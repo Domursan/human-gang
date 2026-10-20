@@ -316,7 +316,10 @@ async function renderMember(user) {
         <span id="head-avatar">${avatarHtml(p, 72)}</span>
         <div><p class="eyebrow">Mon compte</p><h1 class="page-title" id="head-pseudo">${esc(p.pseudo)}</h1></div>
       </div>
-      <button class="btn btn-ghost" type="button" id="logout">${ICON.out} Se déconnecter</button>
+      <div class="btn-row acc-head-actions">
+        <a class="btn btn-sand" href="membre.html">${ICON.badge} Voir ma carte d'identité</a>
+        <button class="btn btn-ghost" type="button" id="logout">${ICON.out} Se déconnecter</button>
+      </div>
     </section>
 
     <div class="privacy-note" role="note">

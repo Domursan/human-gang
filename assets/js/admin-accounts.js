@@ -150,17 +150,20 @@ async function loadDetail(uid) {
 async function openAccount(uid, { tab } = {}) {
   A.uid = uid; A.tab = tab || 'profil'; A.showPair = false; A.d = null;
   root().innerHTML = `${detailHead()}<div class="empty">Chargement de la fiche…</div>`;
+  enterInspect();
   $('#comptes').scrollIntoView({ block: 'start' });
   try {
     A.d = await loadDetail(uid);
+    if (A.uid !== uid) return;
     if (!A.d.editions.data?.some((e) => e.id === A.ssEdition)) A.ssEdition = A.d.editions.data?.[0]?.id ?? null;
     renderDetail();
+    updateInspect();
   } catch (e) {
     root().innerHTML = `${detailHead()}<div class="empty">Impossible de charger la fiche : ${esc(errMsg(e))}</div>`;
   }
 }
 async function reloadDetail() {
-  try { A.d = await loadDetail(A.uid); renderDetail(); } catch (e) { toast(errMsg(e), 'error'); }
+  try { A.d = await loadDetail(A.uid); renderDetail(); updateInspect(); } catch (e) { toast(errMsg(e), 'error'); }
 }
 
 function detailHead() {
@@ -604,7 +607,7 @@ function bindAccounts() {
     if (t.dataset.open) return openAccount(t.dataset.open);
     if (t.dataset.tab) return selectTab(t.dataset.tab);
     const act = t.dataset.act;
-    if (act === 'back') { A.uid = null; A.d = null; renderList(); $('#acc-q')?.focus(); return; }
+    if (act === 'back') { closeDetail(); return; }
     if (act === 'show-pair' || act === 'hide-pair') { A.showPair = act === 'show-pair'; renderPanel(); return; }
     if (act === 'ss-join') return busy(t, async () => { await ssJoin(); await afterSS(); });
     if (act === 'ss-leave') return busy(t, async () => { if (await ssLeave()) await afterSS(); });
@@ -690,6 +693,82 @@ function bindAccounts() {
   });
 }
 async function afterSS() { await reloadDetail(); await A.onChange('ss'); }
+
+/* =========================================================
+   Mode inspection : effet visuel quand une fiche de membre est ouverte
+   (purement visuel, aucune donnée modifiée)
+   ========================================================= */
+const INSP = { bar: null, layer: null, fx: null, leaveT: 0 };
+const inspReduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
+
+function closeDetail() {
+  A.uid = null; A.d = null;
+  renderList();
+  exitInspect();
+  $('#acc-q')?.focus();
+}
+function inspIdentity() {
+  const acc = A.accounts.find((a) => a.id === A.uid) || {};
+  const p = A.d?.profile || { ...(A.avatars.get(A.uid) || {}), pseudo: acc.pseudo };
+  return { ...(A.avatars.get(A.uid) || {}), ...p, pseudo: p.pseudo || acc.pseudo || 'Membre' };
+}
+function enterInspect() {
+  clearTimeout(INSP.leaveT);
+  const body = document.body;
+  const fresh = !INSP.bar;
+  if (fresh) {
+    INSP.layer = document.createElement('div');
+    INSP.layer.className = 'insp-layer';
+    INSP.layer.setAttribute('aria-hidden', 'true');
+    INSP.fx = document.createElement('div');
+    INSP.fx.className = 'insp-fx';
+    INSP.fx.setAttribute('aria-hidden', 'true');
+    INSP.fx.innerHTML = '<div class="insp-frame"><i></i><i></i><i></i><i></i></div><div class="insp-scan"></div>';
+    INSP.bar = document.createElement('div');
+    INSP.bar.className = 'insp-bar';
+    INSP.bar.setAttribute('role', 'region');
+    INSP.bar.setAttribute('aria-label', 'Vue admin d\'un compte');
+    INSP.bar.innerHTML = `<div class="insp-bar-in">
+        <span class="insp-tag">${IC.eye}<span>Vue admin</span></span>
+        <span class="insp-who" aria-live="polite"></span>
+        <button class="btn btn-ghost btn-sm insp-quit" type="button">Quitter la vue</button>
+      </div>`;
+    INSP.bar.querySelector('.insp-quit').addEventListener('click', closeDetail);
+    body.append(INSP.layer, INSP.fx, INSP.bar);
+  }
+  body.classList.remove('is-inspect-leaving');
+  body.classList.add('is-inspecting');
+  updateInspect();
+  // rejoue le balayage d'entrée (y compris quand on passe d'une fiche à l'autre)
+  if (!inspReduced()) {
+    body.classList.remove('is-inspect-enter');
+    void INSP.fx.offsetWidth;
+    body.classList.add('is-inspect-enter');
+  }
+}
+function updateInspect() {
+  if (!INSP.bar || !A.uid) return;
+  const p = inspIdentity();
+  INSP.bar.querySelector('.insp-who').innerHTML = `${avatarHtml(p, 30)}<strong>${esc(p.pseudo)}</strong>`;
+}
+function exitInspect() {
+  if (!INSP.bar) return;
+  const body = document.body;
+  const done = () => {
+    body.classList.remove('is-inspecting', 'is-inspect-leaving', 'is-inspect-enter');
+    INSP.layer?.remove(); INSP.fx?.remove(); INSP.bar?.remove();
+    INSP.layer = INSP.fx = INSP.bar = null;
+  };
+  if (inspReduced()) return done();
+  body.classList.add('is-inspect-leaving');
+  INSP.leaveT = setTimeout(done, 320);
+}
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Escape' || !A.uid || ev.defaultPrevented) return;
+  if (document.querySelector('dialog[open]')) return;
+  ev.preventDefault();
+  closeDetail();
+});
 function selectTab(k, focus = false) {
   A.tab = k;
   $$('#comptes [role="tab"]').forEach((b) => { const on = b.dataset.tab === k; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });

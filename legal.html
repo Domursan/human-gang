@@ -81,6 +81,7 @@
                 <tr><th scope="row">Secret Santa</th><td>Participation aux éditions, liste de souhaits (intitulés et liens), dates d'envoi et de réception du cadeau, résultat du tirage (qui offre à qui).</td></tr>
                 <tr><th scope="row">Sorties IRL</th><td>Sorties créées, réponses (oui / peut-être / non), votes sur les dates proposées.</td></tr>
                 <tr><th scope="row">Photos et souvenirs</th><td>Photos ajoutées aux albums, légendes, moments cultes et leurs images.</td></tr>
+                <tr><th scope="row">Messagerie</th><td>Messages privés échangés avec d'autres membres (texte, date, expéditeur, conversations et date de dernière lecture), y compris les messages anonymes du Secret Santa.</td></tr>
                 <tr><th scope="row">Boîte à idées</th><td>Texte des idées envoyées.</td></tr>
                 <tr><th scope="row">Assistance</th><td>Pseudo, sujet, message et, si tu n'es pas connecté·e, contact Discord indiqué.</td></tr>
                 <tr><th scope="row">Vie du gang</th><td>Badges obtenus, fil d'activité (par exemple « X a rejoint le gang »).</td></tr>
@@ -117,6 +118,7 @@
             <li><strong>Le résultat du tirage</strong> n'est affiché à aucun membre avant la révélation. L'administrateur peut y accéder pour la gestion (par exemple corriger un problème de tirage).</li>
             <li><strong>Ton e-mail, ta date de naissance complète et ton identifiant Discord</strong> ne sont affichés à aucun autre membre (seulement à l'administrateur).</li>
             <li><strong>L'administrateur</strong> gère les invitations, les éditions et les badges, lit la boîte à idées et les demandes d'assistance. Pour la gestion du site, <strong>il a accès à toutes les données des comptes</strong> (y compris l'e-mail, la date de naissance complète, l'identifiant Discord, les informations diverses, les listes de souhaits et le tirage) et peut les consulter ou les corriger depuis l'espace d'administration. Il s'engage à n'utiliser cet accès que pour faire fonctionner le site, l'organisation du Secret Santa et des sorties, la maintenance, la sécurité ou à ta demande, et à ne jamais divulguer ces données en dehors de ce cadre.</li>
+            <li><strong>La messagerie</strong> : tes messages ne sont visibles que par les membres de la conversation. Dans une conversation Secret Santa, ta cible voit seulement « Ton Santa », jamais ton pseudo. <strong>Les messages peuvent être consultés par l'administrateur</strong> (avec le vrai nom de l'expéditeur, y compris pour le Secret Santa), qui peut aussi supprimer un message, uniquement pour la modération, la sécurité ou à ta demande. N'y partage pas de mots de passe ni d'informations sensibles.</li>
             <li><strong>Visiteurs non connectés</strong> : ils ne voient aucune donnée des membres.</li>
           </ul>
 
@@ -183,7 +185,9 @@
                 <tr><th scope="row"><code>hg_intro_seen</code></th><td>Se souvenir que tu as vu l'intro, pour ne pas la rejouer</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_cookie_ok</code></th><td>Se souvenir que tu as fermé le bandeau d'information</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_theme</code></th><td>Thème du site en cache (couleurs, emojis, logo), pour l'afficher sans attendre le serveur</td><td>Jusqu'à effacement</td></tr>
-                <tr><th scope="row"><code>hg_effects_off</code></th><td>Se souvenir que tu as désactivé les effets visuels animés (pluie, neige, étoiles…)</td><td>Jusqu'à effacement</td></tr>
+                <tr><th scope="row"><code>hg_prefs</code></th><td>Tes préférences d'affichage sur cet appareil : mode (sombre, clair, daltonien), thème spécial, effets visuels, sons et volume (remplace l'ancienne clé <code>hg_effects_off</code>)</td><td>Jusqu'à effacement</td></tr>
+                <tr><th scope="row"><code>hg_badges_seen</code></th><td>Liste des badges déjà affichés sur cet appareil, pour ne célébrer que les nouveaux</td><td>Jusqu'à effacement</td></tr>
+                <tr><th scope="row"><code>hg_badges_checked</code> <span class="small">(sessionStorage)</span></th><td>Indique que tes badges ont déjà été vérifiés pendant cette visite, pour ne pas le refaire à chaque page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_pending_join</code></th><td>Code d'invitation et pseudo gardés entre l'inscription et la première connexion, si une confirmation par e-mail est demandée</td><td>Supprimé dès que tu as rejoint le gang</td></tr>
               </tbody>
             </table>

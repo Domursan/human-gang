@@ -100,3 +100,20 @@
   .tile { min-height: 0; }
   .tile-arrow { top: 20px; right: 18px; }
 }
+
+/* Liens vers les cartes de membre (fil d'activité, anniversaires) */
+.member-link { color: var(--text); font-weight: 700; text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
+.member-link:hover { color: var(--sand); border-bottom-color: var(--sand); }
+
+/* Bandeau récap annuel (décembre – janvier) */
+.recap-banner { display: flex; align-items: center; gap: 14px; margin: 0 0 24px; padding: 16px 20px; border-radius: var(--radius);
+  color: var(--text); text-decoration: none; position: relative; overflow: hidden;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--accent) 35%, var(--surface)), var(--surface) 60%);
+  border: 1px solid var(--border-strong); }
+.recap-banner::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  background: linear-gradient(180deg, var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-6)); }
+.recap-banner:hover { color: var(--text); border-color: var(--sand); }
+.recap-banner-emoji { font-size: 28px; line-height: 1; }
+.recap-banner-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.recap-banner-txt span { font-size: 14px; color: var(--muted); }
+.recap-banner-go { color: var(--sand); display: flex; }

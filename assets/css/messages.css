@@ -1,0 +1,141 @@
+/* ===== Human Gang — messagerie ===== */
+.page-msg .site-footer { margin-top: 32px; }
+.msg-head { padding-bottom: 20px; }
+.msg-loading { display: flex; align-items: center; gap: 12px; color: var(--muted); padding: 24px 0; }
+.msg-spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--border-strong); border-top-color: var(--sand);
+  animation: msg-spin .9s linear infinite; display: inline-block; flex: none; }
+@keyframes msg-spin { to { transform: rotate(360deg); } }
+.msg-icon-btn { width: 44px; padding: 0; flex: none; }
+
+/* ---------- Cadre à deux colonnes ---------- */
+.msg-app {
+  display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  height: clamp(480px, calc(100dvh - 250px), 820px);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+}
+.msg-side { border-right: 1px solid var(--border); overflow-y: auto; min-width: 0; overscroll-behavior: contain; }
+.msg-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+
+/* ---------- Liste des conversations ---------- */
+.msg-convs { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.msg-convs-empty { padding: 8px; }
+.msg-conv { font: inherit; color: var(--text); width: 100%; text-align: left; display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; min-height: 64px; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; cursor: pointer; }
+.msg-conv:hover { background: var(--surface-2); }
+.msg-conv[aria-current="true"] { background: var(--surface-2); border-color: var(--border-strong); }
+.msg-conv.is-santa { background: color-mix(in srgb, var(--ss-bg) 55%, transparent); }
+.msg-conv.is-santa:hover, .msg-conv.is-santa[aria-current="true"] { background: var(--ss-bg); border-color: var(--ss-border); }
+.msg-conv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.msg-conv-top, .msg-conv-bottom { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.msg-conv-title { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-conv-time { flex: none; font-size: 12px; color: var(--muted); }
+.msg-conv-preview { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-conv.is-unread .msg-conv-preview { color: var(--text); font-weight: 500; }
+.msg-conv.is-unread .msg-conv-time { color: var(--sand); font-weight: 700; }
+.msg-unread { flex: none; align-self: center; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--accent); color: var(--accent-text);
+  font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.msg-tag { align-self: flex-start; margin-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ss-fg); }
+
+/* Avatars */
+.msg-av { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; flex: none; }
+.msg-av-santa { background: var(--ss-bg); border: 1px solid var(--ss-border); color: var(--ss-fg); }
+.msg-av-wrap { position: relative; flex: none; display: inline-flex; }
+.msg-av-badge { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ss-bg); border: 1px solid var(--ss-border); color: var(--ss-fg); }
+.msg-av-badge svg { width: 14px; height: 14px; }
+
+/* ---------- Fil ---------- */
+.msg-placeholder { margin: auto; padding: 32px; text-align: center; max-width: 360px; }
+.msg-placeholder h2 { font-size: 18px; margin: 12px 0 6px; }
+.msg-placeholder p { margin: 0; }
+.msg-placeholder-icon { width: 64px; height: 64px; margin: 0 auto; border-radius: 50%; border: 1px solid var(--border-strong); color: var(--muted);
+  display: flex; align-items: center; justify-content: center; }
+
+.msg-thread-head { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--surface); min-width: 0; }
+.msg-thread-head.is-santa { background: var(--ss-bg); border-bottom-color: var(--ss-border); }
+.msg-back { display: none; }
+.msg-thread-who { min-width: 0; }
+.msg-thread-title { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-thread-sub { margin: 0; font-size: 13px; color: var(--muted); }
+.msg-thread-head.is-santa .msg-thread-sub { color: var(--ss-fg); }
+
+.msg-thread { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 8px; display: flex; flex-direction: column; gap: 4px; }
+.msg-thread:focus-visible { outline-offset: -2px; }
+.msg-thread-empty { margin: auto; max-width: 380px; text-align: center; color: var(--muted); padding: 24px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+
+.msg-day { display: flex; justify-content: center; margin: 14px 0 8px; }
+.msg-day span { font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
+
+.msg-row { display: flex; flex-direction: column; max-width: min(78%, 560px); margin-top: 8px; }
+.msg-row.is-cont { margin-top: 0; }
+.msg-row.is-mine { align-self: flex-end; align-items: flex-end; }
+.msg-row.is-other { align-self: flex-start; align-items: flex-start; }
+.msg-sender { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 3px 12px; }
+.msg-sender.is-santa { color: var(--ss-fg); letter-spacing: .5px; text-transform: uppercase; }
+.msg-sender svg { width: 16px; height: 16px; }
+.msg-bubble { position: relative; padding: 9px 14px 7px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--border);
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
+.msg-row.is-other .msg-bubble { border-bottom-left-radius: 6px; }
+.msg-row.is-other.is-cont .msg-bubble { border-top-left-radius: 6px; }
+.msg-row.is-mine .msg-bubble { background: var(--accent); border-color: transparent; color: var(--accent-text); border-bottom-right-radius: 6px; }
+.msg-row.is-mine.is-cont .msg-bubble { border-top-right-radius: 6px; }
+.msg-row.is-santa .msg-bubble { background: var(--ss-bg); border-color: var(--ss-border); }
+.msg-bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.msg-row.is-other .msg-bubble a { color: var(--sand); }
+.msg-time { display: inline-block; margin-left: 10px; font-size: 11px; opacity: .7; white-space: nowrap; float: right; margin-top: 6px; }
+
+/* ---------- Saisie ---------- */
+.msg-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: end; padding: 12px 18px 10px;
+  border-top: 1px solid var(--border); background: var(--surface); }
+.msg-compose textarea { font: inherit; width: 100%; min-height: 44px; max-height: 200px; resize: none; padding: 10px 14px; line-height: 1.45;
+  border-radius: 22px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); overflow-y: auto; }
+.msg-compose textarea:focus-visible { outline: 2px solid var(--sand); outline-offset: 1px; }
+.msg-send { width: 44px; height: 44px; padding: 0; border-radius: 50%; }
+.msg-compose-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); padding: 0 6px; }
+.msg-adm { display: none; }
+.msg-count { font-variant-numeric: tabular-nums; flex: none; }
+.msg-count.is-near { color: var(--sand); font-weight: 700; }
+
+.msg-admin-note { display: flex; align-items: center; gap: 8px; margin: 12px 4px 0; }
+.msg-admin-note svg { flex: none; }
+
+/* ---------- Dialogue « Nouveau message » ---------- */
+.msg-dialog { width: min(440px, calc(100vw - 32px)); max-height: min(640px, calc(100dvh - 32px)); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 20px; }
+.msg-dialog::backdrop { background: rgba(0, 0, 0, .65); }
+.msg-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.msg-dialog-title { font-size: 19px; font-weight: 700; }
+.msg-pick { list-style: none; margin: 0; padding: 0; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.msg-pick-btn { font: inherit; color: var(--text); width: 100%; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 10px;
+  border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; }
+.msg-pick-btn:hover, .msg-pick-btn:focus-visible { background: var(--surface-2); border-color: var(--border-strong); }
+.msg-pick-btn span:not(.avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-pick-empty { padding: 12px; }
+
+/* ---------- Mobile : liste OU fil ---------- */
+@media (max-width: 760px) {
+  .msg-head { padding: 28px 0 16px; align-items: center; }
+  .msg-head .page-title { font-size: 36px; }
+  .msg-app { grid-template-columns: minmax(0, 1fr); border-radius: 16px; }
+  /* Liste : dans le flux de la page (pas de double défilement) */
+  .msg-app[data-view="list"] { height: auto; }
+  .msg-app[data-view="list"] .msg-main { display: none; }
+  .msg-app[data-view="list"] .msg-side { overflow: visible; }
+  /* Fil : plein écran, comme une appli de messagerie */
+  .msg-app[data-view="thread"] { position: fixed; inset: 0; z-index: 60; height: 100dvh; border: 0; border-radius: 0; }
+  .msg-app[data-view="thread"] .msg-side { display: none; }
+  .msg-side { border-right: 0; }
+  .msg-compose { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  .msg-back { display: inline-flex; margin-left: -6px; }
+  .msg-thread-head { padding: 8px 12px; gap: 10px; }
+  .msg-thread { padding: 12px 10px 6px; }
+  .msg-row { max-width: 86%; }
+  .msg-compose { padding: 10px 10px 8px; }
+  .msg-hint { display: none; }
+  .msg-adm { display: inline; min-width: 0; }
+}
+@media (max-width: 420px) {
+  .msg-head .btn span { display: none; }
+  .msg-head .btn { width: 44px; padding: 0; }
+}
+@media (max-width: 760px) { body.msg-fullscreen { overflow: hidden; } }

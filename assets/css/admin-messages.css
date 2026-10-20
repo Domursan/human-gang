@@ -1,0 +1,45 @@
+/* ===== Human Gang — administration : messagerie ===== */
+.amsg { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.amsg > .muted { margin: 0; }
+.amsg-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.amsg-tools .filters { margin: 0; }
+.amsg-search { flex: 1 1 200px; min-width: 0; }
+.amsg-layout { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 16px; min-width: 0; }
+.amsg-list, .amsg-reader { min-width: 0; max-height: 620px; overflow-y: auto; overscroll-behavior: contain; }
+.amsg-reader { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); padding: 14px 16px; }
+
+.amsg-convs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.amsg-conv { font: inherit; color: var(--text); width: 100%; text-align: left; display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 14px; min-height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); cursor: pointer; }
+.amsg-conv:hover { border-color: var(--border-strong); }
+.amsg-conv[aria-current="true"] { border-color: var(--text); background: var(--surface-2); }
+.amsg-conv.is-santa { border-color: var(--ss-border); }
+.amsg-conv.is-santa[aria-current="true"] { background: var(--ss-bg); border-color: var(--ss-fg); }
+.amsg-conv-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.amsg-conv .pill { padding: 4px 10px; font-size: 12px; }
+.amsg-who { font-weight: 700; overflow-wrap: anywhere; }
+.amsg-pill-santa { background: var(--ss-bg); color: var(--ss-fg); border: 1px solid var(--ss-border); }
+.amsg-pill-santa svg { width: 14px; height: 14px; }
+
+.amsg-reader-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.amsg-reader-head .card-title { margin: 0; }
+.amsg-reader-head p { margin: 2px 0 0; overflow-wrap: anywhere; }
+.amsg-back { display: none; }
+.amsg-msgs { list-style: none; margin: 0; padding: 0; }
+.amsg-msg { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.amsg-msg:last-child { border-bottom: 0; }
+.amsg-msg.is-santa { box-shadow: inset 3px 0 0 var(--ss-fg); padding-left: 12px; }
+.amsg-msg .item-meta .pill { padding: 2px 8px; font-size: 11px; }
+.amsg-msg .item-body { width: 100%; }
+.amsg-del { color: var(--rose); }
+.amsg-quote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--border-strong); background: var(--bg); border-radius: 6px;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 200px; overflow-y: auto; }
+
+@media (max-width: 760px) {
+  .amsg-layout { grid-template-columns: minmax(0, 1fr); }
+  .amsg-layout[data-view="list"] .amsg-reader { display: none; }
+  .amsg-layout[data-view="reader"] .amsg-list { display: none; }
+  .amsg-back { display: inline-flex; }
+  .amsg-list, .amsg-reader { max-height: none; }
+  .amsg-reader { padding: 12px; }
+}

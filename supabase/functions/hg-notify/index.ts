@@ -9,6 +9,8 @@
 //   ss_gift_received { edition_id }  cible  → MP à son Santa « Ta cible a reçu son cadeau »
 //   irl_new          { event_id }    créateur de la sortie (ou admin) → annonce dans le salon
 //   bot_test         {}              admin  → message de test (salon + MP admin)
+//   message_new      { conversation_id } membre de la conversation → MP aux autres membres (opt-in), sauf discussion
+//                    en cours (message précédent < 10 min). Le Santa d'une conversation santa n'est jamais nommé.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
 const CORS = {
@@ -30,7 +32,7 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 type Bot = {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages', boolean>>;
 };
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
@@ -186,6 +188,47 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>) {
   return { channel };
 }
 
+const MSG_FRESH_MS = 2 * 60_000;   // le message déclencheur doit avoir moins de 2 min
+const MSG_QUIET_MS = 10 * 60_000;  // pas de MP si le message précédent de la conversation a moins de 10 min
+async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>) {
+  if (!isUuid(p.conversation_id)) throw new HttpError(400, 'conversation_id manquant');
+  if (bot.notify?.messages === false) return { skipped: 'désactivé' };
+  const convId = p.conversation_id;
+  const { data: conv } = await db.from('hg_conversations').select('id, kind, santa_id, target_id').eq('id', convId).maybeSingle();
+  if (!conv) throw new HttpError(404, 'Conversation introuvable');
+  const { data: members } = await db.from('hg_conversation_members').select('user_id').eq('conversation_id', convId);
+  const ids: string[] = (members ?? []).map((m: { user_id: string }) => m.user_id);
+  if (!ids.includes(me.id)) throw new HttpError(403, 'Tu ne fais pas partie de cette conversation');
+
+  // Deux derniers messages : le dernier doit être le mien et récent ; le précédent doit être assez ancien.
+  const { data: last } = await db.from('hg_messages').select('id, sender_id, body, created_at')
+    .eq('conversation_id', convId).order('id', { ascending: false }).limit(2);
+  const [latest, previous] = last ?? [];
+  if (!latest || latest.sender_id !== me.id) return { skipped: 'pas de message récent de ta part' };
+  const latestAt = new Date(latest.created_at).getTime();
+  if (Date.now() - latestAt > MSG_FRESH_MS) return { skipped: 'message trop ancien' };
+  if (previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
+
+  const anonymous = conv.kind === 'santa' && conv.santa_id === me.id; // ne JAMAIS révéler le Santa
+  const title = anonymous ? 'Nouveau message de ton Santa' : `Nouveau message de ${me.pseudo}`;
+  const raw = String(latest.body ?? '').replace(/\s+/g, ' ').trim();
+  const excerpt = raw.length > 200 ? `${raw.slice(0, 199)}…` : raw;
+  const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
+
+  let dms = 0, failed = 0, skipped = 0;
+  for (const uid of ids.filter((id) => id !== me.id)) {
+    const other = await getProfile(uid);
+    if (!canDM(other)) { skipped++; continue; }
+    const ok = await trySend(() => sendDM(other.discord_id!, embed({
+      title, description: excerpt || '(message vide)', url,
+      color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
+      ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}),
+    })), `MP message ${uid}`);
+    ok ? dms++ : failed++;
+  }
+  return { dms_sent: dms, dms_failed: failed, recipients_skipped: skipped };
+}
+
 async function onTest(me: Profile, bot: Bot) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   const out: Record<string, unknown> = {};
@@ -228,6 +271,7 @@ Deno.serve(async (req) => {
       case 'ss_gift_received': result = await onGift(me, bot, payload, 'received'); break;
       case 'irl_new': result = await onIrl(me, bot, payload); break;
       case 'bot_test': result = await onTest(me, bot); break;
+      case 'message_new': result = await onMessage(me, bot, payload); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

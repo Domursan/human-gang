@@ -95,6 +95,7 @@ function renderMemberShell() {
       </div>
       <div id="countdown" class="countdown" hidden></div>
     </section>
+    ${recapBanner()}
 
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
@@ -259,6 +260,27 @@ async function loadHistory() {
 /* ---------- Annuaire (partagé par le fil et les anniversaires) ---------- */
 const membersP = sb.rpc('hg_members').then(({ data, error }) => { if (error) throw error; return data || []; });
 
+/* ---------- Liens vers la carte d'identité d'un membre ---------- */
+const memberLink = (m, label = m.pseudo) => `<a class="member-link" href="membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`;
+function feedText(a, m) {
+  const text = String(a.text ?? '');
+  if (!m) return esc(text);
+  if (text.startsWith(m.pseudo)) return `${memberLink(m)}${esc(text.slice(m.pseudo.length))}`;
+  return `${memberLink(m)} · ${esc(text)}`;
+}
+
+/* ---------- Bandeau « Le récap est disponible » (1er décembre → 31 janvier) ---------- */
+function recapBanner() {
+  const d = new Date(), mo = d.getMonth();
+  if (mo !== 11 && mo !== 0) return '';
+  const y = mo === 11 ? d.getFullYear() : d.getFullYear() - 1;
+  return `<a class="recap-banner" href="recap.html?year=${y}">
+      <span class="recap-banner-emoji" aria-hidden="true">✨</span>
+      <span class="recap-banner-txt"><strong>Le récap ${y} est disponible</strong><span>Ton année avec le gang en quelques chiffres</span></span>
+      <span class="recap-banner-go" aria-hidden="true">${ICON.arrow}</span>
+    </a>`;
+}
+
 /* ---------- Fil d'activité ---------- */
 async function loadFeed() {
   const ul = $('#feed');
@@ -276,7 +298,7 @@ async function loadFeed() {
       return `<li class="feed-item">
         ${av}
         <div class="feed-text">
-          <p>${m && !String(a.text).startsWith(m.pseudo) ? `<strong>${esc(m.pseudo)}</strong> · ` : ''}${esc(a.text)}</p>
+          <p>${feedText(a, m)}</p>
           <time class="small muted" datetime="${esc(a.created_at)}" title="${esc(fmtDateTime(a.created_at))}">${esc(ago(a.created_at))}</time>
         </div>
       </li>`;
@@ -301,7 +323,7 @@ async function loadBirthdays() {
     ul.innerHTML = list.map((m) => `
       <li class="bday${m.day === today ? ' is-today' : ''}${m.day < today ? ' is-past' : ''}">
         ${avatarHtml(m, 36)}
-        <span class="bday-name">${esc(m.pseudo)}</span>
+        <span class="bday-name">${memberLink(m)}</span>
         ${m.day === today ? '<span class="pill pill-current">Aujourd\'hui</span>' : `<span class="bday-date">${m.day} ${MONTHS[month - 1]}</span>`}
       </li>`).join('');
   } catch (e) { ul.innerHTML = `<li>${failBox(e)}</li>`; }

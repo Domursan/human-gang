@@ -17,6 +17,7 @@ const I = {
   download: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>',
   trash: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>',
   link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  chat: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z"/></svg>',
   arrow: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15"/><path d="M13 6l6 6-6 6"/></svg>',
   gift: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8c-2-4-6-4-6-1.5S9 8 12 8zM12 8c2-4 6-4 6-1.5S15 8 12 8z"/></svg>',
   box: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>',
@@ -179,6 +180,7 @@ function renderAll() {
         <div class="ss-card-col" id="ss-card"></div>
         <div class="stack ss-side">
           <section class="card card-ss" id="ss-twishes" aria-labelledby="ss-twishes-t"></section>
+          <section class="card" id="ss-msg" aria-labelledby="ss-msg-t"></section>
           <section class="card" id="ss-send" aria-labelledby="ss-send-t"></section>
         </div>
       </section>` : `<section class="card card-ss ss-section" id="ss-notarget"></section>`}
@@ -192,7 +194,7 @@ function renderAll() {
   app.dataset.status = st;
 
   if (!isDrawn()) { renderSignup(); renderPeople(); renderMyWishes(); return; }
-  if (S.mine && S.target) { renderCard(); renderTargetWishes(); renderSend(); } else renderNoTarget();
+  if (S.mine && S.target) { renderCard(); renderTargetWishes(); renderSantaMsg(); renderSend(); } else renderNoTarget();
   renderProgress();
   if (S.mine) renderMyWishes();
   if (isReveal()) renderReveal();
@@ -362,6 +364,7 @@ function renderCard() {
       S.revealed = true; writeSeen();
       $('#ss-card-t').textContent = 'Ta carte';
       renderTargetWishes();
+      renderSantaMsg();
     }
   };
   flip.addEventListener('click', toggle);
@@ -418,6 +421,31 @@ function targetInfoHtml() {
           </dl>
         </div>`).join('')}
     </section>`;
+}
+
+/* ---------- Messagerie anonyme ---------- */
+function renderSantaMsg() {
+  const el = $('#ss-msg'); if (!el) return;
+  el.innerHTML = `
+    <h2 id="ss-msg-t">Messages secrets</h2>
+    <p class="muted small">${S.revealed
+      ? `Pose une question à ${esc(S.target.pseudo)} sans te dévoiler : tu apparais comme « Ton Santa ». Ton Santa peut aussi t’écrire.`
+      : 'Retourne la carte pour pouvoir écrire à ta cible. Tu peux déjà écrire à ton Santa : il reste anonyme.'}</p>
+    <div class="btn-row">
+      ${S.revealed ? `<button class="btn btn-sand" type="button" data-ss-msg="target">${I.chat}<span>Écrire à ma cible (anonyme)</span></button>` : ''}
+      <button class="btn btn-ghost" type="button" data-ss-msg="santa">${I.chat}<span>Écrire à mon Santa</span></button>
+    </div>`;
+  el.querySelectorAll('[data-ss-msg]').forEach((b) => b.addEventListener('click', () => openSantaChat(b, b.dataset.ssMsg)));
+}
+async function openSantaChat(btn, role) {
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('hg_open_santa', { p_edition: S.ed.id, p_role: role });
+    if (error) throw error;
+    const id = Array.isArray(data) ? data[0] : data;
+    if (!id) throw new Error('conversation non créée');
+    location.href = `messages.html?c=${encodeURIComponent(id)}`;
+  } catch (e) { toast(`Messagerie indisponible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
 
 /* ---------- Mon envoi ---------- */

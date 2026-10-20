@@ -3,6 +3,7 @@ import {
   sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn,
 } from './core.js';
 import { mountThemesSection } from './admin-themes.js';
+import { mountMessagesSection } from './admin-messages.js';
 import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from './admin-accounts.js';
 
 const me = await initPage({ auth: 'admin' });
@@ -107,7 +108,7 @@ async function loadSettings() {
   const rows = check(await sb.from('hg_settings').select('key, value').in('key', ['bot', 'theme'])) ?? [];
   const get = (k) => rows.find((r) => r.key === k)?.value;
   S.bot = get('bot') ?? { announce_channel_id: null, admin_discord_id: null, notify: {} };
-  S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, ...(S.bot.notify || {}) };
+  S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, ...(S.bot.notify || {}) };
   S.theme = get('theme') ?? { mode: 'auto', forced: null };
 }
 
@@ -612,7 +613,7 @@ $('#assistance').addEventListener('click', async (ev) => {
 /* =========================================================
    Bot
    ========================================================= */
-const NOTIFY_KEYS = ['draw', 'gift', 'irl', 'birthday', 'support'];
+const NOTIFY_KEYS = ['draw', 'gift', 'irl', 'birthday', 'support', 'messages'];
 const DISCORD_ID = /^\d{17,20}$/;
 function renderBot() {
   const f = $('#bot-form');
@@ -696,6 +697,7 @@ renderIdeas();
 renderSupport();
 if (S.bot) renderBot();
 mountThemesSection($('#theme-root'));
+mountMessagesSection($('#messages-root'));
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({
   me,

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/admin.css">
   <link rel="stylesheet" href="assets/css/admin-accounts.css">
+  <link rel="stylesheet" href="assets/css/admin-messages.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -33,6 +34,7 @@
         <a href="#badges">Badges</a>
         <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
         <a href="#assistance">Assistance <span class="nav-count" data-count="assistance" hidden></span></a>
+        <a href="#messagerie">Messagerie</a>
         <a href="#bot">Bot Discord</a>
         <a href="#theme">Thème</a>
       </nav>
@@ -112,6 +114,11 @@
           </div>
         </section>
 
+        <section id="messagerie" class="admin-section" aria-labelledby="h-messagerie">
+          <h2 id="h-messagerie" class="section-title">Messagerie</h2>
+          <div id="messages-root"><div class="empty">Chargement…</div></div>
+        </section>
+
         <section id="bot" class="admin-section" aria-labelledby="h-bot">
           <h2 id="h-bot" class="section-title">Bot Discord</h2>
           <form class="card stack" id="bot-form">
@@ -133,6 +140,7 @@
               <label class="switch"><input type="checkbox" role="switch" name="irl"><span class="switch-ui" aria-hidden="true"></span><span>Nouvelles sorties IRL <span class="muted small">annonce dans le salon</span></span></label>
               <label class="switch"><input type="checkbox" role="switch" name="birthday"><span class="switch-ui" aria-hidden="true"></span><span>Anniversaires <span class="muted small">pas encore automatisé</span></span></label>
               <label class="switch"><input type="checkbox" role="switch" name="support"><span class="switch-ui" aria-hidden="true"></span><span>Demandes d'assistance <span class="muted small">MP à toi</span></span></label>
+              <label class="switch"><input type="checkbox" role="switch" name="messages"><span class="switch-ui" aria-hidden="true"></span><span>Nouveaux messages <span class="muted small">MP au destinataire (pas à chaque message d'une discussion en cours)</span></span></label>
             </fieldset>
             <div class="btn-row">
               <button class="btn btn-primary" type="submit">Enregistrer</button>
