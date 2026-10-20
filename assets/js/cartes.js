@@ -92,7 +92,7 @@ function skeleton() {
     <p id="cartes-live" class="visually-hidden" aria-live="polite"></p>
 
     <dialog id="cartes-detail" class="cartes-dialog" aria-labelledby="cartes-detail-title">
-      <button type="button" class="btn btn-ghost cartes-close" data-action="close-dialog">Fermer</button>
+      <button type="button" class="cartes-close" data-action="close-dialog" aria-label="Fermer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <div class="cartes-dialog-body">
         <div class="cartes-big" id="cartes-detail-card"></div>
         <div id="cartes-detail-info"></div>
@@ -599,7 +599,7 @@ function copyRow(cp, k) {
   let action;
   if (cp.locked_trade) action = '<span class="pill pill-todo">En échange</span>';
   else if (k.rarity === 'identite') action = '<span class="muted small">Ne se recycle pas</span>';
-  else action = `<button type="button" class="btn btn-ghost" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtPaillettes(val)}</button>`;
+  else action = `<button type="button" class="btn btn-ghost cd-btn" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtPaillettes(val)}</button>`;
   return `<li><span>${parts.map(esc).join(' · ')}</span>${action}</li>`;
 }
 
@@ -622,21 +622,26 @@ function renderDetail() {
   });
   $('#cartes-detail-info').innerHTML = `
     <h2 id="cartes-detail-title">${esc(k.name)}</h2>
-    <p class="muted small">${esc(rarityLabel(k.rarity))} · ${esc(familyLabel(k.family))} · n° ${esc(k.number)}${k.max_copies ? ` · ${nf.format(k.max_copies)} exemplaires au total` : ''}</p>
+    <p class="cd-meta">${esc(rarityLabel(k.rarity))} · ${esc(familyLabel(k.family))} · n° ${esc(k.number)}${k.max_copies ? ` · ${nf.format(k.max_copies)} exemplaires au total` : ''}</p>
+    <button type="button" class="cd-wish${wished ? ' is-on' : ''}" data-action="wish" aria-pressed="${wished}">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+      <span>${wished ? 'Dans ma liste de souhaits' : 'Ajouter à ma liste de souhaits'}</span>
+    </button>
     ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
-    <h3 class="small">Mes exemplaires</h3>
-    ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : '<p class="muted">Pas encore obtenue.</p>'}
-    <div class="btn-row">
-      <button type="button" class="btn btn-ghost" data-action="wish" aria-pressed="${wished}">${wished ? 'Retirer de ma liste de souhaits' : 'Ajouter à ma liste de souhaits'}</button>
-    </div>
-    <h3 class="small">Fabriquer</h3>
-    ${craftable
-      ? `<div class="btn-row">
-          <button type="button" class="btn btn-sand" data-action="craft" data-shiny="0" ${S.busy || short(costN) ? 'disabled' : ''}>Fabriquer · ${fmtPaillettes(costN ?? 0)}</button>
-          ${k.can_shiny ? `<button type="button" class="btn btn-ghost" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer brillante · ${fmtPaillettes(costS ?? 0)}</button>` : ''}
-        </div>
-        ${short(costN) ? `<p class="muted small">Il te manque ${fmtPaillettes(costN - bal())} pour cette carte.</p>` : ''}`
-      : '<p class="muted small">Cette carte ne peut pas être fabriquée.</p>'}`;
+    <section class="cd-sec">
+      <h3 class="cd-h">Mes exemplaires</h3>
+      ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : '<p class="cd-empty">Pas encore obtenue.</p>'}
+    </section>
+    <section class="cd-sec">
+      <h3 class="cd-h">Fabriquer</h3>
+      ${craftable
+        ? `<ul class="cartes-copies">
+            <li><span>Version normale</span><button type="button" class="btn btn-sand cd-btn" data-action="craft" data-shiny="0" ${S.busy || short(costN) ? 'disabled' : ''}>Fabriquer · ${fmtPaillettes(costN ?? 0)}</button></li>
+            ${k.can_shiny ? `<li><span>Version brillante</span><button type="button" class="btn btn-ghost cd-btn" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer · ${fmtPaillettes(costS ?? 0)}</button></li>` : ''}
+          </ul>
+          ${short(costN) ? `<p class="cd-empty">Il te manque ${fmtPaillettes(costN - bal())} pour cette carte.</p>` : ''}`
+        : '<p class="cd-empty">Cette carte ne peut pas être fabriquée.</p>'}
+    </section>`;
 }
 
 async function detailAction(action, el) {
