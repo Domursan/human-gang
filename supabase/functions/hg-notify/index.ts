@@ -14,9 +14,13 @@
 //   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel), title?, body (≤ 2000), channel?: bool }  admin
 //                    → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce facultative,
 //                    trace dans hg_bot_log, détail par destinataire renvoyé.
+//   dyn_announce     { event_id, phase: 'start' | 'end' }  admin → annonce d'un événement dynamique dans le salon
+//                    (image de l'événement, top 3 pour la fin) ; met à jour announced_start_at / announced_end_at.
+//                    Les annonces automatiques sont faites par la fonction hg-cron.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
+import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -338,6 +342,28 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   };
 }
 
+/* ---------- Événements dynamiques : annonce manuelle (admin) ---------- */
+async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
+  if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
+  const phase = p.phase === 'start' || p.phase === 'end' ? p.phase : null;
+  if (!phase) throw new HttpError(400, 'phase attendue : start ou end');
+  const { data: ev } = await db.from('hg_dyn_events').select('*').eq('id', p.event_id).maybeSingle();
+  if (!ev) throw new HttpError(404, 'Événement introuvable');
+  if (!bot.announce_channel_id) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
+  const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE);
+  try {
+    await sendChannel(bot.announce_channel_id, message);
+  } catch (e) {
+    console.error('[hg-notify] annonce événement', e);
+    return { sent: false, error: friendlyDiscordError(e) };
+  }
+  const col = phase === 'start' ? 'announced_start_at' : 'announced_end_at';
+  const { error } = await db.from('hg_dyn_events').update({ [col]: new Date().toISOString() }).eq('id', ev.id);
+  if (error) console.error('[hg-notify] announced_*_at', error);
+  return { sent: true, phase };
+}
+
 /* ---------- Point d'entrée ---------- */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -368,6 +394,7 @@ Deno.serve(async (req) => {
       case 'bot_test': result = await onTest(me, bot, tpl); break;
       case 'message_new': result = await onMessage(me, bot, payload, tpl); break;
       case 'admin_dm': result = await onAdminDm(me, bot, payload); break;
+      case 'dyn_announce': result = await onDynAnnounce(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

@@ -131,7 +131,7 @@ function burst(layer, cx, cy, size, motion) {
  */
 export async function flyDynImage(ev, { preview = false, host = document.body, onCatch } = {}) {
   const size = clamp(Number(ev.size_px) || 72, 24, 320);
-  const duration = clamp(Number(ev.duration_ms) || 6000, 1500, 60000);
+  const duration = clamp(Number(ev.duration_ms) || 6000, 1500, 30000);
   const name = String(ev.name || 'l\'image spéciale');
   const hasImg = ev.image_url ? await preload(ev.image_url) : false;
   const layer = ensureLayer(host);
@@ -200,7 +200,7 @@ export async function flyDynImage(ev, { preview = false, host = document.body, o
         toast(`Tu as attrapé ${name} (${Number(res.mine) || 1})`);
         onCatch?.(res);
         // Nouveau badge ou montée de niveau : la célébration de core.js s'en charge (elle compare aussi les niveaux).
-        checkNewBadges({ force: true });
+        setTimeout(() => checkNewBadges({ force: true }), motion ? 1100 : 300); // laisse l'éclatement se jouer
       } catch (err) {
         toast(`Capture impossible : ${err?.message || err}`, 'error');
       }

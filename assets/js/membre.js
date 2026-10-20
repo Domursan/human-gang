@@ -1,6 +1,7 @@
 // ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » =====
 import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
+import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -136,8 +137,9 @@ function badgesHtml(c) {
     ${list.length ? `<ul class="badge-grid">
       ${list.map((b) => `
         <li class="badge-item" title="${esc(b.description || b.name)}">
-          <span class="badge-img">${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.dataset.i))" data-i="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
+          <span class="badge-img">${b.lv ? `<span class="badge-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.dataset.i))" data-i="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
           <span class="badge-name">${esc(b.name)}</span>
+          ${b.lv ? `${levelPipsHtml(b.lv, b.level, { max: 5 })}<span class="lvl-name">${esc(levelLabel(b.lv, b.level))}</span>` : ''}
           ${b.description ? `<span class="badge-desc">${esc(b.description)}</span>` : ''}
           ${b.awarded_at ? `<span class="badge-date">${esc(fmtDate(b.awarded_at))}</span>` : ''}
         </li>`).join('')}
@@ -310,6 +312,14 @@ export async function renderIdCard(canvas, c) {
     if (im) coverDraw(ctx, im, cx - r, cy - r, r * 2, r * 2);
     else { ctx.fillStyle = '#E2C77E'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `700 46px ${BODY}`; ctx.fillText(initials(b.name), cx, cy + 2); }
     ctx.restore();
+    if (b.lv) { // pastille de niveau (I, II, III…) en bas à droite du badge
+      const t = roman(b.level);
+      ctx.font = `700 30px ${PIXEL}`;
+      const w = Math.max(48, ctx.measureText(t).width + 24), h = 40, x = cx + r - w + 14, y = cy + r - h + 10;
+      ctx.fillStyle = '#141316'; pixelRect(ctx, x - 4, y - 4, w + 8, h + 8, 4); ctx.fill();
+      ctx.fillStyle = '#E2C77E'; pixelRect(ctx, x, y, w, h, 4); ctx.fill();
+      ctx.fillStyle = '#121212'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(t, x + w / 2, y + h / 2 + 2);
+    }
   });
 
   // Statistiques
@@ -378,6 +388,26 @@ async function loadGang() {
   }
 }
 
+/* ---------- Niveaux des badges (hg_user_badges.level + hg_badges.levels) ---------- */
+async function addBadgeLevels(card) {
+  if (!Array.isArray(card.badges) || !card.badges.length) return;
+  try {
+    const [ub, bd] = await Promise.all([
+      sb.from('hg_user_badges').select('badge_code, level').eq('user_id', card.id),
+      sb.from('hg_badges').select('code, image_url, levels_enabled, levels'),
+    ]);
+    if (ub.error || bd.error) throw ub.error || bd.error;
+    const lvl = new Map((ub.data || []).map((r) => [r.badge_code, Number(r.level) || 1]));
+    const defs = new Map((bd.data || []).map((r) => [r.code, r]));
+    card.badges = card.badges.map((b) => {
+      const def = defs.get(b.code);
+      if (!hasLevels(def)) return b;
+      const level = lvl.get(b.code) || 1;
+      return { ...b, level, lv: def, image_url: levelImage(def, level) || b.image_url };
+    });
+  } catch (e) { console.warn('[niveaux]', e?.message || e); }
+}
+
 /* ---------- Lancement ---------- */
 shell();
 const gangP = loadGang();
@@ -385,6 +415,7 @@ try {
   const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
   if (error) throw error;
   const card = data && typeof data === 'object' ? data : null;
+  if (card?.id) await addBadgeLevels(card);
   if (!card || !card.id) {
     $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
       <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;

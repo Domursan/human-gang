@@ -1,6 +1,7 @@
 // ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données =====
 import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
+import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
 const url = new URL(location.href);
@@ -576,27 +577,80 @@ function badgeInitials(name) {
   const w = String(name).replace(/[^\p{L}\s-]/gu, '').split(/[\s-]+/).filter((x) => x.length > 2 || /^\p{Lu}/u.test(x));
   return ((w[0]?.[0] || '') + (w[1]?.[0] || w[0]?.[1] || '')).toUpperCase();
 }
+/** Valeur de mes compteurs pour les badges à niveaux : Map code → valeur (rpc 014, sinon calcul partiel côté client). */
+async function loadBadgeProgress(badges) {
+  const out = new Map();
+  const lv = badges.filter(hasLevels);
+  if (!lv.length) return out;
+  try {
+    const { data, error } = await sb.rpc('hg_my_badge_progress');
+    if (error) throw error;
+    for (const r of data || []) out.set(r.badge_code, Number(r.value) || 0);
+    return out;
+  } catch { /* migration 014 pas encore appliquée : calcul partiel */ }
+  try {
+    const since = new Date(me.joined_on || me.created_at || Date.now());
+    const years = Math.floor((Date.now() - since.getTime()) / 31557600000);
+    let caps = null;
+    if (lv.some((b) => b.metric === 'event_captures' || b.metric === 'events_dynamiques')) {
+      const { data, error } = await sb.from('hg_dyn_captures').select('event_id').eq('user_id', me.id);
+      if (!error) caps = data || [];
+    }
+    for (const b of lv) {
+      if (b.metric === 'anciennete_annees') out.set(b.code, years);
+      else if (b.metric === 'event_captures' && caps) out.set(b.code, caps.filter((c) => !b.event_id || c.event_id === b.event_id).length);
+      else if (b.metric === 'events_dynamiques' && caps) out.set(b.code, new Set(caps.map((c) => c.event_id)).size);
+    }
+  } catch {}
+  return out;
+}
+function levelBlock(b, has, level, value) {
+  const lv = sortedLevels(b);
+  const cur = has ? level : 0;
+  const next = nextLevelDef(b, cur);
+  const curDef = levelDef(b, cur);
+  let prog = '';
+  if (value != null && next) {
+    const from = curDef ? curDef.threshold : 0;
+    const ratio = Math.max(0, Math.min(1, (value - from) / Math.max(1, next.threshold - from)));
+    prog = value >= next.threshold
+      ? `<span class="lvl-prog-txt">Niveau ${roman(next.level)} atteint : mise à jour sous peu</span>`
+      : `<span class="progress lvl-progress" role="progressbar" aria-valuemin="${from}" aria-valuemax="${next.threshold}" aria-valuenow="${value}" aria-label="Progression vers le niveau ${next.level}"><span style="width:${(ratio * 100).toFixed(0)}%"></span></span>
+         <span class="lvl-prog-txt">${esc(metricCount(b.metric, value))} / ${esc(next.threshold)} → niveau ${roman(next.level)}${next.name ? ` (${esc(next.name)})` : ''}</span>`;
+  } else if (next) {
+    prog = `<span class="lvl-prog-txt">Niveau ${roman(next.level)} à ${esc(metricCount(b.metric, next.threshold))}</span>`;
+  } else if (has) {
+    prog = '<span class="lvl-prog-txt">Niveau maximum atteint</span>';
+  }
+  return `${levelPipsHtml(b, cur)}
+    ${has ? `<span class="lvl-name">${esc(levelLabel(b, cur))}</span>` : `<span class="lvl-prog-txt muted">${lv.length} niveaux · ${esc(METRIC_LABEL[b.metric] || '')}</span>`}
+    ${prog}`;
+}
 async function loadBadges() {
   const ul = $('#badge-grid');
   try {
     const [{ data: all, error }, { data: mine, error: e2 }] = await Promise.all([
       sb.from('hg_badges').select('*').order('sort'),
-      sb.from('hg_user_badges').select('badge_code,awarded_at').eq('user_id', me.id),
+      sb.from('hg_user_badges').select('badge_code,awarded_at,level').eq('user_id', me.id),
     ]);
     if (error) throw error; if (e2) throw e2;
-    const got = new Map((mine || []).map((b) => [b.badge_code, b.awarded_at]));
+    const got = new Map((mine || []).map((b) => [b.badge_code, b]));
+    const progress = await loadBadgeProgress(all || []);
     $('#badge-count').textContent = `${got.size} / ${all.length} obtenu${got.size > 1 ? 's' : ''}`;
     ul.innerHTML = all.map((b, i) => {
       const has = got.has(b.code);
+      const level = Number(got.get(b.code)?.level) || 1;
       const tint = BADGE_TINTS[i % BADGE_TINTS.length];
-      const medal = b.image_url
-        ? `<img src="${esc(b.image_url)}" alt="" loading="lazy">`
+      const img = hasLevels(b) ? levelImage(b, has ? level : 1) : b.image_url;
+      const medal = img
+        ? `<img src="${esc(img)}" alt="" loading="lazy">`
         : `<span class="badge-initials display">${esc(badgeInitials(b.name))}</span>`;
-      return `<li class="badge ${has ? 'is-got' : 'is-locked'}" style="--tint:${tint}">
-        <span class="badge-medal">${medal}</span>
+      return `<li class="badge ${has ? 'is-got' : 'is-locked'}${hasLevels(b) ? ' has-levels' : ''}" style="--tint:${tint}">
+        <span class="badge-medal">${medal}${has && hasLevels(b) ? `<span class="medal-lvl" aria-hidden="true">${roman(level)}</span>` : ''}</span>
         <span class="badge-name">${esc(b.name)}</span>
         <span class="badge-desc">${esc(b.description)}</span>
-        <span class="badge-state">${has ? `Obtenu le ${esc(fmtDate(got.get(b.code)))}` : `${ICON.lock} À débloquer`}</span>
+        ${hasLevels(b) ? `<span class="badge-levels">${levelBlock(b, has, level, progress.has(b.code) ? progress.get(b.code) : null)}</span>` : ''}
+        <span class="badge-state">${has ? `Obtenu le ${esc(fmtDate(got.get(b.code).awarded_at))}` : `${ICON.lock} À débloquer`}</span>
       </li>`;
     }).join('');
   } catch (e) { ul.innerHTML = `<li class="empty">Impossible de charger les badges (${esc(errMsg(e))}).</li>`; }

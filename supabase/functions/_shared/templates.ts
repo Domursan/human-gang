@@ -1,4 +1,4 @@
-// ===== Humane Gang — modèles des messages du bot (partagé par hg-notify, hg-support, hg-birthdays) =====
+// ===== Humane Gang — modèles des messages du bot (partagé par hg-notify, hg-support, hg-birthdays, hg-cron) =====
 // Textes par défaut : ./bot-templates.json (même fichier que l'éditeur de l'admin).
 // Textes personnalisés : hg_settings.bot_templates = { [clé]: { title?, body? } } (un champ vide = texte par défaut).
 // Rendu : {variable} remplacée par sa valeur ; une variable non prévue pour ce modèle (ou sans valeur) devient vide.
@@ -6,7 +6,8 @@ import defaults from './bot-templates.json' with { type: 'json' };
 
 export type TemplateKey =
   | 'ss_draw_announce' | 'ss_draw_dm' | 'ss_gift_sent' | 'ss_gift_received' | 'irl_new'
-  | 'message_new' | 'message_new_santa' | 'birthday_dm' | 'birthday_announce' | 'support_new' | 'bot_test';
+  | 'message_new' | 'message_new_santa' | 'birthday_dm' | 'birthday_announce' | 'support_new' | 'bot_test'
+  | 'dyn_start' | 'dyn_end';
 export type Template = { title: string; body: string };
 export type Templates = Partial<Record<string, Partial<Template>>>;
 export type Vars = Record<string, string | number | null | undefined>;

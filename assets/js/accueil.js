@@ -96,6 +96,7 @@ function renderMemberShell() {
       <div id="countdown" class="countdown" hidden></div>
     </section>
     ${recapBanner()}
+    <div id="dyn-banner" hidden></div>
 
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
@@ -281,6 +282,28 @@ function recapBanner() {
     </a>`;
 }
 
+/* ---------- Bandeau « Événement en cours » (événements dynamiques) ---------- */
+async function loadDynBanner() {
+  const box = $('#dyn-banner');
+  if (!box) return;
+  try {
+    const { getActiveDynEvents } = await import('./dyn-events.js');
+    const list = await getActiveDynEvents();
+    if (!list.length) return;
+    const ev = [...list].sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
+    const more = list.length > 1 ? ` (+${list.length - 1} autre${list.length > 2 ? 's' : ''})` : '';
+    const vis = ev.image_url
+      ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" onerror="this.remove()">`
+      : `<span class="recap-banner-emoji" aria-hidden="true">${esc(ev.emoji || '✨')}</span>`;
+    box.innerHTML = `<a class="recap-banner dyn-banner" href="evenements.html">
+        ${vis}
+        <span class="recap-banner-txt"><strong>Événement en cours : ${esc(ev.name)}${esc(more)}</strong><span>Jusqu'au ${esc(fmtDateTime(ev.ends_at))} · une image spéciale traverse le site, attrape-la !</span></span>
+        <span class="recap-banner-go" aria-hidden="true">${ICON.arrow}</span>
+      </a>`;
+    box.hidden = false;
+  } catch (e) { console.warn('[événements]', e); }
+}
+
 /* ---------- Fil d'activité ---------- */
 async function loadFeed() {
   const ul = $('#feed');
@@ -337,6 +360,6 @@ if (!me) {
   renderMemberShell();
   bindIdeas();
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
-  await Promise.allSettled([loadSecretSanta(), loadIrl(), loadHistory(), loadFeed(), loadBirthdays()]);
+  await Promise.allSettled([loadSecretSanta(), loadIrl(), loadHistory(), loadFeed(), loadBirthdays(), loadDynBanner()]);
 }
 app.removeAttribute('aria-busy');

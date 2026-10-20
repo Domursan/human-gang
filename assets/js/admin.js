@@ -9,7 +9,7 @@ import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
-import { mountEventsSection } from './admin-events.js';
+import { mountEventsSection, refreshEventsSection } from './admin-events.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 
 const me = await initPage({ auth: 'admin' });
@@ -498,7 +498,7 @@ function renderBadges() {
     return `<div class="badge-card">
       <div class="badge-top"><div class="badge-img">${badgeImg(b)}</div>
         <div><div class="badge-name">${esc(b.name)}</div><div class="small muted">${esc(b.description)}</div></div></div>
-      <div class="badge-tags"><span class="pill ${auto ? 'pill-muted' : 'pill-current'}">${auto ? 'automatique' : 'manuel'}</span>${hasLevels(b) ? `<span class="pill pill-warn" title="${esc(METRIC_LABEL[b.metric] || b.metric || '')}">${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || b.metric || '')}</span>` : ''}<span class="small muted code-sm">${esc(b.code)}</span></div>
+      <div class="badge-tags"><span class="pill ${auto || hasLevels(b) ? 'pill-muted' : 'pill-current'}">${auto || hasLevels(b) ? 'automatique' : 'manuel'}</span>${hasLevels(b) ? `<span class="pill pill-warn" title="${esc(METRIC_LABEL[b.metric] || b.metric || '')}">${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || b.metric || '')}</span>` : ''}<span class="small muted code-sm">${esc(b.code)}</span></div>
       <div class="badge-holders">${h.length ? `${h.length} membre${h.length > 1 ? 's' : ''} : ${esc(h.sort((x, y) => x.localeCompare(y, 'fr')).join(', '))}` : 'Personne pour l\'instant'}</div>
       <div class="badge-actions">
         <button class="btn btn-ghost btn-sm" type="button" data-badge-edit="${esc(b.code)}">Modifier</button>
@@ -545,7 +545,7 @@ $('#badges').addEventListener('click', async (ev) => {
   }
   if (t.id === 'badge-new' || t.dataset.badgeEdit) {
     const badge = t.dataset.badgeEdit ? S.badges.find((b) => b.code === t.dataset.badgeEdit) : null;
-    openBadgeEditor({ badge, badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); } });
+    openBadgeEditor({ badge, badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); refreshEventsSection(); } });
     return;
   }
   if (t.dataset.badgeDel) {
@@ -726,6 +726,7 @@ mountBotSection($('#bot-root'));
 mountThemesSection($('#theme-root'));
 mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));
+mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({
   me,

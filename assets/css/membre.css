@@ -165,3 +165,12 @@
   .idc { transform: none !important; }
   .idc-glare { display: none; }
 }
+
+/* Badges à niveaux */
+.badge-img { position: relative; }
+.badge-img:has(.badge-lvl) { overflow: visible; }
+.badge-img:has(.badge-lvl) img { border-radius: 50%; }
+.badge-lvl { position: absolute; right: -8px; bottom: -6px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; display: grid; place-items: center;
+  font: 700 11px/1 var(--font-pixel); color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
+.badge-item .lvl-pips { margin: 2px 0; }
+.badge-item .lvl-name { font-size: 11px; }

@@ -6,6 +6,7 @@
     { "id": "messages", "label": "Messagerie" },
     { "id": "birthday", "label": "Anniversaires" },
     { "id": "support", "label": "Assistance" },
+    { "id": "events", "label": "Événements" },
     { "id": "test", "label": "Test" }
   ],
   "templates": {
@@ -52,6 +53,14 @@
     "bot_test": {
       "title": "Test du bot Humane Gang",
       "body": "Si tu lis ceci, {canal} fonctionnent."
+    },
+    "dyn_start": {
+      "title": "Événement : {nom} !",
+      "body": "{description}\n\nUne image spéciale traverse le site jusqu'au {fin}. Clique dessus pour l'attraper et gagner un badge !"
+    },
+    "dyn_end": {
+      "title": "Fin de l'événement : {nom}",
+      "body": "L'événement est terminé. Merci à tous les chasseurs !\n\n**Classement**\n{classement}"
     }
   },
   "meta": {
@@ -174,6 +183,27 @@
         "canal": { "label": "« les annonces » ou « les messages privés »", "example": "les annonces" },
         "pseudo": { "label": "Pseudo de l'admin", "example": "Ethan" },
         "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+      }
+    },
+    "dyn_start": {
+      "group": "events", "label": "Lancement d'un événement", "target": "Salon d'annonces", "color": "#E2C77E",
+      "description": "Publié dans le salon d'annonces au début d'un événement dynamique (automatique via hg-cron, ou bouton de l'admin). L'image de l'événement est ajoutée à l'annonce.",
+      "vars": {
+        "nom": { "label": "Nom de l'événement", "example": "La citrouille d'Halloween" },
+        "description": { "label": "Description de l'événement", "example": "Des citrouilles se baladent sur le site cette semaine." },
+        "fin": { "label": "Date et heure de fin", "example": "samedi 31 octobre à 23:59" },
+        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/evenements.html" }
+      }
+    },
+    "dyn_end": {
+      "group": "events", "label": "Fin d'un événement", "target": "Salon d'annonces", "color": "#E2C77E",
+      "description": "Publié dans le salon d'annonces à la fin d'un événement dynamique, avec le top 3 des chasseurs.",
+      "vars": {
+        "nom": { "label": "Nom de l'événement", "example": "La citrouille d'Halloween" },
+        "description": { "label": "Description de l'événement", "example": "Des citrouilles se baladent sur le site cette semaine." },
+        "fin": { "label": "Date et heure de fin", "example": "samedi 31 octobre à 23:59" },
+        "classement": { "label": "Top 3 (une ligne par personne)", "example": "1. Alex : 14 images\n2. Sam : 9 images\n3. Chloé : 7 images" },
+        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/evenements.html" }
       }
     }
   }

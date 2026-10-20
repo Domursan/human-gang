@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="assets/css/admin-accounts.css">
   <link rel="stylesheet" href="assets/css/admin-messages.css">
   <link rel="stylesheet" href="assets/css/admin-tools.css">
+  <link rel="stylesheet" href="assets/css/admin-events.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -34,6 +35,7 @@
         <a href="#membres">Invitations</a>
         <a href="#secret-santa">Secret Santa</a>
         <a href="#badges">Badges</a>
+        <a href="#evenements">Événements</a>
         <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
         <a href="#assistance">Assistance <span class="nav-count" data-count="assistance" hidden></span></a>
         <a href="#messagerie">Messagerie</a>
@@ -95,6 +97,11 @@
           </div>
           <div class="badge-grid" id="badge-grid"></div>
           <input type="file" id="badge-file" accept="image/png,image/webp,image/jpeg,image/svg+xml" hidden>
+        </section>
+
+        <section id="evenements" class="admin-section" aria-labelledby="h-evenements">
+          <h2 id="h-evenements" class="section-title">Événements</h2>
+          <div id="events-root"><div class="empty">Chargement des événements…</div></div>
         </section>
 
         <section id="idees" class="admin-section" aria-labelledby="h-idees">

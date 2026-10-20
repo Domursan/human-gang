@@ -68,8 +68,9 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   dlg.innerHTML = `
     <form class="stack" id="bdg-form" novalidate>
       <h2 id="bdg-title" class="dialog-title">${isNew ? (preset?.title ? esc(preset.title) : 'Nouveau badge') : `Modifier « ${esc(badge.name)} »`}</h2>
-      ${auto ? '<p class="small muted">Badge automatique : la base l\'attribue toute seule. Tu peux changer son nom, sa description, son image et son ordre.</p>'
-        : isNew ? '<p class="small muted">Un badge créé ici s\'attribue à la main (section Badges ou fiche d\'un membre).</p>' : ''}
+      ${auto ? '<p class="small muted">Badge automatique : la base l\'attribue toute seule. Tu peux changer son nom, sa description, son image, son ordre et lui ajouter des niveaux.</p>'
+        : isNew && preset?.event_id ? '<p class="small muted">Badge lié à l\'événement : sans niveaux, il est gagné à la première image attrapée ; à niveaux, il monte avec le nombre d\'images attrapées.</p>'
+        : isNew ? '<p class="small muted">Un badge créé ici s\'attribue à la main (section Badges ou fiche d\'un membre), sauf s\'il est à niveaux.</p>' : ''}
       <p class="form-error" role="alert" hidden></p>
       <div class="field"><label for="bdg-name">Nom</label><input id="bdg-name" name="name" required maxlength="60" autocomplete="off" value="${esc(src.name ?? '')}"></div>
       <div class="field"><label for="bdg-code">Code ${isNew ? '<span class="muted small">(généré depuis le nom, modifiable)</span>' : '<span class="muted small">(non modifiable)</span>'}</label>
@@ -171,7 +172,7 @@ export async function deleteBadge(badge, holderCount = 0) {
 /* =========================================================
    Badges à niveaux (levels_enabled, metric, levels, event_id)
    ========================================================= */
-const LV_UNIT = { anciennete_annees: 'années', event_captures: 'images', events_dynamiques: 'événements' };
+const LV_UNIT = { anciennete_annees: 'années dans le gang', event_captures: 'images attrapées', events_dynamiques: 'événements avec au moins une capture' };
 const DEFAULT_LEVELS = (metric) => (metric === 'anciennete_annees'
   ? [[1, 'Bronze'], [3, 'Argent'], [5, 'Or']]
   : [[1, 'Bronze'], [5, 'Argent'], [10, 'Or']]).map(([threshold, name]) => ({ threshold, name, image_url: null }));
@@ -198,7 +199,8 @@ function levelsFieldsetHtml(src) {
             <select id="bdg-event" name="event_id"><option value="">Tous les événements</option>
               ${src.event_id ? `<option value="${esc(src.event_id)}" selected>Événement lié</option>` : ''}</select></div>
         </div>
-        <div class="lv-head" aria-hidden="true"><span>Niveau</span><span>Seuil <span class="lv-unit"></span></span><span>Nom (facultatif)</span><span>Image (facultative)</span><span></span></div>
+        <p class="small muted lv-unit"></p>
+        <div class="lv-head" aria-hidden="true"><span>Niveau</span><span>Seuil</span><span>Nom (facultatif)</span><span>Image (facultative)</span><span></span></div>
         <ol class="lv-list" aria-label="Niveaux du badge"></ol>
         <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-lv-add>+ Ajouter un niveau</button></div>
         <p class="small muted lv-note">Seuils strictement croissants. Les niveaux sont recalculés par la base : toutes les heures, à chaque visite d'un membre et après chaque image attrapée. Un niveau atteint n'est jamais retiré. Sans image de niveau, c'est l'image du badge qui s'affiche.</p>
@@ -217,7 +219,8 @@ function bindLevels(dlg, form, src) {
   const BADGE_SVG_SM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>';
 
   const render = () => {
-    $('.lv-unit', box).textContent = LV_UNIT[metricSel.value] ? `(${LV_UNIT[metricSel.value]})` : '';
+    $('.lv-unit', box).textContent = metricSel.value
+      ? `Seuil = nombre de ${LV_UNIT[metricSel.value] || (METRICS.find(([k]) => k === metricSel.value)?.[3] ?? '')} à atteindre pour chaque niveau.` : '';
     list.innerHTML = rows.map((r, i) => `
       <li class="lv-row" data-i="${i}">
         <span class="lv-num" aria-hidden="true"><span class="lvl-pip is-on">${roman(i + 1)}</span></span>

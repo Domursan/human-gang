@@ -117,3 +117,7 @@
 .recap-banner-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .recap-banner-txt span { font-size: 14px; color: var(--muted); }
 .recap-banner-go { color: var(--sand); display: flex; }
+
+/* Bandeau « Événement en cours » (réutilise .recap-banner) */
+.dyn-banner-img { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; flex: none; }
+.dyn-banner { background: linear-gradient(100deg, color-mix(in srgb, var(--sand) 22%, var(--surface)), var(--surface) 60%); }
