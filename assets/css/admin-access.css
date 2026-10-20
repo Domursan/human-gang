@@ -93,6 +93,7 @@
   .pa-mx-member .avatar { font-size: 10px; }
   .pa-matrix th:not(.pa-mx-corner):not(.pa-mx-who) { min-width: 96px; }
   .pa-cell { width: 44px; height: 44px; }
+  .pa-move { width: 44px; min-height: 44px; }
   .pa-mx-head { max-width: 120px; }
   .pa-table-wrap .btn { min-height: 44px; }
   /* Dialogue « Personnes » : plein écran */

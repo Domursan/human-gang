@@ -98,6 +98,7 @@
 
 .msg-admin-note { display: flex; align-items: center; gap: 8px; margin: 12px 4px 0; }
 .msg-admin-note svg { flex: none; }
+.msg-admin-note a { display: inline-flex; align-items: center; min-height: 44px; }
 
 /* ---------- Dialogue « Nouveau message » ---------- */
 .msg-dialog { width: min(440px, calc(100vw - 32px)); max-height: min(640px, calc(100dvh - 32px)); border: 1px solid var(--border-strong);

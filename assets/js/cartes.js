@@ -300,3 +300,351 @@ async function claimDaily() {
     renderAll();
   }
 }
+
+/* ---------- Collection ---------- */
+function cardCell(c) {
+  const cps = copiesOf(c.id);
+  const n = cps.length;
+  const shinyCp = cps.find((x) => x.shiny);
+  return cardHtml(c, {
+    size: 'md', count: n, shiny: !!shinyCp,
+    serial: n === 1 && c.max_copies ? cps[0].serial : null,
+    missing: n === 0, button: true,
+    attrs: `data-action="open-card" data-card="${esc(c.id)}"`,
+  });
+}
+
+function renderCollection(focusId) {
+  const el = $('#cartes-p-collection');
+  const set = S.sets.find((s) => s.id === S.setId);
+  if (!set) { el.innerHTML = '<p class="empty">Aucune série disponible pour le moment.</p>'; return; }
+  const setCards = S.cards.filter((c) => c.set_id === set.id);
+  const scored = setCards.filter((c) => c.rarity !== 'identite');
+  const have = scored.filter((c) => copiesOf(c.id).length > 0).length;
+  const pctDone = scored.length ? Math.round(have / scored.length * 100) : 0;
+  const f = S.filters;
+  const shown = setCards.filter((c) => {
+    const n = copiesOf(c.id).length;
+    if (f.rarity && c.rarity !== f.rarity) return false;
+    if (f.family && c.family !== f.family) return false;
+    if (f.owned === 'owned' && n === 0) return false;
+    if (f.owned === 'missing' && n > 0) return false;
+    if (f.owned === 'dupes' && n < 2) return false;
+    return true;
+  });
+  const plan = massPlan();
+  el.innerHTML = `
+    <section class="card cartes-block">
+      <div class="cartes-series">
+        <div class="field">
+          <label for="cartes-set">Série</label>
+          <select id="cartes-set" data-change="set">
+            ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === set.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="cartes-progress">
+          <p class="cartes-progress-label">${nf.format(have)} / ${nf.format(scored.length)} cartes obtenues</p>
+          <div class="progress" role="progressbar" aria-label="Progression de la série" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone}"><span style="width:${pctDone}%"></span></div>
+        </div>
+      </div>
+      ${set.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
+      <div class="cartes-filters">
+        <div class="field">
+          <label for="cartes-f-rarity">Rareté</label>
+          <select id="cartes-f-rarity" data-filter="rarity">
+            <option value="">Toutes</option>
+            ${RARITIES.map((r) => `<option value="${r.id}" ${f.rarity === r.id ? 'selected' : ''}>${esc(r.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label for="cartes-f-family">Famille</label>
+          <select id="cartes-f-family" data-filter="family">
+            <option value="">Toutes</option>
+            ${FAMILIES.map((x) => `<option value="${x.id}" ${f.family === x.id ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label for="cartes-f-owned">Afficher</label>
+          <select id="cartes-f-owned" data-filter="owned">
+            <option value="all" ${f.owned === 'all' ? 'selected' : ''}>Toutes les cartes</option>
+            <option value="owned" ${f.owned === 'owned' ? 'selected' : ''}>Possédées</option>
+            <option value="missing" ${f.owned === 'missing' ? 'selected' : ''}>Manquantes</option>
+            <option value="dupes" ${f.owned === 'dupes' ? 'selected' : ''}>Doublons</option>
+          </select>
+        </div>
+      </div>
+      <div class="cartes-mass">
+        <p class="muted small">${plural(plan.ids.length, 'doublon recyclable', 'doublons recyclables')} (on garde un exemplaire de chaque carte)</p>
+        <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
+      </div>
+    </section>
+    ${shown.length
+      ? `<div class="cartes-grid">${shown.map(cardCell).join('')}</div>`
+      : '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'}`;
+  if (focusId) document.getElementById(focusId)?.focus();
+}
+
+/* ---------- Recyclage de masse ---------- */
+function recycleValue(cp, k) {
+  const base = tableVal('recycle', k.rarity) ?? 0;
+  return base * (cp.shiny ? Number(cfg().recycle?.shiny_multiplier ?? 3) : 1);
+}
+
+// Garde un exemplaire par carte (brillant d'abord, non échangé d'abord). Exclut identite et échanges en cours.
+function massPlan() {
+  const groups = new Map();
+  for (const cp of S.copies) {
+    if (!groups.has(cp.card_id)) groups.set(cp.card_id, []);
+    groups.get(cp.card_id).push(cp);
+  }
+  const ids = [];
+  let total = 0;
+  for (const [cardId, list] of groups) {
+    const k = S.cardsById.get(cardId);
+    if (!k || k.rarity === 'identite' || list.length < 2) continue;
+    const sorted = [...list].sort((a, b) => (Number(b.shiny) - Number(a.shiny)) || (Number(!!a.locked_trade) - Number(!!b.locked_trade)));
+    for (const cp of sorted.slice(1)) {
+      if (cp.locked_trade) continue;
+      ids.push(cp.id);
+      total += recycleValue(cp, k);
+    }
+  }
+  return { ids, total };
+}
+
+function openMass() {
+  const plan = massPlan();
+  S.massIds = plan.ids;
+  S.massTotal = plan.total;
+  $('#cartes-mass-body').innerHTML = plan.ids.length
+    ? `<p>Tu vas recycler <strong>${plural(plan.ids.length, 'doublon', 'doublons')}</strong> pour environ <strong>${fmtP(plan.total)}</strong>.</p>
+       <p class="muted small">Il te restera au moins un exemplaire de chaque carte. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
+    : '<p>Aucun doublon à recycler pour le moment.</p>';
+  $('#cartes-mass-confirm').hidden = !plan.ids.length;
+  const dlg = $('#cartes-mass');
+  if (!dlg.open) dlg.showModal();
+}
+
+async function confirmMass() {
+  if (S.busy || !S.massIds.length) return;
+  S.busy = true;
+  try {
+    const { data, error } = await sb.rpc('hg_card_recycle', { p_copies: S.massIds });
+    if (error) throw error;
+    toast(`Recyclage terminé : +${fmtP(data)}`, 'ok');
+    $('#cartes-mass').close();
+    await refreshData();
+  } catch (e) {
+    toast(errMsg(e), 'error');
+  } finally {
+    S.busy = false;
+    renderAll();
+  }
+}
+
+/* ---------- Détail d'une carte ---------- */
+function openDetail(cardId) {
+  S.detailId = cardId;
+  renderDetail();
+  const d = $('#cartes-detail');
+  if (!d.open) d.showModal();
+}
+
+function copyRow(cp, k) {
+  const val = recycleValue(cp, k);
+  const parts = [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'Brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean);
+  let action;
+  if (cp.locked_trade) action = '<span class="pill pill-todo">En échange</span>';
+  else if (k.rarity === 'identite') action = '<span class="muted small">Ne se recycle pas</span>';
+  else action = `<button type="button" class="btn btn-ghost" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtP(val)}</button>`;
+  return `<li><span>${parts.map(esc).join(' · ')}</span>${action}</li>`;
+}
+
+function renderDetail() {
+  const k = S.cardsById.get(S.detailId);
+  if (!k) return;
+  const cps = copiesOf(k.id);
+  const n = cps.length;
+  const shinyCp = cps.find((x) => x.shiny);
+  const god = isGod();
+  const costN = tableVal('craft', k.rarity);
+  const costS = costN == null ? null : costN * Number(cfg().craft?.shiny_multiplier ?? 4);
+  const craftable = god || (k.craftable && k.rarity !== 'mythique' && k.rarity !== 'identite' && costN != null);
+  const wished = S.wish.has(k.id);
+  const short = (cost) => !god && bal() < cost;
+
+  $('#cartes-detail-card').innerHTML = cardHtml(k, {
+    size: 'lg', count: n, shiny: !!shinyCp, missing: n === 0,
+    serial: n === 1 && k.max_copies ? cps[0].serial : null,
+  });
+  $('#cartes-detail-info').innerHTML = `
+    <h2 id="cartes-detail-title">${esc(k.name)}</h2>
+    <p class="muted small">${esc(rarityLabel(k.rarity))} · ${esc(familyLabel(k.family))} · n° ${esc(k.number)}${k.max_copies ? ` · ${nf.format(k.max_copies)} exemplaires au total` : ''}</p>
+    ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
+    <h3 class="small">Mes exemplaires</h3>
+    ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : '<p class="muted">Pas encore obtenue.</p>'}
+    <div class="btn-row">
+      <button type="button" class="btn btn-ghost" data-action="wish" aria-pressed="${wished}">${wished ? 'Retirer de ma liste de souhaits' : 'Ajouter à ma liste de souhaits'}</button>
+    </div>
+    <h3 class="small">Fabriquer</h3>
+    ${craftable
+      ? `<div class="btn-row">
+          <button type="button" class="btn btn-sand" data-action="craft" data-shiny="0" ${S.busy || short(costN) ? 'disabled' : ''}>Fabriquer · ${fmtP(costN ?? 0)}</button>
+          ${k.can_shiny ? `<button type="button" class="btn btn-ghost" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer brillante · ${fmtP(costS ?? 0)}</button>` : ''}
+        </div>
+        ${short(costN) ? `<p class="muted small">Il te manque ${nf.format(costN - bal())} ✦ pour cette carte.</p>` : ''}`
+      : '<p class="muted small">Cette carte ne peut pas être fabriquée.</p>'}`;
+}
+
+async function detailAction(action, el) {
+  if (S.busy || !S.detailId) return;
+  S.busy = true;
+  renderDetail();
+  let refreshed = false;
+  try {
+    if (action === 'wish') {
+      const id = S.detailId;
+      if (S.wish.has(id)) {
+        const { error } = await sb.from('hg_card_wishlist').delete().eq('user_id', me.id).eq('card_id', id);
+        if (error) throw error;
+        S.wish.delete(id);
+      } else {
+        const { error } = await sb.from('hg_card_wishlist').insert({ user_id: me.id, card_id: id });
+        if (error) throw error;
+        S.wish.add(id);
+      }
+    } else if (action === 'craft') {
+      const shiny = el.dataset.shiny === '1';
+      const { data, error } = await sb.rpc('hg_card_craft', { p_card: S.detailId, p_shiny: shiny });
+      if (error) throw error;
+      toast(`Carte fabriquée${shiny ? ' (brillante)' : ''} · −${fmtP(data.cost)}`, 'ok');
+      await refreshData();
+      refreshed = true;
+    } else if (action === 'recycle') {
+      const { data, error } = await sb.rpc('hg_card_recycle', { p_copies: [Number(el.dataset.copy)] });
+      if (error) throw error;
+      toast(`Recyclé : +${fmtP(data)}`, 'ok');
+      await refreshData();
+      refreshed = true;
+    }
+  } catch (e) {
+    toast(errMsg(e), 'error');
+  } finally {
+    S.busy = false;
+  }
+  if (refreshed) renderAll();
+  else { renderDetail(); renderTab(); }
+}
+
+/* ---------- Classement ---------- */
+async function renderLeaderboard() {
+  const el = $('#cartes-p-classement');
+  el.innerHTML = '<p class="muted" aria-live="polite">Chargement du classement…</p>';
+  const { data, error } = await sb.rpc('hg_card_leaderboard');
+  if (error) { el.innerHTML = `<p class="empty">${esc(errMsg(error))}</p>`; return; }
+  const rows = data || [];
+  el.innerHTML = `
+    <section class="card">
+      <h2>Classement</h2>
+      <p class="muted small">Le score additionne la valeur des cartes possédées (une carte brillante compte double).</p>
+      ${rows.length ? `<ol class="cartes-lb">
+        ${rows.map((r, i) => `<li>
+          <span class="cartes-lb-rank">${i + 1}</span>
+          <span class="cartes-row">${avatarHtml(r, 36)}
+            <span><strong>${esc(r.pseudo)}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
+            <span class="cartes-lb-stats">${plural(Number(r.uniques), 'unique', 'uniques')} · ${plural(Number(r.copies), 'exemplaire', 'exemplaires')} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
+          </span>
+          <span class="cartes-lb-score">${nf.format(Number(r.score))}</span>
+        </li>`).join('')}
+      </ol>` : '<p class="empty">Personne n’a encore de carte.</p>'}
+    </section>`;
+}
+
+/* ---------- Échanges (module séparé, chargé à la demande) ---------- */
+function mountTradesOnce() {
+  if (S.tradesMounted) return;
+  S.tradesMounted = true;
+  const el = $('#cartes-trades');
+  const ctx = {
+    me,
+    refresh: async () => { await refreshData(); renderAll(); },
+  };
+  import('./cartes-trades.js')
+    .then((m) => m.mountTrades(el, ctx))
+    .catch(() => { el.innerHTML = '<p class="empty">Bientôt.</p>'; });
+}
+
+/* ---------- Historique ---------- */
+function renderHistory() {
+  const el = $('#cartes-history');
+  if (!el) return;
+  el.innerHTML = S.log.length
+    ? `<ul class="cartes-log">${S.log.map((l) => {
+        const d = Number(l.delta);
+        return `<li><span>${esc(REASON_LABEL[l.reason] || l.reason)} <span class="muted small">${esc(fmtDate(l.created_at))}</span></span>
+          <span class="${d >= 0 ? 'cartes-delta-pos' : 'cartes-delta-neg'}">${d > 0 ? '+' : ''}${nf.format(d)} ✦</span></li>`;
+      }).join('')}</ul>`
+    : '<p class="muted small">Aucun mouvement pour le moment.</p>';
+}
+
+/* ---------- Événements ---------- */
+function onClick(e) {
+  const t = e.target.closest('[data-tab], [data-action]');
+  if (!t || t.disabled) return;
+  if (t.dataset.tab) { setTab(t.dataset.tab); $(`#cartes-tab-${t.dataset.tab}`).focus(); return; }
+  switch (t.dataset.action) {
+    case 'daily': return claimDaily();
+    case 'open-free': return openBooster(true);
+    case 'open-paid': return openBooster(false);
+    case 'reveal': return reveal(Number(t.dataset.i));
+    case 'reveal-all': return revealAll();
+    case 'close-reveal': S.reveal = null; return renderBoosters();
+    case 'open-card': return openDetail(t.dataset.card);
+    case 'mass': return openMass();
+    case 'mass-confirm': return confirmMass();
+    case 'wish':
+    case 'craft':
+    case 'recycle': return detailAction(t.dataset.action, t);
+    case 'close-dialog': return t.closest('dialog')?.close();
+  }
+}
+
+function onChange(e) {
+  const t = e.target;
+  if (t.dataset.change === 'set') { S.setId = t.value; renderCollection('cartes-set'); }
+  else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
+}
+
+function onTabKey(e) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  const ids = TABS.map(([id]) => id);
+  const i = ids.indexOf(S.tab);
+  const n = e.key === 'ArrowRight' ? (i + 1) % ids.length
+    : e.key === 'ArrowLeft' ? (i - 1 + ids.length) % ids.length
+    : e.key === 'Home' ? 0 : ids.length - 1;
+  e.preventDefault();
+  setTab(ids[n]);
+  $(`#cartes-tab-${ids[n]}`).focus();
+}
+
+/* ---------- Démarrage ---------- */
+async function boot() {
+  app.innerHTML = skeleton();
+  app.addEventListener('click', onClick);
+  app.addEventListener('change', onChange);
+  $('#cartes-tablist').addEventListener('keydown', onTabKey);
+  $('#cartes-detail').addEventListener('close', () => { S.detailId = null; });
+  try {
+    await loadStatic();
+    await refreshData();
+    renderAll();
+  } catch (e) {
+    app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
+    toast(errMsg(e), 'error');
+  }
+  app.removeAttribute('aria-busy');
+  // Le compte à rebours du booster gratuit se met à jour sans recharger la page
+  setInterval(() => { if (S.tab === 'boosters') renderFree(); }, 30000);
+}
+
+boot();
