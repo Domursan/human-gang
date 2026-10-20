@@ -216,10 +216,12 @@ function fillSelect() {
   if (!m || !sel) return;
   const q = norm(G.root.querySelector('#agh-merge-q')?.value);
   const all = m.members ?? [];
-  const shown = all.filter((x) => !q || norm(x.pseudo).includes(q) || x.id === m.memberId);
+  const hits = all.filter((x) => !q || norm(x.pseudo).includes(q));
+  // Le membre déjà choisi reste dans la liste, même si la recherche ne le retient pas.
+  const shown = m.memberId && !hits.some((x) => x.id === m.memberId) ? [...hits, ...all.filter((x) => x.id === m.memberId)] : hits;
   const placeholder = m.loading ? 'Chargement…' : all.length ? '— Choisir un membre —' : 'Aucun compte inscrit';
   sel.innerHTML = `<option value="">${esc(placeholder)}</option>`
-    + (q && all.length && !shown.length ? '<option value="" disabled>Aucun membre ne correspond</option>' : '')
+    + (q && all.length && !hits.length ? '<option value="" disabled>Aucun membre ne correspond</option>' : '')
     + shown.map((x) => `<option value="${esc(x.id)}">${esc(x.pseudo)}</option>`).join('');
   sel.value = m.memberId ?? '';
 }

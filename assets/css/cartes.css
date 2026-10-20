@@ -90,3 +90,121 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 .cartes-dialog-pad .btn-row { justify-content: flex-end; }
 .cartes-panel { min-height: 40vh; }
 .cartes-lb .cartes-row > span:last-child { flex: 1 1 180px; min-width: 0; }
+
+/* ===== Paillettes : icône et texte formaté ===== */
+.paill { display: inline-flex; align-items: center; gap: .3em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.paill-ic { display: inline-block; line-height: 0; }
+.paill-svg { display: block; width: 1.1em; height: 1.1em; }
+
+/* ===== Pastille de solde : compteur LCD 7 segments (style 1 de la maquette « solde ») ===== */
+.lcd { --lit: #FBD32D; --off: #2b2913; --lab: #8f8f5f; position: relative; display: inline-flex; align-items: center; gap: 12px;
+  white-space: nowrap; line-height: 1; vertical-align: middle; font-variant-numeric: tabular-nums; color: var(--lit);
+  background: #060807; border: 3px solid #34321f; border-radius: 4px; padding: 12px 20px 12px 14px;
+  box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px #15140b; }
+.lcd-sm { gap: 7px; border-width: 2px; border-radius: 3px; padding: 4px 7px 4px 5px; box-shadow: inset 0 0 0 1px #000; }
+.lcd-ic { display: block; flex: none; line-height: 0; }
+.lcd-ic .paill-svg { width: 100%; height: 100%; }
+.lcd-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.lcd-sm .lcd-col { gap: 0; }
+.lcd-lab { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--lab); }
+.lcd-num { display: inline-flex; align-items: center; }
+.lcd-dg { display: block; }
+.lcd-off { fill: var(--off); }
+.lcd-on { fill: var(--lit); }
+.lcd-sep { display: block; flex: none; }
+.lcd-num.is-blink .lcd-on { animation: lcd-blink .12s steps(1, end) 2; }
+@keyframes lcd-blink { 0% { opacity: 0; } 50% { opacity: 1; } }
+.lcd-delta { position: absolute; right: 10px; top: -30px; font-size: 15px; font-weight: 700; color: #2fd17a; text-shadow: 1px 1px 0 #000;
+  pointer-events: none; white-space: nowrap; animation: lcd-rise 1.2s ease-out both; }
+@keyframes lcd-rise { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+html[data-mode="clair"] .lcd { --lit: #15170c; --off: #c3c8ad; --lab: #4f5440; background: #cfd5bd; border-color: #7a806a; box-shadow: inset 0 0 0 2px #aeb496; }
+html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
+
+/* ===== Boosters : deux cartouches ===== */
+.fit { position: relative; width: 100%; height: calc(var(--h, 220) * var(--k, 1) * 1px); }
+.fit-in { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; width: calc(var(--w, 220) * 1px); height: calc(var(--h, 220) * 1px);
+  transform: scale(var(--k, 1)); transform-origin: 50% 0; }
+.cart-shelf { margin-bottom: 20px; }
+.cart-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.cart-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cart-h { font-size: 15px; font-weight: 700; line-height: 1.2; margin: 0; }
+.cart-fit { margin-top: 4px; }
+.cart-act { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cart-act > p { margin: 0; text-align: center; }
+.cart-act .cartes-timer { margin: 0; text-align: center; font-size: 14px; color: var(--muted); }
+.cart-btn { width: 100%; min-height: 44px; padding: 8px 10px; flex-wrap: wrap; gap: 8px; }
+@media (min-width: 720px) { .cart-h { font-size: 17px; } }
+
+.cart-box { position: relative; width: 220px; height: 290px; }
+.cart-box.is-idle { filter: saturate(.45) brightness(.8); }
+.cart-body { position: absolute; inset: 0; background: #2b2836;
+  clip-path: polygon(0px 12px,4px 12px,4px 8px,8px 8px,8px 4px,12px 4px,12px 0px,208px 0px,208px 4px,212px 4px,212px 8px,216px 8px,216px 12px,220px 12px,220px 282px,216px 282px,216px 286px,212px 286px,212px 290px,8px 290px,8px 286px,4px 286px,4px 282px,0px 282px); }
+.cart-notch { position: absolute; left: 78px; top: 0; width: 64px; height: 6px; background: #0b0508; }
+.cart-label { position: absolute; left: 22px; top: 26px; width: 176px; height: 150px; }
+.cart-label-fl { position: absolute; inset: 0; background: #B70127;
+  clip-path: polygon(0px 8px,4px 8px,4px 4px,8px 4px,8px 0px,168px 0px,168px 4px,172px 4px,172px 8px,176px 8px,176px 142px,172px 142px,172px 146px,168px 146px,168px 150px,8px 150px,8px 146px,4px 146px,4px 142px,0px 142px); }
+.cart-scr { position: absolute; left: 14px; top: 12px; width: 148px; height: 84px; background: #0b0508; overflow: hidden; }
+.cart-scr img { position: absolute; left: 40px; top: 8px; width: 68px; height: 68px; image-rendering: pixelated; }
+.cart-lbl1 { position: absolute; left: 22px; top: 128px; width: 176px; margin: 0; text-align: center; font-size: 16px; font-weight: 700;
+  letter-spacing: .12em; line-height: 1; color: #fff; }
+.cart-lbl2 { position: absolute; left: 22px; top: 150px; width: 176px; margin: 0; text-align: center; font-size: 9.5px; letter-spacing: .2em;
+  line-height: 1.2; color: #FBD32D; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-stripe { position: absolute; left: 22px; top: 186px; width: 176px; height: 8px; display: flex; }
+.cart-stripe i { flex: 1; display: block; }
+.cart-stripe i:nth-child(1) { background: #FE3104; }
+.cart-stripe i:nth-child(2) { background: #FCA301; }
+.cart-stripe i:nth-child(3) { background: #FBD32D; }
+.cart-stripe i:nth-child(4) { background: #159946; }
+.cart-stripe i:nth-child(5) { background: #2B5AE2; }
+.cart-stripe i:nth-child(6) { background: #4E2398; }
+.cart-ridge { position: absolute; left: 30px; top: 206px; width: 160px; height: 38px; background: repeating-linear-gradient(90deg, #15131c 0 4px, #4a4658 4px 8px); }
+.cart-foot { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 10px; letter-spacing: .2em; color: #b7b0c4; }
+.cart-stk { position: absolute; right: -10px; top: 6px; width: 108px; height: 44px; margin: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center; background: #159946; text-align: center; font-size: 11.5px; font-weight: 700;
+  line-height: 1.25; letter-spacing: .04em; text-transform: uppercase; color: #fff; text-shadow: 2px 2px 0 #0b0508; transform: rotate(8deg);
+  clip-path: polygon(0px 4px,4px 4px,4px 0px,104px 0px,104px 4px,108px 4px,108px 40px,104px 40px,104px 44px,4px 44px,4px 40px,0px 40px); }
+
+/* ===== Ouverture du booster : scène 400 x 520 (cartouche, console, cartes) ===== */
+.op-wrap { max-width: 400px; margin: 0 auto 16px; }
+.op-stage { --cw: 112px; overflow: hidden; border-radius: 4px; box-shadow: 0 0 0 3px #26222f;
+  background-color: #120f18; background-image: radial-gradient(rgba(255, 255, 255, .06) 1.2px, transparent 1.6px); background-size: 12px 12px; }
+@media (max-width: 600px) { .op-stage { --cw: 96px; } }
+.op-cart { position: absolute; left: 90px; top: 24px; width: 220px; height: 290px; z-index: 2; transform: translateY(-250px);
+  transition: transform .7s cubic-bezier(.3, .7, .25, 1); }
+.op-stage.is-in .op-cart { transform: none; }
+.op-con { position: absolute; left: 30px; top: 250px; width: 340px; height: 170px; z-index: 3; }
+.op-con-body { position: absolute; inset: 0; background: #3a3647;
+  clip-path: polygon(0px 16px,4px 16px,4px 12px,8px 12px,8px 8px,12px 8px,12px 4px,16px 4px,16px 0px,324px 0px,324px 4px,328px 4px,328px 8px,332px 8px,332px 12px,336px 12px,336px 16px,340px 16px,340px 170px,0px 170px); }
+.op-slot { position: absolute; left: 60px; top: 8px; width: 220px; height: 12px; background: #0b0508; }
+.op-scr { position: absolute; left: 60px; top: 30px; width: 220px; height: 96px; background: #0b0508; overflow: hidden; }
+.op-flash { position: absolute; inset: 0; background: var(--fc, #FBD32D); opacity: 0; }
+.op-scr p { position: absolute; z-index: 1; margin: 0; white-space: nowrap; opacity: 0; transition: opacity .2s;
+  font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace; }
+.op-l1 { left: 12px; top: 10px; font-size: 12px; font-weight: 700; color: #7fe3a4; letter-spacing: .06em; }
+.op-l2 { left: 12px; top: 28px; font-size: 10px; color: #4f9d6e; letter-spacing: .08em; }
+.op-l3 { left: 12px; top: 72px; font-size: 10px; color: #FBD32D; letter-spacing: .08em; }
+.op-stage.is-boot .op-scr p { opacity: 1; }
+.op-bar { position: absolute; z-index: 1; left: 12px; top: 50px; display: flex; gap: 3px; }
+.op-bar i { width: 14px; height: 10px; background: #143a24; transition: background .14s; transition-delay: calc(var(--k) * 90ms); }
+.op-stage.is-boot .op-bar i { background: #2fd17a; }
+.op-stage.is-flash .op-flash { animation: op-flash .6s steps(1, end) 1; }
+@keyframes op-flash { 0% { opacity: .85; } 20% { opacity: 0; } 40% { opacity: .85; } 60% { opacity: 0; } 80% { opacity: .85; } 100% { opacity: 0; } }
+.op-led { position: absolute; left: 300px; width: 8px; height: 8px; }
+.op-led1 { top: 50px; background: #FE3104; }
+.op-led2 { top: 66px; background: #159946; }
+.op-stage.is-boot .op-led { animation: op-blink .9s steps(1, end) 3; }
+@keyframes op-blink { 0% { opacity: 1; } 50% { opacity: .15; } }
+.op-tray { position: absolute; left: 60px; top: 136px; width: 220px; height: 14px; background: #0b0508; }
+.op-card { position: absolute; top: calc(var(--y) * 1px); left: calc(200px - var(--cw) / 2 + var(--i) * 48px); width: var(--cw);
+  opacity: 0; transform: translateY(40px) rotate(var(--r)) scale(.6); transition: transform .42s cubic-bezier(.2, .8, .3, 1), opacity .25s ease; }
+.op-card.is-out { opacity: 1; transform: rotate(var(--r)); }
+.op-inner { position: relative; height: calc(var(--cw) * 88 / 63); transform-style: preserve-3d; transition: transform .32s ease; }
+.op-card.is-flip .op-inner { transform: rotateY(180deg); }
+.op-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.op-front { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .op-cart, .op-card, .op-inner, .op-bar i, .op-scr p { transition: none !important; }
+  .op-stage * { animation: none !important; }
+  .lcd-num.is-blink .lcd-on, .lcd-delta { animation: none !important; }
+}
