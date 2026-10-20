@@ -117,7 +117,7 @@ function buildBand() {
     const [x, y] = toBand(bandPoint(t, gauss() * width * 1.6));
     const r = (diag * (0.04 + Math.random() * 0.12)) * BAND_SCALE;
     const [R, G, B] = NEBULA[(Math.random() * NEBULA.length) | 0];
-    const a = 0.018 + Math.random() * 0.04;
+    const a = 0.016 + Math.random() * 0.032;
     const g = c.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, `rgba(${R},${G},${B},${a})`); g.addColorStop(1, `rgba(${R},${G},${B},0)`);
     c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);

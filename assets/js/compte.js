@@ -1,5 +1,5 @@
 // ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données =====
-import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml } from './core.js';
+import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
@@ -444,7 +444,7 @@ function refreshIdentity() {
   $('#head-avatar').innerHTML = avatarHtml(me, 72);
   $('#av-preview').innerHTML = avatarHtml(me, 96);
   $('#head-pseudo').textContent = me.pseudo;
-  const nav = $('.nav-account'); if (nav) nav.textContent = me.pseudo;
+  updateHeaderProfile(me);
   $('#av-remove').hidden = !me.avatar_url;
 }
 
@@ -685,7 +685,7 @@ function bindData() {
       await sb.auth.signOut().catch(() => {});
       try { ['hg_pending_join', 'hg_intro_seen'].forEach((k) => localStorage.removeItem(k)); } catch {}
       dlg.close();
-      $('.nav-account')?.replaceChildren('Connexion');
+      updateHeaderProfile(null);
       app.innerHTML = `<section class="acc-narrow"><div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">Compte supprimé</h1></div></div>
         <div class="card stack"><p>Ton compte et tes données ont été supprimés. Merci d'avoir fait partie du gang.</p>
         <div class="btn-row"><a class="btn btn-ghost" href="accueil.html">Retour à l'accueil</a></div></div></section>`;
