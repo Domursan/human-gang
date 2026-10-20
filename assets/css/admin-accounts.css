@@ -1,5 +1,7 @@
 /* ===== Human Gang — admin : comptes + champs transmis / attributions Secret Santa ===== */
 
+#acc-root { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
 /* Liste des comptes */
 .acc-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .acc-search { flex: 1 1 280px; max-width: 460px; }

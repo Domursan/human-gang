@@ -71,7 +71,7 @@ const root = () => $('#acc-root');
    ========================================================= */
 async function loadAccounts() {
   const [acc, mem] = await Promise.all([sb.rpc('hg_admin_accounts'), sb.rpc('hg_members')]);
-  A.accounts = (check(acc) ?? []).slice().sort((a, b) => String(a.pseudo ?? '~').localeCompare(String(b.pseudo ?? '~'), 'fr'));
+  A.accounts = (check(acc) ?? []).slice().sort((a, b) => (!a.pseudo - !b.pseudo) || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
   A.avatars = new Map((mem.data ?? []).map((m) => [m.id, m]));
 }
 
@@ -148,7 +148,7 @@ async function loadDetail(uid) {
 }
 
 async function openAccount(uid, { tab } = {}) {
-  A.uid = uid; A.tab = tab || A.tab || 'profil'; A.showPair = false; A.d = null;
+  A.uid = uid; A.tab = tab || 'profil'; A.showPair = false; A.d = null;
   root().innerHTML = `${detailHead()}<div class="empty">Chargement de la fiche…</div>`;
   $('#comptes').scrollIntoView({ block: 'start' });
   try {
@@ -800,7 +800,7 @@ async function togglePairs(btn) {
     const sorted = rows.slice().sort((x, y) => pseudoOf(x.giver_id).localeCompare(pseudoOf(y.giver_id), 'fr'));
     body.innerHTML = `
       ${sorted.length ? `<div class="pairs-table" role="table" aria-label="Attributions">
-        <div class="pairs-tr pairs-th" role="row"><span role="columnheader">Santa</span><span role="columnheader" class="visually-hidden">offre à</span><span role="columnheader">Cible</span><span role="columnheader">Envoyé</span><span role="columnheader">Reçu</span></div>
+        <div class="pairs-tr pairs-th" role="row"><span role="columnheader">Santa</span><span role="columnheader"><span class="visually-hidden">offre à</span></span><span role="columnheader">Cible</span><span role="columnheader">Envoyé</span><span role="columnheader">Reçu</span></div>
         ${sorted.map((r) => `<div class="pairs-tr" role="row">
           <span role="cell"><button class="linkish" type="button" data-open-fiche="${esc(r.giver_id)}">${esc(pseudoOf(r.giver_id))}</button></span>
           <span role="cell" class="pairs-arrow" aria-hidden="true">${IC.arrow}</span>
