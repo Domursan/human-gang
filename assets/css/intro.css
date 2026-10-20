@@ -137,5 +137,7 @@ body.intro.reduced .intro-hint { display: none; }
 @media (max-width: 600px) {
   body.intro { --logo: min(80vw, 52vh); }
   @supports (height: 1svh) { body.intro { --logo: min(80vw, 52svh); } }
-  .intro-skip { font-size: 12px; padding: 8px 12px; min-height: 44px; }
+  .intro-skip { font-size: 13px; padding: 8px 14px; min-height: 44px; }
+  .intro-enter { bottom: calc(56px + env(safe-area-inset-bottom)); min-height: 48px; }
+  .intro-hint { bottom: calc(18px + env(safe-area-inset-bottom)); }
 }

@@ -82,4 +82,13 @@
 @media (max-width: 600px) {
   .th-fieldset { padding: 12px; }
   .th-actions .btn:not(.btn-icon) { flex: 1 1 auto; }
+  .th-actions .btn-icon { width: 44px; }
+  .th-preview-bar { bottom: max(12px, env(safe-area-inset-bottom)); width: calc(100vw - 24px); max-width: calc(100vw - 24px); }
+  .th-preview-bar .btn { min-height: 44px; flex: 1 1 auto; }
+  .th-sample { padding: 12px; }
+  .th-sample-btns .btn, .th-sample-btn, .th-sample-ghost { min-height: 44px; }
+  .th-listhead .btn { min-height: 44px; }
+  .th-swatches span { width: 26px; height: 26px; }
+  .th-emoji-preview { font-size: 14px; }
+  .th-range-note { font-size: 13px; }
 }

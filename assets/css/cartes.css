@@ -1,77 +1,84 @@
-/* ===== Cartes à collectionner — page d'attente (aperçu rétro / pixel art) ===== */
+/* ===== Cartes à collectionner — page joueur ===== */
 .cartes-loading { min-height: 50vh; }
 .cartes-head { align-items: flex-end; }
-.cartes-status { margin: 0; }
+.cartes-wallet { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.cartes-bal { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); line-height: 1; color: var(--sand); font-variant-numeric: tabular-nums; }
+.cartes-bal-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cartes-foot-note { font-size: 13px; color: var(--muted); margin: 24px 0 0; text-align: center; }
 
-.cartes-stage { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 48px 28px 36px; overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--sand) 7%, transparent), transparent 62%),
-    var(--surface); }
-.cartes-lead { max-width: 56ch; text-align: center; margin: 0; }
+/* Onglets */
+.cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
+.cartes-tabs::-webkit-scrollbar { display: none; }
+.cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 16px; background: none; border: 0; border-bottom: 3px solid transparent;
+  color: var(--muted); cursor: pointer; white-space: nowrap; }
+.cartes-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.cartes-panel[hidden] { display: none; }
 
-/* Éventail de 3 cartes */
-.tcg-fan { list-style: none; margin: 0; padding: 10px 0 0; display: flex; justify-content: center; align-items: flex-end; gap: 26px; flex-wrap: wrap; }
-.tcg-card { --w: 188px; --px: 4px; --edge: var(--muted); --edge-2: color-mix(in srgb, var(--edge) 45%, #000);
-  display: flex; flex-direction: column; align-items: center; gap: 14px;
-  transition: transform .25s ease; }
-.tcg-card:nth-child(2) { transform: translateY(-14px); }
-.tcg-card:nth-child(1) { transform: rotate(-6deg) translateY(4px); }
-.tcg-card:nth-child(3) { transform: rotate(6deg) translateY(4px); }
-html[data-fx="on"] .tcg-card:hover { transform: translateY(-22px) rotate(0deg); }
+/* Blocs génériques */
+.cartes-block { margin-bottom: 20px; }
+.cartes-block h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+.cartes-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.cartes-row > * { flex: 0 0 auto; }
+.cartes-timer { font-variant-numeric: tabular-nums; }
+.cartes-small { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.cartes-odds { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cartes-odds th, .cartes-odds td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+.cartes-odds td:last-child, .cartes-odds th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 
-.tcg-commune { --edge: #A9A49B; }
-.tcg-rare { --edge: var(--slate); }
-.tcg-legendaire { --edge: var(--sand); }
+.cartes-booster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 16px; justify-items: center; margin: 16px 0; }
+.cartes-reveal-btn { font: inherit; font-weight: 700; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 6px; }
 
-/* Dos de carte : coins « escalier » en pixels (clip-path), liseré double, motif tramé */
-.tcg-face { position: relative; width: var(--w); aspect-ratio: 5 / 7; image-rendering: pixelated;
-  --s: var(--px);
-  clip-path: polygon(
-    calc(var(--s) * 2) 0, calc(100% - var(--s) * 2) 0, calc(100% - var(--s) * 2) var(--s), calc(100% - var(--s)) var(--s),
-    calc(100% - var(--s)) calc(var(--s) * 2), 100% calc(var(--s) * 2), 100% calc(100% - var(--s) * 2), calc(100% - var(--s)) calc(100% - var(--s) * 2),
-    calc(100% - var(--s)) calc(100% - var(--s)), calc(100% - var(--s) * 2) calc(100% - var(--s)), calc(100% - var(--s) * 2) 100%, calc(var(--s) * 2) 100%,
-    calc(var(--s) * 2) calc(100% - var(--s)), var(--s) calc(100% - var(--s)), var(--s) calc(100% - var(--s) * 2), 0 calc(100% - var(--s) * 2),
-    0 calc(var(--s) * 2), var(--s) calc(var(--s) * 2), var(--s) var(--s), calc(var(--s) * 2) var(--s));
-  background: var(--edge);
-  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, .45)); }
-.tcg-face::before { /* intérieur sombre, laisse 2 pixels de liseré */
-  content: ''; position: absolute; inset: calc(var(--px) * 2); background: var(--edge-2); }
-.tcg-face::after { /* second filet intérieur */
-  content: ''; position: absolute; inset: calc(var(--px) * 3); background: #121215;
-  box-shadow: inset 0 0 0 var(--px) color-mix(in srgb, var(--edge) 70%, #000); }
-.tcg-pattern { position: absolute; inset: calc(var(--px) * 5); z-index: 1; opacity: .5;
-  background:
-    repeating-conic-gradient(color-mix(in srgb, var(--edge) 22%, transparent) 0 25%, transparent 0 50%) 0 0 / calc(var(--px) * 2) calc(var(--px) * 2),
-    linear-gradient(180deg, color-mix(in srgb, var(--edge) 10%, transparent), transparent 40%, color-mix(in srgb, var(--edge) 10%, transparent)); }
-.tcg-corner { position: absolute; z-index: 2; width: calc(var(--px) * 3); height: calc(var(--px) * 3); background: var(--edge); }
-.tcg-corner.tl { top: calc(var(--px) * 6); left: calc(var(--px) * 6); }
-.tcg-corner.tr { top: calc(var(--px) * 6); right: calc(var(--px) * 6); }
-.tcg-corner.bl { bottom: calc(var(--px) * 6); left: calc(var(--px) * 6); }
-.tcg-corner.br { bottom: calc(var(--px) * 6); right: calc(var(--px) * 6); }
-.tcg-medal { position: absolute; z-index: 2; left: 50%; top: 46%; width: 62%; aspect-ratio: 1; transform: translate(-50%, -50%);
-  display: grid; place-items: center; background: #121215;
-  clip-path: polygon(30% 0, 70% 0, 70% 8%, 85% 8%, 85% 15%, 92% 15%, 92% 30%, 100% 30%, 100% 70%, 92% 70%, 92% 85%, 85% 85%, 85% 92%, 70% 92%, 70% 100%, 30% 100%, 30% 92%, 15% 92%, 15% 85%, 8% 85%, 8% 70%, 0 70%, 0 30%, 8% 30%, 8% 15%, 15% 15%, 15% 8%, 30% 8%);
-  box-shadow: inset 0 0 0 calc(var(--px) * 1) var(--edge); outline: var(--px) solid var(--edge); }
-.tcg-medal::before { content: ''; position: absolute; inset: 0; background: var(--edge); opacity: .14; }
-.tcg-logo { position: relative; width: 74%; height: 74%; object-fit: contain; image-rendering: pixelated; }
-.tcg-gems { position: absolute; z-index: 2; left: 50%; bottom: calc(var(--px) * 9); transform: translateX(-50%); display: flex; gap: calc(var(--px) * 2); }
-.tcg-gems i { width: calc(var(--px) * 2); height: calc(var(--px) * 2); background: color-mix(in srgb, var(--edge) 30%, #000); }
-.tcg-commune .tcg-gems i:nth-child(1),
-.tcg-rare .tcg-gems i:nth-child(-n + 2),
-.tcg-legendaire .tcg-gems i { background: var(--edge); }
+/* Collection */
+.cartes-series { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+.cartes-series .field { flex: 1 1 220px; }
+.cartes-progress { flex: 1 1 260px; }
+.cartes-progress-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.cartes-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.cartes-filters .field { flex: 1 1 150px; }
+.cartes-filters select { min-height: 44px; }
+.cartes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; justify-items: center; }
+.cartes-grid > * { width: 100%; max-width: 168px; display: flex; justify-content: center; }
+.cartes-grid .hgc { width: min(100%, 168px); }
+@media (max-width: 600px) { .cartes-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; } }
 
-/* Reflet discret sur la légendaire (seulement si les effets sont permis) */
-.tcg-legendaire .tcg-face .tcg-pattern::after { content: ''; position: absolute; inset: 0;
-  background: linear-gradient(115deg, transparent 35%, color-mix(in srgb, var(--sand) 30%, transparent) 50%, transparent 65%) -200% 0 / 200% 100% no-repeat; }
-html[data-fx="on"] .tcg-legendaire .tcg-face .tcg-pattern::after { animation: tcg-shine 4.5s steps(24) infinite; }
-@keyframes tcg-shine { 0%, 40% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+/* Détail carte */
+.cartes-dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: auto;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); }
+.cartes-dialog::backdrop { background: rgba(4, 4, 8, .62); }
+.cartes-dialog-body { padding: 24px; display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.cartes-dialog-body .cartes-big { display: flex; justify-content: center; }
+.cartes-dialog h2 { font-size: 22px; margin: 0 0 8px; font-family: var(--font-body); }
+.cartes-flavor { font-style: italic; color: var(--muted); margin: 0 0 16px; }
+.cartes-copies { list-style: none; margin: 0 0 16px; padding: 0; }
+.cartes-copies li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; align-items: center; }
+.cartes-close { position: absolute; top: 8px; right: 8px; }
+@media (max-width: 600px) { .cartes-dialog-body { grid-template-columns: 1fr; padding: 20px; } .cartes-dialog-body .cartes-big { order: -1; } }
 
-.tcg-rarity { margin: 0; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.tcg-dot { width: 10px; height: 10px; background: var(--edge); }
+/* Recyclage de masse */
+.cartes-mass { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 
-@media (max-width: 700px) {
-  .cartes-stage { padding: 32px 16px 28px; }
-  .tcg-fan { gap: 10px; flex-wrap: nowrap; }
-  .tcg-card { --w: min(28vw, 140px); --px: 3px; gap: 10px; }
-  .tcg-rarity { font-size: 11px; letter-spacing: .02em; }
+/* Classement */
+.cartes-lb { list-style: none; margin: 0; padding: 0; }
+.cartes-lb li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.cartes-lb-rank { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cartes-lb-stats { font-size: 13px; color: var(--muted); }
+.cartes-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Historique */
+.cartes-history summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.cartes-log { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.cartes-log li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.cartes-delta-pos { color: var(--sage-text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.cartes-delta-neg { color: var(--rose); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Animation de retournement (seulement si motionAllowed) */
+.cartes-flip { display: inline-block; perspective: 800px; }
+.cartes-flip-in { animation: cartes-flip .45s ease both; }
+@keyframes cartes-flip { from { transform: rotateY(90deg); opacity: .4; } to { transform: rotateY(0); opacity: 1; } }
+html[data-fx="off"] .cartes-flip-in { animation: none; }
+@media (prefers-reduced-motion: reduce) { .cartes-flip-in { animation: none; } }
+
+@media (max-width: 600px) {
+  .cartes-tab { padding: 10px 12px; }
+  .cartes-block h2 { font-size: 17px; }
 }

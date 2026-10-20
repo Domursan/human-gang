@@ -23,3 +23,12 @@
 .done p { margin: 0; }
 .done-icon { width: 56px; height: 56px; color: var(--sage-text); }
 .done .btn-row { justify-content: center; margin-top: 6px; }
+
+@media (max-width: 600px) {
+  .support-layout { gap: 16px; }
+  .hint, .counter { font-size: 14px; }
+  .tips { font-size: 16px; }
+  .done h2 { font-size: 26px; }
+  .done .btn-row { width: 100%; flex-direction: column; }
+  .done .btn-row .btn { width: 100%; }
+}

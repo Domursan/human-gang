@@ -9,7 +9,7 @@
 .pa-table th, .pa-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
 .pa-table thead th { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
 .pa-table tbody tr:last-child > * { border-bottom: 0; }
-.pa-table tbody tr:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent); }
+@media (hover: hover) { .pa-table tbody tr:hover { background: color-mix(in srgb, var(--surface-2) 60%, transparent); } }
 .pa-order { white-space: nowrap; width: 1%; }
 .pa-move { width: 36px; min-height: 36px; padding: 0; }
 .pa-move:disabled { opacity: .3; cursor: default; }
@@ -31,7 +31,7 @@
 .pa-mx-corner { text-align: left !important; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; vertical-align: bottom; }
 .pa-mx-head { font: inherit; font-size: 13px; font-weight: 700; color: var(--text); background: none; border: 1px solid transparent; border-radius: var(--radius-sm);
   min-height: 44px; padding: 6px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; max-width: 130px; margin: 0 auto; }
-.pa-mx-head:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); }
+@media (hover: hover) { .pa-mx-head:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-2); } }
 .pa-mx-head:disabled { cursor: default; opacity: .7; }
 .pa-mx-mode { font-size: 11px; font-weight: 400; color: var(--muted); white-space: nowrap; }
 .pa-mx-mode.pa-mode-admin { color: var(--sand); }
@@ -43,7 +43,7 @@
 .pa-cell svg { width: 18px; height: 18px; }
 .pa-cell.is-yes { background: var(--sage-soft); border-color: color-mix(in srgb, var(--sage) 50%, transparent); color: var(--sage-text); }
 .pa-cell.is-no { color: color-mix(in srgb, var(--muted) 70%, transparent); border-style: dashed; }
-.pa-cell:hover:not(:disabled) { border-color: var(--text); }
+@media (hover: hover) { .pa-cell:hover:not(:disabled) { border-color: var(--text); } }
 .pa-cell:disabled { cursor: default; }
 .pa-cell:focus-visible, .pa-mx-head:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 
@@ -84,4 +84,23 @@
 @media (max-width: 600px) {
   .pa-card { padding: 16px; }
   .pa-dlg-in { padding: 18px 16px; }
+  /* Matrice : défilement dans le conteneur, colonne « Membre » collée à gauche */
+  .pa-matrix { font-size: 14px; }
+  .pa-matrix th[scope="row"], .pa-mx-corner { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+  .pa-matrix th[scope="row"] { box-shadow: 6px 0 8px -6px rgba(0, 0, 0, .35); }
+  .pa-mx-who { white-space: normal; min-width: 0; }
+  .pa-mx-member { font-size: 14px; }
+  .pa-mx-member .avatar { font-size: 10px; }
+  .pa-matrix th:not(.pa-mx-corner):not(.pa-mx-who) { min-width: 96px; }
+  .pa-cell { width: 44px; height: 44px; }
+  .pa-mx-head { max-width: 120px; }
+  .pa-table-wrap .btn { min-height: 44px; }
+  /* Dialogue « Personnes » : plein écran */
+  dialog.pa-dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+  dialog.pa-dialog[open] { display: flex; flex-direction: column; }
+  dialog.pa-dialog .pa-dlg-in { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  dialog.pa-dialog .pa-people { max-height: none; flex: 1 1 auto; min-height: 120px; }
+  .pa-dlg-tools .pa-dlg-all { width: 100%; }
+  .pa-dlg-search { flex-basis: 100%; }
+  .pa-person-col { white-space: nowrap; }
 }

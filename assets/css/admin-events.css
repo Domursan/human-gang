@@ -88,4 +88,16 @@
   .lv-row { grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr); }
   .lv-img { grid-column: 1 / 3; }
   .lv-row [data-lv-del] { justify-self: end; }
+  .lv-row .field input { min-height: 44px; }
+  .lv-row .lv-thumb { width: 44px; height: 44px; }
+  .lv-file { min-height: 44px; }
+  .ev-dlg, .bdg-dlg { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; padding: 16px; }
+  .bdg-dlg:has(.bdg-levels) { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; }
+  .ev-visual { flex-direction: column; }
+  .ev-preview { width: 88px; height: 88px; }
+  .ev-emoji-field input { max-width: none; }
+  .ev-range-row { grid-template-columns: minmax(0, 1fr) 72px; }
+  .ev-switches .switch { min-height: 44px; }
+  .ev-dlg-actions .btn, .bdg-dlg .dialog-actions .btn { flex: 1 1 auto; }
+  .ev-spacer { display: none; }
 }

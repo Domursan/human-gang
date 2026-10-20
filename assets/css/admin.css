@@ -9,7 +9,7 @@
   border-left: 1px solid var(--border); padding-left: 4px; }
 .admin-nav a { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px;
   padding: 10px 14px; border-radius: var(--radius-sm); color: var(--muted); text-decoration: none; font-size: 15px; }
-.admin-nav a:hover { background: var(--surface); color: var(--text); }
+@media (hover: hover) { .admin-nav a:hover { background: var(--surface); color: var(--text); } }
 .admin-nav a[aria-current="true"] { background: var(--surface-2); color: var(--text); font-weight: 700; box-shadow: inset 3px 0 0 var(--accent); }
 .nav-count { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-text);
   font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
@@ -37,7 +37,7 @@
 .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); }
 .stat { display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; border-radius: var(--radius-sm);
   background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; min-height: 44px; }
-.stat:hover { border-color: var(--border-strong); color: var(--text); }
+@media (hover: hover) { .stat:hover { border-color: var(--border-strong); color: var(--text); } }
 .stat-value { font-family: var(--font-display); font-size: 34px; line-height: 1; }
 .stat-label { font-size: 13px; color: var(--muted); }
 .stat.attention .stat-value { color: var(--sand); }
@@ -81,7 +81,7 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .chip { font: inherit; font-size: 14px; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong);
   background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.chip:hover { color: var(--text); }
+@media (hover: hover) { .chip:hover { color: var(--text); } }
 .chip[aria-pressed="true"] { background: var(--surface-2); color: var(--text); border-color: var(--text); font-weight: 700; }
 
 /* Secret Santa */
@@ -143,6 +143,29 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
   .admin-content { gap: 44px; }
 }
 
+/* ===== Mobile (≤ 600px) : une colonne, champs ≥ 16px, cibles ≥ 44px, aucun débordement de page ===== */
+@media (max-width: 600px) {
+  body input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  body select, body textarea { font-size: 16px !important; }
+  .admin-section, .admin-content, #app { min-width: 0; max-width: 100%; }
+  .admin-intro { max-width: none; }
+  .admin-nav a, .btn, .chip, .switch, .check, .stat, .admin-nav a { min-height: 44px; }
+  .check { align-items: center; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { padding: 14px 16px; }
+  .stat-value { font-size: 28px; }
+  .inline-form { flex-direction: column; align-items: stretch; }
+  .inline-form .field { flex: none; width: 100%; }
+  .inline-form .btn, .btn-row .btn:not(.btn-icon) { width: 100%; justify-content: center; }
+  .btn-row .btn-icon { width: 44px; }
+  .btn-row { flex-wrap: wrap; }
+  .dialog-actions .btn { flex: 1 1 auto; }
+  .hg-dialog { padding: 20px 18px; }
+  .code { overflow-wrap: anywhere; }
+  .filters { gap: 6px; }
+  .field.narrow { max-width: none; }
+}
+
 /* ===== Carte « Mode sans limite » (admin-godmode.js) ===== */
 .god-root { margin-bottom: 28px; }
 .god-card { display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; border-color: var(--border-strong); position: relative; overflow: hidden; }
@@ -159,7 +182,7 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
 .god-card-state strong { color: var(--god-text); }
 .god-card-state time { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-variant-numeric: tabular-nums; }
 .god-card-on { background: transparent; color: var(--god-text); border: 1px solid var(--god-text); }
-.god-card-on:hover { background: color-mix(in srgb, var(--god-yellow) 12%, transparent); color: var(--god-text); }
+@media (hover: hover) { .god-card-on:hover { background: color-mix(in srgb, var(--god-yellow) 12%, transparent); color: var(--god-text); } }
 .god-card-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; font-size: 14px; width: fit-content; }
 .god-card-more .god-lifts { margin-bottom: 10px; }
 .god-redo-dlg .god-note { margin: 0; }

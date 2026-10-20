@@ -43,7 +43,17 @@
 .rj-code-note { margin: 0; font-size: 13px; color: var(--rj-muted); }
 .rj-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
 .rj-sky .btn-ghost { color: var(--rj-ink); border-color: rgba(242, 239, 234, .3); }
-.rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); background: rgba(255, 255, 255, .08); color: var(--rj-ink); }
+@media (hover: hover) { .rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); background: rgba(255, 255, 255, .08); color: var(--rj-ink); } }
+@media (max-width: 600px) {
+  .rj-sky { min-height: 0; margin: 4px 0 24px; padding: 40px 16px; }
+  .rj-inner { gap: 12px; }
+  .rj-logo { width: 112px; height: 112px; }
+  .rj-lead { font-size: 16px; }
+  .rj-code-box { padding: 16px 14px; }
+  .rj-code-note, .rj-foot { font-size: 14px; }
+  .rj-actions { flex-direction: column; align-items: stretch; width: 100%; }
+  .rj-actions .btn { width: 100%; }
+}
 .rj-sky .btn svg { width: 18px; height: 18px; }
 .rj-foot { margin: 8px 0 0; font-size: 13px; color: var(--rj-muted); }
 .rj-foot a { color: var(--rj-ink); }
