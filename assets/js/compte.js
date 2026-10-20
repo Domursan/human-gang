@@ -11,6 +11,15 @@ const rawNext = url.searchParams.get('next') || '';
 const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
 const PENDING_KEY = 'hg_pending_join';
 const PAGE_URL = new URL('compte.html', location.href).href;
+// Code d'invitation reçu via un lien (rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
+const INVITE_KEY = 'hg_invite_code';
+const INVITE = (() => {
+  const ok = (c) => (/^HG-[A-Z0-9]{4,8}$/.test(c) ? c : '');
+  const fromUrl = ok(String(url.searchParams.get('code') || '').trim().toUpperCase());
+  if (fromUrl) { try { sessionStorage.setItem(INVITE_KEY, fromUrl); } catch {} return fromUrl; }
+  try { return ok(String(sessionStorage.getItem(INVITE_KEY) || '').toUpperCase()); } catch { return ''; }
+})();
+function clearInvite() { try { sessionStorage.removeItem(INVITE_KEY); sessionStorage.removeItem('hg_invite_link'); } catch {} }
 
 let recoveryShown = false;
 sb.auth.onAuthStateChange((event) => {
@@ -180,6 +189,15 @@ function renderGuest(initialTab = 'login') {
   $('#to-forgot').addEventListener('click', () => { $('#fg-email').value = $('#li-email').value; show('forgot'); });
   $('#back-login').addEventListener('click', () => show('login'));
   show(initialTab, false);
+  if (INVITE) {
+    $('#su-code').value = INVITE;
+    const hint = document.createElement('p');
+    hint.className = 'small muted'; hint.id = 'su-code-hint';
+    hint.textContent = 'Code reçu grâce à ton lien d\'invitation : valable 48 h, pour un seul compte.';
+    $('#su-code').closest('.field').append(hint);
+    $('#su-code').setAttribute('aria-describedby', 'su-code-hint');
+    if (initialTab === 'signup') $('#su-pseudo')?.focus();
+  }
 
   // Connexion
   panes.login.addEventListener('submit', async (e) => {
@@ -251,7 +269,7 @@ async function afterLogin() {
     const pend = pendingGet();
     if (pend?.code && pend?.pseudo) {
       const { error } = await sb.rpc('hg_join', { p_code: pend.code, p_pseudo: pend.pseudo });
-      if (!error) { pendingSet(null); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); return; }
+      if (!error) { pendingSet(null); clearInvite(); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); return; }
       location.replace(`compte.html?joinerr=${encodeURIComponent(authMsg(error))}${NEXT ? `&next=${encodeURIComponent(NEXT)}` : ''}`);
       return;
     }
@@ -295,7 +313,7 @@ function renderJoin(prefill = {}, error = '') {
     busy(btn, false);
     if (err) return formError(form, authMsg(err));
     pendingSet(null);
-    toast('Bienvenue dans le gang !', 'ok');
+    clearInvite(); toast('Bienvenue dans le gang !', 'ok');
     setTimeout(goAfterAuth, 500);
   });
 }
@@ -722,14 +740,14 @@ if (!recoveryShown) {
   const user = (await sb.auth.getSession()).data.session?.user ?? null;
   if (linkError && !user) renderLinkError();
   else if (isRecoveryLink && user) renderRecovery();
-  else if (!user) renderGuest(url.searchParams.get('tab') === 'signup' ? 'signup' : 'login');
+  else if (!user) renderGuest(url.searchParams.get('tab') === 'signup' || location.hash === '#inscription' || INVITE ? 'signup' : 'login');
   else if (!me) {
     const pend = pendingGet();
     if (pend?.code && pend?.pseudo && !joinErr) {
       const { error } = await sb.rpc('hg_join', { p_code: pend.code, p_pseudo: pend.pseudo });
-      if (!error) { pendingSet(null); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); }
+      if (!error) { pendingSet(null); clearInvite(); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); }
       else renderJoin(pend, authMsg(error));
-    } else renderJoin(pend || {}, joinErr || '');
+    } else renderJoin(pend || (INVITE ? { code: INVITE } : {}), joinErr || '');
   } else if (NEXT) goAfterAuth();
   else await renderMember(user);
 }

@@ -43,7 +43,7 @@
 .rj-code-note { margin: 0; font-size: 13px; color: var(--rj-muted); }
 .rj-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
 .rj-sky .btn-ghost { color: var(--rj-ink); border-color: rgba(242, 239, 234, .3); }
-.rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); }
+.rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); background: rgba(255, 255, 255, .08); color: var(--rj-ink); }
 .rj-sky .btn svg { width: 18px; height: 18px; }
 .rj-foot { margin: 8px 0 0; font-size: 13px; color: var(--rj-muted); }
 .rj-foot a { color: var(--rj-ink); }
