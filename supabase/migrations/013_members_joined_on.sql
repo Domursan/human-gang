@@ -1,4 +1,4 @@
--- 012 — Annuaire : « membre depuis » tient compte de la date d'arrivée saisie par l'admin (hg_profiles.joined_on).
+-- 013 — Annuaire : « membre depuis » tient compte de la date d'arrivée saisie par l'admin (hg_profiles.joined_on).
 -- hg_member_card le faisait déjà (011) ; hg_members renvoyait encore created_at, d'où un écart entre
 -- la carte d'identité et la liste « Le gang » de membre.html. Même signature : pas de DROP nécessaire.
 -- À coller dans l'éditeur SQL Supabase (non appliquée automatiquement).
