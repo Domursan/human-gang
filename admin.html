@@ -128,32 +128,7 @@
 
         <section id="bot" class="admin-section" aria-labelledby="h-bot">
           <h2 id="h-bot" class="section-title">Bot Discord</h2>
-          <form class="card stack" id="bot-form">
-            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
-            <div class="grid-2">
-              <div class="field">
-                <label for="bot-channel">ID du salon d'annonces</label>
-                <input id="bot-channel" name="announce_channel_id" inputmode="numeric" autocomplete="off" placeholder="ex. 112233445566778899">
-              </div>
-              <div class="field">
-                <label for="bot-admin">Ton ID Discord (MP assistance)</label>
-                <input id="bot-admin" name="admin_discord_id" inputmode="numeric" autocomplete="off" placeholder="ex. 998877665544332211">
-              </div>
-            </div>
-            <fieldset class="toggles">
-              <legend class="label">Notifications envoyées</legend>
-              <label class="switch"><input type="checkbox" role="switch" name="draw"><span class="switch-ui" aria-hidden="true"></span><span>Tirage du Secret Santa <span class="muted small">annonce + MP aux participants</span></span></label>
-              <label class="switch"><input type="checkbox" role="switch" name="gift"><span class="switch-ui" aria-hidden="true"></span><span>Cadeaux <span class="muted small">MP « envoyé » / « reçu »</span></span></label>
-              <label class="switch"><input type="checkbox" role="switch" name="irl"><span class="switch-ui" aria-hidden="true"></span><span>Nouvelles sorties IRL <span class="muted small">annonce dans le salon</span></span></label>
-              <label class="switch"><input type="checkbox" role="switch" name="birthday"><span class="switch-ui" aria-hidden="true"></span><span>Anniversaires <span class="muted small">chaque matin : MP + annonce si partagé</span></span></label>
-              <label class="switch"><input type="checkbox" role="switch" name="support"><span class="switch-ui" aria-hidden="true"></span><span>Demandes d'assistance <span class="muted small">MP à toi</span></span></label>
-              <label class="switch"><input type="checkbox" role="switch" name="messages"><span class="switch-ui" aria-hidden="true"></span><span>Nouveaux messages <span class="muted small">MP au destinataire (pas à chaque message d'une discussion en cours)</span></span></label>
-            </fieldset>
-            <div class="btn-row">
-              <button class="btn btn-primary" type="submit">Enregistrer</button>
-              <button class="btn btn-ghost" type="button" id="bot-test">Envoyer un message de test</button>
-            </div>
-          </form>
+          <div id="bot-root"><div class="empty">Chargement…</div></div>
         </section>
 
         <section id="theme" class="admin-section" aria-labelledby="h-theme">

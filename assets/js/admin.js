@@ -4,6 +4,7 @@ import {
 } from './core.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
+import { mountBotSection } from './admin-bot.js';
 import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from './admin-accounts.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
@@ -667,38 +668,7 @@ $('#assistance').addEventListener('click', async (ev) => {
 /* =========================================================
    Bot
    ========================================================= */
-const NOTIFY_KEYS = ['draw', 'gift', 'irl', 'birthday', 'support', 'messages'];
-const DISCORD_ID = /^\d{17,20}$/;
-function renderBot() {
-  const f = $('#bot-form');
-  f.announce_channel_id.value = S.bot.announce_channel_id ?? '';
-  f.admin_discord_id.value = S.bot.admin_discord_id ?? '';
-  for (const k of NOTIFY_KEYS) f.elements[k].checked = S.bot.notify[k] !== false;
-}
-$('#bot-form').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  const f = ev.target;
-  busy(ev.submitter, async () => {
-    const channel = f.announce_channel_id.value.trim(), admin = f.admin_discord_id.value.trim();
-    if (channel && !DISCORD_ID.test(channel)) throw new Error('L\'ID du salon doit être un nombre de 17 à 20 chiffres.');
-    if (admin && !DISCORD_ID.test(admin)) throw new Error('Ton ID Discord doit être un nombre de 17 à 20 chiffres.');
-    const value = {
-      ...S.bot, announce_channel_id: channel || null, admin_discord_id: admin || null,
-      notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, f.elements[k].checked])),
-    };
-    check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
-    S.bot = value;
-    toast('Réglages du bot enregistrés', 'ok');
-  });
-});
-$('#bot-test').addEventListener('click', (ev) => busy(ev.currentTarget, async () => {
-  const res = await callFn('hg-notify', { event: 'bot_test' });
-  const parts = [];
-  if (res?.channel !== undefined) parts.push(`salon : ${res.channel ? 'OK' : 'échec'}`);
-  if (res?.dm !== undefined) parts.push(`MP : ${res.dm ? 'OK' : 'échec'}`);
-  if (res?.error) throw new Error(res.error);
-  toast(parts.length ? `Test envoyé (${parts.join(', ')})` : 'Test envoyé', res?.channel === false || res?.dm === false ? 'error' : 'ok');
-}));
+// Réglages, messages types et message manuel : voir admin-bot.js
 
 /* =========================================================
    Thème
@@ -749,7 +719,7 @@ if (ssLoaded) renderSS();
 renderBadges();
 renderIdeas();
 renderSupport();
-if (S.bot) renderBot();
+mountBotSection($('#bot-root'));
 mountThemesSection($('#theme-root'));
 mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));

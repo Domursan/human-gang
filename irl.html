@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/photos.css">
   <link rel="stylesheet" href="assets/css/irl.css">
+  <link rel="stylesheet" href="assets/css/irl-history.css">
 </head>
 <body>
   <main class="container irl" id="app">
@@ -21,9 +22,18 @@
         <div class="eyebrow">En vrai, pour de vrai</div>
         <h1 class="page-title">Sorties IRL</h1>
       </div>
-      <button class="btn btn-sand" type="button" id="btn-new">+ Proposer une sortie</button>
+      <div class="btn-row head-actions">
+        <button class="btn btn-ghost" type="button" id="btn-retro">+ Ajouter une rencontre passée</button>
+        <button class="btn btn-sand" type="button" id="btn-new">+ Proposer une sortie</button>
+      </div>
     </div>
 
+    <div class="irl-tabs" role="tablist" aria-label="Affichage">
+      <button type="button" role="tab" class="irl-tab" id="tab-sorties" aria-controls="view-sorties" aria-selected="true">Sorties</button>
+      <button type="button" role="tab" class="irl-tab" id="tab-historique" aria-controls="view-historique" aria-selected="false" tabindex="-1">Historique des rencontres</button>
+    </div>
+
+    <div id="view-sorties" role="tabpanel" aria-labelledby="tab-sorties">
     <section aria-labelledby="h-next" class="irl-section">
       <h2 id="h-next" class="visually-hidden">Prochaine sortie</h2>
       <div id="next"><div class="card card-irl irl-loading" aria-busy="true">Chargement des sorties…</div></div>
@@ -45,6 +55,38 @@
     </section>
 
     <p class="irl-ideas"><a href="accueil.html#idees">Une idée de sortie ? Boîte à idées →</a></p>
+    </div>
+
+    <div id="view-historique" role="tabpanel" aria-labelledby="tab-historique" hidden>
+      <div class="hx-filters card" role="search" aria-label="Filtrer l'historique">
+        <div class="hx-years" role="group" aria-label="Année" id="hx-years"></div>
+        <div class="hx-fields">
+          <div class="field"><label for="hx-q">Recherche</label><input id="hx-q" type="search" autocomplete="off" placeholder="Titre, lieu, description, pseudo…"></div>
+          <div class="field"><label for="hx-place">Lieu</label><select id="hx-place"><option value="">Tous les lieux</option></select></div>
+          <div class="field"><label for="hx-person">Personne présente</label><select id="hx-person"><option value="">Tout le monde</option></select></div>
+          <div class="hx-reset"><button type="button" class="btn btn-ghost" id="hx-reset" hidden>Réinitialiser</button></div>
+        </div>
+      </div>
+
+      <section aria-labelledby="h-stats" class="irl-section hx-stats-sec">
+        <h2 id="h-stats" class="visually-hidden">Statistiques</h2>
+        <div id="hx-stats" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="h-map" class="irl-section">
+        <div class="sec-head"><h2 id="h-map" class="sec-title">Carte des lieux</h2>
+          <button type="button" class="btn btn-ghost btn-sm" id="hx-map-btn" aria-expanded="false" aria-controls="hx-map-wrap">Voir la carte</button></div>
+        <div id="hx-map-wrap" hidden>
+          <div id="hx-map" class="hx-map" role="region" aria-label="Carte des lieux de rencontre"></div>
+          <p class="small muted hx-map-note"><span id="hx-map-status" aria-live="polite"></span> Fond de carte et recherche des lieux : © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributeurs OpenStreetMap</a> (Nominatim). Seul le nom des lieux est envoyé.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-timeline" class="irl-section">
+        <div class="sec-head"><h2 id="h-timeline" class="sec-title">Toutes nos rencontres</h2><span class="small muted" id="hx-count"></span></div>
+        <div id="hx-timeline" class="hx-timeline"></div>
+      </section>
+    </div>
   </main>
 
   <dialog class="hg-dialog" id="event-dialog" aria-labelledby="ev-dlg-title">
@@ -91,6 +133,73 @@
       <div class="btn-row dlg-foot">
         <button class="btn btn-ghost" type="button" data-close>Annuler</button>
         <button class="btn btn-primary" type="submit" id="ev-submit">Créer la sortie</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="hg-dialog hg-dialog-wide" id="retro-dialog" aria-labelledby="rt-dlg-title">
+    <form method="dialog" id="retro-form" class="stack" novalidate>
+      <div class="dlg-head">
+        <h2 id="rt-dlg-title" class="dlg-title">Ajouter une rencontre passée</h2>
+        <button class="btn btn-ghost dlg-x" type="button" data-close aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="small muted" id="rt-intro">Une rencontre d'avant le site, ou qu'on a oublié d'ajouter. Le gang n'est pas notifié.</p>
+      <div class="field">
+        <label for="rt-title">Titre</label>
+        <input id="rt-title" name="title" required maxlength="120" autocomplete="off" placeholder="Première raclette chez Max">
+      </div>
+      <div class="rt-when">
+        <div class="field"><label for="rt-date">Date</label><input id="rt-date" name="date" type="date" required></div>
+        <div class="field"><label for="rt-time">Heure <span class="muted">(facultative)</span></label><input id="rt-time" name="time" type="time"></div>
+      </div>
+      <div class="field">
+        <label for="rt-location">Lieu</label>
+        <input id="rt-location" name="location" maxlength="160" autocomplete="off" list="rt-places" placeholder="Lausanne, chez Max…">
+        <datalist id="rt-places"></datalist>
+      </div>
+      <div class="field">
+        <label for="rt-desc">Description</label>
+        <textarea id="rt-desc" name="description" maxlength="3000" placeholder="Ce qui s'est passé, les anecdotes…"></textarea>
+      </div>
+      <fieldset class="pick-field">
+        <legend class="label">Qui était là ?</legend>
+        <div id="rt-picker"></div>
+      </fieldset>
+      <div class="field" id="rt-photos-field">
+        <label for="rt-photos">Photos (facultatif)</label>
+        <input id="rt-photos" name="photos" type="file" accept="image/*" multiple>
+      </div>
+      <div class="field">
+        <label for="rt-cover">Image de couverture (facultative)</label>
+        <input id="rt-cover" name="cover" type="file" accept="image/*">
+        <div id="rt-cover-current" class="cover-current" hidden></div>
+      </div>
+      <p class="small muted upload-status" id="rt-status" aria-live="polite"></p>
+      <div class="btn-row dlg-foot">
+        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
+        <button class="btn btn-primary" type="submit" id="rt-submit">Ajouter la rencontre</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="hg-dialog" id="who-dialog" aria-labelledby="who-dlg-title">
+    <form method="dialog" id="who-form" class="stack" novalidate>
+      <div class="dlg-head">
+        <h2 id="who-dlg-title" class="dlg-title">Qui était là ?</h2>
+        <button class="btn btn-ghost dlg-x" type="button" data-close aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <p class="small muted" id="who-sub"></p>
+      <fieldset class="pick-field">
+        <legend class="visually-hidden">Membres présents</legend>
+        <div id="who-picker"></div>
+      </fieldset>
+      <div class="btn-row dlg-foot">
+        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
+        <button class="btn btn-primary" type="submit" id="who-submit">Enregistrer les présents</button>
       </div>
     </form>
   </dialog>
