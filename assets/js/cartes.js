@@ -1,9 +1,10 @@
 // ===== Cartes à collectionner — page joueur =====
 // RPC : hg_cards_me, hg_cards_daily, hg_open_booster, hg_card_recycle, hg_card_craft, hg_card_leaderboard.
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
-// Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify } from './core.js';
+// Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
+import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -17,11 +18,15 @@ const REASON_LABEL = {
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
 };
+// Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
+const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
+const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
 
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [], massTotal: 0,
+  lcdShown: null, lcdAnim: false,
 };
 const cfg = () => S.state?.config || {};
 const isGod = () => !!S.state?.god;
@@ -34,6 +39,8 @@ const fmtDuration = (ms) => {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${Math.max(1, m)} min`;
 };
 const plural = (n, one, many) => `${nf.format(n)} ${n > 1 ? many : one}`;
+const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
+const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || 'Le Gang · Série 1';
 
 /* ---------- Données ---------- */
 async function loadStatic() {
@@ -105,22 +112,47 @@ function skeleton() {
     </dialog>`;
 }
 
-/* ---------- En-tête ---------- */
+/* ---------- En-tête : solde en pastille LCD ---------- */
 function renderHeader() {
   const el = $('#cartes-wallet');
   if (!el || !S.state) return;
   const s = S.state;
+  // Le solde affiché suit les gains par paliers (animateBalance) ; une dépense s'affiche tout de suite.
+  if (S.lcdShown == null || bal() < S.lcdShown) S.lcdShown = bal();
   const daily = tableVal('rewards', 'daily') ?? 20;
   el.innerHTML = `
-    <div>
-      <p class="cartes-bal-label">Paillettes</p>
-      <p class="cartes-bal">${fmtP(bal())}</p>
-    </div>
+    ${pastilleHtml(S.lcdShown, { size: 'lg', id: 'cartes-lcd' })}
     ${isGod() ? '<span class="pill pill-current">Mode sans limite</span>' : ''}
     ${s.daily_available
-      ? `<button type="button" class="btn btn-sand" data-action="daily">Passage du jour (+${nf.format(daily)} ✦)</button>
+      ? `<button type="button" class="btn btn-sand" data-action="daily">Passage du jour (+${fmtPaillettes(daily)})</button>
          <span class="cartes-small">Série actuelle : ${nf.format(s.daily_streak)} j</span>`
       : `<span class="pill pill-ok">Passage du jour pris · série de ${nf.format(s.daily_streak)} j</span>`}`;
+  if (S.lcdShown < bal() && !S.lcdAnim) animateBalance();
+}
+
+// Gain : le compteur saute par paliers (4 au plus), chaque palier fait clignoter les segments et affiche +N.
+function animateBalance() {
+  const to = bal();
+  const from = S.lcdShown;
+  if (!motionAllowed() || to <= from) { S.lcdShown = to; lcdSet($('#cartes-lcd'), to); return; }
+  S.lcdAnim = true;
+  const gain = to - from;
+  const steps = Math.min(4, gain);
+  let k = 0;
+  const tick = () => {
+    k += 1;
+    const v = k >= steps ? to : from + Math.round(gain * k / steps);
+    const cur = $('#cartes-lcd');
+    lcdDelta(cur, v - S.lcdShown);
+    lcdBlink(cur);
+    setTimeout(() => { S.lcdShown = v; lcdSet($('#cartes-lcd'), v); }, 240);
+    if (k < steps) setTimeout(tick, 640);
+    else setTimeout(() => {
+      S.lcdAnim = false;
+      if (bal() > S.lcdShown) animateBalance();
+    }, 420);
+  };
+  tick();
 }
 
 /* ---------- Onglets ---------- */
@@ -154,6 +186,32 @@ function renderAll() {
   renderTab();
 }
 
+/* ---------- Mise à l'échelle (cartouches et console dessinées à taille fixe) ---------- */
+// Un élément .fit porte data-w (largeur de conception) et --h (hauteur de conception) ; son contenu .fit-in est mis à l'échelle.
+function fitAll(root = document) {
+  root.querySelectorAll('.fit').forEach((el) => {
+    const w = Number(el.dataset.w) || 220;
+    el.style.setProperty('--w', w);
+    el.style.setProperty('--k', Math.min(1, (el.clientWidth / w) || 1));
+  });
+}
+
+/* ---------- Cartouche de booster (concept « cartouche de jeu ») ---------- */
+function cartridgeHtml({ free = false, ready = false } = {}) {
+  const n = nf.format(cfg().booster_size ?? 5);
+  const cls = ['cart-box', free && !ready ? 'is-idle' : ''].filter(Boolean).join(' ');
+  return `<div class="${cls}" aria-hidden="true">`
+    + '<div class="cart-body"></div><div class="cart-notch"></div>'
+    + `<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="${esc(currentLogo())}" alt=""></div></div>`
+    + '<p class="cart-lbl1">LE GANG</p>'
+    + `<p class="cart-lbl2">${esc(seriesName())}</p>`
+    + '<div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>'
+    + '<div class="cart-ridge"></div>'
+    + `<p class="cart-foot">${n} CARTES</p>`
+    + (free && ready ? '<p class="cart-stk">Gratuit du jour</p>' : '')
+    + '</div>';
+}
+
 /* ---------- Boosters ---------- */
 function renderBoosters() {
   const el = $('#cartes-p-boosters');
@@ -165,21 +223,24 @@ function renderBoosters() {
   const pity = Number(c.pity_epique ?? 10);
   const untilGuarantee = Math.max(0, pity - 1 - Number(S.state?.pity ?? 0));
   const canPay = isGod() || bal() >= price;
+  const busy = isBusy();
   const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
 
   el.innerHTML = `
-    <section class="card cartes-block" aria-labelledby="cartes-free-h">
-      <h2 id="cartes-free-h">Booster gratuit</h2>
-      <p class="muted small">Un booster de ${nf.format(size)} cartes toutes les ${nf.format(c.free_booster_hours ?? 24)} h.</p>
-      <div id="cartes-free" class="cartes-row"></div>
-    </section>
-    <section class="card cartes-block" aria-labelledby="cartes-paid-h">
-      <h2 id="cartes-paid-h">Booster payant</h2>
-      <p class="muted small">${nf.format(size)} cartes pour ${fmtP(price)}.</p>
-      <div class="cartes-row">
-        <button type="button" class="btn btn-ghost" data-action="open-paid" ${S.busy || !canPay ? 'disabled' : ''}>Ouvrir un booster · ${fmtP(price)}</button>
-        ${canPay ? '' : `<span class="muted small">Il te manque ${nf.format(price - bal())} ✦</span>`}
+    <section class="cart-shelf" aria-labelledby="cartes-shelf-h">
+      <h2 id="cartes-shelf-h" class="visually-hidden">Boosters à ouvrir</h2>
+      <div class="cart-tiles">
+        <div class="cart-tile" id="cartes-free"></div>
+        <div class="cart-tile" id="cartes-paid">
+          <h2 class="cart-h">Booster payant</h2>
+          <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml()}</div></div>
+          <div class="cart-act">
+            <button type="button" class="btn btn-ghost cart-btn" data-action="open-paid" ${busy || !canPay ? 'disabled' : ''}>Ouvrir un booster · ${pastilleHtml(price, { size: 'sm' })}</button>
+            ${canPay ? '' : `<p class="muted small">Il te manque ${fmtPaillettes(price - bal())}</p>`}
+          </div>
+        </div>
       </div>
+      <p class="muted small">Chaque booster contient ${plural(Number(size), 'carte', 'cartes')}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
       <p class="cartes-small">${untilGuarantee === 0
         ? 'Le prochain booster contient au moins une carte Épique ou plus.'
         : `Encore ${plural(untilGuarantee, 'ouverture', 'ouvertures')} avant la garantie d’une carte Épique ou plus.`}</p>
@@ -198,23 +259,123 @@ function renderBoosters() {
     </section>`;
   renderFree();
   renderReveal();
+  fitAll(el);
 }
 
+// Booster gratuit : cartouche + compte à rebours, ou bouton « Ouvrir » quand il est disponible.
 function renderFree() {
   const box = $('#cartes-free');
   if (!box || !S.state) return;
   const at = S.state.free_booster_at ? new Date(S.state.free_booster_at).getTime() : 0;
   const ms = at - Date.now();
   const ready = ms <= 0;
-  if (box.dataset.ready === String(ready) && box.dataset.busy === String(S.busy)) {
-    if (!ready) box.querySelector('.cartes-timer').textContent = `Disponible dans ${fmtDuration(ms)}`;
+  const busy = isBusy();
+  if (box.dataset.ready === String(ready) && box.dataset.busy === String(busy)) {
+    if (!ready) { const t = box.querySelector('.cartes-timer'); if (t) t.textContent = `Disponible dans ${fmtDuration(ms)}`; }
     return;
   }
   box.dataset.ready = String(ready);
-  box.dataset.busy = String(S.busy);
-  box.innerHTML = ready
-    ? `<button type="button" class="btn btn-primary" data-action="open-free" ${S.busy ? 'disabled' : ''}>Ouvrir le booster gratuit</button>`
-    : `<p class="cartes-timer" role="timer">Disponible dans ${fmtDuration(ms)}</p>`;
+  box.dataset.busy = String(busy);
+  box.innerHTML = `
+    <h2 class="cart-h">Booster gratuit</h2>
+    <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml({ free: true, ready })}</div></div>
+    <div class="cart-act">${ready
+      ? `<button type="button" class="btn btn-primary cart-btn" data-action="open-free" ${busy ? 'disabled' : ''}>Ouvrir le booster gratuit</button>`
+      : `<p class="cartes-timer" role="timer">Disponible dans ${fmtDuration(ms)}</p>`}
+    </div>`;
+  fitAll(box);
+}
+
+/* ---------- Ouverture : séquence d'animation (ou révélation directe) ---------- */
+// Étapes : 1 cartouche insérée, 2 console « BOOT » et barre, 3 flash de la meilleure rareté,
+// puis pour chaque carte i : 4+2i sortie par la fente, 5+2i retournement (révélation de la carte).
+const lastStep = (R) => 4 + 2 * R.cards.length;
+function seqDelay(s) {
+  if (s === 0) return 80;
+  if (s === 1) return 700;
+  if (s === 2) return 1000;
+  if (s === 3) return 520;
+  return s % 2 === 0 ? 380 : 300;
+}
+
+function applyStage(R) {
+  const root = $('#op-stage');
+  if (!root) return;
+  root.classList.toggle('is-in', R.step >= 1);
+  root.classList.toggle('is-boot', R.step >= 2);
+  root.classList.toggle('is-flash', R.step === 3);
+  root.querySelectorAll('.op-card').forEach((card) => {
+    const i = Number(card.dataset.i);
+    card.classList.toggle('is-out', R.step >= 4 + 2 * i);
+    card.classList.toggle('is-flip', R.step >= 5 + 2 * i);
+  });
+}
+
+function startSeq(R) {
+  const next = () => {
+    R.timer = null;
+    if (S.reveal !== R || R.phase !== 'seq') return;
+    R.step += 1;
+    if (R.step >= lastStep(R)) return finishSeq(R);
+    applyStage(R);
+    const s = R.step;
+    if (s >= 5 && s % 2 === 1) revealCard(R, (s - 5) / 2);
+    R.timer = setTimeout(next, seqDelay(s));
+  };
+  R.timer = setTimeout(next, seqDelay(R.step));
+}
+
+function revealCard(R, i) {
+  const card = R.cards[i];
+  if (!card) return;
+  R.revealed.add(i);
+  R.last = i;
+  playSound(rarityRank(card.rarity) >= 5 ? 'badge' : 'click');
+}
+
+function finishSeq(R) {
+  if (R.timer) clearTimeout(R.timer);
+  R.timer = null;
+  R.phase = 'done';
+  R.step = lastStep(R);
+  R.cards.forEach((_, i) => R.revealed.add(i));
+  renderBoosters(); // réactive les cartouches et affiche le résumé
+  $('#cartes-reveal [data-action="close-reveal"]')?.focus();
+}
+
+// « Tout révéler » : passe directement à la fin de la séquence.
+function skipSeq() {
+  const R = S.reveal;
+  if (!R || R.phase !== 'seq') return;
+  finishSeq(R);
+}
+
+function closeReveal() {
+  if (S.reveal?.timer) clearTimeout(S.reveal.timer);
+  S.reveal = null;
+  renderBoosters();
+}
+
+// Contenu de la scène : cartouche, console, cartes en éventail (dos puis face).
+function stageHtml(R) {
+  const n = R.cards.length;
+  const bestName = R.best ? rarityLabel(R.best) : 'aucune';
+  const cards = R.cards.map((card, i) => {
+    const off = i - (n - 1) / 2;
+    return `<div class="op-card" data-i="${i}" style="--i:${off};--r:${off * 6}deg;--y:${330 + Math.abs(off) * 4};z-index:${10 + i}">`
+      + `<div class="op-inner"><div class="op-face op-back">${cardBackHtml('sm')}</div>`
+      + `<div class="op-face op-front">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'sm' })}</div></div></div>`;
+  }).join('');
+  const bars = Array.from({ length: 8 }, (_, k) => `<i style="--k:${k}"></i>`).join('');
+  return `<div class="op-cart">${cartridgeHtml()}</div>`
+    + '<div class="op-con"><div class="op-con-body"></div><div class="op-slot"></div>'
+    + '<div class="op-scr"><div class="op-flash"></div>'
+    + '<p class="op-l1">BOOT HG v1.0</p>'
+    + `<p class="op-l2">LECTURE DU PAQUET ${n}/${n}</p>`
+    + `<div class="op-bar">${bars}</div>`
+    + `<p class="op-l3">&gt; MEILLEURE : ${esc(bestName.toUpperCase())}_</p></div>`
+    + '<i class="op-led op-led1"></i><i class="op-led op-led2"></i><div class="op-tray"></div></div>'
+    + cards;
 }
 
 function renderReveal() {
@@ -222,68 +383,56 @@ function renderReveal() {
   if (!box) return;
   const R = S.reveal;
   if (!R) { box.innerHTML = ''; return; }
-  const n = R.cards.length;
-  const done = R.revealed.size === n;
-  const motion = motionAllowed();
+  const done = R.phase !== 'seq';
+  const best = R.best ? rarityLabel(R.best) : '—';
+  const body = R.seq
+    ? `<div class="fit op-wrap" data-w="400" style="--h:520" aria-hidden="true"><div class="fit-in op-stage" id="op-stage" style="--fc:${tintOf(R.best)}">${stageHtml(R)}</div></div>`
+    : `<div class="cartes-booster-grid">${R.cards.map((card) => cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'md' })).join('')}</div>`;
+  const list = `<ul class="visually-hidden">${R.cards.map((c) => `<li>${esc(c.name)} : ${esc(rarityLabel(c.rarity))}${c.shiny ? ', brillante' : ''}</li>`).join('')}</ul>`;
+  const actions = done
+    ? `<p class="muted">Meilleure carte : ${esc(best)}</p>
+       <button type="button" class="btn btn-primary" data-action="close-reveal">Fermer</button>`
+    : '<button type="button" class="btn btn-ghost" data-action="reveal-all">Tout révéler</button>';
   box.innerHTML = `
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
       <h2 id="cartes-reveal-h">Ton booster</h2>
-      <div class="cartes-booster-grid">
-        ${R.cards.map((card, i) => R.revealed.has(i)
-          ? `<div class="cartes-flip ${motion && R.last === i ? 'cartes-flip-in' : ''}">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'md' })}</div>`
-          : `<button type="button" class="cartes-reveal-btn" data-action="reveal" data-i="${i}" aria-label="Retourner la carte ${i + 1} sur ${n}">${cardBackHtml('md')}</button>`).join('')}
-      </div>
-      <div class="cartes-row">
-        ${done
-          ? `<p class="muted">Meilleure carte : ${esc(R.best ? rarityLabel(R.best) : '—')}</p>
-             <button type="button" class="btn btn-primary" data-action="close-reveal">Fermer</button>`
-          : `<button type="button" class="btn btn-ghost" data-action="reveal-all">Tout révéler</button>`}
-      </div>
+      ${body}${list}
+      <div class="cartes-row">${actions}</div>
     </section>`;
+  if (R.seq) applyStage(R);
+  fitAll(box);
   if (done && !R.announced) {
     R.announced = true;
     $('#cartes-live').textContent = `Booster ouvert. Meilleure carte : ${R.best ? rarityLabel(R.best) : 'aucune'}.`;
   }
 }
 
-function reveal(i) {
-  const R = S.reveal;
-  if (!R || R.revealed.has(i)) return;
-  R.revealed.add(i);
-  R.last = i;
-  playSound(rarityRank(R.cards[i].rarity) >= 5 ? 'badge' : 'click');
-  renderReveal();
-  $('#cartes-reveal [data-action="reveal"], #cartes-reveal [data-action="close-reveal"], #cartes-reveal [data-action="reveal-all"]')?.focus();
-}
-
-function revealAll() {
-  const R = S.reveal;
-  if (!R) return;
-  R.cards.forEach((_, i) => R.revealed.add(i));
-  R.last = -1;
-  playSound('badge');
-  renderReveal();
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus();
-}
-
 async function openBooster(free) {
-  if (S.busy) return;
+  if (isBusy()) return;
   S.busy = true;
   renderBoosters();
+  let R = null;
   try {
     const { data, error } = await sb.rpc('hg_open_booster', { p_free: !!free });
     if (error) throw error;
     const cards = data?.cards || [];
     // Annonce Discord des belles cartes (vérifiée côté serveur par hg-notify)
     for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
-    S.reveal = { cards, best: data?.best, revealed: new Set(), last: -1, announced: false };
-    if (!motionAllowed()) S.reveal.revealed = new Set(cards.map((_, i) => i));
+    const seq = motionAllowed() && cards.length > 0;
+    R = { cards, best: data?.best, revealed: new Set(), last: -1, announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
+    if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
+    S.reveal = R;
     await refreshData();
   } catch (e) {
     toast(errMsg(e), 'error');
   } finally {
     S.busy = false;
     renderAll();
+    if (R && S.reveal === R && R.seq && R.phase === 'seq') {
+      $('#cartes-live').textContent = 'Ouverture du booster en cours.';
+      $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      startSeq(R);
+    }
   }
 }
 
@@ -293,7 +442,7 @@ async function claimDaily() {
   try {
     const { data, error } = await sb.rpc('hg_cards_daily');
     if (error) throw error;
-    toast(`+${nf.format(data.gain)} ✦ · série de ${plural(data.streak, 'jour', 'jours')}`, 'ok');
+    toast(`+${fmtP(data.gain)} · série de ${plural(data.streak, 'jour', 'jours')}`, 'ok');
     await refreshData();
   } catch (e) {
     toast(errMsg(e), 'error');
@@ -419,7 +568,7 @@ function openMass() {
   S.massIds = plan.ids;
   S.massTotal = plan.total;
   $('#cartes-mass-body').innerHTML = plan.ids.length
-    ? `<p>Tu vas recycler <strong>${plural(plan.ids.length, 'doublon', 'doublons')}</strong> pour environ <strong>${fmtP(plan.total)}</strong>.</p>
+    ? `<p>Tu vas recycler <strong>${plural(plan.ids.length, 'doublon', 'doublons')}</strong> pour environ <strong>${fmtPaillettes(plan.total)}</strong>.</p>
        <p class="muted small">Il te restera au moins un exemplaire de chaque carte. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
     : '<p>Aucun doublon à recycler pour le moment.</p>';
   $('#cartes-mass-confirm').hidden = !plan.ids.length;
@@ -458,7 +607,7 @@ function copyRow(cp, k) {
   let action;
   if (cp.locked_trade) action = '<span class="pill pill-todo">En échange</span>';
   else if (k.rarity === 'identite') action = '<span class="muted small">Ne se recycle pas</span>';
-  else action = `<button type="button" class="btn btn-ghost" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtP(val)}</button>`;
+  else action = `<button type="button" class="btn btn-ghost" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtPaillettes(val)}</button>`;
   return `<li><span>${parts.map(esc).join(' · ')}</span>${action}</li>`;
 }
 
@@ -491,10 +640,10 @@ function renderDetail() {
     <h3 class="small">Fabriquer</h3>
     ${craftable
       ? `<div class="btn-row">
-          <button type="button" class="btn btn-sand" data-action="craft" data-shiny="0" ${S.busy || short(costN) ? 'disabled' : ''}>Fabriquer · ${fmtP(costN ?? 0)}</button>
-          ${k.can_shiny ? `<button type="button" class="btn btn-ghost" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer brillante · ${fmtP(costS ?? 0)}</button>` : ''}
+          <button type="button" class="btn btn-sand" data-action="craft" data-shiny="0" ${S.busy || short(costN) ? 'disabled' : ''}>Fabriquer · ${fmtPaillettes(costN ?? 0)}</button>
+          ${k.can_shiny ? `<button type="button" class="btn btn-ghost" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer brillante · ${fmtPaillettes(costS ?? 0)}</button>` : ''}
         </div>
-        ${short(costN) ? `<p class="muted small">Il te manque ${nf.format(costN - bal())} ✦ pour cette carte.</p>` : ''}`
+        ${short(costN) ? `<p class="muted small">Il te manque ${fmtPaillettes(costN - bal())} pour cette carte.</p>` : ''}`
       : '<p class="muted small">Cette carte ne peut pas être fabriquée.</p>'}`;
 }
 
@@ -584,7 +733,7 @@ function renderHistory() {
     ? `<ul class="cartes-log">${S.log.map((l) => {
         const d = Number(l.delta);
         return `<li><span>${esc(REASON_LABEL[l.reason] || l.reason)} <span class="muted small">${esc(fmtDate(l.created_at))}</span></span>
-          <span class="${d >= 0 ? 'cartes-delta-pos' : 'cartes-delta-neg'}">${d > 0 ? '+' : ''}${nf.format(d)} ✦</span></li>`;
+          <span class="${d >= 0 ? 'cartes-delta-pos' : 'cartes-delta-neg'}">${d > 0 ? '+' : ''}${fmtPaillettes(d)}</span></li>`;
       }).join('')}</ul>`
     : '<p class="muted small">Aucun mouvement pour le moment.</p>';
 }
@@ -598,9 +747,8 @@ function onClick(e) {
     case 'daily': return claimDaily();
     case 'open-free': return openBooster(true);
     case 'open-paid': return openBooster(false);
-    case 'reveal': return reveal(Number(t.dataset.i));
-    case 'reveal-all': return revealAll();
-    case 'close-reveal': S.reveal = null; return renderBoosters();
+    case 'reveal-all': return skipSeq();
+    case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
     case 'mass': return openMass();
     case 'mass-confirm': return confirmMass();
@@ -636,6 +784,7 @@ async function boot() {
   app.addEventListener('change', onChange);
   $('#cartes-tablist').addEventListener('keydown', onTabKey);
   $('#cartes-detail').addEventListener('close', () => { S.detailId = null; });
+  window.addEventListener('resize', () => fitAll(app));
   try {
     await loadStatic();
     await refreshData();
