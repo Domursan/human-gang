@@ -23,7 +23,10 @@
 .bt-item-state.is-dirty { color: var(--sand); border: 1px solid var(--sand); padding: 1px 7px; }
 
 .bt-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
-@media (min-width: 1240px) { .bt-main { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; } }
+@media (min-width: 1240px) {
+  .bt-main { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .bt-main .bt-preview { position: sticky; top: 16px; }
+}
 .bt-ed-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .bt-ed-title { font-size: 18px; font-weight: 700; }
 .bt-ed-desc { margin: 4px 0 0; max-width: 60ch; }
@@ -31,10 +34,10 @@
 .bt-hint { margin: 0; }
 .bt-vars { display: flex; flex-direction: column; gap: 8px; }
 .bt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.bt-var { min-height: 36px; padding: 6px 12px 6px 8px; font-size: 13px; color: var(--text); }
+.bt-var { white-space: nowrap; max-width: 100%; min-height: 36px; padding: 6px 12px 6px 8px; font-size: 13px; color: var(--text); }
 .bt-var code { color: var(--sand); font-size: 13px; }
 .bt-var svg { width: 14px; height: 14px; color: var(--muted); }
-.bt-var-label { color: var(--muted); }
+.bt-var-label { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 .bt-var:hover { border-color: var(--sand); }
 @media (pointer: coarse) { .bt-var { min-height: 44px; } }
 .bt-warn { margin: 0; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--sand); color: var(--sand); }

@@ -10,7 +10,7 @@
 .il-title strong { font-size: 16px; overflow-wrap: anywhere; }
 .il-switch { min-height: 36px; }
 .il-url { display: flex; gap: 8px; align-items: center; }
-.il-url-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.il-url-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; text-overflow: ellipsis; }
 .il-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; }
 .il-codes summary { cursor: pointer; font-size: 14px; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
 .il-codes summary:hover { color: var(--text); }
@@ -38,7 +38,7 @@
 .md-row:last-child { border-bottom: 0; }
 .md-giver { font-weight: 700; overflow-wrap: anywhere; }
 .md-arrow svg { width: 18px; height: 18px; color: var(--muted); display: block; }
-.md-row select { width: 100%; min-height: 44px; }
+.md-row select { width: 100%; min-height: 44px; padding: 8px 12px; }
 .md-msg { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .md-msg svg { width: 16px; height: 16px; flex: none; }
 .md-row.is-ok .md-msg { color: var(--sage-text); }

@@ -75,9 +75,9 @@ function formHtml() {
     <form class="il-form" id="il-form">
       <div class="field il-label"><label for="il-label">Libellé</label>
         <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
-      <div class="field"><label for="il-max">Limite de codes <span class="muted small">(facultatif)</span></label>
+      <div class="field"><label for="il-max">Limite de codes</label>
         <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Illimité"></div>
-      <div class="field"><label for="il-exp">Expire le <span class="muted small">(facultatif)</span></label>
+      <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span></label>
         <input id="il-exp" name="expires_at" type="date" min="${today}"></div>
       <button class="btn btn-primary" type="submit">${IC.link} Créer le lien</button>
     </form>`;
@@ -101,7 +101,7 @@ function linkHtml(l) {
       </div>
       <div class="il-url">
         <label class="visually-hidden" for="il-url-${esc(l.id)}">Adresse du lien</label>
-        <input id="il-url-${esc(l.id)}" class="il-url-input" readonly value="${esc(url)}">
+        <input id="il-url-${esc(l.id)}" class="input il-url-input" readonly value="${esc(url)}">
         <button class="btn btn-ghost btn-sm" type="button" data-il-copy>${IC.copy} Copier</button>
         <button class="btn btn-ghost btn-sm" type="button" data-il-qr>${IC.qr} QR code</button>
         <button class="btn btn-danger btn-sm btn-icon" type="button" data-il-del aria-label="Supprimer le lien « ${esc(l.label || 'sans libellé')} »" title="Supprimer">${IC.trash}</button>

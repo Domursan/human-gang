@@ -108,7 +108,7 @@ function rowHtml(g, a) {
     <li class="md-row is-${state}" data-giver="${esc(g)}">
       <label class="md-giver" for="md-${esc(g)}">${esc(M.pseudoOf(g))}</label>
       <span class="md-arrow" aria-hidden="true">${IC.arrow}</span>
-      <select id="md-${esc(g)}" data-md-pick aria-describedby="md-msg-${esc(g)}"${state === 'error' ? ' aria-invalid="true"' : ''}>
+      <select class="input" id="md-${esc(g)}" data-md-pick aria-describedby="md-msg-${esc(g)}"${state === 'error' ? ' aria-invalid="true"' : ''}>
         <option value="">À choisir…</option>
         ${opts.map((o) => `<option value="${esc(o.id)}"${o.id === r ? ' selected' : ''}>${esc(o.p)}</option>`).join('')}
       </select>

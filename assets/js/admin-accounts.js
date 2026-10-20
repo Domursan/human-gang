@@ -90,7 +90,7 @@ function renderList() {
         </div>
         <p class="small muted acc-count" id="acc-count" aria-live="polite"></p>
       </div>
-      <div class="acc-head" aria-hidden="true"><span>Membre</span><span>E-mail</span><span>Inscrit le</span><span>Arrivée dans le gang</span><span>Dernière connexion</span><span></span></div>
+      <div class="acc-head" aria-hidden="true"><span>Membre</span><span>E-mail</span><span>Inscrit le</span><span>Arrivée</span><span>Dernière connexion</span><span></span></div>
       <ul class="acc-list" id="acc-list"></ul>
     </div>`;
   renderRows();
