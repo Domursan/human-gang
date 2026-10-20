@@ -1,0 +1,754 @@
+// ===== Human Gang — administration =====
+import {
+  sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn,
+  SEASONS, SEASON_LABELS, autoSeason,
+} from './core.js';
+
+const me = await initPage({ auth: 'admin' });
+
+/* ---------- Icônes (SVG à trait) ---------- */
+const ICON = {
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10M13 8l4 4-4 4"/></svg>',
+  badge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
+};
+
+/* ---------- État ---------- */
+const S = {
+  members: [], byId: new Map(), invites: [], editions: [], editionId: null, participants: [], exclusions: [],
+  badges: [], userBadges: [], ideas: [], support: [], bot: null, theme: null,
+  ideaFilter: 'nouvelle', supportFilter: 'ouverte', badgeMember: '', lastDraw: null,
+};
+const pseudoOf = (id) => (id ? S.byId.get(id)?.pseudo ?? 'Ancien membre' : '—');
+const STATUS = [
+  ['inscriptions', 'Inscriptions ouvertes'], ['tirage', 'Tirage'], ['envoi', 'Envoi des cadeaux'],
+  ['revelation', 'Révélation'], ['termine', 'Terminé'],
+];
+const STATUS_LABEL = Object.fromEntries(STATUS);
+const SUBJECT_BUG = 'Bug sur le site';
+
+/* ---------- Petits outils ---------- */
+const dlg = $('#confirm-dlg');
+function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
+  $('#confirm-title').textContent = title;
+  $('#confirm-body').textContent = body;
+  const okBtn = $('#confirm-ok');
+  okBtn.textContent = ok;
+  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
+  dlg.returnValue = '';
+  dlg.showModal();
+  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
+}
+async function busy(btn, fn) {
+  if (btn) btn.disabled = true;
+  try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn) btn.disabled = false; }
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.append(ta); ta.select();
+    try { document.execCommand('copy'); } finally { ta.remove(); }
+  }
+  toast('Copié dans le presse-papiers', 'ok');
+}
+function check(res) { if (res.error) throw res.error; return res.data; }
+const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
+async function uploadAsset(path, file) {
+  if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG ou WebP).');
+  if (file.size > 10 * 1024 * 1024) throw new Error('Image trop lourde (10 Mo maximum).');
+  check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '300' }));
+  const { data } = sb.storage.from('hg-assets').getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`; // évite l'ancienne version en cache
+}
+function pickFile(input) {
+  return new Promise((resolve) => {
+    input.value = '';
+    input.onchange = () => resolve(input.files?.[0] ?? null);
+    input.click();
+  });
+}
+const sectionError = (e) => `<div class="empty">Impossible de charger : ${esc(errMsg(e))}</div>`;
+
+/* ---------- Chargement ---------- */
+async function loadMembers() {
+  S.members = check(await sb.rpc('hg_members')) ?? [];
+  S.byId = new Map(S.members.map((m) => [m.id, m]));
+}
+async function loadInvites() { S.invites = check(await sb.from('hg_invites').select('*').order('created_at', { ascending: false })) ?? []; }
+async function loadEditions() {
+  S.editions = check(await sb.from('hg_ss_editions').select('*').order('year', { ascending: false })) ?? [];
+  if (!S.editions.some((e) => e.id === S.editionId)) S.editionId = S.editions[0]?.id ?? null;
+}
+async function loadEditionDetails() {
+  if (!S.editionId) { S.participants = []; S.exclusions = []; return; }
+  const [p, x] = await Promise.all([
+    sb.from('hg_ss_participants').select('user_id, sent_at, received_at, joined_at').eq('edition_id', S.editionId),
+    sb.from('hg_ss_exclusions').select('*').eq('edition_id', S.editionId),
+  ]);
+  S.participants = check(p) ?? [];
+  S.exclusions = check(x) ?? [];
+}
+async function loadBadges() {
+  const [b, u] = await Promise.all([
+    sb.from('hg_badges').select('*').order('sort'),
+    sb.from('hg_user_badges').select('user_id, badge_code, awarded_at'),
+  ]);
+  S.badges = check(b) ?? []; S.userBadges = check(u) ?? [];
+}
+async function loadIdeas() { S.ideas = check(await sb.from('hg_ideas').select('*').order('created_at', { ascending: false })) ?? []; }
+async function loadSupport() { S.support = check(await sb.from('hg_support').select('*').order('created_at', { ascending: false })) ?? []; }
+async function loadSettings() {
+  const rows = check(await sb.from('hg_settings').select('key, value').in('key', ['bot', 'theme'])) ?? [];
+  const get = (k) => rows.find((r) => r.key === k)?.value;
+  S.bot = get('bot') ?? { announce_channel_id: null, admin_discord_id: null, notify: {} };
+  S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, ...(S.bot.notify || {}) };
+  S.theme = get('theme') ?? { mode: 'auto', forced: null };
+}
+
+/* =========================================================
+   Vue d'ensemble
+   ========================================================= */
+function renderStats() {
+  const ed = S.editions[0];
+  const free = S.invites.filter((i) => !i.used_by).length;
+  const newIdeas = S.ideas.filter((i) => i.status === 'nouvelle').length;
+  const open = S.support.filter((s) => s.status === 'ouverte').length;
+  const partCount = ed && ed.id === S.editionId ? S.participants.length : null;
+  const tiles = [
+    ['#membres', S.members.length, 'membres'],
+    ['#membres', free, free > 1 ? 'codes disponibles' : 'code disponible'],
+    ['#secret-santa', ed ? (partCount ?? '–') : '–', ed ? `inscrits · Secret Santa ${ed.year}` : 'aucune édition'],
+    ['#idees', newIdeas, newIdeas > 1 ? 'nouvelles idées' : 'nouvelle idée', newIdeas > 0],
+    ['#assistance', open, open > 1 ? 'demandes ouvertes' : 'demande ouverte', open > 0],
+  ];
+  $('#stats').innerHTML = tiles.map(([href, v, l, warn]) =>
+    `<a class="stat${warn ? ' attention' : ''}" href="${href}"><span class="stat-value">${esc(v)}</span><span class="stat-label">${esc(l)}</span></a>`).join('');
+  setNavCount('idees', newIdeas); setNavCount('assistance', open);
+}
+function setNavCount(key, n) {
+  const el = $(`.nav-count[data-count="${key}"]`);
+  el.hidden = !n; el.textContent = n || '';
+}
+
+/* =========================================================
+   Membres & invitations
+   ========================================================= */
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans I, L, O, 0, 1
+function newCode() {
+  const r = crypto.getRandomValues(new Uint32Array(4));
+  return 'HG-' + [...r].map((n) => CODE_ALPHABET[n % CODE_ALPHABET.length]).join('');
+}
+let lastCodes = [];
+
+function renderMembers() {
+  $('#member-count').textContent = `(${S.members.length})`;
+  const held = new Map();
+  for (const ub of S.userBadges) held.set(ub.user_id, (held.get(ub.user_id) || 0) + 1);
+  $('#member-list').innerHTML = S.members.length
+    ? `<div class="scroll-list">${S.members.map((m) => `
+        <div class="member-row">
+          ${avatarHtml(m, 36)}
+          <div class="grow"><strong>${esc(m.pseudo)}</strong>${m.id === me.id ? ' <span class="pill pill-muted">toi</span>' : ''}
+            <div class="small muted">Membre depuis le ${esc(fmtDate(m.member_since))}${held.get(m.id) ? ` · ${held.get(m.id)} badge${held.get(m.id) > 1 ? 's' : ''}` : ''}</div>
+          </div>
+        </div>`).join('')}</div>`
+    : '<div class="empty">Aucun membre pour l\'instant.</div>';
+}
+
+function renderInvites() {
+  $('#invite-new').innerHTML = lastCodes.length ? `
+    <div class="new-codes" role="status">
+      <strong>${lastCodes.length > 1 ? 'Nouveaux codes' : 'Nouveau code'}</strong>
+      <div class="codes">${lastCodes.map((c) => `<span class="code">${esc(c)}</span>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm" type="button" data-copy-all>${ICON.copy} Copier ${lastCodes.length > 1 ? 'tous les codes' : 'le code'}</button>
+    </div>` : '';
+
+  const unused = S.invites.filter((i) => !i.used_by);
+  const used = S.invites.filter((i) => i.used_by);
+  const unusedHtml = unused.length ? unused.map((i) => `
+      <div class="list-row">
+        <div class="grow"><span class="code">${esc(i.code)}</span><div class="small muted">Créé le ${esc(fmtDate(i.created_at))}</div></div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(i.code)}">${ICON.copy} Copier</button>
+          <button class="btn btn-danger btn-sm btn-icon" type="button" data-del-code="${esc(i.code)}" aria-label="Supprimer le code ${esc(i.code)}" title="Supprimer">${ICON.trash}</button>
+        </div>
+      </div>`).join('') : '<div class="empty">Aucun code disponible. Génère-en un pour inviter quelqu\'un.</div>';
+  const usedHtml = used.length ? used.map((i) => `
+      <div class="list-row">
+        <div class="grow"><span class="code muted">${esc(i.code)}</span>
+          <div class="small muted">Utilisé par <strong class="text">${esc(pseudoOf(i.used_by))}</strong> le ${esc(fmtDate(i.used_at))}</div></div>
+      </div>`).join('') : '<p class="small muted">Aucun code utilisé pour l\'instant.</p>';
+
+  $('#invite-list').innerHTML = `
+    <div class="subhead"><h4 class="sub-title">Disponibles (${unused.length})</h4>
+      ${unused.length > 1 ? '<button class="btn btn-danger btn-sm" type="button" data-del-all>Supprimer tous les disponibles</button>' : ''}</div>
+    <div class="scroll-list">${unusedHtml}</div>
+    <div class="subhead"><h4 class="sub-title">Utilisés (${used.length})</h4></div>
+    <div class="scroll-list">${usedHtml}</div>`;
+}
+
+$('#invite-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const btn = ev.submitter;
+  busy(btn, async () => {
+    const n = Number($('#invite-count').value) || 1;
+    let codes = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const set = new Set(); while (set.size < n) set.add(newCode());
+      codes = [...set];
+      const res = await sb.from('hg_invites').insert(codes.map((code) => ({ code, created_by: me.id })));
+      if (!res.error) break;
+      if (res.error.code !== '23505' || attempt === 2) throw res.error; // doublon improbable : on retente
+    }
+    lastCodes = codes;
+    await loadInvites();
+    renderInvites(); renderStats();
+    toast(n > 1 ? `${n} codes générés` : 'Code généré', 'ok');
+  });
+});
+
+$('#membres').addEventListener('click', async (ev) => {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  if (t.dataset.copy) return copyText(t.dataset.copy);
+  if (t.hasAttribute('data-copy-all')) return copyText(lastCodes.join('\n'));
+  if (t.dataset.delCode) {
+    const code = t.dataset.delCode;
+    if (!(await confirmBox('Supprimer ce code ?', `Le code ${code} ne pourra plus être utilisé.`, { ok: 'Supprimer', danger: true }))) return;
+    await busy(t, async () => {
+      check(await sb.from('hg_invites').delete().eq('code', code).is('used_by', null));
+      lastCodes = lastCodes.filter((c) => c !== code);
+      await loadInvites(); renderInvites(); renderStats();
+      toast('Code supprimé', 'ok');
+    });
+  }
+  if (t.hasAttribute('data-del-all')) {
+    const n = S.invites.filter((i) => !i.used_by).length;
+    if (!(await confirmBox('Supprimer tous les codes disponibles ?', `${n} codes non utilisés seront supprimés. Les codes déjà utilisés sont conservés.`, { ok: 'Tout supprimer', danger: true }))) return;
+    await busy(t, async () => {
+      check(await sb.from('hg_invites').delete().is('used_by', null));
+      lastCodes = [];
+      await loadInvites(); renderInvites(); renderStats();
+      toast('Codes disponibles supprimés', 'ok');
+    });
+  }
+});
+
+/* =========================================================
+   Secret Santa
+   ========================================================= */
+function renderSS() {
+  const root = $('#ss-root');
+  const ed = S.editions.find((e) => e.id === S.editionId);
+  const nextYear = Math.max(new Date().getFullYear(), ...(S.editions.map((e) => e.year + 1)));
+  const yearExists = (y) => S.editions.some((e) => e.year === y);
+  const defaultYear = yearExists(new Date().getFullYear()) ? nextYear : new Date().getFullYear();
+
+  const createForm = `
+    <form class="card stack" id="ss-create">
+      <h3 class="card-title">Nouvelle édition</h3>
+      <div class="grid-2">
+        <div class="field"><label for="ssc-year">Année</label><input id="ssc-year" name="year" type="number" min="2020" max="2100" required value="${defaultYear}"></div>
+        <div class="field"><label for="ssc-budget">Budget</label><input id="ssc-budget" name="budget" maxlength="60" placeholder="ex. 20 à 30 CHF"></div>
+        <div class="field"><label for="ssc-send">Date limite d'envoi</label><input id="ssc-send" name="send_deadline" type="date"></div>
+        <div class="field"><label for="ssc-exch">Date d'échange</label><input id="ssc-exch" name="exchange_date" type="date"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Créer l'édition</button></div>
+    </form>`;
+
+  if (!ed) {
+    root.innerHTML = `<div class="empty" style="margin-bottom:20px">Aucune édition pour l'instant. Crée la première ci-dessous.</div>${createForm}`;
+    return;
+  }
+
+  const parts = [...S.participants].sort((a, b) => pseudoOf(a.user_id).localeCompare(pseudoOf(b.user_id), 'fr'));
+  const sent = parts.filter((p) => p.sent_at).length;
+  const received = parts.filter((p) => p.received_at).length;
+  const partOpts = parts.map((p) => `<option value="${esc(p.user_id)}">${esc(pseudoOf(p.user_id))}</option>`).join('');
+  const canDraw = parts.length >= 3 && !ed.drawn_at; // un seul tirage par édition
+  const editionSelect = S.editions.length > 1 ? `
+      <div class="field"><label for="ss-edition">Édition affichée</label>
+        <select id="ss-edition">${S.editions.map((e) => `<option value="${esc(e.id)}"${e.id === ed.id ? ' selected' : ''}>${esc(e.year)} · ${esc(STATUS_LABEL[e.status] ?? e.status)}</option>`).join('')}</select></div>` : '';
+
+  root.innerHTML = `
+    <div class="ss-head" style="margin-bottom:20px">
+      <div class="steps-mini" aria-label="Étapes">${STATUS.map(([k, l]) => {
+        const idx = STATUS.findIndex(([s]) => s === ed.status), i = STATUS.findIndex(([s]) => s === k);
+        return `<span class="pill ${i < idx ? 'pill-ok' : i === idx ? 'pill-current' : 'pill-todo'}">${esc(l)}</span>`;
+      }).join('')}</div>
+      ${editionSelect}
+    </div>
+    <div class="ss-layout">
+      <form class="card card-ss stack" id="ss-edit">
+        <h3 class="card-title">Édition ${esc(ed.year)}</h3>
+        <div class="grid-2">
+          <div class="field"><label for="sse-status">Statut</label>
+            <select id="sse-status" name="status">${STATUS.map(([k, l]) => `<option value="${k}"${k === ed.status ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+          <div class="field"><label for="sse-budget">Budget</label><input id="sse-budget" name="budget" maxlength="60" value="${esc(ed.budget ?? '')}"></div>
+          <div class="field"><label for="sse-send">Date limite d'envoi</label><input id="sse-send" name="send_deadline" type="date" value="${esc(ed.send_deadline ?? '')}"></div>
+          <div class="field"><label for="sse-exch">Date d'échange</label><input id="sse-exch" name="exchange_date" type="date" value="${esc(ed.exchange_date ?? '')}"></div>
+        </div>
+        <p class="small muted">${ed.drawn_at ? `Tirage effectué le ${esc(fmtDateTime(ed.drawn_at))}.` : 'Tirage pas encore effectué.'} Le tirage passe automatiquement l'édition en « Envoi des cadeaux ».</p>
+        <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
+
+        <div class="draw-box stack">
+          <h4 class="sub-title">Tirage au sort</h4>
+          <p class="small muted">Respecte les exclusions et évite de retomber sur la même personne que l'an dernier. Personne, pas même toi, ne voit les paires. Le tirage ne peut être lancé qu'une seule fois par édition.</p>
+          <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : 'Lancer le tirage'}</button></div>
+          ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < 3 ? '<p class="small muted">Il faut au moins 3 inscrits.</p>' : ''}
+          ${S.lastDraw && S.lastDraw.edition === ed.id ? `<p class="draw-result" role="status">Tirage OK pour ${esc(S.lastDraw.n)} participants</p>` : ''}
+        </div>
+      </form>
+
+      <div class="stack" style="gap:20px">
+        <div class="card stack">
+          <h3 class="card-title">Carte de base</h3>
+          <p class="small muted">Image de fond de la carte que chaque Santa découvre (le pseudo de sa cible est ajouté dessus). Format paysage conseillé, 1500 × 1000 px.</p>
+          <div class="card-preview">${ed.card_base_url ? `<img src="${esc(ed.card_base_url)}" alt="Carte de base ${esc(ed.year)}">` : 'Carte par défaut'}</div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" type="button" id="ss-card-upload">${ICON.upload} ${ed.card_base_url ? 'Remplacer' : 'Téléverser'}</button>
+            ${ed.card_base_url ? '<button class="btn btn-danger" type="button" id="ss-card-reset">Revenir à la carte par défaut</button>' : ''}
+          </div>
+          <input type="file" id="ss-card-file" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+
+        <div class="card stack">
+          <h3 class="card-title">Inscrits <span class="muted">(${parts.length})</span></h3>
+          ${parts.length ? `<div class="participants">${parts.map((p) => `<span class="pill">${esc(pseudoOf(p.user_id))}</span>`).join('')}</div>
+            ${ed.drawn_at ? `<p class="small muted">Cadeaux envoyés : ${sent} / ${parts.length} · reçus : ${received} / ${parts.length}</p>` : ''}`
+            : '<div class="empty">Personne n\'est encore inscrit.</div>'}
+        </div>
+      </div>
+
+      <div class="card stack">
+        <h3 class="card-title">Exclusions</h3>
+        <p class="small muted">Deux personnes d'une même paire ne pourront pas se tirer l'une l'autre (couples, colocs…).</p>
+        ${parts.length >= 2 ? `
+        <form class="inline-form" id="ss-excl-form">
+          <div class="field"><label for="ex-a">Personne A</label><select id="ex-a" required>${partOpts}</select></div>
+          <div class="field"><label for="ex-b">Personne B</label><select id="ex-b" required>${partOpts}</select></div>
+          <button class="btn btn-primary" type="submit">Ajouter</button>
+        </form>` : '<p class="small muted">Il faut au moins deux inscrits pour définir une exclusion.</p>'}
+        <div>${S.exclusions.length ? S.exclusions.map((x) => `
+          <div class="list-row">
+            <div class="pair grow"><strong>${esc(pseudoOf(x.user_a))}</strong>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>
+              <strong>${esc(pseudoOf(x.user_b))}</strong></div>
+            <button class="btn btn-danger btn-sm btn-icon" type="button" data-del-excl="${esc(x.user_a)}|${esc(x.user_b)}" aria-label="Retirer l'exclusion ${esc(pseudoOf(x.user_a))} et ${esc(pseudoOf(x.user_b))}">${ICON.x}</button>
+          </div>`).join('') : '<p class="small muted">Aucune exclusion.</p>'}</div>
+      </div>
+
+      ${createForm}
+    </div>`;
+  const b = $('#ex-b'); if (b && b.options.length > 1) b.selectedIndex = 1;
+}
+
+const nullIfEmpty = (v) => (String(v ?? '').trim() === '' ? null : String(v).trim());
+
+$('#secret-santa').addEventListener('change', async (ev) => {
+  if (ev.target.id !== 'ss-edition') return;
+  S.editionId = ev.target.value;
+  try { await loadEditionDetails(); } catch (e) { toast(errMsg(e), 'error'); }
+  renderSS();
+});
+
+$('#secret-santa').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const form = ev.target, btn = ev.submitter;
+  if (form.id === 'ss-create') {
+    busy(btn, async () => {
+      const fd = new FormData(form);
+      const year = Number(fd.get('year'));
+      if (S.editions.some((e) => e.year === year)) throw new Error(`L'édition ${year} existe déjà.`);
+      const row = check(await sb.from('hg_ss_editions').insert({
+        year, budget: nullIfEmpty(fd.get('budget')), send_deadline: nullIfEmpty(fd.get('send_deadline')),
+        exchange_date: nullIfEmpty(fd.get('exchange_date')),
+      }).select().single());
+      S.editionId = row.id;
+      await loadEditions(); await loadEditionDetails();
+      renderSS(); renderStats();
+      toast(`Édition ${year} créée, inscriptions ouvertes`, 'ok');
+    });
+  }
+  if (form.id === 'ss-edit') {
+    busy(btn, async () => {
+      const fd = new FormData(form);
+      const ed = S.editions.find((e) => e.id === S.editionId);
+      const status = fd.get('status');
+      if (status !== ed.status && ['envoi', 'revelation', 'termine'].includes(status) && !ed.drawn_at) {
+        if (!(await confirmBox('Aucun tirage effectué', `Passer en « ${STATUS_LABEL[status]} » sans tirage ? Les participants n'auront pas de cible.`, { ok: 'Changer quand même' }))) return;
+      }
+      if (status === 'revelation' && ed.status !== 'revelation') {
+        if (!(await confirmBox('Passer à la révélation ?', 'Tous les membres pourront voir qui offrait à qui.', { ok: 'Révéler' }))) return;
+      }
+      check(await sb.from('hg_ss_editions').update({
+        status, budget: nullIfEmpty(fd.get('budget')),
+        send_deadline: nullIfEmpty(fd.get('send_deadline')), exchange_date: nullIfEmpty(fd.get('exchange_date')),
+      }).eq('id', ed.id));
+      await loadEditions(); renderSS(); renderStats();
+      toast('Édition enregistrée', 'ok');
+    });
+  }
+  if (form.id === 'ss-excl-form') {
+    busy(btn, async () => {
+      let a = $('#ex-a').value, b = $('#ex-b').value;
+      if (!a || !b || a === b) throw new Error('Choisis deux personnes différentes.');
+      if (a > b) [a, b] = [b, a];
+      if (S.exclusions.some((x) => (x.user_a === a && x.user_b === b) || (x.user_a === b && x.user_b === a))) throw new Error('Cette exclusion existe déjà.');
+      check(await sb.from('hg_ss_exclusions').insert({ edition_id: S.editionId, user_a: a, user_b: b }));
+      await loadEditionDetails(); renderSS();
+      toast('Exclusion ajoutée', 'ok');
+    });
+  }
+});
+
+$('#secret-santa').addEventListener('click', async (ev) => {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  const ed = S.editions.find((e) => e.id === S.editionId);
+  if (t.dataset.delExcl) {
+    const [a, b] = t.dataset.delExcl.split('|');
+    await busy(t, async () => {
+      check(await sb.from('hg_ss_exclusions').delete().eq('edition_id', S.editionId).eq('user_a', a).eq('user_b', b));
+      await loadEditionDetails(); renderSS();
+      toast('Exclusion retirée', 'ok');
+    });
+  }
+  if (t.id === 'ss-card-upload') {
+    const file = await pickFile($('#ss-card-file'));
+    if (!file) return;
+    await busy(t, async () => {
+      const ext = EXT[file.type] || 'png';
+      const url = await uploadAsset(`cartes/base-${ed.year}.${ext}`, file);
+      check(await sb.from('hg_ss_editions').update({ card_base_url: url }).eq('id', ed.id));
+      await loadEditions(); renderSS();
+      toast('Carte de base mise à jour', 'ok');
+    });
+  }
+  if (t.id === 'ss-card-reset') {
+    if (!(await confirmBox('Revenir à la carte par défaut ?', 'La carte dessinée automatiquement sera utilisée. Le fichier téléversé reste stocké.', { ok: 'Revenir au défaut' }))) return;
+    await busy(t, async () => {
+      check(await sb.from('hg_ss_editions').update({ card_base_url: null }).eq('id', ed.id));
+      await loadEditions(); renderSS();
+      toast('Carte par défaut rétablie', 'ok');
+    });
+  }
+  if (t.id === 'ss-draw') {
+    if (ed.drawn_at) return; // un seul tirage par édition
+    const n = S.participants.length;
+    const msg = `${n} participants, ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''}.\nLe tirage est définitif : il ne pourra pas être relancé. Vérifie les inscrits et les exclusions avant.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`;
+    if (!(await confirmBox('Lancer le tirage ?', msg, { ok: 'Lancer le tirage' }))) return;
+    await busy(t, async () => {
+      const count = check(await sb.rpc('hg_ss_draw', { p_edition: ed.id }));
+      S.lastDraw = { edition: ed.id, n: count };
+      notify('ss_draw', { edition_id: ed.id }); // le bot prévient (sans jamais révéler les paires)
+      await loadEditions(); renderSS(); renderStats();
+      toast(`Tirage OK pour ${count} participants`, 'ok');
+    });
+  }
+});
+
+/* =========================================================
+   Badges
+   ========================================================= */
+const badgeImg = (b) => (b.image_url ? `<img src="${esc(b.image_url)}" alt="">` : ICON.badge);
+
+function renderBadges() {
+  const holders = new Map();
+  for (const ub of S.userBadges) {
+    if (!holders.has(ub.badge_code)) holders.set(ub.badge_code, []);
+    holders.get(ub.badge_code).push(pseudoOf(ub.user_id));
+  }
+  $('#badge-grid').innerHTML = S.badges.map((b) => {
+    const h = holders.get(b.code) || [];
+    return `<div class="badge-card">
+      <div class="badge-top"><div class="badge-img">${badgeImg(b)}</div>
+        <div><div class="badge-name">${esc(b.name)}</div><div class="small muted">${esc(b.description)}</div></div></div>
+      <div class="badge-holders">${h.length ? `${h.length} membre${h.length > 1 ? 's' : ''} : ${esc(h.sort((x, y) => x.localeCompare(y, 'fr')).join(', '))}` : 'Personne pour l\'instant'}</div>
+      <button class="btn btn-ghost btn-sm" type="button" data-badge-img="${esc(b.code)}">${ICON.upload} ${b.image_url ? 'Changer l\'image' : 'Ajouter une image'}</button>
+    </div>`;
+  }).join('') || '<div class="empty">Aucun badge.</div>';
+
+  const sel = $('#badge-member');
+  sel.innerHTML = '<option value="">Choisir un membre…</option>' +
+    S.members.map((m) => `<option value="${esc(m.id)}"${m.id === S.badgeMember ? ' selected' : ''}>${esc(m.pseudo)}</option>`).join('');
+  renderBadgeToggles();
+}
+function renderBadgeToggles() {
+  const uid = S.badgeMember;
+  const box = $('#badge-toggles');
+  if (!uid) { box.innerHTML = '<p class="small muted">Choisis un membre pour voir et modifier ses badges.</p>'; return; }
+  const owned = new Set(S.userBadges.filter((u) => u.user_id === uid).map((u) => u.badge_code));
+  box.innerHTML = S.badges.map((b) => `<button class="chip" type="button" data-toggle-badge="${esc(b.code)}" aria-pressed="${owned.has(b.code)}">${owned.has(b.code) ? ICON.check : ''}${esc(b.name)}</button>`).join('');
+}
+async function awardBadge(userId, code) {
+  const res = await sb.from('hg_user_badges').insert({ user_id: userId, badge_code: code });
+  if (res.error && res.error.code !== '23505') throw res.error;
+  await loadBadges(); renderBadges(); renderMembers();
+}
+const hasBadge = (uid, code) => S.userBadges.some((u) => u.user_id === uid && u.badge_code === code);
+const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?? code;
+
+$('#badge-member').addEventListener('change', (ev) => { S.badgeMember = ev.target.value; renderBadgeToggles(); });
+$('#badges').addEventListener('click', async (ev) => {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  if (t.dataset.toggleBadge) {
+    const code = t.dataset.toggleBadge, uid = S.badgeMember, on = t.getAttribute('aria-pressed') === 'true';
+    if (on && !(await confirmBox('Retirer ce badge ?', `${pseudoOf(uid)} perdra le badge « ${badgeName(code)} ».`, { ok: 'Retirer', danger: true }))) return;
+    await busy(t, async () => {
+      if (on) {
+        check(await sb.from('hg_user_badges').delete().eq('user_id', uid).eq('badge_code', code));
+        await loadBadges(); renderBadges(); renderMembers();
+      } else await awardBadge(uid, code);
+      toast(on ? 'Badge retiré' : `Badge « ${badgeName(code)} » attribué à ${pseudoOf(uid)}`, 'ok');
+    });
+  }
+  if (t.dataset.badgeImg) {
+    const code = t.dataset.badgeImg;
+    const file = await pickFile($('#badge-file'));
+    if (!file) return;
+    await busy(t, async () => {
+      const url = await uploadAsset(`badges/${code}.png`, file);
+      check(await sb.from('hg_badges').update({ image_url: url }).eq('code', code));
+      await loadBadges(); renderBadges();
+      toast('Image du badge mise à jour', 'ok');
+    });
+  }
+});
+
+/* =========================================================
+   Boîte à idées
+   ========================================================= */
+const IDEA_LABEL = { nouvelle: 'Nouvelle', retenue: 'Retenue', ecartee: 'Écartée' };
+const IDEA_PILL = { nouvelle: 'pill-current', retenue: 'pill-ok', ecartee: 'pill-todo' };
+function renderIdeas() {
+  const list = S.ideaFilter === 'all' ? S.ideas : S.ideas.filter((i) => i.status === S.ideaFilter);
+  $$('#idea-filters .chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === S.ideaFilter)));
+  $('#idea-list').innerHTML = list.length ? list.map((i) => `
+    <article class="item">
+      <div class="item-meta"><strong>${esc(i.user_id ? pseudoOf(i.user_id) : 'Membre parti')}</strong>
+        <span>${esc(fmtDateTime(i.created_at))}</span><span class="pill ${IDEA_PILL[i.status]}">${esc(IDEA_LABEL[i.status])}</span>
+        ${i.status === 'retenue' && i.user_id && hasBadge(i.user_id, 'boite_a_idees') ? '<span class="pill pill-muted">badge attribué</span>' : ''}</div>
+      <p class="item-body">${esc(i.body)}</p>
+      <div class="btn-row">
+        ${i.status !== 'retenue' ? `<button class="btn btn-ghost btn-sm" type="button" data-idea="${esc(i.id)}" data-status="retenue">${ICON.check} Retenir</button>` : ''}
+        ${i.status !== 'ecartee' ? `<button class="btn btn-ghost btn-sm" type="button" data-idea="${esc(i.id)}" data-status="ecartee">Écarter</button>` : ''}
+        ${i.status !== 'nouvelle' ? `<button class="btn btn-ghost btn-sm" type="button" data-idea="${esc(i.id)}" data-status="nouvelle">Remettre en nouvelle</button>` : ''}
+        ${i.status === 'retenue' && i.user_id && S.byId.has(i.user_id) && !hasBadge(i.user_id, 'boite_a_idees') ? `<button class="btn btn-sand btn-sm" type="button" data-idea-badge="${esc(i.user_id)}">${ICON.badge} Attribuer le badge</button>` : ''}
+      </div>
+    </article>`).join('') : `<div class="empty">${S.ideaFilter === 'nouvelle' ? 'Aucune nouvelle idée.' : 'Rien dans cette catégorie.'}</div>`;
+}
+async function offerIdeaBadge(uid) {
+  if (!uid || !S.byId.has(uid) || hasBadge(uid, 'boite_a_idees')) return;
+  if (await confirmBox('Attribuer le badge ?', `Attribuer le badge « ${badgeName('boite_a_idees')} » à ${pseudoOf(uid)} ?`, { ok: 'Attribuer' })) {
+    await awardBadge(uid, 'boite_a_idees');
+    toast(`Badge attribué à ${pseudoOf(uid)}`, 'ok');
+  }
+}
+$('#idees').addEventListener('click', async (ev) => {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  if (t.dataset.filter) { S.ideaFilter = t.dataset.filter; renderIdeas(); return; }
+  if (t.dataset.ideaBadge) { await busy(t, () => offerIdeaBadge(t.dataset.ideaBadge)); renderIdeas(); return; }
+  if (t.dataset.idea) {
+    const idea = S.ideas.find((i) => i.id === t.dataset.idea);
+    await busy(t, async () => {
+      check(await sb.from('hg_ideas').update({ status: t.dataset.status }).eq('id', idea.id));
+      await loadIdeas(); renderIdeas(); renderStats();
+      toast(`Idée ${IDEA_LABEL[t.dataset.status].toLowerCase()}`, 'ok');
+      if (t.dataset.status === 'retenue') await offerIdeaBadge(idea.user_id);
+      renderIdeas();
+    });
+  }
+});
+
+/* =========================================================
+   Assistance
+   ========================================================= */
+function renderSupport() {
+  const list = S.support.filter((s) => s.status === S.supportFilter);
+  $$('#support-filters .chip').forEach((c) => {
+    c.setAttribute('aria-pressed', String(c.dataset.filter === S.supportFilter));
+    const n = S.support.filter((s) => s.status === c.dataset.filter).length;
+    c.textContent = `${c.dataset.filter === 'ouverte' ? 'Ouvertes' : 'Traitées'} (${n})`;
+  });
+  $('#support-list').innerHTML = list.length ? list.map((s) => `
+    <article class="item">
+      <div class="item-meta"><strong>${esc(s.pseudo)}</strong>
+        <span class="pill ${s.user_id ? 'pill-ok' : 'pill-todo'}">${s.user_id ? 'Membre connecté' : 'Visiteur'}</span>
+        <span>${esc(fmtDateTime(s.created_at))}</span>
+        <span class="pill ${s.discord_sent ? 'pill-ok' : 'pill-warn'}" title="${s.discord_sent ? 'Le bot t\'a envoyé cette demande en MP' : 'Le MP Discord n\'a pas été envoyé (bot non configuré ou erreur)'}">${s.discord_sent ? 'MP Discord envoyé' : 'MP Discord non envoyé'}</span></div>
+      <div class="item-subject">${esc(s.subject)}</div>
+      <p class="item-body">${esc(s.message)}</p>
+      <div class="small muted">Contact pour la réponse : ${s.contact ? `<strong class="text">${esc(s.contact)}</strong>` : 'non précisé'}</div>
+      <div class="btn-row">
+        ${s.status === 'ouverte'
+          ? `<button class="btn btn-primary btn-sm" type="button" data-support="${esc(s.id)}" data-status="traitee">${ICON.check} Marquer traitée</button>`
+          : `<button class="btn btn-ghost btn-sm" type="button" data-support="${esc(s.id)}" data-status="ouverte">Rouvrir</button>`}
+        ${s.contact ? `<button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(s.contact)}">${ICON.copy} Copier le contact</button>` : ''}
+        ${s.subject === SUBJECT_BUG && s.user_id && S.byId.has(s.user_id) && !hasBadge(s.user_id, 'chasseur_bugs')
+          ? `<button class="btn btn-sand btn-sm" type="button" data-bug-badge="${esc(s.user_id)}">${ICON.badge} Badge ${esc(badgeName('chasseur_bugs'))}</button>` : ''}
+      </div>
+    </article>`).join('') : `<div class="empty">${S.supportFilter === 'ouverte' ? 'Aucune demande en attente.' : 'Aucune demande traitée.'}</div>`;
+}
+$('#assistance').addEventListener('click', async (ev) => {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  if (t.dataset.filter) { S.supportFilter = t.dataset.filter; renderSupport(); return; }
+  if (t.dataset.copy) return copyText(t.dataset.copy);
+  if (t.dataset.bugBadge) {
+    const uid = t.dataset.bugBadge;
+    if (!(await confirmBox('Attribuer le badge ?', `Attribuer « ${badgeName('chasseur_bugs')} » à ${pseudoOf(uid)} ?`, { ok: 'Attribuer' }))) return;
+    await busy(t, async () => { await awardBadge(uid, 'chasseur_bugs'); renderSupport(); toast('Badge attribué', 'ok'); });
+  }
+  if (t.dataset.support) {
+    await busy(t, async () => {
+      check(await sb.from('hg_support').update({ status: t.dataset.status }).eq('id', t.dataset.support));
+      await loadSupport(); renderSupport(); renderStats();
+      toast(t.dataset.status === 'traitee' ? 'Demande marquée comme traitée' : 'Demande rouverte', 'ok');
+    });
+  }
+});
+
+/* =========================================================
+   Bot
+   ========================================================= */
+const NOTIFY_KEYS = ['draw', 'gift', 'irl', 'birthday', 'support'];
+const DISCORD_ID = /^\d{17,20}$/;
+function renderBot() {
+  const f = $('#bot-form');
+  f.announce_channel_id.value = S.bot.announce_channel_id ?? '';
+  f.admin_discord_id.value = S.bot.admin_discord_id ?? '';
+  for (const k of NOTIFY_KEYS) f.elements[k].checked = S.bot.notify[k] !== false;
+}
+$('#bot-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  busy(ev.submitter, async () => {
+    const channel = f.announce_channel_id.value.trim(), admin = f.admin_discord_id.value.trim();
+    if (channel && !DISCORD_ID.test(channel)) throw new Error('L\'ID du salon doit être un nombre de 17 à 20 chiffres.');
+    if (admin && !DISCORD_ID.test(admin)) throw new Error('Ton ID Discord doit être un nombre de 17 à 20 chiffres.');
+    const value = {
+      ...S.bot, announce_channel_id: channel || null, admin_discord_id: admin || null,
+      notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, f.elements[k].checked])),
+    };
+    check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
+    S.bot = value;
+    toast('Réglages du bot enregistrés', 'ok');
+  });
+});
+$('#bot-test').addEventListener('click', (ev) => busy(ev.currentTarget, async () => {
+  const res = await callFn('hg-notify', { event: 'bot_test' });
+  const parts = [];
+  if (res?.channel !== undefined) parts.push(`salon : ${res.channel ? 'OK' : 'échec'}`);
+  if (res?.dm !== undefined) parts.push(`MP : ${res.dm ? 'OK' : 'échec'}`);
+  if (res?.error) throw new Error(res.error);
+  toast(parts.length ? `Test envoyé (${parts.join(', ')})` : 'Test envoyé', res?.channel === false || res?.dm === false ? 'error' : 'ok');
+}));
+
+/* =========================================================
+   Thème
+   ========================================================= */
+const SEASON_DOT = { printemps: '#6E8F5E', paques: '#8C6FA8', ete: '#B26A3E', automne: '#9A5B32', halloween: '#A4532A', hiver: '#4F6A8F', noel: '#8E2F3A' };
+let themeDraft = { mode: 'auto', forced: null };
+function renderTheme() {
+  const f = $('#theme-form');
+  const auto = autoSeason();
+  $('#theme-auto-label').textContent = `(en ce moment : ${SEASON_LABELS[auto]})`;
+  f.querySelector(`input[name="mode"][value="${themeDraft.mode === 'forced' ? 'forced' : 'auto'}"]`).checked = true;
+  const forced = themeDraft.mode === 'forced';
+  const picker = $('#season-picker');
+  picker.setAttribute('aria-disabled', String(!forced));
+  picker.innerHTML = SEASONS.map((s) => `<button class="season-opt" type="button" role="radio" data-season="${s}" aria-checked="${forced && themeDraft.forced === s}"${forced ? '' : ' disabled'}>
+      <span class="season-dot" style="background:${SEASON_DOT[s]}"></span>${esc(SEASON_LABELS[s])}</button>`).join('');
+  previewTheme();
+}
+function previewTheme() {
+  document.documentElement.dataset.season = themeDraft.mode === 'forced' && themeDraft.forced ? themeDraft.forced : autoSeason();
+}
+$('#theme-form').addEventListener('change', (ev) => {
+  if (ev.target.name !== 'mode') return;
+  themeDraft.mode = ev.target.value;
+  if (themeDraft.mode === 'forced' && !themeDraft.forced) themeDraft.forced = autoSeason();
+  renderTheme();
+});
+$('#season-picker').addEventListener('click', (ev) => {
+  const t = ev.target.closest('[data-season]');
+  if (!t || t.disabled) return;
+  themeDraft.forced = t.dataset.season;
+  renderTheme();
+  $(`#season-picker [data-season="${themeDraft.forced}"]`)?.focus();
+});
+$('#season-picker').addEventListener('keydown', (ev) => {
+  if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(ev.key) || themeDraft.mode !== 'forced') return;
+  ev.preventDefault();
+  const i = SEASONS.indexOf(themeDraft.forced), d = ['ArrowRight', 'ArrowDown'].includes(ev.key) ? 1 : -1;
+  themeDraft.forced = SEASONS[(i + d + SEASONS.length) % SEASONS.length];
+  renderTheme();
+  $(`#season-picker [data-season="${themeDraft.forced}"]`)?.focus();
+});
+$('#theme-form').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  busy(ev.submitter, async () => {
+    const value = themeDraft.mode === 'forced' ? { mode: 'forced', forced: themeDraft.forced } : { mode: 'auto', forced: null };
+    check(await sb.from('hg_settings').upsert({ key: 'theme', value, updated_at: new Date().toISOString() }));
+    S.theme = value;
+    try { localStorage.setItem('hg_season', document.documentElement.dataset.season); } catch {}
+    toast(value.mode === 'forced' ? `Thème « ${SEASON_LABELS[value.forced]} » appliqué à tout le site` : 'Thème automatique rétabli', 'ok');
+  });
+});
+
+/* =========================================================
+   Navigation latérale (section active)
+   ========================================================= */
+function setupNav() {
+  const links = $$('.admin-nav a');
+  const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]));
+  const setActive = (id) => links.forEach((a) => {
+    const on = a === byId.get(id);
+    if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    if (on && matchMedia('(max-width: 860px)').matches) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
+  const visible = new Map();
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) visible.set(e.target.id, e.isIntersecting ? e.boundingClientRect.top : null);
+    const first = [...visible.entries()].filter(([, v]) => v !== null).sort((a, b) => a[1] - b[1])[0];
+    if (first) setActive(first[0]);
+  }, { rootMargin: '-15% 0px -60% 0px' });
+  $$('.admin-section').forEach((s) => io.observe(s));
+  setActive(location.hash.slice(1) || 'apercu');
+}
+
+/* =========================================================
+   Démarrage
+   ========================================================= */
+async function safe(fn, onError) { try { await fn(); return true; } catch (e) { console.error(e); onError?.(e); return false; } }
+
+let ssLoaded = false;
+await Promise.all([
+  safe(loadMembers, (e) => { $('#member-list').innerHTML = sectionError(e); }),
+  safe(loadInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }),
+  safe(async () => { await loadEditions(); await loadEditionDetails(); ssLoaded = true; }, (e) => { $('#ss-root').innerHTML = sectionError(e); }),
+  safe(loadBadges, (e) => { $('#badge-grid').innerHTML = sectionError(e); }),
+  safe(loadIdeas, (e) => { $('#idea-list').innerHTML = sectionError(e); }),
+  safe(loadSupport, (e) => { $('#support-list').innerHTML = sectionError(e); }),
+  safe(loadSettings, (e) => toast(`Réglages : ${errMsg(e)}`, 'error')),
+]);
+
+renderStats();
+renderMembers();
+renderInvites();
+if (ssLoaded) renderSS();
+renderBadges();
+renderIdeas();
+renderSupport();
+if (S.bot) renderBot();
+if (S.theme) { themeDraft = { mode: S.theme.mode === 'forced' && S.theme.forced ? 'forced' : 'auto', forced: S.theme.forced ?? null }; renderTheme(); }
+setupNav();
+if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();

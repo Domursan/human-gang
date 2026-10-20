@@ -1,0 +1,62 @@
+/* ===== Human Gang — albums, miniatures, visionneuse, boîtes de dialogue (partagé IRL / Historique) ===== */
+.btn-sm { min-height: 44px; padding: 8px 14px; font-size: 14px; border-radius: 10px; }
+.stack-sm { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stack-lg { display: flex; flex-direction: column; gap: 20px; }
+
+/* L'attribut hidden doit primer sur les display des composants (.field, .stack…) */
+.hg-dialog [hidden], .irl [hidden], .hist [hidden] { display: none !important; }
+
+/* Grille de miniatures */
+.album { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(30%, 120px), 1fr)); }
+.thumb { display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: 10px; overflow: hidden; cursor: zoom-in;
+  background: var(--surface-2); color: var(--text); font: inherit; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+.thumb:hover img { transform: scale(1.04); }
+.thumb-more { cursor: pointer; font-family: var(--font-display); font-size: 22px; display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px dashed var(--border-strong); }
+.thumb-more:hover { background: var(--border); }
+.thumb-missing { display: block; width: 100%; height: 100%;
+  background: repeating-linear-gradient(45deg, var(--surface-2) 0 8px, var(--border) 8px 16px); }
+
+/* Visionneuse */
+.lightbox { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+  background: rgba(8, 8, 10, .96); color: var(--text); display: none; flex-direction: column; }
+.lightbox[open] { display: flex; }
+.lightbox::backdrop { background: rgba(0, 0, 0, .7); }
+.lb-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; }
+.lb-actions { display: flex; gap: 8px; }
+.lb-count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.lb-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 8px 16px; position: relative; }
+.lb-fig { margin: 0; flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.lb-fig img { max-width: 100%; max-height: calc(100% - 32px); object-fit: contain; border-radius: 8px; }
+.lb-fig figcaption { text-align: center; }
+.lb-nav { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--surface);
+  color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.lb-nav:hover { background: var(--surface-2); }
+.lb-nav[hidden] { display: none; }
+@media (max-width: 600px) {
+  .lb-nav { position: absolute; bottom: 20px; z-index: 1; }
+  .lb-prev { left: 16px; } .lb-next { right: 16px; }
+  .lb-fig img { max-height: calc(100% - 90px); }
+  .lb-fig { padding-bottom: 64px; }
+}
+
+/* Boîtes de dialogue (formulaires) */
+.hg-dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border-radius: var(--radius);
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); overflow: auto; }
+.hg-dialog::backdrop { background: rgba(0, 0, 0, .65); }
+.hg-dialog form { padding: 24px; gap: 16px; }
+@media (max-width: 600px) { .hg-dialog form { padding: 18px; } }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg-title { font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+.dlg-x { width: 44px; padding: 0; flex: none; }
+.dlg-foot { justify-content: flex-end; padding-top: 4px; }
+.hg-dialog input[type="file"] { padding: 10px; }
+.hg-dialog input[type="file"]::file-selector-button { font: inherit; font-weight: 700; margin-right: 12px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text); cursor: pointer; }
+input[type="datetime-local"], input[type="date"] { color-scheme: dark; }
+
+/* Libellé-bouton contenant un input fichier masqué */
+.upload-btn { position: relative; cursor: pointer; }
+.upload-btn:focus-within { outline: 2px solid var(--sand); outline-offset: 2px; }
+.upload-btn.is-busy { opacity: .6; pointer-events: none; }

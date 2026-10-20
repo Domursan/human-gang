@@ -1,0 +1,131 @@
+/* ===== Intro « 3D » — index.html ===== */
+body.intro {
+  display: block;
+  min-height: 0;
+  background: #050506;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+}
+
+/* Piste de défilement : sa hauteur fournit la « course » de la caméra */
+.intro-track { position: relative; height: 420vh; }
+.intro-stage {
+  position: sticky; top: 0;
+  height: 100vh; height: 100svh;
+  overflow: hidden;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+  background:
+    radial-gradient(ellipse 80% 70% at 50% 50%, #0d0d10 0%, #060607 60%, #030304 100%);
+}
+.intro-glow {
+  position: absolute; inset: -20%;
+  background: radial-gradient(circle at 50% 50%, rgba(158, 53, 67, 0.22) 0%, rgba(158, 53, 67, 0.06) 22%, transparent 48%);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+.intro-world {
+  position: absolute; inset: 0;
+  transform-style: preserve-3d;
+}
+.intro-logo {
+  position: absolute; left: 50%; top: 50%;
+  width: min(54vmin, 440px); aspect-ratio: 1;
+  margin: calc(min(54vmin, 440px) / -2) 0 0 calc(min(54vmin, 440px) / -2);
+  display: grid; place-items: center;
+  backface-visibility: hidden;
+}
+.intro-logo img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 18px 50px rgba(0, 0, 0, 0.75));
+  user-select: none; -webkit-user-drag: none;
+}
+.intro-logo-fallback {
+  display: none;
+  font-size: min(30vmin, 220px); line-height: 1; color: var(--text);
+  letter-spacing: -0.04em;
+}
+.intro-logo.no-logo img { display: none; }
+.intro-logo.no-logo .intro-logo-fallback { display: block; }
+
+/* Poussière d'étoiles en profondeur (positionnée en JS) */
+.intro-dust { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; }
+.intro-dust i {
+  position: absolute; left: 0; top: 0;
+  width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px;
+  border-radius: 50%;
+  background: #cfcac2;
+  will-change: opacity;
+}
+
+/* Bouton passer */
+.intro-skip {
+  position: fixed; z-index: 20;
+  top: max(16px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right));
+  background: rgba(14, 14, 16, 0.55);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--text); font-size: 14px;
+}
+.intro-skip:hover { background: rgba(40, 40, 46, 0.8); }
+
+/* Indication de défilement */
+.intro-hint {
+  position: fixed; z-index: 10; left: 0; right: 0;
+  bottom: calc(34px + env(safe-area-inset-bottom));
+  margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+  pointer-events: none;
+  will-change: opacity;
+}
+.intro-hint svg { animation: intro-nudge 1.8s ease-in-out infinite; }
+@keyframes intro-nudge { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(5px); opacity: 1; } }
+
+.intro-enter[hidden] { display: none; }
+.intro-enter {
+  position: fixed; z-index: 10; left: 50%; transform: translateX(-50%);
+  bottom: calc(48px + env(safe-area-inset-bottom));
+  min-width: 160px;
+}
+
+/* Barre de progression arc-en-ciel */
+.intro-progress {
+  position: fixed; z-index: 10; left: 0; right: 0; bottom: 0;
+  height: 6px; background: rgba(255, 255, 255, 0.06);
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: content-box;
+}
+.intro-progress-fill {
+  display: flex; height: 6px;
+  clip-path: inset(0 100% 0 0);
+  will-change: clip-path;
+}
+.intro-progress-fill span { flex: 1; }
+.intro-progress-fill span:nth-child(1) { background: var(--rb-1); }
+.intro-progress-fill span:nth-child(2) { background: var(--rb-2); }
+.intro-progress-fill span:nth-child(3) { background: var(--rb-3); }
+.intro-progress-fill span:nth-child(4) { background: var(--rb-4); }
+.intro-progress-fill span:nth-child(5) { background: var(--rb-5); }
+.intro-progress-fill span:nth-child(6) { background: var(--rb-6); }
+
+/* Voile sombre final */
+.intro-fade {
+  position: fixed; inset: 0; z-index: 30;
+  background: #000; opacity: 0; pointer-events: none;
+}
+.intro-fade.on { pointer-events: auto; }
+
+.intro-noscript {
+  position: fixed; inset: auto 0 64px; text-align: center; z-index: 40; margin: 0;
+}
+
+/* Mouvement réduit : pas de course, simple fondu (piloté en JS via l'API Web Animations) */
+body.intro.reduced { overflow: hidden; }
+body.intro.reduced .intro-track { height: 100vh; height: 100svh; }
+body.intro.reduced .intro-hint { display: none; }
+
+@media (max-width: 600px) {
+  .intro-skip { font-size: 13px; padding: 10px 14px; }
+  .intro-logo { width: 68vmin; margin: -34vmin 0 0 -34vmin; }
+}

@@ -1,0 +1,78 @@
+/* ===== Human Gang — Historique ===== */
+.hist .page-head .eyebrow { color: var(--hist-fg); }
+
+/* Filtres */
+.hist-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.hf { --c: var(--text); font: inherit; font-weight: 700; font-size: 14px; min-height: 44px; padding: 10px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
+.hf::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.hf-ss { --c: var(--ss-fg); } .hf-irl { --c: var(--irl-fg); } .hf-moment { --c: var(--plum); }
+.hf:hover { color: var(--text); background: var(--surface-2); }
+.hf[aria-pressed="true"] { color: var(--text); background: var(--surface-2); border-color: var(--c); }
+@media (max-width: 600px) { .hf { flex: 1 1 auto; justify-content: center; padding: 10px 12px; } }
+
+/* Frise */
+.timeline { --rail: 28px; display: flex; flex-direction: column; gap: 40px; }
+.tl-year-title { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px;
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(34px, 5vw, 52px); line-height: 1; color: var(--hist-fg); }
+.tl-year-count { font-family: var(--font-body); letter-spacing: 0; }
+.tl-items { list-style: none; margin: 0; padding: 0 0 0 var(--rail); position: relative; display: flex; flex-direction: column; gap: 16px; }
+.tl-items::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px;
+  background: linear-gradient(var(--hist-border), var(--border) 85%, transparent); }
+.tl-item { --c: var(--hist-fg); --bgc: var(--hist-bg); --bd: var(--hist-border); position: relative; }
+.tl-ss { --c: var(--ss-fg); --bgc: var(--ss-bg); --bd: var(--ss-border); }
+.tl-irl { --c: var(--irl-fg); --bgc: var(--irl-bg); --bd: var(--irl-border); }
+.tl-moment { --c: var(--plum); --bgc: color-mix(in srgb, var(--plum) 9%, var(--surface)); --bd: color-mix(in srgb, var(--plum) 22%, var(--border)); }
+.tl-dot { position: absolute; left: calc(-1 * var(--rail) + 1px); top: 24px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--bg); border: 3px solid var(--c); }
+
+.tl-card { background: var(--bgc); border: 1px solid var(--bd); border-radius: var(--radius); padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+@media (max-width: 600px) { .timeline { --rail: 22px; } .tl-items::before { left: 5px; } .tl-dot { width: 12px; height: 12px; } .tl-card { padding: 18px; } }
+.tl-kind { display: flex; align-items: center; gap: 8px; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--c); }
+.tl-kind svg { flex: none; }
+.tl-title { font-size: 21px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.tl-meta { margin: 0; color: var(--muted); overflow-wrap: anywhere; }
+.tl-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tl-tags .pill { background: rgba(0,0,0,.22); }
+.tl-tags .pill-ok { background: var(--sage-soft); }
+.tl-tags .pill-current { background: transparent; }
+.tl-body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* Révélation Secret Santa */
+.reveal { border-top: 1px solid var(--bd); padding-top: 4px; }
+.reveal summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ss-fg); list-style: none; }
+.reveal summary::-webkit-details-marker { display: none; }
+.reveal summary::before { content: ''; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); transition: transform .2s; margin-right: 2px; }
+.reveal[open] summary::before { transform: rotate(45deg); }
+.reveal-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.reveal-list li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.22); font-size: 14px; min-width: 0; }
+.reveal-list li span:not(.reveal-arrow) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reveal-arrow { color: var(--ss-fg); display: inline-flex; flex: none; }
+
+/* Miniatures sorties */
+.tl-thumbs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 560px; }
+.tl-thumb { display: block; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.tl-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s; }
+.tl-thumb:hover img { transform: scale(1.05); }
+.tl-thumb-more { display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--text);
+  font-family: var(--font-display); font-size: 20px; border: 1px dashed var(--bd); background: rgba(0,0,0,.2); }
+.tl-link { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; color: var(--irl-fg); text-decoration: none; }
+.tl-link:hover { color: var(--amber); text-decoration: underline; }
+
+/* Moments */
+.tl-moment-img { display: block; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: 14px; overflow: hidden; max-width: 560px; }
+.tl-moment-img img { width: 100%; max-height: 360px; object-fit: cover; }
+.tl-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.tl-author { display: inline-flex; align-items: center; gap: 8px; }
+.tl-author .avatar { font-size: 10px; }
+
+/* État vide */
+.hist-empty { position: relative; overflow: hidden; border: 1px solid var(--hist-border); border-radius: var(--radius); padding: 48px 32px;
+  background:
+    radial-gradient(80% 120% at 100% 0%, color-mix(in srgb, var(--hist-fg) 16%, transparent), transparent 60%),
+    var(--hist-bg);
+  display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.hist-empty p { margin: 0; max-width: 560px; }
+.hist-empty-title { font-size: clamp(26px, 4vw, 38px); line-height: 1.1; }
+@media (max-width: 600px) { .hist-empty { padding: 32px 20px; } }

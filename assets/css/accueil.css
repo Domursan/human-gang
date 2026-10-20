@@ -1,0 +1,86 @@
+/* ===== Accueil ===== */
+.home-loading { min-height: 50vh; }
+#app [hidden] { display: none !important; }
+
+/* Héros visiteur */
+.home-hero { padding: 64px 0 40px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; max-width: 760px; }
+.home-hero-logo { width: 88px; height: 88px; object-fit: contain; margin-bottom: 8px; }
+.home-lead { font-size: 18px; color: var(--muted); margin: 0; max-width: 620px; }
+.home-hero-actions { margin-top: 8px; }
+.home-hero .small { margin: 0; }
+
+/* En-tête membre + compte à rebours */
+.home-head { align-items: flex-end; }
+.countdown {
+  background: var(--ss-bg); border: 1px solid var(--ss-border); border-radius: var(--radius);
+  padding: 16px 20px; min-width: 0;
+}
+.countdown p { margin: 0; }
+.cd-title { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--ss-fg); margin-bottom: 8px !important; }
+.cd-units { display: flex; gap: 14px; }
+.cd-unit { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
+.cd-num { font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cd-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.cd-today { font-size: 22px; }
+
+/* Tuiles */
+.home-tiles { margin-bottom: 20px; }
+.tile { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 230px; color: var(--text); text-decoration: none; }
+.tile p { margin: 0; }
+.tile-link { transition: transform .18s ease, border-color .18s ease; }
+.tile-link:hover { color: var(--text); transform: translateY(-2px); }
+.card-ss.tile-link:hover { border-color: var(--ss-fg); }
+.card-irl.tile-link:hover { border-color: var(--irl-fg); }
+.card-hist.tile-link:hover { border-color: var(--hist-fg); }
+.tile-icon {
+  width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid currentColor; margin-bottom: 10px;
+}
+.tile-icon-ss { color: var(--ss-fg); }
+.tile-icon-irl { color: var(--irl-fg); }
+.tile-icon-hist { color: var(--hist-fg); }
+.tile-arrow { position: absolute; top: 28px; right: 26px; color: var(--muted); transition: transform .18s ease, color .18s ease; }
+.tile-link:hover .tile-arrow { transform: translateX(3px); color: var(--text); }
+.tile-label { font-family: var(--font-display) !important; font-weight: 400 !important; font-size: 24px !important; margin: 0 0 4px !important; }
+.tile-body { display: flex; flex-direction: column; gap: 6px; }
+.tile-kicker { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.tile-main { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.tile-sub { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.card-ss .tile-main { color: var(--text); }
+
+/* Squelettes de chargement */
+.skeleton, .skeleton-row { display: block; border-radius: 8px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04)); background-size: 200% 100%; animation: hg-shimmer 1.4s linear infinite; }
+.skeleton { height: 16px; width: 80%; margin: 4px 0; }
+.skeleton.short { width: 50%; }
+.skeleton-row { height: 44px; margin: 8px 0; list-style: none; }
+@keyframes hg-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Fil + anniversaires */
+.home-row > .home-feed { flex: 2 1 420px; }
+.home-row > .home-bdays { flex: 1 1 300px; }
+.card-title { display: flex; align-items: center; gap: 10px; }
+.card-title svg { color: var(--muted); }
+.feed, .bdays { list-style: none; margin: 0; padding: 0; }
+.feed-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.feed-item:last-child { border-bottom: 0; }
+.feed-text { min-width: 0; }
+.feed-text p { margin: 0 0 2px; overflow-wrap: anywhere; }
+.feed-sys { background: var(--surface-2) !important; padding: 5px; overflow: hidden; }
+.feed-sys img { width: 100%; height: 100%; object-fit: contain; }
+
+.bday { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.bday:last-child { border-bottom: 0; }
+.bday-name { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.bday-date { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.bday.is-past { opacity: .55; }
+.bdays .empty, .feed .empty { font-size: 14px; }
+
+@media (max-width: 600px) {
+  .home-hero { padding: 40px 0 28px; }
+  .home-lead { font-size: 16px; }
+  .countdown { width: 100%; }
+  .cd-units { justify-content: space-between; }
+  .cd-num { font-size: 28px; }
+  .tile { min-height: 0; }
+  .tile-arrow { top: 20px; right: 18px; }
+}
