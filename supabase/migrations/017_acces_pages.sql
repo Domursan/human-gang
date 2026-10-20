@@ -1,0 +1,5 @@
+-- Appliquée le 20.10.2026 (résumé ; SQL exact dans l'historique de session).
+-- hg_pages(slug pk = nom du fichier sans .html, label, mode 'membres'|'admin'|'liste', in_nav, sort, updated_at) — lecture membres, écriture admin.
+-- hg_page_access(page_slug, user_id, allowed bool) — admin. allowed=true : autorisé (mode liste) ; allowed=false : interdit (même en mode membres).
+-- rpc hg_my_pages() -> (slug, label, in_nav, sort) : pages accessibles à l'utilisateur connecté (l'admin a tout).
+-- Pages initiales : accueil, secret-santa, irl, historique, messages, evenements, membre, recap (membres) ; cartes (admin).
