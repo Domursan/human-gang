@@ -1,0 +1,5 @@
+-- Appliquée le 20.10.2026 : la date d'inscription affichée partout = la date d'arrivée dans le gang (saisie manuellement).
+-- hg_profiles.account_created_at : vraie date de création du compte (conservée).
+-- hg_profiles.joined_on : jamais vide (= jour de création si non renseigné) ; trigger hg_profiles_sync_joined :
+--   à chaque insertion / modification de joined_on, created_at := joined_on à 12:00 (Europe/Zurich).
+-- Effets : « membre depuis », liste des comptes, badges Fondateur/Fidèle, récap annuel suivent la date d'arrivée.
