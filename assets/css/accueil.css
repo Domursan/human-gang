@@ -33,8 +33,10 @@
 .card-irl.tile-link:hover { border-color: var(--irl-fg); }
 .card-hist.tile-link:hover { border-color: var(--hist-fg); }
 .tile-icon {
-  width: 46px; height: 46px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(255, 255, 255, 0.04); border: 1px solid currentColor; margin-bottom: 10px;
+  width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid color-mix(in srgb, currentColor 45%, transparent); margin-bottom: 10px;
+  font-size: 34px; line-height: 1;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
 .tile-icon-ss { color: var(--ss-fg); }
 .tile-icon-irl { color: var(--irl-fg); }
@@ -75,7 +77,21 @@
 .bday.is-past { opacity: .55; }
 .bdays .empty, .feed .empty { font-size: 14px; }
 
+/* Boîte à idées */
+.home-ideas { margin-top: 20px; scroll-margin-top: 90px; }
+.home-ideas form { max-width: 760px; }
+.ideas-head .card-title { margin: 0 0 4px; }
+.ideas-head p { margin: 0; }
+.ideas-count { align-self: flex-end; }
+.home-ideas .form-error {
+  margin: 0; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--ss-bg); border: 1px solid var(--accent); color: var(--rose); font-size: 14px;
+}
+.home-ideas .form-error[hidden] { display: none; }
+
 @media (max-width: 600px) {
+  .tile-icon { width: 52px; height: 52px; font-size: 30px; }
+  .home-ideas .btn { width: 100%; }
   .home-hero { padding: 40px 0 28px; }
   .home-lead { font-size: 16px; }
   .countdown { width: 100%; }

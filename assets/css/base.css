@@ -37,14 +37,8 @@
   --maxw: 1200px;
 }
 
-/* ===== Thèmes saisonniers : surchargent quelques tokens (attribut data-season sur <html>) ===== */
-html[data-season="halloween"] { --accent: #A4532A; --rust: #D07A3E; --bg: #0F0D0B; }
-html[data-season="noel"]      { --accent: #8E2F3A; --sand: #D9C48A; --bg: #0D100E; }
-html[data-season="paques"]    { --accent: #8C6FA8; --sand: #E3D08A; }
-html[data-season="printemps"] { --accent: #6E8F5E; --rust: #D08A8A; }
-html[data-season="ete"]       { --accent: #B26A3E; --sand: #E8C870; }
-html[data-season="automne"]   { --accent: #9A5B32; --rust: #C77A4A; }
-html[data-season="hiver"]     { --accent: #4F6A8F; --bg: #0C0E12; }
+/* Les thèmes (table hg_themes) surchargent --accent, --bg, --surface(-2), --border(-strong), --text, --muted, --sand
+   directement sur :root via core.js (applyTheme) ; data-theme="<slug>" est posé sur <html>. */
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -74,7 +68,7 @@ h1, h2, h3 { margin: 0; }
 .site-header { border-bottom: 1px solid var(--border); }
 .site-header .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; }
-.brand img { width: 44px; height: 44px; object-fit: contain; }
+.brand img { width: 44px; height: 44px; object-fit: contain; image-rendering: pixelated; }
 .brand span { font-family: var(--font-display); font-size: 20px; }
 .nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .nav a { color: var(--text); text-decoration: none; padding: 10px 14px; border-radius: 999px; border: 1px solid transparent; }
@@ -86,7 +80,11 @@ h1, h2, h3 { margin: 0; }
 /* ===== Pied de page ===== */
 .site-footer { border-top: 1px solid var(--border); margin-top: 64px; }
 .site-footer .container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-top: 24px; padding-bottom: 24px; font-size: 14px; color: var(--muted); }
-.site-footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
+.site-footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.fx-toggle { font: inherit; font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); border-radius: 999px;
+  min-height: 44px; padding: 6px 14px; cursor: pointer; }
+.fx-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+.fx-toggle[hidden] { display: none; }
 
 /* ===== Composants ===== */
 .page-head { padding: 48px 0 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px; }
@@ -158,4 +156,17 @@ h1, h2, h3 { margin: 0; }
 
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+/* ===== Effets de thème (calque derrière le contenu, généré par core.js) ===== */
+.fx-layer { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: strict; }
+.fx-layer span { position: absolute; top: -40px; display: block; will-change: transform; }
+.fx-pluie span { line-height: 1; opacity: .5; animation: fx-fall linear infinite; }
+.fx-neige span { border-radius: 50%; background: #fff; animation: fx-fall linear infinite; }
+.fx-etoiles span { border-radius: 50%; background: var(--sand); box-shadow: 0 0 6px var(--sand); opacity: 0; animation: fx-twinkle ease-in-out infinite; }
+@keyframes fx-fall {
+  from { transform: translate3d(0, 0, 0) rotate(0deg); }
+  to { transform: translate3d(var(--dx, 0px), calc(100vh + 80px), 0) rotate(var(--r, 0deg)); }
+}
+@keyframes fx-twinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: .7; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) { .fx-layer { display: none; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

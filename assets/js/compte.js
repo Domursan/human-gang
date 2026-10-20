@@ -1,5 +1,6 @@
-// ===== Mon compte : connexion, inscription, profil, badges, idées, données =====
-import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, avatarHtml } from './core.js';
+// ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données =====
+import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml } from './core.js';
+import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
 const url = new URL(location.href);
@@ -28,13 +29,14 @@ const ICON = {
   download: svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', 18),
   trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', 18),
   out: svg('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>', 18),
-  bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
+  info: svg('<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2"/>'),
+  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 16),
   badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
   user: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
   data: svg('<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
 };
 const tagPublic = '<span class="vis-tag vis-public">' + ICON.eye + 'Visible par le gang</span>';
-const tagPrivate = '<span class="vis-tag vis-private">' + ICON.lock + 'Privé</span>';
+const tagPrivate = '<span class="vis-tag vis-private">' + ICON.lock + 'Toi et l\'admin</span>';
 
 function authMsg(e) {
   const m = errMsg(e);
@@ -319,7 +321,7 @@ async function renderMember(user) {
 
     <div class="privacy-note" role="note">
       ${ICON.lock}
-      <p><strong>Ces infos sont visibles uniquement par toi</strong>, sauf celles marquées « Visible par le gang » : pseudo, avatar, couleur et, si tu choisis de le partager, le jour et le mois de ton anniversaire (jamais l'année). Ta liste de souhaits Secret Santa n'est visible que par ton Santa.</p>
+      <p><strong>Tes infos sont visibles par toi et l'admin</strong> (qui peut aussi les consulter et les corriger pour la gestion du site). Les autres membres ne voient que celles marquées « Visible par le gang » : pseudo, avatar, couleur et, si tu choisis de le partager, le jour et le mois de ton anniversaire (jamais l'année). Ta liste de souhaits Secret Santa est visible par ton Santa et l'admin.</p>
     </div>
 
     <section class="row acc-row">
@@ -377,6 +379,35 @@ async function renderMember(user) {
       </div>
     </section>
 
+    <section class="card acc-infos" id="infos" aria-labelledby="infos-title">
+      <form id="info-form" novalidate>
+        <div class="acc-infos-head">
+          <h2 class="card-title" id="infos-title">${ICON.info} Informations diverses ${tagPrivate}</h2>
+          <p class="small muted">Adresse, tailles, goûts… pour aider ton Santa à viser juste. Tout est facultatif.</p>
+        </div>
+        <div class="privacy-note info-note" role="note">
+          ${ICON.lock}
+          <p>Ces informations sont visibles uniquement par toi et l'admin. Pour chaque Secret Santa, l'admin choisit lesquelles sont transmises à ton Santa.</p>
+        </div>
+        <div class="info-groups" id="info-groups" aria-busy="true">${INFO_GROUPS.map((g, i) => `
+          <details class="info-group" data-group="${esc(g.id)}"${i === 0 ? ' open' : ''}>
+            <summary><span class="info-group-name">${esc(g.label)}</span><span class="info-group-count small muted" data-count="${esc(g.id)}"></span></summary>
+            <div class="info-fields">${g.fields.map((f) => {
+              const id = `inf-${f.id}`, ph = f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : '';
+              const input = f.type === 'textarea'
+                ? `<textarea id="${id}" data-key="${esc(f.id)}" rows="3" maxlength="1000"${ph}></textarea>`
+                : `<input id="${id}" data-key="${esc(f.id)}" maxlength="300"${ph}>`;
+              return `<div class="field${f.type === 'textarea' ? ' field-wide' : ''}"><label for="${id}">${esc(f.label)}</label>${input}</div>`;
+            }).join('')}</div>
+          </details>`).join('')}
+        </div>
+        <div class="info-actions">
+          <button class="btn btn-primary" type="submit">Enregistrer mes informations</button>
+          <span class="info-status small" id="info-status" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+
     <section class="card acc-badges">
       <div class="acc-badges-head">
         <h2 class="card-title">${ICON.badge} Badges</h2>
@@ -385,21 +416,10 @@ async function renderMember(user) {
       <ul class="badge-grid" id="badge-grid" aria-live="polite"></ul>
     </section>
 
-    <section class="row acc-row">
-      <form class="card stack" id="idea-form" novalidate>
-        <h2 class="card-title">${ICON.bulb} Boîte à idées</h2>
-        <p class="small muted">Une idée de sortie, une fonctionnalité pour le site, un thème ? Ton message est <strong>lu uniquement par l'admin</strong>.</p>
-        <div class="field">
-          <label for="idea-body">Ton idée</label>
-          <textarea id="idea-body" maxlength="2000" rows="4" required></textarea>
-          <span class="small muted counter" id="idea-count">0 / 2000</span>
-        </div>
-        <div class="btn-row"><button class="btn btn-sand" type="submit">Envoyer l'idée</button></div>
-      </form>
-
+    <section class="acc-row">
       <div class="card stack" id="data-card">
         <h2 class="card-title">${ICON.data} Mes données</h2>
-        <p class="small muted">Tu peux récupérer à tout moment une copie de toutes les données liées à ton compte (format JSON), ou supprimer ton compte. <a href="legal.html#droits">Tes droits</a></p>
+        <p class="small muted">Tu peux récupérer à tout moment une copie de toutes les données liées à ton compte (format JSON), ou supprimer ton compte. Une idée pour le gang ? La <a href="accueil.html#idees">boîte à idées</a> est sur l'accueil. <a href="legal.html#droits">Tes droits</a></p>
         <div class="btn-row">
           <button class="btn btn-ghost" type="button" id="export">${ICON.download} Exporter mes données</button>
           <button class="btn btn-danger" type="button" id="delete">${ICON.trash} Supprimer mon compte</button>
@@ -412,8 +432,8 @@ async function renderMember(user) {
   bindProfile();
   bindAvatar();
   bindPassword();
-  bindIdea();
   bindData();
+  bindInfos();
   loadBadges();
 }
 
@@ -561,21 +581,66 @@ async function loadBadges() {
   } catch (e) { ul.innerHTML = `<li class="empty">Impossible de charger les badges (${esc(errMsg(e))}).</li>`; }
 }
 
-/* ---------- Boîte à idées ---------- */
-function bindIdea() {
-  const form = $('#idea-form'), ta = $('#idea-body'), count = $('#idea-count');
-  ta.addEventListener('input', () => { count.textContent = `${ta.value.length} / 2000`; });
+/* ---------- Informations diverses (hg_profile_info) ---------- */
+let infoData = {};       // dernier état enregistré (on conserve aussi les clés inconnues de cette page)
+function infoInputs() { return $$('#info-groups [data-key]'); }
+function infoFromForm() {
+  const out = { ...infoData };
+  for (const el of infoInputs()) out[el.dataset.key] = el.value.trim();
+  return out;
+}
+function infoCounts() {
+  for (const g of INFO_GROUPS) {
+    const n = g.fields.filter((f) => String($(`#inf-${f.id}`)?.value || '').trim()).length;
+    const el = $(`[data-count="${g.id}"]`);
+    if (el) el.textContent = n ? `${n} / ${g.fields.length} renseigné${n > 1 ? 's' : ''}` : 'Rien de renseigné';
+  }
+}
+function infoStatus(state, when) {
+  const el = $('#info-status');
+  if (!el) return;
+  el.className = `info-status small is-${state}`;
+  el.innerHTML = state === 'saved' ? `${ICON.check} Enregistré${when ? ` · ${esc(fmtDateTime(when))}` : ''}`
+    : state === 'dirty' ? 'Modifications non enregistrées'
+    : state === 'saving' ? 'Enregistrement…'
+    : state === 'error' ? 'Échec de l\'enregistrement'
+    : '';
+}
+async function bindInfos() {
+  const form = $('#info-form'), box = $('#info-groups');
+  let dirty = false;
+  const setDirty = (v) => { dirty = v; if (v) infoStatus('dirty'); };
+  try {
+    const { data, error } = await sb.from('hg_profile_info').select('data,updated_at').eq('user_id', me.id).maybeSingle();
+    if (error) throw error;
+    infoData = (data?.data && typeof data.data === 'object') ? data.data : {};
+    for (const el of infoInputs()) el.value = infoData[el.dataset.key] ?? '';
+    infoStatus(data ? 'saved' : '', data?.updated_at);
+  } catch (e) {
+    infoStatus('error');
+    $('#info-status').textContent = `Impossible de charger tes informations (${errMsg(e)}).`;
+  }
+  box.removeAttribute('aria-busy');
+  infoCounts();
+  // Ouvrir d'office les groupes déjà remplis (sinon seul le premier reste ouvert)
+  const filled = INFO_GROUPS.filter((g) => g.fields.some((f) => String(infoData[f.id] || '').trim()));
+  if (filled.length) $$('.info-group', box).forEach((d) => { d.open = filled.some((g) => g.id === d.dataset.group); });
+  form.addEventListener('input', () => { setDirty(true); infoCounts(); });
+  window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const body = ta.value.trim();
-    if (!body) return formError(form, 'Écris ton idée avant de l\'envoyer.');
     const btn = form.querySelector('button[type=submit]');
-    busy(btn, true, 'Envoi…'); formError(form, '');
-    const { error } = await sb.from('hg_ideas').insert({ user_id: me.id, body });
+    const data = infoFromForm();
+    // Objet complet : toutes les clés de la liste (valeurs vides comprises) + celles déjà présentes
+    for (const f of INFO_FIELDS) if (!(f.id in data)) data[f.id] = '';
+    busy(btn, true, 'Enregistrement…'); infoStatus('saving');
+    const updated_at = new Date().toISOString();
+    const { error } = await sb.from('hg_profile_info').upsert({ user_id: me.id, data, updated_at }, { onConflict: 'user_id' });
     busy(btn, false);
-    if (error) return formError(form, authMsg(error));
-    ta.value = ''; count.textContent = '0 / 2000';
-    toast('Merci, ton idée a été transmise à l\'admin.', 'ok');
+    if (error) { infoStatus('error'); return toast(`Enregistrement impossible : ${authMsg(error)}`, 'error'); }
+    infoData = data; dirty = false;
+    infoStatus('saved', updated_at);
+    toast('Informations enregistrées.', 'ok');
   });
 }
 
@@ -588,7 +653,8 @@ function bindData() {
       const { data, error } = await sb.rpc('hg_export_my_data');
       if (error) throw error;
       const { data: { user } } = await sb.auth.getUser();
-      const payload = { exporte_le: new Date().toISOString(), compte: { id: user?.id, email: user?.email, cree_le: user?.created_at }, ...data };
+      const { data: info } = await sb.from('hg_profile_info').select('data,updated_at').eq('user_id', me.id).maybeSingle();
+      const payload = { exporte_le: new Date().toISOString(), compte: { id: user?.id, email: user?.email, cree_le: user?.created_at }, ...data, informations_diverses: info || null };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);

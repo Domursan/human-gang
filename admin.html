@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/admin.css">
+  <link rel="stylesheet" href="assets/css/admin-accounts.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -20,13 +21,14 @@
         <div class="eyebrow">Coulisses</div>
         <h1 class="page-title">Administration</h1>
       </div>
-      <p class="muted small admin-intro">Les attributions du Secret Santa et les infos privées des membres ne sont jamais affichées ici.</p>
+      <p class="muted small admin-intro">Tu as accès à toutes les données des membres. Les attributions du Secret Santa restent masquées tant que tu ne demandes pas à les voir.</p>
     </div>
 
     <div class="admin-layout">
       <nav class="admin-nav" aria-label="Sections de l'administration">
         <a href="#apercu">Vue d'ensemble</a>
-        <a href="#membres">Membres &amp; invitations</a>
+        <a href="#comptes">Comptes</a>
+        <a href="#membres">Invitations</a>
         <a href="#secret-santa">Secret Santa</a>
         <a href="#badges">Badges</a>
         <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
@@ -41,8 +43,13 @@
           <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
         </section>
 
+        <section id="comptes" class="admin-section" aria-labelledby="h-comptes">
+          <h2 id="h-comptes" class="section-title">Comptes</h2>
+          <div id="acc-root"><div class="empty">Chargement des comptes…</div></div>
+        </section>
+
         <section id="membres" class="admin-section" aria-labelledby="h-membres">
-          <h2 id="h-membres" class="section-title">Membres &amp; invitations</h2>
+          <h2 id="h-membres" class="section-title">Invitations</h2>
           <div class="row">
             <div class="card">
               <h3 class="card-title">Codes d'invitation</h3>
@@ -58,10 +65,6 @@
               </form>
               <div id="invite-new"></div>
               <div id="invite-list"></div>
-            </div>
-            <div class="card">
-              <h3 class="card-title">Membres <span class="muted" id="member-count"></span></h3>
-              <div id="member-list"></div>
             </div>
           </div>
         </section>
@@ -140,18 +143,7 @@
 
         <section id="theme" class="admin-section" aria-labelledby="h-theme">
           <h2 id="h-theme" class="section-title">Thème</h2>
-          <form class="card stack" id="theme-form">
-            <fieldset class="toggles">
-              <legend class="label">Mode</legend>
-              <label class="check"><input type="radio" name="mode" value="auto"> <span>Automatique selon la date <span class="muted small" id="theme-auto-label"></span></span></label>
-              <label class="check"><input type="radio" name="mode" value="forced"> <span>Forcer un thème</span></label>
-            </fieldset>
-            <div class="season-picker" id="season-picker" role="radiogroup" aria-label="Thème forcé"></div>
-            <p class="muted small">L'aperçu s'applique tout de suite sur cette page. Les autres visiteurs verront le changement après l'enregistrement.</p>
-            <div class="btn-row">
-              <button class="btn btn-primary" type="submit">Enregistrer le thème</button>
-            </div>
-          </form>
+          <div id="theme-root"><div class="empty">Chargement des thèmes…</div></div>
         </section>
       </div>
     </div>

@@ -1,15 +1,16 @@
 // ===== Accueil : le QG du Human Gang =====
-import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, LOGO_SRC } from './core.js';
+import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo } from './core.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'optional' });
 
 /* ---------- Icônes (SVG à trait) ---------- */
 const svg = (d, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+/* Emojis des rubriques (demandés par Ethan) */
+const EMOJI = { ss: '🎁', irl: '📍', hist: '📜' };
+const tileIcon = (k) => `<span class="tile-icon tile-icon-${k}" aria-hidden="true">${EMOJI[k]}</span>`;
 const ICON = {
-  gift: svg('<rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18"/><path d="M12 8c-2-3.5-6-3.5-6-1 0 1.5 2 1 6 1zM12 8c2-3.5 6-3.5 6-1 0 1.5-2 1-6 1z"/>'),
-  pin: svg('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
-  book: svg('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/>'),
+  bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>', 20),
   arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 20),
   cake: svg('<path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7"/><path d="M5 16c2 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3 1.5 4 0"/><path d="M12 12V8M12 5.5v.01"/>', 20),
   pulse: svg('<path d="M3 12h4l3-7 4 14 3-7h4"/>', 20),
@@ -49,7 +50,7 @@ function syncIntro() {
 function renderGuest() {
   app.innerHTML = `
     <section class="home-hero home-hero-guest">
-      <img class="home-hero-logo" src="${LOGO_SRC}" alt="" onerror="this.remove()">
+      <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" onerror="this.remove()">
       <p class="eyebrow">Human Gang</p>
       <h1 class="page-title">Le QG du Human Gang</h1>
       <p class="home-lead">Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L'espace est réservé aux membres.</p>
@@ -61,17 +62,17 @@ function renderGuest() {
     </section>
     <section class="grid home-tiles" aria-label="Ce qui t'attend">
       <div class="card card-ss tile">
-        <span class="tile-icon tile-icon-ss">${ICON.gift}</span>
+        ${tileIcon('ss')}
         <h2 class="tile-label">Secret Santa</h2>
         <p class="tile-sub">Inscriptions, tirage au sort, liste de souhaits et révélation finale.</p>
       </div>
       <div class="card card-irl tile">
-        <span class="tile-icon tile-icon-irl">${ICON.pin}</span>
+        ${tileIcon('irl')}
         <h2 class="tile-label">IRL</h2>
         <p class="tile-sub">Les prochaines sorties, qui vient, et l'album photo de chaque rencontre.</p>
       </div>
       <div class="card card-hist tile">
-        <span class="tile-icon tile-icon-hist">${ICON.book}</span>
+        ${tileIcon('hist')}
         <h2 class="tile-label">Historique</h2>
         <p class="tile-sub">La frise du gang : éditions passées, sorties et moments cultes.</p>
       </div>
@@ -97,19 +98,19 @@ function renderMemberShell() {
 
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
-        <span class="tile-icon tile-icon-ss">${ICON.gift}</span>
+        ${tileIcon('ss')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">Secret Santa</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
       <a class="card card-irl tile tile-link" href="irl.html" id="tile-irl">
-        <span class="tile-icon tile-icon-irl">${ICON.pin}</span>
+        ${tileIcon('irl')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">IRL</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
       <a class="card card-hist tile tile-link" href="historique.html" id="tile-hist">
-        <span class="tile-icon tile-icon-hist">${ICON.book}</span>
+        ${tileIcon('hist')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">Historique</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
@@ -125,7 +126,42 @@ function renderMemberShell() {
         <h2 class="card-title">${ICON.cake} Anniversaires de ${MONTHS[new Date().getMonth()]}</h2>
         <ul class="bdays" id="bdays"><li class="skeleton-row"></li></ul>
       </div>
+    </section>
+
+    <section class="card home-ideas" id="idees" aria-labelledby="ideas-title">
+      <form class="stack" id="idea-form" novalidate>
+        <div class="ideas-head">
+          <h2 class="card-title" id="ideas-title">${ICON.bulb} Une idée pour le gang ?</h2>
+          <p class="small muted">Une sortie, une fonctionnalité pour le site, un thème… Ton message est <strong>lu uniquement par l'admin</strong>.</p>
+        </div>
+        <div class="field">
+          <label for="idea-body">Ton idée</label>
+          <textarea id="idea-body" maxlength="2000" rows="3" required placeholder="Et si on organisait…"></textarea>
+          <span class="small muted ideas-count" id="idea-count" aria-live="polite">0 / 2000</span>
+        </div>
+        <p class="form-error" id="idea-error" role="alert" hidden></p>
+        <div class="btn-row"><button class="btn btn-sand" type="submit">Envoyer l'idée</button></div>
+      </form>
     </section>`;
+}
+
+/* ---------- Boîte à idées ---------- */
+function bindIdeas() {
+  const form = $('#idea-form'), ta = $('#idea-body'), count = $('#idea-count'), err = $('#idea-error');
+  const showErr = (m) => { err.textContent = m; err.hidden = !m; };
+  ta.addEventListener('input', () => { count.textContent = `${ta.value.length} / 2000`; if (ta.value.trim()) showErr(''); });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = ta.value.trim();
+    if (!body) { showErr('Écris ton idée avant de l\'envoyer.'); ta.focus(); return; }
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true; const label = btn.textContent; btn.textContent = 'Envoi…'; showErr('');
+    const { error } = await sb.from('hg_ideas').insert({ user_id: me.id, body });
+    btn.disabled = false; btn.textContent = label;
+    if (error) { showErr(`Envoi impossible : ${errMsg(error)}`); return; }
+    ta.value = ''; count.textContent = '0 / 2000';
+    toast('Merci, ton idée a été transmise à l\'admin.', 'ok');
+  });
 }
 
 const failBox = (e) => `<p class="small muted">Impossible de charger ces infos (${esc(errMsg(e))}).</p>`;
@@ -236,7 +272,7 @@ async function loadFeed() {
     const byId = new Map(members.map((m) => [m.id, m]));
     ul.innerHTML = data.map((a) => {
       const m = a.user_id ? byId.get(a.user_id) : null;
-      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${LOGO_SRC}" alt="" onerror="this.remove()"></span>`;
+      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" onerror="this.remove()"></span>`;
       return `<li class="feed-item">
         ${av}
         <div class="feed-text">
@@ -277,6 +313,8 @@ if (!me) {
 } else {
   syncIntro();
   renderMemberShell();
+  bindIdeas();
+  if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([loadSecretSanta(), loadIrl(), loadHistory(), loadFeed(), loadBirthdays()]);
 }
 app.removeAttribute('aria-busy');

@@ -1,0 +1,85 @@
+/* ===== Human Gang — administration : éditeur des thèmes (chargé par admin-themes.js) ===== */
+.th-root { gap: 18px; }
+.th-root [hidden] { display: none !important; }
+.th-today { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.th-listhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+.th-listhead .sub-title { margin: 0; }
+
+/* Liste */
+.th-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.th-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border); min-width: 0; }
+.th-card.is-now { border-color: var(--sage); box-shadow: inset 0 0 0 1px var(--sage); }
+.th-card.is-off .th-card-top { opacity: .55; }
+.th-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.th-swatches { display: inline-flex; border-radius: 999px; overflow: hidden; border: 1px solid var(--border-strong); }
+.th-swatches span { width: 22px; height: 22px; display: block; }
+.th-emojis { display: flex; gap: 4px; font-size: 20px; line-height: 1; flex-wrap: wrap; }
+.th-name { font-weight: 700; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; overflow-wrap: anywhere; }
+.th-name code { font-weight: 400; }
+.th-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.th-pills:empty { display: none; }
+.th-pills .pill { padding: 4px 10px; font-size: 12px; }
+.th-meta { margin: 10px 0 0; display: grid; gap: 4px; font-size: 14px; }
+.th-meta div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; }
+.th-meta dt { color: var(--muted); }
+.th-meta dd { margin: 0; overflow-wrap: anywhere; }
+.th-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+
+/* Éditeur */
+.th-editor { border-color: var(--border-strong); scroll-margin-top: 80px; }
+.th-editor-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.th-editor-head .card-title { margin: 0; }
+.th-fieldset { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px 16px; margin: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.th-fieldset legend { padding: 0 6px; }
+.th-range { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.th-range[hidden] { display: none; }
+.th-date { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.th-date .label { min-width: 22px; }
+.th-date select { font: inherit; min-height: 44px; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text); }
+.th-range-note { width: 100%; margin: 0; }
+.th-range-note:empty { display: none; }
+
+.th-logo { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.th-logo .grow { flex: 1 1 220px; min-width: 0; }
+.th-logo-preview { width: 88px; height: 88px; flex: none; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: var(--bg);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--muted); font-size: 12px; text-align: center; padding: 6px; }
+.th-logo-preview img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+.th-emoji-preview { font-size: 13px; color: var(--muted); min-height: 1em; overflow-wrap: anywhere; }
+
+.th-colors { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.th-color { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.th-color input[type="color"] { width: 44px; height: 44px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg); cursor: pointer; flex: none; }
+.th-color-text { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }
+.th-color-text label { font-size: 14px; font-weight: 700; color: var(--text); }
+.th-hex { width: 104px !important; flex: none; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; text-transform: uppercase; padding: 10px !important; }
+.th-warn { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--amber); color: var(--amber); font-size: 14px; }
+.th-warn[hidden] { display: none; }
+.th-warn svg { width: 18px; height: 18px; flex: none; margin-top: 2px; }
+
+/* Échantillon : utilise les couleurs du brouillon sans toucher à la page */
+.th-sample { background: var(--s-bg); border-radius: var(--radius-sm); padding: 18px; border: 1px solid var(--border); }
+.th-sample-card { background: var(--s-surface); color: var(--s-text); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--s-text) 10%, var(--s-surface)); }
+.th-sample-eyebrow { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--s-hl); }
+.th-sample-muted { color: var(--s-muted); font-size: 14px; }
+.th-sample-muted u { color: var(--s-hl); }
+.th-sample-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.th-sample-btn, .th-sample-ghost { font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 10px; }
+.th-sample-btn { background: var(--s-accent); color: var(--s-accent-text); }
+.th-sample-ghost { border: 1px solid color-mix(in srgb, var(--s-text) 22%, var(--s-surface)); color: var(--s-text); font-weight: 500; }
+
+.th-error { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--accent); color: var(--rose); font-size: 14px; }
+.th-error[hidden] { display: none; }
+
+/* Barre d'aperçu */
+.th-preview-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 95; width: max-content; max-width: calc(100vw - 32px);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 10px 12px 10px 18px; border-radius: 16px;
+  background: var(--surface-2); border: 1px solid var(--sand); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); font-weight: 700; }
+.th-preview-bar[hidden] { display: none; }
+
+@media (max-width: 600px) {
+  .th-fieldset { padding: 12px; }
+  .th-actions .btn:not(.btn-icon) { flex: 1 1 auto; }
+}

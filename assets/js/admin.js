@@ -1,8 +1,9 @@
 // ===== Human Gang — administration =====
 import {
   sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn,
-  SEASONS, SEASON_LABELS, autoSeason,
 } from './core.js';
+import { mountThemesSection } from './admin-themes.js';
+import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from './admin-accounts.js';
 
 const me = await initPage({ auth: 'admin' });
 
@@ -120,7 +121,7 @@ function renderStats() {
   const open = S.support.filter((s) => s.status === 'ouverte').length;
   const partCount = ed && ed.id === S.editionId ? S.participants.length : null;
   const tiles = [
-    ['#membres', S.members.length, 'membres'],
+    ['#comptes', S.members.length, 'membres'],
     ['#membres', free, free > 1 ? 'codes disponibles' : 'code disponible'],
     ['#secret-santa', ed ? (partCount ?? '–') : '–', ed ? `inscrits · Secret Santa ${ed.year}` : 'aucune édition'],
     ['#idees', newIdeas, newIdeas > 1 ? 'nouvelles idées' : 'nouvelle idée', newIdeas > 0],
@@ -145,20 +146,8 @@ function newCode() {
 }
 let lastCodes = [];
 
-function renderMembers() {
-  $('#member-count').textContent = `(${S.members.length})`;
-  const held = new Map();
-  for (const ub of S.userBadges) held.set(ub.user_id, (held.get(ub.user_id) || 0) + 1);
-  $('#member-list').innerHTML = S.members.length
-    ? `<div class="scroll-list">${S.members.map((m) => `
-        <div class="member-row">
-          ${avatarHtml(m, 36)}
-          <div class="grow"><strong>${esc(m.pseudo)}</strong>${m.id === me.id ? ' <span class="pill pill-muted">toi</span>' : ''}
-            <div class="small muted">Membre depuis le ${esc(fmtDate(m.member_since))}${held.get(m.id) ? ` · ${held.get(m.id)} badge${held.get(m.id) > 1 ? 's' : ''}` : ''}</div>
-          </div>
-        </div>`).join('')}</div>`
-    : '<div class="empty">Aucun membre pour l\'instant.</div>';
-}
+// La liste des membres est dans la section « Comptes » (admin-accounts.js).
+function renderMembers() { /* rien à rafraîchir ici : la liste des comptes ne dépend pas des badges */ }
 
 function renderInvites() {
   $('#invite-new').innerHTML = lastCodes.length ? `
@@ -258,6 +247,7 @@ function renderSS() {
         <div class="field"><label for="ssc-send">Date limite d'envoi</label><input id="ssc-send" name="send_deadline" type="date"></div>
         <div class="field"><label for="ssc-exch">Date d'échange</label><input id="ssc-exch" name="exchange_date" type="date"></div>
       </div>
+      ${sharedFieldsHtml('ssc', [])}
       <div class="btn-row"><button class="btn btn-primary" type="submit">Créer l'édition</button></div>
     </form>`;
 
@@ -293,12 +283,13 @@ function renderSS() {
           <div class="field"><label for="sse-send">Date limite d'envoi</label><input id="sse-send" name="send_deadline" type="date" value="${esc(ed.send_deadline ?? '')}"></div>
           <div class="field"><label for="sse-exch">Date d'échange</label><input id="sse-exch" name="exchange_date" type="date" value="${esc(ed.exchange_date ?? '')}"></div>
         </div>
+        ${sharedFieldsHtml('sse', ed.shared_fields ?? [])}
         <p class="small muted">${ed.drawn_at ? `Tirage effectué le ${esc(fmtDateTime(ed.drawn_at))}.` : 'Tirage pas encore effectué.'} Le tirage passe automatiquement l'édition en « Envoi des cadeaux ».</p>
         <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
 
         <div class="draw-box stack">
           <h4 class="sub-title">Tirage au sort</h4>
-          <p class="small muted">Respecte les exclusions et évite de retomber sur la même personne que l'an dernier. Personne, pas même toi, ne voit les paires. Le tirage ne peut être lancé qu'une seule fois par édition.</p>
+          <p class="small muted">Respecte les exclusions et évite de retomber sur la même personne que l'an dernier. Les paires restent secrètes : tu peux les afficher plus bas si besoin. Le tirage ne peut être lancé qu'une seule fois par édition.</p>
           <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : 'Lancer le tirage'}</button></div>
           ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < 3 ? '<p class="small muted">Il faut au moins 3 inscrits.</p>' : ''}
           ${S.lastDraw && S.lastDraw.edition === ed.id ? `<p class="draw-result" role="status">Tirage OK pour ${esc(S.lastDraw.n)} participants</p>` : ''}
@@ -343,6 +334,7 @@ function renderSS() {
           </div>`).join('') : '<p class="small muted">Aucune exclusion.</p>'}</div>
       </div>
 
+      ${pairsBlockHtml(ed)}
       ${createForm}
     </div>`;
   const b = $('#ex-b'); if (b && b.options.length > 1) b.selectedIndex = 1;
@@ -367,7 +359,7 @@ $('#secret-santa').addEventListener('submit', (ev) => {
       if (S.editions.some((e) => e.year === year)) throw new Error(`L'édition ${year} existe déjà.`);
       const row = check(await sb.from('hg_ss_editions').insert({
         year, budget: nullIfEmpty(fd.get('budget')), send_deadline: nullIfEmpty(fd.get('send_deadline')),
-        exchange_date: nullIfEmpty(fd.get('exchange_date')),
+        exchange_date: nullIfEmpty(fd.get('exchange_date')), shared_fields: readSharedFields(form),
       }).select().single());
       S.editionId = row.id;
       await loadEditions(); await loadEditionDetails();
@@ -389,6 +381,7 @@ $('#secret-santa').addEventListener('submit', (ev) => {
       check(await sb.from('hg_ss_editions').update({
         status, budget: nullIfEmpty(fd.get('budget')),
         send_deadline: nullIfEmpty(fd.get('send_deadline')), exchange_date: nullIfEmpty(fd.get('exchange_date')),
+        shared_fields: readSharedFields(form),
       }).eq('id', ed.id));
       await loadEditions(); renderSS(); renderStats();
       toast('Édition enregistrée', 'ok');
@@ -655,54 +648,7 @@ $('#bot-test').addEventListener('click', (ev) => busy(ev.currentTarget, async ()
 /* =========================================================
    Thème
    ========================================================= */
-const SEASON_DOT = { printemps: '#6E8F5E', paques: '#8C6FA8', ete: '#B26A3E', automne: '#9A5B32', halloween: '#A4532A', hiver: '#4F6A8F', noel: '#8E2F3A' };
-let themeDraft = { mode: 'auto', forced: null };
-function renderTheme() {
-  const f = $('#theme-form');
-  const auto = autoSeason();
-  $('#theme-auto-label').textContent = `(en ce moment : ${SEASON_LABELS[auto]})`;
-  f.querySelector(`input[name="mode"][value="${themeDraft.mode === 'forced' ? 'forced' : 'auto'}"]`).checked = true;
-  const forced = themeDraft.mode === 'forced';
-  const picker = $('#season-picker');
-  picker.setAttribute('aria-disabled', String(!forced));
-  picker.innerHTML = SEASONS.map((s) => `<button class="season-opt" type="button" role="radio" data-season="${s}" aria-checked="${forced && themeDraft.forced === s}"${forced ? '' : ' disabled'}>
-      <span class="season-dot" style="background:${SEASON_DOT[s]}"></span>${esc(SEASON_LABELS[s])}</button>`).join('');
-  previewTheme();
-}
-function previewTheme() {
-  document.documentElement.dataset.season = themeDraft.mode === 'forced' && themeDraft.forced ? themeDraft.forced : autoSeason();
-}
-$('#theme-form').addEventListener('change', (ev) => {
-  if (ev.target.name !== 'mode') return;
-  themeDraft.mode = ev.target.value;
-  if (themeDraft.mode === 'forced' && !themeDraft.forced) themeDraft.forced = autoSeason();
-  renderTheme();
-});
-$('#season-picker').addEventListener('click', (ev) => {
-  const t = ev.target.closest('[data-season]');
-  if (!t || t.disabled) return;
-  themeDraft.forced = t.dataset.season;
-  renderTheme();
-  $(`#season-picker [data-season="${themeDraft.forced}"]`)?.focus();
-});
-$('#season-picker').addEventListener('keydown', (ev) => {
-  if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(ev.key) || themeDraft.mode !== 'forced') return;
-  ev.preventDefault();
-  const i = SEASONS.indexOf(themeDraft.forced), d = ['ArrowRight', 'ArrowDown'].includes(ev.key) ? 1 : -1;
-  themeDraft.forced = SEASONS[(i + d + SEASONS.length) % SEASONS.length];
-  renderTheme();
-  $(`#season-picker [data-season="${themeDraft.forced}"]`)?.focus();
-});
-$('#theme-form').addEventListener('submit', (ev) => {
-  ev.preventDefault();
-  busy(ev.submitter, async () => {
-    const value = themeDraft.mode === 'forced' ? { mode: 'forced', forced: themeDraft.forced } : { mode: 'auto', forced: null };
-    check(await sb.from('hg_settings').upsert({ key: 'theme', value, updated_at: new Date().toISOString() }));
-    S.theme = value;
-    try { localStorage.setItem('hg_season', document.documentElement.dataset.season); } catch {}
-    toast(value.mode === 'forced' ? `Thème « ${SEASON_LABELS[value.forced]} » appliqué à tout le site` : 'Thème automatique rétabli', 'ok');
-  });
-});
+// Éditeur complet des thèmes (hg_themes + hg_settings.theme) : voir admin-themes.js
 
 /* =========================================================
    Navigation latérale (section active)
@@ -732,7 +678,7 @@ async function safe(fn, onError) { try { await fn(); return true; } catch (e) { 
 
 let ssLoaded = false;
 await Promise.all([
-  safe(loadMembers, (e) => { $('#member-list').innerHTML = sectionError(e); }),
+  safe(loadMembers, (e) => toast(`Membres : ${errMsg(e)}`, 'error')),
   safe(loadInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }),
   safe(async () => { await loadEditions(); await loadEditionDetails(); ssLoaded = true; }, (e) => { $('#ss-root').innerHTML = sectionError(e); }),
   safe(loadBadges, (e) => { $('#badge-grid').innerHTML = sectionError(e); }),
@@ -749,6 +695,17 @@ renderBadges();
 renderIdeas();
 renderSupport();
 if (S.bot) renderBot();
-if (S.theme) { themeDraft = { mode: S.theme.mode === 'forced' && S.theme.forced ? 'forced' : 'auto', forced: S.theme.forced ?? null }; renderTheme(); }
+mountThemesSection($('#theme-root'));
+// Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
+initAccounts({
+  me,
+  onChange: async (kind) => {
+    if (kind === 'members') { await loadMembers(); renderInvites(); renderBadges(); if (ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
+    if (kind === 'badges') { await loadBadges(); renderBadges(); }
+    if (kind === 'ss') { await loadEditionDetails(); if (ssLoaded) renderSS(); renderStats(); }
+    if (kind === 'ideas') { await loadIdeas(); renderIdeas(); renderStats(); }
+    if (kind === 'support') { await loadSupport(); renderSupport(); renderStats(); }
+  },
+});
 setupNav();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();

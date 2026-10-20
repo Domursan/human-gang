@@ -1,6 +1,7 @@
 // ===== Human Gang — page Secret Santa =====
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC } from './core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
+import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -30,6 +31,7 @@ const S = {
   myWishes: [],
   target: null,         // {receiver_id, pseudo, avatar_url}
   targetWishes: [],
+  targetInfo: {},       // infos diverses de la cible (filtrées par shared_fields côté base)
   progress: null,       // {participants, sent, received}
   reveal: [],
   revealed: false,      // carte déjà retournée une fois (mémorisé localement)
@@ -102,6 +104,9 @@ async function load() {
             .select('id, label, url, created_at').eq('edition_id', ed.id).eq('user_id', S.target.receiver_id).order('created_at');
           if (we) throw we;
           S.targetWishes = w || [];
+          const { data: info, error: ie } = await sb.rpc('hg_ss_target_info', { p_edition: ed.id });
+          if (ie) console.warn('[hg_ss_target_info]', ie); // non bloquant : la liste de souhaits reste affichée
+          S.targetInfo = info && typeof info === 'object' && !Array.isArray(info) ? info : {};
         }
       })().catch((e) => toast(`Impossible de charger ta cible : ${errMsg(e)}`, 'error')));
     }
@@ -389,7 +394,30 @@ function renderTargetWishes() {
     <div class="ss-target-who">${avatarHtml({ ...memberOf(S.target.receiver_id), pseudo: S.target.pseudo, avatar_url: S.target.avatar_url || memberOf(S.target.receiver_id).avatar_url }, 44)}
       <div><div class="eyebrow">Tu offres à</div><h2 id="ss-twishes-t" class="ss-target-name">${esc(S.target.pseudo)}</h2></div>
     </div>
-    ${items ? `<ul class="ss-wishes">${items}</ul>` : `<div class="empty">${esc(S.target.pseudo)} n’a pas encore rempli sa liste. Repasse plus tard, elle peut encore la compléter.</div>`}`;
+    ${items ? `<ul class="ss-wishes">${items}</ul>` : `<div class="empty">${esc(S.target.pseudo)} n’a pas encore rempli sa liste. Repasse plus tard, elle peut encore la compléter.</div>`}
+    ${targetInfoHtml()}`;
+}
+
+/** Bloc « Ce qu'il faut savoir sur <pseudo> » : seulement les champs transmis par l'admin et remplis. */
+function targetInfoHtml() {
+  const info = S.targetInfo || {};
+  const filled = (k) => typeof info[k] === 'string' ? info[k].trim() !== '' : info[k] != null && info[k] !== '';
+  const known = new Set(INFO_GROUPS.flatMap((g) => g.fields.map((f) => f.id)));
+  const groups = INFO_GROUPS.map((g) => ({ label: g.label, fields: g.fields.filter((f) => filled(f.id)) })).filter((g) => g.fields.length);
+  const extra = Object.keys(info).filter((k) => !known.has(k) && filled(k));
+  if (extra.length) groups.push({ label: 'Autres', fields: extra.map((k) => ({ id: k, label: INFO_LABEL[k] || k })) });
+  if (!groups.length) return '';
+  return `
+    <section class="ss-info" aria-labelledby="ss-info-t">
+      <h3 id="ss-info-t" class="ss-info-title">Ce qu’il faut savoir sur ${esc(S.target.pseudo)}</h3>
+      ${groups.map((g) => `
+        <div class="ss-info-group">
+          <h4 class="ss-info-glabel">${esc(g.label)}</h4>
+          <dl class="ss-info-list">${g.fields.map((f) => `
+            <div class="ss-info-item"><dt>${esc(INFO_LABEL[f.id] || f.label)}</dt><dd>${esc(String(info[f.id]).trim())}</dd></div>`).join('')}
+          </dl>
+        </div>`).join('')}
+    </section>`;
 }
 
 /* ---------- Mon envoi ---------- */

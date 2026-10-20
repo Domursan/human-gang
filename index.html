@@ -4,30 +4,37 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Human Gang</title>
   <meta name="description" content="Le QG du Human Gang : Secret Santa, sorties IRL et souvenirs du gang.">
-  <meta name="theme-color" content="#050506">
+  <meta name="theme-color" content="#040814">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
   <script>
     /* Intro déjà vue : on file directement à l'accueil, avant tout rendu. */
     try { if (localStorage.getItem('hg_intro_seen')) location.replace('accueil.html'); } catch (e) {}
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
-  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <!-- Le logo passe avant tout le reste -->
+  <link rel="preload" as="image" href="assets/img/logo-1600.webp" type="image/webp" fetchpriority="high">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/intro.css">
+  <!-- Polices non bloquantes (l'intro n'en a presque pas besoin) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+  <!-- Mise en cache, en basse priorité, de la bibliothèque utilisée par l'accueil -->
+  <link rel="prefetch" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm" crossorigin="anonymous">
 </head>
 <body class="intro">
   <a class="intro-skip btn btn-ghost" href="accueil.html" id="skip">Passer l'intro</a>
 
   <div class="intro-track" id="track">
     <div class="intro-stage" id="stage" aria-hidden="true">
+      <canvas class="intro-sky" id="sky"></canvas>
       <div class="intro-glow" id="glow"></div>
       <div class="intro-world" id="world">
-        <div class="intro-dust" id="dust"></div>
         <div class="intro-logo" id="logo">
-          <img id="logo-img" alt="" width="520" height="520" decoding="async">
+          <img id="logo-img" src="assets/img/logo-1600.webp" alt="" width="1600" height="1600" fetchpriority="high" decoding="async" draggable="false">
+          <script>
+            /* Logo du thème actif (cache posé par les autres pages), sinon le logo par défaut déjà préchargé */
+            try { var t = JSON.parse(localStorage.getItem('hg_theme') || 'null'); if (t && typeof t.logo_url === 'string' && /^(https:\/\/|assets\/)/.test(t.logo_url)) document.getElementById('logo-img').src = t.logo_url; } catch (e) {}
+          </script>
           <span class="intro-logo-fallback display">HG</span>
         </div>
       </div>
@@ -35,8 +42,9 @@
   </div>
 
   <h1 class="visually-hidden">Human Gang</h1>
-  <p class="intro-hint" id="hint"><span>Fais défiler pour entrer</span>
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  <p class="intro-hint" id="hint">
+    <span class="visually-hidden">Fais défiler vers le bas pour entrer sur le site</span>
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
   </p>
   <button class="intro-enter btn btn-light" type="button" id="enter" hidden>Entrer</button>
 
