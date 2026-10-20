@@ -66,7 +66,7 @@
 }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); cursor: pointer; padding: 0; }
-.swatch:hover { box-shadow: 0 0 0 2px var(--text); }
+@media (hover: hover) { .swatch:hover { box-shadow: 0 0 0 2px var(--text); } }
 
 /* Avatar */
 .avatar-edit { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
@@ -152,8 +152,21 @@
   .acc-head-actions { width: 100%; }
   .info-actions .btn { width: 100%; }
   .info-fields { padding: 4px 12px 16px; }
-  .acc-dialog { padding: 20px; }
+  .acc-dialog { padding: 20px; width: calc(100vw - 24px); max-width: none; max-height: calc(100dvh - 24px); overflow: auto; }
   .acc-dialog .btn { flex: 1 1 100%; }
+  .swatches { gap: 4px; }
+  .swatch { width: 44px; height: 44px; padding: 6px; border: 0; background-clip: content-box; box-shadow: none; }
+  .swatch:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+  .badge-desc { font-size: 14px; }
+  .badge-name { font-size: 16px; }
+  .badge-grid { gap: 10px; }
+  .badge { padding: 16px 10px; }
+  .acc-row, .acc-badges, .acc-infos { margin-bottom: 16px; }
+  .acc-id .page-title { font-size: 34px; }
+  .privacy-note p { font-size: 15px; }
+  .info-fields { gap: 12px; }
+  .info-group summary { min-height: 52px; }
+  .vis-tag { font-size: 12px; }
 }
 
 /* Badges à niveaux */

@@ -1,7 +1,8 @@
 // ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » =====
-import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo } from './core.js';
+import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo, canAccess } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
 import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
+import { mountShowcase } from './cartes-showcase.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -74,6 +75,7 @@ function shell() {
       <div class="mb-card-col"><div class="idc-wrap"><div class="idc idc-skeleton" aria-hidden="true"></div></div></div>
       <div class="card mb-badges"><span class="skeleton-line"></span><span class="skeleton-line short"></span></div>
     </section>
+    ${canAccess('cartes') ? '<section class="mb-showcase" id="mb-showcase" hidden></section>' : ''}
     <section class="mb-gang" aria-labelledby="gang-title">
       <h2 class="mb-section-title" id="gang-title">${ICON.users} Le gang</h2>
       <ul class="gang-grid" id="gang"><li class="gang-skel"></li><li class="gang-skel"></li><li class="gang-skel"></li></ul>
@@ -425,6 +427,7 @@ try {
     $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
     bindHolo();
     $('#dl-card').addEventListener('click', (e) => onDownload(e.currentTarget, card));
+    if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
   }
 } catch (e) {
   $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;

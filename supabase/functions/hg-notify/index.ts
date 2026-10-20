@@ -17,6 +17,11 @@
 //   dyn_announce     { event_id, phase: 'start' | 'end' }  admin → annonce d'un événement dynamique dans le salon
 //                    (image de l'événement, top 3 pour la fin) ; met à jour announced_start_at / announced_end_at.
 //                    Les annonces automatiques sont faites par la fonction hg-cron.
+//   card_pull        { card: uuid (hg_cards.id), rarity?, shiny?, serial? } membre → annonce « belle carte » dans le salon
+//                    si la carte est légendaire, mythique ou identité ET qu'un exemplaire obtenu il y a moins de 10 min
+//                    appartient à l'appelant (rarity/shiny/serial du client ignorés : lus en base). Désactivable (bot.notify.card_pull).
+//   card_trade       { trade_id: uuid } destinataire de l'offre (celui qui accepte) → annonce « échange conclu » dans le salon.
+//                    Facultative : seulement si bot.notify.card_trade === true (désactivée par défaut).
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
@@ -35,13 +40,13 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 });
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
 const link = (page: string) => (SITE ? `${SITE}/${page}` : undefined);
-const COLOR = { ss: 0xe0909a, irl: 0xe2c77e, info: 0x7e93c9, accent: 0x9e3543 };
+const COLOR = { ss: 0xe0909a, irl: 0xe2c77e, info: 0x7e93c9, accent: 0x9e3543, card: 0xe0a93b };
 const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-répétition)
 
 type Bot = {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade', boolean>>;
 };
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
@@ -364,6 +369,55 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
   return { sent: true, phase };
 }
 
+/* ---------- Cartes à collectionner ---------- */
+const CARD_RARITY_LABEL: Record<string, string> = { legendaire: 'Légendaire', mythique: 'Mythique', identite: 'Identité' };
+const CARD_FRESH_MS = 10 * 60_000; // l'exemplaire doit venir d'être obtenu (anti-spam)
+
+async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!isUuid(p.card)) throw new HttpError(400, 'card manquant');
+  if (bot.notify?.card_pull === false) return { skipped: 'désactivé' };
+  if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
+  const { data: card } = await db.from('hg_cards').select('id, name, rarity, max_copies').eq('id', p.card).maybeSingle();
+  if (!card) throw new HttpError(404, 'Carte introuvable');
+  const rarete = CARD_RARITY_LABEL[card.rarity];
+  if (!rarete) return { skipped: 'carte pas assez rare pour être annoncée' };
+
+  // Service role : un exemplaire récent de cette carte doit appartenir à l'appelant. Valeurs lues en base.
+  let q = db.from('hg_card_copies').select('shiny, serial, obtained_at')
+    .eq('card_id', card.id).eq('owner_id', me.id).is('recycled_at', null)
+    .gte('obtained_at', new Date(Date.now() - CARD_FRESH_MS).toISOString())
+    .order('obtained_at', { ascending: false }).limit(1);
+  if (Number.isInteger(p.serial)) q = q.eq('serial', p.serial as number);
+  const { data: copy } = await q.maybeSingle();
+  if (!copy) return { skipped: 'aucun exemplaire récent de cette carte' };
+
+  const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
+  const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
+    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+    fields: [{ name: 'Rareté', value: rarete, inline: true }],
+  })), 'annonce carte');
+  return { channel };
+}
+
+async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
+  if (bot.notify?.card_trade !== true) return { skipped: 'désactivé' };
+  if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
+  const { data: t } = await db.from('hg_card_trades').select('id, from_user, to_user, status, resolved_at').eq('id', p.trade_id).maybeSingle();
+  if (!t) throw new HttpError(404, 'Échange introuvable');
+  // Seul le destinataire (celui qui accepte l'offre) annonce : une seule annonce par échange.
+  if (t.to_user !== me.id) throw new HttpError(403, 'Seul le destinataire de l\'offre peut annoncer l\'échange');
+  if (t.status !== 'acceptee') return { skipped: 'échange non conclu' };
+  if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
+  const other = await getProfile(t.from_user);
+  const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
+    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+  })), 'annonce échange');
+  return { channel };
+}
+
 /* ---------- Point d'entrée ---------- */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
@@ -395,6 +449,8 @@ Deno.serve(async (req) => {
       case 'message_new': result = await onMessage(me, bot, payload, tpl); break;
       case 'admin_dm': result = await onAdminDm(me, bot, payload); break;
       case 'dyn_announce': result = await onDynAnnounce(me, bot, payload, tpl); break;
+      case 'card_pull': result = await onCardPull(me, bot, payload, tpl); break;
+      case 'card_trade': result = await onCardTrade(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

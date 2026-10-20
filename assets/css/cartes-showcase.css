@@ -1,0 +1,53 @@
+/* ===== Vitrine de cartes (fiche membre) — assets/js/cartes-showcase.js ===== */
+/* Préfixe shw- ; les cartes elles-mêmes viennent de cartes-card.css (.hgc). */
+.shw { margin-top: 56px; }
+.shw-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.shw-head .mb-section-title { margin-bottom: 16px; }
+
+.shw-slots { list-style: none; margin: 0 auto; padding: 0; max-width: 640px; display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; justify-items: center; }
+.shw-slots > li { width: 100%; max-width: 200px; min-width: 0; }
+.shw .hgc, .shw-dlg .hgc { --w: 100%; width: 100%; }
+.shw .hgc-name { font-size: 13px; }
+.shw-empty { width: 100%; aspect-ratio: 5 / 7; border: 2px dashed var(--border-strong); border-radius: 6px;
+  display: grid; place-items: center; padding: 10px; text-align: center; color: var(--muted); font-size: 12px; }
+.shw-skel { height: 180px; border-radius: var(--radius); background: var(--surface); opacity: .6; }
+
+/* ----- Éditeur (dialog) ----- */
+.shw-dlg { width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: hidden;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.shw-dlg::backdrop { background: rgba(4, 4, 8, .62); backdrop-filter: blur(3px); }
+.shw-dlg-inner { display: flex; flex-direction: column; gap: 16px; padding: 24px; box-sizing: border-box;
+  max-height: calc(100dvh - 24px); overflow: auto; }
+.shw-dlg-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; margin: 0 0 6px; }
+.shw-dlg-inner p { margin: 0; }
+.shw-dlg-picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.shw-pick { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; cursor: pointer; }
+.shw-pick-empty { aspect-ratio: 5 / 7; border: 2px dashed var(--border-strong); border-radius: 6px;
+  display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.shw-pick-x { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); z-index: 3; padding: 2px 10px;
+  border-radius: 999px; background: #000; color: var(--sand); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.shw-sub { font-size: 15px; font-weight: 700; margin: 0; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.shw-dlg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 14px;
+  max-height: 46vh; overflow: auto; padding: 6px; }
+.shw-pickable { position: relative; display: block; width: 100%; padding: 0; border: 0; background: none;
+  border-radius: 8px; cursor: pointer; }
+.shw-pickable:focus-visible, .shw-pick:focus-visible { outline: 2px solid var(--sand); outline-offset: 3px; }
+.shw-pickable.is-picked { outline: 2px solid var(--sand); outline-offset: 3px; }
+.shw-badge { position: absolute; top: -8px; left: -8px; z-index: 3; width: 26px; height: 26px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--sand); color: #121212; font-size: 13px; font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+.shw-dlg-msg { min-height: 1.3em; font-size: 14px; }
+.shw-dlg-actions { justify-content: flex-end; }
+
+@media (max-width: 600px) {
+  .shw { margin-top: 40px; }
+  .shw-slots { gap: 10px; }
+  .shw .hgc-name { font-size: 11px; }
+  .shw .hgc-top, .shw .hgc-foot { font-size: 8px; }
+  .shw-dlg-picks { gap: 8px; }
+  .shw-dlg-grid { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+  .shw-dlg-inner { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .shw-skel { animation: none; } }

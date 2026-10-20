@@ -12,6 +12,8 @@ const NOTIFY = [
   ['birthday', 'Anniversaires', 'chaque matin : MP + annonce si partagé'],
   ['support', 'Demandes d\'assistance', 'MP à toi'],
   ['messages', 'Nouveaux messages', 'MP au destinataire (pas à chaque message d\'une discussion en cours)'],
+  ['card_pull', 'Belle carte obtenue', 'annonce dans le salon : carte légendaire, mythique ou identité'],
+  ['card_trade', 'Échange conclu', 'annonce dans le salon (désactivée par défaut)'],
 ];
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 const DISCORD_ID = /^\d{17,20}$/;
@@ -636,7 +638,7 @@ export function mountBotSection(container) {
     if (settings.status === 'fulfilled') {
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = get('bot') ?? S.bot;
-      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, ...(S.bot.notify || {}) };
+      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_trade: false, ...(S.bot.notify || {}) };
       const c = get('bot_templates');
       S.custom = c && typeof c === 'object' && !Array.isArray(c) ? c : {};
     } else {

@@ -7,6 +7,7 @@
     { "id": "birthday", "label": "Anniversaires" },
     { "id": "support", "label": "Assistance" },
     { "id": "events", "label": "Événements" },
+    { "id": "cards", "label": "Cartes" },
     { "id": "test", "label": "Test" }
   ],
   "templates": {
@@ -61,6 +62,14 @@
     "dyn_end": {
       "title": "Fin de l'événement : {nom}",
       "body": "L'événement est terminé. Merci à tous les chasseurs !\n\n**Classement**\n{classement}"
+    },
+    "card_pull_announce": {
+      "title": "Belle carte obtenue : {carte}",
+      "body": "{pseudo} vient de tirer une carte {rarete} !\n\nVa voir la collection sur le site."
+    },
+    "card_trade_announce": {
+      "title": "Échange conclu",
+      "body": "{pseudo} et {partenaire} viennent de conclure un échange de cartes."
     }
   },
   "meta": {
@@ -204,6 +213,26 @@
         "fin": { "label": "Date et heure de fin", "example": "samedi 31 octobre à 23:59" },
         "classement": { "label": "Top 3 (une ligne par personne)", "example": "1. Alex : 14 images\n2. Sam : 9 images\n3. Chloé : 7 images" },
         "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/evenements.html" }
+      }
+    },
+    "card_pull_announce": {
+      "group": "cards", "label": "Belle carte obtenue", "target": "Salon d'annonces", "color": "#E0A93B",
+      "description": "Publié dans le salon d'annonces quand un membre obtient une carte légendaire, mythique ou identité. Vérifié côté serveur (exemplaire récent).",
+      "fields": [["Rareté", "{rarete}"]],
+      "vars": {
+        "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
+        "carte": { "label": "Nom de la carte (avec « brillante » et le numéro si besoin)", "example": "Le Four à raclette N° 03/10" },
+        "rarete": { "label": "Rareté", "example": "Légendaire" },
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+      }
+    },
+    "card_trade_announce": {
+      "group": "cards", "label": "Échange conclu", "target": "Salon d'annonces", "color": "#E0A93B",
+      "description": "Publié dans le salon d'annonces quand une offre d'échange de cartes est acceptée. Désactivé par défaut.",
+      "vars": {
+        "pseudo": { "label": "Pseudo de celui qui accepte", "example": "Alex" },
+        "partenaire": { "label": "Pseudo de l'autre membre", "example": "Sam" },
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
       }
     }
   }

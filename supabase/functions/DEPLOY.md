@@ -49,6 +49,13 @@ ajouté à la racine du dépôt pour que `supabase/functions/_shared/bot-templat
 les `.md` (ex. `BOT.md`) sont servis tels quels (texte brut) au lieu d'être convertis par Jekyll.
 Sans ce fichier, l'admin affiche un avertissement et ne peut pas éditer les modèles.
 
+## Cartes à collectionner : redéployer hg-notify
+Les événements `card_pull` (belle carte obtenue) et `card_trade` (échange conclu) sont dans `hg-notify/index.ts`.
+Les modèles `card_pull_announce` et `card_trade_announce` sont dans `_shared/bot-templates.json` et `_shared/templates.ts`.
+**Redéployer `hg-notify`** (même fichiers que le tableau ci-dessus, aucun nouveau fichier partagé).
+Aucun nouveau secret. Sans redéploiement, le site enverra `card_pull` et la fonction répondra « Événement inconnu ».
+Migration associée : `supabase/migrations/018_cartes_vitrine_rls.sql` (RLS de la vitrine, à appliquer une fois).
+
 ## hg-cron : tâches planifiées (toutes les 5 minutes)
 Annonce automatiquement sur Discord le lancement et la fin des événements dynamiques (`hg_dyn_events` avec
 `announce = true`). Idempotente : appelée deux fois, elle n'annonce rien de plus. Sans `DISCORD_BOT_TOKEN` ou sans

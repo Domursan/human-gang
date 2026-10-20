@@ -28,10 +28,12 @@
 .tile { position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 230px; color: var(--text); text-decoration: none; }
 .tile p { margin: 0; }
 .tile-link { transition: transform .18s ease, border-color .18s ease; }
-.tile-link:hover { color: var(--text); transform: translateY(-2px); }
-.card-ss.tile-link:hover { border-color: var(--ss-fg); }
-.card-irl.tile-link:hover { border-color: var(--irl-fg); }
-.card-hist.tile-link:hover { border-color: var(--hist-fg); }
+@media (hover: hover) {
+  .tile-link:hover { color: var(--text); transform: translateY(-2px); }
+  .card-ss.tile-link:hover { border-color: var(--ss-fg); }
+  .card-irl.tile-link:hover { border-color: var(--irl-fg); }
+  .card-hist.tile-link:hover { border-color: var(--hist-fg); }
+}
 .tile-icon {
   width: 60px; height: 60px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center;
   background: rgba(255, 255, 255, 0.05); border: 1px solid color-mix(in srgb, currentColor 45%, transparent); margin-bottom: 10px;
@@ -92,13 +94,21 @@
 @media (max-width: 600px) {
   .tile-icon { width: 52px; height: 52px; font-size: 30px; }
   .home-ideas .btn { width: 100%; }
-  .home-hero { padding: 40px 0 28px; }
+  .home-hero { padding: 28px 0 24px; }
+  .home-hero-logo { width: 72px; height: 72px; }
   .home-lead { font-size: 16px; }
-  .countdown { width: 100%; }
-  .cd-units { justify-content: space-between; }
+  .home-hero-actions { width: 100%; }
+  .home-hero-actions .btn { width: 100%; }
+  .countdown { width: 100%; padding: 14px 16px; }
+  .cd-units { justify-content: space-between; gap: 8px; }
   .cd-num { font-size: 28px; }
+  .cd-lbl, .tile-kicker { font-size: 13px; }
   .tile { min-height: 0; }
   .tile-arrow { top: 20px; right: 18px; }
+  .tile-sub { font-size: 15px; }
+  .recap-banner { padding: 14px 16px; }
+  .home-tiles { margin-bottom: 16px; }
+  .feed-item { padding: 10px 0; }
 }
 
 /* Liens vers les cartes de membre (fil d'activité, anniversaires) */
