@@ -1,7 +1,8 @@
 // ===== Humane Gang — administration =====
 import {
-  sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn,
+  sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn, isGodMode, godTag,
 } from './core.js';
+import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { mountBotSection } from './admin-bot.js';
@@ -13,6 +14,7 @@ import { mountEventsSection, refreshEventsSection } from './admin-events.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 
 const me = await initPage({ auth: 'admin' });
+mountGodCard($('#god-root'));
 
 /* ---------- Icônes (SVG à trait) ---------- */
 const ICON = {
@@ -247,12 +249,15 @@ function renderSS() {
   const yearExists = (y) => S.editions.some((e) => e.year === y);
   const defaultYear = yearExists(new Date().getFullYear()) ? nextYear : new Date().getFullYear();
 
-  const openEd = S.editions.find((e) => e.status !== 'termine'); // une seule édition en cours à la fois (trigger en base)
+  const god = isGodMode();
+  const openEd = S.editions.find((e) => e.status !== 'termine'); // une seule édition en cours à la fois (trigger en base, levé en mode sans limite)
+  const locked = openEd && !god;
   const createForm = `
     <form class="card stack" id="ss-create"${openEd ? ' aria-describedby="ssc-locked"' : ''}>
       <h3 class="card-title">Nouvelle édition</h3>
-      ${openEd ? `<p class="ss-locked small" id="ssc-locked" role="note">Termine l'édition ${esc(openEd.year)} avant d'en créer une nouvelle (statut actuel : ${esc(STATUS_LABEL[openEd.status] ?? openEd.status)}).</p>` : ''}
-      <fieldset class="ss-create-fields"${openEd ? ' disabled' : ''}>
+      ${locked ? `<p class="ss-locked small" id="ssc-locked" role="note">Termine l'édition ${esc(openEd.year)} avant d'en créer une nouvelle (statut actuel : ${esc(STATUS_LABEL[openEd.status] ?? openEd.status)}).</p>` : ''}
+      ${openEd && god ? `<p class="god-note" id="ssc-locked" role="note"><strong>Mode sans limite :</strong> l'édition ${esc(openEd.year)} n'est pas terminée (${esc(STATUS_LABEL[openEd.status] ?? openEd.status)}), tu peux quand même en créer une nouvelle. La page Secret Santa des membres affichera la plus récente.</p>` : ''}
+      <fieldset class="ss-create-fields"${locked ? ' disabled' : ''}>
       <div class="grid-2">
         <div class="field"><label for="ssc-year">Année</label><input id="ssc-year" name="year" type="number" min="2020" max="2100" required value="${defaultYear}"></div>
         <div class="field"><label for="ssc-budget">Budget</label><input id="ssc-budget" name="budget" maxlength="60" placeholder="ex. 20 à 30 CHF"></div>
@@ -260,7 +265,7 @@ function renderSS() {
         <div class="field"><label for="ssc-exch">Date d'échange</label><input id="ssc-exch" name="exchange_date" type="date"></div>
       </div>
       ${sharedFieldsHtml('ssc', [])}
-      <div class="btn-row"><button class="btn btn-primary" type="submit">Créer l'édition</button></div>
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Créer l'édition${openEd ? godTag() : ''}</button></div>
       </fieldset>
     </form>`;
 
@@ -273,7 +278,8 @@ function renderSS() {
   const sent = parts.filter((p) => p.sent_at).length;
   const received = parts.filter((p) => p.received_at).length;
   const partOpts = parts.map((p) => `<option value="${esc(p.user_id)}">${esc(pseudoOf(p.user_id))}</option>`).join('');
-  const canDraw = parts.length >= 3 && !ed.drawn_at; // un seul tirage par édition
+  const minDraw = god ? 2 : 3; // le serveur accepte 2 participants en mode sans limite
+  const canDraw = parts.length >= minDraw && !ed.drawn_at; // un seul tirage par édition (sauf « Refaire » en mode sans limite)
   const editionSelect = S.editions.length > 1 ? `
       <div class="field"><label for="ss-edition">Édition affichée</label>
         <select id="ss-edition">${S.editions.map((e) => `<option value="${esc(e.id)}"${e.id === ed.id ? ' selected' : ''}>${esc(e.year)} · ${esc(STATUS_LABEL[e.status] ?? e.status)}</option>`).join('')}</select></div>` : '';
@@ -290,7 +296,7 @@ function renderSS() {
       <form class="card card-ss stack" id="ss-edit">
         <h3 class="card-title">Édition ${esc(ed.year)}</h3>
         <div class="grid-2">
-          <div class="field"><label for="sse-status">Statut</label>
+          <div class="field"><label for="sse-status">Statut${godTag()}</label>
             <select id="sse-status" name="status">${STATUS.map(([k, l]) => `<option value="${k}"${k === ed.status ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
           <div class="field"><label for="sse-budget">Budget</label><input id="sse-budget" name="budget" maxlength="60" value="${esc(ed.budget ?? '')}"></div>
           <div class="field"><label for="sse-send">Date limite d'envoi</label><input id="sse-send" name="send_deadline" type="date" value="${esc(ed.send_deadline ?? '')}"></div>
@@ -302,11 +308,20 @@ function renderSS() {
 
         <div class="draw-box stack">
           <h4 class="sub-title">Tirage au sort</h4>
-          <p class="small muted">Respecte les exclusions et évite de retomber sur la même personne que l'an dernier. Les paires restent secrètes : tu peux les afficher plus bas si besoin. Le tirage ne peut être lancé qu'une seule fois par édition.</p>
-          <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : 'Lancer le tirage'}</button>
+          <p class="small muted">${god
+            ? 'Mode sans limite : le tirage au hasard ignore les exclusions et la cible de l\'an dernier, et peut être refait. Les paires restent secrètes : tu peux les afficher plus bas si besoin.'
+            : 'Respecte les exclusions et évite de retomber sur la même personne que l\'an dernier. Les paires restent secrètes : tu peux les afficher plus bas si besoin. Le tirage ne peut être lancé qu\'une seule fois par édition.'}</p>
+          <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : `Lancer le tirage${god ? godTag() : ''}`}</button>
             ${ed.drawn_at ? '' : `<button class="btn btn-ghost" type="button" id="ss-draw-manual"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Tirage manuel</button>`}</div>
           ${ed.drawn_at ? '' : '<p class="small muted">« Lancer le tirage » choisit au hasard. « Tirage manuel » te laisse fixer chaque paire toi-même (et compléter le reste au hasard).</p>'}
-          ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < 3 ? '<p class="small muted">Il faut au moins 3 inscrits.</p>' : ''}
+          ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < minDraw ? `<p class="small muted">Il faut au moins ${minDraw} inscrits${god ? godTag() : ''}.</p>` : ''}
+          ${god && ed.drawn_at ? `<div class="draw-redo stack">
+            <div class="btn-row">
+              <button class="btn btn-sand" type="button" id="ss-redraw"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (auto)${godTag()}</button>
+              <button class="btn btn-ghost" type="button" id="ss-redraw-manual"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (manuel)${godTag()}</button>
+            </div>
+            <p class="small muted">Supprime les attributions actuelles puis relance un tirage. Les cartes déjà vues par les participants changeront.</p>
+          </div>` : ''}
           ${S.lastDraw && S.lastDraw.edition === ed.id ? `<p class="draw-result" role="status">Tirage OK pour ${esc(S.lastDraw.n)} participants</p>` : ''}
         </div>
       </form>
@@ -373,14 +388,16 @@ $('#secret-santa').addEventListener('submit', (ev) => {
       const year = Number(fd.get('year'));
       if (S.editions.some((e) => e.year === year)) throw new Error(`L'édition ${year} existe déjà.`);
       const openEd = S.editions.find((e) => e.status !== 'termine');
-      if (openEd) throw new Error(`Termine l'édition ${openEd.year} avant d'en créer une nouvelle.`);
+      if (openEd && !isGodMode()) throw new Error(`Termine l'édition ${openEd.year} avant d'en créer une nouvelle.`);
       const res = await sb.from('hg_ss_editions').insert({
         year, budget: nullIfEmpty(fd.get('budget')), send_deadline: nullIfEmpty(fd.get('send_deadline')),
         exchange_date: nullIfEmpty(fd.get('exchange_date')), shared_fields: readSharedFields(form),
       }).select().single();
-      if (res.error && /termine/i.test(errMsg(res.error))) { // trigger hg_ss_editions_guard
+      if (res.error && /termine/i.test(errMsg(res.error))) { // trigger hg_ss_editions_guard (levé côté serveur en mode sans limite)
         await loadEditions(); renderSS();
-        throw new Error('Une édition est encore en cours : passe-la en « Terminé » avant d\'en créer une nouvelle.');
+        throw new Error(isGodMode()
+          ? 'Le serveur refuse encore : le mode sans limite a peut-être expiré. Réactive-le puis réessaie.'
+          : 'Une édition est encore en cours : passe-la en « Terminé » avant d\'en créer une nouvelle.');
       }
       const row = check(res);
       S.editionId = row.id;
@@ -394,7 +411,7 @@ $('#secret-santa').addEventListener('submit', (ev) => {
       const fd = new FormData(form);
       const ed = S.editions.find((e) => e.id === S.editionId);
       const status = fd.get('status');
-      if (status !== ed.status && ['envoi', 'revelation', 'termine'].includes(status) && !ed.drawn_at) {
+      if (status !== ed.status && ['envoi', 'revelation', 'termine'].includes(status) && !ed.drawn_at && !isGodMode()) {
         if (!(await confirmBox('Aucun tirage effectué', `Passer en « ${STATUS_LABEL[status]} » sans tirage ? Les participants n'auront pas de cible.`, { ok: 'Changer quand même' }))) return;
       }
       if (status === 'revelation' && ed.status !== 'revelation') {
@@ -453,6 +470,11 @@ $('#secret-santa').addEventListener('click', async (ev) => {
       toast('Carte par défaut rétablie', 'ok');
     });
   }
+  if (t.id === 'ss-redraw' || t.id === 'ss-redraw-manual') {
+    if (!isGodMode() || !ed.drawn_at) return;
+    await redraw(t, ed, t.id === 'ss-redraw-manual');
+    return;
+  }
   if (t.id === 'ss-draw-manual') {
     if (ed.drawn_at) return;
     await busy(t, () => openManualDraw({
@@ -468,7 +490,9 @@ $('#secret-santa').addEventListener('click', async (ev) => {
   if (t.id === 'ss-draw') {
     if (ed.drawn_at) return; // un seul tirage par édition
     const n = S.participants.length;
-    const msg = `${n} participants, ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''}.\nLe tirage est définitif : il ne pourra pas être relancé. Vérifie les inscrits et les exclusions avant.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`;
+    const msg = isGodMode()
+      ? `${n} participants. Mode sans limite : les ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''} et la cible de l'an dernier sont ignorées.\nTu pourras refaire le tirage tant que le mode est actif.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`
+      : `${n} participants, ${S.exclusions.length} exclusion${S.exclusions.length > 1 ? 's' : ''}.\nLe tirage est définitif : il ne pourra pas être relancé. Vérifie les inscrits et les exclusions avant.\nL'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`;
     if (!(await confirmBox('Lancer le tirage ?', msg, { ok: 'Lancer le tirage' }))) return;
     await busy(t, async () => {
       const count = check(await sb.rpc('hg_ss_draw', { p_edition: ed.id }));
@@ -479,6 +503,49 @@ $('#secret-santa').addEventListener('click', async (ev) => {
     });
   }
 });
+
+/* Mode sans limite : refaire le tirage (suppression des attributions puis nouveau tirage auto ou manuel) */
+async function deleteAssignments(ed) {
+  check(await sb.from('hg_ss_assignments').delete().eq('edition_id', ed.id));
+}
+async function afterFailedRedraw(ed) {
+  // Attributions supprimées mais nouveau tirage refusé : l'édition redevient « sans tirage » pour pouvoir relancer.
+  try { check(await sb.from('hg_ss_editions').update({ drawn_at: null }).eq('id', ed.id)); } catch (e) { console.warn('[tirage] remise à zéro', e); }
+  await loadEditions(); renderSS(); renderStats();
+}
+async function redraw(btn, ed, manual) {
+  const n = S.participants.length;
+  if (manual) {
+    await busy(btn, () => openManualDraw({
+      edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf,
+      redo: {
+        confirm: () => confirmRedo({ year: ed.year, participants: n, manual: true }),
+        before: () => deleteAssignments(ed),
+        onFail: () => afterFailedRedraw(ed),
+      },
+      onDone: async (count) => {
+        S.lastDraw = { edition: ed.id, n: count };
+        await loadEditions(); renderSS(); renderStats();
+        toast(`Nouveau tirage manuel enregistré pour ${count} participants`, 'ok');
+      },
+    }));
+    return;
+  }
+  const { ok, notify: tell } = await confirmRedo({ year: ed.year, participants: n });
+  if (!ok) return;
+  await busy(btn, async () => {
+    if (!isGodMode()) throw new Error('Le mode sans limite a expiré : réactive-le pour refaire le tirage.');
+    await deleteAssignments(ed);
+    const res = await sb.rpc('hg_ss_draw', { p_edition: ed.id });
+    if (res.error) { await afterFailedRedraw(ed); throw res.error; }
+    const count = res.data;
+    S.lastDraw = { edition: ed.id, n: count };
+    if (tell) notify('ss_draw', { edition_id: ed.id });
+    await loadEditions(); renderSS(); renderStats();
+    toast(`Nouveau tirage OK pour ${count} participants`, 'ok');
+  });
+}
+window.addEventListener('hg:godmode', () => { if (ssLoaded) renderSS(); });
 
 /* =========================================================
    Badges

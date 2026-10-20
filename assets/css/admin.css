@@ -142,3 +142,25 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
   .list-row .actions { width: 100%; justify-content: flex-start; }
   .admin-content { gap: 44px; }
 }
+
+/* ===== Carte « Mode sans limite » (admin-godmode.js) ===== */
+.god-root { margin-bottom: 28px; }
+.god-card { display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; border-color: var(--border-strong); position: relative; overflow: hidden; }
+.god-card.is-on { border: 2px solid var(--god-yellow); padding-top: 28px; }
+.god-card.is-on::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 10px; background: var(--god-stripes); }
+.god-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.god-card-ico { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 12px;
+  border: 1px solid var(--border-strong); color: var(--god-text); }
+.god-card.is-on .god-card-ico { background: var(--god-yellow); color: var(--god-ink); border-color: var(--god-yellow); }
+.god-card-txt { flex: 1 1 320px; min-width: 0; }
+.god-card-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; margin: 0 0 4px; }
+.god-card-state { margin: 0; color: var(--muted); font-size: 14px; }
+.god-card.is-on .god-card-state { color: var(--text); }
+.god-card-state strong { color: var(--god-text); }
+.god-card-state time { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-variant-numeric: tabular-nums; }
+.god-card-on { background: transparent; color: var(--god-text); border: 1px solid var(--god-text); }
+.god-card-on:hover { background: color-mix(in srgb, var(--god-yellow) 12%, transparent); color: var(--god-text); }
+.god-card-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; font-size: 14px; width: fit-content; }
+.god-card-more .god-lifts { margin-bottom: 10px; }
+.god-redo-dlg .god-note { margin: 0; }
+.draw-redo { border-top: 1px dashed var(--god-text); padding-top: 12px; }

@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : comptes des membres (fiche complète) + extras Secret Santa =====
 // Importé par admin.js. Ne dépend que de core.js et profile-fields.js (pas d'import circulaire).
-import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml } from './core.js';
+import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 
 /* ---------- Icônes ---------- */
@@ -236,8 +236,8 @@ function profileHtml() {
         <div class="field acc-span"><label for="ap-avatar">Adresse de l'avatar (URL)</label>
           <div class="acc-avatar-edit">${avatarHtml(p, 44)}<input id="ap-avatar" name="avatar_url" type="url" inputmode="url" value="${esc(p.avatar_url ?? '')}" placeholder="Vide = initiales"></div></div>
         <div class="field"><label for="ap-bday">Anniversaire</label><input id="ap-bday" name="birthday" type="date" value="${esc(p.birthday ?? '')}"></div>
-        <div class="field"><label for="ap-joined">Date d'arrivée dans le gang</label>
-          <div class="acc-joined"><input id="ap-joined" name="joined_on" type="date" max="${new Date().toISOString().slice(0, 10)}" value="${esc(p.joined_on ?? '')}" aria-describedby="ap-joined-help">
+        <div class="field"><label for="ap-joined">Date d'arrivée dans le gang${godTag()}</label>
+          <div class="acc-joined"><input id="ap-joined" name="joined_on" type="date" ${godLimitAttr('max', new Date().toISOString().slice(0, 10))} value="${esc(p.joined_on ?? '')}" aria-describedby="ap-joined-help">
             <button class="btn btn-ghost btn-sm" type="button" data-act="clear-joined"${p.joined_on ? '' : ' disabled'}>Effacer</button></div>
           <span class="small muted" id="ap-joined-help">Utilisée sur la carte d'identité (membre depuis). Vide = date d'inscription sur le site.</span></div>
         <div class="field"><label for="ap-discord">ID Discord</label><input id="ap-discord" name="discord_id" inputmode="numeric" autocomplete="off" value="${esc(p.discord_id ?? '')}" placeholder="17 à 20 chiffres"></div>
@@ -268,7 +268,7 @@ async function saveProfile(form, btn) {
     intro_seen: form.intro_seen.checked, joined_on: nullIfEmpty(form.joined_on.value),
   };
   if (patch.joined_on && !/^\d{4}-\d{2}-\d{2}$/.test(patch.joined_on)) throw new Error('Date d\'arrivée invalide.');
-  if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10)) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
+  if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10) && !isGodMode()) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
   if (!self) patch.is_admin = form.is_admin.checked;
   if (self && p.is_admin && patch.is_admin === false) throw new Error('Tu ne peux pas te retirer le statut admin.');
   if (!self && patch.is_admin !== p.is_admin) {

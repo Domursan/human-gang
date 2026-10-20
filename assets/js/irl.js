@@ -1,10 +1,11 @@
 // ===== Humane Gang — Sorties IRL =====
-import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 import { mountHistory } from './irl-history.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
+const god = () => isAdmin && isGodMode(); // mode sans limite : RSVP sur les sorties passées
 
 const GRACE_MS = 6 * 3600 * 1000;   // une sortie reste « prochaine » 6 h après son début
 const ALBUM_PREVIEW = 12;           // miniatures affichées avant « +n »
@@ -255,6 +256,7 @@ function renderPast(ev) {
       </div>
       ${ownerActions(ev, { who: true })}
     </div>
+    ${god() ? `<div class="past-rsvp"><p class="small muted">Répondre à cette sortie passée${godTag()}</p>${rsvpBlock(ev, { compact: true })}</div>` : ''}
     ${albumHtml(ev)}
   </article>`;
 }
@@ -549,5 +551,6 @@ form.addEventListener('submit', async (e) => {
 
 /* ---------- Démarrage ---------- */
 hx = mountHistory({ me, isAdmin, S, classify, member, pseudo, canEdit, plural, tint, I, refresh });
+window.addEventListener('hg:godmode', () => { if (isAdmin) render().catch(() => {}); });
 await refresh();
 goToHash();

@@ -346,3 +346,99 @@ html[data-mode="daltonien"] :focus-visible { outline-width: 3px; }
 .lvl-more { border-style: dashed; }
 .lvl-name { font-size: 12px; font-weight: 700; color: var(--sand); }
 html[data-mode="clair"] .lvl-pip.is-on { color: #FFFFFF; }
+
+/* ===== Mode sans limite (admin) : html[data-godmode="on"] posé par core.js =====
+   Bandeau fixe en haut (au-dessus de l'en-tête, le contenu est décalé de --god-h), cadre d'écran en bandes
+   « danger » jaune/noir (animées lentement, figées si mouvement réduit ou effets coupés). */
+:root { --god-yellow: #F5C400; --god-ink: #111111; --god-text: #F5C400; --god-red: #B3261E;
+  --god-stripes: repeating-linear-gradient(-45deg, var(--god-yellow) 0 14px, var(--god-ink) 14px 28px); }
+html[data-mode="clair"] { --god-text: #6B4F00; }
+html[data-godmode="on"] body { padding-top: var(--god-h, 60px); }
+html[data-godmode="on"] { scroll-padding-top: calc(var(--god-h, 60px) + 12px); }
+html[data-godmode="on"] :is(.admin-nav, .bt-list, .bt-main .bt-preview, .legal-toc) { top: calc(var(--god-h, 60px) + 16px); }
+@media (max-width: 860px) { html[data-godmode="on"] .admin-nav { top: var(--god-h, 60px); } }
+
+.god-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 9600; background: var(--god-yellow); color: var(--god-ink);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .45); }
+.god-banner::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 8px; background: var(--god-stripes);
+  animation: god-stripes 3s linear infinite; }
+.god-banner-in { max-width: var(--maxw); margin: 0 auto; padding: 6px 24px; min-height: 56px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+.god-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: var(--god-ink); color: var(--god-yellow); flex: none; }
+.god-msg { margin: 0; flex: 1 1 260px; font-weight: 700; line-height: 1.25; }
+.god-msg strong { font-family: var(--font-display); font-weight: 400; font-size: 18px; letter-spacing: .04em; }
+.god-count { margin: 0; font-weight: 700; font-size: 15px; white-space: nowrap; }
+.god-count[hidden] { display: none; }
+.god-left { font: 700 17px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums;
+  background: var(--god-ink); color: var(--god-yellow); padding: 4px 8px; border-radius: 6px; margin-left: 4px; display: inline-block; }
+.god-off { font: inherit; font-weight: 700; min-height: 44px; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--god-ink); color: var(--god-yellow); border: 2px solid var(--god-ink); }
+.god-off:hover { background: #2a2a2a; }
+.god-off:focus-visible, .god-banner :focus-visible { outline: 3px solid var(--god-ink); outline-offset: 2px; }
+.god-off[disabled] { opacity: .6; cursor: progress; }
+@media (max-width: 600px) {
+  .god-banner-in { padding: 6px 16px; gap: 4px 10px; }
+  .god-ico { width: 28px; height: 28px; }
+  .god-msg { flex-basis: calc(100% - 40px); font-size: 14px; }
+  .god-msg strong { font-size: 16px; }
+  .god-count { flex: 1 1 auto; font-size: 14px; }
+  .god-off { min-height: 44px; padding: 6px 14px; }
+}
+
+.god-frame { position: fixed; inset: 0; z-index: 9500; pointer-events: none; padding: 8px; background: var(--god-stripes);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: god-stripes 3s linear infinite; }
+@media (max-width: 600px) { .god-frame { padding: 5px; } }
+@keyframes god-stripes { to { background-position: 39.598px 0; } } /* une période des bandes à 45° (28px × √2) : boucle sans saut */
+html[data-fx="off"] .god-frame, html[data-fx="off"] .god-banner::after { animation: none; }
+@media (prefers-reduced-motion: reduce) { .god-frame, .god-banner::after { animation: none !important; } }
+
+/* En-tête : léger filtre + bouton éclair */
+html[data-godmode="on"] .site-header { filter: sepia(.35) saturate(.85); box-shadow: inset 0 -2px 0 var(--god-yellow); }
+.nav-god[aria-pressed="true"] { background: var(--god-yellow); color: var(--god-ink); border-color: var(--god-ink); }
+.nav-god[aria-pressed="true"]:hover { background: #ffd51f; color: var(--god-ink); }
+
+/* Libellé sur les actions débloquées */
+.god-tag { font-size: 12px; font-weight: 700; color: var(--god-text); white-space: nowrap; letter-spacing: .01em; }
+.btn .god-tag, .pill .god-tag { color: inherit; font-weight: 500; opacity: .9; }
+.god-note { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--god-text); color: var(--text); font-size: 13px; }
+.god-note strong { color: var(--god-text); }
+
+/* Dialog d'activation */
+.god-dialog { width: min(600px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: auto;
+  background: var(--surface); color: var(--text); border: 2px solid var(--god-yellow); border-radius: var(--radius);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
+.god-dialog::before { content: ''; display: block; height: 12px; background: var(--god-stripes); }
+.god-dialog::backdrop { background: rgba(10, 8, 0, .72); backdrop-filter: blur(3px); }
+.god-form { padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 14px; }
+.god-dlg-head { display: flex; gap: 14px; align-items: center; }
+.god-dlg-ico { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--god-yellow); color: var(--god-ink); }
+.god-dlg-ico svg { width: 28px; height: 28px; }
+.god-dlg-eyebrow { margin: 0 0 2px; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--god-text); font-weight: 700; }
+.god-dialog h2 { font-size: clamp(22px, 5vw, 28px); line-height: 1.1; }
+.god-desc { margin: 0; }
+.god-lifts { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.god-lifts strong { color: var(--text); }
+.god-kept { margin: 0; color: var(--muted); }
+.god-dur { border: 0; margin: 0; padding: 0; min-width: 0; }
+.god-dur legend { font-size: 14px; color: var(--muted); padding: 0; margin-bottom: 8px; }
+.god-dur-opts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.god-dur-opt { position: relative; min-height: 44px; display: grid; place-items: center; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); cursor: pointer; font-weight: 700; }
+.god-dur-opt input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.god-dur-opt:has(input:checked) { border-color: var(--god-yellow); box-shadow: inset 0 0 0 1px var(--god-yellow); color: var(--god-text); }
+.god-dur-opt:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.god-phrase { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text); letter-spacing: .06em; }
+#god-confirm { text-transform: uppercase; letter-spacing: .06em; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.god-err { margin: 0; color: var(--rose); min-height: 0; }
+.god-err:empty { display: none; }
+.god-actions { justify-content: flex-end; }
+.god-go { background: var(--god-red); color: #fff; border-color: var(--god-red); }
+.god-go:hover:not([disabled]) { filter: brightness(1.1); color: #fff; }
+html[data-mode="clair"] .god-dialog { box-shadow: 0 24px 80px rgba(0, 0, 0, .2); }
+@media (max-width: 600px) {
+  .god-form { padding: 18px 16px; }
+  .god-dur-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .god-actions .btn { flex: 1 1 auto; }
+}

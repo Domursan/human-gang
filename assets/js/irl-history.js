@@ -1,5 +1,5 @@
 // ===== Humane Gang — IRL : historique des rencontres, rencontres passées, « Qui était là ? », carte =====
-import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml } from './core.js';
+import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit, godTag } from './core.js';
 import { compressImage, uploadImage, removeObjects, uuid } from './photos.js';
 
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
@@ -101,7 +101,8 @@ export function mountHistory(ctx) {
     $('#rt-submit').textContent = ev ? 'Enregistrer' : 'Ajouter la rencontre';
     $('#rt-intro').hidden = !!ev;
     $('#rt-photos-field').hidden = !!ev;   // en modification, les photos s'ajoutent depuis l'album
-    rForm.elements.date.max = ymd(new Date());
+    godLimit(rForm.elements.date, 'max', ymd(new Date())); // pas de date future… sauf en mode sans limite
+    $('label[for="rt-date"]', rDlg).innerHTML = `Date${ctx.isAdmin ? godTag() : ''}`;
     // Lieux déjà utilisés en suggestion
     const places = new Map();
     for (const e of S.events) if (e.location) places.set(norm(e.location), e.location.trim());
@@ -130,10 +131,11 @@ export function mountHistory(ctx) {
     if (!title) { toast('Donne un titre à la rencontre.', 'error'); f.title.focus(); return; }
     if (!f.date.value) { toast('Indique la date de la rencontre.', 'error'); f.date.focus(); return; }
     const today = ymd(new Date());
-    if (f.date.value > today) { toast('La date doit être dans le passé.', 'error'); f.date.focus(); return; }
+    const god = ctx.isAdmin && isGodMode(); // mode sans limite : date future autorisée
+    if (f.date.value > today && !god) { toast('La date doit être dans le passé.', 'error'); f.date.focus(); return; }
     let start = new Date(`${f.date.value}T${f.time.value || '12:00'}`);
     if (Number.isNaN(start.getTime())) { toast('Date invalide.', 'error'); f.date.focus(); return; }
-    if (start > new Date()) {
+    if (start > new Date() && !god) {
       if (f.time.value) { toast('Cette heure est dans le futur : une rencontre passée doit déjà avoir eu lieu.', 'error'); f.time.focus(); return; }
       start = new Date(Date.now() - 60000);   // aujourd'hui sans heure, avant midi
     }

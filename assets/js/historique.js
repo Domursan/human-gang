@@ -1,5 +1,5 @@
 // ===== Humane Gang — Historique (frise) =====
-import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 
 const me = await initPage({ auth: 'member' });
@@ -238,7 +238,8 @@ function openMomentDialog(m = null) {
   form.elements.title.value = m?.title || '';
   form.elements.body.value = m?.body || '';
   form.elements.happened_on.value = m?.happened_on || todayIso();
-  form.elements.happened_on.max = todayIso();
+  godLimit(form.elements.happened_on, 'max', todayIso()); // date future autorisée en mode sans limite (admin)
+  $('label[for="mo-date"]').innerHTML = `Date${godTag()}`;
   const cur = $('#mo-image-current');
   cur.hidden = !m?.image_path;
   cur.innerHTML = m?.image_path ? `<label class="check"><input type="checkbox" name="remove_image"><span>Retirer l'image actuelle</span></label>` : '';

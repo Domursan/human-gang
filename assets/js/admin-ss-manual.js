@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : tirage manuel du Secret Santa =====
 // Éditeur « une ligne par Santa » avec validation en direct, complétion aléatoire et envoi via rpc hg_ss_manual_draw.
-import { sb, toast, errMsg, esc, $, notify } from './core.js';
+import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from './core.js';
 
 const IC = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
@@ -10,7 +10,7 @@ const IC = {
   dice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></svg>',
 };
 
-const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {} };
+const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
 const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
@@ -160,7 +160,8 @@ function shell() {
         if (!res) { toast('Impossible de compléter sans modifier les lignes déjà remplies (la seule cible restante serait la personne elle-même). Change une ligne et réessaie.', 'error'); return; }
         M.pick = res.pick;
         render();
-        toast(res.relaxed ? 'Complété au hasard, mais une exclusion ou une cible de l\'an dernier n\'a pas pu être évitée.' : 'Lignes vides complétées au hasard', res.relaxed ? 'error' : 'ok');
+        if (res.relaxed && isGodMode()) toast('Complété au hasard (mode sans limite : exclusions et cible de l\'an dernier non bloquantes).', 'ok');
+        else toast(res.relaxed ? 'Complété au hasard, mais une exclusion ou une cible de l\'an dernier n\'a pas pu être évitée.' : 'Lignes vides complétées au hasard', res.relaxed ? 'error' : 'ok');
         return;
       }
       if (t.id === 'md-submit') submit(t);
@@ -170,8 +171,9 @@ function shell() {
     <div class="md-in">
       <div class="md-head">
         <div>
-          <h2 id="md-title" class="dialog-title">Tirage manuel · ${esc(M.ed.year)}</h2>
-          <p class="small muted">Choisis la cible de chaque Santa. Chacun doit recevoir exactement une fois et personne ne s'offre à soi-même. Les exclusions et la cible de l'an dernier ne sont que des avertissements.</p>
+          <h2 id="md-title" class="dialog-title">${M.redo ? 'Refaire le tirage manuel' : 'Tirage manuel'} · ${esc(M.ed.year)}${M.redo ? godTag(true) : ''}</h2>
+          <p class="small muted">Choisis la cible de chaque Santa. Chacun doit recevoir exactement une fois et personne ne s'offre à soi-même. Les exclusions et la cible de l'an dernier ne sont que des avertissements${isGodMode() ? ', jamais bloquants (mode sans limite)' : ''}.</p>
+          ${M.redo ? '<p class="god-note small"><strong>Nouveau tirage :</strong> à la validation, les attributions actuelles seront supprimées et remplacées par ces paires.</p>' : ''}
         </div>
         <button class="btn btn-ghost btn-sm" type="button" id="md-close">Fermer</button>
       </div>
@@ -191,6 +193,7 @@ function shell() {
 async function submit(btn) {
   const a = analyse(M.ids, M.pick, M.excl, M.last, M.pseudoOf);
   if (!a.valid) return;
+  if (M.redo) return submitRedo(btn);
   const warn = a.warnings ? `\n${a.warnings} avertissement${a.warnings > 1 ? 's' : ''} (exclusion ou même cible que l'an dernier) : le tirage sera enregistré quand même.` : '';
   const ok = await confirmBox('Valider ce tirage ?', `${M.ids.length} participants.${warn}\nLe tirage est définitif : il ne pourra pas être relancé. L'édition passera en « Envoi des cadeaux » et les participants seront prévenus par le bot.`, { ok: 'Valider le tirage' });
   if (!ok) return;
@@ -209,12 +212,38 @@ async function submit(btn) {
   }
 }
 
+/* Mode sans limite : remplace un tirage existant (confirmation, suppression des attributions, puis rpc). */
+async function submitRedo(btn) {
+  const redo = M.redo;
+  const { ok, notify: tell } = await redo.confirm();
+  if (!ok) return;
+  if (!isGodMode()) { toast('Le mode sans limite a expiré : réactive-le pour refaire le tirage.', 'error'); return; }
+  btn.disabled = true;
+  let deleted = false;
+  try {
+    await redo.before();
+    deleted = true;
+    const pairs = M.ids.map((g) => ({ giver: g, receiver: M.pick.get(g) }));
+    const { data, error } = await sb.rpc('hg_ss_manual_draw', { p_edition: M.ed.id, p_pairs: pairs });
+    if (error) throw error;
+    if (tell) notify('ss_draw', { edition_id: M.ed.id });
+    M.pick.clear();
+    M.dlg.close();
+    await M.onDone(Number(data) || M.ids.length);
+  } catch (e) {
+    toast(errMsg(e), 'error');
+    btn.disabled = false;
+    if (deleted) { M.dlg.close(); await redo.onFail?.(); }
+  }
+}
+
 /**
  * Ouvre l'éditeur. edition = ligne hg_ss_editions ; participants = uuids ; exclusions = lignes hg_ss_exclusions ;
  * editions = toutes les éditions (pour trouver l'an dernier) ; onDone(count) après succès.
  */
-export async function openManualDraw({ edition, participants, exclusions = [], editions = [], pseudoOf, onDone }) {
+export async function openManualDraw({ edition, participants, exclusions = [], editions = [], pseudoOf, onDone, redo = null }) {
   M.ed = edition;
+  M.redo = redo; // { confirm() → {ok, notify}, before(), onFail() } : « Refaire le tirage (manuel) » en mode sans limite
   if (M.ids.join() !== participants.slice().sort().join() || M.edId !== edition.id) M.pick = new Map(); // garde le brouillon si rien n'a changé
   M.edId = edition.id;
   M.ids = participants.slice().sort();

@@ -4,7 +4,7 @@
 //   puis 1 à max_per_page apparitions à des moments aléatoires (≈ 5 à 40 s). Clic / tap / Entrée → rpc hg_dyn_capture.
 // Sans mouvement (prefers-reduced-motion ou effets coupés) : l'image apparaît en fondu, immobile, dans un coin.
 // Le calque est en position fixe au-dessus du contenu, sans capter les clics (seule l'image est cliquable).
-import { sb, toast, esc, playSound, motionAllowed, checkNewBadges } from './core.js';
+import { sb, toast, esc, playSound, motionAllowed, checkNewBadges, isGodMode } from './core.js';
 
 const FALLBACK_EMOJI = '✨';
 const REASONS = {
@@ -214,12 +214,38 @@ const waitVisible = () => (document.hidden
   : Promise.resolve());
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* Mode sans limite (admin) : chaque événement existant (même inactif ou terminé) apparaît une fois à chaque page,
+   peu après le chargement, sans limite de captures (le serveur ignore dates, actif et maximums pour l'admin en mode actif). */
+let _forced = false;
+async function forceAllDynEvents() {
+  if (_forced) return;
+  _forced = true;
+  let list = [];
+  try {
+    const { data, error } = await sb.from('hg_dyn_events').select('*').order('starts_at', { ascending: false });
+    if (error) throw error;
+    list = Array.isArray(data) ? data : [];
+  } catch (e) { console.warn('[événements] mode sans limite', e?.message || e); return; }
+  list.forEach((ev, i) => {
+    (async () => {
+      await sleep(1200 + i * 2200);
+      await waitVisible();
+      if (!isGodMode()) return;
+      await flyDynImage(ev, {});
+    })().catch((e) => console.warn('[événements]', e));
+  });
+}
+
 let _started = false;
 /** Lance les apparitions de la page pour un membre. Ne jette jamais. */
 export async function startDynEvents(profile) {
   if (_started || !profile?.id) return;
   _started = true;
   try {
+    if (profile.is_admin) {
+      window.addEventListener('hg:godmode', (e) => { if (e.detail?.on) forceAllDynEvents(); });
+      if (isGodMode()) { await forceAllDynEvents(); return; }
+    }
     if (/(^|\/)admin\.html$/.test(location.pathname)) return; // l'admin a son bouton « Tester l'apparition »
     const list = await getActiveDynEvents();
     for (const ev of list) {

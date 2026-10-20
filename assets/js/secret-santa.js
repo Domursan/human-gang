@@ -1,5 +1,5 @@
 // ===== Humane Gang — page Secret Santa =====
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC, isGodMode, godTag } from './core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
 import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
 
@@ -55,6 +55,9 @@ const memberOf = (id) => S.members.get(id) || { pseudo: 'Membre', avatar_url: nu
 const stepIndex = () => ORDER.indexOf(S.ed.status);
 const isDrawn = () => DRAWN.includes(S.ed.status);
 const isReveal = () => ['revelation', 'termine'].includes(S.ed.status);
+/** Mode sans limite (admin) : inscription libre quel que soit le statut, envoi/réception modifiables. */
+const god = () => !!me?.is_admin && isGodMode();
+const STATUS_TXT = { inscriptions: 'inscriptions ouvertes', tirage: 'tirage en préparation', envoi: 'envoi des cadeaux', revelation: 'révélation', termine: 'terminée' };
 
 /* ---------- Chargement ---------- */
 async function loadParticipants() {
@@ -175,6 +178,7 @@ function renderAll() {
       <section class="card ss-section" id="ss-mywishes" aria-labelledby="ss-mywishes-t"></section>`;
   } else {
     body = `
+      ${god() ? '<section class="card card-ss ss-section" id="ss-signup" aria-labelledby="ss-signup-t"></section>' : ''}
       ${S.mine && S.target ? `
       <section class="ss-target ss-section" aria-labelledby="ss-card-t">
         <div class="ss-card-col" id="ss-card"></div>
@@ -194,6 +198,7 @@ function renderAll() {
   app.dataset.status = st;
 
   if (!isDrawn()) { renderSignup(); renderPeople(); renderMyWishes(); return; }
+  if (god()) renderSignup();
   if (S.mine && S.target) { renderCard(); renderTargetWishes(); renderSantaMsg(); renderSend(); } else renderNoTarget();
   renderProgress();
   if (S.mine) renderMyWishes();
@@ -206,7 +211,12 @@ function renderSignup() {
   const open = S.ed.status === 'inscriptions';
   const n = S.participants.length;
   let txt, btn = '';
-  if (open) {
+  if (!open && god()) {
+    txt = `Statut actuel : ${esc(STATUS_TXT[S.ed.status] || S.ed.status)}. ${S.mine ? 'Tu es inscrit·e.' : 'Tu n’es pas inscrit·e.'} Le mode sans limite te permet ${S.mine ? 'de te désinscrire' : 'de t’inscrire'} quand même${isDrawn() ? ' : le tirage est déjà fait, refais-le depuis l’administration pour que ça compte' : ''}.`;
+    btn = S.mine
+      ? `<button class="btn btn-ghost" type="button" id="ss-leave">Se désinscrire${godTag()}</button>`
+      : `<button class="btn btn-primary" type="button" id="ss-join">S’inscrire${godTag()}</button>`;
+  } else if (open) {
     txt = S.mine
       ? `Tu es inscrit·e depuis le ${esc(fmtDate(S.mine.joined_at))}. Pense à remplir ta liste de souhaits : elle aide ton Santa.`
       : 'Les inscriptions sont ouvertes. Inscris-toi pour participer au tirage.';
@@ -219,7 +229,7 @@ function renderSignup() {
       : 'Les inscriptions sont closes : le tirage arrive. Tu ne participes pas à cette édition.';
   }
   el.innerHTML = `
-    <h2 id="ss-signup-t">${open ? 'Inscription' : 'Tirage en préparation'}</h2>
+    <h2 id="ss-signup-t">${open || god() ? 'Inscription' : 'Tirage en préparation'}</h2>
     <p class="ss-big"><span class="display">${n}</span> ${n > 1 ? 'inscrits' : 'inscrit'}</p>
     <p class="muted">${txt}</p>
     ${btn ? `<div class="btn-row">${btn}</div>` : ''}`;
@@ -234,6 +244,7 @@ async function join(btn) {
     if (error) throw error;
     await loadParticipants();
     toast('Inscription enregistrée. Bienvenue dans le tirage !', 'ok');
+    if (isDrawn()) { await load(); renderAll(); return; }
     renderSignup(); renderPeople(); renderMyWishes();
   } catch (e) { toast(`Inscription impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
@@ -246,6 +257,7 @@ async function leave(btn) {
     await loadParticipants();
     if (S.mine) throw new Error('la désinscription a été refusée');
     toast('Tu es désinscrit·e.', 'ok');
+    if (isDrawn()) { S.target = null; await load(); renderAll(); return; }
     renderSignup(); renderPeople(); renderMyWishes();
   } catch (e) { toast(`Désinscription impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
@@ -452,7 +464,9 @@ async function openSantaChat(btn, role) {
 function renderSend() {
   const el = $('#ss-send'); if (!el) return;
   const sent = S.mine?.sent_at, rec = S.mine?.received_at;
-  const closed = S.ed.status === 'termine';
+  const closed = S.ed.status === 'termine' && !god();
+  const tag = S.ed.status === 'termine' ? godTag() : '';
+  const undo = (field, label) => (god() && S.mine?.[field] ? `<button class="btn btn-ghost btn-sm" type="button" data-undo="${field}">Annuler « ${label} »${godTag()}</button>` : '');
   el.innerHTML = `
     <h2 id="ss-send-t">Mon envoi</h2>
     <ul class="ss-checks">
@@ -462,7 +476,7 @@ function renderSend() {
           <strong>Cadeau envoyé</strong>
           <span class="muted small">${sent ? `Le ${esc(fmtDateTime(sent))}` : 'Pas encore'}</span>
         </div>
-        <button class="btn ${sent ? 'btn-ghost' : 'btn-primary'}" type="button" id="ss-sent"${sent || closed ? ' disabled' : ''}>${sent ? 'Envoyé' : 'J’ai envoyé le cadeau'}</button>
+        <button class="btn ${sent ? 'btn-ghost' : 'btn-primary'}" type="button" id="ss-sent"${sent || closed ? ' disabled' : ''}>${sent ? 'Envoyé' : `J’ai envoyé le cadeau${tag}`}</button>
       </li>
       <li class="ss-check${rec ? ' is-done' : ''}">
         <span class="ss-check-icon" aria-hidden="true">${rec ? I.check : I.box}</span>
@@ -470,12 +484,14 @@ function renderSend() {
           <strong>Mon cadeau reçu</strong>
           <span class="muted small">${rec ? `Le ${esc(fmtDateTime(rec))}` : 'Pas encore'}</span>
         </div>
-        <button class="btn ${rec ? 'btn-ghost' : 'btn-sand'}" type="button" id="ss-received"${rec || closed ? ' disabled' : ''}>${rec ? 'Reçu' : 'J’ai reçu le mien'}</button>
+        <button class="btn ${rec ? 'btn-ghost' : 'btn-sand'}" type="button" id="ss-received"${rec || closed ? ' disabled' : ''}>${rec ? 'Reçu' : `J’ai reçu le mien${tag}`}</button>
       </li>
     </ul>
+    ${undo('sent_at', 'envoyé') || undo('received_at', 'reçu') ? `<div class="btn-row">${undo('sent_at', 'envoyé')}${undo('received_at', 'reçu')}</div>` : ''}
     <p class="muted small">Le bot prévient le destinataire sur Discord, sans révéler qui tu es.</p>`;
   $('#ss-sent', el).addEventListener('click', (e) => mark(e.currentTarget, 'sent_at', 'ss_gift_sent', 'Envoi noté. Ton destinataire va être prévenu.'));
   $('#ss-received', el).addEventListener('click', (e) => mark(e.currentTarget, 'received_at', 'ss_gift_received', 'Réception notée. Ton Santa va être prévenu.'));
+  el.querySelectorAll('[data-undo]').forEach((b) => b.addEventListener('click', () => unmark(b, b.dataset.undo)));
 }
 
 async function mark(btn, field, event, okMsg) {
@@ -493,6 +509,25 @@ async function mark(btn, field, event, okMsg) {
     renderSend();
     toast(okMsg, 'ok');
     notify(event, { edition_id: S.ed.id });
+    try { await loadProgress(); renderProgress(); } catch {}
+  } catch (e) { toast(`Enregistrement impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
+}
+
+/** Mode sans limite : remet « envoyé » ou « reçu » à « pas encore » (sans notification). */
+async function unmark(btn, field) {
+  if (!god() || !S.mine?.[field]) return;
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.from('hg_ss_participants')
+      .update({ [field]: null })
+      .eq('edition_id', S.ed.id).eq('user_id', me.id)
+      .select('user_id, sent_at, received_at, joined_at').single();
+    if (error) throw error;
+    S.mine = data;
+    const i = S.participants.findIndex((p) => p.user_id === me.id);
+    if (i >= 0) S.participants[i] = data;
+    renderSend();
+    toast('Remis à « pas encore ».', 'ok');
     try { await loadProgress(); renderProgress(); } catch {}
   } catch (e) { toast(`Enregistrement impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
@@ -545,6 +580,7 @@ function renderReveal() {
 }
 
 /* ---------- Démarrage ---------- */
+window.addEventListener('hg:godmode', () => { if (me?.is_admin && S.ed) renderAll(); });
 try {
   await load();
   renderAll();

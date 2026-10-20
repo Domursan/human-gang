@@ -1,7 +1,7 @@
 // ===== Humane Gang — administration : liens d'invitation (hg_invite_links) =====
 // Un lien public (rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
 // Importé par admin.js (section « Invitations »). Ne dépend que de core.js.
-import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime } from './core.js';
+import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, isGodMode } from './core.js';
 
 const IC = {
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
@@ -77,8 +77,8 @@ function formHtml() {
         <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
       <div class="field"><label for="il-max">Limite de codes</label>
         <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Illimité"></div>
-      <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span></label>
-        <input id="il-exp" name="expires_at" type="date" min="${today}"></div>
+      <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span>${godTag()}</label>
+        <input id="il-exp" name="expires_at" type="date" ${godLimitAttr('min', today)}></div>
       <button class="btn btn-primary" type="submit">${IC.link} Créer le lien</button>
     </form>`;
 }
@@ -183,7 +183,7 @@ function bind() {
       if (max !== null && (!Number.isInteger(max) || max < 1)) throw new Error('La limite doit être un nombre entier supérieur ou égal à 1.');
       // Date d'expiration : fin de journée locale
       const exp = f.expires_at.value ? new Date(`${f.expires_at.value}T23:59:59`) : null;
-      if (exp && exp < new Date()) throw new Error('La date d\'expiration est déjà passée.');
+      if (exp && exp < new Date() && !isGodMode()) throw new Error('La date d\'expiration est déjà passée.');
       const row = check(await sb.from('hg_invite_links').insert({
         label, max_codes: max, expires_at: exp ? exp.toISOString() : null, created_by: L.me.id,
       }).select().single());
