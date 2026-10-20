@@ -29,7 +29,7 @@ button.hgc { cursor: pointer; }
    la fenêtre s'agrandit et la ligne de famille descend dessous. Nom, gemmes, numéro et N° ne changent pas. */
 .hgc-sm .hgc-amb { display: none; }
 .hgc-sm .hgc-win { height: calc(var(--u) * 218); }
-.hgc-sm .hgc-fam { top: calc(var(--u) * 304); }
+.hgc-sm .hgc-fam { top: calc(var(--u) * 303); height: calc(var(--u) * 16); line-height: calc(var(--u) * 16); }
 
 /* ---------- Raretés (palette de la maquette A ; mythique = style doré de la maquette B) ---------- */
 .hgc-commune { --frame: #4b4f5b; --mid: #8c91a0; --face: #1b1c25; --acc: #c4c9d6; --gem: #c4c9d6; }
