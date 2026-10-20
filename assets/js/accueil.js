@@ -1,4 +1,4 @@
-// ===== Accueil : le QG du Human Gang =====
+// ===== Accueil : le QG du Humane Gang =====
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo } from './core.js';
 
 const app = $('#app');
@@ -51,8 +51,8 @@ function renderGuest() {
   app.innerHTML = `
     <section class="home-hero home-hero-guest">
       <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" onerror="this.remove()">
-      <p class="eyebrow">Human Gang</p>
-      <h1 class="page-title">Le QG du Human Gang</h1>
+      <p class="eyebrow">Humane Gang</p>
+      <h1 class="page-title">Le QG du Humane Gang</h1>
       <p class="home-lead">Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L'espace est réservé aux membres.</p>
       <div class="btn-row home-hero-actions">
         <a class="btn btn-primary" href="compte.html?next=accueil.html">Se connecter / Rejoindre</a>
@@ -91,7 +91,7 @@ function renderMemberShell() {
     <section class="page-head home-head">
       <div>
         <p class="eyebrow">Salut ${esc(me.pseudo)}</p>
-        <h1 class="page-title">Le QG du Human Gang</h1>
+        <h1 class="page-title">Le QG du Humane Gang</h1>
       </div>
       <div id="countdown" class="countdown" hidden></div>
     </section>

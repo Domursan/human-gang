@@ -1,4 +1,4 @@
-// ===== Human Gang — assistance (accessible sans compte) =====
+// ===== Humane Gang — assistance (accessible sans compte) =====
 import { initPage, callFn, $, errMsg } from './core.js';
 
 const me = await initPage({ auth: 'optional' });

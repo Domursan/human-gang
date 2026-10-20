@@ -1,4 +1,4 @@
-// ===== Human Gang — générateur de carte Secret Santa (canvas 1000x1400, ratio 5:7) =====
+// ===== Humane Gang — générateur de carte Secret Santa (canvas 1000x1400, ratio 5:7) =====
 // Fonctions pures de rendu : aucune dépendance à Supabase, testables isolément.
 
 export const CARD_W = 1000;
@@ -280,7 +280,7 @@ export async function renderCardBack(canvas, { logoSrc, year } = {}) {
   ctx.fillStyle = 'rgba(242,239,234,0.5)';
   ctx.font = `700 20px ${BODY}`;
   spaced(ctx, 6);
-  ctx.fillText('HUMAN GANG', CARD_W / 2, CARD_H / 2 + 380);
+  ctx.fillText('HUMANE GANG', CARD_W / 2, CARD_H / 2 + 380);
   spaced(ctx, 0);
 }
 

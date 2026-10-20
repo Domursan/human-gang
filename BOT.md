@@ -1,6 +1,6 @@
-# Bot Discord Human Gang : guide d'installation
+# Bot Discord Humane Gang : guide d'installation
 
-Ce guide explique comment créer le bot qui envoie les annonces et les messages privés (MP) du site Human Gang.
+Ce guide explique comment créer le bot qui envoie les annonces et les messages privés (MP) du site Humane Gang.
 Compte environ 15 minutes. Tu n'as rien à installer ni à héberger : le bot ne « tourne » pas en continu,
 ce sont les fonctions Supabase `hg-notify` et `hg-support` qui parlent à Discord quand quelque chose se passe sur le site.
 
@@ -21,10 +21,10 @@ Le bot ne révèle jamais les paires du Secret Santa et désactive les mentions 
 ## 1. Créer l'application et le bot
 
 1. Va sur le portail développeur : <https://discord.com/developers/applications> et connecte-toi.
-2. Clique sur **New Application**, nomme-la `Human Gang`, accepte les conditions, **Create**.
+2. Clique sur **New Application**, nomme-la `Humane Gang`, accepte les conditions, **Create**.
 3. Dans **General Information**, tu peux mettre le logo du gang en icône et une description.
 4. Menu de gauche : **Bot**.
-   - Donne-lui un nom d'utilisateur (`Human Gang`) et l'avatar du logo.
+   - Donne-lui un nom d'utilisateur (`Humane Gang`) et l'avatar du logo.
    - Désactive **Public Bot** : comme ça, toi seul peux l'inviter sur un serveur.
    - Laisse les trois **Privileged Gateway Intents** désactivés : le bot n'en a pas besoin.
 
@@ -43,7 +43,7 @@ Le bot ne révèle jamais les paires du Secret Santa et désactive les mentions 
       - **View Channels**
       - **Send Messages**
       - **Embed Links**
-    4. Copie l'URL générée en bas, ouvre-la dans ton navigateur, choisis le serveur du Human Gang, **Autoriser**.
+    4. Copie l'URL générée en bas, ouvre-la dans ton navigateur, choisis le serveur du Humane Gang, **Autoriser**.
     5. Vérifie que le bot a bien accès au salon d'annonces (si le salon est privé, ajoute le bot ou son rôle
       dans les permissions du salon avec « Voir le salon », « Envoyer des messages » et « Intégrer des liens »).
 

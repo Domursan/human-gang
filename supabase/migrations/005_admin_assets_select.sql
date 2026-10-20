@@ -1,4 +1,4 @@
--- ===== Human Gang : admin — remplacement des fichiers dans hg-assets =====
+-- ===== Humane Gang : admin — remplacement des fichiers dans hg-assets =====
 -- Le Storage exige SELECT + INSERT + UPDATE pour un upload en `upsert: true`
 -- (remplacer cartes/base-<année>.<ext> ou badges/<code>.png déjà existants).
 -- Le bucket est public (lecture par URL publique) ; cette policy ne concerne que l'API Storage authentifiée.

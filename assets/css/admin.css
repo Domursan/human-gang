@@ -1,4 +1,4 @@
-/* ===== Human Gang — administration (+ assistance) ===== */
+/* ===== Humane Gang — administration (+ assistance) ===== */
 .admin-intro { max-width: 360px; margin: 0; }
 
 .admin-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; align-items: start; }

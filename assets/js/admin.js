@@ -1,4 +1,4 @@
-// ===== Human Gang — administration =====
+// ===== Humane Gang — administration =====
 import {
   sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn,
 } from './core.js';

@@ -1,4 +1,4 @@
-// ===== Human Gang — fonction edge « hg-support » =====
+// ===== Humane Gang — fonction edge « hg-support » =====
 // Reçoit une demande d'assistance (avec ou sans compte), l'enregistre dans hg_support
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
             ...(site ? [{ name: 'Traiter', value: `${site}/admin.html#assistance` }] : []),
           ],
           timestamp: new Date().toISOString(),
-          footer: { text: 'Human Gang · assistance' },
+          footer: { text: 'Humane Gang · assistance' },
         }],
       });
       discordSent = true;

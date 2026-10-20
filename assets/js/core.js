@@ -1,4 +1,4 @@
-// ===== Human Gang — socle commun (à importer dans chaque page) =====
+// ===== Humane Gang — socle commun (à importer dans chaque page) =====
 // Ordre volontaire : préférences d'affichage et thème en cache sont appliqués AVANT le chargement
 // de supabase-js (import dynamique en fin de module), pour éviter un flash de couleurs.
 import { SUPABASE_URL, SUPABASE_KEY, LOGO_SRC } from './config.js';
@@ -318,20 +318,23 @@ function startEffects() {
   layer.setAttribute('aria-hidden', 'true');
   const rnd = (a, b) => a + Math.random() * (b - a);
   const small = innerWidth < 600;
-  const count = { pluie: small ? 7 : 12, neige: small ? 16 : 30, etoiles: small ? 14 : 26 }[fx] ?? 0;
+  const count = { pluie: small ? 9 : 18, neige: small ? 18 : 34, etoiles: small ? 16 : 30 }[fx] ?? 0;
+  // Répartition régulière sur toute la largeur (une colonne par élément, position aléatoire dans sa colonne)
+  const col = (i) => (((i + rnd(0.15, 0.85)) / count) * 100).toFixed(1);
+  const order = [...Array(count).keys()].sort(() => Math.random() - 0.5);
   let html = '';
   for (let i = 0; i < count; i++) {
     if (fx === 'pluie') {
       const e = themeEmoji(i);
       if (!e) break;
       const d = rnd(16, 28);
-      html += `<span style="left:${rnd(0, 97).toFixed(1)}%;font-size:${rnd(16, 26).toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--r:${rnd(-160, 160).toFixed(0)}deg">${esc(e)}</span>`;
+      html += `<span style="left:min(${col(order[i])}%, calc(100% - 30px));font-size:${rnd(16, 26).toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--r:${rnd(-160, 160).toFixed(0)}deg">${esc(e)}</span>`;
     } else if (fx === 'neige') {
       const d = rnd(12, 24), s = rnd(3, 7);
-      html += `<span style="left:${rnd(0, 99).toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-50, 50).toFixed(0)}px;opacity:${rnd(0.35, 0.8).toFixed(2)}"></span>`;
+      html += `<span style="left:${col(order[i])}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-50, 50).toFixed(0)}px;opacity:${rnd(0.35, 0.8).toFixed(2)}"></span>`;
     } else if (fx === 'etoiles') {
       const d = rnd(3, 7), s = rnd(2, 3.5);
-      html += `<span style="left:${rnd(0, 99).toFixed(1)}%;top:${rnd(0, 99).toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s"></span>`;
+      html += `<span style="left:${col(order[i])}%;top:${rnd(0, 99).toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s"></span>`;
     }
   }
   if (!html) return;
@@ -403,6 +406,7 @@ const NAV = [
   ['historique.html', 'Historique'],
 ];
 const ICON_MSG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const ICON_DOOR = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6v16h8"/><path d="M10 12h10M17 9l3 3-3 3"/></svg>';
 const ICON_PREFS = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
@@ -433,14 +437,15 @@ export function renderHeader(profile) {
     : '';
   const admin = profile?.is_admin ? `<a class="nav-admin" href="admin.html"${cur('admin.html')}>Admin</a>` : '';
   const prefs = `<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
+  const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
   const account = `<a class="nav-account" href="compte.html"${cur('compte.html')}></a>`;
   const header = document.createElement('header');
   header.className = 'site-header';
   header.innerHTML = `<div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
-      <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMAN GANG</span></a>
+      <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
       <nav class="nav" aria-label="Navigation principale">${profile ? links : ''}${messages}${admin}</nav>
-      <div class="nav-tools">${prefs}${account}</div>
+      <div class="nav-tools">${prefs}${account}${logout}</div>
     </div>`;
   document.body.prepend(header);
   updateHeaderProfile(profile);
@@ -453,6 +458,12 @@ export function renderHeader(profile) {
   });
   _accountObserver.observe(a, { childList: true });
   header.querySelector('.prefs-open').addEventListener('click', openPrefs);
+  header.querySelector('.nav-logout')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { await sb.auth.signOut(); } catch {}
+    try { sessionStorage.removeItem('hg_badges_checked'); } catch {}
+    location.href = 'compte.html';
+  });
 }
 
 /* Messages non lus */
@@ -491,7 +502,7 @@ export function renderFooter() {
   const footer = document.createElement('footer');
   footer.className = 'site-footer';
   footer.innerHTML = `<div class="container">
-      <div>© ${new Date().getFullYear()} Human Gang</div>
+      <div>© ${new Date().getFullYear()} Humane Gang</div>
       <nav aria-label="Liens légaux">
         <a href="assistance.html">Assistance</a>
         <a href="legal.html#mentions">Mentions légales</a>
@@ -545,15 +556,15 @@ function buildPrefsDialog() {
       <div class="prefs-switches">
         <label class="switch-row">
           <span class="switch-txt"><strong>Thème spécial</strong><small>Thèmes de saison (Noël, Halloween…). Coupé : toujours le thème Classique.</small></span>
-          <input class="switch" type="checkbox" role="switch" name="special">
+          <input class="pref-switch" type="checkbox" role="switch" name="special">
         </label>
         <label class="switch-row">
           <span class="switch-txt"><strong>Effets visuels</strong><small class="fx-note">Animations décoratives : étoiles, neige, confettis…</small></span>
-          <input class="switch" type="checkbox" role="switch" name="effects">
+          <input class="pref-switch" type="checkbox" role="switch" name="effects">
         </label>
         <label class="switch-row">
           <span class="switch-txt"><strong>Sons</strong><small>Petits sons discrets : clics, confirmations, messages, badges.</small></span>
-          <input class="switch" type="checkbox" role="switch" name="sound">
+          <input class="pref-switch" type="checkbox" role="switch" name="sound">
         </label>
         <div class="volume-row">
           <label for="prefs-volume">Volume</label>

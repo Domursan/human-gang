@@ -1,4 +1,4 @@
-// ===== Human Gang — messagerie (conversations directes + Secret Santa anonyme) =====
+// ===== Humane Gang — messagerie (conversations directes + Secret Santa anonyme) =====
 import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
 

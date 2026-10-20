@@ -1,4 +1,4 @@
-// ===== Human Gang — petits sons synthétisés (WebAudio, aucun fichier) =====
+// ===== Humane Gang — petits sons synthétisés (WebAudio, aucun fichier) =====
 // playSound(name) : 'click' | 'success' | 'error' | 'message' | 'badge'
 // Ne fait rien si les sons sont désactivés dans les préférences (localStorage 'hg_prefs', défaut : off).
 

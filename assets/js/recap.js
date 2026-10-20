@@ -1,4 +1,4 @@
-// ===== Human Gang — récap annuel au format « story » =====
+// ===== Humane Gang — récap annuel au format « story » =====
 import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
 
@@ -47,7 +47,7 @@ function buildSlides(r) {
   S.push({
     key: 'intro', emoji: '✨',
     html: `<img class="rc-logo" src="${esc(currentLogo())}" alt="" onerror="this.remove()">
-      <p class="rc-eyebrow">Human Gang</p>
+      <p class="rc-eyebrow">Humane Gang</p>
       <h2 class="rc-title">Ton récap<br><span class="rc-year">${esc(year)}</span></h2>
       <p class="rc-sub">Une année de gang en quelques chiffres.<br><span class="rc-hint">Touche à droite pour avancer, maintiens pour mettre en pause.</span></p>`,
   });
@@ -191,7 +191,7 @@ function renderStage(minYear) {
   stage.className = 'rc-stage';
   stage.setAttribute('role', 'region');
   stage.setAttribute('aria-roledescription', 'story');
-  stage.setAttribute('aria-label', `Récap ${year} du Human Gang`);
+  stage.setAttribute('aria-label', `Récap ${year} du Humane Gang`);
   stage.innerHTML = `
     <div class="rc-backdrop" aria-hidden="true"></div>
     <div class="rc-story" id="rc-story">
@@ -370,7 +370,7 @@ export async function renderRecapImage(canvas, r, pseudo) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   if (logo) { ctx.imageSmoothingEnabled = false; const s = 220, k = Math.min(s / logo.width, s / logo.height); ctx.drawImage(logo, (W - logo.width * k) / 2, 110, logo.width * k, logo.height * k); ctx.imageSmoothingEnabled = true; }
   ctx.fillStyle = '#E2C77E'; ctx.font = `700 40px ${PIXEL}`; sp(ctx, 10);
-  ctx.fillText('MON ANNÉE AU', W / 2, 420); ctx.fillText('HUMAN GANG', W / 2, 474); sp(ctx, 0);
+  ctx.fillText('MON ANNÉE AU', W / 2, 420); ctx.fillText('HUMANE GANG', W / 2, 474); sp(ctx, 0);
   ctx.fillStyle = '#F2EFEA'; ctx.font = `400 300px ${DISPLAY}`;
   ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 8;
   ctx.fillText(String(year), W / 2, 770); ctx.shadowColor = 'transparent';
@@ -452,7 +452,7 @@ async function load() {
     if (error) throw error;
     P.recap = data || {};
     P.slides = buildSlides(P.recap);
-    document.title = `Récap ${year} · Human Gang`;
+    document.title = `Récap ${year} · Humane Gang`;
     $('#rc-fallback').innerHTML = `Le récap ${esc(year)} s'affiche en plein écran. <a href="accueil.html">Retour à l'accueil</a>`;
     renderStage(minYear);
     setPaused(false);

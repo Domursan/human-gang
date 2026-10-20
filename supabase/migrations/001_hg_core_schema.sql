@@ -1,4 +1,4 @@
--- ===== Human Gang : schéma principal =====
+-- ===== Humane Gang : schéma principal =====
 create table public.hg_profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   pseudo text not null unique check (char_length(pseudo) between 2 and 32),

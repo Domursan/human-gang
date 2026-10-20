@@ -1,4 +1,4 @@
-// ===== Human Gang — administration : messagerie (lecture + modération) =====
+// ===== Humane Gang — administration : messagerie (lecture + modération) =====
 // Lecture directe des tables hg_conversations / hg_conversation_members / hg_messages (policies admin),
 // liste via rpc hg_admin_conversations(). L'admin voit les vrais expéditeurs, y compris le Santa.
 import { sb, toast, errMsg, esc, $ } from './core.js';

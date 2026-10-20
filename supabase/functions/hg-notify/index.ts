@@ -1,4 +1,4 @@
-// ===== Human Gang — fonction edge « hg-notify » =====
+// ===== Humane Gang — fonction edge « hg-notify » =====
 // Construit et envoie les messages du bot Discord (MP et annonces) à partir d'événements du site.
 // verify_jwt = true : seul un utilisateur connecté peut l'appeler ; on vérifie ensuite ses droits événement par événement.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatif).
@@ -73,7 +73,7 @@ async function sendDM(userId: string, message: Record<string, unknown>) {
 async function trySend(fn: () => Promise<unknown>, label: string): Promise<boolean> {
   try { await fn(); return true; } catch (e) { console.error(`[hg-notify] ${label}`, e); return false; }
 }
-const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Human Gang' }, timestamp: new Date().toISOString(), ...e }] });
+const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Humane Gang' }, timestamp: new Date().toISOString(), ...e }] });
 const canDM = (p: Profile | null | undefined): p is Profile => !!p && p.bot_optin && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
 
 /* ---------- Données ---------- */
@@ -235,12 +235,12 @@ async function onTest(me: Profile, bot: Bot) {
   if (!bot.announce_channel_id && !bot.admin_discord_id) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord, puis enregistre.' };
   if (bot.announce_channel_id) {
     out.channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-      title: 'Test du bot Human Gang', description: 'Si tu lis ceci, les annonces fonctionnent.', color: COLOR.info, url: link('accueil.html'),
+      title: 'Test du bot Humane Gang', description: 'Si tu lis ceci, les annonces fonctionnent.', color: COLOR.info, url: link('accueil.html'),
     })), 'test salon');
   }
   if (bot.admin_discord_id) {
     out.dm = await trySend(() => sendDM(bot.admin_discord_id!, embed({
-      title: 'Test du bot Human Gang', description: 'Les messages privés fonctionnent : tu recevras ici les demandes d\'assistance.', color: COLOR.info,
+      title: 'Test du bot Humane Gang', description: 'Les messages privés fonctionnent : tu recevras ici les demandes d\'assistance.', color: COLOR.info,
     })), 'test MP');
   }
   return out;

@@ -1,4 +1,4 @@
-// ===== Human Gang — administration : comptes des membres (fiche complète) + extras Secret Santa =====
+// ===== Humane Gang — administration : comptes des membres (fiche complète) + extras Secret Santa =====
 // Importé par admin.js. Ne dépend que de core.js et profile-fields.js (pas d'import circulaire).
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
@@ -107,7 +107,7 @@ function renderRows() {
       <span class="acc-go">${a.pseudo ? IC.chev : ''}</span>`;
     return a.pseudo
       ? `<li><button class="acc-row" type="button" data-open="${esc(a.id)}" aria-label="Ouvrir la fiche de ${esc(a.pseudo)}">${inner}</button></li>`
-      : `<li><div class="acc-row is-disabled" title="Compte créé sans code d'invitation : aucun profil Human Gang">${inner}</div></li>`;
+      : `<li><div class="acc-row is-disabled" title="Compte créé sans code d'invitation : aucun profil Humane Gang">${inner}</div></li>`;
   }).join('') : '<li class="empty">Aucun compte ne correspond à la recherche.</li>';
 }
 

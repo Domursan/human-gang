@@ -1,4 +1,4 @@
-// ===== Human Gang — fonction edge « hg-birthdays » =====
+// ===== Humane Gang — fonction edge « hg-birthdays » =====
 // Appelée chaque jour par pg_cron (8h00, heure suisse). Idempotente : un anniversaire n'est fêté
 // qu'une fois par an (table hg_birthday_log), donc un appel en double ne renvoie rien.
 // verify_jwt = false (aucune donnée n'est renvoyée, seulement des compteurs).
@@ -62,8 +62,8 @@ Deno.serve(async () => {
       try {
         await sendDM(p.discord_id, { embeds: [{
           title: `Joyeux anniversaire ${p.pseudo} !`,
-          description: 'Tout le Human Gang te souhaite une journée incroyable.',
-          color: 0xe0909a, url: SITE ? `${SITE}/accueil.html` : undefined, footer: { text: 'Human Gang' },
+          description: 'Tout le Humane Gang te souhaite une journée incroyable.',
+          color: 0xe0909a, url: SITE ? `${SITE}/accueil.html` : undefined, footer: { text: 'Humane Gang' },
         }] });
         out.dms++;
       } catch (e) { console.error('[hg-birthdays] MP', e); out.errors++; }
@@ -74,7 +74,7 @@ Deno.serve(async () => {
         await sendChannel(bot.announce_channel_id!, {
           content: `Joyeux anniversaire ${mention} !`,
           allowed_mentions: { users: isSnowflake(p.discord_id) ? [p.discord_id] : [] },
-          embeds: [{ title: `C'est l'anniversaire de ${p.pseudo} aujourd'hui !`, description: 'Pensez à lui souhaiter.', color: 0xe2c77e, footer: { text: 'Human Gang' } }],
+          embeds: [{ title: `C'est l'anniversaire de ${p.pseudo} aujourd'hui !`, description: 'Pensez à lui souhaiter.', color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
         });
         out.announces++;
       } catch (e) { console.error('[hg-birthdays] annonce', e); out.errors++; }

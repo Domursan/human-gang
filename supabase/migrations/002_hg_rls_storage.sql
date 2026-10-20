@@ -1,4 +1,4 @@
--- ===== Human Gang : sécurité (RLS) et stockage =====
+-- ===== Humane Gang : sécurité (RLS) et stockage =====
 -- Principe : un visiteur non membre ne voit rien. Les infos de profil ne sont lisibles que par leur propriétaire
 -- (l'annuaire passe par la fonction hg_members qui n'expose que pseudo/avatar/couleur/anniversaire partagé).
 

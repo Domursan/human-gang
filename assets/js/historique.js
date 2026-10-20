@@ -1,4 +1,4 @@
-// ===== Human Gang — Historique (frise) =====
+// ===== Humane Gang — Historique (frise) =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 

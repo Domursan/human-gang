@@ -125,7 +125,7 @@ function renderRecovery() {
 function renderGuest(initialTab = 'login') {
   app.innerHTML = `
     <section class="acc-narrow">
-      <div class="page-head"><div><p class="eyebrow">Human Gang</p><h1 class="page-title">Mon compte</h1></div></div>
+      <div class="page-head"><div><p class="eyebrow">Humane Gang</p><h1 class="page-title">Mon compte</h1></div></div>
       <div class="card acc-auth">
         <div class="tabs" role="tablist" aria-label="Connexion ou inscription">
           <button class="tab" role="tab" id="tab-login" aria-controls="pane-login" type="button">Se connecter</button>
@@ -661,7 +661,7 @@ function bindData() {
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `human-gang-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `humane-gang-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       toast('Export téléchargé.', 'ok');

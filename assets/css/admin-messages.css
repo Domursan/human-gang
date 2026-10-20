@@ -1,4 +1,4 @@
-/* ===== Human Gang — administration : messagerie ===== */
+/* ===== Humane Gang — administration : messagerie ===== */
 .amsg { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .amsg > .muted { margin: 0; }
 .amsg-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

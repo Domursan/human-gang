@@ -1,4 +1,4 @@
-// ===== Human Gang — Sorties IRL =====
+// ===== Humane Gang — Sorties IRL =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 

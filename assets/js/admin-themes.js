@@ -1,4 +1,4 @@
-// ===== Human Gang — administration : éditeur des thèmes (hg_themes + hg_settings.theme) =====
+// ===== Humane Gang — administration : éditeur des thèmes (hg_themes + hg_settings.theme) =====
 import {
   sb, toast, errMsg, esc, $,
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,

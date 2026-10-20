@@ -1,4 +1,4 @@
-# Human Gang — spécification de construction (pour les agents)
+# Humane Gang — spécification de construction (pour les agents)
 
 Site statique vanilla HTML/CSS/JS (modules ES), destiné à GitHub Pages, backend Supabase (projet `Gestion_RP`, id `zqbdzokyhgavgmqgiwuw`).
 Tout le texte de l'interface est en **français**. Racine du projet : `/home/claude/hg_new`.
@@ -15,7 +15,7 @@ Tout le texte de l'interface est en **français**. Racine du projet : `/home/cla
 <html lang="fr">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Secret Santa · Human Gang</title>
+  <title>Secret Santa · Humane Gang</title>
   <link rel="icon" href="Logo.png">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/secret-santa.css">   <!-- CSS propre à la page si besoin -->
@@ -44,7 +44,7 @@ Le JS de page commence par `import { sb, initPage, ... } from './core.js'; const
 | Fichier | Rôle | Agent |
 |---|---|---|
 | `index.html` + `assets/js/intro.js` + `assets/css/intro.css` | Intro 3D : seul le logo à l'écran, le scroll zoome dans son centre puis fondu vers `accueil.html`. Bouton « Passer l'intro ». Intro sautée si `localStorage hg_intro_seen`. Version réduite si prefers-reduced-motion. | A |
-| `accueil.html` | Héros « Le QG du Human Gang », 3 tuiles (Secret Santa/IRL/Historique) avec infos réelles, fil d'activité (`hg_activity`), compte à rebours vers `exchange_date` de l'édition en cours, anniversaires du mois (via `hg_members().birthday_dm`). Non connecté → invite à se connecter. | A |
+| `accueil.html` | Héros « Le QG du Humane Gang », 3 tuiles (Secret Santa/IRL/Historique) avec infos réelles, fil d'activité (`hg_activity`), compte à rebours vers `exchange_date` de l'édition en cours, anniversaires du mois (via `hg_members().birthday_dm`). Non connecté → invite à se connecter. | A |
 | `compte.html` | Connexion / création de compte (e-mail + mot de passe Supabase Auth ; inscription = signUp puis RPC `hg_join(code, pseudo)` ; case politique de confidentialité obligatoire), mot de passe oublié. Connecté : profil (pseudo, avatar upload, couleur, anniversaire, partage anniversaire, ID Discord, opt-in bot), badges obtenus/à débloquer (`hg_badges`, `hg_user_badges`), boîte à idées (insert `hg_ideas`), export JSON (`hg_export_my_data`), suppression (`hg_delete_my_account` puis signOut), déconnexion. Paramètre `?next=` pour rediriger après connexion. Si connecté sans profil (pas encore de code) → formulaire code + pseudo. | A |
 | `legal.html` | Sections `#mentions`, `#confidentialite`, `#cookies`, `#droits` (nLPD suisse + RGPD). Placeholders [À COMPLÉTER] pour l'identité de l'éditeur. Hébergeur GitHub Pages (GitHub Inc., 88 Colin P. Kelly Jr. St, San Francisco, CA 94107, USA), Supabase (région UE eu-west-1, Irlande), Discord. auth: optional. | A |
 | `secret-santa.html` | Édition en cours (année la plus récente). Étapes (inscriptions → tirage → envoi → révélation). S'inscrire/se désinscrire pendant `inscriptions`. Après tirage : **carte** générée en canvas = image de base (`card_base_url`, sinon carte par défaut dessinée) + pseudo de la cible ; boutons Télécharger (PNG) et Retourner (flip CSS 3D). Liste de souhaits de la cible (lecture), ma liste (CRUD). Boutons « J'ai envoyé » / « J'ai reçu » (update `hg_ss_participants` + `notify`). Avancement via `hg_ss_progress`. Phase révélation : tableau `hg_ss_reveal`. | B |

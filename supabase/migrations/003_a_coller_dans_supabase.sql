@@ -17,9 +17,9 @@ create policy hg_avatars_obj_delete on storage.objects for delete to authenticat
   using (bucket_id = 'hg-avatars' and (storage.foldername(name))[1] = (select auth.uid())::text);
 create policy hg_assets_obj_admin_del on storage.objects for delete to authenticated using (bucket_id = 'hg-assets' and public.hg_is_admin());
 
--- 2) Suppression de son compte Human Gang (droit à l'effacement)
+-- 2) Suppression de son compte Humane Gang (droit à l'effacement)
 --    Supprime le profil ET l'identifiant de connexion (e-mail, mot de passe), sauf pour un compte
---    qui possède aussi des données Domursan (ton compte) : là, seul le profil Human Gang est effacé.
+--    qui possède aussi des données Domursan (ton compte) : là, seul le profil Humane Gang est effacé.
 create or replace function public.hg_delete_my_account() returns void
 language plpgsql security definer set search_path = public, auth as $$
 declare v_uid uuid := auth.uid();
@@ -35,7 +35,7 @@ revoke execute on function public.hg_delete_my_account() from anon, public;
 grant execute on function public.hg_delete_my_account() to authenticated;
 
 -- 3) Verrouiller Domursan (tables d_*) sur ton seul compte, pour que les membres
---    Human Gang (qui partagent la même base) ne puissent jamais y écrire.
+--    Humane Gang (qui partagent la même base) ne puissent jamais y écrire.
 do $$
 declare t text;
 begin

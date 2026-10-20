@@ -1,4 +1,4 @@
-// ===== Human Gang — photos : compression, envoi, URLs signées, lightbox (partagé IRL / Historique) =====
+// ===== Humane Gang — photos : compression, envoi, URLs signées, lightbox (partagé IRL / Historique) =====
 import { sb, esc } from './core.js';
 
 export const PHOTO_BUCKET = 'hg-photos';

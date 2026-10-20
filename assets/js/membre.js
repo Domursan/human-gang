@@ -1,4 +1,4 @@
-// ===== Human Gang — carte d'identité d'un membre + annuaire « Le gang » =====
+// ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » =====
 import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
 
@@ -83,7 +83,7 @@ function cardHtml(c) {
           <header class="idc-top">
             <img class="idc-logo" src="${esc(currentLogo())}" alt="" onerror="this.style.visibility='hidden'">
             <div class="idc-brand">
-              <span class="idc-brand-name">HUMAN GANG</span>
+              <span class="idc-brand-name">HUMANE GANG</span>
               <span class="idc-brand-sub">Carte de membre</span>
             </div>
             <div class="idc-no">
@@ -247,7 +247,7 @@ export async function renderIdCard(canvas, c) {
   ctx.imageSmoothingEnabled = true;
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
   ctx.fillStyle = '#F2EFEA'; ctx.font = `400 74px ${DISPLAY}`; spacing(ctx, 2);
-  ctx.fillText('HUMAN GANG', 300, 150);
+  ctx.fillText('HUMANE GANG', 300, 150);
   ctx.fillStyle = '#E2C77E'; ctx.font = `700 38px ${PIXEL}`; spacing(ctx, 6);
   ctx.fillText('CARTE DE MEMBRE', 302, 214);
   ctx.textAlign = 'right';
@@ -382,7 +382,7 @@ try {
     $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
       <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;
   } else {
-    document.title = `${card.pseudo} · Carte de membre · Human Gang`;
+    document.title = `${card.pseudo} · Carte de membre · Humane Gang`;
     $('#mb-title').textContent = isMe ? 'Ma carte' : card.pseudo;
     $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
     bindHolo();

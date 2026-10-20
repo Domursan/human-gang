@@ -1,4 +1,4 @@
-// ===== Human Gang — page Secret Santa =====
+// ===== Humane Gang — page Secret Santa =====
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC } from './core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
 import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';

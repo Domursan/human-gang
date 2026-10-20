@@ -1,4 +1,4 @@
-/* ===== Human Gang — administration : éditeur des thèmes (chargé par admin-themes.js) ===== */
+/* ===== Humane Gang — administration : éditeur des thèmes (chargé par admin-themes.js) ===== */
 .th-root { gap: 18px; }
 .th-root [hidden] { display: none !important; }
 .th-today { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
