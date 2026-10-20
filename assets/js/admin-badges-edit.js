@@ -1,5 +1,5 @@
 // ===== Humane Gang — administration : création / modification / suppression des badges =====
-// Les 15 badges d'origine sont attribués automatiquement par la base : ils restent modifiables mais jamais supprimables.
+// Les 15 badges d'origine sont attribués automatiquement par la base. Ils sont modifiables et supprimables (un badge supprimé n'est plus jamais attribué).
 // Les badges créés ici s'attribuent à la main (section Badges ou fiche du membre).
 import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
 import { METRICS, roman, sortedLevels } from './badge-levels.js';
@@ -157,11 +157,11 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   form.elements.name.focus();
 }
 
-/** Supprime un badge créé par l'admin (jamais un badge automatique). Renvoie true si supprimé. */
+/** Supprime un badge (y compris un badge automatique d'origine). Renvoie true si supprimé. */
 export async function deleteBadge(badge, holderCount = 0) {
-  if (isAutoBadge(badge.code)) throw new Error('Les badges automatiques ne peuvent pas être supprimés.');
+  const autoNote = isAutoBadge(badge.code) ? ' C\'est un badge automatique d\'origine : il ne sera plus attribué.' : '';
   const ok = await confirmBox(`Supprimer le badge « ${badge.name} » ?`,
-    holderCount ? `${holderCount} membre${holderCount > 1 ? 's le perdront' : ' le perdra'}. Cette action est définitive.` : 'Personne ne l\'a encore. Cette action est définitive.',
+    (holderCount ? `${holderCount} membre${holderCount > 1 ? 's le perdront' : ' le perdra'}. Cette action est définitive.` : 'Personne ne l\'a encore. Cette action est définitive.') + autoNote,
     { ok: 'Supprimer', danger: true });
   if (!ok) return false;
   check(await sb.from('hg_badges').delete().eq('code', badge.code)); // hg_user_badges : ON DELETE CASCADE

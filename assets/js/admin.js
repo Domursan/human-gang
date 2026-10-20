@@ -503,7 +503,7 @@ function renderBadges() {
       <div class="badge-actions">
         <button class="btn btn-ghost btn-sm" type="button" data-badge-edit="${esc(b.code)}">Modifier</button>
         <button class="btn btn-ghost btn-sm" type="button" data-badge-img="${esc(b.code)}" aria-label="${b.image_url ? 'Changer l\'image' : 'Ajouter une image'} du badge ${esc(b.name)}">${ICON.upload} Image</button>
-        ${auto ? '' : `<button class="btn btn-danger btn-sm btn-icon" type="button" data-badge-del="${esc(b.code)}" aria-label="Supprimer le badge ${esc(b.name)}" title="Supprimer">${ICON.trash}</button>`}
+        <button class="btn btn-danger btn-sm btn-icon" type="button" data-badge-del="${esc(b.code)}" aria-label="Supprimer le badge ${esc(b.name)}" title="Supprimer">${ICON.trash}</button>
       </div>
     </div>`;
   }).join('') || '<div class="empty">Aucun badge.</div>';
