@@ -2,3 +2,5 @@
 -- hg_admin_state(user_id, god_until, updated_at) ; rpc hg_god_mode() -> bool ; rpc hg_set_god_mode(p_on, p_minutes 5-240) -> timestamptz.
 -- En mode actif : trigger hg_ss_editions_guard levé ; hg_ss_draw min 2 participants + exclusions/an dernier ignorés ;
 -- hg_dyn_capture ignore dates/actif/max par personne/max total. Les attributions existantes doivent être supprimées (admin) avant un nouveau tirage.
+-- Mise à jour 20.10.2026 20h50 : en mode sans limite, hg_ss_draw accepte 1 participant (il s'offre à lui-même)
+-- et hg_ss_manual_draw accepte 1 participant et l'auto-attribution.

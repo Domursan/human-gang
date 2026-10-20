@@ -639,7 +639,7 @@ export const GOD_MINUTES = [15, 30, 60, 120];
 export const GOD_PHRASE = 'SANS LIMITE';
 /** Ce que le mode lève (affiché dans le dialog d'activation et la carte de la page admin). */
 export const GOD_LIFTS = [
-  ['Secret Santa', 'nouvelle édition même si une autre est en cours ; tirage dès 2 participants ; exclusions et « même cible que l\'an dernier » ignorées ; tirage refaisable (auto ou manuel) ; statut libre, sans confirmation de tirage.'],
+  ['Secret Santa', 'nouvelle édition même si une autre est en cours ; tirage dès 1 participant (on peut s\'offrir à soi-même) ; exclusions et « même cible que l\'an dernier » ignorées ; tirage refaisable (auto ou manuel) ; statut libre, sans confirmation de tirage.'],
   ['Secret Santa (page membre)', 't\'inscrire ou te désinscrire quel que soit le statut ; marquer (ou annuler) « envoyé » / « reçu » même après la fin.'],
   ['IRL', 'répondre à une sortie passée ; ajouter une rencontre « passée » datée dans le futur.'],
   ['Événements dynamiques', 'chaque événement (même inactif ou terminé) apparaît à chaque page, captures sans limite. Tes captures sont réellement enregistrées.'],

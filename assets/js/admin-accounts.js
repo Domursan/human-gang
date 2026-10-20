@@ -436,7 +436,7 @@ async function ssLeave() {
  * Renvoie false si annulé.
  */
 async function setPair(editionId, giver, receiver) {
-  if (giver === receiver) throw new Error('Une personne ne peut pas s\'offrir un cadeau à elle-même.');
+  if (giver === receiver && !isGodMode()) throw new Error('Une personne ne peut pas s\'offrir un cadeau à elle-même.');
   const rows = (A.d.assigns.data ?? []).filter((a) => a.edition_id === editionId);
   const mineRow = rows.find((a) => a.giver_id === giver);
   const taken = rows.find((a) => a.receiver_id === receiver);

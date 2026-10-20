@@ -39,7 +39,7 @@ export function analyse(ids, pick, excl, last, pseudoOf = (x) => x) {
   for (const g of ids) {
     const r = pick.get(g), row = rows.get(g);
     if (!r) continue;
-    if (r === g) row.errors.push('Ne peut pas s\'offrir un cadeau à soi-même');
+    if (r === g) (isGodMode() ? row.warnings : row.errors).push('S\'offre un cadeau à soi-même');
     if (!ids.includes(r)) row.errors.push('Cible hors des participants');
     const dup = byReceiver.get(r) || [];
     if (dup.length > 1) row.errors.push(`${pseudoOf(r)} est aussi la cible de ${dup.filter((x) => x !== g).map(pseudoOf).join(', ')}`);
@@ -70,7 +70,7 @@ export function completeRandom(ids, pick, excl, last) {
       const givers = shuffle(empty);
       const out = new Map();
       const used = new Set();
-      const ok = (g, r) => r !== g && !used.has(r) && (!soft || (!excl.has(key(g, r)) && last.get(g) !== r));
+      const ok = (g, r) => (r !== g || (isGodMode() && free.length === 1)) && !used.has(r) && (!soft || (!excl.has(key(g, r)) && last.get(g) !== r));
       // backtracking (petites tailles : quelques dizaines de personnes au plus)
       let steps = 0;
       const solve = (i) => {
@@ -100,7 +100,7 @@ export function completeRandom(ids, pick, excl, last) {
 /* ---------- Rendu ---------- */
 function rowHtml(g, a) {
   const st = a.rows.get(g), r = M.pick.get(g) || '';
-  const opts = M.ids.filter((x) => x !== g).map((x) => ({ id: x, p: M.pseudoOf(x) })).sort((x, y) => x.p.localeCompare(y.p, 'fr'));
+  const opts = M.ids.filter((x) => x !== g || isGodMode()).map((x) => ({ id: x, p: M.pseudoOf(x) })).sort((x, y) => x.p.localeCompare(y.p, 'fr'));
   const state = !r ? 'empty' : st.errors.length ? 'error' : st.warnings.length ? 'warn' : 'ok';
   const msg = [...st.errors, ...st.warnings].join(' · ');
   const icon = state === 'error' ? IC.err : state === 'warn' ? IC.warn : state === 'ok' ? IC.ok : '';
@@ -172,7 +172,7 @@ function shell() {
       <div class="md-head">
         <div>
           <h2 id="md-title" class="dialog-title">${M.redo ? 'Refaire le tirage manuel' : 'Tirage manuel'} · ${esc(M.ed.year)}${M.redo ? godTag(true) : ''}</h2>
-          <p class="small muted">Choisis la cible de chaque Santa. Chacun doit recevoir exactement une fois et personne ne s'offre à soi-même. Les exclusions et la cible de l'an dernier ne sont que des avertissements${isGodMode() ? ', jamais bloquants (mode sans limite)' : ''}.</p>
+          <p class="small muted">Choisis la cible de chaque Santa. Chacun doit recevoir exactement une fois${isGodMode() ? '' : ' et personne ne s\'offre à soi-même'}. Les exclusions et la cible de l'an dernier ne sont que des avertissements${isGodMode() ? ', jamais bloquants (mode sans limite)' : ''}.</p>
           ${M.redo ? '<p class="god-note small"><strong>Nouveau tirage :</strong> à la validation, les attributions actuelles seront supprimées et remplacées par ces paires.</p>' : ''}
         </div>
         <button class="btn btn-ghost btn-sm" type="button" id="md-close">Fermer</button>

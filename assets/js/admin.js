@@ -278,7 +278,7 @@ function renderSS() {
   const sent = parts.filter((p) => p.sent_at).length;
   const received = parts.filter((p) => p.received_at).length;
   const partOpts = parts.map((p) => `<option value="${esc(p.user_id)}">${esc(pseudoOf(p.user_id))}</option>`).join('');
-  const minDraw = god ? 2 : 3; // le serveur accepte 2 participants en mode sans limite
+  const minDraw = god ? 1 : 3; // mode sans limite : dès 1 participant (il s'offre alors à lui-même)
   const canDraw = parts.length >= minDraw && !ed.drawn_at; // un seul tirage par édition (sauf « Refaire » en mode sans limite)
   const editionSelect = S.editions.length > 1 ? `
       <div class="field"><label for="ss-edition">Édition affichée</label>
@@ -312,13 +312,13 @@ function renderSS() {
             ? 'Mode sans limite : le tirage au hasard ignore les exclusions et la cible de l\'an dernier, et peut être refait. Les paires restent secrètes : tu peux les afficher plus bas si besoin.'
             : 'Respecte les exclusions et évite de retomber sur la même personne que l\'an dernier. Les paires restent secrètes : tu peux les afficher plus bas si besoin. Le tirage ne peut être lancé qu\'une seule fois par édition.'}</p>
           <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : `Lancer le tirage${god ? godTag() : ''}`}</button>
-            ${ed.drawn_at ? '' : `<button class="btn btn-ghost" type="button" id="ss-draw-manual"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Tirage manuel</button>`}</div>
+            ${ed.drawn_at ? '' : `<button class="btn btn-ghost" type="button" id="ss-draw-manual"${parts.length >= (god ? 1 : 2) ? '' : ' disabled'} aria-haspopup="dialog">Tirage manuel</button>`}</div>
           ${ed.drawn_at ? '' : '<p class="small muted">« Lancer le tirage » choisit au hasard. « Tirage manuel » te laisse fixer chaque paire toi-même (et compléter le reste au hasard).</p>'}
           ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < minDraw ? `<p class="small muted">Il faut au moins ${minDraw} inscrits${god ? godTag() : ''}.</p>` : ''}
           ${god && ed.drawn_at ? `<div class="draw-redo stack">
             <div class="btn-row">
-              <button class="btn btn-sand" type="button" id="ss-redraw"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (auto)${godTag()}</button>
-              <button class="btn btn-ghost" type="button" id="ss-redraw-manual"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (manuel)${godTag()}</button>
+              <button class="btn btn-sand" type="button" id="ss-redraw"${parts.length >= (god ? 1 : 2) ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (auto)${godTag()}</button>
+              <button class="btn btn-ghost" type="button" id="ss-redraw-manual"${parts.length >= (god ? 1 : 2) ? '' : ' disabled'} aria-haspopup="dialog">Refaire le tirage (manuel)${godTag()}</button>
             </div>
             <p class="small muted">Supprime les attributions actuelles puis relance un tirage. Les cartes déjà vues par les participants changeront.</p>
           </div>` : ''}
