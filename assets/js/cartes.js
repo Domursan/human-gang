@@ -80,7 +80,6 @@ function skeleton() {
       </div>
       <div class="cartes-wallet" id="cartes-wallet" aria-live="polite"></div>
     </section>
-    <p class="cartes-small">Aucun argent réel : les Paillettes se gagnent uniquement en participant à la vie du gang.</p>
     <nav class="cartes-tabs" id="cartes-tablist" role="tablist" aria-label="Sections du jeu">
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}">${label}</button>`).join('')}
@@ -90,7 +89,6 @@ function skeleton() {
       <summary>Historique des Paillettes (30 derniers mouvements)</summary>
       <div id="cartes-history" class="cartes-block"></div>
     </details>
-    <p class="cartes-foot-note">Les cartes et les Paillettes restent dans le jeu : rien n’a de valeur en argent.</p>
     <p id="cartes-live" class="visually-hidden" aria-live="polite"></p>
 
     <dialog id="cartes-detail" class="cartes-dialog" aria-labelledby="cartes-detail-title">
@@ -220,8 +218,6 @@ function renderBoosters() {
   const size = c.booster_size ?? 5;
   const rates = c.rates || {};
   const total = Object.values(rates).reduce((a, v) => a + Math.max(0, Number(v) || 0), 0) || 1;
-  const pity = Number(c.pity_epique ?? 10);
-  const untilGuarantee = Math.max(0, pity - 1 - Number(S.state?.pity ?? 0));
   const canPay = isGod() || bal() >= price;
   const busy = isBusy();
   const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
@@ -241,9 +237,6 @@ function renderBoosters() {
         </div>
       </div>
       <p class="muted small">Chaque booster contient ${plural(Number(size), 'carte', 'cartes')}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
-      <p class="cartes-small">${untilGuarantee === 0
-        ? 'Le prochain booster contient au moins une carte Épique ou plus.'
-        : `Encore ${plural(untilGuarantee, 'ouverture', 'ouvertures')} avant la garantie d’une carte Épique ou plus.`}</p>
     </section>
     <div id="cartes-reveal"></div>
     <section class="card cartes-block" aria-labelledby="cartes-odds-h">
@@ -255,7 +248,6 @@ function renderBoosters() {
           <tr><th scope="row">Version brillante (par carte)</th><td>${pct(Number(c.shiny_rate ?? 0))}</td></tr>
         </tbody>
       </table>
-      <p class="cartes-small">Un booster contient une carte Épique ou plus au moins une fois toutes les ${nf.format(pity)} ouvertures.</p>
     </section>`;
   renderFree();
   renderReveal();

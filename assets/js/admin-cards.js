@@ -28,7 +28,7 @@ const REASON_LABEL = {
 };
 // Valeurs de repli = celles de la migration 018 (utilisées seulement si hg_settings.cards est vide).
 const CFG_DEFAULT = {
-  booster_price: 100, booster_size: 5, free_booster_hours: 24, shiny_rate: 3, pity_epique: 10, max_open_trades: 10,
+  starting_paillettes: 1000, booster_price: 100, booster_size: 5, free_booster_hours: 24, shiny_rate: 3, pity_epique: 10, max_open_trades: 10,
   rates: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 },
   recycle: { commune: 5, peu_commune: 10, rare: 25, epique: 60, legendaire: 150, mythique: 400, identite: 1000, shiny_multiplier: 3 },
   craft: { commune: 40, peu_commune: 80, rare: 200, epique: 500, legendaire: 1500, shiny_multiplier: 4 },
@@ -42,6 +42,9 @@ const REWARDS = [
 ];
 // Réglages éditables. k = chemin (« rates.commune ») ; le nom du champ de formulaire remplace le point par un tiret bas.
 const ECON = [
+  { g: 'Départ', hint: 'Paillettes offertes une seule fois à chaque nouveau joueur.', fields: [
+    { k: 'starting_paillettes', l: 'Capital de départ', u: '✦', int: true },
+  ] },
   { g: 'Boosters', fields: [
     { k: 'booster_price', l: 'Prix d\'un booster', u: '✦', int: true },
     { k: 'booster_size', l: 'Cartes par booster', int: true, min: 1, max: 10 },
