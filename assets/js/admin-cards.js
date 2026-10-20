@@ -171,7 +171,7 @@ async function load() {
     fetchAll(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade, recycled_at').order('id')),
     fetchAll(() => sb.from('hg_wallets').select('user_id, paillettes, boosters_opened, pity_epique').order('user_id')),
     fetchAll(() => sb.from('hg_card_trades').select('id, from_user, to_user, status, from_paillettes, to_paillettes, message, created_at').order('id')),
-    fetchAll(() => sb.from('hg_profiles').select('id, pseudo, avatar_url, color, is_ghost').order('id')),
+    fetchAll(() => sb.from('hg_profiles').select('id, pseudo, avatar_url, color, is_ghost, joined_on').order('id')),
     sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle(),
   ]);
   const stv = check(st);
@@ -220,8 +220,10 @@ function setsPanel() {
           <p><strong>${esc(s.name)}</strong> <code class="acd-code">${esc(s.code)}</code> <span class="pill ${cls}">${esc(label)}</span></p>
           <p class="small muted">${nf(n)} carte${n > 1 ? 's' : ''} · ${esc(period(s))} · ordre ${esc(s.sort)}</p>
           ${s.description ? `<p class="small">${esc(s.description)}</p>` : ''}
+          ${s.active ? '' : '<p class="acd-note" role="note"><strong>Inactive :</strong> ses cartes ne sortent pas dans les boosters et les membres ne la voient pas.</p>'}
         </div>
-        <div class="btn-row">
+        <div class="btn-row acd-set-actions">
+          <button class="btn ${s.active ? 'btn-ghost' : 'btn-primary'} acd-set-toggle" type="button" data-act="set-toggle" data-id="${esc(s.id)}" aria-pressed="${s.active ? 'true' : 'false'}">${s.active ? `${ICON.off} Désactiver la série` : `${ICON.on} Activer la série`}</button>
           <button class="btn btn-ghost btn-sm" type="button" data-act="set-edit" data-id="${esc(s.id)}">${ICON.edit} Modifier</button>
           <button class="btn btn-danger btn-sm" type="button" data-act="set-del" data-id="${esc(s.id)}">${ICON.trash} Supprimer</button>
         </div>
@@ -288,6 +290,17 @@ function openSetDialog(s = null) {
     } catch (err2) {
       showErr(friendly(err2, { 23505: 'Ce code de série existe déjà.' }));
     } finally { if (btn?.isConnected) btn.disabled = false; }
+  });
+}
+
+/** Active ou désactive une série (réversible : pas de confirmation). */
+async function toggleSet(btn, id) {
+  const s = C.setById.get(id);
+  if (!s) return;
+  await act(btn, async () => {
+    check(await sb.from('hg_card_sets').update({ active: !s.active }).eq('id', id));
+    toast(s.active ? `Série « ${s.name} » désactivée` : `Série « ${s.name} » activée`, 'ok');
+    await refresh();
   });
 }
 
@@ -838,6 +851,7 @@ const ACTIONS = {
   retry: () => boot(),
   'set-new': () => openSetDialog(),
   'set-edit': (t, id) => openSetDialog(C.setById.get(id) || null),
+  'set-toggle': (t, id) => toggleSet(t, id),
   'set-del': (t, id) => deleteSet(id),
   'card-new': () => openCardDialog(),
   'card-edit': (t, id) => openCardDialog(C.cardById.get(id) || null),
