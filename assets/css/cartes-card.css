@@ -1,0 +1,50 @@
+/* ===== Carte à collectionner — composant partagé (cartes-ui.js : cardHtml / cardBackHtml) ===== */
+.hgc { --edge: #A9A49B; --w: 168px; position: relative; display: inline-block; width: var(--w); aspect-ratio: 5 / 7;
+  padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: default; flex-shrink: 0; }
+button.hgc { cursor: pointer; }
+button.hgc:hover .hgc-frame { transform: translateY(-3px); }
+.hgc-sm { --w: 112px; } .hgc-lg { --w: 240px; }
+@media (max-width: 600px) { .hgc { --w: 140px; } .hgc-sm { --w: 96px; } .hgc-lg { --w: min(70vw, 240px); } }
+
+.hgc-commune { --edge: #A9A49B; }
+.hgc-peu_commune { --edge: #4FA36A; }
+.hgc-rare { --edge: #5B7FE0; }
+.hgc-epique { --edge: #8C6AD8; }
+.hgc-legendaire { --edge: #E0A93B; }
+.hgc-mythique { --edge: #F05A35; }
+.hgc-identite { --edge: #FBD32D; }
+
+.hgc-frame { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 4px; padding: 7px;
+  background: #121215; border: 4px solid var(--edge); border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #000, 0 10px 18px rgba(0, 0, 0, .35); transition: transform .15s ease; overflow: hidden; }
+.hgc-identite .hgc-frame { background: #3a0a14; box-shadow: inset 0 0 0 2px #000, 0 0 0 2px #B70127, 0 10px 22px rgba(0, 0, 0, .45); }
+.hgc-top, .hgc-foot { display: flex; justify-content: space-between; align-items: center; gap: 4px; font-size: 10px; line-height: 1.2;
+  font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--edge); white-space: nowrap; }
+.hgc-art { flex: 1; min-height: 0; display: grid; place-items: center; background: #1d1d22; border: 2px solid #000; overflow: hidden; }
+.hgc-img { width: 100%; height: 100%; object-fit: cover; image-rendering: auto; }
+.hgc-img-ph { width: 60%; height: 60%; object-fit: contain; image-rendering: pixelated; opacity: .35; }
+.hgc-q { font-family: var(--font-display); font-size: 40px; color: color-mix(in srgb, var(--edge) 40%, #555); }
+.hgc-name { font-family: var(--font-display); font-size: 13px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.3em; }
+.hgc-sm .hgc-name { font-size: 11px; } .hgc-lg .hgc-name { font-size: 18px; }
+.hgc-sm .hgc-top, .hgc-sm .hgc-foot { font-size: 8px; } .hgc-sm .hgc-frame { padding: 5px; border-width: 3px; }
+.hgc-serial { color: #FBD32D; }
+.hgc-count { position: absolute; top: -8px; right: -8px; z-index: 2; min-width: 28px; height: 28px; padding: 0 6px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--surface-2); border: 2px solid var(--edge); font-size: 12px; font-weight: 700; }
+.hgc-lock { position: absolute; left: 50%; bottom: 34%; transform: translateX(-50%); z-index: 2; padding: 2px 8px; border-radius: 999px;
+  background: #000; color: var(--sand); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.hgc.is-missing .hgc-frame { opacity: .45; filter: grayscale(1); border-style: dashed; }
+
+/* Brillante : reflet arc-en-ciel discret (animé seulement si les effets sont permis) */
+.hgc.is-shiny .hgc-frame::after { content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .35;
+  background: linear-gradient(115deg, transparent 20%, #FE3104 30%, #FCA301 38%, #FBD32D 46%, #159946 54%, #2B5AE2 62%, #4E2398 70%, transparent 80%) 0 0 / 250% 100%; }
+html[data-fx="on"] .hgc.is-shiny .hgc-frame::after { animation: hgc-shine 5s linear infinite; }
+@keyframes hgc-shine { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+.hgc.is-shiny .hgc-rar::after { content: ' ✦'; }
+
+/* Dos */
+.hgc-back .hgc-frame { place-items: center; display: grid; border-color: #B70127;
+  background: repeating-conic-gradient(#1a1a1f 0 25%, #121215 0 50%) 0 0 / 12px 12px; }
+.hgc-back-logo { width: 58%; image-rendering: pixelated; }
+
+@media (prefers-reduced-motion: reduce) { .hgc-frame { transition: none; } .hgc.is-shiny .hgc-frame::after { animation: none !important; } }
