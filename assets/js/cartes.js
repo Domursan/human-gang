@@ -2,7 +2,7 @@
 // RPC : hg_cards_me, hg_cards_daily, hg_open_booster, hg_card_recycle, hg_card_craft, hg_card_leaderboard.
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
 // Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify } from './core.js';
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 
 const me = await initPage({ auth: 'member' });
@@ -274,6 +274,8 @@ async function openBooster(free) {
     const { data, error } = await sb.rpc('hg_open_booster', { p_free: !!free });
     if (error) throw error;
     const cards = data?.cards || [];
+    // Annonce Discord des belles cartes (vérifiée côté serveur par hg-notify)
+    for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
     S.reveal = { cards, best: data?.best, revealed: new Set(), last: -1, announced: false };
     if (!motionAllowed()) S.reveal.revealed = new Set(cards.map((_, i) => i));
     await refreshData();

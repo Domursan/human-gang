@@ -2,7 +2,7 @@
 // Chargé par cartes.js : import('./cartes-trades.js').then((m) => m.mountTrades(el, ctx)).
 // ctx = { me: profil courant (id, pseudo…), refresh: async () => {} } ; refresh recharge solde et collection côté page.
 // Affichage des cartes : cartes-ui.js (cardHtml). Styles : cartes-trades.css (+ cartes-card.css).
-import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser } from './core.js';
+import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify } from './core.js';
 import { cardHtml, rarityRank, fmtP } from './cartes-ui.js';
 
 const TABS = [
@@ -448,6 +448,7 @@ export async function mountTrades(el, ctx = {}) {
     }
     setPanelBusy(true);
     const { error } = await sb.rpc('hg_trade_respond', { p_trade: t.id, p_accept: accept });
+    if (!error && accept) notify('card_trade', { trade_id: t.id }).catch(() => {});
     await finish(error, accept ? 'Échange conclu' : 'Offre refusée');
   }
   async function cancelOffer(t) {

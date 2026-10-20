@@ -88,7 +88,8 @@
   .pa-matrix { font-size: 14px; }
   .pa-matrix th[scope="row"], .pa-mx-corner { position: sticky; left: 0; z-index: 1; background: var(--surface); }
   .pa-matrix th[scope="row"] { box-shadow: 6px 0 8px -6px rgba(0, 0, 0, .35); }
-  .pa-mx-who { white-space: normal; min-width: 0; }
+  .pa-mx-who { white-space: nowrap; min-width: 128px; }
+  .pa-mx-who .pill { white-space: nowrap; font-size: 11px; padding: 2px 8px; }
   .pa-mx-member { font-size: 14px; }
   .pa-mx-member .avatar { font-size: 10px; }
   .pa-matrix th:not(.pa-mx-corner):not(.pa-mx-who) { min-width: 96px; }
