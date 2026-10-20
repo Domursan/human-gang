@@ -2,6 +2,7 @@
 // Importé par admin.js. Ne dépend que de core.js et profile-fields.js (pas d'import circulaire).
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
+import { ensureAccessData, memberAccessHtml, setAccess, accessPages } from './admin-access.js';
 
 /* ---------- Icônes ---------- */
 const IC = {
@@ -58,7 +59,7 @@ const A = {
 const pseudoOf = (id) => (id ? A.accounts.find((a) => a.id === id)?.pseudo || A.avatars.get(id)?.pseudo || 'Ancien membre' : '—');
 const TABS = [
   ['profil', 'Profil'], ['infos', 'Informations'], ['ss', 'Secret Santa'], ['irl', 'Sorties IRL'],
-  ['photos', 'Photos'], ['contrib', 'Idées & assistance'], ['badges', 'Badges'],
+  ['photos', 'Photos'], ['contrib', 'Idées & assistance'], ['badges', 'Badges'], ['acces', 'Accès'],
 ];
 const SS_STATUS = { inscriptions: 'Inscriptions', tirage: 'Tirage', envoi: 'Envoi', revelation: 'Révélation', termine: 'Terminé' };
 const RSVP = [['', 'Pas de réponse'], ['oui', 'Oui'], ['peut-etre', 'Peut-être'], ['non', 'Non']];
@@ -136,6 +137,7 @@ async function loadDetail(uid) {
     q(sb.from('hg_support').select('*').eq('user_id', uid).order('created_at', { ascending: false })),
     q(sb.from('hg_badges').select('code, name, description, image_url, sort').order('sort')),
     q(sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', uid)),
+    ensureAccessData().catch(() => null), // accès aux pages (onglet « Accès ») ; l'erreur s'affiche dans l'onglet
   ]);
   if (profile.error) throw profile.error;
   if (!profile.data) throw new Error('Profil introuvable.');
@@ -219,6 +221,7 @@ function panelHtml() {
     case 'photos': return photosHtml();
     case 'contrib': return contribHtml();
     case 'badges': return badgesHtml();
+    case 'acces': return memberAccessHtml({ id: A.d.profile.id, pseudo: A.d.profile.pseudo, is_admin: !!A.d.profile.is_admin });
     default: return '';
   }
 }
@@ -654,6 +657,17 @@ function bindAccounts() {
   sec.addEventListener('change', async (ev) => {
     const el = ev.target;
     if (el.matches('[data-ss-edition]')) { A.ssEdition = el.value; A.showPair = false; renderPanel(); return; }
+    if (el.dataset.pageAccess) {
+      const slug = el.dataset.pageAccess, on = el.checked;
+      el.disabled = true;
+      try {
+        await setAccess(slug, [A.uid], on); // déclenche 'hg:access' -> nouveau rendu de l'onglet
+        const label = accessPages().find((x) => x.slug === slug)?.label || slug;
+        toast(on ? `Accès à « ${label} » donné` : `Accès à « ${label} » retiré`, 'ok');
+      } catch (e) { toast(errMsg(e), 'error'); el.checked = !on; el.disabled = false; }
+      $(`[data-page-access="${CSS.escape(slug)}"]`)?.focus();
+      return;
+    }
     if (el.dataset.rsvp) {
       el.disabled = true;
       try { await setRsvp(el.dataset.rsvp, el.value); } catch (e) { toast(errMsg(e), 'error'); }
@@ -791,6 +805,14 @@ function selectTab(k, focus = false) {
   renderPanel();
   if (focus) $(`#acc-tab-${k}`)?.focus();
 }
+
+// Accès aux pages modifiés (ici ou dans la section « Accès aux pages ») : l'onglet « Accès » se met à jour
+window.addEventListener('hg:access', () => {
+  if (!A.uid || !A.d || A.tab !== 'acces') return;
+  const f = document.activeElement?.dataset?.pageAccess;
+  renderPanel();
+  if (f) $(`[data-page-access="${CSS.escape(f)}"]`)?.focus();
+});
 
 /** Point d'entrée appelé par admin.js. onChange(kind) : 'members' | 'badges' | 'ss' | 'ideas' | 'support'. */
 export async function initAccounts({ me, onChange }) {

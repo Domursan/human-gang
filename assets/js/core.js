@@ -400,12 +400,69 @@ export async function notify(event, payload = {}) {
   try { await callFn('hg-notify', { event, ...payload }); } catch (e) { console.warn('[hg-notify]', e); }
 }
 
+/* ---------- Accès aux pages (tables hg_pages / hg_page_access, rpc hg_my_pages) ----------
+   Contrôle d'INTERFACE : masque les liens et renvoie vers l'accueil. Les données restent protégées par les
+   règles de la base. Les pages non déclarées dans hg_pages (compte, legal, assistance, rejoindre, admin…)
+   ne sont pas concernées. En cas d'échec réseau, rien n'est bloqué. */
+let _pages = null; // { declared: Map slug -> {slug,label,mode,in_nav,sort}, mine: [{slug,label,in_nav,sort}], set: Set }
+let _pagesLoading = null;
+const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
+const slugOf = (s) => String(s ?? '').split(/[?#]/)[0].split('/').pop().replace(/\.html$/, '');
+/** Slug de la page courante (nom du fichier sans .html ; 'accueil' pour la racine). */
+export function currentPageSlug() { return slugOf(location.pathname) || 'accueil'; }
+
+/** Charge (une fois par page) les pages déclarées et mes pages accessibles. Ne jette jamais ; renvoie mes pages ou null. */
+export function loadMyPages({ force = false } = {}) {
+  if (_pagesLoading && !force) return _pagesLoading;
+  _pagesLoading = (async () => {
+    try {
+      const [all, mine] = await Promise.all([
+        sb.from('hg_pages').select('slug, label, mode, in_nav, sort'),
+        sb.rpc('hg_my_pages'),
+      ]);
+      if (all.error) throw all.error;
+      if (mine.error) throw mine.error;
+      const list = (Array.isArray(mine.data) ? mine.data : []).filter((p) => p && SLUG_RE.test(p.slug))
+        .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+      _pages = {
+        declared: new Map((all.data ?? []).map((p) => [p.slug, p])),
+        mine: list,
+        set: new Set(list.map((p) => p.slug)),
+      };
+    } catch (e) {
+      console.warn('[accès aux pages]', e?.message || e);
+      _pages = null;
+    }
+    return getMyPages();
+  })();
+  return _pagesLoading;
+}
+/** Mes pages accessibles [{slug,label,in_nav,sort}] triées, ou null si inconnues (non connecté, échec réseau). */
+export function getMyPages() { return _pages ? _pages.mine.map((p) => ({ ...p })) : null; }
+/** Ai-je accès à cette page ? (slug ou nom de fichier). true si la page n'est pas déclarée ou si les accès sont inconnus. */
+export function canAccess(slug) {
+  const s = slugOf(slug);
+  if (!_pages || _profile?.is_admin) return true;
+  if (!_pages.declared.has(s)) return true;
+  return _pages.set.has(s);
+}
+/** Libellé d'une page déclarée (ou ''). */
+export function pageLabel(slug) { return _pages?.declared.get(slugOf(slug))?.label || ''; }
+
 /* ---------- Mise en page commune ---------- */
-const NAV = [
-  ['secret-santa.html', 'Secret Santa'],
-  ['irl.html', 'IRL'],
-  ['historique.html', 'Historique'],
+// Navigation de secours (accès inconnus) : identique à l'ancienne navigation fixe.
+const NAV_FALLBACK = [
+  { slug: 'secret-santa', label: 'Secret Santa' },
+  { slug: 'irl', label: 'IRL' },
+  { slug: 'historique', label: 'Historique' },
+  { slug: 'messages', label: 'Messages' },
 ];
+// Libellés courts pour l'en-tête (le libellé complet reste celui de hg_pages ailleurs).
+const NAV_SHORT = { cartes: 'Cartes', membre: 'Annuaire', recap: 'Récap' };
+function navEntries() {
+  if (!_pages) return NAV_FALLBACK;
+  return _pages.mine.filter((p) => p.in_nav).map((p) => ({ slug: p.slug, label: NAV_SHORT[p.slug] || p.label || p.slug }));
+}
 const ICON_MSG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 const ICON_DOOR = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6v16h8"/><path d="M10 12h10M17 9l3 3-3 3"/></svg>';
 const ICON_PREFS = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
@@ -434,10 +491,12 @@ export function renderHeader(profile) {
   document.querySelector('.site-header')?.remove();
   const here = location.pathname.split('/').pop() || 'accueil.html';
   const cur = (href) => (here === href ? ' aria-current="page"' : '');
-  const links = NAV.map(([href, label]) => `<a href="${href}"${cur(href)}>${label}</a>`).join('');
-  const messages = profile
-    ? `<a class="nav-msg" href="messages.html"${cur('messages.html')} aria-label="Messages">${ICON_MSG}<span class="nav-msg-label">Messages</span><span class="nav-badge" hidden></span></a>`
-    : '';
+  // Pages accessibles avec in_nav, triées par sort ; « Messages » garde son icône et sa pastille.
+  const links = navEntries().map(({ slug, label }) => {
+    const href = `${slug}.html`;
+    if (slug === 'messages') return `<a class="nav-msg" href="messages.html"${cur(href)} aria-label="Messages">${ICON_MSG}<span class="nav-msg-label">${esc(label)}</span><span class="nav-badge" hidden></span></a>`;
+    return `<a href="${href}"${cur(href)} data-page="${esc(slug)}">${esc(label)}</a>`;
+  }).join('');
   const admin = profile?.is_admin ? `<a class="nav-admin" href="admin.html"${cur('admin.html')}>Admin</a>` : '';
   const god = profile?.is_admin ? `<button class="nav-icon nav-god" type="button" aria-pressed="false" aria-label="Activer le mode sans limite" title="Mode sans limite">${ICON_BOLT}</button>` : '';
   const prefs = `${god}<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
@@ -448,7 +507,7 @@ export function renderHeader(profile) {
   header.innerHTML = `<div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
       <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
-      <nav class="nav" aria-label="Navigation principale">${profile ? links : ''}${messages}${admin}</nav>
+      <nav class="nav" aria-label="Navigation principale">${profile ? links : ''}${admin}</nav>
       <div class="nav-tools">${prefs}${account}${logout}</div>
     </div>`;
   document.body.prepend(header);
@@ -513,7 +572,7 @@ export function renderFooter(profile = _profile) {
   footer.innerHTML = `<div class="container">
       <div>© ${new Date().getFullYear()} Humane Gang</div>
       <nav aria-label="Liens légaux">
-        ${profile ? '<a href="evenements.html">Événements</a>' : ''}
+        ${profile && canAccess('evenements') ? '<a href="evenements.html">Événements</a>' : ''}
         <a href="assistance.html">Assistance</a>
         <a href="legal.html#mentions">Mentions légales</a>
         <a href="legal.html#confidentialite">Confidentialité</a>
@@ -1069,8 +1128,18 @@ export async function initPage({ auth = 'member' } = {}) {
   if (auth === 'member') profile = await requireMember();
   else if (auth === 'admin') profile = await requireAdmin();
   else profile = await getProfile();
+  const pagesP = profile ? loadMyPages() : null; // en parallèle du mode sans limite
   if (profile?.is_admin) await loadGodMode(profile); // avant le rendu : les pages lisent getGodMode() dès leur premier affichage
   else _godAdmin = false;
+  if (pagesP) {
+    await pagesP;
+    const slug = currentPageSlug();
+    // Page déclarée mais interdite -> accueil (jamais depuis l'accueil lui-même, pour éviter une boucle)
+    if (slug !== 'accueil' && !canAccess(slug)) {
+      location.replace(`accueil.html?refus=${encodeURIComponent(slug)}`);
+      return new Promise(() => {}); // la page s'arrête là, sans erreur
+    }
+  }
   renderHeader(profile);
   renderFooter(profile);
   cookieNotice();

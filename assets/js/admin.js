@@ -6,7 +6,8 @@ import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { mountBotSection } from './admin-bot.js';
-import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from './admin-accounts.js';
+import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml, openAccountFiche } from './admin-accounts.js';
+import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
@@ -794,11 +795,12 @@ mountThemesSection($('#theme-root'));
 mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
+mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({
   me,
   onChange: async (kind) => {
-    if (kind === 'members') { await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
+    if (kind === 'members') { refreshAccessSection(); await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
     if (kind === 'badges') { await loadBadges(); renderBadges(); }
     if (kind === 'ss') { await loadEditionDetails(); if (ssLoaded) renderSS(); renderStats(); }
     if (kind === 'ideas') { await loadIdeas(); renderIdeas(); renderStats(); }

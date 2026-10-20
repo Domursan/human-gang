@@ -1,8 +1,21 @@
 // ===== Accueil : le QG du Humane Gang =====
-import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo } from './core.js';
+import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'optional' });
+
+/* ---------- Refus d'accès (redirection depuis une page interdite : ?refus=<slug>) ---------- */
+{
+  const params = new URLSearchParams(location.search);
+  const refus = params.get('refus');
+  if (refus !== null) {
+    const label = pageLabel(refus);
+    toast(`Tu n'as pas accès à cette page${label ? ` (${label})` : ''}.`, 'error');
+    params.delete('refus');
+    const qs = params.toString();
+    try { history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`); } catch {}
+  }
+}
 
 /* ---------- Icônes (SVG à trait) ---------- */
 const svg = (d, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -262,7 +275,9 @@ async function loadHistory() {
 const membersP = sb.rpc('hg_members').then(({ data, error }) => { if (error) throw error; return data || []; });
 
 /* ---------- Liens vers la carte d'identité d'un membre ---------- */
-const memberLink = (m, label = m.pseudo) => `<a class="member-link" href="membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`;
+const memberLink = (m, label = m.pseudo) => (canAccess('membre')
+  ? `<a class="member-link" href="membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`
+  : `<strong class="member-link">${esc(label)}</strong>`);
 function feedText(a, m) {
   const text = String(a.text ?? '');
   if (!m) return esc(text);
@@ -273,7 +288,7 @@ function feedText(a, m) {
 /* ---------- Bandeau « Le récap est disponible » (1er décembre → 31 janvier) ---------- */
 function recapBanner() {
   const d = new Date(), mo = d.getMonth();
-  if (mo !== 11 && mo !== 0) return '';
+  if ((mo !== 11 && mo !== 0) || !canAccess('recap')) return '';
   const y = mo === 11 ? d.getFullYear() : d.getFullYear() - 1;
   return `<a class="recap-banner" href="recap.html?year=${y}">
       <span class="recap-banner-emoji" aria-hidden="true">✨</span>
@@ -285,7 +300,7 @@ function recapBanner() {
 /* ---------- Bandeau « Événement en cours » (événements dynamiques) ---------- */
 async function loadDynBanner() {
   const box = $('#dyn-banner');
-  if (!box) return;
+  if (!box || !canAccess('evenements')) return;
   try {
     const { getActiveDynEvents } = await import('./dyn-events.js');
     const list = await getActiveDynEvents();
@@ -352,14 +367,27 @@ async function loadBirthdays() {
   } catch (e) { ul.innerHTML = `<li>${failBox(e)}</li>`; }
 }
 
+/* ---------- Tuiles vers des pages interdites : retirées ---------- */
+const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
+function hideForbiddenTiles() {
+  for (const [id, slug] of Object.entries(TILE_PAGE)) if (!canAccess(slug)) $(`#${id}`)?.remove();
+  const tiles = $('.home-tiles');
+  if (tiles && !tiles.children.length) tiles.remove();
+}
+const tileOn = (id) => !!document.getElementById(id);
+
 /* ---------- Lancement ---------- */
 if (!me) {
   renderGuest();
 } else {
   syncIntro();
   renderMemberShell();
+  hideForbiddenTiles();
   bindIdeas();
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
-  await Promise.allSettled([loadSecretSanta(), loadIrl(), loadHistory(), loadFeed(), loadBirthdays(), loadDynBanner()]);
+  await Promise.allSettled([
+    tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
+    loadFeed(), loadBirthdays(), loadDynBanner(),
+  ]);
 }
 app.removeAttribute('aria-busy');
