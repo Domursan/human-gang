@@ -1075,8 +1075,6 @@ export async function initPage({ auth = 'member' } = {}) {
   renderFooter(profile);
   cookieNotice();
   startEffects();
-  // Transition « Plongée » entre les pages (chargée à part, ne bloque jamais la page)
-  import('./plongee.js').then((m) => m.initPlongee()).catch((e) => { document.documentElement.classList.remove('hg-arrive'); console.warn('[plongée]', e); });
   if (profile) {
     startUnread();
     checkNewBadges();
