@@ -1,0 +1,12 @@
+-- Appliquée le 20.10.2026 (résumé ; le SQL exact est dans l'historique de session).
+-- Messagerie : hg_conversations(kind 'direct'|'santa', edition_id, santa_id, target_id, direct_key), hg_conversation_members(last_read_at),
+--   hg_messages(id bigint, conversation_id, sender_id, body, created_at). Lecture directe = admin uniquement ;
+--   membres via RPC : hg_my_conversations(), hg_unread_count(), hg_open_direct(p_user) -> uuid,
+--   hg_open_santa(p_edition, p_role 'target'|'santa') -> uuid, hg_get_messages(p_conv, p_after bigint, p_limit int)
+--   -> (id, mine, sender_label, body, created_at) [le Santa apparaît « Ton Santa » pour sa cible],
+--   hg_send_message(p_conv, p_body) -> bigint, hg_mark_read(p_conv), admin : hg_admin_conversations().
+-- Badges automatiques : hg_award_badges(p_user) (cron horaire « hg-badges-hourly »), hg_refresh_my_badges(),
+--   hg_theme_seen + hg_mark_theme_seen(p_slug) (badge Saisonnier), trigger hg_badge_activity -> hg_activity.
+-- Carte d'identité : hg_member_card(p_user) -> jsonb {pseudo, avatar_url, color, member_since, birthday_dm, member_number, badges[], stats{}}.
+-- Récap : hg_year_recap(p_year) -> jsonb {year, gang{...}, moi{...}}.
+-- Anniversaires : hg_birthday_log + fonction edge hg-birthdays (cron « hg-birthdays-daily » 06:05/07:05 UTC, idempotente).
