@@ -3,6 +3,7 @@
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { ensureAccessData, memberAccessHtml, setAccess, accessPages } from './admin-access.js';
+import { fetchAdminGhosts } from './admin-ghosts.js';
 
 /* ---------- Icônes ---------- */
 const IC = {
@@ -71,9 +72,19 @@ const root = () => $('#acc-root');
    Liste des comptes
    ========================================================= */
 async function loadAccounts() {
-  const [acc, mem] = await Promise.all([sb.rpc('hg_admin_accounts'), sb.rpc('hg_members')]);
-  A.accounts = (check(acc) ?? []).slice().sort((a, b) => (!a.pseudo - !b.pseudo) || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
+  const [acc, mem, gh] = await Promise.all([
+    sb.rpc('hg_admin_accounts'), sb.rpc('hg_members'),
+    fetchAdminGhosts().catch((e) => { console.warn('[fantômes]', e); return []; }), // admin seulement : les membres ne les voient jamais
+  ]);
+  const real = check(acc) ?? [];
+  const ids = new Set(real.map((a) => a.id));
+  const ghosts = gh.filter((g) => !ids.has(g.id)).map((g) => ({
+    id: g.id, pseudo: g.pseudo, email: null, is_admin: false, created_at: null, last_sign_in_at: null,
+    is_ghost: true, avatar_url: g.avatar_url, joined_on: g.joined_on,
+  }));
+  A.accounts = [...real, ...ghosts].sort((a, b) => (!a.pseudo - !b.pseudo) || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
   A.avatars = new Map((mem.data ?? []).map((m) => [m.id, m]));
+  for (const g of ghosts) A.avatars.set(g.id, { id: g.id, pseudo: g.pseudo, avatar_url: g.avatar_url });
   // Date d'arrivée réelle dans le gang (saisie par l'admin) : absente de hg_admin_accounts
   const jo = await sb.from('hg_profiles').select('id, joined_on');
   if (!jo.error) { const m = new Map((jo.data ?? []).map((r) => [r.id, r.joined_on])); for (const a of A.accounts) a.joined_on = m.get(a.id) ?? null; }
@@ -106,11 +117,13 @@ function renderRows() {
     const m = { ...(A.avatars.get(a.id) || {}), pseudo: a.pseudo || '?' };
     const inner = `
       <span class="acc-who">${avatarHtml(m, 36)}<span class="acc-name"><strong>${esc(a.pseudo || 'Sans profil')}</strong>
-        ${a.is_admin ? '<span class="pill pill-ok acc-pill">admin</span>' : ''}${a.id === A.me.id ? '<span class="pill pill-muted acc-pill">toi</span>' : ''}</span></span>
+        ${a.is_ghost ? '<span class="pill pill-muted acc-pill">(fantôme)</span>' : ''}${a.is_admin ? '<span class="pill pill-ok acc-pill">admin</span>' : ''}${a.id === A.me.id ? '<span class="pill pill-muted acc-pill">toi</span>' : ''}</span></span>
       <span class="acc-email">${esc(a.email || '—')}</span>
-      <span class="acc-date"><span class="acc-k">Inscrit le </span>${esc(fmtDate(a.created_at))}</span>
+      ${a.is_ghost
+        ? '<span class="acc-date"><span class="acc-k">Statut : </span>pas encore inscrit</span>'
+        : `<span class="acc-date"><span class="acc-k">Inscrit le </span>${esc(fmtDate(a.created_at))}</span>`}
       <span class="acc-date"><span class="acc-k">Arrivée dans le gang : </span>${a.joined_on ? esc(fmtDay(a.joined_on)) : '<span class="acc-none">non renseignée</span>'}</span>
-      <span class="acc-date"><span class="acc-k">Dernière connexion : </span>${a.last_sign_in_at ? esc(fmtDateTime(a.last_sign_in_at)) : 'jamais'}</span>
+      <span class="acc-date"><span class="acc-k">Dernière connexion : </span>${a.is_ghost ? '—' : a.last_sign_in_at ? esc(fmtDateTime(a.last_sign_in_at)) : 'jamais'}</span>
       <span class="acc-go">${a.pseudo ? IC.chev : ''}</span>`;
     return a.pseudo
       ? `<li><button class="acc-row" type="button" data-open="${esc(a.id)}" aria-label="Ouvrir la fiche de ${esc(a.pseudo)}">${inner}</button></li>`
@@ -174,9 +187,13 @@ async function reloadDetail() {
   try { A.d = await loadDetail(A.uid); renderDetail(); updateInspect(); } catch (e) { toast(errMsg(e), 'error'); }
 }
 
+/** Vrai si la fiche ouverte est celle d'un fantôme (pas encore inscrit). */
+const isGhostFiche = () => !!(A.d?.profile?.is_ghost ?? A.accounts.find((a) => a.id === A.uid)?.is_ghost);
+
 function detailHead() {
   const acc = A.accounts.find((a) => a.id === A.uid) || {};
   const p = A.d?.profile || { pseudo: acc.pseudo };
+  const ghost = isGhostFiche();
   return `
     <div class="acc-detail-top">
       <button class="btn btn-ghost btn-sm" type="button" data-act="back">${IC.back} Tous les comptes</button>
@@ -184,8 +201,10 @@ function detailHead() {
     <div class="acc-ident">
       ${avatarHtml(p, 56)}
       <div class="acc-ident-txt">
-        <h3 class="acc-ident-name">${esc(p.pseudo || acc.pseudo || 'Membre')}</h3>
-        <div class="small muted">${esc(acc.email || '')}${acc.created_at ? ` · inscrit le ${esc(fmtDate(acc.created_at))}` : ''}${acc.last_sign_in_at ? ` · vu le ${esc(fmtDateTime(acc.last_sign_in_at))}` : ''}</div>
+        <h3 class="acc-ident-name">${esc(p.pseudo || acc.pseudo || 'Membre')}${ghost ? ' <span class="pill pill-muted">(fantôme)</span>' : ''}</h3>
+        ${ghost
+          ? '<div class="small muted">Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.</div>'
+          : `<div class="small muted">${esc(acc.email || '')}${acc.created_at ? ` · inscrit le ${esc(fmtDate(acc.created_at))}` : ''}${acc.last_sign_in_at ? ` · vu le ${esc(fmtDateTime(acc.last_sign_in_at))}` : ''}</div>`}
       </div>
       ${p.is_admin ? '<span class="pill pill-ok">admin</span>' : ''}
     </div>`;
@@ -195,7 +214,7 @@ function renderDetail() {
   root().innerHTML = `
     ${detailHead()}
     <div class="acc-tabs" role="tablist" aria-label="Données du membre">
-      ${TABS.map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
+      ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
     </div>
     <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
 }
@@ -228,7 +247,7 @@ function panelHtml() {
 
 /* ---------- Profil ---------- */
 function profileHtml() {
-  const p = A.d.profile, self = p.id === A.me.id;
+  const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
   const color = /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '#9E3543';
   return `
     <form class="stack" data-form="profile" novalidate>
@@ -250,14 +269,14 @@ function profileHtml() {
         <label class="check"><input type="checkbox" name="share_birthday"${p.share_birthday ? ' checked' : ''}> <span>Partage son anniversaire avec le gang (jour et mois)</span></label>
         <label class="check"><input type="checkbox" name="bot_optin"${p.bot_optin ? ' checked' : ''}> <span>Accepte les messages privés du bot</span></label>
         <label class="check"><input type="checkbox" name="intro_seen"${p.intro_seen ? ' checked' : ''}> <span>Intro déjà vue</span></label>
-        <label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>
+        ${ghost ? '' : `<label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>`}
       </fieldset>
-      <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span> · profil créé le ${esc(fmtDateTime(p.created_at))}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
+      <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span>${ghost ? ' · fantôme (pas encore inscrit)' : ` · profil créé le ${esc(fmtDateTime(p.created_at))}`}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le profil</button></div>
     </form>`;
 }
 async function saveProfile(form, btn) {
-  const p = A.d.profile, self = p.id === A.me.id;
+  const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
   const pseudo = form.pseudo.value.trim();
   if (pseudo.length < 2 || pseudo.length > 32) throw new Error('Le pseudo doit faire entre 2 et 32 caractères.');
   const discord = form.discord_id.value.trim();
@@ -272,9 +291,9 @@ async function saveProfile(form, btn) {
   };
   if (patch.joined_on && !/^\d{4}-\d{2}-\d{2}$/.test(patch.joined_on)) throw new Error('Date d\'arrivée invalide.');
   if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10) && !isGodMode()) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
-  if (!self) patch.is_admin = form.is_admin.checked;
+  if (!self && !ghost) patch.is_admin = form.is_admin.checked; // un fantôme n'a pas de droits à gérer
   if (self && p.is_admin && patch.is_admin === false) throw new Error('Tu ne peux pas te retirer le statut admin.');
-  if (!self && patch.is_admin !== p.is_admin) {
+  if (!self && !ghost && patch.is_admin !== p.is_admin) {
     const ok = await confirmBox(
       patch.is_admin ? `Nommer ${pseudo} admin ?` : `Retirer le statut admin à ${pseudo} ?`,
       patch.is_admin ? 'Cette personne aura accès à toute l\'administration, y compris aux données privées de tous les membres et aux attributions du Secret Santa.' : 'Cette personne n\'aura plus accès à l\'administration.',

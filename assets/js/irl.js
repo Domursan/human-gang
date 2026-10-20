@@ -2,6 +2,7 @@
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 import { mountHistory } from './irl-history.js';
+import { ghostDirectory } from './admin-ghosts.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -43,6 +44,7 @@ async function load() {
   const err = [m, ev, rs, dt, vt, ph].find((r) => r.error)?.error;
   if (err) throw err;
   S.members = new Map((m.data || []).map((x) => [x.id, x]));
+  if (isAdmin) for (const [id, g] of await ghostDirectory()) S.members.set(id, g); // l'admin voit les fantômes, pas les membres
   S.events = ev.data || [];
   S.rsvps = rs.data || [];
   S.dates = dt.data || [];
@@ -63,7 +65,7 @@ const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 function rsvpOf(eventId) {
   const r = { oui: [], 'peut-etre': [], non: [], mine: null };
   for (const x of S.rsvps) {
-    if (x.event_id !== eventId) continue;
+    if (x.event_id !== eventId || !S.members.has(x.user_id)) continue; // présence d'un compte inconnu (fantôme) : ignorée
     r[x.status]?.push(x.user_id);
     if (x.user_id === me.id) r.mine = x.status;
   }

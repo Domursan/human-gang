@@ -171,7 +171,7 @@ async function load() {
     fetchAll(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade, recycled_at').order('id')),
     fetchAll(() => sb.from('hg_wallets').select('user_id, paillettes, boosters_opened, pity_epique').order('user_id')),
     fetchAll(() => sb.from('hg_card_trades').select('id, from_user, to_user, status, from_paillettes, to_paillettes, message, created_at').order('id')),
-    fetchAll(() => sb.from('hg_profiles').select('id, pseudo, avatar_url, color').order('id')),
+    fetchAll(() => sb.from('hg_profiles').select('id, pseudo, avatar_url, color, is_ghost').order('id')),
     sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle(),
   ]);
   const stv = check(st);
@@ -409,7 +409,7 @@ function openCardDialog(k = null) {
           <div class="field"><span class="label" id="acc-prev-l">Aperçu</span>
             <div class="acd-card-preview" id="acc-card-preview" role="img" aria-labelledby="acc-prev-l"></div></div>
           <div class="field"><label for="acc-member">Membre lié</label>
-            <select id="acc-member" name="member_id"><option value="">Aucun</option>${C.profiles.map((p) => `<option value="${esc(p.id)}"${p.id === k?.member_id ? ' selected' : ''}>${esc(p.pseudo)}</option>`).join('')}</select>
+            <select id="acc-member" name="member_id"><option value="">Aucun</option>${C.profiles.map((p) => `<option value="${esc(p.id)}"${p.id === k?.member_id ? ' selected' : ''}>${esc(p.pseudo)}${p.is_ghost ? ' (fantôme)' : ''}</option>`).join('')}</select>
             <span class="small muted">Requis pour les familles Membre et la rareté Identité.</span></div>
           <div class="field"><label for="acc-max">Exemplaires numérotés maximum</label>
             <input id="acc-max" name="max_copies" type="number" min="1" step="1" inputmode="numeric" placeholder="illimité" value="${esc(k?.max_copies ?? '')}">
@@ -643,7 +643,7 @@ function playersPanel() {
   }).join('');
   return `
     <div class="acd-toolbar"><div class="field acd-field-wide"><label for="acd-pl-member">Membre</label>
-      <select id="acd-pl-member">${C.profiles.map((m) => `<option value="${esc(m.id)}"${m.id === uid ? ' selected' : ''}>${esc(m.pseudo)}</option>`).join('')}</select></div></div>
+      <select id="acd-pl-member">${C.profiles.map((m) => `<option value="${esc(m.id)}"${m.id === uid ? ' selected' : ''}>${esc(m.pseudo)}${m.is_ghost ? ' (fantôme)' : ''}</option>`).join('')}</select></div></div>
     <section class="card acd-player" aria-labelledby="acd-pl-h">
       <div class="acd-player-head">${avatarHtml(p, 48)}
         <div><h3 class="card-title" id="acd-pl-h">${esc(p.pseudo)}</h3>

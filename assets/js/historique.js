@@ -1,6 +1,7 @@
 // ===== Humane Gang — Historique (frise) =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { ghostDirectory } from './admin-ghosts.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -38,6 +39,7 @@ async function load() {
   const err = [m, ed, ev, mo].find((r) => r.error)?.error;
   if (err) throw err;
   S.members = new Map((m.data || []).map((x) => [x.id, x]));
+  if (me?.is_admin) for (const [id, g] of await ghostDirectory()) S.members.set(id, g); // l'admin voit les fantômes, pas les membres
   S.editions = ed.data || [];
   S.events = ev.data || [];
   S.moments = mo.data || [];
@@ -104,7 +106,7 @@ function ssCard(e) {
 }
 
 function irlCard(e) {
-  const present = S.present.get(e.id) || [];
+  const present = (S.present.get(e.id) || []).filter((id) => S.members.has(id)); // compte inconnu (fantôme) : ignoré
   const photos = S.photos.get(e.id) || [];
   const shown = photos.slice(0, THUMBS);
   const more = photos.length - shown.length;

@@ -6,7 +6,8 @@ import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { mountBotSection } from './admin-bot.js';
-import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml, openAccountFiche } from './admin-accounts.js';
+import { initAccounts, refreshAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml, openAccountFiche } from './admin-accounts.js';
+import { mountGhostsSection, refreshGhostsSection, fetchAdminGhosts } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
@@ -32,7 +33,7 @@ const ICON = {
 /* ---------- État ---------- */
 const S = {
   members: [], byId: new Map(), invites: [], editions: [], editionId: null, participants: [], exclusions: [],
-  badges: [], userBadges: [], ideas: [], support: [], bot: null, theme: null,
+  badges: [], userBadges: [], ideas: [], support: [], bot: null, theme: null, ghosts: [],
   ideaFilter: 'nouvelle', supportFilter: 'ouverte', badgeMember: '', lastDraw: null,
 };
 const pseudoOf = (id) => (id ? S.byId.get(id)?.pseudo ?? 'Ancien membre' : '—');
@@ -89,7 +90,9 @@ const sectionError = (e) => `<div class="empty">Impossible de charger : ${esc(er
 /* ---------- Chargement ---------- */
 async function loadMembers() {
   S.members = check(await sb.rpc('hg_members')) ?? [];
-  S.byId = new Map(S.members.map((m) => [m.id, m]));
+  // Fantômes : visibles seulement par l'admin (pour leur attribuer badges, présences, cartes…)
+  S.ghosts = await fetchAdminGhosts().catch((e) => { console.warn('[fantômes]', e); return []; });
+  S.byId = new Map([...S.members, ...S.ghosts].map((m) => [m.id, m]));
 }
 async function loadInvites() { S.invites = check(await sb.from('hg_invites').select('*').order('created_at', { ascending: false })) ?? []; }
 async function loadEditions() {
@@ -578,8 +581,10 @@ function renderBadges() {
   }).join('') || '<div class="empty">Aucun badge.</div>';
 
   const sel = $('#badge-member');
+  const pickable = [...S.members.map((m) => ({ id: m.id, label: m.pseudo })), ...S.ghosts.map((g) => ({ id: g.id, label: `${g.pseudo} (fantôme)` }))]
+    .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
   sel.innerHTML = '<option value="">Choisir un membre…</option>' +
-    S.members.map((m) => `<option value="${esc(m.id)}"${m.id === S.badgeMember ? ' selected' : ''}>${esc(m.pseudo)}</option>`).join('');
+    pickable.map((m) => `<option value="${esc(m.id)}"${m.id === S.badgeMember ? ' selected' : ''}>${esc(m.label)}</option>`).join('');
   renderBadgeToggles();
 }
 function renderBadgeToggles() {
@@ -798,6 +803,12 @@ mountMessagesSection($('#messages-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
 mountCardsSection($('#cards-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
+// Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
+mountGhostsSection($('#ghosts-root'), {
+  openFiche: (uid) => openAccountFiche(uid),
+  onChange: async () => { await loadMembers(); await refreshAccounts(); renderBadges(); renderStats(); },
+});
+refreshGhostsSection();
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({
   me,
