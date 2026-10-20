@@ -107,6 +107,9 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
 .hgc-photo { position: relative; flex: none; width: calc(var(--u) * 84); height: calc(var(--u) * 84); overflow: hidden;
   border: calc(var(--u) * 2) solid #000; background: #2a2640; }
 .hgc-photo svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.hgc-photo { display: grid; place-items: center; }
+.hgc-photo .hgc-win-logo { width: 86%; }
+.hgc-photo .hgc-win-img { width: 100%; height: 100%; object-fit: cover; }
 .hgc-idinfo { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .hgc-idk { display: block; font-size: max(5px, calc(var(--u) * 8.5)); letter-spacing: .14em; text-transform: uppercase; color: var(--acc); line-height: 1.4; }
 .hgc-idv { display: block; margin-bottom: calc(var(--u) * 7); font-size: max(6px, calc(var(--u) * 12)); font-weight: 700; line-height: 1.2;

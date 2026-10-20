@@ -59,7 +59,7 @@ const gemsHtml = (r, n) => Array.from({ length: n }, (_, i) => {
   const shade = myth ? '' : '<path d="M2 1h1v1h-1zM1 2h1v1h-1z" fill="#fff" opacity=".85"/><path d="M6 3h1v1h-1zM5 4h1v1h-1zM4 5h2v1h-2zM3 6h1v1h-1z" fill="#000" opacity=".35"/>';
   return `<svg class="hgc-gem" viewBox="0 0 7 7" aria-hidden="true" focusable="false"${st}><path d="${myth ? PATH_STAR : PATH_GEM}" fill="currentColor"/>${shade}</svg>`;
 }).join('');
-const PORTRAIT = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><rect width="16" height="16" fill="#2a2640"/><rect x="2" y="13" width="12" height="3" fill="#2B5AE2"/><rect x="6" y="10" width="4" height="3" fill="#e0ad80"/><rect x="5" y="3" width="6" height="2" fill="#3b2a1e"/><rect x="4" y="4" width="1" height="4" fill="#3b2a1e"/><rect x="11" y="4" width="1" height="4" fill="#3b2a1e"/><rect x="5" y="5" width="6" height="5" fill="#f1c79d"/><rect x="6" y="7" width="1" height="1" fill="#111"/><rect x="9" y="7" width="1" height="1" fill="#111"/><rect x="7" y="9" width="2" height="1" fill="#9c4a3c"/></svg>';
+// Sans image dédiée, toutes les cartes (Identité comprise) affichent le logo du gang.
 
 /** Calques de la carte : cadre (out), liseré (mid), fond de la face (in) et décors cumulés selon la rareté. */
 const LAYERS = '<span class="hgc-layer hgc-out"></span><span class="hgc-layer hgc-mid"></span>'
@@ -88,7 +88,7 @@ export function cardHtml(card, opts = {}) {
   if (miss) {
     win = '<span class="hgc-win"><span class="hgc-q" aria-hidden="true">?</span></span>';
   } else if (ident) {
-    const photo = card.image_url ? `<img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy">` : PORTRAIT;
+    const photo = card.image_url ? `<img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy">` : `<img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy">`;
     win = `<span class="hgc-win hgc-win-id"><span class="hgc-photo">${photo}</span>`
       + `<span class="hgc-idinfo"><span class="hgc-idk">Pseudo</span><span class="hgc-idv">${esc(name)}</span>`
       + (ms ? `<span class="hgc-idk">Membre depuis</span><span class="hgc-idv">${esc(ms)}</span>` : '') + '</span></span>';
