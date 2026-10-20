@@ -67,7 +67,7 @@ function buildSky() {
   bgGrad.addColorStop(0, BG.inner); bgGrad.addColorStop(0.38, BG.mid); bgGrad.addColorStop(0.7, BG.outer); bgGrad.addColorStop(1, BG.edge);
 
   // Nombre d'étoiles adapté à la surface de l'écran
-  const count = Math.round(Math.min(560, Math.max(150, (W * H) / 2500)));
+  const count = Math.round(Math.min(700, Math.max(180, (W * H) / 1900)));
   const half = Math.hypot(W, H) / 2;
   stars = [];
   for (let i = 0; i < count; i++) {
