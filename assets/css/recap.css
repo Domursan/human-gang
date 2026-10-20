@@ -112,7 +112,7 @@ body.rc-open { overflow: hidden; }
 .rc-nav-prev { left: 8px; } .rc-nav-next { right: 8px; }
 .rc-story:hover .rc-nav:not([disabled]), .rc-nav:focus-visible { opacity: 1; }
 .rc-nav[disabled] { opacity: 0 !important; pointer-events: none; }
-@media (hover: none) { .rc-nav { display: none; } }
+@media (hover: none), (max-width: 520px) { .rc-nav { display: none; } }
 
 .rc-story.is-held .rc-slide-inner { transform: scale(.985); transition: transform .2s; }
 

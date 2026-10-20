@@ -439,10 +439,8 @@ export function renderHeader(profile) {
   header.innerHTML = `<div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
       <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMAN GANG</span></a>
-      <nav class="nav" aria-label="Navigation principale">
-        <div class="nav-links">${profile ? links : ''}${messages}${admin}</div>
-        <div class="nav-tools">${prefs}${account}</div>
-      </nav>
+      <nav class="nav" aria-label="Navigation principale">${profile ? links : ''}${messages}${admin}</nav>
+      <div class="nav-tools">${prefs}${account}</div>
     </div>`;
   document.body.prepend(header);
   updateHeaderProfile(profile);

@@ -212,3 +212,7 @@ body.is-inspect-leaving .insp-bar { animation: insp-out .3s steps(6, end) both; 
   .insp-frame { opacity: .85; }
   .insp-scan { display: none; }
 }
+@media (max-width: 420px) {
+  .insp-tag { padding: 6px; }
+  .insp-tag span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}

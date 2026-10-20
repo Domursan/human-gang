@@ -59,7 +59,7 @@ function buildSlides(r) {
         <h2 class="rc-title rc-title-sm">Une année toute calme</h2>
         <p class="rc-sub">Aucune sortie, photo ni Secret Santa enregistrés pour ${esc(year)}. Pas grave : les plus belles histoires du gang restent à écrire.</p>
         <div class="rc-actions">
-          ${year > 2000 ? `<button class="btn btn-light" type="button" data-year="${year - 1}">Voir ${year - 1}</button>` : ''}
+          ${year > minYear ? `<button class="btn btn-light" type="button" data-year="${year - 1}">Voir ${year - 1}</button>` : ''}
           <a class="btn btn-ghost rc-btn-ghost" href="irl.html">Proposer une sortie</a>
         </div>`,
     });

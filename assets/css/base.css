@@ -70,16 +70,19 @@ h1, h2, h3 { margin: 0; }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; }
 .brand img { width: 44px; height: 44px; object-fit: contain; image-rendering: pixelated; }
 .brand span { font-family: var(--font-display); font-size: 20px; }
-.nav { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; justify-content: flex-end; }
-.nav-links, .nav-tools { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: flex-end; flex: 1 1 auto; }
+.nav-tools { display: flex; gap: 6px; align-items: center; }
+.nav-tools .nav-account { color: var(--accent-text); text-decoration: none; border-radius: 999px; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
 .nav a { color: var(--text); text-decoration: none; padding: 10px 14px; border-radius: 999px; border: 1px solid transparent;
   min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
 .nav a:hover { background: var(--surface-2); color: var(--text); }
 .nav a[aria-current="page"] { background: var(--surface-2); border-color: var(--border-strong); font-weight: 700; }
 .nav a.nav-admin { color: var(--muted); font-size: 14px; }
-.nav a.nav-account { background: var(--accent); color: var(--accent-text); font-weight: 700; padding: 4px 16px 4px 4px; max-width: 220px; }
-.nav a.nav-account.is-guest { padding: 10px 16px; }
-.nav a.nav-account .avatar { font-size: 12px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-text) 35%, transparent); }
+.nav-account { background: var(--accent); font-weight: 700; padding: 4px 16px 4px 4px; max-width: 220px; border: 1px solid transparent; }
+.nav-account:hover { filter: brightness(1.1); color: var(--accent-text); }
+.nav-account[aria-current="page"] { border-color: var(--sand); }
+.nav-account.is-guest { padding: 10px 16px; }
+.nav-account .avatar { font-size: 12px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-text) 35%, transparent); }
 .nav-account-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nav a.nav-msg { position: relative; }
 .nav-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--sand); color: #121212;
@@ -89,18 +92,21 @@ h1, h2, h3 { margin: 0; }
   color: var(--muted); background: transparent; border: 1px solid var(--border); }
 .nav-icon:hover { color: var(--text); background: var(--surface-2); border-color: var(--border-strong); }
 @media (max-width: 760px) {
-  .site-header .container { gap: 8px 12px; }
-  .nav { width: 100%; justify-content: space-between; }
-  .nav a { padding: 10px 12px; }
+  .site-header .container { gap: 6px 10px; padding-bottom: 8px; }
+  .brand { flex: 1 1 auto; min-width: 0; }
+  .nav { order: 3; flex: 1 1 100%; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none;
+    margin: 0 -16px; padding: 0 16px; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { padding: 10px 12px; flex: none; white-space: nowrap; }
   .nav-msg-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .nav a.nav-msg .nav-badge { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; line-height: 18px; font-size: 11px; padding: 0 5px; }
 }
 @media (max-width: 600px) {
   .brand img { width: 40px; height: 40px; }
-  .brand span { font-size: 18px; }
-  .nav a.nav-account:not(.is-guest) { padding: 4px; }
-  .nav a.nav-account:not(.is-guest) .nav-account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .nav a.nav-account .avatar { width: 36px !important; height: 36px !important; }
+  .brand span { font-size: 18px; white-space: nowrap; }
+  .nav-account:not(.is-guest) { padding: 3px; }
+  .nav-account:not(.is-guest) .nav-account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .nav-account .avatar { width: 36px !important; height: 36px !important; }
 }
 
 /* ===== Pied de page ===== */
