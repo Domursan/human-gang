@@ -59,16 +59,20 @@ export async function mountTrades(el, ctx = {}) {
   /* ---------- Données ---------- */
   async function load() {
     const me = S.me.id;
-    const [mem, cards, copies, trades, wish, wallet] = await Promise.all([
+    const [mem, cards, copies, trades, wish, wallet, sets] = await Promise.all([
       sb.rpc('hg_members').then(unwrap),
       fetchAll(() => sb.from('hg_cards').select('*').order('id')),
       fetchAll(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, locked_trade, recycled_at').order('id')),
       fetchAll(() => sb.from('hg_card_trades').select('*').or(`from_user.eq.${me},to_user.eq.${me}`).order('id')),
       fetchAll(() => sb.from('hg_card_wishlist').select('user_id, card_id').order('user_id').order('card_id')),
       sb.from('hg_wallets').select('paillettes').eq('user_id', me).maybeSingle().then(unwrap),
+      sb.from('hg_card_sets').select('id, name').then(({ data }) => data || []).catch(() => []), // facultatif : sans lui, pas de nom de série
     ]);
+    S.setNames = new Map(sets.map((x) => [x.id, x.name]));
     S.members = new Map((mem || []).map((m) => [m.id, m]));
     S.cards = new Map(cards.map((c) => [c.id, c]));
+    S.setTotal = new Map(); // nombre de cartes par série (numérotation « 012/100 »)
+    for (const c of cards) S.setTotal.set(c.set_id, (S.setTotal.get(c.set_id) || 0) + 1);
     S.copies = new Map(copies.map((c) => [String(c.id), c]));
     S.wish = new Map();
     for (const w of wish) {
@@ -90,6 +94,12 @@ export async function mountTrades(el, ctx = {}) {
   const memberOf = (id) => S.members.get(id) || { id, pseudo: 'Membre', color: null, avatar_url: null };
   const pseudo = (id) => memberOf(id).pseudo;
   const cardOf = (copy) => S.cards.get(copy.card_id) || { name: 'Carte inconnue', rarity: 'commune', family: 'objet', number: null, max_copies: null };
+  /** Champs d'affichage en plus de la carte : série, total de la série, arrivée du membre (carte Identité). */
+  const shown = (card) => (card.id ? {
+    ...card,
+    set_name: S.setNames.get(card.set_id), set_total: S.setTotal.get(card.set_id),
+    member_since: card.rarity === 'identite' ? (S.members.get(card.member_id)?.member_since ?? null) : null,
+  } : card);
   const copyOf = (id) => S.copies.get(String(id)) || null;
   const cardOk = (copy) => { const k = S.cards.get(copy.card_id); return !!k && k.active !== false && k.tradeable !== false; };
   const byCard = (a, b) => {
@@ -108,7 +118,7 @@ export async function mountTrades(el, ctx = {}) {
   const outgoing = () => S.trades.filter((t) => t.status === 'proposee' && t.from_user === S.me.id).sort(byDateDesc);
 
   /* ---------- Rendu : éléments communs ---------- */
-  const copyCard = (c) => cardHtml(cardOf(c), { size: 'sm', shiny: c.shiny, serial: c.serial });
+  const copyCard = (c) => cardHtml(shown(cardOf(c)), { size: 'sm', shiny: c.shiny, serial: c.serial });
   function sideHtml([label, copies, p]) {
     const empty = !copies.length && !p;
     return `<section class="trd-side">
@@ -366,7 +376,7 @@ export async function mountTrades(el, ctx = {}) {
   const withSelected = (base, set) => [...base, ...[...set].map(copyOf).filter((c) => c && !base.includes(c))].sort(byCard);
   function pickHtml(c, side, set) {
     const on = set.has(String(c.id));
-    return `<div class="trd-pickwrap${on ? ' is-on' : ''}">${cardHtml(cardOf(c), {
+    return `<div class="trd-pickwrap${on ? ' is-on' : ''}">${cardHtml(shown(cardOf(c)), {
       size: 'sm', shiny: c.shiny, serial: c.serial, button: true,
       attrs: `aria-pressed="${on}" data-side="${side}" data-id="${c.id}"`,
     })}<span class="trd-tick" aria-hidden="true">✓</span></div>`;

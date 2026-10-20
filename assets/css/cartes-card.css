@@ -25,6 +25,11 @@
 button.hgc { cursor: pointer; }
 .hgc-sm { --w: 112px; } .hgc-md { --w: 180px; } .hgc-lg { --w: 300px; }
 @media (max-width: 600px) { .hgc { --w: 140px; } .hgc-sm { --w: 96px; } .hgc-md { --w: 150px; } .hgc-lg { --w: min(78vw, 300px); } }
+/* Taille sm (listes d'échanges, grilles de choix) : le texte d'ambiance est illisible à 112 px, on retire la zone ;
+   la fenêtre s'agrandit et la ligne de famille descend dessous. Nom, gemmes, numéro et N° ne changent pas. */
+.hgc-sm .hgc-amb { display: none; }
+.hgc-sm .hgc-win { height: calc(var(--u) * 218); }
+.hgc-sm .hgc-fam { top: calc(var(--u) * 304); }
 
 /* ---------- Raretés (palette de la maquette A ; mythique = style doré de la maquette B) ---------- */
 .hgc-commune { --frame: #4b4f5b; --mid: #8c91a0; --face: #1b1c25; --acc: #c4c9d6; --gem: #c4c9d6; }

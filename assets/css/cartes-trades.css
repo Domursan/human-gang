@@ -81,7 +81,8 @@
 .trd-grid .hgc { --w: 96px; }
 .trd-pickwrap { position: relative; width: 96px; }
 .trd-pickwrap .hgc:focus-visible { outline: 3px solid var(--sand); outline-offset: 3px; border-radius: 6px; }
-.trd-pickwrap.is-on .hgc-frame { outline: 3px solid var(--sand); outline-offset: 2px; }
+/* Sélection : contour sur la carte entière (jamais à l'intérieur) */
+.trd-pickwrap.is-on .hgc { outline: 3px solid var(--sand); outline-offset: 2px; }
 .trd-tick { position: absolute; top: -7px; right: -7px; z-index: 2; width: 26px; height: 26px; border-radius: 50%; display: none;
   place-items: center; background: var(--sage); color: #0b0b0b; font-weight: 800; font-size: 14px; box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
 .trd-pickwrap.is-on .trd-tick { display: grid; }

@@ -6,7 +6,50 @@ import { sb, esc, errMsg, toast, canAccess } from './core.js';
 import { cardHtml, rarityRank } from './cartes-ui.js';
 
 const SLOTS = [1, 2, 3];
-const CARD_COLS = 'id, number, name, family, rarity, image_url, flavor, max_copies';
+const CARD_COLS = 'id, set_id, number, name, family, rarity, image_url, flavor, caption, member_id, max_copies';
+const PAGE = 1000; // pagination PostgREST (plafond par défaut de la base)
+
+/* Données d'affichage communes à la page : une seule requête groupée (cartes + nom de série, pour le total et le nom),
+   et l'arrivée des membres (RPC déjà utilisée par l'annuaire) seulement si une carte Identité doit être affichée. Mises en cache. */
+let metaP = null, sinceP = null;
+function loadMeta() {
+  return metaP ??= (async () => {
+    const names = new Map(), totals = new Map();
+    try {
+      const rows = [];
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await sb.from('hg_cards').select('set_id, hg_card_sets(name)').order('id').range(from, from + PAGE - 1);
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < PAGE) break;
+      }
+      for (const r of rows) {
+        totals.set(r.set_id, (totals.get(r.set_id) || 0) + 1);
+        if (r.hg_card_sets?.name) names.set(r.set_id, r.hg_card_sets.name);
+      }
+    } catch { /* facultatif : la carte s'affiche sans nom ni total de série */ }
+    return { names, totals };
+  })();
+}
+function loadSince() {
+  return sinceP ??= (async () => {
+    try {
+      const { data, error } = await sb.rpc('hg_members');
+      if (error) throw error;
+      return new Map((data || []).map((m) => [m.id, m.member_since]));
+    } catch { return new Map(); }
+  })();
+}
+/** Ajoute à une carte les champs d'affichage disponibles (série, total, arrivée du membre pour une Identité). */
+async function withMeta(cards) {
+  const [meta, since] = await Promise.all([loadMeta(), cards.some((c) => c?.rarity === 'identite') ? loadSince() : null]);
+  const decorate = (card) => (card ? {
+    ...card,
+    set_name: meta.names.get(card.set_id), set_total: meta.totals.get(card.set_id),
+    member_since: card.rarity === 'identite' ? (since?.get(card.member_id) ?? null) : null,
+  } : card);
+  return decorate;
+}
 
 /** Emplacements : slot → { copy_id, shiny, serial, card }. Ignore tout exemplaire qui n'est plus à ce membre. */
 async function loadShowcase(userId) {
@@ -49,19 +92,22 @@ export async function mountShowcase(el, { userId, isMe }) {
     <div class="shw-body" aria-busy="true"><div class="shw-skel" aria-hidden="true"></div></div>`;
   const body = el.querySelector('.shw-body');
 
-  const paint = (bySlot) => {
+  const paint = (bySlot, decorate) => {
     if (!isMe && !bySlot.size) { el.hidden = true; return; }
     const items = SLOTS.filter((s) => bySlot.has(s) || isMe).map((s) => {
       const hit = bySlot.get(s);
       return `<li>${hit
-        ? cardHtml(hit.card, { shiny: hit.shiny, serial: hit.serial })
+        ? cardHtml(decorate(hit.card), { shiny: hit.shiny, serial: hit.serial })
         : `<div class="shw-empty" aria-label="Emplacement ${s} libre"><span>Emplacement ${s} libre</span></div>`}</li>`;
     });
     body.innerHTML = `<ul class="shw-slots">${items.join('')}</ul>`;
   };
   const refresh = async () => {
     body.setAttribute('aria-busy', 'true');
-    try { paint(await loadShowcase(userId)); }
+    try {
+      const bySlot = await loadShowcase(userId);
+      paint(bySlot, await withMeta([...bySlot.values()].map((h) => h.card)));
+    }
     catch (e) { body.innerHTML = `<p class="empty">Vitrine indisponible (${esc(errMsg(e))}).</p>`; }
     body.setAttribute('aria-busy', 'false');
   };
@@ -84,6 +130,7 @@ async function openEditor(userId, onSaved, btn) {
   btn.disabled = false;
 
   const picks = SLOTS.map((s) => current.get(s)?.copy_id ?? null);
+  const decorate = await withMeta(collection.map((r) => r.hg_cards));
   const byCopy = new Map(collection.map((r) => [String(r.id), r]));
 
   const dlg = document.createElement('dialog');
@@ -115,13 +162,13 @@ async function openEditor(userId, onSaved, btn) {
     picksEl.innerHTML = SLOTS.map((s, i) => {
       const r = picks[i] != null ? byCopy.get(String(picks[i])) : null;
       return r
-        ? `<button type="button" class="shw-pick" data-slot="${i}" aria-label="Libérer l'emplacement ${s} (${esc(r.hg_cards.name)})">${cardHtml(r.hg_cards, { shiny: r.shiny, serial: r.serial, size: 'sm' })}<span class="shw-pick-x">Libérer</span></button>`
+        ? `<button type="button" class="shw-pick" data-slot="${i}" aria-label="Libérer l'emplacement ${s} (${esc(r.hg_cards.name)})">${cardHtml(decorate(r.hg_cards), { shiny: r.shiny, serial: r.serial, size: 'sm' })}<span class="shw-pick-x">Libérer</span></button>`
         : `<div class="shw-pick shw-pick-empty"><span>Emplacement ${s}</span></div>`;
     }).join('');
     gridEl.innerHTML = collection.length ? collection.map((r) => {
       const idx = picks.findIndex((p) => p != null && String(p) === String(r.id));
       const label = `${r.hg_cards.name}${idx >= 0 ? `, dans la vitrine, emplacement ${idx + 1}` : ', ajouter à la vitrine'}`;
-      return `<button type="button" class="shw-pickable${idx >= 0 ? ' is-picked' : ''}" data-copy="${esc(r.id)}" aria-label="${esc(label)}">${cardHtml(r.hg_cards, { shiny: r.shiny, serial: r.serial, size: 'sm' })}${idx >= 0 ? `<span class="shw-badge" aria-hidden="true">${idx + 1}</span>` : ''}</button>`;
+      return `<button type="button" class="shw-pickable${idx >= 0 ? ' is-picked' : ''}" data-copy="${esc(r.id)}" aria-label="${esc(label)}">${cardHtml(decorate(r.hg_cards), { shiny: r.shiny, serial: r.serial, size: 'sm' })}${idx >= 0 ? `<span class="shw-badge" aria-hidden="true">${idx + 1}</span>` : ''}</button>`;
     }).join('') : '<p class="empty">Tu n\'as pas encore de carte. Ouvre un booster pour commencer.</p>';
     dlg.querySelector('.shw-count').textContent = collection.length ? `(${collection.length} exemplaire${collection.length > 1 ? 's' : ''})` : '';
   };
