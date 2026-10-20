@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistance · Human Gang</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/assistance.css">
+</head>
+<body>
+  <main class="container" id="app">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Besoin d'un coup de main ?</div>
+        <h1 class="page-title">Assistance</h1>
+      </div>
+    </div>
+
+    <div class="support-layout">
+      <form class="card stack" id="support-form" novalidate>
+        <div class="field">
+          <label for="sp-pseudo">Ton pseudo</label>
+          <input id="sp-pseudo" name="pseudo" maxlength="40" autocomplete="nickname" required>
+          <p class="small muted hint" id="sp-pseudo-hint" hidden>Rempli depuis ton compte.</p>
+        </div>
+        <div class="field">
+          <label for="sp-subject">Sujet</label>
+          <select id="sp-subject" name="subject" required>
+            <option value="">Choisir…</option>
+            <option>Problème de compte / connexion</option>
+            <option>Secret Santa</option>
+            <option>Sortie IRL</option>
+            <option>Bug sur le site</option>
+            <option>Mes données personnelles</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sp-message">Message</label>
+          <textarea id="sp-message" name="message" rows="6" minlength="10" maxlength="4000" required placeholder="Explique ce qui se passe, ce que tu as essayé, sur quelle page…"></textarea>
+          <p class="small muted counter" id="sp-counter" aria-live="polite">0 / 4000</p>
+        </div>
+        <div class="field">
+          <label for="sp-contact" id="sp-contact-label">Ton pseudo Discord pour la réponse</label>
+          <input id="sp-contact" name="contact" maxlength="100" autocomplete="off" placeholder="ex. pseudo_discord">
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="sp-website">Ne pas remplir ce champ</label>
+          <input id="sp-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <p class="form-error" id="sp-error" role="alert" hidden></p>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="submit">Envoyer la demande</button>
+        </div>
+        <p class="small muted">Ta demande est transmise à l'admin sur Discord par le bot Human Gang. Ces infos servent uniquement à traiter ta demande. <a href="legal.html#confidentialite">Confidentialité</a></p>
+      </form>
+
+      <aside class="card card-hist stack support-aside">
+        <h2>Avant d'écrire</h2>
+        <ul class="tips">
+          <li><strong>Mot de passe oublié :</strong> utilise le lien « Mot de passe oublié » sur la page <a href="compte.html">Connexion</a>.</li>
+          <li><strong>Code d'invitation :</strong> il ne sert qu'une fois. S'il ne marche pas, demande-en un nouveau ici.</li>
+          <li><strong>Tes données :</strong> tu peux les exporter ou supprimer ton compte toi-même depuis ta page <a href="compte.html">Compte</a>.</li>
+        </ul>
+      </aside>
+    </div>
+
+    <section class="card done" id="support-done" hidden tabindex="-1" aria-labelledby="done-title">
+      <svg class="done-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+      <h2 id="done-title" class="display">Demande envoyée</h2>
+      <p>Ta demande est transmise à l'admin sur Discord par le bot Human Gang. Ces infos servent uniquement à traiter ta demande.</p>
+      <p class="muted" id="done-contact"></p>
+      <div class="btn-row">
+        <a class="btn btn-light" href="accueil.html">Retour à l'accueil</a>
+        <button class="btn btn-ghost" type="button" id="support-again">Nouvelle demande</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="assets/js/assistance.js"></script>
+</body>
+</html>

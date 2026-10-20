@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mon compte · Human Gang</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/compte.css">
+</head>
+<body>
+  <main class="container" id="app" aria-busy="true">
+    <div class="acc-loading"><span class="visually-hidden">Chargement…</span></div>
+  </main>
+
+  <dialog class="acc-dialog" id="delete-dialog" aria-labelledby="delete-title">
+    <form method="dialog" class="stack" id="delete-form">
+      <h2 id="delete-title" class="display">Supprimer mon compte</h2>
+      <p>Cette action est <strong>définitive</strong>. Seront supprimés : ton profil, tes participations et listes de souhaits Secret Santa, tes réponses aux sorties, tes votes, tes badges et ton avatar.</p>
+      <p class="small muted">Les idées déposées et les demandes d'assistance sont conservées sans lien avec ton profil. Les moments cultes que tu as créés restent dans l'historique du gang, sans ton nom.</p>
+      <label class="check"><input type="checkbox" id="delete-photos" checked> <span>Supprimer aussi les photos que j'ai ajoutées aux albums et aux moments</span></label>
+      <div class="field">
+        <label for="delete-confirm">Pour confirmer, écris <strong>SUPPRIMER</strong></label>
+        <input id="delete-confirm" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" type="button" id="delete-cancel">Annuler</button>
+        <button class="btn btn-primary btn-delete" value="confirm" type="button" id="delete-go" disabled>Supprimer définitivement</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/js/compte.js"></script>
+</body>
+</html>

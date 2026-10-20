@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sorties IRL · Human Gang</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/photos.css">
+  <link rel="stylesheet" href="assets/css/irl.css">
+</head>
+<body>
+  <main class="container irl" id="app">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">En vrai, pour de vrai</div>
+        <h1 class="page-title">Sorties IRL</h1>
+      </div>
+      <button class="btn btn-sand" type="button" id="btn-new">+ Proposer une sortie</button>
+    </div>
+
+    <section aria-labelledby="h-next" class="irl-section">
+      <h2 id="h-next" class="visually-hidden">Prochaine sortie</h2>
+      <div id="next"><div class="card card-irl irl-loading" aria-busy="true">Chargement des sorties…</div></div>
+    </section>
+
+    <section aria-labelledby="h-polls" class="irl-section" id="polls-section" hidden>
+      <div class="sec-head"><h2 id="h-polls" class="sec-title">Dates à caler</h2><span class="small muted">Vote pour toutes les dates qui t'arrangent</span></div>
+      <div id="polls" class="stack-lg"></div>
+    </section>
+
+    <section aria-labelledby="h-upcoming" class="irl-section" id="upcoming-section" hidden>
+      <div class="sec-head"><h2 id="h-upcoming" class="sec-title">À venir</h2></div>
+      <div id="upcoming" class="stack-lg"></div>
+    </section>
+
+    <section aria-labelledby="h-past" class="irl-section">
+      <div class="sec-head"><h2 id="h-past" class="sec-title">Sorties passées</h2><span class="small muted">Et leurs albums photo</span></div>
+      <div id="past" class="stack-lg"></div>
+    </section>
+
+    <p class="irl-ideas"><a href="compte.html#idees">Une idée de sortie ? Boîte à idées →</a></p>
+  </main>
+
+  <dialog class="hg-dialog" id="event-dialog" aria-labelledby="ev-dlg-title">
+    <form method="dialog" id="event-form" class="stack" novalidate>
+      <div class="dlg-head">
+        <h2 id="ev-dlg-title" class="dlg-title">Proposer une sortie</h2>
+        <button class="btn btn-ghost dlg-x" type="button" data-close aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <label for="ev-title">Titre</label>
+        <input id="ev-title" name="title" required maxlength="120" autocomplete="off" placeholder="Bowling + raclette">
+      </div>
+      <div class="field">
+        <label for="ev-location">Lieu</label>
+        <input id="ev-location" name="location" maxlength="160" autocomplete="off" placeholder="Lausanne, chez Max…">
+      </div>
+      <div class="field">
+        <label for="ev-desc">Description</label>
+        <textarea id="ev-desc" name="description" maxlength="3000" placeholder="Programme, budget, ce qu'il faut apporter…"></textarea>
+      </div>
+      <fieldset class="seg-field">
+        <legend class="label">Quand ?</legend>
+        <div class="seg">
+          <label><input type="radio" name="when" value="fixed" checked><span>Date fixée</span></label>
+          <label><input type="radio" name="when" value="poll"><span>Date à caler</span></label>
+        </div>
+      </fieldset>
+      <div class="field" id="ev-fixed">
+        <label for="ev-starts">Date et heure</label>
+        <input id="ev-starts" name="starts_at" type="datetime-local">
+      </div>
+      <div class="stack" id="ev-poll" hidden>
+        <span class="label">Dates proposées (2 à 6) — le gang vote ensuite</span>
+        <div id="ev-dates" class="stack"></div>
+        <div><button type="button" class="btn btn-ghost" id="ev-add-date">+ Ajouter une date</button></div>
+      </div>
+      <div class="field">
+        <label for="ev-cover">Image de couverture (optionnelle)</label>
+        <input id="ev-cover" name="cover" type="file" accept="image/*">
+        <div id="ev-cover-current" class="cover-current" hidden></div>
+      </div>
+      <div class="btn-row dlg-foot">
+        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
+        <button class="btn btn-primary" type="submit" id="ev-submit">Créer la sortie</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/js/irl.js"></script>
+</body>
+</html>

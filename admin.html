@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administration · Human Gang</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+  <main class="container" id="app">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Coulisses</div>
+        <h1 class="page-title">Administration</h1>
+      </div>
+      <p class="muted small admin-intro">Les attributions du Secret Santa et les infos privées des membres ne sont jamais affichées ici.</p>
+    </div>
+
+    <div class="admin-layout">
+      <nav class="admin-nav" aria-label="Sections de l'administration">
+        <a href="#apercu">Vue d'ensemble</a>
+        <a href="#membres">Membres &amp; invitations</a>
+        <a href="#secret-santa">Secret Santa</a>
+        <a href="#badges">Badges</a>
+        <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
+        <a href="#assistance">Assistance <span class="nav-count" data-count="assistance" hidden></span></a>
+        <a href="#bot">Bot Discord</a>
+        <a href="#theme">Thème</a>
+      </nav>
+
+      <div class="admin-content">
+        <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
+          <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
+          <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
+        </section>
+
+        <section id="membres" class="admin-section" aria-labelledby="h-membres">
+          <h2 id="h-membres" class="section-title">Membres &amp; invitations</h2>
+          <div class="row">
+            <div class="card">
+              <h3 class="card-title">Codes d'invitation</h3>
+              <p class="muted small">Chaque code permet à une personne de créer son compte. Il devient inutilisable une fois utilisé.</p>
+              <form class="inline-form" id="invite-form">
+                <div class="field">
+                  <label for="invite-count">Nombre de codes</label>
+                  <select id="invite-count">
+                    <option value="1">1</option><option value="3">3</option><option value="5">5</option><option value="10">10</option>
+                  </select>
+                </div>
+                <button class="btn btn-primary" type="submit">Générer</button>
+              </form>
+              <div id="invite-new"></div>
+              <div id="invite-list"></div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Membres <span class="muted" id="member-count"></span></h3>
+              <div id="member-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="secret-santa" class="admin-section" aria-labelledby="h-ss">
+          <h2 id="h-ss" class="section-title">Secret Santa</h2>
+          <div id="ss-root"><div class="empty">Chargement…</div></div>
+        </section>
+
+        <section id="badges" class="admin-section" aria-labelledby="h-badges">
+          <h2 id="h-badges" class="section-title">Badges</h2>
+          <div class="card">
+            <h3 class="card-title">Attribuer ou retirer</h3>
+            <div class="field narrow">
+              <label for="badge-member">Membre</label>
+              <select id="badge-member"></select>
+            </div>
+            <div id="badge-toggles" class="badge-toggles"></div>
+          </div>
+          <div class="badge-grid" id="badge-grid"></div>
+          <input type="file" id="badge-file" accept="image/png,image/webp,image/jpeg,image/svg+xml" hidden>
+        </section>
+
+        <section id="idees" class="admin-section" aria-labelledby="h-idees">
+          <h2 id="h-idees" class="section-title">Boîte à idées</h2>
+          <div class="card">
+            <div class="filters" role="group" aria-label="Filtrer les idées" id="idea-filters">
+              <button class="chip" type="button" data-filter="nouvelle" aria-pressed="true">Nouvelles</button>
+              <button class="chip" type="button" data-filter="retenue" aria-pressed="false">Retenues</button>
+              <button class="chip" type="button" data-filter="ecartee" aria-pressed="false">Écartées</button>
+              <button class="chip" type="button" data-filter="all" aria-pressed="false">Toutes</button>
+            </div>
+            <div id="idea-list"></div>
+          </div>
+        </section>
+
+        <section id="assistance" class="admin-section" aria-labelledby="h-assistance">
+          <h2 id="h-assistance" class="section-title">Assistance</h2>
+          <div class="card">
+            <div class="filters" role="group" aria-label="Filtrer les demandes" id="support-filters">
+              <button class="chip" type="button" data-filter="ouverte" aria-pressed="true">Ouvertes</button>
+              <button class="chip" type="button" data-filter="traitee" aria-pressed="false">Traitées</button>
+            </div>
+            <div id="support-list"></div>
+          </div>
+        </section>
+
+        <section id="bot" class="admin-section" aria-labelledby="h-bot">
+          <h2 id="h-bot" class="section-title">Bot Discord</h2>
+          <form class="card stack" id="bot-form">
+            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
+            <div class="grid-2">
+              <div class="field">
+                <label for="bot-channel">ID du salon d'annonces</label>
+                <input id="bot-channel" name="announce_channel_id" inputmode="numeric" autocomplete="off" placeholder="ex. 112233445566778899">
+              </div>
+              <div class="field">
+                <label for="bot-admin">Ton ID Discord (MP assistance)</label>
+                <input id="bot-admin" name="admin_discord_id" inputmode="numeric" autocomplete="off" placeholder="ex. 998877665544332211">
+              </div>
+            </div>
+            <fieldset class="toggles">
+              <legend class="label">Notifications envoyées</legend>
+              <label class="switch"><input type="checkbox" role="switch" name="draw"><span class="switch-ui" aria-hidden="true"></span><span>Tirage du Secret Santa <span class="muted small">annonce + MP aux participants</span></span></label>
+              <label class="switch"><input type="checkbox" role="switch" name="gift"><span class="switch-ui" aria-hidden="true"></span><span>Cadeaux <span class="muted small">MP « envoyé » / « reçu »</span></span></label>
+              <label class="switch"><input type="checkbox" role="switch" name="irl"><span class="switch-ui" aria-hidden="true"></span><span>Nouvelles sorties IRL <span class="muted small">annonce dans le salon</span></span></label>
+              <label class="switch"><input type="checkbox" role="switch" name="birthday"><span class="switch-ui" aria-hidden="true"></span><span>Anniversaires <span class="muted small">pas encore automatisé</span></span></label>
+              <label class="switch"><input type="checkbox" role="switch" name="support"><span class="switch-ui" aria-hidden="true"></span><span>Demandes d'assistance <span class="muted small">MP à toi</span></span></label>
+            </fieldset>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="submit">Enregistrer</button>
+              <button class="btn btn-ghost" type="button" id="bot-test">Envoyer un message de test</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="theme" class="admin-section" aria-labelledby="h-theme">
+          <h2 id="h-theme" class="section-title">Thème</h2>
+          <form class="card stack" id="theme-form">
+            <fieldset class="toggles">
+              <legend class="label">Mode</legend>
+              <label class="check"><input type="radio" name="mode" value="auto"> <span>Automatique selon la date <span class="muted small" id="theme-auto-label"></span></span></label>
+              <label class="check"><input type="radio" name="mode" value="forced"> <span>Forcer un thème</span></label>
+            </fieldset>
+            <div class="season-picker" id="season-picker" role="radiogroup" aria-label="Thème forcé"></div>
+            <p class="muted small">L'aperçu s'applique tout de suite sur cette page. Les autres visiteurs verront le changement après l'enregistrement.</p>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="submit">Enregistrer le thème</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <dialog class="hg-dialog" id="confirm-dlg" aria-labelledby="confirm-title">
+    <form method="dialog" class="stack">
+      <h2 id="confirm-title" class="dialog-title"></h2>
+      <p id="confirm-body" class="muted"></p>
+      <div class="btn-row dialog-actions">
+        <button class="btn btn-ghost" value="cancel" type="submit">Annuler</button>
+        <button class="btn btn-primary" value="ok" type="submit" id="confirm-ok">Confirmer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/js/admin.js"></script>
+</body>
+</html>

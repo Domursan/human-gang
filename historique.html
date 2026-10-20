@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historique · Human Gang</title>
+  <link rel="icon" href="Logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/photos.css">
+  <link rel="stylesheet" href="assets/css/historique.css">
+</head>
+<body>
+  <main class="container hist" id="app">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">Les archives du gang</div>
+        <h1 class="page-title">Historique</h1>
+      </div>
+      <button class="btn btn-light" type="button" id="btn-moment">+ Ajouter un moment culte</button>
+    </div>
+
+    <div class="hist-filters" role="group" aria-label="Filtrer la frise">
+      <button type="button" class="hf" data-filter="all" aria-pressed="true">Tout</button>
+      <button type="button" class="hf hf-ss" data-filter="ss" aria-pressed="false">Secret Santa</button>
+      <button type="button" class="hf hf-irl" data-filter="irl" aria-pressed="false">IRL &amp; albums</button>
+      <button type="button" class="hf hf-moment" data-filter="moment" aria-pressed="false">Moments cultes</button>
+    </div>
+    <p class="visually-hidden" aria-live="polite" id="hist-live"></p>
+
+    <div id="timeline" class="timeline"><p class="muted">Chargement de l'historique…</p></div>
+  </main>
+
+  <dialog class="hg-dialog" id="moment-dialog" aria-labelledby="mo-dlg-title">
+    <form method="dialog" id="moment-form" class="stack" novalidate>
+      <div class="dlg-head">
+        <h2 id="mo-dlg-title" class="dlg-title">Ajouter un moment culte</h2>
+        <button class="btn btn-ghost dlg-x" type="button" data-close aria-label="Fermer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <label for="mo-title">Titre</label>
+        <input id="mo-title" name="title" required maxlength="120" autocomplete="off" placeholder="La nuit où Max a perdu ses clés trois fois">
+      </div>
+      <div class="field">
+        <label for="mo-date">Date</label>
+        <input id="mo-date" name="happened_on" type="date" required>
+      </div>
+      <div class="field">
+        <label for="mo-body">Le récit</label>
+        <textarea id="mo-body" name="body" maxlength="3000" placeholder="Raconte, pour la postérité."></textarea>
+      </div>
+      <div class="field">
+        <label for="mo-image">Image (optionnelle)</label>
+        <input id="mo-image" name="image" type="file" accept="image/*">
+        <div id="mo-image-current" hidden></div>
+      </div>
+      <div class="btn-row dlg-foot">
+        <button class="btn btn-ghost" type="button" data-close>Annuler</button>
+        <button class="btn btn-primary" type="submit" id="mo-submit">Ajouter</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="assets/js/historique.js"></script>
+</body>
+</html>
