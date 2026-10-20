@@ -83,6 +83,12 @@ export function cardHtml(card, opts = {}) {
   const flavor = miss ? '' : card.flavor;
   const caption = miss ? '' : card.caption;
   const ms = yearOf(card.member_since);
+  // Ajustement du texte à la place disponible : titre sur 1 ligne réduite ou 2 lignes, ambiance en 3 tailles.
+  const plateTxt = ident ? (miss ? '???' : "Carte d'identité") : name;
+  const pl = plateTxt.length;
+  const plateFit = pl > 28 ? ' hgc-fit-2' : pl > 20 ? ' hgc-fit-1' : '';
+  const al = (flavor ? String(flavor).length + 4 : 0) + (caption ? String(caption).length + 12 : 0);
+  const ambFit = al > 150 ? ' hgc-fit-2' : al > 100 ? ' hgc-fit-1' : '';
 
   let win;
   if (miss) {
@@ -112,10 +118,10 @@ export function cardHtml(card, opts = {}) {
       ${LAYERS}
       ${opts.shiny ? '<span class="hgc-holo"></span>' : ''}
       <span class="hgc-gems">${gemsHtml(r, rarityRank(r))}</span>
-      <span class="hgc-plate"><span class="hgc-plate-t">${esc(ident ? (miss ? '???' : "Carte d'identité") : name)}</span></span>
+      <span class="hgc-plate${plateFit}"><span class="hgc-plate-t">${esc(plateTxt)}</span></span>
       ${win}
       <span class="hgc-fam">${esc(famLine)}</span>
-      <span class="hgc-amb">${flavor ? `<em class="hgc-flavor">« ${esc(flavor)} »</em>` : ''}${caption ? `<span class="hgc-cap">${esc(caption)}</span>` : ''}</span>
+      <span class="hgc-amb${ambFit}">${flavor ? `<em class="hgc-flavor">« ${esc(flavor)} »</em>` : ''}${caption ? `<span class="hgc-cap">${esc(caption)}</span>` : ''}</span>
       <span class="hgc-pied"><span class="hgc-pied-n">${esc(miss ? '' : numberLabel(card))}</span><span class="hgc-pied-s">${esc(serialTxt)}</span></span>
     </span>
     ${count}${lock}

@@ -3,7 +3,9 @@
    donc la composition est identique en sm (112 px), md (180 px) et lg (300 px).
    Mythique : style doré « Premium » (cadre à double filet, fond bordeaux, étoiles). Dos : « Pop BD ». */
 
-.hgc { --w: 180px; --u: calc(var(--w) / 252);
+/* La carte se met à l'échelle de sa largeur réelle : si un parent la rétrécit (grille, colonne de dialogue),
+   tout l'intérieur suit (unités de conteneur), au lieu de déborder du cadre. */
+.hgc { --w: 180px; --u: calc(100cqw / 252); container-type: inline-size; max-width: 100%;
   --s4: calc(var(--u) * 4); --s8: calc(var(--u) * 8); --s12: calc(var(--u) * 12);
   /* bords en escalier (même tracé que la maquette : marche de 4 unités) */
   --st12: polygon(0 var(--s12), var(--s4) var(--s12), var(--s4) var(--s8), var(--s8) var(--s8), var(--s8) var(--s4), var(--s12) var(--s4), var(--s12) 0,
@@ -97,9 +99,16 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
 .hgc-plate::before, .hgc-plate::after { content: ""; position: absolute; top: 50%; width: calc(var(--u) * 6); height: calc(var(--u) * 14); margin-top: calc(var(--u) * -7); background: var(--acc); }
 .hgc-plate::before { left: calc(var(--u) * -7); } .hgc-plate::after { right: calc(var(--u) * -7); }
 .hgc-plate-t { display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: max(6px, calc(var(--u) * 13)); font-weight: 700; line-height: 1.2; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+  font-size: max(6px, calc(var(--u) * 13)); font-weight: 700; line-height: 1.35; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
 
-.hgc-win { position: absolute; top: calc(var(--u) * 84); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 138);
+/* Titre long : police réduite (fit-1), puis deux lignes (fit-2) — plus de points de suspension. */
+.hgc-plate.hgc-fit-1 .hgc-plate-t { font-size: max(5px, calc(var(--u) * 10)); letter-spacing: .02em; }
+.hgc-plate.hgc-fit-2 .hgc-plate-t { font-size: max(5px, calc(var(--u) * 9.5)); letter-spacing: .01em; line-height: 1.12;
+  white-space: normal; text-overflow: clip; text-align: center; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.hgc-mythique .hgc-plate.hgc-fit-1 .hgc-plate-t { font-size: max(5px, calc(var(--u) * 11)); }
+.hgc-mythique .hgc-plate.hgc-fit-2 .hgc-plate-t { font-size: max(5px, calc(var(--u) * 10.5)); }
+
+.hgc-win { position: absolute; top: calc(var(--u) * 84); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 118);
   border: calc(var(--u) * 3) solid var(--acc); overflow: hidden; display: flex; align-items: center; justify-content: center;
   background-color: #14122a; background-image: repeating-conic-gradient(rgba(255, 255, 255, .07) 0 25%, transparent 0 50%);
   background-size: calc(var(--u) * 12) calc(var(--u) * 12); }
@@ -120,14 +129,17 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
 .hgc-idv { display: block; margin-bottom: calc(var(--u) * 7); font-size: max(6px, calc(var(--u) * 12)); font-weight: 700; line-height: 1.2;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.hgc-fam { position: absolute; top: calc(var(--u) * 228); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 14);
+.hgc-fam { position: absolute; top: calc(var(--u) * 208); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 14);
   display: block; text-align: center; font-size: max(5px, calc(var(--u) * 10.5)); line-height: calc(var(--u) * 14); letter-spacing: .16em;
   text-transform: uppercase; color: var(--acc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.hgc-amb { position: absolute; top: calc(var(--u) * 248); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 66);
-  padding: calc(var(--u) * 6) calc(var(--u) * 8); display: flex; flex-direction: column; justify-content: center; overflow: hidden;
+.hgc-amb { position: absolute; top: calc(var(--u) * 228); left: calc(var(--u) * 22); right: calc(var(--u) * 22); height: calc(var(--u) * 86);
+  padding: calc(var(--u) * 6) calc(var(--u) * 8); display: flex; flex-direction: column; justify-content: flex-start; overflow: hidden;
   border: calc(var(--u) * 2) solid var(--box-line); background: rgba(0, 0, 0, .38);
   font-size: max(5px, calc(var(--u) * 10.5)); line-height: 1.3; }
+.hgc-amb.hgc-fit-1 { font-size: max(5px, calc(var(--u) * 9)); }
+.hgc-amb.hgc-fit-2 { font-size: max(5px, calc(var(--u) * 8)); }
+.hgc-amb.hgc-fit-1 .hgc-cap, .hgc-amb.hgc-fit-2 .hgc-cap { font-size: max(5px, calc(var(--u) * 8.5)); margin-top: calc(var(--u) * 3); }
 .hgc-mythique .hgc-amb { background: rgba(255, 220, 120, .05); }
 .hgc-flavor { display: block; margin: 0; font-style: italic; }
 .hgc-mythique .hgc-flavor { font-family: Georgia, "Times New Roman", serif; }
