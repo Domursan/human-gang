@@ -355,7 +355,7 @@ export function mountHistory(ctx) {
     const s = stats(list);
     if (!s.n) { $('#hx-stats').innerHTML = ''; return; }
     const pct = Math.round((s.mine / s.n) * 100);
-    const tile = (big, label, extra = '') => `<div class="hx-stat"><strong class="hx-big">${big}</strong><span class="hx-lbl">${label}</span>${extra}</div>`;
+    const tile = (big, label, extra = '', txt = false) => `<div class="hx-stat${txt ? ' hx-stat-txt' : ''}"><strong class="hx-big">${big}</strong><span class="hx-lbl">${label}</span>${extra}</div>`;
     const tiles = [
       tile(s.n, s.n > 1 ? 'rencontres' : 'rencontre'),
       tile(s.places, s.places > 1 ? 'lieux différents' : 'lieu différent'),
@@ -364,7 +364,7 @@ export function mountHistory(ctx) {
         <span class="hx-bar" aria-hidden="true"><span style="width:${pct}%"></span></span></div>`,
       tile(esc(fmtDate(s.first)), 'première rencontre', '', true),
     ];
-    if (s.best && s.n > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.plural(s.best.c, 'rencontre', 'rencontres')}`));
+    if (s.best && s.n > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.plural(s.best.c, 'rencontre', 'rencontres')}`, '', true));
     if (s.streak.len >= 2) tiles.push(tile(`${s.streak.len} mois`, `plus longue série d'affilée (jusqu'en ${esc(monthLabel(s.streak.end))})`));
     const maxP = Math.max(1, ...s.topPlaces.map((p) => p.n));
     const maxU = Math.max(1, ...s.topPeople.map((p) => p.n));

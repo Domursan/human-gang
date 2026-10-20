@@ -1,6 +1,7 @@
 // ===== Humane Gang — Sorties IRL =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify } from './core.js';
 import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { mountHistory } from './irl-history.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -27,6 +28,7 @@ const I = {
 
 /* ---------- État ---------- */
 const S = { members: new Map(), events: [], rsvps: [], dates: [], votes: [], photos: [], urls: new Map(), expanded: new Set() };
+let hx;   // historique des rencontres (monté plus bas, une fois les helpers définis)
 
 async function load() {
   const [m, ev, rs, dt, vt, ph] = await Promise.all([
@@ -69,9 +71,11 @@ function rsvpOf(eventId) {
 function classify() {
   const now = Date.now();
   const dated = S.events.filter((e) => e.starts_at);
-  const future = dated.filter((e) => new Date(e.starts_at).getTime() >= now - GRACE_MS)
+  // Une rencontre ajoutée après coup (retro) est toujours « passée », même si elle date d'il y a moins de 6 h.
+  const isPast = (e) => e.retro || new Date(e.starts_at).getTime() < now - GRACE_MS;
+  const future = dated.filter((e) => !isPast(e))
     .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
-  const past = dated.filter((e) => new Date(e.starts_at).getTime() < now - GRACE_MS)
+  const past = dated.filter(isPast)
     .sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
   const polls = S.events.filter((e) => !e.starts_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   return { next: future[0] || null, upcoming: future.slice(1), polls, past };
@@ -101,9 +105,10 @@ function meta(ev, { creator = true } = {}) {
   if (creator && ev.created_by) li.push(`<li>${I.user}<span>Proposée par ${esc(pseudo(ev.created_by))}</span></li>`);
   return li.length ? `<ul class="meta">${li.join('')}</ul>` : '';
 }
-function ownerActions(ev) {
+function ownerActions(ev, { who = false } = {}) {
   if (!canEdit(ev)) return '';
   return `<div class="owner-actions">
+    ${who ? `<button type="button" class="btn btn-ghost btn-sm" data-act="who" data-id="${esc(ev.id)}" data-key="who:${esc(ev.id)}">${I.people}<span>Qui était là ?</span></button>` : ''}
     <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(ev.id)}" data-key="edit:${esc(ev.id)}">${I.edit}<span>Modifier</span></button>
     <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(ev.id)}">${I.trash}<span>Supprimer</span></button>
   </div>`;
@@ -243,11 +248,12 @@ function renderPast(ev) {
     <div class="past-head">
       ${dateTile(ev.starts_at)}
       <div class="stack-sm past-info">
+        ${ev.retro ? '<span class="pill retro-pill">Ajoutée après coup</span>' : ''}
         <h3 class="ev-title">${esc(ev.title)}</h3>
         ${meta(ev, { creator: false })}
         <p class="small muted past-people">${I.people}<span>${r.oui.length ? `${plural(r.oui.length, 'présent', 'présents')} : ${r.oui.map((id) => esc(pseudo(id))).join(', ')}` : 'Présents non renseignés'}</span></p>
       </div>
-      ${ownerActions(ev)}
+      ${ownerActions(ev, { who: true })}
     </div>
     ${albumHtml(ev)}
   </article>`;
@@ -259,6 +265,7 @@ async function render() {
   const albumEvents = [...past, ...(next && new Date(next.starts_at) <= Date.now() ? [next] : [])];
   const paths = [
     ...(next?.cover_path ? [next.cover_path] : []),
+    ...past.map((e) => e.cover_path).filter(Boolean),   // miniatures de l'historique
     ...albumEvents.flatMap((e) => photosOf(e.id).map((p) => p.path)),
   ];
   S.urls = await signedUrls(paths);
@@ -273,6 +280,7 @@ async function render() {
   $('#past').innerHTML = past.length
     ? past.map(renderPast).join('')
     : '<p class="empty">Aucune sortie passée pour l\'instant. Les souvenirs arrivent bientôt.</p>';
+  hx.render();
   if (focusKey) $(`[data-key="${CSS.escape(focusKey)}"]`)?.focus();
 }
 
@@ -281,8 +289,10 @@ async function refresh() {
 }
 
 function goToHash() {
+  if (location.hash === '#historique') { if (!hx.isOpen()) hx.setTab('historique'); return; }
   const m = location.hash.match(/^#event-([0-9a-f-]{36})$/i);
   if (!m) return;
+  if (hx.isOpen()) hx.setTab('sorties');
   const el = document.getElementById(`event-${m[1]}`);
   if (!el) return;
   el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -391,7 +401,8 @@ $('#app').addEventListener('click', (e) => {
   if (act === 'rsvp') setRsvp(id, b.dataset.status, b);
   else if (act === 'vote') toggleVote(b.dataset.date, b);
   else if (act === 'fix') fixDate(id, b.dataset.date);
-  else if (act === 'edit') openEventDialog(S.events.find((x) => x.id === id));
+  else if (act === 'edit') { const ev = S.events.find((x) => x.id === id); if (ev?.retro) hx.openRetro(ev); else openEventDialog(ev); }
+  else if (act === 'who') hx.openWho(S.events.find((x) => x.id === id));
   else if (act === 'delete') deleteEvent(id);
   else if (act === 'new') openEventDialog();
   else if (act === 'photo') openPhoto(id, Number(b.dataset.idx));
@@ -402,6 +413,7 @@ $('#app').addEventListener('change', (e) => {
   if (inp) uploadPhotos(inp.dataset.upload, inp);
 });
 $('#btn-new').addEventListener('click', () => openEventDialog());
+$('#btn-retro').addEventListener('click', () => hx.openRetro());
 window.addEventListener('hashchange', goToHash);
 
 /* ---------- Formulaire de sortie ---------- */
@@ -536,5 +548,6 @@ form.addEventListener('submit', async (e) => {
 });
 
 /* ---------- Démarrage ---------- */
+hx = mountHistory({ me, isAdmin, S, classify, member, pseudo, canEdit, plural, tint, I, refresh });
 await refresh();
 goToHash();
