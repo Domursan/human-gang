@@ -220,6 +220,13 @@ begin
   if cardinality(p_give) + cardinality(p_want) = 0 and p_give_p + p_want_p = 0 then raise exception 'L''offre est vide'; end if;
   if (select count(*) from hg_card_trades where from_user = me and status = 'proposee') >= coalesce((c->>'max_open_trades')::int, 10) then
     raise exception 'Trop d''offres en cours'; end if;
+  -- Contre-proposition : l'offre d'origine est remplacée et ses cartes débloquées avant les contrôles
+  if p_parent is not null then
+    select * into par from hg_card_trades where id = p_parent for update;
+    if not found or par.status <> 'proposee' or par.to_user <> me or par.from_user <> p_to then raise exception 'Offre d''origine invalide'; end if;
+    update hg_card_trades set status = 'remplacee', resolved_at = now() where id = p_parent;
+    update hg_card_copies set locked_trade = null where locked_trade = p_parent;
+  end if;
   select count(*) into ng from hg_card_copies x join hg_cards k on k.id = x.card_id
     where x.id = any(p_give) and x.owner_id = me and x.recycled_at is null and x.locked_trade is null and k.tradeable;
   select count(*) into nw from hg_card_copies x join hg_cards k on k.id = x.card_id
@@ -227,12 +234,6 @@ begin
   if ng <> cardinality(p_give) or nw <> cardinality(p_want) then raise exception 'Certaines cartes ne sont pas échangeables'; end if;
   select paillettes into bal from hg_wallets where user_id = me;
   if coalesce(bal, 0) < p_give_p then raise exception 'Pas assez de Paillettes'; end if;
-  if p_parent is not null then
-    select * into par from hg_card_trades where id = p_parent for update;
-    if not found or par.status <> 'proposee' or par.to_user <> me or par.from_user <> p_to then raise exception 'Offre d''origine invalide'; end if;
-    update hg_card_trades set status = 'remplacee', resolved_at = now() where id = p_parent;
-    update hg_card_copies set locked_trade = null where locked_trade = p_parent;
-  end if;
   insert into hg_card_trades(from_user, to_user, from_paillettes, to_paillettes, message, parent_id)
     values (me, p_to, p_give_p, p_want_p, left(p_message, 500), p_parent) returning id into t;
   insert into hg_card_trade_items(trade_id, copy_id, side) select t, unnest(p_give), 'from';
