@@ -8,9 +8,15 @@ const IC = {
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
+  merge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.5 6h3a4 4 0 0 1 4 4v0"/></svg>',
 };
 
-const G = { root: null, openFiche: null, onChange: async () => {}, list: [], error: null };
+const G = {
+  root: null, openFiche: null, onChange: async () => {},
+  list: [], error: null,            // fantômes
+  sugg: [], suggError: null,        // correspondances possibles (hg_ghost_suggestions)
+  merge: null,                      // liaison en cours : { ghostId, slot, memberId, memberPseudo, members, loading, error, busy }
+};
 
 function check(res) { if (res.error) throw res.error; return res.data; }
 async function busy(btn, fn) {
@@ -39,6 +45,8 @@ async function copyText(text, done = 'Copié dans le presse-papiers') {
 }
 /** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
 const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
+/** Comparaison sans accents ni casse. */
+const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
 /** Code actif = non expiré. Un seul code par fantôme : en générer un nouveau invalide l'ancien. */
 export const ghostCodeActive = (g) => !!g.invite_code && !!g.invite_expires_at && new Date(g.invite_expires_at) > new Date();
@@ -65,6 +73,19 @@ export async function ghostDirectory() {
     return new Map((await fetchAdminGhosts()).map((g) => [g.id, { id: g.id, pseudo: `${g.pseudo} (fantôme)`, avatar_url: g.avatar_url, is_ghost: true }]));
   } catch (e) { console.warn('[fantômes]', e); return new Map(); }
 }
+/** Correspondances fantôme ↔ compte inscrit (même ID Discord ou même pseudo). */
+async function fetchSuggestions() {
+  const rows = check(await sb.rpc('hg_ghost_suggestions'));
+  return (rows ?? []).filter((r) => r && r.ghost_id && r.user_id);
+}
+/** Comptes inscrits (non fantômes), triés par pseudo. */
+async function loadMembers() {
+  const data = check(await sb.rpc('hg_members'));
+  return (data ?? [])
+    .filter((m) => m && m.id)
+    .map((m) => ({ id: m.id, pseudo: m.pseudo || 'Sans pseudo' }))
+    .sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
+}
 
 /* ---------- Rendu ---------- */
 function formHtml() {
@@ -83,6 +104,15 @@ function formHtml() {
       </div>
       <div class="btn-row"><button class="btn btn-primary" type="submit">Créer le fantôme</button></div>
     </form>`;
+}
+
+/** Texte d'une correspondance, déjà échappé. */
+function reasonHtml(reason) {
+  const s = norm(reason);
+  const parts = [];
+  if (/discord/.test(s)) parts.push('même ID Discord');
+  if (/pseudo/.test(s)) parts.push('même pseudo');
+  return parts.length ? parts.join(' et ') : esc(reason || 'correspondance');
 }
 
 function itemHtml(g) {
@@ -113,9 +143,33 @@ function itemHtml(g) {
       <div class="agh-actions">
         <button class="btn btn-primary btn-sm" type="button" data-agh="invite">${active ? 'Régénérer le code d\'invitation' : 'Générer le code d\'invitation'}</button>
         <button class="btn btn-ghost btn-sm" type="button" data-agh="fiche">Compléter la fiche</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-agh="link">${IC.merge} Lier à un compte inscrit</button>
         <button class="btn btn-danger btn-sm" type="button" data-agh="delete">${IC.trash} Supprimer le fantôme</button>
       </div>
+      <div class="agh-merge-slot" data-slot="${esc(`item-${g.id}`)}"></div>
     </li>`;
+}
+
+function renderSugg() {
+  const box = G.root?.querySelector('#agh-sugg');
+  if (!box) return;
+  const list = box.querySelector('#agh-sugg-list');
+  if (G.suggError) {
+    box.hidden = false;
+    list.innerHTML = `<li class="agh-sugg-err">Impossible de vérifier les correspondances : ${esc(errMsg(G.suggError))}</li>`;
+    return;
+  }
+  box.hidden = !G.sugg.length;
+  list.innerHTML = G.sugg.map((s) => `
+    <li class="agh-sugg-item">
+      <p class="agh-sugg-text">Le compte inscrit <strong>${esc(s.user_pseudo || 'Sans pseudo')}</strong> ressemble au fantôme <strong>${esc(s.ghost_pseudo)}</strong> — ${reasonHtml(s.reason)}.</p>
+      <div class="agh-sugg-row">
+        <button class="btn btn-primary btn-sm" type="button" data-agh="sugg-link"
+          data-ghost="${esc(s.ghost_id)}" data-user="${esc(s.user_id)}" data-pseudo="${esc(s.user_pseudo || '')}"
+          aria-label="Lier le compte ${esc(s.user_pseudo || '')} au fantôme ${esc(s.ghost_pseudo)}">Lier</button>
+      </div>
+      <div class="agh-merge-slot" data-slot="${esc(`sugg-${s.ghost_id}-${s.user_id}`)}"></div>
+    </li>`).join('');
 }
 
 function renderList() {
@@ -127,6 +181,139 @@ function renderList() {
   box.innerHTML = G.list.length
     ? G.list.map(itemHtml).join('')
     : '<div class="empty">Aucun fantôme pour l\'instant.</div>';
+}
+
+function renderLists() {
+  if (!G.root) return;
+  // Une liaison dont le fantôme a disparu n'a plus de sens.
+  if (G.merge && !G.error && !G.list.some((g) => g.id === G.merge.ghostId)) G.merge = null;
+  renderSugg();
+  renderList();
+  paintMerge();
+}
+
+/* ---------- Panneau de liaison (dans la fiche du fantôme ou sous la correspondance) ---------- */
+function mergeHtml(ghostPseudo) {
+  return `
+    <div class="agh-merge" data-merge>
+      <p class="agh-merge-title">Lier « ${esc(ghostPseudo)} » à un compte inscrit</p>
+      <div class="field"><label for="agh-merge-q">Chercher un membre</label>
+        <input id="agh-merge-q" type="search" autocomplete="off" placeholder="Pseudo du membre"></div>
+      <div class="field"><label for="agh-merge-sel">Compte inscrit</label>
+        <select id="agh-merge-sel"></select></div>
+      <div class="agh-merge-recap" id="agh-merge-recap" aria-live="polite"></div>
+      <p class="agh-merge-err" id="agh-merge-err" role="alert" hidden></p>
+      <div class="agh-merge-btns">
+        <button class="btn btn-ghost" type="button" data-agh="merge-cancel">Annuler</button>
+        <button class="btn btn-danger" type="button" data-agh="merge-confirm" disabled>Lier et supprimer le fantôme</button>
+      </div>
+    </div>`;
+}
+
+/** Remplit la liste des comptes inscrits selon la recherche et la sélection courantes. */
+function fillSelect() {
+  const m = G.merge; const sel = G.root?.querySelector('#agh-merge-sel');
+  if (!m || !sel) return;
+  const q = norm(G.root.querySelector('#agh-merge-q')?.value);
+  const all = m.members ?? [];
+  const shown = all.filter((x) => !q || norm(x.pseudo).includes(q) || x.id === m.memberId);
+  const placeholder = m.loading ? 'Chargement…' : all.length ? '— Choisir un membre —' : 'Aucun compte inscrit';
+  sel.innerHTML = `<option value="">${esc(placeholder)}</option>`
+    + (q && all.length && !shown.length ? '<option value="" disabled>Aucun membre ne correspond</option>' : '')
+    + shown.map((x) => `<option value="${esc(x.id)}">${esc(x.pseudo)}</option>`).join('');
+  sel.value = m.memberId ?? '';
+}
+
+/** Met à jour le récapitulatif, l'état des boutons et l'erreur, sans reconstruire la liste. */
+function syncMerge() {
+  const m = G.merge; if (!m || !G.root) return;
+  const wrap = G.root.querySelector('[data-merge]'); if (!wrap) return;
+  const ghost = G.list.find((g) => g.id === m.ghostId);
+  const member = (m.members ?? []).find((x) => x.id === m.memberId)
+    ?? (m.memberId && m.memberPseudo ? { id: m.memberId, pseudo: m.memberPseudo } : null);
+  const recap = wrap.querySelector('#agh-merge-recap');
+  const ok = wrap.querySelector('[data-agh="merge-confirm"]');
+  const err = wrap.querySelector('#agh-merge-err');
+  if (m.loading) recap.innerHTML = '<p class="small muted">Chargement des comptes inscrits…</p>';
+  else if (!member) recap.innerHTML = '<p class="small muted">Choisis le compte inscrit qui reprendra ce fantôme.</p>';
+  else recap.innerHTML = `
+    <p>Les badges, présences, cartes et infos de <strong>${esc(ghost?.pseudo ?? '')}</strong> passeront sur le compte de <strong>${esc(member.pseudo)}</strong>. Le fantôme sera supprimé. <strong>Action irréversible.</strong></p>
+    <p class="small muted">Les champs vides du compte (date d'arrivée, anniversaire, ID Discord, avatar) seront complétés avec ceux du fantôme.</p>`;
+  ok.disabled = m.busy || !member;
+  ok.textContent = m.busy ? 'Liaison en cours…' : 'Lier et supprimer le fantôme';
+  err.hidden = !m.error;
+  err.textContent = m.error ? m.error : '';
+  wrap.querySelector('#agh-merge-sel').disabled = m.busy || m.loading || !(m.members ?? []).length;
+  wrap.querySelector('#agh-merge-q').disabled = m.busy;
+  wrap.querySelector('[data-agh="merge-cancel"]').disabled = m.busy;
+}
+
+/** Place le panneau dans l'emplacement de la liaison en cours (et nulle part ailleurs). */
+function paintMerge() {
+  if (!G.root) return;
+  G.root.querySelectorAll('[data-merge]').forEach((n) => n.remove());
+  const m = G.merge; if (!m) return;
+  const ghost = G.list.find((g) => g.id === m.ghostId);
+  const slot = G.root.querySelector(`[data-slot="${CSS.escape(m.slot)}"]`);
+  if (!ghost || !slot) { G.merge = null; return; }
+  slot.innerHTML = mergeHtml(ghost.pseudo);
+  fillSelect();
+  syncMerge();
+}
+
+/** Ouvre le panneau de liaison, puis charge la liste des comptes inscrits. */
+async function openMerge(ghostId, slot, pre = {}) {
+  G.merge = { ghostId, slot, memberId: pre.id ?? null, memberPseudo: pre.pseudo ?? null, members: null, loading: true, error: null, busy: false };
+  paintMerge();
+  const panel = G.root?.querySelector('[data-merge]');
+  panel?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  let members = null; let error = null;
+  try { members = await loadMembers(); } catch (e) { error = errMsg(e); console.warn('[fantômes]', e); }
+  const m = G.merge;
+  if (!m || m.ghostId !== ghostId || m.slot !== slot) return; // fermé ou remplacé entre-temps
+  m.members = members; m.loading = false; m.error = error;
+  fillSelect(); syncMerge();
+  G.root.querySelector('#agh-merge-q')?.focus({ preventScroll: true });
+}
+
+/** Lance hg_ghost_merge après le récapitulatif affiché. */
+async function confirmMerge() {
+  const m = G.merge;
+  if (!m || !m.memberId || m.busy) return;
+  const ghost = G.list.find((g) => g.id === m.ghostId);
+  const member = (m.members ?? []).find((x) => x.id === m.memberId) ?? { pseudo: m.memberPseudo || 'ce compte' };
+  m.busy = true; m.error = null; syncMerge();
+  try {
+    const res = check(await sb.rpc('hg_ghost_merge', { p_ghost: m.ghostId, p_user: m.memberId }));
+    const row = Array.isArray(res) ? res[0] : res;
+    const moved = Number(typeof row === 'object' && row !== null ? row.moved : row) || 0;
+    G.merge = null;
+    toast(`« ${ghost?.pseudo ?? 'Fantôme'} » lié à « ${member.pseudo} » : ${moved} élément${moved > 1 ? 's' : ''} transféré${moved > 1 ? 's' : ''}`, 'ok');
+    await refreshGhostsSection();
+    try { await G.onChange(); } catch (e) { console.warn('[fantômes] resynchronisation', e); }
+  } catch (e) {
+    if (G.merge === m) { m.busy = false; m.error = errMsg(e); syncMerge(); }
+  }
+}
+
+function renderInitialShell(root) {
+  root.innerHTML = `
+    <section class="card agh-card agh-sugg" id="agh-sugg" aria-labelledby="agh-sugg-t" hidden>
+      <div class="agh-list-head"><h3 class="card-title" id="agh-sugg-t">Correspondances possibles</h3></div>
+      <p class="small muted">Ces comptes inscrits ressemblent à un fantôme (même ID Discord ou même pseudo). Lie-les pour tout transférer.</p>
+      <ul class="agh-sugg-list" id="agh-sugg-list"></ul>
+    </section>
+    <div class="card agh-card">
+      <p class="agh-lead">Prépare un profil avant l'inscription. Invisible pour les membres. La personne le récupère en s'inscrivant avec son code nominatif, ou avec n'importe quel lien si elle choisit exactement le même pseudo. Tu peux aussi le lier plus tard à un compte déjà inscrit.</p>
+      ${formHtml()}
+    </div>
+    <div class="card agh-card">
+      <div class="agh-list-head">
+        <h3 class="card-title">Fantômes en attente</h3>
+        <p class="small muted" id="agh-count" aria-live="polite"></p>
+      </div>
+      <ul class="agh-list" id="agh-list"><li class="empty">Chargement…</li></ul>
+    </div>`;
 }
 
 /* ---------- Actions ---------- */
@@ -175,18 +362,7 @@ async function removeGhost(g, btn) {
  */
 export function mountGhostsSection(root, { openFiche, onChange } = {}) {
   G.root = root; G.openFiche = openFiche || null; G.onChange = onChange || (async () => {});
-  root.innerHTML = `
-    <div class="card agh-card">
-      <p class="agh-lead">Prépare un profil avant l'inscription. Invisible pour les membres. À l'inscription avec son code, la personne récupère tout.</p>
-      ${formHtml()}
-    </div>
-    <div class="card agh-card">
-      <div class="agh-list-head">
-        <h3 class="card-title">Fantômes en attente</h3>
-        <p class="small muted" id="agh-count" aria-live="polite"></p>
-      </div>
-      <ul class="agh-list" id="agh-list"><li class="empty">Chargement…</li></ul>
-    </div>`;
+  renderInitialShell(root);
 
   root.addEventListener('submit', (ev) => {
     if (ev.target.id !== 'agh-form') return;
@@ -194,22 +370,43 @@ export function mountGhostsSection(root, { openFiche, onChange } = {}) {
     const btn = ev.submitter;
     busy(btn, () => createGhost(ev.target, btn));
   });
+  root.addEventListener('input', (ev) => {
+    if (ev.target.id === 'agh-merge-q') { fillSelect(); syncMerge(); }
+  });
+  root.addEventListener('change', (ev) => {
+    if (ev.target.id !== 'agh-merge-sel' || !G.merge) return;
+    G.merge.memberId = ev.target.value || null;
+    G.merge.memberPseudo = null;
+    G.merge.error = null;
+    syncMerge();
+  });
   root.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-agh]');
     if (!b) return;
     const act = b.dataset.agh;
     if (act === 'copy-code') return copyText(b.dataset.code, 'Code copié');
     if (act === 'copy-link') return copyText(b.dataset.link, 'Lien copié');
-    const g = G.list.find((x) => x.id === b.closest('[data-id]')?.dataset.id);
+    if (act === 'merge-cancel') { G.merge = null; return paintMerge(); }
+    if (act === 'merge-confirm') return confirmMerge();
+    if (act === 'sugg-link') {
+      return openMerge(b.dataset.ghost, `sugg-${b.dataset.ghost}-${b.dataset.user}`, { id: b.dataset.user, pseudo: b.dataset.pseudo });
+    }
+    const item = b.closest('[data-id]');
+    const g = G.list.find((x) => x.id === item?.dataset.id);
     if (!g) return;
+    if (act === 'link') return openMerge(g.id, `item-${g.id}`);
     if (act === 'fiche') return G.openFiche?.(g.id);
     if (act === 'invite') return invite(g, b);
     if (act === 'delete') return removeGhost(g, b);
   });
 }
 
-/** Recharge la liste des fantômes et la réaffiche. */
+/** Recharge les fantômes et les correspondances, puis réaffiche la section. */
 export async function refreshGhostsSection() {
-  try { G.list = await fetchAdminGhosts(); G.error = null; } catch (e) { G.error = e; }
-  renderList();
+  const [list, sugg] = await Promise.allSettled([fetchAdminGhosts(), fetchSuggestions()]);
+  if (list.status === 'fulfilled') { G.list = list.value; G.error = null; }
+  else { G.error = list.reason; }
+  if (sugg.status === 'fulfilled') { G.sugg = sugg.value; G.suggError = null; }
+  else { G.sugg = []; G.suggError = sugg.reason; console.warn('[fantômes] correspondances', sugg.reason); }
+  renderLists();
 }

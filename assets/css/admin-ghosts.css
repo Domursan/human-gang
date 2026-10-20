@@ -34,4 +34,28 @@
   .agh-form-grid { grid-template-columns: 1fr 1fr; }
   .agh-item .agh-actions .btn-primary { flex: 0 1 auto; }
   .agh-item .btn-danger { flex: 0 1 auto; margin-left: auto; }
+  .agh-sugg-row .btn { flex: 0 0 auto; }
+  .agh-merge-btns .btn { flex: 0 1 auto; }
+  .agh-merge-btns .btn-danger { margin-left: auto; }
 }
+
+/* Correspondances possibles */
+.agh-card[hidden] { display: none; }
+.agh-sugg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.agh-sugg-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; background: var(--surface-2, transparent); }
+.agh-sugg-text { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.agh-sugg-row { display: flex; }
+.agh-sugg-row .btn { flex: 1 1 auto; min-height: 44px; }
+.agh-sugg-err { font-size: 14px; color: var(--rose); }
+
+/* Panneau de liaison */
+.agh-merge-slot:empty { display: none; }
+.agh-merge-slot { min-width: 0; }
+.agh-merge { border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); min-width: 0; }
+.agh-merge-title { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.agh-merge .field input, .agh-merge .field select { min-height: 44px; width: 100%; }
+.agh-merge-recap p { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.agh-merge-recap p + p { margin-top: 6px; }
+.agh-merge-err { margin: 0; font-size: 14px; color: var(--rose); overflow-wrap: anywhere; }
+.agh-merge-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.agh-merge-btns .btn { flex: 1 1 100%; min-height: 44px; }
