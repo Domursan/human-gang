@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="assets/css/admin.css">
   <link rel="stylesheet" href="assets/css/admin-accounts.css">
   <link rel="stylesheet" href="assets/css/admin-messages.css">
+  <link rel="stylesheet" href="assets/css/admin-tools.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -70,6 +71,7 @@
               <div id="invite-list"></div>
             </div>
           </div>
+          <div class="card" id="links-root"><div class="empty">Chargement des liens…</div></div>
         </section>
 
         <section id="secret-santa" class="admin-section" aria-labelledby="h-ss">
@@ -86,6 +88,10 @@
               <select id="badge-member"></select>
             </div>
             <div id="badge-toggles" class="badge-toggles"></div>
+          </div>
+          <div class="badge-head">
+            <p class="small muted">Les badges marqués « automatique » sont attribués par le site et ne peuvent pas être supprimés. Ceux que tu crées s'attribuent à la main.</p>
+            <button class="btn btn-primary" type="button" id="badge-new">Nouveau badge</button>
           </div>
           <div class="badge-grid" id="badge-grid"></div>
           <input type="file" id="badge-file" accept="image/png,image/webp,image/jpeg,image/svg+xml" hidden>

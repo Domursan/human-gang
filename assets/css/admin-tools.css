@@ -1,0 +1,79 @@
+/* ===== Humane Gang — admin v4 : liens d'invitation, tirage manuel, éditeur de badges ===== */
+
+/* ---------- Liens d'invitation ---------- */
+.il-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; margin: 14px 0 18px; }
+.il-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.il-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+.il-item.is-off { opacity: .72; }
+.il-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.il-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.il-title strong { font-size: 16px; overflow-wrap: anywhere; }
+.il-switch { min-height: 36px; }
+.il-url { display: flex; gap: 8px; align-items: center; }
+.il-url-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.il-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; }
+.il-codes summary { cursor: pointer; font-size: 14px; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
+.il-codes summary:hover { color: var(--text); }
+.il-code-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 280px; overflow-y: auto; }
+.il-code-list li { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.il-code-list li:last-child { border-bottom: 0; }
+.il-code-list .code { font-size: 14px; }
+.il-qr-dlg { width: min(420px, calc(100vw - 32px)); text-align: center; }
+.il-qr-img { display: block; margin: 0 auto; width: min(100%, 300px); height: auto; image-rendering: pixelated; border-radius: 8px; background: #fff; }
+.il-qr-url { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* ---------- Secret Santa : création verrouillée + tirage manuel ---------- */
+.ss-create-fields { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.ss-create-fields[disabled] { opacity: .5; }
+.ss-locked { margin: 0; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--sand); color: var(--sand); }
+
+.md-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; }
+.md-in { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.md-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.md-head p { margin: 6px 0 0; }
+.md-cols, .md-row { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1.1fr) minmax(0, 1.2fr); gap: 12px; align-items: center; }
+.md-cols { padding: 0 12px; text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; }
+.md-rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 52vh; overflow-y: auto; }
+.md-row { padding: 8px 12px; border-bottom: 1px solid var(--border); border-left: 3px solid transparent; }
+.md-row:last-child { border-bottom: 0; }
+.md-giver { font-weight: 700; overflow-wrap: anywhere; }
+.md-arrow svg { width: 18px; height: 18px; color: var(--muted); display: block; }
+.md-row select { width: 100%; min-height: 44px; }
+.md-msg { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.md-msg svg { width: 16px; height: 16px; flex: none; }
+.md-row.is-ok .md-msg { color: var(--sage-text); }
+.md-row.is-warn { border-left-color: var(--sand); }
+.md-row.is-warn .md-msg { color: var(--sand); }
+.md-row.is-error { border-left-color: var(--rose); background: color-mix(in srgb, var(--rose) 7%, transparent); }
+.md-row.is-error .md-msg { color: var(--rose); }
+.md-row.is-error select { border-color: var(--rose); }
+.md-summary { margin: 0; }
+.md-s-err { color: var(--rose); font-weight: 700; }
+.md-s-warn { color: var(--sand); }
+.md-s-ok { color: var(--sage-text); font-weight: 700; }
+.md-actions { justify-content: flex-end; }
+
+/* ---------- Badges ---------- */
+.badge-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.badge-head p { margin: 0; max-width: 620px; }
+.badge-tags { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.code-sm { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.badge-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+.badge-card .badge-actions .btn { margin-top: 0; }
+.bdg-dlg { width: min(520px, calc(100vw - 32px)); }
+.bdg-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 14px; align-items: start; }
+.bdg-img-edit { display: flex; align-items: center; gap: 12px; }
+.bdg-img-edit input { min-width: 0; flex: 1; font-size: 13px; }
+.bdg-dlg .form-error { margin: 0; color: var(--rose); font-weight: 700; }
+.bdg-dlg .field > .small { display: block; margin-top: 4px; }
+
+@media (max-width: 760px) {
+  .il-form { grid-template-columns: minmax(0, 1fr); }
+  .il-url { flex-wrap: wrap; }
+  .il-url-input { flex-basis: 100%; }
+  .il-code-list li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .md-cols { display: none; }
+  .md-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .md-arrow { display: none; }
+  .bdg-row { grid-template-columns: minmax(0, 1fr); }
+}

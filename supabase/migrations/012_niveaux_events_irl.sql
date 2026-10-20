@@ -1,0 +1,13 @@
+-- Appliquée le 20.10.2026 (résumé ; SQL exact dans l'historique de session).
+-- Badges à niveaux : hg_badges.levels_enabled bool, metric text, levels jsonb [{level, threshold, name?, image_url?}], event_id uuid (pour metric 'event_captures' d'un événement précis).
+--   hg_user_badges.level int (1 par défaut), level_at.
+--   Métriques (hg_metric_value) : anciennete_annees, secret_santa, sorties, sorties_organisees, photos, moments, messages,
+--     idees_retenues, event_captures (toutes ou event_id), events_dynamiques (nb d'événements avec ≥1 capture).
+--   hg_award_level_badges(p_user) (cron horaire avec hg_award_badges ; aussi via hg_refresh_my_badges et après chaque capture).
+--   Trigger hg_badge_level_activity -> fil d'activité « X passe au niveau N du badge … ».
+-- Événements dynamiques : hg_dyn_events(id, name, description, image_url, emoji, starts_at, ends_at, probability (0-1 par page vue),
+--   max_per_page, max_per_user, max_total, duration_ms, size_px, badge_code, announce, announced_start_at, announced_end_at, active, created_by)
+--   hg_dyn_captures(id, event_id, user_id, captured_at). Lecture membres, écriture admin.
+--   rpc hg_dyn_active() -> événements en cours + my_captures + remaining_total ; rpc hg_dyn_capture(p_event) -> {ok, mine, badge_new, reason?} ;
+--   rpc hg_dyn_leaderboard(p_event) -> (user_id, pseudo, avatar_url, captures).
+-- Historique IRL : hg_events.retro bool (rencontre ajoutée après coup) ; policy hg_rsvps_creator (l'organisateur gère les présences de sa sortie).

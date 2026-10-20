@@ -5,6 +5,9 @@ import {
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from './admin-accounts.js';
+import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
+import { openManualDraw } from './admin-ss-manual.js';
+import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
 
 const me = await initPage({ auth: 'admin' });
 
@@ -117,7 +120,7 @@ async function loadSettings() {
    ========================================================= */
 function renderStats() {
   const ed = S.editions[0];
-  const free = S.invites.filter((i) => !i.used_by).length;
+  const free = S.invites.filter((i) => !i.used_by && !i.link_id && !(i.expires_at && new Date(i.expires_at) < new Date())).length;
   const newIdeas = S.ideas.filter((i) => i.status === 'nouvelle').length;
   const open = S.support.filter((s) => s.status === 'ouverte').length;
   const partCount = ed && ed.id === S.editionId ? S.participants.length : null;
@@ -158,8 +161,10 @@ function renderInvites() {
       <button class="btn btn-ghost btn-sm" type="button" data-copy-all>${ICON.copy} Copier ${lastCodes.length > 1 ? 'tous les codes' : 'le code'}</button>
     </div>` : '';
 
-  const unused = S.invites.filter((i) => !i.used_by);
-  const used = S.invites.filter((i) => i.used_by);
+  // Les codes issus d'un lien d'invitation sont listés sous leur lien (admin-invite-links.js)
+  const manual = S.invites.filter((i) => !i.link_id);
+  const unused = manual.filter((i) => !i.used_by);
+  const used = manual.filter((i) => i.used_by);
   const unusedHtml = unused.length ? unused.map((i) => `
       <div class="list-row">
         <div class="grow"><span class="code">${esc(i.code)}</span><div class="small muted">Créé le ${esc(fmtDate(i.created_at))}</div></div>
@@ -218,10 +223,10 @@ $('#membres').addEventListener('click', async (ev) => {
     });
   }
   if (t.hasAttribute('data-del-all')) {
-    const n = S.invites.filter((i) => !i.used_by).length;
+    const n = S.invites.filter((i) => !i.used_by && !i.link_id).length;
     if (!(await confirmBox('Supprimer tous les codes disponibles ?', `${n} codes non utilisés seront supprimés. Les codes déjà utilisés sont conservés.`, { ok: 'Tout supprimer', danger: true }))) return;
     await busy(t, async () => {
-      check(await sb.from('hg_invites').delete().is('used_by', null));
+      check(await sb.from('hg_invites').delete().is('used_by', null).is('link_id', null));
       lastCodes = [];
       await loadInvites(); renderInvites(); renderStats();
       toast('Codes disponibles supprimés', 'ok');
@@ -239,9 +244,12 @@ function renderSS() {
   const yearExists = (y) => S.editions.some((e) => e.year === y);
   const defaultYear = yearExists(new Date().getFullYear()) ? nextYear : new Date().getFullYear();
 
+  const openEd = S.editions.find((e) => e.status !== 'termine'); // une seule édition en cours à la fois (trigger en base)
   const createForm = `
-    <form class="card stack" id="ss-create">
+    <form class="card stack" id="ss-create"${openEd ? ' aria-describedby="ssc-locked"' : ''}>
       <h3 class="card-title">Nouvelle édition</h3>
+      ${openEd ? `<p class="ss-locked small" id="ssc-locked" role="note">Termine l'édition ${esc(openEd.year)} avant d'en créer une nouvelle (statut actuel : ${esc(STATUS_LABEL[openEd.status] ?? openEd.status)}).</p>` : ''}
+      <fieldset class="ss-create-fields"${openEd ? ' disabled' : ''}>
       <div class="grid-2">
         <div class="field"><label for="ssc-year">Année</label><input id="ssc-year" name="year" type="number" min="2020" max="2100" required value="${defaultYear}"></div>
         <div class="field"><label for="ssc-budget">Budget</label><input id="ssc-budget" name="budget" maxlength="60" placeholder="ex. 20 à 30 CHF"></div>
@@ -250,6 +258,7 @@ function renderSS() {
       </div>
       ${sharedFieldsHtml('ssc', [])}
       <div class="btn-row"><button class="btn btn-primary" type="submit">Créer l'édition</button></div>
+      </fieldset>
     </form>`;
 
   if (!ed) {
@@ -291,7 +300,9 @@ function renderSS() {
         <div class="draw-box stack">
           <h4 class="sub-title">Tirage au sort</h4>
           <p class="small muted">Respecte les exclusions et évite de retomber sur la même personne que l'an dernier. Les paires restent secrètes : tu peux les afficher plus bas si besoin. Le tirage ne peut être lancé qu'une seule fois par édition.</p>
-          <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : 'Lancer le tirage'}</button></div>
+          <div class="btn-row"><button class="btn btn-sand" type="button" id="ss-draw"${canDraw ? '' : ' disabled'}>${ed.drawn_at ? 'Tirage effectué' : 'Lancer le tirage'}</button>
+            ${ed.drawn_at ? '' : `<button class="btn btn-ghost" type="button" id="ss-draw-manual"${parts.length >= 2 ? '' : ' disabled'} aria-haspopup="dialog">Tirage manuel</button>`}</div>
+          ${ed.drawn_at ? '' : '<p class="small muted">« Lancer le tirage » choisit au hasard. « Tirage manuel » te laisse fixer chaque paire toi-même (et compléter le reste au hasard).</p>'}
           ${ed.drawn_at ? `<p class="small muted">Tirage fait le ${esc(fmtDateTime(ed.drawn_at))} pour ${parts.length} participants.</p>` : parts.length < 3 ? '<p class="small muted">Il faut au moins 3 inscrits.</p>' : ''}
           ${S.lastDraw && S.lastDraw.edition === ed.id ? `<p class="draw-result" role="status">Tirage OK pour ${esc(S.lastDraw.n)} participants</p>` : ''}
         </div>
@@ -358,10 +369,17 @@ $('#secret-santa').addEventListener('submit', (ev) => {
       const fd = new FormData(form);
       const year = Number(fd.get('year'));
       if (S.editions.some((e) => e.year === year)) throw new Error(`L'édition ${year} existe déjà.`);
-      const row = check(await sb.from('hg_ss_editions').insert({
+      const openEd = S.editions.find((e) => e.status !== 'termine');
+      if (openEd) throw new Error(`Termine l'édition ${openEd.year} avant d'en créer une nouvelle.`);
+      const res = await sb.from('hg_ss_editions').insert({
         year, budget: nullIfEmpty(fd.get('budget')), send_deadline: nullIfEmpty(fd.get('send_deadline')),
         exchange_date: nullIfEmpty(fd.get('exchange_date')), shared_fields: readSharedFields(form),
-      }).select().single());
+      }).select().single();
+      if (res.error && /termine/i.test(errMsg(res.error))) { // trigger hg_ss_editions_guard
+        await loadEditions(); renderSS();
+        throw new Error('Une édition est encore en cours : passe-la en « Terminé » avant d\'en créer une nouvelle.');
+      }
+      const row = check(res);
       S.editionId = row.id;
       await loadEditions(); await loadEditionDetails();
       renderSS(); renderStats();
@@ -432,6 +450,18 @@ $('#secret-santa').addEventListener('click', async (ev) => {
       toast('Carte par défaut rétablie', 'ok');
     });
   }
+  if (t.id === 'ss-draw-manual') {
+    if (ed.drawn_at) return;
+    await busy(t, () => openManualDraw({
+      edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf,
+      onDone: async (count) => {
+        S.lastDraw = { edition: ed.id, n: count };
+        await loadEditions(); renderSS(); renderStats();
+        toast(`Tirage manuel enregistré pour ${count} participants`, 'ok');
+      },
+    }));
+    return;
+  }
   if (t.id === 'ss-draw') {
     if (ed.drawn_at) return; // un seul tirage par édition
     const n = S.participants.length;
@@ -460,11 +490,17 @@ function renderBadges() {
   }
   $('#badge-grid').innerHTML = S.badges.map((b) => {
     const h = holders.get(b.code) || [];
+    const auto = isAutoBadge(b.code);
     return `<div class="badge-card">
       <div class="badge-top"><div class="badge-img">${badgeImg(b)}</div>
         <div><div class="badge-name">${esc(b.name)}</div><div class="small muted">${esc(b.description)}</div></div></div>
+      <div class="badge-tags"><span class="pill ${auto ? 'pill-muted' : 'pill-current'}">${auto ? 'automatique' : 'manuel'}</span><span class="small muted code-sm">${esc(b.code)}</span></div>
       <div class="badge-holders">${h.length ? `${h.length} membre${h.length > 1 ? 's' : ''} : ${esc(h.sort((x, y) => x.localeCompare(y, 'fr')).join(', '))}` : 'Personne pour l\'instant'}</div>
-      <button class="btn btn-ghost btn-sm" type="button" data-badge-img="${esc(b.code)}">${ICON.upload} ${b.image_url ? 'Changer l\'image' : 'Ajouter une image'}</button>
+      <div class="badge-actions">
+        <button class="btn btn-ghost btn-sm" type="button" data-badge-edit="${esc(b.code)}">Modifier</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-badge-img="${esc(b.code)}">${ICON.upload} ${b.image_url ? 'Image' : 'Ajouter une image'}</button>
+        ${auto ? '' : `<button class="btn btn-danger btn-sm btn-icon" type="button" data-badge-del="${esc(b.code)}" aria-label="Supprimer le badge ${esc(b.name)}" title="Supprimer">${ICON.trash}</button>`}
+      </div>
     </div>`;
   }).join('') || '<div class="empty">Aucun badge.</div>';
 
@@ -502,6 +538,24 @@ $('#badges').addEventListener('click', async (ev) => {
       } else await awardBadge(uid, code);
       toast(on ? 'Badge retiré' : `Badge « ${badgeName(code)} » attribué à ${pseudoOf(uid)}`, 'ok');
     });
+  }
+  if (t.id === 'badge-new' || t.dataset.badgeEdit) {
+    const badge = t.dataset.badgeEdit ? S.badges.find((b) => b.code === t.dataset.badgeEdit) : null;
+    openBadgeEditor({ badge, badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); } });
+    return;
+  }
+  if (t.dataset.badgeDel) {
+    const badge = S.badges.find((b) => b.code === t.dataset.badgeDel);
+    if (!badge) return;
+    const holders = S.userBadges.filter((u) => u.badge_code === badge.code).length;
+    await busy(t, async () => {
+      if (await deleteBadge(badge, holders)) {
+        if (t.isConnected) t.disabled = false;
+        await loadBadges(); renderBadges();
+        toast(`Badge « ${badge.name} » supprimé`, 'ok');
+      }
+    });
+    return;
   }
   if (t.dataset.badgeImg) {
     const code = t.dataset.badgeImg;
@@ -697,12 +751,13 @@ renderIdeas();
 renderSupport();
 if (S.bot) renderBot();
 mountThemesSection($('#theme-root'));
+mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({
   me,
   onChange: async (kind) => {
-    if (kind === 'members') { await loadMembers(); renderInvites(); renderBadges(); if (ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
+    if (kind === 'members') { await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
     if (kind === 'badges') { await loadBadges(); renderBadges(); }
     if (kind === 'ss') { await loadEditionDetails(); if (ssLoaded) renderSS(); renderStats(); }
     if (kind === 'ideas') { await loadIdeas(); renderIdeas(); renderStats(); }

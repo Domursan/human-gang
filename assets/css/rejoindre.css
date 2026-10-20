@@ -1,0 +1,52 @@
+/* ===== Humane Gang — rejoindre.html : accueil d'un lien d'invitation ===== */
+.rj-sky {
+  --rj-ink: #F2EFEA; --rj-muted: #B9B4C8; --rj-gold: #E2C77E;
+  position: relative; overflow: hidden; isolation: isolate;
+  margin: 8px 0 32px; min-height: min(78vh, 720px); border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center; padding: 56px 20px;
+  background: radial-gradient(120% 90% at 50% 0%, #1B1F3A 0%, #10121F 55%, #08080D 100%);
+  color: var(--rj-ink); border: 1px solid #23263C;
+}
+.rj-stars, .rj-stars::before, .rj-stars::after { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.rj-stars {
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 28% 62%, #fff 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 44% 12%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 63% 34%, #fff 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 78% 72%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 88% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 7% 84%, #fff 50%, transparent 51%), radial-gradient(1.3px 1.3px at 52% 88%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 93% 52%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 36% 40%, #fff 50%, transparent 51%);
+  opacity: .75;
+}
+.rj-stars::before { content: ''; background-image:
+    radial-gradient(1px 1px at 20% 30%, #CFD6FF 50%, transparent 51%), radial-gradient(1px 1px at 70% 15%, #CFD6FF 50%, transparent 51%),
+    radial-gradient(1px 1px at 82% 88%, #CFD6FF 50%, transparent 51%), radial-gradient(1px 1px at 15% 55%, #CFD6FF 50%, transparent 51%),
+    radial-gradient(1px 1px at 58% 70%, #CFD6FF 50%, transparent 51%), radial-gradient(1px 1px at 40% 95%, #CFD6FF 50%, transparent 51%);
+  background-size: 340px 260px; opacity: .5; }
+.rj-stars::after { content: ''; background-image:
+    radial-gradient(2px 2px at 24% 24%, var(--rj-gold) 50%, transparent 51%), radial-gradient(1.6px 1.6px at 74% 58%, #fff 50%, transparent 51%),
+    radial-gradient(1.8px 1.8px at 60% 8%, #fff 50%, transparent 51%);
+  animation: rj-twinkle 4.5s ease-in-out infinite alternate; }
+@keyframes rj-twinkle { from { opacity: .25; } to { opacity: .95; } }
+@media (prefers-reduced-motion: reduce) { .rj-stars::after { animation: none; opacity: .7; } }
+
+.rj-inner { width: min(520px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.rj-logo { width: 140px; height: 140px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .55)); }
+.rj-eyebrow { margin: 6px 0 0; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--rj-gold); font-weight: 700; }
+.rj-title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.05; color: var(--rj-ink); }
+.rj-lead { margin: 0; color: var(--rj-muted); font-size: 16px; line-height: 1.55; max-width: 44ch; }
+.rj-lead strong { color: var(--rj-ink); }
+
+.rj-code-box { width: 100%; margin-top: 6px; padding: 18px; border-radius: var(--radius-sm); border: 1px dashed rgba(226, 199, 126, .55);
+  background: rgba(10, 11, 20, .55); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.rj-code-k { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--rj-muted); }
+.rj-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(26px, 6vw, 34px); font-weight: 700; letter-spacing: 3px; color: var(--rj-ink); user-select: all; }
+.rj-code-note { margin: 0; font-size: 13px; color: var(--rj-muted); }
+.rj-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
+.rj-sky .btn-ghost { color: var(--rj-ink); border-color: rgba(242, 239, 234, .3); }
+.rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); }
+.rj-sky .btn svg { width: 18px; height: 18px; }
+.rj-foot { margin: 8px 0 0; font-size: 13px; color: var(--rj-muted); }
+.rj-foot a { color: var(--rj-ink); }
+.rj-icon { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(242, 239, 234, .25); color: var(--rj-gold); }
+.rj-icon svg { width: 26px; height: 26px; }
+.rj-icon.is-error { color: #E0909A; border-color: rgba(224, 144, 154, .45); }

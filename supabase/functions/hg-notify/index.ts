@@ -11,7 +11,7 @@
 //   bot_test         {}              admin  → message de test (salon + MP admin)
 //   message_new      { conversation_id } membre de la conversation → MP aux autres membres (opt-in), sauf discussion
 //                    en cours (message précédent < 10 min). Le Santa d'une conversation santa n'est jamais nommé.
-//   admin_dm         { user_ids: uuid[] (≤ 100), title?, body (≤ 2000), channel?: bool }  admin
+//   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel), title?, body (≤ 2000), channel?: bool }  admin
 //                    → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce facultative,
 //                    trace dans hg_bot_log, détail par destinataire renvoyé.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
@@ -275,10 +275,10 @@ const withPseudo = (text: string, pseudo: string) => text.replace(/\{pseudo\}/g,
 
 async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
-  const raw = Array.isArray(p.user_ids) ? p.user_ids : null;
-  if (!raw || !raw.length) throw new HttpError(400, 'Choisis au moins un destinataire');
+  const raw: unknown[] = Array.isArray(p.user_ids) ? p.user_ids : [];
   const ids = [...new Set(raw.filter(isUuid).map((s) => s.toLowerCase()))];
-  if (!ids.length) throw new HttpError(400, 'Destinataires invalides');
+  if (ids.length !== raw.length && !ids.length) throw new HttpError(400, 'Destinataires invalides');
+  if (!ids.length && p.channel !== true) throw new HttpError(400, 'Choisis au moins un destinataire (ou publie dans le salon)');
   if (raw.length > ADMIN_DM_MAX_USERS * 2 || ids.length > ADMIN_DM_MAX_USERS) throw new HttpError(400, `${ADMIN_DM_MAX_USERS} destinataires maximum par envoi`);
   const title = typeof p.title === 'string' ? p.title.replace(/\u0000/g, '').replace(/\s+/g, ' ').trim().slice(0, 200) : '';
   const body = typeof p.body === 'string' ? p.body.replace(/\u0000/g, '').trim() : '';
@@ -287,7 +287,9 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const wantChannel = p.channel === true;
   if (wantChannel && !bot.announce_channel_id) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
 
-  const { data: rows, error } = await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').in('id', ids);
+  const { data: rows, error } = ids.length
+    ? await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').in('id', ids)
+    : { data: [], error: null };
   if (error) throw new Error(error.message);
   const byId = new Map<string, Profile>((rows ?? []).map((r: Profile) => [r.id, r]));
 
