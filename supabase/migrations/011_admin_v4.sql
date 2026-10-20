@@ -1,0 +1,9 @@
+-- Appliquée le 20.10.2026 (résumé ; SQL exact dans l'historique de session).
+-- hg_profiles.joined_on date (date d'arrivée réelle, saisie par l'admin) ; hg_member_card renvoie member_since = coalesce(joined_on, created_at) + joined_on.
+-- Liens d'invitation : hg_invite_links(id, token unique, label, active, max_codes, codes_generated, expires_at, created_by, created_at) — admin.
+--   hg_invites.link_id, hg_invites.expires_at (48 h pour les codes issus d'un lien).
+--   rpc hg_claim_invite_link(p_token) -> text (anon OK) : génère un code HG-XXXXXX unique à chaque appel (max 30 codes non utilisés/h/lien).
+--   hg_join refuse les codes expirés.
+-- Secret Santa : trigger hg_ss_editions_guard (création d'édition impossible tant qu'une autre n'est pas 'termine') ;
+--   rpc hg_ss_manual_draw(p_edition, p_pairs jsonb [{giver, receiver}]) -> int (admin, permutation complète, pas d'auto-attribution).
+-- Bot : hg_settings key 'bot_templates' (jsonb, {} par défaut) ; hg_bot_log(id, sent_by, kind, title, body, recipients jsonb, channel bool, created_at) — admin.
