@@ -41,7 +41,14 @@ function birthdayLabel(dm) {
   const d = Number(m[1]), mo = Number(m[2]);
   return mo >= 1 && mo <= 12 ? `${d === 1 ? '1er' : d} ${MONTHS[mo - 1]}` : '';
 }
-const sinceLabel = (d) => { if (!d) return '—'; const x = new Date(d); return `${MONTHS[x.getMonth()]} ${x.getFullYear()}`; };
+/** « mars 2019 », ou la date complète « 12 mars 2019 » si l'admin a saisi la date d'arrivée réelle (joined_on). */
+function sinceLabel(d, joined) {
+  const j = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(joined || ''));
+  if (j) { const day = Number(j[3]); return `${day === 1 ? '1er' : day} ${MONTHS[Number(j[2]) - 1]} ${j[1]}`; }
+  if (!d) return '—';
+  const x = new Date(d);
+  return `${MONTHS[x.getMonth()]} ${x.getFullYear()}`;
+}
 /** Identifiant lisible dérivé de l'uuid : HG-1A2B-3C4D */
 const shortId = (id) => { const h = String(id || '').replace(/-/g, '').toUpperCase(); return `HG-${h.slice(0, 4)}-${h.slice(-4)}`; };
 /** Code-barres décoratif déterministe (largeurs 1–3) à partir de l'uuid. */
@@ -98,7 +105,7 @@ function cardHtml(c) {
               : `<span class="idc-initials">${esc(initials(c.pseudo))}</span>`}</div>
             <dl class="idc-fields">
               <div class="idc-field idc-field-pseudo"><dt class="idc-k">Pseudo</dt><dd class="idc-pseudo">${esc(c.pseudo)}</dd></div>
-              <div class="idc-field"><dt class="idc-k">Membre depuis</dt><dd>${esc(sinceLabel(c.member_since))}</dd></div>
+              <div class="idc-field"><dt class="idc-k">Membre depuis</dt><dd>${esc(sinceLabel(c.member_since, c.joined_on))}</dd></div>
               ${bday ? `<div class="idc-field"><dt class="idc-k">Anniversaire</dt><dd>${esc(bday)}</dd></div>` : ''}
             </dl>
           </div>
@@ -285,7 +292,7 @@ export async function renderIdCard(canvas, c) {
   ctx.fillText(typeof fit === 'object' ? fit.text : pseudo, fx, 540);
   ctx.fillStyle = color; ctx.fillRect(fx, 570, 120, 10);
   label('Membre depuis', 650);
-  ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(sinceLabel(c.member_since), fx, 715);
+  ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(sinceLabel(c.member_since, c.joined_on), fx, 715);
   const bday = birthdayLabel(c.birthday_dm);
   if (bday) { label('Anniversaire', 795); ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(bday, fx, 860); }
 

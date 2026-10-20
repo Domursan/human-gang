@@ -73,7 +73,12 @@ async function loadAccounts() {
   const [acc, mem] = await Promise.all([sb.rpc('hg_admin_accounts'), sb.rpc('hg_members')]);
   A.accounts = (check(acc) ?? []).slice().sort((a, b) => (!a.pseudo - !b.pseudo) || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
   A.avatars = new Map((mem.data ?? []).map((m) => [m.id, m]));
+  // Date d'arrivée réelle dans le gang (saisie par l'admin) : absente de hg_admin_accounts
+  const jo = await sb.from('hg_profiles').select('id, joined_on');
+  if (!jo.error) { const m = new Map((jo.data ?? []).map((r) => [r.id, r.joined_on])); for (const a of A.accounts) a.joined_on = m.get(a.id) ?? null; }
 }
+/** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
+const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
 
 function renderList() {
   root().innerHTML = `
@@ -85,7 +90,7 @@ function renderList() {
         </div>
         <p class="small muted acc-count" id="acc-count" aria-live="polite"></p>
       </div>
-      <div class="acc-head" aria-hidden="true"><span>Membre</span><span>E-mail</span><span>Inscrit le</span><span>Dernière connexion</span><span></span></div>
+      <div class="acc-head" aria-hidden="true"><span>Membre</span><span>E-mail</span><span>Inscrit le</span><span>Arrivée dans le gang</span><span>Dernière connexion</span><span></span></div>
       <ul class="acc-list" id="acc-list"></ul>
     </div>`;
   renderRows();
@@ -103,6 +108,7 @@ function renderRows() {
         ${a.is_admin ? '<span class="pill pill-ok acc-pill">admin</span>' : ''}${a.id === A.me.id ? '<span class="pill pill-muted acc-pill">toi</span>' : ''}</span></span>
       <span class="acc-email">${esc(a.email || '—')}</span>
       <span class="acc-date"><span class="acc-k">Inscrit le </span>${esc(fmtDate(a.created_at))}</span>
+      <span class="acc-date"><span class="acc-k">Arrivée dans le gang : </span>${a.joined_on ? esc(fmtDay(a.joined_on)) : '<span class="acc-none">non renseignée</span>'}</span>
       <span class="acc-date"><span class="acc-k">Dernière connexion : </span>${a.last_sign_in_at ? esc(fmtDateTime(a.last_sign_in_at)) : 'jamais'}</span>
       <span class="acc-go">${a.pseudo ? IC.chev : ''}</span>`;
     return a.pseudo
@@ -230,6 +236,10 @@ function profileHtml() {
         <div class="field acc-span"><label for="ap-avatar">Adresse de l'avatar (URL)</label>
           <div class="acc-avatar-edit">${avatarHtml(p, 44)}<input id="ap-avatar" name="avatar_url" type="url" inputmode="url" value="${esc(p.avatar_url ?? '')}" placeholder="Vide = initiales"></div></div>
         <div class="field"><label for="ap-bday">Anniversaire</label><input id="ap-bday" name="birthday" type="date" value="${esc(p.birthday ?? '')}"></div>
+        <div class="field"><label for="ap-joined">Date d'arrivée dans le gang</label>
+          <div class="acc-joined"><input id="ap-joined" name="joined_on" type="date" max="${new Date().toISOString().slice(0, 10)}" value="${esc(p.joined_on ?? '')}" aria-describedby="ap-joined-help">
+            <button class="btn btn-ghost btn-sm" type="button" data-act="clear-joined"${p.joined_on ? '' : ' disabled'}>Effacer</button></div>
+          <span class="small muted" id="ap-joined-help">Utilisée sur la carte d'identité (membre depuis). Vide = date d'inscription sur le site.</span></div>
         <div class="field"><label for="ap-discord">ID Discord</label><input id="ap-discord" name="discord_id" inputmode="numeric" autocomplete="off" value="${esc(p.discord_id ?? '')}" placeholder="17 à 20 chiffres"></div>
       </div>
       <fieldset class="toggles">
@@ -255,8 +265,10 @@ async function saveProfile(form, btn) {
   const patch = {
     pseudo, color: form.color.value, avatar_url: avatar, birthday: nullIfEmpty(form.birthday.value),
     discord_id: discord || null, share_birthday: form.share_birthday.checked, bot_optin: form.bot_optin.checked,
-    intro_seen: form.intro_seen.checked,
+    intro_seen: form.intro_seen.checked, joined_on: nullIfEmpty(form.joined_on.value),
   };
+  if (patch.joined_on && !/^\d{4}-\d{2}-\d{2}$/.test(patch.joined_on)) throw new Error('Date d\'arrivée invalide.');
+  if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10)) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
   if (!self) patch.is_admin = form.is_admin.checked;
   if (self && p.is_admin && patch.is_admin === false) throw new Error('Tu ne peux pas te retirer le statut admin.');
   if (!self && patch.is_admin !== p.is_admin) {
@@ -270,7 +282,7 @@ async function saveProfile(form, btn) {
   const row = check(await sb.from('hg_profiles').update(patch).eq('id', p.id).select().single());
   A.d.profile = row;
   const acc = A.accounts.find((a) => a.id === p.id);
-  if (acc) { acc.pseudo = row.pseudo; acc.is_admin = row.is_admin; }
+  if (acc) { acc.pseudo = row.pseudo; acc.is_admin = row.is_admin; acc.joined_on = row.joined_on ?? null; }
   A.avatars.set(row.id, { ...(A.avatars.get(row.id) || {}), id: row.id, pseudo: row.pseudo, avatar_url: row.avatar_url, color: row.color });
   renderDetail();
   toast('Profil enregistré', 'ok');
@@ -591,6 +603,7 @@ function bindAccounts() {
   const sec = $('#comptes');
   sec.addEventListener('input', (ev) => {
     if (ev.target.id === 'acc-q') { A.q = ev.target.value; renderRows(); }
+    if (ev.target.id === 'ap-joined') { const b = $('[data-act="clear-joined"]', sec); if (b) b.disabled = !ev.target.value; }
   });
   sec.addEventListener('keydown', (ev) => {
     const tab = ev.target.closest('[role="tab"]');
@@ -608,6 +621,7 @@ function bindAccounts() {
     if (t.dataset.tab) return selectTab(t.dataset.tab);
     const act = t.dataset.act;
     if (act === 'back') { closeDetail(); return; }
+    if (act === 'clear-joined') { const i = $('#ap-joined'); i.value = ''; t.disabled = true; i.focus(); return; }
     if (act === 'show-pair' || act === 'hide-pair') { A.showPair = act === 'show-pair'; renderPanel(); return; }
     if (act === 'ss-join') return busy(t, async () => { await ssJoin(); await afterSS(); });
     if (act === 'ss-leave') return busy(t, async () => { if (await ssLeave()) await afterSS(); });

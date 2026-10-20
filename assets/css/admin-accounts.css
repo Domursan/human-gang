@@ -10,7 +10,7 @@
 .acc-search-box input { padding-left: 42px; }
 .acc-count { margin: 0 0 12px; }
 
-.acc-head, .acc-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, .9fr) minmax(0, 1.2fr) 24px; gap: 12px; align-items: center; }
+.acc-head, .acc-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.2fr) 24px; gap: 12px; align-items: center; }
 .acc-head { padding: 0 12px 8px; border-bottom: 1px solid var(--border); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 .acc-list { list-style: none; margin: 0; padding: 0; max-height: 640px; overflow-y: auto; }
 .acc-row { width: 100%; min-height: 56px; padding: 10px 12px; font: inherit; text-align: left; color: var(--text);
@@ -216,3 +216,8 @@ body.is-inspect-leaving .insp-bar { animation: insp-out .3s steps(6, end) both; 
   .insp-tag { padding: 6px; }
   .insp-tag span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+
+/* Date d'arrivée dans le gang */
+.acc-joined { display: flex; gap: 8px; align-items: center; }
+.acc-joined input { flex: 1; min-width: 0; }
+.acc-none { font-style: italic; opacity: .75; }

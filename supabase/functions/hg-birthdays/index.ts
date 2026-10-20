@@ -3,7 +3,9 @@
 // qu'une fois par an (table hg_birthday_log), donc un appel en double ne renvoie rien.
 // verify_jwt = false (aucune donnée n'est renvoyée, seulement des compteurs).
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatif).
+// Textes : modèles « birthday_dm » et « birthday_announce » (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -49,6 +51,8 @@ Deno.serve(async () => {
   const botOn = bot.notify?.birthday !== false && !!Deno.env.get('DISCORD_BOT_TOKEN');
 
   const out = { today: today.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };
+  const tpl = botOn && today.length ? await loadTemplates(db) : {};
+  const home = SITE ? `${SITE}/accueil.html` : '';
   for (const p of today) {
     // Verrou annuel : si la ligne existe déjà, l'anniversaire a déjà été fêté
     const { error: lockErr } = await db.from('hg_birthday_log').insert({ user_id: p.id, year });
@@ -61,8 +65,7 @@ Deno.serve(async () => {
     if (p.bot_optin && isSnowflake(p.discord_id)) {
       try {
         await sendDM(p.discord_id, { embeds: [{
-          title: `Joyeux anniversaire ${p.pseudo} !`,
-          description: 'Tout le Humane Gang te souhaite une journée incroyable.',
+          ...embedFrom(renderTemplate('birthday_dm', { pseudo: p.pseudo, lien: home }, tpl)),
           color: 0xe0909a, url: SITE ? `${SITE}/accueil.html` : undefined, footer: { text: 'Humane Gang' },
         }] });
         out.dms++;
@@ -74,7 +77,7 @@ Deno.serve(async () => {
         await sendChannel(bot.announce_channel_id!, {
           content: `Joyeux anniversaire ${mention} !`,
           allowed_mentions: { users: isSnowflake(p.discord_id) ? [p.discord_id] : [] },
-          embeds: [{ title: `C'est l'anniversaire de ${p.pseudo} aujourd'hui !`, description: 'Pensez à lui souhaiter.', color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
+          embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: p.pseudo, lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
         });
         out.announces++;
       } catch (e) { console.error('[hg-birthdays] annonce', e); out.errors++; }

@@ -2,7 +2,9 @@
 // Reçoit une demande d'assistance (avec ou sans compte), l'enregistre dans hg_support
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
+// Texte du MP : modèle « support_new » (hg_settings.bot_templates, défaut dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -109,11 +111,15 @@ Deno.serve(async (req) => {
     const bot = (s?.value ?? {}) as { admin_discord_id?: string | null; notify?: Record<string, boolean> };
     if (bot.notify?.support !== false && bot.admin_discord_id && Deno.env.get('DISCORD_BOT_TOKEN')) {
       const site = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
+      const rendered = renderTemplate('support_new', {
+        sujet: subject, message: truncate(message, 1500), pseudo: truncate(pseudo, 100),
+        contact: truncate(contact || 'non précisé', 100), compte: userId ? 'Membre connecté' : 'Visiteur',
+        lien: site ? `${site}/admin.html#assistance` : '',
+      }, await loadTemplates(admin));
       await sendDM(bot.admin_discord_id, {
         content: 'Nouvelle demande d\'assistance',
         embeds: [{
-          title: truncate(`Assistance : ${subject}`, 256),
-          description: truncate(message, 1500),
+          ...embedFrom(rendered),
           color: 0x9e3543,
           url: site ? `${site}/admin.html#assistance` : undefined,
           fields: [

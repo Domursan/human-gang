@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "groups": [
+    { "id": "ss", "label": "Secret Santa" },
+    { "id": "irl", "label": "IRL" },
+    { "id": "messages", "label": "Messagerie" },
+    { "id": "birthday", "label": "Anniversaires" },
+    { "id": "support", "label": "Assistance" },
+    { "id": "test", "label": "Test" }
+  ],
+  "templates": {
+    "ss_draw_announce": {
+      "title": "Le tirage du Secret Santa {annee} est fait !",
+      "body": "{participants} participants ont chacun reçu leur cible. Va voir ta carte sur le site."
+    },
+    "ss_draw_dm": {
+      "title": "Secret Santa {annee}",
+      "body": "Salut {pseudo} ! Le tirage est fait, va voir ta carte pour découvrir à qui tu offres."
+    },
+    "ss_gift_sent": {
+      "title": "Ton Santa a envoyé ton cadeau !",
+      "body": "Un paquet est en route pour toi (Secret Santa {annee}). Pense à cliquer sur « J'ai reçu le mien » sur le site quand il arrive."
+    },
+    "ss_gift_received": {
+      "title": "Ta cible a reçu son cadeau",
+      "body": "Mission accomplie pour le Secret Santa {annee} : ton cadeau est bien arrivé."
+    },
+    "irl_new": {
+      "title": "Nouvelle sortie : {titre}",
+      "body": "{description}"
+    },
+    "message_new": {
+      "title": "Nouveau message de {expediteur}",
+      "body": "{extrait}"
+    },
+    "message_new_santa": {
+      "title": "Nouveau message de ton Santa",
+      "body": "{extrait}"
+    },
+    "birthday_dm": {
+      "title": "Joyeux anniversaire {pseudo} !",
+      "body": "Tout le Humane Gang te souhaite une journée incroyable."
+    },
+    "birthday_announce": {
+      "title": "C'est l'anniversaire de {pseudo} aujourd'hui !",
+      "body": "Pensez à lui souhaiter."
+    },
+    "support_new": {
+      "title": "Assistance : {sujet}",
+      "body": "{message}"
+    },
+    "bot_test": {
+      "title": "Test du bot Humane Gang",
+      "body": "Si tu lis ceci, {canal} fonctionnent."
+    }
+  },
+  "meta": {
+    "ss_draw_announce": {
+      "group": "ss", "label": "Tirage : annonce", "target": "Salon d'annonces", "color": "#E0909A",
+      "description": "Publié dans le salon d'annonces quand l'admin lance le tirage.",
+      "fields": [["Budget", "{budget}"], ["Envoi avant le", "{date_limite}"]],
+      "vars": {
+        "annee": { "label": "Année de l'édition", "example": "2026" },
+        "participants": { "label": "Nombre de participants", "example": "12" },
+        "budget": { "label": "Budget", "example": "20 CHF" },
+        "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
+        "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+      }
+    },
+    "ss_draw_dm": {
+      "group": "ss", "label": "Tirage : message privé", "target": "MP à chaque participant", "color": "#E0909A",
+      "description": "Envoyé en MP à chaque participant (qui accepte les MP du bot) après le tirage. Ne contient jamais la cible.",
+      "fields": [["Budget", "{budget}"], ["Envoi avant le", "{date_limite}"]],
+      "vars": {
+        "pseudo": { "label": "Pseudo du participant", "example": "Alex" },
+        "annee": { "label": "Année de l'édition", "example": "2026" },
+        "participants": { "label": "Nombre de participants", "example": "12" },
+        "budget": { "label": "Budget", "example": "20 CHF" },
+        "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
+        "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+      }
+    },
+    "ss_gift_sent": {
+      "group": "ss", "label": "Cadeau envoyé", "target": "MP à la cible", "color": "#E0909A",
+      "description": "MP à la cible quand son Santa indique avoir envoyé le cadeau. Le Santa n'est jamais nommé.",
+      "vars": {
+        "pseudo": { "label": "Pseudo de la cible (destinataire)", "example": "Alex" },
+        "annee": { "label": "Année de l'édition", "example": "2026" },
+        "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+      }
+    },
+    "ss_gift_received": {
+      "group": "ss", "label": "Cadeau reçu", "target": "MP au Santa", "color": "#E0909A",
+      "description": "MP au Santa quand sa cible indique avoir reçu le cadeau.",
+      "vars": {
+        "pseudo": { "label": "Pseudo du Santa (destinataire)", "example": "Sam" },
+        "cible": { "label": "Pseudo de sa cible", "example": "Alex" },
+        "annee": { "label": "Année de l'édition", "example": "2026" },
+        "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+      }
+    },
+    "irl_new": {
+      "group": "irl", "label": "Nouvelle sortie", "target": "Salon d'annonces", "color": "#E2C77E",
+      "description": "Publié dans le salon d'annonces quand un membre crée une sortie.",
+      "fields": [["Quand", "{date}"], ["Où", "{lieu}"], ["Proposée par", "{organisateur}"]],
+      "vars": {
+        "titre": { "label": "Titre de la sortie", "example": "Raclette chez Sam" },
+        "description": { "label": "Description (ou « Dis si tu viens sur le site. » si vide)", "example": "On ramène chacun un fromage, le four est fourni." },
+        "lieu": { "label": "Lieu", "example": "Lausanne" },
+        "date": { "label": "Date et heure (ou « Date à choisir » si sondage)", "example": "samedi 14 novembre à 19:00" },
+        "organisateur": { "label": "Pseudo de l'organisateur", "example": "Sam" },
+        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/irl.html" }
+      }
+    },
+    "message_new": {
+      "group": "messages", "label": "Nouveau message", "target": "MP au destinataire", "color": "#7E93C9",
+      "description": "MP aux autres membres d'une conversation (pas à chaque message d'une discussion en cours).",
+      "vars": {
+        "pseudo": { "label": "Pseudo du destinataire", "example": "Alex" },
+        "expediteur": { "label": "Pseudo de l'expéditeur", "example": "Sam" },
+        "extrait": { "label": "Début du message (200 caractères)", "example": "Tu viens samedi ? On cherche encore quelqu'un pour les desserts." },
+        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/messages.html" }
+      }
+    },
+    "message_new_santa": {
+      "group": "messages", "label": "Message de ton Santa", "target": "MP à la cible", "color": "#E0909A",
+      "description": "MP à la cible quand son Santa lui écrit. Aucune variable ne permet d'afficher le Santa.",
+      "vars": {
+        "pseudo": { "label": "Pseudo de la cible (destinataire)", "example": "Alex" },
+        "extrait": { "label": "Début du message (200 caractères)", "example": "Petite question : tu préfères le thé ou le café ?" },
+        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/messages.html" }
+      }
+    },
+    "birthday_dm": {
+      "group": "birthday", "label": "Anniversaire : message privé", "target": "MP au membre", "color": "#E0909A",
+      "description": "Envoyé chaque matin (8 h) en MP au membre dont c'est l'anniversaire.",
+      "vars": {
+        "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+      }
+    },
+    "birthday_announce": {
+      "group": "birthday", "label": "Anniversaire : annonce", "target": "Salon d'annonces", "color": "#E2C77E",
+      "description": "Publié dans le salon si le membre partage son anniversaire. Précédé de « Joyeux anniversaire @membre ! ».",
+      "content": "Joyeux anniversaire @{pseudo} !",
+      "vars": {
+        "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+      }
+    },
+    "support_new": {
+      "group": "support", "label": "Nouvelle demande", "target": "MP à l'admin", "color": "#9E3543",
+      "description": "MP à l'admin à chaque demande d'assistance. Précédé de « Nouvelle demande d'assistance ».",
+      "content": "Nouvelle demande d'assistance",
+      "footer": "Humane Gang · assistance",
+      "fields": [["Pseudo", "{pseudo}"], ["Compte", "{compte}"], ["Contact", "{contact}"]],
+      "vars": {
+        "sujet": { "label": "Sujet choisi", "example": "Bug sur le site" },
+        "message": { "label": "Message (1500 caractères maximum)", "example": "La page IRL ne charge pas les photos depuis hier soir." },
+        "pseudo": { "label": "Pseudo de l'auteur", "example": "Alex" },
+        "contact": { "label": "Contact Discord (ou « non précisé »)", "example": "alex#1234" },
+        "compte": { "label": "« Membre connecté » ou « Visiteur »", "example": "Membre connecté" },
+        "lien": { "label": "Lien vers l'administration", "example": "https://humane-gang.example/admin.html#assistance" }
+      }
+    },
+    "bot_test": {
+      "group": "test", "label": "Message de test", "target": "Salon + MP à l'admin", "color": "#7E93C9",
+      "description": "Envoyé par le bouton « Envoyer un message de test » : une fois dans le salon, une fois en MP.",
+      "vars": {
+        "canal": { "label": "« les annonces » ou « les messages privés »", "example": "les annonces" },
+        "pseudo": { "label": "Pseudo de l'admin", "example": "Ethan" },
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+      }
+    }
+  }
+}

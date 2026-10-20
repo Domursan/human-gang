@@ -11,7 +11,12 @@
 //   bot_test         {}              admin  → message de test (salon + MP admin)
 //   message_new      { conversation_id } membre de la conversation → MP aux autres membres (opt-in), sauf discussion
 //                    en cours (message précédent < 10 min). Le Santa d'une conversation santa n'est jamais nommé.
+//   admin_dm         { user_ids: uuid[] (≤ 100), title?, body (≤ 2000), channel?: bool }  admin
+//                    → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce facultative,
+//                    trace dans hg_bot_log, détail par destinataire renvoyé.
+// Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
+import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -95,11 +100,11 @@ const fmtDate = (d: string | null | undefined, withTime = false) => d
 const recent = (ts: string | null | undefined) => !!ts && Date.now() - new Date(ts).getTime() < FRESH_MS;
 
 /* ---------- Événements ---------- */
-async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>) {
+async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
   if (bot.notify?.draw === false) return { skipped: 'désactivé' };
-  const { data: ed } = await db.from('hg_ss_editions').select('id, year, budget, send_deadline, drawn_at').eq('id', p.edition_id).maybeSingle();
+  const { data: ed } = await db.from('hg_ss_editions').select('id, year, budget, send_deadline, exchange_date, drawn_at').eq('id', p.edition_id).maybeSingle();
   if (!ed) throw new HttpError(404, 'Édition introuvable');
   if (!ed.drawn_at) throw new HttpError(409, 'Le tirage n\'a pas encore été fait');
 
@@ -111,19 +116,21 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>) {
     ...(ed.budget ? [{ name: 'Budget', value: String(ed.budget), inline: true }] : []),
     ...(ed.send_deadline ? [{ name: 'Envoi avant le', value: fmtDate(ed.send_deadline)!, inline: true }] : []),
   ];
+  const vars = {
+    annee: ed.year, participants: people.length, budget: ed.budget ?? '', date_limite: fmtDate(ed.send_deadline) ?? '',
+    date_echange: fmtDate(ed.exchange_date) ?? '', lien: link('secret-santa.html') ?? '',
+  };
   let announced = false;
   if (bot.announce_channel_id) {
     announced = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-      title: `Le tirage du Secret Santa ${ed.year} est fait !`,
-      description: `${people.length} participants ont chacun reçu leur cible. Va voir ta carte sur le site.`,
+      ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)),
       url: link('secret-santa.html'), color: COLOR.ss, fields,
     })), 'annonce tirage');
   }
   let dms = 0, failed = 0;
   for (const person of people.filter(canDM)) {
     const ok = await trySend(() => sendDM(person.discord_id!, embed({
-      title: `Secret Santa ${ed.year}`,
-      description: `Salut ${person.pseudo} ! Le tirage est fait, va voir ta carte pour découvrir à qui tu offres.`,
+      ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: person.pseudo }, tpl)),
       url: link('secret-santa.html'), color: COLOR.ss, fields,
     })), `MP tirage ${person.id}`);
     ok ? dms++ : failed++;
@@ -132,7 +139,7 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>) {
   return { announced, dms_sent: dms, dms_failed: failed };
 }
 
-async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: 'sent' | 'received') {
+async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: 'sent' | 'received', tpl: Templates) {
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
   if (bot.notify?.gift === false) return { skipped: 'désactivé' };
   const { data: part } = await db.from('hg_ss_participants').select('sent_at, received_at')
@@ -151,21 +158,16 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   const other = await getProfile(kind === 'sent' ? a.receiver_id : a.giver_id);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
 
-  const message = kind === 'sent'
-    ? embed({
-        title: 'Ton Santa a envoyé ton cadeau !',
-        description: `Un paquet est en route pour toi (Secret Santa ${ed?.year ?? ''}). Pense à cliquer sur « J'ai reçu le mien » sur le site quand il arrive.`,
-        url: link('secret-santa.html'), color: COLOR.ss,
-      })
-    : embed({
-        title: 'Ta cible a reçu son cadeau',
-        description: `Mission accomplie pour le Secret Santa ${ed?.year ?? ''} : ton cadeau est bien arrivé.`,
-        url: link('secret-santa.html'), color: COLOR.ss,
-      });
+  // ss_gift_sent part chez la cible : aucune variable ne désigne le Santa. ss_gift_received part chez le Santa : {cible} = me.
+  const base = { pseudo: other.pseudo, annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('secret-santa.html') ?? '' };
+  const rendered = kind === 'sent'
+    ? renderTemplate('ss_gift_sent', base, tpl)
+    : renderTemplate('ss_gift_received', { ...base, cible: me.pseudo }, tpl);
+  const message = embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss });
   return { dm: await trySend(() => sendDM(other.discord_id!, message), `MP cadeau ${kind}`) };
 }
 
-async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>) {
+async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
   if (bot.notify?.irl === false) return { skipped: 'désactivé' };
   if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
@@ -175,22 +177,27 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (ev.created_by !== me.id && !me.is_admin) throw new HttpError(403, 'Seul l\'organisateur peut annoncer cette sortie');
   if (Date.now() - new Date(ev.created_at).getTime() > 60 * 60_000) return { skipped: 'sortie déjà ancienne' };
 
+  const when = fmtDate(ev.starts_at, true) ?? 'Date à choisir (sondage sur le site)';
+  const where = String(ev.location || 'À préciser').slice(0, 200);
   const fields = [
-    { name: 'Quand', value: fmtDate(ev.starts_at, true) ?? 'Date à choisir (sondage sur le site)', inline: true },
-    { name: 'Où', value: String(ev.location || 'À préciser').slice(0, 200), inline: true },
+    { name: 'Quand', value: when, inline: true },
+    { name: 'Où', value: where, inline: true },
     { name: 'Proposée par', value: me.pseudo, inline: true },
   ];
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-    title: `Nouvelle sortie : ${String(ev.title).slice(0, 200)}`,
+  const rendered = renderTemplate('irl_new', {
+    titre: String(ev.title).slice(0, 200),
     description: ev.description ? String(ev.description).slice(0, 600) : 'Dis si tu viens sur le site.',
-    url: link('irl.html'), color: COLOR.irl, fields,
+    lieu: where, date: when, organisateur: me.pseudo, lien: link('irl.html') ?? '',
+  }, tpl);
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
+    ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields,
   })), 'annonce IRL');
   return { channel };
 }
 
 const MSG_FRESH_MS = 2 * 60_000;   // le message déclencheur doit avoir moins de 2 min
 const MSG_QUIET_MS = 10 * 60_000;  // pas de MP si le message précédent de la conversation a moins de 10 min
-async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>) {
+async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.conversation_id)) throw new HttpError(400, 'conversation_id manquant');
   if (bot.notify?.messages === false) return { skipped: 'désactivé' };
   const convId = p.conversation_id;
@@ -210,7 +217,6 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
 
   const anonymous = conv.kind === 'santa' && conv.santa_id === me.id; // ne JAMAIS révéler le Santa
-  const title = anonymous ? 'Nouveau message de ton Santa' : `Nouveau message de ${me.pseudo}`;
   const raw = String(latest.body ?? '').replace(/\s+/g, ' ').trim();
   const excerpt = raw.length > 200 ? `${raw.slice(0, 199)}…` : raw;
   const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
@@ -219,8 +225,12 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>) {
   for (const uid of ids.filter((id) => id !== me.id)) {
     const other = await getProfile(uid);
     if (!canDM(other)) { skipped++; continue; }
+    // message_new_santa : l'expéditeur (le Santa) n'est JAMAIS passé dans les variables.
+    const rendered = anonymous
+      ? renderTemplate('message_new_santa', { pseudo: other.pseudo, extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
+      : renderTemplate('message_new', { pseudo: other.pseudo, expediteur: me.pseudo, extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl);
     const ok = await trySend(() => sendDM(other.discord_id!, embed({
-      title, description: excerpt || '(message vide)', url,
+      ...embedFrom(rendered), url,
       color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
       ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}),
     })), `MP message ${uid}`);
@@ -229,21 +239,101 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>) {
   return { dms_sent: dms, dms_failed: failed, recipients_skipped: skipped };
 }
 
-async function onTest(me: Profile, bot: Bot) {
+async function onTest(me: Profile, bot: Bot, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   const out: Record<string, unknown> = {};
   if (!bot.announce_channel_id && !bot.admin_discord_id) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord, puis enregistre.' };
   if (bot.announce_channel_id) {
     out.channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-      title: 'Test du bot Humane Gang', description: 'Si tu lis ceci, les annonces fonctionnent.', color: COLOR.info, url: link('accueil.html'),
+      ...embedFrom(renderTemplate('bot_test', { canal: 'les annonces', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
+      color: COLOR.info, url: link('accueil.html'),
     })), 'test salon');
   }
   if (bot.admin_discord_id) {
     out.dm = await trySend(() => sendDM(bot.admin_discord_id!, embed({
-      title: 'Test du bot Humane Gang', description: 'Les messages privés fonctionnent : tu recevras ici les demandes d\'assistance.', color: COLOR.info,
+      ...embedFrom(renderTemplate('bot_test', { canal: 'les messages privés', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
+      color: COLOR.info,
     })), 'test MP');
   }
   return out;
+}
+
+/* ---------- Message manuel de l'admin ---------- */
+const ADMIN_DM_MAX_USERS = 100;
+const ADMIN_DM_MAX_BODY = 2000;
+type Recipient = { user_id: string; pseudo: string | null; ok: boolean; status: 'sent' | 'failed' | 'skipped'; reason: string | null };
+const friendlyDiscordError = (e: unknown) => {
+  const m = String((e as Error)?.message ?? e);
+  if (/Discord 403/.test(m) || /50007/.test(m)) return 'MP refusés par Discord (serveur non partagé ou MP fermés)';
+  if (/Discord 400/.test(m) && /recipient/i.test(m)) return 'ID Discord invalide';
+  if (/Discord 404/.test(m)) return 'Utilisateur Discord introuvable';
+  if (/trop de requêtes/.test(m)) return 'Discord : trop de requêtes';
+  return truncate(m, 160);
+};
+/** {pseudo} est la seule variable d'un message manuel ; le reste du texte est laissé tel quel. */
+const withPseudo = (text: string, pseudo: string) => text.replace(/\{pseudo\}/g, pseudo);
+
+async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
+  if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
+  const raw = Array.isArray(p.user_ids) ? p.user_ids : null;
+  if (!raw || !raw.length) throw new HttpError(400, 'Choisis au moins un destinataire');
+  const ids = [...new Set(raw.filter(isUuid).map((s) => s.toLowerCase()))];
+  if (!ids.length) throw new HttpError(400, 'Destinataires invalides');
+  if (raw.length > ADMIN_DM_MAX_USERS * 2 || ids.length > ADMIN_DM_MAX_USERS) throw new HttpError(400, `${ADMIN_DM_MAX_USERS} destinataires maximum par envoi`);
+  const title = typeof p.title === 'string' ? p.title.replace(/\u0000/g, '').replace(/\s+/g, ' ').trim().slice(0, 200) : '';
+  const body = typeof p.body === 'string' ? p.body.replace(/\u0000/g, '').trim() : '';
+  if (!body) throw new HttpError(400, 'Le message est vide');
+  if (body.length > ADMIN_DM_MAX_BODY) throw new HttpError(400, `Message trop long (${ADMIN_DM_MAX_BODY} caractères maximum)`);
+  const wantChannel = p.channel === true;
+  if (wantChannel && !bot.announce_channel_id) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
+
+  const { data: rows, error } = await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').in('id', ids);
+  if (error) throw new Error(error.message);
+  const byId = new Map<string, Profile>((rows ?? []).map((r: Profile) => [r.id, r]));
+
+  const build = (pseudo: string) => {
+    const t = truncate(withPseudo(title, pseudo).trim(), 256);
+    const d = truncate(withPseudo(body, pseudo).trim(), 4096);
+    return embed({ ...(t ? { title: t } : {}), description: d || '\u200b', color: COLOR.accent });
+  };
+
+  const recipients: Recipient[] = [];
+  let first = true;
+  for (const id of ids) {
+    const prof = byId.get(id);
+    if (!prof) { recipients.push({ user_id: id, pseudo: null, ok: false, status: 'skipped', reason: 'Compte sans profil' }); continue; }
+    if (!prof.discord_id || !/^\d{17,20}$/.test(prof.discord_id)) {
+      recipients.push({ user_id: id, pseudo: prof.pseudo, ok: false, status: 'skipped', reason: 'Pas d\'ID Discord' }); continue;
+    }
+    if (!prof.bot_optin) { recipients.push({ user_id: id, pseudo: prof.pseudo, ok: false, status: 'skipped', reason: 'A refusé les MP du bot' }); continue; }
+    if (!first) await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
+    first = false;
+    try {
+      await sendDM(prof.discord_id, build(prof.pseudo));
+      recipients.push({ user_id: id, pseudo: prof.pseudo, ok: true, status: 'sent', reason: null });
+    } catch (e) {
+      console.error(`[hg-notify] MP manuel ${id}`, e);
+      recipients.push({ user_id: id, pseudo: prof.pseudo, ok: false, status: 'failed', reason: friendlyDiscordError(e) });
+    }
+  }
+
+  let channelOk: boolean | null = null;
+  let channelError: string | null = null;
+  if (wantChannel) {
+    try { await sendChannel(bot.announce_channel_id!, build('tout le monde')); channelOk = true; }
+    catch (e) { console.error('[hg-notify] annonce manuelle', e); channelOk = false; channelError = friendlyDiscordError(e); }
+  }
+
+  const { data: log, error: logErr } = await db.from('hg_bot_log').insert({
+    sent_by: me.id, kind: 'manual', title: title || null, body, recipients, channel: channelOk === true,
+  }).select('id').maybeSingle();
+  if (logErr) console.error('[hg-notify] hg_bot_log', logErr);
+
+  const count = (s: Recipient['status']) => recipients.filter((r) => r.status === s).length;
+  return {
+    recipients, sent: count('sent'), failed: count('failed'), skipped: count('skipped'),
+    channel: channelOk, channel_error: channelError, log_id: log?.id ?? null,
+  };
 }
 
 /* ---------- Point d'entrée ---------- */
@@ -261,17 +351,21 @@ Deno.serve(async (req) => {
     try { payload = await req.json(); } catch { throw new HttpError(400, 'Requête invalide'); }
     const event = String(payload.event ?? '');
 
-    if (!hasToken()) return json({ ok: true, skipped: 'bot non configuré (DISCORD_BOT_TOKEN absent)', ...(event === 'bot_test' ? { error: 'Le secret DISCORD_BOT_TOKEN n\'est pas configuré dans Supabase.' } : {}) });
-    const bot = await getBot();
+    if (!hasToken()) {
+      if (event === 'admin_dm') throw new HttpError(503, 'Le secret DISCORD_BOT_TOKEN n\'est pas configuré dans Supabase.');
+      return json({ ok: true, skipped: 'bot non configuré (DISCORD_BOT_TOKEN absent)', ...(event === 'bot_test' ? { error: 'Le secret DISCORD_BOT_TOKEN n\'est pas configuré dans Supabase.' } : {}) });
+    }
+    const [bot, tpl] = await Promise.all([getBot(), event === 'admin_dm' ? Promise.resolve({}) : loadTemplates(db)]);
 
     let result: Record<string, unknown>;
     switch (event) {
-      case 'ss_draw': result = await onDraw(me, bot, payload); break;
-      case 'ss_gift_sent': result = await onGift(me, bot, payload, 'sent'); break;
-      case 'ss_gift_received': result = await onGift(me, bot, payload, 'received'); break;
-      case 'irl_new': result = await onIrl(me, bot, payload); break;
-      case 'bot_test': result = await onTest(me, bot); break;
-      case 'message_new': result = await onMessage(me, bot, payload); break;
+      case 'ss_draw': result = await onDraw(me, bot, payload, tpl); break;
+      case 'ss_gift_sent': result = await onGift(me, bot, payload, 'sent', tpl); break;
+      case 'ss_gift_received': result = await onGift(me, bot, payload, 'received', tpl); break;
+      case 'irl_new': result = await onIrl(me, bot, payload, tpl); break;
+      case 'bot_test': result = await onTest(me, bot, tpl); break;
+      case 'message_new': result = await onMessage(me, bot, payload, tpl); break;
+      case 'admin_dm': result = await onAdminDm(me, bot, payload); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });
