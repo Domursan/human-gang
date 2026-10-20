@@ -364,7 +364,7 @@ export function mountHistory(ctx) {
         <span class="hx-bar" aria-hidden="true"><span style="width:${pct}%"></span></span></div>`,
       tile(esc(fmtDate(s.first)), 'première rencontre', '', true),
     ];
-    if (s.best && s.n > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.plural(s.best.c, 'rencontre', 'rencontres')}`, '', true));
+    if (s.best && s.best.c > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.plural(s.best.c, 'rencontre', 'rencontres')}`, '', true));
     if (s.streak.len >= 2) tiles.push(tile(`${s.streak.len} mois`, `plus longue série d'affilée (jusqu'en ${esc(monthLabel(s.streak.end))})`));
     const maxP = Math.max(1, ...s.topPlaces.map((p) => p.n));
     const maxU = Math.max(1, ...s.topPeople.map((p) => p.n));

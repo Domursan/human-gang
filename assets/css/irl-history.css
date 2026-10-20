@@ -26,7 +26,7 @@
 /* Statistiques */
 .hx-stats-sec { margin-top: 24px !important; }
 .hx-stats { display: flex; flex-direction: column; gap: 16px; }
-.hx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+.hx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 12px; }
 .hx-stat { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); min-width: 0; }
 .hx-big { font-family: var(--font-display); font-weight: 400; font-size: 34px; line-height: 1; color: var(--irl-fg); overflow-wrap: anywhere; }
 .hx-stat-txt .hx-big { font-size: 20px; line-height: 1.15; }
@@ -70,7 +70,7 @@
 .hx-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; }
 .hx-card { display: flex; gap: 16px; padding: 14px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); min-width: 0; }
 .hx-card:hover { border-color: var(--irl-border); }
-.hx-thumb { position: relative; flex: none; width: 112px; height: 112px; border-radius: 10px; overflow: hidden; background: var(--surface-2); display: block; }
+.hx-thumb { position: relative; flex: none; width: 112px; height: 112px; border-radius: 10px; overflow: hidden; background: var(--surface-2); display: block; text-decoration: none; color: inherit; }
 .hx-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hx-thumb-date { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: linear-gradient(160deg, color-mix(in srgb, var(--tint) 26%, var(--irl-bg)), var(--irl-bg)); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 12px; }
