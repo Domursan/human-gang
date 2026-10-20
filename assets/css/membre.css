@@ -9,6 +9,7 @@
 @media (max-width: 900px) { .mb-layout { grid-template-columns: minmax(0, 1fr); } }
 .mb-card-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .mb-actions .btn svg { flex: none; }
+@media (max-width: 520px) { .badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .mb-section-title { font-size: 20px; } }
 @media (max-width: 520px) { .mb-actions .btn { flex: 1 1 100%; } }
 .mb-missing { grid-column: 1 / -1; }
 
@@ -154,7 +155,7 @@
 .gang-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 .gang-item { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border-radius: var(--radius-sm);
   background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; transition: border-color .2s, transform .2s; }
-.gang-item:hover { color: var(--text); border-color: var(--border-strong); transform: translateY(-2px); }
+@media (hover: hover) { .gang-item:hover { color: var(--text); border-color: var(--border-strong); transform: translateY(-2px); } }
 .gang-item.is-current { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
 .gang-txt { display: flex; flex-direction: column; min-width: 0; }
 .gang-txt strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

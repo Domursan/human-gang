@@ -35,12 +35,12 @@ html[data-fx="off"] .evp-card.is-live .evp-visual { animation: none; }
 .evp-k { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .evp-k svg { width: 16px; height: 16px; color: var(--sand); }
 .evp-lb { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.evp-lb li { display: grid; grid-template-columns: 26px 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; }
+.evp-lb li { display: grid; grid-template-columns: 26px 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 0 8px; border-radius: 10px; }
 .evp-lb li.is-me { background: color-mix(in srgb, var(--sand) 12%, transparent); }
 .evp-rank { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--muted); text-align: right; }
 .evp-rank.top { color: var(--sand); font-weight: 700; }
-.evp-lb-name { color: var(--text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 32px; display: flex; align-items: center; gap: 6px; }
-.evp-lb-name:hover { color: var(--sand); }
+.evp-lb-name { color: var(--text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 44px; display: flex; align-items: center; gap: 6px; }
+@media (hover: hover) { .evp-lb-name:hover { color: var(--sand); } }
 .evp-me { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
 .evp-lb strong { font-variant-numeric: tabular-nums; }
 
@@ -66,4 +66,12 @@ html[data-mode="clair"] .evp-badge-lvl { color: #FFFFFF; }
   .evp-head { flex-direction: column; gap: 14px; }
   .evp-stats dd { font-size: 22px; }
   .evp-stats div { padding: 10px; }
+}
+@media (max-width: 420px) {
+  .evp-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .evp-stats dd { font-size: 20px; }
+  .evp-stats dt { font-size: 11px; }
+  .evp-visual { --s: 72px !important; border-radius: 16px; }
+  .evp-badge { gap: 12px; padding: 12px; }
+  .evp-badge-img { width: 60px; height: 60px; }
 }

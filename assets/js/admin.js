@@ -12,6 +12,7 @@ import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
 import { mountEventsSection, refreshEventsSection } from './admin-events.js';
+import { mountCardsSection } from './admin-cards.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 
 const me = await initPage({ auth: 'admin' });
@@ -795,6 +796,7 @@ mountThemesSection($('#theme-root'));
 mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
+mountCardsSection($('#cards-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
 // Comptes : fiche complète de chaque membre. Après une modification, on resynchronise les autres sections.
 initAccounts({

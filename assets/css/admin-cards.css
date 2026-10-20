@@ -1,0 +1,97 @@
+/* ===== Humane Gang — admin : cartes à collectionner (admin-cards.js) ===== */
+.acd { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.acd .form-error { margin: 0; color: var(--rose); font-weight: 700; }
+.acd-tabs { margin-bottom: 0; }
+.acd-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.acd-head p { max-width: 620px; margin: 0; }
+.acd-center { justify-content: center; margin-top: 12px; }
+.acd-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Listes ---------- */
+.acd-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.acd-scroll-y { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+.acd-item { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 14px 16px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; }
+.acd-item-tight { padding: 10px 12px; }
+.acd-item-main { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.acd-item-main p { margin: 0; overflow-wrap: anywhere; }
+.acd-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); }
+.acd-msg { font-style: italic; }
+
+/* ---------- Tableaux (défilement horizontal dans un conteneur) ---------- */
+.acd-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
+.acd-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
+.acd-table th, .acd-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.acd-table th { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); white-space: nowrap; }
+.acd-table tr:last-child td { border-bottom: 0; }
+.acd-table tr.is-off td { opacity: .6; }
+.acd-table td.acd-actions { white-space: nowrap; }
+.acd-table td.acd-actions .btn { margin-right: 6px; }
+.acd-table-stats { min-width: 520px; }
+.acd-cardcell { display: inline-flex; align-items: center; gap: 10px; }
+.acd-thumb { flex: none; width: 36px; height: 50px; border-radius: 4px; object-fit: cover; background: var(--surface-2); border: 1px solid var(--border-strong); }
+.acd-thumb-ph { display: inline-block; }
+.acd-rar { border-width: 2px; border-style: solid; border-color: #A9A49B; background: transparent; color: var(--text); }
+.acd-rar-peu_commune { border-color: #4FA36A; }
+.acd-rar-rare { border-color: #5B7FE0; }
+.acd-rar-epique { border-color: #8C6AD8; }
+.acd-rar-legendaire { border-color: #E0A93B; }
+.acd-rar-mythique { border-color: #F05A35; }
+.acd-rar-identite { border-color: #FBD32D; }
+.acd-share { display: flex; align-items: center; gap: 10px; }
+.acd-bar { display: block; flex: 1 1 80px; max-width: 220px; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.acd-bar > span { display: block; height: 100%; background: var(--sand); }
+
+/* ---------- Cartes Identité, filtres ---------- */
+.acd-ident { display: flex; flex-direction: column; gap: 12px; }
+.acd-ident-row, .acd-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.acd-ident-row .field, .acd-toolbar .field { flex: 1 1 180px; min-width: 0; }
+.acd-toolbar .btn, .acd-ident-row .btn { flex: 0 0 auto; }
+.acd-field-wide { max-width: 420px; }
+
+/* ---------- Tuiles de chiffres ---------- */
+.acd-tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.acd-tile { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; min-width: 0; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); }
+.acd-tile strong { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.1; color: var(--sand); overflow-wrap: anywhere; }
+.acd-tile span { font-size: 13px; color: var(--muted); }
+
+/* ---------- Formulaires et dialogues ---------- */
+.acd-fs { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.acd-fs legend { padding: 0 6px; font-weight: 700; font-size: 14px; }
+.acd-fs > p { margin: 0; }
+.acd-grid-2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); min-width: 0; }
+.acd-grid-2 > .field { min-width: 0; }
+.acd-sum { font-weight: 700; margin: 0; }
+.acd-sum.is-warn { color: var(--rose); }
+.acd-switch { align-self: end; }
+.acd-econ { gap: 18px; }
+.acd-econ input[type="number"] { min-height: 44px; }
+.acd-player { display: flex; flex-direction: column; gap: 16px; }
+.acd-player-head { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.acd-pl-grid { align-items: start; }
+.acd-log-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.acd-log-row:last-child { border-bottom: 0; }
+.acd-log-delta { font-weight: 700; font-variant-numeric: tabular-nums; }
+.acd-log-delta.is-neg { color: var(--rose); }
+.acd-log-delta.is-pos { color: var(--sage-text); }
+
+.acd-dlg { width: min(760px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; }
+.acd-dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.acd-dlg-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.acd-dlg-grid > .stack { min-width: 0; }
+.acd-dlg input:not([type="checkbox"]):not([type="file"]), .acd-dlg select, .acd-dlg textarea { min-height: 44px; }
+.acd-dlg textarea { min-height: 72px; }
+.acd-dlg input[type="file"] { font-size: 14px; padding: 8px 0; min-height: 44px; max-width: 100%; }
+.acd-dlg .switch { min-height: 44px; }
+.acd-dlg .dialog-actions { align-items: center; }
+.acd-card-preview { display: flex; justify-content: center; padding: 14px 8px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong);
+  background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--bg) 0 50%) 0 0 / 16px 16px; min-height: 200px; }
+
+@media (max-width: 600px) {
+  .acd-log-row { grid-template-columns: 1fr; gap: 2px; }
+  .acd-toolbar .field, .acd-ident-row .field { flex-basis: 100%; }
+  .acd-toolbar .btn, .acd-ident-row .btn { width: 100%; }
+  .acd-item { padding: 12px; }
+  .acd-dlg { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 18px; }
+  .acd-dlg .btn-row.dialog-actions .btn { flex: 1 1 auto; }
+}
