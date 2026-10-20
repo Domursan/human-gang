@@ -1,0 +1,13 @@
+-- Appliquée le 20.10.2026 : thèmes paramétrables (hg_themes), informations diverses (hg_profile_info),
+-- champs transmis au Santa (hg_ss_editions.shared_fields + rpc hg_ss_target_info),
+-- accès complet de l'admin (policies *_admin + rpc hg_admin_accounts).
+-- Voir le détail dans l'historique de session ; schéma :
+--   hg_themes(id, slug unique, name, is_default, active, start_md 'MM-DD', end_md 'MM-DD', priority, logo_url,
+--             emojis text[], effect in ('aucun','pluie','neige','etoiles'), colors jsonb {accent,bg,surface,text,muted,highlight})
+--   hg_settings.theme = {"mode":"auto"|"forced","forced_slug":<slug>|null}
+--   hg_profile_info(user_id pk, data jsonb, updated_at)  -- RLS : soi + admin
+--   hg_ss_editions.shared_fields text[]                  -- clés de hg_profile_info.data transmises au Santa
+--   rpc hg_ss_target_info(p_edition) -> jsonb            -- infos de ma cible, filtrées par shared_fields
+--   rpc hg_admin_accounts() -> (id, pseudo, email, is_admin, created_at, last_sign_in_at)
+--   admin : select/update hg_profiles ; all sur hg_ss_wishes, hg_ss_assignments, hg_event_rsvps,
+--           hg_event_date_votes, hg_photos, hg_activity, hg_profile_info, hg_themes
