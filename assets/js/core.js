@@ -3,6 +3,7 @@
 // de supabase-js (import dynamique en fin de module), pour éviter un flash de couleurs.
 import { SUPABASE_URL, SUPABASE_KEY, LOGO_SRC } from './config.js';
 import { playSound } from './sound.js';
+import { hasLevels, levelDef, levelImage, roman } from './badge-levels.js';
 
 export { LOGO_SRC, playSound };
 
@@ -497,13 +498,14 @@ function startUnread() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshUnread(); });
 }
 
-export function renderFooter() {
+export function renderFooter(profile = _profile) {
   document.querySelector('.site-footer')?.remove();
   const footer = document.createElement('footer');
   footer.className = 'site-footer';
   footer.innerHTML = `<div class="container">
       <div>© ${new Date().getFullYear()} Humane Gang</div>
       <nav aria-label="Liens légaux">
+        ${profile ? '<a href="evenements.html">Événements</a>' : ''}
         <a href="assistance.html">Assistance</a>
         <a href="legal.html#mentions">Mentions légales</a>
         <a href="legal.html#confidentialite">Confidentialité</a>
@@ -652,21 +654,33 @@ export async function checkNewBadges({ force = false } = {}) {
     const ref = await sb.rpc('hg_refresh_my_badges');
     if (ref.error) console.warn('[badges] rafraîchissement', ref.error);
     const [mine, all] = await Promise.all([
-      sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', p.id),
-      sb.from('hg_badges').select('code, name, description, image_url, sort'),
+      sb.from('hg_user_badges').select('badge_code, awarded_at, level').eq('user_id', p.id),
+      sb.from('hg_badges').select('code, name, description, image_url, sort, levels_enabled, levels'),
     ]);
     if (mine.error) throw mine.error;
     const codes = (mine.data || []).map((b) => b.badge_code);
+    const levels = Object.fromEntries((mine.data || []).map((b) => [b.badge_code, Number(b.level) || 1]));
     const seenAll = readJson(localStorage, BADGES_SEEN_KEY, null);
     const map = seenAll && typeof seenAll === 'object' && !Array.isArray(seenAll) ? seenAll : {};
     const known = Array.isArray(map[p.id]) ? map[p.id] : null;
+    // Niveaux déjà vus (badges à niveaux) : clé séparée « <uid>:lv » → { code: niveau }
+    const lvKey = `${p.id}:lv`;
+    const knownLv = map[lvKey] && typeof map[lvKey] === 'object' && !Array.isArray(map[lvKey]) ? map[lvKey] : null;
     map[p.id] = [...new Set([...(known || []), ...codes])];
+    map[lvKey] = { ...(knownLv || {}), ...levels };
     try { localStorage.setItem(BADGES_SEEN_KEY, JSON.stringify(map)); } catch {}
     if (!known) return []; // premier passage sur cet appareil : on enregistre sans célébrer
-    const fresh = codes.filter((c) => !known.includes(c));
-    if (!fresh.length) return [];
     const info = new Map((all.data || []).map((b) => [b.code, b]));
-    const list = fresh.map((c) => info.get(c) || { code: c, name: c, description: '' });
+    const fresh = codes.filter((c) => !known.includes(c));
+    const ups = knownLv ? codes.filter((c) => known.includes(c) && levels[c] > (Number(knownLv[c]) || 1) && hasLevels(info.get(c))) : [];
+    if (!fresh.length && !ups.length) return [];
+    const withLevel = (c, levelUp) => {
+      const b = info.get(c) || { code: c, name: c, description: '' };
+      if (!hasLevels(b)) return b;
+      const lv = levels[c] || 1;
+      return { ...b, level: lv, level_name: levelDef(b, lv)?.name || '', image_url: levelImage(b, lv), levelUp };
+    };
+    const list = [...fresh.map((c) => withLevel(c, false)), ...ups.map((c) => withLevel(c, true))];
     celebrateBadges(list);
     return list;
   } catch (e) {
@@ -686,7 +700,7 @@ export function celebrateBadges(list) {
   d.setAttribute('aria-describedby', 'bc-desc');
   d.innerHTML = `<canvas class="bc-confetti" aria-hidden="true"></canvas>
     <div class="bc-card">
-      <p class="eyebrow">Nouveau badge débloqué</p>
+      <p class="eyebrow bc-eyebrow">Nouveau badge débloqué</p>
       <div class="bc-badge"></div>
       <h2 id="bc-title" class="display"></h2>
       <p id="bc-desc" class="bc-desc"></p>
@@ -707,7 +721,9 @@ export function celebrateBadges(list) {
       ? `<img src="${esc(b.image_url)}" alt="">`
       : `<span class="bc-initials" aria-hidden="true">${esc(badgeInitials(b.name))}</span>`;
     d.querySelector('#bc-title').textContent = b.name || b.code;
-    d.querySelector('#bc-desc').textContent = b.description || '';
+    d.querySelector('.bc-eyebrow').textContent = b.levelUp ? 'Nouveau niveau atteint' : 'Nouveau badge débloqué';
+    const lvTxt = b.level ? `Niveau ${roman(b.level)}${b.level_name ? ` · ${b.level_name}` : ''}` : '';
+    d.querySelector('#bc-desc').textContent = [lvTxt, b.description || ''].filter(Boolean).join(' — ');
     const cnt = d.querySelector('.bc-count');
     cnt.hidden = total < 2;
     cnt.textContent = `${idx + 1} / ${total}`;
@@ -782,12 +798,14 @@ export async function initPage({ auth = 'member' } = {}) {
   else if (auth === 'admin') profile = await requireAdmin();
   else profile = await getProfile();
   renderHeader(profile);
-  renderFooter();
+  renderFooter(profile);
   cookieNotice();
   startEffects();
   if (profile) {
     startUnread();
     checkNewBadges();
+    // Événements dynamiques (image qui traverse le site) : chargé à part, sans jamais bloquer ni casser la page
+    import('./dyn-events.js').then((m) => m.startDynEvents(profile)).catch((e) => console.warn('[événements]', e));
   }
   return profile;
 }

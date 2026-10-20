@@ -9,6 +9,8 @@ import { initAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml } from
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { openManualDraw } from './admin-ss-manual.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
+import { mountEventsSection } from './admin-events.js';
+import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 
 const me = await initPage({ auth: 'admin' });
 
@@ -102,7 +104,7 @@ async function loadEditionDetails() {
 async function loadBadges() {
   const [b, u] = await Promise.all([
     sb.from('hg_badges').select('*').order('sort'),
-    sb.from('hg_user_badges').select('user_id, badge_code, awarded_at'),
+    sb.from('hg_user_badges').select('user_id, badge_code, awarded_at, level'),
   ]);
   S.badges = check(b) ?? []; S.userBadges = check(u) ?? [];
 }
@@ -487,7 +489,8 @@ function renderBadges() {
   const holders = new Map();
   for (const ub of S.userBadges) {
     if (!holders.has(ub.badge_code)) holders.set(ub.badge_code, []);
-    holders.get(ub.badge_code).push(pseudoOf(ub.user_id));
+    const b = S.badges.find((x) => x.code === ub.badge_code);
+    holders.get(ub.badge_code).push(pseudoOf(ub.user_id) + (hasLevels(b) ? ` (${roman(ub.level || 1)})` : ''));
   }
   $('#badge-grid').innerHTML = S.badges.map((b) => {
     const h = holders.get(b.code) || [];
@@ -495,7 +498,7 @@ function renderBadges() {
     return `<div class="badge-card">
       <div class="badge-top"><div class="badge-img">${badgeImg(b)}</div>
         <div><div class="badge-name">${esc(b.name)}</div><div class="small muted">${esc(b.description)}</div></div></div>
-      <div class="badge-tags"><span class="pill ${auto ? 'pill-muted' : 'pill-current'}">${auto ? 'automatique' : 'manuel'}</span><span class="small muted code-sm">${esc(b.code)}</span></div>
+      <div class="badge-tags"><span class="pill ${auto ? 'pill-muted' : 'pill-current'}">${auto ? 'automatique' : 'manuel'}</span>${hasLevels(b) ? `<span class="pill pill-warn" title="${esc(METRIC_LABEL[b.metric] || b.metric || '')}">${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || b.metric || '')}</span>` : ''}<span class="small muted code-sm">${esc(b.code)}</span></div>
       <div class="badge-holders">${h.length ? `${h.length} membre${h.length > 1 ? 's' : ''} : ${esc(h.sort((x, y) => x.localeCompare(y, 'fr')).join(', '))}` : 'Personne pour l\'instant'}</div>
       <div class="badge-actions">
         <button class="btn btn-ghost btn-sm" type="button" data-badge-edit="${esc(b.code)}">Modifier</button>
