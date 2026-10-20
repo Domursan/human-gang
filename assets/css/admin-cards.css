@@ -18,6 +18,10 @@
 .acd-item-main p { margin: 0; overflow-wrap: anywhere; }
 .acd-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); }
 .acd-msg { font-style: italic; }
+.acd-caption { color: var(--muted); font-style: italic; }
+.acd-note { margin: 0; padding: 8px 10px; border-left: 3px solid var(--rose); border-radius: 4px; background: var(--surface-2); font-size: 14px; }
+.acd-set-actions { align-items: center; }
+.acd-set-toggle { min-height: 44px; }
 
 /* ---------- Tableaux (défilement horizontal dans un conteneur) ---------- */
 /* position: relative : contient les éléments absolus (libellés masqués) dans la zone défilante */

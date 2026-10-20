@@ -122,8 +122,8 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 
 /* ===== Boosters : deux cartouches ===== */
 .fit { position: relative; width: 100%; height: calc(var(--h, 220) * var(--k, 1) * 1px); }
-.fit-in { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; width: calc(var(--w, 220) * 1px); height: calc(var(--h, 220) * 1px);
-  transform: scale(var(--k, 1)); transform-origin: 50% 0; }
+.fit-in { position: absolute; top: 0; left: 50%; width: calc(var(--w, 220) * 1px); height: calc(var(--h, 220) * 1px);
+  transform: translateX(-50%) scale(var(--k, 1)); transform-origin: 50% 0; }
 .cart-shelf { margin-bottom: 20px; }
 .cart-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
 .cart-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;

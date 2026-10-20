@@ -454,14 +454,21 @@ function openCardDialog(k = null) {
     return {
       set_id: E.set_id.value, number: num, name: E.name.value.trim(), family: E.family.value, rarity: E.rarity.value,
       image_url: E.image_url.value.trim() || null, flavor: E.flavor.value.trim() || null, member_id: E.member_id.value || null,
-      max_copies: maxRaw === '' ? null : Number(maxRaw),
+      caption: E.caption.value.trim() || null, max_copies: maxRaw === '' ? null : Number(maxRaw),
     };
   };
   const paint = () => {
     const v = readRaw();
+    $('#acc-caption-count', d).textContent = nf(E.caption.value.length);
+    // Total de la série : cartes actives de la série (celle-ci comprise si elle est active), jamais sous son propre numéro.
+    const activeInSet = C.cards.filter((x) => x.set_id === v.set_id && x.active && x.id !== k?.id).length + (E.active.checked ? 1 : 0);
+    const setTotal = Math.max(activeInSet, Number.isInteger(v.number) ? v.number : 0);
+    const member = v.member_id ? C.byId.get(v.member_id) : null;
     $('#acc-card-preview', d).innerHTML = cardHtml({
       name: v.name || 'Nom de la carte', rarity: v.rarity, family: v.family, image_url: previewUrl || v.image_url,
-      flavor: v.flavor, number: Number.isInteger(v.number) && v.number > 0 ? v.number : '?', max_copies: v.max_copies,
+      flavor: v.flavor, caption: v.caption, number: Number.isInteger(v.number) && v.number > 0 ? v.number : '?',
+      set_total: setTotal || undefined, set_name: C.setById.get(v.set_id)?.name, max_copies: v.max_copies,
+      member_since: v.rarity === 'identite' && member ? (member.joined_on || new Date().getFullYear()) : undefined,
     }, { size: 'md' });
   };
   /** Valeurs validées du formulaire ; lève une erreur lisible sinon. */
@@ -470,6 +477,7 @@ function openCardDialog(k = null) {
     if (!v.set_id) throw new Error('Choisis une série.');
     if (!Number.isInteger(v.number) || v.number < 1) throw new Error('Le numéro doit être un nombre entier, à partir de 1.');
     if (v.name.length < 2) throw new Error('Donne un nom à la carte (2 caractères minimum).');
+    if (v.caption && v.caption.length > 80) throw new Error('La légende ne doit pas dépasser 80 caractères.');
     if (v.max_copies !== null && (!Number.isInteger(v.max_copies) || v.max_copies < 1)) throw new Error('Exemplaires maximum : un nombre entier à partir de 1 (ou vide pour illimité).');
     if (k && v.max_copies !== null && v.max_copies < used) throw new Error(`Des exemplaires sont déjà numérotés jusqu'au n° ${used} : le maximum ne peut pas descendre en dessous.`);
     if (v.image_url && !/^https?:\/\//.test(v.image_url)) throw new Error('L\'URL de l\'image doit commencer par https://');
