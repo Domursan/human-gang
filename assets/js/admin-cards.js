@@ -347,7 +347,7 @@ function cardRow(k) {
     : `${nf(liveCount(k.id))} en circulation`;
   return `<tr${k.active ? '' : ' class="is-off"'}>
     <td>#${esc(k.number)}</td>
-    <td><span class="acd-cardcell">${thumb(k)}<span>${esc(k.name)}${k.member_id && pseudo(k.member_id) !== k.name ? `<br><span class="small muted">${esc(pseudo(k.member_id))}</span>` : ''}</span></span></td>
+    <td><span class="acd-cardcell">${thumb(k)}<span>${esc(k.name)}${k.caption ? `<br><span class="small acd-caption">${esc(k.caption)}</span>` : ''}${k.member_id && pseudo(k.member_id) !== k.name ? `<br><span class="small muted">${esc(pseudo(k.member_id))}</span>` : ''}</span></span></td>
     <td>${esc(C.setById.get(k.set_id)?.name ?? '—')}</td>
     <td>${esc(familyLabel(k.family))}</td>
     <td><span class="pill acd-rar acd-rar-${esc(k.rarity)}">${esc(rarityLabel(k.rarity))}</span></td>
@@ -402,6 +402,9 @@ function openCardDialog(k = null) {
               <span class="small muted">Le plus petit numéro libre de la série.</span></div>
           </div>
           <div class="field"><label for="acc-name">Nom</label><input id="acc-name" name="name" required maxlength="60" autocomplete="off" value="${esc(k?.name ?? '')}"></div>
+          <div class="field"><label for="acc-caption">Légende <span class="muted small">(facultatif)</span></label>
+            <input id="acc-caption" name="caption" maxlength="80" autocomplete="off" placeholder="ex. 2015 · CD Projekt Red" value="${esc(k?.caption ?? '')}" aria-describedby="acc-caption-help">
+            <span class="small muted" id="acc-caption-help"><span id="acc-caption-count">${nf((k?.caption ?? '').length)}</span> / 80 caractères, affichée sous le nom.</span></div>
           <div class="acd-grid-2">
             <div class="field"><label for="acc-family">Famille</label>
               <select id="acc-family" name="family">${FAMILIES.map((x) => `<option value="${x.id}"${(k?.family ?? 'membre') === x.id ? ' selected' : ''}>${esc(x.label)}</option>`).join('')}</select></div>
@@ -413,6 +416,7 @@ function openCardDialog(k = null) {
               <input id="acc-file" name="file" type="file" accept="image/png,image/webp,image/jpeg,image/gif,image/svg+xml"></div>
             <div class="field"><label for="acc-url">Ou URL de l'image</label>
               <input id="acc-url" name="image_url" type="url" inputmode="url" placeholder="https://…" value="${esc(k?.image_url ?? '')}"></div>
+            <p class="small muted">Sans image, la carte affiche le logo du gang.</p>
             <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-acc-noimg>Retirer l'image</button></div>
           </fieldset>
           <div class="field"><label for="acc-flavor">Texte d'ambiance</label>
