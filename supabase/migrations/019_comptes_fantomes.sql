@@ -1,0 +1,16 @@
+-- ===== 019 : comptes fantômes (déjà appliqué) + collection Jeux vidéo + historique Discord =====
+-- Un fantôme = ligne de hg_profiles avec is_ghost = true, créée par l'admin avant l'inscription de la personne.
+-- 1. hg_profiles : colonnes is_ghost (bool, défaut false) et ghost_note ; la clé étrangère id → auth.users est retirée
+--    (un fantôme n'a pas de compte auth). Le trigger hg_auth_user_gone sur auth.users supprime le profil (non fantôme)
+--    quand un utilisateur auth est supprimé (remplace l'ancien ON DELETE CASCADE).
+-- 2. Toutes les clés étrangères vers hg_profiles(id) sont en ON UPDATE CASCADE : le rattachement d'un fantôme se fait par
+--    « update hg_profiles set id = <nouvel utilisateur> », et badges, présences, cartes, infos… suivent.
+-- 3. hg_invites.ghost_id (code nominatif). hg_join : si le code est lié à un fantôme, le fantôme prend l'id du nouvel
+--    utilisateur (is_ghost = false, pseudo du fantôme conservé) au lieu de créer un profil.
+-- 4. RPC admin : hg_ghost_create(p_pseudo, p_joined_on, p_note) → uuid ; hg_ghost_invite(p_ghost) → code 60 jours ;
+--    hg_admin_ghosts() → liste avec code actif.
+-- 5. Invisibles pour les membres : hg_members, hg_card_leaderboard filtrent not is_ghost ; hg_member_card ne renvoie un
+--    fantôme qu'à l'admin ; hg_open_direct refuse un fantôme. (hg_profiles n'est lisible que par soi-même et l'admin.)
+-- 6. hg_cards : colonne caption (≤ 80) et famille « jeu » ; série « jeux-video » (100 cartes, inactive) insérée.
+-- 7. Historique : 53 hg_moments et 6 hg_events (retro) importés depuis l'export Discord.
+-- Le détail SQL exécuté est dans l'historique de la session ; ce fichier sert de mémo.
