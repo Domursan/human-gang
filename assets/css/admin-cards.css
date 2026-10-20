@@ -1,5 +1,6 @@
 /* ===== Humane Gang — admin : cartes à collectionner (admin-cards.js) ===== */
-.acd { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+/* contain: inline-size : le tableau large ne remonte pas dans la colonne de la page (pas de défilement horizontal de page) */
+.acd { display: flex; flex-direction: column; gap: 18px; min-width: 0; max-width: 100%; contain: inline-size; }
 .acd .form-error { margin: 0; color: var(--rose); font-weight: 700; }
 .acd-tabs { margin-bottom: 0; }
 .acd-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; }
@@ -19,7 +20,8 @@
 .acd-msg { font-style: italic; }
 
 /* ---------- Tableaux (défilement horizontal dans un conteneur) ---------- */
-.acd-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
+/* position: relative : contient les éléments absolus (libellés masqués) dans la zone défilante */
+.acd-scroll { position: relative; overflow-x: auto; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
 .acd-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
 .acd-table th, .acd-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .acd-table th { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); white-space: nowrap; }

@@ -89,3 +89,4 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 .cartes-dialog-pad h2 { font-size: 20px; margin: 0; }
 .cartes-dialog-pad .btn-row { justify-content: flex-end; }
 .cartes-panel { min-height: 40vh; }
+.cartes-lb .cartes-row > span:last-child { flex: 1 1 180px; min-width: 0; }

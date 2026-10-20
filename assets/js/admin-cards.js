@@ -334,7 +334,7 @@ function cardRow(k) {
     : `${nf(liveCount(k.id))} en circulation`;
   return `<tr${k.active ? '' : ' class="is-off"'}>
     <td>#${esc(k.number)}</td>
-    <td><span class="acd-cardcell">${thumb(k)}<span>${esc(k.name)}${k.member_id ? `<br><span class="small muted">${esc(pseudo(k.member_id))}</span>` : ''}</span></span></td>
+    <td><span class="acd-cardcell">${thumb(k)}<span>${esc(k.name)}${k.member_id && pseudo(k.member_id) !== k.name ? `<br><span class="small muted">${esc(pseudo(k.member_id))}</span>` : ''}</span></span></td>
     <td>${esc(C.setById.get(k.set_id)?.name ?? '—')}</td>
     <td>${esc(familyLabel(k.family))}</td>
     <td><span class="pill acd-rar acd-rar-${esc(k.rarity)}">${esc(rarityLabel(k.rarity))}</span></td>
