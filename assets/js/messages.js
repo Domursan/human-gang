@@ -32,9 +32,9 @@ const S = {
   loadingThread: false,
 };
 let threadTimer = null, listTimer = null;
-// Canaux Supabase Realtime (événements INSERT sur hg_messages) ; ok = abonnement confirmé
-const RT = { list: null, thread: null, listOk: false, threadOk: false };
-let listPullTimer = null, pendingPull = false;
+// Canal Supabase Realtime de la conversation ouverte (Broadcast privé « conv:<id> ») ; ok = abonnement confirmé
+const RT = { thread: null, threadOk: false };
+let pendingPull = false;
 
 /* ---------- Outils ---------- */
 const memberOf = (id) => S.members.get(id) || null;
@@ -326,13 +326,13 @@ async function openConv(id, { focus = true } = {}) {
     $('#msg-thread').innerHTML = `<div class="msg-thread-empty">Chargement impossible : ${esc(errMsg(e))}</div>`;
   } finally { S.loadingThread = false; }
   if (focus && !MOBILE.matches) $('#msg-input')?.focus();
-  subscribeRt('thread', `hg-msg-thread-${id}`, `conversation_id=eq.${id}`, requestThreadPull);
+  subscribeThreadRt(id);
   startThreadPolling();
 }
 function backToList() {
   S.current = null; S.msgs = []; S.lastId = 0;
   stopThreadPolling();
-  unsubscribeRt('thread');
+  unsubscribeThreadRt();
   setUrl(null);
   setView('list');
   renderConvs();
@@ -415,46 +415,42 @@ function startThreadPolling() {
 function stopThreadPolling() { clearInterval(threadTimer); threadTimer = null; }
 function startListPolling() {
   clearInterval(listTimer);
-  const ms = RT.listOk ? POLL_SAFETY_MS : POLL_LIST_MS;
-  listTimer = setInterval(() => { if (!document.hidden) pollList(); }, ms);
+  listTimer = setInterval(() => { if (!document.hidden) pollList(); }, POLL_LIST_MS);
 }
 
-/* ---------- Temps réel (Supabase Realtime) ----------
-   Un INSERT sur hg_messages déclenche une actualisation immédiate. Sans canal confirmé (échec, indisponible,
+/* ---------- Temps réel (Supabase Realtime, Broadcast privé) ----------
+   La base publie sur le canal « conv:<id> » un payload minimal après chaque message (trigger hg_msg_realtime,
+   migration 025) : aucun expéditeur n'y figure. Seuls les membres de la conversation peuvent s'abonner (policy).
+   Un événement déclenche le rechargement du fil par la RPC habituelle. Sans canal confirmé (échec, indisponible,
    ou client de test sans Realtime), les cadences d'interrogation d'origine restent en vigueur. */
-function subscribeRt(key, name, filter, onChange) {
-  unsubscribeRt(key);
+function subscribeThreadRt(id) {
+  unsubscribeThreadRt();
   try {
-    const opts = { event: 'INSERT', schema: 'public', table: 'hg_messages', ...(filter ? { filter } : {}) };
-    const ch = sb.channel(name).on('postgres_changes', opts, onChange);
-    RT[key] = ch;
+    const ch = sb.channel(`conv:${id}`, { config: { private: true, broadcast: { self: false } } })
+      .on('broadcast', { event: 'new_message' }, requestThreadPull);
+    RT.thread = ch;
     ch.subscribe((status) => {
-      if (RT[key] !== ch) return; // canal remplacé ou fermé entre-temps
+      if (RT.thread !== ch) return; // canal remplacé ou fermé entre-temps
       const ok = status === 'SUBSCRIBED';
-      if (RT[`${key}Ok`] === ok) return;
-      RT[`${key}Ok`] = ok;
-      if (key === 'list') startListPolling();
-      else if (S.current) startThreadPolling();
+      if (RT.threadOk === ok) return;
+      RT.threadOk = ok;
+      if (ok) requestThreadPull(); // rattrape un message arrivé pendant l'abonnement
+      if (S.current) startThreadPolling();
     });
   } catch (e) {
     console.warn('[messages] temps réel indisponible', e);
-    RT[key] = null; RT[`${key}Ok`] = false;
+    RT.thread = null; RT.threadOk = false;
   }
 }
-function unsubscribeRt(key) {
-  const ch = RT[key];
-  RT[key] = null; RT[`${key}Ok`] = false;
+function unsubscribeThreadRt() {
+  const ch = RT.thread;
+  RT.thread = null; RT.threadOk = false;
   if (ch) { try { sb.removeChannel(ch); } catch { /* sans effet */ } }
 }
 /** Actualisation du fil demandée par le temps réel ; si une passe est en cours, on en relance une à la fin. */
 function requestThreadPull() {
   if (polling) { pendingPull = true; return; }
   pollThread();
-}
-/** Liste : regroupe les rafales d'événements en une seule actualisation. */
-function scheduleListPull() {
-  clearTimeout(listPullTimer);
-  listPullTimer = setTimeout(() => { if (!document.hidden) pollList(); }, 250);
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
@@ -508,7 +504,6 @@ try {
   const params = new URLSearchParams(location.search);
   const to = params.get('to'), c = params.get('c');
   const UUID = /^[0-9a-f-]{36}$/i;
-  subscribeRt('list', `hg-msg-list-${me.id}`, null, scheduleListPull);
   if (to && UUID.test(to)) await openDirect(to);
   else if (c && UUID.test(c)) await openConv(c, { focus: false });
   else if (!MOBILE.matches && S.convs.length) await openConv(S.convs[0].id, { focus: false });

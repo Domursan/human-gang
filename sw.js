@@ -113,3 +113,35 @@ async function staleWhileRevalidate(req, event) {
   if (hit) { event.waitUntil(update); return hit; }
   return (await update) || Response.error();
 }
+
+/* ---------- Notifications push (F9) ----------
+   Le serveur envoie « Nouveau message » + nom de la conversation (jamais le contenu, jamais l'expéditeur
+   d'un Secret Santa). Un clic ouvre la messagerie sur la conversation concernée. */
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = {}; }
+  const title = String(data.title || 'Humane Gang').slice(0, 80);
+  const options = {
+    body: String(data.body || '').slice(0, 120),
+    tag: String(data.tag || 'hg-message').slice(0, 120),
+    icon: new URL('assets/img/icon-192.png', self.registration.scope).href,
+    data: { conversation_id: data.conversation_id || null },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const conv = event.notification.data?.conversation_id;
+  const target = new URL('messages.html', self.registration.scope);
+  if (conv && /^[0-9a-f-]{36}$/i.test(conv)) target.searchParams.set('c', conv);
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const win = wins.find((w) => w.url.startsWith(self.registration.scope));
+    if (win) {
+      if ('navigate' in win) await win.navigate(target.href).catch(() => {});
+      return win.focus();
+    }
+    return self.clients.openWindow(target.href);
+  })());
+});
