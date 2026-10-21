@@ -43,6 +43,7 @@
   <link rel="stylesheet" href="assets/css/admin-ghosts.css">
   <link rel="stylesheet" href="assets/css/cartes-card.css">
   <link rel="stylesheet" href="assets/css/admin-cards.css">
+  <link rel="stylesheet" href="assets/css/admin-staff.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -51,7 +52,7 @@
         <div class="eyebrow">Coulisses</div>
         <h1 class="page-title">Administration</h1>
       </div>
-      <p class="muted small admin-intro">Tu as accès à toutes les données des membres. Les attributions du Secret Santa restent masquées tant que tu ne demandes pas à les voir.</p>
+      <p class="muted small admin-intro">Les sections visibles dépendent de tes droits. Les attributions du Secret Santa restent masquées tant que tu ne demandes pas à les voir.</p>
     </div>
 
     <div id="god-root" class="god-root"></div>
@@ -72,6 +73,7 @@
         <a href="#assistance">Assistance <span class="nav-count" data-count="assistance" hidden></span></a>
         <a href="#messagerie">Messagerie</a>
         <a href="#journal">Journal</a>
+        <a href="#staff" data-admin-only>Staff</a>
         <a href="#bot">Bot Discord</a>
         <a href="#theme">Thème</a>
       </nav>
@@ -189,6 +191,11 @@
         <section id="journal" class="admin-section" aria-labelledby="h-journal">
           <h2 id="h-journal" class="section-title">Journal</h2>
           <div id="log-root" class="stack"><div class="empty">Chargement…</div></div>
+        </section>
+
+        <section id="staff" class="admin-section" aria-labelledby="h-staff" data-admin-only>
+          <h2 id="h-staff" class="section-title">Staff</h2>
+          <div id="staff-root"><div class="empty">Chargement du Staff…</div></div>
         </section>
 
         <section id="bot" class="admin-section" aria-labelledby="h-bot">

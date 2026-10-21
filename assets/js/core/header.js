@@ -2,6 +2,7 @@
 // déconnexion) sont dans une colonne latérale <aside class="side-tools"> : à droite sur ordinateur, sous l'en-tête sur téléphone.
 import { sb } from './supabase.js';
 import { getCachedProfile } from './profile.js';
+import { getCachedPerms, canPanel, clearPerms } from './perms.js';
 import { getMyPages } from './pages-access.js';
 import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
@@ -51,7 +52,9 @@ function navHtml(profile) {
     if (slug === 'messages') return `<a class="nav-msg" href="messages.html"${curAttr(href)} aria-label="Messages">${ICON_MSG}<span class="nav-msg-label">${esc(label)}</span><span class="nav-badge" hidden></span></a>`;
     return `<a href="${href}"${curAttr(href)} data-page="${esc(slug)}">${esc(label)}</a>`;
   }).join('');
-  const admin = profile?.is_admin ? `<a class="nav-admin" href="admin.html"${curAttr('admin.html')}>Admin</a>` : '';
+  // Admin : lien « Admin » ; Staff (permissions accordées) : lien « Staff » vers le même panel.
+  const panel = profile && (profile.is_admin || canPanel(getCachedPerms()));
+  const admin = panel ? `<a class="nav-admin" href="admin.html"${curAttr('admin.html')}>${profile.is_admin ? 'Admin' : 'Staff'}</a>` : '';
   return `${profile ? links : ''}${admin}`;
 }
 /** Remplit la navigation de l'en-tête (appelée quand les pages accessibles sont connues). */
@@ -124,6 +127,7 @@ export function renderHeader(profile, { nav = true } = {}) {
     const b = e.currentTarget; b.disabled = true;
     try { await sb.auth.signOut(); } catch {}
     try { sessionStorage.removeItem('hg_badges_checked'); } catch {}
+    clearPerms();
     location.href = 'compte.html';
   });
 }

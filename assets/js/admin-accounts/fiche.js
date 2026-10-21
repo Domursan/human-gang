@@ -3,6 +3,8 @@ import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml } from 
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
 import { IC } from './common.js';
 import { A, H, TABS, root } from './state.js';
+import { isAdminView } from '../admin/perms.js';
+import { permLabel } from '../admin-staff.js';
 import { enterInspect, updateInspect } from './inspect.js';
 import { profileHtml, infosHtml } from './profile.js';
 import { ssHtml } from './ss.js';
@@ -31,8 +33,10 @@ async function loadDetail(uid) {
   ]);
   if (profile.error) throw profile.error;
   if (!profile.data) throw new Error('Profil introuvable.');
+  // Statut Staff du membre : visible de l'administrateur seulement (liste réservée à l'admin)
+  const staffRes = isAdminView() ? await q(sb.rpc('hg_staff_list')) : { data: null, error: null };
   const d = {
-    profile: profile.data, info, editions, parts, wishes, assigns, events, rsvps, photos, ideas, support, badges, ubadges,
+    profile: profile.data, info, staff: (staffRes.data ?? []).find((s) => s.user_id === uid) ?? null, editions, parts, wishes, assigns, events, rsvps, photos, ideas, support, badges, ubadges,
     signed: new Map(),
   };
   // Miniatures signées (bucket privé)
@@ -67,6 +71,13 @@ export async function reloadDetail() {
 /** Vrai si la fiche ouverte est celle d'un fantôme (pas encore inscrit). */
 const isGhostFiche = () => !!(A.d?.profile?.is_ghost ?? A.accounts.find((a) => a.id === A.uid)?.is_ghost);
 
+/** Pastille « Staff » et permissions accordées (administrateur seulement). */
+function staffLineHtml(st) {
+  if (!st || !isAdminView()) return '';
+  const perms = st.perms?.length ? st.perms.map((k) => `<span class="pill pill-muted">${esc(permLabel(k))}</span>`).join('') : '<span class="small muted">aucune permission</span>';
+  return `<div class="acc-staff"><span class="pill pill-ok">Staff</span>${st.active ? '' : ' <span class="pill pill-muted">inactif</span>'} ${perms}</div>`;
+}
+
 function detailHead() {
   const acc = A.accounts.find((a) => a.id === A.uid) || {};
   const p = A.d?.profile || { pseudo: acc.pseudo };
@@ -82,6 +93,7 @@ function detailHead() {
         ${ghost
           ? '<div class="small muted">Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.</div>'
           : `<div class="small muted">${esc(acc.email || '')}${acc.created_at ? ` · inscrit le ${esc(fmtDate(acc.created_at))}` : ''}${acc.last_sign_in_at ? ` · vu le ${esc(fmtDateTime(acc.last_sign_in_at))}` : ''}</div>`}
+${staffLineHtml(A.d?.staff)}
       </div>
       ${p.is_admin ? '<span class="pill pill-ok">admin</span>' : ''}
     </div>`;

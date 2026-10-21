@@ -1,5 +1,6 @@
 // Session et profil du membre connecté (mis en cache pour la page courante).
 import { sb } from './supabase.js';
+import { loadMyPerms, canPanel } from './perms.js';
 
 let _profile;
 /** Profil mis en cache (undefined avant le premier chargement, null si pas de profil). Synchrone. */
@@ -24,8 +25,10 @@ export async function requireMember() {
   if (!p) { location.href = `compte.html?next=${encodeURIComponent(location.pathname.split('/').pop())}`; throw new Error('redirect'); }
   return p;
 }
+/** Panel d'administration : admin, ou Staff actif avec au moins une permission. Sinon redirection vers l'accueil. */
 export async function requireAdmin() {
   const p = await requireMember();
-  if (!p.is_admin) { location.href = 'accueil.html'; throw new Error('redirect'); }
+  if (p.is_admin) return p;
+  if (!canPanel(await loadMyPerms({ strict: true }))) { location.href = 'accueil.html'; throw new Error('redirect'); }
   return p;
 }
