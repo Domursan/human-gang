@@ -7,6 +7,7 @@ import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
 import { avatarHtml, esc } from './util.js';
 import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT } from './icons.js';
+import { searchButtonHtml, bindSearch } from './search.js';
 
 // Navigation de secours (accès inconnus) : identique à l'ancienne navigation fixe.
 const NAV_FALLBACK = [
@@ -77,7 +78,8 @@ export function renderHeader(profile, { nav = true } = {}) {
   document.querySelector('.site-header')?.remove();
   const account = `<a class="nav-account" href="compte.html"${curAttr('compte.html')}></a>`;
   const god = profile?.is_admin ? `<button class="nav-icon nav-god" type="button" aria-pressed="false" aria-label="Activer le mode sans limite" title="Mode sans limite">${ICON_BOLT}</button>` : '';
-  const prefs = `${god}<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
+  const search = profile ? searchButtonHtml() : '';
+  const prefs = `${search}${god}<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
   const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
   const toggle = '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>';
   const header = document.createElement('header');
@@ -115,6 +117,7 @@ export function renderHeader(profile, { nav = true } = {}) {
     else openGodDialog(e);
   });
   paintGod();
+  if (profile) bindSearch(header);
   header.querySelector('.nav-logout')?.addEventListener('click', async (e) => {
     const b = e.currentTarget; b.disabled = true;
     try { await sb.auth.signOut(); } catch {}

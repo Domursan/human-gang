@@ -387,6 +387,48 @@ html[data-mode="daltonien"] :focus-visible { outline-width: 3px; }
 .lvl-name { font-size: 13px; font-weight: 700; color: var(--sand); }
 html[data-mode="clair"] .lvl-pip.is-on { color: #FFFFFF; }
 
+/* ===== Recherche globale (dialogue ouvert par la loupe de l'en-tête ou Ctrl/Cmd+K) ===== */
+.search-dialog { width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 32px); padding: 0; overflow: hidden;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .5); }
+.search-dialog[open] { display: flex; flex-direction: column; }
+.search-dialog::backdrop { background: rgba(4, 4, 8, .62); backdrop-filter: blur(3px); }
+.search-form { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px 22px; flex: 1 1 auto; min-height: 0; box-sizing: border-box; }
+.search-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.search-head h2 { font-size: 24px; }
+.search-close { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; border: 1px solid var(--border);
+  background: transparent; color: var(--text); cursor: pointer; flex: none; }
+@media (hover: hover) { .search-close:hover { background: var(--surface-2); } }
+.search-box { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--muted); flex: none; }
+.search-box:focus-within { border-color: var(--sand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--sand) 35%, transparent); }
+.search-box svg { flex: none; }
+.search-input { flex: 1; min-width: 0; min-height: 46px; padding: 0; border: 0; background: transparent; color: var(--text);
+  font: inherit; font-size: 16px; outline: none; }
+.search-input::placeholder { color: var(--muted); opacity: 1; }
+.search-results { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
+.search-results .sr-group { display: flex; flex-direction: column; gap: 6px; }
+.sr-group-title { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-body); font-size: 13px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.sr-count { font-variant-numeric: tabular-nums; font-size: 12px; line-height: 20px; padding: 0 8px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text); letter-spacing: 0; }
+.sr-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.sr-item { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 12px; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; color: var(--text); text-decoration: none; }
+@media (hover: hover) { .sr-item:hover { background: var(--surface-2); border-color: var(--border); } }
+.sr-item:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.sr-ico { display: inline-flex; flex: none; }
+.sr-title { flex: 0 1 auto; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.sr-sub { flex: 1 1 100%; font-size: 13px; color: var(--muted); }
+.sr-empty, .sr-more { margin: 0; }
+.sr-status { margin: 0; min-height: 1.5em; font-size: 14px; color: var(--muted); }
+html[data-mode="clair"] .search-dialog { box-shadow: 0 24px 80px rgba(0, 0, 0, .18); }
+html[data-mode="clair"] .search-dialog::backdrop { background: rgba(30, 28, 34, .38); }
+@media (max-width: 600px) {
+  .search-dialog { inset: 0; width: 100%; max-width: none; max-height: none; height: 100vh; height: 100dvh; margin: 0; border-radius: 0; border: 0; }
+  .search-form { padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
+}
+
 /* ===== Mode sans limite (admin) : html[data-godmode="on"] posé par core.js =====
    Bandeau fixe en haut (au-dessus de l'en-tête, le contenu est décalé de --god-h), cadre d'écran en bandes
    « danger » jaune/noir (animées lentement, figées si mouvement réduit ou effets coupés). */
