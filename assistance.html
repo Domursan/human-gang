@@ -103,6 +103,22 @@
         <button class="btn btn-ghost" type="button" id="support-again">Nouvelle demande</button>
       </div>
     </section>
+
+    <section class="card stack my-support" id="my-support" hidden aria-labelledby="my-support-title">
+      <div id="my-support-list-view">
+        <h2 id="my-support-title">Mes demandes</h2>
+        <p class="small muted" id="my-support-empty" hidden>Tu n'as pas encore envoyé de demande.</p>
+        <p class="small muted" id="my-support-error" role="alert" hidden></p>
+        <ul class="my-support-list" id="my-support-list"></ul>
+      </div>
+      <div id="my-support-detail" hidden>
+        <button class="btn btn-ghost btn-sm" type="button" id="my-support-back">← Mes demandes</button>
+        <h3 class="my-support-subject" id="my-support-subject"></h3>
+        <p class="small muted" id="my-support-meta"></p>
+        <div class="my-thread" id="my-support-thread" role="log" aria-label="Fil de la demande"></div>
+        <p class="small muted">Pour ajouter une précision, envoie une nouvelle demande ci-dessus.</p>
+      </div>
+    </section>
   </main>
   <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/assistance.js"></script>

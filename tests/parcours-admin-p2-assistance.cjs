@@ -1,6 +1,6 @@
 // Parcours : Communication › Assistance et Boîte à idées (liste en colonne 2, détail dans la zone, fiche rapide).
 // (a) administrateur 1440 px : compteurs et filtres de la liste, sélection (URL #communication/assistance/<id>),
-//     en-tête (statut, « Résoudre »), fil en lecture seule, panneau d'infos (fiche rapide, historique, fiche membre),
+//     en-tête (statut, « Résoudre »), fil avec zone de réponse, panneau d'infos (fiche rapide, historique, fiche membre),
 //     changement de statut écrit en base et compteur de navigation mis à jour, recherche dans la liste.
 // (b) Boîte à idées 1440 px : liste, sélection, « Retenir » écrit en base (le badge proposé est refusé), compteur mis à jour.
 // (c) mobile 390 px : la liste occupe l'écran ; choisir une demande ouvre le détail, « retour » revient à la liste.
@@ -71,7 +71,7 @@ const dbRows = (p, table) => p.evaluate((t) => window.__DB[t].map((r) => ({ ...r
     check(await p.inputValue('#support-root .ui-dhead select') === 'ouverte', '(a) en-tête : statut « ouverte » sélectionné');
     check((await p.textContent('#support-root .ui-dhead-actions [data-primary]')).includes('Résoudre'), '(a) en-tête : bouton « Résoudre »');
     check((await p.textContent('#support-root .ui-thread-log')).includes('je n\'ai pas reçu mes Paillettes'), '(a) fil : message initial de la demande');
-    check(await p.isHidden('#support-root .ui-composer'), '(a) fil : pas de zone de réponse (la base ne garde pas de réponses)');
+    check(await p.isVisible('#support-root .ui-composer'), '(a) fil : zone de réponse visible (réponse publique et note interne)');
     check(await p.locator('#support-root .ui-msg').count() === 1, '(a) fil : un seul message');
 
     // Panneau d'infos : fiche rapide, historique des demandes du même membre, fiche membre

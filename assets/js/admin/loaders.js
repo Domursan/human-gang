@@ -1,6 +1,6 @@
 // Admin : chargement des données partagées (membres, invitations, Secret Santa, badges, idées, assistance).
 // Chaque donnée se charge une seule fois (ensureX) : les sections qui en ont besoin attendent la même promesse.
-import { sb } from '../core.js';
+import { sb, getUser } from '../core.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
 import { S } from './state.js';
 import { check } from './common.js';
@@ -44,7 +44,17 @@ export async function loadBadges() {
   S.badges = check(b) ?? []; S.userBadges = check(u) ?? [];
 }
 export async function loadIdeas() { S.ideas = check(await sb.from('hg_ideas').select('*').order('created_at', { ascending: false })) ?? []; }
-export async function loadSupport() { S.support = check(await sb.from('hg_support').select('*').order('created_at', { ascending: false })) ?? []; }
+/** Demandes (tri par activité), leurs réponses (notes internes comprises) et l'identifiant de l'admin connecté. */
+export async function loadSupport() {
+  const [s, r, u] = await Promise.all([
+    sb.from('hg_support').select('*').order('updated_at', { ascending: false }),
+    sb.from('hg_support_replies').select('*').order('created_at'),
+    getUser(),
+  ]);
+  S.support = check(s) ?? [];
+  S.supportReplies = check(r) ?? [];
+  S.meId = u?.id ?? null;
+}
 
 /* ---------- Versions partagées (une seule requête par donnée pour toutes les sections) ---------- */
 export const ensureMembers = () => once('members', loadMembers);
