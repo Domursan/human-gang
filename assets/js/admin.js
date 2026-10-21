@@ -8,8 +8,8 @@ import { mountThemesSection, themeActions } from './admin-themes.js';
 import { mountMessagesSection, listMessages, openMessages } from './admin-messages.js';
 import { mountLogSection, listLog, openLog } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
-import { initAccounts, refreshAccounts, showAccount, emptyDetail, mountAccountsList, mountAccountsInfo } from './admin-accounts.js';
-import { mountGhostsSection, refreshGhostsSection, mountGhostsList, showGhost } from './admin-ghosts.js';
+import { initAccounts, refreshAccounts, showAccount, showGhostFiche, emptyDetail, mountAccountsList, mountAccountsInfo } from './admin-accounts.js';
+import { ensureGhosts, ghostZoneActions, openNewGhostDrawer } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection, accessActions } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { eventsSub } from './admin-events.js';
@@ -61,10 +61,17 @@ function loadAccountsPanel() {
   });
 }
 // Fournisseur `open` de Comptes : adresse #membres/comptes/<id>[/<onglet>] ; sans identifiant, la zone principale est vide.
+// Comptes inscrits et fantômes sont dans la même liste : un fantôme s'ouvre sur sa fiche (code, liaison), sauf avec un onglet.
+// #membres/comptes/nouveau ouvre le tiroir de création d'un fantôme (adresse transitoire).
 async function openFicheRoute(_el, { id, tab }) {
-  if (!id) { emptyDetail(); return; }   // #membres/comptes : la zone principale invite à choisir dans la liste
+  if (id === 'nouveau') { location.hash = '#membres/comptes'; openNewGhostDrawer(); return; }
+  if (!id) { setActions(ghostZoneActions(null)); emptyDetail(); return; } // #membres/comptes : la zone principale invite à choisir dans la liste
   await ensureAccounts();
-  if (!A.accounts.some((a) => a.id === id)) { toast('Compte introuvable.', 'error'); navigate('membres/comptes'); return; }
+  await ensureGhosts();
+  const acc = A.accounts.find((a) => a.id === id);
+  if (!acc) { toast('Compte introuvable.', 'error'); navigate('membres/comptes'); return; }
+  setActions(ghostZoneActions(acc.is_ghost ? null : id));
+  if (acc.is_ghost && !tab) { showGhostFiche(id); return; }
   showAccount(id, tab);
 }
 
@@ -88,19 +95,6 @@ registerSub('membres/comptes', {
   list: (el) => mountAccountsList(el),
   open: openFicheRoute,
   info: (el) => mountAccountsInfo(el),
-});
-registerSub('membres/fantomes', {
-  // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
-  main: () => {
-    ensureAccounts();
-    mountGhostsSection($('#ghosts-root'), {
-      openFiche: (uid) => navigate(`membres/comptes/${uid}`),
-      onChange: async () => { await loadMembers(); await refreshAccounts(); renderBadges(); renderStats(); },
-    });
-    refreshGhostsSection();
-  },
-  list: (el) => mountGhostsList(el),
-  open: (el, { id }) => showGhost(id),
 });
 registerSub('membres/invitations', {
   main: () => mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } }),
@@ -144,9 +138,9 @@ registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), op
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */
 // Les réglages du bot et du thème se chargent avec leur section (admin-bot.js, admin-themes.js).
-const needMembers = anySection('comptes', 'fantomes', 'membres', 'secret-santa', 'badges', 'idees', 'assistance', 'messagerie');
+const needMembers = anySection('comptes', 'membres', 'secret-santa', 'badges', 'idees', 'assistance', 'messagerie');
 const needSS = has('secret-santa');
-const needBadges = anySection('badges', 'evenements', 'comptes', 'fantomes', 'membres');
+const needBadges = anySection('badges', 'evenements', 'comptes', 'membres');
 await Promise.all([
   needMembers ? safe(ensureMembers, (e) => toast(`Membres : ${errMsg(e)}`, 'error')) : null,
   has('membres') ? safe(ensureInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }) : null,

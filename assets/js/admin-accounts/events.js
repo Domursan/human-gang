@@ -5,7 +5,8 @@ import { safeUrl } from '../utils.js';
 import { busy, check, fromLocalInput } from './common.js';
 import { A, IDEA } from './state.js';
 import { loadAccounts, paintAccountsList } from './list.js';
-import { selectTab, renderPanel, renderDetail, reloadDetail } from './fiche.js';
+import { selectTab, renderPanel, renderDetail, reloadDetail, paintSugg } from './fiche.js';
+import { bindGhostPanel, setGhostHooks, ensureGhosts } from '../admin-ghosts.js';
 import { closeDetail } from './inspect.js';
 import { saveProfile, saveInfos } from './profile.js';
 import { ssJoin, ssLeave, setPair, clearPair, curEdition } from './ss.js';
@@ -140,6 +141,20 @@ export async function initAccounts({ me, onChange }) {
   A.me = me; if (onChange) A.onChange = async (k) => { try { await onChange(k); } catch (e) { console.error(e); } };
   bindAccounts();
   bindSharedFields();
-  try { await loadAccounts(); } catch (e) { A.listError = e; }
+  // Fantômes : zone principale (fiche d'un fantôme, bannière d'un compte) et tiroirs ; effets de bord ici.
+  bindGhostPanel($('#acc-root'));
+  setGhostHooks({
+    members: () => A.accounts.filter((a) => !a.is_ghost && a.pseudo).map((a) => ({ id: a.id, pseudo: a.pseudo })),
+    refreshed: async () => { await A.onChange('members'); paintSugg(); },
+    merged: async (ghostId, memberId) => {
+      // Après une liaison : la fiche du compte inscrit s'ouvre (rechargée si elle est déjà à l'écran)
+      if (A.uid === memberId) return reloadDetail();
+      location.hash = `#membres/comptes/${memberId}`;
+    },
+    removed: async (ghostId) => { if (A.uid === ghostId) location.hash = '#membres/comptes'; },
+    openFiche: (id) => { location.hash = `#membres/comptes/${id}/profil`; },
+  });
+  try { await Promise.all([loadAccounts(), ensureGhosts()]); } catch (e) { A.listError = e; }
   paintAccountsList();
+  paintSugg();
 }

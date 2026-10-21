@@ -8,7 +8,7 @@ import { $$ } from '../core/util.js';
 
 export const SECTION_PERM = {
   apercu: null,
-  comptes: 'membres', fantomes: 'membres', acces: 'membres', membres: 'membres',
+  comptes: 'membres', acces: 'membres', membres: 'membres',
   'secret-santa': 'secret_santa',
   badges: 'badges',
   evenements: 'themes',
@@ -36,7 +36,6 @@ export const DOMAINS = [
   ] },
   { id: 'membres', label: 'Membres', icon: 'users', subs: [
     { id: 'comptes', label: 'Comptes', section: 'comptes' },
-    { id: 'fantomes', label: 'Comptes fantômes', section: 'fantomes' },
     { id: 'invitations', label: 'Invitations', section: 'membres' },
     { id: 'acces', label: 'Accès aux pages', section: 'acces' },
   ] },

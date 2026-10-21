@@ -33,7 +33,7 @@ une permission) sert à la lecture des profils et de l'état du panel.
 
 | Clé | Ce qu'elle ouvre dans le panel | Tables et stockage (`hg_perm_tables`) |
 |---|---|---|
-| `membres` | Membres › Comptes, Comptes fantômes, Invitations, Accès aux pages | `hg_profiles`, `hg_profile_info`, `hg_invites`, `hg_invite_links`, `hg_page_access` |
+| `membres` | Membres › Comptes (comptes inscrits et fantômes ; liaison fantôme → compte), Invitations, Accès aux pages | `hg_profiles`, `hg_profile_info`, `hg_invites`, `hg_invite_links`, `hg_page_access` |
 | `evenements` | Vie du gang › Sorties IRL | `hg_events`, `hg_event_dates`, `hg_event_rsvps`, `hg_event_date_votes` |
 | `souvenirs` | Vie du gang › Souvenirs et photos | `hg_moments`, `hg_photos`, `hg_reactions`, stockage `hg-photos` |
 | `secret_santa` | Vie du gang › Secret Santa (éditions, participants, exclusions, tirages, vœux) | `hg_ss_editions`, `hg_ss_participants`, `hg_ss_exclusions`, `hg_ss_wishes`, `hg_ss_assignments` |

@@ -11,6 +11,8 @@ import { DOMAINS, visibleDomains } from './perms.js';
 const LEGACY = {};
 for (const d of DOMAINS) for (const s of d.subs) if (!LEGACY[s.section] || s.id === s.section) LEGACY[s.section] = `${d.id}/${s.id}`;
 const DOMAIN_IDS = new Set(DOMAINS.map((d) => d.id));
+// Adresses retirées : les comptes fantômes sont dans Comptes (#fantomes et #membres/fantomes[/<id>] suivent la liste).
+const MOVED = { fantomes: 'membres/comptes', 'membres/fantomes': 'membres/comptes' };
 
 /** Première sous-section permise, ou null. */
 export function defaultRoute() {
@@ -38,6 +40,8 @@ export function resolve(hash, { mobile = false } = {}) {
   const { raw, dom: a, sub: b, id, tab } = parseHash(hash);
   const fallback = defaultRoute();
   if (!raw) return { redirect: fallback };
+  const moved = MOVED[b === undefined ? a : `${a}/${b}`];
+  if (moved) return { redirect: [moved, id, tab].filter(Boolean).join('/') };
   if (b === undefined && LEGACY[a]) return { redirect: LEGACY[a] };
   // Ancienne ancre suivie de segments (#comptes/<id>/<onglet>) : mêmes segments sous la nouvelle route
   if (!DOMAIN_IDS.has(a) && LEGACY[a]) return { redirect: [LEGACY[a], b, id, tab].filter(Boolean).join('/') };

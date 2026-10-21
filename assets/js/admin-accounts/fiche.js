@@ -14,6 +14,7 @@ import { profileHtml, infosHtml } from './profile.js';
 import { ssHtml } from './ss.js';
 import { irlHtml, photosHtml, contribHtml, badgesHtml } from './activity.js';
 import { roleOf, selectInList } from './list.js';
+import { ghostBannerHtml, renderGhostView } from '../admin-ghosts.js';
 
 /* =========================================================
    Lectures
@@ -142,7 +143,7 @@ const tabOf = (t) => (TABS.some(([k]) => k === t) ? t : 'profil');
 
 /** Ouvre la fiche d'un membre dans la zone principale (l'URL est déjà à jour). */
 export async function openAccount(uid, { tab } = {}) {
-  A.uid = uid; A.tab = tabOf(tab); A.showPair = false; A.d = { signed: new Map() };
+  A.uid = uid; A.tab = tabOf(tab); A.showPair = false; A.d = { signed: new Map() }; A.ghostView = false;
   root().innerHTML = '<div class="empty">Chargement de la fiche…</div>';
   selectInList(uid);
   paintInfo();
@@ -180,9 +181,17 @@ export async function reloadDetail() {
   } catch (e) { toast(errMsg(e), 'error'); }
 }
 
+/** Fiche d'un fantôme (adresse #membres/comptes/<id>) : code, note et liaison à un compte inscrit (admin-ghosts.js). */
+export function showGhostFiche(uid) {
+  A.uid = uid; A.d = null; A.ghostView = true; A.showPair = false;
+  selectInList(uid);
+  renderGhostView(root(), uid);
+  paintInfo();
+}
+
 /** Écran sans élément choisi : la zone principale invite à choisir dans la liste. */
 export function emptyDetail() {
-  A.uid = null; A.d = null; A.showPair = false;
+  A.uid = null; A.d = null; A.showPair = false; A.ghostView = false;
   selectInList(null);
   root().innerHTML = `<div class="acc-empty">
       <p class="acc-empty-t">Choisis un membre dans la liste</p>
@@ -237,7 +246,10 @@ function paintHead() {
     member: { pseudo: p.pseudo || acc.pseudo || '?', avatar_url: p.avatar_url, color: p.color },
     title: `${p.pseudo || acc.pseudo || 'Membre'}${ghost ? ' (fantôme)' : ''}`,
     subtitle,
-    actions: [{ label: 'Fermer la fiche', onClick: closeDetail }],
+    actions: [
+      ...(ghost ? [{ label: 'Détail du fantôme', onClick: () => { location.hash = `#membres/comptes/${A.uid}`; } }] : []),
+      { label: 'Fermer la fiche', onClick: closeDetail },
+    ],
   });
   const meta = $('#acc-meta');
   if (meta) meta.innerHTML = `${p.is_admin ? '<span class="pill pill-ok">admin</span> ' : ''}${staffLineHtml(A.d?.staff)}`;
@@ -255,13 +267,21 @@ function tabCount(k) {
 export function renderDetail() {
   root().innerHTML = `
     <div id="acc-dh"></div>
+    <div id="acc-sugg"></div>
     <div class="acc-meta" id="acc-meta"></div>
     <div class="acc-tabs" role="tablist" aria-label="Données du membre">
       ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
     </div>
     <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
   paintHead();
+  paintSugg();
   paintInfo();
+}
+
+/** Bannière : fantômes qui ressemblent à ce compte actif (liaison en un clic). Vide pour un fantôme. */
+export function paintSugg() {
+  const host = $('#acc-sugg'); if (!host) return;
+  host.innerHTML = A.uid && !isGhostFiche() ? ghostBannerHtml(A.uid) : '';
 }
 
 /** Met à jour les compteurs des onglets sans reconstruire la fiche (le focus reste sur l'onglet). */
@@ -299,7 +319,7 @@ export async function selectTab(k, focus = false) {
   const panel = $('#acc-panel');
   if (!panel) return renderDetail();
   panel.setAttribute('aria-labelledby', `acc-tab-${k}`);
-  if (A.uid) history.replaceState(null, '', `#membres/comptes/${A.uid}${k === 'profil' ? '' : `/${k}`}`);
+  if (A.uid) history.replaceState(null, '', `#membres/comptes/${A.uid}${k === 'profil' && !isGhostFiche() ? '' : `/${k}`}`);
   if (!A.d || tabReady(k)) renderPanel();
   else {
     // Première ouverture de l'onglet : seules ses données sont lues
@@ -326,6 +346,7 @@ export function mountAccountsInfo(el) {
 export function paintInfo() {
   const host = $('#acc-info'); if (!host) return;
   infoH?.destroy(); infoH = null;
+  if (A.ghostView && A.uid) { host.innerHTML = '<p class="ui-info-empty">Fantôme : pas encore inscrit. Son résumé apparaîtra à son inscription.</p>'; return; }
   if (!A.uid || !A.d) { host.innerHTML = '<p class="ui-info-empty">Sélectionne un membre pour voir son résumé.</p>'; return; }
   const d = A.d; const p = d.profile;
   if (!p) { host.innerHTML = '<p class="ui-info-empty">Chargement du résumé…</p>'; return; }
