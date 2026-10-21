@@ -496,6 +496,7 @@ export async function mountTrades(el, ctx = {}) {
       : await sb.rpc('hg_trade_propose', { p_to: E.to, p_give: give, p_want: want, p_give_p: E.giveP, p_want_p: E.wantP, p_message: message, p_parent: E.parent });
     E.busy = false; setEditorBusy(false);
     if (res.error) return showErr(errMsg(res.error));
+    if (!gift && res.data) notify('trade_offer', { trade_id: res.data }).catch(() => {}); // MP au destinataire (opt-in)
     dlg.close();
     const msg = gift ? `Cadeau offert à ${to.pseudo}` : isCounter ? 'Contre-proposition envoyée' : `Offre envoyée à ${to.pseudo}`;
     await finish(null, msg);

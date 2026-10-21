@@ -24,6 +24,9 @@
 //                    appartient à l'appelant (rarity/shiny/serial du client ignorés : lus en base). Désactivable (bot.notify.card_pull).
 //   card_trade       { trade_id: uuid } destinataire de l'offre (celui qui accepte) → annonce « échange conclu » dans le salon.
 //                    Facultative : seulement si bot.notify.card_trade === true (désactivée par défaut).
+//   trade_offer      { trade_id: uuid } auteur de l'offre (ou de la contre-proposition) → MP au destinataire « te propose
+//                    un échange » : cartes et Paillettes donnés/demandés (noms tronqués). Offre créée il y a moins de 15 min,
+//                    encore ouverte (status proposee). Désactivable (bot.notify.trade_offer, activé par défaut).
 //   card_wish        { cards: uuid[] (≤ 10) } membre, après l'ouverture d'un booster → MP aux membres qui ont la carte dans
 //                    leur liste de souhaits et qui ont activé l'alerte (profil.notify_card_wish). Une fois par exemplaire
 //                    (wish_notified_at). Le membre qui a obtenu la carte n'est pas nommé. Désactivable (bot.notify.card_wish).
@@ -50,7 +53,7 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 type Bot = MentionBot & {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'card_wish', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish', boolean>>;
 };
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
@@ -425,6 +428,55 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   return { channel };
 }
 
+/* Offre d'échange reçue : MP au destinataire, envoyé par l'auteur juste après la création (ou la contre-proposition). */
+const TRADE_NAME_MAX = 40;   // caractères par nom de carte
+const TRADE_NAMES_SHOWN = 5; // noms listés, le reste est résumé
+const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
+function tradeSide(cards: string[], paillettes: number): string {
+  const shown = cards.slice(0, TRADE_NAMES_SHOWN).map((n) => truncate(n, TRADE_NAME_MAX));
+  const more = cards.length - shown.length;
+  const parts: string[] = [];
+  if (cards.length) parts.push(`${cards.length} ${plural(cards.length, 'carte', 'cartes')} (${shown.join(', ')}${more > 0 ? ` et ${more} autre${more > 1 ? 's' : ''}` : ''})`);
+  if (paillettes > 0) parts.push(`${paillettes} Paillettes`);
+  return parts.join(' + ') || 'rien';
+}
+
+async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
+  if (bot.notify?.trade_offer === false) return { skipped: 'désactivé' };
+  const { data: t } = await db.from('hg_card_trades')
+    .select('id, from_user, to_user, status, created_at, parent_id, from_paillettes, to_paillettes').eq('id', p.trade_id).maybeSingle();
+  if (!t) throw new HttpError(404, 'Offre introuvable');
+  if (t.from_user !== me.id) throw new HttpError(403, 'Seul l\'auteur de l\'offre peut la notifier');
+  if (t.status !== 'proposee') return { skipped: 'offre non ouverte' };
+  if (!recent(t.created_at)) return { skipped: 'offre déjà ancienne' };
+
+  // Anti-doublon : hg_card_trades n'a pas de colonne « notifiée ». Le site n'appelle qu'une fois par création, et la
+  // fenêtre de 15 min écarte les vieilles offres. Un 2e appel dans la fenêtre enverrait un 2e MP.
+  const other = await getProfile(t.to_user);
+  if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+
+  // Cartes : côté 'from' = données par l'auteur, côté 'to' = demandées à leur destinataire (lecture serveur).
+  const { data: items } = await db.from('hg_card_trade_items')
+    .select('side, hg_card_copies(shiny, hg_cards(name))').eq('trade_id', t.id);
+  type Row = { side: 'from' | 'to'; hg_card_copies: { shiny: boolean; hg_cards: { name: string } | null } | null };
+  const names = (side: 'from' | 'to') => ((items ?? []) as unknown as Row[])
+    .filter((r) => r.side === side)
+    .map((r) => `${r.hg_card_copies?.hg_cards?.name ?? 'Carte'}${r.hg_card_copies?.shiny ? ' (brillante)' : ''}`);
+
+  const rendered = renderTemplate('trade_offer_dm', {
+    pseudo: me.pseudo,
+    contre: t.parent_id ? ' (contre-proposition)' : '',
+    donne: tradeSide(names('from'), t.from_paillettes ?? 0),
+    demande: tradeSide(names('to'), t.to_paillettes ?? 0),
+    lien: link('cartes.html') ?? '',
+  }, tpl);
+  const ok = await trySend(() => sendDM(other.discord_id!, embed({
+    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+  })), `MP offre ${other.id}`);
+  return { dm: ok };
+}
+
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
 const WISH_MAX_DMS = 50;   // MP maximum par appel
@@ -508,6 +560,7 @@ Deno.serve(async (req) => {
       case 'dyn_announce': result = await onDynAnnounce(me, bot, payload, tpl); break;
       case 'card_pull': result = await onCardPull(me, bot, payload, tpl); break;
       case 'card_trade': result = await onCardTrade(me, bot, payload, tpl); break;
+      case 'trade_offer': result = await onTradeOffer(me, bot, payload, tpl); break;
       case 'card_wish': result = await onCardWish(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }

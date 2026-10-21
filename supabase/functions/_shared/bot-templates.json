@@ -82,6 +82,10 @@
     "card_wish_dm": {
       "title": "Une carte de ta liste de souhaits est sortie",
       "body": "{carte} vient d'être obtenue par un membre. Va voir sur le site si un échange est possible."
+    },
+    "trade_offer_dm": {
+      "title": "{pseudo} te propose un échange{contre}",
+      "body": "**{pseudo} donne** : {donne}\n**{pseudo} demande** : {demande}\n\nRéponds sur le site, dans l'onglet Échanges."
     }
   },
   "meta": {
@@ -273,6 +277,17 @@
       "description": "Envoyé en MP à un membre qui a mis la carte dans sa liste de souhaits, quand un autre membre l'obtient. Le membre qui l'a obtenue n'est pas nommé. Désactivé par défaut, et seulement pour les membres qui ont activé cette alerte.",
       "vars": {
         "carte": { "label": "Nom de la carte (avec « brillante » si besoin)", "example": "Le Four à raclette" },
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+      }
+    },
+    "trade_offer_dm": {
+      "group": "cards", "label": "Offre d'échange reçue", "target": "MP au destinataire de l'offre", "color": "#E0A93B",
+      "description": "Envoyé en MP à un membre quand un autre membre lui propose un échange de cartes (ou une contre-proposition). Désactivable dans Bot Discord, activé par défaut.",
+      "vars": {
+        "pseudo": { "label": "Pseudo de celui qui propose", "example": "Alex" },
+        "contre": { "label": "« (contre-proposition) » si c'est une contre-proposition", "example": " (contre-proposition)" },
+        "donne": { "label": "Ce qui est donné (cartes et Paillettes)", "example": "2 cartes (Le Four à raclette, Tracteur) + 50 Paillettes" },
+        "demande": { "label": "Ce qui est demandé (cartes et Paillettes)", "example": "1 carte (Soirée pizza)" },
         "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
       }
     }

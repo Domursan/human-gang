@@ -51,6 +51,7 @@ const DB = {
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_events: [], hg_event_rsvps: [], hg_photos: [], hg_profile_info: [],
+  hg_card_trades: [], hg_card_trade_items: [],
 };
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
@@ -222,6 +223,10 @@ export function createClient() {
         const ids = args.p_copies; const total = ids.length * 5; DB.hg_wallets[0].paillettes += total; DB.hg_card_copies = DB.hg_card_copies.filter((c) => !ids.includes(c.id)); return { data: total, error: null }; }
       if (fn === 'hg_card_craft') { const w = DB.hg_wallets[0]; const cost = args.p_shiny ? 160 : 40; if (!S.god && w.paillettes < cost) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${cost})` } }; w.paillettes -= cost; DB.hg_card_copies.push({ id: 500 + DB.hg_card_copies.length, card_id: args.p_card, owner_id: ME, shiny: !!args.p_shiny, serial: null, source: 'fabrication', obtained_at: iso(0), locked_trade: null, recycled_at: null }); return { data: { copy_id: 1, cost }, error: null }; }
       if (fn === 'hg_card_leaderboard') return { data: [{ user_id: ME, pseudo: 'Ethan', avatar_url: null, uniques: 5, copies: 11, shinies: 3, identites: 1, series: 0, score: 120 }, { user_id: U(2), pseudo: 'Alice', avatar_url: null, uniques: 3, copies: 4, shinies: 0, identites: 0, series: 1, score: 40 }], error: null };
+      // Offre d'échange (cartes-trades.js) : l'offre est créée et son id renvoyé, comme la RPC réelle (uuid).
+      if (fn === 'hg_trade_propose') { if (S.tradeFail) return { data: null, error: { message: 'Trop d\'offres en cours' } }; const id = '7e57c0de-0000-4000-8000-000000000001';
+        DB.hg_card_trades.unshift({ id, from_user: ME, to_user: args.p_to, status: 'proposee', from_paillettes: args.p_give_p, to_paillettes: args.p_want_p, message: args.p_message, parent_id: args.p_parent, created_at: new Date().toISOString(), resolved_at: null });
+        return { data: id, error: null }; }
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
     },
