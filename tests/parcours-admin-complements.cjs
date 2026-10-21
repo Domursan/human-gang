@@ -111,12 +111,12 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
 
   /* ---------- Accès aux pages : créer, modifier, supprimer ---------- */
   await adminSection(p, 'membres/acces');
-  await p.waitForSelector('#access-root [data-pa-new]', { timeout: 5000 });
-  await p.click('#access-root [data-pa-new]');
+  await p.waitForSelector('#zone-actions [data-pa-new]', { timeout: 5000 });
+  await p.click('#zone-actions [data-pa-new]'); // « + Nouvelle page » : en-tête de zone, ouvre le tiroir
   await p.waitForSelector('#pa-pg-form', { timeout: 5000 });
   await p.fill('#pa-pg-slug', 'galerie-test');
   await p.fill('#pa-pg-label', 'Galerie test');
-  await p.click('#pa-pg-form button[type="submit"]');
+  await p.click('dialog[open] button[type="submit"]'); // bouton du pied du tiroir
   await p.waitForTimeout(500);
   check((await db(p, () => window.__DB.hg_pages.some((x) => x.slug === 'galerie-test' && x.label === 'Galerie test' && x.mode === 'membres'))),
     'page créée (membres, dans le menu par défaut)');
@@ -126,7 +126,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   await p.waitForSelector('#pa-pg-form', { timeout: 5000 });
   await p.fill('#pa-pg-label', 'Galerie renommée');
   await p.selectOption('#pa-pg-mode', 'admin'); // membres -> admin : tous les membres perdent l'accès, donc confirmation
-  await p.click('#pa-pg-form button[type="submit"]');
+  await p.click('dialog[open] button[type="submit"]'); // bouton du pied du tiroir
   await confirmOk(p);
   await p.waitForTimeout(500);
   const pg = await db(p, () => window.__DB.hg_pages.find((x) => x.slug === 'galerie-test'));

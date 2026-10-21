@@ -141,22 +141,11 @@
         </section>
         <section id="membres" class="admin-section" aria-labelledby="h-membres">
           <h2 id="h-membres" class="section-title">Invitations</h2>
-          <div class="row">
-            <div class="card">
-              <h3 class="card-title">Codes d'invitation</h3>
-              <p class="muted small">Chaque code permet à une personne de créer son compte. Il devient inutilisable une fois utilisé.</p>
-              <form class="inline-form" id="invite-form">
-                <div class="field">
-                  <label for="invite-count">Nombre de codes</label>
-                  <select id="invite-count">
-                    <option value="1">1</option><option value="3">3</option><option value="5">5</option><option value="10">10</option>
-                  </select>
-                </div>
-                <button class="btn btn-primary" type="submit">Générer</button>
-              </form>
-              <div id="invite-new"></div>
-              <div id="invite-list"></div>
-            </div>
+          <div class="card inv-card">
+            <h3 class="card-title">Codes d'invitation</h3>
+            <p class="muted small">Chaque code permet à une personne de créer son compte. Il devient inutilisable une fois utilisé.</p>
+            <div id="invite-new"></div>
+            <div id="invite-list"></div>
           </div>
           <div class="card" id="links-root"><div class="empty">Chargement des liens…</div></div>
         </section>

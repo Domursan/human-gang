@@ -8,6 +8,7 @@
 //   Bascule « Note interne » : le message part en note (visible seulement dans le panel, teinte différente).
 //   Ctrl+Entrée (ou ⌘+Entrée) envoie ; Entrée seule saute une ligne.
 //   composer : false pour un fil en lecture seule (pas de zone de réponse, rien à envoyer en base).
+//   rowAction(m) : HTML optionnel sous la bulle (ex. bouton « Supprimer » avec data-row-act="<id>") ; onRowAction(message, bouton).
 import { esc, avatarHtml } from '../../core/util.js';
 import { toast } from '../../core/ui.js';
 import { clock } from './time.js';
@@ -69,11 +70,20 @@ export function createThread(el, opts = {}) {
         <div class="ui-stack">
           <div class="ui-meta">${esc(meta[0])}${meta.slice(1).map((x) => ` · ${esc(x)}`).join('')}</div>
           <div class="ui-bubble">${esc(m.body)}</div>
+          ${opts.rowAction ? opts.rowAction(m) : ''}
         </div>
       </div>`;
     }).join('');
     $log.scrollTop = $log.scrollHeight;
   }
+
+  // Actions par message (rowAction) : délégation sur le journal, le message est retrouvé par son identifiant
+  $log.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-row-act]');
+    if (!b || !opts.onRowAction) return;
+    const m = state.messages.find((x) => String(x.id) === b.dataset.rowAct);
+    if (m) opts.onRowAction(m, b);
+  });
 
   $note.addEventListener('click', () => {
     const on = $note.getAttribute('aria-pressed') !== 'true';

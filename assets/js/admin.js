@@ -5,12 +5,12 @@
 // Accès : admin, ou Staff avec des permissions. Droits : admin/perms.js (source unique).
 import { initPage, $, toast, errMsg } from './core.js';
 import { mountThemesSection } from './admin-themes.js';
-import { mountMessagesSection } from './admin-messages.js';
+import { mountMessagesSection, listMessages, openMessages } from './admin-messages.js';
 import { mountLogSection, listLog, openLog } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
 import { initAccounts, refreshAccounts, openAccountFiche } from './admin-accounts.js';
 import { mountGhostsSection, refreshGhostsSection } from './admin-ghosts.js';
-import { mountAccessSection, refreshAccessSection } from './admin-access.js';
+import { mountAccessSection, refreshAccessSection, accessActions } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection, openCardsTab } from './admin-cards.js';
@@ -25,7 +25,7 @@ import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
 import { renderStats, loadOverview, overviewTables } from './admin/overview.js';
-import { bindInvites, renderInvites, renderMembers } from './admin/invites.js';
+import { bindInvites, renderInvites, renderMembers, inviteActions } from './admin/invites.js';
 import { renderSS } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
 import { bindBadges, renderBadges } from './admin/badges.js';
@@ -33,7 +33,7 @@ import { ideasSub, renderIdeas } from './admin/ideas.js';
 import { supportSub, renderSupport } from './admin/support.js';
 import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
 import { initLive, onTableChange } from './admin/live.js';
-import { initShell, registerSub, startShell, navigate } from './admin/shell.js';
+import { initShell, registerSub, startShell, navigate, setActions } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
 import { bindFicheHash } from './admin/router.js';
 
@@ -99,9 +99,11 @@ registerSub('membres/fantomes', {
 });
 registerSub('membres/invitations', {
   main: () => mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } }),
+  open: () => setActions(inviteActions()), // « + Nouveau code » et « + Nouveau lien » (tiroirs)
 });
 registerSub('membres/acces', {
   main: () => { ensureAccounts(); mountAccessSection($('#access-root'), { openMember: (uid) => navigate(`membres/comptes/${uid}/acces`) }); },
+  open: () => setActions(accessActions()),
 });
 registerSub('vie/sorties', { main: () => mountSortiesSection($('#sorties-root'), { me }) });
 registerSub('vie/souvenirs', { main: () => mountSouvenirsSection($('#souvenirs-root'), { me }) });
@@ -114,7 +116,10 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats',
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
-registerSub('communication/messagerie', { main: () => mountMessagesSection($('#messages-root')) });
+registerSub('communication/messagerie', {
+  main: (el) => { el.dataset.fill = ''; mountMessagesSection($('#messages-root')); },
+  open: openMessages, list: listMessages, // liste en colonne 2, lecture dans la zone (createThread en lecture seule)
+});
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
 registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')) });
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')) });

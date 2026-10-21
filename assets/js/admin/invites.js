@@ -6,6 +6,8 @@ import { ICON, busy, check, copyText } from './common.js';
 import { loadInvites } from './loaders.js';
 import { renderStats } from './overview.js';
 import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
+import { openDrawer } from './ui/drawer.js';
+import { openLinkDrawer } from '../admin-invite-links.js';
 
 /* =========================================================
    Membres & invitations
@@ -55,19 +57,24 @@ export function renderInvites() {
     <div class="scroll-list">${usedHtml}</div>`;
 }
 
-export function bindInvites(me) {
-  const search = mountSearch($('#invite-list'), { id: 'invite-search', label: 'Rechercher un code', placeholder: 'Code ou pseudo de la personne…' });
-  bindSearch(search.input, (q) => { S.q.membres = q; renderInvites(); });
-  $('#invite-form').addEventListener('submit', (ev) => {
-    ev.preventDefault();
-    const btn = ev.submitter;
-    busy(btn, async () => {
-      const n = Number($('#invite-count').value) || 1;
+let ME = null;
+
+/** Ouvre le tiroir « Nouveau code » : génère 1 à 10 codes. */
+function openCodeDrawer() {
+  const body = document.createElement('div');
+  body.innerHTML = `
+    <div class="field"><label for="invite-count">Nombre de codes</label>
+      <select id="invite-count" name="count">${[1, 3, 5, 10].map((n) => `<option value="${n}">${n}</option>`).join('')}</select></div>
+    <p class="muted small">Chaque code permet à une personne de créer son compte. Il devient inutilisable une fois utilisé.</p>`;
+  openDrawer({
+    title: 'Nouveau code d’invitation', body, submitLabel: 'Générer',
+    onSubmit: async (form) => {
+      const n = Number(form.elements.count.value) || 1;
       let codes = [];
       for (let attempt = 0; attempt < 3; attempt++) {
         const set = new Set(); while (set.size < n) set.add(newCode());
         codes = [...set];
-        const res = await sb.from('hg_invites').insert(codes.map((code) => ({ code, created_by: me.id })));
+        const res = await sb.from('hg_invites').insert(codes.map((code) => ({ code, created_by: ME.id })));
         if (!res.error) break;
         if (res.error.code !== '23505' || attempt === 2) throw res.error; // doublon improbable : on retente
       }
@@ -75,8 +82,25 @@ export function bindInvites(me) {
       await loadInvites();
       renderInvites(); renderStats();
       toast(n > 1 ? `${n} codes générés` : 'Code généré', 'ok');
-    });
+    },
   });
+}
+
+/** Boutons de l'en-tête de zone de la sous-section Invitations. */
+export function inviteActions() {
+  const mk = (label, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn btn-primary btn-sm'; b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  };
+  return [mk('+ Nouveau code', openCodeDrawer), mk('+ Nouveau lien', () => openLinkDrawer())];
+}
+
+export function bindInvites(me) {
+  ME = me;
+  const search = mountSearch($('#invite-list'), { id: 'invite-search', label: 'Rechercher un code', placeholder: 'Code ou pseudo de la personne…' });
+  bindSearch(search.input, (q) => { S.q.membres = q; renderInvites(); });
 
   $('#membres').addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
