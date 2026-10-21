@@ -42,7 +42,8 @@ export function renderBadges() {
   }).join('') || emptyHtml(S.q.badges, 'Aucun badge.');
 
   const sel = $('#badge-member');
-  const pickable = [...S.members.map((m) => ({ id: m.id, label: m.pseudo })), ...S.ghosts.map((g) => ({ id: g.id, label: `${g.pseudo} (fantôme)` }))]
+  // Les comptes fantômes ne reçoivent pas de badge tant qu'ils ne sont pas liés à un compte actif (migration 035).
+  const pickable = S.members.filter((m) => !m.is_ghost).map((m) => ({ id: m.id, label: m.pseudo }))
     .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
   sel.innerHTML = '<option value="">Choisir un membre…</option>' +
     pickable.map((m) => `<option value="${esc(m.id)}"${m.id === S.badgeMember ? ' selected' : ''}>${esc(m.label)}</option>`).join('');
