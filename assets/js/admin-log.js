@@ -11,6 +11,8 @@ const PAGE = 50;
 // Libellés des actions journalisées par hg_admin_audit et les triggers. Une action inconnue s'affiche telle quelle.
 export const ACTION_LABEL = {
   carte_donnee: 'Carte donnée',
+  drop_lance: 'Drop de carte lancé',
+  drop_arrete: 'Drop de carte arrêté',
   exemplaire_retire: 'Exemplaire retiré',
   carte_supprimee: 'Carte supprimée',
   ajustement_paillettes: 'Ajustement de Paillettes',

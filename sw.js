@@ -53,7 +53,7 @@ const PRECACHE = [
   'assets/js/core/perms.js', 'assets/js/core/search.js',
   'assets/js/core/supabase.js', 'assets/js/core/theme-calc.js', 'assets/js/core/theme-load.js',
   'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
-  'assets/js/core/util.js', 'assets/js/dyn-events.js',
+  'assets/js/core/util.js', 'assets/js/dyn-events.js', 'assets/js/card-drops.js', 'assets/css/card-drops.css', 'assets/js/admin-cards/drops.js',
   'assets/js/evenements.js', 'assets/js/historique.js', 'assets/js/intro-logo.js',
   'assets/js/intro-daily.js', 'assets/js/intro-redirect.js', 'assets/js/intro.js', 'assets/js/irl-history.js',
   'assets/js/irl.js', 'assets/js/legal.js', 'assets/js/membre.js', 'assets/js/messages.js',

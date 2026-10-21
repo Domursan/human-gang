@@ -79,6 +79,7 @@ async function startPage(auth) {
     checkNewBadges();
     // Événements dynamiques (image qui traverse le site) : chargé à part, sans jamais bloquer ni casser la page
     import('../dyn-events.js').then((m) => m.startDynEvents(profile)).catch((e) => console.warn('[événements]', e));
+    import('../card-drops.js').then((m) => m.startCardDrops(profile)).catch((e) => console.warn('[drops]', e));
   }
   return profile;
 }

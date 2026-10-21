@@ -52,6 +52,8 @@ const DB = {
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_events: [], hg_event_rsvps: [], hg_photos: [], hg_profile_info: [],
   hg_card_trades: [], hg_card_trade_items: [],
+  // Drops de cartes (card-drops.js, admin-cards/drops.js) : scénario S.drops / S.dropClaims (dates ISO)
+  hg_card_drops: S.drops || [], hg_card_drop_claims: S.dropClaims || [],
 };
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
@@ -239,6 +241,47 @@ export function createClient() {
       if (fn === 'hg_trade_propose') { if (S.tradeFail) return { data: null, error: { message: 'Trop d\'offres en cours' } }; const id = '7e57c0de-0000-4000-8000-000000000001';
         DB.hg_card_trades.unshift({ id, from_user: ME, to_user: args.p_to, status: 'proposee', from_paillettes: args.p_give_p, to_paillettes: args.p_want_p, message: args.p_message, parent_id: args.p_parent, created_at: new Date().toISOString(), resolved_at: null });
         return { data: id, error: null }; }
+      // Drops (migration 043) : même logique que la base (fenêtre de temps, un gain par membre, plafond d'exemplaires).
+      if (fn === 'hg_drops_active') {
+        if (S.dropsFail) return { data: null, error: { message: 'rpc indisponible' } };
+        const t = Date.now(), me = S.uid || ME;
+        const rows = DB.hg_card_drops.filter((d) => new Date(d.starts_at) <= t && new Date(d.ends_at) > t)
+          .filter((d) => !DB.hg_card_drop_claims.some((c) => c.drop_id === d.id && c.user_id === me))
+          .filter((d) => DB.hg_card_drop_claims.filter((c) => c.drop_id === d.id).length < d.quantity)
+          .map((d) => { const k = DB.hg_cards.find((x) => x.id === d.card_id); const set = DB.hg_card_sets.find((x) => x.id === k.set_id);
+            return { drop_id: d.id, card_id: k.id, name: k.name, rarity: k.rarity, family: k.family, image_url: k.image_url, flavor: k.flavor, number: k.number,
+              max_copies: k.max_copies, set_name: set.name, shiny: !!d.shiny, quantity: d.quantity, remaining: d.quantity - DB.hg_card_drop_claims.filter((c) => c.drop_id === d.id).length, ends_at: d.ends_at }; });
+        return { data: rows, error: null };
+      }
+      if (fn === 'hg_drop_claim') {
+        window.__CLAIMS_DROP = (window.__CLAIMS_DROP || 0) + 1;
+        const me = S.uid || ME, d = DB.hg_card_drops.find((x) => x.id === args.p_drop), t = Date.now();
+        if (S.dropLate) return { data: null, error: { message: 'Trop tard, tous les exemplaires sont partis !' } }; // course perdue : affiché sans attendre
+        if (!d || new Date(d.starts_at) > t || new Date(d.ends_at) <= t) return { data: null, error: { message: 'Trop tard : ce drop est terminé.' } };
+        if (DB.hg_card_drop_claims.some((c) => c.drop_id === d.id && c.user_id === me)) return { data: null, error: { message: 'Tu as déjà attrapé cette carte.' } };
+        const got = DB.hg_card_drop_claims.filter((c) => c.drop_id === d.id).length;
+        if (got >= d.quantity) return { data: null, error: { message: 'Trop tard, tous les exemplaires sont partis !' } };
+        const k = DB.hg_cards.find((x) => x.id === d.card_id), set = DB.hg_card_sets.find((x) => x.id === k.set_id);
+        const copy = 2000 + DB.hg_card_drop_claims.length;
+        DB.hg_card_drop_claims.push({ drop_id: d.id, user_id: me, copy_id: copy, claimed_at: new Date().toISOString() });
+        if (d.announce !== false) DB.hg_activity.unshift({ user_id: me, kind: 'cartes', text: 'Ethan a attrapé « ' + k.name + ' » !', created_at: new Date().toISOString() });
+        return { data: { copy_id: copy, card_id: k.id, name: k.name, rarity: k.rarity, family: k.family, image_url: k.image_url, flavor: k.flavor,
+          number: k.number, max_copies: k.max_copies, set_name: set.name, shiny: !!d.shiny, serial: null, remaining: d.quantity - got - 1 }, error: null };
+      }
+      if (fn === 'hg_drop_create') {
+        if (S.dropFail) return { data: null, error: { message: 'Réservé à l\'admin' } };
+        const k = DB.hg_cards.find((x) => x.id === args.p_card);
+        const id = 'd0000000-0000-4000-8000-' + String(DB.hg_card_drops.length + 1).padStart(12, '0');
+        DB.hg_card_drops.unshift({ id, card_id: args.p_card, shiny: !!args.p_shiny, quantity: args.p_quantity, starts_at: new Date().toISOString(),
+          ends_at: new Date(Date.now() + args.p_minutes * 6e4).toISOString(), announce: args.p_announce, created_by: ME });
+        return { data: id, error: null };
+      }
+      if (fn === 'hg_drop_stop') {
+        const d = DB.hg_card_drops.find((x) => x.id === args.p_drop);
+        if (!d || new Date(d.ends_at) <= Date.now()) return { data: null, error: { message: 'Ce drop est déjà terminé.' } };
+        d.ends_at = new Date().toISOString();
+        return { data: null, error: null };
+      }
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
     },

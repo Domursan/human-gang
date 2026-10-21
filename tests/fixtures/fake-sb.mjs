@@ -409,6 +409,8 @@ export function createClient() {
         if (sc.suggestions) sc.suggestions = sc.suggestions.filter((s) => s.ghost_id !== args.p_ghost);
         return { data: [{ moved: 3 }], error: null };
       }
+      if (fn === 'hg_drops_active') return { data: [], error: null }; // pas de drop sur ces pages (voir fake-sb-cartes.mjs)
+      if (fn === 'hg_drop_claim') return { data: null, error: { message: 'Trop tard : ce drop est terminé.' } };
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       if (fn === 'hg_ss_reveal') { // paires d'une édition : seulement en révélation ou terminée (comme la base)
         const ed = DB.hg_ss_editions.find((e) => e.id === args.p_edition);
