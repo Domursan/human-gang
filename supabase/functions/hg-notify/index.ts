@@ -30,6 +30,11 @@
 //   card_wish        { cards: uuid[] (≤ 10) } membre, après l'ouverture d'un booster → MP aux membres qui ont la carte dans
 //                    leur liste de souhaits et qui ont activé l'alerte (profil.notify_card_wish). Une fois par exemplaire
 //                    (wish_notified_at). Le membre qui a obtenu la carte n'est pas nommé. Désactivable (bot.notify.card_wish).
+//   card_gift_admin  { user_id: uuid, card_id: uuid, count?: 1..100, shiny?: bool } admin ou Staff « cartes » → MP au membre
+//                    « t'a offert « carte » (rareté, brillante) ×N », avec l'image de la carte si elle est en https. Un don
+//                    (exemplaire source 'admin' de cette carte pour ce membre) doit avoir été créé il y a moins de 15 min.
+//                    Nom, rareté, brillance et image sont lus en base ; count est borné par les exemplaires trouvés.
+//                    Désactivable (bot.notify.card_gift_admin, activé par défaut).
 // Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
@@ -53,7 +58,7 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 type Bot = MentionBot & {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin', boolean>>;
 };
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
@@ -477,6 +482,54 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   return { dm: ok };
 }
 
+/* Don de carte par l'admin ou le Staff « cartes » (hg_cards_admin_give) : MP au membre, envoyé par le site après le don. */
+const CARD_GIFT_MAX = 100; // exemplaires max par don (comme la RPC)
+const RARITY_NAME: Record<string, string> = {
+  commune: 'commune', peu_commune: 'peu commune', rare: 'rare', epique: 'épique',
+  legendaire: 'légendaire', mythique: 'mythique', identite: 'identité',
+};
+/** Droit « cartes » : admin, ou Staff actif avec la permission (même règle que hg_has_perm('cartes') côté base). */
+async function canUseCards(me: Profile): Promise<boolean> {
+  if (me.is_admin) return true;
+  const { data } = await db.from('hg_staff').select('perms, active').eq('user_id', me.id).maybeSingle();
+  return !!data?.active && Array.isArray(data.perms) && (data.perms as string[]).includes('cartes');
+}
+
+async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!(await canUseCards(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Cartes');
+  if (!isUuid(p.user_id)) throw new HttpError(400, 'user_id manquant');
+  if (!isUuid(p.card_id)) throw new HttpError(400, 'card_id manquant');
+  const asked = Number.isInteger(p.count) ? (p.count as number) : 1;
+  if (asked < 1 || asked > CARD_GIFT_MAX) throw new HttpError(400, `Nombre d'exemplaires : entre 1 et ${CARD_GIFT_MAX}`);
+  if (bot.notify?.card_gift_admin === false) return { skipped: 'désactivé' };
+
+  // Dons récents de cette carte à ce membre (lus en base : le client ne fournit ni la rareté ni la brillance).
+  const { data: gifts, error } = await db.from('hg_card_copies').select('shiny, obtained_at')
+    .eq('card_id', p.card_id).eq('owner_id', p.user_id).eq('source', 'admin').is('recycled_at', null)
+    .gte('obtained_at', new Date(Date.now() - FRESH_MS).toISOString())
+    .order('obtained_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  if (!gifts?.length) return { skipped: 'aucun don récent de cette carte' };
+  const count = Math.min(asked, gifts.length);
+  const shiny = !!gifts[0].shiny; // un même don a la même brillance pour tous ses exemplaires
+
+  const { data: card } = await db.from('hg_cards').select('name, rarity, image_url').eq('id', p.card_id).maybeSingle();
+  if (!card) throw new HttpError(404, 'Carte introuvable');
+  const other = await getProfile(p.user_id);
+  if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+
+  const detail = [RARITY_NAME[card.rarity] ?? card.rarity, shiny ? 'brillante' : ''].filter(Boolean).join(', ');
+  const rendered = renderTemplate('card_gift_admin_dm', {
+    admin: me.pseudo, carte: truncate(String(card.name), 100), detail, quantite: count > 1 ? ` ×${count}` : '',
+  }, tpl);
+  const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
+  const ok = await trySend(() => sendDM(other.discord_id!, embed({
+    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+    ...(image ? { image: { url: image } } : {}),
+  })), `MP don carte ${other.id}`);
+  return { dm: ok, count };
+}
+
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
 const WISH_MAX_DMS = 50;   // MP maximum par appel
@@ -562,6 +615,7 @@ Deno.serve(async (req) => {
       case 'card_trade': result = await onCardTrade(me, bot, payload, tpl); break;
       case 'trade_offer': result = await onTradeOffer(me, bot, payload, tpl); break;
       case 'card_wish': result = await onCardWish(me, bot, payload, tpl); break;
+      case 'card_gift_admin': result = await onCardGiftAdmin(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });
