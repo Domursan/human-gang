@@ -108,6 +108,7 @@ export function mountBotSection(container) {
   loadStyles();
   const S = {
     bot: { announce_channel_id: null, admin_discord_id: null, notify: {} },
+    histFilter: 'all',
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
     people: [], pseudo: new Map(), selected: new Set(), q: '', history: null, sending: false,
   };
@@ -153,7 +154,12 @@ export function mountBotSection(container) {
         <div id="bm-body"><div class="empty">Chargement des comptes…</div></div>
         <details class="bm-history" id="bm-history">
           <summary>Historique des envois <span class="muted small">(20 derniers)</span></summary>
+          <div class="filters bm-hist-filters" role="group" aria-label="Filtrer l'historique" id="bm-hist-filters">
+            <button class="chip" type="button" data-hf="all" aria-pressed="true">Toutes</button>
+            <button class="chip" type="button" data-hf="failed" aria-pressed="false">Échecs</button>
+          </div>
           <div id="bm-history-list" class="bm-history-list"><div class="empty">Chargement…</div></div>
+          <p class="small muted">Les échecs sur le salon d'annonces ne sont pas enregistrés dans l'historique : ils n'apparaissent que dans le résultat de l'envoi, sur le moment.</p>
         </details>
       </div>
     </div>
@@ -589,12 +595,36 @@ export function mountBotSection(container) {
   /* ---------- Historique ---------- */
   const histDetails = $('#bm-history', container);
   histDetails.addEventListener('toggle', () => { if (histDetails.open && !S.history) loadHistory(); });
+  $('#bm-hist-filters', container).addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-hf]');
+    if (!b) return;
+    S.histFilter = b.dataset.hf;
+    $$('#bm-hist-filters .chip', container).forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+    loadHistory();
+  });
+  // Lignes d'échec : un envoi a un destinataire « failed » (ou ok:false, ancien format) dans recipients,
+  // ou le passage automatique a signalé des échecs dans son texte. hg_bot_log n'a pas de colonne de statut.
+  async function fetchHistory(failedOnly) {
+    const cols = 'id, sent_by, kind, title, body, recipients, channel, created_at';
+    const base = () => sb.from('hg_bot_log').select(cols).order('created_at', { ascending: false });
+    if (!failedOnly) return check(await base().limit(20)) ?? [];
+    const [a, b, c] = await Promise.all([
+      base().contains('recipients', [{ status: 'failed' }]).limit(50),
+      base().contains('recipients', [{ ok: false }]).limit(50),
+      base().neq('kind', 'manual').ilike('body', '%échec%').limit(50),
+    ]);
+    const seen = new Map();
+    for (const r of [...(check(a) ?? []), ...(check(b) ?? []), ...(check(c) ?? [])]) seen.set(r.id, r);
+    return [...seen.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))).slice(0, 20);
+  }
   async function loadHistory() {
     const box = $('#bm-history-list', container);
+    box.setAttribute('aria-busy', 'true');
     try {
-      const rows = check(await sb.from('hg_bot_log').select('id, sent_by, kind, title, body, recipients, channel, created_at')
-        .order('created_at', { ascending: false }).limit(20)) ?? [];
+      const failedOnly = S.histFilter === 'failed';
+      const rows = await fetchHistory(failedOnly);
       S.history = rows;
+      box.setAttribute('aria-busy', 'false');
       box.innerHTML = rows.length ? rows.map((r) => {
         const rec = Array.isArray(r.recipients) ? r.recipients : [];
         const sent = rec.filter((x) => (x.status ?? (x.ok ? 'sent' : 'failed')) === 'sent').length;
@@ -619,7 +649,7 @@ export function mountBotSection(container) {
             ${rec.length ? recipientsHtml(rec) : '<p class="small muted">Aucun MP (salon uniquement).</p>'}
           </div>
         </details>`;
-      }).join('') : '<div class="empty">Aucun message envoyé pour l\'instant.</div>';
+      }).join('') : `<div class="empty">${failedOnly ? 'Aucun échec enregistré.' : 'Aucun message envoyé pour l\'instant.'}</div>`;
     } catch (e) {
       box.innerHTML = `<div class="empty">Impossible de charger l'historique : ${esc(errMsg(e))}</div>`;
     }
