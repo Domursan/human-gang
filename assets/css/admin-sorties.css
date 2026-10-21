@@ -1,0 +1,72 @@
+/* Admin : section « Sorties IRL » (assets/js/admin-sorties/). Préfixe ass-. */
+.ass { display: grid; gap: 16px; min-width: 0; }
+.ass-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; padding: 18px 20px; }
+.ass-toolbar .field { flex: 1 1 150px; min-width: 0; }
+.ass-toolbar .ass-search { flex: 2 1 220px; }
+.ass-toolbar .btn { flex: 0 0 auto; }
+.ass-list { display: grid; gap: 12px; min-width: 0; }
+.ass-list:focus { outline: none; }
+.ass-list:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: var(--radius); }
+.ass-row { padding: 18px 20px; min-width: 0; }
+.ass-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 16px; }
+.ass-row-info { display: grid; gap: 4px; min-width: 0; flex: 1 1 260px; }
+.ass-row-info .small { margin: 0; overflow-wrap: anywhere; }
+.ass-row-title { margin: 4px 0 0; font-size: 17px; overflow-wrap: anywhere; }
+.ass-row-actions { flex: 0 1 auto; }
+.ass-row-actions .btn { white-space: nowrap; }
+.ass-more { display: flex; justify-content: center; }
+.ass-more [hidden] { display: none; }
+
+/* Pastilles d'état */
+.ass-tag { display: inline-flex; align-items: center; width: fit-content; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+.ass-tag-current { border-color: var(--amber); color: var(--amber); background: transparent; }
+.ass-tag-ok { background: var(--sage-soft); color: var(--sage-text); border-color: transparent; }
+.ass-tag-todo { border-style: dashed; background: transparent; }
+.ass-tag-past { background: transparent; }
+.ass-tag-retro { background: transparent; }
+
+/* Fenêtres */
+.ass-dlg { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+.ass-dlg-wide { width: min(760px, calc(100vw - 32px)); }
+.ass-dlg .dialog-title { margin: 0 0 14px; font-size: 20px; }
+.ass-dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ass-dlg-head .dialog-title { margin: 0; overflow-wrap: anywhere; }
+.ass-form, .ass-d-body { display: grid; gap: 16px; min-width: 0; }
+.ass-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px 16px; }
+.ass-wide { grid-column: 1 / -1; }
+.ass-form .field, .ass-grid .field { min-width: 0; }
+.ass-mode { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.ass-mode legend { font-size: 14px; color: var(--muted); padding: 0; margin-bottom: 6px; width: 100%; }
+.ass-radio, .ass-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.ass-radio:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+.ass-dates { display: grid; gap: 8px; margin-bottom: 10px; }
+.ass-date-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ass-date-row .input { flex: 1 1 200px; min-width: 0; }
+.ass-d-summary { margin: 0; }
+.ass-d-sec { display: grid; gap: 12px; min-width: 0; }
+.ass-h { margin: 0; font-size: 17px; }
+.ass-h-sm { margin: 8px 0 4px; font-size: 14px; color: var(--muted); font-weight: 700; }
+.ass-rsvp-group { display: grid; gap: 4px; }
+.ass-people, .ass-chips, .ass-dates-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+.ass-person { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-width: 0; }
+.ass-person-name { flex: 1 1 140px; min-width: 0; overflow-wrap: anywhere; }
+.ass-person select { flex: 0 1 170px; min-width: 0; }
+.ass-inline { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.ass-inline .field { flex: 1 1 160px; min-width: 0; }
+.ass-date { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+.ass-date.is-retained { border-color: var(--sage); }
+.ass-date-main { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; overflow-wrap: anywhere; }
+.ass-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ass-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 999px; background: var(--surface-2); font-size: 13px; }
+.ass-chip-x { border: 0; background: transparent; color: inherit; cursor: pointer; min-width: 24px; min-height: 24px; border-radius: 999px; font-size: 16px; line-height: 1; }
+.ass-chip-x:focus-visible, .ass-dlg button:focus-visible, .ass-row button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ass-date-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.ass-date-actions .ass-inline { flex: 1 1 260px; }
+
+@media (max-width: 600px) {
+  .ass-toolbar .btn, .ass-row-actions .btn { width: 100%; }
+  .ass-row-actions { width: 100%; }
+  .ass-row { padding: 16px; }
+  .ass-person select { flex: 1 1 100%; }
+}

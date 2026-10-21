@@ -44,6 +44,7 @@
   <link rel="stylesheet" href="assets/css/cartes-card.css">
   <link rel="stylesheet" href="assets/css/admin-cards.css">
   <link rel="stylesheet" href="assets/css/admin-staff.css">
+  <link rel="stylesheet" href="assets/css/admin-sorties.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -65,6 +66,7 @@
         <a href="#acces">Accès aux pages</a>
         <a href="#membres">Invitations</a>
         <a href="#secret-santa">Secret Santa</a>
+        <a href="#sorties" data-perm="evenements">Sorties IRL</a>
         <a href="#badges">Badges</a>
         <a href="#evenements">Événements</a>
         <a href="#cartes">Cartes</a>
@@ -124,6 +126,11 @@
         <section id="secret-santa" class="admin-section" aria-labelledby="h-ss">
           <h2 id="h-ss" class="section-title">Secret Santa</h2>
           <div id="ss-root"><div class="empty">Chargement…</div></div>
+        </section>
+
+        <section id="sorties" class="admin-section" aria-labelledby="h-sorties" data-perm="evenements">
+          <h2 id="h-sorties" class="section-title">Sorties IRL</h2>
+          <div id="sorties-root"><div class="empty">Chargement des sorties…</div></div>
         </section>
 
         <section id="badges" class="admin-section" aria-labelledby="h-badges">

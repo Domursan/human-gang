@@ -16,6 +16,7 @@ import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection } from './admin-staff.js';
+import { mountSortiesSection } from './admin-sorties/index.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditions, loadEditionDetails, loadBadges, loadIdeas, loadSupport, loadSettings, safe } from './admin/loaders.js';
@@ -74,6 +75,7 @@ if (has('evenements')) mountEventsSection($('#events-root'), { onBadgesChange: a
 if (has('cartes')) mountCardsSection($('#cards-root'));
 if (has('defis')) mountChallengesSection($('#challenges-root'));
 if (has('acces')) mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
+if (has('sorties')) mountSortiesSection($('#sorties-root'), { me });
 // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
 if (has('fantomes')) {
   mountGhostsSection($('#ghosts-root'), {
