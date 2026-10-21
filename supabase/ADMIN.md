@@ -1,5 +1,7 @@
 # Administrateur de secours
 
+Pour l'organisation du panel et les permissions Staff, voir `docs/ADMIN-PANEL.md`.
+
 Ce document explique comment garder un second administrateur et comment retrouver l'accès à
 l'administration si le compte principal est perdu ou bloqué. Il ne contient aucune donnée
 personnelle : les adresses, identifiants et mots de passe réels ne doivent jamais être écrits dans
