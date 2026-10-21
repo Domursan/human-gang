@@ -11,15 +11,17 @@ import { econPanel, updateSum, saveEcon } from './economy.js';
 import { playersPanel, refreshLog, adjustPaillettes, giveCard, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
 import { tradesPanel, cancelTrade } from './trades.js';
+import { Q, loadQuests, questsPanel, questActions } from './quests.js';
 
 /* =========================================================
    Rendu et événements
    ========================================================= */
-const PANELS = { series: setsPanel, cartes: cardsPanel, economie: econPanel, joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
+const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
 function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
   C.panel.innerHTML = PANELS[C.tab]();
   if (C.tab === 'joueurs') refreshLog();
+  if (C.tab === 'quetes' && !Q.loaded && !Q.loading && !Q.error) loadQuests(); // en cas d'erreur, « Réessayer » relance
   if (C.tab === 'economie') updateSum();
 }
 
@@ -43,6 +45,7 @@ const ACTIONS = {
   'copy-take': (t, id) => takeCopy(t, id),
   'trade-cancel': (t, id) => cancelTrade(t, id),
   'econ-reset': () => render(),
+  ...questActions,
 };
 
 function onClick(e) {
