@@ -2,6 +2,7 @@
 // Construit le message (embed) de lancement ou de fin d'un événement de hg_dyn_events, à partir des modèles
 // « dyn_start » / « dyn_end » (hg_settings.bot_templates, défauts dans ./bot-templates.json).
 import { renderTemplate, embedFrom, type Templates } from './templates.ts';
+import type { MentionPart } from './mentions.ts';
 
 export type DynEvent = {
   id: string; name: string; description: string | null; image_url: string | null; emoji: string | null;
@@ -37,9 +38,10 @@ export function classementText(rows: { pseudo: string; captures: number }[]) {
   return rows.map((r, i) => `${medal[i] ?? `${i + 1}.`} ${r.pseudo} : ${r.captures} image${r.captures > 1 ? 's' : ''}`).join('\n');
 }
 
-/** Message Discord (corps de POST /channels/:id/messages) pour l'annonce d'un événement. */
+/** Message Discord (corps de POST /channels/:id/messages) pour l'annonce d'un événement. `mention` : réglage bot.mentions.dyn. */
 // deno-lint-ignore no-explicit-any
-export async function buildDynAnnounce(db: any, ev: DynEvent, phase: DynPhase, tpl: Templates, site: string) {
+export async function buildDynAnnounce(db: any, ev: DynEvent, phase: DynPhase, tpl: Templates, site: string,
+  mention: MentionPart = { allowed_mentions: { parse: [] } }) {
   const lien = site ? `${site}/evenements.html` : '';
   const vars: Record<string, string> = {
     nom: ev.name, description: ev.description ?? '', fin: fmtZurich(ev.ends_at), lien,
@@ -49,7 +51,7 @@ export async function buildDynAnnounce(db: any, ev: DynEvent, phase: DynPhase, t
   const title = !ev.image_url && ev.emoji && r.title ? `${ev.emoji} ${r.title}`.slice(0, 256) : r.title;
   const img = ev.image_url && /^https:\/\//.test(ev.image_url) ? ev.image_url : null;
   return {
-    allowed_mentions: { parse: [] },
+    ...mention,
     embeds: [{
       ...embedFrom({ title, description: r.description }),
       color: DYN_COLOR,

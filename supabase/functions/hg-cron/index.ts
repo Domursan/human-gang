@@ -6,7 +6,7 @@
 //
 // Tâches :
 //   1. Lancement des événements dynamiques : announce = true, active = true, starts_at passé, ends_at à venir,
-//      announced_start_at null → annonce « dyn_start » dans le salon d'annonces (avec l'image).
+//      announced_start_at null → annonce « dyn_start » dans le salon d'annonces (avec l'image). Mention : bot.mentions.dyn.
 //   2. Fin : announce = true, active = true, ends_at passé, announced_end_at null → annonce « dyn_end » avec le top 3.
 //      Un événement terminé depuis plus de 24 h est seulement marqué (pas d'annonce tardive).
 //   3. Rappels de sortie IRL (opt-in, profil.remind_irl) : MP aux membres « oui » ou « peut-etre » d'une sortie
@@ -22,6 +22,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
@@ -70,7 +71,7 @@ const fmtZurichDay = (d: string) => new Intl.DateTimeFormat('fr-CH', {
 const canDM = (p: { bot_optin: boolean; discord_id: string | null } | null | undefined) => !!p && p.bot_optin && isSnowflake(p.discord_id);
 
 /* ---------- 1 et 2 : annonces des événements dynamiques ---------- */
-async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: string }) {
+async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: string } & MentionBot) {
   const nowIso = new Date().toISOString();
   const [{ data: startRows, error: e1 }, { data: endRows, error: e2 }] = await Promise.all([
     db.from('hg_dyn_events').select('*').eq('announce', true).eq('active', true).is('announced_start_at', null)
@@ -96,7 +97,7 @@ async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: stri
     if (!botReady) { out.pending_no_bot++; return; } // rien n'est marqué sans envoi effectif
     if (!(await claimRow('hg_dyn_events', { id: ev.id }, col))) return;
     try {
-      await sendChannel(channel!, await buildDynAnnounce(db, ev, phase, tpl, SITE));
+      await sendChannel(channel!, await buildDynAnnounce(db, ev, phase, tpl, SITE, mentionFor(bot, 'dyn')));
       phase === 'start' ? out.starts++ : out.ends++;
     } catch (e) {
       console.error(`[hg-cron] annonce ${phase} ${ev.id}`, e);
@@ -216,7 +217,7 @@ Deno.serve(async (req) => {
   const attempts: Attempt[] = [];
   try {
     const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
-    const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> };
+    const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
     const canSend = hasBotToken();
 
     try { await dynAnnouncements(out, bot); }

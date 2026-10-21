@@ -11,9 +11,11 @@
 //   bot_test         {}              admin  → message de test (salon + MP admin)
 //   message_new      { conversation_id } membre de la conversation → MP aux autres membres (opt-in), sauf discussion
 //                    en cours (message précédent < 10 min). Le Santa d'une conversation santa n'est jamais nommé.
-//   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel), title?, body (≤ 2000), channel?: bool }  admin
-//                    → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce facultative,
-//                    trace dans hg_bot_log, détail par destinataire renvoyé.
+//   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel), title?, body (≤ 2000), channel?: bool,
+//                    mention?: 'none' | 'role' | 'everyone' (salon seulement), attachments?: chemins hg-bot-media (≤ 4) }
+//                    admin ou Staff « bot » → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce
+//                    facultative (avec mention et pièces jointes), trace dans hg_bot_log, détail par destinataire renvoyé.
+//                    Pièces jointes : fichiers du bucket privé hg-bot-media sous manuel/ (10 Mo max chacun), envoyés en multipart.
 //   dyn_announce     { event_id, phase: 'start' | 'end' }  admin → annonce d'un événement dynamique dans le salon
 //                    (image de l'événement, top 3 pour la fin) ; met à jour announced_start_at / announced_end_at.
 //                    Les annonces automatiques sont faites par la fonction hg-cron.
@@ -25,11 +27,15 @@
 //   card_wish        { cards: uuid[] (≤ 10) } membre, après l'ouverture d'un booster → MP aux membres qui ont la carte dans
 //                    leur liste de souhaits et qui ont activé l'alerte (profil.notify_card_wish). Une fois par exemplaire
 //                    (wish_notified_at). Le membre qui a obtenu la carte n'est pas nommé. Désactivable (bot.notify.card_wish).
+// Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade) : bot.mentions.<type> = none | role | everyone,
+// rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
-import { CORS, hasBotToken, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { mentionFor, mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
+import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 
 const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
@@ -41,7 +47,7 @@ const link = (page: string) => (SITE ? `${SITE}/${page}` : undefined);
 const COLOR = { ss: 0xe0909a, irl: 0xe2c77e, info: 0x7e93c9, accent: 0x9e3543, card: 0xe0a93b };
 const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-répétition)
 
-type Bot = {
+type Bot = MentionBot & {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
   notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'card_wish', boolean>>;
@@ -101,10 +107,10 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   };
   let announced = false;
   if (bot.announce_channel_id) {
-    announced = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-      ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)),
-      url: link('secret-santa.html'), color: COLOR.ss, fields,
-    })), 'annonce tirage');
+    announced = await trySend(() => sendChannel(bot.announce_channel_id!, {
+      ...mentionFor(bot, 'draw'),
+      ...embed({ ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)), url: link('secret-santa.html'), color: COLOR.ss, fields }),
+    }), 'annonce tirage');
   }
   let dms = 0, failed = 0;
   for (const person of people.filter(canDM)) {
@@ -168,9 +174,10 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
     description: ev.description ? String(ev.description).slice(0, 600) : 'Dis si tu viens sur le site.',
     lieu: where, date: when, organisateur: me.pseudo, lien: link('irl.html') ?? '',
   }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-    ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields,
-  })), 'annonce IRL');
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+    ...mentionFor(bot, 'irl'),
+    ...embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields }),
+  }), 'annonce IRL');
   return { channel };
 }
 
@@ -240,6 +247,7 @@ async function onTest(me: Profile, bot: Bot, tpl: Templates) {
 /* ---------- Message manuel de l'admin ---------- */
 const ADMIN_DM_MAX_USERS = 100;
 const ADMIN_DM_MAX_BODY = 2000;
+const MANUAL_MENTIONS = ['none', 'role', 'everyone'];
 type Recipient = { user_id: string; pseudo: string | null; ok: boolean; status: 'sent' | 'failed' | 'skipped'; reason: string | null };
 const friendlyDiscordError = (e: unknown) => {
   const m = String((e as Error)?.message ?? e);
@@ -252,8 +260,15 @@ const friendlyDiscordError = (e: unknown) => {
 /** {pseudo} est la seule variable d'un message manuel ; le reste du texte est laissé tel quel. */
 const withPseudo = (text: string, pseudo: string) => text.replace(/\{pseudo\}/g, pseudo);
 
+/** Bot Discord : admin, ou Staff actif avec la permission « bot » (même règle que le panel et le bucket hg-bot-media). */
+async function canUseBot(me: Profile): Promise<boolean> {
+  if (me.is_admin) return true;
+  const { data } = await db.from('hg_staff').select('perms, active').eq('user_id', me.id).maybeSingle();
+  return !!data?.active && Array.isArray(data.perms) && (data.perms as string[]).includes('bot');
+}
+
 async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
-  if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
+  if (!(await canUseBot(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Bot Discord');
   const raw: unknown[] = Array.isArray(p.user_ids) ? p.user_ids : [];
   const ids = [...new Set(raw.filter(isUuid).map((s) => s.toLowerCase()))];
   if (ids.length !== raw.length && !ids.length) throw new HttpError(400, 'Destinataires invalides');
@@ -265,6 +280,12 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (body.length > ADMIN_DM_MAX_BODY) throw new HttpError(400, `Message trop long (${ADMIN_DM_MAX_BODY} caractères maximum)`);
   const wantChannel = p.channel === true;
   if (wantChannel && !bot.announce_channel_id) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
+  if (p.mention != null && !MANUAL_MENTIONS.includes(String(p.mention))) throw new HttpError(400, 'Mention inconnue');
+  const mode = mentionMode(p.mention); // la mention ne concerne que la publication dans le salon
+  if (wantChannel && mode === 'role' && !isSnowflake(bot.mention_role_id)) {
+    throw new HttpError(400, 'Aucun rôle à mentionner n\'est configuré (section Bot Discord)');
+  }
+  const attachPaths = validAttachmentPaths(p.attachments); // chemins sous manuel/ ; erreur de contrôle → 400
 
   const { data: rows, error } = ids.length
     ? await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').in('id', ids)
@@ -272,10 +293,17 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (error) throw new Error(error.message);
   const byId = new Map<string, Profile>((rows ?? []).map((r: Profile) => [r.id, r]));
 
+  // Fichiers lus une fois (service role), puis joints à chaque envoi. Une erreur de contrôle arrête tout avant l'envoi.
+  const files = attachPaths.length ? await loadAttachments(db, attachPaths) : [];
+  const image = files.find((f) => f.type.startsWith('image/'));
+
   const build = (pseudo: string) => {
     const t = truncate(withPseudo(title, pseudo).trim(), 256);
     const d = truncate(withPseudo(body, pseudo).trim(), 4096);
-    return embed({ ...(t ? { title: t } : {}), description: d || '\u200b', color: COLOR.accent });
+    return embed({
+      ...(t ? { title: t } : {}), description: d || '\u200b', color: COLOR.accent,
+      ...(image ? { image: { url: `attachment://${image.name}` } } : {}), // première image affichée dans l'embed
+    });
   };
 
   const recipients: Recipient[] = [];
@@ -290,7 +318,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     if (!first) await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
     first = false;
     try {
-      await sendDM(prof.discord_id, build(prof.pseudo));
+      await sendDM(prof.discord_id, build(prof.pseudo), files);
       recipients.push({ user_id: id, pseudo: prof.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
       console.error(`[hg-notify] MP manuel ${id}`, e);
@@ -301,8 +329,10 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   let channelOk: boolean | null = null;
   let channelError: string | null = null;
   if (wantChannel) {
-    try { await sendChannel(bot.announce_channel_id!, build('tout le monde')); channelOk = true; }
-    catch (e) { console.error('[hg-notify] annonce manuelle', e); channelOk = false; channelError = friendlyDiscordError(e); }
+    try {
+      await sendChannel(bot.announce_channel_id!, { ...mentionWith(bot, mode), ...build('tout le monde') }, files);
+      channelOk = true;
+    } catch (e) { console.error('[hg-notify] annonce manuelle', e); channelOk = false; channelError = friendlyDiscordError(e); }
   }
 
   const { data: log, error: logErr } = await db.from('hg_bot_log').insert({
@@ -314,6 +344,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   return {
     recipients, sent: count('sent'), failed: count('failed'), skipped: count('skipped'),
     channel: channelOk, channel_error: channelError, log_id: log?.id ?? null,
+    mention: wantChannel ? mode : 'none', attachments: files.map((f) => f.name),
   };
 }
 
@@ -326,7 +357,7 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
   const { data: ev } = await db.from('hg_dyn_events').select('*').eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Événement introuvable');
   if (!bot.announce_channel_id) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
-  const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE);
+  const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE, mentionFor(bot, 'dyn'));
   try {
     await sendChannel(bot.announce_channel_id, message);
   } catch (e) {
@@ -367,10 +398,10 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
   const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
-    fields: [{ name: 'Rareté', value: rarete, inline: true }],
-  })), 'annonce carte');
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+    ...mentionFor(bot, 'card_pull'),
+    ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
+  }), 'annonce carte');
   if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id); // échec : la prochaine ouverture pourra réessayer
   return { channel };
 }
@@ -387,9 +418,10 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
   const other = await getProfile(t.from_user);
   const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
-    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
-  })), 'annonce échange');
+  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+    ...mentionFor(bot, 'card_trade'),
+    ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
+  }), 'annonce échange');
   return { channel };
 }
 
@@ -482,6 +514,7 @@ Deno.serve(async (req) => {
     return json({ ok: true, event, ...result });
   } catch (e) {
     if (e instanceof HttpError) return json({ error: e.message }, e.status);
+    if (e instanceof MediaError) return json({ error: e.message }, e.status);
     console.error('[hg-notify]', e);
     return json({ error: 'Erreur interne' }, 500);
   }

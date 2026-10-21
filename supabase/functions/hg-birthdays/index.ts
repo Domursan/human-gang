@@ -12,6 +12,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
   }
 
   const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
-  const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> };
+  const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
   const botOn = bot.notify?.birthday !== false && hasBotToken();
 
   const out = { today: candidates.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };
@@ -119,10 +120,12 @@ Deno.serve(async (req) => {
         await mark(p.id, year, 'announce_sent_at');
       } else {
         try {
-          const mention = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
+          const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
+          // Mention configurée (bot.mentions.birthday) en plus de la personne fêtée, qui est toujours notifiée
+          const mention = mentionWith(bot, mentionMode(bot.mentions?.birthday), isSnowflake(p.discord_id) ? [p.discord_id] : []);
           await sendChannel(bot.announce_channel_id!, {
-            content: `Joyeux anniversaire ${mention} !`,
-            allowed_mentions: { users: isSnowflake(p.discord_id) ? [p.discord_id] : [] },
+            ...mention,
+            content: [mention.content, `Joyeux anniversaire ${who} !`].filter(Boolean).join(' '),
             embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: p.pseudo, lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
           });
           out.announces++;
