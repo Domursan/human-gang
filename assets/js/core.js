@@ -32,17 +32,29 @@ export function avatarHtml(p, size = 40) {
 }
 
 /* ---------- Toasts ---------- */
-export function toast(msg, type = '') {
+/* Conteneur des notifications : créé dès le chargement de la page (région live déjà présente, donc annoncée) */
+function toastBox() {
   let box = $('.toasts');
-  if (!box) { box = document.createElement('div'); box.className = 'toasts'; box.setAttribute('role', 'status'); document.body.append(box); }
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'toasts';
+    box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite');
+    document.body.append(box);
+  }
+  return box;
+}
+export function toast(msg, type = '') {
+  const box = toastBox();
   const t = document.createElement('div');
   t.className = `toast ${type}`; t.textContent = msg;
+  if (type === 'error') t.setAttribute('role', 'alert'); // les erreurs sont annoncées tout de suite
   box.append(t);
   if (type === 'ok' || type === 'success') playSound('success');
   else if (type === 'error') playSound('error');
   setTimeout(() => t.remove(), 4500);
 }
 export function errMsg(e) { return e?.message || String(e); }
+if (document.body) toastBox(); // module différé : le body existe déjà
 
 /* ---------- Préférences d'affichage (par appareil : localStorage 'hg_prefs') ---------- */
 const PREFS_KEY = 'hg_prefs';
