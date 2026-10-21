@@ -6,32 +6,13 @@
 // Textes : modèles « birthday_dm » et « birthday_announce » (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
+import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
-const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
-
-async function discord(path: string, body: unknown) {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let i = 0; i < 3; i++) {
-    const res = await fetch(`https://discord.com/api/v10${path}`, {
-      method: 'POST', headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    if (res.status === 429) { const j = await res.json().catch(() => ({})); await new Promise((r) => setTimeout(r, Math.min(5000, (j.retry_after ?? 1) * 1000))); continue; }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
-}
-const sendChannel = (id: string, m: Record<string, unknown>) => discord(`/channels/${id}/messages`, m);
-async function sendDM(userId: string, m: Record<string, unknown>) {
-  const ch = await discord('/users/@me/channels', { recipient_id: userId });
-  return sendChannel(ch.id, { allowed_mentions: { parse: [] }, ...m });
-}
-const isSnowflake = (v: unknown) => typeof v === 'string' && /^\d{17,20}$/.test(v);
+const json = (b: unknown, s = 200) => jsonResponse(b, s);
 
 Deno.serve(async () => {
   // Date du jour en Suisse

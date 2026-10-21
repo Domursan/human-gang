@@ -14,28 +14,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
+import { hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
 const LATE_MS = 24 * 3600_000;
-const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
-
-async function sendChannel(channelId: string, body: unknown) {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let i = 0; i < 3; i++) {
-    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
-      method: 'POST', headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    if (res.status === 429) { const j = await res.json().catch(() => ({})); await new Promise((r) => setTimeout(r, Math.min(5000, (j.retry_after ?? 1) * 1000))); continue; }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
-}
-const isSnowflake = (v: unknown): v is string => typeof v === 'string' && /^\d{17,20}$/.test(v);
+const json = (b: unknown, s = 200) => jsonResponse(b, s);
 
 /** Réserve l'annonce (null → maintenant). Renvoie false si une autre exécution l'a déjà prise. */
 async function claim(id: string, col: 'announced_start_at' | 'announced_end_at') {

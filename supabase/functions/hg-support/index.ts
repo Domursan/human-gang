@@ -5,14 +5,9 @@
 // Texte du MP : modèle « support_new » (hg_settings.bot_templates, défaut dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
+import { CORS, jsonResponse, sendDM } from '../_shared/discord.ts';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
 const SUBJECTS = [
   'Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre',
@@ -27,30 +22,6 @@ const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE
 const clean = (v: unknown, max: number) =>
   typeof v === 'string' ? v.replace(/\u0000/g, '').trim().slice(0, max) : '';
 const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
-
-async function discord(path: string, body: unknown): Promise<any> {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(`https://discord.com/api/v10${path}`, {
-      method: 'POST',
-      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 429 && attempt === 0) {
-      const info = await res.json().catch(() => ({}));
-      await new Promise((r) => setTimeout(r, Math.min(5000, Math.ceil((info.retry_after ?? 1) * 1000))));
-      continue;
-    }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
-}
-async function sendDM(userId: string, message: Record<string, unknown>) {
-  const channel = await discord('/users/@me/channels', { recipient_id: userId });
-  await discord(`/channels/${channel.id}/messages`, { allowed_mentions: { parse: [] }, ...message });
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });

@@ -26,14 +26,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
+import { CORS, hasBotToken, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -54,36 +49,8 @@ class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
-/* ---------- Discord ---------- */
-function hasToken() { return !!Deno.env.get('DISCORD_BOT_TOKEN'); }
-async function discord(path: string, body: unknown): Promise<any> {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(`https://discord.com/api/v10${path}`, {
-      method: 'POST',
-      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 429) {
-      const info = await res.json().catch(() => ({}));
-      await new Promise((r) => setTimeout(r, Math.min(5000, Math.ceil((info.retry_after ?? 1) * 1000))));
-      continue;
-    }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
-}
-/** Message dans un salon. Les mentions sont désactivées (pas de @everyone involontaire). */
-async function sendChannel(channelId: string, message: Record<string, unknown>) {
-  return await discord(`/channels/${channelId}/messages`, { allowed_mentions: { parse: [] }, ...message });
-}
-/** Message privé (ouvre le salon MP puis envoie). Le membre doit partager un serveur avec le bot et accepter les MP. */
-async function sendDM(userId: string, message: Record<string, unknown>) {
-  const ch = await discord('/users/@me/channels', { recipient_id: userId });
-  return await sendChannel(ch.id, message);
-}
+/* ---------- Discord : client partagé (_shared/discord.ts : 429, MP, salon) ---------- */
+const hasToken = hasBotToken;
 async function trySend(fn: () => Promise<unknown>, label: string): Promise<boolean> {
   try { await fn(); return true; } catch (e) { console.error(`[hg-notify] ${label}`, e); return false; }
 }
