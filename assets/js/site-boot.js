@@ -27,3 +27,8 @@ document.querySelectorAll('link[data-media-all]').forEach((l) => {
   const on = () => { l.media = 'all'; };
   if (l.sheet) on(); else l.addEventListener('load', on, { once: true });
 });
+
+/* Mode hors ligne : enregistrement du service worker (sw.js, à la racine du site). */
+if (window.isSecureContext && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
