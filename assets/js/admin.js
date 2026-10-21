@@ -13,6 +13,7 @@ import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
+import { mountSouvenirsSection } from './admin-souvenirs/index.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditions, loadEditionDetails, loadBadges, loadIdeas, loadSupport, loadSettings, safe } from './admin/loaders.js';
@@ -58,6 +59,7 @@ mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await
 mountMessagesSection($('#messages-root'));
 mountLogSection($('#log-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
+mountSouvenirsSection($('#souvenirs-root'), { me });
 mountCardsSection($('#cards-root'));
 mountChallengesSection($('#challenges-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
