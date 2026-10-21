@@ -46,6 +46,10 @@ export async function saveProfile(form, btn) {
   const avatarRaw = form.avatar_url.value.trim();
   const avatar = avatarRaw ? safeUrl(avatarRaw) : null;
   if (avatarRaw && !avatar) throw new Error('Adresse d\'avatar invalide (http ou https uniquement).');
+  // La base n'accepte que les images envoyées dans le stockage des avatars du site (contrainte hg_profiles_avatar_bucket).
+  if (avatar && !/^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/hg-avatars\/[^\s"'<>]+$/.test(avatar)) {
+    throw new Error('L\'avatar doit être une image envoyée sur le site (le membre la choisit depuis Mon compte). Laisse le champ vide ou remets l\'adresse d\'origine.');
+  }
   const patch = {
     pseudo, color: form.color.value, avatar_url: avatar, birthday: nullIfEmpty(form.birthday.value),
     discord_id: discord || null, share_birthday: form.share_birthday.checked, bot_optin: form.bot_optin.checked,
