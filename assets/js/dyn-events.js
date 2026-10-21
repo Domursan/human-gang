@@ -63,7 +63,7 @@ const preload = (src) => new Promise((resolve) => {
 /* ---------- Trajectoires ---------- */
 const STEPS = 48;
 /** Renvoie une liste de keyframes (transform) pour traverser un écran W×H avec une image de taille s. */
-function trajectory(kind, W, H, s) {
+export function trajectory(kind, W, H, s) {
   const dir = Math.random() < 0.5 ? 1 : -1;
   const xa = dir > 0 ? -s - 10 : W + 10, xb = dir > 0 ? W + 10 : -s - 10;
   const wobble = rnd(6, 16), wobbleF = rnd(1.5, 3.5), r0 = rnd(-10, 10);
@@ -90,7 +90,7 @@ function trajectory(kind, W, H, s) {
   }
   return pts;
 }
-const KINDS = ['diagonale', 'vague', 'rebond', 'chute'];
+export const KINDS = ['diagonale', 'vague', 'rebond', 'chute'];
 
 /* ---------- Effet de capture ---------- */
 function burst(layer, cx, cy, size, motion) {
@@ -138,6 +138,8 @@ export async function flyDynImage(ev, { preview = false, host = document.body, o
   const layer = ensureLayer(host);
   const motion = motionAllowed();
   const W = innerWidth, H = innerHeight;
+  // Une carte de drop en vol (card-drops.js) : l'image attend qu'elle soit posée, pour ne pas se superposer.
+  while (!preview && document.querySelector('.cd-item.is-flying')) await sleep(400);
 
   const btn = document.createElement('button');
   btn.type = 'button';

@@ -2,18 +2,28 @@
 // Appelé par initPage (core/init.js) pour les membres connectés, sur toutes les pages. Lecture : rpc hg_drops_active
 // (drops en cours, non encore gagnés par moi, pas épuisés ; jamais pour un fantôme). Rafraîchissement : temps réel
 // (table hg_card_drops) + interrogation toutes les 60 s quand l'onglet est visible (les gagnants ne sont pas diffusés).
-// Affichage : la vraie carte (cardHtml) flotte dans un coin, sans bloquer la page ; seul le bouton de la carte et le
-// bouton « × » captent les clics. Clic → rpc hg_drop_claim → révélation + confettis + toast, ou « trop tard ».
-// Sans mouvement (prefers-reduced-motion ou effets coupés) : la carte reste immobile dans le coin.
+// Affichage : la vraie carte (cardHtml) traverse la page comme les images d'événements (dyn-events.js : mêmes
+// trajectoires, même vitesse linéaire). Elle revient régulièrement tant que le drop est actif et non gagné.
+// Elle est cliquable pendant son trajet ; seul le bouton de la carte et le « × » captent les clics.
+// Clic → rpc hg_drop_claim → révélation + confettis + toast (dans le coin), ou « trop tard ».
+// Sans mouvement (prefers-reduced-motion ou effets coupés) : la carte reste immobile dans le coin, sans vol.
+// Une seule carte vole à la fois, et jamais en même temps qu'une image d'événement (dyn-events.js attend).
 import { sb, toast, esc, playSound, motionAllowed, hasSession, isNavCancel } from './core.js';
 import { cardHtml } from './cartes-ui.js';
 import { rnd } from './utils.js';
+import { trajectory, KINDS } from './dyn-events.js';
 
 const MAX_VISIBLE = 3;
 const POLL_MS = 60000;
 const GONE_RE = /trop tard|déjà attrapé|terminé|n'existe plus|plus disponible|épuisé|plus aucun/i;
+// Rythme des vols (ms) : premier passage rapide, puis un passage toutes les 8 à 16 s, chacun de 7 à 9,5 s.
+const FIRST_FLY = [1500, 4000];
+const GAP_FLY = [8000, 16000];
+const FLY_MS = [7000, 9500];
+const RETRY_FLY = [2000, 3500];
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
-// S.shown : id du drop -> { el, remaining } ; S.gone : drops à ne plus proposer sur cette page (gagnés, finis, masqués).
+// S.shown : id du drop -> { el, remaining, timer, anim } ; S.gone : drops à ne plus proposer sur cette page (gagnés, finis, masqués).
 const S = { shown: new Map(), gone: new Set(), busy: new Set(), started: false, layer: null, live: null };
 
 /* ---------- Données ---------- */
@@ -59,7 +69,7 @@ function cardOf(d) {
 function show(d) {
   const motion = motionAllowed();
   const item = document.createElement('div');
-  item.className = `cd-item${motion ? ' is-float' : ' is-still'}`;
+  item.className = motion ? 'cd-item is-fly' : 'cd-item is-still';
   item.dataset.drop = d.drop_id;
   const n = Number(d.remaining) || 0;
   item.innerHTML = `
@@ -67,18 +77,57 @@ function show(d) {
     ${cardHtml(cardOf(d), { size: 'sm', shiny: !!d.shiny, button: true,
       attrs: `data-cd-claim="${esc(d.drop_id)}" aria-describedby="cd-hint-${esc(d.drop_id)}"` })}
     <p class="cd-hint" id="cd-hint-${esc(d.drop_id)}">${esc(countText(n))}</p>`;
-  stack().append(item);
+  const entry = { el: item, remaining: n, timer: null, anim: null };
+  S.shown.set(d.drop_id, entry);
+  if (motion) {
+    // Dans le calque, hors du coin : la carte vole, puis se pose (masquée) jusqu'au prochain passage.
+    ensureLayer().append(item);
+    entry.timer = setTimeout(() => fly(d.drop_id), rnd(FIRST_FLY[0], FIRST_FLY[1]));
+  } else {
+    stack().append(item);
+  }
   // Le nombre de sièges restants est aussi annoncé (sans voler le focus).
   say(`Une carte sauvage est apparue : « ${d.name} ». ${countText(n)}. Clique dessus pour l'attraper.`);
-  S.shown.set(d.drop_id, { el: item, remaining: n });
+}
+
+/* ---------- Vol ---------- */
+/** Fait traverser l'écran à la carte (mêmes trajectoires que les images d'événements). Reporte si une autre carte
+ *  ou une image vole, si l'onglet est caché, ou si une capture est en cours. */
+function fly(id) {
+  const s = S.shown.get(id);
+  if (!s) return;
+  const later = (ms) => { s.timer = setTimeout(() => fly(id), ms); };
+  if (document.hidden || S.busy.has(id) || s.el.classList.contains('is-busy')
+    || document.querySelector('.cd-item.is-flying, .dyn-fly')) return later(rnd(RETRY_FLY[0], RETRY_FLY[1]));
+  const { el } = s;
+  el.classList.add('is-flying');
+  const size = Math.max(el.offsetWidth, el.offsetHeight) || 120;
+  s.anim = el.animate(trajectory(pick(KINDS), innerWidth, innerHeight, size),
+    { duration: rnd(FLY_MS[0], FLY_MS[1]), easing: 'linear', fill: 'forwards' });
+  // Posée : elle se remet en attente. Annulée (gain, masquage, retrait) : rien à faire, le nettoyage est fait ailleurs.
+  s.anim.finished.then(() => {
+    const cur = S.shown.get(id);
+    if (!cur || cur !== s) return;
+    cur.anim = null;
+    el.classList.remove('is-flying');
+    later(rnd(GAP_FLY[0], GAP_FLY[1]));
+  }, () => {});
+}
+
+/** Retire un drop de l'écran : arrête son vol et ses passages à venir (il ne reviendra plus sur cette page). */
+function release(id) {
+  const s = S.shown.get(id);
+  if (!s) return null;
+  clearTimeout(s.timer);
+  s.anim?.cancel();
+  S.shown.delete(id);
+  return s;
 }
 
 /** Retire un drop de l'écran (et ne le reproposera pas sur cette page). */
 function forget(id) {
   S.gone.add(id);
-  const s = S.shown.get(id);
-  S.shown.delete(id);
-  s?.el.remove();
+  release(id)?.el.remove();
 }
 
 /** Met l'écran d'accord avec la liste reçue : nouveaux drops, quantités restantes, drops terminés. */
@@ -100,7 +149,7 @@ function sync(list) {
     }
   }
   for (const id of [...S.shown.keys()]) {
-    if (!ids.has(id)) { const s = S.shown.get(id); S.shown.delete(id); s.el.remove(); }
+    if (!ids.has(id)) release(id)?.el.remove();
   }
 }
 
@@ -127,7 +176,7 @@ async function claim(id, item) {
     const { data, error } = await sb.rpc('hg_drop_claim', { p_drop: id });
     if (error) throw error;
     S.gone.add(id);
-    S.shown.delete(id);
+    release(id);
     reveal(item, data || {});
   } catch (e) {
     if (isNavCancel(e)) return;
@@ -151,6 +200,8 @@ async function claim(id, item) {
 /* ---------- Révélation ---------- */
 function reveal(item, c) {
   const name = String(c.name || 'la carte');
+  // La révélation se pose dans le coin (comme avant) : la carte qui volait n'y est plus, elle est sortie du calque.
+  stack().append(item);
   item.className = `cd-item cd-won${motionAllowed() ? '' : ' is-still'}`;
   item.innerHTML = `<div class="cd-reveal" role="status">
       <p class="cd-reveal-t">Tu as attrapé « ${esc(name)} » !</p>

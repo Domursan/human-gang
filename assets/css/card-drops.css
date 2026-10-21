@@ -1,14 +1,14 @@
-/* ===== Drops de cartes (card-drops.js) : une carte flotte dans un coin, sans bloquer la page ===== */
+/* ===== Drops de cartes (card-drops.js) : la carte traverse la page comme les événements, sans bloquer le reste ===== */
 /* Le calque est fixe, sans effet sur les clics ; seuls la carte, « × » et la révélation captent la souris. */
 .cd-layer { position: fixed; inset: 0; z-index: 8950; pointer-events: none; overflow: hidden; }
 .cd-stack { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
   display: flex; flex-direction: column; align-items: flex-end; gap: 12px; max-width: calc(100vw - 24px); }
 
 .cd-item { position: relative; display: grid; justify-items: center; gap: 4px; pointer-events: auto; }
-.cd-item.is-float { animation: cd-in .5s cubic-bezier(.2, .8, .3, 1) both, cd-bob 4.5s ease-in-out .5s infinite; }
+/* Mode mouvement : la carte vit dans le calque et vole (trajectoires de dyn-events.js) ; au repos, elle est masquée. */
+.cd-item.is-fly { position: absolute; left: 0; top: 0; display: none; will-change: transform; touch-action: manipulation; }
+.cd-item.is-fly.is-flying { display: grid; }
 .cd-item.is-busy { opacity: .6; pointer-events: none; }
-@keyframes cd-in { from { opacity: 0; transform: translateY(16px) scale(.85) rotate(-4deg); } to { opacity: 1; transform: none; } }
-@keyframes cd-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
 
 /* La carte elle-même : bouton (focus visible), taille « sm » sur les écrans étroits. */
 .cd-item .hgc { cursor: pointer; border: 0; padding: 0; background: none; display: block; font: inherit;
@@ -27,7 +27,6 @@
 .cd-x:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
 
 /* Révélation : la carte obtenue, avec son titre, quelques secondes. */
-.cd-won { animation: none; }
 .cd-reveal { display: grid; justify-items: center; gap: 6px; padding: 12px; border-radius: 16px;
   background: color-mix(in srgb, var(--surface, #1b1c25) 92%, transparent); border: 1px solid var(--border-strong, #888);
   box-shadow: 0 12px 32px rgba(0, 0, 0, .4); max-width: min(280px, calc(100vw - 48px)); text-align: center; }
@@ -37,10 +36,7 @@
 
 .cd-px { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; }
 
-/* Sans mouvement : la carte reste en place, sans rebond. */
-.cd-item.is-still { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-  .cd-item.is-float { animation: none; }
   .cd-item .hgc { transition: none; }
 }
 @media (max-width: 600px) {
