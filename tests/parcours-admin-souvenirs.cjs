@@ -2,7 +2,7 @@
 // Créer, modifier et supprimer un souvenir ; supprimer une photo d'album ; masquer une réaction.
 // Faux Supabase (fixtures/fake-sb.mjs) : le test vérifie ce que le client envoie (journal) et ce qui s'affiche.
 // Lancer : node tests/parcours-admin-souvenirs.cjs
-const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const ALICE = '00000002-0000-4000-8000-000000000002';
@@ -15,6 +15,7 @@ const dialogOk = (p) => p.click('dialog.hg-dialog[open] .btn-danger');
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
+  await adminSection(p, 'souvenirs');
   await p.waitForSelector('#souvenirs-root .sv-row', { timeout: 5000 }).catch(() => {});
   check(await p.isVisible('#souvenirs'), 'section « Souvenirs et photos » présente');
   check((await p.locator('#souvenirs-root .sv-row').count()) === 3, 'onglet Souvenirs : 3 souvenirs affichés');
