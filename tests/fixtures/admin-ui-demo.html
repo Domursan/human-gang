@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="fr" data-mode="sombre">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Démo composants admin (écran Assistance)</title>
+<link rel="stylesheet" href="../../assets/css/base.css">
+<link rel="stylesheet" href="../../assets/css/admin-ui.css">
+<style>
+/* Coquille de démonstration : grille et rail repris de la maquette C-rail (desktop.html). */
+
+
+
+:root {
+  --bg:#0E0E10; --surface:#17171A; --surface-2:#1F1F23; --border:#2A2A2F; --border-strong:#3A3A40;
+  --text:#F2EFEA; --muted:#ABA7A0; --accent:#9E3543; --sand:#E2C77E; --sage:#6FA37F;
+  --slate:#7E93C9; --plum:#9A88C4; --rose:#E0909A;
+  --display:'Archivo Black', 'Arial Black', system-ui, sans-serif;
+  --ui:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+* { box-sizing:border-box; }
+html, body {
+  margin:0; width:100%; height:100%; overflow:hidden;
+  background:var(--bg); color:var(--text);
+  font-family:var(--ui); font-size:14px; line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+}
+button { font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; }
+svg { width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+
+.win { position:relative; width:100%; height:100%; display:grid; grid-template-columns:72px 280px 1fr 268px; overflow:hidden; }
+.rainbow { position:absolute; left:0; right:0; top:0; height:3px; z-index:10;
+  background:linear-gradient(90deg,#FE3104 0 16.66%,#FCA301 16.66% 33.33%,#FBD32D 33.33% 50%,#159946 50% 66.66%,#2B5AE2 66.66% 83.33%,#4E2398 83.33% 100%); }
+
+/* ---------- Rail ---------- */
+.rail { position:relative; background:#0A0A0C; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:18px 0 14px; }
+.logo { width:44px; height:44px; border-radius:14px; background:linear-gradient(135deg,#9E3543,#4E2398); display:grid; place-items:center;
+  font-family:var(--display); font-size:15px; letter-spacing:.02em; color:var(--text); margin-bottom:10px; }
+.domains { display:flex; flex-direction:column; align-items:center; gap:8px; margin-top:6px; }
+.dom { position:relative; width:48px; height:48px; border-radius:50%; background:var(--surface-2); color:var(--muted); display:grid; place-items:center; }
+.dom:hover { color:var(--text); }
+.dom.active { background:var(--accent); color:#fff; }
+.dom.active::before { content:""; position:absolute; left:-12px; top:50%; transform:translateY(-50%); width:4px; height:32px; border-radius:0 4px 4px 0; background:var(--text); }
+.badge { position:absolute; top:-3px; right:-4px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:var(--accent); color:var(--text);
+  font-size:10.5px; font-weight:700; line-height:18px; text-align:center; border:2px solid #0A0A0C; }
+.dom.active .badge { background:var(--text); color:var(--bg); border-color:var(--accent); }
+.tip { position:absolute; left:calc(100% + 14px); top:50%; transform:translateY(-50%); white-space:nowrap; background:var(--surface-2); border:1px solid var(--border-strong);
+  border-radius:10px; padding:7px 11px; font-size:12.5px; font-weight:600; color:var(--text); box-shadow:0 10px 30px rgba(0,0,0,.45); z-index:6; }
+.tip small { display:block; font-weight:500; color:var(--muted); font-size:11.5px; margin-top:1px; }
+.tip::before { content:""; position:absolute; left:-5px; top:50%; transform:translateY(-50%) rotate(45deg); width:8px; height:8px; background:var(--surface-2); border-left:1px solid var(--border-strong); border-bottom:1px solid var(--border-strong); }
+.sep { width:28px; height:1px; background:var(--border-strong); margin:14px 0; }
+.rail-foot { margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.ico { width:44px; height:44px; border-radius:50%; display:grid; place-items:center; color:var(--muted); }
+.ico:hover { background:var(--surface-2); color:var(--text); }
+.live { width:44px; height:30px; display:grid; place-items:center; }
+.live i { width:9px; height:9px; border-radius:50%; background:var(--sage); box-shadow:0 0 0 4px rgba(111,163,127,.18); }
+.avatar { width:40px; height:40px; border-radius:50%; background:var(--slate); color:var(--bg); display:grid; place-items:center; font-weight:700; font-size:13px; margin-top:4px; }
+
+/* ---------- Column 2 ---------- */
+.col2 { position:relative; background:var(--surface); border-right:1px solid var(--border); padding:26px 16px 16px; display:flex; flex-direction:column; min-height:0; }
+.eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--sand); font-weight:600; }
+.col2 h1 { font-family:var(--display); font-weight:400; font-size:22px; line-height:1.15; margin:6px 0 0; }
+.col2 .sub { color:var(--muted); font-size:12.5px; margin-top:4px; }
+.subs { margin:18px 0 14px; display:flex; flex-direction:column; gap:2px; }
+.sub-item { display:flex; align-items:center; justify-content:space-between; height:36px; padding:0 10px; border-radius:10px; color:var(--muted); font-size:13.5px; }
+.sub-item.on { background:var(--surface-2); color:var(--text); font-weight:600; box-shadow:inset 3px 0 0 var(--accent); }
+.count { min-width:22px; text-align:center; font-size:11.5px; font-weight:600; color:var(--muted); background:var(--bg); border-radius:999px; padding:1px 7px; }
+.count.hot { background:var(--accent); color:var(--text); }
+.search { height:38px; border-radius:12px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; gap:8px; padding:0 12px; color:var(--muted); font-size:13px; }
+.search svg { width:18px; height:18px; }
+.seg { display:flex; gap:6px; margin:12px 0 10px; }
+.seg span { white-space:nowrap; font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--border-strong); color:var(--muted); }
+.seg span.on { border-color:var(--text); color:var(--text); font-weight:600; }
+.list { flex:1; min-height:0; overflow:hidden; margin:0 -8px; padding:0 0 0; }
+.req { position:relative; display:grid; grid-template-columns:38px 1fr; gap:11px; padding:11px 10px 11px 10px; border-radius:12px; }
+.req + .req { margin-top:2px; }
+.req > div:last-child { min-width:0; }
+.req.sel { background:var(--surface-2); }
+.req.sel::before { content:""; position:absolute; left:-8px; top:12px; bottom:12px; width:3px; border-radius:0 3px 3px 0; background:var(--accent); }
+.av { width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--bg); }
+.req .row1 { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.req .who { font-size:13.5px; font-weight:500; color:var(--muted); white-space:nowrap; }
+.req .when { font-size:11.5px; color:var(--muted); white-space:nowrap; }
+.req .subj { font-size:13.5px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.req .ext { font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+.req .row3 { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.req.unread .who, .req.unread .subj { color:var(--text); font-weight:700; }
+.req.unread .when { color:var(--text); font-weight:600; }
+.udot { width:7px; height:7px; border-radius:50%; background:var(--rose); margin-left:-2px; }
+.pill { display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 9px; border-radius:999px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+.pill::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.pill.open { color:var(--rose); background:rgba(224,144,154,.12); }
+.pill.prog { color:var(--sand); background:rgba(226,199,126,.12); }
+.pill.done { color:var(--sage); background:rgba(111,163,127,.14); }
+
+/* ---------- Column 3 ---------- */
+.col3 { display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--bg); }
+.thread-h { height:76px; flex:none; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; padding:0 24px; }
+.thread-h .av { width:42px; height:42px; }
+.thread-h .t { font-size:16px; font-weight:600; white-space:nowrap; }
+.thread-h .s { font-size:12.5px; color:var(--muted); white-space:nowrap; }
+.thread-h .sp { flex:1; }
+.status { display:flex; align-items:center; gap:8px; height:36px; padding:0 8px 0 12px; border-radius:12px; background:var(--surface); border:1px solid var(--border-strong); font-size:13px; font-weight:600; color:var(--rose); }
+.status svg { width:16px; height:16px; color:var(--muted); }
+.btn { height:36px; padding:0 14px; border-radius:12px; display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; border:1px solid var(--border-strong); color:var(--text); background:var(--surface); }
+.btn.primary { background:var(--accent); border-color:var(--accent); }
+.btn svg { width:16px; height:16px; }
+
+.thread { flex:1; min-height:0; overflow:hidden; padding:22px 24px 8px; display:flex; flex-direction:column; gap:14px; }
+.evt { align-self:center; display:flex; align-items:center; gap:10px; font-size:12px; color:var(--muted); margin:2px 0; }
+.evt::before, .evt::after { content:""; width:48px; height:1px; background:var(--border-strong); }
+.msg { display:grid; grid-template-columns:34px minmax(0, 1fr); gap:10px; align-items:end; max-width:600px; }
+.msg .av { width:34px; height:34px; font-size:12px; }
+.msg .meta { font-size:11.5px; color:var(--muted); margin:0 0 5px 2px; }
+.bubble { background:var(--surface); border:1px solid var(--border); border-radius:16px 16px 16px 4px; padding:11px 14px; font-size:14px; line-height:1.55; color:var(--text); }
+.msg.admin { grid-template-columns:minmax(0,1fr) 34px; margin-left:auto; align-items:end; }
+.msg.admin .meta { text-align:right; margin-right:2px; }
+.msg.admin .bubble { background:rgba(158,53,67,.2); border-color:rgba(158,53,67,.5); border-radius:16px 16px 4px 16px; }
+.msg.admin .av { order:2; background:var(--text); color:var(--bg); }
+.msg.admin .stack { order:1; display:flex; flex-direction:column; align-items:flex-end; }
+.msg .stack { display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
+.msg.cont { margin-top:-6px; }
+.msg.cont .av { visibility:hidden; }
+.msg.cont .meta { display:none; }
+
+.composer { flex:none; border-top:1px solid var(--border); padding:14px 24px 18px; background:var(--bg); }
+.box { border:1px solid var(--border-strong); border-radius:16px; background:var(--surface); padding:12px 14px 10px; }
+.box .ph { color:var(--muted); font-size:14px; min-height:40px; }
+.box .tools { display:flex; align-items:center; gap:8px; margin-top:8px; }
+.chip { height:28px; padding:0 10px; border-radius:9px; border:1px solid var(--border-strong); font-size:12px; color:var(--muted); display:inline-flex; align-items:center; gap:6px; }
+.chip svg { width:14px; height:14px; }
+.chip.on { color:var(--sand); border-color:rgba(226,199,126,.45); background:rgba(226,199,126,.08); }
+.box .sp { flex:1; }
+.send { height:34px; padding:0 14px; border-radius:11px; background:var(--accent); color:var(--text); font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:8px; }
+.send svg { width:16px; height:16px; }
+.hint { font-size:11.5px; color:var(--muted); margin-top:8px; }
+
+/* ---------- Column 4 (infos membre) ---------- */
+.col4 { background:var(--surface); border-left:1px solid var(--border); padding:22px 18px; display:flex; flex-direction:column; gap:18px; min-height:0; overflow:hidden; }
+.mem { display:flex; align-items:center; gap:12px; }
+.mem .av { width:52px; height:52px; font-size:16px; }
+.mem .n { font-size:16px; font-weight:600; }
+.mem .m { font-size:12px; color:var(--muted); margin-top:2px; }
+.grp-t { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
+.facts { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.fact { background:var(--surface-2); border-radius:12px; padding:10px 12px; }
+.fact b { display:block; font-family:var(--display); font-weight:400; font-size:19px; line-height:1.1; }
+.fact span { font-size:11.5px; color:var(--muted); }
+.field { height:38px; border-radius:12px; background:var(--bg); border:1px solid var(--border-strong); display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-size:13px; font-weight:600; color:var(--rose); }
+.field svg { width:16px; height:16px; color:var(--muted); }
+.hist { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.hist li { display:grid; grid-template-columns:1fr auto; gap:2px 8px; padding:9px 0; border-top:1px solid var(--border); font-size:13px; }
+.hist li:first-child { border-top:0; }
+.hist li .d { color:var(--muted); font-size:12px; }
+.hist li .pill { height:20px; font-size:10.5px; padding:0 7px; justify-self:end; }
+.link { font-size:13px; color:var(--text); font-weight:600; display:flex; align-items:center; justify-content:space-between; height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--border-strong); margin-top:auto; }
+.link svg { width:16px; height:16px; }
+
+/* Jetons du mode clair (valeurs fournies par core.js en production) pour la démo. */
+html[data-mode="clair"] {
+  --bg:#F6F4EF; --surface:#FFFFFF; --surface-2:#EEEBE4; --border:#E2DDD3; --border-strong:#CBC4B7;
+  --text:#1A1A1D; --muted:#66625B; --sand:#7A5C12; --accent:#9E3543; --accent-text:#FFFFFF;
+}
+html[data-mode="clair"] .rail { background:#EAE6DD; }
+html[data-mode="clair"] .rail .dom { background:#FFFFFF; }
+html, body { height:100%; }
+body { overflow:hidden; padding:0 !important; }
+.col3 .ui-thread { flex:1; }
+.col4 { border-left:1px solid var(--border); }
+.col2 { min-height:0; }
+.col2 .ui-list { flex:1; min-height:0; }
+.col2 h1 { margin:6px 0 0; }
+.back { display:none; }
+/* Mobile (≤ 760 px) : une colonne, écrans liste puis détail */
+@media (max-width:760px) {
+  .win { display:flex; flex-direction:column; }
+  .rail, .subs, .col4 { display:none; }
+  .col2 { flex:1; width:100%; padding:20px 16px 0; border-right:0; }
+  .col3 { display:none; flex:1; }
+  body[data-screen="detail"] .col2 { display:none; }
+  body[data-screen="detail"] .col3 { display:flex; }
+  body[data-screen="detail"] .back { display:inline-flex; align-items:center; gap:6px; height:44px; padding:0 10px 0 2px; color:var(--text); font-size:14px; font-weight:600; }
+  body[data-screen="detail"] .back svg { width:18px; height:18px; }
+  .col3 .ui-dhead { flex-wrap:wrap; }
+  .col3 .ui-composer { padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+  .col2 .ui-list { flex:1; min-height:0; }
+}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="rainbow"></div>
+
+  <nav class="rail" aria-label="Domaines">
+    <div class="logo">HG</div>
+    <div class="domains">
+      <button class="dom" aria-label="Pilotage" title="Pilotage">
+        <svg viewBox="0 0 24 24"><path d="M4 15.5a8 8 0 1 1 16 0"/><path d="M12 15.5l3.6-3.6"/><path d="M7 19h10"/></svg>
+        <span class="badge">2</span>
+      </button>
+      <button class="dom" aria-label="Membres" title="Membres">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.8 20c.6-3.4 3.1-5.5 6.2-5.5s5.6 2.1 6.2 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6"/><path d="M18.6 14.7c1.7.9 2.7 2.8 2.9 5.3"/></svg>
+        <span class="badge">1</span>
+      </button>
+      <button class="dom" aria-label="Vie du gang" title="Vie du gang">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>
+      </button>
+      <button class="dom" aria-label="Jeu de cartes" title="Jeu de cartes">
+        <svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="11" height="14" rx="2.2"/><path d="M8.5 20.5H17a2.5 2.5 0 0 0 2.5-2.5V8.5"/><path d="M9.5 8.2l3 .1M9.5 11.2h4"/></svg>
+        <span class="badge">3</span>
+      </button>
+      <button class="dom active" aria-label="Communication" title="Communication">
+        <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5z"/></svg>
+        <span class="badge">4</span>
+      </button>
+      <button class="dom" aria-label="Site" title="Site">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c-2.6 2.6-2.6 14.4 0 17c2.6-2.6 2.6-14.4 0-17z"/></svg>
+      </button>
+    </div>
+    <div class="sep"></div>
+    <div class="rail-foot">
+      <button class="ico" aria-label="Staff" title="Staff"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.3-3 7.8-7 9.5-4-1.7-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg></button>
+      <button class="ico" aria-label="Réglages" title="Réglages"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+      <div class="live" title="En direct"><i></i></div>
+      <div class="avatar" title="Domu (admin)">DU</div>
+    </div>
+  </nav>
+
+  <aside class="col2">
+    <div class="eyebrow">Domaine</div>
+    <h1>Communication</h1>
+    <div class="sub">5 demandes à traiter</div>
+    <div class="subs">
+      <div class="sub-item"><span>Messagerie</span><span class="count">0</span></div>
+      <div class="sub-item on"><span>Assistance</span><span class="count hot">5</span></div>
+      <div class="sub-item"><span>Boîte à idées</span><span class="count">2</span></div>
+      <div class="sub-item"><span>Bot Discord</span><span class="count">0</span></div>
+    </div>
+    <div id="list" class="ui-list"></div>
+  </aside>
+
+  <section class="col3">
+    <button type="button" class="back" id="back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>Demandes</button>
+    <header id="dhead" class="ui-dhead"></header>
+    <div id="thread" class="ui-thread"></div>
+  </section>
+
+  <aside id="info" class="ui-info col4"></aside>
+</div>
+
+<script type="module">
+import { createList } from '../../assets/js/admin/ui/list.js';
+import { createThread } from '../../assets/js/admin/ui/thread.js';
+import { renderInfoPanel } from '../../assets/js/admin/ui/info-panel.js';
+import { renderDetailHeader } from '../../assets/js/admin/ui/detail-header.js';
+
+const NOW = Date.now();
+const ago = (min) => new Date(NOW - min * 60000);
+const yesterdayAt = (h) => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(h, 0, 0, 0); return d; };
+const ME = 'domu';
+const ADMIN = { id: ME, pseudo: 'Domu', color: '#F2EFEA' };
+const S = {
+  open: { id: 'open', label: 'Ouverte', tone: 'open' },
+  prog: { id: 'prog', label: 'En cours', tone: 'prog' },
+  done: { id: 'done', label: 'Résolue', tone: 'done' },
+};
+const OPTIONS = [S.open, S.prog, S.done];
+const CARZY = { id: 'carzy', pseudo: 'Carzy', color: '#E2C77E' };
+
+let TICKETS = [
+  { id: 't1', member: CARZY, title: 'Paillettes non créditées', excerpt: 'Je suis venu à la sortie IRL de samedi…', at: ago(12), status: S.open, unread: true,
+    since: new Date('2025-03-10'), lastSeen: ago(120), stats: [['340', 'Paillettes'], ['9', 'Sorties IRL'], ['214', 'Cartes'], ['2025', 'Secret Santa inscrit']],
+    history: [{ title: 'Badge « Bienvenue » manquant', status: S.done, at: new Date('2026-06-12') }, { title: 'Lien Secret Santa cassé', status: S.done, at: new Date('2026-09-03') }],
+    opened: 'Ouverte le 21 oct., 14:04' },
+  { id: 't2', member: { id: 'wae', pseudo: 'Wae', color: '#7E93C9' }, title: 'Accès à la page Secret Santa', excerpt: "Le lien m'affiche une page vide depuis…", at: ago(60), status: S.prog,
+    since: new Date('2025-11-02'), lastSeen: ago(50), stats: [['12', 'Paillettes'], ['2', 'Sorties IRL'], ['41', 'Cartes'], ['2025', 'Secret Santa inscrit']], history: [], opened: 'Ouverte le 21 oct., 13:10' },
+  { id: 't3', member: { id: 'izin', pseudo: 'Izin', color: '#E0909A' }, title: 'Carte en double dans Halloween', excerpt: "J'ai reçu deux fois la même carte au…", at: ago(180), status: S.open, unread: true,
+    since: new Date('2025-05-18'), lastSeen: ago(30), stats: [['88', 'Paillettes'], ['6', 'Sorties IRL'], ['160', 'Cartes'], ['2024', 'Secret Santa inscrit']], history: [], opened: 'Ouverte le 21 oct., 11:02' },
+  { id: 't4', member: { id: 'xalina', pseudo: 'Xalina', color: '#9A88C4' }, title: 'Question sur le tirage', excerpt: 'Est-ce que le tirage est définitif ?', at: yesterdayAt(18), status: S.done,
+    since: new Date('2025-08-21'), lastSeen: yesterdayAt(18), stats: [['20', 'Paillettes'], ['1', 'Sorties IRL'], ['12', 'Cartes'], ['2025', 'Secret Santa inscrit']], history: [], opened: 'Ouverte hier, 18:00' },
+  { id: 't5', member: { id: 'terrow', pseudo: 'Terrow', color: '#6FA37F' }, title: 'Badge « Première sortie » absent', excerpt: 'Je suis bien à la sortie du 14, mais…', at: yesterdayAt(9), status: S.prog,
+    since: new Date('2025-02-14'), lastSeen: yesterdayAt(9), stats: [['57', 'Paillettes'], ['7', 'Sorties IRL'], ['98', 'Cartes'], ['2025', 'Secret Santa inscrit']], history: [], opened: 'Ouverte hier, 09:00' },
+  { id: 't6', member: { id: 'mavi', pseudo: 'Mavi', color: '#D8A75E' }, title: "Bug d'affichage du tableau d'activité", excerpt: 'Le tableau reste vide sur mobile…', at: ago(3 * 24 * 60), status: S.open,
+    since: new Date('2025-10-01'), lastSeen: ago(3 * 24 * 60), stats: [['3', 'Paillettes'], ['0', 'Sorties IRL'], ['5', 'Cartes'], ['2025', 'Secret Santa inscrit']], history: [], opened: 'Ouverte le 18 oct., 10:30' },
+];
+
+const MESSAGES = {
+  t1: [
+    { type: 'event', text: 'Demande ouverte par Carzy', at: ago(130) },
+    { id: 'm1', author: CARZY, body: "Salut, je suis allé à la sortie IRL de samedi (le Vinewood, avec Izin et Terrow) et je n'ai pas reçu mes Paillettes. Le tableau d'activité me montre bien présent.", at: ago(126) },
+    { type: 'event', text: 'Domu a pris en charge', at: ago(112) },
+    { id: 'm2', author: ADMIN, body: "Merci Carzy, je regarde le journal. Ta présence est bien validée côté Sorties IRL : la récompense était en attente de la fin du défi « Sorties de l'automne ».", at: ago(109) },
+    { id: 'm3', author: CARZY, body: "D'accord, ça marche. Tu peux me dire quand elles tomberont ?", at: ago(97) },
+  ],
+};
+const messagesFor = (t) => MESSAGES[t.id] || [
+  { type: 'event', text: `Demande ouverte par ${t.member.pseudo}`, at: t.at },
+  { id: t.id + '-1', author: t.member, body: t.excerpt, at: t.at },
+];
+
+const $ = (sel) => document.querySelector(sel);
+let current = null;
+let thread = null;
+let header = null;
+let info = null;
+
+const list = createList($('#list'), {
+  items: TICKETS,
+  key: 'id',
+  label: 'Demandes d’assistance',
+  empty: 'Aucune demande.',
+  selectedId: 't1',
+  filters: [
+    { id: 'open', label: 'Ouvertes', test: (it) => it.status.id === 'open' },
+    { id: 'prog', label: 'En cours', test: (it) => it.status.id === 'prog' },
+  ],
+  search: {
+    placeholder: 'Rechercher une demande',
+    label: 'Rechercher une demande',
+    fields: (it) => [it.member.pseudo, it.title, it.excerpt].join(' '),
+  },
+  onSelect: (it) => show(it),
+});
+
+function setStatus(t, id) {
+  t.status = OPTIONS.find((o) => o.id === id);
+  list.update(TICKETS);
+  show(t);
+}
+
+function show(t) {
+  current = t;
+  document.body.dataset.screen = 'detail';
+  header?.destroy();
+  header = renderDetailHeader($('#dhead'), {
+    member: t.member,
+    title: t.member.pseudo,
+    subtitle: `${t.title} · ${t.opened}`,
+    status: { value: t.status.id, options: OPTIONS, label: 'Statut de la demande' },
+    onStatus: async (id) => setStatus(t, id),
+    primary: t.status.id === 'done' ? null : { label: 'Résoudre', onClick: () => setStatus(t, 'done') },
+  });
+  thread?.destroy();
+  {
+    thread = createThread($('#thread'), {
+      me: ME,
+      messages: messagesFor(t),
+      placeholder: `Répondre à ${t.member.pseudo}…`,
+      hint: `Les réponses sont visibles par ${t.member.pseudo} sur Discord. Les notes internes restent dans le panel.`,
+      onSend: async (text) => {
+        (MESSAGES[current.id] ||= messagesFor(current)).push({ id: 'n' + Date.now(), author: ADMIN, body: text, at: new Date() });
+        thread.update(MESSAGES[current.id]);
+      },
+      onNote: async (text) => {
+        (MESSAGES[current.id] ||= messagesFor(current)).push({ id: 'n' + Date.now(), author: ADMIN, body: text, at: new Date(), internal: true });
+        thread.update(MESSAGES[current.id]);
+      },
+    });
+  }
+  info?.destroy();
+  info = renderInfoPanel($('#info'), {
+    member: { ...t.member, since: t.since, lastSeen: t.lastSeen },
+    stats: t.stats.map(([value, label]) => ({ value, label })),
+    status: { value: t.status.id, options: OPTIONS, label: 'Statut' },
+    onStatus: async (id) => setStatus(t, id),
+    history: t.history,
+    actions: [{ label: 'Ouvrir la fiche membre', onClick: () => { window.__fiche = (window.__fiche || 0) + 1; } }],
+  });
+}
+
+$('#back').addEventListener('click', () => { document.body.dataset.screen = 'list'; });
+show(TICKETS[0]);
+document.body.dataset.screen = 'list';
+window.__demo = { list, get thread() { return thread; }, get tickets() { return TICKETS; } };
+</script>
+</body>
+</html>
