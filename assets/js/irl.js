@@ -2,6 +2,7 @@
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 import { prepareImage } from './image-compress.js';
+import { addToCalendar } from './ics.js';
 import { mountHistory } from './irl-history.js';
 import { ghostDirectory } from './admin-ghosts.js';
 
@@ -137,6 +138,9 @@ function rsvpBlock(ev, { compact = false } = {}) {
     ${counts}${people}
   </div>`;
 }
+function calButton(ev) {
+  return `<button type="button" class="btn btn-ghost btn-sm" data-act="ics" data-id="${esc(ev.id)}" aria-label="Ajouter « ${esc(ev.title)} » à mon agenda">${I.cal}<span>Ajouter à mon agenda</span></button>`;
+}
 function descHtml(ev) {
   return ev.description ? `<p class="desc">${esc(ev.description)}</p>` : '';
 }
@@ -192,6 +196,7 @@ function renderNext(ev) {
       ${meta(ev)}
       ${descHtml(ev)}
       ${rsvpBlock(ev)}
+      <div class="btn-row">${calButton(ev)}</div>
       ${ownerActions(ev)}
     </div>
     ${started ? `<div class="feat-album">${albumHtml(ev)}</div>` : ''}
@@ -243,6 +248,7 @@ function renderUpcoming(ev) {
       </div>
       ${descHtml(ev)}
       ${rsvpBlock(ev, { compact: true })}
+      <div class="btn-row">${calButton(ev)}</div>
     </div>
   </article>`;
 }
@@ -409,6 +415,7 @@ $('#app').addEventListener('click', (e) => {
   else if (act === 'edit') { const ev = S.events.find((x) => x.id === id); if (ev?.retro) hx.openRetro(ev); else openEventDialog(ev); }
   else if (act === 'who') hx.openWho(S.events.find((x) => x.id === id));
   else if (act === 'delete') deleteEvent(id);
+  else if (act === 'ics') { const ev = S.events.find((x) => x.id === id); if (ev?.starts_at) addToCalendar({ id, title: ev.title, start: ev.starts_at, location: ev.location, description: ev.description }, new URL(`irl.html#event-${id}`, location.href).href); }
   else if (act === 'new') openEventDialog();
   else if (act === 'photo') openPhoto(id, Number(b.dataset.idx));
   else if (act === 'expand') { S.expanded.add(id); render().then(() => $(`#event-${CSS.escape(id)} .thumb[data-idx="${ALBUM_PREVIEW}"]`)?.focus()); }

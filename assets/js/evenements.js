@@ -3,6 +3,7 @@
 // Les événements à venir ne sont pas montrés (surprise).
 import { sb, initPage, esc, $, errMsg, avatarHtml } from './core.js';
 import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
+import { addToCalendar } from './ics.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -13,6 +14,7 @@ const ICON = {
   badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
   eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
   clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  cal: svg('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
 };
 const TZ = 'Europe/Zurich';
 const fmt = (iso, o = {}) => new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', ...o }).format(new Date(iso));
@@ -74,6 +76,7 @@ function eventCard(ev, ctx, live) {
         ${live ? `<p class="small muted">Jusqu'au ${esc(fmt(ev.ends_at, { weekday: 'long' }))}. ${ICON.eye} L'image passe au hasard sur les pages du site (${oneIn(ev.probability) === 1 ? 'à chaque page' : `environ 1 page sur ${oneIn(ev.probability)}`}) : clique dessus pour l'attraper.</p>` : ''}
       </div>
     </div>
+    ${live ? `<div class="btn-row"><button type="button" class="btn btn-ghost btn-sm" data-act="ics" data-id="${esc(ev.id)}" aria-label="Ajouter « ${esc(ev.name)} » à mon agenda">${ICON.cal}<span>Ajouter à mon agenda</span></button></div>` : ''}
     <dl class="evp-stats">
       <div><dt>Tes captures</dt><dd>${mine}${ev.max_per_user != null ? `<small> / ${esc(ev.max_per_user)}</small>` : ''}</dd></div>
       <div><dt>Captures du gang</dt><dd>${total}${ev.max_total != null ? `<small> / ${esc(ev.max_total)}</small>` : ''}</dd></div>
@@ -113,7 +116,16 @@ async function load() {
   return { events, mine, total, badges, boards, myBadges };
 }
 
+let shown = null; // contexte du dernier rendu (pour le bouton « Ajouter à mon agenda »)
+app.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act="ics"]');
+  if (!b) return;
+  const ev = shown?.events.find((x) => x.id === b.dataset.id);
+  if (ev) addToCalendar({ id: ev.id, title: ev.name, start: ev.starts_at, end: ev.ends_at, description: ev.description }, new URL('evenements.html', location.href).href);
+});
+
 function render(ctx) {
+  shown = ctx;
   const now = new Date();
   const live = ctx.events.filter((e) => new Date(e.ends_at) > now).sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at));
   const past = ctx.events.filter((e) => new Date(e.ends_at) <= now);
