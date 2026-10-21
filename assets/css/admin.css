@@ -187,3 +187,14 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
 .god-card-more .god-lifts { margin-bottom: 10px; }
 .god-redo-dlg .god-note { margin: 0; }
 .draw-redo { border-top: 1px dashed var(--god-text); padding-top: 12px; }
+
+/* Journal (admin-log.js) */
+.log-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.log-row { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); padding: 10px 12px; }
+.log-row .item-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.log-row time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.log-row p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.log-details { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 6px 0 0; font-size: 14px; }
+.log-details > div { display: flex; gap: 6px; }
+.log-details dt { color: var(--muted); }
+.log-details dd { margin: 0; overflow-wrap: anywhere; }

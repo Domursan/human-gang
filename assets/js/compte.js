@@ -378,6 +378,8 @@ async function renderMember(user) {
           <p class="small muted hint">Sert uniquement au bot pour t'envoyer des messages privés. Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l'identifiant ».</p>
         </div>
         <label class="check"><input type="checkbox" id="pf-bot" ${p.bot_optin ? 'checked' : ''}> <span>Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels)</span></label>
+        <label class="check"><input type="checkbox" id="pf-remind-irl" ${p.remind_irl ? 'checked' : ''}> <span>Me rappeler mes sorties IRL par message Discord, 24 h et 2 h avant</span></label>
+        <label class="check"><input type="checkbox" id="pf-notify-wish" ${p.notify_card_wish ? 'checked' : ''}> <span>M'avertir sur Discord quand une carte de ma liste de souhaits est obtenue par un membre</span></label>
         <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
       </form>
 
@@ -493,6 +495,8 @@ function bindProfile() {
       share_birthday: $('#pf-share').checked,
       discord_id: discord || null,
       bot_optin: $('#pf-bot').checked,
+      remind_irl: $('#pf-remind-irl').checked,
+      notify_card_wish: $('#pf-notify-wish').checked,
     };
     const btn = form.querySelector('button[type=submit]');
     busy(btn, true, 'Enregistrement…'); formError(form, '');
