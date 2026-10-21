@@ -263,7 +263,12 @@ function renderDetail() {
   D.headApi = renderDetailHeader(D.head, {
     member: S.members.get(ev.created_by) || { pseudo: 'Ancien membre' },
     title: ev.title,
-    subtitle: `${statusOf(ev).label} · ${whenLabel(ev)}${ev.location ? ` · ${ev.location}` : ''}`,
+    subtitle: [
+      // À caler : le statut porte déjà « Date à caler » ; on n'ajoute que le nombre de dates du sondage.
+      ev.starts_at ? statusOf(ev).label : (dates.length ? `Date à caler · sondage à ${pluralCount(dates.length, 'date', 'dates')}` : 'Date à caler'),
+      ev.starts_at ? whenLabel(ev) : '',
+      ev.location || '',
+    ].filter(Boolean).join(' · '),
     actions: [
       { label: 'Modifier', onClick: () => openEdit(ev, null) },
       { label: 'Supprimer', onClick: () => CTX.remove(ev) },

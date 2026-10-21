@@ -20,7 +20,11 @@
 }
 .ui-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .ui-pill[data-tone="open"] { color: var(--rose); border-color: transparent; background: color-mix(in srgb, var(--rose) 14%, transparent); }
-.ui-pill[data-tone="prog"] { color: var(--sand); border-color: transparent; background: color-mix(in srgb, var(--sand) 14%, transparent); }
+/* --sand-ink : texte « en cours » des pastilles. Égal à --sand en thème sombre ; en clair, un ocre foncé
+   (contraste ≥ 4,5:1 sur le fond beige). Le thème clair n'écrase que cette variable, pas --sand. */
+:root { --sand-ink: var(--sand); }
+html[data-mode="clair"] { --sand-ink: #6B4F00; }
+.ui-pill[data-tone="prog"] { color: var(--sand-ink); border-color: transparent; background: color-mix(in srgb, var(--sand) 14%, transparent); }
 .ui-pill[data-tone="done"] { color: var(--sage); border-color: transparent; background: color-mix(in srgb, var(--sage) 16%, transparent); }
 .ui-udot { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); flex: none; }
 
@@ -37,6 +41,22 @@
 .ui-status[data-tone="prog"] { color: var(--sand); }
 .ui-status[data-tone="done"] { color: var(--sage); }
 .ui-status-wide { width: 100%; }
+
+/* ---------- Listes déroulantes natives du panel : même habillage que les champs (jetons de couleur, clair et sombre) ----------
+   :where() laisse la main aux règles de métrique propres à chaque écran (.sx-sort select, .md-row select…) et à .ui-status.
+   La seconde sélection à l'intérieur de .field bat « .field select » de base.css (même spécificité, chargé avant). */
+:where(.shell) select,
+:where(.shell) .field select {
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--text);
+  padding: 8px 34px 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background-color: var(--bg);
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 16px 16px;
+}
+:where(.shell) select option { background: var(--surface); color: var(--text); }
+:where(.shell) select:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+:where(.shell) select:disabled { opacity: .7; cursor: default; }
 
 /* ---------- Puces ---------- */
 .ui-chip {
