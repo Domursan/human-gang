@@ -17,6 +17,7 @@ const REASON_LABEL = {
   serie_complete: 'Série complétée', reponse_sortie: 'Réponse à une sortie', presence: 'Présence à une sortie', photo: 'Photo partagée',
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
+  quete: 'Quête de la semaine', defi: 'Défi du gang',
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
 const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
@@ -26,7 +27,7 @@ const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [], massTotal: 0,
-  lcdShown: null, lcdAnim: false,
+  lcdShown: null, lcdAnim: false, quests: null,
 };
 const cfg = () => S.state?.config || {};
 const isGod = () => !!S.state?.god;
@@ -238,6 +239,7 @@ function renderBoosters() {
       </div>
       <p class="muted small">Chaque booster contient ${plural(Number(size), 'carte', 'cartes')}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
     </section>
+    <section class="card cartes-block cq" id="cartes-quests" aria-labelledby="cartes-quests-h"></section>
     <div id="cartes-reveal"></div>
     <section class="card cartes-block" aria-labelledby="cartes-odds-h">
       <h2 id="cartes-odds-h">Chances</h2>
@@ -251,7 +253,76 @@ function renderBoosters() {
     </section>`;
   renderFree();
   renderReveal();
+  renderQuests();
   fitAll(el);
+}
+
+/* ---------- Quêtes de la semaine (3 par semaine, lundi 00:00 heure de Zurich) ---------- */
+// Chargées à part : un échec de ces quêtes ne bloque pas le reste de la page.
+async function loadQuests() {
+  try {
+    const { data, error } = await sb.rpc('hg_card_quests_me');
+    if (error) throw error;
+    S.quests = data || { quests: [] };
+  } catch (e) {
+    console.warn('[quêtes]', e);
+    S.quests = { error: true };
+  }
+  renderQuests();
+}
+
+function questHtml(q) {
+  const target = Math.max(1, Number(q.target) || 1);
+  const value = Math.min(Math.max(0, Number(q.progress) || 0), target);
+  const pctDone = Math.round((value / target) * 100);
+  const state = q.claimed
+    ? '<span class="pill pill-ok">Récompense reçue</span>'
+    : q.done
+      ? `<button type="button" class="btn btn-sand cq-btn" data-action="quest-claim" data-code="${esc(q.code)}" ${S.busy ? 'disabled' : ''}>Réclamer · ${fmtPaillettes(q.reward)}</button>`
+      : '<span class="pill pill-current">En cours</span>';
+  return `<li class="cq-item${q.claimed ? ' is-claimed' : ''}">
+      <div class="cq-main">
+        <p class="cq-label">${esc(q.label)}</p>
+        <div class="progress cq-bar" role="progressbar" aria-label="${esc(q.label)}" aria-valuemin="0" aria-valuemax="${target}" aria-valuenow="${value}" aria-valuetext="${nf.format(value)} sur ${nf.format(target)}">
+          <span style="width:${pctDone}%"></span>
+        </div>
+        <p class="cartes-small cq-count">${nf.format(value)} / ${nf.format(target)} · récompense ${fmtPaillettes(q.reward)}</p>
+      </div>
+      <div class="cq-act">${state}</div>
+    </li>`;
+}
+
+function renderQuests() {
+  const box = $('#cartes-quests');
+  if (!box) return;
+  const Q = S.quests;
+  const head = '<h2 id="cartes-quests-h">Quêtes de la semaine</h2>';
+  if (!Q) { box.innerHTML = `${head}<p class="muted small">Chargement des quêtes…</p>`; return; }
+  if (Q.error) { box.innerHTML = `${head}<p class="muted small">Quêtes indisponibles pour le moment.</p>`; return; }
+  const list = Q.quests || [];
+  if (!list.length) { box.innerHTML = `${head}<p class="muted small">Aucune quête cette semaine.</p>`; return; }
+  const done = list.filter((q) => q.done).length;
+  box.innerHTML = `${head}
+    <p class="cartes-small">${nf.format(done)} sur ${nf.format(list.length)} terminée${done > 1 ? 's' : ''}${Q.ends_at ? ` · nouvelles quêtes le lundi suivant (${esc(fmtDate(Q.ends_at))})` : ''}.</p>
+    <ul class="cq-list">${list.map(questHtml).join('')}</ul>`;
+}
+
+async function claimQuest(code) {
+  if (S.busy) return;
+  S.busy = true;
+  renderQuests();
+  try {
+    const { data, error } = await sb.rpc('hg_card_quest_claim', { p_code: code });
+    if (error) throw error;
+    toast(`Quête terminée : +${fmtP(data?.reward ?? 0)}`, 'ok');
+    await refreshData();
+  } catch (e) {
+    toast(errMsg(e), 'error');
+  } finally {
+    S.busy = false;
+    await loadQuests();
+    renderAll();
+  }
 }
 
 // Booster gratuit : cartouche + compte à rebours, ou bouton « Ouvrir » quand il est disponible.
@@ -442,6 +513,7 @@ async function openBooster(free) {
   } finally {
     S.busy = false;
     renderAll();
+    loadQuests(); // l'ouverture d'un booster fait avancer les quêtes
     if (R && S.reveal === R && R.seq && R.phase === 'seq') {
       $('#cartes-live').textContent = 'Ouverture du booster en cours.';
       $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -766,6 +838,7 @@ function onClick(e) {
     case 'daily': return claimDaily();
     case 'open-free': return openBooster(true);
     case 'open-paid': return openBooster(false);
+    case 'quest-claim': return claimQuest(t.dataset.code);
     case 'reveal-all': return skipSeq();
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
@@ -812,6 +885,7 @@ async function boot() {
     app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
     toast(errMsg(e), 'error');
   }
+  loadQuests();
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page
   // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour

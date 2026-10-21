@@ -15,6 +15,7 @@ import { openManualDraw } from './admin-ss-manual.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
 import { mountEventsSection, refreshEventsSection } from './admin-events.js';
 import { mountCardsSection } from './admin-cards.js';
+import { mountChallengesSection } from './admin-challenges.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 import { prepareImage, otherVariants } from './image-compress.js';
 
@@ -807,6 +808,7 @@ mountMessagesSection($('#messages-root'));
 mountLogSection($('#log-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
 mountCardsSection($('#cards-root'));
+mountChallengesSection($('#challenges-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
 // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
 mountGhostsSection($('#ghosts-root'), {

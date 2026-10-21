@@ -21,6 +21,7 @@ const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['economie', 'Économ
 const RARITY_IDS = RARITIES.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
 const REASON_LABEL = {
+  quete: 'Quête de la semaine', defi: 'Défi du gang',
   booster: 'Booster', quotidien: 'Passage du jour', recyclage: 'Recyclage', fabrication: 'Fabrication', echange: 'Échange',
   reponse_sortie: 'Réponse à une sortie', sortie_creee: 'Sortie créée', photo: 'Photo publiée', moment: 'Moment publié',
   badge: 'Badge gagné', capture: 'Image attrapée', presence: 'Présence à une sortie', cadeau_santa: 'Cadeau Secret Santa',

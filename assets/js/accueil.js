@@ -27,6 +27,7 @@ const ICON = {
   arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 20),
   cake: svg('<path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7"/><path d="M5 16c2 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3 1.5 4 0"/><path d="M12 12V8M12 5.5v.01"/>', 20),
   pulse: svg('<path d="M3 12h4l3-7 4 14 3-7h4"/>', 20),
+  flag: svg('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 20),
 };
 
 const STATUS = {
@@ -110,6 +111,7 @@ function renderMemberShell() {
     </section>
     ${recapBanner()}
     <div id="dyn-banner" hidden></div>
+    <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
 
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
@@ -370,6 +372,52 @@ async function loadBirthdays() {
   } catch (e) { ul.innerHTML = `<li>${failBox(e)}</li>`; }
 }
 
+/* ---------- Défi du gang : objectif collectif (progression calculée côté serveur) ---------- */
+const CHALLENGE_UNIT = {
+  sorties_tenues: 'sorties tenues', participations: 'participations', photos_ajoutees: 'photos ajoutées',
+  souvenirs_publies: 'souvenirs publiés', boosters_ouverts: 'boosters ouverts', cartes_recyclees: 'cartes recyclées',
+  echanges_conclus: 'échanges conclus',
+};
+function challengeStatus(c) {
+  if (c.done) return c.credited ? 'Atteint · récompense reçue' : 'Atteint · récompense versée sous peu';
+  if (c.ended) return 'Terminé, objectif non atteint';
+  return `Jusqu'au ${fmtDate(c.ends_at)}`;
+}
+function challengeHtml(c) {
+  const target = Math.max(1, Number(c.target) || 1);
+  const shown = Math.min(Math.max(0, Number(c.progress) || 0), target);
+  const pct = Math.round((shown / target) * 100);
+  const unit = CHALLENGE_UNIT[c.metric] || '';
+  const text = `${shown} sur ${target} ${unit}`;
+  return `<li class="defi-item${c.done ? ' is-done' : ''}">
+      <div class="defi-top">
+        <p class="defi-title">${esc(c.title)}</p>
+        <p class="small muted">${esc(challengeStatus(c))}</p>
+      </div>
+      ${c.description ? `<p class="small muted defi-desc">${esc(c.description)}</p>` : ''}
+      <div class="progress defi-bar" role="progressbar" aria-label="${esc(c.title)}" aria-valuemin="0" aria-valuemax="${target}" aria-valuenow="${shown}" aria-valuetext="${esc(text)}">
+        <span style="width:${pct}%"></span>
+      </div>
+      <p class="small defi-count"><strong>${esc(String(shown))} / ${esc(String(target))}</strong> ${esc(unit)} · récompense : ${esc(Number(c.reward).toLocaleString('fr-CH'))} Paillettes pour chacun</p>
+    </li>`;
+}
+async function loadChallenges() {
+  const box = $('#defi');
+  if (!box) return;
+  try {
+    const { data, error } = await sb.rpc('hg_challenges_active');
+    if (error) throw error;
+    const list = Array.isArray(data) ? data : [];
+    if (!list.length) return; // pas de défi en cours : le bloc reste masqué
+    box.innerHTML = `
+      <h2 class="card-title" id="defi-title">${ICON.flag} Défi du gang</h2>
+      <ul class="defi-list">${list.map(challengeHtml).join('')}</ul>`;
+    box.hidden = false;
+  } catch (e) {
+    console.warn('[défis]', e);
+  }
+}
+
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
 function hideForbiddenTiles() {
@@ -390,7 +438,7 @@ if (!me) {
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    loadFeed(), loadBirthdays(), loadDynBanner(),
+    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
   ]);
 }
 app.removeAttribute('aria-busy');

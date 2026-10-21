@@ -131,3 +131,16 @@
 /* Bandeau « Événement en cours » (réutilise .recap-banner) */
 .dyn-banner-img { width: 40px; height: 40px; object-fit: contain; image-rendering: pixelated; flex: none; }
 .dyn-banner { background: linear-gradient(100deg, color-mix(in srgb, var(--sand) 22%, var(--surface)), var(--surface) 60%); }
+
+/* Défi du gang (objectif collectif, bloc de l'accueil) */
+.home-defi { margin-bottom: 20px; }
+.home-defi .card-title { margin-bottom: 12px; }
+.defi-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.defi-item { display: grid; gap: 8px; }
+.defi-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+.defi-top p { margin: 0; }
+.defi-title { font-weight: 700; overflow-wrap: anywhere; }
+.defi-desc { overflow-wrap: anywhere; }
+.defi-bar { height: 14px; }
+.defi-count { margin: 0; font-variant-numeric: tabular-nums; }
+.defi-item.is-done .defi-bar > span { background: var(--sand); }
