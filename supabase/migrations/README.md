@@ -4,8 +4,9 @@ Ce dossier contient l'historique des modifications de la base, dans l'ordre. Les
 ont été appliqués à la main (SQL Editor) ou via l'outil de migration ; les noms ne sont pas
 renommés, car ils sont déjà référencés en production.
 
-**Source de vérité** : `supabase/schema/schema_reel_2026-10-21.sql`. Il reconstitue l'état réel
-du schéma `public` tel qu'il est en base le 21/10/2026. Les migrations 006, 009, 011, 012, 015 et 017
+**Source de vérité** : `supabase/schema/schema_reel_2026-10-21b.sql`. Il reconstitue l'état réel
+du schéma `public` tel qu'il est en base le 21/10/2026. L'ancien `schema_reel_2026-10-21.sql` est périmé
+(il ne couvre pas les migrations 020 à 032). Les migrations 006, 009, 011, 012, 015 et 017
 sont des résumés (le SQL exact a été exécuté pendant une session et n'a pas été conservé) : en cas
 de différence, c'est le schéma reconstitué qui fait foi.
 
@@ -30,6 +31,13 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `018_cartes_fonctions.sql` | Fonctions du jeu de cartes | appliqué |
 | `019_comptes_fantomes.sql` | Comptes fantômes | appliqué |
 | `021_securite_cartes.sql` | Sécurité, contraintes, journaux admin, corrections du jeu de cartes | **à appliquer** |
+| `026_staff.sql` | Catalogue des 12 permissions (`hg_perm_catalog`), table `hg_staff`, fonction `hg_has_perm()` | appliqué |
+| `027_staff_regles.sql` | Table `hg_perm_tables` (table ou stockage vers permission) ; `hg_is_admin()` remplacé par `hg_has_perm()` dans les règles RLS et les fonctions du panel | appliqué |
+| `028_staff_ajustements.sql` | Journal des lectures de messages et e-mails réservés à l'administrateur ; modération des réactions (permission `souvenirs`) | appliqué |
+| `029_staff_lectures.sql` | Lecture des profils par tout Staff ; permission de chaque clé de `hg_settings` (`hg_settings_perm`) ; `hg_admin_accounts` | appliqué |
+| `030_admin_temps_reel.sql` | Publication `supabase_realtime` du panel (assistance, idées, profils, Staff, journal, cartes, sorties, souvenirs, Secret Santa) | appliqué |
+| `031_corrections_ambiguites.sql` | Colonnes ambiguës corrigées dans `hg_admin_ghosts` et `hg_admin_conversations` | appliqué |
+| `032_assistance_fil.sql` | Prise en charge et fil de réponses de l'assistance | **absent de cette branche** : ajouté par une autre branche |
 
 ## Les trous et les doublons
 
