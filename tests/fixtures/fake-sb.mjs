@@ -58,6 +58,18 @@ Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', 
 DB.hg_profiles[0].created_at = iso(-4 * 365);
 for (const [u, n] of [[U(2), 4], [ME, 2], [U(3), 1]]) for (let i = 0; i < n; i++) DB.hg_dyn_captures.push({ event_id: 'aaaaaaaa-0000-4000-8000-000000000001', user_id: u, captured_at: iso(-1 + i / 10) });
 for (const [u, n] of [[U(4), 6], [ME, 3], [U(5), 2], [U(2), 1]]) for (let i = 0; i < n; i++) DB.hg_dyn_captures.push({ event_id: 'aaaaaaaa-0000-4000-8000-000000000002', user_id: u, captured_at: iso(-310 + i / 10) });
+// Scénario badgeCount : le membre de test (ME) obtient exactement N badges (0, 3 par défaut, 20…).
+// Les badges ajoutés alternent image et repli (initiales) ; le premier est à niveaux.
+if (Number.isInteger(S.badgeCount)) {
+  const mine = DB.hg_user_badges.filter((u) => u.user_id === ME);
+  DB.hg_user_badges = DB.hg_user_badges.filter((u) => u.user_id !== ME || mine.indexOf(u) < S.badgeCount);
+  for (let i = mine.length; i < S.badgeCount; i++) {
+    const code = `test_badge_${String(i).padStart(2, '0')}`;
+    DB.hg_badges.push({ code, name: `Badge test ${i + 1}`, description: 'Badge de test', image_url: i % 3 ? PUMPKIN : null, sort: 1000 + i,
+      levels_enabled: i === 0, levels: i === 0 ? [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }] : [] });
+    DB.hg_user_badges.push({ user_id: ME, badge_code: code, awarded_at: iso(-i - 1), level: i === 0 ? 2 : 1 });
+  }
+}
 window.__DB = DB; window.__LOG = [];
 // Session : un visiteur (S.guest) n'est connecté qu'après signInWithPassword. La session tient dans
 // localStorage, comme le vrai client, pour survivre à la redirection qui suit la connexion.

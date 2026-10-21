@@ -82,14 +82,38 @@ function shell() {
     </section>`;
 }
 
+/** Nombre maximum de badges affichés sur la carte ; au-delà, une pastille « +n ». */
+const IDC_BADGES_MAX = 8;
+
+/**
+ * Rangée des badges obtenus sur la carte (images déjà résolues par addBadgeLevels : niveau atteint pour
+ * les badges à niveaux). Chaîne vide si aucun badge. Les images cassées retombent sur les initiales.
+ */
+function idcBadgesHtml(c) {
+  const list = Array.isArray(c.badges) ? c.badges : [];
+  if (!list.length) return '';
+  const shown = list.length <= IDC_BADGES_MAX ? list : list.slice(0, IDC_BADGES_MAX - 1);
+  const rest = list.length - shown.length;
+  const items = shown.map((b) => {
+    const name = b.name || b.code || '';
+    const label = b.lv ? `${name} · ${levelLabel(b.lv, b.level)}` : name;
+    return `<li class="idc-bdg" title="${esc(label)}">${b.lv ? `<span class="idc-bdg-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url
+      ? `<img src="${esc(b.image_url)}" alt="${esc(label)}" loading="lazy" data-on-error="initials" data-fallback-class="idc-bdg-init" data-fallback="${esc(initials(name))}">`
+      : `<span class="idc-bdg-init" role="img" aria-label="${esc(label)}">${esc(initials(name))}</span>`}</li>`;
+  }).join('');
+  const more = rest > 0 ? `<li class="idc-bdg idc-bdg-more" title="${rest} autre${rest > 1 ? 's' : ''} badge${rest > 1 ? 's' : ''}">+${rest}</li>` : '';
+  return `<ul class="idc-badges" aria-label="Badges obtenus (${list.length})">${items}${more}</ul>`;
+}
+
 function cardHtml(c) {
   const bday = birthdayLabel(c.birthday_dm);
   const stats = c.stats || {};
   const bars = barcode(c.id).map((w, i) => `<i style="flex-grow:${w}" class="${i % 2 ? 'gap' : ''}"></i>`).join('');
+  const bdg = idcBadgesHtml(c);
   return `
     <div class="idc-wrap" id="idc-wrap">
       <article class="idc" id="idc" style="--member:${esc(safeColor(c.color))}" aria-label="Carte de membre de ${esc(c.pseudo)}">
-        <div class="idc-face">
+        <div class="idc-face${bdg ? ' has-badges' : ''}">
           <header class="idc-top">
             <img class="idc-logo" src="${esc(currentLogo())}" alt="" data-on-error="hide">
             <div class="idc-brand">
@@ -112,6 +136,7 @@ function cardHtml(c) {
               ${bday ? `<div class="idc-field"><dt class="idc-k">Anniversaire</dt><dd>${esc(bday)}</dd></div>` : ''}
             </dl>
           </div>
+          ${bdg}
           <ul class="idc-stats" aria-label="Statistiques">
             ${STATS.map(([k, one, many]) => { const n = Number(stats[k]) || 0; return `<li><strong>${n}</strong><span>${n > 1 ? many : one}</span></li>`; }).join('')}
           </ul>
