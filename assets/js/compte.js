@@ -1,4 +1,14 @@
-// ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données =====
+// ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données (compte.html) =====
+// Une seule page, qui affiche un écran selon l'état de la session :
+//  - visiteur : onglets Se connecter / Rejoindre le gang, mot de passe oublié ;
+//  - lien de réinitialisation ou lien expiré : formulaire de nouveau mot de passe, ou message ;
+//  - connecté sans profil : saisie du code d'invitation (hg_join) ;
+//  - membre : tableau de bord (profil, avatar, mot de passe, informations, badges, mes données, suppression).
+// Dépendances : core.js (Supabase, initPage, profil), profile-fields.js (champs des informations), push.js (notifications),
+// badge-levels.js (niveaux des badges), invite-config.js (format des codes), icons.js.
+// Tables, RPC et stockage : hg_profiles, hg_profile_info, hg_badges, hg_user_badges, hg_my_badge_progress, hg_dyn_captures,
+// hg_join, hg_export_my_data, hg_delete_my_account, hg_photos, hg_moments, stockage hg-avatars et hg-photos.
+// N'exporte rien.
 import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from './push.js';
@@ -13,24 +23,34 @@ const isRecoveryLink = hashParams.get('type') === 'recovery' || url.searchParams
 const linkError = hashParams.get('error_description') || url.searchParams.get('error_description');
 const rawNext = url.searchParams.get('next') || '';
 const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
+/** Clé du stockage local où l'on garde le code et le pseudo en attente pendant la confirmation par e-mail. */
 const PENDING_KEY = 'hg_pending_join';
+/** Adresse absolue de cette page : sert de lien de retour dans les e-mails de confirmation et de réinitialisation. */
 const PAGE_URL = new URL('compte.html', location.href).href;
 // Code d'invitation reçu via un lien (rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
 const INVITE_KEY = 'hg_invite_code';
 await loadInviteConfig(); // préfixe des codes (hg_settings.invites)
+/**
+ * Code d'invitation en cours : celui de l'adresse (?code=) s'il est valide, sinon celui gardé pour cette session. Vide si aucun.
+ * Un code venu de l'adresse est mémorisé, pour survivre à la confirmation par e-mail.
+ */
 const INVITE = (() => {
   const ok = (c) => (inviteCodeRe().test(c) ? c : '');
   const fromUrl = ok(String(url.searchParams.get('code') || '').trim().toUpperCase());
   if (fromUrl) { try { sessionStorage.setItem(INVITE_KEY, fromUrl); } catch {} return fromUrl; }
   try { return ok(String(sessionStorage.getItem(INVITE_KEY) || '').toUpperCase()); } catch { return ''; }
 })();
+/** Efface le code d'invitation mémorisé, une fois le compte rejoint le gang. */
 function clearInvite() { try { sessionStorage.removeItem(INVITE_KEY); sessionStorage.removeItem('hg_invite_link'); } catch {} }
 
+/** Vrai une fois le formulaire « nouveau mot de passe » affiché, pour ne pas le remplacer par erreur. */
 let recoveryShown = false;
+// Un lien « mot de passe oublié » ouvre directement le formulaire de nouveau mot de passe.
 sb.auth.onAuthStateChange((event) => {
   if (event === 'PASSWORD_RECOVERY' && !recoveryShown) setTimeout(renderRecovery, 0);
 });
 
+/* ---------- Conteneur et session : me = profil du membre, ou null s'il n'a pas encore de profil ---------- */
 const app = $('#app');
 let me = await initPage({ auth: 'optional' });
 
@@ -48,9 +68,16 @@ const ICON = {
   user: svg('user', { size: 20, stroke: 1.7 }),
   data: svg('data', { size: 20, stroke: 1.7 }),
 };
+/* Étiquettes de visibilité placées à côté de chaque champ : visible par le gang, ou toi et l'admin seulement. */
 const tagPublic = '<span class="vis-tag vis-public">' + ICON.eye + 'Visible par le gang</span>';
 const tagPrivate = '<span class="vis-tag vis-private">' + ICON.lock + 'Toi et l\'admin</span>';
 
+/**
+ * Traduit une erreur d'authentification ou de base en phrase française compréhensible.
+ * Reconnaît l'erreur à son texte ; si elle est inconnue, renvoie le message brut.
+ * @param {unknown} e l'erreur
+ * @returns {string}
+ */
 function authMsg(e) {
   const m = errMsg(e);
   const map = [
@@ -70,23 +97,39 @@ function authMsg(e) {
   for (const [re, txt] of map) if (re.test(m)) return txt;
   return m;
 }
+/**
+ * Met un bouton en attente (désactivé, libellé « Un instant… » ou celui donné) ou le rétablit.
+ * @param {HTMLButtonElement} btn bouton concerné
+ * @param {boolean} on true pour activer l'attente
+ * @param {string} [label] libellé pendant l'attente
+ */
 function busy(btn, on, label) {
   if (on) { btn.dataset.label = btn.textContent; btn.disabled = true; btn.textContent = label || 'Un instant…'; }
   else { btn.disabled = false; if (btn.dataset.label) btn.textContent = btn.dataset.label; }
 }
+/**
+ * Affiche un message d'erreur en haut du formulaire (ou le masque si msg est vide).
+ * @param {HTMLFormElement} form formulaire concerné
+ * @param {string} msg message d'erreur
+ */
 function formError(form, msg) {
   let box = form.querySelector('.form-error');
   if (!box) { box = document.createElement('p'); box.className = 'form-error'; box.setAttribute('role', 'alert'); form.prepend(box); }
   box.textContent = msg; box.hidden = !msg;
 }
+/** Lit le code d'invitation en attente (code, pseudo, date), ou null. */
 function pendingGet() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { return null; } }
+/** Enregistre le code en attente, ou le supprime si v est vide. Sans effet si le stockage local est indisponible. */
 function pendingSet(v) { try { v ? localStorage.setItem(PENDING_KEY, JSON.stringify(v)) : localStorage.removeItem(PENDING_KEY); } catch {} }
+/** Va à la page demandée (?next=), sinon à l'accueil, une fois connecté. */
 function goAfterAuth() { location.replace(NEXT || 'accueil.html'); }
+/** Retire l'état « occupé » de la page : le contenu est prêt à être lu. */
 function done() { app.removeAttribute('aria-busy'); }
 
 /* ======================================================================
    Lien d'e-mail invalide / expiré
    ====================================================================== */
+/** Écran « Lien expiré » : le lien reçu par e-mail n'est plus valable. Ramène à la connexion. */
 function renderLinkError() {
   app.innerHTML = `
     <section class="acc-narrow">
@@ -103,6 +146,7 @@ function renderLinkError() {
 /* ======================================================================
    Nouveau mot de passe (lien « mot de passe oublié »)
    ====================================================================== */
+/** Formulaire « Nouveau mot de passe », affiché après un lien de réinitialisation. Vérifie la longueur et la confirmation. */
 function renderRecovery() {
   recoveryShown = true;
   app.innerHTML = `
@@ -136,6 +180,11 @@ function renderRecovery() {
 /* ======================================================================
    Visiteur : connexion / inscription / mot de passe oublié
    ====================================================================== */
+/**
+ * Écran du visiteur : onglets Se connecter / Rejoindre le gang, et formulaire « mot de passe oublié ».
+ * Gère la connexion, l'inscription (avec code d'invitation et acceptation de la confidentialité) et l'envoi du lien de réinitialisation.
+ * @param {'login'|'signup'} [initialTab='login'] onglet ouvert au départ
+ */
 function renderGuest(initialTab = 'login') {
   app.innerHTML = `
     <section class="acc-narrow">
@@ -255,6 +304,7 @@ function renderGuest(initialTab = 'login') {
   });
 }
 
+/** Écran « Vérifie tes e-mails » : affiché après une inscription, en attendant la confirmation par lien. */
 function renderCheckMail(email) {
   app.innerHTML = `
     <section class="acc-narrow">
@@ -291,6 +341,11 @@ async function afterLogin() {
 /* ======================================================================
    Connecté sans profil : saisir le code d'invitation
    ====================================================================== */
+/**
+ * Écran pour une personne connectée qui n'a pas encore de profil : saisir le code d'invitation et le pseudo.
+ * @param {{code?: string, pseudo?: string}} [prefill] valeurs à pré-remplir
+ * @param {string} [error] message d'erreur à afficher d'entrée
+ */
 function renderJoin(prefill = {}, error = '') {
   app.innerHTML = `
     <section class="acc-narrow">
@@ -327,6 +382,7 @@ function renderJoin(prefill = {}, error = '') {
   });
 }
 
+/** Déconnecte la personne puis renvoie à l'accueil. Une erreur de déconnexion est ignorée. */
 async function logout() {
   await sb.auth.signOut().catch(() => {});
   location.replace('accueil.html');
@@ -335,6 +391,11 @@ async function logout() {
 /* ======================================================================
    Membre : tableau de bord du compte
    ====================================================================== */
+/**
+ * Tableau de bord du compte pour un membre : profil, avatar, mot de passe, informations diverses, badges, données.
+ * Chaque bloc est branché juste après l'affichage.
+ * @param {object|null} user utilisateur de la session (pour afficher l'e-mail)
+ */
 async function renderMember(user) {
   const p = me;
   app.innerHTML = `
@@ -473,6 +534,7 @@ async function renderMember(user) {
   loadBadges();
 }
 
+/** Met à jour partout l'identité affichée (avatar, pseudo, en-tête du site) après une modification. */
 function refreshIdentity() {
   $('#head-avatar').innerHTML = avatarHtml(me, 72);
   $('#av-preview').innerHTML = avatarHtml(me, 96);
@@ -482,6 +544,10 @@ function refreshIdentity() {
 }
 
 /* ---------- Profil ---------- */
+/**
+ * Formulaire « Profil » : pseudo, couleur, anniversaire, identifiant Discord et options du bot.
+ * Vérifie le pseudo et le format de l'identifiant Discord (15 à 21 chiffres) avant l'envoi.
+ */
 function bindProfile() {
   const form = $('#profile-form');
   $$('.swatch', form).forEach((b) => b.addEventListener('click', () => { $('#pf-color').value = b.dataset.c; }));
@@ -513,6 +579,12 @@ function bindProfile() {
 }
 
 /* ---------- Avatar ---------- */
+/**
+ * Recadre une image en carré (au centre) et la réduit à « size » pixels. Sort en WebP, ou en JPEG si le navigateur ne sait pas faire le WebP.
+ * @param {File} file image choisie
+ * @param {number} [size=384] côté final en pixels
+ * @returns {Promise<Blob>}
+ */
 function squareResize(file, size = 384) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -534,6 +606,10 @@ function squareResize(file, size = 384) {
   });
 }
 const AVATAR_EXTS = ['webp', 'jpg', 'png'];
+/**
+ * Avatar : envoi d'une nouvelle image (recadrée et réduite) dans le stockage, puis mise à jour du profil ; et retrait de l'avatar.
+ * Les anciennes versions d'autres formats sont nettoyées sans bloquer.
+ */
 function bindAvatar() {
   const input = $('#av-file'), label = input.closest('label');
   input.addEventListener('change', async () => {
@@ -571,6 +647,7 @@ function bindAvatar() {
 }
 
 /* ---------- Mot de passe ---------- */
+/** Formulaire « Changer le mot de passe » du tableau de bord. Au moins 8 caractères. */
 function bindPassword() {
   const form = $('#pw-form');
   form.addEventListener('submit', async (e) => {
@@ -588,7 +665,13 @@ function bindPassword() {
 }
 
 /* ---------- Badges ---------- */
+/** Couleurs d'accent des badges, attribuées en boucle selon leur rang dans la liste. */
 const BADGE_TINTS = ['var(--ss-fg)', 'var(--irl-fg)', 'var(--hist-fg)', 'var(--sage-text)', 'var(--plum)', 'var(--rust)'];
+/**
+ * Initiales d'un badge (ex. « Chasseur d'images » → « CI »), utilisées quand le badge n'a pas d'image.
+ * @param {string} name nom du badge
+ * @returns {string} deux lettres majuscules au plus
+ */
 function badgeInitials(name) {
   const w = String(name).replace(/[^\p{L}\s-]/gu, '').split(/[\s-]+/).filter((x) => x.length > 2 || /^\p{Lu}/u.test(x));
   return ((w[0]?.[0] || '') + (w[1]?.[0] || w[0]?.[1] || '')).toUpperCase();
@@ -620,6 +703,14 @@ async function loadBadgeProgress(badges) {
   } catch {}
   return out;
 }
+/**
+ * Bloc d'un badge à niveaux : points de niveau, nom du niveau, barre de progression vers le suivant.
+ * @param {object} b badge
+ * @param {boolean} has true si la personne a déjà le badge
+ * @param {number} level niveau atteint
+ * @param {number|null} value valeur actuelle du compteur (null si inconnue)
+ * @returns {string} HTML
+ */
 function levelBlock(b, has, level, value) {
   const lv = sortedLevels(b);
   const cur = has ? level : 0;
@@ -642,6 +733,7 @@ function levelBlock(b, has, level, value) {
     ${has ? `<span class="lvl-name">${esc(levelLabel(b, cur))}</span>` : `<span class="lvl-prog-txt muted">${lv.length} niveaux · ${esc(METRIC_LABEL[b.metric] || '')}</span>`}
     ${prog}`;
 }
+/** Charge tous les badges, marque ceux que j'ai obtenus, et affiche le compteur « n / total obtenus ». */
 async function loadBadges() {
   const ul = $('#badge-grid');
   try {
@@ -674,12 +766,19 @@ async function loadBadges() {
 
 /* ---------- Informations diverses (hg_profile_info) ---------- */
 let infoData = {};       // dernier état enregistré (on conserve aussi les clés inconnues de cette page)
+/** Champs de la liste « Informations diverses » (un champ par clé). */
 function infoInputs() { return $$('#info-groups [data-key]'); }
+/**
+ * Valeurs saisies dans le formulaire, sur la base de la dernière version enregistrée.
+ * Les clés que cette page ne connaît pas sont conservées telles quelles.
+ * @returns {object}
+ */
 function infoFromForm() {
   const out = { ...infoData };
   for (const el of infoInputs()) out[el.dataset.key] = el.value.trim();
   return out;
 }
+/** Affiche, pour chaque groupe, le nombre de champs renseignés (ex. « 2 / 5 renseignés »). */
 function infoCounts() {
   for (const g of INFO_GROUPS) {
     const n = g.fields.filter((f) => String($(`#inf-${f.id}`)?.value || '').trim()).length;
@@ -687,6 +786,11 @@ function infoCounts() {
     if (el) el.textContent = n ? `${n} / ${g.fields.length} renseigné${n > 1 ? 's' : ''}` : 'Rien de renseigné';
   }
 }
+/**
+ * Affiche l'état de l'enregistrement : modifications non enregistrées, enregistrement, enregistré (avec l'heure), ou erreur.
+ * @param {'saved'|'dirty'|'saving'|'error'|''} state état à afficher
+ * @param {string} [when] date de la dernière sauvegarde
+ */
 function infoStatus(state, when) {
   const el = $('#info-status');
   if (!el) return;
@@ -697,6 +801,10 @@ function infoStatus(state, when) {
     : state === 'error' ? 'Échec de l\'enregistrement'
     : '';
 }
+/**
+ * Formulaire « Informations diverses » : charge les valeurs enregistrées, suit les modifications, et enregistre l'ensemble.
+ * Avertit avant de quitter la page s'il reste des modifications non enregistrées.
+ */
 async function bindInfos() {
   const form = $('#info-form'), box = $('#info-groups');
   let dirty = false;
@@ -736,6 +844,10 @@ async function bindInfos() {
 }
 
 /* ---------- Export / suppression ---------- */
+/**
+ * Export des données (fichier JSON téléchargé) et suppression du compte.
+ * La suppression exige de taper SUPPRIMER dans une fenêtre de confirmation. Les fichiers sont nettoyés avant le compte.
+ */
 function bindData() {
   $('#export').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
@@ -803,9 +915,11 @@ async function cleanupStorage(withPhotos) {
 /* ======================================================================
    Aiguillage
    ====================================================================== */
+// Erreur renvoyée par hg_join (?joinerr=) : affichée une seule fois, puis retirée de l'adresse.
 const joinErr = url.searchParams.get('joinerr');
 if (joinErr) { url.searchParams.delete('joinerr'); history.replaceState(null, '', url.pathname + url.search); }
 
+// Choix de l'écran : lien d'erreur, lien de réinitialisation, visiteur, connecté sans profil, puis tableau de bord.
 if (!recoveryShown) {
   const user = (await sb.auth.getSession()).data.session?.user ?? null;
   if (linkError && !user) renderLinkError();
