@@ -52,7 +52,19 @@ const DB = {
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_events: [], hg_event_rsvps: [], hg_photos: [], hg_profile_info: [],
+  hg_card_quests_templates: [
+    { code: 'boosters_5', label: 'Ouvrir 5 boosters', metric: 'boosters_ouverts', target: 5, reward: 80, active: true, sort: 1 },
+    { code: 'echange_1', label: 'Conclure un échange de cartes', metric: 'echanges_conclus', target: 1, reward: 50, active: true, sort: 2 },
+    { code: 'photo_1', label: 'Ajouter une photo', metric: 'photos_ajoutees', target: 1, reward: 30, active: true, sort: 3 },
+    { code: 'recycle_5', label: 'Recycler 5 cartes', metric: 'cartes_recyclees', target: 5, reward: 40, active: true, sort: 4 },
+    { code: 'jour_3', label: 'Passer 3 fois au passage du jour', metric: 'passages_du_jour', target: 3, reward: 30, active: false, sort: 5 },
+  ],
+  hg_challenges: [
+    { id: '00000000-0000-4000-8000-000000000024', title: 'Vingt sorties ce trimestre', description: 'Le gang fixe ensemble vingt sorties IRL.', metric: 'sorties_tenues', target: 20, reward: 100,
+      starts_at: iso(-10), ends_at: iso(80), active: false },
+  ],
 };
+DB.hg_settings.push({ key: 'push_vapid_public', value: 'BOOPdSa019_test' });
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
 DB.hg_profiles[0].created_at = iso(-4 * 365);
@@ -80,12 +92,17 @@ const signed = () => { try { const v = localStorage.getItem(SESSION_KEY); if (v 
 const setSigned = (on) => { try { localStorage.setItem(SESSION_KEY, on ? '1' : '0'); } catch (e) { /* stockage indisponible */ } };
 // Fonctions SQL exécutables par le rôle anon (sinon : 401 « permission denied » sans session). Relevé en lecture seule
 // sur le projet (has_function_privilege('anon', …)). Toute autre RPC appelée sans session est refusée et journalisée.
+// Suppressions en cascade, comme les clés étrangères ON DELETE CASCADE de la base : table enfant, colonne, clé parente.
+const CASCADE = {
+  hg_ss_editions: [['hg_ss_participants', 'edition_id', 'id'], ['hg_ss_exclusions', 'edition_id', 'id'], ['hg_ss_assignments', 'edition_id', 'id'], ['hg_ss_wishes', 'edition_id', 'id'], ['hg_conversations', 'edition_id', 'id']],
+  hg_pages: [['hg_page_access', 'page_slug', 'slug']],
+};
 const ANON_OK = new Set(['hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
 let seq = 0;
 const getv = (r, c) => r[c];
 class Q {
   constructor(t) { this.t = t; this.f = []; this.one = false; this.op = 'select'; this.payload = null; this.ret = false; }
-  select() { if (this.op !== 'select') this.ret = true; return this; }
+  select(_c, o) { if (this.op !== 'select') this.ret = true; this.head = !!o?.head; return this; }
   eq(c, v) { this.f.push((r) => getv(r, c) === v); return this; }
   neq(c, v) { this.f.push((r) => getv(r, c) !== v); return this; }
   in(c, v) { this.f.push((r) => v.includes(getv(r, c))); return this; }
@@ -117,8 +134,18 @@ class Q {
       return { data: this.one ? rows[0] : rows, error: null };
     }
     if (this.op === 'update') { const rows = tab.filter(match); rows.forEach((r) => Object.assign(r, this.payload)); return { data: this.one ? rows[0] ?? null : rows, error: null }; }
-    if (this.op === 'delete') { const keep = tab.filter((r) => !match(r)); const n = tab.length - keep.length; tab.length = 0; tab.push(...keep); return { data: null, error: null, count: n }; }
+    if (this.op === 'delete') {
+      const gone = tab.filter(match), keep = tab.filter((r) => !match(r));
+      tab.length = 0; tab.push(...keep);
+      for (const [child, col, key] of CASCADE[this.t] || []) {
+        const ids = new Set(gone.map((r) => r[key])), kids = DB[child] || [];
+        const kept = kids.filter((r) => !ids.has(r[col]));
+        kids.length = 0; kids.push(...kept);
+      }
+      return { data: null, error: null, count: gone.length };
+    }
     const out = tab.filter(match);
+    if (this.head) return { data: null, error: null, count: out.length };
     return this.one ? { data: out[0] ?? null, error: null } : { data: out, error: null };
   }
   then(res, rej) { return Promise.resolve(this.run()).then(res, rej); }

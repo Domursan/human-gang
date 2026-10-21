@@ -10,7 +10,7 @@
     "check": "node tests/check-js.cjs",
     "test:rpc": "node tests/check-rpc.mjs",
     "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
-    "test": "npm run test:smoke && node tests/parcours-connexion.cjs && node tests/parcours-sortie.cjs && node tests/parcours-booster.cjs"
+    "test": "npm run test:smoke && node tests/parcours-connexion.cjs && node tests/parcours-sortie.cjs && node tests/parcours-booster.cjs && node tests/parcours-admin-complements.cjs"
   },
   "devDependencies": {
     "playwright": "1.56.0"

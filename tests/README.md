@@ -30,6 +30,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-sortie.cjs` | Proposer une sortie dans `irl.html` : données envoyées à `hg_events`, annonce `irl_new` |
 | `parcours-session.cjs` | Session absente ou fermée : visiteur sur l'accueil, compte et membre ; rafraîchissements après déconnexion ; déconnexion depuis l'en-tête. Aucune RPC réservée aux membres ne doit partir sans session (le faux répond 401 et le journalise) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
+| `parcours-admin-complements.cjs` | Panel admin : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site (ajouter, modifier, JSON refusé, clé sensible avec confirmation), pages (créer, modifier, supprimer), suppression d'une édition Secret Santa |
 
 ## Fixtures
 
