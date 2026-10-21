@@ -35,6 +35,7 @@ export const TABLE_PERM = {
   hg_staff: 'admin',
   hg_admin_log: 'journal',
   hg_card_trades: 'cartes',
+  hg_card_drop_claims: 'cartes',
   hg_events: 'evenements',
   hg_event_rsvps: 'evenements',
   hg_moments: 'souvenirs',

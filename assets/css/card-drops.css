@@ -1,0 +1,53 @@
+/* ===== Drops de cartes (card-drops.js) : une carte flotte dans un coin, sans bloquer la page ===== */
+/* Le calque est fixe, sans effet sur les clics ; seuls la carte, « × » et la révélation captent la souris. */
+.cd-layer { position: fixed; inset: 0; z-index: 8950; pointer-events: none; overflow: hidden; }
+.cd-stack { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: flex-end; gap: 12px; max-width: calc(100vw - 24px); }
+
+.cd-item { position: relative; display: grid; justify-items: center; gap: 4px; pointer-events: auto; }
+.cd-item.is-float { animation: cd-in .5s cubic-bezier(.2, .8, .3, 1) both, cd-bob 4.5s ease-in-out .5s infinite; }
+.cd-item.is-busy { opacity: .6; pointer-events: none; }
+@keyframes cd-in { from { opacity: 0; transform: translateY(16px) scale(.85) rotate(-4deg); } to { opacity: 1; transform: none; } }
+@keyframes cd-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+
+/* La carte elle-même : bouton (focus visible), taille « sm » sur les écrans étroits. */
+.cd-item .hgc { cursor: pointer; border: 0; padding: 0; background: none; display: block; font: inherit;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .35)); transition: transform .15s ease; }
+.cd-item .hgc:hover, .cd-item .hgc:focus-visible { transform: scale(1.06); }
+.cd-item .hgc:focus-visible { outline: 3px solid var(--sand); outline-offset: 4px; }
+.cd-item .hgc:disabled { cursor: progress; }
+
+.cd-hint { margin: 0; font-size: 12px; line-height: 1.2; font-weight: 700; color: #fff; text-align: center;
+  background: rgba(0, 0, 0, .72); padding: 4px 8px; border-radius: 999px; white-space: nowrap; }
+
+.cd-x { position: absolute; top: -8px; left: -8px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; padding: 0;
+  border: 2px solid var(--border-strong, #fff); background: var(--surface, #222); color: var(--text, #fff);
+  font-size: 18px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.cd-x:hover { background: var(--surface-2, #333); }
+.cd-x:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+
+/* Révélation : la carte obtenue, avec son titre, quelques secondes. */
+.cd-won { animation: none; }
+.cd-reveal { display: grid; justify-items: center; gap: 6px; padding: 12px; border-radius: 16px;
+  background: color-mix(in srgb, var(--surface, #1b1c25) 92%, transparent); border: 1px solid var(--border-strong, #888);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .4); max-width: min(280px, calc(100vw - 48px)); text-align: center; }
+.cd-reveal .small { margin: 0; color: var(--muted, #bbb); }
+.cd-reveal-t { margin: 0; font-family: var(--font-display, inherit); font-size: 16px; overflow-wrap: anywhere; }
+.cd-reveal .hgc { pointer-events: none; }
+
+.cd-px { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; }
+
+/* Sans mouvement : la carte reste en place, sans rebond. */
+.cd-item.is-still { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .cd-item.is-float { animation: none; }
+  .cd-item .hgc { transition: none; }
+}
+@media (max-width: 600px) {
+  .cd-stack { gap: 8px; }
+  .cd-hint { font-size: 11px; }
+}
+/* Panel admin sur téléphone : la barre d'onglets du bas reste visible, la carte se place au-dessus. */
+@media (max-width: 760px) {
+  body:has(.shell-tabs) .cd-stack { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 84px); }
+}

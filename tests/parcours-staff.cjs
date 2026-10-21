@@ -74,11 +74,11 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     // Navigation : domaines et sous-sections permis seulement (Pilotage : Journal ; Jeu de cartes : ses parties et les Défis)
     const domaines = await p.$$eval('#shell-rail .shell-dom', (as) => as.map((a) => a.dataset.dom));
     check(JSON.stringify(domaines) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${domaines.join(', ')}`);
-    const attendu = ['journal', 'series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats', 'echanges', 'defis'];
+    const attendu = ['journal', 'series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats', 'echanges', 'drops', 'defis'];
     const subs = await p.$$eval('#shell-subs .shell-sub', (as) => as.map((a) => a.dataset.sub));
     check(JSON.stringify(subs) === JSON.stringify(attendu), `(b) Staff : sous-sections = ${subs.join(', ')}`);
     const sections = await p.$$eval('.admin-section', (ss) => ss.filter((s) => !s.hidden).map((s) => s.id));
-    check(JSON.stringify(sections.sort()) === JSON.stringify(['cartes', 'defis', 'journal']), `(b) Staff : sections permises = ${sections.join(', ')}`);
+    check(JSON.stringify(sections.sort()) === JSON.stringify(['cartes', 'defis', 'drops', 'journal']), `(b) Staff : sections permises = ${sections.join(', ')}`);
     check(await p.isVisible('#journal'), '(b) Staff : Journal affiché (première sous-section permise)');
     await p.click('#shell-rail .shell-dom[data-dom="cartes"]');
     await p.waitForSelector('#cartes', { state: 'visible', timeout: 5000 }).catch(() => {});

@@ -15,7 +15,7 @@ export const SECTION_PERM = {
   sorties: 'evenements',
   souvenirs: 'souvenirs',
   reglages: 'reglages',
-  cartes: 'cartes', defis: 'cartes',
+  cartes: 'cartes', drops: 'cartes', defis: 'cartes',
   idees: 'support', assistance: 'support',
   messagerie: 'messages',
   journal: 'journal',
@@ -54,6 +54,7 @@ export const DOMAINS = [
     { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },
     { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats' },
     { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },
+    { id: 'drops', label: 'Drops', section: 'drops' },
     { id: 'defis', label: 'Défis du gang', section: 'defis' },
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

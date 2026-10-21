@@ -13,7 +13,7 @@ import { ensureGhosts, ghostZoneActions, openNewGhostDrawer } from './admin-ghos
 import { mountAccessSection, refreshAccessSection, accessActions } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { eventsSub } from './admin-events.js';
-import { mountCardsSection, openCardsTab, mountPlayersList } from './admin-cards.js';
+import { mountCardsSection, openCardsTab, mountPlayersList, mountDropsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection, openSortie, listSorties, infoSorties } from './admin-sorties/index.js';
@@ -125,6 +125,7 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'stats', 'echanges'
 }
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
+registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
