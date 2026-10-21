@@ -1,3 +1,8 @@
+/* ===== Intro quotidienne (page accueil.html) =====
+   Script classique (pas un module) chargé AVANT accueil.js, dans l'en-tête de accueil.html.
+   Dépendances : localStorage uniquement (clés hg_site_settings, hg_intro_day, hg_storage_test, hg_intro_seen).
+   Il n'exporte rien. */
+
 /* Accueil : si l'intro n'a pas encore été jouée aujourd'hui sur cet appareil, on la joue d'abord (une fois par jour).
    Seulement si le stockage local fonctionne, sinon l'intro ne pourrait pas retenir son passage et tournerait en boucle. */
 /* Intro désactivée dans les réglages : jamais de renvoi vers l'intro. */

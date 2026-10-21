@@ -1,5 +1,10 @@
 // Tutos « Jeu de cartes : aller plus loin ». Données pures (aucun import) : lisibles dans le navigateur et dans Node.
 // Libellés relevés dans cartes.js, cartes-trades.js, cartes-showcase.js, card-drops.js, accueil.js et membre.js.
+/*
+ * Structure d'un groupe : { id, title, icon, tutos: [...] }.
+ * Structure d'un tuto : { slug, title, summary, page (page HTML concernée), steps: [{ title, text }], tips: [texte], keywords: [mots de recherche] }.
+ * La page d'aide (aide.js) affiche ces données ; elle ne les modifie pas.
+ */
 export default {
   id: 'cartes-avance',
   title: 'Jeu de cartes : aller plus loin',

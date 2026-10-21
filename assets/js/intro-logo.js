@@ -1,3 +1,7 @@
+/* ===== Logo de l'intro (page index.html) =====
+   Script classique, chargé juste après le bloc du logo dans index.html. Il ne fait que changer la source de l'image
+   #logo-img. Il ne lit que le localStorage (hg_theme, hg_prefs, hg_site_settings) et n'exporte rien. */
+
 /* Logo du thème actif (cache posé par les autres pages), sinon le logo par défaut déjà préchargé.
    Préférence « Thème spécial » coupée (hg_prefs.special = false) : toujours le logo par défaut. */
 try {
