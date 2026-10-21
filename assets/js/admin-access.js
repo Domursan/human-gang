@@ -3,7 +3,12 @@
 //  - mode 'membres' : tout le monde sauf les lignes allowed=false (bloqués) ;
 //  - mode 'liste'   : seulement les lignes allowed=true (membres choisis) ;
 //  - mode 'admin'   : admins seulement. Les admins ont toujours accès à tout.
-// Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche). N'importe que core.js.
+// Rôle : section « Accès aux pages » (vue Pages ou matrice membres × pages), dialogue « Personnes » d'une page,
+// tiroir de création et de modification d'une page, et onglet « Accès » de la fiche membre.
+// Contrôle d'affichage seulement : les données restent protégées par les règles de la base.
+// Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche).
+// Dépendances : core.js (Supabase, toast), core/profile.js (profil en cache), icons.js, ui-confirm.js, admin/ui/drawer.js, admin/shell.js.
+// Exporte : MODES, ensureAccessData, accessPages, hasAccess, setAccess, memberAccessHtml, accessActions, mountAccessSection, refreshAccessSection.
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
@@ -16,38 +21,55 @@ export const MODES = [
   ['admin', 'Admin seulement'],
   ['liste', 'Membres choisis'],
 ];
+// Libellé d'un mode à partir de son identifiant (« membres », « admin », « liste »).
 const MODE_LABEL = Object.fromEntries(MODES);
 // Page de repli : jamais bloquée (la redirection d'une page interdite y mène)
 const ALWAYS_OPEN = new Set(['accueil']);
 
+/* ---------- Constantes et icônes ---------- */
+// Icônes SVG : flèches de l'ordre, interrupteurs, fermeture, recherche, membres.
 const IC = {
   up: svg('up', { stroke: 2 }),
   down: svg('down', { stroke: 2 }),
   yes: svg('check2', { stroke: 2.4 }),
   no: svg('no', { stroke: 2.2 }),
   close: svg('close', { stroke: 2 }),
-  plus: svg('plus', { stroke: 2 }),
   search: svg('search', { stroke: 2 }),
   users: svg('users', { stroke: 2 }),
 };
 
 /* ---------- État partagé ---------- */
+// État de la section : pages, exceptions d'accès (rows), membres, chargement, vue (pages ou matrice), page ouverte,
+// recherche du dialogue, racine, fonction d'ouverture de fiche membre, et droit de gérer la structure des pages.
 const AC = {
   pages: [], rows: [], members: [], loaded: false, loading: null, error: null,
   view: 'pages', openSlug: null, q: '', root: null, openMember: null, canPages: false,
 };
+/* ---------- Outils ---------- */
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/** Comparaison sans accents ni casse (recherche de membres). */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/** Date actuelle au format ISO, pour la colonne updated_at. */
 const nowIso = () => new Date().toISOString();
+/** Page à partir de son identifiant, ou undefined. */
 const pageBySlug = (slug) => AC.pages.find((p) => p.slug === slug);
+/** Exception (ligne hg_page_access) d'un membre sur une page, ou undefined. */
 const rowOf = (slug, uid) => AC.rows.find((r) => r.page_slug === slug && r.user_id === uid);
+/** Prévient le reste de l'admin que les accès ont changé (événement « hg:access »). */
 function emit() { try { window.dispatchEvent(new CustomEvent('hg:access')); } catch {} }
 
+/** Charge les pages (ordre « sort », puis slug) dans AC.pages. */
 async function loadPages() {
   AC.pages = (check(await sb.from('hg_pages').select('slug, label, mode, in_nav, sort').order('sort')) ?? [])
     .slice().sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0) || String(a.slug).localeCompare(String(b.slug)));
 }
+/** Charge toutes les exceptions d'accès dans AC.rows. */
 async function loadRows() { AC.rows = check(await sb.from('hg_page_access').select('page_slug, user_id, allowed')) ?? []; }
+/**
+ * Charge les comptes et joint leurs avatars (hg_members). Un compte sans pseudo n'est pas un membre.
+ * Liste triée par pseudo.
+ */
 async function loadMembers() {
   const [acc, mem] = await Promise.all([sb.rpc('hg_admin_accounts'), sb.rpc('hg_members')]);
   const avatars = new Map((mem.data ?? []).map((m) => [m.id, m]));
@@ -92,12 +114,18 @@ export function hasAccess(page, member) {
   return r?.allowed !== false;
 }
 /** Nombre d'exceptions qui comptent pour le mode courant (bloqués en « membres », autorisés en « liste »). */
+/**
+ * Nombre d'exceptions qui comptent pour le mode d'une page : bloqués en « membres », autorisés en « liste ».
+ * @param {object} page Page.
+ * @returns {number}
+ */
 function exceptionCount(page) {
   const ids = new Set(AC.members.filter((m) => !m.is_admin).map((m) => m.id));
   if (page.mode === 'membres') return AC.rows.filter((r) => r.page_slug === page.slug && r.allowed === false && ids.has(r.user_id)).length;
   if (page.mode === 'liste') return AC.rows.filter((r) => r.page_slug === page.slug && r.allowed === true && ids.has(r.user_id)).length;
   return 0;
 }
+/** Nombre de membres ayant accès à la page (admins compris). */
 const accessCount = (page) => AC.members.filter((m) => hasAccess(page, m)).length;
 
 /**
@@ -159,6 +187,11 @@ export function memberAccessHtml(member) {
 /* =========================================================
    Section « Accès aux pages »
    ========================================================= */
+/* ---------- Rendu de la section ---------- */
+/**
+ * HTML de la section : bascule « Pages » / « Matrice », puis la vue choisie.
+ * @returns {string}
+ */
 function sectionHtml() {
   return `
     <p class="small muted pa-note">Contrôle d'affichage : les liens sont masqués et la page renvoie vers l'accueil ; les données restent protégées par les règles de la base.</p>
@@ -169,6 +202,11 @@ function sectionHtml() {
     <div class="card pa-card">${AC.view === 'pages' ? pagesTableHtml() : matrixHtml()}</div>`;
 }
 
+/**
+ * Tableau des pages : ordre (flèches), libellé, mode d'accès, présence dans le menu, exceptions, bouton « Personnes ».
+ * Les pages « Toujours accessible » n'ont pas de mode modifiable.
+ * @returns {string}
+ */
 function pagesTableHtml() {
   const head = AC.canPages ? `<div class="pa-head">
       <p class="small muted">Déclare une page, change son libellé, son accès ou sa place dans le menu. « + Nouvelle page » est en haut.</p>
@@ -206,6 +244,10 @@ function pagesTableHtml() {
     <p class="small muted">Les admins ont toujours accès à tout. « Dans le menu » : lien dans l'en-tête pour les membres qui y ont accès.</p>`;
 }
 
+/**
+ * Matrice membres × pages en lecture seule : une case par membre et par page. Cliquer ouvre la gestion de la page.
+ * @returns {string}
+ */
 function matrixHtml() {
   if (!AC.members.length) return '<div class="empty">Aucun membre.</div>';
   return `
@@ -227,6 +269,9 @@ function matrixHtml() {
     </div>`;
 }
 
+/**
+ * Redessine la section, ou affiche un message de chargement ou d'erreur. Garde le focus sur le contrôle utilisé.
+ */
 function render() {
   if (!AC.root) return;
   if (!AC.loaded) {
@@ -244,7 +289,13 @@ function render() {
 }
 
 /* ---------- Dialog « Personnes » d'une page ---------- */
+// Dialogue « Personnes » : créé une seule fois, puis réutilisé pour chaque page.
 let dlg = null;
+/* ---------- Dialog « Personnes » d'une page ---------- */
+/**
+ * Crée le dialogue « Personnes » et branche ses écouteurs (clics, saisie, changements, fermeture).
+ * @returns {HTMLDialogElement}
+ */
 function buildDialog() {
   const d = document.createElement('dialog');
   d.className = 'hg-dialog pa-dialog';
@@ -262,6 +313,10 @@ function buildDialog() {
   document.body.append(d);
   return d;
 }
+/**
+ * Ouvre le dialogue « Personnes » pour une page. Les pages « Toujours accessible » ne s'ouvrent pas.
+ * @param {string} slug Identifiant de la page.
+ */
 function openDialog(slug) {
   if (!pageBySlug(slug) || ALWAYS_OPEN.has(slug)) return;
   dlg ||= buildDialog();
@@ -270,6 +325,9 @@ function openDialog(slug) {
   if (!dlg.open) dlg.showModal();
   ($('#pa-q', dlg) || $('.pa-dlg-close', dlg))?.focus();
 }
+/**
+ * Écrit le contenu du dialogue : en-tête, mode, aide, outils de recherche et de sélection, puis la liste des membres.
+ */
 function renderDialog() {
   const p = pageBySlug(AC.openSlug);
   if (!dlg || !p) return;
@@ -306,10 +364,18 @@ function renderDialog() {
   renderDialogList();
   if (restore) $(restore, dlg)?.focus();
 }
+/**
+ * Membres affichés dans le dialogue, filtrés par la recherche (sans accents ni casse).
+ * @returns {object[]}
+ */
 function visibleMembers() {
   const q = norm(AC.q.trim());
   return AC.members.filter((m) => !q || norm(m.pseudo).includes(q));
 }
+/**
+ * Redessine la liste des membres du dialogue (cases à cocher, pastilles) et le résumé « n membres sur N ».
+ * Les admins et les pages en mode « admin » n'ont que des lignes fixes.
+ */
 function renderDialogList() {
   const p = pageBySlug(AC.openSlug);
   const ul = dlg && $('#pa-people', dlg);
@@ -335,6 +401,10 @@ function renderDialogList() {
   const n = AC.members.filter((m) => hasAccess(p, m)).length;
   $('#pa-dlg-sum', dlg).textContent = `${n} membre${n > 1 ? 's' : ''} sur ${AC.members.length} ont accès à cette page.`;
 }
+/**
+ * Gère les boutons du dialogue : fermer, « Tous » ou « Aucun » pour les membres affichés.
+ * @param {Event} e Événement de clic.
+ */
 async function onDialogClick(e) {
   const b = e.target.closest('button');
   if (!b || b.disabled) return;
@@ -349,6 +419,11 @@ async function onDialogClick(e) {
     } catch (ex) { toast(errMsg(ex), 'error'); } finally { if (b.isConnected) b.disabled = false; }
   }
 }
+/**
+ * Gère les changements du dialogue : une case de membre, ou le mode de la page.
+ * En cas d'échec, la case revient à son état précédent.
+ * @param {Event} e Événement de changement.
+ */
 async function onDialogChange(e) {
   const el = e.target;
   if (el.matches('[data-pa-user]')) {
@@ -366,6 +441,14 @@ async function onDialogChange(e) {
 
 /* ---------- Tiroir « Modifier la page » / « Nouvelle page » ---------- */
 let pgDrawer = null; // { close } du tiroir ouvert
+/* ---------- Tiroir « Modifier la page » / « Nouvelle page » ---------- */
+/**
+ * HTML du formulaire de page : identifiant (création seulement), libellé, mode, menu, suppression.
+ * @param {object|null} p Page existante, ou null pour une création.
+ * @param {boolean} isNew Vrai pour une création.
+ * @param {boolean} locked Vrai pour l'accueil : mode et suppression figés.
+ * @returns {string}
+ */
 function pageFormHtml(p, isNew, locked) {
   return `
     ${isNew ? `<div class="field"><label for="pa-pg-slug">Nom de la page (sans .html)</label>
@@ -381,6 +464,11 @@ function pageFormHtml(p, isNew, locked) {
     ${p && !locked ? '<div class="pa-pg-danger"><button class="btn btn-danger" type="button" data-pa-pg-del>Supprimer la page</button></div>' : ''}`;
 }
 
+/**
+ * Ouvre le tiroir de création (slug = null) ou de modification d'une page.
+ * @param {string|null} slug Identifiant de la page à modifier, ou null.
+ * @returns {object} Tiroir ouvert.
+ */
 function openPageDialog(slug) {
   const p = slug ? pageBySlug(slug) : null;
   const isNew = !p;
@@ -445,6 +533,10 @@ async function savePage(form, slug) {
   }
 }
 
+/**
+ * Supprime une page après confirmation : son lien disparaît du menu et ses exceptions sont effacées.
+ * @param {string} slug Identifiant de la page.
+ */
 async function deletePage(slug) {
   const p = pageBySlug(slug);
   if (!p || ALWAYS_OPEN.has(slug)) return;
@@ -464,6 +556,14 @@ async function deletePage(slug) {
 }
 
 /* ---------- Actions de la table ---------- */
+/* ---------- Actions de la table ---------- */
+/**
+ * Change le mode d'une page depuis le tableau. Si des membres perdraient l'accès, demande confirmation.
+ * En cas d'échec, le menu revient à l'ancien mode.
+ * @param {string} slug Identifiant de la page.
+ * @param {string} mode Nouveau mode.
+ * @param {HTMLSelectElement} el Menu déroulant du mode.
+ */
 async function changeMode(slug, mode, el) {
   const p = pageBySlug(slug);
   if (!p || p.mode === mode) return;
@@ -477,6 +577,13 @@ async function changeMode(slug, mode, el) {
     emit();
   } catch (ex) { toast(errMsg(ex), 'error'); el.value = p.mode; } finally { if (el.isConnected) el.disabled = false; }
 }
+/**
+ * Demande confirmation avant un changement qui retire l'accès à n membres. Le dialogue « Personnes » est fermé pendant la question, puis rouvert.
+ * @param {object} p Page concernée.
+ * @param {number} n Nombre de membres qui perdraient l'accès.
+ * @param {string} mode Nouveau mode.
+ * @returns {Promise<boolean>} true si l'admin confirme.
+ */
 async function confirmLoss(p, n, mode) {
   const body = `${n} membre${n > 1 ? 's' : ''} perdr${n > 1 ? 'ont' : 'a'} l'accès (mode « ${MODE_LABEL[mode]} »). Les exceptions déjà enregistrées sont conservées.`;
   // Le dialog « Personnes » est modal : on le referme le temps de la confirmation
@@ -486,6 +593,13 @@ async function confirmLoss(p, n, mode) {
   if (reopen) { AC.openSlug = reopen; renderDialog(); dlg.showModal(); $('[data-pa-dlg-mode]', dlg)?.focus(); }
   return ok;
 }
+/**
+ * Déplace une page d'un cran (dir = -1 ou 1) dans l'ordre. Seules les pages dont le rang change sont mises à jour.
+ * En cas d'échec, les données sont rechargées.
+ * @param {string} slug Identifiant de la page.
+ * @param {number} dir Sens du déplacement.
+ * @param {HTMLButtonElement} btn Bouton fléché, désactivé pendant l'envoi.
+ */
 async function move(slug, dir, btn) {
   const i = AC.pages.findIndex((p) => p.slug === slug), j = i + dir;
   if (i < 0 || j < 0 || j >= AC.pages.length) return;
@@ -504,6 +618,11 @@ async function move(slug, dir, btn) {
   finally { if (btn.isConnected) btn.disabled = false; }
 }
 
+/* ---------- Écouteurs de la section ---------- */
+/**
+ * Branche les clics et les changements de la section (vues, gestion, édition, déplacement, mode, menu).
+ * @param {HTMLElement} root Racine de la section.
+ */
 function bindSection(root) {
   root.addEventListener('click', async (e) => {
     const b = e.target.closest('button');
@@ -535,6 +654,7 @@ export function accessActions() {
   b.addEventListener('click', () => openPageDialog(null));
   return [b];
 }
+/** Remet les boutons d'en-tête à jour si la section « Accès » est affichée. */
 function refreshAccessActions() { if (currentSub() === 'membres/acces') setActions(accessActions()); }
 
 /** Point d'entrée (admin.js). openMember(uid) : ouvre la fiche d'un membre (optionnel). */
@@ -542,6 +662,7 @@ export async function mountAccessSection(root, { openMember } = {}) {
   if (!root) return;
   AC.root = root; AC.openMember = openMember || null;
   bindSection(root);
+  // Un changement d'accès (événement « hg:access », émis par emit()) redessine la section.
   window.addEventListener('hg:access', render);
   render();
   try { await ensureAccessData(); } catch (e) { console.error(e); }
