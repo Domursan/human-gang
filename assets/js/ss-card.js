@@ -1,9 +1,14 @@
 // ===== Humane Gang — générateur de carte Secret Santa (canvas 1000x1400, ratio 5:7) =====
-// Fonctions pures de rendu : aucune dépendance à Supabase, testables isolément.
+// Dessine la carte sur un <canvas> : le recto « Tu offres à <pseudo> » et le verso (logo et motif).
+// Fonctions de rendu sans dépendance à Supabase, donc testables seules. Les images (logo, fond) se chargent par URL.
+// Utilisé par secret-santa.js (carte du membre), membre.js (carte de membre) et recap.js (récapitulatif).
+// Exporte : CARD_W, CARD_H (dimensions), loadImage, waitFonts, renderCardFront, renderCardBack, downloadCanvas.
 
+/* ---------- Dimensions ---------- */
 export const CARD_W = 1000;
 export const CARD_H = 1400;
 
+/* ---------- Couleurs et polices (tokens de la charte) ---------- */
 const C = {
   bgTop: '#3A2228',
   bgBottom: '#140C0F',
@@ -13,15 +18,23 @@ const C = {
   muted: '#C9B9B4',
   rainbow: ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'],
 };
+// Police des titres (grasse) et police du texte ; ce sont les polices chargées par waitFonts().
 const DISPLAY = '"Archivo Black", system-ui, sans-serif';
 const BODY = 'Inter, system-ui, sans-serif';
 
-/** Charge une image ; résout null en cas d'échec (jamais de rejet). */
+/* ---------- Chargement des ressources ---------- */
+/**
+ * Charge une image ; résout null en cas d'échec (jamais de rejet).
+ * @param {string} src adresse de l'image (vide = pas d'image)
+ * @param {{cors?: boolean, timeout?: number}} [opts] cors : demander l'image en CORS (nécessaire pour l'exporter) ; timeout en ms
+ * @returns {Promise<HTMLImageElement|null>}
+ */
 export function loadImage(src, { cors = false, timeout = 12000 } = {}) {
   return new Promise((resolve) => {
     if (!src) return resolve(null);
     const img = new Image();
     if (cors) img.crossOrigin = 'anonymous';
+    // Délai maximum : une image qui ne répond pas ne doit pas bloquer la carte.
     const t = setTimeout(() => resolve(null), timeout);
     img.onload = () => { clearTimeout(t); resolve(img); };
     img.onerror = () => { clearTimeout(t); resolve(null); };
@@ -40,6 +53,12 @@ export async function waitFonts() {
   await Promise.race([all, new Promise((r) => setTimeout(r, 4000))]);
 }
 
+/* ---------- Outils de dessin (internes) ---------- */
+/**
+ * Prépare le canvas à la taille de la carte et renvoie son contexte 2D, centré et aligné sur la ligne de base.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {CanvasRenderingContext2D}
+ */
 function setup(canvas) {
   canvas.width = CARD_W;
   canvas.height = CARD_H;
@@ -50,8 +69,10 @@ function setup(canvas) {
   return ctx;
 }
 
+/** Espacement entre lettres (en px) pour le texte suivant. Ignoré si le navigateur ne le gère pas. */
 function spaced(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; }
 
+/** Dessine un chemin de rectangle aux coins arrondis (sans le remplir ni le tracer). */
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -62,6 +83,11 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+/**
+ * Fond de carte : dégradé, halo rose au centre, treillis de losanges et petites étoiles discrètes.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} [strength=1] intensité du motif (le verso le rend plus visible)
+ */
 function drawBackground(ctx, strength = 1) {
   const g = ctx.createLinearGradient(0, 0, CARD_W * 0.4, CARD_H);
   g.addColorStop(0, C.bgTop);
@@ -94,6 +120,7 @@ function drawBackground(ctx, strength = 1) {
   ctx.restore();
 }
 
+/** Petite étoile à quatre branches (courbes) centrée en x, y, de rayon r. Remplie avec la couleur courante. */
 function sparkle(ctx, x, y, r) {
   ctx.beginPath();
   ctx.moveTo(x, y - r);
@@ -104,11 +131,13 @@ function sparkle(ctx, x, y, r) {
   ctx.fill();
 }
 
+/** Bande arc-en-ciel pleine largeur (couleurs du logo), de hauteur h à partir de y. */
 function drawRainbow(ctx, y, h) {
   const w = CARD_W / C.rainbow.length;
   C.rainbow.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(Math.floor(i * w), y, Math.ceil(w) + 1, h); });
 }
 
+/** Double cadre arrondi rose autour de la carte. */
 function drawFrame(ctx) {
   ctx.save();
   ctx.strokeStyle = 'rgba(224,144,154,0.28)';
@@ -121,6 +150,14 @@ function drawFrame(ctx) {
   ctx.restore();
 }
 
+/**
+ * Dessine le logo centré en cx, cy, dans un carré de côté size, sans le déformer. Ne fait rien sans image.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {HTMLImageElement|null} logo
+ * @param {number} cx centre horizontal
+ * @param {number} cy centre vertical
+ * @param {number} size côté maximal
+ */
 function drawLogo(ctx, logo, cx, cy, size) {
   if (!logo) return;
   const r = Math.min(size / logo.width, size / logo.height);
@@ -128,6 +165,7 @@ function drawLogo(ctx, logo, cx, cy, size) {
   ctx.drawImage(logo, cx - w / 2, cy - h / 2, w, h);
 }
 
+/** Séparateur horizontal avec un petit losange au centre, à la hauteur y. */
 function divider(ctx, y, color = 'rgba(226,199,126,0.55)') {
   ctx.save();
   ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
@@ -173,16 +211,22 @@ function drawPseudo(ctx, text, cx, cy, maxW, { max = 168, min = 64, color = C.te
   return { size, lines: lines.length, height: lines.length * lh };
 }
 
+/** Dessine l'image de fond en « couverture » : elle remplit toute la carte, rognée au centre sans déformation. */
 function drawCover(ctx, img) {
   const r = Math.max(CARD_W / img.width, CARD_H / img.height);
   const w = img.width * r, h = img.height * r;
   ctx.drawImage(img, (CARD_W - w) / 2, (CARD_H - h) / 2, w, h);
 }
 
+/* ---------- Recto et verso (fonctions publiques) ---------- */
 /**
  * Recto : « Tu offres à <pseudo> ».
- * opts : { pseudo, year, baseUrl, logoSrc, budget, exchangeDate (texte) }
+ * Si une image de base est fournie, elle sert de fond (avec un voile sombre) ; sinon le fond dessiné est utilisé.
+ * opts : { pseudo, year, baseUrl, logoSrc, budget, exchangeLabel (date d'échange déjà formatée) }
  * Renvoie { usedBase: boolean } (false si l'image de base est absente ou n'a pas pu être chargée).
+ * @param {HTMLCanvasElement} canvas
+ * @param {object} [opts]
+ * @returns {Promise<{usedBase: boolean}>}
  */
 export async function renderCardFront(canvas, opts = {}) {
   const { pseudo, year, baseUrl, logoSrc, budget, exchangeLabel } = opts;
@@ -248,7 +292,12 @@ export async function renderCardFront(canvas, opts = {}) {
   return { usedBase: false };
 }
 
-/** Verso (face cachée) : logo + motif. */
+/**
+ * Verso (face cachée) : médaillon avec le logo, année et nom du gang, sur le motif de fond.
+ * @param {HTMLCanvasElement} canvas
+ * @param {{logoSrc?: string, year?: number}} [opts]
+ * @returns {Promise<void>}
+ */
 export async function renderCardBack(canvas, { logoSrc, year } = {}) {
   const [, logo] = await Promise.all([waitFonts(), loadImage(logoSrc)]);
   const ctx = setup(canvas);
@@ -284,7 +333,13 @@ export async function renderCardBack(canvas, { logoSrc, year } = {}) {
   spaced(ctx, 0);
 }
 
-/** Exporte le canvas en PNG et déclenche le téléchargement. Rejette si le canvas est « contaminé » (CORS). */
+/**
+ * Exporte le canvas en PNG et déclenche le téléchargement du fichier.
+ * Rejette si le canvas est « contaminé » (image venue d'une autre origine sans CORS) : toBlob lève alors une erreur.
+ * @param {HTMLCanvasElement} canvas carte à exporter
+ * @param {string} filename nom du fichier téléchargé
+ * @returns {Promise<void>}
+ */
 export function downloadCanvas(canvas, filename) {
   return new Promise((resolve, reject) => {
     try {

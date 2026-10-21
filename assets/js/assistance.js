@@ -1,15 +1,28 @@
-// ===== Humane Gang — assistance (accessible sans compte) =====
+// ===== Humane Gang — assistance (assistance.html, accessible sans compte) =====
+// Formulaire de demande d'aide (envoyé par la fonction edge hg-support), suivi des demandes du membre connecté
+// (« Mes demandes », avec les réponses publiques), et préremplissage du sujet depuis l'adresse (?sujet=…).
+// Dépendances : core.js (initPage, callFn, sb = Supabase), tables hg_settings, hg_support, hg_support_replies, RPC hg_members.
+// N'exporte rien.
 import { initPage, callFn, $, errMsg, sb, esc, fmtDateTime } from './core.js';
 
+/* ---------- Initialisation : session facultative (un visiteur peut écrire sans compte) ---------- */
+// me = personne connectée, ou null pour un visiteur.
 const me = await initPage({ auth: 'optional' });
 
+/* ---------- Réglages du formulaire (sujets, longueurs de message, délai de réponse) ---------- */
 // Réglages de l'assistance (hg_settings.support, lisible sans compte). Repli sur les défauts si la lecture échoue
 // ou si la valeur est invalide. Même règle que supabase/functions/_shared/reglages.ts (le serveur revalide tout).
 const SUPPORT_DEFAUT = {
   sujets: ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre'],
   message_min: 10, message_max: 4000, delai_reponse_jours: 30,
 };
+// Le sujet « Bug sur le site » doit toujours exister : c'est celui que le formulaire de bug attend.
 const BUG_SUBJECT = 'Bug sur le site';
+/**
+ * Lit les réglages de l'assistance dans hg_settings (clé « support »), en gardant les défauts pour tout champ invalide.
+ * Une lecture qui échoue donne simplement les défauts : le formulaire reste utilisable.
+ * @returns {Promise<{sujets: string[], message_min: number, message_max: number, delai_reponse_jours: number}>}
+ */
 async function loadSupportRules() {
   const r = { ...SUPPORT_DEFAUT };
   try {
@@ -26,6 +39,7 @@ async function loadSupportRules() {
   } catch { /* défauts */ }
   return r;
 }
+/* ---------- Formulaire : sujets, longueurs, préremplissage ---------- */
 const RULES = await loadSupportRules();
 const SUBJECTS = RULES.sujets;
 const form = $('#support-form');
@@ -39,7 +53,7 @@ const errBox = $('#sp-error');
 form.message.minLength = RULES.message_min;
 form.message.maxLength = RULES.message_max;
 
-/* Préremplissage */
+// Préremplissage : pseudo verrouillé pour un membre connecté ; contact Discord obligatoire pour un visiteur.
 if (me) {
   form.pseudo.value = me.pseudo;
   form.pseudo.readOnly = true;
@@ -57,11 +71,22 @@ const counterText = (n) => `${n} / ${RULES.message_max}`;
 form.message.addEventListener('input', () => { counter.textContent = counterText(form.message.value.length); });
 counter.textContent = counterText(form.message.value.length);
 
+/* ---------- Validation et envoi ---------- */
+/**
+ * Affiche l'erreur dans la boîte dédiée, marque le champ fautif (aria-invalid) et le met au premier plan.
+ * @param {string} msg message d'erreur
+ * @param {HTMLElement} [field] champ concerné
+ */
 function showError(msg, field) {
   errBox.textContent = msg; errBox.hidden = false;
   field?.setAttribute('aria-invalid', 'true');
   field?.focus();
 }
+/**
+ * Contrôle le formulaire avant envoi : pseudo, sujet, longueur du message, contact pour un visiteur.
+ * Le serveur revalide tout de toute façon ; ici on évite un aller-retour inutile.
+ * @returns {boolean} true si le formulaire peut partir
+ */
 function validate() {
   form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
   errBox.hidden = true;
@@ -82,6 +107,7 @@ async function fnError(e) {
   return errMsg(e);
 }
 
+// Envoi : appel de la fonction edge hg-support. Le champ « website » est un piège à robots (pot de miel) : il doit rester vide.
 form.addEventListener('submit', async (ev) => {
   ev.preventDefault();
   if (!validate()) return;
@@ -111,6 +137,7 @@ form.addEventListener('submit', async (ev) => {
   }
 });
 
+// « Nouvelle demande » : vide le formulaire et revient à l'écran de saisie.
 $('#support-again').addEventListener('click', () => {
   form.subject.value = ''; form.message.value = ''; counter.textContent = counterText(0);
   if (!me) form.contact.value = '';
@@ -128,16 +155,26 @@ const mineDetail = $('#my-support-detail');
 let mineItems = [];
 let minePseudos = new Map();
 
+// Statut affiché : « Traitée », « En cours » (quelqu'un l'a prise), ou « Ouverte ».
+/** Libellé du statut d'une demande. */
 const statusLabel = (d) => (d.status === 'traitee' ? 'Traitée' : d.taken_by ? 'En cours' : 'Ouverte');
 const statusClass = (d) => (d.status === 'traitee' ? 'done' : d.taken_by ? 'prog' : 'open');
 const pill = (d) => `<span class="sp-pill" data-tone="${statusClass(d)}">${statusLabel(d)}</span>`;
 const byActivity = (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
 
+/**
+ * Affiche une erreur dans la section « Mes demandes ».
+ * @param {string} msg message d'erreur
+ */
 function showMineError(msg) {
   const box = $('#my-support-error');
   box.textContent = msg; box.hidden = false;
 }
 
+/**
+ * Charge les demandes du membre connecté et leur liste, puis ouvre celle désignée par l'adresse (#id) si besoin.
+ * Ne fait rien pour un visiteur.
+ */
 async function loadMine() {
   if (!me) return;
   $('#my-support-error').hidden = true;
@@ -165,6 +202,10 @@ async function loadMine() {
   openMineFromHash();
 }
 
+/**
+ * Ouvre le détail d'une demande : le message du membre, puis les réponses publiques (internes exclues).
+ * @param {string} id identifiant de la demande (hg_support)
+ */
 async function openMine(id) {
   const d = mineItems.find((x) => x.id === id);
   if (!d) return;
@@ -188,16 +229,19 @@ async function openMine(id) {
   }
 }
 
+/** Revient à la liste des demandes depuis le détail. */
 function closeMine() {
   mineDetail.hidden = true;
   mineView.hidden = false;
 }
 
+/** Si l'adresse contient l'identifiant d'une demande connue (#id), ouvre son détail. */
 function openMineFromHash() {
   const id = decodeURIComponent(location.hash.slice(1));
   if (mineItems.some((x) => x.id === id)) openMine(id);
 }
 
+// Clic sur une demande : l'adresse prend son identifiant (pour un lien direct), puis le détail s'ouvre.
 mineList.addEventListener('click', (e) => {
   const b = e.target.closest('[data-id]');
   if (!b) return;
