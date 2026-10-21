@@ -48,21 +48,22 @@
 .agh-sugg-row .btn { flex: 1 1 auto; min-height: 44px; }
 .agh-sugg-err { font-size: 14px; color: var(--rose); }
 
-/* Panneau de liaison */
-.agh-merge-slot:empty { display: none; }
-.agh-merge-slot { min-width: 0; }
-.agh-merge { border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); min-width: 0; }
-.agh-merge-title { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-.agh-merge .field input, .agh-merge .field select { min-height: 44px; width: 100%; }
+/* Bloc « Lier à un compte inscrit » (fiche d'un fantôme) et tiroir de liaison */
+.agh-lier { min-width: 0; }
+.agh-lier-sugg { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.agh-lier-pick { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.agh-lier .field input, .agh-lier .field select, .agh-drawer select { min-height: 44px; width: 100%; }
+.agh-drawer { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .agh-merge-recap p { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
 .agh-merge-recap p + p { margin-top: 6px; }
 .agh-merge-err { margin: 0; font-size: 14px; color: var(--rose); overflow-wrap: anywhere; }
 .agh-merge-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .agh-merge-btns .btn { flex: 1 1 100%; min-height: 44px; }
 
-/* ----- Liste + détail : bouton de la colonne 2, accueil de la zone principale, fiche ----- */
-.agh-new { width: 100%; justify-content: center; margin-bottom: 10px; }
-.agh-hint { align-items: center; justify-content: center; text-align: center; min-height: 200px; }
-.agh-hint p { margin: 0; }
-.agh-hint .acc-empty-t { margin-bottom: 4px; }
+/* ----- Fiche d'un fantôme (zone principale de Comptes) et bannière d'un compte actif ----- */
 .agh-detail { gap: 14px; }
+.agh-banner { border-color: var(--border-strong); }
+.agh-banner-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-width: 0; }
+.agh-banner-row p { margin: 0; flex: 1 1 260px; font-size: 14px; overflow-wrap: anywhere; min-width: 0; }
+.agh-banner-row .btn { min-height: 44px; flex: 0 0 auto; }
+.agh-sugg-err { margin: 0; font-size: 14px; color: var(--rose); overflow-wrap: anywhere; }

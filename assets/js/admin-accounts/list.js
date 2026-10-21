@@ -1,4 +1,5 @@
-// Comptes admin : liste des comptes (colonne 2 du panel : recherche, puces Tous / Staff / Fantômes, lignes compactes).
+// Comptes admin : liste des comptes (colonne 2 du panel : recherche, puces Actifs / Staff / Fantômes / Toutes, lignes compactes,
+// le compte le plus récent en tête).
 import { sb, errMsg } from '../core.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
 import { createList } from '../admin/ui/list.js';
@@ -22,7 +23,12 @@ export async function loadAccounts() {
     id: g.id, pseudo: g.pseudo, email: null, is_admin: false, created_at: null, last_sign_in_at: null,
     is_ghost: true, avatar_url: g.avatar_url, joined_on: g.joined_on,
   }));
-  A.accounts = [...real, ...ghosts].sort((a, b) => (!a.pseudo - !b.pseudo) || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
+  // Le plus récent en tête : date d'inscription (comptes) ou de création (fantômes) ; à défaut, ordre alphabétique.
+  const ghostAt = new Map(gh.map((g) => [g.id, g.created_at ?? null]));
+  for (const g of ghosts) g.created_at = ghostAt.get(g.id);
+  const t = (a) => (a.created_at ? Date.parse(a.created_at) : 0);
+  A.accounts = [...real, ...ghosts].sort((a, b) => (t(b) - t(a))
+    || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
   for (const a of A.accounts) a.is_staff = staffIds.has(a.id);
   A.avatars = new Map((mem.data ?? []).map((m) => [m.id, m]));
   for (const g of ghosts) A.avatars.set(g.id, { id: g.id, pseudo: g.pseudo, avatar_url: g.avatar_url });
@@ -71,9 +77,12 @@ export function mountAccountsList(el) {
     label: 'Comptes des membres',
     search: { placeholder: 'Pseudo ou e-mail', label: 'Rechercher un compte', fields: (it) => `${it.pseudo || ''} ${it.email || ''}` },
     filters: [
+      { id: 'active', label: 'Actifs', test: (it) => !it.is_ghost },
       { id: 'staff', label: 'Staff', test: (it) => it.is_staff },
       { id: 'ghost', label: 'Fantômes', test: (it) => it.is_ghost },
+      { id: 'all', label: 'Toutes', test: () => true },
     ],
+    defaultFilter: 'active',
     selectedId: A.uid,
     empty: A.listError ? `Impossible de charger les comptes : ${errMsg(A.listError)}` : 'Aucun compte ne correspond.',
     onSelect: (it) => {

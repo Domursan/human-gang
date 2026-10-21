@@ -41,7 +41,7 @@ const visibleSubs = (p) => p.$$eval('#shell-subs .shell-sub', (as) => as.filter(
     await p.click('#shell-rail .shell-dom[data-dom="membres"]');
     check(await waitVisible(p, '#comptes') && await waitVisible(p, '#apercu', false), '(a) domaine Membres : Comptes affiché, Vue d’ensemble masquée');
     check((await hashOf(p)) === '#membres/comptes', `(a) domaine cliqué -> #membres/comptes (${await hashOf(p)})`);
-    check(await p.isVisible('#shell-subs a[href="#membres/fantomes"]'), '(a) colonne : sous-sections de Membres');
+    check(await p.isVisible('#shell-subs a[href="#membres/comptes"]') && await p.locator('#shell-subs a[href="#membres/fantomes"]').count() === 0, '(a) colonne : sous-sections de Membres (Comptes fantômes fusionnés dans Comptes)');
     check((await p.locator('.shell-sub[aria-current="true"]').textContent()).includes('Comptes'), '(a) sous-section active : Comptes');
     await p.click('#shell-subs a[href="#membres/invitations"]');
     check(await waitVisible(p, '#membres') && await waitVisible(p, '#comptes', false), '(a) sous-section Invitations affichée seule');

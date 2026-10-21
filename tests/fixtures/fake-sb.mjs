@@ -230,7 +230,12 @@ class Q {
       }
       return { data: null, error: null, count: gone.length };
     }
-    const out = tab.filter(match);
+    let out = tab.filter(match);
+    // Fantômes : leur profil se lit par id comme les autres (ils ne sont pas dans DB.hg_profiles, qui alimente les listes de membres)
+    if (this.t === 'hg_profiles' && this.op === 'select' && !out.length) {
+      out = (window.__SCN?.ghosts ?? []).map((g) => ({ is_admin: false, color: '#8F5F4F', birthday: null, avatar_url: null, ...g, is_ghost: true }))
+        .filter((r) => this.f.every((fn) => fn(r)));
+    }
     if (this.head) return { data: null, error: null, count: out.length };
     if (this.one) return { data: out[0] ?? null, error: null };
     return { data: this.rg ? out.slice(this.rg[0], this.rg[1] + 1) : out, error: null };
@@ -379,6 +384,31 @@ export function createClient() {
         return { data: null, error: null };
       }
       if (fn === 'hg_admin_ghosts') return { data: window.__SCN?.ghosts ?? [], error: null }; // fantômes : fournis par le scénario du test
+      // Fantômes (état propre à chaque page : le scénario est copié dans window.__SCN)
+      if (fn === 'hg_ghost_suggestions') { // correspondances : seulement pour les fantômes encore présents
+        const gs = window.__SCN?.ghosts ?? [];
+        return { data: (window.__SCN?.suggestions ?? []).filter((s) => gs.some((g) => g.id === s.ghost_id)), error: null };
+      }
+      if (fn === 'hg_ghost_create') {
+        const sc = window.__SCN || (window.__SCN = {});
+        const n = (sc.ghosts?.length ?? 0) + 1;
+        sc.ghosts = [...(sc.ghosts ?? []), { id: `cccccccc-0000-4000-8000-${String(n).padStart(12, '0')}`, pseudo: args.p_pseudo, avatar_url: null,
+          joined_on: args.p_joined_on ?? null, created_at: new Date().toISOString(), invite_code: null, invite_expires_at: null, ghost_note: args.p_note ?? null }];
+        return { data: null, error: null };
+      }
+      if (fn === 'hg_ghost_invite') {
+        const g = (window.__SCN?.ghosts ?? []).find((x) => x.id === args.p_ghost);
+        if (!g) return { data: null, error: { message: 'Fantôme introuvable' } };
+        g.invite_code = 'HG-NEW' + String((window.__SCN.ghosts.indexOf(g) + 1)).padStart(3, '0');
+        g.invite_expires_at = new Date(Date.now() + 60 * 864e5).toISOString();
+        return { data: { code: g.invite_code }, error: null };
+      }
+      if (fn === 'hg_ghost_merge') { // transfère (ici : compte fictif) puis supprime le fantôme et ses correspondances
+        const sc = window.__SCN || {};
+        if (sc.ghosts) sc.ghosts = sc.ghosts.filter((g) => g.id !== args.p_ghost);
+        if (sc.suggestions) sc.suggestions = sc.suggestions.filter((s) => s.ghost_id !== args.p_ghost);
+        return { data: [{ moved: 3 }], error: null };
+      }
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       if (fn === 'hg_ss_reveal') { // paires d'une édition : seulement en révélation ou terminée (comme la base)
         const ed = DB.hg_ss_editions.find((e) => e.id === args.p_edition);
