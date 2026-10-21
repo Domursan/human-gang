@@ -35,7 +35,7 @@ export function serialLabel(serial, max) {
 }
 
 /** Numéro de la carte dans la série : « 012/100 » (le total est facultatif). */
-function numberLabel(card) {
+export function numberLabel(card) {
   if (card.number == null || card.number === '') return '';
   const total = card.set_total;
   const w = Math.max(3, String(total || '').length);

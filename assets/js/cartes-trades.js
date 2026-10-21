@@ -6,6 +6,7 @@ import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify } from
 import { cardHtml, rarityRank, fmtP } from './cartes-ui.js';
 import { confirmBox } from './ui-confirm.js';
 import { pluralCount } from './utils.js';
+import { keepPlace, holdHeight } from './cartes-place.js';
 
 const TABS = [
   { id: 'recues', label: 'Reçues' },
@@ -353,16 +354,18 @@ export async function mountTrades(el, ctx = {}) {
     panel.setAttribute('aria-labelledby', `trd-tab-${S.tab}`);
     if (S.tab === 'correspondances') {
       const tab = S.tab;
+      const release = holdHeight(panel); // le texte d'attente garde la hauteur : la page ne remonte pas
       panel.innerHTML = '<p class="empty">Recherche des correspondances…</p>';
       loadMatches()
         .then((data) => { if (S.tab === tab) panel.innerHTML = viewCorrespondances(data); })
-        .catch((e) => { if (S.tab === tab) panel.innerHTML = `<div class="empty">Impossible de charger les correspondances : ${esc(errMsg(e))}</div>`; });
+        .catch((e) => { if (S.tab === tab) panel.innerHTML = `<div class="empty">Impossible de charger les correspondances : ${esc(errMsg(e))}</div>`; })
+        .finally(release);
       return;
     }
     const view = { recues: viewRecues, envoyees: viewEnvoyees, proposer: viewProposer, historique: viewHistorique }[S.tab];
     panel.innerHTML = view();
   }
-  const render = () => renderPanel();
+  const render = () => keepPlace(renderPanel); // le re-rendu garde la place de l'utilisateur
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
   async function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {

@@ -109,7 +109,8 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 }
 
 /* Compléments : dialogues */
-.cartes-dialog { position: relative; }
+/* Fixe dans la fenêtre (et non à sa place dans la page) : sinon le focus à l'ouverture fait remonter la page */
+.cartes-dialog { position: fixed; }
 .cartes-dialog-pad { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .cartes-dialog-pad h2 { font-size: 20px; margin: 0; }
 .cartes-dialog-pad .btn-row { justify-content: flex-end; }
