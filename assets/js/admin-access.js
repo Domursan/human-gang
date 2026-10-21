@@ -150,6 +150,7 @@ export async function setAccess(slug, uids, allow) {
   emit();
 }
 
+/** Met à jour une page (mode, menu, libellé) dans la base, puis dans la liste locale. */
 async function updatePage(slug, patch) {
   check(await sb.from('hg_pages').update({ ...patch, updated_at: nowIso() }).eq('slug', slug));
   Object.assign(pageBySlug(slug) || {}, patch);
@@ -498,6 +499,7 @@ function openPageDialog(slug) {
 async function savePage(form, slug) {
   const E = form.elements;
   const err = form.querySelector('.form-error');
+  /** Affiche un message d'erreur dans le tiroir et renvoie false (le tiroir reste ouvert). */
   const fail = (m) => { err.textContent = m; err.hidden = false; return false; };
   err.hidden = true;
   const isNew = !slug;

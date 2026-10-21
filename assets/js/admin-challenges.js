@@ -148,6 +148,7 @@ function openChallengeForm(r = null) {
   const now = new Date();
   const v = r || {};
   const isNew = !r;
+  /** Attribut « selected » de l'option de métrique, si elle correspond au défi en cours. */
   const sel = (val) => (val === v.metric ? ' selected' : '');
   openDrawer({
     title: isNew ? 'Nouveau défi' : 'Modifier le défi',

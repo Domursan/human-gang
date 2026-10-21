@@ -156,6 +156,7 @@ export async function mountThemesSection(container) {
       <div class="th-list" data-el="list"><div class="empty">Chargement des thèmes…</div></div>
       <p class="muted small">Quand plusieurs périodes se chevauchent, le thème de plus haute priorité l'emporte (à égalité, la période la plus courte). Hors de toute période : thème par défaut.</p>
     </div>`;
+  /** Élément de la section repéré par son attribut data-el. */
   const el = (name) => container.querySelector(`[data-el="${name}"]`);
 
   // Barre d'aperçu flottante (visible partout sur la page)
@@ -323,6 +324,7 @@ export async function mountThemesSection(container) {
   /* ---------- Éditeur ---------- */
   // Options « jour » (1 à 31) pour les menus de période, avec le jour sélectionné.
   const dayOpts = (sel) => Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}"${Number(sel) === i + 1 ? ' selected' : ''}>${i + 1}</option>`).join('');
+  /** Options « mois » pour les menus de période, avec le mois sélectionné. */
   const monthOpts = (sel) => MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}"${Number(sel) === i + 1 ? ' selected' : ''}>${m}</option>`).join('');
 
   /**

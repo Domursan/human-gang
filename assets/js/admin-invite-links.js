@@ -89,6 +89,7 @@ function rulesHtml() {
   const cur = L.rulesRaw && typeof L.rulesRaw === 'object' ? L.rulesRaw : {};
   const custom = !!L.rulesRaw;
   const eff = { ...INVITE_DEFAULTS, ...Object.fromEntries(RULES.map((r) => [r.name, cur[r.name] ?? INVITE_DEFAULTS[r.name]])) };
+  /** Valeur en vigueur d'une règle, suivie de son unité si elle en a une. */
   const shown = (r) => `${esc(eff[r.name])}${r.unit ? ` ${esc(r.unit)}` : ''}`;
   return `<section class="il-rules" aria-labelledby="il-rules-title">
     <div class="il-rules-head">

@@ -72,14 +72,21 @@ export function completeRandom(ids, pick, excl, last) {
   const taken = new Set(ids.map((g) => pick.get(g)).filter(Boolean));
   const free = ids.filter((r) => !taken.has(r));
   if (empty.length !== free.length) return null;
+  /**
+   * Essaie de compléter les lignes vides, jusqu'à 30 fois. soft = true applique aussi les exclusions et la cible de l'an dernier.
+   * @param {boolean} soft Vrai pour les contraintes souples.
+   * @returns {Map<string, string>|null} Les nouvelles paires, ou null.
+   */
   const tryFill = (soft) => {
     for (let attempt = 0; attempt < 30; attempt++) {
       const givers = shuffle(empty);
       const out = new Map();
       const used = new Set();
+      /** Vrai si r peut recevoir le cadeau de g : pas déjà pris ; pas soi-même (sauf mode sans limite au dernier tour) ; et, si soft, ni exclusion ni cible de l'an dernier. */
       const ok = (g, r) => (r !== g || (isGodMode() && free.length === 1)) && !used.has(r) && (!soft || (!excl.has(key(g, r)) && last.get(g) !== r));
       // backtracking (petites tailles : quelques dizaines de personnes au plus)
       let steps = 0;
+      /** Recherche avec retour arrière : attribue une cible au donneur i, puis aux suivants. Renvoie false si aucune solution. */
       const solve = (i) => {
         if (i === givers.length) return true;
         if (++steps > 20000) return false;

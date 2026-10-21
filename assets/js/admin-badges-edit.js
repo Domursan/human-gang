@@ -109,6 +109,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   });
   const { form, body } = d;
   const err = $('.form-error', body);
+  /** Affiche ou efface le message d'erreur du formulaire, et le fait voir. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   let codeTouched = false;
   if (isNew) {

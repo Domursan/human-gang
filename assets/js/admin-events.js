@@ -60,6 +60,7 @@ export function fromZurichInput(v) {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(String(v || ''));
   if (!m) return null;
   const wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+  /** Décalage en millisecondes entre l'heure suisse et UTC à l'instant t (change avec l'heure d'été). */
   const offsetAt = (t) => { const p = zParts(new Date(t)); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - t; };
   let t = wall - offsetAt(wall);
   t = wall - offsetAt(t); // second passage : corrige autour des changements d'heure
@@ -408,6 +409,7 @@ function openEditor(ev = null) {
   const { form, body } = d;
   const f = form.elements;
   const err = body.querySelector('.form-error');
+  /** Affiche ou efface le message d'erreur du formulaire, et le fait voir. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   /** Affiche l'aperçu : image choisie, image actuelle, ou emoji. Le bouton « Retirer l'image » suit l'état. */
   const paintPreview = () => {
@@ -447,6 +449,7 @@ function openEditor(ev = null) {
   /** Valeurs du formulaire (sans l'image téléversée). */
   const read = () => {
     const nv = Math.max(1, Math.min(LIMITS.nMax, Math.round(Number(f.n.value) || 1)));
+    /** Entier d'un champ, ou null si le champ est vide. */
     const intOrNull = (v) => (String(v).trim() === '' ? null : Math.round(Number(v)));
     return {
       name: f.name.value.trim(),
@@ -632,10 +635,12 @@ async function reload() {
 export function eventsSub(opts = {}) {
   E.onBadgesChange = opts.onBadgesChange || null;
   return {
+    /** Repère le conteneur de la zone principale et branche le clic global, une seule fois. */
     main() {
       E.root = document.getElementById('events-root');
       if (!E.bound) { E.bound = true; document.addEventListener('click', onClick); }
     },
+    /** Crée la liste (colonne 2) : filtres, recherche, sélection et navigation vers l'événement choisi. */
     list(el) {
       E.list = createList(el, {
         items: listItems(),
@@ -653,6 +658,7 @@ export function eventsSub(opts = {}) {
         onSelect: (it) => navigate(`${EV_ROUTE}/${it.id}`),
       });
     },
+    /** Ouvre la section : recharge les événements, vérifie l'identifiant demandé, puis affiche la liste et le détail. */
     async open(_el, { id } = {}) {
       const tok = ++E.tok;
       E.sel = id || null;
