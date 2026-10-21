@@ -25,13 +25,13 @@ const RETRY_MIN_MS = 2000;
 const RETRY_MAX_MS = 60000;
 
 // Tables publiées (migration 030) -> permission qui donne le droit de les lire (clé de hg_perm_catalog,
-// ou « admin » pour l'administrateur seul : hg_staff et hg_admin_log n'ont de lecture que pour lui).
+// ou « admin » pour l'administrateur seul : hg_staff n'a de lecture que pour lui ; hg_admin_log relève de « journal »).
 export const TABLE_PERM = {
   hg_ideas: 'support',
   hg_support: 'support',
   hg_profiles: 'membres',
   hg_staff: 'admin',
-  hg_admin_log: 'admin',
+  hg_admin_log: 'journal',
   hg_card_trades: 'cartes',
   hg_events: 'evenements',
   hg_event_rsvps: 'evenements',
