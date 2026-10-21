@@ -4,4 +4,6 @@ try {
   var t = JSON.parse(localStorage.getItem('hg_theme') || 'null'), pr = JSON.parse(localStorage.getItem('hg_prefs') || 'null');
   if (pr && pr.special === false) t = null;
   if (t && typeof t.logo_url === 'string' && /^(https:\/\/|assets\/)/.test(t.logo_url)) document.getElementById('logo-img').src = t.logo_url;
+  var rg = JSON.parse(localStorage.getItem('hg_site_settings') || 'null'), lu = rg && rg.identite && rg.identite.logo_url;
+  if (!(t && t.logo_url) && typeof lu === 'string' && /^(https:\/\/|assets\/)/.test(lu)) document.getElementById('logo-img').src = lu;
 } catch (e) {}

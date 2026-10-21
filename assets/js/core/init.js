@@ -10,6 +10,8 @@ import { renderHeader, updateNav } from './header.js';
 import { renderFooter, cookieNotice } from './footer.js';
 import { startUnread } from './unread.js';
 import { checkNewBadges } from './badges.js';
+import { loadSiteSettings } from './site-load.js';
+import { applySiteDom } from './site-defaults.js';
 
 const PROFILE_TIMEOUT_MS = 15000;
 function withTimeout(p, ms) {
@@ -56,8 +58,11 @@ function connectionError(detail = '') {
 /** Une tentative d'initialisation. Jette en cas d'échec réseau ; Error('redirect') si on quitte la page. */
 async function startPage(auth) {
   applyTheme();
+  const siteP = loadSiteSettings(); // réglages du site (nom, menu, pied, textes) : ne lève jamais d'erreur
   const who = auth === 'member' ? requireMember() : auth === 'admin' ? requireAdmin() : getProfile();
   const profile = await withTimeout(who, PROFILE_TIMEOUT_MS);
+  await siteP;
+  applySiteDom();
   const pagesP = profile ? loadMyPages() : null; // en parallèle du mode sans limite
   const godP = loadGodMode(profile); // les pages lisent getGodMode() dès leur premier affichage
   const permsP = profile ? loadMyPerms() : null; // droits sur le panel (Staff/admin) : une requête, en cache
