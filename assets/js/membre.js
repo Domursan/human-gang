@@ -75,6 +75,7 @@ function shell() {
       <div class="mb-card-col"><div class="idc-wrap"><div class="idc idc-skeleton" aria-hidden="true"></div></div></div>
       <div class="card mb-badges"><span class="skeleton-line"></span><span class="skeleton-line short"></span></div>
     </section>
+    <div class="mb-actions" id="mb-actions" hidden></div>
     ${canAccess('cartes') ? '<section class="mb-showcase" id="mb-showcase" hidden></section>' : ''}
     <section class="mb-gang" aria-labelledby="gang-title">
       <h2 class="mb-section-title" id="gang-title">${ICON.users} Le gang</h2>
@@ -452,6 +453,10 @@ try {
     $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
     bindHolo();
     $('#dl-card').addEventListener('click', (e) => onDownload(e.currentTarget, card));
+    if (!isMe && canAccess('cartes')) { // collection de ce membre, en lecture seule (cartes.html)
+      $('#mb-actions').hidden = false;
+      $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
+    }
     if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
   }
 } catch (e) {

@@ -1,6 +1,7 @@
 // ===== Cartes à collectionner — échanges entre membres =====
 // Chargé par cartes.js : import('./cartes-trades.js').then((m) => m.mountTrades(el, ctx)).
-// ctx = { me: profil courant (id, pseudo…), refresh: async () => {} } ; refresh recharge solde et collection côté page.
+// ctx = { me: profil courant (id, pseudo…), refresh: async () => {}, expose: (api) => {} } ; refresh recharge solde et collection côté page.
+// expose reçoit { offer({ to, want }) } : ouvre l'éditeur d'offre avec un membre (utilisé par la collection d'un membre, cartes.js).
 // Affichage des cartes : cartes-ui.js (cardHtml). Styles : cartes-trades.css (+ cartes-card.css).
 import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify, currentLogo } from './core.js';
 import { cardHtml, rarityRank, rarityLabel, numberLabel, serialLabel, RARITIES, fmtP } from './cartes-ui.js';
@@ -234,6 +235,7 @@ export async function mountTrades(el, ctx = {}) {
           </select>
         </div>
         <button class="btn btn-primary" type="button" data-act="compose" ${S.pickWho ? '' : 'disabled'}>Composer l’offre</button>
+        <a class="btn btn-ghost" data-peer-link href="#collection/${esc(S.pickWho)}" ${S.pickWho ? '' : 'hidden'}>Voir sa collection</a>
       </div>
       <p class="trd-hint">Ton solde : ${esc(fmtP(S.balance))}</p>
     </section>`;
@@ -724,6 +726,8 @@ export async function mountTrades(el, ctx = {}) {
     S.pickWho = e.target.value;
     const btn = panel.querySelector('[data-act="compose"]');
     if (btn) btn.disabled = !S.pickWho;
+    const link = panel.querySelector('[data-peer-link]');
+    if (link) { link.hidden = !S.pickWho; link.setAttribute('href', '#collection/' + S.pickWho); }
   });
   tabsEl.addEventListener('keydown', (e) => {
     const i = TABS.findIndex((t) => t.id === S.tab);
@@ -773,5 +777,6 @@ export async function mountTrades(el, ctx = {}) {
         <div class="btn-row trd-retry"><button class="btn btn-ghost" type="button" data-act="retry">Réessayer</button></div></div>`;
     }
   }
+  ctx.expose?.({ offer: (opts) => openEditor(opts) });
   await start();
 }
