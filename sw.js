@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v21';
+const CACHE_VERSION = 'v22';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -55,7 +55,7 @@ const PRECACHE = [
   'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
   'assets/js/core/util.js', 'assets/js/dyn-events.js',
   'assets/js/evenements.js', 'assets/js/historique.js', 'assets/js/intro-logo.js',
-  'assets/js/intro-redirect.js', 'assets/js/intro.js', 'assets/js/irl-history.js',
+  'assets/js/intro-daily.js', 'assets/js/intro-redirect.js', 'assets/js/intro.js', 'assets/js/irl-history.js',
   'assets/js/irl.js', 'assets/js/legal.js', 'assets/js/membre.js', 'assets/js/messages.js',
   'assets/js/paillettes.js', 'assets/js/photos.js', 'assets/js/profile-fields.js',
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',

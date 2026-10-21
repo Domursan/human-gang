@@ -45,7 +45,12 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion });
   await ctx.addInitScript((s) => {
     window.__SCN = s;
-    try { localStorage.setItem('hg_cookie_ok', '1'); } catch (e) { /* stockage bloqué : sans importance pour le test */ }
+    try {
+      localStorage.setItem('hg_cookie_ok', '1');
+      // Intro déjà jouée aujourd'hui (sinon l'accueil y renvoie) ; scenario.intro = true pour la tester
+      const d = new Date();
+      if (!s.intro) localStorage.setItem('hg_intro_day', `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+    } catch (e) { /* stockage bloqué : sans importance pour le test */ }
   }, scenario);
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
   await ctx.route('**/*', async (route) => {

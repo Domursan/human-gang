@@ -11,10 +11,11 @@ const world = $('world'), logo = $('logo'), img = $('logo-img');
 const glow = $('glow'), hint = $('hint'), fade = $('fade'), canvas = $('sky');
 const progressEl = $('progress'), fill = $('progress-fill'), skip = $('skip'), enterBtn = $('enter');
 
-function markSeen() { try { localStorage.setItem('hg_intro_seen', '1'); } catch {} }
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function markSeen() { try { localStorage.setItem('hg_intro_day', today()); } catch {} }
 
-// Sécurité : si l'intro a déjà été vue (le script en tête de page s'en charge normalement)
-try { if (localStorage.getItem('hg_intro_seen')) location.replace(NEXT); } catch {}
+// Sécurité : si l'intro a déjà été vue aujourd'hui (le script en tête de page s'en charge normalement)
+try { if (localStorage.getItem('hg_intro_day') === today()) location.replace(NEXT); } catch {}
 
 /* ---------- Logo (déjà chargé par le HTML ; on gère seulement l'échec) ---------- */
 if (img.complete && img.naturalWidth === 0) logo.classList.add('no-logo');

@@ -768,7 +768,7 @@ function bindData() {
       const { error } = await sb.rpc('hg_delete_my_account');
       if (error) throw error;
       await sb.auth.signOut().catch(() => {});
-      try { ['hg_pending_join', 'hg_intro_seen'].forEach((k) => localStorage.removeItem(k)); } catch {}
+      try { ['hg_pending_join', 'hg_intro_day'].forEach((k) => localStorage.removeItem(k)); } catch {}
       dlg.close();
       updateHeaderProfile(null);
       app.innerHTML = `<section class="acc-narrow"><div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">Compte supprimé</h1></div></div>

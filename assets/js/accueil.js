@@ -49,13 +49,10 @@ function ago(d) {
 const parseDay = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
-/* ---------- Synchronisation « intro vue » entre l'appareil et le profil ---------- */
+/* ---------- « Intro vue » dans le profil (indicateur affiché dans l'admin ; l'intro se rejoue une fois par jour) ---------- */
 function syncIntro() {
-  if (!me) return;
-  let local = false;
-  try { local = !!localStorage.getItem('hg_intro_seen'); } catch {}
-  if (me.intro_seen && !local) { try { localStorage.setItem('hg_intro_seen', '1'); } catch {} }
-  else if (!me.intro_seen && local) sb.from('hg_profiles').update({ intro_seen: true }).eq('id', me.id).then(() => {}, () => {});
+  if (!me || me.intro_seen) return;
+  sb.from('hg_profiles').update({ intro_seen: true }).eq('id', me.id).then(() => {}, () => {});
 }
 
 /* ======================================================================
@@ -92,7 +89,7 @@ function renderGuest() {
       </div>
     </section>`;
   $('#replay').addEventListener('click', () => {
-    try { localStorage.removeItem('hg_intro_seen'); } catch {}
+    try { localStorage.removeItem('hg_intro_day'); } catch {}
     location.href = 'index.html';
   });
 }
