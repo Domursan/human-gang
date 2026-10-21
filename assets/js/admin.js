@@ -13,6 +13,7 @@ import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
+import { mountReglagesSection } from './admin-reglages/view.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditions, loadEditionDetails, loadBadges, loadIdeas, loadSupport, loadSettings, safe } from './admin/loaders.js';
@@ -60,6 +61,7 @@ mountLogSection($('#log-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
 mountCardsSection($('#cards-root'));
 mountChallengesSection($('#challenges-root'));
+mountReglagesSection($('#reglages-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
 // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
 mountGhostsSection($('#ghosts-root'), {
