@@ -220,8 +220,11 @@ function startCountdown(target, year) {
     box.innerHTML = `<p class="cd-title">Échange des cadeaux ${esc(year)} dans</p>
       <div class="cd-units" role="timer" aria-label="${d} jours, ${h} heures et ${m} minutes">${unit(d, d > 1 ? 'jours' : 'jour')}${unit(h, 'h')}${unit(m, 'min')}${unit(sec, 's')}</div>`;
   };
+  // Minuteur en pause quand l'onglet est caché ; repris (et mis à jour tout de suite) au retour
+  const run = () => { clearInterval(cdTimer); if (!document.hidden) cdTimer = setInterval(tick, 1000); };
   tick();
-  cdTimer = setInterval(tick, 1000);
+  run();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); run(); });
 }
 
 /* ---------- Tuile IRL ---------- */

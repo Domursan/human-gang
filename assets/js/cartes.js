@@ -792,7 +792,9 @@ async function boot() {
   }
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page
-  setInterval(() => { if (S.tab === 'boosters') renderFree(); }, 30000);
+  // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour
+  setInterval(() => { if (S.tab === 'boosters' && !document.hidden) renderFree(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.tab === 'boosters') renderFree(); });
 }
 
 boot();
