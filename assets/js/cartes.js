@@ -1,5 +1,5 @@
 // ===== Cartes à collectionner — page joueur =====
-// RPC : hg_cards_me, hg_cards_daily, hg_open_booster, hg_card_recycle, hg_card_craft, hg_card_leaderboard.
+// RPC : hg_cards_me, hg_cards_daily, hg_open_booster_req (repli hg_open_booster), hg_card_recycle, hg_card_craft, hg_card_leaderboard.
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
@@ -61,7 +61,7 @@ async function refreshData() {
     sb.rpc('hg_cards_me'),
     sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at'),
     sb.from('hg_card_wishlist').select('card_id').eq('user_id', me.id),
-    sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).order('created_at', { ascending: false }).limit(30),
+    sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).neq('reason', 'booster_requete').order('created_at', { ascending: false }).limit(30),
   ]);
   for (const r of [st, cp, wi, lg]) if (r.error) throw r.error;
   S.state = st.data;
@@ -410,7 +410,11 @@ async function openBooster(free) {
     S.bootReq = { free: !!free, id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`) };
   }
   try {
-    const { data, error } = await sb.rpc('hg_open_booster', { p_free: !!free, p_request: S.bootReq.id });
+    // hg_open_booster_req (migration 021) ; repli sur l'ancienne RPC si elle n'est pas encore déployée
+    let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: S.bootReq.id });
+    if ((error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) || (!error && data == null)) {
+      ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
+    }
     if (error) throw error;
     S.bootReq = null;
     const cards = data?.cards || [];

@@ -12,7 +12,7 @@
 --   AD2 table hg_admin_log, écrite par les RPC admin existantes et par un trigger
 --       de suppression de carte
 --   C5  hg_cards_earn_trg : l'erreur est signalée (raise warning) au lieu d'être avalée
---   C7  hg_open_booster : clé p_request (idempotence côté serveur)
+--   C7  hg_open_booster_req : clé p_request (idempotence côté serveur)
 --   J1  hg_trade_respond : verrou sur les deux portefeuilles, dans un ordre fixe
 --   J3  hg_open_booster : renvoie le nombre demandé et le nombre réellement livré
 --
@@ -180,9 +180,12 @@ begin
           jsonb_build_object('nom', old.name, 'numero', old.number, 'set_id', old.set_id));
   return old;
 end $$;
-drop trigger if exists hg_cards_admin_audit_del on public.hg_cards;
-create trigger hg_cards_admin_audit_del after delete on public.hg_cards
-  for each row execute function public.hg_cards_admin_audit_del();
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'hg_cards_admin_audit_del') then
+    create trigger hg_cards_admin_audit_del after delete on public.hg_cards
+      for each row execute function public.hg_cards_admin_audit_del();
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------
 -- 5. Gains du jeu de cartes : erreur signalée, plus avalée (C5)
@@ -220,12 +223,10 @@ end $function$;
 
 -- ---------------------------------------------------------------------
 -- 6. Ouverture de booster : idempotence (C7) et nombre livré (J3)
---    La signature change (ajout de p_request) : l'ancienne est retirée d'abord,
---    sinon PostgREST ne saurait plus quelle version appeler.
+--    Nouvelle RPC hg_open_booster_req(p_free, p_request) : l'ancienne hg_open_booster(p_free)
+--    reste en place (deux surcharges du même nom seraient ambiguës pour PostgREST).
 -- ---------------------------------------------------------------------
-drop function if exists public.hg_open_booster(boolean);
-
-create or replace function public.hg_open_booster(p_free boolean default false, p_request text default null)
+create or replace function public.hg_open_booster_req(p_free boolean default false, p_request text default null)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -288,8 +289,8 @@ begin
     'demandees', n, 'livrees', jsonb_array_length(out));
 end $function$;
 
-revoke all on function public.hg_open_booster(boolean, text) from public, anon;
-grant execute on function public.hg_open_booster(boolean, text) to authenticated;
+revoke all on function public.hg_open_booster_req(boolean, text) from public, anon;
+grant execute on function public.hg_open_booster_req(boolean, text) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- 7. Échanges : verrou des deux portefeuilles, dans un ordre fixe (J1)
