@@ -31,4 +31,13 @@ document.querySelectorAll('link[data-media-all]').forEach((l) => {
 /* Mode hors ligne : enregistrement du service worker (sw.js, à la racine du site). */
 if (window.isSecureContext && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Nouvelle version du site installée pendant la visite : on recharge une fois pour ne pas mélanger
+  // l'ancienne page et les nouveaux fichiers.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    location.reload();
+  });
 }
