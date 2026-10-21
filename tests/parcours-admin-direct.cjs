@@ -8,6 +8,12 @@
 // Lancer : node tests/parcours-admin-direct.cjs
 const { ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
 
+// Ouvre une sous-section du panel (route #domaine/sous-section) et attend que sa section soit affichée.
+async function goto(p, hash, sel) {
+  await p.evaluate((h) => { location.hash = h; }, hash);
+  await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 5000 }).catch(() => {});
+}
+
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const demande = (id, message) => ({ id, user_id: null, pseudo: 'Bruno', subject: 'Question', message, contact: 'bruno@ex.ch',
@@ -39,12 +45,13 @@ const emettre = (p, row) => p.evaluate((r) => {
 
     await emettre(p, demande('sup-live-1', 'Message reçu en direct'));
     await p.waitForFunction(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent === '1', null, { timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('.nav-count[data-count="assistance"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
+    check(await p.isVisible('[data-dom-badge="communication"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
       '(a) événement hg_support : compteur de navigation Assistance mis à jour (1)');
-    check((await p.textContent('#stats a[href="#assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
+    check((await p.textContent('#stats a[href="#communication/assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
     check((await p.textContent('#support-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
+    await goto(p, '#pilotage/staff', '#staff');
     await p.click('#staff [data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
@@ -54,6 +61,7 @@ const emettre = (p, row) => p.evaluate((r) => {
     check((await p.textContent('.nav-count[data-count="assistance"]')).trim() === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'), null, { timeout: 5000 }).catch(() => {});
+    await goto(p, '#communication/assistance', '#assistance');
     await p.click('#assistance .live-banner button');
     await p.waitForTimeout(300);
     check((await p.textContent('#support-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');

@@ -4,6 +4,12 @@
 // Lancer : node tests/parcours-admin-sorties.cjs
 const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
 
+// Ouvre une sous-section du panel (route #domaine/sous-section) et attend que sa section soit affichée.
+async function goto(p, hash, sel) {
+  await p.evaluate((h) => { location.hash = h; }, hash);
+  await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 5000 }).catch(() => {});
+}
+
 const ME = '11111111-1111-4111-8111-111111111111';
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const EV_A = 'ea000000-0000-4000-8000-00000000000a'; // à venir, date fixée
@@ -47,8 +53,9 @@ function dansTrenteJours() {
   const p = await openPage(browser, { page: 'admin', scenario: SCN, width: 1280 });
 
   // 1. Navigation et liste
-  check(await p.isVisible('nav.admin-nav a[href="#sorties"]'), 'admin : lien « Sorties IRL » dans la navigation');
-  check((await p.getAttribute('nav.admin-nav a[href="#sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
+  check((await p.locator('#shell-subs a[href="#vie/sorties"]').count()) === 1, 'admin : lien « Sorties IRL » dans la colonne de navigation');
+  check((await p.getAttribute('#shell-subs a[href="#vie/sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
+  await goto(p, '#vie/sorties', '#sorties');
   check((await p.getAttribute('#sorties', 'data-perm')) === 'evenements', 'section marquée data-perm="evenements"');
   check((await p.locator('#ass-list .ass-row').count()) === 2, 'filtre « À venir » : deux sorties (datée et à caler)');
   await p.selectOption('#ass-filter', 'passees');

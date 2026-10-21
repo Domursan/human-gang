@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/ui-confirm.css">
   <link rel="stylesheet" href="assets/css/admin.css">
+  <link rel="stylesheet" href="assets/css/admin-shell.css">
   <link rel="stylesheet" href="assets/css/admin-live.css">
   <link rel="stylesheet" href="assets/css/admin-accounts.css">
   <link rel="stylesheet" href="assets/css/admin-messages.css">
@@ -50,62 +51,77 @@
   <link rel="stylesheet" href="assets/css/admin-reglages.css">
 </head>
 <body>
-  <main class="container" id="app">
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">Coulisses</div>
-        <h1 class="page-title">Administration</h1>
+  <div class="shell" id="shell" data-screen="domain" data-info="no">
+    <nav class="shell-rail" id="shell-rail" aria-label="Domaines du panel">
+      <a class="shell-logo" href="accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang">HG</a>
+      <div class="shell-doms" id="shell-doms"></div>
+      <div class="shell-sep" aria-hidden="true"></div>
+      <div class="shell-foot" id="shell-foot">
+        <a class="shell-ico" href="#pilotage/staff" data-admin-only aria-label="Staff" title="Staff"><span data-icon="shield"></span></a>
+        <a class="shell-ico" href="#site/reglages" data-rail-reglages aria-label="Réglages" title="Réglages"><span data-icon="sliders"></span></a>
+        <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
+        <div class="shell-live" id="shell-live"></div>
+        <div class="shell-account">
+          <button class="shell-avatar" id="shell-avatar" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shell-menu">··</button>
+          <div class="shell-menu" id="shell-menu" role="menu" aria-label="Compte" hidden>
+            <a role="menuitem" href="accueil.html">Retour au site</a>
+            <button role="menuitem" type="button" data-menu="prefs">Préférences d’affichage</button>
+            <button role="menuitem" type="button" data-menu="logout">Se déconnecter</button>
+          </div>
+        </div>
       </div>
-      <p class="muted small admin-intro">Les sections visibles dépendent de tes droits. Les attributions du Secret Santa restent masquées tant que tu ne demandes pas à les voir.</p>
-    </div>
+    </nav>
 
-    <div id="god-root" class="god-root"></div>
+    <aside class="shell-col" id="shell-col" aria-label="Sous-sections du domaine">
+      <div class="shell-col-head">
+        <p class="eyebrow" id="shell-col-eyebrow">Domaine</p>
+        <h2 class="shell-col-title" id="shell-col-title"></h2>
+        <p class="shell-col-sub" id="shell-col-sub"></p>
+      </div>
+      <nav class="shell-subs" id="shell-subs" aria-label="Sous-sections"></nav>
+      <div class="shell-col-list" id="shell-col-list"></div>
+    </aside>
 
-    <div class="admin-layout">
-      <nav class="admin-nav" aria-label="Sections de l'administration">
-        <a href="#apercu">Vue d'ensemble</a>
-        <a href="#comptes">Comptes</a>
-        <a href="#fantomes">Comptes fantômes</a>
-        <a href="#acces">Accès aux pages</a>
-        <a href="#membres">Invitations</a>
-        <a href="#secret-santa">Secret Santa</a>
-        <a href="#sorties" data-perm="evenements">Sorties IRL</a>
-        <a href="#badges">Badges</a>
-        <a href="#evenements">Événements</a>
-        <a href="#souvenirs" data-perm="souvenirs">Souvenirs et photos</a>
-        <a href="#cartes">Cartes</a>
-        <a href="#defis">Défis du gang</a>
-        <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
-        <a href="#assistance">Assistance <span class="nav-count" data-count="assistance" hidden></span></a>
-        <a href="#messagerie">Messagerie</a>
-        <a href="#journal">Journal</a>
-        <a href="#staff" data-admin-only>Staff</a>
-        <a href="#bot">Bot Discord</a>
-        <a href="#reglages" data-perm="reglages">Réglages</a>
-        <a href="#theme">Thème</a>
-      </nav>
+    <main class="shell-zone" id="app" tabindex="-1" aria-labelledby="zone-title">
+      <header class="zone-head">
+        <a class="zone-back" id="zone-back" href="#pilotage/">Domaine</a>
+        <p class="eyebrow" id="zone-eyebrow"></p>
+        <div class="zone-title-row">
+          <h1 class="zone-title" id="zone-title" tabindex="-1"></h1>
+          <div class="zone-actions" id="zone-actions"></div>
+        </div>
+      </header>
+      <div class="shell-noaccess" id="shell-noaccess" hidden>
+        <p>Aucune section n’est accessible pour tes droits.</p>
+      </div>
+      <div class="shell-groups" id="shell-groups"></div>
+    </main>
 
-      <div class="admin-content">
+    <aside class="shell-info" id="shell-info" aria-label="Informations" hidden>
+      <div id="shell-info-host"></div>
+    </aside>
+
+    <nav class="shell-tabs" id="shell-tabs" aria-label="Domaines"></nav>
+  </div>
+
+  <!-- Sections du panel : placées dans la zone principale à la première visite (admin/shell.js) -->
+  <div id="shell-parking" hidden>
         <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
           <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
           <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="comptes" class="admin-section" aria-labelledby="h-comptes">
           <h2 id="h-comptes" class="section-title">Comptes</h2>
           <div id="acc-root"><div class="empty">Chargement des comptes…</div></div>
         </section>
-
         <section id="fantomes" class="admin-section" aria-labelledby="h-fantomes">
           <h2 id="h-fantomes" class="section-title">Comptes fantômes</h2>
           <div id="ghosts-root"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="acces" class="admin-section" aria-labelledby="h-acces">
           <h2 id="h-acces" class="section-title">Accès aux pages</h2>
           <div id="access-root"><div class="empty">Chargement des accès…</div></div>
         </section>
-
         <section id="membres" class="admin-section" aria-labelledby="h-membres">
           <h2 id="h-membres" class="section-title">Invitations</h2>
           <div class="row">
@@ -127,17 +143,14 @@
           </div>
           <div class="card" id="links-root"><div class="empty">Chargement des liens…</div></div>
         </section>
-
         <section id="secret-santa" class="admin-section" data-perm="secret_santa" aria-labelledby="h-ss">
           <h2 id="h-ss" class="section-title">Secret Santa</h2>
           <div id="ss-root"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="sorties" class="admin-section" aria-labelledby="h-sorties" data-perm="evenements">
           <h2 id="h-sorties" class="section-title">Sorties IRL</h2>
           <div id="sorties-root"><div class="empty">Chargement des sorties…</div></div>
         </section>
-
         <section id="badges" class="admin-section" aria-labelledby="h-badges">
           <h2 id="h-badges" class="section-title">Badges</h2>
           <div class="card">
@@ -155,27 +168,22 @@
           <div class="badge-grid" id="badge-grid"></div>
           <input type="file" id="badge-file" accept="image/png,image/webp,image/jpeg,image/svg+xml" hidden>
         </section>
-
         <section id="evenements" class="admin-section" aria-labelledby="h-evenements">
           <h2 id="h-evenements" class="section-title">Événements</h2>
           <div id="events-root"><div class="empty">Chargement des événements…</div></div>
         </section>
-
         <section id="souvenirs" class="admin-section" aria-labelledby="h-souvenirs" data-perm="souvenirs">
           <h2 id="h-souvenirs" class="section-title">Souvenirs et photos</h2>
           <div id="souvenirs-root"><div class="empty">Chargement des souvenirs…</div></div>
         </section>
-
         <section id="cartes" class="admin-section" data-perm="cartes" aria-labelledby="h-cartes">
           <h2 id="h-cartes" class="section-title">Cartes à collectionner</h2>
           <div id="cards-root"><div class="empty">Chargement des cartes…</div></div>
         </section>
-
         <section id="defis" class="admin-section" data-perm="cartes" aria-labelledby="h-defis">
           <h2 id="h-defis" class="section-title">Défis du gang</h2>
           <div id="challenges-root"><div class="empty">Chargement des défis…</div></div>
         </section>
-
         <section id="idees" class="admin-section" aria-labelledby="h-idees">
           <h2 id="h-idees" class="section-title">Boîte à idées</h2>
           <div class="card">
@@ -188,7 +196,6 @@
             <div id="idea-list"></div>
           </div>
         </section>
-
         <section id="assistance" class="admin-section" aria-labelledby="h-assistance">
           <h2 id="h-assistance" class="section-title">Assistance</h2>
           <div class="card">
@@ -199,39 +206,31 @@
             <div id="support-list"></div>
           </div>
         </section>
-
         <section id="messagerie" class="admin-section" aria-labelledby="h-messagerie">
           <h2 id="h-messagerie" class="section-title">Messagerie</h2>
           <div id="messages-root"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="journal" class="admin-section" aria-labelledby="h-journal">
           <h2 id="h-journal" class="section-title">Journal</h2>
           <div id="log-root" class="stack"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="staff" class="admin-section" aria-labelledby="h-staff" data-admin-only>
           <h2 id="h-staff" class="section-title">Staff</h2>
           <div id="staff-root"><div class="empty">Chargement du Staff…</div></div>
         </section>
-
         <section id="bot" class="admin-section" aria-labelledby="h-bot">
           <h2 id="h-bot" class="section-title">Bot Discord</h2>
           <div id="bot-root"><div class="empty">Chargement…</div></div>
         </section>
-
         <section id="reglages" class="admin-section" data-perm="reglages" aria-labelledby="h-reglages">
           <h2 id="h-reglages" class="section-title">Réglages du site</h2>
           <div id="reglages-root"><div class="empty">Chargement des réglages…</div></div>
         </section>
-
         <section id="theme" class="admin-section" aria-labelledby="h-theme">
           <h2 id="h-theme" class="section-title">Thème</h2>
           <div id="theme-root"><div class="empty">Chargement des thèmes…</div></div>
         </section>
-      </div>
-    </div>
-  </main>
+  </div>
 
   <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/admin.js"></script>

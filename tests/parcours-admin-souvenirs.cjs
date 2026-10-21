@@ -4,6 +4,12 @@
 // Lancer : node tests/parcours-admin-souvenirs.cjs
 const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
 
+// Ouvre une sous-section du panel (route #domaine/sous-section) et attend que sa section soit affichée.
+async function goto(p, hash, sel) {
+  await p.evaluate((h) => { location.hash = h; }, hash);
+  await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 5000 }).catch(() => {});
+}
+
 const ME = '11111111-1111-4111-8111-111111111111';
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const TITRE = 'Souvenir de test CI';
@@ -15,6 +21,7 @@ const dialogOk = (p) => p.click('dialog.hg-dialog[open] .btn-danger');
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
+  await goto(p, '#vie/souvenirs', '#souvenirs');
   await p.waitForSelector('#souvenirs-root .sv-row', { timeout: 5000 }).catch(() => {});
   check(await p.isVisible('#souvenirs'), 'section « Souvenirs et photos » présente');
   check((await p.locator('#souvenirs-root .sv-row').count()) === 3, 'onglet Souvenirs : 3 souvenirs affichés');

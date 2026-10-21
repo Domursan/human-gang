@@ -75,14 +75,15 @@ function onSubmit(e) {
 /**
  * Monte la section « Cartes à collectionner » de l'admin dans container.
  * Autonome : ne dépend d'aucune autre section ; se recharge seul après chaque modification.
+ * tabs:false : la coquille affiche les parties (Séries, Cartes…) comme sous-sections et appelle openCardsTab.
  */
-export async function mountCardsSection(container) {
+export async function mountCardsSection(container, { tabs = true } = {}) {
   if (!container) return;
   C.root = container;
   container.innerHTML = `<div class="acd">
-    <div class="filters acd-tabs" role="group" aria-label="Parties de la section cartes">
+    ${tabs ? `<div class="filters acd-tabs" role="group" aria-label="Parties de la section cartes">
       ${TABS.map(([id, label]) => `<button class="chip" type="button" data-tab="${id}" aria-pressed="${id === C.tab}">${label}</button>`).join('')}
-    </div>
+    </div>` : ''}
     <div id="acd-panel"></div>
   </div>`;
   C.panel = $('#acd-panel', container);
@@ -91,6 +92,13 @@ export async function mountCardsSection(container) {
   container.addEventListener('input', onInput);
   container.addEventListener('submit', onSubmit);
   await boot();
+}
+
+/** Ouvre une partie des cartes (series, cartes, quetes, economie, joueurs, stats, echanges). Sans effet avant le montage. */
+export function openCardsTab(tab) {
+  if (!C.root || !PANELS[tab]) return;
+  C.tab = tab;
+  render();
 }
 
 H.render = render;
