@@ -1,15 +1,15 @@
 // ===== Admin : sorties IRL — libellés, états et règles d'affichage (mêmes règles que irl.js) =====
 import { fmtDateTime } from '../core.js';
 import { pluralCount } from '../utils.js';
+import { delaiPassee } from '../reglages-valeurs-lot3.js';
 
-export const GRACE_MS = 6 * 3600 * 1000; // une sortie reste « à venir » 6 h après son début
 export const BATCH = 30;                 // lignes affichées par lot
 export const RSVP_ORDER = ['oui', 'peut-etre', 'non'];
 export const RSVP_LABEL = { oui: 'Je viens', 'peut-etre': 'Peut-être', non: 'Pas dispo' };
 
 /** Une sortie est passée si elle est marquée « ajoutée après coup » ou si elle a commencé il y a plus de 6 h. */
 export function isPast(ev, now = Date.now()) {
-  return !!ev.retro || (!!ev.starts_at && new Date(ev.starts_at).getTime() < now - GRACE_MS);
+  return !!ev.retro || (!!ev.starts_at && new Date(ev.starts_at).getTime() < now - delaiPassee());
 }
 
 /** Libellé et classe d'état. Il n'existe pas de statut « annulée » en base : une sortie annulée est supprimée. */

@@ -114,6 +114,8 @@ const DB = {
   ],
 };
 DB.hg_settings.push({ key: 'push_vapid_public', value: 'BOOPdSa019_test' });
+// Réglages (lot 3) : scénario { settings: [{ key, value }] } ajouté à hg_settings
+for (const r of (S.settings || [])) DB.hg_settings.push({ ...r });
 const CATALOG_KEYS = DB.hg_perm_catalog.map((c) => c.key);
 const uidNow = () => S.uid || ME;
 const isAdminNow = () => !!DB.hg_profiles.find((p) => p.id === uidNow())?.is_admin;
@@ -196,6 +198,11 @@ class Q {
     if (this.op === 'upsert' && this.t === 'hg_page_access') {
       const rows = (Array.isArray(this.payload) ? this.payload : [this.payload]);
       for (const r of rows) { const i = tab.findIndex((x) => x.page_slug === r.page_slug && x.user_id === r.user_id); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
+      return { data: rows, error: null };
+    }
+    if (this.op === 'upsert' && this.t === 'hg_settings') {  // clé primaire : une ligne par clé, remplacée
+      const rows = (Array.isArray(this.payload) ? this.payload : [this.payload]);
+      for (const r of rows) { const i = tab.findIndex((x) => x.key === r.key); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
       return { data: rows, error: null };
     }
     if (this.op === 'insert' || this.op === 'upsert') {

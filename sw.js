@@ -28,7 +28,7 @@ const PRECACHE = [
   'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js', 'assets/js/admin-godmode.js',
   'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
   'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
-  'assets/js/admin-cards/quests.js', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js',
+  'assets/js/admin-cards/quests.js', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js', 'assets/js/admin-reglages/keys-lot3.js', 'assets/js/admin-reglages/lot3-ui.js', 'assets/js/reglages-valeurs-lot3.js',
   'assets/js/admin-accounts/activity.js', 'assets/js/admin-accounts/common.js', 'assets/js/admin-accounts/events.js', 'assets/js/admin-accounts/fiche.js',
   'assets/js/admin-accounts/inspect.js', 'assets/js/admin-accounts/list.js', 'assets/js/admin-accounts/profile.js', 'assets/js/admin-accounts/ss-pairs.js',
   'assets/js/admin-accounts/ss-shared.js', 'assets/js/admin-accounts/ss.js', 'assets/js/admin-accounts/state.js', 'assets/js/admin-cards/constants.js',

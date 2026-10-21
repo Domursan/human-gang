@@ -12,6 +12,7 @@ import { loadEditions, loadEditionDetails } from './loaders.js';
 import { renderStats } from './overview.js';
 import { renderSS, SSV, ssCurrent, ssOpenEdition } from './ss-render.js';
 import { navigate } from './shell.js';
+import { reglage } from '../reglages-valeurs-lot3.js';
 
 const SS_ROUTE = 'vie/secret-santa';
 let bound = false;
@@ -36,7 +37,7 @@ function createBody() {
       <fieldset class="ss-create-fields"${locked ? ' disabled' : ''}>
         <div class="grid-2">
           <div class="field"><label for="ssc-year">Année</label><input id="ssc-year" name="year" type="number" min="2020" max="2100" required value="${defaultYear}"></div>
-          <div class="field"><label for="ssc-budget">Budget</label><input id="ssc-budget" name="budget" maxlength="60" placeholder="ex. 20 à 30 CHF"></div>
+          <div class="field"><label for="ssc-budget">Budget</label><input id="ssc-budget" name="budget" maxlength="60" placeholder="ex. 20 à 30 CHF" value="${esc(reglage('ss.budget_defaut') ?? '')}"></div>
           <div class="field"><label for="ssc-send">Date limite d'envoi</label><input id="ssc-send" name="send_deadline" type="date"></div>
           <div class="field"><label for="ssc-exch">Date d'échange</label><input id="ssc-exch" name="exchange_date" type="date"></div>
         </div>

@@ -6,6 +6,7 @@ import { prepareImage } from '../image-compress.js';
 import { uploadImage, removeObjects, uuid } from '../photos.js';
 import { confirmBox } from '../ui-confirm.js';
 import { todayIso, peopleOptions } from './helpers.js';
+import { optionsPhoto } from '../reglages-valeurs-lot3.js';
 
 /**
  * Fenêtre de création (m = null) ou de modification d'un souvenir.
@@ -67,7 +68,7 @@ export function openMomentForm({ me, m = null, people, onDone }) {
     let newPath = null;
     try {
       if (file) {
-        const img = await prepareImage(file);
+        const img = await prepareImage(file, optionsPhoto());
         newPath = `${me.id}/moments/${uuid()}.${img.ext}`; // dossier de l'administrateur : règle de stockage hg-photos
         await uploadImage(newPath, img.blob);
         payload.image_path = newPath;

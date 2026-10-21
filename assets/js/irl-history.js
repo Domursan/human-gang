@@ -3,6 +3,7 @@ import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit
 import { uploadImage, removeObjects, uuid } from './photos.js';
 import { prepareImage } from './image-compress.js';
 import { pad } from './utils.js';
+import { optionsPhoto } from './reglages-valeurs-lot3.js';
 
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
 const GEO_KEY = 'hg_geo_v1';
@@ -171,7 +172,7 @@ export function mountHistory(ctx) {
       try {
         if (coverFile) {
           status.textContent = 'Envoi de la couverture…';
-          const img = await prepareImage(coverFile);
+          const img = await prepareImage(coverFile, optionsPhoto());
           const path = `${me.id}/${id}/cover-${uuid().slice(0, 8)}.${img.ext}`;
           await uploadImage(path, img.blob);
           const { error } = await sb.from('hg_events').update({ cover_path: path }).eq('id', id);
@@ -190,7 +191,7 @@ export function mountHistory(ctx) {
         status.textContent = `Compression et envoi des photos ${i + 1} / ${photos.length}…`;
         let path = null;
         try {
-          const img = await prepareImage(file);
+          const img = await prepareImage(file, optionsPhoto());
           path = `${me.id}/${id}/${uuid()}.${img.ext}`;
           await uploadImage(path, img.blob);
           const { error } = await sb.from('hg_photos').insert({ event_id: id, user_id: me.id, path });

@@ -3,15 +3,16 @@
 // verify_jwt = true. Le client Supabase agit avec le JWT de l'appelant : la RLS s'applique
 // (lecture des photos, des sorties et du stockage réservée aux membres). Aucun secret, aucune clé de service.
 // Entrée : POST { event_id: uuid }. Sortie : application/zip (flux) ; erreurs en JSON { error }.
-// Plafonds : 400 photos et 300 Mo par ZIP. La taille est lue dans le stockage avant l'envoi ;
+// Plafonds par défaut : 400 photos et 300 Mo par ZIP (réglables : hg_settings.albums). La taille est lue dans le stockage avant l'envoi ;
 // si elle est illisible, le plafond est vérifié au fil de l'envoi (le flux est alors interrompu).
 // Le ZIP est en mode « stocké » (sans compression) : les images sont déjà compressées.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { Zip, ZipPassThrough } from 'npm:fflate@0.8.2';
 
 const BUCKET = 'hg-photos';
-const MAX_PHOTOS = 400;
-const MAX_BYTES = 300 * 1024 * 1024;
+// Plafonds par défaut : lus dans hg_settings.albums (clés max_photos, max_mo) quand elles existent.
+const DEFAUT_MAX_PHOTOS = 400;
+const DEFAUT_MAX_MO = 300;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const CORS = {
@@ -19,6 +20,18 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+/** Plafonds du ZIP (hg_settings.albums) avec repli sur les défauts ; une lecture en échec garde les défauts. */
+async function lireLimites(db: ReturnType<typeof createClient>): Promise<{ maxPhotos: number; maxBytes: number }> {
+  let maxPhotos = DEFAUT_MAX_PHOTOS, maxMo = DEFAUT_MAX_MO;
+  try {
+    const { data } = await db.from('hg_settings').select('value').eq('key', 'albums').maybeSingle();
+    const v = (data?.value ?? {}) as Record<string, unknown>;
+    if (typeof v.max_photos === 'number' && Number.isFinite(v.max_photos) && v.max_photos >= 1) maxPhotos = Math.floor(v.max_photos);
+    if (typeof v.max_mo === 'number' && Number.isFinite(v.max_mo) && v.max_mo >= 1) maxMo = v.max_mo;
+  } catch (_e) { /* repli */ }
+  return { maxPhotos, maxBytes: maxMo * 1024 * 1024 };
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
@@ -61,8 +74,9 @@ Deno.serve(async (req: Request) => {
   if (photoErr) return json({ error: 'Lecture des photos impossible' }, 500);
   const paths = (rows ?? []).map((r: { path: string }) => r.path).filter(Boolean);
   if (!paths.length) return json({ error: 'Cet album ne contient aucune photo' }, 404);
-  if (paths.length > MAX_PHOTOS) {
-    return json({ error: `Trop de photos (${paths.length}, maximum ${MAX_PHOTOS}). Télécharge les photos par lots.` }, 413);
+  const { maxPhotos, maxBytes } = await lireLimites(db);
+  if (paths.length > maxPhotos) {
+    return json({ error: `Trop de photos (${paths.length}, maximum ${maxPhotos}). Télécharge les photos par lots.` }, 413);
   }
 
   // Tailles lues dans le stockage, dossier par dossier (un dossier par ajouteur)
@@ -76,8 +90,8 @@ Deno.serve(async (req: Request) => {
     }
   }
   const knownTotal = paths.reduce((sum: number, p: string) => sum + (sizes.get(p) ?? 0), 0);
-  if (knownTotal > MAX_BYTES) {
-    return json({ error: "Album trop lourd pour un seul ZIP (maximum 300 Mo). Télécharge les photos par lots." }, 413);
+  if (knownTotal > maxBytes) {
+    return json({ error: `Album trop lourd pour un seul ZIP (maximum ${Math.round(maxBytes / 1048576)} Mo). Télécharge les photos par lots.` }, 413);
   }
 
   // Flux ZIP : une photo à la fois, dans l'ordre chronologique
@@ -99,7 +113,7 @@ Deno.serve(async (req: Request) => {
       const { data: blob, error } = await db.storage.from(BUCKET).download(path);
       if (error || !blob) { controller.error(new Error(`photo ${index + 1} illisible`)); return; }
       written += blob.size;
-      if (written > MAX_BYTES) { controller.error(new Error('plafond de 300 Mo dépassé')); return; }
+      if (written > maxBytes) { controller.error(new Error('plafond de taille dépassé')); return; }
       const bytes = new Uint8Array(await blob.arrayBuffer());
       const name = `${String(index + 1).padStart(3, '0')}-${path.split('/').pop()}`;
       const file = new ZipPassThrough(name);

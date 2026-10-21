@@ -10,6 +10,8 @@ import { pill } from './ui/common.js';
 import { renderDetailHeader } from './ui/detail-header.js';
 import { loadEditionDetails } from './loaders.js';
 import { navigate } from './shell.js';
+import { blocReglages } from '../admin-reglages/lot3-ui.js';
+import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 const TONE = { inscriptions: 'open', tirage: 'prog', envoi: 'prog', revelation: 'prog', termine: 'done' };
 export const ssStatus = (ed) => ({ id: ed.status, label: STATUS_LABEL[ed.status] ?? ed.status, tone: TONE[ed.status] || 'muted' });
@@ -202,6 +204,8 @@ export function renderSS() {
 export const ssSub = {
   main(el) {
     SSV.root = $('#ss-root');
+    el.prepend(blocReglages('ss'));
+    chargerReglagesLot3();
   },
   list(el) {
     SSV.list = createList(el, {

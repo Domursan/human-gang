@@ -8,11 +8,12 @@ import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
 import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
+import { chargerReglagesLot3, delaiPassee } from './reglages-valeurs-lot3.js';
 
 const me = await initPage({ auth: 'member' });
+await chargerReglagesLot3();
 const isAdmin = !!me?.is_admin;
 
-const GRACE_MS = 6 * 3600 * 1000; // même règle que la page IRL : une sortie est « passée » 6 h après son début
 const THUMBS = 4;
 const STATUS_LABEL = { revelation: 'Révélation', termine: 'Terminé' };
 const KIND_LABEL = { ss: 'Secret Santa', irl: 'Sortie IRL', moment: 'Moment culte' };
@@ -34,7 +35,7 @@ const dayDate = (d) => new Date(`${d}T12:00:00`); // date SQL → midi local (é
 
 /* ---------- Données ---------- */
 async function load() {
-  const pastLimit = new Date(Date.now() - GRACE_MS).toISOString();
+  const pastLimit = new Date(Date.now() - delaiPassee()).toISOString();
   const [m, ed, ev, mo] = await Promise.all([
     sb.rpc('hg_members'),
     sb.from('hg_ss_editions').select('*').in('status', ['revelation', 'termine']).order('year', { ascending: false }),

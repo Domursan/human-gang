@@ -14,6 +14,8 @@ import { renderInfoPanel } from '../admin/ui/info-panel.js';
 import { pill } from '../admin/ui/common.js';
 import { sectionError } from '../admin/common.js';
 import { pluralCount } from '../utils.js';
+import { blocReglages } from '../admin-reglages/lot3-ui.js';
+import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 const S = { root: null, me: null, members: new Map(), events: [], rsvps: [], dates: [], votes: [], photos: [],
   sort: 'asc', selId: null, list: null, colEl: null, infoEl: null, infoApi: null };
@@ -154,9 +156,11 @@ export async function mountSortiesSection(root, { me } = {}) {
   S.root = root;
   S.me = me;
   root.innerHTML = '<div class="sx-zone"></div>';
+  root.prepend(blocReglages('irl'));
   mountDialogs(root, ctx);
   mountDetail(root.querySelector('.sx-zone'));
   onTableChange('sorties', ['hg_events', 'hg_event_rsvps'], () => ctx.reload()); // temps réel
+  await chargerReglagesLot3({ force: true });
   try {
     await load();
   } catch (e) {
