@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v16';
+const CACHE_VERSION = 'v17';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -107,15 +107,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Code (JS, CSS) : toujours la version en ligne quand le réseau répond, pour que la page et ses modules
+  // restent de la même version après une mise à jour ; le cache ne sert qu'hors ligne.
+  if (sameOrigin && url.pathname.includes('/assets/') && /\.(m?js|css|json)$/.test(url.pathname)) { event.respondWith(networkFirst(req, true)); return; }
+  // Images, polices, sons : le cache d'abord, rafraîchi en arrière-plan.
   if (sameOrigin && url.pathname.includes('/assets/')) { event.respondWith(staleWhileRevalidate(req, event)); return; }
   const pinnedLibrary = url.origin === 'https://cdn.jsdelivr.net' && url.pathname.startsWith('/npm/');
   if (pinnedLibrary) event.respondWith(cacheFirst(req));
 });
 
-async function networkFirst(req) {
+async function networkFirst(req, revalidate = false) {
   const cache = await caches.open(CACHE);
   try {
-    const res = await fetch(req);
+    // revalidate : demande au serveur si le fichier a changé (réponse 304 légère sinon), sans se fier au cache HTTP.
+    const res = await fetch(req, revalidate ? { cache: 'no-cache' } : undefined);
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch (e) {
