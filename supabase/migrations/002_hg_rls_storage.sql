@@ -129,7 +129,15 @@ create policy hg_assets_obj_admin_ins on storage.objects for insert to authentic
 create policy hg_assets_obj_admin_upd on storage.objects for update to authenticated using (bucket_id = 'hg-assets' and public.hg_is_admin());
 create policy hg_assets_obj_admin_del on storage.objects for delete to authenticated using (bucket_id = 'hg-assets' and public.hg_is_admin());
 
--- ===== Compte admin initial (Ethan) =====
+-- ===== Compte admin initial =====
+-- L'adresse de l'administrateur n'est PAS dans le dépôt (il est public sur GitHub Pages).
+-- Sur une base vierge, insérer avant de rejouer cette migration, hors dépôt :
+--   insert into public.hg_settings(key, value) values
+--     ('admin_initial', '{"email": "<adresse de l''admin>", "pseudo": "<pseudo>"}');
+-- Sans cette ligne, l'insertion ci-dessous ne fait rien (aucune erreur).
 insert into public.hg_profiles(id, pseudo, is_admin)
-select id, 'Ethan', true from auth.users where email = 'domursan1@gmail.com'
+select u.id, coalesce(s.value->>'pseudo', 'Admin'), true
+from auth.users u
+join public.hg_settings s on s.key = 'admin_initial'
+where u.email = s.value->>'email'
 on conflict (id) do update set is_admin = true;

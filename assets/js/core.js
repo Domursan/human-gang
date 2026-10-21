@@ -25,8 +25,12 @@ export function daysUntil(d) {
 }
 export function initials(name) { return String(name || '?').trim().slice(0, 2).toUpperCase(); }
 export function avatarHtml(p, size = 40) {
-  const style = `width:${size}px;height:${size}px;background:${esc(p?.color || 'var(--surface-2)')}`;
-  return p?.avatar_url
+  // Vérification à l'affichage (la base impose déjà ces formats, migration 021) :
+  // seule une couleur hexadécimale et une image du bucket hg-avatars sont acceptées.
+  const color = /^#[0-9a-f]{6}$/i.test(p?.color || '') ? p.color : 'var(--surface-2)';
+  const avatarOk = /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/hg-avatars\/[^\s"'<>]+$/i.test(p?.avatar_url || '');
+  const style = `width:${size}px;height:${size}px;background:${esc(color)}`;
+  return avatarOk
     ? `<img class="avatar" src="${esc(p.avatar_url)}" alt="" style="${style}">`
     : `<span class="avatar" aria-hidden="true" style="${style}">${esc(initials(p?.pseudo))}</span>`;
 }
