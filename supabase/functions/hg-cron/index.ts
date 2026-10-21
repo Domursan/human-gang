@@ -10,10 +10,10 @@
 //   2. Fin : announce = true, active = true, ends_at passé, announced_end_at null → annonce « dyn_end » avec le top 3.
 //      Un événement terminé depuis plus de 24 h est seulement marqué (pas d'annonce tardive).
 //   3. Rappels de sortie IRL (opt-in, profil.remind_irl) : MP aux membres « oui » ou « peut-etre » d'une sortie
-//      qui a lieu dans moins de 24 h (rappel « 24 h », marqué hg_event_rsvps.remind_24h_at) puis dans moins de 2 h
-//      (rappel « 2 h », marqué remind_2h_at). Désactivé si bot.notify.irl === false.
-//   4. Rappels d'envoi de cadeau (Secret Santa) : MP au Santa qui n'a pas marqué son envoi, dans les 3 jours qui
-//      précèdent hg_ss_editions.send_deadline (marqué hg_ss_participants.send_reminder_at, une seule fois).
+//      qui a lieu dans moins de bot.rappels.irl_heures[0] h (défaut 24, marqué hg_event_rsvps.remind_24h_at) puis
+//      dans moins de irl_heures[1] h (défaut 2, marqué remind_2h_at). Désactivé si bot.notify.irl === false.
+//   4. Rappels d'envoi de cadeau (Secret Santa) : MP au Santa qui n'a pas marqué son envoi, dans les N jours qui
+//      précèdent hg_ss_editions.send_deadline (N = bot.rappels.ss_jours_avant, défaut 3 ; marqué hg_ss_participants.send_reminder_at, une seule fois).
 //      Désactivé si bot.notify.gift === false.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
@@ -24,12 +24,12 @@ import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-a
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
+import { botRules, type BotRules } from '../_shared/reglages.ts';
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
-const LATE_MS = 24 * 3600_000;
 const H = 3600_000;
 const COLOR = { irl: 0xe2c77e, ss: 0xe0909a };
 const json = (b: unknown, s = 200) => jsonResponse(b, s);
@@ -71,7 +71,8 @@ const fmtZurichDay = (d: string) => new Intl.DateTimeFormat('fr-CH', {
 const canDM = (p: { bot_optin: boolean; discord_id: string | null } | null | undefined) => !!p && p.bot_optin && isSnowflake(p.discord_id);
 
 /* ---------- 1 et 2 : annonces des événements dynamiques ---------- */
-async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: string } & MentionBot) {
+async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: string } & MentionBot, rules: BotRules) {
+  const LATE_MS = rules.dyn_retard_h * H;
   const nowIso = new Date().toISOString();
   const [{ data: startRows, error: e1 }, { data: endRows, error: e2 }] = await Promise.all([
     db.from('hg_dyn_events').select('*').eq('announce', true).eq('active', true).is('announced_start_at', null)
@@ -97,7 +98,7 @@ async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: stri
     if (!botReady) { out.pending_no_bot++; return; } // rien n'est marqué sans envoi effectif
     if (!(await claimRow('hg_dyn_events', { id: ev.id }, col))) return;
     try {
-      await sendChannel(channel!, await buildDynAnnounce(db, ev, phase, tpl, SITE, mentionFor(bot, 'dyn')));
+      await sendChannel(channel!, await buildDynAnnounce(db, ev, phase, tpl, SITE, mentionFor(bot, 'dyn'), rules.top_n));
       phase === 'start' ? out.starts++ : out.ends++;
     } catch (e) {
       console.error(`[hg-cron] annonce ${phase} ${ev.id}`, e);
@@ -110,10 +111,11 @@ async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: stri
 }
 
 /* ---------- 3 : rappels de sortie IRL (F1) ---------- */
-async function irlReminders(out: Counters, attempts: Attempt[]) {
+async function irlReminders(out: Counters, attempts: Attempt[], rules: BotRules) {
   const now = Date.now();
+  const LONG = rules.irl_long * H, SHORT = rules.irl_short * H;
   const { data: evs, error } = await db.from('hg_events').select('id, title, location, starts_at')
-    .gt('starts_at', new Date(now).toISOString()).lte('starts_at', new Date(now + 24 * H).toISOString());
+    .gt('starts_at', new Date(now).toISOString()).lte('starts_at', new Date(now + LONG).toISOString());
   if (error) throw new Error(error.message);
   if (!evs?.length) return;
   const byEvent = new Map<string, { id: string; title: string; location: string | null; starts_at: string }>(evs.map((e: any) => [e.id, e]));
@@ -126,7 +128,7 @@ async function irlReminders(out: Counters, attempts: Attempt[]) {
     const ev = byEvent.get(r.event_id);
     if (!ev) return false;
     const left = new Date(ev.starts_at).getTime() - now;
-    return left <= 2 * H ? r.remind_2h_at == null : r.remind_24h_at == null;
+    return left <= SHORT ? r.remind_2h_at == null : r.remind_24h_at == null;
   });
   if (!todo.length) return;
 
@@ -141,12 +143,12 @@ async function irlReminders(out: Counters, attempts: Attempt[]) {
     const person = people.get(r.user_id);
     if (!person || !person.remind_irl || !canDM(person)) continue; // opt-out : pas de rappel, pas de marquage
     const left = new Date(ev.starts_at).getTime() - now;
-    const col = left <= 2 * H ? 'remind_2h_at' : 'remind_24h_at';
+    const col = left <= SHORT ? 'remind_2h_at' : 'remind_24h_at';
     const keys = { event_id: r.event_id, user_id: r.user_id };
     if (!(await claimRow('hg_event_rsvps', keys, col))) continue;
     const rendered = renderTemplate('irl_reminder', {
       titre: String(ev.title).slice(0, 200),
-      delai: left <= 2 * H ? 'dans moins de 2 heures' : 'dans moins de 24 heures',
+      delai: left <= SHORT ? `dans moins de ${rules.irl_short} heure${rules.irl_short > 1 ? 's' : ''}` : `dans moins de ${rules.irl_long} heures`,
       quand: fmtZurichWhen(ev.starts_at),
       lieu: String(ev.location || 'lieu à préciser').slice(0, 200),
       lien: link('irl.html') ?? '',
@@ -165,10 +167,10 @@ async function irlReminders(out: Counters, attempts: Attempt[]) {
 }
 
 /* ---------- 4 : rappels d'envoi de cadeau au Secret Santa (F2) ---------- */
-async function ssReminders(out: Counters, attempts: Attempt[]) {
-  // Fenêtre : la date limite est dans les 3 prochains jours (aujourd'hui inclus).
+async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) {
+  // Fenêtre : la date limite est dans les N prochains jours (aujourd'hui inclus, N = bot.rappels.ss_jours_avant).
   const { data: eds, error } = await db.from('hg_ss_editions').select('id, year, send_deadline')
-    .not('drawn_at', 'is', null).gte('send_deadline', zurichDate()).lte('send_deadline', zurichDate(3));
+    .not('drawn_at', 'is', null).gte('send_deadline', zurichDate()).lte('send_deadline', zurichDate(rules.ss_jours));
   if (error) throw new Error(error.message);
   if (!eds?.length) return;
   const editions = new Map<string, { id: string; year: number; send_deadline: string }>(eds.map((e: any) => [e.id, e]));
@@ -218,16 +220,17 @@ Deno.serve(async (req) => {
   try {
     const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
     const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
+    const rules = botRules(bot as Record<string, unknown>);
     const canSend = hasBotToken();
 
-    try { await dynAnnouncements(out, bot); }
+    try { await dynAnnouncements(out, bot, rules); }
     catch (e) { console.error('[hg-cron] annonces', e); out.errors++; }
     if (canSend && bot.notify?.irl !== false) {
-      try { await irlReminders(out, attempts); }
+      try { await irlReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels sortie', e); out.errors++; }
     }
     if (canSend && bot.notify?.gift !== false) {
-      try { await ssReminders(out, attempts); }
+      try { await ssReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels cadeau', e); out.errors++; }
     }
 

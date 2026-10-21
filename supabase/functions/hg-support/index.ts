@@ -3,20 +3,15 @@
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
 // Texte du MP : modèle « support_new » (hg_settings.bot_templates, défaut dans ../_shared/bot-templates.json).
-// Limites par heure : 5 par compte ; pour un visiteur, 5 par contact et 5 par client (empreinte HMAC de l'adresse,
-// colonne hg_support.client_hash) ; plafond global de 200 visiteurs (garde-fou seulement).
+// Réglages (hg_settings.support, lus ici avec repli sur les défauts de _shared/reglages.ts) : sujets, limites par heure
+// (compte ; visiteur par contact et par client, empreinte HMAC de l'adresse dans hg_support.client_hash ; plafond global),
+// longueurs du message et taille du MP envoyé à l'admin.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { CORS, jsonResponse, sendDM } from '../_shared/discord.ts';
+import { supportRules } from '../_shared/reglages.ts';
 
 const json = (body: unknown, status = 200) => jsonResponse(body, status);
-
-const SUBJECTS = [
-  'Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre',
-];
-const MAX_PER_HOUR = 5;              // par compte, ou par contact pour les visiteurs
-const MAX_ANON_CLIENT_PER_HOUR = 5;  // visiteurs : par client (empreinte de l'adresse), et non plus pour tous à la fois
-const MAX_ANON_TOTAL_PER_HOUR = 200; // garde-fou global, seulement contre une attaque répartie sur beaucoup de clients
 
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -47,6 +42,16 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: 'Requête invalide' }, 400); }
 
+  // Réglages : une lecture en échec donne les défauts (même comportement qu'avant les réglages)
+  let rules: ReturnType<typeof supportRules>;
+  try {
+    const { data: st } = await admin.from('hg_settings').select('value').eq('key', 'support').maybeSingle();
+    rules = supportRules(st?.value);
+  } catch (e) {
+    console.error('[hg-support] réglages', e);
+    rules = supportRules(null);
+  }
+
   // Pot de miel : un robot remplit tous les champs. On répond « ok » sans rien enregistrer.
   if (clean(body.website, 200) !== '') return json({ ok: true });
 
@@ -66,11 +71,11 @@ Deno.serve(async (req) => {
   // Validation
   const pseudo = realPseudo ?? clean(body.pseudo, 40);
   const subject = clean(body.subject, 80);
-  const message = clean(body.message, 4000);
+  const message = clean(body.message, rules.message_max);
   const contact = clean(body.contact, 100);
   if (pseudo.length < 2) return json({ error: 'Pseudo manquant (2 caractères minimum).' }, 400);
-  if (!SUBJECTS.includes(subject)) return json({ error: 'Sujet invalide.' }, 400);
-  if (message.length < 10) return json({ error: 'Message trop court (10 caractères minimum).' }, 400);
+  if (!rules.sujets.includes(subject)) return json({ error: 'Sujet invalide.' }, 400);
+  if (message.length < rules.message_min) return json({ error: `Message trop court (${rules.message_min} caractères minimum).` }, 400);
   if (!userId && contact.length < 2) return json({ error: 'Indique ton pseudo Discord pour la réponse.' }, 400);
 
   // Limites anti-abus (sur l'heure qui vient de s'écouler)
@@ -85,16 +90,16 @@ Deno.serve(async (req) => {
   let hash: string | null = null;
   try {
     if (userId) {
-      if (await countSince((q) => q.eq('user_id', userId)) >= MAX_PER_HOUR) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
+      if (await countSince((q) => q.eq('user_id', userId)) >= rules.max_par_heure) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
     } else {
-      if (await countSince((q) => q.is('user_id', null).ilike('contact', contact.replace(/[\\%_]/g, (c) => '\\' + c))) >= MAX_PER_HOUR) {
+      if (await countSince((q) => q.is('user_id', null).ilike('contact', contact.replace(/[\\%_]/g, (c) => '\\' + c))) >= rules.max_par_heure) {
         return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
       }
       hash = await clientHash(clientIp(req));
-      if (hash && await countSince((q) => q.eq('client_hash', hash!)) >= MAX_ANON_CLIENT_PER_HOUR) {
+      if (hash && await countSince((q) => q.eq('client_hash', hash!)) >= rules.visiteur_max_par_heure) {
         return json({ error: 'Trop de demandes depuis ta connexion. Réessaie dans une heure.' }, 429);
       }
-      if (await countSince((q) => q.is('user_id', null)) >= MAX_ANON_TOTAL_PER_HOUR) {
+      if (await countSince((q) => q.is('user_id', null)) >= rules.visiteurs_total_par_heure) {
         return json({ error: 'Trop de demandes en ce moment. Réessaie plus tard.' }, 429);
       }
     }
@@ -117,7 +122,7 @@ Deno.serve(async (req) => {
     if (bot.notify?.support !== false && bot.admin_discord_id && Deno.env.get('DISCORD_BOT_TOKEN')) {
       const site = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
       const rendered = renderTemplate('support_new', {
-        sujet: subject, message: truncate(message, 1500), pseudo: truncate(pseudo, 100),
+        sujet: subject, message: truncate(message, rules.mp_max), pseudo: truncate(pseudo, 100),
         contact: truncate(contact || 'non précisé', 100), compte: userId ? 'Membre connecté' : 'Visiteur',
         lien: site ? `${site}/admin.html#assistance` : '',
       }, await loadTemplates(admin));

@@ -32,6 +32,7 @@ export type UploadFile = { name: string; type: string; data: Uint8Array };
 /** Limites d'un envoi : 4 fichiers, 10 Mo chacun (limite d'envoi d'un bot sur un serveur sans boost). */
 export const MAX_ATTACH_FILES = 4;
 export const MAX_ATTACH_BYTES = 10 * 1024 * 1024;
+// Les limites réglables (bot.envoi) sont passées en paramètre par les appelants ; ces constantes sont les défauts.
 
 /** Nom de fichier accepté par Discord et sans caractère de chemin. */
 export const safeFileName = (n: string) =>

@@ -3,9 +3,41 @@ import { initPage, callFn, $, errMsg, sb, esc, fmtDateTime } from './core.js';
 
 const me = await initPage({ auth: 'optional' });
 
-const SUBJECTS = ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre'];
+// Réglages de l'assistance (hg_settings.support, lisible sans compte). Repli sur les défauts si la lecture échoue
+// ou si la valeur est invalide. Même règle que supabase/functions/_shared/reglages.ts (le serveur revalide tout).
+const SUPPORT_DEFAUT = {
+  sujets: ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre'],
+  message_min: 10, message_max: 4000, delai_reponse_jours: 30,
+};
+const BUG_SUBJECT = 'Bug sur le site';
+async function loadSupportRules() {
+  const r = { ...SUPPORT_DEFAUT };
+  try {
+    const { data } = await sb.from('hg_settings').select('value').eq('key', 'support').maybeSingle();
+    const s = data?.value && typeof data.value === 'object' ? data.value : {};
+    if (Array.isArray(s.sujets)) {
+      const clean = [...new Set(s.sujets.filter((x) => typeof x === 'string').map((x) => x.trim()).filter((x) => x && x.length <= 80))];
+      if (clean.length && clean.length <= 20 && clean.includes(BUG_SUBJECT)) r.sujets = clean;
+    }
+    const int = (v, def, min, max) => (Number.isInteger(v) && v >= min && v <= max ? v : def);
+    r.message_min = int(s.message_min, r.message_min, 1, 1000);
+    r.message_max = int(s.message_max, r.message_max, r.message_min + 1, 4000);
+    r.delai_reponse_jours = int(s.delai_reponse_jours, r.delai_reponse_jours, 1, 365);
+  } catch { /* défauts */ }
+  return r;
+}
+const RULES = await loadSupportRules();
+const SUBJECTS = RULES.sujets;
 const form = $('#support-form');
 const errBox = $('#sp-error');
+// Liste des sujets : rendue depuis le réglage (les options du HTML servent de repli sans JavaScript)
+{
+  const keep = form.subject.value;
+  form.subject.innerHTML = '<option value="">Choisir…</option>' + SUBJECTS.map((s) => `<option>${esc(s)}</option>`).join('');
+  form.subject.value = keep;
+}
+form.message.minLength = RULES.message_min;
+form.message.maxLength = RULES.message_max;
 
 /* Préremplissage */
 if (me) {
@@ -21,7 +53,9 @@ const wanted = new URLSearchParams(location.search).get('sujet');
 if (wanted && SUBJECTS.includes(wanted)) form.subject.value = wanted;
 
 const counter = $('#sp-counter');
-form.message.addEventListener('input', () => { counter.textContent = `${form.message.value.length} / 4000`; });
+const counterText = (n) => `${n} / ${RULES.message_max}`;
+form.message.addEventListener('input', () => { counter.textContent = counterText(form.message.value.length); });
+counter.textContent = counterText(form.message.value.length);
 
 function showError(msg, field) {
   errBox.textContent = msg; errBox.hidden = false;
@@ -34,7 +68,7 @@ function validate() {
   const pseudo = form.pseudo.value.trim(), msg = form.message.value.trim(), contact = form.contact.value.trim();
   if (pseudo.length < 2) return showError('Indique ton pseudo (2 caractères minimum).', form.pseudo), false;
   if (!SUBJECTS.includes(form.subject.value)) return showError('Choisis un sujet.', form.subject), false;
-  if (msg.length < 10) return showError('Ton message est un peu court : donne quelques détails (10 caractères minimum).', form.message), false;
+  if (msg.length < RULES.message_min) return showError(`Ton message est un peu court : donne quelques détails (${RULES.message_min} caractères minimum).`, form.message), false;
   if (!me && contact.length < 2) return showError('Indique ton pseudo Discord pour qu\'on puisse te répondre.', form.contact), false;
   return true;
 }
@@ -62,9 +96,9 @@ form.addEventListener('submit', async (ev) => {
       website: form.website.value, // pot de miel : doit rester vide
     });
     const contact = form.contact.value.trim();
-    $('#done-contact').textContent = contact
+    $('#done-contact').textContent = `${contact
       ? `La réponse arrivera sur Discord (${contact}).`
-      : 'La réponse arrivera sur Discord ou directement sur le site.';
+      : 'La réponse arrivera sur Discord ou directement sur le site.'} Une réponse t'est apportée dans un délai de ${RULES.delai_reponse_jours} jours.`;
     $('.support-layout').hidden = true;
     const done = $('#support-done');
     done.hidden = false; done.focus();
@@ -78,7 +112,7 @@ form.addEventListener('submit', async (ev) => {
 });
 
 $('#support-again').addEventListener('click', () => {
-  form.subject.value = ''; form.message.value = ''; counter.textContent = '0 / 4000';
+  form.subject.value = ''; form.message.value = ''; counter.textContent = counterText(0);
   if (!me) form.contact.value = '';
   $('#support-done').hidden = true;
   $('.support-layout').hidden = false;

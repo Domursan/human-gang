@@ -44,6 +44,7 @@ import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
+import { botRules } from '../_shared/reglages.ts';
 
 const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
@@ -253,8 +254,7 @@ async function onTest(me: Profile, bot: Bot, tpl: Templates) {
 }
 
 /* ---------- Message manuel de l'admin ---------- */
-const ADMIN_DM_MAX_USERS = 100;
-const ADMIN_DM_MAX_BODY = 2000;
+// Limites du message manuel : réglables (bot.envoi), défauts 100 destinataires, 2000 caractères, 4 pièces de 10 Mo.
 const MANUAL_MENTIONS = ['none', 'role', 'everyone'];
 type Recipient = { user_id: string; pseudo: string | null; ok: boolean; status: 'sent' | 'failed' | 'skipped'; reason: string | null };
 const friendlyDiscordError = (e: unknown) => {
@@ -281,11 +281,13 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const ids = [...new Set(raw.filter(isUuid).map((s) => s.toLowerCase()))];
   if (ids.length !== raw.length && !ids.length) throw new HttpError(400, 'Destinataires invalides');
   if (!ids.length && p.channel !== true) throw new HttpError(400, 'Choisis au moins un destinataire (ou publie dans le salon)');
-  if (raw.length > ADMIN_DM_MAX_USERS * 2 || ids.length > ADMIN_DM_MAX_USERS) throw new HttpError(400, `${ADMIN_DM_MAX_USERS} destinataires maximum par envoi`);
+  const rules = botRules(bot as unknown as Record<string, unknown>);
+  const MAX_USERS = rules.destinataires_max, MAX_BODY = rules.corps_max;
+  if (raw.length > MAX_USERS * 2 || ids.length > MAX_USERS) throw new HttpError(400, `${MAX_USERS} destinataires maximum par envoi`);
   const title = typeof p.title === 'string' ? p.title.replace(/\u0000/g, '').replace(/\s+/g, ' ').trim().slice(0, 200) : '';
   const body = typeof p.body === 'string' ? p.body.replace(/\u0000/g, '').trim() : '';
   if (!body) throw new HttpError(400, 'Le message est vide');
-  if (body.length > ADMIN_DM_MAX_BODY) throw new HttpError(400, `Message trop long (${ADMIN_DM_MAX_BODY} caractères maximum)`);
+  if (body.length > MAX_BODY) throw new HttpError(400, `Message trop long (${MAX_BODY} caractères maximum)`);
   const wantChannel = p.channel === true;
   if (wantChannel && !bot.announce_channel_id) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
   if (p.mention != null && !MANUAL_MENTIONS.includes(String(p.mention))) throw new HttpError(400, 'Mention inconnue');
@@ -293,7 +295,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (wantChannel && mode === 'role' && !isSnowflake(bot.mention_role_id)) {
     throw new HttpError(400, 'Aucun rôle à mentionner n\'est configuré (section Bot Discord)');
   }
-  const attachPaths = validAttachmentPaths(p.attachments); // chemins sous manuel/ ; erreur de contrôle → 400
+  const attachPaths = validAttachmentPaths(p.attachments, rules.pieces_max); // chemins sous manuel/ ; erreur de contrôle → 400
 
   const { data: rows, error } = ids.length
     ? await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').in('id', ids)
@@ -302,7 +304,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const byId = new Map<string, Profile>((rows ?? []).map((r: Profile) => [r.id, r]));
 
   // Fichiers lus une fois (service role), puis joints à chaque envoi. Une erreur de contrôle arrête tout avant l'envoi.
-  const files = attachPaths.length ? await loadAttachments(db, attachPaths) : [];
+  const files = attachPaths.length ? await loadAttachments(db, attachPaths, rules.piece_max_mo * 1024 * 1024, rules.piece_max_mo) : [];
   const image = files.find((f) => f.type.startsWith('image/'));
 
   const build = (pseudo: string) => {
@@ -365,7 +367,7 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
   const { data: ev } = await db.from('hg_dyn_events').select('*').eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Événement introuvable');
   if (!bot.announce_channel_id) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
-  const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE, mentionFor(bot, 'dyn'));
+  const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE, mentionFor(bot, 'dyn'), botRules(bot as unknown as Record<string, unknown>).top_n);
   try {
     await sendChannel(bot.announce_channel_id, message);
   } catch (e) {

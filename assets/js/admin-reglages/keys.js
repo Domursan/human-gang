@@ -54,3 +54,6 @@ export function displayValue(value) {
   if (kindOf(value) === 'json') return JSON.stringify(value, null, 2);
   return String(value);
 }
+
+// Lot 5 (bot, planning, assistance) : clés ajoutées par assets/js/admin-reglages/keys-lot5.js
+Object.assign(KEYS, (await import('./keys-lot5.js')).KEYS_LOT5);

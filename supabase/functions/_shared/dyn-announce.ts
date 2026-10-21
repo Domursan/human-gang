@@ -41,12 +41,12 @@ export function classementText(rows: { pseudo: string; captures: number }[]) {
 /** Message Discord (corps de POST /channels/:id/messages) pour l'annonce d'un événement. `mention` : réglage bot.mentions.dyn. */
 // deno-lint-ignore no-explicit-any
 export async function buildDynAnnounce(db: any, ev: DynEvent, phase: DynPhase, tpl: Templates, site: string,
-  mention: MentionPart = { allowed_mentions: { parse: [] } }) {
+  mention: MentionPart = { allowed_mentions: { parse: [] } }, topN = 3) {
   const lien = site ? `${site}/evenements.html` : '';
   const vars: Record<string, string> = {
     nom: ev.name, description: ev.description ?? '', fin: fmtZurich(ev.ends_at), lien,
   };
-  if (phase === 'end') vars.classement = classementText(await dynTop(db, ev.id, 3));
+  if (phase === 'end') vars.classement = classementText(await dynTop(db, ev.id, topN));
   const r = renderTemplate(phase === 'start' ? 'dyn_start' : 'dyn_end', vars, tpl);
   const title = !ev.image_url && ev.emoji && r.title ? `${ev.emoji} ${r.title}`.slice(0, 256) : r.title;
   const img = ev.image_url && /^https:\/\//.test(ev.image_url) ? ev.image_url : null;
