@@ -5,6 +5,20 @@ import { svg } from './icons.js';
 const app = $('#app');
 const me = await initPage({ auth: 'optional' });
 
+/* ---------- Textes réglables (hg_settings.site_textes, lot 2) : repli sur les textes d'origine ---------- */
+// Lisible par les visiteurs (migration 051). Une clé absente ou vide garde le texte d'origine.
+const TX = await (async () => {
+  try {
+    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'site_textes').maybeSingle();
+    if (error) throw error;
+    return data?.value && typeof data.value === 'object' ? data.value : {};
+  } catch (e) { console.warn('[accueil] textes non lus, valeurs par défaut :', e?.message || e); return {}; }
+})();
+/** Texte réglé (clé simple) ou repli. */
+const txt = (key, fallback) => (typeof TX[key] === 'string' && TX[key].trim() ? TX[key].trim() : fallback);
+/** Libellé réglé dans un objet (ex. rsvp_libelles.oui) ou repli. */
+const txtIn = (key, sub, fallback) => (TX[key] && typeof TX[key][sub] === 'string' && TX[key][sub].trim() ? TX[key][sub].trim() : fallback);
+
 /* ---------- Refus d'accès (redirection depuis une page interdite : ?refus=<slug>) ---------- */
 {
   const params = new URLSearchParams(location.search);
@@ -30,14 +44,12 @@ const ICON = {
   flag: svg('flag', { size: 20, stroke: 1.7 }),
 };
 
-const STATUS = {
-  inscriptions: ['Inscriptions ouvertes', 'pill-current'],
-  tirage: ['Tirage en préparation', 'pill-current'],
-  envoi: ['Envoi des cadeaux', 'pill-current'],
-  revelation: ['Révélation', 'pill-ok'],
-  termine: ['Terminée', 'pill-todo'],
-};
-const RSVP = { oui: 'Tu viens', 'peut-etre': 'Peut-être', non: 'Tu ne viens pas' };
+const STATUS_PILL = { inscriptions: 'pill-current', tirage: 'pill-current', envoi: 'pill-current', revelation: 'pill-ok', termine: 'pill-todo' };
+const STATUS_TEXT = { inscriptions: 'Inscriptions ouvertes', tirage: 'Tirage en préparation', envoi: 'Envoi des cadeaux', revelation: 'Révélation', termine: 'Terminée' };
+/** [libellé, classe de pastille] d'un statut Secret Santa (libellés réglables : site_textes.ss_statuts). */
+const STATUS = new Proxy({}, { get: (_, k) => (k in STATUS_TEXT ? [txtIn('ss_statuts', k, STATUS_TEXT[k]), STATUS_PILL[k]] : undefined) });
+const RSVP_TEXT = { oui: 'Tu viens', 'peut-etre': 'Peut-être', non: 'Tu ne viens pas' };
+const RSVP = new Proxy({}, { get: (_, k) => (k in RSVP_TEXT ? txtIn('rsvp_libelles', k, RSVP_TEXT[k]) : undefined) });
 
 const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
 function ago(d) {
@@ -63,13 +75,13 @@ function renderGuest() {
     <section class="home-hero home-hero-guest">
       <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
       <p class="eyebrow">Humane Gang</p>
-      <h1 class="page-title">Le QG du Humane Gang</h1>
-      <p class="home-lead">Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L'espace est réservé aux membres.</p>
+      <h1 class="page-title">${esc(txt('accueil_titre', 'Le QG du Humane Gang'))}</h1>
+      <p class="home-lead">${esc(txt('accueil_lead', 'Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L\'espace est réservé aux membres.'))}</p>
       <div class="btn-row home-hero-actions">
-        <a class="btn btn-primary" href="compte.html?next=accueil.html">Se connecter / Rejoindre</a>
+        <a class="btn btn-primary" href="compte.html?next=accueil.html">${esc(txt('accueil_cta_connexion', 'Se connecter / Rejoindre'))}</a>
         <button class="btn btn-ghost" type="button" id="replay">Revoir l'intro</button>
       </div>
-      <p class="small muted">Pour rejoindre le gang, il te faut un code d'invitation donné par un membre.</p>
+      <p class="small muted">${esc(txt('accueil_note_invitation', 'Pour rejoindre le gang, il te faut un code d\'invitation donné par un membre.'))}</p>
     </section>
     <section class="grid home-tiles" aria-label="Ce qui t'attend">
       <div class="card card-ss tile">
@@ -102,7 +114,7 @@ function renderMemberShell() {
     <section class="page-head home-head">
       <div>
         <p class="eyebrow">Salut ${esc(me.pseudo)}</p>
-        <h1 class="page-title">Le QG du Humane Gang</h1>
+        <h1 class="page-title">${esc(txt('accueil_titre', 'Le QG du Humane Gang'))}</h1>
       </div>
       <div id="countdown" class="countdown" hidden></div>
     </section>
@@ -146,7 +158,7 @@ function renderMemberShell() {
       <form class="stack" id="idea-form" novalidate>
         <div class="ideas-head">
           <h2 class="card-title" id="ideas-title">${ICON.bulb} Une idée pour le gang ?</h2>
-          <p class="small muted">Une sortie, une fonctionnalité pour le site, un thème… Ton message est <strong>lu uniquement par l'admin</strong>.</p>
+          <p class="small muted">${txt('idees_aide', '') ? esc(txt('idees_aide', '')) : 'Une sortie, une fonctionnalité pour le site, un thème… Ton message est <strong>lu uniquement par l\'admin</strong>.'}</p>
         </div>
         <div class="field">
           <label for="idea-body">Ton idée</label>
@@ -186,7 +198,7 @@ async function loadSecretSanta() {
   try {
     const { data: ed, error } = await sb.from('hg_ss_editions').select('*').order('year', { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
-    if (!ed) { body.innerHTML = `<p class="tile-main">Pas encore d'édition</p><p class="tile-sub">L'admin lancera la prochaine bientôt.</p>`; return; }
+    if (!ed) { body.innerHTML = `<p class="tile-main">${esc(txt('ss_pas_edition', 'Pas encore d\'édition'))}</p><p class="tile-sub">L'admin lancera la prochaine bientôt.</p>`; return; }
     const [st, cls] = STATUS[ed.status] || [ed.status, 'pill-todo'];
     const [{ data: mine }, { data: prog }] = await Promise.all([
       sb.from('hg_ss_participants').select('user_id').eq('edition_id', ed.id).eq('user_id', me.id).maybeSingle(),
@@ -378,8 +390,8 @@ const CHALLENGE_UNIT = {
   echanges_conclus: 'échanges conclus',
 };
 function challengeStatus(c) {
-  if (c.done) return c.credited ? 'Atteint · récompense reçue' : 'Atteint · récompense versée sous peu';
-  if (c.ended) return 'Terminé, objectif non atteint';
+  if (c.done) return c.credited ? txtIn('defis_libelles', 'atteint_recu', 'Atteint · récompense reçue') : txtIn('defis_libelles', 'atteint_verse', 'Atteint · récompense versée sous peu');
+  if (c.ended) return txtIn('defis_libelles', 'termine', 'Terminé, objectif non atteint');
   return `Jusqu'au ${fmtDate(c.ends_at)}`;
 }
 function challengeHtml(c) {

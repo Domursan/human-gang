@@ -1,13 +1,15 @@
-// ===== Rejoindre : un lien d'invitation (rejoindre.html?l=<token>) donne un code unique HG-XXXXXX valable 48 h =====
+// ===== Rejoindre : un lien d'invitation (rejoindre.html?l=<token>) donne un code unique HG-XXXXXX valable 48 h (réglable) =====
 import { sb, initPage, esc, $, toast, errMsg, getUser, currentLogo } from './core.js';
 import { svg } from './icons.js';
+import { loadInviteConfig, inviteConfig, inviteCodeRe } from './invite-config.js';
 
 const TOKEN = new URL(location.href).searchParams.get('l')?.trim() || '';
 const CODE_KEY = 'hg_invite_code';      // lu par compte.js
 const LINK_KEY = 'hg_invite_link';      // { token, code, at } : évite un nouveau code à chaque rechargement
-const VALID_MS = 48 * 3600 * 1000;
+const validMs = () => inviteConfig().validite_heures * 3600 * 1000; // hg_settings.invites (48 h par défaut)
 
 const me = await initPage({ auth: 'optional' });
+await loadInviteConfig();
 const box = $('#rj');
 const logo = $('.rj-logo');
 try { const src = currentLogo(); if (src) logo.src = src; } catch {}
@@ -22,11 +24,11 @@ function store(v) { try { sessionStorage.setItem(LINK_KEY, JSON.stringify(v)); s
 function stored() {
   try {
     const v = JSON.parse(sessionStorage.getItem(LINK_KEY) || 'null');
-    if (v && v.token === TOKEN && /^HG-[A-Z0-9]{4,8}$/.test(v.code) && Date.now() - v.at < VALID_MS) return v;
+    if (v && v.token === TOKEN && inviteCodeRe().test(v.code) && Date.now() - v.at < validMs()) return v;
   } catch {}
   return null;
 }
-const until = (at) => new Intl.DateTimeFormat('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(at + VALID_MS));
+const until = (at) => new Intl.DateTimeFormat('fr-CH', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(at + validMs()));
 
 function head(eyebrow, title) {
   return `<img class="rj-logo" src="${esc(logo.getAttribute('src'))}" alt="" width="160" height="160">
@@ -61,7 +63,7 @@ function renderCode(v) {
       <span class="rj-code-k" id="rj-code-k">Ton code d'invitation</span>
       <span class="rj-code" aria-labelledby="rj-code-k">${esc(v.code)}</span>
       <button class="btn btn-ghost btn-sm" type="button" id="rj-copy">${IC.copy} Copier le code</button>
-      <p class="rj-code-note">Valable 48 h (jusqu'au ${esc(until(v.at))}), pour un seul compte.</p>
+      <p class="rj-code-note">Valable ${inviteConfig().validite_heures} h (jusqu'au ${esc(until(v.at))}), pour un seul compte.</p>
     </div>
     <div class="rj-actions">
       <a class="btn btn-primary" href="${esc(signupHref)}" id="rj-go">${v.loggedIn ? 'Continuer' : 'Créer mon compte'}</a>
@@ -93,7 +95,7 @@ else {
       const { data, error } = await sb.rpc('hg_claim_invite_link', { p_token: TOKEN });
       if (error) throw error;
       const code = String(data || '').trim().toUpperCase();
-      if (!/^HG-[A-Z0-9]{4,8}$/.test(code)) throw new Error('réponse inattendue du serveur');
+      if (!inviteCodeRe().test(code)) throw new Error('réponse inattendue du serveur');
       const v = { token: TOKEN, code, at: Date.now() };
       store(v);
       renderCode({ ...v, loggedIn });

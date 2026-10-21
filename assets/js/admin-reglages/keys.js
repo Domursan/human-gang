@@ -1,3 +1,4 @@
+import { KEYS_LOT2 } from './keys-lot2.js'; // lot 2 : comptes et invitations
 // Réglages : libellés, aides et règles des clés de hg_settings.
 // - managed : la clé a son propre éditeur dans une autre section (ancre) ; ici elle est en lecture seule.
 // - sensitive : clé technique ; seul l'administrateur peut la modifier (le reste du panel ne suffit pas).
@@ -12,6 +13,8 @@ export const KEYS = {
   domursan_owner: { label: 'Propriétaire Domursan', help: 'Identifiant technique du propriétaire de l\'app Domursan.', sensitive: true },
   admin_initial: { label: 'Administrateur initial', help: 'Trace de l\'administrateur d\'origine du site.', sensitive: true },
 };
+
+Object.assign(KEYS, KEYS_LOT2); // lot 2 : comptes et invitations
 
 export const KIND_LABEL = { text: 'Texte', number: 'Nombre', bool: 'Oui / non', json: 'JSON (objet ou liste)' };
 export const KEY_RE = /^[a-z][a-z0-9_]{1,40}$/;

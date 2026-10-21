@@ -4,6 +4,7 @@ import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from './push.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 import { svg } from './icons.js';
+import { loadInviteConfig, inviteCodeRe } from './invite-config.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
 const url = new URL(location.href);
@@ -16,8 +17,9 @@ const PENDING_KEY = 'hg_pending_join';
 const PAGE_URL = new URL('compte.html', location.href).href;
 // Code d'invitation reçu via un lien (rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
 const INVITE_KEY = 'hg_invite_code';
+await loadInviteConfig(); // préfixe des codes (hg_settings.invites)
 const INVITE = (() => {
-  const ok = (c) => (/^HG-[A-Z0-9]{4,8}$/.test(c) ? c : '');
+  const ok = (c) => (inviteCodeRe().test(c) ? c : '');
   const fromUrl = ok(String(url.searchParams.get('code') || '').trim().toUpperCase());
   if (fromUrl) { try { sessionStorage.setItem(INVITE_KEY, fromUrl); } catch {} return fromUrl; }
   try { return ok(String(sessionStorage.getItem(INVITE_KEY) || '').toUpperCase()); } catch { return ''; }
