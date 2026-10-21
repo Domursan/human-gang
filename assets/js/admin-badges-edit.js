@@ -9,7 +9,7 @@ import { openDrawer } from './admin/ui/drawer.js';
 
 export const AUTO_BADGES = new Set([
   'premier_noel', 'veteran', 'lutin_express', 'sur_le_fil', 'liste_parfaite', 'toujours_la', 'organisateur', 'globe_trotter',
-  'paparazzi', 'boite_a_idees', 'fondateur', 'fidele', 'chasseur_bugs', 'saisonnier', 'cupidon',
+  'paparazzi', 'boite_a_idees', 'fondateur', 'anciennete', 'fidele', 'chasseur_bugs', 'saisonnier', 'cupidon',
 ]);
 export const isAutoBadge = (code) => AUTO_BADGES.has(code);
 
