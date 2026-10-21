@@ -36,6 +36,7 @@ const PRECACHE = [
   'assets/js/admin-cards/bulk.js', 'assets/js/admin-cards/data.js', 'assets/js/admin-cards/economy.js', 'assets/js/admin-cards/editor.js', 'assets/js/admin-cards/helpers.js',
   'assets/js/admin-cards/list.js', 'assets/js/admin-cards/players.js', 'assets/js/admin-cards/sets.js', 'assets/js/admin-cards/state.js',
   'assets/js/admin-cards/stats.js', 'assets/js/admin-cards/trades.js', 'assets/js/admin-cards/view.js', 'assets/js/admin/badges.js',
+  'assets/js/admin/badges-criteres.js', 'assets/js/admin-reglages/keys-lot4.js', // lot 4 (réglages)
   'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
   'assets/js/admin/overview.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
   'assets/js/admin/support.js', 'assets/js/admin/live.js', 'assets/css/admin-live.css',

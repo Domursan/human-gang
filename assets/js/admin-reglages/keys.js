@@ -63,3 +63,4 @@ export function displayValue(value) {
 }
 
 import { KEYS_LOT3 } from './keys-lot3.js'; Object.assign(KEYS, KEYS_LOT3); // lot 3 : descripteurs Secret Santa, IRL, souvenirs
+import { KEYS_LOT4 } from './keys-lot4.js'; Object.assign(KEYS, KEYS_LOT4); // lot 4 : ajout isolé

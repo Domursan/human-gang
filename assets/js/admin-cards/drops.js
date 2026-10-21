@@ -9,7 +9,15 @@ import { openDrawer } from '../admin/ui/drawer.js';
 import { onTableChange } from '../admin/live.js';
 import { fetchAll, act, fmtWhen, thumb } from './helpers.js';
 
-const D = { root: null, drops: [], claims: [], cards: [], names: new Map() };
+const D = { root: null, drops: [], claims: [], cards: [], names: new Map(), limits: limitsOf(null) };
+// Bornes des drops : hg_settings.cards.drops (réglables dans Cartes › Économie). Repli = valeurs de base.
+function limitsOf(cfg) {
+  const d = cfg?.drops || {};
+  const num = (v, def) => (Number.isInteger(v) && v > 0 ? v : def);
+  const qmax = num(d.quantite_max, 50), dmax = num(d.duree_max_min, 1440);
+  return { qmax, dmax, dflt: Math.min(num(d.duree_defaut_min, 30), dmax) };
+}
+const fmtN = (n) => new Intl.NumberFormat('fr-CH').format(n);
 
 export async function mountDropsSection(container) {
   if (!container) return;
@@ -27,13 +35,15 @@ export async function mountDropsSection(container) {
 }
 
 async function load() {
-  const [drops, claims, cards, dir] = await Promise.all([
+  const [drops, claims, cards, dir, cfg] = await Promise.all([
     fetchAll(() => sb.from('hg_card_drops').select('*').order('starts_at', { ascending: false })),
     fetchAll(() => sb.from('hg_card_drop_claims').select('*').order('claimed_at', { ascending: true })),
     fetchAll(() => sb.from('hg_cards').select('id, name, rarity, image_url, can_shiny, max_copies, active, set_id, number').order('id')),
     sb.rpc('hg_staff_directory'),
+    sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle(),
   ]);
   if (dir.error) throw dir.error;
+  D.limits = limitsOf(cfg.error ? null : cfg.data?.value);
   D.drops = drops;
   D.claims = claims;
   D.cards = cards;
@@ -118,13 +128,13 @@ function openDropForm() {
       </div>
       <div class="field">
         <label for="drop-qty">Exemplaires à attraper</label>
-        <input id="drop-qty" type="number" min="1" max="50" step="1" inputmode="numeric" value="1" required>
-        <p class="small muted">De 1 à 50. Les premiers qui cliquent les gagnent.</p>
+        <input id="drop-qty" type="number" min="1" max="${D.limits.qmax}" step="1" inputmode="numeric" value="1" required>
+        <p class="small muted">De 1 à ${fmtN(D.limits.qmax)}. Les premiers qui cliquent les gagnent.</p>
       </div>
       <div class="field">
         <label for="drop-min">Durée (minutes)</label>
-        <input id="drop-min" type="number" min="1" max="1440" step="1" inputmode="numeric" value="30" required>
-        <p class="small muted">De 1 à 1 440 minutes (24 h).</p>
+        <input id="drop-min" type="number" min="1" max="${D.limits.dmax}" step="1" inputmode="numeric" value="${D.limits.dflt}" required>
+        <p class="small muted">De 1 à ${fmtN(D.limits.dmax)} minutes.</p>
       </div>
       <div class="field adc-wide">
         <label class="switch"><input type="checkbox" id="drop-shiny"><span class="switch-ui" aria-hidden="true"></span><span>Brillante</span></label>
@@ -138,8 +148,9 @@ function openDropForm() {
       const qty = Number(form.querySelector('#drop-qty').value);
       const minutes = Number(form.querySelector('#drop-min').value);
       if (!card) throw new Error('Choisis une carte dans la liste.');
-      if (!Number.isInteger(qty) || qty < 1 || qty > 50) throw new Error('Le nombre d\'exemplaires doit être entre 1 et 50.');
-      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) throw new Error('La durée doit être entre 1 et 1 440 minutes.');
+      const { qmax, dmax } = D.limits;
+      if (!Number.isInteger(qty) || qty < 1 || qty > qmax) throw new Error(`Le nombre d'exemplaires doit être entre 1 et ${fmtN(qmax)}.`);
+      if (!Number.isInteger(minutes) || minutes < 1 || minutes > dmax) throw new Error(`La durée doit être entre 1 et ${fmtN(dmax)} minutes.`);
       const { error } = await sb.rpc('hg_drop_create', {
         p_card: card,
         p_shiny: form.querySelector('#drop-shiny').checked,

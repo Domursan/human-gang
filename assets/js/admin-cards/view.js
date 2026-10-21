@@ -7,7 +7,7 @@ import { act, check } from './helpers.js';
 import { setsPanel, openSetDialog, toggleSet, deleteSet } from './sets.js';
 import { cardsPanel } from './list.js';
 import { openCardDialog, deleteCard, makeIdentities } from './editor.js';
-import { econPanel, updateSum, saveEcon } from './economy.js';
+import { econPanel, updateSum, saveEcon, resetEconGroup } from './economy.js';
 import { openBulkGift } from './bulk.js';
 import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
@@ -68,6 +68,7 @@ const ACTIONS = {
   'copy-take': (t, id) => takeCopy(t, id),
   'trade-cancel': (t, id) => cancelTrade(t, id),
   'econ-reset': () => render(),
+  'econ-default': (t) => resetEconGroup(Number(t.dataset.g)),
   'bulk-open': () => openBulkGift(),
   ...questActions,
   ...playerActions,

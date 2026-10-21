@@ -9,6 +9,7 @@ import { ICON, busy, check, uploadAsset, pickFile } from './common.js';
 import { loadBadges } from './loaders.js';
 import { renderMembers } from './invites.js';
 import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
+import { mountBadgesCriteres } from './badges-criteres.js';
 
 /* =========================================================
    Badges
@@ -66,7 +67,7 @@ export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?
 
 /** Section « Badges » (registerSub) : le bouton « Nouveau badge » est dans la barre de zone. */
 export const badgesSub = {
-  main() { bindBadges(); },
+  main() { bindBadges(); mountBadgesCriteres($('#badge-grid')); },
   open() {
     const z = $('#zone-actions');
     if (z) z.innerHTML = `<button class="btn btn-primary" type="button" id="badge-new">+ Nouveau badge</button>`;
