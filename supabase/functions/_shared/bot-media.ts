@@ -23,10 +23,10 @@ const PATH_RE = /^manuel\/\d{4}-\d{2}-\d{2}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}
 const displayName = (path: string) => (path.split('/').pop() ?? path).replace(/^[0-9a-f-]{36}-/i, '');
 
 /** Valide la liste reçue du client : tableau, 4 chemins au plus, chemins sous manuel/ sans « .. ». */
-export function validAttachmentPaths(raw: unknown): string[] {
+export function validAttachmentPaths(raw: unknown, max = MAX_ATTACH_FILES): string[] {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) throw new MediaError('Pièces jointes invalides');
-  if (raw.length > MAX_ATTACH_FILES) throw new MediaError(`${MAX_ATTACH_FILES} fichiers maximum par envoi`);
+  if (raw.length > max) throw new MediaError(`${max} fichiers maximum par envoi`);
   const paths = raw.map((p) => {
     if (typeof p !== 'string' || !PATH_RE.test(p) || p.includes('..')) throw new MediaError('Chemin de pièce jointe refusé');
     return p;
@@ -36,14 +36,14 @@ export function validAttachmentPaths(raw: unknown): string[] {
 
 /** Lit les fichiers dans le bucket privé et contrôle taille et type. Noms uniques dans le message. */
 // deno-lint-ignore no-explicit-any
-export async function loadAttachments(db: any, paths: string[]): Promise<UploadFile[]> {
+export async function loadAttachments(db: any, paths: string[], maxBytes = MAX_ATTACH_BYTES, maxMo = 10): Promise<UploadFile[]> {
   const out: UploadFile[] = [];
   const used = new Set<string>();
   for (const path of paths) {
     const shown = displayName(path);
     const { data, error } = await db.storage.from(BOT_MEDIA_BUCKET).download(path);
     if (error || !data) throw new MediaError(`Pièce jointe introuvable : ${shown}`);
-    if (data.size > MAX_ATTACH_BYTES) throw new MediaError(`${shown} dépasse 10 Mo`);
+    if (data.size > maxBytes) throw new MediaError(`${shown} dépasse ${maxMo} Mo`);
     const type = data.type || 'application/octet-stream';
     if (!BOT_MEDIA_TYPES.has(type)) throw new MediaError(`Type de fichier non autorisé : ${shown}`);
     let name = safeFileName(shown);

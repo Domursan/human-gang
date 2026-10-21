@@ -21,6 +21,7 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
 const json = (b: unknown, s = 200) => jsonResponse(b, s);
 const WINDOW_DAYS = 3; // jours (dont aujourd'hui) pendant lesquels un envoi en attente est retenté
+const HEURE_DEFAUT = 8; // heure suisse fixe (planning.anniversaires_heure_locale) ; la porte est hg_cron_gate (migration 054)
 
 type Person = { id: string; pseudo: string; birthday: string; share_birthday: boolean; discord_id: string | null; bot_optin: boolean };
 type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 'failed'; reason: string | null };
@@ -47,6 +48,11 @@ function matches(birthday: string, day: { mmdd: string; leap: boolean }): boolea
 
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
+
+  // Porte : pg_cron passe deux fois par jour (06:05 et 07:05 UTC) ; seul le passage de 8 h suisse agit, en été comme en hiver.
+  const { data: gate, error: gateErr } = await db.rpc('hg_cron_gate', { p_tache: 'anniversaires', p_heure_defaut: HEURE_DEFAUT });
+  if (gateErr) return json({ error: `Porte horaire indisponible : ${gateErr.message}` }, 500);
+  if (!gate) return json({ ok: true, skipped: 'hors de l\'heure planifiée (anniversaires, heure suisse)' });
 
   const { data: people, error } = await db.from('hg_profiles')
     .select('id, pseudo, birthday, share_birthday, discord_id, bot_optin').not('birthday', 'is', null);

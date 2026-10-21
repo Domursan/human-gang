@@ -17,6 +17,7 @@ const NOTIFY = [
   ['support', 'Demandes d\'assistance', 'MP à toi'],
   ['messages', 'Nouveaux messages', 'MP au destinataire (pas à chaque message d\'une discussion en cours)'],
   ['card_pull', 'Belle carte obtenue', 'annonce dans le salon : carte légendaire, mythique ou identité'],
+  ['card_wish', 'MP : carte de ta liste de souhaits obtenue', 'MP aux membres qui ont la carte dans leur liste de souhaits et ont activé l\'alerte'],
   ['card_trade', 'Échange conclu', 'annonce dans le salon (désactivée par défaut)'],
   ['trade_offer', 'MP : nouvelle offre d\'échange', 'MP au destinataire d\'une offre ou contre-proposition'],
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
@@ -134,12 +135,123 @@ const uuid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID()
   : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 const dayStamp = () => new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, heure locale
 
+/* ---------- Réglages lot 5 : rappels, envois, assistance, planning ---------- */
+// Défauts = comportement d'avant les réglages (supabase/functions/_shared/reglages.ts). Bornes = celles que le serveur accepte.
+const RULE_DEF = { irl_long: 24, irl_short: 2, ss_jours: 3, dyn_retard: 24, top_n: 3, pieces_max: 4, piece_max_mo: 10, destinataires_max: 100, corps_max: 2000 };
+const RULE_MIN_MAX = { irl_long: [1, 168], irl_short: [1, 167], ss_jours: [1, 30], dyn_retard: [1, 168], top_n: [1, 10], pieces_max: [1, 10], piece_max_mo: [1, 25], destinataires_max: [1, 100], corps_max: [1, 4000] };
+const RULE_GROUPS = {
+  rappels: { title: 'Rappels', keys: ['irl_long', 'irl_short', 'ss_jours'] },
+  dyn: { title: 'Événements dynamiques', keys: ['dyn_retard', 'top_n'] },
+  envoi: { title: 'Message manuel (MP et pièces jointes)', keys: ['pieces_max', 'piece_max_mo', 'destinataires_max', 'corps_max'] },
+};
+const RULE_TXT = {
+  irl_long: ['Rappel de sortie : délai (heures avant)', 'MP aux membres « oui » ou « peut-être » quand la sortie est dans moins de ce délai. Défaut : 24.'],
+  irl_short: ['Second rappel de sortie (heures avant)', 'Doit être plus court que le premier. Défaut : 2.'],
+  ss_jours: ['Rappel de cadeau Secret Santa (jours avant la date limite)', 'MP au Santa qui n\'a pas encore marqué son envoi. Défaut : 3.'],
+  dyn_retard: ['Délai de grâce après la fin d\'un événement (heures)', 'Au-delà, la fin n\'est plus annoncée dans le salon. Défaut : 24.'],
+  top_n: ['Nombre de chasseurs au classement de fin', 'Taille du classement annoncé à la fin d\'un événement. Défaut : 3.'],
+  pieces_max: ['Pièces jointes par envoi', 'Maximum 10. Défaut : 4.'],
+  piece_max_mo: ['Taille maximale d\'une pièce (Mo)', 'Maximum 25 Mo (limite de Discord pour un bot). Défaut : 10.'],
+  destinataires_max: ['Destinataires par envoi', 'Maximum 100. Défaut : 100.'],
+  corps_max: ['Longueur du message manuel (caractères)', 'Maximum 4000 (limite d\'un message Discord). Défaut : 2000.'],
+};
+const BUG_SUBJECT = 'Bug sur le site'; // le badge « Chasseur de bugs » s'appuie sur ce sujet (migration 041)
+const SUPPORT_DEF = {
+  sujets: ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', BUG_SUBJECT, 'Mes données personnelles', 'Autre'],
+  max_par_heure: 5, visiteur_max_par_heure: 5, visiteurs_total_par_heure: 200, message_min: 10, message_max: 4000, mp_max: 1500, delai_reponse_jours: 30,
+};
+const SUPPORT_MIN_MAX = {
+  max_par_heure: [1, 100], visiteur_max_par_heure: [1, 100], visiteurs_total_par_heure: [1, 10000], message_min: [1, 1000],
+  message_max: [1, 4000], mp_max: [100, 4000], delai_reponse_jours: [1, 365],
+};
+const SUPPORT_GROUPS = {
+  sujets: { title: 'Sujets proposés', keys: ['sujets'] },
+  limites: { title: 'Limites anti-abus (par heure)', keys: ['max_par_heure', 'visiteur_max_par_heure', 'visiteurs_total_par_heure'] },
+  messages: { title: 'Longueur des messages', keys: ['message_min', 'message_max', 'mp_max'] },
+  reponse: { title: 'Délai de réponse', keys: ['delai_reponse_jours'] },
+};
+const SUPPORT_TXT = {
+  max_par_heure: ['Par compte connecté', 'Demandes maximum par heure pour un membre connecté. Défaut : 5.'],
+  visiteur_max_par_heure: ['Par visiteur (même contact ou même connexion)', 'Défaut : 5.'],
+  visiteurs_total_par_heure: ['Total des visiteurs', 'Garde-fou global contre une attaque répartie. Défaut : 200.'],
+  message_min: ['Message : minimum (caractères)', 'Défaut : 10.'],
+  message_max: ['Message : maximum (caractères)', 'Défaut : 4000.'],
+  mp_max: ['Longueur du message dans le MP à l\'admin', 'Au-delà, le MP est tronqué ; la demande reste complète dans la liste. Défaut : 1500.'],
+  delai_reponse_jours: ['Délai de réponse annoncé (jours)', 'Affiché au visiteur après l\'envoi. Défaut : 30.'],
+};
+const PLANNING_DEF = { anniversaires_heure_locale: 8 };
+
+const numField = (form, k, [label, help], [min, max]) => `<div class="field">
+  <label for="${form}-${k}">${esc(label)}</label>
+  <input id="${form}-${k}" name="${k}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric" aria-describedby="${form}-${k}-h">
+  <p class="small muted" id="${form}-${k}-h">${esc(help)}</p></div>`;
+const resetBtn = (form, group) => `<button class="btn btn-ghost btn-sm" type="button" data-form="${form}" data-reset-group="${group}">Rétablir les valeurs par défaut</button>`;
+
+function rulesCardHtml() {
+  const groups = Object.entries(RULE_GROUPS).map(([g, def]) => `
+    <fieldset class="rg-group">
+      <legend class="label">${esc(def.title)}</legend>
+      <div class="grid-2">${def.keys.map((k) => numField('rules', k, RULE_TXT[k], RULE_MIN_MAX[k])).join('')}</div>
+      <div class="btn-row">${resetBtn('rules', g)}</div>
+    </fieldset>`).join('');
+  return `<form class="card stack" id="rules-form" novalidate>
+      <div>
+        <h3 class="card-title">Rappels, annonces et envois</h3>
+        <p class="muted small">Délais et limites du bot. « Enregistrer » sauve tous les champs ; « Rétablir » remet un groupe à ses valeurs d'origine.</p>
+      </div>
+      ${groups}
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les rappels et limites</button></div>
+    </form>`;
+}
+
+function supportCardHtml() {
+  const sujets = `<div class="field">
+      <label for="support-sujets">Sujets proposés dans le formulaire</label>
+      <textarea id="support-sujets" name="sujets" rows="7" aria-describedby="support-sujets-h"></textarea>
+      <p class="small muted" id="support-sujets-h">Un sujet par ligne (20 maximum, 80 caractères chacun). « ${esc(BUG_SUBJECT)} » doit rester : le badge Chasseur de bugs s'appuie dessus.</p></div>`;
+  const groups = Object.entries(SUPPORT_GROUPS).map(([g, def]) => `
+    <fieldset class="rg-group">
+      <legend class="label">${esc(def.title)}</legend>
+      ${g === 'sujets' ? sujets : `<div class="grid-2">${def.keys.map((k) => numField('support', k, SUPPORT_TXT[k], SUPPORT_MIN_MAX[k])).join('')}</div>`}
+      <div class="btn-row">${resetBtn('support', g)}</div>
+    </fieldset>`).join('');
+  return `<form class="card stack" id="support-cfg-form" novalidate>
+      <div>
+        <h3 class="card-title">Assistance</h3>
+        <p class="muted small">Ce que voient les visiteurs et les membres sur le formulaire d'assistance, et les limites appliquées côté serveur.</p>
+      </div>
+      ${groups}
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer l'assistance</button></div>
+    </form>`;
+}
+
+function planningCardHtml() {
+  const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')} h</option>`).join('');
+  return `<form class="card stack" id="planning-form" novalidate>
+      <div>
+        <h3 class="card-title">Planning des tâches automatiques</h3>
+        <p class="muted small">Les tâches automatiques tournent à fréquence fixe ; ce réglage décide quand elles agissent.</p>
+      </div>
+      <fieldset class="rg-group">
+        <legend class="label">Anniversaires</legend>
+        <div class="field">
+          <label for="planning-birthday">Heure d'envoi (heure suisse)</label>
+          <select id="planning-birthday" name="anniversaires_heure_locale" aria-describedby="planning-birthday-h">${opts}</select>
+          <p class="small muted" id="planning-birthday-h">Fixe toute l'année : les anniversaires partent à cette heure (HH h 05), heure suisse, en été comme en hiver. Défaut : 8 h.</p>
+        </div>
+        <div class="btn-row">${resetBtn('planning', 'anniversaires')}</div>
+      </fieldset>
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le planning</button></div>
+    </form>`;
+}
+
 /* ========================================================================== */
 export function mountBotSection(container) {
   if (!container) return;
   loadStyles();
   const S = {
     bot: { announce_channel_id: null, birthday_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
+    support: {}, planning: {},
     histFilter: 'all', histQ: '', histLimit: PAGE_SIZE, histMore: false,
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
     people: [], pseudo: new Map(), selected: new Set(), q: '', history: null, sending: false,
@@ -191,6 +303,10 @@ export function mountBotSection(container) {
           <button class="btn btn-ghost" type="button" id="bot-test">Envoyer un message de test</button>
         </div>
       </form>
+
+      ${rulesCardHtml()}
+      ${supportCardHtml()}
+      ${planningCardHtml()}
 
       <div class="card stack bt-card" id="bt-card">
         <div>
@@ -295,6 +411,131 @@ export function mountBotSection(container) {
     if (res?.error) throw new Error(res.error);
     toast(parts.length ? `Test envoyé (${parts.join(', ')})` : 'Test envoyé', res?.channel === false || res?.dm === false ? 'error' : 'ok');
   }));
+
+  /* ======================= Rappels, envois, assistance, planning ======================= */
+  const rulesForm = $('#rules-form', container), supportForm = $('#support-cfg-form', container), planForm = $('#planning-form', container);
+  const RULE_ALL = Object.keys(RULE_DEF), SUPPORT_NUM = Object.keys(SUPPORT_MIN_MAX);
+  /** Entier lu dans un champ, borné ; lève une erreur lisible. */
+  const readInts = (form, keys, limits, labelOf) => {
+    const out = {};
+    for (const k of keys) {
+      const [min, max] = limits[k];
+      const s = String(form[k].value ?? '').trim(), n = Number(s);
+      if (s === '' || !Number.isInteger(n) || n < min || n > max) throw new Error(`${labelOf(k)} : un nombre entier de ${min} à ${max}.`);
+      out[k] = n;
+    }
+    return out;
+  };
+  const labelRule = (k) => RULE_TXT[k][0], labelSupport = (k) => SUPPORT_TXT[k][0];
+  /** Valeur stockée d'un réglage bot (repli sur le défaut si absente ou hors bornes, comme le serveur). */
+  const storedRule = (k) => {
+    const r = S.bot.rappels || {}, d = S.bot.dyn || {}, e = S.bot.envoi || {};
+    const heures = Array.isArray(r.irl_heures) ? r.irl_heures : [];
+    const raw = { irl_long: heures[0], irl_short: heures[1], ss_jours: r.ss_jours_avant, dyn_retard: d.delai_retard_heures, top_n: d.top_n,
+      pieces_max: e.pieces_max, piece_max_mo: e.piece_max_mo, destinataires_max: e.destinataires_max, corps_max: e.corps_max }[k];
+    const [min, max] = RULE_MIN_MAX[k];
+    return Number.isInteger(raw) && raw >= min && raw <= max ? raw : RULE_DEF[k];
+  };
+  const currentRules = () => Object.fromEntries(RULE_ALL.map((k) => [k, storedRule(k)]));
+  /** Objet hg_settings.bot avec les réglages de ce bloc (le reste est conservé). */
+  const botWith = (v) => ({
+    ...S.bot,
+    rappels: { irl_heures: [v.irl_long, v.irl_short], ss_jours_avant: v.ss_jours },
+    dyn: { delai_retard_heures: v.dyn_retard, top_n: v.top_n },
+    envoi: { pieces_max: v.pieces_max, piece_max_mo: v.piece_max_mo, destinataires_max: v.destinataires_max, corps_max: v.corps_max },
+  });
+  const fillRules = () => { for (const k of RULE_ALL) rulesForm[k].value = storedRule(k); };
+  async function saveBot(next) {
+    check(await sb.from('hg_settings').upsert({ key: 'bot', value: next, updated_at: new Date().toISOString() }));
+    S.bot = next;
+    fillRules();
+  }
+  rulesForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    busy(ev.submitter, async () => {
+      const v = readInts(rulesForm, RULE_ALL, RULE_MIN_MAX, labelRule);
+      if (v.irl_short >= v.irl_long) throw new Error('Le second rappel de sortie doit être plus court que le premier.');
+      await saveBot(botWith(v));
+      toast('Rappels et limites enregistrés', 'ok');
+    });
+  });
+
+  const BUG = BUG_SUBJECT;
+  /** Liste de sujets valide (même règle que le serveur), sinon null. */
+  const cleanSujets = (list) => {
+    const clean = [...new Set(list.map((x) => String(x).trim()).filter(Boolean))];
+    return clean.length && clean.length <= 20 && clean.every((x) => x.length <= 80) && clean.includes(BUG) ? clean : null;
+  };
+  const storedSupport = (k) => {
+    const v = S.support?.[k], [min, max] = SUPPORT_MIN_MAX[k];
+    return Number.isInteger(v) && v >= min && v <= max ? v : SUPPORT_DEF[k];
+  };
+  const storedSujets = () => (Array.isArray(S.support?.sujets) && cleanSujets(S.support.sujets.filter((x) => typeof x === 'string')) ) || SUPPORT_DEF.sujets;
+  const currentSupport = () => ({ sujets: storedSujets(), ...Object.fromEntries(SUPPORT_NUM.map((k) => [k, storedSupport(k)])) });
+  const fillSupport = () => {
+    supportForm.sujets.value = storedSujets().join('\n');
+    for (const k of SUPPORT_NUM) supportForm[k].value = storedSupport(k);
+  };
+  async function saveSupport(next) {
+    check(await sb.from('hg_settings').upsert({ key: 'support', value: next, updated_at: new Date().toISOString() }));
+    S.support = next;
+    fillSupport();
+  }
+  supportForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    busy(ev.submitter, async () => {
+      const list = supportForm.sujets.value.split('\n').map((x) => x.trim()).filter(Boolean);
+      if (!list.length) throw new Error('Ajoute au moins un sujet.');
+      if (list.length > 20) throw new Error('20 sujets maximum.');
+      if (list.some((x) => x.length > 80)) throw new Error('Un sujet dépasse 80 caractères.');
+      const sujets = [...new Set(list)];
+      if (!sujets.includes(BUG)) throw new Error(`Le sujet « ${BUG} » doit rester dans la liste : le badge Chasseur de bugs s'appuie dessus.`);
+      const v = readInts(supportForm, SUPPORT_NUM, SUPPORT_MIN_MAX, labelSupport);
+      if (v.message_max <= v.message_min) throw new Error('Le maximum du message doit être plus grand que le minimum.');
+      await saveSupport({ sujets, ...v });
+      toast('Assistance enregistrée', 'ok');
+    });
+  });
+
+  const storedHeure = () => {
+    const h = S.planning?.anniversaires_heure_locale;
+    return Number.isInteger(h) && h >= 0 && h <= 23 ? h : PLANNING_DEF.anniversaires_heure_locale;
+  };
+  const fillPlanning = () => { planForm.anniversaires_heure_locale.value = String(storedHeure()); };
+  async function savePlanning(h) {
+    const next = { anniversaires_heure_locale: h };
+    check(await sb.from('hg_settings').upsert({ key: 'planning', value: next, updated_at: new Date().toISOString() }));
+    S.planning = next;
+    fillPlanning();
+  }
+  planForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    busy(ev.submitter, async () => {
+      await savePlanning(Number(planForm.anniversaires_heure_locale.value));
+      toast('Planning enregistré', 'ok');
+    });
+  });
+
+  /** Rétablir un groupe : ses valeurs reviennent aux défauts et sont enregistrées tout de suite. */
+  container.addEventListener('click', (ev) => {
+    const b = ev.target.closest?.('[data-reset-group]');
+    if (!b) return;
+    busy(b, async () => {
+      const g = b.dataset.resetGroup;
+      if (b.dataset.form === 'rules') {
+        const v = currentRules();
+        for (const k of RULE_GROUPS[g].keys) v[k] = RULE_DEF[k];
+        await saveBot(botWith(v));
+      } else if (b.dataset.form === 'support') {
+        const v = currentSupport();
+        for (const k of SUPPORT_GROUPS[g].keys) v[k] = SUPPORT_DEF[k];
+        await saveSupport(v);
+      } else {
+        await savePlanning(PLANNING_DEF.anniversaires_heure_locale);
+      }
+      toast('Valeurs par défaut rétablies', 'ok');
+    });
+  });
 
   /* ======================= Messages types ======================= */
   const tplBody = $('#bt-body', container);
@@ -899,7 +1140,7 @@ export function mountBotSection(container) {
   /* ======================= Chargement ======================= */
   (async () => {
     const [settings, defs, accounts, profiles] = await Promise.allSettled([
-      sb.from('hg_settings').select('key, value').in('key', ['bot', 'bot_templates']).then(check),
+      sb.from('hg_settings').select('key, value').in('key', ['bot', 'bot_templates', 'support', 'planning']).then(check),
       fetch(TEMPLATES_URL, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
       sb.rpc('hg_admin_accounts').then(check),
       sb.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, avatar_url, color, is_admin, is_ghost').then(check),
@@ -909,13 +1150,16 @@ export function mountBotSection(container) {
     if (settings.status === 'fulfilled') {
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = get('bot') ?? S.bot;
-      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_trade: false, trade_offer: true, card_gift_admin: true, ...(S.bot.notify || {}) };
+      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, ...(S.bot.notify || {}) };
+      S.support = get('support') ?? {};
+      S.planning = get('planning') ?? {};
       const c = get('bot_templates');
       S.custom = c && typeof c === 'object' && !Array.isArray(c) ? c : {};
     } else {
       toast(`Réglages du bot : ${errMsg(settings.reason)}`, 'error');
     }
     renderSettings();
+    fillRules(); fillSupport(); fillPlanning();
 
     // Modèles
     if (defs.status === 'fulfilled' && defs.value?.templates) {
