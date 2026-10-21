@@ -119,6 +119,28 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
   .brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
 
+/* Lien « Aller au contenu » : visible seulement au focus clavier */
+.skip-link { position: absolute; left: 12px; top: -120px; z-index: 1000; min-height: 44px; display: inline-flex; align-items: center;
+  padding: 10px 18px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; text-decoration: none; }
+.skip-link:focus-visible { top: 8px; outline: 2px solid var(--sand); outline-offset: 2px; }
+#app[tabindex="-1"]:focus { outline: none; }
+
+/* Menu repliable (moins de 600 px) : la navigation s'ouvre sous l'en-tête au lieu de défiler */
+.nav-toggle { display: none; }
+@media (max-width: 600px) {
+  .nav-toggle { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 999px;
+    font: inherit; font-weight: 700; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); cursor: pointer; }
+  .nav-toggle[hidden] { display: none; }
+  .site-header .container { row-gap: 0; }
+  .site-header .nav { display: none; }
+  .site-header.nav-open .container { row-gap: 8px; }
+  .site-header.nav-open .nav { display: flex; flex-direction: column; align-items: stretch; flex-wrap: nowrap; overflow: visible; scroll-snap-type: none;
+    margin: 0 -16px; padding: 4px 16px 12px; border-top: 1px solid var(--border); }
+  .site-header.nav-open .nav a { width: 100%; box-sizing: border-box; min-height: 48px; padding: 12px 16px; }
+  .site-header.nav-open .nav-msg-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .site-header.nav-open .nav a.nav-msg .nav-badge { position: static; margin-left: auto; }
+}
+
 /* ===== Pied de page ===== */
 .site-footer { border-top: 1px solid var(--border); margin-top: 64px; }
 .site-footer .container { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; padding-top: 24px; padding-bottom: 24px; font-size: 14px; color: var(--muted); }
@@ -259,6 +281,14 @@ html[data-fx="off"] .badge-celebrate .bc-badge, html[data-fx="off"] .badge-celeb
   display: inline-flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text); }
 
 .empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+
+/* ===== Connexion impossible (initPage, hors ligne ou serveur injoignable) ===== */
+.conn-error { max-width: 520px; margin: 48px auto; padding: 28px; display: grid; gap: 14px; justify-items: start;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius); }
+.conn-error h1 { margin: 0; font-size: clamp(26px, 5vw, 34px); }
+.conn-error p { margin: 0; color: var(--muted); }
+.conn-error .conn-detail:empty { display: none; }
+.conn-error .conn-retry { min-height: 44px; }
 
 /* ===== Toasts ===== */
 .toasts { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; z-index: 100; max-width: calc(100vw - 32px); }

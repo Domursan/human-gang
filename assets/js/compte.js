@@ -265,7 +265,11 @@ function renderCheckMail(email) {
 
 /** Après une connexion réussie : appliquer un code en attente, puis rediriger. */
 async function afterLogin() {
-  me = await getProfile(true);
+  try { me = await getProfile(true); }
+  catch { // réseau : la session est ouverte, on recharge la page (elle proposera de réessayer)
+    location.replace(`compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
+    return;
+  }
   if (!me) {
     const pend = pendingGet();
     if (pend?.code && pend?.pseudo) {

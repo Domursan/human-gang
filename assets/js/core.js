@@ -374,7 +374,9 @@ export async function getProfile(force = false) {
   if (_profile !== undefined && !force) return _profile;
   const user = await getUser();
   if (!user) return (_profile = null);
-  const { data } = await sb.from('hg_profiles').select('*').eq('id', user.id).maybeSingle();
+  const { data, error } = await sb.from('hg_profiles').select('*').eq('id', user.id).maybeSingle();
+  // Erreur réseau (ou base) : on ne met rien en cache et on jette, pour ne pas confondre avec « pas de profil »
+  if (error) throw error;
   return (_profile = data ?? null);
 }
 /** Redirige vers compte.html si non membre. Renvoie le profil. */
@@ -487,31 +489,67 @@ export function updateHeaderProfile(profile = _profile) {
   _accountObserver?.observe(a, { childList: true });
 }
 
-export function renderHeader(profile) {
-  document.querySelector('.site-header')?.remove();
-  const here = location.pathname.split('/').pop() || 'accueil.html';
-  const cur = (href) => (here === href ? ' aria-current="page"' : '');
-  // Pages accessibles avec in_nav, triées par sort ; « Messages » garde son icône et sa pastille.
+const curAttr = (href) => (location.pathname.split('/').pop() === href ? ' aria-current="page"' : '');
+/** Liens de navigation : pages accessibles (in_nav) + Admin. Sans profil, aucun lien de page. */
+function navHtml(profile) {
+  // Pages triées par sort ; « Messages » garde son icône et sa pastille.
   const links = navEntries().map(({ slug, label }) => {
     const href = `${slug}.html`;
-    if (slug === 'messages') return `<a class="nav-msg" href="messages.html"${cur(href)} aria-label="Messages">${ICON_MSG}<span class="nav-msg-label">${esc(label)}</span><span class="nav-badge" hidden></span></a>`;
-    return `<a href="${href}"${cur(href)} data-page="${esc(slug)}">${esc(label)}</a>`;
+    if (slug === 'messages') return `<a class="nav-msg" href="messages.html"${curAttr(href)} aria-label="Messages">${ICON_MSG}<span class="nav-msg-label">${esc(label)}</span><span class="nav-badge" hidden></span></a>`;
+    return `<a href="${href}"${curAttr(href)} data-page="${esc(slug)}">${esc(label)}</a>`;
   }).join('');
-  const admin = profile?.is_admin ? `<a class="nav-admin" href="admin.html"${cur('admin.html')}>Admin</a>` : '';
+  const admin = profile?.is_admin ? `<a class="nav-admin" href="admin.html"${curAttr('admin.html')}>Admin</a>` : '';
+  return `${profile ? links : ''}${admin}`;
+}
+/** Remplit la navigation de l'en-tête (appelée quand les pages accessibles sont connues). */
+export function updateNav(profile = _profile) {
+  const header = document.querySelector('.site-header');
+  const nav = header?.querySelector('.nav');
+  if (!nav) return;
+  nav.innerHTML = navHtml(profile);
+  const toggle = header.querySelector('.nav-toggle');
+  if (toggle) {
+    toggle.hidden = !nav.querySelector('a');
+    if (toggle.hidden) setNavOpen(header, false);
+  }
+}
+/** Ouvre ou ferme la navigation repliée (moins de 600 px). */
+function setNavOpen(header, open) {
+  header.classList.toggle('nav-open', open);
+  header.querySelector('.nav-toggle')?.setAttribute('aria-expanded', String(open));
+}
+
+/**
+ * En-tête commun. nav:false -> la navigation reste vide jusqu'à updateNav (pages accessibles pas encore connues).
+ */
+export function renderHeader(profile, { nav = true } = {}) {
+  document.querySelector('.site-header')?.remove();
+  const account = `<a class="nav-account" href="compte.html"${curAttr('compte.html')}></a>`;
   const god = profile?.is_admin ? `<button class="nav-icon nav-god" type="button" aria-pressed="false" aria-label="Activer le mode sans limite" title="Mode sans limite">${ICON_BOLT}</button>` : '';
   const prefs = `${god}<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
   const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
-  const account = `<a class="nav-account" href="compte.html"${cur('compte.html')}></a>`;
+  const toggle = '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>';
   const header = document.createElement('header');
   header.className = 'site-header';
-  header.innerHTML = `<div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>
+    <div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
       <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
-      <nav class="nav" aria-label="Navigation principale">${profile ? links : ''}${admin}</nav>
-      <div class="nav-tools">${prefs}${account}${logout}</div>
+      <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
+      <div class="nav-tools">${toggle}${prefs}${account}${logout}</div>
     </div>`;
+  // Cible du lien d'évitement : le contenu principal de la page (tabindex -1 : atteignable par script et par le lien)
+  const main = document.getElementById('app');
+  if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
   document.body.prepend(header);
   updateHeaderProfile(profile);
+  const tg = header.querySelector('.nav-toggle');
+  tg.hidden = !header.querySelector('.nav a');
+  tg.addEventListener('click', () => setNavOpen(header, tg.getAttribute('aria-expanded') !== 'true'));
+  header.querySelector('.nav').addEventListener('click', (e) => { if (e.target.closest('a')) setNavOpen(header, false); });
+  header.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && tg.getAttribute('aria-expanded') === 'true') { setNavOpen(header, false); tg.focus(); }
+  });
   // Si une page remplace le contenu du bouton compte (ex. textContent = pseudo), on remet l'avatar
   const a = header.querySelector('.nav-account');
   _accountObserver = new MutationObserver(() => {
@@ -1122,25 +1160,65 @@ function confetti(canvas) {
  * options.auth : 'member' | 'admin' | 'optional'
  * Renvoie le profil (ou null).
  */
-export async function initPage({ auth = 'member' } = {}) {
+const PROFILE_TIMEOUT_MS = 15000;
+function withTimeout(p, ms) {
+  let t = 0;
+  return Promise.race([p, new Promise((_, rej) => { t = setTimeout(() => rej(new Error('délai dépassé')), ms); })])
+    .finally(() => clearTimeout(t));
+}
+
+/**
+ * Écran « Connexion impossible » dans la zone principale. Résout quand l'utilisateur réessaie (bouton)
+ * ou quand le navigateur repasse en ligne : la page reprend alors son initialisation.
+ */
+function connectionError(detail = '') {
+  return new Promise((resolve) => {
+    const main = document.getElementById('app') || document.querySelector('main') || document.body;
+    main.setAttribute('aria-busy', 'false');
+    main.innerHTML = `<section class="conn-error" aria-labelledby="conn-title">
+        <h1 id="conn-title" class="display">Connexion impossible</h1>
+        <p class="conn-text"></p>
+        <button class="btn btn-primary conn-retry" type="button">Réessayer</button>
+        <p class="conn-detail small muted"></p>
+      </section>`;
+    const text = main.querySelector('.conn-text');
+    const btn = main.querySelector('.conn-retry');
+    main.querySelector('.conn-detail').textContent = detail ? `Détail : ${detail}` : '';
+    const paintText = () => {
+      text.textContent = navigator.onLine === false
+        ? 'Tu sembles hors ligne. La page reprendra dès que la connexion reviendra.'
+        : 'Le site n\'a pas pu joindre le serveur. Vérifie ta connexion, puis réessaie.';
+    };
+    paintText();
+    const done = () => {
+      window.removeEventListener('online', go);
+      window.removeEventListener('offline', paintText);
+    };
+    function go() { done(); resolve(); }
+    window.addEventListener('online', go);
+    window.addEventListener('offline', paintText);
+    btn.addEventListener('click', () => { btn.disabled = true; btn.textContent = 'Nouvelle tentative…'; go(); });
+    btn.focus();
+  });
+}
+
+/** Une tentative d'initialisation. Jette en cas d'échec réseau ; Error('redirect') si on quitte la page. */
+async function startPage(auth) {
   applyTheme();
-  let profile = null;
-  if (auth === 'member') profile = await requireMember();
-  else if (auth === 'admin') profile = await requireAdmin();
-  else profile = await getProfile();
+  const who = auth === 'member' ? requireMember() : auth === 'admin' ? requireAdmin() : getProfile();
+  const profile = await withTimeout(who, PROFILE_TIMEOUT_MS);
   const pagesP = profile ? loadMyPages() : null; // en parallèle du mode sans limite
-  if (profile?.is_admin) await loadGodMode(profile); // avant le rendu : les pages lisent getGodMode() dès leur premier affichage
-  else _godAdmin = false;
-  if (pagesP) {
-    await pagesP;
-    const slug = currentPageSlug();
-    // Page déclarée mais interdite -> accueil (jamais depuis l'accueil lui-même, pour éviter une boucle)
-    if (slug !== 'accueil' && !canAccess(slug)) {
-      location.replace(`accueil.html?refus=${encodeURIComponent(slug)}`);
-      return new Promise(() => {}); // la page s'arrête là, sans erreur
-    }
+  const godP = loadGodMode(profile); // les pages lisent getGodMode() dès leur premier affichage
+  // En-tête tout de suite (compte, outils) ; les liens arrivent avec les pages accessibles
+  renderHeader(profile, { nav: false });
+  await Promise.all([pagesP, godP]);
+  const slug = currentPageSlug();
+  // Page déclarée mais interdite -> accueil (jamais depuis l'accueil lui-même, pour éviter une boucle)
+  if (pagesP && slug !== 'accueil' && !canAccess(slug)) {
+    location.replace(`accueil.html?refus=${encodeURIComponent(slug)}`);
+    return new Promise(() => {}); // la page s'arrête là, sans erreur
   }
-  renderHeader(profile);
+  updateNav(profile);
   renderFooter(profile);
   cookieNotice();
   startEffects();
@@ -1151,6 +1229,23 @@ export async function initPage({ auth = 'member' } = {}) {
     import('./dyn-events.js').then((m) => m.startDynEvents(profile)).catch((e) => console.warn('[événements]', e));
   }
   return profile;
+}
+
+/**
+ * Initialise une page : thème, en-tête, pied, bandeau cookies, puis (membre) messages non lus, badges.
+ * options.auth : 'member' | 'admin' | 'optional'. Renvoie le profil (ou null).
+ * En cas d'échec réseau, affiche « Connexion impossible » et ne résout qu'après une nouvelle tentative réussie.
+ */
+export async function initPage({ auth = 'member' } = {}) {
+  for (;;) {
+    try {
+      return await startPage(auth);
+    } catch (e) {
+      if (e?.message === 'redirect') return new Promise(() => {}); // redirection en cours : la page s'arrête là
+      console.warn('[initPage]', e);
+      await connectionError(e?.message || String(e));
+    }
+  }
 }
 
 /* ---------- Client Supabase (chargé en dernier, voir en tête de fichier) ---------- */
