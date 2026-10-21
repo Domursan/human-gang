@@ -2,8 +2,12 @@
 // Utilisé par cartes.js, cartes-trades.js, cartes-showcase.js, admin-cards.js et membre.js (vitrine).
 // Styles : assets/css/cartes-card.css (à inclure sur chaque page qui affiche des cartes).
 // Côté serveur : tables hg_cards / hg_card_copies, réglages hg_settings.cards, fonctions hg_* (migrations 018).
+// Exporte : les listes de raretés et de familles (et leurs libellés), le numéro d'exemplaire, le numéro de carte,
+// le HTML d'une carte (cardHtml), le dos de carte (cardBackHtml) et le format des Paillettes (fmtP).
 import { esc, currentLogo } from './core.js';
 
+/* ---------- Raretés et familles : listes de référence et libellés ---------- */
+// Ordre de RARITIES = du plus commun au plus rare (l'ordre compte pour le rang).
 export const RARITIES = [
   { id: 'commune', label: 'Commune', short: 'C' },
   { id: 'peu_commune', label: 'Peu commune', short: 'PC' },
@@ -13,10 +17,14 @@ export const RARITIES = [
   { id: 'mythique', label: 'Mythique', short: 'M' },
   { id: 'identite', label: 'Identité', short: 'ID' },
 ];
+// Accès rapide par identifiant : RARITY['rare'] donne le libellé, le raccourci et le rang (1 = commune).
 export const RARITY = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
+/** Libellé lisible d'une rareté (« Peu commune »). Renvoie l'identifiant brut si inconnu. */
 export const rarityLabel = (id) => RARITY[id]?.label || id;
+/** Rang d'une rareté (1 pour la commune, 7 pour l'identité, 0 si inconnue). Sert à compter les gemmes. */
 export const rarityRank = (id) => RARITY[id]?.rank || 0;
 
+// Familles de cartes (Membre, Moment, Lieu...).
 export const FAMILIES = [
   { id: 'membre', label: 'Membre' },
   { id: 'moment', label: 'Moment' },
@@ -25,6 +33,7 @@ export const FAMILIES = [
   { id: 'evenement', label: 'Événement' },
   { id: 'jeu', label: 'Jeu vidéo' },
 ];
+/** Libellé d'une famille (« Jeu vidéo »). Renvoie l'identifiant brut si inconnue. */
 export const familyLabel = (id) => FAMILIES.find((f) => f.id === id)?.label || id;
 
 /** Numéro d'exemplaire « N° 03/10 » pour les cartes limitées. */
@@ -49,10 +58,19 @@ function yearOf(v) {
   return m ? m[1] : String(v);
 }
 
+/* ---------- Gemmes : pastilles décoratives (une de plus à chaque rareté) ---------- */
+// Couleurs de l'arc-en-ciel utilisées par les gemmes de la carte Identité.
 const RAINBOW = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
 // Gemme pixel 7×7 (losange) et étoile pixel pour la mythique (dessins inline, sans <use>).
 const PATH_GEM = 'M3 0h1v1h-1zM2 1h3v1h-3zM1 2h5v1h-5zM0 3h7v1h-7zM1 4h5v1h-5zM2 5h3v1h-3zM3 6h1v1h-1z';
 const PATH_STAR = 'M3 0h1v1h-1zM3 1h1v1h-1zM2 2h3v1h-3zM0 3h7v1h-7zM2 4h3v1h-3zM3 5h1v1h-1zM3 6h1v1h-1z';
+/**
+ * Dessine n gemmes (SVG) pour une rareté : étoile pour la mythique, losange sinon,
+ * couleurs de l'arc-en-ciel pour l'identité, reflet blanc et ombre pour les autres.
+ * @param {string} r identifiant de rareté
+ * @param {number} n nombre de gemmes à dessiner
+ * @returns {string} HTML des gemmes
+ */
 const gemsHtml = (r, n) => Array.from({ length: n }, (_, i) => {
   const myth = r === 'mythique';
   const st = r === 'identite' ? ` style="color:${RAINBOW[i % RAINBOW.length]}"` : '';
@@ -61,6 +79,7 @@ const gemsHtml = (r, n) => Array.from({ length: n }, (_, i) => {
 }).join('');
 // Sans image dédiée, toutes les cartes (Identité comprise) affichent le logo du gang.
 
+/* ---------- Carte face visible : calques, contenu et HTML ---------- */
 /** Calques de la carte : cadre (out), liseré (mid), fond de la face (in) et décors cumulés selon la rareté. */
 const LAYERS = '<span class="hgc-layer hgc-out"></span><span class="hgc-layer hgc-mid"></span>'
   + '<span class="hgc-layer hgc-in"><span class="hgc-ln"></span><span class="hgc-ln2"></span>'
@@ -128,6 +147,7 @@ export function cardHtml(card, opts = {}) {
   </${tag}>`;
 }
 
+/* ---------- Dos de carte et format des Paillettes ---------- */
 /** Dos de carte (booster pas encore retourné) : trame rouge, médaillon arc-en-ciel au logo, bandeau noir. */
 export function cardBackHtml(size = 'md') {
   return `<div class="hgc hgc-back hgc-${size}" aria-hidden="true"><span class="hgc-frame">`
@@ -136,5 +156,5 @@ export function cardBackHtml(size = 'md') {
     + '<span class="hgc-band-back">Humane Gang</span></span></span></div>';
 }
 
-/** Formate un nombre de Paillettes. */
+/** Formate un nombre de Paillettes, avec séparateurs de milliers à la suisse et le symbole ✦. */
 export const fmtP = (n) => `${new Intl.NumberFormat('fr-CH').format(n || 0)} ✦`;

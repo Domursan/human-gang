@@ -8,15 +8,19 @@ import { cardHtml, rarityLabel, familyLabel, numberLabel } from './cartes-ui.js'
 
 export const ICON_ZOOM = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/></svg>';
 
+/* ---------- Constantes : taille et grossissement de la loupe, appui long, couleurs, icônes ---------- */
 const LENS_D = 240; // diamètre de la loupe (px)
 const LENS_K = 2.5; // grossissement
 const PRESS_MS = 450; // durée de l'appui long tactile
 const MOVE_TOL = 10; // déplacement toléré pendant l'appui long (px)
+// Couleur d'accent de chaque rareté (utilisée pour le libellé de rareté dans la fiche).
 const TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
 const X_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const CHEV_L = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 const CHEV_R = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
 
+/* ---------- Gabarit de la fenêtre : entête, carte, fiche, barre de navigation et loupe (créé une seule fois) ---------- */
+// Le gabarit est inséré dans la page au premier appel de createZoom().open(). Les boutons portent data-cz pour être reconnus par onClick.
 const DIALOG = `
 <dialog id="cz-dialog" class="cz-dialog" aria-labelledby="cz-title" aria-describedby="cz-hint">
   <div class="cz-stage">
@@ -40,11 +44,14 @@ const DIALOG = `
   <div class="cz-lens" id="cz-lens" aria-hidden="true" hidden><div class="cz-lens-in"></div><span class="cz-lens-badge">×2,5</span><span class="cz-lens-dot"></span></div>
 </dialog>`;
 
+/* ---------- Pointeur : souris précise ou tactile ---------- */
+/** Vrai sur un appareil dont le pointeur est une souris (survol possible), faux sur tactile. */
 const isFine = () => matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /** Texte d'aide : selon le pointeur (souris ou tactile). */
 const hintText = () => (isFine() ? 'Survolez la carte pour zoomer ×2,5' : 'Pincer : zoom · appui long : loupe ×2,5');
 
+/* ---------- Rendu de la fiche (colonne d'informations à droite de la carte) ---------- */
 /** Bloc d'informations à droite de la carte (nom, rareté, série, numéro, ambiance, exemplaires). */
 function infoHtml(d) {
   const k = d.card;
@@ -82,6 +89,8 @@ export function createZoom({ ids, info }) {
   let press = null; // { x, y, id, timer, on } pendant un appui tactile
   let press_timer = 0;
 
+  /* ---------- Construction : insère le gabarit dans la page et branche les écouteurs (une seule fois) ---------- */
+  /** Insère la fenêtre dans la page et relie ses événements (clics, clavier, pointeur, fermeture). */
   function build() {
     document.body.insertAdjacentHTML('beforeend', DIALOG);
     dlg = document.getElementById('cz-dialog');
@@ -107,6 +116,7 @@ export function createZoom({ ids, info }) {
     ui.card.addEventListener('contextmenu', (e) => e.preventDefault()); // pas de menu à l'appui long
   }
 
+  /* ---------- Navigation entre les cartes ---------- */
   /** Affiche la carte d'indice donné dans la liste ; renvoie false si elle n'a pas de fiche. */
   function show(id) {
     const d = info(id);
@@ -122,6 +132,10 @@ export function createZoom({ ids, info }) {
     return true;
   }
 
+  /**
+   * Passe à la carte suivante (delta 1) ou précédente (delta -1), en bouclant sur la liste.
+   * @param {number} delta
+   */
   function step(delta) {
     if (list.length < 2) return;
     const n = (pos + delta + list.length) % list.length; // boucle : après la dernière, la première
@@ -139,6 +153,8 @@ export function createZoom({ ids, info }) {
     if (!dlg.open) dlg.showModal();
   }
 
+  /* ---------- Événements : clics, clavier, fermeture ---------- */
+  /** Gère les clics : fond (ferme), boutons fermer, précédent, suivant. */
   function onClick(e) {
     // Un clic sur le fond (hors carte, infos et boutons) ferme la fenêtre
     if (e.target.matches?.('.cz-stage, .cz-body, .cz-main')) return dlg.close();
@@ -149,11 +165,13 @@ export function createZoom({ ids, info }) {
     else if (t.dataset.cz === 'next') step(1);
   }
 
+  /** Flèches gauche et droite : carte précédente et suivante. */
   function onKey(e) {
     if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
   }
 
+  /** À la fermeture : cache la loupe, annule l'appui long et rend le focus au bouton d'origine. */
   function onClose() {
     hideLens();
     cancelPress();
@@ -191,21 +209,26 @@ export function createZoom({ ids, info }) {
     if (clone) clone.style.transform = `translate(${LENS_D / 2 - LENS_K * px}px, ${LENS_D / 2 - LENS_K * py}px) scale(${LENS_K})`;
   }
 
+  /** Masque la loupe et vide sa copie de carte. */
   function hideLens() {
     lens = null;
     if (ui?.lens) { ui.lens.hidden = true; ui.lensIn.replaceChildren(); }
   }
 
+  /** Annule le minuteur d'appui long en cours (s'il y en a un). */
   function cancelPress() {
     if (press_timer) clearTimeout(press_timer);
     press_timer = 0;
     press = null;
   }
 
+  /* ---------- Pointeur : loupe au survol (souris) ou à l'appui long (tactile) ---------- */
+  /** Souris : entrée sur la carte, la loupe s'affiche. */
   function onEnter(e) {
     if (e.pointerType !== 'touch' && isFine()) showLens(e.clientX, e.clientY, false);
   }
 
+  /** Déplace la loupe avec le pointeur ; sur tactile, annule l'appui long si le doigt glisse. */
   function onMove(e) {
     if (!lens && !press && e.pointerType !== 'touch' && isFine()) showLens(e.clientX, e.clientY, false); // après une navigation au clavier
     if (lens && !lens.touch) moveLens(e.clientX, e.clientY);
@@ -215,10 +238,12 @@ export function createZoom({ ids, info }) {
     }
   }
 
+  /** Souris : sortie de la carte, la loupe se cache. */
   function onLeave() {
     if (lens && !lens.touch) hideLens();
   }
 
+  /** Tactile : un appui démarre un minuteur ; s'il dure PRESS_MS, la loupe s'affiche sous le doigt. */
   function onDown(e) {
     if (e.pointerType !== 'touch') return;
     cancelPress();
@@ -229,6 +254,7 @@ export function createZoom({ ids, info }) {
     }, PRESS_MS);
   }
 
+  /** Tactile : le doigt se lève, la loupe (si elle était ouverte) se referme. */
   function onUp(e) {
     if (e.pointerType !== 'touch') return;
     const was = lens?.touch;

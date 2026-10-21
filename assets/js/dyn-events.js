@@ -6,19 +6,29 @@
 // Le calque est en position fixe au-dessus du contenu, sans capter les clics (seule l'image est cliquable).
 import { sb, toast, esc, playSound, motionAllowed, checkNewBadges, isGodMode, hasSession, isNavCancel } from './core.js';
 import { rnd } from './utils.js';
+// Exporte : getActiveDynEvents (liste des événements en cours), trajectory et KINDS (trajectoires, aussi utilisées
+// par card-drops.js), flyDynImage (faire apparaître une image une fois, aussi utilisé par l'admin), startDynEvents.
 
-const FALLBACK_EMOJI = '✨';
+/* ---------- Constantes et outils ---------- */
+const FALLBACK_EMOJI = '✨'; // affiché si l'événement n'a ni image ni emoji
+// Message affiché quand la capture est refusée, selon la raison renvoyée par hg_dyn_capture.
 const REASONS = {
   termine: 'Trop tard : cet événement est terminé.',
   limite_perso: 'Tu as déjà attrapé le maximum pour cet événement.',
   epuise: 'Raté ! Toutes les images ont déjà été attrapées.',
 };
+/** Tire au hasard un élément d'une liste. */
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+/** Borne v entre a et b. */
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ---------- Données ---------- */
-let _active = null;
-/** Événements en cours (rpc hg_dyn_active), mis en cache pour la page. Jamais d'erreur : [] si la RPC échoue. */
+let _active = null; // cache de la promesse de getActiveDynEvents (une seule lecture par page)
+/**
+ * Événements en cours (rpc hg_dyn_active), mis en cache pour la page. Jamais d'erreur : [] si la RPC échoue.
+ * @param {{force?: boolean}} [opts] force : relit le serveur même si le cache existe
+ * @returns {Promise<object[]>} liste des événements
+ */
 export function getActiveDynEvents({ force = false } = {}) {
   if (_active && !force) return _active;
   _active = (async () => {
@@ -36,6 +46,11 @@ export function getActiveDynEvents({ force = false } = {}) {
 }
 
 /* ---------- Calque + styles (injectés une fois) ---------- */
+/**
+ * Renvoie le calque d'images de l'hôte, en le créant si besoin. Le calque est fixe, sans capter les clics.
+ * @param {HTMLElement} [host] élément qui contient le calque (la page, ou un <dialog> ouvert)
+ * @returns {HTMLElement}
+ */
 function ensureLayer(host = document.body) {
   let layer = host.querySelector(':scope > .dyn-layer');
   if (!layer) {
@@ -46,12 +61,22 @@ function ensureLayer(host = document.body) {
   }
   return layer;
 }
+/**
+ * Annonce un message aux lecteurs d'écran (vide la zone puis écrit après 50 ms, pour répéter une annonce identique).
+ * @param {HTMLElement} layer calque qui contient la zone d'annonce
+ * @param {string} msg
+ */
 function announce(layer, msg) {
   const live = layer.querySelector('.dyn-live');
   if (!live) return;
   live.textContent = '';
   setTimeout(() => { live.textContent = msg; }, 50);
 }
+/**
+ * Charge une image à l'avance pour qu'elle s'affiche tout de suite. Ne rejette jamais.
+ * @param {string} src adresse de l'image
+ * @returns {Promise<boolean>} true si l'image est chargée
+ */
 const preload = (src) => new Promise((resolve) => {
   if (!src) return resolve(false);
   const im = new Image();
@@ -93,6 +118,14 @@ export function trajectory(kind, W, H, s) {
 export const KINDS = ['diagonale', 'vague', 'rebond', 'chute'];
 
 /* ---------- Effet de capture ---------- */
+/**
+ * Affiche « +1 » qui s'envole et, avec mouvement, une gerbe de pastilles colorées autour du point de capture.
+ * @param {HTMLElement} layer calque où poser les éléments
+ * @param {number} cx abscisse du centre de l'image (écran)
+ * @param {number} cy ordonnée du centre de l'image (écran)
+ * @param {number} size taille de l'image (px)
+ * @param {boolean} motion false : seulement le « +1 » en fondu
+ */
 function burst(layer, cx, cy, size, motion) {
   const plus = document.createElement('span');
   plus.className = 'dyn-plus';
@@ -212,14 +245,21 @@ export async function flyDynImage(ev, { preview = false, host = document.body, o
 }
 
 /* ---------- Planification sur une page ---------- */
+/** Attend que l'onglet soit visible : une image ne doit pas partir pendant que la page est cachée. */
 const waitVisible = () => (document.hidden
   ? new Promise((r) => document.addEventListener('visibilitychange', function f() { if (!document.hidden) { document.removeEventListener('visibilitychange', f); r(); } }))
   : Promise.resolve());
+/** Pause de ms millisecondes. */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /* Mode sans limite (admin) : chaque événement existant (même inactif ou terminé) apparaît une fois à chaque page,
    peu après le chargement, sans limite de captures (le serveur ignore dates, actif et maximums pour l'admin en mode actif). */
-let _forced = false;
+let _forced = false; // évite de lancer deux fois le mode sans limite
+/**
+ * Mode admin « sans limite » (mode dieu) : fait apparaître chaque événement une fois, espacé de quelques secondes.
+ * Ne fait rien si le mode n'est pas actif. Ne jette jamais.
+ * @returns {Promise<void>}
+ */
 async function forceAllDynEvents() {
   if (_forced) return;
   _forced = true;
@@ -239,7 +279,8 @@ async function forceAllDynEvents() {
   });
 }
 
-let _started = false;
+/* ---------- Démarrage ---------- */
+let _started = false; // évite de planifier les apparitions deux fois sur la même page
 /** Lance les apparitions de la page pour un membre. Ne jette jamais. */
 export async function startDynEvents(profile) {
   if (_started || !profile?.id || !(await hasSession())) return;
