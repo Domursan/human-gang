@@ -30,7 +30,7 @@ export const SITE_DEFAULTS = {
     nav_libelles: {},
     footer_liens: [
       { id: 'evenements', label: 'Événements', visible: true },
-      { id: 'assistance', label: 'Assistance', visible: true },
+      { id: 'assistance', label: 'Assistance', visible: false },
       { id: 'mentions', label: 'Mentions légales', visible: true },
       { id: 'confidentialite', label: 'Confidentialité', visible: true },
       { id: 'cookies', label: 'Cookies', visible: true },

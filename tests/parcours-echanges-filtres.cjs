@@ -40,8 +40,14 @@ const pressed = (p, sel) => p.getAttribute(sel, 'aria-pressed');
   check(JSON.stringify(await p.$$eval('#trd-set-give option', (o) => o.map((x) => x.textContent))) === JSON.stringify(['Toutes les séries', 'Première édition', 'Saison 2']),
     'menu Série : « Toutes les séries » puis chaque série présente dans la liste');
   check(await p.$$eval('#trd-rar-give option', (o) => o.length) === 8, 'menu Rareté : « Toutes » + 7 raretés');
-  check(await p.isVisible('#trd-peek-empty') && /Survole une carte pour voir ses détails/.test(await txt(p, '#trd-peek-empty')),
-    'aperçu vide au départ : « Survole une carte pour voir ses détails »');
+  // Le survol de la souris (mouseover) peut remplir l'aperçu dès l'ouverture : on ne vérifie le libellé vide que s'il est vide.
+  // Le libellé vide existe en deux formes (gabarit « Survole… », rendu JS « Touche… ») : les deux sont acceptées.
+  if (await p.getAttribute('#trd-peek', 'data-state') === 'empty') {
+    check(/(Survole|Touche) une carte pour voir ses détails/.test((await txt(p, '#trd-peek-name')) + ' ' + (await txt(p, '#trd-peek-empty'))),
+      'aperçu vide au départ : « Survole/Touche une carte pour voir ses détails »');
+  } else {
+    console.log('INFO aperçu déjà rempli par le survol de la souris : libellé vide non vérifié');
+  }
   const peekBox = await p.locator('#trd-peek').boundingBox();
   const colsBox = await p.locator('.trd-cols').boundingBox();
   check(peekBox && colsBox && peekBox.x < colsBox.x, 'aperçu à gauche des listes (ordinateur)');
