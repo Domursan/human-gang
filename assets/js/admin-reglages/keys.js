@@ -61,3 +61,5 @@ export function displayValue(value) {
   if (kindOf(value) === 'json') return JSON.stringify(value, null, 2);
   return String(value);
 }
+
+import { KEYS_LOT3 } from './keys-lot3.js'; Object.assign(KEYS, KEYS_LOT3); // lot 3 : descripteurs Secret Santa, IRL, souvenirs

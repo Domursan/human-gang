@@ -9,12 +9,13 @@ import { ghostDirectory } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { pluralCount, pad } from './utils.js';
+import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
 
 const me = await initPage({ auth: 'member' });
+await chargerReglagesLot3();
 const isAdmin = !!me?.is_admin;
 const god = () => isAdmin && isGodMode(); // mode sans limite : RSVP sur les sorties passées
 
-const GRACE_MS = 6 * 3600 * 1000;   // une sortie reste « prochaine » 6 h après son début
 const ALBUM_PREVIEW = 12;           // miniatures affichées avant « +n »
 const RSVP = [
   ['oui', 'Je viens'],
@@ -81,7 +82,7 @@ function classify() {
   const now = Date.now();
   const dated = S.events.filter((e) => e.starts_at);
   // Une rencontre ajoutée après coup (retro) est toujours « passée », même si elle date d'il y a moins de 6 h.
-  const isPast = (e) => e.retro || new Date(e.starts_at).getTime() < now - GRACE_MS;
+  const isPast = (e) => e.retro || new Date(e.starts_at).getTime() < now - delaiPassee();
   const future = dated.filter((e) => !isPast(e))
     .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
   const past = dated.filter(isPast)
@@ -470,7 +471,7 @@ function updateDateRows() {
     r.querySelector('input').setAttribute('aria-label', `Date proposée ${i + 1}`);
     r.querySelector('button').disabled = rows.length <= 2;
   });
-  $('#ev-add-date').disabled = rows.length >= 6;
+  $('#ev-add-date').disabled = rows.length >= bornesSondage().max;
 }
 function addDateRow(value = '', id = '') {
   const row = document.createElement('div');
@@ -485,7 +486,7 @@ function setMode(mode) {
   form.elements.when.value = mode;
   $('#ev-fixed').hidden = mode !== 'fixed';
   $('#ev-poll').hidden = mode !== 'poll';
-  if (mode === 'poll') { while ($$('.date-row', $('#ev-dates')).length < 2) addDateRow(); }
+  if (mode === 'poll') { while ($$('.date-row', $('#ev-dates')).length < bornesSondage().min) addDateRow(); }
 }
 form.addEventListener('change', (e) => { if (e.target.name === 'when') setMode(e.target.value); });
 $('#ev-add-date').addEventListener('click', () => { addDateRow(); $('#ev-dates .date-row:last-child input').focus(); });
@@ -526,7 +527,8 @@ form.addEventListener('submit', async (e) => {
     pollRows = $$('.date-row input', $('#ev-dates')).filter((i) => i.value);
     const uniq = new Set(pollRows.map((i) => i.value));
     if (uniq.size !== pollRows.length) { toast('Deux dates proposées sont identiques.', 'error'); return; }
-    if (pollRows.length < 2 || pollRows.length > 6) { toast('Propose entre 2 et 6 dates.', 'error'); return; }
+    const { min: sMin, max: sMax } = bornesSondage();
+    if (pollRows.length < sMin || pollRows.length > sMax) { toast(`Propose entre ${sMin} et ${sMax} dates.`, 'error'); return; }
   }
   const payload = { title, location: f.location.value.trim() || null, description: f.description.value.trim() || null, starts_at };
   const coverFile = f.cover.files[0];

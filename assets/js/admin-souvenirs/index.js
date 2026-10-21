@@ -15,6 +15,8 @@ import { loadPeople, dayLabel } from './helpers.js';
 import { openMomentForm, removeMoment } from './moments.js';
 import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
+import { blocReglages } from '../admin-reglages/lot3-ui.js';
+import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions']];
 const LIMIT = 500; // souvenirs chargés d'un coup ; la liste affiche par lots (createList)
@@ -164,6 +166,8 @@ export function mountSouvenirsSection(root, { me }) {
   S.zones = { souvenirs: root.querySelector('[data-zone="souvenirs"]'), photos: root.querySelector('[data-zone="photos"]'), reactions: root.querySelector('[data-zone="reactions"]') };
   S.detailHead = root.querySelector('#sv-d-head');
   S.detailBody = root.querySelector('#sv-d-body');
+  root.prepend(blocReglages('souvenirs'));
+  chargerReglagesLot3();
   S.panels = { photos: createPhotosPanel(S.ctx), reactions: createReactionsPanel(S.ctx) };
   S.zones.photos.append(S.panels.photos.el);
   S.zones.reactions.append(S.panels.reactions.el);

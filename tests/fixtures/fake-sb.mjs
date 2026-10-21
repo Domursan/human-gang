@@ -199,6 +199,11 @@ class Q {
       for (const r of rows) { const i = tab.findIndex((x) => x.page_slug === r.page_slug && x.user_id === r.user_id); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
       return { data: rows, error: null };
     }
+    if (this.op === 'upsert' && this.t === 'hg_settings') {  // clé primaire : une ligne par clé, remplacée
+      const rows = (Array.isArray(this.payload) ? this.payload : [this.payload]);
+      for (const r of rows) { const i = tab.findIndex((x) => x.key === r.key); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
+      return { data: rows, error: null };
+    }
     if (this.op === 'insert' || this.op === 'upsert') {
       if (this.t === 'hg_ss_editions' && S.guardError) return { data: null, error: { message: "Termine d'abord l'édition en cours avant d'en créer une nouvelle" } };
       const rows = (Array.isArray(this.payload) ? this.payload : [this.payload]).map((r) => ({ ...r }));

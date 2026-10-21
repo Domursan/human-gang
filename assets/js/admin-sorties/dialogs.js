@@ -8,8 +8,10 @@ import { pluralCount } from '../utils.js';
 import { renderDetailHeader } from '../admin/ui/detail-header.js';
 import * as api from './data.js';
 import { RSVP_ORDER, RSVP_LABEL, whenLabel, memberName, statusOf } from './format.js';
+import { bornesSondage } from '../reglages-valeurs-lot3.js';
 
-const MIN_DATES = 2, MAX_DATES = 6, TITLE_MAX = 120, LOC_MAX = 160, DESC_MAX = 1000;
+const TITLE_MAX = 120, LOC_MAX = 160, DESC_MAX = 1000;
+const minDates = () => bornesSondage().min, maxDates = () => bornesSondage().max;
 
 // CTX : { me, get() → état de la section, reload() → recharge et redessine, remove(ev), select(id) }
 let CTX = null;
@@ -68,7 +70,7 @@ function buildEdit() {
         <input id="ass-e-start" type="datetime-local">
       </div>
       <div class="ass-wide" id="ass-e-poll" hidden>
-        <p class="small muted">Propose entre ${MIN_DATES} et ${MAX_DATES} dates. Le gang votera pour celle qui convient.</p>
+        <p class="small muted">Propose entre ${minDates()} et ${maxDates()} dates. Le gang votera pour celle qui convient.</p>
         <div id="ass-e-dates" class="ass-dates"></div>
         <button class="btn btn-ghost btn-sm" type="button" id="ass-e-add">+ Ajouter une date</button>
       </div>
@@ -105,7 +107,7 @@ function buildEdit() {
 function setMode(mode) {
   E.form.querySelector('#ass-e-fixed').hidden = mode !== 'fixed';
   E.form.querySelector('#ass-e-poll').hidden = mode !== 'poll';
-  if (mode === 'poll') while (rows().length < MIN_DATES) addDateRow();
+  if (mode === 'poll') while (rows().length < minDates()) addDateRow();
 }
 function onRetro(on) {
   const poll = E.form.querySelector('input[name="ass-e-mode"][value="poll"]');
@@ -130,9 +132,9 @@ function updateDateRows() {
   list.forEach((r, i) => {
     r.querySelector('input').setAttribute('aria-label', `Date proposée ${i + 1}`);
     r.querySelector('button').setAttribute('aria-label', `Retirer la date proposée ${i + 1}`);
-    r.querySelector('button').disabled = list.length <= MIN_DATES;
+    r.querySelector('button').disabled = list.length <= minDates();
   });
-  E.form.querySelector('#ass-e-add').disabled = list.length >= MAX_DATES;
+  E.form.querySelector('#ass-e-add').disabled = list.length >= maxDates();
 }
 
 /** Ouvre la fenêtre pour créer (ev = null) ou modifier une sortie. */
@@ -194,7 +196,7 @@ async function onSave(e) {
     const inputs = rows().map((r) => r.querySelector('input')).filter((i) => i.value);
     const isos = inputs.map((i) => fromZurichInput(i.value));
     if (new Set(isos).size !== isos.length) return fail('Deux dates proposées sont identiques.', inputs[0]);
-    if (isos.length < MIN_DATES || isos.length > MAX_DATES) return fail(`Propose entre ${MIN_DATES} et ${MAX_DATES} dates.`, inputs[0]);
+    if (isos.length < minDates() || isos.length > maxDates()) return fail(`Propose entre ${minDates()} et ${maxDates()} dates.`, inputs[0]);
     wanted = inputs.map((i, k) => ({ id: i.dataset.id || null, iso: isos[k] }));
   }
   const patch = {

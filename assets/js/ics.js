@@ -1,9 +1,9 @@
+import { dureeDefautMs } from './reglages-valeurs-lot3.js';
 // ===== Humane Gang — ajout d'une sortie à l'agenda (fichier .ics, RFC 5545) =====
 // Génération côté client, sans service ni compte externe. L'UID est stable (identifiant de la sortie) :
 // réimporter le fichier met à jour l'événement au lieu de le dupliquer.
 
 const PRODID = '-//Humane Gang//Sorties//FR';
-const DEFAULT_DURATION_MS = 2 * 3600 * 1000; // sans heure de fin : deux heures
 
 /** Valeur TEXT (RFC 5545 §3.3.11) : antislash, point-virgule, virgule et retour à la ligne sont échappés. */
 export function icsText(v) {
@@ -40,7 +40,7 @@ function fold(line) {
  */
 export function buildIcs(ev, now = new Date()) {
   const start = new Date(ev.start);
-  const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + DEFAULT_DURATION_MS);
+  const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + dureeDefautMs());
   const desc = [ev.description, ev.url ? `Détails sur le site : ${ev.url}` : null].filter(Boolean).join('\n\n');
   const lines = [
     'BEGIN:VCALENDAR',

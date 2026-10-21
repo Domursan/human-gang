@@ -6,8 +6,10 @@ import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { safeUrl } from './utils.js';
 import { pairsHtml, peopleByPseudo } from './ss-pairs.js';
+import { chargerReglagesLot3, reglage } from './reglages-valeurs-lot3.js';
 
 const me = await initPage({ auth: 'member' });
+await chargerReglagesLot3();
 const app = $('#app');
 
 const STEPS = [['inscriptions', 'Inscriptions'], ['tirage', 'Tirage'], ['envoi', 'Envoi'], ['revelation', 'Révélation']];
@@ -313,6 +315,8 @@ async function addWish(e) {
   if (label.length > 200) { toast('200 caractères maximum.', 'error'); return; }
   const url = rawUrl ? safeUrl(rawUrl) : null;
   if (rawUrl && !url) { toast('Lien invalide : seules les adresses http ou https sont acceptées.', 'error'); f.url.focus(); return; }
+  const max = reglage('ss.souhaits_max');
+  if (max !== null && S.myWishes.length >= max) { toast(`Tu as atteint la limite de ${max} souhait${max > 1 ? 's' : ''}.`, 'error'); return; }
   const btn = f.querySelector('button[type=submit]');
   btn.disabled = true;
   try {
