@@ -1,6 +1,6 @@
 // Cartes admin : sous-section « Joueurs » en liste + détail. La liste des membres est en colonne 2 ; le détail
 // (portefeuille, exemplaires, journal) occupe la zone principale. Paillettes et cartes se donnent dans un tiroir.
-import { sb, toast, errMsg, esc, $, avatarHtml } from '../core.js';
+import { sb, toast, errMsg, esc, $, avatarHtml, notify } from '../core.js';
 import { rarityLabel, serialLabel, fmtP } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
@@ -157,6 +157,10 @@ function openGiveDrawer() {
         <div class="field"><label for="acd-give-count">Nombre d'exemplaires</label><input id="acd-give-count" name="count" type="number" min="1" max="100" step="1" inputmode="numeric" value="1"></div>
         <label class="switch acd-switch"><input type="checkbox" name="shiny"><span class="switch-ui" aria-hidden="true"></span><span>Brillante</span></label>
       </div>
+      <div class="stack acd-form-checks">
+        <label class="switch acd-switch"><input type="checkbox" name="announce" checked><span class="switch-ui" aria-hidden="true"></span><span>Afficher dans le fil d'actualité</span></label>
+        <label class="switch acd-switch"><input type="checkbox" name="notify" checked><span class="switch-ui" aria-hidden="true"></span><span>Prévenir par MP Discord</span></label>
+      </div>
       <p class="small muted">Les cartes limitées reçoivent le prochain numéro disponible.</p>
     </div>`,
     onSubmit: (form) => giveCard(form, uid),
@@ -171,9 +175,13 @@ async function giveCard(form, uid) {
   const count = Number(form.elements.count.value);
   if (!cardId) { showErr('Choisis une carte.'); return false; }
   if (!Number.isInteger(count) || count < 1 || count > 100) { showErr('Nombre d\'exemplaires : entre 1 et 100.'); return false; }
+  const shiny = form.elements.shiny.checked;
+  const announce = form.elements.announce.checked;
+  const notifyMember = form.elements.notify.checked;
   try {
-    check(await sb.rpc('hg_cards_admin_give', { p_user: uid, p_card: cardId, p_shiny: form.elements.shiny.checked, p_count: count }));
+    check(await sb.rpc('hg_cards_admin_give', { p_user: uid, p_card: cardId, p_shiny: shiny, p_count: count, p_announce: announce }));
     toast(`${nf(count)} carte${count > 1 ? 's' : ''} donnée${count > 1 ? 's' : ''} à ${pseudo(uid)}`, 'ok');
+    if (notifyMember) notify('card_gift_admin', { user_id: uid, card_id: cardId, count, shiny }).catch(() => {}); // MP au membre (opt-in)
     await refresh();
   } catch (e) { showErr(errMsg(e)); return false; }
 }

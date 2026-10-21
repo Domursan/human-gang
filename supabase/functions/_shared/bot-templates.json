@@ -86,6 +86,10 @@
     "trade_offer_dm": {
       "title": "{pseudo} te propose un échange{contre}",
       "body": "**{pseudo} donne** : {donne}\n**{pseudo} demande** : {demande}\n\nRéponds sur le site, dans l'onglet Échanges."
+    },
+    "card_gift_admin_dm": {
+      "title": "🎁 {admin} t'a offert « {carte} » ({detail}){quantite}",
+      "body": "Elle rejoint ta collection. Va voir sur le site."
     }
   },
   "meta": {
@@ -289,6 +293,16 @@
         "donne": { "label": "Ce qui est donné (cartes et Paillettes)", "example": "2 cartes (Le Four à raclette, Tracteur) + 50 Paillettes" },
         "demande": { "label": "Ce qui est demandé (cartes et Paillettes)", "example": "1 carte (Soirée pizza)" },
         "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+      }
+    },
+    "card_gift_admin_dm": {
+      "group": "cards", "label": "Carte offerte par l'admin", "target": "MP au membre qui reçoit la carte", "color": "#E0A93B",
+      "description": "Envoyé en MP à un membre quand l'admin (ou un Staff avec la permission Cartes) lui donne une carte. L'image de la carte est jointe si elle est en https. Désactivable dans Bot Discord, activé par défaut.",
+      "vars": {
+        "admin": { "label": "Pseudo de celui qui offre", "example": "Ethan" },
+        "carte": { "label": "Nom de la carte", "example": "Le Four à raclette" },
+        "detail": { "label": "Rareté, et « brillante » si la carte l'est", "example": "légendaire, brillante" },
+        "quantite": { "label": "« ×N » si plusieurs exemplaires (sinon vide)", "example": " ×3" }
       }
     }
   }

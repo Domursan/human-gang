@@ -165,7 +165,10 @@ export function createClient() {
         if (args.p_user === ME) { DB.hg_wallets[0].paillettes += args.p_delta; return { data: DB.hg_wallets[0].paillettes, error: null }; }
         return { data: 0, error: null };
       }
-      if (fn === 'hg_cards_admin_give') return { data: args.p_count, error: null };
+      if (fn === 'hg_cards_admin_give') {
+        if (S.giveFail) return { data: null, error: { message: 'Réservé à l\'admin' } };
+        return { data: args.p_count, error: null };
+      }
       if (fn === 'hg_cards_admin_take') return { data: null, error: null };
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
