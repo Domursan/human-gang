@@ -112,14 +112,19 @@ const visibleSubs = (p) => p.$$eval('#shell-subs .shell-sub', (as) => as.filter(
     await p.waitForFunction(() => location.hash === '#membres/' || /^#membres\//.test(location.hash), null, { timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#shell-col') && await p.isVisible('#shell-subs a[href="#membres/comptes"]'), '(c) mobile : écran Membres, liste des sous-sections');
     await p.click('#shell-subs a[href="#membres/comptes"]');
-    check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : écran sous-section, colonne masquée');
-    check(await p.isVisible('#zone-back'), '(c) mobile : bouton retour vers le domaine');
-    check(await waitVisible(p, '#comptes'), '(c) mobile : Comptes affichée');
+    // Comptes est une sous-section « liste + détail » : sur mobile, la liste occupe l'écran tant qu'aucun membre n'est choisi
+    check(await waitVisible(p, '#shell-col') && await waitVisible(p, '#app', false), '(c) mobile : liste des comptes plein écran (zone masquée)');
     check(await p.isVisible('#shell-tabs') && (await hashOf(p)) === '#membres/comptes', '(c) mobile : barre d’onglets toujours visible');
     const hs = await hscroll(p);
     check(hs <= 0, `(c) mobile : pas de défilement horizontal (${hs})`);
+    await p.click('#shell-col-list .ui-row');
+    check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : fiche du membre choisi, colonne masquée');
+    check(await p.isVisible('#zone-back') && (await p.getAttribute('#zone-back', 'href')) === '#membres/comptes', '(c) mobile : bouton retour vers la liste des comptes');
+    check(await waitVisible(p, '#comptes'), '(c) mobile : Comptes affichée');
     await p.click('#zone-back');
-    check(await waitVisible(p, '#shell-col') && (await hashOf(p)) === '#membres/', '(c) mobile : retour à l’écran du domaine');
+    check(await waitVisible(p, '#shell-col') && (await hashOf(p)) === '#membres/comptes', '(c) mobile : retour à la liste des comptes');
+    await p.evaluate(() => { location.hash = '#membres/'; });
+    check(await waitVisible(p, '#shell-col') && await p.isVisible('#shell-subs a[href="#membres/comptes"]'), '(c) mobile : retour à l’écran du domaine');
     check(p.errs.length === 0, '(c) mobile : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }

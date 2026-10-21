@@ -4,8 +4,8 @@ import { confirmBox } from '../ui-confirm.js';
 import { safeUrl } from '../utils.js';
 import { busy, check, fromLocalInput } from './common.js';
 import { A, IDEA } from './state.js';
-import { loadAccounts, renderList, renderRows } from './list.js';
-import { openAccount, selectTab, renderPanel, renderDetail, reloadDetail } from './fiche.js';
+import { loadAccounts, paintAccountsList } from './list.js';
+import { selectTab, renderPanel, renderDetail, reloadDetail } from './fiche.js';
 import { closeDetail } from './inspect.js';
 import { saveProfile, saveInfos } from './profile.js';
 import { ssJoin, ssLeave, setPair, clearPair, curEdition } from './ss.js';
@@ -19,7 +19,6 @@ import { bindSharedFields } from './ss-shared.js';
 function bindAccounts() {
   const sec = $('#comptes');
   sec.addEventListener('input', (ev) => {
-    if (ev.target.id === 'acc-q') { A.q = ev.target.value; renderRows(); }
     if (ev.target.id === 'ap-joined') { const b = $('[data-act="clear-joined"]', sec); if (b) b.disabled = !ev.target.value; }
   });
   sec.addEventListener('keydown', (ev) => {
@@ -34,7 +33,6 @@ function bindAccounts() {
   sec.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t || t.disabled) return;
-    if (t.dataset.open) return openAccount(t.dataset.open);
     if (t.dataset.tab) return selectTab(t.dataset.tab);
     const act = t.dataset.act;
     if (act === 'back') { closeDetail(); return; }
@@ -142,5 +140,5 @@ export async function initAccounts({ me, onChange }) {
   bindAccounts();
   bindSharedFields();
   try { await loadAccounts(); } catch (e) { A.listError = e; }
-  renderList();
+  paintAccountsList();
 }

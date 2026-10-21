@@ -120,6 +120,8 @@
   .shell-zone { grid-column: 1; grid-row: 2; }
   .shell-info { display: none !important; }
   .shell[data-screen="domain"] .shell-zone, .shell[data-screen="sub"] .shell-col { display: none; }
+  .shell[data-screen="sub"][data-mode="list"] .shell-col { display: flex; }
+  .shell[data-screen="sub"][data-mode="list"] .shell-zone { display: none; }
   .shell[data-screen="sub"] .zone-back { display: inline-flex; align-items: center; gap: 4px; }
   .zone-head { padding: 16px 16px 14px; }
   .shell-groups { padding: 16px 16px 32px; }

@@ -8,8 +8,8 @@ import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { mountLogSection } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
-import { initAccounts, refreshAccounts, openAccountFiche } from './admin-accounts.js';
-import { mountGhostsSection, refreshGhostsSection } from './admin-ghosts.js';
+import { initAccounts, refreshAccounts, openAccountFiche, showAccount, mountAccountsList, mountAccountsInfo } from './admin-accounts.js';
+import { mountGhostsSection, refreshGhostsSection, mountGhostsList, showGhost } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
@@ -47,7 +47,7 @@ function ensureAccounts() {
   initAccounts({
     me,
     onChange: async (kind) => {
-      if (kind === 'members') { if (has('membres')) refreshAccessSection(); await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (S.ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
+      if (kind === 'members') { await refreshAccounts(); if (has('membres')) refreshAccessSection(); await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (S.ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
       if (kind === 'badges') { await loadBadges(); renderBadges(); }
       if (kind === 'ss') { await loadEditionDetails(); if (S.ssLoaded) renderSS(); renderStats(); }
       if (kind === 'ideas') { await loadIdeas(); renderIdeas(); renderStats(); }
@@ -66,7 +66,13 @@ if (has('assistance')) bindSupport();
 /* ---------- Sous-sections : montage à la première visite ---------- */
 registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')) });
 registerSub('pilotage/staff', { main: () => mountStaffSection($('#staff-root'), { me }) }); // administrateur seulement
-registerSub('membres/comptes', { main: () => ensureAccounts() });
+// Comptes : liste en colonne 2, fiche dans la zone principale (#membres/comptes/<id>/<onglet>), résumé à droite.
+registerSub('membres/comptes', {
+  main: () => ensureAccounts(),
+  list: (el) => mountAccountsList(el),
+  open: (el, { id, tab }) => showAccount(id, tab),
+  info: (el) => mountAccountsInfo(el),
+});
 registerSub('membres/fantomes', {
   // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
   main: () => {
@@ -77,6 +83,8 @@ registerSub('membres/fantomes', {
     });
     refreshGhostsSection();
   },
+  list: (el) => mountGhostsList(el),
+  open: (el, { id }) => showGhost(id),
 });
 registerSub('membres/invitations', {
   main: () => mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } }),

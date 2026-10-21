@@ -1,21 +1,24 @@
-// Comptes admin : fiche d'un membre (chargement, en-tête, onglets, sélection d'onglet).
-import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml } from '../core.js';
+// Comptes admin : fiche d'un membre (chargement, en-tête, onglets, résumé du panneau d'infos).
+// L'onglet suit l'URL : #membres/comptes/<id>/<onglet>.
+import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
-import { IC } from './common.js';
+import { renderDetailHeader } from '../admin/ui/detail-header.js';
+import { renderInfoPanel } from '../admin/ui/info-panel.js';
 import { A, H, TABS, root } from './state.js';
 import { isAdminView } from '../admin/perms.js';
 import { permLabel } from '../admin-staff.js';
-import { enterInspect, updateInspect } from './inspect.js';
+import { closeDetail } from './inspect.js';
 import { profileHtml, infosHtml } from './profile.js';
 import { ssHtml } from './ss.js';
 import { irlHtml, photosHtml, contribHtml, badgesHtml } from './activity.js';
+import { roleOf, selectInList } from './list.js';
 
 /* =========================================================
    Fiche d'un membre
    ========================================================= */
 async function q(p) { const r = await p; return { data: r.data, error: r.error }; }
 async function loadDetail(uid) {
-  const [profile, info, editions, parts, wishes, assigns, events, rsvps, photos, ideas, support, badges, ubadges] = await Promise.all([
+  const [profile, info, editions, parts, wishes, assigns, events, rsvps, photos, ideas, support, badges, ubadges, wallet, cards] = await Promise.all([
     q(sb.from('hg_profiles').select('*').eq('id', uid).maybeSingle()),
     q(sb.from('hg_profile_info').select('data, updated_at').eq('user_id', uid).maybeSingle()),
     q(sb.from('hg_ss_editions').select('id, year, status, drawn_at').order('year', { ascending: false })),
@@ -29,6 +32,8 @@ async function loadDetail(uid) {
     q(sb.from('hg_support').select('*').eq('user_id', uid).order('created_at', { ascending: false })),
     q(sb.from('hg_badges').select('code, name, description, image_url, sort').order('sort')),
     q(sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', uid)),
+    q(sb.from('hg_wallets').select('paillettes').eq('user_id', uid).maybeSingle()), // résumé : Paillettes
+    q(sb.from('hg_card_copies').select('id').eq('owner_id', uid)),                  // résumé : Cartes
     ensureAccessData().catch(() => null), // accès aux pages (onglet « Accès ») ; l'erreur s'affiche dans l'onglet
   ]);
   if (profile.error) throw profile.error;
@@ -37,7 +42,7 @@ async function loadDetail(uid) {
   const staffRes = isAdminView() ? await q(sb.rpc('hg_staff_list')) : { data: null, error: null };
   const d = {
     profile: profile.data, info, staff: (staffRes.data ?? []).find((s) => s.user_id === uid) ?? null, editions, parts, wishes, assigns, events, rsvps, photos, ideas, support, badges, ubadges,
-    signed: new Map(),
+    wallet, cards, signed: new Map(),
   };
   // Miniatures signées (bucket privé)
   const paths = (photos.data ?? []).map((p) => p.path);
@@ -49,23 +54,52 @@ async function loadDetail(uid) {
   return d;
 }
 
+const tabOf = (t) => (TABS.some(([k]) => k === t) ? t : 'profil');
+
+/** Ouvre la fiche d'un membre dans la zone principale (URL déjà à jour). */
 export async function openAccount(uid, { tab } = {}) {
-  A.uid = uid; A.tab = tab || 'profil'; A.showPair = false; A.d = null;
-  root().innerHTML = `${detailHead()}<div class="empty">Chargement de la fiche…</div>`;
-  enterInspect();
-  $('#comptes').scrollIntoView({ block: 'start' });
+  A.uid = uid; A.tab = tabOf(tab); A.showPair = false; A.d = null;
+  root().innerHTML = '<div class="empty">Chargement de la fiche…</div>';
+  selectInList(uid);
+  paintInfo();
   try {
-    A.d = await loadDetail(uid);
+    const d = await loadDetail(uid);
     if (A.uid !== uid) return;
+    A.d = d;
     if (!A.d.editions.data?.some((e) => e.id === A.ssEdition)) A.ssEdition = A.d.editions.data?.[0]?.id ?? null;
+    if (isGhostFiche() && A.tab === 'acces') A.tab = 'profil';
     renderDetail();
-    updateInspect();
   } catch (e) {
-    root().innerHTML = `${detailHead()}<div class="empty">Impossible de charger la fiche : ${esc(errMsg(e))}</div>`;
+    if (A.uid !== uid) return;
+    root().innerHTML = `<div class="empty">Impossible de charger la fiche : ${esc(errMsg(e))}</div>`;
+    paintInfo();
   }
 }
 export async function reloadDetail() {
-  try { A.d = await loadDetail(A.uid); renderDetail(); updateInspect(); } catch (e) { toast(errMsg(e), 'error'); }
+  try { A.d = await loadDetail(A.uid); renderDetail(); } catch (e) { toast(errMsg(e), 'error'); }
+}
+
+/** Écran sans élément choisi : la zone principale invite à choisir dans la liste. */
+export function emptyDetail() {
+  A.uid = null; A.d = null; A.showPair = false;
+  selectInList(null);
+  root().innerHTML = `<div class="acc-empty">
+      <p class="acc-empty-t">Choisis un membre dans la liste</p>
+      <p class="small muted">Sa fiche s'ouvre ici : profil, Secret Santa, sorties, photos, badges et accès aux pages.</p>
+    </div>`;
+  paintInfo();
+}
+
+/** Fournisseur `open` de la sous-section : affiche la fiche de l'URL (#membres/comptes/<id>/<onglet>). */
+export function showAccount(uid, tab) {
+  if (!uid) { emptyDetail(); return; }
+  const t = tabOf(tab);
+  if (A.uid === uid && A.d) {
+    selectInList(uid);
+    if (t !== A.tab) selectTab(t);
+    return;
+  }
+  return openAccount(uid, { tab: t });
 }
 
 /** Vrai si la fiche ouverte est celle d'un fantôme (pas encore inscrit). */
@@ -78,41 +112,44 @@ function staffLineHtml(st) {
   return `<div class="acc-staff"><span class="pill pill-ok">Staff</span>${st.active ? '' : ' <span class="pill pill-muted">inactif</span>'} ${perms}</div>`;
 }
 
-function detailHead() {
+/** En-tête de la fiche : composant commun (admin/ui/detail-header.js) + ligne Staff / admin. */
+function paintHead() {
+  const host = $('#acc-dh'); if (!host) return;
   const acc = A.accounts.find((a) => a.id === A.uid) || {};
   const p = A.d?.profile || { pseudo: acc.pseudo };
   const ghost = isGhostFiche();
-  return `
-    <div class="acc-detail-top">
-      <button class="btn btn-ghost btn-sm" type="button" data-act="back">${IC.back} Tous les comptes</button>
-    </div>
-    <div class="acc-ident">
-      ${avatarHtml(p, 56)}
-      <div class="acc-ident-txt">
-        <h3 class="acc-ident-name">${esc(p.pseudo || acc.pseudo || 'Membre')}${ghost ? ' <span class="pill pill-muted">(fantôme)</span>' : ''}</h3>
-        ${ghost
-          ? '<div class="small muted">Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.</div>'
-          : `<div class="small muted">${esc(acc.email || '')}${acc.created_at ? ` · inscrit le ${esc(fmtDate(acc.created_at))}` : ''}${acc.last_sign_in_at ? ` · vu le ${esc(fmtDateTime(acc.last_sign_in_at))}` : ''}</div>`}
-${staffLineHtml(A.d?.staff)}
-      </div>
-      ${p.is_admin ? '<span class="pill pill-ok">admin</span>' : ''}
-    </div>`;
+  const subtitle = ghost
+    ? 'Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.'
+    : [acc.email, acc.created_at ? `inscrit le ${fmtDate(acc.created_at)}` : '', acc.last_sign_in_at ? `vu le ${fmtDateTime(acc.last_sign_in_at)}` : '']
+      .filter(Boolean).join(' · ');
+  renderDetailHeader(host, {
+    member: { pseudo: p.pseudo || acc.pseudo || '?', avatar_url: p.avatar_url, color: p.color },
+    title: `${p.pseudo || acc.pseudo || 'Membre'}${ghost ? ' (fantôme)' : ''}`,
+    subtitle,
+    actions: [{ label: 'Fermer la fiche', onClick: closeDetail }],
+  });
+  const meta = $('#acc-meta');
+  if (meta) meta.innerHTML = `${p.is_admin ? '<span class="pill pill-ok">admin</span> ' : ''}${staffLineHtml(A.d?.staff)}`;
 }
 
-export function renderDetail() {
-  root().innerHTML = `
-    ${detailHead()}
-    <div class="acc-tabs" role="tablist" aria-label="Données du membre">
-      ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
-    </div>
-    <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
-}
 function tabCount(k) {
   const d = A.d; let n = 0;
   if (k === 'photos') n = d.photos.data?.length ?? 0;
   if (k === 'contrib') n = (d.ideas.data?.length ?? 0) + (d.support.data?.length ?? 0);
   if (k === 'badges') n = d.ubadges.data?.length ?? 0;
   return n ? ` <span class="acc-tab-n">${n}</span>` : '';
+}
+
+export function renderDetail() {
+  root().innerHTML = `
+    <div id="acc-dh"></div>
+    <div class="acc-meta" id="acc-meta"></div>
+    <div class="acc-tabs" role="tablist" aria-label="Données du membre">
+      ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
+    </div>
+    <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
+  paintHead();
+  paintInfo();
 }
 export function renderPanel() {
   const panel = $('#acc-panel'); if (!panel) return renderDetail();
@@ -139,7 +176,65 @@ export function selectTab(k, focus = false) {
   const panel = $('#acc-panel');
   panel.setAttribute('aria-labelledby', `acc-tab-${k}`);
   renderPanel();
+  // L'onglet suit l'URL sans nouvelle entrée d'historique (le routeur ne réagit pas à replaceState)
+  if (A.uid) history.replaceState(null, '', `#membres/comptes/${A.uid}/${k}`);
   if (focus) $(`#acc-tab-${k}`)?.focus();
+}
+
+/* =========================================================
+   Panneau d'infos (colonne 4 : résumé du membre)
+   ========================================================= */
+let infoH = null;
+/** Fournisseur `info` de la sous-section : le contenu est repeint à chaque changement de fiche. */
+export function mountAccountsInfo(el) {
+  el.innerHTML = '<div id="acc-info"></div>';
+  paintInfo();
+}
+
+export function paintInfo() {
+  const host = $('#acc-info'); if (!host) return;
+  infoH?.destroy(); infoH = null;
+  if (!A.uid || !A.d) { host.innerHTML = '<p class="ui-info-empty">Sélectionne un membre pour voir son résumé.</p>'; return; }
+  const d = A.d; const p = d.profile;
+  const acc = A.accounts.find((a) => a.id === A.uid) || {};
+  const ghost = isGhostFiche();
+  const role = roleOf({ ...acc, is_ghost: ghost, is_admin: !!p.is_admin });
+  const nf = (n) => Number(n || 0).toLocaleString('fr-CH');
+  const sorties = (d.rsvps.data ?? []).filter((r) => r.status === 'oui').length;
+  const ss = (d.parts.data ?? []).filter((x) => x.user_id === A.uid).length;
+  const history = (d.support.data ?? []).slice(0, 5).map((s) => ({
+    id: s.id, title: s.subject || 'Demande',
+    status: s.status === 'ouverte' ? { label: 'Ouverte', tone: 'open' } : { label: 'Traitée', tone: 'done' },
+    at: s.created_at,
+  }));
+  const actions = [
+    { label: 'Modifier le profil', onClick: () => selectTab('profil') },
+    { label: 'Secret Santa', onClick: () => selectTab('ss') },
+    { label: 'Badges', onClick: () => selectTab('badges') },
+    ...(ghost ? [] : [{ label: 'Accès aux pages', onClick: () => selectTab('acces') }]),
+  ];
+  infoH = renderInfoPanel(host, {
+    member: { pseudo: p.pseudo || acc.pseudo || '?', avatar_url: p.avatar_url, color: p.color, since: acc.created_at || null, lastSeen: acc.last_sign_in_at || null },
+    statsTitle: 'Résumé',
+    stats: [
+      { value: nf(d.wallet.data?.paillettes), label: 'Paillettes' },
+      { value: nf(d.cards.data?.length), label: 'Cartes' },
+      { value: nf(sorties), label: 'Sorties IRL' },
+      { value: nf(ss), label: 'Secret Santa' },
+      { value: nf(d.ubadges.data?.length), label: 'Badges' },
+      { value: role.label, label: 'Rôle' },
+    ],
+    historyTitle: "Demandes d'assistance",
+    history,
+    actions,
+  });
+}
+
+/** Ouvre la fiche d'un membre depuis une autre section : change l'URL, la sous-section affiche la fiche. */
+export function openAccountFiche(uid, tab) {
+  const h = `#membres/comptes/${uid}${tab ? `/${tab}` : ''}`;
+  if (location.hash === h) return openAccount(uid, { tab: tabOf(tab) });
+  location.hash = h;
 }
 
 // Accès aux pages modifiés (ici ou dans la section « Accès aux pages ») : l'onglet « Accès » se met à jour
@@ -149,9 +244,6 @@ window.addEventListener('hg:access', () => {
   renderPanel();
   if (f) $(`[data-page-access="${CSS.escape(f)}"]`)?.focus();
 });
-
-/** Ouvre la fiche d'un membre (utilisable depuis les autres sections). */
-export function openAccountFiche(uid, tab) { return openAccount(uid, { tab }); }
 
 H.renderPanel = renderPanel;
 H.renderDetail = renderDetail;

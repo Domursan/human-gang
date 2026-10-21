@@ -59,3 +59,10 @@
 .agh-merge-err { margin: 0; font-size: 14px; color: var(--rose); overflow-wrap: anywhere; }
 .agh-merge-btns { display: flex; flex-wrap: wrap; gap: 8px; }
 .agh-merge-btns .btn { flex: 1 1 100%; min-height: 44px; }
+
+/* ----- Liste + détail : bouton de la colonne 2, accueil de la zone principale, fiche ----- */
+.agh-new { width: 100%; justify-content: center; margin-bottom: 10px; }
+.agh-hint { align-items: center; justify-content: center; text-align: center; min-height: 200px; }
+.agh-hint p { margin: 0; }
+.agh-hint .acc-empty-t { margin-bottom: 4px; }
+.agh-detail { gap: 14px; }

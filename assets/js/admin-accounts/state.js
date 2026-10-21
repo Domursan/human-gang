@@ -4,7 +4,7 @@ import { $ } from '../core.js';
 /* ---------- État ---------- */
 export const A = {
   me: null, onChange: async () => {},
-  accounts: [], avatars: new Map(), q: '', listError: null,
+  accounts: [], avatars: new Map(), listError: null,
   uid: null, tab: 'profil', d: null, loading: false,
   ssEdition: null, showPair: false,
 };

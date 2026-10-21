@@ -13,6 +13,7 @@
 //     list?: (el) => …,         // colonne 2, sous les sous-sections : appelé une fois par sous-section (phase 2)
 //     info?: (el) => …,         // panneau d'infos à droite (affiché ≥ 1440 px seulement) : appelé une fois par sous-section
 //   })
+// Sous-section avec `list` : data-mode = list (sans id) ou detail (avec id) ; sur mobile, la liste occupe l'écran tant qu'aucun élément n'est choisi.
 // Toutes les sections n'utilisent pour l'instant que `main`. Une sous-section sans fournisseur affiche sa section seule.
 // Les droits viennent de admin/perms.js (DOMAINS, canSection) : une sous-section non permise n'est jamais montée.
 // setCount(sous-section, n) : compteur « à traiter » affiché dans la colonne et sur les domaines (rail et onglets).
@@ -213,7 +214,11 @@ async function show(r) {
   markActive(r.dom.id, r.sub.id);
   el.zoneEyebrow.textContent = r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
-  el.back.setAttribute('href', `#${r.dom.id}/`);
+  // Sous-section « liste + détail » (fournit `list`) : mobile = liste, puis détail avec retour à la liste
+  const listed = !!p.list;
+  el.shell.dataset.mode = listed ? (r.id ? 'detail' : 'list') : 'page';
+  el.back.setAttribute('href', listed && r.id ? `#${r.dom.id}/${r.sub.id}` : `#${r.dom.id}/`);
+  el.back.textContent = listed && r.id ? 'Liste' : 'Domaine';
   // Conteneur du groupe (une seule sous-section visible à la fois ; les déjà montées restent en mémoire)
   const gid = p.group || key;
   let g = groups.get(gid);
