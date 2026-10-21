@@ -2,7 +2,7 @@
 //
 // Source des appels : `.rpc('nom'` et `.from('nom'` dans assets/js/**/*.js, les pages *.html et sw.js,
 // ainsi que les fonctions edge supabase/functions/**/*.ts (Deno).
-// Source des définitions : supabase/schema/schema_reel_2026-10-21.sql (état réel de la base) et les
+// Source des définitions : supabase/schema/schema_reel_2026-10-21b.sql (état réel de la base) et les
 // migrations supabase/migrations/NNN_*.sql numérotées 020 et plus (postérieures au schéma).
 // Les buckets de stockage (`storage.from('…')`) ne sont pas des tables : ils sont ignorés.
 //
@@ -16,7 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SCHEMA = path.join(ROOT, 'supabase/schema/schema_reel_2026-10-21.sql');
+const SCHEMA = path.join(ROOT, 'supabase/schema/schema_reel_2026-10-21b.sql');
 const MIGRATIONS = path.join(ROOT, 'supabase/migrations');
 const MIGRATION_MIN = 20;
 
