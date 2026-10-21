@@ -53,6 +53,9 @@ const DB = {
   hg_page_access: S.access || [],
   // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
   hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: [], hg_profile_info: [],
+  // Assistance en fil (migration 032) : réponses publiques et notes internes. S.replies : données de départ facultatives.
+  // Les demandes portent updated_at / taken_by / taken_at / read_at quand le scénario les fournit (absents = demande neuve, non lue).
+  hg_support_replies: S.replies || [],
   // Journal admin (Pilotage > Journal) : entrées d'exemple ; scénario S.adminLog / S.accessLog pour en fournir d'autres.
   hg_admin_log: S.adminLog || [
     { id: 1, admin_id: ME, action: 'carte_donnee', target_user: U(2), target_ref: 'Série Printemps #12', details: { carte: 'Renard', quantite: 1 }, created_at: iso(-30) },
@@ -192,9 +195,18 @@ class Q {
       for (const r of rows) {
         if (this.t === 'hg_badges' && tab.some((x) => x.code === r.code)) return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "hg_badges_pkey"' } };
         if (this.t === 'hg_invite_links') Object.assign(r, { id: 'L' + (++seq + 10), token: 'new' + String(seq).padStart(21, '0'), active: true, codes_generated: 0, created_at: new Date().toISOString() });
-        if (r.id === undefined && ['hg_moments', 'hg_photos', 'hg_events'].includes(this.t)) r.id = uid(); // comme la base (gen_random_uuid)
+        if (r.id === undefined && ['hg_moments', 'hg_photos', 'hg_events', 'hg_support_replies'].includes(this.t)) r.id = uid(); // comme la base (gen_random_uuid)
+        if (this.t === 'hg_support_replies' && r.created_at === undefined) r.created_at = new Date().toISOString();
         if (this.t === 'hg_moments' && r.created_at === undefined) r.created_at = new Date().toISOString();
         tab.unshift(r);
+      }
+      // Déclencheur de la migration 032 : une réponse remet la demande à jour et la prend en charge si elle ne l'est pas
+      if (this.t === 'hg_support_replies') for (const r of rows) {
+        const sup = (DB.hg_support || []).find((x) => x.id === r.support_id);
+        if (!sup) continue;
+        const now = new Date().toISOString();
+        sup.updated_at = now;
+        if (!sup.taken_by) { sup.taken_by = r.author_id; sup.taken_at = now; }
       }
       return { data: this.one ? rows[0] : rows, error: null };
     }

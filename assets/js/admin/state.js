@@ -3,7 +3,7 @@
 /* ---------- État ---------- */
 export const S = {
   members: [], byId: new Map(), invites: [], editions: [], editionId: null, participants: [], exclusions: [],
-  badges: [], userBadges: [], ideas: [], support: [], bot: null, theme: null, ghosts: [],
+  badges: [], userBadges: [], ideas: [], support: [], supportReplies: [], meId: null, bot: null, theme: null, ghosts: [],
   ideaFilter: 'nouvelle', supportFilter: 'ouverte', badgeMember: '', lastDraw: null, lastCodes: [], ssLoaded: false,
   // Recherche par liste (texte saisi, vide = tout afficher)
   q: { idees: '', assistance: '', membres: '', badges: '' },

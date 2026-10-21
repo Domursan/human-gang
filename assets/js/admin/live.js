@@ -30,6 +30,7 @@ const RETRY_MAX_MS = 60000;
 export const TABLE_PERM = {
   hg_ideas: 'support',
   hg_support: 'support',
+  hg_support_replies: 'support',
   hg_profiles: 'membres',
   hg_staff: 'admin',
   hg_admin_log: 'journal',
@@ -45,6 +46,7 @@ export const TABLE_PERM = {
 const LOAD = {
   hg_ideas: loadIdeas,
   hg_support: loadSupport,
+  hg_support_replies: loadSupport,
   hg_profiles: loadMembers,
   hg_ss_participants: loadEditionDetails,
 };
@@ -228,7 +230,7 @@ export function initLive() {
   if (started) return;
   started = true;
   if (canSection('idees')) onTableChange('idees', ['hg_ideas'], renderIdeas);
-  if (canSection('assistance')) onTableChange('assistance', ['hg_support'], renderSupport);
+  if (canSection('assistance')) onTableChange('assistance', ['hg_support', 'hg_support_replies'], renderSupport);
   if (canSection('secret-santa')) onTableChange('secret-santa', ['hg_ss_participants'], () => { if (S.ssLoaded) renderSS(); });
   mountIndicator();
   window.addEventListener('pagehide', stop);
