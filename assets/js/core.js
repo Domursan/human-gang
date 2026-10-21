@@ -538,7 +538,7 @@ export function updateNav(profile = _profile) {
     if (toggle.hidden) setNavOpen(header, false);
   }
 }
-/** Ouvre ou ferme la navigation repliée (moins de 600 px). */
+/** Ouvre ou ferme la navigation repliée (760 px et moins). */
 function setNavOpen(header, open) {
   header.classList.toggle('nav-open', open);
   header.querySelector('.nav-toggle')?.setAttribute('aria-expanded', String(open));

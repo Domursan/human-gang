@@ -125,9 +125,9 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
 .skip-link:focus-visible { top: 8px; outline: 2px solid var(--sand); outline-offset: 2px; }
 #app[tabindex="-1"]:focus { outline: none; }
 
-/* Menu repliable (moins de 600 px) : la navigation s'ouvre sous l'en-tête au lieu de défiler */
+/* Menu repliable (760 px et moins) : la navigation s'ouvre sous l'en-tête au lieu de défiler */
 .nav-toggle { display: none; }
-@media (max-width: 600px) {
+@media (max-width: 760px) {
   .nav-toggle { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 999px;
     font: inherit; font-weight: 700; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); cursor: pointer; }
   .nav-toggle[hidden] { display: none; }
