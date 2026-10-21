@@ -404,10 +404,20 @@ async function openBooster(free) {
   S.busy = true;
   renderBoosters();
   let R = null;
+  // Une même demande garde le même identifiant tant qu'elle n'a pas abouti :
+  // si la réponse se perd et que l'utilisateur relance, le serveur ne rouvre pas de booster.
+  if (!S.bootReq || S.bootReq.free !== !!free) {
+    S.bootReq = { free: !!free, id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`) };
+  }
   try {
-    const { data, error } = await sb.rpc('hg_open_booster', { p_free: !!free });
+    const { data, error } = await sb.rpc('hg_open_booster', { p_free: !!free, p_request: S.bootReq.id });
     if (error) throw error;
+    S.bootReq = null;
     const cards = data?.cards || [];
+    // Nombre réellement livré (peut être inférieur au nombre payé si le tirage n'a pas trouvé de carte)
+    const asked = Number(data?.demandees) || cards.length;
+    const got = Number(data?.livrees) || cards.length;
+    if (got < asked) toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
     // Annonce Discord des belles cartes (vérifiée côté serveur par hg-notify)
     for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
     const seq = motionAllowed() && cards.length > 0;
@@ -416,7 +426,14 @@ async function openBooster(free) {
     S.reveal = R;
     await refreshData();
   } catch (e) {
-    toast(errMsg(e), 'error');
+    if (String(e?.message || '').includes('booster_deja_ouvert')) {
+      // Le serveur a déjà traité cette demande : on ne la renvoie pas, on recharge l'état.
+      S.bootReq = null;
+      toast('Ce booster a déjà été ouvert. Ton inventaire est à jour.');
+      await refreshData().catch(() => {});
+    } else {
+      toast(errMsg(e), 'error');
+    }
   } finally {
     S.busy = false;
     renderAll();
