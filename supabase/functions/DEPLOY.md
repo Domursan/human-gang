@@ -54,7 +54,9 @@ Les événements `card_pull` (belle carte obtenue) et `card_trade` (échange con
 Les modèles `card_pull_announce` et `card_trade_announce` sont dans `_shared/bot-templates.json` et `_shared/templates.ts`.
 **Redéployer `hg-notify`** (même fichiers que le tableau ci-dessus, aucun nouveau fichier partagé).
 Aucun nouveau secret. Sans redéploiement, le site enverra `card_pull` et la fonction répondra « Événement inconnu ».
-Migration associée : `supabase/migrations/018_cartes_vitrine_rls.sql` (RLS de la vitrine, à appliquer une fois).
+Aucune migration nouvelle pour cette fonction. Les règles d'accès (RLS) de la vitrine des cartes sont déjà en base et
+figurent dans `supabase/schema/schema_reel_2026-10-21.sql` (section « Policies RLS »). Le fichier
+`018_cartes_vitrine_rls.sql` mentionné auparavant n'a jamais existé dans le dépôt.
 
 ## hg-cron : tâches planifiées (toutes les 5 minutes)
 Annonce automatiquement sur Discord le lancement et la fin des événements dynamiques (`hg_dyn_events` avec
