@@ -1,5 +1,5 @@
 // Pastille « messages non lus » de l'en-tête (rafraîchie à l'ouverture, toutes les minutes et au retour sur l'onglet).
-import { sb } from './supabase.js';
+import { sb, hasSession, isNavCancel } from './supabase.js';
 
 let _unreadTimer = 0;
 let _unreadBound = false;
@@ -7,7 +7,7 @@ let _unreadBound = false;
 /** Rafraîchit la pastille « messages non lus » de l'en-tête. Renvoie le nombre (ou null en cas d'échec). */
 export async function refreshUnread() {
   const link = document.querySelector('.site-header .nav-msg');
-  if (!link) return null;
+  if (!link || !(await hasSession())) return null;
   try {
     const { data, error } = await sb.rpc('hg_unread_count');
     if (error) throw error;
@@ -19,7 +19,7 @@ export async function refreshUnread() {
     link.setAttribute('aria-label', n ? `Messages, ${n} non lu${n > 1 ? 's' : ''}` : 'Messages');
     return n;
   } catch (e) {
-    console.warn('[non lus]', e);
+    if (!isNavCancel(e)) console.warn('[non lus]', e);
     return null;
   }
 }

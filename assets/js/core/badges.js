@@ -1,5 +1,5 @@
 // Badges : vérification (une fois par session) et célébration plein écran des nouveaux badges et niveaux.
-import { sb } from './supabase.js';
+import { sb, hasSession, isNavCancel } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { applyTheme } from './theme-load.js';
 import { getSiteTheme } from './theme.js';
@@ -23,7 +23,7 @@ function badgeInitials(name) {
  */
 export async function checkNewBadges({ force = false } = {}) {
   const p = getCachedProfile();
-  if (!p?.id) return [];
+  if (!p?.id || !(await hasSession())) return []; // déconnecté entre-temps : aucune RPC membre
   try {
     if (!force && sessionStorage.getItem(BADGES_SESSION_KEY)) return [];
     sessionStorage.setItem(BADGES_SESSION_KEY, '1');
@@ -68,7 +68,7 @@ export async function checkNewBadges({ force = false } = {}) {
     celebrateBadges(list);
     return list;
   } catch (e) {
-    console.warn('[badges]', e);
+    if (!isNavCancel(e)) console.warn('[badges]', e);
     return [];
   }
 }

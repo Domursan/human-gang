@@ -18,7 +18,7 @@ export {
 export { effectsEnabled, motionAllowed } from './core/effects.js';
 export { paintTheme, getActiveTheme, getSiteTheme, themeEmoji, currentLogo, getThemeState } from './core/theme.js';
 export { applyTheme, applySeason, autoSeason } from './core/theme-load.js';
-export { sb } from './core/supabase.js';
+export { sb, hasSession, isNavCancel } from './core/supabase.js';
 export { setPrefs, setEffectsEnabled, openPrefs } from './core/prefs.js';
 export { getUser, getProfile, requireMember, requireAdmin } from './core/profile.js';
 export { callFn, notify } from './core/functions.js';

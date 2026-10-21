@@ -16,6 +16,8 @@ npm test                     # tests de fumée puis tests de parcours
 
 Pour tester un autre dossier que celui-ci : `HG_ROOT=/chemin/du/checkout npm test`.
 
+Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cassé répond alors 404) : `HG_PREFIX=/human-gang npm test`.
+
 ## Ce que contiennent les tests
 
 | Fichier | Contenu |
@@ -26,6 +28,7 @@ Pour tester un autre dossier que celui-ci : `HG_ROOT=/chemin/du/checkout npm tes
 | `smoke-admin.cjs` | Même contrôle pour `admin.html` |
 | `parcours-connexion.cjs` | Connexion depuis `compte.html` : identifiants faux, bons identifiants, page compte connectée |
 | `parcours-sortie.cjs` | Proposer une sortie dans `irl.html` : données envoyées à `hg_events`, annonce `irl_new` |
+| `parcours-session.cjs` | Session absente ou fermée : visiteur sur l'accueil, compte et membre ; rafraîchissements après déconnexion ; déconnexion depuis l'en-tête. Aucune RPC réservée aux membres ne doit partir sans session (le faux répond 401 et le journalise) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 
 ## Fixtures
