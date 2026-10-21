@@ -5,14 +5,14 @@
 //   status  : { value, options: [{ id, label, tone }], label? } ; onStatus(id) à la modification
 //   history : [{ id?, title, status { label, tone }, at }] (liste courte, plus récent d'abord)
 //   actions : [{ label, onClick }] boutons pleine largeur en bas (ex. « Ouvrir la fiche membre »)
-//   emptyHistory : texte affiché quand history est vide (défaut « Aucune autre demande. »)
+//   caption : ligne sous le nom (ex. « Organisateur ») ; emptyHistory (ou emptyText) : texte quand history est vide (défaut « Aucune autre demande. »)
 import { esc, avatarHtml } from '../../core/util.js';
 import { monthYear, fmtDay, seenAgo } from './time.js';
 import { pill, statusSelect, bindStatus, ICON } from './common.js';
 
 let seq = 0;
 
-export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes', emptyHistory = 'Aucune autre demande.' } = {}) {
+export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes', caption = '', emptyText, emptyHistory = emptyText ?? 'Aucune autre demande.' } = {}) {
   const uid = `ui-info-${++seq}`;
   el.classList.add('ui-info');
 
@@ -20,7 +20,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
       <div class="ui-info-av">${avatarHtml(member, 52)}</div>
       <div class="ui-info-id">
         <div class="ui-info-name">${esc(member.pseudo || '')}</div>
-        <div class="ui-info-meta">${member.since ? `Membre depuis ${esc(monthYear(member.since))}` : ''}${member.lastSeen ? `<br>${esc(seenAgo(member.lastSeen))}` : ''}</div>
+        <div class="ui-info-meta">${caption ? esc(caption) : ''}${member.since ? `${caption ? '<br>' : ''}Membre depuis ${esc(monthYear(member.since))}` : ''}${member.lastSeen ? `<br>${esc(seenAgo(member.lastSeen))}` : ''}</div>
       </div>
     </div>`;
 

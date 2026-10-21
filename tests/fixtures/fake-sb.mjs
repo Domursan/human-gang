@@ -192,7 +192,7 @@ class Q {
       for (const r of rows) {
         if (this.t === 'hg_badges' && tab.some((x) => x.code === r.code)) return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "hg_badges_pkey"' } };
         if (this.t === 'hg_invite_links') Object.assign(r, { id: 'L' + (++seq + 10), token: 'new' + String(seq).padStart(21, '0'), active: true, codes_generated: 0, created_at: new Date().toISOString() });
-        if (r.id === undefined && ['hg_moments', 'hg_photos'].includes(this.t)) r.id = uid(); // comme la base (gen_random_uuid)
+        if (r.id === undefined && ['hg_moments', 'hg_photos', 'hg_events'].includes(this.t)) r.id = uid(); // comme la base (gen_random_uuid)
         if (this.t === 'hg_moments' && r.created_at === undefined) r.created_at = new Date().toISOString();
         tab.unshift(r);
       }
