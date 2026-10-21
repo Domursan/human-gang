@@ -2,6 +2,7 @@
 // Lecture seule de hg_admin_log (actions de l'administrateur) et de hg_admin_access_log (consultations
 // des conversations dans la messagerie). Pseudos résolus via hg_profiles (policy de lecture admin).
 import { sb, esc, errMsg, fmtDateTime, $ } from './core.js';
+import { onTableChange } from './admin/live.js';
 
 const PAGE = 25;
 // Libellés des actions journalisées par hg_admin_audit et les triggers. Une action inconnue s'affiche telle quelle.
@@ -131,4 +132,5 @@ export function mountLogSection(container) {
     await Promise.all([loadLog(true), loadAccess(true)]);
   }
   init();
+  onTableChange('journal', ['hg_admin_log'], () => Promise.all([loadLog(true), loadAccess(true)]));
 }

@@ -4,6 +4,7 @@
 // journalisée côté base ; la liste est relue après chaque écriture, sans recharger la page.
 import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
+import { onTableChange } from './admin/live.js';
 
 // Regroupement des permissions dans le formulaire (les clés absentes du catalogue vont dans « Autres »)
 const GROUPS = [
@@ -250,6 +251,7 @@ export async function mountStaffSection(root) {
     if (t.dataset.staffOn) return toggleActive(t.dataset.staffOn, true, t);
     if (t.dataset.staffRetry) return load();
   });
+  onTableChange('staff', ['hg_staff'], load); // temps réel : relecture du Staff
   await load();
 }
 

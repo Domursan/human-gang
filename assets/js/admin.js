@@ -30,6 +30,7 @@ import { bindBadges, renderBadges } from './admin/badges.js';
 import { bindIdeas, renderIdeas } from './admin/ideas.js';
 import { bindSupport, renderSupport } from './admin/support.js';
 import { canSection, anySection, isAdminView, applyPanelAccess } from './admin/perms.js';
+import { initLive } from './admin/live.js';
 
 const me = await initPage({ auth: 'admin' });
 // Accès par section : seules les sections permises sont affichées et initialisées.
@@ -103,5 +104,6 @@ if (has('comptes')) {
     },
   });
 }
+initLive(); // temps réel du panel (indicateur, compteurs, sections) ; sans effet si indisponible
 setupNav();
 if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
