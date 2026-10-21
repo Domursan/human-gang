@@ -1,6 +1,7 @@
 // ===== Humane Gang — administration : messagerie (lecture + modération) =====
-// Lecture directe des tables hg_conversations / hg_conversation_members / hg_messages (policies admin),
-// liste via rpc hg_admin_conversations(). L'admin voit les vrais expéditeurs, y compris le Santa.
+// Métadonnées des conversations via hg_conversations (policies admin) et rpc hg_admin_conversations().
+// Les messages sont lus uniquement par rpc hg_admin_read_conversation, qui journalise chaque lecture.
+// L'admin voit les vrais expéditeurs, y compris le Santa.
 import { sb, toast, errMsg, esc, $ } from './core.js';
 
 const ICON = {
@@ -10,6 +11,7 @@ const ICON = {
   refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6L20 8"/><path d="M20 3v5h-5"/></svg>',
 };
 const FILTERS = [['all', 'Toutes'], ['direct', 'Directes'], ['santa', 'Secret Santa']];
+const PAGE = 200; // messages par lecture journalisée (limite de la RPC : 500)
 const dtFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const fmt = (d) => (d ? dtFmt.format(new Date(d)) : '');
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -17,7 +19,7 @@ function check(res) { if (res.error) throw res.error; return res.data; }
 
 export function mountMessagesSection(container) {
   if (!container) return;
-  const S = { convs: [], pseudo: new Map(), filter: 'all', q: '', current: null, msgs: [], conv: null };
+  const S = { convs: [], pseudo: new Map(), filter: 'all', q: '', current: null, msgs: [], conv: null, lastId: 0, more: false };
 
   container.innerHTML = `
     <div class="card amsg">
@@ -96,23 +98,46 @@ export function mountMessagesSection(container) {
       </button></li>`).join('')}</ul>`;
   }
 
+  // Les messages passent par la RPC hg_admin_read_conversation, qui journalise chaque lecture (hg_admin_access_log).
+  // Une page = une lecture journalisée : on ne charge la suite qu'à la demande.
+  async function fetchMessages(id, after) {
+    return check(await sb.rpc('hg_admin_read_conversation', { p_conv: id, p_after: after, p_limit: PAGE })) ?? [];
+  }
   async function openConv(id) {
     S.current = id;
     S.conv = S.convs.find((c) => c.id === id) || null;
+    S.msgs = []; S.lastId = 0; S.more = false;
     layout.dataset.view = 'reader';
     renderList();
     reader.innerHTML = '<div class="empty">Chargement des messages…</div>';
     try {
       const [conv, msgs] = await Promise.all([
         sb.from('hg_conversations').select('id, kind, santa_id, target_id, edition_id, created_at').eq('id', id).maybeSingle(),
-        sb.from('hg_messages').select('id, sender_id, body, created_at').eq('conversation_id', id).order('id', { ascending: true }).limit(2000),
+        fetchMessages(id, 0),
       ]);
       S.conv = { ...(S.conv || {}), ...(check(conv) || {}) };
-      S.msgs = check(msgs) ?? [];
       if (S.current !== id) return;
+      S.msgs = msgs;
+      S.lastId = msgs.length ? msgs[msgs.length - 1].id : 0;
+      S.more = msgs.length === PAGE;
       renderReader();
     } catch (e) {
       reader.innerHTML = `<div class="empty">Impossible de charger : ${esc(errMsg(e))}</div>`;
+    }
+  }
+  async function loadMore(btn) {
+    const id = S.current;
+    btn.disabled = true;
+    try {
+      const msgs = await fetchMessages(id, S.lastId);
+      if (S.current !== id) return;
+      S.msgs = S.msgs.concat(msgs);
+      if (msgs.length) S.lastId = msgs[msgs.length - 1].id;
+      S.more = msgs.length === PAGE;
+      renderReader();
+    } catch (e) {
+      btn.disabled = false;
+      toast(`Chargement impossible : ${errMsg(e)}`, 'error');
     }
   }
   function senderName(m) {
@@ -129,6 +154,8 @@ export function mountMessagesSection(container) {
           <p class="muted small">${c.kind === 'santa' ? `${esc(S.pseudo.get(c.santa_id) || c.santa || '?')} (Santa, anonyme pour sa cible) → ${esc(S.pseudo.get(c.target_id) || c.target || '?')}` : esc(c.members || '')}</p>
         </div>
       </div>`;
+    const audit = '<p class="amsg-audit" role="note">Lecture administrateur : cette consultation est enregistrée</p>';
+    const more = S.more ? '<div class="btn-row"><button class="btn btn-ghost" type="button" id="amsg-more">Charger les messages suivants</button></div>' : '';
     const body = S.msgs.length
       ? `<ol class="amsg-msgs" aria-label="Messages">${S.msgs.map((m) => {
           const isSanta = c.kind === 'santa' && m.sender_id && m.sender_id === c.santa_id;
@@ -139,7 +166,8 @@ export function mountMessagesSection(container) {
           </li>`;
         }).join('')}</ol>`
       : '<div class="empty">Aucun message dans cette conversation.</div>';
-    reader.innerHTML = head + body;
+    reader.innerHTML = head + audit + body + more;
+    $('#amsg-more', reader)?.addEventListener('click', (e) => loadMore(e.currentTarget));
     $('#amsg-back', reader).addEventListener('click', () => { layout.dataset.view = 'list'; S.current = null; renderList(); });
     reader.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => del(b)));
   }

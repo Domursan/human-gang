@@ -47,3 +47,4 @@
   .amsg-msg .btn, .amsg-msg .amsg-del { min-height: 44px; }
   .amsg-tools .btn { min-height: 44px; }
 }
+.amsg-audit { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--sand); background: var(--bg); border-radius: var(--radius-sm); font-size: 14px; color: var(--muted); }
