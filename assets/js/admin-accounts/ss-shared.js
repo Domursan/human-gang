@@ -38,7 +38,8 @@ function updateSfCount(box) {
 }
 let sfBound = false;
 export function bindSharedFields() {
-  const sec = $('#secret-santa'); if (!sec || sfBound) return;
+  // Le document entier : les cases et le bloc des attributions vivent aussi dans le tiroir (hors de #secret-santa)
+  const sec = document.body; if (sfBound) return;
   sfBound = true;
   sec.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-sf-all]');

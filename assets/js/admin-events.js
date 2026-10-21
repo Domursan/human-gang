@@ -1,14 +1,21 @@
 // ===== Humane Gang — administration : événements dynamiques (image qui traverse le site) =====
+// Colonne 2 : liste des événements (createList). Zone principale : l'événement choisi (#vie/evenements/<id>) avec ses
+// paramètres, son badge, ses annonces Discord et son classement. Création et modification dans le tiroir.
 // Table hg_dyn_events (écriture admin), captures hg_dyn_captures, classement rpc hg_dyn_leaderboard(p_event).
 // Les dates sont saisies en heure suisse (Europe/Zurich), quel que soit le fuseau de l'appareil.
 // Annonces Discord : hg-notify { event: 'dyn_announce', event_id, phase: 'start' | 'end' } ; automatiques via hg-cron.
 import { sb, toast, errMsg, esc, $, callFn, avatarHtml, getProfile } from './core.js';
 import { openBadgeEditor } from './admin-badges-edit.js';
 import { flyDynImage } from './dyn-events.js';
-import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
+import { hasLevels, sortedLevels, METRIC_LABEL } from './badge-levels.js';
 import { prepareImage } from './image-compress.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { openDrawer } from './admin/ui/drawer.js';
+import { createList } from './admin/ui/list.js';
+import { renderDetailHeader } from './admin/ui/detail-header.js';
+import { pill } from './admin/ui/common.js';
+import { navigate } from './admin/shell.js';
 
 const TZ = 'Europe/Zurich';
 const ICON = {
@@ -17,10 +24,10 @@ const ICON = {
   play: svg('play', { stroke: 2 }),
   megaphone: svg('megaphone', { stroke: 2 }),
   trash: svg('trash', { stroke: 2 }),
-  trophy: svg('trophy', { stroke: 2 }),
   badge: svg('badge', { stroke: 2 }),
 };
 const LIMITS = { durMin: 1.5, durMax: 30, sizeMin: 24, sizeMax: 240, perPageMax: 10, nMax: 1000 };
+const EV_ROUTE = 'vie/evenements';
 
 /* ---------- Fuseau Europe/Zurich ---------- */
 function zParts(date) {
@@ -51,7 +58,7 @@ const fmtZ = (iso, opts = {}) => (iso ? new Intl.DateTimeFormat('fr-CH', {
 }).format(new Date(iso)) : '');
 
 /* ---------- État ---------- */
-const E = { root: null, opts: {}, events: [], counts: new Map(), badges: [], me: null };
+const E = { root: null, list: null, head: null, sel: null, events: [], counts: new Map(), badges: [], me: null, onBadgesChange: null, tok: 0, bound: false };
 const check = (res) => { if (res.error) throw res.error; return res.data; };
 const phaseOf = (ev, now = Date.now()) => {
   const s = new Date(ev.starts_at).getTime(), e = new Date(ev.ends_at).getTime();
@@ -68,6 +75,7 @@ function uuid() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 const badgeOf = (code) => E.badges.find((b) => b.code === code) || null;
+const current = () => E.events.find((x) => x.id === E.sel) ?? null;
 
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
@@ -86,202 +94,249 @@ async function load() {
   E.badges = check(bdg) ?? [];
 }
 
-/* ---------- Liste ---------- */
+/* ---------- Présentation ---------- */
 function thumb(ev, size = 56) {
   return `<span class="ev-thumb" style="width:${size}px;height:${size}px">${ev.image_url
     ? `<img src="${esc(ev.image_url)}" alt="" loading="lazy">`
     : `<span class="ev-emoji" style="font-size:${Math.round(size * 0.62)}px">${esc(ev.emoji || '✨')}</span>`}</span>`;
 }
-function cardHtml(ev) {
-  const ph = phaseOf(ev);
+/** Pastille d'état : désactivé, en cours, à venir ou terminé. */
+function statePill(ev, now = Date.now()) {
+  if (!ev.active) return pill({ id: 'off', label: 'Désactivé', tone: 'muted' });
+  const ph = phaseOf(ev, now);
+  return ph === 'live' ? pill({ id: 'live', label: 'En cours', tone: 'open' })
+    : ph === 'future' ? pill({ id: 'future', label: 'À venir', tone: 'prog' })
+      : pill({ id: 'past', label: 'Terminé', tone: 'done' });
+}
+function listItems(now = Date.now()) {
+  const rank = { live: 0, future: 1, past: 2, off: 3 };
+  return E.events.map((ev) => {
+    const phase = ev.active ? phaseOf(ev, now) : 'off';
+    return { id: ev.id, name: ev.name, phase, ev, rank: rank[phase] };
+  }).sort((a, b) => a.rank - b.rank || (a.phase === 'past' ? 0 : new Date(a.ev.starts_at) - new Date(b.ev.starts_at)));
+}
+function rowHtml(it) {
+  return `<div class="ui-row-body">
+    <div class="ui-row-top"><span class="ui-row-name">${esc(it.ev.name)}</span></div>
+    <div class="ui-row-title">${esc(fmtZ(it.ev.starts_at))} → ${esc(fmtZ(it.ev.ends_at))}</div>
+    <div class="ui-row-foot">${statePill(it.ev)}</div>
+  </div>`;
+}
+function paintActions() {
+  const z = document.getElementById('zone-actions');
+  if (!z) return;
+  z.innerHTML = `<button class="btn btn-primary" type="button" data-ev-act="new">${ICON.plus} Nouvel événement</button>`;
+}
+
+/* ---------- Zone principale ---------- */
+function detailHtml(ev) {
   const n = E.counts.get(ev.id) || 0;
   const b = badgeOf(ev.badge_code);
-  const pills = [
-    !ev.active ? '<span class="pill pill-todo">désactivé</span>'
-      : ph === 'live' ? '<span class="pill pill-ok">en cours</span>' : ph === 'future' ? '<span class="pill pill-current">à venir</span>' : '<span class="pill pill-todo">terminé</span>',
-    `<span class="pill">1 page sur ${oneIn(ev.probability)} · ${esc(pct(ev.probability))}</span>`,
-    `<span class="pill">${ev.max_per_page} max / page</span>`,
-    ev.max_per_user != null ? `<span class="pill">${ev.max_per_user} max / personne</span>` : '',
-    ev.max_total != null ? `<span class="pill">${n} / ${ev.max_total} au total</span>` : '',
-    b ? `<span class="pill pill-warn">${ICON.badge} ${esc(b.name)}${hasLevels(b) ? ` · ${sortedLevels(b).length} niveaux` : ''}</span>` : '',
-  ].join('');
   const ann = ev.announce
     ? [`Lancement : ${ev.announced_start_at ? `annoncé ${esc(fmtZ(ev.announced_start_at))}` : 'annonce automatique au début'}`,
       `Fin : ${ev.announced_end_at ? `annoncée ${esc(fmtZ(ev.announced_end_at))}` : 'annonce automatique à la fin (top 3)'}`].join(' · ')
     : 'Annonces Discord automatiques désactivées';
-  return `<article class="ev-card${ev.active ? '' : ' is-off'}" data-ev="${esc(ev.id)}">
-    <div class="ev-top">
-      ${thumb(ev)}
-      <div class="ev-main">
-        <h4 class="ev-name">${esc(ev.name)}</h4>
-        <p class="small muted ev-dates">Du ${esc(fmtZ(ev.starts_at))} au ${esc(fmtZ(ev.ends_at))} <span class="ev-tz">(heure suisse)</span></p>
-        ${ev.description ? `<p class="ev-desc">${esc(ev.description)}</p>` : ''}
-      </div>
-      <div class="ev-count"><strong>${n}</strong><span>capture${n > 1 ? 's' : ''}</span></div>
-    </div>
-    <div class="ev-pills">${pills}</div>
-    <p class="small muted ev-ann">${ann}</p>
-    <div class="btn-row ev-actions">
-      <button class="btn btn-ghost btn-sm" type="button" data-ev-edit>${ICON.edit} Modifier</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-ev-test>${ICON.play} Tester l'apparition</button>
-      <button class="btn btn-ghost btn-sm" type="button" data-ev-announce="start">${ICON.megaphone} Annoncer le lancement</button>
-      ${ph === 'past' ? `<button class="btn btn-ghost btn-sm" type="button" data-ev-announce="end">${ICON.megaphone} Annoncer la fin</button>` : ''}
-      <button class="btn btn-danger btn-sm btn-icon" type="button" data-ev-del aria-label="Supprimer l'événement ${esc(ev.name)}" title="Supprimer">${ICON.trash}</button>
-    </div>
-    <details class="ev-board">
-      <summary>${ICON.trophy} Classement <span class="muted">(${n} capture${n > 1 ? 's' : ''})</span></summary>
-      <div class="ev-board-body"><p class="small muted">Chargement…</p></div>
-    </details>
-  </article>`;
-}
-function render() {
-  const now = Date.now();
-  const groups = [
-    ['live', 'En cours', E.events.filter((e) => phaseOf(e, now) === 'live').sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))],
-    ['future', 'À venir', E.events.filter((e) => phaseOf(e, now) === 'future').sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))],
-    ['past', 'Terminés', E.events.filter((e) => phaseOf(e, now) === 'past')],
+  const ph = ev.active ? phaseOf(ev) : 'off';
+  const facts = [
+    [`1 / ${oneIn(ev.probability)}`, `chance par page vue (${pct(ev.probability)})`],
+    [String(ev.max_per_page), 'max par page'],
+    [ev.max_per_user != null ? String(ev.max_per_user) : '∞', 'max par personne'],
+    [ev.max_total != null ? `${n} / ${ev.max_total}` : String(n), ev.max_total != null ? 'captures au total' : 'captures à ce jour'],
+    [`${(ev.duration_ms ?? 6000) / 1000} s`, 'durée à l\'écran'],
+    [`${ev.size_px ?? 72} px`, 'taille'],
   ];
-  E.root.innerHTML = `
-    <div class="badge-head ev-head">
-      <p class="small muted">Pendant un événement, une image spéciale traverse parfois l'écran des membres. Ceux qui cliquent dessus l'attrapent et peuvent gagner un badge (simple ou à niveaux).</p>
-      <button class="btn btn-primary" type="button" data-ev-new>${ICON.plus} Nouvel événement</button>
-    </div>
-    ${E.events.length ? groups.map(([k, label, list]) => `
-      <section class="ev-group" aria-label="${label}">
-        <h3 class="sub-title">${label} <span class="muted">(${list.length})</span></h3>
-        ${list.length ? `<div class="ev-list">${list.map(cardHtml).join('')}</div>` : `<p class="small muted">${k === 'live' ? 'Aucun événement en cours.' : k === 'future' ? 'Rien de prévu.' : 'Aucun événement terminé.'}</p>`}
-      </section>`).join('') : '<div class="empty">Aucun événement pour l\'instant. Crée le premier (Halloween, Noël, anniversaire du gang…).</div>'}`;
-}
-async function reload() {
-  try { await load(); render(); } catch (e) { E.root.innerHTML = `<div class="empty">Impossible de charger les événements : ${esc(errMsg(e))}</div>`; }
+  return `
+    <div class="vie-grid">
+      <section class="card stack" aria-labelledby="ev-h-state">
+        <div class="ev-state-row">${thumb(ev, 72)}
+          <div class="stack" style="gap:6px;min-width:0">
+            <h3 class="card-title" id="ev-h-state">Apparition</h3>
+            <div>${statePill(ev)}</div>
+            <p class="small muted" style="margin:0">${ph === 'off' ? 'Événement désactivé : il n\'apparaît plus.' : ph === 'live' ? 'Les images peuvent apparaître maintenant.' : ph === 'future' ? 'Pas encore lancé.' : 'Terminé.'}</p>
+          </div>
+        </div>
+        <div class="ui-facts">${facts.map(([v, l]) => `<div class="ui-fact"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('')}</div>
+      </section>
+
+      <section class="card stack" aria-labelledby="ev-h-badge">
+        <h3 class="card-title" id="ev-h-badge">Badge</h3>
+        ${b ? `<div class="ev-badge-line">${ICON.badge} <strong>${esc(b.name)}</strong></div>
+          <p class="small muted" style="margin:0">${hasLevels(b) ? `Badge à niveaux : ${sortedLevels(b).length} niveaux (${esc(METRIC_LABEL[b.metric] || b.metric || '')}).` : 'Badge simple : gagné à la première image attrapée.'}</p>`
+          : '<p class="small muted" style="margin:0">Aucun badge lié à cet événement. Modifie l\'événement pour en créer un.</p>'}
+      </section>
+
+      <section class="card stack" aria-labelledby="ev-h-ann">
+        <h3 class="card-title" id="ev-h-ann">Annonces Discord</h3>
+        <p class="small muted" style="margin:0">${ann}</p>
+        <div class="btn-row">
+          <button class="btn btn-ghost btn-sm" type="button" data-ev-announce="start">${ICON.megaphone} Annoncer le lancement</button>
+          ${ph === 'past' ? `<button class="btn btn-ghost btn-sm" type="button" data-ev-announce="end">${ICON.megaphone} Annoncer la fin</button>` : ''}
+        </div>
+      </section>
+
+      <section class="card stack" aria-labelledby="ev-h-board">
+        <h3 class="card-title" id="ev-h-board">Classement <span class="muted">(${n} capture${n > 1 ? 's' : ''})</span></h3>
+        <div id="ev-board"><p class="small muted">Chargement…</p></div>
+      </section>
+
+      <section class="card stack ss-danger vie-wide" aria-labelledby="ev-h-del">
+        <h3 class="card-title" id="ev-h-del">Supprimer l'événement</h3>
+        <p class="small muted">${n ? `Ses ${n} capture${n > 1 ? 's seront supprimées' : ' sera supprimée'}. ` : ''}Les badges déjà gagnés sont conservés. Cette action est définitive.</p>
+        <div class="btn-row"><button class="btn btn-danger btn-sm" type="button" data-ev-act="delete" aria-label="Supprimer l'événement ${esc(ev.name)}">${ICON.trash} Supprimer</button></div>
+      </section>
+    </div>`;
 }
 
-async function loadBoard(details, ev) {
-  const box = $('.ev-board-body', details);
+function paintDetail() {
+  const root = E.root;
+  if (!root) return;
+  E.head?.destroy();
+  E.head = null;
+  const ev = current();
+  if (!E.sel) {
+    root.innerHTML = '<div class="detail-empty">Choisis un événement dans la liste, ou crées-en un avec « Nouvel événement ».</div>';
+    return;
+  }
+  if (!ev) {
+    root.innerHTML = '<div class="detail-empty">Cet événement n\'existe plus. Choisis-en un autre dans la liste.</div>';
+    return;
+  }
+  root.innerHTML = `<div class="vie-detail"><div id="ev-dhead"></div>${detailHtml(ev)}</div>`;
+  E.head = renderDetailHeader(root.querySelector('#ev-dhead'), {
+    title: ev.name,
+    subtitle: `Du ${fmtZ(ev.starts_at)} au ${fmtZ(ev.ends_at)} (heure suisse)`,
+    actions: [
+      { label: 'Modifier', onClick: () => openEditor(current()) },
+      { label: 'Tester l\'apparition', onClick: () => { const c = current(); if (c) flyDynImage(c, { preview: true }); } },
+    ],
+  });
+  loadBoard(ev);
+}
+
+async function loadBoard(ev) {
+  const box = document.getElementById('ev-board');
+  if (!box) return;
   try {
     const rows = check(await sb.rpc('hg_dyn_leaderboard', { p_event: ev.id })) ?? [];
+    if (E.sel !== ev.id || !box.isConnected) return;
     box.innerHTML = rows.length ? `<ol class="ev-lb">${rows.map((r, i) => `
       <li><span class="ev-rank">${i + 1}</span>${avatarHtml(r, 28)}<span class="ev-lb-name">${esc(r.pseudo)}</span><strong>${esc(r.captures)}</strong></li>`).join('')}</ol>`
       : '<p class="small muted">Personne n\'a encore attrapé d\'image.</p>';
-  } catch (e) { box.innerHTML = `<p class="small muted">Classement indisponible : ${esc(errMsg(e))}</p>`; }
+  } catch (e) { if (E.sel === ev.id && box.isConnected) box.innerHTML = `<p class="small muted">Classement indisponible : ${esc(errMsg(e))}</p>`; }
 }
 
-/* ---------- Éditeur ---------- */
+/* ---------- Éditeur (tiroir) ---------- */
 function badgeOptions(sel) {
   return '<option value="">Aucun badge</option>' + E.badges.map((b) =>
     `<option value="${esc(b.code)}"${b.code === sel ? ' selected' : ''}>${esc(b.name)}${hasLevels(b) ? ` (${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || '')})` : ''}</option>`).join('');
 }
+
+function editorBody(ev, { isNew, start, end, n }) {
+  return `
+    <p class="form-error" role="alert" hidden></p>
+    <div class="ev-form-grid">
+      <div class="stack">
+        <div class="field"><label for="evf-name">Nom</label><input id="evf-name" name="name" required maxlength="60" autocomplete="off" placeholder="ex. La citrouille d'Halloween" value="${esc(ev?.name ?? '')}"></div>
+        <div class="field"><label for="evf-desc">Description <span class="muted small">(affichée aux membres et dans l'annonce)</span></label>
+          <textarea id="evf-desc" name="description" rows="2" maxlength="300">${esc(ev?.description ?? '')}</textarea></div>
+        <fieldset class="ev-fs">
+          <legend>Image qui traverse l'écran</legend>
+          <div class="ev-visual">
+            <span class="ev-preview" id="evf-preview" aria-hidden="true"></span>
+            <div class="stack ev-visual-fields">
+              <div class="field"><label for="evf-file">Image <span class="muted small">(PNG transparent conseillé, carré)</span></label>
+                <input id="evf-file" name="file" type="file" accept="image/png,image/webp,image/gif,image/jpeg,image/svg+xml"></div>
+              <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-evf-noimg${ev?.image_url ? '' : ' hidden'}>Retirer l'image</button></div>
+              <div class="field ev-emoji-field"><label for="evf-emoji">Ou un emoji <span class="muted small">(utilisé si pas d'image)</span></label>
+                <input id="evf-emoji" name="emoji" maxlength="8" autocomplete="off" placeholder="🎃" value="${esc(ev?.emoji ?? '')}"></div>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="ev-fs">
+          <legend>Dates <span class="muted small">(heure suisse)</span></legend>
+          <div class="grid-2">
+            <div class="field"><label for="evf-start">Début</label><input id="evf-start" name="starts_at" type="datetime-local" required value="${esc(toZurichInput(start))}"></div>
+            <div class="field"><label for="evf-end">Fin</label><input id="evf-end" name="ends_at" type="datetime-local" required value="${esc(toZurichInput(end))}"></div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="stack">
+        <fieldset class="ev-fs">
+          <legend>Apparitions</legend>
+          <div class="field">
+            <label for="evf-n">Fréquence : 1 chance sur <output class="ev-n-out" for="evf-n evf-range">${n}</output> pages vues</label>
+            <div class="ev-range-row">
+              <input id="evf-range" type="range" min="1" max="100" step="1" value="${Math.min(100, n)}" aria-label="1 chance sur N pages (curseur)">
+              <input id="evf-n" name="n" type="number" min="1" max="${LIMITS.nMax}" step="1" inputmode="numeric" value="${n}" aria-describedby="evf-pct">
+            </div>
+            <span class="small muted" id="evf-pct"></span>
+          </div>
+          <div class="grid-3">
+            <div class="field"><label for="evf-ppage">Max par page</label><input id="evf-ppage" name="max_per_page" type="number" min="1" max="${LIMITS.perPageMax}" step="1" value="${esc(ev?.max_per_page ?? 1)}"></div>
+            <div class="field"><label for="evf-puser">Max par personne</label><input id="evf-puser" name="max_per_user" type="number" min="1" step="1" placeholder="illimité" value="${esc(ev?.max_per_user ?? '')}"></div>
+            <div class="field"><label for="evf-total">Max au total</label><input id="evf-total" name="max_total" type="number" min="1" step="1" placeholder="illimité" value="${esc(ev?.max_total ?? '')}"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="evf-dur">Durée à l'écran (s)</label><input id="evf-dur" name="duration" type="number" min="${LIMITS.durMin}" max="${LIMITS.durMax}" step="0.5" value="${esc((ev?.duration_ms ?? 6000) / 1000)}"></div>
+            <div class="field"><label for="evf-size">Taille : <output id="evf-size-out">${esc(ev?.size_px ?? 72)}</output> px</label>
+              <input id="evf-size" name="size_px" type="range" min="${LIMITS.sizeMin}" max="${LIMITS.sizeMax}" step="4" value="${esc(ev?.size_px ?? 72)}"></div>
+          </div>
+          <p class="small muted">Chaque page vue fait un tirage. En cas de succès, 1 à « max par page » images passent entre 5 et 40 s après le chargement.</p>
+        </fieldset>
+        <fieldset class="ev-fs">
+          <legend>Badge</legend>
+          <div class="field"><label for="evf-badge">Badge associé</label><select id="evf-badge" name="badge_code">${badgeOptions(ev?.badge_code ?? '')}</select></div>
+          <div class="btn-row"><button class="btn btn-sand btn-sm" type="button" data-evf-newbadge${isNew ? ' disabled aria-describedby="evf-nb-help"' : ''}>${ICON.badge} Créer un badge pour cet événement</button></div>
+          <p class="small muted" id="evf-nb-help">${isNew ? 'Enregistre d\'abord l\'événement pour lui créer un badge.' : 'Badge simple (gagné à la première capture) ou à niveaux (compteur « Images attrapées » de cet événement).'}</p>
+        </fieldset>
+        <div class="ev-switches">
+          <label class="switch"><input type="checkbox" name="announce"${(ev?.announce ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Annoncer sur Discord (début et fin)</span></label>
+          <label class="switch"><input type="checkbox" name="active"${(ev?.active ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Actif</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row ev-dlg-actions">
+      <button class="btn btn-ghost" type="button" data-evf-test>${ICON.play} Tester l'apparition</button>
+    </div>`;
+}
+
 function openEditor(ev = null) {
   const isNew = !ev;
   const id = ev?.id ?? uuid();
-  let dlg = $('#ev-dlg');
-  if (!dlg) {
-    dlg = document.createElement('dialog');
-    dlg.id = 'ev-dlg'; dlg.className = 'hg-dialog ev-dlg';
-    dlg.setAttribute('aria-labelledby', 'ev-title');
-    document.body.append(dlg);
-  }
   const start = ev?.starts_at ?? new Date(Math.ceil(Date.now() / 3600000) * 3600000).toISOString();
   const end = ev?.ends_at ?? new Date(new Date(start).getTime() + 7 * 864e5).toISOString();
   const n = ev ? oneIn(ev.probability) : 5;
-  dlg.innerHTML = `
-    <form class="stack" id="ev-form" novalidate>
-      <div class="ev-dlg-head">
-        <h2 id="ev-title" class="dialog-title">${isNew ? 'Nouvel événement' : `Modifier « ${esc(ev.name)} »`}</h2>
-        <button class="btn btn-ghost btn-sm" type="button" data-ev-cancel aria-label="Fermer">Fermer</button>
-      </div>
-      <p class="form-error" role="alert" hidden></p>
-      <div class="ev-form-grid">
-        <div class="stack">
-          <div class="field"><label for="evf-name">Nom</label><input id="evf-name" name="name" required maxlength="60" autocomplete="off" placeholder="ex. La citrouille d'Halloween" value="${esc(ev?.name ?? '')}"></div>
-          <div class="field"><label for="evf-desc">Description <span class="muted small">(affichée aux membres et dans l'annonce)</span></label>
-            <textarea id="evf-desc" name="description" rows="2" maxlength="300">${esc(ev?.description ?? '')}</textarea></div>
-          <fieldset class="ev-fs">
-            <legend>Image qui traverse l'écran</legend>
-            <div class="ev-visual">
-              <span class="ev-preview" id="evf-preview" aria-hidden="true"></span>
-              <div class="stack ev-visual-fields">
-                <div class="field"><label for="evf-file">Image <span class="muted small">(PNG transparent conseillé, carré)</span></label>
-                  <input id="evf-file" name="file" type="file" accept="image/png,image/webp,image/gif,image/jpeg,image/svg+xml"></div>
-                <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-evf-noimg${ev?.image_url ? '' : ' hidden'}>Retirer l'image</button></div>
-                <div class="field ev-emoji-field"><label for="evf-emoji">Ou un emoji <span class="muted small">(utilisé si pas d'image)</span></label>
-                  <input id="evf-emoji" name="emoji" maxlength="8" autocomplete="off" placeholder="🎃" value="${esc(ev?.emoji ?? '')}"></div>
-              </div>
-            </div>
-          </fieldset>
-          <fieldset class="ev-fs">
-            <legend>Dates <span class="muted small">(heure suisse)</span></legend>
-            <div class="grid-2">
-              <div class="field"><label for="evf-start">Début</label><input id="evf-start" name="starts_at" type="datetime-local" required value="${esc(toZurichInput(start))}"></div>
-              <div class="field"><label for="evf-end">Fin</label><input id="evf-end" name="ends_at" type="datetime-local" required value="${esc(toZurichInput(end))}"></div>
-            </div>
-          </fieldset>
-        </div>
-        <div class="stack">
-          <fieldset class="ev-fs">
-            <legend>Apparitions</legend>
-            <div class="field">
-              <label for="evf-n">Fréquence : 1 chance sur <output class="ev-n-out" for="evf-n evf-range">${n}</output> pages vues</label>
-              <div class="ev-range-row">
-                <input id="evf-range" type="range" min="1" max="100" step="1" value="${Math.min(100, n)}" aria-label="1 chance sur N pages (curseur)">
-                <input id="evf-n" name="n" type="number" min="1" max="${LIMITS.nMax}" step="1" inputmode="numeric" value="${n}" aria-describedby="evf-pct">
-              </div>
-              <span class="small muted" id="evf-pct"></span>
-            </div>
-            <div class="grid-3">
-              <div class="field"><label for="evf-ppage">Max par page</label><input id="evf-ppage" name="max_per_page" type="number" min="1" max="${LIMITS.perPageMax}" step="1" value="${esc(ev?.max_per_page ?? 1)}"></div>
-              <div class="field"><label for="evf-puser">Max par personne</label><input id="evf-puser" name="max_per_user" type="number" min="1" step="1" placeholder="illimité" value="${esc(ev?.max_per_user ?? '')}"></div>
-              <div class="field"><label for="evf-total">Max au total</label><input id="evf-total" name="max_total" type="number" min="1" step="1" placeholder="illimité" value="${esc(ev?.max_total ?? '')}"></div>
-            </div>
-            <div class="grid-2">
-              <div class="field"><label for="evf-dur">Durée à l'écran (s)</label><input id="evf-dur" name="duration" type="number" min="${LIMITS.durMin}" max="${LIMITS.durMax}" step="0.5" value="${esc((ev?.duration_ms ?? 6000) / 1000)}"></div>
-              <div class="field"><label for="evf-size">Taille : <output id="evf-size-out">${esc(ev?.size_px ?? 72)}</output> px</label>
-                <input id="evf-size" name="size_px" type="range" min="${LIMITS.sizeMin}" max="${LIMITS.sizeMax}" step="4" value="${esc(ev?.size_px ?? 72)}"></div>
-            </div>
-            <p class="small muted">Chaque page vue fait un tirage. En cas de succès, 1 à « max par page » images passent entre 5 et 40 s après le chargement.</p>
-          </fieldset>
-          <fieldset class="ev-fs">
-            <legend>Badge</legend>
-            <div class="field"><label for="evf-badge">Badge associé</label><select id="evf-badge" name="badge_code">${badgeOptions(ev?.badge_code ?? '')}</select></div>
-            <div class="btn-row"><button class="btn btn-sand btn-sm" type="button" data-evf-newbadge${isNew ? ' disabled aria-describedby="evf-nb-help"' : ''}>${ICON.badge} Créer un badge pour cet événement</button></div>
-            <p class="small muted" id="evf-nb-help">${isNew ? 'Enregistre d\'abord l\'événement pour lui créer un badge.' : 'Badge simple (gagné à la première capture) ou à niveaux (compteur « Images attrapées » de cet événement).'}</p>
-          </fieldset>
-          <div class="ev-switches">
-            <label class="switch"><input type="checkbox" name="announce"${ev?.announce ?? true ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Annoncer sur Discord (début et fin)</span></label>
-            <label class="switch"><input type="checkbox" name="active"${ev?.active ?? true ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Actif</span></label>
-          </div>
-        </div>
-      </div>
-      <div class="btn-row dialog-actions ev-dlg-actions">
-        <button class="btn btn-ghost" type="button" data-evf-test>${ICON.play} Tester l'apparition</button>
-        <span class="ev-spacer"></span>
-        <button class="btn btn-ghost" type="button" data-ev-cancel>Annuler</button>
-        <button class="btn btn-primary" type="submit">${isNew ? 'Créer l\'événement' : 'Enregistrer'}</button>
-      </div>
-    </form>`;
-
-  const form = $('#ev-form', dlg);
-  const f = form.elements;
-  const err = $('.form-error', form);
-  const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   let imageUrl = ev?.image_url ?? null;
   let previewUrl = null;
+  const d = openDrawer({
+    title: isNew ? 'Nouvel événement' : `Modifier « ${ev.name} »`,
+    subtitle: 'Dates en heure suisse. Une image ou un emoji est nécessaire.',
+    body: editorBody(ev, { isNew, start, end, n }),
+    submitLabel: isNew ? 'Créer l\'événement' : 'Enregistrer',
+    onSubmit: (form) => submitEditor(form),
+    onClose: () => { if (previewUrl) URL.revokeObjectURL(previewUrl); },
+    wide: true,
+  });
+  const { form, body } = d;
+  const f = form.elements;
+  const err = body.querySelector('.form-error');
+  const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   const paintPreview = () => {
     const src = previewUrl || imageUrl;
-    $('#evf-preview', dlg).innerHTML = src ? `<img src="${esc(src)}" alt="">` : `<span class="ev-emoji">${esc(f.emoji.value.trim() || '✨')}</span>`;
-    $('[data-evf-noimg]', dlg).hidden = !src;
+    $('#evf-preview', body).innerHTML = src ? `<img src="${esc(src)}" alt="">` : `<span class="ev-emoji">${esc(f.emoji.value.trim() || '✨')}</span>`;
+    $('[data-evf-noimg]', body).hidden = !src;
   };
   const syncN = (from) => {
     let v = Math.round(Number(from.value) || 1);
     v = Math.max(1, Math.min(LIMITS.nMax, v));
     if (from !== f.n) f.n.value = v;
-    if (from !== $('#evf-range', dlg)) $('#evf-range', dlg).value = Math.min(100, v);
-    $('.ev-n-out', dlg).textContent = v;
-    $('#evf-pct', dlg).textContent = `soit ${pct(1 / v)} des pages vues${v === 1 ? ' (à chaque page)' : ''}`;
+    if (from !== $('#evf-range', body)) $('#evf-range', body).value = Math.min(100, v);
+    $('.ev-n-out', body).textContent = v;
+    $('#evf-pct', body).textContent = `soit ${pct(1 / v)} des pages vues${v === 1 ? ' (à chaque page)' : ''}`;
   };
-  $('#evf-range', dlg).addEventListener('input', (e) => syncN(e.target));
+  $('#evf-range', body).addEventListener('input', (e) => syncN(e.target));
   f.n.addEventListener('input', () => syncN(f.n));
-  f.size_px.addEventListener('input', () => { $('#evf-size-out', dlg).textContent = f.size_px.value; });
+  f.size_px.addEventListener('input', () => { $('#evf-size-out', body).textContent = f.size_px.value; });
   f.emoji.addEventListener('input', paintPreview);
   f.file.addEventListener('change', () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -289,13 +344,11 @@ function openEditor(ev = null) {
     previewUrl = file ? URL.createObjectURL(file) : null;
     paintPreview();
   });
-  $('[data-evf-noimg]', dlg).addEventListener('click', () => {
+  $('[data-evf-noimg]', body).addEventListener('click', () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = null; imageUrl = null; f.file.value = '';
     paintPreview(); f.emoji.focus();
   });
-  dlg.querySelectorAll('[data-ev-cancel]').forEach((b) => b.addEventListener('click', () => dlg.close()));
-  dlg.addEventListener('close', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, { once: true });
   syncN(f.n); paintPreview();
 
   /** Valeurs du formulaire (sans l'image téléversée). */
@@ -332,11 +385,11 @@ function openEditor(ev = null) {
     return '';
   };
 
-  $('[data-evf-test]', dlg).addEventListener('click', () => {
+  $('[data-evf-test]', body).addEventListener('click', () => {
     const v = read();
-    flyDynImage({ ...v, name: v.name || 'l\'image', image_url: previewUrl || imageUrl }, { preview: true, host: dlg });
+    flyDynImage({ ...v, name: v.name || 'l\'image', image_url: previewUrl || imageUrl }, { preview: true, host: d.el });
   });
-  $('[data-evf-newbadge]', dlg).addEventListener('click', () => {
+  $('[data-evf-newbadge]', body)?.addEventListener('click', () => {
     if (isNew) return;
     const v = read();
     openBadgeEditor({
@@ -355,22 +408,21 @@ function openEditor(ev = null) {
           await load();
           f.badge_code.innerHTML = badgeOptions(row.code);
           toast(`Badge « ${row.name} » lié à l'événement`, 'ok');
-          await E.opts.onBadgesChange?.();
-          render();
+          await E.onBadgesChange?.();
+          await reload();
         } catch (e) { toast(errMsg(e), 'error'); }
       },
     });
   });
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  /** Enregistrement : renvoie true (le tiroir se ferme) ou false (erreur affichée, le tiroir reste ouvert). */
+  async function submitEditor(formEl) {
     showErr('');
     const v = read();
     const msg = validate(v);
-    if (msg) return showErr(msg);
-    const btn = e.submitter; if (btn) btn.disabled = true;
+    if (msg) { showErr(msg); return false; }
     try {
-      const file = f.file.files?.[0] ?? null;
+      const file = formEl.elements.file.files?.[0] ?? null;
       let url = imageUrl;
       if (file) {
         if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, GIF, WebP, JPG ou SVG).');
@@ -391,75 +443,115 @@ function openEditor(ev = null) {
         if (row.ends_at !== ev.ends_at && new Date(row.ends_at).getTime() > now) row.announced_end_at = null;
         check(await sb.from('hg_dyn_events').update(row).eq('id', ev.id));
       }
-      dlg.close();
       toast(isNew ? `Événement « ${v.name} » créé` : 'Événement enregistré', 'ok');
-      await reload();
-    } catch (err2) {
-      showErr(errMsg(err2));
-    } finally { if (btn?.isConnected) btn.disabled = false; }
-  });
-
-  dlg.showModal();
+      await load();
+      if (isNew) navigate(`${EV_ROUTE}/${id}`); else { E.list?.update(listItems()); paintDetail(); }
+      return true;
+    } catch (err) {
+      showErr(errMsg(err));
+      return false;
+    }
+  }
   f.name.focus();
 }
 
-/* ---------- Actions de la liste ---------- */
+/* ---------- Actions ---------- */
+async function announce(btn, ev, phase) {
+  const ok = await confirmBox(phase === 'start' ? 'Annoncer le lancement ?' : 'Annoncer la fin ?',
+    phase === 'start'
+      ? `Le bot publie « ${ev.name} » dans le salon d'annonces Discord, avec son image.`
+      : `Le bot publie la fin de « ${ev.name} » avec le top 3 dans le salon d'annonces Discord.`,
+    { ok: 'Publier' });
+  if (!ok) return;
+  await busy(btn, async () => {
+    const res = await callFn('hg-notify', { event: 'dyn_announce', event_id: ev.id, phase });
+    if (res?.sent) toast('Annonce publiée sur Discord', 'ok');
+    else toast(res?.skipped ? `Pas d'annonce : ${res.skipped}` : (res?.error || 'Annonce non envoyée'), res?.skipped ? '' : 'error');
+    await reload();
+  });
+}
+
+async function remove(btn, ev) {
+  const n = E.counts.get(ev.id) || 0;
+  const ok = await confirmBox(`Supprimer « ${ev.name} » ?`,
+    `${n ? `Ses ${n} capture${n > 1 ? 's seront supprimées' : ' sera supprimée'}. ` : ''}Les badges déjà gagnés sont conservés. Cette action est définitive.`,
+    { ok: 'Supprimer', danger: true });
+  if (!ok) return;
+  await busy(btn, async () => {
+    check(await sb.from('hg_dyn_events').delete().eq('id', ev.id));
+    const m = /\/hg-assets\/(events\/[^?]+)/.exec(ev.image_url || '');
+    if (m) await sb.storage.from('hg-assets').remove([decodeURIComponent(m[1])]).catch(() => {});
+    toast('Événement supprimé', 'ok');
+    navigate(EV_ROUTE);
+    await reload();
+  });
+}
+
 async function onClick(e) {
-  const t = e.target.closest('button');
+  const t = e.target.closest('button[data-ev-act], button[data-ev-announce]');
   if (!t) return;
-  if (t.hasAttribute('data-ev-new')) return openEditor(null);
-  const card = t.closest('[data-ev]');
-  const ev = card && E.events.find((x) => x.id === card.dataset.ev);
+  if (t.dataset.evAct === 'new') return openEditor(null);
+  const ev = current();
   if (!ev) return;
-  if (t.hasAttribute('data-ev-edit')) return openEditor(ev);
-  if (t.hasAttribute('data-ev-test')) return flyDynImage(ev, { preview: true });
-  if (t.dataset.evAnnounce) {
-    const phase = t.dataset.evAnnounce;
-    const ok = await confirmBox(phase === 'start' ? 'Annoncer le lancement ?' : 'Annoncer la fin ?',
-      phase === 'start'
-        ? `Le bot publie « ${ev.name} » dans le salon d'annonces Discord, avec son image.`
-        : `Le bot publie la fin de « ${ev.name} » avec le top 3 dans le salon d'annonces Discord.`,
-      { ok: 'Publier' });
-    if (!ok) return;
-    await busy(t, async () => {
-      const res = await callFn('hg-notify', { event: 'dyn_announce', event_id: ev.id, phase });
-      if (res?.sent) toast('Annonce publiée sur Discord', 'ok');
-      else toast(res?.skipped ? `Pas d'annonce : ${res.skipped}` : (res?.error || 'Annonce non envoyée'), res?.skipped ? '' : 'error');
-      await reload();
-    });
-    return;
-  }
-  if (t.hasAttribute('data-ev-del')) {
-    const n = E.counts.get(ev.id) || 0;
-    const ok = await confirmBox(`Supprimer « ${ev.name} » ?`,
-      `${n ? `Ses ${n} capture${n > 1 ? 's seront supprimées' : ' sera supprimée'}. ` : ''}Les badges déjà gagnés sont conservés. Cette action est définitive.`,
-      { ok: 'Supprimer', danger: true });
-    if (!ok) return;
-    await busy(t, async () => {
-      check(await sb.from('hg_dyn_events').delete().eq('id', ev.id));
-      const m = /\/hg-assets\/(events\/[^?]+)/.exec(ev.image_url || '');
-      if (m) await sb.storage.from('hg-assets').remove([decodeURIComponent(m[1])]).catch(() => {});
-      toast('Événement supprimé', 'ok');
-      await reload();
-    });
+  if (t.dataset.evAct === 'edit') return openEditor(ev);
+  if (t.dataset.evAct === 'test') return flyDynImage(ev, { preview: true });
+  if (t.dataset.evAct === 'delete') return remove(t, ev);
+  if (t.dataset.evAnnounce) return announce(t, ev, t.dataset.evAnnounce);
+}
+
+/** Recharge les données, la liste et le détail (sans changer la sélection). */
+async function reload() {
+  try {
+    await load();
+    E.list?.update(listItems());
+    E.list?.select(E.sel);
+    paintDetail();
+  } catch (e) {
+    if (E.root) E.root.innerHTML = `<div class="empty">Impossible de charger les événements : ${esc(errMsg(e))}</div>`;
   }
 }
 
 /**
- * Monte la section « Événements » de l'admin dans container.
+ * Section « Événements » (registerSub) : liste en colonne 2, détail dans la zone.
  * opts.onBadgesChange() : appelé après la création d'un badge depuis un événement (pour rafraîchir la section Badges).
  */
-export async function mountEventsSection(container, opts = {}) {
-  if (!container) return;
-  E.root = container; E.opts = opts;
-  container.addEventListener('click', onClick);
-  container.addEventListener('toggle', (e) => {
-    const d = e.target;
-    if (!(d instanceof HTMLDetailsElement) || !d.open || !d.classList.contains('ev-board')) return;
-    const ev = E.events.find((x) => x.id === d.closest('[data-ev]')?.dataset.ev);
-    if (ev) loadBoard(d, ev);
-  }, true);
-  await reload();
+export function eventsSub(opts = {}) {
+  E.onBadgesChange = opts.onBadgesChange || null;
+  return {
+    main() {
+      E.root = document.getElementById('events-root');
+      if (!E.bound) { E.bound = true; document.addEventListener('click', onClick); }
+    },
+    list(el) {
+      E.list = createList(el, {
+        items: listItems(),
+        key: 'id',
+        label: 'Événements',
+        filters: [
+          { id: 'live', label: 'En cours', test: (it) => it.phase === 'live' },
+          { id: 'future', label: 'À venir', test: (it) => it.phase === 'future' },
+          { id: 'past', label: 'Terminés', test: (it) => it.phase === 'past' },
+        ],
+        search: { placeholder: 'Rechercher un événement', label: 'Rechercher un événement', fields: (it) => `${it.ev.name} ${it.ev.description || ''}` },
+        selectedId: E.sel,
+        render: rowHtml,
+        empty: 'Aucun événement pour l\'instant.',
+        onSelect: (it) => navigate(`${EV_ROUTE}/${it.id}`),
+      });
+    },
+    async open(_el, { id } = {}) {
+      const tok = ++E.tok;
+      E.sel = id || null;
+      try { await load(); } catch (e) { if (E.root) E.root.innerHTML = `<div class="empty">Impossible de charger les événements : ${esc(errMsg(e))}</div>`; return; }
+      if (tok !== E.tok) return;
+      if (id && !E.events.some((x) => x.id === id)) { navigate(EV_ROUTE); return; }
+      E.list?.update(listItems());
+      E.list?.select(E.sel);
+      paintActions();
+      paintDetail();
+    },
+  };
 }
+
 /** Recharge la section (ex. après une modification des badges ailleurs). */
 export const refreshEventsSection = () => (E.root ? reload() : Promise.resolve());

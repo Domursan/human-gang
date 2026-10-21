@@ -71,6 +71,7 @@
 }
 .ui-row + .ui-row { margin-top: 2px; }
 .ui-row.is-sel { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+.ui-row--plain { grid-template-columns: minmax(0, 1fr); }
 .ui-row-body { min-width: 0; }
 .ui-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .ui-row-name { font-size: 13.5px; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
@@ -234,3 +235,24 @@
 .ui-drawer-x:hover, .ui-drawer-x:focus-visible { color: var(--text); background: var(--surface-2); }
 .ui-drawer-body { overflow-y: auto; padding: 18px 22px; display: grid; gap: 14px; align-content: start; }
 .ui-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
+
+/* ---------- Vie du gang : détails (Secret Santa, Événements), badges ---------- */
+.vie-detail { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.vie-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items: start; min-width: 0; }
+.vie-grid > .card { min-width: 0; }
+.vie-wide { grid-column: 1 / -1; }
+.vie-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.vie-card-head .card-title { margin: 0; }
+.vie-note { max-width: 620px; }
+.ev-state-row { display: flex; gap: 14px; align-items: center; min-width: 0; }
+.ev-badge-line { display: flex; gap: 8px; align-items: center; }
+.ev-badge-line svg { width: 18px; height: 18px; flex: none; }
+.ss-wish-list { margin: 0; padding-left: 18px; font-size: 13.5px; }
+.ss-wish-list ul { margin: 4px 0 8px; padding-left: 16px; }
+.badge-holders { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.badge-who { font-size: 12.5px; width: 100%; }
+.badge-who summary { cursor: pointer; color: var(--sand); }
+.badge-who p { margin: 4px 0 0; }
+.ev-dlg-actions { justify-content: flex-start; }
+.vie-detail > .ui-dhead { padding: 12px 0; }
+@media (max-width: 760px) { .vie-detail .ui-dhead-s, .vie-detail .ui-dhead-t { white-space: normal; } }

@@ -141,7 +141,9 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#access-root [data-slug="galerie-test"]').count() === 0, 'la page a disparu du tableau');
 
   /* ---------- Secret Santa : suppression d'une édition ---------- */
+  // Le détail d'une édition vit à son adresse (#vie/secret-santa/<id>) ; sans identifiant, la zone propose de la choisir
   await adminSection(p, 'vie/secret-santa');
+  await p.evaluate(() => { location.hash = 'vie/secret-santa/E25'; });
   await p.waitForSelector('#ss-delete', { timeout: 5000 });
   await p.click('#ss-delete');
   await p.waitForSelector('dialog[open]', { timeout: 5000 });

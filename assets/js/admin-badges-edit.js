@@ -5,6 +5,7 @@ import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
 import { METRICS, roman, sortedLevels } from './badge-levels.js';
 import { prepareImage, otherVariants } from './image-compress.js';
 import { confirmBox } from './ui-confirm.js';
+import { openDrawer } from './admin/ui/drawer.js';
 
 export const AUTO_BADGES = new Set([
   'premier_noel', 'veteran', 'lutin_express', 'sur_le_fil', 'liste_parfaite', 'toujours_la', 'organisateur', 'globe_trotter',
@@ -43,7 +44,7 @@ async function uploadBadgeImage(code, file, level = null) {
 const BADGE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>';
 
 /**
- * Ouvre le formulaire (création si badge = null). badges = liste actuelle (codes pris, ordre par défaut).
+ * Ouvre le formulaire dans le tiroir (création si badge = null). badges = liste actuelle (codes pris, ordre par défaut).
  * onSaved(row) après enregistrement.
  */
 export function openBadgeEditor({ badge = null, badges = [], preset = null, onSaved = async () => {} } = {}) {
@@ -51,20 +52,16 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   const src = badge ?? preset ?? {}; // valeurs de départ (preset : création depuis un événement)
   const taken = new Set(badges.map((b) => b.code));
   const nextSort = Math.max(0, ...badges.map((b) => Number(b.sort) || 0)) + 10;
-  let dlg = $('#bdg-dlg');
-  if (!dlg) {
-    dlg = document.createElement('dialog');
-    dlg.id = 'bdg-dlg'; dlg.className = 'hg-dialog bdg-dlg';
-    dlg.setAttribute('aria-labelledby', 'bdg-title');
-    document.body.append(dlg);
-  }
   const auto = !isNew && isAutoBadge(badge.code);
-  dlg.innerHTML = `
-    <form class="stack" id="bdg-form" novalidate>
-      <h2 id="bdg-title" class="dialog-title">${isNew ? (preset?.title ? esc(preset.title) : 'Nouveau badge') : `Modifier « ${esc(badge.name)} »`}</h2>
-      ${auto ? '<p class="small muted">Badge automatique : la base l\'attribue toute seule. Tu peux changer son nom, sa description, son image, son ordre et lui ajouter des niveaux.</p>'
-        : isNew && preset?.event_id ? '<p class="small muted">Badge lié à l\'événement : sans niveaux, il est gagné à la première image attrapée ; à niveaux, il monte avec le nombre d\'images attrapées.</p>'
-        : isNew ? '<p class="small muted">Un badge créé ici s\'attribue à la main (section Badges ou fiche d\'un membre), sauf s\'il est à niveaux.</p>' : ''}
+  const note = auto ? 'Badge automatique : la base l\'attribue toute seule. Tu peux changer son nom, sa description, son image, son ordre et lui ajouter des niveaux.'
+    : isNew && preset?.event_id ? 'Badge lié à l\'événement : sans niveaux, il est gagné à la première image attrapée ; à niveaux, il monte avec le nombre d\'images attrapées.'
+      : isNew ? 'Un badge créé ici s\'attribue à la main (section Badges ou fiche d\'un membre), sauf s\'il est à niveaux.' : '';
+  let previewUrl = null;
+  let lv = null;
+  const d = openDrawer({
+    title: isNew ? (preset?.title ? preset.title : 'Nouveau badge') : `Modifier « ${badge.name} »`,
+    subtitle: note,
+    body: `
       <p class="form-error" role="alert" hidden></p>
       <div class="field"><label for="bdg-name">Nom</label><input id="bdg-name" name="name" required maxlength="60" autocomplete="off" value="${esc(src.name ?? '')}"></div>
       <div class="field"><label for="bdg-code">Code ${isNew ? '<span class="muted small">(généré depuis le nom, modifiable)</span>' : '<span class="muted small">(non modifiable)</span>'}</label>
@@ -81,46 +78,43 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
           </div>
         </div>
       </div>
-      ${levelsFieldsetHtml(src)}
-      <div class="btn-row dialog-actions">
-        <button class="btn btn-ghost" type="button" data-bdg-cancel>Annuler</button>
-        <button class="btn btn-primary" type="submit">${isNew ? 'Créer le badge' : 'Enregistrer'}</button>
-      </div>
-    </form>`;
-  const form = $('#bdg-form', dlg);
-  const err = $('.form-error', form);
-  const showErr = (m) => { err.textContent = m; err.hidden = !m; };
+      ${levelsFieldsetHtml(src)}`,
+    submitLabel: isNew ? 'Créer le badge' : 'Enregistrer',
+    onSubmit: (form) => save(form),
+    onClose: () => { if (previewUrl) URL.revokeObjectURL(previewUrl); lv?.dispose(); },
+    wide: true,
+  });
+  const { form, body } = d;
+  const err = $('.form-error', body);
+  const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   let codeTouched = false;
   if (isNew) {
     form.elements.code.addEventListener('input', () => { codeTouched = true; });
     form.elements.name.addEventListener('input', () => { if (!codeTouched) form.elements.code.value = form.elements.name.value.trim() ? uniqueCode(form.elements.name.value, taken) : ''; });
   }
-  let previewUrl = null;
   form.elements.file.addEventListener('change', () => {
     const f = form.elements.file.files?.[0];
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = f ? URL.createObjectURL(f) : null;
-    $('#bdg-preview', dlg).innerHTML = previewUrl ? `<img src="${previewUrl}" alt="">` : (badge?.image_url ? `<img src="${esc(badge.image_url)}" alt="">` : BADGE_SVG);
+    $('#bdg-preview', body).innerHTML = previewUrl ? `<img src="${previewUrl}" alt="">` : (badge?.image_url ? `<img src="${esc(badge.image_url)}" alt="">` : BADGE_SVG);
   });
-  $('[data-bdg-cancel]', dlg).addEventListener('click', () => dlg.close());
-  const lv = bindLevels(dlg, form, src);
-  dlg.addEventListener('close', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); lv.dispose(); }, { once: true });
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const btn = ev.submitter; showErr('');
-    const name = form.elements.name.value.trim(), description = form.elements.description.value.trim();
-    const code = isNew ? form.elements.code.value.trim().toLowerCase() : badge.code;
-    const sort = Number.parseInt(form.elements.sort.value, 10);
-    if (name.length < 2) return showErr('Le nom doit faire au moins 2 caractères.');
-    if (!description) return showErr('Ajoute une courte description (comment on l\'obtient).');
-    if (isNew && !CODE_RE.test(code)) return showErr('Code invalide : 2 à 40 caractères, minuscules, chiffres et « _ ».');
-    if (isNew && taken.has(code)) return showErr(`Le code « ${code} » est déjà utilisé par un autre badge.`);
-    if (!Number.isFinite(sort)) return showErr('L\'ordre doit être un nombre entier.');
+  lv = bindLevels(body, form, src);
+
+  /** Enregistrement : true (le tiroir se ferme) ou false (erreur affichée, le tiroir reste ouvert). */
+  async function save(formEl) {
+    showErr('');
+    const name = formEl.elements.name.value.trim(), description = formEl.elements.description.value.trim();
+    const code = isNew ? formEl.elements.code.value.trim().toLowerCase() : badge.code;
+    const sort = Number.parseInt(formEl.elements.sort.value, 10);
+    if (name.length < 2) { showErr('Le nom doit faire au moins 2 caractères.'); return false; }
+    if (!description) { showErr('Ajoute une courte description (comment on l\'obtient).'); return false; }
+    if (isNew && !CODE_RE.test(code)) { showErr('Code invalide : 2 à 40 caractères, minuscules, chiffres et « _ ».'); return false; }
+    if (isNew && taken.has(code)) { showErr(`Le code « ${code} » est déjà utilisé par un autre badge.`); return false; }
+    if (!Number.isFinite(sort)) { showErr('L\'ordre doit être un nombre entier.'); return false; }
     const lvErr = lv.validate();
-    if (lvErr) return showErr(lvErr);
+    if (lvErr) { showErr(lvErr); return false; }
     const lvPatch = lv.patch();
-    const file = form.elements.file.files?.[0] ?? null;
-    if (btn) btn.disabled = true;
+    const file = formEl.elements.file.files?.[0] ?? null;
     try {
       let row;
       if (isNew) {
@@ -139,15 +133,15 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
         if (lv.hasFiles()) patch.levels = await lv.uploadFiles(code, lvPatch.levels);
         row = check(await sb.from('hg_badges').update(patch).eq('code', code).select().single());
       }
-      dlg.close();
       toast(isNew ? `Badge « ${name} » créé` : 'Badge enregistré', 'ok');
       await onSaved(row);
+      return true;
     } catch (e) {
       const m = errMsg(e);
       showErr(/duplicate key|23505/i.test(m) || e?.code === '23505' ? `Le code « ${code} » est déjà utilisé.` : m);
-    } finally { if (btn?.isConnected) btn.disabled = false; }
-  });
-  dlg.showModal();
+      return false;
+    }
+  }
   form.elements.name.focus();
 }
 
@@ -219,7 +213,7 @@ function bindLevels(dlg, form, src) {
       <li class="lv-row" data-i="${i}">
         <span class="lv-num" aria-hidden="true"><span class="lvl-pip is-on">${roman(i + 1)}</span></span>
         <div class="field"><label class="visually-hidden" for="lv-t-${i}">Seuil du niveau ${i + 1}</label>
-          <input id="lv-t-${i}" type="number" min="0" step="1" inputmode="numeric" data-lv="threshold" value="${esc(r.threshold ?? '')}" required></div>
+          <input id="lv-t-${i}" type="number" min="0" step="1" inputmode="numeric" data-lv="threshold" value="${esc(r.threshold ?? '')}"></div>
         <div class="field"><label class="visually-hidden" for="lv-n-${i}">Nom du niveau ${i + 1}</label>
           <input id="lv-n-${i}" type="text" maxlength="30" data-lv="name" placeholder="ex. ${esc(['Bronze', 'Argent', 'Or', 'Platine', 'Diamant'][i] || 'Légende')}" value="${esc(r.name)}"></div>
         <div class="lv-img">
