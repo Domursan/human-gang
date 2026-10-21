@@ -2,6 +2,8 @@
 import { sb, esc } from './core.js';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { reactionBarHtml } from './reactions.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 export const PHOTO_BUCKET = 'hg-photos';
 const SIGN_TTL = 3600; // secondes
@@ -68,10 +70,10 @@ export async function signedUrl(path) {
 
 /* ---------- Lightbox ---------- */
 const ICON = {
-  prev: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
-  next: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
-  close: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  prev: svg('prev', { size: 22, stroke: 2 }),
+  next: svg('chev', { size: 22, stroke: 2 }),
+  close: svg('close', { size: 22, stroke: 2 }),
+  trash: svg('trash2', { size: 18, stroke: 2 }),
 };
 let lb;
 function ensureLightbox() {
@@ -122,10 +124,12 @@ function ensureLightbox() {
   d.addEventListener('close', () => { d.querySelector('img').removeAttribute('src'); lb.opener?.focus?.(); });
   d.querySelector('.lb-del').addEventListener('click', async () => {
     const it = lb.items[lb.i];
-    if (!it?.onDelete || !confirm('Supprimer cette photo ?')) return;
+    if (!it?.onDelete || !(await confirmBox('Supprimer cette photo ?', '', { ok: 'Supprimer', danger: true }))) return;
     const ok = await it.onDelete(it);
     if (ok === false) return;
-    lb.items.splice(lb.i, 1);
+    const idx = lb.items.indexOf(it); // l'index a pu changer pendant la confirmation
+    if (idx < 0) return;
+    lb.items.splice(idx, 1);
     if (!lb.items.length) { d.close(); return; }
     lb.i = Math.min(lb.i, lb.items.length - 1);
     show();

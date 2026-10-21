@@ -4,43 +4,29 @@ import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, isGodM
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { ensureAccessData, memberAccessHtml, setAccess, accessPages } from './admin-access.js';
 import { fetchAdminGhosts } from './admin-ghosts.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
+import { fmtDay, safeUrl } from './utils.js';
 
 /* ---------- Icônes ---------- */
 const IC = {
-  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
-  chev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
-  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
-  eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 3.9M6.6 6.6C3.8 8.3 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.4 4.5-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
-  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  back: svg('back2', { stroke: 2 }),
+  chev: svg('chev', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  eye: svg('eye', { stroke: 2 }),
+  eyeOff: svg('eyeOff', { stroke: 2 }),
+  check: svg('check2', { stroke: 2.2 }),
+  arrow: svg('arrow2', { stroke: 2 }),
+  search: svg('search', { stroke: 2 }),
 };
 
 /* ---------- Petits outils (copie locale : admin.js n'exporte rien) ---------- */
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
 }
 function check(res) { if (res.error) throw res.error; return res.data; }
 const nullIfEmpty = (v) => (String(v ?? '').trim() === '' ? null : String(v).trim());
-function safeUrl(raw) {
-  const s = String(raw ?? '').trim();
-  if (!s) return null;
-  const tryParse = (v) => { try { const u = new URL(v); return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : null; } catch { return null; } };
-  return /^[a-z][a-z0-9+.-]*:/i.test(s) ? tryParse(s) : tryParse(`https://${s}`);
-}
 /** ISO -> valeur pour <input type="datetime-local"> (heure locale). */
 function toLocalInput(iso) {
   if (!iso) return '';
@@ -90,7 +76,6 @@ async function loadAccounts() {
   if (!jo.error) { const m = new Map((jo.data ?? []).map((r) => [r.id, r.joined_on])); for (const a of A.accounts) a.joined_on = m.get(a.id) ?? null; }
 }
 /** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
-const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
 
 function renderList() {
   root().innerHTML = `

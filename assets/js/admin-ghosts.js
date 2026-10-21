@@ -3,12 +3,15 @@
 // Invisible pour les membres. Importé par admin.js (section « Comptes fantômes »), admin-accounts.js (liste des comptes),
 // irl.js et historique.js (annuaire vu par l'admin). Ne dépend que de core.js (pas d'import circulaire).
 import { sb, toast, errMsg, esc, $, fmtDate, avatarHtml } from './core.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
+import { fmtDay } from './utils.js';
 
 const IC = {
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
-  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
-  merge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.5 6h3a4 4 0 0 1 4 4v0"/></svg>',
+  copy: svg('copy', { stroke: 2 }),
+  link: svg('link', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  merge: svg('merge', { stroke: 2 }),
 };
 
 const G = {
@@ -23,17 +26,6 @@ async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
 }
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function copyText(text, done = 'Copié dans le presse-papiers') {
   try { await navigator.clipboard.writeText(text); }
   catch {
@@ -44,7 +36,6 @@ async function copyText(text, done = 'Copié dans le presse-papiers') {
   toast(done, 'ok');
 }
 /** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
-const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
 /** Comparaison sans accents ni casse. */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 

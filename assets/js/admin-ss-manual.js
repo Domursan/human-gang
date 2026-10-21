@@ -1,29 +1,20 @@
 // ===== Humane Gang — administration : tirage manuel du Secret Santa =====
 // Éditeur « une ligne par Santa » avec validation en direct, complétion aléatoire et envoi via rpc hg_ss_manual_draw.
 import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from './core.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 const IC = {
-  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
-  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
-  err: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/></svg>',
-  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></svg>',
-  dice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/></svg>',
+  arrow: svg('arrow2', { stroke: 2 }),
+  ok: svg('check2', { stroke: 2.2 }),
+  err: svg('err', { stroke: 2 }),
+  warn: svg('warn', { stroke: 2 }),
+  dice: svg('dice', { stroke: 2 }),
 };
 
 const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
 const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 
 /* ---------- Validation ---------- */
 /** Analyse les choix courants : erreurs (bloquantes) et avertissements par ligne + bilan. */

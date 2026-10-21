@@ -1,6 +1,7 @@
 // ===== Humane Gang — messagerie (conversations directes + Secret Santa anonyme) =====
 import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
+import { svg } from './icons.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -13,12 +14,12 @@ const MOBILE = matchMedia('(max-width: 760px)');
 
 /* ---------- Icônes (SVG à trait) ---------- */
 const I = {
-  plus: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
-  back: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
-  send: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/><path d="M11.5 13.5L20 4"/></svg>',
-  mask: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0v3c0 4-3 6-5.5 6-1.6 0-2.6-1.3-3.5-3-.9 1.7-1.9 3-3.5 3C6 17 3 15 3 11V8z"/><path d="M7 11.5h2M15 11.5h2"/></svg>',
-  chat: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
-  lock: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  plus: svg('plus', { size: 18, stroke: 2 }),
+  back: svg('back', { size: 20, stroke: 2 }),
+  send: svg('send2', { size: 20, stroke: 2 }),
+  mask: svg('mask2', { size: 20, stroke: 1.8 }),
+  chat: svg('chat', { size: 28, stroke: 1.6 }),
+  lock: svg('lock2', { size: 14, stroke: 2 }),
 };
 
 /* ---------- État ---------- */

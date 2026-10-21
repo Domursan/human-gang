@@ -7,15 +7,16 @@ import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel, cardHtml, serialLabel, fmtP } from './cartes-ui.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { prepareImage } from './image-compress.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 const TZ = 'Europe/Zurich';
-const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  plus: svg('<path d="M12 5v14M5 12h14"/>'),
-  edit: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
-  trash: svg('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>'),
-  off: svg('<circle cx="12" cy="12" r="8"/><path d="M6 6l12 12"/>'),
-  on: svg('<path d="M5 12l5 5 9-10"/>'),
+  plus: svg('plus', { stroke: 2 }),
+  edit: svg('edit', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  off: svg('off', { stroke: 2 }),
+  on: svg('check2', { stroke: 2 }),
 };
 const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
 const RARITY_IDS = RARITIES.map((r) => r.id);
@@ -125,17 +126,6 @@ function dialog() {
     document.body.append(d);
   }
   return d;
-}
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
 }
 async function act(btn, fn) {
   if (btn) btn.disabled = true;

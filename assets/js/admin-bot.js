@@ -3,6 +3,8 @@
 // fonctions edge dans supabase/functions/_shared/bot-templates.json) et message manuel (hg-notify « admin_dm »,
 // historique hg_bot_log).
 import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
+import { svg } from './icons.js';
+import { pluralCount } from './utils.js';
 
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 const NOTIFY = [
@@ -20,10 +22,10 @@ const DISCORD_ID = /^\d{17,20}$/;
 const TITLE_MAX = 256, BODY_MAX = 4096, MANUAL_TITLE_MAX = 200, MANUAL_BODY_MAX = 2000, CONFIRM_ABOVE = 5;
 const MAX_RECIPIENTS = 100;
 const ICON = {
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 20 4l-6 16-3-7-7-1z"/></svg>',
-  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  search: svg('search2', { stroke: 2 }),
+  send: svg('send', { stroke: 2 }),
+  undo: svg('undo', { stroke: 2 }),
+  plus: svg('plus', { stroke: 2 }),
 };
 const STATUS = {
   ok: ['Discord OK', 'pill-ok'],
@@ -38,7 +40,6 @@ const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 const timeFmt = new Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' });
 const logFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const filled = (v) => typeof v === 'string' && v.trim() !== '';
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
 function loadStyles() {
   if (document.querySelector('link[data-admin-bot]')) return;
@@ -285,7 +286,7 @@ export function mountBotSection(container) {
       save.textContent = n > 1 ? `Enregistrer (${n} modèles)` : 'Enregistrer';
     }
     const st = $('#bt-status', tplBody);
-    if (st) st.textContent = n ? `${plural(n, 'modification non enregistrée', 'modifications non enregistrées')}` : '';
+    if (st) st.textContent = n ? `${pluralCount(n, 'modification non enregistrée', 'modifications non enregistrées')}` : '';
   }
 
   function selectTemplate(k) {
@@ -520,7 +521,7 @@ export function mountBotSection(container) {
   }
   function renderCount() {
     const n = S.selected.size, total = S.people.filter(reachable).length, off = S.people.length - total;
-    $('#bm-count', bmBody).textContent = `${plural(n, 'sélectionné', 'sélectionnés')} sur ${plural(total, 'compte joignable', 'comptes joignables')}${off ? ` · ${plural(off, 'compte non joignable', 'comptes non joignables')}` : ''}`;
+    $('#bm-count', bmBody).textContent = `${pluralCount(n, 'sélectionné', 'sélectionnés')} sur ${pluralCount(total, 'compte joignable', 'comptes joignables')}${off ? ` · ${pluralCount(off, 'compte non joignable', 'comptes non joignables')}` : ''}`;
   }
   function renderManualCounts() {
     $('#bm-title-count', bmBody).textContent = `${$('#bm-title', bmBody).value.length} / ${MANUAL_TITLE_MAX}`;
@@ -552,7 +553,7 @@ export function mountBotSection(container) {
     }
     S.sending = true;
     const resBox = $('#bm-result', bmBody);
-    resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${plural(ids.length, 'destinataire', 'destinataires')})…</div>`;
+    resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${pluralCount(ids.length, 'destinataire', 'destinataires')})…</div>`;
     await busy(btn, async () => {
       try {
         const res = await callFn('hg-notify', { event: 'admin_dm', user_ids: ids, title, body, channel });
@@ -580,9 +581,9 @@ export function mountBotSection(container) {
 
   function renderResult(res) {
     const parts = [];
-    if (res.sent) parts.push(plural(res.sent, 'envoyé', 'envoyés'));
-    if (res.failed) parts.push(plural(res.failed, 'échec', 'échecs'));
-    if (res.skipped) parts.push(plural(res.skipped, 'ignoré', 'ignorés'));
+    if (res.sent) parts.push(pluralCount(res.sent, 'envoyé', 'envoyés'));
+    if (res.failed) parts.push(pluralCount(res.failed, 'échec', 'échecs'));
+    if (res.skipped) parts.push(pluralCount(res.skipped, 'ignoré', 'ignorés'));
     const ch = res.channel === true ? '<span class="pill pill-ok">Publié dans le salon</span>'
       : res.channel === false ? `<span class="pill bm-pill-fail">Salon : échec</span>${res.channel_error ? ` <span class="small muted">${esc(res.channel_error)}</span>` : ''}` : '';
     $('#bm-result', bmBody).innerHTML = `

@@ -4,6 +4,8 @@
 // Affichage des cartes : cartes-ui.js (cardHtml). Styles : cartes-trades.css (+ cartes-card.css).
 import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify } from './core.js';
 import { cardHtml, rarityRank, fmtP } from './cartes-ui.js';
+import { confirmBox } from './ui-confirm.js';
+import { pluralCount } from './utils.js';
 
 const TABS = [
   { id: 'recues', label: 'Reçues' },
@@ -17,7 +19,6 @@ const PAGE = 1000;   // pagination PostgREST (plafond par défaut de la base)
 const CHUNK = 100;   // identifiants par requête « in »
 const COPY_COLS = 'id, card_id, owner_id, shiny, serial, locked_trade, recycled_at';
 
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
 const norm = (s) => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const cmp = (a, b) => String(a).localeCompare(String(b), 'fr');
@@ -41,15 +42,12 @@ export async function mountTrades(el, ctx = {}) {
       <div class="trd-tabs" role="tablist" aria-label="Échanges de cartes"></div>
       <div class="trd-panel" id="trd-panel" role="tabpanel"></div>
       <dialog class="trd-dialog" id="trd-edit" aria-labelledby="trd-edit-title"><form class="trd-form" id="trd-form" novalidate></form></dialog>
-      <dialog class="trd-dialog trd-confirm" id="trd-confirm"><form class="trd-form" id="trd-confirm-form" method="dialog"></form></dialog>
     </div>`;
   const root = el.querySelector('.trd');
   const tabsEl = root.querySelector('.trd-tabs');
   const panel = root.querySelector('#trd-panel');
   const dlg = root.querySelector('#trd-edit');
   const form = root.querySelector('#trd-form');
-  const cdlg = root.querySelector('#trd-confirm');
-  const cform = root.querySelector('#trd-confirm-form');
 
   const S = {
     me: null, members: new Map(), cards: new Map(), copies: new Map(), trades: [], items: new Map(),
@@ -366,21 +364,6 @@ export async function mountTrades(el, ctx = {}) {
   }
   const render = () => renderPanel();
 
-  /* ---------- Confirmation (boîte de dialogue) ---------- */
-  function confirmBox({ title, text, ok = 'Confirmer' }) {
-    cform.innerHTML = `
-      <header class="trd-dlg-head"><h2 id="trd-confirm-title">${esc(title)}</h2></header>
-      <div class="trd-dlg-body"><p class="trd-note">${esc(text)}</p></div>
-      <footer class="trd-dlg-foot">
-        <button class="btn btn-ghost" type="submit" value="cancel">Annuler</button>
-        <button class="btn btn-primary" type="submit" value="ok">${esc(ok)}</button>
-      </footer>`;
-    cdlg.setAttribute('aria-labelledby', 'trd-confirm-title');
-    cdlg.returnValue = '';
-    cdlg.showModal();
-    return new Promise((resolve) => cdlg.addEventListener('close', () => resolve(cdlg.returnValue === 'ok'), { once: true }));
-  }
-
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
   async function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {
     if (!to || !S.members.has(to)) return toast('Choisis un membre pour l’échange.', 'error');
@@ -467,9 +450,9 @@ export async function mountTrades(el, ctx = {}) {
   }
   function updateSummary() {
     const g = E.give.size, w = E.want.size;
-    form.querySelector('#trd-n-give').textContent = `${plural(g, 'carte sélectionnée', 'cartes sélectionnées')}`;
-    form.querySelector('#trd-n-want').textContent = `${plural(w, 'carte sélectionnée', 'cartes sélectionnées')}`;
-    form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${plural(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${plural(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
+    form.querySelector('#trd-n-give').textContent = `${pluralCount(g, 'carte sélectionnée', 'cartes sélectionnées')}`;
+    form.querySelector('#trd-n-want').textContent = `${pluralCount(w, 'carte sélectionnée', 'cartes sélectionnées')}`;
+    form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${pluralCount(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${pluralCount(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
     form.querySelector('#trd-mcount').textContent = `${E.message.length} / 500 caractères`;
   }
   function showErr(msg) {
@@ -499,11 +482,9 @@ export async function mountTrades(el, ctx = {}) {
     const message = E.message.trim() || null;
     if (gift) {
       if (!give.length) return showErr('Choisis au moins une carte à offrir.');
-      const ok = await confirmBox({
-        title: 'Offrir ce cadeau ?',
-        text: `Tu offres ${plural(give.length, 'carte', 'cartes')} à ${to.pseudo}. Le cadeau est définitif. Les cartes demandées et les Paillettes ne sont pas prises en compte.`,
-        ok: 'Offrir',
-      });
+      const ok = await confirmBox('Offrir ce cadeau ?',
+        `Tu offres ${pluralCount(give.length, 'carte', 'cartes')} à ${to.pseudo}. Le cadeau est définitif. Les cartes demandées et les Paillettes ne sont pas prises en compte.`,
+        { ok: 'Offrir' });
       if (!ok) return;
     } else {
       if (!give.length && !want.length && !E.giveP && !E.wantP) return showErr('L’offre est vide : ajoute au moins une carte ou des Paillettes.');
@@ -524,11 +505,9 @@ export async function mountTrades(el, ctx = {}) {
   async function respond(t, accept) {
     if (accept) {
       const give = itemsOf(t, 'from'), recv = itemsOf(t, 'to');
-      const ok = await confirmBox({
-        title: 'Accepter cet échange ?',
-        text: `Tu reçois ${plural(give.length, 'carte', 'cartes')}${t.from_paillettes ? ` et ${fmtP(t.from_paillettes)}` : ''} et tu donnes ${plural(recv.length, 'carte', 'cartes')}${t.to_paillettes ? ` et ${fmtP(t.to_paillettes)}` : ''}. L’échange est définitif.`,
-        ok: 'Accepter',
-      });
+      const ok = await confirmBox('Accepter cet échange ?',
+        `Tu reçois ${pluralCount(give.length, 'carte', 'cartes')}${t.from_paillettes ? ` et ${fmtP(t.from_paillettes)}` : ''} et tu donnes ${pluralCount(recv.length, 'carte', 'cartes')}${t.to_paillettes ? ` et ${fmtP(t.to_paillettes)}` : ''}. L’échange est définitif.`,
+        { ok: 'Accepter' });
       if (!ok) return;
     }
     setPanelBusy(true);

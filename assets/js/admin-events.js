@@ -7,17 +7,18 @@ import { openBadgeEditor } from './admin-badges-edit.js';
 import { flyDynImage } from './dyn-events.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 import { prepareImage } from './image-compress.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 const TZ = 'Europe/Zurich';
-const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  plus: svg('<path d="M12 5v14M5 12h14"/>'),
-  edit: svg('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
-  play: svg('<path d="M7 5l12 7-12 7z"/>'),
-  megaphone: svg('<path d="M3 11v3l12 5V6L3 11z"/><path d="M15 9a3 3 0 0 1 0 6M6 15l1 5h3l-1-4"/>'),
-  trash: svg('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>'),
-  trophy: svg('<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/>'),
-  badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
+  plus: svg('plus', { stroke: 2 }),
+  edit: svg('edit', { stroke: 2 }),
+  play: svg('play', { stroke: 2 }),
+  megaphone: svg('megaphone', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  trophy: svg('trophy', { stroke: 2 }),
+  badge: svg('badge', { stroke: 2 }),
 };
 const LIMITS = { durMin: 1.5, durMax: 30, sizeMin: 24, sizeMax: 240, perPageMax: 10, nMax: 1000 };
 
@@ -68,17 +69,6 @@ function uuid() {
 }
 const badgeOf = (code) => E.badges.find((b) => b.code === code) || null;
 
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }

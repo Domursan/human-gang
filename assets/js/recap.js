@@ -1,6 +1,8 @@
 // ===== Humane Gang — récap annuel au format « story » =====
 import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
+import { svg } from './icons.js';
+import { pluralWord } from './utils.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -18,17 +20,15 @@ const defaultYear = now.getMonth() === 11 ? now.getFullYear() : now.getFullYear(
 const qYear = Number(new URLSearchParams(location.search).get('year'));
 let year = Number.isInteger(qYear) && qYear >= 2000 && qYear <= now.getFullYear() ? qYear : defaultYear;
 
-const svg = (d, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  pause: svg('<path d="M8 5v14M16 5v14"/>'),
-  play: svg('<path d="M7 4.5v15l12-7.5z"/>'),
-  close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
-  prev: svg('<path d="M15 5l-7 7 7 7"/>', 24),
-  next: svg('<path d="M9 5l7 7-7 7"/>', 24),
-  download: svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
-  replay: svg('<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/>'),
+  pause: svg('pause', { size: 20, stroke: 2 }),
+  play: svg('play2', { size: 20, stroke: 2 }),
+  close: svg('close2', { size: 20, stroke: 2 }),
+  prev: svg('back', { size: 24, stroke: 2 }),
+  next: svg('next', { size: 24, stroke: 2 }),
+  download: svg('download', { size: 20, stroke: 2 }),
+  replay: svg('replay', { size: 20, stroke: 2 }),
 };
-const plural = (n, one, many) => `${n > 1 ? many : one}`;
 const count = (n) => `<span class="rc-num" data-count="${Number(n) || 0}">${reduced ? nf.format(Number(n) || 0) : '0'}</span>`;
 const dateShort = (d) => { if (!d) return ''; const x = new Date(d); return `${x.getDate()} ${MONTHS[x.getMonth()]}`; };
 
@@ -72,8 +72,8 @@ function buildSlides(r) {
     html: `<p class="rc-eyebrow">Le gang</p>
       <p class="rc-lead">À la fin de ${esc(year)}, on était</p>
       <p class="rc-big">${count(total)}</p>
-      <p class="rc-unit">${plural(total, 'membre', 'membres')}</p>
-      ${news.length ? `<p class="rc-sub">dont ${news.length} ${plural(news.length, 'petit nouveau', 'petits nouveaux')} :</p>
+      <p class="rc-unit">${pluralWord(total, 'membre', 'membres')}</p>
+      ${news.length ? `<p class="rc-sub">dont ${news.length} ${pluralWord(news.length, 'petit nouveau', 'petits nouveaux')} :</p>
         <ul class="rc-chips">${news.slice(0, 12).map((p) => `<li>${esc(p)}</li>`).join('')}${news.length > 12 ? `<li>+${news.length - 12}</li>` : ''}</ul>` : ''}`,
   });
 
@@ -84,10 +84,10 @@ function buildSlides(r) {
       key: 'sorties', emoji: '📍',
       html: `<p class="rc-eyebrow">IRL</p>
         <p class="rc-big">${count(sorties.length)}</p>
-        <p class="rc-unit">${plural(sorties.length, 'sortie ensemble', 'sorties ensemble')}</p>
+        <p class="rc-unit">${pluralWord(sorties.length, 'sortie ensemble', 'sorties ensemble')}</p>
         <ol class="rc-list">${top.map((s) => `<li><strong>${esc(s.title)}</strong>
           <span>${esc([dateShort(s.starts_at), s.location].filter(Boolean).join(' · '))}</span>
-          <em>${Number(s.presents) || 0} ${plural(Number(s.presents) || 0, 'présent', 'présents')}</em></li>`).join('')}</ol>`,
+          <em>${Number(s.presents) || 0} ${pluralWord(Number(s.presents) || 0, 'présent', 'présents')}</em></li>`).join('')}</ol>`,
     });
   }
 
@@ -98,7 +98,7 @@ function buildSlides(r) {
       html: `<p class="rc-eyebrow">Toujours là</p>
         <h2 class="rc-title rc-title-sm">Les plus présents</h2>
         <ol class="rc-podium">${pp.slice(0, 3).map((p, i) => `<li class="rc-pod-${i + 1}"><span class="rc-pod-rank">${i + 1}</span>
-          <strong>${esc(p.pseudo)}</strong><span>${count(p.n)} ${plural(p.n, 'sortie', 'sorties')}</span></li>`).join('')}</ol>`,
+          <strong>${esc(p.pseudo)}</strong><span>${count(p.n)} ${pluralWord(p.n, 'sortie', 'sorties')}</span></li>`).join('')}</ol>`,
     });
   }
 
@@ -108,9 +108,9 @@ function buildSlides(r) {
       key: 'photos', emoji: '📸',
       html: `<p class="rc-eyebrow">Les albums</p>
         <p class="rc-big">${count(g.photos)}</p>
-        <p class="rc-unit">${plural(g.photos, 'photo partagée', 'photos partagées')}</p>
+        <p class="rc-unit">${pluralWord(g.photos, 'photo partagée', 'photos partagées')}</p>
         ${tp.length ? `<p class="rc-sub">Paparazzis de l'année</p>
-          <ol class="rc-list rc-list-compact">${tp.map((p) => `<li><strong>${esc(p.pseudo)}</strong><em>${nf.format(p.n)} ${plural(p.n, 'photo', 'photos')}</em></li>`).join('')}</ol>` : ''}`,
+          <ol class="rc-list rc-list-compact">${tp.map((p) => `<li><strong>${esc(p.pseudo)}</strong><em>${nf.format(p.n)} ${pluralWord(p.n, 'photo', 'photos')}</em></li>`).join('')}</ol>` : ''}`,
     });
   }
 
@@ -121,8 +121,8 @@ function buildSlides(r) {
       key: 'ss', emoji: '🎁',
       html: `<p class="rc-eyebrow">Secret Santa ${esc(year)}</p>
         <p class="rc-big">${count(ss.participants)}</p>
-        <p class="rc-unit">${plural(ss.participants, 'participant', 'participants')}</p>
-        <p class="rc-sub">${count(ss.envoyes || 0)} ${plural(ss.envoyes || 0, 'cadeau envoyé', 'cadeaux envoyés')}</p>
+        <p class="rc-unit">${pluralWord(ss.participants, 'participant', 'participants')}</p>
+        <p class="rc-sub">${count(ss.envoyes || 0)} ${pluralWord(ss.envoyes || 0, 'cadeau envoyé', 'cadeaux envoyés')}</p>
         <div class="rc-bar" role="img" aria-label="${pct} % des cadeaux envoyés"><span style="--p:${pct}%"></span></div>`,
     });
   }
@@ -133,7 +133,7 @@ function buildSlides(r) {
       key: 'moments', emoji: '🌟',
       html: `<p class="rc-eyebrow">Historique</p>
         <p class="rc-big">${count(moments.length)}</p>
-        <p class="rc-unit">${plural(moments.length, 'moment culte', 'moments cultes')}</p>
+        <p class="rc-unit">${pluralWord(moments.length, 'moment culte', 'moments cultes')}</p>
         <ul class="rc-list rc-list-compact">${moments.slice(-4).reverse().map((m) => `<li><strong>${esc(m.title)}</strong><em>${esc(dateShort(m.happened_on))}</em></li>`).join('')}</ul>`,
     });
   }
@@ -143,8 +143,8 @@ function buildSlides(r) {
       key: 'extras', emoji: '💬',
       html: `<p class="rc-eyebrow">Et aussi</p>
         <div class="rc-duo">
-          <div><p class="rc-big rc-big-sm">${count(g.messages || 0)}</p><p class="rc-unit">${plural(g.messages || 0, 'message échangé', 'messages échangés')}</p></div>
-          <div><p class="rc-big rc-big-sm">${count(g.badges_debloques || 0)}</p><p class="rc-unit">${plural(g.badges_debloques || 0, 'badge débloqué', 'badges débloqués')}</p></div>
+          <div><p class="rc-big rc-big-sm">${count(g.messages || 0)}</p><p class="rc-unit">${pluralWord(g.messages || 0, 'message échangé', 'messages échangés')}</p></div>
+          <div><p class="rc-big rc-big-sm">${count(g.badges_debloques || 0)}</p><p class="rc-unit">${pluralWord(g.badges_debloques || 0, 'badge débloqué', 'badges débloqués')}</p></div>
         </div>`,
     });
   }
@@ -162,7 +162,7 @@ function buildSlides(r) {
       <h2 class="rc-title rc-title-sm">${esc(me.pseudo)}</h2>
       ${quiet ? '<p class="rc-sub">Tu as été discret·e cette année… L\'an prochain, on compte sur toi !</p>' : ''}
       <ul class="rc-mine">
-        ${mine.map(([e, n, one, many]) => `<li><span class="rc-mine-e" aria-hidden="true">${e}</span><strong>${count(n || 0)}</strong><span>${plural(n || 0, one, many)}</span></li>`).join('')}
+        ${mine.map(([e, n, one, many]) => `<li><span class="rc-mine-e" aria-hidden="true">${e}</span><strong>${count(n || 0)}</strong><span>${pluralWord(n || 0, one, many)}</span></li>`).join('')}
         <li class="rc-mine-wide"><span class="rc-mine-e" aria-hidden="true">🎁</span><span>${moi.secret_santa ? 'Tu as participé au Secret Santa' : 'Pas de Secret Santa pour toi cette fois'}</span></li>
       </ul>
       ${(moi.badges || []).length ? `<ul class="rc-chips">${moi.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}

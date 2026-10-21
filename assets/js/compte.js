@@ -3,6 +3,7 @@ import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTi
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from './push.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
+import { svg } from './icons.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
 const url = new URL(location.href);
@@ -32,19 +33,18 @@ const app = $('#app');
 let me = await initPage({ auth: 'optional' });
 
 /* ---------- Petites aides ---------- */
-const svg = (d, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  lock: svg('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', 18),
-  eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', 18),
-  mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', 28),
-  download: svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', 18),
-  trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', 18),
-  out: svg('<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>', 18),
-  info: svg('<path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2"/>'),
-  check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 16),
-  badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
-  user: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
-  data: svg('<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>'),
+  lock: svg('lock', { size: 18, stroke: 1.7 }),
+  eye: svg('eye', { size: 18, stroke: 1.7 }),
+  mail: svg('mail', { size: 28, stroke: 1.7 }),
+  download: svg('download', { size: 18, stroke: 1.7 }),
+  trash: svg('trash2', { size: 18, stroke: 1.7 }),
+  out: svg('out', { size: 18, stroke: 1.7 }),
+  info: svg('info', { size: 20, stroke: 1.7 }),
+  check: svg('check', { size: 16, stroke: 1.7 }),
+  badge: svg('badge', { size: 20, stroke: 1.7 }),
+  user: svg('user', { size: 20, stroke: 1.7 }),
+  data: svg('data', { size: 20, stroke: 1.7 }),
 };
 const tagPublic = '<span class="vis-tag vis-public">' + ICON.eye + 'Visible par le gang</span>';
 const tagPrivate = '<span class="vis-tag vis-private">' + ICON.lock + 'Toi et l\'admin</span>';

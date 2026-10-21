@@ -5,6 +5,8 @@
 //  - mode 'admin'   : admins seulement. Les admins ont toujours accès à tout.
 // Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche). N'importe que core.js.
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
+import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 export const MODES = [
   ['membres', 'Tous les membres'],
@@ -16,13 +18,13 @@ const MODE_LABEL = Object.fromEntries(MODES);
 const ALWAYS_OPEN = new Set(['accueil']);
 
 const IC = {
-  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
-  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
-  yes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
-  no: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>',
-  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
-  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>',
+  up: svg('up', { stroke: 2 }),
+  down: svg('down', { stroke: 2 }),
+  yes: svg('check2', { stroke: 2.4 }),
+  no: svg('no', { stroke: 2.2 }),
+  close: svg('close', { stroke: 2 }),
+  search: svg('search', { stroke: 2 }),
+  users: svg('users', { stroke: 2 }),
 };
 
 /* ---------- État partagé ---------- */
@@ -359,21 +361,14 @@ async function changeMode(slug, mode, el) {
     emit();
   } catch (ex) { toast(errMsg(ex), 'error'); el.value = p.mode; } finally { if (el.isConnected) el.disabled = false; }
 }
-function confirmLoss(p, n, mode) {
-  const box = $('#confirm-dlg');
-  if (!box) return Promise.resolve(true);
-  $('#confirm-title').textContent = `Restreindre « ${p.label} » ?`;
-  $('#confirm-body').textContent = `${n} membre${n > 1 ? 's' : ''} perdr${n > 1 ? 'ont' : 'a'} l'accès (mode « ${MODE_LABEL[mode]} »). Les exceptions déjà enregistrées sont conservées.`;
-  const ok = $('#confirm-ok'); ok.textContent = 'Restreindre'; ok.className = 'btn btn-danger';
-  box.returnValue = '';
+async function confirmLoss(p, n, mode) {
+  const body = `${n} membre${n > 1 ? 's' : ''} perdr${n > 1 ? 'ont' : 'a'} l'accès (mode « ${MODE_LABEL[mode]} »). Les exceptions déjà enregistrées sont conservées.`;
   // Le dialog « Personnes » est modal : on le referme le temps de la confirmation
   const reopen = dlg?.open ? AC.openSlug : null;
   if (reopen) { dlg.dataset.suspend = '1'; dlg.close(); }
-  box.showModal();
-  return new Promise((resolve) => box.addEventListener('close', () => {
-    if (reopen) { AC.openSlug = reopen; renderDialog(); dlg.showModal(); $('[data-pa-dlg-mode]', dlg)?.focus(); }
-    resolve(box.returnValue === 'ok');
-  }, { once: true }));
+  const ok = await confirmBox(`Restreindre « ${p.label} » ?`, body, { ok: 'Restreindre', danger: true });
+  if (reopen) { AC.openSlug = reopen; renderDialog(); dlg.showModal(); $('[data-pa-dlg-mode]', dlg)?.focus(); }
+  return ok;
 }
 async function move(slug, dir, btn) {
   const i = AC.pages.findIndex((p) => p.slug === slug), j = i + dir;

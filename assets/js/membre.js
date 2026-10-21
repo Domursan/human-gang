@@ -3,6 +3,7 @@ import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials,
 import { loadImage, downloadCanvas } from './ss-card.js';
 import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
 import { mountShowcase } from './cartes-showcase.js';
+import { svg } from './icons.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -20,12 +21,11 @@ const DISPLAY = '"Archivo Black", system-ui, sans-serif';
 const BODY = 'Inter, system-ui, sans-serif';
 const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 
-const svg = (d, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  msg: svg('<path d="M4 5h16v11H9l-5 4z"/>'),
-  download: svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
-  users: svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.7.7 3 2.4 3.5 5.2"/>'),
-  badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
+  msg: svg('msg', { size: 20, stroke: 1.8 }),
+  download: svg('download', { size: 20, stroke: 1.8 }),
+  users: svg('users2', { size: 20, stroke: 1.8 }),
+  badge: svg('badge', { size: 20, stroke: 1.8 }),
 };
 
 const STATS = [
