@@ -63,7 +63,7 @@ function syncIntro() {
 function renderGuest() {
   app.innerHTML = `
     <section class="home-hero home-hero-guest">
-      <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" onerror="this.remove()">
+      <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
       <p class="eyebrow">Humane Gang</p>
       <h1 class="page-title">Le QG du Humane Gang</h1>
       <p class="home-lead">Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L'espace est réservé aux membres.</p>
@@ -311,7 +311,7 @@ async function loadDynBanner() {
     const ev = [...list].sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
     const more = list.length > 1 ? ` (+${list.length - 1} autre${list.length > 2 ? 's' : ''})` : '';
     const vis = ev.image_url
-      ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" onerror="this.remove()">`
+      ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" data-on-error="remove">`
       : `<span class="recap-banner-emoji" aria-hidden="true">${esc(ev.emoji || '✨')}</span>`;
     box.innerHTML = `<a class="recap-banner dyn-banner" href="evenements.html">
         ${vis}
@@ -335,7 +335,7 @@ async function loadFeed() {
     const byId = new Map(members.map((m) => [m.id, m]));
     ul.innerHTML = data.map((a) => {
       const m = a.user_id ? byId.get(a.user_id) : null;
-      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" onerror="this.remove()"></span>`;
+      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" data-on-error="remove"></span>`;
       return `<li class="feed-item">
         ${av}
         <div class="feed-text">

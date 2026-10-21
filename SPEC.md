@@ -5,7 +5,7 @@ Tout le texte de l'interface est en **français**. Racine du projet : `/home/cla
 
 ## Fichiers déjà fournis (NE PAS réécrire, seulement utiliser ; un ajout mineur est permis s'il est indispensable, en le signalant)
 - `assets/css/base.css` — tokens (couleurs désaturées, `--accent`, sections `--ss-*`, `--irl-*`, `--hist-*`), composants : `.container .card .card-ss .card-irl .card-hist .grid .row .stack .btn .btn-primary .btn-light .btn-sand .btn-ghost .btn-danger .btn-row .field .check .pill .pill-ok .pill-current .pill-todo .progress .avatar .empty .list-row .page-head .eyebrow .page-title .display .muted .small`.
-- `assets/js/config.js` — URL + clé publique Supabase, `LOGO_SRC` (fichier `Logo.png` à la racine, L majuscule).
+- `assets/js/config.js` — URL + clé publique Supabase, `LOGO_SRC` (`assets/img/logo-1600.webp`).
 - `assets/js/core.js` — exporte `sb` (client Supabase), `initPage({auth:'member'|'admin'|'optional'})` → profil, `requireMember`, `requireAdmin`, `getProfile(force)`, `getUser`, `toast(msg,'ok'|'error')`, `errMsg`, `esc` (échappement HTML — À UTILISER pour toute donnée insérée en innerHTML), `$`, `$$`, `fmtDate`, `fmtDateTime`, `daysUntil`, `avatarHtml(profile,size)`, `callFn(name, body)`, `notify(event, payload)` (bot Discord, ne jette jamais), `SEASONS`, `SEASON_LABELS`, `autoSeason`, `applySeason`, `LOGO_SRC`.
 - `supabase/migrations/001_hg_core_schema.sql` et `002_hg_rls_storage.sql` — LE schéma de référence. Lis-les avant de coder.
 
@@ -16,7 +16,7 @@ Tout le texte de l'interface est en **français**. Racine du projet : `/home/cla
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Secret Santa · Humane Gang</title>
-  <link rel="icon" href="Logo.png">
+  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/secret-santa.css">   <!-- CSS propre à la page si besoin -->
 </head>
@@ -56,7 +56,7 @@ Le JS de page commence par `import { sb, initPage, ... } from './core.js'; const
 
 ## Mise à jour v2 (20.10.2026) — racine désormais `/home/claude/human-gang` (clone git du dépôt)
 - Les emojis sont désormais autorisés là où Ethan les demande (tuiles de l'accueil, thèmes).
-- Logo : `LOGO_SRC` = `assets/img/logo-1600.webp` (pixel art : afficher avec `image-rendering: pixelated`). Favicon `assets/img/favicon-64.png`. `Logo.png` (5000px) reste dans le dépôt mais n'est plus chargé.
+- Logo : `LOGO_SRC` = `assets/img/logo-1600.webp` (pixel art : afficher avec `image-rendering: pixelated`). Favicon `assets/img/favicon-64.png`. Les anciens PNG du logo (`Logo.png`, `logo-1600.png`, `logo-512.png`) ont été retirés du dépôt : seuls les WebP sont utilisés.
 - Base appliquée (voir `supabase/migrations/006_themes_infos_admin.sql`) : `hg_themes`, `hg_profile_info`, `hg_ss_editions.shared_fields`, rpc `hg_ss_target_info(p_edition)`, rpc `hg_admin_accounts()`, l'admin voit/modifie toutes les données (y compris `hg_ss_assignments`).
 - Liste des informations diverses : `assets/js/profile-fields.js` (`INFO_GROUPS`, `INFO_FIELDS`, `INFO_LABEL`). Ne pas dupliquer cette liste.
 - Thèmes : `core.js` expose (après la v2) `applyTheme()` qui charge le thème actif et pose les variables CSS + `data-theme=<slug>` sur <html>, `getActiveTheme()` → objet thème (avec `emojis`, `logo_url`, `effect`), `themeEmoji(i)`, et `currentLogo()` (logo du thème sinon LOGO_SRC).

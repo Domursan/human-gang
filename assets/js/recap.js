@@ -46,7 +46,7 @@ function buildSlides(r) {
   const S = [];
   S.push({
     key: 'intro', emoji: '✨',
-    html: `<img class="rc-logo" src="${esc(currentLogo())}" alt="" onerror="this.remove()">
+    html: `<img class="rc-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
       <p class="rc-eyebrow">Humane Gang</p>
       <h2 class="rc-title">Ton récap<br><span class="rc-year">${esc(year)}</span></h2>
       <p class="rc-sub">Une année de gang en quelques chiffres.<br><span class="rc-hint">Touche à droite pour avancer, maintiens pour mettre en pause.</span></p>`,

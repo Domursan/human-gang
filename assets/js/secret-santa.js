@@ -588,6 +588,6 @@ try {
   app.innerHTML = `
     <div class="page-head"><div><div class="eyebrow">Secret Santa</div><h1 class="page-title">Secret Santa</h1></div></div>
     <div class="card"><h2>Chargement impossible</h2><p class="muted">${esc(errMsg(e))}</p>
-    <div class="btn-row"><button class="btn btn-primary" type="button" onclick="location.reload()">Réessayer</button></div></div>`;
+    <div class="btn-row"><button class="btn btn-primary" type="button" data-action="reload">Réessayer</button></div></div>`;
   toast(`Secret Santa : ${errMsg(e)}`, 'error');
 }

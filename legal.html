@@ -2,10 +2,30 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <script>try{var p=JSON.parse(localStorage.getItem('hg_prefs')||'{}'),r=document.documentElement,m={clair:1,daltonien:1}[p.mode]?p.mode:'sombre';r.dataset.mode=m;r.style.colorScheme=m==='clair'?'light':'dark';}catch(e){}</script><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://zqbdzokyhgavgmqgiwuw.supabase.co https://cdn.jsdelivr.net https://tile.openstreetmap.org; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mentions légales et confidentialité · Humane Gang</title>
+  <link rel="canonical" href="https://domursan.github.io/human-gang/legal.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Humane Gang">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Mentions légales et confidentialité · Humane Gang">
+  <meta property="og:description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
+  <meta property="og:url" content="https://domursan.github.io/human-gang/legal.html">
+  <meta property="og:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo du Humane Gang">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mentions légales et confidentialité · Humane Gang">
+  <meta name="twitter:description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
+  <meta name="twitter:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
   <meta name="description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
@@ -191,6 +211,11 @@
                 <tr><th scope="row"><code>hg_badges_seen</code></th><td>Liste des badges déjà affichés sur cet appareil, pour ne célébrer que les nouveaux</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_badges_checked</code> <span class="small">(sessionStorage)</span></th><td>Indique que tes badges ont déjà été vérifiés pendant cette visite, pour ne pas le refaire à chaque page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_pending_join</code></th><td>Code d'invitation et pseudo gardés entre l'inscription et la première connexion, si une confirmation par e-mail est demandée</td><td>Supprimé dès que tu as rejoint le gang</td></tr>
+                <tr><th scope="row"><code>hg_invite_code</code> <span class="small">(sessionStorage)</span></th><td>Code d'invitation reçu par un lien, gardé le temps de l'inscription</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
+                <tr><th scope="row"><code>hg_invite_link</code> <span class="small">(sessionStorage)</span></th><td>Lien d'invitation déjà utilisé, pour ne pas générer un nouveau code à chaque rechargement de la page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
+                <tr><th scope="row"><code>hg_godmode_sync</code></th><td>Synchronise le mode administrateur entre les onglets ouverts sur cet appareil</td><td>Jusqu'à la fin ou la désactivation du mode</td></tr>
+                <tr><th scope="row"><code>hg_geo_v1</code></th><td>Coordonnées des lieux de rencontre déjà trouvées, pour ne pas les rechercher à chaque ouverture de la carte IRL (aucune donnée personnelle)</td><td>Jusqu'à effacement</td></tr>
+                <tr><th scope="row"><code>hg_ss_seen_&lt;édition&gt;</code></th><td>Se souvenir que tu as déjà vu ta cible du Secret Santa pour cette édition</td><td>Jusqu'à effacement</td></tr>
               </tbody>
             </table>
           </div>
@@ -225,6 +250,7 @@
       </div>
     </div>
   </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/legal.js"></script>
 </body>
 </html>

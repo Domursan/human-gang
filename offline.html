@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hors ligne · Humane Gang</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0b0a10">
+  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+</head>
+<body>
+  <main class="offline-page" style="max-width:520px;margin:auto;padding:48px 16px;text-align:center">
+    <img src="assets/img/logo-512.webp" alt="" width="120" height="120" style="image-rendering:pixelated">
+    <h1 class="display">Tu es hors ligne</h1>
+    <p class="muted">Le réseau semble coupé. Les pages déjà ouvertes restent accessibles ; les nouveautés (sorties, messages, cartes) apparaîtront dès que la connexion reviendra.</p>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-primary" type="button" data-action="reload">Réessayer</button>
+      <a class="btn btn-light" href="accueil.html">Aller à l'accueil</a>
+    </div>
+  </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
+</body>
+</html>

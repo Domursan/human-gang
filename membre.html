@@ -2,10 +2,31 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <script>try{var p=JSON.parse(localStorage.getItem('hg_prefs')||'{}'),r=document.documentElement,m={clair:1,daltonien:1}[p.mode]?p.mode:'sombre';r.dataset.mode=m;r.style.colorScheme=m==='clair'?'light':'dark';}catch(e){}</script><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://zqbdzokyhgavgmqgiwuw.supabase.co https://cdn.jsdelivr.net https://tile.openstreetmap.org; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Carte de membre · Humane Gang</title>
+  <meta name="description" content="Carte de membre du Humane Gang.">
+  <link rel="canonical" href="https://domursan.github.io/human-gang/membre.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Humane Gang">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Carte de membre · Humane Gang">
+  <meta property="og:description" content="Carte de membre du Humane Gang.">
+  <meta property="og:url" content="https://domursan.github.io/human-gang/membre.html">
+  <meta property="og:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo du Humane Gang">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Carte de membre · Humane Gang">
+  <meta name="twitter:description" content="Carte de membre du Humane Gang.">
+  <meta name="twitter:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
@@ -20,6 +41,7 @@
   <main class="container" id="app" aria-busy="true">
     <div class="mb-loading" aria-live="polite"><span class="visually-hidden">Chargement…</span></div>
   </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/membre.js"></script>
 </body>
 </html>
