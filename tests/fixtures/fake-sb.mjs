@@ -309,6 +309,7 @@ export function createClient() {
       if (fn === 'hg_my_badge_progress') { if (S.noProgress) return { data: null, error: { message: 'function not found' } }; return { data: [{ badge_code: 'fidele', metric: 'anciennete_annees', value: 4 }, { badge_code: 'citrouille', metric: 'event_captures', value: DB.hg_dyn_captures.filter((c) => c.user_id === ME && c.event_id === 'aaaaaaaa-0000-4000-8000-000000000001').length }], error: null }; }
       if (fn === 'hg_my_perms') return { data: myPermsNow(), error: null };
       if (fn === 'hg_is_staff') { const m = myPermsNow(); return { data: m.is_admin || m.perms.length > 0, error: null }; }
+      if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url ?? null, color: p.color ?? null, is_ghost: !!p.is_ghost, joined_on: p.joined_on ?? null })), error: null };
       if (fn === 'hg_staff_list') return isAdminNow() ? { data: staffRowsNow(), error: null } : denied;
       if (fn === 'hg_staff_set') {
         if (!isAdminNow()) return denied;

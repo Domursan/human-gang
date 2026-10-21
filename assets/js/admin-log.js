@@ -62,7 +62,7 @@ function itemsOf() {
 }
 
 async function loadPseudos() {
-  const rows = check(await sb.from('hg_profiles').select('id, pseudo')) ?? [];
+  const rows = check(await sb.rpc('hg_staff_directory')) ?? [];
   LG.pseudo = new Map(rows.map((r) => [r.id, r.pseudo]));
 }
 
