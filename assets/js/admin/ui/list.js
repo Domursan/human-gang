@@ -10,6 +10,7 @@
 //   search  : false pour masquer ; { placeholder, label, fields(item) } sinon. Insensible à la casse et aux accents, délai 150 ms.
 //   onSelect: (item) => … appelé à la sélection (clic, Entrée, ou flèches : la sélection suit le focus).
 //   selectedId, label (nom accessible de la liste), empty (texte de l'état vide).
+//   defaultFilter : id du filtre affiché au départ (défaut : 'all').
 // Lignes par lots de 50 (bouton « Afficher plus »). Navigation : ↑ ↓ Début Fin, Entrée ; ↓ depuis la recherche va à la première ligne.
 import { esc, avatarHtml } from '../../core/util.js';
 import { svg } from '../../icons.js';
@@ -38,7 +39,7 @@ export function createList(el, opts = {}) {
   const uid = `ui-list-${++seq}`;
   const state = {
     items: opts.items || [],
-    filterId: 'all',
+    filterId: opts.defaultFilter || 'all',
     query: '',
     shown: PAGE,
     selectedId: opts.selectedId != null ? String(opts.selectedId) : null,

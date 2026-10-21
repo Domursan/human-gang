@@ -16,8 +16,8 @@ import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection, openCardsTab } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection } from './admin-staff.js';
-import { mountSortiesSection } from './admin-sorties/index.js';
-import { mountSouvenirsSection } from './admin-souvenirs/index.js';
+import { mountSortiesSection, openSortie, listSorties, infoSorties } from './admin-sorties/index.js';
+import { mountSouvenirsSection, openSouvenirs, listSouvenirs } from './admin-souvenirs/index.js';
 import { mountReglagesSection } from './admin-reglages/view.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
@@ -84,8 +84,17 @@ registerSub('membres/invitations', {
 registerSub('membres/acces', {
   main: () => { ensureAccounts(); mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') }); },
 });
-registerSub('vie/sorties', { main: () => mountSortiesSection($('#sorties-root'), { me }) });
-registerSub('vie/souvenirs', { main: () => mountSouvenirsSection($('#souvenirs-root'), { me }) });
+registerSub('vie/sorties', {
+  main: () => mountSortiesSection($('#sorties-root'), { me }),
+  open: (el, r) => openSortie(r),
+  list: listSorties,
+  info: infoSorties,
+});
+registerSub('vie/souvenirs', {
+  main: () => mountSouvenirsSection($('#souvenirs-root'), { me }),
+  open: (el, r) => openSouvenirs(r),
+  list: listSouvenirs,
+});
 registerSub('vie/evenements', { main: () => mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } }) });
 // Jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };

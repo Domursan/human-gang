@@ -16,7 +16,7 @@
 .shell [hidden] { display: none !important; }
 .shell :focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 .shell svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
-.shell button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:where(.shell) button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; } /* :where : les classes de boutons (btn, ui-btn…) gardent la préséance */
 .shell a { color: inherit; text-decoration: none; }
 
 /* Ruban aux couleurs de la marque, en haut du panel */
@@ -119,7 +119,8 @@
   .shell-col { grid-column: 1; grid-row: 2; border-right: 0; padding: 18px 16px 16px; }
   .shell-zone { grid-column: 1; grid-row: 2; }
   .shell-info { display: none !important; }
-  .shell[data-screen="domain"] .shell-zone, .shell[data-screen="sub"] .shell-col { display: none; }
+  .shell[data-screen="domain"] .shell-zone, .shell[data-screen="list"] .shell-zone, .shell[data-screen="sub"] .shell-col { display: none; }
+  .shell[data-screen="list"] .shell-subs { display: none; }
   .shell[data-screen="sub"] .zone-back { display: inline-flex; align-items: center; gap: 4px; }
   .zone-head { padding: 16px 16px 14px; }
   .shell-groups { padding: 16px 16px 32px; }

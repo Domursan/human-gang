@@ -10,7 +10,8 @@
 //     main?: (el) => …,         // appelé UNE fois par groupe, à la première visite ; el = conteneur du groupe.
 //                               // La section (id = `section` de DOMAINS) y est déjà placée. Peut être async.
 //     open?: (el, { id, tab }) => …, // appelé à chaque visite, après main ; id/tab = segments /id/onglet de l'URL
-//     list?: (el) => …,         // colonne 2, sous les sous-sections : appelé une fois par sous-section (phase 2)
+//     list?: (el) => …,         // colonne 2, sous les sous-sections : appelé une fois par sous-section (phase 2).
+//                               // Mobile : la liste occupe l'écran tant qu'aucun /id n'est choisi ; le retour mène à la liste.
 //     info?: (el) => …,         // panneau d'infos à droite (affiché ≥ 1440 px seulement) : appelé une fois par sous-section
 //   })
 // Toutes les sections n'utilisent pour l'instant que `main`. Une sous-section sans fournisseur affiche sa section seule.
@@ -208,12 +209,14 @@ async function show(r) {
   const key = `${r.dom.id}/${r.sub.id}`;
   const p = providers.get(key) || {};
   curKey = key;
-  el.shell.dataset.screen = 'sub';
+  // Mobile : une sous-section avec colonne de liste montre d'abord la liste (plein écran), puis le détail (/id)
+  const listScreen = MOBILE.matches && !!p.list && !r.id;
+  el.shell.dataset.screen = listScreen ? 'list' : 'sub';
   paintColumn(r.dom);
   markActive(r.dom.id, r.sub.id);
   el.zoneEyebrow.textContent = r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
-  el.back.setAttribute('href', `#${r.dom.id}/`);
+  el.back.setAttribute('href', r.id && p.list ? `#${r.dom.id}/${r.sub.id}` : `#${r.dom.id}/`);
   // Conteneur du groupe (une seule sous-section visible à la fois ; les déjà montées restent en mémoire)
   const gid = p.group || key;
   let g = groups.get(gid);

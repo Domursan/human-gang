@@ -5,13 +5,14 @@
 //   status  : { value, options: [{ id, label, tone }], label? } ; onStatus(id) à la modification
 //   history : [{ id?, title, status { label, tone }, at }] (liste courte, plus récent d'abord)
 //   actions : [{ label, onClick }] boutons pleine largeur en bas (ex. « Ouvrir la fiche membre »)
+//   caption : ligne sous le nom (ex. « Organisateur ») ; emptyText : texte quand l'historique est vide
 import { esc, avatarHtml } from '../../core/util.js';
 import { monthYear, fmtDay, seenAgo } from './time.js';
 import { pill, statusSelect, bindStatus, ICON } from './common.js';
 
 let seq = 0;
 
-export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes' } = {}) {
+export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes', caption = '', emptyText = 'Aucune autre demande.' } = {}) {
   const uid = `ui-info-${++seq}`;
   el.classList.add('ui-info');
 
@@ -19,7 +20,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
       <div class="ui-info-av">${avatarHtml(member, 52)}</div>
       <div class="ui-info-id">
         <div class="ui-info-name">${esc(member.pseudo || '')}</div>
-        <div class="ui-info-meta">${member.since ? `Membre depuis ${esc(monthYear(member.since))}` : ''}${member.lastSeen ? `<br>${esc(seenAgo(member.lastSeen))}` : ''}</div>
+        <div class="ui-info-meta">${caption ? esc(caption) : ''}${member.since ? `${caption ? '<br>' : ''}Membre depuis ${esc(monthYear(member.since))}` : ''}${member.lastSeen ? `<br>${esc(seenAgo(member.lastSeen))}` : ''}</div>
       </div>
     </div>`;
 
@@ -39,7 +40,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
           <span class="ui-hist-t">${esc(h.title)}</span>
           ${pill(h.status)}
           <span class="ui-hist-d">${esc(fmtDay(h.at))}</span>
-        </li>`).join('')}</ul>` : '<p class="ui-info-empty">Aucune autre demande.</p>'}
+        </li>`).join('')}</ul>` : `<p class="ui-info-empty">${esc(emptyText)}</p>`}
     </section>`;
 
   const acts = actions.length ? `<div class="ui-info-actions">${actions.map((a, i) => `<button type="button" class="ui-linkbtn" data-action="${i}">
