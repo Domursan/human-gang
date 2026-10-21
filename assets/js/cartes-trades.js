@@ -557,7 +557,10 @@ export async function mountTrades(el, ctx = {}) {
   /* ---------- Événements ---------- */
   root.addEventListener('click', (e) => {
     const tab = e.target.closest('.trd-tab');
-    if (tab && tabsEl.contains(tab)) { S.tab = tab.dataset.tab; render(); tabsEl.querySelector(`[data-tab="${S.tab}"]`)?.focus(); return; }
+    if (tab && tabsEl.contains(tab)) {
+      e.stopPropagation(); // les onglets de la page parente (cartes.js) ne doivent pas réagir à ceux-ci
+      S.tab = tab.dataset.tab; render(); tabsEl.querySelector(`[data-tab="${S.tab}"]`)?.focus(); return;
+    }
     const pick = e.target.closest('button[data-side]');
     if (pick && dlg.contains(pick)) return togglePick(pick);
     const b = e.target.closest('[data-act]');
