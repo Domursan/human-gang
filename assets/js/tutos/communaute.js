@@ -98,7 +98,7 @@ export default {
       page: "membre.html",
       steps: [
         { title: "Ouvre tes badges", text: "Sur ta carte de membre, la section « Badges » liste ceux que tu as obtenus, avec la date d'obtention." },
-        { title: "Participe au Secret Santa", text: "« Premier Noël » : un Secret Santa terminé. « Vétéran » : 5 Secret Santa. « Liste parfaite » : au moins un souhait avant le tirage, un seul suffit. « Lutin express » : cadeau envoyé le premier de l'édition. « Sur le fil » : cadeau envoyé le dernier jour." },
+        { title: "Participe au Secret Santa", text: "« Premier Noël » : une édition révélée ou terminée. « Vétéran » : 5 Secret Santa. « Liste parfaite » : au moins un souhait avant le tirage, un seul suffit. « Lutin express » : cadeau envoyé le premier de l'édition. « Sur le fil » : cadeau envoyé le dernier jour." },
         { title: "Viens aux sorties", text: "« Toujours là » : présent à 5 sorties IRL. « Organisateur » : avoir créé une sortie. « Globe-trotter » : des sorties dans 3 lieux différents." },
         { title: "Partage et participe", text: "« Paparazzi » : 50 photos ajoutées aux albums. « Boîte à idées » : une idée retenue par l'admin. « Chasseur de bugs » : un bug signalé via l'assistance et traité." },
         { title: "Ancienneté et fidélité", text: "« Fidèle » : 3 ans dans le gang depuis la date d'arrivée. « Membre fondateur » : arrivé dès la première année du gang. « Ancienneté » : badge à niveaux, voir le tuto dédié. « Saisonnier » : connecté pendant les 7 thèmes." },
@@ -132,7 +132,7 @@ export default {
       summary: "Envoie une demande à l'admin depuis la page Assistance, même sans compte.",
       page: "assistance.html",
       steps: [
-        { title: "Ouvre Assistance", text: "La page Assistance est accessible depuis le menu, avec ou sans connexion." },
+        { title: "Ouvre Assistance", text: "La page Assistance s\'ouvre depuis la page Aide et tutos (bouton « Contacter l\'assistance »), avec ou sans connexion." },
         { title: "Indique ton pseudo", text: "Connecté, ton pseudo est rempli tout seul. Sans compte, tape le pseudo que tu utilises dans le gang." },
         { title: "Choisis un sujet", text: "Dans la liste « Sujet » : « Problème de compte / connexion », « Secret Santa », « Sortie IRL », « Bug sur le site », « Mes données personnelles » ou « Autre »." },
         { title: "Décris ton problème", text: "Dans « Message » (10 caractères minimum), explique ce qui se passe, ce que tu as essayé et sur quelle page." },
@@ -150,8 +150,8 @@ export default {
       summary: "Dis-nous ce qui ne marche pas, et gagne peut-être le badge « Chasseur de bugs ».",
       page: "assistance.html",
       steps: [
-        { title: "Ouvre Assistance", text: "Depuis le menu, ouvre la page Assistance." },
-        { title: "Choisis « Bug sur le site »", text: "Dans la liste « Sujet », sélectionne « Bug sur le site »." },
+        { title: "Ouvre le formulaire", text: "Depuis la page Aide et tutos, clique sur « Signaler un bug » : le sujet est déjà choisi." },
+        { title: "Vérifie le sujet", text: "Dans la liste « Sujet », « Bug sur le site » doit être sélectionné." },
         { title: "Décris le bug", text: "Dans « Message », dis sur quelle page tu étais, ce que tu as fait et ce qui s'est passé. Un message précis se corrige plus vite." },
         { title: "Envoie", text: "Clique sur « Envoyer la demande ». L'écran confirme « Demande envoyée »." },
         { title: "Suis le traitement", text: "Connecté, la demande apparaît dans « Mes demandes » avec son statut. Une fois traitée, tu peux recevoir la réponse." },

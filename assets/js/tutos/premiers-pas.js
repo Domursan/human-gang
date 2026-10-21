@@ -141,10 +141,11 @@ export default {
         { title: 'Utilise le menu', text: 'En haut, les liens vers les pages (Secret Santa, IRL, Historique, Messages…) sont ceux auxquels ton compte a accès. Sur téléphone, ils sont derrière le bouton « Menu ».' },
         { title: 'Repère la colonne d\'outils', text: 'À côté du menu : « Rechercher », « Préférences d\'affichage », ton compte (avatar et pseudo) et, une fois connecté, « Se déconnecter ». Sur téléphone, cette colonne passe sous l\'en-tête.' },
         { title: 'Reviens à l\'accueil', text: 'Clique sur le logo HUMANE GANG, en haut à gauche, pour revenir à l\'accueil depuis n\'importe quelle page.' },
-        { title: 'Consulte le pied de page', text: 'En bas de chaque page : Événements (si ton compte y a accès), Assistance, Mentions légales, Confidentialité, Cookies, et « Préférences d\'affichage ».' },
+        { title: 'Consulte le pied de page', text: 'En bas de chaque page : Événements (si ton compte y a accès), Mentions légales, Confidentialité, Cookies, et « Préférences d\'affichage ».' },
       ],
       tips: [
         'Une page absente du menu n\'est pas accessible avec ton compte.',
+        'Le bouton « ? » de la colonne d\'outils ouvre la page Aide et tutos, qui regroupe tous ces tutos.',
         'Le lien « Aller au contenu », visible à la touche Tab en haut de page, saute directement au contenu.',
       ],
       keywords: ['menu', 'navigation', 'accueil', 'pages', 'colonne', 'outils', 'pied de page', 'footer', 'mobile', 'téléphone'],
@@ -248,7 +249,7 @@ export default {
         { title: 'Vois tes droits', text: 'La rubrique « Tes droits », accessible depuis le sommaire, détaille accès, correction et suppression. Pour exporter ou effacer tes données, passe par Mon compte.' },
       ],
       tips: [
-        'Une question sur tes données ? Le lien « Assistance » en bas de page permet d\'écrire à l\'équipe.',
+        'Une question sur tes données ? La page Aide et tutos (bouton « Contacter l\'assistance ») permet d\'écrire à l\'équipe.',
       ],
       keywords: ['vie privée', 'confidentialité', 'rgpd', 'cookies', 'mentions légales', 'droits', 'données', 'stockage'],
     },

@@ -21,7 +21,7 @@ export default {
       tips: [
         'Le panneau « Aperçu » montre la carte survolée (ou mise au focus) sans la sélectionner. Sur téléphone, il se replie en haut de la fenêtre : touche « Détails » pour l’ouvrir.',
         'Les cartes que tu donnes sont bloquées tant que l’offre est en attente : tu ne peux pas les proposer ailleurs.',
-        'Pour préparer l’offre à partir de la collection d’un membre, voir « Classement / fiche membre › Voir sa collection, puis Proposer un échange ».',
+        'Pour préparer l’offre à partir de la collection d’un membre, voir le tuto « Préparer un échange avec un membre ».',
       ],
       keywords: ['échange', 'proposer', 'offre', 'filtre', 'aperçu', 'paillettes', 'doublons'],
     },
@@ -136,7 +136,7 @@ export default {
         { title: 'Ouvre l’onglet Classement', text: 'Sur Cartes, touche « Classement ».' },
         { title: 'Lis le score', text: 'Le score additionne la valeur de toutes les cartes possédées. Une carte brillante compte double.' },
         { title: 'Lis les détails de chaque ligne', text: 'Sous le nom : le nombre de cartes uniques, d’exemplaires, de brillantes, d’identités et de séries. Ta ligne porte la mention « (toi) ».' },
-        { title: 'Ouvre la collection d’un membre', text: 'Depuis la fiche d’un membre, « Voir sa collection » permet de préparer un échange (voir « Préparer un échange avec un membre »).' },
+        { title: 'Prépare un échange', text: 'Pour proposer un échange à un membre, voir le tuto « Préparer un échange avec un membre ».' },
       ],
       tips: [
         'Le classement se met à jour à chaque ouverture de l’onglet.',
@@ -153,7 +153,7 @@ export default {
         { title: 'Ouvre ta fiche membre', text: 'Dans Compte, touche « Voir ma carte d’identité ». La section « Vitrine » est sur cette page.' },
         { title: 'Touche « Modifier ma vitrine »', text: 'Le bouton n’apparaît que sur ta propre fiche. La fenêtre « Ma vitrine » s’ouvre.' },
         { title: 'Choisis jusqu’à trois cartes', text: 'Dans « Ma collection », touche une carte pour l’ajouter à un emplacement. Touche-la de nouveau pour la retirer. Un emplacement se libère avec « Libérer ».' },
-        { title: 'Enregistre', text: 'Touche « Enregistrer ». Les cartes apparaissent dans ta vitrine, et les emplacements vides sont indiqués « Emplacement libre ».' },
+        { title: 'Enregistre', text: 'Touche « Enregistrer ». Les cartes apparaissent dans ta vitrine, et les emplacements vides sont indiqués « Emplacement N libre ».' },
       ],
       tips: [
         'Une carte recyclée ou cédée à un autre membre sort automatiquement de la vitrine.',
