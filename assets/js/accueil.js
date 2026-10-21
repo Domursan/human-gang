@@ -1,5 +1,6 @@
 // ===== Accueil : le QG du Humane Gang =====
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
+import { svg } from './icons.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'optional' });
@@ -18,16 +19,15 @@ const me = await initPage({ auth: 'optional' });
 }
 
 /* ---------- Icônes (SVG à trait) ---------- */
-const svg = (d, size = 22) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 /* Emojis des rubriques (demandés par Ethan) */
 const EMOJI = { ss: '🎁', irl: '📍', hist: '📜' };
 const tileIcon = (k) => `<span class="tile-icon tile-icon-${k}" aria-hidden="true">${EMOJI[k]}</span>`;
 const ICON = {
-  bulb: svg('<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>', 20),
-  arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 20),
-  cake: svg('<path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7"/><path d="M5 16c2 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3 1.5 4 0"/><path d="M12 12V8M12 5.5v.01"/>', 20),
-  pulse: svg('<path d="M3 12h4l3-7 4 14 3-7h4"/>', 20),
-  flag: svg('<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', 20),
+  bulb: svg('bulb', { size: 20, stroke: 1.7 }),
+  arrow: svg('arrow', { size: 20, stroke: 1.7 }),
+  cake: svg('cake', { size: 20, stroke: 1.7 }),
+  pulse: svg('pulse', { size: 20, stroke: 1.7 }),
+  flag: svg('flag', { size: 20, stroke: 1.7 }),
 };
 
 const STATUS = {

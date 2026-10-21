@@ -5,6 +5,7 @@ import { prepareImage } from './image-compress.js';
 import { loadReactions, reactionBarHtml } from './reactions.js';
 import { ghostDirectory } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -16,13 +17,13 @@ const KIND_LABEL = { ss: 'Secret Santa', irl: 'Sortie IRL', moment: 'Moment cult
 const FILTER_LABEL = { all: 'tout', ss: 'Secret Santa', irl: 'IRL et albums', moment: 'moments cultes' };
 
 const I = {
-  gift: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3-5-3.5-5-1.2C7 8 9.5 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 14.5 8 12 8z"/></svg>',
-  pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
-  star: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
-  people: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.6 3.6-5.5 6.5-5.5s5.5 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.4 3.5 5.2"/></svg>',
-  arrow: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
-  edit: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  gift: svg('gift', { size: 18, stroke: 1.8 }),
+  pin: svg('pin', { size: 18, stroke: 1.8 }),
+  star: svg('star', { size: 18, stroke: 1.8 }),
+  people: svg('people', { size: 16, stroke: 1.8 }),
+  arrow: svg('arrow', { size: 16, stroke: 2 }),
+  edit: svg('edit2', { size: 16, stroke: 1.8 }),
+  trash: svg('trash2', { size: 16, stroke: 1.8 }),
 };
 
 const S = { members: new Map(), editions: [], progress: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), reveals: new Map(), filter: 'all' };

@@ -4,17 +4,17 @@
 import { sb, initPage, esc, $, errMsg, avatarHtml } from './core.js';
 import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 import { addToCalendar } from './ics.js';
+import { svg } from './icons.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
 
-const svg = (d, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  trophy: svg('<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/>'),
-  badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
-  eye: svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
-  clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
-  cal: svg('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  trophy: svg('trophy', { size: 20, stroke: 1.8 }),
+  badge: svg('badge', { size: 20, stroke: 1.8 }),
+  eye: svg('eye', { size: 20, stroke: 1.8 }),
+  clock: svg('clock', { size: 20, stroke: 1.8 }),
+  cal: svg('cal', { size: 20, stroke: 1.8 }),
 };
 const TZ = 'Europe/Zurich';
 const fmt = (iso, o = {}) => new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', ...o }).format(new Date(iso));

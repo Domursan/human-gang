@@ -4,6 +4,7 @@ import {
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,
   DEFAULT_THEME, THEME_EFFECTS, THEME_COLOR_KEYS,
 } from './core.js';
+import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
 import { prepareImage } from './image-compress.js';
 
@@ -19,13 +20,13 @@ const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet'
 const MONTHS_SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
 const ICON = {
-  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>',
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
-  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
-  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
-  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/></svg>',
+  edit: svg('edit3', { stroke: 2 }),
+  copy: svg('copy', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  eye: svg('eye', { stroke: 2 }),
+  plus: svg('plus', { stroke: 2 }),
+  upload: svg('upload', { stroke: 2 }),
+  warn: svg('warn2', { stroke: 2 }),
 };
 
 /* ---------- Outils ---------- */

@@ -2,6 +2,7 @@
 import {
   sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn, isGodMode, godTag,
 } from './core.js';
+import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
 import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
@@ -25,13 +26,13 @@ mountGodCard($('#god-root'));
 
 /* ---------- Icônes (SVG à trait) ---------- */
 const ICON = {
-  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
-  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10M13 8l4 4-4 4"/></svg>',
-  badge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>',
-  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
-  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
+  copy: svg('copy', { stroke: 2 }),
+  trash: svg('trash', { stroke: 2 }),
+  x: svg('close', { stroke: 2 }),
+  link: svg('link2', { stroke: 2 }),
+  badge: svg('badge', { stroke: 1.8 }),
+  upload: svg('upload', { stroke: 2 }),
+  check: svg('check2', { stroke: 2.2 }),
 };
 
 /* ---------- État ---------- */

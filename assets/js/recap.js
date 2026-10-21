@@ -1,6 +1,7 @@
 // ===== Humane Gang — récap annuel au format « story » =====
 import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
+import { svg } from './icons.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -18,15 +19,14 @@ const defaultYear = now.getMonth() === 11 ? now.getFullYear() : now.getFullYear(
 const qYear = Number(new URLSearchParams(location.search).get('year'));
 let year = Number.isInteger(qYear) && qYear >= 2000 && qYear <= now.getFullYear() ? qYear : defaultYear;
 
-const svg = (d, s = 20) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON = {
-  pause: svg('<path d="M8 5v14M16 5v14"/>'),
-  play: svg('<path d="M7 4.5v15l12-7.5z"/>'),
-  close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
-  prev: svg('<path d="M15 5l-7 7 7 7"/>', 24),
-  next: svg('<path d="M9 5l7 7-7 7"/>', 24),
-  download: svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>'),
-  replay: svg('<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/>'),
+  pause: svg('pause', { size: 20, stroke: 2 }),
+  play: svg('play2', { size: 20, stroke: 2 }),
+  close: svg('close2', { size: 20, stroke: 2 }),
+  prev: svg('back', { size: 24, stroke: 2 }),
+  next: svg('next', { size: 24, stroke: 2 }),
+  download: svg('download', { size: 20, stroke: 2 }),
+  replay: svg('replay', { size: 20, stroke: 2 }),
 };
 const plural = (n, one, many) => `${n > 1 ? many : one}`;
 const count = (n) => `<span class="rc-num" data-count="${Number(n) || 0}">${reduced ? nf.format(Number(n) || 0) : '0'}</span>`;

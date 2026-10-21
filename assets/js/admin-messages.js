@@ -3,12 +3,13 @@
 // Les messages sont lus uniquement par rpc hg_admin_read_conversation, qui journalise chaque lecture.
 // L'admin voit les vrais expéditeurs, y compris le Santa.
 import { sb, toast, errMsg, esc, $ } from './core.js';
+import { svg } from './icons.js';
 
 const ICON = {
-  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>',
-  mask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0v3c0 4-3 6-5.5 6-1.6 0-2.6-1.3-3.5-3-.9 1.7-1.9 3-3.5 3C6 17 3 15 3 11V8z"/></svg>',
-  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
-  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6L20 8"/><path d="M20 3v5h-5"/></svg>',
+  trash: svg('trash', { stroke: 2 }),
+  mask: svg('mask', { stroke: 1.8 }),
+  back: svg('back', { stroke: 2 }),
+  refresh: svg('refresh', { stroke: 2 }),
 };
 const FILTERS = [['all', 'Toutes'], ['direct', 'Directes'], ['santa', 'Secret Santa']];
 const PAGE = 200; // messages par lecture journalisée (limite de la RPC : 500)

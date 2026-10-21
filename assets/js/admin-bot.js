@@ -3,6 +3,7 @@
 // fonctions edge dans supabase/functions/_shared/bot-templates.json) et message manuel (hg-notify « admin_dm »,
 // historique hg_bot_log).
 import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
+import { svg } from './icons.js';
 
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 const NOTIFY = [
@@ -20,10 +21,10 @@ const DISCORD_ID = /^\d{17,20}$/;
 const TITLE_MAX = 256, BODY_MAX = 4096, MANUAL_TITLE_MAX = 200, MANUAL_BODY_MAX = 2000, CONFIRM_ABOVE = 5;
 const MAX_RECIPIENTS = 100;
 const ICON = {
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
-  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12 20 4l-6 16-3-7-7-1z"/></svg>',
-  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  search: svg('search2', { stroke: 2 }),
+  send: svg('send', { stroke: 2 }),
+  undo: svg('undo', { stroke: 2 }),
+  plus: svg('plus', { stroke: 2 }),
 };
 const STATUS = {
   ok: ['Discord OK', 'pill-ok'],

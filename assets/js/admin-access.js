@@ -6,6 +6,7 @@
 // Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche). N'importe que core.js.
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
+import { svg } from './icons.js';
 
 export const MODES = [
   ['membres', 'Tous les membres'],
@@ -17,13 +18,13 @@ const MODE_LABEL = Object.fromEntries(MODES);
 const ALWAYS_OPEN = new Set(['accueil']);
 
 const IC = {
-  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
-  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
-  yes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>',
-  no: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>',
-  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
-  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg>',
+  up: svg('up', { stroke: 2 }),
+  down: svg('down', { stroke: 2 }),
+  yes: svg('check2', { stroke: 2.4 }),
+  no: svg('no', { stroke: 2.2 }),
+  close: svg('close', { stroke: 2 }),
+  search: svg('search', { stroke: 2 }),
+  users: svg('users', { stroke: 2 }),
 };
 
 /* ---------- État partagé ---------- */

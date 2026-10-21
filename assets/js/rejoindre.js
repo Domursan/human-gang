@@ -1,5 +1,6 @@
 // ===== Rejoindre : un lien d'invitation (rejoindre.html?l=<token>) donne un code unique HG-XXXXXX valable 48 h =====
 import { sb, initPage, esc, $, toast, errMsg, getUser, currentLogo } from './core.js';
+import { svg } from './icons.js';
 
 const TOKEN = new URL(location.href).searchParams.get('l')?.trim() || '';
 const CODE_KEY = 'hg_invite_code';      // lu par compte.js
@@ -11,11 +12,10 @@ const box = $('#rj');
 const logo = $('.rj-logo');
 try { const src = currentLogo(); if (src) logo.src = src; } catch {}
 
-const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const IC = {
-  copy: svg('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
-  err: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/>'),
-  home: svg('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),
+  copy: svg('copy', { stroke: 1.8 }),
+  err: svg('err', { stroke: 1.8 }),
+  home: svg('home', { stroke: 1.8 }),
 };
 
 function store(v) { try { sessionStorage.setItem(LINK_KEY, JSON.stringify(v)); sessionStorage.setItem(CODE_KEY, v.code); } catch {} }

@@ -1,7 +1,8 @@
 // ===== Humane Gang — administration : carte « Mode sans limite » + confirmation « Refaire le tirage » =====
 import { esc, $, getGodMode, openGodDialog, disableGodMode, GOD_LIFTS } from './core.js';
+import { svg } from './icons.js';
 
-const ICON_BOLT = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>';
+const ICON_BOLT = svg('bolt', { size: 22, stroke: 1.9 });
 
 function left(until) {
   const s = Math.max(0, Math.ceil((until.getTime() - Date.now()) / 1000));
