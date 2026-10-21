@@ -86,8 +86,9 @@
   padding-bottom: calc(var(--u) * .9); border-bottom: calc(var(--u) * .6) solid var(--member); display: inline-block; max-width: 100%; }
 
 /* Rangée des badges obtenus : une seule ligne, « +n » au-delà de IDC_BADGES_MAX (membre.js) */
-.idc-field-badges dd { margin: 0; min-width: 0; }
-.idc-badges { list-style: none; margin: 0; padding: calc(var(--u) * .8) 0; display: flex; flex-wrap: nowrap; align-items: center; gap: calc(var(--u) * 1.2); min-width: 0; overflow-x: clip; overflow-y: visible; }
+.idc-body:has(.idc-badges-zone) { grid-template-columns: auto minmax(0, 1fr) auto; }
+.idc-badges-zone { display: grid; gap: calc(var(--u) * 1.1); justify-items: end; align-self: center; min-width: 0; }
+.idc-badges { list-style: none; margin: 0; padding: calc(var(--u) * .6); display: grid; grid-template-columns: repeat(4, auto); justify-content: end; align-items: center; gap: calc(var(--u) * 1.4); min-width: 0; }
 .idc-bdg { position: relative; flex: none; box-sizing: border-box; display: grid; place-items: center;
   width: clamp(26px, calc(var(--u) * 5.4), 40px); height: clamp(26px, calc(var(--u) * 5.4), 40px); border-radius: 50%;
   background: #1F1F23; box-shadow: 0 0 0 clamp(1.5px, calc(var(--u) * .5), 3px) rgba(226,199,126,.55); overflow: visible; }
@@ -144,7 +145,9 @@
   .idc-fields { justify-items: center; gap: 10px; }
   .idc-field dd { font-size: 15px; }
   .idc-pseudo { font-size: calc(var(--u) * 10) !important; border-bottom-width: 4px; }
-  .idc-badges { justify-content: center; }
+  .idc-body:has(.idc-badges-zone) { grid-template-columns: minmax(0, 1fr); }
+  .idc-badges-zone { justify-items: center; }
+  .idc-badges { display: flex; flex-wrap: wrap; justify-content: center; }
   .idc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .idc-stats li { padding: 8px 8px 6px; box-shadow: inset 0 3px 0 0 var(--c); }
   .idc-stats strong { font-size: 20px; }
