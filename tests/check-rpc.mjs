@@ -26,6 +26,7 @@ const MIGRATION_MIN = 20;
  */
 const EXCEPTIONS = {
   // 'rpc:hg_exemple': 'Définie hors dépôt (extension Supabase), donc absente du schéma',
+  'rpc:hg_staff_directory': 'Définie directement en base (liste des membres pour le Staff « cartes » sans droit membres) ; migration à versionner',
 };
 
 const JS_DIRS = ['assets/js'];

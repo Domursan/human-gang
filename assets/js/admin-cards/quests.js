@@ -3,7 +3,8 @@
 import { sb, toast, esc, $ } from '../core.js';
 import { ICON } from './constants.js';
 import { H } from './state.js';
-import { check, act, dialog, dlgHead, friendly, nf } from './helpers.js';
+import { check, act, friendly, nf } from './helpers.js';
+import { openDrawer } from '../admin/ui/drawer.js';
 
 export const QUEST_METRICS = [
   ['boosters_ouverts', 'Boosters ouverts', 'Nombre de boosters ouverts pendant la semaine.'],
@@ -65,8 +66,7 @@ export function questsPanel() {
 function formHtml(q, isNew) {
   const v = q || {};
   const metricOpts = QUEST_METRICS.map(([val, l]) => `<option value="${val}"${v.metric === val ? ' selected' : ''}>${esc(l)}</option>`).join('');
-  return `<form class="stack acd-form" id="acd-quest-form" novalidate>
-    ${dlgHead(isNew ? 'Nouvelle quête' : `Modifier « ${v.label} »`)}
+  return `<div class="stack acd-form" id="acd-quest-form">
     <p class="form-error" role="alert" hidden></p>
     <div class="field"><label for="aq-code">Identifiant technique</label>
       <input id="aq-code" name="code" maxlength="40" autocomplete="off" placeholder="ex. boosters_10" value="${esc(v.code ?? '')}"${isNew ? ' required' : ' readonly'} aria-describedby="aq-code-h">
@@ -94,59 +94,56 @@ function formHtml(q, isNew) {
       <label class="switch"><input type="checkbox" name="active"${(v.active ?? true) ? ' checked' : ''} aria-describedby="aq-active-h"><span class="switch-ui" aria-hidden="true"></span><span>Quête active</span></label>
     </div>
     <p class="small muted" id="aq-active-h">Une quête inactive n'est jamais tirée. Les quêtes actives sont tirées au sort, 3 par semaine.</p>
-    <div class="btn-row dialog-actions">
-      <button class="btn btn-ghost" type="button" data-acd-close>Annuler</button>
-      <button class="btn btn-primary" type="submit">${isNew ? 'Créer la quête' : 'Enregistrer'}</button>
-    </div>
-  </form>`;
+  </div>`;
 }
 
+/** Quête : formulaire dans le tiroir. */
 export function openQuestDialog(q = null) {
-  const d = dialog();
   const isNew = !q;
-  d.innerHTML = formHtml(q, isNew);
-  d.showModal();
-  const form = $('#acd-quest-form', d);
-  const E = form.elements;
-  // L'aide de l'action change avec le choix
-  E.metric.addEventListener('change', () => { $('#aq-metric-h', form).textContent = METRIC_HELP[E.metric.value] || ''; });
-  (isNew ? E.code : E.label).focus();
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = e.submitter;
-    const err = $('.form-error', form);
-    const fail = (m) => { err.textContent = m; err.hidden = false; };
-    err.hidden = true;
-    const code = E.code.value.trim().toLowerCase();
-    const label = E.label.value.trim();
-    const target = Number(E.target.value);
-    const reward = Number(E.reward.value);
-    const sort = Number(E.sort.value);
-    if (isNew && !CODE_RE.test(code)) return fail('L\'identifiant doit faire 2 à 40 caractères : lettres minuscules, chiffres ou tiret bas.');
-    if (isNew && Q.rows.some((r) => r.code === code)) return fail('Cet identifiant existe déjà. Choisis-en un autre.');
-    if (!label || label.length > 120) return fail('Donne un libellé (120 caractères au maximum).');
-    if (!METRIC_LABEL[E.metric.value]) return fail('Choisis une action dans la liste.');
-    if (!Number.isInteger(target) || target < 1 || target > 1000000) return fail('L\'objectif doit être un nombre entier positif.');
-    if (!Number.isInteger(reward) || reward < 1 || reward > 10000) return fail('La récompense doit être un nombre entier entre 1 et 10 000 Paillettes.');
-    if (!Number.isInteger(sort)) return fail('L\'ordre d\'affichage doit être un nombre entier.');
-    const row = { label, metric: E.metric.value, target, reward, sort, active: E.active.checked };
-    if (btn) btn.disabled = true;
-    try {
-      if (isNew) {
-        check(await sb.from('hg_card_quests_templates').insert({ code, ...row }));
-        toast('Quête créée.', 'ok');
-      } else {
-        check(await sb.from('hg_card_quests_templates').update(row).eq('code', q.code));
-        toast('Quête enregistrée.', 'ok');
-      }
-      d.close();
-      await loadQuests(true);
-    } catch (ex) {
-      fail(`Enregistrement impossible : ${friendly(ex)}`);
-    } finally {
-      if (btn?.isConnected) btn.disabled = false;
-    }
+  const dr = openDrawer({
+    title: isNew ? 'Nouvelle quête' : `Modifier « ${q.label} »`,
+    submitLabel: isNew ? 'Créer la quête' : 'Enregistrer',
+    body: formHtml(q, isNew),
+    onSubmit: (form) => saveQuest(form, q),
   });
+  const E = dr.form.elements;
+  // L'aide de l'action change avec le choix
+  E.metric.addEventListener('change', () => { $('#aq-metric-h', dr.body).textContent = METRIC_HELP[E.metric.value] || ''; });
+  (isNew ? E.code : E.label).focus();
+}
+
+/** Enregistre la quête saisie ; renvoie false (tiroir ouvert, erreur affichée) en cas d'échec. */
+async function saveQuest(form, q) {
+  const isNew = !q;
+  const E = form.elements;
+  const err = $('.form-error', form);
+  const fail = (m) => { err.textContent = m; err.hidden = false; return false; };
+  err.hidden = true;
+  const code = E.code.value.trim().toLowerCase();
+  const label = E.label.value.trim();
+  const target = Number(E.target.value);
+  const reward = Number(E.reward.value);
+  const sort = Number(E.sort.value);
+  if (isNew && !CODE_RE.test(code)) return fail('L\'identifiant doit faire 2 à 40 caractères : lettres minuscules, chiffres ou tiret bas.');
+  if (isNew && Q.rows.some((r) => r.code === code)) return fail('Cet identifiant existe déjà. Choisis-en un autre.');
+  if (!label || label.length > 120) return fail('Donne un libellé (120 caractères au maximum).');
+  if (!METRIC_LABEL[E.metric.value]) return fail('Choisis une action dans la liste.');
+  if (!Number.isInteger(target) || target < 1 || target > 1000000) return fail('L\'objectif doit être un nombre entier positif.');
+  if (!Number.isInteger(reward) || reward < 1 || reward > 10000) return fail('La récompense doit être un nombre entier entre 1 et 10 000 Paillettes.');
+  if (!Number.isInteger(sort)) return fail('L\'ordre d\'affichage doit être un nombre entier.');
+  const row = { label, metric: E.metric.value, target, reward, sort, active: E.active.checked };
+  try {
+    if (isNew) {
+      check(await sb.from('hg_card_quests_templates').insert({ code, ...row }));
+      toast('Quête créée.', 'ok');
+    } else {
+      check(await sb.from('hg_card_quests_templates').update(row).eq('code', q.code));
+      toast('Quête enregistrée.', 'ok');
+    }
+    await loadQuests(true);
+  } catch (ex) {
+    return fail(`Enregistrement impossible : ${friendly(ex)}`);
+  }
 }
 
 export const questActions = {

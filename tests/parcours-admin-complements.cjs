@@ -31,8 +31,8 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   await p.selectOption('#aq-metric', 'boosters_ouverts');
   await p.fill('#aq-target', '3');
   await p.fill('#aq-reward', '25');
-  await p.click('#acd-quest-form button[type="submit"]');
-  await p.waitForSelector('#acd-quest-form', { state: 'detached', timeout: 5000 }).catch(() => {});
+  await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
+  await p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
   await p.waitForTimeout(300);
   const created = await db(p, () => window.__DB.hg_card_quests_templates.find((q) => q.code === 'test_quete'));
   check(!!created && created.label === 'Trois boosters de test' && created.target === 3 && created.reward === 25 && created.active === true,
@@ -45,7 +45,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
     'modification : l\'identifiant est affiché et ne peut pas être changé');
   await p.fill('#aq-label', 'Ajouter deux photos');
   await p.fill('#aq-target', '2');
-  await p.click('#acd-quest-form button[type="submit"]');
+  await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await p.waitForTimeout(400);
   const edited = await db(p, () => window.__DB.hg_card_quests_templates.find((q) => q.code === 'photo_1'));
   check(edited.label === 'Ajouter deux photos' && edited.target === 2, 'quête modifiée (libellé et objectif)');
@@ -60,8 +60,9 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   await p.waitForSelector('#challenges-root [data-action="adc-edit"]', { timeout: 5000 });
   await p.click('#challenges-root [data-action="adc-edit"]');
   await p.waitForSelector('#adc-title', { timeout: 5000 });
+  await p.waitForSelector('dialog.ui-drawer[open]', { timeout: 5000 });
   await p.fill('#adc-title', 'Vingt sorties ce trimestre (modifié)');
-  await p.click('#adc-save');
+  await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await p.waitForTimeout(400);
   const ch = await db(p, () => window.__DB.hg_challenges[0]);
   check(ch.title === 'Vingt sorties ce trimestre (modifié)', 'défi modifié (titre enregistré)');

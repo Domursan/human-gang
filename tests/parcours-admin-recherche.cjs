@@ -144,10 +144,10 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
 
     // Séries : même recherche sur la liste des séries
     await adminSection(p, 'cartes/series');
-    await p.waitForSelector('#acd-sets-list .acd-item', { timeout: 5000 });
+    await p.waitForSelector('#acd-sets-list .acd-setcard', { timeout: 5000 });
     await p.fill('#acd-search-series', 'saison');
     await sleep(400);
-    check(await p.locator('#acd-sets-list .acd-item').count() === 1, 'séries : recherche « saison » (une série)');
+    check(await p.locator('#acd-sets-list .acd-setcard').count() === 1, 'séries : recherche « saison » (une série)');
     check(p.errs.length === 0, 'cartes : aucune erreur JS (' + p.errs.join(' | ') + ')');
     await p.ctx.close();
   }

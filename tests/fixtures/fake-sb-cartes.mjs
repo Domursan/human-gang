@@ -76,6 +76,13 @@ window.__DB = DB; window.__LOG = [];
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
   DB.hg_wallet_log = [{ user_id: ME, delta: 20, reason: 'quotidien', created_at: iso(-1) }, { user_id: ME, delta: -100, reason: 'booster', created_at: iso(-3) }, { user_id: ME, delta: 15, reason: 'reponse_sortie', created_at: iso(-5) }];
   DB.hg_wallets = [{ user_id: ME, paillettes: S.bal ?? 230, pity_epique: S.pity ?? 3, daily_streak: 2, last_daily: null }];
+// Panel admin (polish cartes) : quêtes, défis et journal des Paillettes
+DB.hg_card_quests_templates = [
+  { code: 'boosters_5', label: 'Ouvrir 5 boosters', metric: 'boosters_ouverts', target: 5, reward: 80, active: true, sort: 1 },
+  { code: 'photo_1', label: 'Ajouter une photo', metric: 'photos_ajoutees', target: 1, reward: 30, active: true, sort: 2 },
+];
+DB.hg_challenges = [{ id: '00000000-0000-4000-8000-0000000000c1', title: 'Vingt sorties ce trimestre', description: null, metric: 'sorties_tenues', target: 20, reward: 100, starts_at: iso(-10), ends_at: iso(80), active: true }];
+DB.hg_wallet_log = [{ user_id: ME, delta: 100, reason: 'booster', ref: null, created_at: iso(-1) }];
 }
 window.__CARDS = { config: { booster_price: 100, booster_size: 5, free_booster_hours: 24, shiny_rate: 3, pity_epique: 10,
   rates: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 },
@@ -113,6 +120,8 @@ class Q {
       for (const r of rows) {
         if (this.t === 'hg_badges' && tab.some((x) => x.code === r.code)) return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "hg_badges_pkey"' } };
         if (this.t === 'hg_invite_links') Object.assign(r, { id: 'L' + (++seq + 10), token: 'new' + String(seq).padStart(21, '0'), active: true, codes_generated: 0, created_at: new Date().toISOString() });
+        if (!r.id && this.t === 'hg_card_sets') r.id = 'SETN' + (++seq);
+        if (!r.id && this.t === 'hg_challenges') r.id = '00000000-0000-4000-8000-0000000d' + String(++seq).padStart(4, '0');
         tab.unshift(r);
       }
       return { data: this.one ? rows[0] : rows, error: null };
@@ -144,6 +153,13 @@ export function createClient() {
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
       if (fn === 'hg_my_perms') return { data: { is_admin: true, perms: ['membres', 'evenements', 'souvenirs', 'secret_santa', 'cartes', 'badges', 'themes', 'messages', 'support', 'bot', 'reglages', 'journal'] }, error: null };
+      if (fn === 'hg_cards_admin_paillettes') {
+        if (args.p_user === ME) { DB.hg_wallets[0].paillettes += args.p_delta; return { data: DB.hg_wallets[0].paillettes, error: null }; }
+        return { data: 0, error: null };
+      }
+      if (fn === 'hg_cards_admin_give') return { data: args.p_count, error: null };
+      if (fn === 'hg_cards_admin_take') return { data: null, error: null };
+      if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
       if (fn === 'hg_admin_accounts') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, email: p.pseudo.toLowerCase() + '@ex.ch', is_admin: p.is_admin, created_at: p.created_at, last_sign_in_at: null })), error: null };
       if (fn === 'hg_claim_invite_link') {

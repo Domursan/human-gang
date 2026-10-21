@@ -13,7 +13,7 @@ import { mountGhostsSection, refreshGhostsSection } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
-import { mountCardsSection, openCardsTab } from './admin-cards.js';
+import { mountCardsSection, openCardsTab, mountPlayersList } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection } from './admin-sorties/index.js';
@@ -108,9 +108,11 @@ registerSub('vie/souvenirs', { main: () => mountSouvenirsSection($('#souvenirs-r
 registerSub('vie/evenements', { main: () => mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } }) });
 // Jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
-for (const tab of ['series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats', 'echanges']) {
+for (const tab of ['series', 'cartes', 'quetes', 'economie', 'stats', 'echanges']) {
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
 }
+// Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
+registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);

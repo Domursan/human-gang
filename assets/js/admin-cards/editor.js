@@ -1,19 +1,24 @@
 // Cartes admin : fiche de création et de modification d'une carte, suppression, cartes Identité.
 import { sb, toast, esc, $ } from '../core.js';
+import { openDrawer } from '../admin/ui/drawer.js';
 import { RARITIES, FAMILIES, cardHtml } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
-import { check, act, dialog, dlgHead, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
+import { check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
 
 export function openCardDialog(k = null) {
-  const d = dialog();
   const isNew = !k;
   const setDefault = k?.set_id || C.f.set || identSetId() || C.sets[0]?.id || '';
   const used = k ? maxSerialOf(k.id) : 0;
-  d.innerHTML = `
-    <form class="stack acd-form" id="acd-card-form" novalidate>
-      ${dlgHead(isNew ? 'Nouvelle carte' : `Modifier « ${k.name} »`)}
+  let previewUrl = null;
+  const dr = openDrawer({
+    title: isNew ? 'Nouvelle carte' : `Modifier « ${k.name} »`,
+    submitLabel: isNew ? 'Créer la carte' : 'Enregistrer',
+    wide: true,
+    onClose: () => { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; },
+    onSubmit: (form) => saveCard(form),
+    body: `<div class="stack acd-form" id="acd-card-form">
       <p class="form-error" role="alert" hidden></p>
       <div class="acd-dlg-grid">
         <div class="stack">
@@ -62,15 +67,13 @@ export function openCardDialog(k = null) {
           </fieldset>
         </div>
       </div>
-      <div class="btn-row dialog-actions">
-        <button class="btn btn-ghost" type="button" data-acd-close>Annuler</button>
-        <button class="btn btn-primary" type="submit">${isNew ? 'Créer la carte' : 'Enregistrer'}</button>
-      </div>
-    </form>`;
-  d.showModal();
-  const form = $('#acd-card-form', d);
+    </div>`,
+  });
+  const root = dr.body;
+  const form = dr.form;
   const E = form.elements;
-  let previewUrl = null;
+
+  /* La coquille ouvre le tiroir ; la logique de la carte suit, relue depuis le formulaire. */
   const readRaw = () => {
     const num = Number(E.number.value);
     const maxRaw = E.max_copies.value.trim();
@@ -82,12 +85,12 @@ export function openCardDialog(k = null) {
   };
   const paint = () => {
     const v = readRaw();
-    $('#acc-caption-count', d).textContent = nf(E.caption.value.length);
+    $('#acc-caption-count', root).textContent = nf(E.caption.value.length);
     // Total de la série : cartes actives de la série (celle-ci comprise si elle est active), jamais sous son propre numéro.
     const activeInSet = C.cards.filter((x) => x.set_id === v.set_id && x.active && x.id !== k?.id).length + (E.active.checked ? 1 : 0);
     const setTotal = Math.max(activeInSet, Number.isInteger(v.number) ? v.number : 0);
     const member = v.member_id ? C.byId.get(v.member_id) : null;
-    $('#acc-card-preview', d).innerHTML = cardHtml({
+    $('#acc-card-preview', root).innerHTML = cardHtml({
       name: v.name || 'Nom de la carte', rarity: v.rarity, family: v.family, image_url: previewUrl || v.image_url,
       flavor: v.flavor, caption: v.caption, number: Number.isInteger(v.number) && v.number > 0 ? v.number : '?',
       set_total: setTotal || undefined, set_name: C.setById.get(v.set_id)?.name, max_copies: v.max_copies,
@@ -107,6 +110,25 @@ export function openCardDialog(k = null) {
     if ((v.family === 'membre' || v.rarity === 'identite') && !v.member_id) throw new Error('Une carte Membre ou Identité doit être liée à un membre.');
     return v;
   };
+  /** Enregistrement : renvoie false (tiroir ouvert, erreur affichée) en cas d'échec. */
+  async function saveCard() {
+    const err = $('.form-error', root);
+    const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
+    showErr('');
+    try {
+      const v = validate();
+      const file = E.file.files?.[0] ?? null;
+      const image_url = file ? await uploadCardImage(file) : v.image_url;
+      const row = { ...v, image_url, flavor: v.flavor || null };
+      if (isNew) check(await sb.from('hg_cards').insert(row));
+      else check(await sb.from('hg_cards').update(row).eq('id', k.id));
+      toast(isNew ? `Carte « ${v.name} » créée` : 'Carte enregistrée', 'ok');
+      await refresh();
+    } catch (err2) {
+      showErr(friendly(err2, { 23505: 'Ce numéro est déjà pris dans cette série.' }));
+      return false;
+    }
+  }
 
   E.file.addEventListener('change', () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -114,7 +136,7 @@ export function openCardDialog(k = null) {
     previewUrl = f ? URL.createObjectURL(f) : null;
     paint();
   });
-  $('[data-acc-noimg]', d).addEventListener('click', () => {
+  $('[data-acc-noimg]', root).addEventListener('click', () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = null; E.file.value = ''; E.image_url.value = ''; paint();
   });
@@ -125,31 +147,7 @@ export function openCardDialog(k = null) {
     paint();
   });
   form.addEventListener('input', paint);
-  d.addEventListener('close', () => { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; }, { once: true });
   paint();
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = e.submitter;
-    const err = $('.form-error', form);
-    const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
-    showErr('');
-    if (btn) btn.disabled = true;
-    try {
-      const v = validate();
-      const file = E.file.files?.[0] ?? null;
-      const image_url = file ? await uploadCardImage(file) : v.image_url;
-      const row = { ...v, image_url, flavor: v.flavor || null };
-      if (isNew) check(await sb.from('hg_cards').insert(row));
-      else check(await sb.from('hg_cards').update(row).eq('id', k.id));
-      d.close();
-      toast(isNew ? `Carte « ${v.name} » créée` : 'Carte enregistrée', 'ok');
-      await refresh();
-    } catch (err2) {
-      showErr(friendly(err2, { 23505: 'Ce numéro est déjà pris dans cette série.' }));
-    } finally { if (btn?.isConnected) btn.disabled = false; }
-  });
-  E.name.focus();
 }
 
 /** Suppression d'une carte : refusée tant qu'elle a des exemplaires (la désactivation les garde) ;

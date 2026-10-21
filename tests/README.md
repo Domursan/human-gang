@@ -41,6 +41,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-coquille.cjs` | Coquille du panel : rail et colonne de navigation, navigation par domaine et sous-section, URL directe `#membres/comptes`, ancienne ancre `#cartes` redirigée, précédent/suivant, Staff `cartes`+`journal` (Pilotage et Jeu de cartes seulement), mobile 375 px avec barre d’onglets et sans défilement horizontal |
 | `parcours-admin-p2-pilotage.cjs` | Pilotage du panel : Staff (ajout, permissions, barre d’enregistrement, désactivation / réactivation, infos), Journal (puces, recherche, détail avant / après, consultations), Vue d’ensemble (tuiles, « À traiter », activité), Staff `journal` seul, mobile 390 px liste puis détail |
 | `parcours-admin-p2-assistance.cjs` | Communication › Assistance et Boîte à idées : liste en colonne 2 avec filtres et compteurs, sélection par URL, en-tête (statut, « Résoudre »), fil en lecture seule, panneau d’infos (fiche rapide, historique, fiche membre), statut écrit en base, recherche, mobile 390 px (liste puis détail avec retour) |
+| `parcours-admin-polish-cartes.cjs` | Jeu de cartes et Défis du gang : séries en grille (interrupteur Active / Masquée, Modifier, création et annulation dans le tiroir), éditeur de carte en tiroir large, quêtes et défis en tiroir, joueurs en liste + détail (adresse `#cartes/joueurs/<id>`, Paillettes et cartes données ou retirées), aucune erreur console, mobile 390 px (tiroir pleine largeur, sans défilement horizontal) |
 
 ## Fixtures
 
