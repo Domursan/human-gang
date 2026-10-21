@@ -1,6 +1,7 @@
 // ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données =====
 import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
+import { mountPushBlock } from './push.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
@@ -451,10 +452,14 @@ async function renderMember(user) {
           <button class="btn btn-danger" type="button" id="delete">${ICON.trash} Supprimer mon compte</button>
         </div>
       </div>
+    </section>
+    <section class="acc-row">
+      <div id="push-slot" hidden></div>
     </section>`;
   done();
 
   $('#logout').addEventListener('click', logout);
+  mountPushBlock($('#push-slot'), me);
   bindProfile();
   bindAvatar();
   bindPassword();
