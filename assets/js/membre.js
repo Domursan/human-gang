@@ -82,8 +82,15 @@ function shell() {
     </section>`;
 }
 
-/** Nombre maximum de badges affichés sur la carte ; au-delà, une pastille « +n ». */
-const IDC_BADGES_MAX = 8;
+/** Nombre maximum de badges affichés sur la carte ; au-delà, une pastille « +n ». Réglable : hg_settings.badges.max_carte (repli 8). */
+let IDC_BADGES_MAX = 8;
+async function loadBadgeMax() {
+  try {
+    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'badges').maybeSingle();
+    const n = Number(data?.value?.max_carte);
+    if (!error && Number.isInteger(n) && n >= 1) IDC_BADGES_MAX = n;
+  } catch { /* repli : 8 */ }
+}
 
 /**
  * Rangée des badges obtenus sur la carte (images déjà résolues par addBadgeLevels : niveau atteint pour
@@ -442,6 +449,7 @@ try {
   const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
   if (error) throw error;
   const card = data && typeof data === 'object' ? data : null;
+  await loadBadgeMax();
   if (card?.id) await addBadgeLevels(card);
   if (!card || !card.id) {
     $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>

@@ -54,3 +54,5 @@ export function displayValue(value) {
   if (kindOf(value) === 'json') return JSON.stringify(value, null, 2);
   return String(value);
 }
+
+import { KEYS_LOT4 } from './keys-lot4.js'; Object.assign(KEYS, KEYS_LOT4); // lot 4 : ajout isolé
