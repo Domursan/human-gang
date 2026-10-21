@@ -8,6 +8,16 @@ import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
 import { prepareImage } from './image-compress.js';
 import { matches, searchHtml, bindSearch, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
+import { openDrawer } from './admin/ui/drawer.js';
+
+// Bouton « + Nouveau thème » de l'en-tête de zone (admin.js) : appelle l'éditeur ouvert par la section montée.
+let openNewTheme = null;
+export function themeActions() {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'btn btn-primary btn-sm'; b.textContent = '+ Nouveau thème';
+  b.addEventListener('click', () => openNewTheme?.());
+  return [b];
+}
 
 const COLOR_LABELS = {
   accent: ['Accent', 'boutons principaux'],
@@ -79,6 +89,11 @@ export async function mountThemesSection(container) {
 
   const S = { themes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false, query: '' };
 
+  // Éditeur : nœud persistant, rattaché au corps du tiroir large à chaque ouverture (les écouteurs restent liés)
+  const editorHost = document.createElement('div');
+  editorHost.className = 'th-editor-host';
+  let drawerApi = null, drawerForm = null;
+
   container.innerHTML = `
     <div class="th-root stack">
       <form class="card stack" data-el="mode-form">
@@ -98,9 +113,7 @@ export async function mountThemesSection(container) {
 
       <div class="th-listhead">
         <h3 class="sub-title">Thèmes <span class="muted small" data-el="count"></span></h3>
-        <button class="btn btn-ghost btn-sm" type="button" data-act="new">${ICON.plus}Nouveau thème</button>
       </div>
-      <div data-el="editor"></div>
       <div class="th-list" data-el="list"><div class="empty">Chargement des thèmes…</div></div>
       <p class="muted small">Quand plusieurs périodes se chevauchent, le thème de plus haute priorité l'emporte (à égalité, la période la plus courte). Hors de toute période : thème par défaut.</p>
     </div>`;
@@ -264,15 +277,19 @@ export async function mountThemesSection(container) {
     S.draft = base;
     S.editingId = theme && !duplicate ? theme.id : null;
     S.slugTouched = !!S.editingId;
+    editorHost.remove(); // détaché de l'ancien tiroir : sinon l'analyseur ignore le <form> interne (formulaire imbriqué)
     renderEditor();
-    el('editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    el('editor').querySelector('input[name="tname"]')?.focus({ preventScroll: true });
+    const title = S.editingId ? `Modifier « ${base.name} »` : 'Nouveau thème';
+    const d = openDrawer({
+      title, subtitle: 'Thème du site', body: editorHost, wide: true, submitLabel: 'Enregistrer',
+      onSubmit: () => saveTheme(),
+      onClose: () => { drawerApi = null; drawerForm = null; stopPreview(); S.draft = null; S.editingId = null; editorHost.remove(); editorHost.innerHTML = ''; },
+    });
+    drawerApi = d; drawerForm = d.form;
+    editorHost.querySelector('input[name="tname"]')?.focus({ preventScroll: true });
   }
-  function closeEditor() {
-    stopPreview();
-    S.draft = null; S.editingId = null;
-    el('editor').innerHTML = '';
-  }
+  function closeEditor() { drawerApi?.close(); }
+  openNewTheme = () => openEditor(null);
 
   function renderEditor() {
     const d = S.draft;
@@ -280,8 +297,8 @@ export async function mountThemesSection(container) {
     const hasRange = isValidMd(d.start_md) && isValidMd(d.end_md);
     const [sm, sd] = (d.start_md || '01-01').split('-');
     const [em, ed] = (d.end_md || '01-31').split('-');
-    el('editor').innerHTML = `
-      <form class="card stack th-editor" novalidate>
+    editorHost.innerHTML = `
+      <form class="stack th-editor" novalidate>
         <div class="th-editor-head">
           <h3 class="card-title">${isNew ? 'Nouveau thème' : `Modifier « ${esc(d.name)} »`}</h3>
           ${d.is_default ? '<span class="pill">Thème par défaut</span>' : ''}
@@ -289,7 +306,7 @@ export async function mountThemesSection(container) {
 
         <div class="grid-2">
           <div class="field"><label for="th-name">Nom</label><input id="th-name" name="tname" required maxlength="40" value="${esc(d.name)}"></div>
-          <div class="field"><label for="th-slug">Identifiant (slug)</label><input id="th-slug" name="slug" maxlength="40" pattern="[a-z0-9-]+" value="${esc(d.slug)}"${isNew ? '' : ' readonly'} autocomplete="off" spellcheck="false">
+          <div class="field"><label for="th-slug">Identifiant (slug)</label><input id="th-slug" name="slug" maxlength="40" pattern="[a-z0-9\\-]+" value="${esc(d.slug)}"${isNew ? '' : ' readonly'} autocomplete="off" spellcheck="false">
             <span class="muted small">${isNew ? 'Créé automatiquement à partir du nom.' : 'Non modifiable après création.'}</span></div>
         </div>
 
@@ -368,7 +385,7 @@ export async function mountThemesSection(container) {
 
   // Lit le formulaire → S.draft ; renvoie la liste des erreurs
   function readForm() {
-    const f = el('editor').querySelector('form');
+    const f = editorHost.querySelector('form');
     const d = S.draft;
     const errors = [];
     d.name = f.tname.value.trim();
@@ -403,7 +420,7 @@ export async function mountThemesSection(container) {
   }
 
   function syncEditor() {
-    const root = el('editor');
+    const root = editorHost;
     const f = root.querySelector('form');
     if (!f) return;
     const errors = readForm();
@@ -441,7 +458,7 @@ export async function mountThemesSection(container) {
     return errors;
   }
 
-  el('editor').addEventListener('input', (ev) => {
+  editorHost.addEventListener('input', (ev) => {
     const f = ev.target.form;
     if (!f) return;
     const n = ev.target.name;
@@ -455,17 +472,17 @@ export async function mountThemesSection(container) {
     }
     syncEditor();
   });
-  el('editor').addEventListener('change', (ev) => { if (ev.target.form) syncEditor(); });
-  el('editor').addEventListener('focusout', (ev) => {
+  editorHost.addEventListener('change', (ev) => { if (ev.target.form) syncEditor(); });
+  editorHost.addEventListener('focusout', (ev) => {
     if (ev.target.name?.startsWith('h_')) {
       const k = ev.target.name.slice(2);
       ev.target.value = S.draft?.colors[k] ?? ev.target.value;
     }
   });
-  el('editor').addEventListener('click', (ev) => {
+  editorHost.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-ed]');
     if (!b) return;
-    const f = el('editor').querySelector('form');
+    const f = editorHost.querySelector('form');
     const act = b.dataset.ed;
     if (act === 'cancel') closeEditor();
     else if (act === 'preview') {
@@ -477,7 +494,7 @@ export async function mountThemesSection(container) {
   });
 
   async function uploadLogo(btn) {
-    const input = el('editor').querySelector('[data-el="file"]');
+    const input = editorHost.querySelector('[data-el="file"]');
     input.value = '';
     const file = await new Promise((resolve) => { input.onchange = () => resolve(input.files?.[0] ?? null); input.click(); });
     if (!file) return;
@@ -485,7 +502,7 @@ export async function mountThemesSection(container) {
       if (!EXT[file.type]) throw new Error('Choisis une image (PNG, JPG, WebP, GIF ou SVG).');
       if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
       const img = await prepareImage(file);
-      const f = el('editor').querySelector('form');
+      const f = editorHost.querySelector('form');
       const slug = slugify(f.slug.value) || 'theme';
       const path = `themes/${slug}-${Date.now()}.${img.ext}`;
       check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
@@ -496,28 +513,30 @@ export async function mountThemesSection(container) {
     });
   }
 
-  el('editor').addEventListener('submit', (ev) => {
-    ev.preventDefault();
-    const errBox = el('editor').querySelector('[data-el="error"]');
+  // Entrée dans un champ : même chose que le bouton « Enregistrer » du pied du tiroir
+  editorHost.addEventListener('submit', (ev) => { ev.preventDefault(); drawerForm?.requestSubmit(); });
+
+  /** Enregistre le thème en cours d'édition. Renvoie false si une erreur de saisie garde le tiroir ouvert. */
+  async function saveTheme() {
+    const errBox = editorHost.querySelector('[data-el="error"]');
     errBox.hidden = false;
     const errors = syncEditor();
-    if (errors.length) { errBox.focus?.(); return; }
-    busy(ev.submitter, async () => {
-      const d = S.draft;
-      const row = {
-        slug: d.slug, name: d.name, logo_url: d.logo_url, emojis: d.emojis, effect: d.effect,
-        colors: Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, d.colors[k]])),
-      };
-      if (!d.is_default) Object.assign(row, { active: d.active, start_md: d.start_md, end_md: d.end_md, priority: d.priority });
-      if (S.editingId) check(await sb.from('hg_themes').update(row).eq('id', S.editingId));
-      else check(await sb.from('hg_themes').insert({ ...row, is_default: false }));
-      const name = d.name;
-      closeEditor();
-      await refreshSite();
-      renderAll();
-      toast(`Thème « ${name} » enregistré`, 'ok');
-    });
-  });
+    if (errors.length) { errBox.focus?.(); return false; }
+    const d = S.draft;
+    const row = {
+      slug: d.slug, name: d.name, logo_url: d.logo_url, emojis: d.emojis, effect: d.effect,
+      colors: Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, d.colors[k]])),
+    };
+    if (!d.is_default) Object.assign(row, { active: d.active, start_md: d.start_md, end_md: d.end_md, priority: d.priority });
+    if (S.editingId) check(await sb.from('hg_themes').update(row).eq('id', S.editingId));
+    else check(await sb.from('hg_themes').insert({ ...row, is_default: false }));
+    const name = d.name;
+    closeEditor();
+    await refreshSite();
+    renderAll();
+    toast(`Thème « ${name} » enregistré`, 'ok');
+    return true;
+  }
 
   /* ---------- Cycle ---------- */
   async function refreshSite() {

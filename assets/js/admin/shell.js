@@ -18,6 +18,7 @@
 // Toutes les sections n'utilisent pour l'instant que `main`. Une sous-section sans fournisseur affiche sa section seule.
 // Les droits viennent de admin/perms.js (DOMAINS, canSection) : une sous-section non permise n'est jamais montée.
 // setCount(sous-section, n) : compteur « à traiter » affiché dans la colonne et sur les domaines (rail et onglets).
+// setActions(nodes) : boutons d'action de la zone principale (#zone-actions). Vidé à chaque visite ; à remplir dans `open`.
 // ------------------------------------------------------
 
 import { $, sb, esc, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
@@ -69,6 +70,12 @@ export function place(host, id) {
 export function setCount(sub, n) {
   counts.set(sub, n || 0);
   paintCounts();
+}
+
+/** Remplit l'en-tête de zone (boutons d'action) ; liste de nœuds ou de chaînes HTML sûres. */
+export function setActions(nodes = []) {
+  const host = document.getElementById('zone-actions');
+  if (host) host.replaceChildren(...nodes);
 }
 
 /* ---------- Construction (rail, colonne, onglets mobiles, menu) ---------- */
@@ -204,6 +211,7 @@ async function show(r) {
     el.shell.dataset.info = 'no';
     paintColumn(r.dom);
     markActive(r.dom.id, null);
+    setActions([]);
     el.zoneEyebrow.textContent = r.dom.label;
     el.zoneTitle.textContent = r.dom.label;
     for (const g of groups.values()) g.el.hidden = true;
@@ -214,6 +222,7 @@ async function show(r) {
   curKey = key;
   paintColumn(r.dom);
   markActive(r.dom.id, r.sub.id);
+  setActions([]);
   el.zoneEyebrow.textContent = r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
   // Sous-section « liste + détail » (fournit `list`) : sur mobile, la liste (colonne 2) occupe l'écran tant qu'aucun

@@ -52,7 +52,7 @@ const DB = {
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
-  hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: [], hg_profile_info: [],
+  hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: S.messages || [], hg_conversations: S.conversations || [], hg_profile_info: [],
   // Assistance en fil (migration 032) : réponses publiques et notes internes. S.replies : données de départ facultatives.
   // Les demandes portent updated_at / taken_by / taken_at / read_at quand le scénario les fournit (absents = demande neuve, non lue).
   hg_support_replies: S.replies || [],
@@ -291,6 +291,12 @@ export function createClient() {
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
+      if (fn === 'hg_admin_conversations') return { data: S.convs || [], error: null };
+      if (fn === 'hg_admin_read_conversation') { // lecture journalisée : chaque appel est tracé dans le journal du faux client
+        window.__READS = (window.__READS || 0) + 1;
+        return { data: DB.hg_messages.filter((m) => m.conversation_id === args.p_conv && m.id > args.p_after).slice(0, args.p_limit), error: null };
+      }
+      if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on || p.created_at })), error: null };
       if (fn === 'hg_admin_accounts') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, email: p.pseudo.toLowerCase() + '@ex.ch', is_admin: p.is_admin, created_at: p.created_at, last_sign_in_at: null })), error: null };
       if (fn === 'hg_claim_invite_link') {
         window.__CLAIMS = (window.__CLAIMS || 0) + 1;

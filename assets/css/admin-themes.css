@@ -92,3 +92,7 @@
   .th-emoji-preview { font-size: 14px; }
   .th-range-note { font-size: 13px; }
 }
+
+/* Tiroir du thème : le titre est déjà dans l'en-tête du tiroir */
+.ui-drawer .th-editor-head { display: none; }
+.th-editor { border: 0; padding: 0; background: none; }

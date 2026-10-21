@@ -114,3 +114,10 @@
 .pa-pg-form { min-width: min(92vw, 460px); }
 .pa-pg-actions { flex-wrap: wrap; }
 .pa-pg-actions .btn-danger { margin-right: auto; }
+
+/* Matrice : défile seule dans son conteneur (la page ne déborde plus), en-tête et première colonne figés */
+.pa-matrix-wrap { max-height: min(68dvh, 640px); overflow: auto; overscroll-behavior: contain; }
+.pa-matrix th[scope="row"], .pa-mx-corner { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+.pa-matrix thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+.pa-matrix thead .pa-mx-corner { z-index: 3; }
+.pa-pg-danger { display: flex; margin-top: 4px; }

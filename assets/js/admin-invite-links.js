@@ -4,6 +4,7 @@
 import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, isGodMode } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { openDrawer } from './admin/ui/drawer.js';
 
 const IC = {
   copy: svg('copy', { stroke: 2 }),
@@ -60,18 +61,42 @@ function codeState(c) {
 }
 
 /* ---------- Rendu ---------- */
-function formHtml() {
+function fieldsHtml() {
   const today = new Date().toISOString().slice(0, 10);
   return `
-    <form class="il-form" id="il-form">
-      <div class="field il-label"><label for="il-label">Libellé</label>
-        <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
-      <div class="field"><label for="il-max">Limite de codes</label>
-        <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Illimité"></div>
-      <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span>${godTag()}</label>
-        <input id="il-exp" name="expires_at" type="date" ${godLimitAttr('min', today)}></div>
-      <button class="btn btn-primary" type="submit">${IC.link} Créer le lien</button>
-    </form>`;
+    <div class="field il-label"><label for="il-label">Libellé</label>
+      <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
+    <div class="field"><label for="il-max">Limite de codes</label>
+      <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Illimité"></div>
+    <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span>${godTag()}</label>
+      <input id="il-exp" name="expires_at" type="date" ${godLimitAttr('min', today)}></div>`;
+}
+
+/** Tiroir « Nouveau lien » : libellé, limite de codes, date d'expiration. */
+export function openLinkDrawer() {
+  const body = document.createElement('div');
+  body.className = 'il-form';
+  body.innerHTML = fieldsHtml();
+  openDrawer({
+    title: 'Nouveau lien d’invitation',
+    subtitle: 'Chaque personne qui ouvre le lien reçoit son propre code, valable 48 h.',
+    body, submitLabel: 'Créer le lien',
+    onSubmit: async (form) => {
+      const label = form.label.value.trim() || `Lien du ${fmtDate(new Date())}`;
+      const maxRaw = form.max_codes.value.trim();
+      const max = maxRaw ? Number(maxRaw) : null;
+      if (max !== null && (!Number.isInteger(max) || max < 1)) throw new Error('La limite doit être un nombre entier supérieur ou égal à 1.');
+      // Date d'expiration : fin de journée locale
+      const exp = form.expires_at.value ? new Date(`${form.expires_at.value}T23:59:59`) : null;
+      if (exp && exp < new Date() && !isGodMode()) throw new Error('La date d\'expiration est déjà passée.');
+      const row = check(await sb.from('hg_invite_links').insert({
+        label, max_codes: max, expires_at: exp ? exp.toISOString() : null, created_by: L.me.id,
+      }).select().single());
+      await refresh();
+      toast('Lien d\'invitation créé : copie-le ci-dessous', 'ok');
+      if (row?.id) $(`[data-link="${CSS.escape(row.id)}"] .il-url-input`, L.root)?.select();
+    },
+  });
 }
 
 function linkHtml(l) {
@@ -119,7 +144,6 @@ function render() {
   r.innerHTML = `
     <h3 class="card-title">Liens d'invitation</h3>
     <p class="muted small">Un lien à partager (Discord, QR code…). Chaque personne qui l'ouvre reçoit son propre code d'invitation, valable 48 h et utilisable une seule fois. Désactive ou supprime le lien quand tu n'en as plus besoin.</p>
-    ${formHtml()}
     ${L.error ? `<div class="empty">Impossible de charger les liens : ${esc(errMsg(L.error))}</div>`
       : L.links.length ? `<ul class="il-list">${L.links.map(linkHtml).join('')}</ul>`
       : '<div class="empty">Aucun lien pour l\'instant.</div>'}`;
@@ -163,26 +187,6 @@ async function showQr(l) {
 /* ---------- Événements ---------- */
 function bind() {
   const r = L.root;
-  r.addEventListener('submit', (ev) => {
-    if (ev.target.id !== 'il-form') return;
-    ev.preventDefault();
-    const f = ev.target;
-    busy(ev.submitter, async () => {
-      const label = f.label.value.trim() || `Lien du ${fmtDate(new Date())}`;
-      const maxRaw = f.max_codes.value.trim();
-      const max = maxRaw ? Number(maxRaw) : null;
-      if (max !== null && (!Number.isInteger(max) || max < 1)) throw new Error('La limite doit être un nombre entier supérieur ou égal à 1.');
-      // Date d'expiration : fin de journée locale
-      const exp = f.expires_at.value ? new Date(`${f.expires_at.value}T23:59:59`) : null;
-      if (exp && exp < new Date() && !isGodMode()) throw new Error('La date d\'expiration est déjà passée.');
-      const row = check(await sb.from('hg_invite_links').insert({
-        label, max_codes: max, expires_at: exp ? exp.toISOString() : null, created_by: L.me.id,
-      }).select().single());
-      await refresh();
-      toast('Lien d\'invitation créé : copie-le ci-dessous', 'ok');
-      if (row?.id) $(`[data-link="${CSS.escape(row.id)}"] .il-url-input`, L.root)?.select();
-    });
-  });
   r.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t) return;

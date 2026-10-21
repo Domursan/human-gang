@@ -256,3 +256,7 @@
 .ev-dlg-actions { justify-content: flex-start; }
 .vie-detail > .ui-dhead { padding: 12px 0; }
 @media (max-width: 760px) { .vie-detail .ui-dhead-s, .vie-detail .ui-dhead-t { white-space: normal; } }
+/* Tiroir : le corps défile seul (pied et en-tête fixes) ; recherche des invitations à largeur raisonnable */
+.ui-drawer-body { min-height: 0; }
+.inv-card .lt-search { max-width: 380px; }
+.inv-card .lt-box input { width: 100%; }
