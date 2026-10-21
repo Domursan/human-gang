@@ -62,7 +62,7 @@ window.__DB = DB; window.__LOG = [];
 // ---- données cartes (factices) ----
 {
   const sets = [{ id: 'SET1', code: 'hg1', name: 'Première édition', description: 'Les premiers membres du gang.', starts_at: null, ends_at: null, active: true, sort: 1 },
-                { id: 'SET2', code: 'hg2', name: 'Saison 2', description: null, starts_at: iso(30), ends_at: null, active: true, sort: 2 }];
+                { id: 'SET2', code: 'hg2', name: 'Saison 2', description: null, starts_at: S.set2Open ? null : iso(30), ends_at: null, active: true, sort: 2 }];
   const R = ['commune','commune','commune','peu_commune','peu_commune','rare','rare','epique','legendaire','mythique','identite','commune'];
   const F = ['membre','moment','lieu','objet','evenement','membre','lieu','objet','moment','membre','membre','objet'];
   const cards = R.map((r, i) => ({ id: 'C' + (i + 1), set_id: 'SET1', number: i + 1, name: ['Ethan','Le Paleto','Château Marius','Pompe à essence','Soirée pizza','Alice','Grapeseed','Cocktail','Braquage raté','Bruno','Carte identité Chloé','Tracteur'][i], family: F[i], rarity: r,
@@ -229,6 +229,8 @@ export function createClient() {
       if (fn === 'hg_card_recycle') { if (S.recycleFail) return { data: null, error: { message: 'Certaines cartes ne peuvent pas être recyclées (échange en cours ?)' } };
         const ids = args.p_copies; const total = ids.length * 5; DB.hg_wallets[0].paillettes += total; DB.hg_card_copies = DB.hg_card_copies.filter((c) => !ids.includes(c.id)); return { data: total, error: null }; }
       if (fn === 'hg_card_craft') { const w = DB.hg_wallets[0]; const cost = args.p_shiny ? 160 : 40; if (!S.god && w.paillettes < cost) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${cost})` } }; w.paillettes -= cost; DB.hg_card_copies.push({ id: 500 + DB.hg_card_copies.length, card_id: args.p_card, owner_id: ME, shiny: !!args.p_shiny, serial: null, source: 'fabrication', obtained_at: iso(0), locked_trade: null, recycled_at: null }); return { data: { copy_id: 1, cost }, error: null }; }
+      if (fn === 'hg_card_leaderboard' && S.rpcDelay) await new Promise((r) => setTimeout(r, S.rpcDelay));
+      if (fn === 'hg_card_leaderboard' && S.lbRows) return { data: Array.from({ length: S.lbRows }, (_, i) => ({ user_id: U(2), pseudo: 'Joueur ' + i, avatar_url: null, uniques: 1, copies: 1, shinies: 0, identites: 0, series: 1, score: 100 - i })), error: null };
       if (fn === 'hg_card_leaderboard') return { data: [{ user_id: ME, pseudo: 'Ethan', avatar_url: null, uniques: 5, copies: 11, shinies: 3, identites: 1, series: 0, score: 120 }, { user_id: U(2), pseudo: 'Alice', avatar_url: null, uniques: 3, copies: 4, shinies: 0, identites: 0, series: 1, score: 40 }], error: null };
       // Offre d'échange (cartes-trades.js) : l'offre est créée et son id renvoyé, comme la RPC réelle (uuid).
       if (fn === 'hg_trade_propose') { if (S.tradeFail) return { data: null, error: { message: 'Trop d\'offres en cours' } }; const id = '7e57c0de-0000-4000-8000-000000000001';

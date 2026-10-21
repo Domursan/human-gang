@@ -6,6 +6,8 @@ import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, mo
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
+import { createZoom, ICON_ZOOM } from './cartes-zoom.js';
+import { keepPlace, holdHeight } from './cartes-place.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -26,12 +28,16 @@ const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
 // Ouverture groupée : nombre de boosters payants ouverts d'un coup, et délai entre deux cartes révélées.
 const MULTI_COUNT = 5;
 const MULTI_STEP_MS = 110;
+// Valeur du sélecteur « Toutes les séries » (Collection) : toutes les séries ouvertes, groupées.
+const ALL = '__all__';
+// Un rendu qui garde la place de l'utilisateur (défilement de la page et des zones data-keep).
+const kept = (fn) => (...args) => keepPlace(() => fn(...args));
 
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [], massTotal: 0,
-  lcdShown: null, lcdAnim: false, quests: null,
+  lcdShown: null, lcdAnim: false, quests: null, shownIds: [],
 };
 const cfg = () => S.state?.config || {};
 const isGod = () => !!S.state?.god;
@@ -44,7 +50,8 @@ const fmtDuration = (ms) => {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${Math.max(1, m)} min`;
 };
 const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
-const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || 'Le Gang · Série 1';
+const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
+const zoom = createZoom({ ids: () => S.shownIds, info: zoomInfo });
 
 /* ---------- Données ---------- */
 /** Lit toutes les lignes d'une requête (l'API renvoie au plus 1000 lignes par appel). */
@@ -68,7 +75,7 @@ async function loadStatic() {
     ? await fetchAllRows(() => sb.from('hg_cards').select('*').eq('active', true).in('set_id', setIds).order('number').order('id'))
     : [];
   S.cardsById = new Map(S.cards.map((c) => [c.id, c]));
-  if (!S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
+  if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }
 
 async function refreshData() {
@@ -187,24 +194,31 @@ function showTab() {
   }
 }
 
+// Chaque rendu garde la place de l'utilisateur : la page ne remonte pas en haut après une action.
 function renderTab() {
-  if (S.tab === 'boosters') renderBoosters();
-  else if (S.tab === 'collection') renderCollection();
-  else if (S.tab === 'classement') renderLeaderboard();
-  else if (S.tab === 'echanges') mountTradesOnce();
+  keepPlace(() => {
+    if (S.tab === 'boosters') renderBoosters();
+    else if (S.tab === 'collection') renderCollection();
+    else if (S.tab === 'classement') return renderLeaderboard();
+    else if (S.tab === 'echanges') mountTradesOnce();
+  });
 }
 
 function setTab(id) {
-  S.tab = id;
-  showTab();
-  renderTab();
+  keepPlace(() => {
+    S.tab = id;
+    showTab();
+    renderTab();
+  });
 }
 
 function renderAll() {
-  renderHeader();
-  renderHistory();
-  showTab();
-  renderTab();
+  keepPlace(() => {
+    renderHeader();
+    renderHistory();
+    showTab();
+    renderTab();
+  });
 }
 
 /* ---------- Mise à l'échelle (cartouches et console dessinées à taille fixe) ---------- */
@@ -234,7 +248,7 @@ function cartridgeHtml({ free = false, ready = false } = {}) {
 }
 
 /* ---------- Boosters ---------- */
-function renderBoosters() {
+function drawBoosters() {
   const el = $('#cartes-p-boosters');
   const c = cfg();
   const price = Number(c.booster_price ?? 100);
@@ -283,6 +297,7 @@ function renderBoosters() {
   renderQuests();
   fitAll(el);
 }
+const renderBoosters = kept(drawBoosters);
 
 /* ---------- Quêtes de la semaine (3 par semaine, lundi 00:00 heure de Zurich) ---------- */
 // Chargées à part : un échec de ces quêtes ne bloque pas le reste de la page.
@@ -319,7 +334,7 @@ function questHtml(q) {
     </li>`;
 }
 
-function renderQuests() {
+function drawQuests() {
   const box = $('#cartes-quests');
   if (!box) return;
   const Q = S.quests;
@@ -333,6 +348,7 @@ function renderQuests() {
     <p class="cartes-small">${nf.format(done)} sur ${nf.format(list.length)} terminée${done > 1 ? 's' : ''}${Q.ends_at ? ` · nouvelles quêtes le lundi suivant (${esc(fmtDate(Q.ends_at))})` : ''}.</p>
     <ul class="cq-list">${list.map(questHtml).join('')}</ul>`;
 }
+const renderQuests = kept(drawQuests);
 
 async function claimQuest(code) {
   if (S.busy) return;
@@ -353,7 +369,7 @@ async function claimQuest(code) {
 }
 
 // Booster gratuit : cartouche + compte à rebours, ou bouton « Ouvrir » quand il est disponible.
-function renderFree() {
+function drawFree() {
   const box = $('#cartes-free');
   if (!box || !S.state) return;
   const at = S.state.free_booster_at ? new Date(S.state.free_booster_at).getTime() : 0;
@@ -375,6 +391,7 @@ function renderFree() {
     </div>`;
   fitAll(box);
 }
+const renderFree = kept(drawFree);
 
 /* ---------- Ouverture : séquence d'animation (ou révélation directe) ---------- */
 // Étapes : 1 cartouche insérée, 2 console « BOOT » et barre, 3 flash de la meilleure rareté,
@@ -430,7 +447,7 @@ function finishSeq(R) {
   R.step = lastStep(R);
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les cartouches et affiche le résumé
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus();
+  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
 }
 
 // « Tout révéler » : passe directement à la fin de la séquence.
@@ -699,7 +716,7 @@ function finishMulti(R) {
   R.phase = 'done';
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les boutons et affiche le résumé (annoncé par renderMultiReveal)
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus();
+  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
 }
 
 async function claimDaily() {
@@ -719,28 +736,63 @@ async function claimDaily() {
 }
 
 /* ---------- Collection ---------- */
+// Une carte de la collection : la carte (bouton, fiche détail) et, à côté, la loupe qui ouvre la carte agrandie.
 function cardCell(c) {
   const cps = copiesOf(c.id);
   const n = cps.length;
   const shinyCp = cps.find((x) => x.shiny);
-  return cardHtml(c, {
+  const card = cardHtml(c, {
     size: 'md', count: n, shiny: !!shinyCp,
     serial: n === 1 && c.max_copies ? cps[0].serial : null,
     missing: n === 0, button: true,
     attrs: `data-action="open-card" data-card="${esc(c.id)}"`,
   });
+  const what = n ? esc(c.name) : 'la carte';
+  return `<div class="cz-cell">${card}`
+    + `<button type="button" class="cz-zoom" data-action="zoom-card" data-card="${esc(c.id)}" aria-label="Agrandir ${what}">${ICON_ZOOM}</button>`
+    + '<span class="cz-tip" aria-hidden="true">Agrandir</span></div>';
 }
 
-function renderCollection(focusId) {
+// Fiche d'une carte pour la fenêtre agrandie (cartes-zoom.js) : tout est déjà chargé, aucune requête.
+function zoomInfo(id) {
+  const k = S.cardsById.get(id);
+  if (!k) return null;
+  const cps = copiesOf(id);
+  return {
+    card: k,
+    count: cps.length,
+    shiny: cps.some((x) => x.shiny),
+    serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
+    missing: cps.length === 0,
+    setName: S.sets.find((s) => s.id === k.set_id)?.name || '',
+    setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
+    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
+  };
+}
+
+// Un intertitre par série dans « Toutes les séries » : nom, possédées / total, barre, cartes.
+function groupHtml(g, i) {
+  const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
+  const hid = `cz-g-${i}`;
+  return `<section class="cz-group" aria-labelledby="${hid}">
+    <div class="cz-group-head">
+      <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
+      <p class="cz-group-count">${nf.format(g.have)} / ${nf.format(g.scored)} possédées</p>
+    </div>
+    <div class="progress cz-group-bar" role="progressbar" aria-label="Progression de ${esc(g.set.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+    <div class="cartes-grid">${g.shown.map(cardCell).join('')}</div>
+  </section>`;
+}
+
+function drawCollection(focusId) {
   const el = $('#cartes-p-collection');
-  const set = S.sets.find((s) => s.id === S.setId);
-  if (!set) { el.innerHTML = '<p class="empty">Aucune série disponible pour le moment.</p>'; return; }
-  const setCards = S.cards.filter((c) => c.set_id === set.id);
-  const scored = setCards.filter((c) => c.rarity !== 'identite');
-  const have = scored.filter((c) => copiesOf(c.id).length > 0).length;
-  const pctDone = scored.length ? Math.round(have / scored.length * 100) : 0;
+  const none = '<p class="empty">Aucune série disponible pour le moment.</p>';
+  if (!S.sets.length) { el.innerHTML = none; S.shownIds = []; return; }
+  const all = S.setId === ALL;
+  const set = all ? null : S.sets.find((s) => s.id === S.setId);
+  if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
-  const shown = setCards.filter((c) => {
+  const keep = (c) => {
     const n = copiesOf(c.id).length;
     if (f.rarity && c.rarity !== f.rarity) return false;
     if (f.family && c.family !== f.family) return false;
@@ -748,23 +800,40 @@ function renderCollection(focusId) {
     if (f.owned === 'missing' && n > 0) return false;
     if (f.owned === 'dupes' && n < 2) return false;
     return true;
+  };
+  // Une entrée par série affichée : ses compteurs (sans filtre) et ses cartes (filtrées).
+  const groups = (all ? S.sets : [set]).map((s) => {
+    const cards = S.cards.filter((c) => c.set_id === s.id);
+    const scored = cards.filter((c) => c.rarity !== 'identite');
+    return { set: s, scored: scored.length, have: scored.filter((c) => copiesOf(c.id).length > 0).length, shown: cards.filter(keep) };
   });
+  const scoredAll = groups.reduce((a, g) => a + g.scored, 0);
+  const haveAll = groups.reduce((a, g) => a + g.have, 0);
+  const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
+  const withCards = groups.filter((g) => g.shown.length);
+  S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // ordre affiché : sert à précédent / suivant
   const plan = massPlan();
+  const body = !withCards.length
+    ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
+    : all
+      ? `<div class="cz-groups">${withCards.map(groupHtml).join('')}</div>`
+      : `<div class="cartes-grid">${groups[0].shown.map(cardCell).join('')}</div>`;
   el.innerHTML = `
     <section class="card cartes-block">
       <div class="cartes-series">
         <div class="field">
           <label for="cartes-set">Série</label>
           <select id="cartes-set" data-change="set">
-            ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === set.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+            <option value="${ALL}" ${all ? 'selected' : ''}>Toutes les séries</option>
+            ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === S.setId ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
           </select>
         </div>
         <div class="cartes-progress">
-          <p class="cartes-progress-label">${nf.format(have)} / ${nf.format(scored.length)} cartes obtenues</p>
-          <div class="progress" role="progressbar" aria-label="Progression de la série" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone}"><span style="width:${pctDone}%"></span></div>
+          <p class="cartes-progress-label">${nf.format(haveAll)} / ${nf.format(scoredAll)} cartes obtenues${all ? ' (toutes les séries)' : ''}</p>
+          <div class="progress" role="progressbar" aria-label="${all ? 'Progression de la collection' : 'Progression de la série'}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone}"><span style="width:${pctDone}%"></span></div>
         </div>
       </div>
-      ${set.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
+      ${set?.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
       <div class="cartes-filters">
         <div class="field">
           <label for="cartes-f-rarity">Rareté</label>
@@ -795,11 +864,11 @@ function renderCollection(focusId) {
         <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
       </div>
     </section>
-    ${shown.length
-      ? `<div class="cartes-grid">${shown.map(cardCell).join('')}</div>`
-      : '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'}`;
-  if (focusId) document.getElementById(focusId)?.focus();
+    ${body}`;
+  // Le focus revient au champ modifié sans faire défiler la page
+  if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
+const renderCollection = kept(drawCollection);
 
 /* ---------- Recyclage de masse ---------- */
 function recycleValue(cp, k) {
@@ -954,32 +1023,43 @@ async function detailAction(action, el) {
   } finally {
     S.busy = false;
   }
+  renderDetail(); // fiche à jour : boutons réactivés, exemplaire recyclé retiré
   if (refreshed) renderAll();
-  else { renderDetail(); renderTab(); }
+  else renderTab();
+  // renderDetail a remplacé le bouton utilisé : le focus revient à son équivalent, sans défilement
+  const again = action === 'wish' ? '.cd-wish'
+    : action === 'craft' ? `[data-action="craft"][data-shiny="${el.dataset.shiny}"]`
+    : `[data-action="recycle"][data-copy="${el.dataset.copy}"]`;
+  $('#cartes-detail')?.querySelector(again)?.focus({ preventScroll: true });
 }
 
 /* ---------- Classement ---------- */
 async function renderLeaderboard() {
   const el = $('#cartes-p-classement');
+  const release = holdHeight(el); // le texte d'attente garde la hauteur : la page ne raccourcit pas
   el.innerHTML = '<p class="muted" aria-live="polite">Chargement du classement…</p>';
-  const { data, error } = await sb.rpc('hg_card_leaderboard');
-  if (error) { el.innerHTML = `<p class="empty">${esc(errMsg(error))}</p>`; return; }
-  const rows = data || [];
-  el.innerHTML = `
-    <section class="card">
-      <h2>Classement</h2>
-      <p class="muted small">Le score additionne la valeur des cartes possédées (une carte brillante compte double).</p>
-      ${rows.length ? `<ol class="cartes-lb">
-        ${rows.map((r, i) => `<li>
-          <span class="cartes-lb-rank">${i + 1}</span>
-          <span class="cartes-row">${avatarHtml(r, 36)}
-            <span><strong>${esc(r.pseudo)}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
-            <span class="cartes-lb-stats">${pluralCount(Number(r.uniques), 'unique', 'uniques', nf.format)} · ${pluralCount(Number(r.copies), 'exemplaire', 'exemplaires', nf.format)} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
-          </span>
-          <span class="cartes-lb-score">${nf.format(Number(r.score))}</span>
-        </li>`).join('')}
-      </ol>` : '<p class="empty">Personne n’a encore de carte.</p>'}
-    </section>`;
+  try {
+    const { data, error } = await sb.rpc('hg_card_leaderboard');
+    if (error) { el.innerHTML = `<p class="empty">${esc(errMsg(error))}</p>`; return; }
+    const rows = data || [];
+    el.innerHTML = `
+      <section class="card">
+        <h2>Classement</h2>
+        <p class="muted small">Le score additionne la valeur des cartes possédées (une carte brillante compte double).</p>
+        ${rows.length ? `<ol class="cartes-lb">
+          ${rows.map((r, i) => `<li>
+            <span class="cartes-lb-rank">${i + 1}</span>
+            <span class="cartes-row">${avatarHtml(r, 36)}
+              <span><strong>${esc(r.pseudo)}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
+              <span class="cartes-lb-stats">${pluralCount(Number(r.uniques), 'unique', 'uniques', nf.format)} · ${pluralCount(Number(r.copies), 'exemplaire', 'exemplaires', nf.format)} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
+            </span>
+            <span class="cartes-lb-score">${nf.format(Number(r.score))}</span>
+          </li>`).join('')}
+        </ol>` : '<p class="empty">Personne n’a encore de carte.</p>'}
+      </section>`;
+  } finally {
+    release();
+  }
 }
 
 /* ---------- Échanges (module séparé, chargé à la demande) ---------- */
@@ -1013,7 +1093,7 @@ function renderHistory() {
 function onClick(e) {
   const t = e.target.closest('.cartes-tab[data-tab], [data-action]');
   if (!t || t.disabled) return;
-  if (t.dataset.tab) { setTab(t.dataset.tab); $(`#cartes-tab-${t.dataset.tab}`).focus(); return; }
+  if (t.dataset.tab) { setTab(t.dataset.tab); $(`#cartes-tab-${t.dataset.tab}`).focus({ preventScroll: true }); return; }
   switch (t.dataset.action) {
     case 'daily': return claimDaily();
     case 'open-free': return openBooster(true);
@@ -1023,6 +1103,7 @@ function onClick(e) {
     case 'reveal-all': return skipSeq();
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
+    case 'zoom-card': return zoom.open(t.dataset.card, t);
     case 'mass': return openMass();
     case 'mass-confirm': return confirmMass();
     case 'wish':
