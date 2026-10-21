@@ -2,6 +2,7 @@
 import {
   sb, initPage, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, notify, callFn, isGodMode, godTag,
 } from './core.js';
+import { confirmBox } from './ui-confirm.js';
 import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
@@ -48,17 +49,6 @@ const STATUS_LABEL = Object.fromEntries(STATUS);
 const SUBJECT_BUG = 'Bug sur le site';
 
 /* ---------- Petits outils ---------- */
-const dlg = $('#confirm-dlg');
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn) btn.disabled = false; }

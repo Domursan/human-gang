@@ -7,6 +7,7 @@ import { openBadgeEditor } from './admin-badges-edit.js';
 import { flyDynImage } from './dyn-events.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
 import { prepareImage } from './image-compress.js';
+import { confirmBox } from './ui-confirm.js';
 
 const TZ = 'Europe/Zurich';
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -68,17 +69,6 @@ function uuid() {
 }
 const badgeOf = (code) => E.badges.find((b) => b.code === code) || null;
 
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }

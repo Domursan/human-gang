@@ -4,6 +4,7 @@ import {
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,
   DEFAULT_THEME, THEME_EFFECTS, THEME_COLOR_KEYS,
 } from './core.js';
+import { confirmBox } from './ui-confirm.js';
 import { prepareImage } from './image-compress.js';
 
 const COLOR_LABELS = {
@@ -61,15 +62,6 @@ function loadStyles() {
   const l = document.createElement('link');
   l.rel = 'stylesheet'; l.href = new URL('../css/admin-themes.css', import.meta.url).href; l.dataset.adminThemes = '';
   document.head.append(l);
-}
-function confirmBox(title, body, okLabel = 'Supprimer') {
-  const d = document.createElement('dialog');
-  d.className = 'hg-dialog';
-  d.innerHTML = `<form method="dialog" class="stack"><h2 class="dialog-title">${esc(title)}</h2><p class="muted">${esc(body)}</p>
-    <div class="btn-row dialog-actions"><button class="btn btn-ghost" value="cancel">Annuler</button><button class="btn btn-danger" value="ok">${esc(okLabel)}</button></div></form>`;
-  document.body.append(d);
-  d.showModal();
-  return new Promise((resolve) => d.addEventListener('close', () => { resolve(d.returnValue === 'ok'); d.remove(); }, { once: true }));
 }
 
 /* =========================================================
@@ -227,7 +219,7 @@ export async function mountThemesSection(container) {
 
   async function deleteTheme(t, btn) {
     if (t.is_default) return;
-    const ok = await confirmBox(`Supprimer « ${t.name} » ?`, 'Le thème sera définitivement supprimé. Si c\'était le thème forcé, le site repasse en mode automatique.');
+    const ok = await confirmBox(`Supprimer « ${t.name} » ?`, 'Le thème sera définitivement supprimé. Si c\'était le thème forcé, le site repasse en mode automatique.', { ok: 'Supprimer', danger: true });
     if (!ok) return;
     await busy(btn, async () => {
       check(await sb.from('hg_themes').delete().eq('id', t.id));

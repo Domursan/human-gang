@@ -4,6 +4,7 @@
 import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
 import { METRICS, roman, sortedLevels } from './badge-levels.js';
 import { prepareImage, otherVariants } from './image-compress.js';
+import { confirmBox } from './ui-confirm.js';
 
 export const AUTO_BADGES = new Set([
   'premier_noel', 'veteran', 'lutin_express', 'sur_le_fil', 'liste_parfaite', 'toujours_la', 'organisateur', 'globe_trotter',
@@ -37,17 +38,6 @@ async function uploadBadgeImage(code, file, level = null) {
   sb.storage.from('hg-assets').remove(otherVariants(base, img.ext)).catch(() => {});
   const { data } = sb.storage.from('hg-assets').getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`;
-}
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
 }
 
 const BADGE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>';

@@ -129,13 +129,7 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
 .season-opt[disabled] { cursor: not-allowed; }
 .season-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
 
-/* Dialogue */
-.hg-dialog { width: min(460px, calc(100vw - 32px)); border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface);
-  color: var(--text); padding: 24px; }
-.hg-dialog::backdrop { background: rgba(0, 0, 0, .65); }
-.dialog-title { font-size: 19px; font-weight: 700; }
-.hg-dialog p { margin: 0; white-space: pre-line; }
-.dialog-actions { justify-content: flex-end; margin-top: 8px; }
+/* Dialogue : voir ui-confirm.css (chargée avant ce fichier) */
 
 @media (max-width: 600px) {
   .list-row { flex-wrap: wrap; }
@@ -159,8 +153,6 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
   .inline-form .btn, .btn-row .btn:not(.btn-icon) { width: 100%; justify-content: center; }
   .btn-row .btn-icon { width: 44px; }
   .btn-row { flex-wrap: wrap; }
-  .dialog-actions .btn { flex: 1 1 auto; }
-  .hg-dialog { padding: 20px 18px; }
   .code { overflow-wrap: anywhere; }
   .filters { gap: 6px; }
   .field.narrow { max-width: none; }

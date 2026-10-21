@@ -1,6 +1,7 @@
 // ===== Humane Gang — administration : tirage manuel du Secret Santa =====
 // Éditeur « une ligne par Santa » avec validation en direct, complétion aléatoire et envoi via rpc hg_ss_manual_draw.
 import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from './core.js';
+import { confirmBox } from './ui-confirm.js';
 
 const IC = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
@@ -13,17 +14,6 @@ const IC = {
 const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
 const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 
 /* ---------- Validation ---------- */
 /** Analyse les choix courants : erreurs (bloquantes) et avertissements par ligne + bilan. */

@@ -4,6 +4,7 @@ import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml, isGodM
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { ensureAccessData, memberAccessHtml, setAccess, accessPages } from './admin-access.js';
 import { fetchAdminGhosts } from './admin-ghosts.js';
+import { confirmBox } from './ui-confirm.js';
 
 /* ---------- Icônes ---------- */
 const IC = {
@@ -18,17 +19,6 @@ const IC = {
 };
 
 /* ---------- Petits outils (copie locale : admin.js n'exporte rien) ---------- */
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
-}
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }

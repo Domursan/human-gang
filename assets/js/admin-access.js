@@ -5,6 +5,7 @@
 //  - mode 'admin'   : admins seulement. Les admins ont toujours accès à tout.
 // Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche). N'importe que core.js.
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
+import { confirmBox } from './ui-confirm.js';
 
 export const MODES = [
   ['membres', 'Tous les membres'],
@@ -359,21 +360,14 @@ async function changeMode(slug, mode, el) {
     emit();
   } catch (ex) { toast(errMsg(ex), 'error'); el.value = p.mode; } finally { if (el.isConnected) el.disabled = false; }
 }
-function confirmLoss(p, n, mode) {
-  const box = $('#confirm-dlg');
-  if (!box) return Promise.resolve(true);
-  $('#confirm-title').textContent = `Restreindre « ${p.label} » ?`;
-  $('#confirm-body').textContent = `${n} membre${n > 1 ? 's' : ''} perdr${n > 1 ? 'ont' : 'a'} l'accès (mode « ${MODE_LABEL[mode]} »). Les exceptions déjà enregistrées sont conservées.`;
-  const ok = $('#confirm-ok'); ok.textContent = 'Restreindre'; ok.className = 'btn btn-danger';
-  box.returnValue = '';
+async function confirmLoss(p, n, mode) {
+  const body = `${n} membre${n > 1 ? 's' : ''} perdr${n > 1 ? 'ont' : 'a'} l'accès (mode « ${MODE_LABEL[mode]} »). Les exceptions déjà enregistrées sont conservées.`;
   // Le dialog « Personnes » est modal : on le referme le temps de la confirmation
   const reopen = dlg?.open ? AC.openSlug : null;
   if (reopen) { dlg.dataset.suspend = '1'; dlg.close(); }
-  box.showModal();
-  return new Promise((resolve) => box.addEventListener('close', () => {
-    if (reopen) { AC.openSlug = reopen; renderDialog(); dlg.showModal(); $('[data-pa-dlg-mode]', dlg)?.focus(); }
-    resolve(box.returnValue === 'ok');
-  }, { once: true }));
+  const ok = await confirmBox(`Restreindre « ${p.label} » ?`, body, { ok: 'Restreindre', danger: true });
+  if (reopen) { AC.openSlug = reopen; renderDialog(); dlg.showModal(); $('[data-pa-dlg-mode]', dlg)?.focus(); }
+  return ok;
 }
 async function move(slug, dir, btn) {
   const i = AC.pages.findIndex((p) => p.slug === slug), j = i + dir;

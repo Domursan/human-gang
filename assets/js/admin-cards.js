@@ -7,6 +7,7 @@ import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel, cardHtml, serialLabel, fmtP } from './cartes-ui.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { prepareImage } from './image-compress.js';
+import { confirmBox } from './ui-confirm.js';
 
 const TZ = 'Europe/Zurich';
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -125,17 +126,6 @@ function dialog() {
     document.body.append(d);
   }
   return d;
-}
-function confirmBox(title, body, { ok = 'Confirmer', danger = false } = {}) {
-  const dlg = $('#confirm-dlg');
-  $('#confirm-title').textContent = title;
-  $('#confirm-body').textContent = body;
-  const okBtn = $('#confirm-ok');
-  okBtn.textContent = ok;
-  okBtn.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
-  dlg.returnValue = '';
-  dlg.showModal();
-  return new Promise((resolve) => dlg.addEventListener('close', () => resolve(dlg.returnValue === 'ok'), { once: true }));
 }
 async function act(btn, fn) {
   if (btn) btn.disabled = true;
