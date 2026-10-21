@@ -210,7 +210,7 @@ async function ssReminders(out: Counters, attempts: Attempt[]) {
 }
 
 Deno.serve(async (req) => {
-  if (!cronAuthorized(req)) return json({ error: 'Non autorisé' }, 401);
+  if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
   const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, errors: 0 };
   const attempts: Attempt[] = [];

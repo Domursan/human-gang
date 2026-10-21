@@ -45,7 +45,7 @@ function matches(birthday: string, day: { mmdd: string; leap: boolean }): boolea
 }
 
 Deno.serve(async (req) => {
-  if (!cronAuthorized(req)) return json({ error: 'Non autorisé' }, 401);
+  if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
   const { data: people, error } = await db.from('hg_profiles')
     .select('id, pseudo, birthday, share_birthday, discord_id, bot_optin').not('birthday', 'is', null);

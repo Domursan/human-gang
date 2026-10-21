@@ -32,3 +32,12 @@ update public.hg_birthday_log
 -- ----- S5 : limite par client pour l'assistance (empreinte HMAC de l'adresse IP, jamais l'IP en clair) -----
 alter table public.hg_support add column if not exists client_hash text;
 create index if not exists hg_support_client_hash_idx on public.hg_support(client_hash, created_at) where client_hash is not null;
+
+-- ----- S4 : secret des fonctions planifiées, dans une table privée (aucune policy : service role et pg_cron seulement) -----
+create table if not exists public.hg_private (key text primary key, value text not null, updated_at timestamptz not null default now());
+alter table public.hg_private enable row level security;
+revoke all on public.hg_private from anon, authenticated;
+-- La valeur est créée une fois, à la main (jamais dans le dépôt) :
+--   insert into public.hg_private(key, value) values ('cron_secret', '<valeur aléatoire longue>') on conflict (key) do nothing;
+-- Tâches pg_cron : l'en-tête lit la table au moment de l'appel.
+--   headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select value from public.hg_private where key = 'cron_secret'))

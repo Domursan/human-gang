@@ -55,8 +55,8 @@ Sans ce fichier, l'admin affiche un avertissement et ne peut pas éditer les mod
 ## Rappels, secret cron et anti-doublons : ordre à suivre
 
 1. Appliquer la migration `supabase/migrations/020_bot_rappels.sql` (colonnes seulement, idempotente).
-2. Créer le secret `CRON_SECRET` dans Supabase (Edge Functions > Secrets), avec une valeur longue et aléatoire.
-   Sans ce secret, `hg-cron` et `hg-birthdays` refusent tout appel (401) : aucun envoi automatique ne part.
+2. Secret des tâches planifiées : ligne `cron_secret` de la table privée `public.hg_private` (voir la fin de la migration 020 ;
+   la variable d'environnement `CRON_SECRET`, si elle existe, est prioritaire). Sans secret, `hg-cron` et `hg-birthdays` refusent tout (401).
 3. Déployer `hg-notify`, `hg-support`, `hg-birthdays` et `hg-cron` (tableau ci-dessus).
 4. Mettre à jour les deux tâches pg_cron pour qu'elles envoient le secret (voir ci-dessous).
 

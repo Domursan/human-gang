@@ -1,10 +1,24 @@
 // ===== Humane Gang — contrôle d'accès des fonctions planifiées (partagé par hg-cron et hg-birthdays) =====
-// pg_cron appelle ces fonctions avec l'en-tête « x-cron-secret » égal à la variable CRON_SECRET de la fonction.
-// Sans CRON_SECRET configuré, tout appel est refusé : une fonction ouverte ne doit jamais tourner par défaut.
-// Comparaison à temps constant (pas de fuite du secret par le temps de réponse).
+// pg_cron appelle ces fonctions avec l'en-tête « x-cron-secret ». La valeur attendue vient de la variable
+// d'environnement CRON_SECRET si elle existe, sinon de la table privée public.hg_private (clé « cron_secret »,
+// RLS sans aucune policy : lisible uniquement avec la clé service role, et par pg_cron côté base).
+// Sans secret configuré, tout appel est refusé. Comparaison à temps constant.
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-export function cronAuthorized(req: Request): boolean {
-  const expected = Deno.env.get('CRON_SECRET') ?? '';
+let cached: string | null = null;
+
+async function expectedSecret(db: SupabaseClient): Promise<string> {
+  const env = Deno.env.get('CRON_SECRET') ?? '';
+  if (env) return env;
+  if (cached) return cached;
+  const { data, error } = await db.from('hg_private').select('value').eq('key', 'cron_secret').maybeSingle();
+  if (error || !data?.value) return '';
+  cached = String(data.value);
+  return cached;
+}
+
+export async function cronAuthorized(req: Request, db: SupabaseClient): Promise<boolean> {
+  const expected = await expectedSecret(db);
   if (!expected) return false;
   const given = new TextEncoder().encode(req.headers.get('x-cron-secret') ?? '');
   const want = new TextEncoder().encode(expected);
