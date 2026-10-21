@@ -5,6 +5,7 @@ import {
 import { mountGodCard, confirmRedo } from './admin-godmode.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
+import { mountLogSection } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
 import { initAccounts, refreshAccounts, sharedFieldsHtml, readSharedFields, pairsBlockHtml, openAccountFiche } from './admin-accounts.js';
 import { mountGhostsSection, refreshGhostsSection, fetchAdminGhosts } from './admin-ghosts.js';
@@ -803,6 +804,7 @@ mountBotSection($('#bot-root'));
 mountThemesSection($('#theme-root'));
 mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } });
 mountMessagesSection($('#messages-root'));
+mountLogSection($('#log-root'));
 mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } });
 mountCardsSection($('#cards-root'));
 mountAccessSection($('#access-root'), { openMember: (uid) => openAccountFiche(uid, 'acces') });
