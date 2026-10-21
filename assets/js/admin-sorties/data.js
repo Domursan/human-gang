@@ -15,7 +15,7 @@ export async function loadAll() {
     sb.from('hg_event_rsvps').select('*'),
     sb.from('hg_event_dates').select('*').order('proposed_at', { ascending: true }),
     sb.from('hg_event_date_votes').select('*'),
-    sb.from('hg_photos').select('id, event_id, path'),
+    sb.from('hg_photos').select('id, event_id, path, caption, created_at'),
   ]);
   const members = new Map((ok(m) || []).map((x) => [x.id, x]));
   for (const [id, g] of await ghostDirectory()) members.set(id, g); // l'admin voit aussi les fantômes (comme irl.js)

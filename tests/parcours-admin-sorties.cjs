@@ -1,4 +1,4 @@
-// Parcours : gérer les sorties IRL depuis l'administration (section « Sorties IRL », admin.html#sorties).
+// Parcours : gérer les sorties IRL depuis l'administration (admin.html#vie/sorties : liste en colonne 2, détail dans la zone principale).
 // Faux Supabase (fixtures/fake-sb.mjs) : le test vérifie ce que le client envoie (journal), pas ce que la base enregistre.
 // Scénario : créer une sortie, la modifier, ajouter et retirer un inscrit, fixer une date, supprimer avec confirmation.
 // Lancer : node tests/parcours-admin-sorties.cjs
@@ -8,6 +8,12 @@ const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.
 async function goto(p, hash, sel) {
   await p.evaluate((h) => { location.hash = h; }, hash);
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 5000 }).catch(() => {});
+}
+// Ligne de la liste (colonne 2) d'une sortie, et sélection de cette sortie (le détail s'affiche dans la zone principale).
+const row = (p, id) => p.locator(`#shell-col .ui-row[data-id="${id}"]`);
+async function choisir(p, id) {
+  await row(p, id).click();
+  await p.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 }).catch(() => {});
 }
 
 const ME = '11111111-1111-4111-8111-111111111111';
@@ -57,13 +63,15 @@ function dansTrenteJours() {
   check((await p.getAttribute('#shell-subs a[href="#vie/sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
   await goto(p, '#vie/sorties', '#sorties');
   check((await p.getAttribute('#sorties', 'data-perm')) === 'evenements', 'section marquée data-perm="evenements"');
-  check((await p.locator('#ass-list .ass-row').count()) === 2, 'filtre « À venir » : deux sorties (datée et à caler)');
-  await p.selectOption('#ass-filter', 'passees');
-  check((await p.locator('#ass-list .ass-row').count()) === 1, 'filtre « Passées » : la sortie passée seulement');
-  await p.selectOption('#ass-filter', 'avenir');
-  await p.fill('#ass-q', 'raclette');
-  check((await p.locator('#ass-list .ass-row').count()) === 1, 'recherche par titre : une sortie');
-  await p.fill('#ass-q', '');
+  check((await p.locator('#shell-col .ui-row').count()) === 2, 'filtre « À venir » : deux sorties (datée et à caler)');
+  await p.click('#shell-col .ui-chip[data-filter="passees"]');
+  check((await p.locator('#shell-col .ui-row').count()) === 1, 'filtre « Passées » : la sortie passée seulement');
+  await p.click('#shell-col .ui-chip[data-filter="avenir"]');
+  await p.fill('#shell-col .ui-search input', 'raclette');
+  await p.waitForTimeout(300);
+  check((await p.locator('#shell-col .ui-row').count()) === 1, 'recherche par titre : une sortie');
+  await p.fill('#shell-col .ui-search input', '');
+  await p.waitForTimeout(300);
 
   // 2. Création
   await p.click('#ass-new');
@@ -82,8 +90,9 @@ function dansTrenteJours() {
   check(journal.some((l) => l[0] === 'fn' && l[1] === 'hg-notify' && l[2]?.event === 'irl_new'), 'création : annonce irl_new envoyée');
   check(!(await p.$eval('#ass-edit', (d) => d.open).catch(() => false)), 'fenêtre refermée après création');
 
-  // 3. Modification
-  await p.click(`[data-act="edit"][data-id="${EV_A}"]`);
+  // 3. Modification (depuis l'en-tête du détail)
+  await choisir(p, EV_A);
+  await p.click('#ass-d-head button:has-text("Modifier")');
   await p.waitForSelector('#ass-e-form', { state: 'visible' });
   check((await p.inputValue('#ass-e-name')) === 'Raclette au chalet', 'modification : titre actuel pré-rempli');
   await p.fill('#ass-e-name', 'Raclette au chalet (modifiée)');
@@ -94,10 +103,9 @@ function dansTrenteJours() {
   check(!!upd, 'modification : nouveau titre envoyé à hg_events');
   check(!journal.some((l) => l[0] === 'fn' && l[1] === 'hg-notify' && l[2]?.event === 'irl_new' && journal.indexOf(l) > journal.indexOf(upd)), 'modification : pas de nouvelle annonce');
 
-  // 4. Inscrits : ajouter, changer la réponse, retirer
-  await p.click(`[data-act="detail"][data-id="${EV_A}"]`);
-  await p.waitForSelector('#ass-d-body', { state: 'visible' });
-  check(await p.$eval('#ass-detail', (d) => d.open).catch(() => false), 'gestion : fenêtre des inscriptions ouverte');
+  // 4. Inscrits : ajouter, changer la réponse, retirer (dans le détail de la sortie)
+  await choisir(p, EV_A);
+  check(await p.isVisible('#ass-d-body form[data-form="add-rsvp"]'), 'gestion : formulaire d\'ajout d\'un inscrit affiché dans le détail');
   await p.selectOption('#ass-d-add-user', U(4));
   await p.selectOption('#ass-d-add-status', 'oui');
   await p.click('form[data-form="add-rsvp"] button[type="submit"]');
@@ -114,25 +122,21 @@ function dansTrenteJours() {
   await p.waitForTimeout(400);
   journal = await log(p);
   check(journal.some((l) => l[0] === 'delete' && l[1] === 'hg_event_rsvps'), 'retrait d\'un inscrit : delete hg_event_rsvps');
-  check(!(await p.$(`[data-act="rm-rsvp"][data-user="${U(3)}"]`)), 'inscrit retiré : absent de la fenêtre');
-  await p.click('#ass-detail [data-close]');
-  await p.waitForTimeout(200);
+  check(!(await p.$(`[data-act="rm-rsvp"][data-user="${U(3)}"]`)), 'inscrit retiré : absent du détail');
 
   // 5. Date retenue pour une sortie à caler
-  await p.click(`[data-act="detail"][data-id="${EV_B}"]`);
-  await p.waitForSelector('#ass-d-body', { state: 'visible' });
+  await choisir(p, EV_B);
   await p.click(`[data-act="fix"][data-date="${D2}"]`);
   await p.waitForSelector('dialog[open] .dialog-title', { state: 'visible' });
   await p.locator('dialog[open] button.btn-primary').last().click();
   await p.waitForTimeout(500);
   journal = await log(p);
   check(journal.some((l) => l[0] === 'update' && l[1] === 'hg_events' && l[2]?.starts_at && !Number.isNaN(Date.parse(l[2].starts_at))), 'date retenue : starts_at envoyé à hg_events');
-  await p.click('#ass-detail [data-close]');
-  await p.waitForTimeout(200);
 
   // 6. Suppression avec confirmation (la sortie passée est dans le filtre « Passées »)
-  await p.selectOption('#ass-filter', 'passees');
-  await p.click(`[data-act="delete"][data-id="${EV_C}"]`);
+  await p.click('#shell-col .ui-chip[data-filter="passees"]');
+  await choisir(p, EV_C);
+  await p.click('#ass-d-head button:has-text("Supprimer")');
   await p.waitForSelector('dialog[open] .dialog-title', { state: 'visible' });
   const texte = await p.locator('dialog[open]').last().innerText();
   check(/inscription/.test(texte) && /photo/.test(texte), 'confirmation : indique les données liées supprimées');
@@ -141,7 +145,7 @@ function dansTrenteJours() {
   await p.waitForTimeout(500);
   journal = await log(p);
   check(journal.some((l) => l[0] === 'delete' && l[1] === 'hg_events'), 'suppression confirmée : delete hg_events');
-  check(!(await p.$(`[data-act="delete"][data-id="${EV_C}"]`)), 'sortie supprimée : disparue de la liste');
+  check((await row(p, EV_C).count()) === 0, 'sortie supprimée : disparue de la liste');
 
   check(!p.errs.length, 'aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();

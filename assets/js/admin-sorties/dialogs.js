@@ -1,24 +1,36 @@
-// ===== Admin : sorties IRL — fenêtres d'édition et de gestion (inscriptions, votes, date retenue) =====
+// ===== Admin : sorties IRL — fenêtre d'édition (modale) et détail de la sortie (zone principale) =====
+// Le détail (en-tête, inscriptions, dates, votes, date retenue) est rendu dans la zone principale : mountDetail + showDetail.
+// La fenêtre de création/modification reste une boîte modale : mountDialogs + openEdit.
 import { toast, errMsg, esc, fmtDateTime } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { toZurichInput, fromZurichInput } from '../admin-events.js';
 import { pluralCount } from '../utils.js';
+import { renderDetailHeader } from '../admin/ui/detail-header.js';
 import * as api from './data.js';
 import { RSVP_ORDER, RSVP_LABEL, whenLabel, memberName, statusOf } from './format.js';
 
 const MIN_DATES = 2, MAX_DATES = 6, TITLE_MAX = 120, LOC_MAX = 160, DESC_MAX = 1000;
 
-// CTX : { me, get() → état de la section, reload() → recharge et redessine }
+// CTX : { me, get() → état de la section, reload() → recharge et redessine, remove(ev), select(id) }
 let CTX = null;
 const E = { dlg: null, form: null, editId: null, opener: null };   // fenêtre d'édition
-const D = { dlg: null, body: null, id: null, opener: null };        // fenêtre de gestion
+const D = { head: null, body: null, headApi: null, id: null };      // détail de la sortie sélectionnée
 
 /* ---------- Montage ---------- */
 export function mountDialogs(root, ctx) {
   CTX = ctx;
   E.dlg = buildEdit();
-  D.dlg = buildDetail();
-  root.append(E.dlg, D.dlg);
+  root.append(E.dlg);
+}
+
+/** Crée l'en-tête et le corps du détail dans `host` (zone principale). */
+export function mountDetail(host) {
+  host.innerHTML = `<div class="ass-d-head" id="ass-d-head"></div><div class="ass-d-body" id="ass-d-body"></div>`;
+  D.head = host.querySelector('#ass-d-head');
+  D.body = host.querySelector('#ass-d-body');
+  D.body.addEventListener('click', onDetailClick);
+  D.body.addEventListener('change', onDetailChange);
+  D.body.addEventListener('submit', onDetailSubmit);
 }
 
 /* ---------- Édition ---------- */
@@ -209,42 +221,23 @@ async function onSave(e) {
     toast(E.editId ? 'Sortie mise à jour.' : 'Sortie créée. Le gang est prévenu.', 'ok');
     E.dlg.close();
     await CTX.reload();
+    if (!E.editId) CTX.select(id);
   } catch (ex) {
     fail(`Enregistrement impossible : ${errMsg(ex)}`);
   } finally { btn.disabled = false; }
 }
 
-/* ---------- Gestion : inscriptions, votes, date retenue ---------- */
-function buildDetail() {
-  const dlg = document.createElement('dialog');
-  dlg.id = 'ass-detail';
-  dlg.className = 'hg-dialog ass-dlg ass-dlg-wide';
-  dlg.setAttribute('aria-labelledby', 'ass-d-title');
-  dlg.innerHTML = `<div class="ass-dlg-head">
-      <h2 class="dialog-title" id="ass-d-title">Sortie</h2>
-      <button class="btn btn-ghost btn-sm" type="button" data-close>Fermer</button>
-    </div>
-    <div id="ass-d-body" class="ass-d-body"></div>`;
-  D.body = dlg.querySelector('#ass-d-body');
-  dlg.querySelector('[data-close]').addEventListener('click', () => dlg.close());
-  D.body.addEventListener('click', onDetailClick);
-  D.body.addEventListener('change', onDetailChange);
-  D.body.addEventListener('submit', onDetailSubmit);
-  dlg.addEventListener('close', () => { D.id = null; restoreFocus(D); });
-  return dlg;
-}
+/* ---------- Détail : inscriptions, votes, date retenue (zone principale) ---------- */
 
-export function openDetail(eventId, opener = null) {
-  D.id = eventId;
-  D.opener = opener;
+/** Affiche la sortie `eventId` dans la zone principale (null : aucune sélection). */
+export function showDetail(eventId) {
+  D.id = eventId || null;
   renderDetail();
-  D.dlg.showModal();
-  D.dlg.querySelector('#ass-d-title').focus();
 }
 
-/** Redessine la fenêtre de gestion si elle est ouverte (après un rechargement). */
+/** Redessine le détail après un rechargement (le focus reste sur le contrôle de l'action). */
 export function refreshDetail() {
-  if (!D.dlg?.open) return;
+  if (!D.body) return;
   renderDetail();
   applyPendingFocus();
 }
@@ -252,15 +245,30 @@ export function refreshDetail() {
 const dateFmt = (iso) => fmtDateTime(iso);
 
 function renderDetail() {
+  if (!D.body) return;
   const S = CTX.get();
-  const ev = S.events.find((x) => x.id === D.id);
-  if (!ev) { D.dlg.close(); return; }
+  const ev = D.id ? S.events.find((x) => x.id === D.id) : null;
+  D.headApi?.destroy();
+  D.headApi = null;
+  if (!ev) {
+    D.head.innerHTML = '';
+    D.body.innerHTML = '<div class="empty">Choisis une sortie dans la liste, ou propose-en une nouvelle.</div>';
+    return;
+  }
   const dates = S.dates.filter((d) => d.event_id === ev.id);
   const ids = new Set(S.rsvps.filter((r) => r.event_id === ev.id).map((r) => r.user_id));
   const members = [...S.members.values()].sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
   const pseudo = (id) => memberName(S.members, id);
   const retained = (d) => ev.starts_at && new Date(d.proposed_at).getTime() === new Date(ev.starts_at).getTime();
-  D.dlg.querySelector('#ass-d-title').textContent = ev.title;
+  D.headApi = renderDetailHeader(D.head, {
+    member: S.members.get(ev.created_by) || { pseudo: 'Ancien membre' },
+    title: ev.title,
+    subtitle: `${statusOf(ev).label} · ${whenLabel(ev)}${ev.location ? ` · ${ev.location}` : ''}`,
+    actions: [
+      { label: 'Modifier', onClick: () => openEdit(ev, null) },
+      { label: 'Supprimer', onClick: () => CTX.remove(ev) },
+    ],
+  });
 
   const groups = Object.fromEntries(RSVP_ORDER.map((s) => [s, []]));
   for (const r of S.rsvps) if (r.event_id === ev.id && groups[r.status] && S.members.has(r.user_id)) groups[r.status].push(r.user_id);
@@ -319,7 +327,6 @@ function renderDetail() {
   }).join('');
 
   D.body.innerHTML = `
-    <p class="small muted ass-d-summary">${esc(whenLabel(ev))}${ev.location ? ` · ${esc(ev.location)}` : ''} · ${esc(statusOf(ev).label)}</p>
     <section class="ass-d-sec" aria-labelledby="ass-d-rsvp-h">
       <h3 class="ass-h" id="ass-d-rsvp-h">Inscriptions <span class="muted">· ${total}</span></h3>
       ${rsvpList}
@@ -334,10 +341,10 @@ function renderDetail() {
 // Après une action, on rend le focus au contrôle concerné (il a été remplacé par le redessin).
 let pendingFocus = null;
 function focusAfterRender(key) { pendingFocus = key; }
-export function applyPendingFocus() {
-  if (!pendingFocus || !D.dlg?.open) return;
+function applyPendingFocus() {
+  if (!pendingFocus || !D.body) return;
   const el = [...D.body.querySelectorAll('[data-key]')].find((x) => x.dataset.key === pendingFocus);
-  (el || D.dlg.querySelector('#ass-d-title'))?.focus();
+  el?.focus();
   pendingFocus = null;
 }
 
@@ -403,5 +410,5 @@ function restoreFocus(W) {
   const el = W.opener;
   W.opener = null;
   if (el?.isConnected) el.focus();
-  else document.querySelector('#ass-list')?.focus(); // le bouton d'origine a été redessiné : on revient à la liste
+  else document.getElementById('ass-new')?.focus(); // bouton d'origine redessiné : retour au bouton de la liste
 }
