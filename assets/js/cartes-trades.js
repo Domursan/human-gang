@@ -5,6 +5,7 @@
 import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify } from './core.js';
 import { cardHtml, rarityRank, fmtP } from './cartes-ui.js';
 import { confirmBox } from './ui-confirm.js';
+import { pluralCount } from './utils.js';
 
 const TABS = [
   { id: 'recues', label: 'Reçues' },
@@ -18,7 +19,6 @@ const PAGE = 1000;   // pagination PostgREST (plafond par défaut de la base)
 const CHUNK = 100;   // identifiants par requête « in »
 const COPY_COLS = 'id, card_id, owner_id, shiny, serial, locked_trade, recycled_at';
 
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
 const norm = (s) => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 const cmp = (a, b) => String(a).localeCompare(String(b), 'fr');
@@ -450,9 +450,9 @@ export async function mountTrades(el, ctx = {}) {
   }
   function updateSummary() {
     const g = E.give.size, w = E.want.size;
-    form.querySelector('#trd-n-give').textContent = `${plural(g, 'carte sélectionnée', 'cartes sélectionnées')}`;
-    form.querySelector('#trd-n-want').textContent = `${plural(w, 'carte sélectionnée', 'cartes sélectionnées')}`;
-    form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${plural(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${plural(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
+    form.querySelector('#trd-n-give').textContent = `${pluralCount(g, 'carte sélectionnée', 'cartes sélectionnées')}`;
+    form.querySelector('#trd-n-want').textContent = `${pluralCount(w, 'carte sélectionnée', 'cartes sélectionnées')}`;
+    form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${pluralCount(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${pluralCount(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
     form.querySelector('#trd-mcount').textContent = `${E.message.length} / 500 caractères`;
   }
   function showErr(msg) {
@@ -483,7 +483,7 @@ export async function mountTrades(el, ctx = {}) {
     if (gift) {
       if (!give.length) return showErr('Choisis au moins une carte à offrir.');
       const ok = await confirmBox('Offrir ce cadeau ?',
-        `Tu offres ${plural(give.length, 'carte', 'cartes')} à ${to.pseudo}. Le cadeau est définitif. Les cartes demandées et les Paillettes ne sont pas prises en compte.`,
+        `Tu offres ${pluralCount(give.length, 'carte', 'cartes')} à ${to.pseudo}. Le cadeau est définitif. Les cartes demandées et les Paillettes ne sont pas prises en compte.`,
         { ok: 'Offrir' });
       if (!ok) return;
     } else {
@@ -506,7 +506,7 @@ export async function mountTrades(el, ctx = {}) {
     if (accept) {
       const give = itemsOf(t, 'from'), recv = itemsOf(t, 'to');
       const ok = await confirmBox('Accepter cet échange ?',
-        `Tu reçois ${plural(give.length, 'carte', 'cartes')}${t.from_paillettes ? ` et ${fmtP(t.from_paillettes)}` : ''} et tu donnes ${plural(recv.length, 'carte', 'cartes')}${t.to_paillettes ? ` et ${fmtP(t.to_paillettes)}` : ''}. L’échange est définitif.`,
+        `Tu reçois ${pluralCount(give.length, 'carte', 'cartes')}${t.from_paillettes ? ` et ${fmtP(t.from_paillettes)}` : ''} et tu donnes ${pluralCount(recv.length, 'carte', 'cartes')}${t.to_paillettes ? ` et ${fmtP(t.to_paillettes)}` : ''}. L’échange est définitif.`,
         { ok: 'Accepter' });
       if (!ok) return;
     }

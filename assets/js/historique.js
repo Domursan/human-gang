@@ -6,6 +6,7 @@ import { loadReactions, reactionBarHtml } from './reactions.js';
 import { ghostDirectory } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { pluralCount } from './utils.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -28,7 +29,6 @@ const I = {
 
 const S = { members: new Map(), editions: [], progress: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), reveals: new Map(), filter: 'all' };
 const member = (id) => S.members.get(id) || { pseudo: 'Ancien membre' };
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const dayDate = (d) => new Date(`${d}T12:00:00`); // date SQL → midi local (évite les décalages de fuseau)
 
 /* ---------- Données ---------- */
@@ -99,7 +99,7 @@ function ssCard(e) {
     <div class="tl-kind">${I.gift}<span>Secret Santa · ${esc(date)}</span></div>
     <h3 class="tl-title">Secret Santa ${esc(e.year)}</h3>
     <div class="tl-tags">
-      <span class="pill">${I.people}${plural(n, 'participant', 'participants')}</span>
+      <span class="pill">${I.people}${pluralCount(n, 'participant', 'participants')}</span>
       ${e.budget ? `<span class="pill">Budget ${esc(e.budget)}</span>` : ''}
       <span class="pill ${e.status === 'termine' ? 'pill-ok' : 'pill-current'}">${esc(STATUS_LABEL[e.status] || e.status)}</span>
     </div>
@@ -123,9 +123,9 @@ function irlCard(e) {
   return `<article class="tl-card tl-card-irl">
     <div class="tl-kind">${I.pin}<span>Sortie IRL · ${esc(fmtDate(e.starts_at))}</span></div>
     <h3 class="tl-title">${esc(e.title)}</h3>
-    <p class="tl-meta small">${e.location ? `${esc(e.location)} · ` : ''}${present.length ? `${plural(present.length, 'présent', 'présents')} : ${present.map((id) => esc(member(id).pseudo)).join(', ')}` : 'Présents non renseignés'}</p>
+    <p class="tl-meta small">${e.location ? `${esc(e.location)} · ` : ''}${present.length ? `${pluralCount(present.length, 'présent', 'présents')} : ${present.map((id) => esc(member(id).pseudo)).join(', ')}` : 'Présents non renseignés'}</p>
     ${thumbs}
-    <a class="tl-link" href="${href}">${photos.length ? `Voir l'album (${plural(photos.length, 'photo', 'photos')})` : 'Ajouter des photos à l\'album'} ${I.arrow}</a>
+    <a class="tl-link" href="${href}">${photos.length ? `Voir l'album (${pluralCount(photos.length, 'photo', 'photos')})` : 'Ajouter des photos à l\'album'} ${I.arrow}</a>
   </article>`;
 }
 
@@ -169,7 +169,7 @@ function render() {
   for (const it of list) years.set(it.year, [...(years.get(it.year) || []), it]);
   tl.innerHTML = [...years.entries()].sort((a, b) => b[0] - a[0]).map(([y, its]) => `
     <section class="tl-year" aria-labelledby="y-${y}">
-      <h2 class="tl-year-title" id="y-${y}"><span>${y}</span><span class="tl-year-count small muted">${plural(its.length, 'souvenir', 'souvenirs')}</span></h2>
+      <h2 class="tl-year-title" id="y-${y}"><span>${y}</span><span class="tl-year-count small muted">${pluralCount(its.length, 'souvenir', 'souvenirs')}</span></h2>
       <ol class="tl-items">
         ${its.map((it) => `<li class="tl-item tl-${it.kind}"><span class="tl-dot" aria-hidden="true"></span><span class="visually-hidden">${KIND_LABEL[it.kind]}</span>${it.html}</li>`).join('')}
       </ol>

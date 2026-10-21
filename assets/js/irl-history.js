@@ -2,6 +2,7 @@
 import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit, godTag } from './core.js';
 import { uploadImage, removeObjects, uuid } from './photos.js';
 import { prepareImage } from './image-compress.js';
+import { pad } from './utils.js';
 
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
 const GEO_KEY = 'hg_geo_v1';
@@ -13,12 +14,11 @@ const MONTH_SHORT = new Intl.DateTimeFormat('fr-CH', { month: 'short' });
 
 /** Normalise un texte pour comparer (casse, accents, espaces). */
 export const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
-const pad = (n) => String(n).padStart(2, '0');
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const monthKey = (d) => d.getFullYear() * 12 + d.getMonth();
 
 /**
- * ctx : { me, isAdmin, S, classify, member, pseudo, canEdit, plural, tint, I, refresh }
+ * ctx : { me, isAdmin, S, classify, member, pseudo, canEdit, pluralCount, tint, I, refresh }
  */
 export function mountHistory(ctx) {
   const { me, S, I } = ctx;
@@ -39,7 +39,7 @@ export function mountHistory(ctx) {
     </div>`;
     const q = $('.picker-q', host), list = $('.picker-list', host), count = $('.picker-count', host), none = $('.picker-none', host);
     let sel = new Set();
-    const updCount = () => { count.textContent = sel.size ? ctx.plural(sel.size, 'personne cochée', 'personnes cochées') : 'Personne de coché'; };
+    const updCount = () => { count.textContent = sel.size ? ctx.pluralCount(sel.size, 'personne cochée', 'personnes cochées') : 'Personne de coché'; };
     const filter = () => {
       const t = norm(q.value);
       let shown = 0;
@@ -202,7 +202,7 @@ export function mountHistory(ctx) {
         }
       }
       // Pas de notify('irl_new') : une rencontre passée ne doit pas prévenir le gang comme une nouvelle sortie.
-      toast(rEditing ? 'Rencontre mise à jour.' : `Rencontre ajoutée à l'historique${ok ? ` avec ${ctx.plural(ok, 'photo', 'photos')}` : ''}.`, 'ok');
+      toast(rEditing ? 'Rencontre mise à jour.' : `Rencontre ajoutée à l'historique${ok ? ` avec ${ctx.pluralCount(ok, 'photo', 'photos')}` : ''}.`, 'ok');
       rDlg.close();
       await ctx.refresh();
       if (!rEditing) { setTab('historique'); resetFilters(); focusCard(id); }
@@ -363,11 +363,11 @@ export function mountHistory(ctx) {
       tile(s.n, s.n > 1 ? 'rencontres' : 'rencontre'),
       tile(s.places, s.places > 1 ? 'lieux différents' : 'lieu différent'),
       `<div class="hx-stat hx-stat-me"><strong class="hx-big">${s.mine}<span class="hx-of"> / ${s.n}</span></strong>
-        <span class="hx-lbl">Tu étais à ${ctx.plural(s.mine, 'rencontre', 'rencontres')} sur ${s.n}</span>
+        <span class="hx-lbl">Tu étais à ${ctx.pluralCount(s.mine, 'rencontre', 'rencontres')} sur ${s.n}</span>
         <span class="hx-bar" aria-hidden="true"><span style="width:${pct}%"></span></span></div>`,
       tile(esc(fmtDate(s.first)), 'première rencontre', '', true),
     ];
-    if (s.best && s.best.c > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.plural(s.best.c, 'rencontre', 'rencontres')}`, '', true));
+    if (s.best && s.best.c > 1) tiles.push(tile(esc(monthLabel(s.best.k)), `mois le plus actif · ${ctx.pluralCount(s.best.c, 'rencontre', 'rencontres')}`, '', true));
     if (s.streak.len >= 2) tiles.push(tile(`${s.streak.len} mois`, `plus longue série d'affilée (jusqu'en ${esc(monthLabel(s.streak.end))})`));
     const maxP = Math.max(1, ...s.topPlaces.map((p) => p.n));
     const maxU = Math.max(1, ...s.topPeople.map((p) => p.n));
@@ -407,10 +407,10 @@ export function mountHistory(ctx) {
         ${ev.location ? `<p class="hx-place">${I.pin}<span>${esc(ev.location)}</span></p>` : ''}
         <div class="hx-people">
           ${who.length ? `<ul class="hx-faces" aria-label="Présents : ${esc(names)}">${faces}${more}</ul>` : ''}
-          <span class="small muted">${who.length ? ctx.plural(who.length, 'présent', 'présents') : 'Présents non renseignés'}</span>
+          <span class="small muted">${who.length ? ctx.pluralCount(who.length, 'présent', 'présents') : 'Présents non renseignés'}</span>
         </div>
         <div class="hx-actions">
-          <a class="hx-link" href="#event-${esc(ev.id)}">${pics.length ? `Voir l'album · ${ctx.plural(pics.length, 'photo', 'photos')}` : "Ouvrir l'album"}<span aria-hidden="true"> →</span></a>
+          <a class="hx-link" href="#event-${esc(ev.id)}">${pics.length ? `Voir l'album · ${ctx.pluralCount(pics.length, 'photo', 'photos')}` : "Ouvrir l'album"}<span aria-hidden="true"> →</span></a>
           ${ctx.canEdit(ev) ? `<button type="button" class="btn btn-ghost btn-sm" data-act="who" data-id="${esc(ev.id)}" data-key="hxwho:${esc(ev.id)}">${I.people}<span>Qui était là ?</span></button>` : ''}
         </div>
       </div>
@@ -418,7 +418,7 @@ export function mountHistory(ctx) {
   }
 
   function renderTimeline(list, total) {
-    $('#hx-count').textContent = list.length === total ? ctx.plural(total, 'rencontre', 'rencontres') : `${list.length} sur ${total}`;
+    $('#hx-count').textContent = list.length === total ? ctx.pluralCount(total, 'rencontre', 'rencontres') : `${list.length} sur ${total}`;
     if (!total) {
       $('#hx-timeline').innerHTML = `<div class="empty hx-empty"><p>Aucune rencontre passée pour l'instant.</p>
         <button type="button" class="btn btn-sand" data-hx="retro">+ Ajouter une rencontre passée</button></div>`;
@@ -432,7 +432,7 @@ export function mountHistory(ctx) {
     for (const ev of list) { const y = yearOf(ev); (byYear.get(y) || byYear.set(y, []).get(y)).push(ev); }
     $('#hx-timeline').innerHTML = [...byYear.entries()].sort((a, b) => b[0] - a[0]).map(([y, evs]) => `
       <section class="hx-year" aria-labelledby="hx-y-${y}">
-        <h3 class="hx-year-title" id="hx-y-${y}">${y}<span class="small muted"> · ${ctx.plural(evs.length, 'rencontre', 'rencontres')}</span></h3>
+        <h3 class="hx-year-title" id="hx-y-${y}">${y}<span class="small muted"> · ${ctx.pluralCount(evs.length, 'rencontre', 'rencontres')}</span></h3>
         <ol class="hx-list">${evs.map(card).join('')}</ol>
       </section>`).join('');
   }
@@ -560,7 +560,7 @@ export function mountHistory(ctx) {
     const say = () => {
       const missing = groups.size - pts.length;
       mapStatus.textContent = !groups.size ? 'Aucun lieu renseigné pour ces rencontres.'
-        : `${ctx.plural(pts.length, 'lieu sur la carte', 'lieux sur la carte')}${missing ? ` (${missing} introuvable${missing > 1 ? 's' : ''})` : ''}.`;
+        : `${ctx.pluralCount(pts.length, 'lieu sur la carte', 'lieux sur la carte')}${missing ? ` (${missing} introuvable${missing > 1 ? 's' : ''})` : ''}.`;
     };
     say();
     for (const [i, [k, label]] of todo.entries()) {

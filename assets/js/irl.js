@@ -8,6 +8,7 @@ import { mountHistory } from './irl-history.js';
 import { ghostDirectory } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { pluralCount, pad } from './utils.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -66,7 +67,6 @@ const tint = (id) => TINTS[[...String(id)].reduce((a, c) => a + c.charCodeAt(0),
 const photosOf = (id) => S.photos.filter((p) => p.event_id === id);
 const datesOf = (id) => S.dates.filter((d) => d.event_id === id);
 const votesOf = (dateId) => S.votes.filter((v) => v.date_id === dateId);
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
 function rsvpOf(eventId) {
   const r = { oui: [], 'peut-etre': [], non: [], mine: null };
@@ -129,7 +129,7 @@ function rsvpBlock(ev, { compact = false } = {}) {
     return `<button type="button" class="rsvp-btn rsvp-${v}" data-act="rsvp" data-id="${esc(ev.id)}" data-status="${v}"
       data-key="rsvp:${esc(ev.id)}:${v}" aria-pressed="${on}">${on ? I.check : ''}<span>${label}</span></button>`;
   }).join('');
-  const counts = `<p class="rsvp-counts small"><strong>${plural(r.oui.length, 'vient', 'viennent')}</strong> · ${r['peut-etre'].length} peut-être · ${r.non.length} pas dispo</p>`;
+  const counts = `<p class="rsvp-counts small"><strong>${pluralCount(r.oui.length, 'vient', 'viennent')}</strong> · ${r['peut-etre'].length} peut-être · ${r.non.length} pas dispo</p>`;
   let people = '';
   if (!compact) {
     const yes = r.oui.map((id) => `<li class="person">${avatarHtml(member(id), 28)}<span>${esc(pseudo(id))}</span></li>`).join('');
@@ -166,7 +166,7 @@ function albumHtml(ev) {
     : '';
   return `<div class="album-wrap">
     <div class="album-head">
-      <h4 class="album-title">Album <span class="muted">· ${plural(list.length, 'photo', 'photos')}</span></h4>
+      <h4 class="album-title">Album <span class="muted">· ${pluralCount(list.length, 'photo', 'photos')}</span></h4>
       <div class="btn-row">${zip}
         <label class="btn btn-ghost btn-sm upload-btn">${I.upload}<span>Ajouter des photos</span>
           <input class="visually-hidden" type="file" accept="image/*" multiple data-upload="${esc(ev.id)}">
@@ -225,7 +225,7 @@ function renderPoll(ev) {
       <div class="pd-main">
         <div class="pd-label"><strong>${esc(fmtDateTime(d.proposed_at))}</strong>${lead ? '<span class="pill pill-ok">En tête</span>' : ''}</div>
         <div class="pd-bar" aria-hidden="true"><span style="width:${Math.round((counts[i] / max) * 100)}%"></span></div>
-        <div class="small muted">${plural(vs.length, 'vote', 'votes')}${who ? ` · ${who}` : ''}</div>
+        <div class="small muted">${pluralCount(vs.length, 'vote', 'votes')}${who ? ` · ${who}` : ''}</div>
       </div>
       <div class="pd-actions">
         <button type="button" class="btn btn-sm vote-btn" data-act="vote" data-date="${esc(d.id)}" data-key="vote:${esc(d.id)}"
@@ -270,7 +270,7 @@ function renderPast(ev) {
         ${ev.retro ? '<span class="pill retro-pill">Ajoutée après coup</span>' : ''}
         <h3 class="ev-title">${esc(ev.title)}</h3>
         ${meta(ev, { creator: false })}
-        <p class="small muted past-people">${I.people}<span>${r.oui.length ? `${plural(r.oui.length, 'présent', 'présents')} : ${r.oui.map((id) => esc(pseudo(id))).join(', ')}` : 'Présents non renseignés'}</span></p>
+        <p class="small muted past-people">${I.people}<span>${r.oui.length ? `${pluralCount(r.oui.length, 'présent', 'présents')} : ${r.oui.map((id) => esc(pseudo(id))).join(', ')}` : 'Présents non renseignés'}</span></p>
       </div>
       ${ownerActions(ev, { who: true })}
     </div>
@@ -393,7 +393,7 @@ async function uploadPhotos(eventId, input) {
   }
   input.disabled = false; label?.classList.remove('is-busy');
   if (status) status.textContent = '';
-  if (ok) { toast(`${plural(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`, 'ok'); S.expanded.add(eventId); await refresh(); }
+  if (ok) { toast(`${pluralCount(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`, 'ok'); S.expanded.add(eventId); await refresh(); }
 }
 async function zipAlbum(eventId, btn) {
   const ev = S.events.find((x) => x.id === eventId);
@@ -459,7 +459,6 @@ const dlg = $('#event-dialog');
 const form = $('#event-form');
 let editing = null;
 
-const pad = (n) => String(n).padStart(2, '0');
 function toLocalInput(iso) {
   if (!iso) return '';
   const d = new Date(iso);
@@ -586,7 +585,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 /* ---------- Démarrage ---------- */
-hx = mountHistory({ me, isAdmin, S, classify, member, pseudo, canEdit, plural, tint, I, refresh });
+hx = mountHistory({ me, isAdmin, S, classify, member, pseudo, canEdit, pluralCount, tint, I, refresh });
 window.addEventListener('hg:godmode', () => { if (isAdmin) render().catch(() => {}); });
 await refresh();
 goToHash();

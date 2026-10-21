@@ -4,6 +4,7 @@
 // historique hg_bot_log).
 import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
 import { svg } from './icons.js';
+import { pluralCount } from './utils.js';
 
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 const NOTIFY = [
@@ -39,7 +40,6 @@ const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 const timeFmt = new Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' });
 const logFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 const filled = (v) => typeof v === 'string' && v.trim() !== '';
-const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
 function loadStyles() {
   if (document.querySelector('link[data-admin-bot]')) return;
@@ -286,7 +286,7 @@ export function mountBotSection(container) {
       save.textContent = n > 1 ? `Enregistrer (${n} modèles)` : 'Enregistrer';
     }
     const st = $('#bt-status', tplBody);
-    if (st) st.textContent = n ? `${plural(n, 'modification non enregistrée', 'modifications non enregistrées')}` : '';
+    if (st) st.textContent = n ? `${pluralCount(n, 'modification non enregistrée', 'modifications non enregistrées')}` : '';
   }
 
   function selectTemplate(k) {
@@ -521,7 +521,7 @@ export function mountBotSection(container) {
   }
   function renderCount() {
     const n = S.selected.size, total = S.people.filter(reachable).length, off = S.people.length - total;
-    $('#bm-count', bmBody).textContent = `${plural(n, 'sélectionné', 'sélectionnés')} sur ${plural(total, 'compte joignable', 'comptes joignables')}${off ? ` · ${plural(off, 'compte non joignable', 'comptes non joignables')}` : ''}`;
+    $('#bm-count', bmBody).textContent = `${pluralCount(n, 'sélectionné', 'sélectionnés')} sur ${pluralCount(total, 'compte joignable', 'comptes joignables')}${off ? ` · ${pluralCount(off, 'compte non joignable', 'comptes non joignables')}` : ''}`;
   }
   function renderManualCounts() {
     $('#bm-title-count', bmBody).textContent = `${$('#bm-title', bmBody).value.length} / ${MANUAL_TITLE_MAX}`;
@@ -553,7 +553,7 @@ export function mountBotSection(container) {
     }
     S.sending = true;
     const resBox = $('#bm-result', bmBody);
-    resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${plural(ids.length, 'destinataire', 'destinataires')})…</div>`;
+    resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${pluralCount(ids.length, 'destinataire', 'destinataires')})…</div>`;
     await busy(btn, async () => {
       try {
         const res = await callFn('hg-notify', { event: 'admin_dm', user_ids: ids, title, body, channel });
@@ -581,9 +581,9 @@ export function mountBotSection(container) {
 
   function renderResult(res) {
     const parts = [];
-    if (res.sent) parts.push(plural(res.sent, 'envoyé', 'envoyés'));
-    if (res.failed) parts.push(plural(res.failed, 'échec', 'échecs'));
-    if (res.skipped) parts.push(plural(res.skipped, 'ignoré', 'ignorés'));
+    if (res.sent) parts.push(pluralCount(res.sent, 'envoyé', 'envoyés'));
+    if (res.failed) parts.push(pluralCount(res.failed, 'échec', 'échecs'));
+    if (res.skipped) parts.push(pluralCount(res.skipped, 'ignoré', 'ignorés'));
     const ch = res.channel === true ? '<span class="pill pill-ok">Publié dans le salon</span>'
       : res.channel === false ? `<span class="pill bm-pill-fail">Salon : échec</span>${res.channel_error ? ` <span class="small muted">${esc(res.channel_error)}</span>` : ''}` : '';
     $('#bm-result', bmBody).innerHTML = `

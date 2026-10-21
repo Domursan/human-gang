@@ -6,6 +6,7 @@ import { ensureAccessData, memberAccessHtml, setAccess, accessPages } from './ad
 import { fetchAdminGhosts } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { fmtDay, safeUrl } from './utils.js';
 
 /* ---------- Icônes ---------- */
 const IC = {
@@ -26,12 +27,6 @@ async function busy(btn, fn) {
 }
 function check(res) { if (res.error) throw res.error; return res.data; }
 const nullIfEmpty = (v) => (String(v ?? '').trim() === '' ? null : String(v).trim());
-function safeUrl(raw) {
-  const s = String(raw ?? '').trim();
-  if (!s) return null;
-  const tryParse = (v) => { try { const u = new URL(v); return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : null; } catch { return null; } };
-  return /^[a-z][a-z0-9+.-]*:/i.test(s) ? tryParse(s) : tryParse(`https://${s}`);
-}
 /** ISO -> valeur pour <input type="datetime-local"> (heure locale). */
 function toLocalInput(iso) {
   if (!iso) return '';
@@ -81,7 +76,6 @@ async function loadAccounts() {
   if (!jo.error) { const m = new Map((jo.data ?? []).map((r) => [r.id, r.joined_on])); for (const a of A.accounts) a.joined_on = m.get(a.id) ?? null; }
 }
 /** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
-const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
 
 function renderList() {
   root().innerHTML = `

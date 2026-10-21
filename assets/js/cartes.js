@@ -5,6 +5,7 @@
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
+import { pluralCount } from './utils.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -39,7 +40,6 @@ const fmtDuration = (ms) => {
   const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${Math.max(1, m)} min`;
 };
-const plural = (n, one, many) => `${nf.format(n)} ${n > 1 ? many : one}`;
 const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || 'Le Gang · Série 1';
 
@@ -237,7 +237,7 @@ function renderBoosters() {
           </div>
         </div>
       </div>
-      <p class="muted small">Chaque booster contient ${plural(Number(size), 'carte', 'cartes')}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
+      <p class="muted small">Chaque booster contient ${pluralCount(Number(size), 'carte', 'cartes', nf.format)}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
     </section>
     <section class="card cartes-block cq" id="cartes-quests" aria-labelledby="cartes-quests-h"></section>
     <div id="cartes-reveal"></div>
@@ -528,7 +528,7 @@ async function claimDaily() {
   try {
     const { data, error } = await sb.rpc('hg_cards_daily');
     if (error) throw error;
-    toast(`+${fmtP(data.gain)} · série de ${plural(data.streak, 'jour', 'jours')}`, 'ok');
+    toast(`+${fmtP(data.gain)} · série de ${pluralCount(data.streak, 'jour', 'jours', nf.format)}`, 'ok');
     await refreshData();
   } catch (e) {
     toast(errMsg(e), 'error');
@@ -611,7 +611,7 @@ function renderCollection(focusId) {
         </div>
       </div>
       <div class="cartes-mass">
-        <p class="muted small">${plural(plan.ids.length, 'doublon recyclable', 'doublons recyclables')} (on garde un exemplaire de chaque carte)</p>
+        <p class="muted small">${pluralCount(plan.ids.length, 'doublon recyclable', 'doublons recyclables', nf.format)} (on garde un exemplaire de chaque carte)</p>
         <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
       </div>
     </section>
@@ -654,7 +654,7 @@ function openMass() {
   S.massIds = plan.ids;
   S.massTotal = plan.total;
   $('#cartes-mass-body').innerHTML = plan.ids.length
-    ? `<p>Tu vas recycler <strong>${plural(plan.ids.length, 'doublon', 'doublons')}</strong> pour environ <strong>${fmtPaillettes(plan.total)}</strong>.</p>
+    ? `<p>Tu vas recycler <strong>${pluralCount(plan.ids.length, 'doublon', 'doublons', nf.format)}</strong> pour environ <strong>${fmtPaillettes(plan.total)}</strong>.</p>
        <p class="muted small">Il te restera au moins un exemplaire de chaque carte. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
     : '<p>Aucun doublon à recycler pour le moment.</p>';
   $('#cartes-mass-confirm').hidden = !plan.ids.length;
@@ -794,7 +794,7 @@ async function renderLeaderboard() {
           <span class="cartes-lb-rank">${i + 1}</span>
           <span class="cartes-row">${avatarHtml(r, 36)}
             <span><strong>${esc(r.pseudo)}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
-            <span class="cartes-lb-stats">${plural(Number(r.uniques), 'unique', 'uniques')} · ${plural(Number(r.copies), 'exemplaire', 'exemplaires')} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
+            <span class="cartes-lb-stats">${pluralCount(Number(r.uniques), 'unique', 'uniques', nf.format)} · ${pluralCount(Number(r.copies), 'exemplaire', 'exemplaires', nf.format)} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
           </span>
           <span class="cartes-lb-score">${nf.format(Number(r.score))}</span>
         </li>`).join('')}

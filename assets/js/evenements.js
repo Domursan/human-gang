@@ -5,6 +5,7 @@ import { sb, initPage, esc, $, errMsg, avatarHtml } from './core.js';
 import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 import { addToCalendar } from './ics.js';
 import { svg } from './icons.js';
+import { fmtDayInZone } from './utils.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -18,7 +19,6 @@ const ICON = {
 };
 const TZ = 'Europe/Zurich';
 const fmt = (iso, o = {}) => new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', ...o }).format(new Date(iso));
-const fmtDay = (iso) => new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
 const oneIn = (p) => Math.max(1, Math.round(1 / (Number(p) || 1)));
 const check = (r) => { if (r.error) throw r.error; return r.data; };
 
@@ -70,7 +70,7 @@ function eventCard(ev, ctx, live) {
     <div class="evp-head">
       ${visual(ev, live ? 112 : 72)}
       <div class="evp-title">
-        <p class="eyebrow">${live ? `${ICON.clock} En cours · ${esc(remaining(ev.ends_at))}` : `Du ${esc(fmtDay(ev.starts_at))} au ${esc(fmtDay(ev.ends_at))}`}</p>
+        <p class="eyebrow">${live ? `${ICON.clock} En cours · ${esc(remaining(ev.ends_at))}` : `Du ${esc(fmtDayInZone(ev.starts_at, TZ))} au ${esc(fmtDayInZone(ev.ends_at, TZ))}`}</p>
         <h2 class="display" id="evp-${esc(ev.id)}">${esc(ev.name)}</h2>
         ${ev.description ? `<p class="evp-desc">${esc(ev.description)}</p>` : ''}
         ${live ? `<p class="small muted">Jusqu'au ${esc(fmt(ev.ends_at, { weekday: 'long' }))}. ${ICON.eye} L'image passe au hasard sur les pages du site (${oneIn(ev.probability) === 1 ? 'à chaque page' : `environ 1 page sur ${oneIn(ev.probability)}`}) : clique dessus pour l'attraper.</p>` : ''}

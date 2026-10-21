@@ -4,6 +4,7 @@ import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
 import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { safeUrl } from './utils.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -41,14 +42,6 @@ const S = {
 };
 
 /* ---------- Utilitaires ---------- */
-/** Ne garde que les URL http(s) ; ajoute https:// si l'utilisateur a oublié le protocole. */
-function safeUrl(raw) {
-  const s = String(raw ?? '').trim();
-  if (!s) return null;
-  const tryParse = (v) => { try { const u = new URL(v); return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : null; } catch { return null; } };
-  if (/^[a-z][a-z0-9+.-]*:/i.test(s)) return tryParse(s);
-  return tryParse(`https://${s}`);
-}
 function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
 const seenKey = () => `hg_ss_seen_${S.ed?.id}`;
 function readSeen() { try { return localStorage.getItem(seenKey()) === '1'; } catch { return false; } }

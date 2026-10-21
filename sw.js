@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -37,7 +37,7 @@ const PRECACHE = [
   'assets/js/paillettes.js', 'assets/js/photos.js', 'assets/js/profile-fields.js',
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
   'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js',
-  'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
+  'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
 ];

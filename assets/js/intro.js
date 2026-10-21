@@ -1,6 +1,7 @@
 // ===== Intro « 3D » : le défilement pilote une caméra qui plonge dans le cœur du logo, sous un ciel étoilé =====
 // Pas de Supabase ici : la page doit rester légère. Le logo est déjà dans le HTML (préchargé).
 
+import { rnd } from './utils.js';
 const NEXT = 'accueil.html';
 const PERSPECTIVE = 1000;       // doit correspondre à .intro-stage { perspective }
 const MAX_SCALE = 26;           // grossissement du logo en fin de course
@@ -35,7 +36,6 @@ skip.addEventListener('click', (e) => { e.preventDefault(); leave(350); });
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
-const rnd = (a, b) => a + Math.random() * (b - a);
 
 /* Préférence « Effets visuels » (panneau des préférences, localStorage hg_prefs ; ancienne clé hg_effects_off) */
 const fxOff = (() => {

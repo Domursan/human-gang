@@ -5,6 +5,7 @@
 // Sans mouvement (prefers-reduced-motion ou effets coupés) : l'image apparaît en fondu, immobile, dans un coin.
 // Le calque est en position fixe au-dessus du contenu, sans capter les clics (seule l'image est cliquable).
 import { sb, toast, esc, playSound, motionAllowed, checkNewBadges, isGodMode } from './core.js';
+import { rnd } from './utils.js';
 
 const FALLBACK_EMOJI = '✨';
 const REASONS = {
@@ -12,7 +13,6 @@ const REASONS = {
   limite_perso: 'Tu as déjà attrapé le maximum pour cet événement.',
   epuise: 'Raté ! Toutes les images ont déjà été attrapées.',
 };
-const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 

@@ -5,6 +5,7 @@
 import { sb, toast, errMsg, esc, $, fmtDate, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { fmtDay } from './utils.js';
 
 const IC = {
   copy: svg('copy', { stroke: 2 }),
@@ -35,7 +36,6 @@ async function copyText(text, done = 'Copié dans le presse-papiers') {
   toast(done, 'ok');
 }
 /** 'AAAA-MM-JJ' -> date lisible, sans décalage de fuseau. */
-const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '')); return m ? fmtDate(new Date(+m[1], m[2] - 1, +m[3])) : ''; };
 /** Comparaison sans accents ni casse. */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
