@@ -55,6 +55,12 @@ export async function togglePairs(btn) {
     btn.innerHTML = `${IC.eyeOff} Masquer les attributions`;
   });
 }
+// Bouton « Afficher / Masquer les attributions » : branché ici, au chargement du module, pour fonctionner même si
+// la section Comptes n'a pas encore été ouverte (le bloc vit dans la section Secret Santa).
+document.addEventListener('click', (ev) => {
+  const p = ev.target.closest('[data-pairs]');
+  if (p) togglePairs(p);
+});
 // Clic sur un pseudo du tableau des attributions -> fiche du membre, onglet Secret Santa
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-open-fiche]');

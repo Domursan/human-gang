@@ -1,7 +1,6 @@
 // Comptes admin : bloc « Informations transmises aux Santas » des formulaires d'édition du Secret Santa.
 import { $, $$, esc } from '../core.js';
 import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
-import { togglePairs } from './ss-pairs.js';
 
 /* =========================================================
    Secret Santa (section de l'admin) : champs transmis + attributions
@@ -49,8 +48,6 @@ export function bindSharedFields() {
       updateSfCount(b.closest('.sf-box'));
       return;
     }
-    const p = ev.target.closest('[data-pairs]');
-    if (p) togglePairs(p);
   });
   sec.addEventListener('change', (ev) => { if (ev.target.name === 'shared_fields') updateSfCount(ev.target.closest('.sf-box')); });
 }
