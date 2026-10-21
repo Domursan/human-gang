@@ -234,3 +234,8 @@
 .ui-drawer-x:hover, .ui-drawer-x:focus-visible { color: var(--text); background: var(--surface-2); }
 .ui-drawer-body { overflow-y: auto; padding: 18px 22px; display: grid; gap: 14px; align-content: start; }
 .ui-drawer-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); }
+
+/* Tiroir : le corps défile seul (pied et en-tête fixes) ; recherche des invitations à largeur raisonnable */
+.ui-drawer-body { min-height: 0; }
+.inv-card .lt-search { max-width: 380px; }
+.inv-card .lt-box input { width: 100%; }

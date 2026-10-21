@@ -72,42 +72,55 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check((await db(p, () => window.__DB.hg_challenges.length)) === 0, 'défi supprimé après confirmation');
   check(await p.locator('#challenges-root', { hasText: 'Aucun défi' }).count() === 1, 'liste des défis vide après suppression');
 
-  /* ---------- Réglages du site ---------- */
+  /* ---------- Réglages du site (liste ; modification et ajout dans le tiroir) ---------- */
   await adminSection(p, 'site/reglages');
   await p.waitForSelector('#reglages-root [data-key-item="theme"]', { timeout: 5000 });
   // Admin : la clé sensible reste modifiable, mais après une confirmation explicite
-  await p.fill('.rg-form[data-key="push_vapid_public"] [name="v"]', 'BOOP_modifie');
-  await p.click('.rg-form[data-key="push_vapid_public"] button[type="submit"]');
+  await p.click('#reglages-root [data-key-item="push_vapid_public"] [data-rg-edit]');
+  await p.waitForSelector('dialog[open] .rg-form[data-key="push_vapid_public"]', { timeout: 5000 });
+  await p.fill('dialog[open] .rg-form[data-key="push_vapid_public"] [name="v"]', 'BOOP_modifie');
+  await p.click('dialog[open] button[data-drawer-submit]');
   await p.waitForSelector('dialog[open] button[value="cancel"]', { timeout: 5000 });
   await p.click('dialog[open] button[value="cancel"]');
   await p.waitForTimeout(300);
   check((await db(p, () => window.__DB.hg_settings.find((s) => s.key === 'push_vapid_public').value)) === 'BOOPdSa019_test',
     'clé sensible (admin) : confirmation demandée, annulée sans écriture');
-  check(await p.locator('#reglages-root [data-key-item="theme"] form').count() === 0,
-    'clé gérée ailleurs (theme) : lecture seule avec renvoi vers la section Thème');
+  await p.click('dialog[open] [data-drawer-close]');
+  await p.waitForTimeout(300);
+  check(await p.locator('#reglages-root [data-key-item="theme"] [data-rg-edit]', { hasText: 'Voir' }).count() === 1
+    && await p.locator('#reglages-root [data-key-item="theme"] form').count() === 0,
+    'clé gérée ailleurs (theme) : lecture seule dans le tiroir, renvoi vers la section Thème');
 
+  await p.click('#zone-actions [data-rg-add]');
+  await p.waitForSelector('#rg-add', { timeout: 5000 });
   await p.fill('#rg-new-key', 'test_reglage');
   await p.fill('#rg-add [name="v"]', 'valeur initiale');
-  await p.click('#rg-add button[type="submit"]');
-  await p.waitForSelector('.rg-form[data-key="test_reglage"]', { timeout: 5000 });
+  await p.click('dialog[open] button[data-drawer-submit]');
+  await p.waitForSelector('#reglages-root [data-key-item="test_reglage"]', { timeout: 5000 });
   check((await db(p, () => window.__DB.hg_settings.some((s) => s.key === 'test_reglage' && s.value === 'valeur initiale'))),
     'réglage ajouté (type texte)');
 
-  await p.fill('.rg-form[data-key="test_reglage"] [name="v"]', 'valeur modifiée');
-  await p.click('.rg-form[data-key="test_reglage"] button[type="submit"]');
+  await p.click('#reglages-root [data-key-item="test_reglage"] [data-rg-edit]');
+  await p.waitForSelector('dialog[open] .rg-form[data-key="test_reglage"]', { timeout: 5000 });
+  await p.fill('dialog[open] .rg-form[data-key="test_reglage"] [name="v"]', 'valeur modifiée');
+  await p.click('dialog[open] button[data-drawer-submit]');
   await p.waitForTimeout(400);
   check((await db(p, () => window.__DB.hg_settings.find((s) => s.key === 'test_reglage').value)) === 'valeur modifiée',
     'réglage modifié et enregistré');
 
-  // JSON : une valeur invalide est refusée avant tout envoi
+  // JSON : une valeur invalide est refusée avant tout envoi (le tiroir reste ouvert)
+  await p.click('#zone-actions [data-rg-add]');
+  await p.waitForSelector('#rg-add', { timeout: 5000 });
   await p.fill('#rg-new-key', 'test_json');
   await p.selectOption('#rg-new-kind', 'json');
   await p.fill('#rg-add [name="v"]', '{ pas du json');
-  await p.click('#rg-add button[type="submit"]');
+  await p.click('dialog[open] button[data-drawer-submit]');
   await p.waitForTimeout(200);
   const jsonErr = await p.textContent('#rg-add .form-error');
   check(/JSON invalide/.test(jsonErr) && (await db(p, () => !window.__DB.hg_settings.some((s) => s.key === 'test_json'))),
     'JSON invalide refusé, rien n\'est écrit');
+  await p.click('dialog[open] [data-drawer-close]');
+  await p.waitForTimeout(300);
 
   /* ---------- Accès aux pages : créer, modifier, supprimer ---------- */
   await adminSection(p, 'membres/acces');

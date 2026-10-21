@@ -151,3 +151,16 @@
   .dc-fields { grid-template-columns: minmax(0, 1fr); }
   .dc-embed { max-width: 100%; }
 }
+
+/* Modèles en liste (une ligne par modèle, édition dans le tiroir large) */
+#bt-body .bt-listbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+#bt-body .bt-listbar .bt-status { margin-right: auto; }
+#bt-body .bt-list { position: static; flex-direction: column; gap: 14px; }
+#bt-body .bt-item { display: flex; align-items: center; gap: 12px; width: 100%; }
+#bt-body .bt-item-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#bt-body .bt-item-go { font-size: 13px; font-weight: 700; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 999px; white-space: nowrap; }
+#bt-body .bt-item-state { flex: none; }
+#bt-body .bt-item-state:empty { display: none; }
+.bt-editor .bt-preview { margin-top: 4px; }
+/* Tiroir du modèle : le titre est déjà dans l'en-tête du tiroir */
+.ui-drawer .bt-ed-title { display: none; }

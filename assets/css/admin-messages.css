@@ -48,3 +48,10 @@
   .amsg-tools .btn { min-height: 44px; }
 }
 .amsg-audit { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--sand); background: var(--bg); border-radius: var(--radius-sm); font-size: 14px; color: var(--muted); }
+
+/* Lecture en détail dans la zone principale (plus de cadre de colonne) */
+#messages-root .amsg-reader { border: 0; padding: 0; background: none; max-height: none; overflow: visible; }
+.amsg-reader-head { flex-wrap: wrap; }
+.amsg-reader-head .amsg-audit { margin: 0; padding: 0; border: 0; background: none; flex-basis: 100%; font-size: 13px; }
+#messages-root .ui-msg .amsg-del { align-self: flex-start; margin-top: 2px; }
+#messages-root .amsg-thread { margin-top: 12px; }

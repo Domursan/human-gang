@@ -6,6 +6,7 @@ import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from '
 import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
 import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './admin/list-tools.js';
+import { openDrawer } from './admin/ui/drawer.js';
 
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 const NOTIFY = [
@@ -227,6 +228,7 @@ export function mountBotSection(container) {
 
   /* ======================= Messages types ======================= */
   const tplBody = $('#bt-body', container);
+  let edRoot = null; // corps du tiroir d'édition (ouvert à la demande)
   const keys = () => Object.keys(S.defs.templates);
   const meta = (k) => S.defs.meta[k] ?? { vars: {} };
   const def = (k) => S.defs.templates[k];
@@ -246,30 +248,27 @@ export function mountBotSection(container) {
   function renderTemplatesShell() {
     const groups = S.defs.groups ?? [];
     tplBody.innerHTML = `
-      <div class="bt-layout">
-        <nav class="bt-list" aria-label="Modèles de messages">
-          ${groups.map((g) => {
-            const items = keys().filter((k) => meta(k).group === g.id);
-            if (!items.length) return '';
-            return `<div class="bt-group" role="group" aria-labelledby="bt-g-${esc(g.id)}">
-              <div class="bt-group-label" id="bt-g-${esc(g.id)}">${esc(g.label)}</div>
-              ${items.map((k) => `<button type="button" class="bt-item" data-key="${esc(k)}">
-                  <span class="bt-item-label">${esc(meta(k).label ?? k)}</span>
-                  <span class="bt-item-sub">${esc(meta(k).target ?? '')}</span>
-                  <span class="bt-item-state" data-state="${esc(k)}"></span>
-                </button>`).join('')}
-            </div>`;
-          }).join('')}
-        </nav>
-        <div class="bt-main">
-          <div class="bt-editor stack" id="bt-editor"></div>
-          <div class="bt-preview">
-            <div class="bt-preview-head"><span class="label">Aperçu</span><span class="muted small">avec des valeurs d'exemple</span></div>
-            <div id="bt-preview" aria-live="polite"></div>
-          </div>
-        </div>
+      <div class="bt-listbar">
+        <span class="muted small bt-status" id="bt-status" aria-live="polite"></span>
+        <button type="button" class="btn btn-primary btn-sm" id="bt-save" disabled>Enregistrer</button>
+      </div>
+      <div class="bt-list" role="list" aria-label="Modèles de messages">
+        ${groups.map((g) => {
+          const items = keys().filter((k) => meta(k).group === g.id);
+          if (!items.length) return '';
+          return `<div class="bt-group" role="group" aria-labelledby="bt-g-${esc(g.id)}">
+            <div class="bt-group-label" id="bt-g-${esc(g.id)}">${esc(g.label)}</div>
+            ${items.map((k) => `<div role="listitem"><button type="button" class="bt-item" data-key="${esc(k)}" aria-label="Modifier « ${esc(meta(k).label ?? k)} »">
+                <span class="bt-item-main"><span class="bt-item-label">${esc(meta(k).label ?? k)}</span>
+                <span class="bt-item-sub">${esc(meta(k).target ?? '')}</span></span>
+                <span class="bt-item-state" data-state="${esc(k)}"></span>
+                <span class="bt-item-go" aria-hidden="true">Modifier</span>
+              </button></div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>`;
     $$('.bt-item', tplBody).forEach((b) => b.addEventListener('click', () => selectTemplate(b.dataset.key)));
+    $('#bt-save', tplBody).addEventListener('click', (e) => saveTemplates(e.currentTarget));
     refreshListStates();
   }
 
@@ -294,12 +293,15 @@ export function mountBotSection(container) {
     if (st) st.textContent = n ? `${pluralCount(n, 'modification non enregistrée', 'modifications non enregistrées')}` : '';
   }
 
+  /** Ouvre le modèle k dans le tiroir large (édition, aperçu, rétablir). L'enregistrement passe par le pied du tiroir. */
   function selectTemplate(k) {
     S.current = k;
     S.lastField = 'body';
     const m = meta(k), t = current(k), d = def(k);
     const vars = Object.entries(m.vars ?? {});
-    $('#bt-editor', tplBody).innerHTML = `
+    const body = document.createElement('div');
+    body.className = 'bt-editor stack';
+    body.innerHTML = `
       <div class="bt-ed-head">
         <div>
           <h4 class="bt-ed-title">${esc(m.label ?? k)}</h4>
@@ -325,11 +327,18 @@ export function mountBotSection(container) {
       <p class="bt-warn small" id="bt-warn" role="status" hidden></p>
       ${k === 'message_new_santa' ? '<p class="small bt-note">Par sécurité, aucune variable ne permet d\'afficher le Santa dans ce message.</p>' : ''}
       <div class="btn-row bt-actions">
-        <button type="button" class="btn btn-primary" id="bt-save">Enregistrer</button>
         <button type="button" class="btn btn-ghost" id="bt-reset">${ICON.undo}Rétablir le texte par défaut</button>
-        <span class="muted small bt-status" id="bt-status" aria-live="polite"></span>
+      </div>
+      <div class="bt-preview">
+        <div class="bt-preview-head"><span class="label">Aperçu</span><span class="muted small">avec des valeurs d'exemple</span></div>
+        <div id="bt-preview" aria-live="polite"></div>
       </div>`;
-    const title = $('#bt-title', tplBody), text = $('#bt-text', tplBody);
+    edRoot = body;
+    openDrawer({
+      title: m.label ?? k, subtitle: m.target ? `Destination : ${m.target}` : '', body, wide: true,
+      submitLabel: 'Enregistrer', onSubmit: () => saveTemplates(null, [k]),
+    });
+    const title = $('#bt-title', edRoot), text = $('#bt-text', edRoot);
     title.value = t.title; text.value = t.body;
     const onInput = () => {
       S.drafts.set(k, { title: title.value, body: text.value });
@@ -339,8 +348,8 @@ export function mountBotSection(container) {
     text.addEventListener('input', onInput);
     title.addEventListener('focus', () => { S.lastField = 'title'; });
     text.addEventListener('focus', () => { S.lastField = 'body'; });
-    $$('.bt-var', tplBody).forEach((b) => b.addEventListener('mousedown', (e) => e.preventDefault())); // garde le curseur
-    $$('.bt-var', tplBody).forEach((b) => b.addEventListener('click', () => {
+    $$('.bt-var', edRoot).forEach((b) => b.addEventListener('mousedown', (e) => e.preventDefault())); // garde le curseur
+    $$('.bt-var', edRoot).forEach((b) => b.addEventListener('click', () => {
       const el = S.lastField === 'title' ? title : text;
       const token = `{${b.dataset.var}}`;
       if (el.value.length + token.length > el.maxLength) { toast('Texte trop long', 'error'); return; }
@@ -349,8 +358,7 @@ export function mountBotSection(container) {
       el.focus();
       onInput();
     }));
-    $('#bt-save', tplBody).addEventListener('click', (e) => saveTemplates(e.currentTarget));
-    $('#bt-reset', tplBody).addEventListener('click', () => {
+    $('#bt-reset', edRoot).addEventListener('click', () => {
       title.value = d.title; text.value = d.body;
       onInput();
       toast(isDirty(k) ? 'Texte par défaut rétabli : pense à enregistrer' : 'C\'est déjà le texte par défaut', 'ok');
@@ -361,13 +369,13 @@ export function mountBotSection(container) {
   function updateEditorMeta() {
     const k = S.current; if (!k) return;
     const t = current(k), allowed = allowedOf(k);
-    $('#bt-title-count', tplBody).textContent = `${t.title.length} / ${TITLE_MAX}`;
-    $('#bt-text-count', tplBody).textContent = `${t.body.length} / ${BODY_MAX}`;
+    $('#bt-title-count', edRoot).textContent = `${t.title.length} / ${TITLE_MAX}`;
+    $('#bt-text-count', edRoot).textContent = `${t.body.length} / ${BODY_MAX}`;
     const unknown = unknownVars(`${t.title} ${t.body}`, allowed);
-    const warn = $('#bt-warn', tplBody);
+    const warn = $('#bt-warn', edRoot);
     warn.hidden = !unknown.length;
     warn.textContent = unknown.length ? `${unknown.length > 1 ? 'Variables inconnues' : 'Variable inconnue'} pour ce message : ${unknown.map((v) => `{${v}}`).join(', ')} (${unknown.length > 1 ? 'seront laissées' : 'sera laissée'} vide${unknown.length > 1 ? 's' : ''}).` : '';
-    $('#bt-reset', tplBody).disabled = same(t, def(k));
+    $('#bt-reset', edRoot).disabled = same(t, def(k));
   }
 
   function renderTplPreview() {
@@ -376,7 +384,7 @@ export function mountBotSection(container) {
     const eff = { title: filled(t.title) ? t.title : def(k).title, body: filled(t.body) ? t.body : def(k).body };
     const title = truncate(fillVars(eff.title, ex, allowed).replace(/\s+/g, ' ').trim(), TITLE_MAX);
     const description = truncate(fillVars(eff.body, ex, allowed).trim(), BODY_MAX);
-    $('#bt-preview', tplBody).innerHTML = discordPreview({
+    $('#bt-preview', edRoot).innerHTML = discordPreview({
       where: m.target,
       content: m.content ? fillVars(m.content, ex, allowed) : '',
       embed: {
@@ -387,15 +395,17 @@ export function mountBotSection(container) {
     });
   }
 
-  async function saveTemplates(btn) {
-    const pending = dirtyKeys();
-    if (!pending.length) return;
-    await busy(btn, async () => {
+  /** Enregistre les modèles modifiés (tous, ou la liste `only`). Renvoie false en cas d'échec : le tiroir reste ouvert. */
+  async function saveTemplates(btn, only = null) {
+    const pending = only ?? dirtyKeys();
+    if (!pending.length) return true;
+    if (btn) btn.disabled = true;
+    try {
       // Relit la valeur en base pour ne pas écraser une modification faite ailleurs entre-temps.
       const row = check(await sb.from('hg_settings').select('value').eq('key', 'bot_templates').maybeSingle());
       const base = row?.value && typeof row.value === 'object' && !Array.isArray(row.value) ? { ...row.value } : {};
       for (const k of pending) {
-        const t = S.drafts.get(k), d = def(k);
+        const t = S.drafts.get(k) ?? saved(k), d = def(k);
         const title = t.title.trim() === d.title ? '' : t.title.trim();
         const body = t.body.trim() === d.body ? '' : t.body.replace(/\s+$/, '');
         if (!title && !body) delete base[k]; else base[k] = { title, body };
@@ -403,9 +413,15 @@ export function mountBotSection(container) {
       check(await sb.from('hg_settings').upsert({ key: 'bot_templates', value: base, updated_at: new Date().toISOString() }));
       S.custom = base;
       for (const k of pending) S.drafts.delete(k);
-      refreshListStates(); updateEditorMeta();
+      refreshListStates(); if (edRoot?.isConnected) updateEditorMeta();
       toast(pending.length > 1 ? `${pending.length} modèles enregistrés` : 'Modèle enregistré', 'ok');
-    });
+      return true;
+    } catch (e) {
+      toast(errMsg(e), 'error');
+      return false;
+    } finally {
+      if (btn?.isConnected) btn.disabled = false;
+    }
   }
 
   window.addEventListener('beforeunload', (e) => {
@@ -706,7 +722,6 @@ export function mountBotSection(container) {
     if (defs.status === 'fulfilled' && defs.value?.templates) {
       S.defs = defs.value;
       renderTemplatesShell();
-      selectTemplate(keys()[0]);
     } else {
       tplBody.innerHTML = `<div class="empty">Impossible de charger les textes par défaut (<code>supabase/functions/_shared/bot-templates.json</code>)${defs.status === 'rejected' ? ` : ${esc(errMsg(defs.reason))}` : ''}. Sur GitHub Pages, vérifie la présence du fichier <code>.nojekyll</code> à la racine.</div>`;
     }

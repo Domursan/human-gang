@@ -12,3 +12,14 @@
 .rg-pre { margin: 8px 0 0; padding: 12px; max-height: 320px; overflow: auto; border-radius: var(--radius-sm);
   background: var(--surface-2); border: 1px solid var(--border); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .rg-meta { margin-top: 2px; }
+
+/* Liste des clés : une ligne par réglage, action à droite (édition dans le tiroir) */
+.rg-list { gap: 0; }
+.rg-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.rg-row:last-child { border-bottom: 0; }
+.rg-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+.rg-main p { margin: 0; }
+.rg-sum { color: var(--text); overflow-wrap: anywhere; font-size: 14px; }
+.rg-act { flex: none; }
+.rg-add { display: grid; gap: 14px; }
+@media (max-width: 520px) { .rg-row { flex-direction: column; } .rg-act .btn { min-height: 44px; } }

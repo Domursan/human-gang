@@ -4,7 +4,7 @@
 // modules autonomes restent à leur place ; le reste est dans assets/js/admin/. Palette « Aller à… » : admin/palette.js.
 // Accès : admin, ou Staff avec des permissions. Droits : admin/perms.js (source unique).
 import { initPage, $, toast, errMsg } from './core.js';
-import { mountThemesSection } from './admin-themes.js';
+import { mountThemesSection, themeActions } from './admin-themes.js';
 import { mountMessagesSection, listMessages, openMessages } from './admin-messages.js';
 import { mountLogSection, listLog, openLog } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
@@ -18,7 +18,7 @@ import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection } from './admin-sorties/index.js';
 import { mountSouvenirsSection } from './admin-souvenirs/index.js';
-import { mountReglagesSection } from './admin-reglages/view.js';
+import { mountReglagesSection, reglagesActions } from './admin-reglages/view.js';
 import { A, TABS } from './admin-accounts/state.js';
 import { closeDetail } from './admin-accounts/inspect.js';
 import { S, pseudoOf } from './admin/state.js';
@@ -121,8 +121,8 @@ registerSub('communication/messagerie', {
   open: openMessages, list: listMessages, // liste en colonne 2, lecture dans la zone (createThread en lecture seule)
 });
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
-registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')) });
-registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')) });
+registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')), open: () => setActions(reglagesActions()) });
+registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */
 // Les réglages du bot et du thème se chargent avec leur section (admin-bot.js, admin-themes.js).
