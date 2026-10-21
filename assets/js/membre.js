@@ -113,7 +113,7 @@ function cardHtml(c) {
   return `
     <div class="idc-wrap" id="idc-wrap">
       <article class="idc" id="idc" style="--member:${esc(safeColor(c.color))}" aria-label="Carte de membre de ${esc(c.pseudo)}">
-        <div class="idc-face${bdg ? ' has-badges' : ''}">
+        <div class="idc-face">
           <header class="idc-top">
             <img class="idc-logo" src="${esc(currentLogo())}" alt="" data-on-error="hide">
             <div class="idc-brand">
@@ -134,9 +134,9 @@ function cardHtml(c) {
               <div class="idc-field idc-field-pseudo"><dt class="idc-k">Pseudo</dt><dd class="idc-pseudo">${esc(c.pseudo)}</dd></div>
               <div class="idc-field"><dt class="idc-k">Membre depuis</dt><dd>${esc(sinceLabel(c.member_since, c.joined_on))}</dd></div>
               ${bday ? `<div class="idc-field"><dt class="idc-k">Anniversaire</dt><dd>${esc(bday)}</dd></div>` : ''}
+              ${bdg ? `<div class="idc-field idc-field-badges"><dt class="idc-k">Badges</dt><dd>${bdg}</dd></div>` : ''}
             </dl>
           </div>
-          ${bdg}
           <ul class="idc-stats" aria-label="Statistiques">
             ${STATS.map(([k, one, many]) => { const n = Number(stats[k]) || 0; return `<li><strong>${n}</strong><span>${n > 1 ? many : one}</span></li>`; }).join('')}
           </ul>
