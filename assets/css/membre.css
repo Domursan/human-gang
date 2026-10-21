@@ -49,6 +49,10 @@
   position: relative; aspect-ratio: 85.6 / 54;
   display: grid; grid-template-rows: auto auto 1fr auto auto; gap: calc(var(--u) * 2);
   padding: calc(var(--u) * 4) calc(var(--u) * 4.5) calc(var(--u) * 3.2);
+}
+/* Carte avec badges : une rangée de plus entre le corps et les statistiques */
+.idc-face.has-badges { grid-template-rows: auto auto 1fr auto auto auto; }
+.idc-face {
   background:
     radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--member) 22%, transparent), transparent 55%),
     conic-gradient(from 90deg at 2px 2px, rgba(242,239,234,.018) 25%, transparent 0) 0 0 / calc(var(--u) * 1.6) calc(var(--u) * 1.6),
@@ -82,6 +86,19 @@
 .idc-field dd { margin: calc(var(--u) * .4) 0 0; font-weight: 700; font-size: clamp(12px, calc(var(--u) * 2.6), 17px); }
 .idc-pseudo { font-family: var(--font-display); font-weight: 400 !important; font-size: calc(var(--u) * 5.4) !important; line-height: 1.05; overflow-wrap: anywhere;
   padding-bottom: calc(var(--u) * .9); border-bottom: calc(var(--u) * .6) solid var(--member); display: inline-block; max-width: 100%; }
+
+/* Rangée des badges obtenus : une seule ligne, « +n » au-delà de IDC_BADGES_MAX (membre.js) */
+.idc-badges { list-style: none; margin: calc(var(--u) * -.8) 0; padding: calc(var(--u) * .8) 0; display: flex; flex-wrap: nowrap; align-items: center; gap: calc(var(--u) * 1.2); min-width: 0; overflow-x: clip; overflow-y: visible; }
+.idc-bdg { position: relative; flex: none; box-sizing: border-box; display: grid; place-items: center;
+  width: clamp(26px, calc(var(--u) * 5.4), 40px); height: clamp(26px, calc(var(--u) * 5.4), 40px); border-radius: 50%;
+  background: #1F1F23; box-shadow: 0 0 0 clamp(1.5px, calc(var(--u) * .5), 3px) rgba(226,199,126,.55); overflow: visible; }
+.idc-bdg img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.idc-bdg-init { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); line-height: 1;
+  font-size: clamp(8px, calc(var(--u) * 2.2), 13px); color: #E2C77E; }
+.idc-bdg-lvl { position: absolute; right: -5px; bottom: -4px; z-index: 1; padding: 1px 3px; border-radius: 3px; background: #E2C77E; color: #121212;
+  font-family: var(--font-pixel); font-weight: 700; font-size: clamp(7px, calc(var(--u) * 1.3), 10px); line-height: 1.2; }
+.idc-bdg-more { width: auto; min-width: clamp(26px, calc(var(--u) * 5.4), 40px); padding: 0 calc(var(--u) * .9); border-radius: 999px; background: rgba(242,239,234,.08);
+  box-shadow: inset 0 0 0 1px rgba(242,239,234,.2); font-family: var(--font-pixel); font-weight: 700; font-size: clamp(8px, calc(var(--u) * 1.9), 12px); color: #F2EFEA; }
 
 .idc-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: calc(var(--u) * 1); }
 .idc-stats li { background: rgba(242,239,234,.05); padding: calc(var(--u) * 1) calc(var(--u) * 1.2); display: flex; flex-direction: column; min-width: 0;
@@ -128,6 +145,8 @@
   .idc-fields { justify-items: center; gap: 10px; }
   .idc-field dd { font-size: 15px; }
   .idc-pseudo { font-size: calc(var(--u) * 10) !important; border-bottom-width: 4px; }
+  .idc-face.has-badges { grid-template-rows: auto auto auto auto 1fr auto; }
+  .idc-badges { justify-content: center; }
   .idc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .idc-stats li { padding: 8px 8px 6px; box-shadow: inset 0 3px 0 0 var(--c); }
   .idc-stats strong { font-size: 20px; }
