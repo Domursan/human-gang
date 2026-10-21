@@ -30,6 +30,7 @@
   --irl-bg: #29251A; --irl-border: #3A3424; --irl-fg: #E2C77E;
   --hist-bg: #171C29; --hist-border: #252C3D; --hist-fg: #7E93C9;
 
+  --side-w: 64px;             /* largeur de la colonne d'outils (ordinateur) */
   --radius: 20px;
   --radius-sm: 12px;
   --font-display: 'Archivo Black', system-ui, sans-serif;
@@ -73,7 +74,9 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
 .brand span { font-family: var(--font-display); font-size: 20px; }
 .nav { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: flex-end; flex: 1 1 auto; }
 .nav-tools { display: flex; gap: 6px; align-items: center; }
-.nav-tools .nav-account { color: var(--accent-text); text-decoration: none; border-radius: 999px; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+/* Colonne d'outils : fixe à droite sur ordinateur (le contenu lui laisse la place, voir plus bas) */
+.side-tools { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.side-tools .nav-account { color: var(--accent-text); text-decoration: none; border-radius: 999px; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
 .nav a { color: var(--text); text-decoration: none; padding: 10px 14px; border-radius: 999px; border: 1px solid transparent;
   min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
 @media (hover: hover) { .nav a:hover { background: var(--surface-2); color: var(--text); } }
@@ -92,12 +95,27 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
 .nav-icon { font: inherit; width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 999px; cursor: pointer;
   color: var(--muted); background: transparent; border: 1px solid var(--border); }
 @media (hover: hover) { .nav-icon:hover { color: var(--text); background: var(--surface-2); border-color: var(--border-strong); } }
+@media (min-width: 761px) {
+  /* Ordinateur : la colonne d'outils est fixe à droite, de bord à bord en hauteur ; le contenu s'arrête avant elle */
+  body { padding-right: var(--side-w); }
+  .nav-tools { display: none; }
+  .side-tools { position: fixed; top: var(--god-h, 0px); right: 0; bottom: 0; width: var(--side-w); z-index: 40;
+    padding: 12px 0; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border-left: 1px solid var(--border); }
+  .side-tools .nav-account { width: 44px; height: 44px; padding: 0; max-width: none; justify-content: center; }
+  .side-tools .nav-account:not(.is-guest) .avatar { width: 36px !important; height: 36px !important; }
+  .side-tools .nav-account .nav-account-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .side-tools .nav-account-ico { display: inline-flex; }
+  .toasts { right: calc(var(--side-w) + 16px); }
+  .cookie-notice { right: calc(var(--side-w) + 16px); }
+}
+.nav-account-ico { display: none; }
 @media (max-width: 760px) {
-  /* Une rangée « marque + outils », puis la navigation pleine largeur qui défile horizontalement */
-  .site-header .container { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand tools" "nav nav";
+  /* Une rangée « marque + Menu », une rangée d'outils, puis la navigation pleine largeur qui défile horizontalement */
+  .site-header .container { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand tools" "side side" "nav nav";
     align-items: center; gap: 8px; padding-top: 10px; padding-bottom: 6px; }
   .brand { grid-area: brand; min-width: 0; }
   .nav-tools { grid-area: tools; flex: none; }
+  .side-tools { grid-area: side; justify-content: flex-end; flex-direction: row; flex-wrap: nowrap; gap: 6px; width: auto; min-width: 0; }
   .nav { grid-area: nav; min-width: 0; flex: none; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
   .nav:empty { display: none; }
@@ -477,7 +495,10 @@ html[data-fx="off"] .god-frame, html[data-fx="off"] .god-banner::after { animati
 @media (prefers-reduced-motion: reduce) { .god-frame, .god-banner::after { animation: none !important; } }
 
 /* En-tête : léger filtre + bouton éclair */
-html[data-godmode="on"] .site-header { filter: sepia(.35) saturate(.85); box-shadow: inset 0 -2px 0 var(--god-yellow); }
+html[data-godmode="on"] .site-header { box-shadow: inset 0 -2px 0 var(--god-yellow); }
+/* Filtre sur chaque bloc de l'en-tête (et non sur l'en-tête entier : un filtre ferait de l'en-tête le bloc englobant de la colonne fixe) */
+html[data-godmode="on"] .site-header .container > :not(.side-tools) { filter: sepia(.35) saturate(.85); }
+html[data-godmode="on"] .site-header .side-tools { filter: sepia(.35) saturate(.85); }
 .nav-god[aria-pressed="true"] { background: var(--god-yellow); color: var(--god-ink); border-color: var(--god-ink); }
 .nav-god[aria-pressed="true"]:hover { background: #ffd51f; color: var(--god-ink); }
 

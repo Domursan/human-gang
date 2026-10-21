@@ -1,4 +1,5 @@
-// En-tête commun : marque, navigation (pages accessibles), outils (mode sans limite, préférences, compte, déconnexion).
+// En-tête commun : marque, navigation (pages accessibles). Les outils (recherche, mode sans limite, préférences, compte,
+// déconnexion) sont dans une colonne latérale <aside class="side-tools"> : à droite sur ordinateur, sous l'en-tête sur téléphone.
 import { sb } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { getMyPages } from './pages-access.js';
@@ -6,7 +7,7 @@ import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
 import { avatarHtml, esc } from './util.js';
-import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT } from './icons.js';
+import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER } from './icons.js';
 import { searchButtonHtml, bindSearch } from './search.js';
 
 // Navigation de secours (accès inconnus) : identique à l'ancienne navigation fixe.
@@ -27,7 +28,7 @@ function navEntries() {
 function accountInner(profile) {
   return profile
     ? `${avatarHtml(profile, 32)}<span class="nav-account-name">${esc(profile.pseudo)}</span>`
-    : '<span class="nav-account-name nav-account-login">Connexion</span>';
+    : `<span class="nav-account-ico" aria-hidden="true">${ICON_USER}</span><span class="nav-account-name nav-account-login">Connexion</span>`;
 }
 let _accountObserver = null;
 /** Met à jour le bouton compte de l'en-tête (avatar + pseudo). À appeler après une modification du profil. */
@@ -79,7 +80,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   const account = `<a class="nav-account" href="compte.html"${curAttr('compte.html')}></a>`;
   const god = profile?.is_admin ? `<button class="nav-icon nav-god" type="button" aria-pressed="false" aria-label="Activer le mode sans limite" title="Mode sans limite">${ICON_BOLT}</button>` : '';
   const search = profile ? searchButtonHtml() : '';
-  const prefs = `${search}${god}<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
+  const prefs = `<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
   const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
   const toggle = '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>';
   const header = document.createElement('header');
@@ -89,7 +90,8 @@ export function renderHeader(profile, { nav = true } = {}) {
     <div class="container">
       <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
-      <div class="nav-tools">${toggle}${prefs}${account}${logout}</div>
+      <div class="nav-tools">${toggle}</div>
+      <aside class="side-tools" aria-label="Outils">${search}${god}${prefs}${account}${logout}</aside>
     </div>`;
   // Cible du lien d'évitement : le contenu principal de la page (tabindex -1 : atteignable par script et par le lien)
   const main = document.getElementById('app');
