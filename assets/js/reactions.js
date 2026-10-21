@@ -4,7 +4,7 @@
 import { sb, toast, errMsg, esc } from './core.js';
 
 export const REACTIONS = ['❤️', '😂', '😮', '🔥', '👏', '🎉'];
-const LABEL = { '❤️': 'Cœur', '😂': 'Rire', '😮': 'Surprise', '🔥': 'Feu', '👏': 'Bravo', '🎉': 'Fête' };
+export const REACTION_LABEL = { '❤️': 'Cœur', '😂': 'Rire', '😮': 'Surprise', '🔥': 'Feu', '👏': 'Bravo', '🎉': 'Fête' };
 const CHUNK = 100;
 
 const cache = new Map();   // "kind:id" -> [{ emoji, user_id }]
@@ -38,7 +38,7 @@ export function reactionBarHtml(kind, id) {
   const sid = esc(id);
   const btns = summary(kind, id).map(({ emoji, n, mine }) => `<button type="button" class="react-btn${mine ? ' is-on' : ''}"
       data-react="${esc(kind)}" data-react-id="${sid}" data-emoji="${esc(emoji)}" aria-pressed="${mine}"
-      aria-label="${LABEL[emoji]} : ${n} ${n > 1 ? 'réactions' : 'réaction'}${mine ? ', tu as réagi' : ''}"><span class="react-emoji" aria-hidden="true">${emoji}</span><span class="react-count" aria-hidden="true">${n}</span></button>`).join('');
+      aria-label="${REACTION_LABEL[emoji]} : ${n} ${n > 1 ? 'réactions' : 'réaction'}${mine ? ', tu as réagi' : ''}"><span class="react-emoji" aria-hidden="true">${emoji}</span><span class="react-count" aria-hidden="true">${n}</span></button>`).join('');
   return `<div class="react-bar" role="group" aria-label="Réactions" data-react-bar="${esc(kind)}:${sid}">${btns}</div>`;
 }
 

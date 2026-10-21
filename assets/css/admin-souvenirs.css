@@ -1,0 +1,50 @@
+/* Administration : section « Souvenirs et photos » (onglets, listes, grille de photos, réactions). */
+
+.sv-body, .sv-panel { min-width: 0; }
+.sv-tabs { margin-bottom: 0; }
+
+.sv-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.sv-search { flex: 1 1 260px; min-width: 0; }
+.sv-filters { margin-bottom: 4px; }
+.sv-filters .field { flex: 0 1 260px; min-width: 0; }
+.sv-filters select { width: 100%; min-height: 44px; }
+.sv-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+
+.sv-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sv-row {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.sv-thumb { width: 64px; height: 64px; border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-2);
+  display: grid; place-items: center; }
+.sv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sv-thumb .thumb-missing { width: 100%; height: 100%; background: var(--surface-2); }
+.sv-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.sv-main p { margin: 0; }
+.sv-title { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.sv-excerpt { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sv-row-actions { flex-wrap: nowrap; justify-content: flex-end; }
+.sv-emoji { font-size: 18px; line-height: 1; }
+
+.sv-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.sv-photo { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; }
+.sv-photo-img { all: unset; cursor: zoom-in; display: block; border-radius: var(--radius-sm); overflow: hidden;
+  aspect-ratio: 4 / 3; background: var(--surface-2); }
+.sv-photo-img:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sv-photo-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sv-photo-img .thumb-missing { display: block; width: 100%; height: 100%; }
+.sv-photo-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+.sv-photo-actions { gap: 6px; }
+.sv-photo-actions .btn { flex: 1 1 auto; }
+
+.sv-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .sv-row { grid-template-columns: 52px minmax(0, 1fr); }
+  .sv-thumb { width: 52px; height: 52px; }
+  .sv-row-actions { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  .sv-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .sv-filters .field { flex: 1 1 100%; }
+}

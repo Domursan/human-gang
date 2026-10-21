@@ -53,7 +53,7 @@ const DB = {
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_profile_info: [],
   // Sorties IRL : vides par défaut ; un scénario peut fournir S.sorties, S.rsvps, S.eventDates, S.eventVotes, S.photos.
-  hg_events: S.sorties || [], hg_event_rsvps: S.rsvps || [], hg_event_dates: S.eventDates || [], hg_event_date_votes: S.eventVotes || [], hg_photos: S.photos || [],
+  hg_event_rsvps: S.rsvps || [], hg_event_dates: S.eventDates || [], hg_event_date_votes: S.eventVotes || [], 
   // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.
   hg_perm_catalog: [['membres','Membres'],['evenements','Sorties IRL'],['souvenirs','Souvenirs et photos'],['secret_santa','Secret Santa'],
     ['cartes','Jeu de cartes'],['badges','Badges'],['themes','Thèmes et événements'],['messages','Messagerie'],['support','Assistance et idées'],
@@ -61,6 +61,23 @@ const DB = {
     .map(([key, label], i) => ({ key, label, description: 'Description de ' + label.toLowerCase(), sort: (i + 1) * 10 })),
   hg_staff: Array.isArray(S.staff) && S.staff.length ? [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
     created_at: iso(-20), updated_at: iso(-20) }] : [],
+  // Souvenirs, photos et réactions (section admin « Souvenirs et photos »)
+  hg_events: S.sorties || [{ id: 'eeeeeeee-0000-4000-8000-000000000001', title: 'Raclette de test', location: 'Lausanne', starts_at: iso(-30), created_by: ME }],
+  hg_moments: [
+    { id: 'mmmmmmmm-0000-4000-8000-000000000001', title: 'Le karaoké de Noël', body: 'Alice a chanté plus fort que tout le monde.', happened_on: iso(-20).slice(0, 10), image_path: null, created_by: U(2), created_at: iso(-20) },
+    { id: 'mmmmmmmm-0000-4000-8000-000000000002', title: 'La partie de cartes', body: null, happened_on: iso(-60).slice(0, 10), image_path: `${U(3)}/moments/photo-souvenir.webp`, created_by: U(3), created_at: iso(-60) },
+    { id: 'mmmmmmmm-0000-4000-8000-000000000003', title: 'Le sapin du lutin', body: 'Le sapin est tombé deux fois.', happened_on: iso(-400).slice(0, 10), image_path: null, created_by: ME, created_at: iso(-400) },
+  ],
+  hg_photos: S.photos || [
+    { id: 'pppppppp-0000-4000-8000-000000000001', event_id: 'eeeeeeee-0000-4000-8000-000000000001', user_id: U(2), path: `${U(2)}/raclette-1.webp`, caption: 'Le fromage', created_at: iso(-30) },
+    { id: 'pppppppp-0000-4000-8000-000000000002', event_id: 'eeeeeeee-0000-4000-8000-000000000001', user_id: ME, path: `${ME}/raclette-2.webp`, caption: null, created_at: iso(-30) },
+  ],
+  hg_reactions: [
+    { id: 'rrrrrrrr-0000-4000-8000-000000000001', target_kind: 'moment', target_id: 'mmmmmmmm-0000-4000-8000-000000000001', user_id: U(3), emoji: '😂', created_at: iso(-19), active: true },
+    { id: 'rrrrrrrr-0000-4000-8000-000000000002', target_kind: 'photo', target_id: 'pppppppp-0000-4000-8000-000000000001', user_id: U(4), emoji: '🔥', created_at: iso(-29), active: true },
+    { id: 'rrrrrrrr-0000-4000-8000-000000000003', target_kind: 'moment', target_id: 'mmmmmmmm-0000-4000-8000-000000000003', user_id: U(5), emoji: '❤️', created_at: iso(-398), active: true },
+    { id: 'rrrrrrrr-0000-4000-8000-000000000004', target_kind: 'moment', target_id: 'mmmmmmmm-0000-4000-8000-000000000001', user_id: U(6), emoji: '👏', created_at: iso(-18), active: false },
+  ],
 };
 const CATALOG_KEYS = DB.hg_perm_catalog.map((c) => c.key);
 const uidNow = () => S.uid || ME;
@@ -77,6 +94,9 @@ const staffRowsNow = () => DB.hg_staff.map((x) => {
   return { user_id: x.user_id, pseudo: p.pseudo, avatar_url: p.avatar_url ?? null, color: p.color ?? null, perms: [...x.perms], active: x.active,
     note: x.note, added_by_pseudo: a?.pseudo ?? null, created_at: x.created_at, updated_at: x.updated_at };
 }).sort((a, b) => Number(b.active) - Number(a.active) || String(a.pseudo).localeCompare(String(b.pseudo)));
+// Image de remplacement pour les URL signées du bucket hg-photos (carré gris, sans réseau).
+const PHOTO_SVG = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 3"><rect width="4" height="3" fill="#8a7f9c"/></svg>');
+const uid = () => `00000000-0000-4000-8000-${String(++seq).padStart(12, '0')}`;
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
 DB.hg_profiles[0].created_at = iso(-4 * 365);
@@ -115,7 +135,15 @@ class Q {
   in(c, v) { this.f.push((r) => v.includes(getv(r, c))); return this; }
   is(c, v) { this.f.push((r) => (getv(r, c) ?? null) === v); return this; }
   not(c, op, v) { if (op === 'is') this.f.push((r) => (getv(r, c) ?? null) !== v); return this; }
-  or() { return this; } order() { return this; } limit() { return this; } gte() { return this; } lte() { return this; } lt() { return this; } gt() { return this; } range() { return this; } ilike() { return this; } contains() { return this; }
+  or() { return this; } order() { return this; } limit() { return this; } gte() { return this; } lte() { return this; } lt() { return this; } gt() { return this; } contains() { return this; }
+  // range(a, b) : lignes a à b incluses (pagination) ; appliqué après les filtres.
+  range(a, b) { this.rg = [a, b]; return this; }
+  // ilike(c, motif) : % et _ joker, insensible à la casse (comme PostgREST).
+  ilike(c, pat) {
+    const re = new RegExp('^' + String(pat).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/%/g, '.*').replace(/_/g, '.') + '$', 'i');
+    this.f.push((r) => re.test(String(getv(r, c) ?? '')));
+    return this;
+  }
   maybeSingle() { this.one = true; return this; } single() { this.one = true; return this; }
   insert(p) { this.op = 'insert'; this.payload = p; return this; }
   update(p) { this.op = 'update'; this.payload = p; return this; }
@@ -136,6 +164,8 @@ class Q {
       for (const r of rows) {
         if (this.t === 'hg_badges' && tab.some((x) => x.code === r.code)) return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "hg_badges_pkey"' } };
         if (this.t === 'hg_invite_links') Object.assign(r, { id: 'L' + (++seq + 10), token: 'new' + String(seq).padStart(21, '0'), active: true, codes_generated: 0, created_at: new Date().toISOString() });
+        if (r.id === undefined && ['hg_moments', 'hg_photos'].includes(this.t)) r.id = uid(); // comme la base (gen_random_uuid)
+        if (this.t === 'hg_moments' && r.created_at === undefined) r.created_at = new Date().toISOString();
         tab.unshift(r);
       }
       return { data: this.one ? rows[0] : rows, error: null };
@@ -143,7 +173,8 @@ class Q {
     if (this.op === 'update') { const rows = tab.filter(match); rows.forEach((r) => Object.assign(r, this.payload)); return { data: this.one ? rows[0] ?? null : rows, error: null }; }
     if (this.op === 'delete') { const keep = tab.filter((r) => !match(r)); const n = tab.length - keep.length; tab.length = 0; tab.push(...keep); return { data: null, error: null, count: n }; }
     const out = tab.filter(match);
-    return this.one ? { data: out[0] ?? null, error: null } : { data: out, error: null };
+    if (this.one) return { data: out[0] ?? null, error: null };
+    return { data: this.rg ? out.slice(this.rg[0], this.rg[1] + 1) : out, error: null };
   }
   then(res, rej) { return Promise.resolve(this.run()).then(res, rej); }
 }
@@ -232,7 +263,8 @@ export function createClient() {
       getPublicUrl: (p) => ({ data: { publicUrl: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="gold"/></svg>') } }),
       upload: async (p) => { window.__LOG.push(['upload', p]); return { data: { path: p }, error: null }; },
       remove: async (p) => { window.__LOG.push(['remove', p]); return { data: [], error: null }; },
-      createSignedUrl: async () => ({ data: { signedUrl: '' } }), createSignedUrls: async () => ({ data: [] }),
+      createSignedUrl: async () => ({ data: { signedUrl: PHOTO_SVG } }),
+      createSignedUrls: async (paths = []) => ({ data: paths.map((p) => ({ path: p, signedUrl: PHOTO_SVG, error: null })) }),
     }) },
     functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
   };

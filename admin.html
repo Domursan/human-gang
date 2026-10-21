@@ -45,6 +45,7 @@
   <link rel="stylesheet" href="assets/css/admin-cards.css">
   <link rel="stylesheet" href="assets/css/admin-staff.css">
   <link rel="stylesheet" href="assets/css/admin-sorties.css">
+  <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -69,6 +70,7 @@
         <a href="#sorties" data-perm="evenements">Sorties IRL</a>
         <a href="#badges">Badges</a>
         <a href="#evenements">Événements</a>
+        <a href="#souvenirs" data-perm="souvenirs">Souvenirs et photos</a>
         <a href="#cartes">Cartes</a>
         <a href="#defis">Défis du gang</a>
         <a href="#idees">Boîte à idées <span class="nav-count" data-count="idees" hidden></span></a>
@@ -154,6 +156,11 @@
         <section id="evenements" class="admin-section" aria-labelledby="h-evenements">
           <h2 id="h-evenements" class="section-title">Événements</h2>
           <div id="events-root"><div class="empty">Chargement des événements…</div></div>
+        </section>
+
+        <section id="souvenirs" class="admin-section" aria-labelledby="h-souvenirs" data-perm="souvenirs">
+          <h2 id="h-souvenirs" class="section-title">Souvenirs et photos</h2>
+          <div id="souvenirs-root"><div class="empty">Chargement des souvenirs…</div></div>
         </section>
 
         <section id="cartes" class="admin-section" aria-labelledby="h-cartes">
