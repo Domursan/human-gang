@@ -39,10 +39,11 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * fixture : fichier de tests/fixtures/ qui remplace le client supabase-js.
  * scenario : objet visible par le faux client sous window.__SCN (ex. { guest: true }).
  * reducedMotion : 'reduce' pour désactiver les animations (préférence système).
+ * touch : true pour un écran tactile (page.tap possible).
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '' } = {}) {
-  const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion });
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false } = {}) {
+  const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch });
   await ctx.addInitScript((s) => {
     window.__SCN = s;
     try {

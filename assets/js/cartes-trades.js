@@ -2,8 +2,8 @@
 // Chargé par cartes.js : import('./cartes-trades.js').then((m) => m.mountTrades(el, ctx)).
 // ctx = { me: profil courant (id, pseudo…), refresh: async () => {} } ; refresh recharge solde et collection côté page.
 // Affichage des cartes : cartes-ui.js (cardHtml). Styles : cartes-trades.css (+ cartes-card.css).
-import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify } from './core.js';
-import { cardHtml, rarityRank, fmtP } from './cartes-ui.js';
+import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify, currentLogo } from './core.js';
+import { cardHtml, rarityRank, rarityLabel, numberLabel, serialLabel, RARITIES, fmtP } from './cartes-ui.js';
 import { confirmBox } from './ui-confirm.js';
 import { pluralCount } from './utils.js';
 
@@ -54,7 +54,8 @@ export async function mountTrades(el, ctx = {}) {
     wish: new Map(), balance: 0, tab: 'recues', pickWho: '', setNames: new Map(), setTotal: new Map(),
     peers: new Set(), matchesP: null,
   };
-  const E = { to: '', parent: null, give: new Set(), want: new Set(), giveP: 0, wantP: 0, message: '', q: '', busy: false };
+  const E = { to: '', parent: null, give: new Set(), want: new Set(), giveP: 0, wantP: 0, message: '', busy: false,
+    filt: { give: { q: '', set: '', rar: '', dup: false }, want: { q: '', set: '', rar: '', dup: false } }, peek: null };
 
   /* ---------- Données ----------
      Chargement ciblé : mes exemplaires, mes échanges et les cartes qu'ils citent. Les exemplaires d'un membre
@@ -365,12 +366,89 @@ export async function mountTrades(el, ctx = {}) {
   const render = () => renderPanel();
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
+  const freshFilter = () => ({ q: '', set: '', rar: '', dup: false });
+  const sideOwner = (side) => (side === 'give' ? S.me.id : E.to);
+  /** Exemplaires d'un côté : disponibles, plus ceux déjà dans l'offre (toujours visibles, même filtrés). */
+  const sideCopies = (side) => withSelected(side === 'give' ? tradables(S.me.id) : tradables(E.to, E.parent), E[side]);
+  const withSelected = (base, set) => [...base, ...[...set].map(copyOf).filter((c) => c && !base.includes(c))].sort(byCard);
+  /** Nombre d'exemplaires possédés par un membre, par carte (exemplaires recyclés exclus). */
+  function ownedCounts(owner) {
+    const m = new Map();
+    for (const c of S.copies.values()) if (c.owner_id === owner && !c.recycled_at) m.set(c.card_id, (m.get(c.card_id) || 0) + 1);
+    return m;
+  }
+  function matchesFilter(c, f, counts) {
+    const card = cardOf(c);
+    const q = f.q.trim();
+    if (q && !norm(card.name).includes(norm(q))) return false;
+    if (f.set && String(card.set_id) !== f.set) return false;
+    if (f.rar && card.rarity !== f.rar) return false;
+    if (f.dup && (counts.get(c.card_id) || 0) < 2) return false;
+    return true;
+  }
+
   async function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {
     if (!to || !S.members.has(to)) return toast('Choisis un membre pour l’échange.', 'error');
     try { await ensurePeer(to); } catch (e) { return toast(errMsg(e), 'error'); }
-    Object.assign(E, { to, parent, give: new Set(give.map(String)), want: new Set(want.map(String)), giveP, wantP, message, q: '', busy: false });
+    Object.assign(E, {
+      to, parent, give: new Set(give.map(String)), want: new Set(want.map(String)), giveP, wantP, message, busy: false,
+      filt: { give: freshFilter(), want: freshFilter() }, peek: null,
+    });
     renderEditor();
     dlg.showModal();
+  }
+
+  /** Une liste de cartes : titre, filtres (recherche, série, rareté, doublons), compteur, grille. */
+  function colHtml(side) {
+    const give = side === 'give';
+    const to = memberOf(E.to);
+    const rarOpts = '<option value="">Toutes</option>' + RARITIES.map((r) => `<option value="${r.id}">${esc(r.label)}</option>`).join('');
+    return `
+      <fieldset class="trd-col">
+        <legend>${give ? 'Je donne' : `Je demande à ${esc(to.pseudo)}`}</legend>
+        <div class="trd-flist-head">
+          <h4 class="trd-side-title">${give ? 'Tes cartes' : 'Ses cartes'}</h4>
+          <p class="trd-fres" id="trd-fres-${side}" aria-live="polite"></p>
+        </div>
+        <div class="trd-fbar" role="group" aria-label="Filtrer ${give ? 'tes cartes' : 'ses cartes'}">
+          <div class="field">
+            <label for="trd-q-${side}">Rechercher</label>
+            <input id="trd-q-${side}" type="search" placeholder="Nom de la carte" autocomplete="off" data-fside="${side}" data-ffield="q">
+          </div>
+          <div class="trd-fsels">
+            <div class="field"><label for="trd-set-${side}">Série</label><select id="trd-set-${side}" data-fside="${side}" data-ffield="set"></select></div>
+            <div class="field"><label for="trd-rar-${side}">Rareté</label><select id="trd-rar-${side}" data-fside="${side}" data-ffield="rar">${rarOpts}</select></div>
+          </div>
+          <div class="trd-fline">
+            <button class="trd-chip" type="button" aria-pressed="false" data-fchip="${side}">Doublons seulement</button>
+            <button class="trd-freset" type="button" data-freset="${side}" hidden>Réinitialiser</button>
+          </div>
+        </div>
+        <p class="trd-count" id="trd-n-${side}"></p>
+        <div class="trd-grid" id="trd-grid-${side}"></div>
+        <div class="field">
+          <label for="trd-${give ? 'gp' : 'wp'}">${give ? 'Paillettes que je donne' : 'Paillettes que je demande'}</label>
+          <input id="trd-${give ? 'gp' : 'wp'}" type="number" min="0" step="1" inputmode="numeric" value="${give ? E.giveP : E.wantP}">
+          ${give ? `<p class="trd-hint">Ton solde : ${esc(fmtP(S.balance))}</p>` : ''}
+        </div>
+      </fieldset>`;
+  }
+
+  /** Aperçu : colonne à gauche sur ordinateur, bandeau replié collé en haut sur téléphone. */
+  function peekHtml() {
+    return `<section class="trd-peek" id="trd-peek" data-state="empty" aria-label="Aperçu de la carte">
+        <p class="eyebrow trd-peek-tag">Aperçu</p>
+        <div class="trd-peek-row">
+          <span class="trd-peek-thumb" id="trd-peek-thumb" aria-hidden="true"></span>
+          <div class="trd-peek-meta"><strong id="trd-peek-name"></strong><span id="trd-peek-sub"></span></div>
+          <button class="trd-peek-toggle" type="button" data-peek-toggle aria-expanded="false" aria-controls="trd-peek-more">Détails</button>
+        </div>
+        <div class="trd-peek-more" id="trd-peek-more">
+          <div class="trd-peek-stage" id="trd-peek-stage" hidden></div>
+          <p class="trd-peek-empty" id="trd-peek-empty">Survole une carte pour voir ses détails</p>
+          <dl class="trd-peek-dl" id="trd-peek-dl"></dl>
+        </div>
+      </section>`;
   }
 
   function renderEditor() {
@@ -386,72 +464,130 @@ export async function mountTrades(el, ctx = {}) {
         <div><p class="eyebrow">${isCounter ? 'Contre-proposition' : 'Nouvelle offre'}</p><h2 id="trd-edit-title">${esc(title)}</h2></div>
         <button class="trd-close" type="button" data-act="close-editor" aria-label="Fermer">×</button>
       </header>
-      <div class="trd-dlg-body">
-        <p class="trd-note">${esc(note)}</p>
-        <div class="field">
-          <label for="trd-q">Rechercher une carte</label>
-          <input id="trd-q" type="search" value="${esc(E.q)}" autocomplete="off" placeholder="Nom de la carte">
+      <div class="trd-dlg-main">
+        ${peekHtml()}
+        <div class="trd-dlg-body">
+          <p class="trd-note">${esc(note)}</p>
+          <div class="trd-cols">${colHtml('give')}${colHtml('want')}</div>
+          <div class="field">
+            <label for="trd-msg">Message (facultatif)</label>
+            <textarea id="trd-msg" maxlength="500" rows="3" placeholder="Un mot pour ${esc(to.pseudo)}…">${esc(E.message)}</textarea>
+            <p class="trd-hint" id="trd-mcount"></p>
+          </div>
+          <p class="trd-summary" id="trd-sum"></p>
+          <p class="trd-err" id="trd-err" role="alert"></p>
         </div>
-        <div class="trd-cols">
-          <fieldset class="trd-col">
-            <legend>Je donne</legend>
-            <p class="trd-count" id="trd-n-give"></p>
-            <div class="trd-grid" id="trd-grid-give"></div>
-            <div class="field">
-              <label for="trd-gp">Paillettes que je donne</label>
-              <input id="trd-gp" type="number" min="0" step="1" inputmode="numeric" value="${E.giveP}">
-              <p class="trd-hint">Ton solde : ${esc(fmtP(S.balance))}</p>
-            </div>
-          </fieldset>
-          <fieldset class="trd-col">
-            <legend>Je demande à ${esc(to.pseudo)}</legend>
-            <p class="trd-count" id="trd-n-want"></p>
-            <div class="trd-grid" id="trd-grid-want"></div>
-            <div class="field">
-              <label for="trd-wp">Paillettes que je demande</label>
-              <input id="trd-wp" type="number" min="0" step="1" inputmode="numeric" value="${E.wantP}">
-            </div>
-          </fieldset>
-        </div>
-        <div class="field">
-          <label for="trd-msg">Message (facultatif)</label>
-          <textarea id="trd-msg" maxlength="500" rows="3">${esc(E.message)}</textarea>
-          <p class="trd-hint" id="trd-mcount"></p>
-        </div>
-        <p class="trd-summary" id="trd-sum"></p>
-        <p class="trd-err" id="trd-err" role="alert"></p>
       </div>
       <footer class="trd-dlg-foot">
         ${isCounter ? '' : '<button class="btn btn-ghost" type="button" data-act="gift" id="trd-gift">Offrir en cadeau</button>'}
         <button class="btn btn-ghost" type="button" data-act="close-editor">Annuler</button>
         <button class="btn btn-primary" type="submit" id="trd-send">${isCounter ? 'Envoyer la contre-proposition' : 'Envoyer l’offre'}</button>
       </footer>`;
+    for (const side of ['give', 'want']) fillSeries(side);
     renderPicks();
+    renderPeek();
     updateSummary();
   }
 
-  /** Ajoute au besoin les exemplaires déjà sélectionnés (ex. offre pré-remplie) pour qu'ils restent visibles. */
-  const withSelected = (base, set) => [...base, ...[...set].map(copyOf).filter((c) => c && !base.includes(c))].sort(byCard);
-  function pickHtml(c, side, set) {
-    const on = set.has(String(c.id));
+  /** Menu Série : « Toutes les séries » puis chaque série présente dans la liste de ce côté. */
+  function fillSeries(side) {
+    const names = new Map();
+    for (const c of sideCopies(side)) {
+      const card = cardOf(c);
+      if (card.set_id != null) names.set(String(card.set_id), S.setNames.get(card.set_id) || 'Série sans nom');
+    }
+    form.querySelector(`#trd-set-${side}`).innerHTML = '<option value="">Toutes les séries</option>'
+      + [...names].sort((a, b) => cmp(a[1], b[1])).map(([id, name]) => `<option value="${esc(id)}">${esc(name)}</option>`).join('');
+  }
+
+  function pickHtml(c, side) {
+    const on = E[side].has(String(c.id));
     return `<div class="trd-pickwrap${on ? ' is-on' : ''}">${cardHtml(shown(cardOf(c)), {
       size: 'sm', shiny: c.shiny, serial: c.serial, button: true,
       attrs: `aria-pressed="${on}" data-side="${side}" data-id="${c.id}"`,
     })}<span class="trd-tick" aria-hidden="true">✓</span></div>`;
   }
-  function renderPicks() {
-    const q = norm(E.q.trim());
-    const matchQ = (c) => !q || norm(cardOf(c).name).includes(q);
-    const give = withSelected(tradables(S.me.id), E.give).filter(matchQ);
-    const want = withSelected(tradables(E.to, E.parent), E.want).filter(matchQ);
-    const none = q ? 'Aucune carte ne correspond à la recherche.' : 'Aucune carte disponible.';
-    form.querySelector('#trd-grid-give').innerHTML = give.map((c) => pickHtml(c, 'give', E.give)).join('') || `<p class="trd-none">${none}</p>`;
-    form.querySelector('#trd-grid-want').innerHTML = want.map((c) => pickHtml(c, 'want', E.want)).join('') || `<p class="trd-none">${none}</p>`;
+  /** Redessine les deux listes (filtres appliqués ; les cartes de l'offre restent visibles). */
+  function renderPicks() { renderSide('give'); renderSide('want'); }
+  function renderSide(side) {
+    const f = E.filt[side];
+    const all = sideCopies(side);
+    const counts = ownedCounts(sideOwner(side));
+    const active = !!(f.q.trim() || f.set || f.rar || f.dup);
+    const list = all.filter((c) => E[side].has(String(c.id)) || matchesFilter(c, f, counts));
+    form.querySelector(`#trd-grid-${side}`).innerHTML = list.map((c) => pickHtml(c, side)).join('')
+      || `<p class="trd-none">${active ? 'Aucune carte ne correspond aux filtres.' : 'Aucune carte disponible.'}</p>`;
+    form.querySelector(`#trd-fres-${side}`).textContent = active
+      ? `${list.length} sur ${all.length} affichées`
+      : pluralCount(all.length, 'carte', 'cartes');
+    form.querySelector(`[data-freset="${side}"]`).hidden = !active;
+    form.querySelector(`[data-fchip="${side}"]`).setAttribute('aria-pressed', String(f.dup));
   }
+  function resetFilters(side) {
+    E.filt[side] = freshFilter();
+    form.querySelector(`#trd-q-${side}`).value = '';
+    form.querySelector(`#trd-set-${side}`).value = '';
+    form.querySelector(`#trd-rar-${side}`).value = '';
+    renderSide(side);
+    form.querySelector(`#trd-q-${side}`).focus();
+  }
+
+  /** Aperçu d'un exemplaire : carte en grand et détails. */
+  function setPeek(id) {
+    if (E.peek === id) return;
+    E.peek = id;
+    renderPeek();
+  }
+  function renderPeek() {
+    const root = form.querySelector('#trd-peek');
+    if (!root) return;
+    const $ = (k) => form.querySelector(`#trd-peek-${k}`);
+    const c = E.peek ? copyOf(E.peek) : null;
+    if (!c) {
+      root.dataset.state = 'empty';
+      $('name').textContent = 'Touche une carte pour voir ses détails';
+      $('sub').textContent = '';
+      $('thumb').innerHTML = '';
+      $('stage').hidden = true;
+      $('empty').hidden = false;
+      $('dl').innerHTML = '';
+      return;
+    }
+    const card = shown(cardOf(c));
+    const mine = ownedCounts(S.me.id).get(c.card_id) || 0;
+    const theirs = ownedCounts(E.to).get(c.card_id) || 0;
+    const owned = c.owner_id === S.me.id
+      ? `Tu en possèdes ${mine}`
+      : `${mine ? `Tu en possèdes ${mine}` : 'Tu n’en possèdes aucun'} · ${pseudo(E.to)} en a ${theirs}`;
+    const place = E.give.has(String(c.id)) ? 'Oui, dans ton offre'
+      : E.want.has(String(c.id)) ? `Oui, demandée à ${pseudo(E.to)}` : 'Non';
+    const rows = [
+      ['Nom', esc(card.name)],
+      ['Rareté', esc(rarityLabel(card.rarity))],
+      ['Série', esc(card.set_name || '—')],
+      ['Numéro', esc(numberLabel(card) || '—')],
+      ['Brillante', c.shiny ? 'Oui, cet exemplaire' : 'Non'],
+      ...(c.serial ? [['Exemplaire', esc(serialLabel(c.serial, card.max_copies))]] : []),
+      ['Exemplaires possédés', esc(owned)],
+      ['Dans l’offre', esc(place)],
+      ['Texte d’ambiance', card.flavor
+        ? `<em>« ${esc(card.flavor)} »</em>${card.caption ? '<br>' + esc(card.caption) : ''}`
+        : (card.caption ? esc(card.caption) : '—')],
+    ];
+    root.dataset.state = 'card';
+    $('name').textContent = card.name;
+    $('sub').textContent = `${rarityLabel(card.rarity)}${card.set_name ? ' · ' + card.set_name : ''}`;
+    $('thumb').innerHTML = `<img src="${esc(card.image_url || currentLogo())}" alt="">`;
+    $('stage').hidden = false;
+    $('stage').innerHTML = cardHtml(card, { size: 'md', shiny: c.shiny, serial: c.serial });
+    $('empty').hidden = true;
+    $('dl').innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  }
+
   function updateSummary() {
     const g = E.give.size, w = E.want.size;
-    form.querySelector('#trd-n-give').textContent = `${pluralCount(g, 'carte sélectionnée', 'cartes sélectionnées')}`;
-    form.querySelector('#trd-n-want').textContent = `${pluralCount(w, 'carte sélectionnée', 'cartes sélectionnées')}`;
+    form.querySelector('#trd-n-give').textContent = pluralCount(g, 'carte sélectionnée', 'cartes sélectionnées');
+    form.querySelector('#trd-n-want').textContent = pluralCount(w, 'carte sélectionnée', 'cartes sélectionnées');
     form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${pluralCount(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${pluralCount(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
     form.querySelector('#trd-mcount').textContent = `${E.message.length} / 500 caractères`;
   }
@@ -463,13 +599,15 @@ export async function mountTrades(el, ctx = {}) {
     form.querySelectorAll('button').forEach((b) => { b.disabled = on; });
   }
   function togglePick(btn) {
-    const set = btn.dataset.side === 'give' ? E.give : E.want;
+    const set = E[btn.dataset.side];
     const id = btn.dataset.id;
     const on = !set.has(id);
     if (on) set.add(id); else set.delete(id);
     btn.setAttribute('aria-pressed', String(on));
     btn.parentElement.classList.toggle('is-on', on);
     showErr('');
+    E.peek = id;
+    renderPeek();
     updateSummary();
   }
 
@@ -540,8 +678,20 @@ export async function mountTrades(el, ctx = {}) {
       e.stopPropagation(); // les onglets de la page parente (cartes.js) ne doivent pas réagir à ceux-ci
       S.tab = tab.dataset.tab; render(); tabsEl.querySelector(`[data-tab="${S.tab}"]`)?.focus(); return;
     }
-    const pick = e.target.closest('button[data-side]');
-    if (pick && dlg.contains(pick)) return togglePick(pick);
+    const chip = e.target.closest('[data-fchip]');
+    if (chip) { const side = chip.dataset.fchip; E.filt[side].dup = !E.filt[side].dup; return renderSide(side); }
+    const reset = e.target.closest('[data-freset]');
+    if (reset) return resetFilters(reset.dataset.freset);
+    const tog = e.target.closest('[data-peek-toggle]');
+    if (tog) {
+      const peek = form.querySelector('#trd-peek');
+      const open = !peek.classList.contains('is-open');
+      peek.classList.toggle('is-open', open);
+      tog.setAttribute('aria-expanded', String(open));
+      return;
+    }
+    const pick = e.target.closest('button[data-side][data-id]');
+    if (pick) return togglePick(pick);
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const act = b.dataset.act;
@@ -582,15 +732,28 @@ export async function mountTrades(el, ctx = {}) {
   });
   form.addEventListener('submit', (e) => { e.preventDefault(); sendOffer(false); });
   form.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); });
+  // Aperçu : survol et focus clavier d'une carte des listes (sans changer la sélection)
+  const previewFromEvent = (e) => {
+    const p = e.target.closest?.('button[data-side][data-id]');
+    if (p) setPeek(p.dataset.id);
+  };
+  form.addEventListener('mouseover', previewFromEvent);
+  form.addEventListener('focusin', previewFromEvent);
   form.addEventListener('input', (e) => {
     const t = e.target;
+    if (t.dataset.ffield === 'q') { E.filt[t.dataset.fside].q = t.value; return renderSide(t.dataset.fside); }
     if (t.id === 'trd-gp') E.giveP = toInt(t.value);
     else if (t.id === 'trd-wp') E.wantP = toInt(t.value);
     else if (t.id === 'trd-msg') E.message = t.value;
-    else if (t.id === 'trd-q') { E.q = t.value; renderPicks(); }
     else return;
     showErr('');
     updateSummary();
+  });
+  form.addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.ffield !== 'set' && t.dataset.ffield !== 'rar') return;
+    E.filt[t.dataset.fside][t.dataset.ffield] = t.value;
+    renderSide(t.dataset.fside);
   });
 
   /* ---------- Démarrage ---------- */
