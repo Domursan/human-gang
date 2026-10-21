@@ -1,6 +1,7 @@
 // ===== Humane Gang — IRL : historique des rencontres, rencontres passées, « Qui était là ? », carte =====
 import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit, godTag } from './core.js';
-import { compressImage, uploadImage, removeObjects, uuid } from './photos.js';
+import { uploadImage, removeObjects, uuid } from './photos.js';
+import { prepareImage } from './image-compress.js';
 
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
 const GEO_KEY = 'hg_geo_v1';
@@ -170,9 +171,9 @@ export function mountHistory(ctx) {
       try {
         if (coverFile) {
           status.textContent = 'Envoi de la couverture…';
-          const blob = await compressImage(coverFile);
-          const path = `${me.id}/${id}/cover-${uuid().slice(0, 8)}.jpg`;
-          await uploadImage(path, blob);
+          const img = await prepareImage(coverFile);
+          const path = `${me.id}/${id}/cover-${uuid().slice(0, 8)}.${img.ext}`;
+          await uploadImage(path, img.blob);
           const { error } = await sb.from('hg_events').update({ cover_path: path }).eq('id', id);
           if (error) throw error;
           if (old) removeObjects([old]).catch(() => {});
@@ -189,9 +190,9 @@ export function mountHistory(ctx) {
         status.textContent = `Compression et envoi des photos ${i + 1} / ${photos.length}…`;
         let path = null;
         try {
-          const blob = await compressImage(file);
-          path = `${me.id}/${id}/${uuid()}.jpg`;
-          await uploadImage(path, blob);
+          const img = await prepareImage(file);
+          path = `${me.id}/${id}/${uuid()}.${img.ext}`;
+          await uploadImage(path, img.blob);
           const { error } = await sb.from('hg_photos').insert({ event_id: id, user_id: me.id, path });
           if (error) throw error;
           ok++;

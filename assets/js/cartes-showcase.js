@@ -7,26 +7,21 @@ import { cardHtml, rarityRank } from './cartes-ui.js';
 
 const SLOTS = [1, 2, 3];
 const CARD_COLS = 'id, set_id, number, name, family, rarity, image_url, flavor, caption, member_id, max_copies';
-const PAGE = 1000; // pagination PostgREST (plafond par défaut de la base)
 
-/* Données d'affichage communes à la page : une seule requête groupée (cartes + nom de série, pour le total et le nom),
-   et l'arrivée des membres (RPC déjà utilisée par l'annuaire) seulement si une carte Identité doit être affichée. Mises en cache. */
+/* Données d'affichage communes à la page : noms des séries (quelques lignes) et nombre de cartes par série
+   (un comptage par série, sans lire les cartes). Mises en cache. */
 let metaP = null, sinceP = null;
 function loadMeta() {
   return metaP ??= (async () => {
     const names = new Map(), totals = new Map();
     try {
-      const rows = [];
-      for (let from = 0; ; from += PAGE) {
-        const { data, error } = await sb.from('hg_cards').select('set_id, hg_card_sets(name)').order('id').range(from, from + PAGE - 1);
-        if (error) throw error;
-        rows.push(...(data || []));
-        if (!data || data.length < PAGE) break;
-      }
-      for (const r of rows) {
-        totals.set(r.set_id, (totals.get(r.set_id) || 0) + 1);
-        if (r.hg_card_sets?.name) names.set(r.set_id, r.hg_card_sets.name);
-      }
+      const { data: sets, error } = await sb.from('hg_card_sets').select('id, name');
+      if (error) throw error;
+      for (const x of sets || []) if (x.name) names.set(x.id, x.name);
+      await Promise.all((sets || []).map(async (x) => {
+        const { count, error: e } = await sb.from('hg_cards').select('id', { count: 'exact', head: true }).eq('set_id', x.id);
+        if (!e) totals.set(x.id, count || 0);
+      }));
     } catch { /* facultatif : la carte s'affiche sans nom ni total de série */ }
     return { names, totals };
   })();

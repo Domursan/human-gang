@@ -6,6 +6,7 @@ import { sb, toast, errMsg, esc, $, callFn, avatarHtml, getProfile } from './cor
 import { openBadgeEditor } from './admin-badges-edit.js';
 import { flyDynImage } from './dyn-events.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
+import { prepareImage } from './image-compress.js';
 
 const TZ = 'Europe/Zurich';
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -18,7 +19,6 @@ const ICON = {
   trophy: svg('<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/>'),
   badge: svg('<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>'),
 };
-const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
 const LIMITS = { durMin: 1.5, durMax: 30, sizeMin: 24, sizeMax: 240, perPageMax: 10, nMax: 1000 };
 
 /* ---------- Fuseau Europe/Zurich ---------- */
@@ -385,8 +385,9 @@ function openEditor(ev = null) {
       if (file) {
         if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, GIF, WebP, JPG ou SVG).');
         if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
-        const path = `events/${id}-${Date.now()}.${EXT[file.type] || 'png'}`;
-        check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' }));
+        const img = await prepareImage(file);
+        const path = `events/${id}-${Date.now()}.${img.ext}`;
+        check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
         url = sb.storage.from('hg-assets').getPublicUrl(path).data.publicUrl;
       }
       const row = { ...v, image_url: url };

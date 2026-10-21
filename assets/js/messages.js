@@ -8,6 +8,7 @@ const app = $('#app');
 const MAX_LEN = 4000;
 const POLL_THREAD_MS = 4000;
 const POLL_LIST_MS = 15000;
+const POLL_SAFETY_MS = 60000; // interrogation de secours quand le temps réel est actif
 const MOBILE = matchMedia('(max-width: 760px)');
 
 /* ---------- Icônes (SVG à trait) ---------- */
@@ -31,6 +32,9 @@ const S = {
   loadingThread: false,
 };
 let threadTimer = null, listTimer = null;
+// Canaux Supabase Realtime (événements INSERT sur hg_messages) ; ok = abonnement confirmé
+const RT = { list: null, thread: null, listOk: false, threadOk: false };
+let listPullTimer = null, pendingPull = false;
 
 /* ---------- Outils ---------- */
 const memberOf = (id) => S.members.get(id) || null;
@@ -322,11 +326,13 @@ async function openConv(id, { focus = true } = {}) {
     $('#msg-thread').innerHTML = `<div class="msg-thread-empty">Chargement impossible : ${esc(errMsg(e))}</div>`;
   } finally { S.loadingThread = false; }
   if (focus && !MOBILE.matches) $('#msg-input')?.focus();
+  subscribeRt('thread', `hg-msg-thread-${id}`, `conversation_id=eq.${id}`, requestThreadPull);
   startThreadPolling();
 }
 function backToList() {
   S.current = null; S.msgs = []; S.lastId = 0;
   stopThreadPolling();
+  unsubscribeRt('thread');
   setUrl(null);
   setView('list');
   renderConvs();
@@ -384,25 +390,71 @@ async function pollThread() {
       renderConvs();
     }
   } catch (e) { console.warn('[messages] actualisation', e); }
-  finally { polling = false; }
+  finally {
+    polling = false;
+    if (pendingPull) { pendingPull = false; pollThread(); }
+  }
 }
+/** Empreinte de ce que renderConvs affiche : sert à ne réécrire la liste que si quelque chose a changé. */
+const convsKey = () => JSON.stringify([S.current, S.convs.map((c) => [c.id, c.title, c.kind, c.other_id, c.last_body, c.last_mine, c.last_message_at, c.unread])]);
 async function pollList() {
   try {
     const before = new Map(S.convs.map((c) => [c.id, c.unread || 0]));
+    const key = convsKey();
     await loadConvs();
     const gained = S.convs.some((c) => c.id !== S.current && (c.unread || 0) > (before.get(c.id) ?? 0));
     if (gained) { playSound('message'); refreshUnread(); }
-    renderConvs();
+    if (convsKey() !== key) renderConvs();
   } catch (e) { console.warn('[messages] liste', e); }
 }
 function startThreadPolling() {
   stopThreadPolling();
-  threadTimer = setInterval(() => { if (!document.hidden) pollThread(); }, POLL_THREAD_MS);
+  const ms = RT.threadOk ? POLL_SAFETY_MS : POLL_THREAD_MS;
+  threadTimer = setInterval(() => { if (!document.hidden) pollThread(); }, ms);
 }
 function stopThreadPolling() { clearInterval(threadTimer); threadTimer = null; }
 function startListPolling() {
   clearInterval(listTimer);
-  listTimer = setInterval(() => { if (!document.hidden) pollList(); }, POLL_LIST_MS);
+  const ms = RT.listOk ? POLL_SAFETY_MS : POLL_LIST_MS;
+  listTimer = setInterval(() => { if (!document.hidden) pollList(); }, ms);
+}
+
+/* ---------- Temps réel (Supabase Realtime) ----------
+   Un INSERT sur hg_messages déclenche une actualisation immédiate. Sans canal confirmé (échec, indisponible,
+   ou client de test sans Realtime), les cadences d'interrogation d'origine restent en vigueur. */
+function subscribeRt(key, name, filter, onChange) {
+  unsubscribeRt(key);
+  try {
+    const opts = { event: 'INSERT', schema: 'public', table: 'hg_messages', ...(filter ? { filter } : {}) };
+    const ch = sb.channel(name).on('postgres_changes', opts, onChange);
+    RT[key] = ch;
+    ch.subscribe((status) => {
+      if (RT[key] !== ch) return; // canal remplacé ou fermé entre-temps
+      const ok = status === 'SUBSCRIBED';
+      if (RT[`${key}Ok`] === ok) return;
+      RT[`${key}Ok`] = ok;
+      if (key === 'list') startListPolling();
+      else if (S.current) startThreadPolling();
+    });
+  } catch (e) {
+    console.warn('[messages] temps réel indisponible', e);
+    RT[key] = null; RT[`${key}Ok`] = false;
+  }
+}
+function unsubscribeRt(key) {
+  const ch = RT[key];
+  RT[key] = null; RT[`${key}Ok`] = false;
+  if (ch) { try { sb.removeChannel(ch); } catch { /* sans effet */ } }
+}
+/** Actualisation du fil demandée par le temps réel ; si une passe est en cours, on en relance une à la fin. */
+function requestThreadPull() {
+  if (polling) { pendingPull = true; return; }
+  pollThread();
+}
+/** Liste : regroupe les rafales d'événements en une seule actualisation. */
+function scheduleListPull() {
+  clearTimeout(listPullTimer);
+  listPullTimer = setTimeout(() => { if (!document.hidden) pollList(); }, 250);
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
@@ -456,6 +508,7 @@ try {
   const params = new URLSearchParams(location.search);
   const to = params.get('to'), c = params.get('c');
   const UUID = /^[0-9a-f-]{36}$/i;
+  subscribeRt('list', `hg-msg-list-${me.id}`, null, scheduleListPull);
   if (to && UUID.test(to)) await openDirect(to);
   else if (c && UUID.test(c)) await openConv(c, { focus: false });
   else if (!MOBILE.matches && S.convs.length) await openConv(S.convs[0].id, { focus: false });

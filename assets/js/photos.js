@@ -12,44 +12,10 @@ export function uuid() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-/* ---------- Compression côté client ---------- */
-async function decode(file) {
-  if ('createImageBitmap' in window) {
-    try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { /* repli <img> */ }
-  }
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = url;
-    await img.decode();
-    return img;
-  } finally { URL.revokeObjectURL(url); }
-}
-
-/** Redimensionne (côté le plus long ≤ max) et réencode en JPEG. Renvoie un Blob image/jpeg. */
-export async function compressImage(file, { max = 2000, quality = 0.85 } = {}) {
-  if (!file?.type?.startsWith('image/')) throw new Error(`« ${file?.name || 'fichier'} » n'est pas une image`);
-  const src = await decode(file);
-  const w0 = src.width, h0 = src.height;
-  if (!w0 || !h0) throw new Error(`Image illisible : ${file.name}`);
-  const k = Math.min(1, max / Math.max(w0, h0));
-  const w = Math.round(w0 * k), h = Math.round(h0 * k);
-  const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff'; // pas de transparence en JPEG
-  ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(src, 0, 0, w, h);
-  src.close?.();
-  const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
-  if (!blob) throw new Error(`Impossible de compresser ${file.name}`);
-  return blob;
-}
-
 /* ---------- Stockage ---------- */
+/** Envoie un blob préparé par prepareImage ; le type MIME vient du blob. */
 export async function uploadImage(path, blob) {
-  const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false, cacheControl: '3600' });
+  const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: blob.type || 'application/octet-stream', upsert: false, cacheControl: '3600' });
   if (error) throw error;
   forgetUrl(path);
   return path;

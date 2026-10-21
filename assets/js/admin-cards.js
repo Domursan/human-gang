@@ -6,6 +6,7 @@
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel, cardHtml, serialLabel, fmtP } from './cartes-ui.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
+import { prepareImage } from './image-compress.js';
 
 const TZ = 'Europe/Zurich';
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -19,7 +20,6 @@ const ICON = {
 const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
 const RARITY_IDS = RARITIES.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
-const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
 const REASON_LABEL = {
   booster: 'Booster', quotidien: 'Passage du jour', recyclage: 'Recyclage', fabrication: 'Fabrication', echange: 'Échange',
   reponse_sortie: 'Réponse à une sortie', sortie_creee: 'Sortie créée', photo: 'Photo publiée', moment: 'Moment publié',
@@ -148,8 +148,9 @@ async function removeImages(urls) {
 async function uploadCardImage(file) {
   if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG, WebP, GIF ou SVG).');
   if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
-  const path = `cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[file.type] || 'png'}`;
-  check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' }));
+  const img = await prepareImage(file);
+  const path = `cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${img.ext}`;
+  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
   return sb.storage.from('hg-assets').getPublicUrl(path).data.publicUrl;
 }
 
@@ -532,18 +533,65 @@ function openCardDialog(k = null) {
   E.name.focus();
 }
 
+/** Suppression d'une carte : refusée tant qu'elle a des exemplaires (la désactivation les garde) ;
+    sinon, il faut retaper le nom exact de la carte. */
 async function deleteCard(id) {
   const k = C.cardById.get(id);
   if (!k) return;
   const n = (C.copiesByCard.get(id) || []).length;
-  const ok = await confirmBox(`Supprimer « ${k.name} » ?`,
-    `${n ? `Ses ${nf(n)} exemplaire${n > 1 ? 's seront retirés' : ' sera retiré'} des collections des membres. ` : ''}Action définitive. Pour la retirer du tirage sans la perdre, désactive-la plutôt.`,
-    { ok: 'Supprimer', danger: true });
-  if (!ok) return;
+  if (n) return refuseCardDelete(k, n);
+  const typed = await typedConfirm({
+    title: `Supprimer « ${k.name} » ?`,
+    text: 'Action définitive. Pour confirmer, tape le nom exact de la carte.',
+    expected: k.name,
+  });
+  if (!typed) return;
   check(await sb.from('hg_cards').delete().eq('id', id));
   await removeImages([k.image_url]);
   toast('Carte supprimée', 'ok');
   await refresh();
+}
+async function refuseCardDelete(k, n) {
+  if (k.active === false) return toast(`Suppression impossible : ${nf(n)} exemplaire${n > 1 ? 's existent' : ' existe'} encore chez les membres.`, 'error');
+  const ok = await confirmBox(`Suppression impossible pour « ${k.name} »`,
+    `${nf(n)} exemplaire${n > 1 ? 's sont' : ' est'} déjà dans les collections des membres, et la suppression les effacerait. Désactive la carte à la place : elle ne sera plus tirée ni proposée aux échanges, et les exemplaires restent.`,
+    { ok: 'Désactiver la carte' });
+  if (!ok) return;
+  check(await sb.from('hg_cards').update({ active: false }).eq('id', k.id));
+  toast('Carte désactivée', 'ok');
+  await refresh();
+}
+/** Confirmation par saisie du nom exact : le bouton reste inactif tant que le nom ne correspond pas. */
+function typedConfirm({ title, text, expected, ok = 'Supprimer' }) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'hg-dialog';
+  dlg.setAttribute('aria-labelledby', 'acd-typed-title');
+  dlg.innerHTML = `
+    <form method="dialog" class="stack">
+      <h2 id="acd-typed-title" class="dialog-title">${esc(title)}</h2>
+      <p class="muted">${esc(text)}</p>
+      <div class="field">
+        <label for="acd-typed-input">Nom de la carte</label>
+        <input id="acd-typed-input" class="input" type="text" autocomplete="off" spellcheck="false" aria-describedby="acd-typed-hint">
+      </div>
+      <p class="small muted" id="acd-typed-hint">Tape exactement : <strong>${esc(expected)}</strong></p>
+      <div class="btn-row dialog-actions">
+        <button class="btn btn-ghost" value="cancel" type="submit">Annuler</button>
+        <button class="btn btn-danger" value="ok" type="submit" id="acd-typed-ok" disabled>${esc(ok)}</button>
+      </div>
+    </form>`;
+  document.body.appendChild(dlg);
+  const input = dlg.querySelector('#acd-typed-input');
+  const okBtn = dlg.querySelector('#acd-typed-ok');
+  input.addEventListener('input', () => { okBtn.disabled = input.value.trim() !== expected.trim(); });
+  dlg.returnValue = '';
+  dlg.showModal();
+  input.focus();
+  return new Promise((resolve) => dlg.addEventListener('close', () => {
+    const yes = dlg.returnValue === 'ok' && input.value.trim() === expected.trim();
+    dlg.remove();
+    resolve(yes);
+  }, { once: true }));
 }
 
 async function makeIdentities(btn) {

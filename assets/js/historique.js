@@ -1,6 +1,7 @@
 // ===== Humane Gang — Historique (frise) =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
-import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { prepareImage } from './image-compress.js';
 import { ghostDirectory } from './admin-ghosts.js';
 
 const me = await initPage({ auth: 'member' });
@@ -264,9 +265,9 @@ form.addEventListener('submit', async (e) => {
   let newPath = null;
   try {
     if (file) {
-      const blob = await compressImage(file);
-      newPath = `${me.id}/moments/${uuid()}.jpg`;
-      await uploadImage(newPath, blob);
+      const img = await prepareImage(file);
+      newPath = `${me.id}/moments/${uuid()}.${img.ext}`;
+      await uploadImage(newPath, img.blob);
       payload.image_path = newPath;
     } else if (removeImg) payload.image_path = null;
 
