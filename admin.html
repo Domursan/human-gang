@@ -52,12 +52,13 @@
   <link rel="stylesheet" href="assets/css/admin-sorties.css">
   <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
   <link rel="stylesheet" href="assets/css/admin-reglages.css">
+  <link rel="stylesheet" href="assets/css/admin-identite.css">
   <link rel="stylesheet" href="assets/css/admin-pilotage.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="domain" data-info="no">
     <nav class="shell-rail" id="shell-rail" aria-label="Domaines du panel">
-      <a class="shell-logo" href="accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang">HG</a>
+      <a class="shell-logo" href="accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang" data-site-identite="initiales">HG</a>
       <div class="shell-doms" id="shell-doms"></div>
       <div class="shell-sep" aria-hidden="true"></div>
       <div class="shell-foot" id="shell-foot">
@@ -214,6 +215,7 @@
         </section>
         <section id="reglages" class="admin-section" data-perm="reglages" aria-labelledby="h-reglages">
           <h2 id="h-reglages" class="section-title">Réglages du site</h2>
+          <div id="identite-root" class="rg-identite"></div>
           <div id="reglages-root"><div class="empty">Chargement des réglages…</div></div>
         </section>
         <section id="theme" class="admin-section" aria-labelledby="h-theme">

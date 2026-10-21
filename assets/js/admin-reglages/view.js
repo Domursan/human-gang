@@ -9,6 +9,7 @@ import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { setActions } from '../admin/shell.js';
 import { KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
+import { mountIdentite } from './identite.js';
 
 const R = { root: null, rows: [], loaded: false, error: null, isAdmin: false };
 
@@ -22,6 +23,7 @@ export async function mountReglagesSection(root) {
   R.isAdmin = !!getCachedProfile()?.is_admin;
   root.addEventListener('click', onClick);
   render();
+  mountIdentite(document.getElementById('identite-root')); // formulaire « Identité et textes » (lot 1), au-dessus de la liste
   await load();
 }
 
@@ -47,14 +49,17 @@ async function load() {
   render();
 }
 
+/** Clés listées ici : celles qui ont un formulaire dédié (site_identite, site_textes) sont exclues. */
+const listRows = () => R.rows.filter((r) => !KEYS[r.key]?.formulaire);
+
 function render() {
   if (!R.root) return;
   R.root.innerHTML = `
     <p class="small muted">Réglages techniques du site : chaque clé porte une valeur (texte, nombre, oui / non ou JSON). Le code du site décide de l'effet d'une clé. Une clé gérée dans une autre section se modifie là-bas.</p>
     ${R.error ? `<div class="empty">Impossible de charger les réglages : ${esc(R.error)} <button class="btn btn-ghost btn-sm" type="button" data-rg="retry">Réessayer</button></div>` : ''}
     ${!R.loaded && !R.error ? '<div class="empty">Chargement des réglages…</div>' : ''}
-    ${R.loaded && !R.rows.length ? '<div class="empty">Aucun réglage enregistré.</div>' : ''}
-    ${R.loaded && R.rows.length ? `<ul class="rg-list">${R.rows.map((r, i) => itemHtml(r, i)).join('')}</ul>` : ''}`;
+    ${R.loaded && !listRows().length ? '<div class="empty">Aucun réglage enregistré.</div>' : ''}
+    ${R.loaded && listRows().length ? `<ul class="rg-list">${listRows().map((r, i) => itemHtml(r, i)).join('')}</ul>` : ''}`;
 }
 
 function itemHtml(r) {

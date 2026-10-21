@@ -10,6 +10,7 @@ import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js
 import { avatarHtml, esc } from './util.js';
 import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP } from './icons.js';
 import { searchButtonHtml, bindSearch } from './search.js';
+import { siteIdentite, navLibelle } from './site-defaults.js';
 
 // Navigation de secours (accès inconnus) : identique à l'ancienne navigation fixe.
 const NAV_FALLBACK = [
@@ -20,10 +21,11 @@ const NAV_FALLBACK = [
 ];
 // Libellés courts pour l'en-tête (le libellé complet reste celui de hg_pages ailleurs).
 const NAV_SHORT = { cartes: 'Cartes', membre: 'Annuaire', recap: 'Récap' };
+// Libellé saisi dans Admin › Réglages (vide = libellé automatique de la page).
 function navEntries() {
   const mine = getMyPages();
-  if (!mine) return NAV_FALLBACK;
-  return mine.filter((p) => p.in_nav).map((p) => ({ slug: p.slug, label: NAV_SHORT[p.slug] || p.label || p.slug }));
+  if (!mine) return NAV_FALLBACK.map((x) => ({ slug: x.slug, label: navLibelle(x.slug) || x.label }));
+  return mine.filter((p) => p.in_nav).map((p) => ({ slug: p.slug, label: navLibelle(p.slug) || NAV_SHORT[p.slug] || p.label || p.slug }));
 }
 
 function accountInner(profile) {
@@ -94,7 +96,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>
     <div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
-      <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
+      <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
       <div class="nav-tools">${toggle}</div>
       <aside class="side-tools" aria-label="Outils">${search}${help}${god}${prefs}${account}${logout}</aside>

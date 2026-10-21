@@ -11,6 +11,9 @@ const world = $('world'), logo = $('logo'), img = $('logo-img');
 const glow = $('glow'), hint = $('hint'), fade = $('fade'), canvas = $('sky');
 const progressEl = $('progress'), fill = $('progress-fill'), skip = $('skip'), enterBtn = $('enter');
 
+import { applySiteDom } from './core/site-defaults.js';
+applySiteDom(); // textes de l'intro (cache des réglages du site)
+
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 function markSeen() { try { localStorage.setItem('hg_intro_day', today()); } catch {} }
 

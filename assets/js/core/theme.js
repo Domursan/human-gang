@@ -1,6 +1,6 @@
 // Thème affiché : état (thème du jour, thème du site, liste et réglage), pose des variables CSS, du logo et de
 // l'effet. Ne charge rien : le chargement depuis la base est dans theme-load.js.
-import { LOGO_SRC } from '../config.js';
+import { siteLogo } from './site-defaults.js';
 import { getPrefs, applyPrefsAttrs } from './prefs-state.js';
 import { DEFAULT_THEME, pickTheme, themeVars, emojiAt } from './theme-calc.js';
 import { startEffects } from './effects.js';
@@ -51,7 +51,7 @@ export function getSiteTheme() { return _siteTheme; }
 /** Emoji n° i du thème actif (modulo le nombre d'emojis), '' s'il n'y en a pas. */
 export function themeEmoji(i = 0) { return emojiAt(_theme?.emojis, i); }
 /** Logo du thème actif, sinon le logo du site. */
-export function currentLogo() { return _theme?.logo_url || LOGO_SRC; }
+export function currentLogo() { return _theme?.logo_url || siteLogo(); }
 /** Thèmes et réglage chargés par applyTheme (null tant que non chargés). */
 export function getThemeState() { return { themes: _themes, setting: _setting, theme: _theme, siteTheme: _siteTheme }; }
 

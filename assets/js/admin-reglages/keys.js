@@ -3,7 +3,9 @@
 // - sensitive : clé technique ; seul l'administrateur peut la modifier (le reste du panel ne suffit pas).
 // Une clé inconnue du registre est affichée sans aide, et modifiable par le Staff (non sensible).
 
-export const KEYS = {
+import { KEYS_LOT1 } from './keys-lot1.js';
+
+const KEYS_BASE = {
   theme: { label: 'Thème du site', help: 'Mode du site (clair, sombre, automatique) et thème forcé.', managed: '#theme', managedLabel: 'Thème' },
   bot: { label: 'Bot Discord', help: 'Salon d\'annonce, administrateur Discord et types de notifications.', managed: '#bot', managedLabel: 'Bot Discord' },
   bot_templates: { label: 'Modèles de messages du bot', help: 'Titres et textes des messages envoyés par le bot.', managed: '#bot', managedLabel: 'Bot Discord' },
@@ -12,6 +14,9 @@ export const KEYS = {
   domursan_owner: { label: 'Propriétaire Domursan', help: 'Identifiant technique du propriétaire de l\'app Domursan.', sensitive: true },
   admin_initial: { label: 'Administrateur initial', help: 'Trace de l\'administrateur d\'origine du site.', sensitive: true },
 };
+
+/** Toutes les clés décrites : base + lot 1 (identité et textes, formulaire dédié). */
+export const KEYS = { ...KEYS_BASE, ...KEYS_LOT1 };
 
 export const KIND_LABEL = { text: 'Texte', number: 'Nombre', bool: 'Oui / non', json: 'JSON (objet ou liste)' };
 export const KEY_RE = /^[a-z][a-z0-9_]{1,40}$/;

@@ -1,0 +1,21 @@
+/* Admin › Réglages : formulaire « Identité et textes » (lot 1). Réutilise les variables du thème admin. */
+.rgi { display: grid; gap: 16px; margin-bottom: 28px; }
+.rgi-title { margin: 0; font-size: 1.2rem; }
+.rgi-form { display: grid; gap: 18px; }
+.rgi-group { border: 1px solid var(--line, #d9d9d9); border-radius: 12px; padding: 14px 16px; margin: 0; min-width: 0; display: grid; gap: 12px; }
+.rgi-legend { font-weight: 600; padding: 0 6px; }
+.rgi-field { display: grid; gap: 6px; min-width: 0; }
+.rgi-field-head, .rgi-field-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.rgi-field input[type="text"], .rgi-field input[type="email"], .rgi-field textarea {
+  width: 100%; min-width: 0; box-sizing: border-box; font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line, #bbb); background: var(--surface, #fff); color: inherit;
+}
+.rgi-rows { display: grid; gap: 6px; }
+.rgi-row { display: grid; grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr); gap: 8px; align-items: center; }
+.rgi-footer-row { grid-template-columns: auto minmax(0, 1fr); }
+.rgi-switch { display: inline-flex; align-items: center; gap: 8px; }
+.rgi-group-foot, .rgi-save { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.rgi .form-error { margin: 0; }
+@media (max-width: 480px) {
+  .rgi-row { grid-template-columns: minmax(0, 1fr); }
+  .rgi-group { padding: 12px; }
+}
