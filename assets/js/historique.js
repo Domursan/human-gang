@@ -7,6 +7,7 @@ import { ghostDirectory } from './admin-ghosts.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
+import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -27,7 +28,7 @@ const I = {
   trash: svg('trash2', { size: 16, stroke: 1.8 }),
 };
 
-const S = { members: new Map(), editions: [], progress: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), reveals: new Map(), filter: 'all' };
+const S = { members: new Map(), people: new Map(), editions: [], progress: new Map(), pairs: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), filter: 'all' };
 const member = (id) => S.members.get(id) || { pseudo: 'Ancien membre' };
 const dayDate = (d) => new Date(`${d}T12:00:00`); // date SQL → midi local (évite les décalages de fuseau)
 
@@ -50,10 +51,11 @@ async function load() {
   await loadReactions('moment', S.moments.map((x) => x.id), me.id); // une requête pour toutes les réactions de la page
 
   const ids = S.events.map((e) => e.id);
-  const [prog, rs, ph] = await Promise.all([
+  const [prog, rs, ph, pairs] = await Promise.all([
     Promise.all(S.editions.map((e) => sb.rpc('hg_ss_progress', { p_edition: e.id }))),
     ids.length ? sb.from('hg_event_rsvps').select('event_id,user_id').eq('status', 'oui').in('event_id', ids) : { data: [] },
     ids.length ? sb.from('hg_photos').select('id,event_id,path,user_id').in('event_id', ids).order('created_at', { ascending: true }) : { data: [] },
+    Promise.all(S.editions.map((e) => fetchPairs(e.id))), // une requête par édition affichée (hg_ss_reveal)
   ]);
   const err2 = [...prog, rs, ph].find((r) => r.error)?.error;
   if (err2) throw err2;
@@ -61,6 +63,8 @@ async function load() {
     const d = prog[i].data;
     return [e.id, Array.isArray(d) ? d[0] : d];
   }));
+  S.pairs = new Map(S.editions.map((e, i) => [e.id, pairs[i]]));
+  S.people = peopleByPseudo(S.members);
   S.present = new Map();
   for (const r of rs.data || []) S.present.set(r.event_id, [...(S.present.get(r.event_id) || []), r.user_id]);
   S.photos = new Map();
@@ -103,11 +107,19 @@ function ssCard(e) {
       ${e.budget ? `<span class="pill">Budget ${esc(e.budget)}</span>` : ''}
       <span class="pill ${e.status === 'termine' ? 'pill-ok' : 'pill-current'}">${esc(STATUS_LABEL[e.status] || e.status)}</span>
     </div>
-    <details class="reveal" data-edition="${esc(e.id)}">
-      <summary>Qui offrait à qui ?</summary>
-      <div class="reveal-body"><p class="small muted">Chargement…</p></div>
-    </details>
+    ${pairsBlock(e)}
   </article>`;
+}
+
+/** Bloc dépliable « Qui a offert à qui » ; rien quand l'édition n'a pas de paires enregistrées. */
+function pairsBlock(e) {
+  const pairs = S.pairs.get(e.id) || [];
+  if (!pairs.length) return '';
+  const label = e.status === 'termine' ? 'Qui a offert à qui ?' : 'Qui offrait à qui ?';
+  return `<details class="ssp-details" data-edition="${esc(e.id)}">
+      <summary>${label}</summary>
+      <div class="ssp-body">${pairsHtml(pairs, S.people, { mePseudo: me.pseudo })}</div>
+    </details>`;
 }
 
 function irlCard(e) {
@@ -190,23 +202,6 @@ $$('.hf').forEach((b) => b.addEventListener('click', () => {
   render();
   $('#hist-live').textContent = `Filtre : ${FILTER_LABEL[S.filter]}`;
 }));
-
-// Révélation chargée à la première ouverture
-$('#timeline').addEventListener('toggle', async (e) => {
-  const d = e.target;
-  if (!d.matches?.('details.reveal') || !d.open) return;
-  const id = d.dataset.edition;
-  const body = $('.reveal-body', d);
-  if (!S.reveals.has(id)) {
-    const { data, error } = await sb.rpc('hg_ss_reveal', { p_edition: id });
-    if (error) { body.innerHTML = '<p class="small muted">Révélation indisponible.</p>'; toast(errMsg(error), 'error'); return; }
-    S.reveals.set(id, data || []);
-  }
-  const rows = S.reveals.get(id);
-  body.innerHTML = rows.length
-    ? `<ul class="reveal-list">${rows.map((r) => `<li><span>${esc(r.giver)}</span><span class="reveal-arrow" aria-label="offrait à">${I.arrow}</span><span>${esc(r.receiver)}</span></li>`).join('')}</ul>`
-    : '<p class="small muted">Aucune attribution enregistrée pour cette édition.</p>';
-}, true);
 
 $('#timeline').addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]');

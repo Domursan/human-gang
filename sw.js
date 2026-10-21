@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v18';
+const CACHE_VERSION = 'v19';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -23,7 +23,7 @@ const PRECACHE = [
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
   'assets/css/irl.css', 'assets/css/legal.css', 'assets/css/membre.css', 'assets/css/messages.css',
   'assets/css/photos.css', 'assets/css/recap.css', 'assets/css/rejoindre.css', 'assets/css/ui-confirm.css',
-  'assets/css/secret-santa.css', 'assets/js/accueil.js', 'assets/js/admin-access.js',
+  'assets/css/secret-santa.css', 'assets/css/ss-pairs.css', 'assets/js/accueil.js', 'assets/js/admin-access.js',
   'assets/js/admin-accounts.js', 'assets/js/admin-badges-edit.js', 'assets/js/admin-bot.js',
   'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js', 'assets/js/admin-godmode.js',
   'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
@@ -59,7 +59,7 @@ const PRECACHE = [
   'assets/js/irl.js', 'assets/js/legal.js', 'assets/js/membre.js', 'assets/js/messages.js',
   'assets/js/paillettes.js', 'assets/js/photos.js', 'assets/js/profile-fields.js',
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
-  'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js',
+  'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js', 'assets/js/ss-pairs.js',
   'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
   'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/css/admin-ui.css', 'assets/js/admin/ui/common.js', 'assets/js/admin/ui/time.js', 'assets/js/admin/ui/list.js', 'assets/js/admin/ui/drawer.js',

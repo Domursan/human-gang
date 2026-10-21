@@ -5,6 +5,7 @@ import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { safeUrl } from './utils.js';
+import { pairsHtml, peopleByPseudo } from './ss-pairs.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -558,20 +559,11 @@ function renderProgress() {
 /* ---------- Révélation ---------- */
 function renderReveal() {
   const el = $('#ss-reveal'); if (!el) return;
-  const byPseudo = new Map([...S.members.values()].map((m) => [m.pseudo, m]));
-  const rows = S.reveal.map((r) => {
-    const g = byPseudo.get(r.giver) || { pseudo: r.giver }, rc = byPseudo.get(r.receiver) || { pseudo: r.receiver };
-    const mine = r.giver === me.pseudo || r.receiver === me.pseudo;
-    return `<li class="ss-reveal-row${mine ? ' is-me' : ''}">
-      <span class="ss-reveal-who">${avatarHtml(g, 36)}<span>${esc(r.giver)}</span></span>
-      <span class="ss-reveal-arrow" aria-hidden="true">${I.arrow}</span><span class="visually-hidden"> offre à </span>
-      <span class="ss-reveal-who">${avatarHtml(rc, 36)}<span>${esc(r.receiver)}</span></span>
-    </li>`;
-  }).join('');
+  const done = S.ed.status === 'termine';
   el.innerHTML = `
     <div class="eyebrow">Les masques tombent</div>
-    <h2 id="ss-reveal-t" class="ss-reveal-title">Qui offrait à qui</h2>
-    ${rows ? `<ul class="ss-reveal">${rows}</ul>` : '<div class="empty">Aucune attribution à afficher.</div>'}`;
+    <h2 id="ss-reveal-t" class="ss-reveal-title">${done ? 'Qui a offert à qui' : 'Qui offrait à qui'}</h2>
+    ${pairsHtml(S.reveal, peopleByPseudo(S.members), { mePseudo: me.pseudo, emptyText: done ? 'Paires non enregistrées.' : 'Aucune attribution à afficher.' })}`;
 }
 
 /* ---------- Démarrage ---------- */

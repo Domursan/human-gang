@@ -5,6 +5,8 @@ const S = window.__SCN || {};
 const ME = '11111111-1111-4111-8111-111111111111';
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const now = Date.now(), iso = (d) => new Date(now + d * 864e5).toISOString();
+// Fantômes (migration 019) : profils préparés par l'admin, invisibles pour les membres (hg_members les exclut).
+const GHOSTS = [{ id: U(7), pseudo: 'Léa', avatar_url: null, color: '#8F5F4F', is_ghost: true }, { id: U(8), pseudo: 'Tom', avatar_url: null, color: '#4F8F7A', is_ghost: true }, { id: U(9), pseudo: 'Nina', avatar_url: null, color: '#7A4F8F', is_ghost: true }];
 const people = [['Ethan', ME], ['Alice', U(2)], ['Bruno', U(3)], ['Chloé', U(4)], ['David', U(5)], ['Emma', U(6)]];
 const AUTO = ['premier_noel','veteran','lutin_express','sur_le_fil','liste_parfaite','toujours_la','organisateur','globe_trotter','paparazzi','boite_a_idees','fondateur','fidele','chasseur_bugs','saisonnier','cupidon'];
 const PUMPKIN = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="3" y="4" width="10" height="10" fill="#E8862A"/><rect x="2" y="6" width="12" height="6" fill="#E8862A"/><rect x="7" y="1" width="2" height="3" fill="#3C7A3A"/><rect x="5" y="7" width="2" height="2" fill="#1a1a1a"/><rect x="9" y="7" width="2" height="2" fill="#1a1a1a"/><rect x="5" y="11" width="6" height="1" fill="#1a1a1a"/></svg>');
@@ -36,7 +38,14 @@ const DB = {
   ],
   hg_ss_participants: people.map(([, id]) => ({ edition_id: 'E25', user_id: id, joined_at: iso(-5) })),
   hg_ss_exclusions: [{ edition_id: 'E25', user_a: U(2), user_b: U(3) }],
-  hg_ss_assignments: [{ edition_id: 'E24', giver_id: ME, receiver_id: U(2) }, { edition_id: 'E24', giver_id: U(2), receiver_id: ME }],
+  hg_ss_assignments: [{ edition_id: 'E24', giver_id: ME, receiver_id: U(2) }, { edition_id: 'E24', giver_id: U(2), receiver_id: ME },
+    // 2023 (terminée, édition fournie par le scénario du parcours parcours-ss-paires) : boucle de 5 dont 3 fantômes (ils ne sont pas dans hg_profiles : un membre ne les voit pas dans hg_members)
+    { edition_id: 'E23', giver_id: ME, receiver_id: GHOSTS[0].id }, { edition_id: 'E23', giver_id: GHOSTS[0].id, receiver_id: U(3) },
+    { edition_id: 'E23', giver_id: U(3), receiver_id: GHOSTS[1].id }, { edition_id: 'E23', giver_id: GHOSTS[1].id, receiver_id: GHOSTS[2].id },
+    { edition_id: 'E23', giver_id: GHOSTS[2].id, receiver_id: ME },
+    // 2025 (en cours, status « envoi » quand un scénario le demande) : ne doit jamais apparaître aux membres
+    { edition_id: 'E25', giver_id: U(2), receiver_id: U(4) }, { edition_id: 'E25', giver_id: U(4), receiver_id: U(5) },
+    { edition_id: 'E25', giver_id: U(5), receiver_id: U(6) }, { edition_id: 'E25', giver_id: U(6), receiver_id: U(2) }],
   hg_dyn_events: [
     { id: 'aaaaaaaa-0000-4000-8000-000000000001', name: 'La citrouille d\'Halloween', description: 'Des citrouilles se baladent sur le site toute la semaine.', image_url: PUMPKIN, emoji: '🎃',
       starts_at: iso(-2), ends_at: iso(5), probability: 1, max_per_page: 2, max_per_user: 20, max_total: null, duration_ms: 7000, size_px: 88,
@@ -346,6 +355,13 @@ export function createClient() {
       }
       if (fn === 'hg_admin_ghosts') return { data: window.__SCN?.ghosts ?? [], error: null }; // fantômes : fournis par le scénario du test
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
+      if (fn === 'hg_ss_reveal') { // paires d'une édition : seulement en révélation ou terminée (comme la base)
+        const ed = DB.hg_ss_editions.find((e) => e.id === args.p_edition);
+        if (!['revelation', 'termine'].includes(ed?.status)) return { data: [], error: null };
+        const pseudo = (id) => (DB.hg_profiles.find((p) => p.id === id) || GHOSTS.find((g) => g.id === id) || {}).pseudo;
+        const rows = DB.hg_ss_assignments.filter((a) => a.edition_id === args.p_edition).map((a) => ({ giver: pseudo(a.giver_id), receiver: pseudo(a.receiver_id) }));
+        return { data: rows.sort((x, y) => x.giver.localeCompare(y.giver, 'fr')), error: null };
+      }
       return { data: null, error: null };
     },
     channel: (name) => makeChannel(name), removeChannel: (ch) => { RT.channels.delete(ch); }, removeAllChannels() { RT.channels.clear(); },

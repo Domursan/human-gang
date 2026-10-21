@@ -1,0 +1,25 @@
+/* Paires « qui offre à qui » d'une édition Secret Santa : historique.html et secret-santa.html */
+.ssp-details { border-top: 1px solid var(--bd); padding-top: 4px; }
+.ssp-details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ss-fg); list-style: none; }
+.ssp-details summary::-webkit-details-marker { display: none; }
+.ssp-details summary::before { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); transition: transform .2s; margin-right: 2px; }
+.ssp-details[open] summary::before { transform: rotate(45deg); }
+@media (hover: hover) { .ssp-details summary:hover { text-decoration: underline; } }
+.ssp-details summary:focus-visible { outline: 2px solid var(--ss-fg); outline-offset: 3px; border-radius: 6px; }
+
+.ssp-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; max-width: 640px; }
+.ssp-item { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px 12px;
+  border-radius: var(--radius-sm); background: rgba(0,0,0,.22); font-size: 14px; min-width: 0; }
+.ssp-item.is-chain-start { margin-top: 12px; }
+.ssp-item.is-me { outline: 1px solid var(--ss-fg); }
+.ssp-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ssp-who:last-child { justify-content: flex-end; text-align: right; }
+.ssp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; min-width: 0; }
+.ssp-arrow { color: var(--ss-fg); display: flex; flex: none; }
+
+@media (max-width: 600px) {
+  .ssp-item { gap: 6px; padding: 8px 10px; }
+  .ssp-who { gap: 6px; }
+  .ssp-item .avatar { width: 28px !important; height: 28px !important; }
+}

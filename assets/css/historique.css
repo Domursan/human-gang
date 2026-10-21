@@ -38,18 +38,6 @@
 .tl-tags .pill-current { background: transparent; }
 .tl-body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
 
-/* Révélation Secret Santa */
-.reveal { border-top: 1px solid var(--bd); padding-top: 4px; }
-.reveal summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ss-fg); list-style: none; }
-.reveal summary::-webkit-details-marker { display: none; }
-.reveal summary::before { content: ''; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg); transition: transform .2s; margin-right: 2px; }
-.reveal[open] summary::before { transform: rotate(45deg); }
-.reveal-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
-.reveal-list li { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.22); font-size: 14px; min-width: 0; }
-.reveal-list li span:not(.reveal-arrow) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.reveal-arrow { color: var(--ss-fg); display: inline-flex; flex: none; }
-
 /* Miniatures sorties */
 .tl-thumbs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 560px; }
 .tl-thumb { display: block; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface-2); }
