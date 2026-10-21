@@ -35,6 +35,7 @@ const PRECACHE = [
   'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js',
   'assets/js/core/icons.js', 'assets/js/core/init.js', 'assets/js/core/pages-access.js',
   'assets/js/core/prefs-state.js', 'assets/js/core/prefs.js', 'assets/js/core/profile.js',
+  'assets/js/core/search.js',
   'assets/js/core/supabase.js', 'assets/js/core/theme-calc.js', 'assets/js/core/theme-load.js',
   'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
   'assets/js/core/util.js', 'assets/js/dyn-events.js',
