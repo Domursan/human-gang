@@ -137,7 +137,7 @@ export function mountBotSection(container) {
   if (!container) return;
   loadStyles();
   const S = {
-    bot: { announce_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
+    bot: { announce_channel_id: null, birthday_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
     histFilter: 'all', histQ: '', histLimit: PAGE_SIZE, histMore: false,
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
     people: [], pseudo: new Map(), selected: new Set(), q: '', history: null, sending: false,
@@ -153,6 +153,11 @@ export function mountBotSection(container) {
           <div class="field">
             <label for="bot-channel">ID du salon d'annonces</label>
             <input id="bot-channel" name="announce_channel_id" inputmode="numeric" autocomplete="off" placeholder="ex. 112233445566778899">
+          </div>
+          <div class="field">
+            <label for="bot-bday-channel">ID du salon des anniversaires <span class="muted small">(facultatif)</span></label>
+            <input id="bot-bday-channel" name="birthday_channel_id" inputmode="numeric" autocomplete="off" placeholder="Vide = salon d'annonces" aria-describedby="bot-bday-hint">
+            <p class="small muted" id="bot-bday-hint">Les « Joyeux anniversaire » y sont publiés ; laissé vide, ils partent dans le salon d'annonces.</p>
           </div>
           <div class="field">
             <label for="bot-admin">Ton ID Discord (MP assistance)</label>
@@ -242,6 +247,7 @@ export function mountBotSection(container) {
   /* ======================= Réglages ======================= */
   function renderSettings() {
     form.announce_channel_id.value = S.bot.announce_channel_id ?? '';
+    form.birthday_channel_id.value = S.bot.birthday_channel_id ?? '';
     form.admin_discord_id.value = S.bot.admin_discord_id ?? '';
     form.mention_role_id.value = S.bot.mention_role_id ?? '';
     for (const [k] of MENTION_TYPES) form.elements[`mention_${k}`].value = mentionOf(k);
@@ -263,12 +269,14 @@ export function mountBotSection(container) {
       const channel = form.announce_channel_id.value.trim(), admin = form.admin_discord_id.value.trim();
       const role = form.mention_role_id.value.trim();
       if (channel && !DISCORD_ID.test(channel)) throw new Error('L\'ID du salon doit être un nombre de 17 à 20 chiffres.');
+      const bdayChannel = form.birthday_channel_id.value.trim();
+      if (bdayChannel && !DISCORD_ID.test(bdayChannel)) throw new Error('L\'ID du salon des anniversaires doit être un nombre de 17 à 20 chiffres.');
       if (admin && !DISCORD_ID.test(admin)) throw new Error('Ton ID Discord doit être un nombre de 17 à 20 chiffres.');
       if (role && !DISCORD_ID.test(role)) throw new Error('L\'ID du rôle doit être un nombre de 17 à 20 chiffres.');
       const mentions = Object.fromEntries(MENTION_TYPES.map(([k]) => [k, form.elements[`mention_${k}`].value]));
       if (Object.values(mentions).includes('role') && !role) throw new Error('Pour mentionner un rôle, renseigne son ID.');
       const value = {
-        ...S.bot, announce_channel_id: channel || null, admin_discord_id: admin || null, mention_role_id: role || null,
+        ...S.bot, announce_channel_id: channel || null, birthday_channel_id: bdayChannel || null, admin_discord_id: admin || null, mention_role_id: role || null,
         mentions, notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])),
       };
       check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));

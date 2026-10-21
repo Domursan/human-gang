@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
   }
 
   const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
-  const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
+  const bot = (s?.value ?? {}) as { announce_channel_id?: string; birthday_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
+  // Salon des anniversaires : le sien s'il est réglé, sinon le salon d'annonces
+  const bdayChannel = isSnowflake(bot.birthday_channel_id) ? bot.birthday_channel_id : bot.announce_channel_id;
   const botOn = bot.notify?.birthday !== false && hasBotToken();
 
   const out = { today: candidates.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };
@@ -116,14 +118,14 @@ Deno.serve(async (req) => {
       }
     }
     if (row.announce_sent_at == null) {
-      if (!(p.share_birthday && isSnowflake(bot.announce_channel_id))) {
+      if (!(p.share_birthday && isSnowflake(bdayChannel))) {
         await mark(p.id, year, 'announce_sent_at');
       } else {
         try {
           const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
           // Mention configurée (bot.mentions.birthday) en plus de la personne fêtée, qui est toujours notifiée
           const mention = mentionWith(bot, mentionMode(bot.mentions?.birthday), isSnowflake(p.discord_id) ? [p.discord_id] : []);
-          await sendChannel(bot.announce_channel_id!, {
+          await sendChannel(bdayChannel!, {
             ...mention,
             content: [mention.content, `Joyeux anniversaire ${who} !`].filter(Boolean).join(' '),
             embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: p.pseudo, lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
