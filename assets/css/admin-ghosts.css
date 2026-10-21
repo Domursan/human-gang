@@ -16,7 +16,7 @@
 .agh-name { overflow-wrap: anywhere; }
 .agh-name .pill { vertical-align: middle; margin-left: 4px; }
 .agh-note { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
-.agh-k { display: inline-block; font-size: 12px; color: var(--muted); margin-right: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.agh-k { display: inline-block; font-size: 13px; color: var(--muted); margin-right: 6px; text-transform: uppercase; letter-spacing: .04em; }
 .agh-code { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .agh-code-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .agh-code-val { font-size: 16px; letter-spacing: .08em; }

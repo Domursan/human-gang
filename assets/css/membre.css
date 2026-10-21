@@ -114,10 +114,10 @@
 /* Format « badge » vertical sur petits écrans */
 @container (max-width: 520px) {
   .idc-face { aspect-ratio: auto; min-height: calc(var(--u) * 150); gap: calc(var(--u) * 4); padding: calc(var(--u) * 7) calc(var(--u) * 6.5) calc(var(--u) * 6); grid-template-rows: auto auto auto 1fr auto; }
-  .idc-k { font-size: 11px; }
+  .idc-k { font-size: 12px; }
   .idc-logo { width: calc(var(--u) * 15); height: calc(var(--u) * 15); }
   .idc-brand-name { font-size: calc(var(--u) * 7); }
-  .idc-brand-sub { font-size: 10px; margin-top: 4px; }
+  .idc-brand-sub { font-size: 11px; margin-top: 4px; }
   .idc-top { grid-template-columns: auto minmax(0, 1fr); }
   .idc-no { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; text-align: left; }
   .idc-no-val { font-size: calc(var(--u) * 10); }
@@ -131,10 +131,10 @@
   .idc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .idc-stats li { padding: 8px 8px 6px; box-shadow: inset 0 3px 0 0 var(--c); }
   .idc-stats strong { font-size: 20px; }
-  .idc-stats span { font-size: 11px; }
+  .idc-stats span { font-size: 12px; }
   .idc-chip { width: 34px; height: 26px; }
   .idc-barcode { height: 24px; }
-  .idc-serial { font-size: 10px; }
+  .idc-serial { font-size: 11px; }
 }
 
 /* ---------- Badges ---------- */
@@ -145,8 +145,8 @@
   background: var(--bg); border: 2px solid color-mix(in srgb, var(--sand) 55%, transparent); font-weight: 700; color: var(--sand); margin-bottom: 4px; }
 .badge-img img { width: 100%; height: 100%; object-fit: cover; }
 .badge-name { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
-.badge-desc { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-.badge-date { font-family: var(--font-pixel); font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.badge-desc { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.badge-date { font-family: var(--font-pixel); font-size: 12px; color: var(--muted); letter-spacing: .06em; }
 .skeleton-line { display: block; height: 14px; border-radius: 6px; background: var(--surface-2); margin: 10px 0; animation: mb-pulse 1.4s ease-in-out infinite; }
 .skeleton-line.short { width: 60%; }
 
@@ -159,7 +159,7 @@
 .gang-item.is-current { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
 .gang-txt { display: flex; flex-direction: column; min-width: 0; }
 .gang-txt strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gang-me { font-family: var(--font-pixel); font-size: 10px; font-weight: 400; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); vertical-align: 2px; }
+.gang-me { font-family: var(--font-pixel); font-size: 12px; font-weight: 400; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); vertical-align: 2px; }
 .gang-skel { height: 64px; border-radius: var(--radius-sm); background: var(--surface); animation: mb-pulse 1.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -174,4 +174,4 @@
 .badge-lvl { position: absolute; right: -8px; bottom: -6px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; display: grid; place-items: center;
   font: 700 11px/1 var(--font-pixel); color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
 .badge-item .lvl-pips { margin: 2px 0; }
-.badge-item .lvl-name { font-size: 11px; }
+.badge-item .lvl-name { font-size: 12px; }

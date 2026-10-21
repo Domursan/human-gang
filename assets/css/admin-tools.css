@@ -10,7 +10,7 @@
 .il-title strong { font-size: 16px; overflow-wrap: anywhere; }
 .il-switch { min-height: 36px; }
 .il-url { display: flex; gap: 8px; align-items: center; }
-.il-url-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; text-overflow: ellipsis; }
+.il-url-input { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; text-overflow: ellipsis; }
 .il-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; }
 .il-codes summary { cursor: pointer; font-size: 14px; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
 @media (hover: hover) { .il-codes summary:hover { color: var(--text); } }
@@ -32,7 +32,7 @@
 .md-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .md-head p { margin: 6px 0 0; }
 .md-cols, .md-row { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1.1fr) minmax(0, 1.2fr); gap: 12px; align-items: center; }
-.md-cols { padding: 0 12px; text-transform: uppercase; letter-spacing: 1.5px; font-size: 11px; }
+.md-cols { padding: 0 12px; text-transform: uppercase; letter-spacing: 1.5px; font-size: 12px; }
 .md-rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 52vh; overflow-y: auto; }
 .md-row { padding: 8px 12px; border-bottom: 1px solid var(--border); border-left: 3px solid transparent; }
 .md-row:last-child { border-bottom: 0; }
@@ -63,7 +63,7 @@
 .bdg-dlg { width: min(520px, calc(100vw - 32px)); }
 .bdg-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 14px; align-items: start; }
 .bdg-img-edit { display: flex; align-items: center; gap: 12px; }
-.bdg-img-edit input { min-width: 0; flex: 1; font-size: 13px; }
+.bdg-img-edit input { min-width: 0; flex: 1; font-size: 14px; }
 .bdg-dlg .form-error { margin: 0; color: var(--rose); font-weight: 700; }
 .bdg-dlg .field > .small { display: block; margin-top: 4px; }
 

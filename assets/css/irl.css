@@ -56,7 +56,7 @@
 .rsvp-counts strong { color: var(--text); }
 .people { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .person { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; background: rgba(0,0,0,.22); font-size: 14px; }
-.person .avatar { font-size: 11px; }
+.person .avatar { font-size: 12px; }
 .rsvp-wrap > p { margin: 0; }
 
 .owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }

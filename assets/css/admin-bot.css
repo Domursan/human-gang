@@ -10,14 +10,14 @@
 .bt-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; align-items: start; }
 .bt-list { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 16px; }
 .bt-group { display: flex; flex-direction: column; gap: 2px; }
-.bt-group-label { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--sand); padding: 0 12px 4px; }
+.bt-group-label { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--sand); padding: 0 12px 4px; }
 .bt-item { font: inherit; text-align: left; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: center;
   min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--text); cursor: pointer; }
 @media (hover: hover) { .bt-item:hover { background: var(--surface-2); } }
 .bt-item[aria-current="true"] { background: var(--surface-2); border-color: var(--border-strong); box-shadow: inset 3px 0 0 var(--accent); }
 .bt-item-label { font-size: 14px; font-weight: 700; line-height: 1.3; }
-.bt-item-sub { grid-column: 1; font-size: 12px; color: var(--muted); line-height: 1.3; }
-.bt-item-state { grid-column: 2; grid-row: 1 / span 2; font-size: 11px; font-weight: 700; border-radius: 999px; }
+.bt-item-sub { grid-column: 1; font-size: 13px; color: var(--muted); line-height: 1.3; }
+.bt-item-state { grid-column: 2; grid-row: 1 / span 2; font-size: 12px; font-weight: 700; border-radius: 999px; }
 .bt-item-state:empty { display: none; }
 .bt-item-state.is-custom { color: var(--sage-text); background: var(--sage-soft); padding: 2px 8px; }
 .bt-item-state.is-dirty { color: var(--sand); border: 1px solid var(--sand); padding: 1px 7px; }
@@ -34,8 +34,8 @@
 .bt-hint { margin: 0; }
 .bt-vars { display: flex; flex-direction: column; gap: 8px; }
 .bt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.bt-var { white-space: nowrap; max-width: 100%; min-height: 36px; padding: 6px 12px 6px 8px; font-size: 13px; color: var(--text); }
-.bt-var code { color: var(--sand); font-size: 13px; }
+.bt-var { white-space: nowrap; max-width: 100%; min-height: 36px; padding: 6px 12px 6px 8px; font-size: 14px; color: var(--text); }
+.bt-var code { color: var(--sand); font-size: 14px; }
 .bt-var svg { width: 14px; height: 14px; color: var(--muted); }
 .bt-var-label { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 @media (hover: hover) { .bt-var:hover { border-color: var(--sand); } }
@@ -50,15 +50,15 @@
 /* ---------- Aperçu façon Discord (volontairement aux couleurs de Discord) ---------- */
 .dc { background: #313338; color: #dbdee1; border-radius: var(--radius-sm); padding: 14px 16px 16px; font-size: 15px; line-height: 1.375;
   border: 1px solid #1e1f22; overflow: hidden; }
-.dc-where { font-size: 12px; color: #949ba4; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #3f4147; }
+.dc-where { font-size: 13px; color: #949ba4; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #3f4147; }
 .dc-where::before { content: '# '; }
 .dc-msg { display: flex; gap: 14px; }
 .dc-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1e1f22; object-fit: contain; image-rendering: pixelated; flex: none; }
 .dc-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
 .dc-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .dc-name { color: #f2f3f5; font-weight: 600; }
-.dc-app { background: #5865f2; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; line-height: 1.4; }
-.dc-time { color: #949ba4; font-size: 12px; }
+.dc-app { background: #5865f2; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 4px; line-height: 1.4; }
+.dc-time { color: #949ba4; font-size: 13px; }
 .dc-content { white-space: pre-wrap; overflow-wrap: anywhere; }
 .dc-embed { background: #2b2d31; border-left: 4px solid var(--dc-bar, #9E3543); border-radius: 4px; padding: 10px 16px 14px 12px;
   max-width: 520px; display: flex; flex-direction: column; gap: 8px; }
@@ -67,9 +67,9 @@
 .dc-desc { font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .dc-empty { color: #949ba4; font-style: italic; }
 .dc-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px 16px; }
-.dc-fname { font-size: 13px; font-weight: 600; color: #f2f3f5; }
+.dc-fname { font-size: 14px; font-weight: 600; color: #f2f3f5; }
 .dc-fval { font-size: 14px; overflow-wrap: anywhere; }
-.dc-footer { font-size: 12px; color: #949ba4; }
+.dc-footer { font-size: 13px; color: #949ba4; }
 .dc code { background: #1e1f22; padding: 0 4px; border-radius: 4px; }
 .dc-link { color: #00a8fc; }
 
@@ -91,7 +91,7 @@
 .bm-row.is-off .avatar, .bm-row.is-off .bm-name { opacity: .55; }
 .bm-row .avatar { width: 32px; height: 32px; font-size: 12px; display: inline-grid; place-items: center; }
 .bm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bm-st { font-size: 11px; padding: 3px 8px; white-space: nowrap; flex: none; }
+.bm-st { font-size: 12px; padding: 3px 8px; white-space: nowrap; flex: none; }
 .bm-compose { min-width: 0; }
 .switch.is-disabled { cursor: not-allowed; opacity: .7; }
 .bm-hint-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -118,10 +118,10 @@
   padding: 10px 14px; min-height: 48px; }
 .bm-log > summary::-webkit-details-marker { display: none; }
 .bm-log[open] > summary { border-bottom: 1px solid var(--border); }
-.bm-log-date { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bm-log-date { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .bm-log-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .bm-log-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.bm-log-stats .pill { font-size: 11px; padding: 3px 8px; }
+.bm-log-stats .pill { font-size: 12px; padding: 3px 8px; }
 .bm-log-body { padding: 12px 14px 14px; }
 .bm-log-body p { margin: 0; }
 .bm-log-t { font-weight: 700; }

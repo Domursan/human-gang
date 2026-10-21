@@ -31,16 +31,16 @@
 
 .rj-inner { width: min(520px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
 .rj-logo { width: 140px; height: 140px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 10px 30px rgba(0, 0, 0, .55)); }
-.rj-eyebrow { margin: 6px 0 0; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--rj-gold); font-weight: 700; }
+.rj-eyebrow { margin: 6px 0 0; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--rj-gold); font-weight: 700; }
 .rj-title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.05; color: var(--rj-ink); }
 .rj-lead { margin: 0; color: var(--rj-muted); font-size: 16px; line-height: 1.55; max-width: 44ch; }
 .rj-lead strong { color: var(--rj-ink); }
 
 .rj-code-box { width: 100%; margin-top: 6px; padding: 18px; border-radius: var(--radius-sm); border: 1px dashed rgba(226, 199, 126, .55);
   background: rgba(10, 11, 20, .55); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.rj-code-k { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--rj-muted); }
+.rj-code-k { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--rj-muted); }
 .rj-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(26px, 6vw, 34px); font-weight: 700; letter-spacing: 3px; color: var(--rj-ink); user-select: all; }
-.rj-code-note { margin: 0; font-size: 13px; color: var(--rj-muted); }
+.rj-code-note { margin: 0; font-size: 14px; color: var(--rj-muted); }
 .rj-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 6px; }
 .rj-sky .btn-ghost { color: var(--rj-ink); border-color: rgba(242, 239, 234, .3); }
 @media (hover: hover) { .rj-sky .btn-ghost:hover { border-color: rgba(242, 239, 234, .6); background: rgba(255, 255, 255, .08); color: var(--rj-ink); } }
@@ -55,7 +55,7 @@
   .rj-actions .btn { width: 100%; }
 }
 .rj-sky .btn svg { width: 18px; height: 18px; }
-.rj-foot { margin: 8px 0 0; font-size: 13px; color: var(--rj-muted); }
+.rj-foot { margin: 8px 0 0; font-size: 14px; color: var(--rj-muted); }
 .rj-foot a { color: var(--rj-ink); }
 .rj-icon { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(242, 239, 234, .25); color: var(--rj-gold); }
 .rj-icon svg { width: 26px; height: 26px; }

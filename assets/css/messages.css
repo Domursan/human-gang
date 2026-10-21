@@ -28,13 +28,13 @@
 .msg-conv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .msg-conv-top, .msg-conv-bottom { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .msg-conv-title { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.msg-conv-time { flex: none; font-size: 12px; color: var(--muted); }
+.msg-conv-time { flex: none; font-size: 13px; color: var(--muted); }
 .msg-conv-preview { flex: 1; min-width: 0; font-size: 14px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .msg-conv.is-unread .msg-conv-preview { color: var(--text); font-weight: 500; }
 .msg-conv.is-unread .msg-conv-time { color: var(--sand); font-weight: 700; }
 .msg-unread { flex: none; align-self: center; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--accent); color: var(--accent-text);
   font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-.msg-tag { align-self: flex-start; margin-top: 2px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ss-fg); }
+.msg-tag { align-self: flex-start; margin-top: 2px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ss-fg); }
 
 /* Avatars */
 .msg-av { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; flex: none; }
@@ -56,7 +56,7 @@
 .msg-back { display: none; }
 .msg-thread-who { min-width: 0; }
 .msg-thread-title { font-size: 17px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.msg-thread-sub { margin: 0; font-size: 13px; color: var(--muted); }
+.msg-thread-sub { margin: 0; font-size: 14px; color: var(--muted); }
 .msg-thread-head.is-santa .msg-thread-sub { color: var(--ss-fg); }
 
 .msg-thread { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 8px; display: flex; flex-direction: column; gap: 4px; }
@@ -64,13 +64,13 @@
 .msg-thread-empty { margin: auto; max-width: 380px; text-align: center; color: var(--muted); padding: 24px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
 
 .msg-day { display: flex; justify-content: center; margin: 14px 0 8px; }
-.msg-day span { font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
+.msg-day span { font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
 
 .msg-row { display: flex; flex-direction: column; max-width: min(78%, 560px); margin-top: 8px; }
 .msg-row.is-cont { margin-top: 0; }
 .msg-row.is-mine { align-self: flex-end; align-items: flex-end; }
 .msg-row.is-other { align-self: flex-start; align-items: flex-start; }
-.msg-sender { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--muted); margin: 0 0 3px 12px; }
+.msg-sender { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); margin: 0 0 3px 12px; }
 .msg-sender.is-santa { color: var(--ss-fg); letter-spacing: .5px; text-transform: uppercase; }
 .msg-sender svg { width: 16px; height: 16px; }
 .msg-bubble { position: relative; padding: 9px 14px 7px; border-radius: 18px; background: var(--surface-2); border: 1px solid var(--border);
@@ -82,7 +82,7 @@
 .msg-row.is-santa .msg-bubble { background: var(--ss-bg); border-color: var(--ss-border); }
 .msg-bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .msg-row.is-other .msg-bubble a { color: var(--sand); }
-.msg-time { display: inline-block; margin-left: 10px; font-size: 11px; opacity: .7; white-space: nowrap; float: right; margin-top: 6px; }
+.msg-time { display: inline-block; margin-left: 10px; font-size: 12px; opacity: .7; white-space: nowrap; float: right; margin-top: 6px; }
 
 /* ---------- Saisie ---------- */
 .msg-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: end; padding: 12px 18px 10px;
@@ -91,7 +91,7 @@
   border-radius: 22px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); overflow-y: auto; }
 .msg-compose textarea:focus-visible { outline: 2px solid var(--sand); outline-offset: 1px; }
 .msg-send { width: 44px; height: 44px; padding: 0; border-radius: 50%; }
-.msg-compose-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); padding: 0 6px; }
+.msg-compose-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); padding: 0 6px; }
 .msg-adm { display: none; }
 .msg-count { font-variant-numeric: tabular-nums; flex: none; }
 .msg-count.is-near { color: var(--sand); font-weight: 700; }

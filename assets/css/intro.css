@@ -75,7 +75,7 @@ body.intro {
   background: rgba(8, 14, 32, 0.45);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(242, 239, 234, 0.72); font-size: 13px; font-weight: 500;
+  color: rgba(242, 239, 234, 0.72); font-size: 14px; font-weight: 500;
 }
 .intro-skip:hover, .intro-skip:focus-visible { background: rgba(24, 34, 64, 0.8); color: var(--text); }
 

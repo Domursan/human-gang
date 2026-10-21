@@ -48,7 +48,7 @@
 /* Étiquettes de visibilité */
 .vis-tag {
   display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; vertical-align: middle;
-  font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+  font-size: 12px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
   padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--muted); white-space: nowrap;
 }
 .vis-tag svg { width: 12px; height: 12px; }
@@ -126,8 +126,8 @@
 .badge-medal img { width: 100%; height: 100%; object-fit: cover; }
 .badge-initials { font-size: 22px; line-height: 1; }
 .badge-name { font-weight: 700; font-size: 15px; }
-.badge-desc { font-size: 13px; color: var(--muted); }
-.badge-state { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--sage-text); margin-top: auto; }
+.badge-desc { font-size: 14px; color: var(--muted); }
+.badge-state { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--sage-text); margin-top: auto; }
 .badge-state svg { width: 12px; height: 12px; }
 .badge.is-locked { background: transparent; border-style: dashed; }
 .badge.is-locked .badge-medal { filter: grayscale(1); opacity: .35; border-color: var(--border-strong); color: var(--muted); background: var(--surface); }
@@ -177,5 +177,5 @@
 .badge.has-levels .badge-medal img { border-radius: 50%; }
 .badge-levels { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; margin-top: 2px; }
 .lvl-progress { width: 100%; height: 8px; }
-.lvl-prog-txt { font-size: 12px; color: var(--muted); }
+.lvl-prog-txt { font-size: 13px; color: var(--muted); }
 html[data-mode="clair"] .medal-lvl { color: #FFFFFF; }

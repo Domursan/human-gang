@@ -14,7 +14,7 @@
 
 .trd-list { display: flex; flex-direction: column; gap: 16px; }
 .trd-none { margin: 0; font-size: 14px; color: var(--muted); }
-.trd-hint { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.trd-hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
 .trd-note { margin: 0; color: var(--muted); font-size: 15px; }
 .trd-retry { margin-top: 12px; justify-content: center; }
 
@@ -23,10 +23,10 @@
 .trd-offer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .trd-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .trd-who h2, .trd-who h3, .trd-offer-head h3 { margin: 0; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
-.trd-date { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.trd-date { margin: 2px 0 0; font-size: 14px; color: var(--muted); }
 .trd-sides { display: grid; gap: 16px; }
 .trd-side { min-width: 0; }
-.trd-side-title { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.trd-side-title { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .trd-cards { display: flex; flex-wrap: wrap; gap: 10px; }
 .trd-pails { margin: 8px 0 0; font-weight: 700; color: var(--sand); }
 .trd-msg { margin: 0; padding: 12px 14px; border-left: 3px solid var(--border-strong); border-radius: var(--radius-sm);
@@ -75,7 +75,7 @@
 .trd-col { margin: 0; min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
   display: flex; flex-direction: column; gap: 12px; }
 .trd-col legend { padding: 0 6px; font-weight: 700; font-size: 15px; }
-.trd-count { margin: 0; font-size: 13px; color: var(--muted); }
+.trd-count { margin: 0; font-size: 14px; color: var(--muted); }
 .trd-grid { display: grid; grid-template-columns: repeat(auto-fill, 96px); justify-content: start; gap: 12px 10px;
   max-height: 340px; overflow: auto; padding: 8px 6px 10px; }
 .trd-grid .hgc { --w: 96px; }
