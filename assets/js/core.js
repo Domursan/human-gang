@@ -409,9 +409,22 @@ export async function callFn(name, body) {
   if (error) throw error;
   return data;
 }
-/** Notifie le bot Discord (silencieux en cas d'échec : le site continue de fonctionner sans bot). */
+const NOTIFY_LABELS = {
+  ss_draw: 'tirage Secret Santa', ss_gift_sent: 'cadeau envoyé', ss_gift_received: 'cadeau reçu', irl_new: 'sortie IRL',
+  message_new: 'message', dyn_announce: 'annonce', card_pull: 'tirage de carte', card_trade: 'échange de cartes',
+  bot_test: 'test du bot', admin_dm: 'message admin',
+};
+/**
+ * Notifie le bot Discord. Renvoie true si l'appel a réussi. Le site continue de fonctionner sans bot :
+ * un membre ne voit rien en cas d'échec ; un admin reçoit un message d'erreur (sinon il croit l'annonce partie).
+ */
 export async function notify(event, payload = {}) {
-  try { await callFn('hg-notify', { event, ...payload }); } catch (e) { console.warn('[hg-notify]', e); }
+  try { await callFn('hg-notify', { event, ...payload }); return true; }
+  catch (e) {
+    console.warn('[hg-notify]', e);
+    if (_profile?.is_admin) toast(`Notification Discord non envoyée (${NOTIFY_LABELS[event] || event}) : ${errMsg(e)}`, 'error');
+    return false;
+  }
 }
 
 /* ---------- Accès aux pages (tables hg_pages / hg_page_access, rpc hg_my_pages) ----------
