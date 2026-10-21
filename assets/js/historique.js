@@ -4,6 +4,7 @@ import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml }
 import { prepareImage } from './image-compress.js';
 import { loadReactions, reactionBarHtml } from './reactions.js';
 import { ghostDirectory } from './admin-ghosts.js';
+import { confirmBox } from './ui-confirm.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -218,7 +219,7 @@ $('#timeline').addEventListener('click', (e) => {
 $('#btn-moment').addEventListener('click', () => openMomentDialog());
 
 async function deleteMoment(m) {
-  if (!confirm(`Supprimer le moment « ${m.title} » ?`)) return;
+  if (!(await confirmBox(`Supprimer le moment « ${m.title} » ?`, '', { ok: 'Supprimer', danger: true }))) return;
   const { error } = await sb.from('hg_moments').delete().eq('id', m.id);
   if (error) return toast(`Suppression impossible : ${errMsg(error)}`, 'error');
   if (m.image_path && (isAdmin || m.image_path.startsWith(`${me.id}/`))) removeObjects([m.image_path]).catch(() => {});

@@ -2,6 +2,7 @@
 import { sb, esc } from './core.js';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { reactionBarHtml } from './reactions.js';
+import { confirmBox } from './ui-confirm.js';
 
 export const PHOTO_BUCKET = 'hg-photos';
 const SIGN_TTL = 3600; // secondes
@@ -122,10 +123,12 @@ function ensureLightbox() {
   d.addEventListener('close', () => { d.querySelector('img').removeAttribute('src'); lb.opener?.focus?.(); });
   d.querySelector('.lb-del').addEventListener('click', async () => {
     const it = lb.items[lb.i];
-    if (!it?.onDelete || !confirm('Supprimer cette photo ?')) return;
+    if (!it?.onDelete || !(await confirmBox('Supprimer cette photo ?', '', { ok: 'Supprimer', danger: true }))) return;
     const ok = await it.onDelete(it);
     if (ok === false) return;
-    lb.items.splice(lb.i, 1);
+    const idx = lb.items.indexOf(it); // l'index a pu changer pendant la confirmation
+    if (idx < 0) return;
+    lb.items.splice(idx, 1);
     if (!lb.items.length) { d.close(); return; }
     lb.i = Math.min(lb.i, lb.items.length - 1);
     show();

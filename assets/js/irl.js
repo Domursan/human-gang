@@ -6,6 +6,7 @@ import { prepareImage } from './image-compress.js';
 import { addToCalendar } from './ics.js';
 import { mountHistory } from './irl-history.js';
 import { ghostDirectory } from './admin-ghosts.js';
+import { confirmBox } from './ui-confirm.js';
 
 const me = await initPage({ auth: 'member' });
 const isAdmin = !!me?.is_admin;
@@ -349,7 +350,7 @@ async function toggleVote(dateId, btn) {
 }
 async function fixDate(eventId, dateId) {
   const d = S.dates.find((x) => x.id === dateId);
-  if (!d || !confirm(`Fixer la sortie au ${fmtDateTime(d.proposed_at)} ?`)) return;
+  if (!d || !(await confirmBox(`Fixer la sortie au ${fmtDateTime(d.proposed_at)} ?`, '', { ok: 'Fixer la date' }))) return;
   const { error } = await sb.from('hg_events').update({ starts_at: d.proposed_at }).eq('id', eventId);
   if (error) return toast(`Impossible de fixer la date : ${errMsg(error)}`, 'error');
   toast('Date fixée. Le gang peut maintenant répondre.', 'ok');
@@ -357,7 +358,7 @@ async function fixDate(eventId, dateId) {
 }
 async function deleteEvent(eventId) {
   const ev = S.events.find((e) => e.id === eventId);
-  if (!ev || !confirm(`Supprimer « ${ev.title} » ? Les réponses, votes et photos de l'album seront supprimés.`)) return;
+  if (!ev || !(await confirmBox(`Supprimer « ${ev.title} » ?`, 'Les réponses, votes et photos de l\'album seront supprimés.', { ok: 'Supprimer', danger: true }))) return;
   const mineOnly = (p) => isAdmin || p.startsWith(`${me.id}/`);
   const files = [ev.cover_path, ...photosOf(eventId).map((p) => p.path)].filter((p) => p && mineOnly(p));
   const { error } = await sb.from('hg_events').delete().eq('id', eventId);

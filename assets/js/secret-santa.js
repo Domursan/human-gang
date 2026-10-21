@@ -2,6 +2,7 @@
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC, isGodMode, godTag } from './core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
 import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
+import { confirmBox } from './ui-confirm.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -249,7 +250,7 @@ async function join(btn) {
   } catch (e) { toast(`Inscription impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
 async function leave(btn) {
-  if (!confirm('Te désinscrire de cette édition ? Ta liste de souhaits est conservée.')) return;
+  if (!(await confirmBox('Te désinscrire de cette édition ?', 'Ta liste de souhaits est conservée.', { ok: 'Me désinscrire', danger: true }))) return;
   btn.disabled = true;
   try {
     const { error } = await sb.from('hg_ss_participants').delete().eq('edition_id', S.ed.id).eq('user_id', me.id);
