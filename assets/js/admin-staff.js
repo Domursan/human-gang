@@ -1,33 +1,46 @@
-// ===== Humane Gang — administration : section « Staff » (administrateur seulement) =====
-// Liste des membres Staff, ajout (choix d'un membre, permissions, note), modification des permissions,
-// désactivation / réactivation (jamais de suppression). Toutes les écritures passent par hg_staff_set,
-// journalisée côté base ; la liste est relue après chaque écriture, sans recharger la page.
-import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from './core.js';
+// ===== Humane Gang : administration : section « Staff » (Pilotage > Staff, administrateur seulement) =====
+// Colonne 2 : membres du Staff (Actifs / Inactifs, « + Ajouter au Staff »). Zone principale : fiche du membre
+// (en-tête, permissions par domaine en cases à cocher, barre d'enregistrement, désactiver / réactiver).
+// Panneau d'infos : ajouté par, date, dernières actions du membre dans le journal.
+// Écritures : hg_staff_set uniquement (journalisée côté base). Jamais de suppression.
+import { sb, toast, errMsg, esc, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { onTableChange } from './admin/live.js';
+import { createList } from './admin/ui/list.js';
+import { renderDetailHeader } from './admin/ui/detail-header.js';
+import { renderInfoPanel } from './admin/ui/info-panel.js';
+import { shortDate } from './admin/ui/time.js';
+import { actionLabel } from './admin-log.js';
 
-// Regroupement des permissions dans le formulaire (les clés absentes du catalogue vont dans « Autres »)
+// Regroupement des permissions dans la fiche (les clés absentes du catalogue vont dans « Autres »)
 const GROUPS = [
-  ['Communauté', ['membres', 'evenements', 'souvenirs', 'secret_santa']],
-  ['Contenu du site', ['cartes', 'badges', 'themes']],
-  ['Messages et support', ['messages', 'support']],
-  ['Technique', ['bot', 'reglages', 'journal']],
+  ['Communauté', ['membres', 'evenements', 'souvenirs', 'secret_santa'], 'var(--slate)'],
+  ['Contenu du site', ['cartes', 'badges', 'themes'], 'var(--plum)'],
+  ['Messages et support', ['messages', 'support'], 'var(--sage)'],
+  ['Technique', ['bot', 'reglages', 'journal'], 'var(--rose)'],
 ];
 
 const ST = {
-  root: null,
+  root: null,         // zone principale (fiche)
   catalog: [],        // [{key,label,description,sort}]
   staff: [],          // hg_staff_list()
   candidates: null,   // membres qui peuvent être ajoutés (chargés à l'ouverture de l'ajout)
   busy: false,
+  sel: null,          // uid du membre affiché
+  draft: null,        // { uid, perms: Set } : permissions en cours de modification
+  recent: [],         // dernières actions du membre sélectionné (journal)
+  recentFor: null,
+  list: null,         // createList de la colonne 2
+  infoEl: null, info: null, dhead: null,
 };
 
 const labelOf = (k) => ST.catalog.find((c) => c.key === k)?.label ?? k;
 /** Libellé d'une permission (la clé si le catalogue n'est pas encore chargé). */
 export const permLabel = labelOf;
-const pillsHtml = (perms) => (perms?.length
-  ? perms.map((k) => `<span class="pill pill-muted staff-perm-pill">${esc(labelOf(k))}</span>`).join('')
-  : '<span class="small muted">Aucune permission</span>');
+
+const selRow = () => ST.staff.find((s) => s.user_id === ST.sel) || null;
+const memberOf = (s) => ({ pseudo: s.pseudo, avatar_url: s.avatar_url, color: s.color });
+const permCount = (s) => s.perms?.length ?? 0;
 
 async function loadStaff() {
   const [cat, list] = await Promise.all([
@@ -40,42 +53,198 @@ async function loadStaff() {
   ST.staff = list.data ?? [];
 }
 
-function render() {
-  const actifs = ST.staff.filter((s) => s.active).length;
-  ST.root.innerHTML = `
-    <div class="staff-head">
-      <p class="small muted">Le Staff gère les domaines que tu lui accordes. Il ne peut ni gérer le Staff, ni changer les administrateurs, ni utiliser le mode sans limite.</p>
-      <button class="btn btn-primary" type="button" data-staff-add>Ajouter un membre au Staff</button>
-    </div>
-    <div class="card staff-card">
-      <h3 class="card-title">Membres du Staff <span class="muted small">(${actifs} actif${actifs > 1 ? 's' : ''} sur ${ST.staff.length})</span></h3>
-      ${ST.staff.length ? `<div class="staff-list">${ST.staff.map(rowHtml).join('')}</div>`
-        : '<div class="empty">Aucun membre du Staff pour l’instant.</div>'}
+async function loadRecent(uid) {
+  const res = await sb.from('hg_admin_log').select('id, admin_id, action, target_user, target_ref, created_at')
+    .or(`admin_id.eq.${uid},target_user.eq.${uid}`).order('created_at', { ascending: false }).limit(6);
+  if (res.error) throw res.error;
+  ST.recent = (res.data ?? []).filter((r) => r.admin_id === uid || r.target_user === uid).slice(0, 5);
+  ST.recentFor = uid;
+}
+
+/* ---------- Colonne 2 : liste ---------- */
+function itemsOf() {
+  return ST.staff.map((s) => ({
+    id: s.user_id, member: memberOf(s), name: s.pseudo, active: !!s.active,
+    title: `${permCount(s)} permission${permCount(s) > 1 ? 's' : ''}`,
+    status: { label: s.active ? 'Actif' : 'Inactif', tone: s.active ? 'done' : 'muted' },
+  })).sort((a, b) => Number(b.active) - Number(a.active) || String(a.name).localeCompare(String(b.name), 'fr'));
+}
+
+/** Colonne 2 (registerSub list) */
+export function listStaff(el) {
+  el.innerHTML = `<div class="stf-col">
+      <button class="btn btn-primary stf-add" type="button" data-staff-add>+ Ajouter au Staff</button>
+      <div class="stf-listhost"></div>
+      <p class="stf-foot small muted">Le Staff gère les domaines que tu lui accordes. Il ne peut ni gérer le Staff, ni changer les administrateurs, ni utiliser le mode sans limite.</p>
+    </div>`;
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-staff-add]');
+    if (!b) return;
+    ST.candidates = null;
+    openForm(null, b);
+  });
+  ST.list = createList(el.querySelector('.stf-listhost'), {
+    items: itemsOf(),
+    filters: [
+      { id: 'actifs', label: 'Actifs', test: (it) => it.active },
+      { id: 'inactifs', label: 'Inactifs', test: (it) => !it.active },
+    ],
+    label: 'Membres du Staff',
+    empty: 'Aucun membre du Staff pour l’instant.',
+    search: { placeholder: 'Rechercher un membre', label: 'Rechercher un membre' },
+    selectedId: ST.sel,
+    onSelect: pick,
+  });
+}
+
+/** Choix d'un membre dans la liste : la fiche suit l'URL (#pilotage/staff/<uid>). */
+async function pick(it) {
+  if (it.id === ST.sel) return;
+  if (dirtyCount() && !(await confirmBox('Modifications non enregistrées', 'Quitter cette fiche sans enregistrer les permissions ?', { ok: 'Quitter', danger: true }))) {
+    ST.list?.select(ST.sel);
+    return;
+  }
+  location.hash = `#pilotage/staff/${it.id}`;
+}
+
+/** Affichage d'un membre (registerSub open, à chaque visite de #pilotage/staff[/uid]). */
+export async function openStaff(_el, { id } = {}) {
+  const next = id ? String(id) : null;
+  if (next === ST.sel && ST.draft) { ST.list?.select(next); return; }
+  ST.sel = next;
+  ST.draft = null;
+  renderDetail();
+  ST.list?.select(next);
+  if (next && ST.recentFor !== next) {
+    try { await loadRecent(next); } catch (e) { console.warn('[staff] journal', e); ST.recent = []; ST.recentFor = next; }
+    if (ST.sel === next) renderInfo();
+  }
+}
+
+/* ---------- Panneau d'infos ---------- */
+export function infoStaff(el) {
+  ST.infoEl = el;
+  renderInfo();
+}
+
+function renderInfo() {
+  const el = ST.infoEl;
+  if (!el) return;
+  ST.info?.destroy();
+  ST.info = null;
+  const s = selRow();
+  if (!s) {
+    el.innerHTML = '<p class="ui-info-empty">Choisis un membre du Staff pour voir sa fiche.</p>';
+    return;
+  }
+  const loaded = ST.recentFor === s.user_id;
+  ST.info = renderInfoPanel(el, {
+    member: memberOf(s),
+    statsTitle: 'Fiche Staff',
+    stats: [
+      { value: permCount(s), label: 'permissions' },
+      { value: s.active ? 'Oui' : 'Non', label: 'actif' },
+      { value: s.added_by_pseudo || '—', label: 'ajouté par' },
+      { value: s.created_at ? shortDate(s.created_at) : '—', label: 'ajouté le' },
+    ],
+    historyTitle: 'Dernières actions',
+    emptyHistory: loaded ? 'Aucune action journalisée pour ce membre.' : 'Chargement…',
+    history: loaded ? ST.recent.map((r) => ({
+      id: r.id,
+      title: `${actionLabel(r.action)} · ${r.admin_id === s.user_id ? 'par lui' : 'sur lui'}`,
+      status: null,
+      at: r.created_at,
+    })) : [],
+  });
+}
+
+/* ---------- Zone principale : fiche ---------- */
+function groupsOf() {
+  const byKey = new Map(ST.catalog.map((c) => [c.key, c]));
+  const used = new Set();
+  const out = GROUPS.map(([title, keys, color]) => {
+    const items = keys.map((k) => byKey.get(k)).filter(Boolean);
+    items.forEach((c) => used.add(c.key));
+    return { title, color, items };
+  });
+  out.push({ title: 'Autres', color: 'var(--sand)', items: ST.catalog.filter((c) => !used.has(c.key)) });
+  return out.filter((g) => g.items.length);
+}
+
+function groupsHtml() {
+  return groupsOf().map((g) => `<section class="stf-card" style="--dot:${g.color}">
+      <h3 class="stf-card-t"><span class="stf-dot" aria-hidden="true"></span>${esc(g.title)}</h3>
+      ${g.items.map((c) => `<label class="stf-perm">
+        <input type="checkbox" data-perm-key="${esc(c.key)}"${ST.draft.perms.has(c.key) ? ' checked' : ''}>
+        <span><strong>${esc(c.label)}</strong><small>${esc(c.description)}</small></span>
+      </label>`).join('')}
+    </section>`).join('');
+}
+
+/** Nombre de permissions modifiées par rapport à l'enregistrement. */
+function dirtyCount() {
+  const s = selRow();
+  if (!s || !ST.draft || ST.draft.uid !== s.user_id) return 0;
+  const saved = new Set(s.perms ?? []);
+  let n = 0;
+  for (const k of ST.draft.perms) if (!saved.has(k)) n++;
+  for (const k of saved) if (!ST.draft.perms.has(k)) n++;
+  return n;
+}
+
+function paintBar() {
+  const bar = ST.root?.querySelector('#stf-bar');
+  if (!bar) return;
+  const n = dirtyCount();
+  bar.innerHTML = `<span class="stf-dirty${n ? ' is-dirty' : ''}" role="status">${n ? `${n} modification${n > 1 ? 's' : ''} non enregistrée${n > 1 ? 's' : ''}` : 'Aucune modification en attente'}</span>
+    <div class="btn-row">
+      <button class="btn btn-ghost" type="button" data-staff-cancel${n ? '' : ' disabled'}>Annuler</button>
+      <button class="btn btn-primary" type="button" data-staff-save${n ? '' : ' disabled'}>Enregistrer</button>
     </div>`;
 }
 
-function rowHtml(s) {
-  const who = { pseudo: s.pseudo, avatar_url: s.avatar_url, color: s.color };
-  const since = s.created_at ? `ajouté${s.added_by_pseudo ? ` par ${esc(s.added_by_pseudo)}` : ''} le ${esc(fmtDate(s.created_at))}` : '';
-  return `
-    <article class="staff-row${s.active ? '' : ' is-off'}" data-uid="${esc(s.user_id)}">
-      <div class="staff-row-ident">${avatarHtml(who, 44)}</div>
-      <div class="staff-row-main">
-        <div class="staff-row-top">
-          <strong class="staff-name">${esc(s.pseudo)}</strong>
-          <span class="pill ${s.active ? 'pill-ok' : 'pill-muted'}">${s.active ? 'Actif' : 'Inactif'}</span>
-        </div>
-        <div class="staff-pills">${pillsHtml(s.perms)}</div>
-        <div class="small muted">${since}</div>
-        ${s.note ? `<p class="staff-note small">${esc(s.note)}</p>` : ''}
-      </div>
-      <div class="staff-row-actions btn-row">
-        <button class="btn btn-ghost btn-sm" type="button" data-staff-edit="${esc(s.user_id)}" aria-label="Modifier les permissions de ${esc(s.pseudo)}">Modifier</button>
-        ${s.active
-          ? `<button class="btn btn-ghost btn-sm" type="button" data-staff-off="${esc(s.user_id)}" aria-label="Désactiver ${esc(s.pseudo)}">Désactiver</button>`
-          : `<button class="btn btn-sand btn-sm" type="button" data-staff-on="${esc(s.user_id)}" aria-label="Réactiver ${esc(s.pseudo)}">Réactiver</button>`}
-      </div>
-    </article>`;
+function renderDetail() {
+  const host = ST.root;
+  if (!host) return;
+  ST.dhead?.destroy();
+  ST.dhead = null;
+  const s = selRow();
+  if (!s) {
+    host.innerHTML = '<div class="empty stf-empty">Choisis un membre dans la liste, ou ajoute-en un au Staff.</div>';
+    renderInfo();
+    return;
+  }
+  if (!ST.draft || ST.draft.uid !== s.user_id) ST.draft = { uid: s.user_id, perms: new Set(s.perms ?? []) };
+  host.innerHTML = `<div class="stf-detail">
+      <div id="stf-head"></div>
+      ${s.note ? `<p class="stf-note">${esc(s.note)}</p>` : ''}
+      <div class="stf-groups">${groupsHtml()}</div>
+      <div class="stf-bar" id="stf-bar"></div>
+    </div>`;
+  const sub = [s.active ? 'Membre du Staff' : 'Membre du Staff · inactif',
+    s.added_by_pseudo ? `ajouté par ${s.added_by_pseudo}` : '',
+    s.created_at ? `le ${shortDate(s.created_at)}` : ''].filter(Boolean).join(' · ');
+  ST.dhead = renderDetailHeader(host.querySelector('#stf-head'), {
+    member: memberOf(s),
+    title: s.pseudo,
+    subtitle: sub,
+    actions: [
+      { label: 'Modifier la note', onClick: () => openForm(s, null) },
+      s.active
+        ? { label: 'Désactiver', onClick: () => toggleActive(s.user_id, false, null) }
+        : { label: 'Réactiver', onClick: () => toggleActive(s.user_id, true, null) },
+    ],
+  });
+  paintBar();
+  renderInfo();
+}
+
+/** Après une lecture du Staff : colonne 2 et fiche à jour. Le brouillon est gardé sauf si reset. */
+function refresh({ reset = false } = {}) {
+  if (reset) ST.draft = null;
+  ST.list?.update(itemsOf());
+  if (ST.sel) ST.list?.select(ST.sel);
+  renderDetail();
 }
 
 /* ---------- Écriture ---------- */
@@ -83,7 +252,7 @@ async function saveStaff({ uid, perms, active, note }) {
   const res = await sb.rpc('hg_staff_set', { p_user: uid, p_perms: perms, p_active: active, p_note: note ?? null });
   if (res.error) throw res.error;
   await loadStaff(); // relecture : ajouté par / date à jour
-  render();
+  refresh({ reset: true });
 }
 
 async function withBusy(btn, fn) {
@@ -93,6 +262,21 @@ async function withBusy(btn, fn) {
   try { return await fn(); }
   catch (e) { toast(errMsg(e), 'error'); }
   finally { ST.busy = false; if (btn) btn.disabled = false; }
+}
+
+/** Enregistre les permissions cochées dans la fiche (le statut actif et la note sont gardés). */
+async function saveDraft(btn) {
+  const s = selRow();
+  if (!s || !ST.draft) return;
+  const perms = [...ST.draft.perms];
+  if (!perms.length) {
+    toast('Coche au moins une permission. Pour retirer l’accès, désactive la personne.', 'error');
+    return;
+  }
+  await withBusy(btn, async () => {
+    await saveStaff({ uid: s.user_id, perms, active: s.active, note: s.note ?? null });
+    toast('Permissions enregistrées', 'ok');
+  });
 }
 
 async function toggleActive(uid, active, btn) {
@@ -106,12 +290,12 @@ async function toggleActive(uid, active, btn) {
     if (!ok) return;
   }
   await withBusy(btn, async () => {
-    await saveStaff({ uid, perms: row.perms, active, note: null });
+    await saveStaff({ uid, perms: row.perms, active, note: row.note ?? null });
     toast(active ? `${row.pseudo} est de nouveau dans le Staff` : `${row.pseudo} a été désactivé`, 'ok');
   });
 }
 
-/* ---------- Dialogue : ajout ou modification ---------- */
+/* ---------- Dialogue : ajout ou modification de la note ---------- */
 async function loadCandidates() {
   const [members, accounts] = await Promise.all([sb.rpc('hg_members'), sb.rpc('hg_admin_accounts')]);
   if (members.error) throw members.error;
@@ -222,6 +406,7 @@ async function openForm(row, btn) {
       await saveStaff({ uid, perms, active: editing ? row.active : true, note });
       toast(editing ? 'Permissions mises à jour' : 'Membre ajouté au Staff', 'ok');
       dlg.close();
+      if (!editing) location.hash = `#pilotage/staff/${uid}`; // la fiche du nouveau membre s'ouvre
     } catch (ex) {
       fail(errMsg(ex));
     } finally {
@@ -238,20 +423,26 @@ async function withPending(btn, fn) {
   try { return await fn(); } finally { if (btn) btn.disabled = false; }
 }
 
-/* ---------- Montage ---------- */
+/* ---------- Montage (zone principale) ---------- */
 export async function mountStaffSection(root) {
   if (!root) return;
   ST.root = root;
-  root.addEventListener('click', (e) => {
-    const t = e.target.closest('button');
-    if (!t || !root.contains(t)) return;
-    if (t.matches('[data-staff-add]')) { ST.candidates = null; return openForm(null, t); }
-    if (t.dataset.staffEdit) return openForm(ST.staff.find((s) => s.user_id === t.dataset.staffEdit), t);
-    if (t.dataset.staffOff) return toggleActive(t.dataset.staffOff, false, t);
-    if (t.dataset.staffOn) return toggleActive(t.dataset.staffOn, true, t);
-    if (t.dataset.staffRetry) return load();
+  root.addEventListener('change', (e) => {
+    const cb = e.target.closest?.('input[data-perm-key]');
+    if (!cb || !ST.draft) return;
+    if (cb.checked) ST.draft.perms.add(cb.dataset.permKey); else ST.draft.perms.delete(cb.dataset.permKey);
+    paintBar();
   });
-  onTableChange('staff', ['hg_staff'], load); // temps réel : relecture du Staff
+  root.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b || !root.contains(b)) return;
+    if (b.matches('[data-staff-cancel]')) { ST.draft = null; renderDetail(); return; }
+    if (b.matches('[data-staff-save]')) { saveDraft(b); return; }
+    if (b.dataset.staffRetry) load();
+  });
+  onTableChange('staff', ['hg_staff'], async () => { // temps réel : relecture du Staff, brouillon conservé
+    try { await loadStaff(); refresh(); } catch (e) { console.warn('[staff] temps réel', e); }
+  });
   await load();
 }
 
@@ -259,7 +450,8 @@ async function load() {
   ST.root.innerHTML = '<div class="empty">Chargement du Staff…</div>';
   try {
     await loadStaff();
-    render();
+    ST.draft = null;
+    renderDetail();
   } catch (e) {
     ST.root.innerHTML = `<div class="empty">Impossible de charger le Staff : ${esc(errMsg(e))}
       <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-staff-retry="1">Réessayer</button></div></div>`;

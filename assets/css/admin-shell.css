@@ -120,6 +120,9 @@
   .shell-zone { grid-column: 1; grid-row: 2; }
   .shell-info { display: none !important; }
   .shell[data-screen="domain"] .shell-zone, .shell[data-screen="sub"] .shell-col { display: none; }
+  /* Sous-section avec liste (colonne 2) : liste plein écran, puis détail (zone principale) */
+  .shell[data-screen="sub"][data-list="yes"][data-sel="no"] .shell-col { display: flex; }
+  .shell[data-screen="sub"][data-list="yes"][data-sel="no"] .shell-zone { display: none; }
   .shell[data-screen="sub"] .zone-back { display: inline-flex; align-items: center; gap: 4px; }
   .zone-head { padding: 16px 16px 14px; }
   .shell-groups { padding: 16px 16px 32px; }

@@ -34,6 +34,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 | `parcours-admin-complements.cjs` | Panel admin : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site (ajouter, modifier, JSON refusé, clé sensible avec confirmation), pages (créer, modifier, supprimer), suppression d'une édition Secret Santa |
 | `parcours-admin-coquille.cjs` | Coquille du panel : rail et colonne de navigation, navigation par domaine et sous-section, URL directe `#membres/comptes`, ancienne ancre `#cartes` redirigée, précédent/suivant, Staff `cartes`+`journal` (Pilotage et Jeu de cartes seulement), mobile 375 px avec barre d’onglets et sans défilement horizontal |
+| `parcours-admin-p2-pilotage.cjs` | Pilotage du panel : Staff (ajout, permissions, barre d’enregistrement, désactivation / réactivation, infos), Journal (puces, recherche, détail avant / après, consultations), Vue d’ensemble (tuiles, « À traiter », activité), Staff `journal` seul, mobile 390 px liste puis détail |
 
 ## Fixtures
 

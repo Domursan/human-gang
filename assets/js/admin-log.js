@@ -1,136 +1,204 @@
-// ===== Humane Gang — administration : journal =====
-// Lecture seule de hg_admin_log (actions de l'administrateur) et de hg_admin_access_log (consultations
-// des conversations dans la messagerie). Pseudos résolus via hg_profiles (policy de lecture admin).
-import { sb, esc, errMsg, fmtDateTime, $ } from './core.js';
+// ===== Humane Gang : administration : journal (Pilotage > Journal) =====
+// Colonne 2 : liste chronologique des actions de l'administrateur (hg_admin_log) et des consultations de la
+// messagerie (hg_admin_access_log), filtres par type, recherche. Zone principale : détail de l'entrée, avec
+// avant / après lus dans le JSON `details`. Lecture seule. Pseudos résolus via hg_profiles (lecture admin).
+import { sb, esc, errMsg, fmtDateTime, toast } from './core.js';
 import { onTableChange } from './admin/live.js';
+import { createList } from './admin/ui/list.js';
+import { renderDetailHeader } from './admin/ui/detail-header.js';
 
-const PAGE = 25;
+const PAGE = 50;
 // Libellés des actions journalisées par hg_admin_audit et les triggers. Une action inconnue s'affiche telle quelle.
-const ACTION_LABEL = {
+export const ACTION_LABEL = {
   carte_donnee: 'Carte donnée',
   exemplaire_retire: 'Exemplaire retiré',
   carte_supprimee: 'Carte supprimée',
   ajustement_paillettes: 'Ajustement de Paillettes',
 };
 const KIND_LABEL = { santa: 'Secret Santa', direct: 'Conversation directe' };
+export const actionLabel = (a) => ACTION_LABEL[a] ?? a;
 
-function check(res) { if (res.error) throw res.error; return res.data; }
-const actionLabel = (a) => ACTION_LABEL[a] ?? a;
-const errBox = (e) => `<div class="empty">Impossible de charger : ${esc(errMsg(e))}</div>`;
+const LG = {
+  pseudo: new Map(), rows: [], access: [], more: false, accessMore: false,
+  sel: null, list: null, detail: null, dh: null, root: null,
+};
 
+const check = (res) => { if (res.error) throw res.error; return res.data; };
+const who = (id) => (id ? LG.pseudo.get(id) ?? 'Compte supprimé' : 'Système');
+const fmtVal = (v) => (v === undefined || v === null || v === '' ? '—' : (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+
+/* ---------- Filtres (puces) : un par action connue, « autres » et « consultations » ---------- */
+const FILTERS = [
+  ...Object.entries(ACTION_LABEL).map(([id, label]) => ({ id, label, test: (it) => it.kind === 'action' && it.action === id })),
+  { id: 'autres', label: 'Autres actions', test: (it) => it.kind === 'action' && !(it.action in ACTION_LABEL) },
+  { id: 'access', label: 'Consultations', test: (it) => it.kind === 'access' },
+];
+
+/* ---------- Données ---------- */
+function entries() {
+  const acts = LG.rows.map((r) => ({
+    id: `l${r.id}`, kind: 'action', action: r.action, admin_id: r.admin_id, target_user: r.target_user,
+    target_ref: r.target_ref, details: r.details, at: r.created_at,
+  }));
+  const acc = LG.access.map((r) => ({
+    id: `c${r.id}`, kind: 'access', admin_id: r.admin_id, conversation_id: r.conversation_id,
+    conversation_kind: r.conversation_kind, at: r.accessed_at,
+  }));
+  return [...acts, ...acc].sort((a, b) => new Date(b.at) - new Date(a.at));
+}
+
+/** Élément de liste : nom = auteur, titre = action, extrait = cible / référence. */
+function itemsOf() {
+  return entries().map((e) => {
+    const name = who(e.admin_id);
+    if (e.kind === 'access') {
+      return { ...e, name, title: 'Conversation ouverte', excerpt: `${KIND_LABEL[e.conversation_kind] ?? 'Conversation'} · réf. ${String(e.conversation_id ?? '').slice(0, 8)}` };
+    }
+    const cible = e.target_user ? `cible : ${who(e.target_user)}` : '';
+    const ref = e.target_ref ? `réf. ${e.target_ref}` : '';
+    return { ...e, name, title: actionLabel(e.action), excerpt: [cible, ref].filter(Boolean).join(' · ') };
+  });
+}
+
+async function loadPseudos() {
+  const rows = check(await sb.from('hg_profiles').select('id, pseudo')) ?? [];
+  LG.pseudo = new Map(rows.map((r) => [r.id, r.pseudo]));
+}
+
+/** Charge la première page (reset) ou la page suivante des deux flux. */
+async function loadPage(reset) {
+  const fromA = reset ? 0 : LG.rows.length;
+  const fromC = reset ? 0 : LG.access.length;
+  const [a, c] = await Promise.all([
+    sb.from('hg_admin_log').select('id, admin_id, action, target_user, target_ref, details, created_at')
+      .order('created_at', { ascending: false }).order('id', { ascending: false })
+      .range(fromA, fromA + PAGE), // une ligne de plus que la page : indique s'il reste des entrées
+    sb.from('hg_admin_access_log').select('id, admin_id, conversation_id, conversation_kind, accessed_at')
+      .order('accessed_at', { ascending: false }).order('id', { ascending: false })
+      .range(fromC, fromC + PAGE),
+  ]);
+  const gotA = check(a) ?? [];
+  const gotC = check(c) ?? [];
+  LG.more = gotA.length > PAGE;
+  LG.accessMore = gotC.length > PAGE;
+  LG.rows = reset ? gotA.slice(0, PAGE) : LG.rows.concat(gotA.slice(0, PAGE));
+  LG.access = reset ? gotC.slice(0, PAGE) : LG.access.concat(gotC.slice(0, PAGE));
+  paintList();
+  if (LG.sel) renderDetail(LG.sel);
+}
+
+/* ---------- Détail ---------- */
 function detailsHtml(d) {
   const entries = Object.entries(d ?? {});
-  if (!entries.length) return '';
-  return `<dl class="log-details">${entries.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v !== null && typeof v === 'object' ? JSON.stringify(v) : String(v))}</dd></div>`).join('')}</dl>`;
+  if (!entries.length) return '<p class="muted small">Aucun détail enregistré.</p>';
+  return `<dl class="log-details">${entries.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(fmtVal(v))}</dd></div>`).join('')}</dl>`;
 }
 
+/** Avant / après : deux colonnes lisibles si `details` a before/after (ou avant/après) ; le reste en liste. */
+function changesHtml(d) {
+  if (!isObj(d)) return detailsHtml(d);
+  const bKey = ['before', 'avant'].find((k) => k in d);
+  const aKey = ['after', 'apres', 'après'].find((k) => k in d);
+  if (!bKey && !aKey) return detailsHtml(d);
+  const b = bKey ? d[bKey] : undefined;
+  const a = aKey ? d[aKey] : undefined;
+  const rows = isObj(b) || isObj(a)
+    ? [...new Set([...Object.keys(isObj(b) ? b : {}), ...Object.keys(isObj(a) ? a : {})])]
+      .map((k) => [k, isObj(b) ? b[k] : undefined, isObj(a) ? a[k] : undefined])
+    : [['Valeur', b, a]];
+  const others = Object.keys(d).filter((k) => k !== bKey && k !== aKey);
+  return `<table class="log-diff">
+      <thead><tr><th scope="col">Champ</th><th scope="col">Avant</th><th scope="col">Après</th></tr></thead>
+      <tbody>${rows.map(([k, x, y]) => `<tr${fmtVal(x) !== fmtVal(y) ? ' class="is-changed"' : ''}><th scope="row">${esc(k)}</th><td>${esc(fmtVal(x))}</td><td>${esc(fmtVal(y))}</td></tr>`).join('')}</tbody>
+    </table>${others.length ? detailsHtml(Object.fromEntries(others.map((k) => [k, d[k]]))) : ''}`;
+}
+
+function renderDetail(id) {
+  const box = LG.detail;
+  if (!box) return;
+  LG.dh?.destroy(); LG.dh = null;
+  const it = entries().find((e) => (e.id === id));
+  if (!it) {
+    box.innerHTML = '<div class="empty">Choisis une entrée dans la liste pour voir son détail.</div>';
+    return;
+  }
+  const name = who(it.admin_id);
+  const isAccess = it.kind === 'access';
+  box.innerHTML = `<div class="log-detail">
+      <div id="log-dhead"></div>
+      <dl class="log-facts">
+        <div><dt>Date</dt><dd><time datetime="${esc(it.at)}">${esc(fmtDateTime(it.at))}</time></dd></div>
+        <div><dt>Auteur</dt><dd>${esc(name)}</dd></div>
+        ${isAccess
+          ? `<div><dt>Type</dt><dd>${esc(KIND_LABEL[it.conversation_kind] ?? 'Conversation')}</dd></div>
+             <div><dt>Conversation</dt><dd>${esc(String(it.conversation_id ?? '').slice(0, 8) || '—')}</dd></div>`
+          : `<div><dt>Cible</dt><dd>${esc(it.target_user ? who(it.target_user) : '—')}</dd></div>
+             <div><dt>Référence</dt><dd>${esc(it.target_ref || '—')}</dd></div>`}
+      </dl>
+      <section class="card stack"><h3 class="card-title">${isAccess ? 'Détail de la consultation' : 'Modifications'}</h3>
+        ${isAccess ? '<p class="muted small">Ouverture d’une conversation de la messagerie par cet administrateur. Le contenu n’est pas journalisé.</p>' : changesHtml(it.details)}
+      </section>
+    </div>`;
+  LG.dh = renderDetailHeader(box.querySelector('#log-dhead'), {
+    member: { pseudo: name },
+    title: isAccess ? 'Conversation ouverte' : actionLabel(it.action),
+    subtitle: `Par ${name} · ${fmtDateTime(it.at)}`,
+  });
+}
+
+/* ---------- Colonne 2 ---------- */
+function paintList() {
+  LG.list?.update(itemsOf());
+  if (LG.moreRow) LG.moreRow.hidden = !(LG.more || LG.accessMore);
+  if (LG.sel) LG.list?.select(LG.sel);
+}
+
+/** Colonne 2 (registerSub list) : liste du journal, filtres et recherche. */
+export function listLog(el) {
+  const host = document.createElement('div');
+  const more = document.createElement('div');
+  more.className = 'log-more';
+  more.hidden = true;
+  more.innerHTML = '<button class="btn btn-ghost btn-sm" type="button" id="log-more">Charger plus</button>';
+  el.append(host, more);
+  LG.moreRow = more;
+  LG.list = createList(host, {
+    items: itemsOf(),
+    filters: FILTERS,
+    label: 'Entrées du journal',
+    empty: 'Aucune entrée pour ce filtre.',
+    search: { placeholder: 'Rechercher dans le journal', label: 'Rechercher dans le journal', fields: (it) => [it.name, it.title, it.excerpt].join(' ') },
+    selectedId: LG.sel,
+    onSelect: (it) => { if (it.id !== LG.sel) location.hash = `#pilotage/journal/${it.id}`; },
+  });
+  more.querySelector('#log-more').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    b.disabled = true;
+    try { await loadPage(false); } catch (err) { toast(`Journal : ${errMsg(err)}`, 'error'); } finally { b.disabled = false; }
+  });
+  more.hidden = !(LG.more || LG.accessMore);
+}
+
+/** Affichage d'une entrée (registerSub open, à chaque visite de #pilotage/journal[/id]). */
+export function openLog(_el, { id } = {}) {
+  LG.sel = id ? String(id) : null;
+  if (LG.root) renderDetail(LG.sel);
+  LG.list?.select(LG.sel);
+}
+
+
+/* ---------- Zone principale ---------- */
 export function mountLogSection(container) {
   if (!container) return;
-  const S = { pseudo: new Map(), actions: new Set(), action: '', rows: [], more: false, access: [], accessMore: false };
-
-  container.innerHTML = `
-    <div class="card stack">
-      <h3 class="card-title">Actions de l'administrateur</h3>
-      <p class="muted small">Tirages, cartes données ou retirées, ajustements de Paillettes, suppressions de cartes.</p>
-      <div class="field narrow">
-        <label for="log-action">Filtrer par action</label>
-        <select id="log-action"><option value="">Toutes les actions</option></select>
-      </div>
-      <div id="log-list" aria-live="polite"><div class="empty">Chargement…</div></div>
-      <div class="btn-row" id="log-more-row" hidden><button class="btn btn-ghost" type="button" id="log-more">Charger plus</button></div>
-    </div>
-    <div class="card stack">
-      <h3 class="card-title">Consultations des messages</h3>
-      <p class="muted small">Chaque ouverture d'une conversation dans la messagerie est enregistrée ici, avec l'administrateur qui l'a lue.</p>
-      <div id="log-access" aria-live="polite"><div class="empty">Chargement…</div></div>
-      <div class="btn-row" id="log-access-more-row" hidden><button class="btn btn-ghost" type="button" id="log-access-more">Charger plus</button></div>
-    </div>`;
-
-  const who = (id) => (id ? S.pseudo.get(id) ?? 'Compte supprimé' : 'Système');
-  const select = $('#log-action', container);
-
-  function syncActionOptions() {
-    const known = new Set([...Object.keys(ACTION_LABEL), ...S.actions]);
-    const current = select.value;
-    select.innerHTML = '<option value="">Toutes les actions</option>'
-      + [...known].sort().map((a) => `<option value="${esc(a)}">${esc(actionLabel(a))}</option>`).join('');
-    select.value = current;
-  }
-
-  async function loadPseudos() {
-    const rows = check(await sb.from('hg_profiles').select('id, pseudo')) ?? [];
-    S.pseudo = new Map(rows.map((r) => [r.id, r.pseudo]));
-  }
-
-  function renderLog() {
-    const box = $('#log-list', container);
-    box.innerHTML = S.rows.length ? `<ol class="log-list">${S.rows.map((r) => `
-      <li class="log-row">
-        <div class="item-meta"><time datetime="${esc(r.created_at)}">${esc(fmtDateTime(r.created_at))}</time>
-          <strong>${esc(actionLabel(r.action))}</strong></div>
-        <p class="small muted">Par ${esc(who(r.admin_id))}${r.target_user ? ` · cible : ${esc(who(r.target_user))}` : ''}${r.target_ref ? ` · réf. ${esc(r.target_ref)}` : ''}</p>
-        ${detailsHtml(r.details)}
-      </li>`).join('')}</ol>`
-      : `<div class="empty">${S.action ? 'Aucune entrée pour cette action.' : 'Aucune action journalisée pour l’instant.'}</div>`;
-    $('#log-more-row', container).hidden = !S.more;
-  }
-
-  async function loadLog(reset) {
-    const from = reset ? 0 : S.rows.length;
-    try {
-      let q = sb.from('hg_admin_log').select('id, admin_id, action, target_user, target_ref, details, created_at')
-        .order('created_at', { ascending: false }).order('id', { ascending: false })
-        .range(from, from + PAGE); // une ligne de plus que la page : indique s'il reste des entrées
-      if (S.action) q = q.eq('action', S.action);
-      const got = check(await q) ?? [];
-      S.more = got.length > PAGE;
-      const page = got.slice(0, PAGE);
-      got.forEach((r) => S.actions.add(r.action));
-      S.rows = reset ? page : S.rows.concat(page);
-      syncActionOptions();
-      renderLog();
-    } catch (e) {
-      $('#log-list', container).innerHTML = errBox(e);
-      $('#log-more-row', container).hidden = true;
-    }
-  }
-
-  function renderAccess() {
-    const box = $('#log-access', container);
-    box.innerHTML = S.access.length ? `<ol class="log-list">${S.access.map((r) => `
-      <li class="log-row">
-        <div class="item-meta"><time datetime="${esc(r.accessed_at)}">${esc(fmtDateTime(r.accessed_at))}</time>
-          <strong>${esc(who(r.admin_id))}</strong></div>
-        <p class="small muted">${esc(KIND_LABEL[r.conversation_kind] ?? 'Conversation')} · réf. ${esc(String(r.conversation_id ?? '').slice(0, 8))}</p>
-      </li>`).join('')}</ol>`
-      : '<div class="empty">Aucune consultation enregistrée.</div>';
-    $('#log-access-more-row', container).hidden = !S.accessMore;
-  }
-
-  async function loadAccess(reset) {
-    const from = reset ? 0 : S.access.length;
-    try {
-      const got = check(await sb.from('hg_admin_access_log').select('id, admin_id, conversation_id, conversation_kind, accessed_at')
-        .order('accessed_at', { ascending: false }).order('id', { ascending: false })
-        .range(from, from + PAGE)) ?? [];
-      S.accessMore = got.length > PAGE;
-      const page = got.slice(0, PAGE);
-      S.access = reset ? page : S.access.concat(page);
-      renderAccess();
-    } catch (e) {
-      $('#log-access', container).innerHTML = errBox(e);
-      $('#log-access-more-row', container).hidden = true;
-    }
-  }
-
-  select.addEventListener('change', () => { S.action = select.value; S.rows = []; loadLog(true); });
-  $('#log-more', container).addEventListener('click', (e) => { e.currentTarget.disabled = true; loadLog(false).finally(() => { e.currentTarget.disabled = false; }); });
-  $('#log-access-more', container).addEventListener('click', (e) => { e.currentTarget.disabled = true; loadAccess(false).finally(() => { e.currentTarget.disabled = false; }); });
-
-  async function init() {
+  LG.root = container;
+  container.innerHTML = '<div id="log-detail"></div>';
+  LG.detail = container.querySelector('#log-detail');
+  renderDetail(LG.sel);
+  (async () => {
     try { await loadPseudos(); } catch (e) { console.warn('[journal] pseudos', e); }
-    await Promise.all([loadLog(true), loadAccess(true)]);
-  }
-  init();
-  onTableChange('journal', ['hg_admin_log'], () => Promise.all([loadLog(true), loadAccess(true)]));
+    try { await loadPage(true); } catch (e) { LG.detail.innerHTML = `<div class="empty">Impossible de charger le journal : ${esc(errMsg(e))}</div>`; }
+  })();
+  onTableChange('journal', ['hg_admin_log'], async () => { await loadPage(true); });
 }
+

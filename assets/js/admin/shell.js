@@ -213,7 +213,10 @@ async function show(r) {
   markActive(r.dom.id, r.sub.id);
   el.zoneEyebrow.textContent = r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
-  el.back.setAttribute('href', `#${r.dom.id}/`);
+  // Mobile : liste (colonne 2) plein écran, puis détail ; « retour » ramène à la liste quand un élément est ouvert
+  el.back.setAttribute('href', r.id ? `#${r.dom.id}/${r.sub.id}` : `#${r.dom.id}/`);
+  el.shell.dataset.sel = r.id ? 'yes' : 'no';
+  el.shell.dataset.list = p.list ? 'yes' : 'no';
   // Conteneur du groupe (une seule sous-section visible à la fois ; les déjà montées restent en mémoire)
   const gid = p.group || key;
   let g = groups.get(gid);

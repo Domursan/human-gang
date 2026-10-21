@@ -1,0 +1,56 @@
+/* Administration : Pilotage (Vue d'ensemble, Journal, Staff). Liste en colonne 2, détail dans la zone principale.
+   Couleurs : jetons de base.css uniquement (clair et sombre). Mobile : les colonnes passent en piles (admin-shell.css). */
+
+/* ---------- Colonne 2 : liste (commune aux trois sous-sections) ---------- */
+.stf-col { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.stf-add { width: 100%; justify-content: center; }
+.stf-listhost { min-height: 0; }
+.stf-foot { margin: 8px 0 0; line-height: 1.45; }
+.log-more { display: flex; justify-content: center; padding: 8px 0 0; }
+.log-more[hidden] { display: none; }
+
+/* ---------- Staff : fiche ---------- */
+.stf-detail { display: flex; flex-direction: column; gap: 18px; min-height: 100%; }
+.stf-note { margin: 0; padding: 10px 14px; border-left: 3px solid var(--sand); background: var(--surface); border-radius: var(--radius-sm); color: var(--muted); font-size: 13.5px; }
+.stf-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.stf-card { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 16px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+.stf-card-t { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stf-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot, var(--muted)); flex: none; }
+.stf-perm { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 6px 0; cursor: pointer; }
+.stf-perm input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--accent); flex: none; }
+.stf-perm > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; }
+.stf-perm small { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+.stf-perm:has(input:not(:checked)) > span > strong { color: var(--muted); font-weight: 500; }
+.stf-bar { position: sticky; bottom: 0; margin-top: auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  padding: 14px 18px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 16px; }
+.stf-dirty { color: var(--muted); font-size: 14px; }
+.stf-dirty.is-dirty { color: var(--sand); font-weight: 600; }
+.stf-empty { margin-top: 32px; }
+
+/* ---------- Journal : détail ---------- */
+.log-detail { display: flex; flex-direction: column; gap: 16px; }
+.log-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 0; }
+.log-facts > div { min-width: 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+.log-facts dt { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.log-facts dd { margin: 4px 0 0; overflow-wrap: anywhere; }
+.log-facts time { font-variant-numeric: tabular-nums; }
+.log-diff { width: 100%; border-collapse: collapse; font-size: 14px; }
+.log-diff th, .log-diff td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.log-diff thead th { font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.log-diff tbody th { font-weight: 500; color: var(--muted); width: 28%; }
+.log-diff tr.is-changed td { color: var(--sand); }
+
+/* ---------- Vue d'ensemble ---------- */
+.ov { display: flex; flex-direction: column; gap: 18px; }
+.ov-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.ov-card { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; min-width: 0; }
+.ov-card .card-title { margin: 0; }
+.ov-todo, .ov-act { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ov-todo-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.ov-todo-row:last-child { border-bottom: 0; }
+.ov-todo-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ov-act li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.ov-act li:last-child { border-bottom: 0; }
+.ov-act time { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.ov-more { margin: 4px 0 0; }
+@media (max-width: 900px) { .ov-cols { grid-template-columns: minmax(0, 1fr); } }
