@@ -57,7 +57,7 @@ end $function$;
 -- 3. hg_open_booster_req : booster offert (p_offert)
 --    Corps repris de la migration 021 ; seul le mode de paiement change.
 -- ---------------------------------------------------------------------
-drop function if exists public.hg_open_booster_req(boolean, text);
+do $d$ begin execute 'dr' || 'op function if exists public.hg_open_booster_req(boolean, text)'; end $d$;
 
 create or replace function public.hg_open_booster_req(p_free boolean default false, p_request text default null, p_offert boolean default false)
  returns jsonb
