@@ -290,6 +290,7 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
       if (fn === 'hg_admin_conversations') return { data: S.convs || [], error: null };
       if (fn === 'hg_admin_read_conversation') { // lecture journalisée : chaque appel est tracé dans le journal du faux client

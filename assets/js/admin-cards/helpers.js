@@ -38,20 +38,6 @@ export const setState = (s, now = Date.now()) => {
 export const period = (s) => (s.starts_at || s.ends_at
   ? `${s.starts_at ? 'du ' + fmtWhen(s.starts_at) : 'dès le début'}${s.ends_at ? ' au ' + fmtWhen(s.ends_at) : ', sans fin'}`
   : 'toujours disponible');
-export const dlgHead = (title) => `<div class="acd-dlg-head"><h2 id="acd-dlg-title" class="dialog-title">${esc(title)}</h2>
-  <button class="btn btn-ghost btn-sm" type="button" data-acd-close>Fermer</button></div>`;
-
-export function dialog() {
-  let d = document.getElementById('acd-dlg');
-  if (!d) {
-    d = document.createElement('dialog');
-    d.id = 'acd-dlg'; d.className = 'hg-dialog acd-dlg';
-    d.setAttribute('aria-labelledby', 'acd-dlg-title');
-    d.addEventListener('click', (e) => { if (e.target.closest('[data-acd-close]')) d.close(); });
-    document.body.append(d);
-  }
-  return d;
-}
 /** Action en cours : bouton désactivé avec indicateur, pas de second envoi. */
 export async function act(btn, fn) {
   if (btn?.dataset.busy) return;

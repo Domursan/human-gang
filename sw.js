@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 

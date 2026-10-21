@@ -5,6 +5,7 @@ import { sb, toast, errMsg, esc, $ } from './core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { confirmBox } from './ui-confirm.js';
 import { matches, searchHtml, bindSearch, setCount, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
+import { openDrawer } from './admin/ui/drawer.js';
 
 /** Bouton en cours : désactivé avec indicateur (pas de second envoi). */
 function setBusy(btn, on) {
@@ -27,61 +28,21 @@ const METRIC_LABEL = Object.fromEntries(METRICS);
 const REWARD_MAX = 100000;
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-const C = { root: null, rows: [], editId: null, query: '' };
+const C = { root: null, rows: [], query: '' };
 
 export async function mountChallengesSection(container) {
   if (!container) return;
   C.root = container;
-  const now = new Date();
-  const in14 = new Date(now.getTime() + 14 * 86400000);
   container.innerHTML = `<div class="adc">
-    <form class="adc-form card" id="adc-form" novalidate aria-labelledby="adc-form-title">
-      <h3 class="adc-h" id="adc-form-title">Nouveau défi</h3>
-      <div class="adc-grid">
-        <div class="field adc-wide">
-          <label for="adc-title">Titre</label>
-          <input id="adc-title" type="text" maxlength="120" required autocomplete="off">
-        </div>
-        <div class="field adc-wide">
-          <label for="adc-desc">Description (facultative)</label>
-          <textarea id="adc-desc" rows="2" maxlength="500"></textarea>
-        </div>
-        <div class="field">
-          <label for="adc-metric">Objectif mesuré</label>
-          <select id="adc-metric">${METRICS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select>
-        </div>
-        <div class="field">
-          <label for="adc-target">Cible (pour tout le gang)</label>
-          <input id="adc-target" type="number" min="1" max="1000000" step="1" inputmode="numeric" required>
-        </div>
-        <div class="field">
-          <label for="adc-reward">Récompense par membre (Paillettes)</label>
-          <input id="adc-reward" type="number" min="1" max="${REWARD_MAX}" step="1" inputmode="numeric" required>
-        </div>
-        <div class="field">
-          <label for="adc-start">Début (heure suisse)</label>
-          <input id="adc-start" type="datetime-local" value="${toZurichInput(now.toISOString())}" required>
-        </div>
-        <div class="field">
-          <label for="adc-end">Fin (heure suisse)</label>
-          <input id="adc-end" type="datetime-local" value="${toZurichInput(in14.toISOString())}" required>
-        </div>
-        <div class="field adc-check">
-          <label><input id="adc-active" type="checkbox"> Actif : visible par les membres sur l'accueil</label>
-        </div>
-      </div>
-      <p class="form-error" id="adc-error" role="alert" hidden></p>
-      <div class="btn-row">
-        <button class="btn btn-primary" type="submit" id="adc-save">Créer le défi</button>
-        <button class="btn btn-ghost" type="button" data-action="adc-reset" hidden id="adc-cancel">Annuler la modification</button>
-      </div>
-    </form>
+    <div class="adc-head">
+      <p class="small muted">Un objectif pour tout le gang. La récompense est versée à chaque membre une fois l'objectif atteint.</p>
+      <button class="btn btn-primary" type="button" data-action="adc-new">+ Nouveau défi</button>
+    </div>
     <div id="adc-list" class="adc-list" aria-live="polite"><div class="empty">Chargement des défis…</div></div>
   </div>`;
   $('#adc-list', container).insertAdjacentHTML('beforebegin', searchHtml({ id: 'adc-search', label: 'Rechercher un défi', placeholder: 'Titre, description ou objectif…' }));
   bindSearch(container.querySelector('#adc-search'), (q) => { C.query = q; renderList(); }, SEARCH_DELAY);
   container.addEventListener('click', onClick);
-  container.addEventListener('submit', onSubmit);
   await reload();
 }
 
@@ -106,7 +67,7 @@ function stateOf(r, now = Date.now()) {
 
 function renderList() {
   const list = $('#adc-list', C.root);
-  if (!C.rows.length) { list.innerHTML = '<div class="empty">Aucun défi pour le moment. Crée le premier ci-dessus.</div>'; setCount($('#adc-search-count', C.root), 0, 0, '', ['défi', 'défis']); return; }
+  if (!C.rows.length) { list.innerHTML = '<div class="empty">Aucun défi pour le moment. Crée le premier avec « Nouveau défi ».</div>'; setCount($('#adc-search-count', C.root), 0, 0, '', ['défi', 'défis']); return; }
   const rows = C.rows.filter((r) => matches(C.query, r.title, r.description, METRIC_LABEL[r.metric] || r.metric));
   setCount($('#adc-search-count', C.root), rows.length, C.rows.length, C.query, ['défi', 'défis']);
   if (!rows.length) { list.innerHTML = emptyHtml(C.query, 'Aucun défi.'); return; }
@@ -146,62 +107,75 @@ function readForm(f) {
   return { row: { title, description: description || null, metric, target, reward, starts_at: starts, ends_at: ends, active: f.querySelector('#adc-active').checked } };
 }
 
-function fillForm(r) {
-  const f = $('#adc-form', C.root);
-  f.querySelector('#adc-title').value = r.title;
-  f.querySelector('#adc-desc').value = r.description || '';
-  f.querySelector('#adc-metric').value = r.metric;
-  f.querySelector('#adc-target').value = r.target;
-  f.querySelector('#adc-reward').value = r.reward;
-  f.querySelector('#adc-start').value = toZurichInput(r.starts_at);
-  f.querySelector('#adc-end').value = toZurichInput(r.ends_at);
-  f.querySelector('#adc-active').checked = !!r.active;
-  f.querySelector('#adc-form-title').textContent = 'Modifier le défi';
-  f.querySelector('#adc-save').textContent = 'Enregistrer les modifications';
-  $('#adc-cancel', C.root).hidden = false;
-  C.editId = r.id;
-  f.querySelector('#adc-title').focus();
-  f.scrollIntoView({ block: 'start', behavior: 'smooth' });
-}
-
-function resetForm() {
-  const f = $('#adc-form', C.root);
-  f.reset();
+/** Formulaire d'un défi (création si r est absent) dans le tiroir. */
+function openChallengeForm(r = null) {
   const now = new Date();
-  f.querySelector('#adc-start').value = toZurichInput(now.toISOString());
-  f.querySelector('#adc-end').value = toZurichInput(new Date(now.getTime() + 14 * 86400000).toISOString());
-  f.querySelector('#adc-form-title').textContent = 'Nouveau défi';
-  f.querySelector('#adc-save').textContent = 'Créer le défi';
-  $('#adc-cancel', C.root).hidden = true;
-  $('#adc-error', C.root).hidden = true;
-  C.editId = null;
+  const v = r || {};
+  const isNew = !r;
+  const sel = (val) => (val === v.metric ? ' selected' : '');
+  openDrawer({
+    title: isNew ? 'Nouveau défi' : 'Modifier le défi',
+    subtitle: isNew ? '' : v.title,
+    submitLabel: isNew ? 'Créer le défi' : 'Enregistrer les modifications',
+    wide: true,
+    body: `<div class="adc-form" id="adc-form">
+      <div class="adc-grid">
+        <div class="field adc-wide">
+          <label for="adc-title">Titre</label>
+          <input id="adc-title" type="text" maxlength="120" required autocomplete="off" value="${esc(v.title ?? '')}">
+        </div>
+        <div class="field adc-wide">
+          <label for="adc-desc">Description (facultative)</label>
+          <textarea id="adc-desc" rows="2" maxlength="500">${esc(v.description ?? '')}</textarea>
+        </div>
+        <div class="field">
+          <label for="adc-metric">Objectif mesuré</label>
+          <select id="adc-metric">${METRICS.map(([m, l]) => `<option value="${m}"${sel(m)}>${esc(l)}</option>`).join('')}</select>
+        </div>
+        <div class="field">
+          <label for="adc-target">Cible (pour tout le gang)</label>
+          <input id="adc-target" type="number" min="1" max="1000000" step="1" inputmode="numeric" required value="${esc(v.target ?? '')}">
+        </div>
+        <div class="field">
+          <label for="adc-reward">Récompense par membre (Paillettes)</label>
+          <input id="adc-reward" type="number" min="1" max="${REWARD_MAX}" step="1" inputmode="numeric" required value="${esc(v.reward ?? '')}">
+        </div>
+        <div class="field">
+          <label for="adc-start">Début (heure suisse)</label>
+          <input id="adc-start" type="datetime-local" value="${toZurichInput(isNew ? now.toISOString() : v.starts_at)}" required>
+        </div>
+        <div class="field">
+          <label for="adc-end">Fin (heure suisse)</label>
+          <input id="adc-end" type="datetime-local" value="${toZurichInput(isNew ? new Date(now.getTime() + 14 * 86400000).toISOString() : v.ends_at)}" required>
+        </div>
+        <div class="field adc-check">
+          <label><input id="adc-active" type="checkbox"${v.active ? ' checked' : ''}> Actif : visible par les membres sur l'accueil</label>
+        </div>
+      </div>
+      <p class="form-error" id="adc-error" role="alert" hidden></p>
+    </div>`,
+    onSubmit: (form) => saveChallenge(form, r?.id ?? null),
+  });
 }
 
-async function onSubmit(e) {
-  if (e.target.id !== 'adc-form') return;
-  e.preventDefault();
-  const f = e.target;
-  const err = $('#adc-error', C.root);
+/** Enregistre le défi saisi ; renvoie false (tiroir ouvert, erreur affichée) en cas d'échec. */
+async function saveChallenge(f, id) {
+  const err = f.querySelector('#adc-error');
   const res = readForm(f);
-  if (res.error) { err.textContent = res.error; err.hidden = false; return; }
+  if (res.error) { err.textContent = res.error; err.hidden = false; return false; }
   err.hidden = true;
-  const btn = $('#adc-save', C.root);
-  if (btn.disabled) return;
-  setBusy(btn, true);
   try {
-    const q = C.editId
-      ? sb.from('hg_challenges').update(res.row).eq('id', C.editId)
+    const q = id
+      ? sb.from('hg_challenges').update(res.row).eq('id', id)
       : sb.from('hg_challenges').insert(res.row);
     const { error } = await q;
     if (error) throw error;
-    toast(C.editId ? 'Défi mis à jour.' : 'Défi créé.', 'ok');
-    resetForm();
+    toast(id ? 'Défi mis à jour.' : 'Défi créé.', 'ok');
     await reload();
   } catch (ex) {
     err.textContent = `Enregistrement impossible : ${errMsg(ex)}`;
     err.hidden = false;
-  } finally {
-    setBusy(btn, false);
+    return false;
   }
 }
 
@@ -209,10 +183,10 @@ async function onClick(e) {
   const t = e.target.closest('[data-action]');
   if (!t || t.disabled) return;
   const id = t.dataset.id;
-  if (t.dataset.action === 'adc-reset') return resetForm();
+  if (t.dataset.action === 'adc-new') return openChallengeForm(null);
   if (t.dataset.action === 'adc-edit') {
     const r = C.rows.find((x) => x.id === id);
-    if (r) fillForm(r);
+    if (r) openChallengeForm(r);
     return;
   }
   if (t.dataset.action === 'adc-del') {
@@ -226,7 +200,6 @@ async function onClick(e) {
     setBusy(t, true);
     const { error } = await sb.from('hg_challenges').delete().eq('id', id);
     if (error) { toast(errMsg(error), 'error'); setBusy(t, false); return; }
-    if (C.editId === id) resetForm();
     toast('Défi supprimé.', 'ok');
     await reload();
     return;

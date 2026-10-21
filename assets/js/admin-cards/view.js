@@ -8,7 +8,7 @@ import { setsPanel, openSetDialog, toggleSet, deleteSet } from './sets.js';
 import { cardsPanel } from './list.js';
 import { openCardDialog, deleteCard, makeIdentities } from './editor.js';
 import { econPanel, updateSum, saveEcon } from './economy.js';
-import { playersPanel, refreshLog, adjustPaillettes, giveCard, takeCopy } from './players.js';
+import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
 import { tradesPanel, cancelTrade } from './trades.js';
 import { Q, loadQuests, questsPanel, questActions } from './quests.js';
@@ -24,7 +24,7 @@ function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
   C.panel.innerHTML = PANELS[C.tab]();
   countLists();
-  if (C.tab === 'joueurs') refreshLog();
+  if (C.tab === 'joueurs') { refreshPlayersList(); refreshLog(); }
   if (C.tab === 'quetes' && !Q.loaded && !Q.loading && !Q.error) loadQuests(); // en cas d'erreur, « Réessayer » relance
   if (C.tab === 'economie') updateSum();
 }
@@ -68,6 +68,7 @@ const ACTIONS = {
   'trade-cancel': (t, id) => cancelTrade(t, id),
   'econ-reset': () => render(),
   ...questActions,
+  ...playerActions,
 };
 
 function onClick(e) {
@@ -79,7 +80,6 @@ function onClick(e) {
 function onChange(e) {
   const t = e.target;
   if (t.id === 'acd-ident-set') C.identSet = t.value;
-  else if (t.id === 'acd-pl-member') C.playerId = t.value;
   else if (t.dataset.f && t.dataset.f !== 'identSet') C.f[t.dataset.f] = t.value;
   else return;
   C.shown = PAGE_SIZE;
@@ -96,8 +96,6 @@ function onInput(e) {
 function onSubmit(e) {
   const form = e.target;
   if (form.id === 'acd-econ-form') { e.preventDefault(); return saveEcon(form, e.submitter); }
-  if (form.id === 'acd-pl-pay') { e.preventDefault(); return adjustPaillettes(form, e.submitter); }
-  if (form.id === 'acd-pl-give') { e.preventDefault(); return giveCard(form, e.submitter); }
 }
 
 /**
@@ -122,10 +120,12 @@ export async function mountCardsSection(container, { tabs = true } = {}) {
   await boot();
 }
 
-/** Ouvre une partie des cartes (series, cartes, quetes, economie, joueurs, stats, echanges). Sans effet avant le montage. */
-export function openCardsTab(tab) {
+/** Ouvre une partie des cartes (series, cartes, quetes, economie, joueurs, stats, echanges). Sans effet avant le montage.
+    id : membre affiché dans « joueurs » (adresse #cartes/joueurs/<id>). */
+export function openCardsTab(tab, id = null) {
   if (!C.root || !PANELS[tab]) return;
   C.tab = tab;
+  if (tab === 'joueurs') C.playerId = id ? String(id) : '';
   render();
 }
 

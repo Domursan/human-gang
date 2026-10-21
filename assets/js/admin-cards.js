@@ -5,3 +5,4 @@
 // Rendu d'une carte : cardHtml de cartes-ui.js. Images : bucket public hg-assets, dossier cards/.
 // Point d'entrée (importé par admin.js) : le code est réparti dans assets/js/admin-cards/.
 export { mountCardsSection, openCardsTab } from './admin-cards/view.js';
+export { mountPlayersList } from './admin-cards/players.js';

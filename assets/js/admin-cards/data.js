@@ -11,7 +11,7 @@ async function load() {
     fetchAll(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade, recycled_at').order('id')),
     fetchAll(() => sb.from('hg_wallets').select('user_id, paillettes, boosters_opened, pity_epique').order('user_id')),
     fetchAll(() => sb.from('hg_card_trades').select('id, from_user, to_user, status, from_paillettes, to_paillettes, message, created_at').order('id')),
-    fetchAll(() => sb.from('hg_profiles').select('id, pseudo, avatar_url, color, is_ghost, joined_on').order('id')),
+    sb.rpc('hg_staff_directory'),
     sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle(),
   ]);
   const stv = check(st);
@@ -20,7 +20,7 @@ async function load() {
   C.copies = copies;
   C.wallets = wallets;
   C.trades = trades;
-  C.profiles = profiles.sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
+  C.profiles = (check(profiles) ?? []).sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
   C.cfgRaw = stv?.value && typeof stv.value === 'object' && !Array.isArray(stv.value) ? structuredClone(stv.value) : {};
   C.setById = new Map(C.sets.map((s) => [s.id, s]));
   C.cardById = new Map(cards.map((k) => [k.id, k]));
