@@ -1,8 +1,10 @@
 /* Service worker du Humane Gang : mode hors ligne (coque du site et derniers contenus lus).
    - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis offline.html.
-   - Assets versionnés du site (/assets/) et bibliothèque jsDelivr épinglée (/npm/) : cache d'abord.
+   - Fichiers du site (/assets/) : copie en cache servie tout de suite, mise à jour en arrière-plan
+     (stale-while-revalidate) : une nouvelle version est utilisée dès le chargement suivant.
+   - Bibliothèque jsDelivr épinglée (/npm/, version fixe) : cache d'abord.
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
-   Incrémenter CACHE_VERSION à chaque déploiement qui modifie des fichiers du site. */
+   CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
 const CACHE_VERSION = 'v1';
 const CACHE_PREFIX = 'hg-coque-';
@@ -48,7 +50,8 @@ const PRECACHE_REMOTE = [
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await cache.addAll(PRECACHE);
+    // Un fichier absent ne doit pas faire échouer toute l'installation.
+    await Promise.allSettled(PRECACHE.map((url) => cache.add(url)));
     await Promise.allSettled(PRECACHE_REMOTE.map((url) => cache.add(url)));
     await self.skipWaiting();
   })());
@@ -78,9 +81,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const versionedAsset = sameOrigin && url.pathname.includes('/assets/');
+  if (sameOrigin && url.pathname.includes('/assets/')) { event.respondWith(staleWhileRevalidate(req, event)); return; }
   const pinnedLibrary = url.origin === 'https://cdn.jsdelivr.net' && url.pathname.startsWith('/npm/');
-  if (versionedAsset || pinnedLibrary) event.respondWith(cacheFirst(req));
+  if (pinnedLibrary) event.respondWith(cacheFirst(req));
 });
 
 async function networkFirst(req) {
@@ -101,4 +104,12 @@ async function cacheFirst(req) {
   const res = await fetch(req);
   if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
   return res;
+}
+
+async function staleWhileRevalidate(req, event) {
+  const cache = await caches.open(CACHE);
+  const hit = await cache.match(req);
+  const update = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => null);
+  if (hit) { event.waitUntil(update); return hit; }
+  return (await update) || Response.error();
 }
