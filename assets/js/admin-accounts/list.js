@@ -2,6 +2,7 @@
 import { sb, esc, errMsg, fmtDate, fmtDateTime, avatarHtml, $ } from '../core.js';
 import { fmtDay } from '../utils.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
+import { moreHtml, PAGE_SIZE } from '../admin/list-tools.js';
 import { IC, check, norm } from './common.js';
 import { A, root } from './state.js';
 
@@ -47,9 +48,10 @@ export function renderRows() {
   const list = $('#acc-list'); if (!list) return;
   if (A.listError) { list.innerHTML = `<li class="empty">Impossible de charger les comptes : ${esc(errMsg(A.listError))}</li>`; return; }
   const q = norm(A.q.trim());
-  const rows = A.accounts.filter((a) => !q || norm(a.pseudo).includes(q) || norm(a.email).includes(q));
-  $('#acc-count').textContent = q ? `${rows.length} / ${A.accounts.length} comptes` : `${A.accounts.length} compte${A.accounts.length > 1 ? 's' : ''}`;
-  list.innerHTML = rows.length ? rows.map((a) => {
+  const found = A.accounts.filter((a) => !q || norm(a.pseudo).includes(q) || norm(a.email).includes(q));
+  const rows = found.slice(0, A.shown);
+  $('#acc-count').textContent = q ? `${found.length} / ${A.accounts.length} comptes` : `${A.accounts.length} compte${A.accounts.length > 1 ? 's' : ''}`;
+  list.innerHTML = (rows.length ? rows.map((a) => {
     const m = { ...(A.avatars.get(a.id) || {}), pseudo: a.pseudo || '?' };
     const inner = `
       <span class="acc-who">${avatarHtml(m, 36)}<span class="acc-name"><strong>${esc(a.pseudo || 'Sans profil')}</strong>
@@ -64,7 +66,8 @@ export function renderRows() {
     return a.pseudo
       ? `<li><button class="acc-row" type="button" data-open="${esc(a.id)}" aria-label="Ouvrir la fiche de ${esc(a.pseudo)}">${inner}</button></li>`
       : `<li><div class="acc-row is-disabled" title="Compte créé sans code d'invitation : aucun profil Humane Gang">${inner}</div></li>`;
-  }).join('') : '<li class="empty">Aucun compte ne correspond à la recherche.</li>';
+  }).join('') : '<li class="empty">Aucun compte ne correspond à la recherche.</li>')
+    + (rows.length < found.length ? `<li class="lt-more-li">${moreHtml('acc-more', rows.length, found.length, 'data-more="accounts"')}</li>` : '');
 }
 
 /** Recharge la liste (ex. après un changement fait ailleurs dans l'admin). */

@@ -4,6 +4,7 @@ import { RARITIES, FAMILIES, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { ICON } from './constants.js';
 import { C } from './state.js';
 import { identSetId, liveCount, maxSerialOf, nf, pseudo, selField, thumb } from './helpers.js';
+import { matches, searchHtml, moreHtml, emptyHtml } from '../admin/list-tools.js';
 
 /* =========================================================
    Cartes
@@ -47,12 +48,31 @@ function cardRow(k) {
   </tr>`;
 }
 
+/** Cartes retenues par les filtres et la recherche, triées par série puis numéro. */
+export function filteredCards() {
+  const f = C.f, q = C.q.cartes;
+  return C.cards
+    .filter((k) => (!f.set || k.set_id === f.set) && (!f.rarity || k.rarity === f.rarity) && (!f.family || k.family === f.family))
+    .filter((k) => matches(q, k.name, k.caption, k.number, C.setById.get(k.set_id)?.name, rarityLabel(k.rarity), familyLabel(k.family), pseudo(k.member_id)))
+    .sort((a, b) => (C.setById.get(a.set_id)?.sort ?? 0) - (C.setById.get(b.set_id)?.sort ?? 0) || a.number - b.number);
+}
+/** Liste des cartes (par lots de C.shown) : { html, shown, total }. */
+export function cardsListData() {
+  const list = filteredCards();
+  const shown = list.slice(0, C.shown);
+  const html = list.length ? `<p class="small muted">${nf(list.length)} carte${list.length > 1 ? 's' : ''} correspondant aux filtres, sur ${nf(C.cards.length)}.</p>
+    <div class="acd-scroll" tabindex="0" role="region" aria-label="Liste des cartes">
+      <table class="acd-table">
+        <thead><tr><th scope="col">N°</th><th scope="col">Carte</th><th scope="col">Série</th><th scope="col">Famille</th><th scope="col">Rareté</th><th scope="col">Exemplaires</th><th scope="col">État</th><th scope="col"><span class="acd-sr">Actions</span></th></tr></thead>
+        <tbody>${shown.map(cardRow).join('')}</tbody>
+      </table></div>${moreHtml('acd-cards-more', shown.length, list.length, 'data-act="cards-more"')}`
+    : emptyHtml(C.q.cartes, 'Aucune carte ne correspond à ces filtres.');
+  return { html, shown: shown.length, total: list.length };
+}
+
 export function cardsPanel() {
   if (!C.sets.length) return `${identityBox()}<div class="empty">Crée d'abord une série : les cartes s'y rangent.</div>`;
   const f = C.f;
-  const list = C.cards
-    .filter((k) => (!f.set || k.set_id === f.set) && (!f.rarity || k.rarity === f.rarity) && (!f.family || k.family === f.family))
-    .sort((a, b) => (C.setById.get(a.set_id)?.sort ?? 0) - (C.setById.get(b.set_id)?.sort ?? 0) || a.number - b.number);
   return `${identityBox()}
     <div class="acd-toolbar" role="group" aria-label="Filtrer les cartes">
       ${selField('acd-f-set', 'Série', 'set', [['', 'Toutes les séries'], ...C.sets.map((s) => [s.id, s.name])], f.set)}
@@ -60,11 +80,6 @@ export function cardsPanel() {
       ${selField('acd-f-family', 'Famille', 'family', [['', 'Toutes les familles'], ...FAMILIES.map((x) => [x.id, x.label])], f.family)}
       <button class="btn btn-primary" type="button" data-act="card-new">${ICON.plus} Nouvelle carte</button>
     </div>
-    <p class="small muted">${nf(list.length)} carte${list.length > 1 ? 's' : ''} affichée${list.length > 1 ? 's' : ''} sur ${nf(C.cards.length)}.</p>
-    ${list.length ? `<div class="acd-scroll" tabindex="0" role="region" aria-label="Liste des cartes">
-      <table class="acd-table">
-        <thead><tr><th scope="col">N°</th><th scope="col">Carte</th><th scope="col">Série</th><th scope="col">Famille</th><th scope="col">Rareté</th><th scope="col">Exemplaires</th><th scope="col">État</th><th scope="col"><span class="acd-sr">Actions</span></th></tr></thead>
-        <tbody>${list.map(cardRow).join('')}</tbody>
-      </table></div>`
-      : '<div class="empty">Aucune carte ne correspond à ces filtres.</div>'}`;
+    ${searchHtml({ id: 'acd-search-cartes', label: 'Rechercher une carte', placeholder: 'Nom, légende, numéro, série, pseudo…', value: C.q.cartes, count: false, attrs: 'data-search="cartes"' })}
+    <div id="acd-cards-list">${cardsListData().html}</div>`;
 }

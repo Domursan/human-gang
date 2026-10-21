@@ -5,6 +5,7 @@
 import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { onTableChange } from './admin/live.js';
+import { matches, searchHtml, setCount, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
 
 // Regroupement des permissions dans le formulaire (les clés absentes du catalogue vont dans « Autres »)
 const GROUPS = [
@@ -20,7 +21,20 @@ const ST = {
   staff: [],          // hg_staff_list()
   candidates: null,   // membres qui peuvent être ajoutés (chargés à l'ouverture de l'ajout)
   busy: false,
+  q: '',              // recherche dans la liste (pseudo, permissions, note)
 };
+
+/** Membres retenus par la recherche (pseudo, permissions accordées, note). */
+const shownStaff = () => ST.staff.filter((s) => matches(ST.q, s.pseudo, (s.perms ?? []).map(labelOf).join(' '), s.note));
+/** Liste seule, pour la mettre à jour pendant la frappe sans perdre le focus. */
+function countStaff() {
+  setCount(document.getElementById('staff-search-count'), shownStaff().length, ST.staff.length, ST.q, ['membre', 'membres']);
+}
+function listHtml() {
+  const rows = shownStaff();
+  if (!ST.staff.length) return '<div class="empty">Aucun membre du Staff pour l’instant.</div>';
+  return rows.length ? `<div class="staff-list">${rows.map(rowHtml).join('')}</div>` : emptyHtml(ST.q, 'Aucun membre ne correspond.');
+}
 
 const labelOf = (k) => ST.catalog.find((c) => c.key === k)?.label ?? k;
 /** Libellé d'une permission (la clé si le catalogue n'est pas encore chargé). */
@@ -49,9 +63,10 @@ function render() {
     </div>
     <div class="card staff-card">
       <h3 class="card-title">Membres du Staff <span class="muted small">(${actifs} actif${actifs > 1 ? 's' : ''} sur ${ST.staff.length})</span></h3>
-      ${ST.staff.length ? `<div class="staff-list">${ST.staff.map(rowHtml).join('')}</div>`
-        : '<div class="empty">Aucun membre du Staff pour l’instant.</div>'}
+      ${ST.staff.length ? searchHtml({ id: 'staff-search', label: 'Rechercher au Staff', placeholder: 'Pseudo, permission ou note…', value: ST.q }) : ''}
+      <div id="staff-list">${listHtml()}</div>
     </div>`;
+  countStaff();
 }
 
 function rowHtml(s) {
@@ -89,10 +104,10 @@ async function saveStaff({ uid, perms, active, note }) {
 async function withBusy(btn, fn) {
   if (ST.busy) return;
   ST.busy = true;
-  if (btn) btn.disabled = true;
+  if (btn) { btn.disabled = true; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
   try { return await fn(); }
   catch (e) { toast(errMsg(e), 'error'); }
-  finally { ST.busy = false; if (btn) btn.disabled = false; }
+  finally { ST.busy = false; if (btn) { btn.disabled = false; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); } }
 }
 
 async function toggleActive(uid, active, btn) {
@@ -234,14 +249,24 @@ async function openForm(row, btn) {
 }
 
 async function withPending(btn, fn) {
-  if (btn) btn.disabled = true;
-  try { return await fn(); } finally { if (btn) btn.disabled = false; }
+  if (btn?.dataset.busy) return;
+  if (btn) { btn.disabled = true; btn.dataset.busy = '1'; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
+  try { return await fn(); } finally {
+    if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); btn.disabled = false; }
+  }
 }
 
 /* ---------- Montage ---------- */
 export async function mountStaffSection(root) {
   if (!root) return;
   ST.root = root;
+  // Recherche : seule la liste est redessinée (le champ garde le focus)
+  let timer = 0;
+  root.addEventListener('input', (e) => {
+    if (e.target.id !== 'staff-search') return;
+    clearTimeout(timer);
+    timer = setTimeout(() => { ST.q = e.target.value; const box = root.querySelector('#staff-list'); if (box) box.innerHTML = listHtml(); countStaff(); }, SEARCH_DELAY);
+  });
   root.addEventListener('click', (e) => {
     const t = e.target.closest('button');
     if (!t || !root.contains(t)) return;

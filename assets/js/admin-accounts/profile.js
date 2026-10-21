@@ -4,7 +4,7 @@ import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
 import { confirmBox } from '../ui-confirm.js';
 import { safeUrl } from '../utils.js';
 import { check, nullIfEmpty, tabError } from './common.js';
-import { A, H } from './state.js';
+import { A, H, dropFicheCache } from './state.js';
 import { isAdminView } from '../admin/perms.js';
 
 /* ---------- Profil ---------- */
@@ -64,6 +64,7 @@ export async function saveProfile(form, btn) {
     if (!ok) return;
   }
   const row = check(await sb.from('hg_profiles').update(patch).eq('id', p.id).select().single());
+  dropFicheCache();
   A.d.profile = row;
   const acc = A.accounts.find((a) => a.id === p.id);
   if (acc) { acc.pseudo = row.pseudo; acc.is_admin = row.is_admin; acc.joined_on = row.joined_on ?? null; }
@@ -108,6 +109,7 @@ export async function saveInfos(form) {
   const row = check(await sb.from('hg_profile_info')
     .upsert({ user_id: A.uid, data, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
     .select('data, updated_at').single());
+  dropFicheCache();
   A.d.info = { data: row, error: null };
   H.renderPanel();
   toast('Informations enregistrées', 'ok');

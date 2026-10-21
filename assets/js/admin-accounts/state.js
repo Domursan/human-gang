@@ -4,7 +4,7 @@ import { $ } from '../core.js';
 /* ---------- État ---------- */
 export const A = {
   me: null, onChange: async () => {},
-  accounts: [], avatars: new Map(), q: '', listError: null,
+  accounts: [], avatars: new Map(), q: '', listError: null, shown: 50, // comptes affichés (par lots de 50)
   uid: null, tab: 'profil', d: null, loading: false,
   ssEdition: null, showPair: false,
 };
@@ -18,6 +18,11 @@ export const RSVP = [['', 'Pas de réponse'], ['oui', 'Oui'], ['peut-etre', 'Peu
 export const IDEA = { nouvelle: 'Nouvelle', retenue: 'Retenue', ecartee: 'Écartée' };
 
 export const root = () => $('#acc-root');
+
+/* Lectures de la fiche déjà faites pendant cette visite de la page : « uid|source » -> { data, error }.
+   Vidé après toute modification (dropFicheCache) ; une lecture en erreur n'est jamais gardée. */
+export const CACHE = new Map();
+export const dropFicheCache = () => CACHE.clear();
 
 /** Hooks de rendu de la fiche, renseignés par fiche.js (évite un import circulaire). */
 export const H = { renderPanel: () => {}, renderDetail: () => {} };

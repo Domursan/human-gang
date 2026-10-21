@@ -5,6 +5,8 @@ export const S = {
   members: [], byId: new Map(), invites: [], editions: [], editionId: null, participants: [], exclusions: [],
   badges: [], userBadges: [], ideas: [], support: [], bot: null, theme: null, ghosts: [],
   ideaFilter: 'nouvelle', supportFilter: 'ouverte', badgeMember: '', lastDraw: null, lastCodes: [], ssLoaded: false,
+  // Recherche par liste (texte saisi, vide = tout afficher)
+  q: { idees: '', assistance: '', membres: '', badges: '' },
 };
 export const pseudoOf = (id) => (id ? S.byId.get(id)?.pseudo ?? 'Ancien membre' : '—');
 export const STATUS = [

@@ -12,14 +12,19 @@ import { ssJoin, ssLeave, setPair, clearPair, curEdition } from './ss.js';
 import { setRsvp, deletePhoto, toggleBadge } from './activity.js';
 import { setAccess, accessPages } from '../admin-access.js';
 import { bindSharedFields } from './ss-shared.js';
+import { PAGE_SIZE, SEARCH_DELAY } from '../admin/list-tools.js';
 
 /* =========================================================
    Événements de la section Comptes
    ========================================================= */
 function bindAccounts() {
   const sec = $('#comptes');
+  let searchTimer = 0;
   sec.addEventListener('input', (ev) => {
-    if (ev.target.id === 'acc-q') { A.q = ev.target.value; renderRows(); }
+    if (ev.target.id === 'acc-q') {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { A.q = ev.target.value; A.shown = PAGE_SIZE; renderRows(); }, SEARCH_DELAY);
+    }
     if (ev.target.id === 'ap-joined') { const b = $('[data-act="clear-joined"]', sec); if (b) b.disabled = !ev.target.value; }
   });
   sec.addEventListener('keydown', (ev) => {
@@ -34,6 +39,7 @@ function bindAccounts() {
   sec.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t || t.disabled) return;
+    if (t.dataset.more === 'accounts') { A.shown += PAGE_SIZE; return renderRows(); }
     if (t.dataset.open) return openAccount(t.dataset.open);
     if (t.dataset.tab) return selectTab(t.dataset.tab);
     const act = t.dataset.act;
@@ -70,7 +76,7 @@ function bindAccounts() {
   });
   sec.addEventListener('change', async (ev) => {
     const el = ev.target;
-    if (el.matches('[data-ss-edition]')) { A.ssEdition = el.value; A.showPair = false; renderPanel(); return; }
+    if (el.matches('[data-ss-edition]')) { A.ssEdition = el.value; A.showPair = false; return selectTab('ss'); }
     if (el.dataset.pageAccess) {
       const slug = el.dataset.pageAccess, on = el.checked;
       el.disabled = true;

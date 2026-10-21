@@ -8,6 +8,7 @@ import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, uploadAsset, pickFile } from './common.js';
 import { loadBadges } from './loaders.js';
 import { renderMembers } from './invites.js';
+import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 
 /* =========================================================
    Badges
@@ -21,7 +22,9 @@ export function renderBadges() {
     const b = S.badges.find((x) => x.code === ub.badge_code);
     holders.get(ub.badge_code).push(pseudoOf(ub.user_id) + (hasLevels(b) ? ` (${roman(ub.level || 1)})` : ''));
   }
-  $('#badge-grid').innerHTML = S.badges.map((b) => {
+  const shown = S.badges.filter((b) => matches(S.q.badges, b.name, b.description, b.code));
+  setCount($('#badge-search-count'), shown.length, S.badges.length, S.q.badges, ['badge', 'badges']);
+  $('#badge-grid').innerHTML = shown.map((b) => {
     const h = holders.get(b.code) || [];
     const auto = isAutoBadge(b.code);
     return `<div class="badge-card">
@@ -35,7 +38,7 @@ export function renderBadges() {
         <button class="btn btn-danger btn-sm btn-icon" type="button" data-badge-del="${esc(b.code)}" aria-label="Supprimer le badge ${esc(b.name)}" title="Supprimer">${ICON.trash}</button>
       </div>
     </div>`;
-  }).join('') || '<div class="empty">Aucun badge.</div>';
+  }).join('') || emptyHtml(S.q.badges, 'Aucun badge.');
 
   const sel = $('#badge-member');
   const pickable = [...S.members.map((m) => ({ id: m.id, label: m.pseudo })), ...S.ghosts.map((g) => ({ id: g.id, label: `${g.pseudo} (fantôme)` }))]
@@ -60,6 +63,8 @@ export const hasBadge = (uid, code) => S.userBadges.some((u) => u.user_id === ui
 export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?? code;
 
 export function bindBadges() {
+  const search = mountSearch($('#badge-grid'), { id: 'badge-search', label: 'Rechercher un badge', placeholder: 'Nom, description ou code…' });
+  bindSearch(search.input, (q) => { S.q.badges = q; renderBadges(); });
   $('#badge-member').addEventListener('change', (ev) => { S.badgeMember = ev.target.value; renderBadgeToggles(); });
   $('#badges').addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');

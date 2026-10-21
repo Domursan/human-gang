@@ -6,17 +6,16 @@ import { ICON } from './constants.js';
 import { C } from './state.js';
 import { check, act, dialog, dlgHead, friendly, group, nf, nextSetSort, period, setState, removeImages } from './helpers.js';
 import { refresh } from './data.js';
+import { matches, searchHtml } from '../admin/list-tools.js';
 
 /* =========================================================
    Séries
    ========================================================= */
-export function setsPanel() {
+/** Séries retenues par la recherche : { html, shown, total } (la liste seule, pour la mise à jour sans perte de frappe). */
+export function setsListData() {
   const counts = group(C.cards, (k) => k.set_id);
-  return `<div class="acd-head">
-      <p class="small muted">Une série regroupe des cartes. Supprimer une série supprime aussi toutes ses cartes et les exemplaires qu'en ont les membres.</p>
-      <button class="btn btn-primary" type="button" data-act="set-new">${ICON.plus} Nouvelle série</button>
-    </div>
-    ${C.sets.length ? `<ul class="acd-list">${C.sets.map((s) => {
+  const rows = C.sets.filter((s) => matches(C.q.series, s.name, s.code, s.description));
+  const html = rows.length ? `<ul class="acd-list">${rows.map((s) => {
       const n = (counts.get(s.id) || []).length;
       const [cls, label] = setState(s);
       return `<li class="acd-item">
@@ -32,8 +31,19 @@ export function setsPanel() {
           <button class="btn btn-danger btn-sm" type="button" data-act="set-del" data-id="${esc(s.id)}">${ICON.trash} Supprimer</button>
         </div>
       </li>`;
-    }).join('')}</ul>` : '<div class="empty">Aucune série pour l\'instant. Crée la première pour y ajouter des cartes.</div>'}`;
+    }).join('')}</ul>` : (C.q.series.trim() ? `<div class="empty">Aucun résultat pour « ${esc(C.q.series.trim())} ».</div>`
+      : '<div class="empty">Aucune série pour l\'instant. Crée la première pour y ajouter des cartes.</div>');
+  return { html, shown: rows.length, total: C.sets.length };
 }
+export function setsPanel() {
+  return `<div class="acd-head">
+      <p class="small muted">Une série regroupe des cartes. Supprimer une série supprime aussi toutes ses cartes et les exemplaires qu'en ont les membres.</p>
+      <button class="btn btn-primary" type="button" data-act="set-new">${ICON.plus} Nouvelle série</button>
+    </div>
+    ${C.sets.length ? searchHtml({ id: 'acd-search-series', label: 'Rechercher une série', placeholder: 'Nom, code ou description…', value: C.q.series, attrs: 'data-search="series"' }) : ''}
+    <div id="acd-sets-list">${setsListData().html}</div>`;
+}
+/* (fin de la liste des séries) */
 
 export function openSetDialog(s = null) {
   const d = dialog();

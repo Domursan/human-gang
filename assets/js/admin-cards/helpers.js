@@ -52,9 +52,13 @@ export function dialog() {
   }
   return d;
 }
+/** Action en cours : bouton désactivé avec indicateur, pas de second envoi. */
 export async function act(btn, fn) {
-  if (btn) btn.disabled = true;
-  try { await fn(); } catch (e) { toast(errMsg(e), 'error'); } finally { if (btn?.isConnected) btn.disabled = false; }
+  if (btn?.dataset.busy) return;
+  if (btn) { btn.disabled = true; btn.dataset.busy = '1'; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
+  try { await fn(); } catch (e) { toast(errMsg(e), 'error'); } finally {
+    if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
+  }
 }
 export async function removeImages(urls) {
   const paths = urls.map((u) => /\/hg-assets\/(cards\/[^?#]+)/.exec(u || '')?.[1]).filter(Boolean).map((p) => decodeURIComponent(p));

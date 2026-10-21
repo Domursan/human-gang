@@ -87,3 +87,21 @@
   .md-actions .btn { flex: 1 1 auto; }
   .md-dlg .dialog-actions { margin-top: auto; }
 }
+
+/* ---------- Outils de liste (recherche, compteur, « Afficher plus », action en cours) ---------- */
+.lt-search { display: grid; gap: 6px; margin: 0 0 14px; max-width: 460px; }
+.lt-label { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.lt-box { position: relative; }
+.lt-box svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.lt-box input { padding-left: 42px; }
+.lt-count { margin: 0; min-height: 1.2em; }
+.lt-more { display: flex; justify-content: center; margin-top: 12px; }
+/* Action en cours : bouton désactivé avec un indicateur qui tourne */
+.btn.is-busy { position: relative; cursor: progress; }
+.btn.is-busy::after { content: ''; width: 14px; height: 14px; margin-left: 2px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent; animation: lt-spin .7s linear infinite; }
+@keyframes lt-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn.is-busy::after { animation-duration: 2.4s; } }
+
+/* Lignes et boutons masqués par l'attribut hidden (display:flex des .btn-row ne doit pas les réafficher) */
+.btn-row[hidden], .lt-more[hidden] { display: none !important; }
