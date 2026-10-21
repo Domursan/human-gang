@@ -37,12 +37,14 @@ const emettre = (p, row) => p.evaluate((r) => {
 
     check(await p.isHidden('.nav-count[data-count="assistance"]'), '(a) avant l\'événement : aucun compteur Assistance');
 
+    await adminSection(p, 'communication/assistance');  // la liste est montée à la première visite
+    await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 }).catch(() => {});
     await emettre(p, demande('sup-live-1', 'Message reçu en direct'));
     await p.waitForFunction(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent === '1', null, { timeout: 5000 }).catch(() => {});
     check(await p.isVisible('[data-dom-badge="communication"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
       '(a) événement hg_support : compteur de navigation Assistance mis à jour (1)');
     check((await p.textContent('#stats a[href="#communication/assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
-    check((await p.textContent('#support-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
+    check((await p.textContent('#shell-col-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
     await adminSection(p, 'pilotage/staff');
@@ -51,14 +53,14 @@ const emettre = (p, row) => p.evaluate((r) => {
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
     await sleep(1500);
     check(await p.locator('#assistance .live-banner').count() === 1, '(a) dialogue ouvert : bandeau « Mises à jour disponibles » dans Assistance');
-    check(!(await p.textContent('#support-list')).includes('Message pendant la saisie'), '(a) dialogue ouvert : la liste n\'est pas remplacée');
+    check(!(await p.textContent('#shell-col-list')).includes('Message pendant la saisie'), '(a) dialogue ouvert : la liste n\'est pas remplacée');
     check((await p.textContent('.nav-count[data-count="assistance"]')).trim() === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'), null, { timeout: 5000 }).catch(() => {});
     await adminSection(p, 'communication/assistance');
     await p.click('#assistance .live-banner button');
     await p.waitForTimeout(300);
-    check((await p.textContent('#support-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');
+    check((await p.textContent('#shell-col-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');
     check(await p.locator('#assistance .live-banner').count() === 0, '(a) « Actualiser » : le bandeau disparaît');
 
     // Coupure du canal : indicateur gris, puis reconnexion automatique

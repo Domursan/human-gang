@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="assets/css/admin.css">
   <link rel="stylesheet" href="assets/css/admin-shell.css">
   <link rel="stylesheet" href="assets/css/admin-nav.css">
+  <link rel="stylesheet" href="assets/css/admin-ui.css">
   <link rel="stylesheet" href="assets/css/admin-live.css">
   <link rel="stylesheet" href="assets/css/admin-accounts.css">
   <link rel="stylesheet" href="assets/css/admin-messages.css">
@@ -50,7 +51,6 @@
   <link rel="stylesheet" href="assets/css/admin-sorties.css">
   <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
   <link rel="stylesheet" href="assets/css/admin-reglages.css">
-  <link rel="stylesheet" href="assets/css/admin-ui.css">
   <link rel="stylesheet" href="assets/css/admin-pilotage.css">
 </head>
 <body>
@@ -203,25 +203,11 @@
         </section>
         <section id="idees" class="admin-section" aria-labelledby="h-idees">
           <h2 id="h-idees" class="section-title">Boîte à idées</h2>
-          <div class="card">
-            <div class="filters" role="group" aria-label="Filtrer les idées" id="idea-filters">
-              <button class="chip" type="button" data-filter="nouvelle" aria-pressed="true">Nouvelles</button>
-              <button class="chip" type="button" data-filter="retenue" aria-pressed="false">Retenues</button>
-              <button class="chip" type="button" data-filter="ecartee" aria-pressed="false">Écartées</button>
-              <button class="chip" type="button" data-filter="all" aria-pressed="false">Toutes</button>
-            </div>
-            <div id="idea-list"></div>
-          </div>
+          <div id="ideas-root" class="detail-host"></div>
         </section>
         <section id="assistance" class="admin-section" aria-labelledby="h-assistance">
           <h2 id="h-assistance" class="section-title">Assistance</h2>
-          <div class="card">
-            <div class="filters" role="group" aria-label="Filtrer les demandes" id="support-filters">
-              <button class="chip" type="button" data-filter="ouverte" aria-pressed="true">Ouvertes</button>
-              <button class="chip" type="button" data-filter="traitee" aria-pressed="false">Traitées</button>
-            </div>
-            <div id="support-list"></div>
-          </div>
+          <div id="support-root" class="detail-host"></div>
         </section>
         <section id="messagerie" class="admin-section" aria-labelledby="h-messagerie">
           <h2 id="h-messagerie" class="section-title">Messagerie</h2>

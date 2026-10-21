@@ -29,8 +29,8 @@ import { bindInvites, renderInvites, renderMembers } from './admin/invites.js';
 import { renderSS } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
 import { bindBadges, renderBadges } from './admin/badges.js';
-import { bindIdeas, renderIdeas } from './admin/ideas.js';
-import { bindSupport, renderSupport } from './admin/support.js';
+import { ideasSub, renderIdeas } from './admin/ideas.js';
+import { supportSub, renderSupport } from './admin/support.js';
 import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
 import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate } from './admin/shell.js';
@@ -74,8 +74,6 @@ async function openFicheRoute(_el, { id, tab }) {
 if (has('membres')) bindInvites(me);
 if (has('secret-santa')) bindSecretSanta();
 if (has('badges')) bindBadges();
-if (has('idees')) bindIdeas();
-if (has('assistance')) bindSupport();
 
 /* ---------- Sous-sections : montage à la première visite ---------- */
 registerSub('pilotage/apercu', {
@@ -114,6 +112,8 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats',
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
 }
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
+registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
+registerSub('communication/idees', ideasSub);
 registerSub('communication/messagerie', { main: () => mountMessagesSection($('#messages-root')) });
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
 registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')) });
@@ -129,8 +129,8 @@ await Promise.all([
   has('membres') ? safe(ensureInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }) : null,
   needSS ? safe(ensureSS, (e) => { $('#ss-root').innerHTML = sectionError(e); }) : null,
   needBadges ? safe(ensureBadges, (e) => { $('#badge-grid').innerHTML = sectionError(e); }) : null,
-  has('idees') ? safe(ensureIdeas, (e) => { $('#idea-list').innerHTML = sectionError(e); }) : null,
-  has('assistance') ? safe(ensureSupport, (e) => { $('#support-list').innerHTML = sectionError(e); }) : null,
+  has('idees') ? safe(ensureIdeas, (e) => { $('#ideas-root').innerHTML = sectionError(e); }) : null,
+  has('assistance') ? safe(ensureSupport, (e) => { $('#support-root').innerHTML = sectionError(e); }) : null,
 ]);
 
 renderStats(); // compteurs « à traiter » compris

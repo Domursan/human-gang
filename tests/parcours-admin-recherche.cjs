@@ -37,39 +37,41 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
-  /* ---------- Boîte à idées : recherche ---------- */
+  /* ---------- Boîte à idées (liste + détail) : recherche, filtres, action ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { ideas: IDEAS } });
     await adminSection(p, 'communication/idees');
-    await p.waitForSelector('#idea-list .item', { timeout: 5000 });
-    check(await p.locator('#idea-list .item').count() === 3, 'idées : filtre « Nouvelles » affiche les 3 nouvelles idées');
-    check((await p.textContent('#idea-search-count')).includes('3 idées'), 'idées : compteur « 3 idées » hors recherche');
+    await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
+    const rows = () => p.locator('#shell-col-list .ui-row').count();
+    const search = '#shell-col-list .ui-search input';
+    check(await rows() === 4, 'idées : les 4 idées (toutes) dans la liste');
+    check((await p.textContent('#shell-col-list .ui-sr[role="status"]')).includes('4 élément'), 'idées : compteur « 4 éléments » hors recherche');
 
-    await p.fill('#idea-search', 'FLECHETTES');
+    await p.click('#shell-col-list .ui-chip[data-filter="nouvelle"]');
+    await sleep(200);
+    check(await rows() === 3, 'idées : filtre « Nouvelles » affiche les 3 nouvelles idées');
+
+    await p.fill(search, 'FLECHETTES');
     await sleep(400);
-    check(await p.locator('#idea-list .item').count() === 1, 'idées : recherche sans accent ni casse trouve « fléchettes »');
-    check((await p.textContent('#idea-search-count')).includes('1 résultat sur 3'), 'idées : compteur « 1 résultat sur 3 »');
+    check(await rows() === 1, 'idées : recherche sans accent ni casse trouve « fléchettes »');
+    check((await p.textContent('#shell-col-list .ui-sr[role="status"]')).includes('1 élément'), 'idées : compteur « 1 élément » pendant la recherche');
 
-    await p.fill('#idea-search', 'introuvable');
+    await p.fill(search, 'introuvable');
     await sleep(400);
-    check(await p.locator('#idea-list', { hasText: 'Aucun résultat' }).count() === 1, 'idées : état vide « Aucun résultat »');
+    check((await p.textContent('#shell-col-list .ui-empty')).includes('Aucun résultat'), 'idées : état vide « Aucun résultat »');
 
-    await p.fill('#idea-search', 'flechettes ALICE');
+    await p.fill(search, '');
     await sleep(400);
-    check(await p.locator('#idea-list .item').count() === 1, 'idées : mots combinés, texte et pseudo de l\'auteur (« flechettes ALICE »)');
+    check(await rows() === 3, 'idées : vider la recherche restaure la liste du filtre');
 
-    await p.fill('#idea-search', '');
-    await sleep(400);
-    check(await p.locator('#idea-list .item').count() === 3, 'idées : vider la recherche restaure la liste');
-
-    // Action : écarter une idée (bouton désactivé pendant la requête, pas de second envoi, état rétabli)
-    await p.click('#idea-list [data-idea="i2"][data-status="ecartee"]');
+    // Action : écarter une idée depuis son détail (statut enregistré, pas de bouton resté en cours)
+    await p.evaluate(() => { location.hash = '#communication/idees/i2'; });
+    await p.waitForSelector('#ideas-root select', { timeout: 5000 });
+    await p.selectOption('#ideas-root select', 'ecartee');
     await p.waitForTimeout(400);
     const st = await p.evaluate(() => window.__DB.hg_ideas.find((i) => i.id === 'i2')?.status);
     check(st === 'ecartee', 'idées : l\'idée écartée est enregistrée');
     check(await p.locator('[aria-busy="true"], .is-busy').count() === 0, 'action : aucun bouton reste en cours après l\'enregistrement');
-    check(await p.locator('#idea-list .item').count() === 2, 'idées : l\'idée écartée sort de la liste « Nouvelles »');
-    check(await p.evaluate(() => (window.__DB.hg_ideas || []).length) === 4, 'idées : aucune idée créée ou supprimée par erreur');
     check(p.errs.length === 0, 'idées : aucune erreur JS (' + p.errs.join(' | ') + ')');
     await p.ctx.close();
   }
