@@ -4,6 +4,10 @@
 // Métadonnées des conversations via rpc hg_admin_conversations(). Les messages ne sont lus que par rpc
 // hg_admin_read_conversation, qui journalise chaque lecture ; la suppression d'un message passe par hg_messages.
 // L'admin voit les vrais expéditeurs, y compris le Santa.
+// Dépendances : core.js (Supabase, toast), icons.js (icône corbeille), admin/ui/list.js et admin/ui/thread.js
+// (liste et fil), admin/shell.js (boutons d'en-tête), ui-confirm.js (confirmation de suppression).
+// Tables et RPC : hg_staff_directory, hg_admin_conversations, hg_admin_read_conversation, hg_conversations, hg_messages.
+// Exporte : mountMessagesSection (zone de lecture), listMessages (colonne 2), openMessages (affichage à chaque visite).
 import { sb, toast, errMsg, esc, $ } from './core.js';
 import { svg } from './icons.js';
 import { createList } from './admin/ui/list.js';
@@ -11,28 +15,45 @@ import { createThread } from './admin/ui/thread.js';
 import { setActions } from './admin/shell.js';
 import { confirmBox } from './ui-confirm.js';
 
+/* ---------- Constantes ---------- */
 const PAGE = 200; // messages par lecture journalisée (limite de la RPC : 500)
+// Filtres de la colonne 2 : identifiant, libellé et test sur une conversation.
 const FILTERS = [
   { id: 'direct', label: 'Directes', test: (c) => c.kind === 'direct' },
   { id: 'santa', label: 'Secret Santa', test: (c) => c.kind === 'santa' },
 ];
+// Format des dates des messages (jour.mois.année heure:minute, heure suisse).
 const dtFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+/** Formate une date pour l'affichage ; chaîne vide si la date est absente. */
 const fmt = (d) => (d ? dtFmt.format(new Date(d)) : '');
-const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Icône corbeille (SVG) du bouton « Supprimer » d'un message.
 const TRASH = svg('trash', { stroke: 2 });
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
 
+/* ---------- État de la section ---------- */
 // État de la section (partagé entre la liste, la lecture et les visites successives)
 const M = {
   convs: [], pseudo: new Map(), sel: null, conv: null, msgs: [], lastId: 0, more: false,
   list: null, reader: null, thread: null, mounted: false, token: 0,
 };
 
+/* ---------- Conversations : titres et lignes de la liste ---------- */
+/**
+ * Titre d'une conversation : « Santa → cible » pour un Secret Santa, membres sinon.
+ * @param {object} c Ligne renvoyée par hg_admin_conversations.
+ * @returns {string}
+ */
 function convTitle(c) {
   return c.kind === 'santa'
     ? `${c.santa || '?'} (Santa) → ${c.target || '?'}`
     : (c.members || 'Conversation vide');
 }
+/**
+ * Convertit une conversation en ligne pour la liste (titre, sous-titre, nombre de messages, badge).
+ * @param {object} c Ligne renvoyée par hg_admin_conversations.
+ * @returns {object} Élément attendu par createList.
+ */
 function toItem(c) {
   return {
     id: c.id,
@@ -44,13 +65,17 @@ function toItem(c) {
     kind: c.kind,
   };
 }
+// Toutes les conversations au format de la liste.
 const convItems = () => M.convs.map(toItem);
 
+/* ---------- Chargement des données ---------- */
+/** Charge les pseudos du Staff (id -> pseudo) pour afficher les noms des expéditeurs. */
 async function loadPseudos() {
   // Annuaire public du Staff (hg_staff_directory) : accessible à tout Staff, sans lecture complète de hg_profiles
   const rows = check(await sb.rpc('hg_staff_directory')) ?? [];
   M.pseudo = new Map(rows.map((r) => [r.id, r.pseudo]));
 }
+/** Charge la liste des conversations visibles par l'admin. */
 async function loadConvs() {
   M.convs = check(await sb.rpc('hg_admin_conversations')) ?? [];
 }
@@ -61,11 +86,19 @@ async function fetchMessages(id, after) {
   return check(await sb.rpc('hg_admin_read_conversation', { p_conv: id, p_after: after, p_limit: PAGE })) ?? [];
 }
 
+/* ---------- Affichage des messages et du lecteur ---------- */
+/**
+ * Nom affiché de l'expéditeur d'un message. Dans un Secret Santa, l'expéditeur est suffixé « (Santa) ».
+ * @param {object} m Message brut (sender_id).
+ * @param {object|null} conv Conversation en cours (kind, santa_id).
+ * @returns {string}
+ */
 function senderName(m, conv) {
   if (!m.sender_id) return 'Ancien membre';
   const name = M.pseudo.get(m.sender_id) || 'Membre inconnu';
   return conv?.kind === 'santa' && m.sender_id === conv.santa_id ? `${name} (Santa)` : name;
 }
+/** Messages de la conversation ouverte au format attendu par createThread. */
 function toMessages() {
   return M.msgs.map((m) => ({
     id: m.id,
@@ -77,6 +110,10 @@ function toMessages() {
   }));
 }
 
+/**
+ * Dessine la zone de lecture : texte d'accueil si rien n'est choisi, sinon en-tête, bouton « suivants » et fil des messages.
+ * Un avertissement rappelle que chaque lecture est journalisée.
+ */
 function paintReader() {
   if (!M.reader) return;
   if (!M.sel) {
@@ -109,7 +146,13 @@ function paintReader() {
   if (!M.msgs.length) host.insertAdjacentHTML('afterbegin', '<div class="empty">Aucun message dans cette conversation.</div>');
 }
 
+/* ---------- Ouverture, pagination et suppression ---------- */
+/**
+ * Ouvre une conversation : charge ses infos et sa première page de messages.
+ * @param {string} id Identifiant de la conversation.
+ */
 async function openConv(id) {
+  // Numéro de requête : si l'admin change de conversation pendant le chargement, la réponse périmée est ignorée.
   const token = ++M.token;
   M.sel = id;
   M.conv = M.convs.find((c) => c.id === id) || null;
@@ -132,6 +175,10 @@ async function openConv(id) {
   }
 }
 
+/**
+ * Charge la page de messages suivante de la conversation ouverte.
+ * @param {HTMLButtonElement} btn Bouton « Charger les messages suivants » (désactivé pendant le chargement).
+ */
 async function loadMore(btn) {
   const id = M.sel;
   btn.disabled = true;
@@ -148,16 +195,27 @@ async function loadMore(btn) {
   }
 }
 
+/**
+ * Demande confirmation avant de supprimer un message. Le texte est tronqué à 300 caractères.
+ * @param {string} body Contenu du message.
+ * @returns {Promise<boolean>} true si l'admin confirme.
+ */
 function confirmDelete(body) {
   const q = body.length > 300 ? `${body.slice(0, 300)}…` : body;
   return confirmBox('Supprimer ce message ?', `Le message sera supprimé définitivement pour tous les membres de la conversation.\n\n« ${q} »`, { ok: 'Supprimer', danger: true });
 }
 
+/**
+ * Supprime un message après confirmation, puis met à jour le fil, le compteur et la liste.
+ * @param {object} m Message à supprimer (id, body).
+ * @param {HTMLButtonElement} [btn] Bouton d'action, réactivé si la suppression échoue.
+ */
 async function del(m, btn) {
   if (!(await confirmDelete(m.body))) return;
   if (btn) btn.disabled = true;
   try {
     const gone = check(await sb.from('hg_messages').delete().eq('id', m.id).select('id'));
+    // Pas d'erreur mais aucune ligne supprimée : la base refuse (droits RLS). On le signale comme un échec.
     if (Array.isArray(gone) && !gone.length) throw new Error('suppression refusée');
     M.msgs = M.msgs.filter((x) => x.id !== m.id);
     const c = M.convs.find((x) => x.id === M.sel);
@@ -171,6 +229,8 @@ async function del(m, btn) {
   }
 }
 
+/* ---------- Actualisation ---------- */
+/** Recharge les conversations (et les pseudos si besoin) puis rouvre la conversation affichée. */
 async function refresh() {
   try {
     await Promise.all([loadConvs(), M.pseudo.size ? null : loadPseudos()]);
@@ -181,6 +241,7 @@ async function refresh() {
   }
 }
 
+/* ---------- Points d'entrée (appelés par admin.js) ---------- */
 /** Section Messagerie : zone principale (lecture). Montée à la première visite (admin.js). */
 export function mountMessagesSection(container) {
   if (!container || M.mounted) return;
@@ -213,6 +274,7 @@ export function openMessages(_el, { id } = {}) {
   openConv(id);
 }
 
+/** Bouton « Actualiser » de l'en-tête de la section Messagerie. */
 function messageActions() {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'btn btn-ghost btn-sm'; b.textContent = 'Actualiser';
