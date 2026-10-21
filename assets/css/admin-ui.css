@@ -140,7 +140,7 @@ html[data-mode="clair"] { --sand-ink: #6B4F00; }
 .ui-msg.is-note .ui-bubble {
   border-style: dashed; border-color: var(--sand); background: color-mix(in srgb, var(--sand) 9%, transparent);
 }
-.ui-msg.is-note .ui-meta { color: var(--sand); }
+.ui-msg.is-note .ui-meta { color: var(--sand-ink); }
 
 .ui-composer { flex: none; border-top: 1px solid var(--border); padding: 14px 24px 18px; background: var(--bg); margin: 0; }
 .ui-box { border: 1px solid var(--border-strong); border-radius: 16px; background: var(--surface); padding: 12px 14px 10px; }
@@ -155,7 +155,7 @@ html[data-mode="clair"] { --sand-ink: #6B4F00; }
 .ui-note-toggle { border-radius: 9px; }
 .ui-note-toggle svg { width: 14px; height: 14px; flex: none; }
 .ui-note-toggle[aria-pressed="true"] {
-  color: var(--sand); border-color: color-mix(in srgb, var(--sand) 45%, transparent); background: color-mix(in srgb, var(--sand) 8%, transparent);
+  color: var(--sand-ink); border-color: color-mix(in srgb, var(--sand) 45%, transparent); background: color-mix(in srgb, var(--sand) 8%, transparent);
 }
 .ui-send {
   height: 34px; padding: 0 14px; border-radius: 11px; background: var(--accent); color: var(--accent-text); border: 0;
