@@ -257,7 +257,9 @@ function renderDetail() {
   }
   const dates = S.dates.filter((d) => d.event_id === ev.id);
   const ids = new Set(S.rsvps.filter((r) => r.event_id === ev.id).map((r) => r.user_id));
-  const members = [...S.members.values()].sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
+  // Choix (ajouter une présence, voter à la place de) : comptes actifs seulement. Les présences et votes déjà
+  // enregistrés gardent leurs fantômes (historique, via S.members qui les contient).
+  const members = [...S.members.values()].filter((m) => !m.is_ghost).sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
   const pseudo = (id) => memberName(S.members, id);
   const retained = (d) => ev.starts_at && new Date(d.proposed_at).getTime() === new Date(ev.starts_at).getTime();
   D.headApi = renderDetailHeader(D.head, {

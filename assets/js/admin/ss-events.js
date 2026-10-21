@@ -127,8 +127,13 @@ async function saveEdition(form, ed) {
   return true;
 }
 
+/** Fantôme (compte non inscrit) : exclu des choix, pas de l'historique. */
+function isGhost(id) { return !!S.byId.get(id)?.is_ghost; }
+
 function openExcl() {
-  const parts = [...S.participants].sort((a, b) => pseudoOf(a.user_id).localeCompare(pseudoOf(b.user_id), 'fr'));
+  // Choix des deux personnes : comptes actifs seulement (les exclusions déjà saisies restent affichées avec leur nom).
+  const parts = S.participants.filter((p) => !S.byId.get(p.user_id)?.is_ghost)
+    .sort((a, b) => pseudoOf(a.user_id).localeCompare(pseudoOf(b.user_id), 'fr'));
   if (parts.length < 2) return;
   const opts = parts.map((p) => `<option value="${esc(p.user_id)}">${esc(pseudoOf(p.user_id))}</option>`).join('');
   openDrawer({
@@ -187,7 +192,7 @@ async function draw(btn, ed) {
 async function drawManual(btn, ed) {
   if (ed.drawn_at) return;
   await busy(btn, () => openManualDraw({
-    edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf,
+    edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf, isGhost,
     onDone: async (count) => {
       S.lastDraw = { edition: ed.id, n: count };
       await loadEditions(); renderSS(); renderStats();
@@ -210,7 +215,7 @@ async function redraw(btn, ed, manual) {
   const n = S.participants.length;
   if (manual) {
     await busy(btn, () => openManualDraw({
-      edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf,
+      edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf, isGhost,
       redo: {
         confirm: () => confirmRedo({ year: ed.year, participants: n, manual: true }),
         before: () => deleteAssignments(ed),

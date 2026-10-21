@@ -9,6 +9,8 @@ export const check = (res) => { if (res.error) throw res.error; return res.data;
 export const nf = (n) => new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(n || 0);
 export const fmtWhen = (iso) => (iso ? new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)) : '');
 export const pseudo = (id) => (id ? C.byId.get(id)?.pseudo ?? 'Ancien membre' : '—');
+/** Comptes inscrits seulement (hors fantômes) : pour les listes et les choix. L'historique garde C.byId. */
+export const activeProfiles = () => C.profiles.filter((p) => !p.is_ghost);
 export const friendly = (e, map = {}) => (e?.code && map[e.code]) || errMsg(e);
 export const group = (rows, key) => {
   const m = new Map();

@@ -3,7 +3,7 @@ import { esc } from '../core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { ICON } from './constants.js';
 import { C } from './state.js';
-import { identSetId, liveCount, maxSerialOf, nf, pseudo, selField, thumb } from './helpers.js';
+import { activeProfiles, identSetId, liveCount, maxSerialOf, nf, pseudo, selField, thumb } from './helpers.js';
 import { matches, searchHtml, moreHtml, emptyHtml } from '../admin/list-tools.js';
 
 /* =========================================================
@@ -12,7 +12,7 @@ import { matches, searchHtml, moreHtml, emptyHtml } from '../admin/list-tools.js
 function identityBox() {
   const idSet = identSetId();
   const ident = C.cards.filter((k) => k.set_id === idSet && k.rarity === 'identite');
-  const missing = C.profiles.filter((p) => !ident.some((k) => k.member_id === p.id));
+  const missing = activeProfiles().filter((p) => !ident.some((k) => k.member_id === p.id));
   return `<section class="card acd-ident" aria-labelledby="acd-ident-h">
     <h3 class="card-title" id="acd-ident-h">Cartes Identité</h3>
     <p class="small muted">Les cartes Identité sont les plus rares : une par membre, numérotée (max_copies conseillé : 5 à 10).</p>

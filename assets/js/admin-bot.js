@@ -892,7 +892,7 @@ export function mountBotSection(container) {
       sb.from('hg_settings').select('key, value').in('key', ['bot', 'bot_templates']).then(check),
       fetch(TEMPLATES_URL, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
       sb.rpc('hg_admin_accounts').then(check),
-      sb.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, avatar_url, color, is_admin').then(check),
+      sb.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, avatar_url, color, is_admin, is_ghost').then(check),
     ]);
 
     // Réglages
@@ -918,7 +918,8 @@ export function mountBotSection(container) {
     // Comptes
     const profs = profiles.status === 'fulfilled' ? profiles.value ?? [] : [];
     const byId = new Map(profs.map((p) => [p.id, p]));
-    const accs = accounts.status === 'fulfilled' && Array.isArray(accounts.value) ? accounts.value : profs.map((p) => ({ id: p.id, pseudo: p.pseudo }));
+    // Repli sans hg_admin_accounts : comptes actifs seulement (pas les fantômes).
+    const accs = accounts.status === 'fulfilled' && Array.isArray(accounts.value) ? accounts.value : profs.filter((p) => !p.is_ghost).map((p) => ({ id: p.id, pseudo: p.pseudo }));
     if (accounts.status === 'rejected' && profiles.status === 'rejected') {
       bmBody.innerHTML = `<div class="empty">Impossible de charger les comptes : ${esc(errMsg(accounts.reason))}</div>`;
       return;
