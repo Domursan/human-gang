@@ -11,6 +11,7 @@ importent aussi `../_shared/dyn-announce.ts`).
 | `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
 | `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
 | `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `false` |
+| `hg-album` | `hg-album/index.ts` (seul fichier ; dépendances `npm:fflate`, `npm:@supabase/supabase-js`) | `true` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
 l'en-tête `x-cron-secret` de `hg-cron` et `hg-birthdays`.
@@ -107,3 +108,19 @@ select cron.schedule(
 );
 ```
 (même forme que `hg-birthdays-daily` ; pour l'arrêter : `select cron.unschedule('hg-cron-5min');`).
+
+## Album téléchargeable (hg-album)
+Fonction `hg-album` : assemble en ZIP, en flux, les photos d'une sortie (bucket privé `hg-photos`), pour le bouton
+« Tout télécharger » de l'album (`assets/js/irl.js`, `downloadAlbum` dans `assets/js/photos.js`).
+- Déployer `supabase/functions/hg-album/index.ts` seul, avec `verify_jwt` à `true` (tableau ci-dessus).
+- Aucun secret à créer : la fonction agit avec le JWT de l'appelant et la clé publique envoyée par le site (`apikey`) ;
+  elle ne reçoit jamais la clé de service. La RLS (membres) s'applique aux photos, aux sorties et au stockage.
+- Plafonds : 400 photos et 300 Mo par ZIP (réponse 413 au-delà). Le ZIP n'est pas compressé (images déjà compressées).
+- Si le stockage ne donne pas la taille d'une photo, le plafond est vérifié pendant l'envoi ; le téléchargement est alors
+  interrompu côté navigateur (message d'erreur « Téléchargement impossible »).
+- Vérification après déploiement : `POST /functions/v1/hg-album` avec `{"event_id": "<uuid>"}` et le JWT d'un membre
+  renvoie un ZIP ; sans JWT, 401 ; avec un JWT de non-membre, 403.
+
+## Réactions (migration 023)
+Appliquer `supabase/migrations/023_reactions.sql` (idempotente) avant de publier le site : la table `hg_reactions`,
+la RPC `hg_toggle_reaction` et les triggers de purge. Aucune fonction edge à redéployer pour les réactions.
