@@ -1,3 +1,4 @@
+-- PÉRIMÉ : ce dump ne contient pas les migrations 020 à 032. Schéma à jour : supabase/schema/schema_reel_2026-10-21b.sql
 -- =====================================================================
 -- Schéma reconstitué du schéma `public` (projet Supabase zqbdzokyhgavgmqgiwuw)
 -- Produit le 2026-10-21 par lecture seule (catalogues pg_catalog,
