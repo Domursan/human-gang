@@ -46,6 +46,7 @@
   <link rel="stylesheet" href="assets/css/admin-staff.css">
   <link rel="stylesheet" href="assets/css/admin-sorties.css">
   <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
+  <link rel="stylesheet" href="assets/css/admin-reglages.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -79,6 +80,7 @@
         <a href="#journal">Journal</a>
         <a href="#staff" data-admin-only>Staff</a>
         <a href="#bot">Bot Discord</a>
+        <a href="#reglages" data-perm="reglages">Réglages</a>
         <a href="#theme">Thème</a>
       </nav>
 
@@ -125,7 +127,7 @@
           <div class="card" id="links-root"><div class="empty">Chargement des liens…</div></div>
         </section>
 
-        <section id="secret-santa" class="admin-section" aria-labelledby="h-ss">
+        <section id="secret-santa" class="admin-section" data-perm="secret_santa" aria-labelledby="h-ss">
           <h2 id="h-ss" class="section-title">Secret Santa</h2>
           <div id="ss-root"><div class="empty">Chargement…</div></div>
         </section>
@@ -163,12 +165,12 @@
           <div id="souvenirs-root"><div class="empty">Chargement des souvenirs…</div></div>
         </section>
 
-        <section id="cartes" class="admin-section" aria-labelledby="h-cartes">
+        <section id="cartes" class="admin-section" data-perm="cartes" aria-labelledby="h-cartes">
           <h2 id="h-cartes" class="section-title">Cartes à collectionner</h2>
           <div id="cards-root"><div class="empty">Chargement des cartes…</div></div>
         </section>
 
-        <section id="defis" class="admin-section" aria-labelledby="h-defis">
+        <section id="defis" class="admin-section" data-perm="cartes" aria-labelledby="h-defis">
           <h2 id="h-defis" class="section-title">Défis du gang</h2>
           <div id="challenges-root"><div class="empty">Chargement des défis…</div></div>
         </section>
@@ -215,6 +217,11 @@
         <section id="bot" class="admin-section" aria-labelledby="h-bot">
           <h2 id="h-bot" class="section-title">Bot Discord</h2>
           <div id="bot-root"><div class="empty">Chargement…</div></div>
+        </section>
+
+        <section id="reglages" class="admin-section" data-perm="reglages" aria-labelledby="h-reglages">
+          <h2 id="h-reglages" class="section-title">Réglages du site</h2>
+          <div id="reglages-root"><div class="empty">Chargement des réglages…</div></div>
         </section>
 
         <section id="theme" class="admin-section" aria-labelledby="h-theme">

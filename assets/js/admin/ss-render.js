@@ -131,6 +131,11 @@ export function renderSS() {
 
       ${pairsBlockHtml(ed)}
       ${createForm}
+      <div class="card stack ss-danger">
+        <h3 class="card-title">Supprimer l'édition ${esc(ed.year)}</h3>
+        <p class="small muted">Efface l'édition avec ses inscrits (${parts.length}), ses exclusions (${S.exclusions.length}), son tirage, ses vœux et ses conversations. Action définitive : le détail exact est affiché avant confirmation.</p>
+        <div class="btn-row"><button class="btn btn-danger" type="button" id="ss-delete">Supprimer l'édition</button></div>
+      </div>
     </div>`;
   const b = $('#ex-b'); if (b && b.options.length > 1) b.selectedIndex = 1;
 }

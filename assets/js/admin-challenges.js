@@ -3,6 +3,7 @@
 // (hg_challenge_value, hg_challenges_active) et le crédit des Paillettes par hg_challenges_award (pg_cron).
 import { sb, toast, errMsg, esc, $ } from './core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
+import { confirmBox } from './ui-confirm.js';
 
 const METRICS = [
   ['sorties_tenues', 'Sorties IRL tenues'],
@@ -107,6 +108,7 @@ function renderList() {
       <div class="btn-row">
         <button class="btn btn-ghost" type="button" data-action="adc-edit" data-id="${esc(r.id)}">Modifier</button>
         <button class="btn btn-ghost" type="button" data-action="adc-toggle" data-id="${esc(r.id)}" aria-pressed="${r.active}">${r.active ? 'Désactiver' : 'Activer'}</button>
+        <button class="btn btn-danger btn-sm" type="button" data-action="adc-del" data-id="${esc(r.id)}">Supprimer</button>
       </div>
     </article>`;
   }).join('');
@@ -196,6 +198,22 @@ async function onClick(e) {
   if (t.dataset.action === 'adc-edit') {
     const r = C.rows.find((x) => x.id === id);
     if (r) fillForm(r);
+    return;
+  }
+  if (t.dataset.action === 'adc-del') {
+    const r = C.rows.find((x) => x.id === id);
+    if (!r) return;
+    const ok = await confirmBox(
+      `Supprimer le défi « ${r.title} » ?`,
+      'Le défi disparaît pour tous les membres et sa progression n\'est plus calculée. Les Paillettes déjà versées restent acquises (elles restent dans le journal). Cette action est définitive.',
+      { ok: 'Supprimer le défi', danger: true });
+    if (!ok) return;
+    t.disabled = true;
+    const { error } = await sb.from('hg_challenges').delete().eq('id', id);
+    if (error) { toast(errMsg(error), 'error'); t.disabled = false; return; }
+    if (C.editId === id) resetForm();
+    toast('Défi supprimé.', 'ok');
+    await reload();
     return;
   }
   if (t.dataset.action === 'adc-toggle') {
