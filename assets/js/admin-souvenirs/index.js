@@ -5,6 +5,7 @@ import { loadPeople } from './helpers.js';
 import { createMomentsPanel } from './moments.js';
 import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
+import { onTableChange } from '../admin/live.js';
 
 const TABS = [
   ['souvenirs', 'Souvenirs', createMomentsPanel],
@@ -32,7 +33,9 @@ export function mountSouvenirsSection(root, { me }) {
   const panels = new Map();
   const makers = new Map(TABS.map(([key, , make]) => [key, make]));
 
+  let current = 'souvenirs';
   async function show(key) {
+    current = key;
     root.querySelectorAll('[data-sv-tab]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.svTab === key)));
     if (!panels.has(key)) panels.set(key, makers.get(key)(ctx));
     const p = panels.get(key);
@@ -44,6 +47,8 @@ export function mountSouvenirsSection(root, { me }) {
     const b = e.target.closest('[data-sv-tab]');
     if (b) show(b.dataset.svTab);
   });
+  // Temps réel : seul l'onglet affiché est relu
+  onTableChange('souvenirs', ['hg_moments', 'hg_photos'], () => panels.get(current)?.load());
   show('souvenirs');
   return { show };
 }

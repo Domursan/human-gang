@@ -1,0 +1,6 @@
+/* Panel admin : temps réel. Indicateur « En direct » dans l'en-tête et bandeau « Mises à jour disponibles ». */
+.live-status { display: inline-flex; align-items: center; gap: 0.45em; margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--muted); }
+.live-dot { width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--border-strong); flex: none; }
+.live-status[data-state="on"] .live-dot { background: var(--sage); box-shadow: 0 0 0 3px var(--sage-soft); }
+.live-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.5rem 0 0.75rem; padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 0.9rem; }

@@ -7,6 +7,7 @@ import { confirmBox } from '../ui-confirm.js';
 import * as api from './data.js';
 import { BATCH, statusOf, whenLabel, rsvpCounts, countsLine, memberName } from './format.js';
 import { mountDialogs, openEdit, openDetail, refreshDetail } from './dialogs.js';
+import { onTableChange } from '../admin/live.js';
 
 const S = { root: null, me: null, members: new Map(), events: [], rsvps: [], dates: [], votes: [], photos: [],
   filter: 'avenir', sort: 'asc', q: '', shown: BATCH };
@@ -167,6 +168,7 @@ export async function mountSortiesSection(root, { me } = {}) {
   </div>`;
   mountDialogs(root, ctx);
   bindList();
+  onTableChange('sorties', ['hg_events', 'hg_event_rsvps'], () => ctx.reload()); // temps réel
   try {
     await load();
     render();

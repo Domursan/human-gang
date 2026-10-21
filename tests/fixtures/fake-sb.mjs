@@ -205,6 +205,37 @@ class Q {
   }
   then(res, rej) { return Promise.resolve(this.run()).then(res, rej); }
 }
+// Temps réel simulé. sb.channel(nom).on(type, filtre, cb).subscribe(cb) : le canal s'enregistre ici.
+// Par défaut il ne se confirme pas (comme un client sans Realtime) ; scénario realtime: true → SUBSCRIBED.
+// window.__fakeRealtime.emit(table, payload) : déclenche les écouteurs « postgres_changes » de cette table
+// (payload : { eventType, new, old }, INSERT par défaut). .status(s) : envoie un état à tous les canaux.
+// .tables() : tables abonnées par les canaux ouverts.
+const RT = { channels: new Set() };
+function makeChannel(name) {
+  const ch = {
+    name, handlers: [], cb: null,
+    on(type, filter, cb) { this.handlers.push({ type, filter: filter || {}, cb }); return this; },
+    subscribe(cb) {
+      this.cb = typeof cb === 'function' ? cb : null;
+      RT.channels.add(this);
+      if (S.realtime && this.cb) setTimeout(() => this.cb('SUBSCRIBED'), 0);
+      return this;
+    },
+  };
+  return ch;
+}
+window.__fakeRealtime = {
+  tables: () => [...RT.channels].flatMap((c) => c.handlers.filter((h) => h.type === 'postgres_changes').map((h) => h.filter.table)),
+  emit(table, payload = {}) {
+    const ev = { schema: 'public', table, commit_timestamp: new Date().toISOString(), eventType: payload.eventType || 'INSERT',
+      new: payload.new || {}, old: payload.old || {}, errors: null };
+    for (const c of [...RT.channels]) for (const h of c.handlers) {
+      if (h.type === 'postgres_changes' && h.filter.table === table && (!h.filter.event || h.filter.event === '*' || h.filter.event === ev.eventType)) h.cb(ev);
+    }
+  },
+  status(s) { for (const c of [...RT.channels]) if (c.cb) c.cb(s); },
+};
+
 export function createClient() {
   return {
     auth: {
@@ -285,7 +316,7 @@ export function createClient() {
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
     },
-    channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {}, removeAllChannels() {},
+    channel: (name) => makeChannel(name), removeChannel: (ch) => { RT.channels.delete(ch); }, removeAllChannels() { RT.channels.clear(); },
     storage: { from: () => ({
       getPublicUrl: (p) => ({ data: { publicUrl: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="gold"/></svg>') } }),
       upload: async (p) => { window.__LOG.push(['upload', p]); return { data: { path: p }, error: null }; },
