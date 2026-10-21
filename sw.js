@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v9';
+const CACHE_VERSION = 'v10';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -17,7 +17,7 @@ const PRECACHE = [
   'assets/css/admin-access.css', 'assets/css/admin-accounts.css', 'assets/css/admin-bot.css',
   'assets/css/admin-cards.css', 'assets/css/admin-events.css', 'assets/css/admin-ghosts.css',
   'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
-  'assets/css/admin.css', 'assets/css/assistance.css', 'assets/css/base.css',
+  'assets/css/admin-staff.css', 'assets/css/admin.css', 'assets/css/assistance.css', 'assets/css/base.css',
   'assets/css/cartes-card.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
   'assets/css/cartes.css', 'assets/css/compte.css', 'assets/css/evenements.css',
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
@@ -35,7 +35,7 @@ const PRECACHE = [
   'assets/js/admin-cards/list.js', 'assets/js/admin-cards/players.js', 'assets/js/admin-cards/sets.js', 'assets/js/admin-cards/state.js',
   'assets/js/admin-cards/stats.js', 'assets/js/admin-cards/trades.js', 'assets/js/admin-cards/view.js', 'assets/js/admin/badges.js',
   'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
-  'assets/js/admin/overview.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
+  'assets/js/admin/overview.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
   'assets/js/admin/support.js',
   'assets/js/assistance.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js',
@@ -44,7 +44,7 @@ const PRECACHE = [
   'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js',
   'assets/js/core/icons.js', 'assets/js/core/init.js', 'assets/js/core/pages-access.js',
   'assets/js/core/prefs-state.js', 'assets/js/core/prefs.js', 'assets/js/core/profile.js',
-  'assets/js/core/search.js',
+  'assets/js/core/perms.js', 'assets/js/core/search.js',
   'assets/js/core/supabase.js', 'assets/js/core/theme-calc.js', 'assets/js/core/theme-load.js',
   'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
   'assets/js/core/util.js', 'assets/js/dyn-events.js',
@@ -55,7 +55,7 @@ const PRECACHE = [
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
   'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js',
   'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
-  'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
+  'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
 ];

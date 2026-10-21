@@ -5,6 +5,7 @@ import { confirmBox } from '../ui-confirm.js';
 import { safeUrl } from '../utils.js';
 import { check, nullIfEmpty, tabError } from './common.js';
 import { A, H } from './state.js';
+import { isAdminView } from '../admin/perms.js';
 
 /* ---------- Profil ---------- */
 export function profileHtml() {
@@ -30,7 +31,7 @@ export function profileHtml() {
         <label class="check"><input type="checkbox" name="share_birthday"${p.share_birthday ? ' checked' : ''}> <span>Partage son anniversaire avec le gang (jour et mois)</span></label>
         <label class="check"><input type="checkbox" name="bot_optin"${p.bot_optin ? ' checked' : ''}> <span>Accepte les messages privés du bot</span></label>
         <label class="check"><input type="checkbox" name="intro_seen"${p.intro_seen ? ' checked' : ''}> <span>Intro déjà vue</span></label>
-        ${ghost ? '' : `<label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>`}
+        ${ghost || !isAdminView() ? '' : `<label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>`}
       </fieldset>
       <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span>${ghost ? ' · fantôme (pas encore inscrit)' : ` · profil créé le ${esc(fmtDateTime(p.created_at))}`}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le profil</button></div>
@@ -52,9 +53,9 @@ export async function saveProfile(form, btn) {
   };
   if (patch.joined_on && !/^\d{4}-\d{2}-\d{2}$/.test(patch.joined_on)) throw new Error('Date d\'arrivée invalide.');
   if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10) && !isGodMode()) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
-  if (!self && !ghost) patch.is_admin = form.is_admin.checked; // un fantôme n'a pas de droits à gérer
+  if (!self && !ghost && isAdminView()) patch.is_admin = form.is_admin.checked; // un fantôme n'a pas de droits à gérer ; le Staff ne touche pas au statut admin
   if (self && p.is_admin && patch.is_admin === false) throw new Error('Tu ne peux pas te retirer le statut admin.');
-  if (!self && !ghost && patch.is_admin !== p.is_admin) {
+  if (!self && !ghost && isAdminView() && patch.is_admin !== p.is_admin) {
     const ok = await confirmBox(
       patch.is_admin ? `Nommer ${pseudo} admin ?` : `Retirer le statut admin à ${pseudo} ?`,
       patch.is_admin ? 'Cette personne aura accès à toute l\'administration, y compris aux données privées de tous les membres et aux attributions du Secret Santa.' : 'Cette personne n\'aura plus accès à l\'administration.',

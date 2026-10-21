@@ -52,7 +52,29 @@ const DB = {
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_events: [], hg_event_rsvps: [], hg_photos: [], hg_profile_info: [],
+  // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.
+  hg_perm_catalog: [['membres','Membres'],['evenements','Sorties IRL'],['souvenirs','Souvenirs et photos'],['secret_santa','Secret Santa'],
+    ['cartes','Jeu de cartes'],['badges','Badges'],['themes','Thèmes et événements'],['messages','Messagerie'],['support','Assistance et idées'],
+    ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin']]
+    .map(([key, label], i) => ({ key, label, description: 'Description de ' + label.toLowerCase(), sort: (i + 1) * 10 })),
+  hg_staff: Array.isArray(S.staff) && S.staff.length ? [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
+    created_at: iso(-20), updated_at: iso(-20) }] : [],
 };
+const CATALOG_KEYS = DB.hg_perm_catalog.map((c) => c.key);
+const uidNow = () => S.uid || ME;
+const isAdminNow = () => !!DB.hg_profiles.find((p) => p.id === uidNow())?.is_admin;
+const denied = { data: null, error: { message: 'Réservé à l\'admin', code: '42501' } };
+const myPermsNow = () => {
+  if (isAdminNow()) return { is_admin: true, perms: [...CATALOG_KEYS] };
+  const row = DB.hg_staff.find((x) => x.user_id === uidNow() && x.active);
+  return { is_admin: false, perms: row ? [...row.perms] : [] };
+};
+const staffRowsNow = () => DB.hg_staff.map((x) => {
+  const p = DB.hg_profiles.find((q) => q.id === x.user_id) || {};
+  const a = DB.hg_profiles.find((q) => q.id === x.added_by);
+  return { user_id: x.user_id, pseudo: p.pseudo, avatar_url: p.avatar_url ?? null, color: p.color ?? null, perms: [...x.perms], active: x.active,
+    note: x.note, added_by_pseudo: a?.pseudo ?? null, created_at: x.created_at, updated_at: x.updated_at };
+}).sort((a, b) => Number(b.active) - Number(a.active) || String(a.pseudo).localeCompare(String(b.pseudo)));
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
 DB.hg_profiles[0].created_at = iso(-4 * 365);
@@ -183,6 +205,23 @@ export function createClient() {
         return { data: [...m.entries()].sort((a, b) => b[1] - a[1]).map(([id, n]) => { const p = DB.hg_profiles.find((x) => x.id === id); return { user_id: id, pseudo: p.pseudo, avatar_url: null, captures: n }; }), error: null };
       }
       if (fn === 'hg_my_badge_progress') { if (S.noProgress) return { data: null, error: { message: 'function not found' } }; return { data: [{ badge_code: 'fidele', metric: 'anciennete_annees', value: 4 }, { badge_code: 'citrouille', metric: 'event_captures', value: DB.hg_dyn_captures.filter((c) => c.user_id === ME && c.event_id === 'aaaaaaaa-0000-4000-8000-000000000001').length }], error: null }; }
+      if (fn === 'hg_my_perms') return { data: myPermsNow(), error: null };
+      if (fn === 'hg_is_staff') { const m = myPermsNow(); return { data: m.is_admin || m.perms.length > 0, error: null }; }
+      if (fn === 'hg_staff_list') return isAdminNow() ? { data: staffRowsNow(), error: null } : denied;
+      if (fn === 'hg_staff_set') {
+        if (!isAdminNow()) return denied;
+        window.__LOG.push(['staff_set', args.p_user, args.p_perms]);
+        if (args.p_user === ME) return { data: null, error: { message: 'Tu es déjà admin' } };
+        if (!DB.hg_profiles.some((x) => x.id === args.p_user)) return { data: null, error: { message: 'Membre introuvable' } };
+        const perms = [...new Set(args.p_perms || [])];
+        const bad = perms.filter((k) => !CATALOG_KEYS.includes(k));
+        if (bad.length) return { data: null, error: { message: 'Permission inconnue : ' + bad.join(', ') } };
+        const now = new Date().toISOString();
+        const row = DB.hg_staff.find((x) => x.user_id === args.p_user);
+        if (row) Object.assign(row, { perms, active: args.p_active ?? true, note: args.p_note ?? row.note, updated_at: now });
+        else DB.hg_staff.push({ user_id: args.p_user, perms, active: args.p_active ?? true, note: args.p_note ?? '', added_by: ME, created_at: now, updated_at: now });
+        return { data: null, error: null };
+      }
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
     },

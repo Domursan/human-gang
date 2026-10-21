@@ -4,6 +4,7 @@ import { getActiveTheme } from './theme.js';
 import { startEffects } from './effects.js';
 import { requireMember, requireAdmin, getProfile } from './profile.js';
 import { loadMyPages, canAccess, currentPageSlug } from './pages-access.js';
+import { loadMyPerms } from './perms.js';
 import { loadGodMode } from './godmode.js';
 import { renderHeader, updateNav } from './header.js';
 import { renderFooter, cookieNotice } from './footer.js';
@@ -59,9 +60,10 @@ async function startPage(auth) {
   const profile = await withTimeout(who, PROFILE_TIMEOUT_MS);
   const pagesP = profile ? loadMyPages() : null; // en parallèle du mode sans limite
   const godP = loadGodMode(profile); // les pages lisent getGodMode() dès leur premier affichage
+  const permsP = profile ? loadMyPerms() : null; // droits sur le panel (Staff/admin) : une requête, en cache
   // En-tête tout de suite (compte, outils) ; les liens arrivent avec les pages accessibles
   renderHeader(profile, { nav: false });
-  await Promise.all([pagesP, godP]);
+  await Promise.all([pagesP, godP, permsP]);
   const slug = currentPageSlug();
   // Page déclarée mais interdite -> accueil (jamais depuis l'accueil lui-même, pour éviter une boucle)
   if (pagesP && slug !== 'accueil' && !canAccess(slug)) {

@@ -1,0 +1,56 @@
+/* Administration : masquage selon les droits, section « Staff » et son formulaire. */
+.admin-nav a[hidden], .admin-section[hidden], [data-admin-only][hidden] { display: none !important; }
+
+.staff-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.staff-head p { margin: 0; max-width: 62ch; }
+.staff-card { display: flex; flex-direction: column; gap: 14px; }
+.staff-card .card-title { margin: 0; }
+.staff-list { display: flex; flex-direction: column; gap: 12px; }
+
+.staff-row {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: start;
+  padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2);
+}
+.staff-row.is-off { opacity: 0.66; }
+.staff-row-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.staff-name { font-size: 16px; }
+.staff-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+.staff-perm-pill { padding: 4px 10px; font-size: 12px; background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); }
+.staff-note { margin: 6px 0 0; font-style: italic; color: var(--muted); }
+.staff-row-actions { flex-direction: column; align-items: stretch; min-width: 128px; }
+.staff-row-actions .btn { justify-content: center; }
+
+.staff-dlg { width: min(680px, calc(100vw - 32px)); }
+.staff-form { gap: 16px; }
+.staff-form .dialog-title { margin: 0; }
+.staff-form .form-error { margin: 0; color: var(--rose); font-weight: 700; }
+.staff-all { justify-content: flex-start; }
+.staff-search { margin: 0; }
+.staff-picks {
+  display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px;
+}
+.staff-pick {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+}
+.staff-pick[hidden] { display: none; }
+.staff-pick:has(input:checked) { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+.staff-pick input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); flex: none; }
+.staff-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.staff-group {
+  margin: 0; min-width: 0; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.staff-group legend { padding: 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.staff-perm { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; padding: 4px 0; cursor: pointer; }
+.staff-perm input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.staff-perm > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; }
+
+.acc-staff { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+
+@media (max-width: 640px) {
+  .staff-row { grid-template-columns: auto minmax(0, 1fr); }
+  .staff-row-actions { grid-column: 1 / -1; flex-direction: row; min-width: 0; }
+  .staff-row-actions .btn { flex: 1 1 auto; }
+  .staff-dlg .dialog-actions .btn { flex: 1 1 auto; }
+}
