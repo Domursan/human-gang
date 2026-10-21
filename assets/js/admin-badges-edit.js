@@ -3,6 +3,7 @@
 // Les badges créés ici s'attribuent à la main (section Badges ou fiche du membre).
 import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
 import { METRICS, roman, sortedLevels } from './badge-levels.js';
+import { prepareImage, otherVariants } from './image-compress.js';
 
 export const AUTO_BADGES = new Set([
   'premier_noel', 'veteran', 'lutin_express', 'sur_le_fil', 'liste_parfaite', 'toujours_la', 'organisateur', 'globe_trotter',
@@ -29,8 +30,11 @@ function check(res) { if (res.error) throw res.error; return res.data; }
 async function uploadBadgeImage(code, file, level = null) {
   if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG, WebP ou SVG).');
   if (file.size > 10 * 1024 * 1024) throw new Error('Image trop lourde (10 Mo maximum).');
-  const path = level ? `badges/${code}-n${level}.png` : `badges/${code}.png`;
-  check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '300' }));
+  const base = level ? `badges/${code}-n${level}` : `badges/${code}`;
+  const img = await prepareImage(file);
+  const path = `${base}.${img.ext}`;
+  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '300' }));
+  sb.storage.from('hg-assets').remove(otherVariants(base, img.ext)).catch(() => {});
   const { data } = sb.storage.from('hg-assets').getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`;
 }
@@ -75,7 +79,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
       <div class="field"><label for="bdg-name">Nom</label><input id="bdg-name" name="name" required maxlength="60" autocomplete="off" value="${esc(src.name ?? '')}"></div>
       <div class="field"><label for="bdg-code">Code ${isNew ? '<span class="muted small">(généré depuis le nom, modifiable)</span>' : '<span class="muted small">(non modifiable)</span>'}</label>
         <input id="bdg-code" name="code" ${isNew ? 'required' : 'readonly'} maxlength="40" pattern="[a-z0-9_]{2,40}" autocomplete="off" spellcheck="false" class="code" value="${esc(badge?.code ?? (preset?.name ? uniqueCode(preset.name, taken) : ''))}" aria-describedby="bdg-code-help">
-        <span class="small muted" id="bdg-code-help">Minuscules, chiffres et « _ » uniquement. Sert aussi de nom d'image (badges/&lt;code&gt;.png).</span></div>
+        <span class="small muted" id="bdg-code-help">Minuscules, chiffres et « _ » uniquement. Sert aussi de nom d'image (badges/&lt;code&gt;.webp).</span></div>
       <div class="field"><label for="bdg-desc">Description</label><textarea id="bdg-desc" name="description" rows="2" maxlength="200" required>${esc(src.description ?? '')}</textarea></div>
       <div class="bdg-row">
         <div class="field"><label for="bdg-sort">Ordre d'affichage</label><input id="bdg-sort" name="sort" type="number" step="1" inputmode="numeric" value="${esc(badge?.sort ?? nextSort)}"></div>
@@ -165,7 +169,7 @@ export async function deleteBadge(badge, holderCount = 0) {
     { ok: 'Supprimer', danger: true });
   if (!ok) return false;
   check(await sb.from('hg_badges').delete().eq('code', badge.code)); // hg_user_badges : ON DELETE CASCADE
-  if (badge.image_url) await sb.storage.from('hg-assets').remove([`badges/${badge.code}.png`]).catch(() => {});
+  if (badge.image_url) await sb.storage.from('hg-assets').remove(otherVariants(`badges/${badge.code}`, '')).catch(() => {});
   return true;
 }
 

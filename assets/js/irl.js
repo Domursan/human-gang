@@ -1,6 +1,7 @@
 // ===== Humane Gang — Sorties IRL =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
-import { compressImage, uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { prepareImage } from './image-compress.js';
 import { mountHistory } from './irl-history.js';
 import { ghostDirectory } from './admin-ghosts.js';
 
@@ -363,9 +364,9 @@ async function uploadPhotos(eventId, input) {
     if (status) status.textContent = `Compression et envoi ${i + 1} / ${files.length}…`;
     let path = null;
     try {
-      const blob = await compressImage(f);
-      path = `${me.id}/${eventId}/${uuid()}.jpg`;
-      await uploadImage(path, blob);
+      const img = await prepareImage(f);
+      path = `${me.id}/${eventId}/${uuid()}.${img.ext}`;
+      await uploadImage(path, img.blob);
       const { error } = await sb.from('hg_photos').insert({ event_id: eventId, user_id: me.id, path });
       if (error) throw error;
       ok++;
@@ -528,10 +529,10 @@ form.addEventListener('submit', async (e) => {
     const old = editing?.cover_path || null;
     try {
       if (coverFile) {
-        const blob = await compressImage(coverFile);
-        const path = `${me.id}/${id}/cover.jpg`;
+        const img = await prepareImage(coverFile);
+        const path = `${me.id}/${id}/cover.${img.ext}`;
         if (old) await removeObjects([old]).catch(() => {});
-        await uploadImage(path, blob);
+        await uploadImage(path, img.blob);
         const { error } = await sb.from('hg_events').update({ cover_path: path }).eq('id', id);
         if (error) throw error;
       } else if (removeCover && old) {

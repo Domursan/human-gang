@@ -15,6 +15,7 @@ import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.j
 import { mountEventsSection, refreshEventsSection } from './admin-events.js';
 import { mountCardsSection } from './admin-cards.js';
 import { hasLevels, sortedLevels, roman, METRIC_LABEL } from './badge-levels.js';
+import { prepareImage, otherVariants } from './image-compress.js';
 
 const me = await initPage({ auth: 'admin' });
 mountGodCard($('#god-root'));
@@ -70,11 +71,14 @@ async function copyText(text) {
   toast('Copié dans le presse-papiers', 'ok');
 }
 function check(res) { if (res.error) throw res.error; return res.data; }
-const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
-async function uploadAsset(path, file) {
+/** Téléverse une image sous `base` (sans extension) ; compressée en WebP, l'extension suit le format envoyé. */
+async function uploadAsset(base, file) {
   if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG ou WebP).');
   if (file.size > 10 * 1024 * 1024) throw new Error('Image trop lourde (10 Mo maximum).');
-  check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '300' }));
+  const img = await prepareImage(file);
+  const path = `${base}.${img.ext}`;
+  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '300' }));
+  sb.storage.from('hg-assets').remove(otherVariants(base, img.ext)).catch(() => {}); // ancienne version dans un autre format
   const { data } = sb.storage.from('hg-assets').getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`; // évite l'ancienne version en cache
 }
@@ -460,8 +464,7 @@ $('#secret-santa').addEventListener('click', async (ev) => {
     const file = await pickFile($('#ss-card-file'));
     if (!file) return;
     await busy(t, async () => {
-      const ext = EXT[file.type] || 'png';
-      const url = await uploadAsset(`cartes/base-${ed.year}.${ext}`, file);
+      const url = await uploadAsset(`cartes/base-${ed.year}`, file);
       check(await sb.from('hg_ss_editions').update({ card_base_url: url }).eq('id', ed.id));
       await loadEditions(); renderSS();
       toast('Carte de base mise à jour', 'ok');
@@ -640,7 +643,7 @@ $('#badges').addEventListener('click', async (ev) => {
     const file = await pickFile($('#badge-file'));
     if (!file) return;
     await busy(t, async () => {
-      const url = await uploadAsset(`badges/${code}.png`, file);
+      const url = await uploadAsset(`badges/${code}`, file);
       check(await sb.from('hg_badges').update({ image_url: url }).eq('code', code));
       await loadBadges(); renderBadges();
       toast('Image du badge mise à jour', 'ok');

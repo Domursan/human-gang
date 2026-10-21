@@ -6,6 +6,7 @@
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel, cardHtml, serialLabel, fmtP } from './cartes-ui.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
+import { prepareImage } from './image-compress.js';
 
 const TZ = 'Europe/Zurich';
 const svg = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -19,7 +20,6 @@ const ICON = {
 const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
 const RARITY_IDS = RARITIES.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
-const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
 const REASON_LABEL = {
   booster: 'Booster', quotidien: 'Passage du jour', recyclage: 'Recyclage', fabrication: 'Fabrication', echange: 'Échange',
   reponse_sortie: 'Réponse à une sortie', sortie_creee: 'Sortie créée', photo: 'Photo publiée', moment: 'Moment publié',
@@ -148,8 +148,9 @@ async function removeImages(urls) {
 async function uploadCardImage(file) {
   if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG, WebP, GIF ou SVG).');
   if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
-  const path = `cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[file.type] || 'png'}`;
-  check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' }));
+  const img = await prepareImage(file);
+  const path = `cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${img.ext}`;
+  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
   return sb.storage.from('hg-assets').getPublicUrl(path).data.publicUrl;
 }
 

@@ -4,6 +4,7 @@ import {
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,
   DEFAULT_THEME, THEME_EFFECTS, THEME_COLOR_KEYS,
 } from './core.js';
+import { prepareImage } from './image-compress.js';
 
 const COLOR_LABELS = {
   accent: ['Accent', 'boutons principaux'],
@@ -479,10 +480,11 @@ export async function mountThemesSection(container) {
     await busy(btn, async () => {
       if (!EXT[file.type]) throw new Error('Choisis une image (PNG, JPG, WebP, GIF ou SVG).');
       if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
+      const img = await prepareImage(file);
       const f = el('editor').querySelector('form');
       const slug = slugify(f.slug.value) || 'theme';
-      const path = `themes/${slug}-${Date.now()}.${EXT[file.type]}`;
-      check(await sb.storage.from('hg-assets').upload(path, file, { upsert: true, contentType: file.type, cacheControl: '3600' }));
+      const path = `themes/${slug}-${Date.now()}.${img.ext}`;
+      check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
       const { data } = sb.storage.from('hg-assets').getPublicUrl(path);
       f.logo_url.value = data.publicUrl;
       syncEditor();
