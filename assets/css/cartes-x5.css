@@ -1,0 +1,24 @@
+/* ===== Ouverture de plusieurs boosters d'un coup : bouton et révélation groupée (cartes.js) ===== */
+/* Résumé en tête : « 5 boosters · 25 cartes · meilleure : Légendaire » */
+.x5-sum { margin: 0 0 12px; }
+.x5-head { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.x5-sum .cartes-small { margin-top: 4px; }
+.x5-sum .muted { margin: 8px 0 0; }
+
+/* Grille : 3 colonnes sur téléphone (390 px), grille fluide sur écran large. Chaque carte suit la largeur de sa case. */
+.x5-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 8px 0 16px; justify-items: center; }
+@media (min-width: 720px) { .x5-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; } }
+.x5-grid .hgc { --w: 100%; width: 100%; }
+.x5-cell { min-width: 0; width: 100%; max-width: 150px; }
+.x5-cell.is-pending .x5-front { display: none; }
+.x5-cell:not(.is-pending) .x5-back { display: none; }
+.x5-cell:not(.is-pending) .x5-front { animation: x5-in .3s ease-out both; }
+/* Mise en valeur : brillantes (lueur dorée), rareté légendaire et plus (lueur orangée) */
+.x5-cell.is-shiny .hgc { filter: drop-shadow(0 0 5px #FBD32D); }
+.x5-cell.is-top .hgc { filter: drop-shadow(0 0 8px #FCA301); }
+.x5-cell.is-top.is-shiny .hgc { filter: drop-shadow(0 0 8px #FE3104); }
+@keyframes x5-in { from { opacity: 0; transform: translateY(8px) scale(.92); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .x5-cell:not(.is-pending) .x5-front { animation: none; }
+}

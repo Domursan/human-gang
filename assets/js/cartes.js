@@ -23,6 +23,9 @@ const REASON_LABEL = {
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
 const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
 const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
+// Ouverture groupée : nombre de boosters payants ouverts d'un coup, et délai entre deux cartes révélées.
+const MULTI_COUNT = 5;
+const MULTI_STEP_MS = 110;
 
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
@@ -239,6 +242,9 @@ function renderBoosters() {
   const rates = c.rates || {};
   const total = Object.values(rates).reduce((a, v) => a + Math.max(0, Number(v) || 0), 0) || 1;
   const canPay = isGod() || bal() >= price;
+  // Reprise d'une ouverture groupée interrompue : on propose les boosters restants.
+  const k5 = pendingX5();
+  const canPay5 = isGod() || bal() >= price * k5;
   const busy = isBusy();
   const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
 
@@ -252,7 +258,9 @@ function renderBoosters() {
           <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml()}</div></div>
           <div class="cart-act">
             <button type="button" class="btn btn-ghost cart-btn" data-action="open-paid" ${busy || !canPay ? 'disabled' : ''}>Ouvrir un booster · ${pastilleHtml(price, { size: 'sm' })}</button>
+            <button type="button" class="btn btn-ghost cart-btn" data-action="open-paid-x5" ${busy || !canPay5 ? 'disabled' : ''}>${k5 === 1 ? 'Ouvrir le dernier booster' : `Ouvrir ${nf.format(k5)} boosters`} · ${pastilleHtml(price * k5, { size: 'sm' })}</button>
             ${canPay ? '' : `<p class="muted small">Il te manque ${fmtPaillettes(price - bal())}</p>`}
+            ${canPay5 ? '' : `<p class="muted small">Pour ${nf.format(k5)} boosters, il te manque ${fmtPaillettes(price * k5 - bal())}</p>`}
           </div>
         </div>
       </div>
@@ -429,7 +437,50 @@ function finishSeq(R) {
 function skipSeq() {
   const R = S.reveal;
   if (!R || R.phase !== 'seq') return;
-  finishSeq(R);
+  if (R.multi) finishMulti(R);
+  else finishSeq(R);
+}
+
+/* ---------- Révélation groupée (ouverture de plusieurs boosters) ---------- */
+const multiHead = (R) => `${pluralCount(R.opened, 'booster', 'boosters', nf.format)}${R.opened < R.total ? ` sur ${nf.format(R.total)}` : ''}`
+  + ` · ${pluralCount(R.cards.length, 'carte', 'cartes', nf.format)}`
+  + (R.best ? ` · meilleure : ${rarityLabel(R.best)}` : '');
+const multiSub = (R) => pluralCount(R.fresh, 'nouvelle pour ta collection', 'nouvelles pour ta collection', nf.format)
+  + (R.shinies ? ` · ${pluralCount(R.shinies, 'brillante', 'brillantes', nf.format)}` : '');
+
+// Grille de toutes les cartes obtenues, la plus rare en premier ; les cartes non encore révélées montrent le dos.
+function multiHtml(R) {
+  const done = R.phase !== 'seq';
+  const cells = R.cards.map((card, i) => {
+    const rank = rarityRank(card.rarity);
+    const cls = ['x5-cell', R.revealed.has(i) ? '' : 'is-pending', card.shiny ? 'is-shiny' : '', rank >= 5 ? 'is-top' : ''].filter(Boolean).join(' ');
+    return `<div class="${cls}" id="x5-c${i}" data-rank="${rank}">`
+      + `<div class="x5-back">${cardBackHtml('sm')}</div>`
+      + `<div class="x5-front">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'sm' })}</div></div>`;
+  }).join('');
+  const list = `<ul class="visually-hidden">${R.cards.map((c) => `<li>${esc(c.name)} : ${esc(rarityLabel(c.rarity))}${c.shiny ? ', brillante' : ''}</li>`).join('')}</ul>`;
+  const actions = done
+    ? '<button type="button" class="btn btn-primary" data-action="close-reveal">Fermer</button>'
+    : '<button type="button" class="btn btn-ghost" data-action="reveal-all">Tout révéler</button>';
+  return `
+    <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
+      <h2 id="cartes-reveal-h">Tes boosters</h2>
+      <div class="x5-sum">
+        <p class="x5-head">${esc(multiHead(R))}</p>
+        <p class="cartes-small">${esc(multiSub(R))}</p>
+        ${done && R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
+      </div>
+      <div class="x5-grid" aria-hidden="true">${cells}</div>${list}
+      <div class="cartes-row">${actions}</div>
+    </section>`;
+}
+
+function renderMultiReveal(box, R) {
+  box.innerHTML = multiHtml(R);
+  if (R.phase !== 'seq' && !R.announced) {
+    R.announced = true;
+    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+  }
 }
 
 function closeReveal() {
@@ -465,6 +516,7 @@ function renderReveal() {
   if (!box) return;
   const R = S.reveal;
   if (!R) { box.innerHTML = ''; return; }
+  if (R.multi) { renderMultiReveal(box, R); return; }
   const done = R.phase !== 'seq';
   const best = R.best ? rarityLabel(R.best) : '—';
   const body = R.seq
@@ -489,6 +541,25 @@ function renderReveal() {
   }
 }
 
+// Identifiant d'une demande d'ouverture (un par booster) : le serveur ne rouvre pas deux fois la même demande.
+const newReqId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+// Appel d'ouverture : hg_open_booster_req (migration 021) ; repli sur l'ancienne RPC si elle n'est pas encore déployée.
+async function rpcOpenBooster(free, reqId) {
+  let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: reqId });
+  if ((error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) || (!error && data == null)) {
+    ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
+  }
+  if (error) throw error;
+  return data;
+}
+
+// Annonce Discord des belles cartes et alerte des membres qui les souhaitent (vérifiées côté serveur par hg-notify).
+function announceCards(cards) {
+  for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
+  if (cards.length) notify('card_wish', { cards: cards.map((c) => c.card_id) }).catch(() => {}); // alerte des membres qui souhaitent ces cartes (opt-in)
+}
+
 async function openBooster(free) {
   if (isBusy()) return;
   S.busy = true;
@@ -496,25 +567,16 @@ async function openBooster(free) {
   let R = null;
   // Une même demande garde le même identifiant tant qu'elle n'a pas abouti :
   // si la réponse se perd et que l'utilisateur relance, le serveur ne rouvre pas de booster.
-  if (!S.bootReq || S.bootReq.free !== !!free) {
-    S.bootReq = { free: !!free, id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`) };
-  }
+  if (!S.bootReq || S.bootReq.free !== !!free) S.bootReq = { free: !!free, id: newReqId() };
   try {
-    // hg_open_booster_req (migration 021) ; repli sur l'ancienne RPC si elle n'est pas encore déployée
-    let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: S.bootReq.id });
-    if ((error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) || (!error && data == null)) {
-      ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
-    }
-    if (error) throw error;
+    const data = await rpcOpenBooster(free, S.bootReq.id);
     S.bootReq = null;
     const cards = data?.cards || [];
     // Nombre réellement livré (peut être inférieur au nombre payé si le tirage n'a pas trouvé de carte)
     const asked = Number(data?.demandees) || cards.length;
     const got = Number(data?.livrees) || cards.length;
     if (got < asked) toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
-    // Annonce Discord des belles cartes (vérifiée côté serveur par hg-notify)
-    for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
-    if (cards.length) notify('card_wish', { cards: cards.map((c) => c.card_id) }).catch(() => {}); // alerte des membres qui souhaitent ces cartes (opt-in)
+    announceCards(cards);
     const seq = motionAllowed() && cards.length > 0;
     R = { cards, best: data?.best, revealed: new Set(), last: -1, announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
@@ -539,6 +601,105 @@ async function openBooster(free) {
       startSeq(R);
     }
   }
+}
+
+/* ---------- Ouverture de plusieurs boosters d'un coup ---------- */
+// Plusieurs appels successifs à la même RPC, chacun avec son propre identifiant de demande.
+// S.x5 garde ces identifiants tant que la série n'est pas terminée : après un arrêt (solde, réseau),
+// une relance ne renvoie que les boosters restants, sans jamais en ouvrir deux fois.
+const pendingX5 = () => (S.x5 ? S.x5.ids.length - S.x5.next : MULTI_COUNT);
+
+// Tri de la révélation : la carte la plus rare d'abord, les brillantes avant, puis le numéro de la série.
+const byRarityDesc = (a, b) => (rarityRank(b.rarity) - rarityRank(a.rarity))
+  || (Number(!!b.shiny) - Number(!!a.shiny))
+  || ((Number(a.number) || 0) - (Number(b.number) || 0));
+
+async function openBoostersMulti() {
+  if (isBusy()) return;
+  S.busy = true;
+  renderBoosters();
+  if (!S.x5) {
+    S.x5 = { ids: Array.from({ length: MULTI_COUNT }, newReqId), next: 0, opened: 0, cards: [], owned: new Set(S.copies.map((c) => c.card_id)) };
+  }
+  const st = S.x5;
+  const total = st.ids.length;
+  let stopMsg = '';
+  while (st.next < total) {
+    const i = st.next;
+    try {
+      const data = await rpcOpenBooster(false, st.ids[i]);
+      const cards = data?.cards || [];
+      st.cards.push(...cards);
+      st.opened += 1;
+      st.next = i + 1;
+      announceCards(cards);
+    } catch (e) {
+      if (String(e?.message || '').includes('booster_deja_ouvert')) {
+        st.next = i + 1; // le serveur a déjà traité cette demande : on ne la renvoie pas
+        stopMsg = 'Ce booster a déjà été ouvert. Ton inventaire est à jour.';
+      } else {
+        stopMsg = errMsg(e);
+      }
+      break; // on s'arrête à la première erreur : les boosters suivants ne sont pas ouverts
+    }
+  }
+  if (st.next >= total) S.x5 = null; // série terminée : rien à reprendre
+  let R = null;
+  if (st.cards.length) {
+    const cards = [...st.cards].sort(byRarityDesc);
+    const seq = motionAllowed();
+    R = {
+      multi: true, cards, opened: st.opened, total, best: cards[0].rarity,
+      fresh: new Set(cards.filter((c) => !st.owned.has(c.card_id)).map((c) => c.card_id)).size,
+      shinies: cards.filter((c) => c.shiny).length,
+      note: stopMsg ? `Ouverture interrompue : ${stopMsg}` : '',
+      seq, phase: seq ? 'seq' : 'done', revealed: new Set(), timer: null, announced: false,
+    };
+    if (!seq) cards.forEach((_, i) => R.revealed.add(i));
+    S.reveal = R;
+  }
+  if (stopMsg) {
+    const n = st.opened;
+    toast(n ? `${n} booster${n > 1 ? 's' : ''} ouvert${n > 1 ? 's' : ''} sur ${total} : ${stopMsg}` : stopMsg, 'error');
+  }
+  S.busy = false;
+  if (st.opened) await refreshData().catch((e) => console.warn('[boosters]', e));
+  renderAll();
+  loadQuests(); // l'ouverture de boosters fait avancer les quêtes
+  if (R?.seq) {
+    $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
+    $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    startMulti(R);
+  }
+}
+
+// Révélation en cascade, de la carte la plus rare à la moins rare.
+function startMulti(R) {
+  const step = (i) => {
+    R.timer = null;
+    if (S.reveal !== R || R.phase !== 'seq') return;
+    revealMulti(R, i);
+    if (i + 1 >= R.cards.length) return finishMulti(R);
+    R.timer = setTimeout(() => step(i + 1), MULTI_STEP_MS);
+  };
+  R.timer = setTimeout(() => step(0), 350);
+}
+
+function revealMulti(R, i) {
+  const card = R.cards[i];
+  if (!card) return;
+  R.revealed.add(i);
+  $(`#x5-c${i}`)?.classList.remove('is-pending');
+  if (rarityRank(card.rarity) >= 5) playSound('badge');
+}
+
+function finishMulti(R) {
+  if (R.timer) clearTimeout(R.timer);
+  R.timer = null;
+  R.phase = 'done';
+  R.cards.forEach((_, i) => R.revealed.add(i));
+  renderBoosters(); // réactive les boutons et affiche le résumé (annoncé par renderMultiReveal)
+  $('#cartes-reveal [data-action="close-reveal"]')?.focus();
 }
 
 async function claimDaily() {
@@ -857,6 +1018,7 @@ function onClick(e) {
     case 'daily': return claimDaily();
     case 'open-free': return openBooster(true);
     case 'open-paid': return openBooster(false);
+    case 'open-paid-x5': return openBoostersMulti();
     case 'quest-claim': return claimQuest(t.dataset.code);
     case 'reveal-all': return skipSeq();
     case 'close-reveal': return closeReveal();

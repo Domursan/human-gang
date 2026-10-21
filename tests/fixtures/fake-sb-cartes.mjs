@@ -192,6 +192,27 @@ export function createClient() {
 
       if (fn === 'hg_cards_me') { const w = DB.hg_wallets[0]; return { data: { paillettes: w.paillettes, boosters_opened: 4, pity: w.pity_epique, daily_streak: w.daily_streak, daily_available: !w.last_daily, free_booster_at: S.freeAt ?? iso(-0.1), god: !!S.god, config: window.__CARDS.config }, error: null }; }
       if (fn === 'hg_cards_daily') { const w = DB.hg_wallets[0]; w.last_daily = 'today'; w.paillettes += 20; return { data: { gain: 20, streak: 3 }, error: null }; }
+      // hg_open_booster_req (migration 021), seulement si scenario.reqRpc : idempotence par p_request,
+      // solde vérifié, et scenario.x5FailAt = numéro de la tentative qui échoue (rien n'est débité ni enregistré).
+      if (fn === 'hg_open_booster_req' && S.reqRpc) {
+        const w = DB.hg_wallets[0];
+        window.__ATT = (window.__ATT || 0) + 1;
+        window.__OK = window.__OK || new Set();
+        if (S.x5FailAt && window.__ATT === S.x5FailAt) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
+        if (window.__OK.has(args.p_request)) return { data: null, error: { message: 'booster_deja_ouvert' } };
+        if (!args.p_free && w.paillettes < 100) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
+        window.__OK.add(args.p_request);
+        if (!args.p_free) w.paillettes -= 100;
+        const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite');
+        const k = window.__OK.size - 1;
+        const cards = Array.from({ length: 5 }, (_, i) => {
+          const c = pool[(k * 5 + i) % pool.length];
+          return { copy_id: 1000 + k * 5 + i, card_id: c.id, name: c.name, rarity: c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: (k * 5 + i) % 7 === 0, serial: null, max_copies: null };
+        });
+        const ORD = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
+        const best = cards.reduce((b, c) => (ORD.indexOf(c.rarity) > ORD.indexOf(b) ? c.rarity : b), 'commune');
+        return { data: { cards, best, demandees: 5, livrees: 5 }, error: null };
+      }
       if (fn === 'hg_open_booster') { const w = DB.hg_wallets[0]; if (S.paidFail && !args.p_free) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite').slice(0, 5);
         const cards = pool.map((c, i) => ({ copy_id: 900 + i, card_id: c.id, name: c.name, rarity: i === 4 ? 'legendaire' : c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: i === 2, serial: null, max_copies: null }));

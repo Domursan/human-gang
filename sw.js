@@ -19,7 +19,7 @@ const PRECACHE = [
   'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
   'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/assistance.css', 'assets/css/base.css',
   'assets/css/cartes-card.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
-  'assets/css/cartes.css', 'assets/css/compte.css', 'assets/css/evenements.css',
+  'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/compte.css', 'assets/css/evenements.css',
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
   'assets/css/irl.css', 'assets/css/legal.css', 'assets/css/membre.css', 'assets/css/messages.css',
   'assets/css/photos.css', 'assets/css/recap.css', 'assets/css/rejoindre.css', 'assets/css/ui-confirm.css',
