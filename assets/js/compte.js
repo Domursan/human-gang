@@ -57,6 +57,7 @@ function authMsg(e) {
     [/user already registered|already been registered/i, 'Un compte existe déjà avec cet e-mail. Connecte-toi.'],
     [/password should be at least|weak password|password is too weak/i, 'Mot de passe trop faible : au moins 8 caractères.'],
     [/same.*password|different from the old/i, 'Le nouveau mot de passe doit être différent de l\'ancien.'],
+    [/email rate limit|over_email_send/i, 'Le site a envoyé trop d\'e-mails de confirmation pour le moment. Réessaie dans une heure ou préviens un admin du gang.'],
     [/rate limit|security purposes|too many/i, 'Trop de tentatives. Réessaie dans quelques minutes.'],
     [/unable to validate email|invalid.*email/i, 'Adresse e-mail invalide.'],
     [/hg_profiles_pseudo_key|duplicate key.*pseudo/i, 'Ce pseudo est déjà pris.'],
