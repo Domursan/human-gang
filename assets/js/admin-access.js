@@ -7,6 +7,7 @@
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { getCachedProfile } from './core/profile.js';
 
 export const MODES = [
   ['membres', 'Tous les membres'],
@@ -23,6 +24,7 @@ const IC = {
   yes: svg('check2', { stroke: 2.4 }),
   no: svg('no', { stroke: 2.2 }),
   close: svg('close', { stroke: 2 }),
+  plus: svg('plus', { stroke: 2 }),
   search: svg('search', { stroke: 2 }),
   users: svg('users', { stroke: 2 }),
 };
@@ -30,7 +32,7 @@ const IC = {
 /* ---------- État partagé ---------- */
 const AC = {
   pages: [], rows: [], members: [], loaded: false, loading: null, error: null,
-  view: 'pages', openSlug: null, q: '', root: null, openMember: null,
+  view: 'pages', openSlug: null, q: '', root: null, openMember: null, canPages: false,
 };
 function check(res) { if (res.error) throw res.error; return res.data; }
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -52,13 +54,23 @@ async function loadMembers() {
     .sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
 }
 
+/** Droit de gérer la structure des pages (créer, renommer, supprimer) : admin ou permission « reglages ». Ne jette pas. */
+async function loadPerms() {
+  try {
+    const { data, error } = await sb.rpc('hg_my_perms');
+    if (error) throw error;
+    AC.canPages = !!(data?.is_admin || (data?.perms ?? []).includes('reglages'));
+  } catch { AC.canPages = false; }
+  if (getCachedProfile()?.is_admin) AC.canPages = true;
+}
+
 /** Charge pages, exceptions et membres (une fois, sauf force). Jette en cas d'échec. */
 export function ensureAccessData(force = false) {
   if (AC.loaded && !force) return Promise.resolve(AC);
   if (AC.loading && !force) return AC.loading;
   AC.loading = (async () => {
     try {
-      await Promise.all([loadPages(), loadRows(), loadMembers()]);
+      await Promise.all([loadPages(), loadRows(), loadMembers(), loadPerms()]);
       AC.loaded = true; AC.error = null;
       return AC;
     } catch (e) { AC.error = e; throw e; } finally { AC.loading = null; }
@@ -156,9 +168,13 @@ function sectionHtml() {
 }
 
 function pagesTableHtml() {
-  if (!AC.pages.length) return '<div class="empty">Aucune page déclarée.</div>';
+  const head = AC.canPages ? `<div class="pa-head">
+      <p class="small muted">Déclare une page, change son libellé, son accès ou sa place dans le menu.</p>
+      <button class="btn btn-primary" type="button" data-pa-new>${IC.plus} Nouvelle page</button>
+    </div>` : '';
+  if (!AC.pages.length) return `${head}<div class="empty">Aucune page déclarée.</div>`;
   const last = AC.pages.length - 1;
-  return `
+  return `${head}
     <div class="pa-table-wrap">
       <table class="pa-table">
         <caption class="visually-hidden">Pages du site et leurs accès</caption>
@@ -174,7 +190,7 @@ function pagesTableHtml() {
               <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="-1" aria-label="Monter « ${esc(p.label)} »"${i === 0 ? ' disabled' : ''}>${IC.up}</button>
               <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="1" aria-label="Descendre « ${esc(p.label)} »"${i === last ? ' disabled' : ''}>${IC.down}</button>
             </td>
-            <th scope="row" class="pa-page"><span class="pa-page-in"><strong>${esc(p.label)}</strong><span class="small muted code-sm">${esc(p.slug)}.html</span></span></th>
+            <th scope="row" class="pa-page"><span class="pa-page-in"><strong>${esc(p.label)}</strong><span class="small muted code-sm">${esc(p.slug)}.html</span>${AC.canPages ? `<button class="btn btn-ghost btn-sm pa-edit" type="button" data-pa-edit="${esc(p.slug)}">Modifier la page</button>` : ''}</span></th>
             <td>${open
               ? '<span class="pill pill-muted">Toujours accessible</span>'
               : `<div class="field pa-field"><label class="visually-hidden" for="pa-mode-${esc(p.slug)}">Qui a accès à ${esc(p.label)}</label>
@@ -347,6 +363,117 @@ async function onDialogChange(e) {
   if (el.matches('[data-pa-dlg-mode]')) await changeMode(AC.openSlug, el.value, el);
 }
 
+/* ---------- Dialogue « Modifier la page » / « Nouvelle page » ---------- */
+let pdlg = null;
+function buildPageDialog() {
+  const d = document.createElement('dialog');
+  d.className = 'hg-dialog pa-dialog';
+  d.setAttribute('aria-labelledby', 'pa-pg-title');
+  d.addEventListener('click', (e) => {
+    if (e.target === d || e.target.closest('[data-pa-pg-close]')) { d.close(); return; }
+    if (e.target.closest('[data-pa-pg-del]')) deletePage(d.slug);
+  });
+  d.addEventListener('submit', (e) => { if (e.target.id === 'pa-pg-form') { e.preventDefault(); savePage(e.target, e.submitter); } });
+  d.addEventListener('close', () => {
+    const el = d.focusSel && AC.root?.querySelector(d.focusSel);
+    (el || AC.root?.querySelector('[data-pa-new]'))?.focus();
+  });
+  document.body.append(d);
+  return d;
+}
+function openPageDialog(slug, trigger) {
+  pdlg ||= buildPageDialog();
+  const p = slug ? pageBySlug(slug) : null;
+  const isNew = !p;
+  const locked = !!p && ALWAYS_OPEN.has(p.slug); // accueil : mode et suppression figés
+  pdlg.slug = p?.slug ?? null;
+  pdlg.focusSel = p ? `[data-pa-edit="${CSS.escape(p.slug)}"]` : null;
+  pdlg.innerHTML = `<form class="stack pa-pg-form" id="pa-pg-form" novalidate>
+    <div class="pa-dlg-head"><div><p class="eyebrow">${isNew ? 'Nouvelle page' : 'Page du site'}</p><h2 id="pa-pg-title" class="dialog-title">${isNew ? 'Déclarer une page' : esc(p.label)}</h2></div>
+      <button class="btn btn-ghost btn-icon pa-dlg-close" type="button" data-pa-pg-close aria-label="Fermer">${IC.close}</button></div>
+    <p class="form-error" role="alert" hidden></p>
+    ${isNew ? `<div class="field"><label for="pa-pg-slug">Nom de la page (sans .html)</label>
+        <input id="pa-pg-slug" name="slug" required maxlength="40" autocomplete="off" placeholder="ex. galerie" aria-describedby="pa-pg-slug-h">
+        <span class="small muted" id="pa-pg-slug-h">Lettres minuscules, chiffres et tirets. Le fichier <code>nom.html</code> doit exister à la racine du site, sinon la page est introuvable.</span></div>`
+      : `<p class="small muted">Adresse : <code>${esc(p.slug)}.html</code></p>`}
+    <div class="field"><label for="pa-pg-label">Libellé dans le menu</label>
+      <input id="pa-pg-label" name="label" required maxlength="60" autocomplete="off" value="${esc(p?.label ?? '')}"></div>
+    <div class="field"><label for="pa-pg-mode">Qui y a accès</label>
+      <select id="pa-pg-mode" name="mode"${locked ? ' disabled' : ''} aria-describedby="pa-pg-mode-h">${MODES.map(([v, l]) => `<option value="${v}"${(p?.mode ?? 'membres') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <span class="small muted" id="pa-pg-mode-h">${locked ? 'L\'accueil reste toujours accessible.' : 'Tous les membres, les admins seulement, ou les membres choisis (bouton « Personnes » du tableau).'}</span></div>
+    <label class="switch"><input type="checkbox" name="in_nav"${(p?.in_nav ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Afficher dans le menu des membres qui y ont accès</span></label>
+    <div class="btn-row dialog-actions pa-pg-actions">
+      ${p && !locked ? '<button class="btn btn-danger" type="button" data-pa-pg-del>Supprimer la page</button>' : ''}
+      <button class="btn btn-ghost" type="button" data-pa-pg-close>Annuler</button>
+      <button class="btn btn-primary" type="submit">${isNew ? 'Déclarer la page' : 'Enregistrer'}</button>
+    </div>
+  </form>`;
+  if (!pdlg.open) pdlg.showModal();
+  (isNew ? $('#pa-pg-slug', pdlg) : $('#pa-pg-label', pdlg)).focus();
+  pdlg.trigger = trigger || null;
+}
+
+async function savePage(form, btn) {
+  const E = form.elements;
+  const err = form.querySelector('.form-error');
+  const fail = (m) => { err.textContent = m; err.hidden = false; };
+  err.hidden = true;
+  const isNew = !pdlg.slug;
+  const p = isNew ? null : pageBySlug(pdlg.slug);
+  const label = E.label.value.trim();
+  const mode = p && ALWAYS_OPEN.has(p.slug) ? p.mode : E.mode.value;
+  const in_nav = E.in_nav.checked;
+  const slug = isNew ? E.slug.value.trim().toLowerCase() : p.slug;
+  if (isNew && !/^[a-z0-9][a-z0-9-]{1,39}$/.test(slug)) return fail('Le nom doit faire 2 à 40 caractères : lettres minuscules, chiffres et tirets.');
+  if (isNew && pageBySlug(slug)) return fail('Une page porte déjà ce nom.');
+  if (!label || label.length > 60) return fail('Donne un libellé (60 caractères au maximum).');
+  if (!MODE_LABEL[mode]) return fail('Choisis qui a accès dans la liste.');
+  if (p && p.mode !== mode) { // même garde que le changement de mode dans le tableau
+    const before = AC.members.filter((m) => hasAccess(p, m)).length;
+    const after = AC.members.filter((m) => hasAccess({ ...p, mode }, m)).length;
+    if (after < before && !(await confirmLoss(p, before - after, mode))) return;
+  }
+  if (btn) btn.disabled = true;
+  try {
+    if (isNew) {
+      const sort = AC.pages.reduce((m, x) => Math.max(m, x.sort ?? 0), -1) + 1;
+      check(await sb.from('hg_pages').insert({ slug, label, mode, in_nav, sort, updated_at: nowIso() }));
+      toast(`Page « ${label} » déclarée. Vérifie que ${slug}.html existe sur le site.`, 'ok');
+    } else {
+      check(await sb.from('hg_pages').update({ label, mode, in_nav, updated_at: nowIso() }).eq('slug', p.slug));
+      toast(`Page « ${label} » enregistrée.`, 'ok');
+    }
+    pdlg.focusSel = `[data-pa-edit="${CSS.escape(slug)}"]`;
+    pdlg.close();
+    await loadPages();
+    await loadRows();
+    emit();
+  } catch (ex) {
+    fail(`Enregistrement impossible : ${errMsg(ex)}`);
+  } finally {
+    if (btn?.isConnected) btn.disabled = false;
+  }
+}
+
+async function deletePage(slug) {
+  const p = pageBySlug(slug);
+  if (!p || ALWAYS_OPEN.has(slug)) return;
+  const n = AC.rows.filter((r) => r.page_slug === slug).length;
+  const ok = await confirmBox(`Supprimer la page « ${p.label} » ?`,
+    `Son lien disparaît du menu. Une page supprimée n'est plus contrôlée : tous les membres pourront l'ouvrir à son adresse, même si elle était réservée aux admins.${n ? ` Les ${n} exception${n > 1 ? 's' : ''} d'accès enregistrée${n > 1 ? 's' : ''} sont effacées.` : ''} Le fichier ${p.slug}.html reste sur le site. Définitif.`,
+    { ok: 'Supprimer la page', danger: true });
+  if (!ok) return;
+  try {
+    check(await sb.from('hg_pages').delete().eq('slug', slug));
+    toast(`Page « ${p.label} » supprimée.`, 'ok');
+    pdlg.focusSel = null;
+    pdlg.close();
+    await loadPages();
+    await loadRows();
+    emit();
+  } catch (ex) { toast(errMsg(ex), 'error'); }
+}
+
 /* ---------- Actions de la table ---------- */
 async function changeMode(slug, mode, el) {
   const p = pageBySlug(slug);
@@ -394,6 +521,8 @@ function bindSection(root) {
     if (!b || b.disabled) return;
     if (b.dataset.paView) { AC.view = b.dataset.paView; render(); $(`[data-pa-view="${AC.view}"]`, root)?.focus(); return; }
     if (b.dataset.paManage) { openDialog(b.dataset.paManage); return; }
+    if (b.hasAttribute('data-pa-new')) { openPageDialog(null, b); return; }
+    if (b.dataset.paEdit) { openPageDialog(b.dataset.paEdit, b); return; }
     if (b.dataset.paMember && AC.openMember) { AC.openMember(b.dataset.paMember); return; }
     if (b.dataset.paMove) { const slug = b.closest('tr')?.dataset.slug; if (slug) await move(slug, Number(b.dataset.paMove), b); }
   });

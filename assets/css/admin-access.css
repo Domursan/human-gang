@@ -106,3 +106,11 @@
   .pa-dlg-search { flex-basis: 100%; }
   .pa-person-col { white-space: nowrap; }
 }
+
+/* Gestion de la structure des pages (créer, modifier, supprimer) */
+.pa-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; }
+.pa-head p { margin: 0; flex: 1 1 260px; }
+.pa-page .pa-edit { margin-top: 6px; align-self: flex-start; }
+.pa-pg-form { min-width: min(92vw, 460px); }
+.pa-pg-actions { flex-wrap: wrap; }
+.pa-pg-actions .btn-danger { margin-right: auto; }
