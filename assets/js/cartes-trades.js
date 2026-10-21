@@ -15,6 +15,7 @@ const TABS = [
 const STATUS_LABEL = { proposee: 'En attente', acceptee: 'Acceptée', refusee: 'Refusée', annulee: 'Annulée', remplacee: 'Remplacée' };
 const PAGE = 1000;   // pagination PostgREST (plafond par défaut de la base)
 const CHUNK = 100;   // identifiants par requête « in »
+const COPY_COLS = 'id, card_id, owner_id, shiny, serial, locked_trade, recycled_at';
 
 const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
@@ -52,42 +53,80 @@ export async function mountTrades(el, ctx = {}) {
 
   const S = {
     me: null, members: new Map(), cards: new Map(), copies: new Map(), trades: [], items: new Map(),
-    wish: new Map(), balance: 0, tab: 'recues', pickWho: '',
+    wish: new Map(), balance: 0, tab: 'recues', pickWho: '', setNames: new Map(), setTotal: new Map(),
+    peers: new Set(), matchesP: null,
   };
   const E = { to: '', parent: null, give: new Set(), want: new Set(), giveP: 0, wantP: 0, message: '', q: '', busy: false };
 
-  /* ---------- Données ---------- */
+  /* ---------- Données ----------
+     Chargement ciblé : mes exemplaires, mes échanges et les cartes qu'ils citent. Les exemplaires d'un membre
+     (proposition) et les correspondances sont chargés à la demande. Le cache de session est vidé après chaque
+     action sur un échange (resetCache). */
+  function resetCache() {
+    S.cards = new Map(); S.copies = new Map(); S.setTotal = new Map(); S.wish = new Map();
+    S.peers = new Set(); S.matchesP = null;
+  }
+  /** Lit une table pour une liste d'identifiants (par lots de CHUNK, toutes les pages). */
+  async function fetchIn(table, column, ids, select, { filter = (q) => q, order = 'id' } = {}) {
+    const uniq = [...new Set(ids.filter((x) => x != null))];
+    const out = [];
+    for (let i = 0; i < uniq.length; i += CHUNK) {
+      const chunk = uniq.slice(i, i + CHUNK);
+      out.push(...await fetchAll(() => filter(sb.from(table).select(select).in(column, chunk)).order(order)));
+    }
+    return out;
+  }
+  /** Ajoute au cache les cartes absentes (et le total de chaque série rencontrée). */
+  async function ensureCards(ids) {
+    const missing = [...new Set(ids.filter((x) => x != null))].filter((id) => !S.cards.has(id));
+    if (!missing.length) return;
+    const rows = await fetchIn('hg_cards', 'id', missing, '*');
+    for (const c of rows) S.cards.set(c.id, c);
+    const sets = [...new Set(rows.map((c) => c.set_id).filter((x) => x != null))].filter((x) => !S.setTotal.has(x));
+    await Promise.all(sets.map(async (sid) => { // nombre de cartes par série (numérotation « 012/100 ») : comptage seul
+      const { count, error } = await sb.from('hg_cards').select('id', { count: 'exact', head: true }).eq('set_id', sid);
+      if (!error) S.setTotal.set(sid, count || 0);
+    }));
+  }
+  /** Ajoute au cache des exemplaires précis (et leurs cartes). */
+  async function ensureCopies(ids) {
+    const missing = [...new Set(ids.filter((x) => x != null).map(String))].filter((id) => !S.copies.has(id));
+    if (!missing.length) return;
+    const rows = await fetchIn('hg_card_copies', 'id', missing, COPY_COLS);
+    for (const r of rows) S.copies.set(String(r.id), r);
+    await ensureCards(rows.map((r) => r.card_id));
+  }
+  /** Exemplaires d'un membre (pour proposer un échange) : une seule requête, mise en cache pour la session. */
+  async function ensurePeer(uid) {
+    if (S.peers.has(uid)) return;
+    const rows = await fetchAll(() => sb.from('hg_card_copies').select(COPY_COLS).eq('owner_id', uid).order('id'));
+    for (const r of rows) S.copies.set(String(r.id), r);
+    await ensureCards(rows.map((r) => r.card_id));
+    S.peers.add(uid);
+  }
+
   async function load() {
+    resetCache();
     const me = S.me.id;
-    const [mem, cards, copies, trades, wish, wallet, sets] = await Promise.all([
+    const [mem, mine, trades, wish, wallet, sets] = await Promise.all([
       sb.rpc('hg_members').then(unwrap),
-      fetchAll(() => sb.from('hg_cards').select('*').order('id')),
-      fetchAll(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, locked_trade, recycled_at').order('id')),
+      fetchAll(() => sb.from('hg_card_copies').select(COPY_COLS).eq('owner_id', me).order('id')),
       fetchAll(() => sb.from('hg_card_trades').select('*').or(`from_user.eq.${me},to_user.eq.${me}`).order('id')),
-      fetchAll(() => sb.from('hg_card_wishlist').select('user_id, card_id').order('user_id').order('card_id')),
+      fetchAll(() => sb.from('hg_card_wishlist').select('card_id').eq('user_id', me).order('card_id')),
       sb.from('hg_wallets').select('paillettes').eq('user_id', me).maybeSingle().then(unwrap),
       sb.from('hg_card_sets').select('id, name').then(({ data }) => data || []).catch(() => []), // facultatif : sans lui, pas de nom de série
     ]);
     S.setNames = new Map(sets.map((x) => [x.id, x.name]));
     S.members = new Map((mem || []).map((m) => [m.id, m]));
-    S.cards = new Map(cards.map((c) => [c.id, c]));
-    S.setTotal = new Map(); // nombre de cartes par série (numérotation « 012/100 »)
-    for (const c of cards) S.setTotal.set(c.set_id, (S.setTotal.get(c.set_id) || 0) + 1);
-    S.copies = new Map(copies.map((c) => [String(c.id), c]));
-    S.wish = new Map();
-    for (const w of wish) {
-      if (!S.wish.has(w.user_id)) S.wish.set(w.user_id, new Set());
-      S.wish.get(w.user_id).add(w.card_id);
-    }
-    S.trades = trades;
     S.balance = wallet?.paillettes ?? 0;
+    S.copies = new Map(mine.map((c) => [String(c.id), c]));
+    S.wish = new Map([[me, new Set(wish.map((w) => w.card_id))]]);
+    S.trades = trades;
     S.items = new Map(trades.map((t) => [t.id, { from: [], to: [] }]));
-    const ids = trades.map((t) => t.id);
-    for (let i = 0; i < ids.length; i += CHUNK) {
-      const chunk = ids.slice(i, i + CHUNK);
-      const rows = await fetchAll(() => sb.from('hg_card_trade_items').select('trade_id, copy_id, side').in('trade_id', chunk).order('trade_id').order('copy_id'));
-      for (const r of rows) S.items.get(r.trade_id)?.[r.side]?.push(r.copy_id);
-    }
+    const rows = await fetchIn('hg_card_trade_items', 'trade_id', trades.map((t) => t.id), 'trade_id, copy_id, side', { order: 'trade_id' });
+    for (const r of rows) S.items.get(r.trade_id)?.[r.side]?.push(r.copy_id);
+    await ensureCopies(rows.map((r) => r.copy_id));
+    await ensureCards(mine.map((c) => c.card_id));
   }
 
   /* ---------- Outils ---------- */
@@ -200,12 +239,34 @@ export async function mountTrades(el, ctx = {}) {
     </section>`;
   }
 
+  /** Données des correspondances, ciblées : exemplaires des cartes que je souhaite, et souhaits des autres
+      pour les cartes que j'ai en double. Mises en cache jusqu'au prochain échange. */
+  function loadMatches() {
+    return S.matchesP ??= computeMatchData().catch((e) => { S.matchesP = null; throw e; });
+  }
+  async function computeMatchData() {
+    const me = S.me.id;
+    const counts = new Map();
+    for (const c of S.copies.values()) {
+      if (c.owner_id === me && !c.recycled_at && cardOk(c)) counts.set(c.card_id, (counts.get(c.card_id) || 0) + 1);
+    }
+    const dupCards = [...counts].filter(([, n]) => n >= 2).map(([card]) => card);
+    const [wanted, wishers] = await Promise.all([
+      fetchIn('hg_card_copies', 'card_id', [...(S.wish.get(me) || [])], COPY_COLS, { filter: (q) => q.is('recycled_at', null) }),
+      fetchIn('hg_card_wishlist', 'card_id', dupCards, 'user_id, card_id', { order: 'user_id' }),
+    ]);
+    for (const c of wanted) S.copies.set(String(c.id), c); // pour l'éditeur (« Proposer un échange »)
+    await ensureCards([...wanted.map((c) => c.card_id), ...dupCards]);
+    return { wanted, wishers };
+  }
+
   /** Correspondances : doublons des autres et souhaits que tu peux satisfaire, regroupés par membre. */
-  function computeMatches() {
+  function computeMatches(data) {
     const me = S.me.id;
     const myWish = S.wish.get(me) || new Set();
     const stats = new Map(); // « propriétaire|carte » -> { total, free: [exemplaires libres] }
-    for (const c of S.copies.values()) {
+    const seen = new Map([...S.copies, ...data.wanted.map((c) => [String(c.id), c])]);
+    for (const c of seen.values()) {
       if (c.recycled_at || !c.owner_id || !cardOk(c)) continue;
       const k = `${c.owner_id}|${c.card_id}`;
       const s = stats.get(k) || { total: 0, free: [] };
@@ -221,7 +282,12 @@ export async function mountTrades(el, ctx = {}) {
       rows.push({ kind: 'want', member: owner, copy: s.free[0] });
     }
     // « X souhaite une carte que tu as en double » : tu en as au moins deux exemplaires
-    for (const [uid, wset] of S.wish) {
+    const wishOf = new Map();
+    for (const w of data.wishers) {
+      if (!wishOf.has(w.user_id)) wishOf.set(w.user_id, new Set());
+      wishOf.get(w.user_id).add(w.card_id);
+    }
+    for (const [uid, wset] of wishOf) {
       if (uid === me || !S.members.has(uid)) continue;
       for (const card of wset) {
         const mine = stats.get(`${me}|${card}`);
@@ -230,8 +296,8 @@ export async function mountTrades(el, ctx = {}) {
     }
     return rows;
   }
-  function viewCorrespondances() {
-    const rows = computeMatches();
+  function viewCorrespondances(data) {
+    const rows = computeMatches(data);
     if (!rows.length) return emptyBox('Aucune correspondance pour le moment. Les correspondances apparaissent quand tes souhaits et les doublons des autres membres se rejoignent.');
     const groups = new Map();
     for (const r of rows) {
@@ -286,8 +352,16 @@ export async function mountTrades(el, ctx = {}) {
 
   function renderPanel() {
     renderTabs();
-    const view = { recues: viewRecues, envoyees: viewEnvoyees, proposer: viewProposer, correspondances: viewCorrespondances, historique: viewHistorique }[S.tab];
     panel.setAttribute('aria-labelledby', `trd-tab-${S.tab}`);
+    if (S.tab === 'correspondances') {
+      const tab = S.tab;
+      panel.innerHTML = '<p class="empty">Recherche des correspondances…</p>';
+      loadMatches()
+        .then((data) => { if (S.tab === tab) panel.innerHTML = viewCorrespondances(data); })
+        .catch((e) => { if (S.tab === tab) panel.innerHTML = `<div class="empty">Impossible de charger les correspondances : ${esc(errMsg(e))}</div>`; });
+      return;
+    }
+    const view = { recues: viewRecues, envoyees: viewEnvoyees, proposer: viewProposer, historique: viewHistorique }[S.tab];
     panel.innerHTML = view();
   }
   const render = () => renderPanel();
@@ -308,8 +382,9 @@ export async function mountTrades(el, ctx = {}) {
   }
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
-  function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {
+  async function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {
     if (!to || !S.members.has(to)) return toast('Choisis un membre pour l’échange.', 'error');
+    try { await ensurePeer(to); } catch (e) { return toast(errMsg(e), 'error'); }
     Object.assign(E, { to, parent, give: new Set(give.map(String)), want: new Set(want.map(String)), giveP, wantP, message, q: '', busy: false });
     renderEditor();
     dlg.showModal();
