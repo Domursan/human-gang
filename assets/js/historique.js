@@ -2,6 +2,7 @@
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 import { prepareImage } from './image-compress.js';
+import { loadReactions, reactionBarHtml } from './reactions.js';
 import { ghostDirectory } from './admin-ghosts.js';
 
 const me = await initPage({ auth: 'member' });
@@ -44,6 +45,7 @@ async function load() {
   S.editions = ed.data || [];
   S.events = ev.data || [];
   S.moments = mo.data || [];
+  await loadReactions('moment', S.moments.map((x) => x.id), me.id); // une requête pour toutes les réactions de la page
 
   const ids = S.events.map((e) => e.id);
   const [prog, rs, ph] = await Promise.all([
@@ -134,6 +136,7 @@ function momentCard(m) {
     <h3 class="tl-title">${esc(m.title)}</h3>
     ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy"></button>` : ''}
     ${m.body ? `<p class="tl-body">${esc(m.body)}</p>` : ''}
+    ${reactionBarHtml('moment', m.id)}
     <div class="tl-foot">
       ${author ? `<span class="tl-author">${avatarHtml(author, 26)}<span class="small muted">Raconté par ${esc(author.pseudo)}</span></span>` : '<span></span>'}
       ${mine ? `<span class="btn-row">

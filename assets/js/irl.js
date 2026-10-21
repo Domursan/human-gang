@@ -1,6 +1,7 @@
 // ===== Humane Gang — Sorties IRL =====
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
-import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, downloadAlbum } from './photos.js';
+import { loadReactions } from './reactions.js';
 import { prepareImage } from './image-compress.js';
 import { addToCalendar } from './ics.js';
 import { mountHistory } from './irl-history.js';
@@ -28,6 +29,7 @@ const I = {
   trash: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
   upload: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>',
   check: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  download: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg>',
 };
 
 /* ---------- État ---------- */
@@ -157,12 +159,17 @@ function albumHtml(ev) {
   const grid = list.length
     ? `<ul class="album" aria-label="Album photo">${tiles}${more}</ul>`
     : '<p class="empty album-empty">Pas encore de photos. Sois le ou la première à en ajouter.</p>';
+  const zip = list.length
+    ? `<button type="button" class="btn btn-ghost btn-sm" data-act="zip" data-id="${esc(ev.id)}" aria-label="Télécharger les ${list.length} photos de l'album « ${esc(ev.title)} » dans un fichier ZIP">${I.download}<span>Tout télécharger</span></button>`
+    : '';
   return `<div class="album-wrap">
     <div class="album-head">
       <h4 class="album-title">Album <span class="muted">· ${plural(list.length, 'photo', 'photos')}</span></h4>
-      <label class="btn btn-ghost btn-sm upload-btn">${I.upload}<span>Ajouter des photos</span>
-        <input class="visually-hidden" type="file" accept="image/*" multiple data-upload="${esc(ev.id)}">
-      </label>
+      <div class="btn-row">${zip}
+        <label class="btn btn-ghost btn-sm upload-btn">${I.upload}<span>Ajouter des photos</span>
+          <input class="visually-hidden" type="file" accept="image/*" multiple data-upload="${esc(ev.id)}">
+        </label>
+      </div>
     </div>
     ${grid}
     <p class="upload-status small muted" aria-live="polite" data-status-for="${esc(ev.id)}"></p>
@@ -280,6 +287,7 @@ async function render() {
     ...albumEvents.flatMap((e) => photosOf(e.id).map((p) => p.path)),
   ];
   S.urls = await signedUrls(paths);
+  await loadReactions('photo', albumEvents.flatMap((e) => photosOf(e.id).map((p) => p.id)), me.id); // une requête pour les réactions des albums affichés
 
   const focusKey = S.focusKey || document.activeElement?.dataset?.key;
   S.focusKey = null;
@@ -385,10 +393,25 @@ async function uploadPhotos(eventId, input) {
   if (status) status.textContent = '';
   if (ok) { toast(`${plural(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`, 'ok'); S.expanded.add(eventId); await refresh(); }
 }
+async function zipAlbum(eventId, btn) {
+  const ev = S.events.find((x) => x.id === eventId);
+  const label = btn.querySelector('span');
+  const prev = label.textContent;
+  btn.disabled = true; btn.setAttribute('aria-busy', 'true'); label.textContent = 'Préparation du ZIP…';
+  try {
+    await downloadAlbum(eventId, ev?.title);
+    toast('Album téléchargé.', 'ok');
+  } catch (e) {
+    toast(`Téléchargement impossible : ${errMsg(e)}`, 'error');
+  } finally {
+    btn.disabled = false; btn.removeAttribute('aria-busy'); label.textContent = prev;
+  }
+}
 function openPhoto(eventId, idx) {
   const list = photosOf(eventId);
   const items = list.map((p) => ({
     url: S.urls.get(p.path),
+    react: p.id,
     alt: `Photo ajoutée par ${pseudo(p.user_id)}`,
     caption: [p.caption, `Ajoutée par ${pseudo(p.user_id)}`].filter(Boolean).join(' · '),
     onDelete: (p.user_id === me.id || isAdmin) ? () => deletePhoto(p) : null,
@@ -418,6 +441,7 @@ $('#app').addEventListener('click', (e) => {
   else if (act === 'ics') { const ev = S.events.find((x) => x.id === id); if (ev?.starts_at) addToCalendar({ id, title: ev.title, start: ev.starts_at, location: ev.location, description: ev.description }, new URL(`irl.html#event-${id}`, location.href).href); }
   else if (act === 'new') openEventDialog();
   else if (act === 'photo') openPhoto(id, Number(b.dataset.idx));
+  else if (act === 'zip') zipAlbum(id, b);
   else if (act === 'expand') { S.expanded.add(id); render().then(() => $(`#event-${CSS.escape(id)} .thumb[data-idx="${ALBUM_PREVIEW}"]`)?.focus()); }
 });
 $('#app').addEventListener('change', (e) => {

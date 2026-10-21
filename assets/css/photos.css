@@ -64,3 +64,18 @@ input[type="datetime-local"], input[type="date"] { color-scheme: dark; }
 .upload-btn { position: relative; cursor: pointer; }
 .upload-btn:focus-within { outline: 2px solid var(--sand); outline-offset: 2px; }
 .upload-btn.is-busy { opacity: .6; pointer-events: none; }
+
+/* ---------- Réactions (émojis) : souvenirs et photos agrandies ---------- */
+.react-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.react-btn { display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 6px 12px;
+  border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text);
+  font: inherit; font-size: 14px; cursor: pointer; }
+@media (hover: hover) { .react-btn:hover { border-color: var(--border-strong); } }
+.react-btn.is-on { border-color: var(--sand); background: color-mix(in srgb, var(--sand) 18%, transparent); }
+.react-btn:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.react-btn:disabled { opacity: .6; cursor: progress; }
+.react-emoji { font-size: 18px; line-height: 1; }
+.react-count { font-variant-numeric: tabular-nums; }
+.lb-react { padding: 0 16px 16px; display: flex; justify-content: center; }
+.lb-react[hidden] { display: none; }
+.lb-react .react-bar { margin-top: 0; justify-content: center; }

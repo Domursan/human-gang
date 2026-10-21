@@ -1,5 +1,7 @@
 // ===== Humane Gang — photos : compression, envoi, URLs signées, lightbox (partagé IRL / Historique) =====
 import { sb, esc } from './core.js';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { reactionBarHtml } from './reactions.js';
 
 export const PHOTO_BUCKET = 'hg-photos';
 const SIGN_TTL = 3600; // secondes
@@ -89,7 +91,8 @@ function ensureLightbox() {
       <button type="button" class="lb-nav lb-prev" aria-label="Photo précédente">${ICON.prev}</button>
       <figure class="lb-fig"><img alt=""><figcaption class="small muted"></figcaption></figure>
       <button type="button" class="lb-nav lb-next" aria-label="Photo suivante">${ICON.next}</button>
-    </div>`;
+    </div>
+    <div class="lb-react" hidden></div>`;
   document.body.append(d);
   lb = { d, items: [], i: 0, opener: null };
   const show = () => {
@@ -102,6 +105,9 @@ function ensureLightbox() {
     d.querySelector('.lb-prev').hidden = !many;
     d.querySelector('.lb-next').hidden = !many;
     d.querySelector('.lb-del').hidden = !it.onDelete;
+    const rb = d.querySelector('.lb-react');
+    rb.hidden = !it.react;
+    rb.innerHTML = it.react ? reactionBarHtml('photo', it.react) : '';
   };
   lb.show = show;
   const step = (n) => { lb.i = (lb.i + n + lb.items.length) % lb.items.length; show(); };
@@ -129,7 +135,7 @@ function ensureLightbox() {
 
 /**
  * Ouvre la visionneuse.
- * items : [{ url, alt?, caption?, onDelete?: async (item) => boolean }]
+ * items : [{ url, alt?, caption?, react?: id de la photo (barre de réactions), onDelete?: async (item) => boolean }]
  */
 export function openLightbox(items, index = 0) {
   if (!items?.length) return;
@@ -144,4 +150,33 @@ export function openLightbox(items, index = 0) {
 /** Petit utilitaire : <img> avec fallback (si URL manquante → bloc vide). */
 export function thumbHtml(url, alt = '') {
   return url ? `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" decoding="async">` : '<span class="thumb-missing" aria-hidden="true"></span>';
+}
+
+/* ---------- Album : téléchargement en un ZIP (fonction edge hg-album) ---------- */
+/** Télécharge toutes les photos d'une sortie. Lève une erreur lisible en cas d'échec. */
+export async function downloadAlbum(eventId, title = '') {
+  const { data: { session } } = await sb.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error('session expirée, reconnecte-toi');
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/hg-album`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event_id: eventId }),
+  });
+  if (!res.ok) {
+    let msg = `erreur ${res.status}`;
+    try { msg = (await res.json()).error || msg; } catch { /* réponse non JSON */ }
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+  const slug = String(title).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '').toLowerCase().slice(0, 60) || 'sortie';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `album-${slug}.zip`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
