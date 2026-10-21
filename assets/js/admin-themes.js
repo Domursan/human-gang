@@ -7,6 +7,7 @@ import {
 import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
 import { prepareImage } from './image-compress.js';
+import { matches, searchHtml, bindSearch, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
 
 const COLOR_LABELS = {
   accent: ['Accent', 'boutons principaux'],
@@ -31,9 +32,13 @@ const ICON = {
 
 /* ---------- Outils ---------- */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/** Action en cours : bouton désactivé avec indicateur, pas de second envoi. */
 async function busy(btn, fn) {
-  if (btn) btn.disabled = true;
-  try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn) btn.disabled = false; }
+  if (btn?.dataset.busy) return undefined;
+  if (btn) { btn.disabled = true; btn.dataset.busy = '1'; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
+  try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally {
+    if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
+  }
 }
 function slugify(s) {
   return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -72,7 +77,7 @@ export async function mountThemesSection(container) {
   if (!container) return;
   loadStyles();
 
-  const S = { themes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false };
+  const S = { themes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false, query: '' };
 
   container.innerHTML = `
     <div class="th-root stack">
@@ -107,6 +112,10 @@ export async function mountThemesSection(container) {
   bar.innerHTML = `<span data-el="bar-label"></span><button class="btn btn-light btn-sm" type="button">Annuler l'aperçu</button>`;
   document.body.append(bar);
   bar.querySelector('button').addEventListener('click', () => stopPreview());
+
+  // Recherche dans la liste des thèmes (le champ reste en place pendant la frappe)
+  el('list').insertAdjacentHTML('beforebegin', searchHtml({ id: 'th-search', label: 'Rechercher un thème', placeholder: 'Nom ou identifiant…', count: false }));
+  bindSearch(container.querySelector('#th-search'), (q) => { S.query = q; renderList(); }, SEARCH_DELAY);
 
   /* ---------- Données ---------- */
   async function load() {
@@ -171,9 +180,11 @@ export async function mountThemesSection(container) {
   }
   function renderList() {
     const now = todayTheme();
-    el('count').textContent = `(${S.themes.length})`;
+    const shown = S.themes.filter((t) => matches(S.query, t.name, t.slug));
+    el('count').textContent = S.query.trim() ? `(${shown.length} sur ${S.themes.length})` : `(${S.themes.length})`;
     if (!S.themes.length) { el('list').innerHTML = '<div class="empty">Aucun thème.</div>'; return; }
-    el('list').innerHTML = S.themes.map((t) => {
+    if (!shown.length) { el('list').innerHTML = emptyHtml(S.query, 'Aucun thème.'); return; }
+    el('list').innerHTML = shown.map((t) => {
       const pills = [
         t.is_default ? '<span class="pill">Par défaut</span>' : '',
         t.slug === now.slug ? '<span class="pill pill-ok">Actif aujourd\'hui</span>' : '',

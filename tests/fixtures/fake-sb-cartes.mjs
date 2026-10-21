@@ -67,6 +67,8 @@ window.__DB = DB; window.__LOG = [];
   const cards = R.map((r, i) => ({ id: 'C' + (i + 1), set_id: 'SET1', number: i + 1, name: ['Ethan','Le Paleto','Château Marius','Pompe à essence','Soirée pizza','Alice','Grapeseed','Cocktail','Braquage raté','Bruno','Carte identité Chloé','Tracteur'][i], family: F[i], rarity: r,
     image_url: null, flavor: 'Un souvenir qui fait sourire le gang.', member_id: null, can_shiny: i !== 0, tradeable: true, craftable: r !== 'identite', max_copies: r === 'identite' ? 3 : null, active: true }));
   cards.push({ id: 'C13', set_id: 'SET2', number: 1, name: 'Saison deux', family: 'moment', rarity: 'rare', image_url: null, flavor: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
+  // S.bigCards : N cartes supplémentaires « Carte test N » (pagination de la liste admin)
+  for (let i = 0; i < (S.bigCards || 0); i++) cards.push({ ...cards[0], id: 'B' + i, number: 1000 + i, name: 'Carte test ' + i, rarity: 'commune', family: 'objet', max_copies: null, member_id: null });
   DB.hg_card_sets = sets; DB.hg_cards = cards;
   // Mes exemplaires : C1 x3 (dont une brillante), C2 x1, C3 x2, C7 x1 brillante, C11 (identite) x1 numéroté, C9 x1 (en échange)
   const cp = (id, card, extra = {}) => ({ id, card_id: card, owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
@@ -141,6 +143,7 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      if (fn === 'hg_my_perms') return { data: { is_admin: true, perms: ['membres', 'evenements', 'souvenirs', 'secret_santa', 'cartes', 'badges', 'themes', 'messages', 'support', 'bot', 'reglages', 'journal'] }, error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
       if (fn === 'hg_admin_accounts') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, email: p.pseudo.toLowerCase() + '@ex.ch', is_admin: p.is_admin, created_at: p.created_at, last_sign_in_at: null })), error: null };
       if (fn === 'hg_claim_invite_link') {

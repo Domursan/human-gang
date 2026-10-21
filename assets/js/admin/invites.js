@@ -5,6 +5,7 @@ import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, copyText } from './common.js';
 import { loadInvites } from './loaders.js';
 import { renderStats } from './overview.js';
+import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 
 /* =========================================================
    Membres & invitations
@@ -28,8 +29,10 @@ export function renderInvites() {
 
   // Les codes issus d'un lien d'invitation sont listés sous leur lien (admin-invite-links.js)
   const manual = S.invites.filter((i) => !i.link_id);
-  const unused = manual.filter((i) => !i.used_by);
-  const used = manual.filter((i) => i.used_by);
+  const shown = manual.filter((i) => matches(S.q.membres, i.code, i.used_by ? pseudoOf(i.used_by) : ''));
+  const unused = shown.filter((i) => !i.used_by);
+  const used = shown.filter((i) => i.used_by);
+  setCount($('#invite-search-count'), shown.length, manual.length, S.q.membres, ['code', 'codes']);
   const unusedHtml = unused.length ? unused.map((i) => `
       <div class="list-row">
         <div class="grow"><span class="code">${esc(i.code)}</span><div class="small muted">Créé le ${esc(fmtDate(i.created_at))}</div></div>
@@ -37,12 +40,12 @@ export function renderInvites() {
           <button class="btn btn-ghost btn-sm" type="button" data-copy="${esc(i.code)}">${ICON.copy} Copier</button>
           <button class="btn btn-danger btn-sm btn-icon" type="button" data-del-code="${esc(i.code)}" aria-label="Supprimer le code ${esc(i.code)}" title="Supprimer">${ICON.trash}</button>
         </div>
-      </div>`).join('') : '<div class="empty">Aucun code disponible. Génère-en un pour inviter quelqu\'un.</div>';
+      </div>`).join('') : emptyHtml(S.q.membres, 'Aucun code disponible. Génère-en un pour inviter quelqu\'un.');
   const usedHtml = used.length ? used.map((i) => `
       <div class="list-row">
         <div class="grow"><span class="code muted">${esc(i.code)}</span>
           <div class="small muted">Utilisé par <strong class="text">${esc(pseudoOf(i.used_by))}</strong> le ${esc(fmtDate(i.used_at))}</div></div>
-      </div>`).join('') : '<p class="small muted">Aucun code utilisé pour l\'instant.</p>';
+      </div>`).join('') : `<p class="small muted">${S.q.membres.trim() ? 'Aucun résultat.' : 'Aucun code utilisé pour l\'instant.'}</p>`;
 
   $('#invite-list').innerHTML = `
     <div class="subhead"><h4 class="sub-title">Disponibles (${unused.length})</h4>
@@ -53,6 +56,8 @@ export function renderInvites() {
 }
 
 export function bindInvites(me) {
+  const search = mountSearch($('#invite-list'), { id: 'invite-search', label: 'Rechercher un code', placeholder: 'Code ou pseudo de la personne…' });
+  bindSearch(search.input, (q) => { S.q.membres = q; renderInvites(); });
   $('#invite-form').addEventListener('submit', (ev) => {
     ev.preventDefault();
     const btn = ev.submitter;

@@ -1,9 +1,11 @@
 // ===== Humane Gang — administration : journal =====
 // Lecture seule de hg_admin_log (actions de l'administrateur) et de hg_admin_access_log (consultations
 // des conversations dans la messagerie). Pseudos résolus via hg_profiles (policy de lecture admin).
+// Pagination serveur (.range) par lots de 50 ; la recherche filtre les lignes déjà chargées.
 import { sb, esc, errMsg, fmtDateTime, $ } from './core.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './admin/list-tools.js';
 
-const PAGE = 25;
+const PAGE = PAGE_SIZE;
 // Libellés des actions journalisées par hg_admin_audit et les triggers. Une action inconnue s'affiche telle quelle.
 const ACTION_LABEL = {
   carte_donnee: 'Carte donnée',
@@ -25,7 +27,7 @@ function detailsHtml(d) {
 
 export function mountLogSection(container) {
   if (!container) return;
-  const S = { pseudo: new Map(), actions: new Set(), action: '', rows: [], more: false, access: [], accessMore: false };
+  const S = { pseudo: new Map(), actions: new Set(), action: '', rows: [], more: false, access: [], accessMore: false, q: '' };
 
   container.innerHTML = `
     <div class="card stack">
@@ -36,17 +38,21 @@ export function mountLogSection(container) {
         <select id="log-action"><option value="">Toutes les actions</option></select>
       </div>
       <div id="log-list" aria-live="polite"><div class="empty">Chargement…</div></div>
-      <div class="btn-row" id="log-more-row" hidden><button class="btn btn-ghost" type="button" id="log-more">Charger plus</button></div>
+      <div class="btn-row" id="log-more-row" hidden><button class="btn btn-ghost" type="button" id="log-more">Afficher plus</button></div>
     </div>
     <div class="card stack">
       <h3 class="card-title">Consultations des messages</h3>
       <p class="muted small">Chaque ouverture d'une conversation dans la messagerie est enregistrée ici, avec l'administrateur qui l'a lue.</p>
       <div id="log-access" aria-live="polite"><div class="empty">Chargement…</div></div>
-      <div class="btn-row" id="log-access-more-row" hidden><button class="btn btn-ghost" type="button" id="log-access-more">Charger plus</button></div>
+      <div class="btn-row" id="log-access-more-row" hidden><button class="btn btn-ghost" type="button" id="log-access-more">Afficher plus</button></div>
     </div>`;
 
   const who = (id) => (id ? S.pseudo.get(id) ?? 'Compte supprimé' : 'Système');
   const select = $('#log-action', container);
+
+  // Recherche : dans le journal des actions, et dans les consultations (lignes déjà chargées)
+  $('#log-list', container).insertAdjacentHTML('beforebegin', searchHtml({ id: 'log-search', label: 'Rechercher dans le journal', placeholder: 'Action, pseudo, référence…' }));
+  bindSearch(container.querySelector('#log-search'), (q) => { S.q = q; renderLog(); renderAccess(); }, SEARCH_DELAY);
 
   function syncActionOptions() {
     const known = new Set([...Object.keys(ACTION_LABEL), ...S.actions]);
@@ -63,14 +69,16 @@ export function mountLogSection(container) {
 
   function renderLog() {
     const box = $('#log-list', container);
-    box.innerHTML = S.rows.length ? `<ol class="log-list">${S.rows.map((r) => `
+    const rows = S.rows.filter((r) => matches(S.q, actionLabel(r.action), who(r.admin_id), who(r.target_user), r.target_ref, r.details));
+    setCount($('#log-search-count', container), rows.length, S.rows.length, S.q, ['entrée', 'entrées']);
+    box.innerHTML = rows.length ? `<ol class="log-list">${rows.map((r) => `
       <li class="log-row">
         <div class="item-meta"><time datetime="${esc(r.created_at)}">${esc(fmtDateTime(r.created_at))}</time>
           <strong>${esc(actionLabel(r.action))}</strong></div>
         <p class="small muted">Par ${esc(who(r.admin_id))}${r.target_user ? ` · cible : ${esc(who(r.target_user))}` : ''}${r.target_ref ? ` · réf. ${esc(r.target_ref)}` : ''}</p>
         ${detailsHtml(r.details)}
       </li>`).join('')}</ol>`
-      : `<div class="empty">${S.action ? 'Aucune entrée pour cette action.' : 'Aucune action journalisée pour l’instant.'}</div>`;
+      : emptyHtml(S.q, S.action ? 'Aucune entrée pour cette action.' : 'Aucune action journalisée pour l’instant.');
     $('#log-more-row', container).hidden = !S.more;
   }
 
@@ -96,13 +104,14 @@ export function mountLogSection(container) {
 
   function renderAccess() {
     const box = $('#log-access', container);
-    box.innerHTML = S.access.length ? `<ol class="log-list">${S.access.map((r) => `
+    const rows = S.access.filter((r) => matches(S.q, who(r.admin_id), KIND_LABEL[r.conversation_kind], r.conversation_kind, r.conversation_id));
+    box.innerHTML = rows.length ? `<ol class="log-list">${rows.map((r) => `
       <li class="log-row">
         <div class="item-meta"><time datetime="${esc(r.accessed_at)}">${esc(fmtDateTime(r.accessed_at))}</time>
           <strong>${esc(who(r.admin_id))}</strong></div>
         <p class="small muted">${esc(KIND_LABEL[r.conversation_kind] ?? 'Conversation')} · réf. ${esc(String(r.conversation_id ?? '').slice(0, 8))}</p>
       </li>`).join('')}</ol>`
-      : '<div class="empty">Aucune consultation enregistrée.</div>';
+      : emptyHtml(S.q, 'Aucune consultation enregistrée.');
     $('#log-access-more-row', container).hidden = !S.accessMore;
   }
 

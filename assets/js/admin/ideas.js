@@ -3,6 +3,7 @@ import { sb, toast, esc, fmtDateTime, $, $$ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf } from './state.js';
 import { ICON, busy, check } from './common.js';
+import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 import { loadIdeas } from './loaders.js';
 import { renderStats } from './overview.js';
 import { hasBadge, awardBadge, badgeName } from './badges.js';
@@ -12,9 +13,12 @@ import { hasBadge, awardBadge, badgeName } from './badges.js';
    ========================================================= */
 const IDEA_LABEL = { nouvelle: 'Nouvelle', retenue: 'Retenue', ecartee: 'Écartée' };
 const IDEA_PILL = { nouvelle: 'pill-current', retenue: 'pill-ok', ecartee: 'pill-todo' };
+const authorOf = (i) => (i.user_id ? pseudoOf(i.user_id) : 'Membre parti');
 export function renderIdeas() {
-  const list = S.ideaFilter === 'all' ? S.ideas : S.ideas.filter((i) => i.status === S.ideaFilter);
+  const byStatus = S.ideaFilter === 'all' ? S.ideas : S.ideas.filter((i) => i.status === S.ideaFilter);
+  const list = byStatus.filter((i) => matches(S.q.idees, i.body, authorOf(i), IDEA_LABEL[i.status]));
   $$('#idea-filters .chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === S.ideaFilter)));
+  setCount($('#idea-search-count'), list.length, byStatus.length, S.q.idees, ['idée', 'idées']);
   $('#idea-list').innerHTML = list.length ? list.map((i) => `
     <article class="item">
       <div class="item-meta"><strong>${esc(i.user_id ? pseudoOf(i.user_id) : 'Membre parti')}</strong>
@@ -27,7 +31,7 @@ export function renderIdeas() {
         ${i.status !== 'nouvelle' ? `<button class="btn btn-ghost btn-sm" type="button" data-idea="${esc(i.id)}" data-status="nouvelle">Remettre en nouvelle</button>` : ''}
         ${i.status === 'retenue' && i.user_id && S.byId.has(i.user_id) && !hasBadge(i.user_id, 'boite_a_idees') ? `<button class="btn btn-sand btn-sm" type="button" data-idea-badge="${esc(i.user_id)}">${ICON.badge} Attribuer le badge</button>` : ''}
       </div>
-    </article>`).join('') : `<div class="empty">${S.ideaFilter === 'nouvelle' ? 'Aucune nouvelle idée.' : 'Rien dans cette catégorie.'}</div>`;
+    </article>`).join('') : emptyHtml(S.q.idees, S.ideaFilter === 'nouvelle' ? 'Aucune nouvelle idée.' : 'Rien dans cette catégorie.');
 }
 async function offerIdeaBadge(uid) {
   if (!uid || !S.byId.has(uid) || hasBadge(uid, 'boite_a_idees')) return;
@@ -38,6 +42,8 @@ async function offerIdeaBadge(uid) {
 }
 
 export function bindIdeas() {
+  const search = mountSearch($('#idea-list'), { id: 'idea-search', label: 'Rechercher une idée', placeholder: 'Texte ou auteur…' });
+  bindSearch(search.input, (q) => { S.q.idees = q; renderIdeas(); });
   $('#idees').addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t) return;

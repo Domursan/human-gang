@@ -33,6 +33,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-sorties.cjs` | Administration, section « Sorties IRL » : liste et filtres, création, modification, ajout et retrait d'un inscrit, date retenue, suppression avec confirmation (données envoyées au faux client) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 | `parcours-admin-complements.cjs` | Panel admin : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site (ajouter, modifier, JSON refusé, clé sensible avec confirmation), pages (créer, modifier, supprimer), suppression d'une édition Secret Santa |
+| `parcours-admin-recherche.cjs` | Panel admin : recherche (Boîte à idées, Journal, Cartes et séries, insensible aux accents et à la casse), « Afficher plus » (Journal, Cartes par lots de 50), fiche membre (au plus 4 requêtes pour l'onglet initial, onglets chargés à la demande, cache de la visite), état d'une action en cours |
 
 ## Fixtures
 

@@ -2,7 +2,7 @@
 import { sb, toast, errMsg, esc, fmtDate, fmtDateTime } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { IC, check, tabError } from './common.js';
-import { A, RSVP, IDEA } from './state.js';
+import { A, RSVP, IDEA, dropFicheCache } from './state.js';
 
 /* ---------- Sorties IRL ---------- */
 export function irlHtml() {
@@ -28,6 +28,7 @@ export async function setRsvp(eventId, status) {
   if (!status) check(await sb.from('hg_event_rsvps').delete().eq('event_id', eventId).eq('user_id', A.uid));
   else check(await sb.from('hg_event_rsvps').upsert({ event_id: eventId, user_id: A.uid, status, updated_at: new Date().toISOString() }, { onConflict: 'event_id,user_id' }));
   const res = await sb.from('hg_event_rsvps').select('event_id, status, updated_at').eq('user_id', A.uid);
+  dropFicheCache();
   A.d.rsvps = { data: res.data ?? [], error: res.error };
   toast(status ? `Réponse enregistrée : ${RSVP.find(([v]) => v === status)[1]}` : 'Réponse retirée', 'ok');
 }
@@ -57,6 +58,7 @@ export async function deletePhoto(id) {
   if (!(await confirmBox('Supprimer cette photo ?', 'Le fichier et sa fiche seront supprimés définitivement de l\'album.', { ok: 'Supprimer', danger: true }))) return false;
   const st = await sb.storage.from('hg-photos').remove([p.path]);
   check(await sb.from('hg_photos').delete().eq('id', id));
+  dropFicheCache();
   if (st.error) toast(`Fiche supprimée, mais le fichier n'a pas pu l'être : ${errMsg(st.error)}`, 'error');
   else toast('Photo supprimée', 'ok');
   return true;
@@ -114,6 +116,7 @@ export async function toggleBadge(code, on) {
     if (res.error && res.error.code !== '23505') throw res.error;
   }
   const r = await sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', A.uid);
+  dropFicheCache();
   A.d.ubadges = { data: r.data ?? [], error: r.error };
   toast(on ? 'Badge retiré' : `Badge « ${name} » attribué`, 'ok');
   return true;

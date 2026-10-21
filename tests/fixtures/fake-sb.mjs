@@ -51,7 +51,9 @@ const DB = {
   hg_dyn_captures: [],
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
-  hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_profile_info: [],
+  // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
+  hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: [], hg_profile_info: [],
+  hg_admin_log: S.adminLog || [], hg_admin_access_log: S.accessLog || [],
   // Sorties IRL : vides par défaut ; un scénario peut fournir S.sorties, S.rsvps, S.eventDates, S.eventVotes, S.photos.
   hg_event_rsvps: S.rsvps || [], hg_event_dates: S.eventDates || [], hg_event_date_votes: S.eventVotes || [], 
   // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.

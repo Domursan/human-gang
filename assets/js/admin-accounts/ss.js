@@ -2,7 +2,7 @@
 import { sb, toast, esc, fmtDateTime, isGodMode } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { IC, check, tabError, toLocalInput } from './common.js';
-import { A, SS_STATUS, pseudoOf } from './state.js';
+import { A, SS_STATUS, pseudoOf, dropFicheCache } from './state.js';
 
 /* ---------- Secret Santa ---------- */
 export function ssHtml() {
@@ -89,6 +89,7 @@ export const curEdition = () => (A.d.editions.data ?? []).find((e) => e.id === A
 export async function ssJoin() {
   const ed = curEdition();
   check(await sb.from('hg_ss_participants').insert({ edition_id: ed.id, user_id: A.uid }));
+  dropFicheCache();
   toast(`${A.d.profile.pseudo} est inscrit·e à l'édition ${ed.year}`, 'ok');
   if (ed.drawn_at) toast('Le tirage est déjà fait : pense à lui attribuer une cible et un Santa.', 'error');
 }
@@ -101,6 +102,7 @@ export async function ssLeave() {
   if (!ok) return false;
   if (assigns.length) check(await sb.from('hg_ss_assignments').delete().eq('edition_id', ed.id).or(`giver_id.eq.${A.uid},receiver_id.eq.${A.uid}`));
   check(await sb.from('hg_ss_participants').delete().eq('edition_id', ed.id).eq('user_id', A.uid));
+  dropFicheCache();
   toast('Désinscription enregistrée', 'ok');
   return true;
 }
@@ -142,6 +144,7 @@ export async function setPair(editionId, giver, receiver) {
     if (before.length) await sb.from('hg_ss_assignments').insert(before); // remise en l'état
     throw res.error;
   }
+  dropFicheCache();
   return true;
 }
 export async function clearPair(editionId, col) {
@@ -153,5 +156,6 @@ export async function clearPair(editionId, col) {
     { ok: 'Supprimer', danger: true });
   if (!ok) return false;
   check(await sb.from('hg_ss_assignments').delete().eq('edition_id', editionId).eq('giver_id', row.giver_id));
+  dropFicheCache();
   return true;
 }

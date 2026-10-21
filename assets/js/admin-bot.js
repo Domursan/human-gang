@@ -5,6 +5,7 @@
 import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
 import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './admin/list-tools.js';
 
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 const NOTIFY = [
@@ -109,7 +110,7 @@ export function mountBotSection(container) {
   loadStyles();
   const S = {
     bot: { announce_channel_id: null, admin_discord_id: null, notify: {} },
-    histFilter: 'all',
+    histFilter: 'all', histQ: '', histLimit: PAGE_SIZE, histMore: false,
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
     people: [], pseudo: new Map(), selected: new Set(), q: '', history: null, sending: false,
   };
@@ -154,7 +155,7 @@ export function mountBotSection(container) {
         </div>
         <div id="bm-body"><div class="empty">Chargement des comptes…</div></div>
         <details class="bm-history" id="bm-history">
-          <summary>Historique des envois <span class="muted small">(20 derniers)</span></summary>
+          <summary>Historique des envois</summary>
           <div class="filters bm-hist-filters" role="group" aria-label="Filtrer l'historique" id="bm-hist-filters">
             <button class="chip" type="button" data-hf="all" aria-pressed="true">Toutes</button>
             <button class="chip" type="button" data-hf="failed" aria-pressed="false">Échecs</button>
@@ -178,9 +179,13 @@ export function mountBotSection(container) {
   const form = $('#bot-form', container);
   const dlg = $('#bm-dlg', container);
 
+  /** Action en cours : bouton désactivé avec indicateur, pas de second envoi. */
   async function busy(btn, fn) {
-    if (btn) btn.disabled = true;
-    try { return await fn(); } catch (e) { toast(await fnError(e), 'error'); return undefined; } finally { if (btn) btn.disabled = false; }
+    if (btn?.dataset.busy) return undefined;
+    if (btn) { btn.disabled = true; btn.dataset.busy = '1'; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
+    try { return await fn(); } catch (e) { toast(await fnError(e), 'error'); return undefined; } finally {
+      if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
+    }
   }
   function confirmSend(text) {
     $('#bm-dlg-p', container).textContent = text;
@@ -600,7 +605,16 @@ export function mountBotSection(container) {
     const b = ev.target.closest('[data-hf]');
     if (!b) return;
     S.histFilter = b.dataset.hf;
+    S.histLimit = PAGE_SIZE;
     $$('#bm-hist-filters .chip', container).forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+    loadHistory();
+  });
+  // Recherche dans les envois chargés (texte, titre, auteur, type) ; « Afficher plus » charge le lot suivant
+  $('#bm-history-list', container).insertAdjacentHTML('beforebegin', searchHtml({ id: 'bm-hist-search', label: 'Rechercher dans l\'historique', placeholder: 'Titre, texte, auteur…' }));
+  bindSearch(container.querySelector('#bm-hist-search'), (q) => { S.histQ = q; renderHistory(); }, SEARCH_DELAY);
+  $('#bm-history-list', container).addEventListener('click', (ev) => {
+    if (!ev.target.closest('#bm-hist-more')) return;
+    S.histLimit += PAGE_SIZE;
     loadHistory();
   });
   // Lignes d'échec : un envoi a un destinataire « failed » (ou ok:false, ancien format) dans recipients,
@@ -608,15 +622,16 @@ export function mountBotSection(container) {
   async function fetchHistory(failedOnly) {
     const cols = 'id, sent_by, kind, title, body, recipients, channel, created_at';
     const base = () => sb.from('hg_bot_log').select(cols).order('created_at', { ascending: false });
-    if (!failedOnly) return check(await base().limit(20)) ?? [];
+    const n = S.histLimit;
+    if (!failedOnly) return check(await base().limit(n)) ?? [];
     const [a, b, c] = await Promise.all([
-      base().contains('recipients', [{ status: 'failed' }]).limit(50),
-      base().contains('recipients', [{ ok: false }]).limit(50),
-      base().neq('kind', 'manual').ilike('body', '%échec%').limit(50),
+      base().contains('recipients', [{ status: 'failed' }]).limit(n),
+      base().contains('recipients', [{ ok: false }]).limit(n),
+      base().neq('kind', 'manual').ilike('body', '%échec%').limit(n),
     ]);
     const seen = new Map();
     for (const r of [...(check(a) ?? []), ...(check(b) ?? []), ...(check(c) ?? [])]) seen.set(r.id, r);
-    return [...seen.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))).slice(0, 20);
+    return [...seen.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))).slice(0, n);
   }
   async function loadHistory() {
     const box = $('#bm-history-list', container);
@@ -625,8 +640,21 @@ export function mountBotSection(container) {
       const failedOnly = S.histFilter === 'failed';
       const rows = await fetchHistory(failedOnly);
       S.history = rows;
+      S.histMore = rows.length >= S.histLimit; // le lot demandé est plein : il en reste peut-être
       box.setAttribute('aria-busy', 'false');
-      box.innerHTML = rows.length ? rows.map((r) => {
+      renderHistory();
+    } catch (e) {
+      box.innerHTML = `<div class="empty">Impossible de charger l'historique : ${esc(errMsg(e))}</div>`;
+    }
+  }
+  function renderHistory() {
+    const box = $('#bm-history-list', container);
+    const failedOnly = S.histFilter === 'failed';
+    const all = S.history ?? [];
+    const rows = all.filter((r) => matches(S.histQ, r.title, r.body, S.pseudo.get(r.sent_by), r.kind));
+    setCount($('#bm-hist-search-count', container), rows.length, all.length, S.histQ, ['envoi', 'envois']);
+    const more = S.histMore ? '<div class="lt-more"><button class="btn btn-ghost btn-sm" type="button" id="bm-hist-more">Afficher plus</button></div>' : '';
+    box.innerHTML = rows.length ? rows.map((r) => {
         const rec = Array.isArray(r.recipients) ? r.recipients : [];
         const sent = rec.filter((x) => (x.status ?? (x.ok ? 'sent' : 'failed')) === 'sent').length;
         const failed = rec.filter((x) => (x.status ?? (x.ok ? 'sent' : 'failed')) === 'failed').length;
@@ -650,10 +678,7 @@ export function mountBotSection(container) {
             ${rec.length ? recipientsHtml(rec) : '<p class="small muted">Aucun MP (salon uniquement).</p>'}
           </div>
         </details>`;
-      }).join('') : `<div class="empty">${failedOnly ? 'Aucun échec enregistré.' : 'Aucun message envoyé pour l\'instant.'}</div>`;
-    } catch (e) {
-      box.innerHTML = `<div class="empty">Impossible de charger l'historique : ${esc(errMsg(e))}</div>`;
-    }
+      }).join('') + more : emptyHtml(S.histQ, failedOnly ? 'Aucun échec enregistré.' : 'Aucun message envoyé pour l\'instant.');
   }
 
   /* ======================= Chargement ======================= */

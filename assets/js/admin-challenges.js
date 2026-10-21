@@ -4,6 +4,15 @@
 import { sb, toast, errMsg, esc, $ } from './core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { confirmBox } from './ui-confirm.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
+
+/** Bouton en cours : désactivé avec indicateur (pas de second envoi). */
+function setBusy(btn, on) {
+  if (!btn) return;
+  btn.disabled = on;
+  btn.classList.toggle('is-busy', on);
+  if (on) btn.setAttribute('aria-busy', 'true'); else btn.removeAttribute('aria-busy');
+}
 
 const METRICS = [
   ['sorties_tenues', 'Sorties IRL tenues'],
@@ -18,7 +27,7 @@ const METRIC_LABEL = Object.fromEntries(METRICS);
 const REWARD_MAX = 100000;
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-const C = { root: null, rows: [], editId: null };
+const C = { root: null, rows: [], editId: null, query: '' };
 
 export async function mountChallengesSection(container) {
   if (!container) return;
@@ -69,6 +78,8 @@ export async function mountChallengesSection(container) {
     </form>
     <div id="adc-list" class="adc-list" aria-live="polite"><div class="empty">Chargement des défis…</div></div>
   </div>`;
+  $('#adc-list', container).insertAdjacentHTML('beforebegin', searchHtml({ id: 'adc-search', label: 'Rechercher un défi', placeholder: 'Titre, description ou objectif…' }));
+  bindSearch(container.querySelector('#adc-search'), (q) => { C.query = q; renderList(); }, SEARCH_DELAY);
   container.addEventListener('click', onClick);
   container.addEventListener('submit', onSubmit);
   await reload();
@@ -95,8 +106,11 @@ function stateOf(r, now = Date.now()) {
 
 function renderList() {
   const list = $('#adc-list', C.root);
-  if (!C.rows.length) { list.innerHTML = '<div class="empty">Aucun défi pour le moment. Crée le premier ci-dessus.</div>'; return; }
-  list.innerHTML = C.rows.map((r) => {
+  if (!C.rows.length) { list.innerHTML = '<div class="empty">Aucun défi pour le moment. Crée le premier ci-dessus.</div>'; setCount($('#adc-search-count', C.root), 0, 0, '', ['défi', 'défis']); return; }
+  const rows = C.rows.filter((r) => matches(C.query, r.title, r.description, METRIC_LABEL[r.metric] || r.metric));
+  setCount($('#adc-search-count', C.root), rows.length, C.rows.length, C.query, ['défi', 'défis']);
+  if (!rows.length) { list.innerHTML = emptyHtml(C.query, 'Aucun défi.'); return; }
+  list.innerHTML = rows.map((r) => {
     const [label, cls] = stateOf(r);
     return `<article class="card adc-row" aria-labelledby="adc-r-${esc(r.id)}">
       <div class="adc-row-head">
@@ -172,7 +186,8 @@ async function onSubmit(e) {
   if (res.error) { err.textContent = res.error; err.hidden = false; return; }
   err.hidden = true;
   const btn = $('#adc-save', C.root);
-  btn.disabled = true;
+  if (btn.disabled) return;
+  setBusy(btn, true);
   try {
     const q = C.editId
       ? sb.from('hg_challenges').update(res.row).eq('id', C.editId)
@@ -186,7 +201,7 @@ async function onSubmit(e) {
     err.textContent = `Enregistrement impossible : ${errMsg(ex)}`;
     err.hidden = false;
   } finally {
-    btn.disabled = false;
+    setBusy(btn, false);
   }
 }
 
@@ -208,9 +223,9 @@ async function onClick(e) {
       'Le défi disparaît pour tous les membres et sa progression n\'est plus calculée. Les Paillettes déjà versées restent acquises (elles restent dans le journal). Cette action est définitive.',
       { ok: 'Supprimer le défi', danger: true });
     if (!ok) return;
-    t.disabled = true;
+    setBusy(t, true);
     const { error } = await sb.from('hg_challenges').delete().eq('id', id);
-    if (error) { toast(errMsg(error), 'error'); t.disabled = false; return; }
+    if (error) { toast(errMsg(error), 'error'); setBusy(t, false); return; }
     if (C.editId === id) resetForm();
     toast('Défi supprimé.', 'ok');
     await reload();
@@ -219,9 +234,9 @@ async function onClick(e) {
   if (t.dataset.action === 'adc-toggle') {
     const r = C.rows.find((x) => x.id === id);
     if (!r) return;
-    t.disabled = true;
+    setBusy(t, true);
     const { error } = await sb.from('hg_challenges').update({ active: !r.active }).eq('id', id);
-    if (error) { toast(errMsg(error), 'error'); t.disabled = false; return; }
+    if (error) { toast(errMsg(error), 'error'); setBusy(t, false); return; }
     toast(r.active ? 'Défi désactivé.' : 'Défi activé.', 'ok');
     await reload();
   }

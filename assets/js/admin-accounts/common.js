@@ -15,9 +15,13 @@ export const IC = {
 };
 
 /* ---------- Petits outils (copie locale : admin.js n'exporte rien) ---------- */
+/** Action en cours : bouton désactivé, indicateur, pas de second envoi (même logique que admin/common.js). */
 export async function busy(btn, fn) {
-  if (btn) btn.disabled = true;
-  try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
+  if (btn?.dataset.busy) return undefined;
+  if (btn) { btn.disabled = true; btn.dataset.busy = '1'; btn.classList.add('is-busy'); btn.setAttribute('aria-busy', 'true'); }
+  try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally {
+    if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
+  }
 }
 export function check(res) { if (res.error) throw res.error; return res.data; }
 export const nullIfEmpty = (v) => (String(v ?? '').trim() === '' ? null : String(v).trim());

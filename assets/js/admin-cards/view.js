@@ -12,6 +12,9 @@ import { playersPanel, refreshLog, adjustPaillettes, giveCard, takeCopy } from '
 import { statsPanel } from './stats.js';
 import { tradesPanel, cancelTrade } from './trades.js';
 import { Q, loadQuests, questsPanel, questActions } from './quests.js';
+import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
+import { setsListData } from './sets.js';
+import { cardsListData } from './list.js';
 
 /* =========================================================
    Rendu et événements
@@ -20,13 +23,32 @@ const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, eco
 function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
   C.panel.innerHTML = PANELS[C.tab]();
+  countLists();
   if (C.tab === 'joueurs') refreshLog();
   if (C.tab === 'quetes' && !Q.loaded && !Q.loading && !Q.error) loadQuests(); // en cas d'erreur, « Réessayer » relance
   if (C.tab === 'economie') updateSum();
 }
 
+/** Listes à rafraîchir seules pendant une recherche (le champ garde le focus). */
+const LISTS = {
+  series: { list: 'acd-sets-list', count: 'acd-search-series-count', noun: ['série', 'séries'], build: setsListData },
+  cartes: { list: 'acd-cards-list', count: null, noun: ['carte', 'cartes'], build: cardsListData },
+};
+function countLists() {
+  const s = setsListData(); setCount($('#acd-search-series-count', C.root), s.shown, s.total, C.q.series, LISTS.series.noun);
+}
+const timers = {};
+function renderList(key) {
+  const L = LISTS[key], el = $(`#${L.list}`, C.root);
+  if (!el) return;
+  const r = L.build();
+  el.innerHTML = r.html;
+  if (L.count) setCount($(`#${L.count}`, C.root), r.shown, r.total, C.q[key], L.noun);
+}
+
 const ACTIONS = {
   retry: () => boot(),
+  'cards-more': () => { C.shown += PAGE_SIZE; renderList('cartes'); },
   'set-new': () => openSetDialog(),
   'set-edit': (t, id) => openSetDialog(C.setById.get(id) || null),
   'set-toggle': (t, id) => toggleSet(t, id),
@@ -60,10 +82,16 @@ function onChange(e) {
   else if (t.id === 'acd-pl-member') C.playerId = t.value;
   else if (t.dataset.f && t.dataset.f !== 'identSet') C.f[t.dataset.f] = t.value;
   else return;
+  C.shown = PAGE_SIZE;
   render();
 }
 function onInput(e) {
-  if (e.target.form?.id === 'acd-econ-form') updateSum();
+  const t = e.target;
+  if (t.form?.id === 'acd-econ-form') return updateSum();
+  const key = t.dataset.search;
+  if (!key) return;
+  clearTimeout(timers[key]);
+  timers[key] = setTimeout(() => { C.q[key] = t.value; C.shown = PAGE_SIZE; renderList(key); }, SEARCH_DELAY);
 }
 function onSubmit(e) {
   const form = e.target;
