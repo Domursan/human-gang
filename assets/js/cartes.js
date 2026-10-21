@@ -1,6 +1,7 @@
 // ===== Cartes à collectionner — page joueur =====
 // RPC : hg_cards_me, hg_cards_daily, hg_open_booster_req (repli hg_open_booster), hg_card_recycle, hg_card_craft, hg_card_leaderboard.
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
+// Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
@@ -38,6 +39,7 @@ const S = {
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [], massTotal: 0,
   lcdShown: null, lcdAnim: false, quests: null, shownIds: [],
+  peer: null, returnY: 0, tradeApi: null, tradesReady: null,
 };
 const cfg = () => S.state?.config || {};
 const isGod = () => !!S.state?.god;
@@ -51,7 +53,8 @@ const fmtDuration = (ms) => {
 };
 const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
-const zoom = createZoom({ ids: () => S.shownIds, info: zoomInfo });
+// Une seule fenêtre de carte agrandie : elle suit la vue affichée (collection ou collection d'un membre).
+const zoom = createZoom({ ids: () => (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)) });
 
 /* ---------- Données ---------- */
 /** Lit toutes les lignes d'une requête (l'API renvoie au plus 1000 lignes par appel). */
@@ -115,6 +118,7 @@ function skeleton() {
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}">${label}</button>`).join('')}
     </nav>
     ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'boosters' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
+    <section class="cartes-peer" id="cartes-peer" hidden></section>
     <details class="card cartes-block" id="cartes-history-wrap">
       <summary>Historique des Paillettes (30 derniers mouvements)</summary>
       <div id="cartes-history" class="cartes-block"></div>
@@ -190,8 +194,17 @@ function showTab() {
     const tab = $(`#cartes-tab-${id}`);
     tab.setAttribute('aria-selected', String(on));
     tab.tabIndex = on ? 0 : -1;
-    $(`#cartes-p-${id}`).hidden = !on;
   }
+  applyView();
+}
+
+// Vue affichée : onglets (défaut) ou collection d'un membre (S.peer), qui remplace les onglets.
+function applyView() {
+  const peer = !!S.peer;
+  $('#cartes-tablist').hidden = peer;
+  $('#cartes-history-wrap').hidden = peer;
+  for (const [id] of TABS) $(`#cartes-p-${id}`).hidden = peer || S.tab !== id;
+  $('#cartes-peer').hidden = !peer;
 }
 
 // Chaque rendu garde la place de l'utilisateur : la page ne remonte pas en haut après une action.
@@ -1048,6 +1061,270 @@ async function detailAction(action, el) {
   $('#cartes-detail')?.querySelector(again)?.focus({ preventScroll: true });
 }
 
+/* ---------- Collection d'un autre membre (lecture seule) ---------- */
+// Adresse : cartes.html#collection/<id>. Mêmes données et mêmes composants que « Collection » (cartes-zoom.js compris),
+// mais rien n'est modifiable : on voit ses cartes, on coche celles qu'on lui demande, puis on ouvre l'éditeur d'offre.
+// S.peer = { id, member, copies, byCard, loading, error, setId, filters, picks (Set de cartes demandées), shownIds }.
+const PEER_RE = /^#collection\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+const PEER_OWNED = [['all', 'Toutes les cartes'], ['owned', 'Possédées par lui'], ['missing', 'Manquantes chez lui'],
+  ['dupes', 'Doublons chez lui'], ['dupes_missing', 'Ses doublons que je n’ai pas']];
+const peerCopies = (cardId) => S.peer?.byCard.get(cardId) || [];
+
+/** Exemplaires d'un membre, par carte. Une seule lecture (RLS : tout membre peut lire hg_card_copies, migration 018 c). */
+async function loadPeer(id) {
+  const [mem, copies] = await Promise.all([
+    sb.rpc('hg_members'),
+    fetchAllRows(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade')
+      .eq('owner_id', id).is('recycled_at', null).order('obtained_at').order('id')),
+  ]);
+  if (mem.error) throw mem.error;
+  const byCard = new Map();
+  for (const cp of copies) {
+    if (!byCard.has(cp.card_id)) byCard.set(cp.card_id, []);
+    byCard.get(cp.card_id).push(cp);
+  }
+  // Les fantômes ne figurent pas dans hg_members : leur collection reste invisible
+  return { member: (mem.data || []).find((m) => m.id === id) || null, copies, byCard };
+}
+
+async function openPeer(id) {
+  if (id === me.id) { // sa propre collection : l'onglet normal
+    leavePeer();
+    S.tab = 'collection';
+    cleanHash();
+    renderAll();
+    return;
+  }
+  if (!S.peer) S.returnY = window.scrollY;
+  S.peer = { id, member: null, copies: [], byCard: new Map(), loading: true, error: '', setId: ALL,
+    filters: { rarity: '', family: '', owned: 'all' }, picks: new Set(), shownIds: [] };
+  applyView();
+  renderPeer();
+  $('#cartes-peer').scrollIntoView({ block: 'start' });
+  try {
+    const data = await loadPeer(id);
+    if (S.peer?.id !== id) return; // une autre collection a été ouverte entre-temps
+    Object.assign(S.peer, data, { loading: false, error: data.member ? '' : 'Ce membre est introuvable ou sa collection n’est pas disponible.' });
+  } catch (e) {
+    if (S.peer?.id !== id) return;
+    Object.assign(S.peer, { loading: false, error: errMsg(e) });
+  }
+  renderPeer();
+  $('#cartes-peer-title')?.focus({ preventScroll: true });
+}
+
+function leavePeer() {
+  if (!S.peer) return;
+  S.peer = null;
+  cleanHash();
+  renderAll();
+  window.scrollTo({ top: S.returnY, behavior: 'instant' });
+}
+
+// L'adresse ne garde pas le #collection/… une fois la vue fermée (sinon un rechargement rouvrirait la vue).
+function cleanHash() {
+  if (PEER_RE.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+}
+
+function routeFromHash() {
+  const m = PEER_RE.exec(location.hash);
+  if (m) openPeer(m[1].toLowerCase());
+  else leavePeer();
+}
+
+function peerKeep(c) {
+  const f = S.peer.filters;
+  const n = peerCopies(c.id).length;
+  const mine = copiesOf(c.id).length;
+  if (f.rarity && c.rarity !== f.rarity) return false;
+  if (f.family && c.family !== f.family) return false;
+  if (f.owned === 'owned' && n === 0) return false;
+  if (f.owned === 'missing' && n > 0) return false;
+  if (f.owned === 'dupes' && n < 2) return false;
+  if (f.owned === 'dupes_missing' && !(n >= 2 && mine === 0)) return false;
+  return true;
+}
+
+// Une carte de sa collection : carte (bouton de sélection si elle la possède), loupe, repères d'échange.
+function peerCell(c) {
+  const cps = peerCopies(c.id);
+  const n = cps.length;
+  const mine = copiesOf(c.id).length;
+  const shinyCp = cps.find((x) => x.shiny);
+  const on = S.peer.picks.has(c.id);
+  const pickable = n > 0;
+  const card = cardHtml(c, {
+    size: 'md', count: n, shiny: !!shinyCp,
+    serial: n === 1 && c.max_copies ? cps[0].serial : null,
+    missing: n === 0, button: pickable,
+    attrs: pickable ? `data-action="peer-pick" data-card="${esc(c.id)}" aria-pressed="${on}"` : '',
+  });
+  const tags = [
+    n && !mine ? ['Tu ne l’as pas', 'is-need'] : null,
+    n >= 2 ? ['Doublon chez lui', 'is-dupe'] : null,
+    on ? ['Demandée', 'is-picked'] : null,
+  ].filter(Boolean);
+  const what = n ? esc(c.name) : 'la carte';
+  return `<div class="cz-cell pv-cell${on ? ' is-picked' : ''}">${card}`
+    + (tags.length ? `<ul class="pv-tags">${tags.map(([t, cls]) => `<li class="pv-tag ${cls}">${esc(t)}</li>`).join('')}</ul>` : '')
+    + `<button type="button" class="cz-zoom" data-action="peer-zoom" data-card="${esc(c.id)}" aria-label="Agrandir ${what}">${ICON_ZOOM}</button>`
+    + '<span class="cz-tip" aria-hidden="true">Agrandir</span></div>';
+}
+
+function peerGroupHtml(g, i) {
+  const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
+  const hid = `pv-g-${i}`;
+  return `<section class="cz-group" aria-labelledby="${hid}">
+    <div class="cz-group-head">
+      <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
+      <p class="cz-group-count">${nf.format(g.have)} / ${nf.format(g.scored)} possédées</p>
+    </div>
+    <div class="progress cz-group-bar" role="progressbar" aria-label="Progression de ${esc(g.set.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+    <div class="cartes-grid">${g.shown.map(peerCell).join('')}</div>
+  </section>`;
+}
+
+function peerZoomInfo(id) {
+  const P = S.peer;
+  const k = S.cardsById.get(id);
+  if (!P || !k) return null;
+  const cps = peerCopies(id);
+  return {
+    card: k,
+    count: cps.length,
+    shiny: cps.some((x) => x.shiny),
+    serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
+    missing: cps.length === 0,
+    setName: S.sets.find((s) => s.id === k.set_id)?.name || '',
+    setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
+    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
+    kicker: `Collection de ${P.member?.pseudo || ''}`,
+    heading: 'Dans sa collection',
+  };
+}
+
+function peerHead(P) {
+  const m = P.member;
+  const n = P.picks.size;
+  return `<section class="card cartes-peer-head" aria-labelledby="cartes-peer-title">
+      <div class="cartes-row"><button type="button" class="btn btn-ghost" data-action="peer-back">← Retour</button></div>
+      <div class="cartes-peer-who">${avatarHtml(m, 48)}
+        <div>
+          <p class="eyebrow">Collection · lecture seule</p>
+          <h2 class="cartes-peer-title" id="cartes-peer-title" tabindex="-1">Collection de ${esc(m.pseudo)}</h2>
+          <p class="muted small">${pluralCount(P.byCard.size, 'carte différente', 'cartes différentes', nf.format)} · ${pluralCount(P.copies.length, 'exemplaire', 'exemplaires', nf.format)}</p>
+        </div>
+      </div>
+      <p class="muted small">Tu peux voir cette collection, pas la modifier. Clique sur une carte qu’il possède pour la demander, puis propose un échange.</p>
+      <div class="cartes-peer-offer">
+        <p class="cartes-small" id="peer-sel" aria-live="polite">${pluralCount(n, 'carte sélectionnée', 'cartes sélectionnées', nf.format)}${n ? ' · elles seront pré-cochées dans « Je demande »' : ''}</p>
+        <button type="button" class="btn btn-primary" data-action="peer-offer">Proposer un échange</button>
+        ${n ? '<button type="button" class="btn btn-ghost" data-action="peer-clear">Vider la sélection</button>' : ''}
+      </div>
+    </section>`;
+}
+
+function peerHtml(P) {
+  const all = P.setId === ALL;
+  const set = all ? null : S.sets.find((s) => s.id === P.setId);
+  const f = P.filters;
+  const groups = (all ? S.sets : [set].filter(Boolean)).map((s) => {
+    const cards = S.cards.filter((c) => c.set_id === s.id);
+    const scored = cards.filter((c) => c.rarity !== 'identite');
+    return { set: s, scored: scored.length, have: scored.filter((c) => peerCopies(c.id).length > 0).length, shown: cards.filter(peerKeep) };
+  });
+  const scoredAll = groups.reduce((a, g) => a + g.scored, 0);
+  const haveAll = groups.reduce((a, g) => a + g.have, 0);
+  const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
+  const withCards = groups.filter((g) => g.shown.length);
+  P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
+  const body = !S.sets.length ? '<p class="empty">Aucune série disponible pour le moment.</p>'
+    : !withCards.length ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
+      : all ? `<div class="cz-groups">${withCards.map(peerGroupHtml).join('')}</div>`
+        : `<div class="cartes-grid">${groups[0].shown.map(peerCell).join('')}</div>`;
+  return `${peerHead(P)}
+    <section class="card cartes-block">
+      <div class="cartes-series">
+        <div class="field">
+          <label for="peer-set">Série</label>
+          <select id="peer-set" data-change="peer-set">
+            <option value="${ALL}" ${all ? 'selected' : ''}>Toutes les séries</option>
+            ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === P.setId ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="cartes-progress">
+          <p class="cartes-progress-label">${nf.format(haveAll)} / ${nf.format(scoredAll)} cartes obtenues par ${esc(P.member.pseudo)}${all ? ' (toutes les séries)' : ''}</p>
+          <div class="progress" role="progressbar" aria-label="Progression de la collection de ${esc(P.member.pseudo)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone}"><span style="width:${pctDone}%"></span></div>
+        </div>
+      </div>
+      <div class="cartes-filters">
+        <div class="field">
+          <label for="peer-f-rarity">Rareté</label>
+          <select id="peer-f-rarity" data-pfilter="rarity">
+            <option value="">Toutes</option>
+            ${RARITIES.map((r) => `<option value="${r.id}" ${f.rarity === r.id ? 'selected' : ''}>${esc(r.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label for="peer-f-family">Famille</label>
+          <select id="peer-f-family" data-pfilter="family">
+            <option value="">Toutes</option>
+            ${FAMILIES.map((x) => `<option value="${x.id}" ${f.family === x.id ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label for="peer-f-owned">Afficher</label>
+          <select id="peer-f-owned" data-pfilter="owned">
+            ${PEER_OWNED.map(([v, l]) => `<option value="${v}" ${f.owned === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </section>
+    ${body}`;
+}
+
+/** Redessine la vue membre ; focusSel (sélecteur) reçoit le focus après le rendu, sans défilement. */
+function renderPeer(focusSel) {
+  const el = $('#cartes-peer');
+  const P = S.peer;
+  if (!el || !P) return;
+  keepPlace(() => {
+    if (P.loading) el.innerHTML = '<p class="muted" aria-live="polite">Chargement de la collection…</p>';
+    else if (P.error) el.innerHTML = `<section class="card cartes-peer-head"><div class="cartes-row"><button type="button" class="btn btn-ghost" data-action="peer-back">← Retour</button></div><p class="empty">${esc(P.error)}</p></section>`;
+    else el.innerHTML = peerHtml(P);
+    if (focusSel) el.querySelector(focusSel)?.focus({ preventScroll: true });
+  });
+}
+
+function togglePeerPick(cardId) {
+  const P = S.peer;
+  if (!P) return;
+  if (P.picks.has(cardId)) P.picks.delete(cardId); else P.picks.add(cardId);
+  renderPeer(`[data-action="peer-pick"][data-card="${CSS.escape(cardId)}"]`);
+}
+
+/** Ouvre l'éditeur d'offre (cartes-trades.js) avec ce membre ; les cartes cochées sont pré-cochées dans « Je demande ». */
+async function peerOffer() {
+  const P = S.peer;
+  if (!P || P.loading || P.error) return;
+  const want = [];
+  let locked = 0;
+  for (const cid of P.picks) {
+    const cp = peerCopies(cid).find((x) => !x.locked_trade);
+    if (cp) want.push(String(cp.id)); else locked++;
+  }
+  let api = null;
+  try { await mountTradesOnce(); api = S.tradeApi; } catch { api = null; }
+  if (!api) return toast('Les échanges ne sont pas disponibles pour le moment.', 'error');
+  if (locked) toast('Certaines cartes sont déjà en échange : elles ne sont pas pré-cochées.');
+  const to = P.id;
+  S.peer = null;
+  cleanHash();
+  S.tab = 'echanges';
+  renderAll();
+  api.offer({ to, want });
+}
+
 /* ---------- Classement ---------- */
 async function renderLeaderboard() {
   const el = $('#cartes-p-classement');
@@ -1065,7 +1342,7 @@ async function renderLeaderboard() {
           ${rows.map((r, i) => `<li>
             <span class="cartes-lb-rank">${i + 1}</span>
             <span class="cartes-row">${avatarHtml(r, 36)}
-              <span><strong>${esc(r.pseudo)}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
+              <span><strong>${r.user_id === me.id ? esc(r.pseudo) : `<a class="cartes-lb-link" href="#collection/${esc(r.user_id)}" title="Voir la collection de ${esc(r.pseudo)}">${esc(r.pseudo)}</a>`}</strong>${r.user_id === me.id ? ' <span class="muted small">(toi)</span>' : ''}<br>
               <span class="cartes-lb-stats">${pluralCount(Number(r.uniques), 'unique', 'uniques', nf.format)} · ${pluralCount(Number(r.copies), 'exemplaire', 'exemplaires', nf.format)} · ${nf.format(Number(r.shinies))} brillantes · ${nf.format(Number(r.identites))} identités · ${nf.format(Number(r.series))} séries</span></span>
             </span>
             <span class="cartes-lb-score">${nf.format(Number(r.score))}</span>
@@ -1078,17 +1355,20 @@ async function renderLeaderboard() {
 }
 
 /* ---------- Échanges (module séparé, chargé à la demande) ---------- */
+// Renvoie une promesse qui se résout quand le module est monté (données chargées).
 function mountTradesOnce() {
-  if (S.tradesMounted) return;
+  if (S.tradesMounted) return S.tradesReady;
   S.tradesMounted = true;
   const el = $('#cartes-trades');
   const ctx = {
     me,
     refresh: async () => { await refreshData(); renderAll(); },
+    expose: (api) => { S.tradeApi = api; }, // api.offer({ to, want }) ouvre l'éditeur d'offre
   };
-  import('./cartes-trades.js')
+  S.tradesReady = import('./cartes-trades.js')
     .then((m) => m.mountTrades(el, ctx))
     .catch(() => { el.innerHTML = '<p class="empty">Bientôt.</p>'; });
+  return S.tradesReady;
 }
 
 /* ---------- Historique ---------- */
@@ -1121,6 +1401,11 @@ function onClick(e) {
     case 'open-card': return openDetail(t.dataset.card);
     case 'zoom-card': return zoom.open(t.dataset.card, t);
     case 'mass': return openMass();
+    case 'peer-back': leavePeer(); $(`#cartes-tab-${S.tab}`)?.focus({ preventScroll: true }); return;
+    case 'peer-zoom': return zoom.open(t.dataset.card, t);
+    case 'peer-pick': return togglePeerPick(t.dataset.card);
+    case 'peer-clear': if (S.peer) { S.peer.picks.clear(); renderPeer('[data-action="peer-offer"]'); } return;
+    case 'peer-offer': return peerOffer();
     case 'mass-confirm': return confirmMass();
     case 'wish':
     case 'craft':
@@ -1133,6 +1418,8 @@ function onChange(e) {
   const t = e.target;
   if (t.dataset.change === 'set') { S.setId = t.value; renderCollection('cartes-set'); }
   else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
+  else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; renderPeer('#peer-set'); }
+  else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
 }
 
 function onTabKey(e) {
@@ -1163,6 +1450,8 @@ async function boot() {
     app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
     toast(errMsg(e), 'error');
   }
+  window.addEventListener('hashchange', routeFromHash);
+  routeFromHash(); // lien direct vers une collection ou retour arrière depuis elle
   loadQuests();
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page

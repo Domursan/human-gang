@@ -250,3 +250,20 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 /* Boosters offerts (cartes.js) */
 .cart-gift { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .cart-gift .cart-h, .cart-gift p { margin: 0; }
+
+/* Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> */
+.cartes-peer { display: grid; gap: 16px; }
+.cartes-peer-head { display: grid; gap: 12px; }
+.cartes-peer-who { display: flex; gap: 14px; align-items: center; }
+.cartes-peer-title { margin: 0; outline-offset: 4px; }
+.cartes-peer-offer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.cartes-lb-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.pv-cell .pv-tags { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.pv-tag { font-size: 12px; line-height: 1.2; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--muted); }
+.pv-tag.is-need { color: var(--sand); border-color: var(--sand); }
+.pv-tag.is-picked { background: var(--sand); color: #121212; border-color: var(--sand); }
+.pv-cell.is-picked .hgc { outline: 3px solid var(--sand); outline-offset: 3px; }
+/* L'attribut hidden doit l'emporter sur display des composants (sinon la vue membre reste affichée) */
+#cartes-tablist[hidden], #cartes-peer[hidden], [data-peer-link][hidden] { display: none; }
+.pv-cell { flex-wrap: wrap; }
+.pv-cell .pv-tags { width: 100%; min-width: 0; }

@@ -60,14 +60,15 @@ function infoHtml(d) {
     <h2 class="cz-title" id="cz-title">${esc(title)}</h2>
     <p class="cz-meta">${esc(meta)}</p>
     ${flavor}${caption}
-    <h3 class="cz-sec">Dans ta collection</h3>
+    <h3 class="cz-sec">${esc(d.heading || 'Dans ta collection')}</h3>
     ${copies}
     <p class="cz-hint" id="cz-hint">${esc(hintText())}</p>`;
 }
 
 /**
  * Crée la fenêtre de carte agrandie.
- * @param {{ ids: () => string[], info: (id: string) => ({card, count, shiny, serial, missing, setName, setTotal, lines} | null) }} src
+ * @param {{ ids: () => string[], info: (id: string) => ({card, count, shiny, serial, missing, setName, setTotal, lines, kicker?, heading?} | null) }} src
+ *   kicker / heading (facultatifs) : libellés de la fenêtre (par défaut « Collection » et « Dans ta collection »).
  * @returns {{ open: (id: string, opener?: HTMLElement) => void }}
  */
 export function createZoom({ ids, info }) {
@@ -114,7 +115,7 @@ export function createZoom({ ids, info }) {
     pos = list.indexOf(id);
     hideLens();
     ui.card.innerHTML = cardHtml(d.card, { size: 'lg', count: d.count, shiny: d.shiny, serial: d.serial, missing: d.missing });
-    ui.eyebrow.textContent = `Collection · ${d.setName} · ${pos + 1} / ${list.length}`;
+    ui.eyebrow.textContent = `${d.kicker || 'Collection'} · ${d.setName} · ${pos + 1} / ${list.length}`;
     ui.info.innerHTML = infoHtml(d);
     const many = list.length > 1;
     for (const b of [...ui.prevs, ...ui.nexts]) b.disabled = !many;
