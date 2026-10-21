@@ -29,6 +29,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-connexion.cjs` | Connexion depuis `compte.html` : identifiants faux, bons identifiants, page compte connectée |
 | `parcours-sortie.cjs` | Proposer une sortie dans `irl.html` : données envoyées à `hg_events`, annonce `irl_new` |
 | `parcours-session.cjs` | Session absente ou fermée : visiteur sur l'accueil, compte et membre ; rafraîchissements après déconnexion ; déconnexion depuis l'en-tête. Aucune RPC réservée aux membres ne doit partir sans session (le faux répond 401 et le journalise) |
+| `parcours-admin-sorties.cjs` | Administration, section « Sorties IRL » : liste et filtres, création, modification, ajout et retrait d'un inscrit, date retenue, suppression avec confirmation (données envoyées au faux client) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 
 ## Fixtures
