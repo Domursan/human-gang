@@ -53,7 +53,16 @@ const DB = {
   hg_page_access: S.access || [],
   // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
   hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: [], hg_profile_info: [],
-  hg_admin_log: S.adminLog || [], hg_admin_access_log: S.accessLog || [],
+  // Journal admin (Pilotage > Journal) : entrées d'exemple ; scénario S.adminLog / S.accessLog pour en fournir d'autres.
+  hg_admin_log: S.adminLog || [
+    { id: 1, admin_id: ME, action: 'carte_donnee', target_user: U(2), target_ref: 'Série Printemps #12', details: { carte: 'Renard', quantite: 1 }, created_at: iso(-30) },
+    { id: 2, admin_id: ME, action: 'ajustement_paillettes', target_user: U(3), target_ref: null, details: { before: 120, after: 150, motif: 'Sortie IRL' }, created_at: iso(-90) },
+    { id: 3, admin_id: U(2), action: 'carte_supprimee', target_user: U(4), target_ref: 'Carte #7', details: { carte: 'Hibou' }, created_at: iso(-600) },
+  ],
+  hg_admin_access_log: S.accessLog || [
+    { id: 1, admin_id: ME, conversation_id: 'cccccccc-0000-4000-8000-000000000001', conversation_kind: 'direct', accessed_at: iso(-10) },
+  ],
+  hg_card_trades: S.trades || [],
   // Sorties IRL : vides par défaut ; un scénario peut fournir S.sorties, S.rsvps, S.eventDates, S.eventVotes, S.photos.
   hg_event_rsvps: S.rsvps || [], hg_event_dates: S.eventDates || [], hg_event_date_votes: S.eventVotes || [], 
   // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.
@@ -61,8 +70,8 @@ const DB = {
     ['cartes','Jeu de cartes'],['badges','Badges'],['themes','Thèmes et événements'],['messages','Messagerie'],['support','Assistance et idées'],
     ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin']]
     .map(([key, label], i) => ({ key, label, description: 'Description de ' + label.toLowerCase(), sort: (i + 1) * 10 })),
-  hg_staff: Array.isArray(S.staff) && S.staff.length ? [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
-    created_at: iso(-20), updated_at: iso(-20) }] : [],
+  hg_staff: S.staffRows || Array.isArray(S.staff) && S.staff.length ? (S.staffRows || [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
+    created_at: iso(-20), updated_at: iso(-20) }]) : [],
   // Souvenirs, photos et réactions (section admin « Souvenirs et photos »)
   hg_events: S.sorties || [{ id: 'eeeeeeee-0000-4000-8000-000000000001', title: 'Raclette de test', location: 'Lausanne', starts_at: iso(-30), created_by: ME }],
   hg_moments: [

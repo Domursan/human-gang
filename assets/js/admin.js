@@ -6,7 +6,7 @@
 import { initPage, $, toast, errMsg } from './core.js';
 import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
-import { mountLogSection } from './admin-log.js';
+import { mountLogSection, listLog, openLog } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
 import { initAccounts, refreshAccounts, openAccountFiche } from './admin-accounts.js';
 import { mountGhostsSection, refreshGhostsSection } from './admin-ghosts.js';
@@ -15,7 +15,7 @@ import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
 import { mountCardsSection, openCardsTab } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
-import { mountStaffSection } from './admin-staff.js';
+import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection } from './admin-sorties/index.js';
 import { mountSouvenirsSection } from './admin-souvenirs/index.js';
 import { mountReglagesSection } from './admin-reglages/view.js';
@@ -24,7 +24,7 @@ import { closeDetail } from './admin-accounts/inspect.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
-import { renderStats } from './admin/overview.js';
+import { renderStats, loadOverview, overviewTables } from './admin/overview.js';
 import { bindInvites, renderInvites, renderMembers } from './admin/invites.js';
 import { renderSS } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
@@ -32,7 +32,7 @@ import { bindBadges, renderBadges } from './admin/badges.js';
 import { bindIdeas, renderIdeas } from './admin/ideas.js';
 import { bindSupport, renderSupport } from './admin/support.js';
 import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
-import { initLive } from './admin/live.js';
+import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
 import { bindFicheHash } from './admin/router.js';
@@ -78,8 +78,15 @@ if (has('idees')) bindIdeas();
 if (has('assistance')) bindSupport();
 
 /* ---------- Sous-sections : montage à la première visite ---------- */
-registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')) });
-registerSub('pilotage/staff', { main: () => mountStaffSection($('#staff-root'), { me }) }); // administrateur seulement
+registerSub('pilotage/apercu', {
+  main: () => {
+    loadOverview();
+    const tables = overviewTables();
+    if (tables.length) onTableChange('apercu', tables, loadOverview); // temps réel : journal et échanges
+  },
+});
+registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')), open: openLog, list: listLog });
+registerSub('pilotage/staff', { main: () => mountStaffSection($('#staff-root')), open: openStaff, list: listStaff, info: infoStaff }); // administrateur seulement
 registerSub('membres/comptes', { main: () => ensureAccounts(), open: openFicheRoute });
 registerSub('membres/fantomes', {
   // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.

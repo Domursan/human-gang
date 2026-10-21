@@ -74,31 +74,36 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     await p.ctx.close();
   }
 
-  /* ---------- Journal : recherche et « Afficher plus » ---------- */
+  /* ---------- Journal (liste + détail) : recherche, « Afficher plus » et lots serveur ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG, accessLog: ACCESS_LOG } });
     await adminSection(p, 'pilotage/journal');
-    await p.waitForSelector('#log-list .log-row', { timeout: 5000 });
-    check(await p.locator('#log-list .log-row').count() === 50, 'journal : premier lot de 50 entrées');
-    check(await p.isVisible('#log-more'), 'journal : bouton « Afficher plus » visible');
+    await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
+    const rows = () => p.locator('#shell-col-list .ui-row').count();
+    check(await rows() === 50, 'journal : premier lot de 50 entrées');
+    check(await p.isVisible('#shell-col-list .ui-more-btn'), 'journal : bouton « Afficher plus » visible');
 
-    await p.fill('#log-search', 'alice');
+    await p.fill('#shell-col-list .ui-search input', 'alice');
     await sleep(400);
-    check(await p.locator('#log-list .log-row').count() === 25, 'journal : recherche « alice » sur les lignes chargées (une sur deux)');
-    check((await p.textContent('#log-search-count')).includes('25 résultats sur 50'), 'journal : compteur « 25 résultats sur 50 »');
+    check(await rows() === 25, 'journal : recherche « alice » sur les lignes chargées (une sur deux)');
+    check((await p.textContent('#shell-col-list .ui-sr[role="status"]')).includes('25 élément'), 'journal : compteur « 25 éléments » pendant la recherche');
 
-    await p.fill('#log-search', 'zz-aucun');
+    await p.fill('#shell-col-list .ui-search input', 'zz-aucun');
     await sleep(400);
-    check(await p.locator('#log-list', { hasText: 'Aucun résultat' }).count() === 1, 'journal : état vide « Aucun résultat »');
+    check((await p.textContent('#shell-col-list .ui-empty')).includes('Aucun résultat'), 'journal : état vide « Aucun résultat »');
 
-    await p.fill('#log-search', '');
+    await p.fill('#shell-col-list .ui-search input', '');
     await sleep(400);
-    check(await p.locator('#log-list .log-row').count() === 50, 'journal : vider la recherche restaure le lot');
+    check(await rows() === 50, 'journal : vider la recherche restaure le lot');
 
+    await p.click('#shell-col-list .ui-more-btn');
+    await sleep(200);
+    check(await rows() === 51, 'journal : « Afficher plus » affiche la ligne restante (51 entrées chargées)');
+    check(await p.isVisible('#log-more'), 'journal : « Charger plus » (lot serveur) visible tant qu\'il reste des entrées');
     await p.click('#log-more');
-    await p.waitForFunction(() => document.querySelectorAll('#log-list .log-row').length === 60, null, { timeout: 5000 }).catch(() => {});
-    check(await p.locator('#log-list .log-row').count() === 60, 'journal : « Afficher plus » charge le lot suivant (60 entrées)');
-    check(!(await p.isVisible('#log-more')), 'journal : plus de bouton quand tout est affiché');
+    await p.waitForFunction(() => document.querySelectorAll('#shell-col-list .ui-row').length === 61, null, { timeout: 5000 }).catch(() => {});
+    check(await rows() === 61, 'journal : « Charger plus » ajoute le lot suivant (61 entrées au total)');
+    check(!(await p.isVisible('#log-more')), 'journal : plus de « Charger plus » quand tout est chargé');
     check(p.errs.length === 0, 'journal : aucune erreur JS (' + p.errs.join(' | ') + ')');
     await p.ctx.close();
   }

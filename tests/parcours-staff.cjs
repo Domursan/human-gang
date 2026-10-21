@@ -43,22 +43,23 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     await p.fill('#staff-note', NOTE);
     await p.click('#staff-dialog button[type="submit"]');
     await p.waitForFunction(() => !document.querySelector('#staff-dialog').open, null, { timeout: 5000 }).catch(() => {});
-    await p.waitForSelector('.staff-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
-    const row = p.locator('.staff-row', { hasText: 'Chloé' });
-    check(await row.count() === 1, '(a) la liste se met à jour : Chloé apparaît dans le Staff');
-    check(await row.locator('.staff-perm-pill').count() === 2, '(a) Chloé a deux permissions affichées');
-    check((await row.textContent()).includes(NOTE), '(a) la note est affichée');
+    // Colonne 2 : la liste se met à jour ; la fiche de Chloé s'ouvre (URL #pilotage/staff/<uid>)
+    await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
+    check(await p.locator('#shell-col-list .ui-row', { hasText: 'Chloé' }).count() === 1, '(a) la liste se met à jour : Chloé apparaît dans le Staff');
+    check((await p.evaluate(() => location.hash)) === '#pilotage/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé est ouverte (URL)');
+    check(await p.locator('#staff input[data-perm-key]:checked').count() === 2, '(a) Chloé a deux permissions cochées dans sa fiche');
+    check((await p.textContent('#staff .stf-note')).includes(NOTE), '(a) la note est affichée dans la fiche');
     let journal = await log(p);
     const add = journal.find((l) => l[0] === 'rpc' && l[1] === 'hg_staff_set');
     check(!!add && add[2].p_user === CHLOE && add[2].p_active === true && add[2].p_perms.includes('cartes') && add[2].p_perms.includes('badges'),
       '(a) hg_staff_set envoyé avec le membre et ses 2 permissions');
 
-    await p.click('.staff-row:has-text("Chloé") [data-staff-off]');
+    await p.click('#staff .ui-btn:has-text("Désactiver")');
     await p.waitForSelector('dialog.hg-dialog[open]', { timeout: 5000 });
     check(await p.isVisible('dialog.hg-dialog[open]'), '(a) désactivation : confirmation demandée');
     await p.click('dialog.hg-dialog[open] button[value="ok"]');
-    await p.waitForSelector('.staff-row.is-off:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
-    check(await p.locator('.staff-row.is-off', { hasText: 'Chloé' }).count() === 1, '(a) Chloé est marquée inactive sans recharger la page');
+    await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé"):has-text("Inactif")', { timeout: 5000 }).catch(() => {});
+    check(await p.locator('#shell-col-list .ui-row:has-text("Inactif")', { hasText: 'Chloé' }).count() === 1, '(a) Chloé est marquée inactive sans recharger la page');
     journal = await log(p);
     const off = journal.find((l) => l[0] === 'rpc' && l[1] === 'hg_staff_set' && l[2].p_active === false);
     check(!!off && off[2].p_user === CHLOE, '(a) désactivation envoyée avec p_active = false (pas de suppression)');

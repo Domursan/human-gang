@@ -46,7 +46,7 @@ const emettre = (p, row) => p.evaluate((r) => {
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
     await adminSection(p, 'pilotage/staff');
-    await p.click('#staff [data-staff-add]');
+    await p.click('#shell-col-list [data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
     await sleep(1500);

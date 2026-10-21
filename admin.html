@@ -50,6 +50,8 @@
   <link rel="stylesheet" href="assets/css/admin-sorties.css">
   <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
   <link rel="stylesheet" href="assets/css/admin-reglages.css">
+  <link rel="stylesheet" href="assets/css/admin-ui.css">
+  <link rel="stylesheet" href="assets/css/admin-pilotage.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="domain" data-info="no">
@@ -110,7 +112,20 @@
   <div id="shell-parking" hidden>
         <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
           <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
-          <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
+          <div class="ov">
+            <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
+            <div class="ov-cols">
+              <div class="card ov-card" id="ov-todo-card">
+                <h3 class="card-title">À traiter</h3>
+                <div id="ov-todo"><div class="empty">Chargement…</div></div>
+              </div>
+              <div class="card ov-card" id="ov-activity-card" hidden>
+                <h3 class="card-title">Activité récente</h3>
+                <div id="ov-activity"><div class="empty">Chargement…</div></div>
+                <p class="small ov-more"><a href="#pilotage/journal">Voir tout le journal</a></p>
+              </div>
+            </div>
+          </div>
         </section>
         <section id="comptes" class="admin-section" aria-labelledby="h-comptes">
           <h2 id="h-comptes" class="section-title">Comptes</h2>

@@ -39,6 +39,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-nav.cjs` | Panel admin : sous-sections montées à la première visite (rien de Cartes, Bot ou Messagerie au chargement), liens directs `#membres/comptes/<id>/<onglet>` (et l'ancienne `#comptes/<id>/<onglet>`) et `#cartes/quetes`, adresse mise à jour par les clics et Précédent, palette « Aller à… » (Ctrl/Cmd+K, sous-sections et fiches, focus piégé), palette limitée aux droits Staff, navigation par domaines à 375 px |
 | `parcours-admin-recherche.cjs` | Panel admin : recherche (Boîte à idées, Journal, Cartes et séries, insensible aux accents et à la casse), « Afficher plus » (Journal, Cartes par lots de 50), fiche membre (au plus 4 requêtes pour l'onglet initial, onglets chargés à la demande, cache de la visite), état d'une action en cours |
 | `parcours-admin-coquille.cjs` | Coquille du panel : rail et colonne de navigation, navigation par domaine et sous-section, URL directe `#membres/comptes`, ancienne ancre `#cartes` redirigée, précédent/suivant, Staff `cartes`+`journal` (Pilotage et Jeu de cartes seulement), mobile 375 px avec barre d’onglets et sans défilement horizontal |
+| `parcours-admin-p2-pilotage.cjs` | Pilotage du panel : Staff (ajout, permissions, barre d’enregistrement, désactivation / réactivation, infos), Journal (puces, recherche, détail avant / après, consultations), Vue d’ensemble (tuiles, « À traiter », activité), Staff `journal` seul, mobile 390 px liste puis détail |
 
 ## Fixtures
 

@@ -109,7 +109,7 @@ const visibleSubs = (p) => p.$$eval('#shell-subs .shell-sub', (as) => as.filter(
     check(!(await p.isVisible('#shell-rail .shell-doms')), '(c) mobile : pas de rail de domaines latéral');
     check(await p.isVisible('#app') && !(await p.isVisible('#shell-col')), '(c) mobile : sans route, la première sous-section s’affiche (écran sous-section)');
     await p.click('#shell-tabs .shell-tab[data-dom="membres"]');
-    await p.waitForFunction(() => location.hash === '#membres/' || /^#membres\//.test(location.hash), null, { timeout: 5000 }).catch(() => {});
+    await p.waitForFunction(() => document.getElementById('shell').dataset.screen === 'domain', null, { timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#shell-col') && await p.isVisible('#shell-subs a[href="#membres/comptes"]'), '(c) mobile : écran Membres, liste des sous-sections');
     await p.click('#shell-subs a[href="#membres/comptes"]');
     check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : écran sous-section, colonne masquée');

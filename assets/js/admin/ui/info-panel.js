@@ -5,13 +5,14 @@
 //   status  : { value, options: [{ id, label, tone }], label? } ; onStatus(id) à la modification
 //   history : [{ id?, title, status { label, tone }, at }] (liste courte, plus récent d'abord)
 //   actions : [{ label, onClick }] boutons pleine largeur en bas (ex. « Ouvrir la fiche membre »)
+//   emptyHistory : texte affiché quand history est vide (défaut « Aucune autre demande. »)
 import { esc, avatarHtml } from '../../core/util.js';
 import { monthYear, fmtDay, seenAgo } from './time.js';
 import { pill, statusSelect, bindStatus, ICON } from './common.js';
 
 let seq = 0;
 
-export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes' } = {}) {
+export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes', emptyHistory = 'Aucune autre demande.' } = {}) {
   const uid = `ui-info-${++seq}`;
   el.classList.add('ui-info');
 
@@ -39,7 +40,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
           <span class="ui-hist-t">${esc(h.title)}</span>
           ${pill(h.status)}
           <span class="ui-hist-d">${esc(fmtDay(h.at))}</span>
-        </li>`).join('')}</ul>` : '<p class="ui-info-empty">Aucune autre demande.</p>'}
+        </li>`).join('')}</ul>` : `<p class="ui-info-empty">${esc(emptyHistory)}</p>`}
     </section>`;
 
   const acts = actions.length ? `<div class="ui-info-actions">${actions.map((a, i) => `<button type="button" class="ui-linkbtn" data-action="${i}">
