@@ -1,0 +1,151 @@
+// Thèmes : constantes, choix du thème du jour et calculs de couleurs. Fonctions pures (sauf la valeur par
+// défaut du mode de themeVars, lue dans les préférences).
+import { getPrefs } from './prefs-state.js';
+
+// Thème de secours (identique au thème « Classique » de la base) : utilisé hors ligne ou avant le chargement.
+export const DEFAULT_THEME = Object.freeze({
+  slug: 'classique', name: 'Classique', is_default: true, active: true, start_md: null, end_md: null, priority: 0,
+  logo_url: null, emojis: ['❤️', '🌈', '✨'], effect: 'etoiles',
+  colors: { accent: '#9E3543', bg: '#0E0E10', surface: '#17171A', text: '#F2EFEA', muted: '#ABA7A0', highlight: '#E2C77E' },
+});
+export const THEME_EFFECTS = { aucun: 'Aucun', pluie: "Pluie d'emojis", neige: 'Neige', etoiles: 'Étoiles scintillantes' };
+export const THEME_COLOR_KEYS = ['accent', 'bg', 'surface', 'text', 'muted', 'highlight'];
+
+/* Anciens thèmes saisonniers (déprécié : utiliser applyTheme / getActiveTheme) */
+export const SEASONS = ['printemps', 'paques', 'ete', 'automne', 'halloween', 'hiver', 'noel'];
+export const SEASON_LABELS = { printemps: 'Printemps', paques: 'Pâques', ete: 'Été', automne: 'Automne', halloween: 'Halloween', hiver: 'Hiver', noel: 'Noël' };
+
+const MD_RE = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const MONTH_DAYS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+/** 'MM-DD' valide (29 février accepté). */
+export function isValidMd(md) {
+  const m = MD_RE.exec(String(md ?? ''));
+  return !!m && Number(m[2]) <= MONTH_DAYS[Number(m[1]) - 1];
+}
+export function todayMd(d = new Date()) {
+  return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+/** La plage [start, end] contient-elle md ? Gère les plages qui passent le nouvel an (12-21 → 03-19). */
+export function mdInRange(md, start, end) {
+  if (!isValidMd(start) || !isValidMd(end)) return false;
+  return start <= end ? md >= start && md <= end : md >= start || md <= end;
+}
+function rangeLength(t) {
+  const n = (md) => { const [m, d] = md.split('-').map(Number); return MONTH_DAYS.slice(0, m - 1).reduce((a, b) => a + b, 0) + d; };
+  const a = n(t.start_md), b = n(t.end_md);
+  return b >= a ? b - a : 366 - a + b;
+}
+/** Dimanche de Pâques (calendrier grégorien). */
+function easterSunday(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+    g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+    l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+    month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(y, month - 1, day);
+}
+/** Le thème « paques » suit automatiquement la date de Pâques : de 7 jours avant au lundi de Pâques. */
+function withDynamicDates(t, date) {
+  if (t.slug !== 'paques') return t;
+  const e = easterSunday(date.getFullYear());
+  const from = new Date(e); from.setDate(e.getDate() - 7);
+  const to = new Date(e); to.setDate(e.getDate() + 1);
+  return { ...t, start_md: todayMd(from), end_md: todayMd(to) };
+}
+
+/**
+ * Choisit le thème : forcé (si le réglage le demande et que le thème existe), sinon le thème actif dont la plage
+ * contient la date avec la plus haute priorité (à égalité : la plage la plus courte), sinon le thème par défaut.
+ */
+export function pickTheme(themes = [], setting = null, date = new Date()) {
+  const list = (Array.isArray(themes) ? themes : []).map((t) => withDynamicDates(t, date));
+  if (setting?.mode === 'forced') {
+    const slug = setting.forced_slug ?? setting.forced; // « forced » = ancien format
+    const f = list.find((t) => t.slug === slug);
+    if (f) return f;
+  }
+  const md = todayMd(date);
+  const hit = list
+    .filter((t) => t.active && !t.is_default && mdInRange(md, t.start_md, t.end_md))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || rangeLength(a) - rangeLength(b) || String(a.name).localeCompare(String(b.name)))[0];
+  return hit ?? list.find((t) => t.is_default) ?? DEFAULT_THEME;
+}
+
+/* Couleurs */
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+export const isHex = (c) => HEX_RE.test(String(c ?? ''));
+function rgb(hex) { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function hex([r, g, b]) { return `#${[r, g, b].map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('')}`; }
+function mix(a, b, t) { const A = rgb(a), B = rgb(b); return hex(A.map((v, i) => v + (B[i] - v) * t)); }
+export function luminance(c) {
+  const [r, g, b] = rgb(c).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+export function contrast(a, b) { const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); }
+/** Assombrit (ou éclaircit) c jusqu'à atteindre le contraste demandé avec `against`. */
+function ensureContrast(c, against, ratio, toward = '#000000') {
+  let x = c;
+  for (let i = 0; i < 24 && contrast(x, against) < ratio; i++) x = mix(x, toward, 0.07);
+  return x;
+}
+function hueSat(c) {
+  const [r, g, b] = rgb(c).map((v) => v / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (!d) return [0, 0];
+  let h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  const l = (max + min) / 2;
+  return [h, d / (1 - Math.abs(2 * l - 1))];
+}
+const isRedOrGreen = (c) => { const [h, s] = hueSat(c); return s > 0.18 && (h < 25 || h > 330 || (h > 70 && h < 170)); };
+
+/**
+ * Variables CSS dérivées d'un objet colors {accent,bg,surface,text,muted,highlight}, composées avec le mode
+ * d'affichage (sombre : couleurs du thème telles quelles ; clair : fond/surface/texte inversés, accent et
+ * surlignage conservés mais assombris si besoin pour rester lisibles ; daltonien : contrastes renforcés,
+ * accent rouge/vert remplacé par du bleu).
+ */
+export function themeVars(colors = {}, mode = getPrefs().mode) {
+  const c = { ...DEFAULT_THEME.colors };
+  for (const k of THEME_COLOR_KEYS) if (isHex(colors[k])) c[k] = colors[k];
+  const accentText = (a) => (contrast(a, '#ffffff') >= contrast(a, '#121212') ? '#ffffff' : '#121212');
+
+  if (mode === 'clair') {
+    const bg = mix('#F5F2ED', c.accent, 0.025), surface = '#FFFFFF', text = '#1B1A1F', muted = '#57534C';
+    const accent = ensureContrast(c.accent, '#FFFFFF', 4.5);
+    const sand = ensureContrast(c.highlight, bg, 4.6);
+    return {
+      '--accent': accent, '--accent-text': accentText(accent),
+      '--bg': bg, '--surface': surface,
+      '--surface-2': mix(bg, text, 0.035),
+      '--border': mix(surface, text, 0.13),
+      '--border-strong': mix(surface, text, 0.26),
+      '--text': text, '--muted': muted,
+      '--sand': sand,
+      '--amber': ensureContrast(mix(c.highlight, c.accent, 0.3), bg, 4.6),
+    };
+  }
+  let accent = c.accent;
+  const dalto = mode === 'daltonien';
+  if (dalto && isRedOrGreen(accent)) accent = '#3A72C2';
+  return {
+    '--accent': accent,
+    '--accent-text': accentText(accent),
+    '--bg': c.bg,
+    '--surface': c.surface,
+    '--surface-2': mix(c.surface, c.text, dalto ? 0.06 : 0.04),
+    '--border': mix(c.surface, c.text, dalto ? 0.16 : 0.085),
+    '--border-strong': mix(c.surface, c.text, dalto ? 0.3 : 0.155),
+    '--text': c.text,
+    '--muted': dalto ? mix(c.muted, c.text, 0.4) : c.muted,
+    '--sand': c.highlight,
+    '--amber': mix(c.highlight, c.accent, 0.3),
+  };
+}
+
+/** Emoji n° i de la liste (modulo le nombre d'emojis), '' s'il n'y en a pas. */
+export function emojiAt(emojis, i = 0) {
+  const list = (emojis || []).filter(Boolean);
+  if (!list.length) return '';
+  const n = Number(i) || 0;
+  return list[((n % list.length) + list.length) % list.length];
+}

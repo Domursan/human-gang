@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -30,7 +30,14 @@ const PRECACHE = [
   'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
   'assets/js/assistance.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js',
-  'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js', 'assets/js/dyn-events.js',
+  'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js',
+  'assets/js/core/badges.js', 'assets/js/core/effects.js', 'assets/js/core/footer.js',
+  'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js',
+  'assets/js/core/icons.js', 'assets/js/core/init.js', 'assets/js/core/pages-access.js',
+  'assets/js/core/prefs-state.js', 'assets/js/core/prefs.js', 'assets/js/core/profile.js',
+  'assets/js/core/supabase.js', 'assets/js/core/theme-calc.js', 'assets/js/core/theme-load.js',
+  'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
+  'assets/js/core/util.js', 'assets/js/dyn-events.js',
   'assets/js/evenements.js', 'assets/js/historique.js', 'assets/js/intro-logo.js',
   'assets/js/intro-redirect.js', 'assets/js/intro.js', 'assets/js/irl-history.js',
   'assets/js/irl.js', 'assets/js/legal.js', 'assets/js/membre.js', 'assets/js/messages.js',

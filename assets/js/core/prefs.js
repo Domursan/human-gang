@@ -1,0 +1,117 @@
+// Préférences d'affichage : modification (setPrefs) et panneau <dialog> « Préférences d'affichage ».
+import { getPrefs, writePrefs, PREF_DEFAULTS } from './prefs-state.js';
+import { paintSiteTheme, paintActiveTheme, getActiveTheme } from './theme.js';
+import { startEffects } from './effects.js';
+import { reducedMotion } from './util.js';
+import { playSound } from '../sound.js';
+import { ICON_CLOSE, ICON_PREFS } from './icons.js';
+
+/** Modifie et enregistre les préférences, puis les applique immédiatement. Renvoie les nouvelles préférences. */
+export function setPrefs(patch = {}) {
+  const before = writePrefs(patch);
+  const after = getPrefs();
+  if (before.special !== after.special) paintSiteTheme();
+  else if (before.mode !== after.mode) paintActiveTheme();
+  else if (before.effects !== after.effects) startEffects(getActiveTheme());
+  syncPrefsDialog();
+  try { window.dispatchEvent(new CustomEvent('hg:prefs', { detail: getPrefs() })); } catch {}
+  return getPrefs();
+}
+export function setEffectsEnabled(on) { setPrefs({ effects: !!on }); }
+
+/* ---------- Panneau « Préférences d'affichage » (<dialog>) ---------- */
+let _prefsDialog = null;
+let _prefsOpener = null;
+function buildPrefsDialog() {
+  const d = document.createElement('dialog');
+  d.className = 'prefs-dialog';
+  d.setAttribute('aria-labelledby', 'prefs-title');
+  const modes = [
+    ['sombre', 'Sombre', 'Par défaut'],
+    ['clair', 'Clair', 'Fond clair, texte foncé'],
+    ['daltonien', 'Daltonien', 'Bleu / orange, contrastes renforcés'],
+  ];
+  d.innerHTML = `<form method="dialog" class="prefs-form">
+      <div class="prefs-head">
+        <h2 id="prefs-title" class="display">Préférences</h2>
+        <button class="prefs-close" type="submit" value="close" aria-label="Fermer les préférences">${ICON_CLOSE}</button>
+      </div>
+      <p class="muted small prefs-note">Enregistrées sur cet appareil seulement.</p>
+      <fieldset class="prefs-modes">
+        <legend>Mode d'affichage</legend>
+        <div class="prefs-mode-grid">
+          ${modes.map(([v, l, s]) => `<label class="mode-opt">
+            <input type="radio" name="mode" value="${v}">
+            <span class="mode-swatch sw-${v}" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="mode-txt"><strong>${l}</strong><small>${s}</small></span>
+          </label>`).join('')}
+        </div>
+      </fieldset>
+      <div class="prefs-switches">
+        <label class="switch-row">
+          <span class="switch-txt"><strong>Thème spécial</strong><small>Thèmes de saison (Noël, Halloween…). Coupé : toujours le thème Classique.</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="special">
+        </label>
+        <label class="switch-row">
+          <span class="switch-txt"><strong>Effets visuels</strong><small class="fx-note">Animations décoratives : étoiles, neige, confettis…</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="effects">
+        </label>
+        <label class="switch-row">
+          <span class="switch-txt"><strong>Sons</strong><small>Petits sons discrets : clics, confirmations, messages, badges.</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="sound">
+        </label>
+        <div class="volume-row">
+          <label for="prefs-volume">Volume</label>
+          <input id="prefs-volume" type="range" name="volume" min="0" max="100" step="5">
+          <output for="prefs-volume" class="volume-out">60 %</output>
+          <button class="btn btn-ghost prefs-test" type="button">Tester</button>
+        </div>
+      </div>
+      <div class="btn-row prefs-actions">
+        <button class="btn btn-ghost prefs-reset" type="button">Réinitialiser</button>
+        <button class="btn btn-primary" type="submit" value="close">Terminé</button>
+      </div>
+    </form>`;
+  const f = d.querySelector('form');
+  f.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.name === 'mode') setPrefs({ mode: el.value });
+    else if (el.name === 'special' || el.name === 'effects') setPrefs({ [el.name]: el.checked });
+    else if (el.name === 'sound') { setPrefs({ sound: el.checked }); if (el.checked) playSound('success'); }
+  });
+  const vol = f.elements.volume;
+  vol.addEventListener('input', () => { setPrefs({ volume: Number(vol.value) / 100 }); });
+  vol.addEventListener('change', () => playSound('click'));
+  f.querySelector('.prefs-test').addEventListener('click', () => playSound('badge'));
+  f.querySelector('.prefs-reset').addEventListener('click', () => { setPrefs({ ...PREF_DEFAULTS }); });
+  d.addEventListener('click', (e) => { if (e.target === d) d.close(); }); // clic sur le fond
+  d.addEventListener('close', () => { _prefsOpener?.focus?.(); _prefsOpener = null; });
+  document.body.append(d);
+  return d;
+}
+function syncPrefsDialog() {
+  const d = _prefsDialog;
+  if (!d) return;
+  const p = getPrefs();
+  const f = d.querySelector('form');
+  for (const r of f.querySelectorAll('input[name="mode"]')) r.checked = r.value === p.mode;
+  f.elements.special.checked = p.special;
+  f.elements.effects.checked = p.effects;
+  f.elements.sound.checked = p.sound;
+  f.elements.volume.value = String(Math.round(p.volume * 100));
+  f.elements.volume.disabled = !p.sound;
+  f.querySelector('.prefs-test').disabled = !p.sound;
+  f.querySelector('.volume-out').textContent = `${Math.round(p.volume * 100)} %`;
+  f.querySelector('.volume-row').classList.toggle('is-off', !p.sound);
+  f.querySelector('.fx-note').textContent = reducedMotion()
+    ? 'Ton appareil demande de réduire les animations : elles restent coupées.'
+    : 'Animations décoratives : étoiles, neige, confettis…';
+}
+/** Ouvre le panneau des préférences d'affichage. */
+export function openPrefs(e) {
+  _prefsDialog ||= buildPrefsDialog();
+  _prefsOpener = e?.currentTarget || document.activeElement;
+  syncPrefsDialog();
+  if (!_prefsDialog.open) _prefsDialog.showModal();
+  _prefsDialog.querySelector('input[name="mode"]:checked')?.focus();
+}
