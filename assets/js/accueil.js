@@ -277,7 +277,9 @@ async function loadHistory() {
 }
 
 /* ---------- Annuaire (partagé par le fil et les anniversaires) ---------- */
-const membersP = sb.rpc('hg_members').then(({ data, error }) => { if (error) throw error; return data || []; });
+// Annuaire : réservé aux membres. Chargé seulement pour un membre connecté (sinon 401 côté visiteur).
+let membersP = null;
+const members = () => (membersP ||= sb.rpc('hg_members').then(({ data, error }) => { if (error) throw error; return data || []; }));
 
 /* ---------- Liens vers la carte d'identité d'un membre ---------- */
 const memberLink = (m, label = m.pseudo) => (canAccess('membre')
@@ -328,13 +330,13 @@ async function loadDynBanner() {
 async function loadFeed() {
   const ul = $('#feed');
   try {
-    const [{ data, error }, members] = await Promise.all([
+    const [{ data, error }, all] = await Promise.all([
       sb.from('hg_activity').select('id,user_id,kind,text,created_at').order('created_at', { ascending: false }).limit(10),
-      membersP.catch(() => []),
+      members().catch(() => []),
     ]);
     if (error) throw error;
     if (!data?.length) { ul.innerHTML = `<li class="empty">Rien pour l'instant. Le fil se remplira au fil des inscriptions, sorties et souvenirs.</li>`; return; }
-    const byId = new Map(members.map((m) => [m.id, m]));
+    const byId = new Map(all.map((m) => [m.id, m]));
     ul.innerHTML = data.map((a) => {
       const m = a.user_id ? byId.get(a.user_id) : null;
       const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" data-on-error="remove"></span>`;
@@ -353,9 +355,9 @@ async function loadFeed() {
 async function loadBirthdays() {
   const ul = $('#bdays');
   try {
-    const members = await membersP;
+    const all = await members();
     const now = new Date(), month = now.getMonth() + 1, today = now.getDate();
-    const list = members
+    const list = all
       .filter((m) => m.birthday_dm && Number(m.birthday_dm.split('.')[1]) === month)
       .map((m) => ({ ...m, day: Number(m.birthday_dm.split('.')[0]) }))
       .sort((a, b) => a.day - b.day || a.pseudo.localeCompare(b.pseudo, 'fr'));

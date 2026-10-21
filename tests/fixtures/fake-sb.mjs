@@ -73,9 +73,14 @@ if (Number.isInteger(S.badgeCount)) {
 window.__DB = DB; window.__LOG = [];
 // Session : un visiteur (S.guest) n'est connecté qu'après signInWithPassword. La session tient dans
 // localStorage, comme le vrai client, pour survivre à la redirection qui suit la connexion.
+// Sans clé enregistrée : visiteur (S.guest) = non connecté, membre = connecté. Après une déconnexion, la clé vaut '0'
+// (le membre reste alors déconnecté, comme en ligne).
 const SESSION_KEY = 'hg_test_session';
-const signed = () => !S.guest || (() => { try { return localStorage.getItem(SESSION_KEY) === '1'; } catch (e) { return false; } })();
-const setSigned = (on) => { try { if (on) localStorage.setItem(SESSION_KEY, '1'); else localStorage.removeItem(SESSION_KEY); } catch (e) { /* stockage indisponible */ } };
+const signed = () => { try { const v = localStorage.getItem(SESSION_KEY); if (v !== null) return v === '1'; } catch (e) { /* stockage indisponible */ } return !S.guest; };
+const setSigned = (on) => { try { localStorage.setItem(SESSION_KEY, on ? '1' : '0'); } catch (e) { /* stockage indisponible */ } };
+// Fonctions SQL exécutables par le rôle anon (sinon : 401 « permission denied » sans session). Relevé en lecture seule
+// sur le projet (has_function_privilege('anon', …)). Toute autre RPC appelée sans session est refusée et journalisée.
+const ANON_OK = new Set(['hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
 let seq = 0;
 const getv = (r, c) => r[c];
 class Q {
@@ -132,11 +137,15 @@ export function createClient() {
         setSigned(true);
         return { data: { session: { user: { id: S.uid || ME } }, user: { id: S.uid || ME } }, error: null };
       },
-      signOut: async () => { setSigned(false); return {}; },
+      signOut: async () => { setSigned(false); window.__LOG.push(['auth', 'signOut']); return {}; },
     },
     from: (t) => new Q(t),
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      if (!signed() && !ANON_OK.has(fn)) { // ce que fait PostgREST sans session : 401, « permission denied »
+        window.__LOG.push(['rpc-401', fn]);
+        return { data: null, error: { message: 'permission denied for function ' + fn, code: '42501' } };
+      }
       if (fn === 'hg_my_pages') {
         if (S.pagesFail) return { data: null, error: { message: 'Failed to fetch' } };
         const uid = S.uid || ME; const adm = DB.hg_profiles.find((p) => p.id === uid)?.is_admin;

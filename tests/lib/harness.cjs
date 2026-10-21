@@ -10,6 +10,9 @@ const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.reso
 const FIXTURES = path.join(TESTS, 'fixtures');
 const SHOTS = path.join(TESTS, 'shots');
 const ORIGIN = 'http://hg.test';
+// Préfixe de chemin : HG_PREFIX=/human-gang sert le site comme GitHub Pages (https://domursan.github.io/human-gang/).
+// Tout chemin hors préfixe (ex. /assets/… à la racine) répond 404, comme en ligne : un chemin absolu cassé se voit.
+const PREFIX = (process.env.HG_PREFIX || '').replace(/\/+$/, '');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain' };
 
 let fails = 0, passes = 0;
@@ -52,7 +55,9 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       return route.fulfill({ status: 204, body: '' });
     }
     if (/\/vendor\/supabase/.test(u.pathname)) return route.fulfill({ body: fakeBody, contentType: 'text/javascript' });
-    let f = path.join(ROOT, decodeURIComponent(u.pathname));
+    if (PREFIX && u.pathname !== PREFIX && !u.pathname.startsWith(PREFIX + '/')) return route.fulfill({ status: 404, body: 'nf' });
+    const rel = u.pathname.slice(PREFIX.length) || '/';
+    let f = path.join(ROOT, decodeURIComponent(rel));
     if (!f.startsWith(ROOT + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
     if (!fs.existsSync(f)) return route.fulfill({ status: 404, body: 'nf' });
@@ -63,7 +68,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });
   page.on('response', (r) => { if (r.status() === 404) page.errs.push('404 ' + r.url()); });
-  await page.goto(`${ORIGIN}/${slug}.html`);
+  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html`);
   await sleep(1200);
   page.ctx = ctx;
   return page;
@@ -75,4 +80,4 @@ const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWid
 /** Journal des appels du faux client (rpc, from, fn, auth…). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
-module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, check, finish, openPage, hscroll, log, sleep, chromium };
+module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, hscroll, log, sleep, chromium };

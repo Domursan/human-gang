@@ -2,7 +2,7 @@
 // Contrôle d'INTERFACE : masque les liens et renvoie vers l'accueil. Les données restent protégées par les
 // règles de la base. Les pages non déclarées dans hg_pages (compte, legal, assistance, rejoindre, admin…)
 // ne sont pas concernées. En cas d'échec réseau, rien n'est bloqué.
-import { sb } from './supabase.js';
+import { sb, hasSession, isNavCancel } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 
 let _pages = null; // { declared: Map slug -> {slug,label,mode,in_nav,sort}, mine: [{slug,label,in_nav,sort}], set: Set }
@@ -18,6 +18,7 @@ export function loadMyPages({ force = false } = {}) {
   if (_pagesLoading && !force) return _pagesLoading;
   _pagesLoading = (async () => {
     try {
+      if (!(await hasSession())) return getMyPages(); // sans session : rien à charger (hg_my_pages est réservée aux membres)
       const [all, mine] = await Promise.all([
         sb.from('hg_pages').select('slug, label, mode, in_nav, sort'),
         sb.rpc('hg_my_pages'),
@@ -32,7 +33,7 @@ export function loadMyPages({ force = false } = {}) {
         set: new Set(list.map((p) => p.slug)),
       };
     } catch (e) {
-      console.warn('[accès aux pages]', e?.message || e);
+      if (!isNavCancel(e)) console.warn('[accès aux pages]', e?.message || e);
       _pages = null;
     }
     return getMyPages();

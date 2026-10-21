@@ -55,6 +55,7 @@ const PRECACHE = [
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
   'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js',
   'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
+  'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
 ];

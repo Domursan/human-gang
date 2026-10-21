@@ -4,7 +4,7 @@
 //   puis 1 à max_per_page apparitions à des moments aléatoires (≈ 5 à 40 s). Clic / tap / Entrée → rpc hg_dyn_capture.
 // Sans mouvement (prefers-reduced-motion ou effets coupés) : l'image apparaît en fondu, immobile, dans un coin.
 // Le calque est en position fixe au-dessus du contenu, sans capter les clics (seule l'image est cliquable).
-import { sb, toast, esc, playSound, motionAllowed, checkNewBadges, isGodMode } from './core.js';
+import { sb, toast, esc, playSound, motionAllowed, checkNewBadges, isGodMode, hasSession, isNavCancel } from './core.js';
 import { rnd } from './utils.js';
 
 const FALLBACK_EMOJI = '✨';
@@ -23,11 +23,12 @@ export function getActiveDynEvents({ force = false } = {}) {
   if (_active && !force) return _active;
   _active = (async () => {
     try {
+      if (!(await hasSession())) return []; // déconnecté : hg_dyn_active est réservée aux membres
       const { data, error } = await sb.rpc('hg_dyn_active');
       if (error) throw error;
       return Array.isArray(data) ? data : [];
     } catch (e) {
-      console.warn('[événements]', e?.message || e);
+      if (!isNavCancel(e)) console.warn('[événements]', e?.message || e);
       return [];
     }
   })();
@@ -239,7 +240,7 @@ async function forceAllDynEvents() {
 let _started = false;
 /** Lance les apparitions de la page pour un membre. Ne jette jamais. */
 export async function startDynEvents(profile) {
-  if (_started || !profile?.id) return;
+  if (_started || !profile?.id || !(await hasSession())) return;
   _started = true;
   try {
     if (profile.is_admin) {
@@ -263,7 +264,7 @@ export async function startDynEvents(profile) {
         for (const t of times) {
           await sleep(t - t0); t0 = t;
           await waitVisible();
-          if (exhausted()) return;
+          if (exhausted() || !(await hasSession())) return;
           await flyDynImage(ev, {
             onCatch: (res) => {
               if (res?.ok) { state.mine = Number(res.mine) || state.mine + 1; if (state.remaining != null) state.remaining--; }
