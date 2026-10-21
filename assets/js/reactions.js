@@ -19,7 +19,7 @@ export async function loadReactions(kind, ids, uid = null) {
   for (const id of list) cache.set(key(kind, id), []);
   for (let i = 0; i < list.length; i += CHUNK) {
     const { data, error } = await sb.from('hg_reactions')
-      .select('target_id,emoji,user_id').eq('target_kind', kind).in('target_id', list.slice(i, i + CHUNK));
+      .select('target_id,emoji,user_id').eq('target_kind', kind).eq('active', true).in('target_id', list.slice(i, i + CHUNK));
     if (error) { console.warn('[reactions]', error); continue; }
     for (const r of data || []) cache.get(key(kind, r.target_id))?.push({ emoji: r.emoji, user_id: r.user_id });
   }
