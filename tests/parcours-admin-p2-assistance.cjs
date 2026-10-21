@@ -109,8 +109,8 @@ const dbRows = (p, table) => p.evaluate((t) => window.__DB[t].map((r) => ({ ...r
     await p.click('#shell-info .ui-linkbtn');
     await p.waitForFunction(() => location.hash.startsWith('#membres/comptes/'), null, { timeout: 4000 }).catch(() => {});
     check((await p.evaluate(() => location.hash)).startsWith('#membres/comptes/'), '(a) « Ouvrir la fiche membre » : URL #membres/comptes/<id>');
-    await p.waitForSelector('#acc-panel .acc-ident-name', { timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('#acc-panel .acc-ident-name'), '(a) « Ouvrir la fiche membre » : la fiche du membre s’affiche');
+    await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 5000 }).catch(() => {});
+    check(await p.isVisible('#acc-dh .ui-dhead-t') && (await p.textContent('#acc-dh .ui-dhead-t')).includes('Alice'), '(a) « Ouvrir la fiche membre » : la fiche d’Alice s’affiche');
     await p.goBack();
     await p.waitForFunction(() => location.hash === '#communication/assistance/sup-1', null, { timeout: 4000 }).catch(() => {});
     check(await p.evaluate(() => location.hash) === '#communication/assistance/sup-1', '(a) Précédent : retour à la demande sélectionnée');

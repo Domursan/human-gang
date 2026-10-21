@@ -6,6 +6,8 @@ import { sb, toast, errMsg, esc, $, fmtDate, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { fmtDay } from './utils.js';
+import { createList } from './admin/ui/list.js';
+import { renderDetailHeader } from './admin/ui/detail-header.js';
 
 const IC = {
   copy: svg('copy', { stroke: 2 }),
@@ -19,6 +21,8 @@ const G = {
   list: [], error: null,            // fantômes
   sugg: [], suggError: null,        // correspondances possibles (hg_ghost_suggestions)
   merge: null,                      // liaison en cours : { ghostId, slot, memberId, memberPseudo, members, loading, error, busy }
+  selectedId: null, loaded: false,  // fantôme affiché (URL), premier chargement terminé
+  pending: null,                    // liaison demandée depuis une correspondance, appliquée à l'affichage du fantôme
 };
 
 function check(res) { if (res.error) throw res.error; return res.data; }
@@ -106,39 +110,28 @@ function reasonHtml(reason) {
   return parts.length ? parts.join(' et ') : esc(reason || 'correspondance');
 }
 
-function itemHtml(g) {
+/** Corps de la fiche d'un fantôme : note privée, code d'invitation, liaison (sous l'en-tête commun). */
+function ghostBodyHtml(g) {
   const active = ghostCodeActive(g);
   const link = active ? ghostInviteLink(g.invite_code) : '';
   return `
-    <li class="agh-item" data-id="${esc(g.id)}">
-      <div class="agh-head">
-        ${avatarHtml({ pseudo: g.pseudo, avatar_url: g.avatar_url }, 44)}
-        <div class="agh-who">
-          <strong class="agh-name">${esc(g.pseudo)} <span class="pill pill-muted">(fantôme)</span></strong>
-          <span class="small muted">Arrivée : ${g.joined_on ? esc(fmtDay(g.joined_on)) : 'non renseignée'} · préparé le ${esc(fmtDate(g.created_at))}</span>
-        </div>
-      </div>
-      ${g.ghost_note ? `<p class="agh-note"><span class="agh-k">Note privée</span> ${esc(g.ghost_note)}</p>` : ''}
-      <div class="agh-code">
-        ${active ? `
-          <div class="agh-code-line"><span class="agh-k">Code</span><span class="code agh-code-val">${esc(g.invite_code)}</span>
-            <span class="small muted">valable jusqu'au ${esc(fmtDate(g.invite_expires_at))}</span></div>
-          <label class="visually-hidden" for="agh-link-${esc(g.id)}">Lien d'inscription de ${esc(g.pseudo)}</label>
-          <input id="agh-link-${esc(g.id)}" class="agh-link" readonly value="${esc(link)}">
-          <div class="agh-btns">
-            <button class="btn btn-ghost btn-sm" type="button" data-agh="copy-code" data-code="${esc(g.invite_code)}">${IC.copy} Copier le code</button>
-            <button class="btn btn-ghost btn-sm" type="button" data-agh="copy-link" data-link="${esc(link)}">${IC.link} Copier le lien</button>
-          </div>`
-          : `<p class="small muted">${g.invite_code ? 'Code expiré.' : 'Aucun code actif.'} Génère-en un pour que la personne puisse s'inscrire.</p>`}
-      </div>
+    ${g.ghost_note ? `<p class="agh-note"><span class="agh-k">Note privée</span> ${esc(g.ghost_note)}</p>` : ''}
+    <div class="agh-code">
+      ${active ? `
+        <div class="agh-code-line"><span class="agh-k">Code</span><span class="code agh-code-val">${esc(g.invite_code)}</span>
+          <span class="small muted">valable jusqu'au ${esc(fmtDate(g.invite_expires_at))}</span></div>
+        <label class="visually-hidden" for="agh-link-${esc(g.id)}">Lien d'inscription de ${esc(g.pseudo)}</label>
+        <input id="agh-link-${esc(g.id)}" class="agh-link" readonly value="${esc(link)}">
+        <div class="agh-btns">
+          <button class="btn btn-ghost btn-sm" type="button" data-agh="copy-code" data-code="${esc(g.invite_code)}">${IC.copy} Copier le code</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-agh="copy-link" data-link="${esc(link)}">${IC.link} Copier le lien</button>
+        </div>`
+        : `<p class="small muted">${g.invite_code ? 'Code expiré.' : 'Aucun code actif.'} Génère-en un pour que la personne puisse s'inscrire.</p>`}
       <div class="agh-actions">
         <button class="btn btn-primary btn-sm" type="button" data-agh="invite">${active ? 'Régénérer le code d\'invitation' : 'Générer le code d\'invitation'}</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-agh="fiche">Compléter la fiche</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-agh="link">${IC.merge} Lier à un compte inscrit</button>
-        <button class="btn btn-danger btn-sm" type="button" data-agh="delete">${IC.trash} Supprimer le fantôme</button>
       </div>
-      <div class="agh-merge-slot" data-slot="${esc(`item-${g.id}`)}"></div>
-    </li>`;
+    </div>
+    <div class="agh-merge-slot" data-slot="${esc(`item-${g.id}`)}"></div>`;
 }
 
 function renderSugg() {
@@ -159,19 +152,98 @@ function renderSugg() {
           data-ghost="${esc(s.ghost_id)}" data-user="${esc(s.user_id)}" data-pseudo="${esc(s.user_pseudo || '')}"
           aria-label="Lier le compte ${esc(s.user_pseudo || '')} au fantôme ${esc(s.ghost_pseudo)}">Lier</button>
       </div>
-      <div class="agh-merge-slot" data-slot="${esc(`sugg-${s.ghost_id}-${s.user_id}`)}"></div>
     </li>`).join('');
 }
 
-function renderList() {
-  const box = G.root?.querySelector('#agh-list');
-  if (!box) return;
-  const count = G.root.querySelector('#agh-count');
-  if (G.error) { box.innerHTML = `<div class="empty">Impossible de charger les fantômes : ${esc(errMsg(G.error))}</div>`; if (count) count.textContent = ''; return; }
-  if (count) count.textContent = `${G.list.length} fantôme${G.list.length > 1 ? 's' : ''}`;
-  box.innerHTML = G.list.length
-    ? G.list.map(itemHtml).join('')
-    : '<div class="empty">Aucun fantôme pour l\'instant.</div>';
+/* ---------- Liste (colonne 2) et zone principale ---------- */
+const NEW = 'nouveau';
+let ghostList = null;
+
+function ghostItems() {
+  return G.list.map((g) => ({
+    id: g.id,
+    name: g.pseudo,
+    member: { pseudo: g.pseudo, avatar_url: g.avatar_url },
+    excerpt: g.joined_on ? `Arrivée : ${fmtDay(g.joined_on)}` : 'Arrivée non renseignée',
+    status: ghostCodeActive(g) ? { id: 'code', label: 'Code actif', tone: 'done' } : { id: 'nocode', label: 'Sans code', tone: 'muted' },
+  }));
+}
+
+/** Monte la liste des fantômes dans la colonne 2 (fournisseur `list` de la sous-section). */
+export function mountGhostsList(el) {
+  ghostList = createList(el, {
+    items: ghostItems(),
+    key: 'id',
+    label: 'Comptes fantômes',
+    search: { placeholder: 'Pseudo du fantôme', label: 'Rechercher un fantôme', fields: (it) => it.name },
+    filters: [
+      { id: 'code', label: 'Code actif', test: (it) => it.status?.id === 'code' },
+      { id: 'nocode', label: 'Sans code', test: (it) => it.status?.id === 'nocode' },
+    ],
+    selectedId: G.selectedId,
+    empty: G.error ? `Impossible de charger les fantômes : ${errMsg(G.error)}` : 'Aucun fantôme pour l’instant.',
+    onSelect: (it) => { location.hash = `#membres/fantomes/${it.id}`; },
+  });
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn btn-primary btn-sm agh-new';
+  b.textContent = '+ Nouveau fantôme';
+  b.addEventListener('click', () => { location.hash = `#membres/fantomes/${NEW}`; });
+  el.prepend(b);
+}
+
+/** Fournisseur `open` : affiche le fantôme de l'URL (ou le formulaire si #…/nouveau, ou l'accueil de la section). */
+export function showGhost(id) {
+  G.selectedId = id || null;
+  renderMain();
+  ghostList?.select(G.selectedId);
+  const p = G.pending;
+  if (p && p.ghostId === id) {
+    G.pending = null;
+    openMerge(p.ghostId, `item-${p.ghostId}`, { id: p.userId, pseudo: p.pseudo });
+  }
+}
+
+function goGhost(id) {
+  const h = `#membres/fantomes${id ? `/${id}` : ''}`;
+  if (location.hash === h) showGhost(id); else location.hash = h;
+}
+
+/** Zone principale : formulaire, fiche d'un fantôme, ou accueil (sans sélection). */
+function renderMain() {
+  const view = G.root?.querySelector('#agh-view'); if (!view) return;
+  const sel = G.selectedId;
+  if (sel === NEW) {
+    view.innerHTML = `<div class="card agh-card">
+        <p class="agh-lead">Prépare un profil avant l'inscription. Invisible pour les membres. La personne le récupère en s'inscrivant avec son code nominatif, ou avec n'importe quel lien si elle choisit exactement le même pseudo. Tu peux aussi le lier plus tard à un compte déjà inscrit.</p>
+        ${formHtml()}
+      </div>`;
+  } else if (sel) {
+    const g = G.list.find((x) => x.id === sel);
+    if (!g) {
+      view.innerHTML = G.error ? `<div class="empty">Impossible de charger les fantômes : ${esc(errMsg(G.error))}</div>`
+        : G.loaded ? '<div class="empty">Ce fantôme n’existe plus.</div>' : '<div class="empty">Chargement…</div>';
+    } else {
+      view.innerHTML = `<div id="agh-dh"></div><div class="card agh-card agh-detail">${ghostBodyHtml(g)}</div>`;
+      renderDetailHeader(view.querySelector('#agh-dh'), {
+        member: { pseudo: g.pseudo, avatar_url: g.avatar_url },
+        title: `${g.pseudo} (fantôme)`,
+        subtitle: `Pas encore inscrit · ${g.joined_on ? `arrivée ${fmtDay(g.joined_on)}` : 'arrivée non renseignée'} · préparé le ${fmtDate(g.created_at)}`,
+        actions: [
+          { label: 'Compléter la fiche', onClick: () => G.openFiche?.(g.id) },
+          { label: 'Lier à un compte', onClick: () => openMerge(g.id, `item-${g.id}`) },
+          { label: 'Supprimer', onClick: () => removeGhost(g, null) },
+        ],
+      });
+    }
+  } else {
+    view.innerHTML = `<div class="card agh-card agh-hint">
+        <p class="acc-empty-t">Choisis un fantôme dans la liste</p>
+        <p class="small muted">Chaque fantôme garde son code d'invitation, sa note privée et, si besoin, sa liaison à un compte déjà inscrit.</p>
+        <div class="btn-row"><button class="btn btn-primary" type="button" data-agh="new">+ Nouveau fantôme</button></div>
+      </div>`;
+  }
+  paintMerge();
 }
 
 function renderLists() {
@@ -179,8 +251,8 @@ function renderLists() {
   // Une liaison dont le fantôme a disparu n'a plus de sens.
   if (G.merge && !G.error && !G.list.some((g) => g.id === G.merge.ghostId)) G.merge = null;
   renderSugg();
-  renderList();
-  paintMerge();
+  ghostList?.update(ghostItems());
+  renderMain();
 }
 
 /* ---------- Panneau de liaison (dans la fiche du fantôme ou sous la correspondance) ---------- */
@@ -282,31 +354,12 @@ async function confirmMerge() {
     const moved = Number(typeof row === 'object' && row !== null ? row.moved : row) || 0;
     G.merge = null;
     toast(`« ${ghost?.pseudo ?? 'Fantôme'} » lié à « ${member.pseudo} » : ${moved} élément${moved > 1 ? 's' : ''} transféré${moved > 1 ? 's' : ''}`, 'ok');
+    if (G.selectedId === m.ghostId) location.hash = '#membres/fantomes';
     await refreshGhostsSection();
     try { await G.onChange(); } catch (e) { console.warn('[fantômes] resynchronisation', e); }
   } catch (e) {
     if (G.merge === m) { m.busy = false; m.error = errMsg(e); syncMerge(); }
   }
-}
-
-function renderInitialShell(root) {
-  root.innerHTML = `
-    <section class="card agh-card agh-sugg" id="agh-sugg" aria-labelledby="agh-sugg-t" hidden>
-      <div class="agh-list-head"><h3 class="card-title" id="agh-sugg-t">Correspondances possibles</h3></div>
-      <p class="small muted">Ces comptes inscrits ressemblent à un fantôme (même ID Discord ou même pseudo). Lie-les pour tout transférer.</p>
-      <ul class="agh-sugg-list" id="agh-sugg-list"></ul>
-    </section>
-    <div class="card agh-card">
-      <p class="agh-lead">Prépare un profil avant l'inscription. Invisible pour les membres. La personne le récupère en s'inscrivant avec son code nominatif, ou avec n'importe quel lien si elle choisit exactement le même pseudo. Tu peux aussi le lier plus tard à un compte déjà inscrit.</p>
-      ${formHtml()}
-    </div>
-    <div class="card agh-card">
-      <div class="agh-list-head">
-        <h3 class="card-title">Fantômes en attente</h3>
-        <p class="small muted" id="agh-count" aria-live="polite"></p>
-      </div>
-      <ul class="agh-list" id="agh-list"><li class="empty">Chargement…</li></ul>
-    </div>`;
 }
 
 /* ---------- Actions ---------- */
@@ -343,6 +396,7 @@ async function removeGhost(g, btn) {
     // Sans policy DELETE sur hg_profiles, Supabase n'échoue pas : il supprime 0 ligne. On le signale.
     if (!rows?.length) throw new Error('Suppression refusée par la base : aucune règle DELETE sur hg_profiles pour l\'admin.');
     toast('Fantôme supprimé', 'ok');
+    if (location.hash.startsWith('#membres/fantomes/')) location.hash = '#membres/fantomes';
     await refreshGhostsSection();
     await G.onChange();
   });
@@ -350,12 +404,18 @@ async function removeGhost(g, btn) {
 
 /* ---------- Montage ---------- */
 /**
- * Monte la section « Comptes fantômes ». openFiche(id) ouvre la fiche (admin-accounts.js) ;
+ * Monte la zone principale de « Comptes fantômes ». openFiche(id) ouvre la fiche du membre (admin-accounts.js) ;
  * onChange() resynchronise les autres sections (liste des comptes, sélecteurs de membres).
  */
 export function mountGhostsSection(root, { openFiche, onChange } = {}) {
   G.root = root; G.openFiche = openFiche || null; G.onChange = onChange || (async () => {});
-  renderInitialShell(root);
+  root.innerHTML = `
+    <section class="card agh-card agh-sugg" id="agh-sugg" aria-labelledby="agh-sugg-t" hidden>
+      <div class="agh-list-head"><h3 class="card-title" id="agh-sugg-t">Correspondances possibles</h3></div>
+      <p class="small muted">Ces comptes inscrits ressemblent à un fantôme (même ID Discord ou même pseudo). Lie-les pour tout transférer.</p>
+      <ul class="agh-sugg-list" id="agh-sugg-list"></ul>
+    </section>
+    <div id="agh-view"></div>`;
 
   root.addEventListener('submit', (ev) => {
     if (ev.target.id !== 'agh-form') return;
@@ -381,11 +441,12 @@ export function mountGhostsSection(root, { openFiche, onChange } = {}) {
     if (act === 'copy-link') return copyText(b.dataset.link, 'Lien copié');
     if (act === 'merge-cancel') { G.merge = null; return paintMerge(); }
     if (act === 'merge-confirm') return confirmMerge();
+    if (act === 'new') return goGhost(NEW);
     if (act === 'sugg-link') {
-      return openMerge(b.dataset.ghost, `sugg-${b.dataset.ghost}-${b.dataset.user}`, { id: b.dataset.user, pseudo: b.dataset.pseudo });
+      G.pending = { ghostId: b.dataset.ghost, userId: b.dataset.user, pseudo: b.dataset.pseudo };
+      return goGhost(b.dataset.ghost);
     }
-    const item = b.closest('[data-id]');
-    const g = G.list.find((x) => x.id === item?.dataset.id);
+    const g = G.list.find((x) => x.id === G.selectedId);
     if (!g) return;
     if (act === 'link') return openMerge(g.id, `item-${g.id}`);
     if (act === 'fiche') return G.openFiche?.(g.id);
@@ -394,11 +455,12 @@ export function mountGhostsSection(root, { openFiche, onChange } = {}) {
   });
 }
 
-/** Recharge les fantômes et les correspondances, puis réaffiche la section. */
+/** Recharge les fantômes et les correspondances, puis réaffiche la liste et la zone principale. */
 export async function refreshGhostsSection() {
   const [list, sugg] = await Promise.allSettled([fetchAdminGhosts(), fetchSuggestions()]);
   if (list.status === 'fulfilled') { G.list = list.value; G.error = null; }
   else { G.error = list.reason; }
+  G.loaded = true;
   if (sugg.status === 'fulfilled') { G.sugg = sugg.value; G.suggError = null; }
   else { G.sugg = []; G.suggError = sugg.reason; console.warn('[fantômes] correspondances', sugg.reason); }
   renderLists();

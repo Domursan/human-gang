@@ -4,15 +4,14 @@ import { confirmBox } from '../ui-confirm.js';
 import { safeUrl } from '../utils.js';
 import { busy, check, fromLocalInput } from './common.js';
 import { A, IDEA } from './state.js';
-import { loadAccounts, renderList, renderRows } from './list.js';
-import { openAccount, selectTab, renderPanel, renderDetail, reloadDetail } from './fiche.js';
+import { loadAccounts, paintAccountsList } from './list.js';
+import { selectTab, renderPanel, renderDetail, reloadDetail } from './fiche.js';
 import { closeDetail } from './inspect.js';
 import { saveProfile, saveInfos } from './profile.js';
 import { ssJoin, ssLeave, setPair, clearPair, curEdition } from './ss.js';
 import { setRsvp, deletePhoto, toggleBadge } from './activity.js';
 import { setAccess, accessPages } from '../admin-access.js';
 import { bindSharedFields } from './ss-shared.js';
-import { PAGE_SIZE, SEARCH_DELAY } from '../admin/list-tools.js';
 
 /* =========================================================
    Événements de la section Comptes
@@ -21,10 +20,6 @@ function bindAccounts() {
   const sec = $('#comptes');
   let searchTimer = 0;
   sec.addEventListener('input', (ev) => {
-    if (ev.target.id === 'acc-q') {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { A.q = ev.target.value; A.shown = PAGE_SIZE; renderRows(); }, SEARCH_DELAY);
-    }
     if (ev.target.id === 'ap-joined') { const b = $('[data-act="clear-joined"]', sec); if (b) b.disabled = !ev.target.value; }
   });
   sec.addEventListener('keydown', (ev) => {
@@ -39,8 +34,6 @@ function bindAccounts() {
   sec.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t || t.disabled) return;
-    if (t.dataset.more === 'accounts') { A.shown += PAGE_SIZE; return renderRows(); }
-    if (t.dataset.open) return openAccount(t.dataset.open);
     if (t.dataset.tab) return selectTab(t.dataset.tab);
     const act = t.dataset.act;
     if (act === 'back') { closeDetail(); return; }
@@ -148,5 +141,5 @@ export async function initAccounts({ me, onChange }) {
   bindAccounts();
   bindSharedFields();
   try { await loadAccounts(); } catch (e) { A.listError = e; }
-  renderList();
+  paintAccountsList();
 }

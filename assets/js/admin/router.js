@@ -6,7 +6,6 @@
 // - Un domaine ou une sous-section sans droit renvoie vers la première sous-section permise (ou null : aucun accès).
 // - Les fiches membres (#comptes/<id>[/<onglet>], ancienne adresse) sont redirigées vers #membres/comptes/<id>[/<onglet>].
 import { DOMAINS, visibleDomains } from './perms.js';
-import { A } from '../admin-accounts/state.js';
 
 // Ancienne ancre -> route : la sous-section de même nom que la section, sinon la première qui la monte.
 const LEGACY = {};
@@ -51,22 +50,4 @@ export function resolve(hash, { mobile = false } = {}) {
   const sub = visible.subs.find((s) => s.id === b);
   if (!sub) return { redirect: fallback };
   return { dom: visible, sub, id, tab };
-}
-
-/**
- * Clics et saisies dans la fiche d'un membre : l'adresse suit le compte ouvert et l'onglet choisi (sans entrée d'historique).
- * Ne réagit qu'aux événements de la section Comptes (ou de la barre « Vue admin ») : une navigation lancée depuis la palette
- * ne doit pas être réécrite avant que la fiche ne soit ouverte.
- */
-export function bindFicheHash() {
-  const inFiche = (e) => e.composedPath().some((n) => n instanceof Element && (n.id === 'comptes' || n.classList.contains('insp-bar')));
-  const sync = (e) => {
-    if (!inFiche(e) || !location.hash.startsWith('#membres/comptes')) return;
-    const want = A.uid
-      ? `membres/comptes/${A.uid}${A.tab && A.tab !== 'profil' ? `/${A.tab}` : ''}`
-      : 'membres/comptes';
-    if (location.hash !== '#' + want) history.replaceState(null, '', '#' + want);
-  };
-  document.addEventListener('click', sync);
-  document.addEventListener('keydown', sync);
 }

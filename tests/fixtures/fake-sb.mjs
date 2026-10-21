@@ -324,6 +324,7 @@ export function createClient() {
         else DB.hg_staff.push({ user_id: args.p_user, perms, active: args.p_active ?? true, note: args.p_note ?? '', added_by: ME, created_at: now, updated_at: now });
         return { data: null, error: null };
       }
+      if (fn === 'hg_admin_ghosts') return { data: window.__SCN?.ghosts ?? [], error: null }; // fantômes : fournis par le scénario du test
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
     },

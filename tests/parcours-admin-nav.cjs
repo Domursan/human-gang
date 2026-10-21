@@ -57,16 +57,16 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
 
   /* ---------- (b) Liens directs ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, hash: `#membres/comptes/${BRUNO}/badges` });
-  await p.waitForSelector('.acc-ident-name', { timeout: 8000 });
-  check(await p.textContent('.acc-ident-name') === 'Bruno', '(b) #membres/comptes/<id>/badges : la fiche de Bruno s\'ouvre');
+  await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 8000 });
+  check(await p.textContent('#acc-dh .ui-dhead-t') === 'Bruno', '(b) #membres/comptes/<id>/badges : la fiche de Bruno s\'ouvre');
   check(await p.getAttribute('#acc-tab-badges', 'aria-selected') === 'true', '(b) #membres/comptes/<id>/badges : l\'onglet Badges est sélectionné');
 
   await p.ctx.close();
   // Ancienne adresse #comptes/<id>/<onglet> : redirigée vers la nouvelle route, la fiche et l'onglet s'ouvrent
   p = await openPage(browser, { page: 'admin', width: 1280, hash: `#comptes/${BRUNO}/badges` });
-  await p.waitForSelector('.acc-ident-name', { timeout: 8000 });
+  await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 8000 });
   check(await p.evaluate(() => location.hash) === `#membres/comptes/${BRUNO}/badges`, '(b) ancienne adresse #comptes/<id>/<onglet> : redirigée vers #membres/comptes/<id>/<onglet>');
-  check(await p.textContent('.acc-ident-name') === 'Bruno', '(b) ancienne adresse : la fiche de Bruno s\'ouvre');
+  check(await p.textContent('#acc-dh .ui-dhead-t') === 'Bruno', '(b) ancienne adresse : la fiche de Bruno s\'ouvre');
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', width: 1280, hash: '#cartes/quetes' });
@@ -84,7 +84,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   // Adresse mise à jour par les clics, Précédent qui y revient
   p = await openPage(browser, { page: 'admin', width: 1280 });
   await adminSection(p, 'membres/comptes');
-  await p.click(`[data-open="${CHLOE}"]`);
+  await p.click(`#shell-col-list .ui-row[data-id="${CHLOE}"]`);
   await p.waitForFunction((id) => location.hash === '#membres/comptes/' + id, CHLOE, { timeout: 5000 });
   check(true, '(b) clic sur un compte : l\'adresse devient #membres/comptes/<id>');
   await p.click('#acc-tab-infos');
@@ -95,9 +95,9 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.goBack();
   await p.waitForFunction(() => location.hash.startsWith('#membres/comptes/'), null, { timeout: 5000 });
   await p.waitForSelector('#acc-tab-infos[aria-selected="true"]', { timeout: 5000 });
-  check(await p.textContent('.acc-ident-name') === 'Chloé', '(b) Précédent : revient à la fiche et à l\'onglet ouverts');
+  check(await p.textContent('#acc-dh .ui-dhead-t') === 'Chloé', '(b) Précédent : revient à la fiche et à l\'onglet ouverts');
   await p.evaluate(() => { location.hash = 'membres/comptes'; });
-  await p.waitForSelector('#acc-list', { timeout: 5000 });
+  await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
   check(await p.locator('.acc-tabs').count() === 0, '(b) #membres/comptes : retour à la liste (fiche fermée)');
   await p.ctx.close();
 
@@ -130,8 +130,8 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.keyboard.press('ArrowUp');
   await p.keyboard.press('Enter');
   await p.waitForFunction((id) => location.hash === '#membres/comptes/' + id, BRUNO, { timeout: 5000 });
-  await p.waitForSelector('.acc-ident-name', { timeout: 5000 });
-  check(await p.textContent('.acc-ident-name') === 'Bruno', '(c) Entrée sur un membre : la fiche s\'ouvre');
+  await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 5000 });
+  check(await p.textContent('#acc-dh .ui-dhead-t') === 'Bruno', '(c) Entrée sur un membre : la fiche s\'ouvre');
   await p.close();
   await p.ctx.close();
 

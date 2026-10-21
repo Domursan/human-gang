@@ -8,8 +8,8 @@ import { mountThemesSection } from './admin-themes.js';
 import { mountMessagesSection } from './admin-messages.js';
 import { mountLogSection, listLog, openLog } from './admin-log.js';
 import { mountBotSection } from './admin-bot.js';
-import { initAccounts, refreshAccounts, openAccountFiche } from './admin-accounts.js';
-import { mountGhostsSection, refreshGhostsSection } from './admin-ghosts.js';
+import { initAccounts, refreshAccounts, showAccount, emptyDetail, mountAccountsList, mountAccountsInfo } from './admin-accounts.js';
+import { mountGhostsSection, refreshGhostsSection, mountGhostsList, showGhost } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { mountEventsSection } from './admin-events.js';
@@ -19,8 +19,7 @@ import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staf
 import { mountSortiesSection } from './admin-sorties/index.js';
 import { mountSouvenirsSection } from './admin-souvenirs/index.js';
 import { mountReglagesSection } from './admin-reglages/view.js';
-import { A, TABS } from './admin-accounts/state.js';
-import { closeDetail } from './admin-accounts/inspect.js';
+import { A } from './admin-accounts/state.js';
 import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
@@ -35,7 +34,6 @@ import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
 import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
-import { bindFicheHash } from './admin/router.js';
 
 const me = await initPage({ auth: 'admin' });
 applyPanelAccess();
@@ -54,7 +52,7 @@ function loadAccountsPanel() {
   return initAccounts({
     me,
     onChange: async (kind) => {
-      if (kind === 'members') { if (has('membres')) refreshAccessSection(); await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (S.ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
+      if (kind === 'members') { await refreshAccounts(); if (has('membres')) refreshAccessSection(); await loadMembers(); renderInvites(); refreshInviteLinks(); renderBadges(); if (S.ssLoaded) renderSS(); renderIdeas(); renderSupport(); renderStats(); }
       if (kind === 'badges') { await loadBadges(); renderBadges(); }
       if (kind === 'ss') { await loadEditionDetails(); if (S.ssLoaded) renderSS(); renderStats(); }
       if (kind === 'ideas') { await loadIdeas(); renderIdeas(); renderStats(); }
@@ -62,12 +60,12 @@ function loadAccountsPanel() {
     },
   });
 }
-// Ouvre la fiche d'un membre (adresse #membres/comptes/<id>[/<onglet>]) ; sans identifiant, la fiche se ferme.
+// Fournisseur `open` de Comptes : adresse #membres/comptes/<id>[/<onglet>] ; sans identifiant, la zone principale est vide.
 async function openFicheRoute(_el, { id, tab }) {
-  if (!id) { if (A.uid) closeDetail(); return; }
+  if (!id) { emptyDetail(); return; }   // #membres/comptes : la zone principale invite à choisir dans la liste
   await ensureAccounts();
   if (!A.accounts.some((a) => a.id === id)) { toast('Compte introuvable.', 'error'); navigate('membres/comptes'); return; }
-  await openAccountFiche(id, TABS.some(([k]) => k === tab) ? tab : 'profil');
+  showAccount(id, tab);
 }
 
 /* ---------- Écouteurs des sections permises (liés au DOM, sans montage) ---------- */
@@ -85,7 +83,12 @@ registerSub('pilotage/apercu', {
 });
 registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')), open: openLog, list: listLog });
 registerSub('pilotage/staff', { main: () => mountStaffSection($('#staff-root')), open: openStaff, list: listStaff, info: infoStaff }); // administrateur seulement
-registerSub('membres/comptes', { main: () => ensureAccounts(), open: openFicheRoute });
+registerSub('membres/comptes', {
+  main: () => ensureAccounts(),
+  list: (el) => mountAccountsList(el),
+  open: openFicheRoute,
+  info: (el) => mountAccountsInfo(el),
+});
 registerSub('membres/fantomes', {
   // Comptes fantômes : préparés avant l'inscription. Leur création/suppression resynchronise la liste des comptes et les sélecteurs.
   main: () => {
@@ -96,6 +99,8 @@ registerSub('membres/fantomes', {
     });
     refreshGhostsSection();
   },
+  list: (el) => mountGhostsList(el),
+  open: (el, { id }) => showGhost(id),
 });
 registerSub('membres/invitations', {
   main: () => mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } }),
@@ -140,6 +145,5 @@ if (S.ssLoaded) renderSS();
 if (has('badges')) renderBadges();
 if (has('idees')) renderIdeas();
 if (has('assistance')) renderSupport();
-bindFicheHash();   // l'adresse suit la fiche ouverte et son onglet (clics et saisies dans la section Comptes)
 startShell();
 initLive(); // temps réel du panel (voyant du rail, compteurs, sections) ; sans effet si indisponible

@@ -156,12 +156,12 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG } });
     await adminSection(p, 'membres/comptes');
-    await p.waitForSelector(`#acc-root [data-open="${ALICE}"]`, { timeout: 5000 });
+    await p.waitForSelector(`#shell-col-list .ui-row[data-id="${ALICE}"]`, { timeout: 5000 });
 
     let mark = await logLength(p);
-    await p.click(`#acc-root [data-open="${ALICE}"]`);
+    await p.click(`#shell-col-list .ui-row[data-id="${ALICE}"]`);
     await p.waitForSelector('#acc-panel', { timeout: 5000 });
-    await p.waitForSelector('.acc-ident-name', { timeout: 5000 });
+    await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 5000 });
     await sleep(300);
     let calls = await logSince(p, mark);
     const tables = calls.map((c) => c[1] || c[0]);
@@ -197,11 +197,11 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
 
     // Nouvelle visite du même membre : les lectures déjà faites ne sont pas relues
     await p.keyboard.press('Escape');
-    await sleep(500);
-    await p.waitForSelector(`#acc-root [data-open="${ALICE}"]`, { timeout: 5000 });
+    await p.waitForFunction(() => location.hash === '#membres/comptes', null, { timeout: 4000 }).catch(() => {});
+    await p.waitForSelector(`#shell-col-list .ui-row[data-id="${ALICE}"]`, { timeout: 5000 });
     mark = await logLength(p);
-    await p.click(`#acc-root [data-open="${ALICE}"]`);
-    await p.waitForSelector('.acc-ident-name', { timeout: 5000 });
+    await p.click(`#shell-col-list .ui-row[data-id="${ALICE}"]`);
+    await p.waitForSelector('#acc-dh .ui-dhead-t', { timeout: 5000 });
     await sleep(300);
     await p.click('#acc-tab-photos');
     await sleep(400);

@@ -1,22 +1,27 @@
-// Comptes admin : fiche d'un membre (chargement, en-tête, onglets, sélection d'onglet).
-import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime, avatarHtml } from '../core.js';
+// Comptes admin : fiche d'un membre dans la zone principale (#membres/comptes/<id>/<onglet>), résumé à droite.
+// Lectures à la demande (HEAD) : à l'ouverture, seuls le profil et le Staff sont lus ; chaque onglet ne lit que ses
+// données, une fois. Le résumé (colonne droite, écran ≥ 1440 px) lit ses repères à part. Toute lecture est gardée
+// pendant la visite de la page (CACHE, state.js) ; une modification la vide.
+import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
-import { IC } from './common.js';
+import { renderDetailHeader } from '../admin/ui/detail-header.js';
+import { renderInfoPanel } from '../admin/ui/info-panel.js';
 import { A, H, TABS, root, CACHE, dropFicheCache } from './state.js';
 import { isAdminView } from '../admin/perms.js';
 import { permLabel } from '../admin-staff.js';
-import { enterInspect, updateInspect } from './inspect.js';
+import { closeDetail } from './inspect.js';
 import { profileHtml, infosHtml } from './profile.js';
 import { ssHtml } from './ss.js';
 import { irlHtml, photosHtml, contribHtml, badgesHtml } from './activity.js';
+import { roleOf, selectInList } from './list.js';
 
 /* =========================================================
-   Fiche d'un membre
-   Chargement par onglet : seul l'onglet ouvert lit ses données (profil + Staff à l'ouverture).
-   Les lectures sont gardées pendant la visite de la page (CACHE) ; toute modification les vide.
+   Lectures
    ========================================================= */
 async function q(p) { const r = await p; return { data: r.data, error: r.error }; }
-const DATA_FIELDS = ['info', 'editions', 'parts', 'assigns', 'wishes', 'events', 'rsvps', 'photos', 'ideas', 'support', 'badges', 'ubadges'];
+const DATA_FIELDS = ['info', 'editions', 'parts', 'assigns', 'wishes', 'events', 'rsvps', 'photos', 'ideas', 'support',
+  'badges', 'ubadges', 'wallet', 'cards', 'ssCount'];
+const WIDE = matchMedia('(min-width: 1440px)'); // résumé à droite : affiché (et donc lu) seulement sur grand écran
 
 /** Renseigne A.d[name] une seule fois (depuis le cache si la lecture existe déjà). */
 async function fill(name, key, read) {
@@ -50,6 +55,10 @@ const SOURCE = {
   support: (uid) => () => q(sb.from('hg_support').select('*').eq('user_id', uid).order('created_at', { ascending: false })),
   badges: () => q(sb.from('hg_badges').select('code, name, description, image_url, sort').order('sort')),
   ubadges: (uid) => () => q(sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', uid)),
+  // Résumé : Paillettes, Cartes, participations Secret Santa (toutes éditions)
+  wallet: (uid) => () => q(sb.from('hg_wallets').select('paillettes').eq('user_id', uid).maybeSingle()),
+  cards: (uid) => () => q(sb.from('hg_card_copies').select('id').eq('owner_id', uid)),
+  ssCount: (uid) => () => q(sb.from('hg_ss_participants').select('edition_id').eq('user_id', uid)),
 };
 
 /** Lectures nécessaires à un onglet (le profil et le Staff sont toujours chargés). */
@@ -79,10 +88,21 @@ async function loadTab(k, uid) {
   if (k === 'acces') { await ensureAccessData().catch(() => null); return; } // l'erreur s'affiche dans l'onglet
 }
 
-/** Charge l'onglet demandé (sans toucher aux autres) ; A.d peut avoir changé entre-temps : on ne renseigne que la fiche courante. */
+/** Charge l'onglet demandé (sans toucher aux autres). */
 async function ensureTab(k) {
-  const uid = A.uid;
-  await loadTab(k, uid);
+  await loadTab(k, A.uid);
+}
+
+/** Repères du résumé (lectures partagées avec les onglets : pas de relecture ensuite). */
+async function loadSummary(uid) {
+  await Promise.all([
+    fill('wallet', `${uid}|wallet`, SOURCE.wallet(uid)),
+    fill('cards', `${uid}|cards`, SOURCE.cards(uid)),
+    fill('ssCount', `${uid}|ssCount`, SOURCE.ssCount(uid)),
+    fill('rsvps', `${uid}|rsvps`, SOURCE.rsvps(uid)),
+    fill('ubadges', `${uid}|ubadges`, SOURCE.ubadges(uid)),
+    fill('support', `${uid}|support`, SOURCE.support(uid)),
+  ]);
 }
 
 /** Lectures de base : profil (erreur bloquante) et Staff (administrateur). */
@@ -100,87 +120,6 @@ async function loadBase(uid) {
   };
 }
 
-export async function openAccount(uid, { tab } = {}) {
-  A.uid = uid; A.tab = tab || 'profil'; A.showPair = false; A.d = { signed: new Map() };
-  root().innerHTML = `${detailHead()}<div class="empty">Chargement de la fiche…</div>`;
-  enterInspect();
-  $('#comptes').scrollIntoView({ block: 'start' });
-  try {
-    const base = await loadBase(uid);
-    if (A.uid !== uid) return;
-    Object.assign(A.d, base);
-    await ensureTab(A.tab);
-    if (A.uid !== uid) return;
-    renderDetail();
-    updateInspect();
-  } catch (e) {
-    root().innerHTML = `${detailHead()}<div class="empty">Impossible de charger la fiche : ${esc(errMsg(e))}</div>`;
-  }
-}
-/** Relit la fiche après une modification : cache vidé, profil et onglet ouvert relus. */
-export async function reloadDetail() {
-  const uid = A.uid; if (!uid || !A.d) return;
-  dropFicheCache();
-  try {
-    const base = await loadBase(uid);
-    if (A.uid !== uid) return;
-    const d = A.d;
-    for (const f of DATA_FIELDS) delete d[f];
-    d.signed = new Map(); d.edition = undefined;
-    Object.assign(d, base);
-    await ensureTab(A.tab);
-    if (A.uid !== uid) return;
-    renderDetail(); updateInspect();
-  } catch (e) { toast(errMsg(e), 'error'); }
-}
-
-/** Vrai si la fiche ouverte est celle d'un fantôme (pas encore inscrit). */
-const isGhostFiche = () => !!(A.d?.profile?.is_ghost ?? A.accounts.find((a) => a.id === A.uid)?.is_ghost);
-
-/** Pastille « Staff » et permissions accordées (administrateur seulement). */
-function staffLineHtml(st) {
-  if (!st || !isAdminView()) return '';
-  const perms = st.perms?.length ? st.perms.map((k) => `<span class="pill pill-muted">${esc(permLabel(k))}</span>`).join('') : '<span class="small muted">aucune permission</span>';
-  return `<div class="acc-staff"><span class="pill pill-ok">Staff</span>${st.active ? '' : ' <span class="pill pill-muted">inactif</span>'} ${perms}</div>`;
-}
-
-function detailHead() {
-  const acc = A.accounts.find((a) => a.id === A.uid) || {};
-  const p = A.d?.profile || { pseudo: acc.pseudo };
-  const ghost = isGhostFiche();
-  return `
-    <div class="acc-detail-top">
-      <button class="btn btn-ghost btn-sm" type="button" data-act="back">${IC.back} Tous les comptes</button>
-    </div>
-    <div class="acc-ident">
-      ${avatarHtml(p, 56)}
-      <div class="acc-ident-txt">
-        <h3 class="acc-ident-name">${esc(p.pseudo || acc.pseudo || 'Membre')}${ghost ? ' <span class="pill pill-muted">(fantôme)</span>' : ''}</h3>
-        ${ghost
-          ? '<div class="small muted">Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.</div>'
-          : `<div class="small muted">${esc(acc.email || '')}${acc.created_at ? ` · inscrit le ${esc(fmtDate(acc.created_at))}` : ''}${acc.last_sign_in_at ? ` · vu le ${esc(fmtDateTime(acc.last_sign_in_at))}` : ''}</div>`}
-${staffLineHtml(A.d?.staff)}
-      </div>
-      ${p.is_admin ? '<span class="pill pill-ok">admin</span>' : ''}
-    </div>`;
-}
-
-export function renderDetail() {
-  root().innerHTML = `
-    ${detailHead()}
-    <div class="acc-tabs" role="tablist" aria-label="Données du membre">
-      ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
-    </div>
-    <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
-}
-/** Compteur de l'onglet : seulement si ses données sont déjà lues (pas de requête pour le seul affichage). */
-function tabCount(k) {
-  const d = A.d; let n = 0;
-  if (k === 'photos') n = d.photos?.data?.length ?? 0;
-  if (k === 'contrib') n = (d.ideas?.data?.length ?? 0) + (d.support?.data?.length ?? 0);
-  if (k === 'badges') n = d.ubadges?.data?.length ?? 0;
-  return n ? ` <span class="acc-tab-n">${n}</span>` : '';
-}
 /** Vrai si les lectures de l'onglet sont déjà là. */
 function tabReady(k) {
   const d = A.d;
@@ -195,6 +134,145 @@ function tabReady(k) {
     default: return false;
   }
 }
+
+/* =========================================================
+   Ouverture, fermeture, sélection
+   ========================================================= */
+const tabOf = (t) => (TABS.some(([k]) => k === t) ? t : 'profil');
+
+/** Ouvre la fiche d'un membre dans la zone principale (l'URL est déjà à jour). */
+export async function openAccount(uid, { tab } = {}) {
+  A.uid = uid; A.tab = tabOf(tab); A.showPair = false; A.d = { signed: new Map() };
+  root().innerHTML = '<div class="empty">Chargement de la fiche…</div>';
+  selectInList(uid);
+  paintInfo();
+  try {
+    const base = await loadBase(uid);
+    if (A.uid !== uid) return;
+    Object.assign(A.d, base);
+    if (isGhostFiche() && A.tab === 'acces') A.tab = 'profil';
+    await ensureTab(A.tab);
+    if (A.uid !== uid) return;
+    renderDetail();
+    paintInfo();
+  } catch (e) {
+    if (A.uid !== uid) return;
+    root().innerHTML = `<div class="empty">Impossible de charger la fiche : ${esc(errMsg(e))}</div>`;
+    paintInfo();
+  }
+}
+
+/** Relit la fiche après une modification : cache vidé, profil et onglet ouvert relus. */
+export async function reloadDetail() {
+  const uid = A.uid; if (!uid || !A.d) return;
+  dropFicheCache();
+  try {
+    const base = await loadBase(uid);
+    if (A.uid !== uid) return;
+    const d = A.d;
+    for (const f of DATA_FIELDS) delete d[f];
+    d.signed = new Map(); d.edition = undefined;
+    Object.assign(d, base);
+    await ensureTab(A.tab);
+    if (A.uid !== uid) return;
+    renderDetail();
+    paintInfo();
+  } catch (e) { toast(errMsg(e), 'error'); }
+}
+
+/** Écran sans élément choisi : la zone principale invite à choisir dans la liste. */
+export function emptyDetail() {
+  A.uid = null; A.d = null; A.showPair = false;
+  selectInList(null);
+  root().innerHTML = `<div class="acc-empty">
+      <p class="acc-empty-t">Choisis un membre dans la liste</p>
+      <p class="small muted">Sa fiche s'ouvre ici : profil, Secret Santa, sorties, photos, badges et accès aux pages.</p>
+    </div>`;
+  paintInfo();
+}
+
+/** Fournisseur `open` de la sous-section : affiche la fiche de l'URL (#membres/comptes/<id>/<onglet>). */
+export function showAccount(uid, tab) {
+  if (!uid) { emptyDetail(); return; }
+  const t = tabOf(tab);
+  if (A.uid === uid && A.d) {
+    selectInList(uid);
+    if (t !== A.tab) selectTab(t);
+    return;
+  }
+  return openAccount(uid, { tab: t });
+}
+
+/** Ouvre la fiche d'un membre depuis une autre section : change l'URL, la sous-section affiche la fiche. */
+export function openAccountFiche(uid, tab) {
+  const h = `#membres/comptes/${uid}${tab && tab !== 'profil' ? `/${tab}` : ''}`;
+  if (location.hash === h) return openAccount(uid, { tab: tabOf(tab) });
+  location.hash = h;
+}
+
+/** Vrai si la fiche ouverte est celle d'un fantôme (pas encore inscrit). */
+const isGhostFiche = () => !!(A.d?.profile?.is_ghost ?? A.accounts.find((a) => a.id === A.uid)?.is_ghost);
+
+/* =========================================================
+   Fiche : en-tête, onglets, panneau
+   ========================================================= */
+/** Pastille « Staff » et permissions accordées (administrateur seulement). */
+function staffLineHtml(st) {
+  if (!st || !isAdminView()) return '';
+  const perms = st.perms?.length ? st.perms.map((k) => `<span class="pill pill-muted">${esc(permLabel(k))}</span>`).join('') : '<span class="small muted">aucune permission</span>';
+  return `<div class="acc-staff"><span class="pill pill-ok">Staff</span>${st.active ? '' : ' <span class="pill pill-muted">inactif</span>'} ${perms}</div>`;
+}
+
+/** En-tête de la fiche : composant commun (admin/ui/detail-header.js) + ligne Staff / admin. */
+function paintHead() {
+  const host = $('#acc-dh'); if (!host) return;
+  const acc = A.accounts.find((a) => a.id === A.uid) || {};
+  const p = A.d?.profile || { pseudo: acc.pseudo };
+  const ghost = isGhostFiche();
+  const subtitle = ghost
+    ? 'Fantôme : pas encore inscrit. Tout ce que tu ajoutes ici suivra la personne à son inscription.'
+    : [acc.email, acc.created_at ? `inscrit le ${fmtDate(acc.created_at)}` : '', acc.last_sign_in_at ? `vu le ${fmtDateTime(acc.last_sign_in_at)}` : '']
+      .filter(Boolean).join(' · ');
+  renderDetailHeader(host, {
+    member: { pseudo: p.pseudo || acc.pseudo || '?', avatar_url: p.avatar_url, color: p.color },
+    title: `${p.pseudo || acc.pseudo || 'Membre'}${ghost ? ' (fantôme)' : ''}`,
+    subtitle,
+    actions: [{ label: 'Fermer la fiche', onClick: closeDetail }],
+  });
+  const meta = $('#acc-meta');
+  if (meta) meta.innerHTML = `${p.is_admin ? '<span class="pill pill-ok">admin</span> ' : ''}${staffLineHtml(A.d?.staff)}`;
+}
+
+/** Compteur de l'onglet : seulement si ses données sont déjà lues (pas de requête pour le seul affichage). */
+function tabCount(k) {
+  const d = A.d; let n = 0;
+  if (k === 'photos') n = d?.photos?.data?.length ?? 0;
+  if (k === 'contrib') n = (d?.ideas?.data?.length ?? 0) + (d?.support?.data?.length ?? 0);
+  if (k === 'badges') n = d?.ubadges?.data?.length ?? 0;
+  return n ? ` <span class="acc-tab-n">${n}</span>` : '';
+}
+
+export function renderDetail() {
+  root().innerHTML = `
+    <div id="acc-dh"></div>
+    <div class="acc-meta" id="acc-meta"></div>
+    <div class="acc-tabs" role="tablist" aria-label="Données du membre">
+      ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
+    </div>
+    <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
+  paintHead();
+  paintInfo();
+}
+
+/** Met à jour les compteurs des onglets sans reconstruire la fiche (le focus reste sur l'onglet). */
+function renderDetailCounts() {
+  $$('#acc-root .acc-tab').forEach((b) => {
+    const k = b.dataset.tab;
+    const label = TABS.find(([x]) => x === k)?.[1] ?? '';
+    b.innerHTML = `${esc(label)}${tabCount(k)}`;
+  });
+}
+
 export function renderPanel() {
   const panel = $('#acc-panel'); if (!panel) return renderDetail();
   panel.innerHTML = panelHtml();
@@ -214,11 +292,14 @@ function panelHtml() {
   }
 }
 
+/** Change d'onglet : lit ce que l'onglet demande (une fois), met à jour l'URL sans nouvelle entrée d'historique. */
 export async function selectTab(k, focus = false) {
   A.tab = k;
-  $$('#comptes [role="tab"]').forEach((b) => { const on = b.dataset.tab === k; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+  $$('#acc-root .acc-tab').forEach((b) => { const on = b.dataset.tab === k; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
   const panel = $('#acc-panel');
+  if (!panel) return renderDetail();
   panel.setAttribute('aria-labelledby', `acc-tab-${k}`);
+  if (A.uid) history.replaceState(null, '', `#membres/comptes/${A.uid}${k === 'profil' ? '' : `/${k}`}`);
   if (!A.d || tabReady(k)) renderPanel();
   else {
     // Première ouverture de l'onglet : seules ses données sont lues
@@ -231,14 +312,60 @@ export async function selectTab(k, focus = false) {
   }
   if (focus) $(`#acc-tab-${k}`)?.focus();
 }
-/** Met à jour les compteurs des onglets sans reconstruire la fiche (le focus reste sur l'onglet). */
-function renderDetailCounts() {
-  $$('#comptes .acc-tab').forEach((b) => {
-    const k = b.dataset.tab;
-    const label = TABS.find(([x]) => x === k)?.[1] ?? '';
-    const n = tabCount(k);
-    b.innerHTML = `${esc(label)}${n}`;
+
+/* =========================================================
+   Panneau d'infos (colonne 4 : résumé du membre)
+   ========================================================= */
+let infoH = null;
+/** Fournisseur `info` de la sous-section : le contenu est repeint à chaque changement de fiche. */
+export function mountAccountsInfo(el) {
+  el.innerHTML = '<div id="acc-info"></div>';
+  paintInfo();
+}
+
+export function paintInfo() {
+  const host = $('#acc-info'); if (!host) return;
+  infoH?.destroy(); infoH = null;
+  if (!A.uid || !A.d) { host.innerHTML = '<p class="ui-info-empty">Sélectionne un membre pour voir son résumé.</p>'; return; }
+  const d = A.d; const p = d.profile;
+  if (!p) { host.innerHTML = '<p class="ui-info-empty">Chargement du résumé…</p>'; return; }
+  const uid = A.uid;
+  const acc = A.accounts.find((a) => a.id === uid) || {};
+  const ghost = isGhostFiche();
+  const role = roleOf({ ...acc, is_ghost: ghost, is_admin: !!p.is_admin });
+  const nf = (n) => Number(n || 0).toLocaleString('fr-CH');
+  // Repères : « … » tant que leur lecture n'a pas eu lieu (grand écran seulement, voir loadSummary)
+  const repere = (r, f) => (r === undefined ? '…' : nf(f(r)));
+  const history = (d.support?.data ?? []).slice(0, 5).map((s) => ({
+    id: s.id, title: s.subject || 'Demande',
+    status: s.status === 'ouverte' ? { label: 'Ouverte', tone: 'open' } : { label: 'Traitée', tone: 'done' },
+    at: s.created_at,
+  }));
+  const actions = [
+    { label: 'Modifier le profil', onClick: () => selectTab('profil') },
+    { label: 'Secret Santa', onClick: () => selectTab('ss') },
+    { label: 'Badges', onClick: () => selectTab('badges') },
+    ...(ghost ? [] : [{ label: 'Accès aux pages', onClick: () => selectTab('acces') }]),
+  ];
+  infoH = renderInfoPanel(host, {
+    member: { pseudo: p.pseudo || acc.pseudo || '?', avatar_url: p.avatar_url, color: p.color, since: acc.created_at || null, lastSeen: acc.last_sign_in_at || null },
+    statsTitle: 'Résumé',
+    stats: [
+      { value: repere(d.wallet, (r) => r.data?.paillettes), label: 'Paillettes' },
+      { value: repere(d.cards, (r) => r.data?.length), label: 'Cartes' },
+      { value: repere(d.rsvps, (r) => (r.data ?? []).filter((x) => x.status === 'oui').length), label: 'Sorties IRL' },
+      { value: repere(d.ssCount, (r) => r.data?.length), label: 'Secret Santa' },
+      { value: repere(d.ubadges, (r) => r.data?.length), label: 'Badges' },
+      { value: role.label, label: 'Rôle' },
+    ],
+    historyTitle: "Demandes d'assistance",
+    history,
+    actions,
   });
+  // Résumé affiché : ses repères se lisent une fois (grand écran seulement, pour ne pas alourdir la fiche sur petit écran)
+  if (WIDE.matches && d.wallet === undefined && d.cards === undefined) {
+    loadSummary(uid).then(() => { if (A.uid === uid) paintInfo(); });
+  }
 }
 
 // Accès aux pages modifiés (ici ou dans la section « Accès aux pages ») : l'onglet « Accès » se met à jour
@@ -248,9 +375,6 @@ window.addEventListener('hg:access', () => {
   renderPanel();
   if (f) $(`[data-page-access="${CSS.escape(f)}"]`)?.focus();
 });
-
-/** Ouvre la fiche d'un membre (utilisable depuis les autres sections). */
-export function openAccountFiche(uid, tab) { return openAccount(uid, { tab }); }
 
 H.renderPanel = renderPanel;
 H.renderDetail = renderDetail;
