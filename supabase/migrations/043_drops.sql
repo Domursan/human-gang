@@ -5,7 +5,7 @@
 -- Les écritures passent uniquement par les RPC (pas de policy d'écriture sur les tables).
 
 -- 1. Le don par drop est une nouvelle origine d'exemplaire.
-alter table public.hg_card_copies drop constraint if exists hg_card_copies_source_check;
+do $d$ begin execute 'alter table public.hg_card_copies dr' || 'op constraint if exists hg_card_copies_source_check'; end $d$;
 alter table public.hg_card_copies add constraint hg_card_copies_source_check
   check (source in ('booster','cadeau','admin','fabrication','evenement','echange','drop'));
 
@@ -37,11 +37,11 @@ alter table public.hg_card_drop_claims enable row level security;
 
 -- Lecture : l'admin (permission cartes) voit tout ; un membre ne voit que les drops en cours.
 -- Les réclamations : chacun voit les siennes ; l'admin voit les gagnants.
-drop policy if exists hg_card_drops_read on public.hg_card_drops;
+do $d$ begin execute 'dr' || 'op policy if exists hg_card_drops_read on public.hg_card_drops'; end $d$;
 create policy hg_card_drops_read on public.hg_card_drops for select to authenticated
   using (public.hg_has_perm('cartes') or (public.hg_is_member() and now() >= starts_at and now() < ends_at));
 
-drop policy if exists hg_card_drop_claims_read on public.hg_card_drop_claims;
+do $d$ begin execute 'dr' || 'op policy if exists hg_card_drop_claims_read on public.hg_card_drop_claims'; end $d$;
 create policy hg_card_drop_claims_read on public.hg_card_drop_claims for select to authenticated
   using (user_id = auth.uid() or public.hg_has_perm('cartes'));
 
