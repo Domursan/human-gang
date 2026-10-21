@@ -70,6 +70,18 @@
     "card_trade_announce": {
       "title": "Échange conclu",
       "body": "{pseudo} et {partenaire} viennent de conclure un échange de cartes."
+    },
+    "irl_reminder": {
+      "title": "Rappel : {titre}",
+      "body": "La sortie a lieu {delai}.\n\n**Quand** : {quand}\n**Où** : {lieu}\n\nSi tu ne peux plus venir, dis-le sur le site."
+    },
+    "ss_send_reminder": {
+      "title": "Rappel : ton cadeau du Secret Santa {annee}",
+      "body": "Salut {pseudo} ! Pense à marquer ton cadeau comme envoyé sur le site avant le {date_limite}. Ta cible compte sur toi."
+    },
+    "card_wish_dm": {
+      "title": "Une carte de ta liste de souhaits est sortie",
+      "body": "{carte} vient d'être obtenue par un membre. Va voir sur le site si un échange est possible."
     }
   },
   "meta": {
@@ -232,6 +244,35 @@
       "vars": {
         "pseudo": { "label": "Pseudo de celui qui accepte", "example": "Alex" },
         "partenaire": { "label": "Pseudo de l'autre membre", "example": "Sam" },
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+      }
+    },
+    "irl_reminder": {
+      "group": "irl", "label": "Rappel de sortie", "target": "MP aux participants", "color": "#E2C77E",
+      "description": "Envoyé en MP 24 h et 2 h avant une sortie, aux membres qui ont répondu « oui » ou « peut-être » et qui ont activé les rappels de sortie dans leur compte.",
+      "vars": {
+        "titre": { "label": "Titre de la sortie", "example": "Raclette chez Sam" },
+        "delai": { "label": "Délai (« dans moins de 24 heures » ou « dans moins de 2 heures »)", "example": "dans moins de 24 heures" },
+        "quand": { "label": "Date et heure", "example": "samedi 14 novembre à 19:00" },
+        "lieu": { "label": "Lieu (ou « lieu à préciser »)", "example": "Lausanne" },
+        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/irl.html" }
+      }
+    },
+    "ss_send_reminder": {
+      "group": "ss", "label": "Rappel d'envoi de cadeau", "target": "MP au Santa", "color": "#E0909A",
+      "description": "Envoyé en MP au Santa qui n'a pas encore marqué son cadeau comme envoyé, 3 jours avant la date limite.",
+      "vars": {
+        "pseudo": { "label": "Pseudo du Santa (destinataire)", "example": "Sam" },
+        "annee": { "label": "Année de l'édition", "example": "2026" },
+        "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+      }
+    },
+    "card_wish_dm": {
+      "group": "cards", "label": "Carte souhaitée disponible", "target": "MP au membre qui la souhaite", "color": "#E0A93B",
+      "description": "Envoyé en MP à un membre qui a mis la carte dans sa liste de souhaits, quand un autre membre l'obtient. Le membre qui l'a obtenue n'est pas nommé. Désactivé par défaut, et seulement pour les membres qui ont activé cette alerte.",
+      "vars": {
+        "carte": { "label": "Nom de la carte (avec « brillante » si besoin)", "example": "Le Four à raclette" },
         "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
       }
     }

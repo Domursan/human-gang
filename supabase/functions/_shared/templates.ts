@@ -7,7 +7,8 @@ import defaults from './bot-templates.json' with { type: 'json' };
 export type TemplateKey =
   | 'ss_draw_announce' | 'ss_draw_dm' | 'ss_gift_sent' | 'ss_gift_received' | 'irl_new'
   | 'message_new' | 'message_new_santa' | 'birthday_dm' | 'birthday_announce' | 'support_new' | 'bot_test'
-  | 'dyn_start' | 'dyn_end' | 'card_pull_announce' | 'card_trade_announce';
+  | 'dyn_start' | 'dyn_end' | 'card_pull_announce' | 'card_trade_announce'
+  | 'irl_reminder' | 'ss_send_reminder' | 'card_wish_dm';
 export type Template = { title: string; body: string };
 export type Templates = Partial<Record<string, Partial<Template>>>;
 export type Vars = Record<string, string | number | null | undefined>;

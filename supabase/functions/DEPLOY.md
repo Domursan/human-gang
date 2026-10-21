@@ -7,10 +7,13 @@ importent aussi `../_shared/dyn-announce.ts`).
 
 | Fonction | Fichiers à envoyer | verify_jwt |
 |---|---|---|
-| `hg-notify` | `hg-notify/index.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `true` |
-| `hg-support` | `hg-support/index.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
-| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
-| `hg-cron` | `hg-cron/index.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `false` |
+| `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `true` |
+| `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
+| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
+| `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `false` |
+
+`_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
+l'en-tête `x-cron-secret` de `hg-cron` et `hg-birthdays`.
 
 Point d'entrée : `index.ts` pour toutes.
 
@@ -48,6 +51,34 @@ GitHub Pages (Jekyll) **ignore les dossiers dont le nom commence par `_`**. Un f
 ajouté à la racine du dépôt pour que `supabase/functions/_shared/bot-templates.json` soit publié. Effet de bord :
 les `.md` (ex. `BOT.md`) sont servis tels quels (texte brut) au lieu d'être convertis par Jekyll.
 Sans ce fichier, l'admin affiche un avertissement et ne peut pas éditer les modèles.
+
+## Rappels, secret cron et anti-doublons : ordre à suivre
+
+1. Appliquer la migration `supabase/migrations/020_bot_rappels.sql` (colonnes seulement, idempotente).
+2. Secret des tâches planifiées : ligne `cron_secret` de la table privée `public.hg_private` (voir la fin de la migration 020 ;
+   la variable d'environnement `CRON_SECRET`, si elle existe, est prioritaire). Sans secret, `hg-cron` et `hg-birthdays` refusent tout (401).
+3. Déployer `hg-notify`, `hg-support`, `hg-birthdays` et `hg-cron` (tableau ci-dessus).
+4. Mettre à jour les deux tâches pg_cron pour qu'elles envoient le secret (voir ci-dessous).
+
+Tâches pg_cron (éditeur SQL). Remplacer `<CRON_SECRET>` par la valeur du secret, à l'identique :
+```sql
+select cron.unschedule('hg-cron-5min');
+select cron.schedule(
+  'hg-cron-5min',
+  '*/5 * * * *',
+  $$select net.http_post(
+      url := 'https://zqbdzokyhgavgmqgiwuw.supabase.co/functions/v1/hg-cron',
+      headers := '{"Content-Type":"application/json","x-cron-secret":"<CRON_SECRET>"}'::jsonb,
+      body := '{}'::jsonb)$$
+);
+```
+Pour `hg-birthdays-daily` : lire la planification actuelle avec `select jobname, schedule, command from cron.job;`,
+puis garder la même planification et remplacer la commande par celle de `hg-cron-5min` (URL
+`.../functions/v1/hg-birthdays`) en ajoutant le même en-tête `x-cron-secret`. Le secret est alors stocké dans la
+commande de la tâche (visible des administrateurs du projet) ; pour éviter cela, on peut le lire depuis Vault.
+
+Journal : chaque passage qui fait quelque chose (annonce, rappel, anniversaire, échec) laisse une ligne dans
+`hg_bot_log` (kinds `auto:cron` et `auto:anniversaire`), visible dans l'historique du bot de l'administration.
 
 ## Cartes à collectionner : redéployer hg-notify
 Les événements `card_pull` (belle carte obtenue) et `card_trade` (échange conclu) sont dans `hg-notify/index.ts`.

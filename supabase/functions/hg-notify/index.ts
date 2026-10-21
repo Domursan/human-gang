@@ -22,18 +22,16 @@
 //                    appartient à l'appelant (rarity/shiny/serial du client ignorés : lus en base). Désactivable (bot.notify.card_pull).
 //   card_trade       { trade_id: uuid } destinataire de l'offre (celui qui accepte) → annonce « échange conclu » dans le salon.
 //                    Facultative : seulement si bot.notify.card_trade === true (désactivée par défaut).
+//   card_wish        { cards: uuid[] (≤ 10) } membre, après l'ouverture d'un booster → MP aux membres qui ont la carte dans
+//                    leur liste de souhaits et qui ont activé l'alerte (profil.notify_card_wish). Une fois par exemplaire
+//                    (wish_notified_at). Le membre qui a obtenu la carte n'est pas nommé. Désactivable (bot.notify.card_wish).
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
+import { CORS, hasBotToken, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -46,7 +44,7 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 type Bot = {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'card_wish', boolean>>;
 };
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
@@ -54,36 +52,8 @@ class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
-/* ---------- Discord ---------- */
-function hasToken() { return !!Deno.env.get('DISCORD_BOT_TOKEN'); }
-async function discord(path: string, body: unknown): Promise<any> {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const res = await fetch(`https://discord.com/api/v10${path}`, {
-      method: 'POST',
-      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 429) {
-      const info = await res.json().catch(() => ({}));
-      await new Promise((r) => setTimeout(r, Math.min(5000, Math.ceil((info.retry_after ?? 1) * 1000))));
-      continue;
-    }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
-}
-/** Message dans un salon. Les mentions sont désactivées (pas de @everyone involontaire). */
-async function sendChannel(channelId: string, message: Record<string, unknown>) {
-  return await discord(`/channels/${channelId}/messages`, { allowed_mentions: { parse: [] }, ...message });
-}
-/** Message privé (ouvre le salon MP puis envoie). Le membre doit partager un serveur avec le bot et accepter les MP. */
-async function sendDM(userId: string, message: Record<string, unknown>) {
-  const ch = await discord('/users/@me/channels', { recipient_id: userId });
-  return await sendChannel(ch.id, message);
-}
+/* ---------- Discord : client partagé (_shared/discord.ts : 429, MP, salon) ---------- */
+const hasToken = hasBotToken;
 async function trySend(fn: () => Promise<unknown>, label: string): Promise<boolean> {
   try { await fn(); return true; } catch (e) { console.error(`[hg-notify] ${label}`, e); return false; }
 }
@@ -383,13 +353,17 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   if (!rarete) return { skipped: 'carte pas assez rare pour être annoncée' };
 
   // Service role : un exemplaire récent de cette carte doit appartenir à l'appelant. Valeurs lues en base.
-  let q = db.from('hg_card_copies').select('shiny, serial, obtained_at')
-    .eq('card_id', card.id).eq('owner_id', me.id).is('recycled_at', null)
+  // Un exemplaire déjà annoncé (announced_at) n'est jamais annoncé deux fois : rappeler card_pull ne republie rien.
+  let q = db.from('hg_card_copies').select('id, shiny, serial, obtained_at')
+    .eq('card_id', card.id).eq('owner_id', me.id).is('recycled_at', null).is('announced_at', null)
     .gte('obtained_at', new Date(Date.now() - CARD_FRESH_MS).toISOString())
     .order('obtained_at', { ascending: false }).limit(1);
   if (Number.isInteger(p.serial)) q = q.eq('serial', p.serial as number);
   const { data: copy } = await q.maybeSingle();
   if (!copy) return { skipped: 'aucun exemplaire récent de cette carte' };
+  const { data: claimed } = await db.from('hg_card_copies').update({ announced_at: new Date().toISOString() })
+    .eq('id', copy.id).is('announced_at', null).select('id');
+  if (!claimed?.length) return { skipped: 'déjà annoncé' };
 
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
   const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
@@ -397,6 +371,7 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
     fields: [{ name: 'Rareté', value: rarete, inline: true }],
   })), 'annonce carte');
+  if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id); // échec : la prochaine ouverture pourra réessayer
   return { channel };
 }
 
@@ -416,6 +391,56 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
   })), 'annonce échange');
   return { channel };
+}
+
+/* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
+const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
+const WISH_MAX_DMS = 50;   // MP maximum par appel
+async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!Array.isArray(p.cards)) throw new HttpError(400, 'cards manquant');
+  const ids = [...new Set((p.cards as unknown[]).filter(isUuid).map((s) => s.toLowerCase()))].slice(0, WISH_MAX_CARDS);
+  if (!ids.length) throw new HttpError(400, 'cards manquant');
+  if (bot.notify?.card_wish === false) return { skipped: 'désactivé' };
+
+  // Exemplaires de l'appelant obtenus il y a peu, pas encore signalés (lus en base). Réservés avant l'envoi.
+  const { data: fresh, error } = await db.from('hg_card_copies').select('id, card_id, shiny')
+    .in('card_id', ids).eq('owner_id', me.id).is('recycled_at', null).is('wish_notified_at', null)
+    .gte('obtained_at', new Date(Date.now() - CARD_FRESH_MS).toISOString());
+  if (error) throw new Error(error.message);
+  if (!fresh?.length) return { skipped: 'aucun exemplaire récent' };
+  const { data: claimed, error: e2 } = await db.from('hg_card_copies').update({ wish_notified_at: new Date().toISOString() })
+    .in('id', fresh.map((c: { id: number }) => c.id)).is('wish_notified_at', null).select('id, card_id, shiny');
+  if (e2) throw new Error(e2.message);
+  if (!claimed?.length) return { skipped: 'déjà signalé' };
+
+  // Une alerte par carte distincte (le premier exemplaire réservé donne le nom et la mention « brillante »)
+  const byCard = new Map<string, { shiny: boolean }>();
+  for (const c of claimed as { card_id: string; shiny: boolean }[]) {
+    if (!byCard.has(c.card_id)) byCard.set(c.card_id, { shiny: c.shiny });
+  }
+  const { data: cards } = await db.from('hg_cards').select('id, name').in('id', [...byCard.keys()]);
+  const names = new Map((cards ?? []).map((c: { id: string; name: string }) => [c.id, c.name]));
+
+  let sent = 0, failed = 0, skipped = 0;
+  for (const [cardId, info] of byCard) {
+    const { data: wishes } = await db.from('hg_card_wishlist').select('user_id').eq('card_id', cardId).neq('user_id', me.id);
+    const wishers = (wishes ?? []).map((w: { user_id: string }) => w.user_id);
+    if (!wishers.length) continue;
+    const { data: profs } = await db.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, notify_card_wish').in('id', wishers);
+    for (const prof of (profs ?? []) as { id: string; discord_id: string | null; bot_optin: boolean; notify_card_wish: boolean }[]) {
+      const reachable = prof.notify_card_wish && prof.bot_optin && /^\d{17,20}$/.test(prof.discord_id ?? '');
+      if (!reachable) { skipped++; continue; }
+      if (sent + failed >= WISH_MAX_DMS) { skipped++; continue; }
+      const carte = `${names.get(cardId) ?? 'Une carte'}${info.shiny ? ' (brillante)' : ''}`;
+      const rendered = renderTemplate('card_wish_dm', { carte, lien: link('cartes.html') ?? '' }, tpl);
+      const ok = await trySend(() => sendDM(prof.discord_id!, embed({
+        ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+      })), `MP souhait ${prof.id}`);
+      ok ? sent++ : failed++;
+      await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
+    }
+  }
+  return { dms_sent: sent, dms_failed: failed, skipped };
 }
 
 /* ---------- Point d'entrée ---------- */
@@ -451,6 +476,7 @@ Deno.serve(async (req) => {
       case 'dyn_announce': result = await onDynAnnounce(me, bot, payload, tpl); break;
       case 'card_pull': result = await onCardPull(me, bot, payload, tpl); break;
       case 'card_trade': result = await onCardTrade(me, bot, payload, tpl); break;
+      case 'card_wish': result = await onCardWish(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

@@ -3,22 +3,20 @@
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
 // Texte du MP : modèle « support_new » (hg_settings.bot_templates, défaut dans ../_shared/bot-templates.json).
+// Limites par heure : 5 par compte ; pour un visiteur, 5 par contact et 5 par client (empreinte HMAC de l'adresse,
+// colonne hg_support.client_hash) ; plafond global de 200 visiteurs (garde-fou seulement).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
+import { CORS, jsonResponse, sendDM } from '../_shared/discord.ts';
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
 const SUBJECTS = [
   'Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre',
 ];
-const MAX_PER_HOUR = 5;        // par compte ou par contact
-const MAX_ANON_PER_HOUR = 30;  // garde-fou global pour les visiteurs sans compte
+const MAX_PER_HOUR = 5;              // par compte, ou par contact pour les visiteurs
+const MAX_ANON_CLIENT_PER_HOUR = 5;  // visiteurs : par client (empreinte de l'adresse), et non plus pour tous à la fois
+const MAX_ANON_TOTAL_PER_HOUR = 200; // garde-fou global, seulement contre une attaque répartie sur beaucoup de clients
 
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -28,28 +26,18 @@ const clean = (v: unknown, max: number) =>
   typeof v === 'string' ? v.replace(/\u0000/g, '').trim().slice(0, max) : '';
 const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
-async function discord(path: string, body: unknown): Promise<any> {
-  const token = Deno.env.get('DISCORD_BOT_TOKEN');
-  if (!token) throw new Error('DISCORD_BOT_TOKEN absent');
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const res = await fetch(`https://discord.com/api/v10${path}`, {
-      method: 'POST',
-      headers: { Authorization: `Bot ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 429 && attempt === 0) {
-      const info = await res.json().catch(() => ({}));
-      await new Promise((r) => setTimeout(r, Math.min(5000, Math.ceil((info.retry_after ?? 1) * 1000))));
-      continue;
-    }
-    if (!res.ok) throw new Error(`Discord ${res.status} : ${await res.text()}`);
-    return await res.json();
-  }
-  throw new Error('Discord : trop de requêtes');
+/** Adresse du client : dernière adresse ajoutée par le relais (x-forwarded-for), sinon cf-connecting-ip. */
+function clientIp(req: Request): string {
+  const xff = (req.headers.get('x-forwarded-for') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  return xff[xff.length - 1] ?? req.headers.get('cf-connecting-ip')?.trim() ?? '';
 }
-async function sendDM(userId: string, message: Record<string, unknown>) {
-  const channel = await discord('/users/@me/channels', { recipient_id: userId });
-  await discord(`/channels/${channel.id}/messages`, { allowed_mentions: { parse: [] }, ...message });
+/** Empreinte HMAC de l'adresse (clé = secret serveur) : l'adresse IP n'est jamais stockée en clair. */
+async function clientHash(ip: string): Promise<string | null> {
+  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!ip || !secret) return null;
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip)));
+  return [...sig.slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 Deno.serve(async (req) => {
@@ -85,22 +73,39 @@ Deno.serve(async (req) => {
   if (message.length < 10) return json({ error: 'Message trop court (10 caractères minimum).' }, 400);
   if (!userId && contact.length < 2) return json({ error: 'Indique ton pseudo Discord pour la réponse.' }, 400);
 
-  // Limite anti-abus : 5 demandes / heure par compte (ou par contact pour les visiteurs)
+  // Limites anti-abus (sur l'heure qui vient de s'écouler)
   const since = new Date(Date.now() - 3600_000).toISOString();
-  let q = admin.from('hg_support').select('id', { count: 'exact', head: true }).gte('created_at', since);
-  q = userId ? q.eq('user_id', userId) : q.is('user_id', null).ilike('contact', contact.replace(/[\\%_]/g, (c) => '\\' + c));
-  const { count, error: countErr } = await q;
-  if (countErr) return json({ error: 'Erreur serveur, réessaie plus tard.' }, 500);
-  if ((count ?? 0) >= MAX_PER_HOUR) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
-  if (!userId) {
-    const { count: anon } = await admin.from('hg_support').select('id', { count: 'exact', head: true })
-      .gte('created_at', since).is('user_id', null);
-    if ((anon ?? 0) >= MAX_ANON_PER_HOUR) return json({ error: 'Trop de demandes en ce moment. Réessaie plus tard.' }, 429);
+  // deno-lint-ignore no-explicit-any
+  const countSince = async (build: (q: any) => any): Promise<number> => {
+    const { count, error: err } = await build(admin.from('hg_support').select('id', { count: 'exact', head: true }).gte('created_at', since));
+    if (err) throw new Error(err.message);
+    return count ?? 0;
+  };
+  // Membre connecté : 5 demandes / heure. Visiteur : 5 par contact et 5 par client (et un plafond global large).
+  let hash: string | null = null;
+  try {
+    if (userId) {
+      if (await countSince((q) => q.eq('user_id', userId)) >= MAX_PER_HOUR) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
+    } else {
+      if (await countSince((q) => q.is('user_id', null).ilike('contact', contact.replace(/[\\%_]/g, (c) => '\\' + c))) >= MAX_PER_HOUR) {
+        return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
+      }
+      hash = await clientHash(clientIp(req));
+      if (hash && await countSince((q) => q.eq('client_hash', hash!)) >= MAX_ANON_CLIENT_PER_HOUR) {
+        return json({ error: 'Trop de demandes depuis ta connexion. Réessaie dans une heure.' }, 429);
+      }
+      if (await countSince((q) => q.is('user_id', null)) >= MAX_ANON_TOTAL_PER_HOUR) {
+        return json({ error: 'Trop de demandes en ce moment. Réessaie plus tard.' }, 429);
+      }
+    }
+  } catch (e) {
+    console.error('[hg-support] limite', e);
+    return json({ error: 'Erreur serveur, réessaie plus tard.' }, 500);
   }
 
-  // Enregistrement
+  // Enregistrement. Visiteur : client_hash (empreinte) ; membre connecté : pas d'empreinte, user_id suffit.
   const { data: row, error } = await admin.from('hg_support')
-    .insert({ user_id: userId, pseudo, subject, message, contact: contact || null })
+    .insert({ user_id: userId, pseudo, subject, message, contact: contact || null, client_hash: userId ? null : hash })
     .select('id').single();
   if (error) { console.error(error); return json({ error: 'Impossible d\'enregistrer la demande.' }, 500); }
 
