@@ -44,15 +44,26 @@ const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || 'Le Gang · Série 1';
 
 /* ---------- Données ---------- */
+/** Lit toutes les lignes d'une requête (l'API renvoie au plus 1000 lignes par appel). */
+async function fetchAllRows(build, page = 1000) {
+  const out = [];
+  for (let from = 0; ; from += page) {
+    const { data, error } = await build().range(from, from + page - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < page) return out;
+  }
+}
+
 async function loadStatic() {
-  const [sets, cards] = await Promise.all([
-    sb.from('hg_card_sets').select('*').eq('active', true).order('sort'),
-    sb.from('hg_cards').select('*').eq('active', true).order('number'),
-  ]);
+  const sets = await sb.from('hg_card_sets').select('*').eq('active', true).order('sort');
   if (sets.error) throw sets.error;
-  if (cards.error) throw cards.error;
   S.sets = (sets.data || []).filter(started);
-  S.cards = cards.data || [];
+  // Seulement les cartes des séries ouvertes (il y en a des milliers au total), en lisant toutes les pages
+  const setIds = S.sets.map((x) => x.id);
+  S.cards = setIds.length
+    ? await fetchAllRows(() => sb.from('hg_cards').select('*').eq('active', true).in('set_id', setIds).order('number').order('id'))
+    : [];
   S.cardsById = new Map(S.cards.map((c) => [c.id, c]));
   if (!S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }
@@ -60,13 +71,21 @@ async function loadStatic() {
 async function refreshData() {
   const [st, cp, wi, lg] = await Promise.all([
     sb.rpc('hg_cards_me'),
-    sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at'),
+    fetchAllRows(() => sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at').order('id'))
+      .then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
     sb.from('hg_card_wishlist').select('card_id').eq('user_id', me.id),
     sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).neq('reason', 'booster_requete').order('created_at', { ascending: false }).limit(30),
   ]);
   for (const r of [st, cp, wi, lg]) if (r.error) throw r.error;
   S.state = st.data;
   S.copies = cp.data || [];
+  // Cartes possédées qui n'appartiennent pas à une série ouverte (série fermée depuis) : on les charge aussi
+  const missing = [...new Set(S.copies.map((c) => c.card_id))].filter((id) => !S.cardsById.has(id));
+  for (let i = 0; i < missing.length; i += 150) {
+    const r = await sb.from('hg_cards').select('*').in('id', missing.slice(i, i + 150));
+    if (r.error) throw r.error;
+    for (const c of r.data || []) S.cardsById.set(c.id, c);
+  }
   S.wish = new Set((wi.data || []).map((w) => w.card_id));
   S.log = lg.data || [];
 }
