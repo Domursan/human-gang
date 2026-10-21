@@ -2,13 +2,23 @@
 // Trois blocs : réglages (hg_settings.bot), messages types (hg_settings.bot_templates, défauts partagés avec les
 // fonctions edge dans supabase/functions/_shared/bot-templates.json) et message manuel (hg-notify « admin_dm »,
 // historique hg_bot_log).
+// Rôle : page « Bot Discord » de l'admin. Réglages du bot (salons, mentions, notifications, rappels, assistance, planning),
+// édition des messages types avec aperçu façon Discord, envoi d'un message manuel à des membres (avec pièces jointes),
+// et historique des envois.
+// Dépendances : core.js (Supabase, toast, appel des fonctions edge, avatar, logo), icons.js, utils.js (pluriels),
+// admin/list-tools.js (recherche, pagination), admin/ui/drawer.js (tiroir).
+// Tables, RPC et stockage : hg_settings (bot, bot_templates, support, planning), hg_bot_log (historique), hg_profiles
+// (destinataires), bucket hg-bot-media (pièces jointes), fonctions edge hg-notify et hg-bot-templates.
+// Exporte : mountBotSection (montage de la page).
 import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
 import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
 import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './admin/list-tools.js';
 import { openDrawer } from './admin/ui/drawer.js';
 
+// Adresse du fichier de modèles partagé avec les fonctions edge (textes par défaut des messages types).
 const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
+// Types de notifications du bot : [clé, libellé, ce qui part et où]. Chaque type peut être activé ou coupé.
 const NOTIFY = [
   ['draw', 'Tirage du Secret Santa', 'annonce + MP aux participants'],
   ['gift', 'Cadeaux', 'MP « envoyé » / « reçu »'],
@@ -22,41 +32,57 @@ const NOTIFY = [
   ['trade_offer', 'MP : nouvelle offre d\'échange', 'MP au destinataire d\'une offre ou contre-proposition'],
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
 ];
+// Seules les clés de NOTIFY, pour parcourir les cases à cocher.
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 // Annonces publiées dans le salon d'annonces, avec leur mention (bot.mentions[type], défaut « none »)
 const MENTION_TYPES = [
   ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
   ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
 ];
+// Modes de mention possibles pour une annonce : aucune, le rôle, ou @everyone.
 const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];
 // Pièces jointes du message manuel : même liste blanche et même limite que hg-bot-media et _shared/bot-media.ts
 const MEDIA_BUCKET = 'hg-bot-media', MEDIA_MAX_FILES = 4, MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 const MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime',
   'audio/mpeg', 'audio/ogg', 'audio/wav', 'application/pdf']);
+// Valeur de l'attribut accept du champ de fichiers : les types de la liste blanche.
 const MEDIA_ACCEPT = [...MEDIA_TYPES].join(',');
+// Un identifiant Discord (salon, rôle, membre) est un nombre de 17 à 20 chiffres.
 const DISCORD_ID = /^\d{17,20}$/;
+// Longueurs maximales : titre et corps d'un message type (TITLE_MAX, BODY_MAX), titre et corps du message manuel.
+// CONFIRM_ABOVE : à partir de ce nombre de destinataires, l'envoi demande confirmation.
 const TITLE_MAX = 256, BODY_MAX = 4096, MANUAL_TITLE_MAX = 200, MANUAL_BODY_MAX = 2000, CONFIRM_ABOVE = 5;
+// Nombre maximum de destinataires d'un message manuel.
 const MAX_RECIPIENTS = 100;
+// Icônes SVG : recherche, envoi, annuler, ajouter.
 const ICON = {
   search: svg('search2', { stroke: 2 }),
   send: svg('send', { stroke: 2 }),
   undo: svg('undo', { stroke: 2 }),
   plus: svg('plus', { stroke: 2 }),
 };
+// État d'un destinataire possible : libellé et classe CSS (ID Discord manquant, refus des MP, compte sans profil).
 const STATUS = {
   ok: ['Discord OK', 'pill-ok'],
   nodiscord: ['Pas d\'ID Discord', 'pill-warn'],
   optout: ['A refusé les MP du bot', 'pill-warn'],
   noprofile: ['Compte sans profil', 'pill-todo'],
 };
+// Résultat d'un envoi (envoyé, échec, ignoré) : libellé et classe CSS.
 const RESULT = { sent: ['Envoyé', 'pill-ok'], failed: ['Échec', 'bm-pill-fail'], skipped: ['Ignoré', 'pill-todo'] };
 
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/** Comparaison sans accents ni casse. */
 const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// Heure seule (HH:MM), pour l'aperçu Discord.
 const timeFmt = new Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' });
+// Date et heure complètes, pour l'historique.
 const logFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+/** Vrai si la valeur est une chaîne non vide (les espaces seuls ne comptent pas). */
 const filled = (v) => typeof v === 'string' && v.trim() !== '';
 
+/** Ajoute la feuille de style de la page du bot, une seule fois. */
 function loadStyles() {
   if (document.querySelector('link[data-admin-bot]')) return;
   const l = document.createElement('link');
@@ -77,10 +103,20 @@ async function fnError(e) {
 }
 
 /* ---------- Rendu des modèles (même logique que supabase/functions/_shared/templates.ts) ---------- */
+/**
+ * Remplace les variables {nom} d'un modèle par leurs valeurs. Une variable non autorisée devient vide.
+ * Même règle que les fonctions edge (templates.ts).
+ * @param {string} text Modèle.
+ * @param {object} vars Valeurs par nom de variable.
+ * @param {Set<string>} [allowed] Variables autorisées (toutes si absent).
+ * @returns {string}
+ */
 function fillVars(text, vars, allowed) {
   return String(text ?? '').replace(/\{([a-z_]+)\}/g, (_m, name) => (allowed && !allowed.has(name) ? '' : String(vars[name] ?? '')));
 }
+/** Coupe un texte à n caractères ; « … » remplace la fin si nécessaire. */
 const truncate = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+/** Liste des variables {nom} d'un texte qui ne sont pas autorisées pour ce modèle (à signaler à l'admin). */
 const unknownVars = (text, allowed) => [...new Set([...String(text ?? '').matchAll(/\{([a-z_]+)\}/g)].map((m) => m[1]).filter((v) => !allowed.has(v)))];
 
 /** Mini-markdown Discord pour l'aperçu (gras, italique, souligné, barré, code, liens). Le texte est échappé d'abord. */
@@ -127,12 +163,14 @@ function discordPreview({ content = '', mention = '', embed, where = '', files =
     </div>`;
 }
 
+/** Taille lisible d'un fichier, en Ko ou en Mo (virgule décimale). */
 const fmtSize = (n) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} Ko` : `${(n / 1048576).toFixed(1).replace('.', ',')} Mo`);
 /** Nom de fichier envoyé au stockage : sans séparateur de chemin, sans « .. » (refusés par la fonction). */
 const storageName = (name) => String(name).normalize('NFC').replace(/[\\/\u0000]/g, '_').replace(/\.{2,}/g, '.').trim().slice(0, 120) || 'fichier';
 /** Identifiant aléatoire (crypto.randomUUID n'existe que sur https : le site peut aussi être servi en http local). */
 const uuid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID()
   : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+/** Date du jour au format AAAA-MM-JJ, heure locale. */
 const dayStamp = () => new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, heure locale
 
 /* ---------- Réglages lot 5 : rappels, envois, assistance, planning ---------- */
@@ -179,14 +217,28 @@ const SUPPORT_TXT = {
   mp_max: ['Longueur du message dans le MP à l\'admin', 'Au-delà, le MP est tronqué ; la demande reste complète dans la liste. Défaut : 1500.'],
   delai_reponse_jours: ['Délai de réponse annoncé (jours)', 'Affiché au visiteur après l\'envoi. Défaut : 30.'],
 };
+// Valeur par défaut du planning : envoi des anniversaires à 8 h (heure suisse).
 const PLANNING_DEF = { anniversaires_heure_locale: 8 };
 
+/**
+ * HTML d'un champ numérique de réglage : libellé, aide, et bornes min et max acceptées.
+ * @param {string} form Préfixe de l'identifiant (rules, support, planning).
+ * @param {string} k Nom du réglage.
+ * @param {string[]} [label, help] Libellé et aide.
+ * @param {number[]} [min, max] Bornes.
+ * @returns {string}
+ */
 const numField = (form, k, [label, help], [min, max]) => `<div class="field">
   <label for="${form}-${k}">${esc(label)}</label>
   <input id="${form}-${k}" name="${k}" type="number" min="${min}" max="${max}" step="1" inputmode="numeric" aria-describedby="${form}-${k}-h">
   <p class="small muted" id="${form}-${k}-h">${esc(help)}</p></div>`;
+/** Bouton « Rétablir les valeurs par défaut » d'un groupe de réglages. */
 const resetBtn = (form, group) => `<button class="btn btn-ghost btn-sm" type="button" data-form="${form}" data-reset-group="${group}">Rétablir les valeurs par défaut</button>`;
 
+/**
+ * HTML de la carte « Rappels, annonces et envois » : trois groupes de champs numériques, chacun avec son bouton de retour aux défauts.
+ * @returns {string}
+ */
 function rulesCardHtml() {
   const groups = Object.entries(RULE_GROUPS).map(([g, def]) => `
     <fieldset class="rg-group">
@@ -204,6 +256,10 @@ function rulesCardHtml() {
     </form>`;
 }
 
+/**
+ * HTML de la carte « Assistance » : sujets proposés (une ligne par sujet), puis les limites anti-abus et les longueurs.
+ * @returns {string}
+ */
 function supportCardHtml() {
   const sujets = `<div class="field">
       <label for="support-sujets">Sujets proposés dans le formulaire</label>
@@ -225,6 +281,10 @@ function supportCardHtml() {
     </form>`;
 }
 
+/**
+ * HTML de la carte « Planning » : heure d'envoi des anniversaires (0 à 23 h, heure suisse).
+ * @returns {string}
+ */
 function planningCardHtml() {
   const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${String(h).padStart(2, '0')} h</option>`).join('');
   return `<form class="card stack" id="planning-form" novalidate>
@@ -246,9 +306,16 @@ function planningCardHtml() {
 }
 
 /* ========================================================================== */
+/**
+ * Affiche la page du bot dans le conteneur et branche ses sections (réglages, modèles, envoi manuel, historique).
+ * Les réglages et les modèles sont chargés depuis la base au montage.
+ * @param {HTMLElement} container Élément qui recevra la page.
+ */
 export function mountBotSection(container) {
   if (!container) return;
   loadStyles();
+  // État de la page : réglages du bot, assistance et planning, filtres de l'historique, modèles (défauts, personnalisés, brouillons),
+  // destinataires choisis et pièces jointes du message manuel.
   const S = {
     bot: { announce_channel_id: null, birthday_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
     support: {}, planning: {},
@@ -258,6 +325,7 @@ export function mountBotSection(container) {
     files: [], // pièces jointes du message manuel : { file, url } (url : aperçu d'une image)
   };
 
+  // Squelette HTML de la page : réglages, rappels, assistance, planning, messages types, envoi manuel et historique.
   container.innerHTML = `
     <div class="bot-admin">
       <form class="card stack" id="bot-form" novalidate>
@@ -344,6 +412,7 @@ export function mountBotSection(container) {
       </form>
     </dialog>`;
 
+  // Formulaire des réglages généraux, et fenêtre de confirmation d'envoi (#bm-dlg).
   const form = $('#bot-form', container);
   const dlg = $('#bm-dlg', container);
 
@@ -355,6 +424,11 @@ export function mountBotSection(container) {
       if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
     }
   }
+  /**
+   * Ouvre la fenêtre de confirmation avec le texte donné.
+   * @param {string} text Phrase qui résume l'envoi.
+   * @returns {Promise<boolean>} true si l'admin clique « Envoyer ».
+   */
   function confirmSend(text) {
     $('#bm-dlg-p', container).textContent = text;
     dlg.returnValue = '';
@@ -363,6 +437,7 @@ export function mountBotSection(container) {
   }
 
   /* ======================= Réglages ======================= */
+  /** Remplit le formulaire des réglages généraux avec les valeurs enregistrées, puis grise les mentions si besoin. */
   function renderSettings() {
     form.announce_channel_id.value = S.bot.announce_channel_id ?? '';
     form.birthday_channel_id.value = S.bot.birthday_channel_id ?? '';
@@ -381,6 +456,8 @@ export function mountBotSection(container) {
     $('#bot-mentions-off', container).hidden = on;
   }
   form.announce_channel_id.addEventListener('input', syncMentionControls);
+  // Enregistrement des réglages généraux : contrôle des identifiants Discord et du rôle exigé par une mention,
+  // puis écriture de hg_settings.bot. Les réglages des autres blocs sont conservés (...S.bot).
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter, async () => {
@@ -403,6 +480,7 @@ export function mountBotSection(container) {
       toast('Réglages du bot enregistrés', 'ok');
     });
   });
+  // Test : le bot envoie un message de test au salon et en MP ; le résultat de chaque voie est affiché.
   $('#bot-test', container).addEventListener('click', (ev) => busy(ev.currentTarget, async () => {
     const res = await callFn('hg-notify', { event: 'bot_test' });
     const parts = [];
@@ -413,7 +491,9 @@ export function mountBotSection(container) {
   }));
 
   /* ======================= Rappels, envois, assistance, planning ======================= */
+  // Formulaires des rappels et limites, de l'assistance et du planning.
   const rulesForm = $('#rules-form', container), supportForm = $('#support-cfg-form', container), planForm = $('#planning-form', container);
+  // Clés des réglages de rappels et limites, et clés numériques de l'assistance.
   const RULE_ALL = Object.keys(RULE_DEF), SUPPORT_NUM = Object.keys(SUPPORT_MIN_MAX);
   /** Entier lu dans un champ, borné ; lève une erreur lisible. */
   const readInts = (form, keys, limits, labelOf) => {
@@ -426,6 +506,7 @@ export function mountBotSection(container) {
     }
     return out;
   };
+  // Libellés des réglages, utilisés dans les messages d'erreur.
   const labelRule = (k) => RULE_TXT[k][0], labelSupport = (k) => SUPPORT_TXT[k][0];
   /** Valeur stockée d'un réglage bot (repli sur le défaut si absente ou hors bornes, comme le serveur). */
   const storedRule = (k) => {
@@ -436,20 +517,28 @@ export function mountBotSection(container) {
     const [min, max] = RULE_MIN_MAX[k];
     return Number.isInteger(raw) && raw >= min && raw <= max ? raw : RULE_DEF[k];
   };
+  /** Tous les réglages de rappels et limites, tels qu'ils sont en vigueur. */
   const currentRules = () => Object.fromEntries(RULE_ALL.map((k) => [k, storedRule(k)]));
   /** Objet hg_settings.bot avec les réglages de ce bloc (le reste est conservé). */
+  // Forme de hg_settings.bot pour les rappels, les événements dynamiques et les envois (rangée sous des clés imbriquées).
   const botWith = (v) => ({
     ...S.bot,
     rappels: { irl_heures: [v.irl_long, v.irl_short], ss_jours_avant: v.ss_jours },
     dyn: { delai_retard_heures: v.dyn_retard, top_n: v.top_n },
     envoi: { pieces_max: v.pieces_max, piece_max_mo: v.piece_max_mo, destinataires_max: v.destinataires_max, corps_max: v.corps_max },
   });
+  /** Remplit le formulaire des rappels et limites avec les valeurs en vigueur. */
   const fillRules = () => { for (const k of RULE_ALL) rulesForm[k].value = storedRule(k); };
+  /**
+   * Enregistre hg_settings.bot avec les nouvelles valeurs, puis recale le formulaire.
+   * @param {object} next Réglages complets du bot.
+   */
   async function saveBot(next) {
     check(await sb.from('hg_settings').upsert({ key: 'bot', value: next, updated_at: new Date().toISOString() }));
     S.bot = next;
     fillRules();
   }
+  // Enregistrement des rappels et limites : chaque nombre doit être dans ses bornes, et le second rappel doit être plus court que le premier.
   rulesForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter, async () => {
@@ -460,27 +549,38 @@ export function mountBotSection(container) {
     });
   });
 
+  // Sujet « Bug sur le site » : il doit toujours rester dans la liste (le badge Chasseur de bugs s'appuie dessus).
   const BUG = BUG_SUBJECT;
   /** Liste de sujets valide (même règle que le serveur), sinon null. */
   const cleanSujets = (list) => {
     const clean = [...new Set(list.map((x) => String(x).trim()).filter(Boolean))];
     return clean.length && clean.length <= 20 && clean.every((x) => x.length <= 80) && clean.includes(BUG) ? clean : null;
   };
+  /** Valeur stockée d'un réglage d'assistance, ou le défaut si elle est absente ou hors bornes. */
   const storedSupport = (k) => {
     const v = S.support?.[k], [min, max] = SUPPORT_MIN_MAX[k];
     return Number.isInteger(v) && v >= min && v <= max ? v : SUPPORT_DEF[k];
   };
+  // Sujets en vigueur : la liste enregistrée si elle est valide, sinon la liste par défaut.
   const storedSujets = () => (Array.isArray(S.support?.sujets) && cleanSujets(S.support.sujets.filter((x) => typeof x === 'string')) ) || SUPPORT_DEF.sujets;
+  /** Tous les réglages d'assistance, tels qu'ils sont en vigueur (sujets compris). */
   const currentSupport = () => ({ sujets: storedSujets(), ...Object.fromEntries(SUPPORT_NUM.map((k) => [k, storedSupport(k)])) });
+  /** Remplit le formulaire de l'assistance (sujets et limites) avec les valeurs en vigueur. */
   const fillSupport = () => {
     supportForm.sujets.value = storedSujets().join('\n');
     for (const k of SUPPORT_NUM) supportForm[k].value = storedSupport(k);
   };
+  /**
+   * Enregistre hg_settings.support avec les nouvelles valeurs, puis recale le formulaire.
+   * @param {object} next Réglages complets de l'assistance (sujets et limites).
+   */
   async function saveSupport(next) {
     check(await sb.from('hg_settings').upsert({ key: 'support', value: next, updated_at: new Date().toISOString() }));
     S.support = next;
     fillSupport();
   }
+  // Enregistrement de l'assistance : mêmes règles que le serveur (1 à 20 sujets de 80 caractères au plus, sujet « Bug » obligatoire,
+  // maximum du message supérieur au minimum).
   supportForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter, async () => {
@@ -497,17 +597,24 @@ export function mountBotSection(container) {
     });
   });
 
+  /** Heure d'envoi des anniversaires en vigueur (0 à 23), ou le défaut si la valeur enregistrée est invalide. */
   const storedHeure = () => {
     const h = S.planning?.anniversaires_heure_locale;
     return Number.isInteger(h) && h >= 0 && h <= 23 ? h : PLANNING_DEF.anniversaires_heure_locale;
   };
+  /** Remplit le formulaire du planning avec l'heure en vigueur. */
   const fillPlanning = () => { planForm.anniversaires_heure_locale.value = String(storedHeure()); };
+  /**
+   * Enregistre hg_settings.planning (heure d'envoi des anniversaires), puis recale le formulaire.
+   * @param {number} h Heure, de 0 à 23.
+   */
   async function savePlanning(h) {
     const next = { anniversaires_heure_locale: h };
     check(await sb.from('hg_settings').upsert({ key: 'planning', value: next, updated_at: new Date().toISOString() }));
     S.planning = next;
     fillPlanning();
   }
+  // Enregistrement du planning.
   planForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter, async () => {
@@ -538,24 +645,36 @@ export function mountBotSection(container) {
   });
 
   /* ======================= Messages types ======================= */
+  // Zone de la liste des messages types.
   const tplBody = $('#bt-body', container);
   let edRoot = null; // corps du tiroir d'édition (ouvert à la demande)
+  // Accès aux définitions des modèles : clés, méta-données (libellé, variables, groupe) et texte par défaut.
   const keys = () => Object.keys(S.defs.templates);
+  /** Méta-données d'un modèle (libellé, cible, variables). Objet vide si le modèle n'en a pas. */
   const meta = (k) => S.defs.meta[k] ?? { vars: {} };
+  /** Texte par défaut d'un modèle, tel que fourni par bot-templates.json. */
   const def = (k) => S.defs.templates[k];
   /** Modèle enregistré (personnalisé champ par champ, sinon défaut). */
   const saved = (k) => {
     const c = S.custom[k] ?? {};
     return { title: filled(c.title) ? c.title : def(k).title, body: filled(c.body) ? c.body : def(k).body };
   };
+  // Texte en cours d'un modèle : le brouillon s'il existe, sinon le texte enregistré.
   const current = (k) => S.drafts.get(k) ?? saved(k);
+  // Vrai si les deux textes (titre et corps) sont identiques.
   const same = (a, b) => a.title === b.title && a.body === b.body;
+  // Vrai si le modèle enregistré diffère du texte par défaut (personnalisé).
   const isCustom = (k) => !same(saved(k), def(k));
+  // Vrai si un brouillon existe et diffère de ce qui est enregistré (modification non enregistrée).
   const isDirty = (k) => S.drafts.has(k) && !same(S.drafts.get(k), saved(k));
+  // Clés des modèles ayant une modification non enregistrée.
   const dirtyKeys = () => keys().filter(isDirty);
+  // Variables autorisées pour un modèle.
   const allowedOf = (k) => new Set(Object.keys(meta(k).vars ?? {}));
+  // Valeurs d'exemple des variables, pour l'aperçu.
   const examplesOf = (k) => Object.fromEntries(Object.entries(meta(k).vars ?? {}).map(([n, v]) => [n, v.example ?? '']));
 
+  /** Dessine la liste des messages types, groupée par destination, avec son bouton « Enregistrer ». */
   function renderTemplatesShell() {
     const groups = S.defs.groups ?? [];
     tplBody.innerHTML = `
@@ -583,6 +702,7 @@ export function mountBotSection(container) {
     refreshListStates();
   }
 
+  /** Met à jour l'état de chaque modèle dans la liste (non enregistré, personnalisé), le bouton Enregistrer et le compteur. */
   function refreshListStates() {
     for (const k of keys()) {
       const el = $(`[data-state="${k}"]`, tplBody);
@@ -651,6 +771,7 @@ export function mountBotSection(container) {
     });
     const title = $('#bt-title', edRoot), text = $('#bt-text', edRoot);
     title.value = t.title; text.value = t.body;
+    /** Enregistre le brouillon à chaque frappe, puis met à jour les compteurs, l'aperçu et les états de la liste. */
     const onInput = () => {
       S.drafts.set(k, { title: title.value, body: text.value });
       updateEditorMeta(); renderTplPreview(); refreshListStates();
@@ -677,6 +798,7 @@ export function mountBotSection(container) {
     updateEditorMeta(); renderTplPreview(); refreshListStates();
   }
 
+  /** Met à jour le compteur de caractères, l'avertissement des variables inconnues et l'état du bouton « Rétablir ». */
   function updateEditorMeta() {
     const k = S.current; if (!k) return;
     const t = current(k), allowed = allowedOf(k);
@@ -689,6 +811,7 @@ export function mountBotSection(container) {
     $('#bt-reset', edRoot).disabled = same(t, def(k));
   }
 
+  /** Met à jour l'aperçu Discord du modèle en cours, rempli avec des valeurs d'exemple. */
   function renderTplPreview() {
     const k = S.current; if (!k) return;
     const m = meta(k), t = current(k), allowed = allowedOf(k), ex = examplesOf(k);
@@ -735,18 +858,23 @@ export function mountBotSection(container) {
     }
   }
 
+  // Avertit avant de quitter la page s'il reste des modèles non enregistrés.
   window.addEventListener('beforeunload', (e) => {
     if (S.defs && dirtyKeys().length) { e.preventDefault(); e.returnValue = ''; }
   });
 
   /* ======================= Message manuel ======================= */
+  // Zone de l'envoi manuel : destinataires, rédaction, pièces jointes, aperçu et résultat.
   const bmBody = $('#bm-body', container);
+  /** Vrai si le compte peut recevoir un MP du bot (ID Discord présent et MP non refusés). */
   const reachable = (p) => p.status === 'ok';
+  /** Comptes affichés dans la liste, filtrés par la recherche (nom ou courriel, sans accents ni casse). */
   const visible = () => {
     const q = norm(S.q);
     return S.people.filter((p) => !q || norm(p.name).includes(q) || norm(p.email).includes(q));
   };
 
+  /** Dessine le formulaire d'envoi manuel et branche ses contrôles : recherche, sélection, salon, pièces jointes, envoi. */
   function renderManualShell() {
     bmBody.innerHTML = `
       <div class="bm-layout">
@@ -807,6 +935,7 @@ export function mountBotSection(container) {
       </div>`;
 
     $('#bm-q', bmBody).addEventListener('input', (e) => { S.q = e.target.value; renderRecipients(); });
+    // « Tous » ajoute les comptes visibles et joignables, dans la limite de MAX_RECIPIENTS.
     $('#bm-all', bmBody).addEventListener('click', () => {
       for (const p of visible().filter(reachable)) if (S.selected.size < MAX_RECIPIENTS) S.selected.add(p.id);
       if (visible().filter(reachable).some((p) => !S.selected.has(p.id))) toast(`${MAX_RECIPIENTS} destinataires maximum par envoi`, 'error');
@@ -828,6 +957,7 @@ export function mountBotSection(container) {
     let last = text;
     title.addEventListener('focus', () => { last = title; });
     text.addEventListener('focus', () => { last = text; });
+    /** Met à jour les compteurs et l'aperçu à chaque frappe dans le message manuel. */
     const onInput = () => { renderManualCounts(); renderManualPreview(); };
     title.addEventListener('input', onInput);
     text.addEventListener('input', onInput);
@@ -835,6 +965,7 @@ export function mountBotSection(container) {
     $('#bm-mention', bmBody).addEventListener('change', renderManualPreview);
     // Pièces jointes : clic ou Entrée/Espace ouvre le sélecteur ; glisser-déposer ; retrait par ligne
     const drop = $('#bm-drop', bmBody), input = fileInput();
+    /** Ouvre le sélecteur de fichiers si la limite de pièces jointes n'est pas atteinte, sinon affiche l'erreur. */
     const openPicker = () => { if (S.files.length < MEDIA_MAX_FILES) input.click(); else showFileError(`${MEDIA_MAX_FILES} fichiers maximum par envoi.`); };
     drop.addEventListener('click', openPicker);
     drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); } });
@@ -847,16 +978,19 @@ export function mountBotSection(container) {
     });
     const varBtn = $('#bm-var', bmBody);
     varBtn.addEventListener('mousedown', (e) => e.preventDefault());
+    // Insère {pseudo} à la position du curseur, dans le champ utilisé en dernier.
     varBtn.addEventListener('click', () => {
       if (last.value.length + 8 > last.maxLength) { toast('Texte trop long', 'error'); return; }
       last.setRangeText('{pseudo}', last.selectionStart ?? last.value.length, last.selectionEnd ?? last.value.length, 'end');
       last.focus(); onInput();
     });
+    // Envoi : passe par sendManual (confirmation, téléversement des pièces jointes, résultat).
     $('#bm-form', bmBody).addEventListener('submit', (e) => { e.preventDefault(); sendManual(e.submitter); });
     syncChannelOption();
     renderRecipients(); renderManualCounts(); renderManualPreview();
   }
 
+  /** Active la case « Publier aussi dans le salon » seulement si un salon d'annonces est configuré. */
   function syncChannelOption() {
     const cb = $('#bm-channel', bmBody); if (!cb) return;
     const has = !!S.bot.announce_channel_id;
@@ -883,7 +1017,9 @@ export function mountBotSection(container) {
   }
 
   /* ---------- Pièces jointes du message manuel ---------- */
+  // Champ de fichiers caché, ouvert par la zone de dépôt.
   const fileInput = () => $('#bm-file-input', bmBody);
+  /** Affiche le message d'erreur des pièces jointes, ou l'efface si msg est vide. */
   function showFileError(msg) {
     const box = $('#bm-file-err', bmBody);
     box.textContent = msg; box.hidden = !msg;
@@ -901,18 +1037,24 @@ export function mountBotSection(container) {
     showFileError(errors.join(' '));
     renderFiles();
   }
+  /**
+   * Retire une pièce jointe de la liste et libère son aperçu.
+   * @param {number} i Position dans S.files.
+   */
   function removeFile(i) {
     const [f] = S.files.splice(i, 1);
     if (f?.url) URL.revokeObjectURL(f.url);
     showFileError('');
     renderFiles();
   }
+  /** Vide la liste des pièces jointes et libère leurs aperçus. */
   function clearFiles() {
     for (const f of S.files) if (f.url) URL.revokeObjectURL(f.url);
     S.files = [];
     const input = fileInput(); if (input) input.value = '';
     renderFiles();
   }
+  /** Dessine la liste des pièces jointes (aperçu ou extension, taille, retirer) et désactive la zone de dépôt si la limite est atteinte. */
   function renderFiles() {
     const list = $('#bm-file-list', bmBody); if (!list) return;
     list.innerHTML = S.files.map((f, i) => {
@@ -938,6 +1080,7 @@ export function mountBotSection(container) {
     return done;
   }
 
+  /** Dessine la liste des comptes avec leur case, leur pastille d'état et leur mention « admin ». */
   function renderRecipients() {
     const list = $('#bm-list', bmBody);
     const rows = visible();
@@ -953,19 +1096,26 @@ export function mountBotSection(container) {
     }).join('') : '<div class="empty">Aucun compte trouvé.</div>';
     renderCount();
   }
+  /** Affiche le nombre de destinataires choisis, par rapport aux comptes joignables et non joignables. */
   function renderCount() {
     const n = S.selected.size, total = S.people.filter(reachable).length, off = S.people.length - total;
     $('#bm-count', bmBody).textContent = `${pluralCount(n, 'sélectionné', 'sélectionnés')} sur ${pluralCount(total, 'compte joignable', 'comptes joignables')}${off ? ` · ${pluralCount(off, 'compte non joignable', 'comptes non joignables')}` : ''}`;
   }
+  /** Met à jour les compteurs de caractères du titre et du message manuel. */
   function renderManualCounts() {
     $('#bm-title-count', bmBody).textContent = `${$('#bm-title', bmBody).value.length} / ${MANUAL_TITLE_MAX}`;
     $('#bm-text-count', bmBody).textContent = `${$('#bm-text', bmBody).value.length} / ${MANUAL_BODY_MAX}`;
   }
+  /**
+   * Met à jour l'aperçu du message manuel. Le premier destinataire choisi sert d'exemple pour {pseudo} ;
+   * sans destinataire, l'aperçu est celui du salon (« tout le monde »).
+   */
   function renderManualPreview() {
     const firstId = [...S.selected][0];
     const who = firstId ? S.pseudo.get(firstId) ?? 'Alex' : null;
     const channel = $('#bm-channel', bmBody).checked;
     const pseudo = who ?? (channel ? 'tout le monde' : 'Alex');
+    /** Remplace {pseudo} par le pseudo d'exemple de l'aperçu. */
     const sub = (s) => s.replace(/\{pseudo\}/g, pseudo);
     const title = truncate(sub($('#bm-title', bmBody).value).replace(/\s+/g, ' ').trim(), TITLE_MAX);
     const description = truncate(sub($('#bm-text', bmBody).value).trim(), BODY_MAX);
@@ -984,6 +1134,12 @@ export function mountBotSection(container) {
     });
   }
 
+  /**
+   * Envoie le message manuel : contrôles, confirmation si l'envoi est large ou mentionne @everyone, téléversement des
+   * pièces jointes, appel de hg-notify (admin_dm), puis résultat et rafraîchissement de l'historique.
+   * En cas d'échec, les fichiers déjà téléversés sont retirés du stockage.
+   * @param {HTMLButtonElement|null} btn Bouton « Envoyer ».
+   */
   async function sendManual(btn) {
     if (S.sending) return;
     const title = $('#bm-title', bmBody).value.trim(), body = $('#bm-text', bmBody).value.trim();
@@ -1031,6 +1187,11 @@ export function mountBotSection(container) {
     });
   }
 
+  /**
+   * Liste des résultats par destinataire : nom, état (envoyé, échec, ignoré) et raison éventuelle.
+   * @param {object[]} list Résultats renvoyés par hg-notify ou stockés dans l'historique.
+   * @returns {string}
+   */
   function recipientsHtml(list) {
     return `<ul class="bm-res-list">${(list ?? []).map((r) => {
       const st = r.status ?? (r.ok ? 'sent' : 'failed');
@@ -1040,6 +1201,10 @@ export function mountBotSection(container) {
     }).join('')}</ul>`;
   }
 
+  /**
+   * Affiche le résultat d'un envoi : totaux, état de la publication dans le salon et détail par destinataire.
+   * @param {object} res Réponse de hg-notify (sent, failed, skipped, channel, recipients).
+   */
   function renderResult(res) {
     const parts = [];
     if (res.sent) parts.push(pluralCount(res.sent, 'envoyé', 'envoyés'));
@@ -1055,6 +1220,7 @@ export function mountBotSection(container) {
   }
 
   /* ---------- Historique ---------- */
+  // Panneau « Historique des envois » (repliable) : l'historique est chargé à la première ouverture.
   const histDetails = $('#bm-history', container);
   histDetails.addEventListener('toggle', () => { if (histDetails.open && !S.history) loadHistory(); });
   $('#bm-hist-filters', container).addEventListener('click', (ev) => {
@@ -1075,8 +1241,15 @@ export function mountBotSection(container) {
   });
   // Lignes d'échec : un envoi a un destinataire « failed » (ou ok:false, ancien format) dans recipients,
   // ou le passage automatique a signalé des échecs dans son texte. hg_bot_log n'a pas de colonne de statut.
+  /**
+   * Charge les envois de l'historique, les plus récents d'abord. Pour « échecs seulement », on interroge trois formes de lignes
+   * (nouveau format, ancien format, passage automatique) puis on fusionne sans doublon.
+   * @param {boolean} failedOnly Vrai pour ne garder que les envois avec un échec.
+   * @returns {Promise<object[]>}
+   */
   async function fetchHistory(failedOnly) {
     const cols = 'id, sent_by, kind, title, body, recipients, channel, created_at';
+    /** Requête de base de l'historique : colonnes utiles, plus récents d'abord. */
     const base = () => sb.from('hg_bot_log').select(cols).order('created_at', { ascending: false });
     const n = S.histLimit;
     if (!failedOnly) return check(await base().limit(n)) ?? [];
@@ -1089,6 +1262,7 @@ export function mountBotSection(container) {
     for (const r of [...(check(a) ?? []), ...(check(b) ?? []), ...(check(c) ?? [])]) seen.set(r.id, r);
     return [...seen.values()].sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))).slice(0, n);
   }
+  /** Charge l'historique selon le filtre et la limite en cours, puis l'affiche. En cas d'erreur, affiche le message. */
   async function loadHistory() {
     const box = $('#bm-history-list', container);
     box.setAttribute('aria-busy', 'true');
@@ -1103,6 +1277,10 @@ export function mountBotSection(container) {
       box.innerHTML = `<div class="empty">Impossible de charger l'historique : ${esc(errMsg(e))}</div>`;
     }
   }
+  /**
+   * Dessine l'historique filtré par la recherche : une ligne repliable par envoi, avec ses compteurs et ses destinataires.
+   * Le bouton « Afficher plus » apparaît s'il reste des envois à charger.
+   */
   function renderHistory() {
     const box = $('#bm-history-list', container);
     const failedOnly = S.histFilter === 'failed';
@@ -1139,6 +1317,7 @@ export function mountBotSection(container) {
 
   /* ======================= Chargement ======================= */
   (async () => {
+    // Chargement : réglages, modèles, comptes et profils en parallèle. Chaque lot peut échouer sans bloquer les autres.
     const [settings, defs, accounts, profiles] = await Promise.allSettled([
       sb.from('hg_settings').select('key, value').in('key', ['bot', 'bot_templates', 'support', 'planning']).then(check),
       fetch(TEMPLATES_URL, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
@@ -1148,8 +1327,10 @@ export function mountBotSection(container) {
 
     // Réglages
     if (settings.status === 'fulfilled') {
+      /** Valeur d'un réglage parmi les lignes chargées (undefined si absent). */
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = get('bot') ?? S.bot;
+      // Notifications activées par défaut ; l'échange conclu reste coupé par défaut. Les choix enregistrés priment.
       S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, ...(S.bot.notify || {}) };
       S.support = get('support') ?? {};
       S.planning = get('planning') ?? {};
@@ -1180,6 +1361,7 @@ export function mountBotSection(container) {
     }
     S.people = accs.map((a) => {
       const p = byId.get(a.id);
+      // Pastille d'état du compte : sans profil, sans ID Discord, MP refusés, ou joignable (ok).
       const status = !p ? 'noprofile' : !DISCORD_ID.test(String(p.discord_id ?? '')) ? 'nodiscord' : !p.bot_optin ? 'optout' : 'ok';
       return {
         id: a.id, name: p?.pseudo ?? a.pseudo ?? a.email ?? 'Compte sans pseudo', email: a.email ?? '',
