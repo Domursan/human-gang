@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -28,6 +28,15 @@ const PRECACHE = [
   'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js',
   'assets/js/admin-godmode.js', 'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
   'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
+  'assets/js/admin-accounts/activity.js', 'assets/js/admin-accounts/common.js', 'assets/js/admin-accounts/events.js', 'assets/js/admin-accounts/fiche.js',
+  'assets/js/admin-accounts/inspect.js', 'assets/js/admin-accounts/list.js', 'assets/js/admin-accounts/profile.js', 'assets/js/admin-accounts/ss-pairs.js',
+  'assets/js/admin-accounts/ss-shared.js', 'assets/js/admin-accounts/ss.js', 'assets/js/admin-accounts/state.js', 'assets/js/admin-cards/constants.js',
+  'assets/js/admin-cards/data.js', 'assets/js/admin-cards/economy.js', 'assets/js/admin-cards/editor.js', 'assets/js/admin-cards/helpers.js',
+  'assets/js/admin-cards/list.js', 'assets/js/admin-cards/players.js', 'assets/js/admin-cards/sets.js', 'assets/js/admin-cards/state.js',
+  'assets/js/admin-cards/stats.js', 'assets/js/admin-cards/trades.js', 'assets/js/admin-cards/view.js', 'assets/js/admin/badges.js',
+  'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
+  'assets/js/admin/overview.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
+  'assets/js/admin/support.js',
   'assets/js/assistance.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js',
   'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js',
