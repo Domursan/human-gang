@@ -208,12 +208,14 @@ async function show(r) {
   const key = `${r.dom.id}/${r.sub.id}`;
   const p = providers.get(key) || {};
   curKey = key;
-  el.shell.dataset.screen = 'sub';
+  // Liste + détail : sur mobile, la liste (colonne 2) occupe l'écran tant qu'aucun élément n'est choisi ;
+  // le bouton retour du détail revient à la liste.
+  el.shell.dataset.screen = MOBILE.matches && p.list && !r.id ? 'list' : 'sub';
   paintColumn(r.dom);
   markActive(r.dom.id, r.sub.id);
   el.zoneEyebrow.textContent = r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
-  el.back.setAttribute('href', `#${r.dom.id}/`);
+  el.back.setAttribute('href', r.id && p.list ? `#${r.dom.id}/${r.sub.id}` : `#${r.dom.id}/`);
   // Conteneur du groupe (une seule sous-section visible à la fois ; les déjà montées restent en mémoire)
   const gid = p.group || key;
   let g = groups.get(gid);

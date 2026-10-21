@@ -7,6 +7,7 @@
 //   onSend(texte) / onNote(texte) : appelés à l'envoi ; une promesse rejetée affiche une erreur et garde le texte.
 //   Bascule « Note interne » : le message part en note (visible seulement dans le panel, teinte différente).
 //   Ctrl+Entrée (ou ⌘+Entrée) envoie ; Entrée seule saute une ligne.
+//   composer : false pour un fil en lecture seule (pas de zone de réponse, rien à envoyer en base).
 import { esc, avatarHtml } from '../../core/util.js';
 import { toast } from '../../core/ui.js';
 import { clock } from './time.js';
@@ -23,7 +24,7 @@ export function createThread(el, opts = {}) {
   el.classList.add('ui-thread');
   el.innerHTML = `
     <div class="ui-thread-log" role="log" aria-label="${esc(label)}" aria-live="polite"></div>
-    <form class="ui-composer" autocomplete="off">
+    <form class="ui-composer" autocomplete="off"${opts.composer === false ? ' hidden' : ''}>
       <div class="ui-box" data-internal="false">
         <label class="ui-sr" for="${uid}-ta">Votre réponse</label>
         <textarea id="${uid}-ta" class="ui-textarea" rows="2" placeholder="${esc(opts.placeholder || 'Votre réponse…')}"></textarea>

@@ -197,6 +197,16 @@
 .ui-linkbtn svg { width: 16px; height: 16px; flex: none; }
 .ui-linkbtn:hover { background: var(--surface-2); }
 
+/* ---------- Liste + détail (Assistance, Boîte à idées) : le fil remplit la zone, seul le journal défile ---------- */
+.shell-group[data-fill] { flex: 1; min-height: 0; }
+.shell-group[data-fill] > .admin-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.detail-host { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.detail-host .ui-dhead { flex: none; }
+.detail-empty { margin: auto; padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
+.detail-note { margin: 0; font-size: 12.5px; color: var(--muted); padding: 10px 24px 14px; border-top: 1px solid var(--border); }
+.detail-host .ui-thread-log { padding-bottom: 16px; }
+.detail-host .ui-msg.is-cont { margin-top: -6px; }
+
 /* ---------- Mobile : cibles tactiles de 44 px ---------- */
 @media (max-width: 760px) {
   .ui-search, .ui-chip, .ui-more-btn, .ui-btn, .ui-send, .ui-linkbtn { min-height: 44px; }

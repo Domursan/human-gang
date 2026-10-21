@@ -27,8 +27,8 @@ import { bindInvites, renderInvites, renderMembers } from './admin/invites.js';
 import { renderSS } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
 import { bindBadges, renderBadges } from './admin/badges.js';
-import { bindIdeas, renderIdeas } from './admin/ideas.js';
-import { bindSupport, renderSupport } from './admin/support.js';
+import { ideasSub, renderIdeas } from './admin/ideas.js';
+import { supportSub, renderSupport } from './admin/support.js';
 import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
 import { initLive } from './admin/live.js';
 import { initShell, registerSub, startShell } from './admin/shell.js';
@@ -60,8 +60,6 @@ function ensureAccounts() {
 if (has('membres')) bindInvites(me);
 if (has('secret-santa')) bindSecretSanta();
 if (has('badges')) bindBadges();
-if (has('idees')) bindIdeas();
-if (has('assistance')) bindSupport();
 
 /* ---------- Sous-sections : montage à la première visite ---------- */
 registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')) });
@@ -93,6 +91,8 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats',
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
 }
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
+registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
+registerSub('communication/idees', ideasSub);
 registerSub('communication/messagerie', { main: () => mountMessagesSection($('#messages-root')) });
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
 registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')) });
@@ -108,8 +108,8 @@ await Promise.all([
   has('membres') ? safe(loadInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }) : null,
   needSS ? safe(async () => { await loadEditions(); await loadEditionDetails(); S.ssLoaded = true; }, (e) => { $('#ss-root').innerHTML = sectionError(e); }) : null,
   needBadges ? safe(loadBadges, (e) => { $('#badge-grid').innerHTML = sectionError(e); }) : null,
-  has('idees') ? safe(loadIdeas, (e) => { $('#idea-list').innerHTML = sectionError(e); }) : null,
-  has('assistance') ? safe(loadSupport, (e) => { $('#support-list').innerHTML = sectionError(e); }) : null,
+  has('idees') ? safe(loadIdeas, (e) => { $('#ideas-root').innerHTML = sectionError(e); }) : null,
+  has('assistance') ? safe(loadSupport, (e) => { $('#support-root').innerHTML = sectionError(e); }) : null,
   anySection('bot', 'theme') ? safe(loadSettings, (e) => toast(`Réglages : ${errMsg(e)}`, 'error')) : null,
 ]);
 
