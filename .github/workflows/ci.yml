@@ -1,0 +1,45 @@
+# Contrôles à chaque push et pull request : syntaxe JS, présence des RPC/tables, tests de parcours.
+# Les tests tournent sur un faux Supabase (tests/fixtures/) : aucun appel à la vraie base.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer les dépendances
+        # Sans package-lock.json, on installe sans en créer un (à committer une fois généré).
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+
+      - name: Installer Chromium pour Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Syntaxe JavaScript
+        run: npm run check
+
+      - name: Appels RPC et tables présents dans la base
+        run: npm run test:rpc
+
+      - name: Tests de parcours et de fumée
+        run: npm test
+
+      - name: Captures des tests (en cas d'échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-tests
+          path: tests/shots/
+          if-no-files-found: ignore
