@@ -4,7 +4,7 @@
 //   items   : tableaux d'objets. Champs lus par défaut : id (ou key), member { pseudo, color, avatar_url },
 //             name (si pas de member), title (sujet), excerpt, at (Date|ISO), status { id, label, tone }, unread.
 //   key     : nom du champ identifiant, ou fonction (item) => identifiant. Défaut : 'id'.
-//   render  : (item) => HTML optionnel remplaçant le contenu d'une ligne (l'avatar et le nom restent gérés ici si absents).
+//   render  : (item) => HTML optionnel remplaçant le contenu d'une ligne (sans avatar : la ligne n'a qu'une colonne, classe ui-row--plain).
 //   filters : [{ id, label, test(item) }] ; « Toutes » (id 'all') est ajoutée en tête si absente.
 //             Les compteurs (« Ouvertes 3 ») comptent les éléments de la liste, sans la recherche.
 //   search  : false pour masquer ; { placeholder, label, fields(item) } sinon. Insensible à la casse et aux accents, délai 150 ms.
@@ -97,7 +97,7 @@ export function createList(el, opts = {}) {
         <div class="ui-row-foot">${pill(it.status)}${it.unread ? '<span class="ui-udot" aria-hidden="true"></span>' : ''}</div>
       </div>`;
     const av = opts.render ? '' : `<div class="ui-row-av">${avatarHtml(it.member || { pseudo: name, color: it.color }, 38)}</div>`;
-    return `<li role="option" class="ui-row${sel ? ' is-sel' : ''}${it.unread ? ' is-unread' : ''}" data-id="${esc(id)}"
+    return `<li role="option" class="ui-row${opts.render ? ' ui-row--plain' : ''}${sel ? ' is-sel' : ''}${it.unread ? ' is-unread' : ''}" data-id="${esc(id)}"
       aria-selected="${sel}" aria-label="${esc(label)}" tabindex="-1">${av}${body}</li>`;
   }
 

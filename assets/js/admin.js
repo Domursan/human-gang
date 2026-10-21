@@ -12,7 +12,7 @@ import { initAccounts, refreshAccounts, showAccount, emptyDetail, mountAccountsL
 import { mountGhostsSection, refreshGhostsSection, mountGhostsList, showGhost } from './admin-ghosts.js';
 import { mountAccessSection, refreshAccessSection } from './admin-access.js';
 import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
-import { mountEventsSection } from './admin-events.js';
+import { eventsSub } from './admin-events.js';
 import { mountCardsSection, openCardsTab } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
@@ -25,9 +25,9 @@ import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
 import { renderStats, loadOverview, overviewTables } from './admin/overview.js';
 import { bindInvites, renderInvites, renderMembers } from './admin/invites.js';
-import { renderSS } from './admin/ss-render.js';
+import { renderSS, ssSub } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
-import { bindBadges, renderBadges } from './admin/badges.js';
+import { bindBadges, renderBadges, badgesSub } from './admin/badges.js';
 import { ideasSub, renderIdeas } from './admin/ideas.js';
 import { supportSub, renderSupport } from './admin/support.js';
 import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
@@ -119,7 +119,9 @@ registerSub('vie/souvenirs', {
   open: (el, r) => openSouvenirs(r),
   list: listSouvenirs,
 });
-registerSub('vie/evenements', { main: () => mountEventsSection($('#events-root'), { onBadgesChange: async () => { await loadBadges(); renderBadges(); } }) });
+registerSub('vie/secret-santa', ssSub);
+registerSub('vie/evenements', eventsSub({ onBadgesChange: async () => { await loadBadges(); renderBadges(); } }));
+registerSub('vie/badges', badgesSub);
 // Jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
 for (const tab of ['series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats', 'echanges']) {

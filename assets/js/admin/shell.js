@@ -13,6 +13,7 @@
 //     list?: (el) => …,         // colonne 2, sous les sous-sections : appelé une fois par sous-section (phase 2)
 //     info?: (el) => …,         // panneau d'infos à droite (affiché ≥ 1440 px seulement) : appelé une fois par sous-section
 //   })
+// Actions de zone : #zone-actions (à droite du titre) est vidé à chaque visite ; open() y pose ses boutons (ex. « + Nouveau défi »).
 // Mobile (≤ 760 px) : data-screen = domain (liste des sous-sections) | list (liste d'une sous-section « liste + détail ») | sub (page ou détail, retour en haut).
 // Toutes les sections n'utilisent pour l'instant que `main`. Une sous-section sans fournisseur affiche sa section seule.
 // Les droits viennent de admin/perms.js (DOMAINS, canSection) : une sous-section non permise n'est jamais montée.
@@ -197,6 +198,7 @@ function slotFor(map, host, key) {
 
 async function show(r) {
   const token = ++seq;
+  el.zoneActions.replaceChildren(); // actions de zone : propres à chaque sous-section (posées par son open)
   if (!r.sub) { // écran du domaine (mobile) : liste des sous-sections
     el.shell.dataset.screen = 'domain';
     el.shell.dataset.info = 'no';
@@ -293,7 +295,7 @@ export function initShell({ me = null } = {}) {
     colEyebrow: $('#shell-col-eyebrow'), colTitle: $('#shell-col-title'), colSub: $('#shell-col-sub'),
     subsHost: $('#shell-subs'), listHost: $('#shell-col-list'), zone: $('#app'), zoneEyebrow: $('#zone-eyebrow'),
     zoneTitle: $('#zone-title'), back: $('#zone-back'), groupsHost: $('#shell-groups'), noAccess: $('#shell-noaccess'),
-    infoPanel: $('#shell-info'), infoHost: $('#shell-info-host'),
+    infoPanel: $('#shell-info'), infoHost: $('#shell-info-host'), zoneActions: $('#zone-actions'),
   };
   buildChrome();
   bindMenu();

@@ -26,15 +26,16 @@ export function renderBadges() {
   setCount($('#badge-search-count'), shown.length, S.badges.length, S.q.badges, ['badge', 'badges']);
   $('#badge-grid').innerHTML = shown.map((b) => {
     const h = holders.get(b.code) || [];
+    const names = h.slice().sort((x, y) => x.localeCompare(y, 'fr'));
     const auto = isAutoBadge(b.code);
     return `<div class="badge-card">
       <div class="badge-top"><div class="badge-img">${badgeImg(b)}</div>
         <div><div class="badge-name">${esc(b.name)}</div><div class="small muted">${esc(b.description)}</div></div></div>
       <div class="badge-tags"><span class="pill ${auto || hasLevels(b) ? 'pill-muted' : 'pill-current'}">${auto || hasLevels(b) ? 'automatique' : 'manuel'}</span>${hasLevels(b) ? `<span class="pill pill-warn" title="${esc(METRIC_LABEL[b.metric] || b.metric || '')}">${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || b.metric || '')}</span>` : ''}<span class="small muted code-sm">${esc(b.code)}</span></div>
-      <div class="badge-holders">${h.length ? `${h.length} membre${h.length > 1 ? 's' : ''} : ${esc(h.sort((x, y) => x.localeCompare(y, 'fr')).join(', '))}` : 'Personne pour l\'instant'}</div>
+      <div class="badge-holders"><span class="pill ${h.length ? 'pill-ok' : 'pill-todo'}">${h.length} détenteur${h.length > 1 ? 's' : ''}</span>${h.length ? `<details class="badge-who"><summary>Voir les membres</summary><p class="small muted">${esc(names.join(', '))}</p></details>` : ''}</div>
       <div class="badge-actions">
         <button class="btn btn-ghost btn-sm" type="button" data-badge-edit="${esc(b.code)}">Modifier</button>
-        <button class="btn btn-ghost btn-sm" type="button" data-badge-img="${esc(b.code)}" aria-label="${b.image_url ? 'Changer l\'image' : 'Ajouter une image'} du badge ${esc(b.name)}">${ICON.upload} Image</button>
+        <button class="btn btn-ghost btn-sm btn-icon" type="button" data-badge-img="${esc(b.code)}" title="${b.image_url ? 'Changer l\'image' : 'Ajouter une image'}" aria-label="${b.image_url ? 'Changer l\'image' : 'Ajouter une image'} du badge ${esc(b.name)}">${ICON.upload}</button>
         <button class="btn btn-danger btn-sm btn-icon" type="button" data-badge-del="${esc(b.code)}" aria-label="Supprimer le badge ${esc(b.name)}" title="Supprimer">${ICON.trash}</button>
       </div>
     </div>`;
@@ -62,52 +63,71 @@ export async function awardBadge(userId, code) {
 export const hasBadge = (uid, code) => S.userBadges.some((u) => u.user_id === uid && u.badge_code === code);
 export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?? code;
 
+/** Section « Badges » (registerSub) : le bouton « Nouveau badge » est dans la barre de zone. */
+export const badgesSub = {
+  main() { bindBadges(); },
+  open() {
+    const z = $('#zone-actions');
+    if (z) z.innerHTML = `<button class="btn btn-primary" type="button" id="badge-new">+ Nouveau badge</button>`;
+  },
+};
+
+let bound = false;
 export function bindBadges() {
+  if (bound) return;
+  bound = true;
   const search = mountSearch($('#badge-grid'), { id: 'badge-search', label: 'Rechercher un badge', placeholder: 'Nom, description ou code…' });
   bindSearch(search.input, (q) => { S.q.badges = q; renderBadges(); });
   $('#badge-member').addEventListener('change', (ev) => { S.badgeMember = ev.target.value; renderBadgeToggles(); });
-  $('#badges').addEventListener('click', async (ev) => {
-    const t = ev.target.closest('button');
-    if (!t) return;
-    if (t.dataset.toggleBadge) {
-      const code = t.dataset.toggleBadge, uid = S.badgeMember, on = t.getAttribute('aria-pressed') === 'true';
-      if (on && !(await confirmBox('Retirer ce badge ?', `${pseudoOf(uid)} perdra le badge « ${badgeName(code)} ».`, { ok: 'Retirer', danger: true }))) return;
-      await busy(t, async () => {
-        if (on) {
-          check(await sb.from('hg_user_badges').delete().eq('user_id', uid).eq('badge_code', code));
-          await loadBadges(); renderBadges(); renderMembers();
-        } else await awardBadge(uid, code);
-        toast(on ? 'Badge retiré' : `Badge « ${badgeName(code)} » attribué à ${pseudoOf(uid)}`, 'ok');
-      });
-    }
-    if (t.id === 'badge-new' || t.dataset.badgeEdit) {
-      const badge = t.dataset.badgeEdit ? S.badges.find((b) => b.code === t.dataset.badgeEdit) : null;
-      openBadgeEditor({ badge, badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); refreshEventsSection(); } });
-      return;
-    }
-    if (t.dataset.badgeDel) {
-      const badge = S.badges.find((b) => b.code === t.dataset.badgeDel);
-      if (!badge) return;
-      const holders = S.userBadges.filter((u) => u.badge_code === badge.code).length;
-      await busy(t, async () => {
-        if (await deleteBadge(badge, holders)) {
-          if (t.isConnected) t.disabled = false;
-          await loadBadges(); renderBadges();
-          toast(`Badge « ${badge.name} » supprimé`, 'ok');
-        }
-      });
-      return;
-    }
-    if (t.dataset.badgeImg) {
-      const code = t.dataset.badgeImg;
-      const file = await pickFile($('#badge-file'));
-      if (!file) return;
-      await busy(t, async () => {
-        const url = await uploadAsset(`badges/${code}`, file);
-        check(await sb.from('hg_badges').update({ image_url: url }).eq('code', code));
+  document.addEventListener('click', onBadgeClick); // barre de zone (hors de la section) et grille
+}
+
+async function onBadgeClick(ev) {
+  const t = ev.target.closest('button');
+  if (!t) return;
+  if (t.id === 'badge-new') {
+    openBadgeEditor({ badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); refreshEventsSection(); } });
+    return;
+  }
+  if (!t.closest('#badges')) return;
+  if (t.dataset.toggleBadge) {
+    const code = t.dataset.toggleBadge, uid = S.badgeMember, on = t.getAttribute('aria-pressed') === 'true';
+    if (on && !(await confirmBox('Retirer ce badge ?', `${pseudoOf(uid)} perdra le badge « ${badgeName(code)} ».`, { ok: 'Retirer', danger: true }))) return;
+    await busy(t, async () => {
+      if (on) {
+        check(await sb.from('hg_user_badges').delete().eq('user_id', uid).eq('badge_code', code));
+        await loadBadges(); renderBadges(); renderMembers();
+      } else await awardBadge(uid, code);
+      toast(on ? 'Badge retiré' : `Badge « ${badgeName(code)} » attribué à ${pseudoOf(uid)}`, 'ok');
+    });
+  }
+  if (t.dataset.badgeEdit) {
+    const badge = t.dataset.badgeEdit ? S.badges.find((b) => b.code === t.dataset.badgeEdit) : null;
+    openBadgeEditor({ badge, badges: S.badges, onSaved: async () => { await loadBadges(); renderBadges(); refreshEventsSection(); } });
+    return;
+  }
+  if (t.dataset.badgeDel) {
+    const badge = S.badges.find((b) => b.code === t.dataset.badgeDel);
+    if (!badge) return;
+    const holders = S.userBadges.filter((u) => u.badge_code === badge.code).length;
+    await busy(t, async () => {
+      if (await deleteBadge(badge, holders)) {
+        if (t.isConnected) t.disabled = false;
         await loadBadges(); renderBadges();
-        toast('Image du badge mise à jour', 'ok');
-      });
-    }
-  });
+        toast(`Badge « ${badge.name} » supprimé`, 'ok');
+      }
+    });
+    return;
+  }
+  if (t.dataset.badgeImg) {
+    const code = t.dataset.badgeImg;
+    const file = await pickFile($('#badge-file'));
+    if (!file) return;
+    await busy(t, async () => {
+      const url = await uploadAsset(`badges/${code}`, file);
+      check(await sb.from('hg_badges').update({ image_url: url }).eq('code', code));
+      await loadBadges(); renderBadges();
+      toast('Image du badge mise à jour', 'ok');
+    });
+  }
 }

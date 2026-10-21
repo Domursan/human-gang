@@ -42,6 +42,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-coquille.cjs` | Coquille du panel : rail et colonne de navigation, navigation par domaine et sous-section, URL directe `#membres/comptes`, ancienne ancre `#cartes` redirigée, précédent/suivant, Staff `cartes`+`journal` (Pilotage et Jeu de cartes seulement), mobile 375 px avec barre d’onglets et sans défilement horizontal |
 | `parcours-admin-p2-pilotage.cjs` | Pilotage du panel : Staff (ajout, permissions, barre d’enregistrement, désactivation / réactivation, infos), Journal (puces, recherche, détail avant / après, consultations), Vue d’ensemble (tuiles, « À traiter », activité), Staff `journal` seul, mobile 390 px liste puis détail |
 | `parcours-admin-p2-assistance.cjs` | Communication › Assistance et Boîte à idées : liste en colonne 2 avec filtres et compteurs, sélection par URL, en-tête (statut, « Résoudre »), fil en lecture seule, panneau d’infos (fiche rapide, historique, fiche membre), statut écrit en base, recherche, mobile 390 px (liste puis détail avec retour) |
+| `parcours-admin-polish-vie.cjs` | Panel admin, Vie du gang : Secret Santa (éditions en colonne 2, détail par adresse, tiroirs de création, modification, exclusion, tirage annulé puis confirmé, suppression), Événements (liste et filtres, tiroir avec validation du nom, modification, suppression), Badges (grille avec détenteurs, tiroirs de création et de modification, attribution), mobile 390 px sans défilement horizontal |
 
 ## Fixtures
 
