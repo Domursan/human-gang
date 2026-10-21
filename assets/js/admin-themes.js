@@ -412,7 +412,7 @@ export async function mountThemesSection(container) {
       } else note.textContent = '';
     }
     // Logo
-    root.querySelector('[data-el="logo-preview"]').innerHTML = `<img src="${esc(d.logo_url || new URL('../img/logo-512.webp', import.meta.url).href)}" alt="" onerror="this.replaceWith(document.createTextNode('Image introuvable'))">`;
+    root.querySelector('[data-el="logo-preview"]').innerHTML = `<img src="${esc(d.logo_url || new URL('../img/logo-512.webp', import.meta.url).href)}" alt="" data-on-error="text" data-fallback="Image introuvable">`;
     // Emojis
     root.querySelector('[data-el="emoji-preview"]').textContent = d.emojis.length ? `${d.emojis.length} emoji${d.emojis.length > 1 ? 's' : ''} : ${d.emojis.join('  ')}` : '';
     // Échantillon (variables locales, n'affecte pas la page)

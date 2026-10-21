@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <script>try{var p=JSON.parse(localStorage.getItem('hg_prefs')||'{}'),r=document.documentElement,m={clair:1,daltonien:1}[p.mode]?p.mode:'sombre';r.dataset.mode=m;r.style.colorScheme=m==='clair'?'light':'dark';}catch(e){}</script><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Récap de l'année · Humane Gang</title>
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
@@ -19,6 +20,7 @@
     <section class="page-head"><div><p class="eyebrow">Humane Gang</p><h1 class="page-title">Récap de l'année</h1></div></section>
     <p class="muted" id="rc-fallback">Chargement du récap…</p>
   </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/recap.js"></script>
 </body>
 </html>

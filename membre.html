@@ -2,7 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <script>try{var p=JSON.parse(localStorage.getItem('hg_prefs')||'{}'),r=document.documentElement,m={clair:1,daltonien:1}[p.mode]?p.mode:'sombre';r.dataset.mode=m;r.style.colorScheme=m==='clair'?'light':'dark';}catch(e){}</script><meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Carte de membre · Humane Gang</title>
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
@@ -20,6 +21,7 @@
   <main class="container" id="app" aria-busy="true">
     <div class="mb-loading" aria-live="polite"><span class="visually-hidden">Chargement…</span></div>
   </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/membre.js"></script>
 </body>
 </html>

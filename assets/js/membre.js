@@ -91,7 +91,7 @@ function cardHtml(c) {
       <article class="idc" id="idc" style="--member:${esc(safeColor(c.color))}" aria-label="Carte de membre de ${esc(c.pseudo)}">
         <div class="idc-face">
           <header class="idc-top">
-            <img class="idc-logo" src="${esc(currentLogo())}" alt="" onerror="this.style.visibility='hidden'">
+            <img class="idc-logo" src="${esc(currentLogo())}" alt="" data-on-error="hide">
             <div class="idc-brand">
               <span class="idc-brand-name">HUMANE GANG</span>
               <span class="idc-brand-sub">Carte de membre</span>
@@ -104,7 +104,7 @@ function cardHtml(c) {
           <div class="idc-rainbow" aria-hidden="true">${RAINBOW.map((r) => `<span style="background:${r}"></span>`).join('')}</div>
           <div class="idc-body">
             <div class="idc-photo">${c.avatar_url
-              ? `<img src="${esc(c.avatar_url)}" alt="" crossorigin="anonymous" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'idc-initials',textContent:this.dataset.i}))" data-i="${esc(initials(c.pseudo))}">`
+              ? `<img src="${esc(c.avatar_url)}" alt="" crossorigin="anonymous" data-on-error="initials" data-fallback-class="idc-initials" data-fallback="${esc(initials(c.pseudo))}">`
               : `<span class="idc-initials">${esc(initials(c.pseudo))}</span>`}</div>
             <dl class="idc-fields">
               <div class="idc-field idc-field-pseudo"><dt class="idc-k">Pseudo</dt><dd class="idc-pseudo">${esc(c.pseudo)}</dd></div>
@@ -139,7 +139,7 @@ function badgesHtml(c) {
     ${list.length ? `<ul class="badge-grid">
       ${list.map((b) => `
         <li class="badge-item" title="${esc(b.description || b.name)}">
-          <span class="badge-img">${b.lv ? `<span class="badge-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(this.dataset.i))" data-i="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
+          <span class="badge-img">${b.lv ? `<span class="badge-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" data-on-error="text" data-fallback="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
           <span class="badge-name">${esc(b.name)}</span>
           ${b.lv ? `${levelPipsHtml(b.lv, b.level, { max: 5 })}<span class="lvl-name">${esc(levelLabel(b.lv, b.level))}</span>` : ''}
           ${b.description ? `<span class="badge-desc">${esc(b.description)}</span>` : ''}
