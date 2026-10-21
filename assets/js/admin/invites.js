@@ -8,6 +8,7 @@ import { renderStats } from './overview.js';
 import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 import { openDrawer } from './ui/drawer.js';
 import { openLinkDrawer } from '../admin-invite-links.js';
+import { inviteConfig } from '../invite-config.js';
 
 /* =========================================================
    Membres & invitations
@@ -15,7 +16,7 @@ import { openLinkDrawer } from '../admin-invite-links.js';
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans I, L, O, 0, 1
 function newCode() {
   const r = crypto.getRandomValues(new Uint32Array(4));
-  return 'HG-' + [...r].map((n) => CODE_ALPHABET[n % CODE_ALPHABET.length]).join('');
+  return inviteConfig().prefixe + [...r].map((n) => CODE_ALPHABET[n % CODE_ALPHABET.length]).join('');
 }
 
 // La liste des membres est dans la section « Comptes » (admin-accounts.js).

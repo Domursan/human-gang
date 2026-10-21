@@ -5,6 +5,7 @@ import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, 
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { openDrawer } from './admin/ui/drawer.js';
+import { INVITE_DEFAULTS, INVITE_LIMITS, normalizeInviteConfig, inviteConfig, loadInviteConfig, resetInviteConfig } from './invite-config.js';
 
 const IC = {
   copy: svg('copy', { stroke: 2 }),
@@ -14,7 +15,7 @@ const IC = {
 };
 const QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm';
 
-const L = { root: null, me: null, pseudoOf: (id) => id, onChange: async () => {}, links: [], codes: [], open: new Set(), error: null };
+const L = { root: null, me: null, pseudoOf: (id) => id, onChange: async () => {}, links: [], codes: [], open: new Set(), error: null, rulesRaw: undefined, rulesError: null };
 
 function check(res) { if (res.error) throw res.error; return res.data; }
 async function busy(btn, fn) {
@@ -39,7 +40,94 @@ export function inviteLinkUrl(token) {
 }
 
 /* ---------- Données ---------- */
+async function loadRules() {
+  try {
+    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'invites').maybeSingle();
+    if (error) throw error;
+    L.rulesRaw = data ? data.value : null;
+    L.rulesError = null;
+  } catch (e) { L.rulesError = e; }
+}
+
+/* ---------- Règles des codes (hg_settings.invites) ---------- */
+const RULES = [
+  { name: 'validite_heures', label: 'Durée d\'un code (heures)', unit: 'h', help: 'Un code donné par un lien est valable pendant ce délai, pour un seul compte.' },
+  { name: 'max_codes_heure_lien', label: 'Codes par heure et par lien', unit: '', help: 'Garde-fou anti-abus : au-delà, le lien répond « Trop de demandes » pendant une heure.' },
+  { name: 'fantome_jours', label: 'Durée d\'un code de compte fantôme (jours)', unit: 'jours', help: 'Code donné à un compte fantôme (profil créé par l\'admin, à réclamer plus tard).' },
+  { name: 'prefixe', label: 'Préfixe des codes', unit: '', help: 'Lettres ou chiffres puis un tiret (ex. HG-). Les codes déjà donnés restent valables.' },
+];
+
+function rulesHtml() {
+  const cur = L.rulesRaw && typeof L.rulesRaw === 'object' ? L.rulesRaw : {};
+  const custom = !!L.rulesRaw;
+  const eff = { ...INVITE_DEFAULTS, ...Object.fromEntries(RULES.map((r) => [r.name, cur[r.name] ?? INVITE_DEFAULTS[r.name]])) };
+  const shown = (r) => `${esc(eff[r.name])}${r.unit ? ` ${esc(r.unit)}` : ''}`;
+  return `<section class="il-rules" aria-labelledby="il-rules-title">
+    <div class="il-rules-head">
+      <h4 class="card-title" id="il-rules-title">Règles des codes</h4>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" type="button" data-il-rules-edit>Modifier les règles</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-il-rules-reset${custom ? '' : ' disabled'}>Rétablir les valeurs par défaut</button>
+      </div>
+    </div>
+    <p class="small muted">${custom ? 'Des valeurs personnalisées sont enregistrées.' : 'Valeurs par défaut en vigueur.'} Une modification s'applique aux prochains codes.</p>
+    ${L.rulesError ? `<div class="empty">Impossible de lire les règles : ${esc(errMsg(L.rulesError))}</div>` : `
+    <dl class="il-rules-list">
+      ${RULES.map((r) => `<div><dt class="small muted">${esc(r.label)}</dt><dd><strong class="text">${shown(r)}</strong></dd></div>`).join('')}
+    </dl>`}
+  </section>`;
+}
+
+/** Tiroir « Modifier les règles » (même principe que « Nouveau lien ») : champs typés, validés à l'enregistrement. */
+function openRulesDrawer() {
+  const cur = L.rulesRaw && typeof L.rulesRaw === 'object' ? L.rulesRaw : {};
+  const body = document.createElement('div');
+  body.className = 'il-form';
+  body.innerHTML = RULES.map((r) => {
+    const val = cur[r.name] ?? INVITE_DEFAULTS[r.name];
+    const id = `il-rule-${r.name}`;
+    const lim = INVITE_LIMITS[r.name];
+    const help = `${r.help} Par défaut : ${INVITE_DEFAULTS[r.name]}${r.unit ? ` ${r.unit}` : ''}.`;
+    return `<div class="field"><label for="${id}">${esc(r.label)}</label>
+      ${r.name === 'prefixe'
+        ? `<input id="${id}" name="${r.name}" maxlength="9" autocomplete="off" value="${esc(val)}" aria-describedby="${id}-h">`
+        : `<input id="${id}" name="${r.name}" type="number" inputmode="numeric" step="1" min="${lim[0]}" max="${lim[1]}" value="${esc(val)}" aria-describedby="${id}-h">`}
+      <span class="small muted" id="${id}-h">${esc(help)}</span></div>`;
+  }).join('');
+  openDrawer({
+    title: 'Règles des codes',
+    subtitle: 'Valables pour les prochains codes ; les codes déjà donnés ne changent pas.',
+    body, submitLabel: 'Enregistrer les règles',
+    onSubmit: async (form) => {
+      const raw = {};
+      for (const r of RULES) raw[r.name] = form.elements[r.name].value.trim();
+      const res = normalizeInviteConfig(raw);
+      if (res.error) throw new Error(res.error);
+      check(await sb.from('hg_settings').upsert({ key: 'invites', value: res.value, updated_at: new Date().toISOString() }, { onConflict: 'key' }));
+      L.rulesRaw = res.value;
+      resetInviteConfig(); await loadInviteConfig();
+      toast('Règles des codes enregistrées', 'ok');
+      render();
+    },
+  });
+}
+
+async function resetRules(btn) {
+  const ok = await confirmBox('Rétablir les valeurs par défaut ?',
+    'La durée, la limite par heure, la durée des comptes fantômes et le préfixe reprennent leurs valeurs d\'origine. Les codes déjà donnés ne changent pas.',
+    { ok: 'Rétablir', danger: false });
+  if (!ok) return;
+  await busy(btn, async () => {
+    check(await sb.from('hg_settings').delete().eq('key', 'invites'));
+    L.rulesRaw = null;
+    resetInviteConfig(); await loadInviteConfig();
+    toast('Valeurs par défaut rétablies', 'ok');
+    render();
+  });
+}
+
 async function load() {
+  await loadRules();
   const [l, c] = await Promise.all([
     sb.from('hg_invite_links').select('*').order('created_at', { ascending: false }),
     sb.from('hg_invites').select('code, used_by, used_at, created_at, expires_at, link_id').not('link_id', 'is', null).order('created_at', { ascending: false }),
@@ -79,7 +167,7 @@ export function openLinkDrawer() {
   body.innerHTML = fieldsHtml();
   openDrawer({
     title: 'Nouveau lien d’invitation',
-    subtitle: 'Chaque personne qui ouvre le lien reçoit son propre code, valable 48 h.',
+    subtitle: `Chaque personne qui ouvre le lien reçoit son propre code, valable ${inviteConfig().validite_heures} h.`,
     body, submitLabel: 'Créer le lien',
     onSubmit: async (form) => {
       const label = form.label.value.trim() || `Lien du ${fmtDate(new Date())}`;
@@ -143,7 +231,8 @@ function render() {
   const r = L.root; if (!r) return;
   r.innerHTML = `
     <h3 class="card-title">Liens d'invitation</h3>
-    <p class="muted small">Un lien à partager (Discord, QR code…). Chaque personne qui l'ouvre reçoit son propre code d'invitation, valable 48 h et utilisable une seule fois. Désactive ou supprime le lien quand tu n'en as plus besoin.</p>
+    ${rulesHtml()}
+    <p class="muted small">Un lien à partager (Discord, QR code…). Chaque personne qui l'ouvre reçoit son propre code d'invitation, valable ${esc(inviteConfig().validite_heures)} h et utilisable une seule fois. Désactive ou supprime le lien quand tu n'en as plus besoin.</p>
     ${L.error ? `<div class="empty">Impossible de charger les liens : ${esc(errMsg(L.error))}</div>`
       : L.links.length ? `<ul class="il-list">${L.links.map(linkHtml).join('')}</ul>`
       : '<div class="empty">Aucun lien pour l\'instant.</div>'}`;
@@ -187,6 +276,12 @@ async function showQr(l) {
 /* ---------- Événements ---------- */
 function bind() {
   const r = L.root;
+  r.addEventListener('click', (ev) => {
+    const edit = ev.target.closest?.('[data-il-rules-edit]');
+    if (edit) return openRulesDrawer();
+    const t = ev.target.closest?.('[data-il-rules-reset]');
+    if (t) resetRules(t);
+  });
   r.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t) return;
@@ -238,6 +333,7 @@ export async function mountInviteLinks(root, { me, pseudoOf, onChange } = {}) {
   Object.assign(L, { root, me, pseudoOf: pseudoOf || L.pseudoOf, onChange: onChange || L.onChange });
   bind();
   root.innerHTML = '<div class="empty">Chargement des liens…</div>';
+  await loadInviteConfig();
   await refresh();
 }
 /** Re-rendu (ex. après rechargement des membres, pour les pseudos). */

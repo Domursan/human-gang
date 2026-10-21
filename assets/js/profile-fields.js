@@ -1,8 +1,9 @@
+import { sb } from './core.js';
 // ===== Informations diverses (Secret Santa) — liste unique des champs =====
 // Stockées dans hg_profile_info.data (jsonb, clé = id). Visibles par la personne et l'admin uniquement.
 // L'admin choisit, par édition, les clés transmises au Santa (hg_ss_editions.shared_fields).
 // type : 'text' (une ligne) | 'textarea' (plusieurs lignes)
-export const INFO_GROUPS = [
+const DEFAULT_INFO_GROUPS = [
   { id: 'livraison', label: 'Livraison', fields: [
     { id: 'nom_complet', label: 'Nom et prénom (pour le colis)', type: 'text' },
     { id: 'adresse', label: 'Adresse postale', type: 'textarea', placeholder: 'Rue, numéro\nNPA Ville\nPays' },
@@ -55,5 +56,53 @@ export const INFO_GROUPS = [
     { id: 'idees_libres', label: 'Autres idées ou remarques', type: 'textarea' },
   ] },
 ];
-export const INFO_FIELDS = INFO_GROUPS.flatMap((g) => g.fields.map((f) => ({ ...f, group: g.id, groupLabel: g.label })));
-export const INFO_LABEL = Object.fromEntries(INFO_FIELDS.map((f) => [f.id, f.label]));
+// ----- Réglage admin « profile_fields » (hg_settings, lot 2) -----
+// Les exports ci-dessous restent les mêmes (tableaux mis à jour sur place) : les pages qui les importent ne changent pas.
+// Sans la clé, ou si la valeur est invalide, la liste d'origine (DEFAULT_INFO_GROUPS) est utilisée.
+export const INFO_GROUPS = structuredClone(DEFAULT_INFO_GROUPS);
+export const INFO_FIELDS = [];
+export const INFO_LABEL = {};
+const ID_RE = /^[a-z][a-z0-9_]{1,40}$/;
+
+function flatten(groups) {
+  INFO_FIELDS.splice(0, INFO_FIELDS.length, ...groups.flatMap((g) => g.fields.map((f) => ({ ...f, group: g.id, groupLabel: g.label }))));
+  for (const k of Object.keys(INFO_LABEL)) delete INFO_LABEL[k];
+  for (const f of INFO_FIELDS) INFO_LABEL[f.id] = f.label;
+}
+flatten(INFO_GROUPS);
+
+/** Vérifie une liste de groupes (réglage) ; renvoie les groupes normalisés ou null. */
+export function validateInfoGroups(raw) {
+  if (!Array.isArray(raw) || !raw.length || raw.length > 12) return null;
+  const seen = new Set();
+  const out = [];
+  for (const g of raw) {
+    if (!g || typeof g !== 'object' || !ID_RE.test(g.id) || typeof g.label !== 'string' || !g.label.trim() || !Array.isArray(g.fields) || !g.fields.length || g.fields.length > 60) return null;
+    const fields = [];
+    for (const f of g.fields) {
+      if (!f || typeof f !== 'object' || !ID_RE.test(f.id) || seen.has(f.id) || typeof f.label !== 'string' || !f.label.trim() || f.label.length > 160) return null;
+      if (f.type !== 'text' && f.type !== 'textarea') return null;
+      if (f.placeholder !== undefined && (typeof f.placeholder !== 'string' || f.placeholder.length > 80)) return null;
+      seen.add(f.id);
+      fields.push({ id: f.id, label: f.label.trim(), type: f.type, ...(f.placeholder ? { placeholder: f.placeholder } : {}) });
+    }
+    out.push({ id: g.id, label: g.label.trim(), fields });
+  }
+  return out;
+}
+
+/** Charge le réglage « profile_fields » (une fois, au chargement du module). Ne lève jamais. */
+async function loadProfileFields() {
+  try {
+    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'profile_fields').maybeSingle();
+    if (error) throw error;
+    if (!data) return;
+    const groups = validateInfoGroups(data.value?.groups);
+    if (!groups) { console.warn('[profil] réglage « profile_fields » invalide : liste d\'origine utilisée'); return; }
+    INFO_GROUPS.splice(0, INFO_GROUPS.length, ...groups);
+    flatten(INFO_GROUPS);
+  } catch (e) {
+    console.warn('[profil] champs non lus, liste d\'origine utilisée :', e?.message || e);
+  }
+}
+await loadProfileFields();

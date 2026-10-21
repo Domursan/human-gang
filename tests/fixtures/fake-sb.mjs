@@ -114,6 +114,7 @@ const DB = {
   ],
 };
 DB.hg_settings.push({ key: 'push_vapid_public', value: 'BOOPdSa019_test' });
+for (const r of S.settings || []) { DB.hg_settings = DB.hg_settings.filter((x) => x.key !== r.key); DB.hg_settings.push({ ...r }); } // lot 2 : réglages semés par le scénario (scenario.settings)
 const CATALOG_KEYS = DB.hg_perm_catalog.map((c) => c.key);
 const uidNow = () => S.uid || ME;
 const isAdminNow = () => !!DB.hg_profiles.find((p) => p.id === uidNow())?.is_admin;
