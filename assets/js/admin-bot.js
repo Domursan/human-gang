@@ -20,6 +20,17 @@ const NOTIFY = [
   ['card_trade', 'Échange conclu', 'annonce dans le salon (désactivée par défaut)'],
 ];
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
+// Annonces publiées dans le salon d'annonces, avec leur mention (bot.mentions[type], défaut « none »)
+const MENTION_TYPES = [
+  ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
+  ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
+];
+const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];
+// Pièces jointes du message manuel : même liste blanche et même limite que hg-bot-media et _shared/bot-media.ts
+const MEDIA_BUCKET = 'hg-bot-media', MEDIA_MAX_FILES = 4, MEDIA_MAX_BYTES = 10 * 1024 * 1024;
+const MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime',
+  'audio/mpeg', 'audio/ogg', 'audio/wav', 'application/pdf']);
+const MEDIA_ACCEPT = [...MEDIA_TYPES].join(',');
 const DISCORD_ID = /^\d{17,20}$/;
 const TITLE_MAX = 256, BODY_MAX = 4096, MANUAL_TITLE_MAX = 200, MANUAL_BODY_MAX = 2000, CONFIRM_ABOVE = 5;
 const MAX_RECIPIENTS = 100;
@@ -81,10 +92,15 @@ function discordMd(text) {
   return h;
 }
 
-/** Aperçu façon Discord. `embed` : { color, title, description, fields: [[nom, valeur]], footer }, `content` facultatif. */
-function discordPreview({ content = '', embed, where = '' }) {
+/**
+ * Aperçu façon Discord. `embed` : { color, title, description, fields: [[nom, valeur]], footer, image }, `content` facultatif.
+ * `mention` : « @everyone » ou « @rôle » affiché en tête du message (une mention notifie, elle n'est jamais dans l'embed).
+ * `files` : [{ name, size, url, image }] : pièces jointes ; une image jointe est affichée dans l'embed (embed.image).
+ */
+function discordPreview({ content = '', mention = '', embed, where = '', files = [] }) {
   const now = timeFmt.format(new Date());
   const fields = (embed.fields ?? []).filter(([, v]) => filled(v));
+  const others = files.filter((f) => !f.inEmbed);
   return `
     <div class="dc" role="img" aria-label="Aperçu du message Discord">
       ${where ? `<div class="dc-where">${esc(where)}</div>` : ''}
@@ -92,28 +108,40 @@ function discordPreview({ content = '', embed, where = '' }) {
         <img class="dc-avatar" src="${esc(currentLogo())}" alt="">
         <div class="dc-main">
           <div class="dc-head"><span class="dc-name">Humane Gang</span><span class="dc-app">APP</span><span class="dc-time">Aujourd'hui à ${now}</span></div>
+          ${mention ? `<div class="dc-content"><span class="dc-mention">${esc(mention)}</span></div>` : ''}
           ${content ? `<div class="dc-content">${discordMd(content)}</div>` : ''}
           <div class="dc-embed" style="--dc-bar:${esc(embed.color || '#9E3543')}">
             ${embed.title ? `<div class="dc-title${embed.url ? ' dc-title-link' : ''}">${discordMd(embed.title)}</div>` : ''}
             ${embed.description ? `<div class="dc-desc">${discordMd(embed.description)}</div>` : ''}
-            ${!embed.title && !embed.description ? '<div class="dc-desc dc-empty">(message vide)</div>' : ''}
+            ${!embed.title && !embed.description && !embed.image ? '<div class="dc-desc dc-empty">(message vide)</div>' : ''}
+            ${embed.image ? `<img class="dc-img" src="${esc(embed.image)}" alt="">` : ''}
             ${fields.length ? `<div class="dc-fields">${fields.map(([n, v]) => `<div class="dc-field"><div class="dc-fname">${esc(n)}</div><div class="dc-fval">${discordMd(v)}</div></div>`).join('')}</div>` : ''}
             <div class="dc-footer">${esc(embed.footer || 'Humane Gang')} • Aujourd'hui à ${now}</div>
           </div>
+          ${others.length ? `<div class="dc-files">${others.map((f) => `<div class="dc-file"><span class="dc-file-name">${esc(f.name)}</span><span class="dc-file-size">${esc(fmtSize(f.size))}</span></div>`).join('')}</div>` : ''}
         </div>
       </div>
     </div>`;
 }
+
+const fmtSize = (n) => (n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} Ko` : `${(n / 1048576).toFixed(1).replace('.', ',')} Mo`);
+/** Nom de fichier envoyé au stockage : sans séparateur de chemin, sans « .. » (refusés par la fonction). */
+const storageName = (name) => String(name).normalize('NFC').replace(/[\\/\u0000]/g, '_').replace(/\.{2,}/g, '.').trim().slice(0, 120) || 'fichier';
+/** Identifiant aléatoire (crypto.randomUUID n'existe que sur https : le site peut aussi être servi en http local). */
+const uuid = () => (globalThis.crypto?.randomUUID ? crypto.randomUUID()
+  : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+const dayStamp = () => new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, heure locale
 
 /* ========================================================================== */
 export function mountBotSection(container) {
   if (!container) return;
   loadStyles();
   const S = {
-    bot: { announce_channel_id: null, admin_discord_id: null, notify: {} },
+    bot: { announce_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
     histFilter: 'all', histQ: '', histLimit: PAGE_SIZE, histMore: false,
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
     people: [], pseudo: new Map(), selected: new Set(), q: '', history: null, sending: false,
+    files: [], // pièces jointes du message manuel : { file, url } (url : aperçu d'une image)
   };
 
   container.innerHTML = `
@@ -131,6 +159,22 @@ export function mountBotSection(container) {
             <input id="bot-admin" name="admin_discord_id" inputmode="numeric" autocomplete="off" placeholder="ex. 998877665544332211">
           </div>
         </div>
+        <div class="field">
+          <label for="bot-role">ID du rôle à mentionner <span class="muted small">(facultatif)</span></label>
+          <input id="bot-role" name="mention_role_id" inputmode="numeric" autocomplete="off" placeholder="ex. 445566778899001122" aria-describedby="bot-role-hint">
+          <p class="small muted" id="bot-role-hint">Dans Discord, active le <em>mode développeur</em> (Paramètres › Avancés), puis fais un clic droit sur le rôle › <em>Copier l'identifiant</em>.</p>
+        </div>
+        <fieldset class="mentions" id="bot-mentions">
+          <legend class="label">Mention dans le salon d'annonces</legend>
+          <p class="small muted">« Le rôle » notifie les membres de ce rôle. <strong>« @everyone » notifie tout le serveur</strong> : à réserver aux annonces vraiment importantes. Par défaut, aucune mention.</p>
+          <p class="small muted" id="bot-mentions-off" hidden>Renseigne d'abord l'ID du salon d'annonces pour choisir une mention.</p>
+          <div class="mention-list">
+            ${MENTION_TYPES.map(([k, label]) => `<div class="mention-row">
+              <label for="bot-mention-${k}">${esc(label)}</label>
+              <select id="bot-mention-${k}" name="mention_${k}">${MENTION_MODES.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select>
+            </div>`).join('')}
+          </div>
+        </fieldset>
         <fieldset class="toggles">
           <legend class="label">Notifications envoyées</legend>
           ${NOTIFY.map(([k, label, hint]) => `<label class="switch"><input type="checkbox" role="switch" name="${k}"><span class="switch-ui" aria-hidden="true"></span><span>${esc(label)} <span class="muted small">${esc(hint)}</span></span></label>`).join('')}
@@ -199,17 +243,33 @@ export function mountBotSection(container) {
   function renderSettings() {
     form.announce_channel_id.value = S.bot.announce_channel_id ?? '';
     form.admin_discord_id.value = S.bot.admin_discord_id ?? '';
+    form.mention_role_id.value = S.bot.mention_role_id ?? '';
+    for (const [k] of MENTION_TYPES) form.elements[`mention_${k}`].value = mentionOf(k);
     for (const k of NOTIFY_KEYS) form.elements[k].checked = S.bot.notify[k] !== false;
+    syncMentionControls();
   }
+  /** Mention d'un type (réglage) : « none » par défaut. */
+  const mentionOf = (k) => (MENTION_MODES.some(([v]) => v === S.bot.mentions?.[k]) ? S.bot.mentions[k] : 'none');
+  /** Les choix de mention ne servent qu'avec un salon d'annonces : sans salon, le bloc est grisé. */
+  function syncMentionControls() {
+    const on = !!form.announce_channel_id.value.trim();
+    $('#bot-mentions', container).disabled = !on;
+    $('#bot-mentions-off', container).hidden = on;
+  }
+  form.announce_channel_id.addEventListener('input', syncMentionControls);
   form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter, async () => {
       const channel = form.announce_channel_id.value.trim(), admin = form.admin_discord_id.value.trim();
+      const role = form.mention_role_id.value.trim();
       if (channel && !DISCORD_ID.test(channel)) throw new Error('L\'ID du salon doit être un nombre de 17 à 20 chiffres.');
       if (admin && !DISCORD_ID.test(admin)) throw new Error('Ton ID Discord doit être un nombre de 17 à 20 chiffres.');
+      if (role && !DISCORD_ID.test(role)) throw new Error('L\'ID du rôle doit être un nombre de 17 à 20 chiffres.');
+      const mentions = Object.fromEntries(MENTION_TYPES.map(([k]) => [k, form.elements[`mention_${k}`].value]));
+      if (Object.values(mentions).includes('role') && !role) throw new Error('Pour mentionner un rôle, renseigne son ID.');
       const value = {
-        ...S.bot, announce_channel_id: channel || null, admin_discord_id: admin || null,
-        notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])),
+        ...S.bot, announce_channel_id: channel || null, admin_discord_id: admin || null, mention_role_id: role || null,
+        mentions, notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])),
       };
       check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
       S.bot = value;
@@ -455,6 +515,13 @@ export function mountBotSection(container) {
         </fieldset>
         <form class="bm-compose stack" id="bm-form" novalidate>
           <label class="switch" id="bm-channel-wrap"><input type="checkbox" role="switch" id="bm-channel"><span class="switch-ui" aria-hidden="true"></span><span>Publier aussi dans le salon d'annonces <span class="muted small" id="bm-channel-hint"></span></span></label>
+          <div class="field bm-mention-field" id="bm-mention-wrap">
+            <label for="bm-mention">Mention dans le salon</label>
+            <select id="bm-mention" name="mention" disabled aria-describedby="bm-mention-hint">
+              ${MENTION_MODES.map(([v, t]) => `<option value="${v}">${esc(v === 'everyone' ? '@everyone (tout le serveur)' : t)}</option>`).join('')}
+            </select>
+            <p class="small muted" id="bm-mention-hint"></p>
+          </div>
           <div class="field">
             <div class="bt-label-row"><label for="bm-title">Titre <span class="muted small">(facultatif)</span></label><span class="muted small bt-count" id="bm-title-count"></span></div>
             <input id="bm-title" maxlength="${MANUAL_TITLE_MAX}" autocomplete="off" placeholder="ex. Info importante">
@@ -466,6 +533,16 @@ export function mountBotSection(container) {
               <button type="button" class="chip bt-var" id="bm-var" aria-label="Insérer {pseudo} : pseudo du destinataire">${ICON.plus}<code>{pseudo}</code><span class="bt-var-label">Pseudo du destinataire</span></button>
               <p class="small muted" id="bm-text-hint">Dans le salon, <code>{pseudo}</code> devient « tout le monde ».</p>
             </div>
+          </div>
+          <div class="field bm-files" id="bm-files">
+            <span class="label" id="bm-files-l">Pièces jointes <span class="muted small">(facultatif · ${MEDIA_MAX_FILES} fichiers maximum · 10 Mo chacun)</span></span>
+            <div class="bm-drop" id="bm-drop" role="button" tabindex="0" aria-describedby="bm-files-l bm-file-err">
+              <span class="bm-drop-main">Glisse des fichiers ici ou <span class="bm-drop-link">choisis-les</span></span>
+              <span class="muted small">Images, GIF, vidéos, sons, PDF</span>
+            </div>
+            <input type="file" id="bm-file-input" multiple accept="${MEDIA_ACCEPT}" hidden>
+            <p class="bm-file-err" id="bm-file-err" role="alert" hidden></p>
+            <ul class="bm-file-list" id="bm-file-list" aria-labelledby="bm-files-l"></ul>
           </div>
           <div class="bt-preview">
             <div class="bt-preview-head"><span class="label">Aperçu</span><span class="muted small" id="bm-preview-for"></span></div>
@@ -503,7 +580,20 @@ export function mountBotSection(container) {
     const onInput = () => { renderManualCounts(); renderManualPreview(); };
     title.addEventListener('input', onInput);
     text.addEventListener('input', onInput);
-    $('#bm-channel', bmBody).addEventListener('change', renderManualPreview);
+    $('#bm-channel', bmBody).addEventListener('change', () => { syncManualMention(); renderManualPreview(); });
+    $('#bm-mention', bmBody).addEventListener('change', renderManualPreview);
+    // Pièces jointes : clic ou Entrée/Espace ouvre le sélecteur ; glisser-déposer ; retrait par ligne
+    const drop = $('#bm-drop', bmBody), input = fileInput();
+    const openPicker = () => { if (S.files.length < MEDIA_MAX_FILES) input.click(); else showFileError(`${MEDIA_MAX_FILES} fichiers maximum par envoi.`); };
+    drop.addEventListener('click', openPicker);
+    drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); } });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('is-over'); addFiles(e.dataTransfer?.files ?? []); });
+    input.addEventListener('change', () => { addFiles(input.files ?? []); input.value = ''; });
+    $('#bm-file-list', bmBody).addEventListener('click', (e) => {
+      const b = e.target.closest('[data-file-remove]'); if (b) removeFile(Number(b.dataset.fileRemove));
+    });
     const varBtn = $('#bm-var', bmBody);
     varBtn.addEventListener('mousedown', (e) => e.preventDefault());
     varBtn.addEventListener('click', () => {
@@ -523,6 +613,78 @@ export function mountBotSection(container) {
     if (!has) cb.checked = false;
     $('#bm-channel-wrap', bmBody).classList.toggle('is-disabled', !has);
     $('#bm-channel-hint', bmBody).textContent = has ? '' : '(renseigne d\'abord l\'ID du salon dans les réglages)';
+    syncManualMention();
+  }
+
+  /** Mention du message manuel : active seulement si on publie dans le salon. Le rôle n'est proposé que s'il est configuré. */
+  function syncManualMention() {
+    const sel = $('#bm-mention', bmBody); if (!sel) return;
+    const on = !!$('#bm-channel', bmBody)?.checked;
+    const role = $('#bm-mention option[value="role"]', bmBody);
+    const hasRole = !!S.bot.mention_role_id;
+    role.disabled = !hasRole;
+    if (!hasRole && sel.value === 'role') sel.value = 'none';
+    sel.disabled = !on;
+    $('#bm-mention-hint', bmBody).textContent = !on
+      ? 'Active la publication dans le salon pour choisir une mention.'
+      : hasRole ? 'Le rôle notifie ses membres ; @everyone notifie tout le serveur.'
+      : 'Aucun rôle configuré : renseigne son ID dans les réglages du bot pour le mentionner.';
+  }
+
+  /* ---------- Pièces jointes du message manuel ---------- */
+  const fileInput = () => $('#bm-file-input', bmBody);
+  function showFileError(msg) {
+    const box = $('#bm-file-err', bmBody);
+    box.textContent = msg; box.hidden = !msg;
+  }
+  /** Ajoute des fichiers choisis ou glissés, en refusant clairement ceux qui ne passent pas. */
+  function addFiles(list) {
+    const errors = [];
+    for (const file of [...list]) {
+      if (S.files.length >= MEDIA_MAX_FILES) { errors.push(`${MEDIA_MAX_FILES} fichiers maximum par envoi.`); break; }
+      if (!MEDIA_TYPES.has(file.type)) { errors.push(`« ${file.name} » : type de fichier non autorisé (images, GIF, vidéos, sons ou PDF).`); continue; }
+      if (file.size > MEDIA_MAX_BYTES) { errors.push(`« ${file.name} » fait ${fmtSize(file.size)} : 10 Mo maximum par fichier.`); continue; }
+      if (S.files.some((f) => f.file.name === file.name && f.file.size === file.size)) continue; // doublon
+      S.files.push({ file, url: file.type.startsWith('image/') ? URL.createObjectURL(file) : null });
+    }
+    showFileError(errors.join(' '));
+    renderFiles();
+  }
+  function removeFile(i) {
+    const [f] = S.files.splice(i, 1);
+    if (f?.url) URL.revokeObjectURL(f.url);
+    showFileError('');
+    renderFiles();
+  }
+  function clearFiles() {
+    for (const f of S.files) if (f.url) URL.revokeObjectURL(f.url);
+    S.files = [];
+    const input = fileInput(); if (input) input.value = '';
+    renderFiles();
+  }
+  function renderFiles() {
+    const list = $('#bm-file-list', bmBody); if (!list) return;
+    list.innerHTML = S.files.map((f, i) => {
+      const ext = (f.file.name.split('.').pop() || '').slice(0, 4).toUpperCase();
+      return `<li class="bm-file">
+        <span class="bm-file-thumb">${f.url ? `<img src="${esc(f.url)}" alt="">` : `<span class="bm-file-ext">${esc(ext)}</span>`}</span>
+        <span class="bm-file-meta"><span class="bm-file-name">${esc(f.file.name)}</span><span class="small muted">${esc(fmtSize(f.file.size))}</span></span>
+        <button type="button" class="btn btn-ghost btn-sm" data-file-remove="${i}" aria-label="Retirer ${esc(f.file.name)}">Retirer</button>
+      </li>`;
+    }).join('');
+    const n = S.files.length;
+    $('#bm-drop', bmBody).setAttribute('aria-disabled', String(n >= MEDIA_MAX_FILES));
+    renderManualPreview();
+  }
+  /** Téléverse les pièces jointes dans hg-bot-media (manuel/<date>/<uuid>-<nom>). Les chemins réussis vont dans `done`. */
+  async function uploadFiles(done) {
+    const day = dayStamp();
+    for (const f of S.files) {
+      const path = `manuel/${day}/${uuid()}-${storageName(f.file.name)}`;
+      check(await sb.storage.from(MEDIA_BUCKET).upload(path, f.file, { contentType: f.file.type, upsert: false, cacheControl: '3600' }));
+      done.push(path);
+    }
+    return done;
   }
 
   function renderRecipients() {
@@ -556,35 +718,62 @@ export function mountBotSection(container) {
     const sub = (s) => s.replace(/\{pseudo\}/g, pseudo);
     const title = truncate(sub($('#bm-title', bmBody).value).replace(/\s+/g, ' ').trim(), TITLE_MAX);
     const description = truncate(sub($('#bm-text', bmBody).value).trim(), BODY_MAX);
-    $('#bm-preview-for', bmBody).textContent = who ? `pour ${who}` : channel && !S.selected.size ? 'dans le salon' : 'avec un pseudo d\'exemple';
-    $('#bm-preview', bmBody).innerHTML = discordPreview({ where: who ? 'Message privé' : channel ? 'Salon d\'annonces' : 'Message privé', embed: { color: '#9E3543', title, description } });
+    // Mention : elle ne concerne que la publication dans le salon. L'aperçu d'un MP ne l'affiche pas (une note le précise).
+    const mode = channel ? $('#bm-mention', bmBody).value : 'none';
+    const salonMention = mode === 'everyone' ? '@everyone' : mode === 'role' ? '@rôle' : '';
+    const mention = !who ? salonMention : '';
+    const firstImage = S.files.find((f) => f.url);
+    const files = S.files.map((f) => ({ name: f.file.name, size: f.file.size, inEmbed: f === firstImage }));
+    $('#bm-preview-for', bmBody).textContent = who
+      ? `pour ${who}${salonMention ? ` · dans le salon : ${salonMention} en tête du message` : ''}`
+      : channel && !S.selected.size ? 'dans le salon' : 'avec un pseudo d\'exemple';
+    $('#bm-preview', bmBody).innerHTML = discordPreview({
+      where: who ? 'Message privé' : channel ? 'Salon d\'annonces' : 'Message privé', mention,
+      embed: { color: '#9E3543', title, description, image: firstImage?.url ?? null }, files,
+    });
   }
 
   async function sendManual(btn) {
     if (S.sending) return;
     const title = $('#bm-title', bmBody).value.trim(), body = $('#bm-text', bmBody).value.trim();
     const channel = $('#bm-channel', bmBody).checked;
+    const mode = channel ? $('#bm-mention', bmBody).value : 'none';
     const ids = [...S.selected];
     if (!body) { toast('Écris un message', 'error'); $('#bm-text', bmBody).focus(); return; }
     if (body.length > MANUAL_BODY_MAX) { toast(`Message trop long (${MANUAL_BODY_MAX} caractères maximum)`, 'error'); return; }
     if (!ids.length && !channel) { toast('Choisis au moins un destinataire', 'error'); return; }
-    if (ids.length > CONFIRM_ABOVE) {
-      const txt = `Le bot va envoyer ce message en privé à ${ids.length} personnes${channel ? ' et le publier dans le salon d\'annonces' : ''}. L'envoi prend quelques secondes par destinataire.`;
+    if (mode === 'role' && !S.bot.mention_role_id) { toast('Aucun rôle configuré pour la mention', 'error'); return; }
+    const files = S.files.slice();
+    const fileTxt = files.length ? ` avec ${pluralCount(files.length, 'pièce jointe', 'pièces jointes')}` : '';
+    const mentionTxt = mode === 'everyone' ? ' Mention @everyone : tout le serveur sera notifié.'
+      : mode === 'role' ? ' Le rôle mentionné sera notifié.' : '';
+    // Confirmation : grand envoi, pièces jointes ou mention @everyone (notifie tout le serveur)
+    if (mode === 'everyone' || ids.length > CONFIRM_ABOVE || files.length) {
+      const parts = [];
+      if (ids.length) parts.push(`en privé à ${pluralCount(ids.length, 'personne', 'personnes')}`);
+      if (channel) parts.push('publier dans le salon d\'annonces');
+      const txt = `Le bot va ${parts.join(' et ')}${fileTxt}.${mentionTxt}${ids.length > CONFIRM_ABOVE ? ' L\'envoi prend quelques secondes par destinataire.' : ''}`;
       if (!(await confirmSend(txt))) return;
     }
     S.sending = true;
     const resBox = $('#bm-result', bmBody);
-    resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${pluralCount(ids.length, 'destinataire', 'destinataires')})…</div>`;
+    const uploaded = [];
+    resBox.innerHTML = `<div class="bm-sending" role="status">${files.length ? 'Téléversement des pièces jointes…' : `Envoi en cours (${pluralCount(ids.length, 'destinataire', 'destinataires')})…`}</div>`;
     await busy(btn, async () => {
       try {
-        const res = await callFn('hg-notify', { event: 'admin_dm', user_ids: ids, title, body, channel });
+        await uploadFiles(uploaded);
+        resBox.innerHTML = `<div class="bm-sending" role="status">Envoi en cours (${pluralCount(ids.length, 'destinataire', 'destinataires')})…</div>`;
+        const res = await callFn('hg-notify', { event: 'admin_dm', user_ids: ids, title, body, channel, mention: mode, attachments: uploaded });
         if (res?.error) throw new Error(res.error);
         renderResult(res);
         const failed = (res?.failed ?? 0) + (res?.channel === false ? 1 : 0);
         toast(failed ? 'Envoi terminé avec des échecs' : 'Message envoyé', failed ? 'error' : 'ok');
+        clearFiles();
         S.history = null;
         if ($('#bm-history', container).open) loadHistory();
       } catch (e) {
+        // Échec : les fichiers déjà téléversés sont retirés du stockage (rien ne reste sans message)
+        if (uploaded.length) sb.storage.from(MEDIA_BUCKET).remove(uploaded).catch(() => {});
         resBox.innerHTML = `<div class="bm-error" role="alert">Échec de l'envoi : ${esc(await fnError(e))}</div>`;
         throw e;
       } finally { S.sending = false; }

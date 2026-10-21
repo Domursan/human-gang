@@ -14,7 +14,7 @@ Ce que fait le bot :
 | Nouvelle sortie IRL | Annonce dans le salon (titre, date, lieu, lien) |
 | Demande d'assistance | MP à toi, avec le sujet, le pseudo, le contact et le message |
 
-Le bot ne révèle jamais les paires du Secret Santa et désactive les mentions (pas de @everyone possible).
+Le bot ne révèle jamais les paires du Secret Santa. Par défaut, les annonces ne mentionnent personne : la mention se règle par type d'annonce (section 6).
 
 ---
 
@@ -74,6 +74,8 @@ Ce sont des nombres de 17 à 20 chiffres.
 1. Connecte-toi au site, ouvre **Admin** → section **Bot Discord** (`admin.html#bot`).
 2. Colle l'ID du salon d'annonces et ton ID Discord.
 3. Choisis les notifications à activer, puis **Enregistrer**.
+   **Mention dans le salon** (facultatif) : pour chaque type d'annonce, « Aucune » (défaut), « Le rôle » (notifie les membres d'un rôle dont tu colles l'ID, clic droit sur le rôle › *Copier l'identifiant*) ou **@everyone**, qui **notifie tout le serveur** : à réserver aux annonces vraiment importantes.
+   Le message manuel (Envoyer un message) a son propre choix de mention, et accepte jusqu'à 4 pièces jointes (images, GIF, vidéos, sons, PDF ; 10 Mo maximum chacune).
 4. Clique sur **Envoyer un message de test** : tu dois voir un message dans le salon et recevoir un MP.
    Si l'un des deux échoue, regarde les points de la section 8.
 

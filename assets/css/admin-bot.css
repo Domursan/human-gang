@@ -164,3 +164,45 @@
 .bt-editor .bt-preview { margin-top: 4px; }
 /* Tiroir du modèle : le titre est déjà dans l'en-tête du tiroir */
 .ui-drawer .bt-ed-title { display: none; }
+
+/* ---------- Mentions des annonces (réglages) ---------- */
+.bot-admin .mentions { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin: 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 10px; }
+.bot-admin .mentions legend { padding: 0 6px; }
+.bot-admin .mentions > p { margin: 0; max-width: 72ch; }
+.bot-admin .mentions:disabled { opacity: .6; }
+.mention-list { display: flex; flex-direction: column; gap: 8px; }
+.mention-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 200px); align-items: center; gap: 12px; }
+.mention-row label { font-size: 14px; }
+.mention-row select { width: 100%; min-height: 44px; }
+@media (max-width: 600px) { .mention-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+
+/* ---------- Mention et pièces jointes (message manuel) ---------- */
+.bm-mention-field { gap: 6px; }
+.bm-mention-field p { margin: 0; }
+.bm-mention-field select:disabled { opacity: .6; }
+.bm-files { gap: 8px; }
+.bm-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 96px; padding: 14px 16px;
+  border: 1.5px dashed var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); text-align: center; cursor: pointer; }
+.bm-drop[aria-disabled="true"] { cursor: default; opacity: .6; }
+.bm-drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bm-drop.is-over { border-color: var(--accent); background: var(--surface); }
+@media (hover: hover) { .bm-drop:hover { border-color: var(--accent); } }
+.bm-drop-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.bm-file-err { margin: 0; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--rose); color: var(--rose); font-size: 14px; }
+.bm-file-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.bm-file { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+.bm-file-thumb { width: 48px; height: 48px; border-radius: 6px; overflow: hidden; display: grid; place-items: center; background: var(--surface-2); }
+.bm-file-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.bm-file-ext { font-size: 11px; font-weight: 700; letter-spacing: .5px; color: var(--muted); }
+.bm-file-meta { display: flex; flex-direction: column; min-width: 0; }
+.bm-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+@media (pointer: coarse) { .bm-file .btn { min-height: 44px; } }
+
+/* Aperçu : mention, image jointe, pièces jointes (couleurs Discord) */
+.dc-mention { display: inline-block; background: rgba(88, 101, 242, .3); color: #c9cdfb; border-radius: 3px; padding: 0 3px; font-weight: 500; }
+.dc-img { display: block; max-width: 100%; max-height: 300px; border-radius: 4px; object-fit: contain; }
+.dc-files { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.dc-file { display: flex; gap: 8px; align-items: baseline; font-size: 14px; color: #00a8fc; overflow-wrap: anywhere; }
+.dc-file-size { color: #949ba4; font-size: 13px; white-space: nowrap; }

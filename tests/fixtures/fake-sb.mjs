@@ -268,6 +268,31 @@ window.__fakeRealtime = {
   status(s) { for (const c of [...RT.channels]) if (c.cb) c.cb(s); },
 };
 
+// Stockage privé hg-bot-media (pièces jointes du message manuel, migration 037) : simulé en mémoire.
+// Seules les métadonnées sont gardées (window.__MEDIA[chemin] = { size, type, name }) ; limite de 10 Mo comme le bucket.
+function botMediaBucket() {
+  window.__MEDIA = window.__MEDIA || {};
+  return {
+    upload: async (p, file) => {
+      window.__LOG.push(['upload', p]);
+      if (file.size > 10485760) return { data: null, error: { message: 'The object exceeded the maximum allowed size' } };
+      if (window.__MEDIA[p]) return { data: null, error: { message: 'The resource already exists' } };
+      window.__MEDIA[p] = { size: file.size, type: file.type, name: file.name };
+      return { data: { path: p }, error: null };
+    },
+    download: async (p) => (window.__MEDIA[p]
+      ? { data: new Blob([''], { type: window.__MEDIA[p].type }), error: null }
+      : { data: null, error: { message: 'Object not found' } }),
+    remove: async (paths) => { window.__LOG.push(['remove-media', paths]); for (const p of paths) delete window.__MEDIA[p]; return { data: [], error: null }; },
+  };
+}
+
+// Réponse de hg-notify « admin_dm » : un résultat par destinataire, et le salon si demandé (comme la fonction réelle).
+function adminDmResult(body) {
+  const recipients = (body.user_ids || []).map((id) => ({ user_id: id, pseudo: DB.hg_profiles.find((x) => x.id === id)?.pseudo ?? null, ok: true, status: 'sent', reason: null }));
+  return { ok: true, recipients, sent: recipients.length, failed: 0, skipped: 0, channel: body.channel ? true : null, channel_error: null, log_id: 1 };
+}
+
 export function createClient() {
   return {
     auth: {
@@ -365,13 +390,13 @@ export function createClient() {
       return { data: null, error: null };
     },
     channel: (name) => makeChannel(name), removeChannel: (ch) => { RT.channels.delete(ch); }, removeAllChannels() { RT.channels.clear(); },
-    storage: { from: () => ({
+    storage: { from: (bucket) => (bucket === 'hg-bot-media' ? botMediaBucket() : {
       getPublicUrl: (p) => ({ data: { publicUrl: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="gold"/></svg>') } }),
       upload: async (p) => { window.__LOG.push(['upload', p]); return { data: { path: p }, error: null }; },
       remove: async (p) => { window.__LOG.push(['remove', p]); return { data: [], error: null }; },
       createSignedUrl: async () => ({ data: { signedUrl: PHOTO_SVG } }),
       createSignedUrls: async (paths = []) => ({ data: paths.map((p) => ({ path: p, signedUrl: PHOTO_SVG, error: null })) }),
     }) },
-    functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
+    functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); if (body?.event === 'admin_dm') return { data: adminDmResult(body), error: null }; return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
   };
 }
