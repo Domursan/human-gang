@@ -11,6 +11,7 @@ importent aussi `../_shared/dyn-announce.ts`).
 | `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
 | `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
 | `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `false` |
+| `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
 l'en-tête `x-cron-secret` de `hg-cron` et `hg-birthdays`.
@@ -107,3 +108,23 @@ select cron.schedule(
 );
 ```
 (même forme que `hg-birthdays-daily` ; pour l'arrêter : `select cron.unschedule('hg-cron-5min');`).
+
+## Notifications push et messagerie temps réel : hg-push (migration 025)
+
+`hg-push` envoie une notification Web Push aux autres membres d'une conversation après chaque message (trigger
+`hg_msg_push` de `025_push_realtime.sql`, appel asynchrone par pg_net). Elle ne contient que « Nouveau message » et
+le nom de la conversation (« Secret Santa » pour un Secret Santa). Fichiers à envoyer : `hg-push/index.ts` et
+`_shared/cron-auth.ts`. `verify_jwt` : `false`. Dépendance : `npm:web-push@3.6.7` (importée par Deno, rien à installer).
+
+Ordre à suivre :
+1. Appliquer `supabase/migrations/025_push_realtime.sql` (idempotente). Elle crée la table `hg_push_subscriptions`,
+   la policy de messagerie temps réel et les deux triggers. Les triggers ne font rien tant que le secret `cron_secret`
+   (table privée `hg_private`, migration 020) est absent.
+2. Insérer les clés VAPID (une seule fois, éditeur SQL). Les commandes sont en commentaire en tête de la migration.
+   La clé publique va dans `hg_settings` (clé `push_vapid_public`), la clé privée dans `hg_private`
+   (clé `push_vapid_private`). Ne jamais les committer.
+3. Déployer `hg-push` (tableau ci-dessus).
+4. Secret facultatif : `VAPID_SUBJECT` (`mailto:` ou `https:`). Sans lui, `SITE_URL` est utilisé.
+
+Tant que les clés VAPID ne sont pas insérées, la fonction répond `vapid_absent` et n'envoie rien. Le bouton
+« Notifications sur cet appareil » de la page Mon compte reste alors indisponible.
