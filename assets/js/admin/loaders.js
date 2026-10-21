@@ -1,8 +1,19 @@
-// Admin : chargement des données (membres, invitations, Secret Santa, badges, idées, assistance, réglages).
+// Admin : chargement des données partagées (membres, invitations, Secret Santa, badges, idées, assistance).
+// Chaque donnée se charge une seule fois (ensureX) : les sections qui en ont besoin attendent la même promesse.
 import { sb } from '../core.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
 import { S } from './state.js';
 import { check } from './common.js';
+
+/* ---------- Cache des données partagées ---------- */
+const LOADED = new Map();
+/** Charge la donnée `key` une seule fois : les appels suivants reçoivent la même promesse. Un échec n'est pas gardé. */
+export function once(key, load) {
+  if (!LOADED.has(key)) LOADED.set(key, load().catch((e) => { LOADED.delete(key); throw e; }));
+  return LOADED.get(key);
+}
+/** Oublie la donnée `key` : le prochain appel la recharge. */
+export function forget(key) { LOADED.delete(key); }
 
 /* ---------- Chargement ---------- */
 export async function loadMembers() {
@@ -34,12 +45,12 @@ export async function loadBadges() {
 }
 export async function loadIdeas() { S.ideas = check(await sb.from('hg_ideas').select('*').order('created_at', { ascending: false })) ?? []; }
 export async function loadSupport() { S.support = check(await sb.from('hg_support').select('*').order('created_at', { ascending: false })) ?? []; }
-export async function loadSettings() {
-  const rows = check(await sb.from('hg_settings').select('key, value').in('key', ['bot', 'theme'])) ?? [];
-  const get = (k) => rows.find((r) => r.key === k)?.value;
-  S.bot = get('bot') ?? { announce_channel_id: null, admin_discord_id: null, notify: {} };
-  S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, ...(S.bot.notify || {}) };
-  S.theme = get('theme') ?? { mode: 'auto', forced: null };
-}
 
-export async function safe(fn, onError) { try { await fn(); return true; } catch (e) { console.error(e); onError?.(e); return false; } }
+/* ---------- Versions partagées (une seule requête par donnée pour toutes les sections) ---------- */
+export const ensureMembers = () => once('members', loadMembers);
+export const ensureInvites = () => once('invites', loadInvites);
+export const ensureBadges = () => once('badges', loadBadges);
+export const ensureIdeas = () => once('ideas', loadIdeas);
+export const ensureSupport = () => once('support', loadSupport);
+/** Éditions Secret Santa et édition retenue (participants, exclusions). */
+export const ensureSS = () => once('ss', async () => { await loadEditions(); await loadEditionDetails(); S.ssLoaded = true; });

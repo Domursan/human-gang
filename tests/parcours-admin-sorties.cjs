@@ -2,7 +2,7 @@
 // Faux Supabase (fixtures/fake-sb.mjs) : le test vérifie ce que le client envoie (journal), pas ce que la base enregistre.
 // Scénario : créer une sortie, la modifier, ajouter et retirer un inscrit, fixer une date, supprimer avec confirmation.
 // Lancer : node tests/parcours-admin-sorties.cjs
-const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
@@ -45,6 +45,7 @@ function dansTrenteJours() {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', scenario: SCN, width: 1280 });
+  await adminSection(p, 'sorties');
 
   // 1. Navigation et liste
   check(await p.isVisible('nav.admin-nav a[href="#sorties"]'), 'admin : lien « Sorties IRL » dans la navigation');

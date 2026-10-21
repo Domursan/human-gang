@@ -39,8 +39,9 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * fixture : fichier de tests/fixtures/ qui remplace le client supabase-js.
  * scenario : objet visible par le faux client sous window.__SCN (ex. { guest: true }).
  * reducedMotion : 'reduce' pour désactiver les animations (préférence système).
+ * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference' } = {}) {
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '' } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion });
   await ctx.addInitScript((s) => {
     window.__SCN = s;
@@ -68,7 +69,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });
   page.on('response', (r) => { if (r.status() === 404) page.errs.push('404 ' + r.url()); });
-  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html`);
+  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html${hash}`); // hash : adresse de départ (lien direct), ex. '#comptes/<id>'
   await sleep(1200);
   page.ctx = ctx;
   return page;
@@ -77,7 +78,16 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
 /** Décalage horizontal de la page (0 = pas de scroll horizontal). */
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
+/**
+ * Admin : ouvre une section comme un clic dans le menu (adresse #id) et attend qu'elle soit montée.
+ * Les sections du panel se chargent à la demande : un test qui interagit avec une section doit l'ouvrir d'abord.
+ */
+async function adminSection(page, id) {
+  await page.evaluate((i) => { location.hash = i; }, id);
+  await page.waitForFunction((i) => { const s = document.getElementById(i); return !!s && !s.classList.contains('is-lazy'); }, id, { timeout: 8000 });
+}
+
 /** Journal des appels du faux client (rpc, from, fn, auth…). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
-module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, hscroll, log, sleep, chromium };
+module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, hscroll, log, sleep, chromium };

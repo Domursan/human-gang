@@ -38,6 +38,7 @@ const PRECACHE = [
   'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
   'assets/js/admin/overview.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
   'assets/js/admin/support.js', 'assets/js/admin/live.js', 'assets/css/admin-live.css',
+  'assets/js/admin/mounts.js', 'assets/js/admin/router.js', 'assets/js/admin/palette.js', 'assets/css/admin-nav.css',
   'assets/js/admin-sorties/data.js', 'assets/js/admin-sorties/dialogs.js', 'assets/js/admin-sorties/format.js', 'assets/js/admin-sorties/index.js',
   'assets/css/admin-souvenirs.css', 'assets/js/admin-souvenirs/helpers.js', 'assets/js/admin-souvenirs/index.js', 'assets/js/admin-souvenirs/moments.js',
   'assets/js/admin-souvenirs/photos.js', 'assets/js/admin-souvenirs/reactions.js',

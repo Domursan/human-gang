@@ -6,7 +6,7 @@
 // (b) Staff { cartes } : aucun abonnement à hg_support, hg_ideas, hg_staff ni hg_admin_log.
 // (c) sans temps réel : indicateur gris « Hors direct », aucune erreur JS, sections inchangées.
 // Lancer : node tests/parcours-admin-direct.cjs
-const { ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
+const { adminSection, ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
 
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -45,6 +45,7 @@ const emettre = (p, row) => p.evaluate((r) => {
     check((await p.textContent('#support-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
+    await adminSection(p, 'staff');
     await p.click('#staff [data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
@@ -54,6 +55,7 @@ const emettre = (p, row) => p.evaluate((r) => {
     check((await p.textContent('.nav-count[data-count="assistance"]')).trim() === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'), null, { timeout: 5000 }).catch(() => {});
+    await adminSection(p, 'assistance');
     await p.click('#assistance .live-banner button');
     await p.waitForTimeout(300);
     check((await p.textContent('#support-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');

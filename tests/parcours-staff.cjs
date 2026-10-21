@@ -4,7 +4,7 @@
 //     aucune requête vers les RPC et tables des autres sections, ni section Staff, ni mode sans limite.
 // (c) membre simple : redirigé hors de admin.html.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-staff.cjs
-const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
 
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const CHLOE = U(4);
@@ -27,6 +27,7 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
   /* (a) Administrateur */
   {
     const p = await openPage(browser, { page: 'admin' });
+    await adminSection(p, 'staff');
     check(await p.isVisible('#staff'), '(a) admin : section Staff visible');
     check(await p.isVisible('.nav-admin') && (await p.textContent('.nav-admin')).trim() === 'Admin', '(a) admin : lien « Admin » dans l’en-tête');
     check(await p.isVisible('#god-root .god-card'), '(a) admin : mode sans limite visible');

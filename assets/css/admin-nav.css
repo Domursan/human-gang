@@ -1,0 +1,49 @@
+/* ===== Humane Gang — administration : chargement à la demande, bouton « Aller à… », palette ===== */
+
+/* Sections pas encore montées : seul le squelette « Chargement… » s'affiche */
+.admin-section.is-lazy > :not(.section-title):not(.admin-skel) { display: none; }
+.admin-skel { display: none; }
+.admin-section.is-lazy > .admin-skel { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 8px; }
+.admin-skel-label { font-size: 14px; color: var(--muted); }
+.admin-skel-bar { display: block; height: 14px; width: min(100%, 560px); border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 200% 100%; animation: admin-skel 1.4s ease-in-out infinite; }
+.admin-skel-bar.short { width: 40%; }
+@keyframes admin-skel { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .admin-skel-bar { animation: none; } }
+
+/* Bouton « Aller à… » en tête du menu des sections */
+.admin-goto { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px;
+  padding: 10px 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  background: transparent; color: var(--muted); font: inherit; font-size: 15px; cursor: pointer; text-align: left; }
+@media (hover: hover) { .admin-goto:hover { color: var(--text); border-style: solid; } }
+.admin-goto:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.admin-goto kbd { font: inherit; font-size: 12px; padding: 2px 6px; border: 1px solid var(--border-strong); border-radius: 6px; color: var(--muted); white-space: nowrap; }
+
+/* Palette « Aller à… » (dialogue modal) */
+.apal-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-start; justify-content: center;
+  padding: 12vh 16px 16px; background: rgba(0, 0, 0, 0.55); }
+.apal-backdrop[hidden] { display: none; }
+.apal { width: min(560px, 100%); max-height: 70vh; display: flex; flex-direction: column; gap: 12px;
+  padding: 16px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45); }
+.apal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.apal-title { margin: 0; font-size: 17px; font-weight: 700; }
+.apal-input { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.apal-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.apal-list { list-style: none; margin: 0; padding: 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.apal-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px;
+  padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; }
+.apal-item[aria-selected="true"] { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--accent); }
+.apal-kind { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; flex: none; }
+.apal-label { min-width: 0; overflow-wrap: anywhere; }
+.apal-empty { padding: 12px; color: var(--muted); }
+.apal-hint { margin: 0; }
+
+/* Menu des sections sur mobile : barre défilante dans son propre conteneur, repère de défilement */
+@media (max-width: 860px) {
+  .admin-nav { scroll-padding-inline: 16px; mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%); }
+  .admin-goto { flex: none; border-radius: 999px; }
+}

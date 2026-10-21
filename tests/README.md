@@ -14,6 +14,9 @@ npm run test:rpc             # chaque RPC et table appelée existe dans le sché
 npm test                     # tests de fumée puis tests de parcours
 ```
 
+Les sections du panel admin se chargent à la demande : un test qui interagit avec une section ouvre d'abord
+la section (`adminSection(page, id)` de `lib/harness.cjs`), comme un clic dans le menu.
+
 Pour tester un autre dossier que celui-ci : `HG_ROOT=/chemin/du/checkout npm test`.
 
 Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cassé répond alors 404) : `HG_PREFIX=/human-gang npm test`.
@@ -33,6 +36,7 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-sorties.cjs` | Administration, section « Sorties IRL » : liste et filtres, création, modification, ajout et retrait d'un inscrit, date retenue, suppression avec confirmation (données envoyées au faux client) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 | `parcours-admin-complements.cjs` | Panel admin : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site (ajouter, modifier, JSON refusé, clé sensible avec confirmation), pages (créer, modifier, supprimer), suppression d'une édition Secret Santa |
+| `parcours-admin-nav.cjs` | Panel admin : sections montées à la demande (rien de Cartes, Bot ou Messagerie au chargement), liens directs `#comptes/<id>/<onglet>` et `#cartes/<onglet>`, adresse mise à jour par les clics et Précédent, palette « Aller à… » (Ctrl/Cmd+K, sections et fiches, focus piégé), palette limitée aux droits Staff, navigation mobile à 375 px |
 
 ## Fixtures
 
