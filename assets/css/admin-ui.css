@@ -38,7 +38,7 @@ html[data-mode="clair"] { --sand-ink: #6B4F00; }
 }
 .ui-status:disabled { opacity: .7; cursor: default; }
 .ui-status[data-tone="open"] { color: var(--rose); }
-.ui-status[data-tone="prog"] { color: var(--sand); }
+.ui-status[data-tone="prog"] { color: var(--sand-ink); }
 .ui-status[data-tone="done"] { color: var(--sage); }
 .ui-status-wide { width: 100%; }
 
