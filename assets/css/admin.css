@@ -187,3 +187,18 @@ fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
 .god-card-more .god-lifts { margin-bottom: 10px; }
 .god-redo-dlg .god-note { margin: 0; }
 .draw-redo { border-top: 1px dashed var(--god-text); padding-top: 12px; }
+
+/* Défis du gang (admin-challenges.js) */
+.adc { display: grid; gap: 20px; }
+.adc-form { display: grid; gap: 14px; }
+.adc-h { margin: 0; font-size: 18px; }
+.adc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px 16px; }
+.adc-wide { grid-column: 1 / -1; }
+.adc-check { display: flex; align-items: center; }
+.adc-check label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.adc-check input { width: 22px; height: 22px; }
+.adc-list { display: grid; gap: 12px; }
+.adc-row { display: grid; gap: 8px; }
+.adc-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 12px; }
+.adc-row-title { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+.adc-row .btn-row { margin-top: 4px; }
