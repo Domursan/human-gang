@@ -1,11 +1,11 @@
-// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton du menu). Filtre les sections permises et les membres (pseudo).
-// Entrée ouvre la section ou la fiche. Dialogue modal : focus piégé, Échap ferme, le reste de la page est inerte.
-// Propre à admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
+// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton du rail). Filtre les sous-sections permises et les membres (pseudo).
+// Entrée ouvre la sous-section ou la fiche, par le routeur de la coquille (admin/shell.js). Dialogue modal : focus piégé,
+// Échap ferme, le reste de la page est inerte. Propre à admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
 import { esc } from '../core.js';
 import { S } from './state.js';
 import { ensureMembers } from './loaders.js';
-import { canSection } from './perms.js';
-import { go } from './router.js';
+import { canSection, visibleDomains } from './perms.js';
+import { navigate } from './shell.js';
 
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const MAX_MEMBERS = 12;
@@ -42,20 +42,14 @@ function build() {
   ui.root.addEventListener('click', (e) => { if (e.target === ui.root) close(); });
 }
 
-/** Sections accessibles : celles de la navigation, qui ne sont pas masquées pour ce compte. */
+/** Sous-sections accessibles (domaines de la coquille, déjà filtrés par les droits). La colonne « kind » donne le domaine. */
 function sectionItems() {
-  return [...document.querySelectorAll('.admin-nav a')]
-    .filter((a) => !a.hidden && canSection(a.getAttribute('href').slice(1)))
-    .map((a) => ({
-      kind: 'Section',
-      label: [...a.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim(),
-      path: a.getAttribute('href').slice(1),
-    }));
+  return visibleDomains().flatMap((d) => d.subs.map((s) => ({ kind: d.label, label: s.label, path: `${d.id}/${s.id}` })));
 }
 function memberItems(q) {
   if (!q || !canSection('comptes') || ui.membersState !== 'ready') return [];
   const pick = (list, kind) => list.filter((m) => m.pseudo && norm(m.pseudo).includes(q))
-    .map((m) => ({ kind, label: m.pseudo, path: `comptes/${m.id}` }));
+    .map((m) => ({ kind, label: m.pseudo, path: `membres/comptes/${m.id}` }));
   return [...pick(S.members, 'Membre'), ...pick(S.ghosts, 'Fantôme')].slice(0, MAX_MEMBERS);
 }
 function items() {
@@ -108,7 +102,7 @@ function choose(i) {
   const it = ui.items[i];
   if (!it) return;
   close();
-  go(it.path);
+  navigate(it.path);
 }
 
 /** Ouvre la palette ; `opener` reçoit le focus à la fermeture. */
@@ -140,7 +134,7 @@ function close() {
   if (back && document.contains(back)) back.focus();
 }
 
-/** Branche le raccourci Ctrl/Cmd+K (phase de capture : la recherche du site ne s'ouvre pas en même temps) et le bouton du menu. */
+/** Branche le raccourci Ctrl/Cmd+K (phase de capture : la recherche du site ne s'ouvre pas en même temps) et le bouton du rail. */
 export function setupPalette() {
   window.addEventListener('keydown', (e) => {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || String(e.key).toLowerCase() !== 'k') return;

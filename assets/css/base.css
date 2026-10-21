@@ -455,8 +455,7 @@ html[data-mode="clair"] .search-dialog::backdrop { background: rgba(30, 28, 34, 
 html[data-mode="clair"] { --god-text: #6B4F00; }
 html[data-godmode="on"] body { padding-top: var(--god-h, 60px); }
 html[data-godmode="on"] { scroll-padding-top: calc(var(--god-h, 60px) + 12px); }
-html[data-godmode="on"] :is(.admin-nav, .bt-list, .bt-main .bt-preview, .legal-toc) { top: calc(var(--god-h, 60px) + 16px); }
-@media (max-width: 860px) { html[data-godmode="on"] .admin-nav { top: var(--god-h, 60px); } }
+html[data-godmode="on"] :is(.bt-list, .bt-main .bt-preview, .legal-toc) { top: calc(var(--god-h, 60px) + 16px); }
 
 .god-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 9600; background: var(--god-yellow); color: var(--god-ink);
   box-shadow: 0 6px 20px rgba(0, 0, 0, .45); }

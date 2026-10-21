@@ -54,3 +54,6 @@ export const ensureIdeas = () => once('ideas', loadIdeas);
 export const ensureSupport = () => once('support', loadSupport);
 /** Éditions Secret Santa et édition retenue (participants, exclusions). */
 export const ensureSS = () => once('ss', async () => { await loadEditions(); await loadEditionDetails(); S.ssLoaded = true; });
+
+/** Exécute `fn` ; en cas d'échec, journalise l'erreur et appelle onError (sans interrompre le démarrage). */
+export async function safe(fn, onError) { try { await fn(); return true; } catch (e) { console.error(e); onError?.(e); return false; } }

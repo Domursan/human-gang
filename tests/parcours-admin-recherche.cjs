@@ -4,7 +4,7 @@
 // la demande, pas de relecture depuis le cache pendant la visite ; action en cours : bouton désactivé puis rétabli.
 // Les contrôles portent sur l'affichage et sur le journal des requêtes du faux client (window.__LOG).
 // Lancer : node tests/parcours-admin-recherche.cjs
-const { ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
@@ -40,6 +40,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Boîte à idées : recherche ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { ideas: IDEAS } });
+    await adminSection(p, 'communication/idees');
     await p.waitForSelector('#idea-list .item', { timeout: 5000 });
     check(await p.locator('#idea-list .item').count() === 3, 'idées : filtre « Nouvelles » affiche les 3 nouvelles idées');
     check((await p.textContent('#idea-search-count')).includes('3 idées'), 'idées : compteur « 3 idées » hors recherche');
@@ -76,6 +77,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Journal : recherche et « Afficher plus » ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG, accessLog: ACCESS_LOG } });
+    await adminSection(p, 'pilotage/journal');
     await p.waitForSelector('#log-list .log-row', { timeout: 5000 });
     check(await p.locator('#log-list .log-row').count() === 50, 'journal : premier lot de 50 entrées');
     check(await p.isVisible('#log-more'), 'journal : bouton « Afficher plus » visible');
@@ -104,8 +106,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Cartes : recherche et lots de 50 ---------- */
   {
     const p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { bigCards: 120 } });
-    await p.waitForSelector('#cards-root [data-tab="cartes"]', { timeout: 5000 });
-    await p.click('#cards-root [data-tab="cartes"]');
+    await adminSection(p, 'cartes/cartes');
     await p.waitForSelector('#acd-cards-list tbody tr', { timeout: 5000 });
     check(await p.locator('#acd-cards-list tbody tr').count() === 50, 'cartes : premier lot de 50 lignes sur 133');
     check(await p.isVisible('[data-act="cards-more"]'), 'cartes : bouton « Afficher plus » visible');
@@ -135,7 +136,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     check(await p.locator('#acd-cards-list tbody tr').count() === 50, 'cartes : vider la recherche revient au premier lot');
 
     // Séries : même recherche sur la liste des séries
-    await p.click('#cards-root [data-tab="series"]');
+    await adminSection(p, 'cartes/series');
     await p.waitForSelector('#acd-sets-list .acd-item', { timeout: 5000 });
     await p.fill('#acd-search-series', 'saison');
     await sleep(400);
@@ -147,6 +148,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Fiche membre : requêtes à l'ouverture, onglets à la demande, cache de la visite ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG } });
+    await adminSection(p, 'membres/comptes');
     await p.waitForSelector(`#acc-root [data-open="${ALICE}"]`, { timeout: 5000 });
 
     let mark = await logLength(p);

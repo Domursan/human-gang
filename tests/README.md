@@ -14,8 +14,8 @@ npm run test:rpc             # chaque RPC et table appelée existe dans le sché
 npm test                     # tests de fumée puis tests de parcours
 ```
 
-Les sections du panel admin se chargent à la demande : un test qui interagit avec une section ouvre d'abord
-la section (`adminSection(page, id)` de `lib/harness.cjs`), comme un clic dans le menu.
+Les sous-sections du panel admin se montent à leur première visite : un test qui interagit avec une sous-section l'ouvre d'abord
+par sa route `domaine/sous-section` (`adminSection(page, 'membres/comptes')` de `lib/harness.cjs`), comme un clic dans la colonne de navigation.
 
 Pour tester un autre dossier que celui-ci : `HG_ROOT=/chemin/du/checkout npm test`.
 
@@ -36,8 +36,9 @@ Pour servir le site comme en ligne, sous `/human-gang/` (tout chemin absolu cass
 | `parcours-admin-sorties.cjs` | Administration, section « Sorties IRL » : liste et filtres, création, modification, ajout et retrait d'un inscrit, date retenue, suppression avec confirmation (données envoyées au faux client) |
 | `parcours-booster.cjs` | Ouvrir le booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 | `parcours-admin-complements.cjs` | Panel admin : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site (ajouter, modifier, JSON refusé, clé sensible avec confirmation), pages (créer, modifier, supprimer), suppression d'une édition Secret Santa |
-| `parcours-admin-nav.cjs` | Panel admin : sections montées à la demande (rien de Cartes, Bot ou Messagerie au chargement), liens directs `#comptes/<id>/<onglet>` et `#cartes/<onglet>`, adresse mise à jour par les clics et Précédent, palette « Aller à… » (Ctrl/Cmd+K, sections et fiches, focus piégé), palette limitée aux droits Staff, navigation mobile à 375 px |
+| `parcours-admin-nav.cjs` | Panel admin : sous-sections montées à la première visite (rien de Cartes, Bot ou Messagerie au chargement), liens directs `#membres/comptes/<id>/<onglet>` (et l'ancienne `#comptes/<id>/<onglet>`) et `#cartes/quetes`, adresse mise à jour par les clics et Précédent, palette « Aller à… » (Ctrl/Cmd+K, sous-sections et fiches, focus piégé), palette limitée aux droits Staff, navigation par domaines à 375 px |
 | `parcours-admin-recherche.cjs` | Panel admin : recherche (Boîte à idées, Journal, Cartes et séries, insensible aux accents et à la casse), « Afficher plus » (Journal, Cartes par lots de 50), fiche membre (au plus 4 requêtes pour l'onglet initial, onglets chargés à la demande, cache de la visite), état d'une action en cours |
+| `parcours-admin-coquille.cjs` | Coquille du panel : rail et colonne de navigation, navigation par domaine et sous-section, URL directe `#membres/comptes`, ancienne ancre `#cartes` redirigée, précédent/suivant, Staff `cartes`+`journal` (Pilotage et Jeu de cartes seulement), mobile 375 px avec barre d’onglets et sans défilement horizontal |
 
 ## Fixtures
 

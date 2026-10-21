@@ -150,9 +150,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 body.is-inspecting { padding-top: 60px; }
 body.is-inspecting #comptes { position: relative; z-index: 41; }
 body.is-inspecting .admin-section { scroll-margin-top: 92px; }
-body.is-inspecting .admin-nav { top: 76px; }
 @media (max-width: 860px) {
-  body.is-inspecting .admin-nav { top: 60px; }
   body.is-inspecting .admin-section { scroll-margin-top: 136px; }
 }
 
@@ -211,7 +209,6 @@ body.is-inspect-leaving .insp-bar { animation: insp-out .3s steps(6, end) both; 
 }
 /* Mobile : la fiche membre occupe tout l'écran sous la barre « Vue admin » */
 @media (max-width: 760px) {
-  body.is-inspecting .admin-nav { display: none; }
   body.is-inspecting #comptes { position: fixed; top: 60px; left: 0; right: 0; bottom: 0; z-index: 41; margin: 0;
     overflow-y: auto; overscroll-behavior: contain; background: var(--bg); padding: 12px 16px 48px; gap: 14px; }
   body.is-inspecting .insp-bar { height: 60px; }

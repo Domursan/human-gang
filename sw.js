@@ -6,7 +6,7 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
-const CACHE_VERSION = 'v11';
+const CACHE_VERSION = 'v12';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -25,8 +25,8 @@ const PRECACHE = [
   'assets/css/photos.css', 'assets/css/recap.css', 'assets/css/rejoindre.css', 'assets/css/ui-confirm.css',
   'assets/css/secret-santa.css', 'assets/js/accueil.js', 'assets/js/admin-access.js',
   'assets/js/admin-accounts.js', 'assets/js/admin-badges-edit.js', 'assets/js/admin-bot.js',
-  'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js',
-  'assets/js/admin-godmode.js', 'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
+  'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js', 'assets/js/admin-godmode.js',
+  'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
   'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
   'assets/js/admin-cards/quests.js', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js',
   'assets/js/admin-accounts/activity.js', 'assets/js/admin-accounts/common.js', 'assets/js/admin-accounts/events.js', 'assets/js/admin-accounts/fiche.js',
@@ -38,8 +38,8 @@ const PRECACHE = [
   'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
   'assets/js/admin/overview.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
   'assets/js/admin/support.js', 'assets/js/admin/live.js', 'assets/css/admin-live.css',
-  'assets/js/admin/mounts.js', 'assets/js/admin/router.js', 'assets/js/admin/palette.js', 'assets/css/admin-nav.css',
-  'assets/js/admin/list-tools.js',
+  'assets/js/admin/shell.js', 'assets/js/admin/router.js', 'assets/css/admin-shell.css',
+  'assets/js/admin/palette.js', 'assets/css/admin-nav.css', 'assets/js/admin/list-tools.js',
   'assets/js/admin-sorties/data.js', 'assets/js/admin-sorties/dialogs.js', 'assets/js/admin-sorties/format.js', 'assets/js/admin-sorties/index.js',
   'assets/css/admin-souvenirs.css', 'assets/js/admin-souvenirs/helpers.js', 'assets/js/admin-souvenirs/index.js', 'assets/js/admin-souvenirs/moments.js',
   'assets/js/admin-souvenirs/photos.js', 'assets/js/admin-souvenirs/reactions.js',

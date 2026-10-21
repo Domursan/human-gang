@@ -1,5 +1,5 @@
 /* Administration : masquage selon les droits, section « Staff » et son formulaire. */
-.admin-nav a[hidden], .admin-section[hidden], [data-admin-only][hidden] { display: none !important; }
+.admin-section[hidden], [data-admin-only][hidden] { display: none !important; }
 
 .staff-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
 .staff-head p { margin: 0; max-width: 62ch; }

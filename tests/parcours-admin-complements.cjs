@@ -17,11 +17,10 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'cartes');
+  await adminSection(p, 'cartes/cartes');
 
   /* ---------- Quêtes de la semaine (onglet « Quêtes » de la section Cartes) ---------- */
-  await p.waitForSelector('#cards-root [data-tab="quetes"]', { timeout: 5000 });
-  await p.click('#cards-root [data-tab="quetes"]');
+  await adminSection(p, 'cartes/quetes');
   await p.waitForSelector('#acd-panel .acd-item', { timeout: 5000 });
   check(await p.locator('#acd-panel .acd-item').count() === 5, 'quêtes : les 5 modèles existants sont listés');
 
@@ -57,7 +56,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(toggled.active === false, 'quête désactivée depuis la liste');
 
   /* ---------- Défis du gang ---------- */
-  await adminSection(p, 'defis');
+  await adminSection(p, 'cartes/defis');
   await p.waitForSelector('#challenges-root [data-action="adc-edit"]', { timeout: 5000 });
   await p.click('#challenges-root [data-action="adc-edit"]');
   await p.waitForSelector('#adc-title', { timeout: 5000 });
@@ -74,7 +73,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#challenges-root', { hasText: 'Aucun défi' }).count() === 1, 'liste des défis vide après suppression');
 
   /* ---------- Réglages du site ---------- */
-  await adminSection(p, 'reglages');
+  await adminSection(p, 'site/reglages');
   await p.waitForSelector('#reglages-root [data-key-item="theme"]', { timeout: 5000 });
   // Admin : la clé sensible reste modifiable, mais après une confirmation explicite
   await p.fill('.rg-form[data-key="push_vapid_public"] [name="v"]', 'BOOP_modifie');
@@ -111,7 +110,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
     'JSON invalide refusé, rien n\'est écrit');
 
   /* ---------- Accès aux pages : créer, modifier, supprimer ---------- */
-  await adminSection(p, 'acces');
+  await adminSection(p, 'membres/acces');
   await p.waitForSelector('#access-root [data-pa-new]', { timeout: 5000 });
   await p.click('#access-root [data-pa-new]');
   await p.waitForSelector('#pa-pg-form', { timeout: 5000 });
@@ -142,7 +141,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#access-root [data-slug="galerie-test"]').count() === 0, 'la page a disparu du tableau');
 
   /* ---------- Secret Santa : suppression d'une édition ---------- */
-  await adminSection(p, 'secret-santa');
+  await adminSection(p, 'vie/secret-santa');
   await p.waitForSelector('#ss-delete', { timeout: 5000 });
   await p.click('#ss-delete');
   await p.waitForSelector('dialog[open]', { timeout: 5000 });

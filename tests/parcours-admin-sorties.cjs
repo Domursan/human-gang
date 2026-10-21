@@ -45,11 +45,12 @@ function dansTrenteJours() {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', scenario: SCN, width: 1280 });
-  await adminSection(p, 'sorties');
+  await adminSection(p, 'vie/sorties');
 
   // 1. Navigation et liste
-  check(await p.isVisible('nav.admin-nav a[href="#sorties"]'), 'admin : lien « Sorties IRL » dans la navigation');
-  check((await p.getAttribute('nav.admin-nav a[href="#sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
+  check((await p.locator('#shell-subs a[href="#vie/sorties"]').count()) === 1, 'admin : lien « Sorties IRL » dans la colonne de navigation');
+  check((await p.getAttribute('#shell-subs a[href="#vie/sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
+  await adminSection(p, 'vie/sorties');
   check((await p.getAttribute('#sorties', 'data-perm')) === 'evenements', 'section marquée data-perm="evenements"');
   check((await p.locator('#ass-list .ass-row').count()) === 2, 'filtre « À venir » : deux sorties (datée et à caler)');
   await p.selectOption('#ass-filter', 'passees');

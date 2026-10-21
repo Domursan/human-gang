@@ -69,7 +69,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });
   page.on('response', (r) => { if (r.status() === 404) page.errs.push('404 ' + r.url()); });
-  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html${hash}`); // hash : adresse de départ (lien direct), ex. '#comptes/<id>'
+  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html${hash}`); // hash : adresse de départ (lien direct), ex. '#membres/comptes/<id>'
   await sleep(1200);
   page.ctx = ctx;
   return page;
@@ -79,12 +79,20 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
 /**
- * Admin : ouvre une section comme un clic dans le menu (adresse #id) et attend qu'elle soit montée.
- * Les sections du panel se chargent à la demande : un test qui interagit avec une section doit l'ouvrir d'abord.
+ * Admin : ouvre une sous-section comme un clic dans la colonne de navigation et attend qu'elle soit affichée.
+ * Les sous-sections se montent à leur première visite : un test qui interagit avec une section doit l'ouvrir d'abord.
+ * Ouvre une sous-section du panel par sa route « domaine/sous-section » (ex. 'vie/secret-santa', 'cartes/defis')
+ * et attend qu'elle soit affichée : adresse à jour, sous-section active dans la colonne, section visible.
  */
-async function adminSection(page, id) {
-  await page.evaluate((i) => { location.hash = i; }, id);
-  await page.waitForFunction((i) => { const s = document.getElementById(i); return !!s && !s.classList.contains('is-lazy'); }, id, { timeout: 8000 });
+async function adminSection(page, route) {
+  await page.evaluate((r) => { location.hash = r; }, route);
+  await page.waitForFunction((r) => {
+    if (location.hash !== '#' + r) return false;
+    const cur = document.querySelector('.shell-sub[aria-current="true"]');
+    if (!cur || cur.getAttribute('href') !== '#' + r) return false;
+    const s = document.querySelector('#shell-groups > .shell-group:not([hidden]) .admin-section');
+    return !!s && s.getClientRects().length > 0;
+  }, route, { timeout: 8000 });
 }
 
 /** Journal des appels du faux client (rpc, from, fn, auth…). */

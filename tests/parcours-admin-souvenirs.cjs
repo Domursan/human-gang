@@ -15,7 +15,7 @@ const dialogOk = (p) => p.click('dialog.hg-dialog[open] .btn-danger');
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'souvenirs');
+  await adminSection(p, 'vie/souvenirs');
   await p.waitForSelector('#souvenirs-root .sv-row', { timeout: 5000 }).catch(() => {});
   check(await p.isVisible('#souvenirs'), 'section « Souvenirs et photos » présente');
   check((await p.locator('#souvenirs-root .sv-row').count()) === 3, 'onglet Souvenirs : 3 souvenirs affichés');

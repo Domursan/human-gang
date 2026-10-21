@@ -1,54 +1,5 @@
-// ===== Humane Gang — administration : carte « Mode sans limite » + confirmation « Refaire le tirage » =====
-import { esc, $, getGodMode, openGodDialog, disableGodMode, GOD_LIFTS } from './core.js';
-import { svg } from './icons.js';
-
-const ICON_BOLT = svg('bolt', { size: 22, stroke: 1.9 });
-
-function left(until) {
-  const s = Math.max(0, Math.ceil((until.getTime() - Date.now()) / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
-
-/** Carte en haut de la page admin : état, explication de ce qui est levé, bouton Activer… / Désactiver. */
-export function mountGodCard(root) {
-  if (!root) return;
-  const render = () => {
-    const { on, until } = getGodMode();
-    const end = until ? new Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' }).format(until) : '';
-    root.innerHTML = `
-      <section class="card god-card${on ? ' is-on' : ''}" aria-labelledby="god-card-t">
-        <div class="god-card-head">
-          <span class="god-card-ico">${ICON_BOLT}</span>
-          <div class="god-card-txt">
-            <h2 id="god-card-t" class="god-card-title">Mode sans limite</h2>
-            <p class="god-card-state">${on
-              ? `<strong>Actif</strong>${until ? ` · expire dans <time data-god-left datetime="${esc(until.toISOString())}">${esc(left(until))}</time> (à ${esc(end)})` : ''}. Les garde-fous ci-dessous sont levés pour toi.`
-              : 'Désactivé : tous les garde-fous sont en place. Pour tester ou corriger une situation bloquée, active-le pour une durée limitée.'}</p>
-          </div>
-          <div class="god-card-act">${on
-            ? '<button class="btn btn-danger" type="button" data-god-off>Désactiver</button>'
-            : '<button class="btn god-card-on" type="button" data-god-on aria-haspopup="dialog">Activer…</button>'}</div>
-        </div>
-        <details class="god-card-more"${on ? ' open' : ''}>
-          <summary>Ce que le mode lève</summary>
-          <ul class="god-lifts">${GOD_LIFTS.map(([k, v]) => `<li><strong>${esc(k)} :</strong> ${esc(v)}</li>`).join('')}</ul>
-          <p class="small muted">Restent actifs : sécurité et confidentialité, longueurs maximales, doublons, personne ne s'offre un cadeau à soi-même. Le mode se coupe tout seul à la fin de la durée choisie.</p>
-        </details>
-      </section>`;
-  };
-  root.addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    if (b.hasAttribute('data-god-on')) openGodDialog(e);
-    if (b.hasAttribute('data-god-off')) disableGodMode(b);
-  });
-  window.addEventListener('hg:godmode', () => {
-    const hadFocus = root.contains(document.activeElement);
-    render();
-    if (hadFocus) $('button', root)?.focus();
-  });
-  render();
-}
+// ===== Humane Gang — administration : confirmation « Refaire le tirage » (le mode sans limite se règle dans la coquille, core/godmode.js) =====
+import { esc, $ } from './core.js';
 
 /* ---------- Confirmation « Refaire le tirage » (dialog dédié, avec choix de prévenir les participants) ---------- */
 let _dlg = null;

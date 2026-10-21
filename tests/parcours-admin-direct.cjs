@@ -39,13 +39,13 @@ const emettre = (p, row) => p.evaluate((r) => {
 
     await emettre(p, demande('sup-live-1', 'Message reçu en direct'));
     await p.waitForFunction(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent === '1', null, { timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('.nav-count[data-count="assistance"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
+    check(await p.isVisible('[data-dom-badge="communication"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
       '(a) événement hg_support : compteur de navigation Assistance mis à jour (1)');
-    check((await p.textContent('#stats a[href="#assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
+    check((await p.textContent('#stats a[href="#communication/assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
     check((await p.textContent('#support-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
-    await adminSection(p, 'staff');
+    await adminSection(p, 'pilotage/staff');
     await p.click('#staff [data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
@@ -55,7 +55,7 @@ const emettre = (p, row) => p.evaluate((r) => {
     check((await p.textContent('.nav-count[data-count="assistance"]')).trim() === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'), null, { timeout: 5000 }).catch(() => {});
-    await adminSection(p, 'assistance');
+    await adminSection(p, 'communication/assistance');
     await p.click('#assistance .live-banner button');
     await p.waitForTimeout(300);
     check((await p.textContent('#support-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');

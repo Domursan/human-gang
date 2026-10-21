@@ -1,71 +1,72 @@
-// Admin : adresse de la page. #section, #comptes/<membre>[/<onglet>], #cartes/<onglet>.
-// Les liens et le bouton Précédent ouvrent l'adresse (hashchange) ; les clics dans une fiche ou un onglet
-// mettent l'adresse à jour sans entrée d'historique (replaceState).
-import { closeDetail } from '../admin-accounts/inspect.js';
+// Admin : routage du panel. URL : admin.html#domaine/sous-section[/id[/onglet]]
+// - Une ancienne ancre de section (#comptes, #cartes, #journal…) est redirigée vers sa sous-section (LEGACY, déduit de DOMAINS).
+//   Un segment seul qui est une ancienne ancre l'emporte sur le domaine de même nom : #membres = Invitations, #cartes = Cartes.
+// - #domaine/ (segment vide) = écran du domaine : sur mobile, la liste des sous-sections ; sur ordinateur, redirection
+//   vers la première sous-section permise.
+// - Un domaine ou une sous-section sans droit renvoie vers la première sous-section permise (ou null : aucun accès).
+// - Les fiches membres (#comptes/<id>[/<onglet>], ancienne adresse) sont redirigées vers #membres/comptes/<id>[/<onglet>].
+import { DOMAINS, visibleDomains } from './perms.js';
 import { A } from '../admin-accounts/state.js';
-import { mountSection, isReady, openFiche, setHash, fichePath } from './mounts.js';
 
-const decode = (s) => { try { return decodeURIComponent(s); } catch { return s; } };
-export function parseHash(h = location.hash) {
-  const parts = h.replace(/^#/, '').split('/').map(decode).filter(Boolean);
-  return { id: parts[0] || 'apercu', rest: parts.slice(1) };
+// Ancienne ancre -> route : la sous-section de même nom que la section, sinon la première qui la monte.
+const LEGACY = {};
+for (const d of DOMAINS) for (const s of d.subs) if (!LEGACY[s.section] || s.id === s.section) LEGACY[s.section] = `${d.id}/${s.id}`;
+const DOMAIN_IDS = new Set(DOMAINS.map((d) => d.id));
+
+/** Première sous-section permise, ou null. */
+export function defaultRoute() {
+  const first = visibleDomains()[0];
+  return first ? `${first.id}/${first.subs[0].id}` : null;
 }
 
-/** Ouvre une adresse (palette, liens) : déclenche hashchange, ou ouvre directement si l'adresse ne change pas. */
-export function go(path) {
-  if (location.hash === '#' + path) return route();
-  location.hash = path;
-  return undefined;
+function decodeSafe(s) {
+  try { return decodeURIComponent(s); } catch { return s; }
 }
 
-/** Applique l'adresse courante : monte la section, ouvre la fiche ou l'onglet demandé, puis fait défiler jusqu'à la section. */
-export async function route() {
-  const { id, rest } = parseHash();
-  const sec = document.getElementById(id);
-  if (!sec || sec.hidden) return;
-  if (id === 'comptes' && rest[0]) {
-    await openFiche(rest[0], rest[1] || 'profil');
-    return;
+/** Découpe un fragment sans vérifier les droits. */
+export function parseHash(hash) {
+  const raw = decodeSafe(String(hash || '').replace(/^#/, '')).trim();
+  const [dom = '', sub, id, tab] = raw.split('/');
+  return { raw, dom, sub, id: id || null, tab: tab || null };
+}
+
+/**
+ * Résout le fragment courant.
+ * Renvoie { redirect } (route vers laquelle remplacer le fragment, ou null : aucun accès), ou
+ * { dom, sub, id, tab } (sub = null : écran du domaine sur mobile).
+ */
+export function resolve(hash, { mobile = false } = {}) {
+  const { raw, dom: a, sub: b, id, tab } = parseHash(hash);
+  const fallback = defaultRoute();
+  if (!raw) return { redirect: fallback };
+  if (b === undefined && LEGACY[a]) return { redirect: LEGACY[a] };
+  // Ancienne ancre suivie de segments (#comptes/<id>/<onglet>) : mêmes segments sous la nouvelle route
+  if (!DOMAIN_IDS.has(a) && LEGACY[a]) return { redirect: [LEGACY[a], b, id, tab].filter(Boolean).join('/') };
+  const visible = visibleDomains().find((d) => d.id === a);
+  if (!visible) return { redirect: fallback };
+  if (!b) {
+    if (mobile) return { dom: visible, sub: null, id: null, tab: null };
+    return { redirect: `${visible.id}/${visible.subs[0].id}` };
   }
-  if (id === 'cartes' && rest[0]) {
-    await mountSection('cartes');
-    document.querySelector(`#cards-root .acd-tabs [data-tab="${CSS.escape(rest[0])}"]`)?.click();
-  } else {
-    await mountSection(id);
-    if (id === 'comptes' && A.uid) closeDetail();
-  }
-  sec.scrollIntoView({ block: 'start' });
+  const sub = visible.subs.find((s) => s.id === b);
+  if (!sub) return { redirect: fallback };
+  return { dom: visible, sub, id, tab };
 }
 
-/* Clics et saisies dans les sections : l'adresse suit la fiche ouverte et l'onglet choisi */
-function syncComptes() {
-  if (!isReady('comptes')) return;
-  const cur = location.hash.slice(1);
-  if (!A.uid && !cur.startsWith('comptes')) return; // on ne quitte pas une autre section pour la liste
-  const want = A.uid ? fichePath(A.uid, A.tab) : 'comptes';
-  if (cur !== want) setHash(want);
-}
-function syncCartes() {
-  const on = document.querySelector('#cards-root .acd-tabs [aria-pressed="true"]');
-  if (on?.dataset.tab) setHash(`cartes/${on.dataset.tab}`);
-}
-// Le chemin de l'événement est lu au moment du clic : un clic sur une ligne remplace le contenu de la section
-// (la ligne n'est plus dans le document quand l'événement remonte jusqu'ici).
-const inPath = (e, pred) => e.composedPath().some((n) => n instanceof Element && pred(n));
-const inComptes = (n) => n.id === 'comptes' || n.classList.contains('insp-bar');
-const inCartesTabs = (n) => n.classList.contains('acd-tabs') && n.closest('#cartes');
-function onClick(e) {
-  if (inPath(e, inComptes)) syncComptes();
-  else if (inPath(e, inCartesTabs)) syncCartes();
-}
-function onKey(e) {
-  if (inPath(e, (n) => n.id === 'comptes')) syncComptes();
-}
-
-/** Branche la navigation par adresse et ouvre l'adresse de départ. */
-export function startRouter() {
-  window.addEventListener('hashchange', () => { route(); });
-  document.addEventListener('click', onClick);
-  document.addEventListener('keydown', onKey);
-  return route();
+/**
+ * Clics et saisies dans la fiche d'un membre : l'adresse suit le compte ouvert et l'onglet choisi (sans entrée d'historique).
+ * Ne réagit qu'aux événements de la section Comptes (ou de la barre « Vue admin ») : une navigation lancée depuis la palette
+ * ne doit pas être réécrite avant que la fiche ne soit ouverte.
+ */
+export function bindFicheHash() {
+  const inFiche = (e) => e.composedPath().some((n) => n instanceof Element && (n.id === 'comptes' || n.classList.contains('insp-bar')));
+  const sync = (e) => {
+    if (!inFiche(e) || !location.hash.startsWith('#membres/comptes')) return;
+    const want = A.uid
+      ? `membres/comptes/${A.uid}${A.tab && A.tab !== 'profil' ? `/${A.tab}` : ''}`
+      : 'membres/comptes';
+    if (location.hash !== '#' + want) history.replaceState(null, '', '#' + want);
+  };
+  document.addEventListener('click', sync);
+  document.addEventListener('keydown', sync);
 }

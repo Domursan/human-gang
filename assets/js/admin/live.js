@@ -1,4 +1,5 @@
 // ===== Humane Gang — administration : temps réel du panel =====
+// Le voyant « En direct » est placé dans le rail (#shell-live, admin/shell.js).
 // Un seul canal Supabase Realtime (« postgres_changes ») abonné aux tables publiées par la migration 030,
 // et seulement à celles dont l'utilisateur a le droit (TABLE_PERM). La base ne livre que les lignes que la RLS
 // autorise à lire : le filtre de droits ici n'est qu'un allègement.
@@ -195,7 +196,7 @@ function stop() {
 
 /* ---------- Indicateur « En direct » ---------- */
 function mountIndicator() {
-  const head = document.querySelector('.page-head > div:first-child');
+  const head = document.getElementById('shell-live'); // voyant du rail (coquille admin)
   if (!head) return;
   indicator = document.createElement('p');
   indicator.className = 'live-status';
