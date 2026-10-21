@@ -92,6 +92,7 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
 .nav-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--sand); color: #121212;
   font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
 .nav-badge[hidden] { display: none; }
+a.nav-icon { text-decoration: none; }
 .nav-icon { font: inherit; width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 999px; cursor: pointer;
   color: var(--muted); background: transparent; border: 1px solid var(--border); }
 @media (hover: hover) { .nav-icon:hover { color: var(--text); background: var(--surface-2); border-color: var(--border-strong); } }
@@ -136,6 +137,10 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
   /* Très étroit : le logo seul ; le nom reste lu par les lecteurs d'écran */
   .brand span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+
+/* Aide & tutos : dans le menu, sur téléphone seulement (sur ordinateur, le bouton « ? » est dans la colonne d'outils) */
+.nav a.nav-help-link { display: none; }
+@media (max-width: 760px) { .nav a.nav-help-link { display: inline-flex; } }
 
 /* Lien « Aller au contenu » : visible seulement au focus clavier */
 .skip-link { position: absolute; left: 12px; top: -120px; z-index: 1000; min-height: 44px; display: inline-flex; align-items: center;

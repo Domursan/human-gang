@@ -8,7 +8,7 @@ import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
 import { avatarHtml, esc } from './util.js';
-import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER } from './icons.js';
+import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP } from './icons.js';
 import { searchButtonHtml, bindSearch } from './search.js';
 
 // Navigation de secours (accès inconnus) : identique à l'ancienne navigation fixe.
@@ -55,7 +55,9 @@ function navHtml(profile) {
   // Admin : lien « Admin » ; Staff (permissions accordées) : lien « Staff » vers le même panel.
   const panel = profile && (profile.is_admin || canPanel(getCachedPerms()));
   const admin = panel ? `<a class="nav-admin" href="admin.html"${curAttr('admin.html')}>${profile.is_admin ? 'Admin' : 'Staff'}</a>` : '';
-  return `${profile ? links : ''}${admin}`;
+  // Aide & tutos : toujours présent dans le menu (visible surtout sur téléphone, où le bouton « ? » est dans la rangée d'outils)
+  const help = `<a class="nav-help-link" href="aide.html"${curAttr('aide.html')} data-page="aide">Aide &amp; tutos</a>`;
+  return `${profile ? links : ''}${admin}${help}`;
 }
 /** Remplit la navigation de l'en-tête (appelée quand les pages accessibles sont connues). */
 export function updateNav(profile = getCachedProfile()) {
@@ -83,6 +85,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   const account = `<a class="nav-account" href="compte.html"${curAttr('compte.html')}></a>`;
   const god = profile?.is_admin ? `<button class="nav-icon nav-god" type="button" aria-pressed="false" aria-label="Activer le mode sans limite" title="Mode sans limite">${ICON_BOLT}</button>` : '';
   const search = profile ? searchButtonHtml() : '';
+  const help = `<a class="nav-icon nav-help" href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>`;
   const prefs = `<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
   const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
   const toggle = '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>';
@@ -94,7 +97,7 @@ export function renderHeader(profile, { nav = true } = {}) {
       <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>HUMANE GANG</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
       <div class="nav-tools">${toggle}</div>
-      <aside class="side-tools" aria-label="Outils">${search}${god}${prefs}${account}${logout}</aside>
+      <aside class="side-tools" aria-label="Outils">${search}${help}${god}${prefs}${account}${logout}</aside>
     </div>`;
   // Cible du lien d'évitement : le contenu principal de la page (tabindex -1 : atteignable par script et par le lien)
   const main = document.getElementById('app');

@@ -1,4 +1,4 @@
-// Pied de page commun et bandeau d'information sur les cookies.
+// Pied de page commun et bandeau d'information sur les cookies. (L'assistance est dans la page d'aide.)
 import { getCachedProfile } from './profile.js';
 import { canAccess } from './pages-access.js';
 import { openPrefs } from './prefs.js';
@@ -12,7 +12,6 @@ export function renderFooter(profile = getCachedProfile()) {
       <div>© ${new Date().getFullYear()} Humane Gang</div>
       <nav aria-label="Liens légaux">
         ${profile && canAccess('evenements') ? '<a href="evenements.html">Événements</a>' : ''}
-        <a href="assistance.html">Assistance</a>
         <a href="legal.html#mentions">Mentions légales</a>
         <a href="legal.html#confidentialite">Confidentialité</a>
         <a href="legal.html#cookies">Cookies</a>

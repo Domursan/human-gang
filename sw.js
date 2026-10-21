@@ -11,13 +11,13 @@ const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
 const PRECACHE = [
-  'index.html', 'accueil.html', 'admin.html', 'assistance.html', 'cartes.html', 'compte.html',
+  'index.html', 'accueil.html', 'admin.html', 'aide.html', 'assistance.html', 'cartes.html', 'compte.html',
   'evenements.html', 'historique.html', 'irl.html', 'legal.html', 'membre.html', 'messages.html',
   'recap.html', 'rejoindre.html', 'secret-santa.html', 'offline.html', 'assets/css/accueil.css',
   'assets/css/admin-access.css', 'assets/css/admin-accounts.css', 'assets/css/admin-bot.css',
   'assets/css/admin-cards.css', 'assets/css/admin-reglages.css', 'assets/css/admin-events.css', 'assets/css/admin-ghosts.css',
   'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
-  'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/assistance.css', 'assets/css/base.css',
+  'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/aide.css', 'assets/css/assistance.css', 'assets/css/base.css',
   'assets/css/cartes-card.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
   'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/cartes-zoom.css', 'assets/css/compte.css', 'assets/css/evenements.css',
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
@@ -43,7 +43,7 @@ const PRECACHE = [
   'assets/js/admin-sorties/data.js', 'assets/js/admin-sorties/dialogs.js', 'assets/js/admin-sorties/format.js', 'assets/js/admin-sorties/index.js',
   'assets/css/admin-souvenirs.css', 'assets/js/admin-souvenirs/helpers.js', 'assets/js/admin-souvenirs/index.js', 'assets/js/admin-souvenirs/moments.js',
   'assets/js/admin-souvenirs/photos.js', 'assets/js/admin-souvenirs/reactions.js',
-  'assets/js/assistance.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
+  'assets/js/aide.js', 'assets/js/assistance.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js', 'assets/js/cartes-zoom.js', 'assets/js/cartes-place.js',
   'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js',
   'assets/js/core/badges.js', 'assets/js/core/effects.js', 'assets/js/core/footer.js',

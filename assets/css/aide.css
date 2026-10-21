@@ -1,0 +1,63 @@
+/* ===== Humane Gang — aide et tutos ===== */
+.aide-search { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 20px; }
+.aide-search label { font-weight: 700; }
+.aide-search input { font: inherit; min-height: 48px; padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text); width: 100%; box-sizing: border-box; }
+.aide-search input:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.aide-search p { margin: 0; min-height: 1.4em; }
+.aide-guest { margin: 0 0 16px; }
+
+.aide-group { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.aide-group .aide-group-title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+.aide-group-icon { font-size: 26px; line-height: 1; }
+.aide-tuto-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.aide-tuto-link { display: flex; flex-direction: column; gap: 4px; height: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); text-decoration: none; min-height: 44px; }
+.aide-tuto-title { font-weight: 700; }
+.aide-tuto-sum { font-size: 14px; color: var(--muted); line-height: 1.45; }
+@media (hover: hover) { .aide-tuto-link:hover { border-color: var(--border-strong); background: var(--surface); } }
+.aide-tuto-link:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.aide-empty { color: var(--muted); }
+.aide-empty[hidden] { display: none; }
+
+/* Un tuto ouvert */
+#aide-tuto-view[hidden], #aide-list-view[hidden] { display: none; }
+.aide-tuto { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.aide-crumb { margin: 0; font-size: 14px; color: var(--muted); }
+.aide-crumb a { color: var(--muted); }
+.aide-tuto .aide-tuto-heading { margin: 0; font-size: 34px; font-weight: 400; line-height: 1.15; font-family: var(--font-display); }
+.aide-missing h2 { margin: 0; font-size: 30px; font-weight: 400; line-height: 1.15; font-family: var(--font-display); }
+.aide-tuto-heading:focus, .aide-missing h2:focus { outline: none; }
+.aide-summary { margin: 0; font-size: 17px; line-height: 1.55; color: var(--muted); }
+.aide-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; counter-reset: none; }
+.aide-step { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; align-items: start; }
+.aide-step-num { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--accent-text);
+  font-family: var(--font-display); font-size: 18px; }
+.aide-step-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.aide-step-body h3 { margin: 6px 0 0; font-size: 18px; font-weight: 700; }
+.aide-step-body p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
+.aide-shot { display: block; width: 100%; max-width: 900px; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-top: 6px; }
+.aide-tips { padding: 14px 18px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: var(--surface-2); }
+.aide-tips h3 { margin: 0 0 6px; font-size: 16px; }
+.aide-tips ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
+.aide-actions { margin-top: 4px; }
+.aide-missing { gap: 12px; }
+.aide-missing p { margin: 0; }
+
+/* Besoin d'aide */
+.aide-help { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+.aide-help h2 { margin: 0 0 4px; font-size: 22px; font-weight: 400; font-family: var(--font-display); }
+.aide-help p { margin: 0; }
+.aide-help-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 600px) {
+  .aide-group .aide-group-title { font-size: 20px; }
+  .aide-tuto-list { grid-template-columns: minmax(0, 1fr); }
+  .aide-tuto .aide-tuto-heading { font-size: 28px; }
+  .aide-step { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; }
+  .aide-step-num { width: 34px; height: 34px; font-size: 16px; }
+  .aide-help-actions { flex-direction: column; }
+  .aide-help-actions .btn { width: 100%; justify-content: center; box-sizing: border-box; }
+  .aide-actions { flex-direction: column; }
+  .aide-actions .btn { width: 100%; justify-content: center; box-sizing: border-box; }
+}
