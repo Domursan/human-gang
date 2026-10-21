@@ -12,7 +12,7 @@ const IC = {
   dice: svg('dice', { stroke: 2 }),
 };
 
-const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
+const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, isGhost: () => false, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
 const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 
@@ -91,7 +91,9 @@ export function completeRandom(ids, pick, excl, last) {
 /* ---------- Rendu ---------- */
 function rowHtml(g, a) {
   const st = a.rows.get(g), r = M.pick.get(g) || '';
-  const opts = M.ids.filter((x) => x !== g || isGodMode()).map((x) => ({ id: x, p: M.pseudoOf(x) })).sort((x, y) => x.p.localeCompare(y.p, 'fr'));
+  // Choix du destinataire : fantômes exclus, sauf celui déjà tiré (pour ne pas casser le brouillon).
+  const opts = M.ids.filter((x) => (x !== g || isGodMode()) && (!M.isGhost(x) || x === r))
+    .map((x) => ({ id: x, p: M.pseudoOf(x) })).sort((x, y) => x.p.localeCompare(y.p, 'fr'));
   const state = !r ? 'empty' : st.errors.length ? 'error' : st.warnings.length ? 'warn' : 'ok';
   const msg = [...st.errors, ...st.warnings].join(' · ');
   const icon = state === 'error' ? IC.err : state === 'warn' ? IC.warn : state === 'ok' ? IC.ok : '';
@@ -232,13 +234,14 @@ async function submitRedo(btn) {
  * Ouvre l'éditeur. edition = ligne hg_ss_editions ; participants = uuids ; exclusions = lignes hg_ss_exclusions ;
  * editions = toutes les éditions (pour trouver l'an dernier) ; onDone(count) après succès.
  */
-export async function openManualDraw({ edition, participants, exclusions = [], editions = [], pseudoOf, onDone, redo = null }) {
+export async function openManualDraw({ edition, participants, exclusions = [], editions = [], pseudoOf, isGhost, onDone, redo = null }) {
   M.ed = edition;
   M.redo = redo; // { confirm() → {ok, notify}, before(), onFail() } : « Refaire le tirage (manuel) » en mode sans limite
   if (M.ids.join() !== participants.slice().sort().join() || M.edId !== edition.id) M.pick = new Map(); // garde le brouillon si rien n'a changé
   M.edId = edition.id;
   M.ids = participants.slice().sort();
   M.pseudoOf = pseudoOf || M.pseudoOf;
+  M.isGhost = isGhost || M.isGhost;
   M.onDone = onDone || M.onDone;
   M.excl = new Set(exclusions.map((x) => key(x.user_a, x.user_b)));
   M.last = new Map();

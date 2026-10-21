@@ -9,7 +9,7 @@ import { navigate } from '../admin/shell.js';
 import { ICON, REASON_LABEL } from './constants.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
-import { check, act, nf, tile, pseudo, fmtWhen } from './helpers.js';
+import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles } from './helpers.js';
 
 const REASON = (r) => REASON_LABEL[r] || r;
 const PL = { list: null };
@@ -18,12 +18,13 @@ const PL = { list: null };
    Colonne 2 : liste des membres
    ========================================================= */
 function playersListItems() {
-  return C.profiles.map((p) => {
+  // Comptes actifs seulement : un fantôme n'apparaît pas dans la liste (son adresse reste ouvrable pour son historique).
+  return activeProfiles().map((p) => {
     const n = (C.copiesByOwner.get(p.id) || []).length;
     return {
       id: p.id, member: p, name: p.pseudo,
       title: `${nf(n)} exemplaire${n > 1 ? 's' : ''} · ${fmtP(C.walletById.get(p.id)?.paillettes ?? 0)}`,
-      status: p.is_ghost ? { id: 'ghost', label: 'Fantôme', tone: 'muted' } : null,
+      status: null,
     };
   });
 }

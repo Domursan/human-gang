@@ -43,9 +43,11 @@ export async function loadPeople() {
   return map;
 }
 
-/** Options <option> triées par pseudo ; `first` ajoute une option vide en tête. */
+/** Options <option> triées par pseudo ; `first` ajoute une option vide en tête. Les fantômes ne sont proposés
+ *  que s'ils sont déjà la valeur `selected` (souvenir ancien) : les choix ne montrent que les comptes actifs. */
 export function peopleOptions(people, selected = '', first = null) {
-  const list = [...people.values()].sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
+  const list = [...people.values()].filter((p) => !p.is_ghost || p.id === selected)
+    .sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
   const head = first === null ? '' : `<option value="">${first}</option>`;
   return head + list.map((p) => `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${esc(p.pseudo)}</option>`).join('');
 }

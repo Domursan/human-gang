@@ -5,7 +5,7 @@ import { RARITIES, FAMILIES, cardHtml } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
-import { check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
+import { activeProfiles, check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
 
 export function openCardDialog(k = null) {
   const isNew = !k;
@@ -54,7 +54,7 @@ export function openCardDialog(k = null) {
           <div class="field"><span class="label" id="acc-prev-l">Aperçu</span>
             <div class="acd-card-preview" id="acc-card-preview" role="img" aria-labelledby="acc-prev-l"></div></div>
           <div class="field"><label for="acc-member">Membre lié</label>
-            <select id="acc-member" name="member_id"><option value="">Aucun</option>${C.profiles.map((p) => `<option value="${esc(p.id)}"${p.id === k?.member_id ? ' selected' : ''}>${esc(p.pseudo)}${p.is_ghost ? ' (fantôme)' : ''}</option>`).join('')}</select>
+            <select id="acc-member" name="member_id"><option value="">Aucun</option>${C.profiles.filter((p) => !p.is_ghost || p.id === k?.member_id).map((p) => `<option value="${esc(p.id)}"${p.id === k?.member_id ? ' selected' : ''}>${esc(p.pseudo)}${p.is_ghost ? ' (fantôme)' : ''}</option>`).join('')}</select>
             <span class="small muted">Requis pour les familles Membre et la rareté Identité.</span></div>
           <div class="field"><label for="acc-max">Exemplaires numérotés maximum</label>
             <input id="acc-max" name="max_copies" type="number" min="1" step="1" inputmode="numeric" placeholder="illimité" value="${esc(k?.max_copies ?? '')}">
@@ -216,7 +216,7 @@ export async function makeIdentities(btn) {
   const set = C.setById.get(setId);
   if (!set) return;
   const ident = C.cards.filter((k) => k.set_id === setId && k.rarity === 'identite');
-  const missing = C.profiles.filter((p) => !ident.some((k) => k.member_id === p.id));
+  const missing = activeProfiles().filter((p) => !ident.some((k) => k.member_id === p.id));
   if (!missing.length) return;
   const ok = await confirmBox('Créer les cartes Identité ?',
     `${nf(missing.length)} carte${missing.length > 1 ? 's' : ''} Identité seront créées dans « ${set.name} » : une par membre, nommée d'après son pseudo, avec son avatar et 10 exemplaires numérotés. Tu pourras les modifier ensuite.`,

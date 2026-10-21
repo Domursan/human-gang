@@ -50,7 +50,8 @@ function memberItems(q) {
   if (!q || !canSection('comptes') || ui.membersState !== 'ready') return [];
   const pick = (list, kind) => list.filter((m) => m.pseudo && norm(m.pseudo).includes(q))
     .map((m) => ({ kind, label: m.pseudo, path: `membres/comptes/${m.id}` }));
-  return [...pick(S.members, 'Membre'), ...pick(S.ghosts, 'Fantôme')].slice(0, MAX_MEMBERS);
+  // Comptes actifs seulement (S.members = hg_members) : les fantômes ne sont pas proposés ici.
+  return pick(S.members, 'Membre').slice(0, MAX_MEMBERS);
 }
 function items() {
   const q = norm(ui.input.value);
