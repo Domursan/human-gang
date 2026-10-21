@@ -31,6 +31,7 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `018_cartes_fonctions.sql` | Fonctions du jeu de cartes | appliqué |
 | `019_comptes_fantomes.sql` | Comptes fantômes | appliqué |
 | `021_securite_cartes.sql` | Sécurité, contraintes, journaux admin, corrections du jeu de cartes | **à appliquer** |
+| `042_dons_groupes.sql` | Boosters offerts (`hg_wallets.gift_boosters`, `hg_open_booster_req` avec `p_offert`), don groupé (`hg_cards_admin_bulk_give`) | **à appliquer** (après 021 et 015) |
 | `026_staff.sql` | Catalogue des 12 permissions (`hg_perm_catalog`), table `hg_staff`, fonction `hg_has_perm()` | appliqué |
 | `027_staff_regles.sql` | Table `hg_perm_tables` (table ou stockage vers permission) ; `hg_is_admin()` remplacé par `hg_has_perm()` dans les règles RLS et les fonctions du panel | appliqué |
 | `028_staff_ajustements.sql` | Journal des lectures de messages et e-mails réservés à l'administrateur ; modération des réactions (permission `souvenirs`) | appliqué |

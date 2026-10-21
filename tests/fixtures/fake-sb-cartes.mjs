@@ -83,7 +83,7 @@ window.__DB = DB; window.__LOG = [];
       { id: 12, card_id: 'C13', owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
   }
   DB.hg_wallet_log = [{ user_id: ME, delta: 20, reason: 'quotidien', created_at: iso(-1) }, { user_id: ME, delta: -100, reason: 'booster', created_at: iso(-3) }, { user_id: ME, delta: 15, reason: 'reponse_sortie', created_at: iso(-5) }];
-  DB.hg_wallets = [{ user_id: ME, paillettes: S.bal ?? 230, pity_epique: S.pity ?? 3, daily_streak: 2, last_daily: null }];
+  DB.hg_wallets = [{ user_id: ME, paillettes: S.bal ?? 230, pity_epique: S.pity ?? 3, daily_streak: 2, last_daily: null, gift_boosters: S.gift ?? 0 }];
 // Panel admin (polish cartes) : quêtes, défis et journal des Paillettes
 DB.hg_card_quests_templates = [
   { code: 'boosters_5', label: 'Ouvrir 5 boosters', metric: 'boosters_ouverts', target: 5, reward: 80, active: true, sort: 1 },
@@ -169,6 +169,13 @@ export function createClient() {
         if (S.giveFail) return { data: null, error: { message: 'Réservé à l\'admin' } };
         return { data: args.p_count, error: null };
       }
+      // Don groupé (migration 042) : p_users null = tout le gang (comptes actifs). scenario.bulkFail = la RPC refuse.
+      if (fn === 'hg_cards_admin_bulk_give') {
+        if (S.bulkFail) return { data: null, error: { message: 'Plus assez d\'exemplaires pour « Carte test » : il en reste 1, il en faut 4' } };
+        const ids = [...new Set(args.p_users ?? DB.hg_profiles.filter((p) => !p.is_ghost).map((p) => p.id))];
+        return { data: { membres: ids.length, type: args.p_kind, montant: args.p_amount, annonce: args.p_announce, batch: 'lot-test',
+          detail: ids.map((id) => ({ user_id: id, pseudo: DB.hg_profiles.find((p) => p.id === id)?.pseudo ?? '' })) }, error: null };
+      }
       if (fn === 'hg_cards_admin_take') return { data: null, error: null };
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
@@ -201,7 +208,7 @@ export function createClient() {
       }
       if (fn === 'hg_my_badge_progress') { if (S.noProgress) return { data: null, error: { message: 'function not found' } }; return { data: [{ badge_code: 'fidele', metric: 'anciennete_annees', value: 4 }, { badge_code: 'citrouille', metric: 'event_captures', value: DB.hg_dyn_captures.filter((c) => c.user_id === ME && c.event_id === 'aaaaaaaa-0000-4000-8000-000000000001').length }], error: null }; }
 
-      if (fn === 'hg_cards_me') { const w = DB.hg_wallets[0]; return { data: { paillettes: w.paillettes, boosters_opened: 4, pity: w.pity_epique, daily_streak: w.daily_streak, daily_available: !w.last_daily, free_booster_at: S.freeAt ?? iso(-0.1), god: !!S.god, config: window.__CARDS.config }, error: null }; }
+      if (fn === 'hg_cards_me') { const w = DB.hg_wallets[0]; return { data: { paillettes: w.paillettes, boosters_opened: 4, pity: w.pity_epique, daily_streak: w.daily_streak, daily_available: !w.last_daily, free_booster_at: S.freeAt ?? iso(-0.1), gift_boosters: w.gift_boosters ?? 0, god: !!S.god, config: window.__CARDS.config }, error: null }; }
       if (fn === 'hg_cards_daily') { const w = DB.hg_wallets[0]; w.last_daily = 'today'; w.paillettes += 20; return { data: { gain: 20, streak: 3 }, error: null }; }
       // hg_open_booster_req (migration 021), seulement si scenario.reqRpc : idempotence par p_request,
       // solde vérifié, et scenario.x5FailAt = numéro de la tentative qui échoue (rien n'est débité ni enregistré).
@@ -211,9 +218,12 @@ export function createClient() {
         window.__OK = window.__OK || new Set();
         if (S.x5FailAt && window.__ATT === S.x5FailAt) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
         if (window.__OK.has(args.p_request)) return { data: null, error: { message: 'booster_deja_ouvert' } };
-        if (!args.p_free && w.paillettes < 100) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
+        // Booster offert (migration 042) : consomme le stock, sans Paillettes ni délai.
+        if (args.p_offert && !(w.gift_boosters > 0)) return { data: null, error: { message: 'Aucun booster offert disponible' } };
+        if (!args.p_offert && !args.p_free && w.paillettes < 100) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
         window.__OK.add(args.p_request);
-        if (!args.p_free) w.paillettes -= 100;
+        if (args.p_offert) w.gift_boosters -= 1;
+        else if (!args.p_free) w.paillettes -= 100;
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite');
         const k = window.__OK.size - 1;
         const cards = Array.from({ length: 5 }, (_, i) => {
@@ -222,7 +232,7 @@ export function createClient() {
         });
         const ORD = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
         const best = cards.reduce((b, c) => (ORD.indexOf(c.rarity) > ORD.indexOf(b) ? c.rarity : b), 'commune');
-        return { data: { cards, best, demandees: 5, livrees: 5 }, error: null };
+        return { data: { cards, best, demandees: 5, livrees: 5, offert: !!args.p_offert, offerts_restants: w.gift_boosters }, error: null };
       }
       if (fn === 'hg_open_booster') { const w = DB.hg_wallets[0]; if (S.paidFail && !args.p_free) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite').slice(0, 5);

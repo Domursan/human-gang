@@ -22,7 +22,12 @@ function econField(f) {
       value="${val == null ? '' : esc(val)}"${f.optional ? ' placeholder="vide = non fabricable"' : ''}></div>`;
 }
 export function econPanel() {
-  return `<p class="small muted">Ces réglages s'appliquent aux prochains boosters, recyclages, fabrications et récompenses.</p>
+  return `<section class="card acd-bulk-intro" aria-labelledby="acd-bulk-h">
+      <h3 class="card-title" id="acd-bulk-h">Dons</h3>
+      <p class="small muted">Donner des Paillettes, des boosters offerts ou une carte à plusieurs membres d'un coup, ou à tout le gang.</p>
+      <div class="btn-row"><button class="btn btn-primary" type="button" data-act="bulk-open">Don groupé…</button></div>
+    </section>
+    <p class="small muted">Ces réglages s'appliquent aux prochains boosters, recyclages, fabrications et récompenses.</p>
     <form class="stack acd-econ" id="acd-econ-form" novalidate>
       <p class="form-error" role="alert" hidden></p>
       ${ECON.map((g) => `<fieldset class="acd-fs"><legend>${esc(g.g)}</legend>

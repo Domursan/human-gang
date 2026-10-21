@@ -246,3 +246,7 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .cq-act { flex: 0 0 auto; }
 .cq-btn { min-height: 44px; }
 .cq-item.is-claimed .cq-label { color: var(--muted); }
+
+/* Boosters offerts (cartes.js) */
+.cart-gift { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.cart-gift .cart-h, .cart-gift p { margin: 0; }

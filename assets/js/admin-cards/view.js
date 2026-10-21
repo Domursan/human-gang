@@ -8,6 +8,7 @@ import { setsPanel, openSetDialog, toggleSet, deleteSet } from './sets.js';
 import { cardsPanel } from './list.js';
 import { openCardDialog, deleteCard, makeIdentities } from './editor.js';
 import { econPanel, updateSum, saveEcon } from './economy.js';
+import { openBulkGift } from './bulk.js';
 import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
 import { tradesPanel, cancelTrade } from './trades.js';
@@ -67,6 +68,7 @@ const ACTIONS = {
   'copy-take': (t, id) => takeCopy(t, id),
   'trade-cancel': (t, id) => cancelTrade(t, id),
   'econ-reset': () => render(),
+  'bulk-open': () => openBulkGift(),
   ...questActions,
   ...playerActions,
 };

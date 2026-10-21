@@ -20,7 +20,7 @@ const REASON_LABEL = {
   serie_complete: 'Série complétée', reponse_sortie: 'Réponse à une sortie', presence: 'Présence à une sortie', photo: 'Photo partagée',
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
-  quete: 'Quête de la semaine', defi: 'Défi du gang',
+  quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
 const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
@@ -260,6 +260,8 @@ function drawBoosters() {
   const k5 = pendingX5();
   const canPay5 = isGod() || bal() >= price * k5;
   const busy = isBusy();
+  // Boosters offerts (stock donné par le gang) : ouverts sans Paillettes ni délai, même animation.
+  const gift = Math.max(0, Number(S.state?.gift_boosters) || 0);
   const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
 
   el.innerHTML = `
@@ -278,6 +280,11 @@ function drawBoosters() {
           </div>
         </div>
       </div>
+      ${gift > 0 ? `<section class="card cartes-block cart-gift" id="cartes-gift" aria-labelledby="cartes-gift-h">
+        <h2 class="cart-h" id="cartes-gift-h">Boosters offerts</h2>
+        <p class="muted small">Le gang t'en a offert ${pluralCount(gift, 'booster', 'boosters', nf.format)}. Ils s'ouvrent sans Paillettes et sans délai.</p>
+        <button type="button" class="btn btn-primary cart-btn" data-action="open-gift" ${busy ? 'disabled' : ''}>Ouvrir un booster offert (${nf.format(gift)} restant${gift > 1 ? 's' : ''})</button>
+      </section>` : ''}
       <p class="muted small">Chaque booster contient ${pluralCount(Number(size), 'carte', 'cartes', nf.format)}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
     </section>
     <section class="card cartes-block cq" id="cartes-quests" aria-labelledby="cartes-quests-h"></section>
@@ -561,8 +568,15 @@ function renderReveal() {
 // Identifiant d'une demande d'ouverture (un par booster) : le serveur ne rouvre pas deux fois la même demande.
 const newReqId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-// Appel d'ouverture : hg_open_booster_req (migration 021) ; repli sur l'ancienne RPC si elle n'est pas encore déployée.
-async function rpcOpenBooster(free, reqId) {
+// Appel d'ouverture : hg_open_booster_req (migrations 021 et 042) ; repli sur l'ancienne RPC si elle n'est pas encore déployée.
+// Un booster offert (offert = true, migration 042) n'a pas de repli : l'ancienne RPC ouvrirait un booster payant.
+async function rpcOpenBooster(free, reqId, offert = false) {
+  if (offert) {
+    const { data, error } = await sb.rpc('hg_open_booster_req', { p_free: false, p_request: reqId, p_offert: true });
+    if (error) throw error;
+    if (data == null) throw new Error('Les boosters offerts ne sont pas encore disponibles. Réessaie plus tard.');
+    return data;
+  }
   let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: reqId });
   if ((error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) || (!error && data == null)) {
     ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
@@ -577,16 +591,17 @@ function announceCards(cards) {
   if (cards.length) notify('card_wish', { cards: cards.map((c) => c.card_id) }).catch(() => {}); // alerte des membres qui souhaitent ces cartes (opt-in)
 }
 
-async function openBooster(free) {
+async function openBooster(free, offert = false) {
   if (isBusy()) return;
   S.busy = true;
   renderBoosters();
   let R = null;
   // Une même demande garde le même identifiant tant qu'elle n'a pas abouti :
   // si la réponse se perd et que l'utilisateur relance, le serveur ne rouvre pas de booster.
-  if (!S.bootReq || S.bootReq.free !== !!free) S.bootReq = { free: !!free, id: newReqId() };
+  const mode = offert ? 'offert' : free ? 'gratuit' : 'payant';
+  if (!S.bootReq || S.bootReq.mode !== mode) S.bootReq = { mode, id: newReqId() };
   try {
-    const data = await rpcOpenBooster(free, S.bootReq.id);
+    const data = await rpcOpenBooster(free, S.bootReq.id, offert);
     S.bootReq = null;
     const cards = data?.cards || [];
     // Nombre réellement livré (peut être inférieur au nombre payé si le tirage n'a pas trouvé de carte)
@@ -1098,6 +1113,7 @@ function onClick(e) {
     case 'daily': return claimDaily();
     case 'open-free': return openBooster(true);
     case 'open-paid': return openBooster(false);
+    case 'open-gift': return openBooster(false, true);
     case 'open-paid-x5': return openBoostersMulti();
     case 'quest-claim': return claimQuest(t.dataset.code);
     case 'reveal-all': return skipSeq();
