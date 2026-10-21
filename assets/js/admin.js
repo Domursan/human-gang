@@ -710,7 +710,7 @@ function renderSupport() {
   $('#support-list').innerHTML = list.length ? list.map((s) => `
     <article class="item">
       <div class="item-meta"><strong>${esc(s.pseudo)}</strong>
-        <span class="pill ${s.user_id ? 'pill-ok' : 'pill-todo'}">${s.user_id ? 'Membre connecté' : 'Visiteur'}</span>
+        <span class="pill ${s.user_id ? 'pill-ok' : 'pill-warn'}"${s.user_id ? '' : ' title="Demande envoyée sans compte : le pseudo n\'est pas vérifié"'}>${s.user_id ? 'Membre connecté' : 'Non connecté · pseudo non vérifié'}</span>
         <span>${esc(fmtDateTime(s.created_at))}</span>
         <span class="pill ${s.discord_sent ? 'pill-ok' : 'pill-warn'}" title="${s.discord_sent ? 'Le bot t\'a envoyé cette demande en MP' : 'Le MP Discord n\'a pas été envoyé (bot non configuré ou erreur)'}">${s.discord_sent ? 'MP Discord envoyé' : 'MP Discord non envoyé'}</span></div>
       <div class="item-subject">${esc(s.subject)}</div>
