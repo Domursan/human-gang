@@ -3,12 +3,18 @@
 // ctx = { me: profil courant (id, pseudo…), refresh: async () => {}, expose: (api) => {} } ; refresh recharge solde et collection côté page.
 // expose reçoit { offer({ to, want }) } : ouvre l'éditeur d'offre avec un membre (utilisé par la collection d'un membre, cartes.js).
 // Affichage des cartes : cartes-ui.js (cardHtml). Styles : cartes-trades.css (+ cartes-card.css).
+// Exporte : mountTrades(el, ctx), la seule fonction appelée par cartes.js. Toute la logique est dans cette fonction :
+// les données (S, E) sont partagées par les fonctions imbriquées et réinitialisées à chaque ouverture de la page.
+// RPC : hg_members, hg_trade_propose, hg_trade_respond, hg_trade_cancel, hg_card_gift. Tables : hg_card_copies,
+// hg_card_trades, hg_card_trade_items, hg_card_wishlist, hg_cards, hg_card_sets, hg_wallets. Notifications : notify().
 import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify, currentLogo } from './core.js';
 import { cardHtml, rarityRank, rarityLabel, numberLabel, serialLabel, RARITIES, fmtP } from './cartes-ui.js';
 import { confirmBox } from './ui-confirm.js';
 import { pluralCount } from './utils.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 
+/* ---------- Constantes ---------- */
+// Onglets du panneau : id (utilisé dans les attributs) et libellé affiché.
 const TABS = [
   { id: 'recues', label: 'Reçues' },
   { id: 'envoyees', label: 'Envoyées' },
@@ -16,18 +22,31 @@ const TABS = [
   { id: 'correspondances', label: 'Correspondances' },
   { id: 'historique', label: 'Historique' },
 ];
+// Libellés des statuts d'une offre (colonne status de hg_card_trades).
 const STATUS_LABEL = { proposee: 'En attente', acceptee: 'Acceptée', refusee: 'Refusée', annulee: 'Annulée', remplacee: 'Remplacée' };
 const PAGE = 1000;   // pagination PostgREST (plafond par défaut de la base)
 const CHUNK = 100;   // identifiants par requête « in »
+// Colonnes lues sur les exemplaires (hg_card_copies) : pas de select('*') pour rester léger.
 const COPY_COLS = 'id, card_id, owner_id, shiny, serial, locked_trade, recycled_at';
 
+/* ---------- Petits outils (sans état) ---------- */
+/** Convertit une valeur en entier positif ou nul (0 si invalide). Sert aux Paillettes saisies. */
 const toInt = (v) => Math.max(0, Math.floor(Number(v) || 0));
+/** Texte normalisé pour la recherche : sans accents, en minuscules. */
 const norm = (s) => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+/** Comparaison de textes en français (pour trier les pseudos et les noms). */
 const cmp = (a, b) => String(a).localeCompare(String(b), 'fr');
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur. */
 const unwrap = ({ data, error }) => { if (error) throw error; return data; };
+/** Pastille de statut (« En attente », « Cadeau »...). cls ajoute une variante de couleur. */
 const pill = (text, cls = '') => `<span class="pill ${cls}">${esc(text)}</span>`;
 
-/** Lit toutes les lignes d'une requête paginée (build() renvoie un nouveau constructeur à chaque page). */
+/**
+ * Lit toutes les lignes d'une requête paginée (build() renvoie un nouveau constructeur à chaque page).
+ * La base ne renvoie que PAGE lignes d'un coup : on continue tant qu'une page est pleine.
+ * @param {() => object} build fonction qui renvoie une nouvelle requête Supabase
+ * @returns {Promise<object[]>}
+ */
 async function fetchAll(build) {
   const out = [];
   for (let from = 0; ; from += PAGE) {
@@ -38,6 +57,15 @@ async function fetchAll(build) {
   }
 }
 
+/* ---------- Point d'entrée ---------- */
+/**
+ * Affiche l'onglet « Échanges » dans `el` et charge les données.
+ * @param {HTMLElement} el élément hôte (vidé et remplacé)
+ * @param {{me?: object, refresh?: () => Promise<void>, expose?: (api: object) => void}} [ctx]
+ *   me : profil courant ; refresh : recharge solde et collection côté page ;
+ *   expose : reçoit { offer({to, want}) } pour ouvrir l'éditeur depuis la collection d'un membre.
+ * @returns {Promise<void>}
+ */
 export async function mountTrades(el, ctx = {}) {
   el.innerHTML = `
     <div class="trd">
@@ -51,6 +79,9 @@ export async function mountTrades(el, ctx = {}) {
   const dlg = root.querySelector('#trd-edit');
   const form = root.querySelector('#trd-form');
 
+  /* ---------- État ----------
+     S : données de la page (membres, cartes, exemplaires, échanges, solde, onglet courant...).
+     E : état de l'éditeur d'offre (destinataire, cartes choisies, filtres, aperçu...). */
   const S = {
     me: null, members: new Map(), cards: new Map(), copies: new Map(), trades: [], items: new Map(),
     wish: new Map(), balance: 0, tab: 'recues', pickWho: '', setNames: new Map(), setTotal: new Map(),
@@ -63,6 +94,7 @@ export async function mountTrades(el, ctx = {}) {
      Chargement ciblé : mes exemplaires, mes échanges et les cartes qu'ils citent. Les exemplaires d'un membre
      (proposition) et les correspondances sont chargés à la demande. Le cache de session est vidé après chaque
      action sur un échange (resetCache). */
+  /** Vide le cache de session (cartes, exemplaires, souhaits, correspondances). Appelée avant chaque rechargement. */
   function resetCache() {
     S.cards = new Map(); S.copies = new Map(); S.setTotal = new Map(); S.wish = new Map();
     S.peers = new Set(); S.matchesP = null;
@@ -106,6 +138,11 @@ export async function mountTrades(el, ctx = {}) {
     S.peers.add(uid);
   }
 
+  /**
+   * Charge la page : membres, mes exemplaires, mes échanges (et leurs exemplaires), mes souhaits, mon solde, les séries.
+   * Les requêtes principales partent en parallèle pour aller plus vite. Lève une erreur si une requête essentielle échoue.
+   * @returns {Promise<void>}
+   */
   async function load() {
     resetCache();
     const me = S.me.id;
@@ -130,9 +167,12 @@ export async function mountTrades(el, ctx = {}) {
     await ensureCards(mine.map((c) => c.card_id));
   }
 
-  /* ---------- Outils ---------- */
+  /* ---------- Outils (lecture des données en cache) ---------- */
+  /** Fiche d'un membre ; un membre inconnu (ex. compte supprimé) est affiché comme « Membre ». */
   const memberOf = (id) => S.members.get(id) || { id, pseudo: 'Membre', color: null, avatar_url: null };
+  /** Pseudo d'un membre. */
   const pseudo = (id) => memberOf(id).pseudo;
+  /** Carte d'un exemplaire ; une carte absente du cache (rare) s'affiche comme « Carte inconnue ». */
   const cardOf = (copy) => S.cards.get(copy.card_id) || { name: 'Carte inconnue', rarity: 'commune', family: 'objet', number: null, max_copies: null };
   /** Champs d'affichage en plus de la carte : série, total de la série, arrivée du membre (carte Identité). */
   const shown = (card) => (card.id ? {
@@ -140,25 +180,39 @@ export async function mountTrades(el, ctx = {}) {
     set_name: S.setNames.get(card.set_id), set_total: S.setTotal.get(card.set_id),
     member_since: card.rarity === 'identite' ? (S.members.get(card.member_id)?.member_since ?? null) : null,
   } : card);
+  /** Exemplaire par identifiant (les identifiants sont comparés en texte), ou null. */
   const copyOf = (id) => S.copies.get(String(id)) || null;
+  /** Vrai si la carte peut être échangée (ni inactive, ni marquée non échangeable). */
   const cardOk = (copy) => { const k = S.cards.get(copy.card_id); return !!k && k.active !== false && k.tradeable !== false; };
+  /** Tri : les plus rares d'abord, puis par nom, puis par numéro d'exemplaire. */
   const byCard = (a, b) => {
     const x = cardOf(a), y = cardOf(b);
     return rarityRank(y.rarity) - rarityRank(x.rarity) || cmp(x.name, y.name) || (a.serial || 0) - (b.serial || 0);
   };
+  /** Tri : les plus récentes d'abord (date de création). */
   const byDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
   /** Exemplaires que `owner` peut mettre en jeu : vivants, libres (ou bloqués par l'offre `parent`), carte échangeable. */
   const tradables = (owner, parent = null) => [...S.copies.values()]
     .filter((c) => c.owner_id === owner && !c.recycled_at && (!c.locked_trade || (parent && c.locked_trade === parent)) && cardOk(c))
     .sort(byCard);
+  /** Identifiants des exemplaires d'un côté (« from » = ce que donne l'émetteur, « to » = ce que reçoit l'émetteur). */
   const idsOf = (t, side) => S.items.get(t.id)?.[side] || [];
+  /** Exemplaires d'un côté, avec leurs données (ceux introuvables sont écartés). */
   const itemsOf = (t, side) => idsOf(t, side).map(copyOf).filter(Boolean);
+  /** Un cadeau : offre acceptée sans aucune carte demandée en retour. */
   const isGift = (t) => t.status === 'acceptee' && idsOf(t, 'to').length === 0;
+  /** Offres reçues en attente (pour moi), les plus récentes d'abord. */
   const incoming = () => S.trades.filter((t) => t.status === 'proposee' && t.to_user === S.me.id).sort(byDateDesc);
+  /** Offres envoyées en attente (par moi), les plus récentes d'abord. */
   const outgoing = () => S.trades.filter((t) => t.status === 'proposee' && t.from_user === S.me.id).sort(byDateDesc);
 
   /* ---------- Rendu : éléments communs ---------- */
+  /** Carte d'un exemplaire en petit format (rendu commun aux listes). */
   const copyCard = (c) => cardHtml(shown(cardOf(c)), { size: 'sm', shiny: c.shiny, serial: c.serial });
+  /**
+   * Un côté d'une offre : titre, cartes, Paillettes. Affiche « Rien » si le côté est vide.
+   * @param {[string, object[], number]} param0 [titre, exemplaires, Paillettes]
+   */
   function sideHtml([label, copies, p]) {
     const empty = !copies.length && !p;
     return `<section class="trd-side">
@@ -168,6 +222,7 @@ export async function mountTrades(el, ctx = {}) {
       ${empty ? '<p class="trd-none">Rien</p>' : ''}
     </section>`;
   }
+  /** Carte d'une offre : en-tête (membre, date, statut), deux côtés, message facultatif et boutons d'action. */
   function articleHtml({ who, date, badge, sides, message, actions = '' }) {
     return `<article class="card trd-offer">
       <header class="trd-offer-head">
@@ -179,9 +234,11 @@ export async function mountTrades(el, ctx = {}) {
       ${actions ? `<div class="btn-row trd-actions">${actions}</div>` : ''}
     </article>`;
   }
+  /** Message « rien à afficher » d'un panneau. */
   const emptyBox = (text) => `<p class="empty">${esc(text)}</p>`;
 
   /* ---------- Rendu : onglets et panneaux ---------- */
+  /** Dessine la barre d'onglets. Le compteur de l'onglet « Reçues » indique le nombre d'offres en attente. */
   function renderTabs() {
     const n = incoming().length;
     tabsEl.innerHTML = TABS.map((t) => {
@@ -192,6 +249,11 @@ export async function mountTrades(el, ctx = {}) {
     }).join('');
   }
 
+  /**
+   * Carte d'une offre en attente, vue du côté reçu (« in ») ou envoyé (« out »), avec ses boutons d'action.
+   * @param {object} t offre (hg_card_trades)
+   * @param {'in'|'out'} dir sens de l'offre par rapport à moi
+   */
   function offerHtml(t, dir) {
     const who = memberOf(dir === 'in' ? t.from_user : t.to_user);
     const [l1, l2] = dir === 'in'
@@ -209,17 +271,21 @@ export async function mountTrades(el, ctx = {}) {
     });
   }
 
+  /* ---------- Panneaux (un par onglet) : chacun renvoie du HTML ---------- */
+  /** Onglet « Reçues » : offres en attente qu'on m'a faites. */
   function viewRecues() {
     const list = incoming();
     if (!list.length) return emptyBox('Aucune offre reçue en attente.');
     return `<div class="trd-list">${list.map((t) => offerHtml(t, 'in')).join('')}</div>`;
   }
+  /** Onglet « Envoyées » : offres en attente que j'ai faites (annulables). */
   function viewEnvoyees() {
     const list = outgoing();
     if (!list.length) return emptyBox('Tu n’as aucune offre en attente.');
     return `<div class="trd-list">${list.map((t) => offerHtml(t, 'out')).join('')}</div>`;
   }
 
+  /** Onglet « Proposer » : choix du membre, puis bouton pour composer une offre (ouvre l'éditeur). */
   function viewProposer() {
     const others = [...S.members.values()].filter((m) => m.id !== S.me.id).sort((a, b) => cmp(a.pseudo, b.pseudo));
     if (!others.length) return emptyBox('Aucun autre membre pour le moment.');
@@ -246,6 +312,11 @@ export async function mountTrades(el, ctx = {}) {
   function loadMatches() {
     return S.matchesP ??= computeMatchData().catch((e) => { S.matchesP = null; throw e; });
   }
+  /**
+   * Lit ce qu'il faut pour les correspondances : mes exemplaires des cartes souhaitées, et les souhaits
+   * des autres pour mes cartes en double. Ajoute les cartes au cache.
+   * @returns {Promise<{wanted: object[], wishers: object[]}>}
+   */
   async function computeMatchData() {
     const me = S.me.id;
     const counts = new Map();
@@ -298,6 +369,7 @@ export async function mountTrades(el, ctx = {}) {
     }
     return rows;
   }
+  /** Onglet « Correspondances » : une section par membre, avec les cartes à proposer en échange. */
   function viewCorrespondances(data) {
     const rows = computeMatches(data);
     if (!rows.length) return emptyBox('Aucune correspondance pour le moment. Les correspondances apparaissent quand tes souhaits et les doublons des autres membres se rejoignent.');
@@ -327,6 +399,11 @@ export async function mountTrades(el, ctx = {}) {
     }).join('');
   }
 
+  /**
+   * Une ligne de l'historique : cadeau, offre acceptée, refusée ou annulée. Les côtés sont présentés
+   * du point de vue de « moi » (« Tu donnes » / « Tu reçois »).
+   * @param {object} t offre terminée
+   */
   function historyHtml(t) {
     const me = S.me.id;
     const other = t.from_user === me ? t.to_user : t.from_user;
@@ -345,6 +422,7 @@ export async function mountTrades(el, ctx = {}) {
     }
     return articleHtml({ who: memberOf(other), date: t.resolved_at || t.created_at, badge, sides, message: t.message });
   }
+  /** Onglet « Historique » : toutes les offres qui ne sont plus en attente, les plus récentes d'abord. */
   function viewHistorique() {
     const list = S.trades.filter((t) => t.status !== 'proposee')
       .sort((a, b) => new Date(b.resolved_at || b.created_at) - new Date(a.resolved_at || a.created_at));
@@ -352,6 +430,7 @@ export async function mountTrades(el, ctx = {}) {
     return `<div class="trd-list">${list.map(historyHtml).join('')}</div>`;
   }
 
+  /** Dessine les onglets puis le panneau de l'onglet courant. L'onglet Correspondances se charge à part. */
   function renderPanel() {
     renderTabs();
     panel.setAttribute('aria-labelledby', `trd-tab-${S.tab}`);
@@ -371,10 +450,13 @@ export async function mountTrades(el, ctx = {}) {
   const render = () => keepPlace(renderPanel); // le re-rendu garde la place de l'utilisateur
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
+  /** Filtres vides d'une colonne de l'éditeur (recherche, série, rareté, doublons seulement). */
   const freshFilter = () => ({ q: '', set: '', rar: '', dup: false });
+  /** Propriétaire des cartes d'un côté : moi pour « give », le destinataire pour « want ». */
   const sideOwner = (side) => (side === 'give' ? S.me.id : E.to);
   /** Exemplaires d'un côté : disponibles, plus ceux déjà dans l'offre (toujours visibles, même filtrés). */
   const sideCopies = (side) => withSelected(side === 'give' ? tradables(S.me.id) : tradables(E.to, E.parent), E[side]);
+  /** Ajoute à la liste de base les exemplaires déjà choisis qui n'y figurent pas, puis trie. */
   const withSelected = (base, set) => [...base, ...[...set].map(copyOf).filter((c) => c && !base.includes(c))].sort(byCard);
   /** Nombre d'exemplaires possédés par un membre, par carte (exemplaires recyclés exclus). */
   function ownedCounts(owner) {
@@ -382,6 +464,12 @@ export async function mountTrades(el, ctx = {}) {
     for (const c of S.copies.values()) if (c.owner_id === owner && !c.recycled_at) m.set(c.card_id, (m.get(c.card_id) || 0) + 1);
     return m;
   }
+  /**
+   * Vrai si l'exemplaire passe les filtres de la colonne (texte, série, rareté, doublons).
+   * @param {object} c exemplaire
+   * @param {object} f filtres de la colonne
+   * @param {Map} counts nombre d'exemplaires par carte (pour « Doublons seulement »)
+   */
   function matchesFilter(c, f, counts) {
     const card = cardOf(c);
     const q = f.q.trim();
@@ -392,6 +480,11 @@ export async function mountTrades(el, ctx = {}) {
     return true;
   }
 
+  /**
+   * Ouvre l'éditeur d'offre (ou de contre-proposition si parent est donné) avec un membre.
+   * Charge les exemplaires du membre avant d'afficher la fenêtre.
+   * @param {{to: string, parent?: string|null, give?: string[], want?: string[], giveP?: number, wantP?: number, message?: string}} opts
+   */
   async function openEditor({ to, parent = null, give = [], want = [], giveP = 0, wantP = 0, message = '' }) {
     if (!to || !S.members.has(to)) return toast('Choisis un membre pour l’échange.', 'error');
     try { await ensurePeer(to); } catch (e) { return toast(errMsg(e), 'error'); }
@@ -403,7 +496,10 @@ export async function mountTrades(el, ctx = {}) {
     dlg.showModal();
   }
 
-  /** Une liste de cartes : titre, filtres (recherche, série, rareté, doublons), compteur, grille. */
+  /**
+   * Une colonne de l'éditeur (« Je donne » ou « Je demande ») : titre, filtres, compteur, grille, Paillettes.
+   * @param {'give'|'want'} side
+   */
   function colHtml(side) {
     const give = side === 'give';
     const to = memberOf(E.to);
@@ -439,7 +535,7 @@ export async function mountTrades(el, ctx = {}) {
       </fieldset>`;
   }
 
-  /** Aperçu : colonne à gauche sur ordinateur, bandeau replié collé en haut sur téléphone. */
+  /** HTML de la zone d'aperçu (carte en grand et détails). Repliée et collée en haut sur téléphone. */
   function peekHtml() {
     return `<section class="trd-peek" id="trd-peek" data-state="empty" aria-label="Aperçu de la carte">
         <p class="eyebrow trd-peek-tag">Aperçu</p>
@@ -456,6 +552,7 @@ export async function mountTrades(el, ctx = {}) {
       </section>`;
   }
 
+  /** Dessine tout l'éditeur (titre, deux colonnes, aperçu, message, récapitulatif) à partir de E. */
   function renderEditor() {
     const to = memberOf(E.to);
     const isCounter = !!E.parent;
@@ -505,6 +602,11 @@ export async function mountTrades(el, ctx = {}) {
       + [...names].sort((a, b) => cmp(a[1], b[1])).map(([id, name]) => `<option value="${esc(id)}">${esc(name)}</option>`).join('');
   }
 
+  /**
+   * Une carte cliquable de la grille de l'éditeur. aria-pressed indique si elle est dans l'offre.
+   * @param {object} c exemplaire
+   * @param {'give'|'want'} side
+   */
   function pickHtml(c, side) {
     const on = E[side].has(String(c.id));
     return `<div class="trd-pickwrap${on ? ' is-on' : ''}">${cardHtml(shown(cardOf(c)), {
@@ -514,6 +616,10 @@ export async function mountTrades(el, ctx = {}) {
   }
   /** Redessine les deux listes (filtres appliqués ; les cartes de l'offre restent visibles). */
   function renderPicks() { renderSide('give'); renderSide('want'); }
+  /**
+   * Redessine une liste de l'éditeur : cartes filtrées, compteur « x sur y », bouton « Réinitialiser ».
+   * @param {'give'|'want'} side
+   */
   function renderSide(side) {
     const f = E.filt[side];
     const all = sideCopies(side);
@@ -528,6 +634,10 @@ export async function mountTrades(el, ctx = {}) {
     form.querySelector(`[data-freset="${side}"]`).hidden = !active;
     form.querySelector(`[data-fchip="${side}"]`).setAttribute('aria-pressed', String(f.dup));
   }
+  /**
+   * Remet à zéro les filtres d'une colonne et donne le focus à la recherche.
+   * @param {'give'|'want'} side
+   */
   function resetFilters(side) {
     E.filt[side] = freshFilter();
     form.querySelector(`#trd-q-${side}`).value = '';
@@ -537,12 +647,16 @@ export async function mountTrades(el, ctx = {}) {
     form.querySelector(`#trd-q-${side}`).focus();
   }
 
-  /** Aperçu d'un exemplaire : carte en grand et détails. */
+  /**
+   * Change la carte affichée dans l'aperçu (sans changer la sélection). Ne redessine que si elle a changé.
+   * @param {string} id identifiant de l'exemplaire
+   */
   function setPeek(id) {
     if (E.peek === id) return;
     E.peek = id;
     renderPeek();
   }
+  /** Redessine l'aperçu : carte en grand et tableau de détails (série, numéro, exemplaires possédés, présence dans l'offre). */
   function renderPeek() {
     const root = form.querySelector('#trd-peek');
     if (!root) return;
@@ -589,6 +703,7 @@ export async function mountTrades(el, ctx = {}) {
     $('dl').innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   }
 
+  /** Met à jour les compteurs de sélection, le récapitulatif et le nombre de caractères du message. */
   function updateSummary() {
     const g = E.give.size, w = E.want.size;
     form.querySelector('#trd-n-give').textContent = pluralCount(g, 'carte sélectionnée', 'cartes sélectionnées');
@@ -596,13 +711,19 @@ export async function mountTrades(el, ctx = {}) {
     form.querySelector('#trd-sum').textContent = `Récapitulatif : tu donnes ${pluralCount(g, 'carte', 'cartes')}${E.giveP ? ` et ${fmtP(E.giveP)}` : ''} ; tu demandes ${pluralCount(w, 'carte', 'cartes')}${E.wantP ? ` et ${fmtP(E.wantP)}` : ''}.`;
     form.querySelector('#trd-mcount').textContent = `${E.message.length} / 500 caractères`;
   }
+  /** Affiche un message d'erreur dans l'éditeur (chaîne vide pour l'effacer). */
   function showErr(msg) {
     const box = form.querySelector('#trd-err');
     if (box) box.textContent = msg;
   }
+  /** Désactive ou réactive tous les boutons de l'éditeur pendant un envoi. */
   function setEditorBusy(on) {
     form.querySelectorAll('button').forEach((b) => { b.disabled = on; });
   }
+  /**
+   * Ajoute ou retire une carte de la colonne de l'offre (give ou want), puis met l'aperçu et le récapitulatif à jour.
+   * @param {HTMLButtonElement} btn carte cliquée (data-side, data-id)
+   */
   function togglePick(btn) {
     const set = E[btn.dataset.side];
     const id = btn.dataset.id;
@@ -616,7 +737,14 @@ export async function mountTrades(el, ctx = {}) {
     updateSummary();
   }
 
+  /**
+   * Envoie l'offre (hg_trade_propose, ou la contre-proposition si E.parent) ou le cadeau (hg_card_gift).
+   * Contrôle d'abord les champs : offre vide, Paillettes insuffisantes, cadeau sans carte.
+   * @param {boolean} gift true pour offrir un cadeau (demande de confirmation avant envoi)
+   * @returns {Promise<void>}
+   */
   async function sendOffer(gift) {
+    // E.busy : bloque un second envoi tant que le premier n'a pas répondu.
     if (E.busy) return;
     const isCounter = !!E.parent;
     const to = memberOf(E.to);
@@ -646,6 +774,11 @@ export async function mountTrades(el, ctx = {}) {
   }
 
   /* ---------- Actions sur les offres ---------- */
+  /**
+   * Accepter (après confirmation) ou refuser une offre reçue (hg_trade_respond).
+   * @param {object} t offre
+   * @param {boolean} accept true pour accepter, false pour refuser
+   */
   async function respond(t, accept) {
     if (accept) {
       const give = itemsOf(t, 'from'), recv = itemsOf(t, 'to');
@@ -659,11 +792,17 @@ export async function mountTrades(el, ctx = {}) {
     if (!error && accept) notify('card_trade', { trade_id: t.id }).catch(() => {});
     await finish(error, accept ? 'Échange conclu' : 'Offre refusée');
   }
+  /**
+   * Annule une offre que j'ai envoyée (hg_trade_cancel). Pas de confirmation : l'annulation est réversible
+   * par une nouvelle offre.
+   * @param {object} t offre
+   */
   async function cancelOffer(t) {
     setPanelBusy(true);
     const { error } = await sb.rpc('hg_trade_cancel', { p_trade: t.id });
     await finish(error, 'Offre annulée');
   }
+  /** Désactive ou réactive les boutons du panneau pendant une action sur une offre. */
   function setPanelBusy(on) {
     panel.setAttribute('aria-busy', String(on));
     panel.querySelectorAll('button').forEach((b) => { b.disabled = on; });
@@ -765,6 +904,10 @@ export async function mountTrades(el, ctx = {}) {
   });
 
   /* ---------- Démarrage ---------- */
+  /**
+   * Charge les données puis dessine le panneau. En cas d'erreur, affiche un bouton « Réessayer ».
+   * @returns {Promise<void>}
+   */
   async function start() {
     panel.innerHTML = '<p class="empty">Chargement des échanges…</p>';
     try {
