@@ -20,7 +20,7 @@
 .cd-units { display: flex; gap: 14px; }
 .cd-unit { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
 .cd-num { font-size: 32px; line-height: 1; font-variant-numeric: tabular-nums; }
-.cd-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.cd-lbl { font-size: 13px; color: var(--muted); margin-top: 4px; }
 .cd-today { font-size: 22px; }
 
 /* Tuiles */
@@ -47,7 +47,7 @@
 .tile-link:hover .tile-arrow { transform: translateX(3px); color: var(--text); }
 .tile-label { font-family: var(--font-display) !important; font-weight: 400 !important; font-size: 24px !important; margin: 0 0 4px !important; }
 .tile-body { display: flex; flex-direction: column; gap: 6px; }
-.tile-kicker { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.tile-kicker { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 .tile-main { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .tile-sub { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
 .card-ss .tile-main { color: var(--text); }

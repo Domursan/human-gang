@@ -11,7 +11,7 @@
 .acc-count { margin: 0 0 12px; }
 
 .acc-head, .acc-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.5fr) minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.2fr) 24px; gap: 12px; align-items: center; }
-.acc-head { padding: 0 12px 8px; border-bottom: 1px solid var(--border); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.acc-head { padding: 0 12px 8px; border-bottom: 1px solid var(--border); font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 .acc-list { list-style: none; margin: 0; padding: 0; max-height: 640px; overflow-y: auto; }
 .acc-row { width: 100%; min-height: 56px; padding: 10px 12px; font: inherit; text-align: left; color: var(--text);
   background: transparent; border: 0; border-bottom: 1px solid var(--border); cursor: pointer; }
@@ -22,7 +22,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 .acc-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .acc-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
 .acc-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.acc-pill { padding: 2px 8px; font-size: 11px; }
+.acc-pill { padding: 2px 8px; font-size: 12px; }
 .acc-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 14px; }
 .acc-date { font-size: 14px; color: var(--muted); }
 .acc-k { display: none; }
@@ -37,7 +37,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
   .acc-row { grid-template-columns: minmax(0, 1fr) 24px; gap: 4px 10px; }
   .acc-who { grid-column: 1; }
   .acc-go { grid-column: 2; grid-row: 1 / span 4; }
-  .acc-email, .acc-date { grid-column: 1; padding-left: 46px; font-size: 13px; }
+  .acc-email, .acc-date { grid-column: 1; padding-left: 46px; font-size: 14px; }
   .acc-k { display: inline; }
 }
 
@@ -64,7 +64,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 .acc-color input[type="color"] { width: 64px; padding: 4px; cursor: pointer; }
 .acc-avatar-edit { display: flex; align-items: center; gap: 12px; }
 .acc-avatar-edit input { flex: 1; min-width: 0; }
-.acc-uid { font-size: 12px; letter-spacing: 0; font-weight: 500; overflow-wrap: anywhere; }
+.acc-uid { font-size: 13px; letter-spacing: 0; font-weight: 500; overflow-wrap: anywhere; }
 
 .acc-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin: 0; min-width: 0; }
 .acc-group legend { padding: 0 6px; font-weight: 700; }
@@ -112,7 +112,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 .sf-group { border: 0; border-top: 1px solid var(--border); margin: 0; padding: 12px 0 4px; min-width: 0; display: grid; gap: 8px 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .sf-group legend { float: left; font-weight: 700; padding: 0; margin: 0; }
 .sf-group-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; grid-column: 2; grid-row: 1; }
-.sf-group-actions .btn { min-height: 44px; padding: 6px 10px; font-size: 13px; }
+.sf-group-actions .btn { min-height: 44px; padding: 6px 10px; font-size: 14px; }
 .sf-checks { grid-column: 1 / -1; display: grid; gap: 4px 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
 .sf-checks .check { min-height: 44px; align-items: center; }
 .sf-checks .check input { margin: 0; }
@@ -127,7 +127,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 .pairs-tr { display: grid; grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr) minmax(0, .8fr) minmax(0, .8fr); gap: 10px; align-items: center;
   padding: 8px 0; border-bottom: 1px solid var(--border); }
 .pairs-tr:last-child { border-bottom: 0; }
-.pairs-th { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.pairs-th { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
 .pairs-arrow { display: flex; color: var(--ss-fg); }
 .pairs-arrow svg { width: 18px; height: 18px; }
 .pairs-tr .pill { padding: 4px 10px; font-size: 12px; }

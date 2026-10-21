@@ -26,7 +26,7 @@ html[data-fx="off"] .evp-card.is-live .evp-visual { animation: none; }
 
 .evp-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .evp-stats div { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); min-width: 0; }
-.evp-stats dt { font-size: 12px; color: var(--muted); }
+.evp-stats dt { font-size: 13px; color: var(--muted); }
 .evp-stats dd { margin: 2px 0 0; font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
 .evp-stats dd small { font-family: var(--font-body); font-size: 14px; color: var(--muted); }
 
@@ -41,7 +41,7 @@ html[data-fx="off"] .evp-card.is-live .evp-visual { animation: none; }
 .evp-rank.top { color: var(--sand); font-weight: 700; }
 .evp-lb-name { color: var(--text); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 44px; display: flex; align-items: center; gap: 6px; }
 @media (hover: hover) { .evp-lb-name:hover { color: var(--sand); } }
-.evp-me { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.evp-me { font-size: 12px; padding: 1px 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
 .evp-lb strong { font-variant-numeric: tabular-nums; }
 
 .evp-badge { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: var(--radius-sm); background: var(--bg); border: 1px dashed var(--border-strong); }
@@ -56,7 +56,7 @@ html[data-fx="off"] .evp-card.is-live .evp-visual { animation: none; }
 .evp-badge-txt { min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
 .evp-badge-txt .evp-k { margin-bottom: 2px; }
 .evp-levels { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; margin-top: 6px; }
-.evp-lv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.evp-lv-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .evp-lv-list li { display: flex; align-items: center; gap: 8px; }
 .evp-lv-list li .lvl-pip { flex: none; }
 html[data-mode="clair"] .evp-badge-lvl { color: #FFFFFF; }
@@ -70,7 +70,7 @@ html[data-mode="clair"] .evp-badge-lvl { color: #FFFFFF; }
 @media (max-width: 420px) {
   .evp-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
   .evp-stats dd { font-size: 20px; }
-  .evp-stats dt { font-size: 11px; }
+  .evp-stats dt { font-size: 12px; }
   .evp-visual { --s: 72px !important; border-radius: 16px; }
   .evp-badge { gap: 12px; padding: 12px; }
   .evp-badge-img { width: 60px; height: 60px; }

@@ -3,8 +3,8 @@
 .cartes-head { align-items: flex-end; }
 .cartes-wallet { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .cartes-bal { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); line-height: 1; color: var(--sand); font-variant-numeric: tabular-nums; }
-.cartes-bal-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.cartes-foot-note { font-size: 13px; color: var(--muted); margin: 24px 0 0; text-align: center; }
+.cartes-bal-label { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cartes-foot-note { font-size: 14px; color: var(--muted); margin: 24px 0 0; text-align: center; }
 
 /* Onglets */
 .cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
@@ -20,7 +20,7 @@
 .cartes-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .cartes-row > * { flex: 0 0 auto; }
 .cartes-timer { font-variant-numeric: tabular-nums; }
-.cartes-small { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+.cartes-small { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .cartes-odds { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cartes-odds th, .cartes-odds td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
 .cartes-odds td:last-child, .cartes-odds th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
@@ -66,7 +66,7 @@
 @media (hover: hover) { .cd-wish:hover { background: var(--surface-2); } }
 #cartes-detail-info .cartes-flavor { margin: 0 0 4px; line-height: 1.55; }
 .cd-sec { margin-top: 20px; }
-.cd-h { margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-family: var(--font-body); }
+.cd-h { margin: 0; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-family: var(--font-body); }
 #cartes-detail-info .cartes-copies { margin: 0; }
 #cartes-detail-info .cartes-copies li { flex-wrap: nowrap; }
 #cartes-detail-info .cartes-copies li > span { min-width: 0; }
@@ -86,7 +86,7 @@
 .cartes-lb { list-style: none; margin: 0; padding: 0; }
 .cartes-lb li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .cartes-lb-rank { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
-.cartes-lb-stats { font-size: 13px; color: var(--muted); }
+.cartes-lb-stats { font-size: 14px; color: var(--muted); }
 .cartes-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 
 /* Historique */
@@ -184,7 +184,7 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .cart-stripe i:nth-child(5) { background: #2B5AE2; }
 .cart-stripe i:nth-child(6) { background: #4E2398; }
 .cart-ridge { position: absolute; left: 30px; top: 206px; width: 160px; height: 38px; background: repeating-linear-gradient(90deg, #15131c 0 4px, #4a4658 4px 8px); }
-.cart-foot { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 10px; letter-spacing: .2em; color: #b7b0c4; }
+.cart-foot { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 11px; letter-spacing: .2em; color: #b7b0c4; }
 .cart-stk { position: absolute; right: -10px; top: 6px; width: 108px; height: 44px; margin: 0; z-index: 2;
   display: flex; align-items: center; justify-content: center; background: #159946; text-align: center; font-size: 11.5px; font-weight: 700;
   line-height: 1.25; letter-spacing: .04em; text-transform: uppercase; color: #fff; text-shadow: 2px 2px 0 #0b0508; transform: rotate(8deg);
@@ -207,8 +207,8 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .op-scr p { position: absolute; z-index: 1; margin: 0; white-space: nowrap; opacity: 0; transition: opacity .2s;
   font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace; }
 .op-l1 { left: 12px; top: 10px; font-size: 12px; font-weight: 700; color: #7fe3a4; letter-spacing: .06em; }
-.op-l2 { left: 12px; top: 28px; font-size: 10px; color: #4f9d6e; letter-spacing: .08em; }
-.op-l3 { left: 12px; top: 72px; font-size: 10px; color: #FBD32D; letter-spacing: .08em; }
+.op-l2 { left: 12px; top: 28px; font-size: 11px; color: #4f9d6e; letter-spacing: .08em; }
+.op-l3 { left: 12px; top: 72px; font-size: 11px; color: #FBD32D; letter-spacing: .08em; }
 .op-stage.is-boot .op-scr p { opacity: 1; }
 .op-bar { position: absolute; z-index: 1; left: 12px; top: 50px; display: flex; gap: 3px; }
 .op-bar i { width: 14px; height: 10px; background: #143a24; transition: background .14s; transition-delay: calc(var(--k) * 90ms); }

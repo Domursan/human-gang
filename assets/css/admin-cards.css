@@ -16,7 +16,7 @@
 .acd-item-tight { padding: 10px 12px; }
 .acd-item-main { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .acd-item-main p { margin: 0; overflow-wrap: anywhere; }
-.acd-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); }
+.acd-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; padding: 2px 6px; border-radius: 6px; background: var(--surface-2); }
 .acd-msg { font-style: italic; }
 .acd-caption { color: var(--muted); font-style: italic; }
 .acd-note { margin: 0; padding: 8px 10px; border-left: 3px solid var(--rose); border-radius: 4px; background: var(--surface-2); font-size: 14px; }
@@ -28,7 +28,7 @@
 .acd-scroll { position: relative; overflow-x: auto; max-width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); -webkit-overflow-scrolling: touch; }
 .acd-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
 .acd-table th, .acd-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.acd-table th { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); white-space: nowrap; }
+.acd-table th { font-size: 13px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; background: var(--surface-2); white-space: nowrap; }
 .acd-table tr:last-child td { border-bottom: 0; }
 .acd-table tr.is-off td { opacity: .6; }
 .acd-table td.acd-actions { white-space: nowrap; }
@@ -59,7 +59,7 @@
 .acd-tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 .acd-tile { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; min-width: 0; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); }
 .acd-tile strong { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.1; color: var(--sand); overflow-wrap: anywhere; }
-.acd-tile span { font-size: 13px; color: var(--muted); }
+.acd-tile span { font-size: 14px; color: var(--muted); }
 
 /* ---------- Formulaires et dialogues ---------- */
 .acd-fs { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }

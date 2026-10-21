@@ -30,7 +30,7 @@
 .table-wrap { overflow-x: auto; margin: 0 0 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .legal-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .legal-table th, .legal-table td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--border); }
-.legal-table thead th { background: var(--surface-2); font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.legal-table thead th { background: var(--surface-2); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
 .legal-table tbody th { font-weight: 700; white-space: nowrap; }
 .legal-table tr:last-child > * { border-bottom: 0; }
 .legal-table code { font-size: 13px; color: var(--sand); }

@@ -64,14 +64,14 @@ body.rc-open { overflow: hidden; }
 .rc-big-sm { font-size: clamp(60px, 18vw, 92px); }
 .rc-unit { font-family: var(--font-display); font-size: clamp(20px, 6vw, 28px); line-height: 1.1; }
 .rc-sub { font-size: 16px; color: rgba(242,239,234,.82); max-width: 32ch; }
-.rc-hint { display: inline-block; margin-top: 8px; font-size: 13px; color: rgba(242,239,234,.55); }
+.rc-hint { display: inline-block; margin-top: 8px; font-size: 14px; color: rgba(242,239,234,.55); }
 
 .rc-chips { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 100%; }
 .rc-chips li { padding: 6px 12px; border-radius: 999px; background: rgba(242,239,234,.1); border: 1px solid rgba(242,239,234,.18); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .rc-list { list-style: none; padding: 0; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 8px; margin-top: 8px !important; counter-reset: rc; }
 .rc-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; text-align: left; padding: 10px 14px; border-radius: 12px; background: rgba(0,0,0,.28); border: 1px solid rgba(242,239,234,.1); }
 .rc-list li strong { overflow-wrap: anywhere; }
-.rc-list li span { grid-column: 1; font-size: 13px; color: rgba(242,239,234,.65); }
+.rc-list li span { grid-column: 1; font-size: 14px; color: rgba(242,239,234,.65); }
 .rc-list li em { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; font-family: var(--font-pixel); font-size: 12px; color: #E2C77E; white-space: nowrap; }
 .rc-list-compact li { padding: 8px 14px; }
 
@@ -96,7 +96,7 @@ body.rc-open { overflow: hidden; }
 .rc-mine { list-style: none; padding: 0; width: 100%; max-width: 360px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px !important; }
 .rc-mine li { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 8px; border-radius: 14px; background: rgba(0,0,0,.3); border: 1px solid rgba(242,239,234,.1); }
 .rc-mine strong { font-family: var(--font-pixel); font-weight: 700; font-size: 28px; line-height: 1.1; }
-.rc-mine li > span:last-child { font-size: 13px; color: rgba(242,239,234,.75); }
+.rc-mine li > span:last-child { font-size: 14px; color: rgba(242,239,234,.75); }
 .rc-mine-e { font-size: 22px; line-height: 1; }
 .rc-mine li.rc-mine-wide { grid-column: 1 / -1; flex-direction: row; justify-content: center; gap: 10px; }
 .rc-mine li.rc-mine-wide > span:last-child { font-size: 14px; color: #F2EFEA; }
