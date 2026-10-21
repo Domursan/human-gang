@@ -108,6 +108,7 @@ export function bindSecretSanta() {
         toast('Carte par défaut rétablie', 'ok');
       });
     }
+    if (t.id === 'ss-delete') { await deleteEdition(t, ed); return; }
     if (t.id === 'ss-redraw' || t.id === 'ss-redraw-manual') {
       if (!isGodMode() || !ed.drawn_at) return;
       await redraw(t, ed, t.id === 'ss-redraw-manual');
@@ -142,6 +143,31 @@ export function bindSecretSanta() {
     }
   });
   window.addEventListener('hg:godmode', () => { if (S.ssLoaded) renderSS(); });
+}
+
+/* Suppression d'une édition : la base supprime en cascade inscrits, exclusions, attributions, vœux,
+   conversations de l'édition et leurs messages. Le détail est compté avant la confirmation. */
+async function deleteEdition(btn, ed) {
+  const count = (table) => sb.from(table).select('*', { count: 'exact', head: true }).eq('edition_id', ed.id)
+    .then((r) => { if (r.error) throw r.error; return r.count ?? 0; });
+  let assign, wishes, convs;
+  try { [assign, wishes, convs] = await Promise.all([count('hg_ss_assignments'), count('hg_ss_wishes'), count('hg_conversations')]); }
+  catch (e) { toast(errMsg(e), 'error'); return; }
+  const parts = S.participants.length, ex = S.exclusions.length;
+  const detail = `Effacé avec l'édition : ${parts} inscrit${parts > 1 ? 's' : ''}, ${ex} exclusion${ex > 1 ? 's' : ''}, ${assign} attribution${assign > 1 ? 's' : ''} du tirage, ${wishes} vœu${wishes > 1 ? 'x' : ''}, ${convs} conversation${convs > 1 ? 's' : ''} de l'édition avec tous leurs messages.`;
+  const warn = ed.drawn_at ? ' Le tirage déjà effectué sera perdu.' : '';
+  const ok = await confirmBox(`Supprimer définitivement l'édition ${ed.year} ?`,
+    `${detail}${warn} La carte de base téléversée reste dans le stockage. Impossible à annuler.`,
+    { ok: 'Supprimer l\'édition', danger: true });
+  if (!ok) return;
+  await busy(btn, async () => {
+    check(await sb.from('hg_ss_editions').delete().eq('id', ed.id));
+    await loadEditions();
+    S.editionId = S.editions[0]?.id ?? null;
+    await loadEditionDetails();
+    renderSS(); renderStats();
+    toast(`Édition ${ed.year} supprimée`, 'ok');
+  });
 }
 
 /* Mode sans limite : refaire le tirage (suppression des attributions puis nouveau tirage auto ou manuel) */
