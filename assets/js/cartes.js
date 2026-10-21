@@ -759,7 +759,7 @@ function renderHistory() {
 
 /* ---------- Événements ---------- */
 function onClick(e) {
-  const t = e.target.closest('[data-tab], [data-action]');
+  const t = e.target.closest('.cartes-tab[data-tab], [data-action]');
   if (!t || t.disabled) return;
   if (t.dataset.tab) { setTab(t.dataset.tab); $(`#cartes-tab-${t.dataset.tab}`).focus(); return; }
   switch (t.dataset.action) {
