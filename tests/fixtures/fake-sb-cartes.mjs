@@ -75,6 +75,13 @@ window.__DB = DB; window.__LOG = [];
   const cp = (id, card, extra = {}) => ({ id, card_id: card, owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
   DB.hg_card_copies = [cp(1,'C1'), cp(2,'C1',{shiny:true}), cp(3,'C1'), cp(4,'C2'), cp(5,'C3'), cp(6,'C3',{source:'fabrication'}), cp(7,'C7',{shiny:true}), cp(8,'C11',{serial:1, max_copies:3}), cp(9,'C9',{locked_trade:'T1'}), cp(10,'C5'), cp(11, 'C5', {shiny: true})];
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
+  // Scénario « echanges » (parcours-echanges-filtres.cjs) : Alice (U(2)) a des doublons et des cartes d'une autre série ;
+  // j'ai aussi une carte de la série « Saison 2 ». Ailleurs, rien ne change.
+  if (S.echanges) {
+    const cpa = (id, card, extra = {}) => ({ id, card_id: card, owner_id: U(2), shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
+    DB.hg_card_copies.push(cpa(101,'C1'), cpa(102,'C1'), cpa(103,'C5'), cpa(104,'C8', { serial: 3 }), cpa(105,'C13'), cpa(106,'C12'), cpa(107,'C12'), cpa(108,'C9', { shiny: true }),
+      { id: 12, card_id: 'C13', owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
+  }
   DB.hg_wallet_log = [{ user_id: ME, delta: 20, reason: 'quotidien', created_at: iso(-1) }, { user_id: ME, delta: -100, reason: 'booster', created_at: iso(-3) }, { user_id: ME, delta: 15, reason: 'reponse_sortie', created_at: iso(-5) }];
   DB.hg_wallets = [{ user_id: ME, paillettes: S.bal ?? 230, pity_epique: S.pity ?? 3, daily_streak: 2, last_daily: null }];
 // Panel admin (polish cartes) : quêtes, défis et journal des Paillettes

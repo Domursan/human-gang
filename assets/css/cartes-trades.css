@@ -55,7 +55,7 @@
 .trd-match .hgc { --w: 96px; }
 
 /* Éditeur et confirmation (<dialog>) */
-.trd-dialog { width: min(780px, calc(100vw - 16px)); max-width: none; max-height: calc(100dvh - 16px); padding: 0; overflow: auto;
+.trd-dialog { width: min(1080px, calc(100vw - 16px)); max-width: none; max-height: calc(100dvh - 16px); padding: 0; overflow: auto;
   background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius);
   box-shadow: 0 24px 80px rgba(0, 0, 0, .5); }
 .trd-dialog::backdrop { background: rgba(4, 4, 8, .62); backdrop-filter: blur(3px); }
@@ -70,7 +70,7 @@
   background: transparent; color: var(--text); font-size: 26px; line-height: 1; cursor: pointer; }
 .trd-close:hover { background: var(--surface-2); }
 
-.trd-cols { display: grid; gap: 16px; }
+.trd-cols { display: grid; gap: 16px; grid-template-columns: 1fr; }
 .trd-col { margin: 0; min-width: 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
   display: flex; flex-direction: column; gap: 12px; }
 .trd-col legend { padding: 0 6px; font-weight: 700; font-size: 15px; }
@@ -90,10 +90,90 @@
 .trd-err { margin: 0; min-height: 1.4em; color: var(--rose); font-size: 15px; overflow-wrap: anywhere; }
 
 @media (min-width: 700px) {
-  .trd-cols { grid-template-columns: 1fr 1fr; }
   .trd-dlg-head, .trd-dlg-body, .trd-dlg-foot { padding-left: 24px; padding-right: 24px; }
   .trd-dlg-head { padding-top: 24px; }
   .trd-dlg-foot .btn { flex: 0 0 auto; }
+}
+
+/* Corps de la fenêtre : deux listes côte à côte dès que la zone de travail est assez large (requête de conteneur) */
+.trd-dlg-body { container-type: inline-size; min-width: 0; }
+@container (min-width: 560px) { .trd .trd-cols { grid-template-columns: 1fr 1fr; } }
+.trd-dlg-main { display: flex; flex-direction: column; min-width: 0; }
+.trd-dialog [hidden] { display: none !important; }
+
+/* Filtres (au-dessus de chaque liste : « Tes cartes », « Ses cartes ») */
+.trd-flist-head { display: flex; flex-direction: column; gap: 2px; }
+.trd-flist-head .trd-side-title { margin: 0; }
+.trd-fres { margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.trd-fbar { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+.trd-fbar .field { gap: 4px; min-width: 0; }
+.trd-fbar .field label { font-size: 13px; }
+.trd-fbar .field input, .trd-fbar .field select { font-size: 15px; min-height: 44px; padding: 8px 12px; }
+.trd-fsels { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; }
+@media (max-width: 480px) { .trd-fsels { grid-template-columns: 1fr; } }
+.trd-fline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; }
+.trd-chip { font: inherit; font-size: 14px; font-weight: 600; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong);
+  background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.trd-chip::before { content: ""; width: 14px; height: 14px; flex: none; border-radius: 4px; border: 2px solid currentColor; box-sizing: border-box; }
+.trd-chip:hover { background: var(--surface-2); color: var(--text); }
+.trd-chip[aria-pressed="true"] { color: #0b0b0b; background: var(--sand); border-color: var(--sand); }
+.trd-chip[aria-pressed="true"]::before { background: #0b0b0b; border-color: #0b0b0b; box-shadow: inset 0 0 0 2px var(--sand); }
+.trd-freset { font: inherit; font-size: 14px; min-height: 44px; padding: 0 6px; background: none; border: 0; color: var(--sand); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.trd-freset:focus-visible, .trd-chip:focus-visible, .trd-peek-toggle:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.trd .trd-count { margin-top: -2px; }
+
+/* Aperçu de la carte : colonne à gauche sur ordinateur */
+.trd-peek { min-width: 0; }
+.trd-peek-tag { margin: 0 0 12px; }
+.trd-peek-stage { display: grid; place-items: center; min-height: 330px; padding: 14px; box-sizing: border-box; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: radial-gradient(circle at 50% 30%, #22222a, #0f0f13 75%); }
+.trd-peek .hgc { --w: 200px; }
+.trd-peek-empty { display: grid; place-items: center; min-height: 330px; padding: 20px; box-sizing: border-box; margin: 0; text-align: center; font-size: 15px; line-height: 1.4;
+  color: var(--muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+.trd-peek-dl { display: grid; gap: 10px; margin: 14px 0 0; }
+.trd-peek-dl > div { display: grid; gap: 2px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.trd-peek-dl dt { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.trd-peek-dl dd { margin: 0; font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.trd-peek-dl dd em { color: var(--sand); }
+.trd-peek-row { display: none; }
+.trd-peek-more { display: flex; flex-direction: column; }
+
+@media (min-width: 900px) {
+  .trd-dlg-main { flex-direction: row; }
+  .trd-dlg-main > .trd-dlg-body { flex: 1 1 auto; }
+  .trd-peek { flex: 0 0 248px; position: sticky; top: 0; align-self: flex-start; max-height: calc(100dvh - 16px); overflow: auto;
+    padding: 8px 20px 20px 24px; border-right: 1px solid var(--border); box-sizing: border-box; }
+}
+
+/* Téléphone : bandeau replié collé en haut de la fenêtre ; « Détails » le déplie */
+@media (max-width: 899px) {
+  .trd-peek { position: sticky; top: 0; z-index: 3; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; box-sizing: border-box; }
+  .trd-peek-tag { display: none; }
+  .trd-peek-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .trd-peek-thumb { flex: none; width: 56px; height: 40px; border: 2px solid var(--border-strong); border-radius: 4px; overflow: hidden; background: #14122a; }
+  .trd-peek-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+  .trd-peek-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .trd-peek-meta strong { font-size: 15px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trd-peek-meta span { font-size: 13px; color: var(--muted); }
+  .trd-peek-toggle { flex: none; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent;
+    color: var(--text); font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .trd-peek[data-state="empty"] .trd-peek-toggle, .trd-peek[data-state="empty"] .trd-peek-thumb, .trd-peek[data-state="empty"] .trd-peek-meta span { display: none; }
+  .trd-peek[data-state="empty"] .trd-peek-meta strong { white-space: normal; font-weight: 500; color: var(--muted); font-size: 14px; }
+  .trd-peek-more { display: none; }
+  .trd-peek.is-open { max-height: 60dvh; overflow: auto; }
+  .trd-peek.is-open .trd-peek-more { display: flex; flex-direction: row; align-items: flex-start; gap: 12px; padding-top: 12px; }
+  .trd-peek.is-open .trd-peek-stage { width: 150px; min-height: 0; padding: 10px; flex: none; }
+  .trd-peek .hgc { --w: 130px; }
+  .trd-peek-empty { display: none; }
+  .trd-peek-dl { margin-top: 0; grid-template-columns: 1fr 1fr; gap: 8px 14px; align-content: start; flex: 1 1 auto; min-width: 0; }
+  .trd-peek-dl > div { padding-bottom: 8px; }
+  .trd-peek-dl dd { font-size: 14px; }
+}
+@media (max-width: 480px) {
+  .trd-peek.is-open .trd-peek-more { flex-direction: column; }
+  .trd-peek.is-open .trd-peek-stage { width: auto; }
+  .trd-peek .hgc { --w: 150px; }
+  .trd-peek-dl { grid-template-columns: 1fr; }
 }
 
 /* Mouvement réduit : pas d'animation ajoutée ici */
