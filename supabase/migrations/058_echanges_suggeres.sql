@@ -1,3 +1,4 @@
+-- Appliquée en production le 22/10/2026.
 -- Suggestions d'échanges à partir des souhaits de cartes (onglet Échanges, bloc « Échanges possibles »).
 -- Ajout seulement, rétrocompatible : une seule fonction nouvelle, rien de modifié ni supprimé.
 -- Le site l'appelle en premier ; s'il ne la trouve pas (PGRST202), il calcule les mêmes suggestions à partir
