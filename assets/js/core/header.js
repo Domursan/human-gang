@@ -16,7 +16,7 @@ import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
 import { avatarHtml, esc } from './util.js';
-import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP } from './icons.js';
+import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP, ICON_MENU } from './icons.js';
 import { searchButtonHtml, bindSearch } from './search.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 
@@ -142,7 +142,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   const help = `<a class="nav-icon nav-help" href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>`;
   const prefs = `<button class="nav-icon prefs-open" type="button" aria-label="Préférences d'affichage" aria-haspopup="dialog" title="Préférences d'affichage">${ICON_PREFS}</button>`;
   const logout = profile ? `<button class="nav-icon nav-logout" type="button" aria-label="Se déconnecter" title="Se déconnecter">${ICON_DOOR}</button>` : '';
-  const toggle = '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>';
+  const toggle = `<button class="nav-icon nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu" title="Menu" hidden>${ICON_MENU}</button>`;
   const header = document.createElement('header');
   header.className = 'site-header';
   header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>

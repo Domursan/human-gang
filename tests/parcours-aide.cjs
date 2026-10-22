@@ -161,8 +161,13 @@ async function checkData() {
   p = await openPage(browser, { page: 'accueil', width: 390 });
   check(await p.locator('.side-tools a.nav-help').isVisible(), '390 px : bouton « ? » visible dans la rangée d\'outils');
   check(await hscroll(p) <= 0, '390 px accueil : pas de défilement horizontal');
+  // Alignement : le bouton Menu est centré verticalement sur le logo (à 3 px près)
+  const centreY = async (sel) => { const b = await p.locator(sel).first().boundingBox(); return b.y + b.height / 2; };
+  const ecart = Math.abs((await centreY('.nav-toggle')) - (await centreY('.brand img')));
+  check(ecart <= 3, '390 px : bouton Menu centré sur le logo (écart ' + ecart.toFixed(1) + ' px)');
   await p.click('.nav-toggle');
   await sleep(150);
+  check(await p.getAttribute('.nav-toggle', 'aria-expanded') === 'true', '390 px : menu ouvert, aria-expanded à true');
   check(await p.locator('.nav a.nav-help-link').isVisible(), '390 px : « Aide & tutos » dans le menu');
   await p.ctx.close();
   p = await openPage(browser, { page: 'aide', width: 390 });

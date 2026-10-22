@@ -116,7 +116,8 @@ a.nav-icon { text-decoration: none; }
     align-items: center; gap: 8px; padding-top: 10px; padding-bottom: 6px; }
   .brand { grid-area: brand; min-width: 0; }
   .nav-tools { grid-area: tools; flex: none; }
-  .side-tools { grid-area: side; justify-content: flex-end; flex-direction: row; flex-wrap: nowrap; gap: 6px; width: auto; min-width: 0; }
+  /* Rangée d'outils : étalée de bord à bord, son premier bouton est aligné sur le logo, son dernier sur le bouton Menu */
+  .side-tools { grid-area: side; justify-content: space-between; flex-direction: row; flex-wrap: nowrap; gap: 6px; width: 100%; min-width: 0; }
   .nav { grid-area: nav; min-width: 0; flex: none; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
   .nav:empty { display: none; }
@@ -148,18 +149,28 @@ a.nav-icon { text-decoration: none; }
 .skip-link:focus-visible { top: 8px; outline: 2px solid var(--sand); outline-offset: 2px; }
 #app[tabindex="-1"]:focus { outline: none; }
 
-/* Menu repliable (760 px et moins) : la navigation s'ouvre sous l'en-tête au lieu de défiler */
+/* Menu repliable (760 px et moins) : bouton rond de la même famille que les outils (.nav-icon), trois traits
+   qui deviennent une croix quand le menu est ouvert. La navigation s'ouvre sous l'en-tête, en colonne pleine largeur. */
 .nav-toggle { display: none; }
 @media (max-width: 760px) {
-  .nav-toggle { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 999px;
-    font: inherit; font-weight: 700; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); cursor: pointer; }
+  .nav-toggle { display: inline-grid; color: var(--text); border-color: var(--border-strong); }
   .nav-toggle[hidden] { display: none; }
+  .nav-toggle-ico { display: block; overflow: visible; }
+  .nav-toggle-ico .bar { transform-box: view-box; transform-origin: 12px 12px; transition: transform .2s ease, opacity .15s ease; }
+  .site-header.nav-open .nav-toggle { background: var(--surface-2); }
+  .site-header.nav-open .nav-toggle .bar-1 { transform: translateY(4px) rotate(45deg); }
+  .site-header.nav-open .nav-toggle .bar-2 { opacity: 0; }
+  .site-header.nav-open .nav-toggle .bar-3 { transform: translateY(-4px) rotate(-45deg); }
+  @media (prefers-reduced-motion: reduce) { .nav-toggle-ico .bar { transition: none; } }
   .site-header .container { row-gap: 0; }
   .site-header .nav { display: none; }
   .site-header.nav-open .container { row-gap: 8px; }
+  /* Liens pleine largeur, texte aligné sur le bord gauche du logo (marge de 16 px) ; le lien courant a un filet doré */
   .site-header.nav-open .nav { display: flex; flex-direction: column; align-items: stretch; flex-wrap: nowrap; overflow: visible; scroll-snap-type: none;
-    margin: 0 -16px; padding: 4px 16px 12px; border-top: 1px solid var(--border); }
-  .site-header.nav-open .nav a { width: 100%; box-sizing: border-box; min-height: 48px; padding: 12px 16px; }
+    gap: 2px; margin: 0 -16px; padding: 6px 0 14px; border-top: 1px solid var(--border); }
+  .site-header.nav-open .nav a { width: 100%; box-sizing: border-box; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 0; }
+  .site-header.nav-open .nav a.nav-admin, .site-header.nav-open .nav a.nav-help-link { border-top: 1px solid var(--border); margin-top: 4px; }
+  .site-header.nav-open .nav a[aria-current="page"] { background: var(--surface-2); box-shadow: inset 3px 0 0 var(--sand); font-weight: 700; }
   .site-header.nav-open .nav-msg-label { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
   .site-header.nav-open .nav a.nav-msg .nav-badge { position: static; margin-left: auto; }
 }
