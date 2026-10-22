@@ -51,7 +51,7 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * touch : true pour un écran tactile (page.tap possible).
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false } = {}) {
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch }); // touch : écran tactile (pointeur grossier)
   await ctx.addInitScript((s) => {
     window.__SCN = s;
@@ -86,6 +86,8 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     route.fulfill({ body: fs.readFileSync(f), contentType: TYPES[path.extname(f)] || 'application/octet-stream' });
   });
   const page = await ctx.newPage();
+  // now : horloge simulée (Playwright) installée avant la navigation, pour tester l'heure de Zurich
+  if (now) await page.clock.install({ time: new Date(now) });
   page.errs = [];
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });

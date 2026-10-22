@@ -415,6 +415,8 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » (l'appel reste dans __LOG) ; hg_eggs_me renvoie le carnet.
+      if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }], letters: 0 }, error: null };
       // Suivi des quêtes (quest-track.js) : rien à renvoyer ; l'appel reste dans window.__LOG.
       if (fn === 'hg_quest_track') return { data: null, error: null };
       // Secrets cachés (eggs/api.js) : une réponse par secret ; la première fois, « new » est vrai. Les lettres se comptent (sur 7).

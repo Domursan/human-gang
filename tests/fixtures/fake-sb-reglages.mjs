@@ -419,6 +419,9 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » ; hg_eggs_me renvoie le carnet.
+      if (fn === 'hg_egg_found') return { data: { new: true, reward: 10, message: 'ok', found: 1 }, error: null };
+      if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }], letters: 0 }, error: null };
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non. Première définition de hg_staff_directory : celle-ci répond.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       // Liste des membres : les fantômes n'y figurent pas (ils ne sont pas dans DB.hg_profiles).
