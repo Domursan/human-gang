@@ -9,7 +9,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v43';
+const CACHE_VERSION = 'v44';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -25,7 +25,7 @@ const PRECACHE = [
   'assets/css/admin-cards.css', 'assets/css/admin-reglages.css', 'assets/css/admin-identite.css', 'assets/css/admin-events.css', 'assets/css/admin-ghosts.css',
   'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
   'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/aide.css', 'assets/css/assistance.css', 'assets/css/base.css',
-  'assets/css/cartes-card.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
+  'assets/css/cartes-card.css', 'assets/css/cartes-boosters.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
   'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/cartes-zoom.css', 'assets/css/compte.css', 'assets/css/evenements.css',
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
   'assets/css/irl.css', 'assets/css/legal.css', 'assets/css/membre.css', 'assets/css/messages.css',

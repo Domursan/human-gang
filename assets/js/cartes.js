@@ -1,5 +1,9 @@
 // ===== Cartes à collectionner — page joueur =====
 // RPC : hg_cards_me, hg_cards_daily, hg_open_booster_req (repli hg_open_booster), hg_card_recycle, hg_card_craft, hg_card_leaderboard.
+// Boosters typés (migration 069, SPEC booster-system) : hg_booster_types_me (types, stocks, limites), hg_booster_buy (p_type, p_qty : achat mis en stock),
+// hg_booster_open (p_type, p_mode stock|gratuit, p_set pour la série), hg_booster_gift (p_type : don à un membre), hg_booster_gifts_me (dons envoyés et reçus), hg_members.
+// Règle de conception : la Boutique n'achète que des boosters (ils vont dans l'inventaire) ; on les ouvre dans l'onglet Ouverture (un seul, ou plusieurs d'un coup).
+// Sans hg_booster_types_me (migration pas encore déployée), la page garde l'ancien mode : un seul booster classique et un stock générique (repli, voir typed()).
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
 // Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
@@ -21,10 +25,14 @@ const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
 /** Pourcentage à deux décimales maximum, ex. « 12,5 % ». */
 const pct = (v) => `${new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(v)} %`;
 // Onglets : [identifiant, libellé]. L'ordre est celui de l'affichage et des flèches clavier.
-const TABS = [['boosters', 'Boosters'], ['collection', 'Collection'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+const TABS = [['ouverture', 'Ouverture'], ['inventaire', 'Inventaire'], ['boutique', 'Boutique'], ['collection', 'Collection'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+// Onglets qui montrent des boosters : redessinés ensemble après une ouverture ou un achat (renderBoosters).
+const BOOSTER_TABS = ['ouverture', 'inventaire', 'boutique'];
 // Icônes des onglets (SVG décoratifs, visibles seulement sur téléphone : grille de la barre d'onglets).
 const TAB_ICON = {
-  boosters: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  ouverture: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  inventaire: '<path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M3 4h18v4H3zM10 12h4"/>',
+  boutique: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v2a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 11z"/><path d="M5.5 13.5V20h13v-6.5"/>',
   collection: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>',
   classement: '<path d="M5 21v-8M12 21V6M19 21v-11"/>',
   echanges: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
@@ -33,7 +41,7 @@ const TAB_ICON = {
 const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange' };
 // Libellés du journal des Paillettes (hg_wallet_log.reason), affichés dans l'historique.
 const REASON_LABEL = {
-  quotidien: 'Passage du jour', booster: 'Booster ouvert', recyclage: 'Recyclage', fabrication: 'Fabrication',
+  quotidien: 'Passage du jour', booster: 'Boosters achetés', remboursement: 'Remboursement Collectionneur', booster_don: 'Booster offert', recyclage: 'Recyclage', fabrication: 'Fabrication',
   serie_complete: 'Série complétée', reponse_sortie: 'Réponse à une sortie', presence: 'Présence à une sortie', photo: 'Photo partagée',
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
@@ -42,13 +50,60 @@ const REASON_LABEL = {
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche ») : table partagée avec cartes-zoom.js (RARITY_TINT = TINT).
 // Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
 const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
-// Ouverture groupée : nombre de boosters payants ouverts d'un coup, et délai entre deux cartes révélées.
+// Ouverture groupée (onglet Ouverture, « Ouvrir 5 », « Tout ouvrir ») : au-delà de ce nombre de boosters, le résumé remplace la révélation carte à carte ; délai entre deux cartes révélées.
 const MULTI_COUNT = 5;
 const MULTI_STEP_MS = 110;
 // Valeur du sélecteur « Toutes les séries » (Collection) : toutes les séries ouvertes, groupées.
 const ALL = '__all__';
-/** Enveloppe une fonction de rendu pour qu'elle garde la place de l'utilisateur (défilement de la page et des zones data-keep). */
-const kept = (fn) => (...args) => keepPlace(() => fn(...args));
+/** Enveloppe une fonction de rendu pour qu'elle garde la place de l'utilisateur (défilement de la page et des zones data-keep) et le focus. */
+const kept = (fn) => (...args) => keepPlace(() => { const r = fn(...args); restoreFocus(); return r; });
+/** Attend un rechargement après une action réussie : un échec ne fait pas échouer l'action (avertissement discret). Ne lève jamais d'erreur. */
+async function refreshAfter(reload = refreshData) {
+  try { await reload(); } catch (e) { console.warn('[rafraîchissement]', e); toast('Affichage pas à jour : recharge la page'); }
+}
+/** Vrai si l'erreur signale une fonction absente (migration pas encore déployée) plutôt qu'un échec passager. */
+const isMissingFn = (e) => e?.code === 'PGRST202' || /Could not find the function/i.test(String(e?.message || ''));
+
+/**
+ * Clé d'un bouton ou champ de la page : son action (et son type), son onglet, ou son identifiant. null si aucune.
+ * @param {EventTarget|null} el élément
+ * @returns {{action?: string, type?: string|null, tabGo?: string, tab?: string, id?: string}|null}
+ */
+function keyOf(el) {
+  if (!el?.dataset) return null;
+  if (el.dataset.action) return { action: el.dataset.action, type: el.dataset.type ?? null };
+  if (el.dataset.tabGo) return { tabGo: el.dataset.tabGo };
+  if (el.dataset.tab) return { tab: el.dataset.tab };
+  return el.id ? { id: el.id } : null;
+}
+/**
+ * Élément de la page correspondant à une clé de keyOf. Pas de sélecteur CSS construit à partir des valeurs (ids, types).
+ * @param {object|null} key clé
+ * @returns {HTMLElement|null}
+ */
+function elementOf(key) {
+  if (!key) return null;
+  if (key.id) return document.getElementById(key.id);
+  return [...app.querySelectorAll('[data-action],[data-tab],[data-tab-go]')].find((el) => {
+    if (key.action) return el.dataset.action === key.action && (el.dataset.type ?? null) === (key.type ?? null);
+    if (key.tabGo) return el.dataset.tabGo === key.tabGo;
+    return el.dataset.tab === key.tab;
+  }) || null;
+}
+/**
+ * Rend le focus après un redessin. Si le focus est perdu (élément remplacé, ou désactivé pendant une action) et qu'il était
+ * sur un bouton ou un champ de la page (S.focusHint), il revient à l'élément de même data-action (et data-type) s'il existe
+ * et n'est pas désactivé ; sinon à fallback() (cible propre à l'action, ex. la zone de révélation). Ne touche jamais au
+ * focus placé hors de la page ni sur un élément actif.
+ * @param {() => HTMLElement|null} [fallback] cible de repli
+ */
+function restoreFocus(fallback = null) {
+  const a = document.activeElement;
+  if (a && a !== document.body && (!app.contains(a) || !a.disabled)) return;
+  const el = elementOf(S.focusHint);
+  const target = el && !el.disabled ? el : (fallback?.() ?? null);
+  if (target && !target.disabled) target.focus({ preventScroll: true });
+}
 
 /* ---------- État de la page ----------
    S regroupe tout l'état : données chargées (sets, cards, copies, state), onglet et filtres, ouverture en cours
@@ -57,10 +112,25 @@ const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
   otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
-  tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
+  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
+  // Ouverture groupée en cours ou interrompue (voir openStockMulti) : type, série, identifiants des demandes, avancement ; null sinon.
+  x5: null,
   lcdShown: null, lcdAnim: false, quests: null, shownIds: [], zoomIds: null,
   peer: null, returnY: 0, tradeApi: null, tradesReady: null,
+  // Boosters en stock : quantité choisie pour l'achat (Boutique), demande en cours (identifiant stable pour ne pas payer deux fois),
+  // dernier achat réussi (lien « Les ouvrir » sous l'article, { id } du type ; null sinon).
+  buyQty: 1, buyReq: null, bought: null,
+  // Dons de boosters (Inventaire) : valeurs du formulaire (type = identifiant du type de booster), confirmation affichée, liste des dons et des membres (null = pas encore chargé).
+  giftForm: { to: '', qty: 1, msg: '', type: '' }, giftConfirm: false, gifts: null, members: null,
+  giftReq: null, // demande de don en cours (identifiant stable tant que le don n'a pas abouti, voir giftConfirm)
+  // Boosters typés : types et stocks du membre (hg_booster_types_me, null = repli), fin de la semaine, quantités par type (sauf classique : buyQty).
+  // typesErr : dernier chargement en échec passager (réseau…) ; sans fonction absente, c'est le repli (typed() faux).
+  types: null, weekEndsAt: null, typeQty: {}, typesErr: false,
+  // Dernier bouton ou champ de la page qui a eu le focus (son action, son type ou son id) : rendu après un redessin (restoreFocus).
+  focusHint: null,
+  // Choix de la série avant l'ouverture d'un booster « Série » : { from (bouton d'origine), onPick (reçoit l'identifiant de la série) }.
+  seriePick: null,
 };
 /** Configuration du jeu (tarifs, taux, durées) renvoyée par hg_cards_me. Vide avant le premier chargement. */
 const cfg = () => S.state?.config || {};
@@ -70,6 +140,27 @@ const isGod = () => !!S.state?.god;
 const bal = () => Number(S.state?.paillettes ?? 0);
 /** Vrai si une série a commencé (ou n'a pas de date de début). */
 const started = (s) => !s.starts_at || new Date(s.starts_at) <= new Date();
+
+/* ---------- Boosters typés : interrupteur et lectures ---------- */
+// Vrai quand hg_booster_types_me a répondu : la page affiche les 9 types. Sinon (migration pas encore déployée),
+// elle garde l'ancien mode (un booster classique, stock générique, hg_open_booster_req, hg_booster_buy sans p_type).
+const typed = () => Array.isArray(S.types) && S.types.length > 0;
+/** Vrai quand les types n'ont pas pu être chargés pour une raison passagère (ni types ni repli : la Boutique l'indique). */
+const typesDown = () => !typed() && S.typesErr;
+/** Type de booster d'après son identifiant (null en mode repli ou si le type est inconnu). */
+const typeOf = (id) => (typed() ? S.types.find((t) => t.id === id) || null : null);
+/** Vrai si un type se donne à un membre : les boosters Collectionneur (pool « manquantes ») ne s'offrent pas. */
+const giftable = (t) => t.pool !== 'manquantes';
+/** Types dont le membre a du stock, dans l'ordre d'affichage (vide en mode repli). */
+const stockedTypes = () => (typed() ? S.types.filter((t) => Number(t.stock) > 0) : []);
+/** Nombre de boosters en stock pour un type (mode repli : seul le classique a un stock, le générique). */
+const stockOf = (id) => (typed() ? Math.max(0, Number(typeOf(id)?.stock) || 0) : (id === 'classique' ? giftCount() : 0));
+/** Nombre total de boosters en stock, tous types confondus. */
+const stockTotal = () => (typed() ? S.types.reduce((a, t) => a + Math.max(0, Number(t.stock) || 0), 0) : giftCount());
+/** Quantité choisie pour l'achat en stock d'un type (le classique garde S.buyQty, comme avant). */
+const qtyFor = (id) => (id === 'classique' ? S.buyQty : (S.typeQty[id] || 1));
+/** Identifiant du sélecteur de quantité d'un type (« shop-qty » pour le classique, comme avant). */
+const qtySelId = (id) => (id === 'classique' ? 'shop-qty' : `shop-qty-${id}`);
 
 /**
  * Charge les cartes possédées hors des séries ouvertes (série fermée, ou pas encore ouverte : drop, don de l'admin…)
@@ -191,6 +282,41 @@ async function loadStatic() {
 }
 
 /**
+ * Charge les types de boosters, leurs stocks et leurs limites de la semaine (hg_booster_types_me).
+ * Ne lève jamais d'erreur. Trois cas :
+ * - fonction absente (PGRST202 : migration 069 pas déployée) : S.types vide, repli (voir typed()) ;
+ * - échec passager (réseau…) : on garde les types déjà chargés, un avertissement discret, et un seul nouvel essai après 3 s ;
+ * - réussite : les types remplacent les précédents.
+ * @param {boolean} [retry=true] vrai pour programmer le nouvel essai unique
+ * @returns {Promise<void>}
+ */
+async function loadTypes(retry = true) {
+  try {
+    const { data, error } = await sb.rpc('hg_booster_types_me');
+    if (error) throw error;
+    const list = Array.isArray(data?.types) ? data.types : [];
+    S.types = list.length ? [...list].sort((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0)) : null;
+    S.weekEndsAt = data?.week_ends_at ?? null;
+    S.typesErr = false;
+  } catch (e) {
+    console.warn('[types]', e);
+    if (isMissingFn(e)) {
+      S.types = null;
+      S.typesErr = false;
+      return;
+    }
+    S.typesErr = true; // S.types garde la liste précédente, s'il y en a une
+    if (retry) {
+      toast('Boosters : liste pas à jour, nouvel essai dans quelques secondes');
+      setTimeout(async () => {
+        await loadTypes(false);
+        if (!isBusy()) renderAll();
+      }, 3000);
+    }
+  }
+}
+
+/**
  * Recharge l'état du membre : solde et configuration (hg_cards_me), ses exemplaires non recyclés,
  * sa liste de souhaits et le journal des Paillettes. Les cartes qu'il possède mais qui ne sont
  * pas dans une série ouverte sont chargées en plus.
@@ -204,6 +330,7 @@ async function refreshData() {
       .then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
     sb.from('hg_card_wishlist').select('card_id').eq('user_id', me.id),
     sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).neq('reason', 'booster_requete').order('created_at', { ascending: false }).limit(30),
+    loadTypes(), // types de boosters et stocks (ne lève jamais d'erreur : sans elle, la page garde l'ancien mode)
   ]);
   for (const r of [st, cp, wi, lg]) if (r.error) throw r.error;
   S.state = st.data;
@@ -233,12 +360,8 @@ function skeleton() {
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
     </nav>
-    ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'boosters' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
+    ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'ouverture' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
     <section class="cartes-peer" id="cartes-peer" hidden></section>
-    <details class="card cartes-block" id="cartes-history-wrap">
-      <summary>Historique des Paillettes (30 derniers mouvements)</summary>
-      <div id="cartes-history" class="cartes-block"></div>
-    </details>
     <p id="cartes-live" class="visually-hidden" aria-live="polite"></p>
 
     <dialog id="cartes-detail" class="cartes-dialog" aria-labelledby="cartes-detail-title">
@@ -255,6 +378,20 @@ function skeleton() {
         <div class="btn-row">
           <button type="button" class="btn btn-ghost" data-action="close-dialog">Annuler</button>
           <button type="button" class="btn btn-primary" id="cartes-mass-confirm" data-action="mass-confirm">Recycler</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="cartes-serie-pick" class="cartes-dialog" aria-labelledby="cartes-serie-title">
+      <div class="cartes-dialog-pad">
+        <h2 id="cartes-serie-title">Quelle série ?</h2>
+        <p class="muted small">Le booster ne contiendra que des cartes de la série choisie.</p>
+        <fieldset class="serie-pick">
+          <legend class="visually-hidden">Série du booster</legend>
+          <div id="cartes-serie-list"></div>
+        </fieldset>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" data-action="close-dialog">Annuler</button>
+          <button type="button" class="btn btn-primary" data-action="serie-confirm">Ouvrir</button>
         </div>
       </div>
     </dialog>`;
@@ -326,7 +463,6 @@ function showTab() {
 function applyView() {
   const peer = !!S.peer;
   $('#cartes-tablist').hidden = peer;
-  $('#cartes-history-wrap').hidden = peer;
   for (const [id] of TABS) $(`#cartes-p-${id}`).hidden = peer || S.tab !== id;
   $('#cartes-peer').hidden = !peer;
 }
@@ -337,20 +473,22 @@ function applyView() {
  */
 function renderTab() {
   keepPlace(() => {
-    if (S.tab === 'boosters') renderBoosters();
+    if (BOOSTER_TABS.includes(S.tab)) renderBoosters();
     else if (S.tab === 'collection') renderCollection();
     else if (S.tab === 'classement') return renderLeaderboard();
     else if (S.tab === 'echanges') mountTradesOnce();
+    restoreFocus();
   });
 }
 
 /**
  * Change d'onglet puis dessine le nouveau panneau.
- * @param {string} id identifiant de l'onglet (boosters, collection, classement, echanges)
+ * @param {string} id identifiant de l'onglet (voir TABS)
  */
 function setTab(id) {
   keepPlace(() => {
     S.tab = id;
+    if (id !== 'boutique') S.bought = null; // le lien « Les ouvrir » ne sert que juste après un achat
     showTab();
     renderTab();
   });
@@ -360,7 +498,6 @@ function setTab(id) {
 function renderAll() {
   keepPlace(() => {
     renderHeader();
-    renderHistory();
     showTab();
     renderTab();
   });
@@ -382,18 +519,35 @@ function fitAll(root = document) {
 
 /* ---------- Cartouche de booster (concept « cartouche de jeu ») ---------- */
 /**
- * HTML d'une cartouche de booster (décor seulement, aria-hidden).
- * @param {{free?: boolean, ready?: boolean}} [opts] free : booster gratuit ; ready : gratuit disponible maintenant
+ * Classe de variante d'une cartouche (cart--<style>, voir cartes-boosters.css) ; vide si le style n'est pas un nom simple.
+ * @param {object|null} type type de booster (champ style)
  * @returns {string}
  */
-function cartridgeHtml({ free = false, ready = false } = {}) {
-  const n = nf.format(cfg().booster_size ?? 5);
-  const cls = ['cart-box', free && !ready ? 'is-idle' : ''].filter(Boolean).join(' ');
+const styleClass = (type) => (/^cart--[a-z_]+$/.test(type?.style || '') ? type.style : '');
+/**
+ * Sous-titre d'une cartouche typée : le nom du type en capitales ; pour la série, le nom de la série choisie (si connue).
+ * @param {object} type type de booster
+ * @param {string} [series] nom de la série (booster « Série » déjà ouvert)
+ * @returns {string}
+ */
+const typeLabel = (type, series = '') => (type.id === 'serie' && series ? series : type.name.toUpperCase());
+
+/**
+ * HTML d'une cartouche de booster (décor seulement, aria-hidden).
+ * Sans type : cartouche d'origine (série active en sous-titre). Avec un type : variante de couleur, sous-titre et taille du type.
+ * @param {{free?: boolean, ready?: boolean, type?: object|null, series?: string}} [opts]
+ *   free : booster gratuit ; ready : gratuit disponible maintenant ; type : type de booster (typé) ; series : nom de la série ouverte
+ * @returns {string}
+ */
+function cartridgeHtml({ free = false, ready = false, type = null, series = '' } = {}) {
+  const n = nf.format(type ? Number(type.size) || 5 : cfg().booster_size ?? 5);
+  const cls = ['cart-box', free && !ready ? 'is-idle' : '', type ? styleClass(type) : ''].filter(Boolean).join(' ');
+  const sub = type ? typeLabel(type, series) : seriesName();
   return `<div class="${cls}" aria-hidden="true">`
     + '<div class="cart-body"></div><div class="cart-notch"></div>'
     + `<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="${esc(currentLogo())}" alt=""></div></div>`
     + '<p class="cart-lbl1">LE GANG</p>'
-    + `<p class="cart-lbl2">${esc(seriesName())}</p>`
+    + `<p class="cart-lbl2">${esc(sub)}</p>`
     + '<div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>'
     + '<div class="cart-ridge"></div>'
     + `<p class="cart-foot">${n} CARTES</p>`
@@ -401,71 +555,605 @@ function cartridgeHtml({ free = false, ready = false } = {}) {
     + '</div>';
 }
 
-/* ---------- Boosters ---------- */
-/**
- * Dessine l'onglet Boosters : boosters gratuit et payant (avec ouverture groupée), boosters offerts,
- * quêtes, séquence ou révélation en cours, et tableau des chances. Les boutons restent désactivés si le
- * solde ne suffit pas ou si une action est en cours.
- */
-function drawBoosters() {
-  const el = $('#cartes-p-boosters');
-  const c = cfg();
-  const price = Number(c.booster_price ?? 100);
-  const size = c.booster_size ?? 5;
-  const rates = c.rates || {};
-  const total = Object.values(rates).reduce((a, v) => a + Math.max(0, Number(v) || 0), 0) || 1;
-  const canPay = isGod() || bal() >= price;
-  // Reprise d'une ouverture groupée interrompue : on propose les boosters restants.
-  const k5 = pendingX5();
-  const canPay5 = isGod() || bal() >= price * k5;
-  const busy = isBusy();
-  // Boosters offerts (stock donné par le gang) : ouverts sans Paillettes ni délai, même animation.
-  const gift = Math.max(0, Number(S.state?.gift_boosters) || 0);
-  // Le tableau des chances affiche chaque rareté en pourcentage de la somme des taux.
-  const odds = RARITIES_TIRAGE.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
+/* ---------- Boosters : onglets Ouverture, Inventaire et Boutique ---------- */
+/** Passe sur l'onglet Ouverture (là où se joue la révélation) avant d'ouvrir un booster depuis un autre onglet. */
+function toOuverture() {
+  if (S.tab !== 'ouverture' && !S.peer) setTab('ouverture');
+}
 
+/** Nombre de boosters offerts en stock (donnés par le gang, mode repli). */
+const giftCount = () => Math.max(0, Number(S.state?.gift_boosters) || 0);
+
+/**
+ * Onglet Ouverture : booster gratuit, boosters en stock (un ou plusieurs d'un coup), révélation en cours et quêtes de la semaine.
+ * Les boosters s'achètent dans la Boutique ; leur ouverture et leur révélation se font ici.
+ */
+function drawOuverture() {
+  const el = $('#cartes-p-ouverture');
+  if (!el) return;
+  const c = cfg();
+  const busy = isBusy();
+  const stocked = stockedTypes();
+  // Boosters typés : une tuile par type en stock (la première porte l'identifiant #cartes-stock).
+  // Sans stock typé (ou en repli) : la tuile « Boosters en stock » d'origine, avec le lien vers la Boutique.
+  const stockTiles = stocked.length
+    ? stocked.map((t, i) => typeStockTileHtml(t, i === 0, busy)).join('')
+    : legacyStockTileHtml(typed() ? 0 : giftCount(), busy);
+  // Tout l'inventaire d'un coup (plusieurs types en stock) ; reprise d'une ouverture groupée interrompue.
+  const pending = S.x5 && S.x5.next < S.x5.items.length ? S.x5 : null;
+  const globalBtns = [
+    typed() && stocked.length >= 2 ? `<button type="button" class="btn btn-sand" data-action="open-all-stock" ${busy ? 'disabled' : ''}>Ouvrir tout l'inventaire (${nf.format(stockTotal())} boosters)</button>` : '',
+    pending ? `<button type="button" class="btn btn-primary" data-action="resume-multi" ${busy ? 'disabled' : ''}>Reprendre l'ouverture (${nf.format(pending.items.length - pending.next)} restants)</button>` : '',
+  ].join('');
   el.innerHTML = `
     <section class="cart-shelf" aria-labelledby="cartes-shelf-h">
       <h2 id="cartes-shelf-h" class="visually-hidden">Boosters à ouvrir</h2>
+      ${globalBtns ? `<div class="cart-global btn-row">${globalBtns}</div>` : ''}
       <div class="cart-tiles">
         <div class="cart-tile" id="cartes-free"></div>
-        <div class="cart-tile" id="cartes-paid">
-          <h2 class="cart-h">Booster payant</h2>
-          <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml()}</div></div>
-          <div class="cart-act">
-            <button type="button" class="btn btn-ghost cart-btn" data-action="open-paid" ${busy || !canPay ? 'disabled' : ''}>Ouvrir un booster · ${pastilleHtml(price, { size: 'sm' })}</button>
-            <button type="button" class="btn btn-ghost cart-btn" data-action="open-paid-x5" ${busy || !canPay5 ? 'disabled' : ''}>${k5 === 1 ? 'Ouvrir le dernier booster' : `Ouvrir ${nf.format(k5)} boosters`} · ${pastilleHtml(price * k5, { size: 'sm' })}</button>
-            ${canPay ? '' : `<p class="muted small">Il te manque ${fmtPaillettes(price - bal())}</p>`}
-            ${canPay5 ? '' : `<p class="muted small">Pour ${nf.format(k5)} boosters, il te manque ${fmtPaillettes(price * k5 - bal())}</p>`}
-          </div>
-        </div>
+        ${stockTiles}
       </div>
-      ${gift > 0 ? `<section class="card cartes-block cart-gift" id="cartes-gift" aria-labelledby="cartes-gift-h">
-        <h2 class="cart-h" id="cartes-gift-h">Boosters offerts</h2>
-        <p class="muted small">Le gang t'en a offert ${pluralCount(gift, 'booster', 'boosters', nf.format)}. Ils s'ouvrent sans Paillettes et sans délai.</p>
-        <button type="button" class="btn btn-primary cart-btn" data-action="open-gift" ${busy ? 'disabled' : ''}>Ouvrir un booster offert (${nf.format(gift)} restant${gift > 1 ? 's' : ''})</button>
-      </section>` : ''}
-      <p class="muted small">Chaque booster contient ${pluralCount(Number(size), 'carte', 'cartes', nf.format)}. Le gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h ; le payant coûte ${fmtPaillettes(price)}.</p>
+      <p class="muted small">Le booster gratuit revient toutes les ${nf.format(c.free_booster_hours ?? 24)} h. Les boosters en stock s'ouvrent sans Paillettes et sans délai.</p>
     </section>
-    <section class="card cartes-block cq" id="cartes-quests" aria-labelledby="cartes-quests-h"></section>
-    <div id="cartes-reveal"></div>
-    <section class="card cartes-block" aria-labelledby="cartes-odds-h">
-      <h2 id="cartes-odds-h">Chances</h2>
-      <table class="cartes-odds">
-        <caption class="visually-hidden">Chances d’obtenir chaque rareté dans un booster</caption>
-        <thead><tr><th scope="col">Rareté</th><th scope="col">Chance</th></tr></thead>
-        <tbody>${odds}
-          <tr><th scope="row">Version brillante (par carte)</th><td>${pct(Number(c.shiny_rate ?? 0))}</td></tr>
-        </tbody>
-      </table>
-    </section>`;
+    <div id="cartes-reveal" tabindex="-1"></div>
+    <section class="card cartes-block cq" id="cartes-quests" aria-labelledby="cartes-quests-h"></section>`;
   renderFree();
   renderReveal();
   renderQuests();
   fitAll(el);
 }
+
+/**
+ * Boutons d'ouverture d'une tuile de stock : « Ouvrir 1 », « Ouvrir 5 » (désactivé sous 5 boosters) et « Tout ouvrir (N) » (dès 2).
+ * @param {string} typeId identifiant du type (« classique » en repli)
+ * @param {number} n boosters en stock de ce type
+ * @param {boolean} busy une action est en cours
+ * @param {string} oneAction action du bouton « Ouvrir 1 » (open-stock ; open-gift pour le classique)
+ * @returns {string} HTML des boutons
+ */
+function openButtonsHtml(typeId, n, busy, oneAction) {
+  const id = esc(typeId);
+  const dis = busy ? 'disabled' : '';
+  // « Ouvrir 5 » désactivé sous 5 boosters : l'explication est écrite sous les boutons (et reliée par aria-describedby).
+  const short = n < MULTI_COUNT;
+  const hintId = esc(`open-hint-${typeId}`);
+  const five = short
+    ? `<button type="button" class="btn btn-ghost cart-btn" data-action="open-stock-multi" data-type="${id}" data-count="5" disabled title="Il te faut 5 boosters" aria-describedby="${hintId}">Ouvrir 5</button>`
+    : `<button type="button" class="btn btn-ghost cart-btn" data-action="open-stock-multi" data-type="${id}" data-count="5" ${dis}>Ouvrir 5</button>`;
+  const hint = short ? `<p class="muted small cart-hint" id="${hintId}">Il te faut 5 boosters.</p>` : '';
+  const all = n >= 2
+    ? `<button type="button" class="btn btn-ghost cart-btn" data-action="open-stock-multi" data-type="${id}" data-count="all" ${dis}>Tout ouvrir (${nf.format(n)})</button>`
+    : '';
+  return `<button type="button" class="btn btn-primary cart-btn" data-action="${oneAction}" data-type="${id}" ${dis}>Ouvrir 1</button>${five}${all}${hint}`;
+}
+
+/**
+ * Tuile d'un type de booster en stock (Ouverture) : cartouche du type et ses boutons d'ouverture.
+ * Le classique garde l'action « open-gift » (alias de l'ancien bouton du stock générique).
+ * @param {object} t type (stock, name, style, size…)
+ * @param {boolean} first vrai pour la première tuile de stock (identifiant #cartes-stock)
+ * @param {boolean} busy une action est en cours
+ * @returns {string}
+ */
+function typeStockTileHtml(t, first, busy) {
+  const action = t.id === 'classique' ? 'open-gift' : 'open-stock';
+  return `<div class="cart-tile" ${first ? 'id="cartes-stock"' : ''} data-stock-type="${esc(t.id)}">
+          <h2 class="cart-h">Booster ${esc(t.name)}</h2>
+          <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml({ type: t })}</div></div>
+          <div class="cart-act">${openButtonsHtml(t.id, Number(t.stock) || 0, busy, action)}</div>
+        </div>`;
+}
+
+/**
+ * Tuile « Boosters en stock » d'origine (repli, ou aucun booster en stock) : bouton d'ouverture ou lien vers la Boutique.
+ * En repli, « Ouvrir 5 » et « Tout ouvrir » ouvrent des boosters offerts (hg_open_booster_req, p_offert).
+ * @param {number} gift nombre de boosters en stock affiché
+ * @param {boolean} busy une action est en cours
+ * @returns {string}
+ */
+function legacyStockTileHtml(gift, busy) {
+  return `<div class="cart-tile" id="cartes-stock">
+          <h2 class="cart-h">Boosters en stock</h2>
+          <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml({ free: true, ready: gift > 0 })}</div></div>
+          <div class="cart-act">${gift > 0
+            ? openButtonsHtml('classique', gift, busy, 'open-gift')
+            : `<p class="muted small">Aucun booster en stock.</p>
+               <button type="button" class="btn btn-ghost cart-btn" data-tab-go="boutique">Aller à la Boutique</button>`}
+          </div>
+        </div>`;
+}
+
+/**
+ * Onglet Inventaire : Paillettes (solde, passage du jour), boosters en stock, booster gratuit,
+ * résumé de la collection et historique des Paillettes.
+ */
+function drawInventaire() {
+  const el = $('#cartes-p-inventaire');
+  if (!el || !S.state) return;
+  const s = S.state;
+  const gift = stockTotal();
+  const busy = isBusy();
+  const freeAt = s.free_booster_at ? new Date(s.free_booster_at) : null;
+  const freeReady = !freeAt || freeAt.getTime() <= Date.now();
+  const distinct = new Set(S.copies.map((x) => x.card_id)).size;
+  const shiny = S.copies.filter((x) => x.shiny).length;
+  const doubles = S.copies.length - distinct;
+  // Boosters typés : le stock par type (seuls les types en stock) ; en repli : le stock générique d'avant.
+  const stocked = stockedTypes();
+  const stockRows = typed()
+    ? (stocked.length ? stocked.map((t) => `<li><span>${esc(t.name)}</span><strong>${nf.format(t.stock)}</strong></li>`).join('')
+      : '')
+    : `<li><span>Boosters en stock</span><strong>${nf.format(gift)}</strong></li>`;
+  el.innerHTML = `
+    <div class="inv-grid">
+      <section class="card cartes-block inv-box" aria-labelledby="inv-pail-h">
+        <h2 id="inv-pail-h" class="cart-h">Paillettes</h2>
+        <p class="inv-big">${fmtPaillettes(bal())}</p>
+        <p class="cartes-small">Série de passages : ${pluralCount(Number(s.daily_streak) || 0, 'jour', 'jours', nf.format)}${s.daily_available ? ' · passage du jour disponible' : ' · passage du jour pris'}</p>
+      </section>
+      <section class="card cartes-block inv-box" aria-labelledby="inv-boost-h">
+        <h2 id="inv-boost-h" class="cart-h">Boosters</h2>
+        ${typed() && !stocked.length ? '<p class="muted small inv-none">Aucun booster en stock</p>' : ''}
+        <ul class="inv-list">
+          ${stockRows}
+          <li><span>Booster gratuit</span><strong>${freeReady ? 'disponible' : esc(fmtDate(freeAt.toISOString()))}</strong></li>
+          <li><span>Boosters ouverts</span><strong>${nf.format(Number(s.boosters_opened) || 0)}</strong></li>
+        </ul>
+        ${gift > 0 || freeReady ? `<div class="btn-row">
+          ${freeReady ? `<button type="button" class="btn btn-primary" data-action="open-free" ${busy ? 'disabled' : ''}>Ouvrir le gratuit</button>` : ''}
+          ${gift > 0 && typed() ? `<button type="button" class="btn btn-ghost" data-tab-go="ouverture">Ouvrir mes boosters</button>` : ''}
+          ${gift > 0 && !typed() ? `<button type="button" class="btn btn-ghost" data-action="open-gift" ${busy ? 'disabled' : ''}>Ouvrir un booster en stock</button>` : ''}
+        </div>` : ''}
+      </section>
+      <section class="card cartes-block inv-box" aria-labelledby="inv-coll-h">
+        <h2 id="inv-coll-h" class="cart-h">Cartes</h2>
+        <ul class="inv-list">
+          <li><span>Exemplaires</span><strong>${nf.format(S.copies.length)}</strong></li>
+          <li><span>Cartes différentes</span><strong>${nf.format(distinct)}</strong></li>
+          <li><span>Brillantes</span><strong>${nf.format(shiny)}</strong></li>
+          <li><span>Doublons</span><strong>${nf.format(doubles)}</strong></li>
+        </ul>
+        <div class="btn-row"><button type="button" class="btn btn-ghost" data-tab-go="collection">Voir la collection</button></div>
+      </section>
+    </div>
+    ${giftSectionHtml()}
+    ${giftsSectionHtml()}
+    <section class="card cartes-block" aria-labelledby="inv-hist-h">
+      <h2 id="inv-hist-h">Historique des Paillettes</h2>
+      <p class="cartes-small">Les 30 derniers mouvements.</p>
+      <div id="cartes-history"></div>
+    </section>`;
+  renderHistory();
+}
+
+/* ---------- Boutique : achat de boosters (ils vont dans l'inventaire) ---------- */
+// La Boutique n'achète que des boosters ; on les ouvre dans l'onglet Ouverture, et on les offre depuis l'Inventaire.
+/** Introduction de la Boutique (mêmes mots en mode typé et en repli). */
+const SHOP_INTRO = 'Achète ici tes boosters : ils vont dans ton inventaire. Ouvre-les quand tu veux dans l\'onglet Ouverture, ou offre-les à un membre depuis l\'Inventaire.';
+// Ce que contient un booster selon son tirage (ligne sous le nom de l'article, si le type n'a pas de description).
+const POOL_TEXT = {
+  tous: 'Cartes tirées dans toutes les séries ouvertes.',
+  serie: 'Tu choisis la série à l’ouverture : seules ses cartes peuvent sortir.',
+  manquantes: 'Que des cartes que tu n’as pas encore. S’il n’en reste plus, la carte est remboursée.',
+};
+
+/**
+ * Tableau des chances d'un type (taux par rareté, brillante) dans un repli « Chances », avec la garantie épique si elle existe.
+ * @param {object} t type de booster (rates, shiny_rate, pity_epique, name)
+ * @returns {string} HTML du repli
+ */
+function oddsHtml(t) {
+  const rates = t.rates || {};
+  const total = Object.values(rates).reduce((a, v) => a + Math.max(0, Number(v) || 0), 0) || 1;
+  const rows = RARITIES_TIRAGE.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
+  const pity = Number(t.pity_epique) > 0
+    ? `<p class="cartes-small">Une Épique ou mieux garantie au bout de ${nf.format(t.pity_epique)} boosters de ce type sans Épique.</p>` : '';
+  return `<details class="shop-odds">
+            <summary>Chances</summary>
+            <table class="cartes-odds">
+              <caption class="visually-hidden">Chances d’obtenir chaque rareté dans un booster ${esc(t.name)}</caption>
+              <thead><tr><th scope="col">Rareté</th><th scope="col">Chance</th></tr></thead>
+              <tbody>${rows}
+                <tr><th scope="row">Version brillante (par carte)</th><td>${pct(Number(t.shiny_rate ?? 0))}</td></tr>
+              </tbody>
+            </table>
+            ${pity}
+          </details>`;
+}
+
+/**
+ * Booster classique en repli (migration 069 non déployée) : même article, données de la configuration du jeu.
+ * @returns {object} type fictif (id « classique », fallback vrai)
+ */
+function fallbackType() {
+  const c = cfg();
+  return {
+    id: 'classique', name: 'Booster classique', fallback: true, pool: 'tous', size: c.booster_size ?? 5,
+    price: Number(c.booster_price ?? 100), rates: c.rates || {}, shiny_rate: c.shiny_rate ?? 0,
+    pity_epique: c.pity_epique ?? 0, weekly_limit: null, description: '',
+  };
+}
+
+/**
+ * Article de la Boutique pour un type de booster : cartouche, nom, prix, taille, description, limite de la semaine,
+ * achat (quantité et un bouton « Acheter · total ») et chances. Le classique garde l'identifiant #cartes-paid.
+ * Un lien « Les ouvrir » apparaît sous l'article juste après un achat réussi de ce type.
+ * @param {object} t type de booster (SPEC : price, size, weekly_limit, remaining_week, pool, rates…) ou fallbackType()
+ * @returns {string} HTML de l'article
+ */
+function shopItemHtml(t) {
+  const classic = t.id === 'classique';
+  const price = Number(t.price) || 0;
+  const limit = t.weekly_limit == null ? '' : `<p class="cartes-small shop-limit">Limite : ${nf.format(t.weekly_limit)} par semaine · il t'en reste ${nf.format(Math.max(0, Number(t.remaining_week) || 0))}</p>`;
+  const bought = S.bought && S.bought.id === t.id
+    ? '<div class="shop-done"><p class="muted small" role="status">Ajouté à ton inventaire.</p><button type="button" class="btn btn-ghost cart-btn" data-tab-go="ouverture">Les ouvrir</button></div>'
+    : '';
+  return `<article class="card shop-item" ${classic ? 'id="cartes-paid"' : ''} data-type="${esc(t.id)}">
+        <div class="fit cart-fit shop-fit" data-w="220" style="--h:290"><div class="fit-in">${t.fallback ? cartridgeHtml() : cartridgeHtml({ type: t })}</div></div>
+        <div class="shop-info">
+          <h3 class="cart-h">${esc(t.name)}</h3>
+          <p class="shop-price">${pastilleHtml(price, { size: 'sm' })} <span class="cartes-small">· ${pluralCount(Number(t.size) || 5, 'carte', 'cartes', nf.format)}</span></p>
+          <p class="cartes-small">${esc(t.description || POOL_TEXT[t.pool] || '')}</p>
+          ${limit}
+          <div class="cart-act">
+            ${stockBoxHtml(price, t.id)}
+            ${bought}
+          </div>
+          ${oddsHtml(t)}
+        </div>
+      </article>`;
+}
+
+/**
+ * Dessine la Boutique : l'introduction, puis un article par type de booster (dans l'ordre d'affichage, S.types),
+ * ou l'article du classique en repli.
+ */
+function drawBoutique() {
+  const el = $('#cartes-p-boutique');
+  if (!el) return;
+  let items;
+  if (typed()) items = S.types.map(shopItemHtml).join('');
+  else if (typesDown()) items = '<p class="muted small shop-soon">La boutique n\'est pas disponible pour le moment. Réessaie dans un instant.</p>';
+  else items = shopItemHtml(fallbackType());
+  el.innerHTML = `
+    <section class="shop" aria-labelledby="cartes-shop-h">
+      <h2 id="cartes-shop-h" class="visually-hidden">Boosters en vente</h2>
+      <p class="muted small shop-intro">${esc(SHOP_INTRO)}</p>
+      ${items}
+    </section>`;
+  fitAll(el);
+}
+
+/** Redessine les trois onglets de boosters (seul le panneau visible compte, les autres restent à jour). */
+function drawBoosters() {
+  drawOuverture();
+  drawInventaire();
+  drawBoutique();
+}
 // Versions « qui gardent la place » des fonctions de dessin (voir kept).
 const renderBoosters = kept(drawBoosters);
+const renderBoutique = kept(drawBoutique);
+const renderInventaire = kept(drawInventaire);
+
+/* ---------- Boosters : achat dans la Boutique (ils vont dans l'inventaire) ---------- */
+/** Options 1 à max d'un sélecteur de quantité, la valeur « selected » étant présélectionnée. */
+const qtyOptions = (max, selected) => Array.from({ length: max }, (_, i) => `<option value="${i + 1}"${i + 1 === selected ? ' selected' : ''}>${nf.format(i + 1)}</option>`).join('');
+
+/**
+ * Bloc d'achat d'un article de la Boutique : quantité (1 à 10) et un seul bouton « Acheter · total ».
+ * Boosters typés : la limite hebdomadaire réduit la quantité permise ; « Limite de la semaine atteinte » quand elle est épuisée.
+ * @param {number} price prix d'un booster
+ * @param {string} [typeId='classique'] type de booster (mode typé) ; en repli, le classique
+ * @returns {string}
+ */
+function stockBoxHtml(price, typeId = 'classique') {
+  const id = esc(typeId);
+  // Repli (migration 069 pas encore déployée) : l'achat ne peut pas aboutir, on ne le propose pas.
+  if (!typed()) {
+    const soon = `shop-soon-${id}`;
+    return `<div class="shop-stock">
+              <button type="button" class="btn btn-primary cart-btn" data-action="buy-stock" data-type="${id}" disabled aria-describedby="${soon}">Acheter · ${pastilleHtml(price, { size: 'sm' })}</button>
+              <p class="muted small shop-stock-miss" id="${soon}">La boutique ouvre bientôt.</p>
+            </div>`;
+  }
+  const t = typeOf(typeId);
+  const qty = qtyFor(typeId);
+  const cost = price * qty;
+  const god = isGod();
+  // Limite de la semaine (mode typé ; le mode sans limite l'ignore) : il ne reste que « left » boosters achetables.
+  const left = !god && t?.weekly_limit != null ? Math.max(0, Number(t.remaining_week) || 0) : null;
+  const capped = left === 0;
+  const overLimit = left != null && qty > left;
+  const canBuy = (god || bal() >= cost) && !overLimit;
+  const busy = isBusy();
+  // Explication du bouton désactivé : écrite sous le bouton, et reliée par aria-describedby.
+  const missId = `shop-miss-${id}`;
+  let miss = '';
+  if (capped) miss = '<p class="muted small shop-soldout" id="' + missId + '">Limite de la semaine atteinte</p>';
+  else if (overLimit) miss = `<p class="muted small shop-stock-miss" id="${missId}">Il ne te reste que ${pluralCount(left, 'booster', 'boosters', nf.format)} cette semaine</p>`;
+  else if (!god && bal() < cost) miss = `<p class="muted small shop-stock-miss" id="${missId}">Il te manque ${fmtPaillettes(cost - bal())}</p>`;
+  const label = god ? 'Acheter · gratuit (mode sans limite)' : `Acheter · ${pastilleHtml(cost, { size: 'sm' })}`;
+  return `<div class="shop-stock">
+              <label for="${esc(qtySelId(typeId))}">Quantité</label>
+              <div class="shop-stock-row">
+                <select id="${esc(qtySelId(typeId))}" data-change="shop-qty" data-type="${id}">${qtyOptions(10, qty)}</select>
+                <button type="button" class="btn btn-primary cart-btn" data-action="buy-stock" data-type="${id}" ${busy || !canBuy ? 'disabled' : ''}${!canBuy && miss ? ` aria-describedby="${missId}"` : ''}>${label}</button>
+              </div>
+              ${miss}
+            </div>`;
+}
+
+/**
+ * Change la quantité d'achat d'un type puis redessine la Boutique, en gardant le focus sur le sélecteur.
+ * @param {string} value valeur du sélecteur (1 à 10)
+ * @param {string} [typeId='classique'] type de booster du sélecteur
+ */
+function setBuyQty(value, typeId = 'classique') {
+  const v = Math.min(10, Math.max(1, Number(value) || 1));
+  if (typeId === 'classique') S.buyQty = v;
+  else S.typeQty[typeId] = v;
+  renderBoutique();
+  document.getElementById(qtySelId(typeId))?.focus({ preventScroll: true });
+}
+
+/**
+ * Achète des boosters : ils vont dans l'inventaire (hg_booster_buy ; p_type en mode typé). L'ouverture se fait ensuite dans l'onglet Ouverture.
+ * La même demande garde le même identifiant tant qu'elle n'a pas abouti (S.buyReq) : un double clic ou une relance ne paie pas deux fois.
+ * Après un achat réussi, un lien « Les ouvrir » apparaît sous l'article ; l'onglet ne change pas.
+ * @param {string} [typeId='classique'] type de booster (ignoré en mode repli)
+ * @returns {Promise<void>}
+ */
+async function buyStock(typeId = 'classique') {
+  // Sans les types (repli), l'achat n'est pas proposé : le bouton est désactivé, et on ne l'envoie pas.
+  if (isBusy() || !typed()) return;
+  const t = typeOf(typeId);
+  if (!t) { toast('Ce booster n’est pas disponible pour le moment.', 'error'); return; }
+  const qty = qtyFor(typeId);
+  S.busy = true;
+  renderBoosters();
+  if (!S.buyReq || S.buyReq.qty !== qty || S.buyReq.type !== typeId) S.buyReq = { type: typeId, qty, id: newReqId() };
+  // 'ok' : acheté ; 'dup' : déjà enregistré par le serveur ; 'error' : échec (rien n'a été acheté).
+  let state = 'error';
+  try {
+    const { error } = await sb.rpc('hg_booster_buy', { p_type: typeId, p_qty: qty, p_request: S.buyReq.id });
+    if (error) throw error;
+    state = 'ok';
+  } catch (e) {
+    if (String(e?.message || '').includes('achat_deja_fait')) {
+      // Le serveur a déjà enregistré cet achat : on ne le renvoie pas, on recharge l'état.
+      S.buyReq = null;
+      state = 'dup';
+      toast('Cet achat a déjà été pris en compte. Ton stock est à jour.');
+    } else {
+      toast(errMsg(e), 'error');
+    }
+  }
+  if (state === 'ok') {
+    S.buyReq = null;
+    toast(`${pluralCount(qty, 'booster ' + t.name, 'boosters ' + t.name, nf.format)} ajouté${qty > 1 ? 's' : ''} à ton inventaire`, 'ok');
+    S.bought = { id: typeId }; // lien « Les ouvrir » sous l'article acheté (l'onglet ne change pas)
+  }
+  // Le rechargement vient après un succès : son échec n'annule pas l'achat.
+  if (state !== 'error') await refreshAfter(refreshData);
+  S.busy = false;
+  renderAll();
+  restoreFocus(() => (state === 'ok' ? articleLinkOf(typeId) : null));
+}
+
+/** Lien « Les ouvrir » de l'article d'un type dans la Boutique (null si absent). */
+const articleLinkOf = (typeId) => [...app.querySelectorAll('#cartes-p-boutique .shop-item')]
+  .find((a) => a.dataset.type === typeId)?.querySelector('[data-tab-go="ouverture"]') || null;
+
+/* ---------- Boosters offerts : dons à un autre membre (Inventaire) ---------- */
+/** Membre de la liste chargée d'après son identifiant (null si la liste n'est pas chargée ou si le membre est absent). */
+const memberOf = (id) => (Array.isArray(S.members) ? S.members.find((m) => m.id === id) || null : null);
+
+/**
+ * Garde dans S.giftForm la valeur d'un champ du formulaire de don. Pas de redessin : le focus reste dans le champ.
+ * @param {HTMLSelectElement|HTMLTextAreaElement} el champ ([data-gift])
+ */
+function updateGift(el) {
+  const k = el.dataset.gift;
+  if (k === 'to') S.giftForm.to = el.value;
+  else if (k === 'qty') S.giftForm.qty = Math.min(10, Math.max(1, Number(el.value) || 1));
+  else if (k === 'msg') S.giftForm.msg = el.value;
+  else if (k === 'type') S.giftForm.type = el.value;
+}
+
+/**
+ * Section « Offrir des boosters » de l'Inventaire : formulaire (type en mode typé, membre, quantité, mot), ou message si le stock est vide.
+ * Mode typé : on choisit le type (seuls ceux en stock sont proposés) ; la quantité ne dépasse pas le stock de ce type.
+ * Après « Offrir », la confirmation remplace le bouton (le don ne peut pas être annulé).
+ * @returns {string}
+ */
+function giftFormHtml() {
+  // Repli (migration 069 pas déployée) : le don n'est pas proposé, il ne pourrait pas aboutir.
+  if (!typed()) return `<p class="muted small">${typesDown() ? 'Les dons de boosters ne sont pas disponibles pour le moment.' : 'Les dons de boosters arrivent bientôt.'}</p>`;
+  if (!stockTotal()) {
+    return `<p class="muted small inv-gift-empty">Tu n'as aucun booster en stock. Achète-en dans la Boutique pour en offrir.</p>
+      <button type="button" class="btn btn-ghost" data-tab-go="boutique">Aller à la Boutique</button>`;
+  }
+  // Les boosters Collectionneur ne s'offrent pas : seuls les autres types sont proposés.
+  const withStock = stockedTypes().filter(giftable);
+  if (!withStock.length) return '<p class="muted small inv-gift-empty">Les boosters Collectionneur ne s\'offrent pas.</p>';
+  const giftTotal = withStock.reduce((a, t) => a + Math.max(0, Number(t.stock) || 0), 0);
+  const f = S.giftForm;
+  // Le type choisi doit être en stock et se donner (sinon le premier type qui se donne est pris).
+  if (!withStock.some((t) => t.id === f.type)) f.type = withStock[0].id;
+  const stock = stockOf(f.type);
+  // La quantité ne dépasse jamais le stock (il a pu baisser depuis le dernier choix).
+  f.qty = Math.min(Math.max(1, Number(f.qty) || 1), Math.min(10, stock));
+  const typeField = `<div class="inv-gift-field">
+          <label for="gift-type">Type de booster</label>
+          <select id="gift-type" data-gift="type">${withStock.map((t) => `<option value="${esc(t.id)}"${t.id === f.type ? ' selected' : ''}>${esc(t.name)} (${nf.format(t.stock)} en stock)</option>`).join('')}</select>
+        </div>`;
+  const typeName = typeOf(f.type)?.name || '';
+  const total = giftTotal;
+  const members = S.members;
+  let people;
+  if (!members) people = '<option value="" disabled selected>Chargement…</option>';
+  else if (members.error) people = '<option value="" disabled selected>Membres indisponibles</option>';
+  else people = '<option value="">Choisis un membre</option>'
+    + members.map((m) => `<option value="${esc(m.id)}"${m.id === f.to ? ' selected' : ''}>${esc(m.pseudo || '')}</option>`).join('');
+  const busy = isBusy();
+  const unavailable = !!members?.error;
+  const confirm = S.giftConfirm && memberOf(f.to);
+  return `<p class="muted small">Tu as ${pluralCount(total, 'booster', 'boosters', nf.format)} en stock.</p>
+      <form id="inv-gift-form" class="inv-gift-form" novalidate>
+        ${typeField}
+        <div class="inv-gift-field">
+          <label for="gift-to">Destinataire</label>
+          <select id="gift-to" data-gift="to" ${!Array.isArray(members) ? 'disabled' : ''}>${people}</select>
+        </div>
+        <div class="inv-gift-field">
+          <label for="gift-qty">Nombre de boosters</label>
+          <select id="gift-qty" data-gift="qty">${qtyOptions(Math.min(10, stock), f.qty)}</select>
+        </div>
+        <div class="inv-gift-field">
+          <label for="gift-msg">Message</label>
+          <textarea id="gift-msg" data-gift="msg" maxlength="300" rows="2" placeholder="Un petit mot (facultatif)">${esc(f.msg)}</textarea>
+        </div>
+        ${confirm ? `<div class="inv-gift-confirm" role="group" aria-label="Confirmer le don">
+          <p>Offrir ${pluralCount(f.qty, 'booster', 'boosters', nf.format)}${typeName ? ` ${esc(typeName)}` : ''} à <strong>${esc(confirm.pseudo || '')}</strong> ? Ce don ne peut pas être annulé.</p>
+          <button type="button" class="btn btn-primary" data-action="gift-confirm" ${busy ? 'disabled' : ''}>Confirmer</button>
+          <button type="button" class="btn btn-ghost" data-action="gift-cancel" ${busy ? 'disabled' : ''}>Annuler</button>
+        </div>` : `<div><button type="submit" class="btn btn-primary" data-action="gift-ask" ${busy || unavailable ? 'disabled' : ''}>Offrir</button></div>`}
+      </form>`;
+}
+
+/** Bloc complet « Offrir des boosters » (formulaire ou message de stock vide). */
+function giftSectionHtml() {
+  return `<section class="card cartes-block" id="inv-gift" aria-labelledby="inv-gift-h">
+      <h2 id="inv-gift-h" tabindex="-1">Offrir des boosters</h2>
+      ${giftFormHtml()}
+    </section>`;
+}
+
+/**
+ * Passe du formulaire à la confirmation (le membre doit être choisi). Le focus va sur « Confirmer ».
+ */
+function askGift() {
+  if (!S.giftForm.to) {
+    toast('Choisis à qui offrir', 'error');
+    $('#gift-to')?.focus();
+    return;
+  }
+  S.giftConfirm = true;
+  renderInventaire();
+  $('[data-action="gift-confirm"]')?.focus();
+}
+
+/** Annule la confirmation et ramène le focus sur le bouton « Offrir ». */
+function cancelGift() {
+  S.giftConfirm = false;
+  renderInventaire();
+  $('[data-action="gift-ask"]')?.focus({ preventScroll: true });
+}
+
+/**
+ * Envoie le don (hg_booster_gift, avec une demande p_request). Une même demande garde le même identifiant tant qu'elle
+ * n'a pas abouti (S.giftReq) : un double clic ou une relance n'offre pas deux fois. Un don déjà enregistré (don_deja_fait)
+ * compte comme réussi. En cas d'échec, les valeurs du formulaire restent en place.
+ * @returns {Promise<void>}
+ */
+async function giftConfirm() {
+  if (S.busy || !typed()) return;
+  const f = S.giftForm;
+  const pseudo = memberOf(f.to)?.pseudo || 'ce membre';
+  const t = typeOf(f.type);
+  if (!t || !giftable(t)) { S.giftConfirm = false; renderInventaire(); toast('Ce booster ne peut pas être offert.', 'error'); return; }
+  const qty = Math.min(Math.max(1, Number(f.qty) || 1), stockOf(f.type));
+  const msg = f.msg.trim() || null;
+  const sig = [f.to, t.id, qty, msg || ''].join('|');
+  if (!S.giftReq || S.giftReq.sig !== sig) S.giftReq = { sig, id: newReqId() };
+  S.busy = true;
+  renderInventaire();
+  // 'ok' : offert ; 'dup' : déjà offert (demande rejouée) ; 'error' : rien n'a été offert.
+  let state = 'error';
+  try {
+    const { error } = await sb.rpc('hg_booster_gift', { p_to: f.to, p_type: t.id, p_qty: qty, p_message: msg, p_request: S.giftReq.id });
+    if (error) throw error;
+    state = 'ok';
+  } catch (e) {
+    if (String(e?.message || '').includes('don_deja_fait')) state = 'dup';
+    else toast(errMsg(e), 'error');
+  }
+  S.giftConfirm = false;
+  if (state !== 'error') {
+    S.giftReq = null;
+    if (state === 'ok') {
+      const n = pluralCount(qty, 'booster', 'boosters', nf.format);
+      toast(`${n} ${t.name} ${qty > 1 ? 'offerts' : 'offert'} à ${pseudo}`, 'ok');
+    } else {
+      toast('Don déjà envoyé');
+    }
+    S.giftForm = { to: '', qty: 1, msg: '', type: f.type };
+    // Le rechargement vient après un succès : son échec n'annule pas le don.
+    await refreshAfter(refreshData);
+    await refreshAfter(loadGifts);
+  }
+  S.busy = false;
+  renderAll();
+  restoreFocus(() => (state === 'error' ? $('[data-action="gift-ask"]') : document.getElementById('inv-gift-h')));
+}
+
+/**
+ * Une ligne de l'historique des dons : envoyé ou reçu, pseudo, nombre, mot éventuel et date.
+ * @param {object} x don (id, qty, message, created_at, sent, other_pseudo)
+ * @returns {string}
+ */
+function giftRowHtml(x) {
+  const who = `<strong>${esc(x.other_pseudo || 'Un membre')}</strong>`;
+  // Mode typé : le nom du type suit le nombre (« 2 boosters Doré »), quand la base le renvoie.
+  const n = pluralCount(Number(x.qty) || 0, 'booster', 'boosters', nf.format) + (x.type_name ? ` ${esc(x.type_name)}` : '');
+  return `<li>
+      <p>${x.sent ? `Tu as offert ${n} à ${who}` : `${who} t'a offert ${n}`}</p>
+      ${x.message ? `<q>${esc(x.message)}</q>` : ''}
+      <span class="muted small">${esc(fmtDate(x.created_at))}</span>
+    </li>`;
+}
+
+/** Section « Boosters offerts et reçus » de l'Inventaire (chargement, erreur, liste vide ou liste). */
+function giftsSectionHtml() {
+  const g = S.gifts;
+  let body;
+  if (!g) body = '<p class="muted small">Chargement…</p>';
+  else if (g.error) body = '<p class="muted small">Historique des dons indisponible pour le moment.</p>';
+  else if (!g.length) body = '<p class="muted small">Aucun don pour le moment.</p>';
+  else body = `<ul class="inv-gifts-list">${g.map(giftRowHtml).join('')}</ul>`;
+  return `<section class="card cartes-block" id="inv-gifts" aria-labelledby="inv-gifts-h">
+      <h2 id="inv-gifts-h">Boosters offerts et reçus</h2>
+      ${body}
+    </section>`;
+}
+
+/** Charge les 30 derniers dons envoyés et reçus (hg_booster_gifts_me). Ne lève jamais d'erreur : la section l'indique. */
+async function loadGifts() {
+  try {
+    const { data, error } = await sb.rpc('hg_booster_gifts_me');
+    if (error) throw error;
+    S.gifts = Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.warn('[dons]', e);
+    S.gifts = { error: true };
+  }
+  if (S.tab === 'inventaire' && !S.peer) renderInventaire();
+}
+
+/** Charge les membres (hg_members) pour le choix du destinataire, sans soi-même. Ne lève jamais d'erreur. */
+async function loadMembers() {
+  try {
+    const { data, error } = await sb.rpc('hg_members');
+    if (error) throw error;
+    S.members = (data || [])
+      .filter((m) => m.id !== me.id)
+      .sort((a, b) => String(a.pseudo || '').localeCompare(String(b.pseudo || ''), 'fr'));
+  } catch (e) {
+    console.warn('[membres]', e);
+    S.members = { error: true };
+  }
+  if (S.tab === 'inventaire' && !S.peer) renderInventaire();
+}
 
 /* ---------- Quêtes de la semaine (3 par semaine, lundi 00:00 heure de Zurich) ---------- */
 // Chargées à part : un échec de ces quêtes ne bloque pas le reste de la page.
@@ -536,18 +1224,23 @@ async function claimQuest(code) {
   if (S.busy) return;
   S.busy = true;
   renderQuests();
+  let res;
   try {
-    const { data, error } = await sb.rpc('hg_card_quest_claim', { p_code: code });
-    if (error) throw error;
-    toast(`Quête terminée : +${fmtP(data?.reward ?? 0)}`, 'ok');
-    await refreshData();
+    res = await sb.rpc('hg_card_quest_claim', { p_code: code });
+    if (res.error) throw res.error;
   } catch (e) {
     toast(errMsg(e), 'error');
-  } finally {
     S.busy = false;
     await loadQuests();
     renderAll();
+    return;
   }
+  toast(`Quête terminée : +${fmtP(res.data?.reward ?? 0)}`, 'ok');
+  // Le rechargement vient après une réclamation réussie : son échec ne l'annule pas.
+  await refreshAfter(refreshData);
+  S.busy = false;
+  await loadQuests();
+  renderAll();
 }
 
 // Booster gratuit : cartouche + compte à rebours, ou bouton « Ouvrir » quand il est disponible.
@@ -685,6 +1378,8 @@ const multiHead = (R) => `${pluralCount(R.opened, 'booster', 'boosters', nf.form
 /** Ligne sous le résumé : nombre de cartes nouvelles pour la collection et de brillantes. */
 const multiSub = (R) => pluralCount(R.fresh, 'nouvelle pour ta collection', 'nouvelles pour ta collection', nf.format)
   + (R.shinies ? ` · ${pluralCount(R.shinies, 'brillante', 'brillantes', nf.format)}` : '');
+/** Ligne du résumé pour les boosters déjà ouverts côté serveur (réponse perdue) : leurs cartes sont dans la collection. Vide si aucun. */
+const dupText = (R) => (R.dup ? pluralCount(R.dup, 'booster déjà ouvert : ses cartes sont dans ta collection', 'boosters déjà ouverts : leurs cartes sont dans ta collection', nf.format) : '');
 
 // Grille de toutes les cartes obtenues, la plus rare en premier ; les cartes non encore révélées montrent le dos.
 /**
@@ -711,6 +1406,7 @@ function multiHtml(R) {
       <div class="x5-sum">
         <p class="x5-head">${esc(multiHead(R))}</p>
         <p class="cartes-small">${esc(multiSub(R))}</p>
+        ${R.dup ? `<p class="cartes-small">${esc(dupText(R))}</p>` : ''}
         ${done && R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
       </div>
       <div class="x5-grid">${cells}</div>${list}
@@ -725,6 +1421,7 @@ function multiHtml(R) {
  * @param {object} R ouverture groupée
  */
 function renderMultiReveal(box, R) {
+  if (R.big) { renderBigReveal(box, R); return; }
   box.innerHTML = multiHtml(R);
   if (R.phase !== 'seq' && !R.announced) {
     R.announced = true;
@@ -755,7 +1452,7 @@ function stageHtml(R) {
       + `<div class="op-face op-front">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'sm' })}</div></div></div>`;
   }).join('');
   const bars = Array.from({ length: 8 }, (_, k) => `<i style="--k:${k}"></i>`).join('');
-  return `<div class="op-cart" aria-hidden="true">${cartridgeHtml()}</div>`
+  return `<div class="op-cart" aria-hidden="true">${cartridgeHtml({ type: R.type, series: R.setName })}</div>`
     + '<div class="op-con" aria-hidden="true"><div class="op-con-body"></div><div class="op-slot"></div>'
     + '<div class="op-scr"><div class="op-flash"></div>'
     + '<p class="op-l1">BOOT HG v1.0</p>'
@@ -839,132 +1536,351 @@ function announceCards(cards) {
 }
 
 /**
- * Ouvre un booster (gratuit, payant ou offert), puis lance sa révélation.
- * La même demande garde le même identifiant tant qu'elle n'a pas abouti (voir S.bootReq).
- * @param {boolean} free true pour le booster gratuit du jour
- * @param {boolean} [offert=false] true pour un booster offert par le gang
+ * Ouverture commune à tous les boosters (repli ou typés) : appel de la RPC, annonces, puis révélation (animée ou directe).
+ * La même demande garde le même identifiant tant qu'elle n'a pas abouti (voir S.bootReq) : si la réponse se perd et que
+ * l'utilisateur relance, le serveur ne rouvre pas de booster.
+ * Un remboursement (cartes déjà toutes possédées, mode typé) est annoncé par un message à la place du « carte livrée sur… ».
+ * @param {{key: string, type?: object|null, setName?: string, call: (reqId: string) => Promise<object>}} o
+ *   key : mode de la demande (une autre clé remplace l'identifiant gardé) ; type : type de booster (cartouche de la scène) ;
+ *   setName : série choisie (cartouche « Série ») ; call : appel de la RPC avec l'identifiant de la demande
  * @returns {Promise<void>}
  */
-async function openBooster(free, offert = false) {
+async function runOpen({ key, type = null, setName = '', call }) {
   if (isBusy()) return;
   S.busy = true;
   renderBoosters();
   let R = null;
-  // Une même demande garde le même identifiant tant qu'elle n'a pas abouti :
-  // si la réponse se perd et que l'utilisateur relance, le serveur ne rouvre pas de booster.
-  const mode = offert ? 'offert' : free ? 'gratuit' : 'payant';
-  if (!S.bootReq || S.bootReq.mode !== mode) S.bootReq = { mode, id: newReqId() };
+  let state = 'error'; // 'ok' : ouvert ; 'dup' : déjà ouvert côté serveur (demande rejouée) ; 'error' : rien d'ouvert
+  if (!S.bootReq || S.bootReq.mode !== key) S.bootReq = { mode: key, id: newReqId() };
   try {
-    const data = await rpcOpenBooster(free, S.bootReq.id, offert);
+    const data = await call(S.bootReq.id);
     S.bootReq = null;
+    state = 'ok';
     const cards = data?.cards || [];
     // Nombre réellement livré (peut être inférieur au nombre payé si le tirage n'a pas trouvé de carte)
     const asked = Number(data?.demandees) || cards.length;
     const got = Number(data?.livrees) || cards.length;
-    if (got < asked) toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
+    const refund = Number(data?.refund) || 0;
+    if (refund > 0) {
+      // Collectionneur : les cartes déjà toutes possédées sont remboursées au prix d'une carte.
+      const missed = asked - got;
+      toast(`${pluralCount(missed, 'carte déjà possédée', 'cartes déjà toutes possédées', nf.format)} : ${fmtP(refund)} remboursés`, 'ok');
+    } else if (got < asked) {
+      toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
+    }
     announceCards(cards);
     // Animation seulement si la préférence de mouvement le permet et qu'il y a des cartes.
     const seq = motionAllowed() && cards.length > 0;
-    R = { cards, best: data?.best, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
+    R = { cards, best: data?.best, type, setName, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
     S.reveal = R;
-    await refreshData();
   } catch (e) {
     if (String(e?.message || '').includes('booster_deja_ouvert')) {
       // Le serveur a déjà traité cette demande : on ne la renvoie pas, on recharge l'état.
       S.bootReq = null;
+      state = 'dup';
       toast('Ce booster a déjà été ouvert. Ton inventaire est à jour.');
-      await refreshData().catch(() => {});
     } else {
       toast(errMsg(e), 'error');
     }
-  } finally {
-    S.busy = false;
-    renderAll();
-    loadQuests(); // l'ouverture d'un booster fait avancer les quêtes
-    if (R && S.reveal === R && R.seq && R.phase === 'seq') {
-      $('#cartes-live').textContent = 'Ouverture du booster en cours.';
-      $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      startSeq(R);
-    }
+  }
+  // Le rechargement vient après une ouverture réussie ou déjà faite : son échec ne fait pas échouer l'ouverture.
+  if (state !== 'error') await refreshAfter(refreshData);
+  S.busy = false;
+  renderAll();
+  loadQuests(); // l'ouverture d'un booster fait avancer les quêtes
+  restoreFocus(() => document.getElementById('cartes-reveal'));
+  if (R && S.reveal === R && R.seq && R.phase === 'seq') {
+    $('#cartes-live').textContent = 'Ouverture du booster en cours.';
+    $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    startSeq(R);
   }
 }
 
-/* ---------- Ouverture de plusieurs boosters d'un coup ---------- */
-// Plusieurs appels successifs à la même RPC, chacun avec son propre identifiant de demande.
-// S.x5 garde ces identifiants tant que la série n'est pas terminée : après un arrêt (solde, réseau),
-// une relance ne renvoie que les boosters restants, sans jamais en ouvrir deux fois.
-/** Nombre de boosters restant à ouvrir dans la série en cours (MULTI_COUNT si aucune série n'a été interrompue). */
-const pendingX5 = () => (S.x5 ? S.x5.ids.length - S.x5.next : MULTI_COUNT);
+/**
+ * Ouvre le booster gratuit du jour ou un booster offert (mode repli, RPC d'origine), puis lance sa révélation.
+ * @param {boolean} free true pour le booster gratuit du jour
+ * @param {boolean} [offert=false] true pour un booster du stock offert par le gang
+ * @returns {Promise<void>}
+ */
+function openBooster(free, offert = false) {
+  const mode = offert ? 'offert' : 'gratuit';
+  return runOpen({ key: mode, call: (reqId) => rpcOpenBooster(free, reqId, offert) });
+}
 
+/**
+ * Appel de hg_booster_open (boosters typés) : mode « stock » (prend un booster en stock) ou « gratuit ».
+ * @param {string} typeId identifiant du type
+ * @param {'stock'|'gratuit'} mode mode d'ouverture (l'achat passe par la Boutique : hg_booster_buy)
+ * @param {string} reqId identifiant de la demande (le serveur ne rouvre pas deux fois la même demande)
+ * @param {string|null} [setId] série (obligatoire pour le type « Série »)
+ * @returns {Promise<object>} résultat : cartes, meilleure rareté, nombre demandé et livré, remboursement
+ */
+async function rpcOpenTyped(typeId, mode, reqId, setId = null) {
+  const { data, error } = await sb.rpc('hg_booster_open', { p_type: typeId, p_mode: mode, p_request: reqId, p_set: setId });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Ouvre un booster d'un type (mode typé), puis lance sa révélation dans la cartouche du type.
+ * @param {string} typeId identifiant du type
+ * @param {'stock'|'gratuit'} mode mode d'ouverture (l'achat passe par la Boutique : hg_booster_buy)
+ * @param {string|null} [setId] série choisie (type « Série »)
+ * @returns {Promise<void>}
+ */
+function openTyped(typeId, mode, setId = null) {
+  const type = typeOf(typeId);
+  if (!type) { toast('Ce booster n’est pas disponible pour le moment.', 'error'); return Promise.resolve(); }
+  const setName = setId ? S.sets.find((s) => s.id === setId)?.name || '' : '';
+  return runOpen({ key: `${typeId}|${mode}|${setId || ''}`, type, setName, call: (reqId) => rpcOpenTyped(typeId, mode, reqId, setId) });
+}
+
+/**
+ * Point d'entrée des boutons d'ouverture typés : pour le type « Série », demande d'abord la série (dialogue), puis ouvre.
+ * Les autres types ouvrent tout de suite. Passe sur l'onglet Ouverture avant l'ouverture (jamais avant le dialogue).
+ * @param {string} typeId identifiant du type
+ * @param {'stock'|'gratuit'} mode mode d'ouverture (l'achat passe par la Boutique : hg_booster_buy)
+ * @param {HTMLElement} [from] bouton d'origine (le focus y revient si le dialogue est annulé)
+ * @returns {Promise<void>|void}
+ */
+function openWithPick(typeId, mode, from) {
+  if (isBusy()) return;
+  const type = typeOf(typeId);
+  if (!type) { toast('Ce booster n’est pas disponible pour le moment.', 'error'); return; }
+  if (type.pool !== 'serie') { toOuverture(); return openTyped(typeId, mode); }
+  askSerie(from, (setId) => { toOuverture(); return openTyped(typeId, mode, setId); });
+}
+
+/**
+ * Ouvre le dialogue de choix de la série (S.sets : séries ouvertes et commencées). La dernière est présélectionnée,
+ * le premier choix reçoit le focus. Confirmer appelle onPick avec l'identifiant de la série ; Échap ou Annuler ferme sans rien ouvrir.
+ * @param {HTMLElement|undefined} from bouton d'origine (le focus y revient)
+ * @param {(setId: string) => void} onPick reçoit l'identifiant de la série choisie
+ */
+function askSerie(from, onPick) {
+  if (!S.sets.length) { toast('Aucune série n’est ouverte pour le moment.', 'error'); return; }
+  const dlg = $('#cartes-serie-pick');
+  const last = S.sets.length - 1;
+  $('#cartes-serie-list').innerHTML = S.sets.map((s, i) => `<label class="serie-opt">
+      <input type="radio" name="serie-set" value="${esc(s.id)}"${i === last ? ' checked' : ''}>
+      <span><strong>${esc(s.name)}</strong>${s.description ? `<span class="muted small">${esc(s.description)}</span>` : ''}</span>
+    </label>`).join('');
+  S.seriePick = { from, onPick };
+  if (!dlg.open) dlg.showModal();
+  $('#cartes-serie-list input[type=radio]')?.focus({ preventScroll: true });
+}
+
+/**
+ * Confirme le choix de la série : ferme le dialogue puis lance l'ouverture avec la série choisie.
+ */
+function confirmSerie() {
+  const dlg = $('#cartes-serie-pick');
+  const pick = dlg.querySelector('input[name=serie-set]:checked');
+  const ask = S.seriePick;
+  if (!pick || !ask) return;
+  S.seriePick = null; // pas de retour du focus : l'ouverture redessine les boutons
+  dlg.close();
+  ask.onPick(pick.value);
+}
+
+/* ---------- Ouverture de plusieurs boosters du stock (onglet Ouverture) ---------- */
+// Une ouverture groupée enchaîne des appels hg_booster_open (mode stock), un par booster, chacun avec son identifiant de demande :
+// le serveur ne rouvre jamais deux fois la même demande. À la première erreur on s'arrête ; S.x5 garde les demandes restantes,
+// et le bouton « Reprendre l'ouverture » les envoie sans rien rouvrir deux fois.
 // Tri de la révélation : la carte la plus rare d'abord, les brillantes avant, puis le numéro de la série.
 /** Comparaison pour trier les cartes : rareté décroissante, brillantes d'abord, puis numéro croissant. */
 const byRarityDesc = (a, b) => (rarityRank(b.rarity) - rarityRank(a.rarity))
   || (Number(!!b.shiny) - Number(!!a.shiny))
   || ((Number(a.number) || 0) - (Number(b.number) || 0));
+/** Nombre maximal de meilleures cartes (légendaire et plus, ou nouvelles) listées dans le résumé d'une grosse ouverture. */
+const BEST_MAX = 30;
 
 /**
- * Ouvre d'un coup la série de boosters payants (MULTI_COUNT, ou les restants si une série a été interrompue).
- * Les ouvertures sont faites une à une ; à la première erreur, on s'arrête et on garde l'état pour reprendre.
+ * Un booster du stock à ouvrir dans une ouverture groupée : hg_booster_open (mode stock) en mode typé,
+ * hg_open_booster_req avec p_offert en repli.
+ * @param {{type: string, set: string|null, id: string}} it booster (identifiant de demande, série si le type est « Série »)
+ * @returns {Promise<object>} résultat de la RPC
+ */
+const openStockOne = (it) => (typed() ? rpcOpenTyped(it.type, 'stock', it.id, it.set) : rpcOpenBooster(false, it.id, true));
+
+/**
+ * Ouvre une suite de boosters du stock, un à un, puis affiche le résultat.
+ * Jusqu'à MULTI_COUNT boosters : révélation en cascade, carte par carte. Au-delà : progression « Ouverture : k / N » pendant
+ * l'ouverture, puis résumé (par rareté, meilleures cartes et nouvelles) et « Voir toutes les cartes » ; sans animation.
+ * @param {Array<{type: string, set: string|null}>|null} items boosters à ouvrir ; null pour reprendre l'ouverture interrompue (S.x5)
+ * @param {string} [key=''] identifiant de l'ouverture (type ou « all »)
  * @returns {Promise<void>}
  */
-async function openBoostersMulti() {
+async function runMulti(items, key = '') {
   if (isBusy()) return;
-  S.busy = true;
-  renderBoosters();
-  if (!S.x5) {
-    S.x5 = { ids: Array.from({ length: MULTI_COUNT }, newReqId), next: 0, opened: 0, cards: [], owned: new Set(S.copies.map((c) => c.card_id)) };
+  let st = S.x5;
+  if (items) {
+    if (!items.length) return;
+    st = S.x5 = { key, items: items.map((it) => ({ ...it, id: newReqId() })), next: 0, opened: 0, dup: 0, cards: [], owned: new Set(S.copies.map((c) => c.card_id)) };
   }
-  const st = S.x5;
-  const total = st.ids.length;
+  if (!st || st.next >= st.items.length) return;
+  const total = st.items.length;
+  const big = total > MULTI_COUNT;
+  S.busy = true;
+  if (big) S.reveal = { multi: true, big: true, phase: 'opening', progress: st.next, total, cards: [], revealed: new Set(), showAll: false, announced: false };
+  renderBoosters();
   let stopMsg = '';
+  /** Avancement de la grosse ouverture (« Ouverture : k / N »). */
+  const progress = () => { if (big) { S.reveal.progress = st.next; renderReveal(); } };
   while (st.next < total) {
-    const i = st.next;
     try {
-      const data = await rpcOpenBooster(false, st.ids[i]);
+      const data = await openStockOne(st.items[st.next]);
       const cards = data?.cards || [];
       st.cards.push(...cards);
       st.opened += 1;
-      st.next = i + 1;
+      st.next += 1;
       announceCards(cards);
     } catch (e) {
       if (String(e?.message || '').includes('booster_deja_ouvert')) {
-        st.next = i + 1; // le serveur a déjà traité cette demande : on ne la renvoie pas
-        stopMsg = 'Ce booster a déjà été ouvert. Ton inventaire est à jour.';
-      } else {
-        stopMsg = errMsg(e);
+        // Le serveur a déjà ouvert ce booster (réponse perdue) : ses cartes sont dans la collection. On le compte et on continue.
+        st.next += 1;
+        st.dup += 1;
+        progress();
+        continue;
       }
-      break; // on s'arrête à la première erreur : les boosters suivants ne sont pas ouverts
+      stopMsg = errMsg(e);
+      break; // à la première erreur, les boosters suivants ne sont pas ouverts
     }
+    progress();
   }
-  if (st.next >= total) S.x5 = null; // série terminée : rien à reprendre
+  if (st.next >= total) S.x5 = null; // ouverture terminée : rien à reprendre
   let R = null;
-  if (st.cards.length) {
+  if (st.cards.length || st.dup) {
     const cards = [...st.cards].sort(byRarityDesc);
-    const seq = motionAllowed();
+    const seq = !big && cards.length > 0 && motionAllowed();
+    const freshIds = new Set(cards.filter((c) => !st.owned.has(c.card_id)).map((c) => c.card_id));
     R = {
-      multi: true, cards, opened: st.opened, total, best: cards[0].rarity,
-      fresh: new Set(cards.filter((c) => !st.owned.has(c.card_id)).map((c) => c.card_id)).size,
+      multi: true, big, cards, opened: st.opened, total, best: cards[0]?.rarity ?? null,
+      fresh: freshIds.size, freshIds,
       shinies: cards.filter((c) => c.shiny).length,
+      dup: st.dup,
       note: stopMsg ? `Ouverture interrompue : ${stopMsg}` : '',
-      seq, phase: seq ? 'seq' : 'done', revealed: new Set(), timer: null, announced: false,
+      seq, phase: seq ? 'seq' : 'done', progress: st.opened, showAll: false,
+      revealed: new Set(), timer: null, announced: false,
     };
     if (!seq) cards.forEach((_, i) => R.revealed.add(i));
-    S.reveal = R;
   }
+  S.reveal = R;
   if (stopMsg) {
     const n = st.opened;
     toast(n ? `${n} booster${n > 1 ? 's' : ''} ouvert${n > 1 ? 's' : ''} sur ${total} : ${stopMsg}` : stopMsg, 'error');
   }
+  // Le rechargement ne fait pas échouer l'ouverture (voir refreshAfter).
+  if (st.opened || st.dup) await refreshAfter(refreshData);
   S.busy = false;
-  if (st.opened) await refreshData().catch((e) => console.warn('[boosters]', e));
   renderAll();
+  restoreFocus(() => document.getElementById('cartes-reveal'));
   loadQuests(); // l'ouverture de boosters fait avancer les quêtes
-  if (R?.seq) {
-    $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
+  if (R) {
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    startMulti(R);
+    if (R.seq) {
+      $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
+      startMulti(R);
+    }
   }
+}
+
+/**
+ * Bouton « Ouvrir 5 » ou « Tout ouvrir » d'une tuile de stock. Pour le type « Série », demande d'abord la série (une fois pour tout le lot).
+ * @param {string} typeId identifiant du type (« classique » en repli)
+ * @param {number} count nombre de boosters voulu (Infinity pour « Tout ouvrir »), plafonné au stock
+ * @param {HTMLElement} [from] bouton d'origine (le focus y revient si le dialogue est annulé)
+ * @returns {Promise<void>|void}
+ */
+function openStockMulti(typeId, count, from) {
+  if (isBusy()) return;
+  const t = typed() ? typeOf(typeId) : null;
+  if (typed() && !t) { toast('Ce booster n’est pas disponible pour le moment.', 'error'); return; }
+  const n = Math.min(count, stockOf(typeId));
+  if (!(n >= 1)) return;
+  const make = (setId) => Array.from({ length: n }, () => ({ type: typeId, set: setId }));
+  if (t?.pool === 'serie') return askSerie(from, (setId) => runMulti(make(setId), typeId));
+  return runMulti(make(null), typeId);
+}
+
+/**
+ * Bouton « Ouvrir tout l'inventaire » : ouvre tous les boosters en stock, type par type (ordre d'affichage).
+ * La série des boosters « Série » est demandée une seule fois.
+ * @param {HTMLElement} [from] bouton d'origine
+ * @returns {Promise<void>|void}
+ */
+function openAllStock(from) {
+  if (isBusy() || !typed()) return;
+  const types = stockedTypes();
+  if (!types.length) return;
+  const make = (setId) => types.flatMap((t) => Array.from({ length: Number(t.stock) }, () => ({ type: t.id, set: t.pool === 'serie' ? setId : null })));
+  if (types.some((t) => t.pool === 'serie')) return askSerie(from, (setId) => runMulti(make(setId), 'all'));
+  return runMulti(make(null), 'all');
+}
+
+/** Affiche ou masque la grille complète d'une grosse ouverture (bouton « Voir toutes les cartes »). */
+function toggleAllCards() {
+  const R = S.reveal;
+  if (!R?.big) return;
+  R.showAll = !R.showAll;
+  renderReveal();
+  $('#cartes-toggle-all')?.focus({ preventScroll: true });
+}
+
+/**
+ * Révélation d'une grosse ouverture (plus de MULTI_COUNT boosters) : pendant l'ouverture, la progression « Ouverture : k / N » ;
+ * à la fin, le résumé (boosters, cartes par rareté, meilleures cartes et nouvelles), puis la grille complète sur demande.
+ * Pas d'animation : la grille s'affiche d'un coup.
+ * @param {HTMLElement} box zone de la révélation
+ * @param {object} R ouverture groupée (big)
+ */
+function renderBigReveal(box, R) {
+  if (R.phase === 'opening') {
+    box.innerHTML = `
+    <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
+      <h2 id="cartes-reveal-h">Tes boosters</h2>
+      <p class="x5-progress" role="status">Ouverture : ${nf.format(R.progress)} / ${nf.format(R.total)}</p>
+    </section>`;
+    return;
+  }
+  const counts = new Map();
+  for (const c of R.cards) counts.set(c.rarity, (counts.get(c.rarity) || 0) + 1);
+  const ranks = RARITIES_TIRAGE.filter((r) => counts.has(r.id)).sort((a, b) => rarityRank(b.id) - rarityRank(a.id))
+    .map((r) => `<li><span>${esc(r.label)}</span><strong>${nf.format(counts.get(r.id))}</strong></li>`).join('');
+  // Meilleures cartes : légendaire et plus, ou nouvelles pour la collection ; une carte n'est listée qu'une fois.
+  const seen = new Set();
+  const top = R.cards.filter((c) => {
+    if (seen.has(c.card_id)) return false;
+    const keep = rarityRank(c.rarity) >= 5 || R.freshIds.has(c.card_id);
+    if (keep) seen.add(c.card_id);
+    return keep;
+  });
+  const shown = top.slice(0, BEST_MAX);
+  const cell = (c) => cardHtml(c, { shiny: c.shiny, serial: c.serial, size: 'sm' });
+  if (!R.announced) {
+    R.announced = true;
+    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+  }
+  box.innerHTML = `
+    <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
+      <h2 id="cartes-reveal-h">Tes boosters</h2>
+      <div class="x5-sum">
+        <p class="x5-head">${esc(multiHead(R))}</p>
+        <p class="cartes-small">${esc(multiSub(R))}</p>
+        ${R.dup ? `<p class="cartes-small">${esc(dupText(R))}</p>` : ''}
+        ${R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
+      </div>
+      <ul class="x5-ranks" aria-label="Cartes par rareté">${ranks}</ul>
+      <h3 class="cart-h x5-h">Meilleures cartes et nouvelles</h3>
+      ${shown.length ? `<div class="cartes-booster-grid">${shown.map(cell).join('')}</div>` : '<p class="muted small">Aucune carte légendaire ni nouvelle cette fois.</p>'}
+      ${top.length > shown.length ? `<p class="muted small">${pluralCount(top.length - shown.length, 'autre carte rare ou nouvelle', 'autres cartes rares ou nouvelles', nf.format)}, dans la liste complète.</p>` : ''}
+      <div class="cartes-row">
+        <button type="button" id="cartes-toggle-all" class="btn btn-ghost" data-action="toggle-all-cards" aria-expanded="${R.showAll}">${R.showAll ? 'Masquer les cartes' : `Voir toutes les cartes (${nf.format(R.cards.length)})`}</button>
+        <button type="button" class="btn btn-primary" data-action="close-reveal">Fermer</button>
+      </div>
+      ${R.showAll ? `<div class="cartes-booster-grid x5-all">${R.cards.map(cell).join('')}</div>` : ''}
+    </section>`;
 }
 
 // Révélation en cascade, de la carte la plus rare à la moins rare.
@@ -1016,17 +1932,21 @@ function finishMulti(R) {
 async function claimDaily() {
   if (S.busy) return;
   S.busy = true;
+  let res;
   try {
-    const { data, error } = await sb.rpc('hg_cards_daily');
-    if (error) throw error;
-    toast(`+${fmtP(data.gain)} · série de ${pluralCount(data.streak, 'jour', 'jours', nf.format)}`, 'ok');
-    await refreshData();
+    res = await sb.rpc('hg_cards_daily');
+    if (res.error) throw res.error;
   } catch (e) {
     toast(errMsg(e), 'error');
-  } finally {
     S.busy = false;
     renderAll();
+    return;
   }
+  const data = res.data;
+  toast(`+${fmtP(data.gain)} · série de ${pluralCount(data.streak, 'jour', 'jours', nf.format)}`, 'ok');
+  await refreshAfter(refreshData);
+  S.busy = false;
+  renderAll();
 }
 
 /* ---------- Collection ---------- */
@@ -1870,15 +2790,21 @@ function onCardKey(e) {
  * @param {MouseEvent} e
  */
 function onClick(e) {
-  const t = e.target.closest('.cartes-tab[data-tab], [data-action]');
+  const t = e.target.closest('.cartes-tab[data-tab], [data-tab-go], [data-action]');
   if (!t || t.disabled) return;
-  if (t.dataset.tab) { setTab(t.dataset.tab); $(`#cartes-tab-${t.dataset.tab}`).focus({ preventScroll: true }); return; }
+  if (t.dataset.tab) { setTab(t.dataset.tab); document.getElementById(`cartes-tab-${t.dataset.tab}`)?.focus({ preventScroll: true }); return; }
+  if (t.dataset.tabGo) { setTab(t.dataset.tabGo); document.getElementById(`cartes-tab-${t.dataset.tabGo}`)?.focus({ preventScroll: true }); return; }
   switch (t.dataset.action) {
     case 'daily': return claimDaily();
-    case 'open-free': return openBooster(true);
-    case 'open-paid': return openBooster(false);
-    case 'open-gift': return openBooster(false, true);
-    case 'open-paid-x5': return openBoostersMulti();
+    // Boutons d'ouverture : en mode typé, chaque bouton ouvre un type (dialogue de série si besoin) ; en repli, l'ancien chemin.
+    case 'open-free': if (typed()) return openWithPick('classique', 'gratuit', t); toOuverture(); return openBooster(true);
+    case 'open-gift': if (typed()) return openWithPick('classique', 'stock', t); toOuverture(); return openBooster(false, true);
+    case 'open-stock': return openWithPick(t.dataset.type, 'stock', t);
+    case 'serie-confirm': return confirmSerie();
+    case 'open-stock-multi': return openStockMulti(t.dataset.type, t.dataset.count === 'all' ? Infinity : Number(t.dataset.count), t);
+    case 'open-all-stock': return openAllStock(t);
+    case 'resume-multi': return runMulti(null);
+    case 'toggle-all-cards': return toggleAllCards();
     case 'quest-claim': return claimQuest(t.dataset.code);
     case 'reveal-all': return skipSeq();
     case 'close-reveal': return closeReveal();
@@ -1892,6 +2818,10 @@ function onClick(e) {
     case 'peer-clear': if (S.peer) { S.peer.picks.clear(); renderPeer('[data-action="peer-offer"]'); } return;
     case 'peer-offer': return peerOffer();
     case 'mass-confirm': return confirmMass();
+    case 'buy-stock': return buyStock(t.dataset.type || 'classique');
+    case 'gift-ask': e.preventDefault(); return askGift(); // bouton de type submit : pas d'envoi du formulaire
+    case 'gift-confirm': return giftConfirm();
+    case 'gift-cancel': return cancelGift();
     case 'wish':
     case 'craft':
     case 'recycle': return detailAction(t.dataset.action, t);
@@ -1909,6 +2839,47 @@ function onChange(e) {
   else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
   else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; renderPeer('#peer-set'); }
   else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
+  else if (t.dataset.change === 'shop-qty') setBuyQty(t.value, t.dataset.type || 'classique');
+  else if (t.dataset.gift === 'type') { updateGift(t); cancelGiftConfirm(t); } // la quantité max suit le stock du type
+  else if (t.dataset.gift) { updateGift(t); cancelGiftConfirm(t); }
+}
+
+/**
+ * Un champ du don change pendant la confirmation : la confirmation ne vaut plus, elle est annulée et le formulaire redessiné,
+ * le focus restant sur le champ modifié. Sans confirmation affichée, rien à redessiner (la valeur est déjà dans S.giftForm).
+ * @param {HTMLElement} [field] champ modifié (son identifiant sert à lui rendre le focus)
+ */
+function cancelGiftConfirm(field = null) {
+  if (!S.giftConfirm) return;
+  S.giftConfirm = false;
+  renderInventaire();
+  if (field?.id) document.getElementById(field.id)?.focus({ preventScroll: true });
+}
+
+/**
+ * Saisie dans le message du don : mémorisée dans S.giftForm. Si une confirmation est affichée, elle est annulée
+ * et le curseur reste à sa place dans le message.
+ * @param {Event} e
+ */
+function onInput(e) {
+  const el = e.target;
+  if (!el.dataset.gift) return;
+  updateGift(el);
+  if (!S.giftConfirm) return;
+  const pos = el.selectionStart ?? el.value.length;
+  cancelGiftConfirm(el);
+  const ta = document.getElementById('gift-msg');
+  if (ta) ta.setSelectionRange(pos, pos); // le curseur reste où on tapait
+}
+
+/**
+ * Envoi du formulaire de don (touche Entrée) : même chemin que le bouton « Offrir ».
+ * @param {SubmitEvent} e
+ */
+function onSubmit(e) {
+  if (e.target.id !== 'inv-gift-form') return;
+  e.preventDefault();
+  askGift();
 }
 
 /**
@@ -1937,10 +2908,22 @@ async function boot() {
   app.innerHTML = skeleton();
   app.addEventListener('click', onClick);
   app.addEventListener('change', onChange);
+  app.addEventListener('input', onInput);
+  app.addEventListener('submit', onSubmit);
   app.addEventListener('keydown', onCardKey);
+  // Dernier bouton ou champ qui a eu le focus : restoreFocus le lui rend après un redessin.
+  app.addEventListener('focusin', (e) => { S.focusHint = keyOf(e.target); });
   $('#cartes-tablist').addEventListener('keydown', onTabKey);
   $('#cartes-detail').addEventListener('close', () => { S.detailId = null; });
+  // Dialogue du choix de série : Échap ou Annuler ferme sans rien ouvrir, et le focus revient au bouton d'origine.
+  $('#cartes-serie-pick').addEventListener('close', () => {
+    const ask = S.seriePick;
+    S.seriePick = null;
+    if (ask?.from?.isConnected) ask.from.focus({ preventScroll: true });
+  });
   window.addEventListener('resize', () => fitAll(app));
+  const fromHash = location.hash.slice(1);
+  if (TABS.some(([id]) => id === fromHash)) { S.tab = fromHash; showTab(); } // lien direct vers un onglet : cartes.html#boutique
   try {
     await loadStatic();
     await refreshData();
@@ -1952,11 +2935,14 @@ async function boot() {
   window.addEventListener('hashchange', routeFromHash);
   routeFromHash(); // lien direct vers une collection ou retour arrière depuis elle
   loadQuests();
+  // Dons et membres : chargés à part, sans bloquer la page (la section Inventaire les attend)
+  loadGifts();
+  loadMembers();
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page
   // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour
-  setInterval(() => { if (S.tab === 'boosters' && !document.hidden) renderFree(); }, 30000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.tab === 'boosters') renderFree(); });
+  setInterval(() => { if (S.tab === 'ouverture' && !document.hidden) renderFree(); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.tab === 'ouverture') renderFree(); });
 }
 
 boot();

@@ -61,7 +61,7 @@ const scrollY = (p) => p.evaluate(() => Math.round(window.scrollY));
   await p.selectOption('#cartes-f-rarity', '');
   await sleep(150);
   // Le choix est retenu pendant la session (changement d'onglet puis retour)
-  await p.click('[data-tab=boosters]');
+  await p.click('[data-tab=boutique]');
   await p.click('[data-tab=collection]');
   check(await p.inputValue('#cartes-set') === '__all__', '« Toutes les séries » retenue après changement d\'onglet');
   await p.selectOption('#cartes-set', 'SET1');

@@ -3,6 +3,7 @@
 // une RPC refusée laisse le tiroir ouvert avec l'erreur. Dans cartes.html, un stock de boosters offerts
 // affiche un bouton qui appelle hg_open_booster_req avec p_offert = true, sans Paillettes ni délai.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (scenario.bulkFail, scenario.gift, scenario.reqRpc).
+// Dans cartes.html (repli sans types), le stock de boosters offerts est dans la tuile « Boosters en stock » (#cartes-stock) de l'onglet Ouverture.
 // Lancer : node tests/parcours-admin-don-groupe.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, log, chromium } = require('./lib/harness.cjs');
 
@@ -130,9 +131,11 @@ async function ouvrirDonGroupe(p) {
 
   // 7. Cartes : stock de boosters offerts (2) : bouton visible, RPC avec p_offert, sans débit de Paillettes.
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { reqRpc: true, gift: 2 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
-  check(await p.isVisible('#cartes-gift'), 'booster offert : bloc visible avec un stock de 2');
-  check((await p.textContent('[data-action=open-gift]')).includes('(2 restants)'), 'booster offert : « (2 restants) » sur le bouton');
+  // Les boosters offerts sont sur l'onglet Ouverture (ouvert par défaut), dans la tuile « Boosters en stock » (#cartes-stock).
+  check(await p.isVisible('#cartes-stock'), 'booster offert : bloc visible avec un stock de 2');
+  await p.waitForSelector('#cartes-stock [data-action=open-stock-multi][data-count=all]', { timeout: 5000 }).catch(() => {});
+  check((await p.textContent('#cartes-stock [data-action=open-stock-multi][data-count=all]')).includes('Tout ouvrir (2)'), 'booster offert : « Tout ouvrir (2) » sur la tuile de stock');
+  check((await p.textContent('#cartes-stock [data-action=open-gift]')).includes('Ouvrir 1'), 'booster offert : bouton « Ouvrir 1 » sur la tuile de stock');
   await p.click('[data-action=open-gift]');
   await p.waitForSelector('[data-action=reveal-all], [data-action=close-reveal]', { timeout: 5000 }).catch(() => {});
   await p.click('[data-action=reveal-all]').catch(() => {});
@@ -147,9 +150,8 @@ async function ouvrirDonGroupe(p) {
 
   // 8. Sans stock : aucun bloc de boosters offerts.
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 390, scenario: { reqRpc: true } });
-  await p.click('[data-tab=boosters]').catch(() => {});
   await sleep(300);
-  check(!(await p.$('#cartes-gift')), 'sans stock : pas de bloc de boosters offerts');
+  check(!(await p.$('#cartes-stock [data-action=open-gift]')), 'sans stock : pas de bouton d\'ouverture de booster offert');
   check(await hscroll(p) <= 0, 'cartes 390 px : sans défilement horizontal');
   await p.ctx.close();
 

@@ -9,17 +9,17 @@
 /* ---------- Onglets ---------- */
 .cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
 .cartes-tabs::-webkit-scrollbar { display: none; }
-.cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 16px; background: none; border: 0; border-bottom: 3px solid transparent;
+.cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .cartes-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
 .cartes-tab-ico { display: none; }
 .cartes-panel[hidden] { display: none; }
 
-/* Téléphone (600 px et moins) : les onglets deviennent une grille de 2 colonnes, tous visibles d'un coup,
-   avec une icône et un libellé court. Plus besoin de glisser pour découvrir Échanges ou Classement. */
+/* Téléphone (600 px et moins) : les six onglets deviennent une grille de 3 colonnes sur 2 lignes, tous visibles d'un coup,
+   icône au-dessus du libellé. Plus besoin de glisser pour découvrir Échanges ou Classement. */
 @media (max-width: 600px) {
-  .cartes-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; border-bottom: 0; margin-bottom: 20px; }
-  .cartes-tab { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; font-size: 15px; background: var(--surface);
+  .cartes-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; overflow: visible; border-bottom: 0; margin-bottom: 20px; }
+  .cartes-tab { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-height: 60px; padding: 8px 4px; font-size: 13px; background: var(--surface);
     border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
   .cartes-tab[aria-selected="true"] { color: var(--text); background: var(--surface-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
   .cartes-tab-ico { display: block; flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -263,10 +263,6 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .cq-btn { min-height: 44px; }
 .cq-item.is-claimed .cq-label { color: var(--muted); }
 
-/* Boosters offerts (cartes.js) */
-.cart-gift { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-.cart-gift .cart-h, .cart-gift p { margin: 0; }
-
 /* Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> */
 .cartes-peer { display: grid; gap: 16px; }
 .cartes-peer-head { display: grid; gap: 12px; }
@@ -286,3 +282,91 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 /* Hors série : en-tête explicatif des cartes uniques, et mention « Déjà attribuée » / « Pas encore attribuée » */
 .cartes-hs-note { margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid #C9A04A; background: rgba(201, 160, 74, .08); font-size: .9rem; }
 .cartes-uniq-state { display: block; margin-top: 6px; text-align: center; font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--muted, #8e88a0); }
+
+/* ===== Inventaire : Paillettes, boosters, résumé des cartes ===== */
+.inv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; margin-bottom: 20px; }
+.inv-grid .cartes-block { margin-bottom: 0; }
+.inv-box { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.inv-box .btn-row { margin-top: auto; }
+.inv-big { margin: 0; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.inv-list { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.inv-list li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.inv-list li:last-child { border-bottom: 0; }
+.inv-list strong { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ===== Boutique : un article par booster en vente ===== */
+.shop { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.shop-item { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 20px; align-items: start; }
+.shop-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.shop-info p { margin: 0; }
+.shop-price { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.shop-info .cart-act { max-width: 360px; }
+.shop-odds summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
+.shop-soon { margin: 0; text-align: center; }
+/* Écran large : les boosters en deux colonnes (cartouche plus petite) pour limiter le défilement */
+@media (min-width: 900px) {
+  .shop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .shop > :not(.shop-item) { grid-column: 1 / -1; }
+  .shop-item { grid-template-columns: 140px minmax(0, 1fr); gap: 16px; }
+  .shop-info .cart-act { max-width: none; }
+}
+@media (max-width: 600px) {
+  .shop-item { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .shop-fit { max-width: 130px; margin-inline: auto; } /* cartouche réduite : 9 boosters sans défilement interminable */
+  .shop-info .cart-act { max-width: none; }
+}
+
+/* ===== Boosters en stock : achat sans ouvrir (Boutique) ===== */
+.shop-stock { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-width: 0; }
+.shop-stock > label { font-weight: 700; font-size: 14px; }
+.shop-stock-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
+.shop-stock-row select { flex: 0 0 auto; min-height: 44px; min-width: 88px; }
+.shop-stock-row .cart-btn { flex: 1 1 200px; width: auto; }
+.shop-stock-miss { margin: 0; }
+
+/* ===== Inventaire : dons de boosters (formulaire, confirmation, historique) ===== */
+.inv-gift-empty { margin: 0 0 10px; }
+.inv-gift-form { display: grid; gap: 10px; max-width: 520px; min-width: 0; }
+.inv-gift-field { display: grid; gap: 4px; min-width: 0; }
+.inv-gift-field label { font-weight: 700; font-size: 14px; }
+.inv-gift-field select,
+.inv-gift-field textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.inv-gift-field select { min-height: 44px; }
+.inv-gift-field textarea { min-height: 64px; resize: vertical; }
+.inv-gift-form > div > .btn { min-height: 44px; }
+.inv-gift-confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.inv-gift-confirm p { flex: 1 1 100%; margin: 0; overflow-wrap: anywhere; }
+.inv-gift-confirm .btn { min-height: 44px; }
+.inv-gifts-list { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+.inv-gifts-list li { display: grid; gap: 4px; padding: 8px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.inv-gifts-list li:last-child { border-bottom: 0; }
+.inv-gifts-list p { margin: 0; overflow-wrap: anywhere; }
+.inv-gifts-list q { font-style: italic; overflow-wrap: anywhere; }
+
+/* ===== Boosters typés : choix de la série, limites et types en stock ===== */
+/* Dialogue « Quelle série ? » : une ligne tactile (44 px) par série, sans bordure de fieldset. */
+.serie-pick { margin: 0; padding: 0; border: 0; min-width: 0; }
+#cartes-serie-list { display: grid; gap: 8px; }
+.serie-opt { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 10px 12px; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; min-width: 0; }
+.serie-opt input { flex: 0 0 auto; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent, #FBD32D); }
+.serie-opt > span { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.serie-opt:has(input:checked) { border-color: var(--accent, #FBD32D); }
+.serie-opt:focus-within { outline: 2px solid var(--accent, #FBD32D); outline-offset: 2px; }
+/* Boutique typée : texte d'introduction, limite de la semaine, achat bloqué. */
+.shop-intro { margin: 0; }
+.shop-limit { margin: 0; }
+.shop-soldout { margin: 0; font-weight: 700; }
+.inv-none { margin: 0 0 8px; }
+/* Ouverture : boutons « Tout l'inventaire » et « Reprendre » au-dessus des tuiles ; grosse ouverture (résumé par rareté, meilleures cartes). */
+.cart-global { margin-bottom: 12px; }
+.x5-progress { font-weight: 700; margin: 8px 0 0; }
+.x5-ranks { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.x5-ranks li { display: flex; gap: 6px; align-items: baseline; }
+.x5-h { margin: 12px 0 6px; font-size: 16px; }
+.shop-done { display: flex; flex-direction: column; gap: 6px; }
+.shop-done > p { margin: 0; }
+/* Focus rendu après un redessin : le conteneur de révélation et le titre du don sont des cibles de repli (pas de contour). */
+#cartes-reveal:focus, #inv-gift-h:focus { outline: none; }
+/* Explication d'un bouton désactivé (Ouvrir 5 sous 5 boosters) : visible, sous le bouton. */
+.cart-hint { font-size: 13px; }

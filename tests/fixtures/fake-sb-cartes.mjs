@@ -2,6 +2,11 @@
 // Sert aux tests de la collection et du panel Jeu de cartes (fixture 'fake-sb-cartes.mjs' passée à openPage() dans lib/harness.cjs).
 // Sert au test d'ouverture de booster dans cartes.html (hg_open_booster, hg_cards_me, …).
 // Exporte createClient(). Lit window.__SCN ; expose window.__DB, window.__LOG et window.__CARDS (configuration du jeu).
+// Boosters typés (SPEC booster-system), seulement si scenario.types = true : RPC hg_booster_types_me, hg_booster_buy (p_type),
+// hg_booster_open, hg_booster_gift (p_type), hg_booster_gifts_me (type_id/type_name). Sans types, les deux premières
+// répondent PGRST202 (repli). Clés du scénario : types, typeOverrides { id: {…} }, stock { id: n }, typePity { id: n },
+// boughtWeek { id: n }, collectorMissing N. État lisible : window.__DB.hg_booster_types / hg_booster_stock /
+// hg_booster_pity / hg_booster_purchases, et window.__SB (le client factice, pour page.evaluate).
 
 /* ---------- Scénario et constantes ---------- */
 const S = window.__SCN || {};
@@ -65,6 +70,8 @@ const DB = {
   // Drops de cartes (card-drops.js, admin-cards/drops.js) : scénario S.drops / S.dropClaims (dates ISO)
   // Drops de cartes : ce que la page reçoit (scénario S.drops et S.dropClaims).
   hg_card_drops: S.drops || [], hg_card_drop_claims: S.dropClaims || [],
+  // Dons de boosters entre membres (migration 067) : scénario S.boosterGifts, lignes au format de la table.
+  hg_booster_gifts: S.boosterGifts || [],
 };
 // Le badge « Fidèle » a des niveaux, pour la page de badges.
 Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', description: 'Membre du gang depuis des années', levels_enabled: true, metric: 'anciennete_annees',
@@ -156,6 +163,32 @@ DB.hg_challenges = [{ id: '00000000-0000-4000-8000-0000000000c1', title: 'Vingt 
 // Journal des Paillettes de la fin : il remplace celui du début (une seule entrée gardée).
 DB.hg_wallet_log = [{ user_id: ME, delta: 100, reason: 'booster', ref: null, created_at: iso(-1) }];
 }
+/* ---------- Types de boosters (SPEC booster-system §1) : données et états du faux backend ---------- */
+// Les neuf types, valeurs définitives de la spec. Taux en pourcentage ; chaque ligne fait 100.
+// S.typeOverrides = { id: { champ: valeur } } remplace des champs d'un type (fusion superficielle, scénario de test).
+const TAUX = (commune, peu, rare, epique, legendaire, mythique, identite) => ({ commune, peu_commune: peu, rare, epique, legendaire, mythique, identite });
+const TYPES_BASE = [
+  { id: 'classique', name: 'Classique', price: 100, size: 5, rates: TAUX(60, 25, 10, 4, 0.88, 0.1, 0.02), shiny_rate: 3, pity_epique: 20, pool: 'tous', weekly_limit: null, free_daily: true, style: 'cart--classique', sort: 10 },
+  { id: 'serie', name: 'Série', price: 150, size: 5, rates: TAUX(60, 25, 10, 4, 0.88, 0.1, 0.02), shiny_rate: 3, pity_epique: 20, pool: 'serie', weekly_limit: null, free_daily: false, style: 'cart--serie', sort: 20 },
+  { id: 'argente', name: 'Argenté', price: 250, size: 5, rates: TAUX(45, 30, 14.88, 8, 2, 0.1, 0.02), shiny_rate: 4, pity_epique: 20, pool: 'tous', weekly_limit: null, free_daily: false, style: 'cart--argente', sort: 30 },
+  { id: 'dore', name: 'Doré', price: 350, size: 5, rates: TAUX(34, 31, 18.68, 12, 4, 0.3, 0.02), shiny_rate: 4, pity_epique: 20, pool: 'tous', weekly_limit: null, free_daily: false, style: 'cart--dore', sort: 40 },
+  { id: 'diamant', name: 'Diamant', price: 500, size: 5, rates: TAUX(15, 28, 25, 20, 10, 1.98, 0.02), shiny_rate: 10, pity_epique: 0, pool: 'tous', weekly_limit: 5, free_daily: false, style: 'cart--diamant', sort: 50 },
+  { id: 'quitte_double', name: 'Quitte ou double', price: 500, size: 5, rates: TAUX(90, 1.5, 1.5, 1.5, 3.98, 1.5, 0.02), shiny_rate: 10, pity_epique: 0, pool: 'tous', weekly_limit: 5, free_daily: false, style: 'cart--quitte', sort: 60 },
+  { id: 'holographique', name: 'Holographique', price: 1000, size: 5, rates: TAUX(0, 20, 20, 20, 20, 20, 0), shiny_rate: 10, pity_epique: 0, pool: 'tous', weekly_limit: 1, free_daily: false, style: 'cart--holo', sort: 80 },
+  { id: 'collectionneur', name: 'Collectionneur', price: 500, size: 10, rates: TAUX(60, 25, 10, 4, 0.5, 0.4, 0.1), shiny_rate: 3, pity_epique: 20, pool: 'manquantes', weekly_limit: null, free_daily: false, style: 'cart--collection', sort: 70 },
+  { id: 'identite', name: 'Identité', price: 10000, size: 5, rates: TAUX(45, 25, 10, 4, 0.5, 0.5, 15), shiny_rate: 3, pity_epique: 0, pool: 'tous', weekly_limit: null, free_daily: false, style: 'cart--identite', sort: 90 },
+];
+// Table des types (toujours présente ; les RPC typées n'répondent que si scenario.types est vrai).
+DB.hg_booster_types = TYPES_BASE.map((t) => ({ description: null, active: true, ...t, ...(S.typeOverrides?.[t.id] ?? {}) }));
+// Stock par type (S.stock = { dore: 2, serie: 1 }), compteurs de garantie épique (S.typePity = { dore: 7 }),
+// achats de la semaine (S.boughtWeek = { holographique: 1 }, comptés dans la limite). Tout pour le membre connecté.
+// Le stock générique (wallet gift_boosters, S.gift) est compté dans « classique ».
+DB.hg_booster_stock = Object.entries(S.stock || {}).map(([type_id, qty]) => ({ user_id: ME, type_id, qty }));
+DB.hg_booster_pity = Object.entries(S.typePity || {}).map(([type_id, count]) => ({ user_id: ME, type_id, count }));
+DB.hg_booster_purchases = Object.entries(S.boughtWeek || {}).map(([type_id, qty], i) => ({ id: i + 1, user_id: ME, type_id, qty, cost: 0, created_at: new Date().toISOString() }));
+// Demandes de don déjà traitées (p_request), pour l'idempotence de hg_booster_gift typé.
+DB.hg_booster_gift_refs = [];
+
 // Configuration du jeu lue par la page : prix, taux, recyclage, fabrication, récompenses quotidiennes.
 window.__CARDS = { config: { booster_price: 100, booster_size: 5, free_booster_hours: 24, shiny_rate: 3, pity_epique: 10,
   rates: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 },
@@ -211,6 +244,210 @@ function suggestionsFromDb() {
   rows.sort((a, b) => Number(b.both) - Number(a.both) || (b.n_want + b.n_give) - (a.n_want + a.n_give) || a.pseudo.localeCompare(b.pseudo, 'fr'));
   return rows;
 }
+/* ---------- Boosters typés (scénario S.types) : aides communes aux RPC hg_booster_* ---------- */
+// Raretés dans l'ordre croissant ; « épique ou mieux » = rang 3 et plus.
+const RARETES = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
+/** Rang d'une rareté (-1 si inconnue, « unique » par exemple). */
+const rangRarete = (r) => RARETES.indexOf(r);
+// Compteurs des boosters typés : identifiants d'exemplaires (au-delà des autres fausses données) et nombre de tirages.
+let copieTypee = 3000;
+let ouvertures = 0;
+/** Réponse d'erreur au format de supabase-js. */
+const erreur = (message) => ({ data: null, error: { message } });
+/** Réponse d'une fonction absente (migration 069 non appliquée) : même erreur que PostgREST, pour tester le repli. */
+const absente = (fn) => ({ data: null, error: { code: 'PGRST202', message: `Could not find the function public.${fn}` } });
+/** Type de booster actif d'après son identifiant, ou undefined. */
+const typeBooster = (id) => DB.hg_booster_types.find((t) => t.id === id && t.active !== false);
+/** Nom d'un type, même désactivé (historique des dons). */
+const nomType = (id) => DB.hg_booster_types.find((t) => t.id === id)?.name ?? null;
+/** Portefeuille du membre connecté. */
+const portefeuille = () => DB.hg_wallets.find((x) => x.user_id === ME);
+/**
+ * Lundi 00:00 à Zurich de la semaine courante, en millisecondes (comme les quêtes).
+ * Heure murale de Zurich lue via Intl, puis convertie : le décalage est celui de l'instant courant.
+ */
+function debutSemaine(t = Date.now()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' }).formatToParts(t).map((x) => [x.type, x.value]));
+  const mural = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+  const decalage = mural - (t - (t % 1000));
+  const depuisLundi = (['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday) + 6) % 7;
+  return Date.UTC(+p.year, +p.month - 1, +p.day - depuisLundi) - decalage;
+}
+/** Boosters achetés cette semaine pour le type (achats et mises en stock ; les dons et cadeaux ne comptent pas). */
+const achatsSemaine = (id) => DB.hg_booster_purchases.filter((r) => r.user_id === ME && r.type_id === id && new Date(r.created_at).getTime() >= debutSemaine())
+  .reduce((s, r) => s + r.qty, 0);
+/** Stock d'un type pour un membre ; le stock générique (gift_boosters) s'ajoute à « classique » du membre connecté. */
+function stockDe(id, uid = ME) {
+  const n = DB.hg_booster_stock.find((r) => r.user_id === uid && r.type_id === id)?.qty ?? 0;
+  return n + (id === 'classique' && uid === ME ? (portefeuille()?.gift_boosters ?? 0) : 0);
+}
+/** Ajoute n boosters du type au stock d'un membre. */
+function ajouterStock(uid, id, n) {
+  let r = DB.hg_booster_stock.find((x) => x.user_id === uid && x.type_id === id);
+  if (!r) DB.hg_booster_stock.push(r = { user_id: uid, type_id: id, qty: 0 });
+  r.qty += n;
+}
+/** Retire n boosters du stock du membre connecté : d'abord la ligne du type, puis le stock générique (classique). */
+function retirerStock(id, n) {
+  const r = DB.hg_booster_stock.find((x) => x.user_id === ME && x.type_id === id);
+  const pris = Math.min(n, r?.qty ?? 0);
+  if (r) r.qty -= pris;
+  if (n - pris > 0 && id === 'classique') portefeuille().gift_boosters -= n - pris;
+}
+/** Compteur de garantie épique du type pour le membre connecté. */
+const pityDe = (id) => DB.hg_booster_pity.find((r) => r.user_id === ME && r.type_id === id)?.count ?? 0;
+/** Met le compteur de garantie du type à n. */
+function fixerPity(id, n) {
+  let r = DB.hg_booster_pity.find((x) => x.user_id === ME && x.type_id === id);
+  if (!r) DB.hg_booster_pity.push(r = { user_id: ME, type_id: id, count: 0 });
+  r.count = n;
+}
+/**
+ * Cartes possibles pour un type : cartes actives des séries actives et commencées, hors « unique » ;
+ * pour « serie » seulement la série demandée ; pour « manquantes » seulement celles que le membre ne possède pas
+ * (S.collectorMissing = N ne garde que les N premières, pour tester le remboursement).
+ */
+function poolType(type, set) {
+  const maint = Date.now();
+  const ouvertes = new Set(DB.hg_card_sets.filter((s) => s.active !== false && (!s.starts_at || new Date(s.starts_at) <= maint)).map((s) => s.id));
+  let cartes = DB.hg_cards.filter((c) => c.active !== false && ouvertes.has(c.set_id) && c.rarity !== 'unique');
+  if (type.pool === 'serie') cartes = cartes.filter((c) => c.set_id === set);
+  if (type.pool === 'manquantes') {
+    const possedees = new Set(DB.hg_card_copies.filter((x) => x.owner_id === ME && !x.recycled_at).map((x) => x.card_id));
+    cartes = cartes.filter((c) => !possedees.has(c.id));
+    if (S.collectorMissing != null) cartes = cartes.slice(0, S.collectorMissing);
+  }
+  return cartes;
+}
+/** Carte d'un booster au format de la RPC : exemplaire donné, brillance et champs comme hg_open_booster_req. */
+const carteSortie = (c, copie, shiny) => ({ copy_id: copie, card_id: c.id, name: c.name, rarity: c.rarity, family: c.family, image_url: null,
+  flavor: c.flavor, number: c.number, shiny, serial: null, max_copies: c.max_copies ?? null });
+/** Tire n cartes distinctes de la liste à partir de l'indice k (même règle que la fausse hg_open_booster_req). */
+function piocher(k, liste, n) {
+  if (!liste.length) return [];
+  const nb = Math.min(n, liste.length);
+  return Array.from({ length: nb }, (_, i) => liste[(k * n + i) % liste.length]);
+}
+/** Les types actifs avec leur stock, leurs achats de la semaine et ce qu'il reste (réponse de hg_booster_types_me). */
+function typesMoi() {
+  const types = DB.hg_booster_types.filter((t) => t.active !== false).sort((a, b) => a.sort - b.sort).map((t) => {
+    const achetes = achatsSemaine(t.id);
+    const { active, ...champs } = t;
+    return { ...champs, stock: stockDe(t.id), pity_count: pityDe(t.id), bought_week: achetes,
+      remaining_week: t.weekly_limit == null ? null : Math.max(0, t.weekly_limit - achetes) };
+  });
+  return { data: { types, free_booster_at: S.freeAt ?? iso(-0.1), week_ends_at: new Date(debutSemaine() + 7 * 864e5).toISOString() }, error: null };
+}
+/** hg_booster_buy typé : met en stock ; p_type absent = classique. Limite hebdomadaire et Paillettes contrôlées. */
+function achatTypee(args) {
+  const type = typeBooster(args.p_type ?? 'classique');
+  if (!type) return erreur('Type de booster inconnu');
+  const q = args.p_qty ?? 1;
+  if (q < 1 || q > 10) return erreur('On peut acheter de 1 à 10 boosters à la fois');
+  const ref = args.p_request != null ? 'achat:' + args.p_request : null;
+  if (ref && DB.hg_wallet_log.some((l) => l.user_id === ME && l.ref === ref)) return erreur('achat_deja_fait');
+  const w = portefeuille();
+  const deja = achatsSemaine(type.id);
+  // Mode sans limite (S.god) : pas de limite, pas de prix, pas d'achat compté.
+  if (!S.god && type.weekly_limit != null && deja + q > type.weekly_limit) {
+    return erreur(`Limite atteinte : il te reste ${Math.max(0, type.weekly_limit - deja)} booster(s) « ${type.name} » cette semaine`);
+  }
+  const cout = S.god ? 0 : type.price * q;
+  if (w.paillettes < cout) return erreur(`Pas assez de Paillettes (il en faut ${cout})`);
+  w.paillettes -= cout;
+  if (cout > 0 || ref) DB.hg_wallet_log.unshift({ user_id: ME, delta: -cout, reason: 'booster', ref, created_at: new Date().toISOString() });
+  if (!S.god) DB.hg_booster_purchases.push({ id: DB.hg_booster_purchases.length + 1, user_id: ME, type_id: type.id, qty: q, cost: cout, created_at: new Date().toISOString() });
+  ajouterStock(ME, type.id, q);
+  const restant = type.weekly_limit == null ? null : Math.max(0, type.weekly_limit - achatsSemaine(type.id));
+  return { data: { type: type.id, qty: q, cost: cout, stock: stockDe(type.id), paillettes: w.paillettes, remaining_week: restant }, error: null };
+}
+/**
+ * hg_booster_open typé : ouvre un booster du stock, l'achète (mode 'achat') ou prend le gratuit (mode 'gratuit').
+ * Garantie épique par type, remboursement des cartes non données (Collectionneur ou pool trop petit),
+ * idempotence par p_request (ref « booster:<requête> », comme la RPC).
+ */
+function ouvrirTypee(args) {
+  const type = typeBooster(args.p_type ?? 'classique');
+  if (!type) return erreur('Type de booster inconnu');
+  const mode = args.p_mode;
+  if (!['achat', 'stock', 'gratuit'].includes(mode)) return erreur("Mode d'ouverture inconnu");
+  const ref = args.p_request != null ? 'booster:' + args.p_request : null;
+  if (ref && DB.hg_wallet_log.some((l) => l.user_id === ME && l.ref === ref)) return erreur('booster_deja_ouvert');
+  if (type.pool === 'serie' && !args.p_set) return erreur('Choisis une série');
+  if (type.pool === 'serie' && !DB.hg_card_sets.some((s) => s.id === args.p_set)) return erreur('Série inconnue');
+  const w = portefeuille();
+  if (mode === 'achat' && !S.god) {
+    const deja = achatsSemaine(type.id);
+    if (type.weekly_limit != null && deja + 1 > type.weekly_limit) {
+      return erreur(`Limite atteinte : il te reste ${Math.max(0, type.weekly_limit - deja)} booster(s) « ${type.name} » cette semaine`);
+    }
+    if (w.paillettes < type.price) return erreur(`Pas assez de Paillettes (il en faut ${type.price})`);
+  }
+  if (mode === 'stock' && stockDe(type.id) < 1) return erreur('Aucun booster de ce type en stock');
+  if (mode === 'gratuit') {
+    if (!type.free_daily) return erreur("Ce booster n'est pas gratuit");
+    // Libre une fois le délai passé, et une seule fois (marqué par une ligne « booster_gratuit » du journal).
+    const libre = new Date(S.freeAt ?? iso(-0.1)).getTime() <= Date.now() && !DB.hg_wallet_log.some((l) => l.user_id === ME && l.reason === 'booster_gratuit');
+    if (!libre) return erreur("Le booster gratuit n'est pas encore disponible");
+  }
+  // Tirage : la liste des cartes possibles, puis la garantie épique si le compteur atteint son seuil.
+  const liste = poolType(type, args.p_set);
+  const k = ouvertures++;
+  const n = type.size;
+  let choisies = piocher(k, liste, n);
+  if (type.pity_epique > 0 && pityDe(type.id) + 1 >= type.pity_epique && !choisies.some((c) => rangRarete(c.rarity) >= 3)) {
+    const epique = liste.find((c) => rangRarete(c.rarity) >= 3 && !choisies.includes(c));
+    if (epique) choisies = [...choisies.slice(0, -1), epique];
+  }
+  const cartes = choisies.map((c, i) => carteSortie(c, copieTypee++, (k * n + i) % 7 === 0));
+  for (const c of cartes) DB.hg_card_copies.push({ id: c.copy_id, card_id: c.card_id, owner_id: ME, shiny: c.shiny, serial: null, source: 'booster',
+    obtained_at: new Date().toISOString(), locked_trade: null, recycled_at: null });
+  if (type.pity_epique > 0) fixerPity(type.id, cartes.some((c) => rangRarete(c.rarity) >= 3) ? 0 : pityDe(type.id) + 1);
+  // Paiement : achat (Paillettes, compté dans la limite) ; stock (1 retiré) ; gratuit (une seule fois par délai).
+  const created_at = new Date().toISOString();
+  if (mode === 'achat' && !S.god) {
+    w.paillettes -= type.price;
+    DB.hg_wallet_log.unshift({ user_id: ME, delta: -type.price, reason: 'booster', ref, created_at });
+    DB.hg_booster_purchases.push({ id: DB.hg_booster_purchases.length + 1, user_id: ME, type_id: type.id, qty: 1, cost: type.price, created_at });
+  }
+  if (mode === 'stock') retirerStock(type.id, 1);
+  if (mode === 'gratuit') DB.hg_wallet_log.unshift({ user_id: ME, delta: 0, reason: 'booster_gratuit', ref, created_at });
+  // Remboursement : prix / taille du booster pour chaque carte non donnée (rien en mode sans limite).
+  const refund = S.god ? 0 : (type.price / type.size) * (n - cartes.length);
+  if (refund > 0) {
+    w.paillettes += refund;
+    DB.hg_wallet_log.unshift({ user_id: ME, delta: refund, reason: 'remboursement', ref: ref ? ref + ':remb' : null, created_at });
+  }
+  DB.hg_wallet_log.unshift({ user_id: ME, delta: 0, reason: 'booster_requete', ref, created_at });
+  w.boosters_opened = (w.boosters_opened ?? 4) + 1;
+  // Annonce : une carte légendaire ou plus écrit une ligne d'activité.
+  for (const c of cartes) if (rangRarete(c.rarity) >= 4) DB.hg_activity.unshift({ user_id: ME, kind: 'cartes', text: 'Ethan a obtenu « ' + c.name + ' » !', created_at });
+  const best = cartes.reduce((b, c) => (rangRarete(c.rarity) > rangRarete(b) ? c.rarity : b), 'commune');
+  return { data: { cards: cartes, best, demandees: n, livrees: cartes.length, type: type.id, mode, stock: stockDe(type.id), refund }, error: null };
+}
+/** hg_booster_gift typé : donne q boosters d'un type du stock à un membre (le journal garde le type).
+ * p_request : une même demande rejouée répond « don_deja_fait » (le don n'est pas refait). Les boosters Collectionneur ne s'offrent pas. */
+function donTypee(args) {
+  const dest = DB.hg_profiles.find((p) => p.id === args.p_to);
+  if (!dest || dest.id === ME || dest.is_ghost) return erreur('Destinataire invalide');
+  const type = typeBooster(args.p_type ?? 'classique');
+  if (!type) return erreur('Type de booster inconnu');
+  if (type.pool === 'manquantes') return erreur('Les boosters Collectionneur ne s\'offrent pas');
+  const ref = args.p_request != null ? 'don:' + args.p_request : null;
+  if (ref && DB.hg_booster_gift_refs.includes(ref)) return erreur('don_deja_fait');
+  const q = args.p_qty ?? 1;
+  if (q < 1 || q > 10) return erreur('On peut offrir de 1 à 10 boosters à la fois');
+  const n = stockDe(type.id);
+  if (n < q) return erreur(`Tu n'as que ${n} booster(s) « ${type.name} » en stock`);
+  const msg = (args.p_message ?? '').trim().slice(0, 300) || null;
+  if (ref) DB.hg_booster_gift_refs.push(ref);
+  retirerStock(type.id, q);
+  ajouterStock(dest.id, type.id, q);
+  DB.hg_booster_gifts.push({ id: DB.hg_booster_gifts.length + 1, from_user: ME, to_user: dest.id, type_id: type.id, qty: q, message: msg, created_at: new Date().toISOString() });
+  return { data: { type: type.id, qty: q, stock: stockDe(type.id) }, error: null };
+}
+
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */
 const getv = (r, c) => r[c];
 /* ---------- Requêtes factices (faux .from()) ---------- */
@@ -296,7 +533,7 @@ if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Anciennet
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {
-  return {
+  const cli = {
     auth: {
       // Session : absente si le scénario indique un visiteur (S.guest).
       getSession: async () => ({ data: { session: S.guest ? null : { user: { id: S.uid || ME } } } }),
@@ -408,10 +645,7 @@ export function createClient() {
         else if (!args.p_free) w.paillettes -= 100;
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite');
         const k = window.__OK.size - 1;
-        const cards = Array.from({ length: 5 }, (_, i) => {
-          const c = pool[(k * 5 + i) % pool.length];
-          return { copy_id: 1000 + k * 5 + i, card_id: c.id, name: c.name, rarity: c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: (k * 5 + i) % 7 === 0, serial: null, max_copies: null };
-        });
+        const cards = piocher(k, pool, 5).map((c, i) => ({ copy_id: 1000 + k * 5 + i, card_id: c.id, name: c.name, rarity: c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: (k * 5 + i) % 7 === 0, serial: null, max_copies: null }));
         const ORD = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
         const best = cards.reduce((b, c) => (ORD.indexOf(c.rarity) > ORD.indexOf(b) ? c.rarity : b), 'commune');
         // Comme la vraie RPC : les cartes tirées deviennent des exemplaires du joueur (collection, carte agrandie).
@@ -499,6 +733,54 @@ export function createClient() {
         d.ends_at = new Date().toISOString();
         return { data: null, error: null };
       }
+      // Boosters en stock (migration 067) : achat, don à un membre et historique des dons.
+      // Mêmes contrôles et mêmes messages que la base ; S.god rend l'achat gratuit, S.giftsError fait échouer l'historique.
+      // Achat : 1 à 10 boosters au prix du booster classique ; un même p_request ne se paie pas deux fois.
+      if (fn === 'hg_booster_buy') {
+        // Scénario S.types : achat par type (p_type absent = classique) ; sinon l'achat générique d'avant.
+        if (S.types) return achatTypee(args);
+        const q = args.p_qty ?? 1, w = DB.hg_wallets.find((x) => x.user_id === ME);
+        if (q < 1 || q > 10) return { data: null, error: { message: 'On peut acheter de 1 à 10 boosters à la fois' } };
+        const ref = args.p_request != null ? 'achat:' + args.p_request : null;
+        if (ref && DB.hg_wallet_log.some((l) => l.user_id === ME && l.ref === ref)) return { data: null, error: { message: 'achat_deja_fait' } };
+        const cost = S.god ? 0 : (window.__CARDS.config.booster_price ?? 100) * q;
+        if (w.paillettes < cost) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${cost})` } };
+        w.paillettes -= cost;
+        if (cost > 0 || ref) DB.hg_wallet_log.unshift({ user_id: ME, delta: -cost, reason: 'booster', ref, created_at: new Date().toISOString() });
+        w.gift_boosters = (w.gift_boosters ?? 0) + q;
+        return { data: { qty: q, cost, stock: w.gift_boosters, paillettes: w.paillettes }, error: null };
+      }
+      // Don : le destinataire doit exister, être un membre (pas un fantôme) et ne pas être moi ; le stock doit suffire.
+      if (fn === 'hg_booster_gift') {
+        // Scénario S.types : don d'un type du stock ; sinon le don générique d'avant.
+        if (S.types) return donTypee(args);
+        const dest = DB.hg_profiles.find((p) => p.id === args.p_to);
+        if (!dest || dest.id === ME || dest.is_ghost) return { data: null, error: { message: 'Destinataire invalide' } };
+        const q = args.p_qty ?? 1;
+        if (q < 1 || q > 10) return { data: null, error: { message: 'On peut offrir de 1 à 10 boosters à la fois' } };
+        const w = DB.hg_wallets.find((x) => x.user_id === ME);
+        if ((w.gift_boosters ?? 0) < q) return { data: null, error: { message: `Tu n'as que ${w.gift_boosters ?? 0} booster(s) en stock` } };
+        const msg = (args.p_message ?? '').trim().slice(0, 300) || null;
+        w.gift_boosters -= q;
+        let wd = DB.hg_wallets.find((x) => x.user_id === dest.id);
+        if (!wd) DB.hg_wallets.push(wd = { user_id: dest.id, paillettes: 0, pity_epique: 0, daily_streak: 0, last_daily: null, gift_boosters: 0 });
+        wd.gift_boosters = (wd.gift_boosters ?? 0) + q;
+        DB.hg_booster_gifts.push({ id: DB.hg_booster_gifts.length + 1, from_user: ME, to_user: dest.id, qty: q, message: msg, created_at: new Date().toISOString() });
+        return { data: { qty: q, stock: w.gift_boosters }, error: null };
+      }
+      // Historique : les 30 derniers dons envoyés ou reçus, les plus récents d'abord, avec le pseudo de l'autre membre.
+      if (fn === 'hg_booster_gifts_me') {
+        if (S.giftsError) return { data: null, error: { message: 'rpc indisponible' } };
+        return { data: DB.hg_booster_gifts.filter((g) => g.from_user === ME || g.to_user === ME)
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 30)
+          .map((g) => { const sent = g.from_user === ME, otherId = sent ? g.to_user : g.from_user;
+            return { id: g.id, qty: g.qty, message: g.message, created_at: g.created_at, sent, other_id: otherId, other_pseudo: DB.hg_profiles.find((p) => p.id === otherId)?.pseudo ?? '',
+              // Scénario S.types : le type du don (les anciens dons sans type sont du classique).
+              ...(S.types ? { type_id: g.type_id ?? 'classique', type_name: nomType(g.type_id ?? 'classique') } : {}) }; }), error: null };
+      }
+      // Boosters typés (migration 069) : sans scenario.types, les deux fonctions « n'existent pas » (repli sur l'ancien mode).
+      if (fn === 'hg_booster_types_me') return S.types ? typesMoi() : absente(fn);
+      if (fn === 'hg_booster_open') return S.types ? ouvrirTypee(args) : absente(fn);
       // Tirage manuel du Secret Santa : renvoie le nombre de paires reçues.
       if (fn === 'hg_ss_manual_draw') return { data: args.p_pairs.length, error: null };
       return { data: null, error: null };
@@ -515,4 +797,7 @@ export function createClient() {
     /** Fonctions edge simulées : notées dans le journal, avec une réponse pour dyn_announce, sinon une réponse vide. */
     functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
   };
+  // Client exposé pour les tests et les smoke tests (page.evaluate(() => window.__SB.rpc(...))).
+  window.__SB = cli;
+  return cli;
 }

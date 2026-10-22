@@ -104,7 +104,7 @@ export default {
       summary: 'Accomplir les quêtes de la semaine et réclamer leurs Paillettes.',
       page: 'cartes.html',
       steps: [
-        { title: 'Trouve le bloc des quêtes', text: 'Sur Cartes, onglet « Boosters », le bloc « Quêtes de la semaine » se trouve sous les boosters.' },
+        { title: 'Trouve le bloc des quêtes', text: 'Sur Cartes, onglet « Ouverture », le bloc « Quêtes de la semaine » se trouve sous la zone d’ouverture des boosters.' },
         { title: 'Lis l’avancement', text: 'Chaque quête affiche sa barre de progression et le compte « X / Y ». Elle se remplit toute seule au fil de tes actions (ouvrir des boosters, conclure un échange, etc.).' },
         { title: 'Réclame la récompense', text: 'Quand une quête est terminée, touche « Réclamer · » suivi du montant. Les Paillettes sont ajoutées à ton solde.' },
         { title: 'Attends le lundi suivant', text: 'Une fois réclamée, la quête affiche « Récompense reçue ». De nouvelles quêtes apparaissent le lundi suivant, à 00 h (heure de Zurich).' },

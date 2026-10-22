@@ -1,0 +1,114 @@
+/* ===== Cartouches de booster : variantes par type (à charger après cartes.css) =====
+   Usage : ajouter la classe cart--<type> à .cart-box (le markup et la géométrie ne changent pas).
+   Types : classique (rien à changer), serie, argente, dore, diamant, quitte, holo, collection, identite.
+   Pur CSS : aucune image ni police externe ; les coins « pixel » restent portés par les clip-path
+   de cartes.css (.cart-body, .cart-label-fl, .cart-stk). Les réglages ci-dessous ne touchent pas à la géométrie. */
+
+/* Classique : aspect d'origine (cartes.css), aucune règle ajoutée. */
+
+/* ---------- Série : corps bleu nuit, étiquette bleue ---------- */
+.cart--serie .cart-body { background: #22324f; }
+.cart--serie .cart-label-fl { background: #2B5AE2; }
+.cart--serie .cart-lbl2 { color: #fff; }
+/* Petit rappel « 1 SÉRIE AU CHOIX » sous le sous-titre, dans la bande libre de l'étiquette. */
+.cart--serie .cart-label::after { content: "1 SÉRIE AU CHOIX"; position: absolute; left: 0; right: 0; bottom: 3px;
+  text-align: center; font-size: 7px; font-weight: 700; line-height: 1; letter-spacing: .18em; color: #fff; }
+
+/* ---------- Argenté : métal brossé gris ---------- */
+.cart--argente .cart-body { background:
+  repeating-linear-gradient(180deg, rgba(255,255,255,.10) 0 1px, rgba(0,0,0,.025) 1px 3px),
+  linear-gradient(180deg, #d9dce3 0%, #9aa0ad 52%, #c4c8d1 100%); }
+.cart--argente .cart-label-fl { background: #5b6170; }
+.cart--argente .cart-lbl1 { color: #fff; }
+.cart--argente .cart-lbl2 { color: #e6e9ef; }
+.cart--argente .cart-ridge { background: repeating-linear-gradient(90deg, #5b6170 0 4px, #e6e9ef 4px 8px); }
+.cart--argente .cart-foot { color: #2b2f38; }
+
+/* ---------- Doré : or poli, reflet diagonal ---------- */
+.cart--dore .cart-body { background:
+  linear-gradient(115deg, rgba(255,255,255,0) 35%, rgba(255,250,220,.45) 50%, rgba(255,255,255,0) 65%),
+  linear-gradient(180deg, #f3d98a 0%, #c9962f 55%, #e8c25e 100%); }
+.cart--dore .cart-label-fl { background: #7a4f0b; }
+.cart--dore .cart-lbl1 { color: #fff; }
+.cart--dore .cart-lbl2 { color: #ffe9a6; }
+.cart--dore .cart-ridge { background: repeating-linear-gradient(90deg, #3a2606 0 4px, #c9962f 4px 8px); }
+.cart--dore .cart-foot { color: #3a2606; }
+
+/* ---------- Diamant : cyan glacé à facettes, étoiles statiques ---------- */
+.cart--diamant .cart-body { background:
+  linear-gradient(118deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 42%),
+  linear-gradient(205deg, rgba(255,255,255,0) 55%, rgba(255,255,255,.40) 100%),
+  linear-gradient(160deg, rgba(15,76,117,.10) 0 50%, rgba(255,255,255,0) 50%),
+  linear-gradient(180deg, #bfefff 0%, #7fd3f0 100%); }
+.cart--diamant .cart-label-fl { background: #0f4c75; }
+.cart--diamant .cart-lbl1 { color: #fff; }
+.cart--diamant .cart-lbl2 { color: #bfefff; }
+.cart--diamant .cart-ridge { background: repeating-linear-gradient(90deg, #0f4c75 0 4px, #bfefff 4px 8px); }
+.cart--diamant .cart-foot { color: #0f4c75; }
+/* Étoiles à 4 branches (clip-path, sans image) : deux sur les bords du corps, une dans l'étiquette. */
+.cart--diamant .cart-body::before,
+.cart--diamant .cart-body::after,
+.cart--diamant .cart-label::after { content: ""; position: absolute; background: #fff;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+.cart--diamant .cart-body::before { left: 5px; top: 96px; width: 12px; height: 12px; }
+.cart--diamant .cart-body::after { right: 4px; top: 214px; width: 10px; height: 10px; background: #e9fbff; }
+.cart--diamant .cart-label::after { right: 2px; top: 2px; width: 9px; height: 9px; }
+
+/* ---------- Quitte ou double : casino noir et rouge sombre, tapis vert, dés ---------- */
+/* Corps : damier noir / rouge sombre très discret (quatre quadrants par tuile de 28 px), fond noir sous le damier. */
+.cart--quitte .cart-body { background:
+  conic-gradient(#0b0a0c 25%, #3a0a12 0 50%, #0b0a0c 0 75%, #3a0a12 0) 0 0 / 28px 28px,
+  #0b0a0c; }
+/* Étiquette : feutre vert de casino ; sous-titre doré (contraste ≈ 5,8:1 sur le vert). */
+.cart--quitte .cart-label-fl { background: #0f5c3a; }
+.cart--quitte .cart-lbl1 { color: #fff; }
+.cart--quitte .cart-lbl2 { color: #FBD32D; }
+.cart--quitte .cart-ridge { background: repeating-linear-gradient(90deg, #0b0a0c 0 4px, #9e1b2c 4px 8px); }
+.cart--quitte .cart-foot { color: #f5d46b; font-weight: 700; }
+/* Badge « ×2 » doré et petit dé blanc à deux points, dessinés sur l'écran à droite du logo (comme le badge ID). */
+.cart--quitte .cart-scr::before { content: "×2"; position: absolute; left: 112px; top: 8px; width: 30px; height: 14px;
+  background: #FBD32D; color: #15131c; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center; }
+.cart--quitte .cart-scr::after { content: ""; position: absolute; left: 114px; top: 30px; width: 26px; height: 26px; border-radius: 4px; background-color: #fff;
+  background-image:
+    radial-gradient(circle at 30% 30%, #9e1b2c 0 2.4px, transparent 2.9px),
+    radial-gradient(circle at 70% 70%, #9e1b2c 0 2.4px, transparent 2.9px); }
+
+/* ---------- Holographique : dégradé irisé, scintillement lent sur le corps ---------- */
+.cart--holo .cart-body { background: linear-gradient(115deg, #ffc6e4 0%, #c6f1ff 18%, #fff6c2 36%, #dcc6ff 56%, #c3ffe0 76%, #ffc6e4 100%);
+  background-size: 250% 100%; background-repeat: repeat-x; animation: cart-holo-shift 8s ease-in-out infinite alternate; }
+@keyframes cart-holo-shift { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+.cart--holo .cart-label-fl { background: #15131c; }
+.cart--holo .cart-lbl1 { color: #fff; }
+/* Sous-titre irisé (texte découpé sur le dégradé) ; lisible sur l'étiquette presque noire. */
+.cart--holo .cart-lbl2 { color: transparent; background: linear-gradient(90deg, #ff9ad5, #9ae8ff, #fff09a, #c9a6ff, #ff9ad5);
+  background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; }
+.cart--holo .cart-ridge { background: repeating-linear-gradient(90deg, #15131c 0 4px, #8d86a0 4px 8px); }
+.cart--holo .cart-foot { color: #15131c; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .cart--holo .cart-body { animation: none; } }
+html[data-fx="off"] .cart--holo .cart-body { animation: none; }
+
+/* ---------- Collectionneur : cuir vert, liseré or intérieur ---------- */
+.cart--collection .cart-body { background: #1f4d36; }
+/* Liseré or : bordure dessinée par pseudo-élément, en retrait de 8 px pour rester dans les coupes pixel. */
+.cart--collection .cart-body::before { content: ""; position: absolute; left: 8px; top: 8px; right: 8px; bottom: 8px;
+  border: 1px solid #c9a24a; pointer-events: none; }
+.cart--collection .cart-label-fl { background: #0f2f20; }
+.cart--collection .cart-lbl1 { color: #fff; }
+.cart--collection .cart-lbl2 { color: #e2c77e; }
+.cart--collection .cart-ridge { background: repeating-linear-gradient(90deg, #0f2f20 0 4px, #c9a24a 4px 8px); }
+.cart--collection .cart-foot { color: #e2c77e; }
+
+/* ---------- Identité : noir, étiquette jaune, badge carte d'identité ---------- */
+.cart--identite .cart-body { background: #111015; }
+.cart--identite .cart-label-fl { background: #FBD32D; }
+.cart--identite .cart-lbl1 { color: #15131c; }
+.cart--identite .cart-lbl2 { color: #3a2f00; }
+.cart--identite .cart-ridge { background: repeating-linear-gradient(90deg, #0a0909 0 4px, #FBD32D 4px 5px, #0a0909 5px 8px); }
+/* Carte d'identité dessinée sur l'écran, à droite du logo : bandeau « ID » + silhouette. */
+.cart--identite .cart-scr::before { content: "ID"; position: absolute; left: 110px; top: 10px; width: 30px; height: 10px;
+  background: #FBD32D; color: #15131c; font-size: 7px; font-weight: 700; line-height: 10px; text-align: center; letter-spacing: .08em; }
+.cart--identite .cart-scr::after { content: ""; position: absolute; left: 110px; top: 20px; width: 30px; height: 40px; box-sizing: border-box;
+  border: 1.5px solid #FBD32D; background:
+    radial-gradient(circle at 50% 34%, #FBD32D 0 4.5px, transparent 5px),
+    radial-gradient(ellipse at 50% 100%, #FBD32D 0 9px, transparent 9.5px),
+    #1c1a22; }

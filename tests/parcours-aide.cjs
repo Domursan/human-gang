@@ -12,7 +12,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
-const MEMBER_SLUG = 'ouvrir-un-booster';   // tuto membre (cartes-base), page cartes.html, 6 étapes, 2 astuces
+const MEMBER_SLUG = 'ouvrir-un-booster';   // tuto membre (cartes-base), page cartes.html, 7 étapes, 3 astuces
 const GUEST_SLUG = 'se-connecter';          // tuto « Premiers pas », visible sans compte, 5 étapes
 const GROUP_IDS = ['premiers-pas', 'secret-santa', 'irl-historique', 'cartes-base', 'cartes-avance', 'communaute'];
 
@@ -111,10 +111,10 @@ async function checkData() {
   p = await openPage(browser, { page: 'aide', hash: '#' + MEMBER_SLUG, width: 1280 });
   check(await p.locator('#aide-list-view').isHidden(), 'tuto par adresse : la liste est masquée');
   check(await p.locator('#aide-tuto-view').isVisible(), 'tuto par adresse : le tuto est affiché');
-  check(await p.locator('.aide-step').count() === 6, 'tuto : six étapes numérotées');
+  check(await p.locator('.aide-step').count() === 7, 'tuto : sept étapes numérotées');
   check(await p.locator('.aide-step-num').first().innerText().then((t) => t === '1'), 'tuto : numérotation à partir de 1');
   check(await p.locator('.aide-shot').count() === 0, 'tuto : pas de capture (aucune étape n\'en a)');
-  check(await p.locator('.aide-tips li').count() === 2, 'tuto : deux astuces');
+  check(await p.locator('.aide-tips li').count() === 3, 'tuto : trois astuces');
   check(await p.locator('.aide-actions a.btn-primary').getAttribute('href') === 'cartes.html', 'tuto : bouton « Y aller » vers cartes.html');
   check(await p.title().then((t) => t.startsWith('Ouvrir un booster')), 'tuto : titre de l\'onglet mis à jour');
   check(await hscroll(p) <= 0, 'tuto 1280 : pas de défilement horizontal');

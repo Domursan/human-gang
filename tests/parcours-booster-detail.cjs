@@ -5,15 +5,33 @@
 // 2. Lot de 5 boosters animé : retournement à la main d'une carte en attente, puis détail après la révélation.
 // 3. Booster gratuit et booster offert sans animation : grille de boutons, clic et Entrée.
 // 4. Téléphone 390 px tactile : toucher une carte ouvre le détail, appui long = loupe ×2,5, sans défilement horizontal.
-// Faux Supabase : fixtures/fake-sb-cartes.mjs, hg_open_booster_req activée par scenario.reqRpc.
+// Les boosters s'ouvrent depuis le stock : on achète dans la Boutique, puis on ouvre dans l'onglet Ouverture.
+// Faux Supabase : fixtures/fake-sb-cartes.mjs en mode typé (scenario.types) : achat hg_booster_buy, ouverture du stock par hg_booster_open.
 // Lancer : node tests/parcours-booster-detail.cjs
 const { ROOT, check, finish, openPage, log, sleep, hscroll, chromium } = require('./lib/harness.cjs');
 
 /* ---------- Aides de test ---------- */
-const BTN = '[data-action=open-paid]';
-const BTN_X5 = '[data-action=open-paid-x5]';
+/** Bouton « Ouvrir 1 » du stock (classique) dans l'onglet Ouverture. */
+const OUVRIR1 = '#cartes-p-ouverture [data-stock-type=classique] [data-action=open-gift]';
+/** Bouton « Ouvrir 5 » du stock (classique) dans l'onglet Ouverture. */
+const BTN_X5 = '[data-action=open-stock-multi][data-type=classique][data-count="5"]';
+/** Bouton d'achat de la Boutique (classique) : achète la quantité choisie dans #shop-qty. */
+const ACHAT = '#cartes-paid [data-action=buy-stock]';
 const OPEN_CARD = '#cz-dialog[open]';
 const HINT = '#cartes-reveal .cartes-reveal-hint';
+/** Ouvre l'onglet Boutique (où sont les boutons d'achat). */
+async function aBoutique(p) { await p.click('[data-tab=boutique]'); await sleep(300); }
+/** Ouvre l'onglet Ouverture (où sont les boutons d'ouverture). */
+async function aOuverture(p) { await p.click('[data-tab=ouverture]'); await sleep(300); }
+/** Achète n boosters classiques dans la Boutique (ils vont dans le stock) et attend le stock. */
+async function acheter(p, n) {
+  await aBoutique(p);
+  await p.selectOption('#shop-qty', String(n));
+  const avant = await p.evaluate(() => window.__DB.hg_booster_stock.find((r) => r.type_id === 'classique')?.qty ?? 0);
+  await p.click(ACHAT);
+  await p.waitForFunction((a) => (window.__DB.hg_booster_stock.find((r) => r.type_id === 'classique')?.qty ?? 0) === a, avant + n, { timeout: 8000 });
+  await sleep(200);
+}
 
 /** Vrai si la fenêtre de carte agrandie est ouverte. */
 const ouverte = async (p) => !!(await p.$(OPEN_CARD));
@@ -38,9 +56,10 @@ const centre = (p, sel) => p.evaluate((s) => {
   const browser = await chromium.launch();
 
   // 1. Booster unique animé.
-  let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { reqRpc: true, bal: 600 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
-  await p.click(BTN);
+  let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { types: true, bal: 600 } });
+  await acheter(p, 1);
+  await aOuverture(p);
+  await p.click(OUVRIR1);
   await p.waitForSelector('#op-stage .op-card', { timeout: 8000 });
   check(await p.$$eval('#op-stage .op-card', (els) => els.length) === 5, 'booster animé : 5 cartes en éventail');
   check(await p.$$eval('#op-stage .op-card', (els) => els.every((e) => e.getAttribute('role') === 'button' && e.tabIndex === 0)), 'cartes : rôle bouton et atteignables au clavier');
@@ -89,8 +108,9 @@ const centre = (p, sel) => p.evaluate((s) => {
   await p.ctx.close();
 
   // 2. Lot de 5 boosters animé : une carte en attente se retourne au premier clic, le détail vient ensuite.
-  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { reqRpc: true, bal: 600 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { types: true, bal: 600 } });
+  await acheter(p, 5);
+  await aOuverture(p);
   await p.click(BTN_X5);
   await p.waitForSelector('#x5-c24', { timeout: 8000 });
   check(await p.$eval('#x5-c24', (e) => e.classList.contains('is-pending')), 'lot de 5 : carte encore face cachée au départ');
@@ -121,8 +141,8 @@ const centre = (p, sel) => p.evaluate((s) => {
   await p.ctx.close();
 
   // 3. Booster gratuit et booster offert, sans animation : grille de cartes (boutons).
-  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, reducedMotion: 'reduce', scenario: { reqRpc: true, bal: 600, gift: 1 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, reducedMotion: 'reduce', scenario: { types: true, bal: 600, stock: { classique: 1 } } });
+  // Booster gratuit : onglet Ouverture (par défaut), pas besoin de changer d'onglet.
   await p.click('[data-action=open-free]');
   await p.waitForSelector('#cartes-reveal .cartes-booster-grid .hgc', { timeout: 5000 }).catch(() => {});
   const grille = p.locator('#cartes-reveal .cartes-booster-grid .hgc');
@@ -144,7 +164,7 @@ const centre = (p, sel) => p.evaluate((s) => {
   await sleep(80);
   check(!(await ouverte(p)), 'grille : Échap ferme');
   // Booster offert (même écran de révélation).
-  await p.click('#cartes-gift [data-action=open-gift]');
+  await p.click(OUVRIR1);
   await p.waitForSelector('#cartes-reveal .cartes-booster-grid .hgc', { timeout: 5000 }).catch(() => {});
   const grilleO = p.locator('#cartes-reveal .cartes-booster-grid .hgc');
   const nomO = await grilleO.nth(3).locator('.hgc-plate-t').textContent();
@@ -157,8 +177,9 @@ const centre = (p, sel) => p.evaluate((s) => {
   await p.ctx.close();
 
   // 4. Téléphone 390 px, écran tactile : toucher une carte ouvre le détail, appui long = loupe.
-  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 390, height: 844, touch: true, reducedMotion: 'reduce', scenario: { reqRpc: true, bal: 600 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 390, height: 844, touch: true, reducedMotion: 'reduce', scenario: { types: true, bal: 600 } });
+  await acheter(p, 5);
+  await aOuverture(p);
   await p.tap(BTN_X5);
   await p.waitForSelector('#cartes-reveal .x5-cell', { timeout: 8000 });
   check(await hscroll(p) <= 0, '390 : révélation du lot sans défilement horizontal');
@@ -186,14 +207,15 @@ const centre = (p, sel) => p.evaluate((s) => {
   await p.ctx.close();
 
   // Journal : les ouvertures passent bien par les RPC habituelles (aucun appel en plus pour voir une carte).
-  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, reducedMotion: 'reduce', scenario: { reqRpc: true, bal: 600 } });
-  await p.click('[data-tab=boosters]').catch(() => {});
-  await p.click(BTN);
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, reducedMotion: 'reduce', scenario: { types: true, bal: 600 } });
+  await acheter(p, 1);
+  await aOuverture(p);
+  await p.click(OUVRIR1);
   await p.waitForSelector('#cartes-reveal .cartes-booster-grid .hgc, #cartes-reveal .x5-cell', { timeout: 5000 }).catch(() => {});
   await p.locator('#cartes-reveal .cartes-booster-grid .hgc').first().click().catch(() => {});
   await p.waitForSelector(OPEN_CARD, { timeout: 3000 }).catch(() => {});
   const j = await log(p);
-  check(j.filter((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster_req').length === 1, 'voir une carte : un seul appel d\'ouverture, aucune requête de plus');
+  check(j.filter((l) => l[0] === 'rpc' && l[1] === 'hg_booster_open' && l[2]?.p_mode === 'stock').length === 1, 'voir une carte : un seul appel d\'ouverture, aucune requête de plus');
   check(!p.errs.length, 'journal : aucune erreur JS');
   await p.ctx.close();
 

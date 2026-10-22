@@ -39,9 +39,13 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `030_admin_temps_reel.sql` | Publication `supabase_realtime` du panel (assistance, idées, profils, Staff, journal, cartes, sorties, souvenirs, Secret Santa) | appliqué |
 | `031_corrections_ambiguites.sql` | Colonnes ambiguës corrigées dans `hg_admin_ghosts` et `hg_admin_conversations` | appliqué |
 | `032_assistance_fil.sql` | Prise en charge et fil de réponses de l'assistance | **absent de cette branche** : ajouté par une autre branche |
+| `068_quiz_vrai_faux_et.sql` | Questions vrai/faux (choix « Vrai » et « Faux » manquants), « & » lu comme « et » | appliqué en production |
+| `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | **à appliquer** (après 042) |
+| `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | **à appliquer** (après 069 ; facultatif : les fonctions savent s'en passer) |
 
 ## Les trous et les doublons
 
+- **067** : brouillon (stock et dons de boosters) jamais appliqué, remplacé par 069 ; le numéro reste vide.
 - **004, 007, 008, 010, 020** : absents du dépôt. Rien ne prouve qu'il s'agissait de migrations
   appliquées ; si c'était le cas, leur effet est dans le schéma reconstitué. Ne pas créer de fichier
   à ces numéros pour les « combler ».
@@ -71,3 +75,29 @@ de différence, c'est le schéma reconstitué qui fait foi.
 3. Déployer le front (`cartes.js`, `core.js`) en même temps : `cartes.js` envoie maintenant `p_request`
    à `hg_open_booster`, qui n'existe plus sous l'ancienne signature.
 4. Pas de fonction edge à redéployer pour 021, ni de secret à créer.
+
+## Pour appliquer 069
+
+Migration `069_types_boosters.sql` : types de boosters, stock par type, achat, ouverture et dons de boosters (remplace le 067, jamais appliqué).
+
+**Ce qu'elle ajoute**
+- Tables `hg_booster_types` (les 9 types : prix, taille, taux, pool, limite par semaine, gratuit), `hg_booster_stock` (stock par membre et type), `hg_booster_pity` (garantie épique par type), `hg_booster_purchases` (achats, base des limites), `hg_booster_gifts` (dons, avec le type). RLS : lecture de ses lignes ; les types sont lisibles par les membres et modifiables par l'admin.
+- RPC membres : `hg_booster_types_me()`, `hg_booster_buy(p_type, p_qty, p_request)`, `hg_booster_open(p_type, p_mode, p_request, p_set)`, `hg_booster_gift(p_to, p_type, p_qty, p_message, p_request)`, `hg_booster_gifts_me()`.
+- Les types retirés de la vente (`active = false`) restent ouvrables et donnables depuis le stock ; `hg_booster_types_me` les renvoie avec `active: false` tant que le membre en a. Achat et ouverture payée refusés pour eux.
+- Les boosters Collectionneur ne s'offrent pas. Le remboursement des cartes non données est calculé sur le prix payé par booster (dernier achat du membre pour ce type), jamais sur le prix actuel.
+- Les taux des types sont validés par contrainte (`hg_booster_types_rates_check` : 7 raretés exactement, valeurs >= 0, somme entre 99,99 et 100,01). Les types ne sont modifiables que par les membres ayant la permission « cartes ».
+- `hg_cards_me` renvoie en plus `boosters_stock`. `hg_cards_admin_bulk_give` verse les boosters offerts dans le stock « classique ».
+- Le stock offert (`hg_wallets.gift_boosters`, migration 042) est versé dans le stock « classique » puis remis à 0.
+
+**Idempotence et rétrocompatibilité**
+- Rejouable : `create table if not exists`, `insert … on conflict do nothing` (relancer ne touche pas aux types : une modification faite par un admin est conservée), `create or replace`, policies, contraintes et clés étrangères dans des blocs `do` (`duplicate_object`). Testée sur une base PostgreSQL 16 locale neuve : migration appliquée deux fois, puis une troisième fois dans les contrôles (123 contrôles, 0 échec).
+- `hg_open_booster_req` (042) garde sa signature, son chemin gratuit et son chemin offert, mais son chemin payant (`p_free => false`, `p_offert => false`) est refusé : « Les boosters s'achètent maintenant dans la Boutique ». Après la migration, son booster offert (`p_offert => true`) ne voit plus rien : le front doit ouvrir par `hg_booster_open(…, 'stock')`.
+- Changement de signature : `hg_booster_gift` passe de 4 à 5 arguments (ajout de `p_request`). L'ancienne version est retirée par la migration. Un appel à 4 arguments reste valide (le dernier a une valeur par défaut).
+- Erreurs à connaître pour le front : `don_deja_fait` (même requête de don rejouée par le même membre), « Les boosters Collectionneur ne s'offrent pas », « Ce booster n'est plus en vente » (ouverture payée ou gratuite d'un type retiré), « Les boosters s'achètent maintenant dans la Boutique » (ancien chemin payant).
+
+**Pour appliquer 069**
+
+1. Relire `069_types_boosters.sql`.
+2. L'appliquer sur la base (une fois ; rejouable sans risque).
+3. **Ordre : 069 d'abord, puis le front** (`cartes.js`, `cartes.css`, `cartes-boosters.css`, `sw.js`). Le front appelle les nouvelles RPC (dont `hg_booster_gift` à 5 arguments) : déployé avant la migration, il passerait en mode de repli (boutique et dons affichés « bientôt »).
+4. Pas de fonction edge à redéployer pour 069, ni de secret à créer.

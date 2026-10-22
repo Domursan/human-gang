@@ -57,9 +57,11 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   await p.keyboard.press('Escape');
   await p.waitForTimeout(200);
 
-  // Chances des boosters : la rareté unique n'y figure pas.
-  await p.click('[data-tab=boosters]');
-  await p.waitForSelector('.cartes-odds', { timeout: 5000 });
+  // Chances des boosters (onglet Boutique, tableau replié par défaut) : la rareté unique n'y figure pas.
+  await p.click('[data-tab=boutique]');
+  await sleep(300);
+  await p.click('.shop-odds summary');
+  await p.waitForSelector('.cartes-odds', { state: 'visible', timeout: 5000 });
   const chances = await p.$$eval('.cartes-odds tbody th', (x) => x.map((e) => e.textContent.trim()));
   check(!chances.some((t) => /unique/i.test(t)) && chances.includes('Mythique'), 'chances des boosters : pas de ligne « Unique » (' + chances.join(', ') + ')');
   await p.ctx.close();
