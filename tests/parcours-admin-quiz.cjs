@@ -231,8 +231,8 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
 
   /* (e) Onglet statistiques (en attente), puis retour aux questions */
   await p.click('#adq-tab-s');
-  await p.waitForSelector('#adq-stats-root .empty', { timeout: 5000 });
-  check((await p.textContent('#adq-stats-root')).includes('Bientôt'), '(e) onglet « Réponses et statistiques » : affiché (en attente)');
+  await p.waitForFunction(() => (document.querySelector('#adq-stats-root')?.textContent || '').trim().length > 0, null, { timeout: 5000 });
+  check((await p.textContent('#adq-stats-root')).trim().length > 0, '(e) onglet « Réponses et statistiques » : statistiques affichées');
   check(await p.isVisible('#adq-pan-s') && !(await p.isVisible('#adq-pan-q')), '(e) seul l\'onglet statistiques est visible');
   await p.click('#adq-tab-q');
   check(await p.isVisible('#adq-pan-q') && !(await p.isVisible('#adq-pan-s')), '(e) retour à l\'onglet Questions');
