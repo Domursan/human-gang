@@ -3,6 +3,8 @@
 // les données partagées sont chargées ici, pour les seules sections permises. Les sections « Comptes », « Cartes » et les
 // modules autonomes restent à leur place ; le reste est dans assets/js/admin/. Palette « Aller à… » : admin/palette.js.
 // Accès : admin, ou Staff avec des permissions. Droits : admin/perms.js (source unique).
+// Ce fichier ne fait que brancher : il relie chaque sous-section à son fournisseur (registerSub), charge les données
+// nécessaires, puis démarre le routage. Le code des sections est dans leurs propres modules.
 import { initPage, $, toast, errMsg } from './core.js';
 import { mountThemesSection, themeActions } from './admin-themes.js';
 import { mountMessagesSection, listMessages, openMessages } from './admin-messages.js';
@@ -35,6 +37,7 @@ import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate, setActions } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
 
+// Démarrage : l'identité (et les droits) sont lus d'abord ; le reste suit.
 const me = await initPage({ auth: 'admin' });
 applyPanelAccess();
 const has = canSection;
@@ -42,11 +45,17 @@ initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand
 setupPalette();    // « Aller à… » (Ctrl/Cmd+K, bouton du rail)
 
 /* ---------- Comptes : fiche complète de chaque membre (initialisée à la première visite d'une sous-section qui en a besoin) ---------- */
+// Promesse de l'initialisation des comptes : créée une seule fois.
 let accountsP = null;
+/** Initialise la section Comptes si la personne y a droit, une seule fois. Renvoie la promesse, ou undefined. */
 function ensureAccounts() {
   if (!accountsP && has('comptes')) accountsP = loadAccountsPanel();
   return accountsP ?? undefined;
 }
+/**
+ * Lance le module Comptes. Après une modification, resynchronise les autres sections concernées
+ * (membres, badges, Secret Santa, idées, assistance, statistiques).
+ */
 function loadAccountsPanel() {
   // Après une modification, on resynchronise les autres sections.
   return initAccounts({
@@ -63,6 +72,11 @@ function loadAccountsPanel() {
 // Fournisseur `open` de Comptes : adresse #membres/comptes/<id>[/<onglet>] ; sans identifiant, la zone principale est vide.
 // Comptes inscrits et fantômes sont dans la même liste : un fantôme s'ouvre sur sa fiche (code, liaison), sauf avec un onglet.
 // #membres/comptes/nouveau ouvre le tiroir de création d'un fantôme (adresse transitoire).
+/**
+ * Affiche une fiche membre (ou la zone vide, ou le tiroir de création d'un fantôme) selon l'adresse.
+ * @param {HTMLElement} _el Conteneur du groupe (non utilisé : la fiche va dans sa propre zone).
+ * @param {{id?: string, tab?: string}} route Segments de l'adresse.
+ */
 async function openFicheRoute(_el, { id, tab }) {
   if (id === 'nouveau') { location.hash = '#membres/comptes'; openNewGhostDrawer(); return; }
   if (!id) { setActions(ghostZoneActions(null)); emptyDetail(); return; } // #membres/comptes : la zone principale invite à choisir dans la liste
@@ -76,11 +90,15 @@ async function openFicheRoute(_el, { id, tab }) {
 }
 
 /* ---------- Écouteurs des sections permises (liés au DOM, sans montage) ---------- */
+// Branchés tout de suite, sans attendre la première visite (les boutons sont dans la page).
 if (has('membres')) bindInvites(me);
 if (has('secret-santa')) bindSecretSanta();
 if (has('badges')) bindBadges();
 
 /* ---------- Sous-sections : montage à la première visite ---------- */
+// Chaque registerSub relie une adresse (domaine/sous-section) à ses fonctions : main (montage unique),
+// open (à chaque visite), list (colonne 2), info (panneau de droite). Voir l'API en tête de admin/shell.js.
+// Pilotage
 registerSub('pilotage/apercu', {
   main: () => {
     loadOverview();
@@ -90,6 +108,7 @@ registerSub('pilotage/apercu', {
 });
 registerSub('pilotage/journal', { main: () => mountLogSection($('#log-root')), open: openLog, list: listLog });
 registerSub('pilotage/staff', { main: () => mountStaffSection($('#staff-root')), open: openStaff, list: listStaff, info: infoStaff }); // administrateur seulement
+// Membres
 registerSub('membres/comptes', {
   main: () => ensureAccounts(),
   list: (el) => mountAccountsList(el),
@@ -104,6 +123,7 @@ registerSub('membres/acces', {
   main: () => { ensureAccounts(); mountAccessSection($('#access-root'), { openMember: (uid) => navigate(`membres/comptes/${uid}/acces`) }); },
   open: () => setActions(accessActions()),
 });
+// Vie du gang
 registerSub('vie/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),
   open: (el, r) => openSortie(r),
@@ -127,6 +147,7 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'stats', 'echanges'
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
+// Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
 registerSub('communication/messagerie', {
@@ -134,6 +155,7 @@ registerSub('communication/messagerie', {
   open: openMessages, list: listMessages, // liste en colonne 2, lecture dans la zone (createThread en lecture seule)
 });
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
+// Site
 registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')), open: () => setActions(reglagesActions()) });
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
 
@@ -142,6 +164,7 @@ registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), op
 const needMembers = anySection('comptes', 'membres', 'secret-santa', 'badges', 'idees', 'assistance', 'messagerie');
 const needSS = has('secret-santa');
 const needBadges = anySection('badges', 'evenements', 'comptes', 'membres');
+// Chargement en parallèle. Une erreur n'arrête pas le démarrage : elle s'affiche dans la section concernée.
 await Promise.all([
   needMembers ? safe(ensureMembers, (e) => toast(`Membres : ${errMsg(e)}`, 'error')) : null,
   has('membres') ? safe(ensureInvites, (e) => { $('#invite-list').innerHTML = sectionError(e); }) : null,
@@ -151,6 +174,7 @@ await Promise.all([
   has('assistance') ? safe(ensureSupport, (e) => { $('#support-root').innerHTML = sectionError(e); }) : null,
 ]);
 
+// Compteurs, puis listes déjà prêtes ; le routage démarre ensuite.
 renderStats(); // compteurs « à traiter » compris
 if (has('membres') || has('comptes')) renderMembers();
 if (has('membres')) renderInvites();
