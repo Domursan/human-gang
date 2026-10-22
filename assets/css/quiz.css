@@ -1,0 +1,95 @@
+/* ===== Humane Gang — Questions du gang (quiz.html) ===== */
+/* Couleurs prises dans base.css (jetons du thème) : la page suit les modes clair, sombre et daltonien. */
+
+.quiz-intro { margin: 12px 0 0; max-width: 640px; font-size: 16px; line-height: 1.5; }
+
+/* Résumé : trois chiffres clés */
+.quiz-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.quiz-summary:empty { display: none; }
+.quiz-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.quiz-tile-n { font-family: var(--font-display); font-size: 30px; line-height: 1.1; overflow-wrap: anywhere; }
+.quiz-tile-l { font-size: 14px; color: var(--muted); }
+
+/* Message après une réponse */
+.quiz-feedback { border-radius: var(--radius-sm); padding: 16px 18px; margin-bottom: 20px; border: 1px solid var(--border-strong); background: var(--surface-2); overflow-wrap: anywhere; }
+.quiz-feedback[hidden] { display: none; }
+.quiz-feedback:focus { outline: 2px solid var(--sand); outline-offset: 2px; }
+.quiz-feedback.is-ok { border-color: var(--sage); background: var(--sage-soft); }
+.quiz-feedback.is-ko { border-color: var(--accent); }
+.quiz-feedback.is-attente { border-color: var(--amber); }
+.quiz-fb-title { margin: 0 0 6px; font-weight: 700; font-size: 18px; }
+.quiz-feedback p { margin: 6px 0 0; }
+
+/* Filtre par difficulté */
+.quiz-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.quiz-chip { font: inherit; font-size: 14px; font-weight: 500; min-height: 44px; padding: 8px 16px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
+.quiz-chip[aria-pressed="true"] { background: var(--text); color: #121212; border-color: var(--text); font-weight: 700; }
+.quiz-chip:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+.quiz-section h2 { font-family: var(--font-body); font-size: 18px; font-weight: 700; margin: 0 0 12px; }
+.quiz-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.quiz-empty { color: var(--muted); margin: 0; }
+
+/* Cartes */
+.quiz-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.quiz-card.is-done { background: var(--surface-2); }
+/* Question secrète : cadre doré épais et libellé sur fond doré (texte sombre, contraste suffisant dans les trois thèmes) */
+.quiz-card.is-secret { border: 2px solid var(--sand); }
+.quiz-secret-tag { margin: 0; align-self: flex-start; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 999px; background: var(--sand); color: #121212; }
+.quiz-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.quiz-prompt { margin: 0; font-size: 19px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.quiz-img { display: block; width: 100%; max-width: 480px; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.quiz-end, .quiz-card p { margin: 0; }
+.quiz-card p.small { overflow-wrap: anywhere; }
+.quiz-expl { margin: 0; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.quiz-sol { margin: 0; }
+
+.quiz-cat { font-size: 13px; color: var(--muted); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px 10px; }
+.quiz-reward { margin-left: auto; font-family: var(--font-display); font-size: 16px; color: var(--sand); white-space: nowrap; }
+
+/* Pastille de difficulté : bordure et étoiles, en plus de la couleur de fond */
+.quiz-diff { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid currentColor; white-space: nowrap; }
+.quiz-stars { letter-spacing: 1px; font-size: 12px; }
+.quiz-diff-facile { background: var(--sage-soft); color: var(--sage-text); }
+.quiz-diff-moyen { background: var(--irl-bg); color: var(--irl-fg); }
+.quiz-diff-difficile { background: var(--ss-bg); color: var(--ss-fg); }
+.quiz-diff-expert { background: var(--hist-bg); color: var(--hist-fg); }
+
+/* Formulaire de réponse */
+.quiz-form { display: flex; flex-direction: column; gap: 12px; }
+.quiz-choices { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.quiz-choices legend { font-size: 14px; color: var(--muted); padding: 0; margin-bottom: 6px; }
+.quiz-hint { margin: 0 0 4px; }
+.quiz-opt { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--surface-2); cursor: pointer; overflow-wrap: anywhere; }
+.quiz-opt:has(input:checked) { border-color: var(--sand); }
+.quiz-opt input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--sand); margin: 0; }
+.quiz-opt input:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.quiz-form .field input[type="text"] { font: inherit; min-height: 48px; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--surface-2); color: var(--text); width: 100%; box-sizing: border-box; }
+.quiz-form .field input[type="text"]:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.quiz-form .field label { font-size: 14px; color: var(--muted); }
+.quiz-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.quiz-actions .btn { min-height: 48px; padding: 0 22px; }
+.quiz-actions p { margin: 0; }
+.quiz-error { margin: 0; color: var(--rose); font-weight: 700; overflow-wrap: anywhere; }
+.quiz-error[hidden] { display: none; }
+
+/* Historique repliable */
+.quiz-history { margin-bottom: 24px; }
+.quiz-history > summary { cursor: pointer; font-size: 18px; font-weight: 700; padding: 10px 0; min-height: 44px; list-style-position: outside; }
+.quiz-history > summary:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; border-radius: 4px; }
+.quiz-history > summary span { color: var(--muted); font-weight: 500; }
+.quiz-history > .quiz-list { margin-top: 12px; }
+
+.quiz-result { white-space: normal; }
+.quiz-result-ko { border: 1px solid var(--accent); color: var(--rose); background: transparent; }
+
+@media (max-width: 480px) {
+  .quiz-card { padding: 18px; }
+  .quiz-reward { margin-left: 0; }
+  .quiz-prompt { font-size: 17px; }
+}
