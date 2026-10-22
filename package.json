@@ -10,7 +10,7 @@
     "check": "node tests/check-js.cjs",
     "test:rpc": "node tests/check-rpc.mjs",
     "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
-    "test": "npm run test:smoke && node tests/parcours-connexion.cjs && node tests/parcours-sortie.cjs && node tests/parcours-booster.cjs && node tests/parcours-cartes-zoom.cjs && node tests/parcours-staff.cjs && node tests/parcours-admin-complements.cjs && node tests/parcours-admin-sorties.cjs && node tests/parcours-admin-souvenirs.cjs && node tests/parcours-admin-nav.cjs && node tests/parcours-session.cjs && node tests/parcours-admin-direct.cjs && node tests/parcours-admin-recherche.cjs && node tests/parcours-admin-coquille.cjs && node tests/parcours-admin-p2-pilotage.cjs && node tests/parcours-admin-p2-assistance.cjs && node tests/parcours-admin-p2-comptes.cjs && node tests/parcours-admin-p2-sorties.cjs && node tests/parcours-admin-assist-fil.cjs && node tests/parcours-admin-polish-vie.cjs && node tests/parcours-admin-polish-site.cjs && node tests/parcours-admin-polish-cartes.cjs && node tests/parcours-ss-paires.cjs && node tests/parcours-admin-bot-mentions.cjs && node tests/parcours-admin-actifs.cjs && node tests/parcours-admin-don-carte.cjs && node tests/parcours-drops.cjs"
+    "test": "node tests/run-all.cjs"
   },
   "devDependencies": {
     "playwright": "1.56.0"

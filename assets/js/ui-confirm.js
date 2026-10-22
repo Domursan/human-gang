@@ -94,6 +94,7 @@ export function confirmBox(title, text = '', { ok = 'Confirmer', cancel = 'Annul
   const cancelBtn = document.createElement('button');
   cancelBtn.type = 'submit';
   cancelBtn.value = 'cancel';
+  cancelBtn.formNoValidate = true; // Annuler doit fermer même si le champ obligatoire est vide
   cancelBtn.className = 'btn btn-ghost';
   cancelBtn.textContent = cancel;
   const okBtn = document.createElement('button');
@@ -103,6 +104,12 @@ export function confirmBox(title, text = '', { ok = 'Confirmer', cancel = 'Annul
   okBtn.textContent = ok;
   actions.append(cancelBtn, okBtn);
   form.append(actions);
+
+  // Entrée dans le champ : le navigateur validerait avec le PREMIER bouton du formulaire (« Annuler »).
+  // On redirige donc la touche vers « Valider ».
+  field?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); okBtn.click(); }
+  });
 
   dlg.append(form);
 

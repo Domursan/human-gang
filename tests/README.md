@@ -39,7 +39,7 @@ Les raccourcis `npm` :
 npm run check        # node tests/check-js.cjs
 npm run test:rpc     # node tests/check-rpc.mjs
 npm run test:smoke   # smoke.cjs puis smoke-admin.cjs
-npm test             # test:smoke, puis 26 parcours (voir plus bas)
+npm test             # toute la suite (tests/run-all.cjs) : vérifications, fumée, puis chaque parcours
 ```
 
 Un test affiche une ligne `OK` ou `ECHEC` par contrôle, puis un bilan `N OK, M ECHEC(S)`. Il sort avec un code
@@ -129,4 +129,4 @@ Les captures sont écrites dans `tests/shots/` (ignoré par git). La CI les join
 1. Copier un fichier `parcours-*.cjs` existant.
 2. Ouvrir la page avec `openPage(browser, { page, fixture, scenario, width })`.
 3. Vérifier avec `check(condition, message)` puis terminer par `finish()`.
-4. Ajouter une ligne dans le tableau ci-dessus et, si le test doit tourner avec `npm test`, l'ajouter à la commande `test` de `package.json`.
+4. Ajouter une ligne dans le tableau ci-dessus (`npm test` le lance automatiquement : tout fichier `tests/parcours-*.cjs` fait partie de la suite).
