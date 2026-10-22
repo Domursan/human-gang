@@ -3,6 +3,9 @@
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
 // Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
+// Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
+// Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
+// recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
@@ -10,12 +13,18 @@ import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 
+/* ---------- Constantes et outils de formatage ---------- */
+// me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
-const nf = new Intl.NumberFormat('fr-CH');
+const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
+/** Pourcentage à deux décimales maximum, ex. « 12,5 % ». */
 const pct = (v) => `${new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(v)} %`;
+// Onglets : [identifiant, libellé]. L'ordre est celui de l'affichage et des flèches clavier.
 const TABS = [['boosters', 'Boosters'], ['collection', 'Collection'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+// Libellés des sources d'une carte (colonne source de hg_card_copies).
 const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange' };
+// Libellés du journal des Paillettes (hg_wallet_log.reason), affichés dans l'historique.
 const REASON_LABEL = {
   quotidien: 'Passage du jour', booster: 'Booster ouvert', recyclage: 'Recyclage', fabrication: 'Fabrication',
   serie_complete: 'Série complétée', reponse_sortie: 'Réponse à une sortie', presence: 'Présence à une sortie', photo: 'Photo partagée',
@@ -25,39 +34,60 @@ const REASON_LABEL = {
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
 const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
+// Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
 const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
 // Ouverture groupée : nombre de boosters payants ouverts d'un coup, et délai entre deux cartes révélées.
 const MULTI_COUNT = 5;
 const MULTI_STEP_MS = 110;
 // Valeur du sélecteur « Toutes les séries » (Collection) : toutes les séries ouvertes, groupées.
 const ALL = '__all__';
-// Un rendu qui garde la place de l'utilisateur (défilement de la page et des zones data-keep).
+/** Enveloppe une fonction de rendu pour qu'elle garde la place de l'utilisateur (défilement de la page et des zones data-keep). */
 const kept = (fn) => (...args) => keepPlace(() => fn(...args));
 
+/* ---------- État de la page ----------
+   S regroupe tout l'état : données chargées (sets, cards, copies, state), onglet et filtres, ouverture en cours
+   (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
-  reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [], massTotal: 0,
+  reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
   lcdShown: null, lcdAnim: false, quests: null, shownIds: [],
   peer: null, returnY: 0, tradeApi: null, tradesReady: null,
 };
+/** Configuration du jeu (tarifs, taux, durées) renvoyée par hg_cards_me. Vide avant le premier chargement. */
 const cfg = () => S.state?.config || {};
+/** Vrai pour un admin en mode sans limite (pas de coûts ni de délais). */
 const isGod = () => !!S.state?.god;
+/** Solde en Paillettes. */
 const bal = () => Number(S.state?.paillettes ?? 0);
+/** Vrai si une série a commencé (ou n'a pas de date de début). */
 const started = (s) => !s.starts_at || new Date(s.starts_at) <= new Date();
+/** Exemplaires de l'utilisateur pour une carte. */
 const copiesOf = (cardId) => S.copies.filter((c) => c.card_id === cardId);
+/** Valeur d'une table de réglages pour une rareté (ex. craft.rare), ou null si absente. */
 const tableVal = (table, rarity) => { const v = cfg()[table]?.[rarity]; return v == null ? null : Number(v); };
+/**
+ * Durée lisible : « 3 h 05 min » ou « 12 min » (au moins 1 min).
+ * @param {number} ms durée en millisecondes
+ */
 const fmtDuration = (ms) => {
   const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${Math.max(1, m)} min`;
 };
+/** Vrai pendant une action en cours (appel réseau ou séquence d'ouverture) : les boutons restent désactivés. */
 const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
+/** Nom de la série affichée dans la cartouche (la plus récente à défaut). */
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
 // Une seule fenêtre de carte agrandie : elle suit la vue affichée (collection ou collection d'un membre).
 const zoom = createZoom({ ids: () => (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)) });
 
 /* ---------- Données ---------- */
-/** Lit toutes les lignes d'une requête (l'API renvoie au plus 1000 lignes par appel). */
+/**
+ * Lit toutes les lignes d'une requête (l'API renvoie au plus 1000 lignes par appel). Continue tant qu'une page est pleine.
+ * @param {() => object} build fonction qui renvoie une nouvelle requête
+ * @param {number} [page] taille d'une page
+ * @returns {Promise<object[]>}
+ */
 async function fetchAllRows(build, page = 1000) {
   const out = [];
   for (let from = 0; ; from += page) {
@@ -68,6 +98,12 @@ async function fetchAllRows(build, page = 1000) {
   }
 }
 
+/* ---------- Chargement des données ---------- */
+/**
+ * Charge les séries ouvertes (dont la date de début est passée) et leurs cartes actives.
+ * Seules les cartes des séries ouvertes sont lues ; les autres sont chargées plus tard si on les possède.
+ * @returns {Promise<void>} lève une erreur si la lecture des séries échoue
+ */
 async function loadStatic() {
   const sets = await sb.from('hg_card_sets').select('*').eq('active', true).order('sort');
   if (sets.error) throw sets.error;
@@ -81,7 +117,14 @@ async function loadStatic() {
   if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }
 
+/**
+ * Recharge l'état du membre : solde et configuration (hg_cards_me), ses exemplaires non recyclés,
+ * sa liste de souhaits et le journal des Paillettes. Les cartes qu'il possède mais qui ne sont
+ * pas dans une série ouverte sont chargées en plus.
+ * @returns {Promise<void>} lève la première erreur rencontrée
+ */
 async function refreshData() {
+  // Les quatre lectures partent en parallèle ; une erreur sur l'une d'elles fait échouer le tout (voir plus bas).
   const [st, cp, wi, lg] = await Promise.all([
     sb.rpc('hg_cards_me'),
     fetchAllRows(() => sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at').order('id'))
@@ -104,6 +147,11 @@ async function refreshData() {
 }
 
 /* ---------- Squelette ---------- */
+/**
+ * HTML de la page : en-tête, onglets, panneaux (un par onglet), fiche membre, historique et deux fenêtres
+ * (détail d'une carte, recyclage de masse). Le contenu des panneaux est rempli ensuite par les fonctions de rendu.
+ * @returns {string}
+ */
 function skeleton() {
   return `
     <section class="page-head cartes-head">
@@ -145,6 +193,7 @@ function skeleton() {
 }
 
 /* ---------- En-tête : solde en pastille LCD ---------- */
+/** Dessine l'en-tête : solde (pastille LCD), passage du jour, série de jours. */
 function renderHeader() {
   const el = $('#cartes-wallet');
   if (!el || !S.state) return;
@@ -162,7 +211,10 @@ function renderHeader() {
   if (S.lcdShown < bal() && !S.lcdAnim) animateBalance();
 }
 
-// Gain : le compteur saute par paliers (4 au plus), chaque palier fait clignoter les segments et affiche +N.
+/**
+ * Anime le solde après un gain : le compteur saute par paliers (4 au plus), chaque palier fait clignoter
+ * les segments et affiche +N. Sans mouvement (préférence d'accessibilité), le solde change d'un coup.
+ */
 function animateBalance() {
   const to = bal();
   const from = S.lcdShown;
@@ -171,6 +223,7 @@ function animateBalance() {
   const gain = to - from;
   const steps = Math.min(4, gain);
   let k = 0;
+  /** Un palier du compteur : fait avancer le solde affiché, clignote les segments, puis programme le palier suivant. */
   const tick = () => {
     k += 1;
     const v = k >= steps ? to : from + Math.round(gain * k / steps);
@@ -187,7 +240,8 @@ function animateBalance() {
   tick();
 }
 
-/* ---------- Onglets ---------- */
+/* ---------- Onglets et vues ---------- */
+/** Met à jour l'état ARIA des onglets (sélectionné ou non), puis affiche la bonne vue. */
 function showTab() {
   for (const [id] of TABS) {
     const on = S.tab === id;
@@ -198,7 +252,9 @@ function showTab() {
   applyView();
 }
 
-// Vue affichée : onglets (défaut) ou collection d'un membre (S.peer), qui remplace les onglets.
+/**
+ * Affiche la vue courante : les onglets (cas normal) ou la collection d'un membre (S.peer), qui remplace les onglets.
+ */
 function applyView() {
   const peer = !!S.peer;
   $('#cartes-tablist').hidden = peer;
@@ -207,7 +263,10 @@ function applyView() {
   $('#cartes-peer').hidden = !peer;
 }
 
-// Chaque rendu garde la place de l'utilisateur : la page ne remonte pas en haut après une action.
+/**
+ * Dessine le panneau de l'onglet courant. Chaque rendu garde la place de l'utilisateur :
+ * la page ne remonte pas en haut après une action.
+ */
 function renderTab() {
   keepPlace(() => {
     if (S.tab === 'boosters') renderBoosters();
@@ -217,6 +276,10 @@ function renderTab() {
   });
 }
 
+/**
+ * Change d'onglet puis dessine le nouveau panneau.
+ * @param {string} id identifiant de l'onglet (boosters, collection, classement, echanges)
+ */
 function setTab(id) {
   keepPlace(() => {
     S.tab = id;
@@ -225,6 +288,7 @@ function setTab(id) {
   });
 }
 
+/** Redessine toute la page (en-tête, historique, onglets, panneau courant). */
 function renderAll() {
   keepPlace(() => {
     renderHeader();
@@ -236,6 +300,10 @@ function renderAll() {
 
 /* ---------- Mise à l'échelle (cartouches et console dessinées à taille fixe) ---------- */
 // Un élément .fit porte data-w (largeur de conception) et --h (hauteur de conception) ; son contenu .fit-in est mis à l'échelle.
+/**
+ * Met à l'échelle les cartouches et consoles à la largeur réelle de leur conteneur (jamais agrandies au-delà de 1).
+ * @param {ParentNode} [root] zone à parcourir
+ */
 function fitAll(root = document) {
   root.querySelectorAll('.fit').forEach((el) => {
     const w = Number(el.dataset.w) || 220;
@@ -245,6 +313,11 @@ function fitAll(root = document) {
 }
 
 /* ---------- Cartouche de booster (concept « cartouche de jeu ») ---------- */
+/**
+ * HTML d'une cartouche de booster (décor seulement, aria-hidden).
+ * @param {{free?: boolean, ready?: boolean}} [opts] free : booster gratuit ; ready : gratuit disponible maintenant
+ * @returns {string}
+ */
 function cartridgeHtml({ free = false, ready = false } = {}) {
   const n = nf.format(cfg().booster_size ?? 5);
   const cls = ['cart-box', free && !ready ? 'is-idle' : ''].filter(Boolean).join(' ');
@@ -261,6 +334,11 @@ function cartridgeHtml({ free = false, ready = false } = {}) {
 }
 
 /* ---------- Boosters ---------- */
+/**
+ * Dessine l'onglet Boosters : boosters gratuit et payant (avec ouverture groupée), boosters offerts,
+ * quêtes, séquence ou révélation en cours, et tableau des chances. Les boutons restent désactivés si le
+ * solde ne suffit pas ou si une action est en cours.
+ */
 function drawBoosters() {
   const el = $('#cartes-p-boosters');
   const c = cfg();
@@ -275,6 +353,7 @@ function drawBoosters() {
   const busy = isBusy();
   // Boosters offerts (stock donné par le gang) : ouverts sans Paillettes ni délai, même animation.
   const gift = Math.max(0, Number(S.state?.gift_boosters) || 0);
+  // Le tableau des chances affiche chaque rareté en pourcentage de la somme des taux.
   const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
 
   el.innerHTML = `
@@ -317,10 +396,12 @@ function drawBoosters() {
   renderQuests();
   fitAll(el);
 }
+// Versions « qui gardent la place » des fonctions de dessin (voir kept).
 const renderBoosters = kept(drawBoosters);
 
 /* ---------- Quêtes de la semaine (3 par semaine, lundi 00:00 heure de Zurich) ---------- */
 // Chargées à part : un échec de ces quêtes ne bloque pas le reste de la page.
+/** Charge les quêtes de la semaine (hg_card_quests_me). En cas d'erreur, la section l'indique sans bloquer la page. */
 async function loadQuests() {
   try {
     const { data, error } = await sb.rpc('hg_card_quests_me');
@@ -333,6 +414,11 @@ async function loadQuests() {
   renderQuests();
 }
 
+/**
+ * Une ligne de quête : libellé, barre de progression, et état (en cours, à réclamer, reçue).
+ * @param {object} q quête (code, label, target, progress, reward, done, claimed)
+ * @returns {string}
+ */
 function questHtml(q) {
   const target = Math.max(1, Number(q.target) || 1);
   const value = Math.min(Math.max(0, Number(q.progress) || 0), target);
@@ -354,6 +440,7 @@ function questHtml(q) {
     </li>`;
 }
 
+/** Dessine la section des quêtes : chargement, erreur, liste vide ou liste des quêtes. */
 function drawQuests() {
   const box = $('#cartes-quests');
   if (!box) return;
@@ -370,6 +457,10 @@ function drawQuests() {
 }
 const renderQuests = kept(drawQuests);
 
+/**
+ * Réclame la récompense d'une quête (hg_card_quest_claim), puis recharge les données.
+ * @param {string} code identifiant de la quête
+ */
 async function claimQuest(code) {
   if (S.busy) return;
   S.busy = true;
@@ -389,6 +480,10 @@ async function claimQuest(code) {
 }
 
 // Booster gratuit : cartouche + compte à rebours, ou bouton « Ouvrir » quand il est disponible.
+/**
+ * Dessine le booster gratuit. Ne redessine que si son état (disponible ou non, occupé ou non) change ;
+ * sinon met seulement le compte à rebours à jour, pour ne pas perdre le focus.
+ */
 function drawFree() {
   const box = $('#cartes-free');
   if (!box || !S.state) return;
@@ -416,7 +511,17 @@ const renderFree = kept(drawFree);
 /* ---------- Ouverture : séquence d'animation (ou révélation directe) ---------- */
 // Étapes : 1 cartouche insérée, 2 console « BOOT » et barre, 3 flash de la meilleure rareté,
 // puis pour chaque carte i : 4+2i sortie par la fente, 5+2i retournement (révélation de la carte).
+/**
+ * Numéro de la dernière étape de la séquence d'un booster (la fin d'animation).
+ * @param {{cards: object[]}} R ouverture en cours
+ * @returns {number}
+ */
 const lastStep = (R) => 4 + 2 * R.cards.length;
+/**
+ * Durée (ms) de l'étape s : pause plus longue pour les étapes d'installation, puis alternance rapide.
+ * @param {number} s numéro de l'étape
+ * @returns {number}
+ */
 function seqDelay(s) {
   if (s === 0) return 80;
   if (s === 1) return 700;
@@ -425,6 +530,10 @@ function seqDelay(s) {
   return s % 2 === 0 ? 380 : 300;
 }
 
+/**
+ * Applique à la scène les classes correspondant à l'étape courante (inséré, boot, flash, sorties et retournements).
+ * @param {object} R ouverture en cours
+ */
 function applyStage(R) {
   const root = $('#op-stage');
   if (!root) return;
@@ -438,7 +547,13 @@ function applyStage(R) {
   });
 }
 
+/**
+ * Lance la séquence d'ouverture d'un booster : une étape après l'autre, à intervalle variable (seqDelay).
+ * Chaque étape peut être interrompue par « Tout révéler » (skipSeq).
+ * @param {object} R ouverture en cours
+ */
 function startSeq(R) {
+  /** Passe à l'étape suivante ; à la fin, termine la séquence. */
   const next = () => {
     R.timer = null;
     if (S.reveal !== R || R.phase !== 'seq') return;
@@ -452,14 +567,22 @@ function startSeq(R) {
   R.timer = setTimeout(next, seqDelay(R.step));
 }
 
+/**
+ * Marque la carte i comme révélée et joue un son (plus fort pour une rareté à partir de légendaire).
+ * @param {object} R ouverture en cours
+ * @param {number} i index de la carte
+ */
 function revealCard(R, i) {
   const card = R.cards[i];
   if (!card) return;
   R.revealed.add(i);
-  R.last = i;
   playSound(rarityRank(card.rarity) >= 5 ? 'badge' : 'click');
 }
 
+/**
+ * Termine la séquence : toutes les cartes sont révélées, les boutons se réactivent, le focus va à « Fermer ».
+ * @param {object} R ouverture en cours
+ */
 function finishSeq(R) {
   if (R.timer) clearTimeout(R.timer);
   R.timer = null;
@@ -471,6 +594,7 @@ function finishSeq(R) {
 }
 
 // « Tout révéler » : passe directement à la fin de la séquence.
+/** Bouton « Tout révéler » : termine tout de suite l'ouverture en cours (simple ou groupée). */
 function skipSeq() {
   const R = S.reveal;
   if (!R || R.phase !== 'seq') return;
@@ -479,13 +603,20 @@ function skipSeq() {
 }
 
 /* ---------- Révélation groupée (ouverture de plusieurs boosters) ---------- */
+/** Titre du résumé d'une ouverture groupée : « 5 boosters · 25 cartes · meilleure : Rare ». */
 const multiHead = (R) => `${pluralCount(R.opened, 'booster', 'boosters', nf.format)}${R.opened < R.total ? ` sur ${nf.format(R.total)}` : ''}`
   + ` · ${pluralCount(R.cards.length, 'carte', 'cartes', nf.format)}`
   + (R.best ? ` · meilleure : ${rarityLabel(R.best)}` : '');
+/** Ligne sous le résumé : nombre de cartes nouvelles pour la collection et de brillantes. */
 const multiSub = (R) => pluralCount(R.fresh, 'nouvelle pour ta collection', 'nouvelles pour ta collection', nf.format)
   + (R.shinies ? ` · ${pluralCount(R.shinies, 'brillante', 'brillantes', nf.format)}` : '');
 
 // Grille de toutes les cartes obtenues, la plus rare en premier ; les cartes non encore révélées montrent le dos.
+/**
+ * HTML de la grille d'une ouverture groupée : chaque carte est un dos tant qu'elle n'est pas révélée.
+ * @param {object} R ouverture groupée
+ * @returns {string}
+ */
 function multiHtml(R) {
   const done = R.phase !== 'seq';
   const cells = R.cards.map((card, i) => {
@@ -512,6 +643,11 @@ function multiHtml(R) {
     </section>`;
 }
 
+/**
+ * Dessine la révélation groupée dans `box`, et annonce le résumé aux lecteurs d'écran une seule fois à la fin.
+ * @param {HTMLElement} box zone de la révélation
+ * @param {object} R ouverture groupée
+ */
 function renderMultiReveal(box, R) {
   box.innerHTML = multiHtml(R);
   if (R.phase !== 'seq' && !R.announced) {
@@ -520,6 +656,7 @@ function renderMultiReveal(box, R) {
   }
 }
 
+/** Ferme la révélation (simple ou groupée) et redessine les boosters. */
 function closeReveal() {
   if (S.reveal?.timer) clearTimeout(S.reveal.timer);
   S.reveal = null;
@@ -527,6 +664,11 @@ function closeReveal() {
 }
 
 // Contenu de la scène : cartouche, console, cartes en éventail (dos puis face).
+/**
+ * HTML de la scène d'ouverture : cartouche, console (BOOT, barre, meilleure rareté) et cartes en éventail.
+ * @param {object} R ouverture en cours
+ * @returns {string}
+ */
 function stageHtml(R) {
   const n = R.cards.length;
   const bestName = R.best ? rarityLabel(R.best) : 'aucune';
@@ -548,6 +690,7 @@ function stageHtml(R) {
     + cards;
 }
 
+/** Dessine la révélation d'un booster simple (scène animée ou grille directe). Ne fait rien s'il n'y en a pas. */
 function renderReveal() {
   const box = $('#cartes-reveal');
   if (!box) return;
@@ -579,10 +722,18 @@ function renderReveal() {
 }
 
 // Identifiant d'une demande d'ouverture (un par booster) : le serveur ne rouvre pas deux fois la même demande.
+/** Crée un identifiant de demande (UUID si le navigateur sait en faire, sinon un repli horodaté). */
 const newReqId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 // Appel d'ouverture : hg_open_booster_req (migrations 021 et 042) ; repli sur l'ancienne RPC si elle n'est pas encore déployée.
 // Un booster offert (offert = true, migration 042) n'a pas de repli : l'ancienne RPC ouvrirait un booster payant.
+/**
+ * Ouvre un booster côté serveur.
+ * @param {boolean} free true pour le booster gratuit
+ * @param {string} reqId identifiant de la demande (le serveur ne rouvre pas deux fois la même demande)
+ * @param {boolean} [offert=false] true pour un booster offert (pas de repli sur l'ancienne RPC)
+ * @returns {Promise<object>} résultat : cartes, meilleure rareté, nombre demandé et livré
+ */
 async function rpcOpenBooster(free, reqId, offert = false) {
   if (offert) {
     const { data, error } = await sb.rpc('hg_open_booster_req', { p_free: false, p_request: reqId, p_offert: true });
@@ -599,11 +750,23 @@ async function rpcOpenBooster(free, reqId, offert = false) {
 }
 
 // Annonce Discord des belles cartes et alerte des membres qui les souhaitent (vérifiées côté serveur par hg-notify).
+/**
+ * Envoie les notifications après une ouverture : cartes légendaires, mythiques ou identité, et alerte des
+ * membres qui souhaitent ces cartes. Les erreurs sont ignorées (une notification ne doit pas casser l'ouverture).
+ * @param {object[]} cards cartes obtenues
+ */
 function announceCards(cards) {
   for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
   if (cards.length) notify('card_wish', { cards: cards.map((c) => c.card_id) }).catch(() => {}); // alerte des membres qui souhaitent ces cartes (opt-in)
 }
 
+/**
+ * Ouvre un booster (gratuit, payant ou offert), puis lance sa révélation.
+ * La même demande garde le même identifiant tant qu'elle n'a pas abouti (voir S.bootReq).
+ * @param {boolean} free true pour le booster gratuit du jour
+ * @param {boolean} [offert=false] true pour un booster offert par le gang
+ * @returns {Promise<void>}
+ */
 async function openBooster(free, offert = false) {
   if (isBusy()) return;
   S.busy = true;
@@ -622,8 +785,9 @@ async function openBooster(free, offert = false) {
     const got = Number(data?.livrees) || cards.length;
     if (got < asked) toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
     announceCards(cards);
+    // Animation seulement si la préférence de mouvement le permet et qu'il y a des cartes.
     const seq = motionAllowed() && cards.length > 0;
-    R = { cards, best: data?.best, revealed: new Set(), last: -1, announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
+    R = { cards, best: data?.best, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
     S.reveal = R;
     await refreshData();
@@ -652,13 +816,20 @@ async function openBooster(free, offert = false) {
 // Plusieurs appels successifs à la même RPC, chacun avec son propre identifiant de demande.
 // S.x5 garde ces identifiants tant que la série n'est pas terminée : après un arrêt (solde, réseau),
 // une relance ne renvoie que les boosters restants, sans jamais en ouvrir deux fois.
+/** Nombre de boosters restant à ouvrir dans la série en cours (MULTI_COUNT si aucune série n'a été interrompue). */
 const pendingX5 = () => (S.x5 ? S.x5.ids.length - S.x5.next : MULTI_COUNT);
 
 // Tri de la révélation : la carte la plus rare d'abord, les brillantes avant, puis le numéro de la série.
+/** Comparaison pour trier les cartes : rareté décroissante, brillantes d'abord, puis numéro croissant. */
 const byRarityDesc = (a, b) => (rarityRank(b.rarity) - rarityRank(a.rarity))
   || (Number(!!b.shiny) - Number(!!a.shiny))
   || ((Number(a.number) || 0) - (Number(b.number) || 0));
 
+/**
+ * Ouvre d'un coup la série de boosters payants (MULTI_COUNT, ou les restants si une série a été interrompue).
+ * Les ouvertures sont faites une à une ; à la première erreur, on s'arrête et on garde l'état pour reprendre.
+ * @returns {Promise<void>}
+ */
 async function openBoostersMulti() {
   if (isBusy()) return;
   S.busy = true;
@@ -719,7 +890,12 @@ async function openBoostersMulti() {
 }
 
 // Révélation en cascade, de la carte la plus rare à la moins rare.
+/**
+ * Lance la révélation en cascade d'une ouverture groupée : une carte toutes les MULTI_STEP_MS.
+ * @param {object} R ouverture groupée
+ */
 function startMulti(R) {
+  /** Révèle la carte i, puis programme la suivante (ou termine après la dernière). */
   const step = (i) => {
     R.timer = null;
     if (S.reveal !== R || R.phase !== 'seq') return;
@@ -730,6 +906,11 @@ function startMulti(R) {
   R.timer = setTimeout(() => step(0), 350);
 }
 
+/**
+ * Révèle la carte i d'une ouverture groupée (retire son dos) ; joue un son pour une rareté à partir de légendaire.
+ * @param {object} R ouverture groupée
+ * @param {number} i index de la carte
+ */
 function revealMulti(R, i) {
   const card = R.cards[i];
   if (!card) return;
@@ -738,6 +919,10 @@ function revealMulti(R, i) {
   if (rarityRank(card.rarity) >= 5) playSound('badge');
 }
 
+/**
+ * Termine l'ouverture groupée : toutes les cartes sont révélées, le résumé s'affiche.
+ * @param {object} R ouverture groupée
+ */
 function finishMulti(R) {
   if (R.timer) clearTimeout(R.timer);
   R.timer = null;
@@ -747,6 +932,7 @@ function finishMulti(R) {
   $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
 }
 
+/** Réclame le passage du jour (hg_cards_daily) : Paillettes et série de jours consécutifs. */
 async function claimDaily() {
   if (S.busy) return;
   S.busy = true;
@@ -765,6 +951,11 @@ async function claimDaily() {
 
 /* ---------- Collection ---------- */
 // Une carte de la collection : la carte (bouton, fiche détail) et, à côté, la loupe qui ouvre la carte agrandie.
+/**
+ * Une case de la collection : la carte (ouvre la fiche détail) et le bouton loupe.
+ * @param {object} c carte (hg_cards)
+ * @returns {string} HTML de la case
+ */
 function cardCell(c) {
   const cps = copiesOf(c.id);
   const n = cps.length;
@@ -782,6 +973,11 @@ function cardCell(c) {
 }
 
 // Fiche d'une carte pour la fenêtre agrandie (cartes-zoom.js) : tout est déjà chargé, aucune requête.
+/**
+ * Fiche de la collection pour la fenêtre agrandie (cartes-zoom.js).
+ * @param {string} id identifiant de la carte
+ * @returns {object|null} fiche (carte, exemplaires, série), ou null si la carte est inconnue
+ */
 function zoomInfo(id) {
   const k = S.cardsById.get(id);
   if (!k) return null;
@@ -799,6 +995,11 @@ function zoomInfo(id) {
 }
 
 // Un intertitre par série dans « Toutes les séries » : nom, possédées / total, barre, cartes.
+/**
+ * Intertitre d'une série (vue « Toutes les séries ») : nom, compte possédées / total, barre, cartes.
+ * @param {{set: object, scored: number, have: number, shown: object[]}} g série et ses cartes affichées
+ * @param {number} i numéro du groupe (sert à relier le titre à sa section)
+ */
 function groupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `cz-g-${i}`;
@@ -812,6 +1013,11 @@ function groupHtml(g, i) {
   </section>`;
 }
 
+/**
+ * Dessine l'onglet Collection : choix de la série, filtres, progression et grille des cartes.
+ * Les compteurs de progression ignorent les filtres ; seules les cartes affichées sont filtrées.
+ * @param {string} [focusId] id du champ à remettre au focus après le rendu (sans défilement)
+ */
 function drawCollection(focusId) {
   const el = $('#cartes-p-collection');
   const none = '<p class="empty">Aucune série disponible pour le moment.</p>';
@@ -820,6 +1026,7 @@ function drawCollection(focusId) {
   const set = all ? null : S.sets.find((s) => s.id === S.setId);
   if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
+  /** Vrai si la carte passe les filtres de la collection (rareté, famille, possession). */
   const keep = (c) => {
     const n = copiesOf(c.id).length;
     if (f.rarity && c.rarity !== f.rarity) return false;
@@ -896,15 +1103,25 @@ function drawCollection(focusId) {
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
-const renderCollection = kept(drawCollection);
+const renderCollection = kept(drawCollection); // voir renderBoosters
 
 /* ---------- Recyclage de masse ---------- */
+/**
+ * Valeur en Paillettes d'un exemplaire recyclé : tarif de la rareté, multiplié si l'exemplaire est brillant.
+ * @param {object} cp exemplaire (hg_card_copies)
+ * @param {object} k carte (hg_cards)
+ * @returns {number}
+ */
 function recycleValue(cp, k) {
   const base = tableVal('recycle', k.rarity) ?? 0;
   return base * (cp.shiny ? Number(cfg().recycle?.shiny_multiplier ?? 3) : 1);
 }
 
-// Garde un exemplaire par carte (brillant d'abord, non échangé d'abord). Exclut identite et échanges en cours.
+/**
+ * Liste les doublons recyclables : pour chaque carte, on garde un exemplaire (le brillant d'abord, puis
+ * le non échangé). Exclut les cartes Identité et les exemplaires en cours d'échange.
+ * @returns {{ids: number[], total: number}} identifiants des exemplaires à recycler et leur valeur en Paillettes
+ */
 function massPlan() {
   const groups = new Map();
   for (const cp of S.copies) {
@@ -926,10 +1143,10 @@ function massPlan() {
   return { ids, total };
 }
 
+/** Ouvre la fenêtre de recyclage de masse, avec le nombre de doublons et leur valeur estimée. */
 function openMass() {
   const plan = massPlan();
   S.massIds = plan.ids;
-  S.massTotal = plan.total;
   $('#cartes-mass-body').innerHTML = plan.ids.length
     ? `<p>Tu vas recycler <strong>${pluralCount(plan.ids.length, 'doublon', 'doublons', nf.format)}</strong> pour environ <strong>${fmtPaillettes(plan.total)}</strong>.</p>
        <p class="muted small">Il te restera au moins un exemplaire de chaque carte. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
@@ -939,6 +1156,10 @@ function openMass() {
   if (!dlg.open) dlg.showModal();
 }
 
+/**
+ * Recycle les doublons prévus (hg_card_recycle), puis recharge l'état et la page.
+ * @returns {Promise<void>}
+ */
 async function confirmMass() {
   if (S.busy || !S.massIds.length) return;
   S.busy = true;
@@ -957,6 +1178,10 @@ async function confirmMass() {
 }
 
 /* ---------- Détail d'une carte ---------- */
+/**
+ * Ouvre la fiche détail d'une carte dans sa fenêtre.
+ * @param {string} cardId identifiant de la carte
+ */
 function openDetail(cardId) {
   S.detailId = cardId;
   renderDetail();
@@ -964,6 +1189,13 @@ function openDetail(cardId) {
   if (!d.open) d.showModal();
 }
 
+/**
+ * Une ligne « Mes exemplaires » : numéro, brillance, origine, date, et le bouton de recyclage
+ * (ou « En échange » / « Ne se recycle pas » selon le cas).
+ * @param {object} cp exemplaire
+ * @param {object} k carte
+ * @returns {string} HTML de la ligne
+ */
 function copyRow(cp, k) {
   const val = recycleValue(cp, k);
   const parts = [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'Brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean);
@@ -974,6 +1206,10 @@ function copyRow(cp, k) {
   return `<li><span>${parts.map(esc).join(' · ')}</span>${action}</li>`;
 }
 
+/**
+ * Dessine la fiche détail de la carte choisie : carte en grand, liste de souhaits, exemplaires, fabrication.
+ * Une carte fabricable doit avoir un coût défini ; Identité et Mythique ne se fabriquent pas.
+ */
 function renderDetail() {
   const k = S.cardsById.get(S.detailId);
   if (!k) return;
@@ -985,6 +1221,7 @@ function renderDetail() {
   const costS = costN == null ? null : costN * Number(cfg().craft?.shiny_multiplier ?? 4);
   const craftable = god || (k.craftable && k.rarity !== 'mythique' && k.rarity !== 'identite' && costN != null);
   const wished = S.wish.has(k.id);
+  /** Vrai si le solde ne suffit pas pour ce coût (jamais en mode sans limite). */
   const short = (cost) => !god && bal() < cost;
 
   $('#cartes-detail-card').innerHTML = cardHtml(k, {
@@ -1015,6 +1252,13 @@ function renderDetail() {
     </section>`;
 }
 
+/**
+ * Exécute une action de la fiche détail : souhait (ajout ou retrait), fabrication, recyclage.
+ * Recharge les données si l'action change l'inventaire, puis remet le focus sur le bouton utilisé.
+ * @param {'wish'|'craft'|'recycle'} action
+ * @param {HTMLElement} el bouton cliqué (data-shiny ou data-copy selon l'action)
+ * @returns {Promise<void>}
+ */
 async function detailAction(action, el) {
   if (S.busy || !S.detailId) return;
   S.busy = true;
@@ -1062,12 +1306,15 @@ async function detailAction(action, el) {
 }
 
 /* ---------- Collection d'un autre membre (lecture seule) ---------- */
+/* Vue ouverte par l'adresse #collection/<id> ou par un lien du classement (voir routeFromHash). */
 // Adresse : cartes.html#collection/<id>. Mêmes données et mêmes composants que « Collection » (cartes-zoom.js compris),
 // mais rien n'est modifiable : on voit ses cartes, on coche celles qu'on lui demande, puis on ouvre l'éditeur d'offre.
 // S.peer = { id, member, copies, byCard, loading, error, setId, filters, picks (Set de cartes demandées), shownIds }.
+/** Forme de l'adresse d'une collection (#collection/<uuid>). */
 const PEER_RE = /^#collection\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 const PEER_OWNED = [['all', 'Toutes les cartes'], ['owned', 'Possédées par lui'], ['missing', 'Manquantes chez lui'],
   ['dupes', 'Doublons chez lui'], ['dupes_missing', 'Ses doublons que je n’ai pas']];
+/** Exemplaires du membre consulté pour une carte (tableau vide si aucun). */
 const peerCopies = (cardId) => S.peer?.byCard.get(cardId) || [];
 
 /** Exemplaires d'un membre, par carte. Une seule lecture (RLS : tout membre peut lire hg_card_copies, migration 018 c). */
@@ -1087,6 +1334,12 @@ async function loadPeer(id) {
   return { member: (mem.data || []).find((m) => m.id === id) || null, copies, byCard };
 }
 
+/**
+ * Ouvre la collection d'un autre membre en lecture seule. Ouvrir sa propre collection revient à l'onglet normal.
+ * Si une autre collection est ouverte entre-temps, la réponse tardive est ignorée.
+ * @param {string} id identifiant du membre (en minuscules)
+ * @returns {Promise<void>}
+ */
 async function openPeer(id) {
   if (id === me.id) { // sa propre collection : l'onglet normal
     leavePeer();
@@ -1113,6 +1366,7 @@ async function openPeer(id) {
   $('#cartes-peer-title')?.focus({ preventScroll: true });
 }
 
+/** Ferme la collection d'un membre, revient aux onglets et remet la page à sa position d'avant. */
 function leavePeer() {
   if (!S.peer) return;
   S.peer = null;
@@ -1122,16 +1376,24 @@ function leavePeer() {
 }
 
 // L'adresse ne garde pas le #collection/… une fois la vue fermée (sinon un rechargement rouvrirait la vue).
+/** Retire #collection/… de l'adresse, sans ajouter d'entrée dans l'historique du navigateur. */
 function cleanHash() {
   if (PEER_RE.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
 }
 
+/** Suit l'adresse : #collection/<id> ouvre la collection du membre, sinon la vue revient aux onglets. */
 function routeFromHash() {
   const m = PEER_RE.exec(location.hash);
   if (m) openPeer(m[1].toLowerCase());
   else leavePeer();
 }
 
+/**
+ * Filtre de la collection d'un membre : vrai si la carte passe les filtres (rareté, famille, possession).
+ * « Doublons chez lui que je n'ai pas » : il en a au moins deux et je n'en ai aucun.
+ * @param {object} c carte
+ * @returns {boolean}
+ */
 function peerKeep(c) {
   const f = S.peer.filters;
   const n = peerCopies(c.id).length;
@@ -1146,6 +1408,11 @@ function peerKeep(c) {
 }
 
 // Une carte de sa collection : carte (bouton de sélection si elle la possède), loupe, repères d'échange.
+/**
+ * Une case de la collection d'un membre : carte, étiquettes (« Tu ne l'as pas », « Doublon chez lui », « Demandée ») et loupe.
+ * @param {object} c carte
+ * @returns {string} HTML de la case
+ */
 function peerCell(c) {
   const cps = peerCopies(c.id);
   const n = cps.length;
@@ -1171,6 +1438,11 @@ function peerCell(c) {
     + '<span class="cz-tip" aria-hidden="true">Agrandir</span></div>';
 }
 
+/**
+ * Intertitre d'une série dans la collection d'un membre (vue « Toutes les séries »).
+ * @param {{set: object, scored: number, have: number, shown: object[]}} g série et ses cartes affichées
+ * @param {number} i numéro du groupe
+ */
 function peerGroupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `pv-g-${i}`;
@@ -1184,6 +1456,11 @@ function peerGroupHtml(g, i) {
   </section>`;
 }
 
+/**
+ * Fiche d'une carte pour la fenêtre agrandie, vue depuis la collection d'un membre (cartes-zoom.js).
+ * @param {string} id identifiant de la carte
+ * @returns {object|null} fiche, ou null si la carte ou la collection n'est pas chargée
+ */
 function peerZoomInfo(id) {
   const P = S.peer;
   const k = S.cardsById.get(id);
@@ -1203,6 +1480,10 @@ function peerZoomInfo(id) {
   };
 }
 
+/**
+ * En-tête de la collection d'un membre : retour, nom, compteurs, sélection et bouton « Proposer un échange ».
+ * @param {object} P état de la collection (S.peer)
+ */
 function peerHead(P) {
   const m = P.member;
   const n = P.picks.size;
@@ -1224,6 +1505,11 @@ function peerHead(P) {
     </section>`;
 }
 
+/**
+ * HTML complet de la collection d'un membre : en-tête, série, progression, filtres et grille.
+ * @param {object} P état de la collection (S.peer), chargé
+ * @returns {string}
+ */
 function peerHtml(P) {
   const all = P.setId === ALL;
   const set = all ? null : S.sets.find((s) => s.id === P.setId);
@@ -1296,6 +1582,10 @@ function renderPeer(focusSel) {
   });
 }
 
+/**
+ * Coche ou décoche une carte qu'on demande au membre (elle sera pré-cochée dans l'éditeur d'offre).
+ * @param {string} cardId identifiant de la carte
+ */
 function togglePeerPick(cardId) {
   const P = S.peer;
   if (!P) return;
@@ -1326,6 +1616,7 @@ async function peerOffer() {
 }
 
 /* ---------- Classement ---------- */
+/** Dessine le classement (hg_card_leaderboard). Les pseudos des autres membres mènent à leur collection. */
 async function renderLeaderboard() {
   const el = $('#cartes-p-classement');
   const release = holdHeight(el); // le texte d'attente garde la hauteur : la page ne raccourcit pas
@@ -1355,7 +1646,10 @@ async function renderLeaderboard() {
 }
 
 /* ---------- Échanges (module séparé, chargé à la demande) ---------- */
-// Renvoie une promesse qui se résout quand le module est monté (données chargées).
+/**
+ * Charge le module des échanges (cartes-trades.js) une seule fois, à la première ouverture de l'onglet.
+ * @returns {Promise<void>} résolue quand le module est monté (ou remplacé par « Bientôt » si le chargement échoue)
+ */
 function mountTradesOnce() {
   if (S.tradesMounted) return S.tradesReady;
   S.tradesMounted = true;
@@ -1372,6 +1666,7 @@ function mountTradesOnce() {
 }
 
 /* ---------- Historique ---------- */
+/** Dessine l'historique des 30 derniers mouvements de Paillettes (en vert : gain, en rouge : dépense). */
 function renderHistory() {
   const el = $('#cartes-history');
   if (!el) return;
@@ -1385,6 +1680,10 @@ function renderHistory() {
 }
 
 /* ---------- Événements ---------- */
+/**
+ * Délégation des clics sur la page : onglets et tous les boutons [data-action] (un seul écouteur pour toute la page).
+ * @param {MouseEvent} e
+ */
 function onClick(e) {
   const t = e.target.closest('.cartes-tab[data-tab], [data-action]');
   if (!t || t.disabled) return;
@@ -1414,6 +1713,10 @@ function onClick(e) {
   }
 }
 
+/**
+ * Délégation des changements (sélecteurs de série, filtres de la collection et de la collection d'un membre).
+ * @param {Event} e
+ */
 function onChange(e) {
   const t = e.target;
   if (t.dataset.change === 'set') { S.setId = t.value; renderCollection('cartes-set'); }
@@ -1422,6 +1725,10 @@ function onChange(e) {
   else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
 }
 
+/**
+ * Flèches, Début et Fin dans la liste des onglets : déplace la sélection et le focus (motif ARIA « tabs »).
+ * @param {KeyboardEvent} e
+ */
 function onTabKey(e) {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
   const ids = TABS.map(([id]) => id);
@@ -1435,6 +1742,11 @@ function onTabKey(e) {
 }
 
 /* ---------- Démarrage ---------- */
+/**
+ * Point d'entrée de la page : squelette, écouteurs, chargement des données, routage de l'adresse,
+ * quêtes et compte à rebours du booster gratuit. Une erreur de chargement est affichée sans bloquer la page.
+ * @returns {Promise<void>}
+ */
 async function boot() {
   app.innerHTML = skeleton();
   app.addEventListener('click', onClick);

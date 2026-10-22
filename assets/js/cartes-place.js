@@ -13,6 +13,7 @@ export function keepPlace(fn) {
   const y = window.scrollY;
   const x = window.scrollX;
   const inner = new Map([...document.querySelectorAll('[data-keep]')].map((el) => [el.dataset.keep, el.scrollTop]));
+  // Rétablit les positions mémorisées (page et zones data-keep). Appelé après le rendu, même si celui-ci est asynchrone.
   const restore = () => {
     for (const [key, top] of inner) {
       const el = document.querySelector(`[data-keep="${CSS.escape(key)}"]`);

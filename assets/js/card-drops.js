@@ -13,17 +13,21 @@ import { cardHtml } from './cartes-ui.js';
 import { rnd } from './utils.js';
 import { trajectory, KINDS } from './dyn-events.js';
 
-const MAX_VISIBLE = 3;
-const POLL_MS = 60000;
+/* ---------- Constantes et état ---------- */
+const MAX_VISIBLE = 3; // nombre maximum de cartes affichées en même temps
+const POLL_MS = 60000; // interrogation de secours toutes les 60 s (les gagnants ne sont pas diffusés en temps réel)
+// Messages d'erreur du serveur qui veulent dire « c'est fini pour ce drop » (et non une panne réseau).
 const GONE_RE = /trop tard|déjà attrapé|terminé|n'existe plus|plus disponible|épuisé|plus aucun/i;
 // Rythme des vols (ms) : premier passage rapide, puis un passage toutes les 8 à 16 s, chacun de 7 à 9,5 s.
 const FIRST_FLY = [1500, 4000];
 const GAP_FLY = [8000, 16000];
 const FLY_MS = [7000, 9500];
-const RETRY_FLY = [2000, 3500];
+const RETRY_FLY = [2000, 3500]; // délai avant de réessayer si un autre objet vole déjà
+/** Tire au hasard un élément d'une liste. */
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 // S.shown : id du drop -> { el, remaining, timer, anim } ; S.gone : drops à ne plus proposer sur cette page (gagnés, finis, masqués).
+// S.busy : drops dont une capture est en cours ; S.layer / S.live : calque et zone d'annonce pour lecteurs d'écran.
 const S = { shown: new Map(), gone: new Set(), busy: new Set(), started: false, layer: null, live: null };
 
 /* ---------- Données ---------- */
@@ -41,6 +45,7 @@ async function fetchActive() {
 }
 
 /* ---------- Calque (injecté une fois) ---------- */
+/** Crée le calque fixe au-dessus de la page (une seule fois) et renvoie-le. Les clics y sont reliés à onClick. */
 function ensureLayer() {
   if (S.layer?.isConnected) return S.layer;
   const layer = document.createElement('div');
@@ -52,20 +57,37 @@ function ensureLayer() {
   S.live = layer.querySelector('.cd-live');
   return layer;
 }
+/**
+ * Annonce un message aux lecteurs d'écran. On vide la zone puis on écrit après 50 ms,
+ * pour que la même annonce soit lue à nouveau si elle se répète.
+ * @param {string} msg
+ */
 function say(msg) {
   if (!S.live) return;
   S.live.textContent = '';
   setTimeout(() => { if (S.live) S.live.textContent = msg; }, 50);
 }
+/** Zone du coin où se posent les cartes (révélations et cartes à l'arrêt). */
 const stack = () => ensureLayer().querySelector('.cd-stack');
+/** Texte sous la carte : « Dernier exemplaire ! » ou le nombre restant. */
 const countText = (n) => (n <= 1 ? 'Dernier exemplaire !' : `${n} exemplaires restants`);
 
 /* ---------- Affichage ---------- */
+/**
+ * Convertit une ligne de drop (hg_drops_active) en objet attendu par cardHtml.
+ * @param {object} d ligne reçue du serveur
+ * @returns {object} carte prête pour cardHtml
+ */
 function cardOf(d) {
   return { name: d.name, rarity: d.rarity, family: d.family, image_url: d.image_url, flavor: d.flavor,
     number: d.number, max_copies: d.max_copies, set_name: d.set_name };
 }
 
+/**
+ * Ajoute une carte sauvage à l'écran. Avec mouvement, elle part dans le calque et volera ;
+ * sans mouvement, elle se pose dans le coin.
+ * @param {object} d ligne du drop (drop_id, remaining, shiny, name...)
+ */
 function show(d) {
   const motion = motionAllowed();
   const item = document.createElement('div');
@@ -96,6 +118,7 @@ function show(d) {
 function fly(id) {
   const s = S.shown.get(id);
   if (!s) return;
+  /** Programme le prochain passage de cette carte dans ms millisecondes. */
   const later = (ms) => { s.timer = setTimeout(() => fly(id), ms); };
   if (document.hidden || S.busy.has(id) || s.el.classList.contains('is-busy')
     || document.querySelector('.cd-item.is-flying, .dyn-fly')) return later(rnd(RETRY_FLY[0], RETRY_FLY[1]));
@@ -153,12 +176,14 @@ function sync(list) {
   }
 }
 
+/** Relit les drops actifs et met l'écran d'accord avec eux (ne fait rien si la lecture échoue). */
 async function refresh() {
   const list = await fetchActive();
   if (list) sync(list);
 }
 
 /* ---------- Clic : attraper ---------- */
+/** Clic sur le calque : « × » masque la carte sur cette page, le bouton de la carte tente de la capturer. */
 function onClick(e) {
   const hide = e.target.closest('[data-cd-hide]');
   if (hide) { forget(hide.closest('.cd-item')?.dataset.drop); return; }
@@ -166,7 +191,14 @@ function onClick(e) {
   if (btn) claim(btn.dataset.cdClaim, btn.closest('.cd-item'));
 }
 
+/**
+ * Tente d'attraper un drop (rpc hg_drop_claim). Succès : révélation. Drop fini : la carte disparaît.
+ * Autre erreur (réseau, serveur) : la carte reste et le bouton redevient actif.
+ * @param {string} id identifiant du drop
+ * @param {HTMLElement} item élément affiché de la carte
+ */
 async function claim(id, item) {
+  // Garde S.busy : un double clic rapide ne doit envoyer qu'une seule capture.
   if (!item || S.busy.has(id)) return;
   S.busy.add(id);
   item.classList.add('is-busy');
@@ -198,6 +230,12 @@ async function claim(id, item) {
 }
 
 /* ---------- Révélation ---------- */
+/**
+ * Montre la carte gagnée dans le coin, avec un message, un son, un toast et des confettis.
+ * La révélation disparaît seule au bout de 6 s.
+ * @param {HTMLElement} item élément de la carte (sorti du calque)
+ * @param {object} c carte renvoyée par hg_drop_claim (name, rarity, serial...)
+ */
 function reveal(item, c) {
   const name = String(c.name || 'la carte');
   // La révélation se pose dans le coin (comme avant) : la carte qui volait n'y est plus, elle est sortie du calque.
@@ -240,7 +278,11 @@ function confetti(item) {
 }
 
 /* ---------- Démarrage ---------- */
-/** Feuille de style de la carte (cartes-card.css) : chargée ici, les autres pages ne la lisent pas. Attend son chargement. */
+/**
+ * Charge la feuille de style des cartes si la page ne l'a pas déjà incluse, et attend qu'elle soit prête
+ * (pour éviter de dessiner une carte sans style).
+ * @returns {Promise<void>}
+ */
 function ensureCardCss() {
   const found = document.querySelector('link[href$="cartes-card.css"]');
   if (found) return found.sheet ? Promise.resolve() : new Promise((res) => found.addEventListener('load', res, { once: true }));

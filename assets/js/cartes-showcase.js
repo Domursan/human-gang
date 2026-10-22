@@ -2,15 +2,24 @@
 // Lecture : hg_card_showcase → hg_card_copies → hg_cards (tous les membres peuvent lire, voir 018 c).
 // Édition (sur sa propre fiche seulement) : une <dialog> qui liste ses exemplaires non recyclés.
 // Rendu : cardHtml() de cartes-ui.js. Styles : cartes-card.css + cartes-showcase.css (préfixe shw-).
+// Exporte : mountShowcase(el, { userId, isMe }) qui affiche la vitrine dans un élément de la fiche membre.
 import { sb, esc, errMsg, toast, canAccess } from './core.js';
 import { cardHtml, rarityRank } from './cartes-ui.js';
 
-const SLOTS = [1, 2, 3];
+/* ---------- Constantes ---------- */
+const SLOTS = [1, 2, 3]; // numéros des 3 emplacements de la vitrine
+// Colonnes lues sur hg_cards (on évite select('*') pour ne pas charger de champs inutiles).
 const CARD_COLS = 'id, set_id, number, name, family, rarity, image_url, flavor, caption, member_id, max_copies';
 
+/* ---------- Données d'affichage (mises en cache) ---------- */
 /* Données d'affichage communes à la page : noms des séries (quelques lignes) et nombre de cartes par série
    (un comptage par série, sans lire les cartes). Mises en cache. */
-let metaP = null, sinceP = null;
+let metaP = null, sinceP = null; // promesses mises en cache : une seule lecture par page
+/**
+ * Charge les noms des séries et leur nombre de cartes. Facultatif : en cas d'erreur, les cartes
+ * s'affichent sans nom de série ni total. Mis en cache.
+ * @returns {Promise<{names: Map, totals: Map}>} noms et totaux par identifiant de série
+ */
 function loadMeta() {
   return metaP ??= (async () => {
     const names = new Map(), totals = new Map();
@@ -26,6 +35,10 @@ function loadMeta() {
     return { names, totals };
   })();
 }
+/**
+ * Date d'arrivée de chaque membre (pour la carte Identité). Mis en cache. Vide en cas d'erreur.
+ * @returns {Promise<Map<string, string>>} date d'arrivée par identifiant de membre
+ */
 function loadSince() {
   return sinceP ??= (async () => {
     try {
@@ -35,9 +48,15 @@ function loadSince() {
     } catch { return new Map(); }
   })();
 }
-/** Ajoute à une carte les champs d'affichage disponibles (série, total, arrivée du membre pour une Identité). */
+/**
+ * Charge les données communes, puis renvoie une fonction qui complète une carte avec ses champs d'affichage
+ * (série, total, arrivée du membre pour une Identité). Le chargement de l'arrivée n'a lieu que si une Identité figure dans la liste.
+ * @param {object[]} cards cartes concernées (sert seulement à savoir si une Identité est présente)
+ * @returns {Promise<(card: object) => object>} fonction de complétion (renvoie la carte telle quelle si elle est vide)
+ */
 async function withMeta(cards) {
   const [meta, since] = await Promise.all([loadMeta(), cards.some((c) => c?.rarity === 'identite') ? loadSince() : null]);
+  /** Complète une carte avec sa série, son total et l'arrivée du membre (Identité). Une carte vide est renvoyée telle quelle. */
   const decorate = (card) => (card ? {
     ...card,
     set_name: meta.names.get(card.set_id), set_total: meta.totals.get(card.set_id),
@@ -87,6 +106,7 @@ export async function mountShowcase(el, { userId, isMe }) {
     <div class="shw-body" aria-busy="true"><div class="shw-skel" aria-hidden="true"></div></div>`;
   const body = el.querySelector('.shw-body');
 
+  /** Dessine les 3 emplacements. Un visiteur ne voit pas la section si la vitrine est vide. */
   const paint = (bySlot, decorate) => {
     if (!isMe && !bySlot.size) { el.hidden = true; return; }
     const items = SLOTS.filter((s) => bySlot.has(s) || isMe).map((s) => {
@@ -97,6 +117,7 @@ export async function mountShowcase(el, { userId, isMe }) {
     });
     body.innerHTML = `<ul class="shw-slots">${items.join('')}</ul>`;
   };
+  /** Relit la vitrine depuis la base et la redessine (aussi appelée après un enregistrement). */
   const refresh = async () => {
     body.setAttribute('aria-busy', 'true');
     try {
@@ -111,7 +132,14 @@ export async function mountShowcase(el, { userId, isMe }) {
   await refresh();
 }
 
-/** Éditeur : choisir jusqu'à 3 exemplaires (un par emplacement), puis enregistrer. */
+/* ---------- Éditeur (dialogue « Ma vitrine ») ---------- */
+/**
+ * Éditeur : choisir jusqu'à 3 exemplaires (un par emplacement), puis enregistrer.
+ * La fenêtre est créée à l'ouverture et retirée de la page à sa fermeture.
+ * @param {string} userId membre dont on modifie la vitrine
+ * @param {() => Promise<void>} onSaved rafraîchit la vitrine affichée après un enregistrement
+ * @param {HTMLButtonElement} btn bouton qui a ouvert l'éditeur (désactivé pendant le chargement)
+ */
 async function openEditor(userId, onSaved, btn) {
   btn.disabled = true;
   let collection, current;
@@ -151,8 +179,10 @@ async function openEditor(userId, onSaved, btn) {
   const gridEl = dlg.querySelector('.shw-dlg-grid');
   const msgEl = dlg.querySelector('.shw-dlg-msg');
   const saveBtn = dlg.querySelector('[data-save]');
+  /** Affiche un message d'état dans le dialogue (chaîne vide pour l'effacer). */
   const say = (t) => { msgEl.textContent = t; };
 
+  /** Redessine les emplacements choisis et la grille de la collection (badge = numéro d'emplacement). */
   const paint = () => {
     picksEl.innerHTML = SLOTS.map((s, i) => {
       const r = picks[i] != null ? byCopy.get(String(picks[i])) : null;
@@ -168,6 +198,7 @@ async function openEditor(userId, onSaved, btn) {
     dlg.querySelector('.shw-count').textContent = collection.length ? `(${collection.length} exemplaire${collection.length > 1 ? 's' : ''})` : '';
   };
 
+  // Toucher une carte de la collection l'ajoute au premier emplacement libre, ou la retire si elle est déjà choisie.
   gridEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-copy]');
     if (!b) return;
@@ -181,6 +212,7 @@ async function openEditor(userId, onSaved, btn) {
     say('');
     paint();
   });
+  // Toucher un emplacement rempli le libère (la carte ne part qu'à l'enregistrement).
   picksEl.addEventListener('click', (e) => {
     const b = e.target.closest('[data-slot]');
     if (!b) return;
@@ -193,6 +225,7 @@ async function openEditor(userId, onSaved, btn) {
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); }); // clic sur le fond
   dlg.addEventListener('close', () => dlg.remove(), { once: true });
 
+  // Enregistrement : d'abord les emplacements remplis (upsert), puis suppression des emplacements vidés.
   saveBtn.addEventListener('click', async () => {
     saveBtn.disabled = true;
     say('');
