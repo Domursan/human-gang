@@ -44,7 +44,7 @@ const pressed = (p, sel) => p.getAttribute(sel, 'aria-pressed');
     'compteurs initiaux : 11 cartes (tes cartes), 8 cartes (ses cartes)');
   check(JSON.stringify(await p.$$eval('#trd-set-give option', (o) => o.map((x) => x.textContent))) === JSON.stringify(['Toutes les séries', 'Première édition', 'Saison 2']),
     'menu Série : « Toutes les séries » puis chaque série présente dans la liste');
-  check(await p.$$eval('#trd-rar-give option', (o) => o.length) === 8, 'menu Rareté : « Toutes » + 7 raretés');
+  check(await p.$$eval('#trd-rar-give option', (o) => o.length) === 9, 'menu Rareté : « Toutes » + 8 raretés (dont Unique)');
   // Le survol de la souris (mouseover) peut remplir l'aperçu dès l'ouverture : on ne vérifie le libellé vide que s'il est vide.
   // Le libellé vide existe en deux formes (gabarit « Survole… », rendu JS « Touche… ») : les deux sont acceptées.
   if (await p.getAttribute('#trd-peek', 'data-state') === 'empty') {
