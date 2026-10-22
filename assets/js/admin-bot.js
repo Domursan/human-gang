@@ -557,7 +557,7 @@ export function mountBotSection(container) {
         <section class="card stack bot-panel" role="tabpanel" id="bot-p-salons" aria-labelledby="bot-tab-salons" hidden>
           <div>
             <h3 class="card-title">Salons</h3>
-            <p class="muted small">Les salons où le bot publie. Ajoute-les ici (${SALONS_MAX} au plus), puis coche, pour chaque type d'annonce, les salons où elle part.</p>
+            <p class="muted small">Les salons où le bot publie. Ajoute-les ici (${SALONS_MAX} au plus), puis coche, pour chaque type d'annonce, les salons où elle part. Chaque changement est enregistré tout de suite.</p>
           </div>
           <div class="salon-block">
             <h4 class="label" id="bot-salons-h">Salons connus</h4>
@@ -846,6 +846,36 @@ export function mountBotSection(container) {
     else if (no) { S.salonAsk = null; renderSalons(); $(`[data-salon-ask="${no.dataset.salonNo}"]`, container)?.focus(); }
     else if (yes) removeSalon(yes.dataset.salonYes);
   });
+  /**
+   * Enregistre tout de suite les salons connus et les salons par type (brouillon de l'onglet Salons) dans hg_settings.bot,
+   * sans toucher aux autres réglages. Appelé à chaque ajout, retrait ou case cochée : rien ne se perd en changeant de page.
+   * @param {string} okMsg message affiché après l'enregistrement
+   * @returns {Promise<boolean>} vrai si l'enregistrement a réussi
+   */
+  async function persistSalons(okMsg) {
+    try {
+      assertLoaded();
+      const d = S.salonDraft;
+      const salons = d.salons.map((x) => ({ id: x.id, nom: x.nom }));
+      const channels = {};
+      for (const [k] of MENTION_TYPES) {
+        const list = (d.channels[k] ?? []).filter((id) => salons.some((x) => x.id === id)).slice(0, CHAN_MAX);
+        if (list.length) channels[k] = list;
+      }
+      const value = { ...S.bot, salons, channels, birthday_channel_id: channels.birthday?.[0] ?? null };
+      check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
+      S.bot = value;
+      syncDirty();
+      syncChannelOption();
+      renderAnnChannels();
+      if (okMsg) toast(okMsg, 'ok');
+      return true;
+    } catch (e) {
+      toast(`Salons non enregistrés : ${e?.message || e}`, 'error');
+      syncDirty();
+      return false;
+    }
+  }
   /** Retire un salon du brouillon et le décoche partout (salons par type). Le retrait part avec « Enregistrer ». */
   function removeSalon(id) {
     const d = S.salonDraft;
@@ -860,7 +890,7 @@ export function mountBotSection(container) {
     const next = d.salons[idx] ?? d.salons[idx - 1];
     renderSalons(); renderChannelsUI(); syncMentionControls();
     (next ? $(`[data-salon-ask="${next.id}"]`, container) : $('#bot-salon-name', container))?.focus();
-    toast('Salon retiré : pense à enregistrer', 'ok');
+    persistSalons('Salon retiré et enregistré');
   }
   /**
    * Ajoute un salon au brouillon après contrôle : nom de 1 à 50 caractères, ID de 17 à 20 chiffres,
@@ -884,7 +914,7 @@ export function mountBotSection(container) {
     d.salons.push({ id, nom });
     nameEl.value = ''; idEl.value = '';
     renderSalons(); renderChannelsUI(); syncMentionControls();
-    toast('Salon ajouté : pense à enregistrer', 'ok');
+    persistSalons('Salon ajouté et enregistré');
     nameEl.focus();
   }
   $('#bot-salon-add', container).addEventListener('click', addSalon);
@@ -930,6 +960,7 @@ export function mountBotSection(container) {
       if (!d[k].length) delete d[k];
     }
     chanCount(k); syncMentionControls(); syncDirty();
+    persistSalons('');
   });
   // Enregistrement des réglages généraux, des salons et des mentions : contrôle des identifiants Discord et du rôle exigé
   // par une mention, puis écriture de hg_settings.bot. Salons connus et salons par type viennent du brouillon.

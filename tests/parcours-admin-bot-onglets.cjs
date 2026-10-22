@@ -127,7 +127,9 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
     await p.fill('#bot-salon-id', ENTREE);
     await p.press('#bot-salon-id', 'Enter');
     check(await p.locator('#bot-salon-list .salon-row').count() === 6, '(d) Entrée dans l\'ID ajoute le salon (6 au total)');
-    check(await p.isVisible('#bot-salons-dirty'), '(d) modifications non enregistrées signalées');
+    await sleep(300);
+    check(!(await p.isVisible('#bot-salons-dirty')), '(d) ajout enregistré tout de suite (pas de « non enregistré »)');
+    check((await botSetting(p)).salons?.some((x) => x.id === ENTREE && x.nom === 'Entrée'), '(d) le salon ajouté est dans hg_settings.bot (nom gardé)');
 
     // (e) cases par type : draw = deux salons, irl = un, card_pull = un, dyn = cinq (sixième refusé)
     await p.check(`#bot-chan-draw input[value="${CHAN}"]`);
@@ -163,7 +165,9 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
     check(await p.locator('#bot-salon-list .salon-row').count() === 5, '(f) Retirer : le salon disparaît de la liste');
     check(await p.locator(`#bot-chan-card_pull input[value="${CARTES}"]`).count() === 0, '(f) le salon n\'est plus proposé dans les cases par type');
     check((await p.textContent('#bot-chan-h-card_pull')).includes('Aucun salon coché'), '(f) le type qui le cochait revient au salon par défaut');
-    check(await p.isVisible('#bot-salons-dirty'), '(f) retrait non enregistré signalé');
+    await sleep(300);
+    check(!(await p.isVisible('#bot-salons-dirty')), '(f) retrait enregistré tout de suite');
+    check(!(await botSetting(p)).salons?.some((x) => x.id === CARTES), '(f) le salon retiré n\'est plus dans hg_settings.bot');
     await save(p);
     s = await botSetting(p);
     check(!(s.salons || []).some((x) => x.id === CARTES) && !('card_pull' in (s.channels || {})), '(f) enregistré : salon retiré de la liste et de card_pull');
