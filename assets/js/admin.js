@@ -17,6 +17,7 @@ import { mountInviteLinks, refreshInviteLinks } from './admin-invite-links.js';
 import { eventsSub } from './admin-events.js';
 import { mountCardsSection, openCardsTab, mountPlayersList, mountDropsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
+import { mountQuizSection } from './admin-quiz.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection, openSortie, listSorties, infoSorties } from './admin-sorties/index.js';
 import { mountSouvenirsSection, openSouvenirs, listSouvenirs } from './admin-souvenirs/index.js';
@@ -147,6 +148,7 @@ for (const tab of ['series', 'cartes', 'quetes', 'economie', 'stats', 'echanges'
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
+registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);

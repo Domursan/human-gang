@@ -91,7 +91,7 @@ const DB = {
   // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.
   hg_perm_catalog: [['membres','Membres'],['evenements','Sorties IRL'],['souvenirs','Souvenirs et photos'],['secret_santa','Secret Santa'],
     ['cartes','Jeu de cartes'],['badges','Badges'],['themes','Thèmes et événements'],['messages','Messagerie'],['support','Assistance et idées'],
-    ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin']]
+    ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin'],['quiz','Questions du gang']]
     .map(([key, label], i) => ({ key, label, description: 'Description de ' + label.toLowerCase(), sort: (i + 1) * 10 })),
   // Staff de test : scénario staffRows, ou un Staff construit à partir de S.staff pour le membre connecté (S.uid).
   hg_staff: S.staffRows || Array.isArray(S.staff) && S.staff.length ? (S.staffRows || [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
@@ -121,6 +121,9 @@ const DB = {
     { code: 'recycle_5', label: 'Recycler 5 cartes', metric: 'cartes_recyclees', target: 5, reward: 40, active: true, sort: 4 },
     { code: 'jour_3', label: 'Passer 3 fois au passage du jour', metric: 'passages_du_jour', target: 3, reward: 30, active: false, sort: 5 },
   ],
+  // Questions du gang (migration 061) : questions lues par la section admin ; clés (hg_quiz_keys) lues seulement par hg_quiz_key.
+  hg_quiz_questions: [],
+  hg_quiz_keys: [],
   hg_challenges: [
     { id: '00000000-0000-4000-8000-000000000024', title: 'Vingt sorties ce trimestre', description: 'Le gang fixe ensemble vingt sorties IRL.', metric: 'sorties_tenues', target: 20, reward: 100,
       starts_at: iso(-10), ends_at: iso(80), active: false },
@@ -377,6 +380,52 @@ function adminDmResult(body) {
   return { ok: true, recipients, sent: recipients.length, failed: 0, skipped: 0, channel: body.channel ? true : null, channel_error: null, log_id: 1 };
 }
 
+/* ---------- Questions du gang : hg_quiz_save simulée (validations du serveur, messages en français) ---------- */
+/** Réponse d'erreur de hg_quiz_save. */
+const quizErr = (message) => ({ data: null, error: { message } });
+/**
+ * Enregistre une question et sa clé comme hg_quiz_save : création si p_id est vide, sinon modification.
+ * Les contrôles reprennent ceux de la migration 061 (nombre de choix, bonne réponse, réponses acceptées, valeur).
+ * @param {{p_id: string|null, p_question: object, p_key: object}} args Arguments de l'appel.
+ */
+function quizSave(args) {
+  if (S.quizError) return quizErr(S.quizError);
+  const q = args.p_question || {}, key = args.p_key || {}, t = q.qtype;
+  if (!['choix_unique', 'choix_multiple', 'vrai_faux', 'texte', 'nombre'].includes(t)) return quizErr('Type de question inconnu');
+  let opts = Array.isArray(q.options) ? q.options : [];
+  if (t === 'vrai_faux') opts = [{ id: 'vrai', text: 'Vrai' }, { id: 'faux', text: 'Faux' }];
+  if (t === 'texte' || t === 'nombre') opts = [];
+  const ids = opts.map((o) => o.id);
+  if (t === 'choix_unique' || t === 'choix_multiple') {
+    if (opts.length < 2 || opts.length > 10) return quizErr('Il faut entre 2 et 10 choix');
+    if (opts.some((o) => !String(o.text || '').trim())) return quizErr('Chaque choix a besoin d\'un texte (200 caractères au plus)');
+  }
+  if (t === 'choix_unique' || t === 'choix_multiple' || t === 'vrai_faux') {
+    const c = key.correct || [];
+    if (!c.length || !c.every((x) => ids.includes(x))) return quizErr('Coche la ou les bonnes réponses');
+    if (t !== 'choix_multiple' && c.length !== 1) return quizErr('Une seule bonne réponse pour ce type');
+  } else if (t === 'texte') {
+    if (!key.manual && !(key.accepted || []).some((a) => String(a).trim())) return quizErr('Donne au moins une réponse acceptée, ou choisis la validation à la main');
+  } else if (!/^-?[0-9]+(\.[0-9]+)?$/.test(String(key.value ?? ''))) return quizErr('Donne la valeur attendue');
+  const now = new Date().toISOString();
+  const fields = { prompt: String(q.prompt || '').trim(), qtype: t, difficulty: q.difficulty || 'moyen', category: q.category || null, options: opts,
+    explanation: q.explanation || null, image_url: q.image_url || null, reward: q.reward ?? 0, starts_at: q.starts_at || now, ends_at: q.ends_at ?? null, active: q.active ?? true };
+  if (!args.p_id) {
+    const row = { id: uid(), ...fields, created_by: ME, created_at: now, updated_at: now };
+    DB.hg_quiz_questions.unshift(row);
+    DB.hg_quiz_keys.push({ question_id: row.id, answer: key });
+    window.__LOG.push(['quiz_save', 'create', t]);
+    return { data: row.id, error: null };
+  }
+  const row = DB.hg_quiz_questions.find((x) => x.id === args.p_id);
+  if (!row) return quizErr('Question introuvable');
+  Object.assign(row, fields, { updated_at: now });
+  const k = DB.hg_quiz_keys.find((x) => x.question_id === row.id);
+  if (k) k.answer = key; else DB.hg_quiz_keys.push({ question_id: row.id, answer: key });
+  window.__LOG.push(['quiz_save', 'update', t]);
+  return { data: row.id, error: null };
+}
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {
@@ -514,6 +563,27 @@ export function createClient() {
         if (sc.ghosts) sc.ghosts = sc.ghosts.filter((g) => g.id !== args.p_ghost);
         if (sc.suggestions) sc.suggestions = sc.suggestions.filter((s) => s.ghost_id !== args.p_ghost);
         return { data: [{ moved: 3 }], error: null };
+      }
+      // Questions du gang (migration 061) : admin ou Staff « quiz ». S.quizError : erreur serveur simulée à l'enregistrement.
+      if (fn === 'hg_quiz_key' || fn === 'hg_quiz_remove' || fn === 'hg_quiz_save' || fn === 'hg_quiz_set_secret') {
+        const m = myPermsNow();
+        if (!(m.is_admin || m.perms.includes('quiz'))) return denied;
+        if (fn === 'hg_quiz_key') { const k = DB.hg_quiz_keys.find((x) => x.question_id === args.p_id); return { data: k ? k.answer : null, error: null }; }
+        if (fn === 'hg_quiz_set_secret') { // migration 062 : S.quizSecretError simule une erreur serveur à cette étape
+          if (S.quizSecretError) return quizErr(S.quizSecretError);
+          const row = DB.hg_quiz_questions.find((x) => x.id === args.p_id);
+          if (!row) return quizErr('Question introuvable');
+          row.secret = !!args.p_secret;
+          window.__LOG.push(['quiz_secret', args.p_id, row.secret]);
+          return { data: null, error: null };
+        }
+        if (fn === 'hg_quiz_remove') {
+          window.__LOG.push(['quiz_remove', args.p_id]);
+          DB.hg_quiz_questions = DB.hg_quiz_questions.filter((x) => x.id !== args.p_id);
+          DB.hg_quiz_keys = DB.hg_quiz_keys.filter((x) => x.question_id !== args.p_id);
+          return { data: null, error: null };
+        }
+        return quizSave(args);
       }
       if (fn === 'hg_drops_active') return { data: [], error: null }; // pas de drop sur ces pages (voir fake-sb-cartes.mjs)
       // Réclamation d'un drop : toujours refusée, le drop est terminé.
