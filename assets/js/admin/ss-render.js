@@ -1,6 +1,8 @@
 // Admin : Secret Santa. Colonne 2 : liste des éditions (createList). Zone principale : l'édition choisie
 // (adresse #vie/secret-santa/<id>) avec inscrits, tirage, exclusions, vœux, carte de base et attributions.
 // Création, modification et exclusions se font dans le tiroir (ss-events.js) ; rien n'est déplié en permanence.
+// Utilisé par admin.js (registerSub), ss-events.js et live.js. Dépend de core.js, state.js, common.js,
+// admin-accounts.js (pairsBlockHtml), ui/ et des réglages « lot 3 » (blocReglages, chargerReglagesLot3).
 import { esc, $, sb, fmtDate, fmtDateTime, isGodMode, godTag } from '../core.js';
 import { S, pseudoOf, STATUS_LABEL } from './state.js';
 import { check } from './common.js';
@@ -13,8 +15,11 @@ import { navigate } from './shell.js';
 import { blocReglages } from '../admin-reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
+// Ton (couleur) de chaque étape d'une édition.
 const TONE = { inscriptions: 'open', tirage: 'prog', envoi: 'prog', revelation: 'prog', termine: 'done' };
+/** Statut d'une édition au format des composants ui/ : { id, label, tone }. */
 export const ssStatus = (ed) => ({ id: ed.status, label: STATUS_LABEL[ed.status] ?? ed.status, tone: TONE[ed.status] || 'muted' });
+/** Tri alphabétique (français) des inscrits, par pseudo. */
 const byPseudo = (a, b) => pseudoOf(a.user_id).localeCompare(pseudoOf(b.user_id), 'fr');
 
 /** État de la vue : id de l'édition affichée (adresse), racines et listes montées. */
@@ -26,6 +31,7 @@ export const ssCurrent = () => S.editions.find((e) => e.id === SSV.id) ?? null;
 export const ssOpenEdition = () => S.editions.find((e) => e.status !== 'termine');
 
 /* ---------- Liste (colonne 2) ---------- */
+/** Éléments de la colonne 2 : une ligne par édition, la plus récente en tête. */
 function items() {
   return S.editions.map((ed) => ({
     id: ed.id,
@@ -35,6 +41,7 @@ function items() {
     ended: ed.status === 'termine',
   }));
 }
+/** Contenu HTML d'une ligne de la colonne 2 (remplace le rendu par défaut de ui/list.js). */
 function rowHtml(it) {
   return `<div class="ui-row-body">
     <div class="ui-row-top"><span class="ui-row-name">${esc(it.name)}</span></div>
@@ -44,12 +51,17 @@ function rowHtml(it) {
 }
 
 /* ---------- Zone principale ---------- */
+/** Bouton « + Nouvelle édition » dans la barre de zone. */
 function paintActions() {
   const z = $('#zone-actions');
   if (!z) return;
   z.innerHTML = `<button class="btn btn-primary" type="button" data-ss-act="new">+ Nouvelle édition</button>`;
 }
 
+/**
+ * Charge les vœux (listes de souhaits) de l'édition. Une erreur est gardée dans SSV.wishesErr
+ * pour être affichée dans la carte « Vœux », sans bloquer le reste de la page.
+ */
 async function loadWishes(id) {
   SSV.wishesErr = null;
   try {
@@ -61,6 +73,7 @@ async function loadWishes(id) {
   }
 }
 
+/** Liste des vœux par participant (lecture seule). Seuls les liens en http(s) deviennent cliquables. */
 function wishesHtml(parts) {
   if (SSV.wishesErr) return `<p class="small muted">Vœux indisponibles : ${esc(SSV.wishesErr.message || 'erreur')}</p>`;
   const by = new Map();
@@ -76,6 +89,11 @@ function wishesHtml(parts) {
     </li>`).join('')}</ul>`;
 }
 
+/**
+ * Carte « Tirage au sort » : boutons (auto, manuel, refaire en mode sans limite) et règles de seuil.
+ * @param {object} ed Édition affichée.
+ * @param {number} n Nombre d'inscrits.
+ */
 function drawBlock(ed, n) {
   const god = isGodMode();
   const minDraw = god ? 1 : 3; // mode sans limite : dès 1 participant (il s'offre alors à lui-même)
@@ -105,6 +123,10 @@ function drawBlock(ed, n) {
   </section>`;
 }
 
+/**
+ * Corps de la page d'une édition : inscrits, tirage, exclusions, vœux, carte de base, paires, suppression.
+ * @param {object} ed Édition affichée.
+ */
 function detailBody(ed) {
   const parts = [...S.participants].sort(byPseudo);
   const n = parts.length;
@@ -164,9 +186,12 @@ function detailBody(ed) {
     </section>`;
 }
 
+/** Icône « croix » (retirer une exclusion). */
 const svgX = () => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+/** Icône « téléverser » (carte de base). */
 const svgUp = () => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></svg>';
 
+/** Dessine la page de l'édition affichée, ou un message si aucune n'est choisie ou si elle n'existe plus. */
 function paintDetail() {
   const root = SSV.root;
   if (!root) return;
@@ -201,12 +226,15 @@ export function renderSS() {
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
+/** Fournisseurs de la sous-section « Secret Santa » (voir admin/shell.js, registerSub). */
 export const ssSub = {
+  /** Montage unique : la zone principale, le bloc de réglages du Secret Santa, et ses valeurs. */
   main(el) {
     SSV.root = $('#ss-root');
     el.prepend(blocReglages('ss'));
     chargerReglagesLot3();
   },
+  /** Colonne 2 : la liste des éditions, sans recherche ; choisir une ligne ouvre son adresse. */
   list(el) {
     SSV.list = createList(el, {
       items: items(),
@@ -223,6 +251,10 @@ export const ssSub = {
       onSelect: (it) => navigate(`vie/secret-santa/${it.id}`),
     });
   },
+  /**
+   * À chaque visite : recharge l'édition de l'adresse (inscrits, exclusions, vœux), puis redessine.
+   * `tok` évite qu'une réponse lente écrase une visite plus récente.
+   */
   async open(_el, { id } = {}) {
     const tok = ++SSV.tok;
     SSV.id = id || null;

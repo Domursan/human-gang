@@ -1,4 +1,7 @@
 // Admin : codes d'invitation (génération, liste, suppression).
+// Deux listes : codes disponibles (non utilisés) et codes utilisés, avec recherche. Les codes issus d'un lien
+// d'invitation sont listés sous leur lien (admin-invite-links.js), pas ici.
+// Utilisé par admin.js (bindInvites, renderInvites, inviteActions). Dépend de core.js, confirm, loaders, list-tools.
 import { sb, toast, esc, $, fmtDate } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf } from './state.js';
@@ -13,15 +16,19 @@ import { inviteConfig } from '../invite-config.js';
 /* =========================================================
    Membres & invitations
    ========================================================= */
-const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // sans I, L, O, 0, 1
+// Alphabet des codes : sans I, L, O, 0 et 1, pour éviter les confusions à la lecture.
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+/** Génère un code : le préfixe de la configuration, suivi de 8 caractères tirés au hasard (crypto). */
 function newCode() {
   const r = crypto.getRandomValues(new Uint32Array(4));
   return inviteConfig().prefixe + [...r].map((n) => CODE_ALPHABET[n % CODE_ALPHABET.length]).join('');
 }
 
 // La liste des membres est dans la section « Comptes » (admin-accounts.js).
+/** Sans effet : la liste des membres ne dépend pas des codes. Gardé pour les appels de l'ensemble du panel. */
 export function renderMembers() { /* rien à rafraîchir ici : la liste des comptes ne dépend pas des badges */ }
 
+/** Dessine le bloc « Nouveaux codes » (après génération) et les listes disponibles / utilisés. */
 export function renderInvites() {
   $('#invite-new').innerHTML = S.lastCodes.length ? `
     <div class="new-codes" role="status">
@@ -58,9 +65,10 @@ export function renderInvites() {
     <div class="scroll-list">${usedHtml}</div>`;
 }
 
+// Administrateur connecté (fourni par admin.js) : il est enregistré comme créateur des codes.
 let ME = null;
 
-/** Ouvre le tiroir « Nouveau code » : génère 1 à 10 codes. */
+/** Ouvre le tiroir « Nouveau code » : génère 1 à 10 codes. Réessaie si un code tiré existe déjà (doublon improbable). */
 function openCodeDrawer() {
   const body = document.createElement('div');
   body.innerHTML = `
@@ -87,8 +95,12 @@ function openCodeDrawer() {
   });
 }
 
-/** Boutons de l'en-tête de zone de la sous-section Invitations. */
+/**
+ * Boutons de l'en-tête de zone de la sous-section Invitations : « + Nouveau code » et « + Nouveau lien ».
+ * @returns {HTMLButtonElement[]}
+ */
 export function inviteActions() {
+  // Crée un bouton primaire « label » qui exécute `fn` au clic.
   const mk = (label, fn) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'btn btn-primary btn-sm'; b.textContent = label;
@@ -98,6 +110,10 @@ export function inviteActions() {
   return [mk('+ Nouveau code', openCodeDrawer), mk('+ Nouveau lien', () => openLinkDrawer())];
 }
 
+/**
+ * Branche une seule fois : recherche, et délégation des clics sur la section (copier, supprimer un code, supprimer tous).
+ * @param {object} me Administrateur connecté (avec son identifiant).
+ */
 export function bindInvites(me) {
   ME = me;
   const search = mountSearch($('#invite-list'), { id: 'invite-search', label: 'Rechercher un code', placeholder: 'Code ou pseudo de la personne…' });
@@ -112,6 +128,7 @@ export function bindInvites(me) {
       const code = t.dataset.delCode;
       if (!(await confirmBox('Supprimer ce code ?', `Le code ${code} ne pourra plus être utilisé.`, { ok: 'Supprimer', danger: true }))) return;
       await busy(t, async () => {
+        // Seuls les codes non utilisés peuvent être supprimés (filtre de sécurité côté requête).
         check(await sb.from('hg_invites').delete().eq('code', code).is('used_by', null));
         S.lastCodes = S.lastCodes.filter((c) => c !== code);
         await loadInvites(); renderInvites(); renderStats();

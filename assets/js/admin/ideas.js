@@ -1,6 +1,8 @@
 // Admin : Communication › Boîte à idées. Liste des idées en colonne 2 (createList), idée ouverte dans la zone principale
 // (en-tête avec auteur et statut, fil d'une seule bulle). La base (hg_ideas) ne garde ni réponses ni note : le fil est
 // en lecture seule. Route : #communication/idees[/<id>]. Droits : admin/perms.js (section « idees », permission « support »).
+// Utilisé par admin.js (registerSub) et live.js (renderIdeas). Dépend de core.js, ui-confirm.js, badges.js (badge
+// « Boîte à idées »), shell.js (compteur) et des composants ui/.
 import { sb, toast, errMsg, fmtDateTime } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf } from './state.js';
@@ -13,6 +15,8 @@ import { createList } from './ui/list.js';
 import { createThread } from './ui/thread.js';
 import { renderDetailHeader } from './ui/detail-header.js';
 
+/* ---------- Libellés, options et filtres ---------- */
+// Libellé et ton (couleur) de chaque statut d'une idée.
 const LABEL = { nouvelle: 'Nouvelle', retenue: 'Retenue', ecartee: 'Écartée' };
 const TONE = { nouvelle: 'open', retenue: 'done', ecartee: 'muted' };
 const OPTIONS = ['nouvelle', 'retenue', 'ecartee'].map((id) => ({ id, label: LABEL[id], tone: TONE[id] }));
@@ -22,29 +26,38 @@ const FILTERS = [
   { id: 'ecartee', label: 'Écartées', test: (it) => it.status.id === 'ecartee' },
 ];
 
+// État de la vue : éléments de l'écran (zone principale, liste) et idée sélectionnée.
 const V = { host: null, list: null, sel: null };
 
+/** Statut d'une idée au format attendu par les composants ui/ : { id, label, tone }. */
 const statusOf = (i) => ({ id: i.status, label: LABEL[i.status] || i.status, tone: TONE[i.status] || 'muted' });
+/** Auteur d'une idée. Si le compte a été supprimé, « Membre parti » ; avatar et couleur pris dans S.byId. */
 const authorOf = (i) => {
   const m = i.user_id ? S.byId.get(i.user_id) : null;
   return { id: i.user_id, pseudo: i.user_id ? pseudoOf(i.user_id) : 'Membre parti', color: m?.color, avatar_url: m?.avatar_url };
 };
+/** Raccourcit un texte à `n` caractères (espaces normalisés), avec « … » si coupé. */
 const short = (text, n = 90) => {
   const t = String(text ?? '').replace(/\s+/g, ' ').trim();
   return t.length > n ? `${t.slice(0, n - 1)}…` : t;
 };
+/** Nombre d'idées au statut « nouvelle ». Sert au compteur à traiter. */
 const newCount = () => S.ideas.filter((i) => i.status === 'nouvelle').length;
 
+/** Élément de liste pour une idée (champs lus par ui/list.js). */
 function toItem(i) {
   return { id: i.id, member: authorOf(i), title: short(i.body), at: i.created_at, status: statusOf(i) };
 }
 
+/** Exécute `fn` ; une erreur est affichée en toast au lieu d'être levée. */
 async function run(fn) {
   try { await fn(); } catch (e) { toast(errMsg(e), 'error'); }
 }
 
+/** Badge « Boîte à idées » proposable : idée retenue, auteur encore inscrit, et badge pas encore attribué. */
 const badgeEligible = (i) => i.status === 'retenue' && !!i.user_id && S.byId.has(i.user_id) && !hasBadge(i.user_id, 'boite_a_idees');
 
+/** Propose d'attribuer le badge « Boîte à idées » à l'auteur, après confirmation. Ne fait rien si ce n'est pas possible. */
 async function offerBadge(uid) {
   if (!uid || !S.byId.has(uid) || hasBadge(uid, 'boite_a_idees')) return;
   if (await confirmBox('Attribuer le badge ?', `Attribuer le badge « ${badgeName('boite_a_idees')} » à ${pseudoOf(uid)} ?`, { ok: 'Attribuer' })) {
@@ -58,7 +71,7 @@ async function setStatus(idea, status) {
     check(await sb.from('hg_ideas').update({ status }).eq('id', idea.id));
   } catch (e) {
     toast(errMsg(e), 'error');
-    renderIdeas();
+    renderIdeas(); // remet le sélecteur sur le statut réel
     return;
   }
   await loadIdeas();
@@ -70,6 +83,7 @@ async function setStatus(idea, status) {
 }
 
 /* ---------- Zone principale : en-tête + idée ---------- */
+/** Dessine l'idée sélectionnée (en-tête, fil, note) dans la zone principale. Sans sélection, affiche un message. */
 function paintDetail() {
   const host = V.host;
   if (!host) return;
@@ -96,6 +110,7 @@ function paintDetail() {
     actions: badgeEligible(i) ? [{ label: `Attribuer le badge`, onClick: () => offerBadge(i.user_id) }] : [],
   });
 
+  // Fil en lecture seule : pas de zone de réponse (composer: false), seulement l'événement et le texte de l'idée.
   createThread(thread, {
     composer: false,
     label: 'Idée',
@@ -108,17 +123,21 @@ function paintDetail() {
 }
 
 /* ---------- Liste (colonne 2) ---------- */
+/** Ouvre une idée : la sélection passe par l'adresse, puis la coquille appelle `open`. */
 function go(id) {
   location.hash = `#communication/idees/${id}`;
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
+/** Fournisseurs de la sous-section « Boîte à idées » (voir admin/shell.js, registerSub). */
 export const ideasSub = {
+  /** Montage unique : prépare la zone principale. */
   main(el) {
     el.dataset.fill = '';
     V.host = document.getElementById('ideas-root');
     paintDetail();
   },
+  /** Colonne 2 : la liste des idées, avec filtres et recherche. */
   list(el) {
     V.list = createList(el, {
       items: S.ideas.map(toItem),
@@ -131,6 +150,7 @@ export const ideasSub = {
       onSelect: (it) => go(it.id),
     });
   },
+  /** À chaque visite : retient l'idée de l'adresse (#communication/idees/<id>) et redessine le détail. */
   open(_el, { id } = {}) {
     V.sel = id || null;
     V.list?.select(V.sel);
@@ -138,7 +158,7 @@ export const ideasSub = {
   },
 };
 
-/** Redessine la liste et le détail après un changement de données (temps réel, actions). */
+/** Redessine la liste, le compteur et le détail après un changement de données (temps réel, actions). */
 export function renderIdeas() {
   setCount('idees', newCount());
   V.list?.update(S.ideas.map(toItem));

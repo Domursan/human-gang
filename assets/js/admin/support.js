@@ -4,6 +4,8 @@
 // avec taken_by), « Traitée ». Non lu = read_at nul, posé à l'ouverture. Le fil mêle le message initial, la prise en
 // charge (séparateur), les réponses publiques (visibles par le membre) et les notes internes (panel seulement).
 // Route : #communication/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
+// Utilisé par admin.js (registerSub) et live.js (renderSupport). Dépend de core.js, ui-confirm.js, state.js, loaders.js,
+// overview.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
 import { sb, toast, fmtDateTime, errMsg } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf, SUBJECT_BUG } from './state.js';
@@ -17,6 +19,8 @@ import { createThread } from './ui/thread.js';
 import { renderDetailHeader } from './ui/detail-header.js';
 import { renderInfoPanel } from './ui/info-panel.js';
 
+/* ---------- Statuts et filtres ---------- */
+// Les trois états affichés (libellé et ton). L'état est calculé à partir de status et taken_by (stateOf).
 const OPEN = { id: 'ouverte', label: 'Ouverte', tone: 'open' };
 const PROG = { id: 'encours', label: 'En cours', tone: 'prog' };
 const DONE = { id: 'traitee', label: 'Traitée', tone: 'done' };
@@ -26,26 +30,36 @@ const FILTERS = [
   { id: 'encours', label: 'En cours', test: (it) => it.status.id === 'encours' },
   { id: 'traitee', label: 'Traitées', test: (it) => it.status.id === 'traitee' },
 ];
+// Durée de validité (ms) de la fiche rapide d'un membre : évite de la recharger à chaque clic.
 const STATS_TTL = 60_000;
 
 // État de la vue (les éléments sont créés à la première visite, puis mis à jour en place)
 const V = { host: null, list: null, infoEl: null, infoApi: null, sel: null, stats: new Map(), thread: null, threadFor: null, threadEl: null };
 
+/** État affiché d'une demande : traitée, en cours (prise en charge) ou ouverte. */
 const stateOf = (s) => (s.status === 'traitee' ? DONE : s.taken_by ? PROG : OPEN);
+/** Membre qui a fait la demande. Sans compte (demande anonyme), le pseudo saisi dans le formulaire. */
 const memberOf = (s) => {
   const m = s.user_id ? S.byId.get(s.user_id) : null;
   return { id: s.user_id, pseudo: s.pseudo || m?.pseudo || 'Anonyme', color: m?.color, avatar_url: m?.avatar_url };
 };
+/** Auteur d'une réponse (admin ou membre) ; « Admin » si le compte est inconnu. */
 const authorOf = (id) => {
   const m = id ? S.byId.get(id) : null;
   return { id, pseudo: m?.pseudo || 'Admin', color: m?.color, avatar_url: m?.avatar_url };
 };
+/** Date d'activité d'une demande (dernière mise à jour, sinon création), en millisecondes. */
 const activity = (s) => new Date(s.updated_at || s.created_at).getTime();
+/** Nombre de demandes ouvertes (sans prise en charge ni traitement). Sert au compteur de navigation. */
 const openCount = () => S.support.filter((s) => s.status === 'ouverte').length;
+/** Copie des demandes, de la plus récemment active à la moins récente. */
 const byActivity = () => [...S.support].sort((a, b) => activity(b) - activity(a));
+/** Réponses et notes d'une demande, dans l'ordre enregistré. */
 const repliesOf = (id) => S.supportReplies.filter((r) => r.support_id === id);
+/** Demande par identifiant, ou undefined. */
 const find = (id) => S.support.find((x) => x.id === id);
 
+/** Élément de liste pour une demande (champs lus par ui/list.js). */
 function toItem(s) {
   return {
     id: s.id,
@@ -58,11 +72,15 @@ function toItem(s) {
   };
 }
 
+/** Exécute `fn` ; une erreur est affichée en toast au lieu d'être levée. */
 async function run(fn) {
   try { await fn(); } catch (e) { toast(errMsg(e), 'error'); }
 }
 
-/** Fil de la demande : message initial, prise en charge, réponses et notes, dans l'ordre chronologique. */
+/**
+ * Fil de la demande : message initial, prise en charge, réponses et notes, dans l'ordre chronologique.
+ * À date égale, l'ordre de `rank` départage (message avant prise en charge, et celle-ci avant les réponses).
+ */
 function threadMessages(s, m) {
   const items = [
     { at: s.created_at, rank: 0, msg: { type: 'event', text: `Demande ouverte par ${m.pseudo}`, at: s.created_at } },
@@ -82,9 +100,13 @@ function threadMessages(s, m) {
 }
 
 /* ---------- Actions (retrouvent la demande par son identifiant : les données peuvent avoir été rechargées) ---------- */
+// Message de confirmation (toast) pour chaque nouvel état.
 const MSG_STATE = { ouverte: 'Demande remise en file', encours: 'Demande prise en charge', traitee: 'Demande marquée comme traitée' };
 
-/** Passe une demande à « ouverte », « encours » (prise en charge par l'admin connecté) ou « traitee ». */
+/**
+ * Passe une demande à « ouverte », « encours » (prise en charge par l'admin connecté) ou « traitee ».
+ * La mise à jour est écrite en base, puis reportée dans S (sans recharger toute la liste).
+ */
 async function setState(id, target) {
   const s = find(id);
   if (!s || stateOf(s).id === target) return;
@@ -106,14 +128,20 @@ async function setState(id, target) {
   toast(MSG_STATE[target], 'ok');
 }
 
-/** Envoie une réponse (publique) ou une note interne. La première réponse prend la demande en charge (trigger). */
+/**
+ * Envoie une réponse (publique) ou une note interne. La première réponse prend la demande en charge (trigger en base).
+ * Les données sont rechargées après l'envoi : le trigger a pu modifier la demande.
+ */
 async function sendReply(id, text, internal) {
   check(await sb.from('hg_support_replies').insert({ support_id: id, author_id: S.meId, body: text, internal }).select().single());
   await loadSupport().catch((e) => console.warn('[panel]', e?.message || e));
   renderSupport();
 }
 
-/** Marque la demande comme lue à l'ouverture (optimiste ; revient en arrière si l'écriture échoue). */
+/**
+ * Marque la demande comme lue à l'ouverture. Optimiste : l'affichage passe tout de suite à « lu » ;
+ * en cas d'échec d'écriture, la demande redevient non lue.
+ */
 async function markRead(s) {
   const now = new Date().toISOString();
   s.read_at = now;
@@ -127,8 +155,10 @@ async function markRead(s) {
   }
 }
 
+/** Le badge « Chasseur de bugs » peut être proposé : demande « bug », auteur inscrit, badge pas encore attribué. */
 const badgeEligible = (s) => s.subject === SUBJECT_BUG && !!s.user_id && S.byId.has(s.user_id) && !hasBadge(s.user_id, 'chasseur_bugs');
 
+/** Propose d'attribuer le badge « Chasseur de bugs » à l'auteur, après confirmation. */
 async function offerBadge(s) {
   const uid = s.user_id;
   if (!(await confirmBox('Attribuer le badge ?', `Attribuer « ${badgeName('chasseur_bugs')} » à ${pseudoOf(uid)} ?`, { ok: 'Attribuer' }))) return;
@@ -136,6 +166,10 @@ async function offerBadge(s) {
 }
 
 /* ---------- Zone principale : en-tête + fil + zone de réponse ---------- */
+/**
+ * Dessine la demande sélectionnée : en-tête (statut, actions), fil et zone de réponse.
+ * Le fil est gardé tant qu'on reste sur la même demande : le brouillon de réponse survit aux mises à jour.
+ */
 function paintDetail() {
   const host = V.host;
   if (!host) return;
@@ -189,6 +223,11 @@ function paintDetail() {
 }
 
 /* ---------- Panneau d'infos : fiche rapide du membre ---------- */
+/**
+ * Statistiques de la fiche rapide (paillettes, sorties, cartes, Secret Santa), gardées STATS_TTL ms.
+ * Une erreur donne des tirets plutôt que de bloquer le panneau.
+ * @returns {Promise<Array<{value: string|number, label: string}>>}
+ */
 function loadStats(uid) {
   const hit = V.stats.get(uid);
   if (hit && Date.now() - hit.at < STATS_TTL) return hit.p;
@@ -213,6 +252,11 @@ function loadStats(uid) {
   return p;
 }
 
+/**
+ * Dessine le panneau d'infos pour la demande `s` (fiche membre, statut, historique des autres demandes).
+ * @param {object} s Demande affichée.
+ * @param {Array|null} stats Statistiques ; null pendant leur chargement.
+ */
 function drawInfo(s, stats) {
   const el = V.infoEl;
   if (!el) return;
@@ -220,6 +264,7 @@ function drawInfo(s, stats) {
   const m = memberOf(s);
   const uid = s.user_id;
   const id = s.id;
+  // Autres demandes du même membre (la demande affichée est exclue).
   const history = uid
     ? S.support.filter((x) => x.user_id === uid && x.id !== s.id)
       .map((x) => ({ id: x.id, title: x.subject, status: stateOf(x), at: x.created_at }))
@@ -238,6 +283,7 @@ function drawInfo(s, stats) {
   });
 }
 
+/** Met le panneau d'infos à jour pour la demande sélectionnée, puis charge les statistiques du membre. */
 function paintInfo() {
   const el = V.infoEl;
   if (!el) return;
@@ -252,21 +298,26 @@ function paintInfo() {
   if (!s.user_id) { drawInfo(s, []); return; }
   drawInfo(s, null);
   const sel = s.id;
+  // Les statistiques arrivent après coup : on ne les affiche que si la même demande est toujours sélectionnée.
   loadStats(s.user_id).then((stats) => { if (V.sel === sel) drawInfo(find(sel) || s, stats); });
 }
 
 /* ---------- Liste (colonne 2) ---------- */
+/** Ouvre une demande : la sélection passe par l'adresse, puis la coquille appelle `open`. */
 function go(id) {
   location.hash = `#communication/assistance/${id}`;
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
+/** Fournisseurs de la sous-section « Assistance » (voir admin/shell.js, registerSub). */
 export const supportSub = {
+  /** Montage unique : prépare la zone principale. */
   main(el) {
     el.dataset.fill = '';
     V.host = document.getElementById('support-root');
     paintDetail();
   },
+  /** Colonne 2 : la liste des demandes, la plus active en tête, avec filtres et recherche. */
   list(el) {
     V.list = createList(el, {
       items: byActivity().map(toItem),
@@ -279,10 +330,12 @@ export const supportSub = {
       onSelect: (it) => go(it.id),
     });
   },
+  /** Colonne de droite (fiche rapide). Ne s'affiche qu'à partir de 1440 px (voir shell.js). */
   info(el) {
     V.infoEl = el;
     paintInfo();
   },
+  /** À chaque visite : retient la demande de l'adresse (#communication/assistance/<id>), puis redessine détail et panneau. */
   open(_el, { id } = {}) {
     V.sel = id || null;
     V.list?.select(V.sel);
@@ -291,7 +344,7 @@ export const supportSub = {
   },
 };
 
-/** Redessine la liste, le détail et le panneau après un changement de données (temps réel, actions). */
+/** Redessine la liste, le compteur, le détail et le panneau après un changement de données (temps réel, actions). */
 export function renderSupport() {
   setCount('assistance', openCount());
   V.list?.update(byActivity().map(toItem));

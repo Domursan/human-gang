@@ -1,4 +1,8 @@
 // Admin : badges (attribution par membre, création et édition, image, suppression).
+// Grille des badges avec recherche, puis, pour un membre choisi, ses badges à cocher. Le formulaire des critères
+// automatiques est monté par badges-criteres.js, au-dessus de la grille.
+// Utilisé par admin.js (badgesSub, bindBadges) et par ideas.js / support.js (hasBadge, awardBadge, badgeName).
+// Dépend de core.js, confirm, admin-badges-edit.js (édition et suppression), admin-events.js, badge-levels.js (niveaux).
 import { sb, toast, esc, $ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openBadgeEditor, deleteBadge, isAutoBadge } from '../admin-badges-edit.js';
@@ -14,9 +18,15 @@ import { mountBadgesCriteres } from './badges-criteres.js';
 /* =========================================================
    Badges
    ========================================================= */
+/** Image d'un badge : son image téléversée, sinon l'icône par défaut. */
 const badgeImg = (b) => (b.image_url ? `<img src="${esc(b.image_url)}" alt="">` : ICON.badge);
 
+/**
+ * Redessine la grille des badges (filtrée par la recherche) et la liste de sélection du membre.
+ * Un badge « à niveaux » affiche ses niveaux en chiffres romains.
+ */
 export function renderBadges() {
+  // Détenteurs de chaque badge, pour l'affichage « Voir les membres ».
   const holders = new Map();
   for (const ub of S.userBadges) {
     if (!holders.has(ub.badge_code)) holders.set(ub.badge_code, []);
@@ -50,6 +60,7 @@ export function renderBadges() {
     pickable.map((m) => `<option value="${esc(m.id)}"${m.id === S.badgeMember ? ' selected' : ''}>${esc(m.label)}</option>`).join('');
   renderBadgeToggles();
 }
+/** Pastilles des badges du membre choisi : une pastille par badge, cochée s'il le possède. */
 function renderBadgeToggles() {
   const uid = S.badgeMember;
   const box = $('#badge-toggles');
@@ -57,24 +68,35 @@ function renderBadgeToggles() {
   const owned = new Set(S.userBadges.filter((u) => u.user_id === uid).map((u) => u.badge_code));
   box.innerHTML = S.badges.map((b) => `<button class="chip" type="button" data-toggle-badge="${esc(b.code)}" aria-pressed="${owned.has(b.code)}">${owned.has(b.code) ? ICON.check : ''}${esc(b.name)}</button>`).join('');
 }
+/**
+ * Attribue un badge à un membre (ignore le doublon 23505), puis recharge badges et membres.
+ * @param {string} userId
+ * @param {string} code Code du badge.
+ */
 export async function awardBadge(userId, code) {
   const res = await sb.from('hg_user_badges').insert({ user_id: userId, badge_code: code });
   if (res.error && res.error.code !== '23505') throw res.error;
   await loadBadges(); renderBadges(); renderMembers();
 }
+/** Le membre possède-t-il ce badge ? */
 export const hasBadge = (uid, code) => S.userBadges.some((u) => u.user_id === uid && u.badge_code === code);
+/** Nom affiché d'un badge (son code si le badge est introuvable). */
 export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?? code;
 
 /** Section « Badges » (registerSub) : le bouton « Nouveau badge » est dans la barre de zone. */
 export const badgesSub = {
+  /** Montage unique : branche les écouteurs et monte le formulaire des critères au-dessus de la grille. */
   main() { bindBadges(); mountBadgesCriteres($('#badge-grid')); },
+  /** À chaque visite : pose le bouton « + Nouveau badge » dans la barre de zone. */
   open() {
     const z = $('#zone-actions');
     if (z) z.innerHTML = `<button class="btn btn-primary" type="button" id="badge-new">+ Nouveau badge</button>`;
   },
 };
 
+// Vrai une fois les écouteurs branchés : bindBadges ne s'exécute qu'une fois.
 let bound = false;
+/** Branche la recherche, le choix du membre et les clics (une seule fois). */
 export function bindBadges() {
   if (bound) return;
   bound = true;
@@ -84,6 +106,10 @@ export function bindBadges() {
   document.addEventListener('click', onBadgeClick); // barre de zone (hors de la section) et grille
 }
 
+/**
+ * Clics sur la section : nouveau badge, retirer ou attribuer un badge au membre, modifier, supprimer, changer l'image.
+ * Les boutons de la barre de zone sont hors de la section : on ne filtre que les boutons de la grille (#badges).
+ */
 async function onBadgeClick(ev) {
   const t = ev.target.closest('button');
   if (!t) return;
