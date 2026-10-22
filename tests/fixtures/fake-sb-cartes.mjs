@@ -293,6 +293,8 @@ export function createClient() {
     /** Simule les fonctions SQL (RPC) : chaque nom a sa réponse ; une fonction inconnue renvoie null sans erreur. */
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
+      if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
       // Pages visibles pour l'utilisateur connecté (même logique que fake-sb.mjs).
       if (fn === 'hg_my_pages') {
         if (S.pagesFail) return { data: null, error: { message: 'Failed to fetch' } };
