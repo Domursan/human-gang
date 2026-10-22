@@ -9,18 +9,23 @@
 // Lancer : node tests/parcours-reglages-lot5.cjs
 const { check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const DEF_RAPPELS = { irl_heures: [24, 2], ss_jours_avant: 3 };
 const DEF_SUJETS = ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', 'Bug sur le site', 'Mes données personnelles', 'Autre'];
 
+/** Ouvre une route du panel admin, puis attend que le sélecteur sel soit affiché. */
 async function goto(p, route, sel) {
   await adminSection(p, route);
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 8000 }).catch(() => {});
   await sleep(200);
 }
 // Le faux client place la ligne la plus récente en tête : on lit la première ligne de la clé.
+/** Valeur de la ligne hg_settings de la clé key dans la base simulée, ou null. */
 const setting = (p, key) => p.evaluate((k) => (window.__DB.hg_settings.find((r) => r.key === k) || {}).value ?? null, key);
+/** Remplit le champ sel avec la valeur v (convertie en texte). */
 const fill = (p, sel, v) => p.fill(sel, String(v));
 
+/* ---------- Scénario ---------- */
 (async () => {
   const browser = await chromium.launch();
 

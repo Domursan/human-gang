@@ -11,15 +11,21 @@ const { check, finish, openPage, adminSection, hscroll, log, sleep, chromium } =
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const CARD = 'C2'; // « Le Paleto », commune, brillante possible
+/** Date ISO décalée de ms millisecondes. */
 const iso = (ms) => new Date(Date.now() + ms).toISOString();
+/** Drop de test : une carte à attraper, valable une heure ; les champs de over remplacent les valeurs par défaut. */
 const drop = (over = {}) => ({ id: 'dr-1', card_id: CARD, shiny: false, quantity: 1, starts_at: iso(-60e3), ends_at: iso(3600e3),
   announce: true, created_by: ME, ...over });
+/** Arguments des appels de la RPC fn dans le journal du faux client. */
 const rpcCalls = async (p, fn) => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === fn).map((e) => e[2]);
+/** Attend qu'une carte soit en vol (ou que le délai timeout expire). */
 // Attend qu'une carte soit en vol, fige son trajet à mi-parcours (là où elle est à l'écran) : le clic suivant vise sa position réelle.
 const waitFlying = (p, timeout = 15000) => p.waitForSelector('.cd-item.is-flying', { state: 'attached', timeout }).catch(() => {});
+/** Met en pause la carte en vol à mi-parcours, pour que le clic suivant vise sa position réelle. */
 const freeze = (p) => p.evaluate(() => {
   document.querySelector('.cd-item.is-flying')?.getAnimations().forEach((a) => { a.currentTime = a.effect.getTiming().duration / 2; a.pause(); });
 });
+/** Position (gauche, haut) de la carte en vol, ou null s'il n'y en a pas. */
 const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top]; }).catch(() => null);
 
 (async () => {

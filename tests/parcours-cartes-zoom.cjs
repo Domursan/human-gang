@@ -13,15 +13,18 @@ const path = require('path');
 const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
 const SCN = { set2Open: true };
+/** Nom de la carte ouverte dans la vue agrandie. */
 const nomOuvert = (p) => p.evaluate(() => document.querySelector('#cz-eyebrow')?.textContent || '');
 
 /** Centre d'un élément à l'écran (coordonnées de la fenêtre). */
+/** Centre (x, y) de l'élément sel dans la fenêtre. */
 const centre = (p, sel) => p.evaluate((s) => {
   const r = document.querySelector(s).getBoundingClientRect();
   return [r.x + r.width / 2, r.y + r.height / 2];
 }, sel);
 
 /** Position de défilement (fenêtre) : les tests comparent avant / après une action. */
+/** Défilement vertical de la page, arrondi. */
 const scrollY = (p) => p.evaluate(() => Math.round(window.scrollY));
 
 (async () => {
@@ -157,6 +160,7 @@ const scrollY = (p) => p.evaluate(() => Math.round(window.scrollY));
   await p.mouse.move(ax - 60, ay - 40);
   await p.mouse.move(ax, ay);
   await sleep(120);
+  /** Mesure la loupe ouverte (position, taille, copie de la carte) ; null si elle est fermée ou cachée. */
   const lens = () => p.evaluate(() => {
     const l = document.getElementById('cz-lens');
     if (!l || l.hidden) return null;

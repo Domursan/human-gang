@@ -9,8 +9,10 @@ const TITRE = 'Bowling de test CI';
 const LIEU = 'Lausanne';
 
 // Date locale au format attendu par <input type="datetime-local"> (AAAA-MM-JJTHH:MM), dans 30 jours.
+/** Date ISO dans trente jours, pour une sortie à venir. */
 function dansTrenteJours() {
   const d = new Date(Date.now() + 30 * 864e5);
+  /** Écrit un nombre sur deux chiffres (format de date). */
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T19:30`;
 }

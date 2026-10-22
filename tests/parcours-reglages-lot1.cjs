@@ -6,6 +6,7 @@
 // Aucune erreur console, pas de défilement horizontal à 390 px. Lancer : node tests/parcours-reglages-lot1.cjs
 const { ORIGIN, PREFIX, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const FX = 'fake-sb-reglages.mjs';
 const REG = {
   site_identite: { nom: 'Crew Test', copyright: '© {annee} {nom} · essai', editeur: 'Ethan Test', bandeau_cookies: false },
@@ -19,10 +20,14 @@ const REG = {
     legal_mentions: 'Paragraphe ajouté par l\'admin.',
   },
 };
+/** Attend 0,4 s, le temps que l'enregistrement se termine. */
 const sleepShort = () => sleep(400);
+/** Réglages enregistrés par le faux client (localStorage, clé __fake_settings). */
 const storedSettings = (p) => p.evaluate(() => { try { return JSON.parse(localStorage.getItem('__fake_settings') || 'null') || []; } catch { return []; } });
+/** Valeur enregistrée pour la clé key de hg_settings, ou undefined. */
 const overridesOf = async (p, key) => ((await storedSettings(p)).find((r) => r.key === key) || {}).value;
 
+/** Ouvre Site › Réglages dans le panel admin. */
 async function adminGoto(p) {
   await p.goto(`${ORIGIN}${PREFIX}/admin.html`);
   await sleep(1200);
@@ -30,9 +35,12 @@ async function adminGoto(p) {
   await p.waitForSelector('#rgi-form', { timeout: 8000 });
   await sleepShort();
 }
+/** Champ de formulaire du réglage k dans le panel. */
 const field = (p, k) => p.locator(`#rgi-${k.replace(/[^a-z0-9]/gi, '-')}`);
+/** Clique sur Enregistrer, puis attend un instant. */
 const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
 
+/* ---------- Scénario ---------- */
 (async () => {
   const browser = await chromium.launch();
   try {

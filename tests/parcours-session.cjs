@@ -5,6 +5,7 @@
 // Lancer : node tests/parcours-session.cjs   (HG_PREFIX=/human-gang pour servir le site sous son chemin en ligne)
 const { ROOT, PREFIX, check, finish, openPage, log, sleep, chromium } = require('./lib/harness.cjs');
 
+/** Entrées du journal correspondant à un appel refusé faute de session (rpc-401). */
 const count401 = async (p) => (await log(p)).filter((l) => l[0] === 'rpc-401');
 
 (async () => {
@@ -39,6 +40,7 @@ const count401 = async (p) => (await log(p)).filter((l) => l[0] === 'rpc-401');
   p = await openPage(browser, { page: 'irl' });
   const res = await p.evaluate(async () => {
     const base = location.href;
+    /** Importe un module JavaScript du site (chemin relatif f) pour vérifier son contenu. */
     const m = (f) => import(new URL(f, base).href);
     const sbm = await m('assets/js/core/supabase.js');
     const unread = await m('assets/js/core/unread.js');

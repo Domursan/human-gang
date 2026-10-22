@@ -9,14 +9,18 @@
 // Lancer : node tests/parcours-reglages-lot4.cjs
 const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
+/** Tiroir de dialogue ouvert (dialog.ui-drawer[open]). */
 const drawer = (p) => p.locator('dialog.ui-drawer[open]');
-const closeDrawer = (p) => p.click('dialog.ui-drawer[open] .ui-drawer-foot [data-drawer-close]');
+/** Attend que le tiroir soit fermé (retiré de la page). */
 const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
+/** Valeur de la ligne hg_settings de la clé key dans la base simulée (copie JSON), ou null. */
 const settingsRow = (p, key) => p.evaluate((k) => {
   const row = window.__DB.hg_settings.find((r) => r.key === k);
   return row ? JSON.parse(JSON.stringify(row.value)) : null;
 }, key);
+/** Arguments des appels de la RPC fn dans le journal du faux client. */
 const rpcCalls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[0] === 'rpc' && x[1] === f).map((x) => x[2]), fn);
+/** Ajoute en tête de la base simulée le réglage « cards » avec la valeur value (point de départ du test). */
 const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unshift({ key: 'cards', value: v }); }, value);
 
 (async () => {

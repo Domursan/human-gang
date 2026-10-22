@@ -7,8 +7,9 @@
 // Lancer : node tests/parcours-reglages-lot3.cjs
 const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
 
-const ME = '11111111-1111-4111-8111-111111111111';
+/** Sélecteur du bloc de réglages du domaine donné. */
 const bloc = (domaine) => `details.rg3-bloc[data-domaine="${domaine}"]`;
+/** Attend ms millisecondes. */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Dernier upsert de hg_settings pour une clé, dans le journal du faux client. */

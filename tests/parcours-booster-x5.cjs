@@ -10,23 +10,28 @@ const fs = require('fs');
 const path = require('path');
 const { ROOT, check, finish, openPage, log, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const QA = '/tmp/claude-0/-home-claude/745c1954-a6f8-5445-b8b6-c526f6aef9c2/scratchpad/qa/booster-x5';
 const BTN = '[data-action=open-paid-x5]';
 const CELL = '#cartes-reveal .x5-cell';
-const RANK = { commune: 1, peu_commune: 2, rare: 3, epique: 4, legendaire: 5, mythique: 6, identite: 7 };
 
+/** Appels de hg_open_booster_req dans le journal j. */
 const rpcs = (j) => j.filter((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster_req');
+/** Nombre d'appels de hg-notify pour l'événement ev dans le journal j. */
 const notifs = (j, ev) => j.filter((l) => l[0] === 'fn' && l[1] === 'hg-notify' && l[2]?.event === ev).length;
 
 // Attend la révélation (cascade ou directe), passe la cascade avec « Tout révéler » si elle est proposée.
+/** Révèle le booster jusqu'au bout (toutes les cartes retournées), puis attend le bouton de fermeture. */
 async function revelerTout(p) {
   await p.waitForSelector('#cartes-reveal [data-action=reveal-all], #cartes-reveal [data-action=close-reveal]', { timeout: 8000 });
   if (await p.$('#cartes-reveal [data-action=reveal-all]')) await p.click('#cartes-reveal [data-action=reveal-all]');
   await p.waitForSelector('#cartes-reveal [data-action=close-reveal]', { timeout: 8000 });
 }
 
+/** Attend qu'une notification (toast) affiche un texte qui correspond à l'expression re. */
 const toastHas = (p, re) => p.waitForFunction((src) => [...document.querySelectorAll('.toast')].some((t) => new RegExp(src).test(t.textContent)), re.source, { timeout: 8000 });
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   fs.mkdirSync(QA, { recursive: true });

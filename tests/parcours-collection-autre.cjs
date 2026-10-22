@@ -15,10 +15,14 @@ const { ROOT, SHOTS, check, finish, openPage, log, hscroll, sleep, chromium } = 
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const ME = '11111111-1111-4111-8111-111111111111';
 const SCN = { echanges: true, set2Open: true };
+/** Texte (espaces réduits) de l'élément sel. */
 const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g, ' ').trim());
+/** Étiquettes affichées sur la carte card dans la collection (lues dans le DOM). */
 const tags = (p, card) => p.$$eval(`.pv-cell:has(.cz-zoom[data-card="${card}"]) .pv-tag`, (x) => x.map((e) => e.textContent.trim()));
+/** Adresse (hash) courante de la page. */
 const hashNow = (p) => p.evaluate(() => location.hash);
 // Affiché = présent à l’écran (boîte rendue), pas seulement sans attribut hidden
+/** Vrai si l'élément sel existe et est affiché. */
 const visible = (p, sel) => p.$eval(sel, (e) => e.getClientRects().length > 0).catch(() => false);
 
 (async () => {

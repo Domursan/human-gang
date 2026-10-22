@@ -7,6 +7,7 @@
 const path = require('path');
 const { SHOTS, check, finish, openPage, hscroll, log, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 // Ordre attendu de la boucle 2023 : Ethan → Léa, Léa → Bruno, Bruno → Tom, Tom → Nina, Nina → Ethan.
 // Le départ est le premier donneur par ordre alphabétique (Bruno), puis on suit les receveurs.
 const CHAIN_2023 = [['Bruno', 'Tom'], ['Tom', 'Nina'], ['Nina', 'Ethan'], ['Ethan', 'Léa'], ['Léa', 'Bruno']];
@@ -21,14 +22,17 @@ const EDITIONS = [
 ];
 
 // Lit les paires affichées d'une édition : [donneur, receveur] dans l'ordre du DOM.
+/** Paires « offre à » affichées pour une édition, lues sur la page. */
 const pairsOf = (p, edition) => p.evaluate((ed) => {
   const root = document.querySelector(`[data-edition="${ed}"]`) || document.querySelector('#ss-reveal');
   if (!root) return null;
   return [...root.querySelectorAll('.ssp-item')].map((li) => [...li.querySelectorAll('.ssp-name')].map((n) => n.textContent));
 }, edition);
 
+/** Identifiants d'édition des appels de la RPC hg_ss_reveal dans le journal. */
 const revealCalls = (journal) => journal.filter((l) => l[0] === 'rpc' && l[1] === 'hg_ss_reveal').map((l) => l[2].p_edition);
 
+/* ---------- Scénario ---------- */
 (async () => {
   const browser = await chromium.launch();
 
