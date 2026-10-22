@@ -1,10 +1,18 @@
+// =====================================================================
 // Comptes admin : onglets « Sorties IRL », « Photos », « Idées & assistance » et « Badges » d'une fiche.
+// Chaque onglet a son rendu (…Html) et, si besoin, son action d'écriture (set…, delete…, toggle…).
+// Dépendances : core.js (sb, toast, errMsg, esc, dates), ui-confirm.js (confirmBox), common.js (IC, check, tabError),
+// state.js (A, RSVP, IDEA, dropFicheCache).
+// Tables/Storage : hg_event_rsvps, hg_photos + bucket hg-photos, hg_ideas, hg_support, hg_user_badges.
+// Exporte : irlHtml, setRsvp, photosHtml, deletePhoto, contribHtml, badgesHtml, toggleBadge.
+// =====================================================================
 import { sb, toast, errMsg, esc, fmtDate, fmtDateTime } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { IC, check, tabError } from './common.js';
 import { A, RSVP, IDEA, dropFicheCache } from './state.js';
 
 /* ---------- Sorties IRL ---------- */
+/** HTML de l'onglet Sorties IRL : une ligne par sortie, avec la réponse du membre modifiable. */
 export function irlHtml() {
   const d = A.d;
   if (d.events.error) return tabError(d.events);
@@ -24,6 +32,12 @@ export function irlHtml() {
       </li>`;
     }).join('')}</ul>`;
 }
+/**
+ * Enregistre la réponse du membre à une sortie. Un statut vide retire la réponse.
+ * Relit ensuite toutes ses réponses pour rafraîchir l'onglet.
+ * @param {string} eventId identifiant de la sortie.
+ * @param {string} status 'oui', 'peut-etre', 'non' ou '' (sans réponse).
+ */
 export async function setRsvp(eventId, status) {
   if (!status) check(await sb.from('hg_event_rsvps').delete().eq('event_id', eventId).eq('user_id', A.uid));
   else check(await sb.from('hg_event_rsvps').upsert({ event_id: eventId, user_id: A.uid, status, updated_at: new Date().toISOString() }, { onConflict: 'event_id,user_id' }));
@@ -34,6 +48,7 @@ export async function setRsvp(eventId, status) {
 }
 
 /* ---------- Photos ---------- */
+/** HTML de l'onglet Photos : miniatures signées et bouton de suppression pour chaque photo. */
 export function photosHtml() {
   const d = A.d;
   if (d.photos.error) return tabError(d.photos);
@@ -52,7 +67,14 @@ export function photosHtml() {
       </li>`;
     }).join('')}</ul>`;
 }
+/**
+ * Supprime une photo après confirmation : le fichier dans le stockage, puis la ligne en base.
+ * Si seul le fichier échoue, la fiche est tout de même supprimée et un message le signale.
+ * @param {string} id identifiant de la photo.
+ * @returns {Promise<boolean>} true si la photo a été supprimée, false si annulé ou introuvable.
+ */
 export async function deletePhoto(id) {
+  /* Photo à supprimer, retrouvée par son identifiant. */
   const p = (A.d.photos.data ?? []).find((x) => x.id === id);
   if (!p) return false;
   if (!(await confirmBox('Supprimer cette photo ?', 'Le fichier et sa fiche seront supprimés définitivement de l\'album.', { ok: 'Supprimer', danger: true }))) return false;
@@ -65,6 +87,7 @@ export async function deletePhoto(id) {
 }
 
 /* ---------- Idées & assistance ---------- */
+/** HTML de l'onglet Idées & assistance : la boîte à idées puis les demandes d'aide du membre. */
 export function contribHtml() {
   const d = A.d;
   const ideas = d.ideas.data ?? [], sup = d.support.data ?? [];
@@ -95,6 +118,7 @@ export function contribHtml() {
 }
 
 /* ---------- Badges ---------- */
+/** HTML de l'onglet Badges : une puce par badge, « pressée » si le membre le possède. */
 export function badgesHtml() {
   const d = A.d;
   if (d.badges.error) return tabError(d.badges);
@@ -106,7 +130,15 @@ export function badgesHtml() {
       return `<button class="chip" type="button" data-toggle-badge="${esc(b.code)}" aria-pressed="${!!u}" title="${esc(b.description)}${u ? ` (depuis le ${esc(fmtDate(u.awarded_at))})` : ''}">${u ? IC.check : ''}${esc(b.name)}</button>`;
     }).join('')}</div>`;
 }
+/**
+ * Attribue ou retire un badge. Le retrait demande confirmation.
+ * Une attribution déjà existante (erreur 23505, doublon) n'est pas considérée comme une erreur.
+ * @param {string} code code du badge.
+ * @param {boolean} on true si le membre possède déjà le badge (on le retire), false sinon (on l'attribue).
+ * @returns {Promise<boolean>} true si la fiche a changé, false si annulé.
+ */
 export async function toggleBadge(code, on) {
+  /* Nom du badge, pour les messages. */
   const name = (A.d.badges.data ?? []).find((b) => b.code === code)?.name ?? code;
   if (on) {
     if (!(await confirmBox('Retirer ce badge ?', `${A.d.profile.pseudo} perdra le badge « ${name} ».`, { ok: 'Retirer', danger: true }))) return false;

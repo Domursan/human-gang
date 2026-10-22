@@ -1,5 +1,12 @@
+// =====================================================================
 // Cartes admin : quêtes de la semaine (table hg_card_quests_templates). Liste, création, modification, activation.
 // Pas de suppression : une quête inactive ne sort plus, et son identifiant garde la trace des récompenses déjà versées.
+// Chaque semaine, des quêtes actives sont tirées au sort pour tous les membres (le nombre est un réglage).
+// Dépendances : core.js (sb, toast, esc, $), constants.js (ICON), state.js (H), helpers.js (check, act, friendly, nf),
+// admin/ui/drawer.js (tiroir du formulaire).
+// Exporte : QUEST_METRICS (actions qu'une quête peut compter), Q (état de la liste), loadQuests, questsPanel,
+// openQuestDialog, questActions (gestionnaires des boutons data-act).
+// =====================================================================
 import { sb, toast, esc, $ } from '../core.js';
 import { ICON } from './constants.js';
 import { H } from './state.js';
@@ -13,8 +20,11 @@ export const QUEST_METRICS = [
   ['cartes_recyclees', 'Cartes recyclées', 'Exemplaires recyclés contre des Paillettes.'],
   ['passages_du_jour', 'Passages du jour', 'Passages au « passage du jour » (récompense quotidienne).'],
 ];
+/* Libellé court de chaque action, par identifiant. */
 const METRIC_LABEL = Object.fromEntries(QUEST_METRICS.map(([v, l]) => [v, l]));
+/* Phrase d'aide de chaque action, affichée sous la liste déroulante. */
 const METRIC_HELP = Object.fromEntries(QUEST_METRICS.map(([v, , h]) => [v, h]));
+/* Forme d'un identifiant technique : minuscules, chiffres et tiret bas, de 2 à 40 caractères. */
 const CODE_RE = /^[a-z0-9_]{2,40}$/;
 
 /** État de la liste (chargée à l'ouverture de l'onglet). */
@@ -39,6 +49,7 @@ export function loadQuests(force = false) {
   return Q.loading;
 }
 
+/** HTML de l'onglet Quêtes : explication du tirage, liste des modèles et alerte si peu sont actifs. */
 export function questsPanel() {
   if (Q.error) return `<div class="empty">Impossible de charger les quêtes : ${esc(Q.error)} <button class="btn btn-ghost btn-sm" type="button" data-act="quest-retry">Réessayer</button></div>`;
   if (!Q.loaded) return '<div class="empty">Chargement des quêtes…</div>';
@@ -63,6 +74,7 @@ export function questsPanel() {
       </li>`).join('')}</ul>` : '<div class="empty">Aucun modèle de quête. Crée-en une pour alimenter le tirage de la semaine.</div>'}`;
 }
 
+/** HTML du formulaire d'une quête. L'identifiant ne se modifie plus après la création. */
 function formHtml(q, isNew) {
   const v = q || {};
   const metricOpts = QUEST_METRICS.map(([val, l]) => `<option value="${val}"${v.metric === val ? ' selected' : ''}>${esc(l)}</option>`).join('');
@@ -117,6 +129,7 @@ async function saveQuest(form, q) {
   const isNew = !q;
   const E = form.elements;
   const err = $('.form-error', form);
+  /* Affiche le message d'erreur dans le formulaire et renvoie false pour arrêter l'envoi. */
   const fail = (m) => { err.textContent = m; err.hidden = false; return false; };
   err.hidden = true;
   const code = E.code.value.trim().toLowerCase();

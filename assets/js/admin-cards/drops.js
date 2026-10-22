@@ -1,7 +1,12 @@
-// ===== Humane Gang — administration : drops de cartes (Jeu de cartes › Drops) =====
-// Un drop = une carte que les membres connectés voient apparaître sur le site ; les X premiers qui cliquent la gagnent.
+// =====================================================================
+// Cartes admin : drops de cartes (Jeu de cartes › Drops). Une carte apparaît sur le site pour les membres connectés ;
+// les premiers qui cliquent la gagnent. Un membre n'en gagne qu'une par drop.
 // Tables hg_card_drops / hg_card_drop_claims (lecture : permission cartes). Écritures uniquement par RPC :
 // hg_drop_create (lancer) et hg_drop_stop (arrêter). Affichage côté membre : assets/js/card-drops.js.
+// Dépendances : core.js (sb, toast, errMsg, esc, $), cartes-ui.js (rarityLabel), ui-confirm.js, admin/ui/drawer.js,
+// admin/live.js (écoute temps réel), helpers.js (fetchAll, act, fmtWhen, thumb).
+// Exporte : mountDropsSection (monte la section, appelé par admin-cards.js).
+// =====================================================================
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { rarityLabel } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -9,16 +14,20 @@ import { openDrawer } from '../admin/ui/drawer.js';
 import { onTableChange } from '../admin/live.js';
 import { fetchAll, act, fmtWhen, thumb } from './helpers.js';
 
+/* État du module : racine de la section, drops, réclamations, cartes, pseudos par identifiant, bornes. */
 const D = { root: null, drops: [], claims: [], cards: [], names: new Map(), limits: limitsOf(null) };
 // Bornes des drops : hg_settings.cards.drops (réglables dans Cartes › Économie). Repli = valeurs de base.
 function limitsOf(cfg) {
   const d = cfg?.drops || {};
+  /* Entier strictement positif, sinon la valeur par défaut. */
   const num = (v, def) => (Number.isInteger(v) && v > 0 ? v : def);
   const qmax = num(d.quantite_max, 50), dmax = num(d.duree_max_min, 1440);
   return { qmax, dmax, dflt: Math.min(num(d.duree_defaut_min, 30), dmax) };
 }
+/* Nombre formaté selon la locale suisse-française. */
 const fmtN = (n) => new Intl.NumberFormat('fr-CH').format(n);
 
+/** Monte la section : structure, bouton « Lancer un drop » et écoute des nouvelles réclamations en direct. */
 export async function mountDropsSection(container) {
   if (!container) return;
   D.root = container;
@@ -34,6 +43,7 @@ export async function mountDropsSection(container) {
   await reload();
 }
 
+/** Lit les drops, les réclamations, les cartes, les pseudos et les bornes. Lève une erreur si la liste des pseudos échoue. */
 async function load() {
   const [drops, claims, cards, dir, cfg] = await Promise.all([
     fetchAll(() => sb.from('hg_card_drops').select('*').order('starts_at', { ascending: false })),
@@ -50,6 +60,7 @@ async function load() {
   D.names = new Map((dir.data || []).map((p) => [p.id, p.pseudo]));
 }
 
+/** Relit toutes les données puis redessine. Un message d'erreur remplace la liste si ça échoue. */
 async function reload() {
   const list = $('#drop-list', D.root);
   try {
@@ -60,7 +71,9 @@ async function reload() {
   }
 }
 
+/* Carte d'un identifiant, dans les cartes chargées. */
 const cardOf = (id) => D.cards.find((k) => k.id === id);
+/* Date lisible pour les drops (fuseau de Zurich). */
 const dateFmt = (iso) => fmtWhen(iso);
 
 /** État d'un drop : [libellé, classe de pastille]. */
@@ -70,6 +83,7 @@ function stateOf(d, won, now = Date.now()) {
   return ['En cours', 'pill-ok'];
 }
 
+/** Dessine la liste des drops : en cours d'abord (le plus récent en tête), puis les terminés, avec leurs gagnants. */
 function render() {
   const list = $('#drop-list', D.root);
   if (!list) return;
@@ -105,9 +119,11 @@ function render() {
 }
 
 /* ---------- Lancer un drop (tiroir) ---------- */
+/* Options d'une liste déroulante de cartes, avec la carte choisie pré-sélectionnée si elle figure dans la liste. */
 const optionsHtml = (cards, selected = '') => cards.map((k) =>
   `<option value="${esc(k.id)}"${k.id === selected ? ' selected' : ''}>${esc(k.name)} — ${esc(rarityLabel(k.rarity))}${k.can_shiny ? '' : ' (pas brillante)'}</option>`).join('');
 
+/** Ouvre le tiroir « Lancer un drop » : recherche de carte, quantité, durée et options. Contrôle les bornes avant l'envoi. */
 function openDropForm() {
   const cards = D.cards.filter((k) => k.active).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   if (!cards.length) { toast('Aucune carte active : crée ou active une carte d\'abord.', 'error'); return; }
@@ -190,6 +206,7 @@ function openDropForm() {
 }
 
 /* ---------- Actions ---------- */
+/** Délégation des clics de la section : lancer un drop ou arrêter un drop en cours. */
 function onClick(e) {
   const t = e.target.closest('[data-action]');
   if (!t || !D.root.contains(t)) return;
@@ -197,6 +214,7 @@ function onClick(e) {
   else if (t.dataset.action === 'drop-stop') stopDrop(t, t.dataset.id);
 }
 
+/** Arrête un drop après confirmation. La carte disparaît du site, mais les gagnants la gardent. */
 async function stopDrop(btn, id) {
   const d = D.drops.find((x) => x.id === id);
   const k = d && cardOf(d.card_id);

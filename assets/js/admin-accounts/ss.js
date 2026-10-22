@@ -1,24 +1,38 @@
+// =====================================================================
 // Comptes admin : onglet « Secret Santa » d'une fiche (inscription, dates, attributions, liste de souhaits).
+// L'admin peut inscrire ou désinscrire un membre, saisir ses dates, et modifier sa cible et son Santa.
+// Dépendances : core.js (sb, toast, esc, fmtDateTime, isGodMode), ui-confirm.js (confirmBox),
+// common.js (IC, check, tabError, toLocalInput), state.js (A, SS_STATUS, pseudoOf, dropFicheCache).
+// Tables : hg_ss_participants, hg_ss_assignments (giver_id -> receiver_id), hg_ss_wishes.
+// Exporte : ssHtml, curEdition, ssJoin, ssLeave, setPair, clearPair.
+// =====================================================================
 import { sb, toast, esc, fmtDateTime, isGodMode } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { IC, check, tabError, toLocalInput } from './common.js';
 import { A, SS_STATUS, pseudoOf, dropFicheCache } from './state.js';
 
 /* ---------- Secret Santa ---------- */
+/** HTML de l'onglet Secret Santa : choix de l'édition, inscription, dates, cible / Santa et souhaits. */
 export function ssHtml() {
   const d = A.d;
   if (d.editions.error) return tabError(d.editions);
   const eds = d.editions.data ?? [];
   if (!eds.length) return '<div class="empty">Aucune édition de Secret Santa pour l\'instant.</div>';
   const ed = eds.find((e) => e.id === A.ssEdition) || eds[0];
+  /* Participants de l'édition affichée. */
   const parts = (d.parts.data ?? []).filter((p) => p.edition_id === ed.id);
   const mine = parts.find((p) => p.user_id === A.uid);
+  /* Souhaits de l'édition affichée. */
   const wishes = (d.wishes.data ?? []).filter((w) => w.edition_id === ed.id);
+  /* Attributions de l'édition affichée. */
   const assigns = (d.assigns.data ?? []).filter((a) => a.edition_id === ed.id);
+  // Cible (à qui il offre) et Santa (qui lui offre), retrouvés dans les attributions.
   const target = assigns.find((a) => a.giver_id === A.uid)?.receiver_id ?? '';
   const santa = assigns.find((a) => a.receiver_id === A.uid)?.giver_id ?? '';
+  // Autres participants (hors le membre), triés par pseudo pour les menus de choix.
   const others = parts.filter((p) => p.user_id !== A.uid).map((p) => ({ id: p.user_id, pseudo: pseudoOf(p.user_id) }))
     .sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
+  /* Options du menu « cible » ou « Santa » : « Aucun·e » puis les autres participants, la valeur sel étant présélectionnée. */
   const opts = (sel) => `<option value="">Aucun·e</option>${others.map((o) => `<option value="${esc(o.id)}"${o.id === sel ? ' selected' : ''}>${esc(o.pseudo)}</option>`).join('')}`;
   const drawn = !!ed.drawn_at || assigns.length > 0;
   const pseudo = d.profile.pseudo;
@@ -84,8 +98,10 @@ export function ssHtml() {
       </form>
     </div>`;
 }
+/** Édition affichée dans l'onglet (celle choisie, sinon la première). */
 export const curEdition = () => (A.d.editions.data ?? []).find((e) => e.id === A.ssEdition) || A.d.editions.data?.[0];
 
+/** Inscrit le membre à l'édition affichée. Prévient si le tirage est déjà fait (il faudra lui attribuer une cible). */
 export async function ssJoin() {
   const ed = curEdition();
   check(await sb.from('hg_ss_participants').insert({ edition_id: ed.id, user_id: A.uid }));
@@ -93,8 +109,14 @@ export async function ssJoin() {
   toast(`${A.d.profile.pseudo} est inscrit·e à l'édition ${ed.year}`, 'ok');
   if (ed.drawn_at) toast('Le tirage est déjà fait : pense à lui attribuer une cible et un Santa.', 'error');
 }
+/**
+ * Désinscrit le membre de l'édition affichée après confirmation.
+ * Si le tirage est fait, ses attributions sont supprimées aussi (la base les retire avec lui).
+ * @returns {Promise<boolean>} true si la désinscription a eu lieu, false si annulée.
+ */
 export async function ssLeave() {
   const ed = curEdition();
+  /* Attributions de l'édition affichée. */
   const assigns = (A.d.assigns.data ?? []).filter((a) => a.edition_id === ed.id && (a.giver_id === A.uid || a.receiver_id === A.uid));
   const ok = await confirmBox(`Désinscrire ${A.d.profile.pseudo} ?`,
     assigns.length ? 'Le tirage est fait : ses attributions (sa cible et son Santa) seront aussi supprimées. Pense à réattribuer les personnes concernées.' : 'Sa liste de souhaits est conservée.',
@@ -114,6 +136,7 @@ export async function ssLeave() {
  */
 export async function setPair(editionId, giver, receiver) {
   if (giver === receiver && !isGodMode()) throw new Error('Une personne ne peut pas s\'offrir un cadeau à elle-même.');
+  /* Attributions de l'édition concernée. */
   const rows = (A.d.assigns.data ?? []).filter((a) => a.edition_id === editionId);
   const mineRow = rows.find((a) => a.giver_id === giver);
   const taken = rows.find((a) => a.receiver_id === receiver);
@@ -137,6 +160,7 @@ export async function setPair(editionId, giver, receiver) {
       if (!ok) return false;
     }
   }
+  // Attributions touchées par la modification : on les garde pour pouvoir les remettre si l'insertion échoue.
   const before = rows.filter((a) => deletes.has(a.giver_id));
   check(await sb.from('hg_ss_assignments').delete().eq('edition_id', editionId).in('giver_id', [...deletes]));
   const res = await sb.from('hg_ss_assignments').insert(inserts);
@@ -147,7 +171,14 @@ export async function setPair(editionId, giver, receiver) {
   dropFicheCache();
   return true;
 }
+/**
+ * Supprime l'attribution où le membre est donneur (col = 'giver_id') ou receveur (col = 'receiver_id').
+ * @param {string} editionId identifiant de l'édition.
+ * @param {'giver_id'|'receiver_id'} col colonne où se trouve le membre.
+ * @returns {Promise<boolean>} true si supprimée, false si annulé ou aucune attribution.
+ */
 export async function clearPair(editionId, col) {
+  /* Attribution où le membre apparaît dans la colonne demandée. */
   const row = (A.d.assigns.data ?? []).find((a) => a.edition_id === editionId && a[col] === A.uid);
   if (!row) { toast('Rien à changer', 'ok'); return false; }
   const other = col === 'giver_id' ? row.receiver_id : row.giver_id;

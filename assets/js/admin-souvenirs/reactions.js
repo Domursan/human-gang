@@ -1,7 +1,12 @@
-// ===== Humane Gang — administration : réactions =====
+// =====================================================================
+// Admin : réactions aux souvenirs et aux photos (vue « Réactions » de la section).
 // Liste des réactions actives (hg_reactions.active = true), la plus récente d'abord, 30 par page.
 // Masquer = active à false (la ligne reste en base ; le membre peut toujours la rétablir en cliquant à nouveau).
 // Droit : politique hg_reactions_moderation (permission « souvenirs »).
+// Dépendances : core.js (sb, esc, toast, errMsg), reactions.js (libellés des réactions), photos.js (miniatures signées),
+// icons.js (svg), admin/common.js (sectionError), helpers.js (pagination, dates, annuaire).
+// Exporte : createReactionsPanel (fabrique la vue : élément HTML et fonction de rechargement).
+// =====================================================================
 import { sb, esc, toast, errMsg } from '../core.js';
 import { REACTION_LABEL } from '../reactions.js';
 import { signedUrls, thumbHtml } from '../photos.js';
@@ -9,8 +14,10 @@ import { svg } from '../icons.js';
 import { sectionError } from '../admin/common.js';
 import { pageRange, pageOf, pagerHtml, stampLabel, peopleOptions } from './helpers.js';
 
+/* Icône du bouton « Masquer ». */
 const ICON = { hide: svg('eye', { size: 16, stroke: 1.8 }) };
 
+/** Fabrique la vue Réactions. ctx.people() donne l'annuaire. Renvoie { el, load } : l'élément à afficher et la fonction de rechargement. */
 export function createReactionsPanel(ctx) {
   const el = document.createElement('div');
   el.className = 'sv-panel stack';
@@ -28,6 +35,7 @@ export function createReactionsPanel(ctx) {
   const memberSel = el.querySelector('#sv-re-member');
   const S = { member: '', page: 0, rows: [], people: new Map(), targets: new Map(), urls: new Map(), seqNo: 0, filled: false };
 
+  /** Charge la page de réactions demandée (et l'annuaire au premier passage), puis affiche la liste. Ignore une réponse périmée. */
   async function load() {
     const my = ++S.seqNo;
     list.innerHTML = '<li class="empty">Chargement des réactions…</li>';
@@ -58,6 +66,7 @@ export function createReactionsPanel(ctx) {
   /** Titres (souvenirs) et sorties (photos) visés par les réactions de la page, en deux requêtes. */
   async function loadTargets(rows) {
     const out = new Map();
+    /* Identifiants distincts des cibles d'un type donné (souvenir ou photo). */
     const ids = (kind) => [...new Set(rows.filter((r) => r.target_kind === kind).map((r) => r.target_id))];
     const mIds = ids('moment');
     const pIds = ids('photo');
@@ -76,6 +85,7 @@ export function createReactionsPanel(ctx) {
     return out;
   }
 
+  /** Affiche les lignes de la page, ou un message si la liste est vide, puis les boutons de page. */
   function render(hasNext) {
     if (!S.rows.length) {
       list.innerHTML = `<li class="empty">${S.member ? 'Aucune réaction active de ce membre.' : 'Aucune réaction active.'}</li>`;
@@ -85,6 +95,7 @@ export function createReactionsPanel(ctx) {
     pager.innerHTML = pagerHtml(S.page, hasNext);
   }
 
+  /** HTML d'une réaction : qui a réagi, à quoi, quand, et le bouton « Masquer ». */
   function row(r) {
     const t = S.targets.get(`${r.target_kind}:${r.target_id}`);
     const who = S.people.get(r.user_id)?.pseudo ?? 'Ancien membre';
@@ -104,6 +115,7 @@ export function createReactionsPanel(ctx) {
     </li>`;
   }
 
+  /** Masque une réaction (active = false), puis recharge la liste. */
   async function hide(id, btn) {
     btn.disabled = true;
     try {

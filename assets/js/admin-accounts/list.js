@@ -1,5 +1,11 @@
-// Comptes admin : liste des comptes (colonne 2 du panel : recherche, puces Actifs / Staff / Fantômes / Toutes, lignes compactes,
-// le compte le plus récent en tête).
+// =====================================================================
+// Comptes admin : liste des comptes (colonne 2 du panel) : recherche, puces Actifs / Staff / Fantômes / Toutes,
+// lignes compactes, le compte le plus récent en tête.
+// Dépendances : core.js (sb, errMsg), admin-ghosts.js (fantômes), admin/ui/list.js (liste générique),
+// admin/perms.js (droit admin), common.js (check), state.js (A).
+// Lit : RPC hg_admin_accounts, hg_members, hg_staff_list ; table hg_profiles (date d'arrivée joined_on).
+// Exporte : loadAccounts, roleOf, accountItems, mountAccountsList, refreshAccounts, paintAccountsList, selectInList.
+// =====================================================================
 import { sb, errMsg } from '../core.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
 import { createList } from '../admin/ui/list.js';
@@ -10,6 +16,11 @@ import { A } from './state.js';
 /* =========================================================
    Données de la liste
    ========================================================= */
+/**
+ * Charge tous les comptes et les fusionne avec les fantômes (fiches de profil sans compte de connexion).
+ * Remplit A.accounts (du plus récent au plus ancien), A.avatars et la date d'arrivée de chaque compte.
+ * Une erreur sur la liste principale remonte ; une erreur sur les fantômes ne bloque pas la liste.
+ */
 export async function loadAccounts() {
   const [acc, mem, gh, staff] = await Promise.all([
     sb.rpc('hg_admin_accounts'), sb.rpc('hg_members'),
@@ -26,6 +37,7 @@ export async function loadAccounts() {
   // Le plus récent en tête : date d'inscription (comptes) ou de création (fantômes) ; à défaut, ordre alphabétique.
   const ghostAt = new Map(gh.map((g) => [g.id, g.created_at ?? null]));
   for (const g of ghosts) g.created_at = ghostAt.get(g.id);
+  /* Date de création d'un compte en millisecondes (0 si elle est inconnue). */
   const t = (a) => (a.created_at ? Date.parse(a.created_at) : 0);
   A.accounts = [...real, ...ghosts].sort((a, b) => (t(b) - t(a))
     || String(a.pseudo ?? a.email ?? '').localeCompare(String(b.pseudo ?? b.email ?? ''), 'fr'));
@@ -67,6 +79,7 @@ export function accountItems() {
 /* =========================================================
    Liste (colonne 2)
    ========================================================= */
+/* Liste montée dans la colonne 2 ; null tant qu'elle n'est pas affichée. */
 let accList = null;
 
 /** Monte la liste des comptes dans la colonne 2 (appelé par le fournisseur `list` de la sous-section). */

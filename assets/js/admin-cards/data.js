@@ -1,9 +1,21 @@
+// =====================================================================
 // Cartes admin : chargement des données et rafraîchissement de la section.
+// Lit les tables des cartes en pages de 1000 lignes (fetchAll), puis construit les index utilisés partout.
+// Dépendances : core.js (sb, toast, errMsg, esc), state.js (C, H), helpers.js (check, group, fetchAll).
+// Lit : hg_card_sets, hg_cards, hg_card_copies, hg_wallets, hg_card_trades, hg_card_trade_items (offres ouvertes),
+// RPC hg_staff_directory (profils des membres), hg_settings (clé « cards », réglages de l'économie).
+// Exporte : refresh (relire et redessiner), boot (premier affichage).
+// =====================================================================
 import { sb, toast, errMsg, esc } from '../core.js';
 import { C, H } from './state.js';
 import { check, group, fetchAll } from './helpers.js';
 
 /* ---------- Chargement ---------- */
+/**
+ * Lit toutes les données de la section et construit les index (par identifiant, par carte, par propriétaire).
+ * Les exemplaires recyclés restent dans la liste générale mais sortent de l'index par propriétaire.
+ * Lève une erreur si une lecture échoue ; l'appelant décide quoi afficher.
+ */
 async function load() {
   const [sets, cards, copies, wallets, trades, profiles, st] = await Promise.all([
     fetchAll(() => sb.from('hg_card_sets').select('*').order('id')),
@@ -32,9 +44,11 @@ async function load() {
   C.items = openIds.length ? (check(await sb.from('hg_card_trade_items').select('trade_id, side').in('trade_id', openIds)) ?? []) : [];
   if (!C.sets.some((s) => s.id === C.identSet)) C.identSet = C.sets[0]?.id || '';
 }
+/** Relit toutes les données puis redessine la section. Une erreur s'affiche en toast. */
 export async function refresh() {
   try { await load(); H.render(); } catch (e) { toast(errMsg(e), 'error'); }
 }
+/** Premier affichage : message de chargement, puis données. En cas d'échec, propose de réessayer. */
 export async function boot() {
   C.panel.innerHTML = '<div class="empty">Chargement…</div>';
   try { await load(); H.render(); } catch (e) {

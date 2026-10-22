@@ -1,4 +1,9 @@
+// =====================================================================
 // Cartes admin : onglet « Statistiques ».
+// Chiffres calculés à partir des données déjà chargées (C) : aucune requête ici.
+// Dépendances : core.js (esc), cartes-ui.js (RARITIES, fmtP), state.js (C), helpers.js (liveCount, maxSerialOf, nf, tile).
+// Exporte : statsPanel.
+// =====================================================================
 import { esc } from '../core.js';
 import { RARITIES, fmtP } from '../cartes-ui.js';
 import { C } from './state.js';
@@ -7,6 +12,7 @@ import { liveCount, maxSerialOf, nf, tile } from './helpers.js';
 /* =========================================================
    Statistiques
    ========================================================= */
+/** HTML de l'onglet Statistiques : chiffres clés, répartition par rareté et numéros des cartes Identité. */
 export function statsPanel() {
   const live = C.copies.filter((x) => !x.recycled_at);
   const active = C.cards.filter((k) => k.active).length;

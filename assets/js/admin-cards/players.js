@@ -1,5 +1,12 @@
+// =====================================================================
 // Cartes admin : sous-section « Joueurs » en liste + détail. La liste des membres est en colonne 2 ; le détail
 // (portefeuille, exemplaires, journal) occupe la zone principale. Paillettes et cartes se donnent dans un tiroir.
+// Dépendances : core.js (sb, toast, errMsg, esc, $, avatarHtml, notify), cartes-ui.js (libellés, numéros, Paillettes),
+// ui-confirm.js, admin/ui/drawer.js, admin/ui/list.js, admin/shell.js (navigate), constants.js, state.js, data.js,
+// helpers.js.
+// Lit : hg_wallet_log (journal). RPC : hg_cards_admin_paillettes, hg_cards_admin_give, hg_cards_admin_take.
+// Exporte : mountPlayersList, refreshPlayersList, playersPanel, refreshLog, playerActions, takeCopy.
+// =====================================================================
 import { sb, toast, errMsg, esc, $, avatarHtml, notify } from '../core.js';
 import { rarityLabel, serialLabel, fmtP } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -11,15 +18,19 @@ import { C } from './state.js';
 import { refresh } from './data.js';
 import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles } from './helpers.js';
 
+/* Libellé lisible d'une raison de mouvement de Paillettes ; à défaut, la raison telle quelle. */
 const REASON = (r) => REASON_LABEL[r] || r;
+/* Référence à la liste de la colonne 2 ; null tant qu'elle n'est pas montée. */
 const PL = { list: null };
 
 /* =========================================================
    Colonne 2 : liste des membres
    ========================================================= */
+/** Lignes de la liste des membres : nombre d'exemplaires et solde de chacun. */
 function playersListItems() {
   // Comptes actifs seulement : un fantôme n'apparaît pas dans la liste (son adresse reste ouvrable pour son historique).
   return activeProfiles().map((p) => {
+    /* Nombre d'exemplaires possédés par le membre. */
     const n = (C.copiesByOwner.get(p.id) || []).length;
     return {
       id: p.id, member: p, name: p.pseudo,
@@ -48,11 +59,13 @@ export function refreshPlayersList() {
 /* =========================================================
    Zone principale : détail d'un membre
    ========================================================= */
+/** HTML de la zone principale pour le membre choisi : solde, exemplaires et journal. */
 export function playersPanel() {
   const uid = C.playerId;
   const p = uid ? C.byId.get(uid) : null;
   if (!p) return '<div class="empty acd-pl-empty">Choisis un membre dans la liste pour voir son portefeuille et ses cartes.</div>';
   const w = C.walletById.get(uid) || { paillettes: 0, boosters_opened: 0, pity_epique: 0 };
+  /* Exemplaires du membre, triés par numéro de carte. */
   const copies = (C.copiesByOwner.get(uid) || []).slice().sort((a, b) => (C.cardById.get(a.card_id)?.number ?? 0) - (C.cardById.get(b.card_id)?.number ?? 0));
   const copyRows = copies.map((x) => {
     const k = C.cardById.get(x.card_id);
@@ -86,6 +99,7 @@ export function playersPanel() {
       <div id="acd-pl-log"><p class="small muted">Chargement…</p></div>
     </section>`;
 }
+/** Charge le journal des Paillettes du membre affiché (60 dernières lignes). La réponse est ignorée si le membre a changé. */
 export async function refreshLog() {
   const box = $('#acd-pl-log', C.panel);
   if (!box) return;
@@ -104,11 +118,13 @@ export async function refreshLog() {
 /* =========================================================
    Actions (tiroirs)
    ========================================================= */
+/* Gestionnaires des boutons du détail membre : ouvrent les tiroirs. */
 export const playerActions = {
   'pay-open': (t) => openPaillettesDrawer(t.dataset.sign === '-1' ? -1 : 1),
   'give-open': () => openGiveDrawer(),
 };
 
+/** Ouvre le tiroir pour donner (sign = 1) ou retirer (sign = -1) des Paillettes. */
 function openPaillettesDrawer(sign) {
   const uid = C.playerId;
   openDrawer({
@@ -128,6 +144,7 @@ function openPaillettesDrawer(sign) {
 /** Ajoute ou retire des Paillettes au membre ; renvoie false (tiroir ouvert) en cas d'échec. */
 async function adjustPaillettes(form, sign, uid) {
   const err = $('.form-error', form);
+  /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; };
   showErr('');
   const n = Number(String(form.elements.amount.value).trim());
@@ -140,6 +157,7 @@ async function adjustPaillettes(form, sign, uid) {
   } catch (e) { showErr(errMsg(e)); return false; }
 }
 
+/** Ouvre le tiroir pour donner une carte : les cartes actives, groupées par série. */
 function openGiveDrawer() {
   const uid = C.playerId;
   const cardOptions = C.sets.map((s) => {
@@ -169,6 +187,7 @@ function openGiveDrawer() {
 /** Donne une ou plusieurs cartes au membre ; renvoie false (tiroir ouvert) en cas d'échec. */
 async function giveCard(form, uid) {
   const err = $('.form-error', form);
+  /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; };
   showErr('');
   const cardId = form.elements.card.value;
@@ -186,6 +205,7 @@ async function giveCard(form, uid) {
   } catch (e) { showErr(errMsg(e)); return false; }
 }
 
+/** Retire un exemplaire de la collection après confirmation. Il n'est ni recyclé ni remboursé. */
 export async function takeCopy(btn, id) {
   const x = C.copies.find((c) => String(c.id) === id);
   const k = x && C.cardById.get(x.card_id);

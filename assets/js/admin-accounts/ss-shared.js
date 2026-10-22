@@ -1,11 +1,23 @@
+// =====================================================================
 // Comptes admin : bloc « Informations transmises aux Santas » des formulaires d'édition du Secret Santa.
+// Un membre choisit quelles informations de son profil sont visibles par son Santa.
+// Dépendances : core.js ($, $$, esc), profile-fields.js (INFO_GROUPS, INFO_FIELDS).
+// Exporte : sharedFieldsHtml (bloc HTML des cases), readSharedFields (lit les cases cochées),
+// bindSharedFields (branche les boutons « tout cocher » une seule fois).
+// =====================================================================
 import { $, $$, esc } from '../core.js';
 import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
 
 /* =========================================================
    Secret Santa (section de l'admin) : champs transmis + attributions
    ========================================================= */
-/** Bloc de cases « Informations transmises aux Santas » pour un formulaire d'édition. */
+/**
+ * Bloc de cases « Informations transmises aux Santas » pour un formulaire d'édition.
+ * Le bloc est replié si rien n'est coché, pour ne pas encombrer le formulaire.
+ * @param {string} prefix préfixe unique des identifiants HTML (évite les doublons à l'écran).
+ * @param {string[]} [selected=[]] identifiants déjà cochés.
+ * @returns {string} HTML du bloc.
+ */
 export function sharedFieldsHtml(prefix, selected = []) {
   const sel = new Set(selected || []);
   const total = INFO_FIELDS.length;
@@ -26,16 +38,26 @@ export function sharedFieldsHtml(prefix, selected = []) {
         </fieldset>`).join('')}
     </details>`;
 }
-/** Clés cochées, dans l'ordre de INFO_FIELDS. */
+/**
+ * Clés cochées dans un formulaire, dans l'ordre de INFO_FIELDS.
+ * @param {HTMLFormElement} form formulaire qui contient les cases.
+ * @returns {string[]} identifiants des champs cochés.
+ */
 export function readSharedFields(form) {
   const on = new Set($$('input[name="shared_fields"]:checked', form).map((i) => i.value));
   return INFO_FIELDS.map((f) => f.id).filter((k) => on.has(k));
 }
+/** Met à jour le compteur « n / total » affiché dans le bloc. */
 function updateSfCount(box) {
   const c = box?.querySelector('[data-sf-count]');
   if (c) c.textContent = `${$$('input[name="shared_fields"]:checked', box).length} / ${INFO_FIELDS.length}`;
 }
+// Vrai une fois les gestionnaires branchés : on ne les pose qu'une seule fois sur la page.
 let sfBound = false;
+/**
+ * Branche les boutons « Tout cocher / Tout décocher » et le compteur.
+ * Posé sur document.body (et non sur #secret-santa) parce que le bloc peut aussi vivre dans le tiroir.
+ */
 export function bindSharedFields() {
   // Le document entier : les cases et le bloc des attributions vivent aussi dans le tiroir (hors de #secret-santa)
   const sec = document.body; if (sfBound) return;

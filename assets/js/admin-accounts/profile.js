@@ -1,4 +1,10 @@
+// =====================================================================
 // Comptes admin : onglets « Profil » et « Informations » d'une fiche (formulaires et enregistrement).
+// Le profil (table hg_profiles) et les informations diverses (table hg_profile_info, champ data en JSON).
+// Dépendances : core.js (sb, toast, esc, avatarHtml, isGodMode), profile-fields.js (INFO_GROUPS, INFO_FIELDS),
+// ui-confirm.js, utils.js (safeUrl), common.js, state.js (A, H), admin/perms.js (isAdminView).
+// Exporte : profileHtml, saveProfile, infosHtml, saveInfos.
+// =====================================================================
 import { sb, toast, esc, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from '../core.js';
 import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -8,6 +14,7 @@ import { A, H, dropFicheCache } from './state.js';
 import { isAdminView } from '../admin/perms.js';
 
 /* ---------- Profil ---------- */
+/** HTML de l'onglet Profil : pseudo, couleur, avatar, anniversaire, date d'arrivée, options et statut admin. */
 export function profileHtml() {
   const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
   const color = /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '#9E3543';
@@ -37,6 +44,13 @@ export function profileHtml() {
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le profil</button></div>
     </form>`;
 }
+/**
+ * Valide le formulaire Profil puis l'enregistre dans hg_profiles.
+ * Refuse les avatars qui ne viennent pas du stockage du site, et demande confirmation avant de changer le statut admin.
+ * Met à jour la fiche et la liste sans recharger la page.
+ * @param {HTMLFormElement} form formulaire du profil.
+ * @param {HTMLElement|null} btn bouton d'envoi (transmis par busy ; la fonction ne s'en sert pas).
+ */
 export async function saveProfile(form, btn) {
   const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
   const pseudo = form.pseudo.value.trim();
@@ -79,6 +93,7 @@ export async function saveProfile(form, btn) {
 }
 
 /* ---------- Informations diverses ---------- */
+/** HTML de l'onglet Informations : un groupe de champs par thème, ceux inconnus restent affichés à part. */
 export function infosHtml() {
   if (A.d.info.error) return tabError(A.d.info);
   const data = A.d.info.data?.data || {};
@@ -102,6 +117,11 @@ export function infosHtml() {
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les informations</button></div>
     </form>`;
 }
+/**
+ * Enregistre les informations diverses. Les clés inconnues déjà stockées sont gardées telles quelles
+ * (on n'efface pas ce que l'interface ne connaît pas), puis les champs connus sont remplacés par la saisie.
+ * @param {HTMLFormElement} form formulaire des informations.
+ */
 export async function saveInfos(form) {
   const old = A.d.info.data?.data || {};
   const known = new Set(INFO_FIELDS.map((f) => f.id));

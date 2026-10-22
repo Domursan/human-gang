@@ -1,4 +1,11 @@
+// =====================================================================
 // Cartes admin : rendu des onglets, délégation d'événements et point d'entrée mountCardsSection.
+// Un seul écouteur par type d'événement sur le conteneur ; chaque bouton se repère à son data-act (ACTIONS) ou data-tab.
+// Dépendances : core.js (sb, toast, $, $$), constants.js (TABS), state.js (C, H), data.js (boot, refresh),
+// helpers.js (act, check), sets.js, list.js, editor.js, economy.js, bulk.js, players.js, stats.js, trades.js,
+// quests.js, admin/list-tools.js (recherche, compteurs, pagination).
+// Exporte : mountCardsSection (monte la section), openCardsTab (ouvre une partie).
+// =====================================================================
 import { sb, toast, $, $$ } from '../core.js';
 import { TABS } from './constants.js';
 import { C, H } from './state.js';
@@ -20,7 +27,9 @@ import { cardsListData } from './list.js';
 /* =========================================================
    Rendu et événements
    ========================================================= */
+/* Fabrique du HTML de chaque onglet, par identifiant d'onglet. */
 const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
+/** Dessine l'onglet courant, puis lance les chargements propres à cet onglet (joueurs, quêtes, économie). */
 function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
   C.panel.innerHTML = PANELS[C.tab]();
@@ -35,10 +44,13 @@ const LISTS = {
   series: { list: 'acd-sets-list', count: 'acd-search-series-count', noun: ['série', 'séries'], build: setsListData },
   cartes: { list: 'acd-cards-list', count: null, noun: ['carte', 'cartes'], build: cardsListData },
 };
+/** Met à jour le compteur de la recherche des séries. */
 function countLists() {
   const s = setsListData(); setCount($('#acd-search-series-count', C.root), s.shown, s.total, C.q.series, LISTS.series.noun);
 }
+/* Minuteries de la recherche, une par champ, pour attendre la fin de la saisie avant de filtrer. */
 const timers = {};
+/** Redessine seulement la liste d'une recherche (le champ garde le focus). */
 function renderList(key) {
   const L = LISTS[key], el = $(`#${L.list}`, C.root);
   if (!el) return;
@@ -47,6 +59,7 @@ function renderList(key) {
   if (L.count) setCount($(`#${L.count}`, C.root), r.shown, r.total, C.q[key], L.noun);
 }
 
+/* Actions des boutons data-act, avec leur gestionnaire. Les gestionnaires reçoivent (bouton, identifiant). */
 const ACTIONS = {
   retry: () => boot(),
   'cards-more': () => { C.shown += PAGE_SIZE; renderList('cartes'); },
@@ -74,12 +87,14 @@ const ACTIONS = {
   ...playerActions,
 };
 
+/** Délégation des clics : onglets (data-tab) et actions (data-act). */
 function onClick(e) {
   const t = e.target.closest('[data-tab],[data-act]');
   if (!t || !C.root.contains(t)) return;
   if (t.dataset.tab) { C.tab = t.dataset.tab; render(); return; }
   ACTIONS[t.dataset.act]?.(t, t.dataset.id);
 }
+/** Délégation des changements de filtre (liste déroulante) : remet la liste à la première page. */
 function onChange(e) {
   const t = e.target;
   if (t.id === 'acd-ident-set') C.identSet = t.value;
@@ -88,6 +103,7 @@ function onChange(e) {
   C.shown = PAGE_SIZE;
   render();
 }
+/** Délégation de la saisie : recherches avec délai, et mise à jour du total de l'économie. */
 function onInput(e) {
   const t = e.target;
   if (t.form?.id === 'acd-econ-form') return updateSum();
@@ -96,6 +112,7 @@ function onInput(e) {
   clearTimeout(timers[key]);
   timers[key] = setTimeout(() => { C.q[key] = t.value; C.shown = PAGE_SIZE; renderList(key); }, SEARCH_DELAY);
 }
+/** Délégation des envois : seul le formulaire de l'économie est traité ici. */
 function onSubmit(e) {
   const form = e.target;
   if (form.id === 'acd-econ-form') { e.preventDefault(); return saveEcon(form, e.submitter); }

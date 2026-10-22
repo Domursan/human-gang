@@ -1,4 +1,10 @@
+// =====================================================================
 // Cartes admin : séries (liste, création et modification, activation, suppression).
+// Une série regroupe des cartes. Elle peut être masquée, ou limitée à une période (dates en heure suisse).
+// Dépendances : core.js (sb, toast, esc, $), ui-confirm.js (confirmBox), admin-events.js (dates en heure suisse),
+// constants.js (ICON), state.js (C), helpers.js, data.js (refresh), admin/ui/drawer.js, admin/list-tools.js.
+// Exporte : setsListData (liste retenue par la recherche), setsPanel (onglet), openSetDialog, toggleSet, deleteSet.
+// =====================================================================
 import { sb, toast, esc, $ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { toZurichInput, fromZurichInput } from '../admin-events.js';
@@ -19,6 +25,7 @@ function setThumb(s, cards) {
   const ini = String(s.name || '?').trim().slice(0, 2).toUpperCase();
   return `<span class="acd-setcard-img acd-setcard-ph" aria-hidden="true">${esc(ini)}</span>`;
 }
+/** Carte d'une série dans la grille : vignette, nom, code, période, interrupteur Active / Masquée et boutons. */
 function setCard(s, cards) {
   const id = esc(s.id);
   const [cls, label] = setState(s);
@@ -58,6 +65,7 @@ export function setsListData() {
       : '<div class="empty">Aucune série pour l\'instant. Crée la première pour y ajouter des cartes.</div>');
   return { html, shown: rows.length, total: C.sets.length };
 }
+/** HTML de l'onglet Séries : bouton de création, recherche et grille des séries. */
 export function setsPanel() {
   return `<div class="acd-head">
       <p class="small muted">Une série regroupe des cartes. Supprimer une série supprime aussi toutes ses cartes et les exemplaires qu'en ont les membres.</p>
@@ -97,6 +105,7 @@ export function openSetDialog(s = null) {
     </div>`,
     onSubmit: async (form) => {
       const err = $('.form-error', form);
+      /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
       const showErr = (m) => { err.textContent = m; err.hidden = !m; };
       showErr('');
       const E = form.elements;
@@ -132,6 +141,11 @@ export async function toggleSet(btn, id) {
   });
 }
 
+/**
+ * Supprime une série après confirmation, avec toutes ses cartes et leurs images.
+ * Les échanges concernés restent visibles sans ces cartes (c'est la base qui le gère).
+ * @param {string} id identifiant de la série.
+ */
 export async function deleteSet(id) {
   const s = C.setById.get(id);
   if (!s) return;

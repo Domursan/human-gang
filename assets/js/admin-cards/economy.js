@@ -1,4 +1,11 @@
+// =====================================================================
 // Cartes admin : onglet « Économie » (Paillettes, boosters, recyclage, fabrication, récompenses, quêtes, drops).
+// Le formulaire est généré à partir de ECON (constants.js). Les réglages sont enregistrés dans hg_settings,
+// clé « cards » ; une clé inconnue déjà présente est conservée à l'enregistrement.
+// Dépendances : core.js (sb, toast, errMsg, esc, $), state.js (C), constants.js (ECON, CFG_DEFAULT, RARITY_IDS),
+// helpers.js (check, act, nf), data.js (refresh).
+// Exporte : econPanel (HTML), updateSum (total des taux), resetEconGroup (défauts d'un groupe), saveEcon (enregistrement).
+// =====================================================================
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { C } from './state.js';
 import { ECON, CFG_DEFAULT, RARITY_IDS } from './constants.js';
@@ -8,28 +15,35 @@ import { refresh } from './data.js';
 /* =========================================================
    Économie
    ========================================================= */
+/* Découpe un chemin « a.b.c » en liste de clés : ['a', 'b', 'c']. */
 const pathOf = (k) => k.split('.');
+/** Lit la valeur d'un chemin « a.b » dans un objet ; null si absente. */
 function getPath(obj, k) {
   const v = pathOf(k).reduce((o, p) => o?.[p], obj);
   return v ?? null;
 }
+/** Écrit une valeur au chemin donné, en créant les objets intermédiaires si besoin. */
 function setPath(obj, path, val) {
   let o = obj;
   for (const p of path.slice(0, -1)) { if (typeof o[p] !== 'object' || o[p] === null) o[p] = {}; o = o[p]; }
   o[path[path.length - 1]] = val;
 }
+/** Supprime la clé au chemin donné, s'il existe. */
 function unsetPath(obj, path) {
   const parent = path.slice(0, -1).reduce((o, p) => o?.[p], obj);
   if (parent && typeof parent === 'object') delete parent[path[path.length - 1]];
 }
+/* Nom du champ de formulaire : le point du chemin devient un tiret bas (« rates.commune » -> « rates_commune »). */
 const fieldName = (f) => f.k.replaceAll('.', '_');
 // Valeur affichée : la valeur enregistrée, sinon le défaut (sauf champ facultatif : vide = non fabricable).
 const cfgSource = () => (Object.keys(C.cfgRaw || {}).length ? C.cfgRaw : {});
+/** Valeur à afficher dans le champ : la valeur enregistrée, sinon le défaut (vide pour un champ facultatif). */
 function shownValue(f) {
   const saved = getPath(cfgSource(), f.k);
   if (saved != null) return saved;
   return f.optional ? null : getPath(CFG_DEFAULT, f.k);
 }
+/** HTML d'un champ de réglage : libellé, unité, valeur actuelle et aide. */
 function econField(f) {
   const name = fieldName(f);
   const val = shownValue(f);
@@ -38,6 +52,7 @@ function econField(f) {
       value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h"${f.optional ? ' placeholder="vide = non fabricable"' : ''}>
     ${f.help ? `<p class="small muted" id="acd-e-${name}-h">${esc(f.help)}</p>` : ''}</div>`;
 }
+/** HTML de l'onglet Économie : bloc Dons, puis le formulaire des réglages groupés. */
 export function econPanel() {
   return `<section class="card acd-bulk-intro" aria-labelledby="acd-bulk-h">
       <h3 class="card-title" id="acd-bulk-h">Dons</h3>
@@ -59,6 +74,7 @@ export function econPanel() {
       </div>
     </form>`;
 }
+/** Affiche le total des taux de tirage et avertit s'il ne fait pas 100 %. */
 export function updateSum() {
   const form = $('#acd-econ-form', C.panel);
   const out = $('#acd-rate-sum', C.panel);
@@ -103,8 +119,15 @@ function readEcon(form) {
   }
   return out;
 }
+/**
+ * Valide le formulaire puis enregistre les réglages dans hg_settings (clé « cards »).
+ * En cas d'erreur de saisie, le message s'affiche dans le formulaire et rien n'est envoyé.
+ * @param {HTMLFormElement} form formulaire des réglages.
+ * @param {HTMLElement|null} btn bouton d'envoi (désactivé pendant l'enregistrement).
+ */
 export async function saveEcon(form, btn) {
   const err = $('.form-error', form);
+  /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   showErr('');
   let next;
