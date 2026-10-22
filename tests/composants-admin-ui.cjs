@@ -8,6 +8,7 @@ const { ROOT, check, finish, chromium } = require('./lib/harness.cjs');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' };
 
+/** Petit serveur local qui sert le dépôt à la page de démonstration (les modules ES ne marchent pas en file://). */
 function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
@@ -29,6 +30,7 @@ function serve() {
   const base = `http://127.0.0.1:${srv.address().port}`;
   const browser = await chromium.launch();
   const errs = [];
+  /** Ouvre la page de démonstration à la taille donnée et attend que la liste soit affichée. */
   const open = async (width, height) => {
     const ctx = await browser.newContext({ viewport: { width, height } });
     const p = await ctx.newPage();
@@ -38,8 +40,11 @@ function serve() {
     await p.waitForFunction(() => window.__demo && document.querySelectorAll('.ui-row').length > 0);
     return { ctx, p };
   };
+  /** Libellés des lignes de la liste (premier segment de l'aria-label de chaque ligne). */
   const rowNames = (p) => p.$$eval('#list .ui-row', (els) => els.map((e) => e.getAttribute('aria-label').split(',')[0]));
+  /** Textes des puces de compteur de la liste. */
   const counts = (p) => p.$$eval('#list .ui-chip', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+  /** Attend ms millisecondes. */
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   try {
@@ -156,6 +161,7 @@ function serve() {
       const time = await import('/assets/js/admin/ui/time.js');
       const common = await import('/assets/js/admin/ui/common.js');
       const now = new Date(2026, 9, 21, 15, 0, 0);
+      /** Date d'il y a ms millisecondes, pour les données de démonstration. */
       const ago = (ms) => new Date(now.getTime() - ms);
       return {
         instant: time.relTime(ago(20_000), now),

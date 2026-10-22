@@ -12,6 +12,7 @@ const ROOT = path.resolve(__dirname, '..');
 const SKIP = new Set(['node_modules', '.git', 'shots']);
 const ESM = /^\s*(import\s|export\s)/m;
 
+/** Liste récursivement les fichiers .js, .mjs et .cjs d'un dossier (sans node_modules, .git ni shots). */
 function walk(dir, out = []) {
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     if (SKIP.has(ent.name)) continue;

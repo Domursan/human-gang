@@ -32,6 +32,7 @@ const JS_DIRS = ['assets/js'];
 const EXTRA_FILES = ['sw.js'];
 const SCAN_DIRS = ['supabase/functions'];
 
+/** Liste récursivement les fichiers dont l'extension figure dans exts, en ignorant les dossiers exclus. */
 function walk(dir, exts, out = []) {
   if (!fs.existsSync(dir)) return out;
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -78,6 +79,7 @@ const IGNORE_OBJECTS = new Set(['storage', 'Array', 'Uint8Array', 'Object', 'Pro
 
 const calls = new Map(); // 'rpc:nom' ou 'from:nom' -> [où…]
 const dynamic = [];
+/** Numéro de ligne (à partir de 1) de la position idx dans le texte, pour les messages d'erreur. */
 const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 
 for (const file of files) {
