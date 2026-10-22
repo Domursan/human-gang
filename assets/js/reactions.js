@@ -25,6 +25,8 @@ const CHUNK = 100;
 
 /** Réactions déjà chargées : clé « genre:id » -> liste de { emoji, user_id }. */
 const cache = new Map();   // "kind:id" -> [{ emoji, user_id }]
+/** Éléments dont le chargement a échoué (clé « genre:id ») : leur compteur est « inconnu », pas 0. */
+const unknown = new Set();
 /** Clics en cours d'envoi, pour ignorer les doubles clics (clé « genre:id:emoji »). */
 const pending = new Set(); // "kind:id:emoji" en cours d'envoi
 /** Identifiant du membre connecté (renseigné par loadReactions), pour savoir si j'ai réagi. */
@@ -41,7 +43,8 @@ const key = (kind, id) => `${kind}:${id}`;
 
 /**
  * Charge les réactions de plusieurs éléments d'un coup (lots de 100 identifiants). Ne lève jamais d'erreur.
- * Un lot en erreur est ignoré (un avertissement dans la console) ; les autres lots sont quand même chargés.
+ * Un lot en erreur n'affiche pas de zéro : ses éléments sont marqués « inconnus » et l'erreur part dans la console ;
+ * les autres lots sont quand même chargés.
  * @param {string} kind Genre des éléments.
  * @param {string[]} ids Identifiants (les vides sont ignorés).
  * @param {string|null} [uid] Identifiant du membre connecté.
@@ -50,11 +53,16 @@ const key = (kind, id) => `${kind}:${id}`;
 export async function loadReactions(kind, ids, uid = null) {
   if (uid) meId = uid;
   const list = [...new Set(ids.filter(Boolean))];
-  for (const id of list) cache.set(key(kind, id), []);
+  for (const id of list) { cache.set(key(kind, id), []); unknown.delete(key(kind, id)); }
   for (let i = 0; i < list.length; i += CHUNK) {
+    const part = list.slice(i, i + CHUNK);
     const { data, error } = await sb.from('hg_reactions')
-      .select('target_id,emoji,user_id').eq('target_kind', kind).eq('active', true).in('target_id', list.slice(i, i + CHUNK));
-    if (error) { console.warn('[reactions]', error); continue; }
+      .select('target_id,emoji,user_id').eq('target_kind', kind).eq('active', true).in('target_id', part);
+    if (error) {
+      console.warn('[reactions] lot non chargé', error);
+      for (const id of part) unknown.add(key(kind, id));
+      continue;
+    }
     for (const r of data || []) cache.get(key(kind, r.target_id))?.push({ emoji: r.emoji, user_id: r.user_id });
   }
 }
@@ -63,9 +71,10 @@ export async function loadReactions(kind, ids, uid = null) {
  * Pour un élément : pour chaque émoji, son nombre de réactions et si le membre connecté a réagi.
  * @param {string} kind Genre de l'élément.
  * @param {string} id Identifiant de l'élément.
- * @returns {Array<{emoji: string, n: number, mine: boolean}>}
+ * @returns {Array<{emoji: string, n: number, mine: boolean}>|null} null si le chargement a échoué (compteur inconnu).
  */
 function summary(kind, id) {
+  if (unknown.has(key(kind, id))) return null;
   const rows = cache.get(key(kind, id)) || [];
   return REACTIONS.map((emoji) => {
     const rs = rows.filter((r) => r.emoji === emoji);
@@ -76,9 +85,10 @@ function summary(kind, id) {
 /** Barre de pastilles (une par émoji) : compteur et état « j'ai réagi ». */
 export function reactionBarHtml(kind, id) {
   const sid = esc(id);
-  const btns = summary(kind, id).map(({ emoji, n, mine }) => `<button type="button" class="react-btn${mine ? ' is-on' : ''}"
+  const sum = summary(kind, id);
+  const btns = (sum || REACTIONS.map((emoji) => ({ emoji, n: null, mine: false }))).map(({ emoji, n, mine }) => `<button type="button" class="react-btn${mine ? ' is-on' : ''}"
       data-react="${esc(kind)}" data-react-id="${sid}" data-emoji="${esc(emoji)}" aria-pressed="${mine}"
-      aria-label="${REACTION_LABEL[emoji]} : ${n} ${n > 1 ? 'réactions' : 'réaction'}${mine ? ', tu as réagi' : ''}"><span class="react-emoji" aria-hidden="true">${emoji}</span><span class="react-count" aria-hidden="true">${n}</span></button>`).join('');
+      aria-label="${REACTION_LABEL[emoji]} : ${n == null ? 'nombre indisponible' : `${n} ${n > 1 ? 'réactions' : 'réaction'}`}${mine ? ', tu as réagi' : ''}"><span class="react-emoji" aria-hidden="true">${emoji}</span><span class="react-count" aria-hidden="true">${n == null ? '?' : n}</span></button>`).join('');
   return `<div class="react-bar" role="group" aria-label="Réactions" data-react-bar="${esc(kind)}:${sid}">${btns}</div>`;
 }
 
@@ -106,13 +116,18 @@ document.addEventListener('click', async (e) => {
   try {
     const { data, error } = await sb.rpc('hg_toggle_reaction', { p_kind: kind, p_id: id, p_emoji: emoji });
     if (error) throw error;
-    const rows = cache.get(key(kind, id)) || [];
-    if (data) rows.push({ emoji, user_id: meId });
-    else {
-      const i = rows.findIndex((r) => r.emoji === emoji && r.user_id === meId);
-      if (i >= 0) rows.splice(i, 1);
+    if (unknown.has(key(kind, id))) {
+      // Compteur inconnu : on recharge l'élément complet plutôt que d'ajouter une ligne à un décompte incomplet
+      await loadReactions(kind, [id]);
+    } else {
+      const rows = cache.get(key(kind, id)) || [];
+      if (data) rows.push({ emoji, user_id: meId });
+      else {
+        const i = rows.findIndex((r) => r.emoji === emoji && r.user_id === meId);
+        if (i >= 0) rows.splice(i, 1);
+      }
+      cache.set(key(kind, id), rows);
     }
-    cache.set(key(kind, id), rows);
     refreshBars();
     // Le bouton a été remplacé : on rend le focus au nouveau bouton du même émoji
     const next = [...document.querySelectorAll('[data-react]')]
