@@ -1,3 +1,4 @@
+-- Appliquée en production le 22/10/2026.
 -- Migration 059 : les affiches et les tutos lisent les critères des badges (hg_settings.badges).
 -- Avant, seule l'administration lisait cette clé ; les membres voient maintenant les critères
 -- (par exemple « 5 sorties » pour Toujours là) dans les textes des affiches et des tutos.
