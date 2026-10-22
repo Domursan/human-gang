@@ -100,6 +100,12 @@ window.__DB = DB; window.__LOG = [];
     cards.push({ id: 'C14', set_id: 'SETHS', number: 1, name: 'La Carte unique', family: 'membre', rarity: 'unique', image_url: null, flavor: 'Il n\'en existe qu\'une.',
       member_id: null, can_shiny: false, tradeable: true, craftable: false, max_copies: 1, active: true });
   }
+  // Scénario « drop d'une série fermée » : série SETX inactive, carte CX1 que le membre connecté a attrapée (drop).
+  if (S.closedDrop) {
+    sets.push({ id: 'SETX', code: 'foret', name: 'La forêt enchantée', description: null, starts_at: null, ends_at: null, active: false, sort: 50 });
+    cards.push({ id: 'CX1', set_id: 'SETX', number: 1, name: 'Libellule', family: 'objet', rarity: 'peu_commune', image_url: null, flavor: null,
+      member_id: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
+  }
   DB.hg_card_sets = sets; DB.hg_cards = cards;
   // Mes exemplaires : C1 x3 (dont une brillante), C2 x1, C3 x2, C7 x1 brillante, C11 (identite) x1 numéroté, C9 x1 (en échange)
   /** Fabrique un exemplaire possédé par le membre connecté ; extra remplace les champs par défaut. */
@@ -109,6 +115,7 @@ window.__DB = DB; window.__LOG = [];
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
   // Carte unique : un seul exemplaire existe, à Alice (S.uniqueTaken) ou à moi (S.uniqueOwned).
   if (S.uniqueTaken) DB.hg_card_copies.push({ id: 501, card_id: 'C14', owner_id: U(2), shiny: false, serial: 1, source: 'admin', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
+  if (S.closedDrop) DB.hg_card_copies.push({ id: 601, card_id: 'CX1', owner_id: ME, shiny: false, serial: null, source: 'drop', obtained_at: iso(0), locked_trade: null, recycled_at: null });
   if (S.uniqueOwned) DB.hg_card_copies.push({ id: 502, card_id: 'C14', owner_id: ME, shiny: false, serial: 1, source: 'evenement', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
   // Scénario « echanges » (parcours-echanges-filtres.cjs) : Alice (U(2)) a des doublons et des cartes d'une autre série ;
   // j'ai aussi une carte de la série « Saison 2 ». Ailleurs, rien ne change.

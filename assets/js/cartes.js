@@ -54,7 +54,8 @@ const kept = (fn) => (...args) => keepPlace(() => fn(...args));
    S regroupe tout l'état : données chargées (sets, cards, copies, state), onglet et filtres, ouverture en cours
    (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
-  state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
+  state: null, sets: [], cards: [], cardsById: new Map(),
+  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
@@ -69,6 +70,54 @@ const isGod = () => !!S.state?.god;
 const bal = () => Number(S.state?.paillettes ?? 0);
 /** Vrai si une série a commencé (ou n'a pas de date de début). */
 const started = (s) => !s.starts_at || new Date(s.starts_at) <= new Date();
+
+/**
+ * Charge les cartes possédées hors des séries ouvertes (série fermée, ou pas encore ouverte : drop, don de l'admin…)
+ * et leurs séries, pour qu'elles apparaissent dans la collection.
+ * @param {Iterable<string>} cardIds identifiants des cartes possédées
+ * @returns {Promise<void>} lève la première erreur de lecture
+ */
+async function loadOwnedOutside(cardIds) {
+  const missing = [...new Set(cardIds)].filter((id) => !S.cardsById.has(id));
+  for (let i = 0; i < missing.length; i += 150) {
+    const r = await sb.from('hg_cards').select('*').in('id', missing.slice(i, i + 150));
+    if (r.error) throw r.error;
+    for (const c of r.data || []) S.cardsById.set(c.id, c);
+  }
+  const open = new Set(S.sets.map((x) => x.id));
+  const need = [...new Set([...new Set(cardIds)].map((id) => S.cardsById.get(id)?.set_id).filter((id) => id && !open.has(id) && !S.otherSets.has(id)))];
+  if (!need.length) return;
+  const r = await sb.from('hg_card_sets').select('*').in('id', need);
+  if (r.error) throw r.error;
+  for (const st of r.data || []) S.otherSets.set(st.id, st);
+}
+
+/**
+ * Groupes « hors série ouverte » : une entrée par série fermée ou pas encore ouverte où le membre possède des cartes.
+ * Seules les cartes possédées sont montrées ; ces groupes ne comptent pas dans la progression.
+ * @param {(cardId: string) => object[]} copiesFn exemplaires possédés d'une carte
+ * @param {(card: object) => boolean} keepFn filtres de la collection
+ * @returns {Array<{set: object, scored: number, have: number, shown: object[], extra: true, owned: number}>}
+ */
+function outsideGroups(copiesFn, keepFn) {
+  const open = new Set(S.sets.map((x) => x.id));
+  const bySet = new Map();
+  for (const c of S.cardsById.values()) {
+    if (open.has(c.set_id) || !S.otherSets.has(c.set_id) || !copiesFn(c.id).length) continue;
+    if (!bySet.has(c.set_id)) bySet.set(c.set_id, []);
+    bySet.get(c.set_id).push(c);
+  }
+  return [...bySet.entries()]
+    .map(([id, cards]) => ({ set: S.otherSets.get(id), cards: cards.sort((a, b) => (a.number ?? 0) - (b.number ?? 0)) }))
+    .sort((a, b) => (a.set.sort ?? 0) - (b.set.sort ?? 0))
+    .map(({ set, cards }) => ({ set, scored: 0, have: 0, owned: cards.length, shown: cards.filter(keepFn), extra: true }));
+}
+/** En-tête d'un groupe « hors série ouverte » (pas de barre de progression : la série n'est pas ouverte). */
+const outsideHead = (g, hid) => `<div class="cz-group-head">
+      <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
+      <p class="cz-group-count">${nf.format(g.owned)} carte${g.owned > 1 ? 's' : ''} possédée${g.owned > 1 ? 's' : ''} · série pas ouverte</p>
+    </div>
+    <p class="muted small">Cartes obtenues hors des boosters (drop, don…) : la série n'est pas ouverte, elles ne comptent pas dans la progression.</p>`;
 /** Exemplaires de l'utilisateur pour une carte. */
 const copiesOf = (cardId) => S.copies.filter((c) => c.card_id === cardId);
 /** En-tête explicatif de la série « Hors série » (cartes uniques). */
@@ -138,7 +187,7 @@ async function loadStatic() {
     const taken = await sb.from('hg_card_copies').select('card_id').in('card_id', uniqueIds).is('recycled_at', null);
     if (!taken.error) S.uniqueTaken = new Set((taken.data || []).map((x) => x.card_id));
   }
-  if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
+  if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId) && !S.otherSets.has(S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }
 
 /**
@@ -159,13 +208,8 @@ async function refreshData() {
   for (const r of [st, cp, wi, lg]) if (r.error) throw r.error;
   S.state = st.data;
   S.copies = cp.data || [];
-  // Cartes possédées qui n'appartiennent pas à une série ouverte (série fermée depuis) : on les charge aussi
-  const missing = [...new Set(S.copies.map((c) => c.card_id))].filter((id) => !S.cardsById.has(id));
-  for (let i = 0; i < missing.length; i += 150) {
-    const r = await sb.from('hg_cards').select('*').in('id', missing.slice(i, i + 150));
-    if (r.error) throw r.error;
-    for (const c of r.data || []) S.cardsById.set(c.id, c);
-  }
+  // Cartes possédées hors des séries ouvertes (série fermée, ou pas encore ouverte : drop, don…) : cartes et séries
+  await loadOwnedOutside(S.copies.map((c) => c.card_id));
   S.wish = new Set((wi.data || []).map((w) => w.card_id));
   S.log = lg.data || [];
 }
@@ -1026,7 +1070,7 @@ function zoomInfo(id) {
     shiny: cps.some((x) => x.shiny),
     serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
     missing: cps.length === 0,
-    setName: S.sets.find((s) => s.id === k.set_id)?.name || '',
+    setName: (S.sets.find((s) => s.id === k.set_id) || S.otherSets.get(k.set_id))?.name || '',
     setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
     lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
   };
@@ -1041,6 +1085,7 @@ function zoomInfo(id) {
 function groupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `cz-g-${i}`;
+  if (g.extra) return `<section class="cz-group" aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(cardCell).join('')}</div></section>`;
   return `<section class="cz-group" aria-labelledby="${hid}">
     <div class="cz-group-head">
       <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
@@ -1060,9 +1105,9 @@ function groupHtml(g, i) {
 function drawCollection(focusId) {
   const el = $('#cartes-p-collection');
   const none = '<p class="empty">Aucune série disponible pour le moment.</p>';
-  if (!S.sets.length) { el.innerHTML = none; S.shownIds = []; return; }
+  if (!S.sets.length && !S.otherSets.size) { el.innerHTML = none; S.shownIds = []; return; }
   const all = S.setId === ALL;
-  const set = all ? null : S.sets.find((s) => s.id === S.setId);
+  const set = all ? null : S.sets.find((s) => s.id === S.setId) || S.otherSets.get(S.setId);
   if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
   /** Vrai si la carte passe les filtres de la collection (rareté, famille, possession). */
@@ -1076,11 +1121,16 @@ function drawCollection(focusId) {
     return true;
   };
   // Une entrée par série affichée : ses compteurs (sans filtre) et ses cartes (filtrées).
-  const groups = (all ? S.sets : [set]).map((s) => {
+  /** Compteurs et cartes affichées d'une série ouverte. */
+  const openGroup = (s) => {
     const cards = S.cards.filter((c) => c.set_id === s.id);
     const scored = cards.filter((c) => c.rarity !== 'identite');
     return { set: s, scored: scored.length, have: scored.filter((c) => copiesOf(c.id).length > 0).length, shown: cards.filter(keep) };
-  });
+  };
+  // Cartes possédées hors des séries ouvertes (drop, don…) : groupes à part, sans progression
+  const extras = outsideGroups(copiesOf, keep);
+  const outside = !all && !S.sets.some((x) => x.id === set.id);
+  const groups = all ? [...S.sets.map(openGroup), ...extras] : outside ? extras.filter((g) => g.set.id === set.id) : [openGroup(set)];
   const scoredAll = groups.reduce((a, g) => a + g.scored, 0);
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
@@ -1091,7 +1141,7 @@ function drawCollection(focusId) {
     ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
     : all
       ? `<div class="cz-groups">${withCards.map(groupHtml).join('')}</div>`
-      : `<div class="cartes-grid">${groups[0].shown.map(cardCell).join('')}</div>`;
+      : `<div class="cartes-grid">${(groups[0]?.shown || []).map(cardCell).join('')}</div>`;
   el.innerHTML = `
     <section class="card cartes-block">
       <div class="cartes-series">
@@ -1100,6 +1150,7 @@ function drawCollection(focusId) {
           <select id="cartes-set" data-change="set">
             <option value="${ALL}" ${all ? 'selected' : ''}>Toutes les séries</option>
             ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === S.setId ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+            ${extras.map((g) => `<option value="${esc(g.set.id)}" ${g.set.id === S.setId ? 'selected' : ''}>${esc(g.set.name)} (pas ouverte)</option>`).join('')}
           </select>
         </div>
         <div class="cartes-progress">
@@ -1371,6 +1422,7 @@ async function loadPeer(id) {
       .eq('owner_id', id).is('recycled_at', null).order('obtained_at').order('id')),
   ]);
   if (mem.error) throw mem.error;
+  await loadOwnedOutside(copies.map((c) => c.card_id)); // ses cartes hors des séries ouvertes (drop, don…)
   const byCard = new Map();
   for (const cp of copies) {
     if (!byCard.has(cp.card_id)) byCard.set(cp.card_id, []);
@@ -1492,6 +1544,7 @@ function peerCell(c) {
 function peerGroupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `pv-g-${i}`;
+  if (g.extra) return `<section class="cz-group" aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(peerCell).join('')}</div></section>`;
   return `<section class="cz-group" aria-labelledby="${hid}">
     <div class="cz-group-head">
       <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
@@ -1518,7 +1571,7 @@ function peerZoomInfo(id) {
     shiny: cps.some((x) => x.shiny),
     serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
     missing: cps.length === 0,
-    setName: S.sets.find((s) => s.id === k.set_id)?.name || '',
+    setName: (S.sets.find((s) => s.id === k.set_id) || S.otherSets.get(k.set_id))?.name || '',
     setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
     lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
     kicker: `Collection de ${P.member?.pseudo || ''}`,
@@ -1558,22 +1611,27 @@ function peerHead(P) {
  */
 function peerHtml(P) {
   const all = P.setId === ALL;
-  const set = all ? null : S.sets.find((s) => s.id === P.setId);
+  const set = all ? null : S.sets.find((s) => s.id === P.setId) || S.otherSets.get(P.setId);
   const f = P.filters;
-  const groups = (all ? S.sets : [set].filter(Boolean)).map((s) => {
+  /** Compteurs et cartes affichées d'une série ouverte. */
+  const openGroup = (s) => {
     const cards = S.cards.filter((c) => c.set_id === s.id);
     const scored = cards.filter((c) => c.rarity !== 'identite');
     return { set: s, scored: scored.length, have: scored.filter((c) => peerCopies(c.id).length > 0).length, shown: cards.filter(peerKeep) };
-  });
+  };
+  // Ses cartes hors des séries ouvertes (drop, don…) : groupes à part, sans progression
+  const extras = outsideGroups(peerCopies, peerKeep);
+  const outside = !!set && !S.sets.some((x) => x.id === set.id);
+  const groups = all ? [...S.sets.map(openGroup), ...extras] : outside ? extras.filter((g) => g.set.id === set.id) : [set].filter(Boolean).map(openGroup);
   const scoredAll = groups.reduce((a, g) => a + g.scored, 0);
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
   const withCards = groups.filter((g) => g.shown.length);
   P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
-  const body = !S.sets.length ? '<p class="empty">Aucune série disponible pour le moment.</p>'
+  const body = !S.sets.length && !extras.length ? '<p class="empty">Aucune série disponible pour le moment.</p>'
     : !withCards.length ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
       : all ? `<div class="cz-groups">${withCards.map(peerGroupHtml).join('')}</div>`
-        : `<div class="cartes-grid">${groups[0].shown.map(peerCell).join('')}</div>`;
+        : `<div class="cartes-grid">${(groups[0]?.shown || []).map(peerCell).join('')}</div>`;
   return `${peerHead(P)}
     <section class="card cartes-block">
       <div class="cartes-series">
@@ -1582,6 +1640,7 @@ function peerHtml(P) {
           <select id="peer-set" data-change="peer-set">
             <option value="${ALL}" ${all ? 'selected' : ''}>Toutes les séries</option>
             ${S.sets.map((s) => `<option value="${esc(s.id)}" ${s.id === P.setId ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}
+            ${extras.map((g) => `<option value="${esc(g.set.id)}" ${g.set.id === P.setId ? 'selected' : ''}>${esc(g.set.name)} (pas ouverte)</option>`).join('')}
           </select>
         </div>
         <div class="cartes-progress">
