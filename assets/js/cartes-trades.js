@@ -69,6 +69,7 @@ async function fetchAll(build) {
 export async function mountTrades(el, ctx = {}) {
   el.innerHTML = `
     <div class="trd">
+      <div class="trd-sugg" id="trd-sugg" aria-live="polite"></div>
       <div class="trd-tabs" role="tablist" aria-label="Échanges de cartes"></div>
       <div class="trd-panel" id="trd-panel" role="tabpanel"></div>
       <dialog class="trd-dialog" id="trd-edit" aria-labelledby="trd-edit-title"><form class="trd-form" id="trd-form" novalidate></form></dialog>
@@ -86,6 +87,7 @@ export async function mountTrades(el, ctx = {}) {
     me: null, members: new Map(), cards: new Map(), copies: new Map(), trades: [], items: new Map(),
     wish: new Map(), balance: 0, tab: 'recues', pickWho: '', setNames: new Map(), setTotal: new Map(),
     peers: new Set(), matchesP: null,
+    sugg: [], suggAll: false, // bloc « Échanges possibles » : membres suggérés et affichage « Voir plus »
   };
   const E = { to: '', parent: null, give: new Set(), want: new Set(), giveP: 0, wantP: 0, message: '', busy: false,
     filt: { give: { q: '', set: '', rar: '', dup: false }, want: { q: '', set: '', rar: '', dup: false } }, peek: null };
@@ -451,6 +453,110 @@ export async function mountTrades(el, ctx = {}) {
   /** Redessine le panneau en gardant la place de l'utilisateur. */
   const render = () => keepPlace(renderPanel); // le re-rendu garde la place de l'utilisateur
 
+  /* ---------- Échanges possibles (bloc au-dessus des onglets) ----------
+     Deux listes : « Ils ont une carte de ta liste » (ils ont en double une carte que je souhaite) et
+     « Ils cherchent tes doublons » (ils souhaitent une carte que j'ai en double). Un membre dans les deux
+     listes est un échange gagnant-gagnant. Une seule requête (hg_trade_suggestions) ; sans elle, repli sur
+     les données de l'onglet Correspondances. */
+  /**
+   * Normalise une suggestion : { uid, want: [{card_id, copy_id}], give: [...], both }.
+   * @param {object} r ligne de hg_trade_suggestions (user_id, want, give, both)
+   */
+  const normSugg = (r) => ({
+    uid: r.user_id, want: Array.isArray(r.want) ? r.want : [], give: Array.isArray(r.give) ? r.give : [],
+    both: !!r.both && Array.isArray(r.want) && r.want.length > 0 && Array.isArray(r.give) && r.give.length > 0,
+  });
+  /**
+   * Recalcule les suggestions avec les données de l'onglet Correspondances (repli si la fonction SQL manque).
+   * @param {{wanted: object[], wishers: object[]}} data résultat de loadMatches()
+   * @returns {object[]} suggestions au même format que normSugg
+   */
+  function suggestFallback(data) {
+    const byUid = new Map();
+    const slot = (uid) => { if (!byUid.has(uid)) byUid.set(uid, { uid, want: [], give: [], both: false }); return byUid.get(uid); };
+    for (const r of computeMatches(data)) {
+      const item = { card_id: r.copy.card_id, copy_id: Number(r.copy.id) };
+      if (r.kind === 'want') slot(r.member).want.push(item); else slot(r.member).give.push(item);
+    }
+    for (const s of byUid.values()) s.both = s.want.length > 0 && s.give.length > 0;
+    return [...byUid.values()];
+  }
+  /**
+   * Charge les suggestions : hg_trade_suggestions, ou repli côté client si la fonction n'est pas encore en base.
+   * Une réponse vide (null) n'est pas une erreur : aucune suggestion.
+   * @returns {Promise<object[]>} suggestions normalisées, les plus utiles d'abord
+   */
+  async function loadSuggestions() {
+    const { data, error } = await sb.rpc('hg_trade_suggestions', { p_limit: 60 });
+    if (!error) return (Array.isArray(data) ? data : []).map(normSugg);
+    if (!/hg_trade_suggestions|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) throw error;
+    return suggestFallback(await loadMatches());
+  }
+  /**
+   * Ajoute au cache les exemplaires et cartes des suggestions (pour les vignettes et l'éditeur).
+   * @param {object[]} list suggestions
+   */
+  async function ensureSuggestCopies(list) {
+    const ids = list.flatMap((m) => [...m.want, ...m.give].map((it) => it.copy_id));
+    await ensureCopies(ids);
+  }
+  /**
+   * Charge puis dessine le bloc « Échanges possibles ». En cas d'erreur, un message discret (sans bloquer les onglets).
+   * @returns {Promise<void>}
+   */
+  async function refreshSuggest() {
+    const box = root.querySelector('#trd-sugg');
+    if (!box) return;
+    box.innerHTML = '<p class="trd-hint">Recherche d’échanges possibles…</p>';
+    try {
+      S.sugg = await loadSuggestions();
+      await ensureSuggestCopies(S.sugg);
+      drawSuggest();
+    } catch (e) {
+      box.innerHTML = `<p class="trd-hint">Échanges possibles indisponibles : ${esc(errMsg(e))}</p>`;
+    }
+  }
+  /** Une suggestion (membre) : vignettes des cartes concernées par côté et bouton qui ouvre l'éditeur pré-rempli. */
+  function suggestItemHtml(m) {
+    const who = memberOf(m.uid);
+    const wantIds = m.want.map((it) => String(it.copy_id)).filter(copyOf);
+    const giveIds = m.give.map((it) => String(it.copy_id)).filter(copyOf);
+    const parts = [];
+    if (wantIds.length) parts.push(`<section class="trd-sugg-part">
+        <h4 class="trd-side-title">Ils ont une carte de ta liste</h4>
+        <div class="trd-cards">${wantIds.map((id) => copyCard(copyOf(id))).join('')}</div></section>`);
+    if (giveIds.length) parts.push(`<section class="trd-sugg-part">
+        <h4 class="trd-side-title">Ils cherchent tes doublons</h4>
+        <div class="trd-cards">${giveIds.map((id) => copyCard(copyOf(id))).join('')}</div></section>`);
+    return `<article class="trd-sugg-item${m.both ? ' is-both' : ''}">
+      <header class="trd-who">${avatarHtml(who, 36)}<div class="trd-sugg-name"><h3>${esc(who.pseudo)}</h3>${m.both ? pill('Échange gagnant-gagnant', 'pill-ok') : ''}</div></header>
+      ${parts.join('')}
+      <div class="btn-row"><button class="btn btn-primary" type="button" data-act="sugg-open" data-to="${esc(m.uid)}"
+        data-give="${esc(giveIds.join(','))}" data-want="${esc(wantIds.join(','))}">Proposer un échange</button></div>
+    </article>`;
+  }
+  /** Dessine le bloc « Échanges possibles » à partir de S.sugg (6 membres, puis « Voir plus »). */
+  function drawSuggest() {
+    const box = root.querySelector('#trd-sugg');
+    if (!box) return;
+    const list = S.sugg;
+    if (!list.length) {
+      box.innerHTML = `<section class="card trd-sugg-box"><h2>Échanges possibles</h2>
+        <p class="muted small">Aucun échange possible pour le moment. Ils apparaissent quand un membre a en double une carte de ta liste de souhaits, ou souhaite une carte que tu as en double.</p></section>`;
+      return;
+    }
+    const shown = S.suggAll ? list : list.slice(0, 6);
+    const more = list.length > 6
+      ? `<div class="btn-row"><button class="btn btn-ghost" type="button" data-act="sugg-more" aria-expanded="${S.suggAll}">${S.suggAll ? 'Voir moins' : `Voir plus (${list.length - 6})`}</button></div>`
+      : '';
+    box.innerHTML = `<section class="card trd-sugg-box" aria-labelledby="trd-sugg-title">
+      <h2 id="trd-sugg-title">Échanges possibles</h2>
+      <p class="muted small">Ces membres ont ce qu’il te faut ou cherchent tes doublons. Ouvre une offre déjà pré-remplie.</p>
+      <div class="trd-sugg-list">${shown.map(suggestItemHtml).join('')}</div>
+      ${more}
+    </section>`;
+  }
+
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
   /** Filtres vides d'une colonne de l'éditeur (recherche, série, rareté, doublons seulement). */
   const freshFilter = () => ({ q: '', set: '', rar: '', dup: false });
@@ -795,11 +901,14 @@ export async function mountTrades(el, ctx = {}) {
     await finish(error, accept ? 'Échange conclu' : 'Offre refusée');
   }
   /**
-   * Annule une offre que j'ai envoyée (hg_trade_cancel). Pas de confirmation : l'annulation est réversible
-   * par une nouvelle offre.
+   * Annule une offre que j'ai envoyée (hg_trade_cancel), après confirmation comme pour l'acceptation.
    * @param {object} t offre
    */
   async function cancelOffer(t) {
+    const ok = await confirmBox('Annuler cette offre ?',
+      'Ton offre est retirée et les cartes que tu donnes sont à nouveau disponibles. Tu pourras en envoyer une nouvelle.',
+      { ok: 'Annuler l’offre' });
+    if (!ok) return;
     setPanelBusy(true);
     const { error } = await sb.rpc('hg_trade_cancel', { p_trade: t.id });
     await finish(error, 'Offre annulée');
@@ -815,6 +924,7 @@ export async function mountTrades(el, ctx = {}) {
     else toast(okMsg, 'ok');
     try { await load(); } catch (e) { toast(errMsg(e), 'error'); }
     render();
+    refreshSuggest(); // le bloc « Échanges possibles » suit les offres (une offre en attente bloque ses cartes)
     if (!error) { try { await ctx.refresh?.(); } catch (e) { console.warn('[cartes-trades] refresh', e); } }
   }
 
@@ -846,6 +956,12 @@ export async function mountTrades(el, ctx = {}) {
     if (act === 'gift') return sendOffer(true);
     if (act === 'retry') return start();
     if (act === 'compose') return openEditor({ to: S.pickWho });
+    if (act === 'sugg-more') { S.suggAll = !S.suggAll; return drawSuggest(); }
+    if (act === 'sugg-open') return openEditor({
+      to: b.dataset.to,
+      give: b.dataset.give ? b.dataset.give.split(',') : [],
+      want: b.dataset.want ? b.dataset.want.split(',') : [],
+    });
     if (act === 'open-match') return openEditor({
       to: b.dataset.to,
       give: b.dataset.give ? [b.dataset.give] : [],
@@ -917,6 +1033,7 @@ export async function mountTrades(el, ctx = {}) {
       if (!S.me?.id) throw new Error('Connexion requise.');
       await load();
       render();
+      refreshSuggest();
     } catch (e) {
       panel.innerHTML = `<div class="empty">Impossible de charger les échanges : ${esc(errMsg(e))}
         <div class="btn-row trd-retry"><button class="btn btn-ghost" type="button" data-act="retry">Réessayer</button></div></div>`;
