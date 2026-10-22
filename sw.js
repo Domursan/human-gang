@@ -9,7 +9,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v39';
+const CACHE_VERSION = 'v40';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -54,7 +54,7 @@ const PRECACHE = [
   'assets/css/admin-souvenirs.css', 'assets/js/admin-souvenirs/helpers.js', 'assets/js/admin-souvenirs/index.js', 'assets/js/admin-souvenirs/moments.js',
   'assets/js/admin-souvenirs/photos.js', 'assets/js/admin-souvenirs/reactions.js',
   'assets/js/aide.js', 'assets/js/assistance.js',
-  'assets/js/reglages-jetons.js', 'assets/js/tutos/index.js', 'assets/js/tutos/premiers-pas.js', 'assets/js/tutos/secret-santa.js',
+  'assets/js/reglages-jetons.js', 'assets/js/quest-track.js', 'assets/js/tutos/index.js', 'assets/js/tutos/premiers-pas.js', 'assets/js/tutos/secret-santa.js',
   'assets/js/tutos/irl-historique.js', 'assets/js/tutos/cartes-base.js', 'assets/js/tutos/cartes-avance.js',
   'assets/js/tutos/communaute.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js', 'assets/js/cartes-zoom.js', 'assets/js/cartes-place.js',

@@ -155,7 +155,7 @@ async function lireBadges() {
 /** Quêtes actives de la semaine (hg_card_quests_templates). Liste vide si la lecture échoue. */
 async function lireQuetes() {
   try {
-    const { data, error } = await sb.from('hg_card_quests_templates').select('code, label, reward, active, sort').eq('active', true).order('sort');
+    const { data, error } = await sb.from('hg_card_quests_templates').select('code, label, metric, reward, active, sort').eq('active', true).order('sort');
     if (error) throw error;
     return (data ?? []).filter((q) => q && q.label && Number.isFinite(Number(q.reward)));
   } catch (e) {
@@ -182,11 +182,28 @@ async function afficherBadges() {
   if (nb) nb.textContent = String(badges.length);
 }
 
-/** Page Paillettes : liste des quêtes lue sur la base, si elle répond. */
+/** Nombre de quêtes montrées sur l'affiche (une grille de 6 tuiles). */
+const QUETES_MONTREES = 6;
+
+/**
+ * Exemples de quêtes pour l'affiche : une quête par action différente, réparties sur toute la liste
+ * (sinon les premières de la liste se ressembleraient toutes).
+ * @param {object[]} quetes quêtes actives, triées par ordre d'affichage
+ * @returns {object[]} au plus QUETES_MONTREES quêtes
+ */
+function exemplesQuetes(quetes) {
+  if (quetes.length <= QUETES_MONTREES) return quetes;
+  const vues = new Set();
+  const uniques = quetes.filter((q) => { const k = q.metric || q.code; if (vues.has(k)) return false; vues.add(k); return true; });
+  const pas = uniques.length / QUETES_MONTREES;
+  return Array.from({ length: Math.min(QUETES_MONTREES, uniques.length) }, (_, i) => uniques[Math.floor(i * pas)]);
+}
+
+/** Page Paillettes : exemples de quêtes lus sur la base, si elle répond (le total est affiché dans la note). */
 function afficherQuetes(quetes) {
   const liste = document.getElementById('quetes');
   if (!liste || !quetes.length) return;
-  liste.replaceChildren(...quetes.map((q) => {
+  liste.replaceChildren(...exemplesQuetes(quetes).map((q) => {
     const d = el('div');
     d.append(el('div', 'q', q.label), el('div', 'v', `${fmt(q.reward)} ✦`));
     return d;
