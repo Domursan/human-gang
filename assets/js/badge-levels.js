@@ -1,8 +1,22 @@
 // ===== Humane Gang — badges à niveaux : outils partagés (aucune dépendance) =====
 // hg_badges : levels_enabled, metric, levels [{ level, threshold, name?, image_url? }], event_id
 // hg_user_badges.level (1 par défaut). Le calcul des niveaux se fait côté base (hg_award_level_badges).
+/*
+ * Rôle : fonctions de lecture des badges à niveaux (nom des niveaux, chiffres romains, pastilles, libellés de métriques).
+ * Aucun appel réseau : tout est calculé à partir de la définition du badge reçue.
+ * Pages : compte.html, membre.html, evenements.html, la célébration de badges (core/badges.js) et l'administration
+ *   des badges (admin/badges.js, admin-badges-edit.js, admin-events.js).
+ * Dépendances : aucune.
+ * Exporte : METRICS, METRIC_LABEL, metricCount, roman, sortedLevels, hasLevels, levelDef, nextLevelDef,
+ *   levelImage, levelLabel, levelPipsHtml.
+ */
 
-/** Métriques connues par la base (hg_metric_value). */
+/* ---------- Métriques ---------- */
+
+/**
+ * Métriques connues par la base (hg_metric_value).
+ * Chaque ligne : [code, libellé, forme au singulier, forme au pluriel].
+ */
 export const METRICS = [
   ['anciennete_annees', 'Années dans le gang', 'an', 'ans'],
   ['secret_santa', 'Secret Santa terminés', 'Secret Santa', 'Secret Santa'],
@@ -61,12 +75,6 @@ export function levelImage(badge, n) {
 export function levelLabel(badge, n) {
   const d = levelDef(badge, n);
   return `Niveau ${roman(n)}${d?.name ? ` · ${d.name}` : ''}`;
-}
-/** Niveau atteint pour une valeur de métrique (0 si aucun). */
-export function levelForValue(badge, value) {
-  let lvl = 0;
-  for (const l of sortedLevels(badge)) if (Number(value) >= l.threshold) lvl = Math.max(lvl, l.level);
-  return lvl;
 }
 
 /**

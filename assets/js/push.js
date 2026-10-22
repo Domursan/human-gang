@@ -1,14 +1,33 @@
 // ===== Humane Gang — notifications push sur cet appareil (F9) =====
 // Bloc « Notifications sur cet appareil » de la page Mon compte. Abonnement Web Push du navigateur (clé VAPID
 // publique lue dans hg_settings), enregistré dans hg_push_subscriptions. Masqué si le navigateur ne gère pas le push.
+/*
+ * Rôle : permet au membre d'activer ou de désactiver les notifications push sur CET appareil, depuis la page Mon compte.
+ * Page : compte.html (bloc « Notifications sur cet appareil »).
+ * Dépendances : core.js (client Supabase, toast, errMsg), sw.js (service worker qui reçoit les notifications).
+ * Tables / RPC : hg_settings (clé 'push_vapid_public'), hg_push_subscriptions (une ligne par appareil).
+ * Exporte : mountPushBlock.
+ */
 import { sb, toast, errMsg } from './core.js';
 
+/* ---------- Constantes ---------- */
+
+/** Délai maximal (ms) pour attendre le service worker avant d'abandonner le bloc. */
 const READY_TIMEOUT_MS = 4000;
 
+/* ---------- Prise en charge et clés ---------- */
+
+/**
+ * Le navigateur sait-il gérer les notifications push ? (contexte sécurisé, service worker, PushManager, Notification).
+ * @returns {boolean}
+ */
 const supported = () => window.isSecureContext && 'serviceWorker' in navigator
   && 'PushManager' in window && 'Notification' in window;
 
-/** Clé publique VAPID (hg_settings, valeur JSON chaîne). Null si absente ou illisible. */
+/**
+ * Clé publique VAPID (hg_settings, valeur JSON chaîne). Null si absente ou illisible.
+ * @returns {Promise<string|null>}
+ */
 async function loadPublicKey() {
   try {
     const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'push_vapid_public').maybeSingle();
@@ -55,12 +74,21 @@ export async function mountPushBlock(container, me) {
   const vapid = await loadPublicKey();
   const reg = await readyRegistration();
 
+  /**
+   * Met à jour le message d'état et le bouton.
+   * @param {string} text Message affiché.
+   * @param {{disabled?: boolean, label?: string|null}} [o] disabled : bouton désactivé ; label : nouveau libellé (null = inchangé).
+   */
   function setState(text, { disabled = false, label = null } = {}) {
     stateEl.textContent = text;
     btn.disabled = disabled;
     if (label !== null) btn.textContent = label;
   }
 
+  /**
+   * Relit l'état réel de l'abonnement sur cet appareil et adapte le message et le bouton.
+   * Les cas « indisponible » et « bloqué par le navigateur » désactivent le bouton.
+   */
   async function refresh() {
     if (!vapid || !reg) {
       setState('Notifications indisponibles pour le moment.', { disabled: true, label: 'Activer' });
@@ -75,6 +103,11 @@ export async function mountPushBlock(container, me) {
     else setState('Désactivées sur cet appareil.', { label: 'Activer' });
   }
 
+  /**
+   * Demande l'autorisation, crée l'abonnement du navigateur, puis l'enregistre en base.
+   * Si l'enregistrement échoue, l'abonnement est annulé pour ne pas rester orphelin.
+   * @throws {Error} Erreur de la base si l'enregistrement échoue.
+   */
   async function enable() {
     const perm = await Notification.requestPermission();
     if (perm !== 'granted') { toast('Notifications non autorisées.', 'error'); return; }
@@ -88,6 +121,11 @@ export async function mountPushBlock(container, me) {
     toast('Notifications activées sur cet appareil.', 'ok');
   }
 
+  /**
+   * Supprime la ligne de cet appareil en base, puis annule l'abonnement du navigateur.
+   * La base passe en premier : si elle échoue, l'abonnement reste actif et le message d'erreur est affiché.
+   * @throws {Error} Erreur de la base si la suppression échoue.
+   */
   async function disable() {
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return;

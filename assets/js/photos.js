@@ -1,13 +1,31 @@
 // ===== Humane Gang — photos : compression, envoi, URLs signées, lightbox (partagé IRL / Historique) =====
+/*
+ * Rôle : tout ce qui touche aux photos : envoi et suppression dans le stockage, adresses temporaires (signées)
+ * pour les afficher, visionneuse plein écran, et téléchargement de l'album d'une sortie en ZIP.
+ * Pages : irl.js et irl-history.js (sorties), historique.js (souvenirs), et l'administration (admin-sorties/, admin-souvenirs/).
+ * Dépendances : core.js (client Supabase, esc), config.js (adresse du projet pour l'album), reactions.js (barre de
+ *   réactions dans la visionneuse), ui-confirm.js (confirmation de suppression), icons.js (icônes).
+ * Stockage : bucket « hg-photos ». Fonction edge : hg-album (album ZIP).
+ * Exporte : PHOTO_BUCKET, uuid, uploadImage, removeObjects, signedUrls, signedUrl, openLightbox, thumbHtml, downloadAlbum.
+ */
 import { sb, esc } from './core.js';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { reactionBarHtml } from './reactions.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 
+/* ---------- Constantes ---------- */
+
+/** Nom du bucket de stockage des photos. */
 export const PHOTO_BUCKET = 'hg-photos';
+/** Durée de validité d'une adresse signée, en secondes (1 heure). */
 const SIGN_TTL = 3600; // secondes
 
+/**
+ * Identifiant unique au format UUID v4. Utilise crypto.randomUUID si le navigateur le fournit,
+ * sinon génère les octets à la main (les bits de version et de variante sont posés).
+ * @returns {string}
+ */
 export function uuid() {
   if (crypto.randomUUID) return crypto.randomUUID();
   const b = crypto.getRandomValues(new Uint8Array(16));
@@ -17,13 +35,24 @@ export function uuid() {
 }
 
 /* ---------- Stockage ---------- */
-/** Envoie un blob préparé par prepareImage ; le type MIME vient du blob. */
+/**
+ * Envoie un blob préparé par prepareImage ; le type MIME vient du blob. Une adresse en cache pour ce chemin est oubliée.
+ * upsert est désactivé : on n'écrase jamais une photo existante.
+ * @param {string} path Chemin dans le bucket.
+ * @param {Blob} blob Image à envoyer.
+ * @returns {Promise<string>} Le chemin (inchangé).
+ */
 export async function uploadImage(path, blob) {
   const { error } = await sb.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: blob.type || 'application/octet-stream', upsert: false, cacheControl: '3600' });
   if (error) throw error;
   forgetUrl(path);
   return path;
 }
+/**
+ * Supprime des fichiers du bucket (les chemins vides sont ignorés) et oublie leurs adresses en cache.
+ * @param {Array<string|null|undefined>} paths Chemins à supprimer.
+ * @returns {Promise<void>}
+ */
 export async function removeObjects(paths) {
   const list = paths.filter(Boolean);
   if (!list.length) return;
@@ -33,10 +62,21 @@ export async function removeObjects(paths) {
 }
 
 /* ---------- URLs signées (avec cache mémoire) ---------- */
+/** Adresses signées déjà obtenues : chemin -> { url, until }. until = instant (ms) à partir duquel l'adresse n'est plus sûre. */
 const urlCache = new Map(); // path -> { url, until }
+/**
+ * Oublie l'adresse signée d'un chemin (après un envoi ou une suppression).
+ * @param {string} path Chemin dans le bucket.
+ */
 function forgetUrl(path) { urlCache.delete(path); }
 
-/** Renvoie une Map path -> url signée, en lots. Les chemins introuvables sont absents de la Map. */
+/**
+ * Renvoie une Map path -> url signée, en lots de 100. Les adresses encore valables viennent du cache.
+ * Les chemins introuvables ou en erreur sont absents de la Map ; un lot en erreur ne bloque pas les autres.
+ * Une adresse est gardée 2 minutes de moins que sa durée réelle, pour ne jamais être servie expirée.
+ * @param {string[]} paths Chemins à signer.
+ * @returns {Promise<Map<string, string>>}
+ */
 export async function signedUrls(paths) {
   const out = new Map();
   const now = Date.now();
@@ -58,6 +98,11 @@ export async function signedUrls(paths) {
   }
   return out;
 }
+/**
+ * Adresse signée d'une seule photo (prise dans le cache si elle est encore valable).
+ * @param {string|null|undefined} path Chemin dans le bucket.
+ * @returns {Promise<string|null>} Adresse, ou null si absente ou en erreur.
+ */
 export async function signedUrl(path) {
   if (!path) return null;
   const c = urlCache.get(path);
@@ -68,14 +113,23 @@ export async function signedUrl(path) {
   return data.signedUrl;
 }
 
-/* ---------- Lightbox ---------- */
+/* ---------- Visionneuse (lightbox) ---------- */
+
+/** Icônes de la visionneuse (précédent, suivant, fermer, supprimer). */
 const ICON = {
   prev: svg('prev', { size: 22, stroke: 2 }),
   next: svg('chev', { size: 22, stroke: 2 }),
   close: svg('close', { size: 22, stroke: 2 }),
   trash: svg('trash2', { size: 18, stroke: 2 }),
 };
+/** État de la visionneuse, créée une seule fois : { d (dialogue), items, i (index affiché), opener, show }. */
 let lb;
+/**
+ * Construit la visionneuse (dialogue) la première fois, puis la renvoie.
+ * Elle affiche une photo, ses légendes, la barre de réactions et un bouton « Supprimer » si l'élément le permet.
+ * Flèches gauche / droite et clic sur le fond la pilotent. À la fermeture, l'image est retirée (libère la mémoire).
+ * @returns {{d: HTMLDialogElement, items: Array<object>, i: number, opener: Element|null, show: Function}}
+ */
 function ensureLightbox() {
   if (lb) return lb;
   const d = document.createElement('dialog');
@@ -97,6 +151,7 @@ function ensureLightbox() {
     <div class="lb-react" hidden></div>`;
   document.body.append(d);
   lb = { d, items: [], i: 0, opener: null };
+  /** Affiche la photo à l'index courant : image, légende, compteur, flèches, bouton supprimer, réactions. */
   const show = () => {
     const it = lb.items[lb.i];
     const img = d.querySelector('img');
@@ -112,6 +167,10 @@ function ensureLightbox() {
     rb.innerHTML = it.react ? reactionBarHtml('photo', it.react) : '';
   };
   lb.show = show;
+  /**
+   * Passe à la photo suivante (n = 1) ou précédente (n = -1), en boucle.
+   * @param {number} n Décalage.
+   */
   const step = (n) => { lb.i = (lb.i + n + lb.items.length) % lb.items.length; show(); };
   d.querySelector('.lb-prev').addEventListener('click', () => step(-1));
   d.querySelector('.lb-next').addEventListener('click', () => step(1));

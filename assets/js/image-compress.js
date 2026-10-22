@@ -2,14 +2,35 @@
 // Redimensionne le côté le plus long à MAX_SIDE px et réencode en WebP (qualité 0.85).
 // Repli JPEG si le navigateur ne sait pas écrire de WebP. Les GIF (animés) et SVG passent tels quels.
 // Une image déjà petite et plus légère en JPEG/WebP d'origine est envoyée telle quelle.
+/*
+ * Rôle : réduit le poids des photos avant de les envoyer au stockage (photos des membres, images de l'administration).
+ * Page : les pages qui envoient une image (irl.js, historique.js, et les pages d'administration : événements, thèmes, souvenirs, badges).
+ * Dépendances : aucune (API navigateur : createImageBitmap ou Image, canvas).
+ * Exporte : prepareImage, otherVariants, MAX_SIDE, WEBP_QUALITY (ces deux constantes ne sont utilisées que dans ce fichier).
+ */
 
+/* ---------- Constantes ---------- */
+
+/** Taille maximale du côté le plus long, en pixels. */
 export const MAX_SIDE = 1600;
+/** Qualité de l'encodage WebP (0 à 1). */
 export const WEBP_QUALITY = 0.85;
+/** Qualité de l'encodage JPEG de repli (0 à 1). */
 const JPEG_QUALITY = 0.85;
+/** Types non réencodés : un GIF pourrait perdre son animation, un SVG est déjà du vectoriel. */
 const KEEP_AS_IS = new Set(['image/gif', 'image/svg+xml']);
+/** Extension de fichier pour chaque type MIME accepté. */
 const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/svg+xml': 'svg' };
+/** Toutes les extensions possibles pour une image envoyée (utilisé pour nettoyer les anciennes versions). */
 const ALL_EXTS = ['png', 'jpg', 'webp', 'gif', 'svg'];
 
+/* ---------- Décodage et encodage ---------- */
+
+/**
+ * Décode un fichier image en bitmap ou en élément <img>, selon ce que le navigateur sait faire.
+ * @param {File} file Fichier image.
+ * @returns {Promise<ImageBitmap|HTMLImageElement>} Image décodée, prête à être dessinée.
+ */
 async function decode(file) {
   if ('createImageBitmap' in window) {
     try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { /* repli <img> */ }
@@ -24,6 +45,13 @@ async function decode(file) {
   } finally { URL.revokeObjectURL(url); }
 }
 
+/**
+ * Encode le contenu d'un canvas en Blob (version Promise de canvas.toBlob).
+ * @param {HTMLCanvasElement} canvas Canvas à encoder.
+ * @param {string} type Type MIME visé ('image/webp' ou 'image/jpeg').
+ * @param {number} quality Qualité (0 à 1).
+ * @returns {Promise<Blob|null>} Null si l'encodage est impossible.
+ */
 const toBlob = (canvas, type, quality) => new Promise((res) => canvas.toBlob(res, type, quality));
 
 /**

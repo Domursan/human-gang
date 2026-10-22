@@ -1,8 +1,21 @@
-import { sb } from './core.js';
 // ===== Informations diverses (Secret Santa) — liste unique des champs =====
 // Stockées dans hg_profile_info.data (jsonb, clé = id). Visibles par la personne et l'admin uniquement.
 // L'admin choisit, par édition, les clés transmises au Santa (hg_ss_editions.shared_fields).
 // type : 'text' (une ligne) | 'textarea' (plusieurs lignes)
+/*
+ * Rôle : liste des champs du formulaire « Mes informations » (livraison, tailles, goûts, réseaux, contraintes).
+ * Cette liste est la source unique : la page compte et les pages Secret Santa s'en servent pour afficher et pour
+ * savoir quels champs peuvent être transmis au Santa.
+ * Pages : compte.html (saisie), secret-santa.html, et la fiche d'un membre dans l'administration (admin-accounts/).
+ * Dépendances : core.js (client Supabase, pour lire le réglage « profile_fields »).
+ * Table : hg_settings (clé 'profile_fields') ; hg_profile_info (données de chaque membre).
+ * Exporte : INFO_GROUPS, INFO_FIELDS, INFO_LABEL, validateInfoGroups.
+ */
+import { sb } from './core.js';
+
+/* ---------- Liste d'origine ---------- */
+
+/** Liste d'origine des champs, groupés. Elle sert de repli si le réglage admin est absent ou invalide. */
 const DEFAULT_INFO_GROUPS = [
   { id: 'livraison', label: 'Livraison', fields: [
     { id: 'nom_complet', label: 'Nom et prénom (pour le colis)', type: 'text' },
@@ -56,14 +69,23 @@ const DEFAULT_INFO_GROUPS = [
     { id: 'idees_libres', label: 'Autres idées ou remarques', type: 'textarea' },
   ] },
 ];
-// ----- Réglage admin « profile_fields » (hg_settings, lot 2) -----
+/* ---------- Réglage admin « profile_fields » (hg_settings, lot 2) ---------- */
 // Les exports ci-dessous restent les mêmes (tableaux mis à jour sur place) : les pages qui les importent ne changent pas.
 // Sans la clé, ou si la valeur est invalide, la liste d'origine (DEFAULT_INFO_GROUPS) est utilisée.
+/** Groupes de champs en cours (copie de la liste d'origine, remplaçable par le réglage admin). */
 export const INFO_GROUPS = structuredClone(DEFAULT_INFO_GROUPS);
+/** Tous les champs à plat, avec leur groupe. Mis à jour sur place par flatten(). */
 export const INFO_FIELDS = [];
+/** Libellé de chaque champ, par identifiant. Mis à jour sur place par flatten(). */
 export const INFO_LABEL = {};
+/** Forme d'un identifiant de champ : minuscules, chiffres et « _ », 2 à 41 caractères. */
 const ID_RE = /^[a-z][a-z0-9_]{1,40}$/;
 
+/**
+ * Recalcule INFO_FIELDS et INFO_LABEL à partir de la liste de groupes, en gardant les mêmes objets
+ * (les pages qui les ont importés voient donc les changements).
+ * @param {Array<object>} groups Groupes { id, label, fields }.
+ */
 function flatten(groups) {
   INFO_FIELDS.splice(0, INFO_FIELDS.length, ...groups.flatMap((g) => g.fields.map((f) => ({ ...f, group: g.id, groupLabel: g.label }))));
   for (const k of Object.keys(INFO_LABEL)) delete INFO_LABEL[k];
@@ -71,7 +93,12 @@ function flatten(groups) {
 }
 flatten(INFO_GROUPS);
 
-/** Vérifie une liste de groupes (réglage) ; renvoie les groupes normalisés ou null. */
+/**
+ * Vérifie une liste de groupes (réglage) : 1 à 12 groupes, 1 à 60 champs par groupe, identifiants de champs uniques,
+ * libellés non vides, type 'text' ou 'textarea'. Les espaces de bord sont retirés des libellés.
+ * @param {*} raw Liste brute lue en base.
+ * @returns {Array<object>|null} Groupes normalisés, ou null si la liste est invalide.
+ */
 export function validateInfoGroups(raw) {
   if (!Array.isArray(raw) || !raw.length || raw.length > 12) return null;
   const seen = new Set();

@@ -2,7 +2,17 @@
 // Toutes les fonctions renvoient du HTML à insérer par innerHTML ; les chiffres réels restent
 // lisibles par les lecteurs d'écran (texte masqué visuellement), les segments sont décoratifs.
 // Styles : assets/css/cartes.css (section « Paillettes »).
+/*
+ * Rôle : la monnaie du site (les « Paillettes ») s'affiche de trois façons : icône, nombre formaté, ou afficheur
+ * 7 segments animé (pastille de solde, avec variation « +N » et clignotement au gain).
+ * Page : cartes.html (utilisé par cartes.js : solde et affichage des gains).
+ * Dépendances : aucune (HTML pur + Intl pour le format des nombres).
+ * Exporte : paillettesIcon, fmtPaillettes, lcdNumHtml, pastilleHtml, lcdSet, lcdBlink, lcdDelta.
+ */
 
+/* ---------- Format des nombres ---------- */
+
+/** Format des nombres à la suisse (espace comme séparateur de milliers). */
 const nf = new Intl.NumberFormat('fr-CH');
 
 /** Icône C « style pop » : étoile à quatre pointes droites, aplat jaune, contour noir épais. */
@@ -24,11 +34,22 @@ export function fmtPaillettes(n, { icon = true } = {}) {
     + '</span>';
 }
 
+/* ---------- Afficheur 7 segments ---------- */
+
 // Afficheur 7 segments : segments allumés par chiffre, géométrie 20 × 34 (reprise de la maquette « solde »).
+/** Segments allumés par chiffre (lettres de a à g, voir SEGR). */
 const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
+/** Position de chaque segment dans le viewBox 20 × 34 : [x, y, largeur, hauteur]. */
 const SEGR = { a: [3, 0, 14, 3], b: [17, 3, 3, 13], c: [17, 18, 3, 13], d: [3, 31, 14, 3], e: [0, 18, 3, 13], f: [0, 3, 3, 13], g: [3, 15, 14, 3] };
+/** Hauteur (px) et taille de l'icône pour chaque taille de pastille : 'lg' (en-tête) ou 'sm' (bouton). */
 const SIZES = { lg: { h: 40, ic: 40 }, sm: { h: 20, ic: 20 } };
 
+/**
+ * Un chiffre en 7 segments : les 7 segments éteints, puis ceux qui doivent être allumés par-dessus.
+ * @param {string} ch Chiffre (0 à 9) ; un autre caractère donne un chiffre éteint.
+ * @param {number} h Hauteur du chiffre en px.
+ * @returns {string} SVG du chiffre.
+ */
 function digitSvg(ch, h) {
   const on = SEG[ch] || '';
   let s = `<svg class="lcd-dg" viewBox="0 0 20 34" style="width:${(h * 20 / 34).toFixed(2)}px;height:${h}px" aria-hidden="true" focusable="false">`;
