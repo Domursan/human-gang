@@ -121,8 +121,8 @@ export default {
       page: "membre.html",
       steps: [
         { title: "Repère le badge", text: "Sur ta carte de membre, cherche le badge « Ancienneté » dans la section « Badges »." },
-        { title: "Lis ton niveau", text: "Le niveau actuel s'affiche sous le badge avec son nom (Bronze, Argent, Or, Platine ou Diamant) et des pastilles de progression." },
-        { title: "Connais les paliers", text: "Bronze à 1 an dans le gang, Argent à 2 ans, Or à 5 ans, Platine à 10 ans, Diamant à 20 ans." },
+        { title: "Lis ton niveau", text: "Le niveau actuel s'affiche sous le badge avec son nom ({{anciennete.noms_texte|Bronze, Argent, Or, Platine ou Diamant}}) et des pastilles de progression." },
+        { title: "Connais les paliers", text: "{{anciennete.paliers_texte|Bronze à 1 an dans le gang, Argent à 2 ans, Or à 5 ans, Platine à 10 ans, Diamant à 20 ans}}." },
         { title: "Compte depuis ta date d'arrivée", text: "Les années se comptent depuis la date d'arrivée renseignée dans le gang, pas depuis la création de ton compte si elles diffèrent." },
       ],
       tips: [
@@ -139,8 +139,8 @@ export default {
       steps: [
         { title: "Ouvre Assistance", text: "La page Assistance s\'ouvre depuis la page Aide et tutos (bouton « Contacter l\'assistance »), avec ou sans connexion." },
         { title: "Indique ton pseudo", text: "Connecté, ton pseudo est rempli tout seul. Sans compte, tape le pseudo que tu utilises dans le gang." },
-        { title: "Choisis un sujet", text: "Dans la liste « Sujet » : « Problème de compte / connexion », « Secret Santa », « Sortie IRL », « Bug sur le site », « Mes données personnelles » ou « Autre »." },
-        { title: "Décris ton problème", text: "Dans « Message » (10 caractères minimum), explique ce qui se passe, ce que tu as essayé et sur quelle page." },
+        { title: "Choisis un sujet", text: "Dans la liste « Sujet » : {{support.sujets_texte|« Problème de compte / connexion », « Secret Santa », « Sortie IRL », « Bug sur le site », « Mes données personnelles » ou « Autre »}}." },
+        { title: "Décris ton problème", text: "Dans « Message » ({{support.message_min_texte|10 caractères}} minimum), explique ce qui se passe, ce que tu as essayé et sur quelle page." },
         { title: "Indique ton pseudo Discord", text: "Champ « Ton pseudo Discord pour la réponse ». Obligatoire sans compte, facultatif connecté. Clique sur « Envoyer la demande »." },
       ],
       tips: [

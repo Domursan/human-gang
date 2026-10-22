@@ -270,6 +270,11 @@ class Q {
 // Scénarios des affiches et des tutos : valeurs de réglages surchargées (S.cardsCfg fusionné dans la configuration, S.badgesCfg = hg_settings.badges).
 if (S.cardsCfg) Object.assign(window.__CARDS.config, S.cardsCfg);
 if (S.badgesCfg) DB.hg_settings.push({ key: 'badges', value: S.badgesCfg });
+// S.supportCfg = hg_settings.support ; S.ancienneteLevels = niveaux du badge Ancienneté (hg_badges.levels).
+if (S.supportCfg) DB.hg_settings.push({ key: 'support', value: S.supportCfg });
+// S.settingsExtra = { clé: valeur } : autres réglages hg_settings (irl, invites…).
+if (S.settingsExtra) for (const [key, value] of Object.entries(S.settingsExtra)) DB.hg_settings.push({ key, value });
+if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Ancienneté', description: 'Années dans le gang', image_url: null, sort: 999, levels_enabled: true, metric: 'anciennete_annees', levels: S.ancienneteLevels });
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */

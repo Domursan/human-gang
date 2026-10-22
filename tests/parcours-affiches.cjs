@@ -82,6 +82,22 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     check(tutoRepli.includes('Il coûte 100 Paillettes'), 'tuto, réglages illisibles : repli 100 affiché');
     check(page.errs.length === 0, 'tuto, réglages illisibles : aucune erreur de page');
     await page.ctx.close();
+
+    // 7. Paliers d'ancienneté (hg_badges.levels) et assistance (hg_settings.support) suivent les réglages admin.
+    page = await openPage(browser, { page: 'aide', fixture: FIXTURE, hash: '#monter-les-niveaux-d-anciennete', width: 1280,
+      scenario: { ancienneteLevels: [{ name: 'Cuivre', level: 1, threshold: 1 }, { name: 'Jade', level: 2, threshold: 4 }] } });
+    await sleep(300);
+    const anc = await page.evaluate(() => document.querySelector('#aide-tuto-view')?.textContent ?? '');
+    check(anc.includes('Cuivre à 1 an dans le gang, Jade à 4 ans'), 'tuto ancienneté : paliers lus dans les niveaux du badge');
+    check(anc.includes('(Cuivre ou Jade)'), 'tuto ancienneté : noms des niveaux lus dans le badge');
+    await page.ctx.close();
+    page = await openPage(browser, { page: 'aide', fixture: FIXTURE, hash: '#demander-de-l-aide', width: 1280,
+      scenario: { supportCfg: { message_min: 1, sujets: ['Compte', 'Autre'] } } });
+    await sleep(300);
+    const sup = await page.evaluate(() => document.querySelector('#aide-tuto-view')?.textContent ?? '');
+    check(sup.includes('(1 caractère minimum)'), 'tuto assistance : minimum de caractères lu dans les réglages');
+    check(sup.includes('« Compte » ou « Autre »'), 'tuto assistance : sujets lus dans les réglages');
+    await page.ctx.close();
   } catch (e) {
     check(false, 'exception : ' + (e && e.stack ? e.stack.split('\n')[0] : e));
   } finally {

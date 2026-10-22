@@ -10,14 +10,21 @@ import { sb } from './core/supabase.js';
 /* ---------- Sources ---------- */
 // Espaces de noms utilisés dans les jetons : « cartes.<champ> » lit hg_card_cfg(), les autres lisent hg_settings[<clé>].
 // Les clés sont celles de hg_settings ; « cartes » n'est pas une clé (la RPC hg_card_cfg lit hg_settings.cards).
-const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss'];
+const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss', 'support'];
 
 /** Valeurs lues, par espace de noms : { cartes: {...}, badges: {...}, irl: {...}, invites: {...}, ss: {...} }. Vide tant que non chargées. */
-let lues = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {} };
+let lues = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, anciennete: {} };
 let chargement = null; // promesse de la lecture (une seule par page)
 
 /** Vrai pour un objet simple (pas un tableau, pas null). */
 const estObjet = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * Liste lisible en français : « a », « a ou b », « a, b ou c ».
+ * @param {string[]} items éléments déjà mis en forme
+ * @returns {string} la liste
+ */
+const listeEnFrancais = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ou ${items[items.length - 1]}`);
 
 /* ---------- Chargement ---------- */
 /**
@@ -29,7 +36,7 @@ const estObjet = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 export function chargerReglages() {
   if (chargement) return chargement;
   chargement = (async () => {
-    const out = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {} };
+    const out = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, anciennete: {} };
     try {
       const { data, error } = await sb.rpc('hg_card_cfg');
       if (!error && estObjet(data)) out.cartes = data;
@@ -42,6 +49,28 @@ export function chargerReglages() {
       for (const r of data ?? []) if (CLES_SETTINGS.includes(r.key) && estObjet(r.value)) out[r.key] = r.value;
     } catch (e) {
       console.warn('[réglages] réglages du site illisibles, valeurs actuelles affichées :', e?.message || e);
+    }
+    // Textes calculés de l'assistance (hg_settings.support, lisible sans compte) : minimum de caractères et liste des sujets.
+    const sup = out.support;
+    const mini = Number(sup.message_min);
+    if (Number.isInteger(mini) && mini >= 1) sup.message_min_texte = `${fmt(mini)} caractère${mini > 1 ? 's' : ''}`;
+    const sujets = Array.isArray(sup.sujets) ? sup.sujets.filter((x) => typeof x === 'string' && x.trim()) : [];
+    if (sujets.length) sup.sujets_texte = listeEnFrancais(sujets.map((x) => `« ${x.trim()} »`));
+    // Paliers du badge Ancienneté (hg_badges.levels, réglables dans l'admin ; lecture réservée aux membres).
+    try {
+      const { data, error } = await sb.from('hg_badges').select('levels').eq('code', 'anciennete').maybeSingle();
+      if (error) throw error;
+      const niveaux = (Array.isArray(data?.levels) ? data.levels : [])
+        .filter((l) => l && typeof l.name === 'string' && l.name.trim() && Number.isFinite(Number(l.threshold)))
+        .sort((a, b) => Number(a.threshold) - Number(b.threshold));
+      if (niveaux.length) {
+        const an = (n) => `${fmt(n)} an${Number(n) > 1 ? 's' : ''}`;
+        out.anciennete.noms_texte = listeEnFrancais(niveaux.map((l) => l.name.trim()));
+        out.anciennete.paliers_texte = niveaux
+          .map((l, i) => `${l.name.trim()} à ${an(Number(l.threshold))}${i === 0 ? ' dans le gang' : ''}`).join(', ');
+      }
+    } catch (e) {
+      console.warn('[réglages] paliers d’ancienneté illisibles, valeurs actuelles affichées :', e?.message || e);
     }
     lues = out;
     return lues;
