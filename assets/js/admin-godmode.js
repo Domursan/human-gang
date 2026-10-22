@@ -1,8 +1,13 @@
 // ===== Humane Gang — administration : confirmation « Refaire le tirage » (le mode sans limite se règle dans la coquille, core/godmode.js) =====
+// Ce module ne fait qu'une chose : demander confirmation avant de supprimer les attributions d'une édition Secret Santa
+// et de refaire le tirage. Le choix « prévenir les participants par le bot » est renvoyé à l'appelant.
+// Utilisé par admin/ss-events.js. Dépendances : core.js (esc, $). Export : confirmRedo.
 import { esc, $ } from './core.js';
 
 /* ---------- Confirmation « Refaire le tirage » (dialog dédié, avec choix de prévenir les participants) ---------- */
+// Dialogue créé une seule fois, puis réutilisé à chaque demande.
 let _dlg = null;
+/** Construit le dialogue au premier appel (ajouté au body), puis renvoie toujours le même élément. */
 function shell() {
   if (_dlg) return _dlg;
   const d = document.createElement('dialog');
@@ -40,6 +45,7 @@ export function confirmRedo({ year, participants, assignments = null, manual = f
   d.returnValue = '';
   const opener = document.activeElement;
   d.showModal();
+  // Le dialogue se résout à sa fermeture : « ok » si le bouton principal a été cliqué, et la case « prévenir » est lue à ce moment.
   return new Promise((resolve) => d.addEventListener('close', () => {
     resolve({ ok: d.returnValue === 'ok', notify: d.querySelector('input[name="notify"]').checked });
     if (opener?.isConnected) opener.focus?.();
