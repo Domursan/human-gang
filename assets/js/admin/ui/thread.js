@@ -9,13 +9,19 @@
 //   Ctrl+Entrée (ou ⌘+Entrée) envoie ; Entrée seule saute une ligne.
 //   composer : false pour un fil en lecture seule (pas de zone de réponse, rien à envoyer en base).
 //   rowAction(m) : HTML optionnel sous la bulle (ex. bouton « Supprimer » avec data-row-act="<id>") ; onRowAction(message, bouton).
+// Utilisé par support.js (fil de l'assistance) et ideas.js (idée en lecture seule). Dépend de core/util.js, core/ui.js, time.js, common.js.
 import { esc, avatarHtml } from '../../core/util.js';
 import { toast } from '../../core/ui.js';
 import { clock } from './time.js';
 import { ICON } from './common.js';
 
+// Identifiant unique par fil (pour relier le libellé à la zone de saisie).
 let seq = 0;
 
+/**
+ * Affiche le fil dans `el` et renvoie son API.
+ * @returns {{update: (messages: object[]) => void, destroy: () => void}}
+ */
 export function createThread(el, opts = {}) {
   const uid = `ui-thread-${++seq}`;
   const state = { messages: opts.messages || [], me: opts.me ?? null, busy: false };
@@ -46,11 +52,16 @@ export function createThread(el, opts = {}) {
   const $send = el.querySelector('.ui-send');
   const $sendTxt = el.querySelector('.ui-send-txt');
 
+  /** Vrai si le message est celui de l'admin (côté droit) : `mine` s'il est fixé, sinon l'auteur est l'admin connecté. */
   function isMine(m) {
     if (typeof m.mine === 'boolean') return m.mine;
     return state.me != null && m.author?.id === state.me;
   }
 
+  /**
+   * Dessine le journal. Deux messages d'affilée du même auteur (même côté, même type de note) se suivent
+   * sans répéter l'avatar ni le nom (classe is-cont). Puis le journal défile tout en bas.
+   */
   function paintLog() {
     let prev = null;
     $log.innerHTML = state.messages.map((m) => {
@@ -85,6 +96,7 @@ export function createThread(el, opts = {}) {
     if (m) opts.onRowAction(m, b);
   });
 
+  // Bascule « note interne » : change le libellé du bouton d'envoi et le placeholder.
   $note.addEventListener('click', () => {
     const on = $note.getAttribute('aria-pressed') !== 'true';
     $note.setAttribute('aria-pressed', String(on));
@@ -93,6 +105,7 @@ export function createThread(el, opts = {}) {
     $sendTxt.textContent = on ? 'Ajouter la note' : 'Envoyer';
   });
 
+  // Ctrl+Entrée (ou ⌘+Entrée) envoie ; Entrée seule saute une ligne.
   $ta.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -100,6 +113,7 @@ export function createThread(el, opts = {}) {
     }
   });
 
+  // Envoi : verrouille la zone pendant l'écriture ; le texte n'est effacé qu'en cas de succès.
   $form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = $ta.value.trim();
@@ -126,10 +140,12 @@ export function createThread(el, opts = {}) {
   paintLog();
 
   return {
+    /** Remplace les messages affichés et redessine le journal. */
     update(messages) {
       state.messages = messages || [];
       paintLog();
     },
+    /** Vide le fil de l'élément (le brouillon de réponse est perdu). */
     destroy() {
       el.innerHTML = '';
       el.classList.remove('ui-thread');

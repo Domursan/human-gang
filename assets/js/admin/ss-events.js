@@ -1,5 +1,9 @@
 // Admin : actions de la section Secret Santa. Création, modification et exclusions dans le tiroir ; tirage,
 // refaire le tirage et suppression après confirmation. Les formulaires gardent leur logique d'enregistrement.
+// Utilisé par admin.js (bindSecretSanta) et ss-render.js (boutons de la page). Toutes les actions passent par une
+// délégation de clics installée une seule fois sur le document (la barre de zone et les tiroirs sont hors de la section).
+// Dépend de core.js, confirm, admin-godmode.js (confirmation « Refaire le tirage »), admin-ss-manual.js (tirage manuel),
+// admin-accounts.js (champs partagés), ui/drawer.js, state.js, loaders.js, ss-render.js et reglages-valeurs-lot3.js.
 import { sb, toast, errMsg, esc, fmtDateTime, $, isGodMode, notify, godTag } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { confirmRedo } from '../admin-godmode.js';
@@ -14,16 +18,24 @@ import { renderSS, SSV, ssCurrent, ssOpenEdition } from './ss-render.js';
 import { navigate } from './shell.js';
 import { reglage } from '../reglages-valeurs-lot3.js';
 
+// Adresse de la sous-section Secret Santa (retour après suppression d'une édition).
 const SS_ROUTE = 'vie/secret-santa';
+// Vrai une fois les écouteurs installés : bindSecretSanta ne s'exécute qu'une fois.
 let bound = false;
 
 /* ---------- Tiroirs : création, modification, exclusion ---------- */
 
+/**
+ * Contenu du tiroir « Nouvelle édition » : année proposée, budget par défaut, dates, champs partagés.
+ * Une édition en cours bloque la création (sauf en mode sans limite) : le formulaire est alors désactivé.
+ * @returns {{locked: boolean, html: string}}
+ */
 function createBody() {
   const god = isGodMode();
   const openEd = ssOpenEdition();
   const locked = openEd && !god; // une seule édition en cours à la fois (trigger en base, levé en mode sans limite)
   const nextYear = Math.max(new Date().getFullYear(), ...S.editions.map((e) => e.year + 1));
+  // Vrai si une édition porte déjà cette année (l'année proposée doit être libre).
   const yearExists = (y) => S.editions.some((e) => e.year === y);
   const defaultYear = yearExists(new Date().getFullYear()) ? nextYear : new Date().getFullYear();
   const note = openEd && !god
@@ -46,6 +58,7 @@ function createBody() {
   };
 }
 
+/** Ouvre le tiroir de création d'une édition ; le bouton « Créer » est désactivé si une édition est en cours. */
 function openCreate() {
   const body = createBody();
   const d = openDrawer({
@@ -59,6 +72,10 @@ function openCreate() {
   if (body.locked) d.el.querySelector('[data-drawer-submit]').disabled = true;
 }
 
+/**
+ * Crée l'édition à partir du formulaire, puis ouvre sa page. Un refus du serveur (trigger « une seule édition en cours »)
+ * recharge les éditions et explique la marche à suivre.
+ */
 async function createEdition(form) {
   const fd = new FormData(form);
   const year = Number(fd.get('year'));
@@ -83,6 +100,7 @@ async function createEdition(form) {
   return true;
 }
 
+/** Contenu du tiroir « Modifier » : statut, budget, dates et champs partagés, avec la date du tirage. */
 function editBody(ed) {
   return `
     <div class="grid-2">
@@ -96,6 +114,7 @@ function editBody(ed) {
     <p class="small muted">${ed.drawn_at ? `Tirage effectué le ${esc(fmtDateTime(ed.drawn_at))}.` : 'Tirage pas encore effectué.'} Le tirage passe automatiquement l'édition en « Envoi des cadeaux ».</p>`;
 }
 
+/** Ouvre le tiroir de modification de l'édition (la courante par défaut). */
 function openEdit(ed = ssCurrent()) {
   if (!ed) return;
   openDrawer({
@@ -108,6 +127,11 @@ function openEdit(ed = ssCurrent()) {
   });
 }
 
+/**
+ * Enregistre les modifications d'une édition. Deux passages demandent confirmation :
+ * aller vers « envoi » ou plus sans tirage, et passer à la révélation (tous verront qui offrait à qui).
+ * @returns {Promise<boolean>} false si la personne annule une confirmation (le tiroir reste ouvert).
+ */
 async function saveEdition(form, ed) {
   const fd = new FormData(form);
   const status = fd.get('status');
@@ -131,6 +155,10 @@ async function saveEdition(form, ed) {
 /** Fantôme (compte non inscrit) : exclu des choix, pas de l'historique. */
 function isGhost(id) { return !!S.byId.get(id)?.is_ghost; }
 
+/**
+ * Tiroir « Nouvelle exclusion » : deux personnes qui ne se tireront pas l'une l'autre.
+ * Ne propose que les comptes actifs ; une exclusion existante reste affichée avec son nom.
+ */
 function openExcl() {
   // Choix des deux personnes : comptes actifs seulement (les exclusions déjà saisies restent affichées avec leur nom).
   const parts = S.participants.filter((p) => !S.byId.get(p.user_id)?.is_ghost)
@@ -147,10 +175,15 @@ function openExcl() {
     submitLabel: 'Ajouter',
     onSubmit: (form) => addExclusion(form),
   });
+  // Deux personnes différentes par défaut : la seconde liste démarre sur la deuxième option.
   const b = document.getElementById('ex-b');
   if (b && b.options.length > 1) b.selectedIndex = 1;
 }
 
+/**
+ * Ajoute une exclusion. Les deux identifiants sont rangés dans l'ordre (user_a < user_b) pour qu'une paire
+ * n'existe qu'une fois, quel que soit l'ordre de saisie.
+ */
 async function addExclusion(form) {
   let a = $('#ex-a', form).value, b = $('#ex-b', form).value;
   if (!a || !b || a === b) throw new Error('Choisis deux personnes différentes.');
@@ -165,6 +198,7 @@ async function addExclusion(form) {
 
 /* ---------- Tirage, cartes, suppression ---------- */
 
+/** Retire une exclusion. Le bouton porte la paire dans data-del-excl, « idA|idB ». */
 async function deleteExclusion(btn) {
   const [a, b] = btn.dataset.delExcl.split('|');
   await busy(btn, async () => {
@@ -174,6 +208,10 @@ async function deleteExclusion(btn) {
   });
 }
 
+/**
+ * Tirage au sort (une seule fois par édition). Demande confirmation ; le bot prévient les participants
+ * (sans jamais révéler les paires).
+ */
 async function draw(btn, ed) {
   if (ed.drawn_at) return; // un seul tirage par édition
   const n = S.participants.length;
@@ -190,6 +228,7 @@ async function draw(btn, ed) {
   });
 }
 
+/** Tirage manuel : l'administrateur fixe chaque paire, le reste est complété au hasard (tiroir dédié). */
 async function drawManual(btn, ed) {
   if (ed.drawn_at) return;
   await busy(btn, () => openManualDraw({
@@ -203,15 +242,24 @@ async function drawManual(btn, ed) {
 }
 
 /* Mode sans limite : refaire le tirage (suppression des attributions puis nouveau tirage auto ou manuel) */
+/** Supprime les attributions de l'édition (première étape d'un nouveau tirage). */
 async function deleteAssignments(ed) {
   check(await sb.from('hg_ss_assignments').delete().eq('edition_id', ed.id));
 }
+/**
+ * Appelée quand le nouveau tirage échoue après la suppression : l'édition redevient « sans tirage » pour
+ * qu'on puisse le relancer. Échec de cette remise à zéro = simple avertissement dans la console.
+ */
 async function afterFailedRedraw(ed) {
   // Attributions supprimées mais nouveau tirage refusé : l'édition redevient « sans tirage » pour pouvoir relancer.
   try { check(await sb.from('hg_ss_editions').update({ drawn_at: null }).eq('id', ed.id)); } catch (e) { console.warn('[tirage] remise à zéro', e); }
   await loadEditions(); renderSS(); renderStats();
 }
 
+/**
+ * Refaire le tirage (mode sans limite uniquement) : confirmation, suppression des attributions, nouveau tirage.
+ * @param {boolean} manual true : tirage manuel (tiroir), false : tirage au hasard.
+ */
 async function redraw(btn, ed, manual) {
   const n = S.participants.length;
   if (manual) {
@@ -247,7 +295,12 @@ async function redraw(btn, ed, manual) {
 
 /* Suppression d'une édition : la base supprime en cascade inscrits, exclusions, attributions, vœux,
    conversations de l'édition et leurs messages. Le détail est compté avant la confirmation. */
+/**
+ * Supprime l'édition après confirmation. Le détail de ce qui sera effacé (comptes à rebours en base) est affiché d'abord.
+ * Une fois supprimée, la page revient à la liste.
+ */
 async function deleteEdition(btn, ed) {
+  /** Nombre de lignes de `table` liées à l'édition (requête de comptage seule). */
   const count = (table) => sb.from(table).select('*', { count: 'exact', head: true }).eq('edition_id', ed.id)
     .then((r) => { if (r.error) throw r.error; return r.count ?? 0; });
   let assign, wishes, convs;
@@ -273,6 +326,10 @@ async function deleteEdition(btn, ed) {
 
 /* ---------- Délégation (une fois) : la zone, la barre d'actions et les tiroirs sont hors de #secret-santa ---------- */
 
+/**
+ * Clics de la section : routé par l'attribut data-ss-act (ou data-del-excl) du bouton.
+ * La carte de base est téléversée ici (sélecteur de fichier, puis enregistrement de l'URL).
+ */
 async function onClick(ev) {
   const t = ev.target.closest('button, [data-del-excl]');
   if (!t) return;
@@ -284,7 +341,7 @@ async function onClick(ev) {
   if (act === 'draw') return draw(t, ed);
   if (act === 'draw-manual') return drawManual(t, ed);
   if (act === 'redraw' || act === 'redraw-manual') {
-    if (!isGodMode() || !ed.drawn_at) return;
+    if (!isGodMode() || !ed.drawn_at) return; // refaire le tirage : mode sans limite et tirage déjà fait
     return redraw(t, ed, act === 'redraw-manual');
   }
   if (act === 'card-upload') {
@@ -308,7 +365,10 @@ async function onClick(ev) {
   if (act === 'delete') { if (ed) await deleteEdition(t, ed); }
 }
 
-/** Liaison unique : clics (délégation sur le document), édition depuis l'en-tête, rafraîchissement mode sans limite. */
+/**
+ * Liaison unique : clics (délégation sur le document), édition depuis l'en-tête, rafraîchissement mode sans limite.
+ * Appelée par admin.js si l'administrateur a le droit Secret Santa ; sans effet au second appel.
+ */
 export function bindSecretSanta() {
   if (bound) return;
   bound = true;

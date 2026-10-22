@@ -2,11 +2,14 @@
 // Colonne 2 : liste chronologique des actions de l'administrateur (hg_admin_log) et des consultations de la
 // messagerie (hg_admin_access_log), filtres par type, recherche. Zone principale : détail de l'entrée, avec
 // avant / après lus dans le JSON `details`. Lecture seule. Pseudos résolus via hg_profiles (lecture admin).
+// Utilisé par admin.js (registerSub « pilotage/journal ») et overview.js (libellés d'actions).
+// Dépend de core.js (Supabase, utilitaires), admin/live.js (temps réel), admin/ui/list.js et ui/detail-header.js.
 import { sb, esc, errMsg, fmtDateTime, toast } from './core.js';
 import { onTableChange } from './admin/live.js';
 import { createList } from './admin/ui/list.js';
 import { renderDetailHeader } from './admin/ui/detail-header.js';
 
+// Entrées chargées par page (« Charger plus » en ajoute une autre).
 const PAGE = 50;
 // Libellés des actions journalisées par hg_admin_audit et les triggers. Une action inconnue s'affiche telle quelle.
 export const ACTION_LABEL = {
@@ -17,17 +20,24 @@ export const ACTION_LABEL = {
   carte_supprimee: 'Carte supprimée',
   ajustement_paillettes: 'Ajustement de Paillettes',
 };
+// Libellés du type de conversation consultée.
 const KIND_LABEL = { santa: 'Secret Santa', direct: 'Conversation directe' };
+/** Libellé d'une action (ou l'identifiant brut si l'action n'est pas connue). */
 export const actionLabel = (a) => ACTION_LABEL[a] ?? a;
 
+// État du journal : pseudos (identifiant -> pseudo), deux flux (actions, consultations), pagination, sélection et éléments d'écran.
 const LG = {
   pseudo: new Map(), rows: [], access: [], more: false, accessMore: false,
   sel: null, list: null, detail: null, dh: null, root: null,
 };
 
+/** Renvoie les données d'une réponse Supabase, ou lève son erreur. */
 const check = (res) => { if (res.error) throw res.error; return res.data; };
+/** Nom affiché d'un auteur : son pseudo, « Système » sans identifiant, « Compte supprimé » si inconnu. */
 const who = (id) => (id ? LG.pseudo.get(id) ?? 'Compte supprimé' : 'Système');
+/** Valeur lisible dans le détail : « — » si vide, JSON pour un objet, texte sinon. */
 const fmtVal = (v) => (v === undefined || v === null || v === '' ? '—' : (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+/** Vrai pour un objet simple (pas un tableau, pas null). */
 const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
 
 /* ---------- Filtres (puces) : un par action connue, « autres » et « consultations » ---------- */
@@ -38,6 +48,10 @@ const FILTERS = [
 ];
 
 /* ---------- Données ---------- */
+/**
+ * Fusionne les deux flux (actions et consultations) en une seule liste, la plus récente en tête.
+ * Chaque entrée reçoit un identifiant préfixé (l pour action, c pour consultation) pour ne pas se confondre.
+ */
 function entries() {
   const acts = LG.rows.map((r) => ({
     id: `l${r.id}`, kind: 'action', action: r.action, admin_id: r.admin_id, target_user: r.target_user,
@@ -63,12 +77,16 @@ function itemsOf() {
   });
 }
 
+/** Charge la table des pseudos (lecture admin) : identifiant -> pseudo, utilisée par who(). */
 async function loadPseudos() {
   const rows = check(await sb.rpc('hg_staff_directory')) ?? [];
   LG.pseudo = new Map(rows.map((r) => [r.id, r.pseudo]));
 }
 
-/** Charge la première page (reset) ou la page suivante des deux flux. */
+/**
+ * Charge la première page (reset) ou la page suivante des deux flux, puis redessine la liste.
+ * Chaque requête demande une ligne de plus que la page : cette ligne sert seulement à savoir s'il reste des entrées.
+ */
 async function loadPage(reset) {
   const fromA = reset ? 0 : LG.rows.length;
   const fromC = reset ? 0 : LG.access.length;
@@ -91,13 +109,17 @@ async function loadPage(reset) {
 }
 
 /* ---------- Détail ---------- */
+/** Liste « clé / valeur » des détails d'une entrée. Sans détail, un message le dit. */
 function detailsHtml(d) {
   const entries = Object.entries(d ?? {});
   if (!entries.length) return '<p class="muted small">Aucun détail enregistré.</p>';
   return `<dl class="log-details">${entries.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(fmtVal(v))}</dd></div>`).join('')}</dl>`;
 }
 
-/** Avant / après : deux colonnes lisibles si `details` a before/after (ou avant/après) ; le reste en liste. */
+/**
+ * Tableau « avant / après » si `details` contient before/after (ou avant/après) ; les autres champs sont listés à part.
+ * Une ligne est marquée « modifiée » quand sa valeur change. Sans ces clés, on affiche la liste simple.
+ */
 function changesHtml(d) {
   if (!isObj(d)) return detailsHtml(d);
   const bKey = ['before', 'avant'].find((k) => k in d);
@@ -116,6 +138,7 @@ function changesHtml(d) {
     </table>${others.length ? detailsHtml(Object.fromEntries(others.map((k) => [k, d[k]]))) : ''}`;
 }
 
+/** Dessine le détail de l'entrée `id` (ou un message si elle n'est pas dans les données chargées). */
 function renderDetail(id) {
   const box = LG.detail;
   if (!box) return;
@@ -150,13 +173,17 @@ function renderDetail(id) {
 }
 
 /* ---------- Colonne 2 ---------- */
+/** Redessine la liste à partir des données, affiche ou masque « Charger plus », et garde la sélection visible. */
 function paintList() {
   LG.list?.update(itemsOf());
   if (LG.moreRow) LG.moreRow.hidden = !(LG.more || LG.accessMore);
   if (LG.sel) LG.list?.select(LG.sel);
 }
 
-/** Colonne 2 (registerSub list) : liste du journal, filtres et recherche. */
+/**
+ * Colonne 2 (registerSub list) : liste du journal, filtres et recherche, avec le bouton « Charger plus ».
+ * @param {HTMLElement} el Conteneur de la colonne 2.
+ */
 export function listLog(el) {
   const host = document.createElement('div');
   const more = document.createElement('div');
@@ -191,6 +218,10 @@ export function openLog(_el, { id } = {}) {
 
 
 /* ---------- Zone principale ---------- */
+/**
+ * Zone principale (registerSub main) : prépare le détail, puis charge les pseudos et la première page.
+ * S'abonne aussi au temps réel : une nouvelle action recharge la première page.
+ */
 export function mountLogSection(container) {
   if (!container) return;
   LG.root = container;
@@ -203,4 +234,3 @@ export function mountLogSection(container) {
   })();
   onTableChange('journal', ['hg_admin_log'], async () => { await loadPage(true); });
 }
-

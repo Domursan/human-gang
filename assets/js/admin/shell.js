@@ -26,9 +26,12 @@ import { svg as iconSvg } from '../icons.js';
 import { DOMAINS, SECTION_PERM, visibleDomains, canSection } from './perms.js';
 import { resolve } from './router.js';
 
+// Deux seuils d'affichage : mobile (≤ 760 px) et large (≥ 1440 px, panneau d'infos visible).
 const MOBILE = matchMedia('(max-width: 760px)');
 const WIDE = matchMedia('(min-width: 1440px)');
 
+/* ---------- Icônes du rail et des domaines (chemins SVG, dessinés à trait) ---------- */
+// Clé = nom utilisé dans DOMAINS (icon) ou dans admin.html (data-icon). Une icône absente s'affiche vide.
 const ICON = {
   gauge: '<path d="M4 15.5a8 8 0 1 1 16 0"/><path d="M12 15.5l3.6-3.6"/><path d="M7 19h10"/>',
   users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.8 20c.6-3.4 3.1-5.5 6.2-5.5s5.6 2.1 6.2 5.5"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6"/><path d="M18.6 14.7c1.7.9 2.7 2.8 2.9 5.3"/>',
@@ -38,41 +41,63 @@ const ICON = {
   globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c-2.6 2.6-2.6 14.4 0 17c2.6-2.6 2.6-14.4 0-17z"/>',
   shield: '<path d="M12 3l7 3v5.5c0 4.3-3 7.8-7 9.5-4-1.7-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4"/>',
   sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
-  back: '<path d="M15 6l-6 6 6 6"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
 };
+/** HTML d'une icône du rail (SVG 24 × 24, masqué aux lecteurs d'écran). */
 const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name] || ''}</svg>`;
 // Libellés courts des onglets de la barre mobile
 const SHORT = { communication: 'Comm.', vie: 'Vie du gang', cartes: 'Cartes', membres: 'Membres', pilotage: 'Pilotage', site: 'Site' };
 
-const groups = new Map();   // groupe -> { el, ready }
-const providers = new Map(); // 'domaine/sous-section' -> fournisseur
+// Groupes de sous-sections (un conteneur par groupe) : groupe -> { el, ready }.
+const groups = new Map();
+// Fournisseurs enregistrés : 'domaine/sous-section' -> { group, main, open, list, info }.
+const providers = new Map();
+// Colonne 2 et panneau d'infos : un emplacement par sous-section, créé à la première visite.
 const slots = { list: new Map(), info: new Map() };
-const counts = new Map();   // sous-section -> n
+// Compteurs « à traiter » : sous-section -> nombre.
+const counts = new Map();
+// Numéro de la dernière navigation : une réponse lente d'une visite précédente est ignorée.
 let seq = 0;
+// Vrai une fois le routage démarré (startShell).
 let started = false;
+// Profil de l'administrateur connecté (pseudo, droits).
 let profile = null;
+// Clé de la sous-section affichée (ex. « membres/comptes »).
 let curKey = null;
+// Éléments de la coquille, remplis par initShell.
 let el = {};
 
-/** Enregistre le fournisseur d'une sous-section (voir l'API en tête de fichier). */
+/**
+ * Enregistre le fournisseur d'une sous-section (voir l'API en tête de fichier).
+ * Un groupe sans `group` forme son propre conteneur.
+ */
 export function registerSub(key, provider = {}) {
   providers.set(key, { group: key, ...provider });
 }
 
-/** Place la section `id` dans le conteneur `host` (sans changer ses droits). */
+/**
+ * Place la section `id` dans le conteneur `host` (sans changer ses droits).
+ * Ne fait rien si la section est déjà dans ce conteneur.
+ */
 export function place(host, id) {
   const s = document.getElementById(id);
   if (s && host && s.parentElement !== host) host.append(s);
 }
 
-/** Compteur « à traiter » d'une sous-section (0 = masqué). */
+/**
+ * Compteur « à traiter » d'une sous-section (0 = masqué). Met à jour la colonne et les domaines.
+ * @param {string} sub Identifiant de sous-section (ex. « idees »).
+ * @param {number} n
+ */
 export function setCount(sub, n) {
   counts.set(sub, n || 0);
   paintCounts();
 }
 
-/** Remplit l'en-tête de zone (boutons d'action) ; liste de nœuds ou de chaînes HTML sûres. */
+/**
+ * Remplit l'en-tête de zone (boutons d'action) ; liste de nœuds ou de chaînes HTML sûres.
+ * @param {Array<Node|string>} nodes
+ */
 export function setActions(nodes = []) {
   const host = document.getElementById('zone-actions');
   if (host) host.replaceChildren(...nodes);
@@ -80,12 +105,17 @@ export function setActions(nodes = []) {
 
 /* ---------- Construction (rail, colonne, onglets mobiles, menu) ---------- */
 
+/** Initiales d'un pseudo (deux lettres) pour l'avatar du rail. « ? » si le nom est vide. */
 function initials(name) {
   const w = String(name || '').trim().split(/\s+/).filter(Boolean);
   if (!w.length) return '?';
   return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).toUpperCase();
 }
 
+/**
+ * Construit le rail (domaines), les onglets mobiles, les sous-sections de chaque domaine et le pied du rail.
+ * Ne montre que les domaines et sous-sections permis.
+ */
 function buildChrome() {
   const doms = visibleDomains();
   el.doms.innerHTML = doms.map((d) => `<a class="shell-dom" href="#${d.id}/${d.subs[0].id}" data-dom="${d.id}" aria-label="${esc(d.label)}">
@@ -108,6 +138,10 @@ function buildChrome() {
 
 /* ---------- Compteurs ---------- */
 
+/**
+ * Affiche les compteurs « à traiter » : sur chaque sous-section, puis le total de chaque domaine
+ * (rail et onglets mobiles). Un compteur à 0 est masqué.
+ */
 function paintCounts() {
   if (!el.col) return;
   for (const [sub, n] of counts) {
@@ -128,6 +162,7 @@ function paintCounts() {
 
 /* ---------- Bouton « Mode sans limite » (réutilise core/godmode.js) ---------- */
 
+/** Met à jour le bouton du rail : état « actif » et libellé avec l'heure de fin. */
 function paintGod() {
   const btn = el.god;
   if (!btn) return;
@@ -142,11 +177,16 @@ function paintGod() {
 
 /* ---------- Menu compte ---------- */
 
+/** Ouvre ou ferme le menu du compte. À l'ouverture, le focus va sur son premier lien. */
 function setMenu(open) {
   el.menu.hidden = !open;
   el.avatar.setAttribute('aria-expanded', String(open));
   if (open) el.menu.querySelector('a, button')?.focus();
 }
+/**
+ * Branche le menu compte : ouverture par l'avatar, actions (préférences, déconnexion),
+ * fermeture par clic extérieur ou Échap, et le bouton « Mode sans limite ».
+ */
 function bindMenu() {
   el.avatar.addEventListener('click', (e) => { e.stopPropagation(); setMenu(el.menu.hidden); });
   el.menu.addEventListener('click', async (e) => {
@@ -174,16 +214,19 @@ function bindMenu() {
 
 /* ---------- Affichage d'une route ---------- */
 
+/** Marque le domaine et la sous-section courants (aria-current), dans le rail, les onglets et la colonne. */
 function markActive(domId, subId) {
   for (const a of document.querySelectorAll('.shell-dom, .shell-tab')) setCurrent(a, a.dataset.dom === domId);
   for (const a of document.querySelectorAll('.shell-sub')) {
     setCurrent(a, a.dataset.sub === subId && a.closest('[data-dom-subs]')?.dataset.domSubs === domId);
   }
 }
+/** Pose ou retire aria-current sur un lien. */
 function setCurrent(a, on) {
   if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
 }
 
+/** Colonne de navigation : affiche les sous-sections du domaine, son titre et le nombre d'éléments à traiter. */
 function paintColumn(dom) {
   for (const h of document.querySelectorAll('[data-dom-subs]')) h.hidden = h.dataset.domSubs !== dom.id;
   el.colEyebrow.textContent = 'Domaine';
@@ -192,6 +235,10 @@ function paintColumn(dom) {
   el.colSub.textContent = n ? `${n} élément${n > 1 ? 's' : ''} à traiter` : 'Rien à traiter';
 }
 
+/**
+ * Emplacement (div) de la colonne 2 ou du panneau d'infos d'une sous-section, créé à la première demande.
+ * @returns {{node: HTMLDivElement, fresh: boolean}} fresh : vrai si l'emplacement vient d'être créé.
+ */
 function slotFor(map, host, key) {
   let node = map.get(key);
   if (node) return { node, fresh: false };
@@ -203,6 +250,12 @@ function slotFor(map, host, key) {
   return { node, fresh: true };
 }
 
+/**
+ * Affiche une route. Sans sous-section (mobile), montre la liste des sous-sections du domaine.
+ * Sinon : montre le groupe de la sous-section (monté à la première visite), appelle son `open`,
+ * puis remplit la colonne 2 et le panneau d'infos. Une visite plus récente annule la précédente (seq).
+ * @param {{dom: object, sub?: object|null, id?: string|null, tab?: string|null}} r Route résolue (voir router.js).
+ */
 async function show(r) {
   const token = ++seq;
   el.zoneActions.replaceChildren(); // actions de zone : propres à chaque sous-section (posées par son open)
@@ -243,6 +296,7 @@ async function show(r) {
     groups.set(gid, g);
   }
   for (const x of groups.values()) x.el.hidden = x !== g;
+  // Montage unique du groupe : la section est placée, puis `main` s'exécute (une seule fois).
   if (!g.ready) {
     g.ready = (async () => {
       place(g.el, r.sub.section);
@@ -269,6 +323,7 @@ async function show(r) {
   el.zone.scrollTop = 0;
 }
 
+/** Affiche l'écran « Aucune section accessible » quand l'administrateur n'a aucun droit. */
 function renderNoAccess() {
   el.shell.dataset.screen = 'sub';
   el.shell.dataset.info = 'no';
@@ -278,7 +333,10 @@ function renderNoAccess() {
   el.noAccess.hidden = false;
 }
 
-/** Résout le fragment, le remplace si besoin (sans nouvelle entrée d'historique), puis affiche. */
+/**
+ * Résout le fragment courant. Si la route doit changer (ancienne adresse, droit manquant), remplace le fragment
+ * sans nouvelle entrée d'historique, puis reprend (3 niveaux au plus, pour éviter une boucle).
+ */
 function sync(depth = 0) {
   const r = resolve(location.hash, { mobile: MOBILE.matches });
   if (r.redirect !== undefined) {
@@ -293,6 +351,7 @@ function sync(depth = 0) {
 /**
  * Construit la coquille (rail, colonne, onglets mobiles, menu compte) et écoute le routage.
  * Le routage (et le montage de la première sous-section) démarre à startShell(), une fois les données chargées.
+ * @param {{me?: object|null}} [opts] me : profil de l'administrateur connecté.
  */
 export function initShell({ me = null } = {}) {
   profile = me;
@@ -315,7 +374,7 @@ export function initShell({ me = null } = {}) {
   WIDE.addEventListener('change', () => { if (started) sync(); });
 }
 
-/** Démarre le routage : affiche la sous-section demandée (ou la première permise). */
+/** Démarre le routage : affiche la sous-section demandée (ou la première permise). Ne fait rien au second appel. */
 export function startShell() {
   if (started) return;
   started = true;
@@ -323,7 +382,10 @@ export function startShell() {
   sync();
 }
 
-/** Ouvre une adresse de la coquille (palette, liens) : le fragment déclenche le routage ; s'il ne change pas, on réaffiche. */
+/**
+ * Ouvre une adresse de la coquille (palette, liens) : le fragment déclenche le routage ; s'il ne change pas, on réaffiche.
+ * @param {string} path Adresse sans « # », ex. « membres/comptes/<id> ».
+ */
 export function navigate(path) {
   const h = '#' + path;
   if (location.hash === h) sync(); else location.hash = path;

@@ -10,6 +10,7 @@
 //  - l'événement document « hg-admin:changed » ({ detail: { table } }) est émis pour chaque table.
 // Sans temps réel (réseau coupé, publication absente, client de test), le panel fonctionne comme avant :
 // l'indicateur reste gris et rien n'est journalisé dans la console.
+// Utilisé par admin.js (initLive) et par les sections (onTableChange). Dépend de core.js (sb), state.js, loaders.js.
 import { sb } from '../core.js';
 import { hasPerm } from '../core/perms.js';
 import { S } from './state.js';
@@ -20,6 +21,7 @@ import { renderIdeas } from './ideas.js';
 import { renderSupport } from './support.js';
 import { renderSS } from './ss-render.js';
 
+// Nom du canal Realtime, et temporisations : regroupement, puis nouvelles tentatives (2 s doublées jusqu'à 60 s).
 const CHANNEL = 'hg-admin-live';
 const DEBOUNCE_MS = 800;
 const RETRY_MIN_MS = 2000;
@@ -66,7 +68,11 @@ export function onTableChange(sectionId, tables, refresh) {
   return () => { const i = entries.indexOf(e); if (i >= 0) entries.splice(i, 1); };
 }
 
-/** Une saisie est-elle en cours (champ modifié ou ayant le focus dans la section, dialogue ouvert) ? */
+/**
+ * Une saisie est-elle en cours (champ ayant le focus dans la section, champ modifié, dialogue ouvert) ?
+ * Dans ce cas la section n'est pas redessinée, pour ne pas effacer ce que la personne écrit.
+ * Les cases, boutons et champs cachés ne comptent pas comme saisie.
+ */
 function busy(el) {
   if (document.querySelector('dialog[open]')) return true;
   if (!el) return false;
@@ -75,6 +81,7 @@ function busy(el) {
   return [...el.querySelectorAll('input, textarea')].some((f) => !f.matches('[type="search"], [type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="hidden"]') && f.value !== f.defaultValue);
 }
 
+/** Lance `fn` sans jamais laisser remonter une erreur (un rafraîchissement raté ne doit pas casser le live). */
 function safeRun(fn) {
   try {
     const r = fn();
@@ -82,6 +89,7 @@ function safeRun(fn) {
   } catch (err) { console.warn('[panel]', err?.message || err); }
 }
 
+/** Affiche le bandeau « Mises à jour disponibles » en tête de la section (une seule fois). */
 function showBanner(e) {
   const el = document.getElementById(e.id);
   if (!el) return;
@@ -99,11 +107,13 @@ function showBanner(e) {
     e.banner = b;
   }
 }
+/** Retire le bandeau d'une section, s'il est affiché. */
 function hideBanner(e) {
   if (e.banner) e.banner.remove();
   e.banner = null;
 }
 
+/** Actualise une section, ou affiche le bandeau si une saisie est en cours. */
 function runEntry(e) {
   const el = document.getElementById(e.id);
   if (el && busy(el)) { showBanner(e); return; }
@@ -112,15 +122,21 @@ function runEntry(e) {
 }
 
 /* ---------- Regroupement des événements ---------- */
+// Tables modifiées pendant la temporisation, et minuteur en cours.
 const pending = new Set();
 let timer = null;
 
+/** Note qu'une table a changé et repousse le traitement : une rafale d'écritures ne donne qu'un seul passage. */
 function queue(table) {
   pending.add(table);
   clearTimeout(timer);
   timer = setTimeout(flush, DEBOUNCE_MS);
 }
 
+/**
+ * Traite les tables modifiées : recharge leurs données, puis les vues et les sections concernées.
+ * Les tables sans rechargement (LOAD) ne font que notifier les sections et l'événement document.
+ */
 async function flush() {
   timer = null;
   const batch = [...pending];
@@ -128,24 +144,27 @@ async function flush() {
   if (!batch.length) return;
   await Promise.all(batch.map((t) => (LOAD[t] ? LOAD[t]().catch((err) => console.warn('[panel]', t, err?.message || err)) : null)));
   safeRun(renderStats);
+  // Copie de la liste : une section peut se retirer pendant le parcours.
   for (const e of entries.slice()) if (batch.some((t) => e.tables.has(t))) runEntry(e);
   for (const table of batch) document.dispatchEvent(new CustomEvent('hg-admin:changed', { detail: { table } }));
 }
 
 /* ---------- Canal ---------- */
-let channel = null;
+let channel = null;         // canal Realtime courant (null si fermé)
 let subscribed = [];        // tables abonnées
-let connected = false;
+let connected = false;      // état affiché par le voyant
 let lost = false;           // une coupure a eu lieu : rattrapage au retour
-let retryMs = RETRY_MIN_MS;
+let retryMs = RETRY_MIN_MS; // délai avant la prochaine tentative (doublé à chaque échec)
 let retryTimer = null;
-let stopped = false;
-let indicator = null;
+let stopped = false;        // page quittée : plus aucune tentative
+let indicator = null;       // voyant « En direct » du rail
 
+/** Tables publiées auxquelles la personne a le droit de lire. */
 function allowedTables() {
   return Object.keys(TABLE_PERM).filter((t) => hasPerm(TABLE_PERM[t]));
 }
 
+/** Ouvre le canal et s'abonne aux tables. Une erreur synchrone passe en « hors direct » et programme une reprise. */
 function connect() {
   if (stopped || !subscribed.length) return;
   let ch = null;
@@ -162,8 +181,12 @@ function connect() {
   }
 }
 
+/**
+ * Réagit à l'état du canal. Au retour après une coupure, relit toutes les tables abonnées :
+ * les changements manqués pendant la coupure sont ainsi rattrapés.
+ */
 function onStatus(ch, status) {
-  if (stopped || ch !== channel) return;
+  if (stopped || ch !== channel) return; // canal remplacé ou page quittée : on ignore
   if (status === 'SUBSCRIBED') {
     setConnected(true);
     retryMs = RETRY_MIN_MS;
@@ -177,6 +200,7 @@ function onStatus(ch, status) {
   }
 }
 
+/** Programme une reconnexion dans `retryMs`, puis double ce délai (plafonné à 60 s). */
 function scheduleRetry() {
   if (stopped) return;
   clearTimeout(retryTimer);
@@ -184,12 +208,14 @@ function scheduleRetry() {
   retryMs = Math.min(retryMs * 2, RETRY_MAX_MS);
 }
 
+/** Ferme le canal courant, s'il existe. */
 function drop() {
   const ch = channel;
   channel = null;
   if (ch) { try { sb.removeChannel(ch); } catch { /* sans effet */ } }
 }
 
+/** Arrête tout (page quittée) : plus de minuteur, plus de reconnexion. */
 function stop() {
   stopped = true;
   clearTimeout(timer);
@@ -198,6 +224,7 @@ function stop() {
 }
 
 /* ---------- Indicateur « En direct » ---------- */
+/** Ajoute le voyant dans le rail, s'il existe. */
 function mountIndicator() {
   const head = document.getElementById('shell-live'); // voyant du rail (coquille admin)
   if (!head) return;
@@ -208,10 +235,12 @@ function mountIndicator() {
   head.append(indicator);
   paintIndicator();
 }
+/** Mémorise l'état de la connexion et met le voyant à jour. */
 function setConnected(on) {
   connected = on;
   paintIndicator();
 }
+/** Affiche « En direct » ou « Hors direct », avec une info-bulle explicative. */
 function paintIndicator() {
   if (!indicator) return;
   indicator.dataset.state = connected ? 'on' : 'off';
@@ -220,6 +249,7 @@ function paintIndicator() {
 }
 
 /* ---------- Démarrage ---------- */
+// Vrai une fois initLive lancé : il ne se lance qu'une seule fois.
 let started = false;
 
 /**

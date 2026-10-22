@@ -7,10 +7,25 @@
 //
 // onSubmit reçoit le <form> ; s'il renvoie false ou lève une erreur, le tiroir reste ouvert
 // (l'erreur est affichée par toast). Le bouton principal est désactivé pendant l'envoi.
+// Utilisé par les sections admin (Secret Santa, invitations, idées…). Dépend de core.js (toast, errMsg, esc).
 import { esc, toast, errMsg } from '../../core.js';
 
+// Identifiant unique par tiroir (pour relier le titre au dialogue).
 let seq = 0;
 
+/**
+ * Ouvre un tiroir modal et renvoie ses éléments.
+ * @param {object} opts
+ * @param {string} opts.title Titre affiché en haut.
+ * @param {string} [opts.subtitle] Ligne sous le titre.
+ * @param {Node|string} [opts.body] Contenu : un élément, ou du HTML.
+ * @param {string} [opts.submitLabel] Libellé du bouton principal.
+ * @param {string} [opts.cancelLabel] Libellé du bouton d'annulation.
+ * @param {(form: HTMLFormElement) => any} [opts.onSubmit] Appelé à l'envoi ; renvoyer false garde le tiroir ouvert.
+ * @param {() => void} [opts.onClose] Appelé à la fermeture, quelle qu'en soit la cause.
+ * @param {boolean} [opts.wide] Tiroir plus large (formulaires à deux colonnes).
+ * @returns {{el: HTMLDialogElement, form: HTMLFormElement, body: HTMLElement, close: () => void}}
+ */
 export function openDrawer({ title, subtitle = '', body = '', submitLabel = 'Enregistrer', cancelLabel = 'Annuler', onSubmit = null, onClose = null, wide = false } = {}) {
   const id = `ui-drawer-${++seq}`;
   const dlg = document.createElement('dialog');
@@ -32,7 +47,9 @@ export function openDrawer({ title, subtitle = '', body = '', submitLabel = 'Enr
   if (body instanceof Node) bodyEl.append(body); else bodyEl.innerHTML = body;
   document.body.append(dlg);
 
+  /** Ferme le tiroir s'il est ouvert. */
   const close = () => { if (dlg.open) dlg.close(); };
+  // Le tiroir se retire du DOM à la fermeture, quelle qu'en soit la cause (bouton, Échap, clic sur le voile).
   dlg.addEventListener('close', () => { dlg.remove(); onClose?.(); });
   dlg.addEventListener('click', (e) => {
     if (e.target.closest('[data-drawer-close]')) { e.preventDefault(); close(); return; }
@@ -55,6 +72,7 @@ export function openDrawer({ title, subtitle = '', body = '', submitLabel = 'Enr
     }
   });
   dlg.showModal();
+  // Le focus va au premier champ du formulaire, sinon à la croix.
   (bodyEl.querySelector('input, select, textarea, button') || dlg.querySelector('.ui-drawer-x'))?.focus();
   return { el: dlg, form, body: bodyEl, close };
 }

@@ -6,16 +6,23 @@
 //   history : [{ id?, title, status { label, tone }, at }] (liste courte, plus récent d'abord)
 //   actions : [{ label, onClick }] boutons pleine largeur en bas (ex. « Ouvrir la fiche membre »)
 //   caption : ligne sous le nom (ex. « Organisateur ») ; emptyHistory (ou emptyText) : texte quand history est vide (défaut « Aucune autre demande. »)
+// Utilisé par la colonne de droite de l'assistance (admin/support.js). Dépend de ui/time.js et ui/common.js.
 import { esc, avatarHtml } from '../../core/util.js';
 import { monthYear, fmtDay, seenAgo } from './time.js';
 import { pill, statusSelect, bindStatus, ICON } from './common.js';
 
+// Identifiant unique par panneau (pour relier le libellé au sélecteur).
 let seq = 0;
 
+/**
+ * Affiche la fiche rapide dans `el` (remplace son contenu) et branche le statut et les actions.
+ * @returns {{destroy: () => void}} destroy retire les écouteurs et vide le panneau.
+ */
 export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus, history = [], actions = [], statsTitle = 'Fiche rapide', historyTitle = 'Historique des demandes', caption = '', emptyText, emptyHistory = emptyText ?? 'Aucune autre demande.' } = {}) {
   const uid = `ui-info-${++seq}`;
   el.classList.add('ui-info');
 
+  // En-tête : avatar, pseudo, puis ligne de légende (membre depuis, dernière visite).
   const head = `<div class="ui-info-head">
       <div class="ui-info-av">${avatarHtml(member, 52)}</div>
       <div class="ui-info-id">
@@ -24,6 +31,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
       </div>
     </div>`;
 
+  // Grille de chiffres clés (absente si aucune stat).
   const facts = stats.length ? `<section class="ui-info-sec">
       <h3 class="ui-grp">${esc(statsTitle)}</h3>
       <div class="ui-facts">${stats.map((s) => `<div class="ui-fact"><b>${esc(s.value)}</b><span>${esc(s.label)}</span></div>`).join('')}</div>
@@ -34,6 +42,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
       ${statusSelect({ id: `${uid}-st`, value: status.value, options: status.options, label: status.label || 'Statut', className: 'ui-status ui-status-wide', disabled: !onStatus })}
     </section>` : '';
 
+  // Historique : les autres demandes du même membre, ou un texte si la liste est vide.
   const hist = `<section class="ui-info-sec">
       <h3 class="ui-grp">${esc(historyTitle)}</h3>
       ${history.length ? `<ul class="ui-hist">${history.map((h) => `<li>
@@ -51,6 +60,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
   const select = el.querySelector('select');
   bindStatus(select, status?.options || [], onStatus);
 
+  // Délégation : un seul écouteur sur le panneau, qui retrouve l'action cliquée par son rang.
   const handlers = (e) => {
     const b = e.target.closest('[data-action]');
     if (!b) return;
@@ -60,6 +70,7 @@ export function renderInfoPanel(el, { member = {}, stats = [], status, onStatus,
   el.addEventListener('click', handlers);
 
   return {
+    /** Retire l'écouteur et vide le panneau. */
     destroy() {
       el.removeEventListener('click', handlers);
       el.innerHTML = '';

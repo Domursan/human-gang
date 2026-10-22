@@ -3,9 +3,12 @@
 // DOMAINS : coquille du panel (rail, colonne de navigation). Chaque sous-section pointe vers une section existante ;
 // les sous-sections « Jeu de cartes » partagent la section #cartes (un onglet chacune). Une sous-section sans droit
 // est masquée et jamais montée. Un domaine sans sous-section permise est masqué.
+// Utilisé par shell.js (rail, colonne), router.js (routage), live.js (tables visibles) et les sections (canSection).
+// Dépend de core/perms.js (permissions en cache, hasPerm) et core/util.js ($$).
 import { getCachedPerms, hasPerm } from '../core/perms.js';
 import { $$ } from '../core/util.js';
 
+/** Section (id de <section>) -> permission requise. null : pas de permission (apercu gère ses propres tuiles). */
 export const SECTION_PERM = {
   apercu: null,
   comptes: 'membres', acces: 'membres', membres: 'membres',
@@ -69,7 +72,11 @@ export const DOMAINS = [
   ] },
 ];
 
-/** Ai-je accès à cette section ? */
+/**
+ * Ai-je accès à cette section ?
+ * « apercu » est permis si au moins une de ses tuiles l'est ; « admin » exige l'administrateur.
+ * @param {string} id Identifiant de section (voir SECTION_PERM).
+ */
 export function canSection(id) {
   if (id === 'apercu') return TILE_SECTIONS.some(canSection);
   const need = SECTION_PERM[id];
@@ -79,19 +86,26 @@ export function canSection(id) {
 }
 /** Au moins une des sections est-elle accessible ? (chargement partagé de données) */
 export const anySection = (...ids) => ids.some(canSection);
+/** Vrai pour l'administrateur (et non pour un membre du Staff). */
 export const isAdminView = () => !!getCachedPerms()?.is_admin;
 
-/** Sous-section permise ? (sous-section = objet de DOMAINS) */
+/** Sous-section permise ? (sous-section = objet de DOMAINS, dont la section donne le droit) */
 export const canSub = (sub) => canSection(sub.section);
 
-/** Domaines permis, avec leurs sous-sections permises (sans domaine vide). */
+/**
+ * Domaines permis, avec leurs sous-sections permises (sans domaine vide).
+ * Une copie : DOMAINS n'est jamais modifié.
+ */
 export function visibleDomains() {
   return DOMAINS
     .map((d) => ({ ...d, subs: d.subs.filter(canSub) }))
     .filter((d) => d.subs.length);
 }
 
-/** Masque les sections non accessibles et les éléments réservés à l'administrateur. */
+/**
+ * Masque les sections non accessibles et les éléments réservés à l'administrateur.
+ * Appelé une fois au démarrage, avant que la coquille ne soit construite.
+ */
 export function applyPanelAccess() {
   for (const s of $$('.admin-section')) s.hidden = !canSection(s.id);
   if (!isAdminView()) for (const el of $$('[data-admin-only]')) el.hidden = true;

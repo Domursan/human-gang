@@ -12,31 +12,42 @@
 //   selectedId, label (nom accessible de la liste), empty (texte de l'état vide).
 //   defaultFilter : id du filtre affiché au départ (défaut : 'all').
 // Lignes par lots de 50 (bouton « Afficher plus »). Navigation : ↑ ↓ Début Fin, Entrée ; ↓ depuis la recherche va à la première ligne.
+// Utilisé par les colonnes 2 (assistance, idées, journal, Secret Santa…). Dépend de core/util.js, icons.js, time.js, common.js.
 import { esc, avatarHtml } from '../../core/util.js';
 import { svg } from '../../icons.js';
 import { relTime } from './time.js';
 import { fold, pill } from './common.js';
 
+// Lignes affichées par lot, et délai de la recherche (ms) avant de filtrer.
 const PAGE = 50;
 const DEBOUNCE = 150;
+// Compteur pour donner un identifiant unique à chaque liste (étiquettes des champs).
 let seq = 0;
 
+/** Ajoute le filtre « Toutes » en tête s'il manque, et donne à chaque filtre un test par défaut (tout passe). */
 function normalizeFilters(filters) {
   const list = (filters && filters.length ? filters : []).map((f) => ({ test: () => true, ...f }));
   if (!list.some((f) => f.id === 'all')) list.unshift({ id: 'all', label: 'Toutes', test: () => true });
   return list;
 }
 
+/** Texte de recherche par défaut : pseudo, nom, titre et extrait réunis. */
 function defaultSearchText(it) {
   return [it.member?.pseudo, it.name, it.title, it.excerpt].filter(Boolean).join(' ');
 }
 
+/**
+ * Construit la liste dans `el` (remplace son contenu) et renvoie son API.
+ * Les événements sont délégués à `el` : rien à détacher quand on vide l'élément.
+ * @returns {{update: (items: object[]) => void, select: (id: string|null) => void, destroy: () => void}}
+ */
 export function createList(el, opts = {}) {
   const keyOf = typeof opts.key === 'function' ? opts.key : (it) => String(it[opts.key || 'id']);
   const filters = normalizeFilters(opts.filters);
   const searchOpts = opts.search === false ? null : { placeholder: 'Rechercher…', label: 'Rechercher', ...(typeof opts.search === 'object' ? opts.search : {}) };
   const onSelect = opts.onSelect || (() => {});
   const uid = `ui-list-${++seq}`;
+  // État de la liste : éléments, filtre actif, recherche saisie, nombre de lignes montrées, sélection, minuteur de recherche.
   const state = {
     items: opts.items || [],
     filterId: opts.defaultFilter || 'all',
@@ -66,14 +77,17 @@ export function createList(el, opts = {}) {
   const $status = el.querySelector('.ui-sr[role="status"]');
   const $q = el.querySelector('input[type="search"]');
 
+  /** Nombre d'éléments qui passent le test d'un filtre (sans tenir compte de la recherche). */
   function count(f) { return state.items.reduce((n, it) => n + (f.test(it) ? 1 : 0), 0); }
 
+  /** Dessine les puces de filtre avec leurs compteurs. */
   function paintFilters() {
     const cur = state.filterId;
     $filters.innerHTML = filters.map((f) => `<button type="button" class="ui-chip" data-filter="${esc(f.id)}" aria-pressed="${f.id === cur}">
       <span>${esc(f.label)}</span> <span class="ui-count">${count(f)}</span></button>`).join('');
   }
 
+  /** Éléments visibles : filtre actif et recherche (texte replié, sans accents) réunis. */
   function visible() {
     const f = filters.find((x) => x.id === state.filterId) || filters[0];
     const q = fold(state.query.trim());
@@ -81,6 +95,7 @@ export function createList(el, opts = {}) {
     return state.items.filter((it) => f.test(it) && (!q || fold(text(it)).includes(q)));
   }
 
+  /** HTML d'une ligne : rendu personnalisé (opts.render) ou gabarit par défaut (avatar, nom, heure, titre, extrait, statut). */
   function rowHtml(it) {
     const id = keyOf(it);
     const name = it.member?.pseudo || it.name || '';
@@ -101,6 +116,7 @@ export function createList(el, opts = {}) {
       aria-selected="${sel}" aria-label="${esc(label)}" tabindex="-1">${av}${body}</li>`;
   }
 
+  /** Redessine tout : filtres, lignes du lot courant, état vide, bouton « Afficher plus », message pour lecteurs d'écran. */
   function paint() {
     paintFilters();
     const vis = visible();
@@ -127,6 +143,9 @@ export function createList(el, opts = {}) {
     });
   }
 
+  /**
+   * Sélectionne une ligne. `notify` : appelle onSelect (faux quand la sélection vient de l'extérieur, via select()).
+   */
   function choose(id, { notify = true } = {}) {
     state.selectedId = id;
     markSelected();
@@ -154,6 +173,7 @@ export function createList(el, opts = {}) {
     if (li) choose(li.dataset.id);
   });
 
+  // Navigation au clavier : flèches, Début/Fin, Entrée ou Espace. La sélection suit le focus.
   $rows.addEventListener('keydown', (e) => {
     const li = e.target.closest('[role="option"]');
     if (!li) return;
@@ -172,6 +192,7 @@ export function createList(el, opts = {}) {
     next.scrollIntoView({ block: 'nearest' });
   });
 
+  // Recherche : filtre après une courte pause (DEBOUNCE). Échap vide le champ ; ↓ passe à la première ligne.
   if ($q) {
     $q.addEventListener('input', () => {
       clearTimeout(state.timer);
@@ -199,10 +220,15 @@ export function createList(el, opts = {}) {
   paint();
 
   return {
+    /** Remplace les éléments de la liste et la redessine (filtre et recherche conservés). */
     update(items) {
       state.items = items || [];
       paint();
     },
+    /**
+     * Sélectionne l'élément `id` (sans appeler onSelect). S'il est au-delà du lot affiché, agrandit le lot pour le montrer.
+     * @param {string|number|null} id
+     */
     select(id) {
       state.selectedId = id == null ? null : String(id);
       const idx = visible().findIndex((it) => keyOf(it) === state.selectedId);
@@ -215,6 +241,7 @@ export function createList(el, opts = {}) {
       const li = [...$rows.children].find((x) => x.dataset.id === state.selectedId);
       if (li) li.scrollIntoView({ block: 'nearest' });
     },
+    /** Retire la liste : annule la recherche en attente et vide l'élément. */
     destroy() {
       clearTimeout(state.timer);
       el.innerHTML = '';

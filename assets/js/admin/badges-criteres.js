@@ -1,12 +1,16 @@
 // Admin › Vie › Badges : critères des badges automatiques et affichage sur la carte (hg_settings.badges).
 // Valeurs de repli = valeurs actuelles du code (migration 053 les reprend côté SQL) : sans clé, rien ne change.
+// Monté par badges.js, au-dessus de la grille des badges. Dépend de core.js (Supabase, toast, esc, $) et common.js (busy).
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { busy } from './common.js';
 
+// Valeurs par défaut (comme le code les utilise) : « Rétablir les valeurs par défaut » les remet dans le formulaire.
 const DEFAULTS = {
   criteres: { toujours_la_sorties: 5, paparazzi_photos: 50, fidele_annees: 3, veteran_editions: 5, globe_trotter_lieux: 3, saisonnier_themes: 7, bug_sujet: 'Bug sur le site' },
   max_carte: 8,
 };
+// Groupes du formulaire : chaque champ a une clé en chemin pointé (ex. « criteres.paparazzi_photos »),
+// des bornes (min, max), un libellé et une aide. text: true pour un champ texte au lieu d'un nombre.
 const GROUPS = [
   { g: 'Critères des badges automatiques', hint: 'Seuils au-delà desquels un badge est attribué automatiquement (calcul toutes les heures). Modifier un seuil n\'enlève pas les badges déjà attribués.', fields: [
     { k: 'criteres.toujours_la_sorties', l: 'Toujours là : sorties passées auxquelles le membre a répondu « oui »', min: 1, max: 999, help: 'Badge « Toujours là ». Défaut : 5.' },
@@ -22,18 +26,24 @@ const GROUPS = [
   ] },
 ];
 
+// État du formulaire : racine, réglages enregistrés (ou null), erreur de chargement, grille au-dessus de laquelle il s'affiche.
 const H = { host: null, stored: null, error: null, grid: null };
+/** Découpe un chemin pointé (« criteres.max ») en tableau de clés. */
 const pathOf = (k) => k.split('.');
+/** Lit la valeur au chemin pointé ; null si absente. */
 const getPath = (obj, k) => pathOf(k).reduce((o, p) => o?.[p], obj) ?? null;
+/** Écrit `v` au chemin donné, en créant les objets intermédiaires si besoin. */
 const setPath = (obj, path, v) => {
   let o = obj;
   for (const p of path.slice(0, -1)) { if (typeof o[p] !== 'object' || o[p] === null) o[p] = {}; o = o[p]; }
   o[path[path.length - 1]] = v;
 };
+/** Valeur à afficher pour un champ : celle enregistrée, sinon la valeur par défaut. */
 const shown = (f) => { const s = getPath(H.stored, f.k); return s != null ? s : getPath(DEFAULTS, f.k); };
+/** Identifiant HTML d'un champ (« bc-criteres_paparazzi_photos »). */
 const idOf = (f) => `bc-${f.k.replaceAll('.', '_')}`;
 
-/** Monte le formulaire au-dessus de la grille des badges (une seule fois). */
+/** Monte le formulaire au-dessus de la grille des badges (une seule fois), puis charge les réglages enregistrés. */
 export async function mountBadgesCriteres(grid) {
   if (H.host || !grid) return;
   H.grid = grid;
@@ -42,11 +52,12 @@ export async function mountBadgesCriteres(grid) {
   grid.before(H.host);
   H.host.addEventListener('click', onClick);
   H.host.addEventListener('submit', onSubmit);
-  render();
+  render(); // affiche d'abord les valeurs par défaut, puis les valeurs enregistrées
   await load();
   render();
 }
 
+/** Lit les réglages « badges » dans hg_settings. Une erreur est gardée pour être affichée, sans bloquer le formulaire. */
 async function load() {
   try {
     const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'badges').maybeSingle();
@@ -58,6 +69,7 @@ async function load() {
   }
 }
 
+/** Dessine le formulaire complet (les valeurs viennent de shown). */
 function render() {
   if (!H.host) return;
   H.host.innerHTML = `<section class="card bc-card" aria-labelledby="bc-h">
@@ -79,6 +91,7 @@ function render() {
   </section>`;
 }
 
+/** « Rétablir les valeurs par défaut » d'un groupe : remplit le formulaire, sans enregistrer. */
 function onClick(e) {
   const t = e.target.closest('[data-bc-default]');
   if (!t) return;
@@ -91,7 +104,10 @@ function onClick(e) {
   toast('Valeurs par défaut remplies : enregistre pour les appliquer', 'ok');
 }
 
-/** Lit et valide le formulaire. Renvoie la valeur complète à enregistrer ou lève une erreur en français. */
+/**
+ * Lit et valide le formulaire. Renvoie la valeur complète à enregistrer ou lève une erreur en français.
+ * Part de la copie des réglages enregistrés : les clés non présentes dans le formulaire sont conservées.
+ */
 function readForm(form) {
   const next = structuredClone(H.stored || {});
   for (const g of GROUPS) for (const f of g.fields) {
@@ -110,11 +126,13 @@ function readForm(form) {
   return next;
 }
 
+/** Enregistre le formulaire (upsert dans hg_settings). Une erreur de saisie s'affiche sous le formulaire. */
 async function onSubmit(e) {
   if (e.target.id !== 'bc-form') return;
   e.preventDefault();
   const form = e.target;
   const err = $('.form-error', form);
+  // Affiche le message d'erreur sous le formulaire (vide = masqué), et le fait voir.
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   showErr('');
   let next;

@@ -1,5 +1,7 @@
 // Admin : vue d'ensemble (Pilotage > Vue d'ensemble) : tuiles de chiffres clés, bloc « À traiter », activité récente.
 // Chaque élément n'apparaît que si les droits de la personne le permettent ; chaque ligne mène à sa sous-section.
+// Utilisé par admin.js (loadOverview, overviewTables) et par live.js (renderStats après chaque changement).
+// Dépend de core.js (Supabase, $, esc), state.js, perms.js, shell.js (compteurs) et admin-log.js (libellés d'actions).
 import { $, esc, sb, avatarHtml } from '../core.js';
 import { relTime } from './ui/time.js';
 import { S, pseudoOf } from './state.js';
@@ -7,19 +9,27 @@ import { canSection } from './perms.js';
 import { setCount } from './shell.js';
 import { actionLabel } from '../admin-log.js';
 
-// Données hors coquille, chargées à l'ouverture de la vue et à chaque changement temps réel
+// Données hors coquille, chargées à l'ouverture de la vue et à chaque changement temps réel :
+// nombre d'échanges de cartes en attente, et les dernières actions du journal.
 const OV = { trades: 0, activity: [] };
 
+/** « 1 idée » / « 3 idées » : nombre suivi du mot au singulier ou au pluriel. */
 const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
 /* =========================================================
    Vue d'ensemble : tuiles + « À traiter » + activité
    ========================================================= */
+/**
+ * Redessine la vue à partir des données déjà chargées (S, OV) : tuiles, « À traiter », activité, compteurs de navigation.
+ * Ne charge rien : c'est loadOverview qui charge OV avant d'appeler cette fonction.
+ */
 export function renderStats() {
   const ed = S.editions[0];
+  // Codes libres : ni utilisés, ni rattachés à un lien, et pas expirés.
   const free = S.invites.filter((i) => !i.used_by && !i.link_id && !(i.expires_at && new Date(i.expires_at) < new Date())).length;
   const newIdeas = S.ideas.filter((i) => i.status === 'nouvelle').length;
   const open = S.support.filter((s) => s.status === 'ouverte').length;
+  // Inscrits : compte seulement si l'édition affichée est bien la plus récente (sinon « – »).
   const partCount = ed && ed.id === S.editionId ? S.participants.length : null;
   // [section, route, valeur, libellé, à traiter]. Une tuile n'apparaît que si sa section est accessible.
   const tiles = [
@@ -74,7 +84,10 @@ export function renderStats() {
   if (canSection('assistance')) setCount('assistance', open);
 }
 
-/** Charge les données de la vue hors coquille (échanges en attente, dernières actions) puis la redessine. */
+/**
+ * Charge les données de la vue hors coquille (échanges en attente, dernières actions), puis redessine.
+ * Une requête qui échoue est signalée dans la console ; la vue s'affiche quand même avec les autres données.
+ */
 export async function loadOverview() {
   const jobs = [];
   if (canSection('cartes')) {
@@ -90,7 +103,10 @@ export async function loadOverview() {
   renderStats();
 }
 
-/** Tables à relire quand elles changent, selon les droits (temps réel). */
+/**
+ * Tables à relire quand elles changent, selon les droits (temps réel).
+ * @returns {string[]} Noms de tables abonnées par la vue d'ensemble.
+ */
 export function overviewTables() {
   return [...(canSection('journal') ? ['hg_admin_log'] : []), ...(canSection('cartes') ? ['hg_card_trades'] : [])];
 }
