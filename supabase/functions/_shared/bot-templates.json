@@ -65,7 +65,7 @@
     },
     "card_pull_announce": {
       "title": "Belle carte obtenue : {carte}",
-      "body": "{pseudo} vient de tirer une carte {rarete} !\n\nVa voir la collection sur le site."
+      "body": "{pseudo} {verbe} une carte {rarete} !\n\nVa voir la collection sur le site."
     },
     "card_trade_announce": {
       "title": "Échange conclu",
@@ -237,10 +237,11 @@
     },
     "card_pull_announce": {
       "group": "cards", "label": "Belle carte obtenue", "target": "Salon d'annonces", "color": "#E0A93B",
-      "description": "Publié dans le salon d'annonces quand un membre obtient une carte légendaire, mythique ou identité. Vérifié côté serveur (exemplaire récent).",
+      "description": "Publié dans le salon d'annonces quand un membre obtient ou fabrique une carte légendaire, mythique, identité ou unique. Vérifié côté serveur (exemplaire récent).",
       "fields": [["Rareté", "{rarete}"]],
       "vars": {
         "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
+        "verbe": { "label": "« a obtenu » ou « a fabriqué » (selon la façon dont la carte a été obtenue)", "example": "a fabriqué" },
         "carte": { "label": "Nom de la carte (avec « brillante » et le numéro si besoin)", "example": "Le Four à raclette N° 03/10" },
         "rarete": { "label": "Rareté", "example": "Légendaire" },
         "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }

@@ -756,7 +756,7 @@ async function rpcOpenBooster(free, reqId, offert = false) {
  * @param {object[]} cards cartes obtenues
  */
 function announceCards(cards) {
-  for (const c of cards) if (['legendaire', 'mythique', 'identite'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
+  for (const c of cards) if (['legendaire', 'mythique', 'identite', 'unique'].includes(c.rarity)) notify('card_pull', { card: c.card_id, rarity: c.rarity, shiny: c.shiny, serial: c.serial }).catch(() => {});
   if (cards.length) notify('card_wish', { cards: cards.map((c) => c.card_id) }).catch(() => {}); // alerte des membres qui souhaitent ces cartes (opt-in)
 }
 
@@ -1281,6 +1281,8 @@ async function detailAction(action, el) {
       const { data, error } = await sb.rpc('hg_card_craft', { p_card: S.detailId, p_shiny: shiny });
       if (error) throw error;
       toast(`Carte fabriquée${shiny ? ' (brillante)' : ''} · −${fmtP(data.cost)}`, 'ok');
+      // Belle carte fabriquée : même annonce que pour un booster, avec la mention « fabriqué » (hg-notify lit la source en base).
+      if (['legendaire', 'mythique', 'identite', 'unique'].includes(data.rarity)) notify('card_pull', { card: data.card_id, rarity: data.rarity, shiny: data.shiny, serial: data.serial, via: 'fabrication' }).catch(() => {});
       await refreshData();
       refreshed = true;
     } else if (action === 'recycle') {

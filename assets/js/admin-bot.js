@@ -26,7 +26,7 @@ const NOTIFY = [
   ['birthday', 'Anniversaires', 'chaque matin : MP + annonce si partagé'],
   ['support', 'Demandes d\'assistance', 'MP à toi'],
   ['messages', 'Nouveaux messages', 'MP au destinataire (pas à chaque message d\'une discussion en cours)'],
-  ['card_pull', 'Belle carte obtenue', 'annonce dans le salon : carte légendaire, mythique ou identité'],
+  ['card_pull', 'Belle carte obtenue', 'annonce dans le salon : carte légendaire, mythique, identité ou unique, obtenue ou fabriquée'],
   ['card_wish', 'MP : carte de ta liste de souhaits obtenue', 'MP aux membres qui ont la carte dans leur liste de souhaits et ont activé l\'alerte'],
   ['card_trade', 'Échange conclu', 'annonce dans le salon (désactivée par défaut)'],
   ['trade_offer', 'MP : nouvelle offre d\'échange', 'MP au destinataire d\'une offre ou contre-proposition'],
