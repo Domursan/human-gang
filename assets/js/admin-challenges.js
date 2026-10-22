@@ -243,7 +243,10 @@ async function saveChallenge(f, id) {
       : sb.from('hg_challenges').insert(res.row);
     const { error } = await q;
     if (error) throw error;
-    toast(id ? 'Défi mis à jour.' : 'Défi créé.', 'ok');
+    // Début dans le futur : le compteur restera à 0 jusque-là, on le dit clairement à l'admin.
+    const later = new Date(res.row.starts_at) > new Date(Date.now() + 60_000);
+    const debut = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(res.row.starts_at));
+    toast(`${id ? 'Défi mis à jour.' : 'Défi créé.'}${later ? ` Il commence le ${debut} : rien n'est compté avant.` : ''}`, 'ok');
     await reload();
   } catch (ex) {
     err.textContent = `Enregistrement impossible : ${errMsg(ex)}`;

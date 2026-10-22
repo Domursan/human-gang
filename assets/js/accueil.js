@@ -472,6 +472,11 @@ const CHALLENGE_UNIT = {
 function challengeStatus(c) {
   if (c.done) return c.credited ? txtIn('defis_libelles', 'atteint_recu', 'Atteint · récompense reçue') : txtIn('defis_libelles', 'atteint_verse', 'Atteint · récompense versée sous peu');
   if (c.ended) return txtIn('defis_libelles', 'termine', 'Terminé, objectif non atteint');
+  // Défi programmé : rien n'est compté avant son début, on l'annonce pour éviter un compteur « bloqué » à 0.
+  if (c.starts_at && new Date(c.starts_at) > new Date()) {
+    const quand = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(c.starts_at));
+    return `Commence le ${quand}`;
+  }
   return `Jusqu'au ${fmtDate(c.ends_at)}`;
 }
 /**
