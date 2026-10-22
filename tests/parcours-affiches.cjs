@@ -124,7 +124,19 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     const teaser = await page.evaluate(() => ({ cases: document.querySelectorAll('.secret').length, mystere: document.querySelectorAll('.mystere').length, texte: document.body.textContent }));
     check(teaser.cases === 12 && teaser.mystere === 12, `affiche teaser : 12 cases floutées avec « ??? » (${teaser.cases} / ${teaser.mystere})`);
     check(!teaser.texte.includes('{{') && !teaser.texte.includes('par jour') && !teaser.texte.includes('Badge'), 'affiche teaser : aucun jeton et aucune récompense affichée');
+    check(!teaser.texte.includes('Indice'), 'affiche teaser : plus aucun indice');
     check(page.errs.length === 0, `affiche teaser : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
+    await page.ctx.close();
+
+    // 10. Solutions : 12 secrets, solutions précises, récompenses qui suivent les réglages.
+    page = await openPage(browser, { page: 'affiches/secrets-solutions-a3', fixture: FIXTURE, scenario: { settingsExtra: { eggs: { recompenses } } }, width: 1123 });
+    const sol = await page.evaluate(() => ({ cases: document.querySelectorAll('.secret').length, texte: document.body.textContent,
+      konami: document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '' }));
+    check(sol.cases === 12, `affiche solutions : 12 secrets (${sol.cases})`);
+    check(sol.texte.includes('/secret.html') && sol.texte.includes('SECRETS') && sol.texte.includes('humane'), 'affiche solutions : solutions précises (page secrète, mot des lettres, mot humane)');
+    check(sol.konami === '250', `affiche solutions : récompense du code Konami suit le réglage (${sol.konami})`);
+    check(!sol.texte.includes('{{'), 'affiche solutions : aucun jeton non remplacé');
+    check(page.errs.length === 0, `affiche solutions : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
   } catch (e) {
     check(false, 'exception : ' + (e && e.stack ? e.stack.split('\n')[0] : e));
