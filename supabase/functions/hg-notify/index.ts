@@ -1,7 +1,13 @@
 // ===== Humane Gang — fonction edge « hg-notify » =====
+// Rôle : point d'entrée unique du site pour envoyer les messages du bot Discord (MP et annonces) quand un événement
+// se produit (tirage du Secret Santa, sortie créée, message reçu, échange conclu, carte offerte...).
 // Construit et envoie les messages du bot Discord (MP et annonces) à partir d'événements du site.
 // verify_jwt = true : seul un utilisateur connecté peut l'appeler ; on vérifie ensuite ses droits événement par événement.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatif).
+// Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, bot-media.ts, reglages.ts ;
+//   tables hg_settings, hg_profiles, hg_staff, hg_ss_*, hg_events, hg_conversations, hg_messages, hg_card_*,
+//   hg_dyn_events, hg_bot_log.
+// Exporte : rien (point d'entrée Deno.serve).
 //
 // Événements :
 //   ss_draw          { edition_id }  admin  → annonce + MP aux participants (opt-in)
@@ -21,7 +27,8 @@
 //                    Les annonces automatiques sont faites par la fonction hg-cron.
 //   card_pull        { card: uuid (hg_cards.id), rarity?, shiny?, serial? } membre → annonce « belle carte » dans le salon
 //                    si la carte est légendaire, mythique ou identité ET qu'un exemplaire obtenu il y a moins de 10 min
-//                    appartient à l'appelant (rarity/shiny/serial du client ignorés : lus en base). Désactivable (bot.notify.card_pull).
+//                    appartient à l'appelant (rarity et shiny du client ignorés : lus en base ; serial sert seulement à
+//                    choisir l'exemplaire). Désactivable (bot.notify.card_pull).
 //   card_trade       { trade_id: uuid } destinataire de l'offre (celui qui accepte) → annonce « échange conclu » dans le salon.
 //                    Facultative : seulement si bot.notify.card_trade === true (désactivée par défaut).
 //   trade_offer      { trade_id: uuid } auteur de l'offre (ou de la contre-proposition) → MP au destinataire « te propose
@@ -46,54 +53,120 @@ import { mentionFor, mentionMode, mentionWith, type MentionBot } from '../_share
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 import { botRules } from '../_shared/reglages.ts';
 
+/* ---------- Constantes et clients ---------- */
+
+/** Réponse JSON avec les en-têtes CORS (raccourci vers jsonResponse). */
 const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
+// Client avec la clé service role : la fonction lit les réglages et écrit le journal ; les droits sont vérifiés à la main.
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+/** Adresse du site sans « / » final ; sert à construire les liens des messages. */
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
+/** Lien vers une page du site, ou undefined si SITE_URL n'est pas configurée. */
 const link = (page: string) => (SITE ? `${SITE}/${page}` : undefined);
+/** Couleurs des embeds par type de message. */
 const COLOR = { ss: 0xe0909a, irl: 0xe2c77e, info: 0x7e93c9, accent: 0x9e3543, card: 0xe0a93b };
 const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-répétition)
 
+/** Réglages du bot (hg_settings.bot). Tous les champs sont facultatifs : une valeur absente désactive la fonction. */
 type Bot = MentionBot & {
   announce_channel_id?: string | null;
   admin_discord_id?: string | null;
   notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin', boolean>>;
 };
+/** Profil de l'appelant ou d'un destinataire, tel que lu par la fonction. */
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
 
+/** Erreur liée à la requête (droits, données absentes...). Son statut HTTP est renvoyé à l'appelant. */
 class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
 /* ---------- Discord : client partagé (_shared/discord.ts : 429, MP, salon) ---------- */
+
+/** Vrai si le jeton du bot est configuré. Alias de hasBotToken. */
 const hasToken = hasBotToken;
+/**
+ * Exécute un envoi Discord sans jamais faire échouer la fonction : l'erreur est seulement journalisée.
+ * Un message qui ne part pas ne doit pas empêcher la suite (autres MP, autres annonces).
+ * @param {() => Promise<unknown>} fn Envoi à exécuter.
+ * @param {string} label Nom de l'envoi, pour le journal.
+ * @returns {Promise<boolean>} true si l'envoi a réussi.
+ */
 async function trySend(fn: () => Promise<unknown>, label: string): Promise<boolean> {
   try { await fn(); return true; } catch (e) { console.error(`[hg-notify] ${label}`, e); return false; }
 }
+/**
+ * Embed Discord avec pied de page « Humane Gang » et horodatage ajoutés par défaut.
+ * @param {Record<string, unknown>} e Champs de l'embed.
+ * @returns {{embeds: object[]}} Corps à fusionner dans le message.
+ */
 const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Humane Gang' }, timestamp: new Date().toISOString(), ...e }] });
+/**
+ * Vrai si le profil peut recevoir un MP : il a accepté le bot et a un identifiant Discord valide.
+ * @param {Profile | null | undefined} p Profil.
+ * @returns {boolean} Vrai si le MP peut partir.
+ */
 const canDM = (p: Profile | null | undefined): p is Profile => !!p && p.bot_optin && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
 
 /* ---------- Données ---------- */
+
+/**
+ * Lit les réglages du bot (hg_settings.bot). Renvoie {} si rien n'est enregistré.
+ * @returns {Promise<Bot>} Réglages du bot.
+ */
 async function getBot(): Promise<Bot> {
   const { data } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
   return (data?.value ?? {}) as Bot;
 }
+/**
+ * Lit un profil par identifiant.
+ * @param {string} id Identifiant du membre.
+ * @returns {Promise<Profile | null>} Le profil, ou null s'il n'existe pas.
+ */
 async function getProfile(id: string): Promise<Profile | null> {
   const { data } = await db.from('hg_profiles').select('id, pseudo, is_admin, discord_id, bot_optin').eq('id', id).maybeSingle();
   return data as Profile | null;
 }
+/**
+ * Vrai si la valeur ressemble à un UUID (forme seulement, sans vérifier qu'il existe).
+ * @param {unknown} v Valeur à tester.
+ * @returns {boolean}
+ */
 const isUuid = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
+/**
+ * Date formatée pour les messages (fuseau de Zurich), avec ou sans jour de semaine et heure.
+ * @param {string | null | undefined} d Date ISO.
+ * @param {boolean} [withTime] Ajoute le jour de la semaine et l'heure.
+ * @returns {string | null} Texte formaté, ou null si la date est absente.
+ */
 const fmtDate = (d: string | null | undefined, withTime = false) => d
   ? new Intl.DateTimeFormat('fr-CH', {
       timeZone: 'Europe/Zurich', weekday: withTime ? 'long' : undefined, day: 'numeric', month: 'long', year: withTime ? undefined : 'numeric',
       hour: withTime ? '2-digit' : undefined, minute: withTime ? '2-digit' : undefined,
     }).format(new Date(d))
   : null;
+/**
+ * Vrai si l'horodatage est moins vieux que FRESH_MS (15 min). Sert contre les envois répétés.
+ * @param {string | null | undefined} ts Horodatage ISO.
+ * @returns {boolean}
+ */
 const recent = (ts: string | null | undefined) => !!ts && Date.now() - new Date(ts).getTime() < FRESH_MS;
 
 /* ---------- Événements ---------- */
+
+/**
+ * Tirage du Secret Santa (ss_draw, admin) : annonce dans le salon et MP à chaque participant opt-in.
+ * Les MP partent un par un, avec une pause de 300 ms, pour rester sous les limites de Discord.
+ * @param {Profile} me Appelant (doit être admin).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (edition_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} Nombre de MP envoyés et échoués, et si l'annonce est partie.
+ * @throws {HttpError} 403 si l'appelant n'est pas admin, 400 si l'identifiant manque, 404 ou 409 si le tirage est absent.
+ */
 async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
@@ -102,10 +175,12 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   if (!ed) throw new HttpError(404, 'Édition introuvable');
   if (!ed.drawn_at) throw new HttpError(409, 'Le tirage n\'a pas encore été fait');
 
+  // Participants et leur profil (jointure PostgREST sur hg_profiles).
   const { data: parts } = await db.from('hg_ss_participants')
     .select('user_id, hg_profiles(id, pseudo, is_admin, discord_id, bot_optin)').eq('edition_id', ed.id);
   const people = (parts ?? []).map((r: any) => r.hg_profiles as Profile).filter(Boolean);
 
+  // Champs affichés dans l'annonce et dans les MP (budget et date limite, s'ils sont renseignés).
   const fields = [
     ...(ed.budget ? [{ name: 'Budget', value: String(ed.budget), inline: true }] : []),
     ...(ed.send_deadline ? [{ name: 'Envoi avant le', value: fmtDate(ed.send_deadline)!, inline: true }] : []),
@@ -133,6 +208,17 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   return { announced, dms_sent: dms, dms_failed: failed };
 }
 
+/**
+ * Envoi ou réception de cadeau (Secret Santa) : MP au partenaire (le Santa ou la cible).
+ * Le Santa n'est jamais nommé dans le MP envoyé à la cible. L'attribution est lue en base, jamais renvoyée au client.
+ * @param {Profile} me Appelant (participant).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (edition_id).
+ * @param {'sent' | 'received'} kind « sent » : le Santa a envoyé ; « received » : la cible a reçu.
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { dm: boolean } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403 (pas participant), 409 (envoi ou réception non enregistré).
+ */
 async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: 'sent' | 'received', tpl: Templates) {
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
   if (bot.notify?.gift === false) return { skipped: 'désactivé' };
@@ -141,9 +227,11 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   if (!part) throw new HttpError(403, 'Tu ne participes pas à cette édition');
   const ts = kind === 'sent' ? part.sent_at : part.received_at;
   if (!ts) throw new HttpError(409, kind === 'sent' ? 'Envoi non enregistré' : 'Réception non enregistrée');
+  // Un MP n'est envoyé que si l'action est récente (anti-répétition).
   if (!recent(ts)) return { skipped: 'déjà notifié' };
 
   // Service role : on lit l'attribution côté serveur, sans jamais la renvoyer au client.
+  // Si l'appelant est le Santa (sent), on cherche sa cible (receiver_id) ; sinon on cherche son Santa (giver_id).
   const col = kind === 'sent' ? 'giver_id' : 'receiver_id';
   const { data: a } = await db.from('hg_ss_assignments').select('giver_id, receiver_id')
     .eq('edition_id', p.edition_id).eq(col, me.id).maybeSingle();
@@ -161,6 +249,15 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   return { dm: await trySend(() => sendDM(other.discord_id!, message), `MP cadeau ${kind}`) };
 }
 
+/**
+ * Nouvelle sortie IRL : annonce dans le salon, seulement par l'organisateur (ou l'admin) et dans l'heure qui suit la création.
+ * @param {Profile} me Appelant.
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (event_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel: boolean } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403 (pas organisateur), 404 (sortie introuvable).
+ */
 async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
   if (bot.notify?.irl === false) return { skipped: 'désactivé' };
@@ -169,6 +266,7 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
     .eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Sortie introuvable');
   if (ev.created_by !== me.id && !me.is_admin) throw new HttpError(403, 'Seul l\'organisateur peut annoncer cette sortie');
+  // Pas d'annonce tardive : la sortie doit avoir été créée il y a moins d'une heure.
   if (Date.now() - new Date(ev.created_at).getTime() > 60 * 60_000) return { skipped: 'sortie déjà ancienne' };
 
   const when = fmtDate(ev.starts_at, true) ?? 'Date à choisir (sondage sur le site)';
@@ -190,8 +288,20 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
   return { channel };
 }
 
+/** Un message déclencheur doit dater de moins de 2 minutes. */
 const MSG_FRESH_MS = 2 * 60_000;   // le message déclencheur doit avoir moins de 2 min
+/** Pas de MP si le message précédent de la conversation est trop récent : la discussion est en cours. */
 const MSG_QUIET_MS = 10 * 60_000;  // pas de MP si le message précédent de la conversation a moins de 10 min
+/**
+ * Nouveau message dans une conversation : MP aux autres membres, avec un extrait (200 caractères au plus).
+ * Pour un Secret Santa, l'expéditeur n'est jamais nommé. Pas de MP pendant une discussion en cours.
+ * @param {Profile} me Expéditeur (doit être membre de la conversation).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (conversation_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} Nombre de MP envoyés, échoués et ignorés.
+ * @throws {HttpError} 400, 403 (pas membre), 404 (conversation introuvable).
+ */
 async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.conversation_id)) throw new HttpError(400, 'conversation_id manquant');
   if (bot.notify?.messages === false) return { skipped: 'désactivé' };
@@ -211,7 +321,9 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   if (Date.now() - latestAt > MSG_FRESH_MS) return { skipped: 'message trop ancien' };
   if (previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
 
+  // Dans un Secret Santa, le Santa (l'expéditeur) reste anonyme pour sa cible.
   const anonymous = conv.kind === 'santa' && conv.santa_id === me.id; // ne JAMAIS révéler le Santa
+  // Extrait : espaces réduits, 200 caractères au plus.
   const raw = String(latest.body ?? '').replace(/\s+/g, ' ').trim();
   const excerpt = raw.length > 200 ? `${raw.slice(0, 199)}…` : raw;
   const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
@@ -234,6 +346,14 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   return { dms_sent: dms, dms_failed: failed, recipients_skipped: skipped };
 }
 
+/**
+ * Message de test (bot_test, admin) : envoie un message de vérification dans le salon et/ou en MP à l'admin.
+ * @param {Profile} me Appelant (doit être admin).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} Résultat par destination (channel, dm), ou un message d'erreur de configuration.
+ * @throws {HttpError} 403 si l'appelant n'est pas admin.
+ */
 async function onTest(me: Profile, bot: Bot, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   const out: Record<string, unknown> = {};
@@ -255,8 +375,15 @@ async function onTest(me: Profile, bot: Bot, tpl: Templates) {
 
 /* ---------- Message manuel de l'admin ---------- */
 // Limites du message manuel : réglables (bot.envoi), défauts 100 destinataires, 2000 caractères, 4 pièces de 10 Mo.
+/** Modes de mention acceptés pour une annonce manuelle. */
 const MANUAL_MENTIONS = ['none', 'role', 'everyone'];
+/** Résultat d'un envoi pour un destinataire, renvoyé à l'admin et gardé dans le journal. */
 type Recipient = { user_id: string; pseudo: string | null; ok: boolean; status: 'sent' | 'failed' | 'skipped'; reason: string | null };
+/**
+ * Traduit une erreur Discord en phrase compréhensible pour l'admin.
+ * @param {unknown} e Erreur reçue (souvent un DiscordError).
+ * @returns {string} Message court en français.
+ */
 const friendlyDiscordError = (e: unknown) => {
   const m = String((e as Error)?.message ?? e);
   if (/Discord 403/.test(m) || /50007/.test(m)) return 'MP refusés par Discord (serveur non partagé ou MP fermés)';
@@ -268,13 +395,27 @@ const friendlyDiscordError = (e: unknown) => {
 /** {pseudo} est la seule variable d'un message manuel ; le reste du texte est laissé tel quel. */
 const withPseudo = (text: string, pseudo: string) => text.replace(/\{pseudo\}/g, pseudo);
 
-/** Bot Discord : admin, ou Staff actif avec la permission « bot » (même règle que le panel et le bucket hg-bot-media). */
+/**
+ * Droit « bot » : admin, ou Staff actif avec la permission « bot » (même règle que le panel et le bucket hg-bot-media).
+ * @param {Profile} me Appelant.
+ * @returns {Promise<boolean>}
+ */
 async function canUseBot(me: Profile): Promise<boolean> {
   if (me.is_admin) return true;
   const { data } = await db.from('hg_staff').select('perms, active').eq('user_id', me.id).maybeSingle();
   return !!data?.active && Array.isArray(data.perms) && (data.perms as string[]).includes('bot');
 }
 
+/**
+ * Message manuel (admin_dm) : MP à chaque destinataire, et annonce facultative dans le salon, avec pièces jointes.
+ * Les contrôles (taille, pièces, mention) se font avant tout envoi. Le journal garde le détail par destinataire.
+ * @param {Profile} me Appelant (admin ou Staff « bot »).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (user_ids, title, body, channel, mention, attachments).
+ * @returns {Promise<object>} Détail par destinataire, compteurs, résultat de l'annonce et identifiant du journal.
+ * @throws {HttpError} 400 (données invalides) ou 403 (droit insuffisant).
+ * @throws {MediaError} 400 si une pièce jointe est refusée.
+ */
 async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   if (!(await canUseBot(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Bot Discord');
   const raw: unknown[] = Array.isArray(p.user_ids) ? p.user_ids : [];
@@ -284,6 +425,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const rules = botRules(bot as unknown as Record<string, unknown>);
   const MAX_USERS = rules.destinataires_max, MAX_BODY = rules.corps_max;
   if (raw.length > MAX_USERS * 2 || ids.length > MAX_USERS) throw new HttpError(400, `${MAX_USERS} destinataires maximum par envoi`);
+  // Titre : sans caractère NUL, espaces réduits, 200 caractères au plus. Corps : sans NUL, borné par corps_max.
   const title = typeof p.title === 'string' ? p.title.replace(/\u0000/g, '').replace(/\s+/g, ' ').trim().slice(0, 200) : '';
   const body = typeof p.body === 'string' ? p.body.replace(/\u0000/g, '').trim() : '';
   if (!body) throw new HttpError(400, 'Le message est vide');
@@ -307,6 +449,11 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const files = attachPaths.length ? await loadAttachments(db, attachPaths, rules.piece_max_mo * 1024 * 1024, rules.piece_max_mo) : [];
   const image = files.find((f) => f.type.startsWith('image/'));
 
+  /**
+   * Construit l'embed d'un message manuel pour un pseudo donné.
+   * @param {string} pseudo Pseudo qui remplace {pseudo} dans le titre et le corps.
+   * @returns {object} Embed prêt à envoyer.
+   */
   const build = (pseudo: string) => {
     const t = truncate(withPseudo(title, pseudo).trim(), 256);
     const d = truncate(withPseudo(body, pseudo).trim(), 4096);
@@ -316,6 +463,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     });
   };
 
+  // Un MP par destinataire ; les comptes non éligibles sont notés « skipped » avec la raison.
   const recipients: Recipient[] = [];
   let first = true;
   for (const id of ids) {
@@ -336,6 +484,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     }
   }
 
+  // Annonce dans le salon : indépendante des MP ; son échec est noté mais ne bloque pas le journal.
   let channelOk: boolean | null = null;
   let channelError: string | null = null;
   if (wantChannel) {
@@ -345,11 +494,17 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     } catch (e) { console.error('[hg-notify] annonce manuelle', e); channelOk = false; channelError = friendlyDiscordError(e); }
   }
 
+  // Trace dans le journal du bot (historique de l'admin).
   const { data: log, error: logErr } = await db.from('hg_bot_log').insert({
     sent_by: me.id, kind: 'manual', title: title || null, body, recipients, channel: channelOk === true,
   }).select('id').maybeSingle();
   if (logErr) console.error('[hg-notify] hg_bot_log', logErr);
 
+  /**
+   * Compte les destinataires ayant un statut donné.
+   * @param {'sent' | 'failed' | 'skipped'} s Statut recherché.
+   * @returns {number}
+   */
   const count = (s: Recipient['status']) => recipients.filter((r) => r.status === s).length;
   return {
     recipients, sent: count('sent'), failed: count('failed'), skipped: count('skipped'),
@@ -359,6 +514,17 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
 }
 
 /* ---------- Événements dynamiques : annonce manuelle (admin) ---------- */
+
+/**
+ * Annonce manuelle d'un événement dynamique (début ou fin), déclenchée par l'admin depuis le panel.
+ * Met à jour la date d'annonce seulement si l'envoi a réussi.
+ * @param {Profile} me Appelant (doit être admin).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (event_id, phase).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { sent, phase } ou une raison d'échec.
+ * @throws {HttpError} 400, 403, 404.
+ */
 async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
@@ -374,6 +540,7 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
     console.error('[hg-notify] annonce événement', e);
     return { sent: false, error: friendlyDiscordError(e) };
   }
+  // Marque l'annonce comme faite, pour que hg-cron ne la republie pas.
   const col = phase === 'start' ? 'announced_start_at' : 'announced_end_at';
   const { error } = await db.from('hg_dyn_events').update({ [col]: new Date().toISOString() }).eq('id', ev.id);
   if (error) console.error('[hg-notify] announced_*_at', error);
@@ -381,9 +548,20 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
 }
 
 /* ---------- Cartes à collectionner ---------- */
+
+/** Libellés français des raretés annoncées publiquement. Les autres raretés ne sont pas annoncées. */
 const CARD_RARITY_LABEL: Record<string, string> = { legendaire: 'Légendaire', mythique: 'Mythique', identite: 'Identité' };
 const CARD_FRESH_MS = 10 * 60_000; // l'exemplaire doit venir d'être obtenu (anti-spam)
 
+/**
+ * Annonce d'une belle carte obtenue (card_pull) : seulement pour les raretés annoncées, et une seule fois par exemplaire.
+ * @param {Profile} me Appelant (doit posséder l'exemplaire récent).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (card, serial facultatif).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 404.
+ */
 async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.card)) throw new HttpError(400, 'card manquant');
   if (bot.notify?.card_pull === false) return { skipped: 'désactivé' };
@@ -402,20 +580,32 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   if (Number.isInteger(p.serial)) q = q.eq('serial', p.serial as number);
   const { data: copy } = await q.maybeSingle();
   if (!copy) return { skipped: 'aucun exemplaire récent de cette carte' };
+  // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
   const { data: claimed } = await db.from('hg_card_copies').update({ announced_at: new Date().toISOString() })
     .eq('id', copy.id).is('announced_at', null).select('id');
   if (!claimed?.length) return { skipped: 'déjà annoncé' };
 
+  // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
   const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
   const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
     ...mentionFor(bot, 'card_pull'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
   }), 'annonce carte');
+  // Échec : on retire la réservation pour que la prochaine ouverture puisse réessayer.
   if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id); // échec : la prochaine ouverture pourra réessayer
   return { channel };
 }
 
+/**
+ * Échange conclu (card_trade) : annonce dans le salon, envoyée par le destinataire de l'offre, seulement si l'option est activée.
+ * @param {Profile} me Appelant (le destinataire de l'offre).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (trade_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403 (pas le destinataire), 404.
+ */
 async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
   if (bot.notify?.card_trade !== true) return { skipped: 'désactivé' };
@@ -436,9 +626,24 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
 }
 
 /* Offre d'échange reçue : MP au destinataire, envoyé par l'auteur juste après la création (ou la contre-proposition). */
+/** Longueur maximale d'un nom de carte dans le MP d'échange. */
 const TRADE_NAME_MAX = 40;   // caractères par nom de carte
+/** Nombre de noms de cartes listés ; le reste est résumé (« et N autres »). */
 const TRADE_NAMES_SHOWN = 5; // noms listés, le reste est résumé
+/**
+ * Choisit le singulier ou le pluriel selon le nombre.
+ * @param {number} n Quantité.
+ * @param {string} one Forme au singulier.
+ * @param {string} many Forme au pluriel.
+ * @returns {string}
+ */
 const plural = (n: number, one: string, many: string) => (n > 1 ? many : one);
+/**
+ * Décrit un côté d'un échange : les cartes (5 noms au plus) et les Paillettes.
+ * @param {string[]} cards Noms des cartes.
+ * @param {number} paillettes Nombre de Paillettes.
+ * @returns {string} Ex. « 2 cartes (A, B) + 50 Paillettes », ou « rien ».
+ */
 function tradeSide(cards: string[], paillettes: number): string {
   const shown = cards.slice(0, TRADE_NAMES_SHOWN).map((n) => truncate(n, TRADE_NAME_MAX));
   const more = cards.length - shown.length;
@@ -448,6 +653,15 @@ function tradeSide(cards: string[], paillettes: number): string {
   return parts.join(' + ') || 'rien';
 }
 
+/**
+ * Offre d'échange (trade_offer) : MP au destinataire, avec le détail de ce qui est donné et demandé.
+ * @param {Profile} me Appelant (l'auteur de l'offre).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (trade_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { dm } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403 (pas l'auteur), 404.
+ */
 async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
   if (bot.notify?.trade_offer === false) return { skipped: 'désactivé' };
@@ -467,6 +681,11 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   const { data: items } = await db.from('hg_card_trade_items')
     .select('side, hg_card_copies(shiny, hg_cards(name))').eq('trade_id', t.id);
   type Row = { side: 'from' | 'to'; hg_card_copies: { shiny: boolean; hg_cards: { name: string } | null } | null };
+  /**
+   * Noms des cartes d'un côté de l'échange, avec « (brillante) » si l'exemplaire l'est.
+   * @param {'from' | 'to'} side Côté à lire.
+   * @returns {string[]}
+   */
   const names = (side: 'from' | 'to') => ((items ?? []) as unknown as Row[])
     .filter((r) => r.side === side)
     .map((r) => `${r.hg_card_copies?.hg_cards?.name ?? 'Carte'}${r.hg_card_copies?.shiny ? ' (brillante)' : ''}`);
@@ -485,18 +704,34 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
 }
 
 /* Don de carte par l'admin ou le Staff « cartes » (hg_cards_admin_give) : MP au membre, envoyé par le site après le don. */
+/** Nombre maximal d'exemplaires par don (même limite que la fonction SQL). */
 const CARD_GIFT_MAX = 100; // exemplaires max par don (comme la RPC)
+/** Noms des raretés en français minuscule, pour la phrase du MP de don. */
 const RARITY_NAME: Record<string, string> = {
   commune: 'commune', peu_commune: 'peu commune', rare: 'rare', epique: 'épique',
   legendaire: 'légendaire', mythique: 'mythique', identite: 'identité',
 };
-/** Droit « cartes » : admin, ou Staff actif avec la permission (même règle que hg_has_perm('cartes') côté base). */
+/**
+ * Droit « cartes » : admin, ou Staff actif avec la permission (même règle que hg_has_perm('cartes') côté base).
+ * @param {Profile} me Appelant.
+ * @returns {Promise<boolean>}
+ */
 async function canUseCards(me: Profile): Promise<boolean> {
   if (me.is_admin) return true;
   const { data } = await db.from('hg_staff').select('perms, active').eq('user_id', me.id).maybeSingle();
   return !!data?.active && Array.isArray(data.perms) && (data.perms as string[]).includes('cartes');
 }
 
+/**
+ * Don de carte par l'admin ou le Staff « cartes » : MP au membre qui a reçu le don.
+ * Le nombre annoncé est borné par les exemplaires réellement donnés il y a moins de 15 min.
+ * @param {Profile} me Appelant (admin ou Staff « cartes »).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (user_id, card_id, count).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { dm, count } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403, 404.
+ */
 async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!(await canUseCards(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Cartes');
   if (!isUuid(p.user_id)) throw new HttpError(400, 'user_id manquant');
@@ -520,10 +755,12 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
   const other = await getProfile(p.user_id);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
 
+  // Détail affiché : rareté, puis « brillante » si besoin.
   const detail = [RARITY_NAME[card.rarity] ?? card.rarity, shiny ? 'brillante' : ''].filter(Boolean).join(', ');
   const rendered = renderTemplate('card_gift_admin_dm', {
     admin: me.pseudo, carte: truncate(String(card.name), 100), detail, quantite: count > 1 ? ` ×${count}` : '',
   }, tpl);
+  // L'image n'est reprise dans le MP que si elle est en https (Discord ne charge pas les autres).
   const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
   const ok = await trySend(() => sendDM(other.discord_id!, embed({
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
@@ -533,8 +770,20 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
 }
 
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
+/** Nombre maximal de cartes distinctes traitées par appel (une ouverture de booster). */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
+/** Nombre maximal de MP par appel, pour rester raisonnable. */
 const WISH_MAX_DMS = 50;   // MP maximum par appel
+/**
+ * Alerte « souhaits » (card_wish) : prévient les membres qui veulent une carte qu'on vient d'obtenir.
+ * Les exemplaires sont réservés (wish_notified_at) avant l'envoi : une même copie n'alerte qu'une fois.
+ * @param {Profile} me Appelant (celui qui vient d'obtenir les cartes).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (cards : liste d'UUID).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} Nombre de MP envoyés, échoués et ignorés.
+ * @throws {HttpError} 400 si la liste est absente ou vide.
+ */
 async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!Array.isArray(p.cards)) throw new HttpError(400, 'cards manquant');
   const ids = [...new Set((p.cards as unknown[]).filter(isUuid).map((s) => s.toLowerCase()))].slice(0, WISH_MAX_CARDS);
@@ -562,11 +811,13 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   let sent = 0, failed = 0, skipped = 0;
   for (const [cardId, info] of byCard) {
+    // Membres qui souhaitent cette carte (sauf l'appelant).
     const { data: wishes } = await db.from('hg_card_wishlist').select('user_id').eq('card_id', cardId).neq('user_id', me.id);
     const wishers = (wishes ?? []).map((w: { user_id: string }) => w.user_id);
     if (!wishers.length) continue;
     const { data: profs } = await db.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, notify_card_wish').in('id', wishers);
     for (const prof of (profs ?? []) as { id: string; discord_id: string | null; bot_optin: boolean; notify_card_wish: boolean }[]) {
+      // Seuls les membres qui ont activé l'alerte, accepté le bot et lié un Discord reçoivent le MP.
       const reachable = prof.notify_card_wish && prof.bot_optin && /^\d{17,20}$/.test(prof.discord_id ?? '');
       if (!reachable) { skipped++; continue; }
       if (sent + failed >= WISH_MAX_DMS) { skipped++; continue; }
@@ -583,10 +834,19 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 }
 
 /* ---------- Point d'entrée ---------- */
+
+/**
+ * Point d'entrée : vérifie l'appelant, lit le type d'événement et appelle le gestionnaire correspondant.
+ * Les erreurs HttpError et MediaError sont renvoyées avec leur statut ; toute autre erreur donne un 500 générique.
+ * Sans DISCORD_BOT_TOKEN, rien n'est envoyé (sauf admin_dm, qui répond 503 pour que l'admin le sache).
+ * @param {Request} req Requête POST avec l'en-tête Authorization et le corps JSON { event, ... }.
+ * @returns {Promise<Response>} Résultat JSON de l'événement.
+ */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée' }, 405);
   try {
+    // Identification de l'appelant à partir de son jeton de session.
     const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
     const { data: auth } = await db.auth.getUser(token);
     if (!auth?.user) throw new HttpError(401, 'Connexion requise');
@@ -597,12 +857,15 @@ Deno.serve(async (req) => {
     try { payload = await req.json(); } catch { throw new HttpError(400, 'Requête invalide'); }
     const event = String(payload.event ?? '');
 
+    // Bot non configuré : on répond sans rien envoyer. L'admin voit une erreur pour le test et pour les pièces jointes.
     if (!hasToken()) {
       if (event === 'admin_dm') throw new HttpError(503, 'Le secret DISCORD_BOT_TOKEN n\'est pas configuré dans Supabase.');
       return json({ ok: true, skipped: 'bot non configuré (DISCORD_BOT_TOKEN absent)', ...(event === 'bot_test' ? { error: 'Le secret DISCORD_BOT_TOKEN n\'est pas configuré dans Supabase.' } : {}) });
     }
+    // Réglages et modèles chargés en parallèle ; le message manuel n'utilise pas les modèles.
     const [bot, tpl] = await Promise.all([getBot(), event === 'admin_dm' ? Promise.resolve({}) : loadTemplates(db)]);
 
+    // Aiguillage vers le gestionnaire de l'événement.
     let result: Record<string, unknown>;
     switch (event) {
       case 'ss_draw': result = await onDraw(me, bot, payload, tpl); break;

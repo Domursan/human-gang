@@ -1,4 +1,6 @@
 // ===== Humane Gang — fonction edge « hg-birthdays » =====
+// Rôle : souhaiter l'anniversaire des membres, par MP Discord (si le membre a accepté le bot) et par annonce
+// dans le salon des anniversaires (si le membre partage sa date). Ajoute aussi l'événement au fil d'activité.
 // Appelée chaque jour par pg_cron (8h00, heure suisse).
 // Suivi par canal dans hg_birthday_log (une ligne par membre et par année, dm_sent_at / announce_sent_at) :
 //   - un canal n'est marqué qu'une fois envoyé (ou quand il ne s'applique pas : pas d'ID Discord, annonce non partagée) ;
@@ -9,27 +11,41 @@
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), CRON_SECRET, DISCORD_BOT_TOKEN, SITE_URL (facultatif).
 // Textes : modèles « birthday_dm » et « birthday_announce » (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 // Journal : une ligne hg_bot_log (kind « auto:anniversaire ») quand il y a eu un envoi, une tentative ou un échec.
+// Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/mentions.ts, ../_shared/cron-auth.ts ;
+//   tables hg_profiles, hg_birthday_log, hg_activity, hg_settings, hg_bot_log ; fonction SQL hg_cron_gate.
+// Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 
+// Client avec la clé service role : la fonction lit les profils de tous les membres.
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+/** Adresse du site sans « / » final (liens dans les messages). Vide si non configurée. */
 const SITE = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
+/** Réponse JSON (raccourci vers jsonResponse). */
 const json = (b: unknown, s = 200) => jsonResponse(b, s);
 const WINDOW_DAYS = 3; // jours (dont aujourd'hui) pendant lesquels un envoi en attente est retenté
 const HEURE_DEFAUT = 8; // heure suisse fixe (planning.anniversaires_heure_locale) ; la porte est hg_cron_gate (migration 054)
 
+/** Membre tel que lu par la fonction. Le champ birthday est au format AAAA-MM-JJ. */
 type Person = { id: string; pseudo: string; birthday: string; share_birthday: boolean; discord_id: string | null; bot_optin: boolean };
+/** Une tentative d'envoi, gardée pour le journal de l'admin. */
 type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 'failed'; reason: string | null };
 
+/** Complète un nombre à deux chiffres (3 devient 03). */
 const pad = (n: number) => String(n).padStart(2, '0');
+/** Année bissextile grégorienne. */
 const isLeap = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
 
-/** Les WINDOW_DAYS derniers jours, en heure suisse, du plus récent au plus ancien. */
+/**
+ * Les WINDOW_DAYS derniers jours, en heure suisse, du plus récent au plus ancien.
+ * Le calcul se fait en UTC à partir de la date suisse, pour que les jours restent corrects à minuit.
+ * @returns {{year: number, mmdd: string, leap: boolean}[]} Pour chaque jour : année, mois-jour (MM-JJ) et bissextilité.
+ */
 function recentDays(): { year: number; mmdd: string; leap: boolean }[] {
   const z = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' })
     .formatToParts(new Date()).map((p) => [p.type, p.value]));
@@ -40,12 +56,23 @@ function recentDays(): { year: number; mmdd: string; leap: boolean }[] {
     return { year, mmdd: `${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`, leap: isLeap(year) };
   });
 }
-/** L'anniversaire (AAAA-MM-JJ) tombe-t-il ce jour ? Le 29 février est fêté le 28 les années non bissextiles. */
+/**
+ * L'anniversaire (AAAA-MM-JJ) tombe-t-il ce jour ? Le 29 février est fêté le 28 les années non bissextiles.
+ * @param {string} birthday Date de naissance AAAA-MM-JJ.
+ * @param {{mmdd: string, leap: boolean}} day Jour de la fenêtre.
+ * @returns {boolean} Vrai si c'est le jour de fête.
+ */
 function matches(birthday: string, day: { mmdd: string; leap: boolean }): boolean {
   const bd = birthday.slice(5, 10);
   return bd === day.mmdd || (!day.leap && day.mmdd === '02-28' && bd === '02-29');
 }
 
+/**
+ * Point d'entrée : passe les anniversaires de la fenêtre en revue et envoie ce qui reste à envoyer.
+ * Renvoie un compte-rendu { today, celebrated, dms, announces, errors }.
+ * @param {Request} req Requête POST de pg_cron avec l'en-tête x-cron-secret.
+ * @returns {Promise<Response>} Compte-rendu JSON.
+ */
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
@@ -66,6 +93,7 @@ Deno.serve(async (req) => {
     if (day) candidates.push({ p, year: day.year });
   }
 
+  // Réglages du bot : salons, notifications et mentions.
   const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
   const bot = (s?.value ?? {}) as { announce_channel_id?: string; birthday_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
   // Salon des anniversaires : le sien s'il est réglé, sinon le salon d'annonces
@@ -74,11 +102,19 @@ Deno.serve(async (req) => {
 
   const out = { today: candidates.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };
   if (!candidates.length) return json({ ok: true, ...out });
+  // Bot coupé : on ne consomme rien, les anniversaires seront traités quand il sera rallumé (dans la fenêtre).
   if (!botOn) return json({ ok: true, ...out, skipped: 'bot désactivé : anniversaires non consommés' });
 
   const tpl = await loadTemplates(db);
   const home = SITE ? `${SITE}/accueil.html` : '';
   const attempts: Attempt[] = [];
+  /**
+   * Marque un canal comme envoyé (ou non applicable) dans hg_birthday_log.
+   * @param {string} userId Membre concerné.
+   * @param {number} year Année de la ligne de suivi.
+   * @param {'dm_sent_at' | 'announce_sent_at'} col Colonne à renseigner.
+   * @returns {Promise<void>}
+   */
   const mark = async (userId: string, year: number, col: 'dm_sent_at' | 'announce_sent_at') => {
     const { error: e } = await db.from('hg_birthday_log').update({ [col]: new Date().toISOString() }).eq('year', year).eq('user_id', userId);
     if (e) { console.error('[hg-birthdays] marquage', col, e); out.errors++; }
@@ -105,6 +141,7 @@ Deno.serve(async (req) => {
     }
 
     // 2. Canaux : un canal sans objet est marqué d'emblée ; un canal qui échoue reste en attente.
+    // 2a. MP : seulement si le membre a accepté le bot et a un identifiant Discord valide.
     if (row.dm_sent_at == null) {
       if (!(p.bot_optin && isSnowflake(p.discord_id))) {
         await mark(p.id, year, 'dm_sent_at');
@@ -123,11 +160,13 @@ Deno.serve(async (req) => {
         }
       }
     }
+    // 2b. Annonce dans le salon : seulement si le membre partage sa date et qu'un salon est réglé.
     if (row.announce_sent_at == null) {
       if (!(p.share_birthday && isSnowflake(bdayChannel))) {
         await mark(p.id, year, 'announce_sent_at');
       } else {
         try {
+          // Le membre est mentionné par son ID s'il en a un, sinon par son pseudo simple.
           const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
           // Mention configurée (bot.mentions.birthday) en plus de la personne fêtée, qui est toujours notifiée
           const mention = mentionWith(bot, mentionMode(bot.mentions?.birthday), isSnowflake(p.discord_id) ? [p.discord_id] : []);
