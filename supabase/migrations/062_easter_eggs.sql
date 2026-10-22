@@ -73,14 +73,170 @@ returns int language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.hg_eggs_count(uuid) from public, anon, authenticated;
 
+
 -- ---------------------------------------------------------------------------
--- Fonctions (appliquées en 062b et 062c) : hg_egg_found, hg_eggs_me, question secrète du quiz.
--- Le texte exact appliqué est celui de la base ; résumé du contrat :
---   hg_egg_found(p_egg, p_extra) : p_egg ∈ konami, logo, humane, jeu404 (p_extra.score ≥ 1), heure_gang (13 h 36 à 13 h 38 à Zurich),
---     anniversaire (jour = eggs.anniversaire_gang), console, lettre_1 … lettre_7, secousse, nuit (3 h à 3 h 59 à Zurich), rembobine.
---     Renvoie { new, reward, message, card, badge, found }. Paillettes : wallet_log reason 'secret'.
---     Premier secret « une fois » trouvé : ligne « … a trouvé un secret caché sur le site… » dans le fil (kind 'secret').
---   hg_eggs_me() : { found, total: 12, eggs: [{ egg, first }], letters }.
---   hg_quiz_list / hg_quiz_answer : une question secrete n'est visible et ouverte qu'avec au moins 3 secrets trouvés ; hg_quiz_list
---     renvoie le champ secret. hg_quiz_set_secret(id, bool) : réglage admin, appelé après hg_quiz_save.
+-- Fonctions (appliquées en 062b et 062c)
 -- ---------------------------------------------------------------------------
+-- Secret trouvé : vérifie, verse la récompense une fois par période, renvoie { new, reward, message, card, badge, found }.
+create or replace function public.hg_egg_found(p_egg text, p_extra jsonb default '{}'::jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid();
+  z timestamp := now() at time zone 'Europe/Zurich';
+  cfg jsonb := coalesce((select value from hg_settings where key = 'eggs'), '{}'::jsonb);
+  per text := 'once'; gain int; msg text; card_name text; badge text; cid uuid; inserted int; extra_msg text := '';
+  base text := case when p_egg like 'lettre_%' then 'lettre' else p_egg end;
+begin
+  if not hg_is_member() then raise exception 'Réservé aux membres'; end if;
+  if p_egg is null or p_egg !~ '^(konami|logo|humane|jeu404|heure_gang|anniversaire|console|lettre_[1-7]|secousse|nuit|rembobine)$' then
+    raise exception 'Secret inconnu';
+  end if;
+  -- Conditions vérifiées côté serveur (heure et date de Zurich).
+  if p_egg = 'heure_gang' and to_char(z, 'HH24:MI') not in ('13:36', '13:37', '13:38') then raise exception 'Ce n''est pas l''heure'; end if;
+  if p_egg = 'nuit' and extract(hour from z) <> 3 then raise exception 'Ce n''est pas l''heure'; end if;
+  if p_egg = 'anniversaire' and coalesce(cfg->>'anniversaire_gang', '') <> to_char(z, 'MM-DD') then raise exception 'Ce n''est pas le bon jour'; end if;
+  if p_egg = 'jeu404' and coalesce((p_extra->>'score')::int, 0) < 1 then raise exception 'Attrape au moins une paillette'; end if;
+  per := case p_egg when 'jeu404' then to_char(z, 'YYYY-MM-DD') when 'secousse' then to_char(z, 'YYYY-MM')
+                    when 'anniversaire' then to_char(z, 'YYYY') else 'once' end;
+  gain := case when base = 'lettre' then 0 else coalesce((cfg#>>array['recompenses', p_egg])::int,
+            case p_egg when 'jeu404' then 5 when 'heure_gang' then 13 else 25 end) end;
+
+  insert into hg_egg_log (user_id, egg, period, reward) values (me, p_egg, per, gain) on conflict do nothing;
+  get diagnostics inserted = row_count;
+  if inserted = 0 then
+    return jsonb_build_object('new', false, 'reward', 0, 'found', hg_eggs_count(me),
+      'message', case when per = 'once' then 'Tu avais déjà trouvé ce secret.' else 'Déjà trouvé pour cette fois-ci. Reviens plus tard !' end);
+  end if;
+
+  if gain > 0 then perform hg_wallet_add(me, gain, 'secret', 'secret:' || p_egg || ':' || per); end if;
+
+  if p_egg = 'konami' then
+    insert into hg_user_badges (user_id, badge_code) values (me, 'initie') on conflict do nothing; badge := 'Initié';
+  elsif p_egg = 'logo' then
+    select k.id into cid from hg_cards k join hg_card_sets s on s.id = k.set_id where s.code = 'secrets' and k.name = 'Le Curieux';
+    if cid is not null then perform hg_card_give(me, cid, false, 'evenement'); card_name := 'Le Curieux'; end if;
+  elsif p_egg = 'anniversaire' then
+    select k.id into cid from hg_cards k join hg_card_sets s on s.id = k.set_id where s.code = 'secrets' and k.name = 'Gâteau du gang';
+    if cid is not null then perform hg_card_give(me, cid, random() < 0.1, 'evenement'); card_name := 'Gâteau du gang'; end if;
+  elsif p_egg = 'secousse' then
+    insert into hg_wallets (user_id) values (me) on conflict do nothing;
+    update hg_wallets set gift_boosters = coalesce(gift_boosters, 0) + 1, updated_at = now() where user_id = me;
+    extra_msg := ' Un booster offert t''attend sur la page Cartes.';
+  elsif base = 'lettre' then
+    if (select count(distinct egg) from hg_egg_log where user_id = me and egg like 'lettre_%') = 7 then
+      insert into hg_user_badges (user_id, badge_code) values (me, 'chasseur_secrets') on conflict do nothing; badge := 'Chasseur de secrets';
+      insert into hg_egg_log (user_id, egg, period, reward)
+        values (me, 'lettres', 'once', coalesce((cfg#>>'{recompenses,lettres}')::int, 200)) on conflict do nothing;
+      get diagnostics inserted = row_count;
+      if inserted > 0 then
+        gain := coalesce((cfg#>>'{recompenses,lettres}')::int, 200);
+        if gain > 0 then perform hg_wallet_add(me, gain, 'secret', 'secret:lettres'); end if;
+        extra_msg := ' Tu as réuni les 7 lettres : « ' || coalesce(cfg->>'mot_secret', 'SECRETS') || ' » !';
+      end if;
+    else
+      extra_msg := ' Lettre ' || (select count(distinct egg) from hg_egg_log where user_id = me and egg like 'lettre_%') || ' sur 7.';
+    end if;
+  end if;
+
+  if per = 'once' and base <> 'lettre' then
+    insert into hg_activity (user_id, kind, text)
+      select me, 'secret', p.pseudo || ' a trouvé un secret caché sur le site…' from hg_profiles p where p.id = me and not p.is_ghost;
+  end if;
+
+  msg := case p_egg
+    when 'konami' then 'Code secret accepté. Bienvenue parmi les initiés !'
+    when 'logo' then 'Tu es curieux… La carte « Le Curieux » rejoint ta collection.'
+    when 'humane' then 'Le gang en couleurs !'
+    when 'jeu404' then 'Bien joué ! Une partie par jour est récompensée.'
+    when 'heure_gang' then 'Il est 13 h 37. Tu connais l''heure du gang.'
+    when 'anniversaire' then 'Joyeux anniversaire au gang ! Une part de gâteau pour toi.'
+    when 'console' then 'Tu as résolu l''énigme de la console. Respect.'
+    when 'secousse' then 'Ça secoue !'
+    when 'nuit' then 'Toi aussi tu ne dors pas ? La chouette te salue.'
+    when 'rembobine' then 'Rembobinage complet. Les souvenirs repartent du début.'
+    else 'Tu as trouvé une lettre cachée.' end || extra_msg;
+  return jsonb_build_object('new', true, 'reward', gain, 'message', msg, 'card', card_name, 'badge', badge, 'found', hg_eggs_count(me));
+end $$;
+revoke execute on function public.hg_egg_found(text, jsonb) from public, anon;
+grant execute on function public.hg_egg_found(text, jsonb) to authenticated;
+
+-- Secrets déjà trouvés par le membre connecté : { found, total: 12, eggs: [{ egg, first }], letters }.
+create or replace function public.hg_eggs_me()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not hg_is_member() then raise exception 'Réservé aux membres'; end if;
+  return jsonb_build_object('found', hg_eggs_count(auth.uid()), 'total', 12,
+    'eggs', coalesce((select jsonb_agg(jsonb_build_object('egg', egg, 'first', first) order by first)
+      from (select egg, min(found_at) first from hg_egg_log where user_id = auth.uid() group by egg) z), '[]'::jsonb),
+    'letters', (select count(distinct egg) from hg_egg_log where user_id = auth.uid() and egg like 'lettre_%'));
+end $$;
+revoke execute on function public.hg_eggs_me() from public, anon;
+grant execute on function public.hg_eggs_me() to authenticated;
+
+-- Question bonus secrète : hg_quiz_list et hg_quiz_answer remplacées (versions de 061 + filtre « secret »).
+create or replace function public.hg_quiz_list()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare unlocked boolean := hg_eggs_count(auth.uid()) >= 3;
+begin
+  if not hg_is_member() then raise exception 'Réservé aux membres'; end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+        'id', q.id, 'prompt', q.prompt, 'type', q.qtype, 'difficulty', q.difficulty, 'category', q.category,
+        'options', (select coalesce(jsonb_agg(jsonb_build_object('id', o->>'id', 'text', o->>'text')), '[]'::jsonb)
+                    from jsonb_array_elements(q.options) o),
+        'image_url', q.image_url, 'reward', q.reward, 'starts_at', q.starts_at, 'ends_at', q.ends_at, 'secret', q.secret,
+        'answered', a.id is not null,
+        'my_response', a.response, 'correct', a.is_correct, 'earned', coalesce(a.reward, 0), 'answered_at', a.answered_at,
+        'explanation', case when a.id is not null then q.explanation end,
+        'solution', case when a.id is not null and a.is_correct is not null then
+          case q.qtype when 'texte' then k.answer->'accepted' when 'nombre' then k.answer->'value' else k.answer->'correct' end end)
+      order by (a.id is not null), q.secret desc, q.starts_at desc)
+    from hg_quiz_questions q
+    left join hg_quiz_keys k on k.question_id = q.id
+    left join hg_quiz_answers a on a.question_id = q.id and a.user_id = auth.uid()
+    where q.active and q.starts_at <= now() and (a.id is not null or q.ends_at is null or q.ends_at > now())
+      and (not q.secret or unlocked or a.id is not null)
+  ), '[]'::jsonb);
+end $$;
+revoke execute on function public.hg_quiz_list() from public, anon;
+grant execute on function public.hg_quiz_list() to authenticated;
+
+create or replace function public.hg_quiz_answer(p_question uuid, p_response jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); q hg_quiz_questions; k jsonb; ok boolean; gain int := 0;
+begin
+  if not hg_is_member() then raise exception 'Réservé aux membres'; end if;
+  select * into q from hg_quiz_questions where id = p_question;
+  if not found or not q.active or q.starts_at > now() or (q.ends_at is not null and q.ends_at <= now())
+     or (q.secret and hg_eggs_count(me) < 3) then
+    raise exception 'Cette question n''est pas ouverte';
+  end if;
+  if p_response is null or (jsonb_typeof(p_response) = 'string' and btrim(p_response #>> '{}') = '')
+     or (jsonb_typeof(p_response) = 'array' and jsonb_array_length(p_response) = 0) then
+    raise exception 'Choisis ou écris une réponse';
+  end if;
+  if length(p_response::text) > 1000 then raise exception 'Réponse trop longue'; end if;
+  if exists (select 1 from hg_quiz_answers where question_id = q.id and user_id = me) then
+    raise exception 'Tu as déjà répondu à cette question';
+  end if;
+  select answer into k from hg_quiz_keys where question_id = q.id;
+  ok := hg_quiz_check(q.qtype, coalesce(k, '{}'::jsonb), p_response);
+  if ok then gain := q.reward; end if;
+  insert into hg_quiz_answers (question_id, user_id, response, is_correct, reward)
+    values (q.id, me, p_response, ok, gain);
+  if gain > 0 then perform hg_wallet_add(me, gain, 'quiz', 'quiz:' || q.id::text); end if;
+  return jsonb_build_object('correct', ok, 'reward', gain, 'explanation', case when ok is not null then q.explanation end,
+    'solution', case when ok is not null then
+      case q.qtype when 'texte' then k->'accepted' when 'nombre' then k->'value' else k->'correct' end end);
+end $$;
+revoke execute on function public.hg_quiz_answer(uuid, jsonb) from public, anon;
+grant execute on function public.hg_quiz_answer(uuid, jsonb) to authenticated;
+
+-- Réglage admin du champ « secret », appelé après hg_quiz_save.
+create or replace function public.hg_quiz_set_secret(p_id uuid, p_secret boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not hg_has_perm('quiz') then raise exception 'Réservé à l''admin'; end if;
+  update hg_quiz_questions set secret = coalesce(p_secret, false), updated_at = now() where id = p_id;
+end $$;
+revoke execute on function public.hg_quiz_set_secret(uuid, boolean) from public, anon;
+grant execute on function public.hg_quiz_set_secret(uuid, boolean) to authenticated;
