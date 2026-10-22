@@ -1,27 +1,49 @@
 // ===== Humane Gang — administration : liens d'invitation (hg_invite_links) =====
 // Un lien public (rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
-// Importé par admin.js (section « Invitations »). Ne dépend que de core.js.
+// Rôle : créer, activer / désactiver, copier, afficher en QR code et supprimer les liens d'invitation, et voir les codes
+// qu'ils ont générés. Règle aussi les codes (durée, limite par heure, préfixe) dans hg_settings.invites.
+// Importé par admin.js (section Invitations) et par admin/invites.js (bouton « + Nouveau lien »).
+// Dépendances : core.js, ui-confirm.js, icons.js, invite-config.js (règles des codes), admin/ui/drawer.js.
+// Tables et RPC : hg_invite_links (liens), hg_invites (codes, lien d'origine = link_id), hg_settings (clé 'invites').
+// Exporte : inviteLinkUrl (URL publique d'un lien), openLinkDrawer (tiroir « Nouveau lien »),
+// mountInviteLinks (montage), refreshInviteLinks (re-rendu).
 import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, isGodMode } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { openDrawer } from './admin/ui/drawer.js';
 import { INVITE_DEFAULTS, INVITE_LIMITS, normalizeInviteConfig, inviteConfig, loadInviteConfig, resetInviteConfig } from './invite-config.js';
 
+/* ---------- Constantes et état ---------- */
+// Icônes SVG des boutons Copier, QR code et Supprimer.
 const IC = {
   copy: svg('copy', { stroke: 2 }),
   trash: svg('trash', { stroke: 2 }),
   qr: svg('qr', { stroke: 2 }),
-  link: svg('link', { stroke: 2 }),
 };
+// Bibliothèque QR code (version figée), chargée seulement au premier clic sur « QR code ».
 const QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm';
 
+// État de la section : racine, admin connecté, fonctions de pseudo et de rappel, liens et codes chargés,
+// sections « Codes » ouvertes, erreurs de chargement, règles lues (rulesRaw : undefined = pas encore lues, null = valeurs par défaut).
 const L = { root: null, me: null, pseudoOf: (id) => id, onChange: async () => {}, links: [], codes: [], open: new Set(), error: null, rulesRaw: undefined, rulesError: null };
 
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/**
+ * Désactive le bouton pendant l'exécution de fn, puis le réactive. Une erreur est affichée en toast.
+ * @param {HTMLButtonElement|null} btn Bouton à désactiver (peut être null).
+ * @param {Function} fn Action asynchrone à exécuter.
+ * @returns {Promise<*>} Le résultat de fn, ou undefined en cas d'erreur.
+ */
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
 }
+/**
+ * Copie un texte dans le presse-papiers. Si l'API moderne échoue (navigateur ancien, contexte non sécurisé),
+ * on passe par un champ caché et execCommand('copy').
+ * @param {string} text Texte à copier.
+ */
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); }
   catch {
@@ -50,6 +72,8 @@ async function loadRules() {
 }
 
 /* ---------- Règles des codes (hg_settings.invites) ---------- */
+/* ---------- Règles des codes (hg_settings.invites) ---------- */
+// Réglages des codes : name = clé dans hg_settings.invites, label et unit affichés, help = aide sous le champ.
 const RULES = [
   { name: 'validite_heures', label: 'Durée d\'un code (heures)', unit: 'h', help: 'Un code donné par un lien est valable pendant ce délai, pour un seul compte.' },
   { name: 'max_codes_heure_lien', label: 'Codes par heure et par lien', unit: '', help: 'Garde-fou anti-abus : au-delà, le lien répond « Trop de demandes » pendant une heure.' },
@@ -57,10 +81,15 @@ const RULES = [
   { name: 'prefixe', label: 'Préfixe des codes', unit: '', help: 'Lettres ou chiffres puis un tiret (ex. HG-). Les codes déjà donnés restent valables.' },
 ];
 
+/**
+ * HTML du bloc « Règles des codes » : valeurs en vigueur (défauts ou valeurs enregistrées) et boutons.
+ * @returns {string}
+ */
 function rulesHtml() {
   const cur = L.rulesRaw && typeof L.rulesRaw === 'object' ? L.rulesRaw : {};
   const custom = !!L.rulesRaw;
   const eff = { ...INVITE_DEFAULTS, ...Object.fromEntries(RULES.map((r) => [r.name, cur[r.name] ?? INVITE_DEFAULTS[r.name]])) };
+  /** Valeur en vigueur d'une règle, suivie de son unité si elle en a une. */
   const shown = (r) => `${esc(eff[r.name])}${r.unit ? ` ${esc(r.unit)}` : ''}`;
   return `<section class="il-rules" aria-labelledby="il-rules-title">
     <div class="il-rules-head">
@@ -112,6 +141,10 @@ function openRulesDrawer() {
   });
 }
 
+/**
+ * Supprime les règles personnalisées après confirmation : les valeurs par défaut reprennent effet.
+ * @param {HTMLButtonElement} btn Bouton « Rétablir les valeurs par défaut ».
+ */
 async function resetRules(btn) {
   const ok = await confirmBox('Rétablir les valeurs par défaut ?',
     'La durée, la limite par heure, la durée des comptes fantômes et le préfixe reprennent leurs valeurs d\'origine. Les codes déjà donnés ne changent pas.',
@@ -126,6 +159,9 @@ async function resetRules(btn) {
   });
 }
 
+/**
+ * Charge les règles, les liens et les codes générés par les liens. Les erreurs remontent à refresh().
+ */
 async function load() {
   await loadRules();
   const [l, c] = await Promise.all([
@@ -136,12 +172,22 @@ async function load() {
   L.codes = check(c) ?? [];
 }
 
+/**
+ * État d'un lien : Désactivé, Expiré, Limite atteinte ou Actif.
+ * @param {object} l Ligne hg_invite_links.
+ * @returns {[string, string]} Libellé et classe CSS de la pastille.
+ */
 function linkState(l) {
   if (!l.active) return ['Désactivé', 'pill-todo'];
   if (l.expires_at && new Date(l.expires_at) < new Date()) return ['Expiré', 'pill-warn'];
   if (l.max_codes != null && l.codes_generated >= l.max_codes) return ['Limite atteinte', 'pill-warn'];
   return ['Actif', 'pill-ok'];
 }
+/**
+ * Texte d'état d'un code : utilisé par qui et quand, expiré, ou encore disponible.
+ * @param {object} c Ligne hg_invites.
+ * @returns {string} HTML sûr (pseudo échappé).
+ */
 function codeState(c) {
   if (c.used_by) return `Utilisé par <strong class="text">${esc(L.pseudoOf(c.used_by))}</strong> le ${esc(fmtDateTime(c.used_at))}`;
   if (c.expires_at && new Date(c.expires_at) < new Date()) return `<span class="muted">Expiré le ${esc(fmtDateTime(c.expires_at))}</span>`;
@@ -149,6 +195,12 @@ function codeState(c) {
 }
 
 /* ---------- Rendu ---------- */
+/* ---------- Rendu ---------- */
+/**
+ * HTML des champs du tiroir « Nouveau lien » : libellé, limite de codes, date d'expiration.
+ * La date minimale est aujourd'hui, sauf en mode sans limite.
+ * @returns {string}
+ */
 function fieldsHtml() {
   const today = new Date().toISOString().slice(0, 10);
   return `
@@ -187,6 +239,11 @@ export function openLinkDrawer() {
   });
 }
 
+/**
+ * HTML d'une carte de lien : titre, interrupteur, adresse copiable, compteurs et liste des codes repliable.
+ * @param {object} l Ligne hg_invite_links.
+ * @returns {string}
+ */
 function linkHtml(l) {
   const url = inviteLinkUrl(l.token);
   const [stateLabel, statePill] = linkState(l);
@@ -227,6 +284,9 @@ function linkHtml(l) {
     </li>`;
 }
 
+/**
+ * Redessine toute la section : titre, règles, puis la liste des liens (ou un message d'erreur ou vide).
+ */
 function render() {
   const r = L.root; if (!r) return;
   r.innerHTML = `
@@ -238,13 +298,21 @@ function render() {
       : '<div class="empty">Aucun lien pour l\'instant.</div>'}`;
 }
 
+/**
+ * Recharge les données puis redessine. Une erreur de chargement est gardée et affichée dans la section.
+ */
 async function refresh() {
   try { await load(); L.error = null; } catch (e) { L.error = e; }
   render();
 }
 
 /* ---------- QR code (bibliothèque légère chargée à la demande) ---------- */
+// Module QR mis en cache : chargé une seule fois.
 let qrLib = null;
+/**
+ * Affiche le QR code du lien dans une fenêtre, avec un bouton pour télécharger l'image (GIF).
+ * @param {object} l Ligne hg_invite_links (token, label).
+ */
 async function showQr(l) {
   const url = inviteLinkUrl(l.token);
   if (!qrLib) qrLib = (await import(QR_LIB)).default;
@@ -259,6 +327,7 @@ async function showQr(l) {
     dlg.setAttribute('aria-labelledby', 'il-qr-title');
     document.body.append(dlg);
   }
+  // Nom de fichier sûr pour le téléchargement : sans accents, sans espaces ni caractères spéciaux.
   const name = (l.label || 'lien').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'lien';
   dlg.innerHTML = `
     <form method="dialog" class="stack">
@@ -274,6 +343,11 @@ async function showQr(l) {
 }
 
 /* ---------- Événements ---------- */
+/* ---------- Événements ---------- */
+/**
+ * Branche les clics (règles, copier, QR, supprimer), les interrupteurs d'activation et le repli des codes.
+ * Appelé une fois au montage : les écouteurs restent attachés à la racine.
+ */
 function bind() {
   const r = L.root;
   r.addEventListener('click', (ev) => {
@@ -317,6 +391,7 @@ function bind() {
       toast(el.checked ? 'Lien activé' : 'Lien désactivé : il ne donne plus de code', 'ok');
       await refresh();
       $(`[data-link="${CSS.escape(l.id)}"] [data-il-toggle]`, r)?.focus();
+    // En cas d'échec, on remet l'interrupteur dans son état précédent pour qu'il reflète la base.
     } catch (e) { el.checked = !el.checked; el.disabled = false; toast(errMsg(e), 'error'); }
   });
   r.addEventListener('toggle', (ev) => {

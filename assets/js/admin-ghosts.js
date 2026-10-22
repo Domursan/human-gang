@@ -6,7 +6,12 @@
 //   - bannière « Ce compte correspond peut-être au fantôme X » (ghostBannerHtml) et actions de zone (ghostZoneActions) ;
 //   - tiroirs : création (openNewGhostDrawer) et liaison depuis une fiche de compte (openMergeDrawer).
 // Les écouteurs de la zone sont posés une fois (bindGhostPanel). Les effets de bord vers Comptes passent par setGhostHooks.
-// Importé par admin-accounts/ (liste, fiche, événements), irl.js et historique.js (annuaire vu par l'admin).
+// Importé par admin.js, admin-accounts/ (liste, fiche, événements), admin-sorties/, admin-souvenirs/, admin/loaders.js,
+// irl.js et historique.js (annuaire des fantômes vu par l'admin).
+// Dépendances : core.js (Supabase, toast, dates), ui-confirm.js, icons.js, utils.js (fmtDay), admin/ui/drawer.js, admin/ui/detail-header.js.
+// Tables et RPC : hg_admin_ghosts, hg_ghost_suggestions, hg_ghost_create, hg_ghost_invite, hg_ghost_merge, hg_profiles (suppression).
+// Exporte : ghostCodeActive, ghostInviteLink, fetchAdminGhosts, ghostDirectory, refreshGhosts, ensureGhosts, setGhostHooks,
+// renderGhostView, ghostBannerHtml, ghostZoneActions, openNewGhostDrawer, openMergeDrawer, bindGhostPanel.
 import { sb, toast, errMsg, esc, fmtDate } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
@@ -14,11 +19,14 @@ import { fmtDay } from './utils.js';
 import { openDrawer } from './admin/ui/drawer.js';
 import { renderDetailHeader } from './admin/ui/detail-header.js';
 
+/* ---------- Constantes et état ---------- */
+// Icônes SVG des boutons Copier le code et Copier le lien.
 const IC = {
   copy: svg('copy', { stroke: 2 }),
   link: svg('link', { stroke: 2 }),
 };
 
+// État du module : fantômes, correspondances, zone affichée et liaison en cours (détail ci-dessous).
 const G = {
   list: [], error: null, loaded: false, // fantômes (hg_admin_ghosts)
   sugg: [], suggError: null,            // correspondances fantôme ↔ compte inscrit (hg_ghost_suggestions)
@@ -35,13 +43,32 @@ const G = {
   },
 };
 
+/* ---------- Liens avec Comptes (évite un import circulaire) ---------- */
+/**
+ * Enregistre les fonctions fournies par Comptes (liste des comptes, rafraîchissement, liaison, suppression, fiche).
+ * Appelé par admin-accounts/ ; les valeurs manquantes gardent leur valeur par défaut.
+ * @param {object} hooks Fonctions à brancher (members, refreshed, merged, removed, openFiche).
+ */
 export function setGhostHooks(hooks) { Object.assign(G.hooks, hooks); }
 
+/* ---------- Utilitaires ---------- */
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/**
+ * Désactive le bouton pendant l'exécution de fn, puis le réactive. Une erreur est affichée en toast.
+ * @param {HTMLButtonElement|null} btn Bouton à désactiver (peut être null).
+ * @param {Function} fn Action asynchrone.
+ * @returns {Promise<*>} Résultat de fn, ou undefined en cas d'erreur.
+ */
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
 }
+/**
+ * Copie un texte dans le presse-papiers (repli sur execCommand si l'API moderne échoue), puis affiche « done ».
+ * @param {string} text Texte à copier.
+ * @param {string} [done] Message affiché après la copie.
+ */
 async function copyText(text, done = 'Copié dans le presse-papiers') {
   try { await navigator.clipboard.writeText(text); }
   catch {
@@ -113,6 +140,7 @@ function reasonHtml(reason) {
   if (/pseudo/.test(s)) parts.push('même pseudo');
   return parts.length ? parts.join(' et ') : esc(reason || 'correspondance');
 }
+// Correspondances connues pour un fantôme donné.
 const suggFor = (ghostId) => G.sugg.filter((s) => s.ghost_id === ghostId);
 
 /** Formulaire de création (contenu du tiroir ; les champs sont lus par createGhost). */
@@ -193,6 +221,7 @@ function fillSelect() {
   const top = hits.filter((x) => suggIds.has(x.id));
   const rest = hits.filter((x) => !suggIds.has(x.id));
   const cur = m.memberId && !hits.some((x) => x.id === m.memberId) ? all.find((x) => x.id === m.memberId) : null;
+  /** HTML d'une option « compte » (valeur = id, texte = pseudo). */
   const opt = (x) => `<option value="${esc(x.id)}">${esc(x.pseudo)}</option>`;
   sel.innerHTML = `<option value="">${esc(all.length ? '— Choisir un compte —' : 'Aucun compte inscrit')}</option>`
     + (top.length ? `<optgroup label="Correspondances">${top.map(opt).join('')}</optgroup>` : '')
@@ -221,6 +250,11 @@ function syncMerge() {
   wrap.querySelector('#agh-merge-q').disabled = m.busy;
 }
 
+/**
+ * Renvoie l'état de liaison du fantôme. Si on passe à un autre fantôme, la liaison repart à zéro.
+ * @param {string} ghostId Id du fantôme.
+ * @returns {object} État G.merge.
+ */
 function ensureMerge(ghostId) {
   if (!G.merge || G.merge.ghostId !== ghostId) G.merge = { ghostId, memberId: null, memberPseudo: null, q: '', busy: false, error: null };
   return G.merge;
@@ -276,6 +310,7 @@ export function ghostBannerHtml(uid) {
 
 /** Actions de la zone principale de Comptes : « Lier un fantôme… » pour un compte actif, « + Nouveau fantôme ». */
 export function ghostZoneActions(uid = null) {
+  /** Crée un bouton avec son libellé, sa classe et son écouteur de clic. */
   const make = (label, cls, onClick) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = `btn ${cls} btn-sm`; b.textContent = label;
@@ -329,6 +364,7 @@ export function openMergeDrawer({ ghostId = null, userId = null } = {}) {
       return true;
     },
   });
+  /** Recalcule le récapitulatif et l'état du bouton « Lier » à chaque changement de choix. */
   const sync = () => {
     const gid = fixedGhost?.id ?? d.form.querySelector('[name="ghost"]')?.value;
     const mid = fixedMember?.id ?? d.form.querySelector('[name="member"]')?.value;
@@ -344,7 +380,14 @@ export function openMergeDrawer({ ghostId = null, userId = null } = {}) {
 }
 
 /* ---------- Actions ---------- */
+/**
+ * Crée un fantôme à partir du formulaire, après contrôle du pseudo (2 à 32 caractères) et de la date d'arrivée.
+ * Les erreurs de saisie sont levées pour être affichées dans le tiroir.
+ * @param {HTMLFormElement} form Formulaire du tiroir.
+ * @returns {Promise<boolean>} true : le tiroir se ferme.
+ */
 async function createGhost(form) {
+  /** Renvoie le champ du formulaire portant ce nom. */
   const field = (n) => form.querySelector(`[name="${n}"]`);
   const pseudo = field('pseudo').value.trim();
   if (pseudo.length < 2 || pseudo.length > 32) throw new Error('Le pseudo doit faire entre 2 et 32 caractères.');
@@ -357,6 +400,11 @@ async function createGhost(form) {
   return true;
 }
 
+/**
+ * Génère (ou régénère) le code d'invitation du fantôme. Demande confirmation si un code actif existe déjà.
+ * @param {object} g Fantôme (id, invite_code).
+ * @param {HTMLButtonElement} btn Bouton d'action.
+ */
 async function invite(g, btn) {
   if (ghostCodeActive(g) && !(await confirmBox('Régénérer le code ?',
     `L'ancien code (${g.invite_code}) ne fonctionnera plus. Un seul code est valable par fantôme.`, { ok: 'Régénérer' }))) return;
@@ -368,6 +416,10 @@ async function invite(g, btn) {
   });
 }
 
+/**
+ * Supprime un fantôme après confirmation. La suppression est vérifiée : une suppression qui touche 0 ligne est signalée.
+ * @param {object} g Fantôme à supprimer.
+ */
 async function removeGhost(g) {
   if (!(await confirmBox('Supprimer ce fantôme ?',
     `La fiche de « ${g.pseudo} » sera supprimée définitivement. Son code d'invitation ne fonctionnera plus.`, { ok: 'Supprimer', danger: true }))) return;
@@ -404,6 +456,11 @@ async function confirmInline() {
 }
 
 /** Choix d'un compte dans les correspondances du bloc. */
+/**
+ * Retient le compte choisi parmi les correspondances du bloc de liaison.
+ * @param {string} userId Id du compte.
+ * @param {string} pseudo Pseudo du compte (affiché dans le récapitulatif).
+ */
 function pickMember(userId, pseudo) {
   const m = G.merge; if (!m) return;
   m.memberId = userId; m.memberPseudo = pseudo || null; m.error = null;
@@ -411,7 +468,13 @@ function pickMember(userId, pseudo) {
 }
 
 /* ---------- Écouteurs de la zone (posés une fois sur #acc-root) ---------- */
+// Zones déjà équipées d'écouteurs : on ne les pose qu'une fois par zone.
 const bound = new WeakSet();
+/**
+ * Pose une fois les écouteurs de la zone : boutons (copier, régénérer, choisir, lier), recherche et choix du compte.
+ * Sans effet si la zone a déjà été équipée.
+ * @param {HTMLElement} root Zone principale de Comptes (#acc-root).
+ */
 export function bindGhostPanel(root) {
   if (!root || bound.has(root)) return;
   bound.add(root);

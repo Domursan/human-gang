@@ -1,6 +1,10 @@
 // ===== Humane Gang — administration : défis collectifs du gang =====
+// Rôle : liste, création, modification, activation et suppression des défis collectifs (route cartes/defis).
 // Table hg_challenges, écrite directement par l'admin (RLS hg_is_admin). La progression est calculée côté base
 // (hg_challenge_value, hg_challenges_active) et le crédit des Paillettes par hg_challenges_award (pg_cron).
+// Dépendances : core.js (client Supabase, toast, échappement), admin-events.js (conversion heure suisse),
+// ui-confirm.js (confirmation), admin/list-tools.js (recherche), admin/ui/drawer.js (tiroir du formulaire).
+// Exporte : mountChallengesSection(container), qui monte la section dans son conteneur.
 import { sb, toast, errMsg, esc, $ } from './core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { confirmBox } from './ui-confirm.js';
@@ -15,6 +19,8 @@ function setBusy(btn, on) {
   if (on) btn.setAttribute('aria-busy', 'true'); else btn.removeAttribute('aria-busy');
 }
 
+/* ---------- Constantes ---------- */
+// Objectifs qu'un admin peut choisir : [clé de la métrique côté base, libellé affiché].
 const METRICS = [
   ['sorties_tenues', 'Sorties IRL tenues'],
   ['participations', 'Participations aux sorties (réponses « oui »)'],
@@ -24,12 +30,22 @@ const METRICS = [
   ['cartes_recyclees', 'Cartes recyclées'],
   ['echanges_conclus', 'Échanges de cartes conclus'],
 ];
+// Libellé d'une métrique à partir de sa clé (sert à l'affichage et à la recherche).
 const METRIC_LABEL = Object.fromEntries(METRICS);
+// Plafond de la récompense par membre, en Paillettes.
 const REWARD_MAX = 100000;
+// Format des dates affichées : toujours heure suisse, quel que soit le fuseau du navigateur.
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+/* ---------- État de la section ---------- */
+// root : conteneur de la section ; rows : défis chargés ; query : texte de recherche en cours.
 const C = { root: null, rows: [], query: '' };
 
+/* ---------- Montage et chargement ---------- */
+/**
+ * Affiche la section dans le conteneur, branche la recherche et les clics, puis charge les défis.
+ * @param {HTMLElement} container Élément qui recevra la section.
+ */
 export async function mountChallengesSection(container) {
   if (!container) return;
   C.root = container;
@@ -46,6 +62,10 @@ export async function mountChallengesSection(container) {
   await reload();
 }
 
+/**
+ * Recharge tous les défis depuis la base (du plus récent au plus ancien) puis redessine la liste.
+ * En cas d'erreur, affiche le message à la place de la liste.
+ */
 async function reload() {
   const list = $('#adc-list', C.root);
   try {
@@ -58,6 +78,13 @@ async function reload() {
   }
 }
 
+/* ---------- Affichage ---------- */
+/**
+ * Donne l'état d'un défi : Inactif, À venir, Terminé ou En cours.
+ * @param {object} r Ligne hg_challenges (active, starts_at, ends_at).
+ * @param {number} [now] Instant de référence en millisecondes (par défaut maintenant).
+ * @returns {[string, string]} Libellé et classe CSS de la pastille.
+ */
 function stateOf(r, now = Date.now()) {
   if (!r.active) return ['Inactif', 'pill'];
   if (new Date(r.starts_at) > now) return ['À venir', 'pill-current'];
@@ -65,6 +92,9 @@ function stateOf(r, now = Date.now()) {
   return ['En cours', 'pill-ok'];
 }
 
+/**
+ * Redessine la liste des défis selon la recherche en cours et met à jour le compteur.
+ */
 function renderList() {
   const list = $('#adc-list', C.root);
   if (!C.rows.length) { list.innerHTML = '<div class="empty">Aucun défi pour le moment. Crée le premier avec « Nouveau défi ».</div>'; setCount($('#adc-search-count', C.root), 0, 0, '', ['défi', 'défis']); return; }
@@ -89,6 +119,12 @@ function renderList() {
   }).join('');
 }
 
+/* ---------- Formulaire ---------- */
+/**
+ * Lit et valide les champs du formulaire de défi.
+ * @param {HTMLFormElement|HTMLElement} f Formulaire du tiroir.
+ * @returns {{row: object}|{error: string}} La ligne à enregistrer, ou le message d'erreur à afficher.
+ */
 function readForm(f) {
   const title = f.querySelector('#adc-title').value.trim();
   const description = f.querySelector('#adc-desc').value.trim();
@@ -112,6 +148,7 @@ function openChallengeForm(r = null) {
   const now = new Date();
   const v = r || {};
   const isNew = !r;
+  /** Attribut « selected » de l'option de métrique, si elle correspond au défi en cours. */
   const sel = (val) => (val === v.metric ? ' selected' : '');
   openDrawer({
     title: isNew ? 'Nouveau défi' : 'Modifier le défi',
@@ -179,6 +216,12 @@ async function saveChallenge(f, id) {
   }
 }
 
+/* ---------- Événements ---------- */
+/**
+ * Gère les clics sur les boutons de la section (nouveau, modifier, supprimer, activer ou désactiver).
+ * Une suppression demande une confirmation. Le bouton est désactivé pendant l'envoi pour éviter un second clic.
+ * @param {Event} e Événement de clic.
+ */
 async function onClick(e) {
   const t = e.target.closest('[data-action]');
   if (!t || t.disabled) return;

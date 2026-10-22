@@ -3,6 +3,11 @@
 // (en-tête, permissions par domaine en cases à cocher, barre d'enregistrement, désactiver / réactiver).
 // Panneau d'infos : ajouté par, date, dernières actions du membre dans le journal.
 // Écritures : hg_staff_set uniquement (journalisée côté base). Jamais de suppression.
+// Dépendances : core.js (Supabase, toast, avatar), ui-confirm.js, admin/live.js (temps réel), admin/ui/* (liste, en-tête,
+// panneau d'infos, dates), admin-log.js (libellé des actions du journal).
+// Tables et RPC : hg_perm_catalog (permissions), rpc hg_staff_list et hg_staff_set, hg_members et hg_admin_accounts (candidats),
+// hg_admin_log (journal).
+// Exporte : permLabel (libellé d'une permission, aussi utilisé par admin-accounts), listStaff, openStaff, infoStaff, mountStaffSection.
 import { sb, toast, errMsg, esc, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { onTableChange } from './admin/live.js';
@@ -20,6 +25,8 @@ const GROUPS = [
   ['Technique', ['bot', 'reglages', 'journal'], 'var(--rose)'],
 ];
 
+// État de la section : racine, catalogue des permissions, Staff, candidats à l'ajout (null tant qu'ils ne sont pas chargés),
+// membre affiché, brouillon des permissions modifiées, journal récent, colonne 2, panneau d'infos, en-tête de fiche.
 const ST = {
   root: null,         // zone principale (fiche)
   catalog: [],        // [{key,label,description,sort}]
@@ -34,14 +41,21 @@ const ST = {
   infoEl: null, info: null, dhead: null,
 };
 
+/** Libellé d'une permission à partir de sa clé (la clé elle-même si le catalogue n'est pas encore chargé). */
 const labelOf = (k) => ST.catalog.find((c) => c.key === k)?.label ?? k;
 /** Libellé d'une permission (la clé si le catalogue n'est pas encore chargé). */
 export const permLabel = labelOf;
 
+/** Ligne du Staff correspondant au membre affiché, ou null. */
 const selRow = () => ST.staff.find((s) => s.user_id === ST.sel) || null;
+/** Données d'affichage (pseudo, avatar, couleur) d'un membre du Staff. */
 const memberOf = (s) => ({ pseudo: s.pseudo, avatar_url: s.avatar_url, color: s.color });
+/** Nombre de permissions accordées à un membre du Staff. */
 const permCount = (s) => s.perms?.length ?? 0;
 
+/**
+ * Charge le catalogue des permissions et la liste du Staff. Une erreur de l'une des deux est levée.
+ */
 async function loadStaff() {
   const [cat, list] = await Promise.all([
     sb.from('hg_perm_catalog').select('key, label, description, sort').order('sort'),
@@ -53,6 +67,10 @@ async function loadStaff() {
   ST.staff = list.data ?? [];
 }
 
+/**
+ * Charge les dernières actions journalisées qui concernent ce membre (faites par lui ou sur lui), cinq au plus.
+ * @param {string} uid Id du membre.
+ */
 async function loadRecent(uid) {
   const res = await sb.from('hg_admin_log').select('id, admin_id, action, target_user, target_ref, created_at')
     .or(`admin_id.eq.${uid},target_user.eq.${uid}`).order('created_at', { ascending: false }).limit(6);
@@ -62,6 +80,10 @@ async function loadRecent(uid) {
 }
 
 /* ---------- Colonne 2 : liste ---------- */
+/**
+ * Lignes de la colonne 2 : actifs d'abord, puis par pseudo.
+ * @returns {object[]}
+ */
 function itemsOf() {
   return ST.staff.map((s) => ({
     id: s.user_id, member: memberOf(s), name: s.pseudo, active: !!s.active,
@@ -127,6 +149,10 @@ export function infoStaff(el) {
   renderInfo();
 }
 
+/**
+ * Affiche le panneau d'infos du membre (permissions, actif, ajouté par, date, dernières actions).
+ * Les actions sont « Chargement… » tant que le journal n'est pas lu.
+ */
 function renderInfo() {
   const el = ST.infoEl;
   if (!el) return;
@@ -159,6 +185,10 @@ function renderInfo() {
 }
 
 /* ---------- Zone principale : fiche ---------- */
+/**
+ * Permissions regroupées pour la fiche : les groupes de GROUPS, puis « Autres » pour les clés non classées.
+ * @returns {{title: string, color: string, items: object[]}[]}
+ */
 function groupsOf() {
   const byKey = new Map(ST.catalog.map((c) => [c.key, c]));
   const used = new Set();
@@ -171,6 +201,10 @@ function groupsOf() {
   return out.filter((g) => g.items.length);
 }
 
+/**
+ * HTML des groupes de cases à cocher de la fiche. Les cases reflètent le brouillon, pas la base.
+ * @returns {string}
+ */
 function groupsHtml() {
   return groupsOf().map((g) => `<section class="stf-card" style="--dot:${g.color}">
       <h3 class="stf-card-t"><span class="stf-dot" aria-hidden="true"></span>${esc(g.title)}</h3>
@@ -182,6 +216,10 @@ function groupsHtml() {
 }
 
 /** Nombre de permissions modifiées par rapport à l'enregistrement. */
+/**
+ * Nombre de permissions différentes entre le brouillon et l'enregistrement en base.
+ * @returns {number}
+ */
 function dirtyCount() {
   const s = selRow();
   if (!s || !ST.draft || ST.draft.uid !== s.user_id) return 0;
@@ -192,6 +230,7 @@ function dirtyCount() {
   return n;
 }
 
+/** Met à jour la barre d'enregistrement : nombre de modifications, et boutons Annuler et Enregistrer. */
 function paintBar() {
   const bar = ST.root?.querySelector('#stf-bar');
   if (!bar) return;
@@ -203,6 +242,10 @@ function paintBar() {
     </div>`;
 }
 
+/**
+ * Affiche la fiche du membre sélectionné (ou un message s'il n'y en a pas), puis le panneau d'infos.
+ * Le brouillon est gardé pour le même membre, sinon il repart des permissions enregistrées.
+ */
 function renderDetail() {
   const host = ST.root;
   if (!host) return;
@@ -248,6 +291,10 @@ function refresh({ reset = false } = {}) {
 }
 
 /* ---------- Écriture ---------- */
+/**
+ * Enregistre un membre du Staff par la RPC hg_staff_set (journalisée côté base), puis relit la liste.
+ * @param {{uid: string, perms: string[], active: boolean, note: string|null}} args Valeurs à écrire.
+ */
 async function saveStaff({ uid, perms, active, note }) {
   const res = await sb.rpc('hg_staff_set', { p_user: uid, p_perms: perms, p_active: active, p_note: note ?? null });
   if (res.error) throw res.error;
@@ -255,6 +302,12 @@ async function saveStaff({ uid, perms, active, note }) {
   refresh({ reset: true });
 }
 
+/**
+ * Empêche deux écritures en même temps. Une erreur est affichée en toast.
+ * @param {HTMLButtonElement|null} btn Bouton à désactiver pendant l'action.
+ * @param {Function} fn Action asynchrone.
+ * @returns {Promise<*>}
+ */
 async function withBusy(btn, fn) {
   if (ST.busy) return;
   ST.busy = true;
@@ -279,6 +332,12 @@ async function saveDraft(btn) {
   });
 }
 
+/**
+ * Désactive ou réactive un membre. La désactivation demande confirmation ; les permissions sont gardées.
+ * @param {string} uid Id du membre.
+ * @param {boolean} active Nouvel état.
+ * @param {HTMLButtonElement|null} btn Bouton d'action.
+ */
 async function toggleActive(uid, active, btn) {
   const row = ST.staff.find((s) => s.user_id === uid);
   if (!row) return;
@@ -296,6 +355,9 @@ async function toggleActive(uid, active, btn) {
 }
 
 /* ---------- Dialogue : ajout ou modification de la note ---------- */
+/**
+ * Charge les membres qui peuvent être ajoutés au Staff : ni admins, ni fantômes, ni déjà dans le Staff. Triés par pseudo.
+ */
 async function loadCandidates() {
   const [members, accounts] = await Promise.all([sb.rpc('hg_members'), sb.rpc('hg_admin_accounts')]);
   if (members.error) throw members.error;
@@ -306,9 +368,15 @@ async function loadCandidates() {
     .sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
 }
 
+/**
+ * HTML des groupes de permissions du dialogue. Les permissions cochées sont celles de `checked`.
+ * @param {string[]} checked Clés des permissions déjà accordées.
+ * @returns {string}
+ */
 function permFieldsetsHtml(checked) {
   const byKey = new Map(ST.catalog.map((c) => [c.key, c]));
   const used = new Set();
+  /** Un groupe de cases à cocher (fieldset). Renvoie '' si aucune de ses permissions n'existe dans le catalogue. */
   const block = (title, keys) => {
     const items = keys.map((k) => byKey.get(k)).filter(Boolean);
     items.forEach((c) => used.add(c.key));
@@ -326,6 +394,10 @@ function permFieldsetsHtml(checked) {
   return groups + block('Autres', rest);
 }
 
+/**
+ * Renvoie le dialogue du Staff, créé la première fois puis réutilisé.
+ * @returns {HTMLDialogElement}
+ */
 function dialogEl() {
   let dlg = document.getElementById('staff-dialog');
   if (!dlg) {
@@ -338,6 +410,11 @@ function dialogEl() {
 }
 
 /** Ouvre le formulaire. row = membre Staff existant (modification), sinon ajout d'un membre. */
+/**
+ * Ouvre le formulaire : ajout d'un membre (choix dans une liste) ou modification des permissions et de la note.
+ * @param {object|null} row Membre du Staff à modifier, ou null pour un ajout.
+ * @param {HTMLButtonElement|null} btn Bouton qui a ouvert le formulaire.
+ */
 async function openForm(row, btn) {
   const dlg = dialogEl();
   const editing = !!row;
@@ -380,6 +457,7 @@ async function openForm(row, btn) {
     </form>`;
   const form = dlg.querySelector('form');
   const err = dlg.querySelector('.form-error');
+  /** Affiche un message d'erreur dans le formulaire. */
   const fail = (msg) => { err.textContent = msg; err.hidden = false; };
 
   dlg.querySelector('[data-cancel]').addEventListener('click', () => dlg.close());
@@ -413,20 +491,32 @@ async function openForm(row, btn) {
       submit.disabled = false;
     }
   });
+  // En fermant, on vide le formulaire : il est recréé à chaque ouverture.
   dlg.addEventListener('close', () => { dlg.innerHTML = ''; }, { once: true });
   dlg.showModal();
   (q ?? dlg.querySelector('input[name="perm"]'))?.focus();
 }
 
+/**
+ * Désactive le bouton pendant fn, puis le réactive (sans toast : l'appelant gère l'erreur).
+ * @param {HTMLButtonElement|null} btn Bouton à désactiver.
+ * @param {Function} fn Action asynchrone.
+ * @returns {Promise<*>}
+ */
 async function withPending(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } finally { if (btn) btn.disabled = false; }
 }
 
 /* ---------- Montage (zone principale) ---------- */
+/**
+ * Monte la fiche du Staff dans la zone principale : écouteurs (cases, annuler, enregistrer, réessayer), temps réel, puis chargement.
+ * @param {HTMLElement} root Zone principale (#staff-root).
+ */
 export async function mountStaffSection(root) {
   if (!root) return;
   ST.root = root;
+  // Case à cocher d'une permission : le brouillon suit le choix, la barre se met à jour.
   root.addEventListener('change', (e) => {
     const cb = e.target.closest?.('input[data-perm-key]');
     if (!cb || !ST.draft) return;
@@ -446,6 +536,7 @@ export async function mountStaffSection(root) {
   await load();
 }
 
+/** Charge le Staff et affiche la fiche ; en cas d'échec, affiche un bouton « Réessayer ». */
 async function load() {
   ST.root.innerHTML = '<div class="empty">Chargement du Staff…</div>';
   try {

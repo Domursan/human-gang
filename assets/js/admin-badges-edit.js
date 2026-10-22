@@ -1,18 +1,28 @@
 // ===== Humane Gang — administration : création / modification / suppression des badges =====
+// Rôle : éditeur de badge (tiroir) pour créer, modifier ou supprimer un badge, y compris ses niveaux (badges à niveaux).
 // Les 15 badges d'origine sont attribués automatiquement par la base. Ils sont modifiables et supprimables (un badge supprimé n'est plus jamais attribué).
 // Les badges créés ici s'attribuent à la main (section Badges ou fiche du membre).
+// Dépendances : core.js (Supabase, toast, dates), badge-levels.js (métriques, chiffres romains, tri des niveaux),
+// image-compress.js (préparation et variantes des images), ui-confirm.js (confirmation), admin/ui/drawer.js (tiroir).
+// Tables et stockage : hg_badges (lignes, niveaux en JSON), hg_dyn_events (liste des événements), bucket hg-assets (dossier badges/).
+// Exporte : AUTO_BADGES, isAutoBadge, slugify, uniqueCode, openBadgeEditor, deleteBadge.
 import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
 import { METRICS, roman, sortedLevels } from './badge-levels.js';
 import { prepareImage, otherVariants } from './image-compress.js';
 import { confirmBox } from './ui-confirm.js';
 import { openDrawer } from './admin/ui/drawer.js';
 
+/* ---------- Badges automatiques ---------- */
+// Codes des badges attribués automatiquement par la base. Ils ne sont pas créés à la main.
 export const AUTO_BADGES = new Set([
   'premier_noel', 'veteran', 'lutin_express', 'sur_le_fil', 'liste_parfaite', 'toujours_la', 'organisateur', 'globe_trotter',
   'paparazzi', 'boite_a_idees', 'fondateur', 'anciennete', 'fidele', 'chasseur_bugs', 'saisonnier', 'cupidon',
 ]);
+/** Vrai si le code correspond à un badge attribué automatiquement par la base. */
 export const isAutoBadge = (code) => AUTO_BADGES.has(code);
 
+/* ---------- Codes et noms ---------- */
+// Format d'un code de badge : 2 à 40 caractères, minuscules, chiffres et « _ ». Ce code sert aussi de nom d'image.
 const CODE_RE = /^[a-z0-9_]{2,40}$/;
 /** « Roi du karaoké ! » -> « roi_du_karaoke » */
 export function slugify(name) {
@@ -28,7 +38,17 @@ export function uniqueCode(name, taken) {
   return `${b.slice(0, 30)}_${Date.now().toString(36)}`;
 }
 
+/* ---------- Envoi des images ---------- */
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
+/**
+ * Envoie l'image d'un badge (ou d'un de ses niveaux) dans le stockage public et renvoie son URL.
+ * Les anciennes variantes de format sont supprimées. Le paramètre ?v= force le navigateur à recharger l'image.
+ * @param {string} code Code du badge.
+ * @param {File} file Fichier choisi par l'admin (image, 10 Mo maximum).
+ * @param {number|null} [level] Numéro du niveau ; null pour l'image du badge lui-même.
+ * @returns {Promise<string>} URL publique de l'image.
+ */
 async function uploadBadgeImage(code, file, level = null) {
   if (!file.type.startsWith('image/')) throw new Error('Choisis une image (PNG, JPG, WebP ou SVG).');
   if (file.size > 10 * 1024 * 1024) throw new Error('Image trop lourde (10 Mo maximum).');
@@ -41,6 +61,8 @@ async function uploadBadgeImage(code, file, level = null) {
   return `${data.publicUrl}?v=${Date.now()}`;
 }
 
+/* ---------- Éditeur de badge (tiroir) ---------- */
+// Icône par défaut (silhouette) affichée quand le badge n'a pas encore d'image.
 const BADGE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>';
 
 /**
@@ -56,6 +78,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   const note = auto ? 'Badge automatique : la base l\'attribue toute seule. Tu peux changer son nom, sa description, son image, son ordre et lui ajouter des niveaux.'
     : isNew && preset?.event_id ? 'Badge lié à l\'événement : sans niveaux, il est gagné à la première image attrapée ; à niveaux, il monte avec le nombre d\'images attrapées.'
       : isNew ? 'Un badge créé ici s\'attribue à la main (section Badges ou fiche d\'un membre), sauf s\'il est à niveaux.' : '';
+  // Aperçu local de la nouvelle image (URL blob) ; libéré à la fermeture du tiroir.
   let previewUrl = null;
   let lv = null;
   const d = openDrawer({
@@ -86,18 +109,22 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
   });
   const { form, body } = d;
   const err = $('.form-error', body);
+  /** Affiche ou efface le message d'erreur du formulaire, et le fait voir. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   let codeTouched = false;
   if (isNew) {
+    // Tant que l'admin n'a pas modifié le code à la main, il suit le nom (suggestion automatique).
     form.elements.code.addEventListener('input', () => { codeTouched = true; });
     form.elements.name.addEventListener('input', () => { if (!codeTouched) form.elements.code.value = form.elements.name.value.trim() ? uniqueCode(form.elements.name.value, taken) : ''; });
   }
+  // Aperçu de la nouvelle image ; sans nouveau fichier, on revient à l'image actuelle du badge.
   form.elements.file.addEventListener('change', () => {
     const f = form.elements.file.files?.[0];
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = f ? URL.createObjectURL(f) : null;
     $('#bdg-preview', body).innerHTML = previewUrl ? `<img src="${previewUrl}" alt="">` : (badge?.image_url ? `<img src="${esc(badge.image_url)}" alt="">` : BADGE_SVG);
   });
+  // Branche la partie « Badge à niveaux » du formulaire (renvoie les fonctions de validation et d'envoi).
   lv = bindLevels(body, form, src);
 
   /** Enregistrement : true (le tiroir se ferme) ou false (erreur affichée, le tiroir reste ouvert). */
@@ -118,6 +145,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
     try {
       let row;
       if (isNew) {
+        // Création en deux temps : la ligne du badge d'abord, puis les images, qui se rangent sous son code.
         row = check(await sb.from('hg_badges').insert({ code, name, description, sort, image_url: null, ...lvPatch }).select().single());
         if (file || lv.hasFiles()) {
           try {
@@ -125,6 +153,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
             if (file) patch.image_url = await uploadBadgeImage(code, file);
             if (lv.hasFiles()) patch.levels = await lv.uploadFiles(code, lvPatch.levels);
             row = check(await sb.from('hg_badges').update(patch).eq('code', code).select().single());
+          // Si une image échoue, le badge reste créé : on le signale seulement, sans annuler la création.
           } catch (e) { toast(`Badge créé, mais une image n'a pas pu être envoyée : ${errMsg(e)}`, 'error'); }
         }
       } else {
@@ -138,6 +167,7 @@ export function openBadgeEditor({ badge = null, badges = [], preset = null, onSa
       return true;
     } catch (e) {
       const m = errMsg(e);
+      // Erreur 23505 : contrainte d'unicité sur le code. On affiche un message plus clair que l'erreur brute.
       showErr(/duplicate key|23505/i.test(m) || e?.code === '23505' ? `Le code « ${code} » est déjà utilisé.` : m);
       return false;
     }
@@ -160,11 +190,19 @@ export async function deleteBadge(badge, holderCount = 0) {
 /* =========================================================
    Badges à niveaux (levels_enabled, metric, levels, event_id)
    ========================================================= */
+/* ---------- Badges à niveaux : constantes ---------- */
+// Unité affichée sous le compteur, selon la métrique choisie.
 const LV_UNIT = { anciennete_annees: 'années dans le gang', event_captures: 'images attrapées', events_dynamiques: 'événements avec au moins une capture' };
+// Niveaux proposés par défaut : seuils 1, 3, 5 pour l'ancienneté (en années), 1, 5, 10 pour les autres compteurs.
 const DEFAULT_LEVELS = (metric) => (metric === 'anciennete_annees'
   ? [[1, 'Bronze'], [3, 'Argent'], [5, 'Or']]
   : [[1, 'Bronze'], [5, 'Argent'], [10, 'Or']]).map(([threshold, name]) => ({ threshold, name, image_url: null }));
 
+/**
+ * HTML de la partie « Badge à niveaux » : interrupteur, compteur, événement lié, liste des niveaux.
+ * @param {object} src Badge de départ (levels_enabled, metric, event_id, levels).
+ * @returns {string}
+ */
 function levelsFieldsetHtml(src) {
   const on = !!src.levels_enabled;
   const metric = src.metric || '';
@@ -202,10 +240,13 @@ function bindLevels(dlg, form, src) {
   const body = $('.bdg-lv-body', box);
   const list = $('.lv-list', box);
   const sw = form.elements.levels_enabled, metricSel = form.elements.metric, eventSel = form.elements.event_id;
+  // Niveaux en cours d'édition : seuil, nom, image actuelle, nouveau fichier et son aperçu.
   let rows = sortedLevels(src).map((l) => ({ threshold: l.threshold, name: l.name || '', image_url: l.image_url || null, file: null, preview: null }));
+  // URL d'aperçu créées pour les nouvelles images : libérées par dispose().
   const urls = new Set();
   const BADGE_SVG_SM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>';
 
+  /** Redessine la liste des niveaux et le texte d'unité sous le compteur. */
   const render = () => {
     $('.lv-unit', box).textContent = metricSel.value
       ? `Seuil = nombre de ${LV_UNIT[metricSel.value] || (METRICS.find(([k]) => k === metricSel.value)?.[3] ?? '')} à atteindre pour chaque niveau.` : '';
@@ -225,6 +266,10 @@ function bindLevels(dlg, form, src) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
       </li>`).join('');
   };
+  /**
+   * Affiche ou masque le bloc des niveaux et le champ Événement selon l'interrupteur et le compteur, puis redessine.
+   * Quand on active les niveaux sans aucun niveau, on pré-remplit les niveaux par défaut.
+   */
   const sync = () => {
     body.hidden = !sw.checked;
     $('[data-lv-event]', box).hidden = metricSel.value !== 'event_captures';
@@ -233,12 +278,14 @@ function bindLevels(dlg, form, src) {
   };
   sw.addEventListener('change', sync);
   metricSel.addEventListener('change', sync);
+  // Seuil et nom sont mis à jour à chaque frappe, sans redessiner la liste (pour garder le focus).
   list.addEventListener('input', (e) => {
     const li = e.target.closest('.lv-row'); if (!li) return;
     const r = rows[Number(li.dataset.i)], k = e.target.dataset.lv;
     if (k === 'threshold') r.threshold = e.target.value === '' ? '' : Number(e.target.value);
     if (k === 'name') r.name = e.target.value;
   });
+  // Nouvelle image choisie pour un niveau : aperçu local puis redessin.
   list.addEventListener('change', (e) => {
     if (e.target.dataset.lv !== 'file') return;
     const r = rows[Number(e.target.closest('.lv-row').dataset.i)], f = e.target.files?.[0];
@@ -247,6 +294,7 @@ function bindLevels(dlg, form, src) {
     r.file = f; r.preview = URL.createObjectURL(f); urls.add(r.preview);
     render();
   });
+  // Boutons : ajouter un niveau (seuil du précédent + 5, ou + 10 au-delà de 10), supprimer, retirer une image.
   box.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.hasAttribute('data-lv-add')) {
@@ -267,9 +315,14 @@ function bindLevels(dlg, form, src) {
     eventSel.innerHTML = '<option value="">Tous les événements</option>' + data.map((ev) =>
       `<option value="${esc(ev.id)}"${ev.id === cur ? ' selected' : ''}>${esc(ev.name)} (${esc(fmtDate(ev.starts_at))})</option>`).join('');
   }, () => {});
+  // Première mise en forme selon l'état initial du badge.
   sync();
 
   return {
+    /**
+     * Contrôle les niveaux avant enregistrement : seuils entiers positifs, strictement croissants.
+     * @returns {string} Message d'erreur à afficher, ou '' si tout est correct.
+     */
     validate() {
       if (!sw.checked) return '';
       if (!metricSel.value) return 'Choisis le compteur qui fait monter le badge de niveau.';
@@ -283,6 +336,10 @@ function bindLevels(dlg, form, src) {
       }
       return '';
     },
+    /**
+     * Données de niveaux à enregistrer. Si les niveaux sont désactivés, on garde les valeurs d'origine du badge.
+     * @returns {object} Champs levels_enabled, metric, event_id et levels.
+     */
     patch() {
       const enabled = sw.checked;
       return {
@@ -293,12 +350,20 @@ function bindLevels(dlg, form, src) {
           : (Array.isArray(src.levels) ? src.levels : []),
       };
     },
+    // Vrai si au moins un niveau a une nouvelle image à envoyer.
     hasFiles: () => sw.checked && rows.some((r) => r.file),
+    /**
+     * Envoie les nouvelles images des niveaux et renvoie la liste des niveaux avec leurs URL.
+     * @param {string} code Code du badge.
+     * @param {object[]} levels Niveaux à enregistrer (copiés, puis complétés).
+     * @returns {Promise<object[]>}
+     */
     async uploadFiles(code, levels) {
       const out = levels.map((l) => ({ ...l }));
       for (const [i, r] of rows.entries()) if (r.file) out[i].image_url = await uploadBadgeImage(code, r.file, i + 1);
       return out;
     },
+    // Libère les URL d'aperçu quand le tiroir se ferme.
     dispose() { urls.forEach((u) => URL.revokeObjectURL(u)); },
   };
 }

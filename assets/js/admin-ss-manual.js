@@ -1,9 +1,17 @@
 // ===== Humane Gang — administration : tirage manuel du Secret Santa =====
 // Éditeur « une ligne par Santa » avec validation en direct, complétion aléatoire et envoi via rpc hg_ss_manual_draw.
+// Rôle : dialogue #md-dlg pour tirer les cibles à la main. Sert au Secret Santa et au mode sans limite (refaire un tirage).
+// Règles : chacun offre une fois, personne ne s'offre à soi-même. Les exclusions et la cible de l'an dernier ne
+// sont que des avertissements (non bloquants).
+// Dépendances : core.js (Supabase, toast, notify, mode sans limite, balise « god »), ui-confirm.js (confirmation), icons.js (icônes).
+// Tables et RPC : rpc hg_ss_manual_draw (enregistre les paires), table hg_ss_assignments (tirage de l'an dernier).
+// Exporte : analyse (contrôle des choix), completeRandom (complétion au hasard), openManualDraw (ouvre l'éditeur).
 import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 
+/* ---------- Constantes et état ---------- */
+// Icônes SVG des lignes (OK, avertissement, erreur) et du bouton « Compléter au hasard ».
 const IC = {
   arrow: svg('arrow2', { stroke: 2 }),
   ok: svg('check2', { stroke: 2.2 }),
@@ -12,7 +20,10 @@ const IC = {
   dice: svg('dice', { stroke: 2 }),
 };
 
+// État du tirage en cours : dialogue, édition, participants (ids triés), choix (giver -> receiver), exclusions,
+// tirage de l'an dernier, fonctions d'affichage (pseudo, fantôme), rappel après succès et contexte de refonte.
 const M = { dlg: null, ed: null, edId: null, ids: [], pseudoOf: (x) => x, isGhost: () => false, excl: new Set(), last: new Map(), pick: new Map(), onDone: async () => {}, redo: null };
+/** Clé d'une paire de personnes, indépendante de l'ordre (A|B = B|A). Sert aux exclusions. */
 const key = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
 
@@ -45,6 +56,11 @@ export function analyse(ids, pick, excl, last, pseudoOf = (x) => x) {
 }
 
 /* ---------- Complétion aléatoire ---------- */
+/**
+ * Mélange une copie du tableau (Fisher-Yates). Le tableau d'origine n'est pas modifié.
+ * @param {Array} a Tableau à mélanger.
+ * @returns {Array} Nouveau tableau mélangé.
+ */
 function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 /**
  * Remplit les lignes vides avec les personnes encore sans Santa, sans toucher aux lignes remplies.
@@ -56,14 +72,21 @@ export function completeRandom(ids, pick, excl, last) {
   const taken = new Set(ids.map((g) => pick.get(g)).filter(Boolean));
   const free = ids.filter((r) => !taken.has(r));
   if (empty.length !== free.length) return null;
+  /**
+   * Essaie de compléter les lignes vides, jusqu'à 30 fois. soft = true applique aussi les exclusions et la cible de l'an dernier.
+   * @param {boolean} soft Vrai pour les contraintes souples.
+   * @returns {Map<string, string>|null} Les nouvelles paires, ou null.
+   */
   const tryFill = (soft) => {
     for (let attempt = 0; attempt < 30; attempt++) {
       const givers = shuffle(empty);
       const out = new Map();
       const used = new Set();
+      /** Vrai si r peut recevoir le cadeau de g : pas déjà pris ; pas soi-même (sauf mode sans limite au dernier tour) ; et, si soft, ni exclusion ni cible de l'an dernier. */
       const ok = (g, r) => (r !== g || (isGodMode() && free.length === 1)) && !used.has(r) && (!soft || (!excl.has(key(g, r)) && last.get(g) !== r));
       // backtracking (petites tailles : quelques dizaines de personnes au plus)
       let steps = 0;
+      /** Recherche avec retour arrière : attribue une cible au donneur i, puis aux suivants. Renvoie false si aucune solution. */
       const solve = (i) => {
         if (i === givers.length) return true;
         if (++steps > 20000) return false;
@@ -89,6 +112,14 @@ export function completeRandom(ids, pick, excl, last) {
 }
 
 /* ---------- Rendu ---------- */
+/* ---------- Rendu ---------- */
+/**
+ * HTML d'une ligne « Santa -> cible » : menu des cibles possibles et message de contrôle.
+ * Les fantômes ne sont proposés que s'ils sont déjà la cible choisie (pour ne pas casser un brouillon).
+ * @param {string} g Id du Santa (giver).
+ * @param {object} a Résultat de analyse().
+ * @returns {string}
+ */
 function rowHtml(g, a) {
   const st = a.rows.get(g), r = M.pick.get(g) || '';
   // Choix du destinataire : fantômes exclus, sauf celui déjà tiré (pour ne pas casser le brouillon).
@@ -108,6 +139,11 @@ function rowHtml(g, a) {
       <span class="md-msg small" id="md-msg-${esc(g)}">${icon}<span>${state === 'empty' ? '' : state === 'ok' ? 'OK' : esc(msg)}</span></span>
     </li>`;
 }
+/**
+ * HTML du bilan sous la liste : nombre de cibles, erreurs, Santas sans cible, avertissements, validité.
+ * @param {object} a Résultat de analyse().
+ * @returns {string}
+ */
 function summaryHtml(a) {
   const n = M.ids.length;
   const parts = [`<strong>${a.filled} / ${n}</strong> Santas ont une cible`];
@@ -117,6 +153,10 @@ function summaryHtml(a) {
   if (a.valid) parts.push('<span class="md-s-ok">Tirage valide</span>');
   return parts.join(' · ');
 }
+/**
+ * Redessine toute la liste, le bilan et l'état des boutons (Valider, Compléter, Tout effacer).
+ * @returns {object} Résultat de analyse() utilisé pour le rendu.
+ */
 function render() {
   const a = analyse(M.ids, M.pick, M.excl, M.last, M.pseudoOf);
   const order = M.ids.slice().sort((x, y) => M.pseudoOf(x).localeCompare(M.pseudoOf(y), 'fr'));
@@ -127,6 +167,10 @@ function render() {
   $('#md-clear', M.dlg).disabled = a.filled === 0;
   return a;
 }
+/**
+ * Crée le dialogue une seule fois (écouteurs de changement et de clic), puis (re)écrit son contenu.
+ * @returns {HTMLDialogElement}
+ */
 function shell() {
   let dlg = $('#md-dlg');
   if (!dlg) {
@@ -183,6 +227,12 @@ function shell() {
   return dlg;
 }
 
+/* ---------- Validation et envoi ---------- */
+/**
+ * Demande confirmation puis envoie le tirage à la base. Le bot prévient les participants sans révéler les paires.
+ * Le tirage normal est définitif. Le mode sans limite passe par submitRedo.
+ * @param {HTMLButtonElement} btn Bouton « Valider le tirage ».
+ */
 async function submit(btn) {
   const a = analyse(M.ids, M.pick, M.excl, M.last, M.pseudoOf);
   if (!a.valid) return;
@@ -205,7 +255,11 @@ async function submit(btn) {
   }
 }
 
-/* Mode sans limite : remplace un tirage existant (confirmation, suppression des attributions, puis rpc). */
+/**
+ * Mode sans limite : remplace un tirage existant (confirmation, suppression des attributions, puis rpc).
+ * Si l'envoi échoue après la suppression, l'éditeur se ferme et onFail est appelé.
+ * @param {HTMLButtonElement} btn Bouton « Valider le tirage », désactivé pendant l'envoi.
+ */
 async function submitRedo(btn) {
   const redo = M.redo;
   const { ok, notify: tell } = await redo.confirm();

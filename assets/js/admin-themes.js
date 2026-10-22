@@ -1,4 +1,10 @@
 // ===== Humane Gang — administration : éditeur des thèmes (hg_themes + hg_settings.theme) =====
+// Rôle : liste des thèmes du site (cartes), réglage du mode (automatique ou thème forcé), aperçu sur toute la page
+// et éditeur (tiroir) : nom, identifiant, période, priorité, logo, emojis, effet et couleurs avec contrôle de contraste.
+// Dépendances : core.js (Supabase, application du thème, contrastes, périodes), icons.js, ui-confirm.js,
+// image-compress.js (préparation du logo), admin/list-tools.js (recherche), admin/ui/drawer.js (tiroir).
+// Tables et stockage : hg_themes (thèmes), hg_settings (clé 'theme' : mode et thème forcé), bucket hg-assets (logos themes/).
+// Exporte : themeActions (boutons de l'en-tête), mountThemesSection (montage de la section).
 import {
   sb, toast, errMsg, esc, $,
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,
@@ -12,6 +18,10 @@ import { openDrawer } from './admin/ui/drawer.js';
 
 // Bouton « + Nouveau thème » de l'en-tête de zone (admin.js) : appelle l'éditeur ouvert par la section montée.
 let openNewTheme = null;
+/**
+ * Crée le bouton « + Nouveau thème » de l'en-tête de zone. Il ouvre l'éditeur de la section montée.
+ * @returns {HTMLButtonElement[]} Liste de boutons pour la barre d'actions.
+ */
 export function themeActions() {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'btn btn-primary btn-sm'; b.textContent = '+ Nouveau thème';
@@ -19,6 +29,7 @@ export function themeActions() {
   return [b];
 }
 
+// Libellés des couleurs : [nom affiché, aide courte]. L'ordre suit THEME_COLOR_KEYS.
 const COLOR_LABELS = {
   accent: ['Accent', 'boutons principaux'],
   bg: ['Fond', 'arrière-plan de la page'],
@@ -27,9 +38,12 @@ const COLOR_LABELS = {
   muted: ['Texte secondaire', 'légendes, aides'],
   highlight: ['Mise en valeur', 'liens, sur-titres'],
 };
+// Noms des mois, complets puis abrégés, pour les menus de période et les dates affichées.
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MONTHS_SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+// Extension de fichier à partir du type MIME d'une image (logo de thème).
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'image/gif': 'gif' };
+// Icônes SVG des boutons de la liste et de l'éditeur.
 const ICON = {
   edit: svg('edit3', { stroke: 2 }),
   copy: svg('copy', { stroke: 2 }),
@@ -41,6 +55,7 @@ const ICON = {
 };
 
 /* ---------- Outils ---------- */
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 function check(res) { if (res.error) throw res.error; return res.data; }
 /** Action en cours : bouton désactivé avec indicateur, pas de second envoi. */
 async function busy(btn, fn) {
@@ -50,10 +65,21 @@ async function busy(btn, fn) {
     if (btn) { delete btn.dataset.busy; btn.classList.remove('is-busy'); btn.removeAttribute('aria-busy'); if (btn.isConnected) btn.disabled = false; }
   }
 }
+/**
+ * Transforme un texte en identifiant d'URL : minuscules, sans accents, tirets, 40 caractères au plus.
+ * @param {string} s Texte source (nom du thème).
+ * @returns {string}
+ */
 function slugify(s) {
   return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
 }
+/**
+ * Découpe la saisie des emojis (séparés par des espaces). Une suite d'emojis sans espace est aussi découpée.
+ * Au plus 12 emojis sont gardés.
+ * @param {string} str Saisie brute.
+ * @returns {string[]}
+ */
 function parseEmojis(str) {
   const out = [];
   const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('fr', { granularity: 'grapheme' }) : null;
@@ -67,12 +93,19 @@ function parseEmojis(str) {
   }
   return out.slice(0, 12);
 }
+/**
+ * Date « MM-JJ » en texte court (ex. « 1er oct. »). Chaîne vide si la date est invalide.
+ * @param {string} md Date au format MM-JJ.
+ * @returns {string}
+ */
 function fmtMd(md) {
   if (!isValidMd(md)) return '';
   const [m, d] = md.split('-').map(Number);
   return `${d === 1 ? '1er' : d} ${MONTHS_SHORT[m - 1]}`;
 }
+/** Période d'un thème en texte (« 1er déc. → 6 janv. »), ou « Sans période ». */
 const rangeLabel = (t) => (isValidMd(t.start_md) && isValidMd(t.end_md) ? `${fmtMd(t.start_md)} → ${fmtMd(t.end_md)}` : 'Sans période');
+/** Ajoute la feuille de style de l'éditeur de thèmes à la page, une seule fois. */
 function loadStyles() {
   if (document.querySelector('link[data-admin-themes]')) return;
   const l = document.createElement('link');
@@ -83,10 +116,16 @@ function loadStyles() {
 /* =========================================================
    Montage
    ========================================================= */
+/**
+ * Affiche la section (mode, liste des thèmes, éditeur) dans le conteneur, puis charge les thèmes.
+ * @param {HTMLElement} container Élément qui recevra la section.
+ */
 export async function mountThemesSection(container) {
   if (!container) return;
   loadStyles();
 
+  // État de la section : thèmes, réglage (mode, thème forcé), brouillon de l'éditeur, id en cours de modification,
+  // thème en aperçu, recherche. slugTouched : l'identifiant ne suit plus le nom une fois modifié à la main.
   const S = { themes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false, query: '' };
 
   // Éditeur : nœud persistant, rattaché au corps du tiroir large à chaque ouverture (les écouteurs restent liés)
@@ -117,6 +156,7 @@ export async function mountThemesSection(container) {
       <div class="th-list" data-el="list"><div class="empty">Chargement des thèmes…</div></div>
       <p class="muted small">Quand plusieurs périodes se chevauchent, le thème de plus haute priorité l'emporte (à égalité, la période la plus courte). Hors de toute période : thème par défaut.</p>
     </div>`;
+  /** Élément de la section repéré par son attribut data-el. */
   const el = (name) => container.querySelector(`[data-el="${name}"]`);
 
   // Barre d'aperçu flottante (visible partout sur la page)
@@ -131,6 +171,7 @@ export async function mountThemesSection(container) {
   bindSearch(container.querySelector('#th-search'), (q) => { S.query = q; renderList(); }, SEARCH_DELAY);
 
   /* ---------- Données ---------- */
+  /** Charge les thèmes et le réglage du site (mode et thème forcé). */
   async function load() {
     const [t, s] = await Promise.all([
       sb.from('hg_themes').select('*').order('is_default', { ascending: false }).order('priority', { ascending: false }).order('name'),
@@ -140,16 +181,24 @@ export async function mountThemesSection(container) {
     const v = check(s)?.value ?? {};
     S.setting = { mode: v.mode === 'forced' ? 'forced' : 'auto', forced_slug: v.forced_slug ?? v.forced ?? null };
   }
+  // Thème qui s'applique aujourd'hui, selon le réglage (mode automatique ou forcé).
   const todayTheme = () => pickTheme(S.themes, S.setting);
+  // Thème qui s'appliquerait en mode automatique, sans forçage.
   const autoTheme = () => pickTheme(S.themes, { mode: 'auto' });
 
   /* ---------- Aperçu ---------- */
+  /**
+   * Applique un thème à toute la page sans l'enregistrer, et affiche la barre « Aperçu ».
+   * @param {object} theme Thème (ou brouillon avec __draft) à montrer.
+   * @param {string} [label] Nom affiché dans la barre.
+   */
   function startPreview(theme, label) {
     S.previewing = theme;
     paintTheme(theme);
     bar.hidden = false;
     bar.querySelector('[data-el="bar-label"]').textContent = `Aperçu : ${label || theme.name || 'thème'}`;
   }
+  /** Arrête l'aperçu : la barre disparaît et le thème du jour est remis. */
   function stopPreview() {
     if (!S.previewing) return;
     S.previewing = null;
@@ -158,6 +207,7 @@ export async function mountThemesSection(container) {
   }
 
   /* ---------- Mode ---------- */
+  /** Remplit le bloc « Mode » : mode choisi, menu du thème forcé, et ce qui s'applique aujourd'hui. */
   function renderMode() {
     const f = el('mode-form');
     f.querySelector(`input[value="${S.setting.mode}"]`).checked = true;
@@ -188,9 +238,15 @@ export async function mountThemesSection(container) {
   });
 
   /* ---------- Liste ---------- */
+  /**
+   * Pastilles de couleur d'un thème (une par clé de couleur). Une valeur invalide donne du noir.
+   * @param {object} colors Couleurs du thème.
+   * @returns {string} HTML.
+   */
   function swatches(colors = {}) {
     return `<span class="th-swatches" aria-hidden="true">${THEME_COLOR_KEYS.map((k) => `<span style="background:${esc(isHex(colors[k]) ? colors[k] : '#000')}"></span>`).join('')}</span>`;
   }
+  /** Dessine la liste des cartes de thèmes selon la recherche, avec leurs pastilles d'état. */
   function renderList() {
     const now = todayTheme();
     const shown = S.themes.filter((t) => matches(S.query, t.name, t.slug));
@@ -230,6 +286,7 @@ export async function mountThemesSection(container) {
       </article>`;
     }).join('');
   }
+  // Boutons des cartes : aperçu, modifier, dupliquer, supprimer (le thème est retrouvé par son id).
   container.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-act]');
     if (!b || !container.contains(b)) return;
@@ -242,6 +299,11 @@ export async function mountThemesSection(container) {
     else if (act === 'del' && t) deleteTheme(t, b);
   });
 
+  /**
+   * Supprime un thème non par défaut après confirmation. Si c'était le thème forcé, le site repasse en automatique.
+   * @param {object} t Thème à supprimer.
+   * @param {HTMLButtonElement} btn Bouton « Supprimer ».
+   */
   async function deleteTheme(t, btn) {
     if (t.is_default) return;
     const ok = await confirmBox(`Supprimer « ${t.name} » ?`, 'Le thème sera définitivement supprimé. Si c\'était le thème forcé, le site repasse en mode automatique.', { ok: 'Supprimer', danger: true });
@@ -260,9 +322,16 @@ export async function mountThemesSection(container) {
   }
 
   /* ---------- Éditeur ---------- */
+  // Options « jour » (1 à 31) pour les menus de période, avec le jour sélectionné.
   const dayOpts = (sel) => Array.from({ length: 31 }, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}"${Number(sel) === i + 1 ? ' selected' : ''}>${i + 1}</option>`).join('');
+  /** Options « mois » pour les menus de période, avec le mois sélectionné. */
   const monthOpts = (sel) => MONTHS.map((m, i) => `<option value="${String(i + 1).padStart(2, '0')}"${Number(sel) === i + 1 ? ' selected' : ''}>${m}</option>`).join('');
 
+  /**
+   * Ouvre le tiroir de l'éditeur : nouveau thème, modification, ou copie d'un thème existant (copie désactivée, sans slug repris).
+   * @param {object|null} theme Thème de départ (null pour un nouveau).
+   * @param {{duplicate?: boolean}} [opts] Vrai pour dupliquer.
+   */
   function openEditor(theme, { duplicate = false } = {}) {
     stopPreview();
     const base = theme ? structuredClone(theme) : { ...structuredClone(DEFAULT_THEME), name: '', slug: '', is_default: false, priority: 1, effect: 'aucun', emojis: [], start_md: '01-01', end_md: '01-31' };
@@ -288,9 +357,12 @@ export async function mountThemesSection(container) {
     drawerApi = d; drawerForm = d.form;
     editorHost.querySelector('input[name="tname"]')?.focus({ preventScroll: true });
   }
+  /** Ferme le tiroir de l'éditeur s'il est ouvert. */
   function closeEditor() { drawerApi?.close(); }
+  // Relie le bouton « + Nouveau thème » de l'en-tête à cet éditeur.
   openNewTheme = () => openEditor(null);
 
+  /** Écrit le formulaire de l'éditeur à partir du brouillon (S.draft), puis le met à jour. */
   function renderEditor() {
     const d = S.draft;
     const isNew = !S.editingId;
@@ -383,7 +455,7 @@ export async function mountThemesSection(container) {
     syncEditor();
   }
 
-  // Lit le formulaire → S.draft ; renvoie la liste des erreurs
+  /** Lit le formulaire dans S.draft et renvoie la liste des erreurs de saisie. */
   function readForm() {
     const f = editorHost.querySelector('form');
     const d = S.draft;
@@ -419,6 +491,10 @@ export async function mountThemesSection(container) {
     return errors;
   }
 
+  /**
+   * Met à jour tout l'éditeur à partir du formulaire : période, logo, emojis, échantillon, contrastes, erreurs et aperçu en direct.
+   * @returns {string[]} Erreurs de saisie.
+   */
   function syncEditor() {
     const root = editorHost;
     const f = root.querySelector('form');
@@ -458,6 +534,7 @@ export async function mountThemesSection(container) {
     return errors;
   }
 
+  // Saisie : le nom remplit l'identifiant (tant qu'il n'a pas été modifié), sélecteur et texte de couleur restent liés.
   editorHost.addEventListener('input', (ev) => {
     const f = ev.target.form;
     if (!f) return;
@@ -473,6 +550,7 @@ export async function mountThemesSection(container) {
     syncEditor();
   });
   editorHost.addEventListener('change', (ev) => { if (ev.target.form) syncEditor(); });
+  // Quitter un champ de couleur invalide remet la dernière couleur valide.
   editorHost.addEventListener('focusout', (ev) => {
     if (ev.target.name?.startsWith('h_')) {
       const k = ev.target.name.slice(2);
@@ -493,6 +571,10 @@ export async function mountThemesSection(container) {
     else if (act === 'upload') uploadLogo(b);
   });
 
+  /**
+   * Ouvre le sélecteur de fichier, envoie l'image choisie dans le stockage et l'inscrit comme logo du thème.
+   * @param {HTMLButtonElement} btn Bouton « Téléverser une image ».
+   */
   async function uploadLogo(btn) {
     const input = editorHost.querySelector('[data-el="file"]');
     input.value = '';
@@ -539,10 +621,12 @@ export async function mountThemesSection(container) {
   }
 
   /* ---------- Cycle ---------- */
+  /** Recharge les thèmes et recalcule le thème du site (et son cache local). */
   async function refreshSite() {
     await load();
     await applyTheme({ force: true }); // recalcule le thème du site + met à jour le cache local
   }
+  /** Redessine le bloc Mode et la liste. */
   function renderAll() { renderMode(); renderList(); }
 
   try {

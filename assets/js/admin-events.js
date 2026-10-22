@@ -4,6 +4,10 @@
 // Table hg_dyn_events (écriture admin), captures hg_dyn_captures, classement rpc hg_dyn_leaderboard(p_event).
 // Les dates sont saisies en heure suisse (Europe/Zurich), quel que soit le fuseau de l'appareil.
 // Annonces Discord : hg-notify { event: 'dyn_announce', event_id, phase: 'start' | 'end' } ; automatiques via hg-cron.
+// Dépendances : core.js (Supabase, toast, profil), admin-badges-edit.js (éditeur de badge), dyn-events.js (aperçu de l'image),
+// badge-levels.js, image-compress.js, ui-confirm.js, icons.js, admin/ui/* (liste, détail, drawer, pastille), admin/shell.js (navigation).
+// Exporte : toZurichInput et fromZurichInput (conversion heure suisse, réutilisées ailleurs), eventsSub (section Événements),
+// refreshEventsSection (rechargement après une modification des badges).
 import { sb, toast, errMsg, esc, $, callFn, avatarHtml, getProfile } from './core.js';
 import { openBadgeEditor } from './admin-badges-edit.js';
 import { flyDynImage } from './dyn-events.js';
@@ -17,7 +21,9 @@ import { renderDetailHeader } from './admin/ui/detail-header.js';
 import { pill } from './admin/ui/common.js';
 import { navigate } from './admin/shell.js';
 
+// Fuseau de toutes les dates affichées et saisies dans cette section.
 const TZ = 'Europe/Zurich';
+// Icônes SVG des boutons (ajouter, modifier, tester, annoncer, supprimer, badge).
 const ICON = {
   plus: svg('plus', { stroke: 2 }),
   edit: svg('edit', { stroke: 2 }),
@@ -26,10 +32,17 @@ const ICON = {
   trash: svg('trash', { stroke: 2 }),
   badge: svg('badge', { stroke: 2 }),
 };
+// Bornes des champs : durée à l'écran (secondes), taille (px), max par page, et « 1 chance sur N » (nMax).
 const LIMITS = { durMin: 1.5, durMax: 30, sizeMin: 24, sizeMax: 240, perPageMax: 10, nMax: 1000 };
+// Route de la section ; sert à revenir à la liste ou à ouvrir un événement.
 const EV_ROUTE = 'vie/evenements';
 
 /* ---------- Fuseau Europe/Zurich ---------- */
+/**
+ * Découpe une date en ses parties (année, mois, jour, heure, minute, seconde) lues à l'heure suisse.
+ * @param {Date} date Date à découper.
+ * @returns {Object<string, string>} Parties sous forme de texte.
+ */
 function zParts(date) {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
     timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
@@ -47,24 +60,37 @@ export function fromZurichInput(v) {
   const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(String(v || ''));
   if (!m) return null;
   const wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+  /** Décalage en millisecondes entre l'heure suisse et UTC à l'instant t (change avec l'heure d'été). */
   const offsetAt = (t) => { const p = zParts(new Date(t)); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - t; };
   let t = wall - offsetAt(wall);
   t = wall - offsetAt(t); // second passage : corrige autour des changements d'heure
   return new Date(t).toISOString();
 }
+// Date lisible en heure suisse ; l'année n'apparaît que si elle n'est pas l'année en cours.
 const fmtZ = (iso, opts = {}) => (iso ? new Intl.DateTimeFormat('fr-CH', {
   timeZone: TZ, weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
   ...(new Date(iso).getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}), ...opts,
 }).format(new Date(iso)) : '');
 
 /* ---------- État ---------- */
+// État de la section : racine, colonne 2, en-tête du détail, événements, captures par événement, badges, profil,
+// callback après changement de badge, numéro de requête (ignore les réponses périmées) et écouteur global posé une fois.
 const E = { root: null, list: null, head: null, sel: null, events: [], counts: new Map(), badges: [], me: null, onBadgesChange: null, tok: 0, bound: false };
+/** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
 const check = (res) => { if (res.error) throw res.error; return res.data; };
+/**
+ * Phase d'un événement à l'instant donné : future (pas commencé), live (en cours) ou past (terminé).
+ * @param {object} ev Ligne hg_dyn_events (starts_at, ends_at).
+ * @param {number} [now] Instant de référence en millisecondes.
+ * @returns {'future'|'live'|'past'}
+ */
 const phaseOf = (ev, now = Date.now()) => {
   const s = new Date(ev.starts_at).getTime(), e = new Date(ev.ends_at).getTime();
   return now < s ? 'future' : now >= e ? 'past' : 'live';
 };
+/** Nombre de pages vues pour une chance : « 1 chance sur N ». Toujours au moins 1. */
 const oneIn = (p) => Math.max(1, Math.round(1 / (Number(p) || 1)));
+/** Probabilité en pourcentage lisible : entier à partir de 10 %, une décimale en dessous. */
 const pct = (p) => { const v = (Number(p) || 0) * 100; return v >= 10 ? `${Math.round(v)} %` : `${v.toLocaleString('fr-CH', { maximumFractionDigits: 1 })} %`; };
 /** uuid v4 (crypto.randomUUID n'existe qu'en contexte sécurisé). */
 function uuid() {
@@ -74,14 +100,26 @@ function uuid() {
   const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
+/** Badge correspondant à un code, ou null s'il n'existe pas. */
 const badgeOf = (code) => E.badges.find((b) => b.code === code) || null;
+/** Événement actuellement sélectionné, ou null. */
 const current = () => E.events.find((x) => x.id === E.sel) ?? null;
 
+/**
+ * Désactive le bouton pendant l'exécution de fn, puis le réactive. Une erreur est affichée en toast.
+ * @param {HTMLButtonElement|null} btn Bouton à désactiver.
+ * @param {Function} fn Action asynchrone.
+ * @returns {Promise<*>} Résultat de fn, ou undefined en cas d'erreur.
+ */
 async function busy(btn, fn) {
   if (btn) btn.disabled = true;
   try { return await fn(); } catch (e) { toast(errMsg(e), 'error'); return undefined; } finally { if (btn?.isConnected) btn.disabled = false; }
 }
 
+/**
+ * Charge les événements, le nombre de captures par événement et les badges, en une seule fois.
+ * Une erreur remonte à l'appelant, qui affiche le message.
+ */
 async function load() {
   const [ev, cap, bdg] = await Promise.all([
     sb.from('hg_dyn_events').select('*').order('starts_at', { ascending: false }),
@@ -95,6 +133,12 @@ async function load() {
 }
 
 /* ---------- Présentation ---------- */
+/**
+ * Vignette d'un événement : son image, ou son emoji (✨ par défaut) si l'image manque.
+ * @param {object} ev Ligne hg_dyn_events.
+ * @param {number} [size=56] Taille en pixels.
+ * @returns {string} HTML.
+ */
 function thumb(ev, size = 56) {
   return `<span class="ev-thumb" style="width:${size}px;height:${size}px">${ev.image_url
     ? `<img src="${esc(ev.image_url)}" alt="" loading="lazy">`
@@ -108,6 +152,11 @@ function statePill(ev, now = Date.now()) {
     : ph === 'future' ? pill({ id: 'future', label: 'À venir', tone: 'prog' })
       : pill({ id: 'past', label: 'Terminé', tone: 'done' });
 }
+/**
+ * Lignes de la liste : en cours d'abord, puis à venir (le plus proche en premier), terminés, désactivés.
+ * @param {number} [now] Instant de référence en millisecondes.
+ * @returns {object[]}
+ */
 function listItems(now = Date.now()) {
   const rank = { live: 0, future: 1, past: 2, off: 3 };
   return E.events.map((ev) => {
@@ -115,6 +164,11 @@ function listItems(now = Date.now()) {
     return { id: ev.id, name: ev.name, phase, ev, rank: rank[phase] };
   }).sort((a, b) => a.rank - b.rank || (a.phase === 'past' ? 0 : new Date(a.ev.starts_at) - new Date(b.ev.starts_at)));
 }
+/**
+ * HTML d'une ligne de la liste : nom, dates et pastille d'état.
+ * @param {object} it Élément de listItems().
+ * @returns {string}
+ */
 function rowHtml(it) {
   return `<div class="ui-row-body">
     <div class="ui-row-top"><span class="ui-row-name">${esc(it.ev.name)}</span></div>
@@ -122,6 +176,7 @@ function rowHtml(it) {
     <div class="ui-row-foot">${statePill(it.ev)}</div>
   </div>`;
 }
+/** Affiche le bouton « Nouvel événement » dans la barre d'actions de la zone. */
 function paintActions() {
   const z = document.getElementById('zone-actions');
   if (!z) return;
@@ -129,6 +184,11 @@ function paintActions() {
 }
 
 /* ---------- Zone principale ---------- */
+/**
+ * HTML de la zone principale d'un événement : apparition, badge, annonces, classement (rempli plus tard) et suppression.
+ * @param {object} ev Ligne hg_dyn_events.
+ * @returns {string}
+ */
 function detailHtml(ev) {
   const n = E.counts.get(ev.id) || 0;
   const b = badgeOf(ev.badge_code);
@@ -187,6 +247,10 @@ function detailHtml(ev) {
     </div>`;
 }
 
+/**
+ * Affiche le détail de l'événement sélectionné, ou un message s'il n'y en a pas ou s'il n'existe plus.
+ * Recharge le classement une fois le détail posé.
+ */
 function paintDetail() {
   const root = E.root;
   if (!root) return;
@@ -213,6 +277,11 @@ function paintDetail() {
   loadBoard(ev);
 }
 
+/**
+ * Charge le classement (top des captures) de l'événement et l'affiche dans la section prévue.
+ * Ignore la réponse si l'admin a changé d'événement entre-temps.
+ * @param {object} ev Événement concerné.
+ */
 async function loadBoard(ev) {
   const box = document.getElementById('ev-board');
   if (!box) return;
@@ -226,11 +295,22 @@ async function loadBoard(ev) {
 }
 
 /* ---------- Éditeur (tiroir) ---------- */
+/**
+ * Options du menu « Badge associé » : « Aucun badge » puis tous les badges (avec le nombre de niveaux).
+ * @param {string} sel Code du badge à présélectionner.
+ * @returns {string} HTML des options.
+ */
 function badgeOptions(sel) {
   return '<option value="">Aucun badge</option>' + E.badges.map((b) =>
     `<option value="${esc(b.code)}"${b.code === sel ? ' selected' : ''}>${esc(b.name)}${hasLevels(b) ? ` (${sortedLevels(b).length} niveaux · ${esc(METRIC_LABEL[b.metric] || '')})` : ''}</option>`).join('');
 }
 
+/**
+ * HTML du formulaire de l'événement (tiroir). Les valeurs viennent de l'événement, ou des valeurs par défaut pour une création.
+ * @param {object|null} ev Événement modifié, ou null pour une création.
+ * @param {{isNew: boolean, start: string, end: string, n: number}} opts Dates de départ (ISO) et fréquence « 1 sur n ».
+ * @returns {string}
+ */
 function editorBody(ev, { isNew, start, end, n }) {
   return `
     <p class="form-error" role="alert" hidden></p>
@@ -300,13 +380,22 @@ function editorBody(ev, { isNew, start, end, n }) {
     </div>`;
 }
 
+/**
+ * Ouvre le tiroir de création (ev = null) ou de modification d'un événement, et branche ses contrôles.
+ * Pour une création, l'id est généré côté navigateur pour pouvoir nommer l'image avant l'envoi.
+ * @param {object|null} [ev=null] Événement à modifier.
+ */
 function openEditor(ev = null) {
   const isNew = !ev;
   const id = ev?.id ?? uuid();
+  // Par défaut : début à la prochaine heure pleine, fin 7 jours plus tard.
   const start = ev?.starts_at ?? new Date(Math.ceil(Date.now() / 3600000) * 3600000).toISOString();
   const end = ev?.ends_at ?? new Date(new Date(start).getTime() + 7 * 864e5).toISOString();
+  // Fréquence par défaut d'une création : 1 chance sur 5 pages vues.
   const n = ev ? oneIn(ev.probability) : 5;
+  // Image actuelle de l'événement. Remise à null si l'admin retire l'image.
   let imageUrl = ev?.image_url ?? null;
+  // Aperçu local de l'image choisie (URL blob) ; libéré à la fermeture du tiroir.
   let previewUrl = null;
   const d = openDrawer({
     title: isNew ? 'Nouvel événement' : `Modifier « ${ev.name} »`,
@@ -320,12 +409,18 @@ function openEditor(ev = null) {
   const { form, body } = d;
   const f = form.elements;
   const err = body.querySelector('.form-error');
+  /** Affiche ou efface le message d'erreur du formulaire, et le fait voir. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
+  /** Affiche l'aperçu : image choisie, image actuelle, ou emoji. Le bouton « Retirer l'image » suit l'état. */
   const paintPreview = () => {
     const src = previewUrl || imageUrl;
     $('#evf-preview', body).innerHTML = src ? `<img src="${esc(src)}" alt="">` : `<span class="ev-emoji">${esc(f.emoji.value.trim() || '✨')}</span>`;
     $('[data-evf-noimg]', body).hidden = !src;
   };
+  /**
+   * Garde synchronisés le champ « 1 chance sur N », le curseur et le texte en pourcentage.
+   * @param {HTMLInputElement} from Champ qui vient d'être modifié (il n'est pas réécrit).
+   */
   const syncN = (from) => {
     let v = Math.round(Number(from.value) || 1);
     v = Math.max(1, Math.min(LIMITS.nMax, v));
@@ -354,6 +449,7 @@ function openEditor(ev = null) {
   /** Valeurs du formulaire (sans l'image téléversée). */
   const read = () => {
     const nv = Math.max(1, Math.min(LIMITS.nMax, Math.round(Number(f.n.value) || 1)));
+    /** Entier d'un champ, ou null si le champ est vide. */
     const intOrNull = (v) => (String(v).trim() === '' ? null : Math.round(Number(v)));
     return {
       name: f.name.value.trim(),
@@ -372,6 +468,11 @@ function openEditor(ev = null) {
       active: f.active.checked,
     };
   };
+  /**
+   * Contrôle les valeurs saisies avant enregistrement.
+   * @param {object} v Valeurs lues par read().
+   * @returns {string} Message d'erreur à afficher, ou '' si tout est correct.
+   */
   const validate = (v) => {
     if (v.name.length < 2) return 'Donne un nom à l\'événement (2 caractères minimum).';
     if (!v.starts_at || !v.ends_at) return 'Indique la date et l\'heure de début et de fin.';
@@ -439,6 +540,7 @@ function openEditor(ev = null) {
       } else {
         // Dates déplacées dans le futur : les annonces correspondantes repartent (hg-cron les refera)
         const now = Date.now();
+        // Si une date a changé et tombe dans le futur, l'annonce correspondante est remise à zéro pour être refaite.
         if (row.starts_at !== ev.starts_at && new Date(row.starts_at).getTime() > now) row.announced_start_at = null;
         if (row.ends_at !== ev.ends_at && new Date(row.ends_at).getTime() > now) row.announced_end_at = null;
         check(await sb.from('hg_dyn_events').update(row).eq('id', ev.id));
@@ -456,6 +558,12 @@ function openEditor(ev = null) {
 }
 
 /* ---------- Actions ---------- */
+/**
+ * Demande confirmation puis demande au bot de publier l'annonce (début ou fin) sur Discord.
+ * @param {HTMLButtonElement} btn Bouton d'annonce.
+ * @param {object} ev Événement.
+ * @param {'start'|'end'} phase Lancement ou fin.
+ */
 async function announce(btn, ev, phase) {
   const ok = await confirmBox(phase === 'start' ? 'Annoncer le lancement ?' : 'Annoncer la fin ?',
     phase === 'start'
@@ -471,6 +579,11 @@ async function announce(btn, ev, phase) {
   });
 }
 
+/**
+ * Supprime l'événement après confirmation, puis son image du stockage. Les badges déjà gagnés restent.
+ * @param {HTMLButtonElement} btn Bouton « Supprimer ».
+ * @param {object} ev Événement à supprimer.
+ */
 async function remove(btn, ev) {
   const n = E.counts.get(ev.id) || 0;
   const ok = await confirmBox(`Supprimer « ${ev.name} » ?`,
@@ -487,6 +600,10 @@ async function remove(btn, ev) {
   });
 }
 
+/**
+ * Gestionnaire global des clics de la section : boutons « Nouvel événement », « Supprimer » et annonces.
+ * @param {Event} e Événement de clic.
+ */
 async function onClick(e) {
   const t = e.target.closest('button[data-ev-act], button[data-ev-announce]');
   if (!t) return;
@@ -518,10 +635,12 @@ async function reload() {
 export function eventsSub(opts = {}) {
   E.onBadgesChange = opts.onBadgesChange || null;
   return {
+    /** Repère le conteneur de la zone principale et branche le clic global, une seule fois. */
     main() {
       E.root = document.getElementById('events-root');
       if (!E.bound) { E.bound = true; document.addEventListener('click', onClick); }
     },
+    /** Crée la liste (colonne 2) : filtres, recherche, sélection et navigation vers l'événement choisi. */
     list(el) {
       E.list = createList(el, {
         items: listItems(),
@@ -539,6 +658,7 @@ export function eventsSub(opts = {}) {
         onSelect: (it) => navigate(`${EV_ROUTE}/${it.id}`),
       });
     },
+    /** Ouvre la section : recharge les événements, vérifie l'identifiant demandé, puis affiche la liste et le détail. */
     async open(_el, { id } = {}) {
       const tok = ++E.tok;
       E.sel = id || null;
