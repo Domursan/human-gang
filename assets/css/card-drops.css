@@ -1,5 +1,7 @@
 /* ===== Drops de cartes (card-drops.js) : la carte traverse la page comme les événements, sans bloquer le reste ===== */
 /* Le calque est fixe, sans effet sur les clics ; seuls la carte, « × » et la révélation captent la souris. */
+
+/* ---------- Calque et cartes ---------- */
 .cd-layer { position: fixed; inset: 0; z-index: 8950; pointer-events: none; overflow: hidden; }
 .cd-stack { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
   display: flex; flex-direction: column; align-items: flex-end; gap: 12px; max-width: calc(100vw - 24px); }
@@ -27,6 +29,8 @@
 .cd-x:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
 
 /* Révélation : la carte obtenue, avec son titre, quelques secondes. */
+
+/* ---------- Révélation ---------- */
 .cd-reveal { display: grid; justify-items: center; gap: 6px; padding: 12px; border-radius: 16px;
   background: color-mix(in srgb, var(--surface, #1b1c25) 92%, transparent); border: 1px solid var(--border-strong, #888);
   box-shadow: 0 12px 32px rgba(0, 0, 0, .4); max-width: min(280px, calc(100vw - 48px)); text-align: center; }
@@ -34,11 +38,15 @@
 .cd-reveal-t { margin: 0; font-family: var(--font-display, inherit); font-size: 16px; overflow-wrap: anywhere; }
 .cd-reveal .hgc { pointer-events: none; }
 
+/* ---------- Particules ---------- */
 .cd-px { position: absolute; display: block; pointer-events: none; image-rendering: pixelated; }
 
+/* ---------- Mouvement réduit ---------- */
 @media (prefers-reduced-motion: reduce) {
   .cd-item .hgc { transition: none; }
 }
+
+/* ---------- Téléphone ---------- */
 @media (max-width: 600px) {
   .cd-stack { gap: 8px; }
   .cd-hint { font-size: 11px; }

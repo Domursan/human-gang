@@ -98,7 +98,7 @@ body.intro {
   min-width: 160px;
 }
 
-/* Barre de progression arc-en-ciel */
+/* ---------- Barre de progression arc-en-ciel ---------- */
 .intro-progress {
   position: fixed; z-index: 10; left: 0; right: 0; bottom: 0;
   height: 4px; background: rgba(255, 255, 255, 0.05);
@@ -118,7 +118,7 @@ body.intro {
 .intro-progress-fill span:nth-child(5) { background: var(--rb-5); }
 .intro-progress-fill span:nth-child(6) { background: var(--rb-6); }
 
-/* Voile final */
+/* ---------- Voile final ---------- */
 .intro-fade {
   position: fixed; inset: 0; z-index: 30;
   background: #02040c; opacity: 0; pointer-events: none;

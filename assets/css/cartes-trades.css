@@ -44,7 +44,7 @@
 .trd-picker .field { flex: 1 1 220px; min-width: 0; }
 .trd-picker .btn { flex: 1 1 200px; }
 
-/* Correspondances */
+/* ---------- Correspondances ---------- */
 .trd-match-group + .trd-match-group { margin-top: 0; }
 .trd-match-group > .trd-who { margin-bottom: 16px; }
 .trd-match-group h2 { font-size: 18px; margin: 0; }

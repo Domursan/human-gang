@@ -1,6 +1,8 @@
 /* ===== Cartes : intertitres par série, loupe sur chaque carte, carte agrandie, loupe ×2,5 ===== */
 
 /* Toutes les séries : un bloc par série (intertitre, compte, barre, cartes) */
+
+/* ---------- Séries ---------- */
 .cz-groups { display: grid; gap: 28px; }
 .cz-group-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 0 0 8px; }
 .cz-group-title { margin: 0; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
@@ -8,6 +10,8 @@
 .cz-group-bar { height: 6px; margin: 0 0 16px; }
 
 /* Une carte de la collection : la carte, puis la loupe dans le coin haut-droit */
+
+/* ---------- Cartes et loupe ---------- */
 .cz-cell { position: relative; width: 100%; max-width: 168px; display: flex; justify-content: center; }
 .cz-cell > .hgc { width: min(100%, 168px); }
 .cz-zoom { position: absolute; top: 6px; right: 6px; z-index: 4; width: 32px; height: 32px; padding: 0; display: grid; place-items: center;

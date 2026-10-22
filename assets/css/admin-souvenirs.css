@@ -1,8 +1,11 @@
 /* Administration : section « Souvenirs et photos » (onglets, listes, grille de photos, réactions). */
 
 .sv-body, .sv-panel { min-width: 0; }
+
+/* ---------- Onglets ---------- */
 .sv-tabs { margin-bottom: 0; }
 
+/* ---------- Recherche et filtres ---------- */
 .sv-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
 .sv-search { flex: 1 1 260px; min-width: 0; }
 .sv-filters { margin-bottom: 4px; }
@@ -10,6 +13,7 @@
 .sv-filters select { width: 100%; min-height: 44px; }
 .sv-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 
+/* ---------- Liste des souvenirs ---------- */
 .sv-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .sv-row {
   display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 14px;
@@ -26,6 +30,7 @@
 .sv-row-actions { flex-wrap: nowrap; justify-content: flex-end; }
 .sv-emoji { font-size: 18px; line-height: 1; }
 
+/* ---------- Grille des photos ---------- */
 .sv-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
 .sv-photo { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--surface);
@@ -39,6 +44,7 @@
 .sv-photo-actions { gap: 6px; }
 .sv-photo-actions .btn { flex: 1 1 auto; }
 
+/* ---------- Pagination ---------- */
 .sv-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 
 @media (max-width: 640px) {

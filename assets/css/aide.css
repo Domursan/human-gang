@@ -1,4 +1,4 @@
-/* ===== Humane Gang — aide et tutos ===== */
+/* ===== Humane Gang — aide et tutos (aide.html) ===== */
 .aide-search { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 20px; }
 .aide-search label { font-weight: 700; }
 .aide-search input { font: inherit; min-height: 48px; padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
@@ -20,7 +20,7 @@
 .aide-empty { color: var(--muted); }
 .aide-empty[hidden] { display: none; }
 
-/* Un tuto ouvert */
+/* ---------- Un tuto ouvert ---------- */
 #aide-tuto-view[hidden], #aide-list-view[hidden] { display: none; }
 .aide-tuto { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
 .aide-crumb { margin: 0; font-size: 14px; color: var(--muted); }
@@ -44,7 +44,7 @@
 .aide-missing { gap: 12px; }
 .aide-missing p { margin: 0; }
 
-/* Besoin d'aide */
+/* ---------- Besoin d'aide ---------- */
 .aide-help { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
 .aide-help h2 { margin: 0 0 4px; font-size: 22px; font-weight: 400; font-family: var(--font-display); }
 .aide-help p { margin: 0; }

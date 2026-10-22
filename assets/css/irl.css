@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Sorties IRL ===== */
+/* ===== Humane Gang — Sorties IRL (irl.html) ===== */
 .irl .page-head .eyebrow { color: var(--irl-fg); }
 .irl-section { margin-top: 40px; }
 .irl-section:first-of-type { margin-top: 0; }
@@ -15,7 +15,7 @@
 .meta span { overflow-wrap: anywhere; }
 .desc { margin: 0; white-space: pre-line; overflow-wrap: anywhere; color: var(--text); opacity: .92; }
 
-/* Prochaine sortie */
+/* ---------- Prochaine sortie ---------- */
 .featured { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 0; padding: 0; overflow: hidden; }
 .feat-cover { min-height: 320px; background: var(--irl-border); position: relative; }
 .feat-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -41,7 +41,7 @@
 }
 @media (max-width: 600px) { .feat-body { padding: 20px; } .feat-album { padding: 0 20px 20px; } }
 
-/* RSVP */
+/* ---------- RSVP ---------- */
 .rsvp-wrap { display: flex; flex-direction: column; gap: 10px; }
 .rsvp { display: flex; flex-wrap: wrap; gap: 8px; }
 .rsvp-btn { font: inherit; font-weight: 700; flex: 1 1 0; min-width: 96px; min-height: 44px; padding: 10px 14px; border-radius: var(--radius-sm);
@@ -61,7 +61,7 @@
 
 .owner-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* Sondage de dates */
+/* ---------- Sondage de dates ---------- */
 .poll { display: flex; flex-direction: column; gap: 16px; border-color: var(--irl-border); }
 .poll-head, .ev-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .poll-head > .stack-sm, .ev-row-head > .stack-sm { flex: 1 1 260px; }
@@ -80,7 +80,7 @@
 .vote-btn[aria-pressed="true"] { background: var(--sand); color: #121212; border-color: var(--sand); }
 @media (max-width: 600px) { .pd-actions { width: 100%; } .pd-actions .btn { flex: 1 1 auto; } }
 
-/* À venir */
+/* ---------- À venir ---------- */
 .ev-row { display: flex; gap: 20px; align-items: flex-start; }
 .ev-main { flex: 1; gap: 12px; }
 .date-tile { flex: none; width: 72px; padding: 10px 0; border-radius: 14px; text-align: center; background: var(--irl-bg); border: 1px solid var(--irl-border);
@@ -96,7 +96,7 @@
   .ev-row .rsvp-btn { flex: 1 1 0; min-width: 0; padding: 10px 8px; font-size: 14px; }
 }
 
-/* Passées + albums */
+/* ---------- Passées + albums ---------- */
 .past { display: flex; flex-direction: column; gap: 20px; }
 .past-head { display: flex; flex-wrap: wrap; gap: 16px 20px; align-items: flex-start; }
 .past-info { flex: 1 1 220px; }

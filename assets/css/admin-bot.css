@@ -109,7 +109,7 @@
 .bm-reason { flex-basis: 100%; }
 @media (min-width: 700px) { .bm-reason { flex-basis: auto; } }
 
-/* Historique */
+/* ---------- Historique ---------- */
 .bm-history { border-top: 1px solid var(--border); padding-top: 14px; }
 .bm-history > summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: 8px; }
 .bm-history-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }

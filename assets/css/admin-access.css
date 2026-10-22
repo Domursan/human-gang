@@ -24,7 +24,7 @@
 .pa-count-on { color: var(--sand); font-weight: 700; }
 .pa-table .btn svg { width: 18px; height: 18px; }
 
-/* Matrice */
+/* ---------- Matrice ---------- */
 .pa-matrix { font-size: 14px; }
 .pa-matrix th, .pa-matrix td { padding: 4px; border-bottom: 1px solid var(--border); text-align: center; }
 .pa-matrix tbody tr:last-child > * { border-bottom: 0; }
@@ -47,7 +47,7 @@
 .pa-cell:disabled { cursor: default; }
 .pa-cell:focus-visible, .pa-mx-head:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 
-/* Dialog « Personnes » */
+/* ---------- Dialog « Personnes » ---------- */
 .pa-dialog { width: min(560px, calc(100vw - 32px)); max-height: min(86vh, 760px); padding: 0; }
 .pa-dlg-in { display: flex; flex-direction: column; gap: 14px; padding: 22px 24px; }
 .pa-dlg-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
@@ -71,7 +71,7 @@
 .pa-people .empty { border: 0; }
 .pa-dlg-sum { margin: 0; }
 
-/* Onglet « Accès » de la fiche membre */
+/* ---------- Onglet « Accès » de la fiche membre ---------- */
 .pa-member { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
 .pa-member-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .pa-member-row:last-child { border-bottom: 0; }
