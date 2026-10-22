@@ -1,6 +1,12 @@
-// ===== Humane Gang — administration : souvenirs (hg_moments) — formulaire et suppression =====
-// La liste et le détail sont dans index.js ; ici, la fenêtre de création/modification et la suppression.
+// =====================================================================
+// Admin : souvenirs (hg_moments) — formulaire et suppression.
+// La liste et le détail sont dans index.js ; ici, la fenêtre de création et de modification, et la suppression.
 // Droits : hg_moments_insert exige created_by = administrateur ; la modification peut changer l'auteur.
+// L'image est rangée dans le dossier de l'administrateur (règle de stockage hg-photos).
+// Dépendances : core.js (sb, esc, toast, errMsg), image-compress.js, photos.js (envoi, suppression, uuid),
+// ui-confirm.js, helpers.js (todayIso, peopleOptions), reglages-valeurs-lot3.js (qualité des photos).
+// Exporte : openMomentForm, removeMoment.
+// =====================================================================
 import { sb, esc, toast, errMsg } from '../core.js';
 import { prepareImage } from '../image-compress.js';
 import { uploadImage, removeObjects, uuid } from '../photos.js';
@@ -55,6 +61,7 @@ export function openMomentForm({ me, m = null, people, onDone }) {
   dlg.showModal();
   f.title.focus();
 
+  /* Valide la saisie, envoie l'image si besoin, écrit la ligne (création ou mise à jour), puis nettoie l'ancienne image. */
   async function save() {
     const title = f.title.value.trim();
     if (!title) { toast('Donne un titre à ce souvenir.', 'error'); f.title.focus(); return; }

@@ -1,7 +1,11 @@
-// ===== Humane Gang — administration : photos =====
-// Deux sources : les albums des sorties (hg_photos) et les images des souvenirs (hg_moments.image_path).
+// =====================================================================
+// Admin : photos. Deux sources : les albums des sorties (hg_photos) et les images des souvenirs (hg_moments.image_path).
 // Les fichiers sont dans le bucket privé hg-photos ; miniatures signées, chargées au défilement (loading="lazy").
-// Supprimer un album : fichier du stockage puis ligne. Retirer l'image d'un souvenir : ligne puis fichier.
+// Supprimer un album : fichier du stockage, puis ligne. Retirer l'image d'un souvenir : ligne, puis fichier.
+// Dépendances : core.js (sb, esc, toast, errMsg), photos.js (stockage, miniatures, lightbox), ui-confirm.js,
+// icons.js, admin/common.js (sectionError), helpers.js (pagination, dates, annuaire).
+// Exporte : createPhotosPanel (fabrique la vue : élément HTML et fonction de rechargement).
+// =====================================================================
 import { sb, esc, toast, errMsg } from '../core.js';
 import { removeObjects, signedUrls, thumbHtml, openLightbox } from '../photos.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -9,11 +13,13 @@ import { svg } from '../icons.js';
 import { sectionError } from '../admin/common.js';
 import { pageRange, pageOf, pagerHtml, dayLabel, peopleOptions } from './helpers.js';
 
+/* Icônes des boutons Légende et Supprimer. */
 const ICON = {
   edit: svg('edit2', { size: 16, stroke: 1.8 }),
   trash: svg('trash2', { size: 16, stroke: 1.8 }),
 };
 
+/** Fabrique la vue Photos. ctx.people() donne l'annuaire. Renvoie { el, load }. */
 export function createPhotosPanel(ctx) {
   const el = document.createElement('div');
   el.className = 'sv-panel stack';
@@ -41,9 +47,12 @@ export function createPhotosPanel(ctx) {
   const authorSel = el.querySelector('#sv-ph-author');
   const S = { source: 'albums', event: '', author: '', page: 0, items: [], urls: new Map(), people: new Map(), events: new Map(), seqNo: 0, filled: false };
 
+  /* Libellé d'une photo : nom de la sortie pour un album, titre du souvenir sinon. */
   const labelOf = (it) => (it.kind === 'album' ? `Sortie : ${S.events.get(it.event)?.title ?? 'sortie supprimée'}` : `Souvenir : ${it.title}`);
+  /* Pseudo de l'auteur d'une photo (« Sans auteur » ou « Ancien membre » selon le cas). */
   const authorOf = (id) => (id ? (S.people.get(id)?.pseudo ?? 'Ancien membre') : 'Sans auteur');
 
+  /** Charge l'annuaire, la liste des sorties (200 dernières) et la liste des auteurs, pour les filtres. */
   async function loadLists() {
     S.people = await ctx.people();
     const r = await sb.from('hg_events').select('id,title,starts_at').order('starts_at', { ascending: false }).limit(200);
@@ -54,6 +63,7 @@ export function createPhotosPanel(ctx) {
     S.filled = true;
   }
 
+  /** Charge la page de photos de la source choisie, avec ses filtres, puis affiche la grille. Ignore une réponse périmée. */
   async function load() {
     const my = ++S.seqNo;
     grid.innerHTML = '<p class="empty">Chargement des photos…</p>';
@@ -88,6 +98,7 @@ export function createPhotosPanel(ctx) {
     }
   }
 
+  /** Affiche la grille des photos, ou un message si la liste est vide, puis les boutons de page. */
   function render(hasNext) {
     if (!S.items.length) {
       grid.innerHTML = `<p class="empty">${S.source === 'albums' ? 'Aucune photo pour ces filtres.' : 'Aucune image de souvenir pour ces filtres.'}</p>`;
@@ -97,6 +108,7 @@ export function createPhotosPanel(ctx) {
     pager.innerHTML = pagerHtml(S.page, hasNext);
   }
 
+  /** HTML d'une photo : vignette (zoom), légende, auteur, date et boutons d'action. */
   function card(it, i) {
     const label = labelOf(it);
     const url = S.urls.get(it.path);
@@ -142,6 +154,7 @@ export function createPhotosPanel(ctx) {
     }
   }
 
+  /** Modifie la légende d'une photo d'album, via une boîte de saisie. */
   async function editCaption(it) {
     const v = await confirmBox('Légende de la photo', '', {
       ok: 'Enregistrer',

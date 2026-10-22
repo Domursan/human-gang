@@ -1,10 +1,16 @@
-// ===== Humane Gang — administration : section « Souvenirs et photos » =====
-// Sous-section unique (vie/souvenirs) avec trois vues, choisies par des puces en haut de la colonne 2 :
+// =====================================================================
+// Admin : section « Souvenirs et photos ». Sous-section unique (vie/souvenirs) avec trois vues, choisies par
+// des puces en haut de la colonne 2 :
 //   #vie/souvenirs            liste des souvenirs (colonne 2) et détail (zone principale)
 //   #vie/souvenirs/<id>       un souvenir sélectionné
 //   #vie/souvenirs/photos     vue Photos (albums des sorties et images des souvenirs)
 //   #vie/souvenirs/reactions  vue Réactions (réactions actives, masquage)
 // Montage par admin.js (registerSub 'vie/souvenirs') : main, open, list. Droits : hg_moments, hg_photos, hg_reactions côté base.
+// Dépendances : core.js, photos.js (miniatures, lightbox), admin/ui/* (liste, en-tête), admin/common.js, admin/live.js,
+// helpers.js, moments.js (formulaire), photos.js (vue Photos), reactions.js (vue Réactions),
+// admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
+// Exporte : mountSouvenirsSection, openSouvenirs, listSouvenirs.
+// =====================================================================
 import { sb, esc } from '../core.js';
 import { signedUrls, thumbHtml, openLightbox } from '../photos.js';
 import { createList } from '../admin/ui/list.js';
@@ -18,9 +24,11 @@ import { createReactionsPanel } from './reactions.js';
 import { blocReglages } from '../admin-reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
+/* Vues de la section : [identifiant, libellé]. Souvenirs est la vue par défaut. */
 const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions']];
 const LIMIT = 500; // souvenirs chargés d'un coup ; la liste affiche par lots (createList)
 
+/* État de la section : auteur, annuaire, souvenirs chargés, URL signées, vue, souvenir choisi et zones d'affichage. */
 const S = {
   me: null, ctx: null, people: new Map(), rows: [], urls: new Map(), error: null, loaded: false, seq: 0,
   view: 'souvenirs', selId: null,
@@ -50,8 +58,10 @@ async function reload() {
   repaint();
 }
 
+/* Pseudo de l'auteur d'un souvenir (« Sans auteur » si absent, « Ancien membre » si inconnu). */
 const authorOf = (id) => (id ? (S.people.get(id)?.pseudo ?? 'Ancien membre') : 'Sans auteur');
 
+/** Lignes de la liste des souvenirs, avec l'URL de la miniature quand elle existe. */
 function listItems() {
   if (S.error) return [];
   return S.rows.map((m) => ({
@@ -66,6 +76,7 @@ function listItems() {
 
 /* ---------- Affichage ---------- */
 
+/** HTML d'une ligne de la liste : miniature, titre, date et auteur. */
 function rowHtml(it) {
   return `<div class="sv-li">
     <div class="sv-li-thumb">${it.url ? thumbHtml(it.url) : '<span class="thumb-missing" aria-hidden="true"></span>'}</div>
@@ -114,6 +125,7 @@ function paintViews() {
   S.colEl.querySelector('.sv-col-list').hidden = S.view !== 'souvenirs';
 }
 
+/** Redessine la liste, le détail et les vues après un changement de données. */
 function repaint() {
   S.list?.update(listItems());
   paintDetail();
@@ -122,8 +134,10 @@ function repaint() {
 
 /* ---------- Actions ---------- */
 
+/* Change l'URL de la section (le routeur réaffiche la bonne vue). */
 const setHash = (path) => { location.hash = `#vie/souvenirs${path}`; };
 
+/** Ouvre le formulaire d'un souvenir (création si m est absent). Après enregistrement, ouvre le nouveau souvenir. */
 async function editMoment(m = null) {
   S.people = await S.ctx.people().catch(() => S.people);
   openMomentForm({
@@ -137,6 +151,7 @@ async function editMoment(m = null) {
   });
 }
 
+/** Après une suppression : relit les souvenirs, revient à la liste et place le focus sur « Nouveau souvenir ». */
 async function afterRemove() {
   const was = S.selId;
   await reload();
