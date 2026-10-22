@@ -136,9 +136,10 @@ export function createPhotosPanel(ctx) {
       { ok: album ? 'Supprimer' : 'Retirer', danger: true }))) return false;
     try {
       if (album) {
-        await removeObjects([it.path]);
+        // Ligne supprimée d'abord, puis le fichier : en cas d'échec, il ne reste pas une fiche sans image.
         const { error } = await sb.from('hg_photos').delete().eq('id', it.id);
         if (error) throw error;
+        await removeObjects([it.path]);
         toast('Photo supprimée.', 'ok');
       } else {
         const { error } = await sb.from('hg_moments').update({ image_path: null }).eq('id', it.id);
