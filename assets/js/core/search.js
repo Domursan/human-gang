@@ -3,30 +3,65 @@
 // (hg_moments : titre, texte) et les membres (rpc hg_members), avec des résultats groupés et des liens vers les pages.
 // Les listes sont chargées une fois, à la première ouverture de la page, et au plus 300 éléments par type ;
 // la recherche se fait ensuite dans la page, sans aller-retour, insensible à la casse et aux accents.
+/*
+ * Rôle : la loupe de l'en-tête ouvre un dialogue de recherche qui parcourt les sorties, les souvenirs
+ * et les membres. Chaque résultat est un lien vers la page concernée.
+ * Page : toutes les pages pour un membre connecté (header.js ajoute la loupe et bindSearch).
+ * Dépendances : supabase.js (requêtes), pages-access.js (groupes visibles selon mes pages),
+ * util.js (esc, errMsg, fmtDate, avatarHtml), icons.js (loupe, fermer).
+ * Tables / RPC : hg_events, hg_moments, rpc hg_members.
+ * Exporte : foldText, openSearch, searchButtonHtml, bindSearch.
+ */
 import { sb } from './supabase.js';
 import { canAccess } from './pages-access.js';
 import { esc, errMsg, fmtDate, avatarHtml } from './util.js';
 import { ICON_SEARCH, ICON_CLOSE } from './icons.js';
 
+/* ---------- Constantes ---------- */
+
 const LIMIT = 300;        // éléments chargés au plus par type
 const MIN_CHARS = 2;      // longueur minimale de la requête
-const SHOW_PER_GROUP = 10;
+const SHOW_PER_GROUP = 10; // résultats affichés par groupe (le reste est signalé)
+/** Forme d'un identifiant UUID : seuls les ids qui la respectent sont utilisés dans les liens. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Groupes de résultats : titre affiché, et page à laquelle le groupe appartient
+ * (le groupe n'apparaît que si le membre a accès à cette page).
+ */
 const GROUPS = {
   events: { title: 'Sorties', slug: 'irl' },
   moments: { title: 'Souvenirs', slug: 'historique' },
   members: { title: 'Membres', slug: 'membre' },
 };
 
-/** Texte normalisé pour la recherche : minuscules, sans accents. */
+/* ---------- Normalisation ---------- */
+
+/**
+ * Texte normalisé pour la recherche : minuscules, sans accents.
+ * Le NFD sépare la lettre de son accent, puis on retire les marques d'accent (plage U+0300 à U+036F).
+ * @param {string|null|undefined} s Texte source.
+ * @returns {string} Texte prêt à comparer.
+ */
 export const foldText = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /* ---------- Données (une fois par type, mises en cache si le chargement a réussi) ---------- */
 const cache = {};   // clé -> { items } ; absent tant que non chargé ou en erreur
 const pending = {}; // clé -> promesse en cours
 
+/**
+ * Renvoie l'identifiant s'il a la forme d'un UUID, sinon null (évite des liens cassés).
+ * @param {*} id Identifiant brut.
+ * @returns {string|null}
+ */
 const okId = (id) => (UUID_RE.test(String(id ?? '')) ? String(id) : null);
 
+/**
+ * Charge la liste d'un type (sorties, souvenirs ou membres) et la transforme en éléments de recherche.
+ * Chaque élément porte un titre, un sous-titre, un lien et un champ `hay` (texte normalisé où chercher).
+ * Ne jette jamais : en cas d'erreur, renvoie { error, items: [] }.
+ * @param {'events'|'moments'|'members'} key Type à charger.
+ * @returns {Promise<{items: Array<object>, error?: string}>}
+ */
 async function fetchGroup(key) {
   try {
     if (key === 'events') {
@@ -70,7 +105,12 @@ async function fetchGroup(key) {
   }
 }
 
-/** Charge un type (une seule fois). Renvoie { items } ou { error, items: [] }. */
+/**
+ * Charge un type (une seule fois). Renvoie { items } ou { error, items: [] }.
+ * Une erreur n'est pas gardée en cache : la prochaine ouverture réessaie.
+ * @param {string} key Type à charger.
+ * @returns {Promise<{items: Array<object>, error?: string}>}
+ */
 function loadGroup(key) {
   if (cache[key]) return Promise.resolve(cache[key]);
   pending[key] ||= fetchGroup(key).then((res) => {
@@ -82,15 +122,37 @@ function loadGroup(key) {
 }
 
 /* ---------- Recherche et rendu ---------- */
+
+/**
+ * Découpe la requête en mots normalisés. Chaque mot doit apparaître dans le résultat (ordre libre).
+ * @param {string} q Requête saisie.
+ * @returns {string[]}
+ */
 const terms = (q) => foldText(q).trim().split(/\s+/).filter(Boolean);
+/**
+ * Clés des groupes que le membre a le droit de voir.
+ * @returns {string[]} Par exemple ['events', 'members'].
+ */
 const visibleGroups = () => Object.keys(GROUPS).filter((k) => canAccess(GROUPS[k].slug));
 
+/**
+ * Markup d'un résultat (lien). Pour un membre, on affiche aussi son avatar.
+ * @param {string} key Type du résultat.
+ * @param {object} it Élément de recherche (title, sub, href, avatar).
+ * @returns {string} Élément <li> en HTML.
+ */
 function itemHtml(key, it) {
   const lead = key === 'members' ? `<span class="sr-ico">${avatarHtml(it.avatar, 32)}</span>` : '';
   // L'espace entre titre et sous-titre est un nœud texte : invisible à l'écran (flex), lu par les lecteurs d'écran
   return `<li><a class="sr-item" href="${esc(it.href)}">${lead}<span class="sr-title">${esc(it.title)}</span>${it.sub ? ` <span class="sr-sub">${esc(it.sub)}</span>` : ''}</a></li>`;
 }
 
+/**
+ * Affiche les résultats pour la requête donnée : un bloc par groupe visible, avec compteur,
+ * « Chargement… » ou « Indisponible » selon l'état des données. Met aussi à jour le message d'état (aria-live).
+ * @param {HTMLDialogElement} d Dialogue de recherche.
+ * @param {string} q Texte saisi.
+ */
 function renderResults(d, q) {
   const box = d.querySelector('.search-results');
   const status = d.querySelector('.sr-status');
@@ -122,9 +184,16 @@ function renderResults(d, q) {
 }
 
 /* ---------- Dialogue ---------- */
+
+/** Dialogue de recherche, créé à la première ouverture. */
 let dlg = null;
+/** Élément à qui rendre le focus à la fermeture. */
 let opener = null;
 
+/**
+ * Construit le dialogue : champ de recherche, zone de résultats, focus piégé, Entrée pour ouvrir le premier résultat.
+ * @returns {HTMLDialogElement} Le dialogue, déjà ajouté au document.
+ */
 function buildDialog() {
   const d = document.createElement('dialog');
   d.className = 'search-dialog';
@@ -150,7 +219,7 @@ function buildDialog() {
   d.querySelector('.search-close').addEventListener('click', () => d.close());
   d.addEventListener('click', (e) => {
     if (e.target === d) d.close(); // clic sur le fond
-    else if (e.target.closest('a.sr-item')) d.close();
+    else if (e.target.closest('a.sr-item')) d.close(); // un résultat : on ferme, le lien fait le reste
   });
   d.addEventListener('close', () => {
     const back = opener?.isConnected ? opener : document.querySelector('.site-header .nav-search-open');
@@ -179,7 +248,11 @@ function buildDialog() {
   return d;
 }
 
-/** Charge les types visibles qui ne le sont pas encore, puis rafraîchit les résultats. */
+/**
+ * Charge les types visibles qui ne le sont pas encore, puis rafraîchit les résultats.
+ * Affiche « Chargement… » pendant l'attente.
+ * @param {HTMLDialogElement} d Dialogue de recherche.
+ */
 function ensureLoaded(d) {
   const todo = visibleGroups().filter((k) => !cache[k]);
   if (!todo.length) return;
@@ -189,7 +262,10 @@ function ensureLoaded(d) {
   });
 }
 
-/** Ouvre la recherche (ou donne le focus au champ si elle est déjà ouverte). */
+/**
+ * Ouvre la recherche (ou donne le focus au champ si elle est déjà ouverte).
+ * @param {Event|null} [e] Événement du clic : son bouton reçoit le focus à la fermeture.
+ */
 export function openSearch(e) {
   if (document.querySelector('dialog[open]') && !dlg?.open) return; // un autre dialogue est déjà ouvert
   dlg ||= buildDialog();
@@ -207,13 +283,20 @@ export function openSearch(e) {
   renderResults(dlg, input.value);
 }
 
-/** Markup du bouton loupe de l'en-tête (membres connectés seulement). */
+/**
+ * Markup du bouton loupe de l'en-tête (membres connectés seulement).
+ * @returns {string} HTML du bouton.
+ */
 export function searchButtonHtml() {
   return '<button class="nav-icon nav-search-open" type="button" aria-label="Rechercher (Ctrl ou Cmd + K)" aria-haspopup="dialog" title="Rechercher (Ctrl ou Cmd + K)">' + ICON_SEARCH + '</button>';
 }
 
+/** true une fois le raccourci clavier branché : on ne l'ajoute pas deux fois. */
 let keyBound = false;
-/** Branche le bouton loupe de l'en-tête et le raccourci Ctrl/Cmd+K (une seule fois pour la page). */
+/**
+ * Branche le bouton loupe de l'en-tête et le raccourci Ctrl/Cmd+K (une seule fois pour la page).
+ * @param {HTMLElement} header En-tête dans lequel se trouve le bouton loupe.
+ */
 export function bindSearch(header) {
   header.querySelector('.nav-search-open')?.addEventListener('click', openSearch);
   if (keyBound) return;

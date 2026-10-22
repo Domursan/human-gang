@@ -1,4 +1,13 @@
 // Pied de page commun et bandeau d'information sur les cookies.
+/*
+ * Rôle : construit le pied de page (liens légaux, aide, événements, bouton « Préférences d'affichage »)
+ * et affiche une seule fois le bandeau d'information sur les cookies.
+ * Page : toutes les pages (appelé par init.js après l'en-tête).
+ * Dépendances : profile.js (profil), pages-access.js (droit d'accès à la page Événements),
+ * prefs.js (ouverture des préférences), icons.js (icône), site-defaults.js (textes et liens du site), util.js (esc).
+ * Stockage local : « hg_cookie_ok » une fois le bandeau accepté.
+ * Exporte : renderFooter, cookieNotice.
+ */
 import { getCachedProfile } from './profile.js';
 import { canAccess } from './pages-access.js';
 import { openPrefs } from './prefs.js';
@@ -6,8 +15,14 @@ import { ICON_PREFS } from './icons.js';
 import { siteIdentite, siteTexte, footerLiens, fmt } from './site-defaults.js';
 import { esc } from './util.js';
 
+/** Adresse de chaque lien du pied de page, par identifiant (les identifiants viennent des réglages du site). */
 const FOOTER_HREF = { evenements: 'evenements.html', assistance: 'assistance.html', mentions: 'legal.html#mentions', confidentialite: 'legal.html#confidentialite', cookies: 'legal.html#cookies' };
 
+/**
+ * Reconstruit le pied de page. Remplace l'ancien s'il existe.
+ * Le lien « Événements » n'apparaît que pour un membre qui y a accès.
+ * @param {object|null} [profile] Profil courant (par défaut le profil en cache).
+ */
 export function renderFooter(profile = getCachedProfile()) {
   document.querySelector('.site-footer')?.remove();
   const footer = document.createElement('footer');
@@ -25,6 +40,12 @@ export function renderFooter(profile = getCachedProfile()) {
   document.body.append(footer);
   footer.querySelector('.prefs-open').addEventListener('click', openPrefs);
 }
+
+/**
+ * Affiche le bandeau cookies en bas de page, si le site l'active et si on ne l'a pas encore accepté.
+ * « OK, compris » retient le choix dans localStorage. Si localStorage est indisponible, on n'affiche
+ * pas le bandeau (sinon il réapparaîtrait à chaque page).
+ */
 export function cookieNotice() {
   if (!siteIdentite().bandeau_cookies) return;
   try { if (localStorage.getItem('hg_cookie_ok')) return; } catch { return; }

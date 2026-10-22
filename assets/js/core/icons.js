@@ -1,4 +1,13 @@
 // Icônes SVG en ligne du socle (en-tête, pied de page, dialogues). Décoratives : aria-hidden.
+/*
+ * Rôle : contient les icônes SVG (chaînes HTML prêtes à insérer) utilisées par l'en-tête, le pied de page
+ * et les dialogues communs. Chaque icône est une constante ICON_<NOM> ; elle n'a pas de texte alternatif
+ * (aria-hidden), le libellé est donné par le bouton ou le lien qui la contient.
+ * Page : toutes les pages (via header.js, footer.js, search.js, etc.).
+ * Dépendances : aucune.
+ * Exporte : ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_ALERT, ICON_CLOSE, ICON_SEARCH, ICON_HELP.
+ * Les icônes utilisent currentColor : elles prennent la couleur du texte qui les entoure.
+ */
 
 export const ICON_MSG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 export const ICON_DOOR = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4H6v16h8"/><path d="M10 12h10M17 9l3 3-3 3"/></svg>';

@@ -1,15 +1,32 @@
 // Préférences d'affichage : modification (setPrefs) et panneau <dialog> « Préférences d'affichage ».
+/*
+ * Rôle : applique une modification de préférence (thème, mode, effets, son) à l'écran tout de suite,
+ * et fournit le panneau « Préférences d'affichage » ouvert depuis l'en-tête ou le pied de page.
+ * Page : toutes les pages (bouton dans header.js et footer.js).
+ * Dépendances : prefs-state.js (lecture et écriture), theme.js (repeindre le thème), effects.js (calque d'effets),
+ * util.js (reducedMotion), sound.js (sons de test), icons.js.
+ * Événement émis : window « hg:prefs » (détail = préférences) après chaque changement.
+ * Exporte : setPrefs, openPrefs.
+ */
 import { getPrefs, writePrefs, PREF_DEFAULTS } from './prefs-state.js';
 import { paintSiteTheme, paintActiveTheme, getActiveTheme } from './theme.js';
 import { startEffects } from './effects.js';
 import { reducedMotion } from './util.js';
 import { playSound } from '../sound.js';
-import { ICON_CLOSE, ICON_PREFS } from './icons.js';
+import { ICON_CLOSE } from './icons.js';
 
-/** Modifie et enregistre les préférences, puis les applique immédiatement. Renvoie les nouvelles préférences. */
+/* ---------- Application d'une modification ---------- */
+
+/**
+ * Modifie et enregistre les préférences, puis les applique immédiatement. Renvoie les nouvelles préférences.
+ * Seul ce qui a changé est repeint : thème spécial, mode, ou effets.
+ * @param {object} [patch={}] Champs à changer.
+ * @returns {object} Préférences après la modification.
+ */
 export function setPrefs(patch = {}) {
   const before = writePrefs(patch);
   const after = getPrefs();
+  // Un seul repaint : si plusieurs champs changent, le thème spécial est prioritaire, puis le mode, puis les effets
   if (before.special !== after.special) paintSiteTheme();
   else if (before.mode !== after.mode) paintActiveTheme();
   else if (before.effects !== after.effects) startEffects(getActiveTheme());
@@ -17,11 +34,17 @@ export function setPrefs(patch = {}) {
   try { window.dispatchEvent(new CustomEvent('hg:prefs', { detail: getPrefs() })); } catch {}
   return getPrefs();
 }
-export function setEffectsEnabled(on) { setPrefs({ effects: !!on }); }
-
 /* ---------- Panneau « Préférences d'affichage » (<dialog>) ---------- */
+
+/** Dialogue des préférences, créé à la première ouverture. */
 let _prefsDialog = null;
+/** Élément qui avait le focus avant l'ouverture : on lui rend le focus à la fermeture. */
 let _prefsOpener = null;
+/**
+ * Construit le dialogue : modes, thème spécial, effets, sons, volume, réinitialisation.
+ * Chaque changement s'applique tout de suite (pas de bouton « Enregistrer »).
+ * @returns {HTMLDialogElement} Le dialogue, déjà ajouté au document.
+ */
 function buildPrefsDialog() {
   const d = document.createElement('dialog');
   d.className = 'prefs-dialog';
@@ -73,6 +96,7 @@ function buildPrefsDialog() {
       </div>
     </form>`;
   const f = d.querySelector('form');
+  // Délégation : un seul écouteur pour les modes et les interrupteurs
   f.addEventListener('change', (e) => {
     const el = e.target;
     if (el.name === 'mode') setPrefs({ mode: el.value });
@@ -80,8 +104,8 @@ function buildPrefsDialog() {
     else if (el.name === 'sound') { setPrefs({ sound: el.checked }); if (el.checked) playSound('success'); }
   });
   const vol = f.elements.volume;
-  vol.addEventListener('input', () => { setPrefs({ volume: Number(vol.value) / 100 }); });
-  vol.addEventListener('change', () => playSound('click'));
+  vol.addEventListener('input', () => { setPrefs({ volume: Number(vol.value) / 100 }); }); // le son suit le curseur en direct
+  vol.addEventListener('change', () => playSound('click')); // un petit clic confirme le volume choisi
   f.querySelector('.prefs-test').addEventListener('click', () => playSound('badge'));
   f.querySelector('.prefs-reset').addEventListener('click', () => { setPrefs({ ...PREF_DEFAULTS }); });
   d.addEventListener('click', (e) => { if (e.target === d) d.close(); }); // clic sur le fond
@@ -89,6 +113,11 @@ function buildPrefsDialog() {
   document.body.append(d);
   return d;
 }
+/**
+ * Recopie les préférences dans les champs du dialogue (utile si elles ont changé ailleurs).
+ * Le volume et le test sont grisés quand les sons sont coupés. La description des effets suit
+ * la préférence « réduire les animations » du système.
+ */
 function syncPrefsDialog() {
   const d = _prefsDialog;
   if (!d) return;
@@ -107,7 +136,10 @@ function syncPrefsDialog() {
     ? 'Ton appareil demande de réduire les animations : elles restent coupées.'
     : 'Animations décoratives : étoiles, neige, confettis…';
 }
-/** Ouvre le panneau des préférences d'affichage. */
+/**
+ * Ouvre le panneau des préférences d'affichage.
+ * @param {Event|null} [e] Événement du clic : son bouton reçoit le focus à la fermeture.
+ */
 export function openPrefs(e) {
   _prefsDialog ||= buildPrefsDialog();
   _prefsOpener = e?.currentTarget || document.activeElement;

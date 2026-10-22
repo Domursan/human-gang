@@ -1,15 +1,36 @@
 // Session et profil du membre connecté (mis en cache pour la page courante).
+/*
+ * Rôle : donne le profil (ligne hg_profiles) du membre connecté, une seule fois par page, et redirige
+ * les visiteurs vers la page de connexion quand la page l'exige.
+ * Page : toutes les pages (init.js appelle requireMember / requireAdmin / getProfile selon la page).
+ * Dépendances : supabase.js (session, table hg_profiles), perms.js (droits du panel).
+ * Exporte : getCachedProfile, getUser, getProfile, requireMember, requireAdmin.
+ */
 import { sb } from './supabase.js';
 import { loadMyPerms, canPanel } from './perms.js';
 
+/** Profil en cache : undefined = pas encore chargé ; null = pas de profil (visiteur). */
 let _profile;
-/** Profil mis en cache (undefined avant le premier chargement, null si pas de profil). Synchrone. */
+/**
+ * Profil mis en cache (undefined avant le premier chargement, null si pas de profil). Synchrone.
+ * @returns {object|null|undefined}
+ */
 export function getCachedProfile() { return _profile; }
 
+/**
+ * Utilisateur connecté (compte d'authentification), ou null si personne n'est connecté.
+ * @returns {Promise<object|null>}
+ */
 export async function getUser() {
   const { data } = await sb.auth.getSession();
   return data.session?.user ?? null;
 }
+/**
+ * Profil du membre connecté. Lu depuis le cache sauf si force est demandé.
+ * @param {boolean} [force=false] Relit la base même si le profil est déjà en cache.
+ * @returns {Promise<object|null>} La ligne hg_profiles, ou null (visiteur ou pas encore de profil).
+ * @throws {Error} En cas d'erreur réseau ou base (rien n'est mis en cache dans ce cas).
+ */
 export async function getProfile(force = false) {
   if (_profile !== undefined && !force) return _profile;
   const user = await getUser();
@@ -19,13 +40,23 @@ export async function getProfile(force = false) {
   if (error) throw error;
   return (_profile = data ?? null);
 }
-/** Redirige vers compte.html si non membre. Renvoie le profil. */
+/**
+ * Exige un membre connecté. Sinon, redirige vers compte.html (avec retour à la page demandée).
+ * @returns {Promise<object>} Le profil. Ne revient jamais si redirigé (lève 'redirect' pour arrêter la page).
+ * @throws {Error} Error('redirect') quand la redirection est lancée.
+ */
 export async function requireMember() {
   const p = await getProfile();
   if (!p) { location.href = `compte.html?next=${encodeURIComponent(location.pathname.split('/').pop())}`; throw new Error('redirect'); }
   return p;
 }
-/** Panel d'administration : admin, ou Staff actif avec au moins une permission. Sinon redirection vers l'accueil. */
+/**
+ * Panel d'administration : admin, ou Staff actif avec au moins une permission. Sinon redirection vers l'accueil.
+ * Un admin passe sans requête de droits ; un Staff vérifie ses permissions. Une erreur réseau n'est
+ * pas une redirection : elle remonte jusqu'à init.js, qui affiche « Connexion impossible ».
+ * @returns {Promise<object>} Le profil.
+ * @throws {Error} Error('redirect') quand la redirection est lancée.
+ */
 export async function requireAdmin() {
   const p = await requireMember();
   if (p.is_admin) return p;
