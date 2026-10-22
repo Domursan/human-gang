@@ -57,7 +57,7 @@ const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
-  lcdShown: null, lcdAnim: false, quests: null, shownIds: [],
+  lcdShown: null, lcdAnim: false, quests: null, shownIds: [], zoomIds: null,
   peer: null, returnY: 0, tradeApi: null, tradesReady: null,
 };
 /** Configuration du jeu (tarifs, taux, durées) renvoyée par hg_cards_me. Vide avant le premier chargement. */
@@ -85,7 +85,8 @@ const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
 /** Nom de la série affichée dans la cartouche (la plus récente à défaut). */
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
 // Une seule fenêtre de carte agrandie : elle suit la vue affichée (collection ou collection d'un membre).
-const zoom = createZoom({ ids: () => (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)) });
+// S.zoomIds, si fixé le temps d'un appel à zoom.open, remplace cette liste (cartes d'un booster, voir openBoosterZoom).
+const zoom = createZoom({ ids: () => S.zoomIds || (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)) });
 
 /* ---------- Données ---------- */
 /**
@@ -546,10 +547,12 @@ function applyStage(R) {
   root.classList.toggle('is-in', R.step >= 1);
   root.classList.toggle('is-boot', R.step >= 2);
   root.classList.toggle('is-flash', R.step === 3);
+  // Une carte déjà retournée à la main (voir onBoosterCard) reste retournée à chaque étape.
   root.querySelectorAll('.op-card').forEach((card) => {
     const i = Number(card.dataset.i);
-    card.classList.toggle('is-out', R.step >= 4 + 2 * i);
-    card.classList.toggle('is-flip', R.step >= 5 + 2 * i);
+    const done = R.revealed.has(i);
+    card.classList.toggle('is-out', done || R.step >= 4 + 2 * i);
+    card.classList.toggle('is-flip', done || R.step >= 5 + 2 * i);
   });
 }
 
@@ -580,9 +583,11 @@ function startSeq(R) {
  */
 function revealCard(R, i) {
   const card = R.cards[i];
-  if (!card) return;
+  if (!card || R.revealed.has(i)) return;
   R.revealed.add(i);
   playSound(rarityRank(card.rarity) >= 5 ? 'badge' : 'click');
+  setCardControl(R, i);
+  showRevealHint();
 }
 
 /**
@@ -628,7 +633,7 @@ function multiHtml(R) {
   const cells = R.cards.map((card, i) => {
     const rank = rarityRank(card.rarity);
     const cls = ['x5-cell', R.revealed.has(i) ? '' : 'is-pending', card.shiny ? 'is-shiny' : '', rank >= 5 ? 'is-top' : ''].filter(Boolean).join(' ');
-    return `<div class="${cls}" id="x5-c${i}" data-rank="${rank}">`
+    return `<div class="${cls}" id="x5-c${i}" data-rank="${rank}" role="button" tabindex="0" data-action="booster-card" data-i="${i}" aria-label="${esc(boosterCardLabel(card, R.revealed.has(i)))}">`
       + `<div class="x5-back">${cardBackHtml('sm')}</div>`
       + `<div class="x5-front">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'sm' })}</div></div>`;
   }).join('');
@@ -644,7 +649,8 @@ function multiHtml(R) {
         <p class="cartes-small">${esc(multiSub(R))}</p>
         ${done && R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
       </div>
-      <div class="x5-grid" aria-hidden="true">${cells}</div>${list}
+      <div class="x5-grid">${cells}</div>${list}
+      ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
     </section>`;
 }
@@ -680,13 +686,13 @@ function stageHtml(R) {
   const bestName = R.best ? rarityLabel(R.best) : 'aucune';
   const cards = R.cards.map((card, i) => {
     const off = i - (n - 1) / 2;
-    return `<div class="op-card" data-i="${i}" style="--i:${off};--r:${off * 6}deg;--y:${330 + Math.abs(off) * 4};z-index:${10 + i}">`
+    return `<div class="op-card" data-i="${i}" role="button" tabindex="0" data-action="booster-card" aria-label="${esc(boosterCardLabel(card, R.revealed.has(i)))}" style="--i:${off};--r:${off * 6}deg;--y:${330 + Math.abs(off) * 4};z-index:${10 + i}">`
       + `<div class="op-inner"><div class="op-face op-back">${cardBackHtml('sm')}</div>`
       + `<div class="op-face op-front">${cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'sm' })}</div></div></div>`;
   }).join('');
   const bars = Array.from({ length: 8 }, (_, k) => `<i style="--k:${k}"></i>`).join('');
-  return `<div class="op-cart">${cartridgeHtml()}</div>`
-    + '<div class="op-con"><div class="op-con-body"></div><div class="op-slot"></div>'
+  return `<div class="op-cart" aria-hidden="true">${cartridgeHtml()}</div>`
+    + '<div class="op-con" aria-hidden="true"><div class="op-con-body"></div><div class="op-slot"></div>'
     + '<div class="op-scr"><div class="op-flash"></div>'
     + '<p class="op-l1">BOOT HG v1.0</p>'
     + `<p class="op-l2">LECTURE DU PAQUET ${n}/${n}</p>`
@@ -706,8 +712,8 @@ function renderReveal() {
   const done = R.phase !== 'seq';
   const best = R.best ? rarityLabel(R.best) : '—';
   const body = R.seq
-    ? `<div class="fit op-wrap" data-w="400" style="--h:520" aria-hidden="true"><div class="fit-in op-stage" id="op-stage" style="--fc:${tintOf(R.best)}">${stageHtml(R)}</div></div>`
-    : `<div class="cartes-booster-grid">${R.cards.map((card) => cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'md' })).join('')}</div>`;
+    ? `<div class="fit op-wrap" data-w="400" style="--h:520"><div class="fit-in op-stage" id="op-stage" style="--fc:${tintOf(R.best)}">${stageHtml(R)}</div></div>`
+    : `<div class="cartes-booster-grid">${R.cards.map((card, i) => cardHtml(card, { shiny: card.shiny, serial: card.serial, size: 'md', button: true, attrs: `data-action="booster-card" data-i="${i}"` })).join('')}</div>`;
   const list = `<ul class="visually-hidden">${R.cards.map((c) => `<li>${esc(c.name)} : ${esc(rarityLabel(c.rarity))}${c.shiny ? ', brillante' : ''}</li>`).join('')}</ul>`;
   const actions = done
     ? `<p class="muted">Meilleure carte : ${esc(best)}</p>
@@ -717,6 +723,7 @@ function renderReveal() {
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
       <h2 id="cartes-reveal-h">Ton booster</h2>
       ${body}${list}
+      ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
     </section>`;
   if (R.seq) applyStage(R);
@@ -920,10 +927,12 @@ function startMulti(R) {
  */
 function revealMulti(R, i) {
   const card = R.cards[i];
-  if (!card) return;
+  if (!card || R.revealed.has(i)) return;
   R.revealed.add(i);
   $(`#x5-c${i}`)?.classList.remove('is-pending');
   if (rarityRank(card.rarity) >= 5) playSound('badge');
+  setCardControl(R, i);
+  showRevealHint();
 }
 
 /**
@@ -1688,6 +1697,86 @@ function renderHistory() {
     : '<p class="muted small">Aucun mouvement pour le moment.</p>';
 }
 
+/* ---------- Cartes d'un booster : retourner, puis voir en grand ---------- */
+// Une carte révélée s'ouvre dans la même fenêtre agrandie que la collection (cartes-zoom.js).
+// Avant son retournement, un clic (ou Entrée / Espace) la retourne ; le clic suivant l'agrandit.
+/**
+ * Libellé accessible d'une carte d'un booster : face cachée tant qu'elle n'est pas retournée, puis son nom.
+ * @param {object} card carte obtenue (booster)
+ * @param {boolean} shown vrai une fois la carte retournée
+ * @returns {string}
+ */
+function boosterCardLabel(card, shown) {
+  if (!shown) return 'Carte cachée : touche pour la retourner';
+  return `Voir le détail de ${card.name} : ${rarityLabel(card.rarity)}${card.shiny ? ', brillante' : ''}`;
+}
+
+/**
+ * Met à jour le libellé accessible de la carte i une fois retournée (sans redessiner la scène).
+ * @param {object} R ouverture en cours
+ * @param {number} i index de la carte
+ */
+function setCardControl(R, i) {
+  const el = R.multi ? $(`#x5-c${i}`) : $(`#op-stage .op-card[data-i="${i}"]`);
+  el?.setAttribute('aria-label', boosterCardLabel(R.cards[i], R.revealed.has(i)));
+}
+
+/**
+ * Indice discret sous les cartes : « Touche une carte pour la voir en grand ». Caché tant qu'aucune carte n'est retournée.
+ * @param {object} R ouverture en cours
+ * @returns {string} HTML de l'indice
+ */
+function revealHint(R) {
+  return `<p class="muted small cartes-reveal-hint"${R.revealed.size ? '' : ' hidden'}>Touche une carte pour la voir en grand</p>`;
+}
+
+/** Affiche l'indice dès qu'une première carte est retournée. */
+function showRevealHint() {
+  $('#cartes-reveal .cartes-reveal-hint')?.removeAttribute('hidden');
+}
+
+/**
+ * Ouvre la carte agrandie sur la carte i d'un booster. Les flèches et « Précédent / Suivant » parcourent
+ * les cartes de ce booster ou de ce lot (sans doublon), pas la collection.
+ * @param {object} R ouverture en cours
+ * @param {number} i index de la carte
+ * @param {HTMLElement} el carte cliquée (le focus y revient à la fermeture)
+ */
+function openBoosterZoom(R, i, el) {
+  const card = R.cards[i];
+  if (!card) return;
+  S.zoomIds = [...new Set(R.cards.map((c) => c.card_id))];
+  try { zoom.open(card.card_id, el); } finally { S.zoomIds = null; }
+}
+
+/**
+ * Clic sur une carte d'un booster : si elle n'est pas encore retournée, il la retourne ; sinon elle s'ouvre en grand.
+ * @param {HTMLElement} el carte cliquée (data-i = index de la carte)
+ */
+function onBoosterCard(el) {
+  const R = S.reveal;
+  if (!R) return;
+  const i = Number(el.dataset.i);
+  if (!R.revealed.has(i)) {
+    if (R.multi) revealMulti(R, i);
+    else { revealCard(R, i); applyStage(R); }
+    return;
+  }
+  openBoosterZoom(R, i, el);
+}
+
+/**
+ * Entrée ou Espace sur une carte de booster (élément à rôle bouton) : même effet qu'un clic.
+ * Les vrais boutons gèrent déjà ces touches, on ne les traite pas deux fois.
+ * @param {KeyboardEvent} e
+ */
+function onCardKey(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  if (!e.target.matches?.('[role=button][data-action=booster-card]')) return;
+  e.preventDefault();
+  e.target.click();
+}
+
 /* ---------- Événements ---------- */
 /**
  * Délégation des clics sur la page : onglets et tous les boutons [data-action] (un seul écouteur pour toute la page).
@@ -1708,6 +1797,7 @@ function onClick(e) {
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
     case 'zoom-card': return zoom.open(t.dataset.card, t);
+    case 'booster-card': return onBoosterCard(t);
     case 'mass': return openMass();
     case 'peer-back': leavePeer(); $(`#cartes-tab-${S.tab}`)?.focus({ preventScroll: true }); return;
     case 'peer-zoom': return zoom.open(t.dataset.card, t);
@@ -1760,6 +1850,7 @@ async function boot() {
   app.innerHTML = skeleton();
   app.addEventListener('click', onClick);
   app.addEventListener('change', onChange);
+  app.addEventListener('keydown', onCardKey);
   $('#cartes-tablist').addEventListener('keydown', onTabKey);
   $('#cartes-detail').addEventListener('close', () => { S.detailId = null; });
   window.addEventListener('resize', () => fitAll(app));

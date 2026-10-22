@@ -397,6 +397,8 @@ export function createClient() {
         });
         const ORD = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
         const best = cards.reduce((b, c) => (ORD.indexOf(c.rarity) > ORD.indexOf(b) ? c.rarity : b), 'commune');
+        // Comme la vraie RPC : les cartes tirées deviennent des exemplaires du joueur (collection, carte agrandie).
+        for (const c of cards) DB.hg_card_copies.push({ id: c.copy_id, card_id: c.card_id, owner_id: ME, shiny: c.shiny, serial: null, source: 'booster', obtained_at: iso(0), locked_trade: null, recycled_at: null });
         return { data: { cards, best, demandees: 5, livrees: 5, offert: !!args.p_offert, offerts_restants: w.gift_boosters }, error: null };
       }
       // Sans le scénario reqRpc, la nouvelle fonction « n'existe pas » : erreur PGRST202 (comme la base sans la migration), pour tester le repli.

@@ -10,6 +10,8 @@
 @media (min-width: 720px) { .x5-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; } }
 .x5-grid .hgc { --w: 100%; width: 100%; }
 .x5-cell { min-width: 0; width: 100%; max-width: 150px; }
+.x5-cell[role=button] { cursor: pointer; border-radius: 10px; }
+.x5-cell[role=button]:focus-visible { outline: 2px solid var(--sand); outline-offset: 4px; }
 .x5-cell.is-pending .x5-front { display: none; }
 .x5-cell:not(.is-pending) .x5-back { display: none; }
 .x5-cell:not(.is-pending) .x5-front { animation: x5-in .3s ease-out both; }
