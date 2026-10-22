@@ -2,14 +2,14 @@
 .irl .page-head { flex-wrap: wrap; gap: 16px; }
 .head-actions { justify-content: flex-end; }
 
-/* Onglets */
+/* ---------- Onglets ---------- */
 .irl-tabs { display: flex; gap: 4px; margin: 0 0 28px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
 .irl-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 16px; background: none; border: 0; color: var(--muted); cursor: pointer;
   border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
 @media (hover: hover) { .irl-tab:hover { color: var(--text); } }
 .irl-tab[aria-selected="true"] { color: var(--irl-fg); border-bottom-color: var(--irl-fg); }
 
-/* Filtres */
+/* ---------- Filtres ---------- */
 .hx-filters { display: flex; flex-direction: column; gap: 16px; padding: 20px; background: var(--irl-bg); border-color: var(--irl-border); }
 .hx-years { display: flex; flex-wrap: wrap; gap: 8px; }
 .hx-chip { font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 6px 14px; border-radius: 999px; cursor: pointer;
@@ -23,7 +23,7 @@
 @media (max-width: 820px) { .hx-fields { grid-template-columns: 1fr 1fr; } .hx-fields > .field:first-child { grid-column: 1 / -1; } }
 @media (max-width: 520px) { .hx-fields { grid-template-columns: 1fr; } }
 
-/* Statistiques */
+/* ---------- Statistiques ---------- */
 .hx-stats-sec { margin-top: 24px !important; }
 .hx-fields select, .hx-fields input { font-size: 16px; }
 .hx-stats { display: flex; flex-direction: column; gap: 16px; }
@@ -50,7 +50,7 @@
 .hx-rbar { grid-column: 2 / -1; height: 4px; }
 .hx-rank .avatar { font-size: 11px; }
 
-/* Carte */
+/* ---------- Carte ---------- */
 .hx-map { height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--irl-border); background: var(--surface); overflow: hidden; z-index: 0; }
 .hx-map.hx-map-off { height: 120px; background: repeating-linear-gradient(135deg, var(--surface), var(--surface) 12px, var(--surface-2) 12px, var(--surface-2) 24px); }
 @media (max-width: 600px) { .hx-map { height: 320px; } }
@@ -62,7 +62,7 @@
 .hx-pop { margin: 6px 0 0; padding-left: 16px; }
 .leaflet-container { font: inherit; }
 
-/* Frise */
+/* ---------- Frise ---------- */
 .hx-timeline { display: flex; flex-direction: column; gap: 32px; }
 .hx-year { position: relative; padding-left: 28px; }
 .hx-year::before { content: ""; position: absolute; left: 7px; top: 14px; bottom: 0; width: 2px; background: var(--irl-border); border-radius: 2px; }
@@ -111,7 +111,7 @@
   .hx-thumb-date strong { font-size: 28px; }
 }
 
-/* Sélecteur de participants */
+/* ---------- Sélecteur de participants ---------- */
 .hg-dialog-wide { width: min(620px, calc(100vw - 24px)); }
 .rt-when { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 12px; }
 .pick-field { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }

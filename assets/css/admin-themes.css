@@ -5,7 +5,7 @@
 .th-listhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
 .th-listhead .sub-title { margin: 0; }
 
-/* Liste */
+/* ---------- Liste ---------- */
 .th-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
 .th-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: var(--radius-sm);
   background: var(--surface); border: 1px solid var(--border); min-width: 0; }
@@ -26,7 +26,7 @@
 .th-meta dd { margin: 0; overflow-wrap: anywhere; }
 .th-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
 
-/* Éditeur */
+/* ---------- Éditeur ---------- */
 .th-editor { border-color: var(--border-strong); scroll-margin-top: 80px; }
 .th-editor-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .th-editor-head .card-title { margin: 0; }
@@ -73,7 +73,7 @@
 .th-error { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--accent); color: var(--rose); font-size: 14px; }
 .th-error[hidden] { display: none; }
 
-/* Barre d'aperçu */
+/* ---------- Barre d'aperçu ---------- */
 .th-preview-bar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 95; width: max-content; max-width: calc(100vw - 32px);
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 10px 12px 10px 18px; border-radius: 16px;
   background: var(--surface-2); border: 1px solid var(--sand); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); font-weight: 700; }

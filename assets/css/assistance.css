@@ -1,4 +1,4 @@
-/* ===== Humane Gang — assistance ===== */
+/* ===== Humane Gang — assistance (assistance.html) ===== */
 .support-layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: start; }
 @media (max-width: 820px) { .support-layout { grid-template-columns: minmax(0, 1fr); } }
 .support-layout[hidden] { display: none; }
@@ -33,7 +33,7 @@
   .done .btn-row .btn { width: 100%; }
 }
 
-/* ===== Mes demandes (membre connecté) ===== */
+/* ---------- Mes demandes (membre connecté) ---------- */
 .my-support { max-width: 760px; margin: 20px auto 0; }
 .my-support[hidden], #my-support-detail[hidden], #my-support-list-view[hidden], #my-support-error[hidden], #my-support-empty[hidden] { display: none; }
 .my-support h2 { margin: 0; font-size: 22px; }

@@ -2,7 +2,7 @@
 
 #acc-root { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
-/* Liste des comptes */
+/* ---------- Liste des comptes ---------- */
 .acc-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .acc-search { flex: 1 1 280px; max-width: 460px; }
 .acc-search-box { position: relative; }
@@ -41,7 +41,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
   .acc-k { display: inline; }
 }
 
-/* Fiche */
+/* ---------- Fiche ---------- */
 .acc-detail-top { display: flex; }
 .acc-ident { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
 .acc-ident-txt { flex: 1 1 200px; min-width: 0; }
@@ -144,7 +144,7 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
   .pairs-tr > :nth-child(5) { grid-column: 2 / 4; }
 }
 
-/* Date d'arrivée dans le gang */
+/* ---------- Date d'arrivée dans le gang ---------- */
 .acc-joined { display: flex; gap: 8px; align-items: center; }
 .acc-joined input { flex: 1; min-width: 0; }
 .acc-none { font-style: italic; opacity: .75; }

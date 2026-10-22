@@ -1,4 +1,4 @@
-/* ===== Cartes à collectionner — page joueur ===== */
+/* ===== Cartes à collectionner — page joueur (cartes.html) ===== */
 .cartes-loading { min-height: 50vh; }
 .cartes-head { align-items: flex-end; }
 .cartes-wallet { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
@@ -6,7 +6,7 @@
 .cartes-bal-label { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .cartes-foot-note { font-size: 14px; color: var(--muted); margin: 24px 0 0; text-align: center; }
 
-/* Onglets */
+/* ---------- Onglets ---------- */
 .cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
 .cartes-tabs::-webkit-scrollbar { display: none; }
 .cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 16px; background: none; border: 0; border-bottom: 3px solid transparent;
@@ -14,7 +14,7 @@
 .cartes-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
 .cartes-panel[hidden] { display: none; }
 
-/* Blocs génériques */
+/* ---------- Blocs génériques ---------- */
 .cartes-block { margin-bottom: 20px; }
 .cartes-block h2 { font-size: 18px; font-weight: 700; margin: 0 0 12px; }
 .cartes-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
@@ -28,7 +28,7 @@
 .cartes-booster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 16px; justify-items: center; margin: 16px 0; }
 .cartes-reveal-btn { font: inherit; font-weight: 700; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 6px; }
 
-/* Collection */
+/* ---------- Collection ---------- */
 .cartes-series { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
 .cartes-series .field { flex: 1 1 220px; }
 .cartes-progress { flex: 1 1 260px; }
@@ -41,7 +41,7 @@
 .cartes-grid .hgc { width: min(100%, 168px); }
 @media (max-width: 600px) { .cartes-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; } }
 
-/* Détail carte */
+/* ---------- Détail carte ---------- */
 .cartes-dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: auto;
   background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); }
 .cartes-dialog::backdrop { background: rgba(4, 4, 8, .62); }
@@ -79,17 +79,17 @@
   #cartes-detail-info .cartes-copies li { flex-wrap: wrap; }
 }
 
-/* Recyclage de masse */
+/* ---------- Recyclage de masse ---------- */
 .cartes-mass { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
 
-/* Classement */
+/* ---------- Classement ---------- */
 .cartes-lb { list-style: none; margin: 0; padding: 0; }
 .cartes-lb li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .cartes-lb-rank { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
 .cartes-lb-stats { font-size: 14px; color: var(--muted); }
 .cartes-lb-score { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 
-/* Historique */
+/* ---------- Historique ---------- */
 .cartes-history summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; }
 .cartes-log { list-style: none; margin: 0; padding: 0; font-size: 14px; }
 .cartes-log li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }

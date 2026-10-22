@@ -1,4 +1,5 @@
 // ===== Humane Gang — réglages lot 5 (bot, rappels, limites, assistance, planning) =====
+// Rôle : lire les réglages modifiables par l'admin dans hg_settings, avec des valeurs de repli.
 // Lecture des clés de hg_settings avec repli : une clé absente ou invalide donne la valeur par défaut,
 // qui est exactement le comportement d'avant les réglages. Les mêmes défauts sont dans admin-bot.js (affichage).
 //   bot.rappels   { irl_heures: [long, court], ss_jours_avant }
@@ -7,9 +8,14 @@
 //   support       { sujets[], max_par_heure, visiteur_max_par_heure, visiteurs_total_par_heure,
 //                   message_min, message_max, mp_max, delai_reponse_jours }
 //   planning      { anniversaires_heure_locale }
+// Dépendances : aucune (fonctions pures, pas d'accès à la base : l'appelant lit hg_settings).
+// Exporte : BUG_SUBJECT, SUPPORT_DEFAUT, PLANNING_DEFAUT, botRules, supportRules, BotRules, SupportRules.
+// PLANNING_DEFAUT n'a aucun usage dans le dépôt (hg-birthdays garde son propre défaut HEURE_DEFAUT) : à retirer plus tard.
 
-export const BUG_SUBJECT = 'Bug sur le site'; // le badge « Chasseur de bugs » (migration 041) compte ce sujet
+/** Sujet « bug » de l'assistance. Le badge « Chasseur de bugs » (migration 041) compte ce sujet : il ne doit pas disparaître. */
+export const BUG_SUBJECT = 'Bug sur le site';
 
+/** Valeurs par défaut de l'assistance (utilisées tant que l'admin ne les a pas changées). */
 export const SUPPORT_DEFAUT = {
   sujets: ['Problème de compte / connexion', 'Secret Santa', 'Sortie IRL', BUG_SUBJECT, 'Mes données personnelles', 'Autre'],
   max_par_heure: 5,
@@ -21,19 +27,29 @@ export const SUPPORT_DEFAUT = {
   delai_reponse_jours: 30,
 };
 
+/** Valeurs par défaut du planning (heure locale d'envoi des anniversaires). */
 export const PLANNING_DEFAUT = { anniversaires_heure_locale: 8 };
 
+/** Vrai si `v` est un entier compris entre min et max (bornes incluses). */
 const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max;
+/** Renvoie `v` si c'est un entier valide, sinon `def`. */
 const intOr = (v: unknown, def: number, min: number, max: number) => (isInt(v, min, max) ? v : def);
+/** Renvoie `v` s'il s'agit d'un objet simple (pas un tableau, pas null), sinon un objet vide. */
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? v as Record<string, unknown> : {});
 
+/** Règles du bot, déjà validées et bornées (jamais de valeur hors plage). */
 export type BotRules = {
   irl_long: number; irl_short: number; ss_jours: number;
   dyn_retard_h: number; top_n: number;
   pieces_max: number; piece_max_mo: number; destinataires_max: number; corps_max: number;
 };
 
-/** Règles du bot à partir de hg_settings.bot (objet déjà lu par la fonction). */
+/**
+ * Règles du bot à partir de hg_settings.bot (objet déjà lu par la fonction).
+ * Les rappels IRL sont deux délais en heures ; si le couple est incohérent (court >= long), on revient aux défauts.
+ * @param {Record<string, unknown> | null | undefined} bot Valeur de hg_settings « bot ».
+ * @returns {BotRules} Règles validées.
+ */
 export function botRules(bot: Record<string, unknown> | null | undefined): BotRules {
   const b = obj(bot);
   const r = obj(b.rappels), d = obj(b.dyn), e = obj(b.envoi);
@@ -53,16 +69,24 @@ export function botRules(bot: Record<string, unknown> | null | undefined): BotRu
   };
 }
 
+/** Type des règles de l'assistance (même forme que SUPPORT_DEFAUT). */
 export type SupportRules = typeof SUPPORT_DEFAUT;
 
-/** Règles de l'assistance à partir de hg_settings.support. Les sujets doivent garder le sujet « bug » (badge). */
+/**
+ * Règles de l'assistance à partir de hg_settings.support. Les sujets doivent garder le sujet « bug » (badge).
+ * Une liste de sujets invalide (vide, trop longue, sans le sujet bug) est ignorée au profit de la liste par défaut.
+ * @param {unknown} raw Valeur de hg_settings « support ».
+ * @returns {SupportRules} Règles validées.
+ */
 export function supportRules(raw: unknown): SupportRules {
   const s = obj(raw);
   let sujets = SUPPORT_DEFAUT.sujets;
   if (Array.isArray(s.sujets)) {
+    // Nettoyage : chaînes seulement, sans doublon, sans espaces autour, 80 caractères au plus.
     const clean = [...new Set(s.sujets.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter((x) => x && x.length <= 80))];
     if (clean.length && clean.length <= 20 && clean.includes(BUG_SUBJECT)) sujets = clean;
   }
+  // message_max est toujours au moins message_min + 1, pour que la plage de longueur reste valide.
   const message_min = intOr(s.message_min, SUPPORT_DEFAUT.message_min, 1, 1000);
   const message_max = intOr(s.message_max, SUPPORT_DEFAUT.message_max, message_min + 1, 4000);
   return {
@@ -75,4 +99,3 @@ export function supportRules(raw: unknown): SupportRules {
     delai_reponse_jours: intOr(s.delai_reponse_jours, SUPPORT_DEFAUT.delai_reponse_jours, 1, 365),
   };
 }
-

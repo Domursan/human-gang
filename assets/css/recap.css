@@ -1,4 +1,4 @@
-/* ===== Humane Gang — récap annuel (story plein écran) ===== */
+/* ===== Humane Gang — récap annuel, story plein écran (recap.html) ===== */
 :root { --font-pixel: 'Silkscreen', ui-monospace, monospace; }
 body.rc-open { overflow: hidden; }
 
@@ -24,7 +24,7 @@ body.rc-open { overflow: hidden; }
   animation: rc-twinkle 6s ease-in-out infinite alternate; }
 @keyframes rc-twinkle { from { opacity: .3; } to { opacity: .65; } }
 
-/* Barre du haut */
+/* ---------- Barre du haut ---------- */
 .rc-top { position: relative; z-index: 3; padding: max(12px, env(safe-area-inset-top)) 12px 0; }
 .rc-progress { display: flex; gap: 4px; }
 .rc-progress > span { flex: 1; height: 4px; border-radius: 2px; background: rgba(242,239,234,.25); overflow: hidden; }
@@ -38,7 +38,7 @@ body.rc-open { overflow: hidden; }
   background: rgba(242,239,234,.08); color: #F2EFEA; border: 1px solid rgba(242,239,234,.16); cursor: pointer; }
 @media (hover: hover) { .rc-icon-btn:hover { background: rgba(242,239,234,.16); color: #F2EFEA; } }
 
-/* Diapos */
+/* ---------- Diapos ---------- */
 .rc-slides { position: relative; flex: 1; min-height: 0; cursor: pointer; }
 .rc-slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow-y: auto;
   background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c) 42%, transparent), transparent 62%),

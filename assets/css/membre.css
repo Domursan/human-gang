@@ -1,4 +1,4 @@
-/* ===== Humane Gang — carte d'identité + annuaire ===== */
+/* ===== Humane Gang — carte d'identité + annuaire (membre.html) ===== */
 :root { --font-pixel: 'Silkscreen', ui-monospace, monospace; }
 
 .mb-loading { min-height: 50vh; }
@@ -117,7 +117,7 @@
 .idc-barcode i.gap { background: transparent; }
 .idc-serial { font-family: var(--font-pixel); font-size: clamp(9px, calc(var(--u) * 1.8), 13px); letter-spacing: .12em; color: #ABA7A0; }
 
-/* Calques holographiques */
+/* ---------- Calques holographiques ---------- */
 .idc-holo, .idc-glare { pointer-events: none; transition: opacity .4s ease; }
 .idc-holo {
   opacity: .16; mix-blend-mode: color-dodge;
@@ -128,7 +128,7 @@
 .idc.is-active .idc-holo { opacity: .3; }
 .idc.is-active .idc-glare { opacity: 1; }
 
-/* Format « badge » vertical sur petits écrans */
+/* ---------- Format « badge » vertical sur petits écrans ---------- */
 @container (max-width: 520px) {
   .idc-face { aspect-ratio: auto; min-height: calc(var(--u) * 150); gap: calc(var(--u) * 4); padding: calc(var(--u) * 7) calc(var(--u) * 6.5) calc(var(--u) * 6); grid-template-rows: auto auto auto 1fr auto; }
   .idc-k { font-size: 12px; }
@@ -187,7 +187,7 @@
   .idc-glare { display: none; }
 }
 
-/* Badges à niveaux */
+/* ---------- Badges à niveaux ---------- */
 .badge-img { position: relative; }
 .badge-img:has(.badge-lvl) { overflow: visible; }
 .badge-img:has(.badge-lvl) img { border-radius: 50%; }

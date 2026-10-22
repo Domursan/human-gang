@@ -1,4 +1,5 @@
 // ===== Humane Gang — fonction edge « hg-support » =====
+// Rôle : recevoir le formulaire d'assistance du site (avec ou sans compte), l'enregistrer, puis prévenir l'admin.
 // Reçoit une demande d'assistance (avec ou sans compte), l'enregistre dans hg_support
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
@@ -6,27 +7,55 @@
 // Réglages (hg_settings.support, lus ici avec repli sur les défauts de _shared/reglages.ts) : sujets, limites par heure
 // (compte ; visiteur par contact et par client, empreinte HMAC de l'adresse dans hg_support.client_hash ; plafond global),
 // longueurs du message et taille du MP envoyé à l'admin.
+// Protection : un champ « website » caché pour les robots (pot de miel), et les limites ci-dessus contre le spam.
+// Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/reglages.ts ; tables hg_support,
+//   hg_settings, hg_profiles.
+// Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { CORS, jsonResponse, sendDM } from '../_shared/discord.ts';
 import { supportRules } from '../_shared/reglages.ts';
 
+/** Réponse JSON avec les en-têtes CORS (raccourci vers jsonResponse). */
 const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
+// Client avec la clé service role : l'écriture dans hg_support se fait sans RLS.
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
+/**
+ * Nettoie une valeur texte venue du client : chaîne seulement, sans caractère NUL, sans espaces autour, longueur bornée.
+ * @param {unknown} v Valeur brute.
+ * @param {number} max Longueur maximale.
+ * @returns {string} Texte nettoyé, ou '' si ce n'est pas une chaîne.
+ */
 const clean = (v: unknown, max: number) =>
   typeof v === 'string' ? v.replace(/\u0000/g, '').trim().slice(0, max) : '';
+/**
+ * Coupe un texte à `n` caractères, avec « … » si on a coupé (pour le MP Discord).
+ * @param {string} s Texte.
+ * @param {number} n Longueur maximale.
+ * @returns {string} Texte coupé ou inchangé.
+ */
 const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
-/** Adresse du client : dernière adresse ajoutée par le relais (x-forwarded-for), sinon cf-connecting-ip. */
+/**
+ * Adresse du client : dernière adresse ajoutée par le relais (x-forwarded-for), sinon cf-connecting-ip.
+ * La dernière entrée est celle que le relais a vue elle-même, les précédentes peuvent être forgées.
+ * @param {Request} req Requête entrante.
+ * @returns {string} Adresse IP, ou '' si introuvable.
+ */
 function clientIp(req: Request): string {
   const xff = (req.headers.get('x-forwarded-for') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
   return xff[xff.length - 1] ?? req.headers.get('cf-connecting-ip')?.trim() ?? '';
 }
-/** Empreinte HMAC de l'adresse (clé = secret serveur) : l'adresse IP n'est jamais stockée en clair. */
+/**
+ * Empreinte HMAC de l'adresse (clé = secret serveur) : l'adresse IP n'est jamais stockée en clair.
+ * Renvoie les 16 premiers octets en hexadécimal (32 caractères).
+ * @param {string} ip Adresse du client.
+ * @returns {Promise<string | null>} Empreinte, ou null si pas d'adresse ou pas de secret.
+ */
 async function clientHash(ip: string): Promise<string | null> {
   const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!ip || !secret) return null;
@@ -35,6 +64,12 @@ async function clientHash(ip: string): Promise<string | null> {
   return [...sig.slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Point d'entrée : valide la demande, applique les limites anti-abus, enregistre, puis prévient l'admin sur Discord.
+ * L'échec de l'envoi Discord ne fait jamais échouer la demande : elle est déjà enregistrée.
+ * @param {Request} req Requête POST avec le corps JSON du formulaire.
+ * @returns {Promise<Response>} { ok, id, discord_sent } ou une erreur JSON.
+ */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'Méthode non autorisée' }, 405);
@@ -56,6 +91,7 @@ Deno.serve(async (req) => {
   if (clean(body.website, 200) !== '') return json({ ok: true });
 
   // Utilisateur connecté ? (le client envoie la clé publique si pas de session : ce n'est pas un JWT)
+  // Un vrai JWT a trois segments séparés par des points ; la clé publique n'en a qu'un.
   let userId: string | null = null;
   let realPseudo: string | null = null;
   const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '');
@@ -69,6 +105,7 @@ Deno.serve(async (req) => {
   }
 
   // Validation
+  // Pour un membre connecté, le pseudo du profil prime sur celui du formulaire.
   const pseudo = realPseudo ?? clean(body.pseudo, 40);
   const subject = clean(body.subject, 80);
   const message = clean(body.message, rules.message_max);
@@ -76,10 +113,17 @@ Deno.serve(async (req) => {
   if (pseudo.length < 2) return json({ error: 'Pseudo manquant (2 caractères minimum).' }, 400);
   if (!rules.sujets.includes(subject)) return json({ error: 'Sujet invalide.' }, 400);
   if (message.length < rules.message_min) return json({ error: `Message trop court (${rules.message_min} caractères minimum).` }, 400);
+  // Un visiteur doit laisser un moyen de le recontacter sur Discord.
   if (!userId && contact.length < 2) return json({ error: 'Indique ton pseudo Discord pour la réponse.' }, 400);
 
   // Limites anti-abus (sur l'heure qui vient de s'écouler)
   const since = new Date(Date.now() - 3600_000).toISOString();
+  /**
+   * Compte les demandes depuis une heure selon un filtre donné.
+   * @param {(q: any) => any} build Ajoute les filtres à la requête de comptage.
+   * @returns {Promise<number>} Nombre de demandes.
+   * @throws {Error} Si le comptage échoue.
+   */
   // deno-lint-ignore no-explicit-any
   const countSince = async (build: (q: any) => any): Promise<number> => {
     const { count, error: err } = await build(admin.from('hg_support').select('id', { count: 'exact', head: true }).gte('created_at', since));
@@ -92,6 +136,7 @@ Deno.serve(async (req) => {
     if (userId) {
       if (await countSince((q) => q.eq('user_id', userId)) >= rules.max_par_heure) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
     } else {
+      // Le contact est recherché sans tenir compte de la casse ; les caractères jokers sont échappés.
       if (await countSince((q) => q.is('user_id', null).ilike('contact', contact.replace(/[\\%_]/g, (c) => '\\' + c))) >= rules.max_par_heure) {
         return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
       }
@@ -119,6 +164,7 @@ Deno.serve(async (req) => {
   try {
     const { data: s } = await admin.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
     const bot = (s?.value ?? {}) as { admin_discord_id?: string | null; notify?: Record<string, boolean> };
+    // Le MP part seulement si l'admin a un ID Discord, si le bot a un jeton et si l'option n'est pas désactivée.
     if (bot.notify?.support !== false && bot.admin_discord_id && Deno.env.get('DISCORD_BOT_TOKEN')) {
       const site = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
       const rendered = renderTemplate('support_new', {
@@ -143,6 +189,7 @@ Deno.serve(async (req) => {
         }],
       });
       discordSent = true;
+      // Marque la demande comme signalée à l'admin (affichage dans l'espace admin).
       await admin.from('hg_support').update({ discord_sent: true }).eq('id', row.id);
     }
   } catch (e) {

@@ -17,7 +17,7 @@
 .ass-more { display: flex; justify-content: center; }
 .ass-more [hidden] { display: none; }
 
-/* Pastilles d'état */
+/* ---------- Pastilles d'état ---------- */
 .ass-tag { display: inline-flex; align-items: center; width: fit-content; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
   background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
 .ass-tag-current { border-color: var(--amber); color: var(--amber); background: transparent; }
@@ -26,7 +26,7 @@
 .ass-tag-past { background: transparent; }
 .ass-tag-retro { background: transparent; }
 
-/* Fenêtres */
+/* ---------- Fenêtres ---------- */
 .ass-dlg { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
 .ass-dlg-wide { width: min(760px, calc(100vw - 32px)); }
 .ass-dlg .dialog-title { margin: 0 0 14px; font-size: 20px; }

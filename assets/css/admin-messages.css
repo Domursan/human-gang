@@ -1,13 +1,18 @@
 /* ===== Humane Gang — administration : messagerie ===== */
 .amsg { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .amsg > .muted { margin: 0; }
+
+/* ---------- Barre d'outils ---------- */
 .amsg-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .amsg-tools .filters { margin: 0; }
 .amsg-search { flex: 1 1 200px; min-width: 0; }
+
+/* ---------- Liste et lecteur ---------- */
 .amsg-layout { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 16px; min-width: 0; }
 .amsg-list, .amsg-reader { min-width: 0; max-height: 620px; overflow-y: auto; overscroll-behavior: contain; }
 .amsg-reader { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); padding: 14px 16px; }
 
+/* ---------- Liste des conversations ---------- */
 .amsg-convs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .amsg-conv { font: inherit; color: var(--text); width: 100%; text-align: left; display: flex; flex-direction: column; gap: 6px;
   padding: 12px 14px; min-height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); cursor: pointer; }
@@ -21,10 +26,13 @@
 .amsg-pill-santa { background: var(--ss-bg); color: var(--ss-fg); border: 1px solid var(--ss-border); }
 .amsg-pill-santa svg { width: 14px; height: 14px; }
 
+/* ---------- Lecteur de conversation ---------- */
 .amsg-reader-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .amsg-reader-head .card-title { margin: 0; }
 .amsg-reader-head p { margin: 2px 0 0; overflow-wrap: anywhere; }
 .amsg-back { display: none; }
+
+/* ---------- Messages ---------- */
 .amsg-msgs { list-style: none; margin: 0; padding: 0; }
 .amsg-msg { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .amsg-msg:last-child { border-bottom: 0; }

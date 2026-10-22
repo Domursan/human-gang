@@ -4,6 +4,7 @@
 .shw-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .shw-head .mb-section-title { margin-bottom: 16px; }
 
+/* ---------- Grille de cartes ---------- */
 .shw-slots { list-style: none; margin: 0 auto; padding: 0; max-width: 640px; display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; justify-items: center; }
 /* Les cartes prennent la largeur de leur conteneur (unités cqw) : --w en pourcentage casserait les cotes --u. */
@@ -11,6 +12,8 @@
 .shw .hgc, .shw-dlg .hgc { --w: 100cqw; width: 100%; }
 .shw-empty { width: 100%; aspect-ratio: 5 / 7; border: 2px dashed var(--border-strong); border-radius: 6px;
   display: grid; place-items: center; padding: 10px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ---------- Chargement ---------- */
 .shw-skel { height: 180px; border-radius: var(--radius); background: var(--surface); opacity: .6; }
 
 /* ----- Éditeur (dialog) ----- */

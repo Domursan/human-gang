@@ -1,10 +1,15 @@
-/* ===== Humane Gang — page Événements ===== */
+/* ===== Humane Gang — page Événements (evenements.html) ===== */
+
+/* ---------- Chargement ---------- */
 .evp-loading { min-height: 50vh; }
 .evp-intro { max-width: 460px; margin: 0; }
+
+/* ---------- Sections ---------- */
 .evp-section { display: flex; flex-direction: column; gap: 18px; margin-bottom: 40px; }
 .evp-section-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(22px, 3vw, 28px); }
 .evp-past { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); }
 
+/* ---------- Carte d'une sortie ---------- */
 .evp-card { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .evp-card.is-live { background: linear-gradient(135deg, color-mix(in srgb, var(--sand) 9%, var(--surface)), var(--surface) 55%); border-color: color-mix(in srgb, var(--sand) 35%, var(--border)); }
 .evp-head { display: flex; gap: 20px; align-items: flex-start; }
@@ -24,12 +29,14 @@ html[data-fx="off"] .evp-card.is-live .evp-visual { animation: none; }
 .evp-title .small { margin: 0; }
 .evp-title .small svg { width: 15px; height: 15px; vertical-align: -3px; }
 
+/* ---------- Chiffres clés ---------- */
 .evp-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
 .evp-stats div { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); min-width: 0; }
 .evp-stats dt { font-size: 13px; color: var(--muted); }
 .evp-stats dd { margin: 2px 0 0; font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
 .evp-stats dd small { font-family: var(--font-body); font-size: 14px; color: var(--muted); }
 
+/* ---------- Colonnes ---------- */
 .evp-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .evp-past .evp-cols { grid-template-columns: minmax(0, 1fr); }
 .evp-k { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 700; }
