@@ -17,13 +17,13 @@ let _loading = null;
 
 /**
  * Charge le réglage + les thèmes, choisit le thème du jour et l'applique (mis en cache pour le chargement suivant).
- * En cas d'erreur, le thème déjà affiché reste en place.
+ * En cas d'erreur, le thème déjà affiché reste en place et le prochain appel recharge.
  * @param {{force?: boolean}} [options] force : relance le chargement même s'il a déjà eu lieu.
  * @returns {Promise<object>} Le thème actif.
  */
 export function applyTheme({ force = false } = {}) {
   if (_loading && !force) return _loading;
-  _loading = (async () => {
+  const job = (async () => {
     try {
       const [s, t] = await Promise.all([
         sb.from('hg_settings').select('value').eq('key', 'theme').maybeSingle(),
@@ -40,8 +40,11 @@ export function applyTheme({ force = false } = {}) {
       return getActiveTheme();
     } catch (e) {
       console.warn('[thème]', e);
+      // Erreur : on oublie ce chargement pour qu'un nouvel appel puisse réessayer.
+      if (_loading === job) _loading = null;
       return getActiveTheme();
     }
   })();
-  return _loading;
+  _loading = job;
+  return job;
 }
