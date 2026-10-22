@@ -1,6 +1,12 @@
-// ===== Admin : sorties IRL — fenêtre d'édition (modale) et détail de la sortie (zone principale) =====
+// =====================================================================
+// Admin : sorties IRL — fenêtre d'édition (modale) et détail de la sortie (zone principale).
 // Le détail (en-tête, inscriptions, dates, votes, date retenue) est rendu dans la zone principale : mountDetail + showDetail.
-// La fenêtre de création/modification reste une boîte modale : mountDialogs + openEdit.
+// La fenêtre de création et de modification reste une boîte modale : mountDialogs + openEdit.
+// Une sortie est soit à date fixe (starts_at), soit à caler par sondage (liste de dates proposées, avec votes).
+// Dépendances : core.js (toast, errMsg, esc, fmtDateTime), ui-confirm.js, admin-events.js (dates en heure suisse),
+// utils.js (pluralCount), admin/ui/detail-header.js, data.js (écritures), format.js (libellés), reglages-valeurs-lot3.js.
+// Exporte : mountDialogs, mountDetail, openEdit, showDetail, refreshDetail.
+// =====================================================================
 import { toast, errMsg, esc, fmtDateTime } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { toZurichInput, fromZurichInput } from '../admin-events.js';
@@ -10,12 +16,16 @@ import * as api from './data.js';
 import { RSVP_ORDER, RSVP_LABEL, whenLabel, memberName, statusOf } from './format.js';
 import { bornesSondage } from '../reglages-valeurs-lot3.js';
 
+/* Longueurs maximales des champs (les mêmes valeurs sont reprises dans les attributs maxlength). */
 const TITLE_MAX = 120, LOC_MAX = 160, DESC_MAX = 1000;
+/* Bornes du nombre de dates d'un sondage, lues dans les réglages (irl.sondage_min et irl.sondage_max). */
 const minDates = () => bornesSondage().min, maxDates = () => bornesSondage().max;
 
 // CTX : { me, get() → état de la section, reload() → recharge et redessine, remove(ev), select(id) }
 let CTX = null;
+/* Fenêtre d'édition : élément, formulaire, sortie modifiée (null = création) et bouton qui l'a ouverte. */
 const E = { dlg: null, form: null, editId: null, opener: null };   // fenêtre d'édition
+/* Détail affiché : zone d'en-tête, zone du corps, instance de l'en-tête et sortie choisie. */
 const D = { head: null, body: null, headApi: null, id: null };      // détail de la sortie sélectionnée
 
 /* ---------- Montage ---------- */
@@ -36,6 +46,7 @@ export function mountDetail(host) {
 }
 
 /* ---------- Édition ---------- */
+/** Crée la fenêtre d'édition, la relie à ses boutons et la renvoie sans l'afficher. */
 function buildEdit() {
   const dlg = document.createElement('dialog');
   dlg.id = 'ass-edit';
@@ -104,11 +115,13 @@ function buildEdit() {
   return dlg;
 }
 
+/** Affiche la date fixe ou le sondage. En mode sondage, complète la liste jusqu'au minimum de dates. */
 function setMode(mode) {
   E.form.querySelector('#ass-e-fixed').hidden = mode !== 'fixed';
   E.form.querySelector('#ass-e-poll').hidden = mode !== 'poll';
   if (mode === 'poll') while (rows().length < minDates()) addDateRow();
 }
+/** « Rencontre passée » : une rencontre passée a une date fixe, donc le sondage est désactivé. */
 function onRetro(on) {
   const poll = E.form.querySelector('input[name="ass-e-mode"][value="poll"]');
   const fixed = E.form.querySelector('input[name="ass-e-mode"][value="fixed"]');
@@ -116,9 +129,12 @@ function onRetro(on) {
   if (on) fixed.checked = true;
   setMode(on ? 'fixed' : currentMode());
 }
+/* Mode choisi dans le formulaire : « fixed » (date fixe) ou « poll » (sondage). */
 const currentMode = () => E.form.querySelector('input[name="ass-e-mode"]:checked')?.value || 'fixed';
+/* Lignes de dates du sondage. */
 const rows = () => [...E.form.querySelectorAll('#ass-e-dates .ass-date-row')];
 
+/** Ajoute une ligne de date au sondage. id est renseigné pour une date déjà enregistrée. */
 function addDateRow(value = '', id = '') {
   const row = document.createElement('div');
   row.className = 'ass-date-row';
@@ -127,6 +143,7 @@ function addDateRow(value = '', id = '') {
   E.form.querySelector('#ass-e-dates').append(row);
   updateDateRows();
 }
+/** Met à jour les libellés accessibles et bloque retrait et ajout quand on atteint une borne. */
 function updateDateRows() {
   const list = rows();
   list.forEach((r, i) => {
@@ -177,9 +194,11 @@ export function openEdit(ev = null, opener = null) {
   f.querySelector('#ass-e-name').focus();
 }
 
+/** Valide le formulaire, crée ou modifie la sortie, synchronise ses dates, annonce une création, puis ferme la fenêtre. */
 async function onSave(e) {
   e.preventDefault();
   const f = E.form, err = f.querySelector('#ass-e-err'), btn = f.querySelector('#ass-e-submit');
+  /* Affiche le message d'erreur dans le formulaire et renvoie false pour arrêter l'envoi. */
   const fail = (msg, el) => { err.textContent = msg; err.hidden = false; el?.focus(); };
   const title = f.querySelector('#ass-e-name').value.trim();
   const retro = f.querySelector('#ass-e-retro').checked;
@@ -244,8 +263,10 @@ export function refreshDetail() {
   applyPendingFocus();
 }
 
+/* Date lisible pour le détail (fuseau de Zurich). */
 const dateFmt = (iso) => fmtDateTime(iso);
 
+/** Dessine le détail de la sortie choisie : en-tête, inscriptions regroupées par réponse, ajout de membre, dates et votes. */
 function renderDetail() {
   if (!D.body) return;
   const S = CTX.get();
@@ -262,7 +283,9 @@ function renderDetail() {
   // Choix (ajouter une présence, voter à la place de) : comptes actifs seulement. Les présences et votes déjà
   // enregistrés gardent leurs fantômes (historique, via S.members qui les contient).
   const members = [...S.members.values()].filter((m) => !m.is_ghost).sort((a, b) => a.pseudo.localeCompare(b.pseudo, 'fr'));
+  /* Pseudo d'un membre pour le détail (« Ancien membre » s'il n'est plus connu). */
   const pseudo = (id) => memberName(S.members, id);
+  /* Vrai si la date proposée est celle retenue pour la sortie. */
   const retained = (d) => ev.starts_at && new Date(d.proposed_at).getTime() === new Date(ev.starts_at).getTime();
   D.headApi = renderDetailHeader(D.head, {
     member: S.members.get(ev.created_by) || { pseudo: 'Ancien membre' },
@@ -349,7 +372,9 @@ function renderDetail() {
 
 // Après une action, on rend le focus au contrôle concerné (il a été remplacé par le redessin).
 let pendingFocus = null;
+/** Mémorise le contrôle à rendre actif après le redessin. */
 function focusAfterRender(key) { pendingFocus = key; }
+/** Donne le focus au contrôle mémorisé, s'il existe encore dans le détail. */
 function applyPendingFocus() {
   if (!pendingFocus || !D.body) return;
   const el = [...D.body.querySelectorAll('[data-key]')].find((x) => x.dataset.key === pendingFocus);
@@ -357,6 +382,7 @@ function applyPendingFocus() {
   pendingFocus = null;
 }
 
+/** Exécute une action du détail : désactive le contrôle, lance l'appel, affiche le message, puis recharge. Une erreur donne un toast. */
 async function run(el, key, fn, okMsg) {
   if (el) el.disabled = true;
   focusAfterRender(key);
@@ -371,6 +397,7 @@ async function run(el, key, fn, okMsg) {
   }
 }
 
+/** Délégation des clics du détail : retirer une inscription, retirer un vote, fixer une date. */
 function onDetailClick(e) {
   const b = e.target.closest('[data-act]');
   if (!b || b.disabled) return;
@@ -380,11 +407,13 @@ function onDetailClick(e) {
   if (act === 'fix') return fixDate(date, b);
 }
 
+/** Changement de réponse d'un membre (menu déroulant de la liste des inscriptions). */
 function onDetailChange(e) {
   const sel = e.target.closest('select[data-rsvp-user]');
   if (sel) run(sel, `st:${sel.dataset.rsvpUser}`, () => api.setRsvp(D.id, sel.dataset.rsvpUser, sel.value), 'Réponse mise à jour.');
 }
 
+/** Envoi des formulaires du détail : ajouter une inscription ou un vote à la place d'un membre. */
 function onDetailSubmit(e) {
   const f = e.target;
   if (f.dataset.form === 'add-rsvp') {
@@ -401,6 +430,7 @@ function onDetailSubmit(e) {
   }
 }
 
+/** Fixe la sortie à une date proposée, après confirmation. La date proposée devient la date retenue. */
 async function fixDate(dateId, btn) {
   const S = CTX.get();
   const d = S.dates.find((x) => x.id === dateId);
@@ -415,6 +445,7 @@ async function fixDate(dateId, btn) {
 }
 
 /* ---------- Focus au retour ---------- */
+/** Rend le focus au bouton qui a ouvert la fenêtre ; à défaut, au bouton « Nouvelle sortie » de la liste. */
 function restoreFocus(W) {
   const el = W.opener;
   W.opener = null;

@@ -1,8 +1,13 @@
-// ===== Admin : section « Sorties IRL » — liste en colonne 2, détail dans la zone principale, panneau d'infos =====
+// =====================================================================
+// Admin : section « Sorties IRL » — liste en colonne 2, détail dans la zone principale, panneau d'infos.
 // Montage par admin.js (registerSub 'vie/sorties') : main = mountSortiesSection, open = openSortie,
 // list = listSorties (colonne 2), info = infoSorties (panneau d'infos, ≥ 1440 px).
 // L'URL suit la sortie choisie : #vie/sorties/<id>. Les écritures passent par data.js (mêmes tables que irl.js) ;
 // les fenêtres d'édition par dialogs.js. Droits : hg_has_perm('evenements') côté base.
+// Dépendances : core.js, ui-confirm.js, data.js, format.js, dialogs.js, admin/live.js, admin/ui/* (liste, panneau, pastille),
+// admin/common.js, utils.js, admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
+// Exporte : mountSortiesSection, openSortie, listSorties, infoSorties.
+// =====================================================================
 import { toast, errMsg, esc } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import * as api from './data.js';
@@ -17,15 +22,18 @@ import { pluralCount } from '../utils.js';
 import { blocReglages } from '../admin-reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
+/* État de la section : zones d'affichage, sorties, réponses, dates, votes, photos, tri et sortie choisie. */
 const S = { root: null, me: null, members: new Map(), events: [], rsvps: [], dates: [], votes: [], photos: [],
   sort: 'asc', selId: null, list: null, colEl: null, infoEl: null, infoApi: null };
 
+/* Filtres de la liste : à venir (par défaut), passées ou toutes. */
 const FILTERS = [
   { id: 'avenir', label: 'À venir', test: (it) => it.group === 'avenir' },
   { id: 'passees', label: 'Passées', test: (it) => it.group === 'passees' },
   { id: 'all', label: 'Toutes' },
 ];
 
+/* Pont vers dialogs.js : il lit l'état, recharge, supprime, sélectionne. */
 const ctx = {
   get me() { return S.me; },
   get: () => S,
@@ -34,6 +42,7 @@ const ctx = {
   select: (id) => setHash(id),
 };
 
+/** Relit toutes les données de la section dans S. */
 async function load() {
   Object.assign(S, await api.loadAll());
 }
@@ -68,6 +77,7 @@ function listItems() {
     });
 }
 
+/** HTML d'une ligne de la liste : titre, état, date, lieu et nombre d'inscrits. */
 function rowHtml(it) {
   return `<div class="sx-row">
     <span class="sx-row-title">${esc(it.name)}</span>

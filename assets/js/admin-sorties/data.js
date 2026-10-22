@@ -1,10 +1,15 @@
-// ===== Admin : sorties IRL — données et écritures =====
+// =====================================================================
+// Admin : sorties IRL — données et écritures.
 // Mêmes tables, mêmes colonnes et mêmes valeurs que irl.js (hg_events, hg_event_dates, hg_event_rsvps,
 // hg_event_date_votes). Les droits sont ceux de la base : hg_has_perm('evenements') (admin ou Staff).
+// Dépendances : core.js (sb, notify), admin-ghosts.js (annuaire des fantômes), photos.js (suppression de fichiers).
+// Exporte : loadAll, createEvent, updateEvent, fixDate, syncDates, deleteEvent, setRsvp, removeRsvp, setVote, announceNew.
+// =====================================================================
 import { sb, notify } from '../core.js';
 import { ghostDirectory } from '../admin-ghosts.js';
 import { removeObjects } from '../photos.js';
 
+/* Renvoie les données d'une réponse Supabase, ou lève l'erreur reçue. */
 const ok = ({ data, error }) => { if (error) throw error; return data; };
 
 /** Charge tout ce dont la section a besoin. Les tables sont petites (une poignée de sorties). */
@@ -34,6 +39,7 @@ export async function createEvent(row) {
   return ok(await sb.from('hg_events').insert(row).select().single());
 }
 
+/** Modifie les champs donnés d'une sortie. */
 export async function updateEvent(id, patch) {
   ok(await sb.from('hg_events').update(patch).eq('id', id));
 }
@@ -68,16 +74,19 @@ export async function deleteEvent(ev, photoPaths = []) {
   try { await removeObjects([ev.cover_path, ...photoPaths]); } catch (e) { console.warn('[admin-sorties] fichiers non supprimés', e); }
 }
 
+/** Enregistre (ou remplace) la réponse d'un membre à une sortie. */
 export async function setRsvp(eventId, userId, status) {
   ok(await sb.from('hg_event_rsvps').upsert(
     { event_id: eventId, user_id: userId, status, updated_at: new Date().toISOString() },
     { onConflict: 'event_id,user_id' }));
 }
 
+/** Retire la réponse d'un membre à une sortie. */
 export async function removeRsvp(eventId, userId) {
   ok(await sb.from('hg_event_rsvps').delete().eq('event_id', eventId).eq('user_id', userId));
 }
 
+/** Ajoute (on = true) ou retire (on = false) le vote d'un membre pour une date proposée. */
 export async function setVote(dateId, userId, on) {
   ok(on
     ? await sb.from('hg_event_date_votes').insert({ date_id: dateId, user_id: userId })
