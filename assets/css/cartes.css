@@ -33,6 +33,8 @@
 .cartes-row > * { flex: 0 0 auto; }
 .cartes-timer { font-variant-numeric: tabular-nums; }
 .cartes-small { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
+.cq-encart { font-size: 14px; color: var(--muted); margin: 14px 0 0; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); }
+.cq-encart a { color: var(--text); font-weight: 700; }
 .cartes-odds { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cartes-odds th, .cartes-odds td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
 .cartes-odds td:last-child, .cartes-odds th:last-child { text-align: right; font-variant-numeric: tabular-nums; }

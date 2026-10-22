@@ -69,7 +69,7 @@ const DB = {
   ],
   hg_dyn_captures: [],
   // Pages du site : slug, libellé, mode (membres ou admin), présence dans la navigation, ordre.
-  hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
+  hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true],['quiz','Questions du gang','membres',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
   hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: S.messages || [], hg_conversations: S.conversations || [], hg_profile_info: [],
@@ -426,6 +426,64 @@ function quizSave(args) {
   return { data: row.id, error: null };
 }
 
+/* ---------- Questions du gang (quiz.html) ----------
+   QUIZ : questions de démonstration, une par type, avec leur clé (correction côté faux serveur, jamais renvoyée telle quelle).
+   QUIZ_ANS : réponses déjà données par le membre connecté (clé = identifiant de la question). */
+const QUIZ = [
+  { id: 'qz-1', prompt: 'De quelle couleur est le logo du Humane Gang ?', qtype: 'choix_unique', difficulty: 'facile', category: 'Culture du gang', image_url: null,
+    options: [{ id: 'a', text: 'Rouge' }, { id: 'b', text: 'Bleu' }, { id: 'c', text: 'Vert' }], explanation: 'Le logo reprend le bleu de la bannière.', reward: 50,
+    key: { correct: ['b'] }, ends_at: null },
+  { id: 'qz-2', prompt: 'Le Secret Santa se tire au sort une fois par an.', qtype: 'vrai_faux', difficulty: 'moyen', category: null, image_url: null,
+    options: [{ id: 'vrai', text: 'Vrai' }, { id: 'faux', text: 'Faux' }], explanation: null, reward: 100, key: { correct: ['vrai'] }, ends_at: null },
+  { id: 'qz-3', prompt: 'Quels langages sont utilisés par le site ? (choisis tout ce qui convient)', qtype: 'choix_multiple', difficulty: 'difficile', category: 'Technique', image_url: null,
+    options: [{ id: 'html', text: 'HTML' }, { id: 'css', text: 'CSS' }, { id: 'js', text: 'JavaScript' }, { id: 'cobol', text: 'COBOL' }],
+    explanation: 'Le site est en HTML, CSS et JavaScript vanilla.', reward: 250, key: { correct: ['css', 'html', 'js'] }, ends_at: null },
+  { id: 'qz-4', prompt: 'Comment s’appelle la monnaie du gang ?', qtype: 'texte', difficulty: 'moyen', category: null, image_url: null,
+    options: [], explanation: 'Les Paillettes, notées ✦.', reward: 100, key: { accepted: ['Paillettes'], manual: false }, ends_at: 'soon' },
+  { id: 'qz-5', prompt: 'Combien de tutos compte la page d’aide ?', qtype: 'nombre', difficulty: 'expert', category: 'Aide', image_url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="#E2C77E"/></svg>'),
+    options: [], explanation: null, reward: 500, key: { value: 62, tolerance: 0 }, ends_at: null },
+  { id: 'qz-6', prompt: 'Raconte le plus beau souvenir du gang.', qtype: 'texte', difficulty: 'difficile', category: 'Souvenirs', image_url: null,
+    options: [], explanation: null, reward: 250, key: { accepted: [], manual: true }, ends_at: null },
+  // Question bonus secrète (secret : true) : affichée en tête des ouvertes, avec le libellé « Question secrète »
+  { id: 'qz-9', prompt: 'Quel mot se cache derrière la lettre du site ?', qtype: 'texte', difficulty: 'moyen', category: 'Secret', image_url: null,
+    options: [], explanation: 'Le mot est dans le code, tout en majuscules.', reward: 300, key: { accepted: ['SECRETS'], manual: false }, ends_at: null, secret: true },
+  // Déjà répondues : une juste (qz-7) et une fausse (qz-8)
+  { id: 'qz-7', prompt: 'Quel est le jour du Secret Santa ?', qtype: 'choix_unique', difficulty: 'facile', category: null, image_url: null,
+    options: [{ id: 'a', text: 'Le 24 décembre' }, { id: 'b', text: 'Le 1er janvier' }], explanation: 'Il se fait avant Noël.', reward: 50, key: { correct: ['a'] }, ends_at: null,
+    answer: { response: 'a', is_correct: true, reward: 50, answered_at: 'past' } },
+  { id: 'qz-8', prompt: 'Combien de membres au total ?', qtype: 'nombre', difficulty: 'moyen', category: null, image_url: null,
+    options: [], explanation: 'Le compte se fait dans l’annuaire.', reward: 100, key: { value: 7, tolerance: 0 }, ends_at: null,
+    answer: { response: '3', is_correct: false, reward: 0, answered_at: 'past' } },
+];
+/** Date d'une réponse déjà donnée (ISO), pour le faux. */
+const QUIZ_PAST = iso(-2);
+/** Solution d'une question corrigée, comme la base : textes acceptés, valeur, ou identifiants corrects. */
+const quizSolution = (q) => (q.qtype === 'texte' ? q.key.accepted : q.qtype === 'nombre' ? q.key.value : q.key.correct);
+/** Texte normalisé pour comparer un texte libre : minuscules, sans accents, sans ponctuation. */
+const quizNorm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+/** Correction d'une réponse, comme hg_quiz_check : true, false, ou null (texte à valider à la main). */
+function quizCheck(q, r) {
+  if (q.qtype === 'choix_multiple' || q.qtype === 'choix_unique' || q.qtype === 'vrai_faux') {
+    const ids = [...new Set([].concat(r))].sort(), good = [...q.key.correct].sort();
+    return ids.length > 0 && ids.join(',') === good.join(',');
+  }
+  if (q.qtype === 'texte') {
+    if (q.key.accepted.some((a) => quizNorm(a) && quizNorm(a) === quizNorm(r))) return true;
+    return q.key.manual ? null : false;
+  }
+  const v = Number(String(r).replace(',', '.'));
+  return Number.isFinite(v) && Math.abs(v - q.key.value) <= (q.key.tolerance || 0);
+}
+/** Question du tableau de démonstration, avec sa réponse éventuelle, pour hg_quiz_list. */
+function quizRow(q) {
+  const a = q.answer ? { ...q.answer, answered_at: q.answer.answered_at === 'past' ? QUIZ_PAST : new Date().toISOString() } : null;
+  const corrected = a && a.is_correct !== null;
+  return { id: q.id, prompt: q.prompt, type: q.qtype, difficulty: q.difficulty, category: q.category, options: q.options,
+    image_url: q.image_url, reward: q.reward, starts_at: iso(-10), ends_at: q.ends_at === 'soon' ? iso(3) : null, secret: !!q.secret,
+    answered: !!a, my_response: a ? a.response : null, correct: a ? a.is_correct : null, earned: a ? a.reward : 0,
+    answered_at: a ? a.answered_at : null, explanation: a ? q.explanation : null, solution: corrected ? quizSolution(q) : null };
+}
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {
@@ -595,6 +653,22 @@ export function createClient() {
           return { data: null, error: null };
         }
         return quizSave(args);
+      }
+      // Questions du gang : liste sans la clé ; réponse en une seule tentative, corrigée ici comme le fait la base.
+      if (fn === 'hg_quiz_list') {
+        if (S.quizFail) return { data: null, error: { message: 'Failed to fetch' } };
+        return { data: QUIZ.map(quizRow), error: null };
+      }
+      if (fn === 'hg_quiz_answer') {
+        const q = QUIZ.find((x) => x.id === args.p_question);
+        if (!q) return { data: null, error: { message: 'Cette question n’est pas ouverte' } };
+        if (q.answer) return { data: null, error: { message: 'Tu as déjà répondu à cette question' } };
+        const r = args.p_response;
+        if (r == null || r === '' || (Array.isArray(r) && r.length === 0)) return { data: null, error: { message: 'Choisis ou écris une réponse' } };
+        const ok = quizCheck(q, r);
+        const reward = ok ? q.reward : 0;
+        q.answer = { response: r, is_correct: ok, reward, answered_at: new Date().toISOString() };
+        return { data: { correct: ok, reward, explanation: ok !== null ? q.explanation : null, solution: ok !== null ? quizSolution(q) : null }, error: null };
       }
       if (fn === 'hg_drops_active') return { data: [], error: null }; // pas de drop sur ces pages (voir fake-sb-cartes.mjs)
       // Réclamation d'un drop : toujours refusée, le drop est terminé.

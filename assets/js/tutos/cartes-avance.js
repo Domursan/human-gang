@@ -200,5 +200,25 @@ export default {
       ],
       keywords: ['série', 'complétée', 'complète', 'récompense', 'collection', 'historique'],
     },
+    {
+      slug: 'questions-du-gang',
+      title: 'Répondre aux questions du gang',
+      summary: 'Répondre aux questions de l’admin, filtrer par difficulté et gagner des Paillettes si ta réponse est juste.',
+      page: 'quiz.html',
+      steps: [
+        { title: 'Ouvre la page', text: 'Sur Cartes, dans l’encart « Questions du gang » sous les quêtes, touche le lien. Tu peux aussi ouvrir « Questions du gang » depuis le menu.' },
+        { title: 'Lis le résumé', text: 'En haut, tu vois les questions ouvertes, tes bonnes réponses et les Paillettes gagnées grâce aux questions.' },
+        { title: 'Filtre par difficulté', text: 'Les boutons « Tous », « Facile », « Moyen », « Difficile » et « Expert » ne gardent que les questions de ce niveau. Chaque pastille indique la difficulté avec ses étoiles.' },
+        { title: 'Choisis ta réponse', text: 'Selon le type : touche le bouton radio d’un choix, coche plusieurs cases si la consigne le demande, ou écris ta réponse dans le champ (un nombre accepte la virgule).' },
+        { title: 'Valide ta réponse', text: 'Touche « Valider ma réponse ». Tu n’as qu’une seule tentative : la réponse ne peut plus être modifiée.' },
+        { title: 'Lis le résultat', text: 'Un bandeau indique « Bravo » avec les Paillettes gagnées, « Raté », ou « En attente de validation par l’admin » pour une réponse libre. Il montre aussi la bonne réponse et l’explication.' },
+      ],
+      tips: [
+        'Les Paillettes d’une bonne réponse sont versées tout de suite, et apparaissent dans « Historique des Paillettes ».',
+        'Les questions répondues passent dans « Déjà répondues », repliable en bas de la page, avec ta réponse et la bonne réponse.',
+        'Une question a parfois une date limite (« Jusqu’au… »). Passé ce délai, elle n’apparaît plus.',
+      ],
+      keywords: ['quiz', 'questions', 'gang', 'question', 'réponse', 'paillettes', 'difficulté', 'facile', 'expert', 'récompense'],
+    },
   ],
 };

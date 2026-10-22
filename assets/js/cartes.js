@@ -470,14 +470,17 @@ function drawQuests() {
   if (!box) return;
   const Q = S.quests;
   const head = '<h2 id="cartes-quests-h">Quêtes de la semaine</h2>';
-  if (!Q) { box.innerHTML = `${head}<p class="muted small">Chargement des quêtes…</p>`; return; }
-  if (Q.error) { box.innerHTML = `${head}<p class="muted small">Quêtes indisponibles pour le moment.</p>`; return; }
+  // Encart « Questions du gang » : toujours affiché sous les quêtes, même pendant le chargement ou en erreur
+  const encart = '<p class="cq-encart">Questions du gang : gagne des Paillettes en répondant aux questions de l’admin, sur la page <a href="quiz.html">Questions du gang</a>.</p>';
+  if (!Q) { box.innerHTML = `${head}<p class="muted small">Chargement des quêtes…</p>${encart}`; return; }
+  if (Q.error) { box.innerHTML = `${head}<p class="muted small">Quêtes indisponibles pour le moment.</p>${encart}`; return; }
   const list = Q.quests || [];
-  if (!list.length) { box.innerHTML = `${head}<p class="muted small">Aucune quête cette semaine.</p>`; return; }
+  if (!list.length) { box.innerHTML = `${head}<p class="muted small">Aucune quête cette semaine.</p>${encart}`; return; }
   const done = list.filter((q) => q.done).length;
   box.innerHTML = `${head}
     <p class="cartes-small">${nf.format(done)} sur ${nf.format(list.length)} terminée${done > 1 ? 's' : ''}${Q.ends_at ? ` · nouvelles quêtes le lundi suivant (${esc(fmtDate(Q.ends_at))})` : ''}.</p>
-    <ul class="cq-list">${list.map(questHtml).join('')}</ul>`;
+    <ul class="cq-list">${list.map(questHtml).join('')}</ul>
+    ${encart}`;
 }
 const renderQuests = kept(drawQuests);
 
