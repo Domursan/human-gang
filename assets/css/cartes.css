@@ -281,3 +281,6 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 #cartes-tablist[hidden], #cartes-peer[hidden], [data-peer-link][hidden] { display: none; }
 .pv-cell { flex-wrap: wrap; }
 .pv-cell .pv-tags { width: 100%; min-width: 0; }
+/* Hors série : en-tête explicatif des cartes uniques, et mention « Déjà attribuée » / « Pas encore attribuée » */
+.cartes-hs-note { margin: 0 0 12px; padding: 10px 12px; border-left: 3px solid #C9A04A; background: rgba(201, 160, 74, .08); font-size: .9rem; }
+.cartes-uniq-state { display: block; margin-top: 6px; text-align: center; font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--muted, #8e88a0); }

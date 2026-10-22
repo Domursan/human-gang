@@ -7,7 +7,7 @@
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
-import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
+import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
@@ -55,6 +55,7 @@ const kept = (fn) => (...args) => keepPlace(() => fn(...args));
    (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(), copies: [], wish: new Set(), log: [],
+  uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
   tab: 'boosters', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
   lcdShown: null, lcdAnim: false, quests: null, shownIds: [], zoomIds: null,
@@ -70,6 +71,15 @@ const bal = () => Number(S.state?.paillettes ?? 0);
 const started = (s) => !s.starts_at || new Date(s.starts_at) <= new Date();
 /** Exemplaires de l'utilisateur pour une carte. */
 const copiesOf = (cardId) => S.copies.filter((c) => c.card_id === cardId);
+/** En-tête explicatif de la série « Hors série » (cartes uniques). */
+const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : un seul exemplaire existe, à gagner lors d\'un événement ou offert par l\'admin.</p>';
+/**
+ * Mention d'une carte unique qu'on ne possède pas : « Déjà attribuée » ou « Pas encore attribuée », si on le sait.
+ * @param {object} c carte
+ * @returns {string} mention, ou chaîne vide si la carte n'est pas unique, est possédée, ou si l'info est inconnue
+ */
+const uniqueStateOf = (c) => (c.rarity !== 'unique' || copiesOf(c.id).length || !S.uniqueTaken ? ''
+  : S.uniqueTaken.has(c.id) ? 'Déjà attribuée' : 'Pas encore attribuée');
 /** Valeur d'une table de réglages pour une rareté (ex. craft.rare), ou null si absente. */
 const tableVal = (table, rarity) => { const v = cfg()[table]?.[rarity]; return v == null ? null : Number(v); };
 /**
@@ -121,6 +131,13 @@ async function loadStatic() {
     ? await fetchAllRows(() => sb.from('hg_cards').select('*').eq('active', true).in('set_id', setIds).order('number').order('id'))
     : [];
   S.cardsById = new Map(S.cards.map((c) => [c.id, c]));
+  // Cartes uniques : seulement savoir si un exemplaire existe déjà (une lecture légère). En cas d'échec, rien n'est affiché.
+  const uniqueIds = S.cards.filter((c) => c.rarity === 'unique').map((c) => c.id);
+  S.uniqueTaken = null;
+  if (uniqueIds.length) {
+    const taken = await sb.from('hg_card_copies').select('card_id').in('card_id', uniqueIds).is('recycled_at', null);
+    if (!taken.error) S.uniqueTaken = new Set((taken.data || []).map((x) => x.card_id));
+  }
   if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }
 
@@ -361,7 +378,7 @@ function drawBoosters() {
   // Boosters offerts (stock donné par le gang) : ouverts sans Paillettes ni délai, même animation.
   const gift = Math.max(0, Number(S.state?.gift_boosters) || 0);
   // Le tableau des chances affiche chaque rareté en pourcentage de la somme des taux.
-  const odds = RARITIES.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
+  const odds = RARITIES_TIRAGE.map((r) => `<tr><th scope="row">${esc(r.label)}</th><td>${pct((Number(rates[r.id]) || 0) / total * 100)}</td></tr>`).join('');
 
   el.innerHTML = `
     <section class="cart-shelf" aria-labelledby="cartes-shelf-h">
@@ -983,9 +1000,11 @@ function cardCell(c) {
     attrs: `data-action="open-card" data-card="${esc(c.id)}"`,
   });
   const what = n ? esc(c.name) : 'la carte';
+  const state = uniqueStateOf(c);
   return `<div class="cz-cell">${card}`
     + `<button type="button" class="cz-zoom" data-action="zoom-card" data-card="${esc(c.id)}" aria-label="Agrandir ${what}">${ICON_ZOOM}</button>`
-    + '<span class="cz-tip" aria-hidden="true">Agrandir</span></div>';
+    + '<span class="cz-tip" aria-hidden="true">Agrandir</span>'
+    + (state ? `<span class="cartes-uniq-state">${esc(state)}</span>` : '') + '</div>';
 }
 
 // Fiche d'une carte pour la fenêtre agrandie (cartes-zoom.js) : tout est déjà chargé, aucune requête.
@@ -1024,6 +1043,7 @@ function groupHtml(g, i) {
       <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
       <p class="cz-group-count">${nf.format(g.have)} / ${nf.format(g.scored)} possédées</p>
     </div>
+    ${g.set.code === 'hors-serie' ? HORS_SERIE_NOTE : ''}
     <div class="progress cz-group-bar" role="progressbar" aria-label="Progression de ${esc(g.set.name)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
     <div class="cartes-grid">${g.shown.map(cardCell).join('')}</div>
   </section>`;
@@ -1084,7 +1104,7 @@ function drawCollection(focusId) {
           <div class="progress" role="progressbar" aria-label="${all ? 'Progression de la collection' : 'Progression de la série'}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pctDone}"><span style="width:${pctDone}%"></span></div>
         </div>
       </div>
-      ${set?.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
+      ${set?.code === 'hors-serie' ? HORS_SERIE_NOTE : set?.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
       <div class="cartes-filters">
         <div class="field">
           <label for="cartes-f-rarity">Rareté</label>
@@ -1148,7 +1168,7 @@ function massPlan() {
   let total = 0;
   for (const [cardId, list] of groups) {
     const k = S.cardsById.get(cardId);
-    if (!k || k.rarity === 'identite' || list.length < 2) continue;
+    if (!k || k.rarity === 'identite' || k.rarity === 'unique' || list.length < 2) continue;
     const sorted = [...list].sort((a, b) => (Number(b.shiny) - Number(a.shiny)) || (Number(!!a.locked_trade) - Number(!!b.locked_trade)));
     for (const cp of sorted.slice(1)) {
       if (cp.locked_trade) continue;
@@ -1217,7 +1237,7 @@ function copyRow(cp, k) {
   const parts = [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'Brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean);
   let action;
   if (cp.locked_trade) action = '<span class="pill pill-todo">En échange</span>';
-  else if (k.rarity === 'identite') action = '<span class="muted small">Ne se recycle pas</span>';
+  else if (k.rarity === 'identite' || k.rarity === 'unique') action = '<span class="muted small">Ne se recycle pas</span>';
   else action = `<button type="button" class="btn btn-ghost cd-btn" data-action="recycle" data-copy="${esc(String(cp.id))}" ${S.busy ? 'disabled' : ''}>Recycler · ${fmtPaillettes(val)}</button>`;
   return `<li><span>${parts.map(esc).join(' · ')}</span>${action}</li>`;
 }
@@ -1235,7 +1255,8 @@ function renderDetail() {
   const god = isGod();
   const costN = tableVal('craft', k.rarity);
   const costS = costN == null ? null : costN * Number(cfg().craft?.shiny_multiplier ?? 4);
-  const craftable = god || (k.craftable && k.rarity !== 'mythique' && k.rarity !== 'identite' && costN != null);
+  const uniq = k.rarity === 'unique';
+  const craftable = !uniq && (god || (k.craftable && k.rarity !== 'mythique' && k.rarity !== 'identite' && costN != null));
   const wished = S.wish.has(k.id);
   /** Vrai si le solde ne suffit pas pour ce coût (jamais en mode sans limite). */
   const short = (cost) => !god && bal() < cost;
@@ -1246,7 +1267,7 @@ function renderDetail() {
   });
   $('#cartes-detail-info').innerHTML = `
     <h2 id="cartes-detail-title">${esc(k.name)}</h2>
-    <p class="cd-meta">${esc(rarityLabel(k.rarity))} · ${esc(familyLabel(k.family))} · n° ${esc(k.number)}${k.max_copies ? ` · ${nf.format(k.max_copies)} exemplaires au total` : ''}</p>
+    <p class="cd-meta">${esc(rarityLabel(k.rarity))} · ${esc(familyLabel(k.family))} · n° ${esc(k.number)}${k.max_copies === 1 ? ' · un seul exemplaire' : k.max_copies ? ` · ${nf.format(k.max_copies)} exemplaires au total` : ''}</p>
     <button type="button" class="cd-wish${wished ? ' is-on' : ''}" data-action="wish" aria-pressed="${wished}">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
       <span>${wished ? 'Dans ma liste de souhaits' : 'Ajouter à ma liste de souhaits'}</span>
@@ -1254,7 +1275,7 @@ function renderDetail() {
     ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
     <section class="cd-sec">
       <h3 class="cd-h">Mes exemplaires</h3>
-      ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : '<p class="cd-empty">Pas encore obtenue.</p>'}
+      ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : `<p class="cd-empty">${esc(uniqueStateOf(k) || 'Pas encore obtenue.')}</p>`}
     </section>
     <section class="cd-sec">
       <h3 class="cd-h">Fabriquer</h3>
@@ -1264,7 +1285,9 @@ function renderDetail() {
             ${k.can_shiny ? `<li><span>Version brillante</span><button type="button" class="btn btn-ghost cd-btn" data-action="craft" data-shiny="1" ${S.busy || short(costS) ? 'disabled' : ''}>Fabriquer · ${fmtPaillettes(costS ?? 0)}</button></li>` : ''}
           </ul>
           ${short(costN) ? `<p class="cd-empty">Il te manque ${fmtPaillettes(costN - bal())} pour cette carte.</p>` : ''}`
-        : '<p class="cd-empty">Cette carte ne peut pas être fabriquée.</p>'}
+        : uniq
+          ? '<p class="cd-empty">Une carte unique ne se fabrique pas : elle s\'obtient lors d\'un événement ou par un don de l\'admin.</p>'
+          : '<p class="cd-empty">Cette carte ne peut pas être fabriquée.</p>'}
     </section>`;
 }
 
@@ -1293,6 +1316,7 @@ async function detailAction(action, el) {
         S.wish.add(id);
       }
     } else if (action === 'craft') {
+      if (S.cardsById.get(S.detailId)?.rarity === 'unique') throw new Error('Une carte unique ne se fabrique pas.');
       const shiny = el.dataset.shiny === '1';
       const { data, error } = await sb.rpc('hg_card_craft', { p_card: S.detailId, p_shiny: shiny });
       if (error) throw error;
@@ -1302,6 +1326,7 @@ async function detailAction(action, el) {
       await refreshData();
       refreshed = true;
     } else if (action === 'recycle') {
+      if (S.cardsById.get(S.detailId)?.rarity === 'unique') throw new Error('Une carte unique ne se recycle pas.');
       const { data, error } = await sb.rpc('hg_card_recycle', { p_copies: [Number(el.dataset.copy)] });
       if (error) throw error;
       toast(`Recyclé : +${fmtP(data)}`, 'ok');

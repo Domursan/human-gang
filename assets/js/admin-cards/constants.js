@@ -1,11 +1,11 @@
 // =====================================================================
 // Cartes admin : constantes (libellés, réglages par défaut, description des réglages de l'économie).
 // Rien ici n'appelle la base : ce sont des valeurs fixes et des listes de libellés.
-// Dépendances : icons.js (svg), cartes-ui.js (RARITIES, rarityLabel : libellés des raretés).
+// Dépendances : icons.js (svg), cartes-ui.js (RARITIES_TIRAGE, rarityLabel : libellés des raretés).
 // Exporte : TZ, ICON, TABS, RARITY_IDS, REASON_LABEL, CFG_DEFAULT, ECON.
 // =====================================================================
 import { svg } from '../icons.js';
-import { RARITIES, rarityLabel } from '../cartes-ui.js';
+import { RARITIES_TIRAGE, rarityLabel } from '../cartes-ui.js';
 
 /* Fuseau horaire d'affichage des dates (Suisse). */
 export const TZ = 'Europe/Zurich';
@@ -19,8 +19,8 @@ export const ICON = {
 };
 /* Onglets de la section, sous la forme [identifiant, libellé]. */
 export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
-/* Identifiants des raretés, dans l'ordre de RARITIES (cartes-ui.js). */
-export const RARITY_IDS = RARITIES.map((r) => r.id);
+/* Identifiants des raretés tirées dans les boosters (taux et recyclage), dans l'ordre de RARITIES. Sans « unique » : jamais tirée, jamais recyclée. */
+export const RARITY_IDS = RARITIES_TIRAGE.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
 /* Libellés des raisons enregistrées dans le journal des Paillettes (hg_wallet_log). */
 export const REASON_LABEL = {

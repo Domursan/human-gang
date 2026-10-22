@@ -1,7 +1,8 @@
 /* ===== Carte à collectionner — composant partagé (cartes-ui.js : cardHtml / cardBackHtml) =====
    Direction « Pixel arcade » : base 252 × 352 (format 63:88). Toutes les cotes sont des multiples de --u (= --w / 252),
    donc la composition est identique en sm (112 px), md (180 px) et lg (300 px).
-   Mythique : style doré « Premium » (cadre à double filet, fond bordeaux, étoiles). Dos : « Pop BD ». */
+   Mythique : style doré « Premium » (cadre à double filet, fond bordeaux, étoiles). Unique : or sur noir, reflet qui glisse.
+   Dos : « Pop BD ». */
 
 /* La carte se met à l'échelle de sa largeur réelle : si un parent la rétrécit (grille, colonne de dialogue),
    tout l'intérieur suit (unités de conteneur), au lieu de déborder du cadre. */
@@ -44,11 +45,16 @@ button.hgc { cursor: pointer; }
   --ink: #f8e7ae; --muted: #c9a14a; --plate-bg: #1b0709; --box-line: #c9a14a; }
 .hgc-identite { --frame: repeating-linear-gradient(45deg, #FE3104 0 calc(var(--u) * 6), #FCA301 calc(var(--u) * 6) calc(var(--u) * 12), #FBD32D calc(var(--u) * 12) calc(var(--u) * 18), #159946 calc(var(--u) * 18) calc(var(--u) * 24), #2B5AE2 calc(var(--u) * 24) calc(var(--u) * 30), #4E2398 calc(var(--u) * 30) calc(var(--u) * 36));
   --mid: #120f1c; --face: #12101c; --acc: #FBD32D; --gem: #FBD32D; }
+/* Unique (hors série) : cadre or et platine sur fond noir, pastilles or ; style réservé aux cartes en exemplaire unique. */
+.hgc-unique { --frame: linear-gradient(135deg, #3a2a0a 0%, #C9A04A 22%, #FFF1C2 40%, #A8772A 56%, #1a1204 70%, #D9AE55 84%, #5c4212 100%);
+  --mid: #0c0a06; --face: radial-gradient(circle at 50% 16%, #2e230f 0%, #0d0b07 58%, #050403 100%); --acc: #F0CD6A; --gem: #F0CD6A;
+  --ink: #FFF1C2; --muted: #B8964E; --plate-bg: #050403; --box-line: #C9A04A; }
 
 /* ---------- Calques ---------- */
 .hgc-frame { position: absolute; inset: 0; display: block; transition: transform .15s ease;
   filter: drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .35)); }
 button.hgc:hover .hgc-frame { transform: translateY(-3px); }
+.hgc-unique .hgc-frame { filter: drop-shadow(0 0 calc(var(--u) * 6) rgba(240, 205, 106, .3)) drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .4)); }
 .hgc-mythique .hgc-frame { filter: drop-shadow(0 0 calc(var(--u) * 7) rgba(233, 194, 90, .35)) drop-shadow(0 calc(var(--u) * 6) calc(var(--u) * 8) rgba(0, 0, 0, .35)); }
 .hgc-layer { position: absolute; display: block; }
 .hgc-out { inset: 0; background: var(--frame); clip-path: var(--st12); }
@@ -62,17 +68,26 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
 .hgc:not(.hgc-commune) .hgc-ln { display: block; }
 .hgc-ln2 { display: none; position: absolute; inset: calc(var(--u) * 7); border: calc(var(--u) * 1) solid rgba(233, 194, 90, .6); }
 .hgc-mythique .hgc-ln { border-color: #b8892f; opacity: .9; border-width: calc(var(--u) * 1.5); }
-.hgc-mythique .hgc-ln2 { display: block; }
+.hgc-mythique .hgc-ln2, .hgc-unique .hgc-ln2 { display: block; }
+.hgc-unique .hgc-ln { border-color: #C9A04A; opacity: .9; border-width: calc(var(--u) * 1.5); }
 .hgc-stud { display: none; position: absolute; width: calc(var(--u) * 6); height: calc(var(--u) * 10); background: var(--acc); top: 50%; margin-top: calc(var(--u) * -5); }
 .hgc-stud.sl { left: var(--u); } .hgc-stud.sr { right: var(--u); }
-.hgc:is(.hgc-rare, .hgc-epique, .hgc-legendaire, .hgc-mythique, .hgc-identite) .hgc-stud { display: block; }
+.hgc:is(.hgc-rare, .hgc-epique, .hgc-legendaire, .hgc-mythique, .hgc-identite, .hgc-unique) .hgc-stud { display: block; }
 .hgc-tab { display: none; position: absolute; width: calc(var(--u) * 30); height: calc(var(--u) * 5); background: var(--mid); left: 50%; margin-left: calc(var(--u) * -15); }
 .hgc-tab.tt { top: 0; } .hgc-tab.tb { bottom: 0; }
-.hgc:is(.hgc-epique, .hgc-legendaire, .hgc-mythique, .hgc-identite) .hgc-tab { display: block; }
+.hgc:is(.hgc-epique, .hgc-legendaire, .hgc-mythique, .hgc-identite, .hgc-unique) .hgc-tab { display: block; }
 .hgc-dia { display: none; position: absolute; width: calc(var(--u) * 8); height: calc(var(--u) * 8); background: var(--acc); transform: rotate(45deg); }
 .hgc-dia.dtl { left: calc(var(--u) * 36); top: calc(var(--u) * -1); } .hgc-dia.dtr { right: calc(var(--u) * 36); top: calc(var(--u) * -1); }
 .hgc-dia.dbl { left: calc(var(--u) * 36); bottom: calc(var(--u) * -1); } .hgc-dia.dbr { right: calc(var(--u) * 36); bottom: calc(var(--u) * -1); }
-.hgc:is(.hgc-legendaire, .hgc-mythique, .hgc-identite) .hgc-dia { display: block; }
+.hgc:is(.hgc-legendaire, .hgc-mythique, .hgc-identite, .hgc-unique) .hgc-dia { display: block; }
+
+/* Reflet doré qui glisse sur la carte unique (seulement si les effets sont permis, comme la brillance) */
+.hgc-sheen { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .32; clip-path: var(--st12);
+  background: linear-gradient(110deg, transparent 0 40%, rgba(255, 241, 194, .9) 50%, transparent 60% 100%) 0 0 / 260% 100% no-repeat; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-fx="on"] .hgc-unique .hgc-sheen { animation: hgc-sheen-move 7s ease-in-out infinite; }
+}
+@keyframes hgc-sheen-move { 0%, 100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
 
 /* Brillante : reflet holographique (animé seulement si les effets sont permis) */
 .hgc-holo { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: .55; clip-path: var(--st12);
@@ -150,7 +165,7 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
   font-size: max(5px, calc(var(--u) * 10.5)); line-height: 1; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
 .hgc-pied-n { color: var(--muted); }
 .hgc-pied-s { color: var(--acc); }
-.hgc-mythique .hgc-plate-t, .hgc-mythique .hgc-idv { font-family: Georgia, "Times New Roman", serif; }
+.hgc-mythique .hgc-plate-t, .hgc-mythique .hgc-idv, .hgc-unique .hgc-plate-t { font-family: Georgia, "Times New Roman", serif; }
 .hgc-mythique .hgc-plate-t { text-transform: none; letter-spacing: .01em; font-size: max(6px, calc(var(--u) * 14)); }
 
 /* Compteur, verrou, manquante */
