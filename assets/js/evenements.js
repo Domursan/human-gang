@@ -1,15 +1,20 @@
-// ===== Humane Gang — page « Événements » : événements dynamiques en cours et passés =====
+// ===== Humane Gang — page « Événements » (evenements.html) : événements dynamiques en cours et passés =====
 // Lecture membres : hg_dyn_events, hg_dyn_captures, hg_badges, hg_user_badges ; classement rpc hg_dyn_leaderboard.
 // Les événements à venir ne sont pas montrés (surprise).
+// Dépendances : core.js (accès Supabase, page), badge-levels.js (niveaux de badge), ics.js (agenda), icons.js, utils.js.
+// Page réservée aux membres (auth: 'member'). N'exporte rien.
 import { sb, initPage, esc, $, errMsg, avatarHtml } from './core.js';
 import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 import { addToCalendar } from './ics.js';
 import { svg } from './icons.js';
 import { fmtDayInZone } from './utils.js';
 
+/* ---------- Initialisation : conteneur et session membre ---------- */
 const app = $('#app');
+// me = personne connectée (la page exige un membre).
 const me = await initPage({ auth: 'member' });
 
+/* ---------- Constantes et icônes ---------- */
 const ICON = {
   trophy: svg('trophy', { size: 20, stroke: 1.8 }),
   badge: svg('badge', { size: 20, stroke: 1.8 }),
@@ -17,22 +22,45 @@ const ICON = {
   clock: svg('clock', { size: 20, stroke: 1.8 }),
   cal: svg('cal', { size: 20, stroke: 1.8 }),
 };
+// Fuseau horaire du gang : toutes les dates affichées sont en heure de Zurich.
 const TZ = 'Europe/Zurich';
+/** Formate une date ISO en français, en heure de Zurich (options Intl en surcharge). */
 const fmt = (iso, o = {}) => new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', ...o }).format(new Date(iso));
+/** Transforme une probabilité (ex. 0.25) en « 1 page sur N » (ex. 4). Au moins 1. */
 const oneIn = (p) => Math.max(1, Math.round(1 / (Number(p) || 1)));
+/** Réponse Supabase → données, ou lève l'erreur pour que le bloc try/catch l'affiche. */
 const check = (r) => { if (r.error) throw r.error; return r.data; };
 
+/* ---------- Rendu : fonctions d'affichage (renvoient du HTML) ---------- */
+/**
+ * Temps restant avant la fin d'un événement, en texte (« encore 2 h 10 min »), ou « terminé ».
+ * @param {string} iso date de fin ISO
+ * @returns {string}
+ */
 function remaining(iso) {
   const ms = new Date(iso) - Date.now();
   if (ms <= 0) return 'terminé';
   const d = Math.floor(ms / 864e5), h = Math.floor((ms % 864e5) / 36e5), m = Math.floor((ms % 36e5) / 6e4);
   return d ? `encore ${d} j ${h} h` : h ? `encore ${h} h ${m} min` : `encore ${m} min`;
 }
+/**
+ * Visuel d'un événement : son image si elle existe, sinon son emoji (ou une étoile).
+ * @param {object} ev l'événement
+ * @param {number} size taille en pixels (variable CSS --s)
+ * @returns {string} HTML
+ */
 function visual(ev, size) {
   return `<span class="evp-visual" style="--s:${size}px">${ev.image_url
     ? `<img src="${esc(ev.image_url)}" alt="" loading="lazy">`
     : `<span class="evp-emoji">${esc(ev.emoji || '✨')}</span>`}</span>`;
 }
+/**
+ * Bloc « badge de l'événement » : image, niveaux (si le badge en a) et état obtenu ou non.
+ * @param {object} b le badge (hg_badges)
+ * @param {object|undefined} mine la ligne hg_user_badges de la personne, si elle l'a obtenu
+ * @param {boolean} live true si l'événement est en cours
+ * @returns {string} HTML, vide si pas de badge
+ */
 function badgeBlock(b, mine, live) {
   if (!b) return '';
   const lv = hasLevels(b);
@@ -53,6 +81,11 @@ function badgeBlock(b, mine, live) {
     </div>
   </div>`;
 }
+/**
+ * Classement d'un événement : top 10, avec la place de la personne si elle est plus loin.
+ * @param {Array<object>|null} rows lignes de hg_dyn_leaderboard, null si la RPC a échoué
+ * @returns {string} HTML
+ */
 function boardHtml(rows) {
   if (!rows) return '<p class="small muted">Classement indisponible.</p>';
   if (!rows.length) return '<p class="small muted">Personne n\'a encore attrapé d\'image. À toi de jouer !</p>';
@@ -62,6 +95,13 @@ function boardHtml(rows) {
       <strong>${esc(r.captures)}</strong></li>`).join('')}</ol>
     ${(() => { const i = rows.findIndex((r) => r.user_id === me.id); return i >= 10 ? `<p class="small muted">Ta place : ${i + 1}<sup>e</sup> avec ${rows[i].captures} capture${rows[i].captures > 1 ? 's' : ''}.</p>` : ''; })()}`;
 }
+/**
+ * Carte complète d'un événement (en cours ou passé) : titre, stats, classement et badge.
+ * @param {object} ev l'événement
+ * @param {object} ctx données chargées par load()
+ * @param {boolean} live true pour un événement en cours
+ * @returns {string} HTML
+ */
 function eventCard(ev, ctx, live) {
   const mine = ctx.mine.get(ev.id) || 0;
   const total = ctx.total.get(ev.id) || 0;
@@ -92,6 +132,13 @@ function eventCard(ev, ctx, live) {
   </article>`;
 }
 
+/* ---------- Chargement des données ---------- */
+/**
+ * Charge tout ce qu'il faut pour la page, en parallèle quand c'est possible.
+ * Ne garde que les événements déjà commencés (un événement à venir reste caché).
+ * @returns {Promise<{events: object[], mine: Map, total: Map, badges: Map, boards: Map, myBadges: Map}>}
+ *   mine/total : nombre de captures par événement (à moi / de tout le gang) ; boards : classement par événement (null si erreur).
+ */
 async function load() {
   const nowIso = new Date().toISOString();
   const [evs, caps, myB] = await Promise.all([
@@ -116,7 +163,9 @@ async function load() {
   return { events, mine, total, badges, boards, myBadges };
 }
 
+/* ---------- Événements : bouton « Ajouter à mon agenda » ---------- */
 let shown = null; // contexte du dernier rendu (pour le bouton « Ajouter à mon agenda »)
+// Délégation : un seul écouteur sur #app, qui marche pour les cartes rendues plus tard.
 app.addEventListener('click', (e) => {
   const b = e.target.closest('[data-act="ics"]');
   if (!b) return;
@@ -124,6 +173,11 @@ app.addEventListener('click', (e) => {
   if (ev) addToCalendar({ id: ev.id, title: ev.name, start: ev.starts_at, end: ev.ends_at, description: ev.description }, new URL('evenements.html', location.href).href);
 });
 
+/* ---------- Page : rendu complet, puis chargement initial ---------- */
+/**
+ * Dessine la page : en-tête, événements en cours, événements passés.
+ * @param {object} ctx données chargées par load() ; gardées dans shown pour le bouton agenda
+ */
 function render(ctx) {
   shown = ctx;
   const now = new Date();
@@ -147,6 +201,7 @@ function render(ctx) {
     </section>`;
 }
 
+// Premier affichage. En cas d'erreur de chargement, un message lisible remplace la page.
 try {
   render(await load());
 } catch (e) {

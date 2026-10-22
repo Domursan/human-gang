@@ -1,3 +1,8 @@
+/* ===== Redirection de l'intro (page index.html) =====
+   Script classique, placé en tout premier dans index.html pour agir avant tout rendu.
+   Il envoie vers accueil.html si l'intro est désactivée ou déjà vue aujourd'hui. Il lit seulement le localStorage
+   (hg_site_settings, hg_intro_day) et n'exporte rien. */
+
 /* Réglage « Intro du site » désactivé (cache des réglages) : accueil direct, sans boucle avec intro-daily.js. */
 try {
   var rg = JSON.parse(localStorage.getItem('hg_site_settings') || 'null');

@@ -1,4 +1,10 @@
-// ===== Humane Gang — Historique (frise) =====
+// ===== Humane Gang — Historique, la frise des souvenirs (historique.html) =====
+// Frise chronologique : éditions du Secret Santa (avec « qui a offert à qui »), sorties IRL passées avec leurs photos,
+// et « moments cultes » ajoutés à la main (avec image, réactions, modification et suppression).
+// Dépendances : core.js, photos.js (images), image-compress.js, reactions.js, admin-ghosts.js (fantômes, admin),
+// ui-confirm.js, ss-pairs.js (paires), reglages-valeurs-lot3.js (délai avant qu'un événement soit « passé »).
+// Tables et RPC : hg_members, hg_ss_editions, hg_ss_progress, hg_events, hg_event_rsvps, hg_photos, hg_moments.
+// N'exporte rien.
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
 import { prepareImage } from './image-compress.js';
@@ -10,10 +16,14 @@ import { pluralCount } from './utils.js';
 import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
 import { chargerReglagesLot3, delaiPassee } from './reglages-valeurs-lot3.js';
 
+/* ---------- Initialisation : session membre, réglages, droits ---------- */
+// me = personne connectée (la page exige un membre). isAdmin : l'admin voit plus de choses (fantômes, modifications d'autrui).
 const me = await initPage({ auth: 'member' });
 await chargerReglagesLot3();
 const isAdmin = !!me?.is_admin;
 
+/* ---------- Constantes et icônes ---------- */
+// Nombre de vignettes de photos affichées par sortie (le reste est résumé par « +N »).
 const THUMBS = 4;
 const STATUS_LABEL = { revelation: 'Révélation', termine: 'Terminé' };
 const KIND_LABEL = { ss: 'Secret Santa', irl: 'Sortie IRL', moment: 'Moment culte' };
@@ -29,11 +39,18 @@ const I = {
   trash: svg('trash2', { size: 16, stroke: 1.8 }),
 };
 
+/* État de la page : données chargées, filtre actif. */
 const S = { members: new Map(), people: new Map(), editions: [], progress: new Map(), pairs: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), filter: 'all' };
+/** Personne à partir de son identifiant ; « Ancien membre » si elle n'est plus dans l'annuaire. */
 const member = (id) => S.members.get(id) || { pseudo: 'Ancien membre' };
+/** Date SQL (AAAA-MM-JJ) à midi local, pour éviter un décalage d'un jour. */
 const dayDate = (d) => new Date(`${d}T12:00:00`); // date SQL → midi local (évite les décalages de fuseau)
 
 /* ---------- Données ---------- */
+/**
+ * Charge toute la frise : membres, éditions, sorties passées, moments, réactions, présences, photos, paires et URLs d'images.
+ * Les requêtes sont groupées en Promise.all pour limiter les allers-retours. Lève une erreur si une requête de base échoue.
+ */
 async function load() {
   const pastLimit = new Date(Date.now() - delaiPassee()).toISOString();
   const [m, ed, ev, mo] = await Promise.all([
@@ -79,6 +96,11 @@ async function load() {
 }
 
 /* ---------- Construction de la frise ---------- */
+/**
+ * Transforme les données en une liste d'éléments { kind, date, year, html }, triée du plus récent au plus ancien.
+ * Une édition sans date d'échange est placée au 24 décembre de son année.
+ * @returns {Array<{kind: string, date: Date, year: number, html: string}>}
+ */
 function items() {
   const out = [];
   for (const e of S.editions) {
@@ -96,6 +118,11 @@ function items() {
   return out.sort((a, b) => b.date - a.date);
 }
 
+/**
+ * Carte d'une édition du Secret Santa : date, nombre de participants, budget, statut et paires.
+ * @param {object} e l'édition (hg_ss_editions)
+ * @returns {string} HTML
+ */
 function ssCard(e) {
   const p = S.progress.get(e.id);
   const n = p?.participants ?? 0;
@@ -123,6 +150,12 @@ function pairsBlock(e) {
     </details>`;
 }
 
+/**
+ * Carte d'une sortie IRL passée : lieu, présents, vignettes de l'album et lien vers irl.html.
+ * Les présents dont le compte n'est pas connu (fantômes) sont ignorés.
+ * @param {object} e la sortie (hg_events)
+ * @returns {string} HTML
+ */
 function irlCard(e) {
   const present = (S.present.get(e.id) || []).filter((id) => S.members.has(id)); // compte inconnu (fantôme) : ignoré
   const photos = S.photos.get(e.id) || [];
@@ -142,6 +175,11 @@ function irlCard(e) {
   </article>`;
 }
 
+/**
+ * Carte d'un moment culte : image (agrandissable), texte, réactions, et boutons Modifier/Supprimer pour l'auteur ou l'admin.
+ * @param {object} m le moment (hg_moments)
+ * @returns {string} HTML
+ */
 function momentCard(m) {
   const url = m.image_path ? S.urls.get(m.image_path) : null;
   const author = m.created_by ? member(m.created_by) : null;
@@ -162,6 +200,10 @@ function momentCard(m) {
   </article>`;
 }
 
+/**
+ * Dessine la frise selon le filtre actif, groupée par année (la plus récente en premier).
+ * Affiche un message d'accueil si la frise est vide, ou si la catégorie choisie n'a rien.
+ */
 function render() {
   const all = items();
   const list = S.filter === 'all' ? all : all.filter((x) => x.kind === S.filter);
@@ -189,6 +231,7 @@ function render() {
     </section>`).join('');
 }
 
+/** Recharge les données puis redessine ; en cas d'erreur, affiche un message et un toast. */
 async function refresh() {
   try { await load(); render(); } catch (e) {
     $('#timeline').innerHTML = '<p class="empty">Impossible de charger l\'historique pour le moment.</p>';
@@ -196,7 +239,8 @@ async function refresh() {
   }
 }
 
-/* ---------- Interactions ---------- */
+/* ---------- Interactions : filtres, clics sur la frise ---------- */
+// Boutons de filtre (tout, Secret Santa, IRL, moments) : aria-pressed indique le bouton actif.
 $$('.hf').forEach((b) => b.addEventListener('click', () => {
   S.filter = b.dataset.filter;
   $$('.hf').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
@@ -204,6 +248,7 @@ $$('.hf').forEach((b) => b.addEventListener('click', () => {
   $('#hist-live').textContent = `Filtre : ${FILTER_LABEL[S.filter]}`;
 }));
 
+// Délégation sur la frise : un seul écouteur pour les boutons data-act (nouveau, modifier, supprimer, agrandir).
 $('#timeline').addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]');
   if (!b) return;
@@ -215,6 +260,11 @@ $('#timeline').addEventListener('click', (e) => {
 });
 $('#btn-moment').addEventListener('click', () => openMomentDialog());
 
+/**
+ * Supprime un moment après confirmation, puis son image si elle appartient à la personne (ou si elle est admin).
+ * La suppression de l'image est lancée sans attendre : un échec n'annule pas la suppression du moment.
+ * @param {object} m le moment à supprimer
+ */
 async function deleteMoment(m) {
   if (!(await confirmBox(`Supprimer le moment « ${m.title} » ?`, '', { ok: 'Supprimer', danger: true }))) return;
   const { error } = await sb.from('hg_moments').delete().eq('id', m.id);
@@ -224,16 +274,22 @@ async function deleteMoment(m) {
   await refresh();
 }
 
-/* ---------- Formulaire moment ---------- */
+/* ---------- Formulaire moment (ajout et modification) ---------- */
 const dlg = $('#moment-dialog');
 const form = $('#moment-form');
+// Moment en cours de modification (null = ajout d'un nouveau moment).
 let editing = null;
 $$('[data-close]', dlg).forEach((b) => b.addEventListener('click', () => dlg.close()));
 
+/** Date du jour au format AAAA-MM-JJ (heure locale), pour le champ date. */
 function todayIso() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+/**
+ * Ouvre la fenêtre d'ajout (sans argument) ou de modification (avec le moment).
+ * @param {object|null} [m=null] moment à modifier
+ */
 function openMomentDialog(m = null) {
   editing = m;
   form.reset();
@@ -251,6 +307,8 @@ function openMomentDialog(m = null) {
   form.elements.title.focus();
 }
 
+// Enregistrement : nouvelle image d'abord (puis la ligne), et suppression de l'ancienne image seulement une fois la ligne à jour.
+// En cas d'échec, la nouvelle image envoyée est retirée pour ne pas laisser de fichier orphelin.
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = form.elements;

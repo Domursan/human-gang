@@ -1,4 +1,10 @@
-// ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » =====
+// ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » (membre.html) =====
+// Affiche la carte de membre (soi-même par défaut, ou ?id=<uuid> pour un autre membre), ses badges, sa vitrine de cartes,
+// et l'annuaire « Le gang ». La carte peut être téléchargée en PNG haute définition.
+// Dépendances : core.js (initPage, sb, canAccess), ss-card.js (chargement d'image et téléchargement),
+// badge-levels.js (niveaux), cartes-showcase.js (vitrine), icons.js.
+// RPC et tables : hg_member_card, hg_members, hg_settings (badges), hg_user_badges, hg_badges.
+// N'exporte que renderIdCard (carte haute définition).
 import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo, canAccess } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
 import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
@@ -8,7 +14,9 @@ import { svg } from './icons.js';
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
 
+/* ---------- Quel membre afficher : ?id=<uuid>, sinon soi-même ---------- */
 const params = new URLSearchParams(location.search);
+/** Format d'un identifiant de compte (uuid). Une valeur qui ne correspond pas est ignorée. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const rawId = params.get('id');
 const targetId = rawId && UUID_RE.test(rawId) ? rawId : me.id;
@@ -19,6 +27,7 @@ const RAINBOW = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398
 const PIXEL = '"Silkscreen", ui-monospace, monospace';
 const DISPLAY = '"Archivo Black", system-ui, sans-serif';
 const BODY = 'Inter, system-ui, sans-serif';
+/** Vrai si l'utilisateur demande moins d'animations (prefers-reduced-motion). */
 const reduced = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 
 const ICON = {
@@ -28,6 +37,7 @@ const ICON = {
   badge: svg('badge', { size: 20, stroke: 1.8 }),
 };
 
+/** Les cinq statistiques de la carte : clé des données, libellé au singulier, libellé au pluriel. */
 const STATS = [
   ['secret_santa', 'Secret Santa', 'Secret Santa'],
   ['sorties', 'Sortie', 'Sorties'],
@@ -36,7 +46,13 @@ const STATS = [
   ['moments', 'Moment', 'Moments'],
 ];
 
+/** Numéro de membre sur quatre chiffres, avec des zéros devant (ex. 0042). */
 const num4 = (n) => String(Math.max(0, Number(n) || 0)).padStart(4, '0');
+/**
+ * Anniversaire lisible (« 1er mars ») à partir de « JJ.MM » (format stocké).
+ * @param {string} dm date au format JJ.MM
+ * @returns {string} libellé, ou chaîne vide si la valeur est absente ou invalide
+ */
 function birthdayLabel(dm) {
   const m = /^(\d{2})\.(\d{2})$/.exec(String(dm || ''));
   if (!m) return '';
@@ -58,11 +74,16 @@ function barcode(id) {
   const h = String(id || '0').replace(/-/g, '');
   return [...h].slice(0, 28).map((c) => (parseInt(c, 16) % 3) + 1);
 }
+/** Couleur de la carte : seule une couleur hexadécimale à six chiffres est acceptée, sinon la couleur par défaut. */
 const safeColor = (c) => (/^#[0-9a-f]{6}$/i.test(String(c || '')) ? c : '#9E3543');
 
 /* =========================================================
    Rendu de la page
    ========================================================= */
+/**
+ * Dessine le squelette de la page (titre, carte en attente, zone des badges, annuaire en attente).
+ * La vraie carte remplace ensuite ces blocs quand les données sont là.
+ */
 function shell() {
   app.innerHTML = `
     <section class="page-head mb-head">
@@ -85,6 +106,7 @@ function shell() {
 
 /** Nombre maximum de badges affichés sur la carte ; au-delà, une pastille « +n ». Réglable : hg_settings.badges.max_carte (repli 8). */
 let IDC_BADGES_MAX = 8;
+/** Lit dans les réglages le nombre de badges affichés sur la carte. Sans réglage valide, on garde 8. */
 async function loadBadgeMax() {
   try {
     const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'badges').maybeSingle();
@@ -113,6 +135,12 @@ function idcBadgesHtml(c) {
   return `<ul class="idc-badges" aria-label="Badges obtenus (${list.length})">${items}${more}</ul>`;
 }
 
+/**
+ * HTML de la carte d'identité : logo, numéro, photo, pseudo, dates, badges, statistiques, code-barres décoratif.
+ * Les boutons (message, téléchargement, modifier le profil) changent selon qu'il s'agit de moi ou d'un autre membre.
+ * @param {object} c carte renvoyée par la RPC hg_member_card
+ * @returns {string} HTML
+ */
 function cardHtml(c) {
   const bday = birthdayLabel(c.birthday_dm);
   const stats = c.stats || {};
@@ -165,6 +193,11 @@ function cardHtml(c) {
     </div>`;
 }
 
+/**
+ * Liste complète des badges de la page (avec niveaux et dates), ou un message s'il n'y en a aucun.
+ * @param {object} c carte du membre
+ * @returns {string} HTML
+ */
 function badgesHtml(c) {
   const list = Array.isArray(c.badges) ? c.badges : [];
   return `
@@ -182,10 +215,15 @@ function badgesHtml(c) {
 }
 
 /* ---------- Effet holographique (tilt 3D + reflet) ---------- */
+/**
+ * Active l'effet holographique : la carte s'incline vers le pointeur (souris uniquement, pas au doigt).
+ * Sans effet si le mouvement est réduit.
+ */
 function bindHolo() {
   const wrap = $('#idc-wrap'), card = $('#idc');
   if (!wrap || !card || reduced()) return;
   let raf = 0, last = null;
+  /** Applique l'inclinaison calculée d'après la position du pointeur (une fois par image). */
   const apply = () => {
     raf = 0;
     if (!last) return;
@@ -213,8 +251,10 @@ function bindHolo() {
 /* =========================================================
    Export PNG haute définition (2000 × 1260, ratio carte bancaire)
    ========================================================= */
+/** Dimensions de l'image téléchargeable : 2000 × 1260, au ratio d'une carte bancaire. */
 const CW = 2000, CH = 1260;
 
+/** Attend les polices de la carte (au plus quatre secondes) pour que l'image ne sorte pas en police de secours. */
 async function waitCardFonts() {
   if (!document.fonts?.load) return;
   const all = Promise.all([
@@ -226,6 +266,7 @@ async function waitCardFonts() {
   ]).catch(() => {});
   await Promise.race([all, new Promise((r) => setTimeout(r, 4000))]);
 }
+/** Chemin d'un rectangle aux coins arrondis (sans remplissage). */
 function rr(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
@@ -240,7 +281,13 @@ function pixelRect(ctx, x, y, w, h, s) {
   ctx.lineTo(x + 2 * s, y + h - s); ctx.lineTo(x + s, y + h - s); ctx.lineTo(x + s, y + h - 2 * s); ctx.lineTo(x, y + h - 2 * s);
   ctx.lineTo(x, y + 2 * s); ctx.lineTo(x + s, y + 2 * s); ctx.lineTo(x + s, y + s); ctx.lineTo(x + 2 * s, y + s); ctx.closePath();
 }
+/** Espacement entre lettres pour le texte suivant. Ignoré si le navigateur ne le gère pas. */
 const spacing = (ctx, px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; };
+/**
+ * Choisit la plus grande taille de police (de start à min) pour que le texte tienne dans maxW.
+ * Si même la taille minimale ne suffit pas, le texte est raccourci avec « … ».
+ * @returns {number|{size: number, text: string}} la taille si elle suffit, sinon la taille et le texte raccourci
+ */
 function fitText(ctx, text, maxW, font, start, min) {
   let s = start;
   for (; s > min; s -= 4) { ctx.font = font(s); if (ctx.measureText(text).width <= maxW) return s; }
@@ -249,12 +296,20 @@ function fitText(ctx, text, maxW, font, start, min) {
   while (t.length > 1 && ctx.measureText(`${t}…`).width > maxW) t = t.slice(0, -1);
   return { size: min, text: t === text ? t : `${t}…` };
 }
+/** Dessine une image en « couverture » dans la zone : elle remplit la zone, rognée au centre, sans déformation. */
 function coverDraw(ctx, img, x, y, w, h) {
   const r = Math.max(w / img.width, h / img.height);
   const iw = img.width * r, ih = img.height * r;
   ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih);
 }
 
+/**
+ * Dessine la carte de membre en haute définition sur un canvas (pour le téléchargement en PNG).
+ * Les images (logo, photo, badges) sont chargées avec CORS, sinon le canvas ne peut pas être exporté.
+ * @param {HTMLCanvasElement} canvas canvas à remplir
+ * @param {object} c carte du membre (RPC hg_member_card, badges déjà complétés par addBadgeLevels)
+ * @returns {Promise<void>}
+ */
 export async function renderIdCard(canvas, c) {
   const color = safeColor(c.color);
   const badges = (Array.isArray(c.badges) ? c.badges : []).slice(0, 6);
@@ -321,6 +376,7 @@ export async function renderIdCard(canvas, c) {
 
   // Champs
   const fx = 610, fw = 760;
+  /** Dessine une étiquette de champ : petit texte gris en majuscules. */
   const label = (t, y) => { ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#ABA7A0'; ctx.font = `400 28px ${PIXEL}`; spacing(ctx, 4); ctx.fillText(t.toUpperCase(), fx, y); spacing(ctx, 0); };
   label('Pseudo', 420);
   ctx.fillStyle = '#F2EFEA';
@@ -386,6 +442,11 @@ export async function renderIdCard(canvas, c) {
   rr(ctx, 2, 2, CW - 4, CH - 4, 62); ctx.stroke();
 }
 
+/**
+ * Crée l'image de la carte puis la télécharge. Le bouton reste désactivé pendant la préparation.
+ * @param {HTMLButtonElement} btn bouton « Télécharger la carte »
+ * @param {object} card carte du membre
+ */
 async function onDownload(btn, card) {
   btn.disabled = true;
   const label = btn.innerHTML;
@@ -405,6 +466,7 @@ async function onDownload(btn, card) {
 }
 
 /* ---------- Annuaire ---------- */
+/** Charge l'annuaire « Le gang » (membres triés par pseudo) et l'affiche sous la carte. */
 async function loadGang() {
   const ul = $('#gang');
   try {
@@ -424,6 +486,11 @@ async function loadGang() {
 }
 
 /* ---------- Niveaux des badges (hg_user_badges.level + hg_badges.levels) ---------- */
+/**
+ * Ajoute à chaque badge à niveaux son niveau atteint et son image de niveau (modifie card.badges sur place).
+ * En cas d'échec, les badges restent sans niveau : la carte s'affiche quand même.
+ * @param {object} card carte du membre
+ */
 async function addBadgeLevels(card) {
   if (!Array.isArray(card.badges) || !card.badges.length) return;
   try {
@@ -444,7 +511,9 @@ async function addBadgeLevels(card) {
 }
 
 /* ---------- Lancement ---------- */
+// Le squelette s'affiche tout de suite ; la carte remplace les blocs en attente une fois les données reçues.
 shell();
+// L'annuaire se charge en parallèle de la carte, sans l'attendre.
 const gangP = loadGang();
 try {
   const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });

@@ -1,14 +1,19 @@
-// ===== Humane Gang — aide et tutos =====
+// ===== Humane Gang — aide et tutos (aide.html) =====
 // Liste des tutos par groupe, recherche (titre, résumé, mots-clés), tuto ouvert par l'adresse aide.html#<slug>.
 // Accessible sans compte : seuls les groupes PUBLIC_GROUP_IDS (« premiers pas ») sont visibles aux visiteurs.
+// Dépendances : core.js (initPage, esc, $) et tutos/index.js (chargement des groupes de tutos).
+// Les données des tutos viennent de assets/js/tutos/ ; cette page ne fait que les afficher. N'exporte rien.
 import { initPage, esc, $ } from './core.js';
 import { loadTutoGroups, PUBLIC_GROUP_IDS } from './tutos/index.js';
 
+/* ---------- Initialisation : session facultative (les visiteurs voient « premiers pas ») ---------- */
 const me = await initPage({ auth: 'optional' });
 
+/* ---------- Constantes et outils ---------- */
 const BASE_TITLE = 'Aide et tutos · Humane Gang';
 const SAFE_PAGE = /^[a-z0-9-]+\.html(#[\w-]*)?$/i; // lien « Y aller » : une page du site, rien d'autre
 const SAFE_IMG = /^assets\/tutos\/[\w.-]+$/;        // capture : un fichier du dépôt, rien d'autre
+/** Met en minuscules et retire les accents, pour que « Sortie » trouve « sortie » ou « Séance ». */
 const fold = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const listView = $('#aide-list-view');
@@ -20,6 +25,7 @@ const guestNote = $('#aide-guest');
 const qInput = $('#aide-q');
 
 /* ---------- Données : groupes valides, avec au moins un tuto ---------- */
+// Filtre les entrées mal formées (slug non conforme, titre absent) pour ne jamais afficher une donnée cassée.
 const loaded = await loadTutoGroups();
 const groups = loaded.map((g) => ({
   id: String(g.id ?? ''),
@@ -27,6 +33,7 @@ const groups = loaded.map((g) => ({
   icon: String(g.icon ?? ''),
   tutos: (Array.isArray(g.tutos) ? g.tutos : []).filter((t) => t && /^[a-z0-9-]+$/.test(t.slug ?? '') && t.title),
 })).filter((g) => g.id && g.tutos.length);
+/** Vrai si je peux voir ce groupe : je suis connecté, ou le groupe est public. */
 const canSee = (g) => !!me || PUBLIC_GROUP_IDS.includes(g.id);
 const visibleGroups = groups.filter(canSee);
 const bySlug = new Map();
@@ -35,8 +42,17 @@ groups.forEach((g) => g.tutos.forEach((t) => bySlug.set(t.slug, { t, g })));
 if (!me) guestNote.hidden = false;
 
 /* ---------- Liste et recherche ---------- */
+/**
+ * Texte de recherche d'un tuto : titre, résumé et mots-clés, sans accents et en minuscules.
+ * @param {{title: string, summary?: string, keywords?: string[]}} t le tuto
+ * @returns {string}
+ */
 const haystack = (t) => fold([t.title, t.summary, ...(Array.isArray(t.keywords) ? t.keywords : [])].join(' '));
 
+/**
+ * Affiche la liste des tutos, filtrée par la recherche, et le message « aucun résultat » ou le compteur.
+ * @param {string} [query=''] texte tapé dans la recherche
+ */
 function renderList(query = '') {
   const q = query.trim();
   const needle = fold(q);
@@ -69,6 +85,13 @@ function renderList(query = '') {
 qInput.addEventListener('input', () => renderList(qInput.value));
 
 /* ---------- Un tuto (adresse aide.html#<slug>) ---------- */
+/**
+ * HTML d'un tuto complet : fil d'Ariane, étapes numérotées, astuces, bouton « Y aller ».
+ * Le lien « Y aller » et les captures ne passent que si leur chemin est sûr (SAFE_PAGE, SAFE_IMG).
+ * @param {object} t le tuto
+ * @param {object} g le groupe auquel il appartient
+ * @returns {string} HTML
+ */
 function tutoHtml(t, g) {
   const steps = (Array.isArray(t.steps) ? t.steps : []).filter((s) => s && s.title);
   const tips = (Array.isArray(t.tips) ? t.tips : []).filter(Boolean);
@@ -95,11 +118,19 @@ function tutoHtml(t, g) {
   </article>`;
 }
 
+/**
+ * Affiche un message à la place d'un tuto (inexistant, réservé aux membres), avec un retour à la liste.
+ * @param {string} html contenu du message (HTML construit ici, pas de saisie utilisateur)
+ */
 function showMessage(html) {
   tutoView.innerHTML = `<div class="card aide-tuto aide-missing">${html}
     <div class="btn-row"><a class="btn btn-ghost" href="aide.html">← Tous les tutos</a></div></div>`;
 }
 
+/**
+ * Ouvre un tuto par son slug (adresse aide.html#<slug>) : le tuto, un message « n'existe pas », ou « réservé aux membres ».
+ * @param {string} slug identifiant du tuto
+ */
 function showTuto(slug) {
   const hit = bySlug.get(slug);
   listView.hidden = true;
@@ -120,6 +151,7 @@ function showTuto(slug) {
   tutoView.querySelector('h2')?.focus();
 }
 
+/** Revient à la liste des tutos (aide.html sans slug) et remet le titre de page par défaut. */
 function showList() {
   tutoView.hidden = true;
   tutoView.innerHTML = '';
@@ -128,6 +160,10 @@ function showList() {
   renderList(qInput.value);
 }
 
+/**
+ * Choisit la vue selon l'adresse : aide.html#<slug> ouvre un tuto, sans slug la liste.
+ * Appelée au chargement et à chaque changement d'ancre.
+ */
 function route() {
   let slug = '';
   try { slug = decodeURIComponent(location.hash.slice(1)); } catch { slug = ''; }

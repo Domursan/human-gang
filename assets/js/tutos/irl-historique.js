@@ -1,4 +1,9 @@
 // Groupe « Sorties IRL & souvenirs » — données pures (aucun import), lisibles dans le navigateur ET dans Node.
+/*
+ * Structure d'un groupe : { id, title, icon, tutos: [...] }.
+ * Structure d'un tuto : { slug, title, summary, page (page HTML concernée), steps: [{ title, text }], tips: [texte], keywords: [mots de recherche] }.
+ * La page d'aide (aide.js) affiche ces données ; elle ne les modifie pas.
+ */
 export default {
   id: 'irl-historique',
   title: 'Sorties IRL & souvenirs',

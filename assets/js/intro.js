@@ -1,11 +1,16 @@
-// ===== Intro « 3D » : le défilement pilote une caméra qui plonge dans le cœur du logo, sous un ciel étoilé =====
+// ===== Intro « 3D » (index.html) : le défilement pilote une caméra qui plonge dans le cœur du logo, sous un ciel étoilé =====
 // Pas de Supabase ici : la page doit rester légère. Le logo est déjà dans le HTML (préchargé).
+// Dépendances : utils.js (rnd), core/site-defaults.js (textes de l'intro), et le localStorage (hg_intro_day, hg_prefs).
+// Deux versions : mouvement réduit (ciel fixe, fondu) ou complète (défilement, caméra 3D). Sortie vers accueil.html.
+// N'exporte rien.
 
+/* ---------- Imports, constantes et éléments de la page ---------- */
 import { rnd } from './utils.js';
 const NEXT = 'accueil.html';
 const PERSPECTIVE = 1000;       // doit correspondre à .intro-stage { perspective }
 const MAX_SCALE = 26;           // grossissement du logo en fin de course
 
+/** Raccourci : élément par identifiant. */
 const $ = (id) => document.getElementById(id);
 const world = $('world'), logo = $('logo'), img = $('logo-img');
 const glow = $('glow'), hint = $('hint'), fade = $('fade'), canvas = $('sky');
@@ -14,7 +19,10 @@ const progressEl = $('progress'), fill = $('progress-fill'), skip = $('skip'), e
 import { applySiteDom } from './core/site-defaults.js';
 applySiteDom(); // textes de l'intro (cache des réglages du site)
 
+/* ---------- Jour de l'intro (une fois par jour, comme intro-daily.js) ---------- */
+/** Date du jour au format « A-M-J » (sans zéro devant), même format que intro-daily.js et intro-redirect.js. */
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+/** Note que l'intro a été vue aujourd'hui, pour ne pas la rejouer avant demain. */
 function markSeen() { try { localStorage.setItem('hg_intro_day', today()); } catch {} }
 
 // Sécurité : si l'intro a déjà été vue aujourd'hui (le script en tête de page s'en charge normalement)
@@ -24,8 +32,12 @@ try { if (localStorage.getItem('hg_intro_day') === today()) location.replace(NEX
 if (img.complete && img.naturalWidth === 0) logo.classList.add('no-logo');
 img.addEventListener('error', () => logo.classList.add('no-logo'), { once: true });
 
-/* ---------- Sortie ---------- */
+/* ---------- Sortie vers l'accueil ---------- */
 let leaving = false;
+/**
+ * Quitte l'intro : marque la journée, fond la page en noir, puis va à l'accueil. Ne fait rien si déjà en cours.
+ * @param {number} [delay=700] durée du fondu, en millisecondes
+ */
 function leave(delay = 700) {
   if (leaving) return;
   leaving = true;
@@ -37,8 +49,12 @@ function leave(delay = 700) {
 }
 skip.addEventListener('click', (e) => { e.preventDefault(); leave(350); });
 
+/* ---------- Réglages de mouvement et petites fonctions mathématiques ---------- */
+// reduced : l'utilisateur a demandé moins d'animations dans son système.
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Ramène une valeur entre 0 et 1. */
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
+/** Courbe en S (smoothstep) : 0 avant a, 1 après b, progression douce entre les deux. */
 const smooth = (a, b, v) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 
 /* Préférence « Effets visuels » (panneau des préférences, localStorage hg_prefs ; ancienne clé hg_effects_off) */
@@ -51,7 +67,7 @@ const fxOff = (() => {
 })();
 
 /* ======================================================================
-   Ciel étoilé (canvas 2D)
+   Ciel étoilé (canvas 2D) : fond, voie lactée, étoiles, étoiles filantes
    Chaque étoile a une position écran au repos (u, v) et une profondeur z0.
    La caméra avance de `travel` : la profondeur vue devient zc et l'étoile
    s'écarte du centre d'un facteur z0 / zc (effet hyperespace en fin de course).
@@ -71,6 +87,7 @@ const BAND_SCALE = 0.5;          // résolution du pré-rendu (le flou vient gra
 
 let W = 0, H = 0, DPR = 1, stars = [], bgGrad = null, band = null, sprites = new Map();
 
+// Nombre « normal » approché (somme de 4 uniformes) : la plupart des valeurs restent près de 0.
 const gauss = () => (Math.random() + Math.random() + Math.random() + Math.random() - 2) / 2; // ~N(0, 0.29)
 
 /** Halo pré-rendu par couleur (moins coûteux qu'un arc + dégradé par étoile et par image). */
@@ -104,6 +121,10 @@ function bandPoint(t, n) {
   return [t * ca - n * sa, t * sa + n * ca - H * 0.06];
 }
 
+/**
+ * Pré-rend la voie lactée une seule fois sur un canvas hors écran (nuages, poussière d'étoiles, zones sombres).
+ * Ensuite drawSky ne fait que recopier cette image, ce qui reste rapide pendant le défilement.
+ */
 function buildBand() {
   // Couvre un peu plus que l'écran (parallaxe + léger zoom)
   const bw = Math.ceil(W * 1.3 * BAND_SCALE), bh = Math.ceil(H * 1.3 * BAND_SCALE);
@@ -112,6 +133,7 @@ function buildBand() {
   const c = band.getContext('2d');
   const diag = Math.hypot(W, H);
   const width = diag * 0.11;
+  /** Convertit une position de la bande en coordonnées du canvas hors écran. */
   const toBand = ([x, y]) => [(x + W * 0.65) * BAND_SCALE, (y + H * 0.65) * BAND_SCALE];
   c.globalCompositeOperation = 'lighter';
   // Nuages diffus
@@ -147,6 +169,10 @@ function buildBand() {
   }
 }
 
+/**
+ * (Re)construit le ciel selon la taille de l'écran : fond, voie lactée, et la liste des étoiles.
+ * Appelée au départ et après un redimensionnement important.
+ */
 function buildSky() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   W = canvas.clientWidth || window.innerWidth;
@@ -194,6 +220,11 @@ function buildSky() {
 
 /* Étoiles filantes : régulièrement, seulement au repos (jusqu'à deux à la fois) */
 let shooting = [], nextShoot = performance.now() + rnd(1200, 2600);
+/**
+ * Lance une étoile filante si le moment est venu (et si la page est au repos).
+ * @param {number} now horodatage de l'image (ms)
+ * @param {boolean} calm true si la caméra ne bouge pas
+ */
 function maybeShoot(now, calm) {
   if (shooting.length >= 2 || !calm || now < nextShoot) return;
   const dir = Math.random() < 0.5 ? -1 : 1;
@@ -209,6 +240,10 @@ function maybeShoot(now, calm) {
   });
   nextShoot = now + rnd(2600, 6500);
 }
+/**
+ * Dessine les étoiles filantes en cours (traînée + petit halo) et retire celles qui sont finies.
+ * @param {number} now horodatage de l'image (ms)
+ */
 function drawShooting(now) {
   if (!shooting.length) return;
   shooting = shooting.filter((s) => now - s.t0 < s.life);
@@ -310,7 +345,12 @@ function drawSky(travel, speed, t, ox, oy, dim, twinkle) {
   ctx.globalAlpha = 1;
 }
 
+/* ---------- Redimensionnement ---------- */
 let resizeTimer = 0;
+/**
+ * Surveille le redimensionnement de la fenêtre et reconstruit le ciel (avec un délai, pour ne pas le faire à chaque pixel).
+ * @param {Function} [cb] fonction à rappeler après la reconstruction
+ */
 function onResize(cb) {
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
@@ -322,11 +362,13 @@ function onResize(cb) {
   }, { passive: true });
 }
 
+/* ---------- Démarrage : construit le ciel, puis choisit la version ---------- */
 buildSky();
 
 if (reduced) {
   /* ---------- Version mouvement réduit : ciel fixe, apparition en fondu, puis fondu vers l'accueil ---------- */
   document.body.classList.add('reduced');
+  /** Dessine le ciel sans animation (mouvement réduit). */
   const still = () => drawSky(0, 0, 0, 0, 0, 1, false);
   still();
   onResize(still);
@@ -362,13 +404,20 @@ if (reduced) {
   window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.activeElement === document.body) leave(500); });
 
   let target = 0, cur = 0, lastT = performance.now(), lastTravel = 0, speedS = 0;
+  /** Défilement maximal de la page, au moins 1 pour éviter une division par zéro. */
   const maxScroll = () => Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  /** Lit la position de défilement et la convertit en progression de 0 à 1. */
   const readScroll = () => { target = clamp01(window.scrollY / maxScroll()); };
   window.addEventListener('scroll', readScroll, { passive: true });
   window.addEventListener('resize', readScroll, { passive: true });
 
   let lastPct = -1;
 
+  /**
+   * Une image d'animation : fait avancer la progression, puis met à jour caméra, logo, lueur, ciel et barre de progression.
+   * Se rappelle elle-même via requestAnimationFrame jusqu'à la sortie.
+   * @param {number} now horodatage fourni par requestAnimationFrame (ms)
+   */
   function frame(now) {
     const dt = Math.min(0.05, (now - lastT) / 1000) || 0.016; lastT = now;
     const k = 1 - Math.exp(-dt * 7);

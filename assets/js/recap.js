@@ -1,4 +1,8 @@
-// ===== Humane Gang — récap annuel au format « story » =====
+// ===== Humane Gang — récap annuel au format « story » (recap.html) =====
+// Lecteur plein écran des chiffres de l'année (sorties, photos, Secret Santa, moments, badges, messages) et
+// image verticale 1080 × 1920 téléchargeable. Données : RPC hg_year_recap (année) et hg_members (première année).
+// Dépendances : core.js, ss-card.js (chargement d'image et téléchargement), icons.js, utils.js (pluralWord).
+// Le récap est réservé aux membres. N'exporte que renderRecapImage (image du récap).
 import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
 import { svg } from './icons.js';
@@ -7,16 +11,24 @@ import { pluralWord } from './utils.js';
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
 
+/** Vrai si l'utilisateur demande moins d'animations : les diapos restent alors plus longtemps, sans mouvement. */
 const reduced = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
+/** Couleurs du logo (arc-en-ciel), pour les bandes et les barres du récap. */
 const RAINBOW = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
+/** Couleur d'accent de chaque diapo, qui revient en boucle. */
 const SLIDE_COLORS = ['#9E3543', '#CF7055', '#D8A75E', '#6FA37F', '#7E93C9', '#9A88C4', '#E0909A', '#5FA3A3'];
+/** Durée d'une diapo, en millisecondes, avant le passage automatique à la suivante. */
 const DURATION = reduced ? 9000 : 6500;
+/** Mois abrégés pour les dates affichées dans le récap. */
 const MONTHS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+/** Format des nombres (locale fr-CH). */
 const nf = new Intl.NumberFormat('fr-CH');
 
 /* ---------- Année ---------- */
+// Année du récap : l'année écoulée, sauf en décembre où l'année en cours est presque complète.
 const now = new Date();
 const defaultYear = now.getMonth() === 11 ? now.getFullYear() : now.getFullYear() - 1;
+// Année demandée dans l'adresse (?year=…). Acceptée seulement si elle est plausible.
 const qYear = Number(new URLSearchParams(location.search).get('year'));
 let year = Number.isInteger(qYear) && qYear >= 2000 && qYear <= now.getFullYear() ? qYear : defaultYear;
 
@@ -29,18 +41,31 @@ const ICON = {
   download: svg('download', { size: 20, stroke: 2 }),
   replay: svg('replay', { size: 20, stroke: 2 }),
 };
+/** Nombre animé : la valeur finale est gardée dans data-count, animateCounters la fait défiler (sauf mouvement réduit). */
 const count = (n) => `<span class="rc-num" data-count="${Number(n) || 0}">${reduced ? nf.format(Number(n) || 0) : '0'}</span>`;
+/** Date courte « 12 mars » à partir d'une date ISO ; chaîne vide si absente. */
 const dateShort = (d) => { if (!d) return ''; const x = new Date(d); return `${x.getDate()} ${MONTHS[x.getMonth()]}`; };
 
 /* =========================================================
    Construction des diapos
    ========================================================= */
+/**
+ * Vrai si l'année ne contient rien à raconter : pas de sortie, photo, Secret Santa, message, badge ni nouveau membre.
+ * @param {object|null} g données « gang » du récap
+ * @returns {boolean}
+ */
 function isEmptyYear(g) {
   if (!g) return true;
   return !(g.sorties?.length || g.photos || (g.secret_santa && g.secret_santa.participants) || g.moments?.length
     || g.badges_debloques || g.messages || g.nouveaux_membres?.length);
 }
 
+/**
+ * Construit la liste des diapos du récap, à partir des données de hg_year_recap.
+ * Chaque diapo ne s'ajoute que si elle a quelque chose à montrer. Une année vide donne une seule diapo de réconfort.
+ * @param {object} r réponse de hg_year_recap : { gang, moi }
+ * @returns {Array<{key: string, emoji: string, html: string, final?: boolean}>}
+ */
 function buildSlides(r) {
   const g = r?.gang || {}, moi = r?.moi || {};
   const S = [];
@@ -177,14 +202,25 @@ function buildSlides(r) {
 /* =========================================================
    Lecteur de story
    ========================================================= */
+/** État du lecteur : diapos, index courant, temps écoulé, pause, appui maintenu, animation en cours et données du récap. */
 const P = { slides: [], i: 0, elapsed: 0, last: 0, paused: false, held: false, raf: 0, recap: null, counterRaf: new Map() };
 
+/**
+ * Options du sélecteur d'année, de l'année en cours jusqu'à la première année disponible.
+ * @param {number} minYear première année disponible
+ * @returns {string} HTML des options
+ */
 function yearOptions(minYear) {
   const ys = [];
   for (let y = now.getFullYear(); y >= Math.min(minYear, year); y--) ys.push(y);
   return ys.map((y) => `<option value="${y}"${y === year ? ' selected' : ''}>${y}</option>`).join('');
 }
 
+/**
+ * Dessine le lecteur plein écran (barre de progression, sélecteur d'année, pause, diapos, flèches).
+ * Remplace le lecteur précédent s'il existe. Met aussi la page en mode « story ».
+ * @param {number} minYear première année disponible, pour le sélecteur
+ */
 function renderStage(minYear) {
   document.querySelector('.rc-stage')?.remove();
   const stage = document.createElement('div');
@@ -218,6 +254,11 @@ function renderStage(minYear) {
   bindStage(stage);
 }
 
+/**
+ * Affiche la diapo d'index i (bornée au premier et au dernier), remet son minuteur à zéro et lance ses compteurs.
+ * @param {number} i index de la diapo
+ * @param {{focus?: boolean}} [opts] focus : placer le curseur sur le premier bouton de la diapo
+ */
 function show(i, { focus = false } = {}) {
   const n = P.slides.length;
   P.i = Math.max(0, Math.min(n - 1, i));
@@ -239,8 +280,14 @@ function show(i, { focus = false } = {}) {
   if (focus) cur.querySelector('.rc-actions .btn')?.focus();
   if (P.slides[P.i].final) { setBar(1); }
 }
+/** Remplit la barre de progression de la diapo courante à la fraction f (0 à 1). */
 function setBar(f) { const bar = $$('.rc-progress > span i')[P.i]; if (bar) bar.style.transform = `scaleX(${Math.min(1, f)})`; }
 
+/**
+ * Boucle d'animation du lecteur : fait avancer le temps de la diapo et passe à la suivante quand la durée est atteinte.
+ * Ne fait rien en pause, pendant un appui maintenu, ou quand l'onglet est caché. Les diapos finales (« final ») ne passent pas toutes seules.
+ * @param {number} t horodatage fourni par requestAnimationFrame
+ */
 function tick(t) {
   P.raf = requestAnimationFrame(tick);
   const dt = t - P.last; P.last = t;
@@ -251,12 +298,17 @@ function tick(t) {
   if (P.elapsed >= DURATION) show(P.i + 1);
 }
 
+/**
+ * Fait défiler les nombres d'une diapo de 0 jusqu'à leur valeur finale (ease-out). Immédiat si mouvement réduit ou valeur nulle.
+ * @param {HTMLElement} root diapo dont on anime les nombres
+ */
 function animateCounters(root) {
   $$('[data-count]', root).forEach((el) => {
     const target = Number(el.dataset.count) || 0;
     cancelAnimationFrame(P.counterRaf.get(el));
     if (reduced || target === 0) { el.textContent = nf.format(target); return; }
     const t0 = performance.now(), dur = Math.min(1600, 700 + target * 12);
+    /** Une image du compteur : fait monter le nombre jusqu'à sa valeur finale. */
     const step = (t) => {
       const k = Math.min(1, (t - t0) / dur), e = 1 - (1 - k) ** 3;
       el.textContent = nf.format(Math.round(target * e));
@@ -267,6 +319,10 @@ function animateCounters(root) {
   });
 }
 
+/**
+ * Met la lecture en pause ou la reprend, et met à jour le bouton et son libellé.
+ * @param {boolean} on true pour mettre en pause
+ */
 function setPaused(on) {
   P.paused = on;
   const b = $('#rc-pause');
@@ -276,6 +332,11 @@ function setPaused(on) {
   $('#rc-story').classList.toggle('is-paused', on);
 }
 
+/**
+ * Branche les interactions du lecteur : toucher gauche ou droite pour changer de diapo, glisser horizontal,
+ * appui maintenu pour pause, boutons de la barre, changement d'année. Les boutons ne déclenchent pas de changement de diapo.
+ * @param {HTMLElement} stage lecteur créé par renderStage
+ */
 function bindStage(stage) {
   const area = $('#rc-slides', stage);
   let down = null, holdT = 0, suppress = false;
@@ -285,6 +346,7 @@ function bindStage(stage) {
     suppress = false;
     holdT = setTimeout(() => { P.held = true; suppress = true; $('#rc-story').classList.add('is-held'); }, 220);
   });
+  /** Fin d'un toucher ou d'un clic : arrête l'appui maintenu, et change de diapo si le geste était un glissement horizontal. */
   const release = (e) => {
     clearTimeout(holdT);
     if (P.held) { P.held = false; $('#rc-story').classList.remove('is-held'); P.last = performance.now(); }
@@ -313,6 +375,7 @@ function bindStage(stage) {
   $('#rc-pause', stage).addEventListener('click', () => setPaused(!P.paused));
   $('#rc-year', stage).addEventListener('change', (e) => changeYear(Number(e.target.value)));
 }
+// Clavier : flèches pour changer de diapo, espace pour pause, Échap pour revenir à l'accueil.
 document.addEventListener('keydown', (e) => {
   if (!document.querySelector('.rc-stage') || e.target.closest?.('select, input, textarea')) return;
   if (e.key === 'ArrowRight') { e.preventDefault(); show(P.i + 1); }
@@ -321,6 +384,10 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'Escape') location.href = 'accueil.html';
 });
 
+/**
+ * Passe à une autre année : met l'adresse à jour (?year=…) puis recharge le récap.
+ * @param {number} y nouvelle année
+ */
 async function changeYear(y) {
   if (!y || y === year) return;
   year = y;
@@ -332,9 +399,11 @@ async function changeYear(y) {
 /* =========================================================
    Image téléchargeable 1080 × 1920
    ========================================================= */
+/* Polices de l'image téléchargeable (les mêmes que celles du site). */
 const PIXEL = '"Silkscreen", ui-monospace, monospace';
 const DISPLAY = '"Archivo Black", system-ui, sans-serif';
 const BODY = 'Inter, system-ui, sans-serif';
+/** Attend les polices de l'image (au plus quatre secondes) pour que le téléchargement ne sorte pas en police de secours. */
 async function waitFonts() {
   if (!document.fonts?.load) return;
   const all = Promise.all([
@@ -343,8 +412,17 @@ async function waitFonts() {
   ]).catch(() => {});
   await Promise.race([all, new Promise((r) => setTimeout(r, 4000))]);
 }
+/** Espacement entre lettres pour le texte suivant. Ignoré si le navigateur ne le gère pas. */
 const sp = (ctx, px) => { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; };
 
+/**
+ * Dessine l'image verticale du récap (1080 × 1920, format story) : fond étoilé, année, pseudo, chiffres personnels, et chiffres du gang.
+ * Les étoiles sont tirées au sort à partir de l'année : la même année donne toujours le même fond.
+ * @param {HTMLCanvasElement} canvas canvas à remplir
+ * @param {object} r données du récap ({ gang, moi })
+ * @param {string} pseudo pseudo affiché
+ * @returns {Promise<void>}
+ */
 export async function renderRecapImage(canvas, r, pseudo) {
   const W = 1080, H = 1920;
   const [, logo] = await Promise.all([waitFonts(), loadImage(currentLogo(), { cors: true })]);
@@ -355,6 +433,7 @@ export async function renderRecapImage(canvas, r, pseudo) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   // étoiles déterministes
   let seed = year * 97;
+  /** Nombre pseudo-aléatoire déterministe (suite à partir de la graine), entre 0 et 1. */
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   for (let i = 0; i < 140; i++) {
     const s = rnd() < 0.85 ? 3 : 6;
@@ -364,6 +443,7 @@ export async function renderRecapImage(canvas, r, pseudo) {
   const halo = ctx.createRadialGradient(W / 2, 430, 20, W / 2, 430, 620);
   halo.addColorStop(0, 'rgba(224,144,154,0.22)'); halo.addColorStop(1, 'rgba(224,144,154,0)');
   ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+  /** Bande arc-en-ciel pleine largeur, de hauteur h à partir de y. */
   const band = (y, h) => { const w = W / RAINBOW.length; RAINBOW.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(Math.floor(i * w), y, Math.ceil(w) + 1, h); }); };
   band(0, 22); band(H - 22, 22);
 
@@ -418,6 +498,10 @@ export async function renderRecapImage(canvas, r, pseudo) {
   });
 }
 
+/**
+ * Crée l'image du récap puis la télécharge. Met la lecture en pause pendant la préparation.
+ * @param {HTMLButtonElement} btn bouton « Télécharger mon récap »
+ */
 async function onDownload(btn) {
   setPaused(true);
   btn.disabled = true;
@@ -438,12 +522,18 @@ async function onDownload(btn) {
 /* =========================================================
    Chargement
    ========================================================= */
+/** Première année disponible : l'année d'arrivée du plus ancien membre, mise à jour quand l'annuaire arrive. */
 let minYear = now.getFullYear() - 1;
+// Charge l'annuaire en arrière-plan pour connaître la première année. En cas d'échec, on garde la valeur par défaut.
 const membersP = sb.rpc('hg_members').then(({ data }) => {
   const ys = (data || []).map((m) => new Date(m.member_since).getFullYear()).filter(Number.isFinite);
   if (ys.length) minYear = Math.min(...ys);
 }, () => {});
 
+/**
+ * Charge le récap de l'année courante, construit les diapos, affiche le lecteur et démarre la lecture.
+ * En cas d'erreur, un message avec un lien vers l'accueil remplace le lecteur.
+ */
 async function load() {
   cancelAnimationFrame(P.raf);
   $('#rc-fallback').textContent = 'Chargement du récap…';

@@ -1,7 +1,14 @@
-// ===== Accueil : le QG du Humane Gang =====
+// ===== Accueil : le QG du Humane Gang (accueil.html) =====
+// Page d'accueil. Visiteur : présentation et connexion. Membre : tuiles (Secret Santa, IRL, Historique),
+// fil d'activité, anniversaires du mois, défi du gang, bandeaux (récap, événement en cours) et boîte à idées.
+// Chaque tuile et chaque bloc se charge séparément : une erreur n'empêche pas les autres.
+// Dépendances : core.js (sb, initPage, canAccess, textes réglables), icons.js, dyn-events.js (événement en cours, chargé à la demande).
+// Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
+// hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
 import { svg } from './icons.js';
 
+/* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
 const app = $('#app');
 const me = await initPage({ auth: 'optional' });
 
@@ -35,6 +42,7 @@ const txtIn = (key, sub, fallback) => (TX[key] && typeof TX[key][sub] === 'strin
 /* ---------- Icônes (SVG à trait) ---------- */
 /* Emojis des rubriques (demandés par Ethan) */
 const EMOJI = { ss: '🎁', irl: '📍', hist: '📜' };
+/** Pastille d'icône d'une tuile (emoji de la rubrique). */
 const tileIcon = (k) => `<span class="tile-icon tile-icon-${k}" aria-hidden="true">${EMOJI[k]}</span>`;
 const ICON = {
   bulb: svg('bulb', { size: 20, stroke: 1.7 }),
@@ -44,6 +52,7 @@ const ICON = {
   flag: svg('flag', { size: 20, stroke: 1.7 }),
 };
 
+/* Classe de pastille et libellé de chaque statut Secret Santa. Les libellés peuvent être réglés dans l'admin (ss_statuts). */
 const STATUS_PILL = { inscriptions: 'pill-current', tirage: 'pill-current', envoi: 'pill-current', revelation: 'pill-ok', termine: 'pill-todo' };
 const STATUS_TEXT = { inscriptions: 'Inscriptions ouvertes', tirage: 'Tirage en préparation', envoi: 'Envoi des cadeaux', revelation: 'Révélation', termine: 'Terminée' };
 /** [libellé, classe de pastille] d'un statut Secret Santa (libellés réglables : site_textes.ss_statuts). */
@@ -51,17 +60,29 @@ const STATUS = new Proxy({}, { get: (_, k) => (k in STATUS_TEXT ? [txtIn('ss_sta
 const RSVP_TEXT = { oui: 'Tu viens', 'peut-etre': 'Peut-être', non: 'Tu ne viens pas' };
 const RSVP = new Proxy({}, { get: (_, k) => (k in RSVP_TEXT ? txtIn('rsvp_libelles', k, RSVP_TEXT[k]) : undefined) });
 
+/* Formateur « il y a 3 heures », en français. */
 const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+/**
+ * Temps écoulé depuis une date, en français (« il y a 5 minutes », « hier »…).
+ * @param {string} d date ISO
+ * @returns {string}
+ */
 function ago(d) {
   const s = (new Date(d) - Date.now()) / 1000;
   const units = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
   for (const [u, n] of units) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
   return 'à l\'instant';
 }
+/** Date « AAAA-MM-JJ » lue en heure locale (évite le décalage d'un jour que donnerait new Date(texte)). */
 const parseDay = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
+/** Noms des mois en français, pour les titres et les dates. */
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
 /* ---------- « Intro vue » dans le profil (indicateur affiché dans l'admin ; l'intro se rejoue une fois par jour) ---------- */
+/**
+ * Marque l'intro comme vue dans le profil (indicateur visible dans l'admin). Une seule fois : sans effet si déjà marqué.
+ * Une erreur d'écriture est ignorée, ce n'est pas bloquant.
+ */
 function syncIntro() {
   if (!me || me.intro_seen) return;
   sb.from('hg_profiles').update({ intro_seen: true }).eq('id', me.id).then(() => {}, () => {});
@@ -70,6 +91,10 @@ function syncIntro() {
 /* ======================================================================
    Visiteur non connecté
    ====================================================================== */
+/**
+ * Accueil pour un visiteur non connecté : présentation du gang, bouton de connexion et tuiles sans données.
+ * Le bouton « Revoir l'intro » efface le jour de l'intro puis renvoie à index.html.
+ */
 function renderGuest() {
   app.innerHTML = `
     <section class="home-hero home-hero-guest">
@@ -109,6 +134,10 @@ function renderGuest() {
 /* ======================================================================
    Membre connecté
    ====================================================================== */
+/**
+ * Squelette de l'accueil d'un membre : titre, bandeaux, tuiles (avec des blocs en attente), fil, anniversaires, boîte à idées.
+ * Les données arrivent ensuite, tuile par tuile.
+ */
 function renderMemberShell() {
   app.innerHTML = `
     <section class="page-head home-head">
@@ -172,8 +201,12 @@ function renderMemberShell() {
 }
 
 /* ---------- Boîte à idées ---------- */
+/**
+ * Boîte à idées : compteur de caractères, envoi à la table hg_ideas (lue seulement par l'admin), et message de confirmation.
+ */
 function bindIdeas() {
   const form = $('#idea-form'), ta = $('#idea-body'), count = $('#idea-count'), err = $('#idea-error');
+  /** Affiche ou efface le message d'erreur de la boîte à idées. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; };
   ta.addEventListener('input', () => { count.textContent = `${ta.value.length} / 2000`; if (ta.value.trim()) showErr(''); });
   form.addEventListener('submit', async (e) => {
@@ -190,9 +223,14 @@ function bindIdeas() {
   });
 }
 
+/** Message discret quand un bloc ne charge pas ; l'erreur technique reste lisible pour la personne. */
 const failBox = (e) => `<p class="small muted">Impossible de charger ces infos (${esc(errMsg(e))}).</p>`;
 
 /* ---------- Tuile Secret Santa + compte à rebours ---------- */
+/**
+ * Tuile Secret Santa : dernière édition, statut, date, participation de la personne, et compte à rebours si l'échange approche.
+ * Sans édition, la tuile affiche un message d'attente.
+ */
 async function loadSecretSanta() {
   const body = $('#tile-ss .tile-body');
   try {
@@ -218,9 +256,16 @@ async function loadSecretSanta() {
 }
 
 let cdTimer;
+/**
+ * Compte à rebours jusqu'à l'échange des cadeaux. Disparaît un jour après la date ; affiche « C'est le jour » le jour même.
+ * @param {Date} target date et heure de l'échange
+ * @param {number|string} year année de l'édition
+ */
 function startCountdown(target, year) {
   const box = $('#countdown');
+  /** Une unité du compte à rebours : nombre sur deux chiffres et libellé. */
   const unit = (n, l) => `<div class="cd-unit"><span class="cd-num display">${String(n).padStart(2, '0')}</span><span class="cd-lbl">${l}</span></div>`;
+  /** Met à jour le compte à rebours : le décompte, ou le message du jour J. */
   const tick = () => {
     const ms = target - Date.now();
     if (ms <= -86400000) { box.hidden = true; clearInterval(cdTimer); return; }
@@ -239,6 +284,9 @@ function startCountdown(target, year) {
 }
 
 /* ---------- Tuile IRL ---------- */
+/**
+ * Tuile IRL : prochaine sortie (date, lieu, nombre de présents, réponse de la personne) et nombre de sondages de dates en cours.
+ */
 async function loadIrl() {
   const body = $('#tile-irl .tile-body');
   try {
@@ -266,6 +314,9 @@ async function loadIrl() {
 }
 
 /* ---------- Tuile Historique ---------- */
+/**
+ * Tuile Historique : nombre de moments culte, de sorties passées et d'éditions Secret Santa, et le dernier souvenir.
+ */
 async function loadHistory() {
   const body = $('#tile-hist .tile-body');
   try {
@@ -277,6 +328,7 @@ async function loadHistory() {
       sb.from('hg_moments').select('title,happened_on').order('happened_on', { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (mom.error) throw mom.error;
+    /** Nombre suivi du mot au singulier ou au pluriel (ex. « 2 moments cultes »). */
     const n = (c, s, p) => `${c || 0} ${(c || 0) > 1 ? p : s}`;
     body.innerHTML = `
       <p class="tile-main">${n(mom.count, 'moment culte', 'moments cultes')}</p>
@@ -287,13 +339,22 @@ async function loadHistory() {
 
 /* ---------- Annuaire (partagé par le fil et les anniversaires) ---------- */
 // Annuaire : réservé aux membres. Chargé seulement pour un membre connecté (sinon 401 côté visiteur).
+/* Cache de l'annuaire : la requête n'est faite qu'une fois, puis partagée entre le fil et les anniversaires. */
 let membersP = null;
+/** Annuaire des membres. La promesse est mise en cache : une seule requête pour toute la page. */
 const members = () => (membersP ||= sb.rpc('hg_members').then(({ data, error }) => { if (error) throw error; return data || []; }));
 
 /* ---------- Liens vers la carte d'identité d'un membre ---------- */
+/** Pseudo cliquable vers la carte du membre, ou pseudo simple si la page membre n'est pas accessible. */
 const memberLink = (m, label = m.pseudo) => (canAccess('membre')
   ? `<a class="member-link" href="membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`
   : `<strong class="member-link">${esc(label)}</strong>`);
+/**
+ * Texte d'une ligne du fil. Si le texte commence par le pseudo, le pseudo devient un lien ; sinon le lien précède le texte.
+ * @param {object} a entrée du fil (hg_activity)
+ * @param {object|null} m membre concerné, s'il existe
+ * @returns {string} HTML
+ */
 function feedText(a, m) {
   const text = String(a.text ?? '');
   if (!m) return esc(text);
@@ -302,6 +363,10 @@ function feedText(a, m) {
 }
 
 /* ---------- Bandeau « Le récap est disponible » (1er décembre → 31 janvier) ---------- */
+/**
+ * Bandeau du récap annuel, affiché de décembre à janvier seulement (et si la page recap est accessible).
+ * @returns {string} HTML, vide hors période
+ */
 function recapBanner() {
   const d = new Date(), mo = d.getMonth();
   if ((mo !== 11 && mo !== 0) || !canAccess('recap')) return '';
@@ -314,6 +379,10 @@ function recapBanner() {
 }
 
 /* ---------- Bandeau « Événement en cours » (événements dynamiques) ---------- */
+/**
+ * Bandeau « Événement en cours » : affiche le premier événement qui se termine (les autres sont comptés).
+ * Le module des événements est chargé à la demande.
+ */
 async function loadDynBanner() {
   const box = $('#dyn-banner');
   if (!box || !canAccess('evenements')) return;
@@ -336,6 +405,7 @@ async function loadDynBanner() {
 }
 
 /* ---------- Fil d'activité ---------- */
+/** Fil d'activité : les 10 dernières entrées de hg_activity, avec l'avatar de l'auteur quand il existe. */
 async function loadFeed() {
   const ul = $('#feed');
   try {
@@ -361,6 +431,10 @@ async function loadFeed() {
 }
 
 /* ---------- Anniversaires du mois ---------- */
+/**
+ * Anniversaires du mois en cours, triés par jour. Celui du jour est mis en évidence, les jours passés sont estompés.
+ * Sans anniversaire, un message invite à partager le sien.
+ */
 async function loadBirthdays() {
   const ul = $('#bdays');
   try {
@@ -384,16 +458,27 @@ async function loadBirthdays() {
 }
 
 /* ---------- Défi du gang : objectif collectif (progression calculée côté serveur) ---------- */
+/** Unité affichée après le nombre de chaque type de défi (ex. « 3 sorties tenues »). */
 const CHALLENGE_UNIT = {
   sorties_tenues: 'sorties tenues', participations: 'participations', photos_ajoutees: 'photos ajoutées',
   souvenirs_publies: 'souvenirs publiés', boosters_ouverts: 'boosters ouverts', cartes_recyclees: 'cartes recyclées',
   echanges_conclus: 'échanges conclus',
 };
+/**
+ * Libellé d'état d'un défi : atteint (récompense reçue ou à venir), terminé sans succès, ou date limite.
+ * @param {object} c défi renvoyé par hg_challenges_active
+ * @returns {string}
+ */
 function challengeStatus(c) {
   if (c.done) return c.credited ? txtIn('defis_libelles', 'atteint_recu', 'Atteint · récompense reçue') : txtIn('defis_libelles', 'atteint_verse', 'Atteint · récompense versée sous peu');
   if (c.ended) return txtIn('defis_libelles', 'termine', 'Terminé, objectif non atteint');
   return `Jusqu'au ${fmtDate(c.ends_at)}`;
 }
+/**
+ * Carte d'un défi : titre, état, barre de progression (bornée à l'objectif) et récompense.
+ * @param {object} c défi renvoyé par hg_challenges_active
+ * @returns {string} HTML
+ */
 function challengeHtml(c) {
   const target = Math.max(1, Number(c.target) || 1);
   const shown = Math.min(Math.max(0, Number(c.progress) || 0), target);
@@ -412,6 +497,7 @@ function challengeHtml(c) {
       <p class="small defi-count"><strong>${esc(String(shown))} / ${esc(String(target))}</strong> ${esc(unit)} · récompense : ${esc(Number(c.reward).toLocaleString('fr-CH'))} Paillettes pour chacun</p>
     </li>`;
 }
+/** Défi du gang : affiche les défis en cours. Sans défi, le bloc reste masqué. */
 async function loadChallenges() {
   const box = $('#defi');
   if (!box) return;
@@ -430,12 +516,15 @@ async function loadChallenges() {
 }
 
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
+/** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
+/** Retire les tuiles vers des pages interdites. Si toutes les tuiles disparaissent, le bloc entier est retiré. */
 function hideForbiddenTiles() {
   for (const [id, slug] of Object.entries(TILE_PAGE)) if (!canAccess(slug)) $(`#${id}`)?.remove();
   const tiles = $('.home-tiles');
   if (tiles && !tiles.children.length) tiles.remove();
 }
+/** Vrai si la tuile existe encore dans la page (pas retirée par hideForbiddenTiles). */
 const tileOn = (id) => !!document.getElementById(id);
 
 /* ---------- Lancement ---------- */

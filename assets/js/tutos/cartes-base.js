@@ -1,5 +1,10 @@
 // Tutos « Jeu de cartes : les bases ». Données pures (aucun import) : lisibles dans le navigateur et dans Node.
 // Chiffres issus de hg_card_cfg() (réglage « cards ») : prix, taux, recyclage, fabrication, récompenses.
+/*
+ * Structure d'un groupe : { id, title, icon, tutos: [...] }.
+ * Structure d'un tuto : { slug, title, summary, page (page HTML concernée), steps: [{ title, text }], tips: [texte], keywords: [mots de recherche] }.
+ * La page d'aide (aide.js) affiche ces données ; elle ne les modifie pas.
+ */
 export default {
   id: 'cartes-base',
   title: 'Jeu de cartes : les bases',

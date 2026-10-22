@@ -1,5 +1,10 @@
 // Tutos du groupe « Vie du gang » — données pures (aucun import), lisibles dans le navigateur ET dans Node.
 // Libellés relus dans messages.js, accueil.js, membre.js, compte.js, assistance.js et la base (hg_badges, migration 041).
+/*
+ * Structure d'un groupe : { id, title, icon, tutos: [...] }.
+ * Structure d'un tuto : { slug, title, summary, page (page HTML concernée), steps: [{ title, text }], tips: [texte], keywords: [mots de recherche] }.
+ * La page d'aide (aide.js) affiche ces données ; elle ne les modifie pas.
+ */
 export default {
   id: 'communaute',
   title: 'Vie du gang',

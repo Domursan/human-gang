@@ -1,4 +1,9 @@
-// ===== Humane Gang — Sorties IRL =====
+// ===== Humane Gang — Sorties IRL (irl.html) =====
+// Page des sorties : prochaine sortie en grand, sorties à venir, sondages de dates, sorties passées avec leur album photo,
+// et l'historique (irl-history.js, monté ici). Réponses (je viens, peut-être, pas dispo), votes, photos et ZIP.
+// Dépendances : core.js, photos.js (envoi, albums, visionneuse), reactions.js, image-compress.js, ics.js (agenda),
+// irl-history.js (historique), admin-ghosts.js (fantômes, admin), ui-confirm.js, reglages-valeurs-lot3.js (délais, bornes).
+// Tables : hg_members, hg_events, hg_event_rsvps, hg_event_dates, hg_event_date_votes, hg_photos. N'exporte rien.
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, downloadAlbum } from './photos.js';
 import { loadReactions } from './reactions.js';
@@ -11,19 +16,26 @@ import { svg } from './icons.js';
 import { pluralCount, pad } from './utils.js';
 import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
 
+/* ---------- Initialisation : session membre, réglages, droits ---------- */
+// me = personne connectée (la page exige un membre). isAdmin : l'admin voit les fantômes et peut tout modifier.
 const me = await initPage({ auth: 'member' });
 await chargerReglagesLot3();
 const isAdmin = !!me?.is_admin;
+/** Mode sans limite actif (admin) : on peut répondre aux sorties passées. */
 const god = () => isAdmin && isGodMode(); // mode sans limite : RSVP sur les sorties passées
 
+/** Nombre de miniatures visibles avant le bouton « +n » de l'album. */
 const ALBUM_PREVIEW = 12;           // miniatures affichées avant « +n »
+/** Réponses possibles à une sortie : valeur enregistrée et libellé affiché. */
 const RSVP = [
   ['oui', 'Je viens'],
   ['peut-etre', 'Peut-être'],
   ['non', 'Pas dispo'],
 ];
+/** Couleurs des tuiles de date sans image de couverture. Chaque sortie garde toujours la même couleur. */
 const TINTS = ['var(--sand)', 'var(--rust)', 'var(--sage)', 'var(--slate)', 'var(--plum)', 'var(--rose)'];
 
+/* Icônes SVG utilisées dans la page. */
 const I = {
   cal: svg('cal', { size: 18, stroke: 1.8 }),
   pin: svg('pin', { size: 18, stroke: 1.8 }),
@@ -37,9 +49,14 @@ const I = {
 };
 
 /* ---------- État ---------- */
+/* État de la page : membres, sorties, réponses, dates de sondage, votes, photos, URLs signées, albums dépliés. */
 const S = { members: new Map(), events: [], rsvps: [], dates: [], votes: [], photos: [], urls: new Map(), expanded: new Set() };
 let hx;   // historique des rencontres (monté plus bas, une fois les helpers définis)
 
+/**
+ * Charge toutes les données de la page en une seule vague de requêtes : membres, sorties, réponses, dates et votes, photos.
+ * Lève une erreur si une requête échoue. L'admin voit aussi les membres fantômes.
+ */
 async function load() {
   const [m, ev, rs, dt, vt, ph] = await Promise.all([
     sb.rpc('hg_members'),
@@ -61,14 +78,26 @@ async function load() {
 }
 
 /* ---------- Helpers ---------- */
+/** Membre à partir de son identifiant ; « Ancien membre » s'il n'est plus dans l'annuaire. */
 const member = (id) => S.members.get(id) || { pseudo: 'Ancien membre' };
+/** Pseudo d'un membre à partir de son identifiant. */
 const pseudo = (id) => member(id).pseudo;
+/** Vrai si je peux modifier la sortie : je l'ai créée, ou je suis admin. */
 const canEdit = (ev) => ev.created_by === me.id || isAdmin;
+/** Couleur de tuile stable pour un identifiant : la même sortie garde toujours la même couleur. */
 const tint = (id) => TINTS[[...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0) % TINTS.length];
+/** Photos d'une sortie, dans l'ordre d'envoi. */
 const photosOf = (id) => S.photos.filter((p) => p.event_id === id);
+/** Dates proposées d'un sondage. */
 const datesOf = (id) => S.dates.filter((d) => d.event_id === id);
+/** Votes d'une date de sondage. */
 const votesOf = (dateId) => S.votes.filter((v) => v.date_id === dateId);
 
+/**
+ * Réponses d'une sortie, rangées par statut. Les présences de comptes inconnus (fantômes) sont ignorées.
+ * @param {string} eventId identifiant de la sortie
+ * @returns {{oui: string[], 'peut-etre': string[], non: string[], mine: string|null}} ids des personnes, et ma réponse
+ */
 function rsvpOf(eventId) {
   const r = { oui: [], 'peut-etre': [], non: [], mine: null };
   for (const x of S.rsvps) {
@@ -78,6 +107,11 @@ function rsvpOf(eventId) {
   }
   return r;
 }
+/**
+ * Range les sorties en quatre groupes : prochaine, à venir, sondages (sans date), passées.
+ * Une sortie ajoutée après coup (retro) est toujours « passée », même si elle est récente.
+ * @returns {{next: object|null, upcoming: object[], polls: object[], past: object[]}}
+ */
 function classify() {
   const now = Date.now();
   const dated = S.events.filter((e) => e.starts_at);
@@ -90,6 +124,7 @@ function classify() {
   const polls = S.events.filter((e) => !e.starts_at).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   return { next: future[0] || null, upcoming: future.slice(1), polls, past };
 }
+/** Libellé du moment d'une sortie : « En cours », « Aujourd'hui », « Demain », ou « Dans N jours ». */
 function whenLabel(iso) {
   const t = new Date(iso).getTime();
   if (t <= Date.now()) return 'En cours';
@@ -98,6 +133,7 @@ function whenLabel(iso) {
   if (d === 1) return 'Demain';
   return `Dans ${d} jours`;
 }
+/** Petite tuile de date (jour de la semaine, numéro, mois) à côté du titre. Décorative : masquée des lecteurs d'écran. */
 function dateTile(iso) {
   const d = new Date(iso);
   const wd = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' }).format(d).replace('.', '');
@@ -105,6 +141,12 @@ function dateTile(iso) {
   const yr = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : '';
   return `<div class="date-tile" aria-hidden="true"><span>${esc(wd)}</span><strong>${d.getDate()}</strong><span>${esc(mo)}${yr}</span></div>`;
 }
+/**
+ * Lignes d'information d'une sortie : date, lieu, et qui l'a proposée.
+ * @param {object} ev la sortie
+ * @param {{creator?: boolean}} [opts] creator : afficher l'auteur
+ * @returns {string} HTML, vide si rien à afficher
+ */
 function meta(ev, { creator = true } = {}) {
   const li = [];
   if (ev.starts_at) {
@@ -115,6 +157,10 @@ function meta(ev, { creator = true } = {}) {
   if (creator && ev.created_by) li.push(`<li>${I.user}<span>Proposée par ${esc(pseudo(ev.created_by))}</span></li>`);
   return li.length ? `<ul class="meta">${li.join('')}</ul>` : '';
 }
+/**
+ * Boutons de gestion d'une sortie (modifier, supprimer, et « Qui était là ? » pour les sorties passées).
+ * Rien si je n'ai pas le droit de modifier.
+ */
 function ownerActions(ev, { who = false } = {}) {
   if (!canEdit(ev)) return '';
   return `<div class="owner-actions">
@@ -123,6 +169,12 @@ function ownerActions(ev, { who = false } = {}) {
     <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(ev.id)}">${I.trash}<span>Supprimer</span></button>
   </div>`;
 }
+/**
+ * Boutons de réponse (« Je viens », « Peut-être », « Pas dispo ») et compteurs. En mode complet, la liste des présents.
+ * @param {object} ev la sortie
+ * @param {{compact?: boolean}} [opts] compact : sans la liste des personnes
+ * @returns {string} HTML
+ */
 function rsvpBlock(ev, { compact = false } = {}) {
   const r = rsvpOf(ev.id);
   const btns = RSVP.map(([v, label]) => {
@@ -143,14 +195,21 @@ function rsvpBlock(ev, { compact = false } = {}) {
     ${counts}${people}
   </div>`;
 }
+/** Bouton « Ajouter à mon agenda » : crée un fichier de calendrier pour la sortie. */
 function calButton(ev) {
   return `<button type="button" class="btn btn-ghost btn-sm" data-act="ics" data-id="${esc(ev.id)}" aria-label="Ajouter « ${esc(ev.title)} » à mon agenda">${I.cal}<span>Ajouter à mon agenda</span></button>`;
 }
+/** Description d'une sortie, échappée ; vide si absente. */
 function descHtml(ev) {
   return ev.description ? `<p class="desc">${esc(ev.description)}</p>` : '';
 }
 
 /* ---------- Albums ---------- */
+/**
+ * Album photo d'une sortie : miniatures (12 au plus, le reste sur demande), ajout de photos, et téléchargement en ZIP.
+ * @param {object} ev la sortie
+ * @returns {string} HTML
+ */
 function albumHtml(ev) {
   const list = photosOf(ev.id);
   const expanded = S.expanded.has(ev.id);
@@ -180,6 +239,7 @@ function albumHtml(ev) {
 }
 
 /* ---------- Rendu ---------- */
+/** Image de couverture d'une sortie, ou à défaut une tuile colorée avec le jour et le mois. */
 function coverHtml(ev) {
   const url = ev.cover_path ? S.urls.get(ev.cover_path) : null;
   if (url) return `<div class="feat-cover"><img src="${esc(url)}" alt=""></div>`;
@@ -189,6 +249,11 @@ function coverHtml(ev) {
     <span class="fc-month">${esc(new Intl.DateTimeFormat('fr-CH', { month: 'long' }).format(d))}</span>
   </div>`;
 }
+/**
+ * Carte de la prochaine sortie (grande carte). Si la sortie a commencé, son album s'affiche aussi.
+ * @param {object|null} ev la prochaine sortie, ou null
+ * @returns {string} HTML
+ */
 function renderNext(ev) {
   if (!ev) {
     return `<div class="card card-irl feat-empty">
@@ -212,6 +277,12 @@ function renderNext(ev) {
     ${started ? `<div class="feat-album">${albumHtml(ev)}</div>` : ''}
   </article>`;
 }
+/**
+ * Carte d'un sondage de dates : chaque date avec ses votes, la date en tête, et le bouton « Je suis dispo ».
+ * L'auteur ou l'admin peut fixer une date. Le classement se fait sur le nombre de votes.
+ * @param {object} ev le sondage
+ * @returns {string} HTML
+ */
 function renderPoll(ev) {
   const ds = datesOf(ev.id);
   const counts = ds.map((d) => votesOf(d.id).length);
@@ -248,6 +319,7 @@ function renderPoll(ev) {
     ${ds.length ? `<ol class="poll-dates">${rows}</ol>` : '<p class="empty">Aucune date proposée pour l\'instant.</p>'}
   </article>`;
 }
+/** Ligne d'une sortie à venir (version compacte, sans la liste complète des présents). */
 function renderUpcoming(ev) {
   return `<article class="card ev-row" id="event-${esc(ev.id)}">
     ${dateTile(ev.starts_at)}
@@ -262,6 +334,11 @@ function renderUpcoming(ev) {
     </div>
   </article>`;
 }
+/**
+ * Ligne d'une sortie passée : présents, album photo, et réponses si le mode sans limite est actif (admin).
+ * @param {object} ev la sortie passée
+ * @returns {string} HTML
+ */
 function renderPast(ev) {
   const r = rsvpOf(ev.id);
   return `<article class="card past" id="event-${esc(ev.id)}">
@@ -280,6 +357,10 @@ function renderPast(ev) {
   </article>`;
 }
 
+/**
+ * Dessine toute la page. Signe d'abord les URLs des images en un seul lot, puis charge les réactions des albums affichés.
+ * Rétablit le focus sur le bouton qui vient d'être utilisé, pour le clavier.
+ */
 async function render() {
   const { next, upcoming, polls, past } = classify();
   // URLs signées en un seul lot : couvertures + photos des albums affichés
@@ -306,10 +387,15 @@ async function render() {
   if (focusKey) $(`[data-key="${CSS.escape(focusKey)}"]`)?.focus();
 }
 
+/** Recharge les données puis redessine la page ; en cas d'erreur, un message s'affiche. */
 async function refresh() {
   try { await load(); await render(); } catch (e) { toast(`Chargement impossible : ${errMsg(e)}`, 'error'); }
 }
 
+/**
+ * Ouvre la bonne vue selon l'adresse : #historique, ou #event-<id> (fait défiler jusqu'à la sortie et la fait clignoter).
+ * Sans effet de défilement si le mouvement est réduit.
+ */
 function goToHash() {
   if (location.hash === '#historique') { if (!hx.isOpen()) hx.setTab('historique'); return; }
   const m = location.hash.match(/^#event-([0-9a-f-]{36})$/i);
@@ -322,6 +408,12 @@ function goToHash() {
 }
 
 /* ---------- Actions ---------- */
+/**
+ * Enregistre ma réponse. Cliquer sur la réponse déjà choisie la retire.
+ * @param {string} eventId identifiant de la sortie
+ * @param {string} status 'oui', 'peut-etre' ou 'non'
+ * @param {HTMLButtonElement} btn bouton cliqué (désactivé pendant l'envoi)
+ */
 async function setRsvp(eventId, status, btn) {
   const mine = rsvpOf(eventId).mine;
   btn.disabled = true;
@@ -338,6 +430,11 @@ async function setRsvp(eventId, status, btn) {
     await refresh();
   } catch (e) { toast(`Réponse non enregistrée : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
+/**
+ * Ajoute ou retire mon vote pour une date de sondage.
+ * @param {string} dateId identifiant de la date
+ * @param {HTMLButtonElement} btn bouton cliqué (désactivé pendant l'envoi)
+ */
 async function toggleVote(dateId, btn) {
   const mine = votesOf(dateId).some((v) => v.user_id === me.id);
   btn.disabled = true;
@@ -350,6 +447,10 @@ async function toggleVote(dateId, btn) {
     await refresh();
   } catch (e) { toast(`Vote non enregistré : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
+/**
+ * Fixe la date d'un sondage : la sortie prend la date choisie et devient une sortie à date fixée.
+ * Demande une confirmation avant.
+ */
 async function fixDate(eventId, dateId) {
   const d = S.dates.find((x) => x.id === dateId);
   if (!d || !(await confirmBox(`Fixer la sortie au ${fmtDateTime(d.proposed_at)} ?`, '', { ok: 'Fixer la date' }))) return;
@@ -358,9 +459,14 @@ async function fixDate(eventId, dateId) {
   toast('Date fixée. Le gang peut maintenant répondre.', 'ok');
   await refresh();
 }
+/**
+ * Supprime une sortie après confirmation, puis ses fichiers (couverture et photos, seulement ceux que je peux supprimer).
+ * La ligne de la sortie est supprimée en premier ; les fichiers ne le sont qu'ensuite.
+ */
 async function deleteEvent(eventId) {
   const ev = S.events.find((e) => e.id === eventId);
   if (!ev || !(await confirmBox(`Supprimer « ${ev.title} » ?`, 'Les réponses, votes et photos de l\'album seront supprimés.', { ok: 'Supprimer', danger: true }))) return;
+  /** Vrai si le fichier m'appartient (ou si je suis admin) : seuls ces fichiers peuvent être supprimés. */
   const mineOnly = (p) => isAdmin || p.startsWith(`${me.id}/`);
   const files = [ev.cover_path, ...photosOf(eventId).map((p) => p.path)].filter((p) => p && mineOnly(p));
   const { error } = await sb.from('hg_events').delete().eq('id', eventId);
@@ -369,6 +475,12 @@ async function deleteEvent(eventId) {
   toast('Sortie supprimée.', 'ok');
   await refresh();
 }
+/**
+ * Envoie les photos choisies, une par une : compression, envoi du fichier, puis enregistrement en base.
+ * Un échec sur une photo n'arrête pas les suivantes ; le fichier déjà envoyé est alors retiré.
+ * @param {string} eventId identifiant de la sortie
+ * @param {HTMLInputElement} input champ de fichiers
+ */
 async function uploadPhotos(eventId, input) {
   const files = [...input.files];
   input.value = '';
@@ -396,6 +508,11 @@ async function uploadPhotos(eventId, input) {
   if (status) status.textContent = '';
   if (ok) { toast(`${pluralCount(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`, 'ok'); S.expanded.add(eventId); await refresh(); }
 }
+/**
+ * Télécharge toutes les photos de l'album dans un fichier ZIP. Le bouton affiche « Préparation du ZIP… » pendant le calcul.
+ * @param {string} eventId identifiant de la sortie
+ * @param {HTMLButtonElement} btn bouton « Tout télécharger »
+ */
 async function zipAlbum(eventId, btn) {
   const ev = S.events.find((x) => x.id === eventId);
   const label = btn.querySelector('span');
@@ -410,6 +527,11 @@ async function zipAlbum(eventId, btn) {
     btn.disabled = false; btn.removeAttribute('aria-busy'); label.textContent = prev;
   }
 }
+/**
+ * Ouvre la visionneuse sur l'album, à la photo choisie. Suppression proposée seulement à l'auteur ou à l'admin.
+ * @param {string} eventId identifiant de la sortie
+ * @param {number} idx position de la photo dans l'album
+ */
 function openPhoto(eventId, idx) {
   const list = photosOf(eventId);
   const items = list.map((p) => ({
@@ -421,6 +543,11 @@ function openPhoto(eventId, idx) {
   })).filter((x) => x.url);
   openLightbox(items, idx);
 }
+/**
+ * Supprime une photo : la ligne en base d'abord, puis le fichier.
+ * @param {object} p ligne de la photo (hg_photos)
+ * @returns {Promise<boolean>} true si la photo est supprimée
+ */
 async function deletePhoto(p) {
   const { error } = await sb.from('hg_photos').delete().eq('id', p.id);
   if (error) { toast(`Suppression impossible : ${errMsg(error)}`, 'error'); return false; }
@@ -430,6 +557,7 @@ async function deletePhoto(p) {
   return true;
 }
 
+// Délégation : un seul écouteur pour tous les boutons data-act de la page, y compris ceux rendus plus tard.
 $('#app').addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]');
   if (!b) return;
@@ -447,6 +575,7 @@ $('#app').addEventListener('click', (e) => {
   else if (act === 'zip') zipAlbum(id, b);
   else if (act === 'expand') { S.expanded.add(id); render().then(() => $(`#event-${CSS.escape(id)} .thumb[data-idx="${ALBUM_PREVIEW}"]`)?.focus()); }
 });
+// Choix de fichiers pour ajouter des photos (champs data-upload).
 $('#app').addEventListener('change', (e) => {
   const inp = e.target.closest('input[data-upload]');
   if (inp) uploadPhotos(inp.dataset.upload, inp);
@@ -460,11 +589,17 @@ const dlg = $('#event-dialog');
 const form = $('#event-form');
 let editing = null;
 
+/**
+ * Date ISO convertie au format attendu par un champ datetime-local (heure locale, sans fuseau).
+ * @param {string} iso date ISO
+ * @returns {string} « AAAA-MM-JJTHH:MM », ou chaîne vide
+ */
 function toLocalInput(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+/** Met à jour les étiquettes et l'état des lignes de dates : au moins deux dates, pas plus que le maximum réglé. */
 function updateDateRows() {
   const rows = $$('.date-row', $('#ev-dates'));
   rows.forEach((r, i) => {
@@ -473,6 +608,11 @@ function updateDateRows() {
   });
   $('#ev-add-date').disabled = rows.length >= bornesSondage().max;
 }
+/**
+ * Ajoute une ligne de date au formulaire de sondage.
+ * @param {string} [value=''] date au format datetime-local
+ * @param {string} [id=''] identifiant de la date existante (vide pour une nouvelle)
+ */
 function addDateRow(value = '', id = '') {
   const row = document.createElement('div');
   row.className = 'date-row';
@@ -482,6 +622,10 @@ function addDateRow(value = '', id = '') {
   $('#ev-dates').append(row);
   updateDateRows();
 }
+/**
+ * Passe le formulaire entre « Date fixée » et « Date à caler » (sondage). En sondage, le nombre minimum de dates est rempli d'office.
+ * @param {'fixed'|'poll'} mode mode choisi
+ */
 function setMode(mode) {
   form.elements.when.value = mode;
   $('#ev-fixed').hidden = mode !== 'fixed';
@@ -492,6 +636,10 @@ form.addEventListener('change', (e) => { if (e.target.name === 'when') setMode(e
 $('#ev-add-date').addEventListener('click', () => { addDateRow(); $('#ev-dates .date-row:last-child input').focus(); });
 $$('[data-close]', dlg).forEach((b) => b.addEventListener('click', () => dlg.close()));
 
+/**
+ * Ouvre le formulaire de sortie : création (sans argument) ou modification (avec la sortie).
+ * @param {object|null} [ev=null] sortie à modifier
+ */
 function openEventDialog(ev = null) {
   editing = ev;
   form.reset();
@@ -513,6 +661,7 @@ function openEventDialog(ev = null) {
   form.elements.title.focus();
 }
 
+// Enregistrement d'une sortie : création ou modification, dates du sondage, puis image de couverture.
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = form.elements;
@@ -588,6 +737,7 @@ form.addEventListener('submit', async (e) => {
 
 /* ---------- Démarrage ---------- */
 hx = mountHistory({ me, isAdmin, S, classify, member, pseudo, canEdit, pluralCount, tint, I, refresh });
+// Mode sans limite activé : on redessine pour afficher les réponses des sorties passées.
 window.addEventListener('hg:godmode', () => { if (isAdmin) render().catch(() => {}); });
 await refresh();
 goToHash();

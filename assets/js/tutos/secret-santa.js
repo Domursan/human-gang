@@ -3,6 +3,11 @@
 // Libellés et chiffres vérifiés sur secret-santa.html / secret-santa.js / messages.js / membre.js,
 // et en base (hg_badges, hg_settings.cards -> rewards : gift_sent = 250, badge = 500).
 
+/*
+ * Structure d'un groupe : { id, title, icon, tutos: [...] }.
+ * Structure d'un tuto : { slug, title, summary, page (page HTML concernée), steps: [{ title, text }], tips: [texte], keywords: [mots de recherche] }.
+ * La page d'aide (aide.js) affiche ces données ; elle ne les modifie pas.
+ */
 export default {
   id: 'secret-santa',
   title: 'Secret Santa',

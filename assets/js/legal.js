@@ -1,9 +1,13 @@
-// ===== Pages légales : en-tête/pied communs + sommaire actif =====
+// ===== Pages légales (legal.html) : en-tête/pied communs, champs d'identité, sommaire actif =====
+// Module chargé par legal.html. Dépend de core.js (initPage, $$) et des réglages du site (core/site-defaults.js).
+// Ne rend rien en dehors de la page légale, et n'exporte rien.
 import { initPage, $$ } from './core.js';
 import { siteIdentite, siteTexte } from './core/site-defaults.js';
 
+/* ---------- Initialisation : en-tête et pied communs, accès facultatif (pas de connexion requise) ---------- */
 await initPage({ auth: 'optional' });
 
+/* ---------- Champs d'identité : éditeur et contact ---------- */
 // Éditeur et contact : réglages du site ; vide = « à compléter » (rien n'est inventé)
 const ident = siteIdentite();
 document.querySelectorAll('[data-field]').forEach((el) => {
@@ -17,12 +21,14 @@ document.querySelectorAll('[data-legal-extra]').forEach((el) => {
   el.replaceChildren(...paras.map((t) => { const p = document.createElement('p'); p.textContent = t; return p; }));
 });
 
+/* ---------- Ancre demandée (ex. legal.html#cookies) ---------- */
 // L'en-tête est injecté après le chargement : on recale l'ancre demandée.
 if (location.hash) {
   const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
   if (target) target.scrollIntoView({ block: 'start' });
 }
 
+/* ---------- Sommaire : mise en évidence de la section visible ---------- */
 // Mise en évidence de la section visible dans le sommaire
 const links = new Map($$('.legal-toc a').map((a) => [a.getAttribute('href').slice(1), a]));
 if ('IntersectionObserver' in window) {

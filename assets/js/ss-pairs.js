@@ -5,16 +5,24 @@
 import { sb, esc, avatarHtml } from './core.js';
 import { svg } from './icons.js';
 
+/* ---------- Constantes ---------- */
 const ARROW = svg('arrow', { size: 16, stroke: 2 });
+/** Tri alphabétique en français (accents pris en compte), pour un ordre stable des pseudos. */
 const collator = new Intl.Collator('fr');
 
-/** Paires { giver, receiver } (pseudos) d'une édition. Une requête par édition ; [] si la RPC échoue. */
+/* ---------- Chargement des paires ---------- */
+/**
+ * Paires { giver, receiver } (pseudos) d'une édition. Une requête par édition ; [] si la RPC échoue.
+ * @param {string} editionId identifiant de l'édition Secret Santa
+ * @returns {Promise<Array<{giver: string, receiver: string}>>}
+ */
 export async function fetchPairs(editionId) {
   const { data, error } = await sb.rpc('hg_ss_reveal', { p_edition: editionId });
   if (error) { console.warn('[hg_ss_reveal]', error); return []; }
   return (data || []).map((r) => ({ giver: r.giver, receiver: r.receiver }));
 }
 
+/* ---------- Annuaire et ordre de la chaîne ---------- */
 /** Annuaire { pseudo → personne } à partir de S.members. Les entrées fantômes (admin) portent « (fantôme) » : retiré ici. */
 export function peopleByPseudo(members) {
   const map = new Map();
@@ -50,15 +58,23 @@ export function chainOrder(pairs) {
   return chains;
 }
 
+/* ---------- Rendu HTML de la chaîne ---------- */
 /**
  * Liste « Chaîne des cadeaux » : « [avatar] Donneur → [avatar] Receveur ».
  * people : Map pseudo → personne (avatar, couleur). Un pseudo inconnu garde les initiales.
+ * @param {Array<{giver: string, receiver: string}>} pairs paires de l'édition
+ * @param {Map<string, object>} people annuaire pseudo → personne
+ * @param {{mePseudo?: string|null, emptyText?: string}} [options] pseudo de la personne connectée (mise en évidence) et texte si vide
+ * @returns {string} HTML de la liste
  */
 export function pairsHtml(pairs, people, { mePseudo = null, emptyText = 'Aucune attribution à afficher.' } = {}) {
   if (!pairs.length) return `<p class="small muted">${esc(emptyText)}</p>`;
+  // Données d'avatar de la personne, avec le pseudo forcé (même si l'annuaire ne la connaît pas).
   const who = (name) => ({ ...(people.get(name) || {}), pseudo: name });
   const rows = chainOrder(pairs).flatMap((chain, ci) => chain.map((p, i) => {
+    // Ligne de la personne connectée (donneuse ou receveuse) : mise en évidence.
     const mine = !!mePseudo && (p.giver === mePseudo || p.receiver === mePseudo);
+    // Premier élément d'une chaîne suivante : séparation visuelle entre deux chaînes.
     const cls = ['ssp-item', mine ? 'is-me' : '', ci > 0 && i === 0 ? 'is-chain-start' : ''].filter(Boolean).join(' ');
     return `<li class="${cls}">
       <span class="ssp-who">${avatarHtml(who(p.giver), 32)}<span class="ssp-name">${esc(p.giver)}</span></span>

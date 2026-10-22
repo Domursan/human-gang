@@ -1,4 +1,9 @@
-// ===== Humane Gang — messagerie (conversations directes + Secret Santa anonyme) =====
+// ===== Humane Gang — messagerie (messages.html) : conversations directes + messages anonymes du Secret Santa =====
+// Page réservée aux membres. Deux colonnes : la liste des conversations, et le fil de la conversation ouverte.
+// Dépendances : core.js (Supabase, notifications), sound.js (son), icons.js.
+// Tables et RPC : hg_members, hg_my_conversations, hg_get_messages, hg_send_message, hg_mark_read, hg_open_direct.
+// Temps réel : canal privé « conv:<id> » (Supabase Realtime), avec actualisation périodique de secours.
+// N'exporte rien.
 import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
 import { svg } from './icons.js';
@@ -39,10 +44,13 @@ let pendingPull = false;
 
 /* ---------- Outils ---------- */
 const memberOf = (id) => S.members.get(id) || null;
+/** Conversation à partir de son identifiant, ou null. */
 const convOf = (id) => S.convs.find((c) => c.id === id) || null;
 /** Côté Secret Santa : 'target' = je suis la cible (mon Santa est anonyme), 'santa' = je suis le Santa (je reste anonyme). */
 function santaSide(c) { return c?.kind === 'santa' ? (c.other_id ? 'santa' : 'target') : null; }
+/** Joue un son de notification (chargé à la demande, sans bloquer la page). */
 function playSound(name) { import('./sound.js').then((m) => m.playSound?.(name)).catch(() => {}); }
+/** Met à jour le compteur de messages non lus dans l'en-tête ; silencieux si la fonction n'existe pas. */
 function refreshUnread() { try { core.refreshUnread?.(); } catch {} }
 
 const timeFmt = new Intl.DateTimeFormat('fr-CH', { hour: '2-digit', minute: '2-digit' });
@@ -52,7 +60,9 @@ const shortFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-di
 const shortYearFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: '2-digit' });
 const weekdayFmt = new Intl.DateTimeFormat('fr-CH', { weekday: 'short' });
 const fullFmt = new Intl.DateTimeFormat('fr-CH', { dateStyle: 'full', timeStyle: 'short' });
+/** Début du jour (minuit local) d'une date, en millisecondes. Sert à comparer des jours entiers. */
 const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+/** Nombre de jours calendaires entre aujourd'hui et la date donnée (0 = aujourd'hui, 1 = hier). */
 const dayDiff = (d) => Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000);
 
 /** Heure relative courte pour la liste des conversations. */
@@ -68,6 +78,11 @@ function relTime(ts) {
   if (dd < 7) return weekdayFmt.format(d);
   return d.getFullYear() === new Date().getFullYear() ? shortFmt.format(d) : shortYearFmt.format(d);
 }
+/**
+ * Libellé d'une date pour le séparateur de jour : « Aujourd’hui », « Hier », ou la date complète.
+ * @param {string} ts date ISO du message
+ * @returns {string}
+ */
 function dayLabel(ts) {
   const d = new Date(ts), dd = dayDiff(d);
   if (dd === 0) return 'Aujourd’hui';
@@ -78,6 +93,7 @@ function dayLabel(ts) {
 
 /** Texte → HTML : échappé, URLs http(s) transformées en liens, sauts de ligne conservés (CSS pre-wrap). */
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
+/** Échappe le texte et transforme les adresses http ou https en liens sûrs, ouvrant un nouvel onglet. */
 function linkify(text) {
   const src = String(text ?? '');
   let out = '', last = 0;
@@ -95,16 +111,25 @@ function linkify(text) {
 }
 
 /* ---------- Données ---------- */
+/** Charge l'annuaire des membres (pseudo, avatar, couleur) dans S.members. Lève une erreur si la RPC échoue. */
 async function loadMembers() {
   const { data, error } = await sb.rpc('hg_members');
   if (error) throw error;
   S.members = new Map((data || []).map((m) => [m.id, m]));
 }
+/** Charge la liste de mes conversations (hg_my_conversations) dans S.convs. Lève une erreur si la RPC échoue. */
 async function loadConvs() {
   const { data, error } = await sb.rpc('hg_my_conversations');
   if (error) throw error;
   S.convs = data || [];
 }
+/**
+ * Lit tous les messages d'une conversation qui suivent l'identifiant after, par pages de 500.
+ * Limite : 20 pages au plus (10 000 messages par passe).
+ * @param {string} conv identifiant de la conversation
+ * @param {number} after identifiant du dernier message déjà connu (0 = depuis le début)
+ * @returns {Promise<Array<object>>} messages, dans l'ordre
+ */
 async function fetchMessages(conv, after) {
   const all = [];
   for (let i = 0; i < 20; i++) { // pages de 500 (limite côté base)
@@ -117,6 +142,7 @@ async function fetchMessages(conv, after) {
   }
   return all;
 }
+/** Marque une conversation comme lue côté serveur, puis remet son compteur à zéro localement. */
 async function markRead(conv) {
   const { error } = await sb.rpc('hg_mark_read', { p_conv: conv });
   if (error) { console.warn('[hg_mark_read]', error); return; }
@@ -125,6 +151,10 @@ async function markRead(conv) {
 }
 
 /* ---------- Squelette ---------- */
+/**
+ * Dessine la structure de la page : en-tête, colonne des conversations, zone du fil (vide au départ),
+ * et la note sur la consultation des messages par l’admin. Le bouton « Nouveau message » est branché ici.
+ */
 function renderShell() {
   app.innerHTML = `
     <div class="page-head msg-head">
@@ -152,6 +182,13 @@ function renderShell() {
 }
 
 /* ---------- Liste des conversations ---------- */
+/**
+ * Avatar d'une conversation. Dans un Secret Santa, la cible voit un masque (le Santa reste anonyme),
+ * et le Santa voit son propre avatar avec un petit masque.
+ * @param {object} c la conversation
+ * @param {number} [size=44] taille en pixels
+ * @returns {string} HTML
+ */
 function convAvatar(c, size = 44) {
   const side = santaSide(c);
   if (side === 'target') return `<span class="msg-av msg-av-santa" style="width:${size}px;height:${size}px" aria-hidden="true">${I.mask}</span>`;
@@ -160,6 +197,7 @@ function convAvatar(c, size = 44) {
     ? `<span class="msg-av-wrap">${avatarHtml(m, size)}<span class="msg-av-badge" aria-hidden="true">${I.mask}</span></span>`
     : avatarHtml(m, size);
 }
+/** Dessine la liste des conversations (aperçu, heure, non-lus, étiquette Secret Santa) et branche les clics. */
 function renderConvs() {
   const ul = $('#msg-convs'); if (!ul) return;
   if (!S.convs.length) {
@@ -186,6 +224,11 @@ function renderConvs() {
 }
 
 /* ---------- Fil ---------- */
+/**
+ * En-tête du fil : retour (mobile), avatar, titre et sous-titre selon le côté Secret Santa.
+ * @param {object} c la conversation
+ * @returns {string} HTML
+ */
 function threadHeadHtml(c) {
   const side = santaSide(c);
   const sub = side === 'target' ? 'Secret Santa · son identité reste secrète jusqu’à la révélation'
@@ -201,6 +244,11 @@ function threadHeadHtml(c) {
       </div>
     </header>`;
 }
+/**
+ * Dessine le fil d'une conversation ouverte : en-tête, zone des messages (en attente), et formulaire d'envoi.
+ * Le texte d'invite change selon le côté Secret Santa, pour ne jamais révéler l'identité du Santa.
+ * @param {object} c la conversation
+ */
 function renderThreadShell(c) {
   const main = $('#msg-main');
   const side = santaSide(c);
@@ -228,6 +276,7 @@ function renderThreadShell(c) {
   });
   $('#msg-compose').addEventListener('submit', (e) => { e.preventDefault(); send(); });
 }
+/** Ajuste la hauteur de la zone de saisie, le compteur de caractères, et l'état du bouton d'envoi. */
 function onInput() {
   const ta = $('#msg-input'); if (!ta) return;
   ta.style.height = 'auto';
@@ -239,6 +288,14 @@ function onInput() {
   $('#msg-send').disabled = S.sending || !ta.value.trim();
 }
 
+/**
+ * Bulle d'un message. Le nom de l'expéditeur n'apparaît que pour le premier message d'un groupe.
+ * Un message « sameGroup » (même auteur, moins de 5 min, même jour) est collé au précédent.
+ * @param {object} m le message
+ * @param {object|null} prev le message précédent (pour regrouper)
+ * @param {object} c la conversation
+ * @returns {string} HTML
+ */
 function bubbleHtml(m, prev, c) {
   const isSanta = !m.mine && santaSide(c) === 'target' && m.sender_label === 'Ton Santa';
   const sameGroup = prev && prev.mine === m.mine && prev.sender_label === m.sender_label
@@ -252,6 +309,13 @@ function bubbleHtml(m, prev, c) {
       <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>
   </div>`;
 }
+/**
+ * HTML d'une suite de messages, avec un séparateur à chaque changement de jour.
+ * @param {Array<object>} list messages à afficher
+ * @param {object|null} prevMsg message qui précède la liste (pour le regroupement)
+ * @param {object} c la conversation
+ * @returns {string} HTML
+ */
 function messagesHtml(list, prevMsg, c) {
   let html = '', prev = prevMsg;
   for (const m of list) {
@@ -263,6 +327,7 @@ function messagesHtml(list, prevMsg, c) {
   }
   return html;
 }
+/** Remplace tout le contenu du fil par les messages chargés, ou par un texte d'accueil s'il n'y en a aucun. */
 function renderMessages() {
   const box = $('#msg-thread'); if (!box) return;
   const c = convOf(S.current);
@@ -277,6 +342,11 @@ function renderMessages() {
   box.innerHTML = messagesHtml(S.msgs, null, c);
   scrollBottom(true);
 }
+/**
+ * Ajoute de nouveaux messages en bas du fil. Ne fait défiler que si mon message vient d'être envoyé,
+ * ou si la personne était déjà en bas (pour ne pas la déranger en pleine lecture).
+ * @param {Array<object>} list nouveaux messages
+ */
 function appendMessages(list) {
   const box = $('#msg-thread'); if (!box || !list.length) return;
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
@@ -287,22 +357,36 @@ function appendMessages(list) {
   if (list.some((m) => m.mine)) scrollBottom(true);
   else if (nearBottom) scrollBottom();
 }
+/**
+ * Fait défiler le fil jusqu'en bas.
+ * @param {boolean} [instant=false] true : sans animation
+ */
 function scrollBottom(instant = false) {
   const box = $('#msg-thread'); if (!box) return;
   box.scrollTo({ top: box.scrollHeight, behavior: instant ? 'auto' : 'smooth' });
 }
 
 /* ---------- Navigation ---------- */
+/**
+ * Affiche la liste ou le fil. Sur mobile, le fil passe en plein écran (classe msg-fullscreen sur body).
+ * @param {'list'|'thread'} v vue demandée
+ */
 function setView(v) {
   const el = $('#msg-app'); if (el) el.dataset.view = v;
   document.body.classList.toggle('msg-fullscreen', v === 'thread');
 }
+/** Met l'identifiant de la conversation dans l'adresse (?c=…), sans recharger la page. Pas d'historique ajouté. */
 function setUrl(conv) {
   const u = new URL(location.href);
   u.searchParams.delete('to');
   if (conv) u.searchParams.set('c', conv); else u.searchParams.delete('c');
   history.replaceState(null, '', u.pathname.split('/').pop() + u.search + u.hash);
 }
+/**
+ * Ouvre une conversation : affiche le fil, charge les messages, marque comme lue, et lance le temps réel et les actualisations.
+ * @param {string} id identifiant de la conversation
+ * @param {{focus?: boolean}} [opts] focus : placer le curseur dans la zone de saisie (hors mobile)
+ */
 async function openConv(id, { focus = true } = {}) {
   let c = convOf(id);
   if (!c) {
@@ -330,6 +414,7 @@ async function openConv(id, { focus = true } = {}) {
   subscribeThreadRt(id);
   startThreadPolling();
 }
+/** Quitte le fil : arrête les actualisations et le temps réel de cette conversation, puis revient à la liste. */
 function backToList() {
   S.current = null; S.msgs = []; S.lastId = 0;
   stopThreadPolling();
@@ -343,6 +428,10 @@ function backToList() {
 }
 
 /* ---------- Envoi ---------- */
+/**
+ * Envoie le message saisi (RPC hg_send_message). Le bot anti-spam est prévenu côté serveur.
+ * Après l'envoi, le fil est actualisé tout de suite et la conversation remonte en tête de liste.
+ */
 async function send() {
   const ta = $('#msg-input');
   const conv = S.current;
@@ -371,6 +460,10 @@ async function send() {
 
 /* ---------- Rafraîchissement ---------- */
 let polling = false;
+/**
+ * Charge les nouveaux messages de la conversation ouverte (depuis S.lastId). Joue un son et marque comme lue
+ * si un message arrive de l'autre. Une seule passe à la fois ; une demande pendant une passe en relance une autre.
+ */
 async function pollThread() {
   const conv = S.current;
   if (!conv || polling || S.loadingThread) return;
@@ -398,6 +491,7 @@ async function pollThread() {
 }
 /** Empreinte de ce que renderConvs affiche : sert à ne réécrire la liste que si quelque chose a changé. */
 const convsKey = () => JSON.stringify([S.current, S.convs.map((c) => [c.id, c.title, c.kind, c.other_id, c.last_body, c.last_mine, c.last_message_at, c.unread])]);
+/** Actualise la liste des conversations ; joue un son si un nouveau message non lu apparaît dans une autre conversation. */
 async function pollList() {
   try {
     const before = new Map(S.convs.map((c) => [c.id, c.unread || 0]));
@@ -408,12 +502,15 @@ async function pollList() {
     if (convsKey() !== key) renderConvs();
   } catch (e) { console.warn('[messages] liste', e); }
 }
+/** Lance l'actualisation du fil : cadence rapide sans temps réel, cadence de secours avec temps réel. */
 function startThreadPolling() {
   stopThreadPolling();
   const ms = RT.threadOk ? POLL_SAFETY_MS : POLL_THREAD_MS;
   threadTimer = setInterval(() => { if (!document.hidden) pollThread(); }, ms);
 }
+/** Arrête l'actualisation du fil. */
 function stopThreadPolling() { clearInterval(threadTimer); threadTimer = null; }
+/** Lance l'actualisation périodique de la liste des conversations (en pause quand l'onglet est caché). */
 function startListPolling() {
   clearInterval(listTimer);
   listTimer = setInterval(() => { if (!document.hidden) pollList(); }, POLL_LIST_MS);
@@ -424,6 +521,11 @@ function startListPolling() {
    migration 025) : aucun expéditeur n'y figure. Seuls les membres de la conversation peuvent s'abonner (policy).
    Un événement déclenche le rechargement du fil par la RPC habituelle. Sans canal confirmé (échec, indisponible,
    ou client de test sans Realtime), les cadences d'interrogation d'origine restent en vigueur. */
+/**
+ * Abonne le fil de la conversation au canal temps réel. Un événement déclenche une actualisation immédiate.
+ * En cas d'échec, l'actualisation périodique reste en place (aucune perte de messages).
+ * @param {string} id identifiant de la conversation
+ */
 function subscribeThreadRt(id) {
   unsubscribeThreadRt();
   try {
@@ -443,6 +545,7 @@ function subscribeThreadRt(id) {
     RT.thread = null; RT.threadOk = false;
   }
 }
+/** Ferme le canal temps réel de la conversation précédente, s'il existe. */
 function unsubscribeThreadRt() {
   const ch = RT.thread;
   RT.thread = null; RT.threadOk = false;
@@ -461,8 +564,13 @@ document.addEventListener('visibilitychange', () => {
 
 /* ---------- Nouveau message ---------- */
 const dlg = $('#msg-new-dlg');
+/**
+ * Liste des membres proposés dans « Nouveau message », filtrée par la recherche (sans accents, sans casse).
+ * @param {string} [q=''] texte de recherche
+ */
 function renderPick(q = '') {
   const ul = $('#msg-new-list');
+  /** Texte normalisé (sans accents, en minuscules) pour la recherche de membres. */
   const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const list = [...S.members.values()].filter((m) => m.id !== me.id && norm(m.pseudo).includes(norm(q)))
     .sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
@@ -475,6 +583,7 @@ function renderPick(q = '') {
     if (ok) dlg.close(); else b.disabled = false;
   }));
 }
+/** Ouvre la fenêtre « Nouveau message » avec la liste complète des membres. */
 function openNewDialog() {
   $('#msg-new-search').value = '';
   renderPick();
@@ -484,6 +593,11 @@ function openNewDialog() {
 $('#msg-new-search').addEventListener('input', (e) => renderPick(e.target.value));
 $('#msg-new-form').addEventListener('submit', (e) => { if (e.submitter?.value !== 'cancel') e.preventDefault(); });
 
+/**
+ * Ouvre (ou crée) une conversation directe avec un membre (RPC hg_open_direct).
+ * @param {string} userId identifiant du membre
+ * @returns {Promise<boolean>} true si la conversation s'est ouverte
+ */
 async function openDirect(userId) {
   try {
     if (userId === me.id) throw new Error('Tu ne peux pas t’écrire à toi-même.');
