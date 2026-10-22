@@ -25,7 +25,7 @@ import { hasLevels, levelDef, levelImage, roman } from '../badge-levels.js';
 
 /** Clé localStorage : pour chaque membre, la liste des badges déjà vus sur cet appareil. */
 const BADGES_SEEN_KEY = 'hg_badges_seen';
-/** Clé sessionStorage : posée dès que la vérification de la session a eu lieu. */
+/** Clé sessionStorage : posée une fois la vérification de la session réussie (sinon la page suivante réessaie). */
 const BADGES_SESSION_KEY = 'hg_badges_checked';
 
 /* ---------- Utilitaires ---------- */
@@ -51,7 +51,6 @@ export async function checkNewBadges({ force = false } = {}) {
   if (!p?.id || !(await hasSession())) return []; // déconnecté entre-temps : aucune RPC membre
   try {
     if (!force && sessionStorage.getItem(BADGES_SESSION_KEY)) return [];
-    sessionStorage.setItem(BADGES_SESSION_KEY, '1');
   } catch { if (!force) return []; }
   try {
     await applyTheme();
@@ -69,6 +68,8 @@ export async function checkNewBadges({ force = false } = {}) {
       sb.from('hg_badges').select('code, name, description, image_url, sort, levels_enabled, levels'),
     ]);
     if (mine.error) throw mine.error;
+    // Traitement réussi (badges recalculés et lus) : on pose le marqueur de session
+    if (!ref.error) { try { sessionStorage.setItem(BADGES_SESSION_KEY, '1'); } catch {} }
     const codes = (mine.data || []).map((b) => b.badge_code);
     const levels = Object.fromEntries((mine.data || []).map((b) => [b.badge_code, Number(b.level) || 1]));
     // Mémoire locale des badges vus : un objet { <uid>: [codes], <uid>:lv: {code: niveau} }
