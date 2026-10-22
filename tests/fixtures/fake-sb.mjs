@@ -417,6 +417,15 @@ export function createClient() {
       if (fn === 'hg_unread_count') return { data: 0, error: null };
       // Suivi des quêtes (quest-track.js) : rien à renvoyer ; l'appel reste dans window.__LOG.
       if (fn === 'hg_quest_track') return { data: null, error: null };
+      // Secrets cachés (eggs/api.js) : une réponse par secret ; la première fois, « new » est vrai. Les lettres se comptent (sur 7).
+      if (fn === 'hg_egg_found') {
+        const code = args.p_egg, vus = (S.eggsVus = S.eggsVus || {});
+        const nouveau = !vus[code]; vus[code] = true;
+        const lettres = Object.keys(vus).filter((c) => c.startsWith('lettre_')).length;
+        const message = code.startsWith('lettre_') ? `Lettre ${code.slice(7)} sur 7 (${lettres}/7)`
+          : code === 'jeu404' ? `Paillettes attrapées : ${args.p_extra?.score}` : `Secret trouvé : ${code}`;
+        return { data: { new: nouveau, reward: nouveau && code === 'jeu404' ? 5 : 0, message, card: null, badge: null, found: Object.keys(vus).length }, error: null };
+      }
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non. Première définition de hg_staff_directory : celle-ci répond.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       // Liste des membres : les fantômes n'y figurent pas (ils ne sont pas dans DB.hg_profiles).

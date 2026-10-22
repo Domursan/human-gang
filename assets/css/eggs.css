@@ -1,0 +1,50 @@
+/* ===== Humane Gang — secrets cachés : page 404 (jeu des paillettes) et lettres du pied de page ===== */
+/* Chargée par 404.html (page introuvable) et par eggs/lettres.js (lettres cachées, sur toutes les pages). */
+
+/* ---------- Page 404 ---------- */
+
+.e404 { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px; box-sizing: border-box; }
+.e404-carte { width: 100%; max-width: 400px; display: grid; gap: 14px; justify-items: center; text-align: center; }
+.e404-carte h1 { margin: 0; font-size: clamp(26px, 7vw, 36px); }
+.e404-carte > p { margin: 0; color: var(--muted); }
+.e404-code { font-family: var(--font-display); font-size: 13px; letter-spacing: .2em; color: var(--muted); }
+.e404-accueil { margin-top: 4px; }
+
+.jeu404 { width: 100%; display: grid; gap: 12px; justify-items: center; }
+.jeu404-canvas {
+  display: block; width: 100%; max-width: 360px; height: auto; aspect-ratio: 360 / 420; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  touch-action: none; /* au doigt : la page ne défile pas pendant la partie */
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.jeu404-canvas:focus-visible { outline: 2px solid var(--sand); outline-offset: 3px; }
+.jeu404-hud { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: center; font-variant-numeric: tabular-nums; }
+.jeu404-hud p { margin: 0; }
+.jeu404-msg { min-height: 1.5em; margin: 0; text-align: center; }
+.jeu404 [hidden] { display: none !important; }
+
+/* ---------- Lettres cachées (pied de page, toutes les pages) ---------- */
+
+.site-footer .lettre-secret {
+  font-family: var(--font-display); font-size: 12px; line-height: 1; color: var(--muted);
+  background: none; border: 0; border-radius: 4px; padding: 3px 4px; margin-left: 8px;
+  opacity: .14; cursor: default; vertical-align: baseline;
+  transition: opacity .4s ease, color .4s ease, text-shadow .4s ease;
+}
+.site-footer .lettre-secret:hover,
+.site-footer .lettre-secret:focus-visible,
+.site-footer .lettre-secret:active {
+  opacity: 1; color: var(--sand); cursor: pointer; text-shadow: 0 0 8px rgba(226, 199, 126, .6);
+}
+.site-footer .lettre-secret:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.site-footer .lettre-secret.trouvee { animation: lettre-saut .6s ease-out; }
+@keyframes lettre-saut {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.9) rotate(-8deg); opacity: 1; color: var(--sand); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer .lettre-secret { transition: none; }
+  .site-footer .lettre-secret.trouvee { animation: none; opacity: 1; color: var(--sand); }
+}

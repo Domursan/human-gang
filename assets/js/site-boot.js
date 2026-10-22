@@ -75,3 +75,6 @@ if (window.isSecureContext && 'serviceWorker' in navigator) {
     location.reload();
   });
 }
+
+/* ---------- Secrets : les sept lettres cachées (eggs/lettres.js, import dynamique) ---------- */
+import('./eggs/lettres.js').catch(() => {});

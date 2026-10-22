@@ -112,6 +112,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-collection-autre.cjs` | `node tests/parcours-collection-autre.cjs` | à la main | Collection d'un autre membre, en lecture seule : filtres, repères « Tu ne l'as pas », compteur |
 | `parcours-drops.cjs` | `node tests/parcours-drops.cjs` | `test` | Drops : lancer (admin), attraper la carte en vol (membre), stock limité, fin du drop |
 | `parcours-aide.cjs` | `node tests/parcours-aide.cjs` | à la main | Aide et tutos : boutons « ? », recherche, adresse `aide.html#<slug>`, tutos réservés aux visiteurs |
+| `parcours-eggs-404-lettres.cjs` | `node tests/parcours-eggs-404-lettres.cjs` | `test` | Secrets cachés : page 404 (adresse inconnue, jeu des paillettes à horloge factice, score envoyé, visiteur), les 7 lettres du pied de page (clic, clavier, survol) |
 | `parcours-affiches.cjs` | `node tests/parcours-affiches.cjs` | `test` | Affiches A3 et tutos : prix, lot, critères des badges et quêtes lus sur les réglages ; repli si la lecture échoue |
 | `parcours-intro-quotidienne.cjs` | `node tests/parcours-intro-quotidienne.cjs` | à la main | L'intro se rejoue une fois par jour |
 | `parcours-ss-paires.cjs` | `node tests/parcours-ss-paires.cjs` | `test` | Secret Santa « qui a offert à qui » : affichage des paires selon l'état de l'édition |
