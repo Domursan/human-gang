@@ -16,7 +16,7 @@ import { navigate } from '../admin/shell.js';
 import { ICON, REASON_LABEL } from './constants.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
-import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles } from './helpers.js';
+import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles, liveCount } from './helpers.js';
 
 /* Libellé lisible d'une raison de mouvement de Paillettes ; à défaut, la raison telle quelle. */
 const REASON = (r) => REASON_LABEL[r] || r;
@@ -162,7 +162,11 @@ function openGiveDrawer() {
   const uid = C.playerId;
   const cardOptions = C.sets.map((s) => {
     const list = C.cards.filter((k) => k.set_id === s.id && k.active).sort((a, b) => a.number - b.number);
-    return list.length ? `<optgroup label="${esc(s.name)}">${list.map((k) => `<option value="${esc(k.id)}">#${esc(k.number)} · ${esc(k.name)} (${esc(rarityLabel(k.rarity))})</option>`).join('')}</optgroup>` : '';
+    // Une carte unique déjà attribuée (son seul exemplaire existe) ne peut pas être redonnée.
+    return list.length ? `<optgroup label="${esc(s.name)}">${list.map((k) => {
+      const taken = k.rarity === 'unique' && liveCount(k.id) > 0;
+      return `<option value="${esc(k.id)}"${taken ? ' disabled' : ''}>#${esc(k.number)} · ${esc(k.name)} (${esc(rarityLabel(k.rarity))})${taken ? ' : déjà attribuée' : ''}</option>`;
+    }).join('')}</optgroup>` : '';
   }).join('');
   openDrawer({
     title: 'Donner une carte',
@@ -193,6 +197,11 @@ async function giveCard(form, uid) {
   const cardId = form.elements.card.value;
   const count = Number(form.elements.count.value);
   if (!cardId) { showErr('Choisis une carte.'); return false; }
+  const picked = C.cardById.get(cardId);
+  if (picked?.rarity === 'unique') {
+    if (liveCount(cardId) > 0) { showErr('Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.'); return false; }
+    if (count !== 1) { showErr('Une carte unique se donne en un seul exemplaire.'); return false; }
+  }
   if (!Number.isInteger(count) || count < 1 || count > 100) { showErr('Nombre d\'exemplaires : entre 1 et 100.'); return false; }
   const shiny = form.elements.shiny.checked;
   const announce = form.elements.announce.checked;

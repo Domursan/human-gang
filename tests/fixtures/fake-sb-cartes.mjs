@@ -93,6 +93,13 @@ window.__DB = DB; window.__LOG = [];
   cards.push({ id: 'C13', set_id: 'SET2', number: 1, name: 'Saison deux', family: 'moment', rarity: 'rare', image_url: null, flavor: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
   // S.bigCards : N cartes supplémentaires « Carte test N » (pagination de la liste admin)
   for (let i = 0; i < (S.bigCards || 0); i++) cards.push({ ...cards[0], id: 'B' + i, number: 1000 + i, name: 'Carte test ' + i, rarity: 'commune', family: 'objet', max_copies: null, member_id: null });
+  // Scénario « uniques » (parcours-cartes-uniques.cjs) : série « Hors série » et une carte unique C14 (un seul exemplaire).
+  // S.uniqueTaken : Alice a déjà son exemplaire ; S.uniqueOwned : c'est moi qui le possède.
+  if (S.uniques) {
+    sets.push({ id: 'SETHS', code: 'hors-serie', name: 'Hors série', description: 'Cartes uniques, en un seul exemplaire : à gagner lors d\'un événement ou offertes par l\'admin.', starts_at: null, ends_at: null, active: true, sort: 9999 });
+    cards.push({ id: 'C14', set_id: 'SETHS', number: 1, name: 'La Carte unique', family: 'membre', rarity: 'unique', image_url: null, flavor: 'Il n\'en existe qu\'une.',
+      member_id: null, can_shiny: false, tradeable: true, craftable: false, max_copies: 1, active: true });
+  }
   DB.hg_card_sets = sets; DB.hg_cards = cards;
   // Mes exemplaires : C1 x3 (dont une brillante), C2 x1, C3 x2, C7 x1 brillante, C11 (identite) x1 numéroté, C9 x1 (en échange)
   /** Fabrique un exemplaire possédé par le membre connecté ; extra remplace les champs par défaut. */
@@ -100,6 +107,9 @@ window.__DB = DB; window.__LOG = [];
   DB.hg_card_copies = [cp(1,'C1'), cp(2,'C1',{shiny:true}), cp(3,'C1'), cp(4,'C2'), cp(5,'C3'), cp(6,'C3',{source:'fabrication'}), cp(7,'C7',{shiny:true}), cp(8,'C11',{serial:1, max_copies:3}), cp(9,'C9',{locked_trade:'T1'}), cp(10,'C5'), cp(11, 'C5', {shiny: true})];
   // Liste de souhaits du membre connecté : la carte C4.
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
+  // Carte unique : un seul exemplaire existe, à Alice (S.uniqueTaken) ou à moi (S.uniqueOwned).
+  if (S.uniqueTaken) DB.hg_card_copies.push({ id: 501, card_id: 'C14', owner_id: U(2), shiny: false, serial: 1, source: 'admin', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
+  if (S.uniqueOwned) DB.hg_card_copies.push({ id: 502, card_id: 'C14', owner_id: ME, shiny: false, serial: 1, source: 'evenement', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
   // Scénario « echanges » (parcours-echanges-filtres.cjs) : Alice (U(2)) a des doublons et des cartes d'une autre série ;
   // j'ai aussi une carte de la série « Saison 2 ». Ailleurs, rien ne change.
   if (S.echanges) {

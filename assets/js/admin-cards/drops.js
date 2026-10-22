@@ -15,7 +15,7 @@ import { onTableChange } from '../admin/live.js';
 import { fetchAll, act, fmtWhen, thumb } from './helpers.js';
 
 /* État du module : racine de la section, drops, réclamations, cartes, pseudos par identifiant, bornes. */
-const D = { root: null, drops: [], claims: [], cards: [], names: new Map(), limits: limitsOf(null) };
+const D = { root: null, drops: [], claims: [], cards: [], taken: new Set(), names: new Map(), limits: limitsOf(null) };
 // Bornes des drops : hg_settings.cards.drops (réglables dans Cartes › Économie). Repli = valeurs de base.
 function limitsOf(cfg) {
   const d = cfg?.drops || {};
@@ -59,6 +59,13 @@ async function load() {
   D.claims = claims;
   D.cards = cards;
   D.names = new Map((dir.data || []).map((p) => [p.id, p.pseudo]));
+  // Cartes uniques déjà attribuées (un exemplaire existe) : elles ne peuvent plus être lancées en drop.
+  const uniqueIds = cards.filter((k) => k.rarity === 'unique').map((k) => k.id);
+  D.taken = new Set();
+  if (uniqueIds.length) {
+    const copies = await fetchAll(() => sb.from('hg_card_copies').select('card_id').in('card_id', uniqueIds).is('recycled_at', null));
+    D.taken = new Set(copies.map((x) => x.card_id));
+  }
 }
 
 /** Relit toutes les données puis redessine. Un message d'erreur remplace la liste si ça échoue. */
@@ -121,8 +128,10 @@ function render() {
 
 /* ---------- Lancer un drop (tiroir) ---------- */
 /* Options d'une liste déroulante de cartes, avec la carte choisie pré-sélectionnée si elle figure dans la liste. */
-const optionsHtml = (cards, selected = '') => cards.map((k) =>
-  `<option value="${esc(k.id)}"${k.id === selected ? ' selected' : ''}>${esc(k.name)} — ${esc(rarityLabel(k.rarity))}${k.can_shiny ? '' : ' (pas brillante)'}</option>`).join('');
+const optionsHtml = (cards, selected = '') => cards.map((k) => {
+  const taken = D.taken.has(k.id) && k.rarity === 'unique';
+  return `<option value="${esc(k.id)}"${k.id === selected ? ' selected' : ''}${taken ? ' disabled' : ''}>${esc(k.name)} — ${esc(rarityLabel(k.rarity))}${k.can_shiny ? '' : ' (pas brillante)'}${taken ? ' : déjà attribuée' : ''}</option>`;
+}).join('');
 
 /** Ouvre le tiroir « Lancer un drop » : recherche de carte, quantité, durée et options. Contrôle les bornes avant l'envoi. */
 function openDropForm() {
@@ -165,6 +174,7 @@ function openDropForm() {
       const qty = Number(form.querySelector('#drop-qty').value);
       const minutes = Number(form.querySelector('#drop-min').value);
       if (!card) throw new Error('Choisis une carte dans la liste.');
+      if (D.taken.has(card) && cardOf(card)?.rarity === 'unique') throw new Error('Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.');
       const { qmax, dmax } = D.limits;
       if (!Number.isInteger(qty) || qty < 1 || qty > qmax) throw new Error(`Le nombre d'exemplaires doit être entre 1 et ${fmtN(qmax)}.`);
       if (!Number.isInteger(minutes) || minutes < 1 || minutes > dmax) throw new Error(`La durée doit être entre 1 et ${fmtN(dmax)} minutes.`);
@@ -198,7 +208,8 @@ function openDropForm() {
     const shown = cards.filter((k) => !term || k.name.toLowerCase().includes(term));
     sel.innerHTML = optionsHtml(shown, keep);
     if (!shown.some((k) => k.id === keep)) sel.selectedIndex = -1;
-    if (sel.selectedIndex < 0 && shown.length) sel.selectedIndex = 0;
+    // Premier choix possible (une carte déjà attribuée est désactivée dans la liste)
+    if (sel.selectedIndex < 0 && shown.length) sel.selectedIndex = [...sel.options].findIndex((o) => !o.disabled);
     syncShiny();
   });
   sel.addEventListener('change', syncShiny);

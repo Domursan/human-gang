@@ -43,6 +43,7 @@
 .acd-rar-epique { border-color: #8C6AD8; }
 .acd-rar-legendaire { border-color: #E0A93B; }
 .acd-rar-mythique { border-color: #F05A35; }
+.acd-rar-unique { border-color: #C9A04A; }
 .acd-rar-identite { border-color: #FBD32D; }
 .acd-share { display: flex; align-items: center; gap: 10px; }
 .acd-bar { display: block; flex: 1 1 80px; max-width: 220px; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }

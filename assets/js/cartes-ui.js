@@ -16,12 +16,16 @@ export const RARITIES = [
   { id: 'legendaire', label: 'Légendaire', short: 'L' },
   { id: 'mythique', label: 'Mythique', short: 'M' },
   { id: 'identite', label: 'Identité', short: 'ID' },
+  // Unique : un seul exemplaire, hors série. Jamais dans un booster, jamais fabriquée ni recyclée (migration 061, partie B).
+  { id: 'unique', label: 'Unique', short: 'U' },
 ];
+// Raretés tirées dans les boosters (taux affichés et réglables) : toutes sauf « unique ».
+export const RARITIES_TIRAGE = RARITIES.filter((r) => r.id !== 'unique');
 // Accès rapide par identifiant : RARITY['rare'] donne le libellé, le raccourci et le rang (1 = commune).
 export const RARITY = Object.fromEntries(RARITIES.map((r, i) => [r.id, { ...r, rank: i + 1 }]));
 /** Libellé lisible d'une rareté (« Peu commune »). Renvoie l'identifiant brut si inconnu. */
 export const rarityLabel = (id) => RARITY[id]?.label || id;
-/** Rang d'une rareté (1 pour la commune, 7 pour l'identité, 0 si inconnue). Sert à compter les gemmes. */
+/** Rang d'une rareté (1 pour la commune, 7 pour l'identité, 8 pour l'unique, 0 si inconnue). Sert à compter les gemmes. */
 export const rarityRank = (id) => RARITY[id]?.rank || 0;
 
 // Familles de cartes (Membre, Moment, Lieu...).
@@ -98,7 +102,9 @@ export function cardHtml(card, opts = {}) {
   const ident = r === 'identite';
   const cls = ['hgc', `hgc-${r}`, `hgc-${size}`, opts.shiny ? 'is-shiny' : '', miss ? 'is-missing' : '', opts.locked ? 'is-locked' : ''].filter(Boolean).join(' ');
   const name = miss ? '???' : String(card.name ?? '');
-  const famLine = [familyLabel(card.family), card.set_name].filter(Boolean).join(' · ');
+  const uniq = r === 'unique';
+  // Une carte unique se présente comme une pièce à part : « Exemplaire unique » remplace la famille.
+  const famLine = [uniq ? 'Exemplaire unique' : familyLabel(card.family), card.set_name].filter(Boolean).join(' · ');
   const flavor = miss ? '' : card.flavor;
   const caption = miss ? '' : card.caption;
   const ms = yearOf(card.member_since);
@@ -123,7 +129,8 @@ export function cardHtml(card, opts = {}) {
       : `<span class="hgc-win"><img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy"></span>`;
   }
 
-  const serialTxt = opts.serial ? serialLabel(opts.serial, card.max_copies) : '';
+  // Unique : le numéro du seul exemplaire est « 1/1 » (sans zéro de remplissage).
+  const serialTxt = uniq ? (opts.serial && !miss ? '1/1' : '') : (opts.serial ? serialLabel(opts.serial, card.max_copies) : '');
   const count = opts.count > 1 ? `<span class="hgc-count" aria-hidden="true">×${opts.count}</span>` : '';
   const lock = opts.locked ? '<span class="hgc-lock" title="Bloquée par une offre d\'échange">En échange</span>' : '';
   const label = `${name} — ${rarityLabel(r)}${opts.shiny ? ', brillante' : ''}${opts.serial ? ', ' + serialLabel(opts.serial, card.max_copies) : ''}`
@@ -136,6 +143,7 @@ export function cardHtml(card, opts = {}) {
     <span class="hgc-frame" aria-hidden="true">
       ${LAYERS}
       ${opts.shiny ? '<span class="hgc-holo"></span>' : ''}
+      ${uniq ? '<span class="hgc-sheen" aria-hidden="true"></span>' : ''}
       <span class="hgc-gems">${gemsHtml(r, rarityRank(r))}</span>
       <span class="hgc-plate${plateFit}"><span class="hgc-plate-t">${esc(plateTxt)}</span></span>
       ${win}

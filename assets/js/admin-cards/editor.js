@@ -15,6 +15,9 @@ import { C } from './state.js';
 import { refresh } from './data.js';
 import { activeProfiles, check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
 
+/** Identifiant de la série « Hors série » (cartes uniques), ou null si elle n'existe pas. */
+const horsSerieId = () => C.sets.find((s) => s.code === 'hors-serie')?.id || null;
+
 /** Ouvre le tiroir de création (k absent) ou de modification d'une carte, avec son aperçu. */
 export function openCardDialog(k = null) {
   const isNew = !k;
@@ -46,8 +49,9 @@ export function openCardDialog(k = null) {
             <div class="field"><label for="acc-family">Famille</label>
               <select id="acc-family" name="family">${FAMILIES.map((x) => `<option value="${x.id}"${(k?.family ?? 'membre') === x.id ? ' selected' : ''}>${esc(x.label)}</option>`).join('')}</select></div>
             <div class="field"><label for="acc-rarity">Rareté</label>
-              <select id="acc-rarity" name="rarity">${RARITIES.map((r) => `<option value="${r.id}"${(k?.rarity ?? 'commune') === r.id ? ' selected' : ''}>${esc(r.label)}</option>`).join('')}</select></div>
+              <select id="acc-rarity" name="rarity" aria-describedby="acc-unique-help">${RARITIES.map((r) => `<option value="${r.id}"${(k?.rarity ?? 'commune') === r.id ? ' selected' : ''}>${esc(r.label)}</option>`).join('')}</select></div>
           </div>
+          <p class="small muted" id="acc-unique-help"${k?.rarity === 'unique' ? '' : ' hidden'}>Unique : jamais dans les boosters ; à offrir (Don) ou à lancer en carte sauvage (Drop). Un seul exemplaire, pas de fabrication.</p>
           <fieldset class="acd-fs"><legend>Image</legend>
             <div class="field"><label for="acc-file">Téléverser une image</label>
               <input id="acc-file" name="file" type="file" accept="image/png,image/webp,image/jpeg,image/gif,image/svg+xml"></div>
@@ -82,6 +86,29 @@ export function openCardDialog(k = null) {
   const form = dr.form;
   const E = form.elements;
 
+  /* Rareté « unique » : un seul exemplaire, série « Hors série », jamais fabricable. Le formulaire le fait respecter. */
+  /** Applique ou relâche les verrous de la rareté unique (exemplaires, fabricable, aide). */
+  const syncUnique = () => {
+    const u = E.rarity.value === 'unique';
+    E.max_copies.readOnly = u;
+    E.craftable.disabled = u;
+    if (u) { E.max_copies.value = '1'; E.craftable.checked = false; }
+    $('#acc-unique-help', root).hidden = !u;
+  };
+  /** Le choix de la rareté unique pré-sélectionne « Hors série » (et le premier numéro libre) ; annulé si on quitte la rareté. */
+  const onRarityChange = () => {
+    if (E.rarity.value === 'unique') {
+      const hs = horsSerieId();
+      if (hs && E.set_id.value !== hs) {
+        E.set_id.value = hs;
+        if (isNew) E.number.value = nextFreeNumber(hs);
+      }
+    } else {
+      E.craftable.checked = true;
+    }
+    syncUnique();
+  };
+
   /* La coquille ouvre le tiroir ; la logique de la carte suit, relue depuis le formulaire. */
   const readRaw = () => {
     const num = Number(E.number.value);
@@ -110,6 +137,8 @@ export function openCardDialog(k = null) {
   /** Valeurs validées du formulaire ; lève une erreur lisible sinon. */
   const validate = () => {
     const v = { ...readRaw(), can_shiny: E.can_shiny.checked, tradeable: E.tradeable.checked, craftable: E.craftable.checked, active: E.active.checked };
+    // Unique : un seul exemplaire et jamais fabricable (la base le vérifie aussi)
+    if (v.rarity === 'unique') { v.max_copies = 1; v.craftable = false; }
     if (!v.set_id) throw new Error('Choisis une série.');
     if (!Number.isInteger(v.number) || v.number < 1) throw new Error('Le numéro doit être un nombre entier, à partir de 1.');
     if (v.name.length < 2) throw new Error('Donne un nom à la carte (2 caractères minimum).');
@@ -156,9 +185,11 @@ export function openCardDialog(k = null) {
   E.rarity.addEventListener('change', () => {
     // Identité : 10 exemplaires numérotés proposés si rien n'est indiqué (modifiable)
     if (E.rarity.value === 'identite' && !E.max_copies.value.trim()) E.max_copies.value = '10';
+    onRarityChange();
     paint();
   });
   form.addEventListener('input', paint);
+  syncUnique();
   paint();
 }
 
