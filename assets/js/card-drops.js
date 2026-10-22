@@ -118,6 +118,7 @@ function show(d) {
 function fly(id) {
   const s = S.shown.get(id);
   if (!s) return;
+  /** Programme le prochain passage de cette carte dans ms millisecondes. */
   const later = (ms) => { s.timer = setTimeout(() => fly(id), ms); };
   if (document.hidden || S.busy.has(id) || s.el.classList.contains('is-busy')
     || document.querySelector('.cd-item.is-flying, .dyn-fly')) return later(rnd(RETRY_FLY[0], RETRY_FLY[1]));
@@ -175,6 +176,7 @@ function sync(list) {
   }
 }
 
+/** Relit les drops actifs et met l'écran d'accord avec eux (ne fait rien si la lecture échoue). */
 async function refresh() {
   const list = await fetchActive();
   if (list) sync(list);

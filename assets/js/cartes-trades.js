@@ -409,7 +409,8 @@ export async function mountTrades(el, ctx = {}) {
     const other = t.from_user === me ? t.to_user : t.from_user;
     const mine = t.from_user === me ? 'from' : 'to';
     const theirs = mine === 'from' ? 'to' : 'from';
-    const pails = (side) => (side === 'from' ? t.from_paillettes : t.to_paillettes);
+    /** Paillettes d'un côté de l'offre (« from » = émetteur, « to » = destinataire). */
+    const pails =(side) => (side === 'from' ? t.from_paillettes : t.to_paillettes);
     const accepted = t.status === 'acceptee';
     let badge, sides;
     if (isGift(t)) {
@@ -447,6 +448,7 @@ export async function mountTrades(el, ctx = {}) {
     const view = { recues: viewRecues, envoyees: viewEnvoyees, proposer: viewProposer, historique: viewHistorique }[S.tab];
     panel.innerHTML = view();
   }
+  /** Redessine le panneau en gardant la place de l'utilisateur. */
   const render = () => keepPlace(renderPanel); // le re-rendu garde la place de l'utilisateur
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */

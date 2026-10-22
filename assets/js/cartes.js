@@ -223,6 +223,7 @@ function animateBalance() {
   const gain = to - from;
   const steps = Math.min(4, gain);
   let k = 0;
+  /** Un palier du compteur : fait avancer le solde affiché, clignote les segments, puis programme le palier suivant. */
   const tick = () => {
     k += 1;
     const v = k >= steps ? to : from + Math.round(gain * k / steps);
@@ -1025,6 +1026,7 @@ function drawCollection(focusId) {
   const set = all ? null : S.sets.find((s) => s.id === S.setId);
   if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
+  /** Vrai si la carte passe les filtres de la collection (rareté, famille, possession). */
   const keep = (c) => {
     const n = copiesOf(c.id).length;
     if (f.rarity && c.rarity !== f.rarity) return false;
@@ -1219,6 +1221,7 @@ function renderDetail() {
   const costS = costN == null ? null : costN * Number(cfg().craft?.shiny_multiplier ?? 4);
   const craftable = god || (k.craftable && k.rarity !== 'mythique' && k.rarity !== 'identite' && costN != null);
   const wished = S.wish.has(k.id);
+  /** Vrai si le solde ne suffit pas pour ce coût (jamais en mode sans limite). */
   const short = (cost) => !god && bal() < cost;
 
   $('#cartes-detail-card').innerHTML = cardHtml(k, {

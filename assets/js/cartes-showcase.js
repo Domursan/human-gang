@@ -56,6 +56,7 @@ function loadSince() {
  */
 async function withMeta(cards) {
   const [meta, since] = await Promise.all([loadMeta(), cards.some((c) => c?.rarity === 'identite') ? loadSince() : null]);
+  /** Complète une carte avec sa série, son total et l'arrivée du membre (Identité). Une carte vide est renvoyée telle quelle. */
   const decorate = (card) => (card ? {
     ...card,
     set_name: meta.names.get(card.set_id), set_total: meta.totals.get(card.set_id),
@@ -178,6 +179,7 @@ async function openEditor(userId, onSaved, btn) {
   const gridEl = dlg.querySelector('.shw-dlg-grid');
   const msgEl = dlg.querySelector('.shw-dlg-msg');
   const saveBtn = dlg.querySelector('[data-save]');
+  /** Affiche un message d'état dans le dialogue (chaîne vide pour l'effacer). */
   const say = (t) => { msgEl.textContent = t; };
 
   /** Redessine les emplacements choisis et la grille de la collection (badge = numéro d'emplacement). */

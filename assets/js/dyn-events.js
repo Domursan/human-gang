@@ -199,6 +199,7 @@ export async function flyDynImage(ev, { preview = false, host = document.body, o
 
   return new Promise((resolve) => {
     let caught = false;
+    /** Retire le bouton de l'écran et résout la promesse (true si l'image a été attrapée). */
     const cleanup = () => { btn.remove(); resolve(caught); };
     anim.finished.then(() => { if (!caught) cleanup(); }, () => {});
     btn.addEventListener('click', async (e) => {
@@ -294,6 +295,7 @@ export async function startDynEvents(profile) {
     const list = await getActiveDynEvents();
     for (const ev of list) {
       const state = { mine: Number(ev.my_captures) || 0, remaining: ev.remaining_total == null ? null : Number(ev.remaining_total) };
+      /** Vrai si ce membre ne peut plus attraper cet événement (limite personnelle atteinte ou plus d'images). */
       const exhausted = () => (ev.max_per_user != null && state.mine >= Number(ev.max_per_user)) || (state.remaining != null && state.remaining <= 0);
       if (exhausted()) continue;
       const p = clamp(Number(ev.probability) || 0, 0, 1);
