@@ -98,6 +98,12 @@ const thread = (p) => p.locator('#support-root .ui-thread-log').textContent();
     check(s1?.taken_by === ME && s1?.taken_at != null && s1?.status === 'ouverte', '(a) « Prendre en charge » : taken_by et taken_at écrits, statut toujours ouverte');
     check((await thread(p)).includes('Ethan a pris en charge'), '(a) fil : séparateur « Ethan a pris en charge »');
     check(/En cours\s*3/.test(await chip(p, 'En cours')), '(a) compteur « En cours » : 3 après la prise en charge');
+    // Membre inscrit : la prise en charge ouvre une conversation privée (hg_support_take), bouton pour l'ouvrir
+    const takes = await p.evaluate(() => window.__LOG.filter((l) => l[0] === 'rpc' && l[1] === 'hg_support_take').map((l) => l[2]));
+    check(takes.length === 1 && takes[0]?.p_support === 'sup-1', '(a) prise en charge : hg_support_take appelée une fois pour la demande');
+    check((await dbRow(p, 'hg_support', 'sup-1'))?.conversation_id === 'conv-sup-1', '(a) conversation privée reliée à la demande');
+    check((await p.textContent('#support-root .ui-dhead-actions')).includes('Ouvrir la conversation'), '(a) bouton « Ouvrir la conversation » affiché');
+    check((await p.textContent('#support-root .ui-composer .ui-hint')).includes('conversation privée'), '(a) mention : la discussion se fait dans la conversation privée');
 
     // Réponse publique : bulle admin, écrite en base (internal = false), membre la verra
     await p.fill('#support-root .ui-composer textarea', 'Merci Alice, je regarde le journal des sorties.');

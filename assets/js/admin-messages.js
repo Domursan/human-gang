@@ -21,6 +21,7 @@ const PAGE = 200; // messages par lecture journalisée (limite de la RPC : 500)
 const FILTERS = [
   { id: 'direct', label: 'Directes', test: (c) => c.kind === 'direct' },
   { id: 'santa', label: 'Secret Santa', test: (c) => c.kind === 'santa' },
+  { id: 'support', label: 'Assistance', test: (c) => c.kind === 'support' },
 ];
 // Format des dates des messages (jour.mois.année heure:minute, heure suisse).
 const dtFmt = new Intl.DateTimeFormat('fr-CH', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -59,10 +60,11 @@ function toItem(c) {
   return {
     id: c.id,
     name: convTitle(c),
-    title: c.kind === 'santa' ? `Secret Santa${c.edition_year ? ` ${c.edition_year}` : ''}` : 'Conversation directe',
+    title: c.kind === 'santa' ? `Secret Santa${c.edition_year ? ` ${c.edition_year}` : ''}` : c.kind === 'support' ? 'Assistance' : 'Conversation directe',
     excerpt: c.messages ? `${c.messages} message${c.messages > 1 ? 's' : ''}` : 'Aucun message',
     at: c.last_message_at,
-    status: c.kind === 'santa' ? { id: 'santa', label: 'Secret Santa', tone: 'santa' } : { id: 'direct', label: 'Directe', tone: 'muted' },
+    status: c.kind === 'santa' ? { id: 'santa', label: 'Secret Santa', tone: 'santa' }
+      : c.kind === 'support' ? { id: 'support', label: 'Assistance', tone: 'muted' } : { id: 'direct', label: 'Directe', tone: 'muted' },
     kind: c.kind,
   };
 }
@@ -136,7 +138,7 @@ function paintReader() {
   M.reader.innerHTML = `
     <div class="amsg-reader-head">
       <div class="amsg-reader-title">
-        <h3 class="card-title">${c.kind === 'santa' ? 'Conversation Secret Santa' : 'Conversation directe'}</h3>
+        <h3 class="card-title">${c.kind === 'santa' ? 'Conversation Secret Santa' : c.kind === 'support' ? 'Conversation d’assistance' : 'Conversation directe'}</h3>
         <p class="muted small">${esc(who)}</p>
       </div>
       <p class="amsg-audit" role="note">Lecture journalisée : cette consultation est enregistrée</p>

@@ -63,3 +63,9 @@
   .my-support-subject { font-size: 18px; }
   .my-msg { max-width: 100%; }
 }
+
+/* Demande prise en charge : la discussion continue dans une conversation privée (page Messages). */
+.my-support-conv { display: block; margin-top: 2px; color: var(--sand); font-weight: 600; }
+.my-support-convbox { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border: 1px solid var(--border); border-left: 3px solid var(--sand); border-radius: var(--radius-sm); background: var(--surface-2); }
+.my-support-convbox p { margin: 0; flex: 1 1 260px; min-width: 0; font-size: 14px; }

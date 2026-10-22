@@ -538,6 +538,51 @@ export function createClient() {
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non. Première définition de hg_staff_directory : celle-ci répond.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       // Liste des membres : les fantômes n'y figurent pas (ils ne sont pas dans DB.hg_profiles).
+      // Messagerie minimale (scénario S.conversations, S.convMembers, S.messages) : liste, fil, lecture, envoi.
+      if (fn === 'hg_my_conversations') {
+        const me = uidNow();
+        const mine = (DB.hg_conversations || []).filter((c) => (S.convMembers || []).some((m) => m.conversation_id === c.id && m.user_id === me));
+        return { data: mine.map((c) => {
+          const msgs = (DB.hg_messages || []).filter((x) => x.conversation_id === c.id);
+          const last = msgs[msgs.length - 1];
+          const other = (S.convMembers || []).find((m) => m.conversation_id === c.id && m.user_id !== me)?.user_id || null;
+          return { id: c.id, kind: c.kind, title: c.kind === 'support' ? c.title : (DB.hg_profiles.find((p) => p.id === other)?.pseudo || 'Conversation'),
+            other_id: other, last_message_at: c.last_message_at, last_body: last?.body ?? null, last_mine: last ? last.sender_id === me : null, unread: 0 };
+        }), error: null };
+      }
+      if (fn === 'hg_get_messages') {
+        const me = uidNow();
+        return { data: (DB.hg_messages || []).filter((x) => x.conversation_id === args.p_conv && x.id > (args.p_after || 0))
+          .map((x) => ({ id: x.id, mine: x.sender_id === me, sender_label: x.sender_id === me ? 'Moi' : (DB.hg_profiles.find((p) => p.id === x.sender_id)?.pseudo || 'Ancien membre'), body: x.body, created_at: x.created_at })), error: null };
+      }
+      if (fn === 'hg_mark_read') return { data: null, error: null };
+      if (fn === 'hg_send_message') {
+        const id = 1 + Math.max(0, ...(DB.hg_messages || []).map((x) => x.id || 0));
+        DB.hg_messages.push({ id, conversation_id: args.p_conv, sender_id: uidNow(), body: args.p_body, created_at: new Date().toISOString() });
+        return { data: id, error: null };
+      }
+      if (fn === 'hg_support_summary') {
+        const c = (DB.hg_conversations || []).find((x) => x.id === args.p_conv);
+        if (!c || c.kind !== 'support') return { data: null, error: null };
+        const sup = (DB.hg_support || []).find((x) => x.id === c.support_id);
+        if (!sup) return { data: { subject: c.title, missing: true }, error: null };
+        return { data: { support_id: sup.id, subject: sup.subject, message: sup.message, created_at: sup.created_at, author: sup.pseudo,
+          status: sup.status === 'traitee' ? 'traitee' : sup.taken_by ? 'encours' : 'ouverte',
+          taken_by: DB.hg_profiles.find((p) => p.id === sup.taken_by)?.pseudo || null, taken_at: sup.taken_at }, error: null };
+      }
+      // Prise en charge d'une demande (migration 066) : en cours ; conversation privée pour un membre inscrit.
+      if (fn === 'hg_support_take') {
+        const sup = (DB.hg_support || []).find((x) => x.id === args.p_support);
+        if (!sup) return { data: null, error: { message: 'Demande introuvable' } };
+        if (sup.status !== 'traitee') { sup.taken_by = sup.taken_by || ME; sup.taken_at = sup.taken_at || new Date().toISOString(); }
+        sup.updated_at = new Date().toISOString();
+        if (!sup.user_id) return { data: null, error: null };
+        if (!sup.conversation_id) {
+          sup.conversation_id = 'conv-' + sup.id;
+          DB.hg_conversations.push({ id: sup.conversation_id, kind: 'support', title: sup.subject, support_id: sup.id, created_at: new Date().toISOString(), last_message_at: new Date().toISOString() });
+        }
+        return { data: sup.conversation_id, error: null };
+      }
       if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
       // Conversations du scénario (S.convs).
       if (fn === 'hg_admin_conversations') return { data: S.convs || [], error: null };

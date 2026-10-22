@@ -25,6 +25,7 @@ const I = {
   mask: svg('mask2', { size: 20, stroke: 1.8 }),
   chat: svg('chat', { size: 28, stroke: 1.6 }),
   lock: svg('lock2', { size: 14, stroke: 2 }),
+  help: svg('info', { size: 14, stroke: 2 }),
 };
 
 /* ---------- État ---------- */
@@ -48,6 +49,8 @@ const memberOf = (id) => S.members.get(id) || null;
 const convOf = (id) => S.convs.find((c) => c.id === id) || null;
 /** Côté Secret Santa : 'target' = je suis la cible (mon Santa est anonyme), 'santa' = je suis le Santa (je reste anonyme). */
 function santaSide(c) { return c?.kind === 'santa' ? (c.other_id ? 'santa' : 'target') : null; }
+/** Vrai pour une conversation d'assistance (ouverte quand l'admin ou le Staff prend en charge une demande). */
+const isSupport = (c) => c?.kind === 'support';
 /** Joue un son de notification (chargé à la demande, sans bloquer la page). */
 function playSound(name) { import('./sound.js').then((m) => m.playSound?.(name)).catch(() => {}); }
 /** Met à jour le compteur de messages non lus dans l'en-tête ; silencieux si la fonction n'existe pas. */
@@ -193,6 +196,7 @@ function convAvatar(c, size = 44) {
   const side = santaSide(c);
   if (side === 'target') return `<span class="msg-av msg-av-santa" style="width:${size}px;height:${size}px" aria-hidden="true">${I.mask}</span>`;
   const m = memberOf(c.other_id) || { pseudo: c.title };
+  if (isSupport(c)) return `<span class="msg-av-wrap">${avatarHtml(m, size)}<span class="msg-av-badge is-support" aria-hidden="true">${I.help}</span></span>`;
   return side === 'santa'
     ? `<span class="msg-av-wrap">${avatarHtml(m, size)}<span class="msg-av-badge" aria-hidden="true">${I.mask}</span></span>`
     : avatarHtml(m, size);
@@ -208,7 +212,8 @@ function renderConvs() {
     const side = santaSide(c);
     const unread = c.id === S.current ? 0 : (c.unread || 0);
     const preview = c.last_body ? `${c.last_mine ? 'Toi : ' : ''}${c.last_body}` : 'Pas encore de message';
-    const tag = side === 'target' ? '<span class="msg-tag">Anonyme</span>' : side === 'santa' ? '<span class="msg-tag">Tu es son Santa</span>' : '';
+    const tag = side === 'target' ? '<span class="msg-tag">Anonyme</span>' : side === 'santa' ? '<span class="msg-tag">Tu es son Santa</span>'
+      : isSupport(c) ? '<span class="msg-tag is-support">Assistance</span>' : '';
     return `<li>
       <button type="button" class="msg-conv${side ? ' is-santa' : ''}${unread ? ' is-unread' : ''}" data-conv="${esc(c.id)}"${c.id === S.current ? ' aria-current="true"' : ''}>
         ${convAvatar(c)}
@@ -233,6 +238,7 @@ function threadHeadHtml(c) {
   const side = santaSide(c);
   const sub = side === 'target' ? 'Secret Santa · son identité reste secrète jusqu’à la révélation'
     : side === 'santa' ? 'Secret Santa · tu apparais comme « Ton Santa »'
+    : isSupport(c) ? 'Assistance · conversation privée avec le Staff'
     : 'Conversation privée';
   return `
     <header class="msg-thread-head${side ? ' is-santa' : ''}">
@@ -252,9 +258,11 @@ function threadHeadHtml(c) {
 function renderThreadShell(c) {
   const main = $('#msg-main');
   const side = santaSide(c);
-  const ph = side === 'target' ? 'Écris à ton Santa…' : side === 'santa' ? `Écris à ${c.title.replace(/^Ta cible : /, '')} (anonyme)…` : `Écris à ${c.title}…`;
+  const ph = side === 'target' ? 'Écris à ton Santa…' : side === 'santa' ? `Écris à ${c.title.replace(/^Ta cible : /, '')} (anonyme)…`
+    : isSupport(c) ? 'Écris ta réponse…' : `Écris à ${c.title}…`;
   main.innerHTML = `
     ${threadHeadHtml(c)}
+    ${isSupport(c) ? '<section class="msg-support-sum" id="msg-support-sum" aria-label="Résumé de la demande d’assistance"><p class="msg-support-load">Chargement de la demande…</p></section>' : ''}
     <div class="msg-thread" id="msg-thread" role="log" aria-live="polite" aria-relevant="additions" aria-label="Messages" tabindex="0">
       <div class="msg-loading" role="status"><span class="msg-spinner" aria-hidden="true"></span> Chargement…</div>
     </div>
@@ -269,6 +277,7 @@ function renderThreadShell(c) {
       </div>
     </form>`;
   $('#msg-back').addEventListener('click', backToList);
+  if (isSupport(c)) loadSupportSummary(c.id);
   const ta = $('#msg-input');
   ta.addEventListener('input', onInput);
   ta.addEventListener('keydown', (e) => {
@@ -276,6 +285,41 @@ function renderThreadShell(c) {
   });
   $('#msg-compose').addEventListener('submit', (e) => { e.preventDefault(); send(); });
 }
+/* ---------- Résumé d'une demande d'assistance (en haut de la conversation) ---------- */
+/** Libellés et tons des statuts d'une demande d'assistance. */
+const SUPPORT_STATE = { ouverte: ['Ouverte', 'is-open'], encours: ['En cours', 'is-progress'], traitee: ['Traitée', 'is-done'] };
+const sumDateFmt = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+/**
+ * Charge (hg_support_summary) et affiche le résumé de la demande : sujet, statut, auteur, date et message d'origine.
+ * Un long message est replié (« Lire toute la demande »).
+ * @param {string} conv identifiant de la conversation d'assistance
+ */
+async function loadSupportSummary(conv) {
+  const box = $('#msg-support-sum'); if (!box) return;
+  let d;
+  try {
+    const { data, error } = await sb.rpc('hg_support_summary', { p_conv: conv });
+    if (error) throw error;
+    d = data;
+  } catch (e) {
+    if (S.current === conv) box.innerHTML = `<p class="msg-support-load">Résumé indisponible : ${esc(errMsg(e))}</p>`;
+    return;
+  }
+  if (S.current !== conv || !$('#msg-support-sum')) return;
+  if (!d || d.missing) { box.innerHTML = `<p class="msg-support-load">La demande d’origine n’existe plus.</p>`; return; }
+  const [label, tone] = SUPPORT_STATE[d.status] || SUPPORT_STATE.ouverte;
+  const msg = String(d.message || '');
+  const long = msg.length > 280;
+  const by = d.taken_by ? ` · prise en charge par ${esc(d.taken_by)}` : '';
+  box.innerHTML = `
+    <div class="msg-support-top"><span class="msg-support-eyebrow">${I.help} Demande d’assistance</span><span class="msg-support-state ${tone}">${esc(label)}</span></div>
+    <h3 class="msg-support-subject">${esc(d.subject || '')}</h3>
+    <p class="msg-support-meta">Envoyée par ${esc(d.author || 'un membre')} le ${esc(sumDateFmt.format(new Date(d.created_at)))}${by}</p>
+    ${long
+      ? `<details class="msg-support-msg"><summary><span class="msg-support-text">${esc(msg.slice(0, 260))}…</span><span class="msg-support-more">Lire toute la demande</span></summary><p class="msg-support-text">${esc(msg)}</p></details>`
+      : `<p class="msg-support-text">${esc(msg)}</p>`}`;
+}
+
 /** Ajuste la hauteur de la zone de saisie, le compteur de caractères, et l'état du bouton d'envoi. */
 function onInput() {
   const ta = $('#msg-input'); if (!ta) return;

@@ -185,7 +185,7 @@ async function loadMine() {
   $('#my-support-error').hidden = true;
   try {
     const [req, names] = await Promise.all([
-      sb.from('hg_support').select('id, subject, message, status, taken_by, created_at, updated_at').eq('user_id', me.id),
+      sb.from('hg_support').select('id, subject, message, status, taken_by, created_at, updated_at, conversation_id').eq('user_id', me.id),
       sb.rpc('hg_members'),
     ]);
     if (req.error) throw req.error;
@@ -201,6 +201,7 @@ async function loadMine() {
   mineList.innerHTML = mineItems.map((d) => `<li>
       <button type="button" class="my-support-row" data-id="${esc(d.id)}">
         <span class="my-support-top"><span class="my-support-name">${esc(d.subject)}</span>${pill(d)}</span>
+        ${d.conversation_id ? '<span class="small my-support-conv">Discussion ouverte dans tes Messages</span>' : ''}
         <time class="small muted" datetime="${esc(new Date(d.created_at).toISOString())}">${esc(fmtDateTime(d.created_at))}</time>
       </button>
     </li>`).join('');
@@ -220,6 +221,11 @@ async function openMine(id) {
   $('#my-support-meta').innerHTML = `${esc(fmtDateTime(d.created_at))} · ${pill(d)}`;
   const thread = $('#my-support-thread');
   thread.innerHTML = `<div class="my-msg is-me"><div class="my-meta">Toi · ${esc(fmtDateTime(d.created_at))}</div><div class="my-bubble">${esc(d.message ?? '')}</div></div>`;
+  // Prise en charge : la discussion avec le Staff continue dans une conversation privée (page Messages).
+  if (d.conversation_id) {
+    thread.insertAdjacentHTML('afterbegin', `<div class="my-support-convbox"><p>Ta demande a été prise en charge : la discussion se passe dans une conversation privée avec le Staff.</p>
+      <a class="btn btn-primary" href="messages.html?c=${encodeURIComponent(d.conversation_id)}">Ouvrir la conversation</a></div>`);
+  }
   try {
     const res = await sb.from('hg_support_replies').select('id, author_id, body, created_at, internal')
       .eq('support_id', id).eq('internal', false).order('created_at');

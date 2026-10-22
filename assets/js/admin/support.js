@@ -3,6 +3,8 @@
 // Trois états affichés : « Ouverte » (statut ouverte, personne n'a pris la demande), « En cours » (statut ouverte
 // avec taken_by), « Traitée ». Non lu = read_at nul, posé à l'ouverture. Le fil mêle le message initial, la prise en
 // charge (séparateur), les réponses publiques (visibles par le membre) et les notes internes (panel seulement).
+// Prise en charge d'un membre inscrit : hg_support_take ouvre une conversation privée (page Messages) entre le Staff
+// et le membre, nommée d'après le sujet, avec le résumé de la demande en haut (migration 066).
 // Route : #communication/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderSupport). Dépend de core.js, ui-confirm.js, state.js, loaders.js,
 // overview.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
@@ -110,6 +112,7 @@ const MSG_STATE = { ouverte: 'Demande remise en file', encours: 'Demande prise e
 async function setState(id, target) {
   const s = find(id);
   if (!s || stateOf(s).id === target) return;
+  if (target === 'encours') { await takeCharge(id); return; }
   const now = new Date().toISOString();
   let patch;
   if (target === 'traitee') patch = { status: 'traitee', updated_at: now };
@@ -126,6 +129,37 @@ async function setState(id, target) {
   renderSupport();
   renderStats();
   toast(MSG_STATE[target], 'ok');
+}
+
+/** Adresse de la conversation privée d'une demande, dans la page Messages. */
+const convUrl = (conv) => `messages.html?c=${encodeURIComponent(conv)}`;
+
+/**
+ * Prend la demande en charge (hg_support_take) : elle passe « en cours » et, pour un membre inscrit, une conversation
+ * privée s'ouvre entre le Staff et le membre (un premier message le prévient). Visiteur : pas de conversation possible.
+ * @param {string} id Identifiant de la demande.
+ * @param {{open?: boolean}} [opts] open : ouvre la conversation dans la page Messages une fois créée.
+ */
+async function takeCharge(id, { open = false } = {}) {
+  const s = find(id);
+  if (!s) return;
+  let conv;
+  try {
+    const { data, error } = await sb.rpc('hg_support_take', { p_support: id });
+    if (error) throw error;
+    conv = data || null;
+  } catch (e) {
+    toast(errMsg(e), 'error');
+    renderSupport();
+    return;
+  }
+  Object.assign(s, { taken_by: s.taken_by || S.meId, taken_at: s.taken_at || new Date().toISOString(),
+    updated_at: new Date().toISOString(), ...(conv ? { conversation_id: conv } : {}) });
+  renderSupport();
+  renderStats();
+  if (!conv) { toast('Demande prise en charge. C\'est un visiteur sans compte : réponds-lui par son contact.', 'ok'); return; }
+  if (open) { location.href = convUrl(conv); return; }
+  toast('Demande prise en charge : une conversation privée est ouverte avec le membre (page Messages).', 'ok');
 }
 
 /**
@@ -189,6 +223,9 @@ function paintDetail() {
   const head = document.createElement('div');
   const actions = [];
   if (!s.taken_by && cur.id !== 'traitee') actions.push({ label: 'Prendre en charge', onClick: () => setState(id, 'encours') });
+  // Conversation privée avec le membre : l'ouvrir (le Staff la rejoint s'il n'en fait pas partie), ou la créer.
+  if (s.conversation_id) actions.push({ label: 'Ouvrir la conversation', onClick: () => takeCharge(id, { open: true }) });
+  else if (s.user_id && s.taken_by) actions.push({ label: 'Démarrer une conversation', onClick: () => takeCharge(id, { open: true }) });
   if (s.contact) actions.push({ label: 'Copier le contact', onClick: () => copyText(s.contact) });
   if (badgeEligible(s)) actions.push({ label: `Badge ${badgeName('chasseur_bugs')}`, onClick: () => offerBadge(find(id)) });
   renderDetailHeader(head, {
@@ -204,19 +241,23 @@ function paintDetail() {
   });
 
   // Fil : gardé tant qu'on reste sur la même demande (le brouillon de réponse survit aux mises à jour)
-  if (!V.thread || V.threadFor !== id) {
+  // Clé du fil : la demande, et si elle a une conversation privée (la mention sous la zone de réponse change alors).
+  const threadKey = `${id}:${s.conversation_id ? 'conv' : ''}`;
+  if (!V.thread || V.threadFor !== threadKey) {
     V.thread?.destroy();
     V.threadEl = document.createElement('div');
     V.thread = createThread(V.threadEl, {
       label: 'Fil de la demande',
       me: S.meId,
       placeholder: `Répondre à ${m.pseudo}…`,
-      hint: 'Le membre voit tes réponses dans Assistance › Mes demandes. Les notes internes restent dans le panel.',
+      hint: s.conversation_id
+        ? 'La discussion avec le membre se fait dans sa conversation privée (bouton « Ouvrir la conversation »). Les notes internes restent dans le panel.'
+        : 'Le membre voit tes réponses dans Assistance › Mes demandes. Les notes internes restent dans le panel.',
       onSend: (text) => sendReply(id, text, false),
       onNote: (text) => sendReply(id, text, true),
       messages: [],
     });
-    V.threadFor = id;
+    V.threadFor = threadKey;
   }
   V.thread.update(threadMessages(s, m));
   host.replaceChildren(head, V.threadEl);
