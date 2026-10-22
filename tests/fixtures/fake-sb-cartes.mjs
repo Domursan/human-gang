@@ -108,6 +108,22 @@ window.__DB = DB; window.__LOG = [];
     DB.hg_card_copies.push(cpa(101,'C1'), cpa(102,'C1'), cpa(103,'C5'), cpa(104,'C8', { serial: 3 }), cpa(105,'C13'), cpa(106,'C12'), cpa(107,'C12'), cpa(108,'C9', { shiny: true }),
       { id: 12, card_id: 'C13', owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
   }
+  // Scénario « suggest » (parcours-echanges-suggeres.cjs) : échanges possibles.
+  //  - moi : souhaits C4 et C1 ; doublons C1 (x3), C3 (x2), C5 (x2) ;
+  //  - Alice : C1 x2 (un doublon que je souhaite) et souhaits C1, C5 (mes doublons) => échange gagnant-gagnant ;
+  //  - Bruno : C4 x2 (un doublon que je souhaite) et aucun souhait ;
+  //  - Chloé : souhait C3 (un de mes doublons), rien à offrir ;
+  //  - David (fantôme) : souhaite C3 mais n'apparaît jamais.
+  if (S.suggest) {
+    const cpo = (id, card, owner, extra = {}) => ({ id, card_id: card, owner_id: owner, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
+    DB.hg_card_copies.push(cpo(101, 'C1', U(2)), cpo(102, 'C1', U(2)), cpo(201, 'C4', U(3)), cpo(202, 'C4', U(3)));
+    DB.hg_card_wishlist.push({ user_id: ME, card_id: 'C1', created_at: iso(-1) },
+      { user_id: U(2), card_id: 'C1', created_at: iso(-1) }, { user_id: U(2), card_id: 'C5', created_at: iso(-1) },
+      { user_id: U(4), card_id: 'C3', created_at: iso(-1) });
+    // David : fantôme, il ne doit pas apparaître dans les suggestions.
+    DB.hg_profiles.find((p) => p.id === U(5)).is_ghost = true;
+    DB.hg_card_wishlist.push({ user_id: U(5), card_id: 'C3', created_at: iso(-1) });
+  }
   // Journal initial des Paillettes ; le journal du bas du bloc le remplace.
   DB.hg_wallet_log = [{ user_id: ME, delta: 20, reason: 'quotidien', created_at: iso(-1) }, { user_id: ME, delta: -100, reason: 'booster', created_at: iso(-3) }, { user_id: ME, delta: 15, reason: 'reponse_sortie', created_at: iso(-5) }];
   // Portefeuille du membre connecté : Paillettes (S.bal), pity (S.pity), cadeaux (S.gift).
@@ -131,6 +147,53 @@ window.__CARDS = { config: { booster_price: 100, booster_size: 5, free_booster_h
 
 // Compteur utilisé pour produire des identifiants distincts.
 let seq = 0;
+/**
+ * Suggestions d'échanges calculées comme la RPC hg_trade_suggestions (même règle) : membres actifs, doublons
+ * vivants, exemplaire libre le plus ancien. Renvoie le même format que la RPC (user_id, want, give, both…).
+ * @returns {object[]} lignes triées : deux sens d'abord, puis nombre de cartes, puis pseudo
+ */
+function suggestionsFromDb() {
+  const me = ME;
+  const members = new Set(DB.hg_profiles.filter((p) => !p.is_ghost).map((p) => p.id));
+  const ok = (c) => { const k = DB.hg_cards.find((x) => x.id === c.card_id); return !!k && k.active !== false && !!k.tradeable; };
+  const live = DB.hg_card_copies.filter((c) => !c.recycled_at && ok(c));
+  const wish = new Set(DB.hg_card_wishlist.filter((w) => w.user_id === me).map((w) => w.card_id));
+  // Mes doublons et l'exemplaire libre le plus ancien de chaque carte (ce que je mets dans l'offre).
+  const mine = live.filter((c) => c.owner_id === me);
+  const cnt = new Map(); for (const c of mine) cnt.set(c.card_id, (cnt.get(c.card_id) || 0) + 1);
+  const giveCopy = new Map();
+  for (const c of mine) if ((cnt.get(c.card_id) || 0) >= 2 && c.locked_trade == null && (!giveCopy.has(c.card_id) || Number(c.id) < Number(giveCopy.get(c.card_id)))) giveCopy.set(c.card_id, c.id);
+  // Ce que je demande : doublons des autres pour mes souhaits, un exemplaire libre par carte.
+  const want = new Map(); const tot = new Map(); const free = new Map();
+  for (const c of live) {
+    if (c.owner_id === me || !members.has(c.owner_id) || !wish.has(c.card_id)) continue;
+    const k = c.owner_id + '|' + c.card_id;
+    tot.set(k, (tot.get(k) || 0) + 1);
+    if (c.locked_trade == null && (!free.has(k) || Number(c.id) < Number(free.get(k)))) free.set(k, c.id);
+  }
+  for (const [k, n] of tot) {
+    if (n < 2 || !free.has(k)) continue;
+    const [uid, card] = k.split('|');
+    if (!want.has(uid)) want.set(uid, []);
+    want.get(uid).push({ card_id: card, copy_id: Number(free.get(k)) });
+  }
+  // Ce qu'ils donnent : leurs souhaits qui tombent sur mes doublons.
+  const give = new Map();
+  for (const w of DB.hg_card_wishlist) {
+    if (w.user_id === me || !members.has(w.user_id) || !giveCopy.has(w.card_id)) continue;
+    if (!give.has(w.user_id)) give.set(w.user_id, []);
+    give.get(w.user_id).push({ card_id: w.card_id, copy_id: Number(giveCopy.get(w.card_id)) });
+  }
+  const uids = new Set([...want.keys(), ...give.keys()]);
+  const rows = [...uids].map((uid) => {
+    const p = DB.hg_profiles.find((x) => x.id === uid);
+    const w = want.get(uid) || [], g = give.get(uid) || [];
+    return { user_id: uid, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, want: w, give: g,
+      both: w.length > 0 && g.length > 0, n_want: w.length, n_give: g.length };
+  });
+  rows.sort((a, b) => Number(b.both) - Number(a.both) || (b.n_want + b.n_give) - (a.n_want + a.n_give) || a.pseudo.localeCompare(b.pseudo, 'fr'));
+  return rows;
+}
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */
 const getv = (r, c) => r[c];
 /* ---------- Requêtes factices (faux .from()) ---------- */
@@ -145,7 +208,8 @@ class Q {
   /** Filtre : la colonne c ne vaut pas v. */
   neq(c, v) { this.f.push((r) => getv(r, c) !== v); return this; }
   /** Filtre : la colonne c est dans la liste v. */
-  in(c, v) { this.f.push((r) => v.includes(getv(r, c))); return this; }
+  // Comparaison en texte : PostgREST accepte les identifiants en chaîne (ex. copy_id numériques lus en « in »).
+  in(c, v) { const set = new Set(v.map(String)); this.f.push((r) => set.has(String(getv(r, c)))); return this; }
   /** Filtre : la colonne c vaut exactement v (null compris). */
   is(c, v) { this.f.push((r) => (getv(r, c) ?? null) === v); return this; }
   /** Filtre négatif : seul l'opérateur « is » est simulé. */
@@ -254,7 +318,7 @@ export function createClient() {
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       // Liste des membres : les fantômes n'y figurent pas.
-      if (fn === 'hg_members') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
+      if (fn === 'hg_members') return { data: DB.hg_profiles.filter((p) => !p.is_ghost).map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, member_since: p.joined_on || p.created_at })), error: null };
       if (fn === 'hg_admin_accounts') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, email: p.pseudo.toLowerCase() + '@ex.ch', is_admin: p.is_admin, created_at: p.created_at, last_sign_in_at: null })), error: null };
       if (fn === 'hg_claim_invite_link') {
         window.__CLAIMS = (window.__CLAIMS || 0) + 1;
@@ -316,13 +380,25 @@ export function createClient() {
         const best = cards.reduce((b, c) => (ORD.indexOf(c.rarity) > ORD.indexOf(b) ? c.rarity : b), 'commune');
         return { data: { cards, best, demandees: 5, livrees: 5, offert: !!args.p_offert, offerts_restants: w.gift_boosters }, error: null };
       }
+      // Sans le scénario reqRpc, la nouvelle fonction « n'existe pas » : erreur PGRST202 (comme la base sans la migration), pour tester le repli.
+      if (fn === 'hg_open_booster_req') return { data: null, error: { code: 'PGRST202', message: 'Could not find the function public.hg_open_booster_req' } };
       // Ancienne ouverture de booster, sans requête : débite 100 Paillettes sauf booster gratuit, renvoie toujours les cinq mêmes cartes.
       if (fn === 'hg_open_booster') { const w = DB.hg_wallets[0]; if (S.paidFail && !args.p_free) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite').slice(0, 5);
         const cards = pool.map((c, i) => ({ copy_id: 900 + i, card_id: c.id, name: c.name, rarity: i === 4 ? 'legendaire' : c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: i === 2, serial: null, max_copies: null }));
-        // Note : pity_epique est remis à zéro même pour un booster gratuit, car la condition ne couvre que le débit (pas d'accolades).
-        if (!args.p_free) w.paillettes -= 100; w.pity_epique = 0;
+        if (!args.p_free) w.paillettes -= 100;
+        // Comme la vraie fonction (hg_open_booster) : la jauge épique repart à zéro si la meilleure carte est épique ou plus,
+        // sinon elle monte, booster gratuit compris. Ici la meilleure carte est une légendaire.
+        const RK = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
+        w.pity_epique = RK.indexOf('legendaire') >= 3 ? 0 : w.pity_epique + 1;
         return { data: { cards, best: 'legendaire' }, error: null }; }
+      // Échanges possibles (migration 058) : suggestions du membre connecté, dans le format de la RPC réelle.
+      // S.suggestions remplace le résultat (scénario de test) ; S.suggFail simule une fonction absente (repli client).
+      if (fn === 'hg_trade_suggestions') {
+        if (S.suggFail) return { data: null, error: { code: 'PGRST202', message: 'Could not find the function public.hg_trade_suggestions' } };
+        if (S.suggestions) return { data: S.suggestions, error: null };
+        return { data: suggestionsFromDb(), error: null };
+      }
       // Recyclage : ajoute 5 Paillettes par carte et retire les exemplaires ; échec si le scénario recycleFail est fourni.
       if (fn === 'hg_card_recycle') { if (S.recycleFail) return { data: null, error: { message: 'Certaines cartes ne peuvent pas être recyclées (échange en cours ?)' } };
         const ids = args.p_copies; const total = ids.length * 5; DB.hg_wallets[0].paillettes += total; DB.hg_card_copies = DB.hg_card_copies.filter((c) => !ids.includes(c.id)); return { data: total, error: null }; }

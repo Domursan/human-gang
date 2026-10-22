@@ -13,8 +13,8 @@ const LENS_D = 240; // diamètre de la loupe (px)
 const LENS_K = 2.5; // grossissement
 const PRESS_MS = 450; // durée de l'appui long tactile
 const MOVE_TOL = 10; // déplacement toléré pendant l'appui long (px)
-// Couleur d'accent de chaque rareté (utilisée pour le libellé de rareté dans la fiche).
-const TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
+// Couleur d'accent de chaque rareté (utilisée pour le libellé de rareté dans la fiche ; exportée pour la console de cartes.js).
+export const TINT ={ commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
 const X_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const CHEV_L = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 const CHEV_R = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';

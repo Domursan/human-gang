@@ -10,7 +10,7 @@ import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, mo
 import { RARITIES, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
-import { createZoom, ICON_ZOOM } from './cartes-zoom.js';
+import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
@@ -32,8 +32,7 @@ const REASON_LABEL = {
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
   quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
 };
-// Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche »).
-const RARITY_TINT = { commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D' };
+// Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche ») : table partagée avec cartes-zoom.js (RARITY_TINT = TINT).
 // Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
 const tintOf = (r) => RARITY_TINT[r] || '#FBD32D';
 // Ouverture groupée : nombre de boosters payants ouverts d'un coup, et délai entre deux cartes révélées.
@@ -742,7 +741,8 @@ async function rpcOpenBooster(free, reqId, offert = false) {
     return data;
   }
   let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: reqId });
-  if ((error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) || (!error && data == null)) {
+  // Repli sur l'ancienne fonction seulement si la nouvelle n'existe pas (PGRST202) : une réponse « null » sans erreur n'en est pas une.
+  if (error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) {
     ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
   }
   if (error) throw error;

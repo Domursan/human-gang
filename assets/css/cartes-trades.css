@@ -178,3 +178,14 @@
 
 /* Mouvement réduit : pas d'animation ajoutée ici */
 @media (prefers-reduced-motion: reduce) { .trd * { transition: none !important; } }
+
+/* Échanges possibles (bloc au-dessus des onglets) : une carte par membre suggéré, vignettes par côté. */
+.trd-sugg:empty { display: none; }
+.trd-sugg-box { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.trd-sugg-box h2 { margin: 0; font-size: 18px; }
+.trd-sugg-list { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.trd-sugg-item { display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); min-width: 0; }
+.trd-sugg-item.is-both { padding-left: 12px; border-left: 3px solid var(--accent, #FCA301); }
+.trd-sugg-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; }
+.trd-sugg-part { min-width: 0; }
+.trd-sugg-item .btn-row { margin-top: 2px; }
