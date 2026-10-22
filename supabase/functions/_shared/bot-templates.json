@@ -90,6 +90,10 @@
     "card_gift_admin_dm": {
       "title": "🎁 {admin} t'a offert « {carte} » ({detail}){quantite}",
       "body": "Elle rejoint ta collection. Va voir sur le site."
+    },
+    "card_drop_announce": {
+      "title": "Une carte sauvage est apparue !",
+      "body": "**{carte}** ({rarete}) traîne sur le site : {quantite} à attraper jusqu'à {fin}.\n\nConnecte-toi vite, les premiers qui cliquent dessus la gagnent !"
     }
   },
   "meta": {
@@ -304,6 +308,18 @@
         "carte": { "label": "Nom de la carte", "example": "Le Four à raclette" },
         "detail": { "label": "Rareté, et « brillante » si la carte l'est", "example": "légendaire, brillante" },
         "quantite": { "label": "« ×N » si plusieurs exemplaires (sinon vide)", "example": " ×3" }
+      }
+    },
+    "card_drop_announce": {
+      "group": "cards", "label": "Drop lancé", "target": "Salon d'annonces", "color": "#E0A93B",
+      "description": "Publié dans le salon d'annonces quand l'admin (ou un Staff avec la permission Cartes) lance un drop avec l'option « Annoncer sur Discord ». L'image de la carte est ajoutée si elle est en https. Désactivable dans Bot Discord, activé par défaut.",
+      "fields": [["Exemplaires", "{quantite}"], ["Jusqu'à", "{fin}"]],
+      "vars": {
+        "carte": { "label": "Nom de la carte (avec « brillante » si besoin)", "example": "Le Four à raclette (brillante)" },
+        "rarete": { "label": "Rareté", "example": "Légendaire" },
+        "quantite": { "label": "Nombre d'exemplaires à attraper", "example": "3 exemplaires" },
+        "fin": { "label": "Heure de fin du drop", "example": "jeudi 22 octobre à 20:30" },
+        "lien": { "label": "Lien vers l'accueil du site", "example": "https://humane-gang.example/accueil.html" }
       }
     }
   }

@@ -3,11 +3,12 @@
 // les premiers qui cliquent la gagnent. Un membre n'en gagne qu'une par drop.
 // Tables hg_card_drops / hg_card_drop_claims (lecture : permission cartes). Écritures uniquement par RPC :
 // hg_drop_create (lancer) et hg_drop_stop (arrêter). Affichage côté membre : assets/js/card-drops.js.
-// Dépendances : core.js (sb, toast, errMsg, esc, $), cartes-ui.js (rarityLabel), ui-confirm.js, admin/ui/drawer.js,
+// Annonce Discord facultative : hg-notify, événement card_drop (case « Annoncer sur Discord »).
+// Dépendances : core.js (sb, toast, errMsg, esc, $, notify), cartes-ui.js (rarityLabel), ui-confirm.js, admin/ui/drawer.js,
 // admin/live.js (écoute temps réel), helpers.js (fetchAll, act, fmtWhen, thumb).
 // Exporte : mountDropsSection (monte la section, appelé par admin-cards.js).
 // =====================================================================
-import { sb, toast, errMsg, esc, $ } from '../core.js';
+import { sb, toast, errMsg, esc, $, notify } from '../core.js';
 import { rarityLabel } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
@@ -168,6 +169,10 @@ function openDropForm() {
       <div class="field adc-wide">
         <label class="switch"><input type="checkbox" id="drop-announce" checked><span class="switch-ui" aria-hidden="true"></span><span>Annoncer dans le fil d'actualité</span></label>
       </div>
+      <div class="field adc-wide">
+        <label class="switch"><input type="checkbox" id="drop-discord" checked><span class="switch-ui" aria-hidden="true"></span><span>Annoncer sur Discord</span></label>
+        <p class="small muted">Le bot poste « Une carte sauvage est apparue ! » dans le salon (réglages dans Communication › Bot Discord).</p>
+      </div>
     </div>`,
     onSubmit: async (form) => {
       const card = form.querySelector('#drop-card').value;
@@ -178,7 +183,8 @@ function openDropForm() {
       const { qmax, dmax } = D.limits;
       if (!Number.isInteger(qty) || qty < 1 || qty > qmax) throw new Error(`Le nombre d'exemplaires doit être entre 1 et ${fmtN(qmax)}.`);
       if (!Number.isInteger(minutes) || minutes < 1 || minutes > dmax) throw new Error(`La durée doit être entre 1 et ${fmtN(dmax)} minutes.`);
-      const { error } = await sb.rpc('hg_drop_create', {
+      const discord = form.querySelector('#drop-discord').checked;
+      const { data: dropId, error } = await sb.rpc('hg_drop_create', {
         p_card: card,
         p_shiny: form.querySelector('#drop-shiny').checked,
         p_quantity: qty,
@@ -187,6 +193,8 @@ function openDropForm() {
       });
       if (error) throw error;
       toast('Drop lancé : la carte apparaît sur le site.', 'ok');
+      // Annonce Discord : ne bloque jamais le lancement (notify signale lui-même une erreur à l'admin).
+      if (discord && typeof dropId === 'string') notify('card_drop', { drop_id: dropId });
       await reload();
       return true;
     },

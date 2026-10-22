@@ -58,6 +58,8 @@ const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.ge
   check(created.length === 1, 'admin : un seul appel hg_drop_create');
   check(created[0]?.p_card === CARD && created[0]?.p_shiny === true && created[0]?.p_quantity === 3 && created[0]?.p_minutes === 20 && created[0]?.p_announce === true,
     'admin : carte, brillante, 3 exemplaires, 20 minutes, annonce');
+  const annonces = await p.evaluate(() => (window.__LOG || []).filter((e) => e[0] === 'fn' && e[1] === 'hg-notify' && e[2]?.event === 'card_drop').map((e) => e[2]));
+  check(annonces.length === 1 && /^d0000000-/.test(annonces[0]?.drop_id || ''), 'admin : annonce Discord demandée (hg-notify card_drop avec l\'identifiant du drop)');
   check((await p.textContent('#drop-list')).includes('En cours'), 'admin : le drop apparaît comme en cours');
   check((await p.textContent('#drop-list')).includes('Le Paleto'), 'admin : nom de la carte dans la liste');
   check((await p.textContent('#drop-list')).includes('0 / 3'), 'admin : 0 / 3 attrapés au lancement');
@@ -70,6 +72,17 @@ const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.ge
   const stops = await rpcCalls(p, 'hg_drop_stop');
   check(stops.length === 1 && typeof stops[0]?.p_drop === 'string', 'admin : arrêt → hg_drop_stop appelée une fois');
   check((await p.textContent('#drop-list')).includes('Terminé'), 'admin : le drop arrêté est Terminé');
+  // Drop sans annonce Discord : la case décochée, aucun appel de hg-notify
+  await p.click('[data-action="drop-new"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #drop-card', { timeout: 5000 });
+  await p.selectOption('#drop-card', { index: 0 });
+  await p.fill('#drop-qty', '1');
+  await p.click('dialog.ui-drawer[open] label:has(#drop-discord)');
+  await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
+  await p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
+  await sleep(300);
+  check((await rpcCalls(p, 'hg_drop_create')).length === 2, 'admin : second drop lancé');
+  check((await p.evaluate(() => (window.__LOG || []).filter((e) => e[0] === 'fn' && e[2]?.event === 'card_drop').length)) === 1, 'admin : « Annoncer sur Discord » décoché → pas d\'annonce');
   check(!p.errs.length, 'admin : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 

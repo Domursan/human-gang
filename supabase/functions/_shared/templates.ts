@@ -13,7 +13,8 @@ export type TemplateKey =
   | 'ss_draw_announce' | 'ss_draw_dm' | 'ss_gift_sent' | 'ss_gift_received' | 'irl_new'
   | 'message_new' | 'message_new_santa' | 'birthday_dm' | 'birthday_announce' | 'support_new' | 'bot_test'
   | 'dyn_start' | 'dyn_end' | 'card_pull_announce' | 'card_trade_announce'
-  | 'irl_reminder' | 'ss_send_reminder' | 'card_wish_dm' | 'trade_offer_dm' | 'card_gift_admin_dm';
+  | 'irl_reminder' | 'ss_send_reminder' | 'card_wish_dm' | 'trade_offer_dm' | 'card_gift_admin_dm'
+  | 'card_drop_announce';
 /** Un modèle : titre et corps. */
 export type Template = { title: string; body: string };
 /** Modèles personnalisés, indexés par clé. Chaque champ est facultatif. */

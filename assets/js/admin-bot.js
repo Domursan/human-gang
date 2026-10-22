@@ -31,6 +31,7 @@ const NOTIFY = [
   ['card_trade', 'Échange conclu', 'annonce dans le salon (désactivée par défaut)'],
   ['trade_offer', 'MP : nouvelle offre d\'échange', 'MP au destinataire d\'une offre ou contre-proposition'],
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
+  ['card_drop', 'Drop lancé', 'annonce dans le salon quand un drop est lancé avec « Annoncer sur Discord »'],
 ];
 // Seules les clés de NOTIFY, pour parcourir les cases à cocher.
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
@@ -38,6 +39,7 @@ const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 const MENTION_TYPES = [
   ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
   ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
+  ['card_drop', 'Drop lancé'],
 ];
 // Modes de mention possibles pour une annonce : aucune, le rôle, ou @everyone.
 const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];
@@ -1351,7 +1353,7 @@ export function mountBotSection(container) {
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = get('bot') ?? S.bot;
       // Notifications activées par défaut ; l'échange conclu reste coupé par défaut. Les choix enregistrés priment.
-      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, ...(S.bot.notify || {}) };
+      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, card_drop: true, ...(S.bot.notify || {}) };
       S.support = get('support') ?? {};
       S.planning = get('planning') ?? {};
       const c = get('bot_templates');

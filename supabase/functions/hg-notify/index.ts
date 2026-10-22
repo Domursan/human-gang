@@ -43,9 +43,13 @@
 //                    (exemplaire source 'admin' de cette carte pour ce membre) doit avoir été créé il y a moins de 15 min.
 //                    Nom, rareté, brillance et image sont lus en base ; count est borné par les exemplaires trouvés.
 //                    Désactivable (bot.notify.card_gift_admin, activé par défaut).
-// Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade) : bot.mentions.<type> = none | role | everyone,
+//   card_drop        { drop_id: uuid } admin ou Staff « cartes », juste après hg_drop_create → annonce « carte sauvage » dans le
+//                    salon (carte, rareté, brillance, exemplaires, heure de fin, image si https). Drop créé il y a moins de
+//                    15 min et encore en cours ; une seule annonce par drop (réservation discord_announced_at, migration 064).
+//                    Désactivable (bot.notify.card_drop, activé par défaut).
+// Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade, card_drop) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
-// Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade) : bot.channels.<type>, sinon le salon d'annonces
+// Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade, card_drop) : bot.channels.<type>, sinon le salon d'annonces
 // (voir ../_shared/channels.ts). Les MP et l'annonce manuelle (admin_dm) ne changent pas.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
@@ -80,7 +84,7 @@ type Bot = MentionBot & {
   birthday_channel_id?: string | null;
   channels?: Partial<Record<MentionType, string | null>> | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop', boolean>>;
 };
 /** Profil de l'appelant ou d'un destinataire, tel que lu par la fonction. */
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
@@ -741,7 +745,7 @@ const CARD_GIFT_MAX = 100; // exemplaires max par don (comme la RPC)
 /** Noms des raretés en français minuscule, pour la phrase du MP de don. */
 const RARITY_NAME: Record<string, string> = {
   commune: 'commune', peu_commune: 'peu commune', rare: 'rare', epique: 'épique',
-  legendaire: 'légendaire', mythique: 'mythique', identite: 'identité',
+  legendaire: 'légendaire', mythique: 'mythique', identite: 'identité', unique: 'unique',
 };
 /**
  * Droit « cartes » : admin, ou Staff actif avec la permission (même règle que hg_has_perm('cartes') côté base).
@@ -799,6 +803,59 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
     ...(image ? { image: { url: image } } : {}),
   })), `MP don carte ${other.id}`);
   return { dm: ok, count };
+}
+
+/* Drop lancé par l'admin ou le Staff « cartes » (hg_drop_create) : annonce dans le salon, envoyée par le site juste après. */
+/**
+ * Annonce d'un drop (card_drop) : « une carte sauvage est apparue », avec la carte, le nombre d'exemplaires et l'heure de fin.
+ * Tout est lu en base (le client ne fournit que l'identifiant du drop). Une seule annonce par drop.
+ * @param {Profile} me Appelant (admin ou Staff « cartes »).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (drop_id).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403, 404.
+ */
+async function onCardDrop(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  if (!(await canUseCards(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Cartes');
+  if (!isUuid(p.drop_id)) throw new HttpError(400, 'drop_id manquant');
+  if (bot.notify?.card_drop === false) return { skipped: 'désactivé' };
+  const dropChannel = channelFor(bot, 'card_drop');
+  if (!dropChannel) return { skipped: 'aucun salon configuré' };
+  const { data: d } = await db.from('hg_card_drops').select('id, card_id, shiny, quantity, ends_at, created_at, discord_announced_at')
+    .eq('id', p.drop_id).maybeSingle();
+  if (!d) throw new HttpError(404, 'Drop introuvable');
+  if (!recent(d.created_at)) return { skipped: 'drop déjà ancien' };
+  if (new Date(d.ends_at).getTime() <= Date.now()) return { skipped: 'drop terminé' };
+  if (d.discord_announced_at) return { skipped: 'déjà annoncé' };
+  const { data: card } = await db.from('hg_cards').select('name, rarity, image_url').eq('id', d.card_id).maybeSingle();
+  if (!card) throw new HttpError(404, 'Carte introuvable');
+
+  // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
+  const { data: claimed, error: claimErr } = await db.from('hg_card_drops').update({ discord_announced_at: new Date().toISOString() })
+    .eq('id', d.id).is('discord_announced_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà annoncé' };
+
+  const nom = RARITY_NAME[card.rarity] ?? String(card.rarity);
+  const rarete = nom.charAt(0).toUpperCase() + nom.slice(1);
+  const carte = `${truncate(String(card.name), 100)}${d.shiny ? ' (brillante)' : ''}`;
+  const quantite = `${d.quantity} exemplaire${d.quantity > 1 ? 's' : ''}`;
+  const fin = fmtDate(d.ends_at, true) ?? '';
+  const rendered = renderTemplate('card_drop_announce', { carte, rarete, quantite, fin, lien: link('accueil.html') ?? '' }, tpl);
+  // L'image n'est reprise que si elle est en https (Discord ne charge pas les autres).
+  const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
+  const channel = await trySend(() => sendChannel(dropChannel, {
+    ...mentionFor(bot, 'card_drop'),
+    ...embed({
+      ...embedFrom(rendered), url: link('accueil.html'), color: COLOR.card,
+      fields: [{ name: 'Exemplaires', value: quantite, inline: true }, ...(fin ? [{ name: 'Jusqu\'à', value: fin, inline: true }] : [])],
+      ...(image ? { image: { url: image } } : {}),
+    }),
+  }), 'annonce drop');
+  // Échec : on libère la réservation pour qu'un nouvel appel puisse réessayer.
+  if (!channel) await db.from('hg_card_drops').update({ discord_announced_at: null }).eq('id', d.id);
+  return { channel };
 }
 
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
@@ -921,6 +978,7 @@ Deno.serve(async (req) => {
       case 'trade_offer': result = await onTradeOffer(me, bot, payload, tpl); break;
       case 'card_wish': result = await onCardWish(me, bot, payload, tpl); break;
       case 'card_gift_admin': result = await onCardGiftAdmin(me, bot, payload, tpl); break;
+      case 'card_drop': result = await onCardDrop(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

@@ -1,5 +1,5 @@
 // ===== Humane Gang — salons des annonces du bot (partagé par hg-notify, hg-cron, hg-birthdays) =====
-// Rôle : choisir le salon Discord où part une annonce, selon son type (draw, irl, birthday, dyn, card_pull, card_trade).
+// Rôle : choisir le salon Discord où part une annonce, selon son type (draw, irl, birthday, dyn, card_pull, card_trade, card_drop).
 // Réglages (hg_settings.bot) :
 //   channels = { <type>: '<ID de salon>' }   vide ou absent = repli (voir channelFor).
 //   birthday_channel_id                       ancien réglage des anniversaires, lu seulement en repli de channels.birthday.
@@ -26,6 +26,7 @@ export const CHANNEL_LABEL: Record<MentionType, string> = {
   dyn: 'Événements',
   card_pull: 'Belles cartes',
   card_trade: 'Échanges',
+  card_drop: 'Drops de cartes',
 };
 
 /**

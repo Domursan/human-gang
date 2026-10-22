@@ -34,7 +34,7 @@ const testCalls = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'f
     await goto(p, 'communication/bot', '#bot-form');
 
     check(await p.locator('#bot-channels').count() === 1, '(a) section « Salon par type d\'annonce » présente');
-    const types = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade'];
+    const types = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade', 'card_drop'];
     check((await Promise.all(types.map((k) => p.locator(`#bot-chan-${k}`).count()))).every((n) => n === 1), '(a) un champ par type d\'annonce');
     check(await p.isDisabled('#bot-mention-draw'), '(a) sans aucun salon : les mentions sont grisées');
     await p.fill('#bot-chan-draw', ANNONCES);
