@@ -348,8 +348,11 @@ async function showQr(l) {
  * Branche les clics (règles, copier, QR, supprimer), les interrupteurs d'activation et le repli des codes.
  * Appelé une fois au montage : les écouteurs restent attachés à la racine.
  */
+let boundRoot = null; // racine déjà câblée : un nouveau montage ne doit pas doubler les écouteurs
 function bind() {
   const r = L.root;
+  if (!r || boundRoot === r) return;
+  boundRoot = r;
   r.addEventListener('click', (ev) => {
     const edit = ev.target.closest?.('[data-il-rules-edit]');
     if (edit) return openRulesDrawer();
