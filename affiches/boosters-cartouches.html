@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartouches de booster — aperçu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap">
+<link rel="stylesheet" href="../assets/css/cartes.css">
+<link rel="stylesheet" href="../assets/css/cartes-boosters.css">
+<style>
+/* Page d'aperçu autonome : fond sombre, grille de 4 colonnes de cartouches (220 × 290). */
+:root { color-scheme: dark; }
+html, body { margin: 0; background: #0b0a10; }
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #ecebf2; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+.page { width: 1200px; max-width: 100%; margin: 0 auto; padding: 56px 40px 64px; box-sizing: border-box; }
+.page-head { margin: 0 0 44px; }
+.page-title { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: .02em; }
+.page-sub { margin: 8px 0 0; font-size: 14px; color: #a7a3b5; }
+.page-sub code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: #d9d5e6; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 56px 40px; }
+.item { display: flex; flex-direction: column; align-items: center; }
+.item .cart-box { flex: none; }
+.cap { margin-top: 18px; text-align: center; }
+.cap-name { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+.cap-price { margin: 4px 0 0; font-size: 14px; font-weight: 700; color: #ffd84d; font-variant-numeric: tabular-nums; }
+.cap-note { margin: 2px 0 0; font-size: 12px; color: #8f8aa0; }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="page-head">
+    <h1 class="page-title">Cartouches de booster</h1>
+    <p class="page-sub">9 types, une classe chacun sur <code>.cart-box</code> : <code>cart--classique</code>, <code>cart--serie</code>, <code>cart--argente</code>, <code>cart--dore</code>, <code>cart--diamant</code>, <code>cart--quitte</code>, <code>cart--holo</code>, <code>cart--collection</code>, <code>cart--identite</code>.</p>
+  </header>
+
+  <div class="grid">
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--classique" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">BOOSTER CLASSIQUE</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Classique</p><p class="cap-price">100 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--serie" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">SÉRIE 1</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Série</p><p class="cap-price">150 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--argente" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">BOOSTER ARGENTÉ</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Argenté</p><p class="cap-price">250 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--dore" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">BOOSTER DORÉ</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Doré</p><p class="cap-price">350 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--diamant" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">BOOSTER DIAMANT</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Diamant</p><p class="cap-price">500 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--quitte" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">QUITTE OU DOUBLE</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Quitte ou double</p><p class="cap-price">500 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--holo" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">HOLOGRAPHIQUE</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Holographique</p><p class="cap-price">1 000 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--collection" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">COLLECTIONNEUR</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">10 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Collectionneur</p><p class="cap-price">500 ✦</p></figcaption>
+    </figure>
+
+    <figure class="item" style="margin:0">
+      <div class="cart-box cart--identite" aria-hidden="true"><div class="cart-body"></div><div class="cart-notch"></div><div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div><p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">IDENTITÉ</p><div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p></div>
+      <figcaption class="cap"><p class="cap-name">Identité</p><p class="cap-price">10 000 ✦</p><p class="cap-note">Paillettes</p></figcaption>
+    </figure>
+  </div>
+</main>
+</body>
+</html>
