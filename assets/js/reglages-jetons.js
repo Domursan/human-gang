@@ -2,7 +2,7 @@
 // Réglages affichés dans les textes : lecture des valeurs du site et remplacement dans les tutos et les affiches.
 // Une valeur absente, illisible ou invalide donne le repli écrit à côté (la valeur actuelle du site).
 // Dépendances : core/supabase.js (client Supabase). Lectures : RPC hg_card_cfg (réglages du jeu de cartes)
-// et table hg_settings (clés badges, irl, invites, ss : lecture publique ou membre selon la clé, voir migrations 052, 051, 059).
+// et table hg_settings (clés badges, irl, invites, ss, eggs : lecture publique ou membre selon la clé, voir migrations 052, 051, 059, 062).
 // Exporte : chargerReglages, valeur, evaluer, fmt, jetons, appliquerReglages.
 // =====================================================================
 import { sb } from './core/supabase.js';
@@ -10,10 +10,10 @@ import { sb } from './core/supabase.js';
 /* ---------- Sources ---------- */
 // Espaces de noms utilisés dans les jetons : « cartes.<champ> » lit hg_card_cfg(), les autres lisent hg_settings[<clé>].
 // Les clés sont celles de hg_settings ; « cartes » n'est pas une clé (la RPC hg_card_cfg lit hg_settings.cards).
-const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss', 'support'];
+const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss', 'support', 'eggs'];
 
 /** Valeurs lues, par espace de noms : { cartes: {...}, badges: {...}, irl: {...}, invites: {...}, ss: {...} }. Vide tant que non chargées. */
-let lues = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, anciennete: {} };
+let lues = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, eggs: {}, anciennete: {} };
 let chargement = null; // promesse de la lecture (une seule par page)
 
 /** Vrai pour un objet simple (pas un tableau, pas null). */
@@ -36,7 +36,7 @@ const listeEnFrancais = (items) => (items.length < 2 ? items.join('') : `${items
 export function chargerReglages() {
   if (chargement) return chargement;
   chargement = (async () => {
-    const out = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, anciennete: {} };
+    const out = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, eggs: {}, anciennete: {} };
     try {
       const { data, error } = await sb.rpc('hg_card_cfg');
       if (!error && estObjet(data)) out.cartes = data;
