@@ -21,6 +21,7 @@ const KEYS_BASE = {
   cards: { label: 'Économie du jeu de cartes', help: 'Taux de tirage, prix des boosters, récompenses en Paillettes.', managed: '#cartes', managedLabel: 'Cartes, onglet Économie' },
   push_vapid_public: { label: 'Clé publique des notifications (VAPID)', help: 'Clé publique Web Push. Elle doit correspondre à la clé privée de la fonction edge : la modifier casse les notifications des membres.', sensitive: true },
   domursan_owner: { label: 'Propriétaire Domursan', help: 'Identifiant technique du propriétaire de l\'app Domursan.', sensitive: true },
+  quiz: { label: 'Questions du gang', help: 'Récompenses par défaut selon la difficulté des questions. Modifiable dans la section Questions du gang.', managed: '#cartes/questions', managedLabel: 'Questions du gang' },
   admin_initial: { label: 'Administrateur initial', help: 'Trace de l\'administrateur d\'origine du site.', sensitive: true },
 };
 

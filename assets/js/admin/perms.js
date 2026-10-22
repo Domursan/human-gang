@@ -18,7 +18,7 @@ export const SECTION_PERM = {
   sorties: 'evenements',
   souvenirs: 'souvenirs',
   reglages: 'reglages',
-  cartes: 'cartes', drops: 'cartes', defis: 'cartes',
+  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
   idees: 'support', assistance: 'support',
   messagerie: 'messages',
   journal: 'journal',
@@ -59,6 +59,7 @@ export const DOMAINS = [
     { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },
     { id: 'drops', label: 'Drops', section: 'drops' },
     { id: 'defis', label: 'Défis du gang', section: 'defis' },
+    { id: 'questions', label: 'Questions du gang', section: 'quiz' },
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [
     { id: 'assistance', label: 'Assistance', section: 'assistance' },

@@ -1,0 +1,66 @@
+/* Admin : Questions du gang (assets/js/admin-quiz.js). Onglets, filtres, liste, formulaire du tiroir. */
+
+.adq { display: grid; gap: 16px; }
+.adq-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line, #d9d4e6); }
+.adq-tab { min-height: 44px; padding: 8px 14px; border: 0; border-bottom: 3px solid transparent; background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.adq-tab[aria-selected="true"] { border-bottom-color: currentColor; }
+.adq-tab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.adq-panel { display: grid; gap: 16px; }
+.adq-panel[hidden] { display: none; }
+
+.adq-rewards { display: grid; gap: 10px; }
+.adq-rw-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 12px 16px; }
+
+.adq-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; }
+.adq-head p { margin: 0; flex: 1 1 280px; }
+
+.adq-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.adq-filters .field { min-width: 0; flex: 1 1 180px; max-width: 240px; }
+.adq-count { margin: 0 0 6px auto; }
+
+.adq-list { display: grid; gap: 12px; }
+.adq-row { display: grid; gap: 8px; }
+.adq-row-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 8px 12px; }
+.adq-row-title { margin: 0; font-size: 17px; overflow-wrap: anywhere; min-width: 0; flex: 1 1 240px; }
+.adq-pills { gap: 6px; }
+.adq-off { opacity: .75; }
+.adq-secret { background: #d7c6f2; color: #1b1b1b; }
+.adq-meta { margin: 0; }
+.adq-row .btn-row { margin-top: 4px; }
+
+.adq-diff { display: inline-block; margin-right: 6px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #1b1b1b; background: #d9d4e6; }
+.adq-diff-facile { background: #b9e3c4; }
+.adq-diff-moyen { background: #f3e09a; }
+.adq-diff-difficile { background: #f5b98f; }
+.adq-diff-expert { background: #e8a3c0; }
+
+.adq-form { display: grid; gap: 14px; }
+.adq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px 16px; }
+.adq-wide { grid-column: 1 / -1; }
+.adq-check { display: flex; align-items: center; }
+.adq-check label, .adq-check-line { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.adq-check input, .adq-check-line input { width: 22px; height: 22px; flex: none; }
+.adq-zone { min-width: 0; margin: 0; padding: 10px 14px 12px; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 12px; display: grid; gap: 10px; }
+.adq-zone legend { padding: 0 6px; font-weight: 600; }
+
+.adq-choices { display: grid; gap: 8px; }
+.adq-choice { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 8px 10px; }
+.adq-choice-id { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font-weight: 700; font-size: 13px; background: var(--surface-2, #efeaf7); }
+.adq-choice-text { min-width: 0; min-height: 44px; padding: 8px 10px; border-radius: 10px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: transparent; color: inherit; font: inherit; }
+.adq-choice-ok { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; white-space: nowrap; cursor: pointer; }
+.adq-choice-ok input { width: 20px; height: 20px; }
+.adq-vf { display: flex; flex-wrap: wrap; gap: 10px 18px; }
+.adq-vf label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.adq-vf input { width: 20px; height: 20px; }
+.adq-zone textarea { width: 100%; }
+
+.adq-examples { display: grid; gap: 10px; }
+.adq-example { display: grid; gap: 4px; min-height: 44px; padding: 12px 14px; text-align: left; border-radius: 12px; border: 1px solid color-mix(in srgb, currentColor 22%, transparent); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.adq-example:hover, .adq-example:focus-visible { border-color: currentColor; }
+.adq-model-title { font-weight: 700; }
+
+@media (max-width: 520px) {
+  .adq-choice { grid-template-columns: auto minmax(0, 1fr); }
+  .adq-choice-ok, .adq-choice .btn { justify-self: start; }
+  .adq-count { margin: 0; }
+}
