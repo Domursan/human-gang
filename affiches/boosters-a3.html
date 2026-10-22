@@ -118,14 +118,14 @@ h1 .o { color: var(--gold); }
 .foot .web { font-family: var(--display); font-size: 26px; color: var(--gold); text-transform: uppercase; white-space: nowrap; }
 </style>
 </head>
-<body>
+<body data-affiche="boosters">
 <main class="poster" id="poster">
   <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
   <header class="head">
     <div class="brandrow"><img src="../assets/img/logo-512.webp" alt="" aria-hidden="true">Humane Gang</div>
     <h1>Obtenir<br><span class="o">des boosters</span></h1>
-    <div class="accroche">Cinq cartes par booster. Quatre façons de les ouvrir.</div>
+    <div class="accroche"><span data-cfg="cartes.booster_size">5</span> cartes par booster. Quatre façons de les ouvrir.</div>
   </header>
 
   <section class="sec" aria-labelledby="h-src">
@@ -139,11 +139,11 @@ h1 .o { color: var(--gold); }
           <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
           <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
           <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
           <p class="cart-stk">Gratuit du jour</p>
         </div></div>
         <h3>Le booster gratuit</h3>
-        <div class="fig">1 fois<small>toutes les 24 h</small></div>
+        <div class="fig">1 fois<small>toutes les <span data-cfg="cartes.free_booster_hours">24</span> h</small></div>
         <p>Sans Paillettes. Le premier est disponible tout de suite, puis le délai repart à chaque ouverture.</p>
       </article>
 
@@ -154,10 +154,10 @@ h1 .o { color: var(--gold); }
           <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
           <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
           <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
         </div></div>
         <h3>Le booster payant</h3>
-        <div class="fig">100<small>Paillettes le booster</small></div>
+        <div class="fig"><span data-cfg="cartes.booster_price">100</span><small>Paillettes le booster</small></div>
         <p>Ouvre-le quand tu veux, sans délai, si tu as assez de Paillettes.</p>
       </article>
 
@@ -169,25 +169,25 @@ h1 .o { color: var(--gold); }
               <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
               <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
               <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
             </div></div>
           <div class="st back" style="transform:translate(-8px,6px) rotate(-6deg) scale(.55)"><div class="cart-box" aria-hidden="true">
               <div class="cart-body"></div><div class="cart-notch"></div>
               <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
               <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
               <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
             </div></div>
           <div class="st" style="transform:scale(.55)"><div class="cart-box" aria-hidden="true">
               <div class="cart-body"></div><div class="cart-notch"></div>
               <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
               <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
               <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
             </div></div>
         </div>
         <h3>Le lot de 5</h3>
-        <div class="fig">500<small>Paillettes pour 5 boosters</small></div>
+        <div class="fig"><span data-expr="cartes.booster_price*5">500</span><small>Paillettes pour 5 boosters</small></div>
         <p>Cinq boosters payants ouverts d'un coup, avec un récapitulatif à la fin.</p>
       </article>
 
@@ -198,7 +198,7 @@ h1 .o { color: var(--gold); }
           <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
           <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
           <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
         </div></div>
         <h3>Les boosters offerts</h3>
         <div class="fig">N restants<small>affiché sur la page Cartes</small></div>
@@ -217,26 +217,26 @@ h1 .o { color: var(--gold); }
           <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
           <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
           <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot">5 CARTES</p>
+          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
         </div></div>
       </div>
       <div>
         <ul class="facts">
-          <li><b>5</b><span><strong>cartes par booster</strong>, tirées une à une selon les taux ci-dessous.</span></li>
-          <li><b>3 %</b><span><strong>des cartes sont brillantes</strong> : même carte, version à part.</span></li>
-          <li><b>20</b><span><strong>garantie épique</strong> : une carte Épique ou mieux au moins tous les 20 boosters.</span></li>
+          <li><b><span data-cfg="cartes.booster_size">5</span></b><span><strong>cartes par booster</strong>, tirées une à une selon les taux ci-dessous.</span></li>
+          <li><b><span data-cfg="cartes.shiny_rate">3</span> %</b><span><strong>des cartes sont brillantes</strong> : même carte, version à part.</span></li>
+          <li><b><span data-cfg="cartes.pity_epique">20</span></b><span><strong>garantie épique</strong> : une carte Épique ou mieux au moins tous les <span data-cfg="cartes.pity_epique">20</span> boosters.</span></li>
         </ul>
         <div class="odds-wrap" role="group" aria-label="Taux de tirage, par carte">
 <table class="odds"><caption>Taux de tirage, par carte</caption><tbody>
-<tr><th scope="row" class="rar-commune">Commune</th><td>60 %</td></tr>
-<tr><th scope="row" class="rar-peu">Peu commune</th><td>25 %</td></tr>
-<tr><th scope="row" class="rar-rare">Rare</th><td>10 %</td></tr>
-<tr><th scope="row" class="rar-epique">Épique</th><td>4 %</td></tr>
+<tr><th scope="row" class="rar-commune">Commune</th><td><span data-cfg="cartes.rates.commune">60</span> %</td></tr>
+<tr><th scope="row" class="rar-peu">Peu commune</th><td><span data-cfg="cartes.rates.peu_commune">25</span> %</td></tr>
+<tr><th scope="row" class="rar-rare">Rare</th><td><span data-cfg="cartes.rates.rare">10</span> %</td></tr>
+<tr><th scope="row" class="rar-epique">Épique</th><td><span data-cfg="cartes.rates.epique">4</span> %</td></tr>
 </tbody></table>
 <table class="odds"><caption class="vh">Suite</caption><tbody>
-<tr><th scope="row" class="rar-leg">Légendaire</th><td>0,88 %</td></tr>
-<tr><th scope="row" class="rar-myth">Mythique</th><td>0,1 %</td></tr>
-<tr><th scope="row" class="rar-id">Identité</th><td>0,02 %</td></tr>
+<tr><th scope="row" class="rar-leg">Légendaire</th><td><span data-cfg="cartes.rates.legendaire">0,88</span> %</td></tr>
+<tr><th scope="row" class="rar-myth">Mythique</th><td><span data-cfg="cartes.rates.mythique">0,1</span> %</td></tr>
+<tr><th scope="row" class="rar-id">Identité</th><td><span data-cfg="cartes.rates.identite">0,02</span> %</td></tr>
 </tbody></table></div>
       </div>
     </div>
@@ -247,5 +247,6 @@ h1 .o { color: var(--gold); }
     <div class="web">Page Cartes</div>
   </footer>
 </main>
+<script type="module" src="affiches.js"></script>
 </body>
 </html>

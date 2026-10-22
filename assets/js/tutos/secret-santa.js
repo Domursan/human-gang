@@ -95,7 +95,7 @@ export default {
       ],
       tips: [
         'Un clic est définitif : le bouton reste « Envoyé » ou « Reçu ». Seul l’admin, en mode sans limite, peut annuler.',
-        'Marquer ton cadeau envoyé te rapporte 250 Paillettes.',
+        'Marquer ton cadeau envoyé te rapporte {{cartes.rewards.gift_sent|250}} Paillettes.',
       ],
       keywords: ['envoi', 'envoyé', 'reçu', 'cadeau', 'avancement', 'paillettes', 'discord'],
     },
@@ -121,14 +121,14 @@ export default {
       summary: 'Ce qui rapporte un badge ou des Paillettes pendant une édition.',
       page: 'membre.html',
       steps: [
-        { title: 'Envoie ton cadeau', text: 'Marquer « J’ai envoyé le cadeau » rapporte 250 Paillettes.' },
+        { title: 'Envoie ton cadeau', text: 'Marquer « J’ai envoyé le cadeau » rapporte {{cartes.rewards.gift_sent|250}} Paillettes.' },
         { title: 'Écris une liste avant le tirage', text: 'Au moins un souhait ajouté avant le tirage donne le badge « Liste parfaite ».' },
         { title: 'Sois le premier ou le dernier à envoyer', text: '« Lutin express » : le premier cadeau envoyé de l’édition. « Sur le fil » : un cadeau envoyé le dernier jour de la date limite.' },
-        { title: 'Reviens pour la durée', text: '« Premier Noël » : avoir participé à une édition révélée ou terminée. « Vétéran » : avoir participé à 5 éditions.' },
+        { title: 'Reviens pour la durée', text: '« Premier Noël » : avoir participé à une édition révélée ou terminée. « Vétéran » : avoir participé à {{badges.criteres.veteran_editions|5}} éditions.' },
         { title: 'Regarde tes badges sur ta carte de membre', text: 'Ouvre « Carte de membre » : tes badges s’affichent avec leur nom.' },
       ],
       tips: [
-        'Chaque badge obtenu rapporte 500 Paillettes.',
+        'Chaque badge obtenu rapporte {{cartes.rewards.badge|500}} Paillettes.',
         'Le badge « Sur le fil » ne compte que si le cadeau a bien été marqué envoyé le dernier jour.',
       ],
       keywords: ['badge', 'paillettes', 'premier noël', 'vétéran', 'lutin express', 'sur le fil', 'liste parfaite', 'carte de membre'],
