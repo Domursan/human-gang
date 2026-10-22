@@ -53,7 +53,9 @@ function fold(line) {
  */
 export function buildIcs(ev, now = new Date()) {
   const start = new Date(ev.start);
-  const end = ev.end ? new Date(ev.end) : new Date(start.getTime() + dureeDefautMs());
+  // Fin absente ou invalide (sinon NaN dans le fichier) : on prend la durée par défaut.
+  const endD = ev.end ? new Date(ev.end) : null;
+  const end = endD && !Number.isNaN(endD.getTime()) ? endD : new Date(start.getTime() + dureeDefautMs());
   const desc = [ev.description, ev.url ? `Détails sur le site : ${ev.url}` : null].filter(Boolean).join('\n\n');
   const lines = [
     'BEGIN:VCALENDAR',

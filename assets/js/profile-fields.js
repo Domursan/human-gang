@@ -94,7 +94,7 @@ function flatten(groups) {
 flatten(INFO_GROUPS);
 
 /**
- * Vérifie une liste de groupes (réglage) : 1 à 12 groupes, 1 à 60 champs par groupe, identifiants de champs uniques,
+ * Vérifie une liste de groupes (réglage) : 1 à 12 groupes, 1 à 60 champs par groupe, identifiants de groupes et de champs uniques,
  * libellés non vides, type 'text' ou 'textarea'. Les espaces de bord sont retirés des libellés.
  * @param {*} raw Liste brute lue en base.
  * @returns {Array<object>|null} Groupes normalisés, ou null si la liste est invalide.
@@ -102,9 +102,11 @@ flatten(INFO_GROUPS);
 export function validateInfoGroups(raw) {
   if (!Array.isArray(raw) || !raw.length || raw.length > 12) return null;
   const seen = new Set();
+  const seenGroups = new Set();
   const out = [];
   for (const g of raw) {
-    if (!g || typeof g !== 'object' || !ID_RE.test(g.id) || typeof g.label !== 'string' || !g.label.trim() || !Array.isArray(g.fields) || !g.fields.length || g.fields.length > 60) return null;
+    if (!g || typeof g !== 'object' || !ID_RE.test(g.id) || seenGroups.has(g.id) || typeof g.label !== 'string' || !g.label.trim() || !Array.isArray(g.fields) || !g.fields.length || g.fields.length > 60) return null;
+    seenGroups.add(g.id);
     const fields = [];
     for (const f of g.fields) {
       if (!f || typeof f !== 'object' || !ID_RE.test(f.id) || seen.has(f.id) || typeof f.label !== 'string' || !f.label.trim() || f.label.length > 160) return null;

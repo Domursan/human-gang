@@ -141,12 +141,16 @@ function eventCard(ev, ctx, live) {
  */
 async function load() {
   const nowIso = new Date().toISOString();
-  const [evs, caps, myB] = await Promise.all([
+  const [evs, myB] = await Promise.all([
     sb.from('hg_dyn_events').select('*').eq('active', true).lte('starts_at', nowIso).order('ends_at', { ascending: false }),
-    sb.from('hg_dyn_captures').select('event_id, user_id'),
     sb.from('hg_user_badges').select('badge_code, level, awarded_at').eq('user_id', me.id),
   ]);
   const events = (check(evs) ?? []).filter((e) => new Date(e.starts_at) <= new Date());
+  // Captures : seulement celles des événements affichés (pas toute la table).
+  const ids = events.map((e) => e.id);
+  const caps = ids.length
+    ? await sb.from('hg_dyn_captures').select('event_id, user_id').in('event_id', ids)
+    : { data: [], error: null };
   const mine = new Map(), total = new Map();
   for (const c of check(caps) ?? []) {
     total.set(c.event_id, (total.get(c.event_id) || 0) + 1);

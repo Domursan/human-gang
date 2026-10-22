@@ -708,20 +708,20 @@ form.addEventListener('submit', async (e) => {
       if (error) throw error;
     }
 
-    // Couverture
+    // Couverture : on envoie la nouvelle d'abord (chemin unique), on met la ligne à jour, puis on supprime l'ancienne.
     const old = editing?.cover_path || null;
     try {
       if (coverFile) {
         const img = await prepareImage(coverFile);
-        const path = `${me.id}/${id}/cover.${img.ext}`;
-        if (old) await removeObjects([old]).catch(() => {});
+        const path = `${me.id}/${id}/cover-${uuid().slice(0, 8)}.${img.ext}`;
         await uploadImage(path, img.blob);
         const { error } = await sb.from('hg_events').update({ cover_path: path }).eq('id', id);
         if (error) throw error;
+        if (old) removeObjects([old]).catch(() => {});
       } else if (removeCover && old) {
         const { error } = await sb.from('hg_events').update({ cover_path: null }).eq('id', id);
         if (error) throw error;
-        await removeObjects([old]).catch(() => {});
+        removeObjects([old]).catch(() => {});
       }
     } catch (err) { toast(`Sortie enregistrée, mais image non envoyée : ${errMsg(err)}`, 'error'); }
 
