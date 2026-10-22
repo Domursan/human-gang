@@ -7,13 +7,15 @@
 // Aucune erreur console. Lancer : node tests/parcours-admin-actifs.cjs
 const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
-const ME = '11111111-1111-4111-8111-111111111111';
 const GHOST = '00000077-0000-4000-8000-000000000077';
 const EV = 'eeeeeeee-0000-4000-8000-0000000000aa'; // sortie à venir avec une présence du fantôme (historique)
 const EV2 = 'eeeeeeee-0000-4000-8000-0000000000ab'; // sortie à venir sans présence du fantôme (choix)
 const drawer = 'dialog.ui-drawer[open]';
+/** Ferme le tiroir ouvert en cliquant sur son bouton de fermeture. */
 const closeDrawer = (p) => p.click(`${drawer} .ui-drawer-foot [data-drawer-close]`);
+/** Textes (espaces réduits) des éléments qui correspondent au sélecteur sel. */
 const texts = (p, sel) => p.$$eval(sel, (els) => els.map((e) => e.textContent.trim()));
+/** Horodatage ISO actuel, pour les données créées pendant le test. */
 const now = () => new Date().toISOString();
 
 (async () => {

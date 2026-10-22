@@ -9,7 +9,7 @@
 // sont simulées par le faux client. Lancer : node tests/parcours-reglages-lot2.cjs
 const { check, finish, openPage, adminSection, log, sleep, chromium, ORIGIN, PREFIX } = require('./lib/harness.cjs');
 
-const DEFAUT_INVITES = { validite_heures: 48, max_codes_heure_lien: 30, fantome_jours: 60, prefixe: 'HG-' };
+/** Écritures sur hg_settings (upsert ou delete) dans le journal du faux client. */
 const settingsWrites = async (p) => (await log(p)).filter((e) => e[1] === 'hg_settings' && (e[0] === 'upsert' || e[0] === 'delete' || e[0] === 'insert'));
 
 (async () => {

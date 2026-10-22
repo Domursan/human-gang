@@ -1,4 +1,9 @@
 <!doctype html>
+<!--
+  Démonstration des composants du panel admin (tests/composants-admin-ui.cjs).
+  Page statique : liste des demandes d'assistance (colonne 2), fil de messages (colonne 3) et panneau d'infos (colonne 4).
+  Charge les modules de assets/js/admin/ui/ avec des données factices. Pas de réseau, pas de Supabase.
+-->
 <html lang="fr" data-mode="sombre">
 <head>
 <meta charset="utf-8">
@@ -254,19 +259,26 @@ import { createThread } from '../../assets/js/admin/ui/thread.js';
 import { renderInfoPanel } from '../../assets/js/admin/ui/info-panel.js';
 import { renderDetailHeader } from '../../assets/js/admin/ui/detail-header.js';
 
+/* ---------- Données de démonstration : demandes d'assistance et messages, avec des dates relatives à maintenant ---------- */
 const NOW = Date.now();
+/** Date d'il y a min minutes. */
 const ago = (min) => new Date(NOW - min * 60000);
+/** Date d'hier à h heures (minutes et secondes à zéro). */
 const yesterdayAt = (h) => { const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(h, 0, 0, 0); return d; };
+// Identifiant et profil de l'administrateur de la démonstration (celui qui répond).
 const ME = 'domu';
 const ADMIN = { id: ME, pseudo: 'Domu', color: '#F2EFEA' };
+// Statuts possibles d'une demande : ouverte, en cours, résolue (le ton sert au style).
 const S = {
   open: { id: 'open', label: 'Ouverte', tone: 'open' },
   prog: { id: 'prog', label: 'En cours', tone: 'prog' },
   done: { id: 'done', label: 'Résolue', tone: 'done' },
 };
 const OPTIONS = [S.open, S.prog, S.done];
+// Membre dont la demande sert d'exemple à la démonstration.
 const CARZY = { id: 'carzy', pseudo: 'Carzy', color: '#E2C77E' };
 
+// Demandes d'assistance de démonstration (une par membre).
 let TICKETS = [
   { id: 't1', member: CARZY, title: 'Paillettes non créditées', excerpt: 'Je suis venu à la sortie IRL de samedi…', at: ago(12), status: S.open, unread: true,
     since: new Date('2025-03-10'), lastSeen: ago(120), stats: [['340', 'Paillettes'], ['9', 'Sorties IRL'], ['214', 'Cartes'], ['2025', 'Secret Santa inscrit']],
@@ -284,6 +296,7 @@ let TICKETS = [
     since: new Date('2025-10-01'), lastSeen: ago(3 * 24 * 60), stats: [['3', 'Paillettes'], ['0', 'Sorties IRL'], ['5', 'Cartes'], ['2025', 'Secret Santa inscrit']], history: [], opened: 'Ouverte le 18 oct., 10:30' },
 ];
 
+// Fil de messages de démonstration, par identifiant de demande (seule t1 a un fil complet).
 const MESSAGES = {
   t1: [
     { type: 'event', text: 'Demande ouverte par Carzy', at: ago(130) },
@@ -293,17 +306,21 @@ const MESSAGES = {
     { id: 'm3', author: CARZY, body: "D'accord, ça marche. Tu peux me dire quand elles tomberont ?", at: ago(97) },
   ],
 };
+/** Fil d'une demande : le fil enregistré s'il existe, sinon le seul message d'ouverture. */
 const messagesFor = (t) => MESSAGES[t.id] || [
   { type: 'event', text: `Demande ouverte par ${t.member.pseudo}`, at: t.at },
   { id: t.id + '-1', author: t.member, body: t.excerpt, at: t.at },
 ];
 
+/* ---------- Liste, détail et fil : composants partagés du panel admin, branchés ici sur les données de démonstration. ---------- */
+/** Raccourci pour trouver un élément de la page par son sélecteur CSS. */
 const $ = (sel) => document.querySelector(sel);
 let current = null;
 let thread = null;
 let header = null;
 let info = null;
 
+// Colonne de gauche : liste des demandes avec filtres et recherche.
 const list = createList($('#list'), {
   items: TICKETS,
   key: 'id',
@@ -322,12 +339,14 @@ const list = createList($('#list'), {
   onSelect: (it) => show(it),
 });
 
+/** Change le statut d'une demande, rafraîchit la liste puis le détail. */
 function setStatus(t, id) {
   t.status = OPTIONS.find((o) => o.id === id);
   list.update(TICKETS);
   show(t);
 }
 
+/** Affiche le détail d'une demande : en-tête, fil de messages et panneau d'infos. Passe l'écran en mode détail. */
 function show(t) {
   current = t;
   document.body.dataset.screen = 'detail';
@@ -347,10 +366,12 @@ function show(t) {
       messages: messagesFor(t),
       placeholder: `Répondre à ${t.member.pseudo}…`,
       hint: `Les réponses sont visibles par ${t.member.pseudo} sur Discord. Les notes internes restent dans le panel.`,
+      // Réponse envoyée au membre : ajoutée au fil comme message de l'administrateur.
       onSend: async (text) => {
         (MESSAGES[current.id] ||= messagesFor(current)).push({ id: 'n' + Date.now(), author: ADMIN, body: text, at: new Date() });
         thread.update(MESSAGES[current.id]);
       },
+      // Note interne : ajoutée au fil, marquée internal pour rester visible seulement côté panel.
       onNote: async (text) => {
         (MESSAGES[current.id] ||= messagesFor(current)).push({ id: 'n' + Date.now(), author: ADMIN, body: text, at: new Date(), internal: true });
         thread.update(MESSAGES[current.id]);
@@ -368,9 +389,11 @@ function show(t) {
   });
 }
 
+// Bouton « Demandes » (écran étroit) : revient à la liste.
 $('#back').addEventListener('click', () => { document.body.dataset.screen = 'list'; });
 show(TICKETS[0]);
 document.body.dataset.screen = 'list';
+// Accès pour les tests : composants, fil courant et liste des demandes.
 window.__demo = { list, get thread() { return thread; }, get tickets() { return TICKETS; } };
 </script>
 </body>

@@ -15,33 +15,41 @@ const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } 
 const EV_CIT = 'aaaaaaaa-0000-4000-8000-000000000001';
 const EV_FUT = 'aaaaaaaa-0000-4000-8000-000000000003';
 
+/** Exécute fn dans la page avec arg et renvoie son résultat (lecture de la base simulée). */
 const db = (p, fn, arg) => p.evaluate(fn, arg);
 const drawer = 'dialog.ui-drawer[open]';
+/** Nombre de tiroirs présents sur la page. */
 const drawerCount = (p) => p.locator('dialog.ui-drawer').count();
 // Lignes de la liste affichée (les listes des autres sous-sections restent montées, masquées)
+/** Nombre de lignes affichées dans la zone de liste. */
 const rowCount = (p) => p.locator('.shell-slot:not([hidden]) .ui-row').count();
 const LIST_ROW = '.shell-slot:not([hidden]) .ui-row';
 /** Bouton « annuler » du pied du tiroir, puis attente de sa fermeture. */
+/** Ferme le tiroir ouvert, en cliquant sur son bouton Fermer. */
 async function closeDrawer(p) {
   await p.click(`${drawer} .ui-drawer-foot [data-drawer-close]`);
   await p.waitForFunction(() => !document.querySelector('dialog.ui-drawer'), null, { timeout: 5000 }).catch(() => {});
 }
 /** Valide le tiroir ouvert (bouton principal), puis attend qu'il se ferme (ou reste ouvert en cas d'erreur). */
+/** Clique sur le bouton de validation du tiroir ouvert. */
 async function submitDrawer(p) {
   await p.click(`${drawer} [data-drawer-submit]`);
   await p.waitForTimeout(400);
 }
 /** Confirmation (confirmBox) : « ok » ou « cancel ». */
+/** Répond à la boîte de confirmation en saisissant value, puis en validant. */
 async function confirmWith(p, value) {
   await p.waitForSelector(`dialog[open] button[value="${value}"]`, { timeout: 5000 });
   await p.click(`dialog[open] button[value="${value}"]`);
   await p.waitForTimeout(300);
 }
+/** Ouvre une adresse (hash) du panel, puis attend que le sélecteur sel soit affiché. */
 async function goto(p, hash, sel) {
   await p.evaluate((h) => { location.hash = h; }, hash);
   await p.waitForSelector(sel, { timeout: 6000 });
   await sleep(200);
 }
+/** Vrai si le journal contient une écriture sur la table (de type op, si fourni). */
 const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).some((e) => e[1] === t && (!o || e[0] === o)), [table, op]);
 
 (async () => {

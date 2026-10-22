@@ -6,11 +6,14 @@
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-p2-sorties.cjs
 const { ROOT, check, finish, openPage, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const ME = '11111111-1111-4111-8111-111111111111';
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const EV_A = 'ea000000-0000-4000-8000-00000000000a'; // à venir, date fixée, 1 « je viens », 1 « peut-être »
 const EV_B = 'eb000000-0000-4000-8000-00000000000b'; // à caler (sondage)
 const EV_C = 'ec000000-0000-4000-8000-00000000000c'; // passée
+/** Date ISO décalée de n jours (négatif : dans le passé). */
 const days = (n) => new Date(Date.now() + n * 864e5).toISOString();
 
 const SCN = {
@@ -30,10 +33,14 @@ const SCN = {
   eventVotes: [],
 };
 
+/** Ligne de la colonne liste pour la sortie d'identifiant id. */
 const row = (p, id) => p.locator(`#shell-col .ui-row[data-id="${id}"]`);
+/** Adresse (hash) courante de la page. */
 const hashOf = (p) => p.evaluate(() => location.hash);
+/** Écran affiché : valeur de l'attribut data-screen (liste ou détail). */
 const screen = (p) => p.getAttribute('#shell', 'data-screen');
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
@@ -90,6 +97,7 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
   await p.fill('#ass-e-name', 'Pizzas du jeudi');
   await p.fill('#ass-e-loc', 'Nyon');
   const d = new Date(Date.now() + 40 * 864e5);
+  /** Écrit un nombre sur deux chiffres (format de date). */
   const pad = (n) => String(n).padStart(2, '0');
   await p.fill('#ass-e-start', `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T19:00`);
   await p.click('#ass-e-submit');

@@ -1,6 +1,7 @@
 // L'intro se rejoue une fois par jour : l'accueil y renvoie si elle n'a pas été jouée aujourd'hui, puis plus ce jour-là.
 // Faux Supabase. Lancer : node tests/parcours-intro-quotidienne.cjs
 const { ORIGIN, PREFIX, check, finish, openPage, sleep, chromium } = require('./lib/harness.cjs');
+/** Vrai si le chemin de la page courante correspond à l'expression re. */
 const at = (p, re) => re.test(new URL(p.url()).pathname);
 (async () => {
   const browser = await chromium.launch();

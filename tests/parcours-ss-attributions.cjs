@@ -1,4 +1,5 @@
 // Admin › Vie du gang › Secret Santa : « Afficher les attributions » fonctionne sans être passé par la section Comptes.
+// Lancer : node tests/parcours-ss-attributions.cjs   (NODE_PATH et PLAYWRIGHT_BROWSERS_PATH : voir tests/README.md)
 const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 (async () => {
   const browser = await chromium.launch();

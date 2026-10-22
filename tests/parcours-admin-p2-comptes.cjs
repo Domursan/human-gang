@@ -7,6 +7,8 @@
 // Faux Supabase (fixtures/fake-sb.mjs) avec deux fantômes fournis par le scénario. Lancer : node tests/parcours-admin-p2-comptes.cjs
 const { ROOT, check, finish, openPage, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const DAY = 864e5; // fantômes préparés il y a 1 et 2 jours : plus récents que les comptes du faux Supabase
 const GHOSTS = [
@@ -16,6 +18,7 @@ const GHOSTS = [
 const SCN = { ghosts: GHOSTS };
 
 // Attend qu'un élément soit visible (ou masqué) après un changement de route.
+/** Attend que sel soit visible (want vrai) ou caché (want faux). */
 async function waitVisible(p, sel, want = true) {
   await p.waitForFunction(([s, w]) => {
     const e = document.querySelector(s);
@@ -24,11 +27,16 @@ async function waitVisible(p, sel, want = true) {
   }, [sel, want], { timeout: 6000 }).catch(() => {});
   return p.isVisible(sel).then((v) => v === want);
 }
+/** Adresse (hash) courante de la page. */
 const hashOf = (p) => p.evaluate(() => location.hash);
+/** Change l'adresse de la page (hash), comme un clic sur un lien. */
 const goHash = (p, h) => p.evaluate((x) => { location.hash = x; }, h);
+/** Nombre de lignes visibles dans la colonne liste. */
 const rowCount = (p) => p.$$eval('#shell-col-list .ui-row', (rs) => rs.filter((r) => r.getClientRects().length).length);
+/** Attend que la colonne liste affiche n lignes visibles. */
 const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAll('#shell-col-list .ui-row')].filter((r) => r.getClientRects().length).length === k, n, { timeout: 8000 }).then(() => true, () => false);
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

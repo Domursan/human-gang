@@ -6,9 +6,12 @@
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-coquille.cjs
 const { ROOT, check, finish, openPage, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 
 // Attend qu'un élément soit visible (ou masqué) après un changement de route.
+/** Attend que sel soit visible (want vrai) ou caché (want faux). */
 async function waitVisible(p, sel, want = true) {
   await p.waitForFunction(([s, w]) => {
     const e = document.querySelector(s);
@@ -17,10 +20,12 @@ async function waitVisible(p, sel, want = true) {
   }, [sel, want], { timeout: 5000 }).catch(() => {});
   return p.isVisible(sel).then((v) => v === want);
 }
+/** Adresse (hash) courante de la page. */
 const hashOf = (p) => p.evaluate(() => location.hash);
+/** Libellés des domaines visibles dans le rail. */
 const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filter((a) => a.getClientRects().length).map((a) => a.dataset.dom));
-const visibleSubs = (p) => p.$$eval('#shell-subs .shell-sub', (as) => as.filter((a) => a.getClientRects().length).map((a) => a.dataset.sub));
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

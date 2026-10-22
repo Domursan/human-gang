@@ -6,11 +6,16 @@
 const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
 const ALICE = '00000002-0000-4000-8000-000000000002';
+/** Tiroir de dialogue ouvert (dialog.ui-drawer[open]). */
 const drawer = (p) => p.locator('dialog.ui-drawer[open]');
+/** Clique sur le bouton de validation du tiroir ouvert. */
 const submitDrawer = (p) => p.click('dialog.ui-drawer[open] [data-drawer-submit]');
+/** Appels de hg-notify faits depuis le panel admin (journal du faux client). */
 const notifyCalls = (p) => p.evaluate(() => (window.__LOG || []).filter((e) => e[0] === 'fn' && e[1] === 'hg-notify').map((e) => e[2]));
+/** Appels de la RPC hg_cards_admin_give (journal du faux client). */
 const giveCalls = (p) => p.evaluate(() => (window.__LOG || []).filter((e) => e[0] === 'rpc' && e[1] === 'hg_cards_admin_give').map((e) => e[2]));
 // Donne une carte au membre choisi ; announce / notify = état des deux cases (true par défaut).
+/** Donne 2 exemplaires de la première carte à Alice depuis le tiroir ouvert. announce et notify décochent l'annonce ou le MP (cochés par défaut). */
 async function donner(p, { announce = true, notify = true } = {}) {
   await p.selectOption('#acd-give-card', { index: 1 });
   await p.fill('#acd-give-count', '2');
@@ -21,6 +26,7 @@ async function donner(p, { announce = true, notify = true } = {}) {
   await p.waitForTimeout(300);
 }
 
+/** Ouvre la fiche d'Alice dans Jeu de cartes › Joueurs, puis le tiroir « Donner une carte ». */
 async function ouvrirDon(p) {
   await adminSection(p, 'cartes/joueurs');
   await p.evaluate((id) => { location.hash = 'cartes/joueurs/' + id; }, ALICE);

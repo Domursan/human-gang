@@ -9,6 +9,7 @@ const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.
 const BOB = '00000002-0000-4000-8000-000000000002'; // Alice (membre proposé)
 const TRADE_ID = '7e57c0de-0000-4000-8000-000000000001';
 
+/** Ouvre l'onglet Échanges › Proposer, choisit le destinataire (BOB) et remplit l'offre. */
 async function proposer(p) {
   await p.click('[data-tab=echanges]');
   await p.waitForSelector('#trd-tab-proposer', { timeout: 5000 });
@@ -20,6 +21,7 @@ async function proposer(p) {
   await p.waitForSelector('#trd-send:not([disabled])', { timeout: 5000 }).catch(() => {});
   await p.click('#trd-send');
 }
+/** Appels de hg-notify faits par la page (journal du faux client). */
 const notifyCalls = async (p) => p.evaluate(() => (window.__LOG || []).filter((e) => e[0] === 'fn' && e[1] === 'hg-notify').map((e) => e[2]));
 
 (async () => {

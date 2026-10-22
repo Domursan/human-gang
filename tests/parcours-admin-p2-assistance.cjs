@@ -7,6 +7,8 @@
 // Faux Supabase (fixtures/fake-sb.mjs, données de scénario S.support / S.ideas). Lancer : node tests/parcours-admin-p2-assistance.cjs
 const { ROOT, check, finish, openPage, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, U(3) = Bruno, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`; // Alice = U(2), Bruno = U(3) (fixture)
 
 // Données de démonstration : trois demandes (deux ouvertes, dont une sans compte, une traitée) et deux idées
@@ -26,15 +28,20 @@ const SCN = {
 };
 
 // Ouvre une sous-section (route #domaine/sous-section[/id]) et attend que sa liste ou son détail soit affiché.
+/** Ouvre une adresse (hash) du panel, puis attend que le sélecteur sel soit affiché. */
 async function goto(p, hash, sel) {
   await p.evaluate((h) => { location.hash = h; }, hash);
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 6000 }).catch(() => {});
   await sleep(250);
 }
+/** Nombre de lignes de la colonne liste. */
 const rows = (p) => p.locator('#shell-col-list .ui-row').count();
+/** Compteur affiché dans la navigation pour la sous-section sub. */
 const navCount = (p, sub) => p.evaluate((s) => document.querySelector(`.nav-count[data-count="${s}"]`)?.textContent?.trim() || '', sub);
+/** Copie des lignes d'une table de la base simulée (window.__DB). */
 const dbRows = (p, table) => p.evaluate((t) => window.__DB[t].map((r) => ({ ...r })), table);
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

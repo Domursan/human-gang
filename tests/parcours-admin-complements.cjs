@@ -6,7 +6,9 @@
 // Lancer : node tests/parcours-admin-complements.cjs
 const { ROOT, check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
+/** Exécute fn dans la page et renvoie son résultat (lecture de la base simulée). */
 const db = (p, fn) => p.evaluate(fn);
+/** Clique sur le bouton « ok » de la boîte de confirmation modale. */
 const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue modal)
   await p.waitForSelector('dialog[open] button[value="ok"]', { timeout: 5000 });
   await p.click('dialog[open] button[value="ok"]');

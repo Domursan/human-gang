@@ -4,8 +4,10 @@
 //     aucune requête vers les RPC et tables des autres sections, ni section Staff, ni mode sans limite.
 // (c) membre simple : redirigé hors de admin.html.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-staff.cjs
-const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const CHLOE = U(4);
 const NOTE = 'Test CI staff';
@@ -20,6 +22,7 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
   'hg_ss_assignments', 'hg_dyn_events', 'hg_ideas', 'hg_support', 'hg_messages',
   'hg_conversations', 'hg_bot_log', 'hg_page_access', 'hg_profile_info'];
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

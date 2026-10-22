@@ -10,6 +10,7 @@ const ALICE = '00000002-0000-4000-8000-000000000002';
 const DIALOG = '#trd-edit[open]';
 
 /** Ouvre « Proposer un échange » avec Alice : cartes.html › Échanges › Proposer › Composer l'offre. */
+/** Ouvre l'éditeur d'offre depuis Échanges › Proposer. */
 async function openEditor(p) {
   await p.click('button.cartes-tab[data-tab=echanges]');
   await p.waitForSelector('#trd-tab-proposer', { timeout: 5000 });
@@ -19,10 +20,14 @@ async function openEditor(p) {
   await p.waitForSelector(DIALOG, { timeout: 5000 });
   await sleep(150);
 }
+/** Texte (espaces réduits) de l'élément sel. */
 const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g, ' ').trim());
 /** Lignes de l'aperçu : « Libellé valeur » (dt puis dd). */
+/** Lignes du détail d'aperçu de l'offre, sous forme « libellé valeur ». */
 const dlText = (p) => p.$$eval('#trd-peek-dl > div', (rows) => rows.map((r) => r.querySelector('dt').textContent + ' ' + r.querySelector('dd').textContent.replace(/\s+/g, ' ').trim()).join(' | '));
+/** Identifiants des cartes affichées dans la grille du côté side de l'éditeur. */
 const picks = (p, side) => p.$$eval(`#trd-grid-${side} button[data-side][data-id]`, (x) => x.map((b) => b.dataset.id));
+/** Valeur de aria-pressed (état d'un bouton de filtre) pour l'élément sel. */
 const pressed = (p, sel) => p.getAttribute(sel, 'aria-pressed');
 
 (async () => {

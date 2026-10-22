@@ -10,19 +10,27 @@
 // Lancer : node tests/parcours-admin-nav.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, log, chromium, sleep } = require('./lib/harness.cjs');
 
+/** Identifiant de test du membre n, mêmes identifiants que le faux client (Alice, Bruno, Chloé…). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`; // mêmes identifiants que le faux (Alice, Bruno, Chloé…)
 const CHLOE = U(4), BRUNO = U(3);
+/** Vrai si au moins une entrée du journal satisfait pred. */
 const has = (entries, pred) => entries.some(pred);
+/** Prédicat pour le journal : entrée touchant la table t. */
 const table = (t) => (e) => e[1] === t;
+/** Prédicat pour le journal : appel de la fonction RPC fn. */
 const rpc = (fn) => (e) => e[0] === 'rpc' && e[1] === fn;
 
+/** Ouvre la palette « Aller à… » (Ctrl+K) et attend qu'elle s'affiche. */
 const openPal = async (p) => {
   await p.keyboard.press('Control+k');
   await p.waitForSelector('.apal-backdrop:not([hidden]) [role="dialog"]', { timeout: 5000 });
 };
+/** Vrai si la palette « Aller à… » est ouverte. */
 const palOpen = (p) => p.locator('.apal-backdrop:not([hidden])').count().then((n) => n === 1);
+/** Libellés des entrées affichées dans la palette. */
 const palLabels = (p) => p.$$eval('.apal-item .apal-label', (els) => els.map((e) => e.textContent.trim()));
 // Sous-section affichée : adresse et lien actif de la colonne
+/** Attend que l'adresse de la page soit #route. */
 const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   && document.querySelector('.shell-sub[aria-current="true"]')?.getAttribute('href') === '#' + r, route, { timeout: 5000 }).then(() => true, () => false);
 

@@ -11,28 +11,40 @@ const path = require('path');
 const fs = require('fs');
 const { check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const SHOTS_DIR = process.env.SHOTS_DIR || '';
+/** Enregistre une capture d'écran nommée name, si un dossier de captures est défini (SHOTS_DIR). */
 const shot = async (p, name) => { if (SHOTS_DIR) { fs.mkdirSync(SHOTS_DIR, { recursive: true }); await p.screenshot({ path: path.join(SHOTS_DIR, name) }); } };
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`; // Alice = U(2) (fixture)
 const CHANNEL = '112233445566778899';
 const ROLE = '445566778899001122';
 const MAX_BYTES = 10 * 1024 * 1024;
 
 // Ouvre une sous-section du panel et attend son formulaire.
+/** Ouvre une route du panel admin, puis attend que le sélecteur sel soit affiché. */
 async function goto(p, route, sel) {
   await adminSection(p, route);
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 8000 }).catch(() => {});
   await sleep(200);
 }
+/** Réglages du bot lus dans la base simulée (hg_settings, clé « bot »). */
 const botSetting = (p) => p.evaluate(() => (window.__DB.hg_settings.find((r) => r.key === 'bot') || {}).value || {});
+/** Appels de hg-notify faits depuis le panel admin (journal du faux client). */
 const adminCalls = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'fn' && e[1] === 'hg-notify' && e[2]?.event === 'admin_dm').map((e) => e[2]));
+/** Chemins des pièces jointes enregistrées dans le faux stockage hg-bot-media. */
 const mediaPaths = (p) => p.evaluate(() => Object.keys(window.__MEDIA || {}));
+/** Nombre de pièces jointes affichées dans la liste du message manuel. */
 const fileList = (p) => p.locator('#bm-file-list .bm-file').count();
+/** Fichier factice dont la taille dépasse la limite de 10 Mo d'un octet. */
 const bigBuffer = () => Buffer.alloc(MAX_BYTES + 1, 0);
 // PNG valide 160 × 100 (dégradé RGB), généré sans dépendance : l'aperçu doit afficher une vraie image.
 const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+/** Somme de contrôle CRC-32 d'un tampon, nécessaire pour fabriquer un PNG valide. */
 const crc32 = (buf) => { let c = 0xffffffff; for (const b of buf) c = CRC[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+/** Bloc PNG (type, données, CRC) : brique de la fabrication d'image. */
 const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td)); return Buffer.concat([len, td, crc]); };
+/** Fabrique une image PNG factice de w × h pixels, sans fichier externe. */
 function png(w = 160, h = 100) {
   const zlib = require('zlib');
   const row = w * 3 + 1, raw = Buffer.alloc(row * h);
@@ -41,6 +53,7 @@ function png(w = 160, h = 100) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
+/* ---------- Scénario ---------- */
 (async () => {
   const browser = await chromium.launch();
 

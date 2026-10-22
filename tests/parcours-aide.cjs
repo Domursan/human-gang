@@ -10,13 +10,14 @@
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { ROOT, ORIGIN, PREFIX, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
 const MEMBER_SLUG = 'ouvrir-un-booster';   // tuto membre (cartes-base), page cartes.html, 6 étapes, 2 astuces
 const GUEST_SLUG = 'se-connecter';          // tuto « Premiers pas », visible sans compte, 5 étapes
 const GROUP_IDS = ['premiers-pas', 'secret-santa', 'irl-historique', 'cartes-base', 'cartes-avance', 'communaute'];
 
 /* ---------- Données (sans navigateur) ---------- */
+/** Parcourt les groupes et tutos de la page d'aide et relève les anomalies : slug en double, page absente, étapes manquantes. */
 async function checkData() {
   const slugs = new Map();   // slug -> groupe
   const badSlug = [], badPage = [], badSteps = [];
