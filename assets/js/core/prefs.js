@@ -99,7 +99,11 @@ function buildPrefsDialog() {
   // Délégation : un seul écouteur pour les modes et les interrupteurs
   f.addEventListener('change', (e) => {
     const el = e.target;
-    if (el.name === 'mode') setPrefs({ mode: el.value });
+    if (el.name === 'mode') {
+      setPrefs({ mode: el.value });
+      // quête « thème changé » : import dynamique, pour ne pas charger le client Supabase avant le thème
+      import('../quest-track.js').then((m) => m.questTrack('theme_change', el.value)).catch(() => {});
+    }
     else if (el.name === 'special' || el.name === 'effects') setPrefs({ [el.name]: el.checked });
     else if (el.name === 'sound') { setPrefs({ sound: el.checked }); if (el.checked) playSound('success'); }
   });

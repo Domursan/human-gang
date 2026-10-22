@@ -7,6 +7,7 @@
 import { initPage, esc, $ } from './core.js';
 import { loadTutoGroups, PUBLIC_GROUP_IDS } from './tutos/index.js';
 import { chargerReglages, jetons } from './reglages-jetons.js';
+import { questTrack } from './quest-track.js';
 
 /* ---------- Initialisation : session facultative (les visiteurs voient « premiers pas ») ---------- */
 const me = await initPage({ auth: 'optional' });
@@ -204,6 +205,7 @@ function showTuto(slug) {
     const cadre = tutoView.querySelector('.aide-affiche-cadre');
     if (cadre) ajusteAffiche.observe(cadre);
     document.title = `${hit.t.title} · ${BASE_TITLE}`;
+    if (me) questTrack('tuto_lu', hit.t.slug); // quête « tutos lus » : seulement pour un membre connecté
     tutoView.querySelector('#aide-tuto-heading')?.focus({ preventScroll: false });
     window.scrollTo({ top: 0 });
     return;

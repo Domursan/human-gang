@@ -5,9 +5,10 @@
 /*
  * Rôle : petits comportements communs à toutes les pages, sans rapport avec une fonctionnalité précise :
  * repli des images cassées, bouton « Réessayer », feuilles de style « print » basculées sur « all »,
- * et enregistrement du service worker (mode hors ligne).
+ * et enregistrement du service worker (mode hors ligne). Signale aussi l'ouverture depuis l'app installée
+ * aux quêtes de la semaine (quest-track.js, importé dynamiquement).
  * Page : toutes les pages (chargé avant le module de chaque page).
- * Dépendances : aucune. Le fichier sw.js (racine du site) est enregistré ici.
+ * Dépendances : aucune au démarrage (quest-track.js seulement si l'app est installée). Le fichier sw.js (racine du site) est enregistré ici.
  * Exporte : rien (effets de bord seulement).
  */
 
@@ -47,6 +48,17 @@ document.querySelectorAll('link[data-media-all]').forEach((l) => {
   const on = () => { l.media = 'all'; };
   if (l.sheet) on(); else l.addEventListener('load', on, { once: true });
 });
+
+/* ---------- App installée (quête « app installée ») ---------- */
+
+/** Vrai si le site tourne comme app installée (fenêtre autonome), et non dans un onglet du navigateur. */
+const estAppInstallee = () => {
+  try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; }
+};
+/** Signale l'action « app installée » aux quêtes. Import dynamique : rien ne se charge dans un onglet ordinaire. */
+const signaleApp = () => { import('./quest-track.js').then((m) => m.questTrack('app_installee', 'app')).catch(() => {}); };
+if (estAppInstallee()) signaleApp();
+addEventListener('appinstalled', signaleApp);
 
 /* ---------- Mode hors ligne (service worker) ---------- */
 
