@@ -1,10 +1,15 @@
-// Outils communs aux tests : site servi depuis le dépôt, faux Supabase, compteurs de résultats.
+// Harnais commun des tests (tests/lib/harness.cjs).
+// Outils communs aux tests : site servi depuis le dépôt sans serveur, faux Supabase (tests/fixtures/),
+// compteurs de résultats (check / finish), ouverture de page et de panel admin.
 // Aucun test ne doit atteindre la vraie base : toute requête vers *.supabase.co est interceptée
 // et signalée, et finish() échoue si l'une a été tentée.
+// Utilisé par les smoke*.cjs et les parcours-*.cjs via require('./lib/harness.cjs'). Rien à lancer seul : voir tests/README.md.
+
 const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
 
+/* ---------- Constantes : chemins (dépôt, tests, fixtures, captures) et adresse du faux site ---------- */
 const TESTS = path.resolve(__dirname, '..');
 const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.resolve(TESTS, '..');
 const FIXTURES = path.join(TESTS, 'fixtures');
@@ -12,9 +17,12 @@ const SHOTS = path.join(TESTS, 'shots');
 const ORIGIN = 'http://hg.test';
 // Préfixe de chemin : HG_PREFIX=/human-gang sert le site comme GitHub Pages (https://domursan.github.io/human-gang/).
 // Tout chemin hors préfixe (ex. /assets/… à la racine) répond 404, comme en ligne : un chemin absolu cassé se voit.
+/** Préfixe de chemin : le site peut être servi sous /human-gang/ comme sur GitHub Pages. */
 const PREFIX = (process.env.HG_PREFIX || '').replace(/\/+$/, '');
+/** Type MIME envoyé au navigateur, selon l'extension du fichier. */
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain' };
 
+/** Compteurs de résultats et liste des requêtes vers le vrai Supabase (remplie par openPage). */
 let fails = 0, passes = 0;
 const EXTERNAL = [];
 
@@ -32,6 +40,7 @@ function finish() {
   process.exitCode = fails ? 1 : 0;
 }
 
+/** Attend ms millisecondes (laisse le temps aux animations et au rendu). */
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 /**
@@ -54,6 +63,8 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     } catch (e) { /* stockage bloqué : sans importance pour le test */ }
   }, scenario);
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
+  // Toute requête de la page passe ici : le site est servi depuis le dépôt, le faux Supabase remplace
+  // supabase-js, les autres hôtes externes répondent vide (204). Les requêtes vers *.supabase.co sont notées dans EXTERNAL.
   await ctx.route('**/*', async (route) => {
     const req = route.request(), u = new URL(req.url());
     if (u.origin !== ORIGIN) {
@@ -82,6 +93,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
 }
 
 /** Décalage horizontal de la page (0 = pas de scroll horizontal). */
+/** Décalage horizontal de la page : 0 si aucun défilement horizontal. */
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
 /**
@@ -102,6 +114,7 @@ async function adminSection(page, route) {
 }
 
 /** Journal des appels du faux client (rpc, from, fn, auth…). */
+/** Renvoie le journal des appels du faux client, lu dans la page (window.__LOG). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
 module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, hscroll, log, sleep, chromium };
