@@ -610,8 +610,6 @@ async function onClick(e) {
   if (t.dataset.evAct === 'new') return openEditor(null);
   const ev = current();
   if (!ev) return;
-  if (t.dataset.evAct === 'edit') return openEditor(ev);
-  if (t.dataset.evAct === 'test') return flyDynImage(ev, { preview: true });
   if (t.dataset.evAct === 'delete') return remove(t, ev);
   if (t.dataset.evAnnounce) return announce(t, ev, t.dataset.evAnnounce);
 }
