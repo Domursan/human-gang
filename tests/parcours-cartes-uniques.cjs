@@ -109,6 +109,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   await p.waitForSelector('dialog.ui-drawer[open] #acc-rarity', { timeout: 5000 });
   check(await p.isHidden('#acc-unique-help'), 'éditeur : aide « Unique » masquée tant que la rareté n\'est pas choisie');
   await p.selectOption('#acc-rarity', 'unique');
+  check(await p.inputValue('#acc-family') === 'unique', 'éditeur : rareté unique → famille « Unique » proposée');
   await sleep(150);
   check(await p.inputValue('#acc-set') === 'SETHS', 'éditeur : choisir « Unique » pré-sélectionne « Hors série »');
   check(await p.inputValue('#acc-max') === '1' && await p.getAttribute('#acc-max', 'readonly') !== null, 'éditeur : exemplaires maximum verrouillé à 1');

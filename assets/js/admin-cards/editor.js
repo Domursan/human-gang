@@ -57,7 +57,7 @@ export function openCardDialog(k = null) {
               <input id="acc-file" name="file" type="file" accept="image/png,image/webp,image/jpeg,image/gif,image/svg+xml"></div>
             <div class="field"><label for="acc-url">Ou URL de l'image</label>
               <input id="acc-url" name="image_url" type="url" inputmode="url" placeholder="https://…" value="${esc(k?.image_url ?? '')}"></div>
-            <p class="small muted">Sans image, la carte affiche le logo du gang.</p>
+            <p class="small muted">Format conseillé : paysage 16:9 (par exemple 1600 × 900 px), sujet bien centré (les petites cartes ne montrent que le milieu). PNG, JPG, WebP, GIF ou SVG, 5 Mo maximum. Sans image, la carte affiche le logo du gang.</p>
             <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-acc-noimg>Retirer l'image</button></div>
           </fieldset>
           <div class="field"><label for="acc-flavor">Texte d'ambiance</label>
@@ -95,9 +95,11 @@ export function openCardDialog(k = null) {
     if (u) { E.max_copies.value = '1'; E.craftable.checked = false; }
     $('#acc-unique-help', root).hidden = !u;
   };
-  /** Le choix de la rareté unique pré-sélectionne « Hors série » (et le premier numéro libre) ; annulé si on quitte la rareté. */
+  /** Le choix de la rareté unique pré-sélectionne la famille « Unique » et la série « Hors série » (et le premier numéro libre). */
   const onRarityChange = () => {
     if (E.rarity.value === 'unique') {
+      const fam = root.querySelector('#acc-family');
+      if (fam) fam.value = 'unique'; // famille « Unique » proposée d'office (modifiable)
       const hs = horsSerieId();
       if (hs && E.set_id.value !== hs) {
         E.set_id.value = hs;

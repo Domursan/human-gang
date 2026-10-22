@@ -36,6 +36,7 @@ export const FAMILIES = [
   { id: 'objet', label: 'Objet' },
   { id: 'evenement', label: 'Événement' },
   { id: 'jeu', label: 'Jeu vidéo' },
+  { id: 'unique', label: 'Unique' },
 ];
 /** Libellé d'une famille (« Jeu vidéo »). Renvoie l'identifiant brut si inconnue. */
 export const familyLabel = (id) => FAMILIES.find((f) => f.id === id)?.label || id;
