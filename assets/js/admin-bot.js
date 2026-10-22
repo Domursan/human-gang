@@ -317,7 +317,7 @@ export function mountBotSection(container) {
   // État de la page : réglages du bot, assistance et planning, filtres de l'historique, modèles (défauts, personnalisés, brouillons),
   // destinataires choisis et pièces jointes du message manuel.
   const S = {
-    bot: { announce_channel_id: null, birthday_channel_id: null, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
+    bot: { announce_channel_id: null, birthday_channel_id: null, channels: {}, admin_discord_id: null, mention_role_id: null, mentions: {}, notify: {} },
     support: {}, planning: {},
     histFilter: 'all', histQ: '', histLimit: PAGE_SIZE, histMore: false,
     defs: null, custom: {}, drafts: new Map(), current: null, lastField: 'body',
@@ -337,11 +337,6 @@ export function mountBotSection(container) {
             <input id="bot-channel" name="announce_channel_id" inputmode="numeric" autocomplete="off" placeholder="ex. 112233445566778899">
           </div>
           <div class="field">
-            <label for="bot-bday-channel">ID du salon des anniversaires <span class="muted small">(facultatif)</span></label>
-            <input id="bot-bday-channel" name="birthday_channel_id" inputmode="numeric" autocomplete="off" placeholder="Vide = salon d'annonces" aria-describedby="bot-bday-hint">
-            <p class="small muted" id="bot-bday-hint">Les « Joyeux anniversaire » y sont publiés ; laissé vide, ils partent dans le salon d'annonces.</p>
-          </div>
-          <div class="field">
             <label for="bot-admin">Ton ID Discord (MP assistance)</label>
             <input id="bot-admin" name="admin_discord_id" inputmode="numeric" autocomplete="off" placeholder="ex. 998877665544332211">
           </div>
@@ -351,10 +346,21 @@ export function mountBotSection(container) {
           <input id="bot-role" name="mention_role_id" inputmode="numeric" autocomplete="off" placeholder="ex. 445566778899001122" aria-describedby="bot-role-hint">
           <p class="small muted" id="bot-role-hint">Dans Discord, active le <em>mode développeur</em> (Paramètres › Avancés), puis fais un clic droit sur le rôle › <em>Copier l'identifiant</em>.</p>
         </div>
+        <fieldset class="channels" id="bot-channels">
+          <legend class="label">Salon par type d'annonce</legend>
+          <p class="small muted">Chaque annonce publiée dans un salon part dans le salon de son type. <strong>Vide = salon d'annonces.</strong> Les messages privés ne sont pas concernés.</p>
+          <div class="mention-list">
+            ${MENTION_TYPES.map(([k, label]) => `<div class="mention-row">
+              <label for="bot-chan-${k}">${esc(label)}</label>
+              <input id="bot-chan-${k}" name="channel_${k}" inputmode="numeric" autocomplete="off" placeholder="Vide = salon d'annonces">
+            </div>`).join('')}
+          </div>
+          <p class="small muted" id="bot-chan-hint">ID du salon : dans Discord, active le <em>mode développeur</em>, puis fais un clic droit sur le salon › <em>Copier l'identifiant</em>.</p>
+        </fieldset>
         <fieldset class="mentions" id="bot-mentions">
-          <legend class="label">Mention dans le salon d'annonces</legend>
+          <legend class="label">Mention dans le salon de l'annonce</legend>
           <p class="small muted">« Le rôle » notifie les membres de ce rôle. <strong>« @everyone » notifie tout le serveur</strong> : à réserver aux annonces vraiment importantes. Par défaut, aucune mention.</p>
-          <p class="small muted" id="bot-mentions-off" hidden>Renseigne d'abord l'ID du salon d'annonces pour choisir une mention.</p>
+          <p class="small muted" id="bot-mentions-off" hidden>Renseigne d'abord un salon (d'annonces ou par type) pour choisir une mention.</p>
           <div class="mention-list">
             ${MENTION_TYPES.map(([k, label]) => `<div class="mention-row">
               <label for="bot-mention-${k}">${esc(label)}</label>
@@ -368,6 +374,11 @@ export function mountBotSection(container) {
         </fieldset>
         <div class="btn-row">
           <button class="btn btn-primary" type="submit">Enregistrer</button>
+          <label class="small muted" for="bot-test-type">Tester le salon</label>
+          <select id="bot-test-type" name="test_type">
+            <option value="">Salon d'annonces</option>
+            ${MENTION_TYPES.map(([k, label]) => `<option value="${k}">${esc(label)}</option>`).join('')}
+          </select>
           <button class="btn btn-ghost" type="button" id="bot-test">Envoyer un message de test</button>
         </div>
       </form>
@@ -440,22 +451,25 @@ export function mountBotSection(container) {
   /** Remplit le formulaire des réglages généraux avec les valeurs enregistrées, puis grise les mentions si besoin. */
   function renderSettings() {
     form.announce_channel_id.value = S.bot.announce_channel_id ?? '';
-    form.birthday_channel_id.value = S.bot.birthday_channel_id ?? '';
     form.admin_discord_id.value = S.bot.admin_discord_id ?? '';
     form.mention_role_id.value = S.bot.mention_role_id ?? '';
     for (const [k] of MENTION_TYPES) form.elements[`mention_${k}`].value = mentionOf(k);
+    for (const [k] of MENTION_TYPES) form.elements[`channel_${k}`].value = channelOf(k);
     for (const k of NOTIFY_KEYS) form.elements[k].checked = S.bot.notify[k] !== false;
     syncMentionControls();
   }
+  /** Salon enregistré pour un type : bot.channels[type], sinon l'ancien réglage des anniversaires, sinon vide. */
+  const channelOf = (k) => S.bot.channels?.[k] || (k === 'birthday' ? S.bot.birthday_channel_id : null) || '';
   /** Mention d'un type (réglage) : « none » par défaut. */
   const mentionOf = (k) => (MENTION_MODES.some(([v]) => v === S.bot.mentions?.[k]) ? S.bot.mentions[k] : 'none');
   /** Les choix de mention ne servent qu'avec un salon d'annonces : sans salon, le bloc est grisé. */
   function syncMentionControls() {
-    const on = !!form.announce_channel_id.value.trim();
+    const on = !!form.announce_channel_id.value.trim() || MENTION_TYPES.some(([k]) => !!form.elements[`channel_${k}`].value.trim());
     $('#bot-mentions', container).disabled = !on;
     $('#bot-mentions-off', container).hidden = on;
   }
   form.announce_channel_id.addEventListener('input', syncMentionControls);
+  for (const [k] of MENTION_TYPES) form.elements[`channel_${k}`].addEventListener('input', syncMentionControls);
   // Enregistrement des réglages généraux : contrôle des identifiants Discord et du rôle exigé par une mention,
   // puis écriture de hg_settings.bot. Les réglages des autres blocs sont conservés (...S.bot).
   form.addEventListener('submit', (ev) => {
@@ -464,14 +478,19 @@ export function mountBotSection(container) {
       const channel = form.announce_channel_id.value.trim(), admin = form.admin_discord_id.value.trim();
       const role = form.mention_role_id.value.trim();
       if (channel && !DISCORD_ID.test(channel)) throw new Error('L\'ID du salon doit être un nombre de 17 à 20 chiffres.');
-      const bdayChannel = form.birthday_channel_id.value.trim();
-      if (bdayChannel && !DISCORD_ID.test(bdayChannel)) throw new Error('L\'ID du salon des anniversaires doit être un nombre de 17 à 20 chiffres.');
+      // Salons par type : vide = salon d'annonces (rien n'est stocké pour ce type).
+      const channels = {};
+      for (const [k, label] of MENTION_TYPES) {
+        const v = form.elements[`channel_${k}`].value.trim();
+        if (v && !DISCORD_ID.test(v)) throw new Error(`L'ID du salon « ${label} » doit être un nombre de 17 à 20 chiffres.`);
+        if (v) channels[k] = v;
+      }
       if (admin && !DISCORD_ID.test(admin)) throw new Error('Ton ID Discord doit être un nombre de 17 à 20 chiffres.');
       if (role && !DISCORD_ID.test(role)) throw new Error('L\'ID du rôle doit être un nombre de 17 à 20 chiffres.');
       const mentions = Object.fromEntries(MENTION_TYPES.map(([k]) => [k, form.elements[`mention_${k}`].value]));
       if (Object.values(mentions).includes('role') && !role) throw new Error('Pour mentionner un rôle, renseigne son ID.');
       const value = {
-        ...S.bot, announce_channel_id: channel || null, birthday_channel_id: bdayChannel || null, admin_discord_id: admin || null, mention_role_id: role || null,
+        ...S.bot, announce_channel_id: channel || null, birthday_channel_id: channels.birthday ?? null, channels, admin_discord_id: admin || null, mention_role_id: role || null,
         mentions, notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])),
       };
       check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
@@ -482,7 +501,8 @@ export function mountBotSection(container) {
   });
   // Test : le bot envoie un message de test au salon et en MP ; le résultat de chaque voie est affiché.
   $('#bot-test', container).addEventListener('click', (ev) => busy(ev.currentTarget, async () => {
-    const res = await callFn('hg-notify', { event: 'bot_test' });
+    const type = $('#bot-test-type', container).value;
+    const res = await callFn('hg-notify', type ? { event: 'bot_test', type } : { event: 'bot_test' });
     const parts = [];
     if (res?.channel !== undefined) parts.push(`salon : ${res.channel ? 'OK' : 'échec'}`);
     if (res?.dm !== undefined) parts.push(`MP : ${res.dm ? 'OK' : 'échec'}`);

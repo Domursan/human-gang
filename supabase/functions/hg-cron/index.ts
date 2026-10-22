@@ -7,7 +7,8 @@
 //
 // Tâches :
 //   1. Lancement des événements dynamiques : announce = true, active = true, starts_at passé, ends_at à venir,
-//      announced_start_at null → annonce « dyn_start » dans le salon d'annonces (avec l'image). Mention : bot.mentions.dyn.
+//      announced_start_at null → annonce « dyn_start » dans le salon (avec l'image). Salon : bot.channels.dyn, sinon le
+//      salon d'annonces (voir ../_shared/channels.ts). Mention : bot.mentions.dyn.
 //   2. Fin : announce = true, active = true, ends_at passé, announced_end_at null → annonce « dyn_end » avec le top 3.
 //      Un événement terminé depuis plus de 24 h est seulement marqué (pas d'annonce tardive).
 //   3. Rappels de sortie IRL (opt-in, profil.remind_irl) : MP aux membres « oui » ou « peut-etre » d'une sortie
@@ -19,7 +20,7 @@
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron »).
-// Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, cron-auth.ts, reglages.ts ;
+// Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, channels.ts, cron-auth.ts, reglages.ts ;
 //   tables hg_settings, hg_dyn_events, hg_events, hg_event_rsvps, hg_profiles, hg_ss_editions, hg_ss_participants,
 //   hg_ss_assignments, hg_bot_log.
 // Exporte : rien (point d'entrée Deno.serve).
@@ -28,6 +29,7 @@ import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_sh
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
+import { channelFor, type ChannelBot } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
 
@@ -124,12 +126,12 @@ const canDM = (p: { bot_optin: boolean; discord_id: string | null } | null | und
  * Annonces de lancement et de fin des événements dynamiques (tâches 1 et 2).
  * Une fin trop ancienne (plus de dyn_retard_h heures) est seulement marquée, sans envoi.
  * @param {Counters} out Compteurs du passage (modifiés).
- * @param {{announce_channel_id?: string} & MentionBot} bot Réglages du bot.
+ * @param {ChannelBot & MentionBot} bot Réglages du bot.
  * @param {BotRules} rules Règles du bot.
  * @returns {Promise<void>}
  * @throws {Error} Si la lecture des événements échoue.
  */
-async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: string } & MentionBot, rules: BotRules) {
+async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rules: BotRules) {
   const LATE_MS = rules.dyn_retard_h * H;
   const nowIso = new Date().toISOString();
   const [{ data: startRows, error: e1 }, { data: endRows, error: e2 }] = await Promise.all([
@@ -143,8 +145,8 @@ async function dynAnnouncements(out: Counters, bot: { announce_channel_id?: stri
   const ends = (endRows ?? []) as DynEvent[];
   if (!starts.length && !ends.length) return;
 
-  const channel = bot.announce_channel_id;
-  const botReady = hasBotToken() && isSnowflake(channel);
+  const channel = channelFor(bot, 'dyn');
+  const botReady = hasBotToken() && !!channel;
   const tpl = botReady ? await loadTemplates(db) : {};
 
   /**
@@ -318,7 +320,7 @@ Deno.serve(async (req) => {
   const attempts: Attempt[] = [];
   try {
     const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
-    const bot = (s?.value ?? {}) as { announce_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
+    const bot = (s?.value ?? {}) as ChannelBot & { notify?: Record<string, boolean> } & MentionBot;
     const rules = botRules(bot as Record<string, unknown>);
     const canSend = hasBotToken();
 

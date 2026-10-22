@@ -44,12 +44,15 @@
 //                    Désactivable (bot.notify.card_gift_admin, activé par défaut).
 // Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
+// Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade) : bot.channels.<type>, sinon le salon d'annonces
+// (voir ../_shared/channels.ts). Les MP et l'annonce manuelle (admin_dm) ne changent pas.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
-import { mentionFor, mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
+import { mentionFor, mentionMode, mentionWith, MENTION_TYPES, type MentionBot, type MentionType } from '../_shared/mentions.ts';
+import { channelFor, CHANNEL_LABEL } from '../_shared/channels.ts';
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 import { botRules } from '../_shared/reglages.ts';
 
@@ -73,6 +76,8 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 /** Réglages du bot (hg_settings.bot). Tous les champs sont facultatifs : une valeur absente désactive la fonction. */
 type Bot = MentionBot & {
   announce_channel_id?: string | null;
+  birthday_channel_id?: string | null;
+  channels?: Partial<Record<MentionType, string | null>> | null;
   admin_discord_id?: string | null;
   notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin', boolean>>;
 };
@@ -190,8 +195,9 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
     date_echange: fmtDate(ed.exchange_date) ?? '', lien: link('secret-santa.html') ?? '',
   };
   let announced = false;
-  if (bot.announce_channel_id) {
-    announced = await trySend(() => sendChannel(bot.announce_channel_id!, {
+  const drawChannel = channelFor(bot, 'draw');
+  if (drawChannel) {
+    announced = await trySend(() => sendChannel(drawChannel, {
       ...mentionFor(bot, 'draw'),
       ...embed({ ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)), url: link('secret-santa.html'), color: COLOR.ss, fields }),
     }), 'annonce tirage');
@@ -228,7 +234,7 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   const ts = kind === 'sent' ? part.sent_at : part.received_at;
   if (!ts) throw new HttpError(409, kind === 'sent' ? 'Envoi non enregistré' : 'Réception non enregistrée');
   // Un MP n'est envoyé que si l'action est récente (anti-répétition).
-  if (!recent(ts)) return { skipped: 'déjà notifié' };
+  if (!recent(ts)) return { skipped: 'action trop ancienne' };
 
   // Service role : on lit l'attribution côté serveur, sans jamais la renvoyer au client.
   // Si l'appelant est le Santa (sent), on cherche sa cible (receiver_id) ; sinon on cherche son Santa (giver_id).
@@ -261,7 +267,8 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
 async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
   if (bot.notify?.irl === false) return { skipped: 'désactivé' };
-  if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
+  const irlChannel = channelFor(bot, 'irl');
+  if (!irlChannel) return { skipped: 'aucun salon configuré' };
   const { data: ev } = await db.from('hg_events').select('id, title, description, location, starts_at, created_by, created_at')
     .eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Sortie introuvable');
@@ -281,7 +288,7 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
     description: ev.description ? String(ev.description).slice(0, 600) : 'Dis si tu viens sur le site.',
     lieu: where, date: when, organisateur: me.pseudo, lien: link('irl.html') ?? '',
   }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+  const channel = await trySend(() => sendChannel(irlChannel, {
     ...mentionFor(bot, 'irl'),
     ...embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields }),
   }), 'annonce IRL');
@@ -354,9 +361,22 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
  * @returns {Promise<object>} Résultat par destination (channel, dm), ou un message d'erreur de configuration.
  * @throws {HttpError} 403 si l'appelant n'est pas admin.
  */
-async function onTest(me: Profile, bot: Bot, tpl: Templates) {
+async function onTest(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!me.is_admin) throw new HttpError(403, 'Réservé à l\'admin');
   const out: Record<string, unknown> = {};
+  // Test d'un salon par type d'annonce (bot.channels) : message seulement dans ce salon, sans MP.
+  if (p.type != null && p.type !== '') {
+    if (!MENTION_TYPES.includes(p.type as MentionType)) throw new HttpError(400, 'Type d\'annonce inconnu');
+    const type = p.type as MentionType;
+    const chan = channelFor(bot, type);
+    if (!chan) return { error: 'Aucun salon pour ce type : renseigne son salon, ou le salon d\'annonces, puis enregistre.' };
+    out.type = type;
+    out.channel = await trySend(() => sendChannel(chan, embed({
+      ...embedFrom(renderTemplate('bot_test', { canal: `les annonces « ${CHANNEL_LABEL[type]} »`, pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
+      color: COLOR.info, url: link('accueil.html'),
+    })), `test salon ${type}`);
+    return out;
+  }
   if (!bot.announce_channel_id && !bot.admin_discord_id) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord, puis enregistre.' };
   if (bot.announce_channel_id) {
     out.channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
@@ -532,10 +552,11 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
   if (!phase) throw new HttpError(400, 'phase attendue : start ou end');
   const { data: ev } = await db.from('hg_dyn_events').select('*').eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Événement introuvable');
-  if (!bot.announce_channel_id) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
+  const dynChannel = channelFor(bot, 'dyn');
+  if (!dynChannel) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
   const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE, mentionFor(bot, 'dyn'), botRules(bot as unknown as Record<string, unknown>).top_n);
   try {
-    await sendChannel(bot.announce_channel_id, message);
+    await sendChannel(dynChannel, message);
   } catch (e) {
     console.error('[hg-notify] annonce événement', e);
     return { sent: false, error: friendlyDiscordError(e) };
@@ -565,7 +586,8 @@ const CARD_FRESH_MS = 10 * 60_000; // l'exemplaire doit venir d'être obtenu (an
 async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.card)) throw new HttpError(400, 'card manquant');
   if (bot.notify?.card_pull === false) return { skipped: 'désactivé' };
-  if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
+  const pullChannel = channelFor(bot, 'card_pull');
+  if (!pullChannel) return { skipped: 'aucun salon configuré' };
   const { data: card } = await db.from('hg_cards').select('id, name, rarity, max_copies').eq('id', p.card).maybeSingle();
   if (!card) throw new HttpError(404, 'Carte introuvable');
   const rarete = CARD_RARITY_LABEL[card.rarity];
@@ -588,7 +610,7 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
   const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+  const channel = await trySend(() => sendChannel(pullChannel, {
     ...mentionFor(bot, 'card_pull'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
   }), 'annonce carte');
@@ -609,7 +631,8 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
   if (bot.notify?.card_trade !== true) return { skipped: 'désactivé' };
-  if (!bot.announce_channel_id) return { skipped: 'aucun salon configuré' };
+  const tradeChannel = channelFor(bot, 'card_trade');
+  if (!tradeChannel) return { skipped: 'aucun salon configuré' };
   const { data: t } = await db.from('hg_card_trades').select('id, from_user, to_user, status, resolved_at').eq('id', p.trade_id).maybeSingle();
   if (!t) throw new HttpError(404, 'Échange introuvable');
   // Seul le destinataire (celui qui accepte l'offre) annonce : une seule annonce par échange.
@@ -618,7 +641,7 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
   const other = await getProfile(t.from_user);
   const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(bot.announce_channel_id!, {
+  const channel = await trySend(() => sendChannel(tradeChannel, {
     ...mentionFor(bot, 'card_trade'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
   }), 'annonce échange');
@@ -672,10 +695,14 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   if (t.status !== 'proposee') return { skipped: 'offre non ouverte' };
   if (!recent(t.created_at)) return { skipped: 'offre déjà ancienne' };
 
-  // Anti-doublon : hg_card_trades n'a pas de colonne « notifiée ». Le site n'appelle qu'une fois par création, et la
-  // fenêtre de 15 min écarte les vieilles offres. Un 2e appel dans la fenêtre enverrait un 2e MP.
+  // La fenêtre de 15 min écarte les vieilles offres ; l'anti-doublon est la réservation notified_at ci-dessous.
   const other = await getProfile(t.to_user);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  // Réservation : seul un appel qui passe de null à « maintenant » envoie le MP. Un second appel ne renvoie rien.
+  const { data: claimed, error: claimErr } = await db.from('hg_card_trades').update({ notified_at: new Date().toISOString() })
+    .eq('id', t.id).is('notified_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà notifié' };
 
   // Cartes : côté 'from' = données par l'auteur, côté 'to' = demandées à leur destinataire (lecture serveur).
   const { data: items } = await db.from('hg_card_trade_items')
@@ -700,6 +727,8 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   const ok = await trySend(() => sendDM(other.discord_id!, embed({
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
   })), `MP offre ${other.id}`);
+  // Échec : on libère la réservation pour qu'un nouvel appel dans la fenêtre de 15 min puisse réessayer.
+  if (!ok) await db.from('hg_card_trades').update({ notified_at: null }).eq('id', t.id);
   return { dm: ok };
 }
 
@@ -803,7 +832,7 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   // Une alerte par carte distincte (le premier exemplaire réservé donne le nom et la mention « brillante »)
   const byCard = new Map<string, { shiny: boolean }>();
-  for (const c of claimed as { card_id: string; shiny: boolean }[]) {
+  for (const c of claimed as { id: number; card_id: string; shiny: boolean }[]) {
     if (!byCard.has(c.card_id)) byCard.set(c.card_id, { shiny: c.shiny });
   }
   const { data: cards } = await db.from('hg_cards').select('id, name').in('id', [...byCard.keys()]);
@@ -811,6 +840,7 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   let sent = 0, failed = 0, skipped = 0;
   for (const [cardId, info] of byCard) {
+    let cardSent = 0, cardFailed = 0;
     // Membres qui souhaitent cette carte (sauf l'appelant).
     const { data: wishes } = await db.from('hg_card_wishlist').select('user_id').eq('card_id', cardId).neq('user_id', me.id);
     const wishers = (wishes ?? []).map((w: { user_id: string }) => w.user_id);
@@ -826,8 +856,15 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
       const ok = await trySend(() => sendDM(prof.discord_id!, embed({
         ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
       })), `MP souhait ${prof.id}`);
-      ok ? sent++ : failed++;
+      if (ok) { sent++; cardSent++; } else { failed++; cardFailed++; }
       await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
+    }
+    // Échec total pour cette carte (aucun MP parti, au moins un échec) : on libère ses exemplaires réservés,
+    // pour qu'un appel ultérieur dans la fenêtre de 10 min puisse réessayer. Un échec partiel reste marqué (pas de MP en double).
+    if (cardSent === 0 && cardFailed > 0) {
+      const copyIds = (claimed as { id: number; card_id: string }[]).filter((c) => c.card_id === cardId).map((c) => c.id);
+      const { error: relErr } = await db.from('hg_card_copies').update({ wish_notified_at: null }).in('id', copyIds);
+      if (relErr) console.error('[hg-notify] libération souhaits', relErr);
     }
   }
   return { dms_sent: sent, dms_failed: failed, skipped };
@@ -872,7 +909,7 @@ Deno.serve(async (req) => {
       case 'ss_gift_sent': result = await onGift(me, bot, payload, 'sent', tpl); break;
       case 'ss_gift_received': result = await onGift(me, bot, payload, 'received', tpl); break;
       case 'irl_new': result = await onIrl(me, bot, payload, tpl); break;
-      case 'bot_test': result = await onTest(me, bot, tpl); break;
+      case 'bot_test': result = await onTest(me, bot, payload, tpl); break;
       case 'message_new': result = await onMessage(me, bot, payload, tpl); break;
       case 'admin_dm': result = await onAdminDm(me, bot, payload); break;
       case 'dyn_announce': result = await onDynAnnounce(me, bot, payload, tpl); break;
