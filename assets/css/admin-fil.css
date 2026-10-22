@@ -1,0 +1,27 @@
+/* Admin › Communication › Fil d'activité (admin-fil.js) : modération des entrées de hg_activity. */
+.afl { display: grid; gap: 14px; max-width: 980px; }
+.afl-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
+.afl-head > p { margin: 0; flex: 1 1 320px; }
+.afl-tools { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 16px; }
+.afl-tools .lt-search { flex: 1 1 280px; margin-bottom: 0; }
+.afl-kind { flex: 0 1 240px; min-width: 0; }
+.afl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.afl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta del" "text del"; gap: 4px 12px;
+  align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.afl-meta { grid-area: meta; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.afl-text { grid-area: text; margin: 0; overflow-wrap: anywhere; }
+.afl-del { grid-area: del; }
+.afl-del svg { width: 18px; height: 18px; }
+.afl-kind-pill { display: inline-flex; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--border-strong); }
+.afl-kind-pill[data-kind="join"] { color: var(--sage-text); }
+.afl-kind-pill[data-kind="cartes"] { color: var(--sand); }
+.afl-kind-pill[data-kind="ss_draw"] { color: var(--rose); }
+.afl-kind-pill[data-kind="badge"] { color: var(--slate); }
+.afl-kind-pill[data-kind="secret"] { color: var(--plum); }
+.afl-limit { margin: 4px 0 0; }
+@media (max-width: 520px) {
+  .afl-row { grid-template-columns: minmax(0, 1fr); grid-template-areas: "meta" "text" "del"; }
+  .afl-del { justify-self: start; }
+}
+.afl .lt-box input { min-height: 44px; }

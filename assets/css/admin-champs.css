@@ -1,0 +1,50 @@
+/* Admin › Membres › Champs du profil (admin-champs.js) : éditeur structuré du réglage « profile_fields ». */
+.ach { display: grid; gap: 14px; max-width: 980px; }
+.ach-intro { margin: 0; }
+.ach-warn { margin: 0; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); color: var(--muted); }
+.ach-form { display: grid; gap: 14px; }
+.ach-groups, .ach-fields { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ach-group > details { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.ach-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 16px;
+  cursor: pointer; font-weight: 700; list-style-position: inside; }
+.ach-summary-title { overflow-wrap: anywhere; min-width: 0; }
+.ach-summary:focus-visible { outline: 2px solid var(--sand); outline-offset: -2px; border-radius: var(--radius-sm); }
+.ach-group-body { display: grid; gap: 12px; padding: 4px 16px 16px; }
+.ach-group-head { display: grid; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.ach-field { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "main moves" "foot foot"; align-items: end;
+  gap: 4px 10px; padding: 8px 12px; background: var(--surface-2); border-radius: var(--radius-sm); min-width: 0; }
+.ach-field > .ach-field-main { grid-area: main; }
+.ach-field > .ach-moves { grid-area: moves; }
+.ach-field > .ach-field-foot { grid-area: foot; }
+.ach-field .field { gap: 2px; }
+.ach-field-main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr); gap: 10px; }
+.ach-field-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.ach .field label { font-size: 13px; }
+.ach-id { margin: 0; overflow-wrap: anywhere; }
+.ach-id code { font-size: 13px; }
+.ach-lock { font-style: italic; }
+.ach-id-edit { flex: 1 1 240px; }
+.ach-moves { display: flex; gap: 6px; margin-left: auto; }
+.ach-icon { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; font: inherit; font-size: 18px;
+  color: var(--text); background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); cursor: pointer; }
+.ach-icon[disabled] { opacity: .4; cursor: not-allowed; }
+@media (hover: hover) { .ach-icon:not([disabled]):hover { background: var(--surface); } }
+.ach-remove { color: var(--rose); }
+.ach-add { justify-self: start; }
+.ach-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ach-spacer { flex: 1 1 auto; }
+.ach-status:empty { display: none; }
+.ach-status { padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.ach-status p, .ach-status ul { margin: 0; }
+.ach-status ul { padding-left: 20px; }
+.ach-status[data-tone="error"] { border-color: var(--rose); color: var(--rose); }
+.ach-status[data-tone="ok"] { border-color: var(--sage); color: var(--sage-text); }
+.ach [aria-invalid="true"] { border-color: var(--rose); }
+@media (max-width: 720px) {
+  .ach-field-main { grid-template-columns: minmax(0, 1fr); }
+  .ach-field { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "foot" "moves"; }
+  .ach-field > .ach-moves { margin-left: 0; }
+  .ach-group-body { padding: 4px 10px 12px; }
+  .ach-actions .btn { flex: 1 1 100%; }
+  .ach-spacer { display: none; }
+}

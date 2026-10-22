@@ -174,7 +174,11 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: {} });
     await adminSection(p, 'vie/badges');
     const cards = await p.locator('#badge-grid .badge-card').count();
-    check(cards > 10, `(c) grille : les badges (${cards}) en cartes`);
+    const total = await db(p, () => window.__DB.hg_badges.length);
+    check(cards >= 9 && cards < total && await p.isVisible('#badge-more-btn'), `(c) grille : une page de badges (${cards} sur ${total}) et « Afficher plus »`);
+    await p.click('#badge-more-btn');
+    const cards2 = await p.locator('#badge-grid .badge-card').count();
+    check(cards2 > cards, `(c) « Afficher plus » ajoute des badges (${cards2})`);
     check(await p.locator('#badge-grid .badge-card .badge-holders .pill').first().count() === 1, '(c) chaque badge affiche son nombre de détenteurs');
     check(await p.locator('#zone-actions #badge-new').count() === 1, '(c) barre de zone : « Nouveau badge »');
 
@@ -197,6 +201,8 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     check(await drawerCount(p) === 0, '(c) création validée : tiroir fermé');
 
     // Modification : tiroir pré-rempli, enregistrement écrit en base
+    await p.fill('#badge-search', 'citrouille'); // recherche : tous les résultats sont affichés
+    await p.waitForSelector('#badge-grid [data-badge-edit="citrouille"]', { timeout: 5000 });
     await p.click('#badge-grid [data-badge-edit="citrouille"]');
     await p.waitForSelector(`${drawer} #bdg-name`, { timeout: 5000 });
     check(await p.inputValue(`${drawer} #bdg-code`) === 'citrouille', '(c) modification : code non modifiable, tiroir pré-rempli');
@@ -204,7 +210,8 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     await submitDrawer(p);
     check((await db(p, () => window.__DB.hg_badges.find((b) => b.code === 'citrouille').name)) === 'Citrouille révisée', '(c) modification : nom écrit en base');
 
-    // Attribution : un membre, un badge à la main
+    // Attribution (partie « Attribution » des badges) : un membre, un badge à la main
+    await adminSection(p, 'vie/badges-attribution');
     await p.selectOption('#badge-member', { index: 1 });
     await p.waitForSelector('#badge-toggles [data-toggle-badge]', { timeout: 5000 });
     check(await p.locator('#badge-toggles [data-toggle-badge]').count() > 0, '(c) attribution : les badges du membre sont proposés');

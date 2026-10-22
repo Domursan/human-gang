@@ -23,3 +23,9 @@
 .rg-act { flex: none; }
 .rg-add { display: grid; gap: 14px; }
 @media (max-width: 520px) { .rg-row { flex-direction: column; } .rg-act .btn { min-height: 44px; } }
+
+/* Parties d'une section découpée (Économie, Identité et textes, Badges) : un bloc d'une autre partie est masqué,
+   même si sa classe impose un display (flex, grid). */
+[data-part][hidden] { display: none !important; }
+.acd-econ-part { margin: 0 0 12px; font-size: 1.2rem; }
+.rg-keys-title { margin: 0 0 8px; }

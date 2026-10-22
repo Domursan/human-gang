@@ -77,7 +77,8 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     // Navigation : domaines et sous-sections permis seulement (Pilotage : Journal ; Jeu de cartes : ses parties et les Défis)
     const domaines = await p.$$eval('#shell-rail .shell-dom', (as) => as.map((a) => a.dataset.dom));
     check(JSON.stringify(domaines) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${domaines.join(', ')}`);
-    const attendu = ['journal', 'series', 'cartes', 'quetes', 'economie', 'joueurs', 'stats', 'echanges', 'drops', 'defis'];
+    // ordre de la colonne (sous-menus Catalogue, Économie, Animation, Suivi) ; Questions [quiz] et Secrets [reglages] absents
+    const attendu = ['journal', 'series', 'cartes', 'boosters', 'economie', 'tirage', 'recyclage', 'limites', 'quetes', 'defis', 'drops', 'joueurs', 'echanges', 'stats'];
     const subs = await p.$$eval('#shell-subs .shell-sub', (as) => as.map((a) => a.dataset.sub));
     check(JSON.stringify(subs) === JSON.stringify(attendu), `(b) Staff : sous-sections = ${subs.join(', ')}`);
     const sections = await p.$$eval('.admin-section', (ss) => ss.filter((s) => !s.hidden).map((s) => s.id));

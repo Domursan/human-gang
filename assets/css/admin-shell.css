@@ -71,6 +71,11 @@
 .shell-sub[aria-current="true"] { background: var(--surface-2); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); }
 .shell-sub .nav-count { min-width: 22px; height: auto; padding: 1px 7px; border-radius: 999px; background: var(--bg); color: var(--muted); font-size: 11.5px; font-weight: 600; text-align: center; }
 .shell-sub .nav-count.hot { background: var(--accent); color: var(--accent-text); }
+/* Sous-menus : titre de groupe (texte seul, non cliquable) au-dessus des sous-sections du groupe */
+.shell-dom-subs, .shell-subgroup { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.shell-subgroup + .shell-subgroup, .shell-sub + .shell-subgroup { margin-top: 12px; }
+.shell-subhead { margin: 0 0 2px; padding: 0 10px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; cursor: default; user-select: none; }
 .shell-col-list:empty, .shell-slot[hidden] { display: none; }
 .shell-col-list { min-height: 0; }
 
@@ -125,7 +130,9 @@
   .shell[data-screen="sub"] .zone-back { display: inline-flex; align-items: center; gap: 4px; }
   .zone-head { padding: 16px 16px 14px; }
   .shell-groups { padding: 16px 16px 32px; }
-  .shell-subs { gap: 6px; }
+  .shell-subs, .shell-dom-subs, .shell-subgroup { gap: 6px; }
+  .shell-subgroup + .shell-subgroup, .shell-sub + .shell-subgroup { margin-top: 16px; }
+  .shell-subhead { padding: 0 2px; font-size: 11.5px; }
   .shell-sub { min-height: 46px; font-size: 14.5px; border: 1px solid var(--border); }
   .shell-sub[aria-current="true"] { box-shadow: none; border-color: var(--border-strong); }
   .shell-tabs { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-items: start;

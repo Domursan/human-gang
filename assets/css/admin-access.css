@@ -110,7 +110,10 @@
 /* Gestion de la structure des pages (créer, modifier, supprimer) */
 .pa-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 12px; }
 .pa-head p { margin: 0; flex: 1 1 260px; }
-.pa-page .pa-edit { margin-top: 6px; align-self: flex-start; }
+/* Actions d'une ligne (Personnes, Modifier) côte à côte : lignes plus basses (onglet ≤ 1 400 px à 1 280 px). */
+.pa-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.pa-acts .pa-edit { min-width: 44px; min-height: 44px; }
+.pa-acts .btn { white-space: nowrap; }
 .pa-pg-form { min-width: min(92vw, 460px); }
 .pa-pg-actions { flex-wrap: wrap; }
 .pa-pg-actions .btn-danger { margin-right: auto; }
@@ -121,3 +124,6 @@
 .pa-matrix thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); }
 .pa-matrix thead .pa-mx-corner { z-index: 3; }
 .pa-pg-danger { display: flex; margin-top: 4px; }
+
+/* Lecture seule (pas de droit « reglages ») : note au-dessus du tableau. */
+.pa-ro { margin: 0 0 12px; }

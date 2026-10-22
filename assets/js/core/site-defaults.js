@@ -30,6 +30,11 @@ export const SITE_DEFAULTS = {
     logo_url: '',
     intro_active: true,
     bandeau_cookies: true,
+    // État du site (Admin › Site › État du site) : affichage seulement, lu par core/site-etat.js.
+    maintenance_active: false,
+    maintenance_message: '',
+    bandeau_actif: false,
+    bandeau_texte: '',
   },
   textes: {
     intro_indice: 'Fais défiler vers le bas pour entrer sur le site',
@@ -51,7 +56,8 @@ export const SITE_DEFAULTS = {
 };
 
 /** Champs dont la valeur vide est permise (affichée « à compléter » ou absente). */
-export const VIDE_OK = new Set(['editeur', 'contact_email', 'logo_url', 'legal_mentions', 'legal_confidentialite', 'legal_cookies']);
+export const VIDE_OK = new Set(['editeur', 'contact_email', 'logo_url', 'legal_mentions', 'legal_confidentialite', 'legal_cookies',
+  'maintenance_message', 'bandeau_texte']);
 /** Liens du menu (en-tête) dont on peut régler le libellé. */
 export const NAV_SLUGS = ['secret-santa', 'irl', 'historique', 'messages', 'cartes', 'membre', 'recap'];
 /** Identifiants des liens du pied de page, dans l'ordre par défaut. */

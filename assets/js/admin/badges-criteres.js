@@ -1,8 +1,16 @@
 // Admin › Vie › Badges : critères des badges automatiques et affichage sur la carte (hg_settings.badges).
 // Valeurs de repli = valeurs actuelles du code (migration 053 les reprend côté SQL) : sans clé, rien ne change.
-// Monté par badges.js, au-dessus de la grille des badges. Dépend de core.js (Supabase, toast, esc, $) et common.js (busy).
+// Monté par badges.js, au-dessus de la grille des badges. Dépend de core.js (Supabase, toast, esc, $), common.js (busy),
+// core/profile.js et core/perms.js (droit d'écriture).
+// La RLS de hg_settings exige l'administrateur ou le droit « reglages » pour écrire la clé « badges » : sans l'un des deux,
+// le formulaire est affiché en lecture seule (champs désactivés, note explicative) au lieu d'échouer à l'enregistrement.
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { busy } from './common.js';
+import { getCachedProfile } from '../core/profile.js';
+import { hasPerm } from '../core/perms.js';
+
+/* Vrai si l'utilisateur peut enregistrer la clé « badges » (administrateur ou droit Réglages du site). */
+const peutEcrire = () => !!getCachedProfile()?.is_admin || hasPerm('reglages');
 
 // Valeurs par défaut (comme le code les utilise) : « Rétablir les valeurs par défaut » les remet dans le formulaire.
 const DEFAULTS = {
@@ -72,21 +80,23 @@ async function load() {
 /** Dessine le formulaire complet (les valeurs viennent de shown). */
 function render() {
   if (!H.host) return;
-  H.host.innerHTML = `<section class="card bc-card" aria-labelledby="bc-h">
+  const ecriture = peutEcrire();
+  H.host.innerHTML = `<section class="card bcr-card" aria-labelledby="bc-h">
     <h3 class="card-title" id="bc-h">Réglages des badges</h3>
     ${H.error ? `<div class="empty">Impossible de charger les réglages : ${esc(H.error)}</div>` : ''}
-    <form class="stack" id="bc-form" novalidate>
+    ${ecriture ? '' : '<p class="small muted bc-ro" id="bc-ro" role="note">Lecture seule : enregistrement réservé au droit Réglages du site.</p>'}
+    <form class="stack" id="bc-form" novalidate${ecriture ? '' : ' aria-describedby="bc-ro"'}>
       <p class="form-error" role="alert" hidden></p>
-      ${GROUPS.map((g, gi) => `<fieldset class="acd-fs"><legend>${esc(g.g)}</legend>
+      ${GROUPS.map((g, gi) => `<fieldset class="acd-fs"${ecriture ? '' : ' disabled'}><legend>${esc(g.g)}</legend>
         ${g.hint ? `<p class="small muted">${esc(g.hint)}</p>` : ''}
         <div class="acd-grid-2">${g.fields.map((f) => `<div class="field">
           <label for="${idOf(f)}">${esc(f.l)}</label>
           <input id="${idOf(f)}" name="${idOf(f).replace('bc-', '')}" type="${f.text ? 'text' : 'number'}" ${f.text ? `maxlength="${f.max}"` : `inputmode="numeric" step="1" min="${f.min}" max="${f.max}"`}
             value="${esc(shown(f) ?? '')}" aria-describedby="${idOf(f)}-h" required>
           <p class="small muted" id="${idOf(f)}-h">${esc(f.help)}</p></div>`).join('')}</div>
-        <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-bc-default="${gi}">Rétablir les valeurs par défaut de ce groupe</button></div>
+        ${ecriture ? `<div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-bc-default="${gi}">Rétablir les valeurs par défaut de ce groupe</button></div>` : ''}
       </fieldset>`).join('')}
-      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les réglages des badges</button></div>
+      ${ecriture ? '<div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les réglages des badges</button></div>' : ''}
     </form>
   </section>`;
 }
@@ -130,6 +140,7 @@ function readForm(form) {
 async function onSubmit(e) {
   if (e.target.id !== 'bc-form') return;
   e.preventDefault();
+  if (!peutEcrire()) return; // lecture seule : aucun bouton d'envoi, garde-fou si Entrée est pressée
   const form = e.target;
   const err = $('.form-error', form);
   // Affiche le message d'erreur sous le formulaire (vide = masqué), et le fait voir.

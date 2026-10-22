@@ -15,6 +15,7 @@
 //   })
 // Actions de zone : #zone-actions (à droite du titre) est vidé à chaque visite ; open() y pose ses boutons (ex. « + Nouveau défi »).
 // Mobile (≤ 760 px) : data-screen = domain (liste des sous-sections) | list (liste d'une sous-section « liste + détail ») | sub (page ou détail, retour en haut).
+// Sous-menus : les sous-sections portant un `heading` (DOMAINS) sont regroupées sous ce titre dans la colonne.
 // Toutes les sections n'utilisent pour l'instant que `main`. Une sous-section sans fournisseur affiche sa section seule.
 // Les droits viennent de admin/perms.js (DOMAINS, canSection) : une sous-section non permise n'est jamais montée.
 // setCount(sous-section, n) : compteur « à traiter » affiché dans la colonne et sur les domaines (rail et onglets).
@@ -46,7 +47,7 @@ const ICON = {
 /** HTML d'une icône du rail (SVG 24 × 24, masqué aux lecteurs d'écran). */
 const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name] || ''}</svg>`;
 // Libellés courts des onglets de la barre mobile
-const SHORT = { communication: 'Comm.', vie: 'Vie du gang', cartes: 'Cartes', membres: 'Membres', pilotage: 'Pilotage', site: 'Site' };
+const SHORT = { communication: 'Comm.', vie: 'Vie du gang', cartes: 'Jeux', membres: 'Membres', pilotage: 'Pilotage', site: 'Site' };
 
 // Groupes de sous-sections (un conteneur par groupe) : groupe -> { el, ready }.
 const groups = new Map();
@@ -112,6 +113,32 @@ function initials(name) {
   return (w.length > 1 ? w[0][0] + w[1][0] : w[0].slice(0, 2)).toUpperCase();
 }
 
+/** Lien d'une sous-section dans la colonne (compteur « à traiter » masqué tant qu'il vaut 0). */
+const subLink = (d, s) => `<a class="shell-sub" href="#${d.id}/${s.id}" data-sub="${s.id}" data-perm="${esc(SECTION_PERM[s.section] || '')}">
+        <span>${esc(s.label)}</span><span class="nav-count" data-count="${s.id}" hidden></span></a>`;
+
+/**
+ * Sous-sections permises d'un domaine, regroupées sous leur titre de groupe (champ `heading` de DOMAINS).
+ * Chaque groupe titré est un role="group" nommé par son titre (annoncé, non cliquable) ; les sous-sections sans titre
+ * restent à plat. Les sous-sections reçues sont déjà filtrées : un groupe vide n'a donc jamais de titre.
+ * @param {{id: string, subs: Array<object>}} d Domaine visible (voir visibleDomains).
+ */
+function subsHtml(d) {
+  const runs = [];
+  for (const s of d.subs) {
+    const last = runs[runs.length - 1];
+    if (last && last.heading === (s.heading || null)) last.subs.push(s);
+    else runs.push({ heading: s.heading || null, subs: [s] });
+  }
+  return runs.map((r, i) => {
+    const links = r.subs.map((s) => subLink(d, s)).join('');
+    if (!r.heading) return links;
+    const hid = `shell-subhead-${d.id}-${i}`;
+    return `<div class="shell-subgroup" role="group" aria-labelledby="${hid}">
+        <p class="shell-subhead" id="${hid}">${esc(r.heading)}</p>${links}</div>`;
+  }).join('');
+}
+
 /**
  * Construit le rail (domaines), les onglets mobiles, les sous-sections de chaque domaine et le pied du rail.
  * Ne montre que les domaines et sous-sections permis.
@@ -123,10 +150,7 @@ function buildChrome() {
   el.tabs.innerHTML = doms.map((d) => `<a class="shell-tab" href="#${d.id}/" data-dom="${d.id}">
       <span class="shell-tab-pic">${icon(d.icon)}<span class="shell-badge" data-dom-badge="${d.id}" hidden></span></span>
       <span class="shell-tab-label">${esc(SHORT[d.id] || d.label)}</span></a>`).join('');
-  el.subsHost.innerHTML = doms.map((d) => `<div class="shell-dom-subs" data-dom-subs="${d.id}" hidden>
-      ${d.subs.map((s) => `<a class="shell-sub" href="#${d.id}/${s.id}" data-sub="${s.id}" data-perm="${esc(SECTION_PERM[s.section] || '')}">
-        <span>${esc(s.label)}</span><span class="nav-count" data-count="${s.id}" hidden></span></a>`).join('')}
-    </div>`).join('');
+  el.subsHost.innerHTML = doms.map((d) => `<div class="shell-dom-subs" data-dom-subs="${d.id}" hidden>${subsHtml(d)}</div>`).join('');
   // Permissions des éléments de pied (Staff : administrateur seulement ; Réglages : droit « reglages »)
   for (const n of el.foot.querySelectorAll('[data-icon]')) n.innerHTML = icon(n.dataset.icon);
   el.god.innerHTML = iconSvg('bolt', { size: 22, stroke: 1.9 });
@@ -276,7 +300,7 @@ async function show(r) {
   paintColumn(r.dom);
   markActive(r.dom.id, r.sub.id);
   setActions([]);
-  el.zoneEyebrow.textContent = r.dom.label;
+  el.zoneEyebrow.textContent = r.sub.heading && r.sub.heading !== r.sub.label ? `${r.dom.label} · ${r.sub.heading}` : r.dom.label;
   el.zoneTitle.textContent = r.sub.label;
   // Sous-section « liste + détail » (fournit `list`) : sur mobile, la liste (colonne 2) occupe l'écran tant qu'aucun
   // élément n'est choisi (/id) ; le détail a un bouton « Liste » qui y revient. Les autres pages ont « Domaine ».

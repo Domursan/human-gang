@@ -203,6 +203,12 @@ if (Number.isInteger(S.badgeCount)) {
     DB.hg_user_badges.push({ user_id: ME, badge_code: code, awarded_at: iso(-i - 1), level: i === 0 ? 2 : 1 });
   }
 }
+/* ---------- Secrets, fil d'activité (sections admin Secrets et Fil d'activité, état du site) ----------
+   Scénario : eggLog (lignes de hg_egg_log : user_id, egg, period, reward, found_at), activity (lignes de hg_activity :
+   id, user_id, kind, text, created_at). Sans eux : tables vides (comportement d'avant). Le réglage « eggs » et
+   site_identite (maintenance, bandeau) se sèment avec scenario.settings. */
+DB.hg_egg_log = S.eggLog || [];
+if (S.activity) DB.hg_activity = S.activity.map((r) => ({ ...r }));
 // Rend la base et le journal lisibles par les tests (page.evaluate).
 window.__DB = DB; window.__LOG = [];
 /* ---------- Session ---------- */

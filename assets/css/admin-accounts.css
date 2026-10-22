@@ -156,3 +156,9 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
   border: 1px dashed var(--border-strong); border-radius: 16px; color: var(--muted); }
 .acc-empty-t { font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--text); margin: 0; }
 #acc-info .ui-info-empty { color: var(--muted); font-size: 13px; }
+
+/* Fiche › Informations : groupes repliables (fiche.js, foldInfoGroups) */
+.acc-fold { border: 1px solid var(--border); border-radius: var(--radius-sm); min-width: 0; }
+.acc-fold-sum { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 0 16px; font-weight: 700; }
+.acc-fold-sum:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; }
+.acc-fold > .acc-group { border: 0; padding: 0 16px 16px; }

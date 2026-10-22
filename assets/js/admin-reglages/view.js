@@ -6,16 +6,34 @@
 // la restriction des clés sensibles est donc faite ici, côté interface, et doit aussi être posée en base.
 // Dépendances : core.js, core/profile.js (profil en cache), ui-confirm.js, admin/ui/drawer.js, admin/shell.js,
 // keys.js (registre et validation des valeurs), identite.js (formulaire « Identité et textes »).
-// Exporte : mountReglagesSection (monte la section), reglagesActions (boutons de l'en-tête).
+// Exporte : mountReglagesSection (monte la section), reglagesActions (boutons de l'en-tête),
+// showReglagesPart (partie affichée : identite | textes | menu | etat = formulaire, cles = liste des clés avancées).
 // =====================================================================
 import { sb, toast, errMsg, esc, $, fmtDateTime } from '../core.js';
 import { getCachedProfile } from '../core/profile.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
-import { mountIdentite } from './identite.js';
+import { mountIdentite, showIdentitePart } from './identite.js';
+import { PARTS_LOT1 } from './keys-lot1.js';
 
-const R = { root: null, rows: [], loaded: false, error: null, isAdmin: false };
+/* part : partie affichée (null = formulaire et liste, comportement d'origine). */
+const R = { root: null, rows: [], loaded: false, error: null, isAdmin: false, part: null };
+
+/**
+ * Partie de la section à afficher. identite | textes | menu | etat : le formulaire « Identité et textes »
+ * réduit à cette partie, la liste des clés masquée ; cles : la liste des clés avancées seule ; null : tout.
+ * Peut être appelée avant le montage : le choix est mémorisé. À appeler avant reglagesActions().
+ * @param {string|null} part partie à afficher.
+ */
+export function showReglagesPart(part) {
+  R.part = part === 'cles' || PARTS_LOT1[part] ? part : null;
+  showIdentitePart(R.part === 'cles' ? null : R.part);
+  const idRoot = document.getElementById('identite-root');
+  const keysRoot = R.root || document.getElementById('reglages-root');
+  if (idRoot) idRoot.hidden = R.part === 'cles';
+  if (keysRoot) keysRoot.hidden = !!R.part && R.part !== 'cles';
+}
 
 /* Vrai si la clé peut être modifiée ici : pas gérée ailleurs, et seul l'admin touche aux clés sensibles. */
 const canEdit = (key) => !managedOf(key) && (!isSensitive(key) || R.isAdmin);
@@ -30,12 +48,13 @@ export async function mountReglagesSection(root) {
   root.addEventListener('click', onClick);
   render();
   mountIdentite(document.getElementById('identite-root')); // formulaire « Identité et textes » (lot 1), au-dessus de la liste
+  showReglagesPart(R.part); // partie choisie avant le montage, s'il y en a une
   await load();
 }
 
 /** Boutons de l'en-tête de zone (admin.js, à chaque visite) : « + Nouvelle clé » pour l'administrateur. */
 export function reglagesActions() {
-  if (!R.isAdmin) return [];
+  if (!R.isAdmin || (R.part && R.part !== 'cles')) return [];
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'btn btn-primary btn-sm'; b.textContent = '+ Nouvelle clé'; b.dataset.rgAdd = '';
   b.addEventListener('click', () => openAddDrawer(b));
@@ -63,6 +82,7 @@ const listRows = () => R.rows.filter((r) => !KEYS[r.key]?.formulaire);
 function render() {
   if (!R.root) return;
   R.root.innerHTML = `
+    <h3 class="rgi-title rg-keys-title">Clés avancées</h3>
     <p class="small muted">Réglages techniques du site : chaque clé porte une valeur (texte, nombre, oui / non ou JSON). Le code du site décide de l'effet d'une clé. Une clé gérée dans une autre section se modifie là-bas.</p>
     ${R.error ? `<div class="empty">Impossible de charger les réglages : ${esc(R.error)} <button class="btn btn-ghost btn-sm" type="button" data-rg="retry">Réessayer</button></div>` : ''}
     ${!R.loaded && !R.error ? '<div class="empty">Chargement des réglages…</div>' : ''}

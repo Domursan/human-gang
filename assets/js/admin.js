@@ -33,13 +33,33 @@ import { bindSecretSanta } from './admin/ss-events.js';
 import { bindBadges, renderBadges, badgesSub } from './admin/badges.js';
 import { ideasSub, renderIdeas } from './admin/ideas.js';
 import { supportSub, renderSupport } from './admin/support.js';
-import { canSection, anySection, applyPanelAccess } from './admin/perms.js';
+import { canSection, anySection, applyPanelAccess, disableSubs } from './admin/perms.js';
+// Parties des sections découpées (sous-menus) : importées par espace de noms, pour qu'une fonction absente (module pas
+// encore à jour) ne casse pas le panel. Sans elle, la sous-section affiche la section entière (comportement d'origine).
+import * as Econ from './admin-cards/economy.js';       // showEconPart(part)
+import * as Reg from './admin-reglages/view.js';        // showReglagesPart(part)
+import * as BadgesParts from './admin/badges.js';       // showBadgesPart(part)
+import * as Access from './admin-access.js';           // setAccessView(view)
 import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate, setActions } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
 
+// Sections facultatives (modules autonomes) : chargées en parallèle de l'identité. Un module absent ou sans sa fonction de
+// montage retire sa sous-section du panel (disableSubs) au lieu de casser le démarrage.
+const OPTIONAL = [
+  { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
+  { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
+  { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+];
+const optionalP = Promise.all(OPTIONAL.map(async (o) => {
+  try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
+  catch (e) { console.warn('[panel] module facultatif indisponible :', o.url, e?.message); return [o.sub, null]; }
+}));
+
 // Démarrage : l'identité (et les droits) sont lus d'abord ; le reste suit.
 const me = await initPage({ auth: 'admin' });
+const MOUNT = Object.fromEntries(await optionalP);
+disableSubs(...OPTIONAL.filter((o) => !MOUNT[o.sub]).map((o) => o.sub));
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -120,10 +140,19 @@ registerSub('membres/invitations', {
   main: () => mountInviteLinks($('#links-root'), { me, pseudoOf, onChange: async () => { await loadInvites(); renderInvites(); renderStats(); } }),
   open: () => setActions(inviteActions()), // « + Nouveau code » et « + Nouveau lien » (tiroirs)
 });
-registerSub('membres/acces', {
+// Accès aux pages : une section, deux parties (Pages, Matrice membres × pages). La puce de vue de la section reste.
+/** Affiche la vue `view` (pages | matrice) ; sans setAccessView, clique la puce de vue de la section. */
+const accessView = (view) => {
+  if (typeof Access.setAccessView === 'function') Access.setAccessView(view);
+  else document.querySelector(`#access-root [data-pa-view="${view}"][aria-pressed="false"]`)?.click();
+};
+const accessGroup = {
+  group: 'acces',
   main: () => { ensureAccounts(); mountAccessSection($('#access-root'), { openMember: (uid) => navigate(`membres/comptes/${uid}/acces`) }); },
-  open: () => setActions(accessActions()),
-});
+};
+registerSub('membres/acces', { ...accessGroup, open: () => { accessView('pages'); setActions(accessActions()); } });
+registerSub('membres/acces-matrice', { ...accessGroup, open: () => { accessView('matrice'); setActions(accessActions()); } });
+if (MOUNT.champs) registerSub('membres/champs', { main: () => MOUNT.champs($('#champs-root')) });
 // Vie du gang
 registerSub('vie/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),
@@ -138,17 +167,33 @@ registerSub('vie/souvenirs', {
 });
 registerSub('vie/secret-santa', ssSub);
 registerSub('vie/evenements', eventsSub({ onBadgesChange: async () => { await loadBadges(); renderBadges(); } }));
-registerSub('vie/badges', badgesSub);
-// Jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
+// Badges : une section, trois parties (Catalogue, Attribution, Critères automatiques). « + Nouveau badge » : Catalogue
+// seulement (ou partout si la section ne sait pas encore se découper).
+/** Fournisseur `open` de la partie `part` des badges. */
+const badgesOpen = (part) => (el, r) => {
+  const split = typeof BadgesParts.showBadgesPart === 'function';
+  if (split) BadgesParts.showBadgesPart(part);
+  if (!split || part === 'catalogue') badgesSub.open?.(el, r);
+};
+for (const [sub, part] of [['badges', 'catalogue'], ['badges-attribution', 'attribution'], ['badges-criteres', 'criteres']]) {
+  registerSub(`vie/${sub}`, { ...badgesSub, group: 'badges', open: badgesOpen(part) });
+}
+// Jeux et cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
-for (const tab of ['series', 'cartes', 'quetes', 'economie', 'boosters', 'stats', 'echanges']) {
+for (const tab of ['series', 'cartes', 'boosters', 'quetes', 'stats', 'echanges']) {
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
+}
+// Économie : un seul formulaire (un enregistrement), quatre parties. La partie est choisie avant d'ouvrir l'onglet
+// (econPanel l'applique au rendu) ; sans showEconPart, l'onglet montre tout le formulaire.
+for (const [sub, part] of [['economie', 'paillettes'], ['tirage', 'tirage'], ['recyclage', 'recyclage'], ['limites', 'limites']]) {
+  registerSub(`cartes/${sub}`, { ...cardsGroup, open: () => { Econ.showEconPart?.(part); openCardsTab('economie'); } });
 }
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
+if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
@@ -156,9 +201,22 @@ registerSub('communication/messagerie', {
   main: (el) => { el.dataset.fill = ''; mountMessagesSection($('#messages-root')); },
   open: openMessages, list: listMessages, // liste en colonne 2, lecture dans la zone (createThread en lecture seule)
 });
+if (MOUNT.fil) registerSub('communication/fil', { main: () => MOUNT.fil($('#fil-root')) }); // modération du fil d'activité de l'accueil
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
 // Site
-registerSub('site/reglages', { main: () => mountReglagesSection($('#reglages-root')), open: () => setActions(reglagesActions()) });
+// Réglages du site : une section, cinq parties (identité, textes, menu, état du site : un seul formulaire ; clés avancées :
+// la liste brute de hg_settings, route d'origine #site/reglages). « + Nouvelle clé » : partie Clés avancées seulement.
+const reglagesGroup = { group: 'reglages', main: () => mountReglagesSection($('#reglages-root')) };
+for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['menu', 'menu'], ['etat', 'etat'], ['reglages', 'cles']]) {
+  registerSub(`site/${sub}`, {
+    ...reglagesGroup,
+    open: () => {
+      if (typeof Reg.showReglagesPart !== 'function') { setActions(reglagesActions()); return; } // section entière
+      Reg.showReglagesPart(part);
+      setActions(part === 'cles' ? reglagesActions() : []);
+    },
+  });
+}
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */

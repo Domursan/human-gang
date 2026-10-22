@@ -8,7 +8,10 @@
 // Contrôle d'affichage seulement : les données restent protégées par les règles de la base.
 // Importé par admin.js (section) et admin-accounts.js (onglet « Accès » de la fiche).
 // Dépendances : core.js (Supabase, toast), core/profile.js (profil en cache), icons.js, ui-confirm.js, admin/ui/drawer.js, admin/shell.js.
-// Exporte : MODES, ensureAccessData, accessPages, hasAccess, setAccess, memberAccessHtml, accessActions, mountAccessSection, refreshAccessSection.
+// Exporte : MODES, ensureAccessData, accessPages, hasAccess, setAccess, memberAccessHtml, accessActions, mountAccessSection, refreshAccessSection,
+// setAccessView (vue affichée : pages ou matrice, pour les sous-sections de la coquille).
+// Droits : hg_pages (mode, menu, ordre) exige le droit « reglages » en base, hg_page_access le droit « membres ».
+// Sans « reglages », le mode, le menu et l'ordre sont affichés en lecture seule (note explicative) ; « Personnes » reste actif.
 import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
@@ -36,6 +39,7 @@ const IC = {
   close: svg('close', { stroke: 2 }),
   search: svg('search', { stroke: 2 }),
   users: svg('users', { stroke: 2 }),
+  edit: svg('edit2', { stroke: 2 }),
 };
 
 /* ---------- État partagé ---------- */
@@ -189,6 +193,22 @@ export function memberAccessHtml(member) {
    Section « Accès aux pages »
    ========================================================= */
 /* ---------- Rendu de la section ---------- */
+/* Note affichée quand le mode, le menu et l'ordre ne peuvent pas être enregistrés (pas de droit « reglages »). */
+const RO_NOTE = '<p class="small muted pa-ro" role="note">Lecture seule pour le mode, le menu et l’ordre : enregistrement réservé au droit Réglages du site. Les exceptions (bouton « Personnes ») restent modifiables.</p>';
+/* Attribut « disabled » des contrôles de hg_pages quand la personne n'a pas le droit de les enregistrer. */
+const roAttr = () => (AC.canPages ? '' : ' disabled');
+
+/**
+ * Vue de la section : « pages » (tableau des pages) ou « matrice » (membres × pages). Une autre valeur est ignorée.
+ * Redessine la section si elle est montée ; sinon le choix est gardé pour le montage. La puce de vue reste affichée.
+ * @param {'pages'|'matrice'} view vue à afficher.
+ */
+export function setAccessView(view) {
+  if (view !== 'pages' && view !== 'matrice') return;
+  AC.view = view;
+  render();
+}
+
 /**
  * HTML de la section : bascule « Pages » / « Matrice », puis la vue choisie.
  * @returns {string}
@@ -211,7 +231,7 @@ function sectionHtml() {
 function pagesTableHtml() {
   const head = AC.canPages ? `<div class="pa-head">
       <p class="small muted">Déclare une page, change son libellé, son accès ou sa place dans le menu. « + Nouvelle page » est en haut.</p>
-    </div>` : '';
+    </div>` : RO_NOTE;
   if (!AC.pages.length) return `${head}<div class="empty">Aucune page déclarée.</div>`;
   const last = AC.pages.length - 1;
   return `${head}
@@ -220,24 +240,24 @@ function pagesTableHtml() {
         <caption class="visually-hidden">Pages du site et leurs accès</caption>
         <thead><tr>
           <th scope="col">Ordre</th><th scope="col">Page</th><th scope="col">Qui y a accès</th>
-          <th scope="col">Dans le menu</th><th scope="col">Exceptions</th><th scope="col"><span class="visually-hidden">Personnes</span></th>
+          <th scope="col">Dans le menu</th><th scope="col">Exceptions</th><th scope="col"><span class="visually-hidden">Actions</span></th>
         </tr></thead>
         <tbody>${AC.pages.map((p, i) => {
           const n = exceptionCount(p), open = ALWAYS_OPEN.has(p.slug);
           const exLabel = p.mode === 'membres' ? `${n} bloqué${n > 1 ? 's' : ''}` : p.mode === 'liste' ? `${n} autorisé${n > 1 ? 's' : ''}` : '—';
           return `<tr data-slug="${esc(p.slug)}">
             <td class="pa-order">
-              <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="-1" aria-label="Monter « ${esc(p.label)} »"${i === 0 ? ' disabled' : ''}>${IC.up}</button>
-              <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="1" aria-label="Descendre « ${esc(p.label)} »"${i === last ? ' disabled' : ''}>${IC.down}</button>
+              <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="-1" aria-label="Monter « ${esc(p.label)} »"${i === 0 || !AC.canPages ? ' disabled' : ''}>${IC.up}</button>
+              <button class="btn btn-ghost btn-icon pa-move" type="button" data-pa-move="1" aria-label="Descendre « ${esc(p.label)} »"${i === last || !AC.canPages ? ' disabled' : ''}>${IC.down}</button>
             </td>
-            <th scope="row" class="pa-page"><span class="pa-page-in"><strong>${esc(p.label)}</strong><span class="small muted code-sm">${esc(p.slug)}.html</span>${AC.canPages ? `<button class="btn btn-ghost btn-sm pa-edit" type="button" data-pa-edit="${esc(p.slug)}">Modifier la page</button>` : ''}</span></th>
+            <th scope="row" class="pa-page"><span class="pa-page-in"><strong>${esc(p.label)}</strong><span class="small muted code-sm">${esc(p.slug)}.html</span></span></th>
             <td>${open
               ? '<span class="pill pill-muted">Toujours accessible</span>'
               : `<div class="field pa-field"><label class="visually-hidden" for="pa-mode-${esc(p.slug)}">Qui a accès à ${esc(p.label)}</label>
-                 <select id="pa-mode-${esc(p.slug)}" data-pa-mode>${MODES.map(([v, l]) => `<option value="${v}"${p.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`}</td>
-            <td><label class="switch pa-switch"><input type="checkbox" role="switch" data-pa-nav${p.in_nav ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span class="visually-hidden">Afficher « ${esc(p.label)} » dans le menu</span></label></td>
+                 <select id="pa-mode-${esc(p.slug)}" data-pa-mode${roAttr()}>${MODES.map(([v, l]) => `<option value="${v}"${p.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>`}</td>
+            <td><label class="switch pa-switch"><input type="checkbox" role="switch" data-pa-nav${p.in_nav ? ' checked' : ''}${roAttr()}><span class="switch-ui" aria-hidden="true"></span><span class="visually-hidden">Afficher « ${esc(p.label)} » dans le menu</span></label></td>
             <td class="pa-count"><span class="${n ? 'pa-count-on' : 'muted'}">${esc(exLabel)}</span><span class="small muted">${accessCount(p)} / ${AC.members.length} avec accès</span></td>
-            <td><button class="btn btn-ghost btn-sm" type="button" data-pa-manage="${esc(p.slug)}"${open ? ' disabled' : ''}>${IC.users} Personnes</button></td>
+            <td><div class="pa-acts"><button class="btn btn-ghost btn-sm" type="button" data-pa-manage="${esc(p.slug)}"${open ? ' disabled' : ''}>${IC.users} Personnes</button>${AC.canPages ? `<button class="btn btn-ghost btn-sm btn-icon pa-edit" type="button" data-pa-edit="${esc(p.slug)}" aria-label="Modifier la page « ${esc(p.label)} »" title="Modifier la page">${IC.edit}</button>` : ''}</div></td>
           </tr>`;
         }).join('')}</tbody>
       </table>
@@ -346,7 +366,8 @@ function renderDialog() {
     </div>
     <div class="field">
       <label for="pa-dlg-mode">Qui y a accès</label>
-      <select id="pa-dlg-mode" data-pa-dlg-mode>${MODES.map(([v, l]) => `<option value="${v}"${p.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      <select id="pa-dlg-mode" data-pa-dlg-mode${roAttr()}${AC.canPages ? '' : ' aria-describedby="pa-dlg-ro"'}>${MODES.map(([v, l]) => `<option value="${v}"${p.mode === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
+      ${AC.canPages ? '' : '<p class="small muted" id="pa-dlg-ro">Mode en lecture seule : enregistrement réservé au droit Réglages du site.</p>'}
     </div>
     <p class="small muted pa-dlg-help">${help}</p>
     ${p.mode === 'admin' ? '' : `
@@ -657,7 +678,7 @@ export function accessActions() {
   return [b];
 }
 /** Remet les boutons d'en-tête à jour si la section « Accès » est affichée. */
-function refreshAccessActions() { if (currentSub() === 'membres/acces') setActions(accessActions()); }
+function refreshAccessActions() { if (String(currentSub()).startsWith('membres/acces')) setActions(accessActions()); }
 
 /** Point d'entrée (admin.js). openMember(uid) : ouvre la fiche d'un membre (optionnel). */
 export async function mountAccessSection(root, { openMember } = {}) {

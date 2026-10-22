@@ -4,6 +4,7 @@
 // - #domaine/ (segment vide) = écran du domaine : sur mobile, la liste des sous-sections ; sur ordinateur, redirection
 //   vers la première sous-section permise.
 // - Un domaine ou une sous-section sans droit renvoie vers la première sous-section permise (ou null : aucun accès).
+// - #reglages (ancienne ancre) mène au formulaire « Identité et textes » (#site/identite).
 // - Les fiches membres (#comptes/<id>[/<onglet>], ancienne adresse) sont redirigées vers #membres/comptes/<id>[/<onglet>].
 // Utilisé par admin/shell.js (resolve à chaque changement d'adresse). Dépend de admin/perms.js (DOMAINS, droits).
 import { DOMAINS, visibleDomains } from './perms.js';
@@ -14,7 +15,9 @@ for (const d of DOMAINS) for (const s of d.subs) if (!LEGACY[s.section] || s.id 
 // Identifiants des domaines : un premier segment qui n'en est pas un peut être une ancienne ancre.
 const DOMAIN_IDS = new Set(DOMAINS.map((d) => d.id));
 // Adresses retirées : les comptes fantômes sont dans Comptes (#fantomes et #membres/fantomes[/<id>] suivent la liste).
-const MOVED = { fantomes: 'membres/comptes', 'membres/fantomes': 'membres/comptes' };
+// #reglages (ancienne ancre du formulaire « Identité et textes ») : première partie du formulaire ; la liste brute des clés
+// garde sa route #site/reglages (« Clés avancées »).
+const MOVED = { fantomes: 'membres/comptes', 'membres/fantomes': 'membres/comptes', reglages: 'site/identite' };
 
 /** Première sous-section permise (« domaine/sous-section »), ou null si l'administrateur n'a aucun droit. */
 export function defaultRoute() {

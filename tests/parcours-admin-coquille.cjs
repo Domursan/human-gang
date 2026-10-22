@@ -1,6 +1,7 @@
 // Parcours : coquille du panel admin (rail, colonne de navigation, zone principale, routage, mobile).
 // (a) administrateur 1440 px : rail visible, en-tête du site absent, navigation par domaine et sous-section,
-//     URL directe #membres/comptes, ancienne ancre #cartes redirigée, précédent/suivant du navigateur.
+//     URL directe #membres/comptes, anciennes ancres #cartes et #reglages redirigées, titres de groupe (sous-menus),
+//     précédent/suivant du navigateur.
 // (b) Staff { cartes, journal } : seuls Pilotage (Journal) et Jeu de cartes sont proposés ; pas de mode sans limite.
 // (c) mobile 375 px : barre d'onglets en bas, écran domaine puis écran sous-section, sans défilement horizontal.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-coquille.cjs
@@ -75,6 +76,15 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
     await p.waitForFunction(() => !!document.querySelector('#cards-root [data-act="quest-new"]') || !!document.querySelector('#acd-panel'), null, { timeout: 5000 }).catch(() => {});
     check(await waitVisible(p, '#cartes') && (await hashOf(p)) === '#cartes/quetes', 'Quêtes ouvertes depuis la colonne');
     check(await p.isVisible('[data-act="quest-new"]'), 'Quêtes : contenu de l’onglet affiché');
+    // Sous-menus : #reglages (ancienne ancre du formulaire) mène à Site › Identité et textes ; la liste brute garde #site/reglages
+    await p.evaluate(() => { location.hash = '#reglages'; });
+    await p.waitForFunction(() => location.hash === '#site/identite', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) === '#site/identite' && await waitVisible(p, '#reglages'), `(a) ancienne ancre #reglages -> #site/identite (${await hashOf(p)})`);
+    check((await p.textContent('#zone-eyebrow')).trim() === 'Site · Identité et textes', '(a) en-tête de zone : domaine · titre du groupe');
+    check(await p.locator('[data-dom-subs="site"] .shell-subhead').count() === 3, '(a) colonne Site : trois titres de groupe');
+    await p.evaluate(() => { location.hash = '#site/reglages'; });
+    await p.waitForFunction(() => document.querySelector('.shell-sub[aria-current="true"]')?.dataset.sub === 'reglages', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) === '#site/reglages' && (await p.textContent('#zone-title')).trim() === 'Clés avancées', '(a) #site/reglages : Clés avancées');
     // ancienne ancre inconnue : retour à la route par défaut
     await p.evaluate(() => { location.hash = '#inconnu'; });
     await p.waitForFunction(() => /^#(pilotage|membres|vie|cartes|communication|site)\//.test(location.hash), null, { timeout: 5000 }).catch(() => {});

@@ -1,0 +1,26 @@
+/* État du site : bandeau d'annonce et écran de maintenance (core/site-etat.js).
+   Chargée à la demande par site-etat.js, seulement quand l'un des deux est affiché. */
+
+/* ---------- Bandeau d'annonce ---------- */
+.site-bandeau {
+  display: flex; align-items: center; gap: 12px;
+  padding: 6px 8px 6px 24px; background: var(--irl-bg); color: var(--text);
+  border-bottom: 1px solid var(--irl-border); box-shadow: inset 4px 0 0 var(--sand);
+}
+.site-bandeau-texte { margin: 0; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; white-space: pre-line; font-weight: 500; }
+.site-bandeau-fermer {
+  flex: 0 0 auto; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  font: inherit; font-size: 24px; line-height: 1; color: var(--text); background: transparent;
+  border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer;
+}
+@media (hover: hover) { .site-bandeau-fermer:hover { background: var(--surface-2); border-color: var(--border-strong); } }
+.site-bandeau-fermer:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+@media (max-width: 480px) { .site-bandeau { padding-left: 16px; font-size: 15px; } }
+
+/* ---------- Écran de maintenance ---------- */
+/* Le contenu de la page reste dans le document mais n'est plus affiché. */
+body.site-maint-on #app, body.site-maint-on main { display: none !important; }
+.site-maint { padding-top: 64px; padding-bottom: 64px; text-align: center; max-width: 640px; }
+.site-maint h1 { font-size: clamp(28px, 7vw, 44px); margin: 0 0 16px; overflow-wrap: anywhere; }
+.site-maint-texte { font-size: 18px; margin: 0 auto 12px; white-space: pre-line; overflow-wrap: anywhere; }
+.site-maint .btn { margin-top: 8px; }

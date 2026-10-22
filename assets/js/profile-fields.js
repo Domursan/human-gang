@@ -16,7 +16,7 @@ import { sb } from './core.js';
 /* ---------- Liste d'origine ---------- */
 
 /** Liste d'origine des champs, groupés. Elle sert de repli si le réglage admin est absent ou invalide. */
-const DEFAULT_INFO_GROUPS = [
+export const DEFAULT_INFO_GROUPS = [
   { id: 'livraison', label: 'Livraison', fields: [
     { id: 'nom_complet', label: 'Nom et prénom (pour le colis)', type: 'text' },
     { id: 'adresse', label: 'Adresse postale', type: 'textarea', placeholder: 'Rue, numéro\nNPA Ville\nPays' },

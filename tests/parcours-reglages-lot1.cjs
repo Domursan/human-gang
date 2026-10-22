@@ -3,6 +3,9 @@
 // 2. Admin › Site › Réglages : validation (nom vide refusé), modification du nom et du copyright, enregistrement
 //    dans hg_settings (faux client persistant), effet visible sur le site dans le même navigateur.
 // 3. Rétablissement par champ puis par groupe : retour aux valeurs d'origine, aucune clé superflue en base.
+// 4. Parties (Site › Identité / Textes / Menu / État du site / Clés avancées) : un seul formulaire, seules les valeurs
+//    de la partie sont visibles ; enregistrer depuis une partie conserve les autres (menu, état du site) ; une erreur
+//    dans une partie masquée est signalée avec un lien vers sa partie.
 // Aucune erreur console, pas de défilement horizontal à 390 px. Lancer : node tests/parcours-reglages-lot1.cjs
 const { ORIGIN, PREFIX, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
@@ -27,11 +30,11 @@ const storedSettings = (p) => p.evaluate(() => { try { return JSON.parse(localSt
 /** Valeur enregistrée pour la clé key de hg_settings, ou undefined. */
 const overridesOf = async (p, key) => ((await storedSettings(p)).find((r) => r.key === key) || {}).value;
 
-/** Ouvre Site › Réglages dans le panel admin. */
-async function adminGoto(p) {
+/** Ouvre une partie de Site (identite par défaut : nom, logo, éditeur, mentions) dans le panel admin. */
+async function adminGoto(p, route = 'site/identite') {
   await p.goto(`${ORIGIN}${PREFIX}/admin.html`);
   await sleep(1200);
-  await adminSection(p, 'site/reglages');
+  await adminSection(p, route);
   await p.waitForSelector('#rgi-form', { timeout: 8000 });
   await sleepShort();
 }
@@ -106,7 +109,6 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(!('nom' in ((await overridesOf(pa, 'site_identite')) || {})), 'admin : nom par défaut -> clé retirée des écarts');
 
     await field(pa, 'site_identite.editeur').fill('Quelqu\'un');
-    await field(pa, 'site_identite.intro_active').uncheck().catch(() => {});
     await pa.click('button[data-reset-group="identite"]');
     check((await field(pa, 'site_identite.editeur').inputValue()) === 'Quelqu\'un', 'admin : rétablir un groupe ne touche pas aux autres groupes');
     await pa.click('button[data-reset-group="legal"]');
@@ -115,6 +117,50 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     const after = await storedSettings(pa);
     const idAfter = (after.find((r) => r.key === 'site_identite') || {}).value || {};
     check(!('nom' in idAfter) && !('editeur' in idAfter), `hg_settings : plus aucun écart pour nom ni éditeur (${JSON.stringify(idAfter)})`);
+
+    // ---- 4. Parties du formulaire ----
+    /* Groupes visibles du formulaire (data-group des fieldsets non masqués). */
+    const shownGroups = () => pa.$$eval('#rgi-form fieldset[data-group]', (fs) => fs.filter((f) => !f.hidden && f.getClientRects().length).map((f) => f.dataset.group).join(','));
+    await adminSection(pa, 'site/menu');
+    await sleepShort();
+    check(await shownGroups() === 'navigation', `parties : « Menu et pied de page » ne montre que son groupe (${await shownGroups()})`);
+    check(!(await pa.isVisible('#reglages-root')) && await pa.isVisible('#rgi-save'), 'parties : liste des clés masquée, bouton Enregistrer visible');
+    await pa.fill('#rgi-site-textes-nav-libelles-irl', 'Sorties');
+    await save(pa);
+    check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.irl === 'Sorties', 'parties : libellé du menu enregistré depuis « Menu »');
+
+    await adminSection(pa, 'site/etat');
+    await sleepShort();
+    check(await shownGroups() === 'etat', `parties : « État du site » ne montre que son groupe (${await shownGroups()})`);
+    check((await pa.textContent('#rgi-title')).trim() === 'État du site', 'parties : titre de la partie');
+    await field(pa, 'site_identite.bandeau_actif').check({ force: true });
+    await field(pa, 'site_identite.bandeau_texte').fill('Annonce de test');
+    // Erreur dans une partie masquée : nom vidé par script (le champ n'est pas visible ici)
+    await pa.evaluate(() => { document.getElementById('rgi-site-identite-nom').value = ''; });
+    await save(pa);
+    const st = await pa.textContent('#rgi-status');
+    check(/À corriger dans « Identité et mentions légales »/.test(st || '') && await pa.locator('#rgi-status a[href="#site/identite"]').count() === 1,
+      `parties : erreur d'une partie masquée nommée, avec son lien (« ${st} »)`);
+    check(!('bandeau_actif' in ((await overridesOf(pa, 'site_identite')) || {})), 'parties : rien écrit tant que l\'erreur masquée n\'est pas corrigée');
+    await pa.click('#rgi-status a[href="#site/identite"]');
+    await sleepShort();
+    check(await shownGroups() === 'identite,legal', `parties : le lien ouvre la partie fautive (${await shownGroups()})`);
+    check((await field(pa, 'site_identite.bandeau_texte').inputValue()) === 'Annonce de test', 'parties : la saisie des autres parties est conservée');
+    await field(pa, 'site_identite.nom').fill('Bande Parties');
+    await save(pa);
+    const idP = (await overridesOf(pa, 'site_identite')) || {};
+    const txP = (await overridesOf(pa, 'site_textes')) || {};
+    check(idP.nom === 'Bande Parties' && idP.bandeau_actif === true && idP.bandeau_texte === 'Annonce de test' && !('maintenance_active' in idP),
+      `parties : état du site enregistré avec l'identité, défauts non écrits (${JSON.stringify(idP)})`);
+    check(txP.nav_libelles?.irl === 'Sorties', 'parties : enregistrer depuis « Identité » conserve les libellés du menu');
+
+    await adminSection(pa, 'site/reglages');
+    await sleepShort();
+    check(!(await pa.isVisible('#identite-root')) && await pa.isVisible('#reglages-root .rg-keys-title'), 'parties : « Clés avancées » montre la liste seule');
+    check(await pa.locator('#zone-actions [data-rg-add]').count() === 1, 'parties : « + Nouvelle clé » dans la partie Clés avancées');
+    await adminSection(pa, 'site/textes');
+    await sleepShort();
+    check(await shownGroups() === 'textes,affichage' && await pa.locator('#zone-actions [data-rg-add]').count() === 0, 'parties : « Textes et intro » (sans « + Nouvelle clé »)');
 
     // Erreurs console et défilement à 390 px
     const pm = await openPage(browser, { page: 'admin', fixture: FX, width: 390, height: 844, touch: true });

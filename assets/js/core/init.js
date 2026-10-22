@@ -5,7 +5,7 @@
  * les services du membre (messages non lus, badges, événements dynamiques, drops de cartes).
  * Page : toutes les pages du site.
  * Dépendances : theme-load.js, theme.js, effects.js, profile.js, pages-access.js, perms.js, godmode.js,
- * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js.
+ * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js, site-etat.js (bandeau et maintenance).
  *   Chargés à part (import dynamique, sans bloquer la page) : dyn-events.js, card-drops.js.
  * Exporte : initPage.
  */
@@ -14,7 +14,7 @@ import { getActiveTheme } from './theme.js';
 import { startEffects } from './effects.js';
 import { requireMember, requireAdmin, getProfile } from './profile.js';
 import { loadMyPages, canAccess, currentPageSlug } from './pages-access.js';
-import { loadMyPerms } from './perms.js';
+import { loadMyPerms, getCachedPerms, canPanel } from './perms.js';
 import { loadGodMode } from './godmode.js';
 import { renderHeader, updateNav } from './header.js';
 import { renderFooter, cookieNotice } from './footer.js';
@@ -22,6 +22,7 @@ import { startUnread } from './unread.js';
 import { checkNewBadges } from './badges.js';
 import { loadSiteSettings } from './site-load.js';
 import { applySiteDom } from './site-defaults.js';
+import { applySiteEtat } from './site-etat.js';
 
 /* ---------- Constantes ---------- */
 
@@ -116,8 +117,10 @@ async function startPage(auth) {
   updateNav(profile);
   renderFooter(profile);
   cookieNotice();
+  // État du site (bandeau d'annonce, écran de maintenance) : affichage seulement ; admin et Staff ne sont jamais bloqués
+  const etat = applySiteEtat({ isStaff: !!profile && canPanel(getCachedPerms()), connecte: !!profile });
   startEffects(getActiveTheme());
-  if (profile) {
+  if (profile && !etat.maintenance) {
     startUnread();
     checkNewBadges();
     // Événements dynamiques (image qui traverse le site) : chargé à part, sans jamais bloquer ni casser la page

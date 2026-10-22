@@ -1,0 +1,50 @@
+/* Admin › Jeux et cartes › Secrets (admin-eggs.js) : formulaire du réglage « eggs » et journal des trouvailles. */
+.aeg { display: grid; gap: 16px; max-width: 980px; }
+.aeg-intro { margin: 0; }
+.aeg-ro { margin: 0; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); color: var(--muted); }
+.aeg-form { display: grid; gap: 18px; }
+.aeg-group { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin: 0; display: grid; gap: 12px; min-width: 0; }
+.aeg-legend { font-weight: 700; padding: 0 6px; }
+.aeg-group > .small { margin: 0; }
+.aeg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.aeg-rewards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 10px 18px; }
+/* Une récompense : nom et champ sur une ligne, aide et erreur dessous */
+.aeg-reward { display: grid; grid-template-columns: minmax(0, 1fr) 104px; grid-template-areas: "label input" "hint hint" "err err";
+  align-items: center; gap: 2px 10px; min-width: 0; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.aeg-reward-label { grid-area: label; font-size: 14px; overflow-wrap: anywhere; }
+.aeg-reward-input { grid-area: input; padding-top: 8px; padding-bottom: 8px; text-align: right; }
+.aeg-reward-hint { grid-area: hint; }
+.aeg-reward-err { grid-area: err; }
+.aeg .form-error { margin: 0; color: var(--rose); font-weight: 700; font-size: 14px; }
+.aeg .form-error[hidden] { display: none; }
+.aeg [aria-invalid="true"] { border-color: var(--rose); }
+.aeg-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.aeg-status { margin: 0 auto 0 0; min-height: 1.5em; color: var(--muted); }
+.aeg-status[data-tone="error"] { color: var(--rose); font-weight: 700; }
+.aeg-status[data-tone="ok"] { color: var(--sage-text); font-weight: 700; }
+.aeg-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--border); }
+.aeg-tab { min-height: 44px; padding: 8px 14px; border: 0; border-bottom: 3px solid transparent; background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+.aeg-tab[aria-selected="true"] { border-bottom-color: var(--sand); }
+.aeg-tab:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.aeg-panel { display: grid; gap: 16px; min-width: 0; }
+.aeg-panel[hidden] { display: none; }
+
+/* Vue d'ensemble : membres par secret */
+.aeg-overview { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 6px 12px; }
+.aeg-overview li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; background: var(--surface-2); border-radius: 8px; font-size: 14px; }
+
+/* Membres */
+.aeg-members { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.aeg-member { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: grid; gap: 8px; min-width: 0; }
+.aeg-member-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.aeg-pseudo { overflow-wrap: anywhere; }
+.aeg-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.aeg-chip { padding: 4px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong); font-size: 13px; }
+.aeg-chip-part { border-style: dashed; color: var(--muted); }
+.aeg-times { color: var(--sand); font-weight: 700; }
+@media (max-width: 480px) {
+  .aeg-group { padding: 12px; }
+  .aeg-actions { justify-content: stretch; }
+  .aeg-actions .btn { flex: 1 1 100%; }
+}
+.aeg .lt-box input { min-height: 44px; }

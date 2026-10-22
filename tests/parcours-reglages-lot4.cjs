@@ -1,6 +1,8 @@
 // Parcours : réglages du lot 4 (badges automatiques, jeu de cartes, drops, quêtes) dans le panel admin.
 // Couvre : Cartes › Économie (valeurs affichées = défauts, enregistrement de cards.drops et cards.quetes_par_semaine,
-// validation durée par défaut > durée max, « Rétablir les valeurs par défaut » d'un groupe) ;
+// validation durée par défaut > durée max, « Rétablir les valeurs par défaut » d'un groupe ; parties Paillettes et dons,
+// Tirage, Recyclage et fabrication, Limites : un seul formulaire, saisies gardées d'une partie à l'autre, erreur d'une
+// partie masquée nommée avec son lien) ;
 // Cartes › Drops (bornes lues dans cards.drops : attribut max, durée proposée, refus hors bornes) ;
 // Vie › Badges (formulaire des critères : enregistrement dans hg_settings.badges, validation, défauts) ;
 // Réglages du site (la clé badges est listée et renvoie vers Vie › Badges).
@@ -28,8 +30,12 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Cartes › Économie ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900 });
-  await adminSection(p, 'cartes/economie');
+  await adminSection(p, 'cartes/limites');
   await p.waitForSelector('#acd-econ-form', { timeout: 8000 });
+  /* Légendes des groupes visibles de l'Économie. */
+  const shownLegends = () => p.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length).map((f) => f.querySelector('legend').textContent.trim()).join(' | '));
+  check(await shownLegends() === 'Quêtes de la semaine | Cartes sauvages (drops) | Échanges', `parties : « Limites » ne montre que ses groupes (${await shownLegends()})`);
+  check((await p.textContent('#acd-econ-part')).trim() === 'Limites' && !(await p.isVisible('.acd-bulk-intro')), 'parties : titre « Limites », bloc Dons masqué');
   check(await p.inputValue('#acd-e-drops_quantite_max') === '50', 'économie : exemplaires max d\'un drop affiche le défaut (50) sans configuration');
   check(await p.inputValue('#acd-e-drops_duree_max_min') === '1440', 'économie : durée max d\'un drop affiche le défaut (1440)');
   check(await p.inputValue('#acd-e-quetes_par_semaine') === '3', 'économie : quêtes tirées par semaine affiche le défaut (3)');
@@ -46,10 +52,25 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   check(await p.textContent('#acd-econ-form .form-error') !== '' && await p.isVisible('#acd-econ-form .form-error'), 'économie : durée par défaut au-delà de la durée max (ou hors bornes) refusée');
   check(await settingsRow(p, 'cards') === null || (await settingsRow(p, 'cards')).drops === undefined, 'économie : rien n\'est enregistré quand la validation échoue');
 
+  // Erreur dans une partie masquée : depuis « Tirage », la durée invalide (partie Limites) est signalée avec son lien
+  await adminSection(p, 'cartes/tirage');
+  await p.waitForTimeout(200);
+  check(await shownLegends() === 'Boosters | Taux de tirage | Brillantes et garantie', `parties : « Tirage » ne montre que ses groupes (${await shownLegends()})`);
+  check(await p.inputValue('#acd-e-drops_duree_defaut_min') === '2000' && await p.inputValue('#acd-e-quetes_par_semaine') === '5', 'parties : les saisies de « Limites » sont gardées en passant à « Tirage »');
+  await p.fill('#acd-e-pity_epique', '25');
+  await p.click('#acd-econ-form [type="submit"]');
+  await p.waitForTimeout(300);
+  check(/À corriger dans « Limites »/.test(await p.textContent('#acd-econ-form .form-error')) && await p.locator('#acd-econ-form .form-error a[href="#cartes/limites"]').count() === 1,
+    'parties : erreur d\'une partie masquée nommée, avec le lien vers « Limites »');
+  await p.click('#acd-econ-form .form-error a[href="#cartes/limites"]');
+  await p.waitForFunction(() => location.hash === '#cartes/limites');
+  await p.waitForTimeout(300);
+  check(await p.isVisible('#acd-e-drops_duree_defaut_min') && await p.inputValue('#acd-e-pity_epique') === '25', 'parties : le lien ouvre « Limites », la saisie de « Tirage » est gardée');
   await p.fill('#acd-e-drops_duree_defaut_min', '45');
   await p.click('#acd-econ-form [type="submit"]');
   await p.waitForTimeout(400);
   const saved = await settingsRow(p, 'cards');
+  check(saved && saved.pity_epique === 25, 'parties : la valeur saisie dans « Tirage » est enregistrée avec celles de « Limites »');
   check(saved && saved.drops && saved.drops.quantite_max === 10 && saved.drops.duree_max_min === 1440 && saved.drops.duree_defaut_min === 45, 'économie : cards.drops enregistré (10 / 1440 / 45)');
   check(saved && saved.quetes_par_semaine === 5, 'économie : cards.quetes_par_semaine enregistré (5)');
   check(saved && saved.rewards && saved.rewards.daily === 100 && saved.craft && saved.craft.shiny_multiplier === 6, 'économie : les autres réglages sont conservés à l\'enregistrement');
@@ -63,6 +84,21 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await p.waitForTimeout(400);
   const reset = await settingsRow(p, 'cards');
   check(reset && reset.drops.quantite_max === 50 && reset.drops.duree_defaut_min === 30, 'économie : après enregistrement, le défaut est bien en base');
+  // Enregistrer depuis « Tirage » conserve drops, récompenses et quêtes
+  await adminSection(p, 'cartes/tirage');
+  await p.waitForTimeout(200);
+  await p.fill('#acd-e-pity_epique', '30');
+  await p.click('#acd-econ-form [type="submit"]');
+  await p.waitForTimeout(400);
+  const fromTirage = await settingsRow(p, 'cards');
+  check(fromTirage && fromTirage.pity_epique === 30 && fromTirage.drops.quantite_max === 50 && fromTirage.rewards.daily === 100 && fromTirage.quetes_par_semaine === 5,
+    'parties : enregistrer depuis « Tirage » conserve drops, récompenses et quêtes');
+  await adminSection(p, 'cartes/economie');
+  await p.waitForTimeout(200);
+  check(await shownLegends() === 'Départ | Récompenses' && await p.isVisible('[data-act="bulk-open"]'), `parties : « Paillettes et dons » : Dons, Départ, Récompenses (${await shownLegends()})`);
+  await adminSection(p, 'cartes/recyclage');
+  await p.waitForTimeout(200);
+  check(await shownLegends() === 'Recyclage | Fabrication', `parties : « Recyclage et fabrication » (${await shownLegends()})`);
   await p.close();
 
   /* ---------- Cartes › Drops : bornes lues dans cards.drops ---------- */
@@ -106,7 +142,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Vie › Badges : critères ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
-  await adminSection(p, 'vie/badges');
+  await adminSection(p, 'vie/badges-criteres');
   await p.waitForSelector('#bc-form', { timeout: 8000 });
   check(await p.inputValue('#bc-criteres_toujours_la_sorties') === '5', 'badges : seuil « Toujours là » affiche le défaut (5)');
   check(await p.inputValue('#bc-criteres_paparazzi_photos') === '50', 'badges : seuil « Paparazzi » affiche le défaut (50)');
@@ -136,6 +172,26 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await p.waitForTimeout(400);
   b = await settingsRow(p, 'badges');
   check(b && b.criteres.toujours_la_sorties === 5 && b.criteres.paparazzi_photos === 50, 'badges : défauts enregistrés en base après rétablissement');
+  // Parties de la section Badges
+  check(!(await p.isVisible('#badge-grid')) && !(await p.isVisible('#badge-member')) && await p.locator('#zone-actions #badge-new').count() === 0,
+    'parties : « Critères automatiques » seul (grille, attribution et « + Nouveau badge » masqués)');
+  await adminSection(p, 'vie/badges-attribution');
+  await p.waitForTimeout(200);
+  check(await p.isVisible('#badge-member') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-grid')), 'parties : « Attribution » seule');
+  await adminSection(p, 'vie/badges');
+  await p.waitForTimeout(200);
+  check(await p.isVisible('#badge-grid') && await p.isVisible('#badge-search') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-member'))
+    && await p.locator('#zone-actions #badge-new').count() === 1, 'parties : « Catalogue » : recherche, grille et « + Nouveau badge »');
+  check(!(await p.isVisible('#bc-ro')), 'badges : pas de note « lecture seule » pour l\'administrateur');
+  await p.close();
+
+  /* ---------- Vie › Badges : Staff sans le droit Réglages du site (la base refuserait la clé « badges ») ---------- */
+  p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['badges'] } });
+  await adminSection(p, 'vie/badges-criteres');
+  await p.waitForSelector('#bc-form', { timeout: 8000 });
+  check(await p.isVisible('#bc-ro') && /réservé au droit Réglages/.test(await p.textContent('#bc-ro')), 'badges (Staff sans Réglages) : note « lecture seule » affichée');
+  check(await p.isDisabled('#bc-criteres_paparazzi_photos') && await p.locator('#bc-form [type="submit"]').count() === 0 && await p.locator('[data-bc-default]').count() === 0,
+    'badges (Staff sans Réglages) : champs désactivés, ni Enregistrer ni Rétablir');
   await p.close();
 
   /* ---------- Réglages du site : la clé badges est listée et renvoie vers sa section ---------- */

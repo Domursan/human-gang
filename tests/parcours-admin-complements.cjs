@@ -1,7 +1,8 @@
 // Parcours : compléments du panel admin (admin.html), sur le faux Supabase (fixtures/fake-sb.mjs).
 // Couvre : quêtes de la semaine (créer, modifier, activer), défis (modifier, supprimer), réglages du site
 // (ajouter, modifier, JSON invalide refusé, clé sensible en lecture seule), pages (créer, modifier, supprimer),
-// édition Secret Santa (suppression avec ses données en cascade).
+// édition Secret Santa (suppression avec ses données en cascade), vue Matrice des accès, accès en lecture seule pour un
+// Staff sans le droit Réglages, fiche membre › Informations (groupes repliables, enregistrement inchangé).
 // Les contrôles portent sur l'état du faux (window.__DB), donc sur ce que le client a réellement écrit.
 // Lancer : node tests/parcours-admin-complements.cjs
 const { ROOT, check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
@@ -171,8 +172,44 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check((await db(p, () => !window.__DB.hg_ss_participants.some((x) => x.edition_id === 'E25'))), 'ses inscrits sont supprimés avec elle');
   check((await db(p, () => window.__DB.hg_ss_editions.some((e) => e.id === 'E24'))), 'l\'édition 2024 est conservée');
 
+  /* ---------- Accès aux pages : vue Matrice (sous-section membres/acces-matrice, setAccessView) ---------- */
+  await adminSection(p, 'membres/acces-matrice');
+  await p.waitForSelector('#access-root .pa-matrix', { timeout: 5000 });
+  check(await p.getAttribute('#access-root [data-pa-view="matrice"]', 'aria-pressed') === 'true', 'accès : la sous-section Matrice affiche la matrice (puce de vue à jour)');
+  await adminSection(p, 'membres/acces');
+  await p.waitForSelector('#access-root .pa-table', { timeout: 5000 });
+  check(!(await p.isVisible('#access-root .pa-ro')) && !(await p.isDisabled('#access-root [data-pa-mode]')), 'accès : administrateur, mode modifiable, pas de note « lecture seule »');
+
+  /* ---------- Fiche membre › Informations : groupes repliables, un seul formulaire ---------- */
+  await p.evaluate(() => { location.hash = 'membres/comptes/00000003-0000-4000-8000-000000000003/infos'; });
+  await p.waitForSelector('#acc-panel details.acc-fold', { timeout: 5000 });
+  const folds = await p.$$eval('#acc-panel details.acc-fold', (ds) => ds.map((d) => ({ open: d.open, sum: d.querySelector('summary').textContent })));
+  check(folds.length > 1 && folds[0].open && folds.slice(1).every((f) => !f.open), `infos : ${folds.length} groupes repliables, seul le premier ouvert`);
+  check(folds.every((f) => /champs? remplis?|aucun champ rempli/.test(f.sum)), `infos : résumé « n champs remplis » (${folds[1]?.sum})`);
+  await p.click('#acc-panel details.acc-fold:nth-of-type(2) > summary');
+  const f2 = p.locator('#acc-panel details.acc-fold:nth-of-type(2) input').first();
+  const f2name = await f2.getAttribute('name');
+  await f2.fill('Valeur du test');
+  check(/1 champ rempli|champs remplis/.test(await p.textContent('#acc-panel details.acc-fold:nth-of-type(2) > summary')), 'infos : le résumé suit la saisie');
+  await p.click('#acc-panel form[data-form="infos"] [type="submit"]');
+  await p.waitForTimeout(500);
+  const info = await db(p, () => (window.__DB.hg_profile_info || []).find((r) => r.user_id === '00000003-0000-4000-8000-000000000003'));
+  check(!!info && info.data && info.data[f2name] === 'Valeur du test', `infos : enregistrement inchangé (champ « ${f2name} » d'un groupe replié écrit)`);
+
   check(!p.errs.length, 'aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
+
+  /* ---------- Accès aux pages, Staff « membres » sans « reglages » : mode, menu et ordre en lecture seule ---------- */
+  const ps = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['membres'] } });
+  await adminSection(ps, 'membres/acces');
+  await ps.waitForSelector('#access-root .pa-table', { timeout: 5000 });
+  check(await ps.isVisible('#access-root .pa-ro') && /réservé au droit Réglages/.test(await ps.textContent('#access-root .pa-ro')), 'accès (Staff sans Réglages) : note « lecture seule » affichée');
+  check(await ps.isDisabled('#access-root [data-pa-mode]') && await ps.isDisabled('#access-root [data-pa-nav]') && await ps.locator('#access-root .pa-move:not([disabled])').count() === 0,
+    'accès (Staff sans Réglages) : mode, menu et ordre désactivés');
+  check(!(await ps.isDisabled('#access-root [data-pa-manage]:not([disabled]) >> nth=0')) && await ps.locator('#zone-actions [data-pa-new]').count() === 0,
+    'accès (Staff sans Réglages) : « Personnes » reste actif, pas de « + Nouvelle page »');
+  check(!ps.errs.length, 'Staff : aucune erreur JS' + (ps.errs.length ? ' (' + ps.errs.join(' | ') + ')' : ''));
+  await ps.ctx.close();
   await browser.close();
   finish();
 })();

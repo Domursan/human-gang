@@ -5,7 +5,7 @@
 // (b) #membres/comptes/<id>/<onglet> ouvre la bonne fiche ; #comptes/<id>/<onglet> (ancienne adresse) y est redirigée ;
 //     #cartes/quetes ouvre la sous-section ; clic met l'adresse à jour ; Précédent
 // (c) Ctrl/Cmd+K ouvre la palette (et pas la recherche du site) ; elle ouvre une sous-section et une fiche ; focus piégé ; Échap
-// (d) Staff ['cartes'] : la palette ne propose que les sous-sections permises, sans membres
+// (d) Staff ['cartes'] : la palette ne propose que les sous-sections permises (« Groupe · Libellé »), sans membres
 // (e) 375 px : barre d'onglets des domaines en bas de l'écran, sans défilement horizontal de la page
 // Lancer : node tests/parcours-admin-nav.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, log, chromium, sleep } = require('./lib/harness.cjs');
@@ -146,8 +146,12 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   /* ---------- (d) Staff : palette limitée aux droits ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: U(2), staff: ['cartes'] } });
   await openPal(p);
-  const labels = (await palLabels(p)).sort();
-  const attendu = ['Séries', 'Cartes', 'Quêtes', 'Économie', 'Boosters', 'Joueurs', 'Statistiques', 'Échanges', 'Drops', 'Défis du gang'].sort();
+  // « Groupe · Libellé » (sous-menus), dans l'ordre de la colonne ; ni Questions du gang [quiz] ni Secrets [reglages]
+  const labels = await palLabels(p);
+  const attendu = ['Catalogue · Séries', 'Catalogue · Cartes', 'Catalogue · Boosters',
+    'Économie · Paillettes et dons', 'Économie · Tirage', 'Économie · Recyclage et fabrication', 'Économie · Limites',
+    'Animation · Quêtes', 'Animation · Défis du gang', 'Animation · Drops',
+    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques'];
   check(JSON.stringify(labels) === JSON.stringify(attendu),
     `(d) Staff ['cartes'] : la palette ne propose que ses sous-sections (${labels.join(' | ')})`);
   await p.fill('#apal-q', 'bruno');

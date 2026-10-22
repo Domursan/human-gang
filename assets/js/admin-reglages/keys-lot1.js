@@ -4,8 +4,8 @@
 // Les deux clés sont saisies dans le formulaire « Identité et textes » (formulaire: true) : elles n'apparaissent pas dans la liste.
 
 export const KEYS_LOT1 = {
-  site_identite: { label: 'Identité du site', help: 'Nom, initiales, logo, éditeur, contact, intro et bandeau cookies. Se règle dans le formulaire ci-dessus.', formulaire: true },
-  site_textes: { label: 'Textes et menu du site', help: 'Textes des pages, libellés du menu et du pied de page, paragraphes ajoutés aux pages légales. Se règle dans le formulaire ci-dessus.', formulaire: true },
+  site_identite: { label: 'Identité du site', help: 'Nom, initiales, logo, éditeur, contact, intro, bandeau cookies, maintenance et bandeau d’annonce. Se règle dans le formulaire « Identité et textes ».', formulaire: true },
+  site_textes: { label: 'Textes et menu du site', help: 'Textes des pages, libellés du menu et du pied de page, paragraphes ajoutés aux pages légales. Se règle dans le formulaire « Identité et textes ».', formulaire: true },
 };
 
 /**
@@ -40,7 +40,21 @@ export const GROUPES_LOT1 = [
     { k: 'site_textes.nav_libelles', kind: 'nav', label: 'Libellés du menu', aide: 'Vide = nom automatique de la page. Le libellé s\'affiche dans l\'en-tête.' },
     { k: 'site_textes.footer_liens', kind: 'footer', label: 'Liens du pied de page', aide: 'Décoche pour masquer un lien. « Événements » reste réservé aux membres qui y ont accès.' },
   ] },
+  { id: 'etat', titre: 'État du site', aide: 'Mode maintenance et bandeau d’annonce affiché en haut de chaque page. C’est un affichage, pas une protection : les données restent protégées par la base.', champs: [
+    { k: 'site_identite.maintenance_active', kind: 'bool', label: 'Mode maintenance', aide: 'Activé : les membres voient un écran « en maintenance » à la place des pages (sauf admin, compte et mentions légales). L’administrateur et le Staff naviguent normalement.' },
+    { k: 'site_identite.maintenance_message', kind: 'area', vide: true, max: 400, label: 'Message de maintenance', aide: 'Vide : « Le site est en maintenance, reviens un peu plus tard. »' },
+    { k: 'site_identite.bandeau_actif', kind: 'bool', label: 'Bandeau d’annonce', aide: 'Activé et texte rempli : un bandeau s’affiche en haut de chaque page. Chacun peut le fermer pour sa visite.' },
+    { k: 'site_identite.bandeau_texte', kind: 'area', vide: true, max: 300, label: 'Texte du bandeau', aide: 'Une ou deux phrases courtes. Vide : aucun bandeau, même activé.' },
+  ] },
 ];
+
+/** Parties du formulaire (sous-sections de Site) : groupes affichés et adresse de chaque partie. */
+export const PARTS_LOT1 = {
+  identite: { label: 'Identité et mentions légales', groups: ['identite', 'legal'], route: '#site/identite' },
+  textes: { label: 'Textes et intro', groups: ['textes', 'affichage'], route: '#site/textes' },
+  menu: { label: 'Menu et pied de page', groups: ['navigation'], route: '#site/menu' },
+  etat: { label: 'État du site', groups: ['etat'], route: '#site/etat' },
+};
 
 /** Libellés automatiques du menu (pour le placeholder du champ). */
 export const NAV_AUTO_LABELS = { 'secret-santa': 'Secret Santa', irl: 'IRL', historique: 'Historique', messages: 'Messages', cartes: 'Cartes', membre: 'Annuaire', recap: 'Récap' };

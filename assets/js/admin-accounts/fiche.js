@@ -10,7 +10,7 @@
 // hg_event_rsvps, hg_photos (+ stockage hg-photos), hg_ideas, hg_support, hg_badges, hg_user_badges,
 // hg_wallets, hg_card_copies ; RPC hg_staff_list.
 // Exporte : openAccount, reloadDetail, showGhostFiche, emptyDetail, showAccount, openAccountFiche, renderDetail,
-// paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo.
+// paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo, foldInfoGroups (groupes repliables de l'onglet Informations).
 // =====================================================================
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
@@ -289,6 +289,7 @@ export function renderDetail() {
       ${TABS.filter(([k]) => !(isGhostFiche() && k === 'acces')).map(([k, l]) => `<button class="acc-tab" type="button" role="tab" id="acc-tab-${k}" data-tab="${k}" aria-controls="acc-panel" aria-selected="${k === A.tab}" tabindex="${k === A.tab ? 0 : -1}">${esc(l)}${tabCount(k)}</button>`).join('')}
     </div>
     <div class="card acc-panel" id="acc-panel" role="tabpanel" aria-labelledby="acc-tab-${A.tab}" tabindex="0">${panelHtml()}</div>`;
+  if (A.tab === 'infos') foldInfoGroups($('#acc-panel'));
   paintHead();
   paintSugg();
   paintInfo();
@@ -313,6 +314,37 @@ function renderDetailCounts() {
 export function renderPanel() {
   const panel = $('#acc-panel'); if (!panel) return renderDetail();
   panel.innerHTML = panelHtml();
+  if (A.tab === 'infos') foldInfoGroups(panel);
+}
+
+/** Texte du résumé d'un groupe : libellé et nombre de champs remplis. */
+function foldSummary(fs, label) {
+  const n = [...fs.querySelectorAll('input, textarea')].filter((el) => el.value.trim()).length;
+  return `${label} · ${n === 0 ? 'aucun champ rempli' : `${n} champ${n > 1 ? 's' : ''} rempli${n > 1 ? 's' : ''}`}`;
+}
+/**
+ * Onglet Informations : chaque groupe de champs (fieldset.acc-group) passe dans un <details> repliable,
+ * le premier ouvert, avec un résumé « Libellé · n champs remplis ». Le formulaire reste unique (même enregistrement) :
+ * les champs d'un groupe fermé sont toujours envoyés. Le résumé suit la saisie.
+ * @param {HTMLElement} scope conteneur de l'onglet.
+ */
+export function foldInfoGroups(scope) {
+  const form = scope?.querySelector('form[data-form="infos"]');
+  if (!form) return;
+  form.querySelectorAll('fieldset.acc-group').forEach((fs, i) => {
+    const legend = fs.querySelector('legend');
+    const label = legend?.textContent.trim() || `Groupe ${i + 1}`;
+    const det = document.createElement('details');
+    det.className = 'acc-fold';
+    det.open = i === 0;
+    const sum = document.createElement('summary');
+    sum.className = 'acc-fold-sum';
+    sum.textContent = foldSummary(fs, label);
+    fs.before(det);
+    det.append(sum, fs);
+    legend?.classList.add('visually-hidden'); // le résumé sert de titre visible ; la légende reste pour les lecteurs d'écran
+    fs.addEventListener('input', () => { sum.textContent = foldSummary(fs, label); });
+  });
 }
 
 /** HTML du panneau correspondant à l'onglet courant. */

@@ -3,17 +3,19 @@
 // Chaque champ a une aide courte, une validation, un bouton « Valeur par défaut » ; chaque groupe a « Rétablir ces valeurs ».
 // Seuls les écarts aux valeurs par défaut sont enregistrés (une clé absente = valeur par défaut).
 // Dépendances : core.js (sb, toast, errMsg, esc), core/site-defaults.js (valeurs par défaut, buildSite, diffFromDefaults),
-// keys-lot1.js (description des champs : GROUPES_LOT1, NAV_AUTO_LABELS).
-// Exporte : mountIdentite (monte le formulaire, appelé par view.js).
+// keys-lot1.js (description des champs : GROUPES_LOT1, PARTS_LOT1, NAV_AUTO_LABELS).
+// Exporte : mountIdentite (monte le formulaire, appelé par view.js), showIdentitePart (n'affiche qu'une partie des groupes ;
+// le formulaire reste unique : un seul bouton Enregistrer, toutes les valeurs relues et enregistrées ensemble).
 // =====================================================================
 import { sb, toast, errMsg, esc } from '../core.js';
 import { SITE_DEFAULTS, buildSite, diffFromDefaults, setSiteRaw, NAV_SLUGS } from '../core/site-defaults.js';
-import { GROUPES_LOT1, NAV_AUTO_LABELS } from './keys-lot1.js';
+import { GROUPES_LOT1, PARTS_LOT1, NAV_AUTO_LABELS } from './keys-lot1.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_RE = /^(https:\/\/|assets\/)\S+$/;
 const BUCKET = { site_identite: 'identite', site_textes: 'textes' };
-const S = { root: null, site: null, error: null };
+/* part : partie affichée (clé de PARTS_LOT1) ; null = tous les groupes (comportement d'origine). */
+const S = { root: null, site: null, error: null, part: null };
 
 /* Identifiant HTML d'un champ, dérivé de sa clé (les points deviennent des tirets). */
 const fieldId = (k) => `rgi-${k.replace(/[^a-z0-9]/gi, '-')}`;
@@ -30,6 +32,37 @@ const defaultOf = (k) => {
 const currentOf = (k) => { const { bucket, champ } = parseK(k); return S.site[bucket][champ]; };
 /* Liste à plat de tous les champs du formulaire, dans l'ordre des groupes. */
 const allFields = () => GROUPES_LOT1.flatMap((g) => g.champs);
+
+/* Partie à laquelle appartient un groupe (null si aucune). */
+const partOfGroup = (gid) => Object.keys(PARTS_LOT1).find((p) => PARTS_LOT1[p].groups.includes(gid)) || null;
+/* Vrai si le groupe est masqué dans la partie courante. */
+const groupHidden = (gid) => !!S.part && partOfGroup(gid) !== S.part;
+
+/**
+ * N'affiche qu'une partie du formulaire (identite | textes | menu | etat ; null ou inconnu = tout).
+ * Mémorisé pour les prochains rendus ; appliqué tout de suite si le formulaire est affiché (saisies conservées).
+ * @param {string|null} part partie à afficher.
+ */
+export function showIdentitePart(part) {
+  S.part = PARTS_LOT1[part] ? part : null;
+  applyPart();
+}
+/** Texte d'introduction selon la partie affichée. */
+function introFor(part) {
+  if (part === 'etat') return 'Mode maintenance et bandeau d\'annonce affichés sur les pages publiques. Les admins et le Staff voient toujours le site. Les modifications s\'appliquent à la prochaine ouverture des pages.';
+  return 'Ce qui se voit sur le site : nom, logo, éditeur, textes et menus. Une valeur vide garde le comportement d\'origine, sauf l\'éditeur et le contact (« à compléter »). Les modifications s\'appliquent à la prochaine ouverture des pages.';
+}
+/** Applique la partie courante au formulaire déjà dessiné : groupes masqués et titre. */
+function applyPart() {
+  if (!S.root) return;
+  let shown = 0;
+  const intro = S.root.querySelector('#rgi-intro'); if (intro) intro.textContent = introFor(S.part);
+  S.root.querySelectorAll('fieldset[data-group]').forEach((fs) => { fs.hidden = groupHidden(fs.dataset.group); if (!fs.hidden) shown += 1; });
+  // Deux groupes ou plus : côte à côte quand la zone est assez large (CSS, requête de conteneur), pour des parties courtes.
+  S.root.querySelector('#rgi-form')?.classList.toggle('rgi-duo', shown >= 2);
+  const t = S.root.querySelector('#rgi-title');
+  if (t) t.textContent = S.part ? PARTS_LOT1[S.part].label : 'Identité et textes';
+}
 
 /** Point d'entrée (view.js). Lit les réglages en base (pas le cache) et dessine le formulaire. */
 export async function mountIdentite(root) {
@@ -94,15 +127,15 @@ function controlHtml(f) {
 /** Dessine le formulaire complet (tous les groupes) dans la zone de la page. */
 function render() {
   if (!S.root) return;
-  const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group" data-group="${g.id}">
+  const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group" data-group="${g.id}" data-part${groupHidden(g.id) ? ' hidden' : ''}>
       <legend class="rgi-legend">${esc(g.titre)}</legend>
       <p class="small muted">${esc(g.aide)}</p>
       ${g.champs.map(controlHtml).join('')}
       <div class="rgi-group-foot"><button class="btn btn-ghost btn-sm" type="button" data-reset-group="${g.id}">Rétablir ces valeurs par défaut</button></div>
     </fieldset>`).join('');
   S.root.innerHTML = `<section class="rgi" aria-labelledby="rgi-title">
-      <h3 id="rgi-title" class="rgi-title">Identité et textes</h3>
-      <p class="small muted">Ce qui se voit sur le site : nom, logo, éditeur, textes et menus. Une valeur vide garde le comportement d'origine, sauf l'éditeur et le contact (« à compléter »). Les modifications s'appliquent à la prochaine ouverture des pages.</p>
+      <h3 id="rgi-title" class="rgi-title">${esc(S.part ? PARTS_LOT1[S.part].label : 'Identité et textes')}</h3>
+      <p class="small muted" id="rgi-intro">${esc(introFor(S.part))}</p>
       ${S.error ? `<div class="empty">Impossible de charger les réglages : ${esc(S.error)}</div>` : ''}
       <form id="rgi-form" class="rgi-form" novalidate>
         ${groups}
@@ -112,6 +145,7 @@ function render() {
         </div>
       </form>
     </section>`;
+  applyPart();
 }
 
 /** Valeur saisie d'un champ (typée selon le champ). */
@@ -212,8 +246,20 @@ async function onSubmit(e) {
   showErrors(errors);
   if (Object.keys(errors).length) {
     status.textContent = 'Corrige les champs signalés avant d\'enregistrer.';
+    // Erreur dans une partie masquée : on nomme la partie et on donne le lien vers sa sous-section.
+    const hiddenParts = [...new Set(Object.keys(errors).map((k) => {
+      const g = GROUPES_LOT1.find((x) => x.champs.some((f) => f.k === k));
+      return g && groupHidden(g.id) ? partOfGroup(g.id) : null;
+    }).filter(Boolean))];
+    for (const p of hiddenParts) {
+      const a = document.createElement('a');
+      a.href = PARTS_LOT1[p].route;
+      a.textContent = `À corriger dans « ${PARTS_LOT1[p].label} »`;
+      a.addEventListener('click', () => showIdentitePart(p));
+      status.append(' ', a);
+    }
     status.hidden = false;
-    S.root.querySelector(`[data-err]:not([hidden])`)?.closest('.rgi-field')?.querySelector('input,textarea')?.focus();
+    S.root.querySelector(`fieldset:not([hidden]) [data-err]:not([hidden])`)?.closest('.rgi-field')?.querySelector('input,textarea')?.focus();
     return;
   }
   const values = readAll();

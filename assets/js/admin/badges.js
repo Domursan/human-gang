@@ -1,7 +1,9 @@
 // Admin : badges (attribution par membre, création et édition, image, suppression).
 // Grille des badges avec recherche, puis, pour un membre choisi, ses badges à cocher. Le formulaire des critères
 // automatiques est monté par badges-criteres.js, au-dessus de la grille.
-// Utilisé par admin.js (badgesSub, bindBadges) et par ideas.js / support.js (hasBadge, awardBadge, badgeName).
+// Utilisé par admin.js (badgesSub, bindBadges, showBadgesPart) et par ideas.js / support.js (hasBadge, awardBadge, badgeName).
+// Parties (sous-sections de la coquille) : catalogue (recherche, grille, création), attribution (« Attribuer ou retirer »),
+// criteres (formulaire des critères automatiques). Sans partie choisie, tout est affiché (comportement d'origine).
 // Dépend de core.js, confirm, admin-badges-edit.js (édition et suppression), admin-events.js, badge-levels.js (niveaux).
 import { sb, toast, esc, $ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -12,12 +14,22 @@ import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, uploadAsset, pickFile } from './common.js';
 import { loadBadges } from './loaders.js';
 import { renderMembers } from './invites.js';
-import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
+import { matches, mountSearch, bindSearch, setCount, emptyHtml, moreHtml, fold } from './list-tools.js';
 import { mountBadgesCriteres } from './badges-criteres.js';
 
 /* =========================================================
    Badges
    ========================================================= */
+/* Rangées de badges affichées d'un coup dans la grille (sans recherche) ; « Afficher plus » en ajoute autant.
+   Garde le catalogue sous ~1 400 px à 1 280 px de large. Pendant une recherche, tous les résultats sont affichés. */
+const BADGE_ROWS = 3;
+/* Nombre de badges d'une « page » : colonnes actuelles de la grille × BADGE_ROWS (9 à 1 280 px, 12 sur grand écran). */
+function badgePage() {
+  const g = $('#badge-grid');
+  const cols = g && g.getClientRects().length ? getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean).length : 3;
+  return Math.max(1, cols) * BADGE_ROWS;
+}
+let badgeLimit = 0; // 0 = une page (calculée au rendu, quand la grille a sa largeur)
 /** Image d'un badge : son image téléversée, sinon l'icône par défaut. */
 const badgeImg = (b) => (b.image_url ? `<img src="${esc(b.image_url)}" alt="">` : ICON.badge);
 
@@ -33,8 +45,12 @@ export function renderBadges() {
     const b = S.badges.find((x) => x.code === ub.badge_code);
     holders.get(ub.badge_code).push(pseudoOf(ub.user_id) + (hasLevels(b) ? ` (${roman(ub.level || 1)})` : ''));
   }
-  const shown = S.badges.filter((b) => matches(S.q.badges, b.name, b.description, b.code));
-  setCount($('#badge-search-count'), shown.length, S.badges.length, S.q.badges, ['badge', 'badges']);
+  const found = S.badges.filter((b) => matches(S.q.badges, b.name, b.description, b.code));
+  const searching = !!fold(S.q.badges);
+  const shown = searching ? found : found.slice(0, badgeLimit || badgePage());
+  setCount($('#badge-search-count'), found.length, S.badges.length, S.q.badges, ['badge', 'badges']);
+  const more = $('#badge-more');
+  if (more) more.innerHTML = searching ? '' : moreHtml('badge-more-btn', shown.length, found.length);
   $('#badge-grid').innerHTML = shown.map((b) => {
     const h = holders.get(b.code) || [];
     const names = h.slice().sort((x, y) => x.localeCompare(y, 'fr'));
@@ -83,14 +99,53 @@ export const hasBadge = (uid, code) => S.userBadges.some((u) => u.user_id === ui
 /** Nom affiché d'un badge (son code si le badge est introuvable). */
 export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?? code;
 
+/* =========================================================
+   Parties de la section
+   ========================================================= */
+/** Libellé et adresse de chaque partie. */
+export const BADGES_PARTS = {
+  catalogue: { label: 'Catalogue', route: '#vie/badges' },
+  attribution: { label: 'Attribution', route: '#vie/badges-attribution' },
+  criteres: { label: 'Critères automatiques', route: '#vie/badges-criteres' },
+};
+/* Partie affichée ; null = toute la section. */
+let badgePart = null;
+/** Partie à laquelle appartient un enfant direct de la section #badges. */
+function partOfEl(el) {
+  if (el.querySelector('#badge-member')) return 'attribution';
+  if (el.id === 'badge-criteres') return 'criteres';
+  return 'catalogue'; // note, recherche et grille
+}
+/** Applique la partie courante : masque les blocs des autres parties et le bouton « + Nouveau badge » hors catalogue. */
+function applyBadgesPart() {
+  const sec = $('#badges');
+  if (!sec) return;
+  for (const el of sec.children) {
+    if (el.tagName === 'H2' || el.id === 'badge-file') continue;
+    el.dataset.part = partOfEl(el);
+    el.hidden = !!badgePart && el.dataset.part !== badgePart;
+  }
+  const nb = $('#badge-new');
+  if (nb) nb.hidden = !!badgePart && badgePart !== 'catalogue';
+}
+/**
+ * N'affiche qu'une partie de la section Badges (catalogue | attribution | criteres ; null ou inconnu = tout).
+ * Peut être appelée avant le montage : le choix est mémorisé et appliqué au montage.
+ * @param {string|null} part partie à afficher.
+ */
+export function showBadgesPart(part) {
+  badgePart = BADGES_PARTS[part] ? part : null;
+  applyBadgesPart();
+}
+
 /** Section « Badges » (registerSub) : le bouton « Nouveau badge » est dans la barre de zone. */
 export const badgesSub = {
   /** Montage unique : branche les écouteurs et monte le formulaire des critères au-dessus de la grille. */
-  main() { bindBadges(); mountBadgesCriteres($('#badge-grid')); },
-  /** À chaque visite : pose le bouton « + Nouveau badge » dans la barre de zone. */
+  main() { bindBadges(); mountBadgesCriteres($('#badge-grid')); applyBadgesPart(); },
+  /** À chaque visite : pose le bouton « + Nouveau badge » dans la barre de zone (catalogue seulement). */
   open() {
     const z = $('#zone-actions');
-    if (z) z.innerHTML = `<button class="btn btn-primary" type="button" id="badge-new">+ Nouveau badge</button>`;
+    if (z) z.innerHTML = badgePart && badgePart !== 'catalogue' ? '' : `<button class="btn btn-primary" type="button" id="badge-new">+ Nouveau badge</button>`;
   },
 };
 
@@ -101,7 +156,10 @@ export function bindBadges() {
   if (bound) return;
   bound = true;
   const search = mountSearch($('#badge-grid'), { id: 'badge-search', label: 'Rechercher un badge', placeholder: 'Nom, description ou code…' });
-  bindSearch(search.input, (q) => { S.q.badges = q; renderBadges(); });
+  bindSearch(search.input, (q) => { S.q.badges = q; badgeLimit = 0; renderBadges(); });
+  const more = document.createElement('div'); // bouton « Afficher plus » sous la grille
+  more.id = 'badge-more';
+  $('#badge-grid').after(more);
   $('#badge-member').addEventListener('change', (ev) => { S.badgeMember = ev.target.value; renderBadgeToggles(); });
   document.addEventListener('click', onBadgeClick); // barre de zone (hors de la section) et grille
 }
@@ -118,6 +176,13 @@ async function onBadgeClick(ev) {
     return;
   }
   if (!t.closest('#badges')) return;
+  if (t.id === 'badge-more-btn') {
+    const first = (badgeLimit || badgePage()) + 1;
+    badgeLimit = first - 1 + badgePage();
+    renderBadges();
+    $(`#badge-grid .badge-card:nth-child(${first}) button`)?.focus(); // le focus passe au premier badge ajouté
+    return;
+  }
   if (t.dataset.toggleBadge) {
     const code = t.dataset.toggleBadge, uid = S.badgeMember, on = t.getAttribute('aria-pressed') === 'true';
     if (on && !(await confirmBox('Retirer ce badge ?', `${pseudoOf(uid)} perdra le badge « ${badgeName(code)} ».`, { ok: 'Retirer', danger: true }))) return;

@@ -19,3 +19,11 @@
   .rgi-row { grid-template-columns: minmax(0, 1fr); }
   .rgi-group { padding: 12px; }
 }
+
+/* Parties du formulaire (Site › Identité, Textes…) : deux groupes côte à côte quand la zone est large. */
+.rgi { container-type: inline-size; }
+.rgi-group[hidden] { display: none; }
+@container (min-width: 760px) {
+  .rgi-form.rgi-duo { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .rgi-form.rgi-duo > .rgi-save { grid-column: 1 / -1; }
+}

@@ -1,7 +1,7 @@
 // Admin : droits du panel. Source unique des permissions (clé de hg_perm_catalog).
 // SECTION_PERM : section (id de <section>) -> permission. « admin » : réservé à l'administrateur (gestion du Staff).
 // DOMAINS : coquille du panel (rail, colonne de navigation). Chaque sous-section pointe vers une section existante ;
-// les sous-sections « Jeu de cartes » partagent la section #cartes (un onglet chacune). Une sous-section sans droit
+// les sous-sections « Jeux et cartes » partagent la section #cartes (un onglet chacune). Une sous-section sans droit
 // est masquée et jamais montée. Un domaine sans sous-section permise est masqué.
 // Utilisé par shell.js (rail, colonne), router.js (routage), live.js (tables visibles) et les sections (canSection).
 // Dépend de core/perms.js (permissions en cache, hasPerm) et core/util.js ($$).
@@ -25,10 +25,20 @@ export const SECTION_PERM = {
   bot: 'bot',
   theme: 'themes',
   staff: 'admin',
+  // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
+  eggs: 'reglages', fil: 'reglages', champs: 'reglages',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
 const TILE_SECTIONS = ['comptes', 'membres', 'secret-santa', 'idees', 'assistance'];
+
+// Sous-menus : `heading` (facultatif) = titre du groupe de sous-sections dans la colonne de navigation et dans la palette
+// (« Groupe · Libellé »). Les sous-sections d'un même groupe se suivent. Un groupe sans sous-section permise n'affiche pas
+// son titre. Plusieurs sous-sections peuvent monter la même section (`section`) : ce sont alors des « parties » (onglets
+// des cartes, parties de l'Économie, des Réglages, des Badges, de l'Accès aux pages), ouvertes par admin.js.
+// Les identifiants de sous-section sont uniques sur tout le panel (compteurs de shell.js indexés par identifiant seul).
+/** Donne le titre de groupe `heading` à chaque sous-section de la liste. */
+const under = (heading, subs) => subs.map((s) => ({ ...s, heading }));
 
 // Domaines et sous-sections, dans l'ordre d'affichage. id = segment de l'URL (#domaine/sous-section).
 export const DOMAINS = [
@@ -38,41 +48,95 @@ export const DOMAINS = [
     { id: 'staff', label: 'Staff', section: 'staff' },
   ] },
   { id: 'membres', label: 'Membres', icon: 'users', subs: [
-    { id: 'comptes', label: 'Comptes', section: 'comptes' },
-    { id: 'invitations', label: 'Invitations', section: 'membres' },
-    { id: 'acces', label: 'Accès aux pages', section: 'acces' },
+    ...under('Comptes', [
+      { id: 'comptes', label: 'Comptes', section: 'comptes' },
+      { id: 'invitations', label: 'Invitations', section: 'membres' },
+      { id: 'champs', label: 'Champs du profil', section: 'champs' },
+    ]),
+    ...under('Accès aux pages', [
+      { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },
+      { id: 'acces-matrice', label: 'Matrice membres × pages', section: 'acces', part: 'matrice' },
+    ]),
   ] },
   { id: 'vie', label: 'Vie du gang', icon: 'calendar', subs: [
-    { id: 'sorties', label: 'Sorties IRL', section: 'sorties' },
-    { id: 'souvenirs', label: 'Souvenirs et photos', section: 'souvenirs' },
-    { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
-    { id: 'evenements', label: 'Événements', section: 'evenements' },
-    { id: 'badges', label: 'Badges', section: 'badges' },
+    ...under('Sorties et souvenirs', [
+      { id: 'sorties', label: 'Sorties IRL', section: 'sorties' },
+      { id: 'souvenirs', label: 'Souvenirs et photos', section: 'souvenirs' },
+    ]),
+    ...under('Rendez-vous', [
+      { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
+      { id: 'evenements', label: 'Événements', section: 'evenements' },
+    ]),
+    ...under('Badges', [
+      { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
+      { id: 'badges-attribution', label: 'Attribution', section: 'badges', part: 'attribution' },
+      { id: 'badges-criteres', label: 'Critères automatiques', section: 'badges', part: 'criteres' },
+    ]),
   ] },
-  { id: 'cartes', label: 'Jeu de cartes', icon: 'cards', subs: [
-    { id: 'series', label: 'Séries', section: 'cartes', tab: 'series' },
-    { id: 'cartes', label: 'Cartes', section: 'cartes', tab: 'cartes' },
-    { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes' },
-    { id: 'economie', label: 'Économie', section: 'cartes', tab: 'economie' },
-    { id: 'boosters', label: 'Boosters', section: 'cartes', tab: 'boosters' },
-    { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },
-    { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats' },
-    { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },
-    { id: 'drops', label: 'Drops', section: 'drops' },
-    { id: 'defis', label: 'Défis du gang', section: 'defis' },
-    { id: 'questions', label: 'Questions du gang', section: 'quiz' },
+  { id: 'cartes', label: 'Jeux et cartes', icon: 'cards', subs: [
+    ...under('Catalogue', [
+      { id: 'series', label: 'Séries', section: 'cartes', tab: 'series' },
+      { id: 'cartes', label: 'Cartes', section: 'cartes', tab: 'cartes' },
+      { id: 'boosters', label: 'Boosters', section: 'cartes', tab: 'boosters' },
+    ]),
+    ...under('Économie', [
+      { id: 'economie', label: 'Paillettes et dons', section: 'cartes', tab: 'economie', part: 'paillettes' },
+      { id: 'tirage', label: 'Tirage', section: 'cartes', tab: 'economie', part: 'tirage' },
+      { id: 'recyclage', label: 'Recyclage et fabrication', section: 'cartes', tab: 'economie', part: 'recyclage' },
+      { id: 'limites', label: 'Limites', section: 'cartes', tab: 'economie', part: 'limites' },
+    ]),
+    ...under('Animation', [
+      { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes' },
+      { id: 'defis', label: 'Défis du gang', section: 'defis' },
+      { id: 'drops', label: 'Drops', section: 'drops' },
+    ]),
+    ...under('Suivi', [
+      { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },
+      { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },
+      { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats' },
+    ]),
+    ...under('Jeux', [
+      { id: 'questions', label: 'Questions du gang', section: 'quiz' },
+      { id: 'secrets', label: 'Secrets', section: 'eggs' },
+    ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [
-    { id: 'assistance', label: 'Assistance', section: 'assistance' },
-    { id: 'idees', label: 'Boîte à idées', section: 'idees' },
-    { id: 'messagerie', label: 'Messagerie', section: 'messagerie' },
-    { id: 'bot', label: 'Bot Discord', section: 'bot' },
+    ...under('Demandes', [
+      { id: 'assistance', label: 'Assistance', section: 'assistance' },
+      { id: 'idees', label: 'Boîte à idées', section: 'idees' },
+    ]),
+    ...under('Conversations', [
+      { id: 'messagerie', label: 'Messagerie', section: 'messagerie' },
+      { id: 'fil', label: 'Fil d’activité', section: 'fil' },
+    ]),
+    ...under('Discord', [
+      { id: 'bot', label: 'Bot Discord', section: 'bot' },
+    ]),
   ] },
   { id: 'site', label: 'Site', icon: 'globe', subs: [
-    { id: 'reglages', label: 'Réglages', section: 'reglages' },
-    { id: 'theme', label: 'Thème', section: 'theme' },
+    ...under('Identité et textes', [
+      { id: 'identite', label: 'Identité et mentions légales', section: 'reglages', part: 'identite' },
+      { id: 'textes', label: 'Textes et intro', section: 'reglages', part: 'textes' },
+      { id: 'menu', label: 'Menu et pied de page', section: 'reglages', part: 'menu' },
+    ]),
+    ...under('Fonctionnement', [
+      { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
+      { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
+    ]),
+    ...under('Apparence', [
+      { id: 'theme', label: 'Thème', section: 'theme' },
+    ]),
   ] },
 ];
+
+// Sous-sections retirées au démarrage parce que leur module est absent (ex. section livrée plus tard) : admin.js
+// appelle disableSubs avant de construire la coquille. Elles sont alors traitées comme non permises.
+const disabled = new Set();
+/**
+ * Retire des sous-sections du panel (module absent). À appeler avant initShell.
+ * @param {...string} ids Identifiants de sous-section (ex. « champs »).
+ */
+export function disableSubs(...ids) { for (const id of ids) disabled.add(id); }
 
 /**
  * Ai-je accès à cette section ?
@@ -92,7 +156,7 @@ export const anySection = (...ids) => ids.some(canSection);
 export const isAdminView = () => !!getCachedPerms()?.is_admin;
 
 /** Sous-section permise ? (sous-section = objet de DOMAINS, dont la section donne le droit) */
-export const canSub = (sub) => canSection(sub.section);
+export const canSub = (sub) => !disabled.has(sub.id) && canSection(sub.section);
 
 /**
  * Domaines permis, avec leurs sous-sections permises (sans domaine vide).

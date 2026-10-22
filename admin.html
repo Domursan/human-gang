@@ -56,6 +56,9 @@
   <link rel="stylesheet" href="assets/css/admin-pilotage.css">
   <link rel="stylesheet" href="assets/css/admin-quiz.css">
   <link rel="stylesheet" href="assets/css/admin-quiz-stats.css">
+  <link rel="stylesheet" href="assets/css/admin-eggs.css">
+  <link rel="stylesheet" href="assets/css/admin-fil.css">
+  <link rel="stylesheet" href="assets/css/admin-champs.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="domain" data-info="no">
@@ -66,7 +69,7 @@
       <div class="shell-foot" id="shell-foot">
         <a class="shell-ico" href="#pilotage/staff" data-admin-only aria-label="Staff" title="Staff"><span data-icon="shield"></span></a>
         <button class="shell-ico" id="admin-goto" type="button" aria-haspopup="dialog" aria-label="Aller à… (Ctrl K)" title="Aller à… (Ctrl K)"><span data-icon="search"></span></button>
-        <a class="shell-ico" href="#site/reglages" data-rail-reglages aria-label="Réglages" title="Réglages"><span data-icon="sliders"></span></a>
+        <a class="shell-ico" href="#site/identite" data-rail-reglages aria-label="Réglages du site" title="Réglages du site"><span data-icon="sliders"></span></a>
         <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
         <div class="shell-live" id="shell-live"></div>
         <div class="shell-account">
@@ -223,6 +226,18 @@
           <h2 id="h-reglages" class="section-title">Réglages du site</h2>
           <div id="identite-root" class="rg-identite"></div>
           <div id="reglages-root"><div class="empty">Chargement des réglages…</div></div>
+        </section>
+        <section id="eggs" class="admin-section" data-perm="reglages" aria-labelledby="h-eggs">
+          <h2 id="h-eggs" class="section-title">Secrets</h2>
+          <div id="eggs-root"><div class="empty">Chargement des secrets…</div></div>
+        </section>
+        <section id="fil" class="admin-section" data-perm="reglages" aria-labelledby="h-fil">
+          <h2 id="h-fil" class="section-title">Fil d’activité</h2>
+          <div id="fil-root"><div class="empty">Chargement du fil…</div></div>
+        </section>
+        <section id="champs" class="admin-section" data-perm="reglages" aria-labelledby="h-champs">
+          <h2 id="h-champs" class="section-title">Champs du profil</h2>
+          <div id="champs-root"><div class="empty">Chargement des champs…</div></div>
         </section>
         <section id="theme" class="admin-section" aria-labelledby="h-theme">
           <h2 id="h-theme" class="section-title">Thème</h2>

@@ -1,4 +1,5 @@
-// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton du rail). Filtre les sous-sections permises et les membres (pseudo).
+// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton du rail). Filtre les sous-sections permises (« Groupe · Libellé »)
+// et les membres (pseudo).
 // Entrée ouvre la sous-section ou la fiche, par le routeur de la coquille (admin/shell.js). Dialogue modal : focus piégé,
 // Échap ferme, le reste de la page est inerte. Propre à admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
 // Utilisé par admin.js (setupPalette). Dépend de core.js (esc), state.js (membres), loaders.js (chargement des membres),
@@ -51,9 +52,16 @@ function build() {
   ui.root.addEventListener('click', (e) => { if (e.target === ui.root) close(); });
 }
 
-/** Sous-sections accessibles (domaines de la coquille, déjà filtrés par les droits). La colonne « kind » donne le domaine. */
+/**
+ * Sous-sections accessibles (domaines de la coquille, déjà filtrés par les droits). La colonne « kind » donne le domaine ;
+ * le libellé est « Groupe · Libellé » quand la sous-section a un titre de groupe (sous-menu) différent de son libellé.
+ * La recherche porte sur ce libellé complet : taper le titre du groupe (« économie ») propose toutes ses sous-sections.
+ */
 function sectionItems() {
-  return visibleDomains().flatMap((d) => d.subs.map((s) => ({ kind: d.label, label: s.label, path: `${d.id}/${s.id}` })));
+  return visibleDomains().flatMap((d) => d.subs.map((s) => {
+    const group = s.heading && s.heading !== s.label ? s.heading : '';
+    return { kind: d.label, group, label: group ? `${group} · ${s.label}` : s.label, path: `${d.id}/${s.id}` };
+  }));
 }
 /**
  * Membres dont le pseudo contient la requête (normalisée), au plus MAX_MEMBERS.
@@ -78,7 +86,8 @@ function render() {
   ui.items = items();
   ui.active = Math.min(ui.active, Math.max(0, ui.items.length - 1));
   let html = ui.items.map((it, i) => `<li class="apal-item" role="option" id="apal-o-${i}" data-i="${i}" aria-selected="${i === ui.active}">
-      <span class="apal-kind">${esc(it.kind)}</span><span class="apal-label">${esc(it.label)}</span></li>`).join('');
+      <span class="apal-kind">${esc(it.kind)}</span><span class="apal-label">${it.group
+        ? `<span class="apal-group">${esc(it.group)} · </span>${esc(it.label.slice(it.group.length + 3))}` : esc(it.label)}</span></li>`).join('');
   if (!ui.items.length) {
     const loading = norm(ui.input.value) && canSection('comptes') && ui.membersState === 'loading';
     html = `<li class="apal-empty">${loading ? 'Chargement des membres…' : ui.membersState === 'error' ? 'Membres indisponibles.' : 'Aucun résultat.'}</li>`;
