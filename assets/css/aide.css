@@ -50,6 +50,18 @@
 .aide-help p { margin: 0; }
 .aide-help-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
+/* Tuto avec affiche : texte et affiche en deux moitiés égales ; l'une sous l'autre sur écran étroit. */
+.aide-tuto-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.aide-tuto-duo .aide-tuto { max-width: none; }
+.aide-affiche { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 24px; }
+.aide-affiche-cadre { position: relative; width: 100%; aspect-ratio: 1123 / 1587; overflow: hidden; border-radius: var(--radius-sm); background: #0b0a10; }
+.aide-affiche-cadre iframe { position: absolute; top: 0; left: 0; width: 1123px; height: 1587px; border: 0; transform-origin: 0 0; pointer-events: none; }
+.aide-affiche-lien { align-self: center; }
+@media (max-width: 900px) {
+  .aide-tuto-duo { grid-template-columns: minmax(0, 1fr); }
+  .aide-affiche { position: static; max-width: 520px; width: 100%; justify-self: center; box-sizing: border-box; }
+}
+
 @media (max-width: 600px) {
   .aide-group .aide-group-title { font-size: 20px; }
   .aide-tuto-list { grid-template-columns: minmax(0, 1fr); }

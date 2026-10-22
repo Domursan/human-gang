@@ -61,6 +61,17 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     check(tuto.includes('Il coûte 250 Paillettes'), 'tuto « Ouvrir un booster » : prix 250 affiché dans l\'étape');
     check(tuto.replace(NBSP, '').includes('Ouvrir5boosters·1250') || tuto.replace(NBSP, '').includes('pour1250Paillettes'), 'tuto « Ouvrir un booster » : lot de 5 à 1 250');
     check(!tuto.includes('{{'), 'tuto « Ouvrir un booster » : aucun jeton non remplacé');
+    // Affiche à côté du tuto : deux colonnes de même largeur, l'affiche des boosters réduite dans son cadre.
+    await sleep(1200);
+    const duo = await page.evaluate(() => {
+      const a = document.querySelector('.aide-tuto-duo .aide-tuto')?.getBoundingClientRect();
+      const b = document.querySelector('.aide-tuto-duo .aide-affiche')?.getBoundingClientRect();
+      const f = document.querySelector('.aide-affiche iframe');
+      return { a: a?.width ?? 0, b: b?.width ?? 0, src: f?.getAttribute('src') ?? '', t: f?.style.transform ?? '' };
+    });
+    check(duo.src === 'affiches/boosters-a3.html', `tuto « Ouvrir un booster » : affiche des boosters à côté (${duo.src})`);
+    check(duo.a > 0 && Math.abs(duo.a - duo.b) < 2, `tuto : texte et affiche en deux moitiés égales (${Math.round(duo.a)} / ${Math.round(duo.b)})`);
+    check(/^scale\(0\.\d+\)$/.test(duo.t), `tuto : affiche réduite à la largeur du cadre (${duo.t})`);
     check(page.errs.length === 0, `tuto : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
 

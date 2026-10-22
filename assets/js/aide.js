@@ -16,6 +16,47 @@ const BASE_TITLE = 'Aide et tutos · Humane Gang';
 const SAFE_PAGE = /^[a-z0-9-]+\.html(#[\w-]*)?$/i; // lien « Y aller » : une page du site, rien d'autre
 const SAFE_IMG = /^assets\/tutos\/[\w.-]+$/;        // capture : un fichier du dépôt, rien d'autre
 /** Met en minuscules et retire les accents, pour que « Sortie » trouve « sortie » ou « Séance ». */
+/* ---------- Affiches A3 à côté des tutos ---------- */
+// Chaque affiche (dossier affiches/) illustre un thème ; un tuto absent de cette table s'affiche sans affiche.
+// Les affiches lisent elles-mêmes les réglages du site : leurs chiffres suivent les prix et gains réglés.
+const AFFICHES = {
+  paillettes: { fichier: 'affiches/paillettes-a3.html', titre: 'Gagner des Paillettes' },
+  boosters: { fichier: 'affiches/boosters-a3.html', titre: 'Obtenir des boosters' },
+  cartes: { fichier: 'affiches/cartes-a3.html', titre: 'Gagner des cartes' },
+  badges: { fichier: 'affiches/badges-a3.html', titre: 'Les badges du Humane Gang' },
+};
+const AFFICHE_PAR_TUTO = {
+  'paillettes-passage-du-jour': 'paillettes', 'quetes-de-la-semaine': 'paillettes', 'defis-du-gang': 'paillettes', 'classement': 'paillettes',
+  'ouvrir-un-booster': 'boosters',
+  'lire-une-carte': 'cartes', 'collection-filtres-et-loupe': 'cartes', 'recycler-ses-doublons': 'cartes', 'fabriquer-une-carte': 'cartes',
+  'liste-de-souhaits': 'cartes', 'attraper-une-carte-sauvage': 'cartes', 'series-completees': 'cartes', 'vitrine': 'cartes',
+  'proposer-un-echange': 'cartes', 'repondre-a-une-offre': 'cartes', 'contre-proposition': 'cartes', 'offrir-une-carte': 'cartes', 'preparer-un-echange': 'cartes',
+  'gagner-des-badges': 'badges', 'monter-les-niveaux-d-anciennete': 'badges', 'badges-et-paillettes-secret-santa': 'badges',
+};
+const AFFICHE_L = 1123, AFFICHE_H = 1587; // taille d'une affiche A3 en pixels (body des pages affiches/)
+
+/**
+ * Bloc « affiche » d'un tuto : l'affiche A3 dans un cadre, réduite à la largeur de la colonne, et un lien pour l'ouvrir en grand.
+ * @param {string} slug identifiant du tuto
+ * @returns {string} HTML, ou '' si le tuto n'a pas d'affiche
+ */
+function afficheHtml(slug) {
+  const a = AFFICHES[AFFICHE_PAR_TUTO[slug]];
+  if (!a) return '';
+  return `<aside class="card aide-affiche" aria-label="Affiche : ${esc(a.titre)}">
+    <div class="aide-affiche-cadre"><iframe src="${esc(a.fichier)}" title="Affiche : ${esc(a.titre)}" width="${AFFICHE_L}" height="${AFFICHE_H}" loading="lazy" scrolling="no" tabindex="-1"></iframe></div>
+    <a class="btn btn-ghost aide-affiche-lien" href="${esc(a.fichier)}" target="_blank" rel="noopener">Ouvrir l'affiche en grand</a>
+  </aside>`;
+}
+
+/** Réduit l'affiche à la largeur de son cadre (l'affiche garde sa mise en page A3, seule l'échelle change). */
+const ajusteAffiche = new ResizeObserver((entries) => {
+  for (const e of entries) {
+    const f = e.target.querySelector('iframe');
+    if (f) f.style.transform = `scale(${e.contentRect.width / AFFICHE_L})`;
+  }
+});
+
 const fold = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 const listView = $('#aide-list-view');
@@ -158,7 +199,10 @@ function showTuto(slug) {
     showMessage(`<h2 class="display" tabindex="-1">Tuto réservé aux membres</h2><p>Connecte-toi pour voir ce tuto.</p>
       <div class="btn-row"><a class="btn btn-primary" href="compte.html">Me connecter</a></div>`);
   } else {
-    tutoView.innerHTML = tutoHtml(hit.t, hit.g);
+    const affiche = afficheHtml(hit.t.slug);
+    tutoView.innerHTML = affiche ? `<div class="aide-tuto-duo">${tutoHtml(hit.t, hit.g)}${affiche}</div>` : tutoHtml(hit.t, hit.g);
+    const cadre = tutoView.querySelector('.aide-affiche-cadre');
+    if (cadre) ajusteAffiche.observe(cadre);
     document.title = `${hit.t.title} · ${BASE_TITLE}`;
     tutoView.querySelector('#aide-tuto-heading')?.focus({ preventScroll: false });
     window.scrollTo({ top: 0 });
@@ -171,6 +215,7 @@ function showTuto(slug) {
 /** Revient à la liste des tutos (aide.html sans slug) et remet le titre de page par défaut. */
 function showList() {
   tutoView.hidden = true;
+  ajusteAffiche.disconnect();
   tutoView.innerHTML = '';
   listView.hidden = false;
   document.title = BASE_TITLE;
