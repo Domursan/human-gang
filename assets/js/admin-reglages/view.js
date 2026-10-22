@@ -1,19 +1,25 @@
+// =====================================================================
 // Admin : section « Réglages du site ». Liste des clés de hg_settings ; modification et ajout dans un tiroir (typé et validé).
 // Les clés gérées dans une autre section sont en lecture seule (lien vers cette section).
 // Les clés sensibles ne sont modifiables que par l'administrateur (getCachedProfile()?.is_admin).
 // Remarque : la politique RLS de hg_settings accepte aussi les Staff « reglages » pour toutes les clés ;
 // la restriction des clés sensibles est donc faite ici, côté interface, et doit aussi être posée en base.
+// Dépendances : core.js, core/profile.js (profil en cache), ui-confirm.js, admin/ui/drawer.js, admin/shell.js,
+// keys.js (registre et validation des valeurs), identite.js (formulaire « Identité et textes »).
+// Exporte : mountReglagesSection (monte la section), reglagesActions (boutons de l'en-tête).
+// =====================================================================
 import { sb, toast, errMsg, esc, $, fmtDateTime } from '../core.js';
 import { getCachedProfile } from '../core/profile.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
-import { setActions } from '../admin/shell.js';
 import { KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
 import { mountIdentite } from './identite.js';
 
 const R = { root: null, rows: [], loaded: false, error: null, isAdmin: false };
 
+/* Vrai si la clé peut être modifiée ici : pas gérée ailleurs, et seul l'admin touche aux clés sensibles. */
 const canEdit = (key) => !managedOf(key) && (!isSensitive(key) || R.isAdmin);
+/* Date actuelle au format ISO, pour le champ updated_at. */
 const nowIso = () => new Date().toISOString();
 
 /** Point d'entrée (admin.js). */
@@ -36,6 +42,7 @@ export function reglagesActions() {
   return [b];
 }
 
+/** Relit toutes les clés de hg_settings puis redessine la liste. Une erreur est affichée dans la section. */
 async function load() {
   try {
     const { data, error } = await sb.from('hg_settings').select('key, value, updated_at').order('key');
@@ -52,6 +59,7 @@ async function load() {
 /** Clés listées ici : celles qui ont un formulaire dédié (site_identite, site_textes) sont exclues. */
 const listRows = () => R.rows.filter((r) => !KEYS[r.key]?.formulaire);
 
+/** Dessine la liste des réglages (ou un message de chargement, d'erreur ou d'absence de réglage). */
 function render() {
   if (!R.root) return;
   R.root.innerHTML = `
@@ -62,6 +70,7 @@ function render() {
     ${R.loaded && listRows().length ? `<ul class="rg-list">${listRows().map((r, i) => itemHtml(r, i)).join('')}</ul>` : ''}`;
 }
 
+/** Une ligne de la liste : nom, clé, badges, résumé de la valeur et bouton Modifier ou Voir. */
 function itemHtml(r) {
   const meta = KEYS[r.key] || {};
   const label = meta.label || r.key;
@@ -164,6 +173,7 @@ function openAddDrawer() {
   });
 }
 
+/** Valeur brute du champ « v » d'un formulaire : case cochée ou texte saisi. */
 function readControl(scope, kind) {
   const el = scope.querySelector('[name="v"]');
   return kind === 'bool' ? el.checked : el.value;
@@ -173,6 +183,7 @@ function readControl(scope, kind) {
 async function saveRow(form) {
   const key = form.dataset.key, kind = form.dataset.kind;
   const err = form.querySelector('.form-error');
+  /* Affiche le message d'erreur dans le formulaire et renvoie false pour arrêter l'envoi. */
   const fail = (m) => { err.textContent = m; err.hidden = false; return false; };
   err.hidden = true;
   if (!canEdit(key)) return fail('Cette clé est en lecture seule ici.');
@@ -196,8 +207,15 @@ async function saveRow(form) {
   }
 }
 
+/**
+ * Valide le nom et la valeur d'une nouvelle clé, puis l'insère dans hg_settings.
+ * Une clé déjà existante, ou gérée ailleurs, est refusée.
+ * @param {HTMLElement} scope tiroir d'ajout.
+ * @returns {Promise<boolean>} true si la clé est ajoutée, false si le tiroir doit rester ouvert.
+ */
 async function addKey(scope) {
   const err = scope.querySelector('.form-error');
+  /* Affiche le message d'erreur dans le formulaire et renvoie false pour arrêter l'envoi. */
   const fail = (m) => { err.textContent = m; err.hidden = false; return false; };
   err.hidden = true;
   const key = scope.querySelector('#rg-new-key').value.trim();
@@ -218,6 +236,7 @@ async function addKey(scope) {
   }
 }
 
+/** Délégation des clics : Réessayer, ou ouvrir l'édition d'une clé. */
 function onClick(e) {
   const b = e.target.closest('[data-rg], [data-rg-edit]');
   if (!b) return;

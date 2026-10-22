@@ -1,10 +1,18 @@
-import { KEYS_LOT2 } from './keys-lot2.js'; // lot 2 : comptes et invitations
+// =====================================================================
 // Réglages : libellés, aides et règles des clés de hg_settings.
+// Le registre KEYS regroupe les descriptions de toutes les clés connues. Il est construit à partir de KEYS_BASE
+// puis complété par les fichiers keys-lot1 à keys-lot5 (chacun pour un lot de réglages).
 // - managed : la clé a son propre éditeur dans une autre section (ancre) ; ici elle est en lecture seule.
 // - sensitive : clé technique ; seul l'administrateur peut la modifier (le reste du panel ne suffit pas).
 // Une clé inconnue du registre est affichée sans aide, et modifiable par le Staff (non sensible).
-
+// Dépendances : keys-lot1.js à keys-lot5.js (descriptions par lot).
+// Exporte : KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue.
+// =====================================================================
 import { KEYS_LOT1 } from './keys-lot1.js';
+import { KEYS_LOT2 } from './keys-lot2.js'; // lot 2 : comptes et invitations
+import { KEYS_LOT3 } from './keys-lot3.js'; // lot 3 : descripteurs Secret Santa, IRL, souvenirs
+import { KEYS_LOT4 } from './keys-lot4.js'; // lot 4 : ajout isolé
+import { KEYS_LOT5 } from './keys-lot5.js'; // lot 5 : bot, planning, assistance
 
 const KEYS_BASE = {
   theme: { label: 'Thème du site', help: 'Mode du site (clair, sombre, automatique) et thème forcé.', managed: '#theme', managedLabel: 'Thème' },
@@ -18,13 +26,18 @@ const KEYS_BASE = {
 
 /** Toutes les clés décrites : base + lot 1 (identité et textes, formulaire dédié). */
 export const KEYS = { ...KEYS_BASE, ...KEYS_LOT1 };
-Object.assign(KEYS, KEYS_LOT2); // lot 2 : comptes et invitations
+Object.assign(KEYS, KEYS_LOT2);
 
+/* Libellés des types d'éditeur, affichés dans les listes et le formulaire d'ajout. */
 export const KIND_LABEL = { text: 'Texte', number: 'Nombre', bool: 'Oui / non', json: 'JSON (objet ou liste)' };
+/* Forme d'un nom de clé : minuscules, chiffres et tiret bas, à partir d'une lettre, 2 à 41 caractères. */
 export const KEY_RE = /^[a-z][a-z0-9_]{1,40}$/;
+/* Longueur maximale d'une valeur texte (même limite que le champ du formulaire). */
 const TEXT_MAX = 2000;
 
+/** Vrai si la clé est sensible (seul l'administrateur peut la modifier). */
 export const isSensitive = (key) => !!KEYS[key]?.sensitive;
+/** Descripteur de la section qui gère la clé, ou null si la clé n'est gérée nulle part ailleurs. */
 export const managedOf = (key) => (KEYS[key]?.managed ? KEYS[key] : null);
 
 /** Type d'éditeur d'après la valeur stockée (jsonb). */
@@ -62,6 +75,6 @@ export function displayValue(value) {
   return String(value);
 }
 
-import { KEYS_LOT3 } from './keys-lot3.js'; Object.assign(KEYS, KEYS_LOT3); // lot 3 : descripteurs Secret Santa, IRL, souvenirs
-import { KEYS_LOT4 } from './keys-lot4.js'; Object.assign(KEYS, KEYS_LOT4); // lot 4 : ajout isolé
-import { KEYS_LOT5 } from './keys-lot5.js'; Object.assign(KEYS, KEYS_LOT5); // lot 5 : bot, planning, assistance
+Object.assign(KEYS, KEYS_LOT3); // lot 3 : descripteurs Secret Santa, IRL, souvenirs
+Object.assign(KEYS, KEYS_LOT4); // lot 4 : ajout isolé
+Object.assign(KEYS, KEYS_LOT5); // lot 5 : bot, planning, assistance

@@ -1,17 +1,26 @@
+// =====================================================================
 // Admin : réglages du lot 3 (Secret Santa, sorties IRL, souvenirs et albums), affichés en tête de chaque sous-section.
 // Un bloc repliable : formulaire groupé, aide sous chaque champ, validation, « Rétablir la valeur par défaut »
 // par champ et par groupe. Enregistrement dans hg_settings (clés ss, irl, albums, photos).
 // La politique RLS de hg_settings exige l'administrateur ou le droit « reglages » : sans l'un des deux, le bloc est en lecture seule.
+// Dépendances : core.js (sb, toast, errMsg, esc), core/profile.js, core/perms.js (hasPerm), keys-lot3.js (champs et domaines),
+// reglages-valeurs-lot3.js (lecture et écriture en mémoire des valeurs).
+// Exporte : blocReglages (le bloc à insérer dans une sous-section).
+// =====================================================================
 import { sb, toast, errMsg, esc } from '../core.js';
 import { getCachedProfile } from '../core/profile.js';
 import { hasPerm } from '../core/perms.js';
 import { CHAMPS_LOT3, DOMAINES_LOT3 } from './keys-lot3.js';
 import { chargerReglagesLot3, majReglagesLot3, reglage, objetLot3 } from '../reglages-valeurs-lot3.js';
 
+/* Vrai si l'utilisateur peut enregistrer ces réglages : administrateur, ou droit « reglages ». */
 const peutEcrire = () => !!getCachedProfile()?.is_admin || hasPerm('reglages');
+/* Champs d'un domaine (ss, irl ou souvenirs). */
 const champsDe = (domaine) => CHAMPS_LOT3.filter((c) => c.domaine === domaine);
+/* Identifiant HTML d'un champ de réglage, unique sur la page. */
 const idOf = (c) => `rg3-${c.cle}-${c.champ}`;
 
+/* Styles du bloc, ajoutés une seule fois dans la page. */
 const STYLE = `
 .rg3-bloc { margin: 0 0 16px; }
 .rg3-bloc > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
@@ -24,6 +33,7 @@ const STYLE = `
 .rg3-check { display: flex; gap: 8px; align-items: center; }
 .rg3-actions { margin-top: 8px; }
 `;
+/** Ajoute la feuille de style du bloc dans le document, une seule fois. */
 function ajouterStyle() {
   if (document.getElementById('rg3-style')) return;
   const st = document.createElement('style');
@@ -46,6 +56,7 @@ export function blocReglages(domaine) {
   return det;
 }
 
+/** Dessine le formulaire d'un domaine : groupes, champs, boutons. Lecture seule sans droit d'écriture. */
 function render(det, domaine) {
   const ecriture = peutEcrire();
   const champs = champsDe(domaine);
@@ -64,6 +75,7 @@ function render(det, domaine) {
     </form>`;
 }
 
+/** HTML d'un champ : contrôle adapté à son type, aide avec la valeur par défaut, bouton « Rétablir ». */
 function fieldHtml(c, ecriture) {
   const id = idOf(c);
   const val = reglage(`${c.cle}.${c.champ}`);
@@ -99,6 +111,7 @@ async function persister(cle, patch) {
   return value;
 }
 
+/** Gère les boutons « Rétablir » (un champ ou un groupe). Ne fait rien si le clic vient d'ailleurs. */
 function onClick(e, det) {
   const btnChamp = e.target.closest('[data-rg3-reset]');
   const btnGroupe = e.target.closest('[data-rg3-reset-groupe]');
@@ -112,6 +125,12 @@ function onClick(e, det) {
   resetCibles(cibles, det, btnChamp || btnGroupe);
 }
 
+/**
+ * Remet les valeurs par défaut des champs choisis, puis redessine le bloc.
+ * @param {Object[]} cibles champs à remettre à leur défaut.
+ * @param {HTMLElement} det bloc de réglages.
+ * @param {HTMLButtonElement} btn bouton cliqué (désactivé pendant l'envoi).
+ */
 async function resetCibles(cibles, det, btn) {
   btn.disabled = true;
   try {
@@ -144,6 +163,10 @@ function lire(c, el) {
   return { value: n };
 }
 
+/**
+ * Envoie le formulaire du domaine : valide chaque champ, vérifie que le maximum d'un sondage n'est pas
+ * sous son minimum, puis enregistre. Rien n'est envoyé si une erreur subsiste.
+ */
 async function onSubmit(e, det) {
   e.preventDefault();
   const domaine = det.dataset.domaine;

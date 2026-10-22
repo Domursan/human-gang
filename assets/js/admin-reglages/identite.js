@@ -1,6 +1,11 @@
+// =====================================================================
 // Admin › Site › Réglages : formulaire « Identité et textes » (clés site_identite et site_textes de hg_settings).
 // Chaque champ a une aide courte, une validation, un bouton « Valeur par défaut » ; chaque groupe a « Rétablir ces valeurs ».
 // Seuls les écarts aux valeurs par défaut sont enregistrés (une clé absente = valeur par défaut).
+// Dépendances : core.js (sb, toast, errMsg, esc), core/site-defaults.js (valeurs par défaut, buildSite, diffFromDefaults),
+// keys-lot1.js (description des champs : GROUPES_LOT1, NAV_AUTO_LABELS).
+// Exporte : mountIdentite (monte le formulaire, appelé par view.js).
+// =====================================================================
 import { sb, toast, errMsg, esc } from '../core.js';
 import { SITE_DEFAULTS, buildSite, diffFromDefaults, setSiteRaw, NAV_SLUGS } from '../core/site-defaults.js';
 import { GROUPES_LOT1, NAV_AUTO_LABELS } from './keys-lot1.js';
@@ -10,15 +15,20 @@ const URL_RE = /^(https:\/\/|assets\/)\S+$/;
 const BUCKET = { site_identite: 'identite', site_textes: 'textes' };
 const S = { root: null, site: null, error: null };
 
+/* Identifiant HTML d'un champ, dérivé de sa clé (les points deviennent des tirets). */
 const fieldId = (k) => `rgi-${k.replace(/[^a-z0-9]/gi, '-')}`;
+/* Découpe « cle.champ » en nom de groupe (identite ou textes) et nom du champ. */
 const parseK = (k) => { const [cle, champ] = k.split('.'); return { bucket: BUCKET[cle], champ }; };
+/* Valeur par défaut d'un champ. Les menus et les liens du pied de page ont leur propre forme. */
 const defaultOf = (k) => {
   const { bucket, champ } = parseK(k);
   if (champ === 'nav_libelles') return {};
   if (champ === 'footer_liens') return SITE_DEFAULTS.textes.footer_liens.map((l) => ({ ...l }));
   return SITE_DEFAULTS[bucket][champ];
 };
+/* Valeur actuellement affichée pour un champ, lue dans le site reconstruit. */
 const currentOf = (k) => { const { bucket, champ } = parseK(k); return S.site[bucket][champ]; };
+/* Liste à plat de tous les champs du formulaire, dans l'ordre des groupes. */
 const allFields = () => GROUPES_LOT1.flatMap((g) => g.champs);
 
 /** Point d'entrée (view.js). Lit les réglages en base (pas le cache) et dessine le formulaire. */
@@ -31,6 +41,7 @@ export async function mountIdentite(root) {
   await load();
 }
 
+/** Lit les deux clés dans la base et reconstruit les valeurs du site. En cas d'erreur, affiche les défauts et le message. */
 async function load() {
   try {
     const { data, error } = await sb.from('hg_settings').select('key, value').in('key', ['site_identite', 'site_textes']);
@@ -49,6 +60,7 @@ async function load() {
   render();
 }
 
+/** HTML d'un champ selon son type (case, menu, liens, texte ou zone de texte). */
 function controlHtml(f) {
   const id = fieldId(f.k), v = currentOf(f.k);
   const hint = `<span class="small muted" id="${id}-h">${esc(f.aide || '')}</span>`;
@@ -79,6 +91,7 @@ function controlHtml(f) {
   return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}${tag}<div class="rgi-field-foot">${hint}</div>${err}</div>`;
 }
 
+/** Dessine le formulaire complet (tous les groupes) dans la zone de la page. */
 function render() {
   if (!S.root) return;
   const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group" data-group="${g.id}">
@@ -161,6 +174,7 @@ function readAll() {
   return { identite, textes };
 }
 
+/** Affiche les messages d'erreur sous les champs concernés et masque les autres. */
 function showErrors(errors) {
   S.root.querySelectorAll('[data-err]').forEach((p) => { p.hidden = true; p.textContent = ''; });
   for (const [k, msg] of Object.entries(errors)) {
@@ -169,6 +183,7 @@ function showErrors(errors) {
   }
 }
 
+/** Gère les boutons « Valeur par défaut » (un champ ou un groupe). N'enregistre rien : il faut envoyer le formulaire. */
 function onClick(e) {
   const r = e.target.closest('[data-reset], [data-reset-group]');
   if (!r) return;
@@ -184,6 +199,10 @@ function onClick(e) {
   }
 }
 
+/**
+ * Envoie le formulaire : validation, puis enregistrement des écarts aux valeurs par défaut.
+ * Une erreur de saisie bloque l'envoi et place le focus sur le premier champ fautif.
+ */
 async function onSubmit(e) {
   if (e.target.id !== 'rgi-form') return;
   e.preventDefault();
