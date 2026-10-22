@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : création / modification / suppression des badges =====
 // Rôle : éditeur de badge (tiroir) pour créer, modifier ou supprimer un badge, y compris ses niveaux (badges à niveaux).
-// Les 15 badges d'origine sont attribués automatiquement par la base. Ils sont modifiables et supprimables (un badge supprimé n'est plus jamais attribué).
+// Les badges d'origine (liste AUTO_BADGES ci-dessous) sont attribués automatiquement par la base. Ils sont modifiables et supprimables (un badge supprimé n'est plus jamais attribué).
 // Les badges créés ici s'attribuent à la main (section Badges ou fiche du membre).
 // Dépendances : core.js (Supabase, toast, dates), badge-levels.js (métriques, chiffres romains, tri des niveaux),
 // image-compress.js (préparation et variantes des images), ui-confirm.js (confirmation), admin/ui/drawer.js (tiroir).
