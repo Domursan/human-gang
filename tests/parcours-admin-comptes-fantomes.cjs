@@ -9,6 +9,8 @@
 // Lancer : node tests/parcours-admin-comptes-fantomes.cjs
 const { ROOT, check, finish, openPage, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const DAY = 864e5;
 const ZOE = 'aaaaaaaa-0000-4000-8000-000000000101';
@@ -20,26 +22,36 @@ const GHOSTS = [
 // Zoé ressemble à Chloé (même ID Discord) : correspondance proposée sur la fiche de Zoé et sur celle de Chloé
 const SUGG = [{ ghost_id: ZOE, ghost_pseudo: 'Zoé', user_id: U(4), user_pseudo: 'Chloé', reason: 'même ID Discord' }];
 
-const hashOf = (p) => p.evaluate(() => location.hash);
+/** Change l'adresse de la page (hash), comme un clic sur un lien. */
 const goHash = (p, h) => p.evaluate((x) => { location.hash = x; }, h);
+/** Attend que l'adresse de la page soit h. */
 const waitHash = (p, h) => p.waitForFunction((x) => location.hash === x, h, { timeout: 5000 }).then(() => true, () => false);
+/** Attend que sel soit visible (want vrai) ou caché (want faux). */
 const waitVisible = (p, sel, want = true) => p.waitForFunction(([s, w]) => {
   const e = document.querySelector(s);
   return (!!e && e.getClientRects().length > 0) === w;
 }, [sel, want], { timeout: 6000 }).then(() => true, () => false);
+/** Attend que l'élément sel contienne le texte text. */
 const waitText = (p, sel, text) => p.waitForFunction(([s, t]) => {
   const e = document.querySelector(s);
   return !!e && e.textContent.includes(t);
 }, [sel, text], { timeout: 6000 }).then(() => true, () => false);
+/** Attend que le sélecteur sel disparaisse de la page. */
 const waitGone = (p, sel) => p.waitForFunction((s) => !document.querySelector(s), sel, { timeout: 6000 }).then(() => true, () => false);
+/** Nombre de lignes visibles dans la colonne liste. */
 const rowCount = (p) => p.$$eval('#shell-col-list .ui-row', (rs) => rs.filter((r) => r.getClientRects().length).length);
+/** Attend que la colonne liste affiche n lignes. */
 const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAll('#shell-col-list .ui-row')].filter((r) => r.getClientRects().length).length === k, n, { timeout: 8000 }).then(() => true, () => false);
+/** Appels RPC du journal, réduits à leur nom et à leurs arguments. */
 const rpcLog = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'rpc').map((e) => [e[1], e[2]]));
+/** Vrai si le journal contient l'appel fn avec ces arguments (comparaison partielle). */
 const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entries(args).every(([k, v]) => a?.[k] === v));
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
+  /** Scénario de test : fantômes et correspondances de départ, recréés à chaque appel. */
   const SCN = () => ({ ghosts: JSON.parse(JSON.stringify(GHOSTS)), suggestions: JSON.parse(JSON.stringify(SUGG)) });
 
   /* (a) Redirections, fiche d'un fantôme, liaison par correspondance */

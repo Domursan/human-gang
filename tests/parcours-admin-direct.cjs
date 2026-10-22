@@ -8,12 +8,17 @@
 // Lancer : node tests/parcours-admin-direct.cjs
 const { adminSection, ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
 
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
+/** Attend ms millisecondes. */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Demande d'assistance factice (ligne de hg_support) envoyée par Bruno. */
 const demande = (id, message) => ({ id, user_id: null, pseudo: 'Bruno', subject: 'Question', message, contact: 'bruno@ex.ch',
   status: 'ouverte', created_at: new Date().toISOString(), discord_sent: false });
+/** Tables abonnées au temps réel dans la page. */
 const tablesOf = (p) => p.evaluate(() => window.__fakeRealtime.tables());
 // Ajoute une ligne à hg_support (fausse base) et émet l'événement temps réel correspondant.
+/** Ajoute une ligne à hg_support dans la fausse base et émet l'événement temps réel correspondant. */
 const emettre = (p, row) => p.evaluate((r) => {
   window.__DB.hg_support.push(r);
   window.__fakeRealtime.emit('hg_support', { eventType: 'INSERT', new: r });

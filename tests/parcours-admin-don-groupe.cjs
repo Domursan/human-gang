@@ -6,15 +6,22 @@
 // Lancer : node tests/parcours-admin-don-groupe.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, log, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const BRUNO = '00000003-0000-4000-8000-000000000003';
 const drawer = 'dialog.ui-drawer[open]';
+/** Clique sur le bouton de validation du tiroir ouvert. */
 const submit = (p) => p.click(`${drawer} [data-drawer-submit]`);
+/** Clique sur « ok » de la boîte de confirmation (dialogue hg-dialog). */
 const confirmOk = (p) => p.click('dialog.hg-dialog[open] button[value="ok"]');
+/** Appels de la RPC hg_cards_admin_bulk_give (journal du faux client). */
 const bulkCalls = async (p) => (await log(p)).filter((l) => l[0] === 'rpc' && l[1] === 'hg_cards_admin_bulk_give').map((l) => l[2]);
+/** Texte du récapitulatif du don groupé (chaîne vide si absent). */
 const recap = (p) => p.textContent('#acd-bulk-recap').catch(() => '');
+/** Attend ms millisecondes. */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Ouvre le tiroir « Don groupé… » depuis Jeu de cartes › Économie. */
 async function ouvrirDonGroupe(p) {
   await adminSection(p, 'cartes/economie');
   await p.waitForSelector('[data-act="bulk-open"]', { timeout: 8000 });
@@ -22,6 +29,7 @@ async function ouvrirDonGroupe(p) {
   await p.waitForSelector(`${drawer} #acd-bulk-kind`, { timeout: 5000 });
 }
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

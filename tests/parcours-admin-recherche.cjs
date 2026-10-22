@@ -7,8 +7,10 @@
 const { ROOT, check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 
 const ME = '11111111-1111-4111-8111-111111111111';
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const ALICE = U(2);
+/** Date ISO décalée de d jours. */
 const iso = (d) => new Date(Date.now() + d * 864e5).toISOString();
 
 const IDEAS = [
@@ -24,13 +26,11 @@ const ADMIN_LOG = Array.from({ length: 60 }, (_, i) => ({
 }));
 const ACCESS_LOG = [{ id: 1, admin_id: ME, conversation_id: 'c0000000-0000-4000-8000-000000000001', conversation_kind: 'direct', accessed_at: iso(-0.5) }];
 
+/** Attend ms millisecondes. */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue modal)
-  await p.waitForSelector('dialog[open] button[value="ok"]', { timeout: 5000 });
-  await p.click('dialog[open] button[value="ok"]');
-  await sleep(300);
-};
+/** Entrées du journal du faux client à partir de l'index from. */
 const logSince = (p, from) => p.evaluate((f) => (window.__LOG || []).slice(f), from);
+/** Nombre d'entrées dans le journal du faux client. */
 const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
 
 (async () => {
@@ -42,6 +42,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { ideas: IDEAS } });
     await adminSection(p, 'communication/idees');
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
+    /** Nombre de lignes de la colonne liste. */
     const rows = () => p.locator('#shell-col-list .ui-row').count();
     const search = '#shell-col-list .ui-search input';
     check(await rows() === 4, 'idées : les 4 idées (toutes) dans la liste');
@@ -81,6 +82,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG, accessLog: ACCESS_LOG } });
     await adminSection(p, 'pilotage/journal');
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
+    /** Nombre de lignes de la colonne liste. */
     const rows = () => p.locator('#shell-col-list .ui-row').count();
     check(await rows() === 50, 'journal : premier lot de 50 entrées');
     check(await p.isVisible('#shell-col-list .ui-more-btn'), 'journal : bouton « Afficher plus » visible');

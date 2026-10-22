@@ -6,13 +6,16 @@
 // Faux Supabase (fixtures/fake-sb.mjs, scénario S.support / S.replies). Lancer : node tests/parcours-admin-assist-fil.cjs
 const fs = require('fs');
 const path = require('path');
-const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, hscroll, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 const ME = '11111111-1111-4111-8111-111111111111';          // admin connecté (fixture)
+/** Identifiant de test du membre n (même règle que le faux client : U(2) = Alice, U(3) = Bruno). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`; // Alice = U(2), Bruno = U(3)
 const QA = process.env.HG_QA_DIR || '/tmp/claude-0/-home-claude/745c1954-a6f8-5445-b8b6-c526f6aef9c2/scratchpad/qa/assist-fil';
 fs.mkdirSync(QA, { recursive: true });
 
+/** Date ISO d'il y a min minutes. */
 const ago = (min) => new Date(Date.now() - min * 60000).toISOString();
 
 // sup-1 : Alice, non lue, ouverte, personne n'a pris la demande
@@ -39,14 +42,22 @@ const SCN = {
   ],
 };
 
+/** Nombre de lignes de la colonne liste. */
 const rows = (p) => p.locator('#shell-col-list .ui-row').count();
+/** Lit une ligne de window.__DB par table et identifiant (ou null). */
 const dbRow = (p, table, id) => p.evaluate(([t, i]) => { const r = window.__DB[t].find((x) => x.id === i); return r ? { ...r } : null; }, [table, id]);
+/** Réponses d'une demande d'assistance, lues dans window.__DB.hg_support_replies. */
 const dbReplies = (p, support) => p.evaluate((sid) => window.__DB.hg_support_replies.filter((r) => r.support_id === sid).map((r) => ({ ...r })), support);
+/** Puce de filtre de la liste dont le texte contient label. */
 const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: label }).first().textContent();
+/** Compteur affiché à côté de « Assistance » dans la navigation. */
 const navCount = (p) => p.evaluate(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent?.trim() || '');
+/** Attend que la fonction fn, évaluée dans la page avec arg, renvoie une valeur vraie (ms millisecondes au plus). */
 const waitFor = (p, fn, arg, ms = 4000) => p.waitForFunction(fn, arg, { timeout: ms }).catch(() => {});
+/** Texte du fil de discussion de la demande affichée. */
 const thread = (p) => p.locator('#support-root .ui-thread-log').textContent();
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

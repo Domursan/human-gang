@@ -10,8 +10,10 @@ const ALICE = '00000002-0000-4000-8000-000000000002';
 const TITRE = 'Souvenir de test CI';
 const TITRE_MODIFIE = 'Souvenir modifié CI';
 
+/** Clique sur le bouton rouge de confirmation de la boîte de dialogue. */
 const dialogOk = (p) => p.click('dialog.hg-dialog[open] .btn-danger');
 // Ligne de la liste (colonne 2) portant ce texte
+/** Ligne de la colonne liste dont le titre est titre. */
 const row = (p, titre) => p.locator('#shell-col .ui-row', { hasText: titre });
 
 (async () => {

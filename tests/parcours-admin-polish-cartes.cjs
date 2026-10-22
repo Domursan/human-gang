@@ -12,12 +12,19 @@ const { check, finish, openPage, adminSection, hscroll, chromium } = require('./
 const QA = '/tmp/claude-0/-home-claude/745c1954-a6f8-5445-b8b6-c526f6aef9c2/scratchpad/qa/polish-cartes';
 fs.mkdirSync(QA, { recursive: true });
 const ALICE = '00000002-0000-4000-8000-000000000002';
+/** Tiroir de dialogue ouvert (dialog.ui-drawer[open]). */
 const drawer = (p) => p.locator('dialog.ui-drawer[open]');
+/** Titre du tiroir ouvert. */
 const drawerTitle = (p) => p.textContent('dialog.ui-drawer[open] .ui-drawer-title');
+/** Clique sur le bouton Fermer du tiroir ouvert. */
 const closeDrawer = (p) => p.click('dialog.ui-drawer[open] .ui-drawer-foot [data-drawer-close]');
+/** Clique sur le bouton de validation du tiroir ouvert. */
 const submitDrawer = (p) => p.click('dialog.ui-drawer[open] [data-drawer-submit]');
+/** Attend que le tiroir soit fermé (retiré de la page). */
 const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
+/** Exécute fn dans la page avec arg et renvoie son résultat (lecture de la base simulée). */
 const db = (p, fn, arg) => p.evaluate(fn, arg);
+/** Appels de la RPC fn dans le journal du faux client. */
 const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[0] === 'rpc' && x[1] === f), fn);
 
 (async () => {

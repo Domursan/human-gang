@@ -6,22 +6,30 @@
 // (d) Staff { journal } : pas de Staff ni de Vue d'ensemble, aucune requête vers hg_staff_list ni hg_staff_set.
 // (e) Mobile 390 px : liste plein écran, puis détail avec retour à la liste.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-p2-pilotage.cjs
-const { ROOT, check, finish, openPage, hscroll, log, sleep, chromium, ORIGIN, PREFIX } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const CHLOE = U(4);
 const NOTE = 'Test CI pilotage';
 
+/** Adresse (hash) courante de la page. */
 const hashOf = (p) => p.evaluate(() => location.hash);
+/** Change l'adresse de la page (hash h), puis attend que le sélecteur sel soit affiché. */
 const goHash = async (p, h, sel) => {
   await p.evaluate((x) => { location.hash = x; }, h);
   if (sel) await p.waitForSelector(sel, { state: 'visible', timeout: 5000 }).catch(() => {});
   await sleep(250);
 };
+/** Vrai si l'élément correspondant à sel est affiché. */
 const visible = (p, sel) => p.evaluate((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel);
+/** Nombre de lignes de la colonne liste. */
 const rowsCount = (p) => p.locator('#shell-col-list .ui-row').count();
+/** Puce de filtre de la liste dont le texte contient label. */
 const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new RegExp('^\\s*' + label) });
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

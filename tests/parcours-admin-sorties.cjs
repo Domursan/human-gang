@@ -4,20 +4,25 @@
 // Lancer : node tests/parcours-admin-sorties.cjs
 const { ROOT, check, finish, openPage, adminSection, log, chromium } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
 // Ligne de la liste (colonne 2) d'une sortie, et sélection de cette sortie (le détail s'affiche dans la zone principale).
+/** Ligne de la colonne liste pour la sortie d'identifiant id. */
 const row = (p, id) => p.locator(`#shell-col .ui-row[data-id="${id}"]`);
+/** Sélectionne la sortie d'identifiant id dans la colonne liste. */
 async function choisir(p, id) {
   await row(p, id).click();
   await p.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 }).catch(() => {});
 }
 
 const ME = '11111111-1111-4111-8111-111111111111';
+/** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const EV_A = 'ea000000-0000-4000-8000-00000000000a'; // à venir, date fixée
 const EV_B = 'eb000000-0000-4000-8000-00000000000b'; // à caler, deux dates proposées
 const EV_C = 'ec000000-0000-4000-8000-00000000000c'; // passée, à supprimer
 const D1 = 'd1000000-0000-4000-8000-000000000001';
 const D2 = 'd2000000-0000-4000-8000-000000000002';
+/** Date ISO décalée de n jours (négatif : dans le passé). */
 const days = (n) => new Date(Date.now() + n * 864e5).toISOString();
 
 // Scénario : trois sorties, des inscriptions et deux dates avec un vote.
@@ -42,12 +47,15 @@ const TITRE = 'Tartiflette de test CI';
 const LIEU = 'Lausanne';
 
 // Date locale (heure suisse, AAAA-MM-JJTHH:MM) dans 30 jours, pour le champ datetime-local.
+/** Date ISO dans trente jours, pour une sortie à venir. */
 function dansTrenteJours() {
   const d = new Date(Date.now() + 30 * 864e5);
+  /** Écrit un nombre sur deux chiffres (format de date). */
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T19:30`;
 }
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();

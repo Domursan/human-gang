@@ -8,11 +8,17 @@ const path = require('path');
 const fs = require('fs');
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
+/* ---------- Aides de test ---------- */
+/** Identifiant de test du membre n (U(2) = Alice, U(3) = Bruno, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`; // Alice = U(2), Bruno = U(3) (fixture)
 const SHOTS_DIR = process.env.SHOTS_DIR || '';
+/** Enregistre une capture d'écran nommée name, si un dossier de captures est défini (SHOTS_DIR). */
 const shot = async (p, name) => { if (SHOTS_DIR) { fs.mkdirSync(SHOTS_DIR, { recursive: true }); await p.screenshot({ path: path.join(SHOTS_DIR, name) }); } };
+/** Exécute fn dans la page et renvoie son résultat (lecture de la base simulée). */
 const db = (p, fn) => p.evaluate(fn);
+/** Vrai si une boîte de dialogue est ouverte. */
 const dialogOpen = (p) => p.evaluate(() => !!document.querySelector('dialog[open]'));
+/** Date ISO d'il y a min minutes. */
 const iso = (min) => new Date(Date.now() - min * 60000).toISOString();
 
 // Données de démonstration : deux conversations (une directe, une Secret Santa) et trois messages
@@ -29,15 +35,20 @@ const SCN = {
 };
 
 // Ouvre une sous-section par sa route et attend que la liste ou le contenu soit affiché.
+/** Ouvre une route du panel admin, puis attend que le sélecteur sel soit affiché. */
 async function goto(p, route, sel) {
   await adminSection(p, route);
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 8000 }).catch(() => {});
   await sleep(200);
 }
+/** Clique sur le bouton de la zone d'actions dont le texte est text. */
 const zoneBtn = (p, text) => p.click(`#zone-actions button:has-text("${text}")`, { timeout: 5000 });
+/** Clique sur le bouton de validation de la boîte de dialogue ouverte. */
 const submitDrawer = (p) => p.click('dialog[open] button[data-drawer-submit]', { timeout: 5000 });
+/** Ferme le tiroir ouvert et attend qu'il soit fermé. */
 const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-close]', { timeout: 5000 }).catch(() => {}); await sleep(300); };
 
+/* ---------- Scénario ---------- */
 (async () => {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
