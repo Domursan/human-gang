@@ -10,6 +10,7 @@ import { loadImage, downloadCanvas } from './ss-card.js';
 import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
 import { mountShowcase } from './cartes-showcase.js';
 import { svg } from './icons.js';
+import { questTrack } from './quest-track.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -457,6 +458,7 @@ async function onDownload(btn, card) {
     const slug = String(card.pseudo || 'membre').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'membre';
     await downloadCanvas(canvas, `carte-hg-${slug}-${num4(card.member_number)}.png`);
     toast('Carte téléchargée', 'ok');
+    questTrack('carte_identite', 'carte'); // quête « carte d'identité téléchargée »
     import('./sound.js').then((m) => m.playSound?.('success')).catch(() => {});
   } catch (e) {
     toast(`Téléchargement impossible : ${errMsg(e)}`, 'error');
@@ -535,6 +537,7 @@ try {
       $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
     }
     if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
+    if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
   }
 } catch (e) {
   $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;
