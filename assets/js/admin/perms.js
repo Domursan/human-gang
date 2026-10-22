@@ -54,6 +54,7 @@ export const DOMAINS = [
     { id: 'cartes', label: 'Cartes', section: 'cartes', tab: 'cartes' },
     { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes' },
     { id: 'economie', label: 'Économie', section: 'cartes', tab: 'economie' },
+    { id: 'boosters', label: 'Boosters', section: 'cartes', tab: 'boosters' },
     { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },
     { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats' },
     { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },

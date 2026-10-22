@@ -129,6 +129,31 @@ const DB = {
       starts_at: iso(-10), ends_at: iso(80), active: false },
   ],
 };
+/* ---------- Boosters paramétrables (onglet admin « Boosters », migrations 069 et 071) ----------
+   hg_booster_types : les 9 types seedés par 069, avec les colonnes de 071 (excluded_rarities, excluded_sets) et les valeurs
+   du Collectionneur après 071 (sans identité, sans la série « Les OG »). hg_card_sets : quelques séries (code, name).
+   Scénario : boosterTypes (remplace la liste), boosterSaveError (message d'erreur de hg_booster_type_save),
+   boosterStatsFail (hg_booster_type_stats en erreur). RPC simulées plus bas : hg_booster_type_save, hg_booster_type_stats. */
+/** Taux d'un type, dans l'ordre des raretés (commune → identité). */
+const TAUX = (c, pc, r, e, l, m, i) => ({ commune: c, peu_commune: pc, rare: r, epique: e, legendaire: l, mythique: m, identite: i });
+DB.hg_booster_types = (S.boosterTypes || [
+  ['classique', 'Classique', 100, 5, TAUX(60, 25, 10, 4, 0.88, 0.1, 0.02), 3, 20, 'tous', null, true, 'cart--classique', 10],
+  ['serie', 'Série', 150, 5, TAUX(60, 25, 10, 4, 0.88, 0.1, 0.02), 3, 20, 'serie', null, false, 'cart--serie', 20],
+  ['argente', 'Argenté', 250, 5, TAUX(45, 30, 14.88, 8, 2, 0.1, 0.02), 4, 20, 'tous', null, false, 'cart--argente', 30],
+  ['dore', 'Doré', 350, 5, TAUX(34, 31, 18.68, 12, 4, 0.3, 0.02), 4, 20, 'tous', null, false, 'cart--dore', 40],
+  ['diamant', 'Diamant', 500, 5, TAUX(15, 28, 25, 20, 10, 1.98, 0.02), 10, 0, 'tous', 5, false, 'cart--diamant', 50],
+  ['quitte_double', 'Quitte ou double', 500, 5, TAUX(90, 1.5, 1.5, 1.5, 3.98, 1.5, 0.02), 10, 0, 'tous', 5, false, 'cart--quitte', 60],
+  ['collectionneur', 'Collectionneur', 500, 10, TAUX(60.1, 25, 10, 4, 0.5, 0.4, 0), 3, 20, 'manquantes', null, false, 'cart--collection', 70],
+  ['holographique', 'Holographique', 1000, 5, TAUX(0, 20, 20, 20, 20, 20, 0), 10, 0, 'tous', 1, false, 'cart--holo', 80],
+  ['identite', 'Identité', 10000, 5, TAUX(45, 25, 10, 4, 0.5, 0.5, 15), 3, 0, 'tous', null, false, 'cart--identite', 90],
+].map(([id, name, price, size, rates, shiny_rate, pity_epique, pool, weekly_limit, free_daily, style, sort]) => ({
+  id, name, price, size, rates, shiny_rate, pity_epique, pool, weekly_limit, free_daily, style, sort, description: `Booster ${name}.`, active: true,
+  excluded_rarities: id === 'collectionneur' ? ['identite'] : [], excluded_sets: id === 'collectionneur' ? ['gang-membres'] : [], updated_at: iso(-1) })));
+DB.hg_card_sets = [
+  { id: 'SET-OG', code: 'gang-membres', name: 'Les OG', description: null, starts_at: null, ends_at: null, active: true, sort: 1, created_at: iso(-200) },
+  { id: 'SET-PR', code: 'printemps', name: 'Printemps', description: null, starts_at: null, ends_at: null, active: true, sort: 2, created_at: iso(-100) },
+  { id: 'SET-HA', code: 'halloween', name: 'Halloween', description: null, starts_at: null, ends_at: null, active: true, sort: 3, created_at: iso(-20) },
+];
 // Clé publique de notification push (valeur factice pour les tests).
 DB.hg_settings.push({ key: 'push_vapid_public', value: 'BOOPdSa019_test' });
 for (const r of S.settings || []) { DB.hg_settings = DB.hg_settings.filter((x) => x.key !== r.key); DB.hg_settings.push({ ...r }); } // lot 2 : réglages semés par le scénario (scenario.settings)
@@ -495,6 +520,66 @@ function quizRow(q) {
     answered_at: a ? a.answered_at : null, explanation: a ? q.explanation : null, solution: corrected ? quizSolution(q) : null };
 }
 
+/* ---------- Boosters paramétrables : hg_booster_type_save simulée (contrat de la migration 071, messages en français) ----------
+   Création : { create: true, id, name, price, rates, … } (défauts : size 5, shiny_rate 3, pity_epique 0, pool « tous »,
+   weekly_limit null, free_daily false, style cart--classique, active true, sort = max + 10, exclusions vides).
+   Modification : { id, …seulement les champs changés }. Réponse : { type, created, free_daily_removed_from }. */
+/** Raretés tirées (les 7 clés des taux, sans « unique »). */
+const BOOSTER_RARITIES = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
+/** Styles de cartouche permis. */
+const BOOSTER_STYLES = ['cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte', 'cart--holo', 'cart--collection', 'cart--identite'];
+/**
+ * Crée ou modifie un type comme hg_booster_type_save(p jsonb) : droits, validations, gratuit du jour unique.
+ * L'appel est noté dans le journal : ['booster_type_save', id, p].
+ * @param {object} p charge utile envoyée par l'admin
+ */
+function boosterTypeSave(p) {
+  const err = (message) => ({ data: null, error: { message } });
+  if (!myPermsNow().is_admin && !myPermsNow().perms.includes('cartes')) return err('Réservé à l\'admin et au Staff « cartes »');
+  if (S.boosterSaveError) return err(S.boosterSaveError);
+  if (!p || typeof p !== 'object') return err('Données manquantes');
+  window.__LOG.push(['booster_type_save', p.id, JSON.parse(JSON.stringify(p))]);
+  const has = (k) => Object.prototype.hasOwnProperty.call(p, k);
+  let row = DB.hg_booster_types.find((x) => x.id === p.id);
+  const created = p.create === true;
+  if (created) {
+    if (!/^[a-z0-9_]{2,30}$/.test(String(p.id || ''))) return err('Identifiant invalide : de 2 à 30 caractères parmi a à z, 0 à 9 et _');
+    if (row) return err(`Un type « ${p.id} » existe déjà (l'identifiant ne se change pas)`);
+    if (!has('name') || !has('price') || !has('rates')) return err('Nom, prix et taux sont obligatoires');
+  } else if (!row) return err(`Type inconnu : ${p.id}`);
+  const base = row || { size: 5, shiny_rate: 3, pity_epique: 0, pool: 'tous', weekly_limit: null, free_daily: false, style: 'cart--classique', description: null,
+    active: true, sort: DB.hg_booster_types.reduce((m, t) => Math.max(m, t.sort), 0) + 10, excluded_rarities: [], excluded_sets: [] };
+  const n = { ...base };
+  for (const k of ['name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique', 'pool', 'weekly_limit', 'free_daily', 'style', 'description', 'active', 'sort', 'excluded_rarities', 'excluded_sets']) if (has(k)) n[k] = p[k];
+  if (n.weekly_limit === '') n.weekly_limit = null;
+  if (typeof n.description === 'string' && !n.description.trim()) n.description = null;
+  const name = String(n.name || '').trim();
+  if (!name || name.length > 60) return err('Le nom fait de 1 à 60 caractères');
+  if (!Number.isInteger(n.price) || n.price < 0) return err('Le prix doit être un entier positif');
+  if (!Number.isInteger(n.size) || n.size < 1 || n.size > 10) return err('Un booster contient de 1 à 10 cartes');
+  const r = n.rates || {};
+  if (Object.keys(r).length !== 7 || !BOOSTER_RARITIES.every((k) => typeof r[k] === 'number' && r[k] >= 0)) return err('Les taux doivent couvrir les 7 raretés');
+  const sum = BOOSTER_RARITIES.reduce((s, k) => s + r[k], 0);
+  if (sum < 99.99 || sum > 100.01) return err(`Les taux doivent faire 100 % au total (actuellement ${Math.round(sum * 100) / 100} %)`);
+  if (typeof n.shiny_rate !== 'number' || n.shiny_rate < 0 || n.shiny_rate > 100) return err('Taux de brillante entre 0 et 100');
+  if (!Number.isInteger(n.pity_epique) || n.pity_epique < 0) return err('Garantie épique : entier positif ou nul');
+  if (!['tous', 'serie', 'manquantes'].includes(n.pool)) return err('Contenu inconnu');
+  if (n.weekly_limit !== null && (!Number.isInteger(n.weekly_limit) || n.weekly_limit < 1)) return err('Limite par semaine : vide ou au moins 1');
+  if (!BOOSTER_STYLES.includes(n.style)) return err(`Style inconnu : « ${n.style} »`);
+  if (n.description != null && String(n.description).length > 300) return err('Description : 300 caractères au maximum');
+  if (!Array.isArray(n.excluded_rarities) || !n.excluded_rarities.every((k) => BOOSTER_RARITIES.includes(k))) return err('Rareté exclue inconnue');
+  if (n.excluded_rarities.length >= 7) return err('Toutes les raretés ne peuvent pas être exclues');
+  if (n.pity_epique > 0 && ['epique', 'legendaire', 'mythique', 'identite'].every((k) => n.excluded_rarities.includes(k))) return err('La garantie Épique demande au moins une rareté Épique ou mieux non exclue (mets-la à 0)');
+  const unknown = (n.excluded_sets || []).find((c) => !DB.hg_card_sets.some((x) => x.code === c));
+  if (!Array.isArray(n.excluded_sets) || unknown) return err(`Série inconnue : ${unknown}`);
+  Object.assign(n, { name, rates: { ...r }, free_daily: !!n.free_daily, active: n.active !== false, excluded_rarities: [...n.excluded_rarities], excluded_sets: [...n.excluded_sets],
+    updated_at: new Date().toISOString(), updated_by: uidNow() });
+  if (row) Object.assign(row, n); else { row = { id: p.id, ...n }; DB.hg_booster_types.push(row); }
+  const removed = [];
+  if (row.free_daily) for (const t of DB.hg_booster_types) if (t.id !== row.id && t.free_daily) { t.free_daily = false; removed.push(t.id); }
+  return { data: { type: JSON.parse(JSON.stringify(row)), created, free_daily_removed_from: removed }, error: null };
+}
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {
@@ -725,6 +810,19 @@ export function createClient() {
         const reward = ok ? q.reward : 0;
         q.answer = { response: r, is_correct: ok, reward, answered_at: new Date().toISOString() };
         return { data: { correct: ok, reward, explanation: ok !== null ? q.explanation : null, solution: ok !== null ? quizSolution(q) : null }, error: null };
+      }
+      // Boosters paramétrables (migration 071) : réservés à l'admin et au Staff « cartes », comme hg_has_perm('cartes').
+      if (fn === 'hg_booster_type_save') return boosterTypeSave(args?.p);
+      if (fn === 'hg_booster_type_stats') {
+        if (!myPermsNow().is_admin && !myPermsNow().perms.includes('cartes')) return { data: null, error: { message: 'Réservé à l\'admin et au Staff « cartes »' } };
+        if (S.boosterStatsFail) return { data: null, error: { message: 'Failed to fetch' } };
+        // Chiffres fictifs, décroissants dans l'ordre de la table (forme exacte de la migration 071)
+        const v = (i, n) => n * Math.max(0, 9 - i);
+        return { data: { generated_at: new Date().toISOString(), opens_since: iso(-1), types: DB.hg_booster_types.map((t, i) => ({
+          id: t.id, name: t.name, style: t.style, price: t.price, active: t.active, sort: t.sort,
+          sales: { d7: { boosters: v(i, 3), paillettes: v(i, 3) * t.price }, d30: { boosters: v(i, 10), paillettes: v(i, 10) * t.price }, total: { boosters: v(i, 25), paillettes: v(i, 25) * t.price } },
+          opens: { d7: v(i, 2), d30: v(i, 8), total: v(i, 20), cards: v(i, 20) * t.size, refund: 0 },
+          stock: { total: v(i, 5), holders: Math.min(6, v(i, 1)) }, gifts: { d7: 0, d30: i, total: i, count: i } })) }, error: null };
       }
       if (fn === 'hg_drops_active') return { data: [], error: null }; // pas de drop sur ces pages (voir fake-sb-cartes.mjs)
       // Réclamation d'un drop : toujours refusée, le drop est terminé.

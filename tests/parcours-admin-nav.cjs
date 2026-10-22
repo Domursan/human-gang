@@ -147,7 +147,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   p = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: U(2), staff: ['cartes'] } });
   await openPal(p);
   const labels = (await palLabels(p)).sort();
-  const attendu = ['Séries', 'Cartes', 'Quêtes', 'Économie', 'Joueurs', 'Statistiques', 'Échanges', 'Drops', 'Défis du gang'].sort();
+  const attendu = ['Séries', 'Cartes', 'Quêtes', 'Économie', 'Boosters', 'Joueurs', 'Statistiques', 'Échanges', 'Drops', 'Défis du gang'].sort();
   check(JSON.stringify(labels) === JSON.stringify(attendu),
     `(d) Staff ['cartes'] : la palette ne propose que ses sous-sections (${labels.join(' | ')})`);
   await p.fill('#apal-q', 'bruno');

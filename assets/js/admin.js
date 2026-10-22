@@ -141,7 +141,7 @@ registerSub('vie/evenements', eventsSub({ onBadgesChange: async () => { await lo
 registerSub('vie/badges', badgesSub);
 // Jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
-for (const tab of ['series', 'cartes', 'quetes', 'economie', 'stats', 'echanges']) {
+for (const tab of ['series', 'cartes', 'quetes', 'economie', 'boosters', 'stats', 'echanges']) {
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
 }
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).

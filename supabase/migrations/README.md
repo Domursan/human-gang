@@ -42,6 +42,7 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `068_quiz_vrai_faux_et.sql` | Questions vrai/faux (choix « Vrai » et « Faux » manquants), « & » lu comme « et » | appliqué en production |
 | `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | **à appliquer** (après 042) |
 | `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | **à appliquer** (après 069 ; facultatif : les fonctions savent s'en passer) |
+| `071_boosters_admin.sql` | Boosters paramétrables par l'admin et le Staff « cartes » : raretés et séries exclues par type (`excluded_rarities`, `excluded_sets`), RPC `hg_booster_type_save` et `hg_booster_type_stats`, journal des ouvertures `hg_booster_opens` ; Collectionneur sans identité ni série « Les OG » (`gang-membres`) | **à appliquer** (après 069) |
 
 ## Les trous et les doublons
 
@@ -101,3 +102,27 @@ Migration `069_types_boosters.sql` : types de boosters, stock par type, achat, o
 2. L'appliquer sur la base (une fois ; rejouable sans risque).
 3. **Ordre : 069 d'abord, puis le front** (`cartes.js`, `cartes.css`, `cartes-boosters.css`, `sw.js`). Le front appelle les nouvelles RPC (dont `hg_booster_gift` à 5 arguments) : déployé avant la migration, il passerait en mode de repli (boutique et dons affichés « bientôt »).
 4. Pas de fonction edge à redéployer pour 069, ni de secret à créer.
+
+## Pour appliquer 071
+
+Migration `071_boosters_admin.sql` : types de boosters modifiables depuis le panel (onglet « Boosters » des cartes), exclusions de raretés et de séries, Collectionneur sans identité ni « Les OG ».
+
+**Ce qu'elle ajoute**
+- `hg_booster_types` : colonnes `excluded_rarities text[]`, `excluded_sets text[]` (codes de `hg_card_sets`), `updated_by uuid` ; contraintes `hg_booster_types_excluded_rarities_check` (sous-ensemble des 7 raretés, pas toutes) et `hg_booster_types_id_format` (`^[a-z0-9_]{2,30}$`) ; index unique partiel `hg_booster_types_one_free` (un seul type `free_daily`).
+- Table `hg_booster_opens` (une ligne par ouverture : type, mode, cartes données, remboursement), RLS sans policy : lue seulement par `hg_booster_type_stats`. Les statistiques d'ouverture commencent à l'application de 071.
+- Tirage : `hg_booster_pick_one` passe à 6 arguments (séries exclues ; l'ancienne version à 5 arguments est retirée), `hg_booster_draw` et `hg_booster_open` gardent leur signature. Une rareté ou une série exclue n'est jamais tirée, ni par la garantie Épique, ni par le repli « sans restriction » du Collectionneur. Rareté tirée exclue : rareté autorisée inférieure, sinon supérieure. Pool « serie » : une série exclue est refusée à l'ouverture (« Cette série n'est pas disponible pour ce booster »). Remboursement inchangé (prix payé / taille, par carte non donnée).
+- `hg_booster_types_me` renvoie en plus `excluded_rarities` et `excluded_sets` pour chaque type.
+- RPC admin (`hg_has_perm('cartes')`) : `hg_booster_type_save(p jsonb)` (création avec `create: true`, sinon modification partielle ; id immuable ; un seul type gratuit du jour ; journal `hg_admin_log` action `booster_type` avec avant/après) et `hg_booster_type_stats()` (ventes 7 j / 30 j / total, ouvertures, stock détenu, dons, par type).
+- Collectionneur : `excluded_rarities = {identite}`, `excluded_sets = {gang-membres}`, taux identité 0,1 -> 0 et commune 60 -> 60,1 (somme 100). Seulement si l'admin n'a rien modifié : exclusions écrites si elles sont vides et `updated_by` vide ; taux écrits seulement s'ils valent encore exactement ceux de 069.
+
+**Idempotence et rétrocompatibilité**
+- Rejouable : `add column if not exists`, `create table if not exists`, contraintes et index dans des blocs `do`, `create or replace`. Relancer 071 n'écrase jamais une modification faite par `hg_booster_type_save` (`updated_by` renseigné). Testée sur PostgreSQL 16 local : 069 puis 071 deux fois, suite 069 adaptée (123 contrôles) et suite 071 (86 contrôles), 0 échec.
+- Changements de comportement voulus : le Collectionneur ne donne plus d'identité ni de carte « Les OG » (cartes non données remboursées ; s'il ne manque au membre que des cartes exclues, l'ouverture est refusée sans rien consommer, comme en 069).
+
+**Pour appliquer 071**
+
+1. Relire `071_boosters_admin.sql`.
+2. L'appliquer sur la base (après 069 ; rejouable sans risque).
+3. Puis le front (onglet admin « Boosters »). Le front membre existant continue de fonctionner sans changement.
+4. L'affiche A3 des boosters est statique : la régénérer si les types changent.
+5. Pas de fonction edge à redéployer, ni de secret à créer.

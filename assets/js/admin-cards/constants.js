@@ -18,7 +18,7 @@ export const ICON = {
   on: svg('check2', { stroke: 2 }),
 };
 /* Onglets de la section, sous la forme [identifiant, libellé]. */
-export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
+export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['boosters', 'Boosters'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
 /* Identifiants des raretés tirées dans les boosters (taux et recyclage), dans l'ordre de RARITIES. Sans « unique » : jamais tirée, jamais recyclée. */
 export const RARITY_IDS = RARITIES_TIRAGE.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais

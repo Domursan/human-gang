@@ -3,7 +3,7 @@
 // Un seul écouteur par type d'événement sur le conteneur ; chaque bouton se repère à son data-act (ACTIONS) ou data-tab.
 // Dépendances : core.js (sb, toast, $, $$), constants.js (TABS), state.js (C, H), data.js (boot, refresh),
 // helpers.js (act, check), sets.js, list.js, editor.js, economy.js, bulk.js, players.js, stats.js, trades.js,
-// quests.js, admin/list-tools.js (recherche, compteurs, pagination).
+// quests.js, boosters.js (onglet Boosters, autonome), admin/list-tools.js (recherche, compteurs, pagination).
 // Exporte : mountCardsSection (monte la section), openCardsTab (ouvre une partie).
 // =====================================================================
 import { sb, toast, $, $$ } from '../core.js';
@@ -23,12 +23,13 @@ import { Q, loadQuests, questsPanel, questActions } from './quests.js';
 import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
 import { setsListData } from './sets.js';
 import { cardsListData } from './list.js';
+import { mountBoostersTab } from './boosters.js';
 
 /* =========================================================
    Rendu et événements
    ========================================================= */
 /* Fabrique du HTML de chaque onglet, par identifiant d'onglet. */
-const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
+const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, boosters: () => '<div id="acd-boosters"></div>', joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
 /** Dessine l'onglet courant, puis lance les chargements propres à cet onglet (joueurs, quêtes, économie). */
 function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
@@ -37,6 +38,7 @@ function render() {
   if (C.tab === 'joueurs') { refreshPlayersList(); refreshLog(); }
   if (C.tab === 'quetes' && !Q.loaded && !Q.loading && !Q.error) loadQuests(); // en cas d'erreur, « Réessayer » relance
   if (C.tab === 'economie') updateSum();
+  if (C.tab === 'boosters') mountBoostersTab($('#acd-boosters', C.panel)); // onglet autonome (boosters.js)
 }
 
 /** Listes à rafraîchir seules pendant une recherche (le champ garde le focus). */
@@ -140,7 +142,7 @@ export async function mountCardsSection(container, { tabs = true } = {}) {
   await boot();
 }
 
-/** Ouvre une partie des cartes (series, cartes, quetes, economie, joueurs, stats, echanges). Sans effet avant le montage.
+/** Ouvre une partie des cartes (series, cartes, quetes, economie, boosters, joueurs, stats, echanges). Sans effet avant le montage.
     id : membre affiché dans « joueurs » (adresse #cartes/joueurs/<id>). */
 export function openCardsTab(tab, id = null) {
   if (!C.root || !PANELS[tab]) return;
