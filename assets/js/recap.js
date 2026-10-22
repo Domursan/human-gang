@@ -499,10 +499,12 @@ export async function renderRecapImage(canvas, r, pseudo) {
 }
 
 /**
- * Crée l'image du récap puis la télécharge. Met la lecture en pause pendant la préparation.
+ * Crée l'image du récap puis la télécharge. Met la lecture en pause pendant la préparation, puis la reprend si elle tournait.
  * @param {HTMLButtonElement} btn bouton « Télécharger mon récap »
  */
 async function onDownload(btn) {
+  // On ne reprend la lecture à la fin que si elle tournait avant le téléchargement.
+  const wasPlaying = !P.paused;
   setPaused(true);
   btn.disabled = true;
   const label = btn.innerHTML;
@@ -516,7 +518,10 @@ async function onDownload(btn) {
     import('./sound.js').then((m) => m.playSound?.('success')).catch(() => {});
   } catch (e) {
     toast(`Téléchargement impossible : ${errMsg(e)}`, 'error');
-  } finally { btn.disabled = false; btn.innerHTML = label; }
+  } finally {
+    btn.disabled = false; btn.innerHTML = label;
+    if (wasPlaying) setPaused(false);
+  }
 }
 
 /* =========================================================
