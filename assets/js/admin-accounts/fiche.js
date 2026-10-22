@@ -1,7 +1,17 @@
+// =====================================================================
 // Comptes admin : fiche d'un membre dans la zone principale (#membres/comptes/<id>/<onglet>), résumé à droite.
-// Lectures à la demande (HEAD) : à l'ouverture, seuls le profil et le Staff sont lus ; chaque onglet ne lit que ses
-// données, une fois. Le résumé (colonne droite, écran ≥ 1440 px) lit ses repères à part. Toute lecture est gardée
-// pendant la visite de la page (CACHE, state.js) ; une modification la vide.
+// Lectures à la demande : à l'ouverture, seuls le profil et le Staff sont lus ; chaque onglet ne lit que ses
+// données, une fois. Le résumé (colonne droite, écran de 1440 px et plus) lit ses repères à part. Toute lecture
+// est gardée pendant la visite de la page (CACHE, dans state.js) ; une modification la vide.
+// Dépendances : core.js (sb, toast, errMsg, esc, $, $$, dates), admin-access.js (droits des pages),
+// admin/ui/detail-header.js et admin/ui/info-panel.js (composants communs), state.js, admin/perms.js,
+// admin-staff.js (libellés des permissions), inspect.js, profile.js, ss.js, activity.js, list.js, admin-ghosts.js.
+// Tables lues : hg_profiles, hg_profile_info, hg_ss_editions / participants / assignments / wishes, hg_events,
+// hg_event_rsvps, hg_photos (+ stockage hg-photos), hg_ideas, hg_support, hg_badges, hg_user_badges,
+// hg_wallets, hg_card_copies ; RPC hg_staff_list.
+// Exporte : openAccount, reloadDetail, showGhostFiche, emptyDetail, showAccount, openAccountFiche, renderDetail,
+// paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo.
+// =====================================================================
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
 import { renderDetailHeader } from '../admin/ui/detail-header.js';
@@ -19,7 +29,9 @@ import { ghostBannerHtml, renderGhostView } from '../admin-ghosts.js';
 /* =========================================================
    Lectures
    ========================================================= */
+/** Attend une requête Supabase et ne garde que { data, error }, la forme utilisée par le cache. */
 async function q(p) { const r = await p; return { data: r.data, error: r.error }; }
+/* Noms des lectures stockées dans A.d : on les efface pour relire la fiche après une modification. */
 const DATA_FIELDS = ['info', 'editions', 'parts', 'assigns', 'wishes', 'events', 'rsvps', 'photos', 'ideas', 'support',
   'badges', 'ubadges', 'wallet', 'cards', 'ssCount'];
 const WIDE = matchMedia('(min-width: 1440px)'); // résumé à droite : affiché (et donc lu) seulement sur grand écran
@@ -33,6 +45,7 @@ async function fill(name, key, read) {
   if (A.d === d && d[name] === undefined) d[name] = r;
 }
 
+/* Lectures de la fiche. Chaque entrée renvoie une fonction : la requête ne part qu'au moment de la lecture. */
 const SOURCE = {
   info: (uid) => () => q(sb.from('hg_profile_info').select('data, updated_at').eq('user_id', uid).maybeSingle()),
   editions: () => q(sb.from('hg_ss_editions').select('id, year, status, drawn_at').order('year', { ascending: false })),
@@ -44,6 +57,7 @@ const SOURCE = {
   photos: (uid) => async () => {
     const r = await q(sb.from('hg_photos').select('id, event_id, path, caption, created_at').eq('user_id', uid).order('created_at', { ascending: false }));
     const signed = new Map(); // miniatures signées (bucket privé)
+    /* Chemins des photos de l'album, à signer pour les afficher. */
     const paths = (r.data ?? []).map((p) => p.path);
     if (paths.length) {
       const { data: urls, error } = await sb.storage.from('hg-photos').createSignedUrls(paths, 3600);
@@ -139,6 +153,7 @@ function tabReady(k) {
 /* =========================================================
    Ouverture, fermeture, sélection
    ========================================================= */
+/** Ramène le nom d'onglet demandé à un onglet connu ; « profil » par défaut. */
 const tabOf = (t) => (TABS.some(([k]) => k === t) ? t : 'profil');
 
 /** Ouvre la fiche d'un membre dans la zone principale (l'URL est déjà à jour). */
@@ -264,6 +279,7 @@ function tabCount(k) {
   return n ? ` <span class="acc-tab-n">${n}</span>` : '';
 }
 
+/** Dessine la fiche complète : en-tête, bannière, onglets et panneau de l'onglet courant. */
 export function renderDetail() {
   root().innerHTML = `
     <div id="acc-dh"></div>
@@ -293,11 +309,13 @@ function renderDetailCounts() {
   });
 }
 
+/** Redessine seulement le contenu de l'onglet courant, sans toucher aux onglets ni à l'en-tête. */
 export function renderPanel() {
   const panel = $('#acc-panel'); if (!panel) return renderDetail();
   panel.innerHTML = panelHtml();
 }
 
+/** HTML du panneau correspondant à l'onglet courant. */
 function panelHtml() {
   switch (A.tab) {
     case 'profil': return profileHtml();
@@ -336,6 +354,7 @@ export async function selectTab(k, focus = false) {
 /* =========================================================
    Panneau d'infos (colonne 4 : résumé du membre)
    ========================================================= */
+/* Instance du panneau d'infos (colonne 4) ; détruite avant chaque nouveau dessin. */
 let infoH = null;
 /** Fournisseur `info` de la sous-section : le contenu est repeint à chaque changement de fiche. */
 export function mountAccountsInfo(el) {
@@ -343,6 +362,7 @@ export function mountAccountsInfo(el) {
   paintInfo();
 }
 
+/** Dessine le résumé du membre dans la colonne 4 : repères, dernières demandes et actions rapides. */
 export function paintInfo() {
   const host = $('#acc-info'); if (!host) return;
   infoH?.destroy(); infoH = null;
@@ -354,9 +374,11 @@ export function paintInfo() {
   const acc = A.accounts.find((a) => a.id === uid) || {};
   const ghost = isGhostFiche();
   const role = roleOf({ ...acc, is_ghost: ghost, is_admin: !!p.is_admin });
+  /* Nombre formaté à la mode suisse (espaces et séparateurs de la locale fr-CH). */
   const nf = (n) => Number(n || 0).toLocaleString('fr-CH');
   // Repères : « … » tant que leur lecture n'a pas eu lieu (grand écran seulement, voir loadSummary)
   const repere = (r, f) => (r === undefined ? '…' : nf(f(r)));
+  /* Les cinq dernières demandes d'aide, au format attendu par le panneau d'infos. */
   const history = (d.support?.data ?? []).slice(0, 5).map((s) => ({
     id: s.id, title: s.subject || 'Demande',
     status: s.status === 'ouverte' ? { label: 'Ouverte', tone: 'open' } : { label: 'Traitée', tone: 'done' },

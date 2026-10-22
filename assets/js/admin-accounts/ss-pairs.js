@@ -1,4 +1,11 @@
-// Comptes admin : bloc « Attributions » de la section Secret Santa (affiché à la demande).
+// =====================================================================
+// Comptes admin : bloc « Attributions » de la section Secret Santa (affiché à la demande, masqué par défaut).
+// Le bloc montre qui offre à qui, avec les dates d'envoi et de réception. Il vit dans la section Secret Santa.
+// Dépendances : core.js (sb, esc, fmtDate, $), common.js (IC, busy, check), state.js (A, pseudoOf),
+// list.js (loadAccounts), fiche.js (openAccount, renderPanel).
+// Lit : table hg_ss_assignments (giver_id, receiver_id) et hg_ss_participants (sent_at, received_at).
+// Exporte : pairsBlockHtml (HTML du bloc) et togglePairs (afficher / masquer le tableau).
+// =====================================================================
 import { sb, esc, fmtDate, $ } from '../core.js';
 import { IC, busy, check } from './common.js';
 import { A, pseudoOf } from './state.js';
@@ -16,6 +23,12 @@ export function pairsBlockHtml(edition) {
       <div id="ss-pairs-body" hidden></div>
     </div>`;
 }
+/**
+ * Affiche ou masque le tableau des attributions.
+ * À l'affichage : lit les paires et les dates d'envoi / réception de l'édition, puis dessine le tableau
+ * et signale les membres sans cible ou sans Santa.
+ * @param {HTMLButtonElement} btn bouton « Afficher / Masquer » (son data-pairs indique l'action).
+ */
 export async function togglePairs(btn) {
   const box = btn.closest('#ss-pairs'), body = $('#ss-pairs-body', box);
   if (btn.dataset.pairs === 'hide') {

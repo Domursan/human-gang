@@ -1,4 +1,10 @@
+// =====================================================================
 // Comptes admin : écouteurs de la section (clics, saisies, formulaires) et démarrage.
+// Un seul écouteur par type d'événement, posé sur la section #comptes ; les actions se repèrent aux attributs data-*.
+// Dépendances : core.js (sb, toast, errMsg, $, $$), ui-confirm.js (confirmBox), utils.js (safeUrl), common.js,
+// state.js, list.js, fiche.js, admin-ghosts.js, inspect.js, profile.js, ss.js, activity.js, admin-access.js, ss-shared.js.
+// Exporte : initAccounts (point d'entrée appelé par admin.js).
+// =====================================================================
 import { sb, toast, errMsg, $, $$ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { safeUrl } from '../utils.js';
@@ -17,12 +23,17 @@ import { bindSharedFields } from './ss-shared.js';
 /* =========================================================
    Événements de la section Comptes
    ========================================================= */
+/**
+ * Branche les écouteurs de la section Comptes. Appelée une seule fois par initAccounts.
+ * Les actions sont repérées par les attributs data-* des boutons et formulaires.
+ */
 function bindAccounts() {
   const sec = $('#comptes');
   let searchTimer = 0;
   sec.addEventListener('input', (ev) => {
     if (ev.target.id === 'ap-joined') { const b = $('[data-act="clear-joined"]', sec); if (b) b.disabled = !ev.target.value; }
   });
+  // Navigation au clavier entre les onglets : flèches gauche / droite, Début et Fin (comme un groupe d'onglets ARIA).
   sec.addEventListener('keydown', (ev) => {
     const tab = ev.target.closest('[role="tab"]');
     if (!tab || !['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(ev.key)) return;
@@ -32,6 +43,7 @@ function bindAccounts() {
     const n = ev.key === 'Home' ? 0 : ev.key === 'End' ? tabs.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
     selectTab(tabs[n].dataset.tab, true);
   });
+  // Clics sur les boutons : onglets, retour, actions de la fiche (badges, souhaits, idées, demandes d'aide, photos).
   sec.addEventListener('click', async (ev) => {
     const t = ev.target.closest('button');
     if (!t || t.disabled) return;
@@ -43,6 +55,7 @@ function bindAccounts() {
     if (act === 'ss-join') return busy(t, async () => { await ssJoin(); await afterSS(); });
     if (act === 'ss-leave') return busy(t, async () => { if (await ssLeave()) await afterSS(); });
     if (t.dataset.delWish) {
+      /* Souhait visé par le bouton de suppression. */
       const w = (A.d.wishes.data ?? []).find((x) => x.id === t.dataset.delWish);
       if (!(await confirmBox('Supprimer ce souhait ?', `« ${w?.label ?? ''} » sera retiré de la liste de ${A.d.profile.pseudo}.`, { ok: 'Supprimer', danger: true }))) return;
       return busy(t, async () => { check(await sb.from('hg_ss_wishes').delete().eq('id', t.dataset.delWish)); await reloadDetail(); toast('Souhait supprimé', 'ok'); });
@@ -68,6 +81,7 @@ function bindAccounts() {
       return busy(t, async () => { check(await sb.from('hg_support').delete().eq('id', t.dataset.delSupport)); await reloadDetail(); toast('Demande supprimée', 'ok'); await A.onChange('support'); });
     }
   });
+  // Changements de champs : édition du Secret Santa choisie, accès aux pages, réponse à une sortie IRL, statut d'une idée.
   sec.addEventListener('change', async (ev) => {
     const el = ev.target;
     if (el.matches('[data-ss-edition]')) { A.ssEdition = el.value; A.showPair = false; return selectTab('ss'); }
@@ -97,6 +111,7 @@ function bindAccounts() {
       await reloadDetail();
     }
   });
+  // Envois de formulaires : profil, informations, dates du Secret Santa, attributions, souhaits.
   sec.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const form = ev.target, btn = ev.submitter, kind = form.dataset.form;
@@ -134,6 +149,7 @@ function bindAccounts() {
     }
   });
 }
+/** Après une modification du Secret Santa : recharge la fiche ouverte et prévient admin.js pour mettre à jour les autres vues. */
 async function afterSS() { await reloadDetail(); await A.onChange('ss'); }
 
 /** Point d'entrée appelé par admin.js. onChange(kind) : 'members' | 'badges' | 'ss' | 'ideas' | 'support'. */
