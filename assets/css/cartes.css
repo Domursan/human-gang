@@ -12,7 +12,19 @@
 .cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 16px; background: none; border: 0; border-bottom: 3px solid transparent;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .cartes-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.cartes-tab-ico { display: none; }
 .cartes-panel[hidden] { display: none; }
+
+/* Téléphone (600 px et moins) : les onglets deviennent une grille de 2 colonnes, tous visibles d'un coup,
+   avec une icône et un libellé court. Plus besoin de glisser pour découvrir Échanges ou Classement. */
+@media (max-width: 600px) {
+  .cartes-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; border-bottom: 0; margin-bottom: 20px; }
+  .cartes-tab { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; font-size: 15px; background: var(--surface);
+    border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
+  .cartes-tab[aria-selected="true"] { color: var(--text); background: var(--surface-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cartes-tab-ico { display: block; flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .cartes-tab[aria-selected="true"] .cartes-tab-ico { color: var(--sand); }
+}
 
 /* ---------- Blocs génériques ---------- */
 .cartes-block { margin-bottom: 20px; }
@@ -104,7 +116,6 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 @media (prefers-reduced-motion: reduce) { .cartes-flip-in { animation: none; } }
 
 @media (max-width: 600px) {
-  .cartes-tab { padding: 10px 12px; }
   .cartes-block h2 { font-size: 17px; }
 }
 
