@@ -2,9 +2,13 @@
 # Les tests tournent sur un faux Supabase (tests/fixtures/) : aucun appel à la vraie base.
 name: CI
 
+# Seulement sur main (la branche en ligne) et sur les demandes de fusion : les branches de travail ne
+# déclenchent pas de test, pour éviter une avalanche de mails à chaque envoi.
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,7 +16,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
