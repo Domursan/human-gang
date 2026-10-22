@@ -105,6 +105,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-admin-don-carte.cjs` | `node tests/parcours-admin-don-carte.cjs` | `test` | Donner une carte à un membre : notification `card_gift_admin`, échec de la RPC sans notification |
 | `parcours-admin-don-groupe.cjs` | `node tests/parcours-admin-don-groupe.cjs` | à la main | Don groupé (destinataires, récapitulatif, RPC refusée, mobile) et bouton « booster offert » dans `cartes.html` |
 | `parcours-cartes-zoom.cjs` | `node tests/parcours-cartes-zoom.cjs` | `test` | Collection : séries, loupe (souris, tactile), carte agrandie, défilement conservé, 390 px |
+| `parcours-cartes-onglets.cjs` | `node tests/parcours-cartes-onglets.cjs` | `test` | Barre d'onglets des Cartes : grille sur téléphone (360, 390, 430 px), tout visible sans défilement, flèches clavier, rangée inchangée à 1280 px |
 | `parcours-booster.cjs` | `node tests/parcours-booster.cjs` | `test` | Booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
 | `parcours-eggs-pages.cjs` | `node tests/parcours-eggs-pages.cjs` | `test` | Secrets cachés : secousse dans `cartes.html` (capteur simulé, bouton 📳 iOS), rembobinage par appui long dans `historique.html`, « réduire les animations » |
 | `parcours-booster-x5.cjs` | `node tests/parcours-booster-x5.cjs` | à la main | Ouvrir 5 boosters payants d'un coup : bouton désactivé sans solde, 5 appels à identifiants distincts |

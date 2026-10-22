@@ -22,6 +22,13 @@ const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
 const pct = (v) => `${new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(v)} %`;
 // Onglets : [identifiant, libellé]. L'ordre est celui de l'affichage et des flèches clavier.
 const TABS = [['boosters', 'Boosters'], ['collection', 'Collection'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+// Icônes des onglets (SVG décoratifs, visibles seulement sur téléphone : grille de la barre d'onglets).
+const TAB_ICON = {
+  boosters: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  collection: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>',
+  classement: '<path d="M5 21v-8M12 21V6M19 21v-11"/>',
+  echanges: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
+};
 // Libellés des sources d'une carte (colonne source de hg_card_copies).
 const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange' };
 // Libellés du journal des Paillettes (hg_wallet_log.reason), affichés dans l'historique.
@@ -162,7 +169,7 @@ function skeleton() {
     </section>
     <nav class="cartes-tabs" id="cartes-tablist" role="tablist" aria-label="Sections du jeu">
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
-        aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}">${label}</button>`).join('')}
+        aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
     </nav>
     ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'boosters' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
     <section class="cartes-peer" id="cartes-peer" hidden></section>
