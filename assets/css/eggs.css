@@ -1,0 +1,241 @@
+/* ===== Humane Gang — secrets cachés (easter eggs) ===== */
+/* Chargée par assets/js/eggs/core.js (balise <link data-eggs>) et par secret.html.
+   Tous les calques sont fixes, sans interaction (pointer-events: none) et coupés dans leur boîte (overflow: hidden),
+   pour ne jamais gêner la navigation ni créer de défilement horizontal. */
+
+/* ---------- Calques communs ---------- */
+
+.egg-calque {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 60;
+}
+
+/* ---------- Code Konami : pluie de logos ---------- */
+
+.egg-pluie img {
+  position: absolute;
+  top: -64px;
+  animation-name: egg-chute;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes egg-chute {
+  to { transform: translate3d(var(--dx, 0), 115vh, 0) rotate(var(--r, 0deg)); }
+}
+
+/* Version calme (mouvement réduit) : un seul logo fixe au centre */
+.egg-calme {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.egg-calme img {
+  width: min(42vw, 180px);
+  height: auto;
+  animation: none;
+}
+
+/* Pirouette du logo après sept clics */
+.brand-logo.egg-pirouette {
+  animation: egg-pirouette 0.9s ease-in-out;
+}
+
+@keyframes egg-pirouette {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Mot « humane » : voile arc-en-ciel ---------- */
+
+.egg-arc-calque {
+  display: none;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+  background: linear-gradient(120deg, var(--rb-1), var(--rb-2), var(--rb-3), var(--rb-4), var(--rb-5), var(--rb-6), var(--rb-1));
+  background-size: 300% 300%;
+  mix-blend-mode: soft-light;
+  opacity: 0.45;
+  animation: egg-teinte 8s ease-in-out infinite;
+}
+
+html.egg-arc .egg-arc-calque {
+  display: block;
+}
+
+@keyframes egg-teinte {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---------- Heure du gang : message dans le pied de page ---------- */
+
+.egg-gang {
+  margin: 0;
+  color: var(--sand);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.egg-gang-anim {
+  display: inline-block;
+  animation: egg-rebond 0.6s ease 3;
+}
+
+@keyframes egg-rebond {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ---------- Nuit profonde : la chouette ---------- */
+
+.egg-chouette {
+  position: absolute;
+  bottom: 18px;
+  left: -220px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  animation: egg-traverse 9s linear forwards;
+}
+
+.egg-oiseau {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.egg-bulle {
+  margin-bottom: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+@keyframes egg-traverse {
+  to { transform: translateX(calc(100vw + 260px)); }
+}
+
+/* Mouvement réduit : la chouette reste fixe dans l'angle */
+.egg-chouette-calme {
+  position: fixed;
+  left: auto;
+  right: 16px;
+  bottom: 16px;
+  animation: none;
+}
+
+/* ---------- Anniversaire du gang : bannière et confettis ---------- */
+
+.egg-anniv {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.egg-anniv:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.egg-confetti span {
+  position: absolute;
+  top: -14px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: egg-confetti;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes egg-confetti {
+  to { transform: translate3d(var(--dx, 0), 110vh, 0) rotate(var(--r, 0deg)); }
+}
+
+/* ---------- Carnet des secrets (secret.html) ---------- */
+
+.egg-barre {
+  height: 10px;
+  margin: 12px 0 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.egg-barre > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--rb-1), var(--rb-3), var(--rb-4));
+}
+
+.egg-carnet-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.egg-case {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.egg-case strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+.egg-case.inconnue {
+  display: grid;
+  place-items: center;
+  min-height: 84px;
+  border-style: dashed;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.egg-carnet-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .egg-pluie img,
+  .egg-confetti span,
+  .egg-chouette,
+  .egg-arc-calque,
+  .egg-gang-anim,
+  .brand-logo.egg-pirouette {
+    animation: none !important;
+  }
+}

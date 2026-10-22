@@ -303,6 +303,9 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » ; hg_eggs_me renvoie le carnet.
+      if (fn === 'hg_egg_found') return { data: { new: true, reward: 10, message: 'ok', found: 1 }, error: null };
+      if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }], letters: 0 }, error: null };
       // Configuration du jeu seule (migration 018) : lue par les affiches et les tutos. S.cardsFail = la RPC refuse.
       if (fn === 'hg_card_cfg') {
         if (S.cardsFail) return { data: null, error: { message: 'permission denied for function hg_card_cfg' } };

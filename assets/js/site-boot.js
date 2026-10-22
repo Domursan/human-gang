@@ -6,9 +6,10 @@
  * Rôle : petits comportements communs à toutes les pages, sans rapport avec une fonctionnalité précise :
  * repli des images cassées, bouton « Réessayer », feuilles de style « print » basculées sur « all »,
  * et enregistrement du service worker (mode hors ligne). Signale aussi l'ouverture depuis l'app installée
- * aux quêtes de la semaine (quest-track.js, importé dynamiquement).
+ * aux quêtes de la semaine (quest-track.js, importé dynamiquement). Lance enfin les secrets cachés
+ * (eggs/core.js) une fois la page chargée, sans la ralentir.
  * Page : toutes les pages (chargé avant le module de chaque page).
- * Dépendances : aucune au démarrage (quest-track.js seulement si l'app est installée). Le fichier sw.js (racine du site) est enregistré ici.
+ * Dépendances : aucune au démarrage (quest-track.js seulement si l'app est installée ; eggs/core.js après le chargement). Le fichier sw.js (racine du site) est enregistré ici.
  * Exporte : rien (effets de bord seulement).
  */
 
@@ -75,3 +76,11 @@ if (window.isSecureContext && 'serviceWorker' in navigator) {
     location.reload();
   });
 }
+
+/* ---------- Secrets cachés (easter eggs) : chargés après la page, sans la ralentir ---------- */
+
+/** Charge et lance le module des secrets (eggs/core.js). Import dynamique : rien ne se charge avant la fin du démarrage. */
+const lanceSecrets = () => { import('./eggs/core.js').then((m) => m.initEggs()).catch(() => {}); };
+/** Planifie le lancement quand le navigateur est au repos (ou après un court délai si l'API manque). */
+const auRepos = () => ('requestIdleCallback' in window ? requestIdleCallback(lanceSecrets, { timeout: 2000 }) : setTimeout(lanceSecrets, 800));
+if (document.readyState === 'complete') auRepos(); else addEventListener('load', auRepos, { once: true });
