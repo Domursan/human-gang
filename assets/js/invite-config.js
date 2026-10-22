@@ -44,7 +44,8 @@ export function normalizeInviteConfig(raw) {
   const out = { ...INVITE_DEFAULTS };
   for (const [k, [min, max]] of Object.entries(INVITE_LIMITS)) {
     if (src[k] === undefined || src[k] === null || src[k] === '') continue;
-    const n = Number(src[k]);
+    // Un booléen n'est pas un nombre (Number(true) vaut 1) : il est refusé comme les autres valeurs mal formées.
+    const n = typeof src[k] === 'boolean' ? NaN : Number(src[k]);
     if (!Number.isInteger(n) || n < min || n > max) return { error: `« ${k} » doit être un nombre entier entre ${min} et ${max}.` };
     out[k] = n;
   }
