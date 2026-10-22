@@ -1181,8 +1181,8 @@ export function mountBotSection(container) {
       } catch (e) {
         // Échec : les fichiers déjà téléversés sont retirés du stockage (rien ne reste sans message)
         if (uploaded.length) sb.storage.from(MEDIA_BUCKET).remove(uploaded).catch(() => {});
+        // Un seul signal d'erreur : le message reste affiché dans la zone de résultat (pas de toast en plus).
         resBox.innerHTML = `<div class="bm-error" role="alert">Échec de l'envoi : ${esc(await fnError(e))}</div>`;
-        throw e;
       } finally { S.sending = false; }
     });
   }
