@@ -1,4 +1,5 @@
 -- ===== Humane Gang — migration 056 : salons des annonces par type, anti-doublon des offres d'échange =====
+-- Appliquée en production le 22/10/2026.
 -- Rôle : ajouter la colonne notified_at sur hg_card_trades. hg-notify (onTradeOffer) y marque l'offre dès que son MP
 -- part, pour qu'un second appel dans la fenêtre de 15 min n'envoie pas un second MP. Colonne nullable : compatible avec
 -- le site en ligne (les anciennes offres restent à null, sans effet).
