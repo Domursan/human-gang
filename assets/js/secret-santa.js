@@ -1,4 +1,12 @@
-// ===== Humane Gang — page Secret Santa =====
+// ===== Humane Gang — page Secret Santa (secret-santa.html) =====
+// Une édition par an. Étapes : inscriptions, tirage, envoi des cadeaux, révélation, terminée.
+// Le membre voit : son inscription, sa liste de souhaits, la carte de sa cible (retournable, téléchargeable),
+// la liste de souhaits de la cible et ce qu'il faut savoir sur elle, la messagerie anonyme, son envoi,
+// l'avancement global, puis la révélation des paires.
+// Dépendances : core.js (Supabase, LOGO_SRC, notifications), ss-card.js (cartes), profile-fields.js (infos de la cible),
+// ui-confirm.js, ss-pairs.js (paires), reglages-valeurs-lot3.js (limite de souhaits), utils.js (liens sûrs).
+// Tables et RPC : hg_ss_editions, hg_ss_participants, hg_ss_wishes, hg_ss_progress, hg_members, hg_ss_my_target,
+// hg_ss_target_info, hg_ss_reveal, hg_open_santa. N'exporte rien.
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC, isGodMode, godTag } from './core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
 import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
@@ -8,12 +16,16 @@ import { safeUrl } from './utils.js';
 import { pairsHtml, peopleByPseudo } from './ss-pairs.js';
 import { chargerReglagesLot3, reglage } from './reglages-valeurs-lot3.js';
 
+// me = personne connectée (la page exige un membre). Les réglages du lot 3 sont chargés avant le premier rendu.
 const me = await initPage({ auth: 'member' });
 await chargerReglagesLot3();
 const app = $('#app');
 
+/* Étapes de l'édition, dans l'ordre : [statut, libellé affiché dans la barre d'étapes]. */
 const STEPS = [['inscriptions', 'Inscriptions'], ['tirage', 'Tirage'], ['envoi', 'Envoi'], ['revelation', 'Révélation']];
+/** Ordre des statuts d'une édition, du premier au dernier. */
 const ORDER = ['inscriptions', 'tirage', 'envoi', 'revelation', 'termine'];
+/** Statuts où le tirage est fait : chaque inscrit a alors une cible. */
 const DRAWN = ['envoi', 'revelation', 'termine'];
 
 /* ---------- Icônes (SVG à trait) ---------- */
@@ -24,12 +36,12 @@ const I = {
   trash: svg('trash3', { size: 18, stroke: 2 }),
   link: svg('link3', { size: 14, stroke: 2 }),
   chat: svg('chat2', { size: 18, stroke: 2 }),
-  arrow: svg('arrow3', { size: 20, stroke: 2 }),
   gift: svg('gift2', { size: 20, stroke: 2 }),
   box: svg('box', { size: 20, stroke: 2 }),
 };
 
 /* ---------- État ---------- */
+/* État de la page : édition, ma participation, membres, ma liste de souhaits, ma cible et sa liste, avancement, révélation. */
 const S = {
   ed: null,
   mine: null,           // ma ligne hg_ss_participants
@@ -45,19 +57,29 @@ const S = {
 };
 
 /* ---------- Utilitaires ---------- */
+/** Nom de domaine d'une adresse, sans « www. », pour l'afficher sous un souhait. Chaîne vide si l'adresse est invalide. */
 function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } }
+/** Clé du stockage local : carte déjà retournée, pour cette édition seulement. */
 const seenKey = () => `hg_ss_seen_${S.ed?.id}`;
+/** Vrai si j'ai déjà retourné ma carte pour cette édition. Faux si le stockage est indisponible. */
 function readSeen() { try { return localStorage.getItem(seenKey()) === '1'; } catch { return false; } }
+/** Mémorise que ma carte a été retournée. Une erreur de stockage est ignorée. */
 function writeSeen() { try { localStorage.setItem(seenKey(), '1'); } catch {} }
+/** Membre à partir de son identifiant ; valeurs par défaut s'il est inconnu. */
 const memberOf = (id) => S.members.get(id) || { pseudo: 'Membre', avatar_url: null, color: null };
+/** Position du statut actuel dans l'ordre des étapes. */
 const stepIndex = () => ORDER.indexOf(S.ed.status);
+/** Vrai si le tirage est fait (chacun a une cible). */
 const isDrawn = () => DRAWN.includes(S.ed.status);
+/** Vrai pendant la révélation et après. */
 const isReveal = () => ['revelation', 'termine'].includes(S.ed.status);
 /** Mode sans limite (admin) : inscription libre quel que soit le statut, envoi/réception modifiables. */
 const god = () => !!me?.is_admin && isGodMode();
+/** Libellé lisible d'un statut, utilisé dans les messages. */
 const STATUS_TXT = { inscriptions: 'inscriptions ouvertes', tirage: 'tirage en préparation', envoi: 'envoi des cadeaux', revelation: 'révélation', termine: 'terminée' };
 
 /* ---------- Chargement ---------- */
+/** Charge les inscrits de l'édition, et ma propre ligne de participation. */
 async function loadParticipants() {
   const { data, error } = await sb.from('hg_ss_participants')
     .select('user_id, sent_at, received_at, joined_at').eq('edition_id', S.ed.id).order('joined_at');
@@ -65,18 +87,24 @@ async function loadParticipants() {
   S.participants = data || [];
   S.mine = S.participants.find((p) => p.user_id === me.id) || null;
 }
+/** Charge ma liste de souhaits pour cette édition. */
 async function loadMyWishes() {
   const { data, error } = await sb.from('hg_ss_wishes')
     .select('id, label, url, created_at').eq('edition_id', S.ed.id).eq('user_id', me.id).order('created_at');
   if (error) throw error;
   S.myWishes = data || [];
 }
+/** Charge l'avancement : nombre d'inscrits, de cadeaux envoyés et de cadeaux reçus. */
 async function loadProgress() {
   const { data, error } = await sb.rpc('hg_ss_progress', { p_edition: S.ed.id });
   if (error) throw error;
   S.progress = (Array.isArray(data) ? data[0] : data) || { participants: 0, sent: 0, received: 0 };
 }
 
+/**
+ * Charge la page : édition la plus récente, membres, inscrits, puis selon le statut la cible et sa liste (tirage fait),
+ * l'avancement, et les paires (révélation). Chaque bloc est indépendant : une erreur n'en bloque pas un autre.
+ */
 async function load() {
   const { data: ed, error } = await sb.from('hg_ss_editions').select('*')
     .order('year', { ascending: false }).limit(1).maybeSingle();
@@ -124,6 +152,7 @@ async function load() {
 }
 
 /* ---------- Rendu : squelette ---------- */
+/** Page quand il n'existe encore aucune édition. */
 function renderEmpty() {
   app.innerHTML = `
     <div class="page-head"><div>
@@ -137,6 +166,10 @@ function renderEmpty() {
     </div>`;
 }
 
+/**
+ * En-tête : numéro de l'édition, barre des étapes (passées, en cours, à venir), et les trois infos (budget, date limite d'envoi, date d'échange).
+ * @returns {string} HTML
+ */
 function headHtml() {
   const idx = stepIndex();
   const pills = STEPS.map(([key, label], i) => {
@@ -163,6 +196,10 @@ function headHtml() {
     <dl class="ss-facts">${facts}</dl>`;
 }
 
+/**
+ * Dessine toute la page selon le statut : inscriptions seules, ou tirage (carte de la cible, messages, envoi, avancement, révélation).
+ * Le mode sans limite (admin) affiche aussi le bloc d'inscription pendant le tirage.
+ */
 function renderAll() {
   if (!S.ed) return renderEmpty();
   const st = S.ed.status;
@@ -204,6 +241,10 @@ function renderAll() {
 }
 
 /* ---------- Inscriptions ---------- */
+/**
+ * Bloc « Inscription » : nombre d'inscrits, et le bouton s'inscrire / se désinscrire selon le statut.
+ * Le texte explique la situation (ouvert, clos, mode sans limite).
+ */
 function renderSignup() {
   const el = $('#ss-signup'); if (!el) return;
   const open = S.ed.status === 'inscriptions';
@@ -235,6 +276,10 @@ function renderSignup() {
   $('#ss-leave', el)?.addEventListener('click', (e) => leave(e.currentTarget));
 }
 
+/**
+ * M'inscrire à l'édition. Si le tirage est déjà fait, la page est rechargée entièrement.
+ * @param {HTMLButtonElement} btn bouton « S'inscrire »
+ */
 async function join(btn) {
   btn.disabled = true;
   try {
@@ -246,6 +291,11 @@ async function join(btn) {
     renderSignup(); renderPeople(); renderMyWishes();
   } catch (e) { toast(`Inscription impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
+/**
+ * Me désinscrire, après confirmation. Si le tirage est fait, la page est rechargée entièrement.
+ * La liste de souhaits est conservée.
+ * @param {HTMLButtonElement} btn bouton « Se désinscrire »
+ */
 async function leave(btn) {
   if (!(await confirmBox('Te désinscrire de cette édition ?', 'Ta liste de souhaits est conservée.', { ok: 'Me désinscrire', danger: true }))) return;
   btn.disabled = true;
@@ -260,6 +310,7 @@ async function leave(btn) {
   } catch (e) { toast(`Désinscription impossible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
 
+/** Liste des inscrits, avec mon avatar mis en évidence (« toi »). */
 function renderPeople() {
   const el = $('#ss-people'); if (!el) return;
   const rows = S.participants.map((p) => {
@@ -272,6 +323,12 @@ function renderPeople() {
 }
 
 /* ---------- Ma liste de souhaits ---------- */
+/**
+ * Une ligne de souhait : libellé, lien (si l'adresse est sûre), et bouton supprimer si on peut le retirer.
+ * @param {object} w souhait
+ * @param {{removable: boolean}} opts removable : afficher le bouton supprimer
+ * @returns {string} HTML
+ */
 function wishItem(w, { removable }) {
   const url = safeUrl(w.url);
   const link = url ? `<a class="ss-wish-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${I.link}<span>${esc(hostOf(url))}</span><span class="visually-hidden"> (nouvel onglet)</span></a>` : '';
@@ -279,6 +336,7 @@ function wishItem(w, { removable }) {
   return `<li class="ss-wish"><div class="ss-wish-main"><span class="ss-wish-label">${esc(w.label)}</span>${link}</div>${del}</li>`;
 }
 
+/** Ma liste de souhaits, avec le formulaire d'ajout. Visible seulement une fois inscrit, et rappelle qu'elle n'est vue que par mon Santa. */
 function renderMyWishes() {
   const el = $('#ss-mywishes'); if (!el) return;
   if (!S.mine) {
@@ -306,6 +364,10 @@ function renderMyWishes() {
   el.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => delWish(b)));
 }
 
+/**
+ * Ajoute un souhait. Vérifie le libellé, le lien (http ou https uniquement) et la limite de souhaits réglée.
+ * @param {Event} e soumission du formulaire
+ */
 async function addWish(e) {
   e.preventDefault();
   const f = e.currentTarget;
@@ -330,6 +392,10 @@ async function addWish(e) {
   } catch (err) { toast(`Ajout impossible : ${errMsg(err)}`, 'error'); btn.disabled = false; }
 }
 
+/**
+ * Supprime un de mes souhaits.
+ * @param {HTMLButtonElement} btn bouton supprimer, qui porte l'identifiant du souhait
+ */
 async function delWish(btn) {
   const id = btn.dataset.del;
   btn.disabled = true;
@@ -343,6 +409,10 @@ async function delWish(btn) {
 }
 
 /* ---------- La carte ---------- */
+/**
+ * Carte de la cible : carte retournable, face avant (« Tu offres à … ») et face arrière (logo).
+ * La génération des deux images est lancée ici ; le téléchargement ne s'active qu'une fois prêt.
+ */
 function renderCard() {
   const el = $('#ss-card'); if (!el) return;
   el.innerHTML = `
@@ -367,6 +437,7 @@ function renderCard() {
   const front = $('#ss-cv-front', el);
   const back = $('#ss-cv-back', el);
   const dl = $('#ss-dl', el);
+  // Retourner la carte. La première fois, la cible et sa liste se découvrent (mémorisé localement).
   const toggle = () => {
     const on = !flip.classList.contains('is-flipped');
     flip.classList.toggle('is-flipped', on);
@@ -386,6 +457,7 @@ function renderCard() {
     catch (e) { toast(`Téléchargement impossible : ${errMsg(e)}`, 'error'); }
   });
 
+  // Date d'échange déjà formatée, passée telle quelle à la carte (le texte est rendu dans l'image).
   const exchangeLabel = S.ed.exchange_date ? fmtDate(S.ed.exchange_date) : '';
   Promise.all([
     renderCardBack(back, { logoSrc: LOGO_SRC, year: S.ed.year }),
@@ -397,6 +469,9 @@ function renderCard() {
   }).catch((e) => toast(`Génération de la carte impossible : ${errMsg(e)}`, 'error'));
 }
 
+/**
+ * Liste de souhaits de ma cible et ce qu'il faut savoir sur elle. Masquée tant que la carte n'a pas été retournée.
+ */
 function renderTargetWishes() {
   const el = $('#ss-twishes'); if (!el) return;
   if (!S.revealed) {
@@ -416,6 +491,7 @@ function renderTargetWishes() {
 /** Bloc « Ce qu'il faut savoir sur <pseudo> » : seulement les champs transmis par l'admin et remplis. */
 function targetInfoHtml() {
   const info = S.targetInfo || {};
+  /** Vrai si le champ d'information est renseigné. */
   const filled = (k) => typeof info[k] === 'string' ? info[k].trim() !== '' : info[k] != null && info[k] !== '';
   const known = new Set(INFO_GROUPS.flatMap((g) => g.fields.map((f) => f.id)));
   const groups = INFO_GROUPS.map((g) => ({ label: g.label, fields: g.fields.filter((f) => filled(f.id)) })).filter((g) => g.fields.length);
@@ -436,6 +512,7 @@ function targetInfoHtml() {
 }
 
 /* ---------- Messagerie anonyme ---------- */
+/** Bloc des messages secrets : écrire à ma cible (après avoir retourné la carte) ou à mon Santa. */
 function renderSantaMsg() {
   const el = $('#ss-msg'); if (!el) return;
   el.innerHTML = `
@@ -449,6 +526,11 @@ function renderSantaMsg() {
     </div>`;
   el.querySelectorAll('[data-ss-msg]').forEach((b) => b.addEventListener('click', () => openSantaChat(b, b.dataset.ssMsg)));
 }
+/**
+ * Ouvre (ou crée) la conversation anonyme avec la cible ou le Santa, puis va à la messagerie.
+ * @param {HTMLButtonElement} btn bouton cliqué (désactivé pendant l'ouverture)
+ * @param {'target'|'santa'} role côté de la conversation
+ */
 async function openSantaChat(btn, role) {
   btn.disabled = true;
   try {
@@ -461,11 +543,17 @@ async function openSantaChat(btn, role) {
 }
 
 /* ---------- Mon envoi ---------- */
+/**
+ * Bloc « Mon envoi » : marquer mon cadeau envoyé, et mon cadeau reçu. Les actions se verrouillent après la fin de l'édition
+ * (sauf en mode sans limite) ; en mode sans limite, on peut annuler une coche.
+ */
 function renderSend() {
   const el = $('#ss-send'); if (!el) return;
   const sent = S.mine?.sent_at, rec = S.mine?.received_at;
+  // Édition terminée : les cases ne se cochent plus, sauf en mode sans limite.
   const closed = S.ed.status === 'termine' && !god();
   const tag = S.ed.status === 'termine' ? godTag() : '';
+  /** Bouton « Annuler » d'une coche, réservé au mode sans limite ; chaîne vide sinon. */
   const undo = (field, label) => (god() && S.mine?.[field] ? `<button class="btn btn-ghost btn-sm" type="button" data-undo="${field}">Annuler « ${label} »${godTag()}</button>` : '');
   el.innerHTML = `
     <h2 id="ss-send-t">Mon envoi</h2>
@@ -494,6 +582,13 @@ function renderSend() {
   el.querySelectorAll('[data-undo]').forEach((b) => b.addEventListener('click', () => unmark(b, b.dataset.undo)));
 }
 
+/**
+ * Coche « envoyé » ou « reçu » : enregistre la date, prévient la personne concernée par le bot, puis met à jour l'avancement.
+ * @param {HTMLButtonElement} btn bouton cliqué
+ * @param {'sent_at'|'received_at'} field champ à renseigner
+ * @param {string} event nom de la notification envoyée au bot
+ * @param {string} okMsg message de confirmation
+ */
 async function mark(btn, field, event, okMsg) {
   if (S.mine?.[field]) return;
   btn.disabled = true;
@@ -514,6 +609,11 @@ async function mark(btn, field, event, okMsg) {
 }
 
 /** Mode sans limite : remet « envoyé » ou « reçu » à « pas encore » (sans notification). */
+/**
+ * Mode sans limite : remet « envoyé » ou « reçu » à « pas encore ». Aucune notification n'est envoyée.
+ * @param {HTMLButtonElement} btn bouton annuler
+ * @param {'sent_at'|'received_at'} field champ à effacer
+ */
 async function unmark(btn, field) {
   if (!god() || !S.mine?.[field]) return;
   btn.disabled = true;
@@ -533,6 +633,7 @@ async function unmark(btn, field) {
 }
 
 /* ---------- Pas de cible / non participant ---------- */
+/** Bloc affiché quand il n'y a pas de cible : inscrit sans cible (après le tirage), ou non participant. */
 function renderNoTarget() {
   const el = $('#ss-notarget'); if (!el) return;
   el.innerHTML = S.mine
@@ -543,6 +644,7 @@ function renderNoTarget() {
 }
 
 /* ---------- Avancement ---------- */
+/** Avancement : deux barres (cadeaux envoyés, cadeaux reçus) en pourcentage des inscrits. */
 function renderProgress() {
   const el = $('#ss-progress'); if (!el) return;
   const p = S.progress || { participants: 0, sent: 0, received: 0 };
@@ -561,6 +663,7 @@ function renderProgress() {
 }
 
 /* ---------- Révélation ---------- */
+/** Bloc de révélation : qui offrait à qui. Les paires viennent de la base (ss-pairs.js). */
 function renderReveal() {
   const el = $('#ss-reveal'); if (!el) return;
   const done = S.ed.status === 'termine';
@@ -571,6 +674,7 @@ function renderReveal() {
 }
 
 /* ---------- Démarrage ---------- */
+// Mode sans limite activé ou désactivé : on redessine toute la page.
 window.addEventListener('hg:godmode', () => { if (me?.is_admin && S.ed) renderAll(); });
 try {
   await load();

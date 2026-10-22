@@ -183,6 +183,7 @@ function drawPseudo(ctx, text, cx, cy, maxW, { max = 168, min = 64, color = C.te
   ctx.textBaseline = 'middle';
   spaced(ctx, 1);
   let size = max;
+  /** Vrai si le texte tient dans la largeur maximale à la taille s. */
   const fits = (s) => { ctx.font = `400 ${s}px ${DISPLAY}`; return ctx.measureText(t).width <= maxW; };
   while (size > min && !fits(size)) size -= 4;
   let lines = [t];
@@ -192,6 +193,7 @@ function drawPseudo(ctx, text, cx, cy, maxW, { max = 168, min = 64, color = C.te
     lines = [];
     const words = t.split(/\s+/);
     let cur = '';
+    /** Découpe un mot trop long en morceaux qui tiennent sur la largeur, caractère par caractère. Renvoie le dernier morceau. */
     const pushChars = (w) => { let part = ''; for (const ch of w) { if (ctx.measureText(part + ch).width > maxW && part) { lines.push(part); part = ch; } else part += ch; } return part; };
     for (const w of words) {
       const next = cur ? `${cur} ${w}` : w;
