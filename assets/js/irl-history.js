@@ -1,34 +1,61 @@
-// ===== Humane Gang — IRL : historique des rencontres, rencontres passées, « Qui était là ? », carte =====
+// ===== Humane Gang — IRL : historique des rencontres, rencontres passées, « Qui était là ? », carte (module de irl.html) =====
+// Module monté par irl.js (mountHistory). Il gère la vue « Historique » : frise, filtres, statistiques, carte des lieux,
+// et les dialogues « Ajouter une rencontre passée » et « Qui était là ? ».
+// Dépendances : core.js, photos.js (envoi d'images), image-compress.js, utils.js, reglages-valeurs-lot3.js (options photo).
+// Services externes : Leaflet et tuiles OpenStreetMap (carte), Nominatim (position des lieux), chargés à la demande.
+// Tables : hg_events, hg_event_rsvps, hg_photos. N'exporte que mountHistory et norm (normalisation de texte).
 import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit, godTag } from './core.js';
 import { uploadImage, removeObjects, uuid } from './photos.js';
 import { prepareImage } from './image-compress.js';
 import { pad } from './utils.js';
 import { optionsPhoto } from './reglages-valeurs-lot3.js';
 
+/* ---------- Constantes : carte, cache des lieux, formats de date ---------- */
+/** Adresse des fichiers Leaflet (bibliothèque de carte). Ils ne sont chargés qu'à l'ouverture de la carte. */
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
+/** Clé du cache local des positions des lieux (nom du lieu → latitude et longitude). */
 const GEO_KEY = 'hg_geo_v1';
 const GEO_RETRY_MS = 30 * 86400000;   // un lieu introuvable est retenté après 30 jours
 const GEO_GAP_MS = 1100;              // Nominatim : 1 requête par seconde au plus
 const PEOPLE_MAX = 8;                 // avatars affichés par carte avant « +n »
+/** Mois et année en français, par exemple « mars 2024 ». */
 const MONTH = new Intl.DateTimeFormat('fr-CH', { month: 'long', year: 'numeric' });
+/** Mois abrégé en français, pour la tuile de date d'une rencontre sans photo. */
 const MONTH_SHORT = new Intl.DateTimeFormat('fr-CH', { month: 'short' });
 
 /** Normalise un texte pour comparer (casse, accents, espaces). */
 export const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+/** Date au format AAAA-MM-JJ (heure locale), pour les champs de date. */
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/** Numéro unique d'un mois (année × 12 + mois), pour trier les mois et compter les rencontres par mois. */
 const monthKey = (d) => d.getFullYear() * 12 + d.getMonth();
 
 /**
  * ctx : { me, isAdmin, S, classify, member, pseudo, canEdit, pluralCount, tint, I, refresh }
  */
+/**
+ * Monte la section « Historique » de la page IRL : frise, filtres, statistiques, carte, et les dialogues d'ajout et de présence.
+ * Renvoie les fonctions utilisées par irl.js : render, openRetro, openWho, setTab, isOpen.
+ * @param {object} ctx { me, isAdmin, S (données de la page), classify, member, pseudo, canEdit, pluralCount, tint, I (icônes), refresh }
+ * @returns {{render: Function, openRetro: Function, openWho: Function, setTab: Function, isOpen: Function}}
+ */
 export function mountHistory(ctx) {
   const { me, S, I } = ctx;
   const F = { year: '', place: '', person: '', q: '' };
+  /** Identifiants des personnes présentes (réponse « oui ») à une sortie. */
   const presents = (id) => S.rsvps.filter((r) => r.event_id === id && r.status === 'oui').map((r) => r.user_id);
+  /** Photos d'une sortie. */
   const photosOf = (id) => S.photos.filter((p) => p.event_id === id);
+  /** Année d'une sortie. */
   const yearOf = (ev) => new Date(ev.starts_at).getFullYear();
 
   /* ============ Sélecteur de participants (réutilisé par les deux dialogs) ============ */
+  /**
+   * Sélecteur de membres à cocher, avec recherche par pseudo. Utilisé par les dialogues « rencontre » et « Qui était là ? ».
+   * @param {HTMLElement} host élément qui reçoit le sélecteur
+   * @param {string} idp préfixe des identifiants HTML (évite les doublons)
+   * @returns {{set: Function, get: Function}} set(ids) coche ces personnes ; get() renvoie l'ensemble coché
+   */
   function createPicker(host, idp) {
     host.innerHTML = `<div class="picker">
       <div class="picker-top">
@@ -40,7 +67,9 @@ export function mountHistory(ctx) {
     </div>`;
     const q = $('.picker-q', host), list = $('.picker-list', host), count = $('.picker-count', host), none = $('.picker-none', host);
     let sel = new Set();
+    /** Met à jour le compteur des personnes cochées. */
     const updCount = () => { count.textContent = sel.size ? ctx.pluralCount(sel.size, 'personne cochée', 'personnes cochées') : 'Personne de coché'; };
+    /** N'affiche que les membres dont le nom correspond à la recherche. */
     const filter = () => {
       const t = norm(q.value);
       let shown = 0;
@@ -95,6 +124,11 @@ export function mountHistory(ctx) {
   let rEditing = null;
   $$('[data-close]', rDlg).forEach((b) => b.addEventListener('click', () => rDlg.close()));
 
+  /**
+   * Ouvre le dialogue « rencontre passée » : création (sans argument) ou modification.
+   * La date ne peut pas être future, sauf en mode sans limite (admin).
+   * @param {object|null} [ev=null] rencontre à modifier
+   */
   function openRetro(ev = null) {
     rEditing = ev;
     rForm.reset();
@@ -126,6 +160,7 @@ export function mountHistory(ctx) {
     rForm.elements.title.focus();
   }
 
+  // Enregistrement d'une rencontre passée : création (avec présents, couverture et photos) ou modification.
   rForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = rForm.elements;
@@ -217,6 +252,10 @@ export function mountHistory(ctx) {
   const wPicker = createPicker($('#who-picker'), 'who');
   let wEvent = null;
   $$('[data-close]', wDlg).forEach((b) => b.addEventListener('click', () => wDlg.close()));
+  /**
+   * Ouvre « Qui était là ? » pour une sortie : la liste des présents se règle à la main.
+   * @param {object} ev la sortie
+   */
   function openWho(ev) {
     if (!ev) return;
     wEvent = ev;
@@ -225,6 +264,7 @@ export function mountHistory(ctx) {
     wDlg.showModal();
     $('#who-q').focus();
   }
+  // Enregistre la liste des présents, puis redessine la carte de la sortie.
   wForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!wEvent) return;
@@ -242,6 +282,11 @@ export function mountHistory(ctx) {
 
   /* ============ Onglets ============ */
   const tabs = $$('.irl-tab');
+  /**
+   * Affiche l'onglet « sorties » ou « historique » et met l'adresse à jour (#historique ou sans ancre).
+   * @param {'sorties'|'historique'} name onglet demandé
+   * @param {{focus?: boolean}} [opts] focus : placer le curseur sur l'onglet
+   */
   function setTab(name, { focus = false } = {}) {
     for (const t of tabs) {
       const on = t.id === `tab-${name}`;
@@ -263,6 +308,7 @@ export function mountHistory(ctx) {
       setTab(tabs[(i + k + tabs.length) % tabs.length].id.slice(4), { focus: true });
     });
   });
+  /** Vrai si la vue « Historique » est affichée. */
   const isOpen = () => !$('#view-historique').hidden;
 
   /* ============ Filtres ============ */
@@ -279,21 +325,32 @@ export function mountHistory(ctx) {
     $(`#hx-years [data-year="${CSS.escape(F.year)}"]`)?.focus();
   });
   $('#hx-reset').addEventListener('click', () => { resetFilters(); render(); qInput.focus(); });
+  /** Remet à zéro les filtres (année, lieu, personne, recherche). Ne redessine pas la page. */
   function resetFilters() { F.year = ''; F.place = ''; F.person = ''; F.q = ''; qInput.value = ''; }
 
+  /** Texte de recherche d'une rencontre : titre, lieu, description et noms des présents, sans accents ni casse. */
   function haystack(ev) {
     return norm([ev.title, ev.location, ev.description, ...presents(ev.id).map(ctx.pseudo)].join(' '));
   }
+  /**
+   * Vrai si la rencontre passe les filtres. skip : ignorer un filtre (« year » pour compter les années dans le menu).
+   */
   const match = (ev, skip = '') => (skip === 'year' || !F.year || String(yearOf(ev)) === F.year)
     && (!F.place || norm(ev.location) === F.place)
     && (!F.person || presents(ev.id).includes(F.person))
     && (!F.q || haystack(ev).includes(F.q));
 
+  /**
+   * Remplit les menus de filtres (années, lieux, personnes) avec le nombre de rencontres correspondant.
+   * Un filtre dont la valeur n'existe plus est remis à zéro. Le bouton « Réinitialiser » n'apparaît que si un filtre est actif.
+   * @param {object[]} all rencontres passées
+   */
   function renderFilters(all) {
     // Années (avec le nombre de rencontres correspondant aux autres filtres)
     const years = [...new Set(all.map(yearOf))].sort((a, b) => b - a);
     if (F.year && !years.includes(Number(F.year))) F.year = '';
     const pool = all.filter((ev) => match(ev, 'year'));
+    /** Nombre de rencontres d'une année, parmi celles qui passent les autres filtres. */
     const cnt = (y) => pool.filter((ev) => yearOf(ev) === y).length;
     $('#hx-years').innerHTML = [`<button type="button" class="hx-chip" data-year="" aria-pressed="${!F.year}">Toutes <span>${pool.length}</span></button>`,
       ...years.map((y) => `<button type="button" class="hx-chip" data-year="${y}" aria-pressed="${F.year === String(y)}">${y} <span>${cnt(y)}</span></button>`)].join('');
@@ -321,6 +378,12 @@ export function mountHistory(ctx) {
   }
 
   /* ============ Statistiques ============ */
+  /**
+   * Calcule les statistiques de la liste filtrée : nombre, lieux, présences de moi, première rencontre,
+   * mois le plus actif, plus longue série de mois consécutifs, et les tops (lieux, personnes).
+   * @param {object[]} list rencontres
+   * @returns {object}
+   */
   function stats(list) {
     const n = list.length;
     const places = new Map();
@@ -348,17 +411,21 @@ export function mountHistory(ctx) {
       run = i && k === keys[i - 1] + 1 ? run + 1 : 1;
       if (run > streak.len) streak = { len: run, end: k };
     });
+    /** Les trois premiers d'un classement (lieux ou personnes). */
     const top = (m) => [...m.entries()].sort((a, b) => b[1].n - a[1].n || a[1].label.localeCompare(b[1].label, 'fr')).slice(0, 3).map(([, v]) => v);
     const topPeople = [...people.entries()].map(([id, c]) => ({ id, n: c, label: ctx.pseudo(id) }))
       .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'fr')).slice(0, 3);
     return { n, places: places.size, topPlaces: top(places), topPeople, first, best, streak, mine };
   }
+  /** Libellé d'un mois à partir de sa clé (voir monthKey). */
   const monthLabel = (k) => MONTH.format(new Date(Math.floor(k / 12), k % 12, 1));
 
+  /** Affiche les tuiles de statistiques et les deux classements (lieux, personnes). Vide s'il n'y a rien. */
   function renderStats(list) {
     const s = stats(list);
     if (!s.n) { $('#hx-stats').innerHTML = ''; return; }
     const pct = Math.round((s.mine / s.n) * 100);
+    /** Une tuile de statistique : grand chiffre, libellé, et contenu optionnel. */
     const tile = (big, label, extra = '', txt = false) => `<div class="hx-stat${txt ? ' hx-stat-txt' : ''}"><strong class="hx-big">${big}</strong><span class="hx-lbl">${label}</span>${extra}</div>`;
     const tiles = [
       tile(s.n, s.n > 1 ? 'rencontres' : 'rencontre'),
@@ -372,6 +439,7 @@ export function mountHistory(ctx) {
     if (s.streak.len >= 2) tiles.push(tile(`${s.streak.len} mois`, `plus longue série d'affilée (jusqu'en ${esc(monthLabel(s.streak.end))})`));
     const maxP = Math.max(1, ...s.topPlaces.map((p) => p.n));
     const maxU = Math.max(1, ...s.topPeople.map((p) => p.n));
+    /** Liste classée : rang, nom, nombre, et barre proportionnelle au plus grand. */
     const rank = (items, maxN, row) => items.length
       ? `<ol class="hx-rank">${items.map((it, i) => `<li><span class="hx-rk">${i + 1}</span>${row(it)}<span class="hx-rn">${it.n}</span>
           <span class="hx-rbar" aria-hidden="true"><span style="width:${Math.round((it.n / maxN) * 100)}%"></span></span></li>`).join('')}</ol>`
@@ -386,6 +454,11 @@ export function mountHistory(ctx) {
   }
 
   /* ============ Frise ============ */
+  /**
+   * Carte d'une rencontre dans la frise : date, titre, lieu, présents, miniature, et liens vers l'album.
+   * @param {object} ev la rencontre
+   * @returns {string} HTML
+   */
   function card(ev) {
     const d = new Date(ev.starts_at);
     const who = presents(ev.id);
@@ -418,6 +491,11 @@ export function mountHistory(ctx) {
     </li>`;
   }
 
+  /**
+   * Dessine la frise, groupée par année (la plus récente en premier), ou un message si elle est vide ou filtrée à zéro.
+   * @param {object[]} list rencontres après filtres
+   * @param {number} total rencontres avant filtres
+   */
   function renderTimeline(list, total) {
     $('#hx-count').textContent = list.length === total ? ctx.pluralCount(total, 'rencontre', 'rencontres') : `${list.length} sur ${total}`;
     if (!total) {
@@ -437,6 +515,7 @@ export function mountHistory(ctx) {
         <ol class="hx-list">${evs.map(card).join('')}</ol>
       </section>`).join('');
   }
+  // Boutons de la frise : « Ajouter une rencontre », « Réinitialiser les filtres », et liens vers les albums (dans l'onglet sorties).
   $('#hx-timeline').addEventListener('click', (e) => {
     const b = e.target.closest('[data-hx]');
     if (b?.dataset.hx === 'retro') openRetro();
@@ -445,6 +524,11 @@ export function mountHistory(ctx) {
     if (a) { e.preventDefault(); setTab('sorties'); location.hash = a.getAttribute('href').slice(1); }
   });
 
+  /**
+   * Met en évidence une carte de la frise (fait défiler sauf si quiet, et la fait clignoter).
+   * @param {string} id identifiant de la rencontre
+   * @param {{quiet?: boolean}} [opts] quiet : pas de défilement, et le focus va au bouton « Qui était là ? »
+   */
   function focusCard(id, { quiet = false } = {}) {
     const el = document.getElementById(`hx-ev-${id}`);
     if (!el || !isOpen()) return;
@@ -455,8 +539,10 @@ export function mountHistory(ctx) {
   }
 
   /* ============ Carte (Leaflet + Nominatim, chargés seulement à l'ouverture) ============ */
+  /* État de la carte : ouverte ou non, instance Leaflet, numéro de génération (annule un calcul périmé), lieux en échec. */
   const M = { open: false, map: null, layer: null, loading: null, gen: 0, failed: new Set(), last: 0 };
   const mapBtn = $('#hx-map-btn'), mapWrap = $('#hx-map-wrap'), mapStatus = $('#hx-map-status');
+  // Bouton « Voir la carte » : ouvre ou ferme la carte, et la charge à la première ouverture.
   mapBtn.addEventListener('click', async () => {
     M.open = !M.open;
     mapBtn.setAttribute('aria-expanded', String(M.open));
@@ -465,6 +551,10 @@ export function mountHistory(ctx) {
     if (M.open) updateMap();
   });
 
+  /**
+   * Charge Leaflet (feuille de style et script) une seule fois. En cas d'échec, les balises ajoutées sont retirées pour une nouvelle tentative.
+   * @returns {Promise<object>} l'objet L de Leaflet
+   */
   function loadLeaflet() {
     if (window.L?.map) return Promise.resolve(window.L);
     if (M.loading) return M.loading;
@@ -482,13 +572,26 @@ export function mountHistory(ctx) {
     }).catch((e) => { M.loading = null; $$('script[src^="https://cdn.jsdelivr.net/npm/leaflet"]').forEach((x) => x.remove()); throw e; });
     return M.loading;
   }
+  /** Cache des positions des lieux, lu dans le stockage local. Vide si illisible. */
   function geoCache() { try { return JSON.parse(localStorage.getItem(GEO_KEY) || '{}') || {}; } catch { return {}; } }
+  /** Range la position d'un lieu, en stockage local et en mémoire. Une erreur de stockage est ignorée. */
   function geoPut(k, v) { try { const c = geoCache(); c[k] = v; localStorage.setItem(GEO_KEY, JSON.stringify(c)); } catch { /* stockage indisponible : cache mémoire seulement */ } M.mem[k] = v; }
+  // Cache mémoire des positions pour cette visite (même si le stockage local est indisponible).
   M.mem = {};
+  /** Position connue d'un lieu : d'abord en mémoire, puis dans le stockage local. */
   const geoGet = (k) => M.mem[k] ?? geoCache()[k];
+  /** Vrai si la position contient une latitude et une longitude valides. */
   const usable = (g) => g && typeof g.lat === 'number' && typeof g.lon === 'number';
+  /** Vrai si un lieu doit être recherché : pas de position, ou un échec remontant à plus de 30 jours. */
   const stale = (g) => !g || (!usable(g) && Date.now() - (g.miss || 0) > GEO_RETRY_MS);
 
+  /**
+   * Cherche la position d'un lieu (service Nominatim), une requête par seconde au plus.
+   * Un lieu introuvable est mémorisé avec la date de l'échec. Une erreur réseau n'est pas mémorisée : on réessaiera à la prochaine visite.
+   * @param {string} key clé du lieu (texte normalisé)
+   * @param {string} label nom du lieu, tel qu'affiché
+   * @returns {Promise<object|null>} la position, ou null
+   */
   async function geocode(key, label) {
     const wait = M.last + GEO_GAP_MS - Date.now();
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
@@ -509,6 +612,10 @@ export function mountHistory(ctx) {
     }
   }
 
+  /**
+   * Met la carte à jour pour les rencontres filtrées : un repère par lieu (avec le nombre de rencontres), cadrage automatique.
+   * Les lieux sans position connue sont recherchés un par un. Une génération plus récente annule le calcul en cours.
+   */
   async function updateMap() {
     if (!M.open) return;
     const gen = ++M.gen;
@@ -540,6 +647,7 @@ export function mountHistory(ctx) {
     }
     M.layer.clearLayers();
     const pts = [];
+    /** Ajoute sur la carte un repère pour un lieu, avec une bulle listant ses rencontres. */
     const add = (k, geo) => {
       const g = groups.get(k);
       const n = g.evs.length;
@@ -550,6 +658,7 @@ export function mountHistory(ctx) {
         .addTo(M.layer);
       pts.push([geo.lat, geo.lon]);
     };
+    /** Cadre la carte sur les repères déjà placés. */
     const fit = () => { if (pts.length) M.map.fitBounds(pts, { padding: [40, 40], maxZoom: 12 }); };
     const todo = [];
     for (const [k, g] of groups) {
@@ -558,6 +667,7 @@ export function mountHistory(ctx) {
       else if (stale(c) && !M.failed.has(k)) todo.push([k, g.label]);
     }
     fit();
+    /** Affiche le bilan de la carte : lieux placés et lieux introuvables. */
     const say = () => {
       const missing = groups.size - pts.length;
       mapStatus.textContent = !groups.size ? 'Aucun lieu renseigné pour ces rencontres.'
@@ -575,8 +685,13 @@ export function mountHistory(ctx) {
   }
 
   /* ============ Rendu ============ */
+  /* Rencontres passées de la dernière lecture (avant filtres). */
   let lastList = [];
+  /** Rencontres passées de la dernière lecture, après filtres. */
   function filtered() { return lastList.filter((ev) => match(ev)); }
+  /**
+   * Relit les rencontres passées, puis redessine filtres, statistiques, frise et carte. Ne fait rien si la vue n'est pas ouverte.
+   */
   function render() {
     lastList = ctx.classify().past;
     if (!isOpen()) return;
@@ -587,5 +702,6 @@ export function mountHistory(ctx) {
     if (M.open) updateMap();
   }
 
+  // Ce que irl.js utilise : redessiner, ouvrir les dialogues, changer d'onglet, savoir si la vue est ouverte.
   return { render, openRetro, openWho, setTab, isOpen };
 }
