@@ -9,7 +9,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v40';
+const CACHE_VERSION = 'v41';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
@@ -18,7 +18,7 @@ const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
    Un fichier ajouté au site doit aussi être ajouté ici s'il doit marcher hors ligne. Ne pas modifier sans
    incrémenter CACHE_VERSION (voir l'en-tête). */
 const PRECACHE = [
-  'index.html', 'accueil.html', 'admin.html', 'aide.html', 'assistance.html', 'cartes.html', 'compte.html',
+  'index.html', 'accueil.html', 'admin.html', 'aide.html', 'quiz.html', 'secret.html', 'assistance.html', 'cartes.html', 'compte.html',
   'evenements.html', 'historique.html', 'irl.html', 'legal.html', 'membre.html', 'messages.html',
   'recap.html', 'rejoindre.html', 'secret-santa.html', 'offline.html', 'assets/css/accueil.css',
   'assets/css/admin-access.css', 'assets/css/admin-accounts.css', 'assets/css/admin-bot.css',
@@ -74,6 +74,9 @@ const PRECACHE = [
   'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
   'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js', 'assets/js/ss-pairs.js',
   'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
+  'assets/js/quiz.js', 'assets/js/secret.js', 'assets/js/admin-quiz.js', 'assets/js/admin-quiz-stats.js',
+  'assets/js/eggs/api.js', 'assets/js/eggs/core.js', 'assets/js/eggs/lettres.js', 'assets/js/eggs/pages.js', 'assets/js/eggs/jeu404.js',
+  'assets/css/quiz.css', 'assets/css/admin-quiz.css', 'assets/css/admin-quiz-stats.css', 'assets/css/eggs.css', 'assets/css/eggs-pages.css',
   'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/css/admin-ui.css', 'assets/js/admin/ui/common.js', 'assets/js/admin/ui/time.js', 'assets/js/admin/ui/list.js', 'assets/js/admin/ui/drawer.js',
   'assets/js/admin/ui/thread.js', 'assets/js/admin/ui/info-panel.js', 'assets/js/admin/ui/detail-header.js',
