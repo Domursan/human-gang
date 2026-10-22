@@ -39,7 +39,7 @@ function ajouteStyle() {
 }
 
 /**
- * Pose la lettre dans le pied de page si elle n'y est pas. Sans effet tant que le pied n'est pas rendu.
+ * Pose la lettre dans le pied de page (juste après le bloc de droits) si elle n'y est pas. Sans effet tant que le pied n'est pas rendu.
  * @param {{ n: number, lettre: string }} info lettre de la page courante
  */
 function pose(info) {
@@ -53,7 +53,7 @@ function pose(info) {
   b.setAttribute('aria-label', 'Un secret ?');
   b.dataset.lettre = String(info.n);
   b.addEventListener('click', () => trouve(b, info.n));
-  cible.append(b);
+  cible.after(b); // à côté du texte de droits, sans s'y mêler (le texte de copyright reste intact)
 }
 
 /**
