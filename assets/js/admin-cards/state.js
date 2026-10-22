@@ -1,6 +1,12 @@
+// =====================================================================
 // Cartes admin : état partagé de la section (séries, cartes, exemplaires, portefeuilles, échanges, onglet).
+// Un seul objet C, lu et modifié par les autres fichiers de admin-cards/. Les index (…ById, …ByCard) sont
+// reconstruits à chaque chargement (data.js).
+// Exporte : C (état), H (hook de rendu, branché par view.js).
+// =====================================================================
 
 /* ---------- État ---------- */
+// État de la section. Les listes contiennent les lignes lues ; les Map servent à retrouver une ligne par son identifiant.
 export const C = {
   root: null, panel: null, tab: 'series',
   sets: [], cards: [], copies: [], wallets: [], trades: [], items: [], profiles: [], cfgRaw: {},

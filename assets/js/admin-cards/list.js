@@ -1,4 +1,10 @@
+// =====================================================================
 // Cartes admin : liste des cartes (filtres, tableau) et bloc des cartes Identité.
+// Une carte Identité est une carte rare, une par membre ; le bloc propose de créer celles qui manquent.
+// Dépendances : core.js (esc), cartes-ui.js (RARITIES, FAMILIES, libellés), constants.js (ICON), state.js (C),
+// helpers.js (utilitaires d'affichage), admin/list-tools.js (recherche, pagination).
+// Exporte : filteredCards (cartes retenues par filtres et recherche), cardsListData (liste paginée), cardsPanel (onglet).
+// =====================================================================
 import { esc } from '../core.js';
 import { RARITIES, FAMILIES, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { ICON } from './constants.js';
@@ -9,6 +15,7 @@ import { matches, searchHtml, moreHtml, emptyHtml } from '../admin/list-tools.js
 /* =========================================================
    Cartes
    ========================================================= */
+/** Bloc « Cartes Identité » : choix de la série et bouton pour créer les cartes manquantes. */
 function identityBox() {
   const idSet = identSetId();
   const ident = C.cards.filter((k) => k.set_id === idSet && k.rarity === 'identite');
@@ -27,6 +34,7 @@ function identityBox() {
   </section>`;
 }
 
+/** Une ligne du tableau : numéro, carte, série, famille, rareté, exemplaires, état et actions. */
 function cardRow(k) {
   const id = esc(k.id);
   const exemp = k.max_copies
@@ -70,6 +78,7 @@ export function cardsListData() {
   return { html, shown: shown.length, total: list.length };
 }
 
+/** HTML de l'onglet Cartes : bloc Identité, filtres, recherche et liste. */
 export function cardsPanel() {
   if (!C.sets.length) return `${identityBox()}<div class="empty">Crée d'abord une série : les cartes s'y rangent.</div>`;
   const f = C.f;

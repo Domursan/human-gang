@@ -1,8 +1,15 @@
+// =====================================================================
 // Cartes admin : constantes (libellés, réglages par défaut, description des réglages de l'économie).
+// Rien ici n'appelle la base : ce sont des valeurs fixes et des listes de libellés.
+// Dépendances : icons.js (svg), cartes-ui.js (RARITIES, rarityLabel : libellés des raretés).
+// Exporte : TZ, ICON, TABS, RARITY_IDS, REASON_LABEL, CFG_DEFAULT, ECON.
+// =====================================================================
 import { svg } from '../icons.js';
 import { RARITIES, rarityLabel } from '../cartes-ui.js';
 
+/* Fuseau horaire d'affichage des dates (Suisse). */
 export const TZ = 'Europe/Zurich';
+/* Icônes SVG des boutons de la section : ajouter, modifier, supprimer, activer, désactiver. */
 export const ICON = {
   plus: svg('plus', { stroke: 2 }),
   edit: svg('edit', { stroke: 2 }),
@@ -10,9 +17,12 @@ export const ICON = {
   off: svg('off', { stroke: 2 }),
   on: svg('check2', { stroke: 2 }),
 };
+/* Onglets de la section, sous la forme [identifiant, libellé]. */
 export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
+/* Identifiants des raretés, dans l'ordre de RARITIES (cartes-ui.js). */
 export const RARITY_IDS = RARITIES.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
+/* Libellés des raisons enregistrées dans le journal des Paillettes (hg_wallet_log). */
 export const REASON_LABEL = {
   quete: 'Quête de la semaine', defi: 'Défi du gang',
   booster: 'Booster', quotidien: 'Passage du jour', recyclage: 'Recyclage', fabrication: 'Fabrication', echange: 'Échange',
@@ -31,6 +41,7 @@ export const CFG_DEFAULT = {
   quetes_par_semaine: 3,
   drops: { quantite_max: 50, duree_max_min: 1440, duree_defaut_min: 30 },
 };
+/* Récompenses en Paillettes avec leur libellé ; les clés correspondent à rewards.* de CFG_DEFAULT. */
 const REWARDS = [
   ['daily', 'Passage du jour'], ['streak_bonus', 'Bonus par jour de série (en plus)'], ['streak_max', 'Série maximale (jours)'],
   ['rsvp', 'Réponse « oui » à une sortie'], ['presence', 'Présence à une sortie passée'], ['photo', 'Photo publiée'],

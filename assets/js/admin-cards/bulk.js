@@ -1,6 +1,11 @@
+// =====================================================================
 // Cartes admin : don groupé (Paillettes, boosters offerts ou une carte) à plusieurs membres, ou à tout le gang.
 // Tiroir ouvert depuis Économie. La RPC hg_cards_admin_bulk_give fait tout ou rien et écrit une seule ligne dans le fil.
 // Les MP Discord ne sont pas envoyés par ce tiroir.
+// Dépendances : core.js (sb, toast, errMsg, esc, $), cartes-ui.js (rarityLabel), ui-confirm.js (confirmBox),
+// admin/ui/drawer.js (tiroir), state.js (C), data.js (refresh), helpers.js (check, nf, activeProfiles).
+// Exporte : openBulkGift.
+// =====================================================================
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { rarityLabel } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
@@ -10,12 +15,15 @@ import { refresh } from './data.js';
 import { check, nf, activeProfiles } from './helpers.js';
 
 const MAX_MEMBRES = 200; // doit correspondre à la migration 042
+/* Les trois sortes de don : libellé, nom du champ de montant, valeur par défaut et bornes autorisées. */
 const KIND = {
   paillettes: { label: 'Paillettes', champ: 'Paillettes par membre', defaut: 100, min: 1, max: 10000 },
   boosters: { label: 'Boosters offerts', champ: 'Boosters par membre', defaut: 1, min: 1, max: 50 },
   carte: { label: 'Une carte', champ: 'Exemplaires par membre', defaut: 1, min: 1, max: 10 },
 };
+/* Texte normalisé pour la recherche : minuscules et sans accents. */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+/* Nombre suivi du mot au singulier ou au pluriel (« 1 booster », « 3 boosters »). */
 const plur = (n, one, many) => `${nf(n)} ${n > 1 ? many : one}`;
 
 /** Options des cartes actives, groupées par série, filtrées par le texte de recherche. */
@@ -28,6 +36,7 @@ function cardOptionsHtml(q = '') {
   }).join('');
 }
 
+/** HTML du tiroir : type de don, montant, carte, destinataires, notes. */
 function bodyHtml() {
   const rows = activeProfiles().map((p) => `<label class="acd-bulk-row"><input type="checkbox" name="who" value="${esc(p.id)}">
     <span>${esc(p.pseudo)}</span></label>`).join('');
@@ -102,6 +111,7 @@ function recapText(v) {
   return v.n > 1 ? `${qui} ${obj} chacun. Soit ${total}.` : `${qui} ${obj}.`;
 }
 
+/** Met à jour le compteur de destinataires et la phrase de récapitulatif. */
 function majRecap(form) {
   const v = lire(form);
   const recap = $('#acd-bulk-recap', form);
@@ -130,6 +140,7 @@ function majType(form) {
   $('#acd-bulk-cardbox', form).hidden = kind !== 'carte';
 }
 
+/** Réagit aux changements : type de don, « tout le gang », puis récapitulatif. */
 function onChange(e) {
   const form = e.currentTarget;
   if (e.target.name === 'kind') majType(form);
@@ -139,6 +150,7 @@ function onChange(e) {
   majRecap(form);
 }
 
+/** Réagit à la saisie : filtre des membres ou recherche de carte, puis récapitulatif. */
 function onInput(e) {
   const form = e.currentTarget;
   if (e.target.id === 'acd-bulk-q') {
@@ -158,6 +170,7 @@ function onInput(e) {
 /** Envoi : contrôle, confirmation avec récapitulatif, appel de la RPC, retour du résultat. Renvoie false si on reste dans le tiroir. */
 async function envoyer(form) {
   const err = $('.form-error', form);
+  /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
   showErr('');
   const v = lire(form);

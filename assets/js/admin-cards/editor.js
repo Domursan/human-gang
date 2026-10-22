@@ -1,4 +1,12 @@
+// =====================================================================
 // Cartes admin : fiche de création et de modification d'une carte, suppression, cartes Identité.
+// Le formulaire est un tiroir ; l'aperçu de la carte se redessine à chaque saisie.
+// Une carte ne se supprime que si aucun exemplaire n'existe ; sinon on propose de la désactiver.
+// Dépendances : core.js (sb, toast, esc, $), admin/ui/drawer.js, cartes-ui.js (RARITIES, FAMILIES, cardHtml),
+// ui-confirm.js, state.js, data.js (refresh), helpers.js.
+// Tables : hg_cards (insert, update, delete). Image : bucket hg-assets via uploadCardImage.
+// Exporte : openCardDialog, deleteCard, makeIdentities.
+// =====================================================================
 import { sb, toast, esc, $ } from '../core.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { RARITIES, FAMILIES, cardHtml } from '../cartes-ui.js';
@@ -7,6 +15,7 @@ import { C } from './state.js';
 import { refresh } from './data.js';
 import { activeProfiles, check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
 
+/** Ouvre le tiroir de création (k absent) ou de modification d'une carte, avec son aperçu. */
 export function openCardDialog(k = null) {
   const isNew = !k;
   const setDefault = k?.set_id || C.f.set || identSetId() || C.sets[0]?.id || '';
@@ -83,6 +92,7 @@ export function openCardDialog(k = null) {
       caption: E.caption.value.trim() || null, max_copies: maxRaw === '' ? null : Number(maxRaw),
     };
   };
+  /* Redessine l'aperçu à partir des valeurs saisies, et met à jour le compteur de légende. */
   const paint = () => {
     const v = readRaw();
     $('#acc-caption-count', root).textContent = nf(E.caption.value.length);
@@ -113,6 +123,7 @@ export function openCardDialog(k = null) {
   /** Enregistrement : renvoie false (tiroir ouvert, erreur affichée) en cas d'échec. */
   async function saveCard() {
     const err = $('.form-error', root);
+    /* Affiche le message d'erreur dans le formulaire, ou le masque si le message est vide. */
     const showErr = (m) => { err.textContent = m; err.hidden = !m; if (m) err.scrollIntoView({ block: 'nearest' }); };
     showErr('');
     try {
@@ -130,6 +141,7 @@ export function openCardDialog(k = null) {
     }
   }
 
+  // Aperçu de l'image choisie : l'URL temporaire précédente est libérée avant d'en créer une nouvelle.
   E.file.addEventListener('change', () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     const f = E.file.files?.[0];
@@ -155,6 +167,7 @@ export function openCardDialog(k = null) {
 export async function deleteCard(id) {
   const k = C.cardById.get(id);
   if (!k) return;
+  /* Nombre d'exemplaires existant pour la carte. */
   const n = (C.copiesByCard.get(id) || []).length;
   if (n) return refuseCardDelete(k, n);
   const typed = await typedConfirm({
@@ -168,6 +181,7 @@ export async function deleteCard(id) {
   toast('Carte supprimée', 'ok');
   await refresh();
 }
+/** Refuse la suppression d'une carte qui a déjà des exemplaires ; propose de la désactiver à la place. */
 async function refuseCardDelete(k, n) {
   if (k.active === false) return toast(`Suppression impossible : ${nf(n)} exemplaire${n > 1 ? 's existent' : ' existe'} encore chez les membres.`, 'error');
   const ok = await confirmBox(`Suppression impossible pour « ${k.name} »`,
@@ -211,6 +225,11 @@ function typedConfirm({ title, text, expected, ok = 'Supprimer' }) {
   }, { once: true }));
 }
 
+/**
+ * Crée d'un coup une carte Identité pour chaque membre qui n'en a pas encore dans la série affichée.
+ * Chaque carte prend le pseudo et l'avatar du membre, 10 exemplaires numérotés, et le premier numéro libre.
+ * @param {HTMLButtonElement} btn bouton déclencheur (désactivé pendant l'envoi).
+ */
 export async function makeIdentities(btn) {
   const setId = identSetId();
   const set = C.setById.get(setId);
