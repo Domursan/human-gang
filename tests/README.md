@@ -106,6 +106,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-admin-don-groupe.cjs` | `node tests/parcours-admin-don-groupe.cjs` | à la main | Don groupé (destinataires, récapitulatif, RPC refusée, mobile) et bouton « booster offert » dans `cartes.html` |
 | `parcours-cartes-zoom.cjs` | `node tests/parcours-cartes-zoom.cjs` | `test` | Collection : séries, loupe (souris, tactile), carte agrandie, défilement conservé, 390 px |
 | `parcours-booster.cjs` | `node tests/parcours-booster.cjs` | `test` | Booster gratuit dans `cartes.html`, animation normale et « réduire les animations » |
+| `parcours-eggs-pages.cjs` | `node tests/parcours-eggs-pages.cjs` | `test` | Secrets cachés : secousse dans `cartes.html` (capteur simulé, bouton 📳 iOS), rembobinage par appui long dans `historique.html`, « réduire les animations » |
 | `parcours-booster-x5.cjs` | `node tests/parcours-booster-x5.cjs` | à la main | Ouvrir 5 boosters payants d'un coup : bouton désactivé sans solde, 5 appels à identifiants distincts |
 | `parcours-cartes-offre.cjs` | `node tests/parcours-cartes-offre.cjs` | à la main | Proposer un échange : notification `trade_offer` avec l'identifiant de l'offre, pas de notification si la RPC échoue |
 | `parcours-echanges-filtres.cjs` | `node tests/parcours-echanges-filtres.cjs` | à la main | Filtres indépendants et aperçu dans l'éditeur d'offre d'échange |

@@ -417,6 +417,8 @@ export function createClient() {
       if (fn === 'hg_unread_count') return { data: 0, error: null };
       // Suivi des quêtes (quest-track.js) : rien à renvoyer ; l'appel reste dans window.__LOG.
       if (fn === 'hg_quest_track') return { data: null, error: null };
+      // Secrets cachés (migration 062) : un secret signalé est toujours « nouveau » ici ; l'appel reste dans window.__LOG.
+      if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un secret vient d\'être trouvé.', card: null, badge: null, found: 1 }, error: null };
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non. Première définition de hg_staff_directory : celle-ci répond.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: p.avatar_url, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on })), error: null };
       // Liste des membres : les fantômes n'y figurent pas (ils ne sont pas dans DB.hg_profiles).

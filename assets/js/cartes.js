@@ -1773,3 +1773,5 @@ async function boot() {
 }
 
 boot();
+// Secret caché « secousse » : module chargé à part (assets/js/eggs/pages.js).
+import('./eggs/pages.js').then((m) => m.secretsCartes()).catch(() => {});

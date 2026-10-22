@@ -345,3 +345,5 @@ form.addEventListener('submit', async (e) => {
 });
 
 await refresh();
+// Secret caché « rembobine » : module chargé à part (assets/js/eggs/pages.js).
+import('./eggs/pages.js').then((m) => m.secretsHistorique()).catch(() => {});

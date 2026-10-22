@@ -1,0 +1,52 @@
+/* ===== Humane Gang — secrets cachés des pages Cartes et Historique (assets/js/eggs/pages.js) ===== */
+
+/* ---------- Cartes : bouton 📳 (iOS) et tremblement ---------- */
+.egg-motion-btn { position: fixed; right: 12px; bottom: 12px; z-index: 40; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 20px; line-height: 1;
+  opacity: .6; cursor: pointer; }
+@media (hover: hover) { .egg-motion-btn:hover { opacity: 1; } }
+
+@keyframes egg-tremble {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-6px, 2px); }
+  20% { transform: translate(6px, -2px); }
+  30% { transform: translate(-5px, 1px); }
+  40% { transform: translate(5px, -1px); }
+  50% { transform: translate(-4px, 2px); }
+  60% { transform: translate(4px, 0); }
+  70% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, 0); }
+  90% { transform: translate(-1px, 0); }
+}
+.egg-shake { animation: egg-tremble .6s linear; }
+
+/* Proposition « Actualiser la page » après un booster offert */
+.egg-relance { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px;
+  max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+.egg-relance .btn { min-height: 44px; }
+
+/* ---------- Historique : rembobinage façon magnétoscope ---------- */
+.egg-vhs { position: fixed; inset: 0; z-index: 9999; pointer-events: none; overflow: hidden; background: rgba(8, 8, 12, .18); }
+.egg-vhs-bandes { position: absolute; inset: -40px 0 0; background: repeating-linear-gradient(to bottom, transparent 0 3px, rgba(0, 0, 0, .28) 3px 5px);
+  animation: egg-bandes .25s steps(2) infinite; }
+.egg-vhs-grain { position: absolute; inset: 0; opacity: .14; mix-blend-mode: overlay;
+  background-image: repeating-conic-gradient(#fff 0% 25%, #000 0% 50%); background-size: 3px 3px;
+  animation: egg-grain .3s steps(3) infinite; }
+.egg-vhs-hud { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; gap: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 15px; font-weight: 700; letter-spacing: 1px;
+  color: #fff; text-shadow: 0 0 6px rgba(255, 255, 255, .45); }
+.egg-vhs-rew { animation: egg-blink .8s steps(2, jump-none) infinite; }
+
+@keyframes egg-bandes { from { transform: translateY(0); } to { transform: translateY(5px); } }
+@keyframes egg-grain { 0% { background-position: 0 0; } 33% { background-position: 3px 1px; } 66% { background-position: 1px 3px; } 100% { background-position: 0 0; } }
+@keyframes egg-blink { from { opacity: 1; } to { opacity: .25; } }
+
+/* Réduire les animations : pas de tremblement, pas de bandes ni de grain (le secret est tout de même signalé) */
+@media (prefers-reduced-motion: reduce) {
+  .egg-shake, .egg-vhs-bandes, .egg-vhs-grain, .egg-vhs-rew { animation: none; }
+}
+
+/* Petit écran : texte un peu plus petit */
+@media (max-width: 600px) { .egg-relance { font-size: 13px; } }
