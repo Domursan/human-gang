@@ -516,6 +516,18 @@ async function withPending(btn, fn) {
 export async function mountStaffSection(root) {
   if (!root) return;
   ST.root = root;
+  // Écouteurs et abonnement temps réel posés une seule fois par racine (un remontage les doublerait).
+  if (staffBoundRoot !== root) { staffBoundRoot = root; bindStaffRoot(root); }
+  await load();
+}
+
+let staffBoundRoot = null;
+let staffUnsubscribe = null;
+/**
+ * Câble la zone du Staff (cases, boutons, temps réel) une seule fois.
+ * @param {HTMLElement} root Zone principale de la section.
+ */
+function bindStaffRoot(root) {
   // Case à cocher d'une permission : le brouillon suit le choix, la barre se met à jour.
   root.addEventListener('change', (e) => {
     const cb = e.target.closest?.('input[data-perm-key]');
@@ -530,10 +542,10 @@ export async function mountStaffSection(root) {
     if (b.matches('[data-staff-save]')) { saveDraft(b); return; }
     if (b.dataset.staffRetry) load();
   });
-  onTableChange('staff', ['hg_staff'], async () => { // temps réel : relecture du Staff, brouillon conservé
+  staffUnsubscribe?.();
+  staffUnsubscribe = onTableChange('staff', ['hg_staff'], async () => { // temps réel : relecture du Staff, brouillon conservé
     try { await loadStaff(); refresh(); } catch (e) { console.warn('[staff] temps réel', e); }
   });
-  await load();
 }
 
 /** Charge le Staff et affiche la fiche ; en cas d'échec, affiche un bouton « Réessayer ». */

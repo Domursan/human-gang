@@ -390,6 +390,7 @@ async function run(el, key, fn, okMsg) {
     await fn();
     if (okMsg) toast(okMsg, 'ok');
     await CTX.reload();
+    refreshDetail(); // redessin du détail avec le focus rendu au contrôle de l'action
   } catch (ex) {
     toast(`Action impossible : ${errMsg(ex)}`, 'error');
     if (el) el.disabled = false;

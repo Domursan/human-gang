@@ -43,7 +43,7 @@ const IC = {
 // recherche du dialogue, racine, fonction d'ouverture de fiche membre, et droit de gérer la structure des pages.
 const AC = {
   pages: [], rows: [], members: [], loaded: false, loading: null, error: null,
-  view: 'pages', openSlug: null, q: '', root: null, openMember: null, canPages: false,
+  view: 'pages', openSlug: null, q: '', root: null, boundRoot: null, openMember: null, canPages: false,
 };
 /* ---------- Outils ---------- */
 /** Renvoie les données d'une réponse Supabase, ou lève l'erreur si la requête a échoué. */
@@ -663,7 +663,8 @@ function refreshAccessActions() { if (currentSub() === 'membres/acces') setActio
 export async function mountAccessSection(root, { openMember } = {}) {
   if (!root) return;
   AC.root = root; AC.openMember = openMember || null;
-  bindSection(root);
+  // Écouteurs de la section posés une seule fois par racine (un remontage ne doit pas les doubler).
+  if (AC.boundRoot !== root) { AC.boundRoot = root; bindSection(root); }
   // Un changement d'accès (événement « hg:access », émis par emit()) redessine la section.
   window.addEventListener('hg:access', render);
   render();

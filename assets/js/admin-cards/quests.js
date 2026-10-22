@@ -8,8 +8,8 @@
 // openQuestDialog, questActions (gestionnaires des boutons data-act).
 // =====================================================================
 import { sb, toast, esc, $ } from '../core.js';
-import { ICON } from './constants.js';
-import { H } from './state.js';
+import { ICON, CFG_DEFAULT } from './constants.js';
+import { H, C } from './state.js';
 import { check, act, friendly, nf } from './helpers.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 
@@ -29,6 +29,16 @@ const CODE_RE = /^[a-z0-9_]{2,40}$/;
 
 /** État de la liste (chargée à l'ouverture de l'onglet). */
 export const Q = { rows: [], loaded: false, loading: null, error: null };
+
+/**
+ * Nombre de quêtes tirées chaque semaine : réglage cards.quetes_par_semaine (lu dans hg_settings.cards),
+ * sinon la valeur par défaut de CFG_DEFAULT.
+ * @returns {number}
+ */
+export function questsPerWeek() {
+  const v = C.cfgRaw?.quetes_par_semaine;
+  return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : CFG_DEFAULT.quetes_par_semaine;
+}
 
 /** Charge les modèles de quêtes puis redessine l'onglet. */
 export function loadQuests(force = false) {
@@ -54,11 +64,12 @@ export function questsPanel() {
   if (Q.error) return `<div class="empty">Impossible de charger les quêtes : ${esc(Q.error)} <button class="btn btn-ghost btn-sm" type="button" data-act="quest-retry">Réessayer</button></div>`;
   if (!Q.loaded) return '<div class="empty">Chargement des quêtes…</div>';
   const active = Q.rows.filter((q) => q.active).length;
+  const perWeek = questsPerWeek();
   const warn = active === 0
     ? 'Aucune quête active : les membres n\'en verront aucune cette semaine.'
-    : active < 3 ? `Seulement ${active} quête${active > 1 ? 's' : ''} active${active > 1 ? 's' : ''} : chaque semaine, les membres n'en auront que ${active}.` : '';
+    : active < perWeek ? `Seulement ${active} quête${active > 1 ? 's' : ''} active${active > 1 ? 's' : ''} : chaque semaine, les membres n'en auront que ${active}.` : '';
   return `<div class="acd-head">
-      <p class="small muted">Chaque semaine (du lundi au dimanche, heure suisse), 3 quêtes sont tirées au sort parmi les modèles <strong>actifs</strong> ; le tirage est le même pour tout le monde. Un membre touche les Paillettes une fois par quête et par semaine, en réclamant la quête une fois atteinte.</p>
+      <p class="small muted">Chaque semaine (du lundi au dimanche, heure suisse), ${perWeek} quête${perWeek > 1 ? 's' : ''} sont tirées au sort parmi les modèles <strong>actifs</strong> ; le tirage est le même pour tout le monde. Un membre touche les Paillettes une fois par quête et par semaine, en réclamant la quête une fois atteinte.</p>
       <button class="btn btn-primary" type="button" data-act="quest-new">${ICON.plus} Nouvelle quête</button>
     </div>
     ${warn ? `<p class="acd-note" role="note">${esc(warn)}</p>` : ''}
@@ -105,7 +116,7 @@ function formHtml(q, isNew) {
         <span class="small muted" id="aq-sort-h">Plus petit = affichée en premier. N'influence pas le tirage au sort.</span></div>
       <label class="switch"><input type="checkbox" name="active"${(v.active ?? true) ? ' checked' : ''} aria-describedby="aq-active-h"><span class="switch-ui" aria-hidden="true"></span><span>Quête active</span></label>
     </div>
-    <p class="small muted" id="aq-active-h">Une quête inactive n'est jamais tirée. Les quêtes actives sont tirées au sort, 3 par semaine.</p>
+    <p class="small muted" id="aq-active-h">Une quête inactive n'est jamais tirée. Les quêtes actives sont tirées au sort, ${questsPerWeek()} par semaine.</p>
   </div>`;
 }
 

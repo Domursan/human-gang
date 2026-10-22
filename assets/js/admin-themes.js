@@ -578,7 +578,13 @@ export async function mountThemesSection(container) {
   async function uploadLogo(btn) {
     const input = editorHost.querySelector('[data-el="file"]');
     input.value = '';
-    const file = await new Promise((resolve) => { input.onchange = () => resolve(input.files?.[0] ?? null); input.click(); });
+    // La promesse se résout dans tous les cas : fichier choisi, ou fenêtre annulée (événement « cancel », sans quoi elle resterait pendante).
+    const file = await new Promise((resolve) => {
+      const done = (f) => { input.onchange = null; input.oncancel = null; resolve(f); };
+      input.onchange = () => done(input.files?.[0] ?? null);
+      input.oncancel = () => done(null);
+      input.click();
+    });
     if (!file) return;
     await busy(btn, async () => {
       if (!EXT[file.type]) throw new Error('Choisis une image (PNG, JPG, WebP, GIF ou SVG).');

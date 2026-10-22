@@ -74,10 +74,14 @@ async function setStatus(idea, status) {
     renderIdeas(); // remet le sélecteur sur le statut réel
     return;
   }
-  await loadIdeas();
+  // Écriture réussie : le nouveau statut est gardé en mémoire, même si le rechargement de la liste échoue.
+  const local = S.ideas.find((x) => x.id === idea.id);
+  if (local) local.status = status;
+  let reloadErr = null;
+  try { await loadIdeas(); } catch (e) { reloadErr = e; }
   renderIdeas();
   renderStats();
-  toast(`Idée ${LABEL[status].toLowerCase()}`, 'ok');
+  toast(reloadErr ? `Statut enregistré, mais la liste n'a pas pu être rechargée : ${errMsg(reloadErr)}` : `Idée ${LABEL[status].toLowerCase()}`, reloadErr ? 'error' : 'ok');
   if (status === 'retenue') await offerBadge(idea.user_id);
   renderIdeas();
 }

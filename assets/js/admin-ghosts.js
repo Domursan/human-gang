@@ -17,6 +17,7 @@ import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { fmtDay } from './utils.js';
 import { openDrawer } from './admin/ui/drawer.js';
+import { loadInviteConfig, inviteConfig } from './invite-config.js';
 import { renderDetailHeader } from './admin/ui/detail-header.js';
 
 /* ---------- Constantes et état ---------- */
@@ -406,12 +407,15 @@ async function createGhost(form) {
  * @param {HTMLButtonElement} btn Bouton d'action.
  */
 async function invite(g, btn) {
+  await loadInviteConfig(); // réglages lus une fois (repli sur les défauts)
   if (ghostCodeActive(g) && !(await confirmBox('Régénérer le code ?',
     `L'ancien code (${g.invite_code}) ne fonctionnera plus. Un seul code est valable par fantôme.`, { ok: 'Régénérer' }))) return;
   await busy(btn, async () => {
     const res = check(await sb.rpc('hg_ghost_invite', { p_ghost: g.id }));
     const code = typeof res === 'string' ? res : res?.code;
-    toast(code ? `Code ${code} généré (valable 60 jours)` : 'Code généré', 'ok');
+    // La durée réelle vient du réglage invites.fantome_jours (la fonction SQL le lit aussi).
+    const days = inviteConfig().fantome_jours;
+    toast(code ? `Code ${code} généré (valable ${days} jours)` : 'Code généré', 'ok');
     await refreshGhosts();
   });
 }

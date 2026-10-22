@@ -36,6 +36,7 @@ function check(res) { if (res.error) throw res.error; return res.data; }
 const M = {
   convs: [], pseudo: new Map(), sel: null, conv: null, msgs: [], lastId: 0, more: false,
   list: null, reader: null, thread: null, mounted: false, token: 0,
+  convTok: 0, convsPending: null,
 };
 
 /* ---------- Conversations : titres et lignes de la liste ---------- */
@@ -77,7 +78,13 @@ async function loadPseudos() {
 }
 /** Charge la liste des conversations visibles par l'admin. */
 async function loadConvs() {
-  M.convs = check(await sb.rpc('hg_admin_conversations')) ?? [];
+  // Numéro de requête : une réponse plus ancienne que la dernière demande est ignorée.
+  const tok = ++M.convTok;
+  M.convsPending = (async () => {
+    const data = check(await sb.rpc('hg_admin_conversations')) ?? [];
+    if (tok === M.convTok) M.convs = data;
+  })();
+  return M.convsPending;
 }
 
 // Les messages passent par la RPC hg_admin_read_conversation, qui journalise chaque lecture (hg_admin_access_log).
@@ -267,9 +274,11 @@ export function listMessages(el) {
 }
 
 /** Affichage (registerSub open, à chaque visite) : sélection, actions de l'en-tête. */
-export function openMessages(_el, { id } = {}) {
+export async function openMessages(_el, { id } = {}) {
   setActions(messageActions());
   if (!id) { M.token++; M.sel = null; M.conv = null; M.list?.select(null); paintReader(); return; }
+  // Première visite : la liste peut encore se charger. On attend sa réponse avant de dire « introuvable ».
+  if (!M.convs.some((c) => c.id === id)) { try { await M.convsPending; } catch { /* erreur déjà signalée par refresh */ } }
   if (!M.convs.some((c) => c.id === id)) { toast('Conversation introuvable.', 'error'); return; }
   openConv(id);
 }
