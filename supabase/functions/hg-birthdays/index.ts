@@ -11,13 +11,15 @@
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), CRON_SECRET, DISCORD_BOT_TOKEN, SITE_URL (facultatif).
 // Textes : modèles « birthday_dm » et « birthday_announce » (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 // Journal : une ligne hg_bot_log (kind « auto:anniversaire ») quand il y a eu un envoi, une tentative ou un échec.
-// Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/mentions.ts, ../_shared/cron-auth.ts ;
+// Salon : bot.channels.birthday, sinon birthday_channel_id (ancien réglage), sinon le salon d'annonces (../_shared/channels.ts).
+// Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/mentions.ts, ../_shared/channels.ts, ../_shared/cron-auth.ts ;
 //   tables hg_profiles, hg_birthday_log, hg_activity, hg_settings, hg_bot_log ; fonction SQL hg_cron_gate.
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
+import { channelFor, type ChannelBot } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 
 // Client avec la clé service role : la fonction lit les profils de tous les membres.
@@ -95,9 +97,9 @@ Deno.serve(async (req) => {
 
   // Réglages du bot : salons, notifications et mentions.
   const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
-  const bot = (s?.value ?? {}) as { announce_channel_id?: string; birthday_channel_id?: string; notify?: Record<string, boolean> } & MentionBot;
-  // Salon des anniversaires : le sien s'il est réglé, sinon le salon d'annonces
-  const bdayChannel = isSnowflake(bot.birthday_channel_id) ? bot.birthday_channel_id : bot.announce_channel_id;
+  const bot = (s?.value ?? {}) as ChannelBot & { notify?: Record<string, boolean> } & MentionBot;
+  // Salon des anniversaires : bot.channels.birthday, sinon birthday_channel_id, sinon le salon d'annonces
+  const bdayChannel = channelFor(bot, 'birthday');
   const botOn = bot.notify?.birthday !== false && hasBotToken();
 
   const out = { today: candidates.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };

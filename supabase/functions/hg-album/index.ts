@@ -12,6 +12,7 @@
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { Zip, ZipPassThrough } from 'npm:fflate@0.8.2';
+import { CORS, jsonResponse } from '../_shared/discord.ts';
 
 /** Bucket privé qui contient les photos des sorties. */
 const BUCKET = 'hg-photos';
@@ -21,12 +22,6 @@ const DEFAUT_MAX_MO = 300;
 /** Identifiant de sortie attendu : un UUID. Toute autre valeur est refusée avant toute requête. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** En-têtes CORS : le site peut appeler la fonction depuis le navigateur. */
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
 /**
  * Plafonds du ZIP (hg_settings.albums) avec repli sur les défauts ; une lecture en échec garde les défauts.
  * @param {ReturnType<typeof createClient>} db Client Supabase de l'appelant (RLS active).
@@ -49,8 +44,7 @@ async function lireLimites(db: ReturnType<typeof createClient>): Promise<{ maxPh
  * @param {number} [status] Code HTTP (200 par défaut).
  * @returns {Response} La réponse prête à renvoyer.
  */
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+const json = (body: unknown, status = 200) => jsonResponse(body, status);
 
 /**
  * Transforme un titre en nom de fichier simple : sans accents, sans espaces, en minuscules, 60 caractères au plus.

@@ -7,11 +7,11 @@ importent aussi `../_shared/dyn-announce.ts`).
 
 | Fonction | Fichiers à envoyer | verify_jwt |
 |---|---|---|
-| `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `true` |
+| `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/bot-media.ts`, `_shared/reglages.ts` | `true` |
 | `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
-| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
-| `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts` | `false` |
-| `hg-album` | `hg-album/index.ts` (seul fichier ; dépendances `npm:fflate`, `npm:@supabase/supabase-js`) | `true` |
+| `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts` | `false` |
+| `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts` | `false` |
+| `hg-album` | `hg-album/index.ts`, `_shared/discord.ts` (CORS et réponse JSON ; aucun appel Discord, pas de jeton) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` | `true` |
 | `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
@@ -33,6 +33,13 @@ Pour `hg-notify` et `hg-cron`, ajouter aussi :
 ```
   { "name": "../_shared/dyn-announce.ts",  "content": "<supabase/functions/_shared/dyn-announce.ts>" }
 ```
+Pour `hg-notify`, `hg-cron` et `hg-birthdays`, ajouter aussi (salons par type, `_shared/channels.ts`, et mentions) :
+```
+  { "name": "../_shared/channels.ts",      "content": "<supabase/functions/_shared/channels.ts>" },
+  { "name": "../_shared/mentions.ts",      "content": "<supabase/functions/_shared/mentions.ts>" }
+```
+(`hg-notify` et `hg-cron` importent aussi `../_shared/reglages.ts` ; `hg-notify` importe `../_shared/bot-media.ts`.)
+Pour `hg-album`, ajouter `{ "name": "../_shared/discord.ts", "content": "<supabase/functions/_shared/discord.ts>" }` (en plus de `index.ts`).
 
 ## Avec la CLI
 ```
@@ -81,6 +88,18 @@ commande de la tâche (visible des administrateurs du projet) ; pour éviter cel
 
 Journal : chaque passage qui fait quelque chose (annonce, rappel, anniversaire, échec) laisse une ligne dans
 `hg_bot_log` (kinds `auto:cron` et `auto:anniversaire`), visible dans l'historique du bot de l'administration.
+
+## Salons des annonces par type (bot.channels) et migration 056
+
+- Réglage : `hg_settings.bot.channels = { <type>: '<ID de salon>' }`, saisi dans la section « Salon par type d'annonce »
+  de la page Bot Discord. Types : `draw`, `irl`, `birthday`, `dyn`, `card_pull`, `card_trade`. Un type vide utilise le salon d'annonces.
+- Anniversaires : `channels.birthday`, sinon l'ancien réglage `birthday_channel_id` (gardé en miroir par l'admin), sinon le salon d'annonces.
+- Les MP et l'annonce manuelle de l'admin (`admin_dm`) ne changent pas.
+- Migration `supabase/migrations/056_canaux_annonces.sql` : ajoute `hg_card_trades.notified_at` (nullable, idempotente).
+  **L'appliquer avant de redéployer `hg-notify`** : l'anti-doublon des offres d'échange (`trade_offer`) écrit cette colonne.
+- Redéployer, dans cet ordre : `hg-notify`, `hg-cron`, `hg-birthdays` (tableau ci-dessus, avec `_shared/channels.ts`), puis `hg-album`
+  (il importe désormais `_shared/discord.ts`).
+- Tant que ces fonctions ne sont pas redéployées, le site continue de fonctionner : l'ancien comportement (salon d'annonces) reste valable.
 
 ## Cartes à collectionner : redéployer hg-notify
 Les événements `card_pull` (belle carte obtenue) et `card_trade` (échange conclu) sont dans `hg-notify/index.ts`.
