@@ -336,6 +336,8 @@ async function onClick(ev) {
   const ed = ssCurrent();
   if (t.dataset.delExcl) return deleteExclusion(t);
   const act = t.dataset.ssAct;
+  // Ces actions portent sur l'édition courante : sans édition sélectionnée, on ne fait rien.
+  if (!ed && ['draw', 'draw-manual', 'redraw', 'redraw-manual', 'card-upload', 'card-reset', 'delete'].includes(act)) return;
   if (act === 'new') return openCreate();
   if (act === 'excl-new') return openExcl();
   if (act === 'draw') return draw(t, ed);
