@@ -6,9 +6,25 @@
 // Le focus part sur le bouton le moins dangereux : « Annuler » pour une action destructive,
 // « Valider » sinon (ou sur le champ de saisie quand il existe). Le texte est posé en textContent.
 
+/*
+ * Rôle : ouvre une boîte de dialogue de confirmation (ou de saisie courte) et attend la réponse.
+ * Page : toutes les pages qui demandent une confirmation (suppressions, validations, saisies).
+ * Dépendances : feuille de style assets/css/ui-confirm.css (chargée une seule fois).
+ * Exporte : confirmBox.
+ */
+
+/* ---------- Constantes et état ---------- */
+
+/** Adresse de la feuille de style, relative à ce fichier. */
 const CSS_HREF = new URL('../css/ui-confirm.css', import.meta.url).href;
+/** Compteur qui rend unique l'identifiant du titre et du texte de chaque boîte ouverte. */
 let seq = 0;
 
+/* ---------- Styles ---------- */
+
+/**
+ * Ajoute la feuille de style à la page, si elle n'y est pas déjà (par son attribut ou son adresse).
+ */
 function ensureStyles() {
   if (document.querySelector('link[data-ui-confirm], link[href$="ui-confirm.css"]')) return;
   const link = document.createElement('link');
@@ -18,6 +34,18 @@ function ensureStyles() {
   document.head.append(link);
 }
 
+/* ---------- Boîte de confirmation ---------- */
+
+/**
+ * Affiche la boîte de confirmation et renvoie la réponse une fois qu'elle est fermée.
+ * Le dialogue est retiré du document à la fermeture (aucune trace laissée).
+ * @param {string} title Titre (texte brut).
+ * @param {string} [text=''] Explication facultative (texte brut).
+ * @param {{ok?: string, cancel?: string, danger?: boolean, input?: ({label?: string, value?: string, placeholder?: string, required?: boolean}|null)}} [options]
+ *   ok / cancel : libellés des boutons ; danger : bouton rouge et focus sur « Annuler » ;
+ *   input : ajoute un champ de saisie.
+ * @returns {Promise<boolean|string|false>} true si validé, false si annulé ; avec input, la saisie (sans espaces de bord) ou false.
+ */
 export function confirmBox(title, text = '', { ok = 'Confirmer', cancel = 'Annuler', danger = false, input = null } = {}) {
   ensureStyles();
   const n = ++seq;

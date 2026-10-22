@@ -1,6 +1,14 @@
 // ===== Humane Gang : petits utilitaires partagés =====
 // Sans dépendance (ni core.js ni Supabase) : utilisable aussi par les pages légères (intro).
 // Remplace les copies locales de plural, fmtDay, safeUrl, pad et rnd.
+/*
+ * Rôle : petits outils de texte, de date et de nombre, utilisés par plusieurs pages (accords, dates, URL, rnd).
+ * Page : toutes les pages (y compris l'intro, qui n'utilise pas core.js).
+ * Dépendances : aucune.
+ * Exporte : pluralWord, pluralCount, fmtDay, fmtDayInZone, safeUrl, pad, rnd.
+ */
+
+/* ---------- Accords ---------- */
 
 /** Mot accordé : singulier pour 0 et 1, pluriel au-delà. Ne renvoie pas le nombre. */
 export const pluralWord = (n, one, many) => (n > 1 ? many : one);
@@ -24,6 +32,7 @@ export const fmtDayInZone = (iso, timeZone) =>
 export function safeUrl(raw) {
   const s = String(raw ?? '').trim();
   if (!s) return null;
+  /** Analyse v comme URL ; renvoie son adresse si elle est http(s) avec un nom de domaine, sinon null. */
   const tryParse = (v) => { try { const u = new URL(v); return ['http:', 'https:'].includes(u.protocol) && u.hostname.includes('.') ? u.href : null; } catch { return null; } };
   return /^[a-z][a-z0-9+.-]*:/i.test(s) ? tryParse(s) : tryParse(`https://${s}`);
 }

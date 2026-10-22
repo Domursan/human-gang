@@ -1,12 +1,31 @@
 // ===== Humane Gang — petits sons synthétisés (WebAudio, aucun fichier) =====
 // playSound(name) : 'click' | 'success' | 'error' | 'message' | 'badge'
 // Ne fait rien si les sons sont désactivés dans les préférences (localStorage 'hg_prefs', défaut : off).
+/*
+ * Rôle : produit de petits sons (clic, succès, erreur, message, badge) avec l'API WebAudio, sans fichier audio.
+ * Page : toutes les pages (ui.js, badges.js, prefs.js, godmode.js, etc.). Le son reste coupé tant que
+ *   l'utilisateur ne l'a pas activé dans les préférences d'affichage.
+ * Dépendances : aucune (lit seulement la préférence dans localStorage « hg_prefs »).
+ * Exporte : playSound.
+ */
 
+/* ---------- Constantes et état ---------- */
+
+/** Clé localStorage des préférences (son activé, volume). */
 const PREFS_KEY = 'hg_prefs';
+/** Contexte audio, créé à la première demande (le navigateur l'exige après un geste de l'utilisateur). */
 let ctx = null;
+/** Sortie générale (gain) : tous les sons passent par elle, ce qui règle le volume. */
 let master = null;
+/** Dernier instant (performance.now) où chaque son a été joué, pour éviter les rafales. */
 let lastPlay = {};
 
+/* ---------- Préférences et contexte audio ---------- */
+
+/**
+ * Lit les préférences de son : activé ou non, et volume (entre 0 et 1, 0,6 par défaut).
+ * @returns {{on: boolean, volume: number}}
+ */
 function soundPrefs() {
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null') || {};
@@ -15,6 +34,10 @@ function soundPrefs() {
   } catch { return { on: false, volume: 0.6 }; }
 }
 
+/**
+ * Crée (une seule fois) le contexte audio et sa sortie générale.
+ * @returns {AudioContext|null} Le contexte, ou null si WebAudio n'est pas disponible.
+ */
 function audio() {
   if (ctx) return ctx;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -33,9 +56,19 @@ function unlock() {
   const c = audio();
   if (c && c.state === 'suspended') c.resume().catch(() => {});
 }
+// Premier geste (souris, clavier, tactile) sur la page : on débloque le son sans attendre le premier play
 ['pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, unlock, { capture: true, passive: true }));
 
-/** Une note : oscillateur + enveloppe courte. t = départ (s, relatif), d = durée (s). */
+/* ---------- Synthèse ---------- */
+
+/**
+ * Une note : oscillateur + enveloppe courte. t = départ (s, relatif), d = durée (s).
+ * L'enveloppe monte vite (attaque) puis descend jusqu'au silence, pour éviter les clics.
+ * @param {AudioContext} c Contexte audio.
+ * @param {AudioNode} out Sortie où envoyer la note (master).
+ * @param {object} p Paramètres : f (fréquence Hz), t (départ), d (durée), type (forme d'onde),
+ *   g (volume de crête), f2 (fréquence finale pour une glissade), attack (durée de l'attaque).
+ */
 function note(c, out, { f, t = 0, d = 0.1, type = 'square', g = 0.2, f2 = null, attack = 0.004 }) {
   const t0 = c.currentTime + t;
   const o = c.createOscillator();
@@ -50,8 +83,14 @@ function note(c, out, { f, t = 0, d = 0.1, type = 'square', g = 0.2, f2 = null, 
   o.start(t0); o.stop(t0 + d + 0.02);
 }
 
-const N = (n) => 440 * 2 ** ((n - 69) / 12); // numéro MIDI -> Hz
+/**
+ * Numéro de note MIDI vers fréquence en Hz (69 = A4 = 440 Hz).
+ * @param {number} n Numéro MIDI.
+ * @returns {number} Fréquence en Hz.
+ */
+const N = (n) => 440 * 2 ** ((n - 69) / 12);
 
+/** Les sons, par nom. Chacun reçoit le contexte et la sortie, et programme ses notes. */
 const SOUNDS = {
   click: (c, o) => note(c, o, { f: 1400, f2: 900, d: 0.035, type: 'square', g: 0.05 }),
   success: (c, o) => {
@@ -77,7 +116,13 @@ const SOUNDS = {
   },
 };
 
-/** Joue un son court. Silencieux (et sans erreur) si les sons sont coupés ou si WebAudio est indisponible. */
+/* ---------- Point d'entrée ---------- */
+
+/**
+ * Joue un son court. Silencieux (et sans erreur) si les sons sont coupés ou si WebAudio est indisponible.
+ * Un même son ne peut pas repartir moins de 40 ms après le précédent (anti-rafale).
+ * @param {'click'|'success'|'error'|'message'|'badge'} name Nom du son.
+ */
 export function playSound(name) {
   const fn = SOUNDS[name];
   const p = soundPrefs();
@@ -93,5 +138,3 @@ export function playSound(name) {
     fn(c, master);
   } catch (e) { console.warn('[son]', e); }
 }
-
-export const SOUND_NAMES = Object.keys(SOUNDS);

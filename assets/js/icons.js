@@ -4,8 +4,20 @@
 // stroke : épaisseur du trait (défaut 2). Les tracés qui différaient sous un même nom sont gardés
 // sous des noms distincts (ex. trash, trash2, trash3) pour ne rien changer visuellement.
 
+/*
+ * Rôle : fournit les icônes SVG du site. Un seul dictionnaire de tracés (PATHS) et une fonction svg()
+ * qui assemble la balise complète. Les icônes sont décoratives (aria-hidden) et prennent la couleur du texte.
+ * Page : toutes les pages (les pages d'administration et les pages membre les importent).
+ * Dépendances : aucune.
+ * Exporte : svg.
+ */
+
+/**
+ * Tracés des icônes, par nom court (contenu de la balise <svg>, sans la balise elle-même).
+ * Un nom inconnu fait échouer svg() : vérifier l'orthographe avant d'ajouter un appel.
+ */
 const PATHS = {
-  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
   arrow2: '<path d="M4 12h15M13 6l6 6-6 6"/>',
   arrow3: '<path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
@@ -49,10 +61,8 @@ const PATHS = {
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   lock2: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
-  mask: '<path d="M3 8c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0v3c0 4-3 6-5.5 6-1.6 0-2.6-1.3-3.5-3-.9 1.7-1.9 3-3.5 3C6 17 3 15 3 11V8z"/>',
   mask2: '<path d="M3 8c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0v3c0 4-3 6-5.5 6-1.6 0-2.6-1.3-3.5-3-.9 1.7-1.9 3-3.5 3C6 17 3 15 3 11V8z"/><path d="M7 11.5h2M15 11.5h2"/>',
   megaphone: '<path d="M3 11v3l12 5V6L3 11z"/><path d="M15 9a3 3 0 0 1 0 6M6 15l1 5h3l-1-4"/>',
-  merge: '<circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><path d="M6 8.5v7M8.5 6h3a4 4 0 0 1 4 4v0"/>',
   msg: '<path d="M4 5h16v11H9l-5 4z"/>',
   next: '<path d="M9 5l7 7-7 7"/>',
   no: '<path d="M7 7l10 10M17 7L7 17"/>',
@@ -67,7 +77,6 @@ const PATHS = {
   prev: '<path d="M15 18l-6-6 6-6"/>',
   pulse: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
   qr: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h3M21 18v3M17.5 17.5h.01"/>',
-  refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.6L20 8"/><path d="M20 3v5h-5"/>',
   replay: '<path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
   search2: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
@@ -90,6 +99,13 @@ const PATHS = {
   warn2: '<path d="M12 3 2 20h20L12 3zM12 10v4M12 17h.01"/>',
 };
 
+/**
+ * Renvoie le HTML d'une icône SVG.
+ * @param {string} name Nom de l'icône (clé de PATHS). Jette une erreur si le nom est inconnu.
+ * @param {{size?: number, stroke?: number}} [options] size : largeur et hauteur en px (absent = taille CSS) ;
+ *   stroke : épaisseur du trait (défaut 2).
+ * @returns {string} Balise <svg> prête à insérer dans un innerHTML.
+ */
 export function svg(name, { size, stroke = 2 } = {}) {
   const inner = PATHS[name];
   if (inner === undefined) throw new Error(`icône inconnue : ${name}`);
