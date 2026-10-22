@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <script src="/human-gang/assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page introuvable · Humane Gang</title>
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Cette page n'existe pas, mais le Humane Gang a quelques paillettes à te proposer.">
+  <meta name="theme-color" content="#0b0a10">
+  <link rel="icon" type="image/png" href="/human-gang/assets/img/favicon-64.png">
+  <link rel="apple-touch-icon" href="/human-gang/assets/img/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/human-gang/assets/css/base.css">
+  <link rel="stylesheet" href="/human-gang/assets/css/eggs.css">
+</head>
+<body>
+  <main class="container e404" id="app">
+    <section class="e404-carte" aria-labelledby="e404-titre">
+      <p class="e404-code">ERREUR 404</p>
+      <h1 id="e404-titre" class="display">Page introuvable…</h1>
+      <p>mais tu peux attraper des paillettes !</p>
+
+      <div class="jeu404" aria-describedby="jeu-aide">
+        <canvas id="jeu-canvas" class="jeu404-canvas" width="360" height="420" tabindex="0" role="application"
+          aria-label="Jeu des paillettes : déplace le chapeau du gang pour attraper les paillettes qui tombent"></canvas>
+        <p id="jeu-aide" class="small muted">Souris, doigt ou flèches gauche et droite : déplace le chapeau. 30 secondes.</p>
+        <div class="jeu404-hud">
+          <p>Score : <output id="jeu-score" for="jeu-canvas">0</output></p>
+          <p>Temps : <span id="jeu-temps">30</span> s</p>
+        </div>
+        <p id="jeu-message" class="jeu404-msg" role="status"></p>
+        <button id="jeu-bouton" class="btn btn-primary" type="button">Jouer</button>
+      </div>
+
+      <a class="btn btn-light e404-accueil" href="/human-gang/">Retour à l'accueil</a>
+    </section>
+  </main>
+  <script type="module" src="/human-gang/assets/js/eggs/jeu404.js"></script>
+</body>
+</html>

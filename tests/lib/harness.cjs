@@ -78,7 +78,11 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     let f = path.join(ROOT, decodeURIComponent(rel));
     if (!f.startsWith(ROOT + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
-    if (!fs.existsSync(f)) return route.fulfill({ status: 404, body: 'nf' });
+    if (!fs.existsSync(f)) { // comme GitHub Pages : une adresse inconnue reçoit 404.html, avec le statut 404
+      const page404 = path.join(ROOT, '404.html');
+      if (fs.existsSync(page404)) return route.fulfill({ status: 404, body: fs.readFileSync(page404), contentType: 'text/html' });
+      return route.fulfill({ status: 404, body: 'nf' });
+    }
     route.fulfill({ body: fs.readFileSync(f), contentType: TYPES[path.extname(f)] || 'application/octet-stream' });
   });
   const page = await ctx.newPage();
