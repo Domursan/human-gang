@@ -267,6 +267,10 @@ class Q {
   /** Permet d'attendre la requête avec await : exécute run() et transmet son résultat. */
   then(res, rej) { return Promise.resolve(this.run()).then(res, rej); }
 }
+// Scénarios des affiches et des tutos : valeurs de réglages surchargées (S.cardsCfg fusionné dans la configuration, S.badgesCfg = hg_settings.badges).
+if (S.cardsCfg) Object.assign(window.__CARDS.config, S.cardsCfg);
+if (S.badgesCfg) DB.hg_settings.push({ key: 'badges', value: S.badgesCfg });
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {
@@ -294,6 +298,11 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Configuration du jeu seule (migration 018) : lue par les affiches et les tutos. S.cardsFail = la RPC refuse.
+      if (fn === 'hg_card_cfg') {
+        if (S.cardsFail) return { data: null, error: { message: 'permission denied for function hg_card_cfg' } };
+        return { data: window.__CARDS.config, error: null };
+      }
       // Droits codés en dur : admin avec tout le catalogue, pour cette fixture.
       if (fn === 'hg_my_perms') return { data: { is_admin: true, perms: ['membres', 'evenements', 'souvenirs', 'secret_santa', 'cartes', 'badges', 'themes', 'messages', 'support', 'bot', 'reglages', 'journal'] }, error: null };
       // Ajustement de Paillettes : seul le membre connecté est crédité.

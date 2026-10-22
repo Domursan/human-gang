@@ -103,10 +103,10 @@ export default {
       page: "membre.html",
       steps: [
         { title: "Ouvre tes badges", text: "Sur ta carte de membre, la section « Badges » liste ceux que tu as obtenus, avec la date d'obtention." },
-        { title: "Participe au Secret Santa", text: "« Premier Noël » : une édition révélée ou terminée. « Vétéran » : 5 Secret Santa. « Liste parfaite » : au moins un souhait avant le tirage, un seul suffit. « Lutin express » : cadeau envoyé le premier de l'édition. « Sur le fil » : cadeau envoyé le dernier jour." },
-        { title: "Viens aux sorties", text: "« Toujours là » : présent à 5 sorties IRL. « Organisateur » : avoir créé une sortie. « Globe-trotter » : des sorties dans 3 lieux différents." },
-        { title: "Partage et participe", text: "« Paparazzi » : 50 photos ajoutées aux albums. « Boîte à idées » : une idée retenue par l'admin. « Chasseur de bugs » : un bug signalé via l'assistance et traité." },
-        { title: "Ancienneté et fidélité", text: "« Fidèle » : 3 ans dans le gang depuis la date d'arrivée. « Membre fondateur » : arrivé dès la première année du gang. « Ancienneté » : badge à niveaux, voir le tuto dédié. « Saisonnier » : connecté pendant les 7 thèmes." },
+        { title: "Participe au Secret Santa", text: "« Premier Noël » : une édition révélée ou terminée. « Vétéran » : {{badges.criteres.veteran_editions|5}} Secret Santa. « Liste parfaite » : au moins un souhait avant le tirage, un seul suffit. « Lutin express » : cadeau envoyé le premier de l'édition. « Sur le fil » : cadeau envoyé le dernier jour." },
+        { title: "Viens aux sorties", text: "« Toujours là » : présent à {{badges.criteres.toujours_la_sorties|5}} sorties IRL. « Organisateur » : avoir créé une sortie. « Globe-trotter » : des sorties dans {{badges.criteres.globe_trotter_lieux|3}} lieux différents." },
+        { title: "Partage et participe", text: "« Paparazzi » : {{badges.criteres.paparazzi_photos|50}} photos ajoutées aux albums. « Boîte à idées » : une idée retenue par l'admin. « Chasseur de bugs » : un bug signalé via l'assistance et traité." },
+        { title: "Ancienneté et fidélité", text: "« Fidèle » : {{badges.criteres.fidele_annees|3}} ans dans le gang depuis la date d'arrivée. « Membre fondateur » : arrivé dès la première année du gang. « Ancienneté » : badge à niveaux, voir le tuto dédié. « Saisonnier » : connecté pendant les {{badges.criteres.saisonnier_themes|7}} thèmes." },
       ],
       tips: [
         "Les badges sont attribués automatiquement, environ une fois par heure : patiente un peu après avoir rempli le critère.",

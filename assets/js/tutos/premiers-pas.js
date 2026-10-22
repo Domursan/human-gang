@@ -19,7 +19,7 @@ export default {
       summary: 'Rejoindre le gang avec le code HG-XXXX reçu d\'un membre, puis confirmer son e-mail.',
       page: 'compte.html',
       steps: [
-        { title: 'Récupère ton code', text: 'Un membre te donne un code de la forme HG-XXXX. S\'il t\'envoie un lien d\'invitation, ouvre-le : il affiche ton code personnel, avec un bouton « Copier le code ». Le code est valable 48 h, pour un seul compte.' },
+        { title: 'Récupère ton code', text: 'Un membre te donne un code de la forme HG-XXXX. S\'il t\'envoie un lien d\'invitation, ouvre-le : il affiche ton code personnel, avec un bouton « Copier le code ». Le code est valable {{invites.validite_heures|48}} h, pour un seul compte.' },
         { title: 'Ouvre l\'onglet « Rejoindre le gang »', text: 'Sur la page Mon compte, clique sur l\'onglet « Rejoindre le gang ». Si tu viens du lien d\'invitation, ton code est déjà rempli.' },
         { title: 'Remplis le formulaire', text: 'Entre le code d\'invitation, ton pseudo (2 à 32 caractères, visible par le gang), ton e-mail (privé) et un mot de passe d\'au moins 8 caractères.' },
         { title: 'Accepte la confidentialité et crée le compte', text: 'Coche « J\'ai lu et j\'accepte la politique de confidentialité », puis clique sur « Créer mon compte ».' },

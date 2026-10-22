@@ -96,7 +96,7 @@
   footer .mono { font-family: "DejaVu Sans Mono", "Courier New", monospace; color: var(--gold); letter-spacing: .08em; }
 </style>
 </head>
-<body>
+<body data-affiche="badges">
 <div class="rainbow"></div>
 <div class="page">
 
@@ -105,128 +105,20 @@
     <div>
       <p class="kicker">Humane Gang · Guide des badges</p>
       <h1>Les badges du<span class="soft">Humane Gang</span></h1>
-      <p class="intro">17 badges à décrocher en participant à la vie du gang, du Secret Santa aux soirées.</p>
-      <span class="pill">+500 Paillettes par badge</span>
+      <p class="intro"><span id="nb-badges">17</span> badges à décrocher en participant à la vie du gang, du Secret Santa aux soirées.</p>
+      <span class="pill">+<span data-cfg="cartes.rewards.badge">500</span> Paillettes par badge</span>
     </div>
   </header>
 
-  <!-- Secret Santa -->
-  <section>
-    <div class="sec-title"><h2>Secret Santa</h2><span class="tag">5 badges</span></div>
-    <div class="grid five">
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/premier_noel.png?v=1792524833665" alt=""></div>
-        <div><h3>Premier Noël</h3><p>A participé à un Secret Santa terminé.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/veteran.png?v=1792524838448" alt=""></div>
-        <div><h3>Vétéran</h3><p>A participé à 5 Secret Santa.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/lutin_express.png?v=1792524869344" alt=""></div>
-        <div><h3>Lutin express</h3><p>A envoyé son cadeau en premier.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/sur_le_fil.png?v=1792524930375" alt=""></div>
-        <div><h3>Sur le fil</h3><p>A envoyé son cadeau le dernier jour.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/liste_parfaite.png?v=1792524990655" alt=""></div>
-        <div><h3>Liste parfaite</h3><p>Un souhait dans sa liste avant le tirage.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sorties IRL -->
-  <section>
-    <div class="sec-title"><h2>Sorties IRL</h2><span class="tag">3 badges</span></div>
-    <div class="grid three">
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/toujours_la.png?v=1792525011471" alt=""></div>
-        <div><h3>Toujours là</h3><p>Présent à 5 sorties passées (RSVP « oui »).</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/organisateur.png?v=1792525054543" alt=""></div>
-        <div><h3>Organisateur</h3><p>A créé une sortie.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/globe_trotter.png?v=1792525100426" alt=""></div>
-        <div><h3>Globe-trotter</h3><p>Sorties passées dans 3 lieux différents.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Fidélité -->
-  <section>
-    <div class="sec-title"><h2>Fidélité</h2><span class="tag">3 badges + Ancienneté</span></div>
-    <div class="grid three">
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur.png?v=1792525710316" alt=""></div>
-        <div><h3>Membre fondateur</h3><p>Arrivé dès la première année du gang.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fidele.png?v=1792525260919" alt=""></div>
-        <div><h3>Fidèle</h3><p>3 ans dans le gang, depuis la date d'arrivée.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/saisonnier.png?v=1792525336189" alt=""></div>
-        <div><h3>Saisonnier</h3><p>Connecté pendant les 7 thèmes du site.</p></div>
-      </div>
-    </div>
-    <div class="anc">
-      <div class="anc-head">
-        <h3>Ancienneté</h3>
-        <p>5 niveaux, calculés sur les années passées dans le gang depuis la date d'arrivée.</p>
-      </div>
-      <div class="levels">
-        <div class="lvl"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur-n1.png?v=1792525710889" alt=""><b>Bronze</b><span>1 an</span></div>
-        <div class="lvl"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur-n2.png?v=1792525711177" alt=""><b>Argent</b><span>2 ans</span></div>
-        <div class="lvl"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur-n3.png?v=1792525711382" alt=""><b>Or</b><span>5 ans</span></div>
-        <div class="lvl"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur-n4.png?v=1792525711802" alt=""><b>Platine</b><span>10 ans</span></div>
-        <div class="lvl"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/fondateur-n5.png?v=1792525712341" alt=""><b>Diamant</b><span>20 ans</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Communauté -->
-  <section>
-    <div class="sec-title"><h2>Communauté</h2><span class="tag">4 badges</span></div>
-    <div class="grid">
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/cupidon.png?v=1792525404565" alt=""></div>
-        <div><h3>Cupidon du gang</h3><p>Un membre a rejoint avec son code d'invitation.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/paparazzi.png?v=1792525140417" alt=""></div>
-        <div><h3>Paparazzi</h3><p>50 photos ajoutées aux albums.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/boite_a_idees.png?v=1792525184828" alt=""></div>
-        <div><h3>Boîte à idées</h3><p>Une de ses idées retenue par l'admin.</p></div>
-      </div>
-      <div class="card">
-        <div class="ico"><img src="https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/chasseur_bugs.png?v=1792525293492" alt=""></div>
-        <div><h3>Chasseur de bugs</h3><p>Un bug signalé via l'assistance, traité.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Événements -->
-  <section>
-    <div class="sec-title"><h2>Événements</h2><span class="tag">Limité</span></div>
-    <div class="grid three">
-      <div class="card hot">
-        <div class="ico"><span aria-hidden="true">👹</span></div>
-        <div><h3>It's Halloween Time !</h3><p>Attraper le monstre pendant l'événement (jusqu'au 2 novembre 2026).</p></div>
-      </div>
-    </div>
-  </section>
+  <!-- Les sections (Secret Santa, Sorties IRL, Fidélité, Communauté, Événements) sont construites par affiches.js à partir de hg_badges. -->
+  <div id="sections"></div>
 
 </div>
 
 <footer>
   <span><strong>Attribués automatiquement toutes les heures.</strong></span>
-  <span class="mono">+500 PAILLETTES / BADGE</span>
+  <span class="mono">+<span data-cfg="cartes.rewards.badge">500</span> PAILLETTES / BADGE</span>
 </footer>
+<script type="module" src="affiches.js"></script>
 </body>
 </html>

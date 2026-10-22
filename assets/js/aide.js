@@ -3,8 +3,10 @@
 // Accessible sans compte : seuls les groupes PUBLIC_GROUP_IDS (« premiers pas ») sont visibles aux visiteurs.
 // Dépendances : core.js (initPage, esc, $) et tutos/index.js (chargement des groupes de tutos).
 // Les données des tutos viennent de assets/js/tutos/ ; cette page ne fait que les afficher. N'exporte rien.
+// Les chiffres des tutos sont des jetons {{chemin|repli}} remplacés par les réglages du site (reglages-jetons.js).
 import { initPage, esc, $ } from './core.js';
 import { loadTutoGroups, PUBLIC_GROUP_IDS } from './tutos/index.js';
+import { chargerReglages, jetons } from './reglages-jetons.js';
 
 /* ---------- Initialisation : session facultative (les visiteurs voient « premiers pas ») ---------- */
 const me = await initPage({ auth: 'optional' });
@@ -27,11 +29,26 @@ const qInput = $('#aide-q');
 /* ---------- Données : groupes valides, avec au moins un tuto ---------- */
 // Filtre les entrées mal formées (slug non conforme, titre absent) pour ne jamais afficher une donnée cassée.
 const loaded = await loadTutoGroups();
+// Les réglages (prix, délais, seuils…) sont lus une fois, avant d'écrire les textes des tutos.
+await chargerReglages();
+/**
+ * Un tuto avec ses jetons remplacés (titre, résumé, mots-clés, étapes, astuces). Les autres champs passent tels quels.
+ * @param {object} t le tuto tel que livré par tutos/*.js
+ * @returns {object} une copie du tuto avec les valeurs des réglages
+ */
+const avecReglages = (t) => ({
+  ...t,
+  title: jetons(t.title),
+  summary: jetons(t.summary),
+  keywords: Array.isArray(t.keywords) ? t.keywords.map(jetons) : t.keywords,
+  steps: Array.isArray(t.steps) ? t.steps.map((s) => (s && typeof s === 'object' ? { ...s, title: jetons(s.title), text: jetons(s.text) } : s)) : t.steps,
+  tips: Array.isArray(t.tips) ? t.tips.map(jetons) : t.tips,
+});
 const groups = loaded.map((g) => ({
   id: String(g.id ?? ''),
   title: String(g.title ?? ''),
   icon: String(g.icon ?? ''),
-  tutos: (Array.isArray(g.tutos) ? g.tutos : []).filter((t) => t && /^[a-z0-9-]+$/.test(t.slug ?? '') && t.title),
+  tutos: (Array.isArray(g.tutos) ? g.tutos : []).filter((t) => t && /^[a-z0-9-]+$/.test(t.slug ?? '') && t.title).map(avecReglages),
 })).filter((g) => g.id && g.tutos.length);
 /** Vrai si je peux voir ce groupe : je suis connecté, ou le groupe est public. */
 const canSee = (g) => !!me || PUBLIC_GROUP_IDS.includes(g.id);

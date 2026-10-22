@@ -16,10 +16,10 @@ export default {
       summary: 'Les Paillettes sont la monnaie du jeu, et le passage du jour t’en donne chaque jour.',
       page: 'cartes.html',
       steps: [
-        { title: 'Regarde ton solde', text: 'En haut de la page Cartes, la pastille lumineuse affiche ton solde de Paillettes. Tu démarres avec 1 000 Paillettes.' },
-        { title: 'Prends le passage du jour', text: 'Une fois par jour, le bouton « Passage du jour (+100) » apparaît en haut de la page. Clique dessus pour encaisser les Paillettes. Le jour se compte à l’heure de Zurich.' },
-        { title: 'Garde ta série', text: 'Chaque jour d’affilée ajoute 20 Paillettes : 120 le deuxième jour, 140 le troisième, et ainsi de suite jusqu’à 680 au trentième jour. Si tu sautes un jour, la série repart de 1 (« Série actuelle : N j »).' },
-        { title: 'Gagne-en d’autres façons', text: 'Tu reçois aussi des Paillettes quand tu réponds « oui » à une sortie (+50), que tu es présent à une sortie (+100), que tu partages une photo (+100) ou un moment culte (+100), que tu crées une sortie (+100), que tu participes à une capture d’événement (+150) ou que tu obtiens un badge (+500). Envoyer ton cadeau Secret Santa rapporte +250, et compléter une série de cartes +300.' },
+        { title: 'Regarde ton solde', text: 'En haut de la page Cartes, la pastille lumineuse affiche ton solde de Paillettes. Tu démarres avec {{cartes.starting_paillettes|1 000}} Paillettes.' },
+        { title: 'Prends le passage du jour', text: 'Une fois par jour, le bouton « Passage du jour (+{{cartes.rewards.daily|100}}) » apparaît en haut de la page. Clique dessus pour encaisser les Paillettes. Le jour se compte à l’heure de Zurich.' },
+        { title: 'Garde ta série', text: 'Chaque jour d’affilée ajoute {{cartes.rewards.streak_bonus|20}} Paillettes : {{cartes.rewards.daily+cartes.rewards.streak_bonus|120}} le deuxième jour, {{cartes.rewards.daily+cartes.rewards.streak_bonus*2|140}} le troisième, et ainsi de suite jusqu’à {{cartes.rewards.daily+cartes.rewards.streak_bonus*(cartes.rewards.streak_max-1)|680}} au {{cartes.rewards.streak_max|30}}e jour. Si tu sautes un jour, la série repart de 1 (« Série actuelle : N j »).' },
+        { title: 'Gagne-en d’autres façons', text: 'Tu reçois aussi des Paillettes quand tu réponds « oui » à une sortie (+{{cartes.rewards.rsvp|50}}), que tu es présent à une sortie (+{{cartes.rewards.presence|100}}), que tu partages une photo (+{{cartes.rewards.photo|100}}) ou un moment culte (+{{cartes.rewards.moment|100}}), que tu crées une sortie (+{{cartes.rewards.event_created|100}}), que tu participes à une capture d’événement (+{{cartes.rewards.capture|150}}) ou que tu obtiens un badge (+{{cartes.rewards.badge|500}}). Envoyer ton cadeau Secret Santa rapporte +{{cartes.rewards.gift_sent|250}}, et compléter une série de cartes +{{cartes.rewards.set_complete|300}}.' },
         { title: 'Lis ton historique', text: 'Sous la page, la zone « Historique des Paillettes (30 derniers mouvements) » montre d’où vient chaque gain et où part chaque dépense.' },
       ],
       tips: [
@@ -30,19 +30,19 @@ export default {
     {
       slug: 'ouvrir-un-booster',
       title: 'Ouvrir un booster',
-      summary: 'Un booster contient 5 cartes : un gratuit toutes les 24 h, un payant à 100 Paillettes, ou un offert par le gang.',
+      summary: 'Un booster contient {{cartes.booster_size|5}} cartes : un gratuit toutes les {{cartes.free_booster_hours|24}} h, un payant à {{cartes.booster_price|100}} Paillettes, ou un offert par le gang.',
       page: 'cartes.html',
       steps: [
         { title: 'Va sur Cartes, onglet Boosters', text: 'Ouvre Cartes dans le menu du haut. L’onglet « Boosters » s’affiche par défaut.' },
-        { title: 'Ouvre le booster gratuit', text: 'Dans la tuile « Booster gratuit », clique sur « Ouvrir le booster gratuit » quand il est disponible. Sinon, un compte à rebours « Disponible dans … » s’affiche. Le gratuit revient 24 h après ton dernier booster gratuit.' },
-        { title: 'Ouvre un booster payant', text: 'Dans la tuile « Booster payant », clique sur « Ouvrir un booster · 100 ». Il coûte 100 Paillettes. Si ton solde est trop bas, le bouton reste grisé et le site indique « Il te manque … ».' },
-        { title: 'Ouvre cinq boosters d’un coup', text: 'Le bouton « Ouvrir 5 boosters · 500 » ouvre cinq boosters payants à la suite, pour 500 Paillettes. Si l’ouverture s’arrête (solde insuffisant, coupure du réseau), le bouton propose ensuite les boosters restants, sans jamais en ouvrir deux fois.' },
+        { title: 'Ouvre le booster gratuit', text: 'Dans la tuile « Booster gratuit », clique sur « Ouvrir le booster gratuit » quand il est disponible. Sinon, un compte à rebours « Disponible dans … » s’affiche. Le gratuit revient {{cartes.free_booster_hours|24}} h après ton dernier booster gratuit.' },
+        { title: 'Ouvre un booster payant', text: 'Dans la tuile « Booster payant », clique sur « Ouvrir un booster · {{cartes.booster_price|100}} ». Il coûte {{cartes.booster_price|100}} Paillettes. Si ton solde est trop bas, le bouton reste grisé et le site indique « Il te manque … ».' },
+        { title: 'Ouvre cinq boosters d’un coup', text: 'Le bouton « Ouvrir 5 boosters · {{cartes.booster_price*5|500}} » ouvre cinq boosters payants à la suite, pour {{cartes.booster_price*5|500}} Paillettes. Si l’ouverture s’arrête (solde insuffisant, coupure du réseau), le bouton propose ensuite les boosters restants, sans jamais en ouvrir deux fois.' },
         { title: 'Ouvre un booster offert', text: 'Si le gang t’en a offert, la section « Boosters offerts » apparaît avec « Ouvrir un booster offert (N restants) ». Il s’ouvre sans Paillettes et sans délai.' },
         { title: 'Révèle tes cartes', text: 'L’animation montre les cartes une à une. Clique sur « Tout révéler » pour sauter l’animation, puis sur « Fermer ». Tes cartes rejoignent ta collection.' },
       ],
       tips: [
         'Les chances de chaque rareté sont affichées dans le tableau « Chances », plus bas sur l’onglet Boosters.',
-        'Chaque carte tirée a 3 % de chance d’être brillante.',
+        'Chaque carte tirée a {{cartes.shiny_rate|3}} % de chance d’être brillante.',
       ],
       keywords: ['booster', 'ouvrir', 'gratuit', 'payant', 'offert', 'cinq', 'chances', 'cartouche'],
     },
@@ -92,7 +92,7 @@ export default {
         { title: 'Recycle un exemplaire', text: 'Ouvre la fiche d’une carte. Dans « Mes exemplaires », le bouton « Recycler · N » indique ce que rapporte cet exemplaire. Clique dessus pour le recycler.' },
         { title: 'Recycle tous les doublons', text: 'Clique sur « Recycler les doublons ». La fenêtre annonce le nombre de doublons et le total en Paillettes. Le bouton « Recycler » confirme, « Annuler » ferme la fenêtre sans rien faire.' },
         { title: 'Garde un exemplaire', text: 'Il reste toujours un exemplaire de chaque carte. Le recyclage d’un coup garde la version brillante si tu en as une. Les cartes Identité et celles en cours d’échange ne sont pas touchées.' },
-        { title: 'Vérifie ce que ça rapporte', text: 'Un exemplaire vaut : Commune 5, Peu commune 10, Rare 25, Épique 60, Légendaire 150 et Mythique 400 Paillettes. Une version brillante rapporte trois fois plus.' },
+        { title: 'Vérifie ce que ça rapporte', text: 'Un exemplaire vaut : Commune {{cartes.recycle.commune|5}}, Peu commune {{cartes.recycle.peu_commune|10}}, Rare {{cartes.recycle.rare|25}}, Épique {{cartes.recycle.epique|60}}, Légendaire {{cartes.recycle.legendaire|150}} et Mythique {{cartes.recycle.mythique|400}} Paillettes. Une version brillante rapporte {{cartes.recycle.shiny_multiplier|3}} fois plus.' },
       ],
       tips: [
         'Le recyclage est définitif : une carte recyclée ne revient pas.',
@@ -108,8 +108,8 @@ export default {
       steps: [
         { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet Collection, clique sur la carte voulue. Tu peux la fabriquer même si tu ne l’as pas encore.' },
         { title: 'Trouve la section Fabriquer', text: 'La section « Fabriquer » de la fiche indique si la carte peut être fabriquée et ce qu’elle coûte.' },
-        { title: 'Fabrique la version normale', text: 'Le bouton « Fabriquer · N » coûte : 100 Paillettes (Commune), 150 (Peu commune), 200 (Rare), 750 (Épique) ou 2 000 (Légendaire). Il reste grisé si ton solde est trop bas, avec « Il te manque … ».' },
-        { title: 'Fabrique la version brillante', text: 'Si la carte peut être brillante, « Version brillante » coûte six fois plus : 600, 900, 1 200, 4 500 ou 12 000 Paillettes selon la rareté.' },
+        { title: 'Fabrique la version normale', text: 'Le bouton « Fabriquer · N » coûte : {{cartes.craft.commune|100}} Paillettes (Commune), {{cartes.craft.peu_commune|150}} (Peu commune), {{cartes.craft.rare|200}} (Rare), {{cartes.craft.epique|750}} (Épique) ou {{cartes.craft.legendaire|2000}} (Légendaire). Il reste grisé si ton solde est trop bas, avec « Il te manque … ».' },
+        { title: 'Fabrique la version brillante', text: 'Si la carte peut être brillante, « Version brillante » coûte {{cartes.craft.shiny_multiplier|6}} fois plus : {{cartes.craft.commune*cartes.craft.shiny_multiplier|600}}, {{cartes.craft.peu_commune*cartes.craft.shiny_multiplier|900}}, {{cartes.craft.rare*cartes.craft.shiny_multiplier|1200}}, {{cartes.craft.epique*cartes.craft.shiny_multiplier|4500}} ou {{cartes.craft.legendaire*cartes.craft.shiny_multiplier|12000}} Paillettes selon la rareté.' },
         { title: 'Retrouve ta carte', text: 'La carte fabriquée rejoint ta collection, avec la source « Fabriquée » dans « Mes exemplaires ».' },
       ],
       tips: [

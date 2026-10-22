@@ -18,7 +18,7 @@ export default {
         { title: 'Ouvre Sorties IRL', text: 'Clique sur « IRL » dans la barre du haut, puis reste sur l’onglet « Sorties ».' },
         { title: 'Clique sur « + Proposer une sortie »', text: 'Le bouton est en haut à droite de la page.' },
         { title: 'Remplis le titre', text: 'Le titre est obligatoire. Le lieu, la description et une image de couverture sont facultatifs.' },
-        { title: 'Choisis « Quand ? »', text: '« Date fixée » demande une date et une heure. « Date à caler » demande entre 2 et 6 dates possibles : le gang votera ensuite.' },
+        { title: 'Choisis « Quand ? »', text: '« Date fixée » demande une date et une heure. « Date à caler » demande entre {{irl.sondage_min|2}} et {{irl.sondage_max|6}} dates possibles : le gang votera ensuite.' },
         { title: 'Clique sur « Créer la sortie »', text: 'Le gang est prévenu et la sortie apparaît dans la liste. Tu peux la modifier ou la supprimer avec « Modifier » et « Supprimer » sous la carte.' },
       ],
       tips: [
