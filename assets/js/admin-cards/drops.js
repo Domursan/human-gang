@@ -21,7 +21,8 @@ function limitsOf(cfg) {
   const d = cfg?.drops || {};
   /* Entier strictement positif, sinon la valeur par défaut. */
   const num = (v, def) => (Number.isInteger(v) && v > 0 ? v : def);
-  const qmax = num(d.quantite_max, 50), dmax = num(d.duree_max_min, 1440);
+  // Plafond des exemplaires : le réglage, borné à 1000 (contrainte technique de la table hg_card_drops, migration 055).
+  const qmax = Math.min(num(d.quantite_max, 50), 1000), dmax = num(d.duree_max_min, 1440);
   return { qmax, dmax, dflt: Math.min(num(d.duree_defaut_min, 30), dmax) };
 }
 /* Nombre formaté selon la locale suisse-française. */

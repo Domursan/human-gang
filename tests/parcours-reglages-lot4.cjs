@@ -88,6 +88,22 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await waitClosed(p);
   await p.close();
 
+  /* ---------- Cartes › Drops : plafond paramétrable (migration 055, borne technique 1 à 1000) ---------- */
+  p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
+  await seedCards(p, { drops: { quantite_max: 120, duree_max_min: 1440, duree_defaut_min: 30 } });
+  await adminSection(p, 'cartes/drops');
+  await p.click('[data-action="drop-new"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #drop-qty', { timeout: 5000 });
+  check(await p.getAttribute('#drop-qty', 'max') === '120', 'drops plafond : avec quantite_max à 120, le champ accepte 120');
+  await p.selectOption('#drop-card', { index: 0 });
+  await p.fill('#drop-qty', '120');
+  await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
+  await p.waitForTimeout(400);
+  const big = await rpcCalls(p, 'hg_drop_create');
+  check(big.length === 1 && big[0].p_quantity === 120, 'drops plafond : un drop de 120 exemplaires est lancé avec quantite_max à 120');
+  await waitClosed(p);
+  await p.close();
+
   /* ---------- Vie › Badges : critères ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
   await adminSection(p, 'vie/badges');

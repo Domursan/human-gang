@@ -79,7 +79,7 @@ export const ECON = [
     { k: 'quetes_par_semaine', l: 'Quêtes tirées chaque semaine', int: true, min: 0, max: 20, help: 'Nombre de quêtes proposées aux membres. Si moins de modèles sont actifs, on en propose moins.' },
   ] },
   { g: 'Cartes sauvages (drops)', hint: 'Bornes du formulaire « Lancer un drop » (Cartes › Drops).', fields: [
-    { k: 'drops.quantite_max', l: 'Exemplaires maximum par drop', int: true, min: 1, max: 50, help: 'Plafond du nombre de cartes à attraper pour un même drop (50 au plus, limite de la base).' },
+    { k: 'drops.quantite_max', l: 'Exemplaires maximum par drop', int: true, min: 1, max: 1000, help: 'Plafond du nombre de cartes à attraper pour un même drop (de 1 à 1000 ; 50 par défaut). Le formulaire « Lancer un drop » ne dépasse jamais cette valeur.' },
     { k: 'drops.duree_max_min', l: 'Durée maximale d\'un drop', u: 'minutes', int: true, min: 1, max: 10080, help: '1440 = 24 h. Au-delà, le drop ne peut pas être lancé.' },
     { k: 'drops.duree_defaut_min', l: 'Durée proposée par défaut', u: 'minutes', int: true, min: 1, max: 10080, help: 'Valeur pré-remplie dans le formulaire ; ne peut pas dépasser la durée maximale.' },
   ] },
