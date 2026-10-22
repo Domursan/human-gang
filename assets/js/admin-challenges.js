@@ -1,5 +1,6 @@
 // ===== Humane Gang — administration : défis collectifs du gang =====
-// Rôle : liste, création, modification, activation et suppression des défis collectifs (route cartes/defis).
+// Rôle : liste, création, modification, activation et suppression des défis collectifs (route cartes/defis),
+// avec des modèles prêts à l'emploi qui pré-remplissent le formulaire de création.
 // Table hg_challenges, écrite directement par l'admin (RLS hg_is_admin). La progression est calculée côté base
 // (hg_challenge_value, hg_challenges_active) et le crédit des Paillettes par hg_challenges_award (pg_cron).
 // Dépendances : core.js (client Supabase, toast, échappement), admin-events.js (conversion heure suisse),
@@ -34,6 +35,16 @@ const METRICS = [
 const METRIC_LABEL = Object.fromEntries(METRICS);
 // Plafond de la récompense par membre, en Paillettes.
 const REWARD_MAX = 100000;
+// Modèles prêts à l'emploi : pré-remplissent le formulaire de création. Rien n'est créé sans le clic sur « Créer ».
+// Cibles calibrées sur le rythme réel de la base (relevé le 22 octobre) : environ 570 boosters par semaine,
+// 1 300 cartes recyclées sur 30 jours, 53 souvenirs sur 30 jours, 5 échanges sur 30 jours.
+// days : durée du défi à partir de maintenant (7 ou 30 jours). Ne servent qu'aux métriques de METRICS.
+const MODELES = [
+  { id: 'boosters-semaine', title: 'Ouvrez 800 boosters cette semaine', description: 'Chaque booster ouvert rapproche le gang de l\'objectif. Tout le monde y gagne.', metric: 'boosters_ouverts', target: 800, reward: 50, days: 7 },
+  { id: 'recyclage-semaine', title: 'Recyclez 400 cartes cette semaine', description: 'Les doublons recyclés servent à tout le gang : on fait le tri ensemble.', metric: 'cartes_recyclees', target: 400, reward: 40, days: 7 },
+  { id: 'souvenirs-semaine', title: 'Publiez 15 souvenirs cette semaine', description: 'Une soirée, une photo, une anecdote : chaque souvenir publié compte.', metric: 'souvenirs_publies', target: 15, reward: 30, days: 7 },
+  { id: 'echanges-mois', title: 'Concluez 8 échanges ce mois-ci', description: 'Des échanges de cartes entre membres : chaque échange conclu compte pour le gang.', metric: 'echanges_conclus', target: 8, reward: 60, days: 30 },
+];
 // Format des dates affichées : toujours heure suisse, quel que soit le fuseau du navigateur.
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
@@ -54,6 +65,11 @@ export async function mountChallengesSection(container) {
       <p class="small muted">Un objectif pour tout le gang. La récompense est versée à chaque membre une fois l'objectif atteint.</p>
       <button class="btn btn-primary" type="button" data-action="adc-new">+ Nouveau défi</button>
     </div>
+    <section class="adc-models" aria-labelledby="adc-models-title">
+      <h3 class="adc-models-title" id="adc-models-title">Modèles prêts à l'emploi</h3>
+      <p class="small muted">Choisis un modèle : le formulaire se pré-remplit, tu ajustes si besoin, puis tu crées le défi.</p>
+      <div class="adc-models-grid">${MODELES.map(modeleHtml).join('')}</div>
+    </section>
     <div id="adc-list" class="adc-list" aria-live="polite"><div class="empty">Chargement des défis…</div></div>
   </div>`;
   $('#adc-list', container).insertAdjacentHTML('beforebegin', searchHtml({ id: 'adc-search', label: 'Rechercher un défi', placeholder: 'Titre, description ou objectif…' }));
@@ -76,6 +92,19 @@ async function reload() {
   } catch (e) {
     list.innerHTML = `<div class="empty">Impossible de charger les défis : ${esc(errMsg(e))}</div>`;
   }
+}
+
+/* ---------- Modèles ---------- */
+/**
+ * Bouton d'un modèle prêt à l'emploi : titre, objectif, cible, récompense et durée.
+ * @param {object} m Entrée de MODELES.
+ * @returns {string} HTML
+ */
+function modeleHtml(m) {
+  return `<button class="adc-model" type="button" data-action="adc-model" data-model="${esc(m.id)}">
+    <span class="adc-model-title">${esc(m.title)}</span>
+    <span class="small muted">${esc(METRIC_LABEL[m.metric])} · cible ${esc(String(m.target))} · ${esc(String(m.reward))} Paillettes par membre · ${esc(String(m.days))} jours</span>
+  </button>`;
 }
 
 /* ---------- Affichage ---------- */
@@ -143,16 +172,23 @@ function readForm(f) {
   return { row: { title, description: description || null, metric, target, reward, starts_at: starts, ends_at: ends, active: f.querySelector('#adc-active').checked } };
 }
 
-/** Formulaire d'un défi (création si r est absent) dans le tiroir. */
-function openChallengeForm(r = null) {
+/**
+ * Formulaire d'un défi dans le tiroir : modification si r est fourni, sinon création.
+ * Avec un modèle, la création est pré-remplie (début maintenant, fin dans la durée du modèle) et le défi
+ * est coché « Actif » : l'admin ajuste si besoin, puis clique sur « Créer le défi ».
+ * @param {object|null} r Défi existant à modifier, ou null.
+ * @param {object|null} [model] Entrée de MODELES pour une création pré-remplie.
+ */
+function openChallengeForm(r = null, model = null) {
   const now = new Date();
-  const v = r || {};
   const isNew = !r;
+  const v = r || (model ? { title: model.title, description: model.description, metric: model.metric, target: model.target, reward: model.reward, active: true } : {});
+  const days = model?.days ?? 14;
   /** Attribut « selected » de l'option de métrique, si elle correspond au défi en cours. */
   const sel = (val) => (val === v.metric ? ' selected' : '');
   openDrawer({
     title: isNew ? 'Nouveau défi' : 'Modifier le défi',
-    subtitle: isNew ? '' : v.title,
+    subtitle: isNew ? (model ? 'Modèle prêt à l\'emploi : ajuste si besoin, puis crée le défi.' : '') : v.title,
     submitLabel: isNew ? 'Créer le défi' : 'Enregistrer les modifications',
     wide: true,
     body: `<div class="adc-form" id="adc-form">
@@ -183,7 +219,7 @@ function openChallengeForm(r = null) {
         </div>
         <div class="field">
           <label for="adc-end">Fin (heure suisse)</label>
-          <input id="adc-end" type="datetime-local" value="${toZurichInput(isNew ? new Date(now.getTime() + 14 * 86400000).toISOString() : v.ends_at)}" required>
+          <input id="adc-end" type="datetime-local" value="${toZurichInput(isNew ? new Date(now.getTime() + days * 86400000).toISOString() : v.ends_at)}" required>
         </div>
         <div class="field adc-check">
           <label><input id="adc-active" type="checkbox"${v.active ? ' checked' : ''}> Actif : visible par les membres sur l'accueil</label>
@@ -227,6 +263,11 @@ async function onClick(e) {
   if (!t || t.disabled) return;
   const id = t.dataset.id;
   if (t.dataset.action === 'adc-new') return openChallengeForm(null);
+  if (t.dataset.action === 'adc-model') {
+    const m = MODELES.find((x) => x.id === t.dataset.model);
+    if (m) openChallengeForm(null, m);
+    return;
+  }
   if (t.dataset.action === 'adc-edit') {
     const r = C.rows.find((x) => x.id === id);
     if (r) openChallengeForm(r);

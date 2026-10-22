@@ -99,6 +99,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-admin-polish-vie.cjs` | `node tests/parcours-admin-polish-vie.cjs` | `test` | Vie du gang : Secret Santa (éditions, tirage annulé puis confirmé), Événements, Badges, mobile |
 | `parcours-admin-polish-cartes.cjs` | `node tests/parcours-admin-polish-cartes.cjs` | `test` | Jeu de cartes et Défis : séries, éditeur de carte, quêtes, joueurs (Paillettes, cartes), mobile |
 | `parcours-admin-polish-site.cjs` | `node tests/parcours-admin-polish-site.cjs` | `test` | Invitations, Accès aux pages, Messagerie (lecture journalisée), Bot Discord, Réglages et Thème : tiroirs et écritures |
+| `parcours-defi-modele.cjs` | `node tests/parcours-defi-modele.cjs` | `test` | Défis du gang : modèles prêts à l'emploi (pré-remplissage, rien créé avant « Créer », fin dans 7 ou 30 jours), refus d'une fin avant le début ; widget « Défi du gang » de l'accueil (jauge, masqué sans défi) |
 | `parcours-admin-bot-mentions.cjs` | `node tests/parcours-admin-bot-mentions.cjs` | `test` | Bot Discord : mentions des annonces, ID de rôle, pièces jointes du message manuel (taille, doublon, retrait) |
 | `parcours-admin-actifs.cjs` | `node tests/parcours-admin-actifs.cjs` | `test` | Un fantôme n'apparaît dans aucun choix hors gestion des comptes ; l'historique le garde |
 | `parcours-admin-don-carte.cjs` | `node tests/parcours-admin-don-carte.cjs` | `test` | Donner une carte à un membre : notification `card_gift_admin`, échec de la RPC sans notification |

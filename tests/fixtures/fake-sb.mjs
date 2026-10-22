@@ -485,6 +485,7 @@ export function createClient() {
         return { data: null, error: null };
       }
       if (fn === 'hg_admin_ghosts') return { data: window.__SCN?.ghosts ?? [], error: null }; // fantômes : fournis par le scénario du test
+      if (fn === 'hg_challenges_active') return { data: window.__SCN?.defis ?? [], error: null }; // défis en cours (widget de l'accueil) : fournis par le scénario du test
       // Fantômes (état propre à chaque page : le scénario est copié dans window.__SCN)
       if (fn === 'hg_ghost_suggestions') { // correspondances : seulement pour les fantômes encore présents
         const gs = window.__SCN?.ghosts ?? [];

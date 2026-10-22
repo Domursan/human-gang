@@ -134,6 +134,16 @@
 .adc-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .adc-head p { margin: 0; max-width: 620px; }
 
+/* Modèles prêts à l'emploi (admin-challenges.js) : une carte cliquable par modèle */
+.adc-models { display: flex; flex-direction: column; gap: 8px; }
+.adc-models-title { margin: 0; font-size: 16px; }
+.adc-models-title + p { margin: 0; max-width: 620px; }
+.adc-models-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.adc-model { font: inherit; text-align: left; display: flex; flex-direction: column; gap: 4px; min-height: 44px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; }
+.adc-model:hover { background: var(--surface-2); }
+.adc-model:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.adc-model-title { font-weight: 700; }
+
 /* Don groupé (admin-cards/bulk.js) */
 .acd-bulk-intro { display: flex; flex-direction: column; gap: 8px; }
 .acd-bulk-intro .card-title { margin: 0; }
