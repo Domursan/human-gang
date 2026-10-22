@@ -417,7 +417,9 @@ export function createClient() {
       if (fn === 'hg_card_recycle') { if (S.recycleFail) return { data: null, error: { message: 'Certaines cartes ne peuvent pas être recyclées (échange en cours ?)' } };
         const ids = args.p_copies; const total = ids.length * 5; DB.hg_wallets[0].paillettes += total; DB.hg_card_copies = DB.hg_card_copies.filter((c) => !ids.includes(c.id)); return { data: total, error: null }; }
       // Fabrication : 40 Paillettes, 160 pour une version brillante ; le scénario god ignore le solde.
-      if (fn === 'hg_card_craft') { const w = DB.hg_wallets[0]; const cost = args.p_shiny ? 160 : 40; if (!S.god && w.paillettes < cost) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${cost})` } }; w.paillettes -= cost; DB.hg_card_copies.push({ id: 500 + DB.hg_card_copies.length, card_id: args.p_card, owner_id: ME, shiny: !!args.p_shiny, serial: null, source: 'fabrication', obtained_at: iso(0), locked_trade: null, recycled_at: null }); return { data: { copy_id: 1, cost }, error: null }; }
+      if (fn === 'hg_card_craft') { const w = DB.hg_wallets[0]; const cost = args.p_shiny ? 160 : 40; if (!S.god && w.paillettes < cost) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${cost})` } }; w.paillettes -= cost; const kc = DB.hg_cards.find((c) => c.id === args.p_card); const cid = 500 + DB.hg_card_copies.length; DB.hg_card_copies.push({ id: cid, card_id: args.p_card, owner_id: ME, shiny: !!args.p_shiny, serial: null, source: 'fabrication', obtained_at: iso(0), locked_trade: null, recycled_at: null });
+        // Comme hg_card_craft : copy_id, coût, carte, rareté, brillance et numéro de série de l'exemplaire créé.
+        return { data: { copy_id: cid, cost, card_id: args.p_card, rarity: kc?.rarity, shiny: !!args.p_shiny, serial: null }, error: null }; }
       // Délai artificiel du classement (scénario rpcDelay), pour tester le chargement.
       if (fn === 'hg_card_leaderboard' && S.rpcDelay) await new Promise((r) => setTimeout(r, S.rpcDelay));
       // Classement de N lignes (scénario lbRows), pour tester la liste longue.

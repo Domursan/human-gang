@@ -6,11 +6,12 @@
 // 4. Défilement conservé après une action (filtre, fiche, souhait, carte agrandie, « Toutes les séries », classement).
 // 5. Téléphone 390 px : sans défilement horizontal, barre Précédent / Suivant, loupe de 40 px.
 // 6. « Réduire les animations » : pas de transition sur la loupe ; aucune erreur console partout.
+// 7. Fabrication : une légendaire fabriquée est annoncée (hg-notify card_pull, via « fabrication ») ; une commune non.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (SET1 : 12 cartes dont 1 identité ; SET2 ouverte par scenario.set2Open).
 // Lancer : node tests/parcours-cartes-zoom.cjs
 const fs = require('fs');
 const path = require('path');
-const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, log, chromium } = require('./lib/harness.cjs');
 
 const SCN = { set2Open: true };
 /** Nom de la carte ouverte dans la vue agrandie. */
@@ -308,6 +309,38 @@ const scrollY = (p) => p.evaluate(() => Math.round(window.scrollY));
   check(!p.errs.length, 'téléphone : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.screenshot({ path: path.join(SHOTS, 'zoom-390-agrandie.png') });
   await p.ctx.close();
+
+  // ---------- 7. Fabrication : une belle carte fabriquée est annoncée (hg-notify card_pull, via fabrication) ----------
+  /** Appels de hg-notify « card_pull » dans le journal j. */
+  const pulls = (j) => j.filter((l) => l[0] === 'fn' && l[1] === 'hg-notify' && l[2]?.event === 'card_pull').map((l) => l[2]);
+  /** Ouvre la fiche d'une carte possédée depuis la collection (toutes les séries). */
+  const ouvrirFiche = async (f, id) => {
+    await f.click(`[data-action="open-card"][data-card="${id}"]`);
+    await f.waitForSelector('#cartes-detail-title', { timeout: 5000 });
+  };
+  const f = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { bal: 5000 } });
+  await f.click('[data-tab=collection]');
+  await f.waitForSelector('#cartes-set', { timeout: 5000 });
+  // Légendaire (C9, « Braquage raté ») : fabrication normale -> annonce card_pull avec via fabrication.
+  await ouvrirFiche(f, 'C9');
+  await f.click('[data-action="craft"][data-shiny="0"]');
+  await f.waitForFunction(() => (window.__LOG || []).some((e) => e[0] === 'fn' && e[1] === 'hg-notify' && e[2]?.event === 'card_pull'), null, { timeout: 5000 }).catch(() => {});
+  let j = await log(f);
+  const annonces = pulls(j);
+  check(annonces.length === 1, `fabrication légendaire : hg-notify card_pull appelée une fois (${annonces.length})`);
+  check(annonces[0]?.via === 'fabrication' && annonces[0]?.card === 'C9' && annonces[0]?.rarity === 'legendaire', 'fabrication légendaire : carte, rareté et via « fabrication » transmis');
+  check(j.some((l) => l[0] === 'rpc' && l[1] === 'hg_card_craft'), 'fabrication légendaire : hg_card_craft appelée');
+  // Commune (C1, « Ethan ») : fabrication sans annonce.
+  await f.keyboard.press('Escape');
+  await f.waitForFunction(() => !document.getElementById('cartes-detail')?.open, null, { timeout: 3000 }).catch(() => {});
+  await ouvrirFiche(f, 'C1');
+  await f.click('[data-action="craft"][data-shiny="0"]');
+  await sleep(700);
+  j = await log(f);
+  check(pulls(j).length === 1, 'fabrication commune : aucune annonce card_pull (toujours une seule, celle de la légendaire)');
+  check(j.filter((l) => l[0] === 'rpc' && l[1] === 'hg_card_craft').length === 2, 'fabrication commune : la fabrication a bien été faite (2 appels à hg_card_craft)');
+  check(!f.errs.length, 'fabrication : aucune erreur JS' + (f.errs.length ? ' (' + f.errs.join(' | ') + ')' : ''));
+  await f.ctx.close();
 
   await browser.close();
   finish();

@@ -25,10 +25,11 @@
 //   dyn_announce     { event_id, phase: 'start' | 'end' }  admin → annonce d'un événement dynamique dans le salon
 //                    (image de l'événement, top 3 pour la fin) ; met à jour announced_start_at / announced_end_at.
 //                    Les annonces automatiques sont faites par la fonction hg-cron.
-//   card_pull        { card: uuid (hg_cards.id), rarity?, shiny?, serial? } membre → annonce « belle carte » dans le salon
-//                    si la carte est légendaire, mythique ou identité ET qu'un exemplaire obtenu il y a moins de 10 min
-//                    appartient à l'appelant (rarity et shiny du client ignorés : lus en base ; serial sert seulement à
-//                    choisir l'exemplaire). Désactivable (bot.notify.card_pull).
+//   card_pull        { card: uuid (hg_cards.id), rarity?, shiny?, serial?, via?: 'fabrication' } membre → annonce « belle carte »
+//                    dans le salon si la carte est légendaire, mythique, identité ou unique ET qu'un exemplaire obtenu il y a
+//                    moins de 10 min appartient à l'appelant (rarity, shiny et via du client ignorés : lus en base ; serial sert
+//                    seulement à choisir l'exemplaire). Si l'exemplaire vient d'une fabrication (source), le texte dit « a fabriqué »
+//                    au lieu de « a obtenu » (variable {verbe}). Désactivable (bot.notify.card_pull).
 //   card_trade       { trade_id: uuid } destinataire de l'offre (celui qui accepte) → annonce « échange conclu » dans le salon.
 //                    Facultative : seulement si bot.notify.card_trade === true (désactivée par défaut).
 //   trade_offer      { trade_id: uuid } auteur de l'offre (ou de la contre-proposition) → MP au destinataire « te propose
@@ -571,7 +572,7 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
 /* ---------- Cartes à collectionner ---------- */
 
 /** Libellés français des raretés annoncées publiquement. Les autres raretés ne sont pas annoncées. */
-const CARD_RARITY_LABEL: Record<string, string> = { legendaire: 'Légendaire', mythique: 'Mythique', identite: 'Identité' };
+const CARD_RARITY_LABEL: Record<string, string> = { legendaire: 'Légendaire', mythique: 'Mythique', identite: 'Identité', unique: 'Unique' };
 const CARD_FRESH_MS = 10 * 60_000; // l'exemplaire doit venir d'être obtenu (anti-spam)
 
 /**
@@ -595,13 +596,15 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   // Service role : un exemplaire récent de cette carte doit appartenir à l'appelant. Valeurs lues en base.
   // Un exemplaire déjà annoncé (announced_at) n'est jamais annoncé deux fois : rappeler card_pull ne republie rien.
-  let q = db.from('hg_card_copies').select('id, shiny, serial, obtained_at')
+  let q = db.from('hg_card_copies').select('id, shiny, serial, obtained_at, source')
     .eq('card_id', card.id).eq('owner_id', me.id).is('recycled_at', null).is('announced_at', null)
     .gte('obtained_at', new Date(Date.now() - CARD_FRESH_MS).toISOString())
     .order('obtained_at', { ascending: false }).limit(1);
   if (Number.isInteger(p.serial)) q = q.eq('serial', p.serial as number);
   const { data: copy } = await q.maybeSingle();
   if (!copy) return { skipped: 'aucun exemplaire récent de cette carte' };
+  // Verbe du texte : « a fabriqué » pour un exemplaire fabriqué, sinon « a obtenu » (source lue en base, jamais celle du client).
+  const verbe = copy.source === 'fabrication' ? 'a fabriqué' : 'a obtenu';
   // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
   const { data: claimed } = await db.from('hg_card_copies').update({ announced_at: new Date().toISOString() })
     .eq('id', copy.id).is('announced_at', null).select('id');
@@ -609,7 +612,7 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
-  const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, lien: link('cartes.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, verbe, lien: link('cartes.html') ?? '' }, tpl);
   const channel = await trySend(() => sendChannel(pullChannel, {
     ...mentionFor(bot, 'card_pull'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
