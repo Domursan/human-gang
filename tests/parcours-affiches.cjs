@@ -98,6 +98,34 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     check(sup.includes('(1 caractère minimum)'), 'tuto assistance : minimum de caractères lu dans les réglages');
     check(sup.includes('« Compte » ou « Autre »'), 'tuto assistance : sujets lus dans les réglages');
     await page.ctx.close();
+    // 8. Affiche des 12 secrets : récompenses lues sur hg_settings.eggs (recompenses), repli écrit si absent.
+    page = await openPage(browser, { page: 'affiches/secrets-a3', fixture: FIXTURE, width: 1123 });
+    const repliEggs = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '');
+    check(repliEggs === '100', `affiche secrets, réglage eggs absent : repli 100 conservé (« ${repliEggs} »)`);
+    const texteSecrets = await page.evaluate(() => document.body.textContent);
+    check(texteSecrets.includes('Les 12 secrets') && texteSecrets.includes('Chasseur de secrets'), 'affiche secrets : titre et récompense « Chasseur de secrets » présents');
+    check(!texteSecrets.includes('{{'), 'affiche secrets : aucun jeton {{ non remplacé');
+    check(page.errs.length === 0, `affiche secrets : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
+    await page.ctx.close();
+    const recompenses = { konami: 250, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 300, secousse: 0, nuit: 30, rembobine: 25 };
+    page = await openPage(browser, { page: 'affiches/secrets-a3', fixture: FIXTURE, scenario: { settingsExtra: { eggs: { recompenses } } }, width: 1123 });
+    const eggsKonami = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '');
+    check(eggsKonami === '250', `affiche secrets : récompense du code Konami suit le réglage (${eggsKonami})`);
+    const eggsLettres = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.lettres"]')?.textContent ?? '');
+    check(eggsLettres === '300', `affiche secrets : récompense des 7 lettres suit le réglage (${eggsLettres})`);
+    const total = await page.evaluate(() => document.querySelector('[data-expr^="eggs.recompenses.konami"]')?.textContent ?? '');
+    // 250 + 50 + 25 + 13 + 100 + 50 + 300 + 30 + 25 = 843.
+    check(total.replace(NBSP, '') === '843', `affiche secrets : total calculé à partir des réglages (${total})`);
+    check(page.errs.length === 0, 'affiche secrets, réglage modifié : aucune erreur de page');
+    await page.ctx.close();
+
+    // 9. Teaser : 12 cases floutées, « ??? » seulement, aucune récompense, aucun jeton.
+    page = await openPage(browser, { page: 'affiches/secrets-teaser-a3', fixture: FIXTURE, width: 1123 });
+    const teaser = await page.evaluate(() => ({ cases: document.querySelectorAll('.secret').length, mystere: document.querySelectorAll('.mystere').length, texte: document.body.textContent }));
+    check(teaser.cases === 12 && teaser.mystere === 12, `affiche teaser : 12 cases floutées avec « ??? » (${teaser.cases} / ${teaser.mystere})`);
+    check(!teaser.texte.includes('{{') && !teaser.texte.includes('par jour') && !teaser.texte.includes('Badge'), 'affiche teaser : aucun jeton et aucune récompense affichée');
+    check(page.errs.length === 0, `affiche teaser : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
+    await page.ctx.close();
   } catch (e) {
     check(false, 'exception : ' + (e && e.stack ? e.stack.split('\n')[0] : e));
   } finally {
