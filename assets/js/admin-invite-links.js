@@ -2,8 +2,8 @@
 // Un lien public (rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
 // Rôle : créer, activer / désactiver, copier, afficher en QR code et supprimer les liens d'invitation, et voir les codes
 // qu'ils ont générés. Règle aussi les codes (durée, limite par heure, préfixe) dans hg_settings.invites.
-// Importé par admin.js (section Invitations) et par admin/invites.js (bouton « + Nouveau lien »). Ne dépend que de core.js
-// et des modules admin voisins (drawer, ui-confirm, invite-config, icons).
+// Importé par admin.js (section Invitations) et par admin/invites.js (bouton « + Nouveau lien »).
+// Dépendances : core.js, ui-confirm.js, icons.js, invite-config.js (règles des codes), admin/ui/drawer.js.
 // Tables et RPC : hg_invite_links (liens), hg_invites (codes, lien d'origine = link_id), hg_settings (clé 'invites').
 // Exporte : inviteLinkUrl (URL publique d'un lien), openLinkDrawer (tiroir « Nouveau lien »),
 // mountInviteLinks (montage), refreshInviteLinks (re-rendu).

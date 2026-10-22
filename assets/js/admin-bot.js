@@ -224,8 +224,8 @@ const PLANNING_DEF = { anniversaires_heure_locale: 8 };
  * HTML d'un champ numérique de réglage : libellé, aide, et bornes min et max acceptées.
  * @param {string} form Préfixe de l'identifiant (rules, support, planning).
  * @param {string} k Nom du réglage.
- * @param {string[]} [label, help] Libellé et aide.
- * @param {number[]} [min, max] Bornes.
+ * @param {string[]} libelleAide Libellé puis aide du réglage.
+ * @param {number[]} bornes Minimum puis maximum acceptés.
  * @returns {string}
  */
 const numField = (form, k, [label, help], [min, max]) => `<div class="field">

@@ -6,7 +6,8 @@
 //   - bannière « Ce compte correspond peut-être au fantôme X » (ghostBannerHtml) et actions de zone (ghostZoneActions) ;
 //   - tiroirs : création (openNewGhostDrawer) et liaison depuis une fiche de compte (openMergeDrawer).
 // Les écouteurs de la zone sont posés une fois (bindGhostPanel). Les effets de bord vers Comptes passent par setGhostHooks.
-// Importé par admin-accounts/ (liste, fiche, événements), irl.js et historique.js (annuaire vu par l'admin).
+// Importé par admin.js, admin-accounts/ (liste, fiche, événements), admin-sorties/, admin-souvenirs/, admin/loaders.js,
+// irl.js et historique.js (annuaire des fantômes vu par l'admin).
 // Dépendances : core.js (Supabase, toast, dates), ui-confirm.js, icons.js, utils.js (fmtDay), admin/ui/drawer.js, admin/ui/detail-header.js.
 // Tables et RPC : hg_admin_ghosts, hg_ghost_suggestions, hg_ghost_create, hg_ghost_invite, hg_ghost_merge, hg_profiles (suppression).
 // Exporte : ghostCodeActive, ghostInviteLink, fetchAdminGhosts, ghostDirectory, refreshGhosts, ensureGhosts, setGhostHooks,
