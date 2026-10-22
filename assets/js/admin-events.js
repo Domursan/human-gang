@@ -541,8 +541,10 @@ function openEditor(ev = null) {
         // Dates déplacées dans le futur : les annonces correspondantes repartent (hg-cron les refera)
         const now = Date.now();
         // Si une date a changé et tombe dans le futur, l'annonce correspondante est remise à zéro pour être refaite.
-        if (row.starts_at !== ev.starts_at && new Date(row.starts_at).getTime() > now) row.announced_start_at = null;
-        if (row.ends_at !== ev.ends_at && new Date(row.ends_at).getTime() > now) row.announced_end_at = null;
+        // Comparaison en instants (timestamps) : deux écritures ISO différentes d'une même date ne comptent pas comme un changement.
+        const moved = (a, b) => new Date(a).getTime() !== new Date(b).getTime();
+        if (moved(row.starts_at, ev.starts_at) && new Date(row.starts_at).getTime() > now) row.announced_start_at = null;
+        if (moved(row.ends_at, ev.ends_at) && new Date(row.ends_at).getTime() > now) row.announced_end_at = null;
         check(await sb.from('hg_dyn_events').update(row).eq('id', ev.id));
       }
       toast(isNew ? `Événement « ${v.name} » créé` : 'Événement enregistré', 'ok');
