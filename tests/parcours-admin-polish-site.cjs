@@ -137,7 +137,9 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
   }
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
-    await goto(p, 'communication/bot', '#bt-body .bt-item');
+    await goto(p, 'communication/bot', '#bot-tablist');
+    await p.click('#bot-tab-modeles'); // les messages types sont dans leur sous-onglet
+    await p.waitForSelector('#bt-body .bt-item', { timeout: 8000 }).catch(() => {});
     check(await p.locator('#bt-body .bt-item').count() >= 1, '(b) Bot : modèles en liste');
     await p.click('#bt-body .bt-item >> nth=0');
     await p.waitForSelector('dialog[open] #bt-title', { timeout: 5000 });

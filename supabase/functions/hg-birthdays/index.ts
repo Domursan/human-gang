@@ -10,8 +10,12 @@
 // Sécurité : en-tête « x-cron-secret » égal au secret CRON_SECRET (sans ce secret, la fonction refuse tout : 401).
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), CRON_SECRET, DISCORD_BOT_TOKEN, SITE_URL (facultatif).
 // Textes : modèles « birthday_dm » et « birthday_announce » (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
-// Journal : une ligne hg_bot_log (kind « auto:anniversaire ») quand il y a eu un envoi, une tentative ou un échec.
-// Salon : bot.channels.birthday, sinon birthday_channel_id (ancien réglage), sinon le salon d'annonces (../_shared/channels.ts).
+// Journal : une ligne hg_bot_log (kind « auto:anniversaire ») quand il y a eu un envoi, une tentative ou un échec ;
+//   colonne channels = détail par salon [{ id, ok, error?, ref }] (ref = « anniversaire de <pseudo> »).
+// Salons : bot.channels.birthday (liste), sinon birthday_channel_id (ancien réglage), sinon le salon d'annonces (../_shared/channels.ts).
+//   L'annonce part dans chaque salon ; le canal salon n'est marqué que si au moins un salon l'a reçue. Un salon en échec alors
+//   qu'un autre a reçu l'annonce n'est pas réessayé. Le détail par salon va dans hg_bot_log.channels (migration 070 ; sans la
+//   colonne, la ligne est écrite sans ce détail).
 // Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/mentions.ts, ../_shared/channels.ts, ../_shared/cron-auth.ts ;
 //   tables hg_profiles, hg_birthday_log, hg_activity, hg_settings, hg_bot_log ; fonction SQL hg_cron_gate.
 // Exporte : rien (point d'entrée Deno.serve).
@@ -19,7 +23,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
-import { channelFor, type ChannelBot } from '../_shared/channels.ts';
+import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 
 // Client avec la clé service role : la fonction lit les profils de tous les membres.
@@ -99,7 +103,7 @@ Deno.serve(async (req) => {
   const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
   const bot = (s?.value ?? {}) as ChannelBot & { notify?: Record<string, boolean> } & MentionBot;
   // Salon des anniversaires : bot.channels.birthday, sinon birthday_channel_id, sinon le salon d'annonces
-  const bdayChannel = channelFor(bot, 'birthday');
+  const bdayChannels = channelsFor(bot, 'birthday');
   const botOn = bot.notify?.birthday !== false && hasBotToken();
 
   const out = { today: candidates.length, celebrated: 0, dms: 0, announces: 0, errors: 0 };
@@ -110,6 +114,8 @@ Deno.serve(async (req) => {
   const tpl = await loadTemplates(db);
   const home = SITE ? `${SITE}/accueil.html` : '';
   const attempts: Attempt[] = [];
+  /** Détail par salon des annonces de ce passage (journal hg_bot_log.channels). */
+  const chanLog: ChannelLogEntry[] = [];
   /**
    * Marque un canal comme envoyé (ou non applicable) dans hg_birthday_log.
    * @param {string} userId Membre concerné.
@@ -164,7 +170,7 @@ Deno.serve(async (req) => {
     }
     // 2b. Annonce dans le salon : seulement si le membre partage sa date et qu'un salon est réglé.
     if (row.announce_sent_at == null) {
-      if (!(p.share_birthday && isSnowflake(bdayChannel))) {
+      if (!(p.share_birthday && bdayChannels.length)) {
         await mark(p.id, year, 'announce_sent_at');
       } else {
         try {
@@ -172,13 +178,19 @@ Deno.serve(async (req) => {
           const who = isSnowflake(p.discord_id) ? `<@${p.discord_id}>` : p.pseudo;
           // Mention configurée (bot.mentions.birthday) en plus de la personne fêtée, qui est toujours notifiée
           const mention = mentionWith(bot, mentionMode(bot.mentions?.birthday), isSnowflake(p.discord_id) ? [p.discord_id] : []);
-          await sendChannel(bdayChannel!, {
+          const annonce = {
             ...mention,
             content: [mention.content, `Joyeux anniversaire ${who} !`].filter(Boolean).join(' '),
             embeds: [{ ...embedFrom(renderTemplate('birthday_announce', { pseudo: p.pseudo, lien: home }, tpl)), color: 0xe2c77e, footer: { text: 'Humane Gang' } }],
-          });
+          };
+          const results = await sendToChannels(bdayChannels, (id) => sendChannel(id, annonce), `anniversaire ${p.id}`);
+          chanLog.push(...channelLog(results, `anniversaire de ${p.pseudo}`));
+          const failedChans = results.filter((r) => !r.ok).map((r) => `salon ${r.id} : ${r.error}`).join(' ; ');
+          // Au moins un salon a reçu l'annonce : elle est faite. Sinon, erreur (ci-dessous) et nouvelle tentative au prochain passage.
+          if (!results.some((r) => r.ok)) throw new Error(failedChans);
           out.announces++;
-          attempts.push({ user_id: p.id, pseudo: p.pseudo, ok: true, status: 'sent', reason: null });
+          // Réussite partielle : les salons en échec sont notés (ils ne seront pas réessayés).
+          attempts.push({ user_id: p.id, pseudo: p.pseudo, ok: true, status: 'sent', reason: failedChans ? `annonce, échec partiel : ${failedChans}`.slice(0, 300) : null });
           await mark(p.id, year, 'announce_sent_at');
         } catch (e) {
           console.error('[hg-birthdays] annonce', e); out.errors++;
@@ -190,7 +202,7 @@ Deno.serve(async (req) => {
 
   // 3. Trace pour l'administrateur (historique du bot) : seulement s'il s'est passé quelque chose
   if (out.celebrated || attempts.length || out.errors) {
-    const { error: logErr } = await db.from('hg_bot_log').insert({
+    const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
       kind: 'auto:anniversaire',
       title: `Anniversaires : ${out.celebrated} nouveau(x), ${out.dms} MP, ${out.announces} annonce(s)`,
       body: out.errors
@@ -198,7 +210,7 @@ Deno.serve(async (req) => {
         : 'Passage automatique des anniversaires.',
       recipients: attempts,
       channel: out.announces > 0,
-    });
+    }, chanLog);
     if (logErr) console.error('[hg-birthdays] journal', logErr);
   }
   return json({ ok: true, ...out });

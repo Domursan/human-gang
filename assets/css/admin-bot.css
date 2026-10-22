@@ -162,8 +162,37 @@
 #bt-body .bt-item-state { flex: none; }
 #bt-body .bt-item-state:empty { display: none; }
 .bt-editor .bt-preview { margin-top: 4px; }
+/* Liste des modèles : deux colonnes de groupes sur grand écran (moins de défilement) */
+@media (min-width: 900px) {
+  #bt-body .bt-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 32px; align-items: start; }
+}
 /* Tiroir du modèle : le titre est déjà dans l'en-tête du tiroir */
 .ui-drawer .bt-ed-title { display: none; }
+
+/* Règles : chaque groupe a son titre et son « Rétablir » sur une même ligne ; ses champs numériques sont en grille
+   (selon la largeur du groupe, pas de la page). Sur grand écran, les groupes se rangent deux par deux. */
+.bot-groups { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* Assistance (formulaire assez large) : sujets et délai côte à côte ; limites et messages sur toute la largeur, trois colonnes */
+#support-cfg-form { container-type: inline-size; }
+@container (min-width: 700px) {
+  .bot-groups.is-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px 14px; }
+  .bot-groups.is-pair > .bot-grp-limites, .bot-groups.is-pair > .bot-grp-messages { grid-column: 1 / -1; order: 1; }
+}
+.bot-grp { container-type: inline-size; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px 14px; margin: 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 10px; }
+.bot-grp-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.bot-grp-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.3; }
+.bot-grp-head .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 13px; }
+@media (pointer: coarse) { .bot-grp-head .btn-sm { min-height: 44px; } }
+.bot-grp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 14px; align-items: start; }
+.bot-grp-grid > .field { min-width: 0; }
+.bot-grp-grid .field > .small { font-size: 13px; line-height: 1.4; }
+@container (min-width: 420px) {
+  .bot-grp-grid.is-2, .bot-grp-grid.is-3, .bot-grp-grid.is-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (min-width: 470px) {
+  .bot-grp-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
 /* ---------- Mentions des annonces (réglages) ---------- */
 .bot-admin .mentions { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin: 0; min-width: 0;
@@ -206,3 +235,73 @@
 .dc-files { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
 .dc-file { display: flex; gap: 8px; align-items: baseline; font-size: 14px; color: #00a8fc; overflow-wrap: anywhere; }
 .dc-file-size { color: #949ba4; font-size: 13px; white-space: nowrap; }
+
+/* ---------- Sous-onglets (comme les onglets de la page Cartes : barre ARIA, grille sur téléphone) ---------- */
+.bot-admin [hidden] { display: none !important; }
+.bot-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); }
+.bot-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent;
+  color: var(--muted); cursor: pointer; white-space: nowrap; }
+.bot-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.bot-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+.bot-unloaded { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px;
+  border: 1px solid var(--rose); border-radius: var(--radius-sm); }
+.bot-settings { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.bot-panel { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (max-width: 600px) {
+  .bot-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; border-bottom: 0; }
+  .bot-tab { min-height: 48px; padding: 6px 4px; font-size: 13px; line-height: 1.2; white-space: normal; text-align: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .bot-tab[aria-selected="true"] { background: var(--surface-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+}
+
+/* ---------- Salons connus et salons par type d'annonce ---------- */
+.salon-block { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.salon-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.salon-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 52px; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); }
+.salon-row:last-child { border-bottom: 0; }
+.salon-row.is-ask { background: var(--surface-2); }
+.salon-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; min-width: 0; overflow-wrap: anywhere; }
+.salon-name { font-weight: 700; }
+.salon-id { font-size: 13px; color: var(--muted); }
+.salon-ask { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.salon-ask .btn-row { gap: 8px; }
+.bot-danger { border-color: var(--rose); color: var(--rose); }
+.salon-add { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; align-items: start; }
+.salon-add .field { min-width: 0; }
+.salon-add-help { grid-column: 1 / -1; margin: 0; }
+.salon-add .btn { grid-column: 1 / -1; justify-self: start; min-height: 44px; }
+.bot-salon-err { margin: 0; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--rose); color: var(--rose); font-size: 14px; }
+#bot-chan-list { min-width: 0; }
+/* Matrice : une ligne par type d'annonce, une colonne par salon. Dans une boîte qui défile en horizontal si besoin (la page, elle, ne défile pas). */
+.chan-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); max-width: 100%; }
+.chan-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.chan-table th, .chan-table td { padding: 4px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; text-align: center; }
+.chan-table tbody tr:last-child > * { border-bottom: 0; }
+.chan-table thead th { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; padding-top: 10px; padding-bottom: 8px; }
+.chan-table thead th span { display: inline-block; max-width: 16ch; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+.chan-table tbody th { text-align: left; font-weight: 600; white-space: nowrap; min-width: 220px; }
+.chan-count { font-weight: 400; font-variant-numeric: tabular-nums; }
+.chan-table td input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); display: block; margin-inline: auto; cursor: pointer; }
+.chan-table td { height: 44px; }
+.chan-table .chan-def { text-align: left; white-space: normal; min-width: 200px; font-size: 13px; }
+.chan-hint { margin: 0; }
+/* Connexion : notifications en colonnes sur grand écran */
+.notif-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px 24px; }
+/* Règles : choix du bloc (rappels, assistance, planning) */
+.bot-seg { display: flex; flex-wrap: wrap; gap: 8px; }
+#bot-channels > p { margin: 0; }
+
+/* ---------- Annonce libre (salons cochés, puis le même formulaire que les MP) ---------- */
+.ann-card .bm-recipients legend { padding: 0; margin-bottom: 8px; }
+.ann-card .bm-recipients .bm-row input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
+.ann-card .bm-recipients .bm-count { margin: 0; }
+
+@media (max-width: 600px) {
+  .salon-add { grid-template-columns: minmax(0, 1fr); }
+  .chan-table td { height: 48px; padding: 4px 6px; }
+  .chan-table td input { width: 24px; height: 24px; }
+  .chan-table tbody th { min-width: 150px; white-space: normal; }
+  .chan-table .chan-def { min-width: 170px; }
+  .bot-tab { min-height: 48px; }
+}

@@ -164,3 +164,57 @@ Ordre à suivre :
 
 Tant que les clés VAPID ne sont pas insérées, la fonction répond `vapid_absent` et n'envoie rien. Le bouton
 « Notifications sur cet appareil » de la page Mon compte reste alors indisponible.
+
+## Bot Discord : plusieurs salons par type d'annonce (bot.channels en liste, bot.salons, admin_dm `channels`)
+
+- Réglages (hg_settings.bot) : `salons` = `[{ id, nom }]` (salons connus, 25 au plus) ; `channels` = `{ <type>: ['<ID>', …] }`
+  (0 à 5 salons par type). L'ancienne forme `'<ID>'` reste lue. Rétrocompatible : sans `salons`, rien ne change.
+
+### Ordre de mise en production (à respecter)
+
+1. **Appliquer la migration `supabase/migrations/070_bot_multi_salons.sql`** (idempotente : ajoute la colonne `channels` jsonb
+   à `hg_bot_log`). Peut être appliquée avant ou juste après les fonctions : sans elle, elles marchent quand même (repli ci-dessous),
+   seul le détail par salon n'est pas gardé dans le journal entre-temps.
+2. **Déployer `hg-notify`**, avec exactement ces fichiers (imports suivis récursivement), octet pour octet :
+   `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`,
+   `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/bot-media.ts`, `_shared/reglages.ts`.
+3. **Déployer `hg-cron`** : `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`,
+   `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts`.
+4. **Déployer `hg-birthdays`** : `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`,
+   `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts`.
+5. **Ensuite seulement, publier le site** (`assets/js/admin-bot.js` et le reste du front) : la page admin enregistre
+   `channels[type]` en **liste** et envoie `admin_dm` avec `channels` ; les anciennes fonctions liraient une liste comme un
+   identifiant invalide (annonce dans le salon par défaut, ou nulle part) et ignoreraient `channels` d'`admin_dm`.
+
+Aucun nouveau secret. `_shared/channels.ts` a changé : les trois fonctions doivent être redéployées toutes les trois
+(`hg-support`, `hg-album`, `hg-push` ne l'importent pas).
+
+### Comportement
+
+- Chaque annonce part dans chaque salon de son type, en parallèle. Une erreur sur un salon n'arrête pas les autres.
+- **Pas de nouvel essai salon par salon.** Une annonce réservée (événement dynamique : `announced_start_at` / `announced_end_at` ;
+  carte : `hg_card_copies.announced_at` ; drop : `hg_card_drops.discord_announced_at` ; anniversaire :
+  `hg_birthday_log.announce_sent_at`) n'est libérée (ou laissée en attente) **que si aucun salon** n'a reçu le message : le
+  prochain passage réessaie alors **tous** les salons. Si au moins un salon l'a reçue, l'annonce est considérée comme faite et
+  les salons en échec **ne sont pas réessayés** ; l'échec reste visible dans le journal (ci-dessous) pour un renvoi à la main
+  (annonce libre, onglet « Annonces »).
+- Journal (`hg_bot_log`, colonne `channels` = `[{ id, ok, error?, ref? }]`, `ref` = annonce concernée quand une ligne en
+  regroupe plusieurs) :
+  - `hg-cron` (kind `auto:cron`) : détail par salon des annonces de début / fin d'événement du passage (`ref` « début : <nom> »).
+  - `hg-birthdays` (kind `auto:anniversaire`) : détail par salon de chaque annonce (`ref` « anniversaire de <pseudo> ») ; en cas
+    de réussite partielle, la ligne du membre dans `recipients` a `ok: true` et `reason` « annonce, échec partiel : … ».
+  - `hg-notify` : `admin_dm` (kind `manual`) toujours ; annonces automatiques : toujours pour `draw` (`auto:tirage`),
+    `dyn_announce` (`auto:evenement`), `card_drop` (`auto:drop`) ; seulement si un salon a échoué pour `irl_new` (`auto:sortie`),
+    `card_pull` (`auto:carte`), `card_trade` (`auto:echange`). Quand un salon échoue, le texte (`body`) contient « échec »
+    (filtre « Échecs » de l'historique).
+  - Repli : si l'insertion échoue **parce que la colonne `channels` manque** (code Postgres 42703, code PostgREST PGRST204, ou
+    message citant « channels »), la ligne est réécrite sans cette colonne. Toute autre erreur n'est pas réessayée.
+- Réponses de `hg-notify` : `channels: [{ id, ok, error? }]` (draw, irl_new, card_pull, card_trade, card_drop, dyn_announce,
+  bot_test avec type, admin_dm). Les champs existants (`announced`, `channel`, `channel_error`, `sent`, `error`) gardent leur sens ;
+  `channel` vaut vrai dès qu'un salon a reçu le message. `admin_dm` renvoie en plus `log_error` (texte, ou `null`) si la ligne du
+  journal n'a pas pu être écrite (l'envoi, lui, a eu lieu).
+- `admin_dm` : `channels` (salons connus : dans `salons` ou égal au salon d'annonces, sinon 400 « Salon inconnu : … ») et
+  `channel: true` (salon d'annonces) peuvent être combinés avec `user_ids`. Les doublons (y compris le salon d'annonces cité deux
+  fois) sont retirés **avant** la limite de 10 salons. `channel: true` sans salon d'annonces valide → 400.
+- `bot_test` sans type : un `announce_channel_id` ou `admin_discord_id` qui n'est pas un identifiant Discord (17 à 20 chiffres)
+  est ignoré (jamais placé dans l'adresse de l'API).

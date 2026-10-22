@@ -7,8 +7,10 @@
 //
 // Tâches :
 //   1. Lancement des événements dynamiques : announce = true, active = true, starts_at passé, ends_at à venir,
-//      announced_start_at null → annonce « dyn_start » dans le salon (avec l'image). Salon : bot.channels.dyn, sinon le
-//      salon d'annonces (voir ../_shared/channels.ts). Mention : bot.mentions.dyn.
+//      announced_start_at null → annonce « dyn_start » dans le salon (avec l'image). Salons : bot.channels.dyn (liste), sinon le
+//      salon d'annonces (voir ../_shared/channels.ts) ; le même message part dans chaque salon. Mention : bot.mentions.dyn.
+//      La réservation n'est libérée que si aucun salon n'a reçu l'annonce (un salon en échec alors qu'un autre l'a reçue n'est pas
+//      réessayé). Le détail par salon va dans hg_bot_log.channels (migration 070 ; sans la colonne, la ligne est écrite sans lui).
 //   2. Fin : announce = true, active = true, ends_at passé, announced_end_at null → annonce « dyn_end » avec le top 3.
 //      Un événement terminé depuis plus de 24 h est seulement marqué (pas d'annonce tardive).
 //   3. Rappels de sortie IRL (opt-in, profil.remind_irl) : MP aux membres « oui » ou « peut-etre » d'une sortie
@@ -19,7 +21,8 @@
 //      Désactivé si bot.notify.gift === false.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
-//   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron »).
+//   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
+//   colonne channels = détail par salon des annonces [{ id, ok, error?, ref }] (ref = « début : <nom> » ou « fin : <nom> »).
 // Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, channels.ts, cron-auth.ts, reglages.ts ;
 //   tables hg_settings, hg_dyn_events, hg_events, hg_event_rsvps, hg_profiles, hg_ss_editions, hg_ss_participants,
 //   hg_ss_assignments, hg_bot_log.
@@ -29,7 +32,7 @@ import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_sh
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
-import { channelFor, type ChannelBot } from '../_shared/channels.ts';
+import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
 
@@ -128,10 +131,11 @@ const canDM = (p: { bot_optin: boolean; discord_id: string | null } | null | und
  * @param {Counters} out Compteurs du passage (modifiés).
  * @param {ChannelBot & MentionBot} bot Réglages du bot.
  * @param {BotRules} rules Règles du bot.
+ * @param {ChannelLogEntry[]} chanLog Détail par salon des annonces, pour le journal (modifié).
  * @returns {Promise<void>}
  * @throws {Error} Si la lecture des événements échoue.
  */
-async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rules: BotRules) {
+async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rules: BotRules, chanLog: ChannelLogEntry[]) {
   const LATE_MS = rules.dyn_retard_h * H;
   const nowIso = new Date().toISOString();
   const [{ data: startRows, error: e1 }, { data: endRows, error: e2 }] = await Promise.all([
@@ -145,8 +149,8 @@ async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rul
   const ends = (endRows ?? []) as DynEvent[];
   if (!starts.length && !ends.length) return;
 
-  const channel = channelFor(bot, 'dyn');
-  const botReady = hasBotToken() && !!channel;
+  const channels = channelsFor(bot, 'dyn');
+  const botReady = hasBotToken() && channels.length > 0;
   const tpl = botReady ? await loadTemplates(db) : {};
 
   /**
@@ -164,7 +168,11 @@ async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rul
     if (!botReady) { out.pending_no_bot++; return; } // rien n'est marqué sans envoi effectif
     if (!(await claimRow('hg_dyn_events', { id: ev.id }, col))) return;
     try {
-      await sendChannel(channel!, await buildDynAnnounce(db, ev, phase, tpl, SITE, mentionFor(bot, 'dyn'), rules.top_n));
+      const message = await buildDynAnnounce(db, ev, phase, tpl, SITE, mentionFor(bot, 'dyn'), rules.top_n);
+      const results = await sendToChannels(channels, (id) => sendChannel(id, message), `annonce ${phase} ${ev.id}`);
+      chanLog.push(...channelLog(results, `${phase === 'start' ? 'début' : 'fin'} : ${String(ev.name || ev.id).slice(0, 80)}`));
+      // Au moins un salon a reçu l'annonce : elle est faite. Sinon, erreur (ci-dessous) et réservation libérée.
+      if (!results.some((r) => r.ok)) throw new Error(results.map((r) => `salon ${r.id} : ${r.error}`).join(' ; '));
       phase === 'start' ? out.starts++ : out.ends++;
     } catch (e) {
       // Échec : on libère la réservation pour que le prochain passage réessaie.
@@ -292,7 +300,7 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
       pseudo: person.pseudo, annee: ed.year, date_limite: fmtZurichDay(ed.send_deadline), lien: link('secret-santa.html') ?? '',
     }, tpl);
     try {
-      await sendDM(person.discord_id, embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss }));
+      await sendDM(person.discord_id!, embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss }));
       out.ss_reminders++;
       attempts.push({ user_id: p.user_id, pseudo: person.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
@@ -318,13 +326,14 @@ Deno.serve(async (req) => {
 
   const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, errors: 0 };
   const attempts: Attempt[] = [];
+  const chanLog: ChannelLogEntry[] = [];
   try {
     const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
     const bot = (s?.value ?? {}) as ChannelBot & { notify?: Record<string, boolean> } & MentionBot;
     const rules = botRules(bot as Record<string, unknown>);
     const canSend = hasBotToken();
 
-    try { await dynAnnouncements(out, bot, rules); }
+    try { await dynAnnouncements(out, bot, rules, chanLog); }
     catch (e) { console.error('[hg-cron] annonces', e); out.errors++; }
     if (canSend && bot.notify?.irl !== false) {
       try { await irlReminders(out, attempts, rules); }
@@ -338,13 +347,13 @@ Deno.serve(async (req) => {
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
     const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.errors;
     if (acted || attempts.length) {
-      const { error: logErr } = await db.from('hg_bot_log').insert({
+      const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
         title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
         channel: out.starts + out.ends > 0,
-      });
+      }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
     return json({ ok: true, ...out });

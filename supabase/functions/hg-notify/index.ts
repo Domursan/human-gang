@@ -4,7 +4,7 @@
 // Construit et envoie les messages du bot Discord (MP et annonces) à partir d'événements du site.
 // verify_jwt = true : seul un utilisateur connecté peut l'appeler ; on vérifie ensuite ses droits événement par événement.
 // Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatif).
-// Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, bot-media.ts, reglages.ts ;
+// Dépendances : ../_shared/templates.ts, dyn-announce.ts, discord.ts, mentions.ts, channels.ts, bot-media.ts, reglages.ts ;
 //   tables hg_settings, hg_profiles, hg_staff, hg_ss_*, hg_events, hg_conversations, hg_messages, hg_card_*,
 //   hg_dyn_events, hg_bot_log.
 // Exporte : rien (point d'entrée Deno.serve).
@@ -14,13 +14,16 @@
 //   ss_gift_sent     { edition_id }  Santa  → MP à sa cible « Ton Santa a envoyé ton cadeau ! » (sans le nommer)
 //   ss_gift_received { edition_id }  cible  → MP à son Santa « Ta cible a reçu son cadeau »
 //   irl_new          { event_id }    créateur de la sortie (ou admin) → annonce dans le salon
-//   bot_test         {}              admin  → message de test (salon + MP admin)
+//   bot_test         { type?: MentionType } admin → message de test (avec type : dans chaque salon de ce type ; sans type : salon
+//                    d'annonces + MP admin)
 //   message_new      { conversation_id } membre de la conversation → MP aux autres membres (opt-in), sauf discussion
 //                    en cours (message précédent < 10 min). Le Santa d'une conversation santa n'est jamais nommé.
-//   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel), title?, body (≤ 2000), channel?: bool,
-//                    mention?: 'none' | 'role' | 'everyone' (salon seulement), attachments?: chemins hg-bot-media (≤ 4) }
+//   admin_dm         { user_ids: uuid[] (≤ 100, peut être vide si channel ou channels), title?, body (≤ 2000), channel?: bool,
+//                    channels?: string[] (1 à 10 salons connus : dans bot.salons ou salon d'annonces ; sinon 400 « Salon inconnu »),
+//                    mention?: 'none' | 'role' | 'everyone' (salons seulement), attachments?: chemins hg-bot-media (≤ 4) }
 //                    admin ou Staff « bot » → MP à chaque destinataire opt-in avec ID Discord ({pseudo} personnalisé), annonce
-//                    facultative (avec mention et pièces jointes), trace dans hg_bot_log, détail par destinataire renvoyé.
+//                    facultative dans chaque salon choisi (channel = salon d'annonces ; avec mention et pièces jointes), trace dans
+//                    hg_bot_log (colonne channels : [{id, ok, error?}]), détail par destinataire et par salon renvoyé.
 //                    Pièces jointes : fichiers du bucket privé hg-bot-media sous manuel/ (10 Mo max chacun), envoyés en multipart.
 //   dyn_announce     { event_id, phase: 'start' | 'end' }  admin → annonce d'un événement dynamique dans le salon
 //                    (image de l'événement, top 3 pour la fin) ; met à jour announced_start_at / announced_end_at.
@@ -49,15 +52,22 @@
 //                    Désactivable (bot.notify.card_drop, activé par défaut).
 // Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade, card_drop) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
-// Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade, card_drop) : bot.channels.<type>, sinon le salon d'annonces
-// (voir ../_shared/channels.ts). Les MP et l'annonce manuelle (admin_dm) ne changent pas.
+// Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade, card_drop) : bot.channels.<type> (liste de salons),
+// sinon le salon d'annonces (voir ../_shared/channels.ts). Chaque annonce part dans chaque salon de la liste ; un échec sur un
+// salon n'empêche pas les autres (résultat « channels » par salon). Les MP ne changent pas.
+// Journal des annonces (hg_bot_log, colonne channels = [{ id, ok, error? }], migration 070) : toujours pour draw, dyn_announce,
+// card_drop (lancées par l'admin) ; seulement si un salon a échoué pour irl, card_pull, card_trade (kinds auto:tirage,
+// auto:evenement, auto:drop, auto:sortie, auto:carte, auto:echange). Un salon en échec n'est jamais réessayé quand un autre a
+// reçu l'annonce ; la réservation (carte, drop) n'est libérée que si aucun salon ne l'a reçue.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, mentionMode, mentionWith, MENTION_TYPES, type MentionBot, type MentionType } from '../_shared/mentions.ts';
-import { channelFor, CHANNEL_LABEL } from '../_shared/channels.ts';
+import {
+  channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, CHANNEL_LABEL, type ChannelResult,
+} from '../_shared/channels.ts';
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 import { botRules } from '../_shared/reglages.ts';
 
@@ -82,7 +92,8 @@ const FRESH_MS = 15 * 60_000; // un envoi/réception doit être récent (anti-r�
 type Bot = MentionBot & {
   announce_channel_id?: string | null;
   birthday_channel_id?: string | null;
-  channels?: Partial<Record<MentionType, string | null>> | null;
+  channels?: Partial<Record<MentionType, string | string[] | null>> | null;
+  salons?: { id: string; nom: string }[] | null;
   admin_discord_id?: string | null;
   notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop', boolean>>;
 };
@@ -120,6 +131,33 @@ const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Hum
  * @returns {boolean} Vrai si le MP peut partir.
  */
 const canDM = (p: Profile | null | undefined): p is Profile => !!p && p.bot_optin && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
+
+/**
+ * Trace d'une annonce publiée dans des salons (hg_bot_log, colonne channels = détail par salon, migration 070).
+ * Écrite si au moins un salon a échoué, ou toujours si always (annonces lancées par l'admin). Le texte contient « échec »
+ * quand un salon a échoué, pour le filtre « Échecs » de l'historique. Ne lève jamais d'erreur.
+ * @param {Profile} me Appelant (auteur de l'action qui a déclenché l'annonce).
+ * @param {string} kind Type de ligne (ex. « auto:carte »).
+ * @param {string} title Titre de la ligne.
+ * @param {ChannelResult[]} results Résultat par salon.
+ * @param {boolean} always Écrire même si tous les salons ont reçu l'annonce.
+ * @returns {Promise<void>}
+ */
+async function logAnnounce(me: Profile, kind: string, title: string, results: ChannelResult[], always: boolean): Promise<void> {
+  const failed = results.filter((r) => !r.ok);
+  if (!results.length || (!failed.length && !always)) return;
+  const ok = results.length - failed.length;
+  try {
+    const { error } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
+      sent_by: me.id, kind, title: truncate(title, 200), recipients: [], channel: ok > 0,
+      body: failed.length
+        ? truncate(`${failed.length} salon(s) en échec sur ${results.length} (non réessayés${ok ? '' : ', nouvelle tentative possible'}) : `
+          + failed.map((r) => `${r.id} : ${r.error ?? 'échec'}`).join(' ; '), 2000)
+        : `Publié dans ${results.length} salon(s).`,
+    }, channelLog(results));
+    if (error) console.error(`[hg-notify] journal ${kind}`, error);
+  } catch (e) { console.error(`[hg-notify] journal ${kind}`, e); }
+}
 
 /* ---------- Données ---------- */
 
@@ -199,14 +237,17 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
     annee: ed.year, participants: people.length, budget: ed.budget ?? '', date_limite: fmtDate(ed.send_deadline) ?? '',
     date_echange: fmtDate(ed.exchange_date) ?? '', lien: link('secret-santa.html') ?? '',
   };
-  let announced = false;
-  const drawChannel = channelFor(bot, 'draw');
-  if (drawChannel) {
-    announced = await trySend(() => sendChannel(drawChannel, {
+  const drawChannels = channelsFor(bot, 'draw');
+  let channels: ChannelResult[] = [];
+  if (drawChannels.length) {
+    const annonce = {
       ...mentionFor(bot, 'draw'),
       ...embed({ ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)), url: link('secret-santa.html'), color: COLOR.ss, fields }),
-    }), 'annonce tirage');
+    };
+    channels = await sendToChannels(drawChannels, (id) => sendChannel(id, annonce), 'annonce tirage', friendlyDiscordError);
+    await logAnnounce(me, 'auto:tirage', `Annonce du tirage ${ed.year}`, channels, true);
   }
+  const announced = channels.some((c) => c.ok);
   let dms = 0, failed = 0;
   for (const person of people.filter(canDM)) {
     const ok = await trySend(() => sendDM(person.discord_id!, embed({
@@ -216,7 +257,7 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
     ok ? dms++ : failed++;
     await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
   }
-  return { announced, dms_sent: dms, dms_failed: failed };
+  return { announced, channels, dms_sent: dms, dms_failed: failed };
 }
 
 /**
@@ -272,8 +313,8 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
 async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.event_id)) throw new HttpError(400, 'event_id manquant');
   if (bot.notify?.irl === false) return { skipped: 'désactivé' };
-  const irlChannel = channelFor(bot, 'irl');
-  if (!irlChannel) return { skipped: 'aucun salon configuré' };
+  const irlChannels = channelsFor(bot, 'irl');
+  if (!irlChannels.length) return { skipped: 'aucun salon configuré' };
   const { data: ev } = await db.from('hg_events').select('id, title, description, location, starts_at, created_by, created_at')
     .eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Sortie introuvable');
@@ -293,11 +334,13 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
     description: ev.description ? String(ev.description).slice(0, 600) : 'Dis si tu viens sur le site.',
     lieu: where, date: when, organisateur: me.pseudo, lien: link('irl.html') ?? '',
   }, tpl);
-  const channel = await trySend(() => sendChannel(irlChannel, {
+  const annonce = {
     ...mentionFor(bot, 'irl'),
     ...embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields }),
-  }), 'annonce IRL');
-  return { channel };
+  };
+  const channels = await sendToChannels(irlChannels, (id) => sendChannel(id, annonce), 'annonce IRL', friendlyDiscordError);
+  await logAnnounce(me, 'auto:sortie', `Annonce de sortie : ${ev.title}`, channels, false);
+  return { channel: channels.some((c) => c.ok), channels };
 }
 
 /** Un message déclencheur doit dater de moins de 2 minutes. */
@@ -373,24 +416,30 @@ async function onTest(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   if (p.type != null && p.type !== '') {
     if (!MENTION_TYPES.includes(p.type as MentionType)) throw new HttpError(400, 'Type d\'annonce inconnu');
     const type = p.type as MentionType;
-    const chan = channelFor(bot, type);
-    if (!chan) return { error: 'Aucun salon pour ce type : renseigne son salon, ou le salon d\'annonces, puis enregistre.' };
+    const chans = channelsFor(bot, type);
+    if (!chans.length) return { error: 'Aucun salon pour ce type : renseigne son salon, ou le salon d\'annonces, puis enregistre.' };
     out.type = type;
-    out.channel = await trySend(() => sendChannel(chan, embed({
+    const test = embed({
       ...embedFrom(renderTemplate('bot_test', { canal: `les annonces « ${CHANNEL_LABEL[type]} »`, pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
       color: COLOR.info, url: link('accueil.html'),
-    })), `test salon ${type}`);
+    });
+    const channels = await sendToChannels(chans, (id) => sendChannel(id, test), `test salon ${type}`, friendlyDiscordError);
+    out.channel = channels.some((c) => c.ok);
+    out.channels = channels;
     return out;
   }
-  if (!bot.announce_channel_id && !bot.admin_discord_id) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord, puis enregistre.' };
-  if (bot.announce_channel_id) {
-    out.channel = await trySend(() => sendChannel(bot.announce_channel_id!, embed({
+  // Identifiants invalides ignorés (ils finiraient dans l'adresse de l'API Discord).
+  const announceId = isSnowflake(bot.announce_channel_id) ? bot.announce_channel_id : null;
+  const adminId = isSnowflake(bot.admin_discord_id) ? bot.admin_discord_id : null;
+  if (!announceId && !adminId) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord (17 à 20 chiffres), puis enregistre.' };
+  if (announceId) {
+    out.channel = await trySend(() => sendChannel(announceId, embed({
       ...embedFrom(renderTemplate('bot_test', { canal: 'les annonces', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
       color: COLOR.info, url: link('accueil.html'),
     })), 'test salon');
   }
-  if (bot.admin_discord_id) {
-    out.dm = await trySend(() => sendDM(bot.admin_discord_id!, embed({
+  if (adminId) {
+    out.dm = await trySend(() => sendDM(adminId, embed({
       ...embedFrom(renderTemplate('bot_test', { canal: 'les messages privés', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
       color: COLOR.info,
     })), 'test MP');
@@ -402,6 +451,8 @@ async function onTest(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
 // Limites du message manuel : réglables (bot.envoi), défauts 100 destinataires, 2000 caractères, 4 pièces de 10 Mo.
 /** Modes de mention acceptés pour une annonce manuelle. */
 const MANUAL_MENTIONS = ['none', 'role', 'everyone'];
+/** Nombre maximal de salons choisis pour une annonce manuelle (liste « channels »). */
+const MAX_MANUAL_CHANNELS = 10;
 /** Résultat d'un envoi pour un destinataire, renvoyé à l'admin et gardé dans le journal. */
 type Recipient = { user_id: string; pseudo: string | null; ok: boolean; status: 'sent' | 'failed' | 'skipped'; reason: string | null };
 /**
@@ -446,7 +497,20 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const raw: unknown[] = Array.isArray(p.user_ids) ? p.user_ids : [];
   const ids = [...new Set(raw.filter(isUuid).map((s) => s.toLowerCase()))];
   if (ids.length !== raw.length && !ids.length) throw new HttpError(400, 'Destinataires invalides');
-  if (!ids.length && p.channel !== true) throw new HttpError(400, 'Choisis au moins un destinataire (ou publie dans le salon)');
+  // Salons : liste facultative ; chaque identifiant doit être un salon connu. « channel: true » = salon d'annonces.
+  // La limite (10 salons) s'applique après retrait des doublons, salon d'annonces compris.
+  if (p.channels != null && !Array.isArray(p.channels)) throw new HttpError(400, 'Salons invalides');
+  const rawChans: unknown[] = Array.isArray(p.channels) ? p.channels : [];
+  if (rawChans.length > MAX_MANUAL_CHANNELS * 10) throw new HttpError(400, `${MAX_MANUAL_CHANNELS} salons maximum par envoi`);
+  for (const c of rawChans) {
+    if (typeof c !== 'string' || !isKnownChannel(bot, c)) throw new HttpError(400, `Salon inconnu : ${String(c)}`);
+  }
+  const wantChannel = p.channel === true;
+  if (wantChannel && !isSnowflake(bot.announce_channel_id)) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
+  // Salons visés, sans doublon : le salon d'annonces (channel: true) puis les salons choisis.
+  const targets = [...new Set([...(wantChannel ? [bot.announce_channel_id as string] : []), ...(rawChans as string[])])];
+  if (targets.length > MAX_MANUAL_CHANNELS) throw new HttpError(400, `${MAX_MANUAL_CHANNELS} salons maximum par envoi`);
+  if (!ids.length && !targets.length) throw new HttpError(400, 'Choisis au moins un destinataire (ou un salon)');
   const rules = botRules(bot as unknown as Record<string, unknown>);
   const MAX_USERS = rules.destinataires_max, MAX_BODY = rules.corps_max;
   if (raw.length > MAX_USERS * 2 || ids.length > MAX_USERS) throw new HttpError(400, `${MAX_USERS} destinataires maximum par envoi`);
@@ -455,11 +519,9 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const body = typeof p.body === 'string' ? p.body.replace(/\u0000/g, '').trim() : '';
   if (!body) throw new HttpError(400, 'Le message est vide');
   if (body.length > MAX_BODY) throw new HttpError(400, `Message trop long (${MAX_BODY} caractères maximum)`);
-  const wantChannel = p.channel === true;
-  if (wantChannel && !bot.announce_channel_id) throw new HttpError(400, 'Aucun salon d\'annonces n\'est configuré');
   if (p.mention != null && !MANUAL_MENTIONS.includes(String(p.mention))) throw new HttpError(400, 'Mention inconnue');
-  const mode = mentionMode(p.mention); // la mention ne concerne que la publication dans le salon
-  if (wantChannel && mode === 'role' && !isSnowflake(bot.mention_role_id)) {
+  const mode = mentionMode(p.mention); // la mention ne concerne que la publication dans les salons
+  if (targets.length && mode === 'role' && !isSnowflake(bot.mention_role_id)) {
     throw new HttpError(400, 'Aucun rôle à mentionner n\'est configuré (section Bot Discord)');
   }
   const attachPaths = validAttachmentPaths(p.attachments, rules.pieces_max); // chemins sous manuel/ ; erreur de contrôle → 400
@@ -509,21 +571,24 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     }
   }
 
-  // Annonce dans le salon : indépendante des MP ; son échec est noté mais ne bloque pas le journal.
-  let channelOk: boolean | null = null;
-  let channelError: string | null = null;
-  if (wantChannel) {
-    try {
-      await sendChannel(bot.announce_channel_id!, { ...mentionWith(bot, mode), ...build('tout le monde') }, files);
-      channelOk = true;
-    } catch (e) { console.error('[hg-notify] annonce manuelle', e); channelOk = false; channelError = friendlyDiscordError(e); }
-  }
+  // Annonce dans chaque salon visé : indépendante des MP ; un salon en échec n'empêche pas les autres ni le journal.
+  const channels: ChannelResult[] = targets.length
+    ? await sendToChannels(targets, (id) => sendChannel(id, { ...mentionWith(bot, mode), ...build('tout le monde') }, files), 'annonce manuelle', friendlyDiscordError)
+    : [];
+  const channelOk: boolean | null = targets.length ? channels.some((c) => c.ok) : null;
+  const channelError: string | null = channels.find((c) => !c.ok)?.error ?? null;
 
-  // Trace dans le journal du bot (historique de l'admin).
-  const { data: log, error: logErr } = await db.from('hg_bot_log').insert({
-    sent_by: me.id, kind: 'manual', title: title || null, body, recipients, channel: channelOk === true,
-  }).select('id').maybeSingle();
-  if (logErr) console.error('[hg-notify] hg_bot_log', logErr);
+  // Trace dans le journal du bot (historique de l'admin). Si la colonne « channels » (migration 070) manque, et seulement
+  // dans ce cas, l'entrée est écrite sans les salons plutôt que perdue. Échec final : log_error dans la réponse.
+  const logRes = await insertWithChannels(
+    (row): PromiseLike<{ data: { id: number } | null; error: { code?: string; message: string } | null }> =>
+      db.from('hg_bot_log').insert(row).select('id').maybeSingle(),
+    { sent_by: me.id, kind: 'manual', title: title || null, body, recipients, channel: channelOk === true },
+    channelLog(channels),
+  );
+  if (logRes.error) console.error('[hg-notify] hg_bot_log', logRes.error);
+  const log = logRes.data;
+  const logError: string | null = logRes.error ? truncate(String(logRes.error.message ?? logRes.error), 160) : null;
 
   /**
    * Compte les destinataires ayant un statut donné.
@@ -533,8 +598,8 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
   const count = (s: Recipient['status']) => recipients.filter((r) => r.status === s).length;
   return {
     recipients, sent: count('sent'), failed: count('failed'), skipped: count('skipped'),
-    channel: channelOk, channel_error: channelError, log_id: log?.id ?? null,
-    mention: wantChannel ? mode : 'none', attachments: files.map((f) => f.name),
+    channel: channelOk, channel_error: channelError, channels, log_id: log?.id ?? null, log_error: logError,
+    mention: targets.length ? mode : 'none', attachments: files.map((f) => f.name),
   };
 }
 
@@ -557,20 +622,19 @@ async function onDynAnnounce(me: Profile, bot: Bot, p: Record<string, unknown>, 
   if (!phase) throw new HttpError(400, 'phase attendue : start ou end');
   const { data: ev } = await db.from('hg_dyn_events').select('*').eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Événement introuvable');
-  const dynChannel = channelFor(bot, 'dyn');
-  if (!dynChannel) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
+  const dynChannels = channelsFor(bot, 'dyn');
+  if (!dynChannels.length) return { sent: false, skipped: 'aucun salon d\'annonces configuré (section Bot Discord)' };
   const message = await buildDynAnnounce(db, ev as DynEvent, phase, tpl, SITE, mentionFor(bot, 'dyn'), botRules(bot as unknown as Record<string, unknown>).top_n);
-  try {
-    await sendChannel(dynChannel, message);
-  } catch (e) {
-    console.error('[hg-notify] annonce événement', e);
-    return { sent: false, error: friendlyDiscordError(e) };
+  const channels = await sendToChannels(dynChannels, (id) => sendChannel(id, message), 'annonce événement', friendlyDiscordError);
+  await logAnnounce(me, 'auto:evenement', `Annonce ${phase === 'start' ? 'de début' : 'de fin'} : ${(ev as DynEvent).name ?? ev.id}`, channels, true);
+  if (!channels.some((c) => c.ok)) {
+    return { sent: false, error: channels.find((c) => !c.ok)?.error ?? 'Aucun salon n\'a reçu l\'annonce', channels };
   }
-  // Marque l'annonce comme faite, pour que hg-cron ne la republie pas.
+  // Marque l'annonce comme faite (au moins un salon l'a reçue), pour que hg-cron ne la republie pas.
   const col = phase === 'start' ? 'announced_start_at' : 'announced_end_at';
   const { error } = await db.from('hg_dyn_events').update({ [col]: new Date().toISOString() }).eq('id', ev.id);
   if (error) console.error('[hg-notify] announced_*_at', error);
-  return { sent: true, phase };
+  return { sent: true, phase, channels };
 }
 
 /* ---------- Cartes à collectionner ---------- */
@@ -591,8 +655,8 @@ const CARD_FRESH_MS = 10 * 60_000; // l'exemplaire doit venir d'être obtenu (an
 async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.card)) throw new HttpError(400, 'card manquant');
   if (bot.notify?.card_pull === false) return { skipped: 'désactivé' };
-  const pullChannel = channelFor(bot, 'card_pull');
-  if (!pullChannel) return { skipped: 'aucun salon configuré' };
+  const pullChannels = channelsFor(bot, 'card_pull');
+  if (!pullChannels.length) return { skipped: 'aucun salon configuré' };
   const { data: card } = await db.from('hg_cards').select('id, name, rarity, max_copies').eq('id', p.card).maybeSingle();
   if (!card) throw new HttpError(404, 'Carte introuvable');
   const rarete = CARD_RARITY_LABEL[card.rarity];
@@ -617,13 +681,16 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
   const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, verbe, lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(pullChannel, {
+  const annonce = {
     ...mentionFor(bot, 'card_pull'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
-  }), 'annonce carte');
-  // Échec : on retire la réservation pour que la prochaine ouverture puisse réessayer.
-  if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id); // échec : la prochaine ouverture pourra réessayer
-  return { channel };
+  };
+  const channels = await sendToChannels(pullChannels, (id) => sendChannel(id, annonce), 'annonce carte', friendlyDiscordError);
+  await logAnnounce(me, 'auto:carte', `Annonce de carte : ${carte} (${me.pseudo})`, channels, false);
+  const channel = channels.some((c) => c.ok);
+  // Aucun salon n'a reçu l'annonce : on retire la réservation pour que la prochaine ouverture puisse réessayer.
+  if (!channel) await db.from('hg_card_copies').update({ announced_at: null }).eq('id', copy.id);
+  return { channel, channels };
 }
 
 /**
@@ -638,8 +705,8 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   if (!isUuid(p.trade_id)) throw new HttpError(400, 'trade_id manquant');
   if (bot.notify?.card_trade !== true) return { skipped: 'désactivé' };
-  const tradeChannel = channelFor(bot, 'card_trade');
-  if (!tradeChannel) return { skipped: 'aucun salon configuré' };
+  const tradeChannels = channelsFor(bot, 'card_trade');
+  if (!tradeChannels.length) return { skipped: 'aucun salon configuré' };
   const { data: t } = await db.from('hg_card_trades').select('id, from_user, to_user, status, resolved_at').eq('id', p.trade_id).maybeSingle();
   if (!t) throw new HttpError(404, 'Échange introuvable');
   // Seul le destinataire (celui qui accepte l'offre) annonce : une seule annonce par échange.
@@ -648,11 +715,13 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
   const other = await getProfile(t.from_user);
   const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
-  const channel = await trySend(() => sendChannel(tradeChannel, {
+  const annonce = {
     ...mentionFor(bot, 'card_trade'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
-  }), 'annonce échange');
-  return { channel };
+  };
+  const channels = await sendToChannels(tradeChannels, (id) => sendChannel(id, annonce), 'annonce échange', friendlyDiscordError);
+  await logAnnounce(me, 'auto:echange', `Annonce d'échange : ${me.pseudo}`, channels, false);
+  return { channel: channels.some((c) => c.ok), channels };
 }
 
 /* Offre d'échange reçue : MP au destinataire, envoyé par l'auteur juste après la création (ou la contre-proposition). */
@@ -820,8 +889,8 @@ async function onCardDrop(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   if (!(await canUseCards(me))) throw new HttpError(403, 'Réservé à l\'admin ou au Staff avec la permission Cartes');
   if (!isUuid(p.drop_id)) throw new HttpError(400, 'drop_id manquant');
   if (bot.notify?.card_drop === false) return { skipped: 'désactivé' };
-  const dropChannel = channelFor(bot, 'card_drop');
-  if (!dropChannel) return { skipped: 'aucun salon configuré' };
+  const dropChannels = channelsFor(bot, 'card_drop');
+  if (!dropChannels.length) return { skipped: 'aucun salon configuré' };
   const { data: d } = await db.from('hg_card_drops').select('id, card_id, shiny, quantity, ends_at, created_at, discord_announced_at')
     .eq('id', p.drop_id).maybeSingle();
   if (!d) throw new HttpError(404, 'Drop introuvable');
@@ -845,17 +914,20 @@ async function onCardDrop(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const rendered = renderTemplate('card_drop_announce', { carte, rarete, quantite, fin, lien: link('accueil.html') ?? '' }, tpl);
   // L'image n'est reprise que si elle est en https (Discord ne charge pas les autres).
   const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
-  const channel = await trySend(() => sendChannel(dropChannel, {
+  const annonce = {
     ...mentionFor(bot, 'card_drop'),
     ...embed({
       ...embedFrom(rendered), url: link('accueil.html'), color: COLOR.card,
       fields: [{ name: 'Exemplaires', value: quantite, inline: true }, ...(fin ? [{ name: 'Jusqu\'à', value: fin, inline: true }] : [])],
       ...(image ? { image: { url: image } } : {}),
     }),
-  }), 'annonce drop');
-  // Échec : on libère la réservation pour qu'un nouvel appel puisse réessayer.
+  };
+  const channels = await sendToChannels(dropChannels, (id) => sendChannel(id, annonce), 'annonce drop', friendlyDiscordError);
+  await logAnnounce(me, 'auto:drop', `Annonce de drop : ${carte}`, channels, true);
+  const channel = channels.some((c) => c.ok);
+  // Aucun salon n'a reçu l'annonce : on libère la réservation pour qu'un nouvel appel puisse réessayer.
   if (!channel) await db.from('hg_card_drops').update({ discord_announced_at: null }).eq('id', d.id);
-  return { channel };
+  return { channel, channels };
 }
 
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */

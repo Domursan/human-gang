@@ -258,6 +258,8 @@ class Q {
       for (const r of rows) { const i = tab.findIndex((x) => x.key === r.key); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
       return { data: rows, error: null };
     }
+    // Scénario botSettingsFail : la lecture des réglages du bot échoue (bandeau « recharge la page », aucune écriture possible).
+    if (this.op === 'select' && this.t === 'hg_settings' && S.botSettingsFail) return { data: null, error: { message: 'Failed to fetch' } };
     // Insertion : les lignes reçoivent un identifiant si la table en exige un (comme gen_random_uuid en base).
     if (this.op === 'insert' || this.op === 'upsert') {
       // Scénario guardError : refus de créer une édition tant que la précédente n'est pas terminée.
@@ -375,9 +377,18 @@ function botMediaBucket() {
 
 // Réponse de hg-notify « admin_dm » : un résultat par destinataire, et le salon si demandé (comme la fonction réelle).
 /** Réponse simulée de la fonction hg-notify « admin_dm » : un résultat par destinataire. */
+// Test du bot (bot_test) : un résultat par salon ; en échec les ids de scenario.botChannelFail.
+function botTestResult() {
+  const fails = (S.botChannelFail || []).map((id) => ({ id, ok: false, error: 'Le bot ne peut pas écrire dans ce salon.' }));
+  return { channel: true, dm: true, channels: [{ id: 'salon-ok', ok: true }, ...fails] };
+}
+// Annonce libre dans des salons (body.channels) : un résultat par salon, en échec pour les ids de scenario.botChannelFail.
 function adminDmResult(body) {
   const recipients = (body.user_ids || []).map((id) => ({ user_id: id, pseudo: DB.hg_profiles.find((x) => x.id === id)?.pseudo ?? null, ok: true, status: 'sent', reason: null }));
-  return { ok: true, recipients, sent: recipients.length, failed: 0, skipped: 0, channel: body.channel ? true : null, channel_error: null, log_id: 1 };
+  const channels = Array.isArray(body.channels)
+    ? body.channels.map((id) => (S.botChannelFail || []).includes(id) ? { id, ok: false, error: 'Le bot ne peut pas écrire dans ce salon.' } : { id, ok: true })
+    : undefined;
+  return { ok: true, recipients, sent: recipients.length, failed: 0, skipped: 0, channel: body.channel ? true : null, channel_error: null, log_id: 1, log_error: null, ...(channels ? { channels } : {}) };
 }
 
 /* ---------- Questions du gang : hg_quiz_save simulée (validations du serveur, messages en français) ---------- */
@@ -743,6 +754,6 @@ export function createClient() {
       createSignedUrls: async (paths = []) => ({ data: paths.map((p) => ({ path: p, signedUrl: PHOTO_SVG, error: null })) }),
     }) },
     /** Fonctions edge simulées : notées dans le journal, avec une réponse pour admin_dm et dyn_announce, sinon une réponse vide. */
-    functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); if (body?.event === 'admin_dm') return { data: adminDmResult(body), error: null }; return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
+    functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); if (body?.event === 'admin_dm') return { data: adminDmResult(body), error: null }; if (body?.event === 'bot_test') return { data: botTestResult(), error: null }; return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },
   };
 }

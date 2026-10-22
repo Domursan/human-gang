@@ -1,4 +1,5 @@
 // Parcours : Communication › Bot Discord — mentions des annonces et pièces jointes du message manuel.
+// Les réglages sont en sous-onglets : chaque étape ouvre l'onglet qui contient le champ (Connexion, Mentions, Messages privés).
 // (a) Réglages : ID du rôle (format refusé, rôle demandé sans ID refusé), mention par type d'annonce enregistrée
 //     dans hg_settings.bot (mention_role_id, mentions) ; sans salon, le bloc des mentions est grisé.
 // (b) Message manuel : mention @everyone (confirmation avant envoi), 3 pièces jointes puis retrait d'une, aperçu
@@ -28,6 +29,14 @@ async function goto(p, route, sel) {
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 8000 }).catch(() => {});
   await sleep(200);
 }
+/** Ouvre un sous-onglet du bot en cliquant dessus, puis attend son panneau. */
+async function tab(p, id) {
+  await p.click(`#bot-tab-${id}`);
+  await p.waitForSelector(`#bot-p-${id}`, { state: 'visible', timeout: 5000 });
+  await sleep(120);
+}
+/** Enregistre les réglages avec le bouton du panneau affiché. */
+async function save(p) { await p.click('#bot-form button[type="submit"]:visible'); await sleep(500); }
 /** Réglages du bot lus dans la base simulée (hg_settings, clé « bot »). */
 const botSetting = (p) => p.evaluate(() => (window.__DB.hg_settings.find((r) => r.key === 'bot') || {}).value || {});
 /** Appels de hg-notify faits depuis le panel admin (journal du faux client). */
@@ -63,30 +72,34 @@ function png(w = 160, h = 100) {
     // Comptes joignables : chacun a un ID Discord et accepte les MP du bot (sans cela, rien à sélectionner)
     await p.evaluate(([ids]) => { window.__DB.hg_profiles.forEach((pr, i) => { pr.discord_id = ids[i] || null; pr.bot_optin = true; }); },
       [['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004', '100000000000000005', '100000000000000006']]);
-    await goto(p, 'communication/bot', '#bot-form');
+    await goto(p, 'communication/bot', '#bot-tablist');
 
+    await tab(p, 'mentions');
     check(await p.isDisabled('#bot-mention-draw'), '(a) sans salon : les mentions sont grisées');
     check(await p.isVisible('#bot-mentions-off'), '(a) sans salon : le texte « renseigne le salon » est visible');
+    await tab(p, 'connexion');
     await p.fill('#bot-channel', CHANNEL);
+    await tab(p, 'mentions');
     check(!(await p.isDisabled('#bot-mention-draw')), '(a) avec salon : les mentions sont actives');
     check(await p.inputValue('#bot-mention-draw') === 'none', '(a) mention par défaut : aucune');
 
+    await tab(p, 'connexion');
     await p.fill('#bot-role', 'abc');
-    await p.click('#bot-form button[type="submit"]');
-    await sleep(300);
+    await save(p);
     check(await p.locator('text=L\'ID du rôle doit être un nombre').count() > 0, '(a) ID de rôle mal formé : refusé');
     check(!(await botSetting(p)).mention_role_id, '(a) ID mal formé : rien enregistré');
 
     await p.fill('#bot-role', '');
+    await tab(p, 'mentions');
     await p.selectOption('#bot-mention-draw', 'role');
-    await p.click('#bot-form button[type="submit"]');
-    await sleep(300);
+    await save(p);
     check(await p.locator('text=Pour mentionner un rôle, renseigne son ID').count() > 0, '(a) rôle demandé sans ID : refusé');
 
+    await tab(p, 'connexion');
     await p.fill('#bot-role', ROLE);
+    await tab(p, 'mentions');
     await p.selectOption('#bot-mention-dyn', 'everyone');
-    await p.click('#bot-form button[type="submit"]');
-    await sleep(500);
+    await save(p);
     const saved = await botSetting(p);
     check(saved.mention_role_id === ROLE, '(a) enregistré : mention_role_id');
     check(saved.mentions?.draw === 'role' && saved.mentions?.dyn === 'everyone', '(a) enregistré : mentions par type (role, everyone)');
@@ -106,7 +119,8 @@ function png(w = 160, h = 100) {
       [['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004', '100000000000000005', '100000000000000006']]);
     // Réglages déjà enregistrés (rôle configuré) : la mention « Le rôle » doit être proposée
     await p.evaluate((id) => { window.__DB.hg_settings.unshift({ key: 'bot', value: { announce_channel_id: '112233445566778899', mention_role_id: id, mentions: {}, notify: {} } }); }, ROLE);
-    await goto(p, 'communication/bot', '#bm-list');
+    await goto(p, 'communication/bot', '#bot-tablist');
+    await tab(p, 'mp');
     await p.waitForSelector(`#bm-list input[value="${U(2)}"]`, { timeout: 8000 });
 
     check(await p.isDisabled('#bm-mention'), '(b) sans publication dans le salon : mention grisée');
@@ -183,7 +197,8 @@ function png(w = 160, h = 100) {
   /* (d) Mobile 390 px : pas de défilement horizontal sur les réglages et le message manuel */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
-    await goto(p, 'communication/bot', '#bm-drop');
+    await goto(p, 'communication/bot', '#bot-tablist');
+    await tab(p, 'mp');
     check(await hscroll(p) === 0, '(d) 390 px : pas de défilement horizontal (message manuel)');
     check(!p.errs.length, '(d) mobile : aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();

@@ -19,6 +19,15 @@ async function goto(p, route, sel) {
   await p.waitForFunction((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel, { timeout: 8000 }).catch(() => {});
   await sleep(200);
 }
+// Les rappels, l'assistance et le planning sont dans le sous-onglet Règles du bot (Communication › Bot Discord).
+/** Ouvre le sous-onglet Règles du bot, puis le bloc sub (rappels, assistance ou planning), puis attend le formulaire sel. */
+async function gotoRegles(p, sel, sub = 'rappels') {
+  await goto(p, 'communication/bot', '#bot-tablist');
+  await p.click('#bot-tab-regles');
+  await p.click(`#bot-rsub [data-rsub="${sub}"]`);
+  await p.waitForSelector(sel, { state: 'visible', timeout: 8000 }).catch(() => {});
+  await sleep(200);
+}
 // Le faux client place la ligne la plus récente en tête : on lit la première ligne de la clé.
 /** Valeur de la ligne hg_settings de la clé key dans la base simulée, ou null. */
 const setting = (p, key) => p.evaluate((k) => (window.__DB.hg_settings.find((r) => r.key === k) || {}).value ?? null, key);
@@ -32,7 +41,7 @@ const fill = (p, sel, v) => p.fill(sel, String(v));
   /* (a) Rappels, délais et limites du bot */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goto(p, 'communication/bot', '#rules-form');
+    await gotoRegles(p, '#rules-form');
 
     check(await p.isVisible('#rules-form'), '(a) formulaire « Rappels, annonces et envois » présent');
     check(await p.inputValue('#rules-form [name="irl_long"]') === '24', '(a) défaut : rappel de sortie 24 h');
@@ -81,7 +90,7 @@ const fill = (p, sel, v) => p.fill(sel, String(v));
   /* (b) Planning : heure suisse des anniversaires */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goto(p, 'communication/bot', '#planning-form');
+    await gotoRegles(p, '#planning-form', 'planning');
     check(await p.inputValue('#planning-birthday') === '8', '(b) défaut : anniversaires à 8 h');
     await p.selectOption('#planning-birthday', '7');
     await p.click('#planning-form button[type="submit"]');
@@ -98,7 +107,7 @@ const fill = (p, sel, v) => p.fill(sel, String(v));
   /* (c) Assistance : sujets et limites */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goto(p, 'communication/bot', '#support-cfg-form');
+    await gotoRegles(p, '#support-cfg-form', 'assistance');
     const sujetsDefaut = (await p.inputValue('#support-sujets')).split('\n');
     check(JSON.stringify(sujetsDefaut) === JSON.stringify(DEF_SUJETS), '(c) défaut : six sujets, dans l\'ordre d\'origine');
 
