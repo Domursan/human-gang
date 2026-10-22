@@ -6,10 +6,17 @@
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
+/* ---------- Constantes ---------- */
+
+// Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
 const CACHE_VERSION = 'v35';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 
+/* ---------- Liste de précache ----------
+   Fichiers téléchargés à l'installation, pour que le site s'ouvre hors ligne. Chemins relatifs à la racine du site.
+   Un fichier ajouté au site doit aussi être ajouté ici s'il doit marcher hors ligne. Ne pas modifier sans
+   incrémenter CACHE_VERSION (voir l'en-tête). */
 const PRECACHE = [
   'index.html', 'accueil.html', 'admin.html', 'aide.html', 'assistance.html', 'cartes.html', 'compte.html',
   'evenements.html', 'historique.html', 'irl.html', 'legal.html', 'membre.html', 'messages.html',
@@ -79,6 +86,9 @@ const PRECACHE_REMOTE = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm',
 ];
 
+/* ---------- Cycle de vie : installation et activation ---------- */
+
+/** Installation : remplit le cache avec la liste PRECACHE puis prend la main sans attendre la fermeture des onglets. */
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
@@ -89,6 +99,7 @@ self.addEventListener('install', (event) => {
   })());
 });
 
+/** Activation : supprime les anciens caches du site (même préfixe, autre version) puis contrôle les onglets ouverts. */
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     for (const key of await caches.keys()) {
@@ -98,6 +109,10 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
+/* ---------- Interception des requêtes (fetch) ----------
+   Choisit la stratégie selon le type de requête. Une requête sans stratégie passe directement au réseau. */
+
+/** Gestionnaire fetch : classe chaque requête GET et choisit la stratégie de cache correspondante. */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -122,6 +137,14 @@ self.addEventListener('fetch', (event) => {
   if (pinnedLibrary) event.respondWith(cacheFirst(req));
 });
 
+/* ---------- Stratégies de cache ---------- */
+
+/**
+ * Réseau d'abord : essaie le réseau et garde une copie. Hors ligne, sert la copie en cache, sinon offline.html.
+ * @param {Request} req Requête à traiter.
+ * @param {boolean} [revalidate] Si vrai, demande au serveur de vérifier la version (évite le cache HTTP du navigateur).
+ * @returns {Promise<Response>} La réponse réseau, la copie en cache, ou une erreur réseau.
+ */
 async function networkFirst(req, revalidate = false) {
   const cache = await caches.open(CACHE);
   try {
@@ -134,6 +157,12 @@ async function networkFirst(req, revalidate = false) {
   }
 }
 
+/**
+ * Cache d'abord : sert la copie en cache si elle existe, sinon va sur le réseau et garde la réponse.
+ * Sert à la bibliothèque jsDelivr épinglée, dont la version ne change jamais.
+ * @param {Request} req Requête à traiter.
+ * @returns {Promise<Response>} La copie en cache ou la réponse réseau.
+ */
 async function cacheFirst(req) {
   const cache = await caches.open(CACHE);
   const hit = await cache.match(req);
@@ -143,6 +172,13 @@ async function cacheFirst(req) {
   return res;
 }
 
+/**
+ * Périmé puis mis à jour : sert tout de suite la copie en cache (si elle existe) et met à jour le cache en arrière-plan.
+ * Sans copie, attend le réseau.
+ * @param {Request} req Requête à traiter.
+ * @param {FetchEvent} event Événement fetch, pour prolonger le travail d'arrière-plan (waitUntil).
+ * @returns {Promise<Response>} La copie en cache, ou la réponse réseau.
+ */
 async function staleWhileRevalidate(req, event) {
   const cache = await caches.open(CACHE);
   const hit = await cache.match(req);
@@ -167,6 +203,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+/* Clic sur la notification : ouvre la messagerie sur la conversation, dans un onglet déjà ouvert si possible. */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const conv = event.notification.data?.conversation_id;
