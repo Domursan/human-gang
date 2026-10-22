@@ -1,4 +1,5 @@
 -- ===== 055 — Plafond des drops paramétrable (cards.drops.quantite_max) =====
+-- Appliquée en production le 22/10/2026.
 -- Avant : la table hg_card_drops imposait CHECK (quantity between 1 and 50) et hg_drop_create plafonnait
 -- le réglage à 50 (correctif 053b). L'admin ne pouvait donc pas dépasser 50 exemplaires par drop.
 -- Après : la contrainte de table devient une borne TECHNIQUE large (1 à 1000), et le réglage
