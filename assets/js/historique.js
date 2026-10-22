@@ -43,6 +43,7 @@ const I = {
 const S = { members: new Map(), people: new Map(), editions: [], progress: new Map(), pairs: new Map(), events: [], present: new Map(), photos: new Map(), moments: [], urls: new Map(), filter: 'all' };
 /** Personne à partir de son identifiant ; « Ancien membre » si elle n'est plus dans l'annuaire. */
 const member = (id) => S.members.get(id) || { pseudo: 'Ancien membre' };
+/** Date SQL (AAAA-MM-JJ) à midi local, pour éviter un décalage d'un jour. */
 const dayDate = (d) => new Date(`${d}T12:00:00`); // date SQL → midi local (évite les décalages de fuseau)
 
 /* ---------- Données ---------- */

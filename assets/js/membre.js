@@ -223,6 +223,7 @@ function bindHolo() {
   const wrap = $('#idc-wrap'), card = $('#idc');
   if (!wrap || !card || reduced()) return;
   let raf = 0, last = null;
+  /** Applique l'inclinaison calculée d'après la position du pointeur (une fois par image). */
   const apply = () => {
     raf = 0;
     if (!last) return;
@@ -375,6 +376,7 @@ export async function renderIdCard(canvas, c) {
 
   // Champs
   const fx = 610, fw = 760;
+  /** Dessine une étiquette de champ : petit texte gris en majuscules. */
   const label = (t, y) => { ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#ABA7A0'; ctx.font = `400 28px ${PIXEL}`; spacing(ctx, 4); ctx.fillText(t.toUpperCase(), fx, y); spacing(ctx, 0); };
   label('Pseudo', 420);
   ctx.fillStyle = '#F2EFEA';

@@ -32,6 +32,7 @@ async function loadSupportRules() {
       const clean = [...new Set(s.sujets.filter((x) => typeof x === 'string').map((x) => x.trim()).filter((x) => x && x.length <= 80))];
       if (clean.length && clean.length <= 20 && clean.includes(BUG_SUBJECT)) r.sujets = clean;
     }
+    /** Renvoie v s'il est un entier entre min et max, sinon la valeur par défaut def. */
     const int = (v, def, min, max) => (Number.isInteger(v) && v >= min && v <= max ? v : def);
     r.message_min = int(s.message_min, r.message_min, 1, 1000);
     r.message_max = int(s.message_max, r.message_max, r.message_min + 1, 4000);
@@ -67,6 +68,7 @@ const wanted = new URLSearchParams(location.search).get('sujet');
 if (wanted && SUBJECTS.includes(wanted)) form.subject.value = wanted;
 
 const counter = $('#sp-counter');
+/** Texte du compteur de caractères, par exemple « 12 / 4000 ». */
 const counterText = (n) => `${n} / ${RULES.message_max}`;
 form.message.addEventListener('input', () => { counter.textContent = counterText(form.message.value.length); });
 counter.textContent = counterText(form.message.value.length);
@@ -158,8 +160,11 @@ let minePseudos = new Map();
 // Statut affiché : « Traitée », « En cours » (quelqu'un l'a prise), ou « Ouverte ».
 /** Libellé du statut d'une demande. */
 const statusLabel = (d) => (d.status === 'traitee' ? 'Traitée' : d.taken_by ? 'En cours' : 'Ouverte');
+/** Classe de couleur du statut d'une demande : done, prog ou open. */
 const statusClass = (d) => (d.status === 'traitee' ? 'done' : d.taken_by ? 'prog' : 'open');
+/** Pastille HTML du statut d'une demande. */
 const pill = (d) => `<span class="sp-pill" data-tone="${statusClass(d)}">${statusLabel(d)}</span>`;
+/** Tri : les demandes les plus récemment mises à jour en premier. */
 const byActivity = (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
 
 /**

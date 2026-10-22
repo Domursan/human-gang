@@ -35,6 +35,7 @@ await loadInviteConfig(); // préfixe des codes (hg_settings.invites)
  * Un code venu de l'adresse est mémorisé, pour survivre à la confirmation par e-mail.
  */
 const INVITE = (() => {
+  /** Renvoie le code s'il a le bon format, sinon une chaîne vide. */
   const ok = (c) => (inviteCodeRe().test(c) ? c : '');
   const fromUrl = ok(String(url.searchParams.get('code') || '').trim().toUpperCase());
   if (fromUrl) { try { sessionStorage.setItem(INVITE_KEY, fromUrl); } catch {} return fromUrl; }
@@ -230,6 +231,11 @@ function renderGuest(initialTab = 'login') {
 
   const panes = { login: $('#pane-login'), signup: $('#pane-signup'), forgot: $('#pane-forgot') };
   const tabs = { login: $('#tab-login'), signup: $('#tab-signup') };
+  /**
+   * Affiche l'onglet demandé (connexion, inscription ou mot de passe oublié) et met à jour les attributs ARIA des onglets.
+   * @param {'login'|'signup'|'forgot'} name onglet à afficher
+   * @param {boolean} [focus=true] placer le curseur dans le premier champ
+   */
   function show(name, focus = true) {
     for (const [k, p] of Object.entries(panes)) p.hidden = k !== name;
     for (const [k, t] of Object.entries(tabs)) { const on = k === name || (name === 'forgot' && k === 'login'); t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; }
@@ -808,6 +814,7 @@ function infoStatus(state, when) {
 async function bindInfos() {
   const form = $('#info-form'), box = $('#info-groups');
   let dirty = false;
+  /** Marque le formulaire comme modifié (ou non), et affiche l'état correspondant. */
   const setDirty = (v) => { dirty = v; if (v) infoStatus('dirty'); };
   try {
     const { data, error } = await sb.from('hg_profile_info').select('data,updated_at').eq('user_id', me.id).maybeSingle();

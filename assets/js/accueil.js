@@ -42,6 +42,7 @@ const txtIn = (key, sub, fallback) => (TX[key] && typeof TX[key][sub] === 'strin
 /* ---------- Icônes (SVG à trait) ---------- */
 /* Emojis des rubriques (demandés par Ethan) */
 const EMOJI = { ss: '🎁', irl: '📍', hist: '📜' };
+/** Pastille d'icône d'une tuile (emoji de la rubrique). */
 const tileIcon = (k) => `<span class="tile-icon tile-icon-${k}" aria-hidden="true">${EMOJI[k]}</span>`;
 const ICON = {
   bulb: svg('bulb', { size: 20, stroke: 1.7 }),
@@ -205,6 +206,7 @@ function renderMemberShell() {
  */
 function bindIdeas() {
   const form = $('#idea-form'), ta = $('#idea-body'), count = $('#idea-count'), err = $('#idea-error');
+  /** Affiche ou efface le message d'erreur de la boîte à idées. */
   const showErr = (m) => { err.textContent = m; err.hidden = !m; };
   ta.addEventListener('input', () => { count.textContent = `${ta.value.length} / 2000`; if (ta.value.trim()) showErr(''); });
   form.addEventListener('submit', async (e) => {
@@ -261,7 +263,9 @@ let cdTimer;
  */
 function startCountdown(target, year) {
   const box = $('#countdown');
+  /** Une unité du compte à rebours : nombre sur deux chiffres et libellé. */
   const unit = (n, l) => `<div class="cd-unit"><span class="cd-num display">${String(n).padStart(2, '0')}</span><span class="cd-lbl">${l}</span></div>`;
+  /** Met à jour le compte à rebours : le décompte, ou le message du jour J. */
   const tick = () => {
     const ms = target - Date.now();
     if (ms <= -86400000) { box.hidden = true; clearInterval(cdTimer); return; }
@@ -324,6 +328,7 @@ async function loadHistory() {
       sb.from('hg_moments').select('title,happened_on').order('happened_on', { ascending: false }).limit(1).maybeSingle(),
     ]);
     if (mom.error) throw mom.error;
+    /** Nombre suivi du mot au singulier ou au pluriel (ex. « 2 moments cultes »). */
     const n = (c, s, p) => `${c || 0} ${(c || 0) > 1 ? p : s}`;
     body.innerHTML = `
       <p class="tile-main">${n(mom.count, 'moment culte', 'moments cultes')}</p>

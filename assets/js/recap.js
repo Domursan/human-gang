@@ -308,6 +308,7 @@ function animateCounters(root) {
     cancelAnimationFrame(P.counterRaf.get(el));
     if (reduced || target === 0) { el.textContent = nf.format(target); return; }
     const t0 = performance.now(), dur = Math.min(1600, 700 + target * 12);
+    /** Une image du compteur : fait monter le nombre jusqu'à sa valeur finale. */
     const step = (t) => {
       const k = Math.min(1, (t - t0) / dur), e = 1 - (1 - k) ** 3;
       el.textContent = nf.format(Math.round(target * e));
@@ -345,6 +346,7 @@ function bindStage(stage) {
     suppress = false;
     holdT = setTimeout(() => { P.held = true; suppress = true; $('#rc-story').classList.add('is-held'); }, 220);
   });
+  /** Fin d'un toucher ou d'un clic : arrête l'appui maintenu, et change de diapo si le geste était un glissement horizontal. */
   const release = (e) => {
     clearTimeout(holdT);
     if (P.held) { P.held = false; $('#rc-story').classList.remove('is-held'); P.last = performance.now(); }
@@ -431,6 +433,7 @@ export async function renderRecapImage(canvas, r, pseudo) {
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   // étoiles déterministes
   let seed = year * 97;
+  /** Nombre pseudo-aléatoire déterministe (suite à partir de la graine), entre 0 et 1. */
   const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
   for (let i = 0; i < 140; i++) {
     const s = rnd() < 0.85 ? 3 : 6;
@@ -440,6 +443,7 @@ export async function renderRecapImage(canvas, r, pseudo) {
   const halo = ctx.createRadialGradient(W / 2, 430, 20, W / 2, 430, 620);
   halo.addColorStop(0, 'rgba(224,144,154,0.22)'); halo.addColorStop(1, 'rgba(224,144,154,0)');
   ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+  /** Bande arc-en-ciel pleine largeur, de hauteur h à partir de y. */
   const band = (y, h) => { const w = W / RAINBOW.length; RAINBOW.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(Math.floor(i * w), y, Math.ceil(w) + 1, h); }); };
   band(0, 22); band(H - 22, 22);
 

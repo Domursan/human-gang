@@ -44,6 +44,7 @@ let pendingPull = false;
 
 /* ---------- Outils ---------- */
 const memberOf = (id) => S.members.get(id) || null;
+/** Conversation à partir de son identifiant, ou null. */
 const convOf = (id) => S.convs.find((c) => c.id === id) || null;
 /** Côté Secret Santa : 'target' = je suis la cible (mon Santa est anonyme), 'santa' = je suis le Santa (je reste anonyme). */
 function santaSide(c) { return c?.kind === 'santa' ? (c.other_id ? 'santa' : 'target') : null; }
@@ -92,6 +93,7 @@ function dayLabel(ts) {
 
 /** Texte → HTML : échappé, URLs http(s) transformées en liens, sauts de ligne conservés (CSS pre-wrap). */
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+/gi;
+/** Échappe le texte et transforme les adresses http ou https en liens sûrs, ouvrant un nouvel onglet. */
 function linkify(text) {
   const src = String(text ?? '');
   let out = '', last = 0;
@@ -568,6 +570,7 @@ const dlg = $('#msg-new-dlg');
  */
 function renderPick(q = '') {
   const ul = $('#msg-new-list');
+  /** Texte normalisé (sans accents, en minuscules) pour la recherche de membres. */
   const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const list = [...S.members.values()].filter((m) => m.id !== me.id && norm(m.pseudo).includes(norm(q)))
     .sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));

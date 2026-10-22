@@ -133,6 +133,7 @@ function buildBand() {
   const c = band.getContext('2d');
   const diag = Math.hypot(W, H);
   const width = diag * 0.11;
+  /** Convertit une position de la bande en coordonnées du canvas hors écran. */
   const toBand = ([x, y]) => [(x + W * 0.65) * BAND_SCALE, (y + H * 0.65) * BAND_SCALE];
   c.globalCompositeOperation = 'lighter';
   // Nuages diffus
@@ -367,6 +368,7 @@ buildSky();
 if (reduced) {
   /* ---------- Version mouvement réduit : ciel fixe, apparition en fondu, puis fondu vers l'accueil ---------- */
   document.body.classList.add('reduced');
+  /** Dessine le ciel sans animation (mouvement réduit). */
   const still = () => drawSky(0, 0, 0, 0, 0, 1, false);
   still();
   onResize(still);
@@ -402,7 +404,9 @@ if (reduced) {
   window.addEventListener('keydown', (e) => { if (e.key === 'Enter' && document.activeElement === document.body) leave(500); });
 
   let target = 0, cur = 0, lastT = performance.now(), lastTravel = 0, speedS = 0;
+  /** Défilement maximal de la page, au moins 1 pour éviter une division par zéro. */
   const maxScroll = () => Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+  /** Lit la position de défilement et la convertit en progression de 0 à 1. */
   const readScroll = () => { target = clamp01(window.scrollY / maxScroll()); };
   window.addEventListener('scroll', readScroll, { passive: true });
   window.addEventListener('resize', readScroll, { passive: true });

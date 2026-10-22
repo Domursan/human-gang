@@ -33,6 +33,7 @@ const groups = loaded.map((g) => ({
   icon: String(g.icon ?? ''),
   tutos: (Array.isArray(g.tutos) ? g.tutos : []).filter((t) => t && /^[a-z0-9-]+$/.test(t.slug ?? '') && t.title),
 })).filter((g) => g.id && g.tutos.length);
+/** Vrai si je peux voir ce groupe : je suis connecté, ou le groupe est public. */
 const canSee = (g) => !!me || PUBLIC_GROUP_IDS.includes(g.id);
 const visibleGroups = groups.filter(canSee);
 const bySlug = new Map();
