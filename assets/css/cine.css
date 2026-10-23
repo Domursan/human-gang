@@ -78,3 +78,21 @@
 .cine-starlab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; }
 .cine-starlab input { width: 20px; height: 20px; accent-color: var(--plum); }
 @media (max-width: 480px) { .cine-form-actions .btn { flex: 1 1 auto; } .cine-chosen { flex-direction: column; align-items: flex-start; } }
+
+/* Affiche d'un film vu : place fixe à gauche de la fiche (la vignette CSS ou l'affiche remplit la largeur). */
+.cine-seen-poster { position: relative; width: 110px; max-width: 100%; }
+/* Secret « livre » (F5) : bulle de BD qui sort du coin de l'affiche, 3 s. Ne reçoit pas les clics. */
+.cine-bulle { position: absolute; left: calc(100% - 22px); top: -14px; z-index: 2; display: flex; align-items: center; gap: 8px;
+  width: max-content; max-width: 200px; padding: 10px 14px; border-radius: 14px; background: var(--sand); color: #1A1408;
+  font-family: var(--font-display); font-size: 15px; line-height: 1.2; box-shadow: 3px 4px 0 #000; pointer-events: none;
+  transform: rotate(-3deg); transform-origin: left bottom; }
+.cine-bulle::before { content: ''; position: absolute; left: -9px; top: 14px; width: 0; height: 0;
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-right: 9px solid var(--sand); }
+.cine-bulle svg { flex: none; }
+.cine-bulle.is-anim { animation: cine-bulle 3s ease-out both; }
+@keyframes cine-bulle {
+  0% { opacity: 0; transform: rotate(-3deg) scale(0.4); }
+  12% { opacity: 1; transform: rotate(-3deg) scale(1.08); }
+  18%, 85% { opacity: 1; transform: rotate(-3deg) scale(1); }
+  100% { opacity: 0; transform: rotate(-3deg) scale(0.96); }
+}

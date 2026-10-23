@@ -1,0 +1,49 @@
+/* ===== Humane Gang — bannière « Pentakill » (cartes, ouverture d'un booster de 5 cartes) ===== */
+/* Traverse l'écran d'ouverture : lettres découpées, éclat doré. Ne bloque pas les clics (pointer-events: none). */
+/* Les classes .is-anim (mouvement permis) et .is-static (mouvement réduit) sont posées par cartes-pentakill.js. */
+
+.penta { position: fixed; inset: 0; z-index: 900; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; overflow: hidden; }
+.penta-band { position: relative; width: 100%; padding: 22px 0; text-align: center;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg) 88%, transparent) 18%, color-mix(in srgb, var(--bg) 88%, transparent) 82%, transparent);
+  box-shadow: 0 -1px 0 var(--sand), 0 1px 0 var(--sand); }
+.penta-word { margin: 0; font-family: var(--font-display); font-size: clamp(40px, 13vw, 116px); line-height: 1; letter-spacing: 0.02em;
+  display: inline-flex; gap: 0.02em; }
+/* Chaque lettre est une « pièce découpée » : remplissage doré (texte découpé), ombre décalée, léger biais. */
+.penta-word > span[aria-hidden] { display: inline-flex; }
+.penta-word > span[aria-hidden] > span { display: inline-block; color: transparent; transform: skewX(-8deg);
+  background: linear-gradient(105deg, #B8862E 0%, #FFF3C4 35%, var(--sand) 50%, #B8862E 65%, #FFF3C4 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; filter: drop-shadow(3px 4px 0 #3A2A0E); }
+.penta-sub { margin: 10px 0 0; font-family: var(--font-body); font-size: clamp(14px, 3.5vw, 18px); font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--sand); }
+
+/* Mouvement permis : glissade de la bande, lettres qui tombent une à une, éclat doré qui balaie le mot. */
+.penta.is-anim .penta-band { animation: penta-in 2s ease-out both; }
+.penta.is-anim .penta-word > span[aria-hidden] > span {
+  animation: penta-letter 2s cubic-bezier(.2, .9, .3, 1.2) both, penta-glint 2s linear 0.6s both;
+  animation-delay: calc(var(--k) * 60ms), calc(var(--k) * 60ms + 0.6s);
+}
+.penta.is-anim .penta-sub { animation: penta-sub 2s ease-out both; }
+
+@keyframes penta-in {
+  0% { transform: translateX(-110%); opacity: 0; }
+  12%, 80% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(8%); opacity: 0; }
+}
+@keyframes penta-letter {
+  0% { transform: translateY(-60px) skewX(-8deg) scale(2.2); opacity: 0; }
+  14% { transform: translateY(0) skewX(-8deg) scale(1); opacity: 1; }
+  30% { transform: translateY(-6px) skewX(-8deg) scale(1.04); }
+  38%, 100% { transform: translateY(0) skewX(-8deg) scale(1); opacity: 1; }
+}
+@keyframes penta-glint {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+@keyframes penta-sub {
+  0%, 25% { opacity: 0; letter-spacing: 12px; }
+  60%, 100% { opacity: 1; letter-spacing: 3px; }
+}
+
+/* Mouvement réduit : bannière fixe de 1,5 s, sans glissade ni éclat. */
+.penta.is-static .penta-band { background-color: color-mix(in srgb, var(--bg) 92%, transparent); }

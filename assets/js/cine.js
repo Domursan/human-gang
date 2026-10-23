@@ -4,6 +4,8 @@
  *   - Prochaine séance : vote entre 2 et 4 films (barres et totaux), « Je serai là », lien du salon vocal Discord.
  *     Sous le seuil de votants à la clôture, la séance est reportée d'une semaine (automatique, côté base).
  *   - Films vus : note moyenne, avis courts (spoilers floutés), bouton « Le livre est mieux » et son compteur.
+ *     Secret F5 (migration 101) : trois clics rapides (moins de 1,5 s) sur l'affiche d'un film vu font sortir une bulle
+ *     « Le livre est mieux. » (3 s) et signalent le secret « livre » (eggFound, qui affiche le gain).
  *   - Liste d'attente : propositions des membres, « + » pour aider le projectionniste à choisir.
  *   - Les mieux notés du gang.
  *   Projectionniste (réglage cine.host_ids) ou Staff « evenements » : programmer une séance, choisir le film, annuler,
@@ -14,13 +16,16 @@
  * Données : RPC hg_cine_state (lecture complète, passe aussi les états échus), hg_cine_propose, hg_cine_plus,
  * hg_cine_withdraw, hg_cine_vote, hg_cine_presence_set, hg_cine_review, hg_cine_book_better, hg_cine_review_hide,
  * hg_cine_session_open, hg_cine_session_admin (migration 087), hg_cine_poster_set (migration 098) ; lecture de
- * hg_cine_films (id, poster_url) ; hg_members (pseudos) ; stockage hg-assets (dossier cine/<membre>/).
- * Dépendances : core.js, icons.js, ui-confirm.js, image-compress.js. Page réservée aux membres (auth: 'member'). N'exporte rien.
+ * hg_cine_films (id, poster_url) ; hg_members (pseudos) ; stockage hg-assets (dossier cine/<membre>/) ;
+ * hg_egg_found via eggs/api.js (code « livre », F5).
+ * Dépendances : core.js, icons.js, ui-confirm.js, image-compress.js, eggs/api.js. Page réservée aux membres (auth: 'member').
+ * N'exporte rien.
  */
-import { sb, initPage, esc, $, errMsg, toast, avatarHtml, hasPerm } from './core.js';
+import { sb, initPage, esc, $, errMsg, toast, avatarHtml, hasPerm, motionAllowed } from './core.js';
 import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
 import { prepareImage } from './image-compress.js';
+import { eggFound } from './eggs/api.js';
 
 /* ---------- Initialisation ---------- */
 const me = await initPage({ auth: 'member' });
@@ -179,6 +184,7 @@ function seenHtml(d) {
     return `<article class="card cine-seen" aria-labelledby="seen-${esc(f.id)}">
       <div class="cine-seen-head"><span class="cine-k cine-k-sand">${f.seen_on ? `Vu le ${esc(dayLong(f.seen_on))}` : 'Vu'}</span>
         <span class="small muted">${f.viewers} spectateur${f.viewers > 1 ? 's' : ''}</span></div>
+      <div class="cine-seen-poster" data-film="${esc(f.id)}">${poster(f)}</div>
       <h3 class="cine-seen-t" id="seen-${esc(f.id)}">${esc(f.title)}${f.year ? ` <span class="muted cine-year">(${f.year})</span>` : ''}</h3>
       <div class="cine-rating">${starsHtml(f.avg)}<span class="small"><strong>${f.avg ? `${nf1(f.avg)} / 5` : 'Pas encore noté'}</strong>${f.notes ? ` · ${f.notes} note${f.notes > 1 ? 's' : ''}` : ''}</span></div>
       ${f.reviews.length ? `<ul class="cine-reviews">${f.reviews.slice(0, 6).map((r) => reviewHtml(f, r, d)).join('')}</ul>` : ''}
@@ -386,6 +392,41 @@ root.addEventListener('click', async (e) => {
     if (v === false) return;
     if (v && !VOICE_RE.test(v)) { toast('Le lien doit être un salon Discord.', 'error'); return; }
     act('hg_cine_session_admin', { p_session: c.id, p_action: 'link', p_voice_link: v || null }, 'Lien enregistré');
+  }
+});
+
+/* ---------- Secret F5 « Le livre est mieux » : trois clics rapides sur l'affiche d'un film vu ---------- */
+/** Les trois derniers clics sur une affiche de film vu : { el, t } (el : l'affiche, t : heure du clic en ms). */
+const livreClics = [];
+/** Petit livre ouvert (SVG), dessiné dans la bulle. */
+const LIVRE_SVG = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.6C9 5 6 4.8 3 5.5V19c3-.7 6-.5 9 1 3-1.5 6-1.7 9-1V5.5c-3-.7-6-.5-9 1.1z"/><path d="M12 6.6V20"/></svg>';
+
+/**
+ * Fait sortir du coin de l'affiche la bulle « Le livre est mieux. » (3 s, sans animation si le mouvement est réduit),
+ * puis signale le secret « livre » au serveur (eggFound affiche le gain).
+ * @param {HTMLElement} box zone de l'affiche cliquée (.cine-seen-poster)
+ */
+function livreSecret(box) {
+  if (box.querySelector('.cine-bulle')) return; // déjà affichée
+  const bulle = document.createElement('div');
+  bulle.className = `cine-bulle${motionAllowed() ? ' is-anim' : ''}`;
+  bulle.setAttribute('role', 'status');
+  bulle.innerHTML = `${LIVRE_SVG}<span>Le livre est mieux.</span>`;
+  box.append(bulle);
+  setTimeout(() => bulle.remove(), 3000);
+  eggFound('livre'); // best effort : ne lève jamais d'exception
+}
+
+// Trois clics sur la même affiche en moins de 1,5 s (du premier au troisième).
+root.addEventListener('click', (e) => {
+  const box = e.target.closest('.cine-seen-poster');
+  if (!box) return;
+  const now = Date.now();
+  livreClics.push({ el: box, t: now });
+  if (livreClics.length > 3) livreClics.shift();
+  if (livreClics.length === 3 && livreClics.every((c) => c.el === box) && now - livreClics[0].t < 1500) {
+    livreClics.length = 0;
+    livreSecret(box);
   }
 });
 

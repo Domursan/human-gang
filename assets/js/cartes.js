@@ -7,6 +7,7 @@
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
 // Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
+// Succès « Pentakill » (F9, migration 101) : hg_pentakill_check après un booster de 5 cartes ; bannière (cartes-pentakill.js).
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, Arène, historique, événements, démarrage.
@@ -26,6 +27,8 @@ import { boosterStyleClass } from './booster-styles.js';
 import { themeDecor, playOpeningFx } from './booster-themes.js';
 import { onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml } from './cartes-saisons.js';
 import { mountProposals } from './cartes-propositions.js';
+// Succès « Pentakill » (F9, migration 101) : contrôle serveur après un booster de 5 cartes, bannière à la fin de la révélation.
+import { pentakillCheck, showPentakill } from './cartes-pentakill.js';
 // Idées du gang, paquet C2 (migration 081) : générations OG / 2e gen (C8), regroupement par jeu (C7), codes cadeaux (C9),
 // Atelier (C10), enchère (C11). Le tableau « Je cherche / Je donne » (C12) est dans cartes-trades.js.
 import { loadGenerations } from './cartes-gen.js';
@@ -1584,6 +1587,7 @@ function revealCard(R, i) {
   playSound(rarityRank(card.rarity) >= 5 ? 'badge' : 'click');
   setCardControl(R, i);
   showRevealHint();
+  if (!R.multi && i === 4) pentaShow(R); // 5e carte retournée : bannière Pentakill si le serveur l'a confirmée
 }
 
 /**
@@ -1598,6 +1602,18 @@ function finishSeq(R) {
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les cartouches et affiche le résumé
   focusRevealEnd();
+  pentaShow(R); // révélation sautée : la bannière s'affiche quand même
+}
+
+/**
+ * Montre la bannière Pentakill d'un booster de 5 cartes, une seule fois, si le serveur l'a confirmée.
+ * Appelée à la 5e carte retournée, à la fin de la révélation, ou tout de suite si l'ouverture n'est pas animée.
+ * @param {object} R ouverture en cours (R.penta : promesse de pentakillCheck, absente si le booster n'a pas 5 cartes)
+ */
+function pentaShow(R) {
+  if (!R?.penta || R.pentaShown) return;
+  R.pentaShown = true;
+  R.penta.then((res) => { if (res) showPentakill(res); });
 }
 
 /** Début d'une séquence : le focus va sur « Tout révéler » (une touche Entrée suffit pour sauter l'animation). */
@@ -1908,6 +1924,7 @@ async function runOpen({ key, type = null, setName = '', call }) {
     const freshIds = new Set(cards.filter((c) => !owned.has(c.card_id)).map((c) => c.card_id));
     R = { cards, best: data?.best, type, setName, freshIds, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
+    if (cards.length === 5) R.penta = pentakillCheck(); // lancé tout de suite, la bannière attend la 5e carte (voir pentaShow)
     S.reveal = R;
   } catch (e) {
     if (String(e?.message || '').includes('booster_deja_ouvert')) {
@@ -1930,7 +1947,7 @@ async function runOpen({ key, type = null, setName = '', call }) {
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     focusRevealAll();
     startSeq(R);
-  } else if (R && S.reveal === R) focusRevealEnd();
+  } else if (R && S.reveal === R) { focusRevealEnd(); pentaShow(R); }
 }
 
 /**
@@ -2072,6 +2089,7 @@ async function runMulti(items, key = '') {
       const cards = data?.cards || [];
       st.cards.push(...cards);
       st.opened += 1;
+      st.lastN = cards.length; // taille du dernier booster ouvert : Pentakill seulement si elle vaut 5
       st.next += 1;
       announceCards(cards);
     } catch (e) {
@@ -2103,6 +2121,7 @@ async function runMulti(items, key = '') {
       revealed: new Set(), timer: null, announced: false,
     };
     if (!seq) cards.forEach((_, i) => R.revealed.add(i));
+    if (st.lastN === 5) R.penta = pentakillCheck(); // le serveur vérifie la dernière ouverture
   }
   S.reveal = R;
   if (stopMsg) {
@@ -2121,7 +2140,7 @@ async function runMulti(items, key = '') {
       $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
       focusRevealAll();
       startMulti(R);
-    } else focusRevealEnd();
+    } else { focusRevealEnd(); pentaShow(R); }
   }
 }
 
@@ -2265,6 +2284,7 @@ function finishMulti(R) {
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les boutons et affiche le résumé (annoncé par renderMultiReveal)
   focusRevealEnd();
+  pentaShow(R);
 }
 
 /** Réclame le passage du jour (hg_cards_daily) : Paillettes et série de jours consécutifs. */
