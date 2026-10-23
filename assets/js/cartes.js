@@ -279,7 +279,7 @@ function sliceGroups(groups, limit) {
 }
 /**
  * Pied de la grille quand elle est dessinée par lots : « 120 cartes affichées sur 842 », barre et « Afficher 120 de plus ».
- * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle observée, voir watchMore).
+ * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle surveillée au défilement, voir watchMore).
  * @param {{drawn: number, total: number, batched: boolean}} sl découpage
  * @param {'col'|'peer'} which collection concernée
  * @returns {string} HTML (vide si tout est dessiné)
@@ -296,19 +296,24 @@ function moreHtml(sl, which) {
       <div class="cz-sentinel" data-sentinel="${which}" aria-hidden="true"></div>` : ''}
     </div>`;
 }
-/** Observateur de la sentinelle « en approchant du bas » (un seul pour la page). */
-let moreObserver = null;
-/** Observe la sentinelle du lot affiché : à son approche, le lot suivant est dessiné sans déplacer le focus. */
-function watchMore() {
-  if (!('IntersectionObserver' in window)) return;
-  moreObserver?.disconnect();
+/** Vrai une fois l'écouteur de défilement posé (un seul pour la page). */
+let moreBound = false;
+/** Identifiant de l'image d'animation en attente pour la vérification de la sentinelle (0 = aucune). */
+let moreTick = 0;
+/**
+ * Vérifie la sentinelle après un défilement : si elle approche du bas de l'écran, le lot suivant est dessiné.
+ * Seul le défilement déclenche ce chargement (pas le redessin lui-même), donc pas de cascade de lots.
+ */
+function checkMore() {
+  moreTick = 0;
   const el = document.querySelector('.cz-sentinel');
-  if (!el) return;
-  moreObserver ||= new IntersectionObserver((entries) => {
-    const hit = entries.find((e) => e.isIntersecting);
-    if (hit) showMore(hit.target.dataset.sentinel, false);
-  }, { rootMargin: '0px 0px 600px 0px' });
-  moreObserver.observe(el);
+  if (el && el.getBoundingClientRect().top < window.innerHeight + 600) showMore(el.dataset.sentinel, false);
+}
+/** Observe la sentinelle du lot affiché : en défilant près du bas, le lot suivant est dessiné sans déplacer le focus. */
+function watchMore() {
+  if (moreBound) return;
+  moreBound = true;
+  window.addEventListener('scroll', () => { if (!moreTick) moreTick = requestAnimationFrame(checkMore); }, { passive: true });
 }
 /**
  * Dessine le lot suivant de la collection (la sienne ou celle d'un membre).
@@ -322,7 +327,6 @@ function showMore(which, byButton = true) {
   const before = Math.max(COL_LOT, (peer ? S.peer.limit : S.colLimit) || 0);
   if (before >= ids.length) return;
   if (peer) S.peer.limit = before + COL_LOT; else S.colLimit = before + COL_LOT;
-  moreObserver?.disconnect();
   const first = ids[before];
   const sel = first ? `[data-action="${peer ? 'peer-pick' : 'open-card'}"][data-card="${CSS.escape(first)}"], [data-action="${peer ? 'peer-zoom' : 'zoom-card'}"][data-card="${CSS.escape(first)}"]` : null;
   if (peer) renderPeer(byButton ? sel : null);
@@ -2239,6 +2243,7 @@ function groupHtml(g, i) {
  * @param {string} [focusId] id du champ à remettre au focus après le rendu (sans défilement)
  */
 function drawCollection(focusId) {
+  try { performance.mark('hg-collection-start'); } catch {}
   const el = $('#cartes-p-collection');
   const none = '<p class="empty">Aucune série disponible pour le moment.</p>';
   if (!S.sets.length && !S.otherSets.size) { el.innerHTML = none; S.shownIds = []; return; }
@@ -2340,6 +2345,8 @@ function drawCollection(focusId) {
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
   watchMore();
+  // Durée du dessin (performance.measure « hg-collection ») : suivie par le test de la collection très longue
+  try { performance.measure('hg-collection', 'hg-collection-start'); } catch {}
 }
 const renderCollection = kept(drawCollection); // voir renderBoosters
 

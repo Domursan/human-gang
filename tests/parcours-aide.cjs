@@ -85,8 +85,8 @@ async function checkData() {
   await p.fill('#aide-q', 'booster');
   await sleep(150);
   check(await p.locator(memberLink).count() === 1, 'recherche « booster » : trouve « Ouvrir un booster »');
-  check(await p.locator('.aide-tuto-link').count() === 2, 'recherche « booster » : deux résultats (« Fabriquer une carte » cite aussi le booster)');
-  check(await p.locator('#aide-count').innerText().then((t) => t === '2 tutos trouvés'), 'recherche « booster » : compteur « 2 tutos trouvés »');
+  check(await p.locator('.aide-tuto-link').count() === 3, 'recherche « booster » : trois résultats (« Fabriquer une carte » et « Préférences d’affichage » citent aussi le booster)');
+  check(await p.locator('#aide-count').innerText().then((t) => t === '3 tutos trouvés'), 'recherche « booster » : compteur « 3 tutos trouvés »');
   await p.fill('#aide-q', 'BOOSTER');
   await sleep(150);
   check(await p.locator(memberLink).count() === 1, 'recherche « BOOSTER » (casse ignorée) : trouve le tuto');

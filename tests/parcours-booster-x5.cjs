@@ -117,6 +117,12 @@ const toastHas = (p, re) => p.waitForFunction((src) => [...document.querySelecto
   check(/5 boosters · 25 cartes · meilleure : /.test(head), `résumé en tête : « ${head.trim()} »`);
   check(/nouvelles? pour ta collection/.test(await p.textContent('.x5-sum')), 'nombre de nouvelles cartes pour la collection');
   check(await p.$eval('#cartes-reveal [data-action=close-reveal]', (b) => b === document.activeElement), 'focus sur « Fermer » en fin de révélation');
+  // Q7 : annonce par rareté (25 cartes : regroupée, seules les cartes à partir d'épique sont nommées) et pastilles du résumé
+  const live = await p.textContent('#cartes-live');
+  check(/^Boosters ouverts\. 25 cartes : \d+ /.test(live) && /nouvelles? pour ta collection/.test(live), `Q7 : annonce « 25 cartes : … » (${live.slice(0, 90)}…)`);
+  const nommees = await p.evaluate(() => window.__DB.hg_card_copies.slice(-25).length);
+  check(nommees === 25 && (live.match(/,/g) || []).length <= 12, 'Q7 : annonce courte (regroupée par rareté)');
+  check(await p.locator('#cartes-reveal .rv-sum .rv-chip').count() >= 2, 'Q7 : pastilles par rareté dans le résumé');
   const liste = await p.$$eval('#cartes-reveal ul.visually-hidden li', (x) => x.length);
   check(liste === 25, 'liste textuelle masquée visuellement : 25 cartes');
   check(notifs(j, 'card_wish') === 5, 'alerte souhaits : un appel par booster (5)');

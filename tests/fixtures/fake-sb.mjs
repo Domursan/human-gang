@@ -23,6 +23,8 @@ const PUMPKIN = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://w
 const DB = {
   hg_profiles: people.map(([p, id], i) => ({ id, pseudo: p, is_admin: id === ME, color: '#4F6A8F', avatar_url: null, created_at: iso(-300 + i), joined_on: i === 1 ? '2019-03-12' : null, birthday: null })),
   hg_settings: [{ key: 'theme', value: { mode: 'auto' } }, { key: 'bot', value: { notify: {} } }],
+  // Notifications par catégorie (idée Q6) : scénario notifPrefs = ligne déjà enregistrée pour le membre connecté.
+  hg_notif_prefs: S.notifPrefs ? [{ user_id: S.uid || ME, ...S.notifPrefs }] : [],
   hg_themes: [{ slug: 'classique', name: 'Classique', is_default: true, active: true, effect: 'aucun', emojis: [], colors: {} }],
   hg_badges: [...AUTO.map((c, i) => ({ code: c, name: c.replace(/_/g, ' '), description: 'Badge automatique', image_url: null, sort: i * 10 })),
     { code: 'roi_karaoke', name: 'Roi du karaoké', description: 'A chanté plus fort que tout le monde', image_url: null, sort: 200 },
@@ -613,6 +615,23 @@ export function createClient() {
       if (!signed() && !ANON_OK.has(fn)) { // ce que fait PostgREST sans session : 401, « permission denied »
         window.__LOG.push(['rpc-401', fn]);
         return { data: null, error: { message: 'permission denied for function ' + fn, code: '42501' } };
+      }
+      // Notifications par catégorie (idée Q6, migration 095) : liste blanche, heures 0 à 23, une ligne par membre.
+      if (fn === 'hg_set_notif_prefs') {
+        const uid = S.uid || ME;
+        const ok = /^(messages|sorties|echanges|souhaits|santa|anniversaires|quiz)\.(push|discord)$/;
+        const pr = args?.p_prefs || {};
+        if (Object.entries(pr).some(([k, v]) => !ok.test(k) || typeof v !== 'boolean')) return { data: null, error: { message: 'Catégorie inconnue' } };
+        const qs = args?.p_quiet_start ?? null, qe = args?.p_quiet_end ?? null;
+        if ((qs == null) !== (qe == null) || (qs != null && (qs < 0 || qs > 23 || qe < 0 || qe > 23 || qs === qe))) return { data: null, error: { message: 'Heures calmes invalides' } };
+        const tab = DB.hg_notif_prefs || (DB.hg_notif_prefs = []);
+        const row = { user_id: uid, prefs: { ...pr }, quiet_start: qs, quiet_end: qe, updated_at: new Date().toISOString() };
+        const i = tab.findIndex((r) => r.user_id === uid);
+        if (i >= 0) tab[i] = row; else tab.push(row);
+        const prof = DB.hg_profiles.find((x) => x.id === uid);
+        if (prof && typeof pr['sorties.discord'] === 'boolean') prof.remind_irl = pr['sorties.discord'];
+        if (prof && typeof pr['souhaits.discord'] === 'boolean') prof.notify_card_wish = pr['souhaits.discord'];
+        return { data: row, error: null };
       }
       // Pages visibles pour l'utilisateur connecté : toutes pour un admin, sinon celles qui lui sont accordées.
       if (fn === 'hg_my_pages') {

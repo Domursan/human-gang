@@ -84,6 +84,7 @@ const scrollY = (p) => p.evaluate(() => Math.round(window.scrollY));
   await sleep(200);
   const opHors = await p.$eval('.cz-zoom[data-card="C2"]', (b) => getComputedStyle(b).opacity);
   check(opHors === '0', 'loupe : cachée hors survol sur ordinateur (opacité ' + opHors + ')');
+  await p.locator('.cz-cell [data-action=open-card][data-card="C2"]').scrollIntoViewIfNeeded();
   const [cx, cy] = await centre(p, '.cz-cell [data-action=open-card][data-card="C2"]');
   await p.mouse.move(cx, cy);
   await sleep(250);
