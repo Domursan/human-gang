@@ -1,0 +1,19 @@
+/* ===== Quêtes à preuve (J11) : fenêtre d'envoi et états dans la liste des quêtes ===== */
+.qp-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text); padding: 0; }
+.qp-dialog::backdrop { background: rgba(0, 0, 0, .6); }
+.qp-form { display: flex; flex-direction: column; gap: 12px; padding: 18px; }
+.qp-title { font-family: var(--font-display); font-size: 22px; margin: 0; }
+.qp-form p { margin: 0; }
+.qp-refus { color: var(--rose); }
+.qp-thumbs { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.qp-thumb { width: 96px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.qp-thumb img { width: 96px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.qp-thumb span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qp-share { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.qp-err:empty { display: none; }
+.qp-err { color: var(--rose); }
+.qp-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.qp-actions .btn { min-height: 44px; }
+/* Dans la liste des quêtes (cartes.js) */
+.cq-proof-game { color: var(--muted); font-weight: 400; }
+.cq-proof-reason { color: var(--rose); font-size: 13px; margin: 4px 0 0; }

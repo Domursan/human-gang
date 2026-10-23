@@ -27,6 +27,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  // Jeux (paquet xJ3) : preuves des quêtes (J11), Framed et Heardle (J9, J10), Bataille (J15)
+  preuves: 'preuves', 'jeux-medias': 'souvenirs', bataille: 'cartes',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -98,6 +100,9 @@ export const DOMAINS = [
     ...under('Jeux', [
       { id: 'questions', label: 'Questions du gang', section: 'quiz' },
       { id: 'secrets', label: 'Secrets', section: 'eggs' },
+      { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves' },
+      { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
+      { id: 'bataille', label: 'Bataille', section: 'bataille' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

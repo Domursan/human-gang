@@ -1,0 +1,6 @@
+/* ===== Page « Jeux » (version minimale du contrat, livrée par xJ3 pour ses tests ; version finale : paquet xJ1) ===== */
+.jeux-tabs { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding: 2px 2px 8px; margin: 0 0 14px; }
+.jeux-tabs [role="tab"] { font: inherit; font-size: 14px; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); white-space: nowrap; cursor: pointer; flex: none; }
+.jeux-tabs [role="tab"][aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 700; }
+.jeux-tabs [role="tab"]:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+#jeux-panels [role="tabpanel"]:focus-visible { outline: 2px solid var(--border-strong); outline-offset: 4px; border-radius: 12px; }

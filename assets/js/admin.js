@@ -50,6 +50,9 @@ const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+  { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Jeux et cartes › Preuves de quêtes (J11)
+  { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Jeux et cartes › Framed et Heardle (J9, J10)
+  { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -194,6 +197,9 @@ registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) })
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
+if (MOUNT.preuves) registerSub('cartes/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
+if (MOUNT['framed-heardle']) registerSub('cartes/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
+if (MOUNT.bataille) registerSub('cartes/bataille', { main: () => MOUNT.bataille($('#bataille-root')) });
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);

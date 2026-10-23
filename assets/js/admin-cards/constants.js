@@ -29,6 +29,7 @@ export const REASON_LABEL = {
   reponse_sortie: 'Réponse à une sortie', sortie_creee: 'Sortie créée', photo: 'Photo publiée', moment: 'Moment publié',
   badge: 'Badge gagné', capture: 'Image attrapée', presence: 'Présence à une sortie', cadeau_santa: 'Cadeau Secret Santa',
   serie_complete: 'Série complète', admin: 'Ajustement admin',
+  framed: 'Framed du ciné-club', heardle: 'Heardle du gang', bataille: 'Bataille de cartes', bataille_def: 'Défense tenue (Bataille)',
 };
 // Valeurs de repli = valeurs actuelles en base (hg_settings.cards, lues le 22/10/2026 ; migration 053 les reprend côté SQL).
 // Utilisées seulement si hg_settings.cards est vide, et pour « Rétablir les valeurs par défaut ».

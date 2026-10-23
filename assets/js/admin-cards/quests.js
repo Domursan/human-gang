@@ -75,6 +75,7 @@ export const QUEST_METRICS = [
   ["ss_souhaits", "Souhaits Secret Santa", "Souhaits ajoutés à sa liste Secret Santa."],
   ["ss_messages", "Messages à sa cible", "Messages secrets envoyés à sa cible Secret Santa."],
   ["ss_cadeau_a_temps", "Cadeau envoyé à temps", "Cadeau Secret Santa marqué envoyé avant la date limite."],
+  ["preuve_validee", "Preuve validée par le Staff (capture)", "Quête à preuve : le membre envoie une capture, un membre du Staff « preuves » la valide. Tirée à part (2 par semaine)."],
 ];
 /* Libellé court de chaque action, par identifiant. */
 const METRIC_LABEL = Object.fromEntries(QUEST_METRICS.map(([v, l]) => [v, l]));

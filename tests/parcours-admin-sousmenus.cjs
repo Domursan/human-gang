@@ -28,7 +28,7 @@ const TREE = {
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
-    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']], ['Jeux', ['questions', 'secrets']]],
+    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']], ['Jeux', ['questions', 'secrets', 'preuves', 'framed-heardle', 'bataille']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages']], ['Apparence', ['theme']]],
 };
@@ -148,8 +148,8 @@ async function goHash(p, h) {
   /* ---------- (d) Staff ['cartes'] ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['cartes'] } });
   const st = await columnTree(p, 'cartes');
-  check(JSON.stringify(st) === JSON.stringify(TREE.cartes.slice(0, 4)),
-    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, sans « Jeux » (${JSON.stringify(st)})`);
+  check(JSON.stringify(st) === JSON.stringify([...TREE.cartes.slice(0, 4), ['Jeux', ['bataille']]]),
+    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, « Jeux » limité à Bataille (${JSON.stringify(st)})`);
   check(await p.locator('#shell-subs a[href="#cartes/secrets"], #shell-subs a[href="#communication/fil"], #shell-subs a[href="#cartes/questions"]').count() === 0,
     '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang');
   await goHash(p, 'cartes/secrets');
