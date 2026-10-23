@@ -27,7 +27,7 @@
 -- 0. Page « Jeux »
 -- ---------------------------------------------------------------------
 insert into public.hg_pages (slug, label, mode, in_nav, sort)
-  values ('jeux', 'Jeux', 'membres', true, 10)
+  values ('jeux', 'Jeux', 'admin', true, 10)  -- réservée aux admins au lancement (Ethan l'ouvre depuis l'accès aux pages)
   on conflict (slug) do nothing;
 
 -- Outils communs aux jeux : jour de Zurich, borne d'un plafond réglable.

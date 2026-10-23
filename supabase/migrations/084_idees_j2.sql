@@ -43,7 +43,7 @@
 -- 0. Page « Jeux », permission « pronos », journal d'idempotence du bot
 -- ---------------------------------------------------------------------
 insert into public.hg_pages (slug, label, mode, in_nav, sort)
-  values ('jeux', 'Jeux', 'membres', true, 10)
+  values ('jeux', 'Jeux', 'admin', true, 10)  -- réservée aux admins au lancement (Ethan l'ouvre depuis l'accès aux pages)
   on conflict (slug) do nothing;
 
 insert into public.hg_perm_catalog (key, label, description, sort)
