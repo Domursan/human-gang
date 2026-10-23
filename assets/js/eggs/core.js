@@ -1,16 +1,18 @@
 // ===== Humane Gang — secrets cachés : effets et déclencheurs (chargé par site-boot.js) =====
 /*
  * Rôle : les secrets visibles de tout le site. Code Konami (clavier ; glissements puis deux tapotements sur le logo
- * sur mobile), logo cliqué sept fois, mot « humane » (mode arc-en-ciel), heure de Zurich (13 h 37 et nuit profonde
- * à 3 h), anniversaire du gang (confettis et bannière), et énigme dans la console du navigateur.
+ * sur mobile), logo cliqué sept fois, mots tapés hors champ (« humane » : mode arc-en-ciel ; « tzatzikistan » :
+ * drapeau imaginaire ; « kc » : confettis et fanfare ; « serge » : couronne sur une carte ; « domu » : petite voiture
+ * chargée), heure de Zurich (13 h 37 et nuit profonde à 3 h), anniversaire du gang (confettis et bannière), et énigme
+ * dans la console du navigateur.
  * Chaque effet est visuel ; le serveur est prévenu par eggFound (api.js), qui ne lève jamais d'exception.
  * Les effets respectent prefers-reduced-motion (version calme) et la préférence d'effets du site, et n'interceptent
- * jamais la saisie dans les champs de formulaire.
+ * jamais la saisie dans les champs de formulaire. La fanfare de « kc » suit la préférence de sons (sound.js).
  * Page : toutes les pages (importé après le chargement par site-boot.js, sans ralentir le démarrage).
- * Dépendances : ../core.js (currentLogo, motionAllowed, effectsEnabled, sb, hasSession), ./api.js (eggFound).
- * Exporte : initEggs().
+ * Dépendances : ../core.js (currentLogo, motionAllowed, effectsEnabled, playSound, sb, hasSession), ./api.js (eggFound).
+ * Exporte : initEggs(), tryWordSecret(mot) (utilisée par la loupe de recherche, core/search.js).
  */
-import { currentLogo, motionAllowed, effectsEnabled, sb, hasSession } from '../core.js';
+import { currentLogo, motionAllowed, effectsEnabled, playSound, sb, hasSession } from '../core.js';
 import { eggFound } from './api.js';
 
 /* ---------- Constantes ---------- */
@@ -29,7 +31,20 @@ const CLICS_LOGO = 7;               // nombre de clics sur le logo…
 const FENETRE_LOGO = 4000;          // …en moins de 4 s
 const PAUSE_LOGO = 800;             // au-delà de 800 ms sans clic, la série repart à zéro
 const VERIFIE_MS = 20000;           // fréquence de vérification de l'heure de Zurich
-const MOT_SECRET = 'humane';
+const DELAI_MOT = 1500;             // ms : sans frappe pendant ce délai, le tampon des mots repart de zéro
+/**
+ * Mots tapés hors champ de saisie → code envoyé au serveur (hg_egg_found). « humane » : mode arc-en-ciel (voir arcBascule).
+ * Les mots sont en minuscules ; « kc » est court, il ne compte que si les deux dernières touches sont k puis c.
+ */
+const MOTS = { humane: 'humane', tzatzikistan: 'tzatziki', kc: 'kc', serge: 'serge', domu: 'domumobile' };
+/** Longueur du plus long mot : taille du tampon de frappe. */
+const MOT_MAX = Math.max(...Object.keys(MOTS).map((m) => m.length));
+const DUREE_DRAPEAU = 5000;         // ms : le drapeau du Tzatzikistan flotte (mouvement réduit : 2,5 s, immobile)
+const DUREE_CALME = 2500;
+const DUREE_KC = 3000;              // ms : confettis bleus et blancs, fanfare
+const DUREE_SERGE = 3000;           // ms : la couronne sur la carte
+const DUREE_DOMU = 4000;            // ms : la voiture traverse le bas de l'écran
+const COULEURS_KC = ['#1F4FA3', '#2F6BC4', '#8FB4E8', '#FFFFFF'];
 
 /* ---------- Outils ---------- */
 
@@ -285,21 +300,58 @@ function calmeLogo() {
 
 /* ---------- Mot « humane » : mode arc-en-ciel ---------- */
 
-let tampon = '';          // dernières lettres tapées (6 au plus)
+let tampon = '';          // dernières lettres tapées hors champ (MOT_MAX au plus)
+let dernierCoup = 0;      // horodatage de la dernière lettre tapée hors champ
 let arcActif = false;
 let arcTimer = 0;
+const enCours = new Set(); // effets de mots en cours de lecture (un même effet ne se superpose pas)
 
 /**
- * Suit les lettres tapées pour reconnaître le mot « humane ». Ignore les champs de saisie et les raccourcis.
+ * Suit les lettres tapées pour reconnaître les mots secrets (MOTS). Ignore les champs de saisie et les raccourcis.
+ * Le tampon repart de zéro après une pause de 1,5 s sans frappe ; un mot est reconnu quand il finit le tampon.
  * @param {KeyboardEvent} e
  */
 function gereMot(e) {
   if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1 || dansChamp()) return;
-  tampon = (tampon + e.key.toLowerCase()).slice(-MOT_SECRET.length);
-  if (tampon === MOT_SECRET) {
+  const now = Date.now();
+  if (now - dernierCoup > DELAI_MOT) tampon = '';
+  dernierCoup = now;
+  tampon = (tampon + e.key.toLowerCase()).slice(-MOT_MAX);
+  const mot = Object.keys(MOTS).find((m) => tampon.endsWith(m));
+  if (mot) {
     tampon = '';
-    arcBascule();
+    lanceSecret(MOTS[mot]);
   }
+}
+
+/**
+ * Lance le secret d'un code : l'effet visuel, puis le signalement au serveur. Effets coupés : signalement immédiat.
+ * @param {string} code code du secret (« humane », « tzatziki », « kc », « serge » ou « domumobile »)
+ */
+function lanceSecret(code) {
+  if (code === 'humane') { arcBascule(); return; }
+  const effet = EFFETS[code];
+  if (!effet || enCours.has(code)) return;
+  chargeCss();
+  if (!effectsEnabled()) { eggFound(code); return; }
+  enCours.add(code);
+  const duree = effet(motionAllowed());
+  setTimeout(() => {
+    enCours.delete(code);
+    eggFound(code);
+  }, duree);
+}
+
+/**
+ * Lance un mot secret tapé dans la loupe de recherche (core/search.js), sans casse ni espaces.
+ * @param {string} mot le texte saisi
+ * @returns {boolean} true si un effet a été lancé (la recherche n'affiche alors pas « Aucun résultat »)
+ */
+export function tryWordSecret(mot) {
+  const m = String(mot ?? '').toLowerCase().replace(/\s+/g, '');
+  if (!Object.prototype.hasOwnProperty.call(MOTS, m)) return false;
+  lanceSecret(MOTS[m]);
+  return true;
 }
 
 /**
@@ -320,6 +372,127 @@ function arcArrete() {
   arcActif = false;
   document.documentElement.classList.remove('egg-arc');
   eggFound('humane');
+}
+
+/* ---------- Mots tapés : tzatziki, kc, serge, domumobile ---------- */
+
+/** Effets des mots (hors « humane ») : chacun ajoute son calque et renvoie sa durée en ms. */
+const EFFETS = {
+  tzatziki: (anime) => drapeauTzatziki(anime),
+  kc: (anime) => fanfareKc(anime),
+  serge: (anime) => couronneSerge(anime),
+  domumobile: (anime) => voitureDomu(anime),
+};
+
+/**
+ * Ajoute un calque décoratif (fixe, sans interaction, aria-hidden), retiré après `ms`.
+ * @param {string} classe classes supplémentaires du calque
+ * @param {number} ms durée d'affichage
+ * @returns {HTMLDivElement} le calque, vide
+ */
+function ajouteCalque(classe, ms) {
+  const c = document.createElement('div');
+  c.className = `egg-calque ${classe}`;
+  c.setAttribute('aria-hidden', 'true');
+  document.body.append(c);
+  setTimeout(() => c.remove(), ms + 300);
+  return c;
+}
+
+/** Drapeau imaginaire (fond blanc, bande concombre, rondelle de concombre et gousse d'ail stylisées). */
+const SVG_DRAPEAU = `<svg class="egg-drapeau-svg" viewBox="0 0 300 200" focusable="false" aria-hidden="true">
+  <rect width="300" height="200" fill="#FFFFFF"/>
+  <rect y="140" width="300" height="60" fill="#8DBA5A"/>
+  <circle cx="92" cy="100" r="46" fill="#A8D27A" stroke="#5E8F3A" stroke-width="4"/>
+  <circle cx="92" cy="100" r="34" fill="#D9EDBE"/>
+  <g fill="#5E8F3A">
+    <circle cx="119" cy="100" r="3.5"/><circle cx="105.5" cy="123.4" r="3.5"/><circle cx="78.5" cy="123.4" r="3.5"/>
+    <circle cx="65" cy="100" r="3.5"/><circle cx="78.5" cy="76.6" r="3.5"/><circle cx="105.5" cy="76.6" r="3.5"/>
+  </g>
+  <path d="M190 62 C214 50 246 60 240 92 C236 118 206 124 194 108 C182 92 178 72 190 62 Z" fill="#F7F3E4" stroke="#B8AE92" stroke-width="3"/>
+  <path d="M191 76 C200 90 204 104 201 118" fill="none" stroke="#B8AE92" stroke-width="2"/>
+  <path d="M206 58 C208 48 218 42 226 40" fill="none" stroke="#7A9B4E" stroke-width="3" stroke-linecap="round"/>
+</svg>`;
+
+/**
+ * Drapeau du Tzatzikistan : il se déroule en haut de l'écran et flotte (ondulation CSS). Mouvement réduit : immobile.
+ * @param {boolean} anime mouvement autorisé
+ * @returns {number} durée en ms
+ */
+function drapeauTzatziki(anime) {
+  const ms = anime ? DUREE_DRAPEAU : DUREE_CALME;
+  const c = ajouteCalque(anime ? 'egg-drapeau' : 'egg-drapeau egg-drapeau-calme', ms);
+  c.innerHTML = `<div class="egg-drapeau-bloc"><div class="egg-drapeau-tissu">${SVG_DRAPEAU}</div>
+    <p class="egg-legende">Bienvenue au Tzatzikistan. Population : le gang.</p></div>`;
+  return ms;
+}
+
+/**
+ * Kc : confettis bleus et blancs (mouvement permis seulement), fanfare de quatre notes (si les sons sont activés),
+ * et le message de l'équipe.
+ * @param {boolean} anime mouvement autorisé
+ * @returns {number} durée en ms
+ */
+function fanfareKc(anime) {
+  const c = ajouteCalque('egg-kc', DUREE_KC);
+  c.innerHTML = '<p class="egg-kc-texte">Le gang pousse derrière son équipe !</p>';
+  if (anime) confettis({ couleurs: COULEURS_KC, nombre: 90, duree: DUREE_KC, classe: 'egg-bleu' });
+  playSound('fanfare');
+  return DUREE_KC;
+}
+
+/** Carte de duchés stylisée et couronne (SVG simple, inline). */
+const SVG_SERGE = `<svg class="egg-serge-svg" viewBox="0 0 320 200" focusable="false" aria-hidden="true">
+  <path class="egg-carte-terre" d="M20 40 L110 16 L170 30 L230 14 L300 40 L292 110 L305 170 L210 186 L140 172 L62 186 L28 150 L40 96 Z"/>
+  <path class="egg-carte-limite" d="M110 16 L120 90 L62 186 M170 30 L160 110 L140 172 M230 14 L222 100 L210 186 M40 96 L120 90 L160 110 L222 100 L292 110"/>
+  <g class="egg-couronne">
+    <path class="egg-or" d="M118 96 L128 60 L146 82 L160 50 L174 82 L192 60 L202 96 Z"/>
+    <rect class="egg-or" x="118" y="96" width="84" height="12" rx="2"/>
+    <circle class="egg-bijou" cx="128" cy="60" r="4"/><circle class="egg-bijou" cx="160" cy="50" r="4"/><circle class="egg-bijou" cx="192" cy="60" r="4"/>
+  </g>
+</svg>`;
+
+/**
+ * Serge : une couronne posée sur la carte de duchés, au centre de l'écran, avec la règle de la campagne.
+ * @param {boolean} anime mouvement autorisé (la couronne tombe et la carte apparaît)
+ * @returns {number} durée en ms
+ */
+function couronneSerge(anime) {
+  const c = ajouteCalque(anime ? 'egg-serge' : 'egg-serge egg-serge-calme', DUREE_SERGE);
+  c.innerHTML = `<figure class="egg-serge-carte">${SVG_SERGE}
+    <figcaption>Les règles de la campagne sont non négociables.</figcaption></figure>`;
+  return DUREE_SERGE;
+}
+
+/** Petite voiture pixelisée (rouge du gang), coffre et toit chargés de sacs, matelas sur le toit. */
+const SVG_VOITURE = `<svg class="egg-voiture-svg" viewBox="0 0 116 56" focusable="false" aria-hidden="true" shape-rendering="crispEdges">
+  <rect x="26" y="2" width="46" height="8" fill="#F2EFEA"/>
+  <rect x="26" y="8" width="46" height="2" fill="#CFC9BD"/>
+  <rect x="76" y="4" width="8" height="8" fill="#C9A46A"/>
+  <rect x="85" y="6" width="7" height="6" fill="#8FB4E8"/>
+  <rect x="22" y="12" width="56" height="12" fill="#9E3543"/>
+  <rect x="26" y="15" width="18" height="6" fill="#BFD7EA"/>
+  <rect x="48" y="15" width="22" height="6" fill="#BFD7EA"/>
+  <rect x="6" y="22" width="108" height="20" fill="#9E3543"/>
+  <rect x="92" y="14" width="10" height="8" fill="#C9A46A"/>
+  <rect x="6" y="30" width="108" height="2" fill="#E2C77E"/>
+  <rect x="110" y="26" width="4" height="4" fill="#E2C77E"/>
+  <rect x="16" y="38" width="16" height="16" fill="#17171A"/>
+  <rect x="84" y="38" width="16" height="16" fill="#17171A"/>
+  <rect x="21" y="43" width="6" height="6" fill="#ABA7A0"/>
+  <rect x="89" y="43" width="6" height="6" fill="#ABA7A0"/>
+</svg>`;
+
+/**
+ * Domu : la petite voiture chargée traverse le bas de l'écran de gauche à droite (quatre secondes).
+ * Mouvement réduit : elle reste fixe dans l'angle, avec le même délai.
+ * @param {boolean} anime mouvement autorisé
+ * @returns {number} durée en ms
+ */
+function voitureDomu(anime) {
+  const c = ajouteCalque('egg-domu', DUREE_DOMU);
+  c.innerHTML = `<div class="${anime ? 'egg-voiture' : 'egg-voiture egg-voiture-calme'}">${SVG_VOITURE}</div>`;
+  return DUREE_DOMU;
 }
 
 /* ---------- Heure du gang (13 h 37) et nuit profonde (3 h) à Zurich ---------- */
@@ -431,26 +604,32 @@ function banniere() {
   cible.prepend(b);
 }
 
+/** Couleurs des confettis par défaut : celles du site (arc-en-ciel et sable). */
+const COULEURS_DEFAUT = ['var(--rb-1)', 'var(--rb-2)', 'var(--rb-3)', 'var(--rb-4)', 'var(--rb-5)', 'var(--rb-6)', 'var(--sand)'];
+
 /**
- * Confettis qui tombent sur l'écran pendant quatre secondes (calque décoratif).
+ * Confettis qui tombent sur l'écran (calque décoratif). Par défaut : 70 morceaux colorés sur quatre secondes.
+ * @param {{couleurs?: string[], nombre?: number, duree?: number, classe?: string}} [opts]
+ *   couleurs : couleurs des morceaux ; nombre : nombre de morceaux ; duree : durée de la chute en ms ;
+ *   classe : classe ajoutée au calque (ex. « egg-bleu », qui ajoute un contour aux morceaux clairs)
  */
-function confettis() {
+function confettis({ couleurs = COULEURS_DEFAUT, nombre = 70, duree = 4000, classe = '' } = {}) {
   const calque = document.createElement('div');
-  calque.className = 'egg-calque egg-confetti';
+  calque.className = `egg-calque egg-confetti ${classe}`.trim();
   calque.setAttribute('aria-hidden', 'true');
-  const couleurs = ['var(--rb-1)', 'var(--rb-2)', 'var(--rb-3)', 'var(--rb-4)', 'var(--rb-5)', 'var(--rb-6)', 'var(--sand)'];
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < nombre; i++) {
     const s = document.createElement('span');
     s.style.left = `${rnd(0, 100).toFixed(1)}%`;
     s.style.background = couleurs[i % couleurs.length];
-    s.style.animationDuration = `${rnd(2.8, 4).toFixed(2)}s`;
+    // Durée de chute : entre 70 % et 100 % de la durée demandée (2,8 à 4 s par défaut)
+    s.style.animationDuration = `${(rnd(0.7, 1) * duree / 1000).toFixed(2)}s`;
     s.style.animationDelay = `${rnd(0, 0.6).toFixed(2)}s`;
     s.style.setProperty('--dx', `${rnd(-80, 80).toFixed(0)}px`);
     s.style.setProperty('--r', `${rnd(-540, 540).toFixed(0)}deg`);
     calque.append(s);
   }
   document.body.append(calque);
-  setTimeout(() => calque.remove(), 4500);
+  setTimeout(() => calque.remove(), duree + 500);
 }
 
 /* ---------- Console : énigme ---------- */

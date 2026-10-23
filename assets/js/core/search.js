@@ -5,7 +5,8 @@
 // la recherche se fait ensuite dans la page, sans aller-retour, insensible à la casse et aux accents.
 /*
  * Rôle : la loupe de l'en-tête ouvre un dialogue de recherche qui parcourt les sorties, les souvenirs
- * et les membres. Chaque résultat est un lien vers la page concernée.
+ * et les membres. Chaque résultat est un lien vers la page concernée. Un mot secret tapé exactement (ex. « serge »)
+ * lance son effet à la place (eggs/core.js, chargé à la demande).
  * Page : toutes les pages pour un membre connecté (header.js ajoute la loupe et bindSearch).
  * Dépendances : supabase.js (requêtes), pages-access.js (groupes visibles selon mes pages),
  * util.js (esc, errMsg, fmtDate, avatarHtml), icons.js (loupe, fermer).
@@ -185,6 +186,24 @@ function renderResults(d, q) {
 
 /* ---------- Dialogue ---------- */
 
+/**
+ * Saisie d'un mot secret (mots tapés hors champ, voir eggs/core.js) : si la saisie vaut exactement un de ces mots
+ * (sans casse ni espaces), l'effet se lance et la recherche se ferme, au lieu d'afficher « Aucun résultat ».
+ * Le module des secrets n'est chargé que pour une saisie de lettres seules (rien à charger pour une sortie).
+ * @param {HTMLDialogElement} d Dialogue de recherche.
+ * @param {string} valeur Texte saisi.
+ */
+function essaieMotSecret(d, valeur) {
+  if (!/^[a-z]{2,12}$/i.test(valeur.trim())) { renderResults(d, valeur); return; }
+  import('../eggs/core.js')
+    .then((m) => {
+      if (d.querySelector('#search-q')?.value !== valeur) return; // la saisie a changé entre-temps
+      if (m.tryWordSecret(valeur)) d.close();
+      else renderResults(d, valeur);
+    })
+    .catch(() => renderResults(d, valeur));
+}
+
 /** Dialogue de recherche, créé à la première ouverture. */
 let dlg = null;
 /** Élément à qui rendre le focus à la fermeture. */
@@ -242,7 +261,7 @@ function buildDialog() {
     const first = d.querySelector('.sr-item');
     if (first) { d.close(); location.href = first.getAttribute('href'); }
   });
-  input.addEventListener('input', () => renderResults(d, input.value));
+  input.addEventListener('input', () => essaieMotSecret(d, input.value));
 
   document.body.append(d);
   return d;
