@@ -39,6 +39,8 @@ export const SECTION_PERM = {
   mj: 'mj', relance: 'membres',
   // Idées « Social et profils » (migration 091) : parrainage et compétences → « membres » ; accueil des membres → « reglages »
   parrainage: 'membres', competences: 'membres', 'accueil-membres': 'reglages',
+  // Idées A8 et A9 : Site › Fonctionnement › Erreurs du site (droit « reglages ») et Archives (administrateur seulement)
+  erreurs: 'reglages', archives: 'admin',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -158,6 +160,8 @@ export const DOMAINS = [
     ]),
     ...under('Fonctionnement', [
       { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
+      { id: 'erreurs', label: 'Erreurs du site', section: 'erreurs' },
+      { id: 'archives', label: 'Archives', section: 'archives' },
       { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
       { id: 'accueil', label: 'Accueil des membres', section: 'accueil-membres' },
     ]),

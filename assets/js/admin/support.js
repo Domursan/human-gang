@@ -20,6 +20,7 @@ import { createList } from './ui/list.js';
 import { createThread } from './ui/thread.js';
 import { renderDetailHeader } from './ui/detail-header.js';
 import { renderInfoPanel } from './ui/info-panel.js';
+import { reportOf, reportItem, reportCard } from './reports.js'; // A6 : signalements
 
 /* ---------- Statuts et filtres ---------- */
 // Les trois états affichés (libellé et ton). L'état est calculé à partir de status et taken_by (stateOf).
@@ -31,6 +32,7 @@ const FILTERS = [
   { id: 'ouverte', label: 'Ouvertes', test: (it) => it.status.id === 'ouverte' },
   { id: 'encours', label: 'En cours', test: (it) => it.status.id === 'encours' },
   { id: 'traitee', label: 'Traitées', test: (it) => it.status.id === 'traitee' },
+  { id: 'signalements', label: 'Signalements', test: (it) => !!it.report && it.status.id !== 'traitee' }, // A6
 ];
 // Durée de validité (ms) de la fiche rapide d'un membre : évite de la recharger à chaque clic.
 const STATS_TTL = 60_000;
@@ -65,6 +67,7 @@ const find = (id) => S.support.find((x) => x.id === id);
 
 /** Élément de liste pour une demande (champs lus par ui/list.js). */
 function toItem(s) {
+  const rep = reportOf(s.id); // A6 : demande « Signalement » liée à hg_reports
   return {
     id: s.id,
     member: memberOf(s),
@@ -73,6 +76,7 @@ function toItem(s) {
     at: s.updated_at || s.created_at,
     status: stateOf(s),
     unread: !s.read_at,
+    ...(rep ? reportItem(rep) : {}),
   };
 }
 
@@ -262,7 +266,10 @@ function paintDetail() {
     V.threadFor = threadKey;
   }
   V.thread.update(threadMessages(s, m));
-  host.replaceChildren(head, V.threadEl);
+  // A6 : demande « Signalement » : aperçu du contenu et décision (masquer, supprimer, ne rien faire) au-dessus du fil
+  const rep = reportOf(id);
+  const card = rep ? reportCard(rep, async () => { await loadSupport().catch((e) => console.warn('[panel]', e?.message || e)); renderSupport(); renderStats(); }) : null;
+  host.replaceChildren(...[head, card, V.threadEl].filter(Boolean));
 }
 
 /* ---------- Panneau d'infos : fiche rapide du membre ---------- */

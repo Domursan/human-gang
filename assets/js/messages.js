@@ -9,6 +9,7 @@ import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
 import { svg } from './icons.js';
 import * as G from './messages-groupes.js'; // groupes et discussions de sortie (migration 090)
+import { reportButtonHtml } from './report.js'; // A6 : « Signaler » un message
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -371,10 +372,15 @@ function bubbleHtml(m, prev, c) {
   // Groupe : avatar et pseudo de l'auteur (couleur du membre) pour les messages des autres.
   const who = G.isGroup(c) && !m.mine && m.sender_id ? memberOf(m.sender_id) : null;
   const glabel = who && !sameGroup ? `<span class="msg-sender msg-sender-grp" style="--who:${esc(/^#[0-9a-f]{6}$/i.test(who.color || '') ? who.color : 'var(--muted)')}">${esc(m.sender_label)}</span>` : '';
-  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}${who ? ' is-grp' : ''}" data-id="${esc(m.id)}">
+  const hidden = S.hidden?.has(Number(m.id)); // A6 : message masqué par le Staff
+  const bubble = `<div class="msg-bubble"><span class="visually-hidden">${m.mine ? 'Toi' : esc(m.sender_label)} : </span><span class="msg-text">${linkify(m.body)}</span>
+      <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>`;
+  // Message d'un autre membre (sauf conversation d'assistance) : menu « … » avec « Signaler »
+  const canReport = !m.mine && !hidden && c?.kind !== 'support';
+  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}${who ? ' is-grp' : ''}${hidden ? ' is-hidden' : ''}" data-id="${esc(m.id)}">
     ${who ? `<span class="msg-row-av" aria-hidden="true">${sameGroup ? '' : avatarHtml(who, 28)}</span><div class="msg-row-col">${glabel}` : label}
-    <div class="msg-bubble"><span class="visually-hidden">${m.mine ? 'Toi' : esc(m.sender_label)} : </span><span class="msg-text">${linkify(m.body)}</span>
-      <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>
+    ${canReport ? `<div class="msg-line">${bubble}${reportButtonHtml('message', m.id, 'message')}</div>` : bubble}
+    ${hidden && m.mine ? '<span class="small muted msg-hidden-note">Masqué par le Staff : l’autre personne ne le voit plus.</span>' : ''}
     ${who ? '</div>' : ''}
   </div>`;
 }
@@ -471,8 +477,10 @@ async function openConv(id, { focus = true } = {}) {
   renderThreadShell(c);
   S.loadingThread = true;
   try {
-    const rows = await fetchMessages(id, 0);
+    const [rows, hid] = await Promise.all([fetchMessages(id, 0),
+      sb.rpc('hg_conv_hidden', { p_conv: id }).then((r) => r.data || [], () => [])]); // A6 : messages masqués
     if (S.current !== id) return;
+    S.hidden = new Set((Array.isArray(hid) ? hid : []).map(Number));
     S.msgs = rows;
     S.lastId = rows.length ? rows[rows.length - 1].id : 0;
     renderMessages();

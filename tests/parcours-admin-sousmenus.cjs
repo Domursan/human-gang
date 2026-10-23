@@ -33,7 +33,7 @@ const TREE = {
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions']], ['Suivi', ['joueurs', 'echanges', 'stats']],
     ['Jeux', ['questions', 'pronos', 'sutom', 'ludotheque', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux', 'saisons']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
-  site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages', 'accueil']], ['Apparence', ['theme']]],
+  site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'erreurs', 'archives', 'reglages', 'accueil']], ['Apparence', ['theme']]],
 };
 const ROUTES = Object.entries(TREE).flatMap(([d, groups]) => groups.flatMap(([, subs]) => subs.map((s) => `${d}/${s}`)));
 

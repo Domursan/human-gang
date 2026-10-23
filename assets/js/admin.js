@@ -64,6 +64,8 @@ const OPTIONAL = [
   { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Parrainage (idée P8)
   { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Compétences (idée P7)
   { sub: 'accueil', url: './admin-social.js', fn: 'mountAccueilSection' },         // Site › Accueil des membres (idées P9, P6)
+  { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Site › Erreurs du site (hg_client_errors, A9)
+  { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Site › Archives (fonction hg-archive, A8)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -265,6 +267,8 @@ for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['men
 }
 for (const [p, v] of PROV) if (v) registerSub(p.route, v); // Planning, À relancer, Mes jeux (idées A2 à A4)
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
+if (MOUNT.erreurs) registerSub('site/erreurs', { main: () => MOUNT.erreurs($('#errors-root')) }); // A9 : erreurs JavaScript regroupées
+if (MOUNT.archives) registerSub('site/archives', { main: () => MOUNT.archives($('#archives-root')) }); // A8 : archive annuelle (admin)
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */
 // Les réglages du bot et du thème se chargent avec leur section (admin-bot.js, admin-themes.js).
@@ -290,4 +294,5 @@ if (has('badges')) renderBadges();
 if (has('idees')) renderIdeas();
 if (has('assistance')) renderSupport();
 startShell();
+if (MOUNT.erreurs && has('erreurs')) import('./admin-errors.js').then((m) => m.countNewErrors()).catch(() => {}); // compteur du rail (A9)
 initLive(); // temps réel du panel (voyant du rail, compteurs, sections) ; sans effet si indisponible

@@ -1,0 +1,55 @@
+/* ===== Humane Gang — admin : santé de l'économie (A7) et signalements (A6) ===== */
+
+/* ---------- Santé de l'économie (Pilotage › Vue d'ensemble) ---------- */
+.eco-card { margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.eco-card .card-title { margin-bottom: 0; }
+.eco-note { margin: -6px 0 0; }
+.eco-inds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.eco-ind { display: flex; flex-direction: column; gap: 3px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); min-width: 0; }
+.eco-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; }
+.eco-dot i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.eco-card [data-tone="ok"] { --eco: var(--sage-text); }
+.eco-card [data-tone="warn"] { --eco: var(--amber); }
+.eco-card [data-tone="bad"] { --eco: var(--rose); }
+.eco-dot, .eco-sub { color: var(--eco, var(--muted)); }
+.eco-big { font-family: var(--font-display); font-size: 24px; font-weight: 400; line-height: 1.15; overflow-wrap: anywhere; }
+.eco-spark { width: 100%; height: 26px; margin-top: 4px; }
+.eco-spark polyline { fill: none; stroke: var(--eco, var(--muted)); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.eco-alert { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--rose) 45%, transparent); background: color-mix(in srgb, var(--rose) 10%, transparent); }
+.eco-alert[data-tone="off"] { border-color: var(--border); background: var(--surface-2); }
+.eco-alert-txt { flex: 1 1 260px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.eco-alert-act { display: flex; gap: 6px; flex-wrap: wrap; }
+.eco-alert-act .btn { min-height: 44px; }
+.eco-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.eco-tbl th, .eco-tbl td { text-align: left; padding: 7px 8px; border-top: 1px solid var(--border); }
+.eco-tbl thead th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-top: 0; }
+.eco-tbl tbody th { font-weight: 600; }
+.eco-yield { display: inline-flex; align-items: center; gap: 8px; color: var(--eco); }
+.eco-bar { display: inline-block; width: 90px; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.eco-bar span { display: block; height: 100%; background: var(--eco); }
+.eco-more summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
+@media (max-width: 1100px) { .eco-inds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) {
+  .eco-bar { width: 48px; }
+  .eco-tbl th:nth-child(3), .eco-tbl td:nth-child(3) { display: none; }
+}
+/* Éditeur de boosters : alerte « machine à Paillettes » */
+.abt-warn.abt-bad { color: var(--rose); border-color: var(--rose); font-weight: 600; }
+
+/* ---------- Signalements (Communication › Assistance) ---------- */
+.rp-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; margin-bottom: 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface); }
+.rp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.rp-title { margin: 0; font-size: 18px; }
+.rp-reason { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+  color: var(--rose); background: color-mix(in srgb, var(--rose) 14%, transparent); }
+.rp-reason[data-r="prive"] { color: var(--accent-text); background: var(--accent); }
+.rp-photo { display: block; max-width: 100%; max-height: 340px; border-radius: var(--radius-sm); object-fit: contain; background: var(--bg); }
+.rp-quote { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); white-space: pre-wrap; overflow-wrap: anywhere; }
+.rp-note { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 13.5px; }
+.rp-state { font-weight: 700; color: var(--amber); }
+.rp-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.rp-actions > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.rp-actions .btn { min-height: 44px; }
+.ui-row-kind { font-size: 11px; font-weight: 700; color: var(--rose); }

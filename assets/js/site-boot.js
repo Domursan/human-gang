@@ -35,6 +35,21 @@ document.addEventListener('error', (e) => {
   }
 }, true);
 
+/* ---------- Journal des erreurs du navigateur (A9) ---------- */
+// Écouteurs posés tout de suite ; le module d'envoi (error-report.js) n'est chargé qu'à la première erreur.
+/** Transmet une erreur au module d'envoi (import à la demande, sans jamais lever). */
+const remonte = (e) => { import('./error-report.js').then((m) => m.reportError(e)).catch(() => {}); };
+addEventListener('error', (e) => {
+  if (!(e instanceof ErrorEvent)) return; // erreurs de chargement (images, scripts) : pas des erreurs JavaScript
+  remonte({ message: e.message || String(e.error || ''), file: e.filename, line: e.lineno, col: e.colno });
+});
+addEventListener('unhandledrejection', (e) => {
+  const r = e.reason;
+  const stack = String(r?.stack || '');
+  const at = stack.match(/(https?:\/\/[^\s)]+?):(\d+):(\d+)/);
+  remonte({ message: `Unhandled rejection: ${r?.message || r || ''}`, file: at?.[1] || '', line: at ? Number(at[2]) : null, col: at ? Number(at[3]) : null });
+});
+
 /* ---------- Bouton « Réessayer » ---------- */
 
 // Délégation : un clic sur n'importe quel [data-action="reload"] recharge la page

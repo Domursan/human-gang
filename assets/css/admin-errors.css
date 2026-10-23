@@ -1,0 +1,48 @@
+/* ===== Humane Gang — admin : Erreurs du site (A9) et Archives (A8) ===== */
+/* Erreurs : tableau des groupes + détail. Archives : carte de téléchargement (assets/js/admin-archive.js). */
+
+/* ---------- Erreurs du site ---------- */
+.er-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.er-list { padding: 6px 8px; min-width: 0; }
+.er-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.er-tbl th { text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; padding: 8px; }
+.er-tbl td { padding: 4px 8px; border-top: 1px solid var(--border); vertical-align: middle; }
+.er-tbl th.er-n, .er-tbl td.er-n { width: 64px; }
+.er-tbl th.er-last, .er-tbl td.er-last { width: 84px; }
+.er-tbl th:last-child, .er-tbl td:last-child { width: 108px; }
+.er-tbl tr.is-sel td { background: color-mix(in srgb, var(--sand) 8%, transparent); }
+.er-pick { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; min-height: 44px; padding: 6px 0; border: 0; background: none;
+  color: inherit; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.er-msg, .er-file { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.er-msg { font-size: 13px; }
+.er-detail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.er-dhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.er-box { margin: 0; padding: 12px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); font-size: 13px;
+  white-space: pre-wrap; overflow-wrap: anywhere; }
+.er-lbl { margin: 0 0 6px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.er-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.er-pills .pill { padding: 4px 10px; }
+.er-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.er-bars li { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13px; }
+.er-track { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.er-track span { display: block; height: 100%; background: var(--sand); border-radius: 4px; }
+.er-days { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
+.er-days span { flex: 1; min-height: 3px; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--rose) 70%, transparent); }
+.er-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.er-sp { flex: 1; }
+.er-actions .btn { min-height: 44px; }
+@media (max-width: 1100px) { .er-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) {
+  .er-tbl th.er-last, .er-tbl td.er-last { display: none; }
+  .er-tbl th:last-child, .er-tbl td:last-child { width: 96px; }
+}
+
+/* ---------- Archives ---------- */
+.ar-card { display: flex; flex-direction: column; gap: 14px; max-width: 720px; }
+.ar-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.ar-row .field { min-width: 160px; }
+.ar-parts { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 16px; min-width: 0; }
+.ar-parts legend { padding: 0; margin-bottom: 6px; font-weight: 700; }
+.ar-parts .check { min-height: 44px; align-items: center; }
+.ar-progress { margin: 0; }
+.ar-progress:empty { display: none; }
