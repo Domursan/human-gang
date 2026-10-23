@@ -98,3 +98,16 @@ alter table public.hg_bot_quota enable row level security;
 -- Aucune policy : seule la clé service (hg-notify) lit et écrit.
 revoke all on public.hg_bot_quota from anon, authenticated;
 comment on table public.hg_bot_quota is 'Annonces et MP du bot déclenchés par chaque membre (hg-notify, migration 075) : limite par heure (hg_settings.bot.limites.annonces_par_heure, 20 par défaut). Clé service seulement ; lignes de plus de 2 jours purgées par hg-notify.';
+
+-- ---------------------------------------------------------------------
+-- Fin de la série 072 → 075 : les fonctions trigger créées par 074 et 075 ne sont pas non plus exécutables
+-- par les rôles client (même règle que 073, point m2).
+-- ---------------------------------------------------------------------
+do $r$
+declare f record;
+begin
+  for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.prorettype = 'trigger'::regtype and p.proname like 'hg\_%' loop
+    execute format('revoke execute on function %s from public, anon, authenticated', f.sig);
+  end loop;
+end $r$;
