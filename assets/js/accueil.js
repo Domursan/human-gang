@@ -7,6 +7,7 @@
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
 import { svg } from './icons.js';
+import { maybeStartTour } from './core/tour.js'; // Q1 : visite guidée au premier passage
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
 const app = $('#app');
@@ -545,5 +546,6 @@ if (!me) {
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
   ]);
+  maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }
 app.removeAttribute('aria-busy');

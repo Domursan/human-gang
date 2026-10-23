@@ -1,49 +1,240 @@
-# Contrôles à chaque push et pull request : syntaxe JS, présence des RPC/tables, tests de parcours.
-# Les tests tournent sur un faux Supabase (tests/fixtures/) : aucun appel à la vraie base.
+# Contrôles à chaque envoi sur main et à chaque demande de fusion : syntaxe JS, présence des RPC/tables,
+# tests de parcours (4 morceaux en parallèle), accessibilité (axe-core) et budget de performance mobile.
+# Les tests tournent sur un faux Supabase (tests/fixtures/) : aucun appel à la vraie base, aucune donnée réelle.
+#
+# Déclencheurs :
+# - envoi sur main (la branche en ligne) ;
+# - demande de fusion (ouverte, mise à jour, ou étiquette « ci » ajoutée pour relancer) ;
+# - passage de nuit sur main à 2 h 17 UTC (3 h 17 à Zurich en hiver, 4 h 17 en été) : détecte ce qui casse sans
+#   changement de code (mise à jour de Chromium, police indisponible…) ;
+# - bouton « Run workflow » (workflow_dispatch).
+# Les branches de travail ne déclenchent rien d'office, pour éviter une avalanche de mails à chaque envoi.
+#
+# Alerte Discord : seulement pour main (envoi, nuit ou bouton), un message quand main casse et un autre quand il
+# repart. Elle utilise le secret GitHub DISCORD_CI_WEBHOOK (adresse d'un webhook de salon Staff) : sans ce secret,
+# l'étape ne fait rien. L'adresse n'est jamais écrite dans le dépôt ni dans les journaux (GitHub masque les secrets).
 name: CI
 
-# Seulement sur main (la branche en ligne) et sur les demandes de fusion : les branches de travail ne
-# déclenchent pas de test, pour éviter une avalanche de mails à chaque envoi.
 on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  schedule:
+    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Une nouvelle exécution sur la même demande de fusion annule la précédente (main n'est jamais annulé).
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  test:
+  # ---------- Vérifications statiques (sans navigateur) ----------
+  verifs:
+    name: Vérifications
+    # Étiquette ajoutée : on ne relance que pour l'étiquette « ci ».
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Installer les dépendances
-        # Sans package-lock.json, on installe sans en créer un (à committer une fois généré).
-        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
-
-      - name: Installer Chromium pour Playwright
-        run: npx playwright install --with-deps chromium
-
       - name: Syntaxe JavaScript
         run: npm run check
-
       - name: Appels RPC et tables présents dans la base
         run: npm run test:rpc
 
+  # ---------- Suite de parcours, en 4 morceaux parallèles ----------
+  morceaux:
+    name: Tests (morceau ${{ matrix.shard }} / 4)
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer les dépendances
+        # Sans package-lock.json, on installe sans en créer un (passer à « npm ci » et au cache npm une fois le
+        # fichier généré et committé).
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+      - name: Cache de Chromium (Playwright)
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+      - name: Installer Chromium pour Playwright
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Dépendances système de Chromium (navigateur déjà en cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       - name: Tests de parcours et de fumée
-        run: npm test
-
-      - name: Captures des tests (en cas d'échec)
-        if: failure()
+        run: node tests/run-all.cjs --shard=${{ matrix.shard }}/4
+      - name: Bilan et captures
+        # Toujours déposé : le bilan JSON sert au résumé global ; les captures n'ont que les fausses données des fixtures.
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: captures-tests
+          name: captures-morceau-${{ matrix.shard }}
           path: tests/shots/
           if-no-files-found: ignore
+          retention-days: 14
+
+  # ---------- Accessibilité (axe-core) : mode « signaler » pendant la période d'observation ----------
+  # Passer A11Y_MODE à « bloquer » (et retirer continue-on-error) après une semaine sans défaut grave nouveau.
+  accessibilite:
+    name: Accessibilité (axe-core)
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    env:
+      A11Y_MODE: signaler
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer les dépendances
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+      - name: Cache de Chromium (Playwright)
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+      - name: Installer Chromium pour Playwright
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Dépendances système de Chromium (navigateur déjà en cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Contrôle axe-core des pages publiques (390 et 1280 px)
+        run: node tests/a11y-pages.cjs
+      - name: Bilan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilan-accessibilite
+          path: tests/shots/a11y.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ---------- Budget de performance mobile (Q3) ----------
+  performance:
+    name: Budget de performance mobile
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer les dépendances
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+      - name: Cache de Chromium (Playwright)
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ hashFiles('package.json') }}
+      - name: Installer Chromium pour Playwright
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Dépendances système de Chromium (navigateur déjà en cache)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - name: Mesure (4G lente simulée, processeur ralenti × 4, 390 px)
+        run: node tests/perf-budget.cjs
+      - name: Bilan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilan-performance
+          path: tests/shots/perf.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ---------- Résultat global (nom « test » conservé : c'est le contrôle attendu sur les demandes de fusion) ----------
+  test:
+    name: test
+    needs: [verifs, morceaux, accessibilite, performance]
+    if: always() && (github.event.action != 'labeled' || github.event.label.name == 'ci')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      echecs: ${{ steps.resume.outputs.echecs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Récupérer les bilans
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          path: bilans
+      - name: Résumé de la CI
+        id: resume
+        run: node tests/ci-resume.cjs bilans
+      - name: Verdict
+        # L'accessibilité ne bloque pas pendant la période d'observation (continue-on-error).
+        env:
+          VERIFS: ${{ needs.verifs.result }}
+          MORCEAUX: ${{ needs.morceaux.result }}
+          PERF: ${{ needs.performance.result }}
+        run: |
+          echo "Vérifications : $VERIFS · Tests : $MORCEAUX · Performance : $PERF"
+          [ "$VERIFS" = success ] && [ "$MORCEAUX" = success ] && [ "$PERF" = success ]
+
+  # ---------- Alerte Discord (main seulement) ----------
+  alerte:
+    name: Alerte Discord
+    needs: [test]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Prévenir le salon Staff si main casse ou repart
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_CI_WEBHOOK }}
+          GH_TOKEN: ${{ github.token }}
+          RESULTAT: ${{ needs.test.result }}
+          ECHECS: ${{ needs.test.outputs.echecs }}
+          DECLENCHEUR: ${{ github.event_name }}
+          RAPPORT: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then echo "Secret DISCORD_CI_WEBHOOK absent : pas d'alerte."; exit 0; fi
+          case "$RESULTAT" in success|failure) ;; *) echo "Exécution $RESULTAT : pas d'alerte."; exit 0;; esac
+          # Conclusion de la dernière exécution terminée sur main (avant celle-ci) : on ne prévient qu'au changement.
+          avant=$(gh api "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?branch=main&status=completed&per_page=5" \
+            --jq "[.workflow_runs[] | select(.id != ${{ github.run_id }}) | select(.event != \"pull_request\")][0].conclusion // \"\"" 2>/dev/null || echo "")
+          case "$DECLENCHEUR" in schedule) qui="passage de nuit";; push) qui="envoi sur main";; *) qui="lancement manuel";; esac
+          if [ "$RESULTAT" = "success" ]; then
+            [ "$avant" = "failure" ] || { echo "main va bien (avant : ${avant:-inconnu}) : rien à envoyer."; exit 0; }
+            titre="CI repartie sur main"; texte="Tous les contrôles repassent ($qui)."; couleur=1415494
+          else
+            [ "$avant" = "failure" ] && { echo "main était déjà en échec : un seul message par panne."; exit 0; }
+            titre="CI en échec sur main"; texte="${ECHECS:-voir le rapport}, voir les captures ($qui)."; couleur=16658692
+          fi
+          jq -n --arg t "$titre" --arg d "$texte" --arg u "$RAPPORT" --argjson c "$couleur" \
+            '{username: "Humane Gang CI", allowed_mentions: {parse: []}, embeds: [{title: $t, description: $d, url: $u, color: $c}]}' \
+            | curl -fsS -o /dev/null -X POST -H 'Content-Type: application/json' --data-binary @- "$WEBHOOK" \
+            && echo "Alerte envoyée : $titre" || echo "Alerte non envoyée (webhook injoignable)."

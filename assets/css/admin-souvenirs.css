@@ -78,3 +78,7 @@
 .sv-d-img img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
 .sv-d-text { margin: 0; max-width: 68ch; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sv-col-list .ui-row { grid-template-columns: minmax(0, 1fr); }
+/* Q3 : bouton « Générer les vignettes manquantes » et son état */
+.sv-thumbs-gen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sv-thumbs-gen[hidden] { display: none; }
+.sv-thumbs-gen .btn { min-height: 44px; }

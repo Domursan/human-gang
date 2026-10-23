@@ -7,13 +7,15 @@
  * Rôle : réduit le poids des photos avant de les envoyer au stockage (photos des membres, images de l'administration).
  * Page : les pages qui envoient une image (irl.js, historique.js, et les pages d'administration : événements, thèmes, souvenirs, badges).
  * Dépendances : aucune (API navigateur : createImageBitmap ou Image, canvas).
- * Exporte : prepareImage, otherVariants, MAX_SIDE, WEBP_QUALITY (ces deux constantes ne sont utilisées que dans ce fichier).
+ * Exporte : prepareImage, prepareThumb, otherVariants, MAX_SIDE, THUMB_SIDE, WEBP_QUALITY.
  */
 
 /* ---------- Constantes ---------- */
 
 /** Taille maximale du côté le plus long, en pixels. */
 export const MAX_SIDE = 1600;
+/** Côté le plus long d'une vignette d'album (Q3 : 300 à 480 px suffisent pour les grilles). */
+export const THUMB_SIDE = 480;
 /** Qualité de l'encodage WebP (0 à 1). */
 export const WEBP_QUALITY = 0.85;
 /** Qualité de l'encodage JPEG de repli (0 à 1). */
@@ -57,7 +59,8 @@ const toBlob = (canvas, type, quality) => new Promise((res) => canvas.toBlob(res
 
 /**
  * Prépare un fichier image pour l'envoi.
- * Renvoie { blob, ext, contentType } : à utiliser tel quel pour le chemin de stockage et le type MIME.
+ * Renvoie { blob, ext, contentType, width, height } : à utiliser tel quel pour le chemin de stockage et le type MIME ;
+ * width et height sont les dimensions de l'image envoyée (absentes pour un GIF, envoyé tel quel).
  */
 export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALITY } = {}) {
   if (!file?.type?.startsWith('image/')) throw new Error(`« ${file?.name || 'fichier'} » n'est pas une image`);
@@ -83,13 +86,25 @@ export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALIT
     ctx.fillRect(0, 0, w, h);
     blob = await toBlob(canvas, 'image/jpeg', JPEG_QUALITY);
     if (!blob) throw new Error(`Impossible de compresser ${file.name}`);
-    return { blob, ext: 'jpg', contentType: 'image/jpeg' };
+    return { blob, ext: 'jpg', contentType: 'image/jpeg', width: w, height: h };
   }
   // Déjà léger et sans redimensionnement : on garde l'original plutôt que de le réencoder plus lourd
   if (k === 1 && blob.size >= file.size && (file.type === 'image/webp' || file.type === 'image/jpeg')) {
-    return { blob: file, ext: EXT[file.type], contentType: file.type };
+    return { blob: file, ext: EXT[file.type], contentType: file.type, width: w, height: h };
   }
-  return { blob, ext: 'webp', contentType: 'image/webp' };
+  return { blob, ext: 'webp', contentType: 'image/webp', width: w, height: h };
+}
+
+/**
+ * Vignette WebP d'une image (côté le plus long : THUMB_SIDE px), pour les grilles d'albums (Q3).
+ * Renvoie null si le navigateur ne sait pas écrire de WebP ou si l'image est un GIF (pas de vignette : la photo sert).
+ * @param {Blob} blob Image source (déjà compressée ou d'origine).
+ * @returns {Promise<Blob|null>}
+ */
+export async function prepareThumb(blob) {
+  const src = blob instanceof File ? blob : new File([blob], 'vignette', { type: blob.type });
+  const t = await prepareImage(src, { max: THUMB_SIDE, quality: 0.8 });
+  return t.contentType === 'image/webp' ? t.blob : null;
 }
 
 /** Chemins possibles d'une image déjà envoyée sous `base` avec une autre extension (pour nettoyer après un remplacement). */

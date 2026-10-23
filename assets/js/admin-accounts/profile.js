@@ -42,6 +42,7 @@ export function profileHtml() {
         <label class="check"><input type="checkbox" name="share_birthday"${p.share_birthday ? ' checked' : ''}> <span>Partage son anniversaire avec le gang (jour et mois)</span></label>
         <label class="check"><input type="checkbox" name="bot_optin"${p.bot_optin ? ' checked' : ''}> <span>Accepte les messages privés du bot</span></label>
         <label class="check"><input type="checkbox" name="intro_seen"${p.intro_seen ? ' checked' : ''}> <span>Intro déjà vue</span></label>
+        ${'tour_done_at' in p ? `<label class="check"><input type="checkbox" name="tour_done"${p.tour_done_at ? ' checked' : ''}> <span>Visite guidée déjà vue <span class="muted small">(décocher la relance à sa prochaine visite de l’accueil)</span></span></label>` : ''}
         ${ghost || !isAdminView() ? '' : `<label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>`}
       </fieldset>
       <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span>${ghost ? ' · fantôme (pas encore inscrit)' : ` · profil créé le ${esc(fmtDateTime(p.created_at))}`}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
@@ -75,6 +76,8 @@ export async function saveProfile(form, btn) {
     discord_id: discord || null, share_birthday: form.share_birthday.checked, bot_optin: form.bot_optin.checked,
     intro_seen: form.intro_seen.checked, joined_on: nullIfEmpty(form.joined_on.value),
   };
+  // Q1 : décocher « Visite guidée déjà vue » remet la date à vide (la visite se relance) ; cocher garde la date existante.
+  if (form.tour_done) patch.tour_done_at = form.tour_done.checked ? (p.tour_done_at || new Date().toISOString()) : null;
   if (patch.joined_on && !/^\d{4}-\d{2}-\d{2}$/.test(patch.joined_on)) throw new Error('Date d\'arrivée invalide.');
   if (patch.joined_on && patch.joined_on > new Date().toISOString().slice(0, 10) && !isGodMode()) throw new Error('La date d\'arrivée ne peut pas être dans le futur.');
   if (!self && !ghost && isAdminView()) patch.is_admin = form.is_admin.checked; // un fantôme n'a pas de droits à gérer ; le Staff ne touche pas au statut admin

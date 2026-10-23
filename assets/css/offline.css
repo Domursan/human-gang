@@ -1,0 +1,14 @@
+/* ===== Collection hors ligne (Q4) : bandeau « Hors ligne · lecture seule » et actions masquées =====
+   Utilisé par cartes.html et membre.html (assets/js/offline-store.js). Couleurs : variables du thème (base.css). */
+.offline-banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin: 16px 0 4px;
+  border-radius: 14px; background: var(--irl-bg); border: 1px solid var(--irl-border); color: var(--text); }
+.offline-banner svg { flex: none; color: var(--sand); margin-top: 2px; }
+.offline-banner p { margin: 0; }
+.offline-banner-title { font-weight: 700; }
+/* Onglets indisponibles sans réseau : grisés, bord pointillé (maquette Q4) */
+.cartes-offline .cartes-tab[disabled] { opacity: .45; border-style: dashed; cursor: not-allowed; }
+/* Rien ne se modifie hors ligne : recyclage, fabrication et souhaits masqués */
+.cartes-offline .cartes-mass,
+.cartes-offline .cd-btn,
+.cartes-offline .cd-wish,
+.membre-offline .mb-actions { display: none !important; }

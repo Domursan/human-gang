@@ -99,6 +99,7 @@ const bySlug = new Map();
 groups.forEach((g) => g.tutos.forEach((t) => bySlug.set(t.slug, { t, g })));
 
 if (!me) guestNote.hidden = false;
+else $('.page-head')?.insertAdjacentHTML('beforeend', '<a class="btn btn-ghost aide-visite" href="accueil.html#visite">Revoir la visite</a>'); // Q1 : relance la visite guidée sur l'accueil
 
 /* ---------- Liste et recherche ---------- */
 /**

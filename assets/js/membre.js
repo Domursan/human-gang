@@ -11,17 +11,20 @@ import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge
 import { mountShowcase } from './cartes-showcase.js';
 import { svg } from './icons.js';
 import { questTrack } from './quest-track.js';
+import { isOffline, startOfflinePage, saveOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : sa carte hors ligne
 
 const app = $('#app');
-const me = await initPage({ auth: 'member' });
+// Q4 : sans réseau, la page montre la carte de membre gardée sur l'appareil (la sienne seulement, aucune requête).
+const OFF = isOffline() ? await startOfflinePage() : null;
+const me = OFF ? OFF.me : await initPage({ auth: 'member' });
 
 /* ---------- Quel membre afficher : ?id=<uuid>, sinon soi-même ---------- */
 const params = new URLSearchParams(location.search);
 /** Format d'un identifiant de compte (uuid). Une valeur qui ne correspond pas est ignorée. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const rawId = params.get('id');
-const targetId = rawId && UUID_RE.test(rawId) ? rawId : me.id;
-const isMe = targetId === me.id;
+const targetId = rawId && UUID_RE.test(rawId) ? rawId : me?.id;
+const isMe = !!me && targetId === me.id;
 
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const RAINBOW = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
@@ -512,36 +515,57 @@ async function addBadgeLevels(card) {
   } catch (e) { console.warn('[niveaux]', e?.message || e); }
 }
 
-/* ---------- Lancement ---------- */
-// Le squelette s'affiche tout de suite ; la carte remplace les blocs en attente une fois les données reçues.
-shell();
-// L'annuaire se charge en parallèle de la carte, sans l'attendre.
-const gangP = loadGang();
-try {
-  const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
-  if (error) throw error;
-  const card = data && typeof data === 'object' ? data : null;
-  await loadBadgeMax();
-  if (card?.id) await addBadgeLevels(card);
-  if (!card || !card.id) {
-    $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
-      <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;
-  } else {
-    document.title = `${card.pseudo} · Carte de membre · Humane Gang`;
-    $('#mb-title').textContent = isMe ? 'Ma carte' : card.pseudo;
-    $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
-    bindHolo();
-    $('#dl-card').addEventListener('click', (e) => onDownload(e.currentTarget, card));
-    if (!isMe && canAccess('cartes')) { // collection de ce membre, en lecture seule (cartes.html)
-      $('#mb-actions').hidden = false;
-      $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
-    }
-    if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
-    if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
-  }
-} catch (e) {
-  $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;
+/* ---------- Hors ligne (Q4) ---------- */
+/** Carte de membre depuis la copie de l'appareil, en lecture seule : ni annuaire, ni vitrine, ni carte d'un autre membre. */
+function renderOffline() {
+  document.body.classList.add('membre-offline');
+  const card = isMe ? OFF.copie?.membre?.card : null;
+  app.innerHTML = `
+    <section class="page-head mb-head"><div><p class="eyebrow">Carte d'identité HG</p><h1 class="page-title" id="mb-title">Ma carte</h1></div></section>
+    ${offlineBannerHtml(card ? OFF.copie.membre.at : null, 'ta carte de membre')}
+    ${card ? `<section class="mb-layout" id="mb-main"><div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div></section>`
+      : `<div class="card mb-missing"><p class="empty">${me && !isMe ? 'Hors ligne, seule ta propre carte est disponible.' : 'Ta carte de membre n’est pas encore gardée sur cet appareil.'}</p>
+        <div class="btn-row"><a class="btn btn-ghost" href="cartes.html">Voir ma collection</a></div></div>`}`;
+  if (card) { bindHolo(); $('#dl-card')?.addEventListener('click', (e) => onDownload(e.currentTarget, card)); }
+  app.removeAttribute('aria-busy');
 }
-await gangP;
-$$('.idc-skeleton').forEach((n) => n.remove());
-app.removeAttribute('aria-busy');
+
+/* ---------- Lancement ---------- */
+if (OFF) renderOffline(); else await renderOnline();
+
+/** Lancement en ligne : squelette, annuaire et carte (lecture de la base). */
+async function renderOnline() {
+  // Le squelette s'affiche tout de suite ; la carte remplace les blocs en attente une fois les données reçues.
+  shell();
+  // L'annuaire se charge en parallèle de la carte, sans l'attendre.
+  const gangP = loadGang();
+  try {
+    const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
+    if (error) throw error;
+    const card = data && typeof data === 'object' ? data : null;
+    await loadBadgeMax();
+    if (card?.id) await addBadgeLevels(card);
+    if (!card || !card.id) {
+      $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
+        <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;
+    } else {
+      document.title = `${card.pseudo} · Carte de membre · Humane Gang`;
+      $('#mb-title').textContent = isMe ? 'Ma carte' : card.pseudo;
+      $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
+      bindHolo();
+      $('#dl-card').addEventListener('click', (e) => onDownload(e.currentTarget, card));
+      if (!isMe && canAccess('cartes')) { // collection de ce membre, en lecture seule (cartes.html)
+        $('#mb-actions').hidden = false;
+        $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
+      }
+      if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
+      if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
+      else saveOffline(me, 'membre', { card }); // Q4 : sa propre carte gardée pour le hors ligne
+    }
+  } catch (e) {
+    $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;
+  }
+  await gangP;
+  $$('.idc-skeleton').forEach((n) => n.remove());
+  app.removeAttribute('aria-busy');
+}

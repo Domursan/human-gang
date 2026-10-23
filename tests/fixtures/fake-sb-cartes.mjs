@@ -543,10 +543,12 @@ export function createClient() {
       signOut: async () => ({}),
     },
     // Commence une requête sur la table t.
-    from: (t) => new Q(t),
+    // Scénario offline (Q4) : toute requête tentée est notée (le test vérifie qu'il n'y en a aucune).
+    from: (t) => { if (S.offline) window.__LOG.push(['offline-req', 'from', t]); return new Q(t); },
     /** Simule les fonctions SQL (RPC) : chaque nom a sa réponse ; une fonction inconnue renvoie null sans erreur. */
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      if (S.offline) window.__LOG.push(['offline-req', 'rpc', fn]);
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
       // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).

@@ -4,6 +4,9 @@
      (stale-while-revalidate) : une nouvelle version est utilisée dès le chargement suivant.
    - Bibliothèque jsDelivr épinglée (/npm/, version fixe) : cache d'abord.
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
+     Seule exception (Q4, collection hors ligne) : les images PUBLIQUES des cartes (/storage/v1/object/public/hg-assets/cards/,
+     sans jeton ni donnée privée) passent par un cache séparé « hg-cartes-img », servi en premier, plafonné à 400 images
+     (les plus anciennes partent). Ce cache est rempli aussi par la page Cartes et effacé à la déconnexion.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
 /* ---------- Constantes ---------- */
@@ -12,6 +15,10 @@
 const CACHE_VERSION = 'v48';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
+// Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
+const IMG_CACHE = 'hg-cartes-img';
+const IMG_MAX = 400;
+const CARD_IMG_PATH = '/storage/v1/object/public/hg-assets/cards/';
 
 /* ---------- Liste de précache ----------
    Fichiers téléchargés à l'installation, pour que le site s'ouvre hors ligne. Chemins relatifs à la racine du site.
@@ -121,6 +128,11 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
+  // Images publiques des cartes (Q4) : cache séparé, servi en premier (le nom de fichier change à chaque nouvelle image).
+  if (url.hostname.endsWith('.supabase.co') && url.pathname.startsWith(CARD_IMG_PATH) && !url.search) {
+    event.respondWith(cardImage(req, event));
+    return;
+  }
   // Données et authentification : toujours en direct.
   if (url.hostname.endsWith('.supabase.co')) return;
 
@@ -188,6 +200,32 @@ async function staleWhileRevalidate(req, event) {
   const update = fetch(req).then((res) => { if (res.ok) cache.put(req, res.clone()); return res; }).catch(() => null);
   if (hit) { event.waitUntil(update); return hit; }
   return (await update) || Response.error();
+}
+
+/**
+ * Image de carte (Q4) : la copie du cache hg-cartes-img si elle existe ; sinon le réseau en mode CORS (réponse lisible,
+ * pas de réponse opaque), gardée dans le cache, plafonné à IMG_MAX images (les plus anciennes sont retirées).
+ * @param {Request} req Requête de l'image.
+ * @param {FetchEvent} event Événement fetch (le rangement du cache se poursuit après la réponse).
+ * @returns {Promise<Response>}
+ */
+async function cardImage(req, event) {
+  const cache = await caches.open(IMG_CACHE);
+  const hit = await cache.match(req.url);
+  if (hit) return hit;
+  try {
+    const res = await fetch(req.url, { mode: 'cors', credentials: 'omit' });
+    if (res.ok) {
+      event.waitUntil((async () => {
+        await cache.put(req.url, res.clone());
+        const keys = await cache.keys();
+        for (const k of keys.slice(0, Math.max(0, keys.length - IMG_MAX))) await cache.delete(k);
+      })());
+    }
+    return res;
+  } catch (e) {
+    return fetch(req); // repli : la requête d'origine (échoue aussi hors ligne, comme avant)
+  }
 }
 
 /* ---------- Notifications push (F9) ----------
