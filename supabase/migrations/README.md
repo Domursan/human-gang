@@ -165,8 +165,9 @@ edge à redéployer, aucun secret.
 Migration `081_idees_c2.sql` (idées du gang C7 à C12, thème « Cartes et économie ») : idempotente, rejouable, rétrocompatible.
 
 - **C7** : colonne `hg_cards.tag` (format `minecraft`, `sea-of-thieves`), RPC `hg_card_tags_complete(p_user)` (titres
-  « Pilier de … », calculés, sans Paillettes). Série `le-gang-joue` créée **inactive** avec 24 cartes **inactives** sans
-  image (6 jeux × 4) : le Staff illustre, valide les légendes, puis active la série et les cartes.
+  « Pilier de … », calculés, sans Paillettes). Série `le-gang-joue` créée **inactive** avec 24 cartes **inactives**, déjà
+  illustrées (6 jeux × 4 ; SVG dans `assets/cards/le-gang-joue/`, chemin relatif dans `image_url`) : le Staff valide les
+  légendes, puis active la série et les cartes **depuis l'admin**. Rejouer la migration remplit les images manquantes.
 - **C8** : `hg_profiles.show_generation` (défaut vrai), réglage `cards.generations.og_before` (défaut 2023-09-01, Économie ›
   Limites), RPC `hg_card_generations()`.
 - **C9** : tables `hg_gift_code_batches`, `hg_gift_codes` (codes hachés, `sha256` intégré : pas besoin de pgcrypto),
