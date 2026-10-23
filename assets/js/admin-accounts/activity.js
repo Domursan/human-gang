@@ -39,8 +39,8 @@ export function irlHtml() {
  * @param {string} status 'oui', 'peut-etre', 'non' ou '' (sans réponse).
  */
 export async function setRsvp(eventId, status) {
-  if (!status) check(await sb.from('hg_event_rsvps').delete().eq('event_id', eventId).eq('user_id', A.uid));
-  else check(await sb.from('hg_event_rsvps').upsert({ event_id: eventId, user_id: A.uid, status, updated_at: new Date().toISOString() }, { onConflict: 'event_id,user_id' }));
+  // RPC journalisée (migration 076) : un statut vide retire la réponse.
+  check(await sb.rpc('hg_rsvp_admin_set', { p_event: eventId, p_user: A.uid, p_status: status || null }));
   const res = await sb.from('hg_event_rsvps').select('event_id, status, updated_at').eq('user_id', A.uid);
   dropFicheCache();
   A.d.rsvps = { data: res.data ?? [], error: res.error };
@@ -144,8 +144,7 @@ export async function toggleBadge(code, on) {
     if (!(await confirmBox('Retirer ce badge ?', `${A.d.profile.pseudo} perdra le badge « ${name} ».`, { ok: 'Retirer', danger: true }))) return false;
     check(await sb.from('hg_user_badges').delete().eq('user_id', A.uid).eq('badge_code', code));
   } else {
-    const res = await sb.from('hg_user_badges').insert({ user_id: A.uid, badge_code: code });
-    if (res.error && res.error.code !== '23505') throw res.error;
+    check(await sb.rpc('hg_badge_award', { p_user: A.uid, p_code: code })); // RPC journalisée (migration 076)
   }
   const r = await sb.from('hg_user_badges').select('badge_code, awarded_at').eq('user_id', A.uid);
   dropFicheCache();

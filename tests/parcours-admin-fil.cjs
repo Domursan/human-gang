@@ -81,7 +81,7 @@ const shownIds = (p) => p.$$eval('#fil-root .afl-row', (els) => els.map((e) => N
   await p.waitForFunction(() => !document.querySelector('.afl-row[data-id="103"]'), null, { timeout: 5000 });
   const ids = await p.evaluate(() => window.__DB.hg_activity.map((r) => r.id));
   check(!ids.includes(103) && ids.length === 4, '(c) entrée retirée de __DB.hg_activity');
-  check(await p.evaluate(() => window.__LOG.some((l) => l[0] === 'delete' && l[1] === 'hg_activity')), '(c) suppression sur hg_activity');
+  check(await p.evaluate(() => window.__LOG.some((l) => l[0] === 'rpc' && l[1] === 'hg_activity_remove' && l[2]?.p_id === 103)), '(c) suppression par la RPC journalisée hg_activity_remove');
   check((await p.textContent('.toasts')).includes('supprimée'), '(c) notification « Entrée supprimée »');
   check((await p.textContent('#afl-search-count')).includes('4 entrées'), '(c) compteur à jour');
   check(p.errs.length === 0, '(a–c) aucune erreur JS' + (p.errs.length ? ' : ' + p.errs.join(' | ') : ''));

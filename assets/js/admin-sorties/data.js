@@ -76,14 +76,12 @@ export async function deleteEvent(ev, photoPaths = []) {
 
 /** Enregistre (ou remplace) la réponse d'un membre à une sortie. */
 export async function setRsvp(eventId, userId, status) {
-  ok(await sb.from('hg_event_rsvps').upsert(
-    { event_id: eventId, user_id: userId, status, updated_at: new Date().toISOString() },
-    { onConflict: 'event_id,user_id' }));
+  ok(await sb.rpc('hg_rsvp_admin_set', { p_event: eventId, p_user: userId, p_status: status })); // RPC journalisée (076)
 }
 
 /** Retire la réponse d'un membre à une sortie. */
 export async function removeRsvp(eventId, userId) {
-  ok(await sb.from('hg_event_rsvps').delete().eq('event_id', eventId).eq('user_id', userId));
+  ok(await sb.rpc('hg_rsvp_admin_set', { p_event: eventId, p_user: userId, p_status: null })); // RPC journalisée (076)
 }
 
 /** Ajoute (on = true) ou retire (on = false) le vote d'un membre pour une date proposée. */

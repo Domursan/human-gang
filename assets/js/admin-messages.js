@@ -49,7 +49,7 @@ const M = {
  */
 function convTitle(c) {
   return c.kind === 'santa'
-    ? `${c.santa || '?'} (Santa) → ${c.target || '?'}`
+    ? `${c.santa || 'Santa masqué'} (Santa) → ${c.target || '?'}`
     : (c.members || 'Conversation vide');
 }
 /**
@@ -134,7 +134,7 @@ function paintReader() {
   }
   const c = M.conv || {};
   const who = c.kind === 'santa'
-    ? `${M.pseudo.get(c.santa_id) || c.santa || '?'} (Santa, anonyme pour sa cible) → ${M.pseudo.get(c.target_id) || c.target || '?'}`
+    ? `${M.pseudo.get(c.santa_id) || c.santa || 'Santa masqué'} (Santa, anonyme pour sa cible) → ${M.pseudo.get(c.target_id) || c.target || '?'}`
     : (c.members || '');
   M.reader.innerHTML = `
     <div class="amsg-reader-head">

@@ -153,7 +153,7 @@ async function onClick(ev) {
   F.busy.add(id);
   renderList();
   try {
-    const { error } = await sb.from('hg_activity').delete().eq('id', row.id);
+    const { error } = await sb.rpc('hg_activity_remove', { p_id: row.id }); // RPC journalisée (migration 076)
     if (error) throw error;
     F.rows = F.rows.filter((r) => String(r.id) !== id);
     toast('Entrée supprimée du fil');
