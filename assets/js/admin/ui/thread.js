@@ -15,7 +15,8 @@ import { esc, avatarHtml } from '../../core/util.js';
 import { toast } from '../../core/ui.js';
 import { clock } from './time.js';
 import { ICON } from './common.js';
-import { attachmentsHtml, hydrateAttachments } from '../../support-files.js';
+// support-files.js (et donc core.js, Supabase) n'est chargé qu'au premier message avec pièces jointes : le composant reste autonome.
+let SF = null;
 
 // Identifiant unique par fil (pour relier le libellé à la zone de saisie).
 let seq = 0;
@@ -83,13 +84,16 @@ export function createThread(el, opts = {}) {
         <div class="ui-stack">
           <div class="ui-meta">${esc(meta[0])}${meta.slice(1).map((x) => ` · ${esc(x)}`).join('')}</div>
           <div class="ui-bubble">${esc(m.body)}</div>
-          ${m.files?.length ? attachmentsHtml(m.files) : ''}
+          ${m.files?.length && SF ? SF.attachmentsHtml(m.files) : ''}
           ${opts.rowAction ? opts.rowAction(m) : ''}
         </div>
       </div>`;
     }).join('');
     $log.scrollTop = $log.scrollHeight;
-    if (state.messages.some((m) => m.files?.length)) hydrateAttachments($log);
+    if (state.messages.some((m) => m.files?.length)) {
+      if (SF) SF.hydrateAttachments($log);
+      else import('../../support-files.js').then((mod) => { SF = mod; paintLog(); }).catch(() => {});
+    }
   }
 
   // Actions par message (rowAction) : délégation sur le journal, le message est retrouvé par son identifiant

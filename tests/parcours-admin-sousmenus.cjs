@@ -30,7 +30,7 @@ const TREE = {
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements', 'rdv', 'avent', 'saison-worlds', 'anniv-gang']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
-    ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions']], ['Suivi', ['joueurs', 'echanges', 'stats']],
+    ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres']], ['Suivi', ['joueurs', 'echanges', 'stats']],
     ['Jeux', ['questions', 'pronos', 'sutom', 'ludotheque', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux', 'saisons']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot', 'commandes']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'erreurs', 'archives', 'reglages', 'accueil']], ['Apparence', ['theme']]],

@@ -66,7 +66,7 @@ const settingsWrites = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] =
   check((await p.inputValue('#aeg-mot')) === 'SECRETS', '(a) mot secret lu');
   check((await p.inputValue('#aeg-r-konami')) === '150', '(a) récompense « konami » lue (150)');
   check((await p.inputValue('#aeg-r-nuit')) === '30', '(a) récompense absente : valeur par défaut (30)');
-  check(await p.locator('.aeg-reward').count() === 11, '(a) 11 récompenses');
+  check(await p.locator('.aeg-reward').count() === 12, '(a) 12 récompenses');
   check((await p.textContent('label[for="aeg-r-lettres"]')).includes('Les sept lettres cachées'), '(a) libellés de la page secrète');
   const hs = await p.evaluate(() => document.getElementById('app').scrollHeight);
   check(hs <= 1400, `(a) onglet Réglages : longueur ≤ 1 400 px à 1 280 px (${hs})`);

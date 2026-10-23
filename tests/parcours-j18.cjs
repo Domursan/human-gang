@@ -23,7 +23,7 @@ async function partie(p, pas = 320) {
   /* ---------- Tirage du jour : Raclette ---------- */
   let p = await openPage(browser, { page: 'jeux', hash: '#arcade', width: 390, height: 900, scenario: { arcadeGame: 'raclette' } });
   await p.waitForSelector('.arc-tires', { timeout: 5000 }).catch(() => {});
-  check((await p.getAttribute('#tab-arcade', 'aria-selected')) === 'true', 'onglet : « Arcade » sélectionné depuis jeux.html#arcade');
+  check((await p.getAttribute('#jeux-tab-arcade', 'aria-selected')) === 'true', 'onglet : « Arcade » sélectionné depuis jeux.html#arcade');
   check((await p.locator('.arc-tire').count()) === 3, 'tirage : les trois mini-jeux affichés');
   check((await p.locator('.arc-tire.is-on').innerText()).includes('Raclette') && (await p.locator('.arc-tire.is-on').innerText()).includes('jeu du jour'), 'tirage : Raclette tirée au sort, « jeu du jour »');
   check((await p.locator('.arc-tire:not(.is-on)').allInnerTexts()).every((t) => t.includes('pas ce soir')), 'tirage : les deux autres « pas ce soir »');

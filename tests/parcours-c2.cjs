@@ -55,7 +55,7 @@ const pate = (open, rest) => ({ id: 'pate_saucisses', name: 'Pâté-saucisses', 
   await p.click('[data-bt="edit"][data-id="classique"]');
   await p.waitForSelector('dialog.ui-drawer.abt-drawer[open]', { timeout: 5000 });
   if (!(await p.evaluate(() => document.querySelector('#abt-sec-saison').open))) await p.click('#abt-sec-saison > summary');
-  await p.check('input[name="sched_on"]');
+  await p.locator('label.switch:has(input[name="sched_on"])').click();
   await p.fill('#abt-pwl', '2');
   await p.click('[data-drawer-submit]');
   await sleep(700);

@@ -59,6 +59,7 @@
   const norm = (p) => String(p || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
 
   window.__FAKE_SETUP = (DB) => {
+    DB.hg_pages = DB.hg_pages.filter((x) => x.slug !== 'jeux'); // la base de test la réserve aux admins : ici elle est ouverte à tous
     DB.hg_pages.push({ slug: 'jeux', label: 'Jeux', mode: 'membres', in_nav: true, sort: 10 });
     DB.hg_perm_catalog.push({ key: 'pronos', label: 'Pronostics', description: 'Pronostics', sort: 135 });
     const s = SC();

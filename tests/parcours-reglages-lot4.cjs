@@ -34,7 +34,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await p.waitForSelector('#acd-econ-form', { timeout: 8000 });
   /* Légendes des groupes visibles de l'Économie. */
   const shownLegends = () => p.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length).map((f) => f.querySelector('legend').textContent.trim()).join(' | '));
-  check(await shownLegends() === 'Quêtes de la semaine | Cartes sauvages (drops) | Échanges', `parties : « Limites » ne montre que ses groupes (${await shownLegends()})`);
+  check(await shownLegends() === 'Quêtes de la semaine | Cartes sauvages (drops) | Générations des membres | Échanges', `parties : « Limites » ne montre que ses groupes (${await shownLegends()})`);
   check((await p.textContent('#acd-econ-part')).trim() === 'Limites' && !(await p.isVisible('.acd-bulk-intro')), 'parties : titre « Limites », bloc Dons masqué');
   check(await p.inputValue('#acd-e-drops_quantite_max') === '50', 'économie : exemplaires max d\'un drop affiche le défaut (50) sans configuration');
   check(await p.inputValue('#acd-e-drops_duree_max_min') === '1440', 'économie : durée max d\'un drop affiche le défaut (1440)');
@@ -98,7 +98,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   check(await shownLegends() === 'Départ | Récompenses' && await p.isVisible('[data-act="bulk-open"]'), `parties : « Paillettes et dons » : Dons, Départ, Récompenses (${await shownLegends()})`);
   await adminSection(p, 'cartes/recyclage');
   await p.waitForTimeout(200);
-  check(await shownLegends() === 'Recyclage | Fabrication', `parties : « Recyclage et fabrication » (${await shownLegends()})`);
+  check(await shownLegends() === 'Recyclage | Fabrication | Alertes économie', `parties : « Recyclage et fabrication » (${await shownLegends()})`);
   await p.close();
 
   /* ---------- Cartes › Drops : bornes lues dans cards.drops ---------- */

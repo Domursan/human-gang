@@ -163,7 +163,11 @@ function jeux(fn, a = {}) {
 export function createClient(...args) {
   const c = base.createClient(...args);
   const DB = window.__DB;
-  if (DB?.hg_pages && !DB.hg_pages.some((p) => p.slug === 'jeux')) DB.hg_pages.push({ slug: 'jeux', label: 'Jeux', mode: 'membres', in_nav: true, sort: 10 });
+  // Ces tests parcourent la page comme un membre : la page « Jeux » y est ouverte à tous (la base la réserve aux admins au lancement).
+  if (DB?.hg_pages) {
+    const jp = DB.hg_pages.find((p) => p.slug === 'jeux');
+    if (jp) { jp.mode = 'membres'; jp.in_nav = true; } else DB.hg_pages.push({ slug: 'jeux', label: 'Jeux', mode: 'membres', in_nav: true, sort: 10 });
+  }
   const rpc = c.rpc;
   c.rpc = async (fn, args) => {
     const r = jeux(fn, args);

@@ -8,7 +8,10 @@ const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./li
 const FIX = 'fake-sb-jeux.mjs';
 // Les onglets viennent de la liste commune (les paquets en ajoutent) : le test ne suppose plus 3 jeux.
 const IDS = [...require('fs').readFileSync(require('path').join(__dirname, '../assets/js/jeux/onglets.js'), 'utf8').matchAll(/\{ id: '([a-z0-9-]+)'/g)].map((m) => m[1]);
-const LAST = IDS[IDS.length - 1];
+// Les onglets sont groupés (Chaque jour, Chaque semaine, Compétition) : le dernier onglet est le dernier de la dernière
+// rubrique non vide, pas le dernier de la liste.
+const RYTHMES = [...require('fs').readFileSync(require('path').join(__dirname, '../assets/js/jeux/onglets.js'), 'utf8').matchAll(/\{ id: '([a-z0-9-]+)'[^\n]*?rythme: '(jour|semaine|competition)'/g)].map((m) => [m[1], m[2]]);
+const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] === r).map((x) => x[0]).pop()).find(Boolean) || IDS[IDS.length - 1];
 
 (async () => {
   const browser = await chromium.launch();

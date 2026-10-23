@@ -101,8 +101,9 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
     check(JSON.stringify(doms) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${doms.join(', ')}`);
     await p.click('#shell-rail .shell-dom[data-dom="pilotage"]');
     const subs = await p.$$eval('#shell-subs [data-dom-subs]:not([hidden]) .shell-sub', (as) => as.map((a) => a.dataset.sub));
-    check(JSON.stringify(subs) === JSON.stringify(['journal']), `(b) Staff : Pilotage ne propose que le Journal (${subs.join(', ')})`);
-    check((await hashOf(p)) === '#pilotage/journal', `(b) Staff : Pilotage -> #pilotage/journal (${await hashOf(p)})`);
+    check(JSON.stringify(subs) === JSON.stringify(['planning', 'journal']), `(b) Staff : Pilotage ne propose que Planning et Journal (${subs.join(', ')})`);
+    check((await hashOf(p)) === '#pilotage/planning', `(b) Staff : Pilotage -> #pilotage/planning (${await hashOf(p)})`);
+    await p.click('#shell-subs a[href="#pilotage/journal"]');
     check(await waitVisible(p, '#journal'), '(b) Staff : Journal affiché');
     check(await p.locator('#shell-subs a[href="#pilotage/staff"]').count() === 0, '(b) Staff : pas de sous-section Staff');
     check(!(await p.isVisible('#shell-god')) && await p.locator('.god-card').count() === 0, '(b) Staff : pas de mode sans limite');

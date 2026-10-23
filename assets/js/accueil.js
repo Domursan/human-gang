@@ -175,7 +175,7 @@ function renderMemberShell() {
         <h2 class="tile-label">Historique</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
-      <section class="card card-hist home-day" id="tile-day" data-home-block="ce_jour_la" data-home-label="Ce jour-là" aria-labelledby="day-title" hidden></section>
+      <section class="card card-hist home-day" id="tile-day" data-home-block="ce_jour_la" data-home-label="Ce jour-là" data-home-kind="tile" aria-labelledby="day-title" hidden></section>
     </section>
 
     <section class="row home-row">

@@ -25,7 +25,7 @@ export const HOME_BLOCKS = [
 ];
 
 /** Accueil d'origine (repli quand hg_settings.home_default est absent ou illisible). */
-export const HOME_DEFAULT = { ordre: ['evenement', 'defi', 'secret_santa', 'irl', 'historique', 'fil', 'anniversaires', 'idees'], obligatoires: ['evenement'] };
+export const HOME_DEFAULT = { ordre: ['evenement', 'defi', 'secret_santa', 'ce_jour_la', 'irl', 'historique', 'fil', 'anniversaires', 'mot_du_jour', 'idees'], obligatoires: ['evenement'] };
 
 /** Profils types proposés en un tap (les identifiants absents du site sont ignorés). */
 export const HOME_PROFILES = [

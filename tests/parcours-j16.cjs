@@ -8,7 +8,7 @@ const { check, finish, openPage, hscroll, log, chromium } = require('./lib/harne
   const browser = await chromium.launch();
   let p = await openPage(browser, { page: 'jeux', hash: '#saison', width: 390, height: 900 });
   await p.waitForSelector('.ssn', { timeout: 5000 }).catch(() => {});
-  check((await p.getAttribute('#tab-saison', 'aria-selected')) === 'true', 'onglet : « Saisons » sélectionné');
+  check((await p.getAttribute('#jeux-tab-saison', 'aria-selected')) === 'true', 'onglet : « Saisons » sélectionné');
   check((await p.locator('.ssn-label').innerText()).includes('Saison d’automne 2026'), 'saison : libellé');
   check(/encore \d+ jours/.test(await p.locator('.ssn-head .pill').innerText()), 'saison : compte à rebours');
   check((await p.locator('.ssn-big').innerText()) === '4e' && (await p.locator('.ssn-mid').innerText()).includes('540'), 'mon rang : 4e, 540 pts');
@@ -27,9 +27,9 @@ const { check, finish, openPage, hscroll, log, chromium } = require('./lib/harne
   check(await hscroll(p) <= 0, '390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   // Navigation au clavier entre onglets de la page
-  await p.focus('#tab-saison');
-  await p.keyboard.press('ArrowRight');
-  check((await p.getAttribute('#tab-qui-main', 'aria-selected')) === 'true' && (await p.evaluate(() => location.hash)) === '#qui-main', 'page Jeux : flèche droite → onglet suivant, adresse à jour');
+  await p.focus('#jeux-tab-saison');
+  await p.keyboard.press('ArrowLeft');
+  check((await p.getAttribute('#jeux-tab-bataille', 'aria-selected')) === 'true' && (await p.evaluate(() => location.hash)) === '#bataille', 'page Jeux : flèche gauche → onglet suivant, adresse à jour');
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'jeux', hash: '#saison', width: 360, height: 800 });
