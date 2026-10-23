@@ -6,14 +6,14 @@
  * avant toute requête, pour éviter un flash de couleurs.
  * Page : toutes les pages (theme-load.js fournit le thème du jour ; prefs.js le repeint après un changement).
  * Dépendances : site-defaults.js (logo du site), prefs-state.js (préférences), theme-calc.js (couleurs, thème par défaut),
- * effects.js (calque d'effets).
+ * effects.js (calque d'effets et classe fx-fromage).
  * Stockage : lit localStorage « hg_theme » (dernier thème du jour connu).
  * Exporte : paintTheme, paintSiteTheme, paintActiveTheme, commitSiteTheme, getActiveTheme, getSiteTheme, currentLogo.
  */
 import { siteLogo } from './site-defaults.js';
 import { getPrefs, applyPrefsAttrs } from './prefs-state.js';
 import { DEFAULT_THEME, themeVars } from './theme-calc.js';
-import { startEffects } from './effects.js';
+import { startEffects, applyFromageClass } from './effects.js';
 
 /* ---------- État ---------- */
 
@@ -104,5 +104,6 @@ try {
   if (cached && typeof cached === 'object' && cached.colors) { _siteTheme = cached; _theme = displayTheme(cached); }
 } catch {}
 setRootVars(_theme);
+applyFromageClass(_theme); // thème fromage : classe posée dès le premier affichage (l'en-tête garde sa place)
 // Si le système demande moins d'animations, on recalcule les attributs et les effets sans attendre un rechargement
 try { matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { applyPrefsAttrs(); startEffects(_theme); }); } catch {}
