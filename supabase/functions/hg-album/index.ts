@@ -2,7 +2,9 @@
 // Rôle : donner à un membre un ZIP de toutes les photos d'une sortie. Appelée par downloadAlbum (assets/js/photos.js).
 // Assemble en ZIP, en flux, les photos d'une sortie (bucket privé hg-photos).
 // verify_jwt = true. Le client Supabase agit avec le JWT de l'appelant : la RLS s'applique
-// (lecture des photos, des sorties et du stockage réservée aux membres). Aucun secret, aucune clé de service.
+// (lecture des photos, des sorties et du stockage réservée aux membres). La clé de service (fournie par Supabase)
+// ne sert qu'au quota : table hg_album_quota (migration 079), ZIP_PAR_HEURE ZIP par membre et par heure glissante,
+// compté juste avant l'envoi. Échec fermé : quota illisible = refus (503).
 // Entrée : POST { event_id: uuid }. Sortie : application/zip (flux) ; erreurs en JSON { error }.
 // Plafonds par défaut : 400 photos et 300 Mo par ZIP (réglables : hg_settings.albums). La taille est lue dans le stockage avant l'envoi ;
 // si elle est illisible, le plafond est vérifié au fil de l'envoi (le flux est alors interrompu).
@@ -19,6 +21,10 @@ const BUCKET = 'hg-photos';
 // Plafonds par défaut : lus dans hg_settings.albums (clés max_photos, max_mo) quand elles existent.
 const DEFAUT_MAX_PHOTOS = 400;
 const DEFAUT_MAX_MO = 300;
+/** Nombre de ZIP par membre et par heure glissante (protège le quota de sortie réseau du projet). */
+const ZIP_PAR_HEURE = 3;
+/** Les lignes de quota plus vieilles que ça sont purgées au passage. */
+const QUOTA_KEEP_MS = 2 * 24 * 60 * 60_000;
 /** Identifiant de sortie attendu : un UUID. Toute autre valeur est refusée avant toute requête. */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -36,6 +42,30 @@ async function lireLimites(db: ReturnType<typeof createClient>): Promise<{ maxPh
     if (typeof v.max_mo === 'number' && Number.isFinite(v.max_mo) && v.max_mo >= 1) maxMo = v.max_mo;
   } catch (_e) { /* repli */ }
   return { maxPhotos, maxBytes: maxMo * 1024 * 1024 };
+}
+
+/**
+ * Consomme un ZIP du quota horaire du membre (insertion puis comptage : des appels simultanés ne dépassent pas
+ * la limite). Clé de service seulement (table sans policy).
+ * @param {string} token JWT de l'appelant (sans « Bearer »).
+ * @returns {Promise<'ok' | 'limite' | 'erreur'>} 'limite' si le membre a déjà ZIP_PAR_HEURE ZIP dans l'heure.
+ */
+async function prendreQuota(token: string): Promise<'ok' | 'limite' | 'erreur'> {
+  const url = Deno.env.get('SUPABASE_URL'), key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return 'erreur';
+  const svc = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: u, error: uErr } = await svc.auth.getUser(token);
+  if (uErr || !u?.user) return 'erreur';
+  const uid = u.user.id;
+  const { error: insErr } = await svc.from('hg_album_quota').insert({ user_id: uid });
+  if (insErr) { console.error('[hg-album] quota (insertion)', insErr); return 'erreur'; }
+  const { count, error } = await svc.from('hg_album_quota').select('id', { count: 'exact', head: true })
+    .eq('user_id', uid).gte('created_at', new Date(Date.now() - 3600_000).toISOString());
+  if (error) { console.error('[hg-album] quota (comptage)', error); return 'erreur'; }
+  // Purge des vieilles lignes du membre (sans attendre ni faire échouer l'envoi).
+  svc.from('hg_album_quota').delete().eq('user_id', uid).lt('created_at', new Date(Date.now() - QUOTA_KEEP_MS).toISOString())
+    .then(({ error: e }: { error: unknown }) => { if (e) console.error('[hg-album] quota (purge)', e); });
+  return (count ?? 0) > ZIP_PAR_HEURE ? 'limite' : 'ok';
 }
 
 /**
@@ -117,6 +147,11 @@ Deno.serve(async (req: Request) => {
   if (knownTotal > maxBytes) {
     return json({ error: `Album trop lourd pour un seul ZIP (maximum ${Math.round(maxBytes / 1048576)} Mo). Télécharge les photos par lots.` }, 413);
   }
+
+  // Quota : compté seulement pour un ZIP qui va réellement partir (après tous les contrôles).
+  const quota = await prendreQuota(auth.replace(/^Bearer\s+/i, ''));
+  if (quota === 'erreur') return json({ error: 'Téléchargement indisponible pour le moment : réessaie plus tard.' }, 503);
+  if (quota === 'limite') return json({ error: `Tu as déjà téléchargé ${ZIP_PAR_HEURE} albums en une heure : réessaie plus tard.` }, 429);
 
   // Flux ZIP : une photo à la fois, dans l'ordre chronologique
   let next = 0;

@@ -8,7 +8,7 @@
  * theme.js (logo), prefs.js, godmode.js (bouton mode sans limite), util.js, icons.js, search.js, site-defaults.js.
  * Exporte : updateHeaderProfile, updateNav, renderHeader.
  */
-import { sb } from './supabase.js';
+import { sb, signOutDevice } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { getCachedPerms, canPanel, clearPerms } from './perms.js';
 import { getMyPages } from './pages-access.js';
@@ -186,7 +186,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   // Déconnexion : on coupe la session, on oublie les droits et les badges vus pour cette session, puis on va à la page de connexion
   header.querySelector('.nav-logout')?.addEventListener('click', async (e) => {
     const b = e.currentTarget; b.disabled = true;
-    try { await sb.auth.signOut(); } catch {}
+    await signOutDevice(); // retire aussi l'abonnement push de l'appareil
     try { sessionStorage.removeItem('hg_badges_checked'); } catch {}
     clearPerms();
     location.href = 'compte.html';

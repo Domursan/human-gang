@@ -5,7 +5,7 @@
 // Rendu : {variable} remplacée par sa valeur ; une variable non prévue pour ce modèle (ou sans valeur) devient vide.
 // Dépendances : ./bot-templates.json (import JSON).
 // Exporte : TemplateKey, Template, Templates, Vars, DISCORD_TITLE_MAX, DISCORD_DESC_MAX, truncate, loadTemplates,
-//   resolveTemplate, fill, renderTemplate, embedFrom.
+//   resolveTemplate, fill, renderTemplate, embedFrom, mdSafe.
 import defaults from './bot-templates.json' with { type: 'json' };
 
 /** Clés de tous les modèles du bot. Chaque clé doit exister dans bot-templates.json. */
@@ -40,6 +40,16 @@ export const DISCORD_DESC_MAX = 4096;
  * @returns {string} Texte coupé ou inchangé.
  */
 export const truncate = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+
+/**
+ * Neutralise le Markdown Discord d'un texte libre (visiteur ou membre) avant de le mettre dans un message du bot :
+ * chaque caractère de mise en forme est précédé d’une barre oblique inverse. Un lien masqué « [Valider ton compte](https://…) »
+ * s'affiche alors tel quel, sans devenir un lien cliquable « signé » par le bot. Les adresses en clair restent
+ * visibles (Discord les rend cliquables, mais la cible se lit). À appliquer après la coupe de longueur.
+ * @param {string} s Texte libre.
+ * @returns {string} Texte sans Markdown actif.
+ */
+export const mdSafe = (s: string) => String(s ?? '').replace(/[\\[\]()*_~`|>]/g, (c) => `\\${c}`);
 
 /**
  * Lit les modèles personnalisés (jamais d'erreur : en cas de problème, textes par défaut).

@@ -9,7 +9,7 @@
 // Tables, RPC et stockage : hg_profiles, hg_profile_info, hg_badges, hg_user_badges, hg_my_badge_progress, hg_dyn_captures,
 // hg_join, hg_export_my_data, hg_delete_my_account, hg_photos, hg_moments, stockage hg-avatars et hg-photos.
 // N'exporte rien.
-import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
+import { sb, authLanding, signOutDevice, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from './push.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
@@ -20,7 +20,9 @@ import { loadInviteConfig, inviteCodeRe } from './invite-config.js';
 const url = new URL(location.href);
 const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
 const isRecoveryLink = hashParams.get('type') === 'recovery' || url.searchParams.get('recovery') === '1';
-const linkError = hashParams.get('error_description') || url.searchParams.get('error_description');
+// Erreur d'un lien d'e-mail : seul le fait qu'il y en ait une compte. Le texte de l'adresse n'est jamais affiché
+// (il pourrait être écrit par n'importe qui) : voir renderLinkError.
+const linkError = !!(hashParams.get('error_description') || url.searchParams.get('error_description') || hashParams.get('error_code') || url.searchParams.get('error_code'));
 const rawNext = url.searchParams.get('next') || '';
 const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
 /**
@@ -54,8 +56,10 @@ function clearInvite() { try { sessionStorage.removeItem(INVITE_KEY); sessionSto
 /** Vrai une fois le formulaire « nouveau mot de passe » affiché, pour ne pas le remplacer par erreur. */
 let recoveryShown = false;
 // Un lien « mot de passe oublié » ouvre directement le formulaire de nouveau mot de passe.
+// Le formulaire n'est ouvert que si la session vient d'être ouverte par le lien lui-même (flux PKCE, même navigateur) :
+// une session déjà ouverte (éventuellement volée) ne permet pas de changer le mot de passe sans l'actuel (voir bindPassword).
 sb.auth.onAuthStateChange((event) => {
-  if (event === 'PASSWORD_RECOVERY' && !recoveryShown) setTimeout(renderRecovery, 0);
+  if (event === 'PASSWORD_RECOVERY' && authLanding.fromEmailLink && !recoveryShown) setTimeout(renderRecovery, 0);
 });
 
 /* ---------- Conteneur et session : me = profil du membre, ou null s'il n'a pas encore de profil ---------- */
@@ -106,6 +110,32 @@ function authMsg(e) {
   return m;
 }
 /**
+ * Erreurs possibles de hg_join, transmises par l'adresse (?joinerr=<code>) après une redirection.
+ * Seuls ces codes sont affichés : un texte libre dans l'adresse n'est jamais repris (usurpation du message officiel).
+ */
+const JOIN_ERRORS = {
+  code: 'Code d’invitation invalide, expiré ou déjà utilisé.',
+  pseudo_pris: 'Ce pseudo est déjà pris.',
+  pseudo_reserve: 'Ce pseudo est réservé : demande ton lien personnel au Staff.',
+  pseudo_longueur: 'Le pseudo doit faire entre 2 et 32 caractères.',
+  reseau: 'Connexion au serveur impossible. Vérifie ta connexion internet.',
+  autre: 'Impossible de rejoindre le gang pour le moment. Vérifie ton code et ton pseudo, puis réessaie.',
+};
+/**
+ * Code court d'une erreur de hg_join, pour l'adresse de redirection (clé de JOIN_ERRORS).
+ * @param {unknown} e l'erreur
+ * @returns {keyof JOIN_ERRORS}
+ */
+function joinErrCode(e) {
+  const m = errMsg(e);
+  if (/invitation invalide|expiré ou déjà utilisé/i.test(m)) return 'code';
+  if (/pseudo est réservé/i.test(m)) return 'pseudo_reserve';
+  if (/hg_profiles_pseudo_key|duplicate key.*pseudo/i.test(m)) return 'pseudo_pris';
+  if (/char_length\(pseudo\)|hg_profiles_pseudo_check/i.test(m)) return 'pseudo_longueur';
+  if (/failed to fetch|network/i.test(m)) return 'reseau';
+  return 'autre';
+}
+/**
  * Met un bouton en attente (désactivé, libellé « Un instant… » ou celui donné) ou le rétablit.
  * @param {HTMLButtonElement} btn bouton concerné
  * @param {boolean} on true pour activer l'attente
@@ -151,8 +181,29 @@ function renderLinkError() {
     <section class="acc-narrow">
       <div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">Lien expiré</h1></div></div>
       <div class="card stack">
-        <p>Ce lien n'est plus valable (${esc(linkError)}). Les liens envoyés par e-mail ne fonctionnent qu'une fois et pendant une durée limitée.</p>
+        <p>Ce lien n'est plus valable. Les liens envoyés par e-mail ne fonctionnent qu'une fois et pendant une durée limitée.</p>
         <div class="btn-row"><a class="btn btn-primary" href="compte.html">Revenir à la connexion</a></div>
+      </div>
+    </section>`;
+  history.replaceState(null, '', 'compte.html');
+  done();
+}
+
+/**
+ * Lien d'e-mail ouvert dans un autre navigateur que celui de la demande (flux PKCE) : aucune session n'est ouverte.
+ * Inscription : l'adresse e-mail est tout de même confirmée, il suffit de se connecter.
+ * Mot de passe oublié : le lien doit être redemandé et ouvert dans le même navigateur.
+ */
+function renderOtherBrowser() {
+  const recovery = isRecoveryLink;
+  app.innerHTML = `
+    <section class="acc-narrow">
+      <div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">${recovery ? 'Lien ouvert ailleurs' : 'Adresse confirmée'}</h1></div></div>
+      <div class="card stack">
+        ${recovery
+          ? '<p>Ce lien doit s’ouvrir dans le navigateur où tu as demandé le nouveau mot de passe (pour ta sécurité, il ne marche pas ailleurs).</p><p>Redemande un lien depuis ce navigateur-ci, ou ouvre le lien reçu dans le navigateur de ta demande.</p>'
+          : '<p>Si tu viens de cliquer sur le lien de confirmation, ton adresse e-mail est confirmée. Connecte-toi avec ton e-mail et ton mot de passe pour continuer.</p>'}
+        <div class="btn-row"><a class="btn btn-primary" href="compte.html">${recovery ? 'Redemander un lien' : 'Se connecter'}</a></div>
       </div>
     </section>`;
   history.replaceState(null, '', 'compte.html');
@@ -232,7 +283,7 @@ function renderGuest(initialTab = 'login') {
 
         <form class="stack tab-pane" id="pane-forgot" novalidate hidden>
           <h2>Mot de passe oublié</h2>
-          <p class="small muted">Indique ton e-mail : tu recevras un lien pour choisir un nouveau mot de passe.</p>
+          <p class="small muted">Indique ton e-mail : tu recevras un lien pour choisir un nouveau mot de passe. Ouvre-le dans ce même navigateur.</p>
           <div class="field"><label for="fg-email">E-mail</label><input id="fg-email" type="email" autocomplete="email" inputmode="email" required></div>
           <div class="btn-row acc-actions">
             <button class="btn btn-primary" type="submit">Envoyer le lien</button>
@@ -307,6 +358,8 @@ function renderGuest(initialTab = 'login') {
       return formError(form, 'Un compte existe déjà avec cet e-mail. Connecte-toi (ou utilise « Mot de passe oublié »).');
     }
     if (data.session) { await afterLogin(); return; }
+    // Le code d'invitation est gardé en attente (hg_pending_join) : on le retire de l'adresse.
+    if (url.searchParams.has('code')) { url.searchParams.delete('code'); history.replaceState(null, '', url.pathname + url.search); }
     renderCheckMail(email);
   });
 
@@ -332,7 +385,7 @@ function renderCheckMail(email) {
       <div class="page-head"><div><p class="eyebrow">Presque fini</p><h1 class="page-title">Vérifie tes e-mails</h1></div></div>
       <div class="card stack acc-mail">
         <span class="acc-mail-icon">${ICON.mail}</span>
-        <p>Un lien de confirmation a été envoyé à <strong>${esc(email)}</strong>. Clique dessus pour activer ton compte : ton code d'invitation et ton pseudo seront appliqués automatiquement à ta première connexion sur cet appareil.</p>
+        <p>Un lien de confirmation a été envoyé à <strong>${esc(email)}</strong>. Clique dessus pour activer ton compte, de préférence dans ce même navigateur : tu seras connecté directement, et ton code d'invitation et ton pseudo seront appliqués automatiquement.</p>
         <p class="small muted">Rien reçu ? Regarde dans les indésirables, ou <a href="assistance.html">contacte l'assistance</a>.</p>
       </div>
     </section>`;
@@ -350,7 +403,7 @@ async function afterLogin() {
     if (pend?.code && pend?.pseudo) {
       const { error } = await sb.rpc('hg_join', { p_code: pend.code, p_pseudo: pend.pseudo });
       if (!error) { pendingSet(null); clearInvite(); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); return; }
-      location.replace(`compte.html?joinerr=${encodeURIComponent(authMsg(error))}${NEXT ? `&next=${encodeURIComponent(NEXT)}` : ''}`);
+      location.replace(`compte.html?joinerr=${joinErrCode(error)}${NEXT ? `&next=${encodeURIComponent(NEXT)}` : ''}`);
       return;
     }
     location.replace(`compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
@@ -403,9 +456,9 @@ function renderJoin(prefill = {}, error = '') {
   });
 }
 
-/** Déconnecte la personne puis renvoie à l'accueil. Une erreur de déconnexion est ignorée. */
+/** Déconnecte la personne (et retire l'abonnement push de l'appareil) puis renvoie à l'accueil. Une erreur de déconnexion est ignorée. */
 async function logout() {
-  await sb.auth.signOut().catch(() => {});
+  await signOutDevice();
   location.replace('accueil.html');
 }
 
@@ -487,6 +540,7 @@ async function renderMember(user) {
         <form class="card stack" id="pw-form" novalidate>
           <h2 class="card-title">${ICON.lock} Connexion</h2>
           <p class="small muted">E-mail du compte ${tagPrivate}<br><strong class="acc-email">${esc(user?.email || '')}</strong></p>
+          <div class="field"><label for="pw-current">Mot de passe actuel</label><input id="pw-current" type="password" autocomplete="current-password"></div>
           <div class="field"><label for="pw-new">Nouveau mot de passe</label><input id="pw-new" type="password" autocomplete="new-password" minlength="8"></div>
           <div class="btn-row"><button class="btn btn-ghost" type="submit">Changer le mot de passe</button></div>
         </form>
@@ -549,7 +603,7 @@ async function renderMember(user) {
   mountPushBlock($('#push-slot'), me);
   bindProfile();
   bindAvatar();
-  bindPassword();
+  bindPassword(user?.email || '');
   bindData();
   bindInfos();
   loadBadges();
@@ -665,19 +719,31 @@ function bindAvatar() {
 }
 
 /* ---------- Mot de passe ---------- */
-/** Formulaire « Changer le mot de passe » du tableau de bord. Au moins 8 caractères. */
-function bindPassword() {
+/**
+ * Formulaire « Changer le mot de passe » du tableau de bord. Au moins 8 caractères.
+ * Le mot de passe actuel est exigé et vérifié par une nouvelle connexion (signInWithPassword) avant le changement :
+ * une session ouverte ne suffit pas à changer le mot de passe (appareil prêté, session volée).
+ * @param {string} email e-mail du compte connecté
+ */
+function bindPassword(email) {
   const form = $('#pw-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const pw = $('#pw-new').value;
+    const current = $('#pw-current').value, pw = $('#pw-new').value;
+    if (!current) return formError(form, 'Indique ton mot de passe actuel.');
     if (pw.length < 8) return formError(form, 'Au moins 8 caractères.');
+    if (!email) return formError(form, 'E-mail du compte introuvable : déconnecte-toi puis utilise « Mot de passe oublié ».');
     const btn = form.querySelector('button[type=submit]');
     busy(btn, true); formError(form, '');
+    const { error: authErr } = await sb.auth.signInWithPassword({ email, password: current });
+    if (authErr) {
+      busy(btn, false);
+      return formError(form, /invalid login credentials/i.test(errMsg(authErr)) ? 'Mot de passe actuel incorrect.' : authMsg(authErr));
+    }
     const { error } = await sb.auth.updateUser({ password: pw });
     busy(btn, false);
     if (error) return formError(form, authMsg(error));
-    $('#pw-new').value = '';
+    $('#pw-current').value = ''; $('#pw-new').value = '';
     toast('Mot de passe modifié.', 'ok');
   });
 }
@@ -901,7 +967,7 @@ function bindData() {
       await cleanupStorage($('#delete-photos').checked);
       const { error } = await sb.rpc('hg_delete_my_account');
       if (error) throw error;
-      await sb.auth.signOut().catch(() => {});
+      await signOutDevice();
       try { ['hg_pending_join', 'hg_intro_day'].forEach((k) => localStorage.removeItem(k)); } catch {}
       dlg.close();
       updateHeaderProfile(null);
@@ -935,14 +1001,16 @@ async function cleanupStorage(withPhotos) {
    Aiguillage
    ====================================================================== */
 // Erreur renvoyée par hg_join (?joinerr=) : affichée une seule fois, puis retirée de l'adresse.
-const joinErr = url.searchParams.get('joinerr');
+const joinErr = JOIN_ERRORS[url.searchParams.get('joinerr')] || (url.searchParams.has('joinerr') ? JOIN_ERRORS.autre : '');
 if (joinErr) { url.searchParams.delete('joinerr'); history.replaceState(null, '', url.pathname + url.search); }
 
 // Choix de l'écran : lien d'erreur, lien de réinitialisation, visiteur, connecté sans profil, puis tableau de bord.
 if (!recoveryShown) {
   const user = (await sb.auth.getSession()).data.session?.user ?? null;
   if (linkError && !user) renderLinkError();
-  else if (isRecoveryLink && user) renderRecovery();
+  else if (authLanding.codeWithoutVerifier && !user) renderOtherBrowser();
+  // Lien « mot de passe oublié » : formulaire sans l'ancien mot de passe seulement si la session vient de ce lien.
+  else if (isRecoveryLink && user && authLanding.fromEmailLink) renderRecovery();
   else if (!user) renderGuest(url.searchParams.get('tab') === 'signup' || location.hash === '#inscription' || INVITE ? 'signup' : 'login');
   else if (!me) {
     const pend = pendingGet();

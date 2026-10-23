@@ -588,22 +588,28 @@ function boosterTypeSave(p) {
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
-export function createClient() {
+export function createClient(_url, _key, opts = {}) {
+  // Options passées par core/supabase.js (detectSessionInUrl, flowType…), lisibles par les tests.
+  window.__SB_OPTS = JSON.parse(JSON.stringify({ auth: { ...(opts.auth || {}), lock: undefined } }));
+  /** Utilisateur de la session simulée (e-mail : S.email, sinon une adresse de test). */
+  const who = () => ({ id: S.uid || ME, email: S.email || 'moi@test.ch' });
   return {
     auth: {
       // Ajout par rapport au faux de qa/ : connexion simulée. Un visiteur (S.guest) devient
       // connecté après signInWithPassword réussi, sauf si S.badPassword.
       // Session lue dans l'état simulé.
-      getSession: async () => ({ data: { session: signed() ? { user: { id: S.uid || ME } } : null } }),
+      getSession: async () => ({ data: { session: signed() ? { user: who() } : null } }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
-      getUser: async () => ({ data: { user: signed() ? { id: S.uid || ME } : null } }),
+      getUser: async () => ({ data: { user: signed() ? who() : null } }),
       signInWithPassword: async ({ email, password } = {}) => {
         window.__LOG.push(['auth', 'signInWithPassword', email]);
-        if (S.badPassword || !password) return { data: { session: null, user: null }, error: { message: 'Invalid login credentials' } };
+        if (S.badPassword || !password || (S.password && password !== S.password)) return { data: { session: null, user: null }, error: { message: 'Invalid login credentials' } };
         setSigned(true);
         return { data: { session: { user: { id: S.uid || ME } }, user: { id: S.uid || ME } }, error: null };
       },
       signOut: async () => { setSigned(false); window.__LOG.push(['auth', 'signOut']); return {}; },
+      // Changement de mot de passe (journalisé, sans le mot de passe).
+      updateUser: async (attrs = {}) => { window.__LOG.push(['auth', 'updateUser', Object.keys(attrs)]); return { data: { user: who() }, error: null }; },
     },
     // Commence une requête sur la table t.
     from: (t) => new Q(t),

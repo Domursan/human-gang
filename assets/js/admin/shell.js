@@ -22,7 +22,7 @@
 // setActions(nodes) : boutons d'action de la zone principale (#zone-actions). Vidé à chaque visite ; à remplir dans `open`.
 // ------------------------------------------------------
 
-import { $, sb, esc, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
+import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
 import { svg as iconSvg } from '../icons.js';
 import { DOMAINS, SECTION_PERM, visibleDomains, canSection } from './perms.js';
 import { resolve } from './router.js';
@@ -219,7 +219,7 @@ function bindMenu() {
     if (b.dataset.menu === 'prefs') { setMenu(false); openPrefs(e); return; }
     if (b.dataset.menu === 'logout') {
       b.disabled = true;
-      try { await sb.auth.signOut(); } catch { /* sans effet */ }
+      await signOutDevice(); // retire aussi l'abonnement push de l'appareil
       try { sessionStorage.removeItem('hg_badges_checked'); } catch { /* stockage bloqué */ }
       clearPerms();
       location.href = 'compte.html';

@@ -2,7 +2,10 @@
    - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis offline.html.
    - Fichiers du site (/assets/) : copie en cache servie tout de suite, mise à jour en arrière-plan
      (stale-while-revalidate) : une nouvelle version est utilisée dès le chargement suivant.
-   - Bibliothèque jsDelivr épinglée (/npm/, version fixe) : cache d'abord.
+   - Bibliothèque jsDelivr épinglée (/npm/, version exacte x.y.z) : cache d'abord ; seules les réponses lisibles et réussies
+     (pas les réponses « opaques », dont le statut est inconnu) sont gardées, sauf pour PRECACHE_REMOTE.
+   - Pages : la copie en cache est rangée sous l'adresse sans paramètres (?code=, ?c=, ?u=…), pour ne garder ni code
+     d'invitation ni identifiant dans le cache.
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
@@ -136,11 +139,31 @@ self.addEventListener('fetch', (event) => {
   if (sameOrigin && url.pathname.includes('/assets/') && /\.(m?js|css|json)$/.test(url.pathname)) { event.respondWith(networkFirst(req, true)); return; }
   // Images, polices, sons : le cache d'abord, rafraîchi en arrière-plan.
   if (sameOrigin && url.pathname.includes('/assets/')) { event.respondWith(staleWhileRevalidate(req, event)); return; }
-  const pinnedLibrary = url.origin === 'https://cdn.jsdelivr.net' && url.pathname.startsWith('/npm/');
-  if (pinnedLibrary) event.respondWith(cacheFirst(req));
+  if (isPinnedLibrary(url)) event.respondWith(cacheFirst(req));
 });
 
 /* ---------- Stratégies de cache ---------- */
+
+/**
+ * Fichier jsDelivr d'une version exacte (ex. /npm/@supabase/auth-js@2.65.0/+esm) : son contenu ne change pas.
+ * Une adresse sans version exacte (plage, « latest », /gh/…) n'est jamais mise en cache.
+ * @param {URL} url Adresse demandée.
+ * @returns {boolean}
+ */
+function isPinnedLibrary(url) {
+  return url.origin === 'https://cdn.jsdelivr.net' && /^\/npm\/(@[\w.-]+\/)?[\w.-]+@\d+\.\d+\.\d+\//.test(url.pathname);
+}
+
+/**
+ * Clé de cache d'une page : l'adresse sans paramètres ni fragment. Les paramètres (code d'invitation, conversation,
+ * membre…) ne sont donc jamais conservés dans le cache, et hors ligne la copie de la page sert pour toute variante.
+ * @param {Request} req Requête de navigation.
+ * @returns {string}
+ */
+function pageKey(req) {
+  const u = new URL(req.url);
+  return u.origin + u.pathname;
+}
 
 /**
  * Réseau d'abord : essaie le réseau et garde une copie. Hors ligne, sert la copie en cache, sinon offline.html.
@@ -150,13 +173,15 @@ self.addEventListener('fetch', (event) => {
  */
 async function networkFirst(req, revalidate = false) {
   const cache = await caches.open(CACHE);
+  // Navigation : rangée sous l'adresse sans paramètres (voir pageKey).
+  const key = req.mode === 'navigate' ? pageKey(req) : req;
   try {
     // revalidate : demande au serveur si le fichier a changé (réponse 304 légère sinon), sans se fier au cache HTTP.
     const res = await fetch(req, revalidate ? { cache: 'no-cache' } : undefined);
-    if (res.ok) cache.put(req, res.clone());
+    if (res.ok) cache.put(key, res.clone());
     return res;
   } catch (e) {
-    return (await cache.match(req)) || (await cache.match('offline.html')) || Response.error();
+    return (await cache.match(key)) || (await cache.match('offline.html')) || Response.error();
   }
 }
 
@@ -171,7 +196,8 @@ async function cacheFirst(req) {
   const hit = await cache.match(req);
   if (hit) return hit;
   const res = await fetch(req);
-  if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+  // Réponse opaque (statut inconnu, peut-être une erreur) : gardée seulement pour la liste PRECACHE_REMOTE.
+  if (res.ok || (res.type === 'opaque' && PRECACHE_REMOTE.includes(req.url))) cache.put(req, res.clone());
   return res;
 }
 

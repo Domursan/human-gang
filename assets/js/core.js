@@ -31,7 +31,7 @@ export { applyTheme } from './core/theme-load.js';
 export { openPrefs, setPrefs } from './core/prefs.js';
 
 /* ---------- Session, profil et droits ---------- */
-export { sb, hasSession, isNavCancel } from './core/supabase.js';
+export { sb, hasSession, isNavCancel, authLanding, signOutDevice } from './core/supabase.js';
 export { getUser, getProfile, requireMember, requireAdmin } from './core/profile.js';
 export { loadMyPerms, getCachedPerms, canPanel, hasPerm, clearPerms } from './core/perms.js';
 export { callFn, notify } from './core/functions.js';
