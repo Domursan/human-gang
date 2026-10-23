@@ -109,7 +109,7 @@ export default {
       steps: [
         { title: 'Copie ton ID Discord', text: 'Dans Discord : Paramètres > Avancés, puis active le « Mode développeur ». Ensuite, fais un clic droit sur ton profil et choisis « Copier l\'identifiant ».' },
         { title: 'Colle-le dans Mon compte', text: 'Sur Mon compte, carte « Profil », champ « ID Discord » : colle le nombre de 15 à 21 chiffres. Ce n\'est pas ton nom d\'utilisateur.' },
-        { title: 'Coche l\'option du bot', text: 'Coche « Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels) ».' },
+        { title: 'Autorise le bot', text: 'Dans le bloc « Mes notifications » de Mon compte, active « Le bot peut m’écrire sur Discord ». Dans le tableau, choisis catégorie par catégorie (messages, sorties, échanges de cartes, souhaits, Secret Santa…) ce que tu veux recevoir « Sur Discord » et « Sur ce téléphone », puis clique sur « Enregistrer ».' },
         { title: 'Enregistre le profil', text: 'Clique sur « Enregistrer ». Le message « Profil enregistré. » confirme.' },
         { title: 'Autorise les messages privés sur Discord', text: 'Dans Discord, fais un clic droit sur le serveur du gang, puis « Paramètres de confidentialité ». Active « Messages privés » pour que le bot puisse t\'écrire.' },
       ],
@@ -117,7 +117,7 @@ export default {
         'Le bot ne peut t\'écrire que si vous êtes sur un serveur Discord en commun. Sinon, Discord refuse le message.',
         'Sans ces réglages, le site fonctionne normalement : tu ne reçois simplement pas de messages privés.',
       ],
-      keywords: ['discord', 'bot', 'mp', 'message privé', 'id discord', 'notifications', 'rappel'],
+      keywords: ['discord', 'bot', 'mp', 'message privé', 'id discord', 'notifications', 'rappel', 'catégories', 'heures calmes', 'push', 'téléphone'],
     },
     {
       slug: 'preferences-affichage',

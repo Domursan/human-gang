@@ -122,9 +122,11 @@ async function loadSummary(uid) {
 
 /** Lectures de base : profil (erreur bloquante) et Staff (administrateur). */
 async function loadBase(uid) {
-  const [profile, staffRes] = await Promise.all([
+  const [profile, staffRes, notifRes] = await Promise.all([
     q(sb.from('hg_profiles').select('*').eq('id', uid).maybeSingle()),
     isAdminView() ? q(sb.rpc('hg_staff_list')) : Promise.resolve({ data: null, error: null }),
+    // Notifications par catégorie (idée Q6, migration 095) : lecture seule ; sans la table, simplement absentes
+    q(sb.from('hg_notif_prefs').select('prefs, quiet_start, quiet_end, updated_at').eq('user_id', uid).maybeSingle()),
   ]);
   if (profile.error) throw profile.error;
   if (!profile.data) throw new Error('Profil introuvable.');
@@ -132,6 +134,7 @@ async function loadBase(uid) {
     profile: profile.data,
     // Statut Staff du membre : visible de l'administrateur seulement (liste réservée à l'admin)
     staff: (staffRes.data ?? []).find((s) => s.user_id === uid) ?? null,
+    notif: notifRes.error ? undefined : (notifRes.data ?? null),
   };
 }
 

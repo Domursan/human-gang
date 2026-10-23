@@ -42,7 +42,7 @@ export default {
         { title: 'Retrouve l’échange conclu', text: 'Une offre acceptée passe dans « Historique » avec le statut « Acceptée ».' },
       ],
       tips: [
-        'Le MP Discord « te propose un échange » arrive seulement si tu as relié ton ID Discord et coché « Recevoir les messages du bot Discord » dans Compte.',
+        'Le MP Discord « te propose un échange » arrive seulement si tu as relié ton ID Discord, activé « Le bot peut m’écrire sur Discord » et laissé « Cartes · échanges » sur Discord dans « Mes notifications » (Mon compte).',
         'Le MP renvoie vers la page Cartes : c’est là que tu réponds, rien ne se fait depuis Discord.',
         'Une offre que tu as envoyée se retire avec « Annuler l’offre », dans l’onglet « Envoyées ».',
       ],

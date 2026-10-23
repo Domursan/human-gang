@@ -12,6 +12,7 @@
 import { sb, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from './push.js';
+import { mountNotifPrefs } from './notif-prefs.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
 import { svg } from './icons.js';
 import { loadInviteConfig, inviteCodeRe } from './invite-config.js';
@@ -462,9 +463,7 @@ async function renderMember(user) {
           <input id="pf-discord" inputmode="numeric" readonly aria-readonly="true" aria-describedby="pf-discord-hint" value="${esc(p.discord_id || '')}" placeholder="Pas encore enregistré">
           <p class="small muted hint" id="pf-discord-hint">Sert uniquement au bot pour t’envoyer des messages privés. Pour ta sécurité, seul le Staff l’enregistre ou le modifie : ${p.discord_id ? 'pour le changer' : 'pour l’ajouter'}, <a href="assistance.html">demande au Staff</a> en lui donnant ton identifiant (Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l’identifiant »).</p>
         </div>
-        <label class="check"><input type="checkbox" id="pf-bot" ${p.bot_optin ? 'checked' : ''}> <span>Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels)</span></label>
-        <label class="check"><input type="checkbox" id="pf-remind-irl" ${p.remind_irl ? 'checked' : ''}> <span>Me rappeler mes sorties IRL par message Discord, 24 h et 2 h avant</span></label>
-        <label class="check"><input type="checkbox" id="pf-notify-wish" ${p.notify_card_wish ? 'checked' : ''}> <span>M'avertir sur Discord quand une carte de ma liste de souhaits est obtenue par un membre</span></label>
+        <p class="small muted">Messages du bot Discord, rappels et alertes : <a href="#notifs">Mes notifications</a>, plus bas.</p>
         <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
       </form>
 
@@ -540,6 +539,9 @@ async function renderMember(user) {
         </div>
       </div>
     </section>
+    <section class="acc-row" id="notifs">
+      <div id="notif-slot" hidden></div>
+    </section>
     <section class="acc-row">
       <div id="push-slot" hidden></div>
     </section>`;
@@ -547,6 +549,7 @@ async function renderMember(user) {
 
   $('#logout').addEventListener('click', logout);
   mountPushBlock($('#push-slot'), me);
+  mountNotifPrefs($('#notif-slot'), me, (p) => { me = { ...me, ...p }; }); // bloc « Mes notifications » (idée Q6)
   bindProfile();
   bindAvatar();
   bindPassword();
@@ -581,9 +584,6 @@ function bindProfile() {
       color: $('#pf-color').value,
       birthday: $('#pf-birthday').value || null,
       share_birthday: $('#pf-share').checked,
-      bot_optin: $('#pf-bot').checked,
-      remind_irl: $('#pf-remind-irl').checked,
-      notify_card_wish: $('#pf-notify-wish').checked,
     };
     const btn = form.querySelector('button[type=submit]');
     busy(btn, true, 'Enregistrement…'); formError(form, '');
