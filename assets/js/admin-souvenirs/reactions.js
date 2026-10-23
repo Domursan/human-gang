@@ -14,8 +14,8 @@ import { svg } from '../icons.js';
 import { sectionError } from '../admin/common.js';
 import { pageRange, pageOf, pagerHtml, stampLabel, peopleOptions } from './helpers.js';
 
-/* Cibles des idées S8, S12, S13 (le détail se consulte dans la vue « Contenus proposés »). */
-const OTHER_KIND = { quote: 'Une citation du mur', postcard: 'Une carte postale', track: 'Un morceau de la playlist' };
+/* Cibles des idées S8, S13 (le détail se consulte dans la vue « Contenus proposés »). */
+const OTHER_KIND = { quote: 'Une citation du mur', track: 'Un morceau de la playlist' };
 /* Icône du bouton « Masquer ». */
 const ICON = { hide: svg('eye', { size: 16, stroke: 1.8 }) };
 

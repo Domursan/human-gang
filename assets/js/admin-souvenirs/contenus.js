@@ -1,23 +1,22 @@
 // =====================================================================
-// Admin : vue « Contenus proposés » de la section Souvenirs (idées S7, S8, S11, S12, S13).
-// Une seule vue, cinq onglets : Citations (file de validation), Capsules, Cartes postales, Playlist, Récap annuel.
-// Droits (côté base) : permission « souvenirs » pour les quatre premiers (hg_quote_review, hg_track_moderate,
-// hg_postcard_hide, hg_capsule_hide via la page de la capsule), « reglages » pour le récap (hg_recap_diapos_set).
+// Admin : vue « Contenus proposés » de la section Souvenirs (idées S8, S11, S13).
+// Une seule vue, trois onglets : Citations (file de validation), Playlist, Récap annuel.
+// Droits (côté base) : permission « souvenirs » pour les deux premiers (hg_quote_review, hg_track_moderate),
+// « reglages » pour le récap (hg_recap_diapos_set).
 // Chaque action Staff est notée au journal par la base (hg_admin_audit).
-// Dépendances : core.js, photos.js (miniatures signées), admin/common.js (sectionError), helpers.js.
+// Dépendances : core.js, admin/common.js (sectionError), helpers.js.
 // Exporte : createContenusPanel (fabrique la vue : élément HTML et fonction de rechargement).
 // =====================================================================
 import { sb, esc, toast, errMsg } from '../core.js';
-import { signedUrls, thumbHtml } from '../photos.js';
 import { sectionError } from '../admin/common.js';
 import { stampLabel, dayLabel } from './helpers.js';
 
 /* Onglets de la vue : [identifiant, libellé]. */
-const TABS = [['citations', 'Citations'], ['capsules', 'Capsules'], ['cartes', 'Cartes postales'], ['playlist', 'Playlist'], ['recap', 'Récap annuel']];
+const TABS = [['citations', 'Citations'], ['playlist', 'Playlist'], ['recap', 'Récap annuel']];
 /* Diapos du récap que le Staff peut masquer : [clé, libellé]. */
 const DIAPOS = [['membres', 'Le gang (membres)'], ['sorties', 'Sorties'], ['presents', 'Les plus présents'], ['photos', 'Photos'], ['ss', 'Secret Santa'],
   ['moments', 'Moments cultes'], ['extras', 'Messages et badges'], ['carte', 'Carte la plus rare du gang'], ['morceaux', 'Morceaux de la semaine'],
-  ['citations', 'Citations'], ['carnet', 'Carnet de voyage'], ['ma_carte', 'Ma carte la plus rare et mes boosters']];
+  ['citations', 'Citations'], ['ma_carte', 'Ma carte la plus rare et mes boosters']];
 const STATUS = { propose: 'En attente', valide: 'Validée', refuse: 'Refusée', retire: 'Retirée' };
 
 /** Fabrique la vue. ctx.people() donne l'annuaire. Renvoie { el, load }. */
@@ -56,34 +55,6 @@ export function createContenusPanel(ctx) {
         </div></li>`).join('') || '<li class="empty">Aucune citation proposée.</li>'}</ul>`;
   }
 
-  async function capsules() {
-    const { data, error } = await sb.rpc('hg_capsules_list');
-    if (error) throw error;
-    const caps = data?.capsules || [];
-    return `<p class="small muted">Personne, Staff compris, ne lit les dépôts avant l’ouverture. Crée et modifie une capsule depuis sa page ; après l’ouverture, tu peux y masquer un objet.</p>
-      <p><a class="btn btn-primary btn-sm" href="capsule.html" target="_blank" rel="noopener">Ouvrir la page des capsules</a></p>
-      <ul class="sv-items">${caps.map((c) => `<li class="sv-row sv-ct-row"><div class="sv-main">
-          <p class="sv-title">${esc(c.title)}</p>
-          <p class="small muted">${c.is_open ? 'Ouverte' : 'Scellée'} · dépôts jusqu’au ${esc(stampLabel(c.deposit_until))} · ouverture le ${esc(stampLabel(c.opens_at))}</p>
-          <p class="small muted">${c.members} membre(s), ${c.items} objet(s)${c.event_title ? ` · sortie « ${esc(c.event_title)} »` : ''}</p></div>
-        <div class="btn-row sv-row-actions"><a class="btn btn-ghost btn-sm" href="capsule.html?id=${esc(c.id)}" target="_blank" rel="noopener">Voir</a></div></li>`).join('') || '<li class="empty">Aucune capsule.</li>'}</ul>`;
-  }
-
-  async function cartes() {
-    const { data, error } = await sb.from('hg_postcards').select('*').order('created_at', { ascending: false }).limit(60);
-    if (error) throw error;
-    const rows = data || [];
-    const urls = await signedUrls(rows.map((p) => p.path));
-    return `<p class="small muted">Masque une carte qui montre une adresse, un visage non consenti ou un contenu gênant.</p>
-      <ul class="sv-items">${rows.map((p) => `<li class="sv-row sv-ct-row">
-        <div class="sv-thumb">${thumbHtml(urls.get(p.path), p.place_label)}</div>
-        <div class="sv-main"><p class="sv-title">${esc(p.place_label)}</p>
-          <p class="small muted">${esc(who(p.user_id))} · publiée ${new Date(p.publish_at) > new Date() ? 'le' : 'depuis le'} ${esc(stampLabel(p.publish_at))}${p.hidden ? ' · <strong>masquée</strong>' : ''}${p.geoguessr_ok ? ' · GeoGuessr' : ''}</p>
-          ${p.message ? `<p class="small sv-excerpt">${esc(p.message)}</p>` : ''}</div>
-        <div class="btn-row sv-row-actions"><button type="button" class="btn btn-ghost btn-sm" data-ct-card="${esc(p.id)}" data-hidden="${p.hidden}">${p.hidden ? 'Réafficher' : 'Masquer'}</button></div>
-      </li>`).join('') || '<li class="empty">Aucune carte postale.</li>'}</ul>`;
-  }
-
   async function playlist() {
     const { data, error } = await sb.from('hg_tracks').select('*').order('created_at', { ascending: false }).limit(80);
     if (error) throw error;
@@ -107,7 +78,7 @@ export function createContenusPanel(ctx) {
       <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Enregistrer</button></div></form>`;
   }
 
-  const RENDER = { citations, capsules, cartes, playlist, recap };
+  const RENDER = { citations, playlist, recap };
 
   /** Recharge l'onglet affiché. */
   async function load() {
@@ -159,8 +130,6 @@ export function createContenusPanel(ctx) {
       act(q, 'hg_quote_review', { p_id: q.dataset.id, p_action: a }, a === 'valider' ? 'Citation validée.' : a === 'refuser' ? 'Citation refusée.' : 'Citation retirée du mur.');
       return;
     }
-    const c = e.target.closest('[data-ct-card]');
-    if (c) { act(c, 'hg_postcard_hide', { p_id: c.dataset.ctCard, p_hidden: c.dataset.hidden !== 'true' }, 'Carte postale mise à jour.'); return; }
     const tr = e.target.closest('[data-ct-track]');
     if (tr) act(tr, 'hg_track_moderate', { p_id: tr.dataset.id, p_action: tr.dataset.ctTrack }, 'Morceau mis à jour.');
   });

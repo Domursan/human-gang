@@ -1,6 +1,6 @@
 // Parcours : Récap annuel enrichi (recap.html), idée S11, et vue admin « Contenus proposés ».
 // Nouvelles diapos (carte la plus rare du gang, morceaux de la semaine, citations, ma carte et mes boosters) ;
-// diapo sautée si sa donnée est trop faible (carnet : 2 cartes) ; diapo masquée par le Staff ; parcours sans erreur.
+// diapo sautée si sa donnée est trop faible ; diapo masquée par le Staff ; parcours sans erreur.
 // Admin : vue Souvenirs > Contenus proposés (validation d'une citation, masquage des diapos du récap).
 // Faux Supabase : fixtures/fake-sb-contenus.mjs.
 const { SHOTS, check, finish, openPage, adminSection, log, sleep, chromium } = require('./lib/harness.cjs');
@@ -16,7 +16,6 @@ const keys = (p) => p.$$eval('.rc-slide', (els) => els.map((e) => [...e.classLis
   await p.waitForSelector('.rc-slide', { timeout: 6000 }).catch(() => {});
   let k = await keys(p);
   check(k.includes('carte') && k.includes('morceaux') && k.includes('citations') && k.includes('ma_carte'), 'nouvelles diapos : carte, morceaux, citations, ma carte');
-  check(!k.includes('carnet'), 'diapo sautée quand la donnée est trop faible (2 cartes postales)');
   check(k.indexOf('ma_carte') < k.indexOf('moi'), '« Ma carte » avant « Ton année »');
   check((await p.locator('.rc-slide-carte .hgc, .rc-slide-carte [class*="hgc"]').count()) > 0, 'diapo carte : rendu de carte du jeu');
   check((await p.locator('.rc-slide-ma_carte').innerText()).includes('boosters ouverts'), 'diapo ma carte : boosters ouverts');
@@ -45,7 +44,7 @@ const keys = (p) => p.$$eval('.rc-slide', (els) => els.map((e) => [...e.classLis
   await adminSection(p, 'vie/souvenirs').catch(() => {});
   await p.evaluate(() => { location.hash = '#vie/souvenirs/contenus'; });
   await p.waitForSelector('.sv-contenus .sv-ct-row', { timeout: 6000 }).catch(() => {});
-  check((await p.locator('.sv-contenus [role="tab"]').count()) === 5, 'admin : 5 onglets (citations, capsules, cartes, playlist, récap)');
+  check((await p.locator('.sv-contenus [role="tab"]').count()) === 3, 'admin : 3 onglets (citations, playlist, récap)');
   check((await p.locator('.sv-contenus').innerText()).includes('2 citations en attente'), 'admin : file de validation (2 en attente)');
   await p.locator('[data-ct-quote="valider"]').first().click();
   await sleep(400);
@@ -57,11 +56,11 @@ const keys = (p) => p.$$eval('.rc-slide', (els) => els.map((e) => [...e.classLis
   check((await log(p)).some((e) => e[1] === 'hg_track_moderate' && e[2].p_action === 'masquer'), 'admin : masquer un morceau');
   await p.click('[data-ct-tab="recap"]');
   await p.waitForSelector('#sv-ct-recap', { timeout: 4000 }).catch(() => {});
-  await p.check('#sv-ct-recap input[value="carnet"]');
+  await p.check('#sv-ct-recap input[value="morceaux"]');
   await p.click('#sv-ct-recap button[type="submit"]');
   await sleep(300);
   const set = (await log(p)).filter((e) => e[1] === 'hg_recap_diapos_set');
-  check(set.length === 1 && set[0][2].p_keys.includes('carnet'), 'admin : diapos masquées enregistrées (hg_recap_diapos_set)');
+  check(set.length === 1 && set[0][2].p_keys.includes('morceaux'), 'admin : diapos masquées enregistrées (hg_recap_diapos_set)');
   await p.screenshot({ path: path.join(SHOTS, 'S11-admin.png') }).catch(() => {});
   check(p.errs.length === 0, 'admin : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();

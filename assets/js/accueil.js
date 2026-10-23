@@ -3,13 +3,13 @@
 // fil d'activité, anniversaires du mois, défi du gang, bandeaux (récap, événement en cours) et boîte à idées.
 // Chaque tuile et chaque bloc se charge séparément : une erreur n'empêche pas les autres.
 // Dépendances : core.js (sb, initPage, canAccess, textes réglables), icons.js, dyn-events.js (événement en cours, chargé à la demande),
-// accueil-ce-jour.js (tuile « Ce jour-là » et mot du jour du lexique).
+// accueil-ce-jour.js (tuile « Ce jour-là »).
 // Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
 import { svg } from './icons.js';
 import { maybeStartTour } from './core/tour.js'; // Q1 : visite guidée au premier passage
-import { loadOnThisDay, loadWordOfDay } from './accueil-ce-jour.js';
+import { loadOnThisDay } from './accueil-ce-jour.js';
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
 const app = $('#app');
@@ -188,8 +188,6 @@ function renderMemberShell() {
         <ul class="bdays" id="bdays"><li class="skeleton-row"></li></ul>
       </div>
     </section>
-
-    <section class="card home-lexday" id="lex-day" data-home-block="mot_du_jour" data-home-label="Mot du jour (Lexique)" aria-labelledby="lexday-title" hidden></section>
 
     <section class="card home-ideas" id="idees" aria-labelledby="ideas-title">
       <form class="stack" id="idea-form" novalidate>
@@ -589,7 +587,7 @@ if (!me) {
     $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
     import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
     home?.loadOwn(),
-    tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null, canAccess('lexique') ? loadWordOfDay($('#lex-day')) : null,
+    tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null,
   ]);
   maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }

@@ -206,21 +206,9 @@ function buildSlides(r) {
         <ul class="rc-quotes">${(cit.extraits || []).slice(0, 3).map((t) => `<li>« ${esc(t)} »</li>`).join('')}</ul>`,
     });
   }
-  const cp = g.cartes_postales;
-  if (cp && Number(cp.n) >= 3) {
-    S.push({
-      key: 'carnet', emoji: '🗺️',
-      html: `<p class="rc-eyebrow">Carnet de voyage</p>
-        <p class="rc-big">${count(cp.n)}</p>
-        <p class="rc-unit">${pluralWord(Number(cp.n), 'carte postale', 'cartes postales')}</p>
-        <p class="rc-sub">depuis ${count(cp.pays || 0)} ${pluralWord(Number(cp.pays) || 0, 'pays', 'pays')}</p>`,
-    });
-  }
   const maRare = moi.carte_plus_rare;
   const moiCartes = [
     [moi.boosters_ouverts, 'booster ouvert', 'boosters ouverts'],
-    [moi.cartes_postales?.n, 'carte postale', 'cartes postales'],
-    [moi.cartes_postales?.pays, 'pays visité', 'pays visités'],
   ].filter(([n]) => n != null);
   if (maRare || moiCartes.some(([n]) => Number(n) > 0)) {
     S.push({
@@ -228,7 +216,7 @@ function buildSlides(r) {
       html: `<p class="rc-eyebrow">Ton année · cartes</p>
         ${maRare ? `<h2 class="rc-title rc-title-sm">Ta carte la plus rare</h2>
           <div class="rc-card">${cardHtml(maRare, { shiny: !!maRare.shiny, serial: maRare.serial, size: 'md' })}</div>
-          <p class="rc-sub">${maRare.obtained_at ? `Tirée le <strong>${esc(dateShort(maRare.obtained_at))}</strong>` : esc(maRare.name)}</p>` : '<h2 class="rc-title rc-title-sm">Tes cartes et tes voyages</h2>'}
+          <p class="rc-sub">${maRare.obtained_at ? `Tirée le <strong>${esc(dateShort(maRare.obtained_at))}</strong>` : esc(maRare.name)}</p>` : '<h2 class="rc-title rc-title-sm">Tes cartes</h2>'}
         <div class="rc-grid3">${moiCartes.map(([n, one, many]) => `<div><strong>${count(n || 0)}</strong><span>${pluralWord(Number(n) || 0, one, many)}</span></div>`).join('')}</div>`,
     });
   }

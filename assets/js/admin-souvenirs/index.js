@@ -5,8 +5,8 @@
 //   #vie/souvenirs/<id>       un souvenir sélectionné
 //   #vie/souvenirs/photos     vue Photos (albums des sorties et images des souvenirs)
 //   #vie/souvenirs/reactions  vue Réactions (réactions actives, masquage)
-//   #vie/souvenirs/contenus   vue Contenus proposés (citations, capsules, cartes postales, playlist, récap : contenus.js)
-//   #vie/souvenirs/ce-jour, /lexique, /gartic : vues des idées S1, S2, S6 (contenu.js)
+//   #vie/souvenirs/contenus   vue Contenus proposés (citations, playlist, récap : contenus.js)
+//   #vie/souvenirs/ce-jour    vue Ce jour-là (idée S1 : contenu.js)
 // Montage par admin.js (registerSub 'vie/souvenirs') : main, open, list. Droits : hg_moments, hg_photos, hg_reactions côté base.
 // Dépendances : core.js, photos.js (miniatures, lightbox), admin/ui/* (liste, en-tête), admin/common.js, admin/live.js,
 // helpers.js, moments.js (formulaire), photos.js (vue Photos), reactions.js (vue Réactions),
@@ -25,14 +25,14 @@ import { momentCardsMap, openMomentCard } from './moment-card.js';
 import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
 import { createContenusPanel } from './contenus.js';
-import { createCeJourPanel, createLexiquePanel, createGarticPanel } from './contenu.js';
+import { createCeJourPanel } from './contenu.js';
 import { blocReglages } from '../admin-reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 /* Vues de la section : [identifiant, libellé]. Souvenirs est la vue par défaut. */
-const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions'], ['contenus', 'Contenus proposés'], ['ce-jour', 'Ce jour-là'], ['lexique', 'Lexique'], ['gartic', 'Gartic']];
+const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions'], ['contenus', 'Contenus proposés'], ['ce-jour', 'Ce jour-là']];
 /* Vues à panneau (chargé à chaque entrée dans la vue). */
-const PANEL_VIEWS = ['photos', 'reactions', 'contenus', 'ce-jour', 'lexique', 'gartic'];
+const PANEL_VIEWS = ['photos', 'reactions', 'contenus', 'ce-jour'];
 const LIMIT = 500; // souvenirs chargés d'un coup ; la liste affiche par lots (createList)
 
 /* État de la section : auteur, annuaire, souvenirs chargés, URL signées, vue, souvenir choisi et zones d'affichage. */
@@ -190,15 +190,13 @@ export function mountSouvenirsSection(root, { me }) {
     <div class="sv-z" data-zone="reactions" hidden></div>
     <div class="sv-z" data-zone="contenus" hidden></div>
     <div class="sv-z" data-zone="ce-jour" hidden></div>
-    <div class="sv-z" data-zone="lexique" hidden></div>
-    <div class="sv-z" data-zone="gartic" hidden></div>
   </div>`;
   S.zones = Object.fromEntries(VIEWS.map(([k]) => [k, root.querySelector(`[data-zone="${k}"]`)]));
   S.detailHead = root.querySelector('#sv-d-head');
   S.detailBody = root.querySelector('#sv-d-body');
   root.prepend(blocReglages('souvenirs'));
   chargerReglagesLot3();
-  S.panels = { photos: createPhotosPanel(S.ctx), reactions: createReactionsPanel(S.ctx), contenus: createContenusPanel(S.ctx), 'ce-jour': createCeJourPanel(S.ctx), lexique: createLexiquePanel(S.ctx), gartic: createGarticPanel(S.ctx) };
+  S.panels = { photos: createPhotosPanel(S.ctx), reactions: createReactionsPanel(S.ctx), contenus: createContenusPanel(S.ctx), 'ce-jour': createCeJourPanel(S.ctx) };
   for (const k of PANEL_VIEWS) S.zones[k].append(S.panels[k].el);
   // Temps réel : souvenirs et photos ; la vue Photos est relue si elle est affichée
   onTableChange('souvenirs', ['hg_moments', 'hg_photos'], () => {

@@ -1,23 +1,20 @@
 // ===== Humane Gang — outils communs des pages « Contenu et souvenirs » =====
-// Citations (citations.html), Playlist (playlist.html), Carnet de voyage (carnet.html), Capsules (capsule.html).
+// Citations (citations.html), Playlist (playlist.html).
 /*
- * Rôle : petites briques partagées par ces quatre pages : annuaire des membres, dates à l'heure de Zurich,
+ * Rôle : petites briques partagées par ces deux pages : annuaire des membres, dates à l'heure de Zurich,
  * boîte de dialogue de formulaire (vrai <dialog>, focus, Échap, message d'erreur), filtres en pastilles.
  * Dépendances : core.js (sb, esc, errMsg).
- * Exporte : FUSEAU, fmtJour, fmtJourHeure, fmtMois, loadPeople, pseudoOf, formDialog, chipsHtml, setPressed.
+ * Exporte : FUSEAU, fmtJour, fmtMois, loadPeople, pseudoOf, formDialog, chipsHtml, setPressed.
  */
 import { sb, esc, errMsg } from './core.js';
 
 /** Fuseau d'affichage : toujours l'heure de Zurich, quel que soit l'appareil. */
 export const FUSEAU = 'Europe/Zurich';
 const fJour = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: FUSEAU });
-const fJourHeure = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: FUSEAU });
 const fMois = new Intl.DateTimeFormat('fr-CH', { month: 'long', year: 'numeric', timeZone: FUSEAU });
 
 /** « 12 mars 2026 » (chaîne vide si la date manque). Une date seule (AAAA-MM-JJ) est lue à midi pour ne pas changer de jour. */
 export const fmtJour = (d) => (d ? fJour.format(new Date(/^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00` : d)) : '');
-/** « 12 mars, 20:30 ». */
-export const fmtJourHeure = (d) => (d ? fJourHeure.format(new Date(d)) : '');
 /** « mars 2026 ». */
 export const fmtMois = (d) => (d ? fMois.format(new Date(/^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T12:00:00` : d)) : '');
 

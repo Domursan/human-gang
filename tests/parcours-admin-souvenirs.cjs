@@ -24,8 +24,8 @@ const row = (p, titre) => p.locator('#shell-col .ui-row', { hasText: titre });
   await p.waitForSelector('#shell-col .ui-row', { timeout: 5000 }).catch(() => {});
   check(await p.isVisible('#souvenirs'), 'section « Souvenirs et photos » présente');
   check((await p.locator('#shell-col .ui-row').count()) === 3, 'colonne 2 : 3 souvenirs affichés');
-  // 7 vues : Souvenirs, Photos, Réactions, Contenus proposés + Ce jour-là, Lexique, Gartic (idées S1, S2, S6)
-  check((await p.locator('#shell-col .sv-views a').count()) === 7, 'puces des vues : Souvenirs, Photos, Réactions, Contenus proposés, Ce jour-là, Lexique, Gartic');
+  // 5 vues : Souvenirs, Photos, Réactions, Contenus proposés, Ce jour-là (idée S1)
+  check((await p.locator('#shell-col .sv-views a').count()) === 5, 'puces des vues : Souvenirs, Photos, Réactions, Contenus proposés, Ce jour-là');
   check((await p.getAttribute('#shell-col .sv-views a[data-view="souvenirs"]', 'aria-current')) === 'true', 'vue Souvenirs active au départ');
 
   // Créer (depuis la colonne 2)

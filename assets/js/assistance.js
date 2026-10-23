@@ -69,7 +69,7 @@ if (me) {
 }
 const wanted = new URLSearchParams(location.search).get('sujet');
 if (wanted && SUBJECTS.includes(wanted)) form.subject.value = wanted;
-// Message prérempli (?message=…), par exemple « Demander le retrait » d'un mot du lexique
+// Message prérempli (?message=…), par exemple depuis une page qui renvoie vers l'assistance.
 const wantedMsg = new URLSearchParams(location.search).get('message');
 if (wantedMsg && !form.message.value) form.message.value = wantedMsg.slice(0, RULES.message_max);
 

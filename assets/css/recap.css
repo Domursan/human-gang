@@ -133,7 +133,7 @@ body.rc-open { overflow: hidden; }
   .rc-slide.is-in .rc-slide-inner, .rc-slide.is-in .rc-emoji, .rc-slide.is-in .rc-bar span { animation: none; }
 }
 
-/* ---------- Diapos ajoutées par l'idée S11 (cartes, playlist, citations, carnet) ---------- */
+/* ---------- Diapos ajoutées par l'idée S11 (cartes, playlist, citations) ---------- */
 .rc-card { display: flex; justify-content: center; margin: 6px 0 4px; filter: drop-shadow(0 18px 30px rgba(252, 163, 1, .28)); }
 .rc-quotes { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; max-width: 32ch; }
 .rc-quotes li { font-family: var(--font-display); font-size: 18px; line-height: 1.2; }

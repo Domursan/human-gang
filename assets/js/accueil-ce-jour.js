@@ -1,13 +1,13 @@
-// ===== Humane Gang — accueil : tuile « Ce jour-là » (S1) et mot du jour du lexique (S2) =====
+// ===== Humane Gang — accueil : tuile « Ce jour-là » (S1) =====
 /*
  * Rôle : la tuile « Ce jour-là » montre un souvenir dont la date tombe aujourd'hui, 1, 2, 3 ou 4 ans plus tôt
  *   (moment culte, sortie passée avec ses photos, soirée d'échange du Secret Santa), ou à 3 jours près. Le choix est fait
  *   par le serveur (même souvenir pour tout le monde ce jour-là, heure de Zurich). « Un autre » fait défiler (5 au plus).
- *   Sans souvenir, la tuile reste masquée. Le mot du jour du lexique s'affiche en bas de l'accueil.
+ *   Sans souvenir, la tuile reste masquée.
  * Page : accueil.html (vue membre), appelé par accueil.js.
  * Dépendances : core.js (sb, esc, errMsg), photos.js (URL signées, visionneuse), reactions.js (barre de réactions), icons.js.
- * RPC : hg_on_this_day, hg_lexicon_word_of_day (migration 088).
- * Exporte : loadOnThisDay, loadWordOfDay, dayHeadline.
+ * RPC : hg_on_this_day.
+ * Exporte : loadOnThisDay, dayHeadline.
  */
 import { sb, esc } from './core.js';
 import { signedUrls, openLightbox } from './photos.js';
@@ -96,25 +96,5 @@ export async function loadOnThisDay(box, me) {
   } catch (e) {
     box.hidden = true;
     console.warn('[ce jour-là]', e?.message || e);
-  }
-}
-
-/**
- * Mot du jour du lexique (un mot validé, le même pour tout le monde ce jour-là). Masqué s'il n'y en a pas.
- * @param {HTMLElement|null} box section #lex-day
- */
-export async function loadWordOfDay(box) {
-  if (!box) return;
-  try {
-    const { data, error } = await sb.rpc('hg_lexicon_word_of_day');
-    if (error) throw error;
-    if (!data?.term) return;
-    box.innerHTML = `<p class="lexday-eyebrow" id="lexday-title">Le mot du jour</p>
-      <p class="lexday-term">${esc(data.term)}</p>
-      <p class="small muted lexday-def">${esc(data.definition)}</p>
-      <a class="small lexday-link" href="lexique.html#${encodeURIComponent(data.slug)}">Tout le lexique du gang</a>`;
-    box.hidden = false;
-  } catch (e) {
-    console.warn('[mot du jour]', e?.message || e);
   }
 }

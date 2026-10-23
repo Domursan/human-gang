@@ -175,11 +175,3 @@
 .day-actions .btn { min-height: 44px; }
 .day-actions .day-next { flex: 1 1 0; }
 .day-actions .day-go { flex: 1.4 1 0; text-decoration: none; }
-
-/* ---------- Mot du jour du lexique (S2) ---------- */
-.home-lexday { margin-bottom: 20px; }
-.home-lexday p { margin: 0; }
-.lexday-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--hist-fg); }
-.lexday-term { font-family: var(--font-display); font-size: 22px; margin: 6px 0 4px !important; overflow-wrap: anywhere; }
-.lexday-def { max-width: 70ch; overflow-wrap: anywhere; }
-.lexday-link { display: inline-flex; align-items: center; min-height: 44px; }

@@ -1,4 +1,4 @@
-// Parcours : idée S1 « Ce jour-là » (tuile de l'accueil) et mot du jour du lexique (S2), plus la vue admin « Ce jour-là ».
+// Parcours : idée S1 « Ce jour-là » (tuile de l'accueil), plus la vue admin « Ce jour-là ».
 // Tuile visible avec des souvenirs (titre « Il y a 3 ans », vignettes, réactions, « Un autre », lien vers l'album),
 // masquée sans souvenir ou quand le réglage est coupé ; placée entre Secret Santa et IRL sur mobile ; 360 px sans défilement.
 // Faux Supabase : fixtures/fake-sb-contenu.mjs (scénario ceJour).
@@ -43,8 +43,6 @@ const ITEMS = [
   await sleep(200);
   check(await p.locator('dialog.lightbox[open]').count() === 1, 'vignettes : la visionneuse s’ouvre');
   await p.keyboard.press('Escape');
-  check((await p.locator('#lex-day').isVisible()) && (await p.locator('#lex-day').innerText()).includes('Tzatzikistan'), 'mot du jour : affiché en bas de l’accueil');
-  check((await p.locator('#lex-day a').getAttribute('href')) === 'lexique.html#tzatzikistan', 'mot du jour : lien vers la fiche');
   check(p.errs.length === 0, 'aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.screenshot({ path: require('path').join(require('./lib/harness.cjs').SHOTS, 's1-accueil-mobile.png'), fullPage: false }).catch(() => {});
   await p.ctx.close();
@@ -68,7 +66,6 @@ const ITEMS = [
   p = await openPage(browser, { page: 'accueil', fixture: F, scenario: { ceJour: [], noWord: true } });
   await sleep(300);
   check(await p.locator('#tile-day').isHidden(), 'sans souvenir : tuile masquée (jamais vide)');
-  check(await p.locator('#lex-day').isHidden(), 'sans mot validé : pas de mot du jour');
   check((await log(p)).some((e) => e[0] === 'rpc' && e[1] === 'hg_on_this_day'), 'appel : hg_on_this_day');
   await p.ctx.close();
   p = await openPage(browser, { page: 'accueil', fixture: F, scenario: { ceJourOff: true } });

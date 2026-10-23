@@ -1,5 +1,5 @@
 /* ===== Humane Gang — styles communs des pages « Contenu et souvenirs » =====
-   Citations, Playlist, Carnet de voyage, Capsules : en-tête de page, pastilles de filtre, boîte de dialogue. */
+   Citations, Playlist : en-tête de page, pastilles de filtre, boîte de dialogue. */
 
 .ct-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .ct-head .eyebrow { color: var(--sand); }
