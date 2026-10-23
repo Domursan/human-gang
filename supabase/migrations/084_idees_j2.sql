@@ -280,9 +280,12 @@ begin
   ok := coalesce(hg_quiz_check(q.qtype, coalesce(k, '{}'::jsonb), p_response), false);
 
   -- Jamais répondue dans le quiz et question ouverte : la réponse compte aussi pour le quiz (comme hg_quiz_answer).
+  -- Mêmes règles que hg_quiz_answer (076) : pas pour l'auteur de la question ni l'auteur d'une citation, pas de gain pour
+  -- le Staff « quiz », récompense plafonnée à 2 000.
   if q.active and q.starts_at <= now() and (q.ends_at is null or q.ends_at > now()) and not coalesce(q.secret, false)
+     and q.created_by is distinct from me and q.subject_id is distinct from me
      and not exists (select 1 from hg_quiz_answers x where x.question_id = qid and x.user_id = me) then
-    if ok then gain := q.reward; end if;
+    if ok and not hg_has_perm('quiz') then gain := least(greatest(q.reward, 0), 2000); end if;
     insert into hg_quiz_answers (question_id, user_id, response, is_correct, reward) values (qid, me, p_response, ok, gain);
     if gain > 0 then perform hg_wallet_add(me, gain, 'quiz', 'quiz:' || qid::text); end if;
     v_copied := true;
