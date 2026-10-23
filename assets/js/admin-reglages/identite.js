@@ -124,13 +124,18 @@ function controlHtml(f) {
   return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}${tag}<div class="rgi-field-foot">${hint}</div>${err}</div>`;
 }
 
+/** Groupes longs, repliés par défaut pour garder la page Textes courte. */
+const REPLIES = new Set(['visite', 'hors_ligne']);
+
 /** Dessine le formulaire complet (tous les groupes) dans la zone de la page. */
 function render() {
   if (!S.root) return;
   const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group" data-group="${g.id}" data-part${groupHidden(g.id) ? ' hidden' : ''}>
       <legend class="rgi-legend">${esc(g.titre)}</legend>
       <p class="small muted">${esc(g.aide)}</p>
-      ${g.champs.map(controlHtml).join('')}
+      ${REPLIES.has(g.id)
+        ? `<details class="rgi-fold"><summary>Voir les ${g.champs.length} réglage${g.champs.length > 1 ? 's' : ''}</summary>${g.champs.map(controlHtml).join('')}</details>`
+        : g.champs.map(controlHtml).join('')}
       <div class="rgi-group-foot"><button class="btn btn-ghost btn-sm" type="button" data-reset-group="${g.id}">Rétablir ces valeurs par défaut</button></div>
     </fieldset>`).join('');
   S.root.innerHTML = `<section class="rgi" aria-labelledby="rgi-title">

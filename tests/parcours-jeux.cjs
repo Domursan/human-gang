@@ -6,6 +6,9 @@
 // Lancer : node tests/parcours-jeux.cjs
 const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 const FIX = 'fake-sb-jeux.mjs';
+// Les onglets viennent de la liste commune (les paquets en ajoutent) : le test ne suppose plus 3 jeux.
+const IDS = [...require('fs').readFileSync(require('path').join(__dirname, '../assets/js/jeux/onglets.js'), 'utf8').matchAll(/\{ id: '([a-z0-9-]+)'/g)].map((m) => m[1]);
+const LAST = IDS[IDS.length - 1];
 
 (async () => {
   const browser = await chromium.launch();
@@ -15,12 +18,12 @@ const FIX = 'fake-sb-jeux.mjs';
   await p.waitForSelector('#jeux-panel-aujourdhui .jeux-row', { timeout: 6000 }).catch(() => {});
   await p.waitForFunction(() => !document.querySelector('[data-sub="geo"]')?.textContent.includes('…'), null, { timeout: 6000 }).catch(() => {});
   const tabs = p.locator('[role="tab"]');
-  check(await tabs.count() === 4, 'onglets : Aujourd’hui + 3 jeux');
+  check(await tabs.count() === IDS.length + 1, `onglets : Aujourd’hui + ${IDS.length} jeux`);
   check(await p.locator('#jeux-tab-aujourdhui').getAttribute('aria-selected') === 'true', 'défaut : onglet « Aujourd’hui » sélectionné');
   check(await p.locator('[role="tab"][tabindex="0"]').count() === 1, 'ARIA : un seul onglet dans l’ordre de tabulation');
   check(await p.locator('#jeux-tabs').getAttribute('aria-orientation') === 'horizontal', 'ARIA : barre horizontale sur téléphone');
   check(await p.locator('#jeux-panel-aujourdhui').getAttribute('aria-labelledby') === 'jeux-tab-aujourdhui', 'ARIA : panneau relié à son onglet');
-  check(await p.locator('.jeux-row').count() === 3, 'tableau de bord : une ligne par jeu');
+  check(await p.locator('.jeux-row').count() === IDS.length, 'tableau de bord : une ligne par jeu');
   check((await p.locator('[data-sub="geo"]').innerText()).includes('Manche n°18'), 'tableau de bord : résumé GeoGuessr');
   check((await p.locator('[data-badge="geo"]').innerText()).includes('À jouer'), 'tableau de bord : GeoGuessr à jouer');
   check((await p.locator('[data-badge="citations"]').innerText()).includes('À jouer'), 'tableau de bord : citations à jouer');
@@ -43,16 +46,18 @@ const FIX = 'fake-sb-jeux.mjs';
   check(await p.evaluate(() => location.hash) === '#geo', 'adresse : #geo');
   await p.keyboard.press('End');
   await sleep(500);
-  check(await p.locator('#jeux-tab-citations').getAttribute('aria-selected') === 'true', 'clavier : Fin → dernier onglet');
+  check(await p.locator('#jeux-tab-' + LAST).getAttribute('aria-selected') === 'true', 'clavier : Fin → dernier onglet');
   await p.keyboard.press('Home');
   await sleep(300);
   check(await p.locator('#jeux-tab-aujourdhui').getAttribute('aria-selected') === 'true', 'clavier : Début → Aujourd’hui');
   await p.keyboard.press('ArrowLeft');
   await sleep(500);
-  check(await p.locator('#jeux-tab-citations').getAttribute('aria-selected') === 'true', 'clavier : flèche gauche boucle sur le dernier');
+  check(await p.locator('#jeux-tab-' + LAST).getAttribute('aria-selected') === 'true', 'clavier : flèche gauche boucle sur le dernier');
+  await p.locator('#jeux-tab-citations').click();
+  await sleep(600);
   check(await p.locator('#jeux-panel-citations .cit').count() === 1, 'chargement paresseux : module des citations monté');
   check(await p.locator('#jeux-panel-geo').isHidden() && !(await p.locator('#jeux-panel-citations').isHidden()), 'un seul panneau visible');
-  check(await p.evaluate(() => [...document.querySelectorAll('link[data-jeux-css]')].map((l) => l.dataset.jeuxCss).sort().join(',')) === 'citations,geo', 'CSS des jeux chargées une fois chacune');
+  check(await p.evaluate(() => { const n = [...document.querySelectorAll('link[data-jeux-css]')].map((l) => l.dataset.jeuxCss); return new Set(n).size === n.length && n.includes('geo') && n.includes('citations'); }), 'CSS des jeux chargées une fois chacune');
   // Ouvrir un jeu depuis le tableau de bord
   await p.locator('#jeux-tab-aujourdhui').click();
   await sleep(300);

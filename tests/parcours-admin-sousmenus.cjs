@@ -29,7 +29,7 @@ const TREE = {
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']],
-    ['Jeux', ['questions', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux']]],
+    ['Jeux', ['questions', 'pronos', 'sutom', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages']], ['Apparence', ['theme']]],
 };

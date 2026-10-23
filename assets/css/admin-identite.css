@@ -27,3 +27,7 @@
   .rgi-form.rgi-duo { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .rgi-form.rgi-duo > .rgi-save { grid-column: 1 / -1; }
 }
+
+/* Groupes longs repliables (Visite guidée, Collection hors ligne) */
+.rgi-fold { display: grid; gap: 12px; }
+.rgi-fold > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }

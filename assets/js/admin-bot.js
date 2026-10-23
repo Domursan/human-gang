@@ -1219,6 +1219,9 @@ export function mountBotSection(container) {
   // Valeurs d'exemple des variables, pour l'aperçu.
   const examplesOf = (k) => Object.fromEntries(Object.entries(meta(k).vars ?? {}).map(([n, v]) => [n, v.example ?? '']));
 
+  // Groupes de modèles repliés par défaut (la liste reste courte) ; le premier groupe reste ouvert.
+  const TPL_REPLIES = new Set(['cards', 'jeux', 'test']);
+
   /** Dessine la liste des messages types, groupée par destination, avec son bouton « Enregistrer ». */
   function renderTemplatesShell() {
     const groups = S.defs.groups ?? [];
@@ -1232,13 +1235,14 @@ export function mountBotSection(container) {
           const items = keys().filter((k) => meta(k).group === g.id);
           if (!items.length) return '';
           return `<div class="bt-group" role="group" aria-labelledby="bt-g-${esc(g.id)}">
-            <div class="bt-group-label" id="bt-g-${esc(g.id)}">${esc(g.label)}</div>
+            ${TPL_REPLIES.has(g.id) ? `<details class="bt-fold"><summary class="bt-group-label" id="bt-g-${esc(g.id)}">${esc(g.label)} (${items.length})</summary>` : `<div class="bt-group-label" id="bt-g-${esc(g.id)}">${esc(g.label)}</div>`}
             ${items.map((k) => `<div role="listitem"><button type="button" class="bt-item" data-key="${esc(k)}" aria-label="Modifier « ${esc(meta(k).label ?? k)} »">
                 <span class="bt-item-main"><span class="bt-item-label">${esc(meta(k).label ?? k)}</span>
                 <span class="bt-item-sub">${esc(meta(k).target ?? '')}</span></span>
                 <span class="bt-item-state" data-state="${esc(k)}"></span>
                 <span class="bt-item-go" aria-hidden="true">Modifier</span>
               </button></div>`).join('')}
+            ${TPL_REPLIES.has(g.id) ? '</details>' : ''}
           </div>`;
         }).join('')}
       </div>`;

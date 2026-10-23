@@ -305,3 +305,6 @@
   .chan-table .chan-def { min-width: 170px; }
   .bot-tab { min-height: 48px; }
 }
+
+/* Groupe « Jeux » des modèles : replié par défaut */
+.bt-fold > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }

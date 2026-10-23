@@ -13,7 +13,7 @@ const fs = require('fs');
 
   let p = await openPage(browser, { page: 'jeux', hash: '#pronos', width: 390, height: 900, init: 'fake-jeux.js' });
   await p.waitForSelector('.pr-card', { timeout: 6000 }).catch(() => {});
-  check((await p.locator('#tab-pronos').getAttribute('aria-selected')) === 'true', 'Jeux : #pronos ouvre l’onglet');
+  check((await p.locator('#jeux-tab-pronos').getAttribute('aria-selected')) === 'true', 'Jeux : #pronos ouvre l’onglet');
   check((await p.locator('.pr-comp').count()) === 3 && (await p.locator('.pr-comp[aria-pressed="true"]').innerText()).includes('Worlds'), 'compétitions en puces, Worlds choisie');
   check((await p.locator('.pr-head .pill').innerText()).includes('2e · 7 pts'), 'mon rang : « 2e · 7 pts »');
   const ouverte = p.locator('.pr-card').first();

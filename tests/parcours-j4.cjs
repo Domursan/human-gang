@@ -49,24 +49,24 @@ const fs = require('fs');
 
   /* ---------- Page Jeux, onglet « Question du jour » ---------- */
   p = await openPage(browser, { page: 'jeux', hash: '#jour', width: 390, height: 844, init: 'fake-jeux.js', scenario: { jeux: { deja: true } } });
-  await p.waitForSelector('#panel-jour .qdj-choice', { timeout: 6000 }).catch(() => {});
+  await p.waitForSelector('#jeux-panel-jour .qdj-choice', { timeout: 6000 }).catch(() => {});
   check((await p.locator('[role="tablist"] [role="tab"]').count()) >= 3, 'Jeux : barre d’onglets (role tablist, au moins trois onglets)');
-  check((await p.locator('#tab-jour').getAttribute('aria-selected')) === 'true', 'Jeux : #jour ouvre l’onglet « Question du jour »');
-  check((await p.locator('#panel-jour .qdj-deja').innerText()).includes('déjà répondu à cette question dans le quiz'), 'déjà jouée : message pour garder sa série');
-  check((await p.locator('#panel-jour .qdj-row').count()) === 10, 'Jeux : classement sur dix lignes');
-  await p.click('#panel-jour [data-tout]');
-  check((await p.locator('#panel-jour .qdj-row').count()) === 12, 'Jeux : « Tout le classement » montre tout');
-  check((await p.locator('#panel-jour .qdj-row.is-me').count()) === 1, 'Jeux : ma ligne mise en avant');
-  await p.locator('#panel-jour .qdj-choice', { hasText: '2023' }).click();
-  await p.waitForSelector('#panel-jour .qdj-result', { timeout: 4000 }).catch(() => {});
-  const r2 = await p.locator('#panel-jour .qdj-result').innerText().catch(() => '');
+  check((await p.locator('#jeux-tab-jour').getAttribute('aria-selected')) === 'true', 'Jeux : #jour ouvre l’onglet « Question du jour »');
+  check((await p.locator('#jeux-panel-jour .qdj-deja').innerText()).includes('déjà répondu à cette question dans le quiz'), 'déjà jouée : message pour garder sa série');
+  check((await p.locator('#jeux-panel-jour .qdj-row').count()) === 10, 'Jeux : classement sur dix lignes');
+  await p.click('#jeux-panel-jour [data-tout]');
+  check((await p.locator('#jeux-panel-jour .qdj-row').count()) === 12, 'Jeux : « Tout le classement » montre tout');
+  check((await p.locator('#jeux-panel-jour .qdj-row.is-me').count()) === 1, 'Jeux : ma ligne mise en avant');
+  await p.locator('#jeux-panel-jour .qdj-choice', { hasText: '2023' }).click();
+  await p.waitForSelector('#jeux-panel-jour .qdj-result', { timeout: 4000 }).catch(() => {});
+  const r2 = await p.locator('#jeux-panel-jour .qdj-result').innerText().catch(() => '');
   check(r2.includes('Raté') && r2.includes('Bonne réponse : 2022'), 'réponse fausse : « Raté » et bonne réponse');
   check(!r2.includes('pour la bonne réponse'), 'déjà jouée : aucun gain du quiz annoncé');
   // Flèches : passer à l'onglet suivant
-  await p.focus('#tab-jour');
+  await p.focus('#jeux-tab-jour');
   await p.keyboard.press('ArrowRight');
   await sleep(300);
-  check((await p.locator('#tab-pronos').getAttribute('aria-selected')) === 'true' && p.url().endsWith('#pronos'), 'onglets : flèche droite → onglet suivant, adresse mise à jour');
+  check((await p.locator('#jeux-tab-sutom').getAttribute('aria-selected')) === 'true' && p.url().endsWith('#sutom'), 'onglets : flèche droite → onglet suivant, adresse mise à jour');
   check((await p.locator('.nav a[href="jeux.html"]').count()) === 1, 'menu : lien « Jeux »');
   check((await hscroll(p)) <= 0, 'Jeux 390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'Jeux : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
