@@ -833,10 +833,10 @@ end $$;
 -- 6. Pages du menu et droits
 -- ---------------------------------------------------------------------
 insert into public.hg_pages (slug, label, mode, in_nav, sort) values
-  ('citations', 'Citations', 'membres', true, 12),
-  ('playlist', 'Playlist', 'membres', true, 13),
-  ('carnet', 'Carnet de voyage', 'membres', true, 14),
-  ('capsule', 'Capsules', 'membres', true, 15)
+  ('citations', 'Citations', 'admin', true, 12),
+  ('playlist', 'Playlist', 'admin', true, 13),
+  ('carnet', 'Carnet de voyage', 'admin', true, 14),
+  ('capsule', 'Capsules', 'admin', true, 15)
 on conflict (slug) do nothing;
 
 -- Tables : lecture seule pour le site (les écritures passent par les RPC SECURITY DEFINER).
