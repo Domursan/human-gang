@@ -7,6 +7,8 @@
 // toute la collection, pas de défilement horizontal à 360 px.
 // Lancer : node tests/parcours-collection-longue.cjs
 const { ROOT, check, finish, openPage, sleep, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const SCN = { bigCollection: true };
 const cells = (p) => p.$$eval('#cartes-p-collection .cz-cell', (x) => x.length);
@@ -16,7 +18,7 @@ const dernierDessin = (p) => p.evaluate(() => { const m = performance.getEntries
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: SCN });
-  await p.click('[data-tab=collection]');
+  await goTab(p, 'collection');
   await p.waitForSelector('#cartes-set', { timeout: 10000 });
   await p.selectOption('#cartes-set', '__all__');
   await sleep(300);
@@ -113,7 +115,7 @@ const dernierDessin = (p) => p.evaluate(() => { const m = performance.getEntries
 
   // Remplissage : sur un grand écran (3000 px), les lots suivants se chargent seuls tant que l'écran n'est pas couvert.
   const g = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 3000, scenario: SCN });
-  await g.click('[data-tab=collection]');
+  await goTab(g, 'collection');
   await g.waitForSelector('#cartes-set', { timeout: 10000 });
   await g.selectOption('#cartes-set', '__all__');
   await sleep(900);
@@ -125,7 +127,7 @@ const dernierDessin = (p) => p.evaluate(() => { const m = performance.getEntries
 
   // Téléphone 360 px : pas de défilement horizontal
   const m = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 360, height: 780, scenario: SCN, mobile: true, dpr: 2 });
-  await m.click('[data-tab=collection]');
+  await goTab(m, 'collection');
   await m.waitForSelector('#cartes-set', { timeout: 10000 });
   await m.selectOption('#cartes-set', '__all__');
   await sleep(300);

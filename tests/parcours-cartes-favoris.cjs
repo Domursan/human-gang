@@ -22,7 +22,7 @@ const shown = (p) => p.$$eval('.cz-cell .cz-zoom', (els) => els.map((e) => e.dat
 
   /* 1 à 4 : collection de l'admin-membre (ME possède C1, C2, C3, C5, C7, C9, C11) */
   const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900, scenario: { set2Open: true } });
-  await p.click('[data-tab=collection]');
+  await p.evaluate(() => { location.hash = 'collection'; }); // onglets masqués : navigation par adresse
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   await p.selectOption('#cartes-set', '__all__');
   await p.waitForSelector('.cz-star', { timeout: 5000 }).catch(() => {});
@@ -97,7 +97,7 @@ const shown = (p) => p.$$eval('.cz-cell .cz-zoom', (els) => els.map((e) => e.dat
 
   /* 6. Téléphone 390 px : grille et étoiles sans défilement horizontal */
   const t = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 390, height: 844, scenario: { set2Open: true }, touch: true });
-  await t.click('[data-tab=collection]');
+  await t.evaluate(() => { location.hash = 'collection'; });
   await t.waitForSelector('#cartes-set', { timeout: 5000 });
   await t.selectOption('#cartes-set', '__all__');
   await t.waitForSelector('.cz-star', { timeout: 5000 }).catch(() => {});

@@ -11,7 +11,7 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, types: true, bal: 9000 }, width: 360, height: 800 });
-  await p.click('[data-tab=boutique]');
+  await p.evaluate(() => { location.hash = 'boutique'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('.c2-auc-teaser', { timeout: 5000 }).catch(() => {});
   check(/Le gobelet du RDV n° 1/.test(await txt(p, '.c2-auc-teaser')) && /Fin dans 03 h 1\d min/.test(await txt(p, '.c2-auc-teaser')), 'encart : carte et temps restant');
   await p.click('[data-c2=auc-open]');
@@ -48,7 +48,8 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   await p.click('#acd-auc-form button[type=submit]');
   await sleep(500);
   const c = (await log(p)).find((l) => l[1] === 'hg_auction_create');
-  check(c && c[2].p.card_id === 'C14' && c[2].p.min_bid === 500 && c[2].p.step === 50, 'admin : hg_auction_create (carte unique C14, 500 / 50)');
+  // Les règles partent en chaînes (readRules, enchere-regles.js) : le serveur les lit comme entiers.
+  check(c && c[2].p.card_id === 'C14' && Number(c[2].p.min_bid) === 500 && Number(c[2].p.step) === 50, 'admin : hg_auction_create (carte unique C14, 500 / 50)');
   check(!p.errs.length, 'admin : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await browser.close();
   finish();

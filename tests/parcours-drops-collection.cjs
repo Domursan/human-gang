@@ -5,8 +5,7 @@ const { check, finish, openPage, chromium } = require('./lib/harness.cjs');
 
 (async () => {
   const browser = await chromium.launch();
-  const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { closedDrop: true } });
-  await p.click('#cartes-tab-collection');
+  const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { closedDrop: true }, hash: '#collection' });
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   const opts = await p.$$eval('#cartes-set option', (o) => o.map((x) => x.textContent.trim()));
   check(opts.includes('La forêt enchantée (pas ouverte)'), `menu Série : la série fermée où j'ai une carte est proposée (${opts.join(' | ')})`);

@@ -5,13 +5,15 @@
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (hg_trade_propose renvoie un uuid, comme la vraie RPC).
 // Lancer : node tests/parcours-cartes-offre.cjs
 const { ROOT, check, finish, openPage, log, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const BOB = '00000002-0000-4000-8000-000000000002'; // Alice (membre proposé)
 const TRADE_ID = '7e57c0de-0000-4000-8000-000000000001';
 
 /** Ouvre l'onglet Échanges › Proposer, choisit le destinataire (BOB) et remplit l'offre. */
 async function proposer(p) {
-  await p.click('[data-tab=echanges]');
+  await goTab(p, 'echanges');
   await p.waitForSelector('#trd-tab-proposer', { timeout: 5000 });
   await p.click('#trd-tab-proposer');
   await p.selectOption('#trd-who', BOB);
