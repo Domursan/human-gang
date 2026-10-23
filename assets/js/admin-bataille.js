@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : réglages de la Bataille de cartes (idée J15) =====
 /*
- * Rôle : Jeux et cartes › Bataille. Activation du jeu, gains (désactivés pendant la bêta), montants et plafonds
+ * Rôle : Jeux et cartes › Bataille. Activation du jeu, gains, montants et plafonds
  * (hg_settings.cards.bataille et cards.plafonds), bornés par le serveur et journalisés.
  * Droits : Staff « cartes » et administrateur. Route : #cartes/bataille. Section : <section id="bataille">, #bataille-root.
  * RPC : hg_battle_me (lecture des réglages), hg_battle_settings_save. Exporte : mountBatailleSection.
@@ -25,7 +25,7 @@ export async function mountBatailleSection(root) {
   if (error || !data?.cfg) { root.innerHTML = `<div class="empty">${esc(error ? errMsg(error) : 'Réglages indisponibles')}</div>`; return; }
   const c = data.cfg;
   root.innerHTML = `<form class="card jm-form" id="bt-form">
-    <p class="small muted">Puissance d’une carte = rareté (1 à 6) + 1 si brillante + 2 si sa famille a l’avantage. Les gains restent coupés pendant la bêta (2 semaines conseillées) : on regarde d’abord l’équilibre.</p>
+    <p class="small muted">Puissance d’une carte = rareté (1 à 6) + 1 si brillante + 2 si sa famille a l’avantage. Les gains se coupent ici si l’équilibre pose problème.</p>
     <label class="check"><input type="checkbox" id="bt-actif" ${c.actif ? 'checked' : ''}> Bataille ouverte aux membres</label>
     <label class="check"><input type="checkbox" id="bt-gains" ${c.gains ? 'checked' : ''}> Gains en Paillettes activés</label>
     <div class="jm-grid">${CHAMPS.map(([k, cur, l, min, max]) => `<div class="field"><label for="bt-${k}">${esc(l)}</label>

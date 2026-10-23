@@ -21,7 +21,7 @@
 --   3. J10 Heardle : morceaux du gang (identifiant YouTube), propositions des membres, manches, RPC membre et Staff.
 --   4. J11 Quêtes à preuve : colonnes des modèles, table hg_quest_proofs, bucket privé hg-proofs, tirage (2 par
 --      semaine en plus des quêtes habituelles), progression, envoi, validation, nettoyage après 60 jours, 6 modèles.
---   5. J15 Bataille de cartes : decks de défense, batailles résolues côté serveur, gains (désactivés par défaut : bêta).
+--   5. J15 Bataille de cartes : decks de défense, batailles résolues côté serveur, gains (actifs par défaut).
 --   6. Droits d'exécution.
 -- =====================================================================
 
@@ -825,14 +825,14 @@ alter table public.hg_battle_decks enable row level security;
 alter table public.hg_battles enable row level security;
 revoke all on public.hg_battle_decks, public.hg_battles from anon, authenticated;
 
--- Réglages : cards.bataille = { actif (vrai par défaut), gains (faux par défaut : bêta sans Paillettes) } ;
+-- Réglages : cards.bataille = { actif (vrai par défaut), gains (vrai par défaut) } ;
 -- montants et plafonds dans cards.plafonds (hg_eco_cap) : bataille_gain 10, defense_gain 5, batailles_jour 3,
 -- defenses_jour 3, bataille_meme_adversaire 2, batailles_max_jour 20.
 create or replace function public.hg_battle_cfg()
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'actif', coalesce((hg_card_cfg()#>>'{bataille,actif}')::boolean, true),
-    'gains', coalesce((hg_card_cfg()#>>'{bataille,gains}')::boolean, false),
+    'gains', coalesce((hg_card_cfg()#>>'{bataille,gains}')::boolean, true),
     'gain', least(100, hg_eco_cap('bataille_gain', 10)), 'defense_gain', least(100, hg_eco_cap('defense_gain', 5)),
     'cap_jour', least(20, hg_eco_cap('batailles_jour', 3)), 'cap_defense', least(20, hg_eco_cap('defenses_jour', 3)),
     'meme_adversaire', least(10, greatest(1, hg_eco_cap('bataille_meme_adversaire', 2))),
