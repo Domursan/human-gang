@@ -20,6 +20,7 @@ import { rarityLabel } from '../cartes-ui.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { CFG_DEFAULT, RARITY_IDS, ICON } from './constants.js';
 import { check, nf } from './helpers.js';
+import { confirmBox } from '../ui-confirm.js';
 
 /* ---------- Constantes ---------- */
 /** Les 9 styles de cartouche (classe CSS de cartes-boosters.css, libellé). */
@@ -145,7 +146,8 @@ export function boosterOdds(eff, size) {
 export function recycleValue(eff, size, shiny, recycle) {
   const total = RARITY_IDS.reduce((s, r) => s + (eff?.[r] || 0), 0) || 1;
   const mult = Number(recycle?.shiny_multiplier) || 1;
-  const perCard = RARITY_IDS.reduce((s, r) => s + ((eff?.[r] || 0) / total) * (Number(recycle?.[r]) || 0), 0);
+  // Identité ne se recycle pas (hg_card_recycle) : valeur 0, comme hg_booster_ev (migration 093).
+  const perCard = RARITY_IDS.reduce((s, r) => s + (r === 'identite' ? 0 : ((eff?.[r] || 0) / total) * (Number(recycle?.[r]) || 0)), 0);
   return perCard * size * (1 + (Math.min(100, Math.max(0, shiny)) / 100) * (mult - 1));
 }
 
@@ -202,6 +204,9 @@ async function load() {
   B.sets = (check(sets) ?? []).filter((s) => s?.code).sort((a, b) => ((a.sort ?? 0) - (b.sort ?? 0)) || String(a.name).localeCompare(String(b.name), 'fr'));
   const cfg = check(st)?.value;
   B.recycle = { ...CFG_DEFAULT.recycle, ...(cfg && typeof cfg === 'object' && cfg.recycle && typeof cfg.recycle === 'object' ? cfg.recycle : {}) };
+  // Seuil d'alerte « machine à Paillettes » (A7 : cards.alertes.booster_pct, borné comme hg_eco_health)
+  const seuil = Number(cfg?.alertes?.booster_pct);
+  B.alertPct = Number.isFinite(seuil) ? Math.min(200, Math.max(50, seuil)) : 100;
   await loadStats();
 }
 /** Lit hg_booster_type_stats ; accepte { types: [...] } ou directement une liste. Une erreur n'empêche pas l'onglet. */
@@ -597,6 +602,7 @@ function updateLive(form) {
       const rv = recycleValue(eff, size, Number(v.shiny_rate) || 0, B.recycle);
       const share = price > 0 ? (rv / price) * 100 : null;
       const warn = share != null && share > RECYCLE_WARN;
+      const bad = share != null && share > (B.alertPct ?? 100); // A7 : ouvrir puis tout recycler fait gagner des Paillettes
       const shifted = v.excluded_rarities.filter((r) => Number(v.rates[r]) > 0);
       live.innerHTML = `<dl class="abt-odds">
           <div><dt>Au moins une Épique ou mieux</dt><dd>${pct(odds.epique)}</dd></div>
@@ -605,7 +611,8 @@ function updateLive(form) {
           <div class="${warn ? 'is-warn' : ''}"><dt>Valeur moyenne au recyclage</dt><dd>${nf(Math.round(rv))} ✦${share != null ? ` · ${pct(share)} du prix` : ''}</dd></div>
         </dl>
         <p class="small muted">Par booster de ${nf(size)} cartes, sans la garantie Épique, brillantes comprises (barème de recyclage de l’onglet Économie).</p>
-        ${warn ? `<p class="abt-warn" role="status">Attention : recycler ce booster rend en moyenne plus de ${RECYCLE_WARN} % de son prix.</p>` : ''}
+        ${bad ? `<p class="abt-warn abt-bad" role="status">Machine à Paillettes : ce booster rapporte ${pct(share)} de son prix au recyclage (seuil ${nf(B.alertPct ?? 100)} %). Ouvrir puis tout recycler ferait gagner des Paillettes.</p>`
+    : warn ? `<p class="abt-warn" role="status">Attention : recycler ce booster rend en moyenne plus de ${RECYCLE_WARN} % de son prix.</p>` : ''}
         ${shifted.length ? `<p class="small muted">${esc(shifted.map(rarityLabel).join(', '))} : exclue${shifted.length > 1 ? 's' : ''}, leur part passe à la rareté voisine dans ces calculs.</p>` : ''}`;
     }
   } else live.innerHTML = '<p class="small muted">Les chances s’affichent quand le total fait 100 %.</p>';
@@ -689,6 +696,11 @@ async function submitEditor(form, orig) {
   try { row = validate(readForm(form), orig); } catch (e) { return fail(errMsg(e)); }
   const payload = savePayload(row, orig);
   if (orig && Object.keys(payload).length === 1) { toast('Aucun changement', 'ok'); return true; }
+  // A7 : avertissement avant d'enregistrer un type déséquilibré (valeur au recyclage au-delà du seuil d'alerte)
+  const effR = effectiveRates(row.rates, row.excluded_rarities || []);
+  const shareR = effR && row.price > 0 ? (recycleValue(effR, row.size, row.shiny_rate, B.recycle) / row.price) * 100 : null;
+  if (shareR != null && shareR > (B.alertPct ?? 100)
+    && !(await confirmBox('Booster déséquilibré', `« ${row.name} » rapporterait ${pct(shareR)} de son prix au recyclage : ouvrir puis tout recycler ferait gagner des Paillettes. Enregistrer quand même ?`, { ok: 'Enregistrer quand même' }))) return false;
   let res;
   try {
     res = await saveType(row, orig);

@@ -1,0 +1,25 @@
+/* ===== Humane Gang — « Signaler » un contenu (A6), côté membre : menu « … », fenêtre, mention « masqué » ===== */
+.rp-wrap { position: relative; display: inline-flex; }
+.rp-more { min-width: 44px; min-height: 44px; display: inline-grid; place-items: center; padding: 0 8px; border-radius: 999px;
+  border: 1px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+.rp-more:hover, .rp-more[aria-expanded="true"] { color: var(--text); background: var(--surface-2); }
+.rp-menu { position: absolute; z-index: 30; right: 0; top: calc(100% + 4px); min-width: 160px; padding: 6px; border-radius: var(--radius-sm);
+  background: var(--surface); border: 1px solid var(--border-strong); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+.rp-item { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px;
+  background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rp-item:hover, .rp-item:focus-visible { background: var(--surface-2); }
+.rp-dialog { width: min(440px, calc(100vw - 32px)); }
+.rp-reasons { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rp-reasons legend { padding: 0; margin-bottom: 6px; }
+.rp-opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); cursor: pointer; }
+.rp-opt:has(input:checked) { border-color: var(--sand); box-shadow: inset 0 0 0 1px var(--sand); }
+.rp-opt input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.rp-dialog textarea { width: 100%; min-width: 0; resize: vertical; }
+.rp-hidden { margin: 6px 0 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--muted); }
+.msg-row.is-hidden .msg-bubble { opacity: .7; font-style: italic; }
+.lb-report { color: var(--text); }
+.msg-line { display: flex; align-items: center; gap: 2px; max-width: 100%; }
+.msg-line .rp-more { opacity: .6; }
+.msg-line:hover .rp-more, .msg-line .rp-more:focus-visible, .msg-line .rp-more[aria-expanded="true"] { opacity: 1; }
+.msg-hidden-note { margin-top: 2px; }

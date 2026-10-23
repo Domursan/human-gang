@@ -8,6 +8,7 @@ import { S, pseudoOf } from './state.js';
 import { canSection } from './perms.js';
 import { setCount } from './shell.js';
 import { actionLabel } from '../admin-log.js';
+import { loadEco, renderEco, ecoTodo, ecoTile } from './eco-health.js'; // A7 : santé de l'économie
 
 // Données hors coquille, chargées à l'ouverture de la vue et à chaque changement temps réel :
 // nombre d'échanges de cartes en attente, et les dernières actions du journal.
@@ -40,6 +41,8 @@ export function renderStats() {
     ['assistance', '#communication/assistance', open, open > 1 ? 'demandes ouvertes' : 'demande ouverte', open > 0],
   ];
   const shown = tiles.filter(([section]) => canSection(section));
+  const eco = ecoTile(); // A7 : alertes économie (droit « cartes »)
+  if (eco) shown.push(['cartes', eco.href, eco.value, eco.label, eco.warn]);
   $('#stats').innerHTML = shown.length
     ? shown.map(([, href, v, l, warn]) =>
       `<a class="stat${warn ? ' attention' : ''}" href="${href}"><span class="stat-value">${esc(v)}</span><span class="stat-label">${esc(l)}</span></a>`).join('')
@@ -50,6 +53,8 @@ export function renderStats() {
   if (canSection('assistance') && open) todo.push({ label: `${plural(open, 'demande ouverte', 'demandes ouvertes')} d’assistance`, meta: 'Communication · Assistance', href: '#communication/assistance', act: 'Répondre' });
   if (canSection('idees') && newIdeas) todo.push({ label: `${plural(newIdeas, 'idée nouvelle', 'idées nouvelles')}`, meta: 'Communication · Boîte à idées', href: '#communication/idees', act: 'Trier' });
   if (canSection('secret-santa') && ed && ed.status === 'tirage') todo.push({ label: `Tirage du Secret Santa ${ed.year} à faire`, meta: 'Vie du gang · Secret Santa', href: '#vie/secret-santa', act: 'Ouvrir' });
+  const ecoT = ecoTodo();
+  if (ecoT) todo.push(ecoT);
   if (canSection('cartes') && OV.trades) todo.push({ label: `${plural(OV.trades, 'échange en attente', 'échanges en attente')}`, meta: 'Jeu de cartes · Échanges', href: '#cartes/echanges', act: 'Examiner' });
   const $todo = $('#ov-todo');
   if ($todo) {
@@ -79,6 +84,8 @@ export function renderStats() {
       : '<div class="empty">Aucune action journalisée pour l’instant.</div>';
   }
 
+  renderEco();
+
   // Compteurs « à traiter » : colonne de navigation, rail et onglets
   if (canSection('idees')) setCount('idees', newIdeas);
   if (canSection('assistance')) setCount('assistance', open);
@@ -93,6 +100,7 @@ export async function loadOverview() {
   if (canSection('cartes')) {
     jobs.push(sb.from('hg_card_trades').select('id').eq('status', 'proposee')
       .then((r) => { if (r.error) throw r.error; OV.trades = r.data?.length ?? 0; }));
+    jobs.push(loadEco());
   }
   if (canSection('journal')) {
     jobs.push(sb.from('hg_admin_log').select('id, admin_id, action, target_user, created_at')
@@ -110,3 +118,6 @@ export async function loadOverview() {
 export function overviewTables() {
   return [...(canSection('journal') ? ['hg_admin_log'] : []), ...(canSection('cartes') ? ['hg_card_trades'] : [])];
 }
+
+// A7 : « Ignorer cette semaine » a changé l'état des alertes : on redessine la vue.
+document.addEventListener('hg:eco-changed', () => renderStats());

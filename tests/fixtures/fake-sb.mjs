@@ -76,6 +76,8 @@ const DB = {
   // Assistance en fil (migration 032) : réponses publiques et notes internes. S.replies : données de départ facultatives.
   // Les demandes portent updated_at / taken_by / taken_at / read_at quand le scénario les fournit (absents = demande neuve, non lue).
   hg_support_replies: S.replies || [],
+  // Migration 093 (idées A6, A9) : signalements et journal des erreurs du navigateur (scénarios S.reports, S.clientErrors).
+  hg_reports: S.reports || [], hg_client_errors: S.clientErrors || [],
   // Journal admin (Pilotage > Journal) : entrées d'exemple ; scénario S.adminLog / S.accessLog pour en fournir d'autres.
   hg_admin_log: S.adminLog || [
     { id: 1, admin_id: ME, action: 'carte_donnee', target_user: U(2), target_ref: 'Série Printemps #12', details: { carte: 'Renard', quantite: 1 }, created_at: iso(-30) },
@@ -229,7 +231,7 @@ const CASCADE = {
   hg_pages: [['hg_page_access', 'page_slug', 'slug']],
 };
 // Fonctions SQL appelables sans session (rôle anon), comme en ligne.
-const ANON_OK = new Set(['hg_support_public', 'hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
+const ANON_OK = new Set(['hg_client_error', 'hg_support_public', 'hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
 // Compteur utilisé par uid() pour produire des identifiants distincts.
 let seq = 0;
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */
@@ -594,7 +596,7 @@ export function createClient() {
       // Ajout par rapport au faux de qa/ : connexion simulée. Un visiteur (S.guest) devient
       // connecté après signInWithPassword réussi, sauf si S.badPassword.
       // Session lue dans l'état simulé.
-      getSession: async () => ({ data: { session: signed() ? { user: { id: S.uid || ME } } : null } }),
+      getSession: async () => ({ data: { session: signed() ? { user: { id: S.uid || ME }, access_token: 'jeton-factice' } : null } }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
       getUser: async () => ({ data: { user: signed() ? { id: S.uid || ME } : null } }),
       signInWithPassword: async ({ email, password } = {}) => {
@@ -865,6 +867,70 @@ export function createClient() {
           sales: { d7: { boosters: v(i, 3), paillettes: v(i, 3) * t.price }, d30: { boosters: v(i, 10), paillettes: v(i, 10) * t.price }, total: { boosters: v(i, 25), paillettes: v(i, 25) * t.price } },
           opens: { d7: v(i, 2), d30: v(i, 8), total: v(i, 20), cards: v(i, 20) * t.size, refund: 0 },
           stock: { total: v(i, 5), holders: Math.min(6, v(i, 1)) }, gifts: { d7: 0, d30: i, total: i, count: i } })) }, error: null };
+      }
+      // ---------- Migration 093 (idées A6, A7, A9) ----------
+      if (fn === 'hg_client_error') return { data: null, error: null }; // l'appel reste dans __LOG (A9)
+      const canP = (k) => myPermsNow().is_admin || myPermsNow().perms.includes(k);
+      if (fn === 'hg_report') { // A6 : une fois par contenu ; crée la demande « Signalement » ; masquage au 3e membre
+        const me = uidNow();
+        if (DB.hg_reports.some((r) => r.reporter === me && r.kind === args.p_kind && r.ref_id === String(args.p_ref))) return { data: null, error: { message: 'Tu as déjà signalé ce contenu' } };
+        const sid = 'sup-rep-' + (DB.hg_reports.length + 1);
+        const pseudo = DB.hg_profiles.find((x) => x.id === me)?.pseudo || 'Membre';
+        DB.hg_support.push({ id: sid, user_id: me, pseudo, subject: 'Signalement', message: `Signalement · ${args.p_kind}`, status: 'ouverte', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        const row = { id: 'rep-' + (DB.hg_reports.length + 1), reporter: me, kind: args.p_kind, ref_id: String(args.p_ref), reason: args.p_reason, note: args.p_note, snapshot: {}, support_id: sid, status: 'ouverte', created_at: new Date().toISOString() };
+        DB.hg_reports.push(row);
+        const n = new Set(DB.hg_reports.filter((r) => r.kind === row.kind && r.ref_id === row.ref_id && r.status === 'ouverte').map((r) => r.reporter)).size;
+        return { data: { ok: true, id: row.id, masque: n >= 3 }, error: null };
+      }
+      if (fn === 'hg_report_resolve') {
+        if (!canP('support')) return { data: null, error: { message: 'Réservé au Staff « assistance »' } };
+        const r = DB.hg_reports.find((x) => x.id === args.p_report);
+        if (!r) return { data: null, error: { message: 'Signalement introuvable' } };
+        const tab = { photo: 'hg_photos', moment: 'hg_moments', message: 'hg_messages' }[r.kind];
+        const item = (DB[tab] || []).find((x) => String(x.id) === r.ref_id);
+        let n = 0, path = null;
+        if (args.p_action === 'masquer' && item) Object.assign(item, { hidden_at: new Date().toISOString(), hidden_by: uidNow() });
+        if (args.p_action === 'reafficher' && item) Object.assign(item, { hidden_at: null, hidden_by: null });
+        if (args.p_action === 'supprimer' && item) { path = item.path || item.image_path || null; DB[tab].splice(DB[tab].indexOf(item), 1); }
+        if (args.p_action !== 'reafficher') for (const x of DB.hg_reports.filter((y) => y.kind === r.kind && y.ref_id === r.ref_id && y.status === 'ouverte')) {
+          Object.assign(x, { status: args.p_action === 'rien' ? 'rejetee' : 'traitee', action: args.p_action, resolved_at: new Date().toISOString() });
+          const sup = DB.hg_support.find((y) => y.id === x.support_id);
+          if (sup) sup.status = 'traitee';
+          DB.hg_support_replies.push({ id: 'rr' + Math.random(), support_id: x.support_id, author_id: uidNow(), body: 'C’est réglé, merci', internal: false, created_at: new Date().toISOString() });
+          n++;
+        }
+        window.__LOG.push(['report_resolve', args.p_report, args.p_action]);
+        return { data: { ok: true, closed: n, path }, error: null };
+      }
+      if (fn === 'hg_conv_hidden') return { data: (DB.hg_messages || []).filter((m) => m.conversation_id === args.p_conv && m.hidden_at).map((m) => m.id), error: null };
+      if (fn === 'hg_eco_health') {
+        if (!canP('cartes')) return { data: null, error: { message: 'Réservé à l\'admin et au Staff « cartes »' } };
+        const ig = S.ecoIgnore || null;
+        return { data: S.ecoHealth || { generated_at: new Date().toISOString(), ignore_until: ig,
+          seuils: { paillettes_pct: 25, recyclage_pct: 60, booster_pct: 100, concentration_x: 5 },
+          paillettes: { total: 184300, net7: 29400, pct: 19, days: [1200, 2400, 3100, 4200, 5100, 6000, 7400], level: 'warn' },
+          recyclage: { recycled: 152, obtained: 400, pct: 38, days: [30, 42, 35, 40, 38, 36, 38], level: 'ok' },
+          boosters: [{ id: 'argente', name: 'Argenté', price: 250, ev: 148, ratio: 59, level: 'ok' }, { id: 'dore', name: 'Doré', price: 350, ev: 262, ratio: 75, level: 'ok' },
+            { id: 'diamant', name: 'Diamant', price: 600, ev: 672, ratio: 112, level: 'bad' }, { id: 'classique', name: 'Classique', price: 100, ev: 61, ratio: 61, level: 'ok' }],
+          booster_max: { id: 'diamant', name: 'Diamant', price: 600, ev: 672, ratio: 112 },
+          concentration: { earners: 12, median: 400, max: 840, ratio: 2.1, top: null, level: 'ok' } }, error: null };
+      }
+      if (fn === 'hg_eco_alerts_ignore') {
+        if (!canP('cartes')) return { data: null, error: { message: 'Réservé' } };
+        S.ecoIgnore = args.p_days ? new Date(Date.now() + args.p_days * 864e5).toISOString() : null;
+        window.__LOG.push(['eco_ignore', args.p_days]);
+        return { data: S.ecoIgnore, error: null };
+      }
+      if (fn === 'hg_client_error_set' || fn === 'hg_client_error_ticket') {
+        if (!canP('reglages')) return { data: null, error: { message: 'Réservé au Staff « réglages »' } };
+        const e = DB.hg_client_errors.find((x) => x.id === args.p_id);
+        if (!e) return { data: null, error: { message: 'Erreur introuvable' } };
+        if (fn === 'hg_client_error_set') { e.status = args.p_status; if (args.p_status === 'corrigee') e.fixed_version = e.last_version; return { data: null, error: null }; }
+        if (!e.support_id) {
+          e.support_id = 'sup-err-' + e.id;
+          DB.hg_support.push({ id: e.support_id, user_id: uidNow(), pseudo: 'Ethan', subject: 'Bug sur le site', message: e.message, status: 'ouverte', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        }
+        return { data: e.support_id, error: null };
       }
       if (fn === 'hg_drops_active') return { data: [], error: null }; // pas de drop sur ces pages (voir fake-sb-cartes.mjs)
       // Réclamation d'un drop : toujours refusée, le drop est terminé.

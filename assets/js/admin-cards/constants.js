@@ -40,6 +40,7 @@ export const CFG_DEFAULT = {
   rewards: { daily: 100, streak_bonus: 20, streak_max: 30, rsvp: 50, presence: 100, photo: 100, moment: 100, gift_sent: 250, badge: 500, capture: 150, event_created: 100, set_complete: 300 },
   quetes_par_semaine: 3,
   drops: { quantite_max: 50, duree_max_min: 1440, duree_defaut_min: 30 },
+  alertes: { paillettes_pct: 25, recyclage_pct: 60, booster_pct: 100, concentration_x: 5 },
 };
 /* Récompenses en Paillettes avec leur libellé ; les clés correspondent à rewards.* de CFG_DEFAULT. */
 const REWARDS = [
@@ -84,4 +85,11 @@ export const ECON = [
     { k: 'drops.duree_defaut_min', l: 'Durée proposée par défaut', u: 'minutes', int: true, min: 1, max: 10080, help: 'Valeur pré-remplie dans le formulaire ; ne peut pas dépasser la durée maximale.' },
   ] },
   { g: 'Échanges', fields: [{ k: 'max_open_trades', l: 'Offres en cours maximum par personne', int: true, min: 1, help: 'Nombre d\'offres d\'échange qu\'un membre peut avoir ouvertes en même temps.' }] },
+  // A7 : seuils du bloc « Santé de l'économie » (Pilotage › Vue d'ensemble), bornés aussi par hg_eco_health.
+  { g: 'Alertes économie', hint: 'Seuils des alertes du bloc « Santé de l’économie » (Pilotage › Vue d’ensemble).', fields: [
+    { k: 'alertes.paillettes_pct', l: 'Hausse des Paillettes en 7 jours', u: '%', int: true, min: 5, max: 500, help: 'Alerte au-delà (25 % par défaut).' },
+    { k: 'alertes.recyclage_pct', l: 'Taux de recyclage de la semaine', u: '%', int: true, min: 10, max: 100, help: 'Cartes recyclées / cartes obtenues ; alerte au-delà (60 % par défaut).' },
+    { k: 'alertes.booster_pct', l: 'Rendement d’un booster au recyclage', u: '%', int: true, min: 50, max: 200, help: 'Valeur moyenne au recyclage / prix ; alerte rouge au-delà (100 % par défaut).' },
+    { k: 'alertes.concentration_x', l: 'Gains concentrés', u: '× la médiane', step: 0.5, min: 2, max: 50, help: 'Gains de la semaine d’un membre / médiane ; alerte au-delà (5 par défaut).' },
+  ] },
 ];

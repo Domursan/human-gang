@@ -7,6 +7,7 @@
 import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
 import { svg } from './icons.js';
+import { reportButtonHtml } from './report.js'; // A6 : « Signaler » un message
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -347,10 +348,15 @@ function bubbleHtml(m, prev, c) {
   const label = !m.mine && !sameGroup
     ? `<span class="msg-sender${isSanta ? ' is-santa' : ''}">${isSanta ? I.mask : ''}${esc(m.sender_label)}</span>` : '';
   const d = new Date(m.created_at);
-  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}" data-id="${esc(m.id)}">
+  const hidden = S.hidden?.has(Number(m.id)); // A6 : message masqué par le Staff
+  const bubble = `<div class="msg-bubble"><span class="visually-hidden">${m.mine ? 'Toi' : esc(m.sender_label)} : </span><span class="msg-text">${linkify(m.body)}</span>
+      <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>`;
+  // Message d'un autre membre (sauf conversation d'assistance) : menu « … » avec « Signaler »
+  const canReport = !m.mine && !hidden && c?.kind !== 'support';
+  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}${hidden ? ' is-hidden' : ''}" data-id="${esc(m.id)}">
     ${label}
-    <div class="msg-bubble"><span class="visually-hidden">${m.mine ? 'Toi' : esc(m.sender_label)} : </span><span class="msg-text">${linkify(m.body)}</span>
-      <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>
+    ${canReport ? `<div class="msg-line">${bubble}${reportButtonHtml('message', m.id, 'message')}</div>` : bubble}
+    ${hidden && m.mine ? '<span class="small muted msg-hidden-note">Masqué par le Staff : l’autre personne ne le voit plus.</span>' : ''}
   </div>`;
 }
 /**
@@ -445,8 +451,10 @@ async function openConv(id, { focus = true } = {}) {
   renderThreadShell(c);
   S.loadingThread = true;
   try {
-    const rows = await fetchMessages(id, 0);
+    const [rows, hid] = await Promise.all([fetchMessages(id, 0),
+      sb.rpc('hg_conv_hidden', { p_conv: id }).then((r) => r.data || [], () => [])]); // A6 : messages masqués
     if (S.current !== id) return;
+    S.hidden = new Set((Array.isArray(hid) ? hid : []).map(Number));
     S.msgs = rows;
     S.lastId = rows.length ? rows[rows.length - 1].id : 0;
     renderMessages();

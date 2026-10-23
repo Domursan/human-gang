@@ -53,13 +53,16 @@ export async function loadBadges() {
 export async function loadIdeas() { S.ideas = check(await sb.from('hg_ideas').select('*').order('created_at', { ascending: false })) ?? []; }
 /** Demandes (tri par activité), leurs réponses (notes internes comprises) et l'identifiant de l'admin connecté. */
 export async function loadSupport() {
-  const [s, r, u] = await Promise.all([
+  const [s, r, u, rep] = await Promise.all([
     sb.from('hg_support').select('*').order('updated_at', { ascending: false }),
     sb.from('hg_support_replies').select('*').order('created_at'),
     getUser(),
+    // A6 : signalements liés aux demandes (table absente avant la migration 093 : liste vide, sans erreur)
+    sb.from('hg_reports').select('*').order('created_at', { ascending: false }).then((x) => (x.error ? { data: [] } : x), () => ({ data: [] })),
   ]);
   S.support = check(s) ?? [];
   S.supportReplies = check(r) ?? [];
+  S.reports = rep?.data ?? [];
   S.meId = u?.id ?? null;
 }
 

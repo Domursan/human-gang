@@ -540,7 +540,8 @@ function openPhoto(eventId, idx) {
     url: S.urls.get(p.path),
     react: p.id,
     alt: `Photo ajoutée par ${pseudo(p.user_id)}`,
-    caption: [p.caption, `Ajoutée par ${pseudo(p.user_id)}`].filter(Boolean).join(' · '),
+    caption: [p.caption, `Ajoutée par ${pseudo(p.user_id)}`, p.hidden_at ? 'masquée par le Staff (visible de toi seul et du Staff)' : ''].filter(Boolean).join(' · '),
+    report: p.user_id !== me.id ? p.id : null, // A6 : « Signaler » une photo d'un autre membre
     onDelete: (p.user_id === me.id || isAdmin) ? () => deletePhoto(p) : null,
   })).filter((x) => x.url);
   openLightbox(items, idx);

@@ -16,6 +16,7 @@ import { pluralCount } from './utils.js';
 import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
 import { chargerReglagesLot3, delaiPassee } from './reglages-valeurs-lot3.js';
 import { lireQuota, restants, messageSouvenir } from './eco-quota.js';
+import { reportButtonHtml, hiddenNoteHtml } from './report.js'; // A6 : « Signaler » un moment
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit plus de choses (fantômes, modifications d'autrui).
@@ -190,6 +191,7 @@ function momentCard(m) {
     <h3 class="tl-title">${esc(m.title)}</h3>
     ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy"></button>` : ''}
     ${m.body ? `<p class="tl-body">${esc(m.body)}</p>` : ''}
+    ${m.hidden_at ? hiddenNoteHtml('moment') : ''}
     ${reactionBarHtml('moment', m.id)}
     <div class="tl-foot">
       ${author ? `<span class="tl-author">${avatarHtml(author, 26)}<span class="small muted">Raconté par ${esc(author.pseudo)}</span></span>` : '<span></span>'}
@@ -197,6 +199,7 @@ function momentCard(m) {
         <button type="button" class="btn btn-ghost btn-sm" data-act="edit" data-id="${esc(m.id)}">${I.edit}<span>Modifier</span></button>
         <button type="button" class="btn btn-danger btn-sm" data-act="delete" data-id="${esc(m.id)}">${I.trash}<span>Supprimer</span></button>
       </span>` : ''}
+      ${m.created_by !== me.id ? reportButtonHtml('moment', m.id, m.title) : ''}
     </div>
   </article>`;
 }

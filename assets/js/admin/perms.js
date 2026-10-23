@@ -27,6 +27,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  // Idées A8 et A9 : Site › Fonctionnement › Erreurs du site (droit « reglages ») et Archives (administrateur seulement)
+  erreurs: 'reglages', archives: 'admin',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -121,6 +123,8 @@ export const DOMAINS = [
     ]),
     ...under('Fonctionnement', [
       { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
+      { id: 'erreurs', label: 'Erreurs du site', section: 'erreurs' },
+      { id: 'archives', label: 'Archives', section: 'archives' },
       { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
     ]),
     ...under('Apparence', [

@@ -23,6 +23,7 @@ const PART_OF = {
   'Boosters': 'tirage', 'Taux de tirage': 'tirage', 'Brillantes et garantie': 'tirage',
   'Recyclage': 'recyclage', 'Fabrication': 'recyclage',
   'Quêtes de la semaine': 'limites', 'Cartes sauvages (drops)': 'limites', 'Échanges': 'limites',
+  'Alertes économie': 'recyclage', // A7 (dans Limites, l'onglet dépassait 1 400 px)
 };
 /** Libellé et adresse de chaque partie (sous-sections de la coquille). */
 export const ECON_PARTS = {

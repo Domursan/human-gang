@@ -12,6 +12,7 @@ importent aussi `../_shared/dyn-announce.ts`).
 | `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts` | `false` |
 | `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts` | `false` |
 | `hg-album` | `hg-album/index.ts`, `_shared/discord.ts` (CORS et réponse JSON ; aucun appel Discord, pas de jeton) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` | `true` |
+| `hg-archive` | `hg-archive/index.ts`, `hg-archive/lib.ts`, `_shared/discord.ts` (CORS) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` ; migration 093 (RPC `hg_archive_year`) appliquée avant | `true` |
 | `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
@@ -218,3 +219,10 @@ Aucun nouveau secret. `_shared/channels.ts` a changé : les trois fonctions doiv
   fois) sont retirés **avant** la limite de 10 salons. `channel: true` sans salon d'annonces valide → 400.
 - `bot_test` sans type : un `announce_channel_id` ou `admin_discord_id` qui n'est pas un identifiant Discord (17 à 20 chiffres)
   est ignoré (jamais placé dans l'adresse de l'API).
+
+## Archive annuelle (hg-archive, idée A8)
+Fonction `hg-archive` : ZIP d'une année complète pour l'administrateur (Site › Archives). Appliquer d'abord la migration 093.
+- Déployer `hg-archive/index.ts` avec `hg-archive/lib.ts` et `../_shared/discord.ts`, `verify_jwt` à `true`. Aucun secret.
+- Entrée `POST { year, parts, part }` ; en-tête de réponse `X-Archive-Parts` (nombre de parties, plafond `hg_settings.albums.max_mo` par partie).
+- Vérification : avec le JWT de l'admin, `{"year": 2025, "parts": ["moments"], "part": 1}` renvoie un ZIP (index.html, LISEZ-MOI.txt,
+  donnees/annee.json) ; avec le JWT d'un membre, 403.

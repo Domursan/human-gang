@@ -139,6 +139,7 @@ function ensureLightbox() {
     <div class="lb-bar">
       <span class="lb-count small" aria-live="polite"></span>
       <div class="lb-actions">
+        <button type="button" class="btn btn-ghost lb-report" hidden>Signaler</button>
         <button type="button" class="btn btn-danger lb-del" hidden>${ICON.trash}<span>Supprimer</span></button>
         <button type="button" class="btn btn-ghost lb-close" aria-label="Fermer">${ICON.close}</button>
       </div>
@@ -162,6 +163,7 @@ function ensureLightbox() {
     d.querySelector('.lb-prev').hidden = !many;
     d.querySelector('.lb-next').hidden = !many;
     d.querySelector('.lb-del').hidden = !it.onDelete;
+    d.querySelector('.lb-report').hidden = !it.report; // A6 : « Signaler » (photo d'un autre membre)
     const rb = d.querySelector('.lb-react');
     rb.hidden = !it.react;
     rb.innerHTML = it.react ? reactionBarHtml('photo', it.react) : '';
@@ -181,6 +183,10 @@ function ensureLightbox() {
   });
   d.addEventListener('click', (e) => { if (e.target === d || e.target.classList.contains('lb-stage')) d.close(); });
   d.addEventListener('close', () => { d.querySelector('img').removeAttribute('src'); lb.opener?.focus?.(); });
+  d.querySelector('.lb-report').addEventListener('click', (e) => {
+    const it = lb.items[lb.i];
+    if (it?.report) import('./report.js').then((m) => m.openReport('photo', it.report, e.currentTarget)).catch(() => {});
+  });
   d.querySelector('.lb-del').addEventListener('click', async () => {
     const it = lb.items[lb.i];
     if (!it?.onDelete || !(await confirmBox('Supprimer cette photo ?', '', { ok: 'Supprimer', danger: true }))) return;
@@ -198,7 +204,8 @@ function ensureLightbox() {
 
 /**
  * Ouvre la visionneuse.
- * items : [{ url, alt?, caption?, react?: id de la photo (barre de réactions), onDelete?: async (item) => boolean }]
+ * items : [{ url, alt?, caption?, react?: id de la photo (barre de réactions), report?: id de la photo à signaler (A6),
+ *   onDelete?: async (item) => boolean }]
  */
 export function openLightbox(items, index = 0) {
   if (!items?.length) return;

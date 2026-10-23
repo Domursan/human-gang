@@ -50,6 +50,8 @@ const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+  { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Site › Erreurs du site (hg_client_errors, A9)
+  { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Site › Archives (fonction hg-archive, A8)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -218,6 +220,8 @@ for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['men
   });
 }
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
+if (MOUNT.erreurs) registerSub('site/erreurs', { main: () => MOUNT.erreurs($('#errors-root')) }); // A9 : erreurs JavaScript regroupées
+if (MOUNT.archives) registerSub('site/archives', { main: () => MOUNT.archives($('#archives-root')) }); // A8 : archive annuelle (admin)
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */
 // Les réglages du bot et du thème se chargent avec leur section (admin-bot.js, admin-themes.js).
@@ -243,4 +247,5 @@ if (has('badges')) renderBadges();
 if (has('idees')) renderIdeas();
 if (has('assistance')) renderSupport();
 startShell();
+if (MOUNT.erreurs && has('erreurs')) import('./admin-errors.js').then((m) => m.countNewErrors()).catch(() => {}); // compteur du rail (A9)
 initLive(); // temps réel du panel (voyant du rail, compteurs, sections) ; sans effet si indisponible

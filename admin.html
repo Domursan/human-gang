@@ -59,6 +59,8 @@
   <link rel="stylesheet" href="assets/css/admin-eggs.css">
   <link rel="stylesheet" href="assets/css/admin-fil.css">
   <link rel="stylesheet" href="assets/css/admin-champs.css">
+  <link rel="stylesheet" href="assets/css/admin-errors.css">
+  <link rel="stylesheet" href="assets/css/admin-eco.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="domain" data-info="no">
@@ -121,6 +123,10 @@
           <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
           <div class="ov">
             <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
+            <div class="card ov-card eco-card" id="ov-eco-card" hidden>
+              <h3 class="card-title">Santé de l’économie</h3>
+              <div id="ov-eco"><div class="empty">Chargement…</div></div>
+            </div>
             <div class="ov-cols">
               <div class="card ov-card" id="ov-todo-card">
                 <h3 class="card-title">À traiter</h3>
@@ -238,6 +244,14 @@
         <section id="champs" class="admin-section" data-perm="reglages" aria-labelledby="h-champs">
           <h2 id="h-champs" class="section-title">Champs du profil</h2>
           <div id="champs-root"><div class="empty">Chargement des champs…</div></div>
+        </section>
+        <section id="erreurs" class="admin-section" data-perm="reglages" aria-labelledby="h-erreurs">
+          <h2 id="h-erreurs" class="section-title">Erreurs du site</h2>
+          <div id="errors-root"><div class="empty">Chargement des erreurs…</div></div>
+        </section>
+        <section id="archives" class="admin-section" data-admin-only aria-labelledby="h-archives">
+          <h2 id="h-archives" class="section-title">Archives</h2>
+          <div id="archives-root"><div class="empty">Chargement…</div></div>
         </section>
         <section id="theme" class="admin-section" aria-labelledby="h-theme">
           <h2 id="h-theme" class="section-title">Thème</h2>
