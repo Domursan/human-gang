@@ -8,12 +8,14 @@
 //   Bascule « Note interne » : le message part en note (visible seulement dans le panel, teinte différente).
 //   Ctrl+Entrée (ou ⌘+Entrée) envoie ; Entrée seule saute une ligne.
 //   composer : false pour un fil en lecture seule (pas de zone de réponse, rien à envoyer en base).
+//   files : pièces jointes du message [{ path, name, mime, size }] (assistance) : vignettes ou PDF, liens signés.
 //   rowAction(m) : HTML optionnel sous la bulle (ex. bouton « Supprimer » avec data-row-act="<id>") ; onRowAction(message, bouton).
 // Utilisé par support.js (fil de l'assistance) et ideas.js (idée en lecture seule). Dépend de core/util.js, core/ui.js, time.js, common.js.
 import { esc, avatarHtml } from '../../core/util.js';
 import { toast } from '../../core/ui.js';
 import { clock } from './time.js';
 import { ICON } from './common.js';
+import { attachmentsHtml, hydrateAttachments } from '../../support-files.js';
 
 // Identifiant unique par fil (pour relier le libellé à la zone de saisie).
 let seq = 0;
@@ -81,11 +83,13 @@ export function createThread(el, opts = {}) {
         <div class="ui-stack">
           <div class="ui-meta">${esc(meta[0])}${meta.slice(1).map((x) => ` · ${esc(x)}`).join('')}</div>
           <div class="ui-bubble">${esc(m.body)}</div>
+          ${m.files?.length ? attachmentsHtml(m.files) : ''}
           ${opts.rowAction ? opts.rowAction(m) : ''}
         </div>
       </div>`;
     }).join('');
     $log.scrollTop = $log.scrollHeight;
+    if (state.messages.some((m) => m.files?.length)) hydrateAttachments($log);
   }
 
   // Actions par message (rowAction) : délégation sur le journal, le message est retrouvé par son identifiant

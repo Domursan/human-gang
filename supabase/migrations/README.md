@@ -50,6 +50,7 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `073_securite_profils_staff.sql` | Sécurité (audit du 23/10, paquet B) : garde des profils élargie (I1, I5), fantôme rattaché seulement par lien nominatif (I2), plus d'accès direct du Staff aux messages (I4) ni d'écriture directe sur l'économie (M5), audit `hg_wallets`, bornes des récompenses `hg_settings`, clés inconnues réservées à l'admin, buckets `photos`/`hg-assets`/`d-files`, `hg_backup_027` retirée | **à appliquer** (après 072) |
 | `074_securite_echanges.sql` | Sécurité, paquet C : verrous des exemplaires (dons, échanges, recyclage), captures d'événement, fantômes refusés comme destinataires, plafond et ancienneté des Paillettes échangées (réglage `echanges`), ancienne ouverture payante `hg_open_booster` refusée, liens d'invitation plafonnés, abonnements push contrôlés | **à appliquer cette nuit** (après 073 ; puis le front `cartes.js`, `admin-invite-links.js`) |
 | `075_securite_annonces.sql` | Sécurité, paquet D : annonces | **à appliquer cette nuit** (après 074) |
+| `078_assistance_pj_favoris.sql` | Assistance : pièces jointes (bucket privé `hg-support-files`, table `hg_support_files`, RPC `hg_support_add`) ; cartes en favoris (`hg_card_favorites`, RPC `hg_card_favorite_set`, nettoyage à la sortie de la collection). Aucune récompense | **à appliquer** (après 075) |
 **État réel au 23/10/2026** : l'outil de migration de production connaît 038 → 071 (plus les migrations `airpe_*` et
 `domursan_01_schema` des autres applications du projet). 001 → 037 et 063 ont été appliqués à la main.
 
