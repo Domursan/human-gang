@@ -10,9 +10,11 @@ importent aussi `../_shared/dyn-announce.ts`).
 | `hg-notify` | `hg-notify/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/bot-media.ts`, `_shared/reglages.ts` | `true` |
 | `hg-support` | `hg-support/index.ts`, `_shared/discord.ts`, `_shared/templates.ts`, `_shared/bot-templates.json` | `false` |
 | `hg-birthdays` | `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts` | `false` |
-| `hg-cron` | `hg-cron/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts` | `false` |
+| `hg-cron` | `hg-cron/index.ts`, `_shared/cine-announce.ts` (migration 087), `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`, `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts` | `false` |
 | `hg-album` | `hg-album/index.ts`, `_shared/discord.ts` (CORS et réponse JSON ; aucun appel Discord, pas de jeton) ; dépendances `npm:fflate`, `npm:@supabase/supabase-js` | `true` |
 | `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |
+| `hg-discord` | `hg-discord/index.ts`, `hg-discord/handler.ts`, `hg-discord/lib.ts` (pas de `_shared`) | `false` |
+| `hg-calendar` | `hg-calendar/index.ts`, `hg-calendar/feed.ts` (pas de `_shared`) | `false` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
 l'en-tête `x-cron-secret` de `hg-cron` et `hg-birthdays`.
@@ -218,3 +220,15 @@ Aucun nouveau secret. `_shared/channels.ts` a changé : les trois fonctions doiv
   fois) sont retirés **avant** la limite de 10 salons. `channel: true` sans salon d'annonces valide → 400.
 - `bot_test` sans type : un `announce_channel_id` ou `admin_discord_id` qui n'est pas un identifiant Discord (17 à 20 chiffres)
   est ignoré (jamais placé dans l'adresse de l'API).
+
+## Calendrier du gang et commandes slash : hg-calendar et hg-discord (migration 087)
+
+Ordre : appliquer `supabase/migrations/087_idees_vd.sql`, puis déployer les deux fonctions (verify_jwt = false pour les deux).
+
+- `hg-calendar` : flux ICS d'abonnement personnel, `GET …/functions/v1/hg-calendar?t=<jeton>` (jeton de `hg_calendar_tokens`,
+  régénérable par le membre). Lecture par la RPC `hg_calendar_feed` (clé service seulement). Aucun nouveau secret (`SITE_URL` facultatif).
+  Fichiers MCP : `[{ "name": "index.ts", … }, { "name": "feed.ts", … }]`.
+- `hg-discord` : « Interactions Endpoint URL » de l'application Discord (commandes slash). Secrets : `DISCORD_PUBLIC_KEY` (obligatoire,
+  sans elle tout est refusé en 401), `DISCORD_GUILD_ID` (recommandé), `SITE_URL` (facultatif). Fichiers MCP : `index.ts`, `handler.ts`, `lib.ts`.
+  `register.ts` n'est PAS déployé : c'est le script local d'enregistrement des commandes (voir BOT.md, section 10).
+- Tests hors Deno : `node tests/check-hg-discord.mjs` (signature, rejeu, boutons) et `node tests/check-hg-calendar.mjs` (format ICS).

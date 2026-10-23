@@ -27,6 +27,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  // Idées V8, V9 (calendrier, ciné-club) et D3 (commandes slash) : migration 087
+  rdv: 'evenements', commandes: 'bot',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -66,6 +68,7 @@ export const DOMAINS = [
     ...under('Rendez-vous', [
       { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
       { id: 'evenements', label: 'Événements', section: 'evenements' },
+      { id: 'rdv', label: 'Calendrier et ciné', section: 'rdv' },
     ]),
     ...under('Badges', [
       { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
@@ -111,6 +114,7 @@ export const DOMAINS = [
     ]),
     ...under('Discord', [
       { id: 'bot', label: 'Bot Discord', section: 'bot' },
+      { id: 'commandes', label: 'Commandes slash', section: 'commandes' },
     ]),
   ] },
   { id: 'site', label: 'Site', icon: 'globe', subs: [

@@ -14,7 +14,7 @@ const dir = __dirname;
 /** Limite de temps d'un fichier de test, en millisecondes. */
 const LIMITE_MS = 4 * 60_000;
 const parcours = fs.readdirSync(dir).filter((f) => /^parcours-.*\.cjs$/.test(f)).sort();
-const suite = ['check-js.cjs', 'check-rpc.mjs', 'smoke.cjs', 'smoke-admin.cjs', 'composants-admin-ui.cjs', ...parcours];
+const suite = ['check-js.cjs', 'check-rpc.mjs', 'check-hg-discord.mjs', 'check-hg-calendar.mjs', 'smoke.cjs', 'smoke-admin.cjs', 'composants-admin-ui.cjs', ...parcours];
 
 /**
  * Lance un fichier de test et indique s'il a réussi dans le temps imparti.

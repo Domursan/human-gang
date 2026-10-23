@@ -1,0 +1,78 @@
+/* ===== Humane Gang — Ciné-club (cine.html) ===== */
+/* Teinte prune du ciné (--plum, base.css) ; vignettes dessinées en CSS (pas d'affiches officielles). */
+
+.cine [hidden] { display: none !important; }
+.cine-eyebrow { color: var(--plum); }
+.btn-sm { min-height: 44px; padding: 8px 14px; font-size: 14px; }
+.cine-icon { width: 44px; min-height: 44px; padding: 0; flex: none; }
+.cine-error { color: var(--rose); }
+.cine-k { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--plum); margin: 0; font-family: var(--font-body); }
+.cine-k-sand { color: var(--sand); letter-spacing: 1px; }
+
+/* Prochaine séance */
+.cine-cur { display: flex; flex-direction: column; gap: 14px; padding: 20px; margin-bottom: 28px;
+  background: color-mix(in srgb, var(--plum) 10%, var(--surface)); border-color: color-mix(in srgb, var(--plum) 28%, var(--border)); }
+.cine-cur p { margin: 0; }
+.cine-cur-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cine-forfait { color: var(--amber); }
+.cine-films { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.cine-film { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border-strong); border-radius: 14px; padding: 10px; background: var(--surface); min-width: 0; }
+.cine-film.is-mine { border: 2px solid var(--plum); }
+.cine-film p { overflow-wrap: anywhere; }
+.cine-film-t { margin: 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; font-family: var(--font-body); }
+.cine-film-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cine-mine { background: color-mix(in srgb, var(--plum) 25%, var(--surface)); color: var(--text); padding: 6px 10px; }
+.cine-host-btn { align-self: flex-start; }
+.cine-bar { height: 8px; border-radius: 999px; background: var(--progress-bg, var(--surface-2)); overflow: hidden; }
+.cine-bar span { display: block; height: 100%; background: var(--plum); border-radius: inherit; }
+.cine-poster { height: 92px; border-radius: 10px; display: flex; align-items: flex-end; padding: 8px; overflow: hidden;
+  background: linear-gradient(160deg, hsl(var(--h) 30% 30%), hsl(var(--h) 25% 9%)); color: #F2EFEA;
+  font-family: var(--font-display); font-size: 17px; line-height: 1.05; }
+.cine-poster span { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.cine-poster.is-big { height: 140px; width: 110px; flex: none; font-size: 15px; }
+.cine-chosen { display: flex; gap: 16px; align-items: flex-end; }
+.cine-chosen-t { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; font-size: 24px; overflow-wrap: anywhere; }
+.cine-presence { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.cine-presence .btn { min-height: 44px; }
+.cine-host summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--muted); font-size: 14px; }
+.cine-host .btn-row { margin-top: 6px; }
+
+/* Sections */
+.cine-sec { margin-bottom: 32px; }
+.cine-sec-t { font-family: var(--font-display); font-weight: 400; font-size: 24px; margin: 0 0 12px; }
+.cine-wait-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.cine-wait-head p { margin: 0; }
+.cine-wait { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cine-wait-i { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); flex-wrap: wrap; }
+.cine-wait-txt { display: flex; flex-direction: column; gap: 2px; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.cine-wait-act { display: flex; gap: 6px; }
+
+/* Films vus */
+.cine-seen { display: flex; flex-direction: column; gap: 10px; padding: 18px; margin-bottom: 14px; }
+.cine-seen-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cine-seen-t { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; }
+.cine-year { font-family: var(--font-body); font-size: 15px; }
+.cine-rating { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cine-stars { display: inline-flex; gap: 2px; color: var(--sand); }
+.cine-reviews { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cine-review { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
+.cine-review-b { display: flex; flex-direction: column; gap: 4px; min-width: 0; align-items: flex-start; }
+.cine-review-t { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.cine-spoiler { margin: 0; font-size: 14px; filter: blur(5px); user-select: none; overflow-wrap: anywhere; }
+@media (prefers-contrast: more) { .cine-spoiler { filter: none; color: transparent; background: var(--border-strong); border-radius: 4px; } }
+.cine-seen-foot { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.cine-top { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.cine-top li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+
+/* Boîtes de dialogue */
+.cine-dlg { width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: auto; }
+.cine-dlg-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.cine-dlg-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.15; margin: 0; overflow-wrap: anywhere; }
+.cine-form-err { color: var(--rose); margin: 0; }
+.cine-form-actions { justify-content: flex-end; }
+.cine-starpick, .cine-pick { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.cine-pick { flex-direction: column; }
+.cine-starpick legend, .cine-pick legend { font-size: 14px; color: var(--muted); padding: 0 4px; }
+.cine-starlab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; }
+.cine-starlab input { width: 20px; height: 20px; accent-color: var(--plum); }
+@media (max-width: 480px) { .cine-form-actions .btn { flex: 1 1 auto; } .cine-chosen { flex-direction: column; align-items: flex-start; } }

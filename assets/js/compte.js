@@ -461,6 +461,7 @@ async function renderMember(user) {
           <label for="pf-discord">ID Discord ${tagPrivate}</label>
           <input id="pf-discord" inputmode="numeric" readonly aria-readonly="true" aria-describedby="pf-discord-hint" value="${esc(p.discord_id || '')}" placeholder="Pas encore enregistré">
           <p class="small muted hint" id="pf-discord-hint">Sert uniquement au bot pour t’envoyer des messages privés. Pour ta sécurité, seul le Staff l’enregistre ou le modifie : ${p.discord_id ? 'pour le changer' : 'pour l’ajouter'}, <a href="assistance.html">demande au Staff</a> en lui donnant ton identifiant (Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l’identifiant »).</p>
+          ${p.discord_id ? '<p class="small muted hint">Commandes Discord disponibles sur le serveur du gang : /paillettes, /carte, /sortie et /quiz (<a href="aide.html#commandes-discord">mode d’emploi</a>).</p>' : ''}
         </div>
         <label class="check"><input type="checkbox" id="pf-bot" ${p.bot_optin ? 'checked' : ''}> <span>Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels)</span></label>
         <label class="check"><input type="checkbox" id="pf-remind-irl" ${p.remind_irl ? 'checked' : ''}> <span>Me rappeler mes sorties IRL par message Discord, 24 h et 2 h avant</span></label>
