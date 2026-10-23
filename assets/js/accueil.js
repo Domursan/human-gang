@@ -174,7 +174,7 @@ function renderMemberShell() {
 
     <section class="row home-row">
       <div class="card home-feed">
-        <h2 class="card-title">${ICON.pulse} Fil d'activité</h2>
+        <div class="feed-head"><h2 class="card-title">${ICON.pulse} Fil d'activité</h2><div class="feed-tools" id="feed-tools"></div></div>
         <ul class="feed" id="feed" aria-live="polite"><li class="skeleton-row"></li><li class="skeleton-row"></li><li class="skeleton-row"></li></ul>
       </div>
       <div class="card home-bdays">
@@ -410,16 +410,20 @@ async function loadFeed() {
   const ul = $('#feed');
   try {
     const [{ data, error }, all] = await Promise.all([
-      sb.from('hg_activity').select('id,user_id,kind,text,created_at').order('created_at', { ascending: false }).limit(10),
+      sb.from('hg_activity').select('*').order('created_at', { ascending: false }).limit(10), // ref (migration 090) : lien vers un sondage
       members().catch(() => []),
     ]);
     if (error) throw error;
-    if (!data?.length) { ul.innerHTML = `<li class="empty">Rien pour l'instant. Le fil se remplira au fil des inscriptions, sorties et souvenirs.</li>`; return; }
+    if (!data?.length) {
+      ul.innerHTML = `<li class="empty">Rien pour l'instant. Le fil se remplira au fil des inscriptions, sorties et souvenirs.</li>`;
+      import('./polls.js').then((m) => m.mountPolls({ feed: null, head: $('#feed-tools'), reload: loadFeed })).catch(() => {});
+      return;
+    }
     const byId = new Map(all.map((m) => [m.id, m]));
     ul.innerHTML = data.map((a) => {
       const m = a.user_id ? byId.get(a.user_id) : null;
       const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" data-on-error="remove"></span>`;
-      return `<li class="feed-item">
+      return `<li class="feed-item" data-kind="${esc(a.kind)}"${a.ref ? ` data-ref="${esc(a.ref)}"` : ''}>
         ${av}
         <div class="feed-text">
           <p>${feedText(a, m)}</p>
@@ -427,6 +431,9 @@ async function loadFeed() {
         </div>
       </li>`;
     }).join('');
+    // Sondages libres (migration 090) : cartes de vote à la place des lignes « sondage », boutons de l'en-tête.
+    import('./polls.js').then((m) => m.mountPolls({ feed: ul, head: $('#feed-tools'), rows: data, members: byId, reload: loadFeed }))
+      .catch((e) => console.warn('[sondages]', e));
   } catch (e) { ul.innerHTML = `<li>${failBox(e)}</li>`; }
 }
 

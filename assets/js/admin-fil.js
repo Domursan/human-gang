@@ -28,6 +28,9 @@ export const FIL_KINDS = Object.freeze({
   cartes: 'Cartes',
   ss_draw: 'Secret Santa',
   secret: 'Secret',
+  merci: 'Merci',
+  sondage: 'Sondage',
+  sondage_resultat: 'Résultat de sondage',
 });
 /** Dates : heure suisse. */
 const dtFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -75,7 +78,7 @@ export async function mountFilSection(root) {
 async function reload() {
   try {
     const [act, dir] = await Promise.all([
-      sb.from('hg_activity').select('id, user_id, kind, text, created_at').order('created_at', { ascending: false }).limit(LIMIT),
+      sb.from('hg_activity').select('*').order('created_at', { ascending: false }).limit(LIMIT), // ref : merci ou sondage (migration 090)
       sb.rpc('hg_staff_directory'),
     ]);
     if (act.error) throw act.error;
@@ -103,6 +106,17 @@ function renderKinds() {
   sel.innerHTML = `<option value="">Tous les types</option>${kinds.map((k) => `<option value="${esc(k)}"${k === F.kind ? ' selected' : ''}>${esc(kindLabel(k))} (${F.rows.filter((r) => r.kind === k).length})</option>`).join('')}`;
 }
 
+/**
+ * Action propre à l'objet de la ligne (migration 090) : retirer le merci lui-même (Staff « souvenirs ») ou le sondage
+ * (Staff « reglages ») ; la RPC vérifie le droit et journalise.
+ */
+function extraAction(r) {
+  const ref = String(r.ref || '');
+  if (/^merci:[0-9a-f-]{36}$/i.test(ref)) return `<button class="btn btn-ghost afl-extra" type="button" data-afl="merci" data-ref="${esc(ref.slice(6))}" data-id="${esc(String(r.id))}">Retirer le merci</button>`;
+  if (/^poll:[0-9a-f-]{36}$/i.test(ref) && r.kind === 'sondage') return `<button class="btn btn-ghost afl-extra" type="button" data-afl="poll" data-ref="${esc(ref.slice(5))}" data-id="${esc(String(r.id))}">Retirer le sondage</button>`;
+  return '';
+}
+
 /** Dessine la liste filtrée. */
 function renderList() {
   const box = F.root.querySelector('#afl-list');
@@ -121,6 +135,7 @@ function renderList() {
         <span class="small muted">${esc(authorOf(r))} · <time datetime="${esc(r.created_at || '')}">${esc(fmtDt(r.created_at))}</time></span>
       </div>
       <p class="afl-text">${esc(r.text)}</p>
+      ${extraAction(r)}
       <button class="btn btn-danger afl-del" type="button" data-afl="del" data-id="${esc(String(r.id))}"
         aria-label="Supprimer l’entrée « ${esc(String(r.text).slice(0, 60))} »"${F.busy.has(String(r.id)) ? ' disabled aria-busy="true"' : ''}>${TRASH}<span>Supprimer</span></button>
     </li>`).join('')}</ul>
@@ -140,6 +155,20 @@ async function onClick(ev) {
     F.shown += LOT;
     renderList();
     F.root.querySelectorAll('.afl-row')[first]?.querySelector('.afl-del')?.focus();
+    return;
+  }
+  if (b.dataset.afl === 'merci' || b.dataset.afl === 'poll') {
+    const isPoll = b.dataset.afl === 'poll';
+    const ok = await confirmBox(isPoll ? 'Retirer ce sondage ?' : 'Retirer ce merci ?',
+      isPoll ? 'Le sondage, ses votes et ses lignes du fil disparaissent pour tout le monde. L’action est journalisée.'
+        : 'Le merci ne compte plus, quitte la fiche du membre et le fil. L’action est journalisée.', { ok: 'Retirer', danger: true });
+    if (!ok) { b.focus(); return; }
+    try {
+      const { error } = await sb.rpc(isPoll ? 'hg_poll_remove' : 'hg_admin_thank_remove', isPoll ? { p_poll: b.dataset.ref } : { p_id: b.dataset.ref });
+      if (error) throw error;
+      toast(isPoll ? 'Sondage retiré' : 'Merci retiré');
+      await reload();
+    } catch (e) { toast(`Action impossible : ${errMsg(e)}`, 'error'); }
     return;
   }
   if (b.dataset.afl !== 'del') return;

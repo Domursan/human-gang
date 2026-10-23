@@ -25,3 +25,10 @@
   .afl-del { justify-self: start; }
 }
 .afl .lt-box input { min-height: 44px; }
+/* Migration 090 : action propre à l'objet (retirer le merci ou le sondage) */
+.afl-extra { grid-area: extra; }
+.afl-row:has(.afl-extra) { grid-template-areas: "meta extra" "text del"; }
+@media (max-width: 520px) {
+  .afl-row:has(.afl-extra) { grid-template-areas: "meta" "text" "extra" "del"; }
+  .afl-extra { justify-self: start; }
+}

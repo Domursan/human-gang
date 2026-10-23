@@ -26,7 +26,7 @@ export const SECTION_PERM = {
   theme: 'themes',
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
-  eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  eggs: 'reglages', fil: 'reglages', champs: 'reglages', social: 'reglages',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -52,6 +52,7 @@ export const DOMAINS = [
       { id: 'comptes', label: 'Comptes', section: 'comptes' },
       { id: 'invitations', label: 'Invitations', section: 'membres' },
       { id: 'champs', label: 'Champs du profil', section: 'champs' },
+      { id: 'social', label: 'Vie sociale', section: 'social' },
     ]),
     ...under('Accès aux pages', [
       { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },

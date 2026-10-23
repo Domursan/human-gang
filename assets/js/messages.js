@@ -1,12 +1,14 @@
 // ===== Humane Gang — messagerie (messages.html) : conversations directes + messages anonymes du Secret Santa =====
 // Page réservée aux membres. Deux colonnes : la liste des conversations, et le fil de la conversation ouverte.
 // Dépendances : core.js (Supabase, notifications), sound.js (son), icons.js.
-// Tables et RPC : hg_members, hg_my_conversations, hg_get_messages, hg_send_message, hg_mark_read, hg_open_direct.
+// Tables et RPC : hg_members, hg_my_conversations, hg_get_messages, hg_send_message, hg_mark_read, hg_open_direct ;
+// groupes (migration 090) : messages-groupes.js (hg_group_*, hg_event_conv_open). Lien direct : ?event=<sortie>.
 // Temps réel : canal privé « conv:<id> » (Supabase Realtime), avec actualisation périodique de secours.
 // N'exporte rien.
 import * as core from './core.js';
 import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
 import { svg } from './icons.js';
+import * as G from './messages-groupes.js'; // groupes et discussions de sortie (migration 090)
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -26,6 +28,8 @@ const I = {
   chat: svg('chat', { size: 28, stroke: 1.6 }),
   lock: svg('lock2', { size: 14, stroke: 2 }),
   help: svg('info', { size: 14, stroke: 2 }),
+  group: svg('users2', { size: 18, stroke: 2 }),
+  users: svg('users2', { size: 20, stroke: 2 }),
 };
 
 /* ---------- État ---------- */
@@ -165,7 +169,10 @@ function renderShell() {
         <div class="eyebrow">Entre nous</div>
         <h1 class="page-title">Messages</h1>
       </div>
-      <button class="btn btn-primary" type="button" id="msg-new" aria-label="Nouveau message">${I.plus}<span>Nouveau message</span></button>
+      <div class="btn-row msg-head-actions">
+        <button class="btn btn-ghost" type="button" id="msg-new-group">${I.group}<span>Nouveau groupe</span></button>
+        <button class="btn btn-primary" type="button" id="msg-new" aria-label="Nouveau message">${I.plus}<span>Nouveau message</span></button>
+      </div>
     </div>
     <div class="msg-app" id="msg-app" data-view="list">
       <section class="msg-side" aria-labelledby="msg-side-t">
@@ -182,6 +189,13 @@ function renderShell() {
     </div>
     <p class="muted small msg-admin-note">${I.lock}<span>Les messages peuvent être consultés par l’admin. <a href="legal.html#confidentialite">En savoir plus</a></span></p>`;
   $('#msg-new').addEventListener('click', openNewDialog);
+  $('#msg-new-group').addEventListener('click', () => G.openGroupCreate({ members: S.members, me, onCreated: reopen }));
+}
+/** Recharge la liste puis ouvre (ou rouvre) la conversation id : après création, ajout, renommage ou sourdine. */
+async function reopen(id) {
+  try { await loadConvs(); } catch (e) { toast(errMsg(e), 'error'); }
+  renderConvs();
+  if (id && convOf(id)) await openConv(id, { focus: false });
 }
 
 /* ---------- Liste des conversations ---------- */
@@ -193,6 +207,7 @@ function renderShell() {
  * @returns {string} HTML
  */
 function convAvatar(c, size = 44) {
+  if (G.isGroup(c)) return G.groupAvatarHtml(c, S.members, size);
   const side = santaSide(c);
   if (side === 'target') return `<span class="msg-av msg-av-santa" style="width:${size}px;height:${size}px" aria-hidden="true">${I.mask}</span>`;
   const m = memberOf(c.other_id) || { pseudo: c.title };
@@ -213,7 +228,8 @@ function renderConvs() {
     const unread = c.id === S.current ? 0 : (c.unread || 0);
     const preview = c.last_body ? `${c.last_mine ? 'Toi : ' : ''}${c.last_body}` : 'Pas encore de message';
     const tag = side === 'target' ? '<span class="msg-tag">Anonyme</span>' : side === 'santa' ? '<span class="msg-tag">Tu es son Santa</span>'
-      : isSupport(c) ? '<span class="msg-tag is-support">Assistance</span>' : '';
+      : isSupport(c) ? '<span class="msg-tag is-support">Assistance</span>'
+      : G.isGroup(c) ? `<span class="msg-tag is-group">${c.event_id ? 'Sortie' : 'Groupe'} · ${Number(c.members_count) || 0}${G.muteLabel(c.muted_until) ? ' · en sourdine' : ''}</span>` : '';
     return `<li>
       <button type="button" class="msg-conv${side ? ' is-santa' : ''}${unread ? ' is-unread' : ''}" data-conv="${esc(c.id)}"${c.id === S.current ? ' aria-current="true"' : ''}>
         ${convAvatar(c)}
@@ -239,6 +255,7 @@ function threadHeadHtml(c) {
   const sub = side === 'target' ? 'Secret Santa · son identité reste secrète jusqu’à la révélation'
     : side === 'santa' ? 'Secret Santa · tu apparais comme « Ton Santa »'
     : isSupport(c) ? 'Assistance · conversation privée avec le Staff'
+    : G.isGroup(c) ? `${G.groupSubtitle(c)}${G.muteLabel(c.muted_until) ? ` · ${G.muteLabel(c.muted_until).toLowerCase()}` : ''}`
     : 'Conversation privée';
   return `
     <header class="msg-thread-head${side ? ' is-santa' : ''}">
@@ -248,6 +265,7 @@ function threadHeadHtml(c) {
         <h2 id="msg-thread-t" class="msg-thread-title">${esc(c.title)}</h2>
         <p class="msg-thread-sub">${esc(sub)}</p>
       </div>
+      ${G.isGroup(c) ? `<button class="btn btn-ghost msg-icon-btn" type="button" id="msg-group-info" aria-label="Membres et réglages du groupe">${I.users}</button>` : ''}
     </header>`;
 }
 /**
@@ -259,7 +277,7 @@ function renderThreadShell(c) {
   const main = $('#msg-main');
   const side = santaSide(c);
   const ph = side === 'target' ? 'Écris à ton Santa…' : side === 'santa' ? `Écris à ${c.title.replace(/^Ta cible : /, '')} (anonyme)…`
-    : isSupport(c) ? 'Écris ta réponse…' : `Écris à ${c.title}…`;
+    : isSupport(c) ? 'Écris ta réponse…' : G.isGroup(c) ? 'Écris au groupe…' : `Écris à ${c.title}…`;
   main.innerHTML = `
     ${threadHeadHtml(c)}
     ${isSupport(c) ? '<section class="msg-support-sum" id="msg-support-sum" aria-label="Résumé de la demande d’assistance"><p class="msg-support-load">Chargement de la demande…</p></section>' : ''}
@@ -277,6 +295,8 @@ function renderThreadShell(c) {
       </div>
     </form>`;
   $('#msg-back').addEventListener('click', backToList);
+  $('#msg-group-info')?.addEventListener('click', () => G.openGroupPanel(c.id, { members: S.members, me,
+    onChange: () => reopen(c.id), onLeft: async () => { backToList(); await reopen(null); } }));
   if (isSupport(c)) loadSupportSummary(c.id);
   const ta = $('#msg-input');
   ta.addEventListener('input', onInput);
@@ -341,16 +361,21 @@ function onInput() {
  * @returns {string} HTML
  */
 function bubbleHtml(m, prev, c) {
+  if (m.system) return G.systemRowHtml(m);
   const isSanta = !m.mine && santaSide(c) === 'target' && m.sender_label === 'Ton Santa';
-  const sameGroup = prev && prev.mine === m.mine && prev.sender_label === m.sender_label
+  const sameGroup = prev && !prev.system && prev.mine === m.mine && prev.sender_label === m.sender_label
     && new Date(m.created_at) - new Date(prev.created_at) < 5 * 60000 && dayDiff(prev.created_at) === dayDiff(m.created_at);
   const label = !m.mine && !sameGroup
     ? `<span class="msg-sender${isSanta ? ' is-santa' : ''}">${isSanta ? I.mask : ''}${esc(m.sender_label)}</span>` : '';
   const d = new Date(m.created_at);
-  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}" data-id="${esc(m.id)}">
-    ${label}
+  // Groupe : avatar et pseudo de l'auteur (couleur du membre) pour les messages des autres.
+  const who = G.isGroup(c) && !m.mine && m.sender_id ? memberOf(m.sender_id) : null;
+  const glabel = who && !sameGroup ? `<span class="msg-sender msg-sender-grp" style="--who:${esc(/^#[0-9a-f]{6}$/i.test(who.color || '') ? who.color : 'var(--muted)')}">${esc(m.sender_label)}</span>` : '';
+  return `<div class="msg-row ${m.mine ? 'is-mine' : 'is-other'}${isSanta ? ' is-santa' : ''}${sameGroup ? ' is-cont' : ''}${who ? ' is-grp' : ''}" data-id="${esc(m.id)}">
+    ${who ? `<span class="msg-row-av" aria-hidden="true">${sameGroup ? '' : avatarHtml(who, 28)}</span><div class="msg-row-col">${glabel}` : label}
     <div class="msg-bubble"><span class="visually-hidden">${m.mine ? 'Toi' : esc(m.sender_label)} : </span><span class="msg-text">${linkify(m.body)}</span>
       <time class="msg-time" datetime="${esc(m.created_at)}" title="${esc(fullFmt.format(d))}">${esc(timeFmt.format(d))}</time></div>
+    ${who ? '</div>' : ''}
   </div>`;
 }
 /**
@@ -380,6 +405,7 @@ function renderMessages() {
     box.innerHTML = `<div class="msg-thread-empty">${side === 'target'
       ? 'Ton Santa ne t’a pas encore écrit. Tu peux lui poser une question : il ne saura pas que tu as deviné, et tu ne sauras pas qui il est.'
       : side === 'santa' ? 'Ta cible ne saura pas que c’est toi : tes messages s’affichent comme « Ton Santa ».'
+      : G.isGroup(c) ? 'Aucun message pour l’instant. Lance la discussion !'
       : 'Aucun message pour l’instant. Dis bonjour !'}</div>`;
     return;
   }
@@ -422,7 +448,7 @@ function setView(v) {
 /** Met l'identifiant de la conversation dans l'adresse (?c=…), sans recharger la page. Pas d'historique ajouté. */
 function setUrl(conv) {
   const u = new URL(location.href);
-  u.searchParams.delete('to');
+  u.searchParams.delete('to'); u.searchParams.delete('event');
   if (conv) u.searchParams.set('c', conv); else u.searchParams.delete('c');
   history.replaceState(null, '', u.pathname.split('/').pop() + u.search + u.hash);
 }
@@ -661,9 +687,10 @@ try {
   renderShell();
   renderConvs();
   const params = new URLSearchParams(location.search);
-  const to = params.get('to'), c = params.get('c');
+  const to = params.get('to'), c = params.get('c'), ev = params.get('event');
   const UUID = /^[0-9a-f-]{36}$/i;
-  if (to && UUID.test(to)) await openDirect(to);
+  if (ev && UUID.test(ev)) { const id = await G.openEventConv(ev); if (id) await reopen(id); else setUrl(null); }
+  else if (to && UUID.test(to)) await openDirect(to);
   else if (c && UUID.test(c)) await openConv(c, { focus: false });
   else if (!MOBILE.matches && S.convs.length) await openConv(S.convs[0].id, { focus: false });
   startListPolling();

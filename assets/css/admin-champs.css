@@ -48,3 +48,16 @@
   .ach-actions .btn { flex: 1 1 100%; }
   .ach-spacer { display: none; }
 }
+
+/* ===== Membres › Vie sociale (admin-social.js, migration 090) ===== */
+.asoc-block { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.asoc-block legend { font-weight: 700; padding: 0 6px; }
+.asoc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.asoc-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.asoc-f { display: flex; flex-direction: column; gap: 4px; flex: 1 1 140px; min-width: 0; }
+.asoc-f input, .asoc-f select { width: 100%; }
+.asoc-color { flex: 0 0 72px; }
+.asoc-color input { min-height: 44px; padding: 2px; }
+.asoc-caps { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+.asoc .form-error { color: var(--rose); font-weight: 700; margin: 0; }
+.asoc .form-error[hidden] { display: none; }

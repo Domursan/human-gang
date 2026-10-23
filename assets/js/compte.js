@@ -493,6 +493,8 @@ async function renderMember(user) {
       </div>
     </section>
 
+    <section class="card acc-gaming" id="gaming" aria-labelledby="gaming-title"></section>
+
     <section class="card acc-infos" id="infos" aria-labelledby="infos-title">
       <form id="info-form" novalidate>
         <div class="acc-infos-head">
@@ -553,6 +555,8 @@ async function renderMember(user) {
   bindData();
   bindInfos();
   loadBadges();
+  // Profil gaming (migration 090) : carte publique, chargée à la demande.
+  import('./profil-gaming.js').then((m) => m.mountGamingEditor($('#gaming'), me)).catch((e) => console.warn('[gaming]', e));
 }
 
 /** Met à jour partout l'identité affichée (avatar, pseudo, en-tête du site) après une modification. */

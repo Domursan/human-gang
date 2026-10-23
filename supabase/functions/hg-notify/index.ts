@@ -443,6 +443,7 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const convId = p.conversation_id;
   const { data: conv } = await db.from('hg_conversations').select('id, kind, santa_id, target_id').eq('id', convId).maybeSingle();
   if (!conv) throw new HttpError(404, 'Conversation introuvable');
+  if (conv.kind === 'group') return { skipped: 'groupe : pas de MP Discord' }; // migration 090 : notifications push seulement
   const { data: members } = await db.from('hg_conversation_members').select('user_id').eq('conversation_id', convId);
   const ids: string[] = (members ?? []).map((m: { user_id: string }) => m.user_id);
   if (!ids.includes(me.id)) throw new HttpError(403, 'Tu ne fais pas partie de cette conversation');

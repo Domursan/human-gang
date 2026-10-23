@@ -50,6 +50,7 @@ const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+  { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Vie sociale (hg_settings.social, migration 090)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -153,6 +154,7 @@ const accessGroup = {
 registerSub('membres/acces', { ...accessGroup, open: () => { accessView('pages'); setActions(accessActions()); } });
 registerSub('membres/acces-matrice', { ...accessGroup, open: () => { accessView('matrice'); setActions(accessActions()); } });
 if (MOUNT.champs) registerSub('membres/champs', { main: () => MOUNT.champs($('#champs-root')) });
+if (MOUNT.social) registerSub('membres/social', { main: () => MOUNT.social($('#social-root')) });
 // Vie du gang
 registerSub('vie/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),
