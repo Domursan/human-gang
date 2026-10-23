@@ -151,6 +151,7 @@ function renderMemberShell() {
       <div id="countdown" class="countdown" hidden></div>
     </section>
     ${recapBanner()}
+    <div id="saison-home" hidden></div>
     <div id="dyn-banner" hidden></div>
     <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
     <div id="qdj-home" hidden></div>
@@ -549,6 +550,17 @@ async function loadDailyQuestion() {
   }
 }
 
+/* ---------- Rendez-vous saisonniers (migration 096) ---------- */
+/** Calendrier de l'Avent (décembre) et saison des Worlds : module chargé à la demande (saisons.js). */
+async function loadSeasonal() {
+  try {
+    const { mountSeasonal } = await import('./saisons.js');
+    await mountSeasonal($('#saison-home'));
+  } catch (e) {
+    console.warn('[saisons]', e);
+ }
+}
+
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 /** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique', 'tile-day': 'historique' };
@@ -574,11 +586,11 @@ if (!me) {
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(),
+    $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
     import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
     home?.loadOwn(),
     tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null, canAccess('lexique') ? loadWordOfDay($('#lex-day')) : null,
-  ]);
+ ]);
   maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }
 app.removeAttribute('aria-busy');

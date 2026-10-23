@@ -32,7 +32,9 @@
 //      (kind « auto:programme ») par annonce envoyée.
 //   7. Ciné-club (migration 087, ../_shared/cine-announce.ts) : hg_cine_tick puis annonces du vote, du film choisi, du report
 //      et rappel une heure avant (salon bot.channels.cine, sinon salon d'annonces). Désactivé si bot.notify.cine === false.
-//   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
+//   8. Annonces saisonnières (migration 096, ../_shared/saisons-cron.ts) : case du jour du calendrier de l'Avent, bonus
+//      collectif, soirée déballage (tout reçu, rappel 1 h avant, tour de passage si bot.notify.unwrap), anniversaire du gang.
+/   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
 //   colonne channels = détail par salon des annonces [{ id, ok, error?, ref }] (ref = « début : <nom> » ou « fin : <nom> »).
@@ -49,7 +51,7 @@ import { channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChan
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
 import { cineAnnouncements } from '../_shared/cine-announce.ts';
-
+import { seasonAnnouncements } from '../_shared/saisons-cron.ts';
 /* ---------- Constantes et clients ---------- */
 
 // Client avec la clé service role : la fonction lit et écrit dans toutes les tables des automatismes.
@@ -76,8 +78,7 @@ type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 
 /** Profil lu par la fonction. remind_irl est facultatif (absent pour les rappels de cadeau). */
 type Prof = { id: string; pseudo: string; discord_id: string | null; bot_optin: boolean; remind_irl?: boolean };
 /** Compteurs d'un passage, renvoyés dans la réponse et résumés dans le journal. */
-type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; quiz_daily: number; scheduled: number; errors: number };
-
+type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; quiz_daily: number; scheduled: number; season: number; errors: number };
 /* ---------- Réservation des envois (idempotence) ---------- */
 
 /**
@@ -457,8 +458,8 @@ async function quizDaily(out: Counters, bot: ChannelBot & MentionBot, chanLog: C
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
-  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, scheduled: 0, errors: 0 };
-  const attempts: Attempt[] = [];
+  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, scheduled: 0, season: 0, errors: 0 };
+ const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   let polls = 0; // sondages clôturés à ce passage
   try {
@@ -496,16 +497,22 @@ Deno.serve(async (req) => {
     try { cine = await cineAnnouncements(db, bot, canSend, SITE); }
     catch (e) { console.error('[hg-cron] ciné-club', e); cine.cine_errors++; }
 
+    // 8. Annonces saisonnières (migration 096) : calendrier de l'Avent, soirée déballage, anniversaire du gang.
+    if (canSend) {
+      try { const r = await seasonAnnouncements(db, bot, SITE); out.season += r.sent; out.errors += r.errors; chanLog.push(...r.log); }
+      catch (e) { console.error('[hg-cron] saisons', e); out.errors++; }
+    }
+
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.scheduled + out.errors + cine.cine_posts;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.scheduled + out.season + out.errors + cine.cine_posts;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
-        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}${cine.cine_posts ? `, ${cine.cine_posts} annonce(s) du ciné-club` : ''}`,
+        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}${cine.cine_posts ? `, ${cine.cine_posts} annonce(s) du ciné-club` : ''}${out.season ? `, ${out.season} annonce(s) de saison` : ''}`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
-        channel: out.starts + out.ends + out.quiz_daily > 0,
-      }, chanLog);
+        channel: out.starts + out.ends + out.quiz_daily + out.season > 0,
+     }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
     return json({ ok: true, ...out, ...cine, polls_closed: polls });

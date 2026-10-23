@@ -43,7 +43,8 @@ export const SECTION_PERM = {
   erreurs: 'reglages', archives: 'admin',
   // Idées V8, V9 (calendrier, ciné-club) et D3 (commandes slash) : migration 087
   rdv: 'evenements', commandes: 'bot',
-};
+  saisons: 'themes', // rendez-vous saisonniers (migration 096) : calendrier de l'Avent, saison des Worlds, anniversaire du gang
+;
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
 const TILE_SECTIONS = ['comptes', 'membres', 'secret-santa', 'idees', 'assistance'];
@@ -92,7 +93,10 @@ export const DOMAINS = [
       { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
       { id: 'evenements', label: 'Événements', section: 'evenements' },
       { id: 'rdv', label: 'Calendrier et ciné', section: 'rdv' },
-    ]),
+      { id: 'avent', label: 'Calendrier de l’Avent', section: 'saisons', part: 'avent' },
+      { id: 'saison-worlds', label: 'Saison des Worlds', section: 'saisons', part: 'worlds' },
+      { id: 'anniv-gang', label: 'Anniversaire du gang', section: 'saisons', part: 'anniv' },
+   ]),
     ...under('Badges', [
       { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
       { id: 'badges-attribution', label: 'Attribution', section: 'badges', part: 'attribution' },

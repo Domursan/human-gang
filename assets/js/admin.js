@@ -227,6 +227,12 @@ for (const [sub, part] of [['economie', 'paillettes'], ['tirage', 'tirage'], ['r
 }
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
+// Rendez-vous saisonniers (migration 096) : une section, trois parties ; module chargé à la première visite.
+const saisonsMod = () => import('./admin-saisons.js');
+for (const [sub, part] of [['avent', 'avent'], ['saison-worlds', 'worlds'], ['anniv-gang', 'anniv']]) {
+  registerSub(`vie/${sub}`, { group: 'saisons', main: async () => (await saisonsMod()).mountSaisonsSection($('#saisons-root')),
+    open: async () => (await saisonsMod()).showSaisonsPart(part) });
+}
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 // Idées C13/C15 (cagnotte, bulletin) et C17 (cartes Champions) : modules chargés à la demande
 registerSub('cartes/cagnotte', { main: () => import('./admin-cards/pots.js').then((m) => m.mountPotsSection($('#pots-root'))) });
