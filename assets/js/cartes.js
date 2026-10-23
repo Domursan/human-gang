@@ -1,5 +1,5 @@
 // ===== Cartes à collectionner — page joueur =====
-// RPC : hg_cards_me, hg_cards_daily, hg_open_booster_req (repli hg_open_booster), hg_card_recycle, hg_card_craft, hg_card_leaderboard.
+// RPC : hg_cards_me, hg_cards_daily, hg_open_booster_req, hg_card_recycle, hg_card_craft, hg_card_leaderboard.
 // Boosters typés (migration 069, SPEC booster-system) : hg_booster_types_me (types, stocks, limites), hg_booster_buy (p_type, p_qty : achat mis en stock),
 // hg_booster_open (p_type, p_mode stock|gratuit, p_set pour la série), hg_booster_gift (p_type : don à un membre), hg_booster_gifts_me (dons envoyés et reçus), hg_members.
 // Règle de conception : la Boutique n'achète que des boosters (ils vont dans l'inventaire) ; on les ouvre dans l'onglet Ouverture (un seul, ou plusieurs d'un coup).
@@ -1499,13 +1499,13 @@ function renderReveal() {
 /** Crée un identifiant de demande (UUID si le navigateur sait en faire, sinon un repli horodaté). */
 const newReqId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-// Appel d'ouverture : hg_open_booster_req (migrations 021 et 042) ; repli sur l'ancienne RPC si elle n'est pas encore déployée.
-// Un booster offert (offert = true, migration 042) n'a pas de repli : l'ancienne RPC ouvrirait un booster payant.
+// Appel d'ouverture : hg_open_booster_req (migrations 021 et 042). Plus de repli sur l'ancienne hg_open_booster :
+// son chemin payant contournait la Boutique et est refusé depuis la migration 074.
 /**
  * Ouvre un booster côté serveur.
  * @param {boolean} free true pour le booster gratuit
  * @param {string} reqId identifiant de la demande (le serveur ne rouvre pas deux fois la même demande)
- * @param {boolean} [offert=false] true pour un booster offert (pas de repli sur l'ancienne RPC)
+ * @param {boolean} [offert=false] true pour un booster offert
  * @returns {Promise<object>} résultat : cartes, meilleure rareté, nombre demandé et livré
  */
 async function rpcOpenBooster(free, reqId, offert = false) {
@@ -1515,11 +1515,7 @@ async function rpcOpenBooster(free, reqId, offert = false) {
     if (data == null) throw new Error('Les boosters offerts ne sont pas encore disponibles. Réessaie plus tard.');
     return data;
   }
-  let { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: reqId });
-  // Repli sur l'ancienne fonction seulement si la nouvelle n'existe pas (PGRST202) : une réponse « null » sans erreur n'en est pas une.
-  if (error && /hg_open_booster_req|PGRST202|not find|introuvable/i.test(`${error.code || ''} ${error.message || ''}`)) {
-    ({ data, error } = await sb.rpc('hg_open_booster', { p_free: !!free }));
-  }
+  const { data, error } = await sb.rpc('hg_open_booster_req', { p_free: !!free, p_request: reqId });
   if (error) throw error;
   return data;
 }

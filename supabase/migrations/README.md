@@ -30,8 +30,8 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `018_cartes_tables.sql` | Tables du jeu de cartes (les policies sont dans le schéma reconstitué) | appliqué |
 | `018_cartes_fonctions.sql` | Fonctions du jeu de cartes | appliqué |
 | `019_comptes_fantomes.sql` | Comptes fantômes | appliqué |
-| `021_securite_cartes.sql` | Sécurité, contraintes, journaux admin, corrections du jeu de cartes | **à appliquer** |
-| `042_dons_groupes.sql` | Boosters offerts (`hg_wallets.gift_boosters`, `hg_open_booster_req` avec `p_offert`), don groupé (`hg_cards_admin_bulk_give`) | **à appliquer** (après 021 et 015) |
+| `021_securite_cartes.sql` | Sécurité, contraintes, journaux admin, corrections du jeu de cartes | appliqué à la main (contraintes `hg_profiles_*_format` et `hg_admin_log` présentes en production) |
+| `042_dons_groupes.sql` | Boosters offerts (`hg_wallets.gift_boosters`, `hg_open_booster_req` avec `p_offert`), don groupé (`hg_cards_admin_bulk_give`) | appliqué (outil de migration, 21/10) |
 | `026_staff.sql` | Catalogue des 12 permissions (`hg_perm_catalog`), table `hg_staff`, fonction `hg_has_perm()` | appliqué |
 | `027_staff_regles.sql` | Table `hg_perm_tables` (table ou stockage vers permission) ; `hg_is_admin()` remplacé par `hg_has_perm()` dans les règles RLS et les fonctions du panel | appliqué |
 | `028_staff_ajustements.sql` | Journal des lectures de messages et e-mails réservés à l'administrateur ; modération des réactions (permission `souvenirs`) | appliqué |
@@ -39,10 +39,20 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `030_admin_temps_reel.sql` | Publication `supabase_realtime` du panel (assistance, idées, profils, Staff, journal, cartes, sorties, souvenirs, Secret Santa) | appliqué |
 | `031_corrections_ambiguites.sql` | Colonnes ambiguës corrigées dans `hg_admin_ghosts` et `hg_admin_conversations` | appliqué |
 | `032_assistance_fil.sql` | Prise en charge et fil de réponses de l'assistance | **absent de cette branche** : ajouté par une autre branche |
+| `038_quete_photo_avatar.sql` → `043_drops.sql` | Quête photo d'avatar, don admin dans le fil, `039b_rarete_libelle.sql` (libellé des raretés), choix d'annonce, critères des badges, dons groupés, drops | appliqués (outil de migration, 21/10). `039b` a été appliqué sans fichier : le fichier a été reconstitué le 23/10 depuis l'historique de production (texte identique) |
+| `050_reglages_lot1.sql` → `054b_reglages_bot_planning_correctif.sql` | Réglages admin, lots 1 à 5 (les `b` sont les correctifs, enregistrés en production sous `052_corrige`, `053_corrige`, `054_corrige`) | appliqués (21/10) |
+| `055_drops_plafond.sql` → `066_assistance_conversation.sql` | Plafond des drops, salons des annonces, échanges suggérés, affiches, quêtes, quiz, cartes uniques, easter eggs, annonce des drops, famille « Unique », assistance en conversation. 061, 062 et 066 ont été appliqués en plusieurs morceaux (`061a`…`061f`, `062a`…`062c`, `066a`…`066c`) ; `063_page_quiz.sql` a été appliqué à la main (absent de l'historique de l'outil) | appliqués (22/10) |
 | `068_quiz_vrai_faux_et.sql` | Questions vrai/faux (choix « Vrai » et « Faux » manquants), « & » lu comme « et » | appliqué en production |
-| `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | **à appliquer** (après 042) |
-| `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | **à appliquer** (après 069 ; facultatif : les fonctions savent s'en passer) |
-| `071_boosters_admin.sql` | Boosters paramétrables par l'admin et le Staff « cartes » : raretés et séries exclues par type (`excluded_rarities`, `excluded_sets`), RPC `hg_booster_type_save` et `hg_booster_type_stats`, journal des ouvertures `hg_booster_opens` ; Collectionneur sans identité ni série « Les OG » (`gang-membres`) | **à appliquer** (après 069) |
+| `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | appliqué (outil de migration, 22/10) |
+| `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | appliqué (outil de migration, 22/10) |
+| `071_boosters_admin.sql` | Boosters paramétrables par l'admin et le Staff « cartes » : raretés et séries exclues par type (`excluded_rarities`, `excluded_sets`), RPC `hg_booster_type_save` et `hg_booster_type_stats`, journal des ouvertures `hg_booster_opens` ; Collectionneur sans identité ni série « Les OG » (`gang-membres`) | appliqué (outil de migration, 23/10) |
+| `072_securite_economie.sql` | Sécurité, paquet A (audit du 23/10) : économie (Paillettes, badges) | **à appliquer cette nuit** (dans l'ordre 072 → 075) |
+| `073_securite_profils_staff.sql` | Sécurité, paquet B : profils et Staff | **à appliquer cette nuit** (après 072) |
+| `074_securite_echanges.sql` | Sécurité, paquet C : verrous des exemplaires (dons, échanges, recyclage), captures d'événement, fantômes refusés comme destinataires, plafond et ancienneté des Paillettes échangées (réglage `echanges`), ancienne ouverture payante `hg_open_booster` refusée, liens d'invitation plafonnés, abonnements push contrôlés | **à appliquer cette nuit** (après 073 ; puis le front `cartes.js`, `admin-invite-links.js`) |
+| `075_securite_annonces.sql` | Sécurité, paquet D : annonces | **à appliquer cette nuit** (après 074) |
+
+**État réel au 23/10/2026** : l'outil de migration de production connaît 038 → 071 (plus les migrations `airpe_*` et
+`domursan_01_schema` des autres applications du projet). 001 → 037 et 063 ont été appliqués à la main.
 
 ## Les trous et les doublons
 
@@ -126,3 +136,27 @@ Migration `071_boosters_admin.sql` : types de boosters modifiables depuis le pan
 3. Puis le front (onglet admin « Boosters »). Le front membre existant continue de fonctionner sans changement.
 4. L'affiche A3 des boosters est statique : la régénérer si les types changent.
 5. Pas de fonction edge à redéployer, ni de secret à créer.
+
+## Pour appliquer 074
+
+Migration `074_securite_echanges.sql` (paquet C de l'audit de sécurité du 23/10) : idempotente, rejouable.
+
+- **I3** : `hg_card_gift`, `hg_trade_propose`, `hg_trade_respond`, `hg_trade_cancel`, `hg_card_recycle` verrouillent les
+  exemplaires (`for update`, ordre par id) avant de les contrôler, puis les déplacent par un `update` conditionnel
+  (propriétaire, `recycled_at is null`, `locked_trade` attendu) dont le nombre de lignes est vérifié.
+  `hg_trade_respond` verrouille aussi les exemplaires demandés. `hg_dyn_capture` prend un verrou consultatif par événement.
+  Ordre des verrous : offre -> portefeuilles -> exemplaires.
+- **m10** : don et offre refusés vers un compte fantôme.
+- **M6** : Paillettes dans un échange : le compte qui les donne doit avoir au moins 7 jours (date la plus récente du
+  compte Auth et du profil) ; chaque membre reçoit au plus 5 000 Paillettes par échange sur 7 jours glissants.
+  Réglage `hg_settings.echanges` : `{"paillettes_max_semaine": 5000, "anciennete_jours": 7}` (permission « réglages »).
+  Liens d'invitation : un lien sans limite reçoit 20 codes (en plus de ceux déjà générés) et 30 jours (trigger
+  `hg_invite_links_defaults` ; clés facultatives `invites.lien_max_codes_defaut`, `invites.lien_validite_jours_defaut`).
+  Les liens actifs sans limite sont mis à jour à l'application ; un lien nominatif (limite fixée) n'est pas touché.
+- **M1** : `hg_open_booster(false)` lève « Achète tes boosters dans la Boutique » ; `hg_open_booster(true)` passe par
+  `hg_open_booster_req` (même délai du booster gratuit). Le front n'appelle plus `hg_open_booster`.
+- **M8** : `hg_push_subscriptions` : contrainte `hg_push_subscriptions_endpoint_check` (FCM, Mozilla, Apple, WNS ; `not valid`
+  seulement si une ligne existante ne passe pas) et 5 appareils au plus par membre (trigger : les plus anciens sont retirés).
+
+Ordre : 072, 073, puis 074, puis le front (`assets/js/cartes.js`, `assets/js/admin-invite-links.js`). Aucune fonction
+edge à redéployer, aucun secret.
