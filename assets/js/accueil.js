@@ -558,7 +558,7 @@ async function loadSeasonal() {
     await mountSeasonal($('#saison-home'));
   } catch (e) {
     console.warn('[saisons]', e);
- }
+  }
 }
 
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
@@ -590,7 +590,7 @@ if (!me) {
     import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
     home?.loadOwn(),
     tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null, canAccess('lexique') ? loadWordOfDay($('#lex-day')) : null,
- ]);
+  ]);
   maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }
 app.removeAttribute('aria-busy');

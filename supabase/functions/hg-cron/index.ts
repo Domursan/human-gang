@@ -34,7 +34,7 @@
 //      et rappel une heure avant (salon bot.channels.cine, sinon salon d'annonces). Désactivé si bot.notify.cine === false.
 //   8. Annonces saisonnières (migration 096, ../_shared/saisons-cron.ts) : case du jour du calendrier de l'Avent, bonus
 //      collectif, soirée déballage (tout reçu, rappel 1 h avant, tour de passage si bot.notify.unwrap), anniversaire du gang.
-/   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
+//   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
 //   colonne channels = détail par salon des annonces [{ id, ok, error?, ref }] (ref = « début : <nom> » ou « fin : <nom> »).
@@ -465,7 +465,7 @@ Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
   const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, scheduled: 0, season: 0, errors: 0 };
- const attempts: Attempt[] = [];
+  const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   let polls = 0; // sondages clôturés à ce passage
   try {
@@ -518,7 +518,7 @@ Deno.serve(async (req) => {
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
         channel: out.starts + out.ends + out.quiz_daily + out.season > 0,
-     }, chanLog);
+      }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
     return json({ ok: true, ...out, ...cine, polls_closed: polls });

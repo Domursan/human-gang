@@ -71,7 +71,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   // init : script supplémentaire exécuté avant la page : nom d'un fichier de tests/fixtures/ (ex. fake-jeux.js : RPC des jeux)
   // ou script Playwright (fonction, { content }, { path }).
   if (init) await ctx.addInitScript(typeof init === 'string' && /\.m?js$/.test(init) ? { path: path.join(FIXTURES, init) } : init);
- const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
+  const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
   const net = ctx.__net = { requetes: 0, octets: 0 };
   // Réponse comptée (requêtes et octets) et retardée si un réseau lent est simulé (delay).
   const serve = async (route, opts) => {

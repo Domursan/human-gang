@@ -28,7 +28,7 @@ const TREE = {
   pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']]],
   membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social']], ['Entraide', ['parrainage', 'competences']], ['Accès aux pages', ['acces', 'acces-matrice']]],
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements', 'rdv', 'avent', 'saison-worlds', 'anniv-gang']],
-   ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
+    ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions']], ['Suivi', ['joueurs', 'echanges', 'stats']],
     ['Jeux', ['questions', 'pronos', 'sutom', 'ludotheque', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux', 'saisons']]],

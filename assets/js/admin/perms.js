@@ -96,7 +96,7 @@ export const DOMAINS = [
       { id: 'avent', label: 'Calendrier de l’Avent', section: 'saisons', part: 'avent' },
       { id: 'saison-worlds', label: 'Saison des Worlds', section: 'saisons', part: 'worlds' },
       { id: 'anniv-gang', label: 'Anniversaire du gang', section: 'saisons', part: 'anniv' },
-   ]),
+    ]),
     ...under('Badges', [
       { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
       { id: 'badges-attribution', label: 'Attribution', section: 'badges', part: 'attribution' },
