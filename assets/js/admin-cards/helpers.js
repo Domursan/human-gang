@@ -91,7 +91,8 @@ export async function uploadCardImage(file) {
   if (file.size > 5 * 1024 * 1024) throw new Error('Image trop lourde (5 Mo maximum).');
   const img = await prepareImage(file);
   const path = `cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${img.ext}`;
-  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '3600' }));
+  // Nom unique à chaque envoi (jamais réécrit) : l'image peut être gardée un an par les navigateurs (Q3).
+  check(await sb.storage.from('hg-assets').upload(path, img.blob, { upsert: true, contentType: img.contentType, cacheControl: '31536000' }));
   return sb.storage.from('hg-assets').getPublicUrl(path).data.publicUrl;
 }
 

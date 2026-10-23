@@ -40,6 +40,7 @@ npm run check        # node tests/check-js.cjs
 npm run test:rpc     # node tests/check-rpc.mjs
 npm run test:smoke   # smoke.cjs puis smoke-admin.cjs
 npm test             # toute la suite (tests/run-all.cjs) : vérifications, fumée, puis chaque parcours
+                     # (--shard=K/N : un morceau seulement, comme la CI ; --continuer : ne s'arrête pas au premier échec)
 ```
 
 Un test affiche une ligne `OK` ou `ECHEC` par contrôle, puis un bilan `N OK, M ECHEC(S)`. Il sort avec un code
@@ -125,6 +126,12 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-reglages-lot3.cjs` | `node tests/parcours-reglages-lot3.cjs` | à la main | Réglages Secret Santa, sorties IRL et souvenirs : validation, enregistrement, rétablissement par champ |
 | `parcours-reglages-lot4.cjs` | `node tests/parcours-reglages-lot4.cjs` | à la main | Réglages des cartes : économie, drops, quêtes, bornes lues par la page |
 | `parcours-reglages-lot5.cjs` | `node tests/parcours-reglages-lot5.cjs` | à la main | Réglages Bot Discord, rappels, limites, planning d'anniversaires, assistance |
+| `parcours-visite.cjs` | `node tests/parcours-visite.cjs` | `test` | Q1 · visite guidée : premier passage (390 et 1280 px), Échap, page masquée sautée, bandeau des anciens membres, « Revoir la visite » |
+| `parcours-vignettes.cjs` | `node tests/parcours-vignettes.cjs` | `test` | Q3 · vignettes des albums : dimensions dans la grille, envoi photo + vignette, « Générer les vignettes manquantes » (admin) |
+| `parcours-collection-hors-ligne.cjs` | `node tests/parcours-collection-hors-ligne.cjs` | `test` | Q4 · collection et carte de membre hors ligne : bandeau daté, onglets grisés, aucune requête, effacement à la déconnexion |
+| `a11y-pages.cjs` | `node tests/a11y-pages.cjs` | `test:a11y` | Q2 · axe-core sur les pages publiques (390 et 1280 px) ; `A11Y_MODE=bloquer` pour bloquer sur les défauts graves |
+| `perf-budget.cjs` | `node tests/perf-budget.cjs` | `test:perf` | Q3 · budget mobile (LCP, octets, requêtes, CLS) en 4G lente simulée ; seuils dans `perf-budget.json` |
+| `ci-resume.cjs` | `node tests/ci-resume.cjs <dossier>` | CI | Q2 · résumé global de la CI (bilans des 4 morceaux, accessibilité, performance) |
 
 ## Captures
 

@@ -190,6 +190,8 @@ Object.assign(DB.hg_badges.find((b) => b.code === 'fidele'), { name: 'Fidèle', 
   levels: [{ level: 1, threshold: 1, name: 'Bronze' }, { level: 2, threshold: 3, name: 'Argent' }, { level: 3, threshold: 5, name: 'Or', image_url: PUMPKIN }] });
 // L'administrateur est membre depuis quatre ans (ancienneté des badges).
 DB.hg_profiles[0].created_at = iso(-4 * 365);
+// Visite guidée (Q1) : scenario.tour = null (jamais vue), '1970-01-01T00:00:00Z' (inscrit avant la visite) ou une date.
+if ('tour' in S) { const tp = DB.hg_profiles.find((p) => p.id === (S.uid || ME)); if (tp) tp.tour_done_at = S.tour; }
 // Captures de démonstration : quelques joueurs ont attrapé des citrouilles, puis des flocons.
 for (const [u, n] of [[U(2), 4], [ME, 2], [U(3), 1]]) for (let i = 0; i < n; i++) DB.hg_dyn_captures.push({ event_id: 'aaaaaaaa-0000-4000-8000-000000000001', user_id: u, captured_at: iso(-1 + i / 10) });
 for (const [u, n] of [[U(4), 6], [ME, 3], [U(5), 2], [U(2), 1]]) for (let i = 0; i < n; i++) DB.hg_dyn_captures.push({ event_id: 'aaaaaaaa-0000-4000-8000-000000000002', user_id: u, captured_at: iso(-310 + i / 10) });
@@ -608,10 +610,12 @@ export function createClient() {
       signOut: async () => { setSigned(false); window.__LOG.push(['auth', 'signOut']); return {}; },
     },
     // Commence une requête sur la table t.
-    from: (t) => new Q(t),
+    // Scénario offline (Q4) : toute requête tentée est notée (le test vérifie qu'il n'y en a aucune).
+    from: (t) => { if (S.offline) window.__LOG.push(['offline-req', 'from', t]); return new Q(t); },
     /** Simule les fonctions SQL (RPC) : chaque nom a sa réponse. Sans session, seules les fonctions de ANON_OK répondent ; une fonction inconnue renvoie null sans erreur. */
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      if (S.offline) window.__LOG.push(['offline-req', 'rpc', fn]);
       if (!signed() && !ANON_OK.has(fn)) { // ce que fait PostgREST sans session : 401, « permission denied »
         window.__LOG.push(['rpc-401', fn]);
         return { data: null, error: { message: 'permission denied for function ' + fn, code: '42501' } };
@@ -894,8 +898,8 @@ export function createClient() {
       upload: async (p) => { window.__LOG.push(['upload', p]); return { data: { path: p }, error: null }; },
       remove: async (p) => { window.__LOG.push(['remove', p]); return { data: [], error: null }; },
       /** URL signée : une image grise de remplacement, sans réseau. */
-      createSignedUrl: async () => ({ data: { signedUrl: PHOTO_SVG } }),
-      createSignedUrls: async (paths = []) => ({ data: paths.map((p) => ({ path: p, signedUrl: PHOTO_SVG, error: null })) }),
+      createSignedUrl: async () => ({ data: { signedUrl: S.photoUrl || PHOTO_SVG } }), // S.photoUrl : image du site téléchargeable (test des vignettes, Q3)
+      createSignedUrls: async (paths = []) => ({ data: paths.map((p) => ({ path: p, signedUrl: S.photoUrl || PHOTO_SVG, error: null })) }),
     }) },
     /** Fonctions edge simulées : notées dans le journal, avec une réponse pour admin_dm et dyn_announce, sinon une réponse vide. */
     functions: { invoke: async (name, { body } = {}) => { window.__LOG.push(['fn', name, body]); if (body?.event === 'admin_dm') return { data: adminDmResult(body), error: null }; if (body?.event === 'bot_test') return { data: botTestResult(), error: null }; return { data: body?.event === 'dyn_announce' ? { ok: true, sent: true } : {}, error: null }; } },

@@ -35,6 +35,10 @@ export const SITE_DEFAULTS = {
     maintenance_message: '',
     bandeau_actif: false,
     bandeau_texte: '',
+    // Q1 : visite guidée automatique au premier passage (coupée : seulement « Revoir la visite » sur la page Aide).
+    visite_active: true,
+    // Q4 : copie de la collection sur l'appareil pour la consulter hors ligne (coupée : rien n'est gardé, copie effacée).
+    cartes_hors_ligne: true,
   },
   textes: {
     intro_indice: 'Fais défiler vers le bas pour entrer sur le site',
@@ -44,6 +48,13 @@ export const SITE_DEFAULTS = {
     legal_mentions: '',
     legal_confidentialite: '',
     legal_cookies: '',
+    // Q1 : textes des bulles de la visite guidée ({n} = nombre d'étapes).
+    visite_bienvenue: 'On te montre l’essentiel en {n} étapes.',
+    visite_menu: 'Cartes, IRL, Historique, Messages : le menu mène à chaque rubrique du gang.',
+    visite_cartes: 'Un booster gratuit t’attend chaque jour, et les quêtes de la semaine rapportent des Paillettes.',
+    visite_recherche: 'Une sortie, un souvenir ou un membre (Ctrl+K sur ordinateur).',
+    visite_aide: 'Plus de 60 tutos pas à pas, et l’assistance si tu bloques.',
+    visite_bandeau: 'la visite du site en 30 secondes.',
     nav_libelles: {},
     footer_liens: [
       { id: 'evenements', label: 'Événements', visible: true },

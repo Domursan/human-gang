@@ -5,7 +5,7 @@
 // irl-history.js (historique), admin-ghosts.js (fantômes, admin), ui-confirm.js, reglages-valeurs-lot3.js (délais, bornes).
 // Tables : hg_members, hg_events, hg_event_rsvps, hg_event_dates, hg_event_date_votes, hg_photos. N'exporte rien.
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
-import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, downloadAlbum } from './photos.js';
+import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, downloadAlbum, gridPath, uploadAlbumPhoto, insertPhotoRow, selectPhotos } from './photos.js';
 import { loadReactions } from './reactions.js';
 import { prepareImage } from './image-compress.js';
 import { addToCalendar } from './ics.js';
@@ -59,13 +59,19 @@ let hx;   // historique des rencontres (monté plus bas, une fois les helpers d�
  * Lève une erreur si une requête échoue. L'admin voit aussi les membres fantômes.
  */
 async function load() {
+  // Q3 : les photos ne sont lues que pour les sorties commencées (les seules qui ont un album), colonnes utiles seulement.
+  const evQ = Promise.resolve(sb.from('hg_events').select('*').order('starts_at', { ascending: true }));
+  const phQ = evQ.then((r) => {
+    const ids = (r.data || []).filter((e) => new Date(e.starts_at) <= Date.now()).map((e) => e.id);
+    return ids.length ? selectPhotos((cols) => sb.from('hg_photos').select(cols).in('event_id', ids).order('created_at', { ascending: true })) : { data: [], error: r.error || null };
+  });
   const [m, ev, rs, dt, vt, ph] = await Promise.all([
     sb.rpc('hg_members'),
-    sb.from('hg_events').select('*').order('starts_at', { ascending: true }),
+    evQ,
     sb.from('hg_event_rsvps').select('*'),
     sb.from('hg_event_dates').select('*').order('proposed_at', { ascending: true }),
     sb.from('hg_event_date_votes').select('*'),
-    sb.from('hg_photos').select('*').order('created_at', { ascending: true }),
+    phQ,
   ]);
   const err = [m, ev, rs, dt, vt, ph].find((r) => r.error)?.error;
   if (err) throw err;
@@ -217,7 +223,7 @@ function albumHtml(ev) {
   const shown = expanded ? list : list.slice(0, ALBUM_PREVIEW);
   const rest = list.length - shown.length;
   const tiles = shown.map((p, i) => `<li><button type="button" class="thumb" data-act="photo" data-id="${esc(ev.id)}" data-idx="${i}"
-      aria-label="Photo ${i + 1} sur ${list.length}${p.user_id ? `, ajoutée par ${esc(pseudo(p.user_id))}` : ''}">${thumbHtml(S.urls.get(p.path))}</button></li>`).join('');
+      aria-label="Photo ${i + 1} sur ${list.length}${p.user_id ? `, ajoutée par ${esc(pseudo(p.user_id))}` : ''}">${thumbHtml(S.urls.get(gridPath(p)) || S.urls.get(p.path), '', p)}</button></li>`).join('');
   const more = rest > 0 ? `<li><button type="button" class="thumb thumb-more" data-act="expand" data-id="${esc(ev.id)}" aria-label="Afficher les ${rest} autres photos">+${rest}</button></li>` : '';
   const grid = list.length
     ? `<ul class="album" aria-label="Album photo">${tiles}${more}</ul>`
@@ -369,7 +375,7 @@ async function render() {
   const paths = [
     ...(next?.cover_path ? [next.cover_path] : []),
     ...past.map((e) => e.cover_path).filter(Boolean),   // miniatures de l'historique
-    ...albumEvents.flatMap((e) => photosOf(e.id).map((p) => p.path)),
+    ...albumEvents.flatMap((e) => photosOf(e.id).flatMap((p) => [p.path, gridPath(p)])), // photo entière (visionneuse) + vignette (grille)
   ];
   S.urls = await signedUrls(paths);
   await loadReactions('photo', albumEvents.flatMap((e) => photosOf(e.id).map((p) => p.id)), me.id); // une requête pour les réactions des albums affichés
@@ -493,16 +499,14 @@ async function uploadPhotos(eventId, input) {
   let ok = 0;
   for (const [i, f] of files.entries()) {
     if (status) status.textContent = `Compression et envoi ${i + 1} / ${files.length}…`;
-    let path = null;
+    let row = null;
     try {
-      const img = await prepareImage(f);
-      path = `${me.id}/${eventId}/${uuid()}.${img.ext}`;
-      await uploadImage(path, img.blob);
-      const { error } = await sb.from('hg_photos').insert({ event_id: eventId, user_id: me.id, path });
+      row = await uploadAlbumPhoto(f, `${me.id}/${eventId}`); // photo + vignette 480 px (Q3)
+      const { error } = await insertPhotoRow({ event_id: eventId, user_id: me.id, ...row });
       if (error) throw error;
       ok++;
     } catch (e) {
-      if (path) removeObjects([path]).catch(() => {});
+      if (row) removeObjects([row.path, row.thumb_path]).catch(() => {});
       toast(`${f.name} : ${errMsg(e)}`, 'error');
     }
   }
@@ -553,7 +557,7 @@ function openPhoto(eventId, idx) {
 async function deletePhoto(p) {
   const { error } = await sb.from('hg_photos').delete().eq('id', p.id);
   if (error) { toast(`Suppression impossible : ${errMsg(error)}`, 'error'); return false; }
-  try { await removeObjects([p.path]); } catch (e) { console.warn('[irl] fichier non supprimé', e); }
+  try { await removeObjects([p.path, p.thumb_path]); } catch (e) { console.warn('[irl] fichier non supprimé', e); }
   toast('Photo supprimée.', 'ok');
   refresh();
   return true;

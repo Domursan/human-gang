@@ -1,0 +1,60 @@
+{
+  "_note": "Budget de performance mobile (Q3) : téléphone moyen, 4G lente simulée, processeur ralenti × 4, 390 px. lcp_ms : plus grand affichage ; ko : octets servis au premier chargement (hors photos, hors polices Google) ; requetes : requêtes servies ; cls : décalage de mise en page. Les valeurs de chaque page sont l'objectif (affiché « hors objectif » s'il est dépassé) ; « plafond » fixe, pour les mesures qui dépassent déjà l'objectif au 23/10/2026, la limite bloquante (mesure du jour arrondie). Échec si une mesure dépasse sa limite (plafond, sinon objectif) de plus de 10 %. Abaisser un plafond après chaque correction.",
+  "reseau": {
+    "rtt_ms": 150,
+    "debit_ko_s": 200
+  },
+  "cpu": 4,
+  "tolerance": 0.1,
+  "pages": {
+    "accueil": {
+      "lcp_ms": 2500,
+      "ko": 600,
+      "requetes": 60,
+      "cls": 0.1,
+      "plafond": {
+        "cls": 0.3
+      }
+    },
+    "cartes": {
+      "lcp_ms": 2500,
+      "ko": 600,
+      "requetes": 60,
+      "cls": 0.1,
+      "plafond": {
+        "ko": 700,
+        "lcp_ms": 2800
+      }
+    },
+    "irl": {
+      "lcp_ms": 2500,
+      "ko": 600,
+      "requetes": 60,
+      "cls": 0.1,
+      "plafond": {
+        "cls": 1.05,
+        "ko": 700,
+        "requetes": 70
+      }
+    },
+    "historique": {
+      "lcp_ms": 2500,
+      "ko": 600,
+      "requetes": 60,
+      "cls": 0.1,
+      "plafond": {
+        "cls": 0.2,
+        "requetes": 70
+      }
+    },
+    "membre": {
+      "lcp_ms": 2500,
+      "ko": 600,
+      "requetes": 60,
+      "cls": 0.1,
+      "plafond": {
+        "cls": 0.2
+      }
+    }
+  }
+}

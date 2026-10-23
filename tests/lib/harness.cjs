@@ -51,8 +51,11 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * touch : true pour un écran tactile (page.tap possible).
  * mobile / dpr : téléphone émulé (isMobile, deviceScaleFactor), ex. { mobile: true, dpr: 2.6 }.
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
+ * Mesure de performance (tests/perf-budget.cjs) : delay(octets) → millisecondes d'attente avant chaque réponse du site
+ * (réseau lent simulé), cpu : ralentissement du processeur (×N, protocole Chrome), init : script ajouté avant le chargement.
+ * Le contexte renvoyé (page.ctx) compte les requêtes servies et leurs octets : page.ctx.__net = { requetes, octets }.
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1, init = null } = {}) {
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1, delay = null, cpu = 0, init = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch || mobile, isMobile: mobile, deviceScaleFactor: dpr }); // touch : écran tactile (pointeur grossier)
   await ctx.addInitScript((s) => {
     window.__SCN = s;
@@ -63,19 +66,28 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       if (!s.intro) localStorage.setItem('hg_intro_day', `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
     } catch (e) { /* stockage bloqué : sans importance pour le test */ }
   }, scenario);
-  // init : script supplémentaire (fichier de tests/fixtures/), exécuté avant la page (ex. fake-jeux.js : RPC des jeux).
-  if (init) await ctx.addInitScript({ path: path.join(FIXTURES, init) });
+  // init : script supplémentaire exécuté avant la page : nom d'un fichier de tests/fixtures/ (ex. fake-jeux.js : RPC des jeux)
+  // ou script Playwright (fonction, { content }, { path }).
+  if (init) await ctx.addInitScript(typeof init === 'string' && /\.m?js$/.test(init) ? { path: path.join(FIXTURES, init) } : init);
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
+  const net = ctx.__net = { requetes: 0, octets: 0 };
+  // Réponse comptée (requêtes et octets) et retardée si un réseau lent est simulé (delay).
+  const serve = async (route, opts) => {
+    const n = opts.body ? Buffer.byteLength(opts.body) : 0;
+    net.requetes++; net.octets += n;
+    if (delay) await sleep(delay(n));
+    return route.fulfill(opts);
+  };
   // Toute requête de la page passe ici : le site est servi depuis le dépôt, le faux Supabase remplace
   // supabase-js, les autres hôtes externes répondent vide (204). Les requêtes vers *.supabase.co sont notées dans EXTERNAL.
   await ctx.route('**/*', async (route) => {
     const req = route.request(), u = new URL(req.url());
     if (u.origin !== ORIGIN) {
       if (u.hostname.endsWith('supabase.co')) EXTERNAL.push(req.url());
-      if (u.hostname === 'cdn.jsdelivr.net' && u.pathname.includes('supabase-js')) return route.fulfill({ body: fakeBody, contentType: 'text/javascript' });
+      if (u.hostname === 'cdn.jsdelivr.net' && u.pathname.includes('supabase-js')) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
       return route.fulfill({ status: 204, body: '' });
     }
-    if (/\/vendor\/supabase/.test(u.pathname)) return route.fulfill({ body: fakeBody, contentType: 'text/javascript' });
+    if (/\/vendor\/supabase/.test(u.pathname)) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
     if (PREFIX && u.pathname !== PREFIX && !u.pathname.startsWith(PREFIX + '/')) return route.fulfill({ status: 404, body: 'nf' });
     const rel = u.pathname.slice(PREFIX.length) || '/';
     let f = path.join(ROOT, decodeURIComponent(rel));
@@ -86,11 +98,12 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       if (fs.existsSync(page404)) return route.fulfill({ status: 404, body: fs.readFileSync(page404), contentType: 'text/html' });
       return route.fulfill({ status: 404, body: 'nf' });
     }
-    route.fulfill({ body: fs.readFileSync(f), contentType: TYPES[path.extname(f)] || 'application/octet-stream' });
+    return serve(route, { body: fs.readFileSync(f), contentType: TYPES[path.extname(f)] || 'application/octet-stream' });
   });
   const page = await ctx.newPage();
   // now : horloge simulée (Playwright) installée avant la navigation, pour tester l'heure de Zurich
   if (now) await page.clock.install({ time: new Date(now) });
+  if (cpu > 1) { const cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpu }); }
   page.errs = [];
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });

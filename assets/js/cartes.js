@@ -16,10 +16,13 @@ import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paill
 import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
+import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllowed, clearOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : collection hors ligne
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
-const me = await initPage({ auth: 'member' });
+// Q4 : sans réseau, la page démarre depuis la copie gardée sur l'appareil (lecture seule, aucune requête).
+const OFF = isOffline() ? await startOfflinePage() : null;
+const me = OFF ? OFF.me : await initPage({ auth: 'member' });
 const app = $('#app');
 const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
 /** Pourcentage à deux décimales maximum, ex. « 12,5 % ». */
@@ -131,6 +134,8 @@ const S = {
   focusHint: null,
   // Choix de la série avant l'ouverture d'un booster « Série » : { from (bouton d'origine), onPick (reçoit l'identifiant de la série) }.
   seriePick: null,
+  // Q4 : page dessinée depuis la copie hors ligne (lecture seule : seule la collection est consultable).
+  offline: !!OFF,
 };
 /** Configuration du jeu (tarifs, taux, durées) renvoyée par hg_cards_me. Vide avant le premier chargement. */
 const cfg = () => S.state?.config || {};
@@ -231,7 +236,7 @@ const fmtDuration = (ms) => {
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')} min` : `${Math.max(1, m)} min`;
 };
 /** Vrai pendant une action en cours (appel réseau ou séquence d'ouverture) : les boutons restent désactivés. */
-const isBusy = () => S.busy || !!(S.reveal && S.reveal.phase === 'seq');
+const isBusy = () => S.offline || S.busy || !!(S.reveal && S.reveal.phase === 'seq');
 /** Nom de la série affichée dans la cartouche (la plus récente à défaut). */
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
 // Une seule fenêtre de carte agrandie : elle suit la vue affichée (collection ou collection d'un membre).
@@ -339,6 +344,32 @@ async function refreshData() {
   await loadOwnedOutside(S.copies.map((c) => c.card_id));
   S.wish = new Set((wi.data || []).map((w) => w.card_id));
   S.log = lg.data || [];
+  saveCollectionOffline(); // Q4 : copie à jour à chaque lecture (sans attendre)
+}
+
+/* ---------- Copie hors ligne (Q4) ---------- */
+/**
+ * Garde la collection du membre sur l'appareil : séries ouvertes et leurs cartes (pour la progression), séries et
+ * cartes possédées hors séries ouvertes, ses exemplaires et son solde affiché. Ne lève jamais d'erreur.
+ */
+function saveCollectionOffline() {
+  if (S.offline) return;
+  if (!offlineAllowed()) { clearOffline(); return; }
+  const owned = new Set(S.copies.map((c) => c.card_id));
+  const outside = [...S.cardsById.values()].filter((c) => owned.has(c.id) && !S.cards.includes(c));
+  saveOffline(me, 'cartes', {
+    sets: S.sets, otherSets: [...S.otherSets.values()], cards: [...S.cards, ...outside],
+    copies: S.copies.map(({ id, card_id, shiny, serial, source, obtained_at }) => ({ id, card_id, shiny, serial, source, obtained_at })),
+    paillettes: bal(),
+  });
+}
+/** Garde les images des cartes possédées pour l'affichage hors ligne (après le premier rendu, sans le ralentir). */
+function cacheOwnedImages() {
+  if (S.offline) return;
+  const owned = new Set(S.copies.map((c) => c.card_id));
+  const urls = [...owned].map((id) => S.cardsById.get(id)?.image_url).filter(Boolean);
+  const run = () => cacheCardImages(urls);
+  if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 5000 }); else setTimeout(run, 2000);
 }
 
 /* ---------- Squelette ---------- */
@@ -402,6 +433,7 @@ function skeleton() {
 function renderHeader() {
   const el = $('#cartes-wallet');
   if (!el || !S.state) return;
+  if (S.offline) { el.innerHTML = pastilleHtml(bal(), { size: 'lg', id: 'cartes-lcd' }); return; } // Q4 : solde de la copie, sans action
   const s = S.state;
   // Le solde affiché suit les gains par paliers (animateBalance) ; une dépense s'affiche tout de suite.
   if (S.lcdShown == null || bal() < S.lcdShown) S.lcdShown = bal();
@@ -2788,6 +2820,8 @@ function onCardKey(e) {
 function onClick(e) {
   const t = e.target.closest('.cartes-tab[data-tab], [data-tab-go], [data-action]');
   if (!t || t.disabled) return;
+  // Q4 : hors ligne, seules la collection, la fiche et la carte agrandie répondent (aucune action sur l'économie).
+  if (S.offline && !(t.dataset.tab === 'collection' || ['open-card', 'zoom-card', 'close-dialog'].includes(t.dataset.action))) return;
   if (t.dataset.tab) { setTab(t.dataset.tab); document.getElementById(`cartes-tab-${t.dataset.tab}`)?.focus({ preventScroll: true }); return; }
   if (t.dataset.tabGo) { setTab(t.dataset.tabGo); document.getElementById(`cartes-tab-${t.dataset.tabGo}`)?.focus({ preventScroll: true }); return; }
   switch (t.dataset.action) {
@@ -2884,6 +2918,7 @@ function onSubmit(e) {
  */
 function onTabKey(e) {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+  if (S.offline) return; // Q4 : hors ligne, seule la collection est ouverte
   const ids = TABS.map(([id]) => id);
   const i = ids.indexOf(S.tab);
   const n = e.key === 'ArrowRight' ? (i + 1) % ids.length
@@ -2901,6 +2936,7 @@ function onTabKey(e) {
  * @returns {Promise<void>}
  */
 async function boot() {
+  if (OFF) { bootOffline(); return; }
   app.innerHTML = skeleton();
   app.addEventListener('click', onClick);
   app.addEventListener('change', onChange);
@@ -2924,6 +2960,7 @@ async function boot() {
     await loadStatic();
     await refreshData();
     renderAll();
+    cacheOwnedImages(); // Q4 : images des cartes possédées gardées pour le hors ligne
   } catch (e) {
     app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
     toast(errMsg(e), 'error');
@@ -2939,6 +2976,49 @@ async function boot() {
   // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour
   setInterval(() => { if (S.tab === 'ouverture' && !document.hidden) renderFree(); }, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && S.tab === 'ouverture') renderFree(); });
+}
+
+/**
+ * Q4 : démarrage sans réseau. Dessine la collection depuis la copie de l'appareil, en lecture seule : onglets
+ * Ouverture, Inventaire, Boutique, Classement et Échanges grisés ; aucun appel à la base.
+ * Sans copie (jamais ouverte avec du réseau, ou effacée), un bandeau l'explique.
+ */
+function bootOffline() {
+  const c = OFF.copie?.cartes;
+  if (!me || !c) {
+    app.innerHTML = `<section class="page-head"><div><p class="eyebrow">Jeu de cartes</p><h1 class="page-title">Cartes</h1></div></section>
+      ${offlineBannerHtml(null, 'ta collection')}
+      <div class="btn-row"><a class="btn btn-ghost" href="accueil.html">Aller à l'accueil</a></div>`;
+    app.removeAttribute('aria-busy');
+    return;
+  }
+  document.body.classList.add('cartes-offline');
+  app.innerHTML = offlineBannerHtml(c.at, 'ta collection') + skeleton();
+  app.addEventListener('click', onClick);
+  app.addEventListener('change', onChange);
+  app.addEventListener('input', onInput);
+  app.addEventListener('keydown', onCardKey);
+  $('#cartes-tablist').addEventListener('keydown', onTabKey);
+  $('#cartes-detail').addEventListener('close', () => { S.detailId = null; });
+  window.addEventListener('resize', () => fitAll(app));
+  S.sets = Array.isArray(c.sets) ? c.sets : [];
+  S.otherSets = new Map((Array.isArray(c.otherSets) ? c.otherSets : []).map((x) => [x.id, x]));
+  S.cards = (Array.isArray(c.cards) ? c.cards : []).filter((k) => S.sets.some((x) => x.id === k.set_id));
+  S.cardsById = new Map((Array.isArray(c.cards) ? c.cards : []).map((k) => [k.id, k]));
+  S.copies = Array.isArray(c.copies) ? c.copies : [];
+  S.state = { paillettes: Number(c.paillettes) || 0, config: {} };
+  S.uniqueTaken = null;
+  S.setId = S.sets.at(-1)?.id || null;
+  S.tab = 'collection';
+  for (const [id] of TABS) {
+    if (id === 'collection') continue;
+    const b = $(`#cartes-tab-${id}`);
+    b.disabled = true;
+    b.setAttribute('aria-disabled', 'true');
+    b.title = 'Disponible quand le réseau revient';
+  }
+  renderAll();
+  app.removeAttribute('aria-busy');
 }
 
 boot();

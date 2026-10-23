@@ -156,6 +156,23 @@ export default {
       keywords: ['menu', 'navigation', 'accueil', 'pages', 'colonne', 'outils', 'pied de page', 'footer', 'mobile', 'téléphone'],
     },
     {
+      slug: 'visite-guidee',
+      title: 'La visite guidée',
+      summary: 'Quatre bulles qui montrent l\'essentiel du site : le menu, les cartes, la recherche et l\'aide.',
+      page: 'accueil.html#visite',
+      steps: [
+        { title: 'Elle se lance toute seule la première fois', text: 'À ta première connexion, après l\'intro, la page d\'accueil s\'assombrit et une bulle « Bienvenue dans le gang ! » apparaît. Clique sur « C\'est parti ».' },
+        { title: 'Suis les bulles', text: 'Chaque étape éclaire un élément de la page et l\'explique en deux lignes. Le compteur « 2 / 4 » indique où tu en es ; clique sur « Suivant », puis sur « Terminer ».' },
+        { title: 'Passe-la quand tu veux', text: 'Le bouton « Passer la visite » ou la touche Échap la ferment. Elle ne se relance plus d\'elle-même ensuite.' },
+        { title: 'Revois-la depuis l\'aide', text: 'En haut de la page Aide et tutos, le bouton « Revoir la visite » te ramène à l\'accueil et la relance.' },
+      ],
+      tips: [
+        'Une étape qui présente une page à laquelle ton compte n\'a pas accès est sautée.',
+        'Sur téléphone, la visite ouvre d\'abord le menu replié pour te le montrer, puis le referme.',
+      ],
+      keywords: ['visite', 'découvrir', 'premiers pas', 'bienvenue', 'tour', 'nouveau', 'guide'],
+    },
+    {
       slug: 'rechercher-sur-le-site',
       title: 'Rechercher une sortie, un souvenir ou un membre',
       summary: 'La recherche globale retrouve une sortie, un souvenir ou un membre en quelques lettres.',

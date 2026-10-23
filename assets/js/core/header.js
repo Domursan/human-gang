@@ -188,6 +188,8 @@ export function renderHeader(profile, { nav = true } = {}) {
     const b = e.currentTarget; b.disabled = true;
     try { await sb.auth.signOut(); } catch {}
     try { sessionStorage.removeItem('hg_badges_checked'); } catch {}
+    // Q4 : copie hors ligne de la collection et images des cartes effacées (téléphone prêté, ordinateur partagé)
+    try { await (await import('../offline-store.js')).clearOffline(); } catch { /* rien à effacer */ }
     clearPerms();
     location.href = 'compte.html';
   });

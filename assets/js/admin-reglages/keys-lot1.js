@@ -36,6 +36,18 @@ export const GROUPES_LOT1 = [
     { k: 'site_identite.intro_active', kind: 'bool', label: 'Intro d\'entrée', aide: 'Coupée : l\'accueil s\'ouvre directement, sans l\'animation.' },
     { k: 'site_identite.bandeau_cookies', kind: 'bool', label: 'Bandeau d\'information cookies', aide: 'Coupé : le bandeau n\'apparaît plus. Le site n\'utilise que le stockage nécessaire.' },
   ] },
+  { id: 'visite', titre: 'Visite guidée', aide: 'Les bulles montrées à la première connexion d’un membre (menu, Cartes, loupe, Aide). Une étape dont la page est masquée est sautée.', champs: [
+    { k: 'site_identite.visite_active', kind: 'bool', label: 'Visite automatique au premier passage', aide: 'Coupée : la visite ne se lance plus d’elle-même ; « Revoir la visite » reste sur la page Aide.' },
+    { k: 'site_textes.visite_bienvenue', kind: 'text', max: 200, label: 'Bulle de bienvenue', aide: '{n} est remplacé par le nombre d’étapes.' },
+    { k: 'site_textes.visite_menu', kind: 'text', max: 200, label: 'Étape « menu »' },
+    { k: 'site_textes.visite_cartes', kind: 'text', max: 200, label: 'Étape « Cartes »' },
+    { k: 'site_textes.visite_recherche', kind: 'text', max: 200, label: 'Étape « recherche »' },
+    { k: 'site_textes.visite_aide', kind: 'text', max: 200, label: 'Étape « Aide et tutos »' },
+    { k: 'site_textes.visite_bandeau', kind: 'text', max: 120, label: 'Bandeau des membres déjà inscrits', aide: 'Après « Nouveau : ». Proposé une seule fois.' },
+  ] },
+  { id: 'hors_ligne', titre: 'Collection hors ligne', aide: 'Copie de la collection de cartes et de sa carte de membre sur l’appareil, pour la montrer sans réseau (lecture seule).', champs: [
+    { k: 'site_identite.cartes_hors_ligne', kind: 'bool', label: 'Garder une copie hors ligne', aide: 'Coupée : plus aucune copie n’est gardée, et la copie existante est effacée à la visite suivante de la page Cartes.' },
+  ] },
   { id: 'navigation', titre: 'Menu et pied de page', aide: 'Libellés du menu (en-tête) et liens du pied de page.', champs: [
     { k: 'site_textes.nav_libelles', kind: 'nav', label: 'Libellés du menu', aide: 'Vide = nom automatique de la page. Le libellé s\'affiche dans l\'en-tête.' },
     { k: 'site_textes.footer_liens', kind: 'footer', label: 'Liens du pied de page', aide: 'Décoche pour masquer un lien. « Événements » reste réservé aux membres qui y ont accès.' },
@@ -51,7 +63,7 @@ export const GROUPES_LOT1 = [
 /** Parties du formulaire (sous-sections de Site) : groupes affichés et adresse de chaque partie. */
 export const PARTS_LOT1 = {
   identite: { label: 'Identité et mentions légales', groups: ['identite', 'legal'], route: '#site/identite' },
-  textes: { label: 'Textes et intro', groups: ['textes', 'affichage'], route: '#site/textes' },
+  textes: { label: 'Textes et intro', groups: ['textes', 'affichage', 'visite', 'hors_ligne'], route: '#site/textes' },
   menu: { label: 'Menu et pied de page', groups: ['navigation'], route: '#site/menu' },
   etat: { label: 'État du site', groups: ['etat'], route: '#site/etat' },
 };

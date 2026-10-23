@@ -87,3 +87,8 @@
 .sv-ct-row .sv-row-actions { flex-wrap: wrap; }
 .sv-ct-diapos { display: grid; gap: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
 @media (max-width: 600px) { .sv-ct-row, .sv-ct-row:has(.sv-thumb) { grid-template-columns: minmax(0, 1fr); } }
+
+/* Q3 : bouton « Générer les vignettes manquantes » et son état */
+.sv-thumbs-gen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.sv-thumbs-gen[hidden] { display: none; }
+.sv-thumbs-gen .btn { min-height: 44px; }

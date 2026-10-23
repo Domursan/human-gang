@@ -6,7 +6,7 @@
 // Tables et RPC : hg_members, hg_ss_editions, hg_ss_progress, hg_events, hg_event_rsvps, hg_photos, hg_moments.
 // N'exporte rien.
 import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
-import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml } from './photos.js';
+import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, gridPath, selectPhotos } from './photos.js';
 import { prepareImage } from './image-compress.js';
 import { loadReactions, reactionBarHtml } from './reactions.js';
 import { ghostDirectory } from './admin-ghosts.js';
@@ -73,7 +73,7 @@ async function load() {
   const [prog, rs, ph, pairs] = await Promise.all([
     Promise.all(S.editions.map((e) => sb.rpc('hg_ss_progress', { p_edition: e.id }))),
     ids.length ? sb.from('hg_event_rsvps').select('event_id,user_id').eq('status', 'oui').in('event_id', ids) : { data: [] },
-    ids.length ? sb.from('hg_photos').select('id,event_id,path,user_id').in('event_id', ids).order('created_at', { ascending: true }) : { data: [] },
+    ids.length ? selectPhotos((cols) => sb.from('hg_photos').select(cols).in('event_id', ids).order('created_at', { ascending: true })) : { data: [] }, // Q3 : vignettes et dimensions
     Promise.all(S.editions.map((e) => fetchPairs(e.id))), // une requête par édition affichée (hg_ss_reveal)
   ]);
   const err2 = [...prog, rs, ph].find((r) => r.error)?.error;
@@ -90,7 +90,7 @@ async function load() {
   for (const p of ph.data || []) S.photos.set(p.event_id, [...(S.photos.get(p.event_id) || []), p]);
 
   const paths = [
-    ...[...S.photos.values()].flatMap((l) => l.slice(0, THUMBS).map((p) => p.path)),
+    ...[...S.photos.values()].flatMap((l) => l.slice(0, THUMBS).map(gridPath)), // vignette 480 px si elle existe (Q3)
     ...S.moments.map((x) => x.image_path),
   ];
   S.urls = await signedUrls(paths);
@@ -164,7 +164,7 @@ function irlCard(e) {
   const more = photos.length - shown.length;
   const href = `irl.html#event-${encodeURIComponent(e.id)}`;
   const thumbs = shown.length ? `<ul class="tl-thumbs">
-      ${shown.map((p, i) => `<li><a class="tl-thumb" href="${href}" aria-label="Photo ${i + 1} de l'album ${esc(e.title)}">${thumbHtml(S.urls.get(p.path))}</a></li>`).join('')}
+      ${shown.map((p, i) => `<li><a class="tl-thumb" href="${href}" aria-label="Photo ${i + 1} de l'album ${esc(e.title)}">${thumbHtml(S.urls.get(gridPath(p)), '', p)}</a></li>`).join('')}
       ${more > 0 ? `<li><a class="tl-thumb tl-thumb-more" href="${href}" aria-label="${more} autres photos dans l'album">+${more}</a></li>` : ''}
     </ul>` : '';
   return `<article class="tl-card tl-card-irl">

@@ -1,0 +1,38 @@
+/* ===== Visite guidée (Q1) : fond assombri, élément éclairé, bulle d'explication, bandeau « Nouveau » =====
+   Utilisé par assets/js/core/tour.js (page d'accueil). Couleurs : variables du thème (base.css). */
+
+.tour { position: fixed; inset: 0; z-index: 9300; }
+/* Fond : assombri par le voile quand rien n'est éclairé, sinon par l'ombre de l'éclairage (le voile reste pour bloquer les clics). */
+.tour-veil { position: absolute; inset: 0; background: rgba(6, 6, 8, .72); }
+.tour.has-spot .tour-veil { background: transparent; }
+.tour-spot { position: fixed; border-radius: 16px; pointer-events: none;
+  box-shadow: 0 0 0 3px var(--sand), 0 0 0 9999px rgba(6, 6, 8, .72);
+  transition: left .25s ease, top .25s ease, width .25s ease, height .25s ease; }
+.tour-bubble { position: fixed; left: 50%; top: 50%; width: min(360px, calc(100vw - 32px));
+  background: var(--surface-2, #1F1F23); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius);
+  padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+  transition: left .25s ease, top .25s ease; }
+.tour-bubble.tour-center { transform: translate(-50%, -50%); }
+.tour-bubble:focus { outline: none; }
+.tour-bubble p { margin: 0; }
+.tour-arrow { position: absolute; width: 16px; height: 16px; background: inherit; transform: rotate(45deg);
+  border: 1px solid var(--border-strong); bottom: -9px; border-top: 0; border-left: 0; }
+.tour-arrow.tour-arrow-up { top: -9px; bottom: auto; border: 1px solid var(--border-strong); border-right: 0; border-bottom: 0; }
+.tour-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tour-count { color: var(--sand); font-weight: 700; }
+.tour-dots { display: flex; gap: 6px; }
+.tour-dots i { width: 22px; height: 5px; border-radius: 999px; background: var(--border-strong); }
+.tour-dots i.on { background: var(--sand); }
+.tour-title { font-weight: 700; font-size: 1.05rem; }
+.tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tour-actions .btn { min-height: 44px; }
+/* Sans animation (préférence « réduire les animations » ou effets coupés) */
+.tour-still .tour-spot, .tour-still .tour-bubble { transition: none; }
+@media (prefers-reduced-motion: reduce) { .tour-spot, .tour-bubble { transition: none; } }
+
+/* Bandeau proposé une fois aux membres inscrits avant la visite */
+.tour-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; margin-bottom: 16px; border-radius: var(--radius-sm); background: var(--irl-bg); border: 1px solid var(--irl-border); }
+.tour-banner p { margin: 0; }
+.tour-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tour-banner .btn { min-height: 44px; }

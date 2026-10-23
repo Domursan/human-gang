@@ -6,13 +6,17 @@
  * Dépendances : core.js (client Supabase, esc), config.js (adresse du projet pour l'album), reactions.js (barre de
  *   réactions dans la visionneuse), ui-confirm.js (confirmation de suppression), icons.js (icônes).
  * Stockage : bucket « hg-photos ». Fonction edge : hg-album (album ZIP).
- * Exporte : PHOTO_BUCKET, uuid, uploadImage, removeObjects, signedUrls, signedUrl, openLightbox, thumbHtml, downloadAlbum.
+ * Q3 : chaque photo d'album a une vignette 480 px (<chemin>.thumb.webp) et ses dimensions (hg_photos.thumb_path, width,
+ *   height, migration 094) : les grilles affichent la vignette avec sa taille connue, la visionneuse la photo entière.
+ * Exporte : PHOTO_BUCKET, PHOTO_COLS, uuid, uploadImage, removeObjects, signedUrls, signedUrl, openLightbox, thumbHtml, downloadAlbum,
+ *   thumbPathOf, gridPath, uploadAlbumPhoto, insertPhotoRow, selectPhotos.
  */
 import { sb, esc } from './core.js';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { reactionBarHtml } from './reactions.js';
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
+import { prepareImage, prepareThumb } from './image-compress.js';
 
 /* ---------- Constantes ---------- */
 
@@ -210,9 +214,71 @@ export function openLightbox(items, index = 0) {
   l.d.querySelector('.lb-close').focus();
 }
 
-/** Petit utilitaire : <img> avec fallback (si URL manquante → bloc vide). */
-export function thumbHtml(url, alt = '') {
-  return url ? `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" decoding="async">` : '<span class="thumb-missing" aria-hidden="true"></span>';
+/**
+ * Petit utilitaire : <img> avec fallback (si URL manquante → bloc vide).
+ * dims : { width, height } connus (hg_photos, Q3) → attributs width/height, la case garde sa taille pendant le chargement.
+ */
+export function thumbHtml(url, alt = '', dims = null) {
+  const w = Number(dims?.width), h = Number(dims?.height);
+  const size = w > 0 && h > 0 ? ` width="${Math.round(w)}" height="${Math.round(h)}"` : '';
+  return url ? `<img src="${esc(url)}" alt="${esc(alt)}"${size} loading="lazy" decoding="async">` : '<span class="thumb-missing" aria-hidden="true"></span>';
+}
+
+/* ---------- Vignettes des albums (Q3, migration 094) ---------- */
+
+/** Colonnes de hg_photos lues par les pages d'albums (pas de select('*') : seulement ce qui s'affiche). */
+export const PHOTO_COLS = 'id,event_id,path,thumb_path,width,height,user_id,caption,created_at';
+/** Colonnes d'avant la migration 094 (repli tant qu'elle n'est pas appliquée). */
+const PHOTO_COLS_OLD = 'id,event_id,path,user_id,caption,created_at';
+/** Vrai si l'erreur dit qu'une colonne n'existe pas (migration 094 pas encore appliquée). */
+const missingColumn = (e) => !!e && (e.code === '42703' || e.code === 'PGRST204' || /column .* does not exist|thumb_path|schema cache/i.test(e.message || ''));
+/** Chemin imposé de la vignette d'une photo (contrainte hg_photos_thumb_path_ok). */
+export const thumbPathOf = (path) => `${path}.thumb.webp`;
+/** Chemin à afficher dans une grille : la vignette si elle existe, sinon la photo entière. */
+export const gridPath = (p) => p?.thumb_path || p?.path;
+
+/**
+ * Lit des photos d'albums (colonnes PHOTO_COLS). query(cols) construit la requête ; en cas de colonne absente,
+ * relance avec les colonnes d'avant la migration 094.
+ * @param {(cols: string) => PromiseLike<{data: any, error: any}>} query
+ * @returns {Promise<{data: any, error: any}>}
+ */
+export async function selectPhotos(query) {
+  const r = await query(PHOTO_COLS);
+  return missingColumn(r.error) ? query(PHOTO_COLS_OLD) : r;
+}
+
+/**
+ * Compresse et envoie une photo d'album, puis sa vignette 480 px (sans bloquer si la vignette échoue).
+ * @param {File} file Photo choisie.
+ * @param {string} dir Dossier : « <uid>/<id de la sortie> » (le premier dossier doit être celui du membre).
+ * @param {object} [opts] Options de prepareImage (taille maximale, qualité).
+ * @returns {Promise<{path: string, thumb_path?: string, width?: number, height?: number}>} Champs de la ligne hg_photos.
+ */
+export async function uploadAlbumPhoto(file, dir, opts) {
+  const img = await prepareImage(file, opts);
+  const path = `${dir}/${uuid()}.${img.ext}`;
+  await uploadImage(path, img.blob);
+  const row = { path };
+  if (img.width > 0 && img.height > 0) Object.assign(row, { width: img.width, height: img.height });
+  try {
+    const th = await prepareThumb(img.blob);
+    if (th) { await uploadImage(thumbPathOf(path), th); row.thumb_path = thumbPathOf(path); }
+  } catch (e) { console.warn('[photos] vignette non envoyée :', e?.message || e); }
+  return row;
+}
+
+/**
+ * Enregistre la ligne hg_photos d'une photo envoyée. Si la base n'a pas encore les colonnes de la migration 094,
+ * enregistre sans vignette ni dimensions. En cas d'échec, l'appelant retire les fichiers (path et thumb_path).
+ * @param {object} row { event_id, user_id, path, thumb_path?, width?, height? }
+ * @returns {Promise<{error: any}>}
+ */
+export async function insertPhotoRow(row) {
+  const r = await sb.from('hg_photos').insert(row);
+  if (!missingColumn(r.error)) return r;
+  const { thumb_path, width, height, ...old } = row;
+  return sb.from('hg_photos').insert(old);
 }
 
 /* ---------- Album : téléchargement en un ZIP (fonction edge hg-album) ---------- */

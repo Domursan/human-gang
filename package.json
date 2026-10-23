@@ -10,9 +10,12 @@
     "check": "node tests/check-js.cjs && node tests/check-publication.cjs",
     "test:rpc": "node tests/check-rpc.mjs",
     "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
-    "test": "node tests/run-all.cjs"
+    "test": "node tests/run-all.cjs",
+    "test:a11y": "node tests/a11y-pages.cjs",
+    "test:perf": "node tests/perf-budget.cjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.10.1",
     "playwright": "1.56.0"
   }
 }

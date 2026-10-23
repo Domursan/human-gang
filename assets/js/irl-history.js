@@ -5,7 +5,7 @@
 // Services externes : Leaflet et tuiles OpenStreetMap (carte), Nominatim (position des lieux), chargés à la demande.
 // Tables : hg_events, hg_event_rsvps, hg_photos. N'exporte que mountHistory et norm (normalisation de texte).
 import { sb, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, isGodMode, godLimit, godTag } from './core.js';
-import { uploadImage, removeObjects, uuid } from './photos.js';
+import { uploadImage, removeObjects, uuid, uploadAlbumPhoto, insertPhotoRow } from './photos.js';
 import { prepareImage } from './image-compress.js';
 import { pad } from './utils.js';
 import { optionsPhoto } from './reglages-valeurs-lot3.js';
@@ -226,16 +226,14 @@ export function mountHistory(ctx) {
       let ok = 0;
       for (const [i, file] of photos.entries()) {
         status.textContent = `Compression et envoi des photos ${i + 1} / ${photos.length}…`;
-        let path = null;
+        let row = null;
         try {
-          const img = await prepareImage(file, optionsPhoto());
-          path = `${me.id}/${id}/${uuid()}.${img.ext}`;
-          await uploadImage(path, img.blob);
-          const { error } = await sb.from('hg_photos').insert({ event_id: id, user_id: me.id, path });
+          row = await uploadAlbumPhoto(file, `${me.id}/${id}`, optionsPhoto()); // photo + vignette 480 px (Q3)
+          const { error } = await insertPhotoRow({ event_id: id, user_id: me.id, ...row });
           if (error) throw error;
           ok++;
         } catch (err) {
-          if (path) removeObjects([path]).catch(() => {});
+          if (row) removeObjects([row.path, row.thumb_path]).catch(() => {});
           toast(`${file.name} : ${errMsg(err)}`, 'error');
         }
       }
@@ -467,7 +465,7 @@ export function mountHistory(ctx) {
     const d = new Date(ev.starts_at);
     const who = presents(ev.id);
     const pics = photosOf(ev.id);
-    const thumbUrl = (pics[0] && S.urls.get(pics[0].path)) || (ev.cover_path && S.urls.get(ev.cover_path)) || null;
+    const thumbUrl = (pics[0] && (S.urls.get(pics[0].thumb_path) || S.urls.get(pics[0].path))) || (ev.cover_path && S.urls.get(ev.cover_path)) || null;
     const thumb = thumbUrl
       ? `<img src="${esc(thumbUrl)}" alt="" loading="lazy" decoding="async">`
       : `<span class="hx-thumb-date" style="--tint:${ctx.tint(ev.id)}"><strong>${d.getDate()}</strong><span>${esc(MONTH_SHORT.format(d))}</span></span>`;
