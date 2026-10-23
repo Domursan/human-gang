@@ -285,3 +285,7 @@
   .abt-simbar { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .abt-sec > summary::after { transition: none; } }
+
+/* ---------- Cartes Champions (admin-cards/champions.js, idée C17) ---------- */
+.champ-adm-body { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.champ-adm-body p { margin: 0; flex: 1 1 200px; overflow-wrap: anywhere; }

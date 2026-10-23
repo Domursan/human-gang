@@ -1,0 +1,74 @@
+/* ===== Planche imprimable d'une collection (collection-a4.html, idée C16) =====
+   Écran : barre d'outils + prévisualisation des pages A4 mises à l'échelle de la largeur disponible (--k, collection-a4.js).
+   Impression : seules les pages A4 (210 × 297 mm), sans en-tête ni pied du site, une page par feuille. */
+.a4-main { padding-top: 24px; padding-bottom: 40px; }
+.a4-tools { margin-bottom: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.a4-tools-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.a4-tools-h { font-size: 18px; font-weight: 700; }
+.a4-opts { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; }
+.a4-opts .field { min-width: min(260px, 100%); }
+.a4-opts select { min-height: 44px; }
+.a4-fs { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.a4-fs legend { font-size: 14px; color: var(--muted); padding: 0; margin-bottom: 6px; }
+.a4-radio, .a4-check { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.a4-radio input, .a4-check input { width: 20px; height: 20px; accent-color: var(--sand); }
+
+/* Prévisualisation : la page garde sa taille réelle, mise à l'échelle par transform (pas de défilement horizontal). */
+.a4-sheets { --k: 1; width: 100%; overflow: hidden; }
+.a4-sheets-in { width: 210mm; transform: scale(var(--k)); transform-origin: top left; display: flex; flex-direction: column; gap: 10mm; }
+
+/* ---------- Page A4 ---------- */
+.a4-page { --pg-bg: #F6F3EE; --pg-ink: #1a1618; --pg-muted: #6f6266; --pg-acc: #9E3543; --pg-line: #1a1618;
+  --miss-bg: #ECE7E0; --miss-line: #B8B0A6; --miss-ink: #5c5458;
+  width: 210mm; height: 297mm; padding: 13mm 12mm 10mm; box-sizing: border-box; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; background: var(--pg-bg); color: var(--pg-ink); font-family: var(--font-body);
+  box-shadow: 0 2px 18px rgba(0, 0, 0, .35); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.a4-sombre { --pg-bg: #0E0E10; --pg-ink: #F2EFEA; --pg-muted: #ABA7A0; --pg-acc: #E2C77E; --pg-line: #F2EFEA;
+  --miss-bg: #1F1F23; --miss-line: #3A3A40; --miss-ink: #ABA7A0; }
+.a4-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; }
+.a4-kicker { margin: 0; font-size: 8.5pt; font-weight: 700; letter-spacing: 2.4pt; text-transform: uppercase; color: var(--pg-acc); }
+.a4-title { margin: 2mm 0 0; font-family: var(--font-display); font-weight: 400; font-size: 22pt; line-height: 1.05; }
+.a4-sub { margin: 1.5mm 0 0; font-size: 10pt; color: var(--pg-muted); }
+.a4-count { text-align: right; flex: none; }
+.a4-count-n { display: block; font-family: var(--font-display); font-size: 22pt; line-height: 1; }
+.a4-count-l { font-size: 8.5pt; color: var(--pg-muted); }
+.a4-head-mini { padding-bottom: 3mm; border-bottom: .5mm solid var(--pg-line); margin-bottom: 5mm; }
+.a4-rule { height: .6mm; background: var(--pg-line); margin: 4mm 0 4.5mm; }
+.a4-rainbow { display: flex; height: 2mm; margin-bottom: 5mm; }
+.a4-rainbow span { flex: 1; }
+.a4-rainbow span:nth-child(1) { background: #FE3104; } .a4-rainbow span:nth-child(2) { background: #FCA301; }
+.a4-rainbow span:nth-child(3) { background: #FBD32D; } .a4-rainbow span:nth-child(4) { background: #159946; }
+.a4-rainbow span:nth-child(5) { background: #2B5AE2; } .a4-rainbow span:nth-child(6) { background: #4E2398; }
+
+/* Grille 6 × 5 : cases de 28 × 39 mm (format carte 63 / 88). */
+.a4-grid { display: grid; grid-template-columns: repeat(6, 28mm); grid-auto-rows: 39.1mm; gap: 3.4mm 3.6mm; justify-content: space-between; align-content: start; flex: 1; }
+.a4-cell { position: relative; }
+.a4-cell .hgc { --w: 28mm; width: 28mm; max-width: none; }
+.a4-cell .hgc-holo, .a4-cell .hgc-sheen { display: none; } /* aucun effet animé sur papier */
+.a4-shiny { position: absolute; top: -1.6mm; right: -1.6mm; width: 4.6mm; height: 4.6mm; border-radius: 50%; background: #FCA301; color: #1a1618;
+  display: grid; place-items: center; font-size: 7pt; line-height: 1; box-shadow: 0 0 0 .5mm var(--pg-bg); }
+.a4-miss { border: .45mm dashed var(--miss-line); border-radius: 1.6mm; background: var(--miss-bg); color: var(--miss-ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2mm; padding: 2mm; text-align: center; }
+.a4-miss-n { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-weight: 700; font-size: 8.5pt; color: var(--pg-ink); }
+.a4-miss-name { font-size: 7.5pt; line-height: 1.2; overflow-wrap: anywhere; }
+.a4-miss-t { font-size: 7pt; }
+.a4-empty { grid-column: 1 / -1; color: var(--pg-muted); font-size: 11pt; }
+.a4-foot { display: flex; justify-content: space-between; gap: 6mm; border-top: .3mm solid var(--miss-line); padding-top: 2.5mm; margin-top: 4mm;
+  font-size: 7.5pt; color: var(--pg-muted); }
+
+@media (max-width: 600px) {
+  .a4-tools { padding: 16px; }
+  .a4-tools-head .btn { width: 100%; }
+}
+
+/* ---------- Impression ---------- */
+@page { size: A4 portrait; margin: 0; }
+@media print {
+  html, body { background: #fff !important; }
+  body > :not(main), .site-header, .site-footer, footer:not(.a4-foot), .a4-tools, .toast-box, .cookie-notice { display: none !important; }
+  main.a4-main { padding: 0 !important; margin: 0 !important; max-width: none !important; width: auto !important; }
+  .a4-sheets { overflow: visible; height: auto !important; }
+  .a4-sheets-in { transform: none !important; gap: 0; }
+  .a4-page { box-shadow: none; break-after: page; page-break-after: always; }
+  .a4-page:last-child { break-after: auto; page-break-after: auto; }
+}
