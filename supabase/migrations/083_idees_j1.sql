@@ -629,7 +629,8 @@ begin
   ), '[]'::jsonb);
 end $$;
 
--- hg_quiz_answer : version de 062, plus le refus pour l'auteur d'une citation.
+-- hg_quiz_answer : version de 076 (auteur de la question, Staff « quiz », plafond 2 000), plus le refus pour
+-- l'auteur d'une citation.
 create or replace function public.hg_quiz_answer(p_question uuid, p_response jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare me uuid := auth.uid(); q hg_quiz_questions; k jsonb; ok boolean; gain int := 0;
@@ -640,6 +641,7 @@ begin
      or (q.secret and hg_eggs_count(me) < 3) or q.subject_id = me then
     raise exception 'Cette question n''est pas ouverte';
   end if;
+  if q.created_by = me then raise exception 'Tu ne peux pas répondre à une question que tu as écrite.' using errcode = 'P0001'; end if;
   if p_response is null or (jsonb_typeof(p_response) = 'string' and btrim(p_response #>> '{}') = '')
      or (jsonb_typeof(p_response) = 'array' and jsonb_array_length(p_response) = 0) then
     raise exception 'Choisis ou écris une réponse';
@@ -650,7 +652,8 @@ begin
   end if;
   select answer into k from hg_quiz_keys where question_id = q.id;
   ok := hg_quiz_check(q.qtype, coalesce(k, '{}'::jsonb), p_response);
-  if ok then gain := q.reward; end if;
+  -- 076 (I2) : le Staff « quiz » connaît les réponses : il joue sans gagner de Paillettes.
+  if ok and not hg_has_perm('quiz') then gain := least(greatest(q.reward, 0), 2000); end if;
   insert into hg_quiz_answers (question_id, user_id, response, is_correct, reward)
     values (q.id, me, p_response, ok, gain);
   if gain > 0 then perform hg_wallet_add(me, gain, 'quiz', 'quiz:' || q.id::text); end if;

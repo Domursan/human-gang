@@ -738,8 +738,8 @@ returns jsonb language sql stable security definer set search_path = public as $
   select case when not public.hg_is_member() then null else jsonb_build_object(
     'year', p_year,
     'gang', jsonb_build_object(
-      'membres_total', (select count(*) from hg_profiles, b where created_at < b.e),
-      'nouveaux_membres', (select coalesce(jsonb_agg(pseudo order by created_at), '[]') from hg_profiles, b where created_at >= b.s and created_at < b.e),
+      'membres_total', (select count(*) from hg_profiles, b where not is_ghost and created_at < b.e),
+      'nouveaux_membres', (select coalesce(jsonb_agg(pseudo order by created_at), '[]') from hg_profiles, b where not is_ghost and created_at >= b.s and created_at < b.e),
       'sorties', (select coalesce(jsonb_agg(jsonb_build_object('id', id, 'title', title, 'location', location, 'starts_at', starts_at,
                     'presents', (select count(*) from hg_event_rsvps r where r.event_id = ev.id and r.status = 'oui')) order by starts_at), '[]') from ev),
       'photos', (select count(*) from ph),
