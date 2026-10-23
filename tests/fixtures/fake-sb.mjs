@@ -532,9 +532,10 @@ function quizRow(q) {
    Modification : { id, …seulement les champs changés }. Réponse : { type, created, free_daily_removed_from }. */
 /** Raretés tirées (les 7 clés des taux, sans « unique »). */
 const BOOSTER_RARITIES = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
-/** Styles de cartouche permis : 9 d'origine + 30 couleurs (migration 077, hg_booster_styles()). */
+/** Styles de cartouche permis : 9 d'origine + 30 couleurs + 14 thèmes (migration 077, hg_booster_styles()). */
 const BOOSTER_STYLES = ['cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte', 'cart--holo', 'cart--collection', 'cart--identite',
-  'cart--rubis', 'cart--paprika', 'cart--braise', 'cart--corail', 'cart--framboise', 'cart--dragee', 'cart--fuchsia', 'cart--mauve', 'cart--lavande', 'cart--prune', 'cart--abricot', 'cart--mandarine', 'cart--miel', 'cart--cuivre', 'cart--cacao', 'cart--citron', 'cart--pistache', 'cart--kiwi', 'cart--olive', 'cart--acide', 'cart--menthe', 'cart--lagon', 'cart--petrole', 'cart--azur', 'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire'];
+  'cart--rubis', 'cart--paprika', 'cart--braise', 'cart--corail', 'cart--framboise', 'cart--dragee', 'cart--fuchsia', 'cart--mauve', 'cart--lavande', 'cart--prune', 'cart--abricot', 'cart--mandarine', 'cart--miel', 'cart--cuivre', 'cart--cacao', 'cart--citron', 'cart--pistache', 'cart--kiwi', 'cart--olive', 'cart--acide', 'cart--menthe', 'cart--lagon', 'cart--petrole', 'cart--azur', 'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire',
+  'cart--theme-pate', 'cart--theme-saucisse', 'cart--theme-pate-saucisse', 'cart--theme-raclette', 'cart--theme-fondue', 'cart--theme-arene', 'cart--theme-blocs', 'cart--theme-usine', 'cart--theme-noel', 'cart--theme-halloween', 'cart--theme-paques', 'cart--theme-saint-nicolas', 'cart--theme-feux-artifice', 'cart--theme-gateau-anniversaire'];
 /**
  * Crée ou modifie un type comme hg_booster_type_save(p jsonb) : droits, validations, gratuit du jour unique.
  * L'appel est noté dans le journal : ['booster_type_save', id, p].

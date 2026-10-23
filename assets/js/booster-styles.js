@@ -1,6 +1,6 @@
 // =====================================================================
-// Styles de cartouche des boosters : liste de référence côté front (39 = 9 d'origine + 30 couleurs).
-// Classes CSS : cartes-boosters.css (9 d'origine) et boosters-styles.css (30 couleurs, une famille par teinte).
+// Styles de cartouche des boosters : liste de référence côté front (53 = 9 d'origine + 30 couleurs + 14 thèmes).
+// Classes CSS : cartes-boosters.css (9 d'origine) et boosters-styles.css (30 couleurs, une famille par teinte ; 14 thèmes cart--theme-<slug>).
 // Même liste côté base : hg_booster_styles() (migration 077), qui valide hg_booster_type_save et la contrainte
 // hg_booster_types_style_check. Ajouter un style = une ligne ici + une classe CSS + la liste SQL.
 // Exporte : BOOSTER_STYLE_FAMILIES, BOOSTER_STYLE_LIST, BOOSTER_STYLES (paires [classe, libellé]), boosterStyleClass.
@@ -15,6 +15,7 @@ export const BOOSTER_STYLE_FAMILIES = [
   ['verts', 'Jaunes et verts'],
   ['bleus', 'Bleus et cyans'],
   ['neutres', 'Indigos et neutres'],
+  ['themes', 'Thèmes'],
 ];
 
 /**
@@ -61,6 +62,20 @@ export const BOOSTER_STYLE_LIST = [
   { cls: 'cart--indigo', label: 'Indigo', fam: 'neutres', motif: 'ciel étoilé, sombre' },
   { cls: 'cart--ardoise', label: 'Ardoise', fam: 'neutres', motif: 'feuilletage, moyen' },
   { cls: 'cart--ivoire', label: 'Ivoire', fam: 'neutres', motif: 'toile de lin, clair' },
+  { cls: 'cart--theme-pate', label: 'Pâté', fam: 'themes', motif: 'croûte en treillis, moyen' },
+  { cls: 'cart--theme-saucisse', label: 'Saucisse', fam: 'themes', motif: 'chaînons et liens, sombre' },
+  { cls: 'cart--theme-pate-saucisse', label: 'Pâté + saucisse', fam: 'themes', motif: 'moitié treillis, moitié chaînons' },
+  { cls: 'cart--theme-raclette', label: 'Raclette', fam: 'themes', motif: 'fromage fondu, gouttes' },
+  { cls: 'cart--theme-fondue', label: 'Fondue', fam: 'themes', motif: 'bulles de fromage, piques' },
+  { cls: 'cart--theme-arene', label: 'Arène', fam: 'themes', motif: 'grille hexagonale dorée, gemme' },
+  { cls: 'cart--theme-blocs', label: 'Blocs', fam: 'themes', motif: 'pixels herbe et terre' },
+  { cls: 'cart--theme-usine', label: 'Usine', fam: 'themes', motif: 'orange industriel, tapis, engrenage' },
+  { cls: 'cart--theme-noel', label: 'Noël', fam: 'themes', motif: 'neige, ruban rouge' },
+  { cls: 'cart--theme-halloween', label: 'Halloween', fam: 'themes', motif: 'lune, lueur orange, étoiles' },
+  { cls: 'cart--theme-paques', label: 'Pâques', fam: 'themes', motif: 'œufs peints pastel' },
+  { cls: 'cart--theme-saint-nicolas', label: 'Saint-Nicolas', fam: 'themes', motif: 'étoiles dorées, biscuits' },
+  { cls: 'cart--theme-feux-artifice', label: 'Feux d’artifice', fam: 'themes', motif: 'bouquets en anneaux' },
+  { cls: 'cart--theme-gateau-anniversaire', label: 'Gâteau d’anniversaire', fam: 'themes', motif: 'glaçage, bougies' },
 ];
 
 /** Paires [classe, libellé], dans l'ordre de BOOSTER_STYLE_LIST. */

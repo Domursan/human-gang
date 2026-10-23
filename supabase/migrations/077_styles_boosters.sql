@@ -1,11 +1,11 @@
--- ===== Humane Gang — 077 : 30 nouveaux styles de cartouche de booster =====
--- Rôle : autoriser 30 styles de couleur supplémentaires pour hg_booster_types.style (en plus des 9 d'origine),
+-- ===== Humane Gang — 077 : 44 nouveaux styles de cartouche de booster (30 couleurs, 14 thèmes) =====
+-- Rôle : autoriser 44 styles supplémentaires (30 couleurs et 14 thèmes) pour hg_booster_types.style (en plus des 9 d'origine),
 -- choisis dans l'éditeur de types de l'admin (onglet Boosters des cartes).
---   1. hg_booster_styles() : liste de référence des 39 classes (même liste que assets/js/booster-styles.js ;
+--   1. hg_booster_styles() : liste de référence des 53 classes (même liste que assets/js/booster-styles.js ;
 --      CSS : cartes-boosters.css pour les 9 d'origine, boosters-styles.css pour les 30 couleurs).
 --   2. hg_booster_type_save : identique à 071 (et à la définition en production), sauf la liste des styles,
 --      désormais lue dans hg_booster_styles() ; un style inconnu reste refusé (« Style inconnu »).
---   3. Contrainte hg_booster_types_style_check (style = une des 39 classes) : filet de sécurité en plus de la RPC.
+--   3. Contrainte hg_booster_types_style_check (style = une des 53 classes) : filet de sécurité en plus de la RPC.
 --      Posée NOT VALID puis validée (les 9 types existants utilisent des styles d'origine).
 -- Idempotente (create or replace, contrainte posée seulement si absente), rétrocompatible (aucun style retiré).
 
@@ -24,7 +24,10 @@ as $$
     'cart--fuchsia', 'cart--mauve', 'cart--lavande', 'cart--prune', 'cart--abricot', 'cart--mandarine',
     'cart--miel', 'cart--cuivre', 'cart--cacao', 'cart--citron', 'cart--pistache', 'cart--kiwi',
     'cart--olive', 'cart--acide', 'cart--menthe', 'cart--lagon', 'cart--petrole', 'cart--azur',
-    'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire'
+    'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire',
+    -- 14 thèmes (077) : dessins génériques, classes cart--theme-<slug>
+    'cart--theme-pate', 'cart--theme-saucisse', 'cart--theme-pate-saucisse', 'cart--theme-raclette', 'cart--theme-fondue', 'cart--theme-arene', 'cart--theme-blocs',
+    'cart--theme-usine', 'cart--theme-noel', 'cart--theme-halloween', 'cart--theme-paques', 'cart--theme-saint-nicolas', 'cart--theme-feux-artifice', 'cart--theme-gateau-anniversaire'
   ]::text[];
 $$;
 comment on function public.hg_booster_styles() is 'Classes CSS autorisées pour hg_booster_types.style (9 d''origine + 30 couleurs, migration 077). Même liste que assets/js/booster-styles.js.';

@@ -1,4 +1,4 @@
-/* ===== Cartouches de booster : 30 styles de couleur supplémentaires (à charger après cartes-boosters.css) =====
+/* ===== Cartouches de booster : 30 styles de couleur + 14 thèmes (à charger après cartes-boosters.css) =====
    Même construction que les 9 styles d’origine : dégradé du corps + motif, étiquette unie, sous-titre clair,
    tranche rayée, pied contrasté (≥ 4,5:1, vérifié aussi motif renforcé). Chaque style a un motif propre et un
    niveau de luminosité (clair, moyen, sombre) : il reste reconnaissable sans distinguer les teintes.
@@ -353,3 +353,167 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 .cart--ivoire .cart-lbl2 { color: #f3e9d0; }
 .cart--ivoire .cart-ridge { background: repeating-linear-gradient(90deg, #5a4a2a 0 4px, #e9dec2 4px 8px); }
 .cart--ivoire .cart-foot { color: #4a3c20; font-weight: 700; text-shadow: 0 0 2px #e9dec2, 0 0 4px #e9dec2; }
+
+/* ================= Thèmes (14 cartouches à thème, classes cart--theme-<slug>) =================
+   Dessins génériques faits pour le gang : aucun logo, nom de marque, personnage ni élément officiel.
+   Plaque, nom et prix : contraste ≥ 4,5:1 sur leur fond. Motif et couleur différents, donc lisibles en daltonien. */
+
+/* ---------- Pâté : croûte en treillis, moyen ---------- */
+.cart--theme-pate .cart-body { background:
+  repeating-linear-gradient(45deg, rgb(255 220 150 / .38) 0 3px, transparent 3px 14px),
+  repeating-linear-gradient(-45deg, rgb(255 220 150 / .38) 0 3px, transparent 3px 14px),
+  radial-gradient(circle, rgb(40 52 20 / .7) 0 1.4px, transparent 2.2px) 0 0 / 11px 13px,
+  linear-gradient(180deg, #b5651d 0%, #7a3e12 100%); }
+.cart--theme-pate .cart-label-fl { background: #3a1e0b; }
+.cart--theme-pate .cart-lbl1 { color: #ffffff; }
+.cart--theme-pate .cart-lbl2 { color: #ffe2b0; }
+.cart--theme-pate .cart-ridge { background: repeating-linear-gradient(90deg, #3a1e0b 0 4px, #e0a85a 4px 8px); }
+.cart--theme-pate .cart-foot { color: #ffffff; font-weight: 700; background: #3a1e0b; }
+
+/* ---------- Saucisse : chaînons et liens, sombre ---------- */
+.cart--theme-saucisse .cart-body { background:
+  repeating-linear-gradient(90deg, transparent 0 27px, rgb(60 0 0 / .45) 27px 30px),
+  radial-gradient(ellipse 27px 13px at 50% 50%, rgb(255 190 170 / .55) 0 58%, transparent 62%) 0 0 / 60px 44px,
+  linear-gradient(180deg, #b8323a 0%, #7d1a22 100%); }
+.cart--theme-saucisse .cart-label-fl { background: #4a0c13; }
+.cart--theme-saucisse .cart-lbl1 { color: #ffffff; }
+.cart--theme-saucisse .cart-lbl2 { color: #ffd6cc; }
+.cart--theme-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #4a0c13 0 4px, #ff9f8f 4px 8px); }
+.cart--theme-saucisse .cart-foot { color: #ffffff; font-weight: 700; background: #4a0c13; }
+
+/* ---------- Pâté + saucisse : moitié treillis, moitié chaînons ---------- */
+.cart--theme-pate-saucisse .cart-body { background:
+  radial-gradient(ellipse 27px 13px at 50% 50%, rgb(255 190 170 / .55) 0 58%, transparent 62%) 0 0 / 60px 44px no-repeat,
+  linear-gradient(180deg, #b8323a 0%, #7d1a22 100%); }
+.cart--theme-pate-saucisse .cart-label-fl { background: #2a1408; }
+.cart--theme-pate-saucisse .cart-lbl1 { color: #ffffff; }
+.cart--theme-pate-saucisse .cart-lbl2 { color: #fff3d6; }
+.cart--theme-pate-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #2a1408 0 4px, #e0a85a 4px 8px); }
+.cart--theme-pate-saucisse .cart-foot { color: #ffffff; font-weight: 700; background: #2a1408; }
+
+/* ---------- Raclette : fromage fondu, gouttes ---------- */
+.cart--theme-raclette .cart-body { background:
+  radial-gradient(ellipse 22px 36px at 22% 100%, #fff1a6 0 70%, transparent 72%),
+  radial-gradient(ellipse 18px 30px at 70% 100%, #fff1a6 0 70%, transparent 72%),
+  radial-gradient(circle, rgb(190 120 0 / .5) 0 2.2px, transparent 3px) 0 0 / 26px 22px,
+  linear-gradient(180deg, #ffd45c 0%, #f2a81f 100%); }
+.cart--theme-raclette .cart-label-fl { background: #5a3200; }
+.cart--theme-raclette .cart-lbl1 { color: #ffffff; }
+.cart--theme-raclette .cart-lbl2 { color: #ffe9a8; }
+.cart--theme-raclette .cart-ridge { background: repeating-linear-gradient(90deg, #5a3200 0 4px, #ffd45c 4px 8px); }
+.cart--theme-raclette .cart-foot { color: #ffffff; font-weight: 700; background: #5a3200; }
+
+/* ---------- Fondue : bulles de fromage, piques ---------- */
+.cart--theme-fondue .cart-body { background:
+  repeating-linear-gradient(-30deg, rgb(255 255 255 / .14) 0 2px, transparent 2px 22px),
+  radial-gradient(circle, rgb(255 240 200 / .6) 0 2.6px, transparent 3.6px) 0 0 / 30px 34px,
+  radial-gradient(circle, rgb(255 240 200 / .45) 0 5px, transparent 6px) 14px 17px / 62px 70px,
+  linear-gradient(180deg, #d9822b 0%, #8a3f12 100%); }
+.cart--theme-fondue .cart-label-fl { background: #3c1a06; }
+.cart--theme-fondue .cart-lbl1 { color: #ffffff; }
+.cart--theme-fondue .cart-lbl2 { color: #ffe0b3; }
+.cart--theme-fondue .cart-ridge { background: repeating-linear-gradient(90deg, #3c1a06 0 4px, #ffb36b 4px 8px); }
+.cart--theme-fondue .cart-foot { color: #ffffff; font-weight: 700; background: #3c1a06; }
+
+/* ---------- Arène : grille hexagonale dorée, gemme ---------- */
+.cart--theme-arene .cart-body { background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 60'%3E%3Cpolygon points='30,3 55,30 30,57 5,30' fill='%234fc3f7' stroke='%23f0dca0' stroke-width='3'/%3E%3Cpolygon points='30,3 55,30 30,30 5,30' fill='%23bfeeff' fill-opacity='.55'/%3E%3C/svg%3E") 124px 40px / 56px 56px no-repeat,
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='35' viewBox='0 0 40 35'%3E%3Cpath d='M10 1 L30 1 L40 17.5 L30 34 L10 34 L0 17.5 Z' fill='none' stroke='%23c8aa6e' stroke-opacity='.4' stroke-width='1.2'/%3E%3C/svg%3E") 0 0 / 40px 35px,
+  linear-gradient(180deg, #13295a 0%, #061026 100%); }
+.cart--theme-arene .cart-label-fl { background: #0a1430; }
+.cart--theme-arene .cart-lbl1 { color: #f0dca0; }
+.cart--theme-arene .cart-lbl2 { color: #ffffff; }
+.cart--theme-arene .cart-ridge { background: repeating-linear-gradient(90deg, #0a1430 0 4px, #c8aa6e 4px 8px); }
+.cart--theme-arene .cart-foot { color: #f0dca0; font-weight: 700; background: #0a1430; }
+
+/* ---------- Blocs : pixels herbe et terre ---------- */
+.cart--theme-blocs .cart-body { background:
+  conic-gradient(rgb(0 0 0 / .16) 25%, transparent 0 50%, rgb(0 0 0 / .16) 0 75%, transparent 0) 0 0 / 24px 24px,
+  linear-gradient(180deg, #5f9e3a 0 38%, #7a5230 38% 100%); }
+.cart--theme-blocs .cart-label-fl { background: #2d2118; }
+.cart--theme-blocs .cart-lbl1 { color: #ffffff; }
+.cart--theme-blocs .cart-lbl2 { color: #e8ffcc; }
+.cart--theme-blocs .cart-ridge { background: repeating-linear-gradient(90deg, #2d2118 0 4px, #5f9e3a 4px 8px); }
+.cart--theme-blocs .cart-foot { color: #ffffff; font-weight: 700; background: #2d2118; }
+
+/* ---------- Usine : orange industriel, tapis, engrenage ---------- */
+.cart--theme-usine .cart-body { background:
+  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%233d3d3d' stroke-width='14' stroke-dasharray='9 7'/%3E%3Ccircle cx='50' cy='50' r='30' fill='%233d3d3d'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23f08a24'/%3E%3C/svg%3E") 150px 60px / 84px 84px no-repeat,
+  repeating-linear-gradient(90deg, #2b2b2b 0 14px, #3d3d3d 14px 28px) 0 200px / 100% 40px no-repeat,
+  linear-gradient(180deg, #f08a24 0%, #c85f0a 100%); }
+.cart--theme-usine .cart-label-fl { background: #2b2b2b; }
+.cart--theme-usine .cart-lbl1 { color: #ffb347; }
+.cart--theme-usine .cart-lbl2 { color: #ffffff; }
+.cart--theme-usine .cart-ridge { background: repeating-linear-gradient(90deg, #2b2b2b 0 4px, #ffb347 4px 8px); }
+.cart--theme-usine .cart-foot { color: #ffffff; font-weight: 700; background: #2b2b2b; }
+
+/* ---------- Noël : neige, ruban rouge ---------- */
+.cart--theme-noel .cart-body { background:
+  linear-gradient(#b3122e, #b3122e) 0 200px / 100% 40px no-repeat,
+  radial-gradient(circle, #ffffff 0 1.6px, transparent 2.6px) 0 0 / 22px 26px,
+  linear-gradient(180deg, #0f4d2b 0%, #093218 100%); }
+.cart--theme-noel .cart-label-fl { background: #6b0a18; }
+.cart--theme-noel .cart-lbl1 { color: #ffffff; }
+.cart--theme-noel .cart-lbl2 { color: #ffe08a; }
+.cart--theme-noel .cart-ridge { background: repeating-linear-gradient(90deg, #6b0a18 0 4px, #ffffff 4px 8px); }
+.cart--theme-noel .cart-foot { color: #ffffff; font-weight: 700; background: #6b0a18; }
+
+/* ---------- Halloween : lune, lueur orange, étoiles ---------- */
+.cart--theme-halloween .cart-body { background:
+  radial-gradient(circle at 190px 40px, #ff9a3c 0 17px, transparent 18px),
+  radial-gradient(ellipse at 50% 100%, rgb(255 120 20 / .45), transparent 60%),
+  radial-gradient(circle, #ffffff 0 1px, transparent 1.8px) 0 0 / 34px 38px,
+  linear-gradient(180deg, #22102e 0%, #120818 100%); }
+.cart--theme-halloween .cart-label-fl { background: #2a0f3a; }
+.cart--theme-halloween .cart-lbl1 { color: #ff9a3c; }
+.cart--theme-halloween .cart-lbl2 { color: #ffffff; }
+.cart--theme-halloween .cart-ridge { background: repeating-linear-gradient(90deg, #2a0f3a 0 4px, #ff9a3c 4px 8px); }
+.cart--theme-halloween .cart-foot { color: #ffd9a8; font-weight: 700; background: #2a0f3a; }
+
+/* ---------- Pâques : œufs peints pastel ---------- */
+.cart--theme-paques .cart-body { background:
+  radial-gradient(ellipse 12px 16px at 50% 50%, #ffb3c7 0 55%, transparent 58%) 0 0 / 40px 48px,
+  radial-gradient(ellipse 12px 16px at 50% 50%, #ffe27a 0 55%, transparent 58%) 20px 24px / 40px 48px,
+  radial-gradient(ellipse 10px 13px at 50% 50%, #c9b6ff 0 55%, transparent 58%) 30px 6px / 40px 48px,
+  linear-gradient(180deg, #c9f2dc 0%, #9fdcc0 100%); }
+.cart--theme-paques .cart-label-fl { background: #1f5a55; }
+.cart--theme-paques .cart-lbl1 { color: #ffffff; }
+.cart--theme-paques .cart-lbl2 { color: #f6fffb; }
+.cart--theme-paques .cart-ridge { background: repeating-linear-gradient(90deg, #1f5a55 0 4px, #ffb3c7 4px 8px); }
+.cart--theme-paques .cart-foot { color: #ffffff; font-weight: 700; background: #1f5a55; }
+
+/* ---------- Saint-Nicolas : étoiles dorées, biscuits ---------- */
+.cart--theme-saint-nicolas .cart-body { background:
+  radial-gradient(ellipse 8px 10px at 50% 50%, #c98a4b 0 60%, transparent 66%) 13px 40px / 52px 60px,
+  radial-gradient(circle, #e6b84d 0 2px, transparent 2.8px) 0 0 / 26px 30px,
+  linear-gradient(180deg, #7a1d1d 0%, #4a0f0f 100%); }
+.cart--theme-saint-nicolas .cart-label-fl { background: #2b0808; }
+.cart--theme-saint-nicolas .cart-lbl1 { color: #ffd96b; }
+.cart--theme-saint-nicolas .cart-lbl2 { color: #ffffff; }
+.cart--theme-saint-nicolas .cart-ridge { background: repeating-linear-gradient(90deg, #2b0808 0 4px, #e6b84d 4px 8px); }
+.cart--theme-saint-nicolas .cart-foot { color: #ffd96b; font-weight: 700; background: #2b0808; }
+
+/* ---------- Feux d’artifice : bouquets en anneaux ---------- */
+.cart--theme-feux-artifice .cart-body { background:
+  radial-gradient(circle at 45px 60px, #ffd34d 0 3px, transparent 4px),
+  radial-gradient(circle at 45px 60px, transparent 0 22px, rgb(255 77 141 / .85) 23px 24.5px, transparent 26px),
+  radial-gradient(circle at 185px 215px, #4de6ff 0 3px, transparent 4px),
+  radial-gradient(circle at 185px 215px, transparent 0 30px, rgb(77 230 255 / .8) 31px 32.5px, transparent 34px),
+  radial-gradient(circle, #ffffff 0 1px, transparent 1.6px) 0 0 / 30px 34px,
+  linear-gradient(180deg, #0a0f2c 0%, #05071a 100%); }
+.cart--theme-feux-artifice .cart-label-fl { background: #05071a; }
+.cart--theme-feux-artifice .cart-lbl1 { color: #ffd34d; }
+.cart--theme-feux-artifice .cart-lbl2 { color: #ffffff; }
+.cart--theme-feux-artifice .cart-ridge { background: repeating-linear-gradient(90deg, #05071a 0 4px, #ff4d8d 4px 8px); }
+.cart--theme-feux-artifice .cart-foot { color: #ffffff; font-weight: 700; background: #05071a; }
+
+/* ---------- Gâteau d’anniversaire : glaçage, bougies ---------- */
+.cart--theme-gateau-anniversaire .cart-body { background:
+  radial-gradient(ellipse 130px 26px at 50% 186px, #ffffff 0 90%, transparent 92%),
+  repeating-linear-gradient(90deg, #ffffff 0 12px, #ffb3d1 12px 24px) 0 200px / 100% 90px no-repeat,
+  linear-gradient(180deg, #ffd6e7 0%, #f7b8d2 100%); }
+.cart--theme-gateau-anniversaire .cart-label-fl { background: #7a2a5a; }
+.cart--theme-gateau-anniversaire .cart-lbl1 { color: #ffffff; }
+.cart--theme-gateau-anniversaire .cart-lbl2 { color: #ffe6f2; }
+.cart--theme-gateau-anniversaire .cart-ridge { background: repeating-linear-gradient(90deg, #7a2a5a 0 4px, #ffffff 4px 8px); }
+.cart--theme-gateau-anniversaire .cart-foot { color: #ffffff; font-weight: 700; background: #7a2a5a; }

@@ -64,7 +64,7 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
   await openEdit(p, 'argente');
   await p.screenshot({ path: path.join(SHOTS, 'boosters-editeur-1280.png') });
   check(await p.locator('.abt-sec').count() === 5, '(b) éditeur : 5 sous-sections repliables (Général, Contenu, Limites, Chances, Simulateur)');
-  check(await p.locator('.abt-style input[name="style"]').count() === 39, '(b) sélecteur de style : 39 cartouches (9 d’origine + 30 couleurs)');
+  check(await p.locator('.abt-style input[name="style"]').count() === 53, '(b) sélecteur de style : 53 cartouches (9 d’origine + 30 couleurs + 14 thèmes)');
   check(await p.isChecked('.abt-style input[value="cart--argente"]'), '(b) style actuel coché');
   check(await p.getAttribute('#abt-id', 'readonly') !== null, '(b) identifiant non modifiable pour un type existant');
   check((await p.textContent('#abt-total')).includes('100'), '(b) total des taux en direct : 100 %');
