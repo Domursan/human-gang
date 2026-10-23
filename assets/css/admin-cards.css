@@ -239,6 +239,13 @@
   border: 2px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); text-align: center; }
 .abt-style input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .abt-style-l { font-size: 12px; line-height: 1.2; }
+/* Sélecteur regroupé par famille de couleurs (booster-styles.js) : un titre court par groupe. */
+.abt-styles { gap: 14px; }
+.abt-style-fam { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.abt-style-fh { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .03em; color: var(--text); }
+.abt-style-fh .muted { font-weight: 400; }
+/* Interrupteurs de l'éditeur : la case cachée suit son libellé (défilement du tiroir, focus visible). */
+.abt-ed .switch { position: relative; }
 .abt-style:has(input:checked) { border-color: var(--sand); background: var(--surface); }
 .abt-style:has(input:checked) .abt-style-l { font-weight: 700; color: var(--sand); }
 .abt-style:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
