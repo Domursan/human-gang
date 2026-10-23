@@ -6,6 +6,10 @@
 // (c) Boutique (cartes.html, types) : un type en « Braise » affiche sa cartouche (dégradé et motif de boosters-styles.css),
 //     un style inconnu ou malveillant retombe sur « cart--classique » (aucun attribut injecté) ; la tuile de stock et la
 //     scène d'ouverture reprennent le style ; mode daltonien : motifs renforcés (--bs-k) ; 390 px sans défilement horizontal.
+// (d) Thèmes à décor dessiné (booster-themes.js) : chaque thème rend son décor, calques non cliquables, identifiants SVG uniques,
+//     effets coupés et mouvement réduit sans animation, 360 px sans défilement horizontal.
+// (e) Animation d'ouverture : feux d'artifice et gâteau seulement (calque posé sur la scène, 1,5 à 2,2 s, non bloquant), aucun
+//     autre thème ; mouvement réduit : flash doux au lieu de la scène.
 // Faux Supabase : fixtures/fake-sb.mjs (admin) et fixtures/fake-sb-cartes.mjs (typeOverrides). Captures dans scratchpad/nuit2/shots/.
 // Lancer : node tests/parcours-styles-boosters.cjs
 const fs = require('fs');
@@ -100,6 +104,129 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   await p.click('[data-tab=boutique]'); await sleep(300);
   check(await hscroll(p) <= 0, '(c) 390 px : Boutique sans défilement horizontal');
   await p.ctx.close();
+
+  /* ---------- (d) Thèmes à décor : chaque thème rend son décor, calques non cliquables, mouvement réduit ---------- */
+  // Neuf types portent neuf thèmes (le dixième, Gâteau, est vérifié en (e)).
+  const THEMES = [['classique', 'pate', '.cart-body > svg'], ['serie', 'saucisse', '.cart-body > svg'], ['argente', 'pate-saucisse', '.cart-scr > svg pattern'],
+    ['dore', 'raclette', '.cart-body > svg .bs-rc-dr'], ['diamant', 'fondue', '.bs-over svg.fd-bx'], ['quitte_double', 'usine', '.cart-scr .ug-b'],
+    ['holographique', 'halloween', '.bs-over .bs-spl .bs-wk'], ['collectionneur', 'saint-nicolas', '.bs-over .bs-sk'], ['identite', 'feux-artifice', '.cart-scr > svg circle']];
+  const ovr = {}; THEMES.forEach(([id, slug]) => { ovr[id] = { style: `cart--theme-${slug}` }; });
+  const scnD = { types: true, bal: 20000, stock: { dore: 1 }, typeOverrides: ovr };
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: scnD });
+  await p.click('[data-tab=boutique]'); await sleep(400);
+  for (const [id, slug, sel] of THEMES) {
+    const box = `#cartes-p-boutique .shop-item[data-type=${id}] .cart-box.cart--theme-${slug}`;
+    check(await p.locator(`${box} ${sel}`).count() > 0, `(d) thème « ${slug} » : son décor est dessiné (${sel})`);
+    check(await p.locator(`${box} .cart-scr img`).count() === 0 || slug === 'raclette', `(d) thème « ${slug} » : la scène remplace le logo à l’écran`);
+  }
+  check(await p.locator('#cartes-p-boutique .shop-item[data-type=dore] .cart-box.cart--theme-raclette .bs-rc-dr').count() >= 4, '(d) Raclette : la patate coupée a ses coulées animées');
+  check(await p.locator('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-wk').count() === 8 && await p.locator('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-hd').count() === 3, '(d) Halloween : huit araignées qui marchent, trois pendues à leur fil');
+  check(await p.locator('#cartes-p-boutique .cart-box.cart--theme-saint-nicolas .cart-scr .bs-fl').count() === 12, '(d) Saint-Nicolas : douze flocons');
+  check(await p.$$eval('#cartes-p-boutique .bs-over', (os) => os.length >= 4 && os.every((o) => getComputedStyle(o).pointerEvents === 'none')), '(d) calques décoratifs : pointer-events none');
+  check(await p.$$eval('#cartes-p-boutique .bs-over, #cartes-p-boutique .bs-over *', (os) => os.every((o) => getComputedStyle(o).pointerEvents === 'none')), '(d) calques décoratifs : aucun descendant ne capte le pointeur');
+  const dupD = await p.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map((e) => e.id); return ids.filter((x, i) => ids.indexOf(x) !== i); });
+  check(dupD.length === 0, `(d) identifiants SVG uniques (${dupD.slice(0, 3).join(', ') || 'aucun doublon'})`);
+  check((await p.$eval('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-wk', (e) => getComputedStyle(e).animationName)) !== 'none', '(d) Halloween : les araignées sont animées en mouvement normal');
+  check(await p.$eval('#cartes-p-boutique .cart-box.cart--theme-raclette .cart-label', (e) => getComputedStyle(e).display) === 'none', '(d) Raclette : pas d’étiquette (toute la cartouche est la patate)');
+  check(p.errs.length === 0, `(d) aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
+  await (await p.$('#cartes-p-boutique .cart-tiles, #cartes-p-boutique')).screenshot({ path: path.join(SHOTS, 'styles-themes-boutique.png') }).catch(() => {});
+  // Effets coupés : les animations des décors s'arrêtent.
+  await p.evaluate(() => { document.documentElement.dataset.fx = 'off'; });
+  check((await p.$eval('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-wk', (e) => getComputedStyle(e).animationName)) === 'none', '(d) effets coupés : les araignées ne bougent plus');
+  await p.ctx.close();
+  // Mouvement réduit (préférence système) : décor présent, animations coupées.
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: scnD, reducedMotion: 'reduce' });
+  await p.click('[data-tab=boutique]'); await sleep(400);
+  check(await p.locator('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-wk').count() === 8, '(d) mouvement réduit : le décor est toujours dessiné');
+  const anims = await p.$$eval('#cartes-p-boutique .cart-box[class*="cart--theme-"], #cartes-p-boutique .cart-box[class*="cart--theme-"] *', (es) => es.filter((e) => getComputedStyle(e).animationName !== 'none').length);
+  check(anims === 0, `(d) mouvement réduit : aucune animation dans les décors (${anims})`);
+  await p.ctx.close();
+  // 360 px : aucun défilement horizontal avec tous les thèmes affichés (Boutique, puis Ouverture).
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 360, height: 780, scenario: scnD });
+  await p.click('[data-tab=boutique]'); await sleep(400);
+  check(await hscroll(p) <= 0, '(d) 360 px : Boutique sans défilement horizontal (thèmes à décor)');
+  await p.click('[data-tab=ouverture]'); await sleep(300);
+  check(await hscroll(p) <= 0, '(d) 360 px : Ouverture sans défilement horizontal');
+  await p.ctx.close();
+
+  /* ---------- (e) Animation d'ouverture : feux d'artifice et gâteau seulement, non bloquante ---------- */
+  /** Ouvre le booster « dore » (stock) avec le style donné ; observe les calques d'animation ajoutés et retirés. */
+  const openWith = async (style, reducedMotion = 'no-preference') => {
+    const q = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, reducedMotion,
+      scenario: { types: true, bal: 20000, stock: { dore: 1 }, typeOverrides: { dore: { style } } } });
+    await q.click('[data-tab=ouverture]'); await sleep(300);
+    await q.evaluate(() => {
+      window.__fx = { stage: 0, soft: 0, kinds: [], t0: 0, t1: 0, sample: null, flips: 0 };
+      new MutationObserver((ms) => {
+        for (const m of ms) {
+          for (const n of m.addedNodes) {
+            if (n.nodeType !== 1) continue;
+            if (n.matches('.bs-fx')) {
+              window.__fx.stage++; window.__fx.kinds.push(n.dataset.fxKind); window.__fx.t0 = Date.now();
+              const c = document.querySelector('.op-cart .cart-box').getBoundingClientRect();
+              const top = document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2);
+              window.__fx.sample = { passes: !!top && !top.closest('.bs-fx'), parts: n.querySelectorAll('i').length, events: getComputedStyle(n).pointerEvents };
+            }
+            if (n.matches('.bs-fx-soft')) window.__fx.soft++;
+          }
+          for (const n of m.removedNodes) if (n.nodeType === 1 && n.matches('.bs-fx')) window.__fx.t1 = Date.now();
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    await q.click('#cartes-p-ouverture [data-action=open-stock][data-type=dore]');
+    return q;
+  };
+  /** Attend la fin de la révélation (bouton Fermer) puis le retrait du calque. */
+  const settle = async (q) => { await q.waitForSelector('[data-action=close-reveal]', { timeout: 20000 }).catch(() => {}); await sleep(2600); return q.evaluate(() => window.__fx); };
+
+  let q = await openWith('cart--theme-feux-artifice');
+  await q.waitForSelector('.op-stage .bs-fx', { timeout: 15000 }).catch(() => {});
+  check(await q.locator('.op-stage .bs-fx--feux').count() === 1, '(e) feux d’artifice : le calque d’animation est posé sur la scène d’ouverture');
+  check(await q.locator('.op-stage .bs-fx--feux .bs-bu').count() === 5 && await q.locator('.op-stage .bs-fx--feux .bs-bu i').count() === 80, '(e) feux d’artifice : cinq bouquets de seize étincelles');
+  await q.screenshot({ path: path.join(SHOTS, 'styles-ouverture-feux.png') });
+  let fx = await settle(q);
+  check(fx.stage === 1 && fx.kinds[0] === 'feux' && fx.soft === 0, `(e) feux d’artifice : une seule animation, sans flash doux (${JSON.stringify({ s: fx.stage, k: fx.kinds, f: fx.soft })})`);
+  check(fx.sample && fx.sample.passes && fx.sample.events === 'none', '(e) feux d’artifice : le calque laisse passer le pointeur (rien ne gêne la révélation)');
+  const dur = fx.t1 - fx.t0;
+  check(dur >= 1500 && dur <= 2200, `(e) feux d’artifice : durée de 1,5 à 2,2 s (${dur} ms)`);
+  check(await q.locator('.bs-fx').count() === 0, '(e) feux d’artifice : le calque se retire de lui-même');
+  check(await q.locator('[data-action=close-reveal]').count() === 1 && await q.locator('.op-card.is-flip').count() === 5, '(e) feux d’artifice : les cinq cartes sont révélées (la séquence n’est pas bloquée)');
+  check(q.errs.length === 0, `(e) feux d’artifice : aucune erreur console (${q.errs.join(' | ') || 'rien'})`);
+  await q.ctx.close();
+
+  q = await openWith('cart--theme-gateau-anniversaire');
+  await q.waitForSelector('.op-stage .bs-fx', { timeout: 15000 }).catch(() => {});
+  check(await q.locator('.op-stage .bs-fx--confettis .bs-cf').count() === 44, '(e) gâteau : pluie de 44 confettis sur la scène d’ouverture');
+  await q.screenshot({ path: path.join(SHOTS, 'styles-ouverture-gateau.png') });
+  fx = await settle(q);
+  check(fx.stage === 1 && fx.kinds[0] === 'confettis' && fx.soft === 0 && fx.t1 - fx.t0 >= 1500 && fx.t1 - fx.t0 <= 2200, `(e) gâteau : une animation de 1,5 à 2,2 s (${fx.t1 - fx.t0} ms)`);
+  check(await q.locator('.op-card.is-flip').count() === 5, '(e) gâteau : les cinq cartes sont révélées');
+  await q.ctx.close();
+
+  for (const style of ['cart--theme-halloween', 'cart--theme-fondue', 'cart--braise', 'cart--classique']) {
+    q = await openWith(style);
+    fx = await settle(q);
+    check(fx.stage === 0 && fx.soft === 0 && await q.locator('.bs-fx, .bs-fx-soft').count() === 0, `(e) ${style} : aucune animation d’ouverture`);
+    check(await q.locator('.op-card.is-flip').count() === 5, `(e) ${style} : l’ouverture se déroule normalement`);
+    await q.ctx.close();
+  }
+
+  // Mouvement réduit : pas de scène animée, un flash doux pour les deux thèmes seulement.
+  for (const [style, kind] of [['cart--theme-feux-artifice', 'feux'], ['cart--theme-gateau-anniversaire', 'confettis']]) {
+    q = await openWith(style, 'reduce');
+    await q.waitForSelector('.bs-fx-soft', { timeout: 8000 }).catch(() => {});
+    check(await q.locator(`.bs-fx-soft--${kind}`).count() === 1 && await q.locator('.op-stage').count() === 0, `(e) ${style} en mouvement réduit : flash doux, pas de scène animée`);
+    check(await q.$eval('.bs-fx-soft', (e) => getComputedStyle(e).pointerEvents) === 'none', '(e) flash doux : pointer-events none');
+    await sleep(2600);
+    fx = await q.evaluate(() => window.__fx);
+    check(fx.stage === 0 && fx.soft === 1 && await q.locator('.bs-fx-soft').count() === 0, `(e) ${style} en mouvement réduit : un seul flash, retiré ensuite (${fx.soft})`);
+    check(await q.locator('.cartes-booster-grid').count() === 1 && await q.locator('[data-action=close-reveal]').count() === 1, `(e) ${style} en mouvement réduit : les cartes sont affichées tout de suite`);
+    await q.ctx.close();
+  }
+  q = await openWith('cart--theme-halloween', 'reduce');
+  await sleep(1800);
+  check(await q.evaluate(() => window.__fx.soft) === 0, '(e) mouvement réduit : pas de flash pour un autre thème');
+  await q.ctx.close();
 
   await browser.close();
   finish();

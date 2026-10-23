@@ -246,6 +246,31 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
   check(p.errs.length === 0, '(h) Staff « cartes » : aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
+  /* ---------- (j) Thèmes à décor dessiné (booster-themes.js) : sélecteur, aperçu et miniature de la liste ---------- */
+  p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+  await openTab(p);
+  await openEdit(p, 'serie');
+  const DECO = { pate: 'svg', saucisse: 'svg', 'pate-saucisse': 'svg', raclette: '.bs-rc-dr', fondue: '.fd-bx', usine: '.us-lamp', halloween: '.bs-spl .bs-wk', 'saint-nicolas': '.bs-sk', 'feux-artifice': 'svg', 'gateau-anniversaire': 'svg' };
+  for (const [slug, sel] of Object.entries(DECO)) {
+    const box = `.abt-style:has(input[value="cart--theme-${slug}"]) .cart-box`;
+    check(await p.locator(`${box} .cart-scr > svg, ${box} .cart-body > svg`).count() > 0 && await p.locator(`${box} ${sel === 'svg' ? '.cart-scr > svg' : sel}`).count() > 0, `(j) sélecteur : le thème « ${slug} » dessine son décor`);
+    check(await p.locator(`${box} .cart-scr img`).count() === 0 || slug === 'raclette', `(j) sélecteur : « ${slug} » remplace le logo par sa scène`);
+  }
+  check(await p.locator('.abt-style:has(input[value="cart--theme-arene"]) .cart-scr img').count() === 1, '(j) sélecteur : un thème sans décor dessiné (Arène) garde le logo');
+  check(await p.$$eval('.bs-over', (os) => os.length > 0 && os.every((o) => getComputedStyle(o).pointerEvents === 'none')), '(j) calques décoratifs : pointer-events none');
+  const dup = await p.evaluate(() => { const ids = [...document.querySelectorAll('[id]')].map((e) => e.id); return ids.filter((x, i) => ids.indexOf(x) !== i); });
+  check(dup.length === 0, `(j) identifiants SVG uniques (${dup.slice(0, 3).join(', ') || 'aucun doublon'})`);
+  await p.click('.abt-style:has(input[value="cart--theme-halloween"])');
+  check(await p.locator('#abt-preview .cart-box.cart--theme-halloween .bs-spl .bs-wk').count() === 8 && await p.locator('#abt-preview .cart-box .bs-hd').count() === 3, '(j) aperçu : Halloween, huit araignées qui marchent et trois pendues');
+  await p.screenshot({ path: path.join(SHOTS, 'boosters-themes-editeur-1280.png') });
+  await p.click('[data-drawer-submit]');
+  await p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
+  await p.waitForSelector('.abt-row[data-type="serie"] .cart-box.cart--theme-halloween', { timeout: 5000 }).catch(() => {});
+  check(await p.locator('.abt-row[data-type="serie"] .cart-box.cart--theme-halloween .bs-spl').count() === 1, '(j) liste : la miniature affiche le décor du thème choisi');
+  check(await hscroll(p) <= 0, '(j) 1280 px : pas de défilement horizontal');
+  check(p.errs.length === 0, '(j) aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
   /* ---------- (i) Mobile 390 px ---------- */
   p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
   await openTab(p);

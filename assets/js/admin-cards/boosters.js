@@ -21,6 +21,7 @@ import { openDrawer } from '../admin/ui/drawer.js';
 import { CFG_DEFAULT, RARITY_IDS, ICON } from './constants.js';
 import { check, nf } from './helpers.js';
 import { BOOSTER_STYLES, BOOSTER_STYLE_LIST, BOOSTER_STYLE_FAMILIES, boosterStyleClass } from '../booster-styles.js';
+import { themeDecor } from '../booster-themes.js';
 
 /* ---------- Constantes ---------- */
 /** Les 39 styles de cartouche (9 d'origine + 30 couleurs) : liste de référence dans booster-styles.js. */
@@ -71,13 +72,15 @@ const arr = (v) => (Array.isArray(v) ? v.map(String) : []);
  * @param {number} s échelle (0.25 = 55 × 72 px)
  */
 function cartHtml(t, s = 0.3) {
-  return `<span class="abt-cart" style="--s:${s}" aria-hidden="true"><span class="cart-box ${esc(safeStyle(t.style))}">`
-    + '<span class="cart-body"></span><span class="cart-notch"></span>'
-    + `<span class="cart-label"><span class="cart-label-fl"></span><span class="cart-scr"><img src="${esc(currentLogo())}" alt=""></span></span>`
+  const style = safeStyle(t.style);
+  const deco = themeDecor(style); // thèmes à décor dessiné : SVG du corps et de l'écran, calque d'éléments (booster-themes.js)
+  return `<span class="abt-cart" style="--s:${s}" aria-hidden="true"><span class="cart-box ${esc(style)}">`
+    + `<span class="cart-body">${deco ? deco.body : ''}</span><span class="cart-notch"></span>`
+    + `<span class="cart-label"><span class="cart-label-fl"></span><span class="cart-scr">${deco ? deco.scr : `<img src="${esc(currentLogo())}" alt="">`}</span></span>`
     + '<span class="cart-lbl1">LE GANG</span>'
     + `<span class="cart-lbl2">${esc(String(t.name || styleLabel(t.style)).toUpperCase())}</span>`
     + '<span class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></span><span class="cart-ridge"></span>'
-    + `<span class="cart-foot">${esc(nf(Number(t.size) || 5))} CARTES</span></span></span>`;
+    + `<span class="cart-foot">${esc(nf(Number(t.size) || 5))} CARTES</span>${deco ? deco.over : ''}</span></span>`;
 }
 
 /** Charge cartes-boosters.css (9 styles d'origine) et boosters-styles.css (30 couleurs) une seule fois. */

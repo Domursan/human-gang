@@ -10,13 +10,14 @@
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo } from './core.js';
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 import { boosterStyleClass } from './booster-styles.js';
+import { themeDecor, playOpeningFx } from './booster-themes.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -543,17 +544,21 @@ const typeLabel = (type, series = '') => (type.id === 'serie' && series ? series
  */
 function cartridgeHtml({ free = false, ready = false, type = null, series = '' } = {}) {
   const n = nf.format(type ? Number(type.size) || 5 : cfg().booster_size ?? 5);
-  const cls = ['cart-box', free && !ready ? 'is-idle' : '', type ? styleClass(type) : ''].filter(Boolean).join(' ');
+  const style = type ? styleClass(type) : '';
+  const cls = ['cart-box', free && !ready ? 'is-idle' : '', style].filter(Boolean).join(' ');
   const sub = type ? typeLabel(type, series) : seriesName();
+  // Thèmes à décor dessiné (booster-themes.js) : SVG du corps et de l'écran, calque d'éléments animés ; sinon le logo à l'écran.
+  const deco = themeDecor(style);
   return `<div class="${cls}" aria-hidden="true">`
-    + '<div class="cart-body"></div><div class="cart-notch"></div>'
-    + `<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="${esc(currentLogo())}" alt=""></div></div>`
+    + `<div class="cart-body">${deco ? deco.body : ''}</div><div class="cart-notch"></div>`
+    + `<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr">${deco ? deco.scr : `<img src="${esc(currentLogo())}" alt="">`}</div></div>`
     + '<p class="cart-lbl1">LE GANG</p>'
     + `<p class="cart-lbl2">${esc(sub)}</p>`
     + '<div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>'
     + '<div class="cart-ridge"></div>'
     + `<p class="cart-foot">${n} CARTES</p>`
     + (free && ready ? '<p class="cart-stk">Gratuit du jour</p>' : '')
+    + (deco ? deco.over : '')
     + '</div>';
 }
 
@@ -1306,6 +1311,8 @@ function applyStage(R) {
   root.classList.toggle('is-in', R.step >= 1);
   root.classList.toggle('is-boot', R.step >= 2);
   root.classList.toggle('is-flash', R.step === 3);
+  // Thèmes « fête » (feux d'artifice, gâteau) : gerbes ou confettis autour de la cartouche, une seule fois, sans bloquer la révélation.
+  if (R.step >= 3 && R.phase === 'seq' && !R.fxDone) { R.fxDone = true; playOpeningFx(root, styleClass(R.type)); }
   // Une carte déjà retournée à la main (voir onBoosterCard) reste retournée à chaque étape.
   root.querySelectorAll('.op-card').forEach((card) => {
     const i = Number(card.dataset.i);
@@ -1490,6 +1497,8 @@ function renderReveal() {
       <div class="cartes-row">${actions}</div>
     </section>`;
   if (R.seq) applyStage(R);
+  // Pas de scène animée (mouvement réduit) : un flash doux pour les thèmes « fête », seulement si les effets sont permis.
+  else if (!R.fxDone && effectsEnabled()) { R.fxDone = true; playOpeningFx(null, styleClass(R.type), { soft: true }); }
   fitAll(box);
   if (done && !R.announced) {
     R.announced = true;

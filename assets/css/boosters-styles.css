@@ -356,64 +356,126 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 
 /* ================= Thèmes (14 cartouches à thème, classes cart--theme-<slug>) =================
    Dessins génériques faits pour le gang : aucun logo, nom de marque, personnage ni élément officiel.
-   Plaque, nom et prix : contraste ≥ 4,5:1 sur leur fond. Motif et couleur différents, donc lisibles en daltonien. */
+   Plaque, nom et prix : contraste ≥ 4,5:1 sur leur fond. Motif et couleur différents, donc lisibles en daltonien.
+   Dix thèmes (Pâté, Saucisse, Pâté + saucisse, Raclette, Fondue, Usine, Halloween, Saint-Nicolas, Feux d’artifice, Gâteau)
+   ont un décor dessiné en SVG (assets/js/booster-themes.js : SVG du corps, de l’écran et calque .bs-over) ; ces calques
+   ne reçoivent jamais le pointeur. Animations : coupées si l’utilisateur demande moins de mouvement (prefers-reduced-motion)
+   ou désactive les effets (html[data-fx="off"]). Les blocs de décor sont repris des maquettes validées. */
 
-/* ---------- Pâté : croûte en treillis, moyen ---------- */
-.cart--theme-pate .cart-body { background:
-  repeating-linear-gradient(45deg, rgb(255 220 150 / .38) 0 3px, transparent 3px 14px),
-  repeating-linear-gradient(-45deg, rgb(255 220 150 / .38) 0 3px, transparent 3px 14px),
-  radial-gradient(circle, rgb(40 52 20 / .7) 0 1.4px, transparent 2.2px) 0 0 / 11px 13px,
-  linear-gradient(180deg, #b5651d 0%, #7a3e12 100%); }
-.cart--theme-pate .cart-label-fl { background: #3a1e0b; }
-.cart--theme-pate .cart-lbl1 { color: #ffffff; }
-.cart--theme-pate .cart-lbl2 { color: #ffe2b0; }
-.cart--theme-pate .cart-ridge { background: repeating-linear-gradient(90deg, #3a1e0b 0 4px, #e0a85a 4px 8px); }
-.cart--theme-pate .cart-foot { color: #ffffff; font-weight: 700; background: #3a1e0b; }
+/* Décor commun : SVG du corps et de l’écran, calque d’éléments animés par-dessus (non cliquable). */
+.cart-box .bs-over { position: absolute; left: 0; top: 0; right: 0; bottom: 0; pointer-events: none; }
+.cart-body > svg { position: absolute; left: 0; top: 0; width: 220px; height: 290px; display: block; }
+.cart-scr > svg { position: absolute; left: 0; top: 0; width: 148px; height: 84px; display: block; }
+html[data-fx="off"] .cart-box[class*="cart--theme-"] *, html[data-fx="off"] .cart-box[class*="cart--theme-"] *::before { animation: none !important; }
 
-/* ---------- Saucisse : chaînons et liens, sombre ---------- */
-.cart--theme-saucisse .cart-body { background:
-  repeating-linear-gradient(90deg, transparent 0 27px, rgb(60 0 0 / .45) 27px 30px),
-  radial-gradient(ellipse 27px 13px at 50% 50%, rgb(255 190 170 / .55) 0 58%, transparent 62%) 0 0 / 60px 44px,
-  linear-gradient(180deg, #b8323a 0%, #7d1a22 100%); }
-.cart--theme-saucisse .cart-label-fl { background: #4a0c13; }
-.cart--theme-saucisse .cart-lbl1 { color: #ffffff; }
-.cart--theme-saucisse .cart-lbl2 { color: #ffd6cc; }
-.cart--theme-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #4a0c13 0 4px, #ff9f8f 4px 8px); }
-.cart--theme-saucisse .cart-foot { color: #ffffff; font-weight: 700; background: #4a0c13; }
+/* ---------- Pâté : bocal à clip, pâté en coupe ---------- */
+.cart--theme-pate .cart-body { background: #d7ece0; }
+.cart--theme-pate .cart-label-fl { background: #14493a; }
+.cart--theme-pate .cart-scr { background: #eaf6ef; }
+.cart--theme-pate .cart-lbl1 { color: #fff; }
+.cart--theme-pate .cart-lbl2 { color: #ffb27a; }
+.cart--theme-pate .cart-ridge { background: repeating-linear-gradient(90deg, #14493a 0 4px, #ff7a1a 4px 8px); }
+.cart--theme-pate .cart-foot { background: #ff7a1a; color: #1a1a1a; }
+.cart--theme-pate .cart-foot { left: 48px; right: 48px; bottom: 12px; padding: 3px 0; letter-spacing: .2em; }
 
-/* ---------- Pâté + saucisse : moitié treillis, moitié chaînons ---------- */
-.cart--theme-pate-saucisse .cart-body { background:
-  radial-gradient(ellipse 27px 13px at 50% 50%, rgb(255 190 170 / .55) 0 58%, transparent 62%) 0 0 / 60px 44px no-repeat,
-  linear-gradient(180deg, #b8323a 0%, #7d1a22 100%); }
-.cart--theme-pate-saucisse .cart-label-fl { background: #2a1408; }
-.cart--theme-pate-saucisse .cart-lbl1 { color: #ffffff; }
-.cart--theme-pate-saucisse .cart-lbl2 { color: #fff3d6; }
-.cart--theme-pate-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #2a1408 0 4px, #e0a85a 4px 8px); }
-.cart--theme-pate-saucisse .cart-foot { color: #ffffff; font-weight: 700; background: #2a1408; }
+/* ---------- Saucisse : brochette au feu de camp ---------- */
+.cart--theme-saucisse .cart-body { background: linear-gradient(180deg, #1d1b4a 0%, #6a2a6e 60%, #ff7a2a 100%); }
+.cart--theme-saucisse .cart-label-fl { background: #1f3d2a; }
+.cart--theme-saucisse .cart-scr { background: #1d1b4a; }
+.cart--theme-saucisse .cart-lbl1 { color: #fff; }
+.cart--theme-saucisse .cart-lbl2 { color: #ffd27a; }
+.cart--theme-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #1f3d2a 0 4px, #ffb020 4px 8px); }
+.cart--theme-saucisse .cart-foot { background: #ffd23f; color: #1f1a10; }
+.cart--theme-saucisse .cart-foot { left: 48px; right: 48px; bottom: 12px; padding: 3px 0; letter-spacing: .2em; }
 
-/* ---------- Raclette : fromage fondu, gouttes ---------- */
-.cart--theme-raclette .cart-body { background:
-  radial-gradient(ellipse 22px 36px at 22% 100%, #fff1a6 0 70%, transparent 72%),
-  radial-gradient(ellipse 18px 30px at 70% 100%, #fff1a6 0 70%, transparent 72%),
-  radial-gradient(circle, rgb(190 120 0 / .5) 0 2.2px, transparent 3px) 0 0 / 26px 22px,
-  linear-gradient(180deg, #ffd45c 0%, #f2a81f 100%); }
-.cart--theme-raclette .cart-label-fl { background: #5a3200; }
-.cart--theme-raclette .cart-lbl1 { color: #ffffff; }
-.cart--theme-raclette .cart-lbl2 { color: #ffe9a8; }
-.cart--theme-raclette .cart-ridge { background: repeating-linear-gradient(90deg, #5a3200 0 4px, #ffd45c 4px 8px); }
-.cart--theme-raclette .cart-foot { color: #ffffff; font-weight: 700; background: #5a3200; }
+/* ---------- Pâté + saucisse : panier de pique-nique ---------- */
+.cart--theme-pate-saucisse .cart-body { background: repeating-linear-gradient(0deg, rgba(255,255,255,.28) 0 11px, transparent 11px 22px), repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 11px, transparent 11px 22px), #b8232f; }
+.cart--theme-pate-saucisse .cart-body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 26px;
+  background: repeating-linear-gradient(45deg, #8a5a2e 0 4px, #6b3e1d 4px 8px); }
+.cart--theme-pate-saucisse .cart-label-fl { background: #6b3e1d; }
+.cart--theme-pate-saucisse .cart-scr { background: #c79a5e; }
+.cart--theme-pate-saucisse .cart-lbl1 { color: #fff; }
+.cart--theme-pate-saucisse .cart-lbl2 { color: #ffe2b0; }
+.cart--theme-pate-saucisse .cart-ridge { background: repeating-linear-gradient(90deg, #6b3e1d 0 4px, #f6efe6 4px 8px); }
+.cart--theme-pate-saucisse .cart-foot { background: #f6efe6; color: #b8232f; }
+.cart--theme-pate-saucisse .cart-foot { left: 48px; right: 48px; bottom: 12px; padding: 3px 0; letter-spacing: .2em; }
 
-/* ---------- Fondue : bulles de fromage, piques ---------- */
+/* ---------- Raclette : patate coupée, fromage qui coule ---------- */
+.cart--theme-raclette .cart-body { clip-path: none; background: none; }
+.cart--theme-raclette .cart-notch, .cart--theme-raclette .cart-label, .cart--theme-raclette .cart-stripe, .cart--theme-raclette .cart-ridge { display: none; }
+.cart--theme-raclette .cart-lbl1 { left: 26px; top: 163px; width: 168px; font-size: 20px; letter-spacing: .1em; padding-left: .1em; color: #fff; }
+.cart--theme-raclette .cart-lbl2 { left: 26px; top: 189px; width: 168px; font-size: 9.5px; letter-spacing: .2em; padding-left: .2em; color: #ffd96a; }
+.cart--theme-raclette .cart-foot { left: 56px; right: auto; width: 108px; bottom: auto; top: 254px; height: 22px; line-height: 22px; padding: 0 0 0 .2em; font-weight: 700; background: #2a1409; color: #fff;
+  clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+.cart--theme-raclette .bs-rc-dr{transform-box:fill-box;transform-origin:50% 0;animation:rcDrip 3.5s ease-in infinite}
+.cart--theme-raclette .bs-rc-dp{opacity:0;animation:rcDrop 3.5s cubic-bezier(.5,0,1,.7) infinite}
+.cart--theme-raclette .bs-rc-cz{transform-box:fill-box;transform-origin:50% 0;animation:rcWave 3.5s ease-in-out infinite}
+.cart--theme-raclette .bs-rc-sw{animation:rcSweep 3.5s ease-in-out infinite}
+.cart--theme-raclette .bs-rc-gl{transform-box:fill-box;transform-origin:center;opacity:0;animation:rcGlint 2.7s ease-in-out infinite}
+.cart--theme-raclette .bs-rc-st{opacity:0;animation:rcSteam 3.5s ease-out infinite}
+@keyframes rcDrip{
+  0%{transform:scale(1,.8)}
+  48%{transform:scale(.97,1.7)}
+  55%{transform:scale(.8,1.95)}
+  58%{transform:scale(1.05,.55)}
+  72%{transform:scale(1,.85)}
+  100%{transform:scale(1,.8)}
+}
+@keyframes rcDrop{
+  0%,54%{opacity:0;transform:translateY(0)}
+  56%{opacity:1;transform:translateY(0)}
+  88%{opacity:1;transform:translateY(72px)}
+  96%,100%{opacity:0;transform:translateY(88px)}
+}
+@keyframes rcWave{
+  0%,100%{transform:skewX(-1.6deg) scale(1,.97)}
+  50%{transform:skewX(1.6deg) scale(1,1.04)}
+}
+@keyframes rcSweep{0%{transform:skewX(-20deg) translateX(0)}60%,100%{transform:skewX(-20deg) translateX(330px)}}
+@keyframes rcGlint{0%,100%{opacity:0;transform:scale(.2) rotate(0)}50%{opacity:1;transform:scale(1.2) rotate(45deg)}}
+@keyframes rcSteam{
+  0%{opacity:0;transform:translate(0,6px) scaleY(.7)}
+  30%{opacity:.65}
+  100%{opacity:0;transform:translate(4px,-22px) scaleY(1.1)}
+}
+@media (prefers-reduced-motion: reduce){
+  .cart--theme-raclette .bs-rc-dr,.cart--theme-raclette .bs-rc-dp,.cart--theme-raclette .bs-rc-cz,.cart--theme-raclette .bs-rc-sw,.cart--theme-raclette .bs-rc-gl,.cart--theme-raclette .bs-rc-st{animation:none}
+  .cart--theme-raclette .bs-rc-dr{transform:scale(1,1.2)}
+  .cart--theme-raclette .bs-rc-st{opacity:.25}
+}
+
+
+/* ---------- Fondue : caquelon garni, pain qui déborde ---------- */
+.fd-bx{position:absolute;overflow:visible;pointer-events:none;z-index:3}
+/* Fondue A */
 .cart--theme-fondue .cart-body { background:
-  repeating-linear-gradient(-30deg, rgb(255 255 255 / .14) 0 2px, transparent 2px 22px),
-  radial-gradient(circle, rgb(255 240 200 / .6) 0 2.6px, transparent 3.6px) 0 0 / 30px 34px,
-  radial-gradient(circle, rgb(255 240 200 / .45) 0 5px, transparent 6px) 14px 17px / 62px 70px,
-  linear-gradient(180deg, #d9822b 0%, #8a3f12 100%); }
-.cart--theme-fondue .cart-label-fl { background: #3c1a06; }
-.cart--theme-fondue .cart-lbl1 { color: #ffffff; }
-.cart--theme-fondue .cart-lbl2 { color: #ffe0b3; }
-.cart--theme-fondue .cart-ridge { background: repeating-linear-gradient(90deg, #3c1a06 0 4px, #ffb36b 4px 8px); }
-.cart--theme-fondue .cart-foot { color: #ffffff; font-weight: 700; background: #3c1a06; }
+  radial-gradient(ellipse at 50% 108%, rgb(255 154 46 / .22), transparent 55%),
+  linear-gradient(180deg, #6a2236 0%, #2a0c15 100%); }
+.cart--theme-fondue .cart-label-fl { background: #f3e4c3; }
+.cart--theme-fondue .cart-lbl1 { color: #2a1409; }
+.cart--theme-fondue .cart-lbl2 { color: #7a2f0e; }
+.cart--theme-fondue .cart-stripe i:nth-child(1), .cart--theme-fondue .cart-stripe i:nth-child(4) { background: #ff9a2e; }
+.cart--theme-fondue .cart-stripe i:nth-child(2), .cart--theme-fondue .cart-stripe i:nth-child(5) { background: #f3e4c3; }
+.cart--theme-fondue .cart-stripe i:nth-child(3), .cart--theme-fondue .cart-stripe i:nth-child(6) { background: #c9894b; }
+.cart--theme-fondue .cart-ridge { background: repeating-linear-gradient(90deg, #2a0c15 0 4px, #c9894b 4px 8px); }
+.cart--theme-fondue .cart-foot { color: #f3e4c3; font-weight: 700; }
+.cart--theme-fondue .cart-scr { background: #1a0b07; }
+.fd-steam path{animation:fdSteam 4s ease-in-out infinite}
+.fd-flame{transform-box:fill-box;transform-origin:50% 100%;animation:fdFlame 1.1s ease-in-out infinite alternate}
+.fd-bub{transform-box:fill-box;transform-origin:50% 50%;animation:fdBub 2.8s ease-in-out infinite}
+.fd-bob{animation:fdBob 3.4s ease-in-out infinite}
+.fd-string{transform-box:fill-box;transform-origin:50% 100%;animation:fdStr 3.4s ease-in-out infinite}
+.fd-string-d{animation:fdBob 3.4s ease-in-out infinite}
+.fd-wob{transform-box:fill-box;transform-origin:50% 50%;animation:fdWob 5s ease-in-out infinite}
+.fd-drip{animation:fdDrip 3.6s ease-in-out infinite}
+@keyframes fdSteam{0%{transform:translateY(5px);opacity:0}30%{opacity:1}100%{transform:translateY(-7px);opacity:0}}
+@keyframes fdFlame{from{transform:scaleY(.92) scaleX(1.02)}to{transform:scaleY(1.08) scaleX(.97)}}
+@keyframes fdBub{0%,60%,100%{transform:scale(.5);opacity:.4}75%{transform:scale(1.5);opacity:1}}
+@keyframes fdBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2px)}}
+@keyframes fdStr{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.3)}}
+@keyframes fdWob{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes fdDrip{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+
 
 /* ---------- Arène : grille hexagonale dorée, gemme ---------- */
 .cart--theme-arene .cart-body { background:
@@ -436,16 +498,42 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 .cart--theme-blocs .cart-ridge { background: repeating-linear-gradient(90deg, #2d2118 0 4px, #5f9e3a 4px 8px); }
 .cart--theme-blocs .cart-foot { color: #ffffff; font-weight: 700; background: #2d2118; }
 
-/* ---------- Usine : orange industriel, tapis, engrenage ---------- */
+/* ---------- Usine : tôle rivetée, engrenages, voyants ---------- */
 .cart--theme-usine .cart-body { background:
-  url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='38' fill='none' stroke='%233d3d3d' stroke-width='14' stroke-dasharray='9 7'/%3E%3Ccircle cx='50' cy='50' r='30' fill='%233d3d3d'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23f08a24'/%3E%3C/svg%3E") 150px 60px / 84px 84px no-repeat,
-  repeating-linear-gradient(90deg, #2b2b2b 0 14px, #3d3d3d 14px 28px) 0 200px / 100% 40px no-repeat,
-  linear-gradient(180deg, #f08a24 0%, #c85f0a 100%); }
-.cart--theme-usine .cart-label-fl { background: #2b2b2b; }
-.cart--theme-usine .cart-lbl1 { color: #ffb347; }
-.cart--theme-usine .cart-lbl2 { color: #ffffff; }
-.cart--theme-usine .cart-ridge { background: repeating-linear-gradient(90deg, #2b2b2b 0 4px, #ffb347 4px 8px); }
-.cart--theme-usine .cart-foot { color: #ffffff; font-weight: 700; background: #2b2b2b; }
+  repeating-linear-gradient(90deg, rgb(255 255 255 / .05) 0 1px, rgb(0 0 0 / .05) 1px 3px),
+  linear-gradient(135deg, #919aa2 0%, #646c74 50%, #454c53 100%); }
+.cart--theme-usine .cart-body::before { content:""; position:absolute; inset:0;
+  background:
+  radial-gradient(circle 3.8px at 50% 50%, #eef2f4 0 .8px, #b4bdc4 1.5px, #596168 2.8px, rgb(0 0 0 / .3) 3.2px, transparent 3.8px) 4px 12px / 12px 22px repeat-y,
+  radial-gradient(circle 3.8px at 50% 50%, #eef2f4 0 .8px, #b4bdc4 1.5px, #596168 2.8px, rgb(0 0 0 / .3) 3.2px, transparent 3.8px) 204px 12px / 12px 22px repeat-y,
+  radial-gradient(circle 3.8px at 50% 50%, #eef2f4 0 .8px, #b4bdc4 1.5px, #596168 2.8px, rgb(0 0 0 / .3) 3.2px, transparent 3.8px) 30px 197px / 20px 8px repeat-x,
+  radial-gradient(circle 3.8px at 50% 50%, #eef2f4 0 .8px, #b4bdc4 1.5px, #596168 2.8px, rgb(0 0 0 / .3) 3.2px, transparent 3.8px) 30px 248px / 20px 8px repeat-x,
+  linear-gradient(#262b30,#262b30) 0 200px / 100% 1px no-repeat,
+  linear-gradient(rgb(255 255 255 / .35),rgb(255 255 255 / .35)) 0 201px / 100% 1px no-repeat,
+  linear-gradient(#262b30,#262b30) 0 251px / 100% 1px no-repeat,
+  linear-gradient(rgb(255 255 255 / .35),rgb(255 255 255 / .35)) 0 252px / 100% 1px no-repeat,
+  linear-gradient(180deg, rgb(255 255 255 / .12), transparent 18%, transparent 80%, rgb(0 0 0 / .22)); }
+.cart--theme-usine .cart-label-fl { background: #1f2328; }
+.cart--theme-usine .cart-label-fl::after { content:""; position:absolute; inset:5px; border:1px solid rgb(245 196 0 / .55);
+  }
+.cart--theme-usine .cart-lbl1 { color: #ffd23a; }
+.cart--theme-usine .cart-lbl2 { color: #e6e9ec; }
+.cart--theme-usine .cart-scr { background:#1b2025; box-shadow: inset 0 0 0 2px #0a0c0e; }
+.cart--theme-usine .cart-stripe i:nth-child(odd) { background: #f5c400; }
+.cart--theme-usine .cart-stripe i:nth-child(even) { background: #141414; }
+.cart--theme-usine .cart-ridge { background: repeating-linear-gradient(45deg, #f5c400 0 8px, #141414 8px 16px); box-shadow: 0 0 0 2px #141414; }
+.cart--theme-usine .cart-foot { background: #f5c400; color: #141414; font-weight: 700; left: 30px; right: 30px; border-radius: 999px; padding: 3px 0; }
+.us-lamp{position:absolute;left:186px;top:7px;width:13px;height:13px;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 38% 32%, #ffd9d4, #ff4a3a 38%, #8a1409 100%);
+  box-shadow:0 0 0 2px #aab3ba, 0 0 0 3.5px #2b3036, 0 0 8px 2px rgb(255 74 58 / .75);
+  animation:usBlink 1.8s steps(1,end) infinite}
+.us-led-g{animation:usBlink2 1.8s steps(1,end) infinite}
+.ug-b,.ug-s{transform-box:fill-box;transform-origin:50% 50%;animation-name:usSpin;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes usSpin{from{transform:rotate(var(--r0))}to{transform:rotate(var(--r1))}}
+@keyframes usBlink{0%,55%{opacity:1}56%,100%{opacity:.35;box-shadow:0 0 0 2px #aab3ba, 0 0 0 3.5px #2b3036, 0 0 0 0 transparent}}
+@keyframes usBlink2{0%,55%{opacity:1}56%,100%{opacity:.35}}
+@media (prefers-reduced-motion: reduce){ .bs-an, .bs-an *, .fd-steam path{animation:none !important} .fd-steam path{opacity:.2} }
+
 
 /* ---------- Noël : neige, ruban rouge ---------- */
 .cart--theme-noel .cart-body { background:
@@ -458,17 +546,158 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 .cart--theme-noel .cart-ridge { background: repeating-linear-gradient(90deg, #6b0a18 0 4px, #ffffff 4px 8px); }
 .cart--theme-noel .cart-foot { color: #ffffff; font-weight: 700; background: #6b0a18; }
 
-/* ---------- Halloween : lune, lueur orange, étoiles ---------- */
-.cart--theme-halloween .cart-body { background:
-  radial-gradient(circle at 190px 40px, #ff9a3c 0 17px, transparent 18px),
-  radial-gradient(ellipse at 50% 100%, rgb(255 120 20 / .45), transparent 60%),
-  radial-gradient(circle, #ffffff 0 1px, transparent 1.8px) 0 0 / 34px 38px,
-  linear-gradient(180deg, #22102e 0%, #120818 100%); }
-.cart--theme-halloween .cart-label-fl { background: #2a0f3a; }
-.cart--theme-halloween .cart-lbl1 { color: #ff9a3c; }
-.cart--theme-halloween .cart-lbl2 { color: #ffffff; }
-.cart--theme-halloween .cart-ridge { background: repeating-linear-gradient(90deg, #2a0f3a 0 4px, #ff9a3c 4px 8px); }
-.cart--theme-halloween .cart-foot { color: #ffd9a8; font-weight: 700; background: #2a0f3a; }
+/* ---------- Halloween : nuit de lune, citrouille, araignées qui grouillent ---------- */
+/* ===== Halloween A : araignées qui grouillent ===== */
+.cart--theme-halloween .cart-body { background: linear-gradient(180deg, #140b26 0%, #2a1446 100%); }
+.cart--theme-halloween .cart-label-fl { background: #1d0f33; }
+.cart--theme-halloween .cart-lbl1 { color: #fff; }
+.cart--theme-halloween .cart-lbl2 { color: #ffb35c; }
+.cart--theme-halloween .cart-ridge { background: repeating-linear-gradient(90deg, #1d0f33 0 4px, #ff7a18 4px 8px); }
+.cart--theme-halloween .cart-foot { color: #ffd9a8; font-weight: 700; background: #1d0f33; }
+.bs-spl{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.bs-wk{position:absolute;display:block;line-height:0;will-change:transform}
+.bs-wk .bs-sp{display:block}
+.bs-sp .bs-bd{fill:#140a22;stroke:#e3d2ff;stroke-width:.7}
+.bs-sp .bs-lg path{fill:none;stroke:#e3d2ff;stroke-width:.95;stroke-linecap:round;stroke-linejoin:round}
+.bs-sp .bs-mk{fill:#ff7a18}
+.bs-sp .bs-ey{fill:#ffd23f}
+.bs-sp.bs-or .bs-bd{fill:#3a1604;stroke:#ffb35c}
+.bs-sp.bs-or .bs-lg path{stroke:#ffb35c}
+.bs-sp.bs-or .bs-mk{fill:#ffd23f}
+.bs-sp .bs-lg{transform-origin:10px 10px}
+.bs-sp .bs-la{animation:bs-lgA .22s ease-in-out infinite alternate}
+.bs-sp .bs-lb{animation:bs-lgB .22s ease-in-out infinite alternate}
+@keyframes bs-lgA{from{transform:rotate(-13deg)}to{transform:rotate(13deg)}}
+@keyframes bs-lgB{from{transform:rotate(13deg)}to{transform:rotate(-13deg)}}
+.bs-hg{position:absolute;top:0;width:0;height:0}
+.bs-hd{position:absolute;left:0;top:0;display:block;width:0;height:0}
+.bs-hd .bs-th{position:absolute;left:-.5px;bottom:2px;width:1px;height:320px;background:linear-gradient(180deg,rgba(227,210,255,.25),rgba(227,210,255,.85))}
+.bs-hd .bs-sp{position:absolute;left:0;top:-3px;transform:rotate(180deg)}
+.bs-hd .bs-sp.bs-dn{margin:0}
+/* le fil part du haut de la carte : le corps pend en bas */
+.bs-hd{transform:translateY(6px)}
+
+@media (prefers-reduced-motion: reduce){
+  .bs-wk{animation:none !important}
+  .bs-sp .bs-la,.bs-sp .bs-lb{animation:none !important}
+  .cart--theme-halloween .bs-hd{animation:none !important;transform:translateY(34px)}
+}
+@keyframes bs-w0{
+  0.00%{transform:translate(0px,0px) rotate(180.0deg)}
+  22.12%{transform:translate(0px,202px) rotate(180.0deg)}
+  23.32%{transform:translate(0px,202px) rotate(127.9deg)}
+  28.31%{transform:translate(36px,230px) rotate(127.9deg)}
+  29.51%{transform:translate(36px,230px) rotate(90.0deg)}
+  42.65%{transform:translate(156px,230px) rotate(90.0deg)}
+  43.85%{transform:translate(156px,230px) rotate(52.1deg)}
+  48.84%{transform:translate(192px,202px) rotate(52.1deg)}
+  50.04%{transform:translate(192px,202px) rotate(0.0deg)}
+  72.16%{transform:translate(192px,0px) rotate(0.0deg)}
+  73.36%{transform:translate(192px,0px) rotate(-53.6deg)}
+  78.53%{transform:translate(154px,-28px) rotate(-53.6deg)}
+  79.73%{transform:translate(154px,-28px) rotate(-90.0deg)}
+  92.43%{transform:translate(38px,-28px) rotate(-90.0deg)}
+  93.63%{transform:translate(38px,-28px) rotate(-126.4deg)}
+  100.00%{transform:translate(0px,0px) rotate(-126.4deg)}
+}
+.cart--theme-halloween .bs-w0{left:2.0px;top:32.0px;transform:rotate(180.0deg);animation:bs-w0 26s linear 0s infinite}
+@keyframes bs-w1{
+  0.00%{transform:translate(0px,0px) rotate(110.0deg)}
+  23.21%{transform:translate(154px,56px) rotate(110.0deg)}
+  24.41%{transform:translate(154px,56px) rotate(-110.0deg)}
+  46.73%{transform:translate(6px,110px) rotate(-110.0deg)}
+  47.93%{transform:translate(6px,110px) rotate(102.7deg)}
+  68.55%{transform:translate(148px,142px) rotate(102.7deg)}
+  69.75%{transform:translate(148px,142px) rotate(-46.2deg)}
+  100.00%{transform:translate(0px,0px) rotate(-46.2deg)}
+}
+.cart--theme-halloween .bs-w1{left:24.0px;top:52.0px;transform:rotate(110.0deg);animation:bs-w1 19s linear -4s infinite}
+@keyframes bs-w2{
+  0.00%{transform:translate(0px,0px) rotate(75.0deg)}
+  43.09%{transform:translate(142px,-38px) rotate(75.0deg)}
+  44.29%{transform:translate(142px,-38px) rotate(-125.0deg)}
+  65.75%{transform:translate(82px,4px) rotate(-125.0deg)}
+  66.95%{transform:translate(82px,4px) rotate(-56.8deg)}
+  85.16%{transform:translate(30px,-30px) rotate(-56.8deg)}
+  86.36%{transform:translate(30px,-30px) rotate(-135.0deg)}
+  100.00%{transform:translate(0px,0px) rotate(225.0deg)}
+}
+.cart--theme-halloween .bs-w2{left:29.0px;top:241.0px;transform:rotate(75.0deg);animation:bs-w2 22s linear -9s infinite}
+@keyframes bs-w3{
+  0.00%{transform:translate(0px,0px) rotate(84.6deg)}
+  17.86%{transform:translate(64px,-6px) rotate(84.6deg)}
+  19.06%{transform:translate(64px,-6px) rotate(97.9deg)}
+  43.18%{transform:translate(150px,6px) rotate(97.9deg)}
+  44.38%{transform:translate(150px,6px) rotate(-128.0deg)}
+  66.95%{transform:translate(86px,56px) rotate(-128.0deg)}
+  68.15%{transform:translate(86px,56px) rotate(-70.9deg)}
+  83.43%{transform:translate(34px,38px) rotate(-70.9deg)}
+  84.63%{transform:translate(34px,38px) rotate(-41.8deg)}
+  100.00%{transform:translate(0px,0px) rotate(318.2deg)}
+}
+.cart--theme-halloween .bs-w3{left:27.5px;top:37.5px;transform:rotate(84.6deg);animation:bs-w3 15s linear -3s infinite}
+@keyframes bs-w4{
+  0.00%{transform:translate(0px,0px) rotate(-68.2deg)}
+  21.54%{transform:translate(-90px,-36px) rotate(-68.2deg)}
+  22.74%{transform:translate(-90px,-36px) rotate(-70.0deg)}
+  43.55%{transform:translate(-178px,-68px) rotate(-70.0deg)}
+  44.75%{transform:translate(-178px,-68px) rotate(66.0deg)}
+  66.64%{transform:translate(-88px,-108px) rotate(66.0deg)}
+  67.84%{transform:translate(-88px,-108px) rotate(140.8deg)}
+  100.00%{transform:translate(0px,0px) rotate(140.8deg)}
+}
+.cart--theme-halloween .bs-w4{left:187.0px;top:255.0px;transform:rotate(-68.2deg);animation:bs-w4 24s linear -13s infinite}
+@keyframes bs-w5{
+  0.00%{transform:translate(0px,0px) rotate(-60.3deg)}
+  19.27%{transform:translate(-70px,-40px) rotate(-60.3deg)}
+  20.47%{transform:translate(-70px,-40px) rotate(-55.4deg)}
+  37.31%{transform:translate(-128px,-80px) rotate(-55.4deg)}
+  38.51%{transform:translate(-128px,-80px) rotate(-141.3deg)}
+  53.81%{transform:translate(-168px,-30px) rotate(-141.3deg)}
+  55.01%{transform:translate(-168px,-30px) rotate(117.1deg)}
+  75.96%{transform:translate(-90px,10px) rotate(117.1deg)}
+  77.16%{transform:translate(-90px,10px) rotate(83.7deg)}
+  100.00%{transform:translate(0px,0px) rotate(-276.3deg)}
+}
+.cart--theme-halloween .bs-w5{left:180.5px;top:170.5px;transform:rotate(-60.3deg);animation:bs-w5 20s linear -7s infinite}
+@keyframes bs-w6{
+  0.00%{transform:translate(0px,0px) rotate(115.9deg)}
+  19.54%{transform:translate(66px,32px) rotate(115.9deg)}
+  20.74%{transform:translate(66px,32px) rotate(12.3deg)}
+  38.19%{transform:translate(80px,-32px) rotate(12.3deg)}
+  39.39%{transform:translate(80px,-32px) rotate(-66.6deg)}
+  56.82%{transform:translate(20px,-58px) rotate(-66.6deg)}
+  58.02%{transform:translate(20px,-58px) rotate(-134.2deg)}
+  84.02%{transform:translate(-50px,10px) rotate(-134.2deg)}
+  85.22%{transform:translate(-50px,10px) rotate(78.7deg)}
+  100.00%{transform:translate(0px,0px) rotate(-281.3deg)}
+}
+.cart--theme-halloween .bs-w6{left:99.5px;top:107.5px;transform:rotate(115.9deg);animation:bs-w6 28s linear -17s infinite}
+@keyframes bs-w7{
+  0.00%{transform:translate(0px,0px) rotate(68.2deg)}
+  15.95%{transform:translate(60px,-24px) rotate(68.2deg)}
+  17.15%{transform:translate(60px,-24px) rotate(104.5deg)}
+  32.96%{transform:translate(122px,-8px) rotate(104.5deg)}
+  34.16%{transform:translate(122px,-8px) rotate(56.9deg)}
+  47.71%{transform:translate(168px,-38px) rotate(56.9deg)}
+  48.91%{transform:translate(168px,-38px) rotate(-60.5deg)}
+  61.95%{transform:translate(122px,-64px) rotate(-60.5deg)}
+  63.15%{transform:translate(122px,-64px) rotate(-107.9deg)}
+  79.23%{transform:translate(60px,-44px) rotate(-107.9deg)}
+  80.43%{transform:translate(60px,-44px) rotate(-126.3deg)}
+  100.00%{transform:translate(0px,0px) rotate(-126.3deg)}
+}
+.cart--theme-halloween .bs-w7{left:20.0px;top:262.0px;transform:rotate(68.2deg);animation:bs-w7 14s linear -6s infinite}
+@keyframes bs-h0{0%,8%{transform:translateY(6px)}38%,52%{transform:translateY(48px)}58%{transform:translateY(34px)}64%{transform:translateY(48px)}100%{transform:translateY(6px)}}
+.cart--theme-halloween .bs-h0{animation:bs-h0 9s ease-in-out -2s infinite}
+.cart--theme-halloween .bs-h0.bs-st{transform:translateY(33px)}
+@keyframes bs-h1{0%,8%{transform:translateY(6px)}38%,52%{transform:translateY(62px)}58%{transform:translateY(48px)}64%{transform:translateY(62px)}100%{transform:translateY(6px)}}
+.cart--theme-halloween .bs-h1{animation:bs-h1 11s ease-in-out -6s infinite}
+.cart--theme-halloween .bs-h1.bs-st{transform:translateY(43px)}
+@keyframes bs-h2{0%,8%{transform:translateY(6px)}38%,52%{transform:translateY(30px)}58%{transform:translateY(16px)}64%{transform:translateY(30px)}100%{transform:translateY(6px)}}
+.cart--theme-halloween .bs-h2{animation:bs-h2 8s ease-in-out -4s infinite}
+.cart--theme-halloween .bs-h2.bs-st{transform:translateY(21px)}
+
 
 /* ---------- Pâques : œufs peints pastel ---------- */
 .cart--theme-paques .cart-body { background:
@@ -482,38 +711,93 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 .cart--theme-paques .cart-ridge { background: repeating-linear-gradient(90deg, #1f5a55 0 4px, #ffb3c7 4px 8px); }
 .cart--theme-paques .cart-foot { color: #ffffff; font-weight: 700; background: #1f5a55; }
 
-/* ---------- Saint-Nicolas : étoiles dorées, biscuits ---------- */
-.cart--theme-saint-nicolas .cart-body { background:
-  radial-gradient(ellipse 8px 10px at 50% 50%, #c98a4b 0 60%, transparent 66%) 13px 40px / 52px 60px,
-  radial-gradient(circle, #e6b84d 0 2px, transparent 2.8px) 0 0 / 26px 30px,
-  linear-gradient(180deg, #7a1d1d 0%, #4a0f0f 100%); }
-.cart--theme-saint-nicolas .cart-label-fl { background: #2b0808; }
-.cart--theme-saint-nicolas .cart-lbl1 { color: #ffd96b; }
-.cart--theme-saint-nicolas .cart-lbl2 { color: #ffffff; }
-.cart--theme-saint-nicolas .cart-ridge { background: repeating-linear-gradient(90deg, #2b0808 0 4px, #e6b84d 4px 8px); }
-.cart--theme-saint-nicolas .cart-foot { color: #ffd96b; font-weight: 700; background: #2b0808; }
+/* ---------- Saint-Nicolas : attributs sous la neige ---------- */
+/* ===== Saint-Nicolas A : attributs, neige ===== */
+.cart--theme-saint-nicolas .cart-body { background: linear-gradient(180deg, #1b3157 0%, #0c1830 100%); }
+.cart--theme-saint-nicolas .cart-label-fl { background: #8a1a2b; }
+.cart--theme-saint-nicolas .cart-lbl1 { color: #fff; }
+.cart--theme-saint-nicolas .cart-lbl2 { color: #ffd66b; }
+.cart--theme-saint-nicolas .cart-ridge { background: repeating-linear-gradient(90deg, #8a1a2b 0 4px, #ffd66b 4px 8px); }
+.cart--theme-saint-nicolas .cart-foot { color: #ffd66b; font-weight: 700; background: #0c1830; }
+.cart--theme-saint-nicolas .cart-scr .bs-tw{transform-box:fill-box;transform-origin:center;animation:bs-twk 3.2s ease-in-out infinite}
+.cart--theme-saint-nicolas .cart-scr .bs-t2{animation-delay:-1.1s}.cart--theme-saint-nicolas .cart-scr .bs-t3{animation-delay:-2.1s}
+@keyframes bs-twk{0%,100%{opacity:.35;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+.cart--theme-saint-nicolas .cart-scr .bs-fl{animation:bs-snow 7s linear infinite}
+.cart--theme-saint-nicolas .cart-scr .bs-f1{animation-duration:9s}.cart--theme-saint-nicolas .cart-scr .bs-f2{animation-duration:6s}.cart--theme-saint-nicolas .cart-scr .bs-f3{animation-duration:11s}
+@keyframes bs-snow{0%{transform:translate(0,0);opacity:0}8%{opacity:.95}50%{transform:translate(5px,46px)}92%{opacity:.9}100%{transform:translate(-2px,92px);opacity:0}}
+.bs-sk{position:absolute;z-index:1;width:5px;height:5px;background:#ffd66b;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:bs-twk 3.6s ease-in-out infinite;pointer-events:none}
+@media (prefers-reduced-motion: reduce){
+  .cart--theme-saint-nicolas .cart-scr .bs-tw,.cart--theme-saint-nicolas .cart-scr .bs-fl,.bs-sk{animation:none !important}
+  .cart--theme-saint-nicolas .cart-scr .bs-fl{opacity:.8;transform:translate(0,40px)}
+}
 
-/* ---------- Feux d’artifice : bouquets en anneaux ---------- */
-.cart--theme-feux-artifice .cart-body { background:
-  radial-gradient(circle at 45px 60px, #ffd34d 0 3px, transparent 4px),
-  radial-gradient(circle at 45px 60px, transparent 0 22px, rgb(255 77 141 / .85) 23px 24.5px, transparent 26px),
-  radial-gradient(circle at 185px 215px, #4de6ff 0 3px, transparent 4px),
-  radial-gradient(circle at 185px 215px, transparent 0 30px, rgb(77 230 255 / .8) 31px 32.5px, transparent 34px),
-  radial-gradient(circle, #ffffff 0 1px, transparent 1.6px) 0 0 / 30px 34px,
-  linear-gradient(180deg, #0a0f2c 0%, #05071a 100%); }
-.cart--theme-feux-artifice .cart-label-fl { background: #05071a; }
-.cart--theme-feux-artifice .cart-lbl1 { color: #ffd34d; }
-.cart--theme-feux-artifice .cart-lbl2 { color: #ffffff; }
-.cart--theme-feux-artifice .cart-ridge { background: repeating-linear-gradient(90deg, #05071a 0 4px, #ff4d8d 4px 8px); }
-.cart--theme-feux-artifice .cart-foot { color: #ffffff; font-weight: 700; background: #05071a; }
 
-/* ---------- Gâteau d’anniversaire : glaçage, bougies ---------- */
-.cart--theme-gateau-anniversaire .cart-body { background:
-  radial-gradient(ellipse 130px 26px at 50% 186px, #ffffff 0 90%, transparent 92%),
-  repeating-linear-gradient(90deg, #ffffff 0 12px, #ffb3d1 12px 24px) 0 200px / 100% 90px no-repeat,
-  linear-gradient(180deg, #ffd6e7 0%, #f7b8d2 100%); }
-.cart--theme-gateau-anniversaire .cart-label-fl { background: #7a2a5a; }
+/* ---------- Feux d’artifice : ciel de fête ---------- */
+.cart--theme-feux-artifice .cart-body { background: linear-gradient(180deg, #0b1a3f 0%, #040816 100%); }
+.cart--theme-feux-artifice .cart-label-fl { background: #070b1f; }
+.cart--theme-feux-artifice .cart-lbl1 { color: #ffffff; }
+.cart--theme-feux-artifice .cart-lbl2 { color: #ffd34d; }
+.cart--theme-feux-artifice .cart-ridge { background: repeating-linear-gradient(90deg, #070b1f 0 4px, #ffd34d 4px 8px); }
+.cart--theme-feux-artifice .cart-foot { color: #ffffff; font-weight: 700; background: #070b1f; }
+
+
+/* ---------- Gâteau d’anniversaire : gâteau aux bougies ---------- */
+.cart--theme-gateau-anniversaire .cart-body { background: linear-gradient(180deg, #ffe3cf 0%, #ffc9a8 100%); }
+.cart--theme-gateau-anniversaire .cart-label-fl { background: #0f4c5c; }
 .cart--theme-gateau-anniversaire .cart-lbl1 { color: #ffffff; }
-.cart--theme-gateau-anniversaire .cart-lbl2 { color: #ffe6f2; }
-.cart--theme-gateau-anniversaire .cart-ridge { background: repeating-linear-gradient(90deg, #7a2a5a 0 4px, #ffffff 4px 8px); }
-.cart--theme-gateau-anniversaire .cart-foot { color: #ffffff; font-weight: 700; background: #7a2a5a; }
+.cart--theme-gateau-anniversaire .cart-lbl2 { color: #ffe7b8; }
+.cart--theme-gateau-anniversaire .cart-ridge { background: repeating-linear-gradient(90deg, #0f4c5c 0 4px, #ffffff 4px 8px); }
+.cart--theme-gateau-anniversaire .cart-foot { color: #ffffff; font-weight: 700; background: #0f4c5c; }
+
+
+/* ================= Animation d’ouverture des thèmes « fête » (feux d’artifice, gâteau) =================
+   Jouée par booster-themes.js (playOpeningFx) quand le booster ouvert a ce thème : environ 1,8 s, sur la scène d’ouverture
+   (.op-stage) autour de la cartouche, sans bloquer la révélation des cartes (calque non cliquable, au-dessus).
+   Mouvement réduit : pas de scène animée, seulement un flash doux (fondu de lumière, .bs-fx-soft). Effets coupés : rien. */
+.bs-fx { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 30; overflow: hidden; pointer-events: none; }
+.bs-fx::before { content: ""; position: absolute; left: 0; top: 0; right: 0; bottom: 0; opacity: 0; animation: bs-glow 1.1s ease-out both; }
+.bs-fx--feux::before { background: radial-gradient(60% 50% at 50% 38%, rgb(255 236 190 / .75), rgb(255 236 190 / 0) 70%); }
+.bs-fx--confettis::before { background: radial-gradient(60% 50% at 50% 38%, rgb(255 200 225 / .7), rgb(255 200 225 / 0) 70%); }
+@keyframes bs-glow { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+.bs-fx b, .bs-fx i { position: absolute; display: block; opacity: 0; }
+.bs-bu { position: absolute; width: 0; height: 0; }
+.bs-bu i { left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px 2px var(--c);
+  animation: bs-boom 1.1s cubic-bezier(.1, .75, .3, 1) var(--t) both; }
+.bs-bu b { left: -30px; top: -30px; width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0, rgb(255 255 255 / .5) 35%, rgb(255 255 255 / 0) 70%); animation: bs-core .7s ease-out var(--t) both; }
+@keyframes bs-boom {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  8% { opacity: 1; }
+  62% { transform: translate(var(--x), var(--y)) scale(.9); opacity: 1; }
+  100% { transform: translate(var(--x), calc(var(--y) + 30px)) scale(.2); opacity: 0; }
+}
+@keyframes bs-core { 0% { transform: scale(.2); opacity: 0; } 10% { opacity: 1; } 55% { transform: scale(1.8); opacity: .8; } 100% { transform: scale(2.4); opacity: 0; } }
+.bs-cf { left: var(--l); top: -20px; width: var(--w); height: var(--h); background: var(--c);
+  animation: bs-fall 1.3s cubic-bezier(.35, .1, .6, .95) var(--t) both; }
+@keyframes bs-fall {
+  0% { transform: translate(0, 0) rotate(0deg) scaleY(1); opacity: 0; }
+  6% { opacity: 1; }
+  35% { transform: translate(calc(var(--sx) * -.6), 190px) rotate(240deg) scaleY(-.6); }
+  65% { transform: translate(var(--sx), 370px) rotate(480deg) scaleY(.9); opacity: 1; }
+  100% { transform: translate(calc(var(--sx) * -.4), 580px) rotate(760deg) scaleY(-.7); opacity: 0; }
+}
+/* La cartouche tremble puis saute, et sa plaque s'illumine (classe posée sur la scène pendant l'animation). */
+.op-stage.bs-fx-on .op-cart .cart-box { animation: bs-shake .8s ease-in-out both; }
+.op-stage.bs-fx-on .op-cart .cart-label-fl, .op-stage.bs-fx-on .op-cart .cart-ridge { animation: bs-lueur 1s ease-out both; }
+@keyframes bs-shake {
+  0%, 4% { transform: none; }
+  10% { transform: translate(-5px, 1px) rotate(-1.6deg); }
+  20% { transform: translate(5px, -1px) rotate(1.6deg); }
+  30% { transform: translate(-6px, 0) rotate(-2deg); }
+  40% { transform: translate(6px, 1px) rotate(2deg); }
+  50% { transform: translate(-4px, 0) rotate(-1.2deg); }
+  62% { transform: translate(0, -14px) scale(1.07); }
+  80% { transform: translate(0, -6px) scale(1.03); }
+  100% { transform: none; }
+}
+@keyframes bs-lueur { 0%, 30% { filter: none; } 50% { filter: brightness(1.9) saturate(1.2); } 100% { filter: none; } }
+/* Flash doux (mouvement réduit) : un fondu de lumière sur toute la fenêtre, sans déplacement.
+   Animé en JavaScript (API Web Animations) : la règle globale de base.css coupe les animations CSS en mouvement réduit. */
+.bs-fx-soft { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 70; pointer-events: none; opacity: 0; }
+.bs-fx-soft--feux { background: radial-gradient(70% 55% at 50% 40%, rgb(255 236 190 / .38), rgb(255 236 190 / 0) 75%); }
+.bs-fx-soft--confettis { background: radial-gradient(70% 55% at 50% 40%, rgb(255 200 225 / .36), rgb(255 200 225 / 0) 75%); }
