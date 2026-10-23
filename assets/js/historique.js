@@ -68,6 +68,9 @@ async function load() {
   S.events = ev.data || [];
   S.moments = mo.data || [];
   await loadReactions('moment', S.moments.map((x) => x.id), me.id); // une requête pour toutes les réactions de la page
+  // Moments devenus des cartes (migration 080, C5) : pastille « En carte ». Sans la colonne, aucune pastille.
+  const mc = await sb.from('hg_cards').select('id,moment_id').eq('active', true).not('moment_id', 'is', null);
+  S.momentCards = new Map(mc.error ? [] : (mc.data || []).filter((k) => k.moment_id).map((k) => [k.moment_id, k.id]));
 
   const ids = S.events.map((e) => e.id);
   const [prog, rs, ph, pairs] = await Promise.all([
@@ -185,8 +188,9 @@ function momentCard(m) {
   const url = m.image_path ? S.urls.get(m.image_path) : null;
   const author = m.created_by ? member(m.created_by) : null;
   const mine = m.created_by === me.id || isAdmin;
-  return `<article class="tl-card tl-card-moment">
-    <div class="tl-kind">${I.star}<span>Moment culte · ${esc(fmtDate(dayDate(m.happened_on)))}</span></div>
+  const inCard = S.momentCards?.has(m.id);
+  return `<article class="tl-card tl-card-moment" id="moment-${esc(m.id)}">
+    <div class="tl-kind">${I.star}<span>Moment culte · ${esc(fmtDate(dayDate(m.happened_on)))}</span>${inCard ? '<a class="tl-incard" href="cartes.html#collection">En carte</a>' : ''}</div>
     <h3 class="tl-title">${esc(m.title)}</h3>
     ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy"></button>` : ''}
     ${m.body ? `<p class="tl-body">${esc(m.body)}</p>` : ''}
@@ -347,5 +351,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 await refresh();
+// Lien direct vers un moment (« Voir le moment » depuis une carte, migration 080) : on le montre une fois la frise dessinée.
+if (location.hash.startsWith('#moment-')) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
 // Secret caché « rembobine » : module chargé à part (assets/js/eggs/pages.js).
 import('./eggs/pages.js').then((m) => m.secretsHistorique()).catch(() => {});

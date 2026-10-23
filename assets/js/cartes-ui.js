@@ -91,17 +91,25 @@ const LAYERS = '<span class="hgc-layer hgc-out"></span><span class="hgc-layer hg
   + '<span class="hgc-stud sl"></span><span class="hgc-stud sr"></span><span class="hgc-tab tt"></span><span class="hgc-tab tb"></span>'
   + '<span class="hgc-dia dtl"></span><span class="hgc-dia dtr"></span><span class="hgc-dia dbl"></span><span class="hgc-dia dbr"></span></span>';
 
+/** Calque « fondue » (C3) : nappe de fromage en haut du cadre, coulures et bulles (animées seulement si les effets sont permis). */
+const FONDUE = '<span class="hgc-fondue"><i class="d1"></i><i class="d2"></i><i class="d3"></i><i class="d4"></i>'
+  + '<b class="b1"></b><b class="b2"></b><b class="b3"></b></span>';
+
 /**
  * HTML d'une carte face visible.
- * card : { name, rarity, family, image_url, flavor, caption?, number, set_total?, set_name?, max_copies, member_since? }
- * opts : { shiny, serial, count (nb d'exemplaires possédés), size: 'sm'|'md'|'lg', locked, missing, button (true = <button>), attrs (string) }
+ * card : { name, rarity, family, image_url, flavor, caption?, number, set_total?, set_name?, max_copies, member_since?, finish? }
+ * opts : { shiny, serial, count (nb d'exemplaires possédés), size: 'sm'|'md'|'lg', locked, missing, button (true = <button>), attrs (string),
+ *          finish ('fondue' : brillante fondue du booster Raclette, migration 080 ; repli : card.finish), stamp (true : tampon « J’y étais ») }
  */
 export function cardHtml(card, opts = {}) {
   const r = RARITY[card.rarity] ? card.rarity : 'commune';
   const size = opts.size || 'md';
   const miss = !!opts.missing;
   const ident = r === 'identite';
-  const cls = ['hgc', `hgc-${r}`, `hgc-${size}`, opts.shiny ? 'is-shiny' : '', miss ? 'is-missing' : '', opts.locked ? 'is-locked' : ''].filter(Boolean).join(' ');
+  // Brillante « fondue » (C3) : le fromage remplace le reflet holographique ; tampon « J’y étais » (C4).
+  const fondue = !!opts.shiny && !miss && (opts.finish ?? card.finish) === 'fondue';
+  const stamp = !!opts.stamp && !miss;
+  const cls = ['hgc', `hgc-${r}`, `hgc-${size}`, opts.shiny ? 'is-shiny' : '', fondue ? 'is-fondue' : '', miss ? 'is-missing' : '', opts.locked ? 'is-locked' : ''].filter(Boolean).join(' ');
   const name = miss ? '???' : String(card.name ?? '');
   const uniq = r === 'unique';
   // Une carte unique se présente comme une pièce à part : « Exemplaire unique » remplace la famille.
@@ -134,7 +142,7 @@ export function cardHtml(card, opts = {}) {
   const serialTxt = uniq ? (opts.serial && !miss ? '1/1' : '') : (opts.serial ? serialLabel(opts.serial, card.max_copies) : '');
   const count = opts.count > 1 ? `<span class="hgc-count" aria-hidden="true">×${opts.count}</span>` : '';
   const lock = opts.locked ? '<span class="hgc-lock" title="Bloquée par une offre d\'échange">En échange</span>' : '';
-  const label = `${name} — ${rarityLabel(r)}${opts.shiny ? ', brillante' : ''}${opts.serial ? ', ' + serialLabel(opts.serial, card.max_copies) : ''}`
+  const label = `${name} — ${rarityLabel(r)}${opts.shiny ? (fondue ? ', brillante fondue' : ', brillante') : ''}${stamp ? ', J’y étais' : ''}${opts.serial ? ', ' + serialLabel(opts.serial, card.max_copies) : ''}`
     + `${opts.count > 1 ? ', ' + opts.count + ' exemplaires' : ''}${opts.locked ? ', en échange' : ''}${miss ? ' (pas encore obtenue)' : ''}`;
   const tag = opts.button ? 'button' : 'div';
   const typeAttr = opts.button ? ' type="button"' : '';
@@ -143,11 +151,12 @@ export function cardHtml(card, opts = {}) {
   return `<${tag}${typeAttr} class="${cls}" aria-label="${esc(label)}"${roleAttr} ${opts.attrs || ''}>
     <span class="hgc-frame" aria-hidden="true">
       ${LAYERS}
-      ${opts.shiny ? '<span class="hgc-holo"></span>' : ''}
+      ${opts.shiny ? (fondue ? FONDUE : '<span class="hgc-holo"></span>') : ''}
       ${uniq ? '<span class="hgc-sheen" aria-hidden="true"></span>' : ''}
       <span class="hgc-gems">${gemsHtml(r, rarityRank(r))}</span>
       <span class="hgc-plate${plateFit}"><span class="hgc-plate-t">${esc(plateTxt)}</span></span>
       ${win}
+      ${stamp ? '<span class="hgc-stamp"><span>J’y</span><span>étais</span></span>' : ''}
       <span class="hgc-fam">${esc(famLine)}</span>
       <span class="hgc-amb${ambFit}">${flavor ? `<em class="hgc-flavor">« ${esc(flavor)} »</em>` : ''}${caption ? `<span class="hgc-cap">${esc(caption)}</span>` : ''}</span>
       <span class="hgc-pied"><span class="hgc-pied-n">${esc(miss ? '' : numberLabel(card))}</span><span class="hgc-pied-s">${esc(serialTxt)}</span></span>

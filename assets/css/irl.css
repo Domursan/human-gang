@@ -137,3 +137,19 @@
 
 /* Rencontre ajoutée après coup (liste des sorties passées) */
 .retro-pill { align-self: flex-start; padding: 3px 10px; font-size: 12px; color: var(--muted); background: transparent; border: 1px dashed var(--border-strong); }
+
+/* ---------- Carte « J’y étais » d'une sortie passée (migration 080, C4) ---------- */
+.jy { margin-top: 14px; padding: 14px; border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; gap: 12px; }
+.jy-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.jy-title { margin: 0; font-size: 16px; }
+.jy-mine { color: var(--sage-text, #8FC39F); background: var(--sage-soft, #18241C); border-color: transparent; font-weight: 700; }
+.jy-body { display: flex; gap: 14px; align-items: flex-start; }
+.jy-card { flex: none; }
+.jy-info { min-width: 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.jy-info p { margin: 0; }
+.jy-names { overflow-wrap: anywhere; }
+.jy-add { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.jy-add p { margin: 0; }
+.jy-add-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.jy-add-row select { flex: 1 1 160px; min-height: 44px; min-width: 0; }
+.jy-add-row .btn { min-height: 44px; }

@@ -86,3 +86,11 @@
 .sx-row-when { font-size: 12.5px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sx-row-meta { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sx-col-list .ui-row { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Carte « J’y étais » de la sortie (migration 080, C4) ---------- */
+.ass-jy { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.ass-jy-prev { flex: none; }
+.ass-jy-form { flex: 1 1 260px; min-width: 0; }
+.ass-jy-form input:not([type=checkbox]), .ass-jy-form select { min-height: 44px; }
+.ass-jy-who { margin-top: 12px; }
+.ass-jy-who p { overflow-wrap: anywhere; }

@@ -533,7 +533,7 @@ function quizRow(q) {
 /** Raretés tirées (les 7 clés des taux, sans « unique »). */
 const BOOSTER_RARITIES = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
 /** Styles de cartouche permis. */
-const BOOSTER_STYLES = ['cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte', 'cart--holo', 'cart--collection', 'cart--identite'];
+const BOOSTER_STYLES = ['cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte', 'cart--holo', 'cart--collection', 'cart--identite', 'cart--esport', 'cart--pate', 'cart--raclette'];
 /**
  * Crée ou modifie un type comme hg_booster_type_save(p jsonb) : droits, validations, gratuit du jour unique.
  * L'appel est noté dans le journal : ['booster_type_save', id, p].
@@ -585,6 +585,9 @@ function boosterTypeSave(p) {
   if (row.free_daily) for (const t of DB.hg_booster_types) if (t.id !== row.id && t.free_daily) { t.free_daily = false; removed.push(t.id); }
   return { data: { type: JSON.parse(JSON.stringify(row)), created, free_daily_removed_from: removed }, error: null };
 }
+
+// Idées C1 à C6 (migration 080) : lignes ajoutées par le scénario, table par table (S.c080 = { hg_cards: [...], ... }).
+if (S.c080) for (const [t, rows] of Object.entries(S.c080)) DB[t] = [...(DB[t] || []), ...rows];
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */

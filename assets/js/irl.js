@@ -16,6 +16,7 @@ import { svg } from './icons.js';
 import { pluralCount, pad } from './utils.js';
 import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
 import { lireQuota, restants, messagePhotos, messageSortie } from './eco-quota.js';
+import { loadSortieCards, sortieCardHtml, onSortieCardClick } from './irl-carte.js';
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit les fantômes et peut tout modifier.
@@ -76,6 +77,7 @@ async function load() {
   S.dates = dt.data || [];
   S.votes = vt.data || [];
   S.photos = ph.data || [];
+  await loadSortieCards(S.events); // cartes « J’y étais » (migration 080, C4)
 }
 
 /* ---------- Helpers ---------- */
@@ -354,6 +356,7 @@ function renderPast(ev) {
       ${ownerActions(ev, { who: true })}
     </div>
     ${god() ? `<div class="past-rsvp"><p class="small muted">Répondre à cette sortie passée${godTag()}</p>${rsvpBlock(ev, { compact: true })}</div>` : ''}
+    ${sortieCardHtml(ev, { me, members: S.members, pseudo })}
     ${albumHtml(ev)}
   </article>`;
 }
@@ -561,6 +564,7 @@ async function deletePhoto(p) {
 
 // Délégation : un seul écouteur pour tous les boutons data-act de la page, y compris ceux rendus plus tard.
 $('#app').addEventListener('click', (e) => {
+  if (onSortieCardClick(e, refresh)) return; // « Il était là aussi » (carte de la sortie)
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const { act, id } = b.dataset;

@@ -35,7 +35,9 @@ async function openSec(p, id) {
   if (!open) await p.click(`#abt-sec-${id} > summary`);
 }
 /** Champs attendus dans chaque charge utile de hg_booster_type_save. */
-const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique', 'pool', 'weekly_limit', 'free_daily', 'style', 'description', 'active', 'sort', 'excluded_rarities', 'excluded_sets'].sort();
+const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique', 'pool', 'weekly_limit', 'free_daily', 'style', 'description', 'active', 'sort', 'excluded_rarities', 'excluded_sets',
+  // Migration 080 : fenêtre de vente, série unique, plage horaire, limite par soirée, style des brillantes.
+  'available_from', 'available_until', 'only_set', 'schedule', 'per_window_limit', 'shiny_style'].sort();
 
 (async () => {
   const browser = await chromium.launch();

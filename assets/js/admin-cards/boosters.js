@@ -20,6 +20,7 @@ import { rarityLabel } from '../cartes-ui.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { CFG_DEFAULT, RARITY_IDS, ICON } from './constants.js';
 import { check, nf } from './helpers.js';
+import { SAISON_STYLES, saisonDefaults, saisonSectionHtml, readSaison, validateSaison, saisonPayload } from './boosters-saison.js';
 
 /* ---------- Constantes ---------- */
 /** Les 9 styles de cartouche (classe CSS de cartes-boosters.css, libellé). */
@@ -27,6 +28,7 @@ export const BOOSTER_STYLES = [
   ['cart--classique', 'Classique'], ['cart--serie', 'Série'], ['cart--argente', 'Argenté'], ['cart--dore', 'Doré'],
   ['cart--diamant', 'Diamant'], ['cart--quitte', 'Quitte ou double'], ['cart--holo', 'Holographique'],
   ['cart--collection', 'Collection'], ['cart--identite', 'Identité'],
+  ...SAISON_STYLES, // saison esport, pâté-saucisses, raclette (migration 080)
 ];
 /** Contenu possible d'un booster (colonne pool). */
 const POOLS = [
@@ -321,6 +323,7 @@ function payloadOf(t) {
     free_daily: !!t.free_daily, style: safeStyle(t.style), description: t.description ? String(t.description) : null,
     active: t.active !== false, sort: Number(t.sort) || 0,
     excluded_rarities: arr(t.excluded_rarities), excluded_sets: arr(t.excluded_sets),
+    ...saisonPayload(t), // fenêtre, série unique, plage horaire, style des brillantes (migration 080)
   };
 }
 /** Égalité de deux valeurs de champ (taux et listes comparés par contenu). */
@@ -396,7 +399,7 @@ async function move(btn, id, dir) {
 function blankType() {
   return { id: '', name: '', price: 100, size: 5, rates: { ...CFG_DEFAULT.rates }, shiny_rate: 3, pity_epique: 20, pool: 'tous',
     weekly_limit: null, free_daily: false, style: 'cart--classique', description: '', active: false,
-    sort: B.types.reduce((m, t) => Math.max(m, Number(t.sort) || 0), 0) + 10, excluded_rarities: [], excluded_sets: [] };
+    sort: B.types.reduce((m, t) => Math.max(m, Number(t.sort) || 0), 0) + 10, excluded_rarities: [], excluded_sets: [], ...saisonDefaults() };
 }
 
 /** Champ numérique de l'éditeur. */
@@ -491,6 +494,7 @@ function editorHtml(t, isNew) {
         ${section('general', 'Général', general)}
         ${section('contenu', 'Contenu', contenu, !isNew && (t.excluded_rarities.length > 0 || t.excluded_sets.length > 0 || t.pool !== 'tous'))}
         ${section('limites', 'Limites et garantie', limites, false)}
+        ${section('saison', 'Saison et horaires', saisonSectionHtml(t, B.sets), !!(t.available_from || t.available_until || t.schedule || t.only_set || t.shiny_style))}
       </fieldset>
       <div class="abt-col">
         <fieldset class="abt-plain"${ro ? ' disabled' : ''}><legend class="acd-sr">Chances</legend>${section('chances', 'Chances', chances)}</fieldset>
@@ -514,6 +518,7 @@ function readForm(form) {
     rates: Object.fromEntries(RARITY_IDS.map((r) => [r, val(`rate_${r}`)])),
     excluded_rarities: $$('input[name="ex_rar"]:checked', form).map((i) => i.value),
     excluded_sets: [...new Set($$('input[name="ex_set"]', form).filter((i) => i.type === 'hidden' || i.checked).map((i) => i.value))],
+    saison: readSaison(form),
   };
 }
 /** Total des taux saisis (null si une valeur n'est pas un nombre positif). */
@@ -565,6 +570,7 @@ function validate(v, orig) {
     shiny_rate: shiny, pity_epique: Number(v.pity_epique), pool: v.pool, weekly_limit: v.weekly_limit === '' ? null : Number(v.weekly_limit),
     free_daily: v.free_daily, style: v.style, active: v.active, sort: Number(v.sort),
     excluded_rarities: v.excluded_rarities, excluded_sets: v.excluded_sets,
+    ...(v.saison ? validateSaison(v.saison, v.pool) : {}),
   };
 }
 

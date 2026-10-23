@@ -1,0 +1,66 @@
+/* ===== Cartes — boosters de saison et du soir, propositions de cartes (migration 080, idées C1, C2, C3, C6) ===== */
+
+/* Pastille d'état au-dessus du nom d'un article de la Boutique (cartes-saisons.js : saleBadgeHtml). */
+.shop-badge { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 0; padding: 4px 10px;
+  border-radius: 999px; border: 1px solid currentColor; font-size: 13px; font-weight: 700; line-height: 1.3; }
+.shop-badge svg { flex: none; }
+.shop-badge.is-season { color: #7ff3ff; }
+.shop-badge.is-last { color: var(--sand); }
+.shop-badge.is-open { color: var(--sage-text, #8FC39F); }
+.shop-badge.is-closed { color: var(--muted); }
+
+/* Encart « Proposer une carte » : visible seulement avec l'onglet Collection (il suit son panneau). */
+#cartes-p-collection[hidden] + .prop-box { display: none; }
+.prop-box { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.prop-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.prop-head > div { flex: 1 1 260px; min-width: 0; }
+.prop-head p { margin: 4px 0 0; }
+.prop-sub { font-size: 15px; margin: 0; }
+.prop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.prop-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 12px; }
+.prop-name { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.prop-note { display: block; }
+.prop-pill { padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid currentColor; }
+.prop-pill.is-wait { color: var(--sand); } .prop-pill.is-ok { color: var(--sage-text, #8FC39F); }
+.prop-pill.is-no { color: #E0909A; } .prop-pill.is-off { color: var(--muted); }
+.prop-row .btn-sm { min-height: 44px; }
+
+/* Formulaire de proposition : champs à gauche, aperçu à droite (une colonne sur téléphone). */
+.prop-dlg { width: min(760px, calc(100vw - 32px)); }
+.prop-grid { display: grid; grid-template-columns: minmax(0, 1fr) 200px; gap: 16px; align-items: start; }
+.prop-fields { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.prop-fields input, .prop-fields select { width: 100%; min-height: 44px; }
+.prop-blason { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+.prop-blason legend { font-weight: 700; padding: 0 4px; }
+.prop-blason .check { grid-column: 1 / -1; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.prop-preview { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.prop-prev-h { margin: 0; font-weight: 700; }
+.prop-err:empty { display: none; }
+.prop-err { color: #E0909A; }
+@media (max-width: 600px) {
+  .prop-grid { grid-template-columns: minmax(0, 1fr); }
+  .prop-blason { grid-template-columns: minmax(0, 1fr); }
+  .prop-preview { order: -1; }
+}
+.prop-blason { grid-template-columns: minmax(0, 1fr); }
+.prop-sub-fs { border: 0; margin: 0; padding: 0; min-width: 0; }
+.prop-sub-fs legend { font-weight: 700; font-size: 14px; padding: 0; margin-bottom: 6px; }
+.prop-sw { display: flex; flex-wrap: wrap; gap: 8px; }
+.prop-swatch { position: relative; width: 44px; height: 44px; border-radius: 10px; background: var(--c); border: 2px solid var(--border); cursor: pointer; }
+.prop-swatch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.prop-swatch:has(input:checked) { border-color: var(--text, #F2EFEA); box-shadow: 0 0 0 2px var(--bg, #0E0E10) inset; }
+.prop-swatch:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.prop-figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.prop-fig { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 44px; padding: 4px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 11px; text-align: center; }
+.prop-fig img { width: 48px; height: 32px; image-rendering: pixelated; object-fit: cover; }
+.prop-fig input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.prop-fig:has(input:checked) { border-color: var(--sand); background: color-mix(in srgb, var(--sand) 14%, transparent); }
+.prop-fig:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.prop-blason:disabled .prop-sw, .prop-sub-fs:disabled { opacity: .45; }
+
+/* Booster du soir : prix de référence barré, réduction, ligne compacte hors plage. */
+.shop-ref { color: var(--muted); font-size: 13px; }
+.shop-off { padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--sage-text, #8FC39F); background: var(--sage-soft, #18241C); }
+.shop-later { font-size: 14px; margin: 8px 0 0; }
+.shop-closed { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; color: var(--muted); }
+.shop-closed-t { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; color: var(--text); }

@@ -40,6 +40,8 @@ function setCard(s, cards) {
         <p class="small muted">${nf(cards.length)} carte${cards.length > 1 ? 's' : ''}</p>
         <p class="small muted">${esc(period(s))}</p>
         ${state}
+        ${s.proposals_open ? '<span class="pill">Propositions ouvertes</span>' : ''}
+        ${s.booster_scope ? `<span class="pill">${s.booster_scope === 'saison' ? 'Booster de saison' : 'Hors boosters'}</span>` : ''}
       </div>
     </div>
     ${s.description ? `<p class="small acd-setcard-desc">${esc(s.description)}</p>` : ''}
@@ -72,7 +74,8 @@ export function setsPanel() {
       <button class="btn btn-primary" type="button" data-act="set-new">${ICON.plus} Nouvelle série</button>
     </div>
     ${C.sets.length ? searchHtml({ id: 'acd-search-series', label: 'Rechercher une série', placeholder: 'Nom, code ou description…', value: C.q.series, attrs: 'data-search="series"' }) : ''}
-    <div id="acd-sets-list">${setsListData().html}</div>`;
+    <div id="acd-sets-list">${setsListData().html}</div>
+    <div id="acd-props"></div>`;
 }
 
 /** Formulaire de série, ouvert dans le tiroir. */
@@ -102,6 +105,16 @@ export function openSetDialog(s = null) {
         <div class="field"><label for="acs-sort">Ordre d'affichage</label><input id="acs-sort" name="sort" type="number" step="1" value="${esc(v.sort ?? nextSetSort())}"></div>
         <label class="switch"><input type="checkbox" name="active"${(v.active ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Série active</span></label>
       </div>
+      <div class="acd-grid-2">
+        <div class="field"><label for="acs-scope">Dans les boosters</label>
+          <select id="acs-scope" name="booster_scope" aria-describedby="acs-scope-h">
+            <option value="">Tous les boosters</option>
+            <option value="saison"${v.booster_scope === 'saison' ? ' selected' : ''}>Seulement son booster de saison</option>
+            <option value="hors_boosters"${v.booster_scope === 'hors_boosters' ? ' selected' : ''}>Jamais (cartes données)</option>
+          </select>
+          <span class="small muted" id="acs-scope-h">« Booster de saison » : le type dont la « Série unique » est cette série.</span></div>
+        <label class="switch"><input type="checkbox" name="proposals_open"${v.proposals_open ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Propositions des membres ouvertes</span></label>
+      </div>
     </div>`,
     onSubmit: async (form) => {
       const err = $('.form-error', form);
@@ -113,6 +126,8 @@ export function openSetDialog(s = null) {
         code: E.code.value.trim().toLowerCase(), name: E.name.value.trim(), description: E.description.value.trim() || null,
         starts_at: fromZurichInput(E.starts_at.value), ends_at: fromZurichInput(E.ends_at.value),
         sort: Math.round(Number(E.sort.value) || 0), active: E.active.checked,
+        // Migration 080 : séries réservées et propositions de cartes des membres.
+        booster_scope: E.booster_scope.value || null, proposals_open: E.proposals_open.checked,
       };
       if (!/^[a-z0-9][a-z0-9-]{1,31}$/.test(row.code)) return showErr('Le code doit faire 2 à 32 caractères : lettres minuscules, chiffres et tirets.'), false;
       if (row.name.length < 2) return showErr('Donne un nom à la série (2 caractères minimum).'), false;

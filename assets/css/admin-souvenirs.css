@@ -78,3 +78,19 @@
 .sv-d-img img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
 .sv-d-text { margin: 0; max-width: 68ch; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sv-col-list .ui-row { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Moment → carte (migration 080, C5) ---------- */
+.sv-incard { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; color: var(--sage-text, #8FC39F); background: var(--sage-soft, #18241C); }
+.sv-incard-line { margin: 0 0 12px; }
+.sv-card-dlg { width: min(860px, calc(100vw - 32px)); }
+.sv-kc { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 20px; align-items: start; }
+.sv-kc-kicker { margin: 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--sand); }
+.sv-kc-rar { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sv-kc-rar legend { font-weight: 700; margin-bottom: 6px; padding: 0; }
+.sv-kc-chip { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; }
+.sv-kc-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.sv-kc-chip:has(input:checked) { border-color: #9bb8ff; color: #9bb8ff; font-weight: 700; }
+.sv-kc-chip:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.sv-kc-prev { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.sv-kc-prev-h { margin: 0; font-weight: 700; }
+@media (max-width: 700px) { .sv-kc { grid-template-columns: minmax(0, 1fr); } .sv-kc-prev { order: -1; } }

@@ -530,6 +530,9 @@ if (S.supportCfg) DB.hg_settings.push({ key: 'support', value: S.supportCfg });
 if (S.settingsExtra) for (const [key, value] of Object.entries(S.settingsExtra)) DB.hg_settings.push({ key, value });
 if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Ancienneté', description: 'Années dans le gang', image_url: null, sort: 999, levels_enabled: true, metric: 'anciennete_annees', levels: S.ancienneteLevels });
 
+// Idées C1 à C6 (migration 080) : lignes ajoutées par le scénario, table par table (S.c080 = { hg_cards: [...], ... }).
+if (S.c080) for (const [t, rows] of Object.entries(S.c080)) DB[t] = [...(DB[t] || []), ...rows];
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 export function createClient() {

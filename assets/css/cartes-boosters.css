@@ -112,3 +112,40 @@ html[data-fx="off"] .cart--holo .cart-body { animation: none; }
     radial-gradient(circle at 50% 34%, #FBD32D 0 4.5px, transparent 5px),
     radial-gradient(ellipse at 50% 100%, #FBD32D 0 9px, transparent 9.5px),
     #1c1a22; }
+
+/* ---------- Saison esport (C1, migration 080) : écran de match, fond nuit, bandeau néon, petit score ---------- */
+.cart--esport .cart-body { background:
+  repeating-linear-gradient(180deg, rgba(0, 240, 255, .06) 0 2px, transparent 2px 5px),
+  linear-gradient(180deg, #121a3a 0%, #0b1026 100%); }
+.cart--esport .cart-label-fl { background: #0b1026; box-shadow: inset 0 0 0 2px #00e0ff; }
+.cart--esport .cart-lbl1 { color: #fff; }
+.cart--esport .cart-lbl2 { color: #7ff3ff; }
+.cart--esport .cart-ridge { background: repeating-linear-gradient(90deg, #00e0ff 0 2px, #0b1026 2px 6px); }
+.cart--esport .cart-foot { color: #7ff3ff; }
+/* Petit score « 1 - 0 » dessiné à droite du logo. */
+.cart--esport .cart-scr::after { content: "1 - 0"; position: absolute; left: 106px; top: 16px; width: 40px; height: 20px;
+  background: #0b1026; border: 2px solid #00e0ff; color: #7ff3ff; font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; }
+
+/* ---------- Pâté-saucisses (C2, migration 080) : charcuterie, rondelles de saucisson ---------- */
+.cart--pate .cart-body { background:
+  radial-gradient(circle at 30% 40%, rgba(255, 235, 225, .55) 0 3px, transparent 3.5px) 0 0 / 22px 22px,
+  radial-gradient(circle at 70% 75%, rgba(255, 235, 225, .4) 0 2px, transparent 2.5px) 0 0 / 22px 22px,
+  linear-gradient(180deg, #b0475a 0%, #7d2a3a 100%); }
+.cart--pate .cart-label-fl { background: #f2d7c2; }
+.cart--pate .cart-lbl1 { color: #4a1620; }
+.cart--pate .cart-lbl2 { color: #7d2a3a; }
+.cart--pate .cart-ridge { background: repeating-linear-gradient(90deg, #4a1620 0 4px, #f2d7c2 4px 8px); }
+.cart--pate .cart-foot { color: #ffe1d0; }
+
+/* ---------- Raclette (C3, migration 080) : caquelon jaune fromage, rebord brun, vapeur ---------- */
+.cart--raclette .cart-body { background: linear-gradient(180deg, #ffe58a 0%, #f6c945 45%, #d99a1a 100%); }
+.cart--raclette .cart-label-fl { background: #6b3a12; }
+.cart--raclette .cart-lbl1 { color: #fff; }
+.cart--raclette .cart-lbl2 { color: #ffe58a; }
+.cart--raclette .cart-ridge { background: repeating-linear-gradient(90deg, #6b3a12 0 4px, #ffe58a 4px 8px); }
+.cart--raclette .cart-foot { color: #4a2508; font-weight: 700; }
+/* Deux filets de vapeur au-dessus de l'écran, à droite du logo. */
+.cart--raclette .cart-scr::after { content: ""; position: absolute; left: 116px; top: 10px; width: 22px; height: 30px;
+  background:
+    radial-gradient(ellipse 3px 7px at 30% 30%, rgba(255, 255, 255, .85) 60%, transparent 62%),
+    radial-gradient(ellipse 3px 7px at 70% 60%, rgba(255, 255, 255, .7) 60%, transparent 62%); }
