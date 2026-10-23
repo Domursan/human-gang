@@ -42,7 +42,8 @@ const PROPS = [
   await sleep(500);
   const can = (await log(p)).filter((x) => x[0] === 'rpc' && x[1] === 'hg_card_proposal_cancel').pop();
   check(can && can[2].p_id === 'P1', '(3) hg_card_proposal_cancel');
-  await p.click('#cartes-tab-boutique');
+  await p.evaluate(() => { location.hash = 'boutique'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
+  await p.waitForSelector('#cartes-p-boutique:not([hidden])', { timeout: 5000 });
   await sleep(300);
   check(await p.$eval('#cartes-propose', (el) => getComputedStyle(el).display === 'none'), '(1) encart caché hors de l’onglet Collection');
   check(!p.errs.length, '(1) aucune erreur de page ' + p.errs.join(' | '));

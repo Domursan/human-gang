@@ -12,7 +12,7 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   const browser = await chromium.launch();
   for (const [width, label] of [[1280, 'ordinateur'], [360, '360 px']]) {
     const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width, height: 900 });
-    await p.click('[data-tab=collection]');
+    await p.evaluate(() => { location.hash = 'collection'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
     await p.waitForSelector('#cartes-set', { timeout: 5000 });
     await p.selectOption('#cartes-set', 'SET1');
     await sleep(150);

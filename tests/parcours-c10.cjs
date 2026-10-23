@@ -12,7 +12,7 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, bal: 900 }, width: 360, height: 800 });
-  await p.click('[data-tab=collection]');
+  await p.evaluate(() => { location.hash = 'collection'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('.c2-atelier', { timeout: 5000 }).catch(() => {});
   check(/Atelier/.test(await txt(p, '#c2-atelier-h')) && /2 recettes actives/.test(await txt(p, '.c2-atelier-head')), 'panneau « Atelier », 2 recettes actives');
   check((await txt(p, '.c2-rec-open .c2-rec-name')) === 'La méga-usine du gang', 'recette ouverte : La méga-usine du gang');
