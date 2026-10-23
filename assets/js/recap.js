@@ -7,6 +7,7 @@ import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js'
 import { loadImage, downloadCanvas } from './ss-card.js';
 import { svg } from './icons.js';
 import { pluralWord } from './utils.js';
+import { cardHtml, rarityLabel } from './cartes-ui.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -174,6 +175,64 @@ function buildSlides(r) {
     });
   }
 
+  // ----- Diapos ajoutées par l'idée S11 (chacune seulement si sa source existe et n'est pas vide) -----
+  const rare = g.carte_plus_rare;
+  if (rare) {
+    S.push({
+      key: 'carte', emoji: '🃏',
+      html: `<p class="rc-eyebrow">Le gang · cartes</p>
+        <h2 class="rc-title rc-title-sm">La carte la plus rare tirée par le gang</h2>
+        <div class="rc-card">${cardHtml(rare, { shiny: !!rare.shiny, serial: rare.serial, size: 'md' })}</div>
+        <p class="rc-sub">${esc(rare.name)} · ${esc(rarityLabel(rare.rarity))}${rare.obtained_at ? ` · tirée le ${esc(dateShort(rare.obtained_at))}` : ''}</p>`,
+    });
+  }
+  const morceaux = g.morceaux;
+  if (morceaux && Number(morceaux.n) >= 3) {
+    S.push({
+      key: 'morceaux', emoji: '🎵',
+      html: `<p class="rc-eyebrow">Playlist du gang</p>
+        <p class="rc-big">${count(morceaux.n)}</p>
+        <p class="rc-unit">${pluralWord(Number(morceaux.n), 'morceau de la semaine', 'morceaux de la semaine')}</p>
+        <ul class="rc-list rc-list-compact">${(morceaux.titres || []).slice(0, 4).map((t) => `<li><strong>${esc(t.title)}</strong>${t.artist ? `<em>${esc(t.artist)}</em>` : ''}</li>`).join('')}</ul>`,
+    });
+  }
+  const cit = g.citations;
+  if (cit && Number(cit.n) >= 3) {
+    S.push({
+      key: 'citations', emoji: '💬',
+      html: `<p class="rc-eyebrow">Mur des citations</p>
+        <p class="rc-big">${count(cit.n)}</p>
+        <p class="rc-unit">${pluralWord(Number(cit.n), 'citation culte', 'citations cultes')}</p>
+        <ul class="rc-quotes">${(cit.extraits || []).slice(0, 3).map((t) => `<li>« ${esc(t)} »</li>`).join('')}</ul>`,
+    });
+  }
+  const cp = g.cartes_postales;
+  if (cp && Number(cp.n) >= 3) {
+    S.push({
+      key: 'carnet', emoji: '🗺️',
+      html: `<p class="rc-eyebrow">Carnet de voyage</p>
+        <p class="rc-big">${count(cp.n)}</p>
+        <p class="rc-unit">${pluralWord(Number(cp.n), 'carte postale', 'cartes postales')}</p>
+        <p class="rc-sub">depuis ${count(cp.pays || 0)} ${pluralWord(Number(cp.pays) || 0, 'pays', 'pays')}</p>`,
+    });
+  }
+  const maRare = moi.carte_plus_rare;
+  const moiCartes = [
+    [moi.boosters_ouverts, 'booster ouvert', 'boosters ouverts'],
+    [moi.cartes_postales?.n, 'carte postale', 'cartes postales'],
+    [moi.cartes_postales?.pays, 'pays visité', 'pays visités'],
+  ].filter(([n]) => n != null);
+  if (maRare || moiCartes.some(([n]) => Number(n) > 0)) {
+    S.push({
+      key: 'ma_carte', emoji: '✨',
+      html: `<p class="rc-eyebrow">Ton année · cartes</p>
+        ${maRare ? `<h2 class="rc-title rc-title-sm">Ta carte la plus rare</h2>
+          <div class="rc-card">${cardHtml(maRare, { shiny: !!maRare.shiny, serial: maRare.serial, size: 'md' })}</div>
+          <p class="rc-sub">${maRare.obtained_at ? `Tirée le <strong>${esc(dateShort(maRare.obtained_at))}</strong>` : esc(maRare.name)}</p>` : '<h2 class="rc-title rc-title-sm">Tes cartes et tes voyages</h2>'}
+        <div class="rc-grid3">${moiCartes.map(([n, one, many]) => `<div><strong>${count(n || 0)}</strong><span>${pluralWord(Number(n) || 0, one, many)}</span></div>`).join('')}</div>`,
+    });
+  }
+
   const mine = [
     ['📍', moi.sorties, 'sortie', 'sorties'],
     ['📸', moi.photos, 'photo', 'photos'],
@@ -196,7 +255,9 @@ function buildSlides(r) {
         <button class="btn btn-ghost rc-btn-ghost" type="button" data-act="replay">${ICON.replay} Revoir</button>
       </div>`,
   });
-  return S;
+  // Diapos masquées par le Staff (réglage recap.diapos_masquees) ; l'intro et « Ton année » restent toujours.
+  const hidden = new Set(Array.isArray(r?.masquees) ? r.masquees : []);
+  return S.filter((s) => !hidden.has(s.key));
 }
 
 /* =========================================================

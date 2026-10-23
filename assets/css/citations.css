@@ -1,0 +1,34 @@
+/* ===== Humane Gang — Mur des citations (citations.html), idée S13 ===== */
+
+/* ---------- Mur de post-it (colonnes) ---------- */
+.qt-wall { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 12px; }
+@media (min-width: 900px) { .qt-wall { columns: 3; column-gap: 18px; } }
+.qt-wall > .ct-empty { column-span: all; }
+.qt-note { break-inside: avoid; margin: 0 0 12px; padding: 14px; border-radius: 14px; background: var(--qc); color: #121212;
+  transform: rotate(var(--qt, 0deg)); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+@media (prefers-reduced-motion: reduce) { .qt-note { transform: none; } }
+.qt-text { margin: 0; font-family: var(--font-display); font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+@media (min-width: 900px) { .qt-text { font-size: 19px; } }
+.qt-meta { font-size: 12px; opacity: .9; overflow-wrap: anywhere; }
+.qt-rx { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; font-weight: 700; }
+.qt-rx-i { display: inline-flex; gap: 3px; align-items: center; }
+.qt-rx-none { font-weight: 500; opacity: .75; }
+.qt-react-toggle { font: inherit; font-size: 13px; font-weight: 700; align-self: flex-start; min-height: 44px; padding: 6px 12px; cursor: pointer;
+  border-radius: 999px; border: 1px solid rgba(0, 0, 0, .35); background: rgba(255, 255, 255, .35); color: #121212; }
+.qt-react-toggle:focus-visible { outline: 2px solid #121212; outline-offset: 2px; }
+.qt-bar .react-bar { margin-top: 0; }
+.qt-bar .react-btn { background: rgba(255, 255, 255, .55); color: #121212; border-color: rgba(0, 0, 0, .25); min-width: 44px; padding: 6px 8px; }
+.qt-bar .react-btn.is-on { background: #121212; color: #fff; border-color: #121212; }
+
+/* ---------- « On t'a cité » ---------- */
+.qt-cited { display: grid; gap: 12px; margin-top: 8px; }
+.qt-cited-card { display: grid; gap: 10px; padding: 18px; border-color: var(--irl-border); background: var(--irl-bg); }
+.qt-cited-text { margin: 0; font-family: var(--font-display); font-size: 18px; }
+.qt-cited-card .btn { flex: 1 1 180px; }
+
+/* ---------- Mes propositions ---------- */
+.qt-mine summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.qt-mine-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.qt-mine-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.qt-mine-txt { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.qt-mine-actions { flex: 1 1 100%; }
