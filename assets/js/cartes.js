@@ -46,6 +46,7 @@ const REASON_LABEL = {
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
   quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
+  cagnotte: 'Cagnotte du gang', cagnotte_remboursee: 'Cagnotte remboursée', cagnotte_annulee: 'Cagnotte annulée', // C13 (migration 082)
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche ») : table partagée avec cartes-zoom.js (RARITY_TINT = TINT).
 // Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
@@ -356,6 +357,7 @@ function skeleton() {
       </div>
       <div class="cartes-wallet" id="cartes-wallet" aria-live="polite"></div>
     </section>
+    <div class="pot-slot" id="cartes-pot" hidden></div>
     <nav class="cartes-tabs" id="cartes-tablist" role="tablist" aria-label="Sections du jeu">
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
@@ -2104,8 +2106,14 @@ function drawCollection(focusId) {
         <p class="muted small">${pluralCount(plan.ids.length, 'doublon recyclable', 'doublons recyclables', nf.format)} (on garde un exemplaire de chaque carte)</p>
         <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
       </div>
+      <div class="cz-extra">
+        <a class="btn btn-ghost" href="collection-a4.html?set=${all ? 'all' : esc(set.id)}">Imprimer ma planche</a>
+        <button type="button" class="btn btn-ghost" data-action="champion">Ma carte Champion</button>
+      </div>
     </section>
     ${body}`;
+  el.insertAdjacentHTML('afterbegin', '<div id="cartes-luck-slot"></div>');
+  import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
@@ -2516,6 +2524,7 @@ function peerHead(P) {
         <p class="cartes-small" id="peer-sel" aria-live="polite">${pluralCount(n, 'carte sélectionnée', 'cartes sélectionnées', nf.format)}${n ? ' · elles seront pré-cochées dans « Je demande »' : ''}</p>
         <button type="button" class="btn btn-primary" data-action="peer-offer">Proposer un échange</button>
         ${n ? '<button type="button" class="btn btn-ghost" data-action="peer-clear">Vider la sélection</button>' : ''}
+        <a class="btn btn-ghost" href="collection-a4.html?user=${esc(P.id)}&amp;set=all">Imprimer sa planche</a>
       </div>
     </section>`;
 }
@@ -2661,6 +2670,7 @@ async function renderLeaderboard() {
           </li>`).join('')}
         </ol>` : '<p class="empty">Personne n’a encore de carte.</p>'}
       </section>`;
+    import('./cartes-bulletin.js').then((m) => m.mountBulletin(el)).catch(() => {}); // « Le Cours de la Paillette » (C15)
   } finally {
     release();
   }
@@ -2808,6 +2818,7 @@ function onClick(e) {
     case 'zoom-card': return zoom.open(t.dataset.card, t);
     case 'booster-card': return onBoosterCard(t);
     case 'mass': return openMass();
+    case 'champion': return import('./cartes-champion.js').then((m) => m.openChampion({ onClose: () => { if (t.isConnected) t.focus({ preventScroll: true }); } })); // C17
     case 'peer-back': leavePeer(); $(`#cartes-tab-${S.tab}`)?.focus({ preventScroll: true }); return;
     case 'peer-zoom': return zoom.open(t.dataset.card, t);
     case 'peer-pick': return togglePeerPick(t.dataset.card);
@@ -2924,6 +2935,8 @@ async function boot() {
     await loadStatic();
     await refreshData();
     renderAll();
+    // Cagnotte collective (C13) : encart au-dessus des onglets, module chargé à part
+    import('./cartes-cagnotte.js').then((m) => m.mountPot($('#cartes-pot'), { me, balance: bal, refresh: async () => { await refreshData(); renderAll(); } })).catch(() => {});
   } catch (e) {
     app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
     toast(errMsg(e), 'error');

@@ -19,6 +19,7 @@ export const SECTION_PERM = {
   souvenirs: 'souvenirs',
   reglages: 'reglages',
   cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
+  cagnotte: 'cartes', champions: 'cartes', // idées C13/C15 et C17 (migration 082)
   idees: 'support', assistance: 'support',
   messagerie: 'messages',
   journal: 'journal',
@@ -89,6 +90,8 @@ export const DOMAINS = [
       { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes' },
       { id: 'defis', label: 'Défis du gang', section: 'defis' },
       { id: 'drops', label: 'Drops', section: 'drops' },
+      { id: 'cagnotte', label: 'Cagnotte et bulletin', section: 'cagnotte' },
+      { id: 'champions', label: 'Cartes Champions', section: 'champions' },
     ]),
     ...under('Suivi', [
       { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },

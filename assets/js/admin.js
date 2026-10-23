@@ -191,6 +191,9 @@ for (const [sub, part] of [['economie', 'paillettes'], ['tirage', 'tirage'], ['r
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
+// Idées C13/C15 (cagnotte, bulletin) et C17 (cartes Champions) : modules chargés à la demande
+registerSub('cartes/cagnotte', { main: () => import('./admin-cards/pots.js').then((m) => m.mountPotsSection($('#pots-root'))) });
+registerSub('cartes/champions', { main: () => import('./admin-cards/champions.js').then((m) => m.mountChampionsSection($('#champions-root'))) });
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles

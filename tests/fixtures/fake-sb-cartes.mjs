@@ -532,6 +532,81 @@ if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Anciennet
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
+/* ---------- Idées C13 à C17 (migration 082) : cagnotte, Ma chance, bulletin, carte Champion ---------- */
+// Scénario : S.pot ('ouverte' | 'atteinte' | 'echouee'), S.luck ('peu' | 'beaucoup'), S.bulletin (true), S.champion ('aucune' | 'proposee' | 'acceptee').
+// Sans la clé, la fonction répond PGRST202 (migration pas déployée) : la page doit rester propre.
+const absente082 = (fn) => ({ data: null, error: { code: 'PGRST202', message: `Could not find the function public.${fn}` } });
+const POT = S.pot ? { id: 7, title: 'Un booster Raclette pour tout le monde', goal: 20000, total: S.pot === 'atteinte' ? 20000 : 13450, status: S.pot,
+  starts_at: iso(-6), ends_at: S.pot === 'ouverte' ? iso(9) : iso(-1), reached_at: S.pot === 'atteinte' ? iso(-0.5) : null, closed_at: S.pot === 'ouverte' ? null : iso(-0.5),
+  reward_type: 'classique', reward_name: 'Raclette', reward_style: 'cart--classique', reward_qty: 1, min: 10, cap: 5000, contributors: 16, badge: true } : null;
+const POT_RECENT = [
+  { amount: 500, created_at: iso(-0.0005), anonymous: false, is_me: false, pseudo: 'Alice', avatar_url: null, color: '#C9A227' },
+  { amount: 200, created_at: iso(-0.008), anonymous: true, is_me: false, pseudo: null, avatar_url: null, color: null },
+  { amount: 150, created_at: iso(-0.05), anonymous: false, is_me: false, pseudo: 'Bruno', avatar_url: null, color: '#4F6A8F' },
+  { amount: 1000, created_at: iso(-1.2), anonymous: false, is_me: false, pseudo: 'Chloé', avatar_url: null, color: '#3C7A3A' },
+];
+let potMine = 0;
+const potState = () => ({ pot: POT, mine: potMine, my_left: Math.max(0, Math.min(5000 - potMine, POT.goal - POT.total)), rewarded: POT.status === 'atteinte', recent: POT_RECENT.slice(0, 5) });
+const LUCK_RAR = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
+function luckData() {
+  const many = S.luck === 'beaucoup', n = many ? 312 : 40;
+  const exp = [60, 25, 10, 4, 0.88, 0.1, 0.02], obs = many ? [57.8, 24.6, 10.9, 5.3, 1.1, 0.3, 0] : [65, 22.5, 7.5, 5, 0, 0, 0];
+  return { total: n, min: 100, boosters: many ? 62 : 8, verdict: many ? 'chanceux' : 'pas_assez', high: { count: 21, expected: 5, z: 1.2 },
+    rarities: LUCK_RAR.map((id, i) => ({ id, expected: exp[i], observed: obs[i], count: Math.round(n * obs[i] / 100) })),
+    shiny: { count: 12, observed: 3.8, expected: 3 },
+    pity: [{ type_id: 'classique', name: 'Classique', every: 20, left: 7 }, { type_id: 'serie', name: 'Saison esport', every: 10, left: 3 }],
+    dry: many ? { length: 18, ended_at: iso(-70) } : null,
+    best: { at: iso(-4), type_name: 'Saison esport', cards: ['C9', 'C8', 'C6', 'C4', 'C2'].map((id, i) => { const k = DB.hg_cards.find((c) => c.id === id); return { card_id: id, name: k.name, rarity: k.rarity, family: k.family, image_url: null, number: k.number, shiny: i === 0 }; }) } };
+}
+const BUL = { week: '2026-10-19', num: 12, headline: 'La carte « Braquage raté » s’arrache', circulation: 412380, circulation_prev: 400000, delta_pct: 3.1,
+  series: [380000, 385000, 383000, 392000, 396000, 395000, 400000, 412380], boosters_sold: { type_id: 'serie', name: 'Saison esport', qty: 64 }, boosters_total: 90,
+  opens: 120, trades: 14, top_traded: { card_id: 'C9', name: 'Braquage raté', count: 9 }, top_wished: { card_id: 'C10', name: 'Bruno', count: 11 }, recycled: 140,
+  top_recycler: { pseudo: null, count: 86 }, top_set: { name: 'Première édition', count: 4 }, shinies: { count: 23, legendary_plus: 2 },
+  pot: { title: 'Un booster Raclette pour tout le monde', total: 13450, goal: 20000, status: 'ouverte' } };
+const BUL_OLD = { ...BUL, week: '2026-10-12', num: 11, headline: 'Semaine calme sur le marché des cartes', top_traded: null };
+let ecoPublic = false;
+let champ = S.champion === 'proposee' ? { id: 3, status: 'proposee', year: 2026, game: 'lol', main: 'Ahri', emblem: 'baton', flavor: 'Je ne ban jamais Yasuo.' }
+  : S.champion === 'acceptee' ? { id: 3, status: 'acceptee', year: 2026, game: 'ck3', main: 'Serge', emblem: 'couronne', flavor: null } : null;
+const champMe = () => ({ year: 2026, pseudo: 'Ethan', current: champ, can_propose: !champ || ['refusee', 'retiree'].includes(champ.status), cards: champ?.status === 'acceptee' ? [{ year: 2026, card_id: 'CH1' }] : [] });
+const IDEES_C3 = {
+  hg_pot_current: () => (S.pot ? { data: potState(), error: null } : absente082('hg_pot_current')),
+  hg_pot_contribute: (a) => {
+    if (!S.pot) return absente082('hg_pot_contribute');
+    if (!a.p_request) return { data: null, error: { message: 'Demande invalide' } };
+    if (a.p_amount < 10) return { data: null, error: { message: 'Versement minimal : 10 ✦' } };
+    const w = DB.hg_wallets[0];
+    if (w.paillettes < a.p_amount) return { data: null, error: { message: `Pas assez de Paillettes (il en faut ${a.p_amount})` } };
+    w.paillettes -= a.p_amount; potMine += a.p_amount; POT.total += a.p_amount; POT.contributors += 1;
+    POT_RECENT.unshift({ amount: a.p_amount, created_at: new Date().toISOString(), anonymous: !!a.p_anonymous, is_me: true, pseudo: a.p_anonymous ? null : 'Ethan', avatar_url: null, color: '#4F6A8F' });
+    return { data: { ...potState(), duplicate: false, reached: false }, error: null };
+  },
+  hg_card_luck_me: () => (S.luck ? { data: luckData(), error: null } : absente082('hg_card_luck_me')),
+  hg_eco_bulletins_me: () => (S.bulletin ? { data: { latest: BUL, archive: [{ week: BUL.week, num: 12, headline: BUL.headline }, { week: BUL_OLD.week, num: 11, headline: BUL_OLD.headline }], eco_public: ecoPublic }, error: null } : absente082('hg_eco_bulletins_me')),
+  hg_eco_bulletin_get: (a) => ({ data: a.p_week === BUL_OLD.week ? BUL_OLD : BUL, error: null }),
+  hg_eco_public_set: (a) => { ecoPublic = !!a.p_on; return { data: ecoPublic, error: null }; },
+  hg_champion_me: () => (S.champion ? { data: champMe(), error: null } : absente082('hg_champion_me')),
+  hg_champion_propose: (a) => {
+    const p = a.p || {};
+    if (!p.main) return { data: null, error: { message: 'Ton main : 1 à 24 caractères' } };
+    champ = { id: 4, status: 'proposee', year: 2026, game: p.game, main: p.main, emblem: p.emblem, flavor: p.flavor };
+    return { data: 4, error: null };
+  },
+  hg_champion_withdraw: () => { if (champ?.status === 'proposee') champ = { ...champ, status: 'retiree' }; return { data: true, error: null }; },
+  // Panel (Staff « cartes ») : cagnottes, bulletin, propositions Champions. window.__POTS et window.__CHAMPS gardent l'état.
+  hg_pot_admin: () => ({ data: (window.__POTS = window.__POTS || (S.pot ? [{ ...POT, reward_name: 'Classique', rewarded: 0, contributions: 20, created_at: iso(-6), badge_code: 'cagnotte_2026' }] : [])), error: null }),
+  hg_pot_create: (a) => {
+    const p = a.p || {};
+    if (!(p.goal >= 500)) return { data: null, error: { message: 'Objectif : de 500 à 1 000 000 ✦' } };
+    window.__POTS = [{ id: 8, title: p.title, goal: p.goal, total: 0, status: 'ouverte', reward_type: p.reward_type, reward_name: 'Classique', reward_qty: p.reward_qty, badge_code: p.badge ? 'cagnotte_2026' : null,
+      starts_at: new Date().toISOString(), ends_at: p.ends_at, reached_at: null, closed_at: null, created_at: new Date().toISOString(), contributors: 0, contributions: 0, rewarded: 0 }, ...(window.__POTS || [])];
+    return { data: 8, error: null };
+  },
+  hg_pot_cancel: (a) => { const x = (window.__POTS || []).find((q) => q.id === a.p_pot); if (x) x.status = 'annulee'; return { data: 3, error: null }; },
+  hg_eco_bulletin_rebuild: () => ({ data: { ...BUL }, error: null }),
+  hg_champion_pending: () => ({ data: (window.__CHAMPS = window.__CHAMPS || [{ id: 5, user_id: U(2), pseudo: 'Alice', avatar_url: null, color: '#C9A227', year: 2026, game: 'aoe2', main: 'Francs', emblem: 'chateau', flavor: 'Le trébuchet d’abord.', created_at: iso(-1) }]), error: null }),
+  hg_champion_review: (a) => { window.__CHAMPS = (window.__CHAMPS || []).filter((x) => x.id !== a.p_id); return { data: { status: a.p_accept ? 'acceptee' : 'refusee' }, error: null }; },
+};
+
 export function createClient() {
   const cli = {
     auth: {
@@ -547,6 +622,8 @@ export function createClient() {
     /** Simule les fonctions SQL (RPC) : chaque nom a sa réponse ; une fonction inconnue renvoie null sans erreur. */
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      // Idées C13 à C17 (migration 082), seulement avec le scénario correspondant ; sinon la fonction « n'existe pas ».
+      if (fn in IDEES_C3) return IDEES_C3[fn](args);
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
       // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).

@@ -1,0 +1,131 @@
+/* ===== Cartes à collectionner — idées du gang, paquet C3 (cartes.html) =====
+   Cagnotte collective (C13, cartes-cagnotte.js), Ma chance (C14, cartes-chance.js), bulletin « Le Cours de la Paillette »
+   (C15, cartes-bulletin.js), carte Champion (C17, cartes-champion.js), boutons de la planche imprimable (C16). */
+
+/* ---------- C13 · Cagnotte ---------- */
+.pot-slot { margin: 0 0 20px; }
+.pot-slot[hidden] { display: none; }
+.pot-box { background: var(--irl-bg); border: 1px solid var(--irl-border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.pot-between { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pot-eyebrow { margin: 0; font-size: 11px; }
+.pot-title { font-size: 19px; font-weight: 700; line-height: 1.2; }
+.pot-sum { align-items: center; }
+.pot-total { margin: 0; font-family: var(--font-display); font-size: 26px; line-height: 1; color: var(--sand); }
+.pot-bar { --progress-bg: #1F1F23; }
+.pot-bar > span { background: linear-gradient(90deg, var(--amber), var(--sand)); }
+.pot-mine, .pot-foot { margin: 0; }
+.pot-cta { width: 100%; }
+.pot-done { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--sage-soft); color: var(--sage-text); }
+.pot-fail { background: var(--surface-2); color: var(--text); }
+.pot-link { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; min-height: 24px; }
+.pot-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.pot-form-h { font-size: 17px; font-weight: 700; }
+.pot-quick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pot-chip { font: inherit; font-size: 14px; min-width: 52px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); cursor: pointer; }
+.pot-chip[aria-pressed="true"] { border-color: var(--sand); color: var(--sand); font-weight: 700; background: transparent; }
+.pot-amount { display: inline-flex; align-items: center; gap: 6px; flex: 1 1 110px; min-height: 44px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); }
+.pot-amount input { font: inherit; font-weight: 700; width: 100%; min-width: 0; min-height: 42px; border: 0; background: none; color: var(--text); }
+.pot-amount input:focus { outline: none; }
+.pot-amount:focus-within { outline: 2px solid var(--sand); outline-offset: 2px; }
+.pot-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.pot-check input { width: 20px; height: 20px; accent-color: var(--sand); }
+.pot-note { margin: 0; font-size: 13px; color: var(--muted); }
+.pot-confirm { flex: 1 1 auto; }
+.pot-recent-h { font-size: 13px; font-weight: 700; color: var(--muted); margin: 4px 0 6px; }
+.pot-list { list-style: none; margin: 0; padding: 0; }
+.pot-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.pot-row:last-child { border-bottom: 0; }
+.pot-who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pot-amt { font-weight: 700; }
+.pot-anon { display: inline-grid; place-items: center; border-radius: 50%; background: var(--surface-2); font-size: 13px; font-weight: 700; }
+@media (min-width: 900px) { .pot-cta { width: auto; align-self: flex-start; } }
+
+/* ---------- C14 · Ma chance ---------- */
+.luck { padding: 18px; margin-bottom: 20px; }
+.luck-sum { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; min-height: 44px; list-style: none; }
+.luck-sum::-webkit-details-marker { display: none; }
+.luck-sum::after { content: ''; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-left: 4px; flex: none; }
+.luck[open] .luck-sum::after { transform: rotate(-135deg); }
+.luck-h { font-family: var(--font-display); font-size: 20px; margin-right: auto; }
+.luck-pill { padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1px solid var(--border); }
+.luck-up { background: var(--sage-soft); color: var(--sage-text); border-color: #24382A; }
+.luck-down { background: var(--ss-bg); color: var(--rose); border-color: var(--ss-border); }
+.luck-mid { background: var(--surface-2); color: var(--text); }
+.luck-intro { margin: 8px 0 12px; }
+.luck-rows { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.luck-row { display: flex; flex-direction: column; gap: 4px; }
+.luck-line { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+.luck-vals { font-variant-numeric: tabular-nums; }
+.luck-obs.luck-up, .luck-obs.luck-down { background: none; border: 0; }
+.luck-bar { display: block; height: 5px; border-radius: 3px; background: var(--slate); }
+.luck-bar-exp { background: var(--border-strong); }
+.luck-strong { color: var(--text); }
+.luck-sub { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.luck-sub-h { font-size: 14px; font-weight: 700; color: var(--muted); }
+.luck-pity { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.luck-pbar { height: 8px; margin-top: 4px; }
+.luck-pbar > span { background: var(--plum); }
+.luck-best { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; }
+.luck-best .hgc { --w: 84px; }
+.luck-share { width: 100%; margin-top: 12px; }
+.luck-note { margin: 10px 0 0; }
+
+/* ---------- C15 · Bulletin ---------- */
+.bul-teaser { padding: 18px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.bul-teaser .eyebrow { margin: 0; font-size: 11px; }
+.bul-teaser-h { font-family: var(--font-display); font-size: 22px; font-weight: 400; margin: 0 !important; }
+.bul-headline { margin: 0; font-size: 16px; }
+.bul-teaser-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.bul-delta { font-size: 13px; color: var(--sage-text); font-family: var(--font-body); font-weight: 500; }
+.bul-delta.is-down { color: var(--rose); }
+.bul { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.bul-back { align-self: flex-start; }
+.bul-head { border-top: 3px double var(--text); border-bottom: 1px solid var(--border-strong); padding: 10px 0; text-align: center; }
+.bul-kicker { margin: 0; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--sand); }
+.bul-title { font-family: var(--font-display); font-size: clamp(24px, 6vw, 34px); line-height: 1.1; margin-top: 6px; }
+.bul-title:focus { outline: none; }
+.bul-lead { margin: 0; font-size: 18px; line-height: 1.35; }
+.bul-big { padding: 16px; }
+.bul-big-n { margin: 6px 0; font-family: var(--font-display); font-size: 30px; line-height: 1; color: var(--sand); }
+.bul-spark { width: 100%; height: 64px; color: var(--sand); display: block; }
+.bul-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 900px) { .bul-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bul-tile { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; min-width: 0; }
+.bul-tile-t { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+.bul-tile-v { margin: 2px 0; font-weight: 700; overflow-wrap: anywhere; }
+.bul-tile-s { margin: 0; font-size: 12px; color: var(--muted); }
+.bul-line { margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; }
+.bul-consent { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.bul-consent input { width: 20px; height: 20px; accent-color: var(--sand); }
+.bul-arch-h { font-size: 14px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.bul-arch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.bul-arch { font: inherit; text-align: left; width: 100%; min-height: 44px; padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+
+/* ---------- C16 et C17 · boutons de la Collection ---------- */
+.cz-extra { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.cz-extra .btn { flex: 1 1 200px; }
+
+/* ---------- C17 · Ma carte Champion ---------- */
+.champ-dlg { max-width: 520px; width: calc(100% - 24px); }
+.champ-body { display: flex; flex-direction: column; gap: 14px; }
+.champ-body .eyebrow { margin: 0; font-size: 11px; }
+.champ-title { font-family: var(--font-display); font-size: 24px; font-weight: 400; }
+.champ-title:focus { outline: none; }
+.champ-preview { display: flex; justify-content: center; }
+.champ-form { display: flex; flex-direction: column; gap: 14px; }
+.champ-fs { border: 0; margin: 0; padding: 0; }
+.champ-lg { font-size: 14px; color: var(--muted); padding: 0; margin-bottom: 8px; }
+.champ-chips, .champ-embs { display: flex; flex-wrap: wrap; gap: 8px; }
+.champ-chip, .champ-emb { position: relative; cursor: pointer; }
+.champ-chip input, .champ-emb input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.champ-chip span { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-strong); font-size: 14px; }
+.champ-chip input:checked + span { background: var(--sand); color: #121212; border-color: var(--sand); font-weight: 700; }
+.champ-emb-i { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text); }
+.champ-emb input:checked + .champ-emb-i { border-color: var(--sand); color: var(--sand); box-shadow: inset 0 0 0 1px var(--sand); }
+.champ-chip input:focus-visible + span, .champ-emb input:focus-visible + .champ-emb-i { outline: 2px solid var(--sand); outline-offset: 2px; }
+.champ-form input[type="text"], .champ-form input:not([type]) { min-height: 44px; }
+.champ-submit { width: 100%; }
+.champ-status { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); font-size: 14px; }
+.champ-ok { background: var(--sage-soft); color: var(--sage-text); }
+.champ-ko { background: var(--ss-bg); color: var(--rose); }
+@media (max-width: 600px) { .champ-dlg { width: 100%; max-width: none; min-height: 100%; margin: 0; border-radius: 0; } }
