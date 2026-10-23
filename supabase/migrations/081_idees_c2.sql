@@ -1,8 +1,8 @@
 -- ===== Humane Gang — 081 : idées du gang, paquet C2 (thème « Cartes et économie ») =====
 -- Idées retenues par Ethan le 23/10/2026 :
 --   C7  Série « Le gang joue » : colonne hg_cards.tag (regroupement par jeu), titres « Pilier de … » calculés
---       (hg_card_tags_complete), série « le-gang-joue » créée inactive avec 24 cartes inactives (à illustrer et
---       valider par le Staff avant d'ouvrir la série).
+--       (hg_card_tags_complete), série « le-gang-joue » créée inactive avec 24 cartes inactives, illustrées (SVG dans
+--       assets/cards/le-gang-joue/) ; le Staff valide les légendes puis active la série depuis l'admin.
 --   C8  Générations « OG » / « 2e gen » des membres : réglage cards.generations.og_before, préférence
 --       hg_profiles.show_generation, lecture hg_card_generations() (aucune récompense, aucune rareté différente).
 --   C9  Codes cadeaux à usage unique (QR) : lots hg_gift_code_batches, codes hachés hg_gift_codes (sha256 intégré à
@@ -111,43 +111,78 @@ begin
   return res;
 end $$;
 
--- Série « Le gang joue » : créée inactive (cartes inactives, sans image). Le Staff illustre les cartes (pixel art
--- original, aucun logo ni capture), valide les légendes, puis active la série et les cartes.
+-- Série « Le gang joue » : créée inactive, cartes inactives et illustrées (pixel art original en SVG, dans
+-- assets/cards/le-gang-joue/, aucun logo ni capture). Le Staff valide les légendes, puis active la série et les
+-- cartes depuis l'admin.
 insert into public.hg_card_sets(code, name, description, active, sort)
 select 'le-gang-joue', 'Le gang joue', 'Objets et lieux des jeux du gang, quatre cartes par jeu.', false, 40
  where not exists (select 1 from public.hg_card_sets where code = 'le-gang-joue');
 
-insert into public.hg_cards(set_id, number, name, family, rarity, flavor, tag, active, can_shiny, tradeable, craftable)
-select s.id, v.n, v.name, 'jeu', v.rarity, v.flavor, v.tag, false, true, true, true
+insert into public.hg_cards(set_id, number, name, family, rarity, flavor, tag, image_url, active, can_shiny, tradeable, craftable)
+select s.id, v.n, v.name, 'jeu', v.rarity, v.flavor, v.tag, v.img, false, true, true, true
   from public.hg_card_sets s
   cross join (values
-    (1,  'Le portail du Torii',            'commune',     'Le passage vers l’autre monde, posé au pixel près.',          'minecraft'),
-    (2,  'L’usine à fer',                  'peu_commune', 'Elle tourne même quand tout le monde est déconnecté.',        'minecraft'),
-    (3,  'La base du gang',                'rare',        'Coordonnées : sur l’ancienne carte, promis.',                   'minecraft'),
-    (4,  'Le coffre des trouvailles',      'epique',      'Personne ne sait qui l’a rangé.',                              'minecraft'),
-    (5,  'La Merveille',                   'commune',     'Encore 200 ans de construction, et on gagne.',                 'aoe2'),
-    (6,  'Le moine qui convertit',         'peu_commune', '« Wololo » résonne encore dans le vocal.',                     'aoe2'),
-    (7,  'Le trébuchet',                   'rare',        'Lent, mais il finit toujours par arriver.',                    'aoe2'),
-    (8,  'Le villageois oisif',            'epique',      'Il attend des ordres depuis la partie de 2022.',               'aoe2'),
-    (9,  'Le Nexus',                       'commune',     'Le dernier rempart de la soirée.',                             'lol'),
-    (10, 'La tour du milieu',              'peu_commune', 'Elle a vu passer beaucoup de plongeons ratés.',                'lol'),
-    (11, 'Le pick’em du gang',             'rare',        'Rempli avec le cœur, jamais avec la tête.',                    'lol'),
-    (12, 'La balise de vision',            'epique',      'Posée trop tard, comme d’habitude.',                           'lol'),
-    (13, 'Le bateau',                      'commune',     'Trois matelots, quatre avis sur le cap.',                      'sea-of-thieves'),
-    (14, 'Le coffre maudit',               'peu_commune', 'Il pleure, il chante, il coule.',                              'sea-of-thieves'),
-    (15, 'La carte au trésor',             'rare',        'La croix était juste derrière nous.',                          'sea-of-thieves'),
-    (16, 'Le seau d’eau',                  'epique',      'L’objet le plus utile de la soirée.',                          'sea-of-thieves'),
-    (17, 'La planète à industrialiser',    'commune',     'Une plaine verte, pour l’instant.',                            'satisfactory'),
-    (18, 'Le convoyeur sans fin',          'peu_commune', 'Il va quelque part. Personne ne sait où.',                     'satisfactory'),
-    (19, 'L’usine répartie',               'rare',        'Usine répartie entre plusieurs membres du gang.',              'satisfactory'),
-    (20, 'La foreuse géante',              'epique',      'Elle a creusé plus que prévu.',                                'satisfactory'),
-    (21, 'Le bouton d’urgence',            'commune',     'Appuyé « pour vérifier ».',                                    'soiree'),
-    (22, 'La bouche d’aération',           'peu_commune', 'Quelqu’un en est sorti, tout le monde l’a vu.',                'soiree'),
-    (23, 'La grille de mots',              'rare',        'Un indice, deux mots, zéro accord.',                           'soiree'),
-    (24, 'Le dessin incompréhensible',     'epique',      'C’était un chat. Évidemment.',                                 'soiree')
-  ) as v(n, name, rarity, flavor, tag)
+    (1,  'Le portail du Torii',            'commune',     'Le passage vers l’autre monde, posé au pixel près.',          'minecraft', 'assets/cards/le-gang-joue/01-torii.svg'),
+    (2,  'L’usine à fer',                  'peu_commune', 'Elle tourne même quand tout le monde est déconnecté.',        'minecraft', 'assets/cards/le-gang-joue/02-usine-a-fer.svg'),
+    (3,  'La base du gang',                'rare',        'Coordonnées : sur l’ancienne carte, promis.',                   'minecraft', 'assets/cards/le-gang-joue/03-base-du-gang.svg'),
+    (4,  'Le coffre des trouvailles',      'epique',      'Personne ne sait qui l’a rangé.',                              'minecraft', 'assets/cards/le-gang-joue/04-coffre-des-trouvailles.svg'),
+    (5,  'La Merveille',                   'commune',     'Encore 200 ans de construction, et on gagne.',                 'aoe2', 'assets/cards/le-gang-joue/05-la-merveille.svg'),
+    (6,  'Le moine qui convertit',         'peu_commune', '« Wololo » résonne encore dans le vocal.',                     'aoe2', 'assets/cards/le-gang-joue/06-moine-qui-convertit.svg'),
+    (7,  'Le trébuchet',                   'rare',        'Lent, mais il finit toujours par arriver.',                    'aoe2', 'assets/cards/le-gang-joue/07-trebuchet.svg'),
+    (8,  'Le villageois oisif',            'epique',      'Il attend des ordres depuis la partie de 2022.',               'aoe2', 'assets/cards/le-gang-joue/08-villageois-oisif.svg'),
+    (9,  'Le Nexus',                       'commune',     'Le dernier rempart de la soirée.',                             'lol', 'assets/cards/le-gang-joue/09-le-nexus.svg'),
+    (10, 'La tour du milieu',              'peu_commune', 'Elle a vu passer beaucoup de plongeons ratés.',                'lol', 'assets/cards/le-gang-joue/10-tour-du-milieu.svg'),
+    (11, 'Le pick’em du gang',             'rare',        'Rempli avec le cœur, jamais avec la tête.',                    'lol', 'assets/cards/le-gang-joue/11-pickem-du-gang.svg'),
+    (12, 'La balise de vision',            'epique',      'Posée trop tard, comme d’habitude.',                           'lol', 'assets/cards/le-gang-joue/12-balise-de-vision.svg'),
+    (13, 'Le bateau',                      'commune',     'Trois matelots, quatre avis sur le cap.',                      'sea-of-thieves', 'assets/cards/le-gang-joue/13-le-bateau.svg'),
+    (14, 'Le coffre maudit',               'peu_commune', 'Il pleure, il chante, il coule.',                              'sea-of-thieves', 'assets/cards/le-gang-joue/14-le-coffre-maudit.svg'),
+    (15, 'La carte au trésor',             'rare',        'La croix était juste derrière nous.',                          'sea-of-thieves', 'assets/cards/le-gang-joue/15-la-carte-au-tresor.svg'),
+    (16, 'Le seau d’eau',                  'epique',      'L’objet le plus utile de la soirée.',                          'sea-of-thieves', 'assets/cards/le-gang-joue/16-le-seau-d-eau.svg'),
+    (17, 'La planète à industrialiser',    'commune',     'Une plaine verte, pour l’instant.',                            'satisfactory', 'assets/cards/le-gang-joue/17-la-planete-a-industrialiser.svg'),
+    (18, 'Le convoyeur sans fin',          'peu_commune', 'Il va quelque part. Personne ne sait où.',                     'satisfactory', 'assets/cards/le-gang-joue/18-le-convoyeur-sans-fin.svg'),
+    (19, 'L’usine répartie',               'rare',        'Usine répartie entre plusieurs membres du gang.',              'satisfactory', 'assets/cards/le-gang-joue/19-l-usine-repartie.svg'),
+    (20, 'La foreuse géante',              'epique',      'Elle a creusé plus que prévu.',                                'satisfactory', 'assets/cards/le-gang-joue/20-la-foreuse-geante.svg'),
+    (21, 'Le bouton d’urgence',            'commune',     'Appuyé « pour vérifier ».',                                    'soiree', 'assets/cards/le-gang-joue/21-le-bouton-d-urgence.svg'),
+    (22, 'La bouche d’aération',           'peu_commune', 'Quelqu’un en est sorti, tout le monde l’a vu.',                'soiree', 'assets/cards/le-gang-joue/22-la-bouche-d-aeration.svg'),
+    (23, 'La grille de mots',              'rare',        'Un indice, deux mots, zéro accord.',                           'soiree', 'assets/cards/le-gang-joue/23-la-grille-de-mots.svg'),
+    (24, 'Le dessin incompréhensible',     'epique',      'C’était un chat. Évidemment.',                                 'soiree', 'assets/cards/le-gang-joue/24-le-dessin-incomprehensible.svg')
+  ) as v(n, name, rarity, flavor, tag, img)
  where s.code = 'le-gang-joue'
    and not exists (select 1 from public.hg_cards k where k.set_id = s.id and k.number = v.n);
+
+-- Illustrations : une carte déjà présente sans image reçoit son SVG (rejouer la migration remplit les images).
+-- Chemins relatifs au site (dossier assets/cards/le-gang-joue/ du dépôt) ; les cartes déjà illustrées ne sont pas modifiées.
+update public.hg_cards k set image_url = v.img
+  from public.hg_card_sets s
+  join (values
+    (1, 'assets/cards/le-gang-joue/01-torii.svg'),
+    (2, 'assets/cards/le-gang-joue/02-usine-a-fer.svg'),
+    (3, 'assets/cards/le-gang-joue/03-base-du-gang.svg'),
+    (4, 'assets/cards/le-gang-joue/04-coffre-des-trouvailles.svg'),
+    (5, 'assets/cards/le-gang-joue/05-la-merveille.svg'),
+    (6, 'assets/cards/le-gang-joue/06-moine-qui-convertit.svg'),
+    (7, 'assets/cards/le-gang-joue/07-trebuchet.svg'),
+    (8, 'assets/cards/le-gang-joue/08-villageois-oisif.svg'),
+    (9, 'assets/cards/le-gang-joue/09-le-nexus.svg'),
+    (10, 'assets/cards/le-gang-joue/10-tour-du-milieu.svg'),
+    (11, 'assets/cards/le-gang-joue/11-pickem-du-gang.svg'),
+    (12, 'assets/cards/le-gang-joue/12-balise-de-vision.svg'),
+    (13, 'assets/cards/le-gang-joue/13-le-bateau.svg'),
+    (14, 'assets/cards/le-gang-joue/14-le-coffre-maudit.svg'),
+    (15, 'assets/cards/le-gang-joue/15-la-carte-au-tresor.svg'),
+    (16, 'assets/cards/le-gang-joue/16-le-seau-d-eau.svg'),
+    (17, 'assets/cards/le-gang-joue/17-la-planete-a-industrialiser.svg'),
+    (18, 'assets/cards/le-gang-joue/18-le-convoyeur-sans-fin.svg'),
+    (19, 'assets/cards/le-gang-joue/19-l-usine-repartie.svg'),
+    (20, 'assets/cards/le-gang-joue/20-la-foreuse-geante.svg'),
+    (21, 'assets/cards/le-gang-joue/21-le-bouton-d-urgence.svg'),
+    (22, 'assets/cards/le-gang-joue/22-la-bouche-d-aeration.svg'),
+    (23, 'assets/cards/le-gang-joue/23-la-grille-de-mots.svg'),
+    (24, 'assets/cards/le-gang-joue/24-le-dessin-incomprehensible.svg')
+  ) as v(n, img) on true
+ where s.code = 'le-gang-joue'
+   and k.set_id = s.id and k.number = v.n
+   and (k.image_url is null or k.image_url = '');
 
 -- =====================================================================
 -- C8. Générations « OG » et « 2e gen »
