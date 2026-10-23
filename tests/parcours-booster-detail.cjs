@@ -10,6 +10,12 @@
 // Lancer : node tests/parcours-booster-detail.cjs
 const { ROOT, check, finish, openPage, log, sleep, hscroll, chromium } = require('./lib/harness.cjs');
 
+/** Ouvre un onglet de Cartes par son adresse (cartes.html#id) : la barre d'onglets est masquée depuis le nouvel en-tête. */
+async function goTab(p, id) {
+  await p.evaluate((h) => { location.hash = ''; location.hash = h; }, id);
+  await p.waitForFunction((i) => document.getElementById('cartes-p-' + i) && !document.getElementById('cartes-p-' + i).hidden, id, { timeout: 8000 });
+}
+
 /* ---------- Aides de test ---------- */
 /** Bouton « Ouvrir 1 » du stock (classique) dans l'onglet Ouverture. */
 const OUVRIR1 = '#cartes-p-ouverture [data-stock-type=classique] [data-action=open-gift]';
@@ -20,9 +26,9 @@ const ACHAT = '#cartes-paid [data-action=buy-stock]';
 const OPEN_CARD = '#cz-dialog[open]';
 const HINT = '#cartes-reveal .cartes-reveal-hint';
 /** Ouvre l'onglet Boutique (où sont les boutons d'achat). */
-async function aBoutique(p) { await p.click('[data-tab=boutique]'); await sleep(300); }
+async function aBoutique(p) { await goTab(p, 'boutique'); await sleep(300); }
 /** Ouvre l'onglet Ouverture (où sont les boutons d'ouverture). */
-async function aOuverture(p) { await p.click('[data-tab=ouverture]'); await sleep(300); }
+async function aOuverture(p) { await goTab(p, 'ouverture'); await sleep(300); }
 /** Achète n boosters classiques dans la Boutique (ils vont dans le stock) et attend le stock. */
 async function acheter(p, n) {
   await aBoutique(p);

@@ -16,10 +16,16 @@ const fs = require('fs');
 const path = require('path');
 const { check, finish, openPage, adminSection, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
+/** Ouvre un onglet de Cartes par son adresse (cartes.html#id) : la barre d'onglets est masquée depuis le nouvel en-tête. */
+async function goTab(p, id) {
+  await p.evaluate((h) => { location.hash = ''; location.hash = h; }, id);
+  await p.waitForFunction((i) => document.getElementById('cartes-p-' + i) && !document.getElementById('cartes-p-' + i).hidden, id, { timeout: 8000 });
+}
+
 const SHOTS = '/tmp/claude-0/-home-claude/745c1954-a6f8-5445-b8b6-c526f6aef9c2/scratchpad/nuit2/shots';
 fs.mkdirSync(SHOTS, { recursive: true });
 /** Familles attendues dans le sélecteur, dans l'ordre, avec leur nombre de styles. */
-const FAMS = [['Styles d’origine', 9], ['Rouges', 5], ['Roses et violets', 5], ['Oranges et bruns', 5], ['Jaunes et verts', 5], ['Bleus et cyans', 5], ['Indigos et neutres', 5], ['Thèmes', 14]];
+const FAMS = [['Styles d’origine', 9], ['Rouges', 5], ['Roses et violets', 5], ['Oranges et bruns', 5], ['Jaunes et verts', 5], ['Bleus et cyans', 5], ['Indigos et neutres', 5], ['Thèmes', 17]];
 /** Appels de hg_booster_type_save reçus par le faux (charges utiles). */
 const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] === 'booster_type_save').map((x) => x[2]));
 
@@ -82,7 +88,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   const scenario = { types: true, bal: 20000, stock: { dore: 1 },
     typeOverrides: { dore: { style: 'cart--braise' }, argente: { style: 'cart--pirate' }, diamant: { style: 'cart--x" onmouseover="alert(1)' } } };
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   const cls = (id) => p.$eval(`#cartes-p-boutique .shop-item[data-type=${id}] .cart-box`, (b) => b.className);
   check(/\bcart--braise\b/.test(await cls('dore')), '(c) Boutique : le type Doré passé en « Braise » affiche cart--braise');
   check(/radial-gradient/.test(await p.$eval('#cartes-p-boutique .shop-item[data-type=dore] .cart-body', (e) => getComputedStyle(e).backgroundImage)), '(c) Boutique : motif « étincelles » appliqué (boosters-styles.css)');
@@ -90,7 +96,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   check(/\bcart--classique\b/.test(await cls('diamant')) && await p.locator('[onmouseover]').count() === 0, '(c) style malveillant : Classique, aucun attribut injecté');
   check(/\bcart--holo\b/.test(await cls('holographique')), '(c) styles d’origine inchangés (Holographique)');
   await (await p.$('#cartes-p-boutique .shop-item[data-type=dore]')).screenshot({ path: path.join(SHOTS, 'styles-boutique-braise.png') });
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await p.locator('#cartes-p-ouverture [data-stock-type=dore] .cart-box.cart--braise').count() === 1, '(c) Ouverture : la tuile du stock « Doré » est dessinée en Braise');
   await p.click('#cartes-p-ouverture [data-action=open-stock][data-type=dore]');
   await p.waitForSelector('.op-cart .cart-box', { timeout: 8000 }).catch(() => {});
@@ -101,7 +107,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 390, height: 844, scenario });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await hscroll(p) <= 0, '(c) 390 px : Boutique sans défilement horizontal');
   await p.ctx.close();
 
@@ -113,7 +119,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   const ovr = {}; THEMES.forEach(([id, slug]) => { ovr[id] = { style: `cart--theme-${slug}` }; });
   const scnD = { types: true, bal: 20000, stock: { dore: 1 }, typeOverrides: ovr };
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: scnD });
-  await p.click('[data-tab=boutique]'); await sleep(400);
+  await goTab(p, 'boutique'); await sleep(400);
   for (const [id, slug, sel] of THEMES) {
     const box = `#cartes-p-boutique .shop-item[data-type=${id}] .cart-box.cart--theme-${slug}`;
     check(await p.locator(`${box} ${sel}`).count() > 0, `(d) thème « ${slug} » : son décor est dessiné (${sel})`);
@@ -136,16 +142,16 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   await p.ctx.close();
   // Mouvement réduit (préférence système) : décor présent, animations coupées.
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: scnD, reducedMotion: 'reduce' });
-  await p.click('[data-tab=boutique]'); await sleep(400);
+  await goTab(p, 'boutique'); await sleep(400);
   check(await p.locator('#cartes-p-boutique .cart-box.cart--theme-halloween .bs-wk').count() === 8, '(d) mouvement réduit : le décor est toujours dessiné');
   const anims = await p.$$eval('#cartes-p-boutique .cart-box[class*="cart--theme-"], #cartes-p-boutique .cart-box[class*="cart--theme-"] *', (es) => es.filter((e) => getComputedStyle(e).animationName !== 'none').length);
   check(anims === 0, `(d) mouvement réduit : aucune animation dans les décors (${anims})`);
   await p.ctx.close();
   // 360 px : aucun défilement horizontal avec tous les thèmes affichés (Boutique, puis Ouverture).
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 360, height: 780, scenario: scnD });
-  await p.click('[data-tab=boutique]'); await sleep(400);
+  await goTab(p, 'boutique'); await sleep(400);
   check(await hscroll(p) <= 0, '(d) 360 px : Boutique sans défilement horizontal (thèmes à décor)');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await hscroll(p) <= 0, '(d) 360 px : Ouverture sans défilement horizontal');
   await p.ctx.close();
 
@@ -154,7 +160,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   const openWith = async (style, reducedMotion = 'no-preference') => {
     const q = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, reducedMotion,
       scenario: { types: true, bal: 20000, stock: { dore: 1 }, typeOverrides: { dore: { style } } } });
-    await q.click('[data-tab=ouverture]'); await sleep(300);
+    await goTab(q, 'ouverture'); await sleep(300);
     await q.evaluate(() => {
       window.__fx = { stage: 0, soft: 0, kinds: [], t0: 0, t1: 0, sample: null, flips: 0 };
       new MutationObserver((ms) => {

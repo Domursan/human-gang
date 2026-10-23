@@ -1,5 +1,5 @@
 // Parcours : affiches A3 et tutos lisent les réglages du site (prix, critères, quêtes).
-// Une valeur changée dans les réglages (par exemple le prix d'un booster à 250) doit apparaître sur l'affiche
+// Le prix du booster Classique se lit sur son type (hg_booster_types, scénario typeOverrides) ; une valeur changée (par exemple 250) doit apparaître sur l'affiche
 // des boosters et dans le tuto « Ouvrir un booster ». Sans lecture des réglages, le texte d'origine reste (repli).
 // Affiches : affiches/boosters-a3.html, affiches/badges-a3.html, affiches/paillettes-a3.html (script affiches/affiches.js).
 // Tutos : aide.html#ouvrir-un-booster (assets/js/aide.js, assets/js/reglages-jetons.js).
@@ -15,7 +15,7 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
   const browser = await chromium.launch();
   try {
     // 1. Affiche des boosters, prix du booster à 250 : tous les prix et le lot de 5 (250 × 5) suivent le réglage.
-    let page = await openPage(browser, { page: 'affiches/boosters-a3', fixture: FIXTURE, scenario: { cardsCfg: { booster_price: 250 } }, width: 1123 });
+    let page = await openPage(browser, { page: 'affiches/boosters-a3', fixture: FIXTURE, scenario: { cardsCfg: { booster_price: 250 }, typeOverrides: { classique: { price: 250 } } }, width: 1123 });
     const prix = await page.evaluate(() => [...document.querySelectorAll('[data-cfg="cartes.booster_price"]')].map((e) => e.textContent));
     check(prix.length >= 1 && prix.every((t) => t === '250'), `affiche boosters : prix du booster affiché 250 (${prix.join(', ') || 'aucun élément'})`);
     const lot = await page.evaluate(() => document.querySelector('[data-expr="cartes.booster_price*5"]')?.textContent ?? '');

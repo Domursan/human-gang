@@ -71,7 +71,10 @@ async function nb(p, kind, ref) {
   /* ---------- Thème d'affichage changé par le membre ---------- */
   p = await openPage(browser, { page: 'accueil', width: 1280 });
   check(await nb(p, 'theme_change') === 0, 'accueil au chargement : aucun « theme_change » (pas au chargement)');
-  await p.locator('.prefs-open').first().click();
+  // Le bouton « Préférences » est dans l'éventail de la photo de profil (.me-fan) : on l'ouvre d'abord.
+  await p.locator('.nav-me').click();
+  await p.waitForSelector('.me-fan:not([hidden])', { timeout: 5000 });
+  await p.locator('.me-fan .prefs-open').click();
   await sleep(300);
   await p.locator('input[name="mode"][value="clair"]').check({ force: true });
   await sleep(400);

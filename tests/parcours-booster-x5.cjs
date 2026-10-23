@@ -13,6 +13,12 @@ const fs = require('fs');
 const path = require('path');
 const { ROOT, check, finish, openPage, log, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
+/** Ouvre un onglet de Cartes par son adresse (cartes.html#id) : la barre d'onglets est masquée depuis le nouvel en-tête. */
+async function goTab(p, id) {
+  await p.evaluate((h) => { location.hash = ''; location.hash = h; }, id);
+  await p.waitForFunction((i) => document.getElementById('cartes-p-' + i) && !document.getElementById('cartes-p-' + i).hidden, id, { timeout: 8000 });
+}
+
 /* ---------- Aides de test ---------- */
 const QA = '/tmp/claude-0/-home-claude/745c1954-a6f8-5445-b8b6-c526f6aef9c2/scratchpad/qa/booster-x5';
 /** Bouton d'achat de la Boutique (classique) : achète la quantité choisie dans #shop-qty. */
@@ -21,9 +27,9 @@ const ACHAT = '#cartes-paid [data-action=buy-stock]';
 const OUVRIR5 = '[data-action=open-stock-multi][data-type=classique][data-count="5"]';
 const CELL = '#cartes-reveal .x5-cell';
 /** Ouvre l'onglet Boutique (où sont les boutons d'achat). */
-async function aBoutique(p) { await p.click('[data-tab=boutique]'); await sleep(300); }
+async function aBoutique(p) { await goTab(p, 'boutique'); await sleep(300); }
 /** Ouvre l'onglet Ouverture (où sont les boutons d'ouverture) ; l'achat ne change pas d'onglet à lui seul. */
-async function aOuverture(p) { await p.click('[data-tab=ouverture]'); await sleep(300); }
+async function aOuverture(p) { await goTab(p, 'ouverture'); await sleep(300); }
 const ME = '11111111-1111-4111-8111-111111111111';
 /** Nombre de boosters classiques en stock pour le membre connecté (base factice, table hg_booster_stock). */
 const stock = (p) => p.evaluate((me) => window.__DB.hg_booster_stock.find((r) => r.user_id === me && r.type_id === 'classique')?.qty ?? 0, ME);
