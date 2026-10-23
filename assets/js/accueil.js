@@ -563,12 +563,15 @@ if (!me) {
   syncIntro();
   renderMemberShell();
   hideForbiddenTiles();
-  bindIdeas();
+  // Accueil personnalisable (idée P9) : ordre, blocs masqués (retirés avant tout chargement) et blocs ajoutés
+  const home = await import('./home-blocks.js').then((m) => m.applyHomeLayout(app, me)).catch((e) => { console.warn('[accueil perso]', e?.message || e); return null; });
+  if ($('#idea-form')) bindIdeas();
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(), loadDailyQuestion(),
+    $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(),
     import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
+    home?.loadOwn(),
   ]);
   maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }

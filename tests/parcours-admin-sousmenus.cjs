@@ -26,14 +26,14 @@ const EXCEPTIONS = {
 // Arbre attendu : domaine → [titre de groupe (null : sans titre), [sous-sections]].
 const TREE = {
   pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']]],
-  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social']], ['Accès aux pages', ['acces', 'acces-matrice']]],
+  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social']], ['Entraide', ['parrainage', 'competences']], ['Accès aux pages', ['acces', 'acces-matrice']]],
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions']], ['Suivi', ['joueurs', 'echanges', 'stats']],
     ['Jeux', ['questions', 'pronos', 'sutom', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux', 'saisons']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
-  site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages']], ['Apparence', ['theme']]],
+  site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages', 'accueil']], ['Apparence', ['theme']]],
 };
 const ROUTES = Object.entries(TREE).flatMap(([d, groups]) => groups.flatMap(([, subs]) => subs.map((s) => `${d}/${s}`)));
 

@@ -36,6 +36,8 @@ export const SECTION_PERM = {
   // Idées A3 et A4 (migration 092) : Mes jeux (permission « Maître du jeu ») et À relancer. Le Planning (A2) est à part :
   // permis dès qu'une de ses sources l'est (PLANNING_PERMS), chaque bloc étant filtré par la base.
   mj: 'mj', relance: 'membres',
+  // Idées « Social et profils » (migration 091) : parrainage et compétences → « membres » ; accueil des membres → « reglages »
+  parrainage: 'membres', competences: 'membres', 'accueil-membres': 'reglages',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -66,6 +68,10 @@ export const DOMAINS = [
       { id: 'invitations', label: 'Invitations', section: 'membres' },
       { id: 'champs', label: 'Champs du profil', section: 'champs' },
       { id: 'social', label: 'Vie sociale', section: 'social' },
+    ]),
+    ...under('Entraide', [
+      { id: 'parrainage', label: 'Parrainage', section: 'parrainage' },
+      { id: 'competences', label: 'Compétences', section: 'competences' },
     ]),
     ...under('Accès aux pages', [
       { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },
@@ -151,6 +157,7 @@ export const DOMAINS = [
     ...under('Fonctionnement', [
       { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
       { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
+      { id: 'accueil', label: 'Accueil des membres', section: 'accueil-membres' },
     ]),
     ...under('Apparence', [
       { id: 'theme', label: 'Thème', section: 'theme' },

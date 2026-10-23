@@ -549,6 +549,7 @@ async function renderMember(user) {
     </section>
 
     <section class="card acc-gaming" id="gaming" aria-labelledby="gaming-title"></section>
+    <div id="social-slot" hidden></div>
 
     <section class="card acc-infos" id="infos" aria-labelledby="infos-title">
       <form id="info-form" novalidate>
@@ -612,6 +613,8 @@ async function renderMember(user) {
   loadBadges();
   // Profil gaming (migration 090) : carte publique, chargée à la demande.
   import('./profil-gaming.js').then((m) => m.mountGamingEditor($('#gaming'), me)).catch((e) => console.warn('[gaming]', e));
+  // Entraide et liens (idées P6, P7, P8) : module à part, une erreur n'empêche pas le reste du compte
+  import('./compte-social.js').then((m) => m.mountSocialCard($('#social-slot'), me)).catch((e) => console.warn('[entraide]', e?.message || e));
 }
 
 /** Met à jour partout l'identité affichée (avatar, pseudo, en-tête du site) après une modification. */

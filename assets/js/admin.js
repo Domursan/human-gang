@@ -60,6 +60,9 @@ const OPTIONAL = [
   { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
   { sub: 'saisons', url: './admin-jeux4.js', fn: 'mountJeux4Section' }, // Jeux et cartes › Saisons et soirées (J16, J19)
   { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Vie sociale (hg_settings.social, migration 090)
+  { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Parrainage (idée P8)
+  { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Compétences (idée P7)
+  { sub: 'accueil', url: './admin-social.js', fn: 'mountAccueilSection' },         // Site › Accueil des membres (idées P9, P6)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -178,6 +181,9 @@ registerSub('membres/acces', { ...accessGroup, open: () => { accessView('pages')
 registerSub('membres/acces-matrice', { ...accessGroup, open: () => { accessView('matrice'); setActions(accessActions()); } });
 if (MOUNT.champs) registerSub('membres/champs', { main: () => MOUNT.champs($('#champs-root')) });
 if (MOUNT.social) registerSub('membres/social', { main: () => MOUNT.social($('#social-root')) });
+if (MOUNT.parrainage) registerSub('membres/parrainage', { main: () => MOUNT.parrainage($('#parrainage-root')) });
+if (MOUNT.competences) registerSub('membres/competences', { main: () => MOUNT.competences($('#competences-root')) });
+if (MOUNT.accueil) registerSub('site/accueil', { main: () => MOUNT.accueil($('#accueil-root')) });
 // Vie du gang
 registerSub('vie/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),

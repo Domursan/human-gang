@@ -690,7 +690,13 @@ try {
   const to = params.get('to'), c = params.get('c'), ev = params.get('event');
   const UUID = /^[0-9a-f-]{36}$/i;
   if (ev && UUID.test(ev)) { const id = await G.openEventConv(ev); if (id) await reopen(id); else setUrl(null); }
-  else if (to && UUID.test(to)) await openDirect(to);
+  else if (to && UUID.test(to)) {
+    // Brouillon prérempli (?brouillon=, ex. « Demander un coup de main » de l'annuaire) : jamais envoyé sans la personne
+    if (await openDirect(to)) {
+      const draft = (params.get('brouillon') || '').slice(0, 500), input = $('#msg-input');
+      if (draft && input && !input.value) { input.value = draft; input.dispatchEvent(new Event('input')); input.focus(); }
+    }
+  }
   else if (c && UUID.test(c)) await openConv(c, { focus: false });
   else if (!MOBILE.matches && S.convs.length) await openConv(S.convs[0].id, { focus: false });
   startListPolling();
