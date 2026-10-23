@@ -9,6 +9,7 @@ import { uploadImage, removeObjects, uuid } from './photos.js';
 import { prepareImage } from './image-compress.js';
 import { pad } from './utils.js';
 import { optionsPhoto } from './reglages-valeurs-lot3.js';
+import { lireQuota, restants, notePhotos } from './eco-quota.js';
 
 /* ---------- Constantes : carte, cache des lieux, formats de date ---------- */
 /** Adresse des fichiers Leaflet (bibliothèque de carte). Ils ne sont chargés qu'à l'ouverture de la carte. */
@@ -220,7 +221,8 @@ export function mountHistory(ctx) {
         }
       } catch (err) { toast(`Rencontre enregistrée, mais couverture non envoyée : ${errMsg(err)}`, 'error'); }
 
-      // Photos de l'album
+      // Photos de l'album (une rencontre passée ne rapporte rien ; ses photos, si : 5 par jour)
+      const reste = photos.length ? restants(await lireQuota(), 'photos') : null;
       let ok = 0;
       for (const [i, file] of photos.entries()) {
         status.textContent = `Compression et envoi des photos ${i + 1} / ${photos.length}…`;
@@ -238,7 +240,9 @@ export function mountHistory(ctx) {
         }
       }
       // Pas de notify('irl_new') : une rencontre passée ne doit pas prévenir le gang comme une nouvelle sortie.
-      toast(rEditing ? 'Rencontre mise à jour.' : `Rencontre ajoutée à l'historique${ok ? ` avec ${ctx.pluralCount(ok, 'photo', 'photos')}` : ''}.`, 'ok');
+      const base = rEditing ? 'Rencontre mise à jour.' : `Rencontre ajoutée à l'historique${ok ? ` avec ${ctx.pluralCount(ok, 'photo', 'photos')}` : ''}.`;
+      const note = ok ? notePhotos(ok, reste) : '';
+      toast(note ? `${base} ${note}` : base, 'ok');
       rDlg.close();
       await ctx.refresh();
       if (!rEditing) { setTab('historique'); resetFilters(); focusCard(id); }

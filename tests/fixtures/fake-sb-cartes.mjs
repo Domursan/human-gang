@@ -549,6 +549,22 @@ export function createClient() {
       window.__LOG.push(['rpc', fn, args]);
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
+      // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).
+      const reglage = (k) => DB.hg_settings.find((r) => r.key === k)?.value || {};
+      if (fn === 'hg_support_public') {
+        const v = reglage('support'), out = {};
+        for (const k of ['sujets', 'message_min', 'message_max', 'delai_reponse_jours']) if (v[k] !== undefined) out[k] = v[k];
+        return { data: out, error: null };
+      }
+      if (fn === 'hg_eggs_public') {
+        const v = reglage('eggs');
+        const md = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+        const today = `${md.find((x) => x.type === 'month').value}-${md.find((x) => x.type === 'day').value}`;
+        return { data: { recompenses: v.recompenses || {}, anniversaire_aujourdhui: v.anniversaire_gang === today }, error: null };
+      }
+      if (fn === 'hg_eco_quota') {
+        return { data: S.ecoQuota || { photos: { payees: 0, plafond: 5 }, souvenirs: { payes: 0, plafond: 5 }, sortie: { payees: 0, plafond: 1 } }, error: null };
+      }
       // Pages visibles pour l'utilisateur connecté (même logique que fake-sb.mjs).
       if (fn === 'hg_my_pages') {
         if (S.pagesFail) return { data: null, error: { message: 'Failed to fetch' } };

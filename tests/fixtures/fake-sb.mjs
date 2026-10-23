@@ -229,7 +229,7 @@ const CASCADE = {
   hg_pages: [['hg_page_access', 'page_slug', 'slug']],
 };
 // Fonctions SQL appelables sans session (rôle anon), comme en ligne.
-const ANON_OK = new Set(['hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
+const ANON_OK = new Set(['hg_support_public', 'hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
 // Compteur utilisé par uid() pour produire des identifiants distincts.
 let seq = 0;
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */
@@ -624,6 +624,28 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Migration 072 : réglages lus par RPC (sans les valeurs sensibles), inscrits du Secret Santa, gains restants.
+      const reglage = (k) => DB.hg_settings?.find((r) => r.key === k)?.value || {};
+      if (fn === 'hg_support_public') {
+        const v = reglage('support'), out = {};
+        for (const k of ['sujets', 'message_min', 'message_max', 'delai_reponse_jours']) if (v[k] !== undefined) out[k] = v[k];
+        return { data: out, error: null };
+      }
+      if (fn === 'hg_eggs_public') {
+        const v = reglage('eggs');
+        const md = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+        const today = `${md.find((x) => x.type === 'month').value}-${md.find((x) => x.type === 'day').value}`;
+        return { data: { recompenses: v.recompenses || {}, anniversaire_aujourdhui: v.anniversaire_gang === today }, error: null };
+      }
+      if (fn === 'hg_ss_people') {
+        return { data: (DB.hg_ss_participants || []).filter((r) => r.edition_id === args.p_edition)
+          .sort((a, b) => String(a.joined_at).localeCompare(String(b.joined_at))).map(({ user_id, joined_at }) => ({ user_id, joined_at })), error: null };
+      }
+      // Cible Secret Santa (scénario ssTarget) : sans scénario, pas de cible (comportement d'avant).
+      if (fn === 'hg_ss_my_target' && S.ssTarget) return { data: S.ssTarget, error: null };
+      if (fn === 'hg_eco_quota') {
+        return { data: S.ecoQuota || { photos: { payees: 0, plafond: 5 }, souvenirs: { payes: 0, plafond: 5 }, sortie: { payees: 0, plafond: 1 } }, error: null };
+      }
       // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » (l'appel reste dans __LOG) ; hg_eggs_me renvoie le carnet.
       if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }], letters: 0 }, error: null };
       // Suivi des quêtes (quest-track.js) : rien à renvoyer ; l'appel reste dans window.__LOG.

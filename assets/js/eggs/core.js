@@ -384,7 +384,7 @@ function chouette() {
 /* ---------- Anniversaire du gang (membres connectés, accueil et cartes) ---------- */
 
 /**
- * Si aujourd'hui est l'anniversaire du gang (réglage hg_settings.eggs.anniversaire_gang, date de Zurich), affiche
+ * Si aujourd'hui est l'anniversaire du gang (RPC hg_eggs_public, date de Zurich calculée par le serveur), affiche
  * une bannière qui donne la part de gâteau, et des confettis une fois par jour. Ne fait rien pour un visiteur.
  */
 async function verifieAnniversaire() {
@@ -392,8 +392,9 @@ async function verifieAnniversaire() {
   const z = heureZurich();
   try {
     if (!(await hasSession())) return;
-    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'eggs').maybeSingle();
-    if (error || data?.value?.anniversaire_gang !== z.md) return;
+    // RPC hg_eggs_public : dit seulement si c'est le jour (la date et le mot secret ne sont plus lisibles).
+    const { data, error } = await sb.rpc('hg_eggs_public');
+    if (error || data?.anniversaire_aujourdhui !== true) return;
   } catch { return; }
   const cle = `hg_egg_anniv_${z.ymd}`;
   if (!lectureStock(cle)) {

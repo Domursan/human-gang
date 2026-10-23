@@ -15,6 +15,7 @@ import { svg } from './icons.js';
 import { pluralCount } from './utils.js';
 import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
 import { chargerReglagesLot3, delaiPassee } from './reglages-valeurs-lot3.js';
+import { lireQuota, restants, messageSouvenir } from './eco-quota.js';
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit plus de choses (fantômes, modifications d'autrui).
@@ -330,12 +331,13 @@ form.addEventListener('submit', async (e) => {
       payload.image_path = newPath;
     } else if (removeImg) payload.image_path = null;
 
+    const reste = editing ? null : restants(await lireQuota(), 'souvenirs'); // souvenirs qui rapportent encore aujourd'hui
     const { error } = editing
       ? await sb.from('hg_moments').update(payload).eq('id', editing.id)
       : await sb.from('hg_moments').insert({ ...payload, created_by: me.id });
     if (error) throw error;
     if (old && (file || removeImg) && (isAdmin || old.startsWith(`${me.id}/`))) removeObjects([old]).catch(() => {});
-    toast(editing ? 'Moment mis à jour.' : 'Moment ajouté à la frise.', 'ok');
+    toast(editing ? 'Moment mis à jour.' : messageSouvenir(reste, 'Moment ajouté à la frise.'), 'ok');
     dlg.close();
     await refresh();
   } catch (err) {
