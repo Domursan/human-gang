@@ -20,6 +20,7 @@ import { mountChallengesSection } from './admin-challenges.js';
 import { mountQuizSection } from './admin-quiz.js';
 import { mountPronosSection } from './admin-pronos.js';
 import { mountSutomSection } from './admin-sutom.js';
+import { mountLudothequeSection } from './admin-ludotheque.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
 import { mountSortiesSection, openSortie, listSorties, infoSorties } from './admin-sorties/index.js';
 import { mountSouvenirsSection, openSouvenirs, listSouvenirs } from './admin-souvenirs/index.js';
@@ -229,6 +230,7 @@ registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 registerSub('cartes/pronos', { main: () => mountPronosSection($('#pronos-root')) }); // pronostics (J5) : compétitions, matchs, résultats
 registerSub('cartes/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
+registerSub('cartes/ludotheque', { main: () => mountLudothequeSection($('#ludo-root')) }); // ludothèque du gang (S3) : permission « ludothèque »
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
 // Page « Jeux » : GeoGuessr, jeux du jour, citations (admin-jeux.js)
 if (MOUNT.geoguessr) registerSub('cartes/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });

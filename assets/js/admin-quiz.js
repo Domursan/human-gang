@@ -215,6 +215,12 @@ export async function mountQuizSection(container) {
     container.dataset.adqBound = '1';
   }
   await Promise.all([loadRewards(), reload()]);
+  // Brouillon venu du lexique (« En faire une question du quiz ») : le formulaire s'ouvre pré-rempli, rien n'est créé.
+  let draft = null;
+  try { draft = JSON.parse(sessionStorage.getItem('hg_quiz_draft') || 'null'); sessionStorage.removeItem('hg_quiz_draft'); } catch { draft = null; }
+  if (draft && typeof draft.prompt === 'string') {
+    openQuestionForm({ example: { q: { prompt: draft.prompt.slice(0, 500), qtype: 'texte', difficulty: 'moyen', category: String(draft.category || '').slice(0, 40), explanation: String(draft.explanation || '').slice(0, 500) }, key: { accepted: [], manual: true } } });
+  }
 }
 
 /**

@@ -108,3 +108,13 @@
 .sv-kc-prev { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
 .sv-kc-prev-h { margin: 0; font-weight: 700; }
 @media (max-width: 700px) { .sv-kc { grid-template-columns: minmax(0, 1fr); } .sv-kc-prev { order: -1; } }
+/* ---------- Vues Ce jour-là, Lexique, Gartic (idées S1, S2, S6) et Ludothèque (S3) ---------- */
+.lx-tools { justify-content: space-between; }
+.lx-gain input { width: 110px; min-height: 44px; }
+.lx-item { padding: 16px; }
+.aj-row { grid-template-columns: 52px minmax(0, 1fr) auto; }
+.aj-ico { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; color: var(--g, var(--slate));
+  background: color-mix(in srgb, var(--g, var(--slate)) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--g, var(--slate)) 35%, transparent); }
+.aj-refs { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin: 0; }
+.aj-refs legend { font-size: 14px; color: var(--muted); padding: 0 4px; }
+@media (max-width: 600px) { .aj-row { grid-template-columns: 48px minmax(0, 1fr); } .aj-row .sv-row-actions { grid-column: 1 / -1; } }
