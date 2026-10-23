@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "check": "node tests/check-js.cjs",
+    "check": "node tests/check-js.cjs && node tests/check-publication.cjs",
     "test:rpc": "node tests/check-rpc.mjs",
     "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
     "test": "node tests/run-all.cjs"
