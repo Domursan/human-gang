@@ -1,4 +1,5 @@
-// ===== Humane Gang — page « Jeux », onglet Bataille de cartes (idée J15) =====
+// ===== Humane Gang — page « Jeux », onglet Arène (idée J15, ex-« Bataille ») =====
+// Adresse : jeux.html#bataille (identifiant inchangé ; le libellé affiché est « Arène », voir onglets.js).
 /*
  * Rôle : mini-jeu asynchrone avec les cartes de sa collection. Chacun règle son deck de défense (5 cartes, dans
  * l'ordre) ; pour attaquer, on choisit un membre et on aligne 5 cartes : 5 duels face à face, résolus par le serveur.
@@ -23,7 +24,7 @@ const S = { d: null, err: null, view: 'accueil', pick: [], target: null, result:
 export async function mount(panel, ctx) {
   P = panel; C = ctx;
   loadCss('cartes-card'); loadCss('jeux-bataille');
-  panel.innerHTML = '<p class="muted">Chargement de la Bataille…</p>';
+  panel.innerHTML = '<p class="muted">Chargement de l’Arène…</p>';
   panel.addEventListener('click', onClick);
   panel.addEventListener('input', (e) => { if (e.target.id === 'jb-filter') { S.filter = e.target.value; paintPool(); } });
   await load();
@@ -56,7 +57,7 @@ const resTxt = (r, wa, wd) => (r === 'victoire' ? `Victoire ${wa} – ${wd}` : r
 /* ---------- Rendu ---------- */
 function render() {
   const esc = C.esc;
-  if (S.err) { P.innerHTML = `<p class="card">Bataille indisponible : ${esc(S.err)}</p>`; return; }
+  if (S.err) { P.innerHTML = `<p class="card">Arène indisponible : ${esc(S.err)}</p>`; return; }
   if (S.view === 'resultat' && S.result) { P.innerHTML = resultHtml(S.result); animate(); return; }
   if (S.view === 'deck' || S.view === 'attaque') { P.innerHTML = pickerHtml(); paintPool(); return; }
   P.innerHTML = homeHtml();
@@ -65,7 +66,7 @@ function render() {
 /** Écran d'accueil : règles, gains, deck de défense, adversaires, historique. */
 function homeHtml() {
   const esc = C.esc, d = S.d, cfg = d.cfg;
-  const gains = !cfg.actif ? '<p class="card jb-note">La Bataille est en pause pour le moment.</p>'
+  const gains = !cfg.actif ? '<p class="card jb-note">L’Arène est en pause pour le moment.</p>'
     : cfg.gains ? `<p class="muted small">+${esc(cfg.gain)} ✦ par victoire (${esc(Math.min(d.paid_today, cfg.cap_jour))}/${esc(cfg.cap_jour)} payées aujourd’hui) · +${esc(cfg.defense_gain)} ✦ quand ta défense tient (${esc(cfg.cap_defense)} par jour).</p>`
       : '<p class="muted small">Bêta : on joue pour la gloire, pas encore de Paillettes.</p>';
   const deck = d.deck
@@ -88,7 +89,7 @@ function homeHtml() {
       ${!att ? `<button type="button" class="btn btn-ghost" data-act="attaquer" data-id="${esc(other.id)}">Revanche</button>` : ''}</span></li>`;
   }).join('')}</ul>` : '<p class="muted small">Aucune bataille pour l’instant.</p>';
   return `<div class="jb">
-    <h2 class="jd-title jb-title">Bataille de cartes</h2>
+    <h2 class="jd-title jb-title">Arène de cartes</h2>
     <p class="muted small">Puissance = rareté (1 à 6) + 1 si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre. Aucune carte n’est perdue.</p>
     ${gains}
     <section class="card jb-sec" aria-labelledby="jb-deck-h"><div class="jb-sec-h"><h3 id="jb-deck-h">Mon deck de défense</h3>
@@ -156,7 +157,7 @@ function resultHtml(b) {
   const other = att ? b.defender : b.attacker;
   return `<div class="jb jb-res">
     <button type="button" class="btn btn-ghost jb-back" data-act="retour">← Retour</button>
-    <p class="muted small">Bataille · ${att ? `contre la défense de ${esc(other.pseudo)}` : `${esc(other.pseudo)} contre ta défense`}</p>
+    <p class="muted small">Arène · ${att ? `contre la défense de ${esc(other.pseudo)}` : `${esc(other.pseudo)} contre ta défense`}</p>
     <h2 class="jd-title" role="status">${esc(big)}</h2>
     ${b.paid ? `<p class="small">+${esc(b.paid)} ✦ crédités</p>` : ''}
     <div class="jb-res-h muted small"><span>${att ? 'Tes cartes' : 'Ta défense'}</span><span>${att ? 'Sa défense' : 'Ses cartes'}</span></div>

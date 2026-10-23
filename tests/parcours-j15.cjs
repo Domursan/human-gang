@@ -9,7 +9,7 @@ const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./li
   const p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#bataille', width: 390, height: 900, reducedMotion: 'reduce' });
   await p.waitForSelector('.jb', { timeout: 5000 }).catch(() => {});
   const txt = await p.locator('#jeux-panel-bataille').innerText();
-  check(txt.includes('Bataille de cartes') && txt.includes('Membre bat objet'), 'accueil : titre et règles (Membre bat objet…)');
+  check(txt.includes('Arène de cartes') && txt.includes('Membre bat objet'), 'accueil : titre et règles (Membre bat objet…)');
   check(txt.includes('Bêta'), 'accueil : bêta sans Paillettes annoncée');
   check(txt.includes('pas encore de deck de défense'), 'accueil : pas encore de deck');
   check(await p.locator('[data-act="attaquer"][aria-label^="Attaquer Bruno"]').isDisabled(), 'adversaire sans deck : bouton désactivé');

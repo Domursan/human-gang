@@ -42,7 +42,7 @@ const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
 /** Pourcentage à deux décimales maximum, ex. « 12,5 % ». */
 const pct = (v) => `${new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(v)} %`;
 // Onglets : [identifiant, libellé]. L'ordre est celui de l'affichage et des flèches clavier.
-const TABS = [['ouverture', 'Ouverture'], ['inventaire', 'Inventaire'], ['boutique', 'Boutique'], ['collection', 'Collection'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+const TABS = [['ouverture', 'Ouverture'], ['inventaire', 'Inventaire'], ['boutique', 'Boutique'], ['collection', 'Mes cartes'], ['classement', 'Classement'], ['echanges', 'Échanges']];
 // Onglets qui montrent des boosters : redessinés ensemble après une ouverture ou un achat (renderBoosters).
 const BOOSTER_TABS = ['ouverture', 'inventaire', 'boutique'];
 // Icônes des onglets (SVG décoratifs, visibles seulement sur téléphone : grille de la barre d'onglets).
@@ -63,7 +63,7 @@ const REASON_LABEL = {
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
   quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
-  framed: 'Framed du ciné-club', heardle: 'Heardle du gang', bataille: 'Bataille de cartes', bataille_def: 'Défense tenue (Bataille)',
+  framed: 'Framed du ciné-club', heardle: 'Heardle du gang', bataille: 'Arène de cartes', bataille_def: 'Défense tenue (Arène)',
   cagnotte: 'Cagnotte du gang', cagnotte_remboursee: 'Cagnotte remboursée', cagnotte_annulee: 'Cagnotte annulée', // C13 (migration 082)
   code: 'Code cadeau', atelier: 'Atelier', enchere: 'Offre d’enchère', enchere_remboursee: 'Enchère dépassée (remboursée)',
 };
@@ -890,7 +890,7 @@ function drawInventaire() {
           <li><span>Brillantes</span><strong>${nf.format(shiny)}</strong></li>
           <li><span>Doublons</span><strong>${nf.format(doubles)}</strong></li>
         </ul>
-        <div class="btn-row"><button type="button" class="btn btn-ghost" data-tab-go="collection">Voir la collection</button></div>
+        <div class="btn-row"><button type="button" class="btn btn-ghost" data-tab-go="collection">Voir mes cartes</button></div>
       </section>
     </div>
     ${codeBoxHtml()}
@@ -2805,7 +2805,7 @@ function cleanHash() {
   if (PEER_RE.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
 }
 
-/** Suit l'adresse : #collection/<id> ouvre la collection du membre, sinon la vue revient aux onglets. */
+/** Suit l'adresse : #collection/<id> ouvre la collection du membre, #<onglet> ouvre cet onglet, sinon la vue revient aux onglets. */
 function routeFromHash() {
   // QR d'un code cadeau (idée C9) : cartes.html#code=HG-XXXX-XXXX ouvre la fenêtre déjà remplie, puis l'adresse est nettoyée.
   const code = codeFromHash(location.hash);
@@ -2816,8 +2816,15 @@ function routeFromHash() {
     return;
   }
   const m = PEER_RE.exec(location.hash);
-  if (m) openPeer(m[1].toLowerCase());
-  else leavePeer();
+  if (m) { openPeer(m[1].toLowerCase()); return; }
+  // Lien direct vers un onglet (cartes.html#boutique, #collection…) : on quitte la collection d'un membre s'il y en a une, puis l'onglet s'affiche
+  const onglet = location.hash.slice(1);
+  if (TABS.some(([id]) => id === onglet)) {
+    if (S.peer) leavePeer();
+    if (S.tab !== onglet) setTab(onglet);
+    return;
+  }
+  leavePeer();
 }
 
 /**

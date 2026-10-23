@@ -10,9 +10,10 @@
  *   icone   facultatif : contenu SVG (viewBox 0 0 24 24, trait) de l'icône ;
  *   couleur facultatif : couleur de l'icône dans le tableau de bord (variable CSS ou hexadécimal).
  * Contrat d'un module :
- *   export async function mount(panel, ctx)  panel = <section role="tabpanel"> vide, ctx = { sb, me, toast, esc } ;
+ *   export async function mount(panel, ctx)  panel = <section role="tabpanel"> vide, ctx = { sb, me, toast, esc, sub } (sub : choix
+ *     tiré de l'adresse, jeux.html#<id>-<choix>, ou null) ; un changement de choix alors que le module est monté arrive par « jeux:sub » ;
  *   export function unmount()                facultatif, appelé quand on quitte la page ;
- *   export async function resume(ctx)        facultatif, pour l'onglet « Aujourd'hui » : { etat: 'fait' | 'a_jouer' |
+ *   export async function resume(ctx)        facultatif, pour le tableau de bord « Les missions du jour » : { etat: 'fait' | 'a_jouer' |
  *     'en_cours' | 'info', texte, badge, gain?, serie? } (texte = sous-titre, badge = pastille, gain = Paillettes
  *     gagnées aujourd'hui, serie = jours consécutifs). Sans resume, le jeu apparaît avec « Ouvrir ».
  * Le panneau reçoit l'événement « jeux:show » chaque fois qu'il redevient visible (carte à redimensionner…).
@@ -24,9 +25,9 @@ export const ONGLETS = [
   { id: 'citations', titre: 'Qui a dit ça ?', module: './citations.js', idee: 'J3', rythme: 'jour', couleur: 'var(--slate)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
   { id: 'jour', titre: 'Question du jour', module: './jour.js', idee: 'J4', rythme: 'jour' },
-  { id: 'sutom', titre: 'Sutom', module: './sutom.js', idee: 'J8', rythme: 'jour' },
+  { id: 'sutom', titre: 'Sutom HG', module: './sutom.js', idee: 'J8', rythme: 'jour' },
   { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
   { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
-  { id: 'bataille', titre: 'Bataille', module: './bataille.js', idee: 'J15', rythme: 'competition' },
+  { id: 'bataille', titre: 'Arène', module: './bataille.js', idee: 'J15', rythme: 'competition' },
   { id: 'arcade', titre: 'Arcade', module: './arcade.js', idee: 'J18', rythme: 'jour' },
 ];

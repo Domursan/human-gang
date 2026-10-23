@@ -87,7 +87,7 @@ function listHtml() {
 function render(focus = null) {
   if (!R.el) return;
   R.el.innerHTML = `<div class="stack">
-      <p class="small muted">Les recettes apparaissent dans le panneau « Atelier » de l’onglet Collection. Les cartes utilisées sont retirées du jeu.</p>
+      <p class="small muted">Les recettes apparaissent dans le panneau « Atelier » de l’onglet « Mes cartes ». Les cartes utilisées sont retirées du jeu.</p>
       ${R.edit ? editorHtml() : '<div class="btn-row"><button class="btn btn-primary" type="button" data-rc="new">Nouvelle recette</button></div>'}
       ${listHtml()}</div>`;
   if (focus) R.el.querySelector(focus)?.focus();
