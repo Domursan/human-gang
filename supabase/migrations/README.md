@@ -186,3 +186,15 @@ Migration `081_idees_c2.sql` (idées du gang C7 à C12, thème « Cartes et éco
   RPC `hg_trade_board`, `hg_trade_board_set` ; Staff : `hg_trade_board_note_clear`.
 
 Ordre : 081, puis le front. Aucune fonction edge à redéployer, aucun secret, aucune permission nouvelle (tout passe par « cartes »).
+
+## Pour appliquer 104 (Arène v2)
+
+- **104_arene_v2.sql** : tables `hg_arena_seasons`, `hg_arena_ratings`, `hg_arena_fights`, `hg_arena_results` (fermées aux
+  clients, accès par RPC), réglages `hg_settings.arena` (défauts dans `hg_arena_cfg`), saison 1 créée à la fin du script.
+  RPC membres (gardées par `hg_arena_gate`, refusées tant que `arena.v2_public` n'est pas vrai, sauf pour l'administrateur) :
+  `hg_arena_me`, `hg_arena_attack`, `hg_arena_seen`, `hg_arena_board`. RPC Staff « cartes » : `hg_arena_admin`,
+  `hg_arena_settings_save` (ouverture aux membres réservée à l'administrateur), `hg_arena_season_close`.
+  Journal « arene_reglages » et « arene_saison_cloturee ».
+- Gains : raisons `arene`, `arene_def`, `arene_saison`, `arene_booster` dans `hg_wallet_log`. Le deck de défense est
+  celui de l'Arène actuelle (`hg_battle_decks`, `hg_battle_set_deck`), inchangé.
+- Aucune permission nouvelle. Les membres ne voient rien tant que l'administrateur n'ouvre pas l'Arène v2 dans le panel.

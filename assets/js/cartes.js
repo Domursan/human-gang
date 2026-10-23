@@ -11,7 +11,7 @@
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, Arène, historique, événements, démarrage.
-// Arène (onglet arene) : le module jeux/bataille.js est chargé et monté à la première ouverture de l'onglet (mountArene).
+// Arène (onglet arene) : le module jeux/arene-v2.js est chargé et monté à la première ouverture de l'onglet (mountArene) ; il affiche l'Arène v2 ou, si elle n'est pas ouverte, l'Arène actuelle (jeux/bataille.js).
 // La barre d'onglets est masquée (CSS) : la navigation est dans le menu du haut (core/header.js). Les onglets restent la
 // mécanique qui affiche le bon panneau, pilotée par l'adresse (cartes.html#<onglet>) et par les boutons internes ;
 // le titre visible de la section (#cartes-section-h) dit où l'on est.
@@ -667,13 +667,13 @@ function renderTab() {
   });
 }
 
-/* ---------- Arène (onglet « arene ») : module jeux/bataille.js ---------- */
+/* ---------- Arène (onglet « arene ») : module jeux/arene-v2.js (repli sur jeux/bataille.js) ---------- */
 let arene = null;
 /** Monte le panneau de l'Arène une seule fois (module chargé à la première ouverture). En cas d'échec, un message ; le prochain affichage réessaie. */
 function mountArene() {
   if (arene) return;
   const panel = $('#cartes-p-arene');
-  arene = import('./jeux/bataille.js')
+  arene = import('./jeux/arene-v2.js')
     .then((m) => m.mount(panel, { sb, me, toast, esc }))
     .catch((e) => {
       console.warn('[arène]', e);

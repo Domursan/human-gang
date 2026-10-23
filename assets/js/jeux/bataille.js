@@ -8,7 +8,7 @@
  * Une seule carte de puissance 6 par main. Textes neutres : « duel perdu », jamais de moquerie.
  * RPC : hg_battle_me, hg_battle_set_deck, hg_battle_attack, hg_battle_seen. Gains éventuels versés par le serveur.
  * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/css/cartes-card.css.
- * Exporte : mount(panel, ctx).
+ * Exporte : mount(panel, ctx) ; mini, resTxt, resultHtml et animate (réutilisés par l'Arène v2, jeux/arene-v2.js).
  */
 import { cardHtml, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { loadCss } from './devine.js';
@@ -43,8 +43,8 @@ async function load() {
 
 /** Carte au format attendu par cardHtml. */
 const asCard = (c) => ({ name: c.name, rarity: c.rarity, family: c.family, image_url: c.image_url, number: c.number });
-/** Petite carte. */
-const mini = (c, attrs = '') => cardHtml(asCard(c), { size: 'sm', shiny: c.shiny, attrs });
+/** Petite carte (exportée : réutilisée par l'Arène v2). */
+export const mini = (c, attrs = '') => cardHtml(asCard(c), { size: 'sm', shiny: c.shiny, attrs });
 /** Texte d'avantage d'un duel. */
 function advText(a, d, adv) {
   if (adv === 'a') return `avantage : ${familyLabel(a.family).toLowerCase()} bat ${familyLabel(d.family).toLowerCase()}`;
@@ -52,7 +52,7 @@ function advText(a, d, adv) {
   return 'pas d’avantage de famille';
 }
 /** Résultat lisible. */
-const resTxt = (r, wa, wd) => (r === 'victoire' ? `Victoire ${wa} – ${wd}` : r === 'defaite' ? `Défaite ${wa} – ${wd}` : `Égalité ${wa} – ${wd}`);
+export const resTxt = (r, wa, wd) => (r === 'victoire' ? `Victoire ${wa} – ${wd}` : r === 'defaite' ? `Défaite ${wa} – ${wd}` : `Égalité ${wa} – ${wd}`);
 
 /* ---------- Rendu ---------- */
 function render() {
@@ -139,8 +139,9 @@ function paintPool() {
 }
 
 /** Écran de résultat (maquette J15). */
-function resultHtml(b) {
-  const esc = C.esc, att = b.role === 'attaque';
+/** Écran de résultat d'un combat ; esc par défaut celui de l'Arène actuelle (l'Arène v2 le passe). */
+export function resultHtml(b, esc = C.esc) {
+  const att = b.role === 'attaque';
   const mine = att ? b.attack : b.defense, theirs = att ? b.defense : b.attack;
   const rows = b.duels.map((x, i) => {
     const my = att ? x.a : x.d, th = att ? x.d : x.a;
@@ -169,9 +170,9 @@ function resultHtml(b) {
 }
 
 /** Dévoile les duels l'un après l'autre (sauf mouvement réduit). */
-function animate() {
+export function animate(root = P) {
   if (reduce()) return;
-  P.querySelectorAll('.jb-duel').forEach((li, i) => { li.classList.add('is-hidden'); setTimeout(() => li.classList.remove('is-hidden'), 250 + i * 450); });
+  root.querySelectorAll('.jb-duel').forEach((li, i) => { li.classList.add('is-hidden'); setTimeout(() => li.classList.remove('is-hidden'), 250 + i * 450); });
 }
 
 /* ---------- Actions ---------- */
