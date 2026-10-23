@@ -231,6 +231,7 @@ function renderAll() {
           <section class="card" id="ss-send" aria-labelledby="ss-send-t"></section>
         </div>
       </section>` : `<section class="card card-ss ss-section" id="ss-notarget"></section>`}
+      ${['envoi', 'revelation'].includes(st) ? '<section class="card ss-section" id="ss-unwrap" aria-labelledby="ss-unwrap-t"></section>' : ''}
       <div class="row ss-section">
         <section class="card" id="ss-progress" aria-labelledby="ss-progress-t"></section>
         ${S.mine ? '<section class="card" id="ss-mywishes" aria-labelledby="ss-mywishes-t"></section>' : ''}
@@ -246,6 +247,10 @@ function renderAll() {
   renderProgress();
   if (S.mine) renderMyWishes();
   if (isReveal()) renderReveal();
+  // Soirée déballage (migration 096) : module chargé à la demande, sans bloquer le reste de la page.
+  const uw = $('#ss-unwrap');
+  if (uw) import('./ss-unwrap.js').then((m) => m.mountUnwrap(uw, { ed: S.ed, me, members: S.members, onReveal: () => location.reload() }))
+    .catch((e) => { console.warn('[déballage]', e); uw.remove(); });
 }
 
 /* ---------- Inscriptions ---------- */

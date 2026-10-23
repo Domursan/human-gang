@@ -27,6 +27,7 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  saisons: 'themes', // rendez-vous saisonniers (migration 096) : calendrier de l'Avent, saison des Worlds, anniversaire du gang
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -66,6 +67,9 @@ export const DOMAINS = [
     ...under('Rendez-vous', [
       { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
       { id: 'evenements', label: 'Événements', section: 'evenements' },
+      { id: 'avent', label: 'Calendrier de l’Avent', section: 'saisons', part: 'avent' },
+      { id: 'saison-worlds', label: 'Saison des Worlds', section: 'saisons', part: 'worlds' },
+      { id: 'anniv-gang', label: 'Anniversaire du gang', section: 'saisons', part: 'anniv' },
     ]),
     ...under('Badges', [
       { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },

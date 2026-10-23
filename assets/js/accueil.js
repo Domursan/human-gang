@@ -148,6 +148,7 @@ function renderMemberShell() {
       <div id="countdown" class="countdown" hidden></div>
     </section>
     ${recapBanner()}
+    <div id="saison-home" hidden></div>
     <div id="dyn-banner" hidden></div>
     <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
 
@@ -520,6 +521,17 @@ async function loadChallenges() {
   }
 }
 
+/* ---------- Rendez-vous saisonniers (migration 096) ---------- */
+/** Calendrier de l'Avent (décembre) et saison des Worlds : module chargé à la demande (saisons.js). */
+async function loadSeasonal() {
+  try {
+    const { mountSeasonal } = await import('./saisons.js');
+    await mountSeasonal($('#saison-home'));
+  } catch (e) {
+    console.warn('[saisons]', e);
+  }
+}
+
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 /** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
@@ -543,7 +555,7 @@ if (!me) {
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
+    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(), loadSeasonal(),
   ]);
 }
 app.removeAttribute('aria-busy');

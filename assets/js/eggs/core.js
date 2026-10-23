@@ -390,18 +390,27 @@ function chouette() {
 async function verifieAnniversaire() {
   if (!/(^|\/)(accueil|cartes)(\.html)?$/.test(location.pathname)) return;
   const z = heureZurich();
+  let encart = false; // encart d’anniversaire (anniv.js) affiché
   try {
     if (!(await hasSession())) return;
     // RPC hg_eggs_public : dit seulement si c'est le jour (la date et le mot secret ne sont plus lisibles).
     const { data, error } = await sb.rpc('hg_eggs_public');
-    if (error || data?.anniversaire_aujourdhui !== true) return;
+    if (error) return;
+    // Fenêtre de l'anniversaire du serveur (migration 096) : encart « Le gang a N ans » à la place de la bannière.
+    if (data?.anniversaire_fenetre === true && Number(data.anniversaire_age) > 0) {
+      try {
+        const { mountAnniv } = await import('../anniv.js');
+        if (await mountAnniv({ today: data.anniversaire_aujourdhui === true })) encart = true;
+      } catch { /* module indisponible : bannière d'origine */ }
+    }
+    if (data?.anniversaire_aujourdhui !== true) return;
   } catch { return; }
   const cle = `hg_egg_anniv_${z.ymd}`;
   if (!lectureStock(cle)) {
     ecritureStock(cle, '1');
     if (motionAllowed()) confettis();
   }
-  banniere();
+  if (!encart) banniere();
 }
 
 /**

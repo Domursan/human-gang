@@ -2944,3 +2944,5 @@ async function boot() {
 boot();
 // Secret caché « secousse » : module chargé à part (assets/js/eggs/pages.js).
 import('./eggs/pages.js').then((m) => m.secretsCartes()).catch(() => {});
+// Calendrier de l'Avent (migration 096) : rappel discret en décembre si une case attend sur l'accueil.
+if (new Date().getMonth() === 11) import('./avent.js').then((m) => m.cartesReminder('#cartes-tablist')).catch(() => {});

@@ -190,6 +190,12 @@ for (const [sub, part] of [['economie', 'paillettes'], ['tirage', 'tirage'], ['r
 }
 // Joueurs : liste en colonne 2 ; le membre choisi est dans l'adresse (#cartes/joueurs/<id>).
 registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_el, { id }) => openCardsTab('joueurs', id) });
+// Rendez-vous saisonniers (migration 096) : une section, trois parties ; module chargé à la première visite.
+const saisonsMod = () => import('./admin-saisons.js');
+for (const [sub, part] of [['avent', 'avent'], ['saison-worlds', 'worlds'], ['anniv-gang', 'anniv']]) {
+  registerSub(`vie/${sub}`, { group: 'saisons', main: async () => (await saisonsMod()).mountSaisonsSection($('#saisons-root')),
+    open: async () => (await saisonsMod()).showSaisonsPart(part) });
+}
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques

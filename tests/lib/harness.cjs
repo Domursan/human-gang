@@ -54,15 +54,17 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  */
 async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1 } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch || mobile, isMobile: mobile, deviceScaleFactor: dpr }); // touch : écran tactile (pointeur grossier)
-  await ctx.addInitScript((s) => {
+  // Avec now (horloge simulée), le jour de l'intro vient de now : le script d'initialisation s'exécute avant l'horloge.
+  const dayKey = now ? (() => { const d = new Date(now); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; })() : null;
+  await ctx.addInitScript(({ s, dayKey }) => {
     window.__SCN = s;
     try {
       localStorage.setItem('hg_cookie_ok', '1');
       // Intro déjà jouée aujourd'hui (sinon l'accueil y renvoie) ; scenario.intro = true pour la tester
       const d = new Date();
-      if (!s.intro) localStorage.setItem('hg_intro_day', `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+      if (!s.intro) localStorage.setItem('hg_intro_day', dayKey || `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
     } catch (e) { /* stockage bloqué : sans importance pour le test */ }
-  }, scenario);
+  }, { s: scenario, dayKey });
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
   // Toute requête de la page passe ici : le site est servi depuis le dépôt, le faux Supabase remplace
   // supabase-js, les autres hôtes externes répondent vide (204). Les requêtes vers *.supabase.co sont notées dans EXTERNAL.

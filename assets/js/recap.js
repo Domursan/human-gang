@@ -200,6 +200,66 @@ function buildSlides(r) {
 }
 
 /* =========================================================
+   Rétrospective de l'anniversaire du gang (recap.html?retro=1, migration 096)
+   ========================================================= */
+/** Mode rétrospective : toute la vie du serveur (RPC hg_gang_retro) au lieu d'une année. */
+const RETRO = new URLSearchParams(location.search).get('retro') === '1';
+
+/**
+ * Diapos de la rétrospective : intro (âge du gang), une diapo par année (chiffres et moments retenus par le Staff),
+ * chiffres cumulés, photo de famille (si le Staff l'a choisie). Aucun membre n'est nommé.
+ * @param {object} r réponse de hg_gang_retro : { age, annee, years, totals, photo_famille }
+ * @param {string|null} familyUrl adresse signée de la photo de famille
+ * @returns {Array<{key: string, emoji: string, html: string, final?: boolean}>}
+ */
+function buildRetroSlides(r, familyUrl) {
+  const S = [];
+  const age = Number(r?.age) || 0, y0 = Number(r?.annee) || 2022;
+  S.push({
+    key: 'intro', emoji: '🎂',
+    html: `<img class="rc-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
+      <p class="rc-eyebrow">Humane Gang · ${esc(y0)} → ${esc(y0 + age)}</p>
+      <h2 class="rc-title">Le gang a<br><span class="rc-year">${esc(age)} ans</span></h2>
+      <p class="rc-sub">Toutes ces années en quelques écrans.<br><span class="rc-hint">Touche à droite pour avancer, maintiens pour mettre en pause.</span></p>`,
+  });
+  for (const y of r?.years || []) {
+    const ms = y.moments || [];
+    const stats = [[y.sorties, 'sortie', 'sorties'], [y.photos, 'photo', 'photos'], [y.souvenirs, 'souvenir', 'souvenirs'], [y.secret_santa, 'lutin', 'lutins']]
+      .filter(([n]) => Number(n) > 0);
+    S.push({
+      key: `y${y.year}`, emoji: '📅',
+      html: `<p class="rc-eyebrow">${esc(y.year)}</p>
+        ${ms.length ? `<h2 class="rc-title rc-title-sm">${esc(ms[0].title)}</h2>` : `<h2 class="rc-title rc-title-sm">L’année ${esc(y.year)}</h2>`}
+        ${stats.length ? `<ul class="rc-chips">${stats.map(([n, one, many]) => `<li>${nf.format(Number(n))} ${pluralWord(Number(n), one, many)}</li>`).join('')}</ul>` : '<p class="rc-sub">Une année discrète, mais on était là.</p>'}
+        ${ms.length > 1 ? `<ul class="rc-list rc-list-compact">${ms.slice(1).map((m) => `<li><strong>${esc(m.title)}</strong><em>${esc(dateShort(m.happened_on))}</em></li>`).join('')}</ul>` : ''}`,
+    });
+  }
+  const t = r?.totals || {};
+  S.push({
+    key: 'totaux', emoji: '✨',
+    html: `<p class="rc-eyebrow">En tout</p>
+      <div class="rc-duo">
+        <div><p class="rc-big rc-big-sm">${count(t.sorties || 0)}</p><p class="rc-unit">${pluralWord(t.sorties || 0, 'sortie', 'sorties')}</p></div>
+        <div><p class="rc-big rc-big-sm">${count(t.photos || 0)}</p><p class="rc-unit">${pluralWord(t.photos || 0, 'photo', 'photos')}</p></div>
+        <div><p class="rc-big rc-big-sm">${count(t.souvenirs || 0)}</p><p class="rc-unit">${pluralWord(t.souvenirs || 0, 'souvenir', 'souvenirs')}</p></div>
+        <div><p class="rc-big rc-big-sm">${count(t.secret_santa || 0)}</p><p class="rc-unit">Secret Santa</p></div>
+      </div>
+      <p class="rc-sub">${nf.format(Number(t.cartes) || 0)} cartes ouvertes, ${nf.format(Number(t.membres) || 0)} membres aujourd’hui.</p>`,
+  });
+  S.push({
+    key: 'fin', emoji: '❤️', final: true,
+    html: `<p class="rc-eyebrow">Merci d’être là</p>
+      ${familyUrl ? `<img class="rc-family" src="${esc(familyUrl)}" alt="Photo de famille du dernier rendez-vous" style="max-width:100%;max-height:42vh;border-radius:16px;object-fit:cover" data-on-error="remove">` : ''}
+      <h2 class="rc-title rc-title-sm">Joyeux anniversaire au gang</h2>
+      <div class="rc-actions">
+        <button class="btn btn-light" type="button" data-act="replay">${ICON.replay} Revoir</button>
+        <a class="btn btn-ghost rc-btn-ghost" href="accueil.html">Retour à l’accueil</a>
+      </div>`,
+  });
+  return S;
+}
+
+/* =========================================================
    Lecteur de story
    ========================================================= */
 /** État du lecteur : diapos, index courant, temps écoulé, pause, appui maintenu, animation en cours et données du récap. */
@@ -543,13 +603,28 @@ async function load() {
   cancelAnimationFrame(P.raf);
   $('#rc-fallback').textContent = 'Chargement du récap…';
   try {
-    const [{ data, error }] = await Promise.all([sb.rpc('hg_year_recap', { p_year: year }), membersP]);
-    if (error) throw error;
-    P.recap = data || {};
-    P.slides = buildSlides(P.recap);
-    document.title = `Récap ${year} · Humane Gang`;
+    if (RETRO) {
+      const { data, error } = await sb.rpc('hg_gang_retro');
+      if (error) throw error;
+      let fam = null;
+      if (data?.photo_famille?.path) { try { fam = await (await import('./photos.js')).signedUrl(data.photo_famille.path); } catch { fam = null; } }
+      P.recap = data || {};
+      P.slides = buildRetroSlides(P.recap, fam);
+      document.title = `Le gang a ${Number(data?.age) || ''} ans · Humane Gang`;
+    } else {
+      const [{ data, error }] = await Promise.all([sb.rpc('hg_year_recap', { p_year: year }), membersP]);
+      if (error) throw error;
+      P.recap = data || {};
+      P.slides = buildSlides(P.recap);
+      document.title = `Récap ${year} · Humane Gang`;
+    }
     $('#rc-fallback').innerHTML = `Le récap ${esc(year)} s'affiche en plein écran. <a href="accueil.html">Retour à l'accueil</a>`;
     renderStage(minYear);
+    if (RETRO) { // rétrospective : pas de choix d'année
+      document.querySelector('.rc-year-pick')?.remove();
+      document.querySelector('.rc-stage')?.setAttribute('aria-label', 'Rétrospective du Humane Gang');
+      $('#rc-fallback').innerHTML = 'La rétrospective s’affiche en plein écran. <a href="accueil.html">Retour à l’accueil</a>';
+    }
     setPaused(false);
     show(0);
     P.last = performance.now();

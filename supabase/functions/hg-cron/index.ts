@@ -19,6 +19,8 @@
 //   4. Rappels d'envoi de cadeau (Secret Santa) : MP au Santa qui n'a pas marqué son envoi, dans les N jours qui
 //      précèdent hg_ss_editions.send_deadline (N = bot.rappels.ss_jours_avant, défaut 3 ; marqué hg_ss_participants.send_reminder_at, une seule fois).
 //      Désactivé si bot.notify.gift === false.
+//   5. Annonces saisonnières (migration 096, ../_shared/saisons-cron.ts) : case du jour du calendrier de l'Avent, bonus
+//      collectif, soirée déballage (tout reçu, rappel 1 h avant, tour de passage si bot.notify.unwrap), anniversaire du gang.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
@@ -35,6 +37,7 @@ import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
+import { seasonAnnouncements } from '../_shared/saisons-cron.ts';
 
 /* ---------- Constantes et clients ---------- */
 
@@ -62,7 +65,7 @@ type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 
 /** Profil lu par la fonction. remind_irl est facultatif (absent pour les rappels de cadeau). */
 type Prof = { id: string; pseudo: string; discord_id: string | null; bot_optin: boolean; remind_irl?: boolean };
 /** Compteurs d'un passage, renvoyés dans la réponse et résumés dans le journal. */
-type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; errors: number };
+type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; season: number; errors: number };
 
 /* ---------- Réservation des envois (idempotence) ---------- */
 
@@ -324,7 +327,7 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
-  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, errors: 0 };
+  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, season: 0, errors: 0 };
   const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   try {
@@ -343,16 +346,21 @@ Deno.serve(async (req) => {
       try { await ssReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels cadeau', e); out.errors++; }
     }
+    // 5. Annonces saisonnières (migration 096) : calendrier de l'Avent, soirée déballage, anniversaire du gang.
+    if (canSend) {
+      try { const r = await seasonAnnouncements(db, bot, SITE); out.season += r.sent; out.errors += r.errors; chanLog.push(...r.log); }
+      catch (e) { console.error('[hg-cron] saisons', e); out.errors++; }
+    }
 
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.errors;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.season + out.errors;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
-        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau`,
+        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.season ? `, ${out.season} annonce(s) de saison` : ''}`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
-        channel: out.starts + out.ends > 0,
+        channel: out.starts + out.ends + out.season > 0,
       }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
