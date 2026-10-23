@@ -12,7 +12,7 @@
 // admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
 // Exporte : mountSouvenirsSection, openSouvenirs, listSouvenirs.
 // =====================================================================
-import { sb, esc } from '../core.js';
+import { sb, esc, hasPerm } from '../core.js';
 import { signedUrls, thumbHtml, openLightbox } from '../photos.js';
 import { createList } from '../admin/ui/list.js';
 import { renderDetailHeader } from '../admin/ui/detail-header.js';
@@ -20,6 +20,7 @@ import { sectionError } from '../admin/common.js';
 import { onTableChange } from '../admin/live.js';
 import { loadPeople, dayLabel } from './helpers.js';
 import { openMomentForm, removeMoment } from './moments.js';
+import { momentCardsMap, openMomentCard } from './moment-card.js';
 import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
 import { createContenusPanel } from './contenus.js';
@@ -32,7 +33,7 @@ const LIMIT = 500; // souvenirs chargés d'un coup ; la liste affiche par lots (
 
 /* État de la section : auteur, annuaire, souvenirs chargés, URL signées, vue, souvenir choisi et zones d'affichage. */
 const S = {
-  me: null, ctx: null, people: new Map(), rows: [], urls: new Map(), error: null, loaded: false, seq: 0,
+  me: null, ctx: null, people: new Map(), rows: [], urls: new Map(), cards: new Map(), error: null, loaded: false, seq: 0,
   view: 'souvenirs', selId: null,
   zones: {}, panels: {}, colEl: null, list: null, headApi: null, detailHead: null, detailBody: null,
 };
@@ -49,9 +50,9 @@ async function reload() {
     ]);
     if (res.error) throw res.error;
     const rows = res.data || [];
-    const urls = await signedUrls(rows.map((m) => m.image_path));
+    const [urls, cards] = await Promise.all([signedUrls(rows.map((m) => m.image_path)), momentCardsMap()]);
     if (my !== S.seq) return; // un rechargement plus récent a remplacé celui-ci
-    Object.assign(S, { people, rows, urls, error: null });
+    Object.assign(S, { people, rows, urls, cards, error: null });
   } catch (e) {
     if (my !== S.seq) return;
     S.error = e;
@@ -73,6 +74,7 @@ function listItems() {
     date: m.happened_on,
     author: authorOf(m.created_by),
     url: m.image_path ? S.urls.get(m.image_path) : null,
+    card: S.cards.has(m.id),
   }));
 }
 
@@ -84,7 +86,7 @@ function rowHtml(it) {
     <div class="sv-li-thumb">${it.url ? thumbHtml(it.url) : '<span class="thumb-missing" aria-hidden="true"></span>'}</div>
     <div class="sv-li-body">
       <div class="sv-li-title">${esc(it.title)}</div>
-      <div class="sv-li-meta">${esc(dayLabel(it.date))} · ${esc(it.author)}</div>
+      <div class="sv-li-meta">${esc(dayLabel(it.date))} · ${esc(it.author)}${it.card ? ' · <span class="sv-incard">En carte</span>' : ''}</div>
     </div>
   </div>`;
 }
@@ -107,11 +109,14 @@ function paintDetail() {
     title: m.title,
     subtitle: `${dayLabel(m.happened_on)} · Raconté par ${authorOf(m.created_by)}`,
     actions: [
+      // Moment → carte (migration 080, C5) : permission « cartes », un moment = une carte.
+      ...(hasPerm('cartes') && !S.cards.has(m.id) ? [{ label: 'Créer une carte', onClick: () => openMomentCard(m, url, () => reload()) }] : []),
       { label: 'Modifier', onClick: () => editMoment(m) },
       { label: 'Supprimer', onClick: () => removeMoment(m, { onDone: afterRemove }) },
     ],
   });
-  S.detailBody.innerHTML = `${url ? `<button type="button" class="sv-d-img" data-sv-zoom aria-label="Voir l'image en grand">${thumbHtml(url, m.title)}</button>` : ''}
+  const kc = S.cards.get(m.id);
+  S.detailBody.innerHTML = `${kc ? `<p class="sv-incard-line"><span class="sv-incard">En carte</span> « ${esc(kc.name)} »${kc.active ? '' : ' (inactive)'}</p>` : ''}${url ? `<button type="button" class="sv-d-img" data-sv-zoom aria-label="Voir l'image en grand">${thumbHtml(url, m.title)}</button>` : ''}
     ${m.body ? `<p class="sv-d-text">${esc(m.body)}</p>` : '<p class="small muted">Pas de texte pour ce souvenir.</p>'}`;
   S.detailBody.querySelector('[data-sv-zoom]')?.addEventListener('click', () => openLightbox([{ url, alt: m.title, caption: m.title }], 0));
 }

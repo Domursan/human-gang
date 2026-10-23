@@ -1,5 +1,5 @@
 // =====================================================================
-// Styles de cartouche des boosters : liste de référence côté front (53 = 9 d'origine + 30 couleurs + 14 thèmes).
+// Styles de cartouche des boosters : liste de référence côté front (56 = 9 d'origine + 30 couleurs + 14 thèmes + 3 styles de saison de la migration 080).
 // Classes CSS : cartes-boosters.css (9 d'origine) et boosters-styles.css (30 couleurs, une famille par teinte ; 14 thèmes cart--theme-<slug>, dont dix à décor dessiné : booster-themes.js).
 // Même liste côté base : hg_booster_styles() (migration 077), qui valide hg_booster_type_save et la contrainte
 // hg_booster_types_style_check. Ajouter un style = une ligne ici + une classe CSS + la liste SQL.
@@ -75,6 +75,9 @@ export const BOOSTER_STYLE_LIST = [
   { cls: 'cart--theme-paques', label: 'Pâques', fam: 'themes', motif: 'œufs peints pastel' },
   { cls: 'cart--theme-saint-nicolas', label: 'Saint-Nicolas', fam: 'themes', motif: 'attributs sous la neige, étoiles, animé' },
   { cls: 'cart--theme-feux-artifice', label: 'Feux d’artifice', fam: 'themes', motif: 'ciel étoilé, bouquets, animation d’ouverture' },
+  { cls: 'cart--esport', label: 'Saison esport', fam: 'themes', motif: 'néon cyan sur nuit bleue (migration 080)' },
+  { cls: 'cart--pate', label: 'Pâté-saucisses (simple)', fam: 'themes', motif: 'cartouche sobre aux couleurs du pâté (migration 080)' },
+  { cls: 'cart--raclette', label: 'Raclette (simple)', fam: 'themes', motif: 'cartouche sobre fromage et patate (migration 080)' },
   { cls: 'cart--theme-gateau-anniversaire', label: 'Gâteau d’anniversaire', fam: 'themes', motif: 'gâteau aux bougies, confettis à l’ouverture' },
 ];
 

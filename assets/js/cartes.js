@@ -20,6 +20,8 @@ import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllow
 import { openProof, proofCss } from './quest-proofs.js';
 import { boosterStyleClass } from './booster-styles.js';
 import { themeDecor, playOpeningFx } from './booster-themes.js';
+import { onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml } from './cartes-saisons.js';
+import { mountProposals } from './cartes-propositions.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -44,7 +46,7 @@ const TAB_ICON = {
   echanges: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
 };
 // Libellés des sources d'une carte (colonne source de hg_card_copies).
-const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange' };
+const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange', sortie: 'J’y étais' };
 // Libellés du journal des Paillettes (hg_wallet_log.reason), affichés dans l'historique.
 const REASON_LABEL = {
   quotidien: 'Passage du jour', booster: 'Boosters achetés', remboursement: 'Remboursement Collectionneur', booster_don: 'Booster offert', recyclage: 'Recyclage', fabrication: 'Fabrication',
@@ -336,7 +338,7 @@ async function refreshData() {
   // Les quatre lectures partent en parallèle ; une erreur sur l'une d'elles fait échouer le tout (voir plus bas).
   const [st, cp, wi, lg, , fv] = await Promise.all([
     sb.rpc('hg_cards_me'),
-    fetchAllRows(() => sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at').order('id'))
+    fetchAllRows(() => sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade,finish').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at').order('id'))
       .then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
     sb.from('hg_card_wishlist').select('card_id').eq('user_id', me.id),
     sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).neq('reason', 'booster_requete').order('created_at', { ascending: false }).limit(30),
@@ -837,12 +839,13 @@ function shopItemHtml(t) {
   return `<article class="card shop-item" ${classic ? 'id="cartes-paid"' : ''} data-type="${esc(t.id)}">
         <div class="fit cart-fit shop-fit" data-w="220" style="--h:290"><div class="fit-in">${t.fallback ? cartridgeHtml() : cartridgeHtml({ type: t })}</div></div>
         <div class="shop-info">
+          ${t.fallback ? '' : saleBadgeHtml(t)}
           <h3 class="cart-h">${esc(t.name)}</h3>
-          <p class="shop-price">${pastilleHtml(price, { size: 'sm' })} <span class="cartes-small">· ${pluralCount(Number(t.size) || 5, 'carte', 'cartes', nf.format)}</span></p>
-          <p class="cartes-small">${esc(t.description || POOL_TEXT[t.pool] || '')}</p>
-          ${limit}
+          <p class="shop-price">${pastilleHtml(price, { size: 'sm' })}${t.fallback ? '' : discountHtml(t, S.types || [])} <span class="cartes-small">· ${pluralCount(Number(t.size) || 5, 'carte', 'cartes', nf.format)}</span></p>
+          <p class="cartes-small">${esc(t.description || (t.only_set_name ? `Série « ${t.only_set_name} » uniquement.` : POOL_TEXT[t.pool]) || '')}</p>
+          ${limit}${t.fallback ? '' : saleLimitHtml(t)}
           <div class="cart-act">
-            ${stockBoxHtml(price, t.id)}
+            ${t.fallback || openNow(t) ? stockBoxHtml(price, t.id) : closedBoxHtml(t)}
             ${bought}
           </div>
           ${oddsHtml(t)}
@@ -858,7 +861,13 @@ function drawBoutique() {
   const el = $('#cartes-p-boutique');
   if (!el) return;
   let items;
-  if (typed()) items = S.types.map(shopItemHtml).join('');
+  // Boosters de saison et du soir (migration 080) : hors fenêtre, absents ; hors plage horaire, une ligne compacte à la fin.
+  if (typed()) {
+    const shelf = S.types.filter(onShelf);
+    items = shelf.filter(openNow).map(shopItemHtml).join('');
+    const closed = shelf.filter((t) => !openNow(t));
+    if (closed.length) items += `<h3 class="shop-later">Le reste de la semaine</h3>${closed.map(closedRowHtml).join('')}`;
+  }
   else if (typesDown()) items = '<p class="muted small shop-soon">La boutique n\'est pas disponible pour le moment. Réessaie dans un instant.</p>';
   else items = shopItemHtml(fallbackType());
   el.innerHTML = `
@@ -907,7 +916,11 @@ function stockBoxHtml(price, typeId = 'classique') {
   const cost = price * qty;
   const god = isGod();
   // Limite de la semaine (mode typé ; le mode sans limite l'ignore) : il ne reste que « left » boosters achetables.
-  const left = !god && t?.weekly_limit != null ? Math.max(0, Number(t.remaining_week) || 0) : null;
+  const leftWeek = !god && t?.weekly_limit != null ? Math.max(0, Number(t.remaining_week) || 0) : null;
+  // Limite par soirée (migration 080, booster du soir) : la plus petite des deux limites compte.
+  const leftWin = !god && t?.per_window_limit != null && t?.remaining_window != null ? Math.max(0, Number(t.remaining_window) || 0) : null;
+  const left = leftWin != null && (leftWeek == null || leftWin < leftWeek) ? leftWin : leftWeek;
+  const winCap = left != null && left === leftWin;
   const capped = left === 0;
   const overLimit = left != null && qty > left;
   const canBuy = (god || bal() >= cost) && !overLimit;
@@ -915,8 +928,8 @@ function stockBoxHtml(price, typeId = 'classique') {
   // Explication du bouton désactivé : écrite sous le bouton, et reliée par aria-describedby.
   const missId = `shop-miss-${id}`;
   let miss = '';
-  if (capped) miss = '<p class="muted small shop-soldout" id="' + missId + '">Limite de la semaine atteinte</p>';
-  else if (overLimit) miss = `<p class="muted small shop-stock-miss" id="${missId}">Il ne te reste que ${pluralCount(left, 'booster', 'boosters', nf.format)} cette semaine</p>`;
+  if (capped) miss = '<p class="muted small shop-soldout" id="' + missId + '">' + (winCap ? 'Limite de la soirée atteinte' : 'Limite de la semaine atteinte') + '</p>';
+  else if (overLimit) miss = `<p class="muted small shop-stock-miss" id="${missId}">Il ne te reste que ${pluralCount(left, 'booster', 'boosters', nf.format)} ${winCap ? 'pour cette soirée' : 'cette semaine'}</p>`;
   else if (!god && bal() < cost) miss = `<p class="muted small shop-stock-miss" id="${missId}">Il te manque ${fmtPaillettes(cost - bal())}</p>`;
   const label = god ? 'Acheter · gratuit (mode sans limite)' : `Acheter · ${pastilleHtml(cost, { size: 'sm' })}`;
   return `<div class="shop-stock">
@@ -1720,10 +1733,12 @@ function openWithPick(typeId, mode, from) {
  * @param {(setId: string) => void} onPick reçoit l'identifiant de la série choisie
  */
 function askSerie(from, onPick) {
-  if (!S.sets.length) { toast('Aucune série n’est ouverte pour le moment.', 'error'); return; }
+  // Les séries réservées (saison, sorties : migration 080) ne se choisissent pas dans le booster « Série ».
+  const sets = S.sets.filter((s) => !s.booster_scope);
+  if (!sets.length) { toast('Aucune série n’est ouverte pour le moment.', 'error'); return; }
   const dlg = $('#cartes-serie-pick');
-  const last = S.sets.length - 1;
-  $('#cartes-serie-list').innerHTML = S.sets.map((s, i) => `<label class="serie-opt">
+  const last = sets.length - 1;
+  $('#cartes-serie-list').innerHTML = sets.map((s, i) => `<label class="serie-opt">
       <input type="radio" name="serie-set" value="${esc(s.id)}"${i === last ? ' checked' : ''}>
       <span><strong>${esc(s.name)}</strong>${s.description ? `<span class="muted small">${esc(s.description)}</span>` : ''}</span>
     </label>`).join('');
@@ -2012,6 +2027,18 @@ async function claimDaily() {
 
 /* ---------- Collection ---------- */
 // Une carte de la collection : la carte (bouton, fiche détail) et, à côté, la loupe qui ouvre la carte agrandie.
+/** Code de la série d'une carte (séries ouvertes ou chargées à part), ou ''. */
+const setCodeOf = (setId) => (S.sets.find((s) => s.id === setId) || S.otherSets.get(setId))?.code || '';
+/**
+ * Apparence liée aux exemplaires (migration 080) : finition « fondue » d'une brillante et tampon « J’y étais » des cartes de sortie.
+ * @param {object} c carte
+ * @param {object[]} cps exemplaires montrés
+ * @returns {{finish: string|null, stamp: boolean}}
+ */
+const lookOf = (c, cps) => ({ finish: cps.find((x) => x.shiny && x.finish)?.finish || null, stamp: cps.length > 0 && setCodeOf(c.set_id) === 'sorties' });
+/** Libellé de la brillance d'un exemplaire dans les lignes de détail. */
+const shinyWord = (cp) => (cp.shiny ? (cp.finish === 'fondue' ? 'brillante fondue' : 'brillante') : '');
+
 /**
  * Une case de la collection : la carte (ouvre la fiche détail) et le bouton loupe.
  * @param {object} c carte (hg_cards)
@@ -2022,7 +2049,7 @@ function cardCell(c) {
   const n = cps.length;
   const shinyCp = cps.find((x) => x.shiny);
   const card = cardHtml(c, {
-    size: 'md', count: n, shiny: !!shinyCp,
+    size: 'md', count: n, shiny: !!shinyCp, ...lookOf(c, cps),
     serial: n === 1 && c.max_copies ? cps[0].serial : null,
     missing: n === 0, button: true,
     attrs: `data-action="open-card" data-card="${esc(c.id)}"`,
@@ -2052,12 +2079,12 @@ function zoomInfo(id) {
     card: k,
     count: cps.length,
     favable: cps.length > 0, favOn: S.favs.has(id),
-    shiny: cps.some((x) => x.shiny),
+    shiny: cps.some((x) => x.shiny), ...lookOf(k, cps),
     serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
     missing: cps.length === 0,
     setName: (S.sets.find((s) => s.id === k.set_id) || S.otherSets.get(k.set_id))?.name || '',
     setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
-    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
+    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', shinyWord(cp), SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
   };
 }
 
@@ -2282,7 +2309,7 @@ function openDetail(cardId) {
  */
 function copyRow(cp, k) {
   const val = recycleValue(cp, k);
-  const parts = [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'Brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean);
+  const parts = [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? (cp.finish === 'fondue' ? 'Brillante fondue' : 'Brillante') : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean);
   let action;
   if (cp.locked_trade) action = '<span class="pill pill-todo">En échange</span>';
   else if (k.rarity === 'identite' || k.rarity === 'unique') action = '<span class="muted small">Ne se recycle pas</span>';
@@ -2310,7 +2337,7 @@ function renderDetail() {
   const short = (cost) => !god && bal() < cost;
 
   $('#cartes-detail-card').innerHTML = cardHtml(k, {
-    size: 'lg', count: n, shiny: !!shinyCp, missing: n === 0,
+    size: 'lg', count: n, shiny: !!shinyCp, missing: n === 0, ...lookOf(k, cps),
     serial: n === 1 && k.max_copies ? cps[0].serial : null,
   });
   $('#cartes-detail-info').innerHTML = `
@@ -2322,6 +2349,7 @@ function renderDetail() {
     </button>
     ${n ? `<button type="button" class="cd-wish cd-fav${S.favs.has(k.id) ? ' is-on' : ''}" data-action="fav" data-card="${esc(k.id)}" aria-pressed="${S.favs.has(k.id) ? 'true' : 'false'}">${ICON_STAR}<span>${S.favs.has(k.id) ? 'Dans mes favoris' : 'Ajouter aux favoris'}</span></button>` : ''}
     ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
+    ${k.moment_id ? `<p><a class="cd-moment" href="historique.html#moment-${esc(k.moment_id)}">Voir le moment dans l’historique</a></p>` : ''}
     <section class="cd-sec">
       <h3 class="cd-h">Mes exemplaires</h3>
       ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : `<p class="cd-empty">${esc(uniqueStateOf(k) || 'Pas encore obtenue.')}</p>`}
@@ -2447,7 +2475,7 @@ const peerCopies = (cardId) => S.peer?.byCard.get(cardId) || [];
 async function loadPeer(id) {
   const [mem, copies] = await Promise.all([
     sb.rpc('hg_members'),
-    fetchAllRows(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade')
+    fetchAllRows(() => sb.from('hg_card_copies').select('id, card_id, owner_id, shiny, serial, source, obtained_at, locked_trade, finish')
       .eq('owner_id', id).is('recycled_at', null).order('obtained_at').order('id')),
   ]);
   if (mem.error) throw mem.error;
@@ -2548,7 +2576,7 @@ function peerCell(c) {
   const on = S.peer.picks.has(c.id);
   const pickable = n > 0;
   const card = cardHtml(c, {
-    size: 'md', count: n, shiny: !!shinyCp,
+    size: 'md', count: n, shiny: !!shinyCp, ...lookOf(c, cps),
     serial: n === 1 && c.max_copies ? cps[0].serial : null,
     missing: n === 0, button: pickable,
     attrs: pickable ? `data-action="peer-pick" data-card="${esc(c.id)}" aria-pressed="${on}"` : '',
@@ -2597,12 +2625,12 @@ function peerZoomInfo(id) {
   return {
     card: k,
     count: cps.length,
-    shiny: cps.some((x) => x.shiny),
+    shiny: cps.some((x) => x.shiny), ...lookOf(k, cps),
     serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
     missing: cps.length === 0,
     setName: (S.sets.find((s) => s.id === k.set_id) || S.otherSets.get(k.set_id))?.name || '',
     setTotal: S.cards.filter((c) => c.set_id === k.set_id).length,
-    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', cp.shiny ? 'brillante' : '', SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
+    lines: cps.map((cp) => [cp.serial ? serialLabel(cp.serial, k.max_copies) : '', shinyWord(cp), SOURCE_LABEL[cp.source] || cp.source, fmtDate(cp.obtained_at)].filter(Boolean).join(' · ')),
     kicker: `Collection de ${P.member?.pseudo || ''}`,
     heading: 'Dans sa collection',
   };
@@ -3059,6 +3087,8 @@ async function boot() {
   // Dons et membres : chargés à part, sans bloquer la page (la section Inventaire les attend)
   loadGifts();
   loadMembers();
+  // Propositions de cartes (migration 080, C6) : encart sous la Collection quand une série en accepte.
+  mountProposals(app, me);
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page
   // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour

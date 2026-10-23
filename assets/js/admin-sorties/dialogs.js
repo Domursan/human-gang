@@ -15,6 +15,7 @@ import { renderDetailHeader } from '../admin/ui/detail-header.js';
 import * as api from './data.js';
 import { RSVP_ORDER, RSVP_LABEL, whenLabel, memberName, statusOf } from './format.js';
 import { bornesSondage } from '../reglages-valeurs-lot3.js';
+import { mountCarte } from './carte.js';
 
 /* Longueurs maximales des champs (les mêmes valeurs sont reprises dans les attributs maxlength). */
 const TITLE_MAX = 120, LOC_MAX = 160, DESC_MAX = 1000;
@@ -367,7 +368,10 @@ function renderDetail() {
     <section class="ass-d-sec" aria-labelledby="ass-d-dates-h">
       <h3 class="ass-h" id="ass-d-dates-h">Dates proposées <span class="muted">· ${dates.length}</span></h3>
       ${dates.length ? `<ol class="ass-dates-list">${dateList}</ol>` : '<p class="small muted">Aucune date proposée. Sans date fixée, la sortie reste à caler.</p>'}
-    </section>`;
+    </section>
+    <section class="ass-d-sec" id="ass-d-carte" aria-labelledby="ass-d-carte-h"></section>`;
+  // Carte « J’y étais » (migration 080, C4) : section autonome, chargée à part.
+  mountCarte(D.body.querySelector('#ass-d-carte'), ev, S, async () => { await CTX.reload(); refreshDetail(); });
 }
 
 // Après une action, on rend le focus au contrôle concerné (il a été remplacé par le redessin).

@@ -289,3 +289,12 @@
 /* ---------- Cartes Champions (admin-cards/champions.js, idée C17) ---------- */
 .champ-adm-body { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
 .champ-adm-body p { margin: 0; flex: 1 1 200px; overflow-wrap: anywhere; }
+
+/* ---------- Propositions de cartes des membres (migration 080, C6) ---------- */
+.acd-props { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+.acd-props h3 { margin: 0; }
+.acd-prop-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.acd-prop { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px; border: 1px solid var(--border); border-radius: 16px; }
+.acd-prop-card { flex: none; }
+.acd-prop-body { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.acd-prop-body p { margin: 0; overflow-wrap: anywhere; }

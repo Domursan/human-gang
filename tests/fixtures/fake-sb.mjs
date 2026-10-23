@@ -538,10 +538,11 @@ function quizRow(q) {
    Modification : { id, …seulement les champs changés }. Réponse : { type, created, free_daily_removed_from }. */
 /** Raretés tirées (les 7 clés des taux, sans « unique »). */
 const BOOSTER_RARITIES = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique', 'identite'];
-/** Styles de cartouche permis : 9 d'origine + 30 couleurs + 14 thèmes (migration 077, hg_booster_styles()). */
+/** Styles de cartouche permis : 9 d'origine + 30 couleurs + 14 thèmes + 3 de saison (migrations 077 et 080, hg_booster_styles()). */
 const BOOSTER_STYLES = ['cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte', 'cart--holo', 'cart--collection', 'cart--identite',
   'cart--rubis', 'cart--paprika', 'cart--braise', 'cart--corail', 'cart--framboise', 'cart--dragee', 'cart--fuchsia', 'cart--mauve', 'cart--lavande', 'cart--prune', 'cart--abricot', 'cart--mandarine', 'cart--miel', 'cart--cuivre', 'cart--cacao', 'cart--citron', 'cart--pistache', 'cart--kiwi', 'cart--olive', 'cart--acide', 'cart--menthe', 'cart--lagon', 'cart--petrole', 'cart--azur', 'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire',
-  'cart--theme-pate', 'cart--theme-saucisse', 'cart--theme-pate-saucisse', 'cart--theme-raclette', 'cart--theme-fondue', 'cart--theme-arene', 'cart--theme-blocs', 'cart--theme-usine', 'cart--theme-noel', 'cart--theme-halloween', 'cart--theme-paques', 'cart--theme-saint-nicolas', 'cart--theme-feux-artifice', 'cart--theme-gateau-anniversaire'];
+  'cart--theme-pate', 'cart--theme-saucisse', 'cart--theme-pate-saucisse', 'cart--theme-raclette', 'cart--theme-fondue', 'cart--theme-arene', 'cart--theme-blocs', 'cart--theme-usine', 'cart--theme-noel', 'cart--theme-halloween', 'cart--theme-paques', 'cart--theme-saint-nicolas', 'cart--theme-feux-artifice', 'cart--theme-gateau-anniversaire',
+  'cart--esport', 'cart--pate', 'cart--raclette'];
 /**
  * Crée ou modifie un type comme hg_booster_type_save(p jsonb) : droits, validations, gratuit du jour unique.
  * L'appel est noté dans le journal : ['booster_type_save', id, p].
@@ -593,6 +594,9 @@ function boosterTypeSave(p) {
   if (row.free_daily) for (const t of DB.hg_booster_types) if (t.id !== row.id && t.free_daily) { t.free_daily = false; removed.push(t.id); }
   return { data: { type: JSON.parse(JSON.stringify(row)), created, free_daily_removed_from: removed }, error: null };
 }
+
+// Idées C1 à C6 (migration 080) : lignes ajoutées par le scénario, table par table (S.c080 = { hg_cards: [...], ... }).
+if (S.c080) for (const [t, rows] of Object.entries(S.c080)) DB[t] = [...(DB[t] || []), ...rows];
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */

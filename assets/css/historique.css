@@ -64,3 +64,9 @@
 .hist-empty p { margin: 0; max-width: 560px; }
 .hist-empty-title { font-size: clamp(26px, 4vw, 38px); line-height: 1.1; }
 @media (max-width: 600px) { .hist-empty { padding: 32px 20px; } }
+
+/* Moment devenu carte (migration 080, C5) */
+.tl-incard { margin-left: auto; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--sage-text, #8FC39F); color: var(--sage-text, #8FC39F);
+  font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; text-decoration: none; min-height: 24px; display: inline-flex; align-items: center; }
+.tl-incard { position: relative; }
+.tl-incard::before { content: ""; position: absolute; inset: -10px -6px; } /* zone de clic de 44 px */

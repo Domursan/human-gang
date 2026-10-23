@@ -80,7 +80,7 @@ function infoHtml(d) {
 
 /**
  * Crée la fenêtre de carte agrandie.
- * @param {{ ids: () => string[], info: (id: string) => ({card, count, shiny, serial, missing, setName, setTotal, lines, kicker?, heading?} | null) }} src
+ * @param {{ ids: () => string[], info: (id: string) => ({card, count, shiny, serial, missing, setName, setTotal, lines, kicker?, heading?, finish?, stamp?} | null) }} src
  *   kicker / heading (facultatifs) : libellés de la fenêtre (par défaut « Collection » et « Dans ta collection »).
  * @param {{ toggle: (id: string) => Promise<void> }} [fav] favoris : bascule l'étoile de la carte affichée (sans fav, pas d'étoile)
  * @returns {{ open: (id: string, opener?: HTMLElement) => void, refresh: () => void }}
@@ -132,7 +132,7 @@ export function createZoom({ ids, info, fav }) {
     cur = id;
     pos = list.indexOf(id);
     hideLens();
-    ui.card.innerHTML = cardHtml(d.card, { size: 'lg', count: d.count, shiny: d.shiny, serial: d.serial, missing: d.missing });
+    ui.card.innerHTML = cardHtml(d.card, { size: 'lg', count: d.count, shiny: d.shiny, serial: d.serial, missing: d.missing, finish: d.finish, stamp: d.stamp });
     ui.eyebrow.textContent = `${d.kicker || 'Collection'} · ${d.setName} · ${pos + 1} / ${list.length}`;
     ui.info.innerHTML = infoHtml(d);
     ui.body.scrollTop = 0; // téléphone : la nouvelle carte s'affiche depuis le haut, pas au niveau de la fiche précédente

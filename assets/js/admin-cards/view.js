@@ -24,6 +24,7 @@ import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
 import { setsListData } from './sets.js';
 import { cardsListData } from './list.js';
 import { mountBoostersTab } from './boosters.js';
+import { mountProposalsAdmin } from './proposals.js';
 
 /* =========================================================
    Rendu et événements
@@ -39,6 +40,7 @@ function render() {
   if (C.tab === 'quetes' && !Q.loaded && !Q.loading && !Q.error) loadQuests(); // en cas d'erreur, « Réessayer » relance
   if (C.tab === 'economie') updateSum();
   if (C.tab === 'boosters') mountBoostersTab($('#acd-boosters', C.panel)); // onglet autonome (boosters.js)
+  if (C.tab === 'series') mountProposalsAdmin($('#acd-props', C.panel)); // propositions des membres (migration 080)
 }
 
 /** Listes à rafraîchir seules pendant une recherche (le champ garde le focus). */

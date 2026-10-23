@@ -35,7 +35,9 @@ async function openSec(p, id) {
   if (!open) await p.click(`#abt-sec-${id} > summary`);
 }
 /** Champs attendus dans chaque charge utile de hg_booster_type_save. */
-const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique', 'pool', 'weekly_limit', 'free_daily', 'style', 'description', 'active', 'sort', 'excluded_rarities', 'excluded_sets'].sort();
+const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique', 'pool', 'weekly_limit', 'free_daily', 'style', 'description', 'active', 'sort', 'excluded_rarities', 'excluded_sets',
+  // Migration 080 : fenêtre de vente, série unique, plage horaire, limite par soirée, style des brillantes.
+  'available_from', 'available_until', 'only_set', 'schedule', 'per_window_limit', 'shiny_style'].sort();
 
 (async () => {
   const browser = await chromium.launch();
@@ -63,8 +65,8 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
   /* ---------- (b) Éditeur : modifier Argenté et enregistrer ---------- */
   await openEdit(p, 'argente');
   await p.screenshot({ path: path.join(SHOTS, 'boosters-editeur-1280.png') });
-  check(await p.locator('.abt-sec').count() === 5, '(b) éditeur : 5 sous-sections repliables (Général, Contenu, Limites, Chances, Simulateur)');
-  check(await p.locator('.abt-style input[name="style"]').count() === 53, '(b) sélecteur de style : 53 cartouches (9 d’origine + 30 couleurs + 14 thèmes)');
+  check(await p.locator('.abt-sec').count() === 6, '(b) éditeur : 6 sous-sections repliables (Général, Contenu, Limites, Saison et horaires, Chances, Simulateur)');
+  check(await p.locator('.abt-style input[name="style"]').count() === 56, '(b) sélecteur de style : 56 cartouches (9 d’origine + 30 couleurs + 14 thèmes + 3 de saison)');
   check(await p.isChecked('.abt-style input[value="cart--argente"]'), '(b) style actuel coché');
   check(await p.getAttribute('#abt-id', 'readonly') !== null, '(b) identifiant non modifiable pour un type existant');
   check((await p.textContent('#abt-total')).includes('100'), '(b) total des taux en direct : 100 %');

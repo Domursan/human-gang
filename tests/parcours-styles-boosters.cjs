@@ -1,5 +1,5 @@
 // Parcours : 30 nouveaux styles de cartouche de booster (migration 077, booster-styles.js, boosters-styles.css).
-// (a) Admin 1280 px : sélecteur de l'éditeur regroupé par famille (8 groupes, 53 styles, nom affiché et motif au survol),
+// (a) Admin 1280 px : sélecteur de l'éditeur regroupé par famille (8 groupes, 56 styles, nom affiché et motif au survol),
 //     les deux feuilles de styles chargées, choix de « Lagon » : aperçu, charge utile de hg_booster_type_save, miniature
 //     de la liste ; style inconnu en base : miniature en Classique.
 // (b) Admin 390 px : éditeur sans défilement horizontal.
@@ -33,7 +33,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   check(await p.locator('link[data-abt-css]').count() === 2, '(a) cartes-boosters.css et boosters-styles.css chargées à la demande');
   await p.click('[data-bt="edit"][data-id="serie"]');
   await p.waitForSelector('dialog.ui-drawer.abt-drawer[open]', { timeout: 5000 });
-  check(await p.locator('.abt-style input[name="style"]').count() === 53, '(a) 53 styles dans le sélecteur');
+  check(await p.locator('.abt-style input[name="style"]').count() === 56, '(a) 56 styles dans le sélecteur');
   const fams = await p.$$eval('.abt-style-fam', (fs) => fs.map((f) => [f.querySelector('.abt-style-fh').firstChild.textContent.trim(), f.querySelectorAll('input[name="style"]').length]));
   check(JSON.stringify(fams) === JSON.stringify(FAMS), `(a) 8 familles dans l'ordre avec leurs effectifs (${fams.map((f) => f.join(' ')).join(', ')})`);
   check(await p.$$eval('.abt-style-fam', (fs) => fs.every((f) => f.getAttribute('role') === 'group' && document.getElementById(f.getAttribute('aria-labelledby')))), '(a) chaque famille est un groupe nommé (role=group, aria-labelledby)');
