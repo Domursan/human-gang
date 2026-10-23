@@ -5,6 +5,7 @@
 //   bot.rappels   { irl_heures: [long, court], ss_jours_avant }
 //   bot.dyn       { delai_retard_heures, top_n }
 //   bot.envoi     { pieces_max, piece_max_mo, destinataires_max, corps_max }
+//   bot.limites   { annonces_par_heure }  (annonces et MP déclenchés par un membre, hg-notify, migration 075)
 //   support       { sujets[], max_par_heure, visiteur_max_par_heure, visiteurs_total_par_heure,
 //                   message_min, message_max, mp_max, delai_reponse_jours }
 //   planning      { anniversaires_heure_locale }
@@ -42,6 +43,8 @@ export type BotRules = {
   irl_long: number; irl_short: number; ss_jours: number;
   dyn_retard_h: number; top_n: number;
   pieces_max: number; piece_max_mo: number; destinataires_max: number; corps_max: number;
+  /** Annonces et MP du bot qu'un membre peut déclencher par heure glissante (hg-notify). */
+  annonces_heure: number;
 };
 
 /**
@@ -52,7 +55,7 @@ export type BotRules = {
  */
 export function botRules(bot: Record<string, unknown> | null | undefined): BotRules {
   const b = obj(bot);
-  const r = obj(b.rappels), d = obj(b.dyn), e = obj(b.envoi);
+  const r = obj(b.rappels), d = obj(b.dyn), e = obj(b.envoi), l = obj(b.limites);
   const heures = Array.isArray(r.irl_heures) ? r.irl_heures : [];
   let irl_long = intOr(heures[0], 24, 1, 168);
   let irl_short = intOr(heures[1], 2, 1, 167);
@@ -66,6 +69,7 @@ export function botRules(bot: Record<string, unknown> | null | undefined): BotRu
     piece_max_mo: intOr(e.piece_max_mo, 10, 1, 25),
     destinataires_max: intOr(e.destinataires_max, 100, 1, 100),
     corps_max: intOr(e.corps_max, 2000, 1, 4000),
+    annonces_heure: intOr(l.annonces_par_heure, 20, 1, 500),
   };
 }
 
