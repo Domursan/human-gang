@@ -29,6 +29,10 @@ exclude:
   - "*.ts"
   - "*.sh"
   - "*.toml"
+  # Outils de développement et affiche « tout dévoilé » (sécurité : ne pas servir, voir docs/PUBLICATION.md)
+  - simulateur.html
+  - assets/js/simulateur.js
+  - affiches/secrets-solutions-a3.html
   # Outillage
   - package.json
   - package-lock.json

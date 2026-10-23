@@ -14,6 +14,12 @@ import { lireQuota, restants, notePhotos } from './eco-quota.js';
 /* ---------- Constantes : carte, cache des lieux, formats de date ---------- */
 /** Adresse des fichiers Leaflet (bibliothèque de carte). Ils ne sont chargés qu'à l'ouverture de la carte. */
 const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
+/** Empreintes d'intégrité (SRI) publiées par Leaflet pour la version 1.9.4 (leafletjs.com/download) :
+ *  un fichier modifié sur le CDN est refusé par le navigateur au lieu d'être exécuté. */
+const LEAFLET_SRI = {
+  css: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
+  js: 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=',
+};
 /** Clé du cache local des positions des lieux (nom du lieu → latitude et longitude). */
 const GEO_KEY = 'hg_geo_v1';
 const GEO_RETRY_MS = 30 * 86400000;   // un lieu introuvable est retenté après 30 jours
@@ -563,10 +569,12 @@ export function mountHistory(ctx) {
     M.loading = new Promise((res, rej) => {
       if (!$('link[data-leaflet]')) {
         const css = document.createElement('link');
-        css.rel = 'stylesheet'; css.href = `${LEAFLET}/leaflet.css`; css.dataset.leaflet = '';
+        css.rel = 'stylesheet'; css.integrity = LEAFLET_SRI.css; css.crossOrigin = 'anonymous';
+        css.href = `${LEAFLET}/leaflet.css`; css.dataset.leaflet = '';
         document.head.append(css);
       }
       const s = document.createElement('script');
+      s.integrity = LEAFLET_SRI.js; s.crossOrigin = 'anonymous';
       s.src = `${LEAFLET}/leaflet.js`; s.async = true;
       s.onload = () => (window.L?.map ? res(window.L) : rej(new Error('bibliothèque de carte indisponible')));
       s.onerror = () => rej(new Error('bibliothèque de carte injoignable'));

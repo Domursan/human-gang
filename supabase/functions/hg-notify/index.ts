@@ -45,6 +45,7 @@
 //                    « t'a offert « carte » (rareté, brillante) ×N », avec l'image de la carte si elle est en https. Un don
 //                    (exemplaire source 'admin' de cette carte pour ce membre) doit avoir été créé il y a moins de 15 min.
 //                    Nom, rareté, brillance et image sont lus en base ; count est borné par les exemplaires trouvés.
+//                    Une seule fois par exemplaire (réservation gift_dm_at, migration 079).
 //                    Désactivable (bot.notify.card_gift_admin, activé par défaut).
 //   card_drop        { drop_id: uuid } admin ou Staff « cartes », juste après hg_drop_create → annonce « carte sauvage » dans le
 //                    salon (carte, rareté, brillance, exemplaires, heure de fin, image si https). Drop créé il y a moins de
@@ -68,7 +69,7 @@
 // hg_bot_quota ; au-delà, 429. Événements comptés : ss_gift_*, irl_new, message_new, card_pull, card_trade, trade_offer,
 // card_wish (une unité par envoi réel, pas par appel ignoré).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
-import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
+import { loadTemplates, renderTemplate, embedFrom, mdSafe, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, mentionMode, mentionWith, MENTION_TYPES, type MentionBot, type MentionType } from '../_shared/mentions.ts';
@@ -217,21 +218,21 @@ const QUOTA_KEEP_MS = 2 * 24 * 60 * 60_000;
 /**
  * Consomme une unité de la limite horaire du membre (hg_bot_quota, migration 075), juste avant un envoi réel.
  * La ligne est insérée puis comptée : même des appels simultanés ne dépassent pas la limite. L'admin n'est pas limité.
- * Si la table manque (migration 075 non appliquée), l'envoi n'est pas bloqué (erreur seulement journalisée).
+ * Échec fermé : si l'insertion ou le comptage échoue, l'envoi est refusé (503), la limite ne pouvant être vérifiée.
  * @param {Profile} me Appelant.
  * @param {Bot} bot Réglages du bot (bot.limites.annonces_par_heure).
  * @param {string} event Événement compté.
  * @returns {Promise<void>}
- * @throws {HttpError} 429 si la limite est dépassée.
+ * @throws {HttpError} 429 si la limite est dépassée, 503 si elle ne peut pas être vérifiée.
  */
 async function takeQuota(me: Profile, bot: Bot, event: string): Promise<void> {
   if (me.is_admin) return;
   const max = botRules(bot as unknown as Record<string, unknown>).annonces_heure;
   const { error: insErr } = await db.from('hg_bot_quota').insert({ user_id: me.id, event });
-  if (insErr) { console.error('[hg-notify] quota (insertion)', insErr); return; }
+  if (insErr) { console.error('[hg-notify] quota (insertion)', insErr); throw new HttpError(503, 'Envoi impossible pour le moment : réessaie plus tard.'); }
   const { count, error } = await db.from('hg_bot_quota').select('id', { count: 'exact', head: true })
     .eq('user_id', me.id).gte('created_at', new Date(Date.now() - QUOTA_WINDOW_MS).toISOString());
-  if (error) { console.error('[hg-notify] quota (comptage)', error); return; }
+  if (error) { console.error('[hg-notify] quota (comptage)', error); throw new HttpError(503, 'Envoi impossible pour le moment : réessaie plus tard.'); }
   // Purge des vieilles lignes du membre (sans attendre ni faire échouer l'envoi).
   db.from('hg_bot_quota').delete().eq('user_id', me.id).lt('created_at', new Date(Date.now() - QUOTA_KEEP_MS).toISOString())
     .then(({ error: e }) => { if (e) console.error('[hg-notify] quota (purge)', e); });
@@ -315,7 +316,7 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   let dms = 0, failed = 0;
   for (const person of people.filter(canDM)) {
     const ok = await trySend(() => sendDM(person.discord_id!, embed({
-      ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: person.pseudo }, tpl)),
+      ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: mdSafe(person.pseudo) }, tpl)),
       url: link('secret-santa.html'), color: COLOR.ss, fields,
     })), `MP tirage ${person.id}`);
     ok ? dms++ : failed++;
@@ -358,10 +359,10 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
 
   // ss_gift_sent part chez la cible : aucune variable ne désigne le Santa. ss_gift_received part chez le Santa : {cible} = me.
-  const base = { pseudo: other.pseudo, annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('secret-santa.html') ?? '' };
+  const base = { pseudo: mdSafe(other.pseudo), annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('secret-santa.html') ?? '' };
   const rendered = kind === 'sent'
     ? renderTemplate('ss_gift_sent', base, tpl)
-    : renderTemplate('ss_gift_received', { ...base, cible: me.pseudo }, tpl);
+    : renderTemplate('ss_gift_received', { ...base, cible: mdSafe(me.pseudo) }, tpl);
   const message = embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss });
   // Un seul MP par participant, édition et sens (I7) : rappeler l'événement ne renvoie rien.
   await takeQuota(me, bot, `ss_gift_${kind}`);
@@ -398,16 +399,18 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
   if (ev.announced_at) return { skipped: 'déjà annoncée' };
 
   const when = fmtDate(ev.starts_at, true) ?? 'Date à choisir (sondage sur le site)';
-  const where = String(ev.location || 'À préciser').slice(0, 200);
+  // Titre, description, lieu et pseudo sont du texte libre de membre : Markdown neutralisé (pas de lien masqué).
+  const where = mdSafe(String(ev.location || 'À préciser').slice(0, 200));
+  const orga = mdSafe(me.pseudo);
   const fields = [
     { name: 'Quand', value: when, inline: true },
     { name: 'Où', value: where, inline: true },
-    { name: 'Proposée par', value: me.pseudo, inline: true },
+    { name: 'Proposée par', value: orga, inline: true },
   ];
   const rendered = renderTemplate('irl_new', {
-    titre: String(ev.title).slice(0, 200),
-    description: ev.description ? String(ev.description).slice(0, 600) : 'Dis si tu viens sur le site.',
-    lieu: where, date: when, organisateur: me.pseudo, lien: link('irl.html') ?? '',
+    titre: mdSafe(String(ev.title).slice(0, 200)),
+    description: ev.description ? mdSafe(String(ev.description).slice(0, 600)) : 'Dis si tu viens sur le site.',
+    lieu: where, date: when, organisateur: orga, lien: link('irl.html') ?? '',
   }, tpl);
   const annonce = {
     ...mentionFor(bot, 'irl'),
@@ -461,7 +464,8 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const anonymous = conv.kind === 'santa' && conv.santa_id === me.id; // ne JAMAIS révéler le Santa
   // Extrait : espaces réduits, 200 caractères au plus.
   const raw = String(latest.body ?? '').replace(/\s+/g, ' ').trim();
-  const excerpt = raw.length > 200 ? `${raw.slice(0, 199)}…` : raw;
+  // Texte libre : Markdown neutralisé après la coupe (pas de lien masqué dans un MP du bot).
+  const excerpt = mdSafe(raw.length > 200 ? `${raw.slice(0, 199)}…` : raw);
   const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
 
   // Réservation (I7) : un seul lot de MP par message ; libérée si aucun MP n'est parti alors qu'il y a eu des échecs.
@@ -473,8 +477,8 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
     if (!canDM(other)) { skipped++; continue; }
     // message_new_santa : l'expéditeur (le Santa) n'est JAMAIS passé dans les variables.
     const rendered = anonymous
-      ? renderTemplate('message_new_santa', { pseudo: other.pseudo, extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
-      : renderTemplate('message_new', { pseudo: other.pseudo, expediteur: me.pseudo, extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl);
+      ? renderTemplate('message_new_santa', { pseudo: mdSafe(other.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
+      : renderTemplate('message_new', { pseudo: mdSafe(other.pseudo), expediteur: mdSafe(me.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl);
     const ok = await trySend(() => sendDM(other.discord_id!, embed({
       ...embedFrom(rendered), url,
       color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
@@ -648,7 +652,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     if (!first) await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
     first = false;
     try {
-      await sendDM(prof.discord_id, build(prof.pseudo), files);
+      await sendDM(prof.discord_id, build(mdSafe(prof.pseudo)), files);
       recipients.push({ user_id: id, pseudo: prof.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
       console.error(`[hg-notify] MP manuel ${id}`, e);
@@ -766,7 +770,7 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
-  const rendered = renderTemplate('card_pull_announce', { pseudo: me.pseudo, carte, rarete, verbe, lien: link('cartes.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_pull_announce', { pseudo: mdSafe(me.pseudo), carte, rarete, verbe, lien: link('cartes.html') ?? '' }, tpl);
   const annonce = {
     ...mentionFor(bot, 'card_pull'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
@@ -801,7 +805,7 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
   if (t.announced_at) return { skipped: 'déjà annoncé' };
   const other = await getProfile(t.from_user);
-  const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_trade_announce', { pseudo: mdSafe(me.pseudo), partenaire: mdSafe(other?.pseudo ?? ''), lien: link('cartes.html') ?? '' }, tpl);
   const annonce = {
     ...mentionFor(bot, 'card_trade'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
@@ -887,7 +891,7 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
     .map((r) => `${r.hg_card_copies?.hg_cards?.name ?? 'Carte'}${r.hg_card_copies?.shiny ? ' (brillante)' : ''}`);
 
   const rendered = renderTemplate('trade_offer_dm', {
-    pseudo: me.pseudo,
+    pseudo: mdSafe(me.pseudo),
     contre: t.parent_id ? ' (contre-proposition)' : '',
     donne: tradeSide(names('from'), t.from_paillettes ?? 0),
     demande: tradeSide(names('to'), t.to_paillettes ?? 0),
@@ -939,19 +943,31 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
   if (bot.notify?.card_gift_admin === false) return { skipped: 'désactivé' };
 
   // Dons récents de cette carte à ce membre (lus en base : le client ne fournit ni la rareté ni la brillance).
-  const { data: gifts, error } = await db.from('hg_card_copies').select('shiny, obtained_at')
+  const { data: gifts, error } = await db.from('hg_card_copies').select('id, shiny, obtained_at, gift_dm_at')
     .eq('card_id', p.card_id).eq('owner_id', p.user_id).eq('source', 'admin').is('recycled_at', null)
     .gte('obtained_at', new Date(Date.now() - FRESH_MS).toISOString())
     .order('obtained_at', { ascending: false });
   if (error) throw new Error(error.message);
   if (!gifts?.length) return { skipped: 'aucun don récent de cette carte' };
-  const count = Math.min(asked, gifts.length);
-  const shiny = !!gifts[0].shiny; // un même don a la même brillance pour tous ses exemplaires
+  // Seuls les exemplaires pas encore annoncés comptent (migration 079 : gift_dm_at).
+  const fresh = gifts.filter((g: { gift_dm_at: string | null }) => !g.gift_dm_at);
+  if (!fresh.length) return { skipped: 'déjà annoncé' };
+  const shiny = !!fresh[0].shiny; // un même don a la même brillance pour tous ses exemplaires
 
   const { data: card } = await db.from('hg_cards').select('name, rarity, image_url').eq('id', p.card_id).maybeSingle();
   if (!card) throw new HttpError(404, 'Carte introuvable');
   const other = await getProfile(p.user_id);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+
+  // Réservation anti-rejeu : les exemplaires annoncés passent gift_dm_at de null à « maintenant » ; seul le premier
+  // appel les obtient. Libérés si le MP ne part pas, pour pouvoir réessayer.
+  const ids = fresh.slice(0, asked).map((g: { id: string }) => g.id);
+  const { data: claimed, error: claimErr } = await db.from('hg_card_copies').update({ gift_dm_at: new Date().toISOString() })
+    .in('id', ids).is('gift_dm_at', null).select('id');
+  if (claimErr) throw new Error(`réservation hg_card_copies.gift_dm_at : ${claimErr.message}`);
+  if (!claimed?.length) return { skipped: 'déjà annoncé' };
+  const claimedIds = claimed.map((c: { id: string }) => c.id);
+  const count = claimedIds.length;
 
   // Détail affiché : rareté, puis « brillante » si besoin.
   const detail = [RARITY_NAME[card.rarity] ?? card.rarity, shiny ? 'brillante' : ''].filter(Boolean).join(', ');
@@ -964,6 +980,10 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
     ...(image ? { image: { url: image } } : {}),
   })), `MP don carte ${other.id}`);
+  if (!ok) {
+    const { error: relErr } = await db.from('hg_card_copies').update({ gift_dm_at: null }).in('id', claimedIds);
+    if (relErr) console.error('[hg-notify] libération hg_card_copies.gift_dm_at', relErr);
+  }
   return { dm: ok, count };
 }
 

@@ -380,7 +380,7 @@ const SUPPORT_GROUPS = {
 const SUPPORT_TXT = {
   max_par_heure: ['Par compte connecté', 'Demandes maximum par heure pour un membre connecté. Défaut : 5.'],
   visiteur_max_par_heure: ['Par visiteur (même contact ou même connexion)', 'Défaut : 5.'],
-  visiteurs_total_par_heure: ['Total des visiteurs', 'Garde-fou global contre une attaque répartie. Défaut : 200.'],
+  visiteurs_total_par_heure: ['Total des visiteurs', 'Garde-fou global contre une attaque répartie : au-delà, les demandes des visiteurs sont enregistrées sans MP à l’admin ; refus seulement au-delà de 5 fois ce nombre. Défaut : 200.'],
   message_min: ['Message : minimum (caractères)', 'Défaut : 10.'],
   message_max: ['Message : maximum (caractères)', 'Défaut : 4000.'],
   mp_max: ['Longueur du message dans le MP à l\'admin', 'Au-delà, le MP est tronqué ; la demande reste complète dans la liste. Défaut : 1500.'],

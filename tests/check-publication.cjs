@@ -84,6 +84,11 @@ for (const f of ['index.html', '404.html', 'sw.js', 'manifest.webmanifest', 'sup
   if (!pub.has(f)) errors.push(`fichier nécessaire non publié : ${f}`);
 }
 
+// Outils de développement et affiche des solutions des secrets : jamais servis (ré-audit F7).
+for (const f of ['simulateur.html', 'assets/js/simulateur.js', 'affiches/secrets-solutions-a3.html']) {
+  if (pub.has(f)) errors.push(`fichier interne publié : ${f}`);
+}
+
 if (errors.length) {
   console.error(`Publication : ${errors.length} problème(s)`);
   for (const e of errors) console.error(`  ✗ ${e}`);

@@ -8,11 +8,15 @@
 // (compte ; visiteur par contact et par client, empreinte HMAC de l'adresse dans hg_support.client_hash ; plafond global),
 // longueurs du message et taille du MP envoyé à l'admin.
 // Protection : un champ « website » caché pour les robots (pot de miel), et les limites ci-dessus contre le spam.
+// Seul un compte qui a un profil (hg_profiles) est traité en membre ; un compte d'authentification sans profil
+// (inscription sans code d'invitation) suit le chemin des visiteurs. Le plafond global des visiteurs ne bloque pas
+// l'assistance : au-delà, les demandes sont enregistrées sans MP à l'admin ; refus seulement au-delà de
+// HARD_CAP_FACTOR fois ce plafond. Le texte libre est mis dans le MP sans Markdown actif (pas de lien masqué).
 // Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/reglages.ts ; tables hg_support,
 //   hg_settings, hg_profiles.
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
-import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
+import { loadTemplates, renderTemplate, embedFrom, mdSafe } from '../_shared/templates.ts';
 import { CORS, jsonResponse, sendDM } from '../_shared/discord.ts';
 import { supportRules } from '../_shared/reglages.ts';
 
@@ -40,15 +44,23 @@ const clean = (v: unknown, max: number) =>
  */
 const truncate = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 
+/** Au-delà de visiteurs_total_par_heure × HARD_CAP_FACTOR demandes de visiteurs dans l'heure, refus (protection du stockage). */
+const HARD_CAP_FACTOR = 5;
+
 /**
- * Adresse du client : dernière adresse ajoutée par le relais (x-forwarded-for), sinon cf-connecting-ip.
- * La dernière entrée est celle que le relais a vue elle-même, les précédentes peuvent être forgées.
+ * Adresse du client. Sur Supabase, la requête passe par Cloudflare puis par la passerelle :
+ * - cf-connecting-ip est posé par Cloudflare (une valeur envoyée par le client est remplacée) : il est préféré ;
+ * - sinon la PREMIÈRE entrée de x-forwarded-for, adresse du client vue par le premier relais (exemple officiel de
+ *   Supabase pour les fonctions edge). Les dernières entrées sont celles de l'infrastructure : avec elles, tous
+ *   les visiteurs auraient la même empreinte.
  * @param {Request} req Requête entrante.
  * @returns {string} Adresse IP, ou '' si introuvable.
  */
 function clientIp(req: Request): string {
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  if (cf) return cf;
   const xff = (req.headers.get('x-forwarded-for') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-  return xff[xff.length - 1] ?? req.headers.get('cf-connecting-ip')?.trim() ?? '';
+  return xff[0] ?? '';
 }
 /**
  * Empreinte HMAC de l'adresse (clé = secret serveur) : l'adresse IP n'est jamais stockée en clair.
@@ -98,9 +110,9 @@ Deno.serve(async (req) => {
   if (token.split('.').length === 3) {
     const { data } = await admin.auth.getUser(token);
     if (data?.user) {
-      userId = data.user.id;
-      const { data: prof } = await admin.from('hg_profiles').select('pseudo').eq('id', userId).maybeSingle();
-      realPseudo = prof?.pseudo ?? null;
+      const { data: prof } = await admin.from('hg_profiles').select('pseudo').eq('id', data.user.id).maybeSingle();
+      // Membre seulement s'il a un profil : un compte sans profil est un visiteur (contact et plafonds des visiteurs).
+      if (prof?.pseudo) { userId = data.user.id; realPseudo = prof.pseudo; }
     }
   }
 
@@ -130,8 +142,10 @@ Deno.serve(async (req) => {
     if (err) throw new Error(err.message);
     return count ?? 0;
   };
-  // Membre connecté : 5 demandes / heure. Visiteur : 5 par contact et 5 par client (et un plafond global large).
+  // Membre connecté : 5 demandes / heure. Visiteur : 5 par contact et 5 par client ; au-delà du plafond global,
+  // enregistrée sans MP (quiet), refus seulement au-delà de HARD_CAP_FACTOR fois ce plafond.
   let hash: string | null = null;
+  let quiet = false;
   try {
     if (userId) {
       if (await countSince((q) => q.eq('user_id', userId)) >= rules.max_par_heure) return json({ error: 'Trop de demandes envoyées. Réessaie dans une heure.' }, 429);
@@ -144,9 +158,11 @@ Deno.serve(async (req) => {
       if (hash && await countSince((q) => q.eq('client_hash', hash!)) >= rules.visiteur_max_par_heure) {
         return json({ error: 'Trop de demandes depuis ta connexion. Réessaie dans une heure.' }, 429);
       }
-      if (await countSince((q) => q.is('user_id', null)) >= rules.visiteurs_total_par_heure) {
+      const visiteurs = await countSince((q) => q.is('user_id', null));
+      if (visiteurs >= rules.visiteurs_total_par_heure * HARD_CAP_FACTOR) {
         return json({ error: 'Trop de demandes en ce moment. Réessaie plus tard.' }, 429);
       }
+      quiet = visiteurs >= rules.visiteurs_total_par_heure;
     }
   } catch (e) {
     console.error('[hg-support] limite', e);
@@ -165,11 +181,14 @@ Deno.serve(async (req) => {
     const { data: s } = await admin.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
     const bot = (s?.value ?? {}) as { admin_discord_id?: string | null; notify?: Record<string, boolean> };
     // Le MP part seulement si l'admin a un ID Discord, si le bot a un jeton et si l'option n'est pas désactivée.
-    if (bot.notify?.support !== false && bot.admin_discord_id && Deno.env.get('DISCORD_BOT_TOKEN')) {
+    // Pas de MP au-delà du plafond global des visiteurs (quiet) : la demande reste visible dans l'admin.
+    if (!quiet && bot.notify?.support !== false && bot.admin_discord_id && Deno.env.get('DISCORD_BOT_TOKEN')) {
       const site = (Deno.env.get('SITE_URL') ?? '').replace(/\/+$/, '');
+      // Texte libre (visiteur anonyme compris) : Markdown neutralisé, pas de lien masqué cliquable.
+      const mdPseudo = mdSafe(truncate(pseudo, 100)), mdContact = mdSafe(truncate(contact || 'non précisé', 100));
       const rendered = renderTemplate('support_new', {
-        sujet: subject, message: truncate(message, rules.mp_max), pseudo: truncate(pseudo, 100),
-        contact: truncate(contact || 'non précisé', 100), compte: userId ? 'Membre connecté' : 'Visiteur',
+        sujet: subject, message: mdSafe(truncate(message, rules.mp_max)), pseudo: mdPseudo,
+        contact: mdContact, compte: userId ? 'Membre connecté' : 'Visiteur',
         lien: site ? `${site}/admin.html#assistance` : '',
       }, await loadTemplates(admin));
       await sendDM(bot.admin_discord_id, {
@@ -179,9 +198,9 @@ Deno.serve(async (req) => {
           color: 0x9e3543,
           url: site ? `${site}/admin.html#assistance` : undefined,
           fields: [
-            { name: 'Pseudo', value: truncate(pseudo, 100), inline: true },
+            { name: 'Pseudo', value: mdPseudo, inline: true },
             { name: 'Compte', value: userId ? 'Membre connecté' : 'Visiteur', inline: true },
-            { name: 'Contact', value: truncate(contact || 'non précisé', 100), inline: true },
+            { name: 'Contact', value: mdContact, inline: true },
             ...(site ? [{ name: 'Traiter', value: `${site}/admin.html#assistance` }] : []),
           ],
           timestamp: new Date().toISOString(),
