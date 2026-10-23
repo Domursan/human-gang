@@ -110,7 +110,7 @@ function buildDialog() {
         <div class="field"><label for="prop-cap">Légende (facultative, ex. « Fief de Terrow »)</label><input id="prop-cap" name="caption" maxlength="80" autocomplete="off"></div>
         <fieldset class="prop-blason">
           <legend>Blason</legend>
-          <label class="check"><input type="checkbox" name="with_blason" checked> Utiliser un blason comme image</label>
+          <label class="check"><input type="checkbox" name="with_blason" checked><span>Utiliser un blason comme image</span></label>
           ${swatches('c0', 'Couleur du champ', DEFAULT_BLASON.colors[0])}
           ${swatches('c2', 'Couleur de la figure', DEFAULT_BLASON.colors[2])}
           ${swatches('c1', 'Couleur de la bordure', DEFAULT_BLASON.colors[1])}
