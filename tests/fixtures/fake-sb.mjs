@@ -76,6 +76,8 @@ const DB = {
   // Assistance en fil (migration 032) : réponses publiques et notes internes. S.replies : données de départ facultatives.
   // Les demandes portent updated_at / taken_by / taken_at / read_at quand le scénario les fournit (absents = demande neuve, non lue).
   hg_support_replies: S.replies || [],
+  // Pièces jointes de l'assistance (migration 078) : S.supportFiles, sinon aucune.
+  hg_support_files: S.supportFiles || [],
   // Journal admin (Pilotage > Journal) : entrées d'exemple ; scénario S.adminLog / S.accessLog pour en fournir d'autres.
   hg_admin_log: S.adminLog || [
     { id: 1, admin_id: ME, action: 'carte_donnee', target_user: U(2), target_ref: 'Série Printemps #12', details: { carte: 'Renard', quantite: 1 }, created_at: iso(-30) },

@@ -14,7 +14,7 @@ import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, mo
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
-import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
+import { createZoom, ICON_ZOOM, ICON_STAR, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllowed, clearOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : collection hors ligne
 import { openProof, proofCss } from './quest-proofs.js';
@@ -118,7 +118,7 @@ function restoreFocus(fallback = null) {
    (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
-  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), log: [],
+  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
   tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all' },
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
@@ -246,7 +246,7 @@ const isBusy = () => S.offline || S.busy || !!(S.reveal && S.reveal.phase === 's
 const seriesName = () => S.sets.find((s) => s.id === S.setId)?.name || S.sets.at(-1)?.name || 'Le Gang · Série 1';
 // Une seule fenêtre de carte agrandie : elle suit la vue affichée (collection ou collection d'un membre).
 // S.zoomIds, si fixé le temps d'un appel à zoom.open, remplace cette liste (cartes d'un booster, voir openBoosterZoom).
-const zoom = createZoom({ ids: () => S.zoomIds || (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)) });
+const zoom = createZoom({ ids: () => S.zoomIds || (S.peer ? S.peer.shownIds : S.shownIds), info: (id) => (S.peer ? peerZoomInfo(id) : zoomInfo(id)), fav: { toggle: (id) => toggleFav(id) } });
 
 /* ---------- Données ---------- */
 /**
@@ -334,13 +334,14 @@ async function loadTypes(retry = true) {
  */
 async function refreshData() {
   // Les quatre lectures partent en parallèle ; une erreur sur l'une d'elles fait échouer le tout (voir plus bas).
-  const [st, cp, wi, lg] = await Promise.all([
+  const [st, cp, wi, lg, , fv] = await Promise.all([
     sb.rpc('hg_cards_me'),
     fetchAllRows(() => sb.from('hg_card_copies').select('id,card_id,owner_id,shiny,serial,source,obtained_at,locked_trade').eq('owner_id', me.id).is('recycled_at', null).order('obtained_at').order('id'))
       .then((data) => ({ data, error: null }), (error) => ({ data: null, error })),
     sb.from('hg_card_wishlist').select('card_id').eq('user_id', me.id),
     sb.from('hg_wallet_log').select('delta,reason,created_at').eq('user_id', me.id).neq('reason', 'booster_requete').order('created_at', { ascending: false }).limit(30),
     loadTypes(), // types de boosters et stocks (ne lève jamais d'erreur : sans elle, la page garde l'ancien mode)
+    sb.from('hg_card_favorites').select('card_id').eq('user_id', me.id), // favoris (migration 078)
   ]);
   for (const r of [st, cp, wi, lg]) if (r.error) throw r.error;
   S.state = st.data;
@@ -349,6 +350,8 @@ async function refreshData() {
   await loadOwnedOutside(S.copies.map((c) => c.card_id));
   S.wish = new Set((wi.data || []).map((w) => w.card_id));
   S.log = lg.data || [];
+  // Favoris : une erreur de lecture les laisse vides plutôt que de bloquer la collection
+  S.favs = new Set(fv?.error ? [] : (fv?.data || []).map((x) => x.card_id));
   saveCollectionOffline(); // Q4 : copie à jour à chaque lecture (sans attendre)
 }
 
@@ -2026,7 +2029,10 @@ function cardCell(c) {
   });
   const what = n ? esc(c.name) : 'la carte';
   const state = uniqueStateOf(c);
-  return `<div class="cz-cell">${card}`
+  // Étoile des favoris : seulement pour une carte possédée (sa propre collection)
+  const on = S.favs.has(c.id);
+  const star = n ? `<button type="button" class="cz-star${on ? ' is-on' : ''}" data-action="fav" data-card="${esc(c.id)}" aria-pressed="${on ? 'true' : 'false'}" aria-label="${on ? 'Retirer' : 'Ajouter'} ${what} ${on ? 'des' : 'aux'} favoris">${ICON_STAR}</button>` : '';
+  return `<div class="cz-cell">${card}${star}`
     + `<button type="button" class="cz-zoom" data-action="zoom-card" data-card="${esc(c.id)}" aria-label="Agrandir ${what}">${ICON_ZOOM}</button>`
     + '<span class="cz-tip" aria-hidden="true">Agrandir</span>'
     + (state ? `<span class="cartes-uniq-state">${esc(state)}</span>` : '') + '</div>';
@@ -2045,6 +2051,7 @@ function zoomInfo(id) {
   return {
     card: k,
     count: cps.length,
+    favable: cps.length > 0, favOn: S.favs.has(id),
     shiny: cps.some((x) => x.shiny),
     serial: cps.length === 1 && k.max_copies ? cps[0].serial : null,
     missing: cps.length === 0,
@@ -2096,8 +2103,10 @@ function drawCollection(focusId) {
     if (f.owned === 'owned' && n === 0) return false;
     if (f.owned === 'missing' && n > 0) return false;
     if (f.owned === 'dupes' && n < 2) return false;
+    if (f.owned === 'fav' && (n === 0 || !S.favs.has(c.id))) return false;
     return true;
   };
+  const favCount = [...S.favs].filter((id) => copiesOf(id).length > 0).length; // favoris encore possédés (libellé du filtre)
   // Une entrée par série affichée : ses compteurs (sans filtre) et ses cartes (filtrées).
   /** Compteurs et cartes affichées d'une série ouverte. */
   const openGroup = (s) => {
@@ -2159,6 +2168,7 @@ function drawCollection(focusId) {
             <option value="owned" ${f.owned === 'owned' ? 'selected' : ''}>Possédées</option>
             <option value="missing" ${f.owned === 'missing' ? 'selected' : ''}>Manquantes</option>
             <option value="dupes" ${f.owned === 'dupes' ? 'selected' : ''}>Doublons</option>
+            <option value="fav" ${f.owned === 'fav' ? 'selected' : ''}>Favoris · ${nf.format(favCount)}</option>
           </select>
         </div>
       </div>
@@ -2310,6 +2320,7 @@ function renderDetail() {
       <svg viewBox="0 0 24 24" width="18" height="18" fill="${wished ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
       <span>${wished ? 'Dans ma liste de souhaits' : 'Ajouter à ma liste de souhaits'}</span>
     </button>
+    ${n ? `<button type="button" class="cd-wish cd-fav${S.favs.has(k.id) ? ' is-on' : ''}" data-action="fav" data-card="${esc(k.id)}" aria-pressed="${S.favs.has(k.id) ? 'true' : 'false'}">${ICON_STAR}<span>${S.favs.has(k.id) ? 'Dans mes favoris' : 'Ajouter aux favoris'}</span></button>` : ''}
     ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
     <section class="cd-sec">
       <h3 class="cd-h">Mes exemplaires</h3>
@@ -2327,6 +2338,40 @@ function renderDetail() {
           ? '<p class="cd-empty">Une carte unique ne se fabrique pas : elle s\'obtient lors d\'un événement ou par un don de l\'admin.</p>'
           : '<p class="cd-empty">Cette carte ne peut pas être fabriquée.</p>'}
     </section>`;
+}
+
+/**
+ * Ajoute ou retire une carte des favoris du membre (RPC hg_card_favorite_set). Aucune récompense.
+ * Redessine la collection, la fiche détail et la fenêtre agrandie ; le focus revient sur l'étoile utilisée.
+ * @param {string} cardId identifiant de la carte
+ * @param {HTMLElement} [el] bouton cliqué (sert au focus si la fenêtre agrandie n'est pas ouverte)
+ * @returns {Promise<void>}
+ */
+async function toggleFav(cardId, el) {
+  if (!cardId || S.favBusy) return;
+  const on = !S.favs.has(cardId);
+  S.favBusy = true;
+  try {
+    const { error } = await sb.rpc('hg_card_favorite_set', { p_card: cardId, p_on: on });
+    if (error) throw error;
+    if (on) S.favs.add(cardId); else S.favs.delete(cardId);
+    toast(on ? 'Ajoutée à tes favoris' : 'Retirée de tes favoris', 'ok');
+  } catch (e) {
+    toast(errMsg(e), 'error');
+  } finally {
+    S.favBusy = false;
+  }
+  if (S.tab === 'collection' && !S.peer) renderTab();
+  if (S.detailId) renderDetail();
+  zoom.refresh();
+  // Focus : après le redessin, le bouton reprend le focus (fiche détaillée, sinon étoile de la grille), sauf si la fenêtre agrandie est ouverte
+  if ($('#cz-dialog')?.open) return;
+  if (S.detailId && $('#cartes-detail')?.open) {
+    $('#cartes-detail [data-action="fav"]')?.focus?.({ preventScroll: true });
+    return;
+  }
+  const again = document.querySelector(`[data-action="fav"][data-card="${CSS.escape(cardId)}"]`);
+  (again || el)?.focus?.({ preventScroll: true });
 }
 
 /**
@@ -2895,6 +2940,7 @@ function onClick(e) {
     case 'wish':
     case 'craft':
     case 'recycle': return detailAction(t.dataset.action, t);
+    case 'fav': return toggleFav(t.dataset.card, t);
     case 'close-dialog': return t.closest('dialog')?.close();
   }
 }

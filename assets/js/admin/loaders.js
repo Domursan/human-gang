@@ -53,13 +53,16 @@ export async function loadBadges() {
 export async function loadIdeas() { S.ideas = check(await sb.from('hg_ideas').select('*').order('created_at', { ascending: false })) ?? []; }
 /** Demandes (tri par activité), leurs réponses (notes internes comprises) et l'identifiant de l'admin connecté. */
 export async function loadSupport() {
-  const [s, r, u] = await Promise.all([
+  const [s, r, u, f] = await Promise.all([
     sb.from('hg_support').select('*').order('updated_at', { ascending: false }),
     sb.from('hg_support_replies').select('*').order('created_at'),
     getUser(),
+    sb.from('hg_support_files').select('id, support_id, path, name, mime, size').order('created_at'),
   ]);
   S.support = check(s) ?? [];
   S.supportReplies = check(r) ?? [];
+  // Pièces jointes (migration 078) : lecture facultative, une erreur ne bloque pas le panel.
+  S.supportFiles = f?.error ? [] : (f?.data ?? []);
   S.meId = u?.id ?? null;
 }
 

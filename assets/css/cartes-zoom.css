@@ -107,3 +107,23 @@
   .cz-zoom, .cz-tip { transition: none !important; }
   .cz-clone { will-change: auto; }
 }
+
+/* ---------- Favoris : étoile sur la carte (grille), dans la fenêtre agrandie ---------- */
+/* Zone tactile de 44 px ; le disque visible est dessiné par ::before. Visible au survol, au focus, et toujours sur un favori. */
+.cz-star { position: absolute; top: 0; left: 0; z-index: 4; width: 44px; height: 44px; padding: 0; display: grid; place-items: center;
+  background: transparent; border: 0; color: var(--sand); cursor: pointer; opacity: 0; }
+.cz-star::before { content: ""; position: absolute; top: 6px; left: 6px; width: 32px; height: 32px; border-radius: 999px; z-index: -1;
+  background: rgba(14, 14, 16, .88); border: 1px solid var(--border-strong); box-shadow: 0 2px 8px rgba(0, 0, 0, .45); }
+.cz-star svg { position: relative; }
+.cz-star.is-on, .cz-star:focus-visible { opacity: 1; }
+.cz-star:focus-visible { outline: none; }
+.cz-star:focus-visible::before { outline: 2px solid var(--sand); outline-offset: 2px; }
+.cz-star.is-on svg { fill: currentColor; }
+@media (hover: hover) and (pointer: fine) { .cz-cell:hover .cz-star { opacity: 1; } }
+@media (hover: none) { .cz-star { opacity: 1; } }
+.cz-fav { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; margin: 0 0 14px; border-radius: 999px;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--text); background: transparent; border: 1px solid var(--border-strong); cursor: pointer; }
+.cz-fav svg { flex: none; color: var(--sand); }
+.cz-fav.is-on { background: var(--surface-2); border-color: var(--sand); }
+.cz-fav.is-on svg { fill: currentColor; }
+.cz-fav:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }

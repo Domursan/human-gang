@@ -120,6 +120,8 @@ window.__DB = DB; window.__LOG = [];
   DB.hg_card_copies = [cp(1,'C1'), cp(2,'C1',{shiny:true}), cp(3,'C1'), cp(4,'C2'), cp(5,'C3'), cp(6,'C3',{source:'fabrication'}), cp(7,'C7',{shiny:true}), cp(8,'C11',{serial:1, max_copies:3}), cp(9,'C9',{locked_trade:'T1'}), cp(10,'C5'), cp(11, 'C5', {shiny: true})];
   // Liste de souhaits du membre connecté : la carte C4.
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
+  // Favoris du membre connecté (migration 078) : C1 et C3 (possédées). S.favorites remplace la liste de départ.
+  DB.hg_card_favorites = (S.favorites || [{ card_id: 'C1' }, { card_id: 'C3' }]).map((f) => ({ user_id: ME, card_id: f.card_id, created_at: iso(-1) }));
   // Carte unique : un seul exemplaire existe, à Alice (S.uniqueTaken) ou à moi (S.uniqueOwned).
   if (S.uniqueTaken) DB.hg_card_copies.push({ id: 501, card_id: 'C14', owner_id: U(2), shiny: false, serial: 1, source: 'admin', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
   if (S.closedDrop) DB.hg_card_copies.push({ id: 601, card_id: 'CX1', owner_id: ME, shiny: false, serial: null, source: 'drop', obtained_at: iso(0), locked_trade: null, recycled_at: null });
@@ -769,6 +771,17 @@ export function createClient() {
         return { data: suggestionsFromDb(), error: null };
       }
       // Recyclage : ajoute 5 Paillettes par carte et retire les exemplaires ; échec si le scénario recycleFail est fourni.
+      // Favoris (migration 078) : seulement une carte possédée, plafond de 200, retrait sans erreur (miroir de la RPC)
+      if (fn === 'hg_card_favorite_set') {
+        const own = DB.hg_card_copies.some((c) => c.card_id === args.p_card && c.owner_id === ME && !c.recycled_at);
+        if (args.p_on) {
+          if (!own) return { data: null, error: { message: 'Seules les cartes de ta collection peuvent être mises en favori' } };
+          const has = DB.hg_card_favorites.some((f) => f.card_id === args.p_card);
+          if (!has && DB.hg_card_favorites.length >= 200) return { data: null, error: { message: 'Tu as atteint la limite de 200 favoris' } };
+          if (!has) DB.hg_card_favorites.push({ user_id: ME, card_id: args.p_card, created_at: iso(0) });
+        } else DB.hg_card_favorites = DB.hg_card_favorites.filter((f) => f.card_id !== args.p_card);
+        return { data: { on: !!args.p_on, count: DB.hg_card_favorites.length }, error: null };
+      }
       if (fn === 'hg_card_recycle') { if (S.recycleFail) return { data: null, error: { message: 'Certaines cartes ne peuvent pas être recyclées (échange en cours ?)' } };
         const ids = args.p_copies; const total = ids.length * 5; DB.hg_wallets[0].paillettes += total; DB.hg_card_copies = DB.hg_card_copies.filter((c) => !ids.includes(c.id)); return { data: total, error: null }; }
       // Fabrication : 40 Paillettes, 160 pour une version brillante ; le scénario god ignore le solde.

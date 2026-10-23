@@ -12,6 +12,10 @@
 // (inscription sans code d'invitation) suit le chemin des visiteurs. Le plafond global des visiteurs ne bloque pas
 // l'assistance : au-delà, les demandes sont enregistrées sans MP à l'admin ; refus seulement au-delà de
 // HARD_CAP_FACTOR fois ce plafond. Le texte libre est mis dans le MP sans Markdown actif (pas de lien masqué).
+// Pièces jointes (membres connectés seulement) : le client dépose ses fichiers dans son dossier du bucket privé
+// « hg-support-files » puis envoie leurs chemins (files: [{path, name}], 3 au plus). La RPC hg_support_add (migration 078)
+// crée la demande et ses pièces jointes dans une seule transaction, et vérifie chaque fichier (dossier, type, taille).
+// Le MP Discord n'envoie jamais le fichier : il indique seulement le nombre de pièces jointes.
 // Dépendances : ../_shared/templates.ts, ../_shared/discord.ts, ../_shared/reglages.ts ; tables hg_support,
 //   hg_settings, hg_profiles.
 // Exporte : rien (point d'entrée Deno.serve).
@@ -122,6 +126,15 @@ Deno.serve(async (req) => {
   const subject = clean(body.subject, 80);
   const message = clean(body.message, rules.message_max);
   const contact = clean(body.contact, 100);
+  // Pièces jointes : tableau de { path, name } (3 au plus). Le contrôle fin (dossier, type, taille) est fait en base.
+  const rawFiles = Array.isArray(body.files) ? body.files.slice(0, 4) : [];
+  const files = rawFiles.filter((f) => f && typeof f === 'object').map((f) => ({
+    path: clean((f as Record<string, unknown>).path, 300),
+    name: clean((f as Record<string, unknown>).name, 120),
+  }));
+  if (Array.isArray(body.files) && body.files.length > 3) return json({ error: 'Trois pièces jointes au maximum.' }, 400);
+  if (files.length && !userId) return json({ error: 'Les pièces jointes sont réservées aux membres connectés.' }, 400);
+  if (files.some((f) => !f.path)) return json({ error: 'Pièce jointe invalide.' }, 400);
   if (pseudo.length < 2) return json({ error: 'Pseudo manquant (2 caractères minimum).' }, 400);
   if (!rules.sujets.includes(subject)) return json({ error: 'Sujet invalide.' }, 400);
   if (message.length < rules.message_min) return json({ error: `Message trop court (${rules.message_min} caractères minimum).` }, 400);
@@ -169,11 +182,18 @@ Deno.serve(async (req) => {
     return json({ error: 'Erreur serveur, réessaie plus tard.' }, 500);
   }
 
-  // Enregistrement. Visiteur : client_hash (empreinte) ; membre connecté : pas d'empreinte, user_id suffit.
-  const { data: row, error } = await admin.from('hg_support')
-    .insert({ user_id: userId, pseudo, subject, message, contact: contact || null, client_hash: userId ? null : hash })
-    .select('id').single();
-  if (error) { console.error(error); return json({ error: 'Impossible d\'enregistrer la demande.' }, 500); }
+  // Enregistrement (demande et pièces jointes, une seule transaction). Visiteur : client_hash (empreinte) ;
+  // membre connecté : pas d'empreinte, user_id suffit. Une erreur de la RPC est un refus (message en français).
+  const { data: rowId, error } = await admin.rpc('hg_support_add', {
+    p_user: userId, p_pseudo: pseudo, p_subject: subject, p_message: message,
+    p_contact: contact || null, p_client_hash: userId ? null : hash, p_files: files,
+  });
+  if (error) {
+    console.error('[hg-support] enregistrement', error);
+    const refus = /pièce|Pièce|membres connectés|Trois/.test(error.message ?? '');
+    return refus ? json({ error: error.message }, 400) : json({ error: 'Impossible d\'enregistrer la demande.' }, 500);
+  }
+  const requestId = rowId as string;
 
   // MP Discord à l'admin (ne fait jamais échouer la demande)
   let discordSent = false;
@@ -201,6 +221,7 @@ Deno.serve(async (req) => {
             { name: 'Pseudo', value: mdPseudo, inline: true },
             { name: 'Compte', value: userId ? 'Membre connecté' : 'Visiteur', inline: true },
             { name: 'Contact', value: mdContact, inline: true },
+            ...(files.length ? [{ name: 'Pièces jointes', value: files.length === 1 ? '1 pièce jointe' : `${files.length} pièces jointes`, inline: true }] : []),
             ...(site ? [{ name: 'Traiter', value: `${site}/admin.html#assistance` }] : []),
           ],
           timestamp: new Date().toISOString(),
@@ -209,11 +230,11 @@ Deno.serve(async (req) => {
       });
       discordSent = true;
       // Marque la demande comme signalée à l'admin (affichage dans l'espace admin).
-      await admin.from('hg_support').update({ discord_sent: true }).eq('id', row.id);
+      await admin.from('hg_support').update({ discord_sent: true }).eq('id', requestId);
     }
   } catch (e) {
     console.error('[hg-support] Discord', e);
   }
 
-  return json({ ok: true, id: row.id, discord_sent: discordSent });
+  return json({ ok: true, id: requestId, discord_sent: discordSent });
 });

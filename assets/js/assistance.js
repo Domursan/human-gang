@@ -1,9 +1,11 @@
 // ===== Humane Gang — assistance (assistance.html, accessible sans compte) =====
 // Formulaire de demande d'aide (envoyé par la fonction edge hg-support), suivi des demandes du membre connecté
 // (« Mes demandes », avec les réponses publiques), et préremplissage du sujet depuis l'adresse (?sujet=…).
-// Dépendances : core.js (initPage, callFn, sb = Supabase), tables hg_settings, hg_support, hg_support_replies, RPC hg_members.
+// Pièces jointes (membres connectés) : support-files.js ; fichiers déposés dans le bucket privé, puis chemins envoyés à hg-support.
+// Dépendances : core.js (initPage, callFn, sb = Supabase), tables hg_settings, hg_support, hg_support_replies, hg_support_files, RPC hg_members.
 // N'exporte rien.
 import { initPage, callFn, $, errMsg, sb, esc, fmtDateTime } from './core.js';
+import { SUPPORT_MAX_FILES, prepareSupportFile, uploadSupportFile, removeSupportFiles, fileSize, attachmentsHtml, hydrateAttachments } from './support-files.js';
 
 /* ---------- Initialisation : session facultative (un visiteur peut écrire sans compte) ---------- */
 // me = personne connectée, ou null pour un visiteur.
@@ -68,6 +70,71 @@ if (me) {
 const wanted = new URLSearchParams(location.search).get('sujet');
 if (wanted && SUBJECTS.includes(wanted)) form.subject.value = wanted;
 
+/* ---------- Pièces jointes à envoyer (membre connecté seulement) ---------- */
+// pending : fichiers choisis, compressés, pas encore envoyés. { prepared, url } ; url = aperçu d'une image (à libérer).
+const pending = [];
+const filesField = $('#sp-files-field');
+const filesList = $('#sp-files-list');
+const filesErr = $('#sp-files-error');
+const filesInput = $('#sp-files-input');
+if (me) filesField.hidden = false;
+
+/** Affiche une erreur liée aux pièces jointes (vide pour l'effacer). */
+function showFilesError(msg) {
+  filesErr.textContent = msg || '';
+  filesErr.hidden = !msg;
+}
+/** Dessine la liste des pièces jointes à envoyer : vignette, nom, poids (avant et après compression), retrait. */
+function renderPending() {
+  filesList.innerHTML = pending.map((it, i) => {
+    const p = it.prepared;
+    const meta = p.isImage
+      ? `Image · ${fileSize(p.original)}${p.size < p.original ? ` → ${fileSize(p.size)} après compression` : ''}`
+      : `PDF · ${fileSize(p.size)}`;
+    const thumb = p.isImage
+      ? `<span class="sf-thumb"><img alt="" src="${esc(it.url)}"></span>`
+      : `<span class="sf-thumb sf-pdf" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg><span>PDF</span></span>`;
+    return `<li>${thumb}<span class="sf-meta"><strong class="sf-nm">${esc(p.name)}</strong><span>${esc(meta)}</span></span>`
+      + `<button class="sf-rm" type="button" data-rm="${i}" aria-label="Retirer ${esc(p.name)}">`
+      + `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></li>`;
+  }).join('');
+  $('#sp-files-add').disabled = pending.length >= SUPPORT_MAX_FILES;
+}
+/** Libère les aperçus et vide la liste (après envoi, ou « Nouvelle demande »). */
+function clearPending() {
+  for (const it of pending) if (it.url) URL.revokeObjectURL(it.url);
+  pending.length = 0;
+  renderPending();
+  showFilesError('');
+}
+// Ajout : chaque fichier est contrôlé et compressé ; les refus sont listés sans bloquer les autres.
+filesInput.addEventListener('change', async () => {
+  const chosen = [...filesInput.files];
+  filesInput.value = '';
+  const errors = [];
+  for (const file of chosen) {
+    if (pending.length >= SUPPORT_MAX_FILES) { errors.push(`Trois fichiers au maximum (« ${file.name} » n'a pas été ajouté).`); break; }
+    try {
+      const prepared = await prepareSupportFile(file);
+      pending.push({ prepared, url: prepared.isImage ? URL.createObjectURL(prepared.blob) : null });
+    } catch (e) { errors.push(errMsg(e)); }
+  }
+  renderPending();
+  showFilesError(errors.join(' '));
+  $('#sp-files-add').focus();
+});
+$('#sp-files-add').addEventListener('click', () => filesInput.click());
+// Retrait avant envoi : la liste se redessine, le focus reste dans la zone.
+filesList.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-rm]');
+  if (!b) return;
+  const [it] = pending.splice(Number(b.dataset.rm), 1);
+  if (it?.url) URL.revokeObjectURL(it.url);
+  renderPending();
+  showFilesError('');
+  $('#sp-files-add').focus();
+});
+
 const counter = $('#sp-counter');
 /** Texte du compteur de caractères, par exemple « 12 / 4000 ». */
 const counterText = (n) => `${n} / ${RULES.message_max}`;
@@ -116,14 +183,22 @@ form.addEventListener('submit', async (ev) => {
   if (!validate()) return;
   const btn = ev.submitter || form.querySelector('[type="submit"]');
   btn.disabled = true; btn.textContent = 'Envoi…';
+  // Pièces jointes : déposées d'abord dans le dossier du membre, puis leurs chemins partent avec la demande.
+  const uploaded = [];
+  let stage = 'upload'; // upload, puis envoi, puis fin : ce qui a échoué dicte le message
   try {
+    for (const it of pending) uploaded.push({ path: await uploadSupportFile(me.id, it.prepared), name: it.prepared.name });
+    stage = 'envoi';
     await callFn('hg-support', {
       pseudo: form.pseudo.value.trim(),
       subject: form.subject.value,
       message: form.message.value.trim(),
       contact: form.contact.value.trim(),
       website: form.website.value, // pot de miel : doit rester vide
+      files: uploaded,
     });
+    stage = 'fin';
+    clearPending();
     const contact = form.contact.value.trim();
     $('#done-contact').textContent = `${contact
       ? `La réponse arrivera sur Discord (${contact}).`
@@ -134,7 +209,9 @@ form.addEventListener('submit', async (ev) => {
     window.scrollTo({ top: 0 });
     if (me) loadMine();
   } catch (e) {
-    showError(`Envoi impossible : ${await fnError(e)}`);
+    // Échec avant la fin : les fichiers déposés mais non rattachés à une demande sont retirés du bucket.
+    if (stage !== 'fin') await removeSupportFiles(uploaded.map((u) => u.path));
+    showError(`Envoi impossible : ${stage === 'upload' ? errMsg(e) : await fnError(e)}`);
   } finally {
     btn.disabled = false; btn.textContent = 'Envoyer la demande';
   }
@@ -143,6 +220,7 @@ form.addEventListener('submit', async (ev) => {
 // « Nouvelle demande » : vide le formulaire et revient à l'écran de saisie.
 $('#support-again').addEventListener('click', () => {
   form.subject.value = ''; form.message.value = ''; counter.textContent = counterText(0);
+  clearPending();
   if (!me) form.contact.value = '';
   $('#support-done').hidden = true;
   $('.support-layout').hidden = false;
@@ -157,6 +235,7 @@ const mineView = $('#my-support-list-view');
 const mineDetail = $('#my-support-detail');
 let mineItems = [];
 let minePseudos = new Map();
+let mineFiles = [];
 
 // Statut affiché : « Traitée », « En cours » (quelqu'un l'a prise), ou « Ouverte ».
 /** Libellé du statut d'une demande. */
@@ -185,12 +264,15 @@ async function loadMine() {
   if (!me) return;
   $('#my-support-error').hidden = true;
   try {
-    const [req, names] = await Promise.all([
+    const [req, names, files] = await Promise.all([
       sb.from('hg_support').select('id, subject, message, status, taken_by, created_at, updated_at, conversation_id').eq('user_id', me.id),
       sb.rpc('hg_members'),
+      sb.from('hg_support_files').select('id, support_id, path, name, mime, size').order('created_at'),
     ]);
     if (req.error) throw req.error;
     mineItems = (req.data || []).sort(byActivity);
+    // Pièces jointes : la base ne renvoie que les miennes (RLS) ; une erreur ne bloque pas la liste.
+    mineFiles = files?.error ? [] : (files?.data || []);
     // Pseudos des répondants (annuaire des membres) ; sans annuaire, les réponses sont signées « L’équipe »
     minePseudos = new Map((names?.error ? [] : names?.data || []).map((m) => [m.id, m.pseudo]));
   } catch (e) {
@@ -221,7 +303,9 @@ async function openMine(id) {
   $('#my-support-subject').textContent = d.subject;
   $('#my-support-meta').innerHTML = `${esc(fmtDateTime(d.created_at))} · ${pill(d)}`;
   const thread = $('#my-support-thread');
-  thread.innerHTML = `<div class="my-msg is-me"><div class="my-meta">Toi · ${esc(fmtDateTime(d.created_at))}</div><div class="my-bubble">${esc(d.message ?? '')}</div></div>`;
+  const own = mineFiles.filter((f) => f.support_id === d.id);
+  thread.innerHTML = `<div class="my-msg is-me"><div class="my-meta">Toi · ${esc(fmtDateTime(d.created_at))}</div><div class="my-bubble">${esc(d.message ?? '')}</div>${attachmentsHtml(own)}</div>`;
+  if (own.length) hydrateAttachments(thread);
   // Prise en charge : la discussion avec le Staff continue dans une conversation privée (page Messages).
   if (d.conversation_id) {
     thread.insertAdjacentHTML('afterbegin', `<div class="my-support-convbox"><p>Ta demande a été prise en charge : la discussion se passe dans une conversation privée avec le Staff.</p>

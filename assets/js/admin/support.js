@@ -58,6 +58,8 @@ const openCount = () => S.support.filter((s) => s.status === 'ouverte').length;
 const byActivity = () => [...S.support].sort((a, b) => activity(b) - activity(a));
 /** Réponses et notes d'une demande, dans l'ordre enregistré. */
 const repliesOf = (id) => S.supportReplies.filter((r) => r.support_id === id);
+/** Pièces jointes d'une demande (migration 078), dans l'ordre d'envoi. */
+const filesOf = (id) => (S.supportFiles || []).filter((f) => f.support_id === id);
 /** Demande par identifiant, ou undefined. */
 const find = (id) => S.support.find((x) => x.id === id);
 
@@ -86,7 +88,7 @@ async function run(fn) {
 function threadMessages(s, m) {
   const items = [
     { at: s.created_at, rank: 0, msg: { type: 'event', text: `Demande ouverte par ${m.pseudo}`, at: s.created_at } },
-    { at: s.created_at, rank: 1, msg: { id: s.id, type: 'message', author: m, body: s.message, at: s.created_at, mine: false } },
+    { at: s.created_at, rank: 1, msg: { id: s.id, type: 'message', author: m, body: s.message, at: s.created_at, mine: false, files: filesOf(s.id) } },
   ];
   if (s.taken_by && s.taken_at) {
     items.push({ at: s.taken_at, rank: 2, msg: { type: 'event', text: `${pseudoOf(s.taken_by)} a pris en charge`, at: s.taken_at } });

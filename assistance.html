@@ -69,6 +69,17 @@
           <textarea id="sp-message" name="message" rows="6" minlength="10" maxlength="4000" required placeholder="Explique ce qui se passe, ce que tu as essayé, sur quelle page…"></textarea>
           <p class="small muted counter" id="sp-counter" aria-live="polite">0 / 4000</p>
         </div>
+        <fieldset class="field sf-field" id="sp-files-field" hidden>
+          <legend class="sf-legend">Pièces jointes <span class="small muted">(facultatif)</span></legend>
+          <ul class="sf-prep" id="sp-files-list" aria-label="Pièces jointes à envoyer"></ul>
+          <div class="sf-add-row">
+            <button class="btn btn-ghost" type="button" id="sp-files-add" aria-describedby="sp-files-hint">Ajouter une image ou un PDF</button>
+          </div>
+          <input type="file" id="sp-files-input" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple hidden>
+          <p class="small muted" id="sp-files-hint">JPG, PNG, WebP, GIF ou PDF · 5 Mo maximum par fichier · 3 fichiers au plus. Les images sont compressées avant l’envoi.</p>
+          <p class="small muted">Les pièces jointes ne sont visibles que par toi et le Staff.</p>
+          <p class="form-error" id="sp-files-error" role="alert" hidden></p>
+        </fieldset>
         <div class="field">
           <label for="sp-contact" id="sp-contact-label">Ton pseudo Discord pour la réponse</label>
           <input id="sp-contact" name="contact" maxlength="100" autocomplete="off" placeholder="ex. pseudo_discord">

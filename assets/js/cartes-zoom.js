@@ -15,6 +15,8 @@ const PRESS_MS = 450; // durée de l'appui long tactile
 const MOVE_TOL = 10; // déplacement toléré pendant l'appui long (px)
 // Couleur d'accent de chaque rareté (utilisée pour le libellé de rareté dans la fiche ; exportée pour la console de cartes.js).
 export const TINT ={ commune: '#c4c9d6', peu_commune: '#2fd17a', rare: '#4f80ff', epique: '#a674f5', legendaire: '#FCA301', mythique: '#FE3104', identite: '#FBD32D', unique: '#F0CD6A' };
+// Étoile des favoris (contour ; pleine quand la carte est en favori, voir .is-on dans cartes-zoom.css).
+export const ICON_STAR = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.8l2.5 5.1 5.6.8-4.05 3.95.96 5.57L12 16.5l-5.01 2.72.96-5.57L3.9 9.7l5.6-.8z"/></svg>';
 const X_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 const CHEV_L = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
 const CHEV_R = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
@@ -60,13 +62,17 @@ function infoHtml(d) {
   const meta = [familyLabel(k.family), d.setName, num ? `N° ${num}` : ''].filter(Boolean).join(' · ');
   const flavor = d.missing ? '' : k.flavor ? `<p class="cz-flavor"><em>« ${esc(k.flavor)} »</em></p>` : '';
   const caption = d.missing || !k.caption ? '' : `<p class="cz-cap">${esc(k.caption)}</p>`;
+  // Favoris : seulement pour sa propre collection (d.favable), étoile avec son état (d.favOn)
+  const fav = d.favable
+    ? `<button type="button" class="cz-fav${d.favOn ? ' is-on' : ''}" data-cz="fav" aria-pressed="${d.favOn ? 'true' : 'false'}">${ICON_STAR}<span>${d.favOn ? 'Dans tes favoris' : 'Ajouter aux favoris'}</span></button>`
+    : '';
   const copies = d.missing || !d.lines.length
     ? '<p class="cz-empty">Pas encore obtenue.</p>'
     : `<ul class="cz-copies">${d.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`;
   return `<p class="cz-rar" style="--rc:${TINT[k.rarity] || TINT.identite}">${esc(rarityLabel(k.rarity))}</p>
     <h2 class="cz-title" id="cz-title">${esc(title)}</h2>
     <p class="cz-meta">${esc(meta)}</p>
-    ${flavor}${caption}
+    ${fav}${flavor}${caption}
     <h3 class="cz-sec">${esc(d.heading || 'Dans ta collection')}</h3>
     ${copies}
     <p class="cz-hint" id="cz-hint">${esc(hintText())}</p>`;
@@ -76,9 +82,10 @@ function infoHtml(d) {
  * Crée la fenêtre de carte agrandie.
  * @param {{ ids: () => string[], info: (id: string) => ({card, count, shiny, serial, missing, setName, setTotal, lines, kicker?, heading?} | null) }} src
  *   kicker / heading (facultatifs) : libellés de la fenêtre (par défaut « Collection » et « Dans ta collection »).
- * @returns {{ open: (id: string, opener?: HTMLElement) => void }}
+ * @param {{ toggle: (id: string) => Promise<void> }} [fav] favoris : bascule l'étoile de la carte affichée (sans fav, pas d'étoile)
+ * @returns {{ open: (id: string, opener?: HTMLElement) => void, refresh: () => void }}
  */
-export function createZoom({ ids, info }) {
+export function createZoom({ ids, info, fav }) {
   let dlg = null;
   let ui = null;
   let list = [];
@@ -165,6 +172,19 @@ export function createZoom({ ids, info }) {
     if (t.dataset.cz === 'close') dlg.close();
     else if (t.dataset.cz === 'prev') step(-1);
     else if (t.dataset.cz === 'next') step(1);
+    else if (t.dataset.cz === 'fav' && fav && cur) fav.toggle(cur);
+  }
+
+  /**
+   * Redessine la fiche de la carte affichée (après un changement de favori). Le focus reste sur l'étoile s'il y était.
+   */
+  function refresh() {
+    if (!dlg?.open || !cur) return;
+    const d = info(cur);
+    if (!d) return;
+    const had = dlg.contains(document.activeElement);
+    ui.info.innerHTML = infoHtml(d);
+    if (had) ui.info.querySelector('[data-cz=fav]')?.focus({ preventScroll: true });
   }
 
   /** Flèches gauche et droite : carte précédente et suivante. */
@@ -264,5 +284,5 @@ export function createZoom({ ids, info }) {
     if (was) hideLens();
   }
 
-  return { open };
+  return { open, refresh };
 }
