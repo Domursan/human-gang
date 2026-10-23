@@ -152,7 +152,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   const attendu = ['Planning', 'Catalogue · Séries', 'Catalogue · Cartes', 'Catalogue · Boosters',
     'Économie · Paillettes et dons', 'Économie · Tirage', 'Économie · Recyclage et fabrication', 'Économie · Limites',
     'Animation · Quêtes', 'Animation · Défis du gang', 'Animation · Drops', 'Animation · Cagnotte et bulletin', 'Animation · Cartes Champions',
-    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques', 'Jeux · Jeux du jour', 'Jeux · Bataille'];
+    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques', 'Jeux · Jeux du jour', 'Jeux · Bataille', 'Jeux · Saisons et soirées'];
   check(JSON.stringify(labels) === JSON.stringify(attendu),
     `(d) Staff ['cartes'] : la palette ne propose que ses sous-sections (${labels.join(' | ')})`);
   await p.fill('#apal-q', 'bruno');

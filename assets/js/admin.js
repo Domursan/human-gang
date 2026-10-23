@@ -58,6 +58,7 @@ const OPTIONAL = [
   { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Jeux et cartes › Preuves de quêtes (J11)
   { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Jeux et cartes › Framed et Heardle (J9, J10)
   { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
+  { sub: 'saisons', url: './admin-jeux4.js', fn: 'mountJeux4Section' }, // Jeux et cartes › Saisons et soirées (J16, J19)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -228,6 +229,7 @@ if (MOUNT.citations) registerSub('cartes/citations', { main: () => MOUNT.citatio
 if (MOUNT.preuves) registerSub('cartes/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
 if (MOUNT['framed-heardle']) registerSub('cartes/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
 if (MOUNT.bataille) registerSub('cartes/bataille', { main: () => MOUNT.bataille($('#bataille-root')) });
+if (MOUNT.saisons) registerSub('cartes/saisons', { main: () => MOUNT.saisons($('#jeux4-root')) }); // saisons de classement et soirées complètes
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);

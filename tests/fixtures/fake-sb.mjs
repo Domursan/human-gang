@@ -69,7 +69,7 @@ const DB = {
   ],
   hg_dyn_captures: [],
   // Pages du site : slug, libellé, mode (membres ou admin), présence dans la navigation, ordre.
-  hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true],['quiz','Questions du gang','membres',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
+  hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true],['quiz','Questions du gang','membres',true],['jeux','Jeux','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   // S.ideas, S.support, S.adminLog, S.accessLog : données de départ facultatives (tests de recherche et de pagination)
   hg_ideas: S.ideas || [], hg_support: S.support || [], hg_activity: [], hg_messages: S.messages || [], hg_conversations: S.conversations || [], hg_profile_info: [],
@@ -124,6 +124,7 @@ const DB = {
     { code: 'jour_3', label: 'Passer 3 fois au passage du jour', metric: 'passages_du_jour', target: 3, reward: 30, active: false, sort: 5 },
   ],
   // Questions du gang (migration 061) : questions lues par la section admin ; clés (hg_quiz_keys) lues seulement par hg_quiz_key.
+  hg_seasons: [{ id: '2026-T3', label: 'Saison d’été 2026', starts_at: '2026-06-30T22:00:00Z', ends_at: '2026-09-30T22:00:00Z', settled_at: null }], // migration 086 (xJ4)
   hg_quiz_questions: [],
   hg_quiz_keys: [],
   hg_challenges: [
@@ -503,6 +504,13 @@ const QUIZ = [
     options: [], explanation: 'Le compte se fait dans l’annuaire.', reward: 100, key: { value: 7, tolerance: 0 }, ends_at: null,
     answer: { response: '3', is_correct: false, reward: 0, answered_at: 'past' } },
 ];
+// Questions « Qui main ? » (J17, paquet xJ4) : seulement avec le scénario quiMain (les autres tests gardent leurs comptes).
+if (S.quiMain) QUIZ.push(
+  { id: 'qm-1', prompt: 'Qui joue Xayah en main ?', qtype: 'choix_unique', difficulty: 'facile', category: 'Qui main ? · League of Legends', image_url: null,
+    options: [{ id: 'a', text: 'Alice' }, { id: 'b', text: 'Bruno' }, { id: 'c', text: 'Chloé' }, { id: 'd', text: 'David' }],
+    explanation: 'Xayah, main de Bruno depuis 2022.', reward: 10, key: { correct: ['b'] }, ends_at: null },
+  { id: 'qm-2', prompt: 'Quelle civilisation AoE2 prend toujours Emma ?', qtype: 'choix_unique', difficulty: 'moyen', category: 'Qui main ?', image_url: null,
+    options: [{ id: 'a', text: 'Francs' }, { id: 'b', text: 'Mongols' }], explanation: 'Les Mongols, toujours.', reward: 10, key: { correct: ['b'] }, ends_at: null });
 /** Date d'une réponse déjà donnée (ISO), pour le faux. */
 const QUIZ_PAST = iso(-2);
 /** Solution d'une question corrigée, comme la base : textes acceptés, valeur, ou identifiants corrects. */
@@ -954,6 +962,59 @@ export function createClient(_url, _key, opts = {}) {
         if (row) Object.assign(row, { perms, active: args.p_active ?? true, note: args.p_note ?? row.note, updated_at: now });
         else DB.hg_staff.push({ user_id: args.p_user, perms, active: args.p_active ?? true, note: args.p_note ?? '', added_by: ME, created_at: now, updated_at: now });
         return { data: null, error: null };
+      }
+      // ---- Paquet xJ4 (migration 086) : arcade du jour (J18), saisons (J16), soirées complètes (J19) ----
+      // Scénario : arcadeGame ('paillettes' | 'raclette' | 'domu'), arcadeRewarded, arcadeBadScore ; saison (remplace le classement) ;
+      // night (soirée en cours ou à venir, null = aucune), nightNotStaff. Les appels restent dans window.__LOG.
+      if (fn.startsWith('hg_arcade_') || fn.startsWith('hg_season_') || fn.startsWith('hg_night') ) {
+        const X = (window.__X4 ||= { rewarded: !!S.arcadeRewarded, runs: 0, best: 0, here: false, presents: null });
+        const pr = (id) => { const p = DB.hg_profiles.find((q) => q.id === id) || {}; return { user_id: id, pseudo: p.pseudo, avatar_url: null, color: p.color || '#4F6A8F' }; };
+        const game = S.arcadeGame || 'raclette';
+        const top = () => [{ ...pr(U(2)), best: 61 }, { ...pr(U(3)), best: 40 }, ...(X.best ? [{ ...pr(uidNow()), best: X.best }] : [])].sort((a, b) => b.best - a.best).slice(0, 5);
+        if (fn === 'hg_arcade_board') return { data: { day: iso(0).slice(0, 10), game, reward: 5, rewarded_today: X.rewarded, my_best: X.best || null, rules: {}, top: top() }, error: null };
+        if (fn === 'hg_arcade_start') { X.runs++; return { data: { run: `run-${X.runs}`, game }, error: null }; }
+        if (fn === 'hg_arcade_finish') {
+          if (S.arcadeBadScore) return { data: { ok: false, error: 'Score impossible', score: 0, reward: 0 }, error: null };
+          const sc = Number(args.p_score) || 0, nb = sc > X.best;
+          const reward = !X.rewarded && sc >= 1 ? 5 : 0;
+          if (reward) X.rewarded = true;
+          if (nb) X.best = sc;
+          return { data: { ok: true, score: sc, game, reward, new_best: nb && sc > 0, best: X.best, top: top() }, error: null };
+        }
+        const cats = [['quiz', 'Questions du gang', 5, 50], ['jeux', 'Jeux du jour', 5, 35], ['quetes', 'Quêtes de la semaine', 10, 40], ['captures', 'Captures et drops', 5, 20], ['cartes', 'Cartes nouvelles', 2, 20], ['defis', 'Défis du gang', 15, 15]]
+          .map(([cat, label, pts, cap]) => ({ cat, label, pts, cap }));
+        if (fn === 'hg_season_board') {
+          const general = [[U(2), 612, false], [U(3), 588, false], [U(4), 571, false], [uidNow(), 540, true], [U(5), 498, true]].map(([id, points, nouveau], i) => ({ rank: i + 1, ...pr(id), points, nouveau }));
+          return { data: S.saison || { season: { id: '2026-T4', label: 'Saison d’automne 2026', starts_at: '2026-09-30T22:00:00Z', ends_at: iso(69), settled_at: null },
+            cats, rewards: { podium: [300, 200, 100], nouveaux: [150, 100, 50], palier_points: 100, palier_gain: 50 }, participants: 12,
+            me: { rank: 4, points: 540, nouveau: true, rank_nouveaux: 1, detail: { quiz: 200 }, week: { quiz: 38, jeux: 25, quetes: 30, captures: 9, cartes: 12, defis: 15 } },
+            top: general, top_nouveaux: general.filter((r) => r.nouveau).map((r, i) => ({ ...r, rank: i + 1 })) }, error: null };
+        }
+        const staff = () => { const m = myPermsNow(); return m.is_admin || m.perms.includes('cartes'); };
+        if (fn === 'hg_season_save' || fn === 'hg_season_settle') return staff() ? { data: { id: args.p_id || args.p_season, versements: 3 }, error: null } : { data: null, error: { message: 'Réservé au Staff (cartes)' } };
+        if (fn === 'hg_night_current') {
+          if (!S.night) return { data: null, error: null };
+          if (X.presents === null) X.presents = [...(S.night.presents || [])];
+          const live = S.night.live !== false;
+          return { data: { id: 'night-1', title: 'Soirée Gartic', starts_at: live ? iso(-0.05) : iso(1), ends_at: live ? iso(0.1) : iso(1.2), threshold: S.night.threshold || 3, reward: 30,
+            completed_at: X.presents.length >= (S.night.threshold || 3) ? iso(0) : null, live, here: X.here, presents: X.presents.map(pr), completes_annee: 2, seuil_pct: 60, actifs: 13 }, error: null };
+        }
+        if (fn === 'hg_night_here') {
+          if (!X.here) { X.here = true; X.presents.push(uidNow()); }
+          const th = S.night?.threshold || 3, cnt = X.presents.length;
+          return { data: { count: cnt, threshold: th, complete: cnt >= th, just_completed: cnt === th, paid: cnt >= th, reward: 30 }, error: null };
+        }
+        if (fn === 'hg_nights_admin') {
+          if (!staff()) return { data: null, error: { message: 'Réservé au Staff (cartes)' } };
+          return { data: { defaults: { seuil_pct: 60, recompense: 30, actifs: 10, seuil: 6 }, nights: (X.nights ||= [
+            { id: 'n1', title: 'Soirée Gartic', starts_at: iso(-0.05), ends_at: iso(0.1), threshold: 6, reward: 30, source: 'staff', cancelled: false, completed_at: null, presents: 2 }]) }, error: null };
+        }
+        if (fn === 'hg_night_save') {
+          if (!staff()) return { data: null, error: { message: 'Réservé au Staff (cartes)' } };
+          (X.nights ||= []).unshift({ id: 'n' + (X.nights.length + 2), title: args.p_title, starts_at: args.p_starts, ends_at: args.p_ends, threshold: args.p_threshold ?? 6, reward: args.p_reward ?? 30, source: 'staff', cancelled: false, completed_at: null, presents: 0 });
+          return { data: 'n-new', error: null };
+        }
+        if (fn === 'hg_night_cancel' || fn === 'hg_night_defaults_set') return staff() ? { data: null, error: null } : { data: null, error: { message: 'Réservé au Staff (cartes)' } };
       }
       if (fn === 'hg_admin_ghosts') return { data: window.__SCN?.ghosts ?? [], error: null }; // fantômes : fournis par le scénario du test
       if (fn === 'hg_challenges_active') return { data: window.__SCN?.defis ?? [], error: null }; // défis en cours (widget de l'accueil) : fournis par le scénario du test

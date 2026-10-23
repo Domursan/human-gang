@@ -31,4 +31,8 @@ export const ONGLETS = [
   { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
   { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
   { id: 'bataille', titre: 'Bataille', module: './bataille.js', idee: 'J15', rythme: 'competition' },
+  { id: 'saison', titre: 'Saisons', module: './saison.js', idee: 'J16', rythme: 'competition' },
+  { id: 'qui-main', titre: 'Qui main ?', module: './qui-main.js', idee: 'J17', rythme: 'jour' },
+  { id: 'arcade', titre: 'Arcade', module: './arcade.js', idee: 'J18', rythme: 'jour' },
+  { id: 'soiree', titre: 'Soirée complète', module: './soiree.js', idee: 'J19', rythme: 'semaine' },
 ];

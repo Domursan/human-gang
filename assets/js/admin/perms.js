@@ -18,7 +18,7 @@ export const SECTION_PERM = {
   sorties: 'evenements',
   souvenirs: 'souvenirs',
   reglages: 'reglages',
-  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
+  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz', jeux4: 'cartes', // jeux4 : Saisons et soirées (migration 086)
   pronos: 'pronos', sutom: 'souvenirs', // jeux du jour (migration 084) : pronostics (J5), Sutom du gang (J8)
   cagnotte: 'cartes', champions: 'cartes', // idées C13/C15 et C17 (migration 082)
   idees: 'support', assistance: 'support',
@@ -125,6 +125,7 @@ export const DOMAINS = [
       { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
       { id: 'bataille', label: 'Bataille', section: 'bataille' },
       { id: 'mes-jeux', label: 'Mes jeux', section: 'mj' },
+      { id: 'saisons', label: 'Saisons et soirées', section: 'jeux4' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [
