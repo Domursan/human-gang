@@ -64,6 +64,7 @@
 .cal-bar { width: 4px; border-radius: 4px; background: var(--c, var(--muted)); flex: none; }
 .cal-item-txt { display: flex; flex-direction: column; gap: 2px; flex: 1 1 200px; min-width: 0; }
 .cal-item-txt strong { overflow-wrap: anywhere; }
+.cal-item-txt .cal-item-note { white-space: pre-line; overflow-wrap: anywhere; }
 .cal-item-act { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .cal-none { margin: 0; }
 .cal-actions { margin-bottom: 32px; }
