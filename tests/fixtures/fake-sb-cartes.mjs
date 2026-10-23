@@ -796,6 +796,8 @@ export function createClient() {
       { const c2 = rpcC2(fn, args); if (c2) return c2; } // idées C2 (migration 081)
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
+      // Succès Pentakill (F9, migration 101) : scenario.pentakill = réponse de hg_pentakill_check ; sinon « pas de Pentakill ».
+      if (fn === 'hg_pentakill_check') return { data: S.pentakill || { pentakill: false }, error: null };
       // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).
       const reglage = (k) => DB.hg_settings.find((r) => r.key === k)?.value || {};
       if (fn === 'hg_support_public') {
