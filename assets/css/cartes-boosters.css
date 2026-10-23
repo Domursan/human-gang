@@ -112,3 +112,19 @@ html[data-fx="off"] .cart--holo .cart-body { animation: none; }
     radial-gradient(circle at 50% 34%, #FBD32D 0 4.5px, transparent 5px),
     radial-gradient(ellipse at 50% 100%, #FBD32D 0 9px, transparent 9.5px),
     #1c1a22; }
+
+/* ===== Résumé d'une ouverture (idée Q7) : pastilles par rareté, toujours avec leur texte ===== */
+.rv-sum { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.rv-chip { --c: #8c91a0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; line-height: 1.2;
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--c); color: var(--text); }
+.rv-chip i { width: 9px; height: 9px; border-radius: 2px; background: var(--c); flex: none; }
+.rv-peu_commune { --c: #2fd17a; }
+.rv-rare { --c: #4f80ff; }
+.rv-epique { --c: #a674f5; }
+.rv-legendaire { --c: #FCA301; }
+.rv-mythique { --c: #e9c25a; }
+.rv-identite { --c: #FBD32D; }
+.rv-unique { --c: #F0CD6A; }
+.rv-new { --c: var(--sand); color: var(--sand); }
+/* Interrupteur « Révéler mes boosters d'un coup » sous le résultat */
+.rv-pref { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-2, transparent); }

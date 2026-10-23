@@ -10,7 +10,7 @@
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, notify, currentLogo, getPrefs, setPrefs } from './core.js';
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
@@ -1358,7 +1358,18 @@ function finishSeq(R) {
   R.step = lastStep(R);
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les cartouches et affiche le résumé
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
+  focusRevealEnd();
+}
+
+/** Début d'une séquence : le focus va sur « Tout révéler » (une touche Entrée suffit pour sauter l'animation). */
+function focusRevealAll() {
+  $('#cartes-reveal [data-action="reveal-all"]')?.focus({ preventScroll: true });
+}
+
+/** Fin d'une ouverture : le focus va sur « Fermer » (le titre du résultat le précède dans l'ordre de lecture). */
+function focusRevealEnd() {
+  const el = $('#cartes-reveal [data-action="close-reveal"]') || $('#cartes-reveal-h');
+  el?.focus({ preventScroll: true });
 }
 
 // « Tout révéler » : passe directement à la fin de la séquence.
@@ -1369,6 +1380,87 @@ function skipSeq() {
   if (R.multi) finishMulti(R);
   else finishSeq(R);
 }
+
+/* ---------- Résumé d'une ouverture (pastilles et annonce) ---------- */
+/** À partir de ce nombre de cartes, l'annonce regroupe par rareté et ne nomme que quelques belles cartes. */
+const SUMMARY_BIG = 25;
+/** Nombre maximal de cartes nommées dans l'annonce (rareté épique et plus). */
+const SUMMARY_NAMES = 5;
+
+/**
+ * Résumé d'une ouverture par rareté : comptes (de la plus commune à la plus rare), brillantes et nouvelles.
+ * Sert aux pastilles visibles (summaryHtml) et à l'annonce des lecteurs d'écran (summaryText).
+ * @param {object[]} cards cartes obtenues
+ * @param {Set<string>} [freshIds] cartes qui n'étaient pas dans la collection avant l'ouverture
+ * @returns {{total: number, groups: Array<{id: string, text: string}>, fresh: number, names: string[], more: number}}
+ */
+function raritySummary(cards, freshIds = new Set()) {
+  const by = new Map();
+  for (const c of cards) {
+    const g = by.get(c.rarity) || { n: 0, shiny: 0 };
+    g.n += 1;
+    if (c.shiny) g.shiny += 1;
+    by.set(c.rarity, g);
+  }
+  const groups = RARITIES.filter((r) => by.has(r.id)).map((r) => {
+    const { n, shiny } = by.get(r.id);
+    const label = r.label.toLowerCase();
+    let text = `${nf.format(n)} ${n > 1 ? label.replace(/(\S+)$/, '$1s') : label}`;
+    if (shiny && shiny === n) text += n > 1 ? ' brillantes' : ' brillante';
+    else if (shiny) text += ` dont ${pluralCount(shiny, 'brillante', 'brillantes', nf.format)}`;
+    return { id: r.id, text };
+  });
+  // Belles cartes nommées : épique et plus, sans doublon, la plus rare d'abord.
+  const seen = new Set();
+  const top = [...cards].sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity))
+    .filter((c) => rarityRank(c.rarity) >= rarityRank('epique') && !seen.has(c.card_id) && seen.add(c.card_id));
+  const max = cards.length >= SUMMARY_BIG ? Math.min(3, SUMMARY_NAMES) : SUMMARY_NAMES;
+  return { total: cards.length, groups, fresh: freshIds.size, names: top.slice(0, max).map((c) => c.name), more: Math.max(0, top.length - max) };
+}
+
+/**
+ * Pastilles colorées du résumé (« 3 communes », « 1 épique brillante », « 2 nouvelles ») : le texte est toujours présent,
+ * la couleur n'est qu'un repère (lisible en mode daltonien).
+ * @param {ReturnType<typeof raritySummary>} sum résumé
+ * @returns {string} HTML
+ */
+function summaryHtml(sum) {
+  if (!sum.total) return '';
+  const chips = sum.groups.map((g) => `<li class="rv-chip rv-${esc(g.id)}"><i aria-hidden="true"></i>${esc(g.text)}</li>`);
+  if (sum.fresh) chips.push(`<li class="rv-chip rv-new">${esc(pluralCount(sum.fresh, 'nouvelle', 'nouvelles', nf.format))}</li>`);
+  return `<ul class="rv-sum" aria-label="Résumé de l’ouverture">${chips.join('')}</ul>`;
+}
+
+/**
+ * Texte du résumé pour l'annonce : « 5 cartes : 3 communes, 1 rare, 1 épique brillante, Pick’em des Worlds. 2 nouvelles pour ta collection. »
+ * Au-delà de SUMMARY_BIG cartes, seules quelques cartes à partir d'épique sont nommées.
+ * @param {ReturnType<typeof raritySummary>} sum résumé
+ * @returns {string}
+ */
+function summaryText(sum) {
+  if (!sum.total) return 'Aucune carte.';
+  let names = sum.names.join(', ');
+  if (names && sum.more) names += ` et ${pluralCount(sum.more, 'autre belle carte', 'autres belles cartes', nf.format)}`;
+  return `${pluralCount(sum.total, 'carte', 'cartes', nf.format)} : ${sum.groups.map((g) => g.text).join(', ')}${names ? `, ${names}` : ''}.`
+    + (sum.fresh ? ` ${pluralCount(sum.fresh, 'nouvelle pour ta collection', 'nouvelles pour ta collection', nf.format)}.` : '');
+}
+
+/**
+ * Interrupteur « Révéler mes boosters d'un coup » sous le résultat (le même réglage que dans les Préférences d'affichage).
+ * @returns {string} HTML
+ */
+function revealPrefHtml() {
+  return `<label class="switch-row rv-pref"><span class="switch-txt"><strong>Révéler mes boosters d’un coup</strong>`
+    + `<small>Sans la séquence animée. Aussi dans les Préférences d’affichage.</small></span>`
+    + `<input class="pref-switch" type="checkbox" role="switch" data-change="reveal-direct"${getPrefs().revealDirect ? ' checked' : ''}></label>`;
+}
+
+/**
+ * Vrai si l'ouverture doit être animée : mouvement permis, préférence « Révéler d'un coup » coupée et au moins une carte.
+ * @param {number} n nombre de cartes
+ * @returns {boolean}
+ */
+const animateReveal = (n) => n > 0 && motionAllowed() && !getPrefs().revealDirect;
 
 /* ---------- Révélation groupée (ouverture de plusieurs boosters) ---------- */
 /** Titre du résumé d'une ouverture groupée : « 5 boosters · 25 cartes · meilleure : Rare ». */
@@ -1409,9 +1501,11 @@ function multiHtml(R) {
         ${R.dup ? `<p class="cartes-small">${esc(dupText(R))}</p>` : ''}
         ${done && R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
       </div>
+      ${done ? summaryHtml(raritySummary(R.cards, R.freshIds)) : ''}
       <div class="x5-grid">${cells}</div>${list}
       ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
+      ${done ? revealPrefHtml() : ''}
     </section>`;
 }
 
@@ -1425,7 +1519,7 @@ function renderMultiReveal(box, R) {
   box.innerHTML = multiHtml(R);
   if (R.phase !== 'seq' && !R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+    $('#cartes-live').textContent = `Boosters ouverts. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
 }
 
@@ -1482,16 +1576,18 @@ function renderReveal() {
     : '<button type="button" class="btn btn-ghost" data-action="reveal-all">Tout révéler</button>';
   box.innerHTML = `
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
-      <h2 id="cartes-reveal-h">Ton booster</h2>
+      <h2 id="cartes-reveal-h" tabindex="-1">Ton booster</h2>
+      ${done ? summaryHtml(raritySummary(R.cards, R.freshIds)) : ''}
       ${body}${list}
       ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
+      ${done ? revealPrefHtml() : ''}
     </section>`;
   if (R.seq) applyStage(R);
   fitAll(box);
   if (done && !R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Booster ouvert. Meilleure carte : ${R.best ? rarityLabel(R.best) : 'aucune'}.`;
+    $('#cartes-live').textContent = `Booster ouvert. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
 }
 
@@ -1548,6 +1644,7 @@ async function runOpen({ key, type = null, setName = '', call }) {
   let R = null;
   let state = 'error'; // 'ok' : ouvert ; 'dup' : déjà ouvert côté serveur (demande rejouée) ; 'error' : rien d'ouvert
   if (!S.bootReq || S.bootReq.mode !== key) S.bootReq = { mode: key, id: newReqId() };
+  const owned = new Set(S.copies.map((c) => c.card_id)); // collection avant l'ouverture : sert à compter les nouvelles cartes
   try {
     const data = await call(S.bootReq.id);
     S.bootReq = null;
@@ -1565,9 +1662,10 @@ async function runOpen({ key, type = null, setName = '', call }) {
       toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
     }
     announceCards(cards);
-    // Animation seulement si la préférence de mouvement le permet et qu'il y a des cartes.
-    const seq = motionAllowed() && cards.length > 0;
-    R = { cards, best: data?.best, type, setName, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
+    // Animation seulement si le mouvement est permis, que la préférence « Révéler d'un coup » est coupée et qu'il y a des cartes.
+    const seq = animateReveal(cards.length);
+    const freshIds = new Set(cards.filter((c) => !owned.has(c.card_id)).map((c) => c.card_id));
+    R = { cards, best: data?.best, type, setName, freshIds, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
     S.reveal = R;
   } catch (e) {
@@ -1589,8 +1687,9 @@ async function runOpen({ key, type = null, setName = '', call }) {
   if (R && S.reveal === R && R.seq && R.phase === 'seq') {
     $('#cartes-live').textContent = 'Ouverture du booster en cours.';
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    focusRevealAll();
     startSeq(R);
-  }
+  } else if (R && S.reveal === R) focusRevealEnd();
 }
 
 /**
@@ -1749,7 +1848,7 @@ async function runMulti(items, key = '') {
   let R = null;
   if (st.cards.length || st.dup) {
     const cards = [...st.cards].sort(byRarityDesc);
-    const seq = !big && cards.length > 0 && motionAllowed();
+    const seq = !big && animateReveal(cards.length);
     const freshIds = new Set(cards.filter((c) => !st.owned.has(c.card_id)).map((c) => c.card_id));
     R = {
       multi: true, big, cards, opened: st.opened, total, best: cards[0]?.rarity ?? null,
@@ -1777,8 +1876,9 @@ async function runMulti(items, key = '') {
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     if (R.seq) {
       $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
+      focusRevealAll();
       startMulti(R);
-    }
+    } else focusRevealEnd();
   }
 }
 
@@ -1856,7 +1956,7 @@ function renderBigReveal(box, R) {
   const cell = (c) => cardHtml(c, { shiny: c.shiny, serial: c.serial, size: 'sm' });
   if (!R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+    $('#cartes-live').textContent = `Boosters ouverts. ${pluralCount(R.opened, 'booster', 'boosters', nf.format)}. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
   box.innerHTML = `
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
@@ -1921,7 +2021,7 @@ function finishMulti(R) {
   R.phase = 'done';
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les boutons et affiche le résumé (annoncé par renderMultiReveal)
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
+  focusRevealEnd();
 }
 
 /** Réclame le passage du jour (hg_cards_daily) : Paillettes et série de jours consécutifs. */
@@ -2835,6 +2935,7 @@ function onChange(e) {
   else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
   else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; renderPeer('#peer-set'); }
   else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
+  else if (t.dataset.change === 'reveal-direct') setPrefs({ revealDirect: t.checked });
   else if (t.dataset.change === 'shop-qty') setBuyQty(t.value, t.dataset.type || 'classique');
   else if (t.dataset.gift === 'type') { updateGift(t); cancelGiftConfirm(t); } // la quantité max suit le stock du type
   else if (t.dataset.gift) { updateGift(t); cancelGiftConfirm(t); }
