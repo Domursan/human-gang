@@ -5,6 +5,7 @@
 //   #vie/souvenirs/<id>       un souvenir sélectionné
 //   #vie/souvenirs/photos     vue Photos (albums des sorties et images des souvenirs)
 //   #vie/souvenirs/reactions  vue Réactions (réactions actives, masquage)
+//   #vie/souvenirs/ce-jour, /lexique, /gartic : vues des idées S1, S2, S6 (contenu.js)
 // Montage par admin.js (registerSub 'vie/souvenirs') : main, open, list. Droits : hg_moments, hg_photos, hg_reactions côté base.
 // Dépendances : core.js, photos.js (miniatures, lightbox), admin/ui/* (liste, en-tête), admin/common.js, admin/live.js,
 // helpers.js, moments.js (formulaire), photos.js (vue Photos), reactions.js (vue Réactions),
@@ -21,11 +22,14 @@ import { loadPeople, dayLabel } from './helpers.js';
 import { openMomentForm, removeMoment } from './moments.js';
 import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
+import { createCeJourPanel, createLexiquePanel, createGarticPanel } from './contenu.js';
 import { blocReglages } from '../admin-reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 /* Vues de la section : [identifiant, libellé]. Souvenirs est la vue par défaut. */
-const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions']];
+const VIEWS = [['souvenirs', 'Souvenirs'], ['photos', 'Photos'], ['reactions', 'Réactions'], ['ce-jour', 'Ce jour-là'], ['lexique', 'Lexique'], ['gartic', 'Gartic']];
+/* Vues à panneau (chargé à chaque entrée dans la vue). */
+const PANEL_VIEWS = ['photos', 'reactions', 'ce-jour', 'lexique', 'gartic'];
 const LIMIT = 500; // souvenirs chargés d'un coup ; la liste affiche par lots (createList)
 
 /* État de la section : auteur, annuaire, souvenirs chargés, URL signées, vue, souvenir choisi et zones d'affichage. */
@@ -177,15 +181,17 @@ export function mountSouvenirsSection(root, { me }) {
     <div class="sv-d" data-zone="souvenirs"><div class="ass-d-head sv-d-head" id="sv-d-head"></div><div class="ass-d-body sv-d-body" id="sv-d-body"></div></div>
     <div class="sv-z" data-zone="photos" hidden></div>
     <div class="sv-z" data-zone="reactions" hidden></div>
+    <div class="sv-z" data-zone="ce-jour" hidden></div>
+    <div class="sv-z" data-zone="lexique" hidden></div>
+    <div class="sv-z" data-zone="gartic" hidden></div>
   </div>`;
-  S.zones = { souvenirs: root.querySelector('[data-zone="souvenirs"]'), photos: root.querySelector('[data-zone="photos"]'), reactions: root.querySelector('[data-zone="reactions"]') };
+  S.zones = Object.fromEntries(VIEWS.map(([k]) => [k, root.querySelector(`[data-zone="${k}"]`)]));
   S.detailHead = root.querySelector('#sv-d-head');
   S.detailBody = root.querySelector('#sv-d-body');
   root.prepend(blocReglages('souvenirs'));
   chargerReglagesLot3();
-  S.panels = { photos: createPhotosPanel(S.ctx), reactions: createReactionsPanel(S.ctx) };
-  S.zones.photos.append(S.panels.photos.el);
-  S.zones.reactions.append(S.panels.reactions.el);
+  S.panels = { photos: createPhotosPanel(S.ctx), reactions: createReactionsPanel(S.ctx), 'ce-jour': createCeJourPanel(S.ctx), lexique: createLexiquePanel(S.ctx), gartic: createGarticPanel(S.ctx) };
+  for (const k of PANEL_VIEWS) S.zones[k].append(S.panels[k].el);
   // Temps réel : souvenirs et photos ; la vue Photos est relue si elle est affichée
   onTableChange('souvenirs', ['hg_moments', 'hg_photos'], () => {
     reload();
@@ -200,7 +206,7 @@ export function openSouvenirs({ id } = {}) {
   const changed = view !== S.view;
   S.view = view;
   S.selId = view === 'souvenirs' ? (id || null) : null;
-  if (changed && (view === 'photos' || view === 'reactions')) S.panels[view].load();
+  if (changed && PANEL_VIEWS.includes(view)) S.panels[view].load();
   S.list?.select(S.selId);
   paintDetail();
   paintViews();

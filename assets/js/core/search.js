@@ -9,7 +9,7 @@
  * Page : toutes les pages pour un membre connecté (header.js ajoute la loupe et bindSearch).
  * Dépendances : supabase.js (requêtes), pages-access.js (groupes visibles selon mes pages),
  * util.js (esc, errMsg, fmtDate, avatarHtml), icons.js (loupe, fermer).
- * Tables / RPC : hg_events, hg_moments, rpc hg_members.
+ * Tables / RPC : hg_events, hg_moments, hg_lexicon, rpc hg_members.
  * Exporte : foldText, openSearch, searchButtonHtml, bindSearch.
  */
 import { sb } from './supabase.js';
@@ -32,6 +32,7 @@ const GROUPS = {
   events: { title: 'Sorties', slug: 'irl' },
   moments: { title: 'Souvenirs', slug: 'historique' },
   members: { title: 'Membres', slug: 'membre' },
+  lexique: { title: 'Lexique', slug: 'lexique' },
 };
 
 /* ---------- Normalisation ---------- */
@@ -59,7 +60,7 @@ const okId = (id) => (UUID_RE.test(String(id ?? '')) ? String(id) : null);
  * Charge la liste d'un type (sorties, souvenirs ou membres) et la transforme en éléments de recherche.
  * Chaque élément porte un titre, un sous-titre, un lien et un champ `hay` (texte normalisé où chercher).
  * Ne jette jamais : en cas d'erreur, renvoie { error, items: [] }.
- * @param {'events'|'moments'|'members'} key Type à charger.
+ * @param {'events'|'moments'|'members'|'lexique'} key Type à charger.
  * @returns {Promise<{items: Array<object>, error?: string}>}
  */
 async function fetchGroup(key) {
@@ -84,6 +85,13 @@ async function fetchGroup(key) {
         if (!okId(m.id)) return [];
         return [{ title: m.title || 'Sans titre', sub: fmtDate(m.happened_on), href: 'historique.html', hay: foldText(`${m.title ?? ''}\n${m.body ?? ''}`) }];
       });
+      return { items };
+    }
+    if (key === 'lexique') { // mots validés du lexique (migration 088) : terme et définition
+      const { data, error } = await sb.from('hg_lexicon').select('term,slug,definition').eq('status', 'valide').order('term').limit(LIMIT);
+      if (error) throw error;
+      const items = (data ?? []).filter((w) => /^[a-z0-9-]+$/.test(w.slug || ''))
+        .map((w) => ({ title: w.term, sub: String(w.definition ?? '').slice(0, 80), href: `lexique.html#${w.slug}`, hay: foldText(`${w.term ?? ''}\n${w.definition ?? ''}`) }));
       return { items };
     }
     // membres : les plus récents d'abord, 300 au plus, puis affichés par pseudo
@@ -209,7 +217,7 @@ function buildDialog() {
         <label for="search-q" class="visually-hidden">Rechercher une sortie, un souvenir ou un membre</label>
         <input id="search-q" class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Sortie, lieu, souvenir, membre…" aria-describedby="search-hint sr-status-line">
       </div>
-      <p id="search-hint" class="muted small">Sorties (titre, lieu), souvenirs (titre, texte), membres. Insensible aux accents et à la casse.</p>
+      <p id="search-hint" class="muted small">Sorties (titre, lieu), souvenirs (titre, texte), membres, mots du lexique. Insensible aux accents et à la casse.</p>
       <p id="sr-status-line" class="sr-status" role="status" aria-live="polite"></p>
       <div class="search-results"></div>
     </form>`;

@@ -1,0 +1,44 @@
+/* ===== Humane Gang — Lexique du gang (lexique.html) ===== */
+.lex [hidden] { display: none !important; }
+.lex-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.lex-intro { max-width: 62ch; margin: 8px 0 0; }
+.lex-propose { min-height: 44px; }
+.lex-search { margin: 18px 0 12px; }
+.lex-search input { width: 100%; }
+.lex-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.lex-chip { font: inherit; font-size: 13px; font-weight: 700; min-height: 44px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--muted); cursor: pointer; }
+.lex-chip[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: #121212; }
+@media (hover: hover) { .lex-chip:hover { color: var(--text); } .lex-chip[aria-pressed="true"]:hover { color: #121212; } }
+html[data-mode="clair"] .lex-chip[aria-pressed="true"] { color: #FFFFFF; }
+
+.lex-list { display: flex; flex-direction: column; gap: 10px; }
+.lex-group { display: flex; flex-direction: column; gap: 10px; }
+.lex-letter { font-family: var(--font-display); color: var(--hist-fg); font-size: 14px; letter-spacing: 2px; margin: 10px 0 0; }
+.lex-entry { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); scroll-margin-top: 90px; }
+.lex-entry.is-open { background: var(--hist-bg); border-color: var(--hist-border); gap: 10px; }
+.lex-entry p { margin: 0; }
+.lex-entry-h { margin: 0; font: inherit; }
+.lex-toggle { font: inherit; color: var(--text); background: none; border: 0; padding: 0; width: 100%; min-height: 44px; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+.lex-term { font-family: var(--font-display); font-size: 17px; overflow-wrap: anywhere; }
+.lex-era { flex: none; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--muted); }
+.lex-short { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: -6px !important; }
+.lex-detail { display: flex; flex-direction: column; gap: 10px; }
+.lex-def { overflow-wrap: anywhere; }
+.lex-ex { border-left: 3px solid var(--hist-fg); padding: 4px 0 4px 10px; font-style: italic; overflow-wrap: anywhere; }
+.lex-ex::before { content: '« '; } .lex-ex::after { content: ' »'; }
+.lex-links { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.lex-links a, .lex-tools a { display: inline-flex; align-items: center; min-height: 44px; }
+.lex-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.lex-entry .react-bar { margin-top: 0; }
+.lex-empty { color: var(--muted); }
+
+.lex-mine { margin-top: 32px; }
+.lex-mine h2 { font-size: 18px; }
+.lex-mine-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lex-mine-item { padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lex-mine-item p { flex-basis: 100%; margin: 0; }
+
+.lex-p-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.form-error { color: var(--rose); margin: 0; }

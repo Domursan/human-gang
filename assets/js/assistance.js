@@ -67,6 +67,9 @@ if (me) {
 }
 const wanted = new URLSearchParams(location.search).get('sujet');
 if (wanted && SUBJECTS.includes(wanted)) form.subject.value = wanted;
+// Message prérempli (?message=…), par exemple « Demander le retrait » d'un mot du lexique
+const wantedMsg = new URLSearchParams(location.search).get('message');
+if (wantedMsg && !form.message.value) form.message.value = wantedMsg.slice(0, RULES.message_max);
 
 const counter = $('#sp-counter');
 /** Texte du compteur de caractères, par exemple « 12 / 4000 ». */

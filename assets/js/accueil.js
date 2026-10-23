@@ -2,11 +2,13 @@
 // Page d'accueil. Visiteur : présentation et connexion. Membre : tuiles (Secret Santa, IRL, Historique),
 // fil d'activité, anniversaires du mois, défi du gang, bandeaux (récap, événement en cours) et boîte à idées.
 // Chaque tuile et chaque bloc se charge séparément : une erreur n'empêche pas les autres.
-// Dépendances : core.js (sb, initPage, canAccess, textes réglables), icons.js, dyn-events.js (événement en cours, chargé à la demande).
+// Dépendances : core.js (sb, initPage, canAccess, textes réglables), icons.js, dyn-events.js (événement en cours, chargé à la demande),
+// accueil-ce-jour.js (tuile « Ce jour-là » et mot du jour du lexique).
 // Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
 import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
 import { svg } from './icons.js';
+import { loadOnThisDay, loadWordOfDay } from './accueil-ce-jour.js';
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
 const app = $('#app');
@@ -170,6 +172,7 @@ function renderMemberShell() {
         <h2 class="tile-label">Historique</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
+      <section class="card card-hist home-day" id="tile-day" aria-labelledby="day-title" hidden></section>
     </section>
 
     <section class="row home-row">
@@ -182,6 +185,8 @@ function renderMemberShell() {
         <ul class="bdays" id="bdays"><li class="skeleton-row"></li></ul>
       </div>
     </section>
+
+    <section class="card home-lexday" id="lex-day" aria-labelledby="lexday-title" hidden></section>
 
     <section class="card home-ideas" id="idees" aria-labelledby="ideas-title">
       <form class="stack" id="idea-form" novalidate>
@@ -522,7 +527,7 @@ async function loadChallenges() {
 
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 /** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
-const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
+const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique', 'tile-day': 'historique' };
 /** Retire les tuiles vers des pages interdites. Si toutes les tuiles disparaissent, le bloc entier est retiré. */
 function hideForbiddenTiles() {
   for (const [id, slug] of Object.entries(TILE_PAGE)) if (!canAccess(slug)) $(`#${id}`)?.remove();
@@ -544,6 +549,7 @@ if (!me) {
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
+    tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null, canAccess('lexique') ? loadWordOfDay($('#lex-day')) : null,
   ]);
 }
 app.removeAttribute('aria-busy');

@@ -28,7 +28,7 @@ const TREE = {
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
-    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']], ['Jeux', ['questions', 'secrets']]],
+    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']], ['Jeux', ['questions', 'ludotheque', 'secrets']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages']], ['Apparence', ['theme']]],
 };
