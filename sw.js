@@ -12,7 +12,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v50';
+const CACHE_VERSION = 'v51';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -97,6 +97,7 @@ const PRECACHE = [
   'assets/js/map-loader.js', 'assets/js/leaflet-load.js',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
+  'assets/cards/champions/baton.svg', 'assets/cards/champions/bouclier.svg', 'assets/cards/champions/chateau.svg', 'assets/cards/champions/couronne.svg', 'assets/cards/champions/epee.svg', 'assets/cards/champions/etoile.svg', 'assets/cards/champions/fusee.svg', 'assets/cards/champions/pioche.svg', 'assets/css/boosters-styles.css', 'assets/css/cartes-idees.css', 'assets/css/collection-a4.css', 'assets/js/admin-cards/champions.js', 'assets/js/admin-cards/pots.js', 'assets/js/booster-styles.js', 'assets/js/booster-themes.js', 'assets/js/cartes-bulletin.js', 'assets/js/cartes-cagnotte.js', 'assets/js/cartes-champion.js', 'assets/js/cartes-chance.js', 'assets/js/collection-a4.js', 'collection-a4.html',
 ];
 
 // Bibliothèque versionnée (épinglée) : mise en cache si le réseau le permet, sans bloquer l'installation.

@@ -2173,7 +2173,7 @@ function drawCollection(focusId) {
     </section>
     ${body}`;
   el.insertAdjacentHTML('afterbegin', '<div id="cartes-luck-slot"></div>');
-  import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
+  if (!OFF) import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
@@ -2730,7 +2730,7 @@ async function renderLeaderboard() {
           </li>`).join('')}
         </ol>` : '<p class="empty">Personne n’a encore de carte.</p>'}
       </section>`;
-    import('./cartes-bulletin.js').then((m) => m.mountBulletin(el)).catch(() => {}); // « Le Cours de la Paillette » (C15)
+    if (!OFF) import('./cartes-bulletin.js').then((m) => m.mountBulletin(el)).catch(() => {}); // « Le Cours de la Paillette » (C15)
   } finally {
     release();
   }
