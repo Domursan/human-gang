@@ -2,7 +2,8 @@
 // Réglages affichés dans les textes : lecture des valeurs du site et remplacement dans les tutos et les affiches.
 // Une valeur absente, illisible ou invalide donne le repli écrit à côté (la valeur actuelle du site).
 // Dépendances : core/supabase.js (client Supabase). Lectures : RPC hg_card_cfg (réglages du jeu de cartes)
-// et table hg_settings (clés badges, irl, invites, ss, eggs : lecture publique ou membre selon la clé, voir migrations 052, 051, 059, 062).
+// et table hg_settings (clés badges, irl, invites, ss : lecture publique ou membre selon la clé, voir migrations 052, 051, 059) ;
+// RPC hg_support_public et hg_eggs_public pour « support » et « eggs » (migration 072).
 // Exporte : chargerReglages, valeur, evaluer, fmt, jetons, appliquerReglages.
 // =====================================================================
 import { sb } from './core/supabase.js';
@@ -10,7 +11,10 @@ import { sb } from './core/supabase.js';
 /* ---------- Sources ---------- */
 // Espaces de noms utilisés dans les jetons : « cartes.<champ> » lit hg_card_cfg(), les autres lisent hg_settings[<clé>].
 // Les clés sont celles de hg_settings ; « cartes » n'est pas une clé (la RPC hg_card_cfg lit hg_settings.cards).
-const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss', 'support', 'eggs'];
+const CLES_SETTINGS = ['badges', 'irl', 'invites', 'ss'];
+// Lues par RPC (migration 072) : « support » (sujets et longueurs, sans les seuils anti-spam) et « eggs »
+// (récompenses seulement, sans le mot secret ni la date d'anniversaire ; membres connectés).
+const RPC_SETTINGS = { support: 'hg_support_public', eggs: 'hg_eggs_public' };
 
 /** Valeurs lues, par espace de noms : { cartes: {...}, badges: {...}, irl: {...}, invites: {...}, ss: {...} }. Vide tant que non chargées. */
 let lues = { cartes: {}, badges: {}, irl: {}, invites: {}, ss: {}, support: {}, eggs: {}, anciennete: {} };
@@ -50,6 +54,12 @@ export function chargerReglages() {
     } catch (e) {
       console.warn('[réglages] réglages du site illisibles, valeurs actuelles affichées :', e?.message || e);
     }
+    await Promise.all(Object.entries(RPC_SETTINGS).map(async ([cle, rpc]) => {
+      try {
+        const { data, error } = await sb.rpc(rpc);
+        if (!error && estObjet(data)) out[cle] = data;
+      } catch { /* sans session ou sans réponse : repli des textes */ }
+    }));
     // Textes calculés de l'assistance (hg_settings.support, lisible sans compte) : minimum de caractères et liste des sujets.
     const sup = out.support;
     const mini = Number(sup.message_min);

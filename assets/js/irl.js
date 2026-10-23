@@ -15,6 +15,7 @@ import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { pluralCount, pad } from './utils.js';
 import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
+import { lireQuota, restants, messagePhotos, messageSortie } from './eco-quota.js';
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit les fantômes et peut tout modifier.
@@ -488,6 +489,7 @@ async function uploadPhotos(eventId, input) {
   const status = $(`[data-status-for="${CSS.escape(eventId)}"]`);
   const label = input.closest('label');
   input.disabled = true; label?.classList.add('is-busy');
+  const reste = restants(await lireQuota(), 'photos'); // photos qui rapportent encore des Paillettes aujourd'hui
   let ok = 0;
   for (const [i, f] of files.entries()) {
     if (status) status.textContent = `Compression et envoi ${i + 1} / ${files.length}…`;
@@ -506,7 +508,7 @@ async function uploadPhotos(eventId, input) {
   }
   input.disabled = false; label?.classList.remove('is-busy');
   if (status) status.textContent = '';
-  if (ok) { toast(`${pluralCount(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`, 'ok'); S.expanded.add(eventId); await refresh(); }
+  if (ok) { toast(messagePhotos(ok, reste, `${pluralCount(ok, 'photo ajoutée', 'photos ajoutées')} à l'album.`), 'ok'); S.expanded.add(eventId); await refresh(); }
 }
 /**
  * Télécharge toutes les photos de l'album dans un fichier ZIP. Le bouton affiche « Préparation du ZIP… » pendant le calcul.
@@ -672,6 +674,11 @@ form.addEventListener('submit', async (e) => {
   if (mode === 'fixed') {
     if (!f.starts_at.value) { toast('Indique une date, ou choisis « Date à caler ».', 'error'); f.starts_at.focus(); return; }
     starts_at = new Date(f.starts_at.value).toISOString();
+    // Une nouvelle sortie se crée à l'avance (la base refuse une date passée, sauf « rencontre passée » ou Staff).
+    if (!editing && !isAdmin && new Date(starts_at).getTime() < Date.now() - 3600000) {
+      toast('Cette date est passée. Pour une rencontre qui a déjà eu lieu, utilise « Ajouter une rencontre passée ».', 'error');
+      f.starts_at.focus(); return;
+    }
   } else {
     pollRows = $$('.date-row input', $('#ev-dates')).filter((i) => i.value);
     const uniq = new Set(pollRows.map((i) => i.value));
@@ -686,10 +693,12 @@ form.addEventListener('submit', async (e) => {
   btn.disabled = true;
   try {
     let id = editing?.id;
+    let resteSortie = null; // sorties qui rapportent encore des Paillettes cette semaine
     if (editing) {
       const { error } = await sb.from('hg_events').update(payload).eq('id', id);
       if (error) throw error;
     } else {
+      resteSortie = restants(await lireQuota(), 'sortie');
       const { data, error } = await sb.from('hg_events').insert({ ...payload, created_by: me.id }).select().single();
       if (error) throw error;
       id = data.id;
@@ -726,7 +735,7 @@ form.addEventListener('submit', async (e) => {
     } catch (err) { toast(`Sortie enregistrée, mais image non envoyée : ${errMsg(err)}`, 'error'); }
 
     if (!editing) notify('irl_new', { event_id: id });
-    toast(editing ? 'Sortie mise à jour.' : 'Sortie proposée. Le gang est prévenu.', 'ok');
+    toast(editing ? 'Sortie mise à jour.' : messageSortie(resteSortie, 'Sortie proposée. Le gang est prévenu.'), 'ok');
     dlg.close();
     await refresh();
     if (!editing) { location.hash = `event-${id}`; goToHash(); }

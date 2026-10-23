@@ -79,13 +79,21 @@ const god = () => !!me?.is_admin && isGodMode();
 const STATUS_TXT = { inscriptions: 'inscriptions ouvertes', tirage: 'tirage en préparation', envoi: 'envoi des cadeaux', revelation: 'révélation', termine: 'terminée' };
 
 /* ---------- Chargement ---------- */
-/** Charge les inscrits de l'édition, et ma propre ligne de participation. */
+/**
+ * Charge les inscrits de l'édition (RPC hg_ss_people : pseudo et date d'inscription, sans les dates d'envoi ni de
+ * réception des autres, qui trahiraient le Santa), et ma propre ligne de participation (seule ligne lisible).
+ */
 async function loadParticipants() {
-  const { data, error } = await sb.from('hg_ss_participants')
-    .select('user_id, sent_at, received_at, joined_at').eq('edition_id', S.ed.id).order('joined_at');
-  if (error) throw error;
-  S.participants = data || [];
-  S.mine = S.participants.find((p) => p.user_id === me.id) || null;
+  const [mine, people] = await Promise.all([
+    sb.from('hg_ss_participants').select('user_id, sent_at, received_at, joined_at')
+      .eq('edition_id', S.ed.id).eq('user_id', me.id).maybeSingle(),
+    sb.rpc('hg_ss_people', { p_edition: S.ed.id }),
+  ]);
+  if (mine.error) throw mine.error;
+  if (people.error) throw people.error;
+  S.mine = mine.data || null;
+  S.participants = (people.data || []).map((p) => (S.mine && p.user_id === me.id ? S.mine : p));
+  if (S.mine && !S.participants.some((p) => p.user_id === me.id)) S.participants.push(S.mine);
 }
 /** Charge ma liste de souhaits pour cette édition. */
 async function loadMyWishes() {
@@ -550,9 +558,11 @@ async function openSantaChat(btn, role) {
 function renderSend() {
   const el = $('#ss-send'); if (!el) return;
   const sent = S.mine?.sent_at, rec = S.mine?.received_at;
-  // Édition terminée : les cases ne se cochent plus, sauf en mode sans limite.
-  const closed = S.ed.status === 'termine' && !god();
-  const tag = S.ed.status === 'termine' ? godTag() : '';
+  // L'envoi se note pendant la phase « envoi », la réception pendant l'envoi ou la révélation (règle de la base) ;
+  // en dehors, les cases ne se cochent plus, sauf en mode sans limite.
+  const sendOpen = S.ed.status === 'envoi', recOpen = ['envoi', 'revelation'].includes(S.ed.status);
+  const closedSent = !sendOpen && !god(), closedRec = !recOpen && !god();
+  const tagSent = sendOpen ? '' : godTag(), tagRec = recOpen ? '' : godTag();
   /** Bouton « Annuler » d'une coche, réservé au mode sans limite ; chaîne vide sinon. */
   const undo = (field, label) => (god() && S.mine?.[field] ? `<button class="btn btn-ghost btn-sm" type="button" data-undo="${field}">Annuler « ${label} »${godTag()}</button>` : '');
   el.innerHTML = `
@@ -564,7 +574,7 @@ function renderSend() {
           <strong>Cadeau envoyé</strong>
           <span class="muted small">${sent ? `Le ${esc(fmtDateTime(sent))}` : 'Pas encore'}</span>
         </div>
-        <button class="btn ${sent ? 'btn-ghost' : 'btn-primary'}" type="button" id="ss-sent"${sent || closed ? ' disabled' : ''}>${sent ? 'Envoyé' : `J’ai envoyé le cadeau${tag}`}</button>
+        <button class="btn ${sent ? 'btn-ghost' : 'btn-primary'}" type="button" id="ss-sent"${sent || closedSent ? ' disabled' : ''}>${sent ? 'Envoyé' : `J’ai envoyé le cadeau${tagSent}`}</button>
       </li>
       <li class="ss-check${rec ? ' is-done' : ''}">
         <span class="ss-check-icon" aria-hidden="true">${rec ? I.check : I.box}</span>
@@ -572,7 +582,7 @@ function renderSend() {
           <strong>Mon cadeau reçu</strong>
           <span class="muted small">${rec ? `Le ${esc(fmtDateTime(rec))}` : 'Pas encore'}</span>
         </div>
-        <button class="btn ${rec ? 'btn-ghost' : 'btn-sand'}" type="button" id="ss-received"${rec || closed ? ' disabled' : ''}>${rec ? 'Reçu' : `J’ai reçu le mien${tag}`}</button>
+        <button class="btn ${rec ? 'btn-ghost' : 'btn-sand'}" type="button" id="ss-received"${rec || closedRec ? ' disabled' : ''}>${rec ? 'Reçu' : `J’ai reçu le mien${tagRec}`}</button>
       </li>
     </ul>
     ${undo('sent_at', 'envoyé') || undo('received_at', 'reçu') ? `<div class="btn-row">${undo('sent_at', 'envoyé')}${undo('received_at', 'reçu')}</div>` : ''}

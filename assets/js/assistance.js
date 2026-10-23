@@ -19,15 +19,16 @@ const SUPPORT_DEFAUT = {
 // Le sujet « Bug sur le site » doit toujours exister : c'est celui que le formulaire de bug attend.
 const BUG_SUBJECT = 'Bug sur le site';
 /**
- * Lit les réglages de l'assistance dans hg_settings (clé « support »), en gardant les défauts pour tout champ invalide.
+ * Lit les réglages publics de l'assistance (RPC hg_support_public), en gardant les défauts pour tout champ invalide.
  * Une lecture qui échoue donne simplement les défauts : le formulaire reste utilisable.
  * @returns {Promise<{sujets: string[], message_min: number, message_max: number, delai_reponse_jours: number}>}
  */
 async function loadSupportRules() {
   const r = { ...SUPPORT_DEFAUT };
   try {
-    const { data } = await sb.from('hg_settings').select('value').eq('key', 'support').maybeSingle();
-    const s = data?.value && typeof data.value === 'object' ? data.value : {};
+    // RPC hg_support_public : sujets et longueurs seulement (les seuils anti-spam restent côté serveur).
+    const { data } = await sb.rpc('hg_support_public');
+    const s = data && typeof data === 'object' ? data : {};
     if (Array.isArray(s.sujets)) {
       const clean = [...new Set(s.sujets.filter((x) => typeof x === 'string').map((x) => x.trim()).filter((x) => x && x.length <= 80))];
       if (clean.length && clean.length <= 20 && clean.includes(BUG_SUBJECT)) r.sujets = clean;
