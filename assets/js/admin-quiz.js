@@ -13,6 +13,7 @@ import { confirmBox } from './ui-confirm.js';
 import { openDrawer } from './admin/ui/drawer.js';
 import { mountQuizStats } from './admin-quiz-stats.js';
 import { mountQuizJour } from './admin-quiz-jour.js';
+import { openQuizImport } from './admin-quiz-import.js'; // idée A1 : import d'un fichier CSV (tiroir)
 
 /* ---------- Constantes ---------- */
 // Types de réponse : [valeur en base, libellé].
@@ -174,6 +175,7 @@ export async function mountQuizSection(container) {
         <p class="small muted">Les membres répondent à ces questions ; une bonne réponse rapporte les Paillettes de la question, versées tout de suite.</p>
         <div class="btn-row">
           <button class="btn btn-ghost" type="button" data-adq="examples">Exemples</button>
+          <button class="btn btn-ghost" type="button" data-adq="import">Importer un fichier</button>
           <button class="btn btn-primary" type="button" data-adq="new">+ Nouvelle question</button>
         </div>
       </div>
@@ -306,6 +308,7 @@ async function onClick(e) {
   if (act === 'tab') return showTab(t.dataset.tab);
   if (act === 'new') return openQuestionForm({});
   if (act === 'examples') return openExamples();
+  if (act === 'import') return openQuizImport({ onDone: reload });
   if (act === 'save-rewards') return saveRewards(t);
   const row = Q.rows.find((x) => x.id === t.dataset.id);
   if (!row) return;

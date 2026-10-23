@@ -64,10 +64,24 @@ const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   catch (e) { console.warn('[panel] module facultatif indisponible :', o.url, e?.message); return [o.sub, null]; }
 }));
 
+// Idées A2, A3, A4 (migration 092) : sous-sections livrées comme fournisseurs complets ({ main, open }). Un module absent
+// retire sa sous-section (comme OPTIONAL).
+const PROVIDERS = [
+  { route: 'pilotage/planning', url: './admin/planning.js', name: 'planningSub' },     // Pilotage › Planning
+  { route: 'membres/relance', url: './admin-accounts/remind.js', name: 'remindSub' },  // Membres › À relancer
+  { route: 'cartes/mes-jeux', url: './admin-mj.js', name: 'mjSub' },                   // Jeux et cartes › Mes jeux
+];
+const providersP = Promise.all(PROVIDERS.map(async (p) => {
+  try { const m = await import(p.url); return [p, m[p.name] && typeof m[p.name] === 'object' ? m[p.name] : null]; }
+  catch (e) { console.warn('[panel] module facultatif indisponible :', p.url, e?.message); return [p, null]; }
+}));
+
 // Démarrage : l'identité (et les droits) sont lus d'abord ; le reste suit.
 const me = await initPage({ auth: 'admin' });
 const MOUNT = Object.fromEntries(await optionalP);
 disableSubs(...OPTIONAL.filter((o) => !MOUNT[o.sub]).map((o) => o.sub));
+const PROV = await providersP;
+disableSubs(...PROV.filter(([, v]) => !v).map(([p]) => p.route.split('/')[1]));
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -234,6 +248,7 @@ for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['men
     },
   });
 }
+for (const [p, v] of PROV) if (v) registerSub(p.route, v); // Planning, À relancer, Mes jeux (idées A2 à A4)
 registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */

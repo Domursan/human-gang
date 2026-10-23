@@ -1,0 +1,45 @@
+/* ===== Admin : Membres › À relancer (idée A4, assets/js/admin-accounts/remind.js) ===== */
+.rl-seg { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border-radius: 12px; background: var(--surface-2); flex-wrap: wrap; }
+.rl-seg-l { padding: 0 8px; }
+.rl-segb { min-height: 44px; min-width: 52px; padding: 0 10px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.rl-segb[aria-pressed="true"] { background: var(--bg); color: var(--text); font-weight: 700; }
+.rl { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1100px) { .rl { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); } }
+.rl-col { display: grid; gap: 8px; min-width: 0; }
+.rl-sum { margin: 0 0 4px; }
+.rl-h { margin: 12px 0 2px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rl-row { width: 100%; min-height: 56px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rl-row:hover, .rl-row:focus-visible { border-color: var(--border-strong); }
+.rl-row.is-sel { border-color: var(--rose); background: color-mix(in srgb, var(--rose) 8%, var(--surface)); }
+.rl-who { display: grid; gap: 2px; min-width: 0; }
+.rl-who .small { overflow-wrap: anywhere; }
+.rl-av { width: 36px; height: 36px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; background: var(--c); color: #111; font-weight: 700; font-size: 12px; }
+.rl-av.is-big { width: 52px; height: 52px; font-size: 16px; }
+.rl-tag { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-strong); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.rl-tag.is-back { border-color: transparent; background: var(--sage-soft); color: var(--sage-text); font-weight: 700; }
+.rl-prow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rl-prow b { flex: 1; }
+.rl-models { justify-self: start; margin-top: 8px; }
+.rl-fiche { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); min-width: 0; }
+.rl-fhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.rl-fwho { flex: 1; min-width: 160px; }
+.rl-fwho h3 { margin: 0; font-size: 20px; font-weight: 600; }
+.rl-fwho p { margin: 2px 0 0; }
+.rl-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.rl-tile { margin: 0; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-2); display: grid; gap: 6px; align-content: start; }
+.rl-tile span { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rl-tile b { font-size: 14px; overflow-wrap: anywhere; }
+.rl-tpl { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.rl-label { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rl-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.rl-chip[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: #1a1407; font-weight: 700; }
+.rl-msg { width: 100%; min-height: 120px; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; line-height: 1.5; resize: vertical; }
+.rl-fiche > p { margin: 0; }
+.rl-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.rl-actions [data-rl="pause"] { margin-right: auto; }
+.rl-form { display: grid; gap: 12px; }
+.rl-mf { margin: 0; padding: 10px 14px 12px; border: 1px solid var(--border); border-radius: 12px; display: grid; gap: 10px; }
+.rl-mf legend { padding: 0 6px; font-weight: 700; font-size: 14px; }

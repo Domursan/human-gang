@@ -91,7 +91,7 @@ const DB = {
   // Staff : catalogue des permissions (migration 026) et membres Staff. Scénario S.staff : le membre connecté (S.uid) est Staff.
   hg_perm_catalog: [['membres','Membres'],['evenements','Sorties IRL'],['souvenirs','Souvenirs et photos'],['secret_santa','Secret Santa'],
     ['cartes','Jeu de cartes'],['badges','Badges'],['themes','Thèmes et événements'],['messages','Messagerie'],['support','Assistance et idées'],
-    ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin'],['quiz','Questions du gang']]
+    ['bot','Bot Discord'],['reglages','Réglages du site'],['journal','Journal admin'],['quiz','Questions du gang'],['mj','Maître du jeu']]
     .map(([key, label], i) => ({ key, label, description: 'Description de ' + label.toLowerCase(), sort: (i + 1) * 10 })),
   // Staff de test : scénario staffRows, ou un Staff construit à partir de S.staff pour le membre connecté (S.uid).
   hg_staff: S.staffRows || Array.isArray(S.staff) && S.staff.length ? (S.staffRows || [{ user_id: S.uid, perms: [...S.staff], active: true, note: 'Aide sur les cartes', added_by: ME,
@@ -592,6 +592,133 @@ function boosterTypeSave(p) {
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
+/* ---------- Idées A1 à A4 (migration 092) : import du quiz, planning, maîtres du jeu, membres à relancer ----------
+   Scénario : S.remind (réponse de hg_admin_to_remind), S.games / S.gameMasters (jeux), S.botScheduled (annonces programmées),
+   S.importError (erreur de l'import réel). Les droits suivent hg_has_perm (admin, ou Staff avec la permission). */
+const hasP = (k) => { const m = myPermsNow(); return m.is_admin || m.perms.includes(k); };
+const xErr = (message) => ({ data: null, error: { message } });
+DB.hg_bot_scheduled = S.botScheduled || [];
+DB.hg_games = S.games || [{ slug: 'ck3', name: 'Campagne Serge (CK3)', channel_id: '333333333333333333', active: true }, { slug: 'minecraft', name: 'Minecraft', channel_id: null, active: true }];
+DB.hg_game_masters = S.gameMasters || [];
+DB.hg_relances = [];
+/** Texte normalisé (doublons du quiz), comme hg_quiz_norm. */
+const qnorm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+function xa1Rpc(fn, args = {}) {
+  if (fn === 'hg_touch') return { data: null, error: null };
+  if (fn === 'hg_quiz_import') {
+    if (!hasP('quiz')) return denied;
+    const rows = args.p_rows || [];
+    if (rows.length > 300) return xErr('300 lignes au plus par fichier');
+    const seen = new Map(); const out = [];
+    for (const r of rows) {
+      let status = 'pret', error = null, warning = null, similar_to = null;
+      if (r.error) { status = 'erreur'; error = r.error; }
+      else if (!['facile', 'moyen', 'difficile', 'expert'].includes(r.difficulty || 'moyen')) { status = 'erreur'; error = 'difficulté inconnue'; }
+      else {
+        const n = qnorm(r.prompt);
+        const ex = DB.hg_quiz_questions.find((q) => qnorm(q.prompt) === n);
+        if (ex) { status = 'doublon'; similar_to = ex.prompt; } else if (seen.has(n)) { status = 'doublon'; similar_to = `ligne ${seen.get(n)} du fichier`; }
+        seen.set(n, r.line);
+        if (r.reward && Number(r.reward) > 5000) warning = 'récompense hors limites (0 à 5000) : 100 Paillettes appliquées';
+      }
+      out.push({ line: r.line, status, error, warning, similar_to, similarity: similar_to ? 100 : 0 });
+    }
+    if (args.p_dry_run === false) {
+      if (S.importError) return xErr(S.importError);
+      const bad = out.find((x) => x.status === 'erreur');
+      if (bad) return xErr(`Import annulé, rien n’est enregistré : ligne ${bad.line} : ${bad.error}`);
+      for (const r of rows) quizSave({ p_id: null, p_question: { ...r, reward: Number(r.reward) <= 5000 && r.reward !== '' ? Number(r.reward || 100) : 100 }, p_key: r.key });
+      window.__LOG.push(['quiz_import', rows.length]);
+    }
+    return { data: { dry_run: args.p_dry_run !== false, created: args.p_dry_run === false ? rows.length : 0, rows: out,
+      ready: out.filter((x) => x.status === 'pret').length, duplicates: out.filter((x) => x.status === 'doublon').length, errors: out.filter((x) => x.status === 'erreur').length }, error: null };
+  }
+  if (fn === 'hg_planning_items') {
+    const from = new Date(args.p_from), to = new Date(args.p_to);
+    if (to - from > 92 * 864e5) return xErr('Période trop longue (92 jours au plus)');
+    const inR = (d) => d && new Date(d) >= from && new Date(d) < to;
+    const out = [];
+    if (hasP('quiz')) for (const q of DB.hg_quiz_questions) if (inR(q.starts_at)) out.push({ kind: 'quiz', id: q.id, title: q.prompt, start: q.starts_at, end: q.ends_at, status: 'active', route: 'cartes/questions' });
+    if (hasP('themes')) for (const e of DB.hg_dyn_events) if (new Date(e.starts_at) < to && new Date(e.ends_at) >= from) out.push({ kind: 'evenement', id: e.id, title: e.name, start: e.starts_at, end: e.ends_at, status: 'active', route: 'vie/evenements' });
+    if (hasP('evenements')) for (const e of DB.hg_events) if (inR(e.starts_at)) out.push({ kind: 'sortie', id: e.id, title: e.title, start: e.starts_at, end: null, status: 'prevue', detail: e.location, route: 'vie/sorties' });
+    if (hasP('cartes')) for (const d of S.planningDrops || []) if (inR(d.start)) out.push({ kind: 'carte_drop', route: 'cartes/drops', status: 'normale', ...d });
+    if (hasP('bot')) for (const b of DB.hg_bot_scheduled) if (inR(b.send_at)) out.push({ kind: 'bot', id: b.id, title: b.title || b.body.slice(0, 80), start: b.send_at, end: null,
+      status: b.cancelled_at ? 'annulee' : b.sent_at ? 'envoyee' : 'programmee', by: 'Ethan', detail: b.body, channels: b.channels, game: b.game_slug ? 'Campagne Serge (CK3)' : null, route: 'communication/bot' });
+    return { data: out, error: null };
+  }
+  if (fn === 'hg_bot_schedule_save') {
+    if (!hasP('bot')) return denied;
+    if (!args.p_body || !args.p_channels?.length) return xErr('Choisis entre 1 et 5 salons');
+    const row = args.p_id ? DB.hg_bot_scheduled.find((x) => x.id === args.p_id) : null;
+    if (row) Object.assign(row, { title: args.p_title, body: args.p_body, channels: args.p_channels, send_at: args.p_send_at });
+    else DB.hg_bot_scheduled.push({ id: uid(), title: args.p_title, body: args.p_body, channels: args.p_channels, send_at: args.p_send_at, sent_at: null, cancelled_at: null, game_slug: null, created_at: new Date().toISOString() });
+    window.__LOG.push(['bot_schedule', args.p_send_at]);
+    return { data: row?.id || DB.hg_bot_scheduled.at(-1).id, error: null };
+  }
+  if (fn === 'hg_bot_schedule_cancel') {
+    const row = DB.hg_bot_scheduled.find((x) => x.id === args.p_id);
+    if (!row) return xErr('Annonce introuvable');
+    if (!hasP('bot') && !(row.game_slug && hasP('mj'))) return denied;
+    row.cancelled_at = new Date().toISOString();
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_mj_overview') {
+    const m = myPermsNow(); const admin = m.is_admin;
+    if (!admin && !m.perms.includes('mj')) return denied;
+    const mine = DB.hg_games.filter((g) => admin || DB.hg_game_masters.some((x) => x.game_slug === g.slug && x.user_id === uidNow()));
+    const pseudo = (id) => DB.hg_profiles.find((p) => p.id === id)?.pseudo || '?';
+    return { data: { is_admin: admin, quota_max: 3,
+      candidates: admin ? DB.hg_staff.filter((s) => s.active && s.perms.includes('mj')).map((s) => ({ user_id: s.user_id, pseudo: pseudo(s.user_id) })) : [],
+      games: mine.map((g) => ({ ...g, masters: admin ? DB.hg_game_masters.filter((x) => x.game_slug === g.slug).map((x) => ({ user_id: x.user_id, pseudo: pseudo(x.user_id) })) : null,
+        quota: { used: DB.hg_bot_scheduled.filter((b) => b.game_slug === g.slug && !b.cancelled_at).length, max: 3 },
+        upcoming: DB.hg_bot_scheduled.filter((b) => b.game_slug === g.slug).slice().reverse() })) }, error: null };
+  }
+  if (fn === 'hg_mj_announce') {
+    const g = DB.hg_games.find((x) => x.slug === args.p_game);
+    const mine = isAdminNow() || (hasP('mj') && DB.hg_game_masters.some((x) => x.game_slug === args.p_game && x.user_id === uidNow()));
+    if (!g || !mine) return xErr('Réservé au maître du jeu de ce jeu');
+    if (DB.hg_bot_scheduled.filter((b) => b.game_slug === g.slug && !b.cancelled_at).length >= 3) return xErr('Déjà 3 annonces cette semaine pour ce jeu');
+    DB.hg_bot_scheduled.push({ id: uid(), title: 'Session ' + g.name, body: args.p_body, channels: [g.channel_id], send_at: args.p_send_at || new Date().toISOString(), sent_at: null, cancelled_at: null, game_slug: g.slug });
+    window.__LOG.push(['mj_announce', g.slug, args.p_body]);
+    return { data: 'ok', error: null };
+  }
+  if (fn === 'hg_game_save') {
+    if (!isAdminNow()) return denied;
+    const g = DB.hg_games.find((x) => x.slug === args.p_slug);
+    if (g) Object.assign(g, { name: args.p_name, channel_id: args.p_channel, active: args.p_active });
+    else DB.hg_games.push({ slug: args.p_slug, name: args.p_name, channel_id: args.p_channel, active: args.p_active });
+    return { data: args.p_slug, error: null };
+  }
+  if (fn === 'hg_game_master_set') {
+    if (!isAdminNow()) return denied;
+    DB.hg_game_masters = DB.hg_game_masters.filter((x) => !(x.game_slug === args.p_game && x.user_id === args.p_user));
+    if (args.p_on) DB.hg_game_masters.push({ game_slug: args.p_game, user_id: args.p_user });
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_admin_to_remind') {
+    if (!hasP('membres')) return denied;
+    const R = S.remind || { todo: [], done: [], paused: [] };
+    const gone = (id) => DB.hg_relances.find((r) => r.user_id === id);
+    return { data: { days: args.p_days, todo: R.todo.filter((m) => !gone(m.id)),
+      done: [...R.done, ...R.todo.filter((m) => gone(m.id)?.canal === 'copie' || gone(m.id)?.canal === 'mp').map((m) => ({ ...m, at: new Date().toISOString(), by: 'Ethan', canal: gone(m.id).canal, back: false }))],
+      paused: [...R.paused, ...R.todo.filter((m) => gone(m.id)?.canal === 'pause')] }, error: null };
+  }
+  if (fn === 'hg_relance_mark' || fn === 'hg_relance_pause') {
+    if (!hasP('membres')) return denied;
+    DB.hg_relances.push({ user_id: args.p_user, canal: fn === 'hg_relance_pause' ? (args.p_pause ? 'pause' : 'reprise') : args.p_canal });
+    window.__LOG.push([fn, args.p_user, args.p_canal ?? args.p_pause]);
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_relance_settings') return hasP('membres') ? { data: DB.hg_settings.find((r) => r.key === 'relance')?.value || {}, error: null } : denied;
+  if (fn === 'hg_relance_settings_save') {
+    if (!hasP('membres')) return denied;
+    DB.hg_settings = DB.hg_settings.filter((r) => r.key !== 'relance');
+    DB.hg_settings.push({ key: 'relance', value: { modeles: args.p_modeles } });
+    return { data: null, error: null };
+  }
+  return null;
+}
+
 export function createClient() {
   return {
     auth: {
@@ -887,6 +1014,7 @@ export function createClient() {
         const rows = DB.hg_ss_assignments.filter((a) => a.edition_id === args.p_edition).map((a) => ({ giver: pseudo(a.giver_id), receiver: pseudo(a.receiver_id) }));
         return { data: rows.sort((x, y) => x.giver.localeCompare(y.giver, 'fr')), error: null };
       }
+      { const x = xa1Rpc(fn, args); if (x) return x; } // idées A1 à A4 (migration 092)
       return { data: null, error: null };
     },
     // Temps réel et stockage (fichiers) : simulés plus bas.

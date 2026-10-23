@@ -32,10 +32,15 @@ export const SECTION_PERM = {
   'jeux-geo': 'souvenirs', 'jeux-jdj': 'cartes', 'jeux-citations': 'quiz',
   // Jeux (paquet xJ3) : preuves des quêtes (J11), Framed et Heardle (J9, J10), Bataille (J15)
   preuves: 'preuves', 'jeux-medias': 'souvenirs', bataille: 'cartes',
+  // Idées A3 et A4 (migration 092) : Mes jeux (permission « Maître du jeu ») et À relancer. Le Planning (A2) est à part :
+  // permis dès qu'une de ses sources l'est (PLANNING_PERMS), chaque bloc étant filtré par la base.
+  mj: 'mj', relance: 'membres',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
 const TILE_SECTIONS = ['comptes', 'membres', 'secret-santa', 'idees', 'assistance'];
+// Planning (idée A2) : visible si l'une de ces permissions est accordée (quiz, cartes, événements, sorties, Secret Santa, bot).
+const PLANNING_PERMS = ['quiz', 'cartes', 'themes', 'evenements', 'secret_santa', 'bot'];
 
 // Sous-menus : `heading` (facultatif) = titre du groupe de sous-sections dans la colonne de navigation et dans la palette
 // (« Groupe · Libellé »). Les sous-sections d'un même groupe se suivent. Un groupe sans sous-section permise n'affiche pas
@@ -49,12 +54,14 @@ const under = (heading, subs) => subs.map((s) => ({ ...s, heading }));
 export const DOMAINS = [
   { id: 'pilotage', label: 'Pilotage', icon: 'gauge', subs: [
     { id: 'apercu', label: "Vue d'ensemble", section: 'apercu' },
+    { id: 'planning', label: 'Planning', section: 'planning' },
     { id: 'journal', label: 'Journal', section: 'journal' },
     { id: 'staff', label: 'Staff', section: 'staff' },
   ] },
   { id: 'membres', label: 'Membres', icon: 'users', subs: [
     ...under('Comptes', [
       { id: 'comptes', label: 'Comptes', section: 'comptes' },
+      { id: 'relance', label: 'À relancer', section: 'relance' },
       { id: 'invitations', label: 'Invitations', section: 'membres' },
       { id: 'champs', label: 'Champs du profil', section: 'champs' },
     ]),
@@ -111,6 +118,7 @@ export const DOMAINS = [
       { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves' },
       { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
       { id: 'bataille', label: 'Bataille', section: 'bataille' },
+      { id: 'mes-jeux', label: 'Mes jeux', section: 'mj' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [
@@ -158,6 +166,7 @@ export function disableSubs(...ids) { for (const id of ids) disabled.add(id); }
  */
 export function canSection(id) {
   if (id === 'apercu') return TILE_SECTIONS.some(canSection);
+  if (id === 'planning') return PLANNING_PERMS.some((k) => hasPerm(k));
   const need = SECTION_PERM[id];
   if (!need) return false;
   if (need === 'admin') return !!getCachedPerms()?.is_admin;

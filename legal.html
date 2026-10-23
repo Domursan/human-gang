@@ -98,7 +98,7 @@
             <table class="legal-table">
               <thead><tr><th scope="col">Catégorie</th><th scope="col">Données</th></tr></thead>
               <tbody>
-                <tr><th scope="row">Compte</th><td>Adresse e-mail, mot de passe (stocké uniquement sous forme chiffrée irréversible, personne ne peut le lire), code d'invitation utilisé, dates de création et de dernière connexion.</td></tr>
+                <tr><th scope="row">Compte</th><td>Adresse e-mail, mot de passe (stocké uniquement sous forme chiffrée irréversible, personne ne peut le lire), code d'invitation utilisé, dates de création et de dernière connexion, jour de ta dernière visite du site (vu seulement par l’admin et le Staff « Membres », à la semaine près, pour proposer une relance amicale qui ne part jamais toute seule).</td></tr>
                 <tr><th scope="row">Profil</th><td>Pseudo, avatar, couleur, date d'anniversaire (facultative), choix de partager le jour et le mois de ton anniversaire, identifiant Discord (facultatif), préférence de messages du bot, intro déjà vue.</td></tr>
                 <tr><th scope="row">Informations diverses</th><td>Facultatives : adresse de livraison, nom pour le colis, téléphone, tailles, goûts, allergies et contraintes, remarques libres (rubrique « Informations diverses » de Mon compte).</td></tr>
                 <tr><th scope="row">Secret Santa</th><td>Participation aux éditions, liste de souhaits (intitulés et liens), dates d'envoi et de réception du cadeau, résultat du tirage (qui offre à qui).</td></tr>
@@ -217,6 +217,7 @@
                 <tr><th scope="row"><code>hg_invite_code</code> <span class="small">(sessionStorage)</span></th><td>Code d'invitation reçu par un lien, gardé le temps de l'inscription</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_invite_link</code> <span class="small">(sessionStorage)</span></th><td>Lien d'invitation déjà utilisé, pour ne pas générer un nouveau code à chaque rechargement de la page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_godmode_sync</code></th><td>Synchronise le mode administrateur entre les onglets ouverts sur cet appareil</td><td>Jusqu'à la fin ou la désactivation du mode</td></tr>
+                <tr><th scope="row"><code>hg_seen_day</code></th><td>Jour où ta visite a déjà été notée, pour ne l’envoyer qu’une fois par jour</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_geo_v1</code></th><td>Coordonnées des lieux de rencontre déjà trouvées, pour ne pas les rechercher à chaque ouverture de la carte IRL (aucune donnée personnelle)</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_ss_seen_&lt;édition&gt;</code></th><td>Se souvenir que tu as déjà vu ta cible du Secret Santa pour cette édition</td><td>Jusqu'à effacement</td></tr>
               </tbody>

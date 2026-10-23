@@ -86,6 +86,16 @@
   .faits p { margin: 0; color: var(--text); }
   .faits b { color: var(--muted); font-weight: 700; }
 
+  /* Grille adaptée au nombre de boosters (affiches.js) : 4 colonnes et textes un peu réduits au-delà de 9 */
+  .gamme.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .gamme.g4 .tile { padding: 18px 14px 14px; gap: 10px; }
+  .gamme.g4 .tile h2 { font-size: 19px; white-space: normal; }
+  .gamme.g4 .taux li { font-size: 12.5px; padding: 3px 0 2px; }
+  .gamme.g4 .vitrine { width: 70px; height: 93px; }
+  .gamme.g4 .vitrine .cart-box { transform: scale(.32); }
+  .gamme.g4 .faits { font-size: 12.5px; }
+  .until { display: inline-block; padding: 2px 10px 1px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; color: #1a1407; background: var(--gold-2); }
+
   /* Pied */
   .foot { margin-top: 14px; padding: 14px 0 24px; border-top: 3px solid var(--raspberry); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .04em; line-height: 1.5; }
   .foot b { color: var(--gold); font-weight: 700; }
@@ -101,17 +111,17 @@
     <div>
       <p class="kicker">Humane Gang · Page Cartes · Boutique</p>
       <h1>Les boosters<span class="soft">la gamme complète</span></h1>
-      <p class="intro">Neuf boosters pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.</p>
+      <p class="intro" id="gamme-intro">Neuf boosters pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.</p>
     </div>
   </header>
 
-  <div class="sec-title"><h2>Les 9 boosters</h2><span class="tag">Du plus simple au plus rare</span></div>
+  <div class="sec-title"><h2 id="gamme-titre">Les 9 boosters</h2><span class="tag">Du plus simple au plus rare</span></div>
 
   <section class="gamme" id="gamme" aria-label="Les neuf boosters"></section>
 
   <footer class="foot">
     <span><b>✦</b> Tous les boosters s’achètent dans la Boutique ; le Classique est aussi offert 1 fois par jour. Sans pastille de limite : pas de limite.</span>
-    <span class="r">Taux par carte tirée · Disponible : toujours</span>
+    <span class="r">Taux par carte tirée · <span id="gamme-date">Données écrites dans la page</span></span>
   </footer>
 </main>
 
@@ -181,7 +191,8 @@ function tuile(b, i) {
   });
   lignes.push('<li class="brill"><b>✦ Brillante</b><span>' + pct(b.brillante) + '</span></li>');
   const badges = (b.gratuit ? '<span class="free">' + esc(b.gratuit) + '</span>' : '')
-    + (b.limite ? '<span class="lim">' + esc(b.limite) + '</span>' : '');
+    + (b.limite ? '<span class="lim">' + esc(b.limite) + '</span>' : '')
+    + (b.jusqua ? '<span class="until">' + esc(b.jusqua) + '</span>' : '');
   return '<article class="tile" style="--tint:' + b.tint + '">'
     + '<div class="t-head"><span class="n">' + String(i + 1).padStart(2, '0') + '</span><h2>' + esc(b.nom) + '</h2></div>'
     + '<div class="t-body">'
@@ -198,6 +209,9 @@ function tuile(b, i) {
 }
 
 document.getElementById('gamme').innerHTML = BOOSTERS.map(tuile).join('');
+// affiches.js (module) relit les boosters actifs en base et redessine la grille avec la même tuile ; cette liste reste le repli.
+window.HG_GAMME = { tuile, BOOSTERS, esc };
 </script>
+<script type="module" src="affiches.js"></script>
 </body>
 </html>

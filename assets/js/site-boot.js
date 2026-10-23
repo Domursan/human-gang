@@ -10,6 +10,7 @@
  * (eggs/core.js) une fois la page chargée, sans la ralentir.
  * Page : toutes les pages (chargé avant le module de chaque page).
  * Dépendances : aucune au démarrage (quest-track.js seulement si l'app est installée ; eggs/core.js après le chargement). Le fichier sw.js (racine du site) est enregistré ici.
+ * Note aussi la visite du jour (hg_touch, idée A4 : une écriture par jour au plus, seulement connecté).
  * Exporte : rien (effets de bord seulement).
  */
 
@@ -86,3 +87,19 @@ const lanceSecrets = () => { import('./eggs/core.js').then((m) => m.initEggs()).
 /** Planifie le lancement quand le navigateur est au repos (ou après un court délai si l'API manque). */
 const auRepos = () => ('requestIdleCallback' in window ? requestIdleCallback(lanceSecrets, { timeout: 2000 }) : setTimeout(lanceSecrets, 800));
 if (document.readyState === 'complete') auRepos(); else addEventListener('load', auRepos, { once: true });
+
+/* ---------- Visite du jour (idée A4 « Membres à relancer ») ---------- */
+// Une fois par jour et par navigateur (repère local), seulement avec une session : hg_touch note le jour de visite
+// (date seule, lue par l'admin et le Staff « Membres » à la semaine près). Import dynamique, après le chargement.
+const noteVisite = async () => {
+  const jour = new Date().toISOString().slice(0, 10);
+  try { if (localStorage.getItem('hg_seen_day') === jour) return; } catch { /* stockage bloqué : on note quand même */ }
+  try {
+    const { sb } = await import('./core/supabase.js');
+    const { data } = await sb.auth.getSession();
+    if (!data?.session) return;
+    const { error } = await sb.rpc('hg_touch');
+    if (!error) { try { localStorage.setItem('hg_seen_day', jour); } catch { /* sans repère : un appel par page, sans effet */ } }
+  } catch { /* hors ligne ou fonction absente : sans importance */ }
+};
+if (document.readyState === 'complete') setTimeout(noteVisite, 1500); else addEventListener('load', () => setTimeout(noteVisite, 1500), { once: true });

@@ -1,6 +1,8 @@
 // =====================================================================
 // Affiches A3 : chiffres et listes lus sur le site (prix, gains, taux, critères des badges, quêtes, badges).
-// Une affiche déclare sa page avec <body data-affiche="badges | paillettes | cartes | boosters">.
+// Une affiche déclare sa page avec <body data-affiche="badges | paillettes | cartes | boosters | boosters-gamme">.
+// Boosters (idée A5) : la gamme (boosters-gamme) est reconstruite depuis hg_booster_types (types actifs, ordre « sort ») ;
+// la liste BOOSTERS écrite dans la page reste le repli (sans session). boosters : prix et taille du Classique lus sur son type.
 // Les chiffres sont des éléments data-cfg (valeur d'un réglage), data-expr (calcul) ou data-cfg-calc
 // (calcul de la page) : voir assets/js/reglages-jetons.js. Le texte écrit dans la page est le repli :
 // il reste affiché si un réglage est illisible (par exemple sans session, les affiches sont imprimées connecté).
@@ -210,6 +212,80 @@ function afficherQuetes(quetes) {
   }));
 }
 
+/* ---------- Boosters (idée A5) : gamme et prix lus sur hg_booster_types ---------- */
+// Nombre maximal de boosters sur une A3 (au-delà, les suivants sont signalés en pied de page).
+const GAMME_MAX = 12;
+// Teinte du liseré de chaque style de cartouche (comme la liste écrite dans la page) ; or par défaut.
+const TEINTES = { 'cart--classique': '#c4c9d6', 'cart--serie': '#2fd17a', 'cart--argente': '#d9dee9', 'cart--dore': '#FBD32D',
+  'cart--diamant': '#4f80ff', 'cart--quitte': '#1f9d5c', 'cart--collection': '#a674f5', 'cart--identite': '#FE3104',
+  'cart--holo': 'linear-gradient(90deg,#FE3104,#FCA301,#FBD32D,#159946,#2B5AE2,#4E2398)' };
+// Cartes possibles selon le tirage (colonne pool).
+const POOLS = { tous: 'toutes sauf les uniques', serie: 'la série choisie à l’ouverture',
+  manquantes: 'uniquement les cartes que tu n’as pas, sauf uniques (différence remboursée)' };
+const jourFr = (d) => new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+const jourCourt = (d) => new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short' }).format(d);
+// Nombres en toutes lettres pour l'accroche (jusqu'à 12).
+const LETTRES = ['Zéro', 'Un', 'Deux', 'Trois', 'Quatre', 'Cinq', 'Six', 'Sept', 'Huit', 'Neuf', 'Dix', 'Onze', 'Douze'];
+
+/** Types de boosters actifs (hg_booster_types, lisible par tout membre connecté). Liste vide si la lecture échoue. */
+async function lireBoosters() {
+  try {
+    const { data, error } = await sb.from('hg_booster_types').select('*').eq('active', true).order('sort');
+    if (error) throw error;
+    return (data ?? []).filter((t) => t && t.id && t.name && Number.isFinite(Number(t.price)));
+  } catch (e) {
+    console.warn('[affiches] boosters illisibles, liste écrite dans la page :', e?.message || e);
+    return [];
+  }
+}
+
+/** Ligne de hg_booster_types → tuile de l'affiche (mêmes champs que la liste BOOSTERS de la page). Les taux sont ceux du tirage. */
+function boosterDeType(t) {
+  const fin = t.ends_at || t.available_until || null;   // booster saisonnier (colonne facultative, idées C1 à C3)
+  const debut = t.starts_at || t.available_from || null;
+  const futur = debut && new Date(debut) > Date.now();
+  return {
+    nom: String(t.name).slice(0, 28), cls: /^cart--[a-z0-9-]+$/.test(t.style || '') ? t.style : 'cart--classique',
+    lbl2: String(t.name).toUpperCase().slice(0, 18), tint: TEINTES[t.style] || '#e2c77e',
+    prix: Number(t.price), cartes: Number(t.size) || 5, taux: t.rates || {}, brillante: Number(t.shiny_rate) || 0,
+    possibles: POOLS[t.pool] || POOLS.tous, limite: t.weekly_limit ? `${t.weekly_limit} / semaine` : null,
+    gratuit: t.free_daily ? '1 gratuit / jour' : null,
+    jusqua: futur ? `Dès le ${jourCourt(new Date(debut))}` : fin ? `Jusqu’au ${jourCourt(new Date(fin))}` : null,
+  };
+}
+
+/** Page de la gamme : grille reconstruite (3 colonnes jusqu'à 9 boosters, 4 au-delà), titre et date des données. */
+async function afficherGamme() {
+  const g = window.HG_GAMME;
+  if (!g?.tuile) return;
+  const types = await lireBoosters();
+  if (!types.length) return;   // repli : la grille écrite dans la page reste
+  const liste = types.slice(0, GAMME_MAX).map(boosterDeType);
+  const n = liste.length;
+  const grille = document.getElementById('gamme');
+  grille.classList.toggle('g4', n > 9);
+  const cols = n > 9 ? 4 : 3;
+  grille.style.gridTemplateRows = `repeat(${Math.max(1, Math.ceil(n / cols))}, minmax(0, 1fr))`;
+  grille.innerHTML = liste.map(g.tuile).join('');
+  grille.setAttribute('aria-label', `Les ${n} boosters`);
+  const titre = document.getElementById('gamme-titre');
+  if (titre) titre.textContent = `Les ${n} booster${n > 1 ? 's' : ''}`;
+  const intro = document.getElementById('gamme-intro');
+  if (intro) intro.textContent = `${LETTRES[n] || n} booster${n > 1 ? 's' : ''} pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.`;
+  const date = document.getElementById('gamme-date');
+  if (date) date.textContent = `Données du ${jourFr(new Date())}${types.length > GAMME_MAX ? ` · ${types.length - GAMME_MAX} autre(s) dans la Boutique` : ''}`;
+}
+
+/** Affiche des boosters : prix et taille du booster Classique lus sur son type (sinon les réglages cartes.*). */
+async function prixClassique() {
+  const types = await lireBoosters();
+  const c = types.find((t) => t.id === 'classique') || types[0];
+  if (!c) return;
+  for (const el of document.querySelectorAll('[data-cfg="cartes.booster_price"]')) el.textContent = fmt(Number(c.price));
+  for (const el of document.querySelectorAll('[data-expr="cartes.booster_price*5"]')) el.textContent = fmt(Number(c.price) * 5);
+  for (const el of document.querySelectorAll('[data-cfg="cartes.booster_size"]')) el.textContent = fmt(Number(c.size) || 5);
+}
+
 /* ---------- Démarrage ---------- */
 const page = document.body.dataset.affiche;
 await chargerReglages();
@@ -224,3 +300,6 @@ appliquerReglages(document, {
   // Nombre de quêtes actives (sinon le nombre écrit dans la page).
   quetes: () => quetes.length || undefined,
 });
+// Boosters : après les réglages, pour que les valeurs du type l'emportent sur cartes.booster_price.
+if (page === 'boosters-gamme') await afficherGamme();
+if (page === 'boosters') await prixClassique();
