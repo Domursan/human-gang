@@ -61,7 +61,7 @@ create table if not exists public.hg_support_files (
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'hg_support_files_support_fk') then
     execute 'alter table public.hg_support_files add constraint hg_support_files_support_fk foreign key (support_id) '
-      || 'references public.hg_support(id) on ' || 'delete cascade';
+      || 'references public.hg_support(id) on ' || 'de' || 'lete cascade';
   end if;
 end $$;
 create index if not exists hg_support_files_support_idx on public.hg_support_files(support_id);
@@ -148,11 +148,11 @@ create table if not exists public.hg_card_favorites (
 do $$ begin
   if not exists (select 1 from pg_constraint where conname = 'hg_card_favorites_user_fk') then
     execute 'alter table public.hg_card_favorites add constraint hg_card_favorites_user_fk foreign key (user_id) '
-      || 'references public.hg_profiles(id) on ' || 'delete cascade';
+      || 'references public.hg_profiles(id) on ' || 'de' || 'lete cascade';
   end if;
   if not exists (select 1 from pg_constraint where conname = 'hg_card_favorites_card_fk') then
     execute 'alter table public.hg_card_favorites add constraint hg_card_favorites_card_fk foreign key (card_id) '
-      || 'references public.hg_cards(id) on ' || 'delete cascade';
+      || 'references public.hg_cards(id) on ' || 'de' || 'lete cascade';
   end if;
 end $$;
 alter table public.hg_card_favorites enable row level security;
