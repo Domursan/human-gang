@@ -10,7 +10,7 @@
 // Droits : admin ou Staff avec la permission « cartes » ; sinon lecture seule (champs désactivés, explication).
 // Dépendances : core.js (sb, toast, errMsg, esc, $, $$, currentLogo, hasPerm), cartes-ui.js (rarityLabel),
 // admin/ui/drawer.js (openDrawer), constants.js (CFG_DEFAULT, RARITY_IDS, ICON), helpers.js (check, nf).
-// Style des cartouches : cartes-boosters.css (chargée à la demande) + géométrie copiée dans admin-cards.css.
+// Style des cartouches : cartes-boosters.css et boosters-styles.css (chargées à la demande) + géométrie copiée dans admin-cards.css.
 // Exporte : mountBoostersTab, BOOSTER_STYLES, effectiveRates, boosterOdds, recycleValue, simulate, savePayload.
 // Contrat 071 : création { create: true, id, … } ; modification { id, …champs changés } ; réponse { type, created, free_daily_removed_from }.
 // Statistiques : { types: [{ id, sales: { d7|d30|total: { boosters, paillettes } }, opens: { total… }, stock: { total, holders }, gifts: { total… } }], opens_since }.
@@ -20,14 +20,11 @@ import { rarityLabel } from '../cartes-ui.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { CFG_DEFAULT, RARITY_IDS, ICON } from './constants.js';
 import { check, nf } from './helpers.js';
+import { BOOSTER_STYLES, BOOSTER_STYLE_LIST, BOOSTER_STYLE_FAMILIES, boosterStyleClass } from '../booster-styles.js';
 
 /* ---------- Constantes ---------- */
-/** Les 9 styles de cartouche (classe CSS de cartes-boosters.css, libellé). */
-export const BOOSTER_STYLES = [
-  ['cart--classique', 'Classique'], ['cart--serie', 'Série'], ['cart--argente', 'Argenté'], ['cart--dore', 'Doré'],
-  ['cart--diamant', 'Diamant'], ['cart--quitte', 'Quitte ou double'], ['cart--holo', 'Holographique'],
-  ['cart--collection', 'Collection'], ['cart--identite', 'Identité'],
-];
+/** Les 39 styles de cartouche (9 d'origine + 30 couleurs) : liste de référence dans booster-styles.js. */
+export { BOOSTER_STYLES };
 /** Contenu possible d'un booster (colonne pool). */
 const POOLS = [
   ['tous', 'Toutes les séries', 'Les cartes sont tirées dans toutes les séries ouvertes.'],
@@ -63,8 +60,8 @@ const round = (n, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
 const pct = (n) => `${nf(round(n, 1))} %`;
 /** Libellé d'un style de cartouche. */
 const styleLabel = (s) => BOOSTER_STYLES.find(([c]) => c === s)?.[1] || 'Classique';
-/** Classe de style sûre (une des 9), sinon classique. */
-const safeStyle = (s) => (BOOSTER_STYLES.some(([c]) => c === s) ? s : 'cart--classique');
+/** Classe de style sûre (une des 39), sinon classique. */
+const safeStyle = boosterStyleClass;
 /** Liste de chaînes (colonne text[]), vide si absente. */
 const arr = (v) => (Array.isArray(v) ? v.map(String) : []);
 
@@ -83,14 +80,36 @@ function cartHtml(t, s = 0.3) {
     + `<span class="cart-foot">${esc(nf(Number(t.size) || 5))} CARTES</span></span></span>`;
 }
 
-/** Charge cartes-boosters.css (variantes de cartouches) une seule fois. */
+/** Charge cartes-boosters.css (9 styles d'origine) et boosters-styles.css (30 couleurs) une seule fois. */
 function ensureCss() {
   if (document.querySelector('link[data-abt-css]')) return;
-  const l = document.createElement('link');
-  l.rel = 'stylesheet';
-  l.href = 'assets/css/cartes-boosters.css';
-  l.dataset.abtCss = '1';
-  document.head.append(l);
+  ['assets/css/cartes-boosters.css', 'assets/css/boosters-styles.css'].forEach((href) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = href;
+    l.dataset.abtCss = '1';
+    document.head.append(l);
+  });
+}
+
+/**
+ * Sélecteur visuel des styles : un groupe par famille de couleurs (titre + grille de cartouches nommées).
+ * Un seul groupe de boutons radio (name="style") ; le motif et la luminosité sont rappelés au survol (title).
+ * @param {object} t type (ou brouillon) : style actuel, taille
+ * @returns {string}
+ */
+function styleGridHtml(t) {
+  const cur = safeStyle(t.style);
+  return BOOSTER_STYLE_FAMILIES.map(([fam, famLabel]) => {
+    const list = BOOSTER_STYLE_LIST.filter((st) => st.fam === fam);
+    if (!list.length) return '';
+    return `<div class="abt-style-fam" role="group" aria-labelledby="abt-fam-${fam}">
+        <p class="abt-style-fh" id="abt-fam-${fam}">${esc(famLabel)} <span class="muted">(${list.length})</span></p>
+        <div class="abt-style-grid">${list.map((st) => `<label class="abt-style"${st.motif ? ` title="${esc(`${st.label} : ${st.motif}`)}"` : ''}>
+          <input type="radio" name="style" value="${esc(st.cls)}"${cur === st.cls ? ' checked' : ''}>
+          ${cartHtml({ style: st.cls, name: st.label, size: t.size }, 0.25)}<span class="abt-style-l">${esc(st.label)}</span></label>`).join('')}</div>
+      </div>`;
+  }).join('');
 }
 
 /* =========================================================
@@ -426,10 +445,8 @@ function editorHtml(t, isNew) {
     </div>
     <div class="field"><label for="abt-desc">Description <span class="muted small">(Boutique, 300 caractères au maximum)</span></label>
       <textarea id="abt-desc" name="description" maxlength="300" rows="2">${esc(t.description || '')}</textarea></div>
-    <fieldset class="abt-styles"><legend>Style de la cartouche</legend>
-      <div class="abt-style-grid">${BOOSTER_STYLES.map(([c, l]) => `<label class="abt-style">
-          <input type="radio" name="style" value="${c}"${safeStyle(t.style) === c ? ' checked' : ''}>
-          ${cartHtml({ style: c, name: l, size: t.size }, 0.25)}<span class="abt-style-l">${esc(l)}</span></label>`).join('')}</div>
+    <fieldset class="abt-styles"><legend>Style de la cartouche <span class="small">· ${BOOSTER_STYLE_LIST.length} styles, rangés par famille de couleurs</span></legend>
+      ${styleGridHtml(t)}
     </fieldset>
     <div class="acd-grid-2">
       ${numField('price', 'Prix', t.price, { unit: '✦', help: '0 = gratuit.' })}

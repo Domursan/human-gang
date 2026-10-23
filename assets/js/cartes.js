@@ -16,6 +16,7 @@ import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paill
 import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
+import { boosterStyleClass } from './booster-styles.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -519,11 +520,12 @@ function fitAll(root = document) {
 
 /* ---------- Cartouche de booster (concept « cartouche de jeu ») ---------- */
 /**
- * Classe de variante d'une cartouche (cart--<style>, voir cartes-boosters.css) ; vide si le style n'est pas un nom simple.
+ * Classe de variante d'une cartouche (cart--<style>, voir cartes-boosters.css et boosters-styles.css) ;
+ * un style absent ou inconnu retombe sur « cart--classique » (liste de référence : booster-styles.js).
  * @param {object|null} type type de booster (champ style)
  * @returns {string}
  */
-const styleClass = (type) => (/^cart--[a-z_]+$/.test(type?.style || '') ? type.style : '');
+const styleClass = (type) => boosterStyleClass(type?.style);
 /**
  * Sous-titre d'une cartouche typée : le nom du type en capitales ; pour la série, le nom de la série choisie (si connue).
  * @param {object} type type de booster

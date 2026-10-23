@@ -1,0 +1,355 @@
+/* ===== Cartouches de booster : 30 styles de couleur supplémentaires (à charger après cartes-boosters.css) =====
+   Même construction que les 9 styles d’origine : dégradé du corps + motif, étiquette unie, sous-titre clair,
+   tranche rayée, pied contrasté (≥ 4,5:1, vérifié aussi motif renforcé). Chaque style a un motif propre et un
+   niveau de luminosité (clair, moyen, sombre) : il reste reconnaissable sans distinguer les teintes.
+   Mode daltonien : --bs-k renforce l’opacité des motifs (×1,8). Liste et familles : assets/js/booster-styles.js.
+   Généré à partir d’un seul tableau (couleurs relevées et contrastes calculés) ; garder les blocs homogènes. */
+html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
+
+/* ================= Rouges ================= */
+/* ---------- Rubis : facettes taillées, moyen (#b0153a) ---------- */
+.cart--rubis .cart-body { background:
+  linear-gradient(118deg, rgb(255 255 255 / calc(0.3 * var(--bs-k, 1))) 0%, rgb(255 255 255 / 0) 40%),
+  linear-gradient(205deg, rgb(255 255 255 / 0) 55%, rgb(255 255 255 / calc(0.16 * var(--bs-k, 1))) 100%),
+  linear-gradient(150deg, rgb(0 0 0 / calc(0.14 * var(--bs-k, 1))) 0 50%, rgb(0 0 0 / 0) 50%),
+  linear-gradient(30deg, rgb(0 0 0 / 0) 0 62%, rgb(255 255 255 / calc(0.08 * var(--bs-k, 1))) 62%),
+  linear-gradient(180deg, #c81c45 0%, #7e0c25 100%); }
+.cart--rubis .cart-label-fl { background: #4d0616; }
+.cart--rubis .cart-lbl1 { color: #fff; }
+.cart--rubis .cart-lbl2 { color: #ffc2cf; }
+.cart--rubis .cart-ridge { background: repeating-linear-gradient(90deg, #4d0616 0 4px, #e0566f 4px 8px); }
+.cart--rubis .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #7e0c25, 0 0 4px #7e0c25; }
+
+/* ---------- Paprika : grains d’épices, moyen (#c43d14) ---------- */
+.cart--paprika .cart-body { background:
+  radial-gradient(circle, rgb(60 10 0 / calc(0.45 * var(--bs-k, 1))) 0 1.3px, transparent 1.8px) 0 0 / 9px 11px,
+  radial-gradient(circle, rgb(255 210 170 / calc(0.4 * var(--bs-k, 1))) 0 1px, transparent 1.5px) 4px 6px / 13px 7px,
+  linear-gradient(180deg, #d24a1c 0%, #8f2a0b 100%); }
+.cart--paprika .cart-label-fl { background: #4a1204; }
+.cart--paprika .cart-lbl1 { color: #fff; }
+.cart--paprika .cart-lbl2 { color: #ffd0b0; }
+.cart--paprika .cart-ridge { background: repeating-linear-gradient(90deg, #4a1204 0 4px, #f08a5a 4px 8px); }
+.cart--paprika .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #8f2a0b, 0 0 4px #8f2a0b; }
+
+/* ---------- Braise : étincelles et lueur, sombre (#3d0b05) ---------- */
+.cart--braise .cart-body { background:
+  radial-gradient(circle, rgb(255 154 60 / calc(0.95 * var(--bs-k, 1))) 0 1.3px, transparent 1.9px) 0 0 / 23px 31px,
+  radial-gradient(circle, rgb(255 200 100 / calc(0.75 * var(--bs-k, 1))) 0 .9px, transparent 1.4px) 11px 15px / 17px 19px,
+  radial-gradient(ellipse at 50% 72%, rgb(255 90 20 / .40) 0, rgb(255 90 20 / 0) 55%),
+  linear-gradient(180deg, #1c0604 0%, #3d0b05 100%); }
+.cart--braise .cart-label-fl { background: #8a1c06; }
+.cart--braise .cart-lbl1 { color: #fff; }
+.cart--braise .cart-lbl2 { color: #ffd49a; }
+.cart--braise .cart-ridge { background: repeating-linear-gradient(90deg, #1c0604 0 4px, #e2541a 4px 8px); }
+.cart--braise .cart-foot { color: #ffcf8a; font-weight: 700; text-shadow: 0 0 2px #3d0b05, 0 0 4px #3d0b05; }
+
+/* ---------- Corail : vagues, clair (#ff9a86) ---------- */
+.cart--corail .cart-body { background:
+  radial-gradient(circle at 50% 0, transparent 0 9px, rgb(255 255 255 / calc(0.4 * var(--bs-k, 1))) 9px 11px, transparent 11px) 0 0 / 24px 14px,
+  linear-gradient(180deg, #ffb8a8 0%, #ff8f78 100%); }
+.cart--corail .cart-label-fl { background: #8f2416; }
+.cart--corail .cart-lbl1 { color: #fff; }
+.cart--corail .cart-lbl2 { color: #ffdcd3; }
+.cart--corail .cart-ridge { background: repeating-linear-gradient(90deg, #8f2416 0 4px, #ffc9bc 4px 8px); }
+.cart--corail .cart-foot { color: #5a140a; font-weight: 700; text-shadow: 0 0 2px #ff8f78, 0 0 4px #ff8f78; }
+
+/* ---------- Framboise : pois, moyen (#b81a5e) ---------- */
+.cart--framboise .cart-body { background:
+  radial-gradient(circle, rgb(255 255 255 / calc(0.2 * var(--bs-k, 1))) 0 3px, transparent 3.5px) 0 0 / 16px 16px,
+  radial-gradient(circle, rgb(255 255 255 / calc(0.2 * var(--bs-k, 1))) 0 3px, transparent 3.5px) 8px 8px / 16px 16px,
+  linear-gradient(180deg, #cc2369 0%, #9a134b 100%); }
+.cart--framboise .cart-label-fl { background: #4a0623; }
+.cart--framboise .cart-lbl1 { color: #fff; }
+.cart--framboise .cart-lbl2 { color: #ffbcd8; }
+.cart--framboise .cart-ridge { background: repeating-linear-gradient(90deg, #4a0623 0 4px, #f27aac 4px 8px); }
+.cart--framboise .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #9a134b, 0 0 4px #9a134b; }
+
+/* ================= Roses et violets ================= */
+/* ---------- Dragée : losanges, clair (#f7d0df) ---------- */
+.cart--dragee .cart-body { background:
+  linear-gradient(45deg, rgb(200 70 130 / calc(0.14 * var(--bs-k, 1))) 25%, transparent 25% 75%, rgb(200 70 130 / calc(0.14 * var(--bs-k, 1))) 75%) 0 0 / 24px 34px,
+  linear-gradient(-45deg, rgb(200 70 130 / calc(0.14 * var(--bs-k, 1))) 25%, transparent 25% 75%, rgb(200 70 130 / calc(0.14 * var(--bs-k, 1))) 75%) 0 0 / 24px 34px,
+  linear-gradient(180deg, #fbe2ec 0%, #f3c4d6 100%); }
+.cart--dragee .cart-label-fl { background: #8c2453; }
+.cart--dragee .cart-lbl1 { color: #fff; }
+.cart--dragee .cart-lbl2 { color: #ffe0ec; }
+.cart--dragee .cart-ridge { background: repeating-linear-gradient(90deg, #8c2453 0 4px, #f7cfe0 4px 8px); }
+.cart--dragee .cart-foot { color: #5a1033; font-weight: 700; text-shadow: 0 0 2px #f3c4d6, 0 0 4px #f3c4d6; }
+
+/* ---------- Fuchsia : rayures néon, sombre (#c2127f) ---------- */
+.cart--fuchsia .cart-body { background:
+  repeating-linear-gradient(135deg, transparent 0 14px, rgb(255 70 200 / calc(0.55 * var(--bs-k, 1))) 14px 15.5px, transparent 15.5px 22px),
+  radial-gradient(ellipse at 50% 40%, rgb(255 60 190 / .22) 0, rgb(255 60 190 / 0) 65%),
+  linear-gradient(180deg, #2a0a24 0%, #1a0616 100%); }
+.cart--fuchsia .cart-label-fl { background: #b0106f; }
+.cart--fuchsia .cart-lbl1 { color: #fff; }
+.cart--fuchsia .cart-lbl2 { color: #ffe1f4; }
+.cart--fuchsia .cart-ridge { background: repeating-linear-gradient(90deg, #1a0616 0 4px, #ff46c8 4px 8px); }
+.cart--fuchsia .cart-foot { color: #ff9ade; font-weight: 700; text-shadow: 0 0 2px #1a0616, 0 0 4px #1a0616; }
+
+/* ---------- Mauve : tartan, moyen (#8f5f80) ---------- */
+.cart--mauve .cart-body { background:
+  repeating-linear-gradient(0deg, rgb(60 20 50 / calc(0.22 * var(--bs-k, 1))) 0 6px, transparent 6px 22px, rgb(255 255 255 / calc(0.12 * var(--bs-k, 1))) 22px 24px, transparent 24px 34px),
+  repeating-linear-gradient(90deg, rgb(60 20 50 / calc(0.22 * var(--bs-k, 1))) 0 6px, transparent 6px 22px, rgb(255 255 255 / calc(0.12 * var(--bs-k, 1))) 22px 24px, transparent 24px 34px),
+  linear-gradient(180deg, #a2708f 0%, #6e4562 100%); }
+.cart--mauve .cart-label-fl { background: #3d2236; }
+.cart--mauve .cart-lbl1 { color: #fff; }
+.cart--mauve .cart-lbl2 { color: #f3d6e8; }
+.cart--mauve .cart-ridge { background: repeating-linear-gradient(90deg, #3d2236 0 4px, #d9b3cb 4px 8px); }
+.cart--mauve .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #6e4562, 0 0 4px #6e4562; }
+
+/* ---------- Lavande : fleurettes, clair (#d4c4f5) ---------- */
+.cart--lavande .cart-body { background:
+  radial-gradient(circle at 50% 28%, rgb(110 70 180 / calc(0.35 * var(--bs-k, 1))) 0 1.7px, transparent 2.2px) 0 0 / 18px 18px,
+  radial-gradient(circle at 50% 72%, rgb(110 70 180 / calc(0.35 * var(--bs-k, 1))) 0 1.7px, transparent 2.2px) 0 0 / 18px 18px,
+  radial-gradient(circle at 28% 50%, rgb(110 70 180 / calc(0.35 * var(--bs-k, 1))) 0 1.7px, transparent 2.2px) 0 0 / 18px 18px,
+  radial-gradient(circle at 72% 50%, rgb(110 70 180 / calc(0.35 * var(--bs-k, 1))) 0 1.7px, transparent 2.2px) 0 0 / 18px 18px,
+  linear-gradient(180deg, #e6dbfb 0%, #c8b6f0 100%); }
+.cart--lavande .cart-label-fl { background: #4b2e8c; }
+.cart--lavande .cart-lbl1 { color: #fff; }
+.cart--lavande .cart-lbl2 { color: #e6dbfb; }
+.cart--lavande .cart-ridge { background: repeating-linear-gradient(90deg, #4b2e8c 0 4px, #d4c4f5 4px 8px); }
+.cart--lavande .cart-foot { color: #2c1858; font-weight: 700; text-shadow: 0 0 2px #c8b6f0, 0 0 4px #c8b6f0; }
+
+/* ---------- Prune : zigzags, sombre (#3f1646) ---------- */
+.cart--prune .cart-body { background:
+  linear-gradient(135deg, rgb(255 255 255 / calc(0.07 * var(--bs-k, 1))) 25%, transparent 25%) -10px 0 / 20px 20px,
+  linear-gradient(225deg, rgb(255 255 255 / calc(0.07 * var(--bs-k, 1))) 25%, transparent 25%) -10px 0 / 20px 20px,
+  linear-gradient(315deg, rgb(255 255 255 / calc(0.07 * var(--bs-k, 1))) 25%, transparent 25%) 0 0 / 20px 20px,
+  linear-gradient(45deg, rgb(255 255 255 / calc(0.07 * var(--bs-k, 1))) 25%, transparent 25%) 0 0 / 20px 20px,
+  linear-gradient(180deg, #4a1a52 0%, #2e1033 100%); }
+.cart--prune .cart-label-fl { background: #8e3a9a; }
+.cart--prune .cart-lbl1 { color: #fff; }
+.cart--prune .cart-lbl2 { color: #f6dcfa; }
+.cart--prune .cart-ridge { background: repeating-linear-gradient(90deg, #2e1033 0 4px, #c77ad3 4px 8px); }
+.cart--prune .cart-foot { color: #ecc4f2; font-weight: 700; text-shadow: 0 0 2px #2e1033, 0 0 4px #2e1033; }
+
+/* ================= Oranges et bruns ================= */
+/* ---------- Abricot : vichy, clair (#ffd2a8) ---------- */
+.cart--abricot .cart-body { background:
+  linear-gradient(90deg, rgb(230 120 42 / calc(0.16 * var(--bs-k, 1))) 50%, transparent 50%) 0 0 / 20px 20px,
+  linear-gradient(0deg, rgb(230 120 42 / calc(0.16 * var(--bs-k, 1))) 50%, transparent 50%) 0 0 / 20px 20px,
+  linear-gradient(180deg, #ffe2c4 0%, #ffc898 100%); }
+.cart--abricot .cart-label-fl { background: #8a3f0c; }
+.cart--abricot .cart-lbl1 { color: #fff; }
+.cart--abricot .cart-lbl2 { color: #ffe2c4; }
+.cart--abricot .cart-ridge { background: repeating-linear-gradient(90deg, #8a3f0c 0 4px, #ffc898 4px 8px); }
+.cart--abricot .cart-foot { color: #6a2e05; font-weight: 700; text-shadow: 0 0 2px #ffc898, 0 0 4px #ffc898; }
+
+/* ---------- Mandarine : rayures diagonales larges, moyen (#f57412) ---------- */
+.cart--mandarine .cart-body { background:
+  repeating-linear-gradient(45deg, rgb(255 255 255 / calc(0.15 * var(--bs-k, 1))) 0 14px, transparent 14px 28px),
+  linear-gradient(180deg, #ff8a24 0%, #e8620a 100%); }
+.cart--mandarine .cart-label-fl { background: #5c2a00; }
+.cart--mandarine .cart-lbl1 { color: #fff; }
+.cart--mandarine .cart-lbl2 { color: #ffd29a; }
+.cart--mandarine .cart-ridge { background: repeating-linear-gradient(90deg, #5c2a00 0 4px, #ffb36b 4px 8px); }
+.cart--mandarine .cart-foot { color: #2e1400; font-weight: 700; text-shadow: 0 0 2px #e8620a, 0 0 4px #e8620a; }
+
+/* ---------- Miel : alvéoles, moyen (#cf8510) ---------- */
+.cart--miel .cart-body { background:
+  radial-gradient(circle, transparent 0 7px, rgb(110 60 0 / calc(0.3 * var(--bs-k, 1))) 7px 9px, transparent 9px) 0 0 / 18px 16px,
+  radial-gradient(circle, transparent 0 7px, rgb(110 60 0 / calc(0.3 * var(--bs-k, 1))) 7px 9px, transparent 9px) 9px 8px / 18px 16px,
+  linear-gradient(180deg, #e8a62a 0%, #c97d12 100%); }
+.cart--miel .cart-label-fl { background: #4f2e00; }
+.cart--miel .cart-lbl1 { color: #fff; }
+.cart--miel .cart-lbl2 { color: #ffd36b; }
+.cart--miel .cart-ridge { background: repeating-linear-gradient(90deg, #4f2e00 0 4px, #f2b440 4px 8px); }
+.cart--miel .cart-foot { color: #1e1100; font-weight: 700; text-shadow: 0 0 2px #c97d12, 0 0 4px #c97d12; }
+
+/* ---------- Cuivre : métal brossé, moyen (#c27440) ---------- */
+.cart--cuivre .cart-body { background:
+  repeating-linear-gradient(180deg, rgb(255 255 255 / calc(0.1 * var(--bs-k, 1))) 0 1px, rgb(0 0 0 / calc(0.04 * var(--bs-k, 1))) 1px 3px),
+  linear-gradient(115deg, rgb(255 255 255 / 0) 35%, rgb(255 230 200 / .35) 50%, rgb(255 255 255 / 0) 65%),
+  linear-gradient(180deg, #e7a274 0%, #b0602f 55%, #d58550 100%); }
+.cart--cuivre .cart-label-fl { background: #4a1f0a; }
+.cart--cuivre .cart-lbl1 { color: #fff; }
+.cart--cuivre .cart-lbl2 { color: #ffcfae; }
+.cart--cuivre .cart-ridge { background: repeating-linear-gradient(90deg, #4a1f0a 0 4px, #e7a274 4px 8px); }
+.cart--cuivre .cart-foot { color: #2e1206; font-weight: 700; text-shadow: 0 0 2px #d58550, 0 0 4px #d58550; }
+
+/* ---------- Cacao : tablette, sombre (#3b2318) ---------- */
+.cart--cacao .cart-body { background:
+  linear-gradient(90deg, rgb(0 0 0 / calc(0.4 * var(--bs-k, 1))) 0 2px, transparent 2px) 0 0 / 36px 36px,
+  linear-gradient(0deg, rgb(0 0 0 / calc(0.4 * var(--bs-k, 1))) 0 2px, transparent 2px) 0 0 / 36px 36px,
+  linear-gradient(90deg, rgb(255 255 255 / calc(0.08 * var(--bs-k, 1))) 0 2px, transparent 2px) 2px 2px / 36px 36px,
+  linear-gradient(0deg, rgb(255 255 255 / calc(0.08 * var(--bs-k, 1))) 0 2px, transparent 2px) 2px 2px / 36px 36px,
+  linear-gradient(180deg, #4a2c1e 0%, #2c1810 100%); }
+.cart--cacao .cart-label-fl { background: #6e4128; }
+.cart--cacao .cart-lbl1 { color: #fff; }
+.cart--cacao .cart-lbl2 { color: #f4d6b6; }
+.cart--cacao .cart-ridge { background: repeating-linear-gradient(90deg, #2c1810 0 4px, #b07a4f 4px 8px); }
+.cart--cacao .cart-foot { color: #ecc8a2; font-weight: 700; text-shadow: 0 0 2px #2c1810, 0 0 4px #2c1810; }
+
+/* ================= Jaunes et verts ================= */
+/* ---------- Citron : papier quadrillé, clair (#f5e04a) ---------- */
+.cart--citron .cart-body { background:
+  linear-gradient(rgb(120 100 0 / calc(0.2 * var(--bs-k, 1))) 1px, transparent 1px) 0 0 / 12px 12px,
+  linear-gradient(90deg, rgb(120 100 0 / calc(0.2 * var(--bs-k, 1))) 1px, transparent 1px) 0 0 / 12px 12px,
+  linear-gradient(180deg, #fff27a 0%, #f2d92a 100%); }
+.cart--citron .cart-label-fl { background: #5c5200; }
+.cart--citron .cart-lbl1 { color: #fff; }
+.cart--citron .cart-lbl2 { color: #fff27a; }
+.cart--citron .cart-ridge { background: repeating-linear-gradient(90deg, #5c5200 0 4px, #fff27a 4px 8px); }
+.cart--citron .cart-foot { color: #363000; font-weight: 700; text-shadow: 0 0 2px #f2d92a, 0 0 4px #f2d92a; }
+
+/* ---------- Pistache : écailles, clair (#cbe39c) ---------- */
+.cart--pistache .cart-body { background:
+  radial-gradient(circle at 50% 100%, transparent 0 8px, rgb(60 90 20 / calc(0.28 * var(--bs-k, 1))) 8px 9.5px, transparent 9.5px) 0 0 / 20px 12px,
+  radial-gradient(circle at 50% 100%, transparent 0 8px, rgb(60 90 20 / calc(0.28 * var(--bs-k, 1))) 8px 9.5px, transparent 9.5px) 10px 6px / 20px 12px,
+  linear-gradient(180deg, #ddeeb4 0%, #b9d886 100%); }
+.cart--pistache .cart-label-fl { background: #3a5610; }
+.cart--pistache .cart-lbl1 { color: #fff; }
+.cart--pistache .cart-lbl2 { color: #e3f2b8; }
+.cart--pistache .cart-ridge { background: repeating-linear-gradient(90deg, #3a5610 0 4px, #ddeeb4 4px 8px); }
+.cart--pistache .cart-foot { color: #223606; font-weight: 700; text-shadow: 0 0 2px #b9d886, 0 0 4px #b9d886; }
+
+/* ---------- Kiwi : rayons, moyen (#5aac2c) ---------- */
+.cart--kiwi .cart-body { background:
+  repeating-conic-gradient(from 0deg at 50% 44%, rgb(255 255 255 / calc(0.13 * var(--bs-k, 1))) 0 6deg, transparent 6deg 18deg),
+  radial-gradient(circle at 50% 44%, rgb(240 255 210 / .35) 0 22px, rgb(240 255 210 / 0) 60px),
+  linear-gradient(180deg, #6cbf3a 0%, #4a9420 100%); }
+.cart--kiwi .cart-label-fl { background: #1c4608; }
+.cart--kiwi .cart-lbl1 { color: #fff; }
+.cart--kiwi .cart-lbl2 { color: #cdf2a6; }
+.cart--kiwi .cart-ridge { background: repeating-linear-gradient(90deg, #1c4608 0 4px, #9ee06a 4px 8px); }
+.cart--kiwi .cart-foot { color: #071702; font-weight: 700; text-shadow: 0 0 2px #4a9420, 0 0 4px #4a9420; }
+
+/* ---------- Olive : camouflage, moyen (#7f8128) ---------- */
+.cart--olive .cart-body { background:
+  radial-gradient(ellipse 26px 15px at 22% 18%, rgb(90 92 20 / calc(0.9 * var(--bs-k, 1))) 96%, transparent 100%) 0 0 / 110px 120px,
+  radial-gradient(ellipse 20px 13px at 72% 40%, rgb(163 160 70 / calc(0.9 * var(--bs-k, 1))) 96%, transparent 100%) 0 0 / 110px 120px,
+  radial-gradient(ellipse 24px 12px at 35% 70%, rgb(76 78 16 / calc(0.9 * var(--bs-k, 1))) 96%, transparent 100%) 0 0 / 110px 120px,
+  radial-gradient(ellipse 16px 11px at 85% 88%, rgb(163 160 70 / calc(0.9 * var(--bs-k, 1))) 96%, transparent 100%) 0 0 / 110px 120px,
+  linear-gradient(180deg, #8a8a2e 0%, #66681a 100%); }
+.cart--olive .cart-label-fl { background: #33350a; }
+.cart--olive .cart-lbl1 { color: #fff; }
+.cart--olive .cart-lbl2 { color: #ebe8a4; }
+.cart--olive .cart-ridge { background: repeating-linear-gradient(90deg, #33350a 0 4px, #b5b25a 4px 8px); }
+.cart--olive .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #66681a, 0 0 4px #66681a; }
+
+/* ---------- Acide : grille néon, sombre (#b6ff3b) ---------- */
+.cart--acide .cart-body { background:
+  linear-gradient(rgb(182 255 59 / calc(0.24 * var(--bs-k, 1))) 1px, transparent 1px) 0 0 / 22px 22px,
+  linear-gradient(90deg, rgb(182 255 59 / calc(0.24 * var(--bs-k, 1))) 1px, transparent 1px) 0 0 / 22px 22px,
+  radial-gradient(ellipse at 50% 50%, rgb(182 255 59 / .12) 0, rgb(182 255 59 / 0) 70%),
+  linear-gradient(180deg, #121c0a 0%, #0a1006 100%); }
+.cart--acide .cart-label-fl { background: #b6ff3b; }
+.cart--acide .cart-lbl1 { color: #0d1408; }
+.cart--acide .cart-lbl2 { color: #26420a; }
+.cart--acide .cart-ridge { background: repeating-linear-gradient(90deg, #0a1006 0 4px, #b6ff3b 4px 8px); }
+.cart--acide .cart-foot { color: #b6ff3b; font-weight: 700; text-shadow: 0 0 2px #0a1006, 0 0 4px #0a1006; }
+
+/* ================= Bleus et cyans ================= */
+/* ---------- Menthe : bulles, clair (#b4f0d6) ---------- */
+.cart--menthe .cart-body { background:
+  radial-gradient(circle, transparent 0 4px, rgb(15 110 80 / calc(0.28 * var(--bs-k, 1))) 4px 5.5px, transparent 5.5px) 0 0 / 30px 34px,
+  radial-gradient(circle, transparent 0 2px, rgb(15 110 80 / calc(0.28 * var(--bs-k, 1))) 2px 3.2px, transparent 3.2px) 14px 18px / 22px 26px,
+  linear-gradient(180deg, #cdf6e5 0%, #9ae4c4 100%); }
+.cart--menthe .cart-label-fl { background: #0f5c45; }
+.cart--menthe .cart-lbl1 { color: #fff; }
+.cart--menthe .cart-lbl2 { color: #cdf6e5; }
+.cart--menthe .cart-ridge { background: repeating-linear-gradient(90deg, #0f5c45 0 4px, #9ae4c4 4px 8px); }
+.cart--menthe .cart-foot { color: #073528; font-weight: 700; text-shadow: 0 0 2px #9ae4c4, 0 0 4px #9ae4c4; }
+
+/* ---------- Lagon : ondes, moyen (#17a6b4) ---------- */
+.cart--lagon .cart-body { background:
+  repeating-radial-gradient(circle at 18% 8%, rgb(255 255 255 / calc(0.16 * var(--bs-k, 1))) 0 2px, transparent 2px 14px),
+  linear-gradient(180deg, #22bcc6 0%, #0d8a9c 100%); }
+.cart--lagon .cart-label-fl { background: #063c45; }
+.cart--lagon .cart-lbl1 { color: #fff; }
+.cart--lagon .cart-lbl2 { color: #a6f2f6; }
+.cart--lagon .cart-ridge { background: repeating-linear-gradient(90deg, #063c45 0 4px, #7fe2ea 4px 8px); }
+.cart--lagon .cart-foot { color: #011216; font-weight: 700; text-shadow: 0 0 2px #0d8a9c, 0 0 4px #0d8a9c; }
+
+/* ---------- Pétrole : reflet irisé, sombre (#0b2f38) ---------- */
+.cart--petrole .cart-body { background:
+  linear-gradient(125deg, rgb(0 0 0 / 0) 28%, rgb(140 80 200 / calc(0.26 * var(--bs-k, 1))) 42%, rgb(40 200 170 / calc(0.26 * var(--bs-k, 1))) 52%, rgb(230 200 60 / calc(0.16 * var(--bs-k, 1))) 60%, rgb(0 0 0 / 0) 72%),
+  repeating-linear-gradient(170deg, rgb(127 216 226 / calc(0.07 * var(--bs-k, 1))) 0 1px, transparent 1px 12px),
+  linear-gradient(180deg, #0c3540 0%, #07222a 100%); }
+.cart--petrole .cart-label-fl { background: #146b78; }
+.cart--petrole .cart-lbl1 { color: #fff; }
+.cart--petrole .cart-lbl2 { color: #c4f4f8; }
+.cart--petrole .cart-ridge { background: repeating-linear-gradient(90deg, #07222a 0 4px, #3fb0bf 4px 8px); }
+.cart--petrole .cart-foot { color: #86dce6; font-weight: 700; text-shadow: 0 0 2px #07222a, 0 0 4px #07222a; }
+
+/* ---------- Azur : fines rayures verticales, moyen (#2a7de0) ---------- */
+.cart--azur .cart-body { background:
+  repeating-linear-gradient(90deg, rgb(255 255 255 / calc(0.14 * var(--bs-k, 1))) 0 1px, transparent 1px 9px),
+  linear-gradient(180deg, #3a8cec 0%, #1554ae 100%); }
+.cart--azur .cart-label-fl { background: #0b2f66; }
+.cart--azur .cart-lbl1 { color: #fff; }
+.cart--azur .cart-lbl2 { color: #c2e0ff; }
+.cart--azur .cart-ridge { background: repeating-linear-gradient(90deg, #0b2f66 0 4px, #8ec2ff 4px 8px); }
+.cart--azur .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #1554ae, 0 0 4px #1554ae; }
+
+/* ---------- Saphir : taille princesse, sombre (#0f2380) ---------- */
+.cart--saphir .cart-body { background:
+  conic-gradient(from 45deg, rgb(255 255 255 / calc(0.14 * var(--bs-k, 1))) 0 25%, rgb(0 0 0 / calc(0.2 * var(--bs-k, 1))) 0 50%, rgb(255 255 255 / calc(0.06 * var(--bs-k, 1))) 0 75%, rgb(0 0 0 / calc(0.08 * var(--bs-k, 1))) 0) 0 0 / 44px 44px,
+  linear-gradient(180deg, #14298f 0%, #0a1a5c 100%); }
+.cart--saphir .cart-label-fl { background: #08113a; }
+.cart--saphir .cart-lbl1 { color: #fff; }
+.cart--saphir .cart-lbl2 { color: #a9bdff; }
+.cart--saphir .cart-ridge { background: repeating-linear-gradient(90deg, #08113a 0 4px, #6f8cf0 4px 8px); }
+.cart--saphir .cart-foot { color: #c4d0ff; font-weight: 700; text-shadow: 0 0 2px #0a1a5c, 0 0 4px #0a1a5c; }
+
+/* ================= Indigos et neutres ================= */
+/* ---------- Pervenche : nuages, clair (#c0c8fb) ---------- */
+.cart--pervenche .cart-body { background:
+  radial-gradient(circle at 20% 22%, rgb(255 255 255 / .55) 0 16px, rgb(255 255 255 / 0) 26px),
+  radial-gradient(circle at 82% 46%, rgb(255 255 255 / .45) 0 20px, rgb(255 255 255 / 0) 32px),
+  radial-gradient(circle at 30% 84%, rgb(255 255 255 / .45) 0 18px, rgb(255 255 255 / 0) 30px),
+  radial-gradient(circle, rgb(44 52 140 / calc(0.18 * var(--bs-k, 1))) 0 1px, transparent 1.4px) 0 0 / 14px 14px,
+  linear-gradient(180deg, #d4daff 0%, #aeb7f4 100%); }
+.cart--pervenche .cart-label-fl { background: #2c348c; }
+.cart--pervenche .cart-lbl1 { color: #fff; }
+.cart--pervenche .cart-lbl2 { color: #d8ddff; }
+.cart--pervenche .cart-ridge { background: repeating-linear-gradient(90deg, #2c348c 0 4px, #d4daff 4px 8px); }
+.cart--pervenche .cart-foot { color: #1e2668; font-weight: 700; text-shadow: 0 0 2px #aeb7f4, 0 0 4px #aeb7f4; }
+
+/* ---------- Améthyste : géode, moyen (#8448c4) ---------- */
+.cart--amethyste .cart-body { background:
+  repeating-radial-gradient(ellipse at 50% 100%, rgb(255 255 255 / calc(0.11 * var(--bs-k, 1))) 0 6px, transparent 6px 14px),
+  linear-gradient(160deg, rgb(255 255 255 / .18) 0%, rgb(255 255 255 / 0) 40%),
+  linear-gradient(180deg, #9a5ad6 0%, #6a32a6 100%); }
+.cart--amethyste .cart-label-fl { background: #2e1052; }
+.cart--amethyste .cart-lbl1 { color: #fff; }
+.cart--amethyste .cart-lbl2 { color: #e6ceff; }
+.cart--amethyste .cart-ridge { background: repeating-linear-gradient(90deg, #2e1052 0 4px, #c79cf2 4px 8px); }
+.cart--amethyste .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #6a32a6, 0 0 4px #6a32a6; }
+
+/* ---------- Indigo : ciel étoilé, sombre (#24196a) ---------- */
+.cart--indigo .cart-body { background:
+  radial-gradient(circle, rgb(255 255 255 / calc(0.85 * var(--bs-k, 1))) 0 1px, transparent 1.5px) 0 0 / 19px 23px,
+  radial-gradient(circle, rgb(214 204 255 / calc(0.65 * var(--bs-k, 1))) 0 .7px, transparent 1.1px) 9px 12px / 13px 17px,
+  linear-gradient(180deg, #2a1d70 0%, #170f45 100%); }
+.cart--indigo .cart-label-fl { background: #5b48d6; }
+.cart--indigo .cart-lbl1 { color: #fff; }
+.cart--indigo .cart-lbl2 { color: #e6e0ff; }
+.cart--indigo .cart-ridge { background: repeating-linear-gradient(90deg, #170f45 0 4px, #9d8cff 4px 8px); }
+.cart--indigo .cart-foot { color: #cfc6ff; font-weight: 700; text-shadow: 0 0 2px #170f45, 0 0 4px #170f45; }
+/* Étoile à 4 branches (comme Diamant), en haut à gauche du corps. */
+.cart--indigo .cart-body::before { content: ""; position: absolute; left: 6px; top: 90px; width: 12px; height: 12px; background: #fff;
+  clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); }
+
+/* ---------- Ardoise : feuilletage, moyen (#5a6876) ---------- */
+.cart--ardoise .cart-body { background:
+  repeating-linear-gradient(176deg, rgb(255 255 255 / calc(0.08 * var(--bs-k, 1))) 0 2px, transparent 2px 17px),
+  repeating-linear-gradient(183deg, rgb(0 0 0 / calc(0.14 * var(--bs-k, 1))) 0 1px, transparent 1px 23px),
+  linear-gradient(180deg, #6b7a88 0%, #47535f 100%); }
+.cart--ardoise .cart-label-fl { background: #232b33; }
+.cart--ardoise .cart-lbl1 { color: #fff; }
+.cart--ardoise .cart-lbl2 { color: #d9e2ea; }
+.cart--ardoise .cart-ridge { background: repeating-linear-gradient(90deg, #232b33 0 4px, #9aa8b5 4px 8px); }
+.cart--ardoise .cart-foot { color: #fff; font-weight: 700; text-shadow: 0 0 2px #47535f, 0 0 4px #47535f; }
+
+/* ---------- Ivoire : toile de lin, clair (#f4ecd8) ---------- */
+.cart--ivoire .cart-body { background:
+  repeating-linear-gradient(0deg, rgb(120 100 56 / calc(0.09 * var(--bs-k, 1))) 0 1px, transparent 1px 3px),
+  repeating-linear-gradient(90deg, rgb(120 100 56 / calc(0.09 * var(--bs-k, 1))) 0 1px, transparent 1px 3px),
+  linear-gradient(180deg, #fcf8ec 0%, #e9dec2 100%); }
+.cart--ivoire .cart-label-fl { background: #5a4a2a; }
+.cart--ivoire .cart-lbl1 { color: #fff; }
+.cart--ivoire .cart-lbl2 { color: #f3e9d0; }
+.cart--ivoire .cart-ridge { background: repeating-linear-gradient(90deg, #5a4a2a 0 4px, #e9dec2 4px 8px); }
+.cart--ivoire .cart-foot { color: #4a3c20; font-weight: 700; text-shadow: 0 0 2px #e9dec2, 0 0 4px #e9dec2; }

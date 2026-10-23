@@ -64,7 +64,7 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
   await openEdit(p, 'argente');
   await p.screenshot({ path: path.join(SHOTS, 'boosters-editeur-1280.png') });
   check(await p.locator('.abt-sec').count() === 5, '(b) éditeur : 5 sous-sections repliables (Général, Contenu, Limites, Chances, Simulateur)');
-  check(await p.locator('.abt-style input[name="style"]').count() === 9, '(b) sélecteur de style : 9 cartouches');
+  check(await p.locator('.abt-style input[name="style"]').count() === 39, '(b) sélecteur de style : 39 cartouches (9 d’origine + 30 couleurs)');
   check(await p.isChecked('.abt-style input[value="cart--argente"]'), '(b) style actuel coché');
   check(await p.getAttribute('#abt-id', 'readonly') !== null, '(b) identifiant non modifiable pour un type existant');
   check((await p.textContent('#abt-total')).includes('100'), '(b) total des taux en direct : 100 %');
@@ -162,13 +162,13 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
 
   /* ---------- (e2) Gratuit du jour : un seul type ; toast avec les types concernés ---------- */
   await openEdit(p, 'serie');
-  await p.check('input[name="free_daily"]');
+  await p.click('label:has(input[name="free_daily"])');
   await p.click('[data-drawer-submit]');
   await waitClosed(p);
   check((await typeRow(p, 'serie')).free_daily === true && (await typeRow(p, 'classique')).free_daily === false, '(e2) gratuit du jour déplacé sur Série');
   check(/retiré de « Classique »/.test(await p.evaluate(() => document.body.innerText)), '(e2) toast : gratuit du jour retiré de « Classique »');
   await openEdit(p, 'classique');
-  await p.check('input[name="free_daily"]');
+  await p.click('label:has(input[name="free_daily"])');
   await p.click('[data-drawer-submit]');
   await waitClosed(p);
   check((await typeRow(p, 'classique')).free_daily === true, '(e2) remis sur Classique');
