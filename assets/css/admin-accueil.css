@@ -2,13 +2,13 @@
    Gauche (≈ 60 %) : chiffres clés, tuiles des domaines, économie, activité. Droite (≈ 40 %) : la file « À traiter ».
    Téléphone (≤ 760 px) : deux onglets, un seul panneau visible. Couleurs : jetons de base.css ; la couleur d'un domaine
    est --dom (bordures, pastilles, fonds teintés), le texte reste en jetons de texte (clair et sombre).
-   Sur cette route, la coquille masque rail et colonne en largeur de bureau (classe admin-home posée par shell.js). */
+   Sur cette route, la coquille masque la colonne de navigation en largeur de bureau ; le rail (compte, recherche, domaines) reste (classe admin-home posée par shell.js). */
 
 /* ---------- Coquille : accueil pleine largeur (les autres sous-sections ne sont pas touchées) ---------- */
 @media (min-width: 761px) {
-  .shell.admin-home { grid-template-columns: minmax(0, 1fr); }
-  .shell.admin-home .shell-rail, .shell.admin-home .shell-col { display: none; }
-  .shell.admin-home .shell-zone { grid-column: 1; }
+  .shell.admin-home { grid-template-columns: 72px minmax(0, 1fr); }
+  .shell.admin-home .shell-col { display: none; }
+  .shell.admin-home .shell-zone { grid-column: 2; }
 }
 
 /* ---------- Couleur par domaine (tuiles et éléments de la file) ---------- */

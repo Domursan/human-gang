@@ -41,7 +41,7 @@ const attendreFile = (p, n) => p.waitForFunction((k) => document.querySelectorAl
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: SCN });
       await attendreFile(p, 5);
       check(await p.evaluate(() => document.getElementById('shell').classList.contains('admin-home')), '(a) accueil : classe admin-home sur la coquille');
-      check(!(await visible(p, '#shell-rail')) && !(await visible(p, '#shell-col')), '(a) accueil : rail et colonne de navigation masqués');
+      check(await visible(p, '#shell-rail') && !(await visible(p, '#shell-col')), '(a) accueil : rail gardé, colonne de navigation masquée');
       check(await p.evaluate(() => document.getElementById('app').getBoundingClientRect().width) >= 1200, '(a) accueil : zone principale pleine largeur');
       check(await p.locator('#ov-tiles .ov-tile').count() === 6, '(a) six tuiles, une par domaine');
       check(await p.locator('#ov-tiles .ov-tile-links a').count() === 18, '(a) trois raccourcis par domaine (18 liens)');

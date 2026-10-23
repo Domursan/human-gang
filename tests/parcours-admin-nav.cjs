@@ -122,8 +122,8 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.keyboard.press('Escape');
   check(!(await palOpen(p)), '(c) Échap : la palette se ferme');
 
-  // Accueil (Vue d’ensemble) : le rail est masqué, donc pas de bouton « Aller à… » ; Ctrl K ouvre la palette quand même
-  check(!(await p.isVisible('#admin-goto')), '(c) accueil : rail masqué, bouton « Aller à… » absent de l’écran');
+  // Accueil (Vue d’ensemble) : le rail reste, donc le bouton « Aller à… » aussi ; Ctrl K ouvre la palette
+  check(await p.isVisible('#admin-goto'), '(c) accueil : rail gardé, bouton « Aller à… » visible');
   await p.keyboard.press('Control+k');
   check(await palOpen(p), '(c) Ctrl K : ouvre la palette sur l’accueil');
   await p.keyboard.press('Escape');

@@ -36,7 +36,7 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
     check(/#pilotage\/apercu$/.test(await hashOf(p)), `(a) route par défaut : ${await hashOf(p)}`);
     check(await waitVisible(p, '#apercu'), '(a) Vue d’ensemble affichée par défaut');
-    check(!(await p.isVisible('#shell-rail')), '(a) accueil (Vue d’ensemble) : rail masqué, pleine largeur (admin-accueil.css)');
+    check(await p.isVisible('#shell-rail') && !(await p.isVisible('#shell-col')), '(a) accueil (Vue d’ensemble) : rail gardé, colonne masquée (admin-accueil.css)');
     await p.evaluate(() => { location.hash = '#pilotage/journal'; }); // hors accueil, la coquille habituelle reprend
     await p.waitForSelector('#shell-rail', { state: 'visible', timeout: 5000 });
     check(await p.isVisible('#shell-rail'), '(a) rail visible hors accueil');
