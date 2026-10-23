@@ -84,12 +84,12 @@ Deno.serve(async (req) => {
 
   // Porte : pg_cron passe deux fois par jour (06:05 et 07:05 UTC) ; seul le passage de 8 h suisse agit, en été comme en hiver.
   const { data: gate, error: gateErr } = await db.rpc('hg_cron_gate', { p_tache: 'anniversaires', p_heure_defaut: HEURE_DEFAUT });
-  if (gateErr) return json({ error: `Porte horaire indisponible : ${gateErr.message}` }, 500);
+  if (gateErr) { console.error('[hg-birthdays] porte horaire', gateErr); return json({ error: 'Porte horaire indisponible' }, 500); }
   if (!gate) return json({ ok: true, skipped: 'hors de l\'heure planifiée (anniversaires, heure suisse)' });
 
   const { data: people, error } = await db.from('hg_profiles')
     .select('id, pseudo, birthday, share_birthday, discord_id, bot_optin').not('birthday', 'is', null);
-  if (error) return json({ error: error.message }, 500);
+  if (error) { console.error('[hg-birthdays] profils', error); return json({ error: 'Lecture des profils impossible' }, 500); }
 
   // Anniversaire du jour ou des jours précédents de la fenêtre (le plus récent gagne)
   const days = recentDays();

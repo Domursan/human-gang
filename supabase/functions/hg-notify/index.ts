@@ -60,6 +60,13 @@
 // auto:evenement, auto:drop, auto:sortie, auto:carte, auto:echange). Un salon en échec n'est jamais réessayé quand un autre a
 // reçu l'annonce ; la réservation (carte, drop) n'est libérée que si aucun salon ne l'a reçue.
 // Textes : modèles personnalisables (hg_settings.bot_templates, défauts dans ../_shared/bot-templates.json).
+// Anti-rejeu (audit I7, migration 075) : chaque annonce ou MP déclenché par un membre est réservé une seule fois en base
+// (update … is null, comme card_pull) : hg_events.announced_at (irl_new), hg_ss_participants.gift_notified_at /
+// received_notified_at (ss_gift_*), hg_card_trades.announced_at (card_trade), hg_messages.dm_notified_at (message_new).
+// La réservation est libérée seulement si rien n'est parti. Ces colonnes ne sont modifiables que par la clé service.
+// Limite par membre (hors admin) : bot.limites.annonces_par_heure (20 par défaut) sur une heure glissante, comptée dans
+// hg_bot_quota ; au-delà, 429. Événements comptés : ss_gift_*, irl_new, message_new, card_pull, card_trade, trade_offer,
+// card_wish (une unité par envoi réel, pas par appel ignoré).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
@@ -203,6 +210,63 @@ const fmtDate = (d: string | null | undefined, withTime = false) => d
  */
 const recent = (ts: string | null | undefined) => !!ts && Date.now() - new Date(ts).getTime() < FRESH_MS;
 
+/** Fenêtre de la limite par membre (heure glissante). */
+const QUOTA_WINDOW_MS = 60 * 60_000;
+/** Les lignes de quota plus vieilles que ça sont purgées au passage. */
+const QUOTA_KEEP_MS = 2 * 24 * 60 * 60_000;
+/**
+ * Consomme une unité de la limite horaire du membre (hg_bot_quota, migration 075), juste avant un envoi réel.
+ * La ligne est insérée puis comptée : même des appels simultanés ne dépassent pas la limite. L'admin n'est pas limité.
+ * Si la table manque (migration 075 non appliquée), l'envoi n'est pas bloqué (erreur seulement journalisée).
+ * @param {Profile} me Appelant.
+ * @param {Bot} bot Réglages du bot (bot.limites.annonces_par_heure).
+ * @param {string} event Événement compté.
+ * @returns {Promise<void>}
+ * @throws {HttpError} 429 si la limite est dépassée.
+ */
+async function takeQuota(me: Profile, bot: Bot, event: string): Promise<void> {
+  if (me.is_admin) return;
+  const max = botRules(bot as unknown as Record<string, unknown>).annonces_heure;
+  const { error: insErr } = await db.from('hg_bot_quota').insert({ user_id: me.id, event });
+  if (insErr) { console.error('[hg-notify] quota (insertion)', insErr); return; }
+  const { count, error } = await db.from('hg_bot_quota').select('id', { count: 'exact', head: true })
+    .eq('user_id', me.id).gte('created_at', new Date(Date.now() - QUOTA_WINDOW_MS).toISOString());
+  if (error) { console.error('[hg-notify] quota (comptage)', error); return; }
+  // Purge des vieilles lignes du membre (sans attendre ni faire échouer l'envoi).
+  db.from('hg_bot_quota').delete().eq('user_id', me.id).lt('created_at', new Date(Date.now() - QUOTA_KEEP_MS).toISOString())
+    .then(({ error: e }) => { if (e) console.error('[hg-notify] quota (purge)', e); });
+  if ((count ?? 0) > max) throw new HttpError(429, 'Trop d\'annonces envoyées en une heure : réessaie plus tard.');
+}
+
+/**
+ * Réserve une ligne pour un envoi : passe la colonne de null à « maintenant ». Seul le premier appel réussit.
+ * @param {string} table Table.
+ * @param {string} col Colonne de réservation.
+ * @param {Record<string, unknown>} keys Filtres d'égalité qui désignent la ligne.
+ * @returns {Promise<boolean>} true si la réservation est prise par cet appel.
+ * @throws {Error} si la requête échoue (colonne absente…) : 500 générique.
+ */
+async function claim(table: string, col: string, keys: Record<string, unknown>): Promise<boolean> {
+  let q = db.from(table).update({ [col]: new Date().toISOString() });
+  for (const [k, v] of Object.entries(keys)) q = q.eq(k, v as string);
+  const { data, error } = await q.is(col, null).select(col);
+  if (error) throw new Error(`réservation ${table}.${col} : ${error.message}`);
+  return !!data?.length;
+}
+/**
+ * Libère une réservation quand rien n'est parti, pour qu'un nouvel appel puisse réessayer.
+ * @param {string} table Table.
+ * @param {string} col Colonne de réservation.
+ * @param {Record<string, unknown>} keys Filtres d'égalité qui désignent la ligne.
+ * @returns {Promise<void>}
+ */
+async function release(table: string, col: string, keys: Record<string, unknown>): Promise<void> {
+  let q = db.from(table).update({ [col]: null });
+  for (const [k, v] of Object.entries(keys)) q = q.eq(k, v as string);
+  const { error } = await q;
+  if (error) console.error(`[hg-notify] libération ${table}.${col}`, error);
+}
+
 /* ---------- Événements ---------- */
 
 /**
@@ -274,19 +338,20 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
 async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: 'sent' | 'received', tpl: Templates) {
   if (!isUuid(p.edition_id)) throw new HttpError(400, 'edition_id manquant');
   if (bot.notify?.gift === false) return { skipped: 'désactivé' };
-  const { data: part } = await db.from('hg_ss_participants').select('sent_at, received_at')
+  const { data: part } = await db.from('hg_ss_participants').select('sent_at, received_at, gift_notified_at, received_notified_at')
     .eq('edition_id', p.edition_id).eq('user_id', me.id).maybeSingle();
   if (!part) throw new HttpError(403, 'Tu ne participes pas à cette édition');
   const ts = kind === 'sent' ? part.sent_at : part.received_at;
   if (!ts) throw new HttpError(409, kind === 'sent' ? 'Envoi non enregistré' : 'Réception non enregistrée');
   // Un MP n'est envoyé que si l'action est récente (anti-répétition).
   if (!recent(ts)) return { skipped: 'action trop ancienne' };
+  if (kind === 'sent' ? part.gift_notified_at : part.received_notified_at) return { skipped: 'déjà notifié' };
 
   // Service role : on lit l'attribution côté serveur, sans jamais la renvoyer au client.
   // Si l'appelant est le Santa (sent), on cherche sa cible (receiver_id) ; sinon on cherche son Santa (giver_id).
-  const col = kind === 'sent' ? 'giver_id' : 'receiver_id';
+  const role = kind === 'sent' ? 'giver_id' : 'receiver_id';
   const { data: a } = await db.from('hg_ss_assignments').select('giver_id, receiver_id')
-    .eq('edition_id', p.edition_id).eq(col, me.id).maybeSingle();
+    .eq('edition_id', p.edition_id).eq(role, me.id).maybeSingle();
   if (!a) return { skipped: 'pas d\'attribution' };
   const { data: ed } = await db.from('hg_ss_editions').select('year, exchange_date').eq('id', p.edition_id).maybeSingle();
   const other = await getProfile(kind === 'sent' ? a.receiver_id : a.giver_id);
@@ -298,7 +363,14 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
     ? renderTemplate('ss_gift_sent', base, tpl)
     : renderTemplate('ss_gift_received', { ...base, cible: me.pseudo }, tpl);
   const message = embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss });
-  return { dm: await trySend(() => sendDM(other.discord_id!, message), `MP cadeau ${kind}`) };
+  // Un seul MP par participant, édition et sens (I7) : rappeler l'événement ne renvoie rien.
+  await takeQuota(me, bot, `ss_gift_${kind}`);
+  const col = kind === 'sent' ? 'gift_notified_at' : 'received_notified_at';
+  const keys = { edition_id: p.edition_id, user_id: me.id };
+  if (!(await claim('hg_ss_participants', col, keys))) return { skipped: 'déjà notifié' };
+  const dm = await trySend(() => sendDM(other.discord_id!, message), `MP cadeau ${kind}`);
+  if (!dm) await release('hg_ss_participants', col, keys);
+  return { dm };
 }
 
 /**
@@ -315,12 +387,15 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
   if (bot.notify?.irl === false) return { skipped: 'désactivé' };
   const irlChannels = channelsFor(bot, 'irl');
   if (!irlChannels.length) return { skipped: 'aucun salon configuré' };
-  const { data: ev } = await db.from('hg_events').select('id, title, description, location, starts_at, created_by, created_at')
+  const { data: ev } = await db.from('hg_events').select('id, title, description, location, starts_at, created_by, created_at, retro, announced_at')
     .eq('id', p.event_id).maybeSingle();
   if (!ev) throw new HttpError(404, 'Sortie introuvable');
   if (ev.created_by !== me.id && !me.is_admin) throw new HttpError(403, 'Seul l\'organisateur peut annoncer cette sortie');
   // Pas d'annonce tardive : la sortie doit avoir été créée il y a moins d'une heure.
   if (Date.now() - new Date(ev.created_at).getTime() > 60 * 60_000) return { skipped: 'sortie déjà ancienne' };
+  // Une rencontre passée (créée depuis l'historique) n'est jamais annoncée comme une nouvelle sortie.
+  if (ev.retro) return { skipped: 'sortie passée' };
+  if (ev.announced_at) return { skipped: 'déjà annoncée' };
 
   const when = fmtDate(ev.starts_at, true) ?? 'Date à choisir (sondage sur le site)';
   const where = String(ev.location || 'À préciser').slice(0, 200);
@@ -338,9 +413,14 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
     ...mentionFor(bot, 'irl'),
     ...embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields }),
   };
+  // Réservation (I7) : une seule annonce par sortie, libérée si aucun salon ne l'a reçue.
+  await takeQuota(me, bot, 'irl_new');
+  if (!(await claim('hg_events', 'announced_at', { id: ev.id }))) return { skipped: 'déjà annoncée' };
   const channels = await sendToChannels(irlChannels, (id) => sendChannel(id, annonce), 'annonce IRL', friendlyDiscordError);
   await logAnnounce(me, 'auto:sortie', `Annonce de sortie : ${ev.title}`, channels, false);
-  return { channel: channels.some((c) => c.ok), channels };
+  const channel = channels.some((c) => c.ok);
+  if (!channel) await release('hg_events', 'announced_at', { id: ev.id });
+  return { channel, channels };
 }
 
 /** Un message déclencheur doit dater de moins de 2 minutes. */
@@ -368,13 +448,14 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   if (!ids.includes(me.id)) throw new HttpError(403, 'Tu ne fais pas partie de cette conversation');
 
   // Deux derniers messages : le dernier doit être le mien et récent ; le précédent doit être assez ancien.
-  const { data: last } = await db.from('hg_messages').select('id, sender_id, body, created_at')
+  const { data: last } = await db.from('hg_messages').select('id, sender_id, body, created_at, dm_notified_at')
     .eq('conversation_id', convId).order('id', { ascending: false }).limit(2);
   const [latest, previous] = last ?? [];
   if (!latest || latest.sender_id !== me.id) return { skipped: 'pas de message récent de ta part' };
   const latestAt = new Date(latest.created_at).getTime();
   if (Date.now() - latestAt > MSG_FRESH_MS) return { skipped: 'message trop ancien' };
   if (previous && latestAt - new Date(previous.created_at).getTime() < MSG_QUIET_MS) return { skipped: 'discussion en cours' };
+  if (latest.dm_notified_at) return { skipped: 'déjà notifié' };
 
   // Dans un Secret Santa, le Santa (l'expéditeur) reste anonyme pour sa cible.
   const anonymous = conv.kind === 'santa' && conv.santa_id === me.id; // ne JAMAIS révéler le Santa
@@ -383,6 +464,9 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const excerpt = raw.length > 200 ? `${raw.slice(0, 199)}…` : raw;
   const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
 
+  // Réservation (I7) : un seul lot de MP par message ; libérée si aucun MP n'est parti alors qu'il y a eu des échecs.
+  await takeQuota(me, bot, 'message_new');
+  if (!(await claim('hg_messages', 'dm_notified_at', { id: latest.id }))) return { skipped: 'déjà notifié' };
   let dms = 0, failed = 0, skipped = 0;
   for (const uid of ids.filter((id) => id !== me.id)) {
     const other = await getProfile(uid);
@@ -398,6 +482,7 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
     })), `MP message ${uid}`);
     ok ? dms++ : failed++;
   }
+  if (!dms && failed) await release('hg_messages', 'dm_notified_at', { id: latest.id });
   return { dms_sent: dms, dms_failed: failed, recipients_skipped: skipped };
 }
 
@@ -673,6 +758,7 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   if (!copy) return { skipped: 'aucun exemplaire récent de cette carte' };
   // Verbe du texte : « a fabriqué » pour un exemplaire fabriqué, sinon « a obtenu » (source lue en base, jamais celle du client).
   const verbe = copy.source === 'fabrication' ? 'a fabriqué' : 'a obtenu';
+  await takeQuota(me, bot, 'card_pull');
   // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
   const { data: claimed } = await db.from('hg_card_copies').update({ announced_at: new Date().toISOString() })
     .eq('id', copy.id).is('announced_at', null).select('id');
@@ -707,21 +793,27 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (bot.notify?.card_trade !== true) return { skipped: 'désactivé' };
   const tradeChannels = channelsFor(bot, 'card_trade');
   if (!tradeChannels.length) return { skipped: 'aucun salon configuré' };
-  const { data: t } = await db.from('hg_card_trades').select('id, from_user, to_user, status, resolved_at').eq('id', p.trade_id).maybeSingle();
+  const { data: t } = await db.from('hg_card_trades').select('id, from_user, to_user, status, resolved_at, announced_at').eq('id', p.trade_id).maybeSingle();
   if (!t) throw new HttpError(404, 'Échange introuvable');
   // Seul le destinataire (celui qui accepte l'offre) annonce : une seule annonce par échange.
   if (t.to_user !== me.id) throw new HttpError(403, 'Seul le destinataire de l\'offre peut annoncer l\'échange');
   if (t.status !== 'acceptee') return { skipped: 'échange non conclu' };
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
+  if (t.announced_at) return { skipped: 'déjà annoncé' };
   const other = await getProfile(t.from_user);
   const rendered = renderTemplate('card_trade_announce', { pseudo: me.pseudo, partenaire: other?.pseudo ?? '', lien: link('cartes.html') ?? '' }, tpl);
   const annonce = {
     ...mentionFor(bot, 'card_trade'),
     ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
   };
+  // Réservation (I7) : une seule annonce par échange, libérée si aucun salon ne l'a reçue.
+  await takeQuota(me, bot, 'card_trade');
+  if (!(await claim('hg_card_trades', 'announced_at', { id: t.id }))) return { skipped: 'déjà annoncé' };
   const channels = await sendToChannels(tradeChannels, (id) => sendChannel(id, annonce), 'annonce échange', friendlyDiscordError);
   await logAnnounce(me, 'auto:echange', `Annonce d'échange : ${me.pseudo}`, channels, false);
-  return { channel: channels.some((c) => c.ok), channels };
+  const channel = channels.some((c) => c.ok);
+  if (!channel) await release('hg_card_trades', 'announced_at', { id: t.id });
+  return { channel, channels };
 }
 
 /* Offre d'échange reçue : MP au destinataire, envoyé par l'auteur juste après la création (ou la contre-proposition). */
@@ -774,6 +866,7 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   // La fenêtre de 15 min écarte les vieilles offres ; l'anti-doublon est la réservation notified_at ci-dessous.
   const other = await getProfile(t.to_user);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  await takeQuota(me, bot, 'trade_offer');
   // Réservation : seul un appel qui passe de null à « maintenant » envoie le MP. Un second appel ne renvoie rien.
   const { data: claimed, error: claimErr } = await db.from('hg_card_trades').update({ notified_at: new Date().toISOString() })
     .eq('id', t.id).is('notified_at', null).select('id');
@@ -957,6 +1050,7 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
     .gte('obtained_at', new Date(Date.now() - CARD_FRESH_MS).toISOString());
   if (error) throw new Error(error.message);
   if (!fresh?.length) return { skipped: 'aucun exemplaire récent' };
+  await takeQuota(me, bot, 'card_wish');
   const { data: claimed, error: e2 } = await db.from('hg_card_copies').update({ wish_notified_at: new Date().toISOString() })
     .in('id', fresh.map((c: { id: number }) => c.id)).is('wish_notified_at', null).select('id, card_id, shiny');
   if (e2) throw new Error(e2.message);

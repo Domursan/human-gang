@@ -359,6 +359,6 @@ Deno.serve(async (req) => {
     return json({ ok: true, ...out });
   } catch (e) {
     console.error('[hg-cron]', e);
-    return json({ ok: false, error: String((e as Error)?.message ?? e), ...out }, 500);
+    return json({ ok: false, error: 'Erreur interne (voir les journaux de hg-cron)', ...out }, 500); // détail seulement dans console.error (m16)
   }
 });
