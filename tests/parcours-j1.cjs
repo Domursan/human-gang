@@ -10,9 +10,18 @@ const { FIXTURES, SHOTS, check, finish, openPage, adminSection, hscroll, log, sl
 const FIX = 'fake-sb-jeux.mjs';
 const LEAF = fs.readFileSync(path.join(FIXTURES, 'fake-leaflet.js'));
 
+/* Le faux fichier n'a pas l'empreinte SRI du vrai Leaflet (leaflet-load.js la demande) : le navigateur le
+ * refuserait, et le premier chargement (CDN réel) produirait aussi une erreur. Dans ce test seulement, l'attribut
+ * integrity est ignoré dès le premier chargement ; la production garde la SRI. */
+const SANS_SRI = () => {
+  for (const C of [HTMLScriptElement, HTMLLinkElement]) {
+    Object.defineProperty(C.prototype, 'integrity', { configurable: true, get() { return ''; }, set() {} });
+  }
+};
+
 /** Ouvre une page avec le faux Leaflet (route ajoutée puis rechargement). */
 async function ouvrir(browser, opts) {
-  const p = await openPage(browser, { fixture: FIX, ...opts });
+  const p = await openPage(browser, { fixture: FIX, init: SANS_SRI, ...opts });
   await p.ctx.route('**/leaflet@1.9.4/dist/leaflet.js', (r) => r.fulfill({ body: LEAF, contentType: 'text/javascript' }));
   await p.ctx.route('**/leaflet@1.9.4/dist/leaflet.css', (r) => r.fulfill({ body: '', contentType: 'text/css' }));
   await p.reload();

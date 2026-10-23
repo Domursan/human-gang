@@ -111,5 +111,8 @@ export async function signOutDevice() {
       ]);
     }
   } catch { /* push indisponible : sans effet */ }
+  // Copie hors ligne de la collection (IndexedDB) effacée à chaque déconnexion, comme le menu : téléphone prêté,
+  // ordinateur partagé. Sans cela, la page Compte et le panel admin la laissaient sur l'appareil.
+  try { await (await import('../offline-store.js')).clearOffline(); } catch { /* rien à effacer */ }
   try { await sb.auth.signOut(); } catch { /* déconnexion locale au mieux */ }
 }
