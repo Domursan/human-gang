@@ -74,7 +74,7 @@ function steps() {
     { id: 'menu', menu: true, titre: 'Tout le site part d’ici', texte: tx('visite_menu', 'Le jeu de cartes, IRL, Jeux, Calendrier : chaque menu s’ouvre sur ses rubriques.'),
       cible: () => { const n = document.querySelector('.site-header .nav'); return n?.querySelector('.nav-top') ? n : null; } },
     { id: 'cartes', menu: true, page: 'cartes', titre: 'Tes cartes t’attendent', texte: tx('visite_cartes', 'Un booster gratuit t’attend chaque jour, et les quêtes de la semaine rapportent des Paillettes.'),
-      cible: () => document.querySelector('#tile-cartes') || document.querySelector('.site-header .nav a[data-page="cartes"]') },
+      cible: () => document.querySelector('.site-header .nav-group[data-menu="cartes"] .nav-top') },
     { id: 'recherche', titre: 'Cherche n’importe quoi', texte: tx('visite_recherche', 'Une sortie, un souvenir ou un membre : la loupe est derrière ta photo (Ctrl+K sur ordinateur).'),
       cible: () => vis('.site-header .nav-search-open') || document.querySelector('.site-header .nav-me') },
     { id: 'aide', titre: 'Besoin d’un coup de main ?', texte: tx('visite_aide', 'Clique sur ta photo : l’aide, tes messages et tes réglages sont là, avec plus de 60 tutos pas à pas.'),

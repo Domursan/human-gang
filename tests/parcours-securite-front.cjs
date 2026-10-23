@@ -173,7 +173,8 @@ async function routeEvil(p, target) {
     } });
   });
   await p.reload(); await sleep(1500);
-  await p.click('.nav-logout');
+  await p.click('.nav-me'); // « Se déconnecter » est dans l'éventail de la photo de profil
+  await p.click('.me-fan .nav-logout');
   await p.waitForURL(/compte\.html/, { timeout: 6000 }).catch(() => {});
   await sleep(300);
   check(rec.join(',') === 'delete:hg_push_subscriptions,unsubscribe,signOut', `déconnexion : ligne push supprimée, désabonnement, puis signOut (${rec.join(' → ')})`);

@@ -70,7 +70,8 @@ const page = (p) => p.evaluate(() => location.pathname.split('/').pop());
   await sleep(200);
   check(!(await p.isVisible('.kbd-dialog[open]')), 'préférence coupée : « ? » n’ouvre rien');
   // La préférence se réactive dans le panneau des préférences
-  await p.click('.prefs-open').catch(() => {});
+  await p.click('.nav-me'); // « Affichage » est dans l'éventail de la photo de profil
+  await p.click('.me-fan .prefs-open').catch(() => {});
   await p.waitForSelector('.prefs-dialog[open] input[name=shortcuts]', { timeout: 3000 }).catch(() => {});
   check(await p.isVisible('.prefs-dialog[open] input[name=shortcuts]'), 'interrupteur « Raccourcis clavier » dans les préférences (ordinateur)');
   check(await p.isVisible('.prefs-dialog[open] input[name=revealDirect]'), 'interrupteur « Révéler mes boosters d’un coup » dans les préférences');

@@ -78,7 +78,7 @@ async function ouvrir(browser, opts) {
   await sleep(500);
   check(!(await p.locator('#geo-result').isHidden()) && /4.210/.test(await p.locator('#geo-result').innerText()), 'déjà jouée : résultat directement');
   check(await p.locator('#geo-actions').isHidden(), 'déjà jouée : pas de nouvelle tentative');
-  await p.locator('#jeux-tab-aujourdhui').click();
+  await p.evaluate(() => { location.hash = 'aujourdhui'; }); // colonne d'onglets masquée : navigation par adresse
   await sleep(800);
   check((await p.locator('[data-badge="geo"]').innerText()).includes('Fait') && (await p.locator('#jeux-bal-v').innerText()).includes('+42'), 'tableau de bord : GeoGuessr fait, +42 du jour');
   check(p.errs.length === 0, `aucune erreur JS (déjà jouée) ${p.errs.join(' | ')}`);

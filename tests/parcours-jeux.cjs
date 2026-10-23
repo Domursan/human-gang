@@ -12,6 +12,9 @@ const IDS = [...require('fs').readFileSync(require('path').join(__dirname, '../a
 // rubrique non vide, pas le dernier de la liste.
 const RYTHMES = [...require('fs').readFileSync(require('path').join(__dirname, '../assets/js/jeux/onglets.js'), 'utf8').matchAll(/\{ id: '([a-z0-9-]+)'[^\n]*?rythme: '(jour|semaine|competition)'/g)].map((m) => [m[1], m[2]]);
 const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] === r).map((x) => x[0]).pop()).find(Boolean) || IDS[IDS.length - 1];
+// La colonne d'onglets est masquée à toutes les largeurs (navigation par l'adresse et par le menu « Jeux ») :
+// les touches du clavier sont envoyées à l'onglet, comme le ferait le clavier, et les cibles visibles sont mesurées.
+const touche = (pg, id, key) => pg.evaluate(([i, k]) => document.getElementById(i).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })), [id, key]);
 
 (async () => {
   const browser = await chromium.launch();
@@ -33,36 +36,34 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   check((await p.locator('#jeux-prog-txt').innerText()).includes('0 jeu sur 2'), 'programme : 0 jeu sur 2 faits');
   check(!(await p.locator('#jeux-bal').isHidden()) && (await p.locator('#jeux-bal-v').innerText()).includes('+0'), 'en-tête : Paillettes du jour affichées');
   check(await hscroll(p) <= 0, '360 px : pas de défilement horizontal de la page');
-  const bar = await p.evaluate(() => { const t = document.querySelector('#jeux-tabs'); return { sw: t.scrollWidth, cw: t.clientWidth }; });
-  check(bar.sw >= bar.cw, '360 px : la barre d’onglets reste dans sa boîte (défile seule)');
-  const minH = await p.evaluate(() => Math.min(...[...document.querySelectorAll('[role="tab"], .jeux-row')].map((b) => b.getBoundingClientRect().height)));
-  check(minH >= 44, `cibles ≥ 44 px (min ${Math.round(minH)})`);
-  check(await p.locator('.site-header a[data-page="jeux"]').count() >= 1, 'menu : lien « Jeux »');
+  check(await p.locator('.jeux-tabs-wrap').isHidden(), 'barre d’onglets masquée (navigation par le menu et l’adresse)');
+  const minH = await p.evaluate(() => Math.min(...[...document.querySelectorAll('[role="tab"], .jeux-row')].filter((b) => b.getClientRects().length > 0).map((b) => b.getBoundingClientRect().height)));
+  check(minH >= 44, `cibles visibles ≥ 44 px (min ${Math.round(minH)})`);
+  check(await p.locator('.nav-group[data-menu="jeux"] .nav-menu a[href^="jeux.html#"]').count() >= 1, 'menu : liens vers les onglets Jeux');
   check(!(await log(p)).some((l) => l[0] === 'rpc' && l[1] === 'hg_daily_submit'), 'aucun envoi au chargement');
 
   /* ---------- Clavier : flèches, Fin, Début ; adresse et mémoire ---------- */
-  await p.locator('#jeux-tab-aujourdhui').focus();
-  await p.keyboard.press('ArrowRight');
+  await touche(p, 'jeux-tab-aujourdhui', 'ArrowRight');
   await sleep(500);
   check(await p.locator('#jeux-tab-geo').getAttribute('aria-selected') === 'true', 'clavier : flèche droite → GeoGuessr');
-  check(await p.evaluate(() => document.activeElement?.id) === 'jeux-tab-geo', 'clavier : le focus suit l’onglet');
+  check(await p.locator('#jeux-tab-geo').getAttribute('tabindex') === '0' && await p.locator('#jeux-tab-aujourdhui').getAttribute('tabindex') === '-1', 'clavier : tabulation roulante (onglet actif seul dans l’ordre)');
   check(await p.evaluate(() => location.hash) === '#geo', 'adresse : #geo');
-  await p.keyboard.press('End');
+  await touche(p, 'jeux-tab-geo', 'End');
   await sleep(500);
   check(await p.locator('#jeux-tab-' + LAST).getAttribute('aria-selected') === 'true', 'clavier : Fin → dernier onglet');
-  await p.keyboard.press('Home');
+  await touche(p, 'jeux-tab-' + LAST, 'Home');
   await sleep(300);
   check(await p.locator('#jeux-tab-aujourdhui').getAttribute('aria-selected') === 'true', 'clavier : Début → Aujourd’hui');
-  await p.keyboard.press('ArrowLeft');
+  await touche(p, 'jeux-tab-aujourdhui', 'ArrowLeft');
   await sleep(500);
   check(await p.locator('#jeux-tab-' + LAST).getAttribute('aria-selected') === 'true', 'clavier : flèche gauche boucle sur le dernier');
-  await p.locator('#jeux-tab-citations').click();
+  await p.evaluate(() => { location.hash = 'citations'; });
   await sleep(600);
   check(await p.locator('#jeux-panel-citations .cit').count() === 1, 'chargement paresseux : module des citations monté');
   check(await p.locator('#jeux-panel-geo').isHidden() && !(await p.locator('#jeux-panel-citations').isHidden()), 'un seul panneau visible');
   check(await p.evaluate(() => { const n = [...document.querySelectorAll('link[data-jeux-css]')].map((l) => l.dataset.jeuxCss); return new Set(n).size === n.length && n.includes('geo') && n.includes('citations'); }), 'CSS des jeux chargées une fois chacune');
   // Ouvrir un jeu depuis le tableau de bord
-  await p.locator('#jeux-tab-aujourdhui').click();
+  await p.evaluate(() => { location.hash = 'aujourdhui'; });
   await sleep(300);
   await p.locator('.jeux-row[data-open="geo"]').click();
   await sleep(600);
@@ -87,13 +88,10 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   p = await openPage(browser, { page: 'jeux', fixture: FIX, width: 1280, height: 900 });
   await p.waitForSelector('.jeux-card', { timeout: 6000 }).catch(() => {});
   check(await p.locator('#jeux-tabs').getAttribute('aria-orientation') === 'vertical', 'grand écran : aria-orientation vertical');
-  const lay = await p.evaluate(() => { const a = document.querySelector('#jeux-tab-aujourdhui').getBoundingClientRect(), b = document.querySelector('#jeux-tab-geo').getBoundingClientRect(); return { col: b.top > a.top && Math.abs(b.left - a.left) < 2, w: a.width }; });
-  check(lay.col && lay.w > 180, 'grand écran : onglets empilés dans une colonne');
-  check(await p.locator('.jeux-tabs-grp').first().isVisible() && (await p.locator('.jeux-tabs-grp').first().innerText()).includes('Chaque jour'), 'grand écran : groupe « Chaque jour »');
+  check(await p.locator('.jeux-tabs-wrap').isHidden(), 'grand écran : colonne d’onglets masquée (navigation par le menu)');
+  check((await p.locator('.jeux-tabs-grp').first().textContent()).includes('Chaque jour'), 'grand écran : groupe « Chaque jour » dans la liste');
   check(await p.locator('.jeux-card').count() === 2, 'grand écran : cartes « À jouer »');
-  await p.keyboard.press('Tab');
-  await p.locator('#jeux-tab-aujourdhui').focus();
-  await p.keyboard.press('ArrowDown');
+  await touche(p, 'jeux-tab-aujourdhui', 'ArrowDown');
   await sleep(500);
   check(await p.locator('#jeux-tab-geo').getAttribute('aria-selected') === 'true', 'grand écran : flèche bas → onglet suivant');
   check(p.errs.length === 0, `aucune erreur JS (grand écran) ${p.errs.join(' | ')}`);

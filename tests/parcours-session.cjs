@@ -61,7 +61,8 @@ const count401 = async (p) => (await log(p)).filter((l) => l[0] === 'rpc-401');
 
   // 4. Membre : la déconnexion depuis l'en-tête mène à compte.html sans erreur JS.
   p = await openPage(browser, { page: 'accueil' });
-  await p.click('.nav-logout');
+  await p.click('.nav-me'); // « Se déconnecter » est dans l'éventail de la photo de profil
+  await p.click('.me-fan .nav-logout');
   await p.waitForURL(/compte\.html/, { timeout: 8000 }).catch(() => {});
   await sleep(800);
   check(/compte\.html$/.test(p.url()), 'déconnexion depuis l\'en-tête : arrivée sur compte.html');

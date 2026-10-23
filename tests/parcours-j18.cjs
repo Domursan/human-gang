@@ -25,7 +25,7 @@ async function partie(p, pas = 320) {
   await p.waitForSelector('.arc-choix', { timeout: 5000 }).catch(() => {});
   check((await p.getAttribute('#jeux-tab-arcade', 'aria-selected')) === 'true', 'onglet : « Arcade » sélectionné depuis jeux.html#arcade');
   check((await p.locator('.arc-jeu').count()) === 3 && (await p.locator('.arc-jeu:not([disabled])').count()) === 3, 'sélecteur : les trois mini-jeux jouables');
-  check((await p.locator('.arc-jeu[aria-pressed="true"]').innerText()).includes('Raclette') && (await p.locator('.arc-jeu[aria-pressed="true"]').innerText()).includes('Jeu du jour'), 'sélecteur : Raclette (jeu du jour) choisi par défaut');
+  check(/Raclette/.test(await p.locator('.arc-jeu[aria-pressed="true"]').innerText()) && /jeu du jour/i.test(await p.locator('.arc-jeu[aria-pressed="true"]').innerText()), 'sélecteur : Raclette (jeu du jour) choisi par défaut'); // badge affiché en capitales par la CSS
   check((await p.locator('.arc-jeu[aria-pressed="false"]').count()) === 2, 'sélecteur : les deux autres non choisis (aria-pressed=false)');
   check(/une seule partie par jour/i.test(await p.locator('.arc-tirage').innerText()), 'sélecteur : une seule partie par jour récompensée, tous jeux confondus');
   check((await p.locator('#arc-scores-h').innerText()).includes('Raclette'), 'scores : « Meilleurs scores · Raclette »');
@@ -35,7 +35,7 @@ async function partie(p, pas = 320) {
   check(await p.$eval('#arc-canvas', (el) => getComputedStyle(el).touchAction) === 'none', 'canevas : pas de défilement au doigt');
   check(await hscroll(p) <= 0, '390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'aucune erreur JS au chargement' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
-  check((await p.locator('.nav a[href="jeux.html"]').count()) === 1, 'menu : lien « Jeux »');
+  check((await p.locator('.nav-group[data-menu="jeux"] .nav-menu a[href^="jeux.html#"]').count()) >= 1, 'menu : liens vers les onglets Jeux');
   await p.ctx.close();
 
   /* ---------- Partie complète (horloge simulée), pause, gain une fois ---------- */
