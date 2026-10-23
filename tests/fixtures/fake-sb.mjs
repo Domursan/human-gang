@@ -829,7 +829,7 @@ export function createClient(_url, _key, opts = {}) {
         const v = reglage('eggs');
         const md = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
         const today = `${md.find((x) => x.type === 'month').value}-${md.find((x) => x.type === 'day').value}`;
-        return { data: { recompenses: v.recompenses || {}, anniversaire_aujourdhui: v.anniversaire_gang === today }, error: null };
+        return { data: { recompenses: v.recompenses || {}, anniversaire_aujourdhui: v.anniversaire_gang === today, ...(S.champi ? { champi: S.champi } : {}) }, error: null };
       }
       if (fn === 'hg_ss_people') {
         return { data: (DB.hg_ss_participants || []).filter((r) => r.edition_id === args.p_edition)
@@ -840,8 +840,9 @@ export function createClient(_url, _key, opts = {}) {
       if (fn === 'hg_eco_quota') {
         return { data: S.ecoQuota || { photos: { payees: 0, plafond: 5 }, souvenirs: { payes: 0, plafond: 5 }, sortie: { payees: 0, plafond: 1 } }, error: null };
       }
-      // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » (l'appel reste dans __LOG) ; hg_eggs_me renvoie le carnet.
-      if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }], letters: 0 }, error: null };
+      // Secrets cachés (migration 062) : hg_egg_found répond « nouveau » (l'appel reste dans __LOG) ; hg_eggs_me renvoie le carnet,
+      // avec les secrets déjà trouvés avant la visite (scénario eggsDeja, distinct de eggsVus qui se remplit pendant la visite).
+      if (fn === 'hg_eggs_me') return { data: { found: 1, total: 12, eggs: [{ egg: 'konami', first: new Date().toISOString() }, ...Object.keys(S.eggsDeja || {}).map((egg) => ({ egg, first: new Date().toISOString() }))], letters: 0 }, error: null };
       // Suivi des quêtes (quest-track.js) : rien à renvoyer ; l'appel reste dans window.__LOG.
       if (fn === 'hg_quest_track') return { data: null, error: null };
       // Secrets cachés (eggs/api.js) : une réponse par secret ; la première fois, « new » est vrai. Les lettres se comptent (sur 7).

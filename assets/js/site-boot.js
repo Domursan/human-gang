@@ -95,6 +95,9 @@ if (window.isSecureContext && 'serviceWorker' in navigator) {
 
 /* ---------- Secrets : les sept lettres cachées (eggs/lettres.js, import dynamique) ---------- */
 import('./eggs/lettres.js').catch(() => {});
+/* Secrets F : le drôle de bloc (eggs/creeper.js) et la cueillette de champignons (eggs/champignon.js), membres seulement */
+import('./eggs/creeper.js').catch(() => {});
+import('./eggs/champignon.js').catch(() => {});
 /* ---------- Secrets cachés (easter eggs) : chargés après la page, sans la ralentir ---------- */
 
 /** Charge et lance le module des secrets (eggs/core.js). Import dynamique : rien ne se charge avant la fin du démarrage. */
