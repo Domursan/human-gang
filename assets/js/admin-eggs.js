@@ -19,7 +19,7 @@ import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from '
 export const EGGS_DEFAULTS = Object.freeze({
   anniversaire_gang: null,
   mot_secret: 'SECRETS',
-  recompenses: Object.freeze({ konami: 100, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 200, secousse: 0, nuit: 30, rembobine: 25 }),
+  recompenses: Object.freeze({ konami: 100, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 200, secousse: 0, nuit: 30, rembobine: 25, arcade: 5 }),
 });
 
 /** Nom de chaque secret, comme sur la page secrète (secret.js, NOMS), dans le même ordre. */
@@ -35,6 +35,7 @@ export const EGG_NOMS = Object.freeze({
   secousse: 'La secousse',
   nuit: 'La chouette insomniaque',
   rembobine: 'Le retour en arrière',
+  arcade: 'L’arcade du jour (page Jeux)',
 });
 
 /** Fréquence et bonus de chaque secret (règles de hg_egg_found, migration 062), affichés en aide. */
@@ -50,6 +51,7 @@ const EGG_AIDE = {
   secousse: 'Une fois par mois · un booster offert',
   nuit: 'Une fois, entre 3 h et 4 h du matin',
   rembobine: 'Une fois',
+  arcade: 'Une partie par jour · 50 au plus',
 };
 
 /** Limites des champs. */
@@ -336,7 +338,7 @@ function renderLog() {
   if (!E.log) { host.innerHTML = '<div class="empty">Chargement du journal…</div>'; return; }
   const members = groupByMember(E.log);
   // Nombre de membres par secret (vue d'ensemble)
-  const perEgg = Object.keys(EGG_NOMS).map((c) => ({ c, n: members.filter((m) => (c === 'lettres' ? m.letters > 0 || m.eggs.some((e) => e.egg === 'lettres') : m.eggs.some((e) => e.egg === c))).length }));
+  const perEgg = Object.keys(EGG_NOMS).filter((c) => c !== 'arcade').map((c) => ({ c, n: members.filter((m) => (c === 'lettres' ? m.letters > 0 || m.eggs.some((e) => e.egg === 'lettres') : m.eggs.some((e) => e.egg === c))).length }));
   host.innerHTML = `${members.length ? `<ul class="aeg-overview" aria-label="Membres par secret">${perEgg.map(({ c, n }) =>
       `<li><span>${esc(EGG_NOMS[c])}</span><strong>${n}</strong></li>`).join('')}</ul>` : ''}
     ${searchHtml({ id: 'aeg-search', label: 'Rechercher un membre', placeholder: 'Pseudo ou secret…', value: E.query })}

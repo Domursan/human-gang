@@ -1,0 +1,54 @@
+/* ===== Humane Gang — page Jeux, onglet « Arcade » (J18 : l'arcade du jour) ===== */
+/* Chargé par assets/js/jeux/arcade.js. Maquette : idees-design/project/J18.dc.html (téléphone 390 px). */
+.arc { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
+.arc p { margin: 0; }
+.arc .card { padding: 14px; }
+.arc-titre { font-family: var(--font-display); font-weight: 400; font-size: 28px; line-height: 1; margin: 4px 0 0; }
+.arc-h { font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1.15; margin: 0; }
+.arc-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.arc-sand { color: var(--sand); }
+.arc-fort { color: var(--text); }
+
+/* Tirage du jour */
+.arc-tirage { display: flex; flex-direction: column; gap: 14px; }
+.arc-tires { list-style: none; margin: 0; padding: 6px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.arc-tire { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 14px;
+  background: var(--surface); border: 1px dashed var(--border-strong); opacity: .75; text-align: center; min-width: 0; }
+.arc-tire.is-on { background: var(--irl-bg); border: 2px solid var(--sand); opacity: 1; }
+.arc-tire-badge { position: absolute; top: -11px; background: var(--sand); color: #121212; font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  padding: 2px 8px; border-radius: 999px; text-transform: uppercase; white-space: nowrap; }
+.arc-tire-nom { font-weight: 700; color: var(--muted); overflow-wrap: anywhere; }
+.arc-tire.is-on .arc-tire-nom { color: var(--text); }
+
+/* Écran de jeu */
+.arc-ecran { position: relative; width: 100%; max-width: 360px; align-self: center; border: 3px solid var(--border-strong); border-radius: 14px; overflow: hidden; line-height: 0; }
+.arc-canvas {
+  display: block; width: 100%; height: auto; aspect-ratio: 360 / 420; background: #14122a;
+  touch-action: none; /* au doigt : la page ne défile pas pendant la partie */
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.arc-canvas:focus-visible { outline: 2px solid var(--sand); outline-offset: -4px; }
+.arc-hud { position: absolute; left: 10px; right: 10px; top: 8px; display: flex; justify-content: space-between; line-height: 1.2; pointer-events: none;
+  font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 13px; font-weight: 700; color: #F2EFEA; font-variant-numeric: tabular-nums; }
+.arc-msg { min-height: 1.5em; }
+.arc-boutons { display: flex; gap: 8px; }
+.arc-boutons .btn { flex: 1; min-height: 44px; }
+
+/* Record et récompense */
+.arc-boites { display: flex; gap: 8px; }
+.arc-boite { flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.arc-chiffre { font-family: var(--font-display); font-size: 18px; }
+.arc-unite { font-family: var(--font-body); font-weight: 500; }
+
+/* Meilleurs scores */
+.arc-scores { padding-bottom: 6px; }
+.arc-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.arc-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.arc-row:last-child { border-bottom: 0; }
+.arc-row.is-me { background: var(--surface-2); border-radius: 10px; padding-left: 8px; padding-right: 8px; }
+.arc-row .avatar { flex: none; border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 700; color: #121212; }
+.arc-rank { width: 22px; font-family: var(--font-display); color: var(--muted); font-size: 14px; flex: none; }
+.arc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.arc-row.is-me .arc-name { font-weight: 700; }
+.arc-best { font-family: var(--font-display); font-size: 14px; flex: none; }
+.arc-empty { padding: 10px 0; }

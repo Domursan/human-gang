@@ -544,6 +544,7 @@ if (!me) {
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
+    import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
   ]);
 }
 app.removeAttribute('aria-busy');

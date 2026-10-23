@@ -18,7 +18,7 @@ export const SECTION_PERM = {
   sorties: 'evenements',
   souvenirs: 'souvenirs',
   reglages: 'reglages',
-  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
+  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz', jeux4: 'cartes',
   idees: 'support', assistance: 'support',
   messagerie: 'messages',
   journal: 'journal',
@@ -98,6 +98,7 @@ export const DOMAINS = [
     ...under('Jeux', [
       { id: 'questions', label: 'Questions du gang', section: 'quiz' },
       { id: 'secrets', label: 'Secrets', section: 'eggs' },
+      { id: 'saisons', label: 'Saisons et soirées', section: 'jeux4' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

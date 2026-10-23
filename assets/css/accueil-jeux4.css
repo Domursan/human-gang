@@ -1,0 +1,20 @@
+/* ===== Humane Gang — accueil : soirée complète (J19) et rang de saison (J16) ===== */
+/* Chargé par assets/js/accueil-jeux4.js. Tuile de soirée : maquette J19 (« Sur l’accueil pendant la soirée »). */
+.home-soiree { display: flex; align-items: center; justify-content: space-between; gap: 10px 12px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 20px;
+  border-color: #24382A; background: #141c17; }
+.home-soiree-g { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; color: var(--text); text-decoration: none; }
+.home-soiree-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; flex: none; font-size: 18px; }
+.home-soiree-t { font-weight: 700; margin: 0; display: block; }
+.home-soiree-s { margin: 0; display: block; }
+.home-soiree-avs { list-style: none; margin: 4px 0 0; padding: 0; display: flex; }
+.home-soiree-avs li { margin-left: -6px; }
+.home-soiree-avs li:first-child { margin-left: 0; }
+.home-soiree-avs .avatar { border-radius: 50%; display: inline-grid; place-items: center; font-size: 10px; font-weight: 700; color: #121212; box-shadow: 0 0 0 2px #141c17; }
+.home-soiree .btn { min-height: 44px; flex: none; }
+.home-soiree-ok { color: var(--sage-text); font-weight: 700; margin: 0; }
+
+.home-saison { display: flex; align-items: center; gap: 14px; padding: 14px 18px; margin-bottom: 20px; color: var(--text); text-decoration: none; min-height: 44px; }
+@media (hover: hover) { .home-saison:hover { border-color: var(--border-strong); } }
+.home-saison-rang { font-family: var(--font-display); font-size: 28px; line-height: 1; min-width: 48px; text-align: center; color: var(--sand); }
+.home-saison-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-saison-voir { color: var(--sand); font-weight: 700; }

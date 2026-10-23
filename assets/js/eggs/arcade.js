@@ -1,0 +1,155 @@
+// ===== Humane Gang — petit moteur d'arcade (canevas) =====
+/*
+ * Rôle : boucle, entrées et cycle de vie communs aux mini-jeux de l'arcade (idée J18) : canevas net sur écran haute
+ * densité, une image par rafraîchissement, commandes (souris, doigt, glisser, flèches), pause automatique quand
+ * l'onglet est masqué, « réduire les animations » (jeu plus lent, pas de secousse), fin de partie.
+ * Les règles de chaque mini-jeu sont dans eggs/jeu-paillettes.js, eggs/jeu-raclette.js, eggs/jeu-domu.js.
+ * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) (sprite partagé).
+ */
+
+/** Taille logique du canevas (pixels CSS) ; la taille réelle suit la densité de l'écran. */
+export const W = 360, H = 420;
+
+/**
+ * Trace une étoile à quatre branches (la paillette du site).
+ * @param {CanvasRenderingContext2D} ctx contexte du canevas
+ * @param {number} x centre
+ * @param {number} y centre
+ * @param {number} r rayon
+ */
+export function etoile(ctx, x, y, r) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.quadraticCurveTo(x, y, x, y + r);
+  ctx.quadraticCurveTo(x, y, x - r, y);
+  ctx.quadraticCurveTo(x, y, x, y - r);
+  ctx.closePath();
+}
+
+/**
+ * Crée une borne d'arcade sur un canevas pour un mini-jeu.
+ * Le mini-jeu est un objet { init(s), update(s, dt, entree), draw(ctx, s), score(s), fini(s), temps(s) } :
+ *   s est l'état de la partie (créé par init), entree = { cible, fleche, pas } :
+ *   cible : position horizontale visée par le pointeur (ou null), fleche : -1, 0 ou 1 (flèche tenue),
+ *   pas : -1 ou 1 pour un changement de voie ponctuel (flèche pressée, appui à gauche ou à droite, glissement), sinon 0.
+ * @param {{canvas: HTMLCanvasElement, jeu: object, onHud?: Function, onFin?: Function, onDebut?: Function}} o
+ *   onHud(score, temps) à chaque image ; onFin(score, s) à la fin ; onDebut() au lancement.
+ * @returns {{demarre: Function, arrete: Function, pause: Function, enJeu: Function, dessine: Function}}
+ */
+export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, onDebut = () => {} }) {
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let etat = 'attente'; // 'attente' | 'jeu' | 'pause' | 'fin'
+  let s = jeu.init({ reduit });
+  let dernierT = null, raf = 0;
+  const entree = { cible: null, fleche: 0, pas: 0 };
+  let depart = null; // appui du doigt (pour reconnaître un glissement)
+  let manuelle = false; // pause demandée par le joueur (l'onglet visible ne la lève pas)
+
+  /** Position horizontale (coordonnées du canevas) d'un pointeur. */
+  const posX = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return ((e.clientX - r.left) / r.width) * W;
+  };
+
+  /** Fond de borne : damier sombre en pixel art (le jeu peut le recouvrir, comme la route de Domu-mobile). */
+  const fond = () => {
+    ctx.fillStyle = '#14122a'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#18162f';
+    for (let y = 0; y < H; y += 24) for (let x = (y / 24) % 2 ? 24 : 0; x < W; x += 48) ctx.fillRect(x, y, 24, 24);
+  };
+  const dessine = () => { ctx.clearRect(0, 0, W, H); fond(); jeu.draw(ctx, s); };
+
+  /** Une image : avance le jeu, affiche, termine si le jeu le dit. */
+  const boucle = (t) => {
+    if (etat !== 'jeu') return;
+    const dt = dernierT === null ? 0 : Math.min(0.05, (t - dernierT) / 1000);
+    dernierT = t;
+    jeu.update(s, dt, entree);
+    entree.pas = 0;
+    onHud(jeu.score(s), jeu.temps(s));
+    dessine();
+    if (jeu.fini(s)) { fin(); return; }
+    raf = requestAnimationFrame(boucle);
+  };
+
+  /** Lance une partie (sans effet pendant une partie). */
+  const demarre = () => {
+    if (etat === 'jeu' || etat === 'pause') return;
+    s = jeu.init({ reduit });
+    entree.cible = null; entree.fleche = 0; entree.pas = 0;
+    dernierT = null; manuelle = false;
+    etat = 'jeu';
+    onDebut();
+    onHud(jeu.score(s), jeu.temps(s));
+    canvas.focus({ preventScroll: true });
+    raf = requestAnimationFrame(boucle);
+  };
+
+  /** Fin de partie : dernière image, puis rappel onFin(score). */
+  const fin = () => {
+    etat = 'fin';
+    cancelAnimationFrame(raf);
+    dessine();
+    onFin(jeu.score(s), s);
+  };
+
+  /** Pause demandée par le joueur (bouton) : true si la partie est maintenant en pause. */
+  const pause = () => {
+    if (etat === 'jeu') { etat = 'pause'; manuelle = true; cancelAnimationFrame(raf); return true; }
+    if (etat === 'pause') { etat = 'jeu'; manuelle = false; dernierT = null; canvas.focus({ preventScroll: true }); raf = requestAnimationFrame(boucle); }
+    return false;
+  };
+  /** Arrête la borne (onglet quitté) sans fin de partie. */
+  const arrete = () => { cancelAnimationFrame(raf); etat = 'attente'; document.removeEventListener('visibilitychange', visibilite); };
+
+  /** Onglet masqué : pause ; de retour : reprise (le temps masqué ne compte pas). */
+  const visibilite = () => {
+    if (document.hidden && etat === 'jeu') { etat = 'pause'; cancelAnimationFrame(raf); }
+    else if (!document.hidden && etat === 'pause' && !manuelle) { etat = 'jeu'; dernierT = null; raf = requestAnimationFrame(boucle); }
+  };
+  document.addEventListener('visibilitychange', visibilite);
+
+  /* ---------- Commandes ---------- */
+  canvas.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || depart) entree.cible = posX(e); });
+  canvas.addEventListener('pointerdown', (e) => {
+    const x = posX(e);
+    depart = { x, t: performance.now() };
+    entree.cible = x;
+    if (etat === 'pause') return;
+    if (etat !== 'jeu') { demarre(); return; }
+    if (jeu.voies) entree.pas = x < W / 2 ? -1 : 1; // jeu à voies : appui à gauche ou à droite
+  });
+  canvas.addEventListener('pointerup', (e) => {
+    if (depart && jeu.voies) {
+      const dx = posX(e) - depart.x;
+      if (Math.abs(dx) > 24) entree.pas = dx < 0 ? -1 : 1; // glissement
+    }
+    depart = null;
+    if (e.pointerType !== 'mouse') entree.cible = null;
+  });
+  canvas.addEventListener('pointercancel', () => { depart = null; });
+  canvas.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const d = e.key === 'ArrowLeft' ? -1 : 1;
+    entree.cible = null;
+    if (etat === 'pause') return;
+    if (etat !== 'jeu') { demarre(); return; }
+    if (!e.repeat) entree.pas = d;
+    entree.fleche = d;
+  });
+  canvas.addEventListener('keyup', (e) => {
+    if ((e.key === 'ArrowLeft' && entree.fleche < 0) || (e.key === 'ArrowRight' && entree.fleche > 0)) entree.fleche = 0;
+  });
+  canvas.addEventListener('blur', () => { entree.fleche = 0; });
+
+  dessine();
+  return { demarre, arrete, pause, enJeu: () => etat === 'jeu' || etat === 'pause', dessine };
+}

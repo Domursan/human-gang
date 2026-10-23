@@ -50,6 +50,7 @@ const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+  { sub: 'saisons', url: './admin-jeux4.js', fn: 'mountJeux4Section' }, // Jeux et cartes › Saisons et soirées (J16, J19)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -194,6 +195,7 @@ registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) })
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
+if (MOUNT.saisons) registerSub('cartes/saisons', { main: () => MOUNT.saisons($('#jeux4-root')) }); // saisons de classement et soirées complètes
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
