@@ -527,17 +527,27 @@ do $$ begin
   end if;
 end $$;
 
--- Titre d'une conversation : nom du groupe pour un groupe (le reste ne change pas).
-create or replace function public.hg_conv_title(c public.hg_conversations, me uuid)
-returns text language sql stable security definer set search_path = public as $$
+-- Titre d'une conversation : nom du groupe pour un groupe. Reprend EXACTEMENT la version de 076 (correctif de sécurité I1 :
+-- le titre n'est donné qu'à un membre de la conversation, « Secret Santa » pour un tiers) et ajoute seulement la ligne « group ».
+-- Les droits (revoke execute de 076) sont conservés par create or replace ; ils sont rappelés plus bas par sécurité.
+create or replace function public.hg_conv_title(c hg_conversations, me uuid)
+ returns text
+ language sql
+ stable security definer
+ set search_path to 'public'
+as $function$
   select case
+    -- 076 : seulement pour un membre de la conversation (appel interne par hg_my_conversations)
+    when me is null or not exists (select 1 from hg_conversation_members m where m.conversation_id = c.id and m.user_id = me) then 'Conversation'
     when c.kind = 'support' then coalesce(nullif(c.title, ''), 'Assistance')
-    when c.kind = 'group' then coalesce(nullif(c.title, ''), 'Groupe')
+    when c.kind = 'group' then coalesce(nullif(c.title, ''), 'Groupe')  -- 090
     when c.kind = 'santa' and me = c.target_id then 'Ton Santa ' || coalesce((select year::text from hg_ss_editions where id = c.edition_id), '')
     when c.kind = 'santa' and me = c.santa_id then 'Ta cible : ' || coalesce((select pseudo from hg_profiles where id = c.target_id), '?')
+    when c.kind = 'santa' then 'Secret Santa'
     else coalesce((select p.pseudo from hg_conversation_members m join hg_profiles p on p.id = m.user_id
                    where m.conversation_id = c.id and m.user_id <> me limit 1), 'Conversation')
-  end $$;
+  end $function$;
+revoke execute on function public.hg_conv_title(public.hg_conversations, uuid) from public, anon, authenticated;
 
 -- Liste de mes conversations : colonnes ajoutées en fin (couleur, taille, avatars, sourdine, sortie, rôle) pour les groupes.
 -- Le type de retour change : la fonction est recréée (mêmes droits). Rien n'est ajouté pour un Secret Santa (anonymat).

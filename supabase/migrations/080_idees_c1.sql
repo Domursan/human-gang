@@ -503,15 +503,43 @@ begin
     'week_ends_at', hg_booster_week_start(now() + interval '7 days'));
 end $$;
 
+-- Styles de cartouche : liste de 077 (53 classes) + 3 styles de saison (cart--esport, cart--pate, cart--raclette).
+-- La liste est lue par hg_booster_type_save et par la contrainte hg_booster_types_style_check (posée en 077, qui appelle
+-- cette fonction) : sans cette mise à jour, l'insertion des types de saison plus bas serait refusée.
+-- Reprend exactement la définition de 077 (mêmes 53 classes, même ordre, mêmes droits) et ajoute les trois classes à la fin.
+create or replace function public.hg_booster_styles()
+returns text[]
+language sql
+immutable
+set search_path = public
+as $$
+  select array[
+    'cart--classique', 'cart--serie', 'cart--argente', 'cart--dore', 'cart--diamant', 'cart--quitte',
+    'cart--holo', 'cart--collection', 'cart--identite',
+    -- 30 couleurs (077) : rouges, roses et violets, oranges et bruns, jaunes et verts, bleus et cyans, indigos et neutres
+    'cart--rubis', 'cart--paprika', 'cart--braise', 'cart--corail', 'cart--framboise', 'cart--dragee',
+    'cart--fuchsia', 'cart--mauve', 'cart--lavande', 'cart--prune', 'cart--abricot', 'cart--mandarine',
+    'cart--miel', 'cart--cuivre', 'cart--cacao', 'cart--citron', 'cart--pistache', 'cart--kiwi',
+    'cart--olive', 'cart--acide', 'cart--menthe', 'cart--lagon', 'cart--petrole', 'cart--azur',
+    'cart--saphir', 'cart--pervenche', 'cart--amethyste', 'cart--indigo', 'cart--ardoise', 'cart--ivoire',
+    -- 14 thèmes (077) : dessins génériques, classes cart--theme-<slug>
+    'cart--theme-pate', 'cart--theme-saucisse', 'cart--theme-pate-saucisse', 'cart--theme-raclette', 'cart--theme-fondue', 'cart--theme-arene', 'cart--theme-blocs',
+    'cart--theme-usine', 'cart--theme-noel', 'cart--theme-halloween', 'cart--theme-paques', 'cart--theme-saint-nicolas', 'cart--theme-feux-artifice', 'cart--theme-gateau-anniversaire',
+    -- 3 styles de saison (080)
+    'cart--esport', 'cart--pate', 'cart--raclette'
+  ]::text[];
+$$;
+comment on function public.hg_booster_styles() is 'Classes CSS autorisées pour hg_booster_types.style (9 d''origine + 30 couleurs + 14 thèmes, migration 077, + 3 styles de saison, migration 080). Même liste que assets/js/booster-styles.js.';
+revoke all on function public.hg_booster_styles() from public, anon, authenticated;
+grant execute on function public.hg_booster_styles() to service_role;
+
 -- Enregistrement d'un type par l'admin / Staff « cartes » : + available_from, available_until, only_set, schedule,
--- per_window_limit, shiny_style, et trois styles de cartouche (esport, pâté-saucisses, raclette).
+-- per_window_limit, shiny_style. Reprend la version de 077 (styles lus dans hg_booster_styles()).
 create or replace function public.hg_booster_type_save(p jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   keys text[] := array['commune','peu_commune','rare','epique','legendaire','mythique','identite'];
-  styles text[] := array['cart--classique','cart--serie','cart--argente','cart--dore','cart--diamant',
-                         'cart--quitte','cart--holo','cart--collection','cart--identite',
-                         'cart--esport','cart--pate','cart--raclette'];
+  styles text[] := public.hg_booster_styles();  -- 077 : liste partagée avec la contrainte de la table (+ 3 styles de saison, 080)
   v_id text;
   v_create boolean;
   old_t hg_booster_types;
@@ -1267,6 +1295,9 @@ begin
     'public.hg_card_check_sets(uuid)'] loop
     execute format('revoke all on function %s from public, anon, authenticated', f);
   end loop;
+  -- Validateurs purs (utilisés par une contrainte et par des RPC définer) : pas d'accès anonyme.
+  revoke execute on function public.hg_blason_ok(jsonb) from public, anon;
+  revoke execute on function public.hg_booster_sched_ok(jsonb) from public, anon;
   -- RPC des membres et du Staff.
   foreach f in array array[
     'public.hg_booster_buy(text, integer, text)', 'public.hg_booster_open(text, text, text, uuid)',

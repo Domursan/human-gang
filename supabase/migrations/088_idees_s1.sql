@@ -17,7 +17,7 @@
 -- Contenu :
 --   0. Outils (slug, ville sans adresse, anniversaire d'une date), réglages « contenu », permission « ludothèque », pages.
 --   1. S1 : colonnes hide_on_this_day (figées pour les clients), RPC hg_on_this_day et hg_on_this_day_hide.
---   2. Réactions : registre hg_reaction_kinds (moment, photo, lexique, gartic) et hg_toggle_reaction générique.
+--   2. Réactions : registre hg_reaction_kinds (moment, photo, citation, carte postale, morceau, lexique, gartic) et hg_toggle_reaction générique.
 --   3. S2 : table hg_lexicon, RPC hg_lexicon_propose, hg_lexicon_review, hg_lexicon_word_of_day.
 --   4. S3 : tables hg_ludo_games, hg_ludo_private, hg_ludo_referents, hg_ludo_players, hg_ludo_sessions,
 --      hg_ludo_session_rsvps, hg_ludo_rules_history ; RPC de gestion.
@@ -238,7 +238,10 @@ do $$ begin
     create policy hg_reaction_kinds_read on public.hg_reaction_kinds for select to authenticated using (true);
   end if;
 end $$;
-insert into public.hg_reaction_kinds (kind, tbl) values ('moment', 'hg_moments'), ('photo', 'hg_photos')
+-- Genres déjà autorisés en production par 089 (citations, cartes postales, morceaux) : ils doivent être dans le registre
+-- avant que la contrainte figée devienne une clé étrangère, sinon les réactions existantes la violeraient.
+insert into public.hg_reaction_kinds (kind, tbl) values ('moment', 'hg_moments'), ('photo', 'hg_photos'),
+  ('quote', 'hg_quotes'), ('postcard', 'hg_postcards'), ('track', 'hg_tracks')
   on conflict (kind) do nothing;
 -- (lexique et gartic sont ajoutés après la création de leurs tables, plus bas)
 
@@ -889,24 +892,41 @@ do $$ begin
 end $$;
 
 -- Réaction : ajout ou retrait (même contrat qu'avant). Le genre doit être dans hg_reaction_kinds et l'élément exister.
+-- Reprend EXACTEMENT les contrôles de la version de 089 (souvenir, photo, citation validée, carte postale publiée et non
+-- masquée, morceau non masqué) et ajoute le lexique (mot validé) et Gartic (chaîne non masquée).
 create or replace function public.hg_toggle_reaction(p_kind text, p_id uuid, p_emoji text)
 returns boolean language plpgsql security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
   v_on boolean;
-  v_tbl text;
-  v_ok boolean;
 begin
   if not public.hg_is_member() then raise exception 'Réservé aux membres'; end if;
-  select tbl into v_tbl from public.hg_reaction_kinds where kind = p_kind;
-  if v_tbl is null then raise exception 'Cible inconnue'; end if;
+  if not exists (select 1 from public.hg_reaction_kinds where kind = p_kind) then raise exception 'Cible inconnue'; end if;
   if p_emoji is null or p_emoji not in ('❤️', '😂', '😮', '🔥', '👏', '🎉') then
     raise exception 'Réaction non autorisée';
   end if;
-  execute format('select exists (select 1 from public.%I where id = $1)', v_tbl) into v_ok using p_id;
-  if not v_ok then
-    raise exception '%', case p_kind when 'moment' then 'Souvenir introuvable' when 'photo' then 'Photo introuvable' else 'Élément introuvable' end;
+  if p_kind = 'moment' and not exists (select 1 from public.hg_moments where id = p_id) then
+    raise exception 'Souvenir introuvable';
   end if;
+  if p_kind = 'photo' and not exists (select 1 from public.hg_photos where id = p_id) then
+    raise exception 'Photo introuvable';
+  end if;
+  if p_kind = 'quote' and not exists (select 1 from public.hg_quotes where id = p_id and status = 'valide') then
+    raise exception 'Citation introuvable';
+  end if;
+  if p_kind = 'postcard' and not exists (select 1 from public.hg_postcards where id = p_id and not hidden and publish_at <= now()) then
+    raise exception 'Carte postale introuvable';
+  end if;
+  if p_kind = 'track' and not exists (select 1 from public.hg_tracks where id = p_id and not hidden) then
+    raise exception 'Morceau introuvable';
+  end if;
+  if p_kind = 'lexique' and not exists (select 1 from public.hg_lexicon where id = p_id and status = 'valide') then
+    raise exception 'Mot introuvable';
+  end if;
+  if p_kind = 'gartic' and not exists (select 1 from public.hg_gartic_chains where id = p_id and not hidden) then
+    raise exception 'Chaîne introuvable';
+  end if;
+
   insert into public.hg_reactions (target_kind, target_id, user_id, emoji)
   values (p_kind, p_id, v_uid, p_emoji)
   on conflict on constraint hg_reactions_unique do update set active = not public.hg_reactions.active, created_at = now()

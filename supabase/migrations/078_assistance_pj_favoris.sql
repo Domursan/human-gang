@@ -208,6 +208,9 @@ begin
   return null;
 end $$;
 
+-- Fonction de déclencheur : jamais appelée par un client.
+revoke all on function public.hg_card_favorites_prune() from public, anon, authenticated;
+
 do $$ begin
   if not exists (select 1 from pg_trigger where tgname = 'hg_card_copies_fav_prune_trg') then
     create trigger hg_card_copies_fav_prune_trg after update of owner_id, recycled_at on public.hg_card_copies

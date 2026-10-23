@@ -302,46 +302,49 @@ begin
   return jsonb_build_object('ok', true, 'closed', v_n, 'path', v_path);
 end $$;
 
--- 6. Messagerie : un message masqué n'est plus lisible que par son auteur (mêmes signatures qu'avant)
+-- 6. Messagerie : un message masqué n'est plus lisible que par son auteur.
+-- Reprend les versions de 090 (colonnes sender_id / system de hg_get_messages, groupes et sourdine de hg_my_conversations) :
+-- 093 s'applique après 090 et ne doit pas en retirer les colonnes ; seul le texte d'un message masqué change.
 create or replace function public.hg_get_messages(p_conv uuid, p_after bigint default 0, p_limit integer default 200)
-returns table(id bigint, mine boolean, sender_label text, body text, created_at timestamptz)
-language sql
-stable
-security definer
-set search_path = public
-as $$
+returns table(id bigint, mine boolean, sender_label text, body text, created_at timestamptz, sender_id uuid, system boolean)
+language sql stable security definer set search_path = public as $$
   select x.id, x.sender_id = auth.uid(),
          case when x.sender_id = auth.uid() then 'Moi'
               when c.kind = 'santa' and x.sender_id = c.santa_id then 'Ton Santa'
               else coalesce(p.pseudo, 'Ancien membre') end,
          case when x.hidden_at is not null and x.sender_id is distinct from auth.uid() then 'Message masqué par le Staff.' else x.body end,
-         x.created_at
+         x.created_at,
+         case when c.kind = 'group' then x.sender_id end,
+         x.system
   from hg_messages x join hg_conversations c on c.id = x.conversation_id
   left join hg_profiles p on p.id = x.sender_id
   where x.conversation_id = p_conv and x.id > coalesce(p_after, 0)
     and exists(select 1 from hg_conversation_members m where m.conversation_id = p_conv and m.user_id = auth.uid())
-  order by x.id asc limit least(coalesce(p_limit, 200), 500)
-$$;
+  order by x.id asc limit least(coalesce(p_limit, 200), 500) $$;
 
 create or replace function public.hg_my_conversations()
-returns table(id uuid, kind text, title text, other_id uuid, last_message_at timestamptz, last_body text, last_mine boolean, unread integer)
-language sql
-stable
-security definer
-set search_path = public
-as $$
+returns table(id uuid, kind text, title text, other_id uuid, last_message_at timestamptz, last_body text, last_mine boolean,
+  unread integer, color text, members_count integer, member_ids uuid[], muted_until timestamptz, event_id uuid, my_role text)
+language sql stable security definer set search_path = public as $$
   select c.id, c.kind, hg_conv_title(c, auth.uid()),
-         case when c.kind = 'santa' and auth.uid() = c.target_id then null
+         case when c.kind = 'group' then null
+              when c.kind = 'santa' and auth.uid() = c.target_id then null
               else (select m2.user_id from hg_conversation_members m2 where m2.conversation_id = c.id and m2.user_id <> auth.uid() limit 1) end,
          c.last_message_at,
          (select case when x.hidden_at is not null and x.sender_id is distinct from auth.uid() then 'Message masqué par le Staff.' else left(x.body, 140) end
             from hg_messages x where x.conversation_id = c.id order by x.id desc limit 1),
          (select x.sender_id = auth.uid() from hg_messages x where x.conversation_id = c.id order by x.id desc limit 1),
-         (select count(*)::int from hg_messages x where x.conversation_id = c.id and x.created_at > m.last_read_at and x.sender_id is distinct from auth.uid())
+         (select count(*)::int from hg_messages x where x.conversation_id = c.id and x.created_at > m.last_read_at and x.sender_id is distinct from auth.uid()),
+         case when c.kind = 'group' then c.color end,
+         case when c.kind = 'group' then (select count(*)::int from hg_conversation_members m3 where m3.conversation_id = c.id) end,
+         case when c.kind = 'group' then (select array_agg(s.user_id) from (select m4.user_id from hg_conversation_members m4
+              where m4.conversation_id = c.id and m4.user_id <> auth.uid() order by m4.joined_at, m4.user_id limit 5) s) end,
+         m.muted_until,
+         case when c.kind = 'group' then c.event_id end,
+         case when c.kind = 'group' then m.role end
   from hg_conversation_members m join hg_conversations c on c.id = m.conversation_id
   where m.user_id = auth.uid() and public.hg_is_member()
-  order by c.last_message_at desc
-$$;
+  order by c.last_message_at desc $$;
 
 -- Messages masqués d'une conversation (membres de la conversation seulement) : la page Messages affiche la mention.
 create or replace function public.hg_conv_hidden(p_conv uuid)
