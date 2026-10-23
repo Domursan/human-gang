@@ -12,7 +12,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v49';
+const CACHE_VERSION = 'v50';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -87,6 +87,14 @@ const PRECACHE = [
   'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/css/admin-ui.css', 'assets/js/admin/ui/common.js', 'assets/js/admin/ui/time.js', 'assets/js/admin/ui/list.js', 'assets/js/admin/ui/drawer.js',
   'assets/js/admin/ui/thread.js', 'assets/js/admin/ui/info-panel.js', 'assets/js/admin/ui/detail-header.js',
+  // Nouvelles pages et modules (23/10 : Jeux, citations, playlist, carnet, capsules, visite guidée, hors ligne)
+  'jeux.html', 'citations.html', 'playlist.html', 'carnet.html', 'capsule.html',
+  'assets/js/jeux.js', 'assets/js/jeux/onglets.js', 'assets/js/jeux/commun.js', 'assets/css/jeux.css',
+  'assets/js/citations.js', 'assets/css/citations.css', 'assets/js/playlist.js', 'assets/css/playlist.css',
+  'assets/js/carnet.js', 'assets/css/carnet.css', 'assets/js/capsule.js', 'assets/css/capsule.css',
+  'assets/js/contenus-ui.js', 'assets/css/contenus.css', 'assets/js/core/tour.js', 'assets/css/tour.css',
+  'assets/js/offline-store.js', 'assets/css/offline.css', 'assets/js/quest-proofs.js', 'assets/css/quest-proofs.css',
+  'assets/js/map-loader.js', 'assets/js/leaflet-load.js',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
 ];
