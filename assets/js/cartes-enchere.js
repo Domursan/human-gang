@@ -3,13 +3,16 @@
 // compte à rebours, meilleure offre, champ d'offre (minimum et plafond affichés) et 10 dernières offres.
 // Enchérir bloque les Paillettes tout de suite ; l'ancien meilleur enchérisseur est remboursé aussitôt (serveur).
 // Mise à jour : relecture toutes les 20 s quand la Boutique est affichée, compte à rebours chaque seconde.
-// RPC : hg_auction_current (clôt aussi les enchères échues), hg_auction_bid.
+// Règles propres à chaque enchère (migration 097) affichées aux membres ; le Staff « cartes » les règle ici même
+// (« Régler cette enchère », formulaire partagé enchere-regles.js).
+// RPC : hg_auction_current (clôt aussi les enchères échues), hg_auction_bid, hg_auction_update.
 // Exporte : initEnchere(ctx), drawEnchere(). ctx = { app, visible: () => boolean, refresh: async () => {} }.
 import { sb, esc, toast, errMsg, avatarHtml } from './core.js';
 import { cardHtml, fmtP } from './cartes-ui.js';
+import { rulesFieldsHtml, readRules, rulesSummary } from './enchere-regles.js';
 
 let C = null;
-const E = { data: null, detail: false, busy: false, err: '', amount: '', timer: null, tick: null };
+const E = { data: null, detail: false, busy: false, err: '', amount: '', timer: null, tick: null, edit: false };
 const nf = new Intl.NumberFormat('fr-CH');
 const TZ = 'Europe/Zurich';
 
@@ -65,10 +68,13 @@ function detailHtml(x) {
   const lead = top?.mine;
   const cap = Number(me.cap) || 0;
   const min = Number(x.next_min) || 0;
+  const rules = E.data.rules || null;
+  const noBidsLeft = me.bids_left === 0;
   const blockMsg = !open() ? '' : me.last_winner ? 'Tu as gagné la dernière enchère : laisse sa chance aux autres cette fois.'
     : lead ? 'Tu as la meilleure offre. Tes Paillettes te seront rendues si quelqu’un fait mieux.'
-    : cap < min ? `Ton plafond (${fmtP(cap)}) est sous l’offre minimale.` : '';
-  const canBid = open() && !me.last_winner && !lead && cap >= min && !E.busy;
+    : noBidsLeft ? 'Tu as utilisé toutes tes offres pour cette enchère.'
+    : cap < min ? `Ton maximum (${fmtP(cap)}) est sous l’offre minimale.` : '';
+  const canBid = open() && !me.last_winner && !lead && !noBidsLeft && cap >= min && !E.busy;
   const form = open() ? `<form class="card c2-auc-form" data-c2-form="bid" novalidate>
         <label for="c2-auc-amount" class="c2-auc-lab">Ton offre · minimum ${esc(fmtP(min))}</label>
         <div class="c2-auc-row">
@@ -78,7 +84,7 @@ function detailHtml(x) {
         </div>
         ${E.err ? `<p class="c2-auc-err" id="c2-auc-err" role="alert">${esc(E.err)}</p>` : ''}
         ${blockMsg ? `<p class="small c2-auc-note" role="status">${esc(blockMsg)}</p>` : ''}
-        <p class="small muted" id="c2-auc-help">Tes Paillettes sont bloquées tout de suite et rendues si quelqu’un fait mieux. Plafond : ${esc(fmtP(cap))} (la moitié de ton solde de lundi). Une offre dans les 5 dernières minutes prolonge de 5 minutes.</p>
+        <p class="small muted" id="c2-auc-help">Tes Paillettes sont bloquées tout de suite et rendues si quelqu’un fait mieux. Ton maximum : ${esc(fmtP(cap))}${me.bids_left != null ? ` · offres restantes : ${esc(String(me.bids_left))}` : ''}.</p>
       </form>` : `<p class="card c2-auc-done">${x.status === 'prevue' ? `L’enchère ouvre ${esc(when(x.starts_at))}.`
         : x.winner ? `${x.won ? 'Tu as remporté' : `${esc(x.winner)} a remporté`} « ${esc(x.card?.name || '')} » pour ${esc(fmtP(x.price))}.` : 'Enchère terminée sans offre : la carte reste en réserve.'}</p>`;
   const bids = (E.data.bids || []).map((b) => `<li class="c2-auc-bid">${avatarHtml(b, 24)}<span class="c2-auc-who">${esc(b.pseudo || 'membre')}${b.mine ? ' <span class="muted small">(toi)</span>' : ''}</span>
@@ -98,9 +104,38 @@ function detailHtml(x) {
         </div>
       </div>
       ${form}
+      ${rules ? `<details class="card c2-auc-rulesbox"${E.data.can_admin ? ' open' : ''}><summary>Règles de cette enchère</summary>
+        <ul class="small c2-auc-rules">${rulesSummary(rules).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></details>` : ''}
+      ${E.data.can_admin && (x.status === 'ouverte' || x.status === 'prevue') ? adminHtml(x, rules) : ''}
       <h3 class="c2-auc-sub">Dernières offres</h3>
       ${bids ? `<ul class="c2-auc-bids">${bids}</ul>` : '<p class="muted small">Aucune offre pour l’instant.</p>'}
     </section>`;
+}
+
+/** Staff « cartes » : réglage des règles de cette enchère, directement sur la page. */
+function adminHtml(x, rules) {
+  if (!E.edit) return `<div class="btn-row"><button type="button" class="btn btn-ghost" data-c2="auc-edit" aria-expanded="false">Régler cette enchère</button></div>`;
+  return `<form class="card c2-auc-admin" data-c2-form="rules" novalidate>
+      <h3 class="c2-auc-sub">Régler cette enchère <span class="small muted">(visible par le Staff seulement)</span></h3>
+      ${rulesFieldsHtml('c2-auc-r', rules || {}, { lockMin: !!x.top })}
+      <div class="btn-row"><button type="submit" class="btn btn-sand" ${E.busy ? 'disabled' : ''}>Enregistrer</button>
+        <button type="button" class="btn btn-ghost" data-c2="auc-edit" aria-expanded="true">Fermer</button></div>
+    </form>`;
+}
+
+/** Enregistre les règles (Staff). La fin et le début ne changent pas d'ici (onglet Enchères de l'admin). */
+async function saveRules(form) {
+  const x = a();
+  if (!x || E.busy) return;
+  E.busy = true;
+  try {
+    const { error } = await sb.rpc('hg_auction_update', { p_id: x.id, p: { ...readRules(form), starts_at: x.starts_at, ends_at: x.ends_at } });
+    if (error) throw error;
+    toast('Règles de l’enchère enregistrées', 'ok');
+    E.edit = false;
+  } catch (e) { toast(errMsg(e), 'error'); }
+  E.busy = false;
+  await loadEnchere();
 }
 
 /** Dessine l'encart ou la vue détaillée dans #cartes-enchere (posé par la Boutique). */
@@ -136,7 +171,7 @@ async function bid(amount) {
   if (!x || E.busy) return;
   const n = Math.floor(Number(amount));
   if (!Number.isFinite(n) || n < Number(x.next_min)) { E.err = `L’offre minimale est de ${fmtP(x.next_min)}.`; drawEnchere(); document.getElementById('c2-auc-amount')?.focus(); return; }
-  if (n > Number(E.data.me?.cap || 0)) { E.err = `Plafond : ${fmtP(E.data.me?.cap || 0)} (la moitié de ton solde de lundi).`; drawEnchere(); document.getElementById('c2-auc-amount')?.focus(); return; }
+  if (n > Number(E.data.me?.cap || 0)) { E.err = `Ton maximum pour cette enchère : ${fmtP(E.data.me?.cap || 0)}.`; drawEnchere(); document.getElementById('c2-auc-amount')?.focus(); return; }
   E.busy = true; E.err = ''; drawEnchere();
   try {
     const { error } = await sb.rpc('hg_auction_bid', { p_auction: x.id, p_amount: n });
@@ -172,9 +207,11 @@ export function initEnchere(ctx) {
     const b = e.target.closest('[data-c2^="auc-"]');
     if (!b || b.disabled) return;
     if (b.dataset.c2 === 'auc-open') { E.detail = true; drawEnchere(); document.getElementById('c2-auc-h')?.setAttribute('tabindex', '-1'); document.getElementById('c2-auc-h')?.focus(); }
+    if (b.dataset.c2 === 'auc-edit') { E.edit = !E.edit; drawEnchere(); document.querySelector(E.edit ? '#c2-auc-r-min_bid' : '[data-c2="auc-edit"]')?.focus(); return; }
     if (b.dataset.c2 === 'auc-close') { E.detail = false; E.err = ''; drawEnchere(); document.querySelector('[data-c2="auc-open"]')?.focus(); }
   });
   ctx.app.addEventListener('submit', (e) => {
+    if (e.target.matches?.('[data-c2-form="rules"]')) { e.preventDefault(); saveRules(e.target); return; }
     if (!e.target.matches?.('[data-c2-form="bid"]')) return;
     e.preventDefault();
     bid(e.target.querySelector('#c2-auc-amount')?.value);
@@ -182,5 +219,5 @@ export function initEnchere(ctx) {
   ctx.app.addEventListener('input', (e) => { if (e.target.id === 'c2-auc-amount') { E.amount = e.target.value; } });
   loadEnchere();
   E.tick = setInterval(() => { if (!document.hidden && ctx.visible()) tick(); }, 1000);
-  E.timer = setInterval(() => { if (!document.hidden && ctx.visible() && !E.busy && document.activeElement?.id !== 'c2-auc-amount') loadEnchere(); }, 20000);
+  E.timer = setInterval(() => { if (!document.hidden && ctx.visible() && !E.busy && document.activeElement?.id !== 'c2-auc-amount' && !E.edit) loadEnchere(); }, 20000);
 }

@@ -298,3 +298,9 @@
 .acd-prop-card { flex: none; }
 .acd-prop-body { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .acd-prop-body p { margin: 0; overflow-wrap: anywhere; }
+
+/* Règles d'une enchère (migration 097) */
+.enr-rules { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin: 0; display: grid; gap: 12px; min-width: 0; }
+.enr-rules legend { padding: 0 6px; font-weight: 700; }
+.enr-sum { margin: 6px 0 0; padding-left: 1.2em; }
+.enr-edit { margin-top: 10px; }

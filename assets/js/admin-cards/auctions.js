@@ -3,15 +3,17 @@
 // Planifier l'enchère d'une carte unique (par défaut du vendredi 18 h au dimanche 18 h, mise 500 ✦, pas 50 ✦),
 // annuler une enchère prévue ou ouverte (la meilleure offre est remboursée), historique des 50 dernières.
 // Le serveur refuse une carte non unique, déjà attribuée, qui représente un membre, ou déjà aux enchères.
-// RPC : hg_auctions_admin, hg_auction_create, hg_auction_cancel (Staff « cartes », journal admin).
+// Règles réglables par enchère (migration 097) : à la création et ensuite (« Modifier les règles »), via enchere-regles.js.
+// RPC : hg_auctions_admin, hg_auction_create, hg_auction_update, hg_auction_cancel (Staff « cartes », journal admin).
 // Exporte : mountAuctionsTab(el), nextWeekend(now). Les cartes viennent de C (state.js).
 // =====================================================================
 import { sb, toast, esc, errMsg } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
+import { rulesFieldsHtml, readRules, rulesSummary } from '../enchere-regles.js';
 
-const X = { el: null, list: null, err: '' };
+const X = { el: null, list: null, err: '', edit: null };
 const STATUS = { prevue: 'Prévue', ouverte: 'Ouverte', close: 'Terminée', annulee: 'Annulée' };
 /** Valeur d'un champ datetime-local (heure locale). */
 const toLocal = (d) => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 16); };
@@ -40,10 +42,8 @@ function formHtml() {
         <div class="field"><label for="au-card">Carte unique</label><select id="au-card" name="card_id">${cards.map((k) => `<option value="${esc(k.id)}">${esc(k.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="au-start">Début</label><input id="au-start" name="starts_at" type="datetime-local" value="${toLocal(start)}"></div>
         <div class="field"><label for="au-end">Fin</label><input id="au-end" name="ends_at" type="datetime-local" value="${toLocal(end)}"></div>
-        <div class="field"><label for="au-min">Mise de départ (✦)</label><input id="au-min" name="min_bid" type="number" min="1" max="100000" value="500" inputmode="numeric"></div>
-        <div class="field"><label for="au-step">Pas minimal (✦)</label><input id="au-step" name="step" type="number" min="1" max="10000" value="50" inputmode="numeric"></div>
       </div>
-      <p class="small muted">Une offre dans les 5 dernières minutes prolonge de 5 minutes (une heure au plus). Plafond d’un membre : la moitié de son solde du lundi ; le gagnant de la dernière enchère ne peut pas enchérir.</p>
+      ${rulesFieldsHtml('au-new')}
       <div class="btn-row"><button class="btn btn-primary" type="submit">Planifier l’enchère</button></div>`
       : '<p class="empty">Aucune carte unique disponible : crée une carte de rareté « Unique » (Catalogue › Cartes).</p>'}
     </form>`;
@@ -60,8 +60,25 @@ function listHtml() {
         <p class="small">${a.status === 'close' ? (a.winner ? `Remportée par ${esc(a.winner)} pour ${nf(a.price)} ✦` : 'Sans offre : carte en réserve')
           : a.top ? `Meilleure offre : ${nf(a.top)} ✦ (${esc(a.top_pseudo || 'membre')})` : 'Pas encore d’offre'}</p>
       </div>
-      ${a.status === 'prevue' || a.status === 'ouverte' ? `<div class="btn-row"><button class="btn btn-danger btn-sm" type="button" data-au="cancel" data-id="${esc(a.id)}">Annuler</button></div>` : ''}
+      ${a.status === 'prevue' || a.status === 'ouverte' ? `<div class="btn-row">
+        <button class="btn btn-ghost btn-sm" type="button" data-au="edit" data-id="${esc(a.id)}" aria-expanded="${X.edit === a.id}">${X.edit === a.id ? 'Fermer' : 'Modifier les règles'}</button>
+        <button class="btn btn-danger btn-sm" type="button" data-au="cancel" data-id="${esc(a.id)}">Annuler</button></div>` : ''}
+      ${X.edit === a.id ? editHtml(a) : a.rules ? `<ul class="small muted enr-sum">${rulesSummary(a.rules).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
     </li>`).join('')}</ul>`;
+}
+
+/** Formulaire de modification d'une enchère prévue ou ouverte (dates et règles). */
+function editHtml(a) {
+  const id = `au-e-${a.id.slice(0, 8)}`;
+  return `<form class="card stack enr-edit" data-au-form="edit" data-id="${esc(a.id)}" novalidate>
+      <div class="acd-grid-2">
+        <div class="field"><label for="${id}-start">Début</label><input id="${id}-start" name="starts_at" type="datetime-local" value="${toLocal(a.starts_at)}"${a.started ? ' readonly aria-describedby="' + id + '-sh"' : ''}>
+          ${a.started ? `<p class="small muted" id="${id}-sh">Déjà ouverte : le début ne change plus.</p>` : ''}</div>
+        <div class="field"><label for="${id}-end">Fin</label><input id="${id}-end" name="ends_at" type="datetime-local" value="${toLocal(a.ends_at)}"></div>
+      </div>
+      ${rulesFieldsHtml(id, a.rules || {}, { lockMin: a.bids > 0 })}
+      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les règles</button></div>
+    </form>`;
 }
 
 function render() {
@@ -84,14 +101,22 @@ export function mountAuctionsTab(el) {
   X.el = el;
   render();
   el.addEventListener('submit', async (e) => {
+    if (e.target.dataset.auForm === 'edit') {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const p = { ...readRules(e.target), starts_at: new Date(f.get('starts_at')).toISOString(), ends_at: new Date(f.get('ends_at')).toISOString() };
+      await act(e.submitter, async () => { check(await sb.rpc('hg_auction_update', { p_id: e.target.dataset.id, p })); toast('Règles enregistrées', 'ok'); X.edit = null; await load(); });
+      return;
+    }
     if (e.target.id !== 'acd-auc-form') return;
     e.preventDefault();
     const f = new FormData(e.target);
-    const p = { card_id: f.get('card_id'), starts_at: new Date(f.get('starts_at')).toISOString(), ends_at: new Date(f.get('ends_at')).toISOString(),
-      min_bid: Number(f.get('min_bid')), step: Number(f.get('step')) };
+    const p = { ...readRules(e.target), card_id: f.get('card_id'), starts_at: new Date(f.get('starts_at')).toISOString(), ends_at: new Date(f.get('ends_at')).toISOString() };
     await act(e.submitter, async () => { check(await sb.rpc('hg_auction_create', { p })); toast('Enchère planifiée', 'ok'); await load(); });
   });
   el.addEventListener('click', async (e) => {
+    const ed = e.target.closest('[data-au="edit"]');
+    if (ed) { X.edit = X.edit === ed.dataset.id ? null : ed.dataset.id; render(); X.el.querySelector(`[data-au="edit"][data-id="${ed.dataset.id}"]`)?.focus(); return; }
     const b = e.target.closest('[data-au="cancel"]');
     if (!b) return;
     if (!(await confirmBox('Annuler cette enchère ?', 'La meilleure offre est remboursée. La carte reste en réserve.', { ok: 'Annuler l’enchère', danger: true }))) return;

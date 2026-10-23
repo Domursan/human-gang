@@ -268,3 +268,10 @@
 
 /* C11 : la vue détaillée de l’enchère masque la Boutique ; [hidden] doit gagner sur « .shop { display:flex } ». */
 .shop[hidden], #cartes-enchere[hidden] { display: none !important; }
+
+/* ===== Règles de l'enchère (migration 097) ===== */
+.enr-rules { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; margin: 0; display: grid; gap: 12px; min-width: 0; }
+.enr-rules legend { padding: 0 6px; font-weight: 700; }
+.enr-rules .acd-grid-2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); min-width: 0; }
+.c2-auc-rules { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.c2-auc-admin { display: grid; gap: 12px; }
