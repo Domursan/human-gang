@@ -28,7 +28,7 @@ export const SECTION_PERM = {
   theme: 'themes',
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
-  eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  eggs: 'reglages', fil: 'reglages', champs: 'reglages', social: 'reglages', // social : Vie sociale (migration 090)
   // Page « Jeux » (migration 083) : GeoGuessr (photos des sorties), jeux du jour (économie), citations (quiz)
   'jeux-geo': 'souvenirs', 'jeux-jdj': 'cartes', 'jeux-citations': 'quiz',
   // Jeux (paquet xJ3) : preuves des quêtes (J11), Framed et Heardle (J9, J10), Bataille (J15)
@@ -65,6 +65,7 @@ export const DOMAINS = [
       { id: 'relance', label: 'À relancer', section: 'relance' },
       { id: 'invitations', label: 'Invitations', section: 'membres' },
       { id: 'champs', label: 'Champs du profil', section: 'champs' },
+      { id: 'social', label: 'Vie sociale', section: 'social' },
     ]),
     ...under('Accès aux pages', [
       { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },

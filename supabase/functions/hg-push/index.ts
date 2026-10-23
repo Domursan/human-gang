@@ -78,7 +78,9 @@ Deno.serve(async (req) => {
   if (!keys) return json({ sent: 0, reason: 'vapid_absent' });
 
   // Destinataires : les autres membres de la conversation.
-  let membersQuery = db.from('hg_conversation_members').select('user_id').eq('conversation_id', conv);
+  // Sourdine (migration 090) : un membre dont muted_until est dans le futur ne reçoit pas de notification.
+  let membersQuery = db.from('hg_conversation_members').select('user_id').eq('conversation_id', conv)
+    .or(`muted_until.is.null,muted_until.lt.${new Date().toISOString()}`);
   if (sender) membersQuery = membersQuery.neq('user_id', sender);
   const { data: members, error: membersErr } = await membersQuery;
   if (membersErr) return json({ error: 'Lecture des membres impossible' }, 500);
@@ -86,10 +88,13 @@ Deno.serve(async (req) => {
   if (!recipients.length) return json({ sent: 0, reason: 'aucun_destinataire' });
 
   // Nom affiché : « Secret Santa » pour un Secret Santa, sinon le pseudo de l'expéditeur (conversation directe).
-  const { data: conversation } = await db.from('hg_conversations').select('kind').eq('id', conv).maybeSingle();
+  const { data: conversation } = await db.from('hg_conversations').select('kind, title').eq('id', conv).maybeSingle();
   let name = 'Conversation';
   if (conversation?.kind === 'santa') {
     name = 'Secret Santa';
+  } else if (conversation?.kind === 'group') { // groupe (migration 090) : « Pseudo · Nom du groupe »
+    const { data: profile } = sender ? await db.from('hg_profiles').select('pseudo').eq('id', sender).maybeSingle() : { data: null };
+    name = [profile?.pseudo, conversation.title || 'Groupe'].filter(Boolean).map(String).join(' · ').slice(0, 120);
   } else if (sender) {
     const { data: profile } = await db.from('hg_profiles').select('pseudo').eq('id', sender).maybeSingle();
     if (profile?.pseudo) name = String(profile.pseudo);

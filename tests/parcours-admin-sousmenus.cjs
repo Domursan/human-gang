@@ -20,12 +20,13 @@ const EXCEPTIONS = {
   'cartes/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
   'cartes/saisons': 'deux cartes (saison de classement + soirées complètes) avec barème et récompenses : à séparer en deux sous-onglets si Ethan le souhaite',
   'membres/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard (audit §3.3)',
+  'membres/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs (question ouverte pour Ethan)',
 };
 
 // Arbre attendu : domaine → [titre de groupe (null : sans titre), [sous-sections]].
 const TREE = {
   pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']]],
-  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs']], ['Accès aux pages', ['acces', 'acces-matrice']]],
+  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social']], ['Accès aux pages', ['acces', 'acces-matrice']]],
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],

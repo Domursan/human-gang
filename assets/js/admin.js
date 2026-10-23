@@ -59,6 +59,7 @@ const OPTIONAL = [
   { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Jeux et cartes › Framed et Heardle (J9, J10)
   { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
   { sub: 'saisons', url: './admin-jeux4.js', fn: 'mountJeux4Section' }, // Jeux et cartes › Saisons et soirées (J16, J19)
+  { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Vie sociale (hg_settings.social, migration 090)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -176,6 +177,7 @@ const accessGroup = {
 registerSub('membres/acces', { ...accessGroup, open: () => { accessView('pages'); setActions(accessActions()); } });
 registerSub('membres/acces-matrice', { ...accessGroup, open: () => { accessView('matrice'); setActions(accessActions()); } });
 if (MOUNT.champs) registerSub('membres/champs', { main: () => MOUNT.champs($('#champs-root')) });
+if (MOUNT.social) registerSub('membres/social', { main: () => MOUNT.social($('#social-root')) });
 // Vie du gang
 registerSub('vie/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),

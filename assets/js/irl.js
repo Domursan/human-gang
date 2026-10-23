@@ -48,6 +48,7 @@ const I = {
   upload: svg('upload2', { size: 18, stroke: 1.8 }),
   check: svg('check', { size: 16, stroke: 2.2 }),
   download: svg('download2', { size: 18, stroke: 1.8 }),
+  chat: svg('chat', { size: 16, stroke: 1.8 }),
 };
 
 /* ---------- État ---------- */
@@ -208,6 +209,25 @@ function rsvpBlock(ev, { compact = false } = {}) {
 function calButton(ev) {
   return `<button type="button" class="btn btn-ghost btn-sm" data-act="ics" data-id="${esc(ev.id)}" aria-label="Ajouter « ${esc(ev.title)} » à mon agenda">${I.cal}<span>Ajouter à mon agenda</span></button>`;
 }
+/**
+ * Lien « Discussion de la sortie » (groupe de la messagerie, migration 090) : pour l'organisateur et les réponses
+ * « oui » / « peut-être ». Le serveur vérifie le droit (hg_event_conv_open) ; ici, seulement l'affichage.
+ */
+function discussBtn(ev) {
+  const mine = rsvpOf(ev.id).mine;
+  if (ev.created_by !== me.id && mine !== 'oui' && mine !== 'peut-etre') return '';
+  return `<a class="btn btn-ghost btn-sm" href="messages.html?event=${encodeURIComponent(ev.id)}">${I.chat}<span>Discussion de la sortie</span></a>`;
+}
+/**
+ * Suggestion « Dire merci à l’organisateur » dans les trois jours qui suivent une sortie où j'étais (P4, migration 090).
+ * Le lien ouvre la fiche de l'organisateur avec la boîte de merci et la sortie déjà choisie.
+ */
+function thanksHint(ev) {
+  const t = new Date(ev.starts_at).getTime();
+  if (!ev.created_by || ev.created_by === me.id || rsvpOf(ev.id).mine !== 'oui' || !(t <= Date.now() && Date.now() - t < 3 * 864e5)) return '';
+  return `<p class="irl-thanks small">${esc(pseudo(ev.created_by))} a organisé cette sortie.
+    <a class="btn btn-sand btn-sm" href="membre.html?id=${encodeURIComponent(ev.created_by)}&amp;merci=${encodeURIComponent(ev.id)}">Dire merci à l’organisateur</a></p>`;
+}
 /** Description d'une sortie, échappée ; vide si absente. */
 function descHtml(ev) {
   return ev.description ? `<p class="desc">${esc(ev.description)}</p>` : '';
@@ -280,7 +300,7 @@ function renderNext(ev) {
       ${meta(ev)}
       ${descHtml(ev)}
       ${rsvpBlock(ev)}
-      <div class="btn-row">${calButton(ev)}</div>
+      <div class="btn-row">${calButton(ev)}${discussBtn(ev)}</div>
       ${ownerActions(ev)}
     </div>
     ${started ? `<div class="feat-album">${albumHtml(ev)}</div>` : ''}
@@ -339,7 +359,7 @@ function renderUpcoming(ev) {
       </div>
       ${descHtml(ev)}
       ${rsvpBlock(ev, { compact: true })}
-      <div class="btn-row">${calButton(ev)}</div>
+      <div class="btn-row">${calButton(ev)}${discussBtn(ev)}</div>
     </div>
   </article>`;
 }
@@ -361,6 +381,7 @@ function renderPast(ev) {
       </div>
       ${ownerActions(ev, { who: true })}
     </div>
+    ${thanksHint(ev)}
     ${god() ? `<div class="past-rsvp"><p class="small muted">Répondre à cette sortie passée${godTag()}</p>${rsvpBlock(ev, { compact: true })}</div>` : ''}
     ${sortieCardHtml(ev, { me, members: S.members, pseudo })}
     ${albumHtml(ev)}

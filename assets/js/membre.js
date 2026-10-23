@@ -3,7 +3,8 @@
 // et l'annuaire « Le gang ». La carte peut être téléchargée en PNG haute définition.
 // Dépendances : core.js (initPage, sb, canAccess), ss-card.js (chargement d'image et téléchargement),
 // badge-levels.js (niveaux), cartes-showcase.js (vitrine), icons.js.
-// RPC et tables : hg_member_card, hg_members, hg_settings (badges), hg_user_badges, hg_badges.
+// RPC et tables : hg_member_card, hg_members, hg_settings (badges), hg_user_badges, hg_badges ;
+// profil gaming et mercis (migration 090) : profil-gaming.js et mercis.js, chargés à la demande.
 // N'exporte que renderIdCard (carte haute définition).
 import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo, canAccess } from './core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
@@ -104,9 +105,11 @@ function shell() {
       <div class="card mb-badges"><span class="skeleton-line"></span><span class="skeleton-line short"></span></div>
     </section>
     <div class="mb-actions" id="mb-actions" hidden></div>
+    <div class="mb-social"><div id="mb-gaming" hidden></div><div id="mb-thanks" hidden></div></div>
     ${canAccess('cartes') ? '<section class="mb-showcase" id="mb-showcase" hidden></section>' : ''}
     <section class="mb-gang" aria-labelledby="gang-title">
       <h2 class="mb-section-title" id="gang-title">${ICON.users} Le gang</h2>
+      <div id="gm-who" hidden></div>
       <ul class="gang-grid" id="gang"><li class="gang-skel"></li><li class="gang-skel"></li><li class="gang-skel"></li></ul>
     </section>`;
 }
@@ -543,6 +546,7 @@ async function renderOnline() {
   shell();
   // L'annuaire se charge en parallèle de la carte, sans l'attendre.
   const gangP = loadGang();
+  import('./profil-gaming.js').then((m) => m.mountWhoPlays($('#gm-who'))).catch((e) => console.warn('[gaming]', e)); // « Qui joue à… »
   try {
     const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
     if (error) throw error;
@@ -571,6 +575,11 @@ async function renderOnline() {
       if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
       if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
       else saveOffline(me, 'membre', { card }); // Q4 : sa propre carte gardée pour le hors ligne
+      // Social (migration 090) : bloc « En jeu » et mercis, chargés à la demande sans retarder la carte.
+      import('./profil-gaming.js').then((m) => m.mountGamingBlock($('#mb-gaming'), card.id, isMe)).catch((e) => console.warn('[gaming]', e));
+      const merciEv = params.get('merci');
+      import('./mercis.js').then((m) => m.mountThanks($('#mb-thanks'), card, isMe, { eventId: merciEv && UUID_RE.test(merciEv) ? merciEv : null, mePseudo: me.pseudo }))
+        .catch((e) => console.warn('[mercis]', e));
     }
   } catch (e) {
     $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;

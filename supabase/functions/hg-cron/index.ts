@@ -457,6 +457,7 @@ Deno.serve(async (req) => {
   const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, scheduled: 0, errors: 0 };
   const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
+  let polls = 0; // sondages clôturés à ce passage
   try {
     const { data: s } = await db.from('hg_settings').select('value').eq('key', 'bot').maybeSingle();
     const bot = (s?.value ?? {}) as ChannelBot & { notify?: Record<string, boolean> } & MentionBot;
@@ -475,6 +476,12 @@ Deno.serve(async (req) => {
       try { await ssReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels cadeau', e); out.errors++; }
     }
+    // Sondages libres échus (migration 090) : clôture et ligne de résultat dans le fil, une seule fois (result_posted).
+    try {
+      const { data: n, error } = await db.rpc('hg_poll_finalize_due');
+      if (error) throw error;
+      polls = Number(n) || 0;
+    } catch (e) { console.error('[hg-cron] sondages', e); out.errors++; }
 
     if (canSend && (bot as { notify?: Record<string, boolean> }).notify?.quiz_daily !== false) {
       try { await quizDaily(out, bot, chanLog); }
@@ -493,7 +500,7 @@ Deno.serve(async (req) => {
       }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
-    return json({ ok: true, ...out });
+    return json({ ok: true, ...out, polls_closed: polls });
   } catch (e) {
     console.error('[hg-cron]', e);
     return json({ ok: false, error: 'Erreur interne (voir les journaux de hg-cron)', ...out }, 500); // détail seulement dans console.error (m16)
