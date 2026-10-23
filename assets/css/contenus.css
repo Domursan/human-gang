@@ -1,0 +1,42 @@
+/* ===== Humane Gang — styles communs des pages « Contenu et souvenirs » =====
+   Citations, Playlist, Carnet de voyage, Capsules : en-tête de page, pastilles de filtre, boîte de dialogue. */
+
+.ct-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ct-head .eyebrow { color: var(--sand); }
+.ct-intro { max-width: 62ch; margin-top: 10px; }
+.ct-section { margin-top: 28px; }
+.ct-section > h2 { font-family: var(--font-display); font-weight: 400; font-size: 22px; margin-bottom: 12px; }
+
+/* ---------- Pastilles de filtre ---------- */
+.ct-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 20px 0 16px; }
+.ct-chip { font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--muted); }
+.ct-chip[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: #121212; }
+@media (hover: hover) { .ct-chip:hover { color: var(--text); } .ct-chip[aria-pressed="true"]:hover { color: #121212; } }
+.ct-chip:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.ct-select { font: inherit; font-size: 14px; min-height: 44px; padding: 8px 12px; border-radius: 999px; max-width: 100%;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); }
+
+/* ---------- Boîte de dialogue de formulaire ---------- */
+.ct-dialog { width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; overflow: auto;
+  border-radius: var(--radius); border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); }
+.ct-dialog::backdrop { background: rgba(4, 4, 8, .62); backdrop-filter: blur(3px); }
+.ct-dlg-form { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.ct-dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ct-dlg-head h2 { font-family: var(--font-display); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.ct-dlg-x { min-width: 44px; padding: 8px; }
+.ct-dlg-err { color: var(--rose); font-size: 14px; }
+.ct-dlg-actions { justify-content: flex-end; }
+.ct-count { font-size: 13px; color: var(--muted); text-align: right; }
+@media (max-width: 600px) {
+  .ct-dialog { inset: 0; width: 100%; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; border: 0; }
+  .ct-dlg-actions .btn { flex: 1 1 0; }
+}
+html[data-mode="clair"] .ct-dialog::backdrop { background: rgba(30, 28, 34, .38); }
+
+/* ---------- Divers ---------- */
+.ct-empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); }
+.ct-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--muted); white-space: nowrap; }
+.ct-status-ok { border-color: var(--sage); color: var(--sage-text); }
+.ct-status-wait { border-color: var(--amber); color: var(--amber); }
+.ct-status-ko { border-color: var(--rose); color: var(--rose); }

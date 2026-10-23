@@ -78,3 +78,12 @@
 .sv-d-img img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
 .sv-d-text { margin: 0; max-width: 68ch; white-space: pre-wrap; overflow-wrap: anywhere; }
 .sv-col-list .ui-row { grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Vue « Contenus proposés » (idées S7, S8, S11, S12, S13) ---------- */
+.sv-ct-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.sv-ct-tabs [aria-selected="true"] { background: var(--sand); border-color: var(--sand); color: #121212; }
+.sv-ct-row { grid-template-columns: minmax(0, 1fr) auto; }
+.sv-ct-row:has(.sv-thumb) { grid-template-columns: 64px minmax(0, 1fr) auto; }
+.sv-ct-row .sv-row-actions { flex-wrap: wrap; }
+.sv-ct-diapos { display: grid; gap: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
+@media (max-width: 600px) { .sv-ct-row, .sv-ct-row:has(.sv-thumb) { grid-template-columns: minmax(0, 1fr); } }

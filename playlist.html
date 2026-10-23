@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/ https://cdn.jsdelivr.net/npm/leaflet@1.9.4/ https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org https://www.youtube.com https://open.spotify.com; frame-src https://www.youtube-nocookie.com https://open.spotify.com https://widget.deezer.com https://w.soundcloud.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playlist du gang · Humane Gang</title>
+  <meta name="description" content="La playlist du Humane Gang et le morceau de la semaine.">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://domursan.github.io/human-gang/playlist.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Humane Gang">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Playlist du gang · Humane Gang">
+  <meta property="og:description" content="La playlist du Humane Gang et le morceau de la semaine.">
+  <meta property="og:url" content="https://domursan.github.io/human-gang/playlist.html">
+  <meta property="og:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo du Humane Gang">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Playlist du gang · Humane Gang">
+  <meta name="twitter:description" content="La playlist du Humane Gang et le morceau de la semaine.">
+  <meta name="twitter:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0a10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/card-drops.css">
+  <link rel="stylesheet" href="assets/css/photos.css">
+  <link rel="stylesheet" href="assets/css/contenus.css">
+  <link rel="stylesheet" href="assets/css/playlist.css">
+</head>
+<body>
+  <main class="container ct-page pl-page" id="app" aria-busy="true">
+    <div class="page-head ct-head">
+      <div>
+        <div class="eyebrow">Ce que le gang écoute</div>
+        <h1 class="page-title">Playlist du gang</h1>
+        <p class="ct-intro muted">Partage un morceau (YouTube, Spotify, Deezer ou SoundCloud) et vote pour le morceau de la semaine. Une voix par semaine, pas pour ton propre morceau ; en cas d’égalité, le premier partagé gagne.</p>
+      </div>
+      <button class="btn btn-sand" type="button" id="pl-add">+ Partager un morceau</button>
+    </div>
+
+    <section class="card pl-winner" id="pl-winner" aria-labelledby="pl-winner-h" hidden></section>
+
+    <section class="ct-section" aria-labelledby="pl-week-h">
+      <h2 id="pl-week-h">Cette semaine</h2>
+      <p class="small muted" id="pl-week-info"></p>
+      <div class="ct-filters" id="pl-tags-f" role="group" aria-label="Filtrer par étiquette"></div>
+      <p class="small muted pl-privacy">Le lecteur ne se charge qu’au clic sur « Écouter ici » : aucun traceur avant.</p>
+      <ul class="pl-list" id="pl-week"><li class="ct-empty">Chargement de la playlist…</li></ul>
+    </section>
+
+    <section class="ct-section" aria-labelledby="pl-hof-h">
+      <h2 id="pl-hof-h">Morceaux de la semaine</h2>
+      <ol class="pl-hof" id="pl-hof"></ol>
+    </section>
+
+    <details class="ct-section pl-older">
+      <summary>Semaines passées <span id="pl-older-count"></span></summary>
+      <ul class="pl-list" id="pl-older"></ul>
+    </details>
+  </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
+  <script type="module" src="assets/js/playlist.js"></script>
+</body>
+</html>

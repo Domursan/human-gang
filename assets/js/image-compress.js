@@ -58,10 +58,11 @@ const toBlob = (canvas, type, quality) => new Promise((res) => canvas.toBlob(res
 /**
  * Prépare un fichier image pour l'envoi.
  * Renvoie { blob, ext, contentType } : à utiliser tel quel pour le chemin de stockage et le type MIME.
+ * strip : true pour toujours réencoder (l'image redessinée perd ses métadonnées EXIF, dont la position GPS).
  */
-export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALITY } = {}) {
+export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALITY, strip = false } = {}) {
   if (!file?.type?.startsWith('image/')) throw new Error(`« ${file?.name || 'fichier'} » n'est pas une image`);
-  if (KEEP_AS_IS.has(file.type)) return { blob: file, ext: EXT[file.type], contentType: file.type };
+  if (KEEP_AS_IS.has(file.type) && !strip) return { blob: file, ext: EXT[file.type], contentType: file.type };
 
   const src = await decode(file);
   const w0 = src.width, h0 = src.height;
@@ -86,7 +87,7 @@ export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALIT
     return { blob, ext: 'jpg', contentType: 'image/jpeg' };
   }
   // Déjà léger et sans redimensionnement : on garde l'original plutôt que de le réencoder plus lourd
-  if (k === 1 && blob.size >= file.size && (file.type === 'image/webp' || file.type === 'image/jpeg')) {
+  if (!strip && k === 1 && blob.size >= file.size && (file.type === 'image/webp' || file.type === 'image/jpeg')) {
     return { blob: file, ext: EXT[file.type], contentType: file.type };
   }
   return { blob, ext: 'webp', contentType: 'image/webp' };

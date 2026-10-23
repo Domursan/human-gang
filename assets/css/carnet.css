@@ -1,0 +1,62 @@
+/* ===== Humane Gang — Carnet de voyage (carnet.html), idée S12 ===== */
+
+/* ---------- Onglets ---------- */
+.cv-tabs { display: flex; gap: 8px; margin: 8px 0 16px; }
+.cv-tabs [role="tab"] { font: inherit; font-size: 14px; font-weight: 700; min-height: 44px; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--muted); }
+.cv-tabs [aria-selected="true"] { background: var(--sand); border-color: var(--sand); color: #121212; }
+.cv-tabs [role="tab"]:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+/* ---------- Carte du monde ---------- */
+.cv-map-box { margin-bottom: 18px; }
+.cv-map { height: 200px; border-radius: 16px; background: var(--hist-bg); border: 1px solid var(--hist-border); overflow: hidden; }
+@media (min-width: 900px) { .cv-map { height: 320px; } }
+.cv-map-off { height: 64px; }
+.cv-map-status { margin-top: 6px; text-align: right; }
+.cv-pin span { display: block; width: 12px; height: 12px; margin: 3px; border-radius: 50%; background: var(--sand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--sand) 30%, transparent); }
+
+/* ---------- Grande carte postale ---------- */
+.cv-pc { background: #F2EFEA; color: #1b1b1d; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 10px;
+  transform: rotate(-1.2deg); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); max-width: 560px; }
+@media (prefers-reduced-motion: reduce) { .cv-pc { transform: none; } }
+.cv-photo { position: relative; display: block; width: 100%; height: 220px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; cursor: zoom-in;
+  background: linear-gradient(180deg, #f6b37c 0%, #e2788a 45%, #5b4a8a 100%); }
+@media (min-width: 700px) { .cv-photo { height: 300px; } }
+.cv-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cv-photo:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cv-stamp { position: absolute; z-index: 2; top: 8px; right: 8px; width: 46px; height: 56px; background: #F2EFEA; padding: 3px; border: 2px dashed #B70127; }
+.cv-stamp span { width: 100%; height: 100%; background: #9E3543; display: grid; place-items: center; color: #F2EFEA; font-family: var(--font-display); font-size: 11px; }
+.cv-tampon { position: absolute; z-index: 2; left: 10px; bottom: 10px; width: 78px; height: 78px; border-radius: 50%; border: 2px solid rgba(242, 239, 234, .85);
+  color: #F2EFEA; display: grid; place-items: center; text-align: center; font-size: 10px; font-weight: 700; line-height: 1.2; transform: rotate(-14deg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .6); padding: 4px; }
+.cv-pc-body { display: grid; gap: 4px; padding: 0 4px 4px; overflow-wrap: anywhere; }
+.cv-place { color: #5d5a56; }
+.cv-msg { font-size: 15px; }
+.cv-date { font-size: 12px; color: #5d5a56; }
+.cv-pc-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 20px; }
+.cv-pc-foot .react-bar { margin-top: 0; }
+
+/* ---------- Listes ---------- */
+.cv-list, .cv-mine { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.cv-li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
+.cv-thumb { width: 64px; height: 64px; flex: none; padding: 0; border: 0; border-radius: 10px; overflow: hidden; cursor: zoom-in;
+  background: linear-gradient(180deg, #9fc4e8, #e8f0f6 60%, #6FA37F); }
+.cv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cv-li-body { flex: 1; min-width: 0; display: grid; gap: 2px; overflow-wrap: anywhere; }
+.cv-li-body .react-bar { margin-top: 6px; }
+.cv-li .btn { flex: none; }
+.cv-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 480px) { .cv-li { flex-wrap: wrap; } .cv-li > .btn { flex: 1 1 100%; } }
+
+/* ---------- Mon carnet ---------- */
+.cv-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; align-items: center; }
+.cv-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px 16px; display: grid; text-align: center; min-width: 110px; }
+.cv-stat b { font-family: var(--font-display); font-weight: 400; font-size: 26px; }
+.cv-stat span { font-size: 12px; color: var(--muted); }
+.cv-flags { flex: 1 1 100%; }
+
+/* ---------- Envoi ---------- */
+.cv-search { display: flex; gap: 8px; }
+.cv-search input { flex: 1; min-width: 0; }
+.cv-results { display: grid; gap: 6px; }
+.cv-results .check { min-height: 44px; align-items: center; }

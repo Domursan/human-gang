@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/ https://cdn.jsdelivr.net/npm/leaflet@1.9.4/ https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <script src="assets/js/theme-boot.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mur des citations · Humane Gang</title>
+  <meta name="description" content="Le mur des citations cultes du Humane Gang.">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://domursan.github.io/human-gang/citations.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Humane Gang">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Mur des citations · Humane Gang">
+  <meta property="og:description" content="Le mur des citations cultes du Humane Gang.">
+  <meta property="og:url" content="https://domursan.github.io/human-gang/citations.html">
+  <meta property="og:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo du Humane Gang">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mur des citations · Humane Gang">
+  <meta name="twitter:description" content="Le mur des citations cultes du Humane Gang.">
+  <meta name="twitter:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
+  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0a10">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
+  <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/card-drops.css">
+  <link rel="stylesheet" href="assets/css/photos.css">
+  <link rel="stylesheet" href="assets/css/contenus.css">
+  <link rel="stylesheet" href="assets/css/citations.css">
+</head>
+<body>
+  <main class="container ct-page qt-page" id="app" aria-busy="true">
+    <div class="page-head ct-head">
+      <div>
+        <div class="eyebrow">Souvenirs</div>
+        <h1 class="page-title">Mur des citations</h1>
+        <p class="ct-intro muted">Les phrases cultes du gang. Chacun peut en proposer ; elles apparaissent une fois validées par le Staff, et la personne citée a toujours le dernier mot.</p>
+      </div>
+      <button class="btn btn-sand" type="button" id="qt-propose">+ Proposer</button>
+    </div>
+
+    <section class="qt-cited" id="qt-cited" aria-label="On t’a cité" hidden></section>
+
+    <div class="ct-filters" id="qt-filters" role="group" aria-label="Filtrer les citations"></div>
+
+    <ul class="qt-wall" id="qt-wall" aria-live="polite"><li class="ct-empty">Chargement des citations…</li></ul>
+
+    <details class="ct-section qt-mine" id="qt-mine-box">
+      <summary>Mes propositions et les citations qui me concernent <span id="qt-mine-count"></span></summary>
+      <ul class="qt-mine-list" id="qt-mine"></ul>
+    </details>
+  </main>
+  <script type="module" src="assets/js/site-boot.js"></script>
+  <script type="module" src="assets/js/citations.js"></script>
+</body>
+</html>

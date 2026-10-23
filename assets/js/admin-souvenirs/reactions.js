@@ -14,6 +14,8 @@ import { svg } from '../icons.js';
 import { sectionError } from '../admin/common.js';
 import { pageRange, pageOf, pagerHtml, stampLabel, peopleOptions } from './helpers.js';
 
+/* Cibles des idées S8, S12, S13 (le détail se consulte dans la vue « Contenus proposés »). */
+const OTHER_KIND = { quote: 'Une citation du mur', postcard: 'Une carte postale', track: 'Un morceau de la playlist' };
 /* Icône du bouton « Masquer ». */
 const ICON = { hide: svg('eye', { size: 16, stroke: 1.8 }) };
 
@@ -106,7 +108,7 @@ export function createReactionsPanel(ctx) {
       <div class="sv-thumb">${url ? thumbHtml(url) : '<span class="sv-emoji" aria-hidden="true">' + esc(emoji) + '</span>'}</div>
       <div class="sv-main">
         <p><span class="sv-emoji" aria-hidden="true">${esc(emoji)}</span> <strong>${esc(who)}</strong> a réagi (${esc(label.toLowerCase())}) à</p>
-        <p class="sv-title">${t ? esc(t.label) : (r.target_kind === 'moment' ? 'Souvenir supprimé' : 'Photo supprimée')}</p>
+        <p class="sv-title">${t ? esc(t.label) : (OTHER_KIND[r.target_kind] || (r.target_kind === 'moment' ? 'Souvenir supprimé' : 'Photo supprimée'))}</p>
         <p class="small muted">${esc(stampLabel(r.created_at))}</p>
       </div>
       <div class="btn-row sv-row-actions">
