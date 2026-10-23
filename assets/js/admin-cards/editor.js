@@ -45,6 +45,10 @@ export function openCardDialog(k = null) {
           <div class="field"><label for="acc-caption">Légende <span class="muted small">(facultatif)</span></label>
             <input id="acc-caption" name="caption" maxlength="80" autocomplete="off" placeholder="ex. 2015 · CD Projekt Red" value="${esc(k?.caption ?? '')}" aria-describedby="acc-caption-help">
             <span class="small muted" id="acc-caption-help"><span id="acc-caption-count">${nf((k?.caption ?? '').length)}</span> / 80 caractères, affichée sous le nom.</span></div>
+          <div class="field"><label for="acc-tag">Tag de jeu <span class="muted small">(facultatif)</span></label>
+            <input id="acc-tag" name="tag" maxlength="32" autocomplete="off" list="acc-tag-list" placeholder="ex. minecraft" value="${esc(k?.tag ?? '')}" aria-describedby="acc-tag-help">
+            <datalist id="acc-tag-list">${[...new Set(C.cards.map((x) => x.tag).filter(Boolean))].sort().map((t) => `<option value="${esc(t)}"></option>`).join('')}</datalist>
+            <span class="small muted" id="acc-tag-help">Regroupe les cartes d’un même jeu (Collection « par jeu », titre « Pilier de … », recettes de l’Atelier). Minuscules, chiffres et tirets.</span></div>
           <div class="acd-grid-2">
             <div class="field"><label for="acc-family">Famille</label>
               <select id="acc-family" name="family">${FAMILIES.map((x) => `<option value="${x.id}"${(k?.family ?? 'membre') === x.id ? ' selected' : ''}>${esc(x.label)}</option>`).join('')}</select></div>
@@ -119,6 +123,8 @@ export function openCardDialog(k = null) {
       set_id: E.set_id.value, number: num, name: E.name.value.trim(), family: E.family.value, rarity: E.rarity.value,
       image_url: E.image_url.value.trim() || null, flavor: E.flavor.value.trim() || null, member_id: E.member_id.value || null,
       caption: E.caption.value.trim() || null, max_copies: maxRaw === '' ? null : Number(maxRaw),
+      // Tag de jeu (idée C7, migration 081) : envoyé seulement s'il est rempli ou si la colonne existe déjà.
+      ...(E.tag && (E.tag.value.trim() || (k && 'tag' in k)) ? { tag: E.tag.value.trim().toLowerCase() || null } : {}),
     };
   };
   /* Redessine l'aperçu à partir des valeurs saisies, et met à jour le compteur de légende. */
@@ -145,6 +151,7 @@ export function openCardDialog(k = null) {
     if (!Number.isInteger(v.number) || v.number < 1) throw new Error('Le numéro doit être un nombre entier, à partir de 1.');
     if (v.name.length < 2) throw new Error('Donne un nom à la carte (2 caractères minimum).');
     if (v.caption && v.caption.length > 80) throw new Error('La légende ne doit pas dépasser 80 caractères.');
+    if (v.tag && !/^[a-z0-9][a-z0-9-]{0,31}$/.test(v.tag)) throw new Error('Tag de jeu : minuscules, chiffres et tirets (ex. minecraft, sea-of-thieves).');
     if (v.max_copies !== null && (!Number.isInteger(v.max_copies) || v.max_copies < 1)) throw new Error('Exemplaires maximum : un nombre entier à partir de 1 (ou vide pour illimité).');
     if (k && v.max_copies !== null && v.max_copies < used) throw new Error(`Des exemplaires sont déjà numérotés jusqu'au n° ${used} : le maximum ne peut pas descendre en dessous.`);
     if (v.image_url && !/^https?:\/\//.test(v.image_url)) throw new Error('L\'URL de l\'image doit commencer par https://');

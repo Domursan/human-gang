@@ -22,7 +22,7 @@ const PART_OF = {
   'Départ': 'paillettes', 'Récompenses': 'paillettes',
   'Boosters': 'tirage', 'Taux de tirage': 'tirage', 'Brillantes et garantie': 'tirage',
   'Recyclage': 'recyclage', 'Fabrication': 'recyclage',
-  'Quêtes de la semaine': 'limites', 'Cartes sauvages (drops)': 'limites', 'Échanges': 'limites',
+  'Quêtes de la semaine': 'limites', 'Cartes sauvages (drops)': 'limites', 'Échanges': 'limites', 'Générations des membres': 'limites',
 };
 /** Libellé et adresse de chaque partie (sous-sections de la coquille). */
 export const ECON_PARTS = {
@@ -89,6 +89,11 @@ function shownValue(f) {
 function econField(f, draft) {
   const name = fieldName(f);
   const val = draft && name in draft ? draft[name] : shownValue(f);
+  if (f.date) { // champ date (AAAA-MM-JJ), ex. bascule des générations
+    return `<div class="field"><label for="acd-e-${name}">${esc(f.l)}</label>
+    <input id="acd-e-${name}" name="${name}" type="date" min="2015-01-01" max="2100-01-01" value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h">
+    ${f.help ? `<p class="small muted" id="acd-e-${name}-h">${esc(f.help)}</p>` : ''}</div>`;
+  }
   return `<div class="field"><label for="acd-e-${name}">${esc(f.l)}${f.u ? ` <span class="muted small">(${esc(f.u)})</span>` : ''}</label>
     <input id="acd-e-${name}" name="${name}" type="number" inputmode="decimal" step="${f.step ?? 1}" min="${f.min ?? 0}"${f.max != null ? ` max="${f.max}"` : ''}
       value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h"${f.optional ? ' placeholder="vide = non fabricable"' : ''}>
@@ -154,6 +159,11 @@ function readEcon(form) {
     const path = pathOf(f.k);
     const raw = String(form.elements[name].value).trim();
     if (f.optional && raw === '') { unsetPath(out, path); continue; }
+    if (f.date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw < '2015-01-01' || raw > '2100-01-01') throw new Error(`« ${f.l} » : date invalide.`);
+      setPath(out, path, raw);
+      continue;
+    }
     const n = Number(raw);
     if (raw === '' || !Number.isFinite(n)) throw new Error(`« ${f.l} » : indique un nombre.`);
     if (n < (f.min ?? 0) || (f.max != null && n > f.max)) throw new Error(`« ${f.l} » : valeur entre ${f.min ?? 0} et ${f.max ?? 'sans limite'}.`);

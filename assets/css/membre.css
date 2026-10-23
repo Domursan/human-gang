@@ -197,3 +197,9 @@
 .badge-item .lvl-name { font-size: 12px; }
 .mb-actions { display: flex; justify-content: center; margin: 0 0 16px; }
 .mb-actions[hidden] { display: none; }
+
+/* Génération OG / 2e gen (idée C8) et titres « Pilier de … » (idée C7) sur la carte de membre */
+.idc-gen { color: #C9CED6; }
+.idc-gen-og { color: var(--sand); }
+.idc-titles { display: flex; flex-wrap: wrap; gap: 4px; }
+.idc-titles .pill { font-size: 12px; }

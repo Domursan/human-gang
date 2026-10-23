@@ -180,7 +180,7 @@ for (const [sub, part] of [['badges', 'catalogue'], ['badges-attribution', 'attr
 }
 // Jeux et cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
-for (const tab of ['series', 'cartes', 'boosters', 'quetes', 'stats', 'echanges']) {
+for (const tab of ['series', 'cartes', 'boosters', 'quetes', 'stats', 'echanges', 'codes', 'recettes', 'encheres']) {
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
 }
 // Économie : un seul formulaire (un enregistrement), quatre parties. La partie est choisie avant d'ouvrir l'onglet

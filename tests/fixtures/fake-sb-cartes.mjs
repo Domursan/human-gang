@@ -104,7 +104,7 @@ window.__DB = DB; window.__LOG = [];
   // S.uniqueTaken : Alice a déjà son exemplaire ; S.uniqueOwned : c'est moi qui le possède.
   if (S.uniques) {
     sets.push({ id: 'SETHS', code: 'hors-serie', name: 'Hors série', description: 'Cartes uniques, en un seul exemplaire : à gagner lors d\'un événement ou offertes par l\'admin.', starts_at: null, ends_at: null, active: true, sort: 9999 });
-    cards.push({ id: 'C14', set_id: 'SETHS', number: 1, name: 'La Carte unique', family: 'membre', rarity: 'unique', image_url: null, flavor: 'Il n\'en existe qu\'une.',
+    cards.push({ id: 'C14', set_id: 'SETHS', number: 1, name: 'La Carte unique', family: 'unique', rarity: 'unique', image_url: null, flavor: 'Il n\'en existe qu\'une.',
       member_id: null, can_shiny: false, tradeable: true, craftable: false, max_copies: 1, active: true });
   }
   // Scénario « drop d'une série fermée » : série SETX inactive, carte CX1 que le membre connecté a attrapée (drop).
@@ -532,6 +532,154 @@ if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Anciennet
 
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
+/* ---------- Idées du gang, paquet C2 (migration 081) : scénario S.c2 ----------
+   C7 série « Le gang joue » (SETJ, tags minecraft / lol), C8 générations (Ethan OG, Alice 2e gen ; S.genHidden : aucune),
+   C9 codes (HG-7KQ4-M2XR booster Doré, HG-AAAA-BBBB 300 Paillettes, HG-2345-6789 déjà utilisé),
+   C10 recettes de l'Atelier, C11 enchère ouverte, C12 tableau. Sans S.c2, ces fonctions répondent vide (comme avant 081). */
+const C2 = { gens: [], board: { on: false, note: null }, codesUsed: new Set(['23456789']), batches: [], recipes: [], auctions: [], bid: null };
+if (S.c2) {
+  DB.hg_card_sets.push({ id: 'SETJ', code: 'le-gang-joue', name: 'Le gang joue', description: 'Objets et lieux des jeux du gang.', starts_at: null, ends_at: null, active: true, sort: 3 });
+  const J = (n, name, rarity, tag, extra = {}) => ({ id: 'J' + n, set_id: 'SETJ', number: n, name, family: 'jeu', rarity, tag, image_url: null, flavor: n === 3 ? 'Coordonnées : sur l’ancienne carte, promis.' : null,
+    member_id: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true, ...extra });
+  DB.hg_cards.push(J(1, 'Le portail du Torii', 'commune', 'minecraft'), J(2, 'L’usine à fer', 'peu_commune', 'minecraft'), J(3, 'La base du gang', 'rare', 'minecraft'),
+    J(4, 'Le coffre des trouvailles', 'epique', 'minecraft'), J(5, 'Le Nexus', 'commune', 'lol'), J(6, 'La tour du milieu', 'peu_commune', 'lol'),
+    J(7, 'Le pick’em du gang', 'rare', 'lol'), J(8, 'La balise de vision', 'epique', 'lol'), J(9, 'La méga-usine du gang', 'legendaire', null, { craftable: false }));
+  const mine = (id, card) => ({ id, card_id: card, owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
+  DB.hg_card_copies.push(mine(301, 'J1'), mine(302, 'J1'), mine(303, 'J2'), mine(304, 'J3'), mine(305, 'J5'), mine(306, 'J6'), mine(307, 'J7'), mine(308, 'J8'), mine(309, 'C6'));
+  DB.hg_cards.find((c) => c.id === 'C1').member_id = ME;
+  DB.hg_cards.find((c) => c.id === 'C6').member_id = U(2);
+  for (const p of DB.hg_profiles) p.show_generation = !S.genHidden;
+  if (!S.genHidden) C2.gens = [{ user_id: ME, gen: 'og', since: '2021-01-01' }, { user_id: U(2), gen: 'gen2', since: '2024-02-01' }];
+  DB.hg_card_copies.push({ id: 201, card_id: 'C4', owner_id: U(3), shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null },
+    { id: 202, card_id: 'C4', owner_id: U(3), shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
+  DB.hg_card_wishlist.push({ user_id: U(2), card_id: 'C1', created_at: iso(-1) });
+  C2.recipes = [
+    { id: 'R1', name: 'La méga-usine du gang', description: null, output_shiny: false, paillettes: 200, starts_at: null, ends_at: null, max_total: null, once_per_user: false, used_total: 0, done: false,
+      output: DB.hg_cards.find((c) => c.id === 'J9'),
+      inputs: [{ card: 'J3', qty: 1, name: 'La base du gang', rarity: 'rare' }, { tag: 'minecraft', qty: 2, label: 'Minecraft', cards: ['J1', 'J2', 'J3', 'J4'] }] },
+    { id: 'R2', name: 'L’Empereur de Serge', description: null, output_shiny: false, paillettes: 0, starts_at: null, ends_at: iso(30), max_total: 5, once_per_user: true, used_total: 1, done: false,
+      output: DB.hg_cards.find((c) => c.id === 'C9'), inputs: [{ card: 'C10', qty: 1, name: 'Bruno', rarity: 'mythique' }, { card: 'C2', qty: 2, name: 'Le Paleto', rarity: 'commune' }] },
+  ];
+  C2.auction = { id: 'A1', status: 'ouverte', starts_at: iso(-1), ends_at: new Date(Date.now() + 3 * 3600e3 + 12 * 60e3).toISOString(), hard_end_at: iso(1), min_bid: 500, step: 50,
+    card: { id: 'CU1', name: 'Le gobelet du RDV n° 1', rarity: 'unique', family: 'unique', image_url: null, flavor: 'Le tout premier, fait par Carzy.', number: 7, max_copies: 1 },
+    winner: null, won: false, price: null };
+  C2.bids = [{ uid: U(2), amount: 1300, created_at: new Date(Date.now() - 4 * 60e3).toISOString() }, { uid: U(4), amount: 1250, created_at: new Date(Date.now() - 9 * 60e3).toISOString() },
+    { uid: U(2), amount: 1100, created_at: iso(-0.05) }, { uid: U(5), amount: 900, created_at: iso(-0.6) }];
+  C2.batches = [{ id: 'B1', kind: 'booster', amount: 1, type_id: 'dore', shiny: false, lot: { kind: 'booster', amount: 1, type_id: 'dore', type_name: 'Doré' }, codes: 24, max_uses: 1,
+    one_per_member: true, expires_at: iso(60), note: 'Gobelets du RDV', active: true, created_at: iso(-1), created_by: 'Ethan', used: 3, codes_used: 3 }];
+  C2.recipesAdmin = C2.recipes.map((r) => ({ ...r, output_card: r.output.id, output_name: r.output.name, uses: r.used_total, active: true, sort: 0,
+    inputs: r.inputs.map((i) => (i.card ? { card: i.card, qty: i.qty } : { tag: i.tag, qty: i.qty })) }));
+  C2.auctionsAdmin = [{ id: 'A1', card_id: 'CU1', card_name: 'Le gobelet du RDV n° 1', starts_at: iso(-1), ends_at: C2.auction.ends_at, min_bid: 500, step: 50, status: 'ouverte', price: null, winner: null, top: 1300, top_pseudo: 'Alice', bids: 4 }];
+}
+const pseudoOf = (id) => DB.hg_profiles.find((p) => p.id === id)?.pseudo || 'membre';
+/** Lot d'un code connu du scénario (forme normalisée), ou null. */
+function lotOf(n) {
+  if (n === '7KQ4M2XR') return { kind: 'booster', amount: 1, type_id: 'dore', type_name: 'Doré', expires_at: '2026-06-30T21:59:59Z' };
+  if (n === 'AAAABBBB') return { kind: 'paillettes', amount: 300 };
+  if (n === '23456789') return { kind: 'paillettes', amount: 10 };
+  return null;
+}
+const normCode = (v) => { let x = String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (x.length === 10 && x.startsWith('HG')) x = x.slice(2); return x; };
+/** Réponses des RPC de la migration 081 (null : pas une RPC de ce paquet). */
+function rpcC2(fn, a = {}) {
+  const ok = (data) => ({ data, error: null });
+  const ko = (message) => ({ data: null, error: { message } });
+  switch (fn) {
+    case 'hg_card_generations': return ok(C2.gens);
+    case 'hg_card_tags_complete': {
+      if (!S.c2) return ok([]);
+      const uid = a.p_user || ME;
+      const tags = [...new Set(DB.hg_cards.filter((c) => c.tag).map((c) => c.tag))];
+      return ok(tags.map((t) => { const cs = DB.hg_cards.filter((c) => c.tag === t); const have = cs.filter((c) => DB.hg_card_copies.some((x) => x.card_id === c.id && x.owner_id === uid && !x.recycled_at)).length;
+        const label = { minecraft: 'Minecraft', lol: 'LoL' }[t] || t; return { tag: t, label, have, total: cs.length, complete: have === cs.length, title: 'Pilier de ' + label }; }));
+    }
+    case 'hg_gift_code_peek': case 'hg_gift_code_redeem': {
+      const n = normCode(a.p_code); const lot = lotOf(n);
+      if (!lot) return ok({ ok: false, error: 'inconnu', message: 'Ce code n’existe pas. Vérifie les 8 signes (sans 0, O, 1, I ni L).' });
+      if (C2.codesUsed.has(n)) return ok({ ok: false, error: 'deja', message: 'Déjà utilisé.' });
+      const code = `HG-${n.slice(0, 4)}-${n.slice(4)}`;
+      if (fn === 'hg_gift_code_peek') return ok({ ok: true, code, lot });
+      C2.codesUsed.add(n);
+      if (lot.kind === 'booster') ajouterStock(ME, lot.type_id, lot.amount);
+      else { const w = DB.hg_wallets[0]; w.paillettes += lot.amount; DB.hg_wallet_log.unshift({ user_id: ME, delta: lot.amount, reason: 'code', ref: 'code:' + n, created_at: new Date().toISOString() }); }
+      return ok({ ok: true, code, lot, copy_id: null });
+    }
+    case 'hg_card_recipes_me': return ok({ recipes: C2.recipes, showcase: [] });
+    case 'hg_card_recipe_craft': {
+      const r = C2.recipes.find((x) => x.id === a.p_recipe);
+      if (!r) return ko('Cette recette n’est pas disponible');
+      const ids = (a.p_copies || []).map(Number);
+      const lives = DB.hg_card_copies.filter((x) => x.owner_id === ME && !x.recycled_at);
+      for (const id of ids) {
+        const cp = lives.find((x) => Number(x.id) === id);
+        if (!cp) return ko('Une des cartes choisies ne t’appartient plus');
+        if (!a.p_confirm_last && !lives.some((x) => x.card_id === cp.card_id && !ids.includes(Number(x.id)))) return ko('Tu utiliserais ton dernier exemplaire : confirme pour continuer');
+      }
+      const w = DB.hg_wallets[0];
+      if (w.paillettes < r.paillettes) return ko(`Pas assez de Paillettes (il en faut ${r.paillettes})`);
+      for (const cp of lives) if (ids.includes(Number(cp.id))) cp.recycled_at = new Date().toISOString();
+      w.paillettes -= r.paillettes;
+      DB.hg_card_copies.push({ id: 900 + DB.hg_card_copies.length, card_id: r.output.id, owner_id: ME, shiny: false, serial: null, source: 'atelier', obtained_at: new Date().toISOString(), locked_trade: null, recycled_at: null });
+      r.used_total += 1;
+      return ok({ copy_id: 999, card_id: r.output.id, cost: r.paillettes });
+    }
+    case 'hg_auction_current': {
+      if (!C2.auction) return ok({ auction: null });
+      const bids = [...(C2.bid ? [C2.bid] : []), ...C2.bids].slice(0, 10);
+      const top = bids[0];
+      const x = { ...C2.auction, next_min: top ? top.amount + C2.auction.step : C2.auction.min_bid,
+        top: top ? { amount: top.amount, mine: top.uid === ME, pseudo: pseudoOf(top.uid), avatar_url: null, color: '#E2C77E' } : null };
+      return ok({ auction: x, bids: bids.map((b) => ({ amount: b.amount, created_at: b.created_at, mine: b.uid === ME, pseudo: pseudoOf(b.uid), avatar_url: null, color: '#E2C77E' })),
+        me: { cap: 4100, last_winner: false, balance: DB.hg_wallets[0].paillettes } });
+    }
+    case 'hg_auction_bid': {
+      const top = C2.bid || C2.bids[0];
+      const min = top ? top.amount + C2.auction.step : C2.auction.min_bid;
+      if (top?.uid === ME) return ko('Tu as déjà la meilleure offre');
+      if (a.p_amount < min) return ko(`L’offre minimale est de ${min} Paillettes`);
+      if (a.p_amount > 4100) return ko('Plafond : 4100 Paillettes (la moitié de ton solde de lundi)');
+      C2.bid = { uid: ME, amount: a.p_amount, created_at: new Date().toISOString() };
+      DB.hg_wallets[0].paillettes -= a.p_amount;
+      return ok({ bid: 1, amount: a.p_amount, ends_at: C2.auction.ends_at, outbid: top?.uid || null });
+    }
+    case 'hg_trade_board': {
+      if (!S.c2) return ok({ rows: [], total: 0, offset: 0, me: { on: false, note: null }, notes: [] });
+      let rows = [
+        { id: 'C4', name: 'Pompe à essence', rarity: 'peu_commune', family: 'objet', image_url: null, number: 4, max_copies: null, set_id: 'SET1',
+          seekers: [{ id: ME, pseudo: 'Ethan' }, { id: U(4), pseudo: 'Chloé' }], givers: [{ id: U(3), pseudo: 'Bruno', n: 1 }] },
+        { id: 'C1', name: 'Ethan', rarity: 'commune', family: 'membre', image_url: null, number: 1, max_copies: null, set_id: 'SET1',
+          seekers: [{ id: U(2), pseudo: 'Alice' }], givers: [{ id: ME, pseudo: 'Ethan', n: 2 }] },
+        { id: 'C7', name: 'Grapeseed', rarity: 'rare', family: 'lieu', image_url: null, number: 7, max_copies: null, set_id: 'SET1',
+          seekers: [{ id: U(2), pseudo: 'Alice' }, { id: U(4), pseudo: 'Chloé' }], givers: [] },
+      ];
+      if (a.p_rarity) rows = rows.filter((r) => r.rarity === a.p_rarity);
+      if (a.p_mine) rows = rows.filter((r) => r.id !== 'C7');
+      return ok({ rows, total: rows.length, offset: 0, me: C2.board, notes: [{ id: U(5), pseudo: 'David', note: 'J’échange mes Dorées contre les OG' }] });
+    }
+    case 'hg_trade_board_set': C2.board = { on: !!a.p_on, note: a.p_note ?? null }; return ok(C2.board);
+    case 'hg_trade_board_note_clear': return ok(null);
+    case 'hg_gift_codes_create': {
+      const n = Math.max(1, Math.min(200, Number(a.p?.count) || 1));
+      const codes = Array.from({ length: n }, (_, i) => `HG-${String(2222 + i).slice(-4).replace(/[01]/g, '7')}-ABCD`);
+      C2.batches.unshift({ id: 'B' + (C2.batches.length + 1), kind: a.p.kind, amount: a.p.amount, lot: { kind: a.p.kind, amount: a.p.amount, type_id: a.p.type_id, type_name: a.p.type_id }, codes: n, max_uses: a.p.max_uses || 1, one_per_member: !!a.p.one_per_member, expires_at: a.p.expires_at, note: a.p.note, active: true, created_at: new Date().toISOString(), created_by: 'Ethan', used: 0, codes_used: 0 });
+      return ok({ batch_id: 'B9', codes });
+    }
+    case 'hg_gift_codes_batches': return ok(C2.batches);
+    case 'hg_gift_codes_batch_active': { const b = C2.batches.find((x) => x.id === a.p_batch); if (b) b.active = !!a.p_active; return ok(null); }
+    case 'hg_card_recipes_admin': return ok(C2.recipesAdmin || []);
+    case 'hg_card_recipe_save': {
+      const out = DB.hg_cards.find((c) => c.id === a.p?.output_card);
+      if (out?.craftable && out.rarity !== 'unique') return ko('La carte obtenue est fabricable contre des Paillettes : décoche « Fabricable » dans sa fiche');
+      (C2.recipesAdmin ||= []).push({ ...a.p, id: 'R' + Date.now(), output_name: out?.name, uses: 0 });
+      return ok('R9');
+    }
+    case 'hg_auctions_admin': return ok(C2.auctionsAdmin || []);
+    case 'hg_auction_create': (C2.auctionsAdmin ||= []).unshift({ id: 'A9', card_id: a.p.card_id, card_name: DB.hg_cards.find((c) => c.id === a.p.card_id)?.name, starts_at: a.p.starts_at, ends_at: a.p.ends_at, min_bid: a.p.min_bid, step: a.p.step, status: 'prevue', bids: 0 }); return ok('A9');
+    case 'hg_auction_cancel': { const x = (C2.auctionsAdmin || []).find((y) => y.id === a.p_id); if (x) x.status = 'annulee'; return ok(null); }
+    default: return null;
+  }
+}
+
 export function createClient() {
   const cli = {
     auth: {
@@ -547,6 +695,7 @@ export function createClient() {
     /** Simule les fonctions SQL (RPC) : chaque nom a sa réponse ; une fonction inconnue renvoie null sans erreur. */
     rpc: async (fn, args) => {
       window.__LOG.push(['rpc', fn, args]);
+      { const c2 = rpcC2(fn, args); if (c2) return c2; } // idées C2 (migration 081)
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
       // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).

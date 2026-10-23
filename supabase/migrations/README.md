@@ -159,3 +159,28 @@ Migration `074_securite_echanges.sql` (paquet C de l'audit de sécurité du 23/1
 
 Ordre : 072, 073, puis 074, puis le front (`assets/js/cartes.js`, `assets/js/admin-invite-links.js`). Aucune fonction
 edge à redéployer, aucun secret.
+
+## Pour appliquer 081
+
+Migration `081_idees_c2.sql` (idées du gang C7 à C12, thème « Cartes et économie ») : idempotente, rejouable, rétrocompatible.
+
+- **C7** : colonne `hg_cards.tag` (format `minecraft`, `sea-of-thieves`), RPC `hg_card_tags_complete(p_user)` (titres
+  « Pilier de … », calculés, sans Paillettes). Série `le-gang-joue` créée **inactive** avec 24 cartes **inactives** sans
+  image (6 jeux × 4) : le Staff illustre, valide les légendes, puis active la série et les cartes.
+- **C8** : `hg_profiles.show_generation` (défaut vrai), réglage `cards.generations.og_before` (défaut 2023-09-01, Économie ›
+  Limites), RPC `hg_card_generations()`.
+- **C9** : tables `hg_gift_code_batches`, `hg_gift_codes` (codes hachés, `sha256` intégré : pas besoin de pgcrypto),
+  `hg_gift_code_claims`, `hg_gift_code_attempts` (10 essais faux par heure). RPC `hg_gift_code_peek`, `hg_gift_code_redeem` ;
+  Staff « cartes » : `hg_gift_codes_create` (200 codes, Paillettes ≤ `plafonds.code_paillettes` = 1000), `hg_gift_codes_batches`,
+  `hg_gift_codes_batch_active`. Journal « code ».
+- **C10** : `hg_card_recipes`, `hg_card_recipe_uses`, `hg_card_copies.consumed_by`, source « atelier » ajoutée à
+  `hg_card_copies_source_check` (reconstruite à partir des valeurs existantes). RPC `hg_card_recipes_me`,
+  `hg_card_recipe_craft` ; Staff : `hg_card_recipes_admin`, `hg_card_recipe_save` (carte obtenue non fabricable, valeur de
+  recyclage ≤ ingrédients + Paillettes). Journal « atelier ».
+- **C11** : `hg_card_auctions`, `hg_card_bids`. RPC `hg_auction_current` (clôt aussi les enchères échues), `hg_auction_bid` ;
+  `hg_auction_close` (service, idempotente) ; Staff : `hg_auction_create`, `hg_auction_cancel`, `hg_auctions_admin`.
+  Journal « enchere » / « enchere_remboursee ».
+- **C12** : `hg_profiles.trade_board`, `trade_board_note` (80 caractères), index `hg_card_copies_card_owner_live`.
+  RPC `hg_trade_board`, `hg_trade_board_set` ; Staff : `hg_trade_board_note_clear`.
+
+Ordre : 081, puis le front. Aucune fonction edge à redéployer, aucun secret, aucune permission nouvelle (tout passe par « cartes »).

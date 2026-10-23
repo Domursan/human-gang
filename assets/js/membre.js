@@ -11,6 +11,9 @@ import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge
 import { mountShowcase } from './cartes-showcase.js';
 import { svg } from './icons.js';
 import { questTrack } from './quest-track.js';
+import { loadGenerations } from './cartes-gen.js';
+import { generationLabel } from './cartes-ui.js';
+import { loadTagLabels, titlesOf } from './cartes-jeux.js';
 
 const app = $('#app');
 const me = await initPage({ auth: 'member' });
@@ -169,7 +172,8 @@ function cardHtml(c) {
               : `<span class="idc-initials">${esc(initials(c.pseudo))}</span>`}</div>
             <dl class="idc-fields">
               <div class="idc-field idc-field-pseudo"><dt class="idc-k">Pseudo</dt><dd class="idc-pseudo">${esc(c.pseudo)}</dd></div>
-              <div class="idc-field"><dt class="idc-k">Membre depuis</dt><dd>${esc(sinceLabel(c.member_since, c.joined_on))}</dd></div>
+              <div class="idc-field"><dt class="idc-k">Membre depuis</dt><dd>${esc(sinceLabel(c.member_since, c.joined_on))}${c.gen ? ` · <span class="idc-gen idc-gen-${esc(c.gen)}">${esc(generationLabel(c.gen))}</span>` : ''}</dd></div>
+              ${c.titles?.length ? `<div class="idc-field"><dt class="idc-k">Titre${c.titles.length > 1 ? 's' : ''}</dt><dd class="idc-titles">${c.titles.map((t) => `<span class="pill pill-sand">${esc(t)}</span>`).join(' ')}</dd></div>` : ''}
               ${bday ? `<div class="idc-field"><dt class="idc-k">Anniversaire</dt><dd>${esc(bday)}</dd></div>` : ''}
             </dl>
             ${bdg ? `<div class="idc-badges-zone"><span class="idc-k">Badges</span>${bdg}</div>` : ''}
@@ -386,7 +390,7 @@ export async function renderIdCard(canvas, c) {
   ctx.fillText(typeof fit === 'object' ? fit.text : pseudo, fx, 540);
   ctx.fillStyle = color; ctx.fillRect(fx, 570, 120, 10);
   label('Membre depuis', 650);
-  ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(sinceLabel(c.member_since, c.joined_on), fx, 715);
+  ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(sinceLabel(c.member_since, c.joined_on) + (c.gen ? ` · ${generationLabel(c.gen)}` : ''), fx, 715);
   const bday = birthdayLabel(c.birthday_dm);
   if (bday) { label('Anniversaire', 795); ctx.fillStyle = '#F2EFEA'; ctx.font = `700 52px ${BODY}`; ctx.fillText(bday, fx, 860); }
 
@@ -523,6 +527,12 @@ try {
   const card = data && typeof data === 'object' ? data : null;
   await loadBadgeMax();
   if (card?.id) await addBadgeLevels(card);
+  // Génération OG / 2e gen (idée C8) et titres « Pilier de … » (idée C7) : facultatifs, jamais bloquants.
+  if (card?.id) {
+    const [gens, tags] = await Promise.all([loadGenerations(), canAccess('cartes') ? loadTagLabels(card.id) : Promise.resolve([])]);
+    card.gen = gens.get(card.id) || null;
+    card.titles = titlesOf(tags);
+  }
   if (!card || !card.id) {
     $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
       <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;

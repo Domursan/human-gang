@@ -21,6 +21,7 @@ const TABS = [
   { id: 'proposer', label: 'Proposer' },
   { id: 'correspondances', label: 'Correspondances' },
   { id: 'historique', label: 'Historique' },
+  { id: 'tableau', label: 'Tableau' }, // « Je cherche / Je donne » (idée C12, cartes-tableau.js)
 ];
 // Libellés des statuts d'une offre (colonne status de hg_card_trades).
 const STATUS_LABEL = { proposee: 'En attente', acceptee: 'Acceptée', refusee: 'Refusée', annulee: 'Annulée', remplacee: 'Remplacée' };
@@ -445,6 +446,12 @@ export async function mountTrades(el, ctx = {}) {
         .then((data) => { if (S.tab === tab) panel.innerHTML = viewCorrespondances(data); })
         .catch((e) => { if (S.tab === tab) panel.innerHTML = `<div class="empty">Impossible de charger les correspondances : ${esc(errMsg(e))}</div>`; })
         .finally(release);
+      return;
+    }
+    if (S.tab === 'tableau') { // tableau « Je cherche / Je donne » (idée C12) : module chargé à la demande
+      import('./cartes-tableau.js')
+        .then((m) => { if (S.tab === 'tableau') m.mountBoard(panel, { me: S.me, sets: S.setNames, openEditor }); })
+        .catch(() => { panel.innerHTML = emptyBox('Le tableau n’est pas disponible pour le moment.'); });
       return;
     }
     const view = { recues: viewRecues, envoyees: viewEnvoyees, proposer: viewProposer, historique: viewHistorique }[S.tab];
