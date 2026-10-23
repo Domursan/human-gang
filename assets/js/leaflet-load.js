@@ -11,6 +11,11 @@
 
 /** Dossier de Leaflet sur le CDN (version figée, autorisée par la CSP des pages). */
 export const LEAFLET = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
+/** Empreintes SRI des deux fichiers ci-dessus : mêmes valeurs que irl-history.js (audit du 23/10). */
+const LEAFLET_SRI = {
+  css: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
+  js: 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=',
+};
 
 /** Chargement en cours ou terminé (une seule promesse par page). */
 let loading = null;
@@ -26,10 +31,12 @@ export function loadLeaflet() {
     if (!document.querySelector('link[data-leaflet]')) {
       const css = document.createElement('link');
       css.rel = 'stylesheet'; css.href = `${LEAFLET}/leaflet.css`; css.dataset.leaflet = '';
+      css.integrity = LEAFLET_SRI.css; css.crossOrigin = 'anonymous';
       document.head.append(css);
     }
     const s = document.createElement('script');
     s.src = `${LEAFLET}/leaflet.js`; s.async = true;
+    s.integrity = LEAFLET_SRI.js; s.crossOrigin = 'anonymous';
     s.onload = () => (window.L?.map ? res(window.L) : rej(new Error('bibliothèque de carte indisponible')));
     s.onerror = () => rej(new Error('bibliothèque de carte injoignable'));
     document.head.append(s);
