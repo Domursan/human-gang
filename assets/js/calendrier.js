@@ -357,7 +357,8 @@ async function loadCanManage() {
     const { data, error } = await sb.rpc('hg_cal_can_manage');
     S.canManage = !error && data === true;
   } catch { S.canManage = false; }
-  $('#cal-add-evt').hidden = !S.canManage;
+  const addEvt = $('#cal-add-evt'); // absent si une ancienne copie de la page est encore en cache
+  if (addEvt) addEvt.hidden = !S.canManage;
   render();
 }
 
@@ -365,6 +366,8 @@ async function loadCanManage() {
 $('#cal-prev').innerHTML = I.prev; $('#cal-next').innerHTML = I.next;
 $('#cal-sub').innerHTML = `${I.cal}<span>S’abonner dans mon agenda</span>`;
 $('#cal-add').innerHTML = `${I.plus}<span>Rendez-vous récurrent</span>`;
+// Bouton « Ajouter un événement » : créé ici s'il manque (ancienne copie de calendrier.html en cache).
+if (!$('#cal-add-evt')) $('#cal-add')?.insertAdjacentHTML('afterend', '<button type="button" class="btn btn-ghost" id="cal-add-evt" hidden></button>');
 $('#cal-add-evt').innerHTML = `${I.plus}<span>Ajouter un événement</span>`;
 $('#cal-prev').addEventListener('click', () => go(-1));
 $('#cal-next').addEventListener('click', () => go(1));
