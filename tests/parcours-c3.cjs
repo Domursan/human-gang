@@ -40,7 +40,8 @@ const scenario = {
       check(await p.$('.cz-dialog[open] .hgc.is-fondue, dialog[open] .hgc.is-fondue'), '(2) fenêtre agrandie : rendu fondu');
       await p.keyboard.press('Escape');
       await p.screenshot({ path: 'tests/shots/c3-collection.png' });
-      await p.click('#cartes-tab-boutique');
+      await p.evaluate(() => { location.hash = 'boutique'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
+      await p.waitForSelector('#cartes-p-boutique:not([hidden])', { timeout: 5000 });
       await sleep(400);
       const art = '#cartes-p-boutique .shop-item[data-type="raclette"]';
       check(await p.$(`${art} .cart-box.cart--raclette`), '(4) cartouche Raclette');

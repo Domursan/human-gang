@@ -12,6 +12,12 @@
 // Lancer : node tests/parcours-boosters-stock-dons.cjs
 const { openPage, check, finish, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
+/** Ouvre un onglet de Cartes par son adresse (cartes.html#id) : la barre d'onglets est masquée depuis le nouvel en-tête. */
+async function goTab(p, id) {
+  await p.evaluate((h) => { location.hash = ''; location.hash = h; }, id);
+  await p.waitForFunction((i) => document.getElementById('cartes-p-' + i) && !document.getElementById('cartes-p-' + i).hidden, id, { timeout: 8000 });
+}
+
 const FIXTURE = 'fake-sb-cartes.mjs';
 // Identifiants factices du fixture (même formule que U(n) et ME dans fake-sb-cartes.mjs).
 const ME = '11111111-1111-4111-8111-111111111111';
@@ -53,13 +59,13 @@ async function revelerTout(p) {
 
   // ---------- 1. Pas assez de Paillettes : bouton désactivé, message, rien d'acheté ----------
   let p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 360, height: 800, scenario: { types: true, bal: 50 } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$eval('#cartes-paid #shop-qty', (s) => s.options.length) === 10, 'Boutique : quantité de 1 à 10 proposée');
   check((await p.$eval('#cartes-paid [data-action=buy-stock]', (b) => b.textContent.trim())).startsWith('Acheter · '), 'Boutique : bouton « Acheter · total »');
   check(await p.$eval('#cartes-paid [data-action=buy-stock]', (b) => b.disabled), 'Boutique : achat désactivé sans assez de Paillettes');
   check(await p.isVisible('#cartes-paid p.shop-stock-miss'), 'Boutique : message « il te manque » affiché');
   check(await hscroll(p) === 0, '360 px : Boutique sans défilement horizontal');
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(await p.isVisible('#inv-gift p.inv-gift-empty'), 'Inventaire sans stock : message « pas de booster à offrir »');
   check(await p.$eval('#inv-gift [data-tab-go=boutique]', (b) => !!b), 'Inventaire sans stock : lien vers la Boutique');
   check(!(await p.$('#inv-gift-form')), 'Inventaire sans stock : pas de formulaire de don');
@@ -72,7 +78,7 @@ async function revelerTout(p) {
 
   // ---------- 2. Achats dans la Boutique : toast, solde, stock, pas de révélation ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 360, height: 800, scenario: { types: true, bal: 500 } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check((await p.textContent('#cartes-paid [data-action=buy-stock]')).includes('100'), 'Boutique : le total d\'un booster (100) est affiché sur le bouton');
   await p.click('#cartes-paid [data-action=buy-stock]');
   check(await toast(p, '1 booster Classique ajouté à ton inventaire'), 'Un booster acheté : toast « 1 booster Classique ajouté à ton inventaire »');
@@ -81,12 +87,12 @@ async function revelerTout(p) {
   check(s.paillettes === 400 && s.stock === 1, `Un booster acheté : solde -100 et stock 1 (${s.paillettes} P, stock ${s.stock})`);
   check(await actif(p, 'boutique'), 'Acheter ne change pas d\'onglet');
   check(await sansRevelation(p), 'Acheter n\'ouvre aucune révélation');
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(await stockInventaire(p) === '1', 'Inventaire : le stock Classique vaut 1');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check((await boutonOuvrir(p)) === 'Ouvrir 1', 'Ouverture : le bouton de la tuile est « Ouvrir 1 »');
   check(await p.$eval('#cartes-p-ouverture [data-action=open-stock-multi][data-type=classique][data-count="5"]', (b) => b.disabled && b.title === 'Il te faut 5 boosters'), 'Ouverture : « Ouvrir 5 » désactivé avec 1 booster');
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   await p.selectOption('#cartes-paid #shop-qty', '3');
   check((await p.textContent('#cartes-paid [data-action=buy-stock]')).includes('300'), 'Boutique : le total passe à 300 pour 3 boosters');
   await p.click('#cartes-paid [data-action=buy-stock]');
@@ -107,7 +113,7 @@ async function revelerTout(p) {
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 360, height: 800, scenario: { types: true, bal: 500, stock: { classique: 4 }, boosterGifts: [recu] } });
   const ids = await p.evaluate(() => Object.fromEntries(window.__DB.hg_profiles.map((x) => [x.pseudo, x.id])));
   check(ids.Alice === ALICE && ids.Bruno === BRUNO && ids.Chloé === CHLOE, 'Identifiants des membres conformes au fixture');
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(!!(await p.$('#inv-gift-form')), 'Stock 4 : formulaire de don affiché');
   check(await hscroll(p) === 0, '360 px : Inventaire avec formulaire sans défilement horizontal');
   check(await p.$eval('#gift-type', (t) => t.options[0].textContent.trim()) === 'Classique (4 en stock)', 'Don : type « Classique (4 en stock) »');
@@ -156,7 +162,7 @@ async function revelerTout(p) {
   check(liste.includes('Tu as offert 1 booster Classique à Chloé'), 'Historique : « Tu as offert 1 booster Classique à Chloé »');
   check(await p.evaluate((c) => window.__DB.hg_booster_gifts.some((g) => g.to_user === c && g.qty === 1 && g.message === null), CHLOE),
     'Base : le don à Chloé est enregistré sans message');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check((await boutonOuvrir(p)) === 'Ouvrir 1', 'Ouverture : « Ouvrir 1 » après les dons (1 en stock)');
   check(await hscroll(p) === 0, '360 px : Ouverture sans défilement horizontal');
   check(p.errs.length === 0, `Dons : aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
@@ -164,7 +170,7 @@ async function revelerTout(p) {
 
   // ---------- 4. Historique en erreur ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { types: true, bal: 0, stock: { classique: 2 }, giftsError: true } });
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check((await p.textContent('#inv-gifts')).includes('Historique des dons indisponible pour le moment.'), 'Historique en erreur : message « indisponible »');
   check(!!(await p.$('#inv-gift-form')), 'Historique en erreur : le don reste possible (stock 2)');
   check(p.errs.length === 0, `Historique en erreur : aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
@@ -173,14 +179,14 @@ async function revelerTout(p) {
   // ---------- 5. Repli : backend sans les RPC typées (migration 069 pas déployée) ----------
   // Pas d'achat ni de don proposés ; le stock d'origine (wallet gift_boosters) reste ouvrable.
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { reqRpc: true, bal: 5000, gift: 2 } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$eval('#cartes-paid [data-action=buy-stock]', (b) => b.disabled && b.textContent.trim().startsWith('Acheter')), 'Repli : « Acheter » désactivé');
   check(await p.isVisible('#cartes-paid :text("La boutique ouvre bientôt.")'), 'Repli : note « La boutique ouvre bientôt. »');
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(await p.isVisible('#inv-gift :text("Les dons de boosters arrivent bientôt.")'), 'Repli : « Les dons de boosters arrivent bientôt. »');
   check(!(await p.$('#inv-gift-form')), 'Repli : formulaire de don masqué');
   check((await stockInventaire(p)) === '2', 'Repli : « Boosters en stock » vaut 2');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   await p.click('#cartes-stock [data-action=open-gift]');
   await revelerTout(p);
   const jr = (await p.evaluate(() => window.__LOG)).filter((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster_req');

@@ -44,9 +44,9 @@ async function collection(browser, scenario, width = 390) {
   // Repli mémorisé
   await p.click('.luck-sum');
   await sleep(150);
-  await p.click('#cartes-tab-classement');
+  await p.evaluate(() => { location.hash = 'classement'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await sleep(300);
-  await p.click('#cartes-tab-collection');
+  await p.evaluate(() => { location.hash = 'collection'; });
   await sleep(500);
   check(await p.$eval('[data-luck]', (d) => !d.open), 'état replié gardé après un changement d’onglet');
   check(await p.$eval('.luck-sum', (s) => s.getBoundingClientRect().height >= 44), 'résumé cliquable ≥ 44 px');

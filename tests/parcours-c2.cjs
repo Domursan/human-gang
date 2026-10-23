@@ -10,8 +10,11 @@ const iso = (d) => new Date(Date.now() + d * 864e5).toISOString();
 const RATES = { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 };
 /** Prochain vendredi 20 h (heure de Zurich, approximation UTC+1/+2 sans importance pour l'affichage du jour). */
 function nextFriday20() {
+  // 20 h à Zurich : l'heure UTC dépend de l'heure d'été (18 h UTC en été, 19 h UTC en hiver)
+  const zHour = (d) => Number(new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', hour: '2-digit', hourCycle: 'h23' }).format(d));
   const d = new Date(); d.setUTCHours(18, 0, 0, 0);
   while (d.getUTCDay() !== 5 || d <= new Date()) d.setUTCDate(d.getUTCDate() + 1);
+  if (zHour(d) !== 20) d.setUTCHours(19);
   return d.toISOString();
 }
 const pate = (open, rest) => ({ id: 'pate_saucisses', name: 'Pâté-saucisses', price: 80, size: 5, rates: RATES, shiny_rate: 5, pity_epique: 0, pool: 'tous',

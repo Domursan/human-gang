@@ -13,7 +13,7 @@ const checked = (p, side) => p.$$eval(`#trd-grid-${side} button[aria-pressed="tr
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 360, height: 800 });
-  await p.click('[data-tab=echanges]');
+  await p.evaluate(() => { location.hash = 'echanges'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('#trd-tab-tableau', { timeout: 6000 });
   await p.click('#trd-tab-tableau');
   await p.waitForSelector('.c2-brd-row', { timeout: 5000 }).catch(() => {});

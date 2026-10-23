@@ -17,7 +17,7 @@ function contrast(a, b) {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 1280, height: 900 });
-  await p.click('[data-tab=collection]');
+  await p.evaluate(() => { location.hash = 'collection'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   await p.selectOption('#cartes-set', 'SET1');
   await sleep(200);
@@ -37,7 +37,7 @@ function contrast(a, b) {
 
   // Petit format (téléphone, cartes 112 px) : le bandeau reste dans la carte et lisible
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 360, height: 800 });
-  await p.click('[data-tab=collection]');
+  await p.evaluate(() => { location.hash = 'collection'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   await p.selectOption('#cartes-set', 'SET1');
   await sleep(200);
@@ -48,7 +48,7 @@ function contrast(a, b) {
 
   // Préférence coupée : aucun bandeau
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, genHidden: true }, width: 1280, height: 900 });
-  await p.click('[data-tab=collection]');
+  await p.evaluate(() => { location.hash = 'collection'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   await p.selectOption('#cartes-set', 'SET1');
   await sleep(200);

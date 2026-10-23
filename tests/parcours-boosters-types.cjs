@@ -18,6 +18,12 @@
 // Lancer : node tests/parcours-boosters-types.cjs
 const { openPage, check, finish, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 
+/** Ouvre un onglet de Cartes par son adresse (cartes.html#id) : la barre d'onglets est masquée depuis le nouvel en-tête. */
+async function goTab(p, id) {
+  await p.evaluate((h) => { location.hash = ''; location.hash = h; }, id);
+  await p.waitForFunction((i) => document.getElementById('cartes-p-' + i) && !document.getElementById('cartes-p-' + i).hidden, id, { timeout: 8000 });
+}
+
 const FIXTURE = 'fake-sb-cartes.mjs';
 const ME = '11111111-1111-4111-8111-111111111111';
 const ALICE = '00000002-0000-4000-8000-000000000002';
@@ -53,7 +59,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   // ---------- 1. Boutique : 9 articles ----------
   let p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario });
   check(p.errs.length === 0, `Chargement typé : aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   const articles = await p.$$eval('#cartes-p-boutique .shop-item', (els) => els.map((e) => e.dataset.type));
   check(articles.join(',') === TYPES.join(','), `Boutique : 9 articles dans l'ordre (${articles.join(',')})`);
   check(await p.$eval('#cartes-paid', (a) => !!a.querySelector('#shop-qty') && !!a.querySelector('[data-action=buy-stock][data-type=classique]')),
@@ -86,7 +92,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   check(await stockDe(p, 'classique') === 1, 'Classique acheté : stock classique à 1');
   check(await p.$eval('#cartes-tab-boutique', (b) => b.getAttribute('aria-selected')) === 'true', 'Achat : reste dans la Boutique');
   check(await sansRevelation(p), 'Achat : aucune révélation');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await p.$eval('#cartes-p-ouverture [data-stock-type=classique] [data-action=open-gift]', (b) => b.textContent.trim()) === 'Ouvrir 1',
     'Ouverture : bouton « Ouvrir 1 » sur le classique');
   await p.click('#cartes-p-ouverture [data-stock-type=classique] [data-action=open-gift]'); await sleep(300);
@@ -100,7 +106,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   await p.click('#cartes-reveal [data-action=close-reveal]'); await sleep(200);
 
   // ---------- 3. Achat en stock (Doré, 1 puis 3) ----------
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   const avant = await stockDe(p, 'dore');
   await p.click('#cartes-p-boutique [data-action=buy-stock][data-type=dore]');
   check(await toast(p, '1 booster Doré ajouté à ton inventaire'), 'Achat (Doré) : toast « 1 booster Doré ajouté à ton inventaire »');
@@ -113,7 +119,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   await p.selectOption('#shop-qty-dore', '1');
 
   // ---------- 4. Ouverture depuis le stock (Doré) ----------
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await p.$$eval('#cartes-p-ouverture [data-stock-type]', (els) => els.map((e) => e.dataset.stockType).join(',')) === 'serie,dore',
     'Ouverture : une tuile par type en stock (serie, dore)');
   check(await p.$eval('#cartes-p-ouverture #cartes-stock', (e) => e.dataset.stockType) === 'serie', 'Ouverture : #cartes-stock sur la première tuile de stock');
@@ -159,7 +165,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   await p.click('#cartes-reveal [data-action=close-reveal]'); await sleep(200);
 
   // ---------- 6. Limite hebdomadaire : Holographique (1 par semaine) ----------
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   const avantHolo = await paillettes(p);
   await p.click('#cartes-p-boutique [data-action=buy-stock][data-type=holographique]'); await sleep(300);
   check(await paillettes(p) === avantHolo - 1000, 'Holographique acheté : 1000 Paillettes débitées');
@@ -168,7 +174,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   check(await p.$eval('#cartes-p-boutique [data-type=diamant] [data-action=buy-stock]', (b) => !b.disabled), 'Diamant : achat encore possible (limite non atteinte)');
 
   // ---------- 7. Don par type (Doré) ----------
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(await p.$eval('#cartes-p-inventaire', (s) => /Doré/.test(s.textContent) && /Aucun booster/.test(s.textContent) === false), 'Inventaire : stock listé par type (Doré)');
   const typesDon = await p.$$eval('#gift-type option', (o) => o.map((x) => x.textContent.trim()).join(' | '));
   check(/Doré \(2 en stock\)/.test(typesDon) && !/Quitte/.test(typesDon), `Don : choix du type limité aux types en stock, « Doré (2 en stock) » (${typesDon})`);
@@ -189,7 +195,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   j = await log(p);
   const don = rpcs(j, 'hg_booster_gift').at(-1);
   check(don?.[2]?.p_type === 'dore' && don?.[2]?.p_qty === 2 && don?.[2]?.p_to === ALICE, `Don : RPC hg_booster_gift(dore, 2, Alice) (${JSON.stringify(don?.[2])})`);
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await p.$eval('#cartes-p-ouverture', (s) => !s.querySelector('[data-action=open-stock][data-type=dore]')), 'Ouverture : plus de tuile Doré quand le stock est à zéro');
   check(await hscroll(p) === 0, '1280 : Inventaire et Ouverture sans défilement horizontal');
   // Appels de la RPC d'achat : le type et la quantité sont envoyés.
@@ -202,7 +208,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
 
   // ---------- 8a. Limite déjà atteinte (boughtWeek) : holographique bloqué dès l'ouverture ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { types: true, bal: 20000, boughtWeek: { holographique: 1 } } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$eval('#cartes-p-boutique [data-type=holographique]', (a) => /Limite de la semaine atteinte/.test(a.textContent)), 'Limite atteinte (boughtWeek) : « Limite de la semaine atteinte »');
   check(await p.$eval('#cartes-p-boutique [data-type=holographique] [data-action=buy-stock]', (b) => b.disabled), 'Limite atteinte (boughtWeek) : mise en stock désactivée');
   check(p.errs.length === 0, `Limite atteinte : aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
@@ -210,7 +216,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
 
   // ---------- 8b. Paillettes insuffisantes (bal 50) : achats refusés, message, rien d'acheté ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { types: true, bal: 50 } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$eval('#cartes-paid [data-action=buy-stock][data-type=classique]', (b) => b.disabled), 'Paillettes insuffisantes : classique non acheté');
   check(await p.$eval('#cartes-p-boutique [data-type=dore] [data-action=buy-stock]', (b) => b.disabled), 'Paillettes insuffisantes : Doré non acheté');
   check(await p.$eval('#cartes-p-boutique [data-type=dore] p.shop-stock-miss', (e) => /Il te manque/.test(e.textContent)), 'Paillettes insuffisantes : « Il te manque … » affiché pour le Doré');
@@ -220,11 +226,11 @@ let j = null; // journal du faux client, relu après chaque ouverture
 
   // ---------- 8c. Collectionneur : 3 cartes manquantes sur 10 : 7 remboursées à 50 P ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { types: true, bal: 20000, collectorMissing: 3 } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   const avantCollec = await paillettes(p);
   await p.click('#cartes-p-boutique [data-action=buy-stock][data-type=collectionneur]'); await sleep(300);
   check(await paillettes(p) === avantCollec - 500, 'Collectionneur acheté : 500 Paillettes débitées');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   await p.click('#cartes-p-ouverture [data-action=open-stock][data-type=collectionneur]'); await sleep(300);
   await revelerTout(p);
   check(await toast(p, 'remboursés'), 'Collectionneur : toast de remboursement');
@@ -239,10 +245,10 @@ let j = null; // journal du faux client, relu après chaque ouverture
 
   // ---------- 8d. Mode sans limite (god) : holographique à volonté, rien ne se débite ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { types: true, bal: 0, god: true, boughtWeek: { holographique: 1 } } });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$eval('#cartes-p-boutique [data-action=buy-stock][data-type=holographique]', (b) => !b.disabled), 'Mode sans limite : holographique acheté malgré la limite');
   await p.click('#cartes-p-boutique [data-action=buy-stock][data-type=holographique]'); await sleep(300);
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   await p.click('#cartes-p-ouverture [data-action=open-stock][data-type=holographique]'); await sleep(300);
   await revelerTout(p);
   await p.click('#cartes-reveal [data-action=close-reveal]'); await sleep(200);
@@ -252,13 +258,13 @@ let j = null; // journal du faux client, relu après chaque ouverture
 
   // ---------- 9. Téléphone 390 px : Boutique, Ouverture, Inventaire et dialogue sans défilement ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 390, height: 844, touch: true, scenario });
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await hscroll(p) === 0, '390 : Boutique typée sans défilement horizontal');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   check(await hscroll(p) === 0, '390 : Ouverture typée sans défilement horizontal');
-  await p.click('[data-tab=inventaire]'); await sleep(300);
+  await goTab(p, 'inventaire'); await sleep(300);
   check(await hscroll(p) === 0, '390 : Inventaire typé sans défilement horizontal');
-  await p.click('[data-tab=ouverture]'); await sleep(300);
+  await goTab(p, 'ouverture'); await sleep(300);
   await p.click('#cartes-p-ouverture [data-action=open-stock][data-type=serie]'); await sleep(300);
   check(await hscroll(p) === 0, '390 : dialogue de série sans défilement horizontal');
   await p.keyboard.press('Escape');
@@ -268,7 +274,7 @@ let j = null; // journal du faux client, relu après chaque ouverture
   // ---------- 10. Repli : sans types, l'ancien mode reste en place ----------
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { bal: 500, gift: 2 } });
   check(await p.$eval('#cartes-p-ouverture', (s) => !!s.querySelector('#cartes-stock [data-action=open-gift]')), 'Repli : « Ouvrir un booster (2 en stock) » sur #cartes-stock');
-  await p.click('[data-tab=boutique]'); await sleep(300);
+  await goTab(p, 'boutique'); await sleep(300);
   check(await p.$$eval('#cartes-p-boutique .shop-item', (e) => e.length) === 1 && await p.$('#cartes-paid [data-action=buy-stock][data-type=classique]') !== null, 'Repli : une seule carte d\'article (classique)');
   check(p.errs.length === 0, `Repli : aucune erreur console (${p.errs.join(' | ') || 'rien'})`);
   await p.ctx.close();
