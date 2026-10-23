@@ -130,13 +130,13 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
       scenario: { support: [{ id: 'sup-1', status: 'ouverte', user_id: U(3), subject: 'Test', message: 'Bonjour', created_at: new Date().toISOString() }] } });
     await goHash(p, '#pilotage/apercu', '#apercu');
     check(await p.locator('#stats .stat').count() > 0, '(c) tuiles de chiffres clés affichées');
-    check(await p.locator('#ov-todo .ov-todo-row').count() >= 1, '(c) « À traiter » : au moins une ligne');
-    check(await p.locator('#ov-todo a[href="#communication/assistance"]').count() === 1, '(c) « À traiter » : lien vers Assistance');
+    check(await p.locator('#ov-todo .ov-q-item').count() >= 1, '(c) « À traiter » : au moins une ligne');
+    check(await p.locator('#ov-todo a[href^="#communication/assistance/"]').count() === 1, '(c) « À traiter » : « Répondre » mène à la demande (Assistance)');
     check(await p.locator('#ov-activity li').count() >= 1 && await visible(p, '#ov-activity-card'), '(c) activité récente : dernières actions du journal');
-    check((await p.evaluate(() => document.querySelector('#ov-todo').textContent)).includes('demande ouverte'), '(c) « À traiter » : libellé de la demande');
-    await p.click('#ov-todo a[href="#communication/assistance"]');
+    check((await p.evaluate(() => document.querySelector('#ov-tiles').textContent)).includes('demande ouverte'), '(c) tuile Communication : libellé « demande ouverte »');
+    await p.click('#ov-todo a[href^="#communication/assistance/"]');
     await sleep(300);
-    check(await hashOf(p) === '#communication/assistance', '(c) lien « À traiter » : mène à la sous-section');
+    check(await hashOf(p) === '#communication/assistance/sup-1', '(c) lien « Répondre » : mène à la demande dans Assistance');
     check(!p.errs.length, '(c) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }

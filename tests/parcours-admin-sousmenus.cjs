@@ -17,6 +17,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const MAX_H = 1400;
 // Exceptions documentées à la garde de longueur (route → raison). Toute autre route au-delà de MAX_H échoue.
 const EXCEPTIONS = {
+  'pilotage/apercu': 'accueil en deux moitiés : six tuiles de domaines, puis économie et activité sous les tuiles (admin-accueil.css) ; mesuré 1 876 px',
   'cartes/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
   'membres/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard (audit §3.3)',
   'membres/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs (question ouverte pour Ethan)',

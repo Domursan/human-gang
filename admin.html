@@ -68,6 +68,7 @@
   <link rel="stylesheet" href="assets/css/social.css">
   <link rel="stylesheet" href="assets/css/admin-errors.css">
   <link rel="stylesheet" href="assets/css/admin-eco.css">
+  <link rel="stylesheet" href="assets/css/admin-accueil.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="domain" data-info="no">
@@ -128,22 +129,29 @@
   <div id="shell-parking" hidden>
         <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
           <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
-          <div class="ov">
-            <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
-            <div class="card ov-card eco-card" id="ov-eco-card" hidden>
-              <h3 class="card-title">Santé de l’économie</h3>
-              <div id="ov-eco"><div class="empty">Chargement…</div></div>
+          <div class="ov" id="ov" data-mtab="todo">
+            <div class="ov-tabs" role="tablist" aria-label="Vue d’ensemble : domaines ou à traiter">
+              <button type="button" role="tab" id="ov-tab-domains" aria-controls="ov-pane-domains" aria-selected="false" data-ov-tab="domains" data-ov-k="tab:domains">Domaines</button>
+              <button type="button" role="tab" id="ov-tab-todo" aria-controls="ov-pane-todo" aria-selected="true" data-ov-tab="todo" data-ov-k="tab:todo">À traiter</button>
             </div>
-            <div class="ov-cols">
-              <div class="card ov-card" id="ov-todo-card">
-                <h3 class="card-title">À traiter</h3>
+            <div class="ov-split">
+              <div class="ov-left" id="ov-pane-domains" role="tabpanel" aria-labelledby="ov-tab-domains">
+                <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
+                <div class="ov-tiles" id="ov-tiles"><div class="empty">Chargement…</div></div>
+                <div class="card ov-card eco-card" id="ov-eco-card" hidden>
+                  <h3 class="card-title">Santé de l’économie</h3>
+                  <div id="ov-eco"><div class="empty">Chargement…</div></div>
+                </div>
+                <div class="card ov-card" id="ov-activity-card" hidden>
+                  <h3 class="card-title">Activité récente</h3>
+                  <div id="ov-activity"><div class="empty">Chargement…</div></div>
+                  <p class="small ov-more"><a href="#pilotage/journal">Voir tout le journal</a></p>
+                </div>
+              </div>
+              <aside class="ov-right card" id="ov-todo-card" role="tabpanel" aria-labelledby="ov-tab-todo">
+                <div class="ov-todo-head" id="ov-todo-head"></div>
                 <div id="ov-todo"><div class="empty">Chargement…</div></div>
-              </div>
-              <div class="card ov-card" id="ov-activity-card" hidden>
-                <h3 class="card-title">Activité récente</h3>
-                <div id="ov-activity"><div class="empty">Chargement…</div></div>
-                <p class="small ov-more"><a href="#pilotage/journal">Voir tout le journal</a></p>
-              </div>
+              </aside>
             </div>
           </div>
         </section>

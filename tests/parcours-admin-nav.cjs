@@ -122,6 +122,13 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.keyboard.press('Escape');
   check(!(await palOpen(p)), '(c) Échap : la palette se ferme');
 
+  // Accueil (Vue d’ensemble) : le rail est masqué, donc pas de bouton « Aller à… » ; Ctrl K ouvre la palette quand même
+  check(!(await p.isVisible('#admin-goto')), '(c) accueil : rail masqué, bouton « Aller à… » absent de l’écran');
+  await p.keyboard.press('Control+k');
+  check(await palOpen(p), '(c) Ctrl K : ouvre la palette sur l’accueil');
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => { location.hash = '#pilotage/journal'; });
+  await p.waitForSelector('#admin-goto', { state: 'visible', timeout: 5000 });
   await p.click('#admin-goto');
   check(await palOpen(p), '(c) bouton « Aller à… » du rail : ouvre la palette');
   await p.fill('#apal-q', 'secret');

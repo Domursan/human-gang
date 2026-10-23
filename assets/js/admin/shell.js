@@ -20,12 +20,17 @@
 // Les droits viennent de admin/perms.js (DOMAINS, canSection) : une sous-section non permise n'est jamais montée.
 // setCount(sous-section, n) : compteur « à traiter » affiché dans la colonne et sur les domaines (rail et onglets).
 // setActions(nodes) : boutons d'action de la zone principale (#zone-actions). Vidé à chaque visite ; à remplir dans `open`.
+// Vue d'ensemble (#pilotage/apercu) : la classe admin-home est posée sur #shell (rail et colonne masqués en largeur
+// de bureau, voir admin-accueil.css) ; les autres sous-sections gardent la coquille telle quelle.
 // ------------------------------------------------------
 
 import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
 import { svg as iconSvg } from '../icons.js';
 import { DOMAINS, SECTION_PERM, visibleDomains, canSection } from './perms.js';
 import { resolve } from './router.js';
+
+// Route de la vue d'ensemble : accueil pleine largeur (classe admin-home sur #shell).
+const HOME = 'pilotage/apercu';
 
 // Deux seuils d'affichage : mobile (≤ 760 px) et large (≥ 1440 px, panneau d'infos visible).
 const MOBILE = matchMedia('(max-width: 760px)');
@@ -46,6 +51,8 @@ const ICON = {
 };
 /** HTML d'une icône du rail (SVG 24 × 24, masqué aux lecteurs d'écran). */
 const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name] || ''}</svg>`;
+/** Icône d'un domaine (HTML, SVG 24 × 24) pour les tuiles de la vue d'ensemble. */
+export const domainIcon = (name) => icon(name);
 // Libellés courts des onglets de la barre mobile
 const SHORT = { communication: 'Comm.', vie: 'Vie du gang', cartes: 'Jeux', membres: 'Membres', pilotage: 'Pilotage', site: 'Site' };
 
@@ -283,6 +290,8 @@ function slotFor(map, host, key) {
 async function show(r) {
   const token = ++seq;
   el.zoneActions.replaceChildren(); // actions de zone : propres à chaque sous-section (posées par son open)
+  // Vue d'ensemble : accueil pleine largeur (rail et colonne masqués en largeur de bureau, admin-accueil.css)
+  el.shell.classList.toggle('admin-home', !!r.sub && `${r.dom.id}/${r.sub.id}` === HOME);
   if (!r.sub) { // écran du domaine (mobile) : liste des sous-sections
     el.shell.dataset.screen = 'domain';
     el.shell.dataset.info = 'no';
@@ -349,6 +358,7 @@ async function show(r) {
 
 /** Affiche l'écran « Aucune section accessible » quand l'administrateur n'a aucun droit. */
 function renderNoAccess() {
+  el.shell.classList.remove('admin-home');
   el.shell.dataset.screen = 'sub';
   el.shell.dataset.info = 'no';
   el.zoneEyebrow.textContent = 'Panel';

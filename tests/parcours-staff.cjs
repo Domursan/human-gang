@@ -30,7 +30,8 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
 
   /* (a) Administrateur */
   {
-    const p = await openPage(browser, { page: 'admin' });
+    // Départ sur la section Staff (et non sur la Vue d’ensemble, où le rail est masqué : admin-accueil.css)
+    const p = await openPage(browser, { page: 'admin', hash: '#pilotage/staff' });
     // Rail : lien Staff (administrateur) -> section Staff ; compte et mode sans limite dans le rail
     await p.click('#shell-foot a[href="#pilotage/staff"]');
     await p.waitForSelector('#staff', { state: 'visible', timeout: 5000 }).catch(() => {});

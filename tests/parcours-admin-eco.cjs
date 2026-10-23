@@ -1,10 +1,10 @@
 // Parcours : alertes économie (idée A7, migration 093) dans Pilotage › Vue d'ensemble, et éditeur de boosters.
 // (a) admin : bloc « Santé de l'économie » (4 indicateurs, feux), alerte rouge expliquée (« Diamant rapporte 112 % »)
 //     avec le lien vers le réglage, tuile et ligne « À traiter » ; « Ignorer cette semaine » (hg_eco_alerts_ignore).
-// (b) Économie › Recyclage et fabrication : groupe « Alertes économie » (seuils) ; vue d'ensemble ≤ 1 400 px.
+// (b) Économie › Recyclage et fabrication : groupe « Alertes économie » (seuils) ; vue d'ensemble ≤ 2 000 px (accueil en deux moitiés : tuiles, puis économie et activité sous les tuiles).
 // (c) Éditeur de boosters : rendement recalculé en direct ; avertissement avant d'enregistrer un type déséquilibré ;
 //     cartes Identité comptées à 0 (non recyclables).
-// (d) Staff sans « cartes » : ni bloc ni appel à hg_eco_health. (e) 375 px sans défilement horizontal.
+// (d) Staff sans « cartes » : ni bloc ni appel à hg_eco_health. (e) 375 px sans défilement horizontal (onglet Domaines).
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-eco.cjs
 const { check, finish, openPage, hscroll, adminSection, log, sleep, chromium } = require('./lib/harness.cjs');
 
@@ -31,7 +31,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
     check((await log(p)).some((l) => l[0] === 'eco_ignore' && l[1] === 7), '(a) « Ignorer cette semaine » : hg_eco_alerts_ignore(7)');
     check(/Alertes suspendues/.test(await p.textContent('#ov-eco')) && !/alerte économie/.test(await p.textContent('#ov-todo')), '(a) alertes suspendues, plus dans « À traiter »');
     const h = await p.evaluate(() => document.getElementById('app').scrollHeight);
-    check(h <= 1400, `(b) vue d’ensemble ≤ 1 400 px (${h})`);
+    check(h <= 2000, `(b) vue d’ensemble ≤ 2 000 px (${h})`);
     check(p.errs.length === 0, '(a) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 3).join(' | ') + ')' : ''));
 
     /* ---------- (b) seuils ---------- */
@@ -83,6 +83,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
     /* ---------- (e) 375 px ---------- */
     p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
     await adminSection(p, 'pilotage/apercu');
+    await p.click('#ov-tab-domains'); // téléphone : le bloc économie est dans l'onglet « Domaines » (À traiter s'ouvre par défaut)
     await p.waitForSelector('#ov-eco .eco-ind', { timeout: 6000 });
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     await p.ctx.close();

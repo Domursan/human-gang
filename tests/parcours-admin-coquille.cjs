@@ -34,14 +34,17 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
   /* (a) Administrateur, ordinateur 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    check(await p.isVisible('#shell-rail'), '(a) rail visible');
+    check(/#pilotage\/apercu$/.test(await hashOf(p)), `(a) route par défaut : ${await hashOf(p)}`);
+    check(await waitVisible(p, '#apercu'), '(a) Vue d’ensemble affichée par défaut');
+    check(!(await p.isVisible('#shell-rail')), '(a) accueil (Vue d’ensemble) : rail masqué, pleine largeur (admin-accueil.css)');
+    await p.evaluate(() => { location.hash = '#pilotage/journal'; }); // hors accueil, la coquille habituelle reprend
+    await p.waitForSelector('#shell-rail', { state: 'visible', timeout: 5000 });
+    check(await p.isVisible('#shell-rail'), '(a) rail visible hors accueil');
     check(await p.locator('nav[aria-label="Domaines du panel"]').count() === 1, '(a) rail : nav aria-label « Domaines du panel »');
     check((await visibleDomains(p)).length === 6, `(a) six domaines dans le rail (${(await visibleDomains(p)).join(', ')})`);
     check(await p.locator('.site-header').count() === 0 && await p.locator('.site-footer').count() === 0, '(a) en-tête et pied du site absents');
     check(await p.locator('#god-root').count() === 0, '(a) plus de carte « Mode sans limite » dans la page');
     check(await p.isVisible('#shell-god'), '(a) bouton Mode sans limite dans le rail (administrateur)');
-    check(/#pilotage\/apercu$/.test(await hashOf(p)), `(a) route par défaut : ${await hashOf(p)}`);
-    check(await waitVisible(p, '#apercu'), '(a) Vue d’ensemble affichée par défaut');
 
     // Navigation par domaine, puis sous-section
     await p.click('#shell-rail .shell-dom[data-dom="membres"]');

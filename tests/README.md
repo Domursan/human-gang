@@ -98,6 +98,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-admin-recherche.cjs` | `node tests/parcours-admin-recherche.cjs` | `test` | Recherche sans accents ni casse, « Afficher plus » par lots de 50, fiche membre (requêtes limitées), action en cours |
 | `parcours-admin-coquille.cjs` | `node tests/parcours-admin-coquille.cjs` | `test` | Rail et colonne de navigation, routage et adresses directes, Staff limité, mobile 375 px |
 | `parcours-admin-p2-pilotage.cjs` | `node tests/parcours-admin-p2-pilotage.cjs` | `test` | Pilotage : Staff (ajout, permissions, désactivation), Journal (filtres, détail avant / après), Vue d'ensemble, mobile |
+| `parcours-admin-accueil.cjs` | `node tests/parcours-admin-accueil.cjs` | `test` | Vue d'ensemble en deux moitiés : accueil pleine largeur, tuiles et filtre, file « À traiter » (déplier, marquer comme traitée), onglets et mobile 390 px ; captures `tests/shots/admin-accueil-*.png` |
 | `parcours-admin-p2-assistance.cjs` | `node tests/parcours-admin-p2-assistance.cjs` | `test` | Communication › Assistance et Boîte à idées : liste, sélection par URL, statut écrit en base, recherche, mobile |
 | `parcours-admin-p2-comptes.cjs` | `node tests/parcours-admin-p2-comptes.cjs` | `test` | Membres › Comptes en liste + détail : filtres, URL, résumé, Échap, Précédent |
 | `parcours-admin-comptes-fantomes.cjs` | `node tests/parcours-admin-comptes-fantomes.cjs` | à la main | Comptes fantômes dans Membres › Comptes : fiche, liaison à un compte, fusion, codes d'invitation, création |

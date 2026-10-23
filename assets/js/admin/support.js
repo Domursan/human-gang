@@ -115,7 +115,7 @@ const MSG_STATE = { ouverte: 'Demande remise en file', encours: 'Demande prise e
  * Passe une demande à « ouverte », « encours » (prise en charge par l'admin connecté) ou « traitee ».
  * La mise à jour est écrite en base, puis reportée dans S (sans recharger toute la liste).
  */
-async function setState(id, target) {
+export async function setState(id, target) {
   const s = find(id);
   if (!s || stateOf(s).id === target) return;
   if (target === 'encours') { await takeCharge(id); return; }
