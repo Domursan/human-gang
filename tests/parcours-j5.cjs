@@ -19,7 +19,8 @@ const fs = require('fs');
   const ouverte = p.locator('.pr-card').first();
   check((await ouverte.locator('.pr-opt').count()) === 2 && (await ouverte.locator('.pr-vs').count()) === 1, 'match ouvert : deux pastilles et « contre »');
   check((await ouverte.locator('img').count()) === 0, 'aucun logo d’équipe');
-  const horloge = await ouverte.locator('.pr-clock').innerText();
+  // textContent : innerText insère un saut de ligne entre les éléments flex (.pill est inline-flex).
+  const horloge = ((await ouverte.locator('.pr-clock').textContent()) || '').replace(/\s+/g, ' ').trim();
   check(/ferme dans 1 j \d+ h/.test(horloge), `compte à rebours « ferme dans 1 j … » (${horloge})`);
   check((await ouverte.locator('.pr-stake').count()) === 4, 'mises 0 / 10 / 25 / 50');
   check((await ouverte.innerText()).includes('solde 1’240') || (await ouverte.innerText()).includes('solde 1 240') || /solde 1.240/.test(await ouverte.innerText()), 'solde affiché');

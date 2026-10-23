@@ -47,11 +47,16 @@ async function tape(p, mot) {
   check(fin.includes('Bravo') && fin.includes('RACLETTE') && fin.includes('Plat sacré'), 'gagné : mot et définition à la sauce du gang');
   check(fin.includes('+10 Paillettes'), 'gagné : +10 Paillettes');
   check((await p.locator('.su-kbd').count()) === 0, 'fin de partie : clavier retiré');
-  await p.ctx.grantPermissions(['clipboard-read', 'clipboard-write']);
+  // Le presse-papiers du navigateur de test n'est pas fiable (focus) : on capte ce que le bouton écrit.
+  await p.evaluate(() => {
+    window.__copie = null;
+    const faux = { writeText: async (t) => { window.__copie = t; }, readText: async () => window.__copie || '' };
+    try { Object.defineProperty(navigator, 'clipboard', { value: faux, configurable: true }); } catch (e) { /* non redéfinissable : on garde le presse-papiers natif */ }
+  });
   await p.click('[data-share]');
   await sleep(200);
-  const txt = await p.evaluate(() => navigator.clipboard.readText()).catch(() => '');
-  check(txt.startsWith('Sutom du gang #42 2/6') && !txt.includes('RACLETTE') && txt.includes('🟥'), 'partage : « Sutom du gang #42 2/6 » à cases, sans le mot');
+  const txt = (await p.evaluate(() => window.__copie).catch(() => null)) || '';
+  check(txt.startsWith('Sutom du gang #42 2/6') && !txt.includes('RACLETTE') && txt.includes('🟥'), `partage : « Sutom du gang #42 2/6 » à cases, sans le mot (presse-papiers : ${JSON.stringify(txt.slice(0, 40))})`);
   const g = (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_sutom_guess').map((e) => e[2].p_word);
   check(g.join(',') === 'RZZZZZZZ,RESTAURE,RACLETTE', 'appels : chaque essai part au serveur (y compris le refusé)');
   check(p.errs.length === 0, 'aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
