@@ -1,15 +1,16 @@
 // =====================================================================
 // Affiches A3 : chiffres et listes lus sur le site (prix, gains, taux, critères des badges, quêtes, badges).
-// Une affiche déclare sa page avec <body data-affiche="badges | paillettes | cartes | boosters | boosters-gamme">.
-// Boosters (idée A5) : la gamme (boosters-gamme) est reconstruite depuis hg_booster_types (types actifs, ordre « sort ») ;
-// la liste BOOSTERS écrite dans la page reste le repli (sans session). boosters : prix et taille du Classique lus sur son type.
+// Une affiche déclare sa page avec <main class="affiche" data-affiche="badges | paillettes | boosters | boosters-gamme">
+// (les autres affiches, secrets et jeux, n'ont que des chiffres : data-cfg / data-expr, lus par reglages-jetons.js).
+// Boosters : la gamme (boosters-gamme) est reconstruite depuis hg_booster_types (types actifs, ordre « sort ») ;
+// la liste BOOSTERS écrite dans gamme.js reste le repli (sans session). boosters : prix et taille du Classique lus sur son type.
 // Les chiffres sont des éléments data-cfg (valeur d'un réglage), data-expr (calcul) ou data-cfg-calc
 // (calcul de la page) : voir assets/js/reglages-jetons.js. Le texte écrit dans la page est le repli :
 // il reste affiché si un réglage est illisible (par exemple sans session, les affiches sont imprimées connecté).
 // Les badges viennent de hg_badges (noms, images, niveaux, critères) ; sans lecture, BADGES_REPLI est affiché.
 // Les quêtes viennent de hg_card_quests_templates ; sans lecture, la liste écrite dans la page reste.
 // Dépendances : core/supabase.js (sb), reglages-jetons.js (valeurs et mise en forme), badge-levels.js (niveaux).
-// Ne fait rien d'autre que remplir la page : la mise en page A3 est celle du HTML (impression inchangée).
+// Ne fait rien d'autre que remplir la page : la mise en page A3 est celle du HTML et de affiche.css (impression inchangée).
 // =====================================================================
 import { sb } from '../assets/js/core/supabase.js';
 import { chargerReglages, appliquerReglages, jetons, fmt } from '../assets/js/reglages-jetons.js';
@@ -22,6 +23,7 @@ const SECTIONS = [
   { titre: 'Sorties IRL', codes: ['toujours_la', 'organisateur', 'globe_trotter'] },
   { titre: 'Fidélité', codes: ['fondateur', 'fidele', 'saisonnier', 'anciennete'] },
   { titre: 'Communauté', codes: ['cupidon', 'paparazzi', 'boite_a_idees', 'chasseur_bugs'] },
+  { titre: 'Secrets et cartes', codes: ['initie', 'chasseur_secrets', 'cueilleur', 'pentakill'] },
 ];
 // Texte de chaque badge sur l'affiche, avec les critères réglables (jetons). Un badge sans modèle garde sa description de la base.
 const MODELES = {
@@ -40,8 +42,13 @@ const MODELES = {
   paparazzi: '{{badges.criteres.paparazzi_photos|50}} photos ajoutées aux albums.',
   boite_a_idees: 'Une de ses idées retenue par l’admin.',
   chasseur_bugs: 'Un bug signalé via l’assistance, traité.',
+  anciennete: 'Calculé sur les années passées dans le gang, depuis la date d’arrivée.',
+  initie: 'A trouvé le code secret du gang.',
+  chasseur_secrets: 'A réuni les 7 lettres cachées du site.',
+  cueilleur: 'A cueilli le champignon caché des quatre saisons.',
+  pentakill: 'Des boosters parfaits : 5 cartes de même rareté (rare ou mieux), ou 5 nouvelles.',
 };
-// Liste de repli (sans lecture de hg_badges) : les 17 badges tels qu'ils étaient écrits dans l'affiche.
+// Liste de repli (sans lecture de hg_badges) : les 21 badges tels qu'ils sont affichés.
 const IMG = (f) => `https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/${f}`;
 const BADGES_REPLI = [
   { code: 'premier_noel', name: 'Premier Noël', image_url: IMG('premier_noel.png?v=1792524833665') },
@@ -69,6 +76,17 @@ const BADGES_REPLI = [
   { code: 'paparazzi', name: 'Paparazzi', image_url: IMG('paparazzi.png?v=1792525140417') },
   { code: 'boite_a_idees', name: 'Boîte à idées', image_url: IMG('boite_a_idees.png?v=1792525184828') },
   { code: 'chasseur_bugs', name: 'Chasseur de bugs', image_url: IMG('chasseur_bugs.png?v=1792525293492') },
+  { code: 'initie', name: 'Initié', image_url: null },
+  { code: 'chasseur_secrets', name: 'Chasseur de secrets', image_url: null },
+  { code: 'cueilleur', name: 'Cueilleur', image_url: null },
+  {
+    code: 'pentakill', name: 'Pentakill', levels_enabled: true, metric: 'pentakills', image_url: null,
+    levels: [
+      { level: 1, threshold: 1, name: null, image_url: null },
+      { level: 2, threshold: 3, name: null, image_url: null },
+      { level: 3, threshold: 10, name: null, image_url: null },
+    ],
+  },
   { code: 'it_s_halloween_time', name: 'It\'s Halloween Time !', description: 'A attrapé It\'s Halloween Time ! pendant l\'événement.', image_url: null },
 ];
 
@@ -84,56 +102,66 @@ const el = (tag, cls = '', texte) => {
 /** Description affichée d'un badge : le modèle de l'affiche (critères réglables), sinon la description de la base. */
 const descriptionDe = (b) => (MODELES[b.code] ? jetons(MODELES[b.code]) : (b.description || ''));
 
-/** Carte d'un badge simple (sans niveaux). */
-function carte(b, evenement) {
-  const card = el('div', evenement ? 'card hot' : 'card');
-  const ico = el('div', 'ico');
-  if (b.image_url) {
+/** Pastille de badge : l'image de la base, ou une médaille si elle manque. */
+function pastille(src, classe) {
+  const ico = el('div', classe);
+  if (src) {
     const img = el('img');
-    img.src = b.image_url;
+    img.src = src;
     img.alt = '';
     ico.append(img);
   } else {
     ico.setAttribute('aria-hidden', 'true');
     ico.textContent = '🏅';
   }
+  return ico;
+}
+
+/** Carte d'un badge simple (sans niveaux). */
+function carte(b, evenement) {
+  const card = el('div', evenement ? 'card hot' : 'card');
   const txt = el('div');
   txt.append(el('h3', '', b.name), el('p', '', descriptionDe(b)));
-  card.append(ico, txt);
+  card.append(pastille(b.image_url, 'ico'), txt);
   return card;
 }
 
-/** Bloc d'un badge à niveaux (Ancienneté) : pastilles des niveaux, avec leur seuil lu sur la base. */
+/** Libellé d'un niveau selon la métrique du badge (les métriques sans libellé donnent le nombre seul). */
+function libelleNiveau(b, n) {
+  if (b.metric === 'pentakills') return `${n} Pentakill${n > 1 ? 's' : ''}`;
+  return metricCount(b.metric, n);
+}
+
+/** Bloc d'un badge à niveaux (Ancienneté, Pentakill) : description, puis une ligne par niveau, avec son seuil lu sur la base. */
 function blocNiveaux(b) {
   const niveaux = sortedLevels(b);
   const bloc = el('div', 'anc');
-  const head = el('div', 'anc-head');
-  head.append(el('h3', '', b.name), el('p', '', `${niveaux.length} niveaux, calculés sur les années passées dans le gang depuis la date d’arrivée.`));
-  const grille = el('div', 'levels');
+  bloc.append(el('h3', '', b.name));
+  const desc = descriptionDe(b);
+  if (desc) bloc.append(el('p', 'anc-desc', desc));
+  const liste = el('div', 'levels');
   for (const n of niveaux) {
     const lvl = el('div', 'lvl');
-    const img = el('img');
-    img.src = levelImage(b, n.level) || '';
-    img.alt = '';
-    lvl.append(img, el('b', '', n.name || `Niveau ${n.level}`), el('span', '', metricCount(b.metric, n.threshold)));
-    grille.append(lvl);
+    const src = levelImage(b, n.level);
+    lvl.append(pastille(src, 'lvl-ico'), el('b', '', n.name || `Niveau ${n.level}`), el('span', '', libelleNiveau(b, n.threshold)));
+    liste.append(lvl);
   }
-  bloc.append(head, grille);
+  bloc.append(liste);
   return bloc;
 }
 
-/** Une section de l'affiche : titre, nombre, cartes et blocs de niveaux. */
+/** Une section de l'affiche : titre, nombre, cartes et blocs de niveaux. Renvoie l'élément (les colonnes sont faites par le CSS). */
 function section(titre, badges, tagDefaut) {
   const simples = badges.filter((b) => !hasLevels(b));
   const niveaux = badges.filter((b) => hasLevels(b));
   const evenement = titre === 'Événements';
-  const sec = el('section');
+  const sec = el('section', 'bloc');
   const t = el('div', 'sec-title');
   const suite = niveaux.map((b) => ` + ${b.name}`).join('');
   t.append(el('h2', '', titre), el('span', 'tag', tagDefaut ?? `${simples.length} badge${simples.length > 1 ? 's' : ''}${suite}`));
   sec.append(t);
   if (simples.length) {
-    const grille = el('div', simples.length === 5 ? 'grid five' : simples.length <= 3 ? 'grid three' : 'grid');
+    const grille = el('div', 'grid');
     grille.append(...simples.map((b) => carte(b, evenement)));
     sec.append(grille);
   }
@@ -167,7 +195,7 @@ async function lireQuetes() {
 }
 
 /* ---------- Remplissage par page ---------- */
-/** Page des badges : sections construites depuis hg_badges, puis nombre total. */
+/** Page des badges : sections construites depuis hg_badges, réparties en colonnes, puis nombre total. */
 async function afficherBadges() {
   const lus = await lireBadges();
   const badges = lus.length ? lus : BADGES_REPLI;
@@ -213,15 +241,15 @@ function afficherQuetes(quetes) {
 }
 
 /* ---------- Boosters (idée A5) : gamme et prix lus sur hg_booster_types ---------- */
-// Nombre maximal de boosters sur une A3 (au-delà, les suivants sont signalés en pied de page).
-const GAMME_MAX = 12;
-// Teinte du liseré de chaque style de cartouche (comme la liste écrite dans la page) ; or par défaut.
+const GAMME_MAX = 9;   // une colonne par booster : neuf colonnes tiennent sur l’A3 (au-delà, signalés en pied)
+// Teinte de la barre de chaque style de cartouche (comme la liste de gamme.js) ; or par défaut.
 const TEINTES = { 'cart--classique': '#c4c9d6', 'cart--serie': '#2fd17a', 'cart--argente': '#d9dee9', 'cart--dore': '#FBD32D',
   'cart--diamant': '#4f80ff', 'cart--quitte': '#1f9d5c', 'cart--collection': '#a674f5', 'cart--identite': '#FE3104',
   'cart--holo': 'linear-gradient(90deg,#FE3104,#FCA301,#FBD32D,#159946,#2B5AE2,#4E2398)' };
-// Cartes possibles selon le tirage (colonne pool).
+// Cartes possibles selon le tirage (colonne pool) : texte long (note) et libellé court (colonne du tableau).
 const POOLS = { tous: 'toutes sauf les uniques', serie: 'la série choisie à l’ouverture',
   manquantes: 'uniquement les cartes que tu n’as pas, sauf uniques (différence remboursée)' };
+const TIRAGES = { tous: 'Toutes', serie: 'Série choisie', manquantes: 'Manquantes' };
 const jourFr = (d) => new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 const jourCourt = (d) => new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', day: 'numeric', month: 'short' }).format(d);
 // Nombres en toutes lettres pour l'accroche (jusqu'à 12).
@@ -239,7 +267,7 @@ async function lireBoosters() {
   }
 }
 
-/** Ligne de hg_booster_types → tuile de l'affiche (mêmes champs que la liste BOOSTERS de la page). Les taux sont ceux du tirage. */
+/** Ligne de hg_booster_types → ligne du tableau de l'affiche (mêmes champs que la liste BOOSTERS de gamme.js). Les taux sont ceux du tirage. */
 function boosterDeType(t) {
   const fin = t.ends_at || t.available_until || null;   // booster saisonnier (colonne facultative, idées C1 à C3)
   const debut = t.starts_at || t.available_from || null;
@@ -248,28 +276,27 @@ function boosterDeType(t) {
     nom: String(t.name).slice(0, 28), cls: /^cart--[a-z0-9-]+$/.test(t.style || '') ? t.style : 'cart--classique',
     lbl2: String(t.name).toUpperCase().slice(0, 18), tint: TEINTES[t.style] || '#e2c77e',
     prix: Number(t.price), cartes: Number(t.size) || 5, taux: t.rates || {}, brillante: Number(t.shiny_rate) || 0,
-    possibles: POOLS[t.pool] || POOLS.tous, limite: t.weekly_limit ? `${t.weekly_limit} / semaine` : null,
+    possibles: POOLS[t.pool] || POOLS.tous, tirage: TIRAGES[t.pool] || TIRAGES.tous,
+    limite: t.weekly_limit ? `${t.weekly_limit} / semaine` : null,
     gratuit: t.free_daily ? '1 gratuit / jour' : null,
     jusqua: futur ? `Dès le ${jourCourt(new Date(debut))}` : fin ? `Jusqu’au ${jourCourt(new Date(fin))}` : null,
   };
 }
 
-/** Page de la gamme : grille reconstruite (3 colonnes jusqu'à 9 boosters, 4 au-delà), titre et date des données. */
+/** Page de la gamme : tableau reconstruit (une colonne par booster), date des données. */
 async function afficherGamme() {
   const g = window.HG_GAMME;
-  if (!g?.tuile) return;
+  if (!g?.tableau) return;
   const types = await lireBoosters();
-  if (!types.length) return;   // repli : la grille écrite dans la page reste
+  if (!types.length) return;   // repli : le tableau écrit par gamme.js reste
   const liste = types.slice(0, GAMME_MAX).map(boosterDeType);
   const n = liste.length;
-  const grille = document.getElementById('gamme');
-  grille.classList.toggle('g4', n > 9);
-  const cols = n > 9 ? 4 : 3;
-  grille.style.gridTemplateRows = `repeat(${Math.max(1, Math.ceil(n / cols))}, minmax(0, 1fr))`;
-  grille.innerHTML = liste.map(g.tuile).join('');
-  grille.setAttribute('aria-label', `Les ${n} boosters`);
-  const titre = document.getElementById('gamme-titre');
-  if (titre) titre.textContent = `Les ${n} booster${n > 1 ? 's' : ''}`;
+  const tete = document.getElementById('gamme-tete');
+  const corps = document.getElementById('gamme');
+  if (!tete || !corps) return;
+  const t = g.tableau(liste);
+  tete.innerHTML = t.tete;
+  corps.innerHTML = t.corps;
   const intro = document.getElementById('gamme-intro');
   if (intro) intro.textContent = `${LETTRES[n] || n} booster${n > 1 ? 's' : ''} pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.`;
   const date = document.getElementById('gamme-date');
@@ -287,7 +314,7 @@ async function prixClassique() {
 }
 
 /* ---------- Démarrage ---------- */
-const page = document.body.dataset.affiche;
+const page = document.querySelector('[data-affiche]')?.dataset.affiche;
 await chargerReglages();
 let quetes = [];
 if (page === 'badges') await afficherBadges();

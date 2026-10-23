@@ -1,0 +1,69 @@
+/* Affiches A3 : une seule charte pour toute la série.
+   Format : 1123 × 1587 px (A3 portrait), une seule page à l'impression, sans marge.
+   Tailles : titre principal 84 px (63 pt), sous-titres de section 46 px (34 pt), texte 19 px minimum (14 pt). */
+@page { size: A3 portrait; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #0b0a10; }
+body { width: 1123px; height: 1587px; overflow: hidden; }
+:root {
+  --bg: #0b0a10; --surface: #17151d; --surface-2: #221f2b; --line: #3a3646;
+  --text: #f4f1ea; --muted: #cbc5d6; --gold: #e2c77e; --gold-2: #fbd32d; --framboise: #9e3543;
+  --rb1: #FE3104; --rb2: #FCA301; --rb3: #FBD32D; --rb4: #159946; --rb5: #2B5AE2; --rb6: #4E2398;
+  --display: 'Archivo Black', 'Arial Black', Impact, sans-serif;
+  --body: Inter, system-ui, 'DejaVu Sans', sans-serif;
+}
+
+.affiche {
+  position: relative; width: 1123px; height: 1587px; overflow: hidden;
+  display: flex; flex-direction: column;
+  background:
+    radial-gradient(circle at 88% 3%, rgba(158, 53, 67, .30), transparent 46%),
+    radial-gradient(circle at 4% 97%, rgba(226, 199, 126, .10), transparent 40%),
+    var(--bg);
+  color: var(--text); font-family: var(--body); font-size: 19px; line-height: 1.4;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+
+/* Bande arc-en-ciel : en haut et en bas de chaque affiche */
+.band { flex: none; height: 10px; display: flex; }
+.band i { flex: 1; display: block; }
+.band i:nth-child(1) { background: var(--rb1); }
+.band i:nth-child(2) { background: var(--rb2); }
+.band i:nth-child(3) { background: var(--rb3); }
+.band i:nth-child(4) { background: var(--rb4); }
+.band i:nth-child(5) { background: var(--rb5); }
+.band i:nth-child(6) { background: var(--rb6); }
+
+/* En-tête commun */
+.mast { flex: none; display: flex; align-items: center; gap: 34px; padding: 34px 56px 28px; border-bottom: 2px solid var(--line); }
+.mast .logo { width: 128px; height: 128px; flex: 0 0 128px; object-fit: contain; image-rendering: pixelated; }
+.kicker { margin: 0 0 12px; font-weight: 800; font-size: 19px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+h1 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 84px; line-height: .95; letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
+h1 .soft { display: block; margin-top: 8px; font-size: 48px; line-height: 1; color: var(--gold); }
+.lede { margin: 14px 0 0; font-size: 22px; line-height: 1.38; color: var(--muted); }
+.lede b { color: var(--text); }
+
+/* Corps : zone libre entre l'en-tête et le pied */
+.corps { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 26px; padding: 28px 56px 0; }
+
+/* Pied commun */
+.pied {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 18px 56px 20px; border-top: 3px solid var(--framboise);
+  font-weight: 800; font-size: 19px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.pied .or { color: var(--gold); }
+
+/* Titres de section */
+.sec-h { display: flex; align-items: center; gap: 16px; margin: 0 0 16px; font-family: var(--display); font-weight: 400; font-size: 46px; line-height: 1; text-transform: uppercase; color: #fff; }
+.sec-h .num { flex: none; padding: 6px 12px 4px; background: var(--gold); color: var(--bg); font-size: 26px; }
+.sec-h .line { flex: 1; height: 3px; background: linear-gradient(90deg, var(--framboise), transparent); }
+
+/* Tuiles et pastilles */
+.tile { min-width: 0; padding: 16px 18px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; }
+.tile h3 { margin: 0 0 6px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.05; text-transform: uppercase; color: #fff; }
+.tile p { margin: 0; color: var(--muted); }
+.pill { display: inline-block; padding: 3px 14px 2px; border-radius: 999px; background: var(--gold); color: #1a1407; font-weight: 800; font-size: 19px; line-height: 1.3; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill.line { background: transparent; color: var(--gold); border: 2px solid var(--gold); padding: 1px 12px 0; }
+.or { color: var(--gold); }
+.gros { font-family: var(--display); font-weight: 400; color: var(--gold-2); font-variant-numeric: tabular-nums; }
