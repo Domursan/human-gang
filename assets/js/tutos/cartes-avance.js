@@ -189,7 +189,7 @@ export default {
       summary: 'Repérer ta progression dans une série et toucher la récompense quand elle est complète.',
       page: 'cartes.html',
       steps: [
-        { title: 'Ouvre la collection', text: 'Sur Cartes, touche « Collection ». Dans la liste « Série », choisis une série ou « Toutes les séries ».' },
+        { title: 'Ouvre la collection', text: 'Sur Cartes, touche « Mes cartes ». Dans la liste « Série », choisis une série ou « Toutes les séries ».' },
         { title: 'Lis la progression', text: 'Chaque série affiche ses cartes possédées sur le total et une barre de progression.' },
         { title: 'Complète la série', text: 'Il te manque des cartes ? Ouvre des boosters ou attrape des cartes sauvages, ou propose un échange pour les obtenir.' },
         { title: 'Reçois la récompense', text: 'Quand tu possèdes toutes les cartes d’une série, la récompense en Paillettes est versée automatiquement. Elle apparaît dans « Historique des Paillettes » avec le libellé « Série complétée ».' },

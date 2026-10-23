@@ -48,7 +48,7 @@ export function openCardDialog(k = null) {
           <div class="field"><label for="acc-tag">Tag de jeu <span class="muted small">(facultatif)</span></label>
             <input id="acc-tag" name="tag" maxlength="32" autocomplete="off" list="acc-tag-list" placeholder="ex. minecraft" value="${esc(k?.tag ?? '')}" aria-describedby="acc-tag-help">
             <datalist id="acc-tag-list">${[...new Set(C.cards.map((x) => x.tag).filter(Boolean))].sort().map((t) => `<option value="${esc(t)}"></option>`).join('')}</datalist>
-            <span class="small muted" id="acc-tag-help">Regroupe les cartes d’un même jeu (Collection « par jeu », titre « Pilier de … », recettes de l’Atelier). Minuscules, chiffres et tirets.</span></div>
+            <span class="small muted" id="acc-tag-help">Regroupe les cartes d’un même jeu (« Mes cartes » par jeu, titre « Pilier de … », recettes de l’Atelier). Minuscules, chiffres et tirets.</span></div>
           <div class="acd-grid-2">
             <div class="field"><label for="acc-family">Famille</label>
               <select id="acc-family" name="family">${FAMILIES.map((x) => `<option value="${x.id}"${(k?.family ?? 'membre') === x.id ? ' selected' : ''}>${esc(x.label)}</option>`).join('')}</select></div>

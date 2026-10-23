@@ -1,9 +1,10 @@
-// ===== Humane Gang — page « Jeux » (jeux.html) : tableau de bord « Aujourd'hui » et un onglet par jeu =====
+// ===== Humane Gang — page « Jeux » (jeux.html) : tableau de bord « Les missions du jour » et un onglet par jeu =====
 /*
- * Rôle : construit la barre d'onglets (liste de assets/js/jeux/onglets.js), précédée de l'onglet « Aujourd'hui »
+ * Rôle : construit la barre d'onglets (liste de assets/js/jeux/onglets.js), précédée de l'onglet « Les missions du jour »
  * (programme du jour : chaque jeu avec son état, Paillettes gagnées aujourd'hui). Charge le module d'un jeu à la
  * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (jeux.html#geo) et
- * retenu dans le stockage local pour la visite suivante.
+ * retenu dans le stockage local pour la visite suivante. Un choix propre à un jeu suit le nom de l'onglet dans l'adresse
+ * (jeux.html#arcade-raclette) : il est passé au module dans ctx.sub, et l'événement « jeux:sub » le signale quand il change.
  * Mise en page (maquettes JEUX / JEUX-PC) : sur téléphone, pastilles qui défilent horizontalement (la page, elle, ne
  * défile pas de côté) ; sur grand écran, colonne d'onglets à gauche, groupée (Chaque jour, Chaque semaine, Compétition).
  * Accessibilité : motif ARIA des onglets, flèches (gauche/droite et haut/bas), Début et Fin, un seul onglet dans
@@ -37,11 +38,11 @@ const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.tes
   && a.findIndex((x) => x.id === o.id) === i && (GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour') === g)
   .map((o) => ({ ...o, rythme: GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour' })));
 /** Tous les onglets : le tableau de bord puis les jeux. */
-const LISTE = [{ id: HUB, titre: 'Aujourd’hui', icone: ICONE_HUB, hub: true }, ...JEUX];
+const LISTE = [{ id: HUB, titre: 'Les missions du jour', icone: ICONE_HUB, hub: true }, ...JEUX];
 /** Dossier des modules (les chemins de onglets.js lui sont relatifs). */
 const BASE = new URL('./jeux/', import.meta.url);
-/** Contexte passé aux modules. */
-const CTX = { sb, me, toast, esc };
+/** Contexte passé aux modules. sub : choix propre à un jeu tiré de l'adresse (null si aucun). */
+const CTX = { sb, me, toast, esc, sub: null };
 // État : onglet affiché ; modules montés (id -> module) ; montages en cours ; modules importés ; résumés (id -> résumé).
 const S = { cur: null, mods: new Map(), loading: new Map(), imports: new Map(), resumes: new Map() };
 
@@ -58,10 +59,15 @@ const couleur = (c) => (/^(var\(--[a-z0-9-]+\)|#[0-9a-f]{3,8})$/i.test(c || '') 
 function lireMemoire() { try { return localStorage.getItem(CLE); } catch { return null; } }
 /** Retient l'onglet ouvert. */
 function retenir(id) { try { localStorage.setItem(CLE, id); } catch { /* stockage bloqué : rien à faire */ } }
-/** Identifiant d'onglet lu dans l'adresse (#geo), ou null s'il n'existe pas. */
-function idDepuisAdresse() {
+/**
+ * Onglet et choix lus dans l'adresse : #geo → { id: 'geo', sub: null } ; #arcade-raclette → { id: 'arcade', sub: 'raclette' } ;
+ * adresse inconnue → { id: null, sub: null }.
+ */
+function lireAdresse() {
   const h = decodeURIComponent(location.hash.slice(1)).split('/')[0];
-  return LISTE.some((o) => o.id === h) ? h : null;
+  if (LISTE.some((o) => o.id === h)) return { id: h, sub: null };
+  const o = LISTE.find((x) => !x.hub && h.startsWith(`${x.id}-`) && h.length > x.id.length + 1);
+  return o ? { id: o.id, sub: h.slice(o.id.length + 1) } : { id: null, sub: null };
 }
 /**
  * Importe le module d'un jeu (une seule fois).
@@ -102,7 +108,7 @@ function construire() {
   mq.addEventListener?.('change', orient);
 }
 
-/* ---------- Tableau de bord « Aujourd'hui » ---------- */
+/* ---------- Tableau de bord « Les missions du jour » ---------- */
 /** Pastille d'état d'un jeu. */
 function badgeHtml(r) {
   if (!r) return '<span class="pill jeux-pill-sand">Ouvrir</span>';
@@ -237,12 +243,14 @@ function monter(o) {
 /**
  * Affiche un onglet : état ARIA, panneau visible, adresse et mémoire à jour, module chargé si besoin.
  * @param {string} id Identifiant de l'onglet.
- * @param {{focus?: boolean, adresse?: boolean}} [opts] focus : donne le focus à l'onglet ; adresse : met #id dans l'URL.
+ * @param {{focus?: boolean, adresse?: boolean, sub?: string|null}} [opts] focus : donne le focus à l'onglet ; adresse : met #id dans l'URL ;
+ *   sub : choix propre au jeu (ctx.sub) ; s'il est fourni, le module déjà monté est prévenu par « jeux:sub ».
  */
-function choisir(id, { focus = false, adresse = true } = {}) {
+function choisir(id, { focus = false, adresse = true, sub = undefined } = {}) {
   const o = LISTE.find((x) => x.id === id) || LISTE[0];
   const avant = S.cur;
   S.cur = o.id;
+  CTX.sub = sub ?? null;
   for (const t of tablist.querySelectorAll('[role="tab"]')) {
     const on = t.dataset.id === o.id;
     t.setAttribute('aria-selected', String(on));
@@ -259,12 +267,16 @@ function choisir(id, { focus = false, adresse = true } = {}) {
   }
   for (const p of panels.querySelectorAll('[role="tabpanel"]')) p.hidden = p.dataset.id !== o.id;
   retenir(o.id);
-  if (adresse && location.hash !== `#${o.id}`) history.replaceState(null, '', `#${o.id}`);
+  if (adresse && lireAdresse().id !== o.id) history.replaceState(null, '', `#${o.id}`);
   document.title = `${o.hub ? 'Jeux' : `${o.titre} · Jeux`} · Humane Gang`;
   // Retour au tableau de bord : les états ont pu changer (jeu joué entre-temps)
   if (o.hub && avant && avant !== HUB && S.mods.has(HUB)) rafraichirHub();
   // Le panneau est prévenu à chaque affichage (une carte cachée doit recalculer sa taille)
-  monter(o).then(() => document.getElementById(`jeux-panel-${o.id}`)?.dispatchEvent(new CustomEvent('jeux:show')));
+  monter(o).then(() => {
+    const panneau = document.getElementById(`jeux-panel-${o.id}`);
+    panneau?.dispatchEvent(new CustomEvent('jeux:show'));
+    if (sub !== undefined) panneau?.dispatchEvent(new CustomEvent('jeux:sub', { detail: { sub: CTX.sub } }));
+  });
 }
 
 /* ---------- Clavier et clics ---------- */
@@ -284,15 +296,16 @@ tablist.addEventListener('keydown', (e) => {
   e.preventDefault();
   choisir(tabs[j].dataset.id, { focus: true });
 });
-// Lien direct ou retour arrière vers jeux.html#<id>
-window.addEventListener('hashchange', () => { const id = idDepuisAdresse(); if (id && id !== S.cur) choisir(id, { adresse: false }); });
+// Lien direct ou retour arrière vers jeux.html#<id> ou jeux.html#<id>-<choix>
+window.addEventListener('hashchange', () => { const a = lireAdresse(); if (a.id) choisir(a.id, { adresse: false, sub: a.sub }); });
 // En quittant la page : chaque module chargé peut libérer ses ressources (minuteurs, abonnements…)
 window.addEventListener('pagehide', () => { for (const m of S.mods.values()) { try { m.unmount?.(); } catch { /* sans importance */ } } });
 
 /* ---------- Démarrage ---------- */
 construire();
 const memo = lireMemoire();
-choisir(idDepuisAdresse() || (LISTE.some((o) => o.id === memo) ? memo : HUB));
+const depart = lireAdresse();
+choisir(depart.id || (LISTE.some((o) => o.id === memo) ? memo : HUB), { sub: depart.sub });
 // Les états des onglets (« Fait »…) et les gains du jour sont utiles même sans ouvrir le tableau de bord
 if (S.cur !== HUB) rafraichirHub();
 app.setAttribute('aria-busy', 'false');

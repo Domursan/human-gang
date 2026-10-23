@@ -987,9 +987,10 @@ export function createClient(_url, _key, opts = {}) {
       if (fn.startsWith('hg_arcade_') || fn.startsWith('hg_season_') || fn.startsWith('hg_night') ) {
         const X = (window.__X4 ||= { rewarded: !!S.arcadeRewarded, runs: 0, best: 0, here: false, presents: null });
         const pr = (id) => { const p = DB.hg_profiles.find((q) => q.id === id) || {}; return { user_id: id, pseudo: p.pseudo, avatar_url: null, color: p.color || '#4F6A8F' }; };
-        const game = S.arcadeGame || 'raclette';
+        const gameOfDay = S.arcadeGame || 'raclette'; // jeu tiré pour la journée (game_of_day)
+        const game = ['paillettes', 'raclette', 'domu'].includes(args.p_game) ? args.p_game : gameOfDay; // p_game demandé, sinon celui du jour
         const top = () => [{ ...pr(U(2)), best: 61 }, { ...pr(U(3)), best: 40 }, ...(X.best ? [{ ...pr(uidNow()), best: X.best }] : [])].sort((a, b) => b.best - a.best).slice(0, 5);
-        if (fn === 'hg_arcade_board') return { data: { day: iso(0).slice(0, 10), game, reward: 5, rewarded_today: X.rewarded, my_best: X.best || null, rules: {}, top: top() }, error: null };
+        if (fn === 'hg_arcade_board') return { data: { day: iso(0).slice(0, 10), game, game_of_day: gameOfDay, reward: 5, rewarded_today: X.rewarded, my_best: X.best || null, rules: {}, top: top() }, error: null };
         if (fn === 'hg_arcade_start') { X.runs++; return { data: { run: `run-${X.runs}`, game }, error: null }; }
         if (fn === 'hg_arcade_finish') {
           if (S.arcadeBadScore) return { data: { ok: false, error: 'Score impossible', score: 0, reward: 0 }, error: null };

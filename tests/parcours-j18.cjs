@@ -1,6 +1,6 @@
 // Parcours : idée J18, l'arcade du jour (onglet « Arcade » de jeux.html, paquet xJ4).
-// Le serveur tire UN mini-jeu par jour (hg_arcade_board) : le tirage s'affiche (jeu du jour mis en avant, les deux autres
-// « pas ce soir ») ; une partie complète (horloge simulée) ouvre et ferme la partie côté serveur (hg_arcade_start,
+// Les trois mini-jeux sont jouables chaque jour : sélecteur (aria-pressed, « Jeu du jour » sur le tirage du serveur),
+// adresse #arcade-<jeu> (choix au chargement, puis changement d'adresse), récompense « une par jour, tous jeux confondus » ; une partie complète (horloge simulée) ouvre et ferme la partie côté serveur (hg_arcade_start,
 // hg_arcade_finish), affiche le gain du jour une seule fois ; bouton Pause ; score refusé par le serveur ; 360 px.
 // Faux Supabase : fixtures/fake-sb.mjs (scénario arcadeGame, arcadeRewarded, arcadeBadScore).
 const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
@@ -22,15 +22,15 @@ async function partie(p, pas = 320) {
 
   /* ---------- Tirage du jour : Raclette ---------- */
   let p = await openPage(browser, { page: 'jeux', hash: '#arcade', width: 390, height: 900, scenario: { arcadeGame: 'raclette' } });
-  await p.waitForSelector('.arc-tires', { timeout: 5000 }).catch(() => {});
+  await p.waitForSelector('.arc-choix', { timeout: 5000 }).catch(() => {});
   check((await p.getAttribute('#jeux-tab-arcade', 'aria-selected')) === 'true', 'onglet : « Arcade » sélectionné depuis jeux.html#arcade');
-  check((await p.locator('.arc-tire').count()) === 3, 'tirage : les trois mini-jeux affichés');
-  check((await p.locator('.arc-tire.is-on').innerText()).includes('Raclette') && (await p.locator('.arc-tire.is-on').innerText()).includes('jeu du jour'), 'tirage : Raclette tirée au sort, « jeu du jour »');
-  check((await p.locator('.arc-tire:not(.is-on)').allInnerTexts()).every((t) => t.includes('pas ce soir')), 'tirage : les deux autres « pas ce soir »');
-  check(/Prochain tirage dans \d/.test(await p.locator('.arc-tirage').innerText()), 'tirage : temps avant le prochain tirage');
+  check((await p.locator('.arc-jeu').count()) === 3 && (await p.locator('.arc-jeu:not([disabled])').count()) === 3, 'sélecteur : les trois mini-jeux jouables');
+  check((await p.locator('.arc-jeu[aria-pressed="true"]').innerText()).includes('Raclette') && (await p.locator('.arc-jeu[aria-pressed="true"]').innerText()).includes('Jeu du jour'), 'sélecteur : Raclette (jeu du jour) choisi par défaut');
+  check((await p.locator('.arc-jeu[aria-pressed="false"]').count()) === 2, 'sélecteur : les deux autres non choisis (aria-pressed=false)');
+  check(/une seule partie par jour/i.test(await p.locator('.arc-tirage').innerText()), 'sélecteur : une seule partie par jour récompensée, tous jeux confondus');
   check((await p.locator('#arc-scores-h').innerText()).includes('Raclette'), 'scores : « Meilleurs scores · Raclette »');
   check((await p.locator('#arc-top .arc-row').count()) === 2, 'scores : tableau de la semaine (2 lignes)');
-  check((await p.locator('#arc-gain').innerText()).includes('+5 ✦') && (await p.locator('#arc-gain').innerText()).includes('1 / jour'), 'récompense : « +5 ✦ 1 / jour »');
+  check((await p.locator('#arc-gain').innerText()).includes('+5 ✦') && (await p.locator('#arc-gain').innerText()).includes('à gagner aujourd’hui'), 'récompense : « +5 ✦ à gagner aujourd’hui »');
   check(await p.locator('#arc-pause').isDisabled(), 'pause : désactivée avant la partie');
   check(await p.$eval('#arc-canvas', (el) => getComputedStyle(el).touchAction) === 'none', 'canevas : pas de défilement au doigt');
   check(await hscroll(p) <= 0, '390 px : pas de défilement horizontal');
@@ -71,13 +71,28 @@ async function partie(p, pas = 320) {
   /* ---------- Domu-mobile, score refusé par le serveur ---------- */
   p = await openPage(browser, { page: 'jeux', hash: '#arcade', width: 1280, scenario: { arcadeGame: 'domu', arcadeBadScore: true } });
   await p.waitForSelector('#arc-jouer', { timeout: 5000 });
-  check((await p.locator('#arc-titre, .arc-tire.is-on').last().innerText()).includes('Domu-mobile'), 'tirage : Domu-mobile');
+  check((await p.locator('.arc-jeu[aria-pressed="true"]').innerText()).includes('Domu-mobile'), 'sélecteur : Domu-mobile (jeu du jour)');
   await p.clock.install();
   await p.click('#arc-jouer');
   for (let i = 0; i < 950 && !(await p.locator('#arc-jouer').isEnabled()); i++) { await p.keyboard.press(i % 2 ? 'ArrowLeft' : 'ArrowRight'); await p.clock.runFor(100); }
   await sleep(400);
   check((await p.textContent('#arc-msg')).includes('Score non retenu : Score impossible'), 'serveur : score refusé, message clair');
   check(p.errs.length === 0, 'Domu-mobile : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
+  await p.ctx.close();
+
+  /* ---------- Adresse #arcade-<jeu> : choix au chargement, puis changement d'adresse et de jeu ---------- */
+  p = await openPage(browser, { page: 'jeux', hash: '#arcade-domu', width: 1280, scenario: { arcadeGame: 'raclette' } });
+  await p.waitForSelector('#arc-jouer', { timeout: 5000 });
+  check((await p.getAttribute('.arc-jeu[data-game="domu"]', 'aria-pressed')) === 'true', 'adresse #arcade-domu : Domu-mobile choisi');
+  check((await p.locator('.arc-jeu[data-game="raclette"] .arc-tire-badge').isVisible()), 'adresse #arcade-domu : le jeu du jour reste étiqueté');
+  await p.evaluate(() => { location.hash = '#arcade-paillettes'; });
+  await p.waitForFunction(() => document.querySelector('.arc-jeu[data-game="paillettes"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 }).catch(() => {});
+  check((await p.getAttribute('.arc-jeu[data-game="paillettes"]', 'aria-pressed')) === 'true', 'adresse changée (#arcade-paillettes) pendant que l’onglet est ouvert : Paillettes choisi');
+  await p.click('.arc-jeu[data-game="raclette"]');
+  await p.waitForFunction(() => document.querySelector('#arc-canvas')?.getAttribute('aria-label')?.includes('Raclette'), null, { timeout: 5000 }).catch(() => {});
+  check((await p.getAttribute('#arc-canvas', 'aria-label')).includes('Raclette'), 'sélecteur : cliquer Raclette charge le jeu (canevas)');
+  check((await p.locator('.arc-jeu[aria-pressed="true"]').getAttribute('data-game')) === 'raclette', 'sélecteur : Raclette marqué');
+  check(p.errs.length === 0, 'adresse et sélecteur : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
   /* ---------- 360 px et animation réduite ---------- */

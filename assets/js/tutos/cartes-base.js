@@ -54,9 +54,9 @@ export default {
       summary: 'Chaque carte indique sa rareté, sa famille, sa série et son numéro. Les brillantes et les numérotées se repèrent vite.',
       page: 'cartes.html',
       steps: [
-        { title: 'Ouvre la fiche', text: 'Dans Cartes, onglet Collection, clique sur une carte. Sa fiche s’ouvre dans une fenêtre.' },
+        { title: 'Ouvre la fiche', text: 'Dans Cartes, onglet « Mes cartes », clique sur une carte. Sa fiche s’ouvre dans une fenêtre.' },
         { title: 'Lis la rareté et la famille', text: 'La ligne sous le nom donne la rareté (Commune, Peu commune, Rare, Épique, Légendaire, Mythique ou Identité), la famille (Membre, Moment, Lieu, Objet, Événement ou Jeu vidéo) et le numéro « n° … ».' },
-        { title: 'Repère la série', text: 'Le nom de la série est indiqué dans la carte agrandie (voir le tuto sur la Collection) et en titre de groupe quand tu choisis « Toutes les séries ».' },
+        { title: 'Repère la série', text: 'Le nom de la série est indiqué dans la carte agrandie (voir le tuto sur Mes cartes) et en titre de groupe quand tu choisis « Toutes les séries ».' },
         { title: 'Repère les numéros d’exemplaire', text: 'Une carte à tirage limité indique son total (« N exemplaires au total »). Dans « Mes exemplaires », chaque exemplaire porte son numéro, du type « N° 03/50 ».' },
         { title: 'Repère les brillantes', text: 'Une version brillante a un effet holographique et porte la mention « Brillante » dans « Mes exemplaires ».' },
       ],
@@ -68,11 +68,11 @@ export default {
     },
     {
       slug: 'collection-filtres-et-loupe',
-      title: 'La Collection : filtres, carte agrandie et loupe',
-      summary: 'La Collection range toutes tes cartes, avec des filtres, la progression de chaque série et une carte agrandie.',
+      title: 'Mes cartes : filtres, carte agrandie et loupe',
+      summary: 'Mes cartes range toutes tes cartes, avec des filtres, la progression de chaque série et une carte agrandie.',
       page: 'cartes.html',
       steps: [
-        { title: 'Ouvre l’onglet Collection', text: 'Sur la page Cartes, clique sur l’onglet « Collection ».' },
+        { title: 'Ouvre l’onglet Mes cartes', text: 'Sur la page Cartes, clique sur l’onglet « Mes cartes ».' },
         { title: 'Choisis une série', text: 'Le menu « Série » propose chaque série ouverte. Avec « Toutes les séries », toutes les cartes sont affichées groupées par série, avec une barre de progression pour chacune.' },
         { title: 'Filtre les cartes', text: 'Trois menus affinent la liste : « Rareté », « Famille » et « Afficher » (Toutes les cartes, Possédées, Manquantes ou Doublons).' },
         { title: 'Agrandis une carte', text: 'Le petit bouton loupe, en haut à droite de chaque carte, ouvre la carte agrandie. « Précédent » et « Suivant » passent d’une carte à l’autre dans l’ordre affiché.' },
@@ -90,7 +90,7 @@ export default {
       summary: 'Transforme un exemplaire en Paillettes, une carte à la fois ou tous les doublons d’un coup.',
       page: 'cartes.html',
       steps: [
-        { title: 'Repère les doublons', text: 'Dans Cartes, onglet Collection, choisis « Afficher : Doublons ». La liste ne montre que les cartes que tu possèdes en plusieurs exemplaires.' },
+        { title: 'Repère les doublons', text: 'Dans Cartes, onglet « Mes cartes », choisis « Afficher : Doublons ». La liste ne montre que les cartes que tu possèdes en plusieurs exemplaires.' },
         { title: 'Recycle un exemplaire', text: 'Ouvre la fiche d’une carte. Dans « Mes exemplaires », le bouton « Recycler · N » indique ce que rapporte cet exemplaire. Clique dessus pour le recycler.' },
         { title: 'Recycle tous les doublons', text: 'Clique sur « Recycler les doublons ». La fenêtre annonce le nombre de doublons et le total en Paillettes. Le bouton « Recycler » confirme, « Annuler » ferme la fenêtre sans rien faire.' },
         { title: 'Garde un exemplaire', text: 'Il reste toujours un exemplaire de chaque carte. Le recyclage d’un coup garde la version brillante si tu en as une. Les cartes Identité et celles en cours d’échange ne sont pas touchées.' },
@@ -108,7 +108,7 @@ export default {
       summary: 'Fabriquer une carte te la donne directement, contre des Paillettes, sans passer par un booster.',
       page: 'cartes.html',
       steps: [
-        { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet Collection, clique sur la carte voulue. Tu peux la fabriquer même si tu ne l’as pas encore.' },
+        { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet « Mes cartes », clique sur la carte voulue. Tu peux la fabriquer même si tu ne l’as pas encore.' },
         { title: 'Trouve la section Fabriquer', text: 'La section « Fabriquer » de la fiche indique si la carte peut être fabriquée et ce qu’elle coûte.' },
         { title: 'Fabrique la version normale', text: 'Le bouton « Fabriquer · N » coûte : {{cartes.craft.commune|100}} Paillettes (Commune), {{cartes.craft.peu_commune|150}} (Peu commune), {{cartes.craft.rare|200}} (Rare), {{cartes.craft.epique|750}} (Épique) ou {{cartes.craft.legendaire|2000}} (Légendaire). Il reste grisé si ton solde est trop bas, avec « Il te manque … ».' },
         { title: 'Fabrique la version brillante', text: 'Si la carte peut être brillante, « Version brillante » coûte {{cartes.craft.shiny_multiplier|6}} fois plus : {{cartes.craft.commune*cartes.craft.shiny_multiplier|600}}, {{cartes.craft.peu_commune*cartes.craft.shiny_multiplier|900}}, {{cartes.craft.rare*cartes.craft.shiny_multiplier|1200}}, {{cartes.craft.epique*cartes.craft.shiny_multiplier|4500}} ou {{cartes.craft.legendaire*cartes.craft.shiny_multiplier|12000}} Paillettes selon la rareté.' },
@@ -126,7 +126,7 @@ export default {
       summary: 'Mets de côté les cartes que tu veux, et demande à être prévenu quand un membre les obtient.',
       page: 'cartes.html',
       steps: [
-        { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet Collection, clique sur la carte que tu veux.' },
+        { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet « Mes cartes », clique sur la carte que tu veux.' },
         { title: 'Ajoute-la à ta liste', text: 'Clique sur « Ajouter à ma liste de souhaits ». Le bouton passe à « Dans ma liste de souhaits ».' },
         { title: 'Retire-la si besoin', text: 'Clique de nouveau sur le même bouton pour retirer la carte de ta liste.' },
         { title: 'Active les alertes Discord', text: 'Va sur la page Mon compte, bloc « Mes notifications » : active la ligne « Cartes · souhaits et cadeaux » dans la colonne « Sur Discord », puis clique sur « Enregistrer ».' },
