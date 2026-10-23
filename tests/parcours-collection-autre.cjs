@@ -11,6 +11,8 @@
 const fs = require('fs');
 const path = require('path');
 const { ROOT, SHOTS, check, finish, openPage, log, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const ME = '11111111-1111-4111-8111-111111111111';
@@ -32,7 +34,7 @@ const visible = (p, sel) => p.$eval(sel, (e) => e.getClientRects().length > 0).c
 
   // ---------- 1. Depuis le Classement ----------
   let p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900, scenario: SCN });
-  await p.click('[data-tab=classement]');
+  await goTab(p, 'classement');
   await p.waitForSelector('.cartes-lb-link', { timeout: 5000 });
   const liens = await p.$$eval('.cartes-lb-link', (x) => x.map((a) => [a.textContent, a.getAttribute('href')]));
   check(liens.length === 1 && liens[0][0] === 'Alice' && liens[0][1] === '#collection/' + ALICE, 'classement : seul Alice a un lien vers sa collection (' + JSON.stringify(liens) + ')');
@@ -132,7 +134,7 @@ const visible = (p, sel) => p.$eval(sel, (e) => e.getClientRects().length > 0).c
   check(await txt(p, '#cartes-peer-title') === 'Collection de Alice', 'adresse directe : la collection d’Alice s’ouvre');
   await p.click('[data-action=peer-back]');
   await sleep(150);
-  check(await visible(p, '#cartes-tablist') && !(await visible(p, '#cartes-peer')), 'Retour : retour aux onglets');
+  check(await visible(p, '#cartes-section-h') && !(await visible(p, '#cartes-peer')), 'Retour : retour aux onglets (titre de section affiché)');
   check((await hashNow(p)) === '' || (await hashNow(p)) === '#', 'Retour : adresse nettoyée');
   await p.ctx.close();
 
@@ -144,12 +146,12 @@ const visible = (p, sel) => p.$eval(sel, (e) => e.getClientRects().length > 0).c
   // Adresse invalide : rien ne s’ouvre
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900, scenario: SCN, hash: '#collection/pas-un-id' });
   await sleep(300);
-  check(await visible(p, '#cartes-tablist') && !(await visible(p, '#cartes-peer')), 'adresse invalide : onglets normaux');
+  check(await visible(p, '#cartes-section-h') && !(await visible(p, '#cartes-peer')), 'adresse invalide : onglets normaux (titre de section affiché)');
   await p.ctx.close();
 
   // ---------- 3. Onglet Échanges : choix d'un membre puis « Voir sa collection » ----------
   p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900, scenario: SCN });
-  await p.click('button.cartes-tab[data-tab=echanges]');
+  await goTab(p, 'echanges');
   await p.waitForSelector('#trd-tab-proposer', { timeout: 5000 });
   await p.click('#trd-tab-proposer');
   check(!(await p.$eval('[data-peer-link]', (a) => a.getClientRects().length > 0)), 'Échanges : « Voir sa collection » masqué sans membre choisi');

@@ -5,6 +5,8 @@
 // au focus clavier et au toucher, bandeau replié / déplié sur 390 px, envoi d'une offre, aucune erreur console.
 // Lancer : node tests/parcours-echanges-filtres.cjs
 const { ROOT, check, finish, openPage, log, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const DIALOG = '#trd-edit[open]';
@@ -12,7 +14,7 @@ const DIALOG = '#trd-edit[open]';
 /** Ouvre « Proposer un échange » avec Alice : cartes.html › Échanges › Proposer › Composer l'offre. */
 /** Ouvre l'éditeur d'offre depuis Échanges › Proposer. */
 async function openEditor(p) {
-  await p.click('button.cartes-tab[data-tab=echanges]');
+  await goTab(p, 'echanges');
   await p.waitForSelector('#trd-tab-proposer', { timeout: 5000 });
   await p.click('#trd-tab-proposer');
   await p.selectOption('#trd-who', ALICE);

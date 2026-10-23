@@ -8,6 +8,8 @@
 // Faux Supabase : fixtures/fake-sb-cartes.mjs, scénarios uniques (série + carte C14), uniqueTaken (Alice l'a), uniqueOwned (moi).
 // Lancer : node tests/parcours-cartes-uniques.cjs   (HG_ROOT / HG_PREFIX comme les autres parcours)
 const { check, finish, openPage, adminSection, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const FIXTURE = 'fake-sb-cartes.mjs';
 const ALICE = '00000002-0000-4000-8000-000000000002';
@@ -23,7 +25,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 1. Collection : Hors série, carte unique non possédée, personne ne l'a encore.
   let p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: HS });
-  await p.click('[data-tab=collection]');
+  await goTab(p, 'collection');
   await p.waitForSelector('#cartes-set', { timeout: 5000 });
   const series = await p.$$eval('#cartes-set option', (o) => o.map((x) => [x.value, x.textContent]));
   check(series.some(([v, t]) => v === 'SETHS' && t === 'Hors série'), 'sélecteur de série : « Hors série » est listée');
@@ -58,7 +60,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   await p.waitForTimeout(200);
 
   // Chances des boosters (onglet Boutique, tableau replié par défaut) : la rareté unique n'y figure pas.
-  await p.click('[data-tab=boutique]');
+  await goTab(p, 'boutique');
   await sleep(300);
   await p.click('.shop-odds summary');
   await p.waitForSelector('.cartes-odds', { state: 'visible', timeout: 5000 });
@@ -68,7 +70,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 2. Carte unique que je possède : pas de bouton recycler, mention « Ne se recycle pas ».
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { uniques: true, uniqueOwned: true } });
-  await p.click('[data-tab=collection]');
+  await goTab(p, 'collection');
   await p.selectOption('#cartes-set', 'SETHS');
   await p.waitForSelector('.hgc-unique', { timeout: 5000 }).catch(() => {});
   check(await p.$$eval('.hgc-unique', (x) => x.length) === 1 && await p.$$eval('.cartes-uniq-state', (x) => x.length) === 0, 'carte possédée : pas de mention d\'attribution');
@@ -83,7 +85,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 3. Un autre membre a déjà l'exemplaire : « Déjà attribuée », et la mise en page tient à 390 px sans défilement.
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 390, height: 844, scenario: { uniques: true, uniqueTaken: true } });
-  await p.click('[data-tab=collection]');
+  await goTab(p, 'collection');
   await p.selectOption('#cartes-set', 'SETHS');
   await p.waitForSelector('.cartes-uniq-state', { timeout: 5000 }).catch(() => {});
   check((await p.textContent('.cartes-uniq-state').catch(() => '')).trim() === 'Déjà attribuée', 'vignette : « Déjà attribuée » (Alice l\'a)');
@@ -93,7 +95,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 4. Animation : le reflet doré ne bouge pas si la préférence « réduire les animations » est active.
   p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, reducedMotion: 'reduce', scenario: HS });
-  await p.click('[data-tab=collection]');
+  await goTab(p, 'collection');
   await p.selectOption('#cartes-set', 'SETHS');
   await p.waitForSelector('.hgc-sheen', { timeout: 5000 }).catch(() => {});
   const anim = await p.evaluate(() => getComputedStyle(document.querySelector('.hgc-sheen') || document.body).animationName);
