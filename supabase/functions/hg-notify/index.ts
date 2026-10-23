@@ -77,6 +77,7 @@ import {
 } from '../_shared/channels.ts';
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 import { botRules } from '../_shared/reglages.ts';
+import { loadNotifPrefs, notifAllowed, type NotifCat } from '../_shared/notif-prefs.ts';
 
 /* ---------- Constantes et clients ---------- */
 
@@ -138,6 +139,18 @@ const embed = (e: Record<string, unknown>) => ({ embeds: [{ footer: { text: 'Hum
  * @returns {boolean} Vrai si le MP peut partir.
  */
 const canDM = (p: Profile | null | undefined): p is Profile => !!p && p.bot_optin && !!p.discord_id && /^\d{17,20}$/.test(p.discord_id);
+/** Raison renvoyée quand le membre a coupé la catégorie sur Discord (idée Q6, migration 095). */
+const CAT_OFF = 'Catégorie coupée';
+/**
+ * Vrai si le membre accepte les MP Discord de cette catégorie (hg_notif_prefs ; sans ligne ou sans la table : oui).
+ * @param {string} userId membre
+ * @param {NotifCat} cat catégorie
+ * @returns {Promise<boolean>}
+ */
+async function dmAllowed(userId: string, cat: NotifCat): Promise<boolean> {
+  const prefs = await loadNotifPrefs(db, [userId]);
+  return notifAllowed(prefs.get(userId), cat, 'discord');
+}
 
 /**
  * Trace d'une annonce publiée dans des salons (hg_bot_log, colonne channels = détail par salon, migration 070).
@@ -313,7 +326,8 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   }
   const announced = channels.some((c) => c.ok);
   let dms = 0, failed = 0;
-  for (const person of people.filter(canDM)) {
+  const drawPrefs = await loadNotifPrefs(db, people.map((x) => x.id));
+  for (const person of people.filter(canDM).filter((x) => notifAllowed(drawPrefs.get(x.id), 'santa', 'discord'))) {
     const ok = await trySend(() => sendDM(person.discord_id!, embed({
       ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: person.pseudo }, tpl)),
       url: link('secret-santa.html'), color: COLOR.ss, fields,
@@ -356,6 +370,8 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   const { data: ed } = await db.from('hg_ss_editions').select('year, exchange_date').eq('id', p.edition_id).maybeSingle();
   const other = await getProfile(kind === 'sent' ? a.receiver_id : a.giver_id);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  // La catégorie change seulement si on envoie, jamais ce qu'on envoie : la raison ne nomme personne.
+  if (!(await dmAllowed(other.id, 'santa'))) return { dm: false, reason: CAT_OFF };
 
   // ss_gift_sent part chez la cible : aucune variable ne désigne le Santa. ss_gift_received part chez le Santa : {cible} = me.
   const base = { pseudo: other.pseudo, annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('secret-santa.html') ?? '' };
@@ -468,9 +484,10 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   await takeQuota(me, bot, 'message_new');
   if (!(await claim('hg_messages', 'dm_notified_at', { id: latest.id }))) return { skipped: 'déjà notifié' };
   let dms = 0, failed = 0, skipped = 0;
+  const msgPrefs = await loadNotifPrefs(db, ids.filter((id) => id !== me.id));
   for (const uid of ids.filter((id) => id !== me.id)) {
     const other = await getProfile(uid);
-    if (!canDM(other)) { skipped++; continue; }
+    if (!canDM(other) || !notifAllowed(msgPrefs.get(uid), 'messages', 'discord')) { skipped++; continue; }
     // message_new_santa : l'expéditeur (le Santa) n'est JAMAIS passé dans les variables.
     const rendered = anonymous
       ? renderTemplate('message_new_santa', { pseudo: other.pseudo, extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
@@ -866,6 +883,7 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
   // La fenêtre de 15 min écarte les vieilles offres ; l'anti-doublon est la réservation notified_at ci-dessous.
   const other = await getProfile(t.to_user);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  if (!(await dmAllowed(other.id, 'echanges'))) return { dm: false, reason: CAT_OFF };
   await takeQuota(me, bot, 'trade_offer');
   // Réservation : seul un appel qui passe de null à « maintenant » envoie le MP. Un second appel ne renvoie rien.
   const { data: claimed, error: claimErr } = await db.from('hg_card_trades').update({ notified_at: new Date().toISOString() })
@@ -952,6 +970,7 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
   if (!card) throw new HttpError(404, 'Carte introuvable');
   const other = await getProfile(p.user_id);
   if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  if (!(await dmAllowed(other.id, 'souhaits'))) return { dm: false, reason: CAT_OFF };
 
   // Détail affiché : rareté, puis « brillante » si besoin.
   const detail = [RARITY_NAME[card.rarity] ?? card.rarity, shiny ? 'brillante' : ''].filter(Boolean).join(', ');
@@ -1072,9 +1091,11 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
     const wishers = (wishes ?? []).map((w: { user_id: string }) => w.user_id);
     if (!wishers.length) continue;
     const { data: profs } = await db.from('hg_profiles').select('id, pseudo, discord_id, bot_optin, notify_card_wish').in('id', wishers);
+    const wishPrefs = await loadNotifPrefs(db, wishers);
     for (const prof of (profs ?? []) as { id: string; discord_id: string | null; bot_optin: boolean; notify_card_wish: boolean }[]) {
       // Seuls les membres qui ont activé l'alerte, accepté le bot et lié un Discord reçoivent le MP.
-      const reachable = prof.notify_card_wish && prof.bot_optin && /^\d{17,20}$/.test(prof.discord_id ?? '');
+      const reachable = prof.notify_card_wish && prof.bot_optin && /^\d{17,20}$/.test(prof.discord_id ?? '')
+        && notifAllowed(wishPrefs.get(prof.id), 'souhaits', 'discord'); // catégorie « Cartes · souhaits et cadeaux » (095)
       if (!reachable) { skipped++; continue; }
       if (sent + failed >= WISH_MAX_DMS) { skipped++; continue; }
       const carte = `${names.get(cardId) ?? 'Une carte'}${info.shiny ? ' (brillante)' : ''}`;

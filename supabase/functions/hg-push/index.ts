@@ -15,6 +15,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import webpush from 'npm:web-push@3.6.7';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
+import { loadNotifPrefs, notifAllowed } from '../_shared/notif-prefs.ts';
 
 // Client avec la clé service role : la fonction lit les abonnements de tous les destinataires.
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
@@ -82,8 +83,12 @@ Deno.serve(async (req) => {
   if (sender) membersQuery = membersQuery.neq('user_id', sender);
   const { data: members, error: membersErr } = await membersQuery;
   if (membersErr) return json({ error: 'Lecture des membres impossible' }, 500);
-  const recipients = (members ?? []).map((m) => String(m.user_id));
-  if (!recipients.length) return json({ sent: 0, reason: 'aucun_destinataire' });
+  const everyone = (members ?? []).map((m) => String(m.user_id));
+  if (!everyone.length) return json({ sent: 0, reason: 'aucun_destinataire' });
+  // Catégorie « Messages privés » sur le téléphone, heures calmes comprises (idée Q6, migration 095)
+  const prefs = await loadNotifPrefs(db, everyone);
+  const recipients = everyone.filter((id) => notifAllowed(prefs.get(id), 'messages', 'push'));
+  if (!recipients.length) return json({ sent: 0, reason: 'categorie_coupee' });
 
   // Nom affiché : « Secret Santa » pour un Secret Santa, sinon le pseudo de l'expéditeur (conversation directe).
   const { data: conversation } = await db.from('hg_conversations').select('kind').eq('id', conv).maybeSingle();
