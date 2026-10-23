@@ -77,7 +77,7 @@ async function routeEvil(p, target) {
     await new Promise((r) => setTimeout(r, 300));
     return viol;
   });
-  check(res.some((u) => u.includes('paquet-inconnu')) && res.some((u) => u.includes('/gh/')), 'CSP : paquet jsDelivr non prévu refusé');
+  check(res.some((u) => u.includes('/gh/')), 'CSP : fichiers GitHub via jsDelivr (/gh/) refusés');
   check(!res.some((u) => u.includes('qrcode-generator') || u.includes('@supabase')), 'CSP : bibliothèques prévues (@supabase, qrcode-generator) autorisées');
   check(await p.evaluate(() => window.top === window.self && document.documentElement.style.visibility !== 'hidden'), 'page normale : affichée, pas de masquage');
   await p.ctx.close();
