@@ -44,7 +44,7 @@ const MENUS = [
     { label: 'Mes cartes', href: 'cartes.html#collection', page: 'cartes' },
     { label: 'Classement', href: 'cartes.html#classement', page: 'cartes' },
     { label: 'Échanges', href: 'cartes.html#echanges', page: 'cartes' },
-    { label: 'Arène', href: 'jeux.html#bataille', page: 'jeux' },
+    { label: 'Arène', href: 'cartes.html#arene', page: 'cartes' },
   ] },
   { id: 'irl', label: 'IRL', items: [
     { label: 'Secret Santa', href: 'secret-santa.html', page: 'secret-santa' },

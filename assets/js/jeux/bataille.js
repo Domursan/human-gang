@@ -1,5 +1,5 @@
 // ===== Humane Gang — page « Jeux », onglet Arène (idée J15, ex-« Bataille ») =====
-// Adresse : jeux.html#bataille (identifiant inchangé ; le libellé affiché est « Arène », voir onglets.js).
+// Page : cartes.html#arene (onglet « Arène » de la page Cartes, monté par cartes.js). L'ancienne adresse jeux.html#bataille redirige vers elle.
 /*
  * Rôle : mini-jeu asynchrone avec les cartes de sa collection. Chacun règle son deck de défense (5 cartes, dans
  * l'ordre) ; pour attaquer, on choisit un membre et on aligne 5 cartes : 5 duels face à face, résolus par le serveur.

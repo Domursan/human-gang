@@ -9,7 +9,11 @@
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
-// recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
+// recyclage, fiche détail, collection d'un autre membre, classement, échanges, Arène, historique, événements, démarrage.
+// Arène (onglet arene) : le module jeux/bataille.js est chargé et monté à la première ouverture de l'onglet (mountArene).
+// La barre d'onglets est masquée (CSS) : la navigation est dans le menu du haut (core/header.js). Les onglets restent la
+// mécanique qui affiche le bon panneau, pilotée par l'adresse (cartes.html#<onglet>) et par les boutons internes ;
+// le titre visible de la section (#cartes-section-h) dit où l'on est.
 import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo, getPrefs, setPrefs } from './core.js';
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
@@ -41,11 +45,11 @@ const app = $('#app');
 const nf = new Intl.NumberFormat('fr-CH'); // nombres à la suisse (1'234)
 /** Pourcentage à deux décimales maximum, ex. « 12,5 % ». */
 const pct = (v) => `${new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 2 }).format(v)} %`;
-// Onglets : [identifiant, libellé]. L'ordre est celui de l'affichage et des flèches clavier.
-const TABS = [['ouverture', 'Ouverture'], ['inventaire', 'Inventaire'], ['boutique', 'Boutique'], ['collection', 'Mes cartes'], ['classement', 'Classement'], ['echanges', 'Échanges']];
+// Onglets : [identifiant, libellé]. L'ordre est celui du menu (header.js) et des flèches clavier.
+const TABS = [['ouverture', 'Ouverture'], ['inventaire', 'Inventaire'], ['boutique', 'Boutique'], ['collection', 'Mes cartes'], ['classement', 'Classement'], ['echanges', 'Échanges'], ['arene', 'Arène']];
 // Onglets qui montrent des boosters : redessinés ensemble après une ouverture ou un achat (renderBoosters).
 const BOOSTER_TABS = ['ouverture', 'inventaire', 'boutique'];
-// Icônes des onglets (SVG décoratifs, visibles seulement sur téléphone : grille de la barre d'onglets).
+// Icônes des onglets (SVG décoratifs de la barre d'onglets, masquée sur toutes les tailles d'écran : voir TABS).
 const TAB_ICON = {
   ouverture: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
   inventaire: '<path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M3 4h18v4H3zM10 12h4"/>',
@@ -53,6 +57,7 @@ const TAB_ICON = {
   collection: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>',
   classement: '<path d="M5 21v-8M12 21V6M19 21v-11"/>',
   echanges: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
+  arene: '<path d="M5 5l9 9M19 5l-9 9"/><path d="M4 16l4 4M20 16l-4 4"/>',
 };
 // Libellés des sources d'une carte (colonne source de hg_card_copies).
 const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange', sortie: 'J’y étais', atelier: 'Atelier' };
@@ -531,6 +536,7 @@ function skeleton() {
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
     </nav>
+    <h2 class="cartes-section-h" id="cartes-section-h" tabindex="-1"></h2>
     ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'ouverture' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
     <section class="cartes-peer" id="cartes-peer" hidden></section>
     <p id="cartes-live" class="visually-hidden" aria-live="polite"></p>
@@ -635,6 +641,10 @@ function showTab() {
 function applyView() {
   const peer = !!S.peer;
   $('#cartes-tablist').hidden = peer;
+  // Titre visible de la section affichée (il tient lieu de barre d'onglets)
+  const titre = $('#cartes-section-h');
+  titre.hidden = peer;
+  titre.textContent = TABS.find(([id]) => id === S.tab)?.[1] || '';
   for (const [id] of TABS) $(`#cartes-p-${id}`).hidden = peer || S.tab !== id;
   $('#cartes-peer').hidden = !peer;
 }
@@ -649,8 +659,29 @@ function renderTab() {
     else if (S.tab === 'collection') renderCollection();
     else if (S.tab === 'classement') return renderLeaderboard();
     else if (S.tab === 'echanges') mountTradesOnce();
+    else if (S.tab === 'arene') mountArene();
     restoreFocus();
   });
+}
+
+/* ---------- Arène (onglet « arene ») : module jeux/bataille.js ---------- */
+let arene = null;
+/** Monte le panneau de l'Arène une seule fois (module chargé à la première ouverture). En cas d'échec, un message ; le prochain affichage réessaie. */
+function mountArene() {
+  if (arene) return;
+  const panel = $('#cartes-p-arene');
+  arene = import('./jeux/bataille.js')
+    .then((m) => m.mount(panel, { sb, me, toast, esc }))
+    .catch((e) => {
+      console.warn('[arène]', e);
+      arene = null;
+      panel.innerHTML = '<p class="card">L’Arène n’a pas pu se charger. Change d’onglet puis reviens pour réessayer.</p>';
+    });
+}
+
+/** Donne le focus au titre de la section affichée (les onglets sont masqués, voir TABS). */
+function focusSection() {
+  document.getElementById('cartes-section-h')?.focus({ preventScroll: true });
 }
 
 /**
@@ -3219,8 +3250,8 @@ function onClick(e) {
   if (!t || t.disabled) return;
   // Q4 : hors ligne, seules la collection, la fiche et la carte agrandie répondent (aucune action sur l'économie).
   if (S.offline && !(t.dataset.tab === 'collection' || ['open-card', 'zoom-card', 'close-dialog'].includes(t.dataset.action))) return;
-  if (t.dataset.tab) { setTab(t.dataset.tab); document.getElementById(`cartes-tab-${t.dataset.tab}`)?.focus({ preventScroll: true }); return; }
-  if (t.dataset.tabGo) { setTab(t.dataset.tabGo); document.getElementById(`cartes-tab-${t.dataset.tabGo}`)?.focus({ preventScroll: true }); return; }
+  if (t.dataset.tab) { setTab(t.dataset.tab); focusSection(); return; }
+  if (t.dataset.tabGo) { setTab(t.dataset.tabGo); focusSection(); return; }
   switch (t.dataset.action) {
     case 'daily': return claimDaily();
     // Boutons d'ouverture : en mode typé, chaque bouton ouvre un type (dialogue de série si besoin) ; en repli, l'ancien chemin.
@@ -3243,8 +3274,8 @@ function onClick(e) {
     case 'mass': return openMass();
     case 'champion': return import('./cartes-champion.js').then((m) => m.openChampion({ onClose: () => { if (t.isConnected) t.focus({ preventScroll: true }); } })); // C17
     case 'jeu-open': S.jeuOpen = t.dataset.tag; renderCollection(); document.getElementById(`c2-jeu-${t.dataset.tag}`)?.scrollIntoView({ block: 'nearest' }); return;
-    case 'jeu-trade': setTab('echanges'); $('#cartes-tab-echanges')?.focus({ preventScroll: true }); return;
-    case 'peer-back': leavePeer(); $(`#cartes-tab-${S.tab}`)?.focus({ preventScroll: true }); return;
+    case 'jeu-trade': setTab('echanges'); focusSection(); return;
+    case 'peer-back': leavePeer(); focusSection(); return;
     case 'peer-zoom': return zoom.open(t.dataset.card, t);
     case 'peer-pick': return togglePeerPick(t.dataset.card);
     case 'peer-clear': if (S.peer) { S.peer.picks.clear(); renderPeer('[data-action="peer-offer"]'); } return;
@@ -3349,7 +3380,7 @@ function onTabKey(e) {
     : e.key === 'Home' ? 0 : ids.length - 1;
   e.preventDefault();
   setTab(ids[n]);
-  $(`#cartes-tab-${ids[n]}`).focus();
+  focusSection();
 }
 
 /* ---------- Démarrage ---------- */
@@ -3392,7 +3423,7 @@ async function boot() {
   }
   // Idées du gang (paquet C2) : codes cadeaux, Atelier, enchère. Chaque module se charge seul et ne bloque pas la page.
   const refreshAll = async () => { await refreshAfter(refreshData); renderAll(); };
-  initCodes({ app, refresh: refreshAll, goTab: (id) => { setTab(id); $(`#cartes-tab-${id}`)?.focus({ preventScroll: true }); } });
+  initCodes({ app, refresh: refreshAll, goTab: (id) => { setTab(id); focusSection(); } });
   initAtelier({ app, copies: () => S.copies, card: (id) => S.cardsById.get(id) || null, balance: bal, god: isGod, refresh: refreshAll });
   initEnchere({ app, visible: () => S.tab === 'boutique' && !S.peer, refresh: refreshAll });
   window.addEventListener('hashchange', routeFromHash);
@@ -3457,4 +3488,4 @@ boot();
 // Secret caché « secousse » : module chargé à part (assets/js/eggs/pages.js).
 import('./eggs/pages.js').then((m) => m.secretsCartes()).catch(() => {});
 // Calendrier de l'Avent (migration 096) : rappel discret en décembre si une case attend sur l'accueil.
-if (new Date().getMonth() === 11) import('./avent.js').then((m) => m.cartesReminder('#cartes-tablist')).catch(() => {});
+if (new Date().getMonth() === 11) import('./avent.js').then((m) => m.cartesReminder('#cartes-section-h')).catch(() => {});

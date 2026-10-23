@@ -9,6 +9,11 @@
 /* ---------- Onglets ---------- */
 .cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
 .cartes-tabs::-webkit-scrollbar { display: none; }
+/* Barre d'onglets masquée (sur toutes les tailles d'écran) : la navigation est dans le menu du haut (header.js).
+   Les onglets restent la mécanique qui affiche le panneau (adresse, boutons internes). Le titre de section les remplace. */
+#cartes-tablist { display: none; }
+.cartes-section-h { font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.1; margin: 0 0 16px; }
+.cartes-section-h[hidden] { display: none; }
 .cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent;
   color: var(--muted); cursor: pointer; white-space: nowrap; }
 .cartes-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }

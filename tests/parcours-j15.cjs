@@ -1,4 +1,4 @@
-// Parcours J15 : Bataille de cartes (jeux.html#bataille).
+// Parcours J15 : Arène de cartes (cartes.html#arene, ex-jeux.html#bataille).
 // Accueil (règles, bêta sans Paillettes, pas de deck) ; créer son deck de défense (5 cartes, une seule de puissance 6) ;
 // attaquer Alice avec 5 cartes ; écran de résultat (5 duels, puissances, avantages en texte, score) ; historique ;
 // adversaire sans deck non attaquable ; 360 px sans défilement horizontal ; aucune erreur JS.
@@ -6,9 +6,9 @@ const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./li
 
 (async () => {
   const browser = await chromium.launch();
-  const p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#bataille', width: 390, height: 900, reducedMotion: 'reduce' });
+  const p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-jeux3.mjs', hash: '#arene', width: 390, height: 900, reducedMotion: 'reduce' });
   await p.waitForSelector('.jb', { timeout: 5000 }).catch(() => {});
-  const txt = await p.locator('#jeux-panel-bataille').innerText();
+  const txt = await p.locator('#cartes-p-arene').innerText();
   check(txt.includes('Arène de cartes') && txt.includes('Membre bat objet'), 'accueil : titre et règles (Membre bat objet…)');
   check(txt.includes('Bêta'), 'accueil : bêta sans Paillettes annoncée');
   check(txt.includes('pas encore de deck de défense'), 'accueil : pas encore de deck');

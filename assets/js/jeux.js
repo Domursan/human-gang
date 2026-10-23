@@ -5,8 +5,9 @@
  * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (jeux.html#geo) et
  * retenu dans le stockage local pour la visite suivante. Un choix propre à un jeu suit le nom de l'onglet dans l'adresse
  * (jeux.html#arcade-raclette) : il est passé au module dans ctx.sub, et l'événement « jeux:sub » le signale quand il change.
- * Mise en page (maquettes JEUX / JEUX-PC) : sur téléphone, pastilles qui défilent horizontalement (la page, elle, ne
- * défile pas de côté) ; sur grand écran, colonne d'onglets à gauche, groupée (Chaque jour, Chaque semaine, Compétition).
+ * La barre d'onglets est masquée (CSS) : la navigation est dans le menu du haut (core/header.js). Le panneau de l'onglet
+ * choisi occupe toute la largeur ; le tableau de bord et chaque jeu portent leur titre. L'Arène n'est plus ici (cartes.html#arene) :
+ * l'ancienne adresse jeux.html#bataille y redirige.
  * Accessibilité : motif ARIA des onglets, flèches (gauche/droite et haut/bas), Début et Fin, un seul onglet dans
  * l'ordre de tabulation.
  * Page : jeux.html (session membre requise).
@@ -16,6 +17,9 @@
 import { sb, initPage, toast, esc, $ } from './core.js';
 import { ONGLETS } from './jeux/onglets.js';
 import { nf, jourLong, zurichIso } from './jeux/commun.js';
+
+/* ---------- Ancienne adresse de l'Arène : elle vit dans la page Cartes ---------- */
+if (location.hash === '#bataille') location.replace('cartes.html#arene');
 
 /* ---------- Initialisation : session membre requise ---------- */
 const me = await initPage();
@@ -123,6 +127,7 @@ function badgeHtml(r) {
 /** Monte le tableau de bord (structure), puis le remplit avec les résumés des jeux. */
 function monterHub(panel) {
   panel.innerHTML = `<div class="jeux-hub">
+      <h2 class="jeux-hub-title">Les missions du jour</h2>
       <section class="jg-card jeux-prog" aria-labelledby="jeux-prog-h">
         <div class="jg-between"><h2 class="jg-h3" id="jeux-prog-h">Ton programme du jour</h2>
           <span class="jeux-serie" id="jeux-serie" hidden></span></div>
@@ -139,7 +144,6 @@ function monterHub(panel) {
               <span class="jeux-row-txt"><span class="jeux-row-t">${esc(o.titre)}</span><span class="small muted jeux-row-s" data-sub="${o.id}">…</span></span>
               <span class="jeux-row-b" data-badge="${o.id}"></span></button></li>`).join('')}</ul></section>` : '';
       }).join('')}
-      <p class="small muted jeux-hint">Fais glisser la barre d’onglets pour passer d’un jeu à l’autre.</p>
     </div>`;
   panel.addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) choisir(b.dataset.open, { focus: true }); });
   return rafraichirHub();

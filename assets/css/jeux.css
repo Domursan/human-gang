@@ -12,7 +12,10 @@
 
 /* ---------- Barre d'onglets (téléphone) : pastilles avec icône, défilement de la barre seulement ---------- */
 .jeux-layout { min-width: 0; }
-.jeux-tabs-wrap { position: relative; margin: 0 0 16px; min-width: 0; }
+/* Barre d'onglets masquée (toutes tailles) : la navigation est dans le menu du haut (header.js). Les onglets restent la
+   mécanique qui affiche le panneau (adresse, JS). Le panneau occupe toute la largeur, son titre est dans le panneau. */
+.jeux-tabs-wrap { display: none; position: relative; margin: 0 0 16px; min-width: 0; }
+.jeux-hub-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.1; margin: 0 0 16px; }
 .jeux-tabs { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
   padding: 2px 48px 6px 2px; -webkit-overflow-scrolling: touch; }
 .jeux-tabs::-webkit-scrollbar { display: none; }
@@ -29,7 +32,6 @@
 
 /* ---------- Grand écran : colonne d'onglets à gauche, groupée ---------- */
 @media (min-width: 1024px) {
-  .jeux-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 24px; align-items: start; }
   .jeux-tabs-wrap { margin: 0; position: sticky; top: 16px; }
   .jeux-tabs-wrap::after { display: none; }
   .jeux-tabs { flex-direction: column; gap: 1px; overflow: visible; padding: 0 16px 0 0; border-right: 1px solid var(--border); }
@@ -73,9 +75,7 @@
 .jeux-row-b { flex: none; }
 .jeux-pill-sand { border: 1px solid var(--sand); color: var(--sand); background: transparent; font-weight: 700; }
 .jeux-pill-amber { border: 1px solid var(--amber); color: var(--amber); background: transparent; font-weight: 700; }
-.jeux-hint { text-align: center; margin: 0; }
 @media (min-width: 1024px) {
-  .jeux-hint { display: none; }
   .jeux-hub-cards:not([hidden]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .jeux-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-color: var(--sand); }
   .jeux-card p { margin: 0; }

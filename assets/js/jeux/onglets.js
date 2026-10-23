@@ -28,6 +28,5 @@ export const ONGLETS = [
   { id: 'sutom', titre: 'Sutom HG', module: './sutom.js', idee: 'J8', rythme: 'jour' },
   { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
   { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
-  { id: 'bataille', titre: 'Arène', module: './bataille.js', idee: 'J15', rythme: 'competition' },
   { id: 'arcade', titre: 'Arcade', module: './arcade.js', idee: 'J18', rythme: 'jour' },
 ];
