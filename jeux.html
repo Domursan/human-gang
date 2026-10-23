@@ -6,14 +6,14 @@
   <script src="assets/js/theme-boot.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jeux · Humane Gang</title>
-  <meta name="description" content="Jeux du gang : question du jour, pronostics, Sutom et autres jeux, avec des Paillettes à gagner.">
+  <meta name="description" content="Jeux du gang : GeoGuessr, jeux du matin, « Qui a dit ça ? » et d’autres défis qui rapportent des Paillettes.">
   <meta name="robots" content="noindex">
   <link rel="canonical" href="https://domursan.github.io/human-gang/jeux.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Humane Gang">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:title" content="Jeux · Humane Gang">
-  <meta property="og:description" content="Les jeux du gang, un onglet par jeu.">
+  <meta property="og:description" content="Les jeux du gang : un onglet par jeu, des Paillettes à gagner.">
   <meta property="og:url" content="https://domursan.github.io/human-gang/jeux.html">
   <meta property="og:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -21,7 +21,7 @@
   <meta property="og:image:alt" content="Logo du Humane Gang">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Jeux · Humane Gang">
-  <meta name="twitter:description" content="Les jeux du gang, un onglet par jeu.">
+  <meta name="twitter:description" content="Les jeux du gang : un onglet par jeu, des Paillettes à gagner.">
   <meta name="twitter:image" content="https://domursan.github.io/human-gang/assets/img/og-image.png">
   <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
   <link rel="manifest" href="manifest.webmanifest">
@@ -37,15 +37,20 @@
   <link rel="stylesheet" href="assets/css/jeux.css">
 </head>
 <body>
-  <main class="container" id="app" aria-busy="true">
+  <main class="container jeux" id="app" aria-busy="true">
     <div class="page-head jeux-head">
       <div>
         <div class="eyebrow">Jeux du gang</div>
-        <h1 class="page-title" id="jeux-title">Jeux</h1>
+        <h1 class="page-title jeux-title">Jeux</h1>
       </div>
+      <p class="jeux-bal" id="jeux-bal" hidden><span class="jeux-bal-v" id="jeux-bal-v"></span><span class="jeux-bal-l">aujourd’hui</span></p>
     </div>
-    <div class="jeux-tabs" id="jeux-tabs" role="tablist" aria-label="Jeux"></div>
-    <div id="jeux-panels"></div>
+    <div class="jeux-layout">
+      <div class="jeux-tabs-wrap">
+        <div class="jeux-tabs" id="jeux-tabs" role="tablist" aria-label="Jeux"></div>
+      </div>
+      <div class="jeux-panels" id="jeux-panels"><p class="card jeux-empty">Chargement des jeux…</p></div>
+    </div>
   </main>
   <script type="module" src="assets/js/site-boot.js"></script>
   <script type="module" src="assets/js/jeux.js"></script>

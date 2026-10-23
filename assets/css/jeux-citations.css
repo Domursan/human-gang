@@ -1,0 +1,46 @@
+/* ===== Humane Gang — Jeux › « Qui a dit ça ? » (assets/js/jeux/citations.js) ===== */
+
+.cit-card { display: flex; flex-direction: column; gap: 14px; border-color: var(--border-strong); }
+.cit-pills { gap: 8px; }
+.cit-cat { font-weight: 700; }
+.cit-reward { margin-left: auto; font-size: 15px; }
+.cit-quote { margin: 0; padding: 6px 0 6px 16px; border-left: 4px solid var(--sand); }
+.cit-quote p { margin: 0; font-size: clamp(22px, 4vw, 30px); line-height: 1.2; overflow-wrap: anywhere; }
+.cit-quote-sm p { font-size: 18px; }
+
+/* Quatre membres en choix : grands boutons-avatars, 2 × 2 */
+.cit-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cit-opt { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; min-height: 44px; border-radius: 14px;
+  cursor: pointer; color: var(--text); background: var(--surface-2); border: 2px solid var(--border-strong); min-width: 0; }
+@media (hover: hover) { .cit-opt:not(:disabled):hover { border-color: var(--sand); } }
+.cit-opt:disabled { cursor: default; }
+.cit-opt .avatar { width: 46px; height: 46px; font-size: 18px; display: inline-grid; place-items: center; color: #121212; font-weight: 700; }
+.cit-opt-name { font-weight: 700; font-size: 14px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cit-opt-state { color: var(--muted); }
+.cit-opt.is-good { background: var(--sage-soft); border-color: var(--sage); }
+.cit-opt.is-good .cit-opt-state { color: var(--sage-text); }
+.cit-opt.is-wrong { background: var(--ss-bg); border-color: var(--accent); }
+.cit-opt.is-wrong .cit-opt-state { color: var(--rose); }
+.cit-opt.is-off { opacity: .75; }
+.cit-foot .btn { min-height: 44px; }
+
+/* Proposition */
+.cit-propose-btn { width: 100%; }
+.cit-form { display: flex; flex-direction: column; gap: 12px; }
+.cit-form textarea, .cit-form input, .cit-form select { width: 100%; }
+.cit-left:empty { display: none; }
+.cit-left, .cit-note { margin: 0; }
+.cit-note { text-align: center; }
+.cit-consent { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; border-color: var(--sand); }
+.cit-consent-h { margin: 0; font-weight: 700; }
+.cit-consent p { margin: 0; }
+
+/* Listes (mes propositions, déjà jouées) */
+.cit-mine summary, .cit-history summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.cit-mine-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cit-mine-list li { display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.cit-mine-list li:last-child { border-bottom: 0; }
+.cit-li-q { overflow-wrap: anywhere; }
+.cit-li-btn { font: inherit; color: var(--text); text-align: left; background: none; border: 0; padding: 4px 0; display: flex; flex-direction: column; gap: 2px; cursor: pointer; min-height: 44px; width: 100%; }
+.cit-st-publiee { color: var(--sage-text); }
+.cit-st-refusee { color: var(--rose); }

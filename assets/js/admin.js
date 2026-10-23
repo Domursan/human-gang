@@ -52,6 +52,9 @@ const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
+  { sub: 'geoguessr', url: './admin-jeux.js', fn: 'mountGeoSection' },         // Jeux et cartes › GeoGuessr (migration 083)
+  { sub: 'jeux-du-jour', url: './admin-jeux.js', fn: 'mountJdjSection' },      // Jeux et cartes › Jeux du jour
+  { sub: 'citations', url: './admin-jeux.js', fn: 'mountCitationsSection' },   // Jeux et cartes › Citations « Qui a dit ça ? »
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -198,6 +201,10 @@ registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) 
 registerSub('cartes/pronos', { main: () => mountPronosSection($('#pronos-root')) }); // pronostics (J5) : compétitions, matchs, résultats
 registerSub('cartes/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
+// Page « Jeux » : GeoGuessr, jeux du jour, citations (admin-jeux.js)
+if (MOUNT.geoguessr) registerSub('cartes/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
+if (MOUNT['jeux-du-jour']) registerSub('cartes/jeux-du-jour', { main: () => MOUNT['jeux-du-jour']($('#jdj-admin-root')) });
+if (MOUNT.citations) registerSub('cartes/citations', { main: () => MOUNT.citations($('#citations-admin-root')) });
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);

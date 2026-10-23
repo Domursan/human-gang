@@ -5,7 +5,8 @@
 // (b) #membres/comptes/<id>/<onglet> ouvre la bonne fiche ; #comptes/<id>/<onglet> (ancienne adresse) y est redirigée ;
 //     #cartes/quetes ouvre la sous-section ; clic met l'adresse à jour ; Précédent
 // (c) Ctrl/Cmd+K ouvre la palette (et pas la recherche du site) ; elle ouvre une sous-section et une fiche ; focus piégé ; Échap
-// (d) Staff ['cartes'] : la palette ne propose que les sous-sections permises (« Groupe · Libellé »), sans membres
+// (d) Staff ['cartes'] : la palette ne propose que les sous-sections permises (« Groupe · Libellé »), sans membres ;
+//     « Jeux du jour » (droit cartes) est proposé, GeoGuessr et Citations (droits souvenirs, quiz) ne le sont pas
 // (e) 375 px : barre d'onglets des domaines en bas de l'écran, sans défilement horizontal de la page
 // Lancer : node tests/parcours-admin-nav.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, log, chromium, sleep } = require('./lib/harness.cjs');
@@ -151,7 +152,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   const attendu = ['Catalogue · Séries', 'Catalogue · Cartes', 'Catalogue · Boosters',
     'Économie · Paillettes et dons', 'Économie · Tirage', 'Économie · Recyclage et fabrication', 'Économie · Limites',
     'Animation · Quêtes', 'Animation · Défis du gang', 'Animation · Drops',
-    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques'];
+    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques', 'Jeux · Jeux du jour'];
   check(JSON.stringify(labels) === JSON.stringify(attendu),
     `(d) Staff ['cartes'] : la palette ne propose que ses sous-sections (${labels.join(' | ')})`);
   await p.fill('#apal-q', 'bruno');
