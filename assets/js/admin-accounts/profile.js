@@ -12,8 +12,31 @@ import { safeUrl } from '../utils.js';
 import { check, nullIfEmpty, tabError } from './common.js';
 import { A, H, dropFicheCache } from './state.js';
 import { isAdminView } from '../admin/perms.js';
+import { NOTIF_ROWS } from '../notif-prefs.js';
 
 /* ---------- Profil ---------- */
+/**
+ * Résumé en lecture seule des notifications par catégorie du membre (idée Q6), pour répondre à « je ne reçois rien ».
+ * @param {object|null|undefined} n ligne hg_notif_prefs (null : réglages par défaut ; undefined : non lue)
+ * @param {object} p profil (bot_optin, remind_irl, notify_card_wish)
+ * @returns {string} HTML
+ */
+function notifSummaryHtml(n, p) {
+  if (n === undefined) return '';
+  const prefs = n?.prefs || {};
+  const off = [];
+  for (const [k, label] of NOTIF_ROWS) {
+    const canaux = [];
+    if (prefs[`${k}.push`] === false) canaux.push('téléphone');
+    const discord = typeof prefs[`${k}.discord`] === 'boolean' ? prefs[`${k}.discord`]
+      : k === 'sorties' ? !!p.remind_irl : k === 'souhaits' ? !!p.notify_card_wish : true;
+    if (!discord) canaux.push('Discord');
+    if (canaux.length) off.push(`${label} (${canaux.join(', ')})`);
+  }
+  const quiet = n?.quiet_start != null ? ` · heures calmes ${String(n.quiet_start).padStart(2, '0')}:00 – ${String(n.quiet_end).padStart(2, '0')}:00` : '';
+  const txt = !p.bot_optin ? 'Le bot ne peut pas lui écrire (tous les MP coupés).' : off.length ? `Catégories coupées : ${off.join(' · ')}.` : 'Aucune catégorie coupée.';
+  return `<div class="acc-notif" role="note"><p class="label">Notifications (lecture seule)</p><p class="small">${esc(txt + quiet)}</p></div>`;
+}
 /** HTML de l'onglet Profil : pseudo, couleur, avatar, anniversaire, date d'arrivée, options et statut admin. */
 export function profileHtml() {
   const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
@@ -45,6 +68,7 @@ export function profileHtml() {
         ${'tour_done_at' in p ? `<label class="check"><input type="checkbox" name="tour_done"${p.tour_done_at ? ' checked' : ''}> <span>Visite guidée déjà vue <span class="muted small">(décocher la relance à sa prochaine visite de l’accueil)</span></span></label>` : ''}
         ${ghost || !isAdminView() ? '' : `<label class="check"><input type="checkbox" name="is_admin"${p.is_admin ? ' checked' : ''}${self ? ' disabled' : ''}> <span>Administrateur${self ? ' <span class="muted small">(tu ne peux pas te retirer ce statut toi-même)</span>' : ''}</span></label>`}
       </fieldset>
+      ${notifSummaryHtml(A.d.notif, p)}
       <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span>${ghost ? ' · fantôme (pas encore inscrit)' : ` · profil créé le ${esc(fmtDateTime(p.created_at))}`}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le profil</button></div>
       </fieldset>

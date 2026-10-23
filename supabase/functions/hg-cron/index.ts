@@ -52,6 +52,8 @@ import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
 import { cineAnnouncements } from '../_shared/cine-announce.ts';
 import { seasonAnnouncements } from '../_shared/saisons-cron.ts';
+import { loadNotifPrefs, notifAllowed } from '../_shared/notif-prefs.ts';
+
 /* ---------- Constantes et clients ---------- */
 
 // Client avec la clé service role : la fonction lit et écrit dans toutes les tables des automatismes.
@@ -294,11 +296,13 @@ async function irlReminders(out: Counters, attempts: Attempt[], rules: BotRules)
   if (e3) throw new Error(e3.message);
   const people = new Map<string, Prof>((profs ?? []).map((p: Prof) => [p.id, p] as [string, Prof]));
   const tpl: Templates = await loadTemplates(db);
+  const irlPrefs = await loadNotifPrefs(db, userIds); // catégorie « Sorties IRL » (idée Q6, migration 095)
 
   for (const r of todo) {
     const ev = byEvent.get(r.event_id)!;
     const person = people.get(r.user_id);
     if (!person || !person.remind_irl || !canDM(person)) continue; // opt-out : pas de rappel, pas de marquage
+    if (!notifAllowed(irlPrefs.get(r.user_id), 'sorties', 'discord')) continue; // catégorie coupée : pas de rappel, pas de marquage
     const left = new Date(ev.starts_at).getTime() - now;
     const col = left <= SHORT ? 'remind_2h_at' : 'remind_24h_at';
     const keys = { event_id: r.event_id, user_id: r.user_id };
@@ -358,10 +362,12 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
   if (e4) throw new Error(e4.message);
   const people = new Map<string, Prof>((profs ?? []).map((p: Prof) => [p.id, p] as [string, Prof]));
   const tpl: Templates = await loadTemplates(db);
+  const ssPrefs = await loadNotifPrefs(db, [...people.keys()]); // catégorie « Secret Santa » (idée Q6, migration 095)
 
   for (const p of todo) {
     const person = people.get(p.user_id);
     if (!person || !canDM(person)) continue; // sans Discord ou opt-out : pas de MP, pas de marquage (un MP partira si le compte se met en règle)
+    if (!notifAllowed(ssPrefs.get(p.user_id), 'santa', 'discord')) continue; // catégorie coupée : pas de MP, pas de marquage
     const ed = editions.get(p.edition_id)!;
     const keys = { edition_id: p.edition_id, user_id: p.user_id };
     if (!(await claimRow('hg_ss_participants', keys, 'send_reminder_at'))) continue;

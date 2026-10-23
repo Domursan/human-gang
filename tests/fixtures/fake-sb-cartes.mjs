@@ -113,11 +113,20 @@ window.__DB = DB; window.__LOG = [];
     cards.push({ id: 'CX1', set_id: 'SETX', number: 1, name: 'Libellule', family: 'objet', rarity: 'peu_commune', image_url: null, flavor: null,
       member_id: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
   }
+  // Scénario « bigCollection » (parcours-collection-longue.cjs, idée Q5) : 2 000 cartes réparties en 4 séries ouvertes,
+  // 5 000 exemplaires pour le membre connecté (doublons gardés pour la fabrication). Les noms contiennent « Raclette » 1 fois sur 50.
+  if (S.bigCollection) {
+    const RR = ['commune', 'commune', 'peu_commune', 'rare', 'epique', 'legendaire'];
+    for (let k = 0; k < 4; k++) sets.push({ id: 'SETB' + k, code: 'big' + k, name: 'Grande série ' + (k + 1), description: null, starts_at: null, ends_at: null, active: true, sort: 10 + k });
+    for (let i = 0; i < 2000; i++) cards.push({ id: 'G' + i, set_id: 'SETB' + (i % 4), number: Math.floor(i / 4) + 1, name: (i % 50 === 7 ? 'Raclette fondue ' : 'Carte géante ') + i, family: F[i % F.length], rarity: RR[i % RR.length],
+      image_url: null, flavor: null, member_id: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
+  }
   DB.hg_card_sets = sets; DB.hg_cards = cards;
   // Mes exemplaires : C1 x3 (dont une brillante), C2 x1, C3 x2, C7 x1 brillante, C11 (identite) x1 numéroté, C9 x1 (en échange)
   /** Fabrique un exemplaire possédé par le membre connecté ; extra remplace les champs par défaut. */
   const cp = (id, card, extra = {}) => ({ id, card_id: card, owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
   DB.hg_card_copies = [cp(1,'C1'), cp(2,'C1',{shiny:true}), cp(3,'C1'), cp(4,'C2'), cp(5,'C3'), cp(6,'C3',{source:'fabrication'}), cp(7,'C7',{shiny:true}), cp(8,'C11',{serial:1, max_copies:3}), cp(9,'C9',{locked_trade:'T1'}), cp(10,'C5'), cp(11, 'C5', {shiny: true})];
+  if (S.bigCollection) for (let i = 0; i < 5000; i++) DB.hg_card_copies.push(cp(10000 + i, 'G' + ((i * 7) % 1800), { shiny: i % 97 === 0 }));
   // Liste de souhaits du membre connecté : la carte C4.
   DB.hg_card_wishlist = [{ user_id: ME, card_id: 'C4', created_at: iso(-1) }];
   // Favoris du membre connecté (migration 078) : C1 et C3 (possédées). S.favorites remplace la liste de départ.
@@ -471,7 +480,7 @@ class Q {
   /** Filtre négatif : seul l'opérateur « is » est simulé. */
   not(c, op, v) { if (op === 'is') this.f.push((r) => (getv(r, c) ?? null) !== v); return this; }
   // Méthodes sans effet ici : tri, limite et bornes ne sont pas simulés (range renvoie toutes les lignes).
-  or() { return this; } order() { return this; } limit() { return this; } gte() { return this; } lte() { return this; } lt() { return this; } gt() { return this; } range() { return this; } ilike() { return this; } contains() { return this; }
+  or() { return this; } order() { return this; } limit() { return this; } gte() { return this; } lte() { return this; } lt() { return this; } gt() { return this; } range(a, b) { this.rg = [a, b]; return this; } ilike() { return this; } contains() { return this; }
   /** Attend une seule ligne (ou null). */
   maybeSingle() { this.one = true; return this; } single() { this.one = true; return this; }
   /** Prépare une insertion ; la requête s'exécute à l'attente (await). */
@@ -517,7 +526,8 @@ class Q {
     // Suppression : retire les lignes filtrées et renvoie leur nombre (count).
     if (this.op === 'delete') { const keep = tab.filter((r) => !match(r)); const n = tab.length - keep.length; tab.length = 0; tab.push(...keep); return { data: null, error: null, count: n }; }
     // Lecture : les lignes qui respectent les filtres ; une seule si maybeSingle ou single.
-    const out = tab.filter(match);
+    let out = tab.filter(match);
+    if (this.rg) out = out.slice(this.rg[0], this.rg[1] + 1); // pagination (fetchAllRows : pages de 1 000 lignes)
     return this.one ? { data: out[0] ?? null, error: null } : { data: out, error: null };
   }
   /** Permet d'attendre la requête avec await : exécute run() et transmet son résultat. */

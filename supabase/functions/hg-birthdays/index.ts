@@ -25,6 +25,7 @@ import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
+import { loadNotifPrefs, notifAllowed } from '../_shared/notif-prefs.ts';
 
 // Client avec la clé service role : la fonction lit les profils de tous les membres.
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
@@ -128,6 +129,7 @@ Deno.serve(async (req) => {
     if (e) { console.error('[hg-birthdays] marquage', col, e); out.errors++; }
   };
 
+  const bdayPrefs = await loadNotifPrefs(db, candidates.map((c) => c.p.id)); // catégorie « Anniversaires » (idée Q6, migration 095)
   for (const { p, year } of candidates) {
     // 1. Ligne de suivi : créée une fois par membre et par année (clé primaire = protection contre un double appel)
     const { data: found, error: selErr } = await db.from('hg_birthday_log').select('dm_sent_at, announce_sent_at')
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
     // 2. Canaux : un canal sans objet est marqué d'emblée ; un canal qui échoue reste en attente.
     // 2a. MP : seulement si le membre a accepté le bot et a un identifiant Discord valide.
     if (row.dm_sent_at == null) {
-      if (!(p.bot_optin && isSnowflake(p.discord_id))) {
+      if (!(p.bot_optin && isSnowflake(p.discord_id)) || !notifAllowed(bdayPrefs.get(p.id), 'anniversaires', 'discord')) {
         await mark(p.id, year, 'dm_sent_at');
       } else {
         try {

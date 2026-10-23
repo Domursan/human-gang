@@ -10,7 +10,7 @@
 // Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, historique, événements, démarrage.
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo, getPrefs, setPrefs } from './core.js';
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
 import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
 import { pluralCount } from './utils.js';
@@ -29,6 +29,7 @@ import { hasTags, tagGroupsHtml, loadTagLabels } from './cartes-jeux.js';
 import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.js';
 import { initAtelier, drawAtelier } from './cartes-atelier.js';
 import { initEnchere, drawEnchere } from './cartes-enchere.js';
+import { foldText } from './core/search.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -128,9 +129,12 @@ function restoreFocus(fallback = null) {
    (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
-  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
+  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…)
+  copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
-  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '' }, jeuOpen: null,
+  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '', q: '' }, jeuOpen: null,
+  // Collection très longue (idée Q5) : nombre de cartes dessinées (lot affiché), remis à zéro à chaque changement de filtre.
+  colLimit: 0,
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
   // Ouverture groupée en cours ou interrompue (voir openStockMulti) : type, série, identifiants des demandes, avancement ; null sinon.
   x5: null,
@@ -229,8 +233,128 @@ const outsideHead = (g, hid) => `<div class="cz-group-head">
       <p class="cz-group-count">${nf.format(g.owned)} carte${g.owned > 1 ? 's' : ''} possédée${g.owned > 1 ? 's' : ''} · série pas ouverte</p>
     </div>
     <p class="muted small">Cartes obtenues hors des boosters (drop, don…) : la série n'est pas ouverte, elles ne comptent pas dans la progression.</p>`;
-/** Exemplaires de l'utilisateur pour une carte. */
-const copiesOf = (cardId) => S.copies.filter((c) => c.card_id === cardId);
+/**
+ * Index carte → exemplaires de l'utilisateur (idée Q5). Recalculé seulement quand S.copies change
+ * (nouveau tableau après un rechargement, ou longueur différente) : ouverture, recyclage, échange.
+ */
+const copyIndex = { src: null, len: -1, map: new Map() };
+/** Liste vide partagée (jamais modifiée) pour une carte sans exemplaire. */
+const NO_COPIES = Object.freeze([]);
+/**
+ * Exemplaires de l'utilisateur pour une carte (lecture par l'index : le coût ne grimpe plus avec cartes × exemplaires).
+ * @param {string} cardId identifiant de la carte
+ * @returns {object[]} exemplaires (ne pas modifier le tableau renvoyé)
+ */
+const copiesOf = (cardId) => {
+  const list = S.copies || NO_COPIES;
+  if (copyIndex.src !== list || copyIndex.len !== list.length) {
+    const map = new Map();
+    for (const cp of list) {
+      const a = map.get(cp.card_id);
+      if (a) a.push(cp); else map.set(cp.card_id, [cp]);
+    }
+    copyIndex.src = list; copyIndex.len = list.length; copyIndex.map = map;
+  }
+  return copyIndex.map.get(cardId) || NO_COPIES;
+};
+
+/* ---------- Collection très longue (idée Q5) : dessin par lots ---------- */
+/** Taille d'un lot de cartes dessinées. */
+const COL_LOT = 120;
+/** En dessous de ce nombre de cartes affichées, tout est dessiné d'un coup (rien ne change). */
+const COL_SEUIL = 300;
+/** Noms des cartes sans accents ni majuscules, pour la recherche (calculés une fois par carte). */
+const foldedNames = new Map();
+/**
+ * Vrai si la carte correspond à la recherche (comparaison sans accents, comme la recherche du site).
+ * @param {object} c carte
+ * @param {string} q recherche déjà repliée (foldText)
+ * @returns {boolean}
+ */
+function matchQuery(c, q) {
+  if (!q) return true;
+  let n = foldedNames.get(c.id);
+  if (n === undefined) { n = foldText(`${c.name ?? ''} ${c.number ?? ''}`); foldedNames.set(c.id, n); }
+  return n.includes(q);
+}
+/**
+ * Coupe les groupes au lot affiché : au-delà de COL_SEUIL cartes, seules les `limit` premières sont dessinées.
+ * Les compteurs des groupes (possédées / total) restent ceux de toute la série.
+ * @param {object[]} groups groupes avec leurs cartes affichées (shown)
+ * @param {number} limit nombre de cartes à dessiner (0 = un lot)
+ * @returns {{groups: object[], drawn: number, total: number, batched: boolean}}
+ */
+function sliceGroups(groups, limit) {
+  const total = groups.reduce((a, g) => a + g.shown.length, 0);
+  if (total <= COL_SEUIL) return { groups, drawn: total, total, batched: false };
+  let left = Math.max(COL_LOT, limit || 0);
+  const out = [];
+  for (const g of groups) {
+    if (left <= 0) break;
+    out.push(g.shown.length <= left ? g : { ...g, shown: g.shown.slice(0, left) });
+    left -= g.shown.length;
+  }
+  const drawn = Math.min(total, Math.max(COL_LOT, limit || 0));
+  return { groups: out, drawn, total, batched: true };
+}
+/**
+ * Pied de la grille quand elle est dessinée par lots : « 120 cartes affichées sur 842 », barre et « Afficher 120 de plus ».
+ * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle surveillée au défilement, voir watchMore).
+ * @param {{drawn: number, total: number, batched: boolean}} sl découpage
+ * @param {'col'|'peer'} which collection concernée
+ * @returns {string} HTML (vide si tout est dessiné)
+ */
+function moreHtml(sl, which) {
+  if (!sl.batched) return '';
+  const rest = sl.total - sl.drawn;
+  const pctShown = Math.round(sl.drawn / sl.total * 100);
+  return `<div class="cz-more">
+      <p class="cz-more-count" role="status"><strong>${pluralCount(sl.drawn, 'carte affichée', 'cartes affichées', nf.format)}</strong> sur ${nf.format(sl.total)}</p>
+      <div class="progress cz-more-bar" aria-hidden="true"><span style="width:${pctShown}%"></span></div>
+      ${rest > 0 ? `<button type="button" class="btn btn-ghost cz-more-btn" data-action="more-cards" data-which="${which}">+ Afficher ${nf.format(Math.min(COL_LOT, rest))} de plus</button>
+      <p class="muted small">Se déclenche aussi tout seul en approchant du bas.</p>
+      <div class="cz-sentinel" data-sentinel="${which}" aria-hidden="true"></div>` : ''}
+    </div>`;
+}
+/** Vrai une fois l'écouteur de défilement posé (un seul pour la page). */
+let moreBound = false;
+/** Identifiant de l'image d'animation en attente pour la vérification de la sentinelle (0 = aucune). */
+let moreTick = 0;
+/**
+ * Vérifie la sentinelle après un défilement : si elle approche du bas de l'écran, le lot suivant est dessiné.
+ * Seul le défilement déclenche ce chargement (pas le redessin lui-même), donc pas de cascade de lots.
+ */
+function checkMore() {
+  moreTick = 0;
+  const el = document.querySelector('.cz-sentinel');
+  if (el && el.getBoundingClientRect().top < window.innerHeight + 600) showMore(el.dataset.sentinel, false);
+}
+/** Observe la sentinelle du lot affiché : en défilant près du bas, le lot suivant est dessiné sans déplacer le focus. */
+function watchMore() {
+  if (moreBound) return;
+  moreBound = true;
+  window.addEventListener('scroll', () => { if (!moreTick) moreTick = requestAnimationFrame(checkMore); }, { passive: true });
+}
+/**
+ * Dessine le lot suivant de la collection (la sienne ou celle d'un membre).
+ * @param {'col'|'peer'} which collection concernée
+ * @param {boolean} [byButton=true] true si on a cliqué « Afficher plus » : le focus va sur la première carte ajoutée
+ */
+function showMore(which, byButton = true) {
+  const peer = which === 'peer';
+  if (peer && !S.peer) return;
+  const ids = peer ? S.peer.shownIds : S.shownIds;
+  const before = Math.max(COL_LOT, (peer ? S.peer.limit : S.colLimit) || 0);
+  if (before >= ids.length) return;
+  if (peer) S.peer.limit = before + COL_LOT; else S.colLimit = before + COL_LOT;
+  const first = ids[before];
+  const sel = first ? `[data-action="${peer ? 'peer-pick' : 'open-card'}"][data-card="${CSS.escape(first)}"], [data-action="${peer ? 'peer-zoom' : 'zoom-card'}"][data-card="${CSS.escape(first)}"]` : null;
+  if (peer) renderPeer(byButton ? sel : null);
+  else {
+    renderCollection();
+    if (byButton && sel) document.querySelector(`#cartes-p-collection :is(${sel})`)?.focus({ preventScroll: true });
+  }
+}
 /** En-tête explicatif de la série « Hors série » (cartes uniques). */
 const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : un seul exemplaire existe, à gagner lors d\'un événement ou offert par l\'admin.</p>';
 /**
@@ -1445,7 +1569,18 @@ function finishSeq(R) {
   R.step = lastStep(R);
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les cartouches et affiche le résumé
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
+  focusRevealEnd();
+}
+
+/** Début d'une séquence : le focus va sur « Tout révéler » (une touche Entrée suffit pour sauter l'animation). */
+function focusRevealAll() {
+  $('#cartes-reveal [data-action="reveal-all"]')?.focus({ preventScroll: true });
+}
+
+/** Fin d'une ouverture : le focus va sur « Fermer » (le titre du résultat le précède dans l'ordre de lecture). */
+function focusRevealEnd() {
+  const el = $('#cartes-reveal [data-action="close-reveal"]') || $('#cartes-reveal-h');
+  el?.focus({ preventScroll: true });
 }
 
 // « Tout révéler » : passe directement à la fin de la séquence.
@@ -1456,6 +1591,87 @@ function skipSeq() {
   if (R.multi) finishMulti(R);
   else finishSeq(R);
 }
+
+/* ---------- Résumé d'une ouverture (pastilles et annonce) ---------- */
+/** À partir de ce nombre de cartes, l'annonce regroupe par rareté et ne nomme que quelques belles cartes. */
+const SUMMARY_BIG = 25;
+/** Nombre maximal de cartes nommées dans l'annonce (rareté épique et plus). */
+const SUMMARY_NAMES = 5;
+
+/**
+ * Résumé d'une ouverture par rareté : comptes (de la plus commune à la plus rare), brillantes et nouvelles.
+ * Sert aux pastilles visibles (summaryHtml) et à l'annonce des lecteurs d'écran (summaryText).
+ * @param {object[]} cards cartes obtenues
+ * @param {Set<string>} [freshIds] cartes qui n'étaient pas dans la collection avant l'ouverture
+ * @returns {{total: number, groups: Array<{id: string, text: string}>, fresh: number, names: string[], more: number}}
+ */
+function raritySummary(cards, freshIds = new Set()) {
+  const by = new Map();
+  for (const c of cards) {
+    const g = by.get(c.rarity) || { n: 0, shiny: 0 };
+    g.n += 1;
+    if (c.shiny) g.shiny += 1;
+    by.set(c.rarity, g);
+  }
+  const groups = RARITIES.filter((r) => by.has(r.id)).map((r) => {
+    const { n, shiny } = by.get(r.id);
+    const label = r.label.toLowerCase();
+    let text = `${nf.format(n)} ${n > 1 ? label.replace(/(\S+)$/, '$1s') : label}`;
+    if (shiny && shiny === n) text += n > 1 ? ' brillantes' : ' brillante';
+    else if (shiny) text += ` dont ${pluralCount(shiny, 'brillante', 'brillantes', nf.format)}`;
+    return { id: r.id, text };
+  });
+  // Belles cartes nommées : épique et plus, sans doublon, la plus rare d'abord.
+  const seen = new Set();
+  const top = [...cards].sort((a, b) => rarityRank(b.rarity) - rarityRank(a.rarity))
+    .filter((c) => rarityRank(c.rarity) >= rarityRank('epique') && !seen.has(c.card_id) && seen.add(c.card_id));
+  const max = cards.length >= SUMMARY_BIG ? Math.min(3, SUMMARY_NAMES) : SUMMARY_NAMES;
+  return { total: cards.length, groups, fresh: freshIds.size, names: top.slice(0, max).map((c) => c.name), more: Math.max(0, top.length - max) };
+}
+
+/**
+ * Pastilles colorées du résumé (« 3 communes », « 1 épique brillante », « 2 nouvelles ») : le texte est toujours présent,
+ * la couleur n'est qu'un repère (lisible en mode daltonien).
+ * @param {ReturnType<typeof raritySummary>} sum résumé
+ * @returns {string} HTML
+ */
+function summaryHtml(sum) {
+  if (!sum.total) return '';
+  const chips = sum.groups.map((g) => `<li class="rv-chip rv-${esc(g.id)}"><i aria-hidden="true"></i>${esc(g.text)}</li>`);
+  if (sum.fresh) chips.push(`<li class="rv-chip rv-new">${esc(pluralCount(sum.fresh, 'nouvelle', 'nouvelles', nf.format))}</li>`);
+  return `<ul class="rv-sum" aria-label="Résumé de l’ouverture">${chips.join('')}</ul>`;
+}
+
+/**
+ * Texte du résumé pour l'annonce : « 5 cartes : 3 communes, 1 rare, 1 épique brillante, Pick’em des Worlds. 2 nouvelles pour ta collection. »
+ * Au-delà de SUMMARY_BIG cartes, seules quelques cartes à partir d'épique sont nommées.
+ * @param {ReturnType<typeof raritySummary>} sum résumé
+ * @returns {string}
+ */
+function summaryText(sum) {
+  if (!sum.total) return 'Aucune carte.';
+  let names = sum.names.join(', ');
+  if (names && sum.more) names += ` et ${pluralCount(sum.more, 'autre belle carte', 'autres belles cartes', nf.format)}`;
+  return `${pluralCount(sum.total, 'carte', 'cartes', nf.format)} : ${sum.groups.map((g) => g.text).join(', ')}${names ? `, ${names}` : ''}.`
+    + (sum.fresh ? ` ${pluralCount(sum.fresh, 'nouvelle pour ta collection', 'nouvelles pour ta collection', nf.format)}.` : '');
+}
+
+/**
+ * Interrupteur « Révéler mes boosters d'un coup » sous le résultat (le même réglage que dans les Préférences d'affichage).
+ * @returns {string} HTML
+ */
+function revealPrefHtml() {
+  return `<label class="switch-row rv-pref"><span class="switch-txt"><strong>Révéler mes boosters d’un coup</strong>`
+    + `<small>Sans la séquence animée. Aussi dans les Préférences d’affichage.</small></span>`
+    + `<input class="pref-switch" type="checkbox" role="switch" data-change="reveal-direct"${getPrefs().revealDirect ? ' checked' : ''}></label>`;
+}
+
+/**
+ * Vrai si l'ouverture doit être animée : mouvement permis, préférence « Révéler d'un coup » coupée et au moins une carte.
+ * @param {number} n nombre de cartes
+ * @returns {boolean}
+ */
+const animateReveal = (n) => n > 0 && motionAllowed() && !getPrefs().revealDirect;
 
 /* ---------- Révélation groupée (ouverture de plusieurs boosters) ---------- */
 /** Titre du résumé d'une ouverture groupée : « 5 boosters · 25 cartes · meilleure : Rare ». */
@@ -1496,9 +1712,11 @@ function multiHtml(R) {
         ${R.dup ? `<p class="cartes-small">${esc(dupText(R))}</p>` : ''}
         ${done && R.note ? `<p class="muted small">${esc(R.note)}</p>` : ''}
       </div>
+      ${done ? summaryHtml(raritySummary(R.cards, R.freshIds)) : ''}
       <div class="x5-grid">${cells}</div>${list}
       ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
+      ${done ? revealPrefHtml() : ''}
     </section>`;
 }
 
@@ -1512,7 +1730,7 @@ function renderMultiReveal(box, R) {
   box.innerHTML = multiHtml(R);
   if (R.phase !== 'seq' && !R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+    $('#cartes-live').textContent = `Boosters ouverts. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
 }
 
@@ -1569,10 +1787,12 @@ function renderReveal() {
     : '<button type="button" class="btn btn-ghost" data-action="reveal-all">Tout révéler</button>';
   box.innerHTML = `
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
-      <h2 id="cartes-reveal-h">Ton booster</h2>
+      <h2 id="cartes-reveal-h" tabindex="-1">Ton booster</h2>
+      ${done ? summaryHtml(raritySummary(R.cards, R.freshIds)) : ''}
       ${body}${list}
       ${revealHint(R)}
       <div class="cartes-row">${actions}</div>
+      ${done ? revealPrefHtml() : ''}
     </section>`;
   if (R.seq) applyStage(R);
   // Pas de scène animée (mouvement réduit) : un flash doux pour les thèmes « fête », seulement si les effets sont permis.
@@ -1580,7 +1800,7 @@ function renderReveal() {
   fitAll(box);
   if (done && !R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Booster ouvert. Meilleure carte : ${R.best ? rarityLabel(R.best) : 'aucune'}.`;
+    $('#cartes-live').textContent = `Booster ouvert. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
 }
 
@@ -1637,6 +1857,7 @@ async function runOpen({ key, type = null, setName = '', call }) {
   let R = null;
   let state = 'error'; // 'ok' : ouvert ; 'dup' : déjà ouvert côté serveur (demande rejouée) ; 'error' : rien d'ouvert
   if (!S.bootReq || S.bootReq.mode !== key) S.bootReq = { mode: key, id: newReqId() };
+  const owned = new Set(S.copies.map((c) => c.card_id)); // collection avant l'ouverture : sert à compter les nouvelles cartes
   try {
     const data = await call(S.bootReq.id);
     S.bootReq = null;
@@ -1654,9 +1875,10 @@ async function runOpen({ key, type = null, setName = '', call }) {
       toast(`${got} carte${got > 1 ? 's' : ''} livrée${got > 1 ? 's' : ''} sur ${asked} : le tirage n'a pas trouvé de carte pour certains emplacements.`);
     }
     announceCards(cards);
-    // Animation seulement si la préférence de mouvement le permet et qu'il y a des cartes.
-    const seq = motionAllowed() && cards.length > 0;
-    R = { cards, best: data?.best, type, setName, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
+    // Animation seulement si le mouvement est permis, que la préférence « Révéler d'un coup » est coupée et qu'il y a des cartes.
+    const seq = animateReveal(cards.length);
+    const freshIds = new Set(cards.filter((c) => !owned.has(c.card_id)).map((c) => c.card_id));
+    R = { cards, best: data?.best, type, setName, freshIds, revealed: new Set(), announced: false, seq, phase: seq ? 'seq' : 'done', step: 0, timer: null };
     if (!seq) R.cards.forEach((_, i) => R.revealed.add(i));
     S.reveal = R;
   } catch (e) {
@@ -1678,8 +1900,9 @@ async function runOpen({ key, type = null, setName = '', call }) {
   if (R && S.reveal === R && R.seq && R.phase === 'seq') {
     $('#cartes-live').textContent = 'Ouverture du booster en cours.';
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    focusRevealAll();
     startSeq(R);
-  }
+  } else if (R && S.reveal === R) focusRevealEnd();
 }
 
 /**
@@ -1840,7 +2063,7 @@ async function runMulti(items, key = '') {
   let R = null;
   if (st.cards.length || st.dup) {
     const cards = [...st.cards].sort(byRarityDesc);
-    const seq = !big && cards.length > 0 && motionAllowed();
+    const seq = !big && animateReveal(cards.length);
     const freshIds = new Set(cards.filter((c) => !st.owned.has(c.card_id)).map((c) => c.card_id));
     R = {
       multi: true, big, cards, opened: st.opened, total, best: cards[0]?.rarity ?? null,
@@ -1868,8 +2091,9 @@ async function runMulti(items, key = '') {
     $('#cartes-reveal')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     if (R.seq) {
       $('#cartes-live').textContent = 'Ouverture des boosters en cours.';
+      focusRevealAll();
       startMulti(R);
-    }
+    } else focusRevealEnd();
   }
 }
 
@@ -1947,7 +2171,7 @@ function renderBigReveal(box, R) {
   const cell = (c) => cardHtml(c, { shiny: c.shiny, serial: c.serial, size: 'sm' });
   if (!R.announced) {
     R.announced = true;
-    $('#cartes-live').textContent = `Boosters ouverts. ${multiHead(R)}. ${multiSub(R)}.`;
+    $('#cartes-live').textContent = `Boosters ouverts. ${pluralCount(R.opened, 'booster', 'boosters', nf.format)}. ${summaryText(raritySummary(R.cards, R.freshIds))}`;
   }
   box.innerHTML = `
     <section class="card cartes-block" aria-labelledby="cartes-reveal-h">
@@ -2012,7 +2236,7 @@ function finishMulti(R) {
   R.phase = 'done';
   R.cards.forEach((_, i) => R.revealed.add(i));
   renderBoosters(); // réactive les boutons et affiche le résumé (annoncé par renderMultiReveal)
-  $('#cartes-reveal [data-action="close-reveal"]')?.focus({ preventScroll: true });
+  focusRevealEnd();
 }
 
 /** Réclame le passage du jour (hg_cards_daily) : Paillettes et série de jours consécutifs. */
@@ -2126,6 +2350,7 @@ function groupHtml(g, i) {
  * @param {string} [focusId] id du champ à remettre au focus après le rendu (sans défilement)
  */
 function drawCollection(focusId) {
+  try { performance.mark('hg-collection-start'); } catch {}
   const el = $('#cartes-p-collection');
   const none = '<p class="empty">Aucune série disponible pour le moment.</p>';
   if (!S.sets.length && !S.otherSets.size) { el.innerHTML = none; S.shownIds = []; return; }
@@ -2133,9 +2358,11 @@ function drawCollection(focusId) {
   const set = all ? null : S.sets.find((s) => s.id === S.setId) || S.otherSets.get(S.setId);
   if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
-  /** Vrai si la carte passe les filtres de la collection (rareté, famille, possession). */
+  const q = foldText(f.q).trim();
+  /** Vrai si la carte passe les filtres de la collection (recherche, rareté, famille, possession). */
   const keep = (c) => {
     const n = copiesOf(c.id).length;
+    if (q && !matchQuery(c, q)) return false;
     if (f.rarity && c.rarity !== f.rarity) return false;
     if (f.family && c.family !== f.family) return false;
     if (f.owned === 'owned' && n === 0) return false;
@@ -2160,8 +2387,10 @@ function drawCollection(focusId) {
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
   const withCards = groups.filter((g) => g.shown.length);
-  S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // ordre affiché : sert à précédent / suivant
-  const plan = massPlan();
+  // Liste complète (pas seulement le lot dessiné) : sert à « Précédente / Suivante » dans la carte agrandie
+  S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
+  const plan = massPlan(); // toujours sur toute la collection, jamais sur le lot affiché
+  const sl = sliceGroups(withCards, S.colLimit);
   // Regroupement par jeu (idée C7) : proposé quand des cartes de la sélection portent un tag.
   const pool = all ? [...S.cards, ...extras.flatMap((g) => g.shown)] : outside ? (extras[0]?.shown || []) : S.cards.filter((c) => c.set_id === set.id);
   const tagged = hasTags(pool);
@@ -2172,9 +2401,9 @@ function drawCollection(focusId) {
       title: all ? 'Toutes les séries' : `Série « ${set.name} »` })
     : !withCards.length
     ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
-    : all
-      ? `<div class="cz-groups">${withCards.map(groupHtml).join('')}</div>`
-      : `<div class="cartes-grid">${(groups[0]?.shown || []).map(cardCell).join('')}</div>`;
+    : (all
+      ? `<div class="cz-groups">${sl.groups.map(groupHtml).join('')}</div>`
+      : `<div class="cartes-grid">${(sl.groups[0]?.shown || []).map(cardCell).join('')}</div>`) + moreHtml(sl, 'col');
   el.innerHTML = `
     <div id="cartes-atelier" hidden></div>
     <section class="card cartes-block">
@@ -2193,6 +2422,13 @@ function drawCollection(focusId) {
         </div>
       </div>
       ${set?.code === 'hors-serie' ? HORS_SERIE_NOTE : set?.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
+      <div class="field cartes-search">
+        <label for="cartes-f-q">Chercher une carte</label>
+        <div class="cartes-search-box">
+          <input id="cartes-f-q" type="search" data-search="col" value="${esc(f.q)}" autocomplete="off" maxlength="60" placeholder="Nom ou numéro" aria-describedby="cartes-f-q-n">
+          <span class="muted small" id="cartes-f-q-n">${q ? esc(pluralCount(S.shownIds.length, 'résultat', 'résultats', nf.format)) : ''}</span>
+        </div>
+      </div>
       <div class="cartes-filters">
         <div class="field">
           <label for="cartes-f-rarity">Rareté</label>
@@ -2241,6 +2477,9 @@ function drawCollection(focusId) {
   drawAtelier(); // panneau de l'Atelier (idée C10)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
+  watchMore();
+  // Durée du dessin (performance.measure « hg-collection ») : suivie par le test de la collection très longue
+  try { performance.measure('hg-collection', 'hg-collection-start'); } catch {}
 }
 const renderCollection = kept(drawCollection); // voir renderBoosters
 
@@ -2533,7 +2772,7 @@ async function openPeer(id) {
   }
   if (!S.peer) S.returnY = window.scrollY;
   S.peer = { id, member: null, copies: [], byCard: new Map(), loading: true, error: '', setId: ALL,
-    filters: { rarity: '', family: '', owned: 'all' }, picks: new Set(), shownIds: [] };
+    filters: { rarity: '', family: '', owned: 'all' }, picks: new Set(), shownIds: [], limit: 0 };
   applyView();
   renderPeer();
   $('#cartes-peer').scrollIntoView({ block: 'start' });
@@ -2721,11 +2960,12 @@ function peerHtml(P) {
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
   const withCards = groups.filter((g) => g.shown.length);
-  P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
+  P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // liste complète, pour la carte agrandie
+  const sl = sliceGroups(withCards, P.limit);
   const body = !S.sets.length && !extras.length ? '<p class="empty">Aucune série disponible pour le moment.</p>'
     : !withCards.length ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
-      : all ? `<div class="cz-groups">${withCards.map(peerGroupHtml).join('')}</div>`
-        : `<div class="cartes-grid">${(groups[0]?.shown || []).map(peerCell).join('')}</div>`;
+      : (all ? `<div class="cz-groups">${sl.groups.map(peerGroupHtml).join('')}</div>`
+        : `<div class="cartes-grid">${(sl.groups[0]?.shown || []).map(peerCell).join('')}</div>`) + moreHtml(sl, 'peer');
   return `${peerHead(P)}
     <section class="card cartes-block">
       <div class="cartes-series">
@@ -2779,6 +3019,7 @@ function renderPeer(focusSel) {
     else el.innerHTML = peerHtml(P);
     if (focusSel) el.querySelector(focusSel)?.focus({ preventScroll: true });
   });
+  watchMore();
 }
 
 /**
@@ -2985,6 +3226,7 @@ function onClick(e) {
     case 'quest-claim': return claimQuest(t.dataset.code);
     case 'quest-proof': return openProof(S.quests.quests.find((q) => q.code === t.dataset.code), { uid: me.id, sb, toast, esc, onDone: loadQuests });
     case 'reveal-all': return skipSeq();
+    case 'more-cards': return showMore(t.dataset.which);
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
     case 'zoom-card': return zoom.open(t.dataset.card, t);
@@ -3017,10 +3259,11 @@ function onClick(e) {
  */
 function onChange(e) {
   const t = e.target;
-  if (t.dataset.change === 'set') { S.setId = t.value; renderCollection('cartes-set'); }
-  else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
-  else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; renderPeer('#peer-set'); }
-  else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
+  if (t.dataset.change === 'set') { S.setId = t.value; S.colLimit = 0; renderCollection('cartes-set'); }
+  else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; S.colLimit = 0; renderCollection(t.id); }
+  else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; S.peer.limit = 0; renderPeer('#peer-set'); }
+  else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; S.peer.limit = 0; renderPeer('#' + t.id); }
+  else if (t.dataset.change === 'reveal-direct') setPrefs({ revealDirect: t.checked });
   else if (t.dataset.change === 'shop-qty') setBuyQty(t.value, t.dataset.type || 'classique');
   else if (t.dataset.gift === 'type') { updateGift(t); cancelGiftConfirm(t); } // la quantité max suit le stock du type
   else if (t.dataset.gift) { updateGift(t); cancelGiftConfirm(t); }
@@ -3045,6 +3288,7 @@ function cancelGiftConfirm(field = null) {
  */
 function onInput(e) {
   const el = e.target;
+  if (el.dataset.search === 'col') { searchCollection(el); return; }
   if (!el.dataset.gift) return;
   updateGift(el);
   if (!S.giftConfirm) return;
@@ -3052,6 +3296,24 @@ function onInput(e) {
   cancelGiftConfirm(el);
   const ta = document.getElementById('gift-msg');
   if (ta) ta.setSelectionRange(pos, pos); // le curseur reste où on tapait
+}
+
+/** Minuterie de la recherche dans la collection (on attend une courte pause dans la frappe). */
+let searchTimer = null;
+/**
+ * Saisie dans « Chercher une carte » : la grille se redessine après une courte pause, le curseur reste à sa place.
+ * @param {HTMLInputElement} el champ de recherche
+ */
+function searchCollection(el) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    const pos = el.selectionStart ?? el.value.length;
+    S.filters.q = el.value.slice(0, 60);
+    S.colLimit = 0;
+    renderCollection('cartes-f-q');
+    const box = document.getElementById('cartes-f-q');
+    try { box?.setSelectionRange(pos, pos); } catch {}
+  }, 160);
 }
 
 /**

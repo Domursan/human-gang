@@ -36,12 +36,18 @@ export function setPrefs(patch = {}) {
 }
 /* ---------- Panneau « Préférences d'affichage » (<dialog>) ---------- */
 
+/**
+ * Vrai sur un écran seulement tactile (pas de souris ni de clavier attendu) : la ligne « Raccourcis clavier » y est cachée.
+ * @returns {boolean}
+ */
+const touchOnly = () => { try { return matchMedia('(hover: none) and (pointer: coarse)').matches; } catch { return false; } };
+
 /** Dialogue des préférences, créé à la première ouverture. */
 let _prefsDialog = null;
 /** Élément qui avait le focus avant l'ouverture : on lui rend le focus à la fermeture. */
 let _prefsOpener = null;
 /**
- * Construit le dialogue : modes, thème spécial, effets, sons, volume, réinitialisation.
+ * Construit le dialogue : modes, thème spécial, effets, révélation des boosters, raccourcis, sons, volume, réinitialisation.
  * Chaque changement s'applique tout de suite (pas de bouton « Enregistrer »).
  * @returns {HTMLDialogElement} Le dialogue, déjà ajouté au document.
  */
@@ -83,6 +89,14 @@ function buildPrefsDialog() {
           <span class="switch-txt"><strong>Sons</strong><small>Petits sons discrets : clics, confirmations, messages, badges.</small></span>
           <input class="pref-switch" type="checkbox" role="switch" name="sound">
         </label>
+        <label class="switch-row">
+          <span class="switch-txt"><strong>Révéler mes boosters d’un coup</strong><small>Sans la séquence animée : toutes les cartes s’affichent tout de suite.</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="revealDirect">
+        </label>
+        <label class="switch-row prefs-shortcuts-row"${touchOnly() ? ' hidden' : ''}>
+          <span class="switch-txt"><strong>Raccourcis clavier</strong><small>« g » puis une lettre pour changer de page, « / » pour chercher, « ? » pour l’aide-mémoire.</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="shortcuts">
+        </label>
         <div class="volume-row">
           <label for="prefs-volume">Volume</label>
           <input id="prefs-volume" type="range" name="volume" min="0" max="100" step="5">
@@ -104,7 +118,7 @@ function buildPrefsDialog() {
       // quête « thème changé » : import dynamique, pour ne pas charger le client Supabase avant le thème
       import('../quest-track.js').then((m) => m.questTrack('theme_change', el.value)).catch(() => {});
     }
-    else if (el.name === 'special' || el.name === 'effects') setPrefs({ [el.name]: el.checked });
+    else if (['special', 'effects', 'revealDirect', 'shortcuts'].includes(el.name)) setPrefs({ [el.name]: el.checked });
     else if (el.name === 'sound') { setPrefs({ sound: el.checked }); if (el.checked) playSound('success'); }
   });
   const vol = f.elements.volume;
@@ -131,6 +145,8 @@ function syncPrefsDialog() {
   f.elements.special.checked = p.special;
   f.elements.effects.checked = p.effects;
   f.elements.sound.checked = p.sound;
+  f.elements.revealDirect.checked = p.revealDirect;
+  f.elements.shortcuts.checked = p.shortcuts;
   f.elements.volume.value = String(Math.round(p.volume * 100));
   f.elements.volume.disabled = !p.sound;
   f.querySelector('.prefs-test').disabled = !p.sound;

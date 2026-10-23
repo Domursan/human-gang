@@ -129,7 +129,7 @@ export default {
         { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet Collection, clique sur la carte que tu veux.' },
         { title: 'Ajoute-la à ta liste', text: 'Clique sur « Ajouter à ma liste de souhaits ». Le bouton passe à « Dans ma liste de souhaits ».' },
         { title: 'Retire-la si besoin', text: 'Clique de nouveau sur le même bouton pour retirer la carte de ta liste.' },
-        { title: 'Active les alertes Discord', text: 'Va sur la page Compte, dans le bloc « Profil », coche « M’avertir sur Discord quand une carte de ma liste de souhaits est obtenue par un membre », puis clique sur « Enregistrer ».' },
+        { title: 'Active les alertes Discord', text: 'Va sur la page Mon compte, bloc « Mes notifications » : active la ligne « Cartes · souhaits et cadeaux » dans la colonne « Sur Discord », puis clique sur « Enregistrer ».' },
         { title: 'Repère les correspondances', text: 'Dans l’onglet Échanges, les correspondances montrent les membres qui ont une carte que tu souhaites, et ceux qui souhaitent une carte que tu as en double.' },
       ],
       tips: [

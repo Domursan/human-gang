@@ -18,6 +18,7 @@ import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js
 import { avatarHtml, esc } from './util.js';
 import { ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP, ICON_MENU } from './icons.js';
 import { searchButtonHtml, bindSearch } from './search.js';
+import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 
 /* ---------- Constantes ---------- */
@@ -183,6 +184,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   });
   paintGod();
   if (profile) bindSearch(header);
+  bindShortcuts(profile); // « g » puis une lettre, « / », « ? » (idée Q8 ; rien sur admin.html)
   // Déconnexion : on coupe la session, on oublie les droits et les badges vus pour cette session, puis on va à la page de connexion
   header.querySelector('.nav-logout')?.addEventListener('click', async (e) => {
     const b = e.currentTarget; b.disabled = true;

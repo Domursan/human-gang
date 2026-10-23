@@ -2,7 +2,8 @@
 // Les modules qui ont besoin de lire les préférences importent ce fichier ; c'est prefs.js qui les modifie
 // et les répercute (thème, effets, panneau).
 /*
- * Rôle : garde les préférences de l'appareil (mode d'affichage, thème spécial, effets, sons, volume),
+ * Rôle : garde les préférences de l'appareil (mode d'affichage, thème spécial, effets, sons, volume,
+ * révélation directe des boosters, raccourcis clavier),
  * les valide, les enregistre et pose les attributs correspondants sur <html>.
  * Page : toutes les pages (chargé dès le premier import, donc avant tout rendu).
  * Dépendances : util.js (reducedMotion).
@@ -19,8 +20,11 @@ const PREFS_KEY = 'hg_prefs';
 const OLD_FX_KEY = 'hg_effects_off';
 /** Modes d'affichage proposés, avec leur libellé. */
 export const PREF_MODES = { sombre: 'Sombre', clair: 'Clair', daltonien: 'Daltonien' };
-/** Valeurs par défaut : sombre, thème spécial et effets actifs, sons coupés, volume 60 %. */
-export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effects: true, sound: false, volume: 0.6 });
+/**
+ * Valeurs par défaut : sombre, thème spécial et effets actifs, sons coupés, volume 60 %,
+ * boosters révélés avec leur séquence animée (revealDirect coupé), raccourcis clavier actifs.
+ */
+export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effects: true, sound: false, volume: 0.6, revealDirect: false, shortcuts: true });
 
 /* ---------- Validation et chargement ---------- */
 
@@ -28,7 +32,7 @@ export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effe
  * Ramène un objet quelconque à des préférences valides : valeurs inconnues remplacées par les défauts,
  * volume borné entre 0 et 1.
  * @param {object} [p={}] Préférences brutes (par exemple lues dans localStorage).
- * @returns {{mode: string, special: boolean, effects: boolean, sound: boolean, volume: number}}
+ * @returns {{mode: string, special: boolean, effects: boolean, sound: boolean, volume: number, revealDirect: boolean, shortcuts: boolean}}
  */
 function normalizePrefs(p = {}) {
   const v = Number(p.volume);
@@ -38,6 +42,8 @@ function normalizePrefs(p = {}) {
     effects: typeof p.effects === 'boolean' ? p.effects : PREF_DEFAULTS.effects,
     sound: typeof p.sound === 'boolean' ? p.sound : PREF_DEFAULTS.sound,
     volume: Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : PREF_DEFAULTS.volume,
+    revealDirect: typeof p.revealDirect === 'boolean' ? p.revealDirect : PREF_DEFAULTS.revealDirect,
+    shortcuts: typeof p.shortcuts === 'boolean' ? p.shortcuts : PREF_DEFAULTS.shortcuts,
   };
 }
 /**
@@ -65,7 +71,7 @@ let _prefs = loadPrefs();
 /* ---------- Lecture et écriture ---------- */
 
 /**
- * Préférences courantes (copie) : { mode, special, effects, sound, volume }.
+ * Préférences courantes (copie) : { mode, special, effects, sound, volume, revealDirect, shortcuts }.
  * @returns {object} Copie de l'état ; la modifier ne change rien.
  */
 export function getPrefs() { return { ..._prefs }; }

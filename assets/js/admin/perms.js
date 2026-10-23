@@ -44,7 +44,7 @@ export const SECTION_PERM = {
   // Idées V8, V9 (calendrier, ciné-club) et D3 (commandes slash) : migration 087
   rdv: 'evenements', commandes: 'bot',
   saisons: 'themes', // rendez-vous saisonniers (migration 096) : calendrier de l'Avent, saison des Worlds, anniversaire du gang
-;
+};
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
 const TILE_SECTIONS = ['comptes', 'membres', 'secret-santa', 'idees', 'assistance'];
