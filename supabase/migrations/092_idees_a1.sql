@@ -60,7 +60,7 @@ declare
   q jsonb; k jsonb; rw int; diff text; defs jsonb; norm text; words text[];
   out jsonb := '[]'::jsonb; seen jsonb := '{}'::jsonb; v_exist jsonb; t_start timestamptz; t_end timestamptz;
   nready int := 0; ndup int := 0; nerr int := 0; created int := 0; line int;
-  rmax constant int := 5000;  -- borne des récompenses (même borne que hg_settings.quiz, migration 073)
+  rmax constant int := 2000;  -- borne des récompenses (même borne que hg_quiz_save, migration 076)
   base_rw constant jsonb := '{"facile": 50, "moyen": 100, "difficile": 250, "expert": 500}'::jsonb;
 begin
   if not public.hg_has_perm('quiz') then raise exception 'Réservé à l''admin et au Staff « Questions du gang »'; end if;
