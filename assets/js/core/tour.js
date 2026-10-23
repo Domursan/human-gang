@@ -67,16 +67,18 @@ const visible = (el) => !!el && el.getClientRects().length > 0;
  * Étapes de la visite. cible() renvoie l'élément à éclairer (null : étape sautée) ; menu : ouvre le menu replié sur téléphone ;
  * page : page du site que l'étape présente (sautée si le membre n'y a pas accès).
  */
+/** L'élément s'il est affiché (pas dans le menu en arc fermé), sinon null. */
+const vis = (sel) => { const el = document.querySelector(sel); return el && el.offsetParent !== null ? el : null; };
 function steps() {
   return [
-    { id: 'menu', menu: true, titre: 'Tout le site part d’ici', texte: tx('visite_menu', 'Cartes, IRL, Historique, Messages : le menu mène à chaque rubrique du gang.'),
-      cible: () => { const n = document.querySelector('.site-header .nav'); return n?.querySelector('a') ? n : null; } },
+    { id: 'menu', menu: true, titre: 'Tout le site part d’ici', texte: tx('visite_menu', 'Le jeu de cartes, IRL, Jeux, Calendrier : chaque menu s’ouvre sur ses rubriques.'),
+      cible: () => { const n = document.querySelector('.site-header .nav'); return n?.querySelector('.nav-top') ? n : null; } },
     { id: 'cartes', menu: true, page: 'cartes', titre: 'Tes cartes t’attendent', texte: tx('visite_cartes', 'Un booster gratuit t’attend chaque jour, et les quêtes de la semaine rapportent des Paillettes.'),
       cible: () => document.querySelector('#tile-cartes') || document.querySelector('.site-header .nav a[data-page="cartes"]') },
-    { id: 'recherche', titre: 'Cherche n’importe quoi', texte: tx('visite_recherche', 'Une sortie, un souvenir ou un membre (Ctrl+K sur ordinateur).'),
-      cible: () => document.querySelector('.site-header .nav-search-open') },
-    { id: 'aide', titre: 'Besoin d’un coup de main ?', texte: tx('visite_aide', 'Plus de 60 tutos pas à pas, et l’assistance si tu bloques.'),
-      cible: () => document.querySelector('.site-header .nav-help') || document.querySelector('.site-header .nav-help-link') },
+    { id: 'recherche', titre: 'Cherche n’importe quoi', texte: tx('visite_recherche', 'Une sortie, un souvenir ou un membre : la loupe est derrière ta photo (Ctrl+K sur ordinateur).'),
+      cible: () => vis('.site-header .nav-search-open') || document.querySelector('.site-header .nav-me') },
+    { id: 'aide', titre: 'Besoin d’un coup de main ?', texte: tx('visite_aide', 'Clique sur ta photo : l’aide, tes messages et tes réglages sont là, avec plus de 60 tutos pas à pas.'),
+      cible: () => vis('.site-header .nav-help') || document.querySelector('.site-header .nav-me') },
   ];
 }
 

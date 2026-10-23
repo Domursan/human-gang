@@ -5,7 +5,8 @@
  * (aria-hidden), le libellé est donné par le bouton ou le lien qui la contient.
  * Page : toutes les pages (via header.js, footer.js, search.js, etc.).
  * Dépendances : aucune.
- * Exporte : ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_ALERT, ICON_CLOSE, ICON_SEARCH, ICON_HELP, ICON_MENU.
+ * Exporte : ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_ALERT, ICON_CLOSE, ICON_SEARCH, ICON_HELP, ICON_MENU,
+ *   ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD.
  * Les icônes utilisent currentColor : elles prennent la couleur du texte qui les entoure.
  */
 
@@ -20,3 +21,7 @@ export const ICON_SEARCH = '<svg viewBox="0 0 24 24" width="20" height="20" fill
 export const ICON_HELP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1.1.9-1.1 1.7v.4"/><path d="M12 17.2v.01"/></svg>';
 // Menu repliable (téléphone) : trois traits qui deviennent une croix quand le menu est ouvert (voir base.css).
 export const ICON_MENU = '<svg class="nav-toggle-ico" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path class="bar bar-1" d="M4 8h16"/><path class="bar bar-2" d="M4 12h16"/><path class="bar bar-3" d="M4 16h16"/></svg>';
+// Nouveau menu (23/10) : chevrons des menus déroulants et bouclier du lien Admin dans le menu en arc.
+export const ICON_CHEVRON = '<svg class="nav-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
+export const ICON_CHEVRON_RIGHT = '<svg class="nav-chev-r" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>';
+export const ICON_SHIELD = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>';

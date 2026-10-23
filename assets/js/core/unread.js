@@ -1,4 +1,4 @@
-// Pastille « messages non lus » de l'en-tête (rafraîchie à l'ouverture, toutes les minutes et au retour sur l'onglet).
+// Pastille « messages non lus » de l'en-tête (icône Messages du menu en arc et photo de profil) (rafraîchie à l'ouverture, toutes les minutes et au retour sur l'onglet).
 /*
  * Rôle : affiche dans le lien « Messages » de l'en-tête le nombre de messages non lus du membre.
  * Page : toutes les pages du membre (init.js lance startUnread ; messages.js appelle aussi refreshUnread).
@@ -31,6 +31,14 @@ export async function refreshUnread() {
     badge.hidden = n === 0;
     badge.textContent = n > 99 ? '99+' : String(n);
     link.setAttribute('aria-label', n ? `Messages, ${n} non lu${n > 1 ? 's' : ''}` : 'Messages');
+    // Même pastille sur la photo de profil (menu en arc fermé), et dans son libellé.
+    const me = document.querySelector('.site-header .nav-me');
+    const mb = me?.querySelector('.nav-me-badge');
+    if (mb) { mb.hidden = n === 0; mb.textContent = badge.textContent; }
+    if (me) {
+      const base = (me.getAttribute('aria-label') || 'Mon menu').replace(/, \d+\+? messages? non lus?$/, '');
+      me.setAttribute('aria-label', n ? `${base}, ${n > 99 ? '99+' : n} message${n > 1 ? 's' : ''} non lu${n > 1 ? 's' : ''}` : base);
+    }
     return n;
   } catch (e) {
     if (!isNavCancel(e)) console.warn('[non lus]', e);
