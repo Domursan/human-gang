@@ -6,8 +6,11 @@
  * choisi, export d'un rendez-vous dans son agenda, abonnement personnel (adresse ICS à coller dans son agenda).
  * Rendez-vous récurrents : création, modification et retrait par leur auteur (ou le Staff « evenements »), annulation
  * d'une date précise.
+ * Événements ponctuels (Staff « evenements » ou admin, migration 098) : ajout, modification et retrait, avec heure
+ * facultative, lieu, lien https et note. Affichés comme les autres éléments « site ».
  * Données : RPC hg_calendar (période ≤ 62 jours), table hg_gang_slots (lecture), RPC hg_gang_slot_save,
  * hg_gang_slot_archive, hg_gang_slot_skip, hg_calendar_token_me, hg_calendar_token_reset (migration 087).
+ * Événements ponctuels : RPC hg_cal_can_manage (droit de gestion), hg_cal_event_save, hg_cal_event_remove (migration 098).
  * Fuseau : tout en heure de Zurich. Les filtres sont mémorisés dans le navigateur (localStorage, facultatif).
  * Dépendances : core.js, ics.js (export d'un rendez-vous), icons.js, ui-confirm.js, config.js (adresse du flux).
  * Page réservée aux membres (auth: 'member'). N'exporte rien.
@@ -67,7 +70,7 @@ const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const T = todayZ();
 const S = {
   y: Number(T.slice(0, 4)), m: Number(T.slice(5, 7)), sel: T,
-  items: [], slots: [], loading: false, error: null,
+  items: [], slots: [], loading: false, error: null, canManage: false,
   off: new Set(readFilters()),
 };
 /** Filtres masqués mémorisés (facultatif : stockage parfois indisponible). */
@@ -154,15 +157,21 @@ function renderDay() {
   const list = (byDay().get(S.sel) || []);
   box.innerHTML = `<h2 class="cal-day-title" id="cal-day-title">${esc(cap(longDay(S.sel)))}</h2>
     ${list.length ? `<ul class="cal-list">${list.map((it) => {
-      const href = safeHref(it.link), ext = /^https:/.test(href || '');
+      const evt = it.meta?.source === 'calendrier' ? it.meta : null;
+      // Événement ajouté depuis ce calendrier : pas de « Ouvrir » sans lien https (le lien par défaut est la page elle-même)
+      const href = evt && !/^https:\/\//.test(it.link || '') ? null : safeHref(it.link), ext = /^https:/.test(href || '');
       const timed = it.starts_at && !it.all_day;
       const slot = it.kind === 'groupe' ? it.meta?.slot_id : null;
       return `<li class="cal-item"><span class="cal-bar" style="--c:${TYPES[typeOf(it)]?.color}" aria-hidden="true"></span>
-        <div class="cal-item-txt"><strong>${esc(it.title)}</strong><span class="small muted">${esc(subOf(it))}</span></div>
+        <div class="cal-item-txt"><strong>${esc(it.title)}</strong><span class="small muted">${esc(subOf(it))}</span>
+          ${evt?.location ? `<span class="small">Lieu : ${esc(evt.location)}</span>` : ''}
+          ${evt?.note ? `<span class="small muted cal-item-note">${esc(evt.note)}</span>` : ''}</div>
         <div class="cal-item-act">
           ${href ? `<a class="btn btn-ghost btn-sm" href="${esc(href)}"${ext ? ' target="_blank" rel="noopener noreferrer"' : ''}>${ext ? I.link : ''}<span>Ouvrir</span></a>` : ''}
           ${timed ? `<button type="button" class="btn btn-ghost btn-sm cal-icon" data-act="ics" data-ref="${esc(it.ref)}" aria-label="Ajouter « ${esc(it.title)} » à mon agenda">${I.down}</button>` : ''}
           ${slot && isMineSlot(slot) ? `<button type="button" class="btn btn-ghost btn-sm" data-act="skip" data-slot="${esc(slot)}" data-day="${esc(it.day)}">Annuler cette date</button>` : ''}
+          ${evt && S.canManage ? `<button type="button" class="btn btn-ghost btn-sm" data-act="edit-evt" data-ref="${esc(it.ref)}" aria-label="Modifier « ${esc(it.title)} »">${I.edit}<span>Modifier</span></button>
+          <button type="button" class="btn btn-ghost btn-sm" data-act="remove-evt" data-ref="${esc(it.ref)}" aria-label="Retirer « ${esc(it.title)} »">${I.trash}<span>Retirer</span></button>` : ''}
         </div></li>`;
     }).join('')}</ul>` : '<p class="muted cal-none">Rien de prévu ce jour-là.</p>'}`;
 }
@@ -292,15 +301,77 @@ function openSlot(slot = null) {
   form.title.focus();
 }
 
+/* ---------- Événement ponctuel : formulaire (migration 098) ---------- */
+/** Ouvre le formulaire d'un événement ponctuel ; ev = { id, title, day, time, location, link, note } pour une modification. */
+function openEvent(ev = null) {
+  const back = document.activeElement;
+  const dlg = document.createElement('dialog');
+  dlg.className = 'hg-dialog cal-dlg';
+  dlg.setAttribute('aria-labelledby', 'cal-ev-t');
+  const v = ev || { title: '', day: S.sel, time: '', location: '', link: '', note: '' };
+  dlg.innerHTML = `<form class="stack" novalidate>
+    <div class="cal-dlg-head"><h2 class="cal-dlg-title" id="cal-ev-t">${ev ? 'Modifier l’événement' : 'Nouvel événement'}</h2>
+      <button type="button" class="btn btn-ghost cal-icon" data-close aria-label="Fermer">${I.close}</button></div>
+    <div class="field"><label for="ev-title">Titre</label><input id="ev-title" name="title" maxlength="120" required value="${esc(v.title)}" placeholder="Anniversaire de Léa"></div>
+    <div class="cal-form-row">
+      <div class="field"><label for="ev-day">Jour</label><input id="ev-day" name="day" type="date" required value="${esc(v.day)}"></div>
+      <div class="field"><label for="ev-time">Heure (facultatif)</label><input id="ev-time" name="time" type="time" value="${esc(v.time || '')}" aria-describedby="ev-time-h">
+        <p class="small muted" id="ev-time-h">Vide : toute la journée.</p></div>
+    </div>
+    <div class="field"><label for="ev-loc">Lieu (facultatif)</label><input id="ev-loc" name="location" maxlength="200" value="${esc(v.location || '')}" placeholder="Ferme de Grapeseed"></div>
+    <div class="field"><label for="ev-link">Lien (facultatif)</label><input id="ev-link" name="link" type="url" maxlength="500" inputmode="url" value="${esc(v.link || '')}" placeholder="https://discord.com/channels/…" aria-describedby="ev-link-h">
+      <p class="small muted" id="ev-link-h">Adresse en https:// seulement.</p></div>
+    <div class="field"><label for="ev-note">Note (facultatif)</label><textarea id="ev-note" name="note" maxlength="500" rows="3">${esc(v.note || '')}</textarea></div>
+    <p class="cal-form-err" role="alert" hidden></p>
+    <div class="btn-row cal-form-actions"><button type="button" class="btn btn-ghost" data-close>Annuler</button><button type="submit" class="btn btn-sand">${ev ? 'Enregistrer' : 'Ajouter au calendrier'}</button></div>
+  </form>`;
+  const form = dlg.querySelector('form'), err = dlg.querySelector('.cal-form-err');
+  const fail = (m, el) => { err.textContent = m; err.hidden = false; el?.focus(); };
+  dlg.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) dlg.close(); });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(form));
+    const title = String(f.title).trim(), link = String(f.link || '').trim();
+    if (!title) { fail('Donne un titre à l’événement.', form.title); return; }
+    if (!f.day) { fail('Choisis le jour.', form.day); return; }
+    if (link && !/^https:\/\//.test(link)) { fail('Le lien doit commencer par https://', form.link); return; }
+    const btn = form.querySelector('[type="submit"]'); btn.disabled = true; err.hidden = true;
+    const payload = { ...(ev ? { id: ev.id } : {}), title, day: String(f.day), time: String(f.time || ''),
+      location: String(f.location || '').trim(), link, note: String(f.note || '').trim() };
+    const { error } = await sb.rpc('hg_cal_event_save', { p: payload });
+    btn.disabled = false;
+    if (error) { fail(errMsg(error)); return; }
+    dlg.close(); toast(ev ? 'Événement modifié' : 'Événement ajouté');
+    if (!ev) { S.y = Number(payload.day.slice(0, 4)); S.m = Number(payload.day.slice(5, 7)); S.sel = payload.day; } // on affiche le mois du nouvel événement
+    load();
+  });
+  dlg.addEventListener('close', () => { dlg.remove(); back?.focus?.(); });
+  document.body.append(dlg);
+  dlg.showModal();
+  form.title.focus();
+}
+
+/** Droit de gestion des événements ponctuels (hg_cal_can_manage) : affiche le bouton d'ajout et les actions. */
+async function loadCanManage() {
+  try {
+    const { data, error } = await sb.rpc('hg_cal_can_manage');
+    S.canManage = !error && data === true;
+  } catch { S.canManage = false; }
+  $('#cal-add-evt').hidden = !S.canManage;
+  render();
+}
+
 /* ---------- Événements ---------- */
 $('#cal-prev').innerHTML = I.prev; $('#cal-next').innerHTML = I.next;
 $('#cal-sub').innerHTML = `${I.cal}<span>S’abonner dans mon agenda</span>`;
 $('#cal-add').innerHTML = `${I.plus}<span>Rendez-vous récurrent</span>`;
+$('#cal-add-evt').innerHTML = `${I.plus}<span>Ajouter un événement</span>`;
 $('#cal-prev').addEventListener('click', () => go(-1));
 $('#cal-next').addEventListener('click', () => go(1));
 $('#cal-today').addEventListener('click', () => { S.y = Number(T.slice(0, 4)); S.m = Number(T.slice(5, 7)); S.sel = T; load(); });
 $('#cal-sub').addEventListener('click', openSubscribe);
 $('#cal-add').addEventListener('click', () => openSlot());
+$('#cal-add-evt').addEventListener('click', () => openEvent());
 $('#cal-filters').addEventListener('click', (e) => {
   const b = e.target.closest('[data-filter]'); if (!b) return;
   const k = b.dataset.filter;
@@ -342,8 +413,18 @@ app.addEventListener('click', async (e) => {
     if (!(await confirmBox(`Retirer « ${s.title} » ?`, 'Il disparaît du calendrier de tout le monde, pour toutes les semaines.', { ok: 'Retirer', danger: true }))) return;
     const { error } = await sb.rpc('hg_gang_slot_archive', { p_id: s.id });
     if (error) toast(errMsg(error), 'error'); else { toast('Rendez-vous retiré'); load(); }
+  } else if (act === 'edit-evt') {
+    const it = S.items.find((x) => x.ref === b.dataset.ref); if (!it) return;
+    openEvent({ id: it.meta.event_id, title: it.title, day: it.day, time: it.meta.time || '', location: it.meta.location || '',
+      note: it.meta.note || '', link: /^https:\/\//.test(it.link || '') ? it.link : '' });
+  } else if (act === 'remove-evt') {
+    const it = S.items.find((x) => x.ref === b.dataset.ref); if (!it) return;
+    if (!(await confirmBox(`Retirer « ${it.title} » ?`, 'Il disparaît du calendrier de tout le monde.', { ok: 'Retirer', danger: true }))) return;
+    const { error } = await sb.rpc('hg_cal_event_remove', { p_id: it.meta.event_id });
+    if (error) toast(errMsg(error), 'error'); else { toast('Événement retiré'); load(); }
   }
 });
 
 render();
 load();
+loadCanManage();

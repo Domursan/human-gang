@@ -8,15 +8,19 @@
  *   - Les mieux notés du gang.
  *   Projectionniste (réglage cine.host_ids) ou Staff « evenements » : programmer une séance, choisir le film, annuler,
  *   changer le lien vocal, retirer une proposition. Staff « souvenirs » : masquer un avis.
- * Aucune affiche officielle : une vignette dessinée en CSS (titre et couleur tirée du titre).
+ * Affiches : celles que les membres ajoutent (lien https ou fichier image, migration 098), sinon une vignette dessinée
+ * en CSS (titre et couleur tirée du titre). Ajout et retrait : la personne qui a proposé le film, le projectionniste
+ * et le Staff « evenements ».
  * Données : RPC hg_cine_state (lecture complète, passe aussi les états échus), hg_cine_propose, hg_cine_plus,
  * hg_cine_withdraw, hg_cine_vote, hg_cine_presence_set, hg_cine_review, hg_cine_book_better, hg_cine_review_hide,
- * hg_cine_session_open, hg_cine_session_admin (migration 087) ; hg_members (pseudos).
- * Dépendances : core.js, icons.js, ui-confirm.js. Page réservée aux membres (auth: 'member'). N'exporte rien.
+ * hg_cine_session_open, hg_cine_session_admin (migration 087), hg_cine_poster_set (migration 098) ; lecture de
+ * hg_cine_films (id, poster_url) ; hg_members (pseudos) ; stockage hg-assets (dossier cine/<membre>/).
+ * Dépendances : core.js, icons.js, ui-confirm.js, image-compress.js. Page réservée aux membres (auth: 'member'). N'exporte rien.
  */
-import { sb, initPage, esc, $, errMsg, toast, avatarHtml } from './core.js';
+import { sb, initPage, esc, $, errMsg, toast, avatarHtml, hasPerm } from './core.js';
 import { svg } from './icons.js';
 import { confirmBox } from './ui-confirm.js';
+import { prepareImage } from './image-compress.js';
 
 /* ---------- Initialisation ---------- */
 const me = await initPage({ auth: 'member' });
@@ -51,15 +55,18 @@ const nf1 = (n) => Number(n).toLocaleString('fr-CH', { minimumFractionDigits: 1,
 const hue = (s) => { let h = 0; for (const c of String(s)) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
 
 /* ---------- État ---------- */
-const S = { data: null, members: new Map(), busy: false, open: new Set() };
+const S = { data: null, members: new Map(), posters: new Map(), broken: new Set(), busy: false, open: new Set() };
 const pseudo = (id) => S.members.get(id)?.pseudo || 'Ancien membre';
 
 async function load() {
   app.setAttribute('aria-busy', 'true');
   try {
-    const [st, mem] = await Promise.all([sb.rpc('hg_cine_state'), S.members.size ? null : sb.rpc('hg_members')]);
+    // Les affiches ne sont pas dans hg_cine_state : lecture directe (autorisée aux membres).
+    const [st, mem, posters] = await Promise.all([sb.rpc('hg_cine_state'), S.members.size ? null : sb.rpc('hg_members'),
+      sb.from('hg_cine_films').select('id, poster_url').not('poster_url', 'is', null)]);
     if (st.error) throw st.error;
     if (mem && !mem.error) S.members = new Map((mem.data || []).map((m) => [m.id, m]));
+    if (!posters.error) S.posters = new Map((posters.data || []).map((r) => [r.id, r.poster_url]));
     S.data = st.data;
     render();
   } catch (e) {
@@ -81,7 +88,23 @@ async function act(fn, args, okMsg) {
 }
 
 /* ---------- Rendu ---------- */
-const poster = (f, big = false) => `<div class="cine-poster${big ? ' is-big' : ''}" style="--h:${hue(f.title)}" aria-hidden="true"><span>${esc(f.title)}</span></div>`;
+/** Vignette dessinée en CSS (repli : pas d'affiche, ou affiche qui ne charge pas). */
+const cssPoster = (title, big = false) => `<div class="cine-poster${big ? ' is-big' : ''}" style="--h:${hue(title)}" aria-hidden="true"><span>${esc(title)}</span></div>`;
+/** Affiche du film si un membre en a ajouté une, sinon vignette CSS. */
+const poster = (f, big = false) => {
+  const url = S.posters.get(f.id);
+  if (!url || S.broken.has(url)) return cssPoster(f.title, big);
+  return `<img class="cine-poster cine-poster-img${big ? ' is-big' : ''}" src="${esc(url)}" alt="${esc(f.title)}" loading="lazy" decoding="async" data-big="${big ? 1 : 0}">`;
+};
+/** Peut changer l'affiche : la personne qui a proposé le film, le projectionniste, le Staff « evenements ». */
+const canPoster = (f) => !!f && (f.proposed_by === me.id || !!S.data?.is_host || hasPerm('evenements'));
+/** Bouton « Ajouter / Changer l'affiche » (vide si la personne n'a pas le droit). */
+const posterBtn = (f) => (canPoster(f)
+  ? `<button type="button" class="btn btn-ghost btn-sm" data-act="poster" data-film="${esc(f.id)}" aria-label="${S.posters.has(f.id) ? 'Changer l’affiche' : 'Ajouter une affiche'} de ${esc(f.title)}">${S.posters.has(f.id) ? 'Changer l’affiche' : 'Ajouter une affiche'}</button>`
+  : '');
+/** Retrouve un film dans la séance en cours, la liste d'attente ou les films vus. */
+const findFilm = (id) => S.data?.current?.films?.find((x) => x.id === id) || S.data?.waiting?.find((x) => x.id === id)
+  || S.data?.seen?.find((x) => x.id === id) || null;
 
 function starsHtml(avg, label = true) {
   const n = Math.round(Number(avg) || 0);
@@ -113,12 +136,13 @@ function currentHtml(d) {
       <div class="cine-film-foot"><span class="small"><strong>${f.votes} vote${f.votes > 1 ? 's' : ''}</strong></span>
         ${mine ? `<span class="pill cine-mine">${I.check}Ton choix</span>` : `<button type="button" class="btn btn-ghost btn-sm" data-act="vote" data-film="${esc(f.id)}" aria-label="Voter pour ${esc(f.title)}">Voter</button>`}
       </div>
+      ${posterBtn(f)}
       ${d.is_host ? `<button type="button" class="btn btn-ghost btn-sm cine-host-btn" data-act="fix" data-film="${esc(f.id)}">Choisir ce film</button>` : ''}
     </article>`;
   }).join('')}</div>
     <p class="small muted">${c.voters} votant${c.voters > 1 ? 's' : ''}. En dessous de ${cfg.seuil}, la séance est reportée d’une semaine.${c.postponed ? ` Déjà reportée ${c.postponed} fois.` : ''}</p>`
     : chosen ? `<div class="cine-chosen">${poster(chosen, true)}<div><h3 class="cine-chosen-t">${esc(chosen.title)}</h3>
-        <p class="small muted">${[chosen.year, chosen.pitch ? `« ${chosen.pitch} »` : null].filter(Boolean).map(esc).join(' · ')}</p></div></div>` : '';
+        <p class="small muted">${[chosen.year, chosen.pitch ? `« ${chosen.pitch} »` : null].filter(Boolean).map(esc).join(' · ')}</p>${posterBtn(chosen)}</div></div>` : '';
   return `<section class="card cine-cur" aria-labelledby="cine-cur-t">
     <div class="cine-cur-head"><h2 class="cine-k" id="cine-cur-t">${voting ? 'Vote de la semaine' : 'Film choisi'}</h2>
       ${voting ? `<span class="pill pill-todo">Clôture ${esc(short(c.closes_at))}</span>` : '<span class="pill pill-ok">C’est décidé</span>'}</div>
@@ -160,6 +184,7 @@ function seenHtml(d) {
       ${f.reviews.length ? `<ul class="cine-reviews">${f.reviews.slice(0, 6).map((r) => reviewHtml(f, r, d)).join('')}</ul>` : ''}
       <div class="cine-seen-foot">
         <button type="button" class="btn ${bb ? 'btn-sand' : 'btn-ghost'} btn-sm" data-act="book" data-film="${esc(f.id)}" aria-pressed="${bb}">${I.book}<span>Le livre est mieux · ${f.book_better}</span></button>
+        ${posterBtn(f)}
         <button type="button" class="btn btn-sand btn-sm" data-act="review" data-film="${esc(f.id)}">${mine.stars || mine.body ? 'Modifier mon avis' : 'Noter'}</button>
       </div>
     </article>`;
@@ -171,7 +196,7 @@ function waitingHtml(d) {
       <button type="button" class="btn btn-ghost btn-sm" data-act="propose">${I.plus}<span>Proposer un film</span></button></div>
     ${d.waiting.length ? `<ul class="cine-wait">${d.waiting.map((f) => `<li class="cine-wait-i">
       <div class="cine-wait-txt"><strong>${esc(f.title)}</strong>${f.year ? ` <span class="muted">(${f.year})</span>` : ''}
-        <span class="small muted">${f.pitch ? `« ${esc(f.pitch)} » · ` : ''}proposé par ${esc(pseudo(f.proposed_by))}</span></div>
+        <span class="small muted">${f.pitch ? `« ${esc(f.pitch)} » · ` : ''}proposé par ${esc(pseudo(f.proposed_by))}</span>${posterBtn(f)}</div>
       <div class="cine-wait-act">
         <button type="button" class="btn ${f.my_plus ? 'btn-sand' : 'btn-ghost'} btn-sm" data-act="plus" data-film="${esc(f.id)}" aria-pressed="${!!f.my_plus}" aria-label="+ pour ${esc(f.title)} (${f.plus})">+ ${f.plus}</button>
         ${f.proposed_by === me.id || d.is_host ? `<button type="button" class="btn btn-ghost btn-sm cine-icon" data-act="withdraw" data-film="${esc(f.id)}" aria-label="Retirer ${esc(f.title)}">${I.trash}</button>` : ''}
@@ -196,6 +221,7 @@ function render() {
 /* ---------- Boîtes de dialogue ---------- */
 /** Ouvre une boîte de dialogue à formulaire ; onSubmit(FormData, afficherErreur) renvoie true pour fermer. */
 function dialog(title, inner, submitLabel, onSubmit) {
+  const back = document.activeElement; // le bouton qui a ouvert la boîte reprend le focus à la fermeture
   const dlg = document.createElement('dialog');
   dlg.className = 'hg-dialog cine-dlg';
   dlg.setAttribute('aria-labelledby', 'cine-dlg-t');
@@ -214,7 +240,7 @@ function dialog(title, inner, submitLabel, onSubmit) {
     const btn = form.querySelector('[type="submit"]'); btn.disabled = true;
     try { if (await onSubmit(new FormData(form), fail, form)) dlg.close(); } finally { btn.disabled = false; }
   });
-  dlg.addEventListener('close', () => dlg.remove());
+  dlg.addEventListener('close', () => { dlg.remove(); back?.focus?.(); });
   document.body.append(dlg);
   dlg.showModal();
   form.querySelector('input, textarea, select')?.focus();
@@ -265,7 +291,41 @@ function openReview(film) {
   });
 }
 
-/** Prochaine date par défaut : jour et heure du réglage (dimanche 20 h 30), au moins demain. */
+/** Affiche d'un film : une adresse https, ou un fichier image (compressé, envoyé dans cine/<membre>/). */
+function openPoster(film) {
+  const has = S.posters.has(film.id);
+  const dlg = dialog(`Affiche de ${film.title}`, `
+    <div class="field"><label for="cp-url">Adresse de l’image (https)</label><input id="cp-url" name="url" type="url" inputmode="url" maxlength="600" placeholder="https://…" autocomplete="off"></div>
+    <p class="small muted">ou</p>
+    <div class="field"><label for="cp-file">Choisir un fichier image (10 Mo au plus)</label><input id="cp-file" name="file" type="file" accept="image/*"></div>
+    ${has ? '<div><button type="button" class="btn btn-ghost btn-sm" data-act-dlg="remove">Retirer l’affiche</button></div>' : ''}`,
+  'Enregistrer', async (fd, fail) => {
+    const file = fd.get('file'), url = String(fd.get('url') || '').trim();
+    let target = url;
+    if (file && file.size) {
+      if (!file.type.startsWith('image/')) { fail('Choisis un fichier image (PNG, JPG, WebP ou GIF).'); return false; }
+      if (file.size > 10 * 1024 * 1024) { fail('Image trop lourde (10 Mo maximum).'); return false; }
+      try {
+        const img = await prepareImage(file);
+        const path = `cine/${me.id}/${film.id}-${Date.now()}.${img.ext}`;
+        const up = await sb.storage.from('hg-assets').upload(path, img.blob, { contentType: img.contentType, upsert: false });
+        if (up.error) throw up.error;
+        target = sb.storage.from('hg-assets').getPublicUrl(path).data.publicUrl;
+      } catch (e) { fail(errMsg(e)); return false; }
+    } else if (!url) { fail('Colle une adresse https ou choisis un fichier image.'); return false; }
+    if (!/^https:\/\//.test(target)) { fail('L’adresse doit commencer par https://'); return false; }
+    const { error } = await sb.rpc('hg_cine_poster_set', { p_film: film.id, p_url: target });
+    if (error) { fail(errMsg(error)); return false; }
+    toast('Affiche enregistrée'); load(); return true;
+  });
+  dlg.querySelector('[data-act-dlg="remove"]')?.addEventListener('click', async () => {
+    const { error } = await sb.rpc('hg_cine_poster_set', { p_film: film.id, p_url: '' });
+    if (error) { toast(errMsg(error), 'error'); return; }
+    dlg.close(); toast('Affiche retirée'); load();
+  });
+}
+
+/** Prochaine date par défaut :jour et heure du réglage (dimanche 20 h 30), au moins demain. */
 function defaultStart(cfg) {
   const [h, m] = String(cfg.heure || '20:30').split(':').map(Number);
   const d = new Date();
@@ -309,6 +369,7 @@ root.addEventListener('click', async (e) => {
   else if (a === 'propose') openPropose();
   else if (a === 'review') { const f = d.seen.find((x) => x.id === film); if (f) openReview(f); }
   else if (a === 'spoiler') { S.open.add(b.dataset.key); render(); }
+  else if (a === 'poster') { const f = findFilm(film); if (f && canPoster(f)) openPoster(f); }
   else if (a === 'open-session') openSession();
   else if (a === 'withdraw') {
     const f = d.waiting.find((x) => x.id === film);
@@ -327,5 +388,15 @@ root.addEventListener('click', async (e) => {
     act('hg_cine_session_admin', { p_session: c.id, p_action: 'link', p_voice_link: v || null }, 'Lien enregistré');
   }
 });
+
+// Affiche qui ne charge pas : on garde la vignette CSS (écoute en phase de capture, l'événement « error » ne remonte pas).
+root.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement) || !img.classList.contains('cine-poster-img')) return;
+  S.broken.add(img.getAttribute('src'));
+  const t = document.createElement('template');
+  t.innerHTML = cssPoster(img.alt, img.dataset.big === '1');
+  img.replaceWith(t.content);
+}, true);
 
 load();
