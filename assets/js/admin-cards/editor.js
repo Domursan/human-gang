@@ -60,7 +60,7 @@ export function openCardDialog(k = null) {
             <div class="field"><label for="acc-file">Téléverser une image</label>
               <input id="acc-file" name="file" type="file" accept="image/png,image/webp,image/jpeg,image/gif,image/svg+xml"></div>
             <div class="field"><label for="acc-url">Ou URL de l'image</label>
-              <input id="acc-url" name="image_url" type="url" inputmode="url" placeholder="https://…" value="${esc(k?.image_url ?? '')}"></div>
+              <input id="acc-url" name="image_url" type="text" inputmode="url" spellcheck="false" placeholder="https://…" value="${esc(k?.image_url ?? '')}"></div>
             <p class="small muted">Format conseillé : paysage 16:9 (par exemple 1600 × 900 px), sujet bien centré (les petites cartes ne montrent que le milieu). PNG, JPG, WebP, GIF ou SVG, 5 Mo maximum. Sans image, la carte affiche le logo du gang.</p>
             <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-acc-noimg>Retirer l'image</button></div>
           </fieldset>
@@ -154,7 +154,8 @@ export function openCardDialog(k = null) {
     if (v.tag && !/^[a-z0-9][a-z0-9-]{0,31}$/.test(v.tag)) throw new Error('Tag de jeu : minuscules, chiffres et tirets (ex. minecraft, sea-of-thieves).');
     if (v.max_copies !== null && (!Number.isInteger(v.max_copies) || v.max_copies < 1)) throw new Error('Exemplaires maximum : un nombre entier à partir de 1 (ou vide pour illimité).');
     if (k && v.max_copies !== null && v.max_copies < used) throw new Error(`Des exemplaires sont déjà numérotés jusqu'au n° ${used} : le maximum ne peut pas descendre en dessous.`);
-    if (v.image_url && !/^https?:\/\//.test(v.image_url)) throw new Error('L\'URL de l\'image doit commencer par https://');
+    // Adresse web, ou image dessinée livrée avec le site (assets/cards/<série>/<fichier>.svg : cartes Champions, Le gang joue)
+    if (v.image_url && !/^https?:\/\//.test(v.image_url) && !/^assets\/cards\/[a-z0-9-]+\/[a-z0-9-]+\.svg$/.test(v.image_url)) throw new Error('L\'URL de l\'image doit commencer par https://');
     if ((v.family === 'membre' || v.rarity === 'identite') && !v.member_id) throw new Error('Une carte Membre ou Identité doit être liée à un membre.');
     return v;
   };
