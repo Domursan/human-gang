@@ -15,7 +15,7 @@ const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.reso
 const FIXTURES = path.join(TESTS, 'fixtures');
 const SHOTS = path.join(TESTS, 'shots');
 const ORIGIN = 'http://hg.test';
-// Préfixe de chemin : HG_PREFIX=/human-gang sert le site comme GitHub Pages (https://domursan.github.io/human-gang/).
+// Préfixe de chemin : HG_PREFIX=/human-gang sert le site comme GitHub Pages (https://humane-gang.com/).
 // Tout chemin hors préfixe (ex. /assets/… à la racine) répond 404, comme en ligne : un chemin absolu cassé se voit.
 /** Préfixe de chemin : le site peut être servi sous /human-gang/ comme sur GitHub Pages. */
 const PREFIX = (process.env.HG_PREFIX || '').replace(/\/+$/, '');
