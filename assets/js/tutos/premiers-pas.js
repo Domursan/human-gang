@@ -127,7 +127,7 @@ export default {
       steps: [
         { title: 'Ouvre les préférences', text: 'Clique sur l\'icône « Préférences d\'affichage » dans la colonne d\'outils de l\'en-tête, ou sur « Préférences d\'affichage » en bas de page.' },
         { title: 'Choisis un mode d\'affichage', text: 'Dans « Mode d\'affichage » : Sombre (par défaut), Clair (fond clair, texte foncé) ou Daltonien (bleu et orange, contrastes renforcés). Le changement est immédiat.' },
-        { title: 'Règle les interrupteurs', text: '« Thème spécial » : thèmes de saison (Noël, Halloween…). « Effets visuels » : étoiles, neige, confettis. « Sons » : petits sons discrets, coupés par défaut.' },
+        { title: 'Règle les interrupteurs', text: '« Thème spécial » : thèmes de saison (Noël, Halloween…). « Effets visuels » : étoiles, neige, confettis. « Révéler mes boosters d’un coup » : les cartes d’un booster s’affichent tout de suite, sans la séquence animée. « Raccourcis clavier » (sur ordinateur) : les raccourcis d’une touche. « Sons » : petits sons discrets, coupés par défaut.' },
         { title: 'Règle le volume', text: 'Quand les sons sont activés, le curseur « Volume » devient utilisable. Le bouton « Tester » joue un son pour vérifier.' },
         { title: 'Ferme le panneau', text: 'Clique sur « Terminé ». Le bouton « Réinitialiser » remet tous les réglages par défaut.' },
       ],
@@ -135,7 +135,24 @@ export default {
         'Les préférences sont enregistrées sur cet appareil seulement. Sur un autre appareil, il faut les régler à nouveau.',
         'Si ton appareil demande de réduire les animations, les effets visuels restent coupés.',
       ],
-      keywords: ['préférences', 'thème', 'mode', 'clair', 'sombre', 'daltonien', 'effets', 'neige', 'sons', 'volume', 'affichage'],
+      keywords: ['préférences', 'thème', 'mode', 'clair', 'sombre', 'daltonien', 'effets', 'neige', 'sons', 'volume', 'affichage', 'booster', 'révéler', 'animation'],
+    },
+    {
+      slug: 'raccourcis-clavier',
+      title: 'Raccourcis clavier',
+      summary: 'Changer de page, chercher et ouvrir l’aide-mémoire au clavier, sur ordinateur.',
+      page: null,
+      steps: [
+        { title: 'Change de page', text: 'Tape « g » puis, dans la seconde et demie, une lettre : a Accueil, c Cartes, i Sorties IRL, h Historique, m Messages, s Secret Santa, q Quiz, p Mon compte, t Aide et tutos. Une petite étiquette « g… » en bas de l’écran montre que le site attend la seconde touche.' },
+        { title: 'Cherche', text: 'Tape « / » (ou Ctrl + K, Cmd + K sur Mac) pour ouvrir la recherche.' },
+        { title: 'Ouvre l’aide-mémoire', text: 'Tape « ? » : la liste des raccourcis s’affiche, avec ceux de la page ouverte (sur Cartes : flèches et Échap dans la carte agrandie). Échap ou « Compris » la ferme.' },
+        { title: 'Coupe-les si besoin', text: 'Dans les Préférences d’affichage, l’interrupteur « Raccourcis clavier » les coupe, tout comme le bouton « Désactiver les raccourcis » de l’aide-mémoire.' },
+      ],
+      tips: [
+        'Les raccourcis ne réagissent pas quand tu écris dans un champ, quand une fenêtre est ouverte, ni avec Ctrl, Alt ou Cmd.',
+        'Une page que le gang a masquée n’a pas de raccourci.',
+      ],
+      keywords: ['raccourcis', 'clavier', 'touches', 'g', 'aide-mémoire', 'navigation', 'accessibilité'],
     },
     {
       slug: 'naviguer-sur-le-site',

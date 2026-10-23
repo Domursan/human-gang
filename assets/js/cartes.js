@@ -16,6 +16,7 @@ import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paill
 import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
+import { foldText } from './core/search.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -110,9 +111,12 @@ function restoreFocus(fallback = null) {
    (reveal, busy), collection d'un membre (peer), échanges (tradeApi). */
 const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
-  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), log: [],
+  otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…)
+  copies: [], wish: new Set(), log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
-  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all' },
+  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', q: '' },
+  // Collection très longue (idée Q5) : nombre de cartes dessinées (lot affiché), remis à zéro à chaque changement de filtre.
+  colLimit: 0,
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
   // Ouverture groupée en cours ou interrompue (voir openStockMulti) : type, série, identifiants des demandes, avancement ; null sinon.
   x5: null,
@@ -209,8 +213,124 @@ const outsideHead = (g, hid) => `<div class="cz-group-head">
       <p class="cz-group-count">${nf.format(g.owned)} carte${g.owned > 1 ? 's' : ''} possédée${g.owned > 1 ? 's' : ''} · série pas ouverte</p>
     </div>
     <p class="muted small">Cartes obtenues hors des boosters (drop, don…) : la série n'est pas ouverte, elles ne comptent pas dans la progression.</p>`;
-/** Exemplaires de l'utilisateur pour une carte. */
-const copiesOf = (cardId) => S.copies.filter((c) => c.card_id === cardId);
+/**
+ * Index carte → exemplaires de l'utilisateur (idée Q5). Recalculé seulement quand S.copies change
+ * (nouveau tableau après un rechargement, ou longueur différente) : ouverture, recyclage, échange.
+ */
+const copyIndex = { src: null, len: -1, map: new Map() };
+/** Liste vide partagée (jamais modifiée) pour une carte sans exemplaire. */
+const NO_COPIES = Object.freeze([]);
+/**
+ * Exemplaires de l'utilisateur pour une carte (lecture par l'index : le coût ne grimpe plus avec cartes × exemplaires).
+ * @param {string} cardId identifiant de la carte
+ * @returns {object[]} exemplaires (ne pas modifier le tableau renvoyé)
+ */
+const copiesOf = (cardId) => {
+  const list = S.copies || NO_COPIES;
+  if (copyIndex.src !== list || copyIndex.len !== list.length) {
+    const map = new Map();
+    for (const cp of list) {
+      const a = map.get(cp.card_id);
+      if (a) a.push(cp); else map.set(cp.card_id, [cp]);
+    }
+    copyIndex.src = list; copyIndex.len = list.length; copyIndex.map = map;
+  }
+  return copyIndex.map.get(cardId) || NO_COPIES;
+};
+
+/* ---------- Collection très longue (idée Q5) : dessin par lots ---------- */
+/** Taille d'un lot de cartes dessinées. */
+const COL_LOT = 120;
+/** En dessous de ce nombre de cartes affichées, tout est dessiné d'un coup (rien ne change). */
+const COL_SEUIL = 300;
+/** Noms des cartes sans accents ni majuscules, pour la recherche (calculés une fois par carte). */
+const foldedNames = new Map();
+/**
+ * Vrai si la carte correspond à la recherche (comparaison sans accents, comme la recherche du site).
+ * @param {object} c carte
+ * @param {string} q recherche déjà repliée (foldText)
+ * @returns {boolean}
+ */
+function matchQuery(c, q) {
+  if (!q) return true;
+  let n = foldedNames.get(c.id);
+  if (n === undefined) { n = foldText(`${c.name ?? ''} ${c.number ?? ''}`); foldedNames.set(c.id, n); }
+  return n.includes(q);
+}
+/**
+ * Coupe les groupes au lot affiché : au-delà de COL_SEUIL cartes, seules les `limit` premières sont dessinées.
+ * Les compteurs des groupes (possédées / total) restent ceux de toute la série.
+ * @param {object[]} groups groupes avec leurs cartes affichées (shown)
+ * @param {number} limit nombre de cartes à dessiner (0 = un lot)
+ * @returns {{groups: object[], drawn: number, total: number, batched: boolean}}
+ */
+function sliceGroups(groups, limit) {
+  const total = groups.reduce((a, g) => a + g.shown.length, 0);
+  if (total <= COL_SEUIL) return { groups, drawn: total, total, batched: false };
+  let left = Math.max(COL_LOT, limit || 0);
+  const out = [];
+  for (const g of groups) {
+    if (left <= 0) break;
+    out.push(g.shown.length <= left ? g : { ...g, shown: g.shown.slice(0, left) });
+    left -= g.shown.length;
+  }
+  const drawn = Math.min(total, Math.max(COL_LOT, limit || 0));
+  return { groups: out, drawn, total, batched: true };
+}
+/**
+ * Pied de la grille quand elle est dessinée par lots : « 120 cartes affichées sur 842 », barre et « Afficher 120 de plus ».
+ * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle observée, voir watchMore).
+ * @param {{drawn: number, total: number, batched: boolean}} sl découpage
+ * @param {'col'|'peer'} which collection concernée
+ * @returns {string} HTML (vide si tout est dessiné)
+ */
+function moreHtml(sl, which) {
+  if (!sl.batched) return '';
+  const rest = sl.total - sl.drawn;
+  const pctShown = Math.round(sl.drawn / sl.total * 100);
+  return `<div class="cz-more">
+      <p class="cz-more-count" role="status"><strong>${pluralCount(sl.drawn, 'carte affichée', 'cartes affichées', nf.format)}</strong> sur ${nf.format(sl.total)}</p>
+      <div class="progress cz-more-bar" aria-hidden="true"><span style="width:${pctShown}%"></span></div>
+      ${rest > 0 ? `<button type="button" class="btn btn-ghost cz-more-btn" data-action="more-cards" data-which="${which}">+ Afficher ${nf.format(Math.min(COL_LOT, rest))} de plus</button>
+      <p class="muted small">Se déclenche aussi tout seul en approchant du bas.</p>
+      <div class="cz-sentinel" data-sentinel="${which}" aria-hidden="true"></div>` : ''}
+    </div>`;
+}
+/** Observateur de la sentinelle « en approchant du bas » (un seul pour la page). */
+let moreObserver = null;
+/** Observe la sentinelle du lot affiché : à son approche, le lot suivant est dessiné sans déplacer le focus. */
+function watchMore() {
+  if (!('IntersectionObserver' in window)) return;
+  moreObserver?.disconnect();
+  const el = document.querySelector('.cz-sentinel');
+  if (!el) return;
+  moreObserver ||= new IntersectionObserver((entries) => {
+    const hit = entries.find((e) => e.isIntersecting);
+    if (hit) showMore(hit.target.dataset.sentinel, false);
+  }, { rootMargin: '0px 0px 600px 0px' });
+  moreObserver.observe(el);
+}
+/**
+ * Dessine le lot suivant de la collection (la sienne ou celle d'un membre).
+ * @param {'col'|'peer'} which collection concernée
+ * @param {boolean} [byButton=true] true si on a cliqué « Afficher plus » : le focus va sur la première carte ajoutée
+ */
+function showMore(which, byButton = true) {
+  const peer = which === 'peer';
+  if (peer && !S.peer) return;
+  const ids = peer ? S.peer.shownIds : S.shownIds;
+  const before = Math.max(COL_LOT, (peer ? S.peer.limit : S.colLimit) || 0);
+  if (before >= ids.length) return;
+  if (peer) S.peer.limit = before + COL_LOT; else S.colLimit = before + COL_LOT;
+  moreObserver?.disconnect();
+  const first = ids[before];
+  const sel = first ? `[data-action="${peer ? 'peer-pick' : 'open-card'}"][data-card="${CSS.escape(first)}"], [data-action="${peer ? 'peer-zoom' : 'zoom-card'}"][data-card="${CSS.escape(first)}"]` : null;
+  if (peer) renderPeer(byButton ? sel : null);
+  else {
+    renderCollection();
+    if (byButton && sel) document.querySelector(`#cartes-p-collection :is(${sel})`)?.focus({ preventScroll: true });
+  }
+}
 /** En-tête explicatif de la série « Hors série » (cartes uniques). */
 const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : un seul exemplaire existe, à gagner lors d\'un événement ou offert par l\'admin.</p>';
 /**
@@ -2126,9 +2246,11 @@ function drawCollection(focusId) {
   const set = all ? null : S.sets.find((s) => s.id === S.setId) || S.otherSets.get(S.setId);
   if (!all && !set) { el.innerHTML = none; S.shownIds = []; return; }
   const f = S.filters;
-  /** Vrai si la carte passe les filtres de la collection (rareté, famille, possession). */
+  const q = foldText(f.q).trim();
+  /** Vrai si la carte passe les filtres de la collection (recherche, rareté, famille, possession). */
   const keep = (c) => {
     const n = copiesOf(c.id).length;
+    if (q && !matchQuery(c, q)) return false;
     if (f.rarity && c.rarity !== f.rarity) return false;
     if (f.family && c.family !== f.family) return false;
     if (f.owned === 'owned' && n === 0) return false;
@@ -2151,13 +2273,15 @@ function drawCollection(focusId) {
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
   const withCards = groups.filter((g) => g.shown.length);
-  S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // ordre affiché : sert à précédent / suivant
-  const plan = massPlan();
+  // Liste complète (pas seulement le lot dessiné) : sert à « Précédente / Suivante » dans la carte agrandie
+  S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
+  const plan = massPlan(); // toujours sur toute la collection, jamais sur le lot affiché
+  const sl = sliceGroups(withCards, S.colLimit);
   const body = !withCards.length
     ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
-    : all
-      ? `<div class="cz-groups">${withCards.map(groupHtml).join('')}</div>`
-      : `<div class="cartes-grid">${(groups[0]?.shown || []).map(cardCell).join('')}</div>`;
+    : (all
+      ? `<div class="cz-groups">${sl.groups.map(groupHtml).join('')}</div>`
+      : `<div class="cartes-grid">${(sl.groups[0]?.shown || []).map(cardCell).join('')}</div>`) + moreHtml(sl, 'col');
   el.innerHTML = `
     <section class="card cartes-block">
       <div class="cartes-series">
@@ -2175,6 +2299,13 @@ function drawCollection(focusId) {
         </div>
       </div>
       ${set?.code === 'hors-serie' ? HORS_SERIE_NOTE : set?.description ? `<p class="muted small">${esc(set.description)}</p>` : ''}
+      <div class="field cartes-search">
+        <label for="cartes-f-q">Chercher une carte</label>
+        <div class="cartes-search-box">
+          <input id="cartes-f-q" type="search" data-search="col" value="${esc(f.q)}" autocomplete="off" maxlength="60" placeholder="Nom ou numéro" aria-describedby="cartes-f-q-n">
+          <span class="muted small" id="cartes-f-q-n">${q ? esc(pluralCount(S.shownIds.length, 'résultat', 'résultats', nf.format)) : ''}</span>
+        </div>
+      </div>
       <div class="cartes-filters">
         <div class="field">
           <label for="cartes-f-rarity">Rareté</label>
@@ -2208,6 +2339,7 @@ function drawCollection(focusId) {
     ${body}`;
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
+  watchMore();
 }
 const renderCollection = kept(drawCollection); // voir renderBoosters
 
@@ -2464,7 +2596,7 @@ async function openPeer(id) {
   }
   if (!S.peer) S.returnY = window.scrollY;
   S.peer = { id, member: null, copies: [], byCard: new Map(), loading: true, error: '', setId: ALL,
-    filters: { rarity: '', family: '', owned: 'all' }, picks: new Set(), shownIds: [] };
+    filters: { rarity: '', family: '', owned: 'all' }, picks: new Set(), shownIds: [], limit: 0 };
   applyView();
   renderPeer();
   $('#cartes-peer').scrollIntoView({ block: 'start' });
@@ -2643,11 +2775,12 @@ function peerHtml(P) {
   const haveAll = groups.reduce((a, g) => a + g.have, 0);
   const pctDone = scoredAll ? Math.round(haveAll / scoredAll * 100) : 0;
   const withCards = groups.filter((g) => g.shown.length);
-  P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id));
+  P.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // liste complète, pour la carte agrandie
+  const sl = sliceGroups(withCards, P.limit);
   const body = !S.sets.length && !extras.length ? '<p class="empty">Aucune série disponible pour le moment.</p>'
     : !withCards.length ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
-      : all ? `<div class="cz-groups">${withCards.map(peerGroupHtml).join('')}</div>`
-        : `<div class="cartes-grid">${(groups[0]?.shown || []).map(peerCell).join('')}</div>`;
+      : (all ? `<div class="cz-groups">${sl.groups.map(peerGroupHtml).join('')}</div>`
+        : `<div class="cartes-grid">${(sl.groups[0]?.shown || []).map(peerCell).join('')}</div>`) + moreHtml(sl, 'peer');
   return `${peerHead(P)}
     <section class="card cartes-block">
       <div class="cartes-series">
@@ -2701,6 +2834,7 @@ function renderPeer(focusSel) {
     else el.innerHTML = peerHtml(P);
     if (focusSel) el.querySelector(focusSel)?.focus({ preventScroll: true });
   });
+  watchMore();
 }
 
 /**
@@ -2903,6 +3037,7 @@ function onClick(e) {
     case 'toggle-all-cards': return toggleAllCards();
     case 'quest-claim': return claimQuest(t.dataset.code);
     case 'reveal-all': return skipSeq();
+    case 'more-cards': return showMore(t.dataset.which);
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);
     case 'zoom-card': return zoom.open(t.dataset.card, t);
@@ -2931,10 +3066,10 @@ function onClick(e) {
  */
 function onChange(e) {
   const t = e.target;
-  if (t.dataset.change === 'set') { S.setId = t.value; renderCollection('cartes-set'); }
-  else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; renderCollection(t.id); }
-  else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; renderPeer('#peer-set'); }
-  else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; renderPeer('#' + t.id); }
+  if (t.dataset.change === 'set') { S.setId = t.value; S.colLimit = 0; renderCollection('cartes-set'); }
+  else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; S.colLimit = 0; renderCollection(t.id); }
+  else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; S.peer.limit = 0; renderPeer('#peer-set'); }
+  else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; S.peer.limit = 0; renderPeer('#' + t.id); }
   else if (t.dataset.change === 'reveal-direct') setPrefs({ revealDirect: t.checked });
   else if (t.dataset.change === 'shop-qty') setBuyQty(t.value, t.dataset.type || 'classique');
   else if (t.dataset.gift === 'type') { updateGift(t); cancelGiftConfirm(t); } // la quantité max suit le stock du type
@@ -2960,6 +3095,7 @@ function cancelGiftConfirm(field = null) {
  */
 function onInput(e) {
   const el = e.target;
+  if (el.dataset.search === 'col') { searchCollection(el); return; }
   if (!el.dataset.gift) return;
   updateGift(el);
   if (!S.giftConfirm) return;
@@ -2967,6 +3103,24 @@ function onInput(e) {
   cancelGiftConfirm(el);
   const ta = document.getElementById('gift-msg');
   if (ta) ta.setSelectionRange(pos, pos); // le curseur reste où on tapait
+}
+
+/** Minuterie de la recherche dans la collection (on attend une courte pause dans la frappe). */
+let searchTimer = null;
+/**
+ * Saisie dans « Chercher une carte » : la grille se redessine après une courte pause, le curseur reste à sa place.
+ * @param {HTMLInputElement} el champ de recherche
+ */
+function searchCollection(el) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    const pos = el.selectionStart ?? el.value.length;
+    S.filters.q = el.value.slice(0, 60);
+    S.colLimit = 0;
+    renderCollection('cartes-f-q');
+    const box = document.getElementById('cartes-f-q');
+    try { box?.setSelectionRange(pos, pos); } catch {}
+  }, 160);
 }
 
 /**

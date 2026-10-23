@@ -593,7 +593,7 @@ html[data-mode="clair"] .god-dialog { box-shadow: 0 24px 80px rgba(0, 0, 0, .2);
 .kbd-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
 .kbd-keys { display: flex; gap: 4px; align-items: center; flex: none; }
 .kbd-then { font-size: 11px; color: var(--muted); }
-kbd { font: 700 12px/1 inherit; font-family: inherit; min-width: 26px; height: 26px; padding: 0 7px; display: inline-grid; place-items: center;
+kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; min-width: 26px; height: 26px; padding: 0 7px; display: inline-grid; place-items: center;
   border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border-strong, var(--border)); border-bottom-width: 3px; color: var(--text); }
 .kbd-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .kbd-hint { position: fixed; left: 16px; bottom: 16px; z-index: 60; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
