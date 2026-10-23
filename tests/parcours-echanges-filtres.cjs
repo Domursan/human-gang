@@ -187,6 +187,65 @@ const pressed = (p, sel) => p.getAttribute(sel, 'aria-pressed');
   check(!p.errs.length, '390 px : aucune erreur JS ni console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
+  /* ---------- Longue colonne « Ses cartes » (cartes-lots.js) : 408 exemplaires d'Alice, dessin par lots ---------- */
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { echanges: true, bigTrade: true }, width: 1280, height: 900 });
+  await openEditor(p);
+  const GRILLE = '#trd-grid-want';
+  const nCartes = () => p.$$eval(`${GRILLE} button[data-side][data-id]`, (x) => x.length);
+  /** Place la sentinelle de la colonne à y pixels du haut de la grille (défilement de la grille, pas de la page). */
+  const placerGrille = (y) => p.evaluate((y) => {
+    const g = document.getElementById('trd-grid-want');
+    const s = g.querySelector('[data-sentinel=want]');
+    g.scrollTop += s.getBoundingClientRect().top - g.getBoundingClientRect().top - y;
+  }, y);
+  check(await nCartes() === 120, 'colonne longue (408 cartes) : un lot de 120 cartes dessiné');
+  check(await txt(p, '#trd-fres-want') === '120 sur 408 affichées', 'colonne longue : compteur « 120 sur 408 affichées »');
+  check(await p.locator(`${GRILLE} [data-lot=want]`).count() === 1, 'colonne longue : bouton « Afficher plus » (repli clavier)');
+  check(await p.locator('#trd-fres-give').textContent() === '11 cartes', 'colonne « Tes cartes » (11) : pas de lots');
+
+  // Sélection : une carte du premier lot est choisie, puis on défile, on charge et on filtre : elle reste sélectionnée
+  const premiere = await p.$eval(`${GRILLE} button[data-side][data-id]`, (b) => b.dataset.id);
+  await p.click(`${GRILLE} button[data-id="${premiere}"]`);
+  await sleep(100);
+  check(await pressed(p, `${GRILLE} button[data-id="${premiere}"]`) === 'true', 'carte choisie dans le premier lot : sélectionnée');
+  // Sentinelle à 1000 px sous le haut de la grille (grille de 340 px) : rien ne se charge
+  await placerGrille(1000);
+  await sleep(300);
+  check(await nCartes() === 120, 'sentinelle loin (1000 px) : pas de chargement anticipé');
+  check(await p.evaluate(() => document.activeElement?.dataset.id) === premiere, 'focus sur la carte choisie, inchangé');
+  // Sentinelle à 600 px (moins de 1,5 grille restante) : le lot suivant arrive, le focus et le défilement de la grille restent
+  await placerGrille(600);
+  const defilAvant = await p.evaluate(() => document.getElementById('trd-grid-want').scrollTop);
+  await sleep(400);
+  const avecLot = await nCartes();
+  check(avecLot === 240, `sentinelle à 600 px : lot suivant chargé seul (${avecLot} cartes)`);
+  check(await p.evaluate(() => document.activeElement?.dataset.id) === premiere, 'focus gardé sur la carte choisie après le lot');
+  check(await pressed(p, `${GRILLE} button[data-id="${premiere}"]`) === 'true', 'la carte choisie reste sélectionnée après le lot');
+  check(await p.evaluate(() => document.getElementById('trd-grid-want').scrollTop) === defilAvant, 'défilement de la grille inchangé par le lot');
+
+  // Recherche sans accents sur la colonne longue : « CHATEAU » trouve « Château Marius » (34 exemplaires, pas de lots)
+  // La carte choisie reste dessinée même si elle ne correspond pas : elle compte alors en plus des 34 « Château Marius »
+  const nomChoisie = await p.evaluate((id) => document.querySelector(`#trd-grid-want button[data-id="${id}"]`)?.textContent || '', premiere);
+  const choisieCorrespond = nomChoisie.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().includes('chateau');
+  const attendu = 34 + (choisieCorrespond ? 0 : 1);
+  await p.fill('#trd-q-want', 'CHATEAU');
+  await sleep(120);
+  check(await txt(p, '#trd-fres-want') === `${attendu} sur 408 affichées`, `recherche « CHATEAU » sans accent : ${attendu} résultats (34 « Château Marius »)`);
+  check(await pressed(p, `${GRILLE} button[data-id="${premiere}"]`) === 'true', 'filtre : la carte choisie reste dans la liste et sélectionnée');
+  check(await p.$$eval(`${GRILLE} button[data-side][data-id]`, (x) => x.length) <= 35, 'filtre : seuls les exemplaires correspondants (et la sélection) sont dessinés');
+  await p.fill('#trd-q-want', '');
+  await sleep(120);
+  check(await nCartes() === 120 && await txt(p, '#trd-fres-want') === '120 sur 408 affichées', 'recherche vidée : retour au premier lot de 120');
+
+  // Repli clavier : le bouton « Afficher plus » ajoute le lot et garde le focus sur lui
+  await p.evaluate(() => document.querySelector('[data-lot=want]').focus({ preventScroll: true }));
+  await p.keyboard.press('Enter');
+  await sleep(200);
+  check(await nCartes() === 240, 'bouton « Afficher plus » (clavier) : 240 cartes');
+  check(await p.evaluate(() => document.activeElement?.dataset.lot) === 'want', 'après « Afficher plus », le focus reste sur le bouton');
+  check(!p.errs.length, 'colonne longue : aucune erreur JS ni console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
   await browser.close();
   finish();
 })();

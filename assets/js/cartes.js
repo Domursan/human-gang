@@ -29,6 +29,7 @@ import { hasTags, tagGroupsHtml, loadTagLabels } from './cartes-jeux.js';
 import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.js';
 import { initAtelier, drawAtelier } from './cartes-atelier.js';
 import { initEnchere, drawEnchere } from './cartes-enchere.js';
+import { LOT as COL_LOT, SEUIL as COL_SEUIL, lotsAnticipes, gardeFocus, mesurerGroupes, attrGroupe } from './cartes-lots.js';
 import { foldText } from './core/search.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
@@ -258,11 +259,8 @@ const copiesOf = (cardId) => {
   return copyIndex.map.get(cardId) || NO_COPIES;
 };
 
-/* ---------- Collection très longue (idée Q5) : dessin par lots ---------- */
-/** Taille d'un lot de cartes dessinées. */
-const COL_LOT = 120;
-/** En dessous de ce nombre de cartes affichées, tout est dessiné d'un coup (rien ne change). */
-const COL_SEUIL = 300;
+/* ---------- Collection très longue (idée Q5) : dessin par lots ----------
+   COL_LOT et COL_SEUIL viennent de cartes-lots.js (partagés avec le sélecteur d'échange). */
 /** Noms des cartes sans accents ni majuscules, pour la recherche (calculés une fois par carte). */
 const foldedNames = new Map();
 /**
@@ -299,7 +297,7 @@ function sliceGroups(groups, limit) {
 }
 /**
  * Pied de la grille quand elle est dessinée par lots : « 120 cartes affichées sur 842 », barre et « Afficher 120 de plus ».
- * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle surveillée au défilement, voir watchMore).
+ * Le bouton se déclenche aussi tout seul en approchant du bas (sentinelle surveillée, voir lotsCol et lotsPeer).
  * @param {{drawn: number, total: number, batched: boolean}} sl découpage
  * @param {'col'|'peer'} which collection concernée
  * @returns {string} HTML (vide si tout est dessiné)
@@ -316,44 +314,43 @@ function moreHtml(sl, which) {
       <div class="cz-sentinel" data-sentinel="${which}" aria-hidden="true"></div>` : ''}
     </div>`;
 }
-/** Vrai une fois l'écouteur de défilement posé (un seul pour la page). */
-let moreBound = false;
-/** Identifiant de l'image d'animation en attente pour la vérification de la sentinelle (0 = aucune). */
-let moreTick = 0;
-/**
- * Vérifie la sentinelle après un défilement : si elle approche du bas de l'écran, le lot suivant est dessiné.
- * Seul le défilement déclenche ce chargement (pas le redessin lui-même), donc pas de cascade de lots.
- */
-function checkMore() {
-  moreTick = 0;
-  const el = document.querySelector('.cz-sentinel');
-  if (el && el.getBoundingClientRect().top < window.innerHeight + 600) showMore(el.dataset.sentinel, false);
-}
-/** Observe la sentinelle du lot affiché : en défilant près du bas, le lot suivant est dessiné sans déplacer le focus. */
-function watchMore() {
-  if (moreBound) return;
-  moreBound = true;
-  window.addEventListener('scroll', () => { if (!moreTick) moreTick = requestAnimationFrame(checkMore); }, { passive: true });
-}
+/* Chargement anticipé (cartes-lots.js) : le lot suivant arrive quand il reste ~1,5 écran à défiler, un lot par image,
+   sans déplacer le focus ni le défilement. Le remplissage de l'écran est assuré par planifier() après chaque dessin. */
+const lotsCol = lotsAnticipes({
+  sentinelle: () => document.querySelector('#cartes-p-collection [data-sentinel="col"]'),
+  charger: () => showMore('col', false),
+});
+const lotsPeer = lotsAnticipes({
+  sentinelle: () => document.querySelector('#cartes-peer [data-sentinel="peer"]'),
+  charger: () => showMore('peer', false),
+});
 /**
  * Dessine le lot suivant de la collection (la sienne ou celle d'un membre).
  * @param {'col'|'peer'} which collection concernée
- * @param {boolean} [byButton=true] true si on a cliqué « Afficher plus » : le focus va sur la première carte ajoutée
+ * @param {boolean} [byButton=true] true si on a cliqué « Afficher plus » : le focus va sur la première carte ajoutée ;
+ *   false pour le chargement anticipé, qui garde le focus et le défilement tels quels
+ * @returns {boolean} true si un lot a été dessiné
  */
 function showMore(which, byButton = true) {
   const peer = which === 'peer';
-  if (peer && !S.peer) return;
+  if (peer && !S.peer) return false;
   const ids = peer ? S.peer.shownIds : S.shownIds;
   const before = Math.max(COL_LOT, (peer ? S.peer.limit : S.colLimit) || 0);
-  if (before >= ids.length) return;
+  if (before >= ids.length) return false;
   if (peer) S.peer.limit = before + COL_LOT; else S.colLimit = before + COL_LOT;
   const first = ids[before];
   const sel = first ? `[data-action="${peer ? 'peer-pick' : 'open-card'}"][data-card="${CSS.escape(first)}"], [data-action="${peer ? 'peer-zoom' : 'zoom-card'}"][data-card="${CSS.escape(first)}"]` : null;
-  if (peer) renderPeer(byButton ? sel : null);
-  else {
-    renderCollection();
-    if (byButton && sel) document.querySelector(`#cartes-p-collection :is(${sel})`)?.focus({ preventScroll: true });
+  if (peer) {
+    const root = $('#cartes-peer');
+    if (byButton) renderPeer(sel);
+    else gardeFocus(root, () => renderPeer(null));
+  } else {
+    if (byButton) {
+      renderCollection();
+      if (sel) document.querySelector(`#cartes-p-collection :is(${sel})`)?.focus({ preventScroll: true });
+    } else gardeFocus(document.getElementById('cartes-p-collection'), () => renderCollection());
   }
+  return true;
 }
 /** En-tête explicatif de la série « Hors série » (cartes uniques). */
 const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : un seul exemplaire existe, à gagner lors d\'un événement ou offert par l\'admin.</p>';
@@ -2324,6 +2321,10 @@ function zoomInfo(id) {
 }
 
 // Un intertitre par série dans « Toutes les séries » : nom, possédées / total, barre, cartes.
+/** Identifiant d'un groupe de la collection (série ouverte ou hors série) pour data-group. */
+const cleGroupe = (g) => `${g.extra ? 'x' : 's'}-${g.set?.id ?? ''}`;
+/** Hauteurs des groupes mesurées avant le dernier redessin (mesurerGroupes) : estimées à l'identique au rendu suivant. */
+let mesuresGroupes = new Map();
 /**
  * Intertitre d'une série (vue « Toutes les séries ») : nom, compte possédées / total, barre, cartes.
  * @param {{set: object, scored: number, have: number, shown: object[]}} g série et ses cartes affichées
@@ -2332,8 +2333,8 @@ function zoomInfo(id) {
 function groupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `cz-g-${i}`;
-  if (g.extra) return `<section class="cz-group" aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(cardCell).join('')}</div></section>`;
-  return `<section class="cz-group" aria-labelledby="${hid}">
+  if (g.extra) return `<section class="cz-group"${attrGroupe(cleGroupe(g), mesuresGroupes)} aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(cardCell).join('')}</div></section>`;
+  return `<section class="cz-group"${attrGroupe(cleGroupe(g), mesuresGroupes)} aria-labelledby="${hid}">
     <div class="cz-group-head">
       <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
       <p class="cz-group-count">${nf.format(g.have)} / ${nf.format(g.scored)} possédées</p>
@@ -2396,6 +2397,7 @@ function drawCollection(focusId) {
   const tagged = hasTags(pool);
   const byGame = tagged && f.group === 'jeu';
   if (byGame) S.shownIds = withCards.flatMap((g) => g.shown.filter((c) => c.tag).map((c) => c.id));
+  mesuresGroupes = mesurerGroupes(el);
   const body = byGame
     ? tagGroupsHtml({ cards: withCards.flatMap((g) => g.shown), all: pool, copiesOf, cell: cardCell, open: S.jeuOpen,
       title: all ? 'Toutes les séries' : `Série « ${set.name} »` })
@@ -2477,7 +2479,7 @@ function drawCollection(focusId) {
   drawAtelier(); // panneau de l'Atelier (idée C10)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
-  watchMore();
+  lotsCol.planifier(); // remplit l'écran si la liste ne le couvre pas encore (grand écran, filtre)
   // Durée du dessin (performance.measure « hg-collection ») : suivie par le test de la collection très longue
   try { performance.measure('hg-collection', 'hg-collection-start'); } catch {}
 }
@@ -2876,8 +2878,8 @@ function peerCell(c) {
 function peerGroupHtml(g, i) {
   const pct = g.scored ? Math.round(g.have / g.scored * 100) : 0;
   const hid = `pv-g-${i}`;
-  if (g.extra) return `<section class="cz-group" aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(peerCell).join('')}</div></section>`;
-  return `<section class="cz-group" aria-labelledby="${hid}">
+  if (g.extra) return `<section class="cz-group"${attrGroupe(cleGroupe(g), mesuresGroupes)} aria-labelledby="${hid}">${outsideHead(g, hid)}<div class="cartes-grid">${g.shown.map(peerCell).join('')}</div></section>`;
+  return `<section class="cz-group"${attrGroupe(cleGroupe(g), mesuresGroupes)} aria-labelledby="${hid}">
     <div class="cz-group-head">
       <h2 class="cz-group-title" id="${hid}">${esc(g.set.name)}</h2>
       <p class="cz-group-count">${nf.format(g.have)} / ${nf.format(g.scored)} possédées</p>
@@ -3016,10 +3018,10 @@ function renderPeer(focusSel) {
   keepPlace(() => {
     if (P.loading) el.innerHTML = '<p class="muted" aria-live="polite">Chargement de la collection…</p>';
     else if (P.error) el.innerHTML = `<section class="card cartes-peer-head"><div class="cartes-row"><button type="button" class="btn btn-ghost" data-action="peer-back">← Retour</button></div><p class="empty">${esc(P.error)}</p></section>`;
-    else el.innerHTML = peerHtml(P);
+    else { mesuresGroupes = mesurerGroupes(el); el.innerHTML = peerHtml(P); }
     if (focusSel) el.querySelector(focusSel)?.focus({ preventScroll: true });
   });
-  watchMore();
+  lotsPeer.planifier();
 }
 
 /**
