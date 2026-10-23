@@ -16,6 +16,7 @@ const REASONS = {
   termine: 'Trop tard : cet événement est terminé.',
   limite_perso: 'Tu as déjà attrapé le maximum pour cet événement.',
   epuise: 'Raté ! Toutes les images ont déjà été attrapées.',
+  trop_vite: 'Doucement ! Attends une seconde avant la prochaine capture.',
 };
 /** Tire au hasard un élément d'une liste. */
 const pick = (list) => list[Math.floor(Math.random() * list.length)];

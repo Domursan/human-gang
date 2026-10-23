@@ -85,13 +85,12 @@ function renderBadgeToggles() {
   box.innerHTML = S.badges.map((b) => `<button class="chip" type="button" data-toggle-badge="${esc(b.code)}" aria-pressed="${owned.has(b.code)}">${owned.has(b.code) ? ICON.check : ''}${esc(b.name)}</button>`).join('');
 }
 /**
- * Attribue un badge à un membre (ignore le doublon 23505), puis recharge badges et membres.
+ * Attribue un badge à un membre par la RPC journalisée hg_badge_award (déjà attribué : sans effet), puis recharge badges et membres.
  * @param {string} userId
  * @param {string} code Code du badge.
  */
 export async function awardBadge(userId, code) {
-  const res = await sb.from('hg_user_badges').insert({ user_id: userId, badge_code: code });
-  if (res.error && res.error.code !== '23505') throw res.error;
+  check(await sb.rpc('hg_badge_award', { p_user: userId, p_code: code }));
   await loadBadges(); renderBadges(); renderMembers();
 }
 /** Le membre possède-t-il ce badge ? */

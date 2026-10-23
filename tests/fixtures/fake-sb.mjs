@@ -624,6 +624,25 @@ export function createClient() {
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
+      // Migration 076 : écritures du Staff par RPC journalisées (fil, réponses aux sorties, badges).
+      if (fn === 'hg_activity_remove') {
+        DB.hg_activity = (DB.hg_activity || []).filter((r) => String(r.id) !== String(args?.p_id));
+        return { data: null, error: null };
+      }
+      if (fn === 'hg_rsvp_admin_set') {
+        const list = DB.hg_event_rsvps || (DB.hg_event_rsvps = []);
+        const i = list.findIndex((r) => r.event_id === args.p_event && r.user_id === args.p_user);
+        if (!args.p_status) { if (i >= 0) list.splice(i, 1); }
+        else if (i >= 0) list[i] = { ...list[i], status: args.p_status, updated_at: new Date().toISOString() };
+        else list.push({ event_id: args.p_event, user_id: args.p_user, status: args.p_status, updated_at: new Date().toISOString(), self_answered: false });
+        return { data: null, error: null };
+      }
+      if (fn === 'hg_badge_award') {
+        const list = DB.hg_user_badges || (DB.hg_user_badges = []);
+        if (list.some((r) => r.user_id === args.p_user && r.badge_code === args.p_code)) return { data: false, error: null };
+        list.push({ user_id: args.p_user, badge_code: args.p_code, awarded_at: new Date().toISOString(), level: 1 });
+        return { data: true, error: null };
+      }
       // Migration 072 : réglages lus par RPC (sans les valeurs sensibles), inscrits du Secret Santa, gains restants.
       const reglage = (k) => DB.hg_settings?.find((r) => r.key === k)?.value || {};
       if (fn === 'hg_support_public') {

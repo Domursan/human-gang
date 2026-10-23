@@ -114,17 +114,17 @@ function dansTrenteJours() {
   await p.click('form[data-form="add-rsvp"] button[type="submit"]');
   await p.waitForTimeout(500);
   journal = await log(p);
-  check(journal.some((l) => l[0] === 'upsert' && l[1] === 'hg_event_rsvps' && l[2]?.user_id === U(4) && l[2]?.status === 'oui'), 'ajout d\'un inscrit : upsert hg_event_rsvps (membre, « je viens »)');
+  check(journal.some((l) => l[0] === 'rpc' && l[1] === 'hg_rsvp_admin_set' && l[2]?.p_user === U(4) && l[2]?.p_status === 'oui'), 'ajout d\'un inscrit : RPC hg_rsvp_admin_set (membre, « je viens »)');
 
   await p.selectOption(`select[data-rsvp-user="${U(3)}"]`, 'non');
   await p.waitForTimeout(400);
   journal = await log(p);
-  check(journal.some((l) => l[0] === 'upsert' && l[1] === 'hg_event_rsvps' && l[2]?.user_id === U(3) && l[2]?.status === 'non'), 'changement de réponse : statut envoyé');
+  check(journal.some((l) => l[0] === 'rpc' && l[1] === 'hg_rsvp_admin_set' && l[2]?.p_user === U(3) && l[2]?.p_status === 'non'), 'changement de réponse : statut envoyé');
 
   await p.click(`[data-act="rm-rsvp"][data-user="${U(3)}"]`);
   await p.waitForTimeout(400);
   journal = await log(p);
-  check(journal.some((l) => l[0] === 'delete' && l[1] === 'hg_event_rsvps'), 'retrait d\'un inscrit : delete hg_event_rsvps');
+  check(journal.some((l) => l[0] === 'rpc' && l[1] === 'hg_rsvp_admin_set' && l[2]?.p_status === null), 'retrait d\'un inscrit : RPC hg_rsvp_admin_set (null)');
   check(!(await p.$(`[data-act="rm-rsvp"][data-user="${U(3)}"]`)), 'inscrit retiré : absent du détail');
 
   // 5. Date retenue pour une sortie à caler
