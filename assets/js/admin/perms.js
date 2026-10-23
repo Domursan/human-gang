@@ -27,6 +27,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  // Page « Jeux » (migration 083) : GeoGuessr (photos des sorties), jeux du jour (économie), citations (quiz)
+  'jeux-geo': 'souvenirs', 'jeux-jdj': 'cartes', 'jeux-citations': 'quiz',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -98,6 +100,9 @@ export const DOMAINS = [
     ...under('Jeux', [
       { id: 'questions', label: 'Questions du gang', section: 'quiz' },
       { id: 'secrets', label: 'Secrets', section: 'eggs' },
+      { id: 'geoguessr', label: 'GeoGuessr', section: 'jeux-geo' },
+      { id: 'jeux-du-jour', label: 'Jeux du jour', section: 'jeux-jdj' },
+      { id: 'citations', label: 'Citations « Qui a dit ça ? »', section: 'jeux-citations' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

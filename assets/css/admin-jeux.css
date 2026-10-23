@@ -1,0 +1,39 @@
+/* Admin › Jeux et cartes › GeoGuessr, Jeux du jour, Citations (admin-jeux.js). */
+.ajx { display: grid; gap: 16px; max-width: 980px; min-width: 0; }
+.ajx-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ajx-intro { margin: 0; max-width: 60ch; }
+.ajx-stats { margin: 0; color: var(--muted); }
+.ajx-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ajx-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); min-width: 0; }
+.ajx-row.is-off { opacity: .7; }
+.ajx-row-main { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.ajx-row .btn { min-height: 44px; }
+.ajx-quote { margin: 0; font-weight: 700; }
+.ajx-raw summary { cursor: pointer; min-height: 32px; display: inline-flex; align-items: center; }
+.ajx-raw pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; background: var(--bg); padding: 8px; border-radius: 8px; margin: 4px 0 0; }
+.ajx-form { display: grid; gap: 14px; }
+.ajx-fs { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.ajx-fs legend { font-weight: 700; padding: 0 6px; }
+.ajx-fs p { margin: 0; }
+.ajx-jdj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 8px 16px; }
+.ajx-jdj-game { display: grid; grid-template-columns: minmax(0, 1fr) 140px 84px; gap: 6px; align-items: center; }
+.ajx-jdj-game input[type="date"], .ajx-jdj-game input[type="number"] { min-height: 44px; min-width: 0; }
+.ajx-check { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.ajx-inline { flex-direction: row; align-items: center; gap: 8px; }
+.ajx-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px; }
+.ajx-warn { color: var(--amber); margin: 0; font-weight: 700; }
+.ajx-lbl { font-weight: 600; font-size: 14px; }
+.ajx-geo-form { display: grid; gap: 14px; }
+.ajx-geo-map { height: 300px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #1A2130; }
+.ajx-photos-fs { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin: 0; min-width: 0; }
+.ajx-photos-fs legend { font-weight: 700; padding: 0 6px; }
+.ajx-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 280px; overflow-y: auto; }
+.ajx-photos p { grid-column: 1 / -1; margin: 0; }
+.ajx-photo { position: relative; display: block; cursor: pointer; border-radius: 8px; overflow: hidden; border: 2px solid transparent; }
+.ajx-photo input { position: absolute; opacity: 0; inset: 0; }
+.ajx-photo img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+.ajx-photo:has(input:checked) { border-color: var(--sand); }
+.ajx-photo:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.ajx-geo-cur { max-height: 160px; width: auto; border-radius: 8px; margin-top: 8px; }
+.ajx-pin span { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--sand); border: 2px solid #121212; }
+@media (max-width: 480px) { .ajx-jdj-game { grid-template-columns: 1fr 1fr; } .ajx-jdj-game .ajx-check { grid-column: 1 / -1; } }

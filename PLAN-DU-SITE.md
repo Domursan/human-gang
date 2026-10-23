@@ -14,6 +14,7 @@ flowchart TD
   A --> H[historique.html]
   A --> M[messages.html]
   A --> CA[cartes.html<br/>Jeu de cartes]
+  A --> JX[jeux.html<br/>Jeux]
   A --> EV[evenements.html]
   A --> AI[aide.html<br/>Aide et tutos]
   AI --> AS[assistance.html]
@@ -45,6 +46,7 @@ Accès : **Public** = sans compte ; **Membre** = connecté ; **Staff** = membre 
 | `recap.html` | Membre | Récap de l'année du membre et du gang | `recap.js` |
 | `messages.html` | Membre | Conversations privées, nouveau message, messages avec son Santa (anonymes) | `messages.js` |
 | `cartes.html` | Membre | Onglets Boosters, Collection, Classement, Échanges ; collection d'un autre membre en lecture seule (`#collection/<id>`) ; drops à attraper | `cartes.js` et `cartes-*.js` |
+| `jeux.html` | Membre | Onglet « Aujourd’hui » (programme du jour, Paillettes du jour) puis un onglet par jeu (`jeux.html#<id>`) : GeoGuessr du gang, Jeux du jour, « Qui a dit ça ? » | `jeux.js`, `jeux/onglets.js`, `jeux/<id>.js` |
 | `membre.html` | Membre | Carte de membre d'un joueur : infos partagées, badges, vitrine de cartes, « Voir sa collection » | `membre.js` |
 | `evenements.html` | Membre | Événements en cours et passés (images à attraper), classement des chasseurs | `evenements.js` |
 | `aide.html` | Public | 61 tutos en 6 groupes, recherche, accès à l'assistance | `aide.js`, `tutos/` |
@@ -63,7 +65,7 @@ Adresse d'une section : `admin.html#domaine/sous-section`. Chaque sous-section d
 | Pilotage | Vue d'ensemble · Journal [journal] · Staff (admin seulement) |
 | Membres | Comptes : actifs, Staff, fantômes [membres] · Invitations [membres] · Accès aux pages [membres] |
 | Vie du gang | Sorties IRL [evenements] · Souvenirs et photos [souvenirs] · Secret Santa [secret_santa] · Événements [themes] · Badges [badges] |
-| Jeu de cartes | Séries · Cartes · Quêtes · Économie · Joueurs · Statistiques · Échanges · Drops · Défis du gang [cartes] |
+| Jeu de cartes | Séries · Cartes · Quêtes · Économie · Joueurs · Statistiques · Échanges · Drops · Défis du gang [cartes] · Jeux : GeoGuessr [souvenirs], Jeux du jour [cartes], Citations [quiz] |
 | Communication | Assistance [support] · Boîte à idées [support] · Messagerie [messages] · Bot Discord [bot] |
 | Site | Réglages [reglages] · Thème [themes] |
 

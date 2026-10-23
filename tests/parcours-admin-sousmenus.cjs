@@ -6,7 +6,7 @@
 //     #cartes/economie, #vie/badges, #membres/acces, #site/reglages restent valides ; palette « Groupe · Libellé »
 // (c) garde de longueur : à 1 280 × 900, #app.scrollHeight ≤ 1 400 px pour chaque sous-section, partie, onglet du Bot et
 //     onglet de la fiche membre (données du faux Supabase), sauf la liste d'exceptions EXCEPTIONS ci-dessous
-// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions ; pas de titre « Jeux » ; titres Catalogue, Économie, Animation, Suivi
+// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions, ni GeoGuessr, ni Citations ; seul « Jeux du jour » (droit cartes) sous « Jeux » ; titres Catalogue, Économie, Animation, Suivi, Jeux
 // (e) 375 px : 6 onglets en bas, écran du domaine avec ses titres, sans défilement horizontal
 // Lancer : node tests/parcours-admin-sousmenus.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
@@ -28,7 +28,8 @@ const TREE = {
   vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements']],
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
-    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']], ['Jeux', ['questions', 'secrets']]],
+    ['Animation', ['quetes', 'defis', 'drops']], ['Suivi', ['joueurs', 'echanges', 'stats']],
+    ['Jeux', ['questions', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'reglages']], ['Apparence', ['theme']]],
 };
@@ -148,10 +149,10 @@ async function goHash(p, h) {
   /* ---------- (d) Staff ['cartes'] ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['cartes'] } });
   const st = await columnTree(p, 'cartes');
-  check(JSON.stringify(st) === JSON.stringify(TREE.cartes.slice(0, 4)),
-    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, sans « Jeux » (${JSON.stringify(st)})`);
-  check(await p.locator('#shell-subs a[href="#cartes/secrets"], #shell-subs a[href="#communication/fil"], #shell-subs a[href="#cartes/questions"]').count() === 0,
-    '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang');
+  check(JSON.stringify(st) === JSON.stringify([...TREE.cartes.slice(0, 4), ['Jeux', ['jeux-du-jour']]]),
+    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, Jeux (seul « Jeux du jour ») (${JSON.stringify(st)})`);
+  check(await p.locator('#shell-subs a[href="#cartes/secrets"], #shell-subs a[href="#communication/fil"], #shell-subs a[href="#cartes/questions"], #shell-subs a[href="#cartes/geoguessr"], #shell-subs a[href="#cartes/citations"]').count() === 0,
+    '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang, ni GeoGuessr, ni Citations');
   await goHash(p, 'cartes/secrets');
   check(await p.evaluate(() => location.hash) !== '#cartes/secrets' && !(await p.isVisible('#eggs')), '(d) Staff : #cartes/secrets redirigée, section jamais affichée');
   await adminSection(p, 'cartes/limites');
