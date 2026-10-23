@@ -30,7 +30,7 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   check((await p.locator('[data-sub="geo"]').innerText()).includes('Manche n°18'), 'tableau de bord : résumé GeoGuessr');
   check((await p.locator('[data-badge="geo"]').innerText()).includes('À jouer'), 'tableau de bord : GeoGuessr à jouer');
   check((await p.locator('[data-badge="citations"]').innerText()).includes('À jouer'), 'tableau de bord : citations à jouer');
-  check((await p.locator('#jeux-prog-txt').innerText()).includes('0 jeu sur 3'), 'programme : 0 jeu sur 3 faits');
+  check((await p.locator('#jeux-prog-txt').innerText()).includes('0 jeu sur 2'), 'programme : 0 jeu sur 2 faits');
   check(!(await p.locator('#jeux-bal').isHidden()) && (await p.locator('#jeux-bal-v').innerText()).includes('+0'), 'en-tête : Paillettes du jour affichées');
   check(await hscroll(p) <= 0, '360 px : pas de défilement horizontal de la page');
   const bar = await p.evaluate(() => { const t = document.querySelector('#jeux-tabs'); return { sw: t.scrollWidth, cw: t.clientWidth }; });
@@ -64,9 +64,9 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   // Ouvrir un jeu depuis le tableau de bord
   await p.locator('#jeux-tab-aujourdhui').click();
   await sleep(300);
-  await p.locator('.jeux-row[data-open="jdj"]').click();
+  await p.locator('.jeux-row[data-open="geo"]').click();
   await sleep(600);
-  check(await p.locator('#jeux-tab-jdj').getAttribute('aria-selected') === 'true', 'tableau de bord : une ligne ouvre son jeu');
+  check(await p.locator('#jeux-tab-geo').getAttribute('aria-selected') === 'true', 'tableau de bord : une ligne ouvre son jeu');
   check(p.errs.length === 0, `aucune erreur JS (téléphone) ${p.errs.join(' | ')}`);
   await p.ctx.close();
 
@@ -77,9 +77,9 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   await p.goto(p.url().split('#')[0]);
   await sleep(1500);
   check(await p.locator('#jeux-tab-citations').getAttribute('aria-selected') === 'true', 'mémoire locale : dernier onglet rouvert');
-  await p.evaluate(() => { location.hash = 'jdj'; });
+  await p.evaluate(() => { location.hash = 'geo'; });
   await sleep(600);
-  check(await p.locator('#jeux-tab-jdj').getAttribute('aria-selected') === 'true', 'changement d’adresse (#jdj) suivi');
+  check(await p.locator('#jeux-tab-geo').getAttribute('aria-selected') === 'true', 'changement d’adresse (#geo) suivi');
   check(p.errs.length === 0, `aucune erreur JS (adresse) ${p.errs.join(' | ')}`);
   await p.ctx.close();
 
@@ -90,7 +90,7 @@ const LAST = ['competition', 'semaine'].map((r) => RYTHMES.filter((x) => x[1] ==
   const lay = await p.evaluate(() => { const a = document.querySelector('#jeux-tab-aujourdhui').getBoundingClientRect(), b = document.querySelector('#jeux-tab-geo').getBoundingClientRect(); return { col: b.top > a.top && Math.abs(b.left - a.left) < 2, w: a.width }; });
   check(lay.col && lay.w > 180, 'grand écran : onglets empilés dans une colonne');
   check(await p.locator('.jeux-tabs-grp').first().isVisible() && (await p.locator('.jeux-tabs-grp').first().innerText()).includes('Chaque jour'), 'grand écran : groupe « Chaque jour »');
-  check(await p.locator('.jeux-card').count() === 3, 'grand écran : cartes « À jouer »');
+  check(await p.locator('.jeux-card').count() === 2, 'grand écran : cartes « À jouer »');
   await p.keyboard.press('Tab');
   await p.locator('#jeux-tab-aujourdhui').focus();
   await p.keyboard.press('ArrowDown');

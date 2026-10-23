@@ -78,7 +78,7 @@ const H = {
     AV.claimed.add(p_day); return ok({ already: false, paid: 25 });
   },
   hg_saison_state: () => ok({ worlds: S.worlds ? {
-    fin: new Date(Date.now() + 10 * 864e5).toISOString(), pronos: 'jeux.html#pronos',
+    fin: new Date(Date.now() + 10 * 864e5).toISOString(),
     booster: { id: 'worlds_2026', name: 'Saison esport', price: 150, size: 5, description: '', active: true },
     next: S.worldsNext === null ? null : { id: 'i1', label: 'Quart de finale · BO5', comp: 'Worlds 2026', locks_at: new Date(Date.now() + 5 * 36e5).toISOString(),
       options: [{ id: 't1', label: 'T1' }, { id: 'blg', label: 'BLG' }], bets: 11, mine: 't1' },

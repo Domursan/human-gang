@@ -511,13 +511,6 @@ const QUIZ = [
     options: [], explanation: 'Le compte se fait dans l’annuaire.', reward: 100, key: { value: 7, tolerance: 0 }, ends_at: null,
     answer: { response: '3', is_correct: false, reward: 0, answered_at: 'past' } },
 ];
-// Questions « Qui main ? » (J17, paquet xJ4) : seulement avec le scénario quiMain (les autres tests gardent leurs comptes).
-if (S.quiMain) QUIZ.push(
-  { id: 'qm-1', prompt: 'Qui joue Xayah en main ?', qtype: 'choix_unique', difficulty: 'facile', category: 'Qui main ? · League of Legends', image_url: null,
-    options: [{ id: 'a', text: 'Alice' }, { id: 'b', text: 'Bruno' }, { id: 'c', text: 'Chloé' }, { id: 'd', text: 'David' }],
-    explanation: 'Xayah, main de Bruno depuis 2022.', reward: 10, key: { correct: ['b'] }, ends_at: null },
-  { id: 'qm-2', prompt: 'Quelle civilisation AoE2 prend toujours Emma ?', qtype: 'choix_unique', difficulty: 'moyen', category: 'Qui main ?', image_url: null,
-    options: [{ id: 'a', text: 'Francs' }, { id: 'b', text: 'Mongols' }], explanation: 'Les Mongols, toujours.', reward: 10, key: { correct: ['b'] }, ends_at: null });
 /** Date d'une réponse déjà donnée (ISO), pour le faux. */
 const QUIZ_PAST = iso(-2);
 /** Solution d'une question corrigée, comme la base : textes acceptés, valeur, ou identifiants corrects. */

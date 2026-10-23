@@ -585,7 +585,6 @@ if (!me) {
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
-    import('./accueil-jeux4.js').then((m) => m.mountAccueilJeux(me)), // soirée complète (J19) et rang de saison (J16)
     home?.loadOwn(),
     tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null,
   ]);

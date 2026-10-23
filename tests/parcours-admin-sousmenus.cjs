@@ -6,7 +6,7 @@
 //     #cartes/economie, #vie/badges, #membres/acces, #site/reglages restent valides ; palette « Groupe · Libellé »
 // (c) garde de longueur : à 1 280 × 900, #app.scrollHeight ≤ 1 400 px pour chaque sous-section, partie, onglet du Bot et
 //     onglet de la fiche membre (données du faux Supabase), sauf la liste d'exceptions EXCEPTIONS ci-dessous
-// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions, ni GeoGuessr, ni Citations ; seul « Jeux du jour » (droit cartes) sous « Jeux » ; titres Catalogue, Économie, Animation, Suivi, Jeux
+// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions, ni GeoGuessr, ni Citations ; seule « Bataille » (droit cartes) sous « Jeux » ; titres Catalogue, Économie, Animation, Suivi, Jeux
 // (e) 375 px : 6 onglets en bas, écran du domaine avec ses titres, sans défilement horizontal
 // Lancer : node tests/parcours-admin-sousmenus.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
@@ -18,7 +18,6 @@ const MAX_H = 1400;
 // Exceptions documentées à la garde de longueur (route → raison). Toute autre route au-delà de MAX_H échoue.
 const EXCEPTIONS = {
   'cartes/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
-  'cartes/saisons': 'deux cartes (saison de classement + soirées complètes) avec barème et récompenses : à séparer en deux sous-onglets si Ethan le souhaite',
   'membres/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard (audit §3.3)',
   'membres/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs (question ouverte pour Ethan)',
 };
@@ -31,7 +30,7 @@ const TREE = {
     ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres']], ['Suivi', ['joueurs', 'echanges', 'stats']],
-    ['Jeux', ['questions', 'pronos', 'sutom', 'secrets', 'geoguessr', 'jeux-du-jour', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux', 'saisons']]],
+    ['Jeux', ['questions', 'sutom', 'secrets', 'geoguessr', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux']]],
   communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot', 'commandes']]],
   site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'erreurs', 'archives', 'reglages', 'accueil']], ['Apparence', ['theme']]],
 };
@@ -151,8 +150,8 @@ async function goHash(p, h) {
   /* ---------- (d) Staff ['cartes'] ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['cartes'] } });
   const st = await columnTree(p, 'cartes');
-  check(JSON.stringify(st) === JSON.stringify([...TREE.cartes.slice(0, 4), ['Jeux', ['jeux-du-jour', 'bataille', 'saisons']]]),
-    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, Jeux (Jeux du jour, Bataille et Saisons) (${JSON.stringify(st)})`);
+  check(JSON.stringify(st) === JSON.stringify([...TREE.cartes.slice(0, 4), ['Jeux', ['bataille']]]),
+    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, Jeux (Bataille) (${JSON.stringify(st)})`);
   check(await p.locator('#shell-subs a[href="#cartes/secrets"], #shell-subs a[href="#communication/fil"], #shell-subs a[href="#cartes/questions"], #shell-subs a[href="#cartes/geoguessr"], #shell-subs a[href="#cartes/citations"]').count() === 0,
     '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang, ni GeoGuessr, ni Citations');
   await goHash(p, 'cartes/secrets');

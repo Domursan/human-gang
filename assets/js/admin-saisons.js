@@ -119,7 +119,7 @@ function renderWorlds(host) {
       <p class="muted small">Allumer la saison active d’un coup le thème « Saison des Worlds » (pendant les dates), le booster de la saison en boutique
         et trois quêtes en plus des quêtes de la semaine. L’éteindre les retire et attribue les badges « Pick’em parfait » et « Fidèle de la saison ».</p>
       <p class="small">État : <strong>${w.en_cours ? 'en cours' : w.actif ? 'allumée (hors dates)' : 'éteinte'}</strong>
-        · thème ${s.theme?.active ? 'actif' : 'inactif'} · pronostics ${s.pronos_ready ? 'disponibles' : 'pas encore installés (J5)'}</p>
+        · thème ${s.theme?.active ? 'actif' : 'inactif'}</p>
       <label class="check"><input type="checkbox" name="actif"${w.actif ? ' checked' : ''}> Saison des Worlds allumée</label>
       <div class="field"><label for="zw-deb">Début</label><input id="zw-deb" name="debut" type="datetime-local" value="${esc(isoLocal(w.debut))}"></div>
       <div class="field"><label for="zw-fin">Fin (120 jours au plus après le début)</label><input id="zw-fin" name="fin" type="datetime-local" value="${esc(isoLocal(w.fin))}"></div>
