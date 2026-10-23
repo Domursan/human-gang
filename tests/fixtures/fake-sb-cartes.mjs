@@ -141,6 +141,9 @@ window.__DB = DB; window.__LOG = [];
     DB.hg_card_copies.push(cpa(101,'C1'), cpa(102,'C1'), cpa(103,'C5'), cpa(104,'C8', { serial: 3 }), cpa(105,'C13'), cpa(106,'C12'), cpa(107,'C12'), cpa(108,'C9', { shiny: true }),
       { id: 12, card_id: 'C13', owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
   }
+  // Scénario « bigTrade » (parcours-echanges-filtres.cjs, idée Q5) : Alice a 400 exemplaires de plus (12 cartes en
+  // rotation). Son côté « Ses cartes » dans l'éditeur dépasse le seuil de lots (300) : dessin par lots de 120.
+  if (S.bigTrade) for (let i = 0; i < 400; i++) DB.hg_card_copies.push({ id: 30000 + i, card_id: 'C' + (1 + (i % 12)), owner_id: U(2), shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null });
   // Scénario « suggest » (parcours-echanges-suggeres.cjs) : échanges possibles.
   //  - moi : souhaits C4 et C1 ; doublons C1 (x3), C3 (x2), C5 (x2) ;
   //  - Alice : C1 x2 (un doublon que je souhaite) et souhaits C1, C5 (mes doublons) => échange gagnant-gagnant ;

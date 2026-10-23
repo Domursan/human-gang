@@ -377,7 +377,9 @@ html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 .cartes-search-box input { width: 100%; min-height: 44px; padding-right: 96px; }
 .cartes-search-box span { position: absolute; right: 12px; pointer-events: none; }
 /* Paint containment : la marge intérieure laisse place aux pastilles « ×3 » qui débordent des cartes. */
-.cz-group { content-visibility: auto; contain-intrinsic-size: auto 900px; padding: 8px 6px 0; margin-inline: -6px; }
+/* Hauteur estimée d'un groupe avant son rendu : --cz-h, mesurée au redessin précédent (cartes-lots.js, attrGroupe). Sans elle,
+   un groupe repris après un lot reprend 900 px et le défilement saute. */
+.cz-group { content-visibility: auto; contain-intrinsic-size: auto var(--cz-h, 900px); padding: 8px 6px 0; margin-inline: -6px; }
 .cz-more { margin: 16px 0 0; padding: 16px; border: 1px dashed var(--border); border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .cz-more-count { margin: 0; }
 .cz-more-count strong { font-weight: 700; }

@@ -78,6 +78,10 @@
 .trd-grid { display: grid; grid-template-columns: repeat(auto-fill, 96px); justify-content: start; gap: 12px 10px;
   max-height: 340px; overflow: auto; padding: 8px 6px 10px; }
 .trd-grid .hgc { --w: 96px; }
+/* Longues listes (cartes-lots.js) : bouton « Afficher plus » (repli clavier) pleine largeur, sentinelle du chargement anticipé. */
+.trd-more { grid-column: 1 / -1; padding: 4px 0; }
+.trd-more .trd-more-btn { min-height: 44px; }
+.trd-sentinel { display: block; height: 1px; }
 .trd-pickwrap { position: relative; width: 96px; }
 .trd-pickwrap .hgc:focus-visible { outline: 3px solid var(--sand); outline-offset: 3px; border-radius: 6px; }
 /* Sélection : contour sur la carte entière (jamais à l'intérieur) */

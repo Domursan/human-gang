@@ -1,9 +1,10 @@
 // Parcours : collection très longue (idée Q5). Faux Supabase fixtures/fake-sb-cartes.mjs, scénario bigCollection :
 // 2 000 cartes en 4 séries + les 12 de la première série, 5 000 exemplaires.
 // Vérifie : premier dessin rapide (performance.measure « hg-collection »), dessin par lots de 120 avec compteur exact,
-// « Afficher 120 de plus » (focus sur la première carte ajoutée), chargement automatique en approchant du bas,
-// carte agrandie « Suivante » au-delà du lot dessiné, recherche sans accents, recyclage des doublons calculé sur toute
-// la collection, pas de défilement horizontal à 360 px.
+// « Afficher 120 de plus » (focus sur la première carte ajoutée), chargement anticipé (le lot suivant arrive quand il
+// reste 1,5 écran à défiler, pas avant), focus et défilement gardés par le chargement, remplissage de l'écran sur un grand
+// écran, carte agrandie « Suivante » au-delà du lot dessiné, recherche sans accents, recyclage des doublons calculé sur
+// toute la collection, pas de défilement horizontal à 360 px.
 // Lancer : node tests/parcours-collection-longue.cjs
 const { ROOT, check, finish, openPage, sleep, chromium } = require('./lib/harness.cjs');
 
@@ -79,12 +80,48 @@ const dernierDessin = (p) => p.evaluate(() => { const m = performance.getEntries
   await p.selectOption('#cartes-f-rarity', '');
   await sleep(200);
 
-  // Chargement automatique en approchant du bas
-  await p.evaluate(() => document.querySelector('.cz-sentinel')?.scrollIntoView());
-  await sleep(600);
-  check(await cells(p) > 120, `en approchant du bas : lot suivant dessiné tout seul (${await cells(p)})`);
-  check(!p.errs.length, 'aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  // Chargement anticipé (cartes-lots.js) : rien tant que la sentinelle est à plus de 2,5 écrans du haut de la fenêtre
+  // (il reste plus de 1,5 écran à défiler), puis le lot suivant dès qu'elle y entre. Le focus et le défilement ne bougent pas.
+  await p.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await sleep(300);
+  const H = await p.evaluate(() => window.innerHeight);
+  /** Place la sentinelle à y pixels du haut de la fenêtre (défilement instantané). */
+  const placerSentinelle = (y) => p.evaluate((y) => {
+    const s = document.querySelector('#cartes-p-collection .cz-sentinel');
+    window.scrollBy({ top: s.getBoundingClientRect().top - y, behavior: 'instant' });
+  }, y);
+  const focusId = await p.evaluate(() => {
+    const b = document.querySelectorAll('#cartes-p-collection .cz-zoom')[3];
+    b.focus({ preventScroll: true });
+    return b.dataset.card;
+  });
+  const focusSur = () => p.evaluate(() => document.activeElement?.dataset.card ?? null);
+  check(await cells(p) === 120 && await p.locator('.cz-sentinel').count() === 1, 'avant défilement : un lot de 120, sentinelle présente');
+  await placerSentinelle(3 * H);
+  await sleep(400);
+  check(await cells(p) === 120, `sentinelle à 3 écrans : pas de chargement anticipé (${await cells(p)})`);
+  check(await focusSur() === focusId, 'focus inchangé quand rien ne se charge');
+  await placerSentinelle(2 * H);
+  const yAvant = await p.evaluate(() => window.scrollY);
+  await sleep(400);
+  const apres = await cells(p);
+  check(apres > 120 && apres % 120 === 0, `sentinelle à 2 écrans (1,5 écran restant) : lot suivant dessiné (${apres} cartes, par lots de 120)`);
+  check(await p.evaluate(() => window.scrollY) === yAvant, 'défilement inchangé par le lot chargé');
+  check(await focusSur() === focusId, `focus gardé sur la carte ${focusId} après le lot`);
+  check(!p.errs.length, 'chargement anticipé : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
+
+  // Remplissage : sur un grand écran (3000 px), les lots suivants se chargent seuls tant que l'écran n'est pas couvert.
+  const g = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 3000, scenario: SCN });
+  await g.click('[data-tab=collection]');
+  await g.waitForSelector('#cartes-set', { timeout: 10000 });
+  await g.selectOption('#cartes-set', '__all__');
+  await sleep(900);
+  const nG = await cells(g);
+  check(nG > 120 && nG % 120 === 0 && await g.evaluate(() => window.scrollY) === 0,
+    `grand écran : les lots se chargent sans défiler pour couvrir l’écran (${nG} cartes)`);
+  check(!g.errs.length, 'grand écran : aucune erreur JS' + (g.errs.length ? ' (' + g.errs.join(' | ') + ')' : ''));
+  await g.ctx.close();
 
   // Téléphone 360 px : pas de défilement horizontal
   const m = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 360, height: 780, scenario: SCN, mobile: true, dpr: 2 });

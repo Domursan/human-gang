@@ -12,6 +12,7 @@ import { cardHtml, rarityRank, rarityLabel, numberLabel, serialLabel, RARITIES, 
 import { confirmBox } from './ui-confirm.js';
 import { pluralCount } from './utils.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
+import { LOT, SEUIL, lotsAnticipes, gardeFocus } from './cartes-lots.js';
 
 /* ---------- Constantes ---------- */
 // Onglets du panneau : id (utilisé dans les attributs) et libellé affiché.
@@ -90,7 +91,8 @@ export async function mountTrades(el, ctx = {}) {
     sugg: [], suggAll: false, // bloc « Échanges possibles » : membres suggérés et affichage « Voir plus »
   };
   const E = { to: '', parent: null, give: new Set(), want: new Set(), giveP: 0, wantP: 0, message: '', busy: false,
-    filt: { give: { q: '', set: '', rar: '', dup: false }, want: { q: '', set: '', rar: '', dup: false } }, peek: null };
+    filt: { give: { q: '', set: '', rar: '', dup: false, lim: 0 }, want: { q: '', set: '', rar: '', dup: false, lim: 0 } }, peek: null,
+    lots: {} }; // lots : chargement anticipé de chaque colonne (lotsAnticipes), créé à chaque ouverture de l'éditeur
 
   /* ---------- Données ----------
      Chargement ciblé : mes exemplaires, mes échanges et les cartes qu'ils citent. Les exemplaires d'un membre
@@ -559,7 +561,8 @@ export async function mountTrades(el, ctx = {}) {
 
   /* ---------- Éditeur d'offre (<dialog>) ---------- */
   /** Filtres vides d'une colonne de l'éditeur (recherche, série, rareté, doublons seulement). */
-  const freshFilter = () => ({ q: '', set: '', rar: '', dup: false });
+  // lim : nombre de cartes dessinées par colonne quand la liste est longue (lot de cartes-lots.js), remis à zéro à chaque filtre.
+  const freshFilter = () => ({ q: '', set: '', rar: '', dup: false, lim: 0 });
   /** Propriétaire des cartes d'un côté : moi pour « give », le destinataire pour « want ». */
   const sideOwner = (side) => (side === 'give' ? S.me.id : E.to);
   /** Exemplaires d'un côté : disponibles, plus ceux déjà dans l'offre (toujours visibles, même filtrés). */
@@ -694,7 +697,17 @@ export async function mountTrades(el, ctx = {}) {
         <button class="btn btn-primary" type="submit" id="trd-send">${isCounter ? 'Envoyer la contre-proposition' : 'Envoyer l’offre'}</button>
       </footer>`;
     for (const side of ['give', 'want']) fillSeries(side);
+    // Chargement anticipé de chaque colonne : la zone défilante est la grille de la colonne (voir .trd-grid).
+    E.lots = {};
     renderPicks();
+    for (const side of ['give', 'want']) {
+      E.lots[side] = lotsAnticipes({
+        zone: form.querySelector(`#trd-grid-${side}`),
+        sentinelle: () => form.querySelector(`[data-sentinel="${side}"]`),
+        charger: () => chargerLot(side),
+      });
+      E.lots[side].planifier();
+    }
     renderPeek();
     updateSummary();
   }
@@ -726,21 +739,50 @@ export async function mountTrades(el, ctx = {}) {
   function renderPicks() { renderSide('give'); renderSide('want'); }
   /**
    * Redessine une liste de l'éditeur : cartes filtrées, compteur « x sur y », bouton « Réinitialiser ».
+   * Au-delà de SEUIL cartes, un lot seulement (LOT, cartes-lots.js) ; un bouton « Afficher plus » et une sentinelle
+   * ajoutent le lot suivant. Les cartes de l'offre restent toujours dessinées (même hors du lot), donc gardées sélectionnées.
+   * Le focus reste sur l'élément qui l'avait (gardeFocus) : un lot qui arrive ne le déplace pas.
    * @param {'give'|'want'} side
    */
   function renderSide(side) {
+    gardeFocus(form, () => {
+      const f = E.filt[side];
+      const all = sideCopies(side);
+      const counts = ownedCounts(sideOwner(side));
+      const active = !!(f.q.trim() || f.set || f.rar || f.dup);
+      const matching = all.filter((c) => E[side].has(String(c.id)) || matchesFilter(c, f, counts));
+      const batched = matching.length > SEUIL;
+      const lim = Math.max(LOT, f.lim || 0);
+      const list = batched ? matching.filter((c, i) => i < lim || E[side].has(String(c.id))) : matching;
+      const rest = batched ? Math.max(0, matching.length - lim) : 0;
+      const more = rest > 0
+        ? `<div class="trd-more"><button type="button" class="btn btn-ghost trd-more-btn" data-lot="${side}">+ Afficher ${Math.min(LOT, rest)} de plus</button><span class="trd-sentinel" data-sentinel="${side}" aria-hidden="true"></span></div>`
+        : '';
+      const cells = list.map((c) => pickHtml(c, side)).join('');
+      form.querySelector(`#trd-grid-${side}`).innerHTML = cells
+        ? cells + more
+        : `<p class="trd-none">${active ? 'Aucune carte ne correspond aux filtres.' : 'Aucune carte disponible.'}</p>`;
+      form.querySelector(`#trd-fres-${side}`).textContent = batched && rest > 0
+        ? `${lim} sur ${matching.length} affichées`
+        : active
+          ? `${matching.length} sur ${all.length} affichées`
+          : pluralCount(all.length, 'carte', 'cartes');
+      form.querySelector(`[data-freset="${side}"]`).hidden = !active;
+      form.querySelector(`[data-fchip="${side}"]`).setAttribute('aria-pressed', String(f.dup));
+      E.lots[side]?.planifier(); // la colonne se remplit toute seule si elle ne couvre pas encore sa zone
+    });
+  }
+  /**
+   * Dessine le lot suivant d'une colonne (bouton « Afficher plus » ou chargement anticipé). Renvoie false s'il n'y a rien à ajouter.
+   * @param {'give'|'want'} side
+   * @returns {boolean}
+   */
+  function chargerLot(side) {
     const f = E.filt[side];
-    const all = sideCopies(side);
-    const counts = ownedCounts(sideOwner(side));
-    const active = !!(f.q.trim() || f.set || f.rar || f.dup);
-    const list = all.filter((c) => E[side].has(String(c.id)) || matchesFilter(c, f, counts));
-    form.querySelector(`#trd-grid-${side}`).innerHTML = list.map((c) => pickHtml(c, side)).join('')
-      || `<p class="trd-none">${active ? 'Aucune carte ne correspond aux filtres.' : 'Aucune carte disponible.'}</p>`;
-    form.querySelector(`#trd-fres-${side}`).textContent = active
-      ? `${list.length} sur ${all.length} affichées`
-      : pluralCount(all.length, 'carte', 'cartes');
-    form.querySelector(`[data-freset="${side}"]`).hidden = !active;
-    form.querySelector(`[data-fchip="${side}"]`).setAttribute('aria-pressed', String(f.dup));
+    if (!form.querySelector(`[data-sentinel="${side}"]`)) return false;
+    f.lim = Math.max(LOT, f.lim || 0) + LOT;
+    renderSide(side);
+    return true;
   }
   /**
    * Remet à zéro les filtres d'une colonne et donne le focus à la recherche.
@@ -936,7 +978,9 @@ export async function mountTrades(el, ctx = {}) {
       S.tab = tab.dataset.tab; render(); tabsEl.querySelector(`[data-tab="${S.tab}"]`)?.focus(); return;
     }
     const chip = e.target.closest('[data-fchip]');
-    if (chip) { const side = chip.dataset.fchip; E.filt[side].dup = !E.filt[side].dup; return renderSide(side); }
+    if (chip) { const side = chip.dataset.fchip; E.filt[side].dup = !E.filt[side].dup; E.filt[side].lim = 0; return renderSide(side); }
+    const lot = e.target.closest('[data-lot]');
+    if (lot) return chargerLot(lot.dataset.lot);
     const reset = e.target.closest('[data-freset]');
     if (reset) return resetFilters(reset.dataset.freset);
     const tog = e.target.closest('[data-peek-toggle]');
@@ -1006,7 +1050,7 @@ export async function mountTrades(el, ctx = {}) {
   form.addEventListener('focusin', previewFromEvent);
   form.addEventListener('input', (e) => {
     const t = e.target;
-    if (t.dataset.ffield === 'q') { E.filt[t.dataset.fside].q = t.value; return renderSide(t.dataset.fside); }
+    if (t.dataset.ffield === 'q') { E.filt[t.dataset.fside].q = t.value; E.filt[t.dataset.fside].lim = 0; return renderSide(t.dataset.fside); }
     if (t.id === 'trd-gp') E.giveP = toInt(t.value);
     else if (t.id === 'trd-wp') E.wantP = toInt(t.value);
     else if (t.id === 'trd-msg') E.message = t.value;
@@ -1018,6 +1062,7 @@ export async function mountTrades(el, ctx = {}) {
     const t = e.target;
     if (t.dataset.ffield !== 'set' && t.dataset.ffield !== 'rar') return;
     E.filt[t.dataset.fside][t.dataset.ffield] = t.value;
+    E.filt[t.dataset.fside].lim = 0;
     renderSide(t.dataset.fside);
   });
 
