@@ -38,7 +38,7 @@ const continuer = args.includes('--continuer') || !!shard || process.env.CI === 
 
 /* ---------- Liste des fichiers ---------- */
 const parcours = fs.readdirSync(dir).filter((f) => /^parcours-.*\.cjs$/.test(f)).sort();
-const STATIQUES = ['check-js.cjs', 'check-rpc.mjs'];
+const STATIQUES = ['check-js.cjs', 'check-rpc.mjs', 'check-hg-discord.mjs', 'check-hg-calendar.mjs'];
 const NAVIGATEUR = ['smoke.cjs', 'smoke-admin.cjs', 'composants-admin-ui.cjs', ...parcours];
 /** Suite complète, ou le morceau demandé (un fichier sur N, liste triée : la découpe ne dépend que des noms). */
 const suite = shard

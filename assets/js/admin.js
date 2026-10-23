@@ -66,6 +66,8 @@ const OPTIONAL = [
   { sub: 'accueil', url: './admin-social.js', fn: 'mountAccueilSection' },         // Site › Accueil des membres (idées P9, P6)
   { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Site › Erreurs du site (hg_client_errors, A9)
   { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Site › Archives (fonction hg-archive, A8)
+  { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Vie du gang › Calendrier et ciné (idées V8, V9)
+  { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Communication › Commandes slash (idée D3)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -201,6 +203,7 @@ registerSub('vie/souvenirs', {
 });
 registerSub('vie/secret-santa', ssSub);
 registerSub('vie/evenements', eventsSub({ onBadgesChange: async () => { await loadBadges(); renderBadges(); } }));
+if (MOUNT.rdv) registerSub('vie/rdv', { main: () => MOUNT.rdv($('#rdv-root')) }); // calendrier (rendez-vous récurrents) et ciné-club
 // Badges : une section, trois parties (Catalogue, Attribution, Critères automatiques). « + Nouveau badge » : Catalogue
 // seulement (ou partout si la section ne sait pas encore se découper).
 /** Fournisseur `open` de la partie `part` des badges. */
@@ -251,6 +254,7 @@ registerSub('communication/messagerie', {
 });
 if (MOUNT.fil) registerSub('communication/fil', { main: () => MOUNT.fil($('#fil-root')) }); // modération du fil d'activité de l'accueil
 registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
+if (MOUNT.commandes) registerSub('communication/commandes', { main: () => MOUNT.commandes($('#commandes-root')) }); // commandes slash Discord
 // Site
 // Réglages du site : une section, cinq parties (identité, textes, menu, état du site : un seul formulaire ; clés avancées :
 // la liste brute de hg_settings, route d'origine #site/reglages). « + Nouvelle clé » : partie Clés avancées seulement.

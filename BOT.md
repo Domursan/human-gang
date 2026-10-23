@@ -110,3 +110,29 @@ Idée pour plus tard :
   (uniquement ceux qui ont activé « partager mon anniversaire ») et poste un message dans le salon ;
 - appelée chaque matin par **pg_cron** (+ `pg_net`) depuis Supabase, par exemple à 8 h heure suisse ;
 - en respectant le réglage `notify.birthday` et sans jamais afficher l'année de naissance.
+
+## 10. Commandes slash (/paillettes, /carte, /sortie, /quiz)
+
+Les commandes passent par les « interactions HTTP » de Discord : Discord appelle la fonction edge `hg-discord`, rien ne tourne en permanence.
+Le bot reconnaît chaque membre grâce à son ID Discord enregistré par le Staff (fiche du compte) ; sans ID, il explique comment le demander.
+Les réponses personnelles sont éphémères (seul l'auteur les voit). Les réponses aux sorties et au quiz passent par les mêmes règles que le site
+(plafonds, une seule tentative au quiz, mêmes Paillettes).
+
+Mise en service (une fois) :
+1. Appliquer la migration `supabase/migrations/087_idees_vd.sql`.
+2. Portail développeur Discord › ton application › **General Information** : copier la **Public Key** (clé publique, ce n'est pas un secret
+   sensible mais elle reste dans Supabase) et l'**Application ID**.
+3. Supabase › Edge Functions › Secrets : ajouter `DISCORD_PUBLIC_KEY` (la Public Key) et `DISCORD_GUILD_ID` (ID du serveur du gang :
+   clic droit sur le serveur › « Copier l'identifiant du serveur »). `SITE_URL` (facultatif) ajoute les boutons « Ouvrir mes cartes », « Voir la sortie ».
+4. Déployer la fonction `hg-discord` avec **verify_jwt = false** (voir `supabase/functions/DEPLOY.md`).
+5. Portail développeur › **General Information** › **Interactions Endpoint URL** :
+   `https://zqbdzokyhgavgmqgiwuw.supabase.co/functions/v1/hg-discord`, puis **Save Changes**. Discord envoie un PING signé :
+   l'enregistrement n'est accepté que si la fonction répond (signature vérifiée avec `DISCORD_PUBLIC_KEY`).
+6. Portail développeur › **OAuth2 › URL Generator** : si le bot a été invité sans le scope `applications.commands`, l'inviter de nouveau
+   avec les scopes `bot` **et** `applications.commands` (mêmes permissions qu'avant). Les commandes n'apparaissent pas sans ce scope.
+7. Enregistrer les commandes sur le serveur, depuis son ordinateur (Deno installé) :
+   `DISCORD_APP_ID=… DISCORD_GUILD_ID=… DISCORD_BOT_TOKEN=… deno run --allow-net --allow-env supabase/functions/hg-discord/register.ts`
+   (`--dry` affiche la liste sans rien envoyer). À relancer seulement si la liste des commandes change.
+8. Dans Discord, taper `/` : les quatre commandes du bot apparaissent. Les couper ou les rallumer : Admin › Communication › Commandes slash.
+
+Journal : chaque commande laisse une ligne `cmd:<nom>` dans l'historique du bot (sans le contenu de la réponse).

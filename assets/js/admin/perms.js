@@ -41,6 +41,8 @@ export const SECTION_PERM = {
   parrainage: 'membres', competences: 'membres', 'accueil-membres': 'reglages',
   // Idées A8 et A9 : Site › Fonctionnement › Erreurs du site (droit « reglages ») et Archives (administrateur seulement)
   erreurs: 'reglages', archives: 'admin',
+  // Idées V8, V9 (calendrier, ciné-club) et D3 (commandes slash) : migration 087
+  rdv: 'evenements', commandes: 'bot',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -89,6 +91,7 @@ export const DOMAINS = [
     ...under('Rendez-vous', [
       { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
       { id: 'evenements', label: 'Événements', section: 'evenements' },
+      { id: 'rdv', label: 'Calendrier et ciné', section: 'rdv' },
     ]),
     ...under('Badges', [
       { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
@@ -150,6 +153,7 @@ export const DOMAINS = [
     ]),
     ...under('Discord', [
       { id: 'bot', label: 'Bot Discord', section: 'bot' },
+      { id: 'commandes', label: 'Commandes slash', section: 'commandes' },
     ]),
   ] },
   { id: 'site', label: 'Site', icon: 'globe', subs: [

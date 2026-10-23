@@ -183,5 +183,57 @@ export default {
       ],
       keywords: ["idée", "idées", "proposer", "suggestion", "boîte", "fonctionnalité", "sortie", "thème"],
     },
+    {
+      slug: 'calendrier-du-gang',
+      title: 'Suivre le calendrier du gang',
+      summary: "Toutes les sorties, séances ciné, rendez-vous des groupes et anniversaires sur un seul mois, et dans ton agenda.",
+      page: "calendrier.html",
+      steps: [
+        { title: "Ouvre Calendrier", text: "Depuis le menu, ouvre la page Calendrier. Chaque jour porte des pastilles de couleur : sable pour les sorties IRL, vert pour les soirées, prune pour le ciné, bleu pour les groupes, rose pour les anniversaires, rouille pour le site." },
+        { title: "Choisis un jour", text: "Touche un jour : la liste de ses rendez-vous s'affiche dessous, avec un bouton « Ouvrir » vers la sortie, la séance ou la page concernée." },
+        { title: "Filtre", text: "Les boutons en haut masquent ou affichent un type de rendez-vous. Ton choix est gardé sur cet appareil." },
+        { title: "Ajoute un rendez-vous récurrent", text: "« Rendez-vous récurrent » crée par exemple « Campagne CK3 chaque jeudi à 20 h ». Tu peux le modifier, le retirer ou annuler une seule date depuis la liste du jour." },
+        { title: "Abonne-toi dans ton agenda", text: "« S'abonner dans mon agenda » donne ton adresse personnelle à coller dans Google Agenda ou Calendrier : les rendez-vous du gang s'y ajoutent et se mettent à jour tout seuls." },
+      ],
+      tips: [
+        "Ton adresse d'abonnement est personnelle. Si tu l'as partagée par erreur, crée-en une nouvelle depuis la même fenêtre : l'ancienne cesse de fonctionner.",
+        "Les anniversaires n'apparaissent que pour les membres qui partagent leur date, jamais avec l'année.",
+      ],
+      keywords: ["calendrier", "agenda", "ics", "abonnement", "rendez-vous", "récurrent", "ck3", "soirée", "anniversaire", "mois"],
+    },
+    {
+      slug: 'cine-club',
+      title: 'Participer au ciné-club',
+      summary: "Propose des films, vote pour la séance du dimanche, puis note le film vu.",
+      page: "cine.html",
+      steps: [
+        { title: "Ouvre Ciné-club", text: "Depuis le menu, ouvre la page Ciné-club. En haut, la prochaine séance : le vote en cours ou le film choisi." },
+        { title: "Vote", text: "Clique sur « Voter » sous le film de ton choix. Tu peux changer d'avis jusqu'à la clôture. S'il y a trop peu de votants, la séance est reportée d'une semaine." },
+        { title: "Dis si tu viens", text: "« Je serai là » ajoute ton nom à la liste des présents ; le bouton « Salon vocal » ouvre le salon Discord de la séance." },
+        { title: "Propose un film", text: "« Proposer un film » l'ajoute à la liste d'attente (titre, année, une phrase pour donner envie). Le « + » aide le projectionniste à choisir les prochains films en lice." },
+        { title: "Note après la séance", text: "Dans « Films vus », « Noter » ouvre ta note (1 à 5 étoiles) et un avis court. Coche « Contient un spoiler » pour flouter ton texte. Et si le livre est mieux, dis-le !" },
+      ],
+      tips: [
+        "Le lien de la séance est toujours un salon Discord : jamais de lien de visionnage.",
+        "Tu peux avoir 5 films en attente à la fois.",
+      ],
+      keywords: ["ciné", "cinéma", "film", "vote", "séance", "dimanche", "projectionniste", "avis", "note", "livre"],
+    },
+    {
+      slug: 'commandes-discord',
+      title: 'Utiliser les commandes Discord',
+      summary: "Consulte ton solde, une carte, la prochaine sortie ou une question du gang sans ouvrir le site.",
+      page: "compte.html",
+      steps: [
+        { title: "Fais enregistrer ton ID Discord", text: "Les commandes te reconnaissent grâce à ton identifiant Discord, que seul le Staff enregistre. Vérifie sur la page Mon compte qu'il est bien rempli ; sinon, demande-le via l'assistance." },
+        { title: "Tape / dans un salon", text: "Sur le serveur du gang, tape / puis choisis /paillettes, /carte, /sortie ou /quiz dans la liste du bot." },
+        { title: "Lis la réponse", text: "Les réponses personnelles ne sont visibles que de toi (« Seul·e toi peux voir ce message »). /sortie public:True montre la prochaine sortie à tout le salon." },
+        { title: "Réponds avec les boutons", text: "/sortie propose J'y vais / Peut-être / Non ; /quiz propose les réponses. Ce sont les mêmes règles et les mêmes gains que sur le site, avec une seule tentative au quiz." },
+      ],
+      tips: [
+        "Pour /carte, commence à taper le nom : la liste se complète toute seule.",
+      ],
+      keywords: ["discord", "commande", "slash", "bot", "paillettes", "carte", "sortie", "quiz", "solde"],
+    },
   ],
 };

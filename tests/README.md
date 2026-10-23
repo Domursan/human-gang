@@ -77,11 +77,16 @@ et doit être lancé avec `node tests/<fichier>`.
 |---|---|---|---|
 | `check-js.cjs` | `node tests/check-js.cjs` | `npm run check` | Syntaxe de chaque fichier `.js`, `.mjs` et `.cjs` du dépôt (modules ES compris) |
 | `check-rpc.mjs` | `node tests/check-rpc.mjs` | `npm run test:rpc` | Chaque table et fonction RPC appelée par le site existe dans le schéma ou les migrations 020+ |
+| `check-hg-discord.mjs` | `node tests/check-hg-discord.mjs` | `test` | Fonction edge des commandes slash (D3) sans Deno : signature Ed25519, PING, rejeu, membre inconnu, boutons, rendus |
+| `check-hg-calendar.mjs` | `node tests/check-hg-calendar.mjs` | `test` | Flux d'agenda ICS du calendrier (V8) : fuseau Europe/Zurich, journées entières, pliage, liens, ni lieu ni participants |
 | `smoke.cjs` | `node tests/smoke.cjs` | `test:smoke`, `test` | Chaque page publique à 1280 et 375 px : pas d'erreur JS, pas de 404, pas de défilement horizontal |
 | `smoke-admin.cjs` | `node tests/smoke-admin.cjs` | `test:smoke`, `test` | Même contrôle pour `admin.html` |
 | `composants-admin-ui.cjs` | `node tests/composants-admin-ui.cjs` | à la main | Composants du panel (liste, fil, panneau d'infos, en-tête de détail) sur la page de démonstration |
 | `parcours-connexion.cjs` | `node tests/parcours-connexion.cjs` | `test` | Connexion depuis `compte.html` : mauvais identifiants, bons identifiants, page compte connectée |
 | `parcours-sortie.cjs` | `node tests/parcours-sortie.cjs` | `test` | Proposer une sortie dans `irl.html` : données envoyées à `hg_events`, annonce `irl_new` |
+| `parcours-v8.cjs` | `node tests/parcours-v8.cjs` | `test` | Calendrier du gang (`calendrier.html`) : mois, filtres, liste du jour, abonnement ICS, rendez-vous récurrents |
+| `parcours-v9.cjs` | `node tests/parcours-v9.cjs` | `test` | Ciné-club (`cine.html`) : vote, présence, avis et spoiler, « Le livre est mieux », propositions, séance du projectionniste |
+| `parcours-d3.cjs` | `node tests/parcours-d3.cjs` | `test` | Admin : commandes slash (interrupteurs), calendrier et ciné (rendez-vous, réglage) ; ligne des commandes sur Mon compte |
 | `parcours-session.cjs` | `node tests/parcours-session.cjs` | `test` | Session absente ou fermée : écrans visiteur, rafraîchissements, déconnexion, aucune RPC membre sans session |
 | `parcours-staff.cjs` | `node tests/parcours-staff.cjs` | `test` | Staff : section Staff pour l'admin (ajout, permissions, désactivation), droits limités `cartes` + `journal` |
 | `parcours-admin-sorties.cjs` | `node tests/parcours-admin-sorties.cjs` | `test` | Sorties IRL dans l'admin : liste, filtres, création, modification, inscrits, date, suppression avec confirmation |

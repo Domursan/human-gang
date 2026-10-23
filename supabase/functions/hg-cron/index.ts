@@ -30,6 +30,8 @@
 //      (isKnownChannel), puis error = détail si un salon a échoué. Aucun salon atteint : réservation libérée (nouvel essai au
 //      passage suivant). Plus de 6 h de retard : marquée sans envoi (error « trop tard »). Une ligne hg_bot_log
 //      (kind « auto:programme ») par annonce envoyée.
+//   7. Ciné-club (migration 087, ../_shared/cine-announce.ts) : hg_cine_tick puis annonces du vote, du film choisi, du report
+//      et rappel une heure avant (salon bot.channels.cine, sinon salon d'annonces). Désactivé si bot.notify.cine === false.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
@@ -46,6 +48,7 @@ import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
+import { cineAnnouncements } from '../_shared/cine-announce.ts';
 
 /* ---------- Constantes et clients ---------- */
 
@@ -488,19 +491,24 @@ Deno.serve(async (req) => {
       catch (e) { console.error('[hg-cron] question du jour', e); out.errors++; }
     }
 
+    // Ciné-club (idée V9, migration 087) : clôture des votes, reports, annonces et rappel ; sans effet tant que la migration manque.
+    let cine = { cine_ticks: 0, cine_posts: 0, cine_errors: 0 };
+    try { cine = await cineAnnouncements(db, bot, canSend, SITE); }
+    catch (e) { console.error('[hg-cron] ciné-club', e); cine.cine_errors++; }
+
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.scheduled + out.errors;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.scheduled + out.errors + cine.cine_posts;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
-        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}`,
+        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}${cine.cine_posts ? `, ${cine.cine_posts} annonce(s) du ciné-club` : ''}`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
         channel: out.starts + out.ends + out.quiz_daily > 0,
       }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }
-    return json({ ok: true, ...out, polls_closed: polls });
+    return json({ ok: true, ...out, ...cine, polls_closed: polls });
   } catch (e) {
     console.error('[hg-cron]', e);
     return json({ ok: false, error: 'Erreur interne (voir les journaux de hg-cron)', ...out }, 500); // détail seulement dans console.error (m16)
