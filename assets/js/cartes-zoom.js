@@ -98,6 +98,7 @@ export function createZoom({ ids, info }) {
       eyebrow: dlg.querySelector('#cz-eyebrow'),
       card: dlg.querySelector('#cz-card'),
       info: dlg.querySelector('#cz-info'),
+      body: dlg.querySelector('.cz-body'),
       lens: dlg.querySelector('#cz-lens'),
       lensIn: dlg.querySelector('.cz-lens-in'),
       prevs: [...dlg.querySelectorAll('[data-cz=prev]')],
@@ -127,6 +128,7 @@ export function createZoom({ ids, info }) {
     ui.card.innerHTML = cardHtml(d.card, { size: 'lg', count: d.count, shiny: d.shiny, serial: d.serial, missing: d.missing });
     ui.eyebrow.textContent = `${d.kicker || 'Collection'} · ${d.setName} · ${pos + 1} / ${list.length}`;
     ui.info.innerHTML = infoHtml(d);
+    ui.body.scrollTop = 0; // téléphone : la nouvelle carte s'affiche depuis le haut, pas au niveau de la fiche précédente
     const many = list.length > 1;
     for (const b of [...ui.prevs, ...ui.nexts]) b.disabled = !many;
     return true;

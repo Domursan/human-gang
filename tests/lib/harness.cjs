@@ -49,10 +49,11 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * scenario : objet visible par le faux client sous window.__SCN (ex. { guest: true }).
  * reducedMotion : 'reduce' pour désactiver les animations (préférence système).
  * touch : true pour un écran tactile (page.tap possible).
+ * mobile / dpr : téléphone émulé (isMobile, deviceScaleFactor), ex. { mobile: true, dpr: 2.6 }.
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null } = {}) {
-  const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch }); // touch : écran tactile (pointeur grossier)
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1 } = {}) {
+  const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch || mobile, isMobile: mobile, deviceScaleFactor: dpr }); // touch : écran tactile (pointeur grossier)
   await ctx.addInitScript((s) => {
     window.__SCN = s;
     try {
