@@ -1,0 +1,259 @@
+/* ===== Humane Gang — secrets F : le drôle de bloc (creeper) et le champignon (Mycena) ===== */
+/* Chargée par assets/js/eggs/creeper.js et assets/js/eggs/champignon.js (balise <link data-eggs-f>).
+   Les calques du bloc sont fixes, sans interaction (pointer-events: none) sauf le bloc lui-même, et coupés dans leur
+   boîte (overflow: hidden) : rien ne gêne la navigation ni ne crée de défilement horizontal.
+   Le champignon vit dans la section de la page (position: absolute), jamais hors de sa boîte.
+   Mouvement réduit (ou effets coupés) : la classe egg-f-calme coupe toutes les animations, il ne reste que le fondu. */
+
+/* ---------- Drôle de bloc : calque et positions (gauche ou droite, en bas) ---------- */
+
+.egg-f-calque {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 58;
+}
+
+.egg-f-gauche { left: 12px; }
+.egg-f-droite { right: 12px; }
+
+/* Le bloc : un vrai bouton, 56 px (48 px au moins) */
+.egg-f-monstre {
+  position: absolute;
+  bottom: 12px;
+  width: 56px;
+  height: 56px;
+  min-width: 48px;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: egg-f-sort 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.egg-f-monstre svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.egg-f-monstre:focus-visible {
+  outline: 2px solid var(--sand, #E2C77E);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@keyframes egg-f-sort {
+  from { transform: translateY(130%); }
+  to { transform: none; }
+}
+
+/* Clignotement blanc pendant trois secondes (le bloc est blanc à 20 %, 60 %) */
+.egg-f-monstre.egg-f-clignote svg {
+  animation: egg-f-blanc 3s step-end 1 both;
+}
+
+@keyframes egg-f-blanc {
+  0% { filter: none; }
+  20% { filter: brightness(0) invert(1); }
+  40% { filter: none; }
+  60% { filter: brightness(0) invert(1); }
+  80% { filter: none; }
+  100% { filter: none; }
+}
+
+/* Touché : il se dégonfle */
+.egg-f-monstre.egg-f-touche {
+  animation: egg-f-degonfle 0.45s ease-in both;
+}
+
+@keyframes egg-f-degonfle {
+  to { transform: scale(0.1); opacity: 0; }
+}
+
+/* Nuage de la cueillette, à l'endroit du bloc */
+.egg-f-nuage {
+  position: absolute;
+  bottom: 12px;
+  width: 72px;
+  height: 52px;
+  background:
+    radial-gradient(circle at 30% 60%, #F2EFEA 0 28%, transparent 30%),
+    radial-gradient(circle at 60% 40%, #F2EFEA 0 34%, transparent 36%),
+    radial-gradient(circle at 75% 70%, #F2EFEA 0 22%, transparent 24%);
+  opacity: 0;
+  pointer-events: none;
+  animation: egg-f-nuage 0.6s ease-out both;
+}
+
+@keyframes egg-f-nuage {
+  0% { transform: scale(0.3); opacity: 0.95; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+/* Raté : bulle « BOUM » de BD (contour en étoile) */
+.egg-f-boum {
+  position: absolute;
+  bottom: 74px;
+  padding: 10px 14px;
+  background: #FFE14D;
+  color: #111;
+  font-family: var(--font-display, system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  clip-path: polygon(50% 0%, 61% 14%, 80% 6%, 80% 26%, 98% 30%, 88% 46%, 100% 62%, 82% 70%, 88% 90%, 68% 88%, 56% 100%, 44% 88%, 26% 96%, 22% 78%, 2% 72%, 12% 56%, 0% 40%, 14% 28%, 8% 10%, 30% 14%);
+  animation: egg-f-pop 0.3s ease-out both;
+}
+
+.egg-f-boum.egg-f-gauche { left: 8px; }
+.egg-f-boum.egg-f-droite { right: 8px; }
+
+@keyframes egg-f-pop {
+  from { transform: scale(0.2); }
+  to { transform: scale(1); }
+}
+
+/* Cratère pixelisé : reste dans le coin jusqu'au rechargement */
+.egg-f-cratere {
+  position: absolute;
+  bottom: 4px;
+  width: 56px;
+  height: 21px;
+  pointer-events: none;
+}
+
+.egg-f-cratere svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Tremblement de la page (une demi-seconde) : sur main, jamais sur body */
+.egg-f-tremble {
+  animation: egg-f-tremble 0.5s linear;
+}
+
+@keyframes egg-f-tremble {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 2px); }
+  40% { transform: translate(4px, -2px); }
+  60% { transform: translate(-3px, -1px); }
+  80% { transform: translate(3px, 1px); }
+}
+
+/* Mouvement réduit ou effets coupés : pas de mouvement, seulement un fondu à l'apparition */
+.egg-f-calme *,
+.egg-f-calme {
+  animation: none !important;
+}
+
+.egg-f-calme .egg-f-monstre {
+  animation: egg-f-fondu 0.3s ease both !important;
+}
+
+@keyframes egg-f-fondu {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------- Champignon Mycena : cueillette ---------- */
+
+.champi-f {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  z-index: 2;
+}
+
+.champi-f-bouton {
+  display: block;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.champi-f-bouton:hover,
+.champi-f-bouton:focus-visible {
+  opacity: 1;
+}
+
+.champi-f-bouton:focus-visible {
+  outline: 2px solid var(--sand, #E2C77E);
+  outline-offset: 2px;
+}
+
+.champi-f-bouton svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 4px rgba(127, 224, 240, 0.45));
+}
+
+.champi-f-bouton:disabled {
+  cursor: default;
+}
+
+/* Épanouissement : le chapeau s'ouvre */
+.champi-f-bouton.champi-f-eclot svg {
+  transform-origin: 50% 100%;
+  animation: champi-f-eclot 0.6s ease-out both;
+}
+
+@keyframes champi-f-eclot {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+/* Spores : petits points qui s'éloignent du champignon */
+.champi-f-spore {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;
+  background: #B9F3FF;
+  box-shadow: 0 0 6px #7FE0F0;
+  pointer-events: none;
+  animation: champi-f-spore 1.1s ease-out both;
+}
+
+@keyframes champi-f-spore {
+  from { transform: translate(0, 0); opacity: 1; }
+  to { transform: translate(var(--dx, 0), var(--dy, 0)); opacity: 0; }
+}
+
+/* Bulle avec l'anecdote du jour */
+.champi-f-bulle {
+  position: absolute;
+  right: 0;
+  bottom: 52px;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong, #3A3A40);
+  border-radius: var(--radius-sm, 12px);
+  background: var(--surface, #17171A);
+  color: var(--text, #F2EFEA);
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
