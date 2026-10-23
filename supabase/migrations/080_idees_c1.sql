@@ -94,18 +94,22 @@ do $c$ begin
     check (booster_scope is null or booster_scope in ('saison', 'hors_boosters'));
 exception when duplicate_object then null; end $c$;
 
--- Source « sortie » des exemplaires (C4) : la contrainte est recréée avec la nouvelle valeur.
+-- Source « sortie » des exemplaires (C4) : la contrainte est reconstruite à partir des valeurs déjà permises
+-- (dont « drop », migration 043, et celles d'autres migrations), plus « sortie ».
 do $c$
-declare def text;
+declare def text; vals text[]; lst text;
 begin
   select pg_get_constraintdef(oid) into def from pg_constraint
    where conrelid = 'public.hg_card_copies'::regclass and conname = 'hg_card_copies_source_check';
-  if def is null or position('sortie' in def) = 0 then
+  if def is null or position('''sortie''' in def) = 0 then
+    select coalesce(array_agg(distinct m[1]), '{}') into vals
+      from regexp_matches(coalesce(def, ''), '''([a-z_]+)''', 'g') as m;
+    vals := array(select distinct x from unnest(vals || array['booster','cadeau','admin','fabrication','evenement','echange','drop','sortie']) x order by 1);
+    select string_agg(quote_literal(x), ', ') into lst from unnest(vals) x;
     if def is not null then
       execute 'alter table public.hg_card_copies ' || 'dr' || 'op constraint hg_card_copies_source_check';
     end if;
-    alter table public.hg_card_copies add constraint hg_card_copies_source_check
-      check (source = any (array['booster','cadeau','admin','fabrication','evenement','echange','sortie']));
+    execute 'alter table public.hg_card_copies add constraint hg_card_copies_source_check check (source = any (array[' || lst || ']))';
   end if;
 end $c$;
 
