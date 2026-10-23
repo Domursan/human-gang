@@ -1,4 +1,4 @@
-// Faux serveur des jeux (migration 084) pour les tests Playwright : question du jour (J4), pronostics (J5), Sutom (J8),
+// Faux serveur des jeux (migration 084) pour les tests Playwright : question du jour (J4), Sutom (J8),
 // et leurs sections admin. Script injecté avant la page par openPage({ init: 'fake-jeux.js' }) ; il s'accroche au faux
 // client fake-sb.mjs par window.__FAKE_SETUP (base) et window.__FAKE_RPC (RPC). Mêmes formes de réponse que la base.
 // Scénario (window.__SCN.jeux) : { deja: true } question déjà jouée dans le quiz ; { vide: true } aucune question,
@@ -31,16 +31,6 @@
     ], me: { rank: 12, bonnes: 10, repondues: 20 } },
     calendar: Array.from({ length: 28 }, (_, i) => ({ day: day(i - 7), question_id: i < 8 ? 'qd-1' : null, prompt: i < 8 ? 'En quelle année est né le Tzatzikistan ?' : null,
       difficulty: 'facile', category: 'Vie du gang', picked_by: i === 7 ? 'Ethan' : null, auto: i < 7, answered: i < 8 ? 9 : 0, correct: i < 8 ? 7 : 0 })),
-    comps: [{ id: 'c1', title: 'Worlds 2026', kind: 'lol', active: true }, { id: 'c2', title: 'F1', kind: 'f1', active: true }, { id: 'c3', title: 'Eurovision', kind: 'eurovision', active: true }],
-    items: [
-      { id: 'm1', comp: 'c1', label: 'Quart de finale · BO5', options: [{ id: 'kc', label: 'KC' }, { id: 'g2', label: 'G2' }], locks_at: iso(1.9), result: null, cancelled: false, settled_at: null, mine: null },
-      { id: 'm2', comp: 'c1', label: 'Quart de finale · BO5', options: [{ id: 'hle', label: 'HLE' }, { id: 'blg', label: 'BLG' }], locks_at: iso(-0.05), result: null, cancelled: false, settled_at: null,
-        mine: { choice: 'blg', stake: 10, gain: 0 }, dist: [{ choice: 'hle', n: 5, stake: 120 }, { choice: 'blg', n: 4, stake: 85 }] },
-      { id: 'm3', comp: 'c1', label: 'Huitième', options: [{ id: 'kc', label: 'KC' }, { id: 'fnc', label: 'FNC' }], locks_at: iso(-3), result: 'kc', cancelled: false, settled_at: iso(-2.9),
-        mine: { choice: 'kc', stake: 20, gain: 38 }, dist: [{ choice: 'kc', n: 6, stake: 90 }, { choice: 'fnc', n: 3, stake: 40 }] },
-      { id: 'm4', comp: 'c2', label: 'GP de Monza', options: [{ id: 'ver', label: 'Verstappen' }, { id: 'lec', label: 'Leclerc' }, { id: 'nor', label: 'Norris' }], locks_at: iso(5), result: null, cancelled: false, settled_at: null, mine: null },
-    ],
-    balance: 1240, weekUsed: 25,
     sutom: { word: 'RACLETTE', definition: 'Plat sacré du gang. Existe aussi en version « soirée raclette sans raclette ».', guesses: [], finished: false, solved: false, streak: 9 },
     dict: new Set(['RESTAURE', 'RATELIER', 'RECALEES', 'REGLETTE', 'RELEVENT', 'RAQUETTE', 'RACLETTE']),
     bank: [{ word: 'RACLETTE', definition: 'Plat sacré du gang.', active: true, last_day: day(0) }, { word: 'GOBELET', definition: 'Fait maison pour Lyon 2026.', active: true, last_day: null }],
@@ -61,15 +51,14 @@
   window.__FAKE_SETUP = (DB) => {
     DB.hg_pages = DB.hg_pages.filter((x) => x.slug !== 'jeux'); // la base de test la réserve aux admins : ici elle est ouverte à tous
     DB.hg_pages.push({ slug: 'jeux', label: 'Jeux', mode: 'membres', in_nav: true, sort: 10 });
-    DB.hg_perm_catalog.push({ key: 'pronos', label: 'Pronostics', description: 'Pronostics', sort: 135 });
     const s = SC();
     if (s.deja) J.jour.already_played = true;
-    if (s.vide) { J.jour.question = null; J.comps = []; J.items = []; J.sutom = null; }
+    if (s.vide) { J.jour.question = null; J.sutom = null; }
     if (s.fini) Object.assign(J.sutom, { guesses: ['RACLETTE'], finished: true, solved: true });
   };
 
   window.__FAKE_RPC = (fn, a) => {
-    if (!/^hg_(quiz_daily|pick|sutom)_/.test(fn)) return undefined;
+    if (!/^hg_(quiz_daily|sutom)_/.test(fn)) return undefined;
     J.calls.push([fn, a]);
     const s = SC();
     if (s.fail === fn) return ko('Failed to fetch');
@@ -91,44 +80,6 @@
       Object.assign(d, a.p_question ? { question_id: a.p_question, prompt: 'Question programmée', picked_by: 'Ethan', auto: false } : { question_id: null, prompt: null, picked_by: null });
       return ok(null);
     }
-    /* ----- J5 ----- */
-    const vue = (it) => {
-      const locked = new Date(it.locks_at) <= new Date() || !!it.settled_at || it.cancelled;
-      return { id: it.id, label: it.label, options: it.options, locks_at: it.locks_at, locked, result: it.result, settled: !!it.settled_at && !it.cancelled,
-        cancelled: it.cancelled, mine: it.mine, dist: locked ? (it.dist || []) : null };
-    };
-    if (fn === 'hg_pick_board') {
-      const comp = J.comps.find((c) => c.id === a.p_comp)?.id || J.comps[0]?.id || null;
-      return ok({ comps: J.comps.filter((c) => c.active).map(({ id, title, kind }) => ({ id, title, kind })), comp,
-        items: J.items.filter((i) => i.comp === comp).map(vue),
-        board: comp === 'c1' ? [{ rank: 1, user_id: U(2), pseudo: 'Alice', color: '#6FA37F', avatar_url: null, points: 9 }, { rank: 2, user_id: ME, pseudo: 'Ethan', color: '#E0909A', avatar_url: null, points: 7 }] : [],
-        cfg: { mise_max: 50, semaine: 300, bonus: 5 }, week_used: J.weekUsed, balance: J.balance });
-    }
-    if (fn === 'hg_pick_bet') {
-      const it = J.items.find((i) => i.id === a.p_item);
-      if (!it || new Date(it.locks_at) <= new Date()) return ko('Les pronostics sont fermés pour ce match');
-      if (a.p_stake < 0 || a.p_stake > 50) return ko('La mise va de 0 à 50 Paillettes');
-      J.balance += (it.mine?.stake || 0) - a.p_stake;
-      it.mine = { choice: a.p_choice, stake: a.p_stake, gain: 0 };
-      return ok({ item: it.id, choice: a.p_choice, stake: a.p_stake, balance: J.balance, week_used: J.weekUsed + a.p_stake });
-    }
-    if (fn === 'hg_pick_admin') {
-      const comp = J.comps.find((c) => c.id === a.p_comp)?.id || J.comps[0]?.id || null;
-      return ok({ comps: J.comps.map((c) => ({ ...c, items: J.items.filter((i) => i.comp === c.id).length, todo: J.items.filter((i) => i.comp === c.id && !i.settled_at && new Date(i.locks_at) <= new Date()).length })),
-        comp, items: J.items.filter((i) => i.comp === comp).map((i) => ({ id: i.id, label: i.label, options: i.options, locks_at: i.locks_at, result: i.result, cancelled: i.cancelled, settled_at: i.settled_at, dist: i.dist || [], bets: (i.dist || []).reduce((s, d) => s + d.n, 0) })) });
-    }
-    if (fn === 'hg_pick_comp_save') {
-      if (String(a.p?.title || '').trim().length < 3) return ko('Le titre fait de 3 à 80 caractères');
-      if (a.p_id) { Object.assign(J.comps.find((c) => c.id === a.p_id), { title: a.p.title, kind: a.p.kind, active: a.p.active }); return ok(a.p_id); }
-      const id = `c${J.comps.length + 1}`; J.comps.push({ id, title: a.p.title, kind: a.p.kind, active: true }); return ok(id);
-    }
-    if (fn === 'hg_pick_items_add') {
-      for (const x of a.p_items) J.items.push({ id: `m${J.items.length + 1}`, comp: a.p_comp, label: x.label, options: x.options, locks_at: x.locks_at, result: null, cancelled: false, settled_at: null, mine: null });
-      return ok(a.p_items.length);
-    }
-    if (fn === 'hg_pick_settle') { const it = J.items.find((i) => i.id === a.p_item); Object.assign(it, { result: a.p_result, settled_at: new Date().toISOString() }); return ok({ winners: 5, paid: 205 }); }
-    if (fn === 'hg_pick_cancel') { const it = J.items.find((i) => i.id === a.p_item); Object.assign(it, { cancelled: true, settled_at: new Date().toISOString() }); return ok({ refunded: 3 }); }
-    if (fn === 'hg_pick_item_edit') { const it = J.items.find((i) => i.id === a.p_item); if (a.p.locks_at) it.locks_at = a.p.locks_at; return ok(null); }
     /* ----- J8 ----- */
     if (fn === 'hg_sutom_state') {
       const g = J.sutom;

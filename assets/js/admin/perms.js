@@ -18,8 +18,8 @@ export const SECTION_PERM = {
   sorties: 'evenements',
   souvenirs: 'souvenirs',
   reglages: 'reglages',
-  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz', jeux4: 'cartes', // jeux4 : Saisons et soirées (migration 086)
-  pronos: 'pronos', sutom: 'souvenirs', // jeux du jour (migration 084) : pronostics (J5), Sutom du gang (J8)
+  cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
+  sutom: 'souvenirs', // Sutom du gang (J8)
   cagnotte: 'cartes', champions: 'cartes', // idées C13/C15 et C17 (migration 082)
   ludotheque: 'ludotheque', // Ludothèque (migration 088)
   idees: 'support', assistance: 'support',
@@ -30,8 +30,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages', social: 'reglages', // social : Vie sociale (migration 090)
-  // Page « Jeux » (migration 083) : GeoGuessr (photos des sorties), jeux du jour (économie), citations (quiz)
-  'jeux-geo': 'souvenirs', 'jeux-jdj': 'cartes', 'jeux-citations': 'quiz',
+  // Page « Jeux » (migration 083) : GeoGuessr (photos des sorties), citations (quiz)
+  'jeux-geo': 'souvenirs', 'jeux-citations': 'quiz',
   // Jeux (paquet xJ3) : preuves des quêtes (J11), Framed et Heardle (J9, J10), Bataille (J15)
   preuves: 'preuves', 'jeux-medias': 'souvenirs', bataille: 'cartes',
   // Idées A3 et A4 (migration 092) : Mes jeux (permission « Maître du jeu ») et À relancer. Le Planning (A2) est à part :
@@ -132,18 +132,15 @@ export const DOMAINS = [
     ]),
     ...under('Jeux', [
       { id: 'questions', label: 'Questions du gang', section: 'quiz' },
-      { id: 'pronos', label: 'Pronostics', section: 'pronos' },
       { id: 'sutom', label: 'Sutom du gang', section: 'sutom' },
       { id: 'ludotheque', label: 'Ludothèque', section: 'ludotheque' },
       { id: 'secrets', label: 'Secrets', section: 'eggs' },
       { id: 'geoguessr', label: 'GeoGuessr', section: 'jeux-geo' },
-      { id: 'jeux-du-jour', label: 'Jeux du jour', section: 'jeux-jdj' },
       { id: 'citations', label: 'Citations « Qui a dit ça ? »', section: 'jeux-citations' },
       { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves' },
       { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
       { id: 'bataille', label: 'Bataille', section: 'bataille' },
       { id: 'mes-jeux', label: 'Mes jeux', section: 'mj' },
-      { id: 'saisons', label: 'Saisons et soirées', section: 'jeux4' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

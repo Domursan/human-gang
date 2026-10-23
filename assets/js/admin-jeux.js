@@ -1,18 +1,16 @@
-// ===== Humane Gang — administration : jeux de la page « Jeux » (idées J1, J2, J3) =====
+// ===== Humane Gang — administration : jeux de la page « Jeux » (idées J1, J3) =====
 /*
- * Rôle : trois sous-sections de Jeux et cartes › Jeux.
+ * Rôle : deux sous-sections de Jeux et cartes › Jeux.
  *   GeoGuessr (#cartes/geoguessr, Staff « souvenirs ») : manches programmées et réserve « jouable ». Pour créer une
  *     manche : choisir une sortie, une de ses photos, placer le vrai lieu sur la carte, nommer le lieu, choisir le jour
  *     (vide = réserve). La photo est recopiée dans un dossier neutre (<mon id>/geo/…) après recompression : ni EXIF,
  *     ni identifiant de sortie dans son chemin (sinon la réponse fuiterait avant le vote).
- *   Jeux du jour (#cartes/jeux-du-jour, Staff « cartes ») : jeux ouverts, numéros de référence des grilles, Paillettes
- *     oui / non ; résultats d'un jour avec retrait d'un résultat aberrant.
  *   Citations (#cartes/citations, Staff « quiz ») : file des citations proposées (publier en reformulant, refuser),
  *     saisie directe d'une citation par le Staff (l'accord de l'auteur reste demandé).
  * Toutes les écritures passent par des RPC qui vérifient les droits et journalisent (migration 083).
  * Dépendances : core.js (sb, toast, errMsg, esc, getUser), photos.js (signatures, envoi), image-compress.js
  *   (recompression), leaflet-load.js (carte), ui-confirm.js (confirmation), admin/ui/drawer.js (tiroir).
- * Exporte : mountGeoSection, mountJdjSection, mountCitationsSection.
+ * Exporte : mountGeoSection, mountCitationsSection.
  */
 import { sb, toast, errMsg, esc, getUser } from './core.js';
 import { signedUrls, signedUrl, uploadImage, uuid } from './photos.js';
@@ -224,109 +222,6 @@ async function geoCopiePhoto(srcPath) {
   const path = `${me.id}/geo/${uuid()}.${img.ext}`;
   await uploadImage(path, img.blob);
   return path;
-}
-
-/* =====================================================================
-   Jeux du jour
-   ===================================================================== */
-const JDJ_JEUX = [['worldle', 'Worldle'], ['sutom', 'Sutom'], ['framed', 'Framed'], ['cemantix', 'Cémantix'], ['pedantix', 'Pédantix'], ['heardle', 'Heardle'], ['loldle', 'LoLdle']];
-const JDJ = { root: null, day: null, rows: [] };
-
-/**
- * Monte la sous-section Jeux du jour.
- * @param {HTMLElement} root Conteneur (#jdj-admin-root).
- */
-export async function mountJdjSection(root) {
-  if (!root) return;
-  JDJ.root = root;
-  JDJ.day = aujourdHui();
-  root.innerHTML = `<div class="ajx">
-    <form class="card ajx-form" id="ajx-jdj-form" novalidate>
-      <h3 class="card-title">Réglages</h3>
-      <fieldset class="ajx-fs"><legend>Jeux ouverts et grille de référence</legend>
-        <p class="small muted">Référence : le numéro de la grille à une date. Le site en déduit la grille du jour et refuse un numéro invraisemblable
-          (la grille d’hier reste acceptée jusqu’à midi). Sans référence, aucun contrôle du numéro.</p>
-        <div class="ajx-jdj-grid">${JDJ_JEUX.map(([k, nom]) => `<div class="ajx-jdj-game">
-            <label class="ajx-check"><input type="checkbox" name="actif" value="${k}"> ${esc(nom)}</label>
-            <label class="visually-hidden" for="ajx-jdj-d-${k}">Date de référence de ${esc(nom)}</label><input id="ajx-jdj-d-${k}" type="date" data-ref-date="${k}">
-            <label class="visually-hidden" for="ajx-jdj-n-${k}">Numéro de grille de ${esc(nom)} à cette date</label><input id="ajx-jdj-n-${k}" type="number" min="0" max="999999" step="1" inputmode="numeric" placeholder="n°" data-ref-n="${k}">
-          </div>`).join('')}</div>
-      </fieldset>
-      <label class="ajx-check"><input type="checkbox" id="ajx-jdj-pail"> Verser des Paillettes (sinon : classement seulement)</label>
-      <p class="small muted">Gain et plafond : Économie › Limites (clés jeu_du_jour_gain, 5 par défaut, et jeux_du_jour, 3 jeux payés par jour).</p>
-      <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer les réglages</button></div>
-    </form>
-    <section class="card" aria-labelledby="ajx-jdj-h">
-      <div class="ajx-head"><h3 class="card-title" id="ajx-jdj-h">Résultats déclarés</h3>
-        <div class="field ajx-inline"><label for="ajx-jdj-day">Jour</label><input id="ajx-jdj-day" type="date" value="${JDJ.day}" max="${JDJ.day}"></div></div>
-      <div id="ajx-jdj-list" aria-live="polite"><div class="empty">Chargement…</div></div>
-    </section>
-  </div>`;
-  root.querySelector('#ajx-jdj-form').addEventListener('submit', jdjSave);
-  root.querySelector('#ajx-jdj-day').addEventListener('change', (e) => { JDJ.day = e.target.value || aujourdHui(); jdjCharger(); });
-  root.addEventListener('click', jdjClick);
-  await jdjCharger(true);
-}
-
-/**
- * Lit réglages et résultats du jour choisi.
- * @param {boolean} [reglages] Remplir aussi le formulaire des réglages.
- */
-async function jdjCharger(reglages = false) {
-  const { data, error } = await sb.rpc('hg_daily_admin', { p_day: JDJ.day });
-  const list = JDJ.root.querySelector('#ajx-jdj-list');
-  if (error) { list.innerHTML = `<div class="empty">Résultats indisponibles : ${esc(errMsg(error))}</div>`; return; }
-  if (reglages) {
-    const cfg = data?.reglages || {};
-    const actifs = Array.isArray(cfg.actifs) ? cfg.actifs : JDJ_JEUX.map(([k]) => k);
-    for (const c of JDJ.root.querySelectorAll('input[name="actif"]')) c.checked = actifs.includes(c.value);
-    for (const [k] of JDJ_JEUX) {
-      const ref = cfg.ref?.[k];
-      JDJ.root.querySelector(`[data-ref-date="${k}"]`).value = ref?.date || '';
-      JDJ.root.querySelector(`[data-ref-n="${k}"]`).value = ref?.n ?? '';
-    }
-    JDJ.root.querySelector('#ajx-jdj-pail').checked = cfg.paillettes !== false;
-  }
-  JDJ.rows = Array.isArray(data?.rows) ? data.rows : [];
-  if (!JDJ.rows.length) { list.innerHTML = '<div class="empty">Aucun résultat ce jour-là.</div>'; return; }
-  const nom = Object.fromEntries(JDJ_JEUX);
-  list.innerHTML = `<ul class="ajx-rows">${JDJ.rows.map((r) => `<li class="ajx-row">
-      <div class="ajx-row-main"><strong>${esc(r.pseudo)}</strong> <span class="small muted">${esc(nom[r.game] || r.game)} n°${esc(r.grid)} · ${r.max ? `${r.score || 'X'}/${r.max}` : `${esc(r.score)} coups`} · ${r.reward ? `+${r.reward} ✦` : 'sans Paillettes'}</span>
-        <details class="ajx-raw"><summary class="small">Texte collé</summary><pre>${esc(r.raw)}</pre></details></div>
-      <button class="btn btn-danger" type="button" data-ajx="jdj-rm" data-id="${esc(r.id)}">Retirer</button></li>`).join('')}</ul>`;
-}
-
-/** Enregistre les réglages (le serveur filtre et borne). */
-async function jdjSave(e) {
-  e.preventDefault();
-  const f = e.currentTarget;
-  const btn = f.querySelector('[type="submit"]');
-  const ref = {};
-  for (const [k, nom] of JDJ_JEUX) {
-    const d = f.querySelector(`[data-ref-date="${k}"]`).value, n = f.querySelector(`[data-ref-n="${k}"]`).value;
-    if (d && n !== '') ref[k] = { date: d, n: Number(n) };
-    else if (d || n !== '') { toast(`${nom} : donne la date ET le numéro de grille, ou aucun des deux.`, 'error'); return; }
-  }
-  const p = { actifs: [...f.querySelectorAll('input[name="actif"]:checked')].map((c) => c.value), ref, paillettes: f.querySelector('#ajx-jdj-pail').checked };
-  occupe(btn, true);
-  const { error } = await sb.rpc('hg_daily_settings_save', { p });
-  occupe(btn, false);
-  if (error) { toast(errMsg(error), 'error'); return; }
-  toast('Réglages des jeux du jour enregistrés', 'success');
-}
-
-/** Retrait d'un résultat aberrant (confirmé). */
-async function jdjClick(e) {
-  const b = e.target.closest('[data-ajx="jdj-rm"]');
-  if (!b) return;
-  const r = JDJ.rows.find((x) => String(x.id) === b.dataset.id);
-  if (!r || !(await confirmBox('Retirer ce résultat ?', `${r.pseudo} · ${r.game} n°${r.grid}. Les Paillettes déjà versées restent.`, { ok: 'Retirer', danger: true }))) return;
-  occupe(b, true);
-  const { error } = await sb.rpc('hg_daily_remove', { p_id: Number(r.id) });
-  occupe(b, false);
-  if (error) { toast(errMsg(error), 'error'); return; }
-  toast('Résultat retiré', 'ok');
-  jdjCharger();
 }
 
 /* =====================================================================

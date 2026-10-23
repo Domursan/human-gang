@@ -1,11 +1,10 @@
 // Faux client Supabase de la page « Jeux » (jeux.html) et de ses sous-sections admin (migration 083).
 // Enveloppe fake-sb.mjs (chargé depuis le dépôt) : ajoute la page « jeux » au menu et simule les RPC GeoGuessr (J1),
-// jeux du jour (J2) et « Qui a dit ça ? » (J3), avec les mêmes règles que la base (une tentative, plafonds, masquage).
+// « Qui a dit ça ? » (J3), avec les mêmes règles que la base (une tentative, plafonds, masquage).
 // Scénario (window.__SCN) : geoNone (pas de manche), geoPlayed (manche déjà jouée), quotesNone, quoteConsent (une citation
 // attend l'accord du membre), jeuxFail (toutes les RPC des jeux échouent).
 // Exporte createClient().
 const base = await import(new URL('tests/fixtures/fake-sb.mjs', location.href).href);
-const parser = await import(new URL('assets/js/jeux/jdj-parse.js', location.href).href);
 
 const S = window.__SCN || {};
 const ME = '11111111-1111-4111-8111-111111111111';
@@ -33,12 +32,6 @@ const G = {
     { round: 'geo-today', user_id: U(2), pseudo: 'Alice', color: '#E2C77E', score: 4940, distance_m: 120 },
     { round: 'geo-today', user_id: U(3), pseudo: 'Bruno', color: '#9A88C4', score: 3905, distance_m: 2100 },
   ],
-  daily: [
-    { id: 1, user_id: U(2), pseudo: 'Alice', color: '#9A88C4', game: 'worldle', grid: 1312, score: 1, max: 6, raw: '#Worldle #1312 1/6', reward: 5 },
-    { id: 2, user_id: U(3), pseudo: 'Bruno', color: '#6FA37F', game: 'worldle', grid: 1312, score: 3, max: 6, raw: '#Worldle #1312 3/6', reward: 5 },
-    { id: 3, user_id: U(4), pseudo: 'Chloé', color: '#D8A75E', game: 'sutom', grid: 1201, score: 0, max: 6, raw: 'SUTOM #1201 -/6', reward: 5 },
-  ],
-  cfg: { actifs: ['worldle', 'sutom', 'framed', 'cemantix', 'pedantix', 'heardle', 'loldle'], ref: {}, paillettes: true },
   quotes: S.quotesNone ? [] : [
     { id: 'qt-1', quote: 'MERCI DE PAS TROLL la liste de courses', difficulty: 'facile', reward: 10, good: 'b', context: 'Salon nouvel an, décembre 2024',
       options: [['a', 'Alice', U(2), '#E0909A'], ['b', 'Bruno', U(3), '#E2C77E'], ['c', 'Chloé', U(4), '#CF7055'], ['d', 'David', U(5), '#6FA37F']], rate: 62 },
@@ -73,7 +66,7 @@ function quoteRow(x) {
 
 /** RPC des jeux : réponse, ou undefined pour laisser répondre le faux client de base. */
 function jeux(fn, a = {}) {
-  if (!/^hg_(geo|daily|quote)_/.test(fn) && !(fn === 'hg_quiz_answer' && String(a.p_question).startsWith('qt-'))) return undefined;
+  if (!/^hg_(geo|quote)_/.test(fn) && !(fn === 'hg_quiz_answer' && String(a.p_question).startsWith('qt-'))) return undefined;
   if (S.jeuxFail) return ko('Failed to fetch');
   const d = today();
   switch (fn) {
@@ -111,30 +104,6 @@ function jeux(fn, a = {}) {
       else G.rounds.push({ id: `geo-${G.rounds.length + 1}`, number: 0, guesses: 0, ...a.p });
       return ok(a.p_id || 'geo-new');
     }
-    case 'hg_daily_submit': {
-      const r = parser.parse(a.p_raw);
-      if (!r) return ko('Format non reconnu. Jeux pris en charge : Worldle, Sutom, Framed, Cémantix, Pédantix, Heardle, LoLdle.');
-      if (G.daily.some((x) => x.user_id === ME && x.game === r.game)) return ko('Tu as déjà déclaré ce jeu pour ce jour');
-      const payes = G.daily.filter((x) => x.user_id === ME && x.reward > 0).length;
-      const reward = payes < 3 ? 5 : 0;
-      G.daily.push({ id: G.daily.length + 1, user_id: ME, pseudo: 'Ethan', color: '#4F6A8F', game: r.game, grid: r.grid ?? 9999, score: r.score, max: r.max, raw: a.p_raw, reward });
-      return ok({ game: r.game, grid: r.grid ?? 9999, score: r.score, max: r.max, played_on: d, reward, payes: payes + (reward ? 1 : 0), plafond: 3, points: parser.points(r.game, r.score), streak: 4 });
-    }
-    case 'hg_daily_board': {
-      const rows = G.daily.map((x) => ({ ...x, points: parser.points(x.game, x.score) }))
-        .sort((x, y) => x.game.localeCompare(y.game) || y.points - x.points || (x.score === 0) - (y.score === 0) || x.score - y.score);
-      const m = G.daily.filter((x) => x.user_id === ME);
-      return ok({ day: d, actifs: G.cfg.actifs, paillettes: G.cfg.paillettes, gain: 5, plafond: 3, payes: m.filter((x) => x.reward > 0).length,
-        streak: m.length ? 4 : 3, mine: m.map((x) => ({ game: x.game, grid: x.grid, score: x.score, max: x.max, reward: x.reward })), rows });
-    }
-    case 'hg_daily_week': {
-      const by = new Map();
-      for (const x of G.daily) { const o = by.get(x.user_id) || { user_id: x.user_id, pseudo: x.pseudo, color: x.color, avatar_url: null, points: 0, jeux: 0 }; o.points += parser.points(x.game, x.score); o.jeux++; by.set(x.user_id, o); }
-      return ok({ week: d, rows: [...by.values()].sort((x, y) => y.points - x.points).map((x, i) => ({ ...x, rank: i + 1 })) });
-    }
-    case 'hg_daily_admin': return ok({ reglages: G.cfg, day: a.p_day || d, rows: G.daily.map((x) => ({ ...x, created_at: new Date().toISOString() })) });
-    case 'hg_daily_settings_save': window.__LOG.push(['jdj_settings', a.p]); G.cfg = { ...a.p }; return ok(G.cfg);
-    case 'hg_daily_remove': window.__LOG.push(['jdj_remove', a.p_id]); G.daily = G.daily.filter((x) => x.id !== a.p_id); return ok(null);
     case 'hg_quote_list': return ok(G.quotes.map(quoteRow).sort((x, y) => x.answered - y.answered));
     case 'hg_quiz_answer': {
       const x = G.quotes.find((q) => q.id === a.p_question);

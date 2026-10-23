@@ -21,18 +21,12 @@
 export const ONGLETS = [
   { id: 'geo', titre: 'GeoGuessr', module: './geo.js', idee: 'J1', rythme: 'jour', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/>' },
-  { id: 'jdj', titre: 'Jeux du jour', module: './jdj.js', idee: 'J2', rythme: 'jour', couleur: 'var(--sage-text)',
-    icone: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>' },
   { id: 'citations', titre: 'Qui a dit ça ?', module: './citations.js', idee: 'J3', rythme: 'jour', couleur: 'var(--slate)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
   { id: 'jour', titre: 'Question du jour', module: './jour.js', idee: 'J4', rythme: 'jour' },
-  { id: 'pronos', titre: 'Pronostics', module: './pronos.js', idee: 'J5', rythme: 'competition' },
   { id: 'sutom', titre: 'Sutom', module: './sutom.js', idee: 'J8', rythme: 'jour' },
   { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
   { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
   { id: 'bataille', titre: 'Bataille', module: './bataille.js', idee: 'J15', rythme: 'competition' },
-  { id: 'saison', titre: 'Saisons', module: './saison.js', idee: 'J16', rythme: 'competition' },
-  { id: 'qui-main', titre: 'Qui main ?', module: './qui-main.js', idee: 'J17', rythme: 'jour' },
   { id: 'arcade', titre: 'Arcade', module: './arcade.js', idee: 'J18', rythme: 'jour' },
-  { id: 'soiree', titre: 'Soirée complète', module: './soiree.js', idee: 'J19', rythme: 'semaine' },
 ];

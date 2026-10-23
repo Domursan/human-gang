@@ -18,7 +18,6 @@ import { eventsSub } from './admin-events.js';
 import { mountCardsSection, openCardsTab, mountPlayersList, mountDropsSection } from './admin-cards.js';
 import { mountChallengesSection } from './admin-challenges.js';
 import { mountQuizSection } from './admin-quiz.js';
-import { mountPronosSection } from './admin-pronos.js';
 import { mountSutomSection } from './admin-sutom.js';
 import { mountLudothequeSection } from './admin-ludotheque.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
@@ -54,12 +53,10 @@ const OPTIONAL = [
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
   { sub: 'geoguessr', url: './admin-jeux.js', fn: 'mountGeoSection' },         // Jeux et cartes › GeoGuessr (migration 083)
-  { sub: 'jeux-du-jour', url: './admin-jeux.js', fn: 'mountJdjSection' },      // Jeux et cartes › Jeux du jour
   { sub: 'citations', url: './admin-jeux.js', fn: 'mountCitationsSection' },   // Jeux et cartes › Citations « Qui a dit ça ? »
   { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Jeux et cartes › Preuves de quêtes (J11)
   { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Jeux et cartes › Framed et Heardle (J9, J10)
   { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
-  { sub: 'saisons', url: './admin-jeux4.js', fn: 'mountJeux4Section' }, // Jeux et cartes › Saisons et soirées (J16, J19)
   { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Vie sociale (hg_settings.social, migration 090)
   { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Parrainage (idée P8)
   { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Compétences (idée P7)
@@ -239,18 +236,15 @@ registerSub('cartes/cagnotte', { main: () => import('./admin-cards/pots.js').the
 registerSub('cartes/champions', { main: () => import('./admin-cards/champions.js').then((m) => m.mountChampionsSection($('#champions-root'))) });
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
 registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
-registerSub('cartes/pronos', { main: () => mountPronosSection($('#pronos-root')) }); // pronostics (J5) : compétitions, matchs, résultats
 registerSub('cartes/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
 registerSub('cartes/ludotheque', { main: () => mountLudothequeSection($('#ludo-root')) }); // ludothèque du gang (S3) : permission « ludothèque »
 if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
-// Page « Jeux » : GeoGuessr, jeux du jour, citations (admin-jeux.js)
+// Page « Jeux » : GeoGuessr, citations (admin-jeux.js)
 if (MOUNT.geoguessr) registerSub('cartes/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
-if (MOUNT['jeux-du-jour']) registerSub('cartes/jeux-du-jour', { main: () => MOUNT['jeux-du-jour']($('#jdj-admin-root')) });
 if (MOUNT.citations) registerSub('cartes/citations', { main: () => MOUNT.citations($('#citations-admin-root')) });
 if (MOUNT.preuves) registerSub('cartes/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
 if (MOUNT['framed-heardle']) registerSub('cartes/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
 if (MOUNT.bataille) registerSub('cartes/bataille', { main: () => MOUNT.bataille($('#bataille-root')) });
-if (MOUNT.saisons) registerSub('cartes/saisons', { main: () => MOUNT.saisons($('#jeux4-root')) }); // saisons de classement et soirées complètes
 // Communication
 registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('communication/idees', ideasSub);
