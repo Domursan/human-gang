@@ -24,8 +24,9 @@ const PUMPKIN = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://w
 // Base simulée : données de départ, une clé par table Supabase.
 const DB = {
   hg_profiles: people.map(([p, id], i) => ({ id, pseudo: p, is_admin: id === ME, color: '#4F6A8F', avatar_url: null, created_at: iso(-300 + i), joined_on: i === 1 ? '2019-03-12' : null, birthday: null })),
-  hg_settings: [{ key: 'theme', value: { mode: 'auto' } }, { key: 'bot', value: { notify: {} } }],
-  hg_themes: [{ slug: 'classique', name: 'Classique', is_default: true, active: true, effect: 'aucun', emojis: [], colors: {} }],
+  // S.themeSetting : réglage du thème (forçage) ; S.themes : thèmes supplémentaires (test du thème Raclette)
+  hg_settings: [{ key: 'theme', value: S.themeSetting || { mode: 'auto' } }, { key: 'bot', value: { notify: {} } }],
+  hg_themes: [{ slug: 'classique', name: 'Classique', is_default: true, active: true, effect: 'aucun', emojis: [], colors: {} }, ...(S.themes || [])],
   hg_badges: [...AUTO.map((c, i) => ({ code: c, name: c.replace(/_/g, ' '), description: 'Badge automatique', image_url: null, sort: i * 10 })),
     { code: 'roi_karaoke', name: 'Roi du karaoké', description: 'A chanté plus fort que tout le monde', image_url: null, sort: 200 },
     { code: 'citrouille', name: 'Chasseur de citrouilles', description: 'A attrapé des citrouilles d\'Halloween', image_url: PUMPKIN, sort: 210, levels_enabled: true, metric: 'event_captures', event_id: 'aaaaaaaa-0000-4000-8000-000000000001',
@@ -796,6 +797,8 @@ export function createClient() {
       { const c2 = rpcC2(fn, args); if (c2) return c2; } // idées C2 (migration 081)
       // Secrets cachés (migration 062) : la secousse offre un booster ; l'appel reste dans window.__LOG.
       if (fn === 'hg_egg_found') return { data: { new: true, reward: 0, message: 'Un booster offert t\'attend sur la page Cartes.', card: null, badge: null, found: 1 }, error: null };
+      // Succès Pentakill (F9, migration 101) : scenario.pentakill = réponse de hg_pentakill_check ; sinon « pas de Pentakill ».
+      if (fn === 'hg_pentakill_check') return { data: S.pentakill || { pentakill: false }, error: null };
       // Migration 072 : réglages « support » et « eggs » lus par RPC, sans les valeurs sensibles (même logique que fake-sb.mjs).
       const reglage = (k) => DB.hg_settings.find((r) => r.key === k)?.value || {};
       if (fn === 'hg_support_public') {

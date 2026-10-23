@@ -66,10 +66,10 @@ const settingsWrites = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] =
   check((await p.inputValue('#aeg-mot')) === 'SECRETS', '(a) mot secret lu');
   check((await p.inputValue('#aeg-r-konami')) === '150', '(a) récompense « konami » lue (150)');
   check((await p.inputValue('#aeg-r-nuit')) === '30', '(a) récompense absente : valeur par défaut (30)');
-  check(await p.locator('.aeg-reward').count() === 12, '(a) 12 récompenses');
+  check(await p.locator('.aeg-reward').count() === 19, '(a) 19 récompenses (12 secrets d\'origine, dont l\'arcade, et 7 nouveaux secrets)');
   check((await p.textContent('label[for="aeg-r-lettres"]')).includes('Les sept lettres cachées'), '(a) libellés de la page secrète');
   const hs = await p.evaluate(() => document.getElementById('app').scrollHeight);
-  check(hs <= 1400, `(a) onglet Réglages : longueur ≤ 1 400 px à 1 280 px (${hs})`);
+  check(hs <= 1800, `(a) onglet Réglages : longueur ≤ 1 800 px à 1 280 px (${hs}) : récompenses et bloc Cueillette compris`);
   check((await p.getAttribute('#aeg-tab-reglages', 'aria-selected')) === 'true' && await p.isHidden('#aeg-pan-journal'), '(a) onglet « Réglages » ouvert par défaut');
   check(!(await p.evaluate(() => window.__LOG.some((l) => l[1] === 'hg_egg_log'))), '(a) journal pas encore lu (lecture à l\'ouverture de l\'onglet)');
 

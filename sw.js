@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v56';
+const CACHE_VERSION = 'v57';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -36,7 +36,7 @@ const PRECACHE = [
   'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
   'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/aide.css', 'assets/css/assistance.css', 'assets/css/base.css',
   'assets/css/cartes-card.css', 'assets/css/cartes-boosters.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
-  'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/cartes-zoom.css', 'assets/css/compte.css', 'assets/css/evenements.css',
+  'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/cartes-zoom.css', 'assets/css/cartes-pentakill.css', 'assets/js/cartes-pentakill.js', 'assets/css/compte.css', 'assets/css/evenements.css',
   'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
   'assets/css/irl.css', 'assets/css/legal.css', 'assets/css/membre.css', 'assets/css/messages.css',
   'assets/css/photos.css', 'assets/css/recap.css', 'assets/css/rejoindre.css', 'assets/css/ui-confirm.css',
@@ -85,8 +85,8 @@ const PRECACHE = [
   'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js', 'assets/js/ss-pairs.js',
   'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
   'assets/js/quiz.js', 'assets/js/secret.js', 'assets/js/admin-quiz.js', 'assets/js/admin-quiz-stats.js',
-  'assets/js/eggs/api.js', 'assets/js/eggs/core.js', 'assets/js/eggs/lettres.js', 'assets/js/eggs/pages.js', 'assets/js/eggs/jeu404.js',
-  'assets/css/quiz.css', 'assets/css/admin-quiz.css', 'assets/css/admin-quiz-stats.css', 'assets/css/eggs.css', 'assets/css/eggs-pages.css',
+  'assets/js/eggs/api.js', 'assets/js/eggs/core.js', 'assets/js/eggs/lettres.js', 'assets/js/eggs/creeper.js', 'assets/js/eggs/champignon.js', 'assets/js/eggs/pages.js', 'assets/js/eggs/jeu404.js',
+  'assets/css/quiz.css', 'assets/css/admin-quiz.css', 'assets/css/admin-quiz-stats.css', 'assets/css/eggs.css', 'assets/css/eggs-pages.css', 'assets/css/eggs-f.css',
   'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
   'assets/css/admin-ui.css', 'assets/js/admin/ui/common.js', 'assets/js/admin/ui/time.js', 'assets/js/admin/ui/list.js', 'assets/js/admin/ui/drawer.js',
   'assets/js/admin/ui/thread.js', 'assets/js/admin/ui/info-panel.js', 'assets/js/admin/ui/detail-header.js',

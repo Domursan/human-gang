@@ -1,5 +1,5 @@
 // ===== Humane Gang — petits sons synthétisés (WebAudio, aucun fichier) =====
-// playSound(name) : 'click' | 'success' | 'error' | 'message' | 'badge'
+// playSound(name) : 'click' | 'success' | 'error' | 'message' | 'badge' | 'fanfare'
 // Ne fait rien si les sons sont désactivés dans les préférences (localStorage 'hg_prefs', défaut : off).
 /*
  * Rôle : produit de petits sons (clic, succès, erreur, message, badge) avec l'API WebAudio, sans fichier audio.
@@ -114,6 +114,13 @@ const SOUNDS = {
     }
     note(c, o, { f: N(96), t: 0.54, d: 0.35, type: 'square', g: 0.025 }); // scintillement
   },
+  // Fanfare de quatre notes montantes (secret « kc », voir eggs/core.js)
+  fanfare: (c, o) => {
+    [[72, 0, 0.1], [76, 0.11, 0.1], [79, 0.22, 0.1], [84, 0.33, 0.36]].forEach(([n, t, d]) => {
+      note(c, o, { f: N(n), t, d, type: 'square', g: 0.1 });
+      note(c, o, { f: N(n - 12), t, d, type: 'triangle', g: 0.12 });
+    });
+  },
 };
 
 /* ---------- Point d'entrée ---------- */
@@ -121,7 +128,7 @@ const SOUNDS = {
 /**
  * Joue un son court. Silencieux (et sans erreur) si les sons sont coupés ou si WebAudio est indisponible.
  * Un même son ne peut pas repartir moins de 40 ms après le précédent (anti-rafale).
- * @param {'click'|'success'|'error'|'message'|'badge'} name Nom du son.
+ * @param {'click'|'success'|'error'|'message'|'badge'|'fanfare'} name Nom du son.
  */
 export function playSound(name) {
   const fn = SOUNDS[name];

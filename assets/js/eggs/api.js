@@ -6,7 +6,8 @@
  * Dépendances : core/supabase.js (sb, hasSession), core/ui.js (toast).
  * Exporte : eggFound(code, extra), eggsMe().
  * Codes : konami, logo, humane, jeu404 (extra.score ≥ 1), heure_gang, anniversaire, console, lettre_1 … lettre_7,
- *         secousse, nuit, rembobine.
+ *         secousse, nuit, rembobine, tzatziki, champi_<saison> (printemps, ete, automne, hiver), livre, kc, creeper,
+ *         serge, domumobile.
  */
 import { sb, hasSession } from '../core/supabase.js';
 import { toast } from '../core/ui.js';

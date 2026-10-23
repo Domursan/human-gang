@@ -1,7 +1,8 @@
 // ===== Humane Gang — administration : secrets cachés (easter eggs) =====
 /*
  * Rôle : Jeux et cartes › Secrets. Formulaire du réglage hg_settings.eggs (date d'anniversaire du gang, mot secret,
- * récompense en Paillettes de chacun des 11 secrets) et journal « Qui a trouvé quoi » (table hg_egg_log).
+ * récompense en Paillettes de chacun des secrets, cueillette : page de chaque saison et anecdotes) et journal
+ * « Qui a trouvé quoi » (table hg_egg_log). Les quatre champignons (champi_<saison>) forment un seul secret « champi ».
  * Enregistrement : upsert de la seule clé « eggs », en conservant les clés inconnues (et les récompenses inconnues).
  * Le journal n'est lisible que par l'administrateur (RLS hg_egg_log_own, migration 062) : le Staff voit une explication.
  * Écriture permise à l'admin et au Staff « reglages » (RLS hg_settings_admin, hg_settings_perm('eggs') = 'reglages').
@@ -15,11 +16,24 @@ import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from '
 
 /* ---------- Constantes ---------- */
 
-/** Valeurs par défaut (celles de la migration 062). */
+/** Saisons de la cueillette (champignon caché) : code de la saison et libellé. */
+const SAISONS = [['printemps', 'Printemps'], ['ete', 'Été'], ['automne', 'Automne'], ['hiver', 'Hiver']];
+/** Limites de la cueillette : nom de page (slug), nombre et longueur des anecdotes. */
+const PAGE_RE = /^[a-z0-9-]{2,40}$/;
+const FAITS_MAX = 20;
+const FAIT_MAX = 200;
+
+/** Valeurs par défaut (celles de la migration 062, et de la migration 101 pour les nouveaux secrets). */
 export const EGGS_DEFAULTS = Object.freeze({
   anniversaire_gang: null,
   mot_secret: 'SECRETS',
-  recompenses: Object.freeze({ konami: 100, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 200, secousse: 0, nuit: 30, rembobine: 25, arcade: 5 }),
+  recompenses: Object.freeze({ konami: 100, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 200, secousse: 0, nuit: 30, rembobine: 25, arcade: 5,
+    tzatziki: 25, champi: 20, livre: 10, kc: 10, creeper: 1, serge: 25, domumobile: 15 }),
+  champi: Object.freeze({
+    pages: Object.freeze({ printemps: 'irl', ete: 'historique', automne: 'compte', hiver: 'cartes' }),
+    facts: Object.freeze(['Certains Mycena brillent dans le noir.', 'Un champignon n’est ni une plante ni un animal.',
+      'Le plus grand être vivant connu est un champignon souterrain.', 'Les champignons respirent de l’oxygène, comme nous.']),
+  }),
 });
 
 /** Nom de chaque secret, comme sur la page secrète (secret.js, NOMS), dans le même ordre. */
@@ -35,6 +49,13 @@ export const EGG_NOMS = Object.freeze({
   secousse: 'La secousse',
   nuit: 'La chouette insomniaque',
   rembobine: 'Le retour en arrière',
+  tzatziki: 'Le pays imaginaire',
+  champi: 'La cueillette',
+  livre: 'Le livre est mieux',
+  kc: 'Le supporter',
+  creeper: 'Le démineur',
+  serge: 'Le maître du jeu',
+  domumobile: 'La voiture du gang',
   arcade: 'L’arcade du jour (page Jeux)',
 });
 
@@ -51,6 +72,13 @@ const EGG_AIDE = {
   secousse: 'Une fois par mois · un booster offert',
   nuit: 'Une fois, entre 3 h et 4 h du matin',
   rembobine: 'Une fois',
+  tzatziki: 'Une fois · carte « Drapeau du Tzatzikistan »',
+  champi: 'Une fois par saison, quatre saisons · carte « Mycena » et badge « Cueilleur »',
+  livre: 'Une fois · carte « Le Projectionniste »',
+  kc: 'Une fois',
+  creeper: 'Une fois par jour',
+  serge: 'Une fois · carte « Le Maître de Serge »',
+  domumobile: 'Une fois · carte « La Domu-mobile »',
   arcade: 'Une partie par jour · 50 au plus',
 };
 
@@ -103,7 +131,22 @@ export function validateEggs(v) {
     const n = Number(t);
     if (t === '' || !Number.isInteger(n) || n < 0 || n > REWARD_MAX) errs[`r.${code}`] = `Un nombre entier entre 0 et ${REWARD_MAX.toLocaleString('fr-CH')}.`;
   }
+  for (const [saison] of SAISONS) {
+    if (!PAGE_RE.test(String(v.champi?.pages?.[saison] ?? '').trim())) errs[`c.${saison}`] = 'Le nom de la page en minuscules, sans accent ni espace (ex. irl, historique).';
+  }
+  const faits = faitsDe(v.champi?.facts);
+  if (faits.length > FAITS_MAX) errs['c.facts'] = `Au plus ${FAITS_MAX} anecdotes (une par ligne).`;
+  else if (faits.some((f) => f.length > FAIT_MAX)) errs['c.facts'] = `Une anecdote fait au plus ${FAIT_MAX} caractères.`;
   return errs;
+}
+
+/**
+ * Anecdotes saisies : une par ligne, lignes vides ignorées.
+ * @param {string} texte Contenu du champ.
+ * @returns {string[]}
+ */
+function faitsDe(texte) {
+  return String(texte ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
 }
 
 /* ---------- Montage ---------- */
@@ -192,6 +235,16 @@ async function loadLog() {
 
 /* ---------- Valeurs ---------- */
 
+/** Page de la cueillette pour une saison (enregistrée si valable, sinon défaut). */
+function pageOf(saison) {
+  const p = E.raw?.champi?.pages?.[saison];
+  return typeof p === 'string' && PAGE_RE.test(p) ? p : EGGS_DEFAULTS.champi.pages[saison];
+}
+/** Anecdotes de la cueillette (enregistrées si c'est une liste, sinon défaut). */
+function faitsOf() {
+  const f = E.raw?.champi?.facts;
+  return Array.isArray(f) ? f.filter((x) => typeof x === 'string') : [...EGGS_DEFAULTS.champi.facts];
+}
 /** Valeur effective d'une récompense (enregistrée si valable, sinon défaut). */
 function rewardOf(code) {
   const v = E.raw?.recompenses?.[code];
@@ -204,6 +257,7 @@ function current() {
     anniversaire_gang: typeof r.anniversaire_gang === 'string' ? r.anniversaire_gang : '',
     mot_secret: typeof r.mot_secret === 'string' && r.mot_secret ? r.mot_secret : EGGS_DEFAULTS.mot_secret,
     recompenses: Object.fromEntries(Object.keys(EGG_NOMS).map((c) => [c, rewardOf(c)])),
+    champi: { pages: Object.fromEntries(SAISONS.map(([s]) => [s, pageOf(s)])), facts: faitsOf() },
   };
 }
 
@@ -270,6 +324,22 @@ function render() {
         <p class="small muted">Paillettes versées à chaque trouvaille. 0 : aucune Paillette (le bonus éventuel reste donné).</p>
         <div class="aeg-rewards">${Object.keys(EGG_NOMS).map((c) => rewardHtml(c, v.recompenses[c], ro)).join('')}</div>
       </fieldset>
+      <fieldset class="aeg-group">
+        <legend class="aeg-legend">Cueillette : le champignon caché</legend>
+        <p class="small muted">Chaque saison, le champignon caché renvoie à une page du site (son nom, par exemple irl). Une anecdote est tirée au hasard chaque jour. Une anecdote par ligne ; vide : les anecdotes d’origine.</p>
+        <div class="aeg-grid">${SAISONS.map(([s, label]) => `<div class="field">
+          <label for="aeg-c-${s}">Page de la saison : ${esc(label)}</label>
+          <input id="aeg-c-${s}" name="c.${s}" type="text" autocomplete="off" spellcheck="false" maxlength="40" value="${esc(v.champi.pages[s])}"
+            aria-describedby="aeg-c-${s}-e"${ro ? ' disabled' : ''}>
+          <p class="form-error" id="aeg-c-${s}-e" data-err="c.${s}" hidden></p>
+        </div>`).join('')}</div>
+        <div class="field">
+          <label for="aeg-c-facts">Anecdotes (une par ligne)</label>
+          <textarea id="aeg-c-facts" name="c.facts" rows="5" maxlength="6000" aria-describedby="aeg-c-facts-h aeg-c-facts-e"${ro ? ' disabled' : ''}>${esc(v.champi.facts.join('\n'))}</textarea>
+          <span class="small muted" id="aeg-c-facts-h">${FAITS_MAX} anecdotes au plus, ${FAIT_MAX} caractères chacune.</span>
+          <p class="form-error" id="aeg-c-facts-e" data-err="c.facts" hidden></p>
+        </div>
+      </fieldset>
       <div class="aeg-actions">
         <p class="aeg-status" id="aeg-status" role="status" aria-live="polite"></p>
         ${ro ? '' : `<button class="btn btn-ghost" type="button" data-aeg="defaults">Rétablir les valeurs par défaut</button>
@@ -295,17 +365,25 @@ function groupByMember(rows) {
   const by = new Map();
   for (const r of rows) {
     let m = by.get(r.user_id);
-    if (!m) { m = { id: r.user_id, pseudo: E.pseudo.get(r.user_id) || 'Ancien membre', total: 0, last: r.found_at, eggs: new Map(), letters: new Set() }; by.set(r.user_id, m); }
+    if (!m) { m = { id: r.user_id, pseudo: E.pseudo.get(r.user_id) || 'Ancien membre', total: 0, last: r.found_at, eggs: new Map(), letters: new Set(), saisons: new Set(), cueillette: null }; by.set(r.user_id, m); }
     m.total += Number(r.reward) || 0;
     if (r.found_at > m.last) m.last = r.found_at;
     if (/^lettre_[1-7]$/.test(r.egg)) { m.letters.add(r.egg); continue; }
+    // Cueillette : les saisons (champi_<saison>) et la case « champis » forment un seul secret « champi »
+    if (/^champi(_|s$)/.test(r.egg)) {
+      if (r.egg.startsWith('champi_')) m.saisons.add(r.egg);
+      if (!m.cueillette || r.found_at < m.cueillette) m.cueillette = r.found_at;
+      continue;
+    }
     const e = m.eggs.get(r.egg) || { egg: r.egg, n: 0, first: r.found_at };
     e.n += 1;
     if (r.found_at < e.first) e.first = r.found_at;
     m.eggs.set(r.egg, e);
   }
   return [...by.values()].map((m) => {
-    const eggs = [...m.eggs.values()].sort((a, b) => String(a.first).localeCompare(String(b.first)));
+    const eggs = [...m.eggs.values()];
+    if (m.cueillette) eggs.push({ egg: 'champi', n: m.saisons.size, first: m.cueillette, saisons: m.saisons.size });
+    eggs.sort((a, b) => String(a.first).localeCompare(String(b.first)));
     // Comme hg_eggs_count : les lettres comptent pour un seul secret (« lettres »)
     const count = new Set([...eggs.map((e) => e.egg), ...(m.letters.size ? ['lettres'] : [])]).size;
     return { id: m.id, pseudo: m.pseudo, total: m.total, last: m.last, count, letters: m.letters.size, eggs };
@@ -319,7 +397,9 @@ function groupByMember(rows) {
  */
 function chipHtml(e) {
   const nom = EGG_NOMS[e.egg] || e.egg;
-  return `<li class="aeg-chip" title="Première fois : ${esc(fmtDt(e.first))}">${esc(nom)}${e.n > 1 ? ` <span class="aeg-times">× ${e.n}</span>` : ''}</li>`;
+  let fois = e.n > 1 ? ` <span class="aeg-times">× ${e.n}</span>` : '';
+  if (e.egg === 'champi') fois = e.saisons < SAISONS.length ? ` <span class="aeg-times">${e.saisons} / ${SAISONS.length}</span>` : '';
+  return `<li class="aeg-chip" title="Première fois : ${esc(fmtDt(e.first))}">${esc(nom)}${fois}</li>`;
 }
 
 /** Dessine le journal (ou l'explication pour le Staff). */
@@ -376,6 +456,7 @@ function readForm(form) {
     anniversaire_gang: String(fd.get('anniversaire_gang') ?? '').trim(),
     mot_secret: String(fd.get('mot_secret') ?? '').trim().toUpperCase(),
     recompenses: Object.fromEntries(Object.keys(EGG_NOMS).map((c) => [c, String(fd.get(`r.${c}`) ?? '').trim()])),
+    champi: { pages: Object.fromEntries(SAISONS.map(([s]) => [s, String(fd.get(`c.${s}`) ?? '').trim()])), facts: String(fd.get('c.facts') ?? '') },
   };
 }
 
@@ -423,6 +504,9 @@ async function onSubmit(ev) {
     mot_secret: v.mot_secret,
     recompenses: { ...(base.recompenses && typeof base.recompenses === 'object' ? base.recompenses : {}),
       ...Object.fromEntries(Object.entries(v.recompenses).map(([c, n]) => [c, Number(n)])) },
+    champi: { ...(base.champi && typeof base.champi === 'object' && !Array.isArray(base.champi) ? base.champi : {}),
+      pages: { ...(base.champi?.pages && typeof base.champi.pages === 'object' ? base.champi.pages : {}), ...v.champi.pages },
+      facts: faitsDe(v.champi.facts) },
   };
   const btn = form.querySelector('#aeg-save');
   E.busy = true;
@@ -463,6 +547,8 @@ async function onClick(ev) {
     form.anniversaire_gang.value = EGGS_DEFAULTS.anniversaire_gang ?? '';
     form.mot_secret.value = EGGS_DEFAULTS.mot_secret;
     for (const [c, n] of Object.entries(EGGS_DEFAULTS.recompenses)) form.querySelector(`[name="r.${c}"]`).value = String(n);
+    for (const [s] of SAISONS) form.querySelector(`[name="c.${s}"]`).value = EGGS_DEFAULTS.champi.pages[s];
+    form.querySelector('[name="c.facts"]').value = EGGS_DEFAULTS.champi.facts.join('\n');
     showErrors(form, {});
     status('Valeurs par défaut remises dans le formulaire : enregistre pour les appliquer.');
   }
