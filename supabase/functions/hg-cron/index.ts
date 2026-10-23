@@ -19,6 +19,11 @@
 //   4. Rappels d'envoi de cadeau (Secret Santa) : MP au Santa qui n'a pas marqué son envoi, dans les N jours qui
 //      précèdent hg_ss_editions.send_deadline (N = bot.rappels.ss_jours_avant, défaut 3 ; marqué hg_ss_participants.send_reminder_at, une seule fois).
 //      Désactivé si bot.notify.gift === false.
+//   5. Annonces programmées (idées A2 et A3, migration 092) : hg_bot_scheduled non annulées, non parties, send_at passé →
+//      réservation (sent_at de null à maintenant), envoi dans chaque salon de la ligne qui est un salon connu du bot
+//      (isKnownChannel), puis error = détail si un salon a échoué. Aucun salon atteint : réservation libérée (nouvel essai au
+//      passage suivant). Plus de 6 h de retard : marquée sans envoi (error « trop tard »). Une ligne hg_bot_log
+//      (kind « auto:programme ») par annonce envoyée.
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
@@ -32,7 +37,7 @@ import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_sh
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
 import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
-import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
+import { channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
 import { botRules, type BotRules } from '../_shared/reglages.ts';
 
@@ -62,7 +67,7 @@ type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 
 /** Profil lu par la fonction. remind_irl est facultatif (absent pour les rappels de cadeau). */
 type Prof = { id: string; pseudo: string; discord_id: string | null; bot_optin: boolean; remind_irl?: boolean };
 /** Compteurs d'un passage, renvoyés dans la réponse et résumés dans le journal. */
-type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; errors: number };
+type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; scheduled: number; errors: number };
 
 /* ---------- Réservation des envois (idempotence) ---------- */
 
@@ -183,6 +188,60 @@ async function dynAnnouncements(out: Counters, bot: ChannelBot & MentionBot, rul
   };
   for (const ev of starts) await run(ev, 'start');
   for (const ev of ends) await run(ev, 'end');
+}
+
+/* ---------- 5 : annonces programmées (A2, A3) ---------- */
+
+/** Ligne de hg_bot_scheduled lue par la tâche. */
+type Scheduled = { id: string; title: string | null; body: string; channels: string[]; send_at: string; game_slug: string | null; created_by: string | null };
+
+/**
+ * Annonces programmées (tâche 5) : réservation, envoi dans les salons connus, trace dans hg_bot_log.
+ * @param {Counters} out Compteurs du passage (modifiés).
+ * @param {ChannelBot} bot Réglages du bot (salons connus).
+ * @param {ChannelLogEntry[]} chanLog Détail par salon, pour le journal du passage (modifié).
+ * @returns {Promise<void>}
+ * @throws {Error} Si la lecture échoue.
+ */
+async function scheduledAnnouncements(out: Counters, bot: ChannelBot, chanLog: ChannelLogEntry[]) {
+  const LATE_MS = 6 * H;
+  const { data, error } = await db.from('hg_bot_scheduled').select('id, title, body, channels, send_at, game_slug, created_by')
+    .is('sent_at', null).is('cancelled_at', null).lte('send_at', new Date().toISOString()).order('send_at').limit(20);
+  if (error) {
+    if (/hg_bot_scheduled/.test(error.message)) return; // migration 092 pas encore appliquée
+    throw new Error(error.message);
+  }
+  for (const row of (data ?? []) as Scheduled[]) {
+    if (Date.now() - new Date(row.send_at).getTime() > LATE_MS) {
+      if (await claimRow('hg_bot_scheduled', { id: row.id }, 'sent_at')) {
+        await db.from('hg_bot_scheduled').update({ error: 'Trop tard : pas envoyée (plus de 6 h de retard).' }).eq('id', row.id);
+        out.marked_late++;
+      }
+      continue;
+    }
+    if (!hasBotToken()) { out.pending_no_bot++; continue; }
+    const ids = (row.channels ?? []).filter((id) => isKnownChannel(bot, id));
+    if (!ids.length) { out.errors++; continue; } // salon retiré des réglages : la ligne attend (et sera marquée « trop tard »)
+    if (!(await claimRow('hg_bot_scheduled', { id: row.id }, 'sent_at'))) continue;
+    try {
+      const message = row.title ? embed({ title: row.title.slice(0, 256), description: row.body }) : { content: row.body, allowed_mentions: { parse: [] } };
+      const results = await sendToChannels(ids, (id) => sendChannel(id, message), `annonce programmée ${row.id}`);
+      chanLog.push(...channelLog(results, `programmée : ${String(row.title || row.body).slice(0, 80)}`));
+      if (!results.some((r) => r.ok)) throw new Error(results.map((r) => `salon ${r.id} : ${r.error}`).join(' ; '));
+      const failed = results.filter((r) => !r.ok);
+      if (failed.length) await db.from('hg_bot_scheduled').update({ error: failed.map((r) => `salon ${r.id} : ${r.error}`).join(' ; ').slice(0, 500) }).eq('id', row.id);
+      const { error: logErr } = await insertWithChannels((r) => db.from('hg_bot_log').insert(r), {
+        kind: 'auto:programme', sent_by: row.created_by, title: String(row.title || (row.game_slug ? 'Annonce de session' : 'Annonce programmée')).slice(0, 120),
+        body: row.body, recipients: [], channel: true,
+      }, channelLog(results));
+      if (logErr) console.error('[hg-cron] journal annonce programmée', logErr);
+      out.scheduled++;
+    } catch (e) {
+      console.error(`[hg-cron] annonce programmée ${row.id}`, e);
+      out.errors++;
+      await releaseRow('hg_bot_scheduled', { id: row.id }, 'sent_at');
+    }
+  }
 }
 
 /* ---------- 3 : rappels de sortie IRL (F1) ---------- */
@@ -324,7 +383,7 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
-  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, errors: 0 };
+  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, scheduled: 0, errors: 0 };
   const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   try {
@@ -335,6 +394,8 @@ Deno.serve(async (req) => {
 
     try { await dynAnnouncements(out, bot, rules, chanLog); }
     catch (e) { console.error('[hg-cron] annonces', e); out.errors++; }
+    try { await scheduledAnnouncements(out, bot, chanLog); }
+    catch (e) { console.error('[hg-cron] annonces programmées', e); out.errors++; }
     if (canSend && bot.notify?.irl !== false) {
       try { await irlReminders(out, attempts, rules); }
       catch (e) { console.error('[hg-cron] rappels sortie', e); out.errors++; }
@@ -345,7 +406,7 @@ Deno.serve(async (req) => {
     }
 
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.errors;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.scheduled + out.errors;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',

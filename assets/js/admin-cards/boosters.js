@@ -295,8 +295,9 @@ function render() {
   if (!B.root) return;
   B.root.innerHTML = `<div class="abt">
     <div class="acd-head">
-      <p class="small muted">Les types de boosters vendus dans la Boutique, dans l’ordre d’affichage. Un type retiré n’est plus vendu, mais le stock des joueurs reste ouvrable. L’affiche A3 de la Boutique est statique : à refaire si les types changent.</p>
-      ${B.canWrite ? `<button class="btn btn-primary" type="button" data-bt="new">${ICON.plus} Nouveau type</button>` : ''}
+      <p class="small muted">Les types de boosters vendus dans la Boutique, dans l’ordre d’affichage. Un type retiré n’est plus vendu, mais le stock des joueurs reste ouvrable. L’affiche A3 de la gamme lit les types actifs à l’ouverture : elle suit tes changements.</p>
+      <div class="btn-row"><a class="btn btn-ghost" href="affiches/boosters-gamme-a3.html" target="_blank" rel="noopener">Voir l’affiche</a>
+      ${B.canWrite ? `<button class="btn btn-primary" type="button" data-bt="new">${ICON.plus} Nouveau type</button>` : ''}</div>
     </div>
     ${B.canWrite ? '' : '<p class="acd-note" role="note">Lecture seule : il faut la permission « Jeu de cartes » pour modifier les boosters.</p>'}
     ${B.types.length ? `<ul class="acd-list abt-list" aria-label="Types de boosters">${B.types.map((t, i) => rowHtml(t, i, B.types.length)).join('')}</ul>`
