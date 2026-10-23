@@ -23,8 +23,15 @@ const isRecoveryLink = hashParams.get('type') === 'recovery' || url.searchParams
 const linkError = hashParams.get('error_description') || url.searchParams.get('error_description');
 const rawNext = url.searchParams.get('next') || '';
 const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
-/** Clé du stockage local où l'on garde le code et le pseudo en attente pendant la confirmation par e-mail. */
+/**
+ * Clé du stockage local où l'on garde le code et le pseudo en attente pendant la confirmation par e-mail.
+ * Stockage local et non de session : le lien de confirmation s'ouvre souvent dans un autre onglet, qui ne voit pas
+ * le stockage de session. L'origine étant partagée avec d'autres sites, l'entrée est effacée dès qu'elle a servi
+ * et ignorée (puis effacée) après PENDING_TTL_MS.
+ */
 const PENDING_KEY = 'hg_pending_join';
+/** Durée de vie du code en attente : 1 heure (au-delà, le code et le pseudo sont redemandés). */
+const PENDING_TTL_MS = 3600000;
 /** Adresse absolue de cette page : sert de lien de retour dans les e-mails de confirmation et de réinitialisation. */
 const PAGE_URL = new URL('compte.html', location.href).href;
 // Code d'invitation reçu via un lien (rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
@@ -118,8 +125,16 @@ function formError(form, msg) {
   if (!box) { box = document.createElement('p'); box.className = 'form-error'; box.setAttribute('role', 'alert'); form.prepend(box); }
   box.textContent = msg; box.hidden = !msg;
 }
-/** Lit le code d'invitation en attente (code, pseudo, date), ou null. */
-function pendingGet() { try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch { return null; } }
+/** Lit le code d'invitation en attente (code, pseudo, date), ou null. Une entrée de plus d'une heure (ou sans date) est effacée. */
+function pendingGet() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
+    if (!v) return null;
+    const age = Date.now() - Number(v.at);
+    if (!(age >= 0 && age < PENDING_TTL_MS)) { localStorage.removeItem(PENDING_KEY); return null; }
+    return v;
+  } catch { return null; }
+}
 /** Enregistre le code en attente, ou le supprime si v est vide. Sans effet si le stockage local est indisponible. */
 function pendingSet(v) { try { v ? localStorage.setItem(PENDING_KEY, JSON.stringify(v)) : localStorage.removeItem(PENDING_KEY); } catch {} }
 /** Va à la page demandée (?next=), sinon à l'accueil, une fois connecté. */

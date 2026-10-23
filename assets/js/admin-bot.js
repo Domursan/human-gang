@@ -520,7 +520,7 @@ export function mountBotSection(container) {
         <section class="card stack bot-panel" role="tabpanel" id="bot-p-connexion" aria-labelledby="bot-tab-connexion">
           <div>
             <h3 class="card-title">Connexion</h3>
-            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
+            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="https://github.com/domursan/human-gang/blob/main/BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
           </div>
           <div class="grid-2">
             <div class="field">
@@ -1928,7 +1928,7 @@ export function mountBotSection(container) {
       S.defs = defs.value;
       renderTemplatesShell();
     } else {
-      tplBody.innerHTML = `<div class="empty">Impossible de charger les textes par défaut (<code>supabase/functions/_shared/bot-templates.json</code>)${defs.status === 'rejected' ? ` : ${esc(errMsg(defs.reason))}` : ''}. Sur GitHub Pages, vérifie la présence du fichier <code>.nojekyll</code> à la racine.</div>`;
+      tplBody.innerHTML = `<div class="empty">Impossible de charger les textes par défaut (<code>supabase/functions/_shared/bot-templates.json</code>)${defs.status === 'rejected' ? ` : ${esc(errMsg(defs.reason))}` : ''}. Sur GitHub Pages, vérifie que <code>_config.yml</code> publie toujours ce fichier (<code>include: _shared</code>).</div>`;
     }
 
     // Comptes

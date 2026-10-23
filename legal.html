@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/ https://cdn.jsdelivr.net/npm/leaflet@1.9.4/ https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <script src="assets/js/theme-boot.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mentions légales et confidentialité · Humane Gang</title>
@@ -41,7 +41,7 @@
       <div>
         <p class="eyebrow">Informations légales</p>
         <h1 class="page-title">Mentions légales et confidentialité</h1>
-        <p class="muted legal-updated">Dernière mise à jour : <time datetime="2026-10-20">20 octobre 2026</time></p>
+        <p class="muted legal-updated">Dernière mise à jour : <time datetime="2026-10-23">23 octobre 2026</time></p>
       </div>
     </header>
 
@@ -155,7 +155,7 @@
                 <tr><th scope="row">GitHub, Inc. (GitHub Pages)</th><td>Hébergement des pages du site ; journaux de connexion incluant l'adresse IP</td><td>États-Unis</td></tr>
                 <tr><th scope="row">Discord, Inc.</th><td>Messages du bot, uniquement si tu as indiqué ton identifiant Discord et accepté les messages (identifiant et contenu des messages)</td><td>États-Unis</td></tr>
                 <tr><th scope="row">jsDelivr</th><td>Réseau de distribution qui fournit la bibliothèque technique de connexion à la base ; reçoit l'adresse IP</td><td>International (CDN)</td></tr>
-                <tr><th scope="row">OpenStreetMap (OpenStreetMap Foundation)</th><td>Uniquement si tu ouvres la carte de l'historique IRL : chargement des tuiles de la carte, et recherche des coordonnées des lieux via le service Nominatim, à partir du seul nom des lieux de rencontre (aucune donnée personnelle, ni pseudo ni participants) ; reçoit l'adresse IP. La bibliothèque de carte (Leaflet) est fournie par jsDelivr. Les coordonnées trouvées sont gardées en cache dans ton navigateur.</td><td>Royaume-Uni / UE (serveurs OSM)</td></tr>
+                <tr><th scope="row">OpenStreetMap (OpenStreetMap Foundation)</th><td>Uniquement si tu ouvres la carte de l'historique IRL : chargement des tuiles de la carte, et recherche des coordonnées des lieux via le service Nominatim, à partir du seul nom des lieux de rencontre, tel qu'il a été saisi pour la sortie (ni pseudo, ni participants, ni date) ; ces requêtes partent directement de ton navigateur vers les serveurs d'OpenStreetMap, qui reçoivent ton adresse IP et l'adresse du site. Sans ouverture de la carte, rien n'est envoyé à OpenStreetMap. La bibliothèque de carte (Leaflet) est fournie par jsDelivr. Les coordonnées trouvées sont gardées en cache dans ton navigateur.</td><td>Royaume-Uni / UE (serveurs OSM)</td></tr>
                 <tr><th scope="row">Google Fonts (Google LLC)</th><td>Fourniture des polices d'écriture ; reçoit l'adresse IP</td><td>États-Unis</td></tr>
               </tbody>
             </table>
@@ -213,7 +213,7 @@
                 <tr><th scope="row"><code>hg_prefs</code></th><td>Tes préférences d'affichage sur cet appareil : mode (sombre, clair, daltonien), thème spécial, effets visuels, sons et volume (remplace l'ancienne clé <code>hg_effects_off</code>)</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_badges_seen</code></th><td>Liste des badges déjà affichés sur cet appareil, pour ne célébrer que les nouveaux</td><td>Jusqu'à effacement</td></tr>
                 <tr><th scope="row"><code>hg_badges_checked</code> <span class="small">(sessionStorage)</span></th><td>Indique que tes badges ont déjà été vérifiés pendant cette visite, pour ne pas le refaire à chaque page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
-                <tr><th scope="row"><code>hg_pending_join</code></th><td>Code d'invitation et pseudo gardés entre l'inscription et la première connexion, si une confirmation par e-mail est demandée</td><td>Supprimé dès que tu as rejoint le gang</td></tr>
+                <tr><th scope="row"><code>hg_pending_join</code></th><td>Code d'invitation et pseudo gardés entre l'inscription et la première connexion, si une confirmation par e-mail est demandée</td><td>Supprimé dès que tu as rejoint le gang, sinon ignoré puis supprimé au bout d'une heure</td></tr>
                 <tr><th scope="row"><code>hg_invite_code</code> <span class="small">(sessionStorage)</span></th><td>Code d'invitation reçu par un lien, gardé le temps de l'inscription</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_invite_link</code> <span class="small">(sessionStorage)</span></th><td>Lien d'invitation déjà utilisé, pour ne pas générer un nouveau code à chaque rechargement de la page</td><td>Jusqu'à la fermeture de l'onglet</td></tr>
                 <tr><th scope="row"><code>hg_godmode_sync</code></th><td>Synchronise le mode administrateur entre les onglets ouverts sur cet appareil</td><td>Jusqu'à la fin ou la désactivation du mode</td></tr>
@@ -222,7 +222,7 @@
               </tbody>
             </table>
           </div>
-          <p>Les polices (Google Fonts) et la bibliothèque technique (jsDelivr) sont chargées depuis des serveurs tiers, qui reçoivent ton adresse IP mais ne déposent pas de cookie. Tu peux effacer le stockage local à tout moment depuis les réglages de ton navigateur ; tu seras alors simplement déconnecté·e.</p>
+          <p>Les polices (Google Fonts) et la bibliothèque technique (jsDelivr) sont chargées depuis des serveurs tiers, qui reçoivent ton adresse IP mais ne déposent pas de cookie. Il en va de même pour la carte de l'historique IRL : à son ouverture, les fonds de carte et la recherche des lieux (Nominatim) sont demandés à OpenStreetMap (voir « Destinataires et sous-traitants »). Tu peux effacer le stockage local à tout moment depuis les réglages de ton navigateur ; tu seras alors simplement déconnecté·e.</p>
           <div class="legal-extra" data-legal-extra="legal_cookies"></div>
         </section>
 

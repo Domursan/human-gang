@@ -1,0 +1,36 @@
+# Publication GitHub Pages (branche main, construite par Jekyll).
+# Ce fichier ne sert qu'à choisir les fichiers publiés : aucune page n'a d'en-tête « --- »,
+# donc Jekyll copie tout tel quel (pas de modèle Liquid, pas de mise en page).
+# But : ne plus publier le code SQL, les fonctions edge, la documentation interne et les tests.
+# Le dépôt GitHub reste public : ces fichiers y sont toujours lisibles, ils ne sont simplement plus servis par le site.
+#
+# Avant d'ajouter un fichier ou un dossier au site :
+# - un nom qui commence par « _ » ou « . » n'est publié que s'il figure dans « include » ;
+# - un fichier qui commence par « --- » serait traité comme un modèle Liquid (à éviter) ;
+# - les fichiers .md, .sql, .ts, .sh ne sont jamais publiés (motifs ci-dessous).
+# Vérification locale : voir docs/PUBLICATION.md.
+
+# Seul fichier publié sous supabase/ : les textes par défaut du bot, lus par l'admin (assets/js/admin-bot.js).
+include:
+  - _shared
+
+exclude:
+  # Dossiers internes
+  - docs
+  - tests
+  - qa
+  - node_modules
+  - supabase/migrations
+  - supabase/schema
+  - supabase/functions/hg-*
+  # Types de fichiers jamais utilisés par le site (documentation, SQL, code des fonctions edge, scripts)
+  - "*.md"
+  - "*.sql"
+  - "*.ts"
+  - "*.sh"
+  - "*.toml"
+  # Outillage
+  - package.json
+  - package-lock.json
+  - Gemfile
+  - Gemfile.lock
