@@ -518,6 +518,7 @@ async function renderMember(user) {
         <label class="check"><input type="checkbox" id="pf-bot" ${p.bot_optin ? 'checked' : ''}> <span>Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels)</span></label>
         <label class="check"><input type="checkbox" id="pf-remind-irl" ${p.remind_irl ? 'checked' : ''}> <span>Me rappeler mes sorties IRL par message Discord, 24 h et 2 h avant</span></label>
         <label class="check"><input type="checkbox" id="pf-notify-wish" ${p.notify_card_wish ? 'checked' : ''}> <span>M'avertir sur Discord quand une carte de ma liste de souhaits est obtenue par un membre</span></label>
+        ${'show_generation' in p ? `<label class="check"><input type="checkbox" id="pf-show-gen" ${p.show_generation !== false ? 'checked' : ''}> <span>Afficher ma génération (OG ou 2e gen) sur mes cartes et ma fiche</span></label>` : ''}
         <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
       </form>
 
@@ -639,6 +640,7 @@ function bindProfile() {
       remind_irl: $('#pf-remind-irl').checked,
       notify_card_wish: $('#pf-notify-wish').checked,
     };
+    if ($('#pf-show-gen')) patch.show_generation = $('#pf-show-gen').checked; // idée C8 (colonne de la migration 081)
     const btn = form.querySelector('button[type=submit]');
     busy(btn, true, 'Enregistrement…'); formError(form, '');
     const { data, error } = await sb.from('hg_profiles').update(patch).eq('id', me.id).select().single();

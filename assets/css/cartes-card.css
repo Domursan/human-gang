@@ -228,3 +228,12 @@ button.hgc:hover .hgc-frame { transform: translateY(-3px); }
   display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 50%;
   border: calc(var(--u) * 3) solid #E0909A; background: rgba(20, 18, 42, .82); color: #E0909A; transform: rotate(-14deg);
   font-size: max(5px, calc(var(--u) * 11)); font-weight: 700; line-height: 1.05; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ---------- Générations des membres (idée C8) : bandeau en haut à droite de la fenêtre, liseré double pour les OG ---------- */
+/* Même carte, même rareté : seul l'habillage change. Texte foncé sur or ou argent (contraste > 10:1). */
+.hgc-gen { position: absolute; top: calc(var(--u) * 90); right: calc(var(--u) * 28); z-index: 3;
+  padding: 0 max(2px, calc(var(--u) * 6)); font: 700 max(8px, calc(var(--u) * 17))/1.5 ui-monospace, 'Courier New', monospace;
+  letter-spacing: .04em; text-transform: uppercase; color: #121212; background: #C9CED6;
+  border: max(1px, calc(var(--u) * 2)) solid #121212; white-space: nowrap; pointer-events: none; }
+.hgc-og .hgc-gen { background: #E2C77E; }
+.hgc-og .hgc-mid { box-shadow: inset 0 0 0 calc(var(--u) * 1.5) #E2C77E, inset 0 0 0 calc(var(--u) * 2.5) rgba(0, 0, 0, .6), inset 0 0 0 calc(var(--u) * 4) #E2C77E; }

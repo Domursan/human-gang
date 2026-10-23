@@ -22,6 +22,13 @@ import { boosterStyleClass } from './booster-styles.js';
 import { themeDecor, playOpeningFx } from './booster-themes.js';
 import { onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml } from './cartes-saisons.js';
 import { mountProposals } from './cartes-propositions.js';
+// Idées du gang, paquet C2 (migration 081) : générations OG / 2e gen (C8), regroupement par jeu (C7), codes cadeaux (C9),
+// Atelier (C10), enchère (C11). Le tableau « Je cherche / Je donne » (C12) est dans cartes-trades.js.
+import { loadGenerations } from './cartes-gen.js';
+import { hasTags, tagGroupsHtml, loadTagLabels } from './cartes-jeux.js';
+import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.js';
+import { initAtelier, drawAtelier } from './cartes-atelier.js';
+import { initEnchere, drawEnchere } from './cartes-enchere.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -46,7 +53,7 @@ const TAB_ICON = {
   echanges: '<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',
 };
 // Libellés des sources d'une carte (colonne source de hg_card_copies).
-const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange', sortie: 'J’y étais' };
+const SOURCE_LABEL = { booster: 'Booster', cadeau: 'Cadeau', admin: 'Attribuée par le gang', fabrication: 'Fabriquée', evenement: 'Événement', echange: 'Échange', sortie: 'J’y étais', atelier: 'Atelier' };
 // Libellés du journal des Paillettes (hg_wallet_log.reason), affichés dans l'historique.
 const REASON_LABEL = {
   quotidien: 'Passage du jour', booster: 'Boosters achetés', remboursement: 'Remboursement Collectionneur', booster_don: 'Booster offert', recyclage: 'Recyclage', fabrication: 'Fabrication',
@@ -56,6 +63,7 @@ const REASON_LABEL = {
   quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
   framed: 'Framed du ciné-club', heardle: 'Heardle du gang', bataille: 'Bataille de cartes', bataille_def: 'Défense tenue (Bataille)',
   cagnotte: 'Cagnotte du gang', cagnotte_remboursee: 'Cagnotte remboursée', cagnotte_annulee: 'Cagnotte annulée', // C13 (migration 082)
+  code: 'Code cadeau', atelier: 'Atelier', enchere: 'Offre d’enchère', enchere_remboursee: 'Enchère dépassée (remboursée)',
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche ») : table partagée avec cartes-zoom.js (RARITY_TINT = TINT).
 // Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
@@ -122,7 +130,7 @@ const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
   otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…) copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
   uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
-  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all' },
+  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '' }, jeuOpen: null,
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
   // Ouverture groupée en cours ou interrompue (voir openStockMulti) : type, série, identifiants des demandes, avancement ; null sinon.
   x5: null,
@@ -764,6 +772,7 @@ function drawInventaire() {
         <div class="btn-row"><button type="button" class="btn btn-ghost" data-tab-go="collection">Voir la collection</button></div>
       </section>
     </div>
+    ${codeBoxHtml()}
     ${giftSectionHtml()}
     ${giftsSectionHtml()}
     <section class="card cartes-block" aria-labelledby="inv-hist-h">
@@ -871,11 +880,13 @@ function drawBoutique() {
   else if (typesDown()) items = '<p class="muted small shop-soon">La boutique n\'est pas disponible pour le moment. Réessaie dans un instant.</p>';
   else items = shopItemHtml(fallbackType());
   el.innerHTML = `
+    <div id="cartes-enchere" hidden></div>
     <section class="shop" aria-labelledby="cartes-shop-h">
       <h2 id="cartes-shop-h" class="visually-hidden">Boosters en vente</h2>
       <p class="muted small shop-intro">${esc(SHOP_INTRO)}</p>
       ${items}
     </section>`;
+  drawEnchere(); // encart ou vue de l'enchère de la semaine (idée C11)
   fitAll(el);
 }
 
@@ -2151,12 +2162,21 @@ function drawCollection(focusId) {
   const withCards = groups.filter((g) => g.shown.length);
   S.shownIds = withCards.flatMap((g) => g.shown.map((c) => c.id)); // ordre affiché : sert à précédent / suivant
   const plan = massPlan();
-  const body = !withCards.length
+  // Regroupement par jeu (idée C7) : proposé quand des cartes de la sélection portent un tag.
+  const pool = all ? [...S.cards, ...extras.flatMap((g) => g.shown)] : outside ? (extras[0]?.shown || []) : S.cards.filter((c) => c.set_id === set.id);
+  const tagged = hasTags(pool);
+  const byGame = tagged && f.group === 'jeu';
+  if (byGame) S.shownIds = withCards.flatMap((g) => g.shown.filter((c) => c.tag).map((c) => c.id));
+  const body = byGame
+    ? tagGroupsHtml({ cards: withCards.flatMap((g) => g.shown), all: pool, copiesOf, cell: cardCell, open: S.jeuOpen,
+      title: all ? 'Toutes les séries' : `Série « ${set.name} »` })
+    : !withCards.length
     ? '<p class="empty">Aucune carte ne correspond à ces filtres.</p>'
     : all
       ? `<div class="cz-groups">${withCards.map(groupHtml).join('')}</div>`
       : `<div class="cartes-grid">${(groups[0]?.shown || []).map(cardCell).join('')}</div>`;
   el.innerHTML = `
+    <div id="cartes-atelier" hidden></div>
     <section class="card cartes-block">
       <div class="cartes-series">
         <div class="field">
@@ -2198,6 +2218,13 @@ function drawCollection(focusId) {
             <option value="fav" ${f.owned === 'fav' ? 'selected' : ''}>Favoris · ${nf.format(favCount)}</option>
           </select>
         </div>
+        ${tagged ? `<div class="field">
+          <label for="cartes-f-group">Grouper</label>
+          <select id="cartes-f-group" data-filter="group">
+            <option value="" ${f.group ? '' : 'selected'}>Par numéro</option>
+            <option value="jeu" ${f.group === 'jeu' ? 'selected' : ''}>Par jeu</option>
+          </select>
+        </div>` : ''}
       </div>
       <div class="cartes-mass">
         <p class="muted small">${pluralCount(plan.ids.length, 'doublon recyclable', 'doublons recyclables', nf.format)} (on garde un exemplaire de chaque carte)</p>
@@ -2211,6 +2238,7 @@ function drawCollection(focusId) {
     ${body}`;
   el.insertAdjacentHTML('afterbegin', '<div id="cartes-luck-slot"></div>');
   if (!OFF) import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
+  drawAtelier(); // panneau de l'Atelier (idée C10)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
 }
@@ -2538,6 +2566,14 @@ function cleanHash() {
 
 /** Suit l'adresse : #collection/<id> ouvre la collection du membre, sinon la vue revient aux onglets. */
 function routeFromHash() {
+  // QR d'un code cadeau (idée C9) : cartes.html#code=HG-XXXX-XXXX ouvre la fenêtre déjà remplie, puis l'adresse est nettoyée.
+  const code = codeFromHash(location.hash);
+  if (code) {
+    history.replaceState(null, '', location.pathname + location.search);
+    if (S.tab !== 'inventaire') setTab('inventaire');
+    openCode(code);
+    return;
+  }
   const m = PEER_RE.exec(location.hash);
   if (m) openPeer(m[1].toLowerCase());
   else leavePeer();
@@ -2955,6 +2991,8 @@ function onClick(e) {
     case 'booster-card': return onBoosterCard(t);
     case 'mass': return openMass();
     case 'champion': return import('./cartes-champion.js').then((m) => m.openChampion({ onClose: () => { if (t.isConnected) t.focus({ preventScroll: true }); } })); // C17
+    case 'jeu-open': S.jeuOpen = t.dataset.tag; renderCollection(); document.getElementById(`c2-jeu-${t.dataset.tag}`)?.scrollIntoView({ block: 'nearest' }); return;
+    case 'jeu-trade': setTab('echanges'); $('#cartes-tab-echanges')?.focus({ preventScroll: true }); return;
     case 'peer-back': leavePeer(); $(`#cartes-tab-${S.tab}`)?.focus({ preventScroll: true }); return;
     case 'peer-zoom': return zoom.open(t.dataset.card, t);
     case 'peer-pick': return togglePeerPick(t.dataset.card);
@@ -3071,7 +3109,7 @@ async function boot() {
   const fromHash = location.hash.slice(1);
   if (TABS.some(([id]) => id === fromHash)) { S.tab = fromHash; showTab(); } // lien direct vers un onglet : cartes.html#boutique
   try {
-    await loadStatic();
+    await Promise.all([loadStatic(), loadGenerations(), loadTagLabels()]); // générations (C8) et libellés des jeux (C7) : jamais d'erreur
     await refreshData();
     renderAll();
     cacheOwnedImages(); // Q4 : images des cartes possédées gardées pour le hors ligne
@@ -3081,6 +3119,11 @@ async function boot() {
     app.querySelector('#cartes-wallet').innerHTML = `<p class="empty">${esc(errMsg(e))}</p>`;
     toast(errMsg(e), 'error');
   }
+  // Idées du gang (paquet C2) : codes cadeaux, Atelier, enchère. Chaque module se charge seul et ne bloque pas la page.
+  const refreshAll = async () => { await refreshAfter(refreshData); renderAll(); };
+  initCodes({ app, refresh: refreshAll, goTab: (id) => { setTab(id); $(`#cartes-tab-${id}`)?.focus({ preventScroll: true }); } });
+  initAtelier({ app, copies: () => S.copies, card: (id) => S.cardsById.get(id) || null, balance: bal, god: isGod, refresh: refreshAll });
+  initEnchere({ app, visible: () => S.tab === 'boutique' && !S.peer, refresh: refreshAll });
   window.addEventListener('hashchange', routeFromHash);
   routeFromHash(); // lien direct vers une collection ou retour arrière depuis elle
   loadQuests();

@@ -27,7 +27,34 @@ export function tradesPanel() {
         ${t.message ? `<p class="small acd-msg">« ${esc(t.message)} »</p>` : ''}
       </div>
       <div class="btn-row"><button class="btn btn-danger btn-sm" type="button" data-act="trade-cancel" data-id="${esc(t.id)}">Annuler l'offre</button></div>
-    </li>`).join('')}</ul>` : '<div class="empty">Aucun échange en cours.</div>'}`;
+    </li>`).join('')}</ul>` : '<div class="empty">Aucun échange en cours.</div>'}
+    <section class="stack acd-brd" id="acd-brd-notes" aria-labelledby="acd-brd-h"></section>`;
+}
+
+/* =========================================================
+   Tableau « Je cherche / Je donne » (idée C12) : modération des petits mots
+   ========================================================= */
+/** Charge les petits mots publics du tableau (hg_trade_board) et les affiche avec « Effacer ». Sans la fonction : rien. */
+export async function loadBoardNotes() {
+  const el = C.panel?.querySelector('#acd-brd-notes');
+  if (!el) return;
+  const { data, error } = await sb.rpc('hg_trade_board', { p_offset: 0 });
+  if (error || !el.isConnected) return;
+  const notes = (data?.notes || []).filter((n) => n.note);
+  el.innerHTML = `<h3 id="acd-brd-h">Petits mots du tableau</h3>
+    ${notes.length ? `<ul class="acd-list">${notes.map((n) => `<li class="acd-item acd-item-tight"><div class="acd-item-main"><p><strong>${esc(n.pseudo)}</strong> : « ${esc(n.note)} »</p></div>
+      <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-act="board-note-clear" data-id="${esc(n.id)}">Effacer</button></div></li>`).join('')}</ul>`
+      : '<p class="small muted">Aucun petit mot sur le tableau.</p>'}`;
+}
+/**
+ * Efface le petit mot d'un membre (journal admin).
+ * @param {HTMLButtonElement} btn bouton « Effacer »
+ * @param {string} id membre
+ */
+export async function clearBoardNote(btn, id) {
+  const ok = await confirmBox('Effacer ce petit mot ?', 'Le membre reste inscrit sur le tableau ; seul son texte disparaît.', { ok: 'Effacer', danger: true });
+  if (!ok) return;
+  await act(btn, async () => { check(await sb.rpc('hg_trade_board_note_clear', { p_user: id })); toast('Petit mot effacé', 'ok'); await loadBoardNotes(); });
 }
 /**
  * Annule une offre après confirmation. La base libère les cartes bloquées pour cette offre.

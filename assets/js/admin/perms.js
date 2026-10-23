@@ -104,6 +104,9 @@ export const DOMAINS = [
       { id: 'drops', label: 'Drops', section: 'drops' },
       { id: 'cagnotte', label: 'Cagnotte et bulletin', section: 'cagnotte' },
       { id: 'champions', label: 'Cartes Champions', section: 'champions' },
+      { id: 'codes', label: 'Codes cadeaux', section: 'cartes', tab: 'codes' },
+      { id: 'recettes', label: 'Atelier (recettes)', section: 'cartes', tab: 'recettes' },
+      { id: 'encheres', label: 'Enchères', section: 'cartes', tab: 'encheres' },
     ]),
     ...under('Suivi', [
       { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },

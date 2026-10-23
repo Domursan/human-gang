@@ -18,7 +18,8 @@ export const ICON = {
   on: svg('check2', { stroke: 2 }),
 };
 /* Onglets de la section, sous la forme [identifiant, libellé]. */
-export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['boosters', 'Boosters'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges']];
+export const TABS = [['series', 'Séries'], ['cartes', 'Cartes'], ['quetes', 'Quêtes'], ['economie', 'Économie'], ['boosters', 'Boosters'], ['joueurs', 'Joueurs'], ['stats', 'Statistiques'], ['echanges', 'Échanges'],
+  ['codes', 'Codes cadeaux'], ['recettes', 'Atelier'], ['encheres', 'Enchères']]; // idées C9, C10, C11 (migration 081)
 /* Identifiants des raretés tirées dans les boosters (taux et recyclage), dans l'ordre de RARITIES. Sans « unique » : jamais tirée, jamais recyclée. */
 export const RARITY_IDS = RARITIES_TIRAGE.map((r) => r.id);
 const CRAFT_IDS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire']; // mythique et identite ne se fabriquent jamais
@@ -83,6 +84,10 @@ export const ECON = [
     { k: 'drops.quantite_max', l: 'Exemplaires maximum par drop', int: true, min: 1, max: 1000, help: 'Plafond du nombre de cartes à attraper pour un même drop (de 1 à 1000 ; 50 par défaut). Le formulaire « Lancer un drop » ne dépasse jamais cette valeur.' },
     { k: 'drops.duree_max_min', l: 'Durée maximale d\'un drop', u: 'minutes', int: true, min: 1, max: 10080, help: '1440 = 24 h. Au-delà, le drop ne peut pas être lancé.' },
     { k: 'drops.duree_defaut_min', l: 'Durée proposée par défaut', u: 'minutes', int: true, min: 1, max: 10080, help: 'Valeur pré-remplie dans le formulaire ; ne peut pas dépasser la durée maximale.' },
+  ] },
+  // Générations des membres (idée C8, migration 081) : bandeau « OG » ou « 2e gen » sur les cartes, aucune récompense.
+  { g: 'Générations des membres', hint: 'Arrivés avant cette date (date d’arrivée, sinon création du compte) : « OG » ; après : « 2e gen ». Habillage seulement, même rareté.', fields: [
+    { k: 'generations.og_before', l: 'OG si arrivé avant le', date: true, optional: true, help: 'Vide = 1er septembre 2023.' },
   ] },
   { g: 'Échanges', fields: [{ k: 'max_open_trades', l: 'Offres en cours maximum par personne', int: true, min: 1, help: 'Nombre d\'offres d\'échange qu\'un membre peut avoir ouvertes en même temps.' }] },
 ];

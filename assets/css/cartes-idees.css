@@ -129,3 +129,142 @@
 .champ-ok { background: var(--sage-soft); color: var(--sage-text); }
 .champ-ko { background: var(--ss-bg); color: var(--rose); }
 @media (max-width: 600px) { .champ-dlg { width: 100%; max-width: none; min-height: 100%; margin: 0; border-radius: 0; } }
+
+/* ===== Cartes : idées du gang, paquet C2 (migration 081) =====
+   C7 regroupement par jeu (.c2-jeux), C9 code cadeau (.c2-code*), C10 Atelier (.c2-atelier, .c2-rec*, .c2-ing*),
+   C11 enchère (.c2-auc*), C12 tableau « Je cherche / Je donne » (.c2-brd*). Cibles ≥ 44 px, rien de plus large que 360 px. */
+
+/* ---------- Commun ---------- */
+.c2-code-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.c2-code-row input { flex: 1 1 160px; min-width: 0; min-height: 44px; }
+.c2-chip, .c2-chip-sel { min-height: 44px; }
+.c2-chip-sel { border-radius: 999px; padding: 0 12px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); font: inherit; font-size: 14px; max-width: 100%; }
+.c2-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; background: none; border: 0; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.c2-back:hover { color: var(--text); }
+.c2-dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.c2-dlg-head .cartes-close { position: static; }
+
+/* ---------- C7 : groupes par jeu ---------- */
+.c2-jeux { display: grid; gap: 14px; }
+.c2-jeux-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.c2-jeux-title { font-size: 18px; }
+.c2-jeu-open { display: grid; gap: 10px; }
+.c2-jeu-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.c2-jeu-name { font-size: 18px; font-weight: 500; }
+.c2-jeu-n { font-variant-numeric: tabular-nums; font-size: 16px; }
+.c2-jeu-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.c2-jeu-list { list-style: none; margin: 0; padding: 4px 16px; }
+.c2-jeu-list li + li { border-top: 1px solid var(--border); }
+.c2-jeu-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; padding: 4px 0; }
+.c2-jeu-row-name { flex: 1; font-weight: 700; min-width: 0; }
+.c2-pips { display: inline-flex; gap: 4px; flex: none; }
+.c2-pip { width: 12px; height: 18px; border-radius: 3px; display: inline-block; }
+.c2-pip.is-off { background: var(--surface-2); border: 1px solid var(--border-strong); }
+.c2-chev { color: var(--muted); flex: none; }
+.c2-titres { background: var(--irl-bg); border-color: var(--irl-border); display: grid; gap: 6px; }
+
+/* ---------- C9 : code cadeau ---------- */
+.c2-code-dlg { width: min(440px, calc(100vw - 24px)); }
+.c2-code-in { width: 100%; min-height: 56px; text-align: center; font: 700 22px/1 ui-monospace, 'Courier New', monospace; letter-spacing: .18em;
+  text-transform: uppercase; background: var(--bg); color: var(--text); border: 1px solid var(--sand); border-radius: 12px; padding: 0 10px; }
+.c2-code-in.c2-code-sm { min-height: 44px; font-size: 16px; letter-spacing: .1em; border-color: var(--border-strong); }
+.c2-code-lot { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; font-size: 14px; }
+.c2-code-use { width: 100%; min-height: 48px; }
+.c2-code-err, .c2-auc-err { color: var(--rose); font-size: 14px; margin: 0; }
+.c2-code-ok { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 16px; background: var(--sage-soft); border: 1px solid #24382A; color: var(--sage-text); }
+.c2-code-ok > div { flex: 1; min-width: 0; }
+.c2-code-ok p { margin: 0; }
+.c2-code-ok-t { color: var(--text); font-weight: 700; }
+.c2-code-ok svg { flex: none; }
+
+/* ---------- C10 : Atelier ---------- */
+.c2-atelier { display: grid; gap: 12px; margin-bottom: 16px; }
+.c2-atelier-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.c2-atelier-title { font-size: 20px; }
+.c2-rec-open { display: grid; gap: 12px; }
+.c2-rec-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.c2-rec-name { font-size: 16px; }
+.c2-ings { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.c2-ing { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.c2-ing-card { position: relative; display: block; }
+.c2-ing-card .hgc { --w: 96px; }
+.c2-ing-badge { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 700; font-size: 13px; background: var(--sage); color: #0E0E10; border: 2px solid var(--surface); }
+.c2-ing.is-last .c2-ing-badge { background: var(--amber); }
+.c2-ing-cap { font-size: 13px; line-height: 1.3; }
+.c2-ing.is-miss { align-content: center; min-height: 96px; border: 1px dashed var(--border-strong); border-radius: 12px; padding: 8px; color: var(--rose); }
+.c2-rec-gives { display: flex; justify-content: center; align-items: center; gap: 10px; margin: 0; }
+.c2-rec-out { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.c2-rec-card { flex: none; }
+.c2-rec-card .hgc { --w: 130px; }
+.c2-rec-act { flex: 1 1 170px; display: grid; gap: 10px; min-width: 0; }
+.c2-rec-last { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; }
+.c2-rec-last input { width: 22px; height: 22px; flex: none; margin-top: 2px; accent-color: var(--sand); }
+.c2-rec-why { color: var(--rose); font-size: 14px; margin: 0; }
+.c2-rec-go { min-height: 48px; width: 100%; }
+.c2-rec-list { list-style: none; margin: 0; padding: 4px 16px; }
+.c2-rec-list li + li { border-top: 1px solid var(--border); }
+.c2-rec-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.c2-rec-row-t { flex: 1; display: grid; min-width: 0; font-size: 14px; }
+
+/* ---------- C11 : enchère ---------- */
+#cartes-enchere { margin-bottom: 16px; }
+.c2-auc-teaser { display: flex; gap: 14px; align-items: center; }
+.c2-auc-mini { flex: none; }
+.c2-auc-mini .hgc { --w: 96px; }
+.c2-auc-tinfo { display: grid; gap: 6px; min-width: 0; }
+.c2-auc-tinfo p { margin: 0; }
+.c2-auc-tname { font-size: 18px; }
+.c2-auc { display: grid; gap: 14px; }
+.c2-auc-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.c2-auc-name { font-size: 22px; line-height: 1.15; }
+.c2-auc-name:focus { outline: none; }
+.c2-auc-top { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.c2-auc-card .hgc { --w: 150px; }
+.c2-auc-boxes { display: grid; gap: 10px; min-width: 0; }
+.c2-auc-box { padding: 12px; display: grid; gap: 4px; }
+.c2-auc-box p { margin: 0; }
+.c2-auc-big { font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.c2-auc-box:first-child .c2-auc-big { color: var(--sand); }
+.c2-auc-who { display: inline-flex; align-items: center; gap: 8px; }
+.c2-auc-form { display: grid; gap: 10px; }
+.c2-auc-lab { font-weight: 700; font-size: 14px; }
+.c2-auc-row { display: flex; gap: 8px; }
+.c2-auc-row input { flex: 1; min-width: 0; min-height: 48px; font-size: 18px; }
+.c2-auc-row .btn { min-height: 48px; }
+.c2-auc-note { margin: 0; color: var(--sage-text); }
+.c2-auc-sub { font-size: 15px; }
+.c2-auc-bids { list-style: none; margin: 0; padding: 0; }
+.c2-auc-bid { display: flex; align-items: center; gap: 10px; min-height: 44px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.c2-auc-bid .c2-auc-who { flex: 1; min-width: 0; }
+.c2-auc-done { margin: 0; }
+@media (max-width: 420px) { .c2-auc-card .hgc { --w: 140px; } .c2-auc-big { font-size: 20px; } }
+
+/* ---------- C12 : tableau ---------- */
+.c2-brd { display: grid; gap: 12px; }
+.c2-brd-opt { display: grid; gap: 12px; }
+.c2-switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; }
+.c2-switch > span { display: grid; }
+.c2-switch input { appearance: none; -webkit-appearance: none; flex: none; width: 48px; height: 28px; border-radius: 999px; background: var(--border-strong); position: relative; cursor: pointer; margin: 0; }
+.c2-switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--text); transition: transform .15s; }
+.c2-switch input:checked { background: var(--sage); }
+.c2-switch input:checked::after { transform: translateX(20px); }
+.c2-switch input:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.c2-brd-note { display: grid; gap: 6px; }
+.c2-brd-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.c2-brd-notes { list-style: none; margin: 0; padding: 0; }
+.c2-brd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.c2-brd-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px; }
+.c2-brd-card { flex: none; }
+.c2-brd-card .hgc { --w: 76px; }
+.c2-brd-info { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.c2-brd-info p { margin: 0; overflow-wrap: anywhere; }
+.c2-brd-name { font-size: 15px; }
+.c2-brd-seek { color: var(--rose); }
+.c2-brd-give { color: var(--sage-text); }
+.c2-brd-go { margin-top: 6px; width: 100%; }
+.c2-chip[aria-pressed="true"] { background: var(--sage-soft); border-color: #24382A; color: var(--sage-text); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .c2-switch input::after { transition: none; } }
+
+/* C11 : la vue détaillée de l’enchère masque la Boutique ; [hidden] doit gagner sur « .shop { display:flex } ». */
+.shop[hidden], #cartes-enchere[hidden] { display: none !important; }

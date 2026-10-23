@@ -3,6 +3,7 @@
 // Styles : assets/css/cartes-card.css (à inclure sur chaque page qui affiche des cartes).
 // Côté serveur : tables hg_cards / hg_card_copies, réglages hg_settings.cards, fonctions hg_* (migrations 018).
 // Exporte : les listes de raretés et de familles (et leurs libellés), le numéro d'exemplaire, le numéro de carte,
+// les générations des membres (setGenerations, generationOf, generationLabel : idée C8),
 // le HTML d'une carte (cardHtml), le dos de carte (cardBackHtml) et le format des Paillettes (fmtP).
 import { esc, currentLogo } from './core.js';
 
@@ -63,6 +64,21 @@ function yearOf(v) {
   return m ? m[1] : String(v);
 }
 
+/* ---------- Générations des membres (idée C8) ----------
+   Bandeau « OG » (fond or, double filet) ou « 2e gen » (fond argent) sur les cartes liées à un membre (member_id).
+   La page charge les générations une fois (cartes-gen.js, RPC hg_card_generations) ; sans elles, rien ne change.
+   Même carte, même rareté : seul l'habillage change. */
+const GEN = new Map();
+/** Enregistre les générations : Map ou liste [{ user_id, gen: 'og'|'gen2' }]. */
+export function setGenerations(list) {
+  GEN.clear();
+  for (const g of (list instanceof Map ? [...list].map(([user_id, gen]) => ({ user_id, gen })) : list || [])) if (g?.user_id && (g.gen === 'og' || g.gen === 'gen2')) GEN.set(g.user_id, g.gen);
+}
+/** Génération d'un membre (« og », « gen2 ») ou null (inconnue ou masquée par le membre). */
+export const generationOf = (memberId) => (memberId ? GEN.get(memberId) || null : null);
+/** Libellé d'une génération : « OG » ou « 2e gen ». */
+export const generationLabel = (g) => (g === 'og' ? 'OG' : g === 'gen2' ? '2e gen' : '');
+
 /* ---------- Gemmes : pastilles décoratives (une de plus à chaque rareté) ---------- */
 // Couleurs de l'arc-en-ciel utilisées par les gemmes de la carte Identité.
 const RAINBOW = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
@@ -109,9 +125,11 @@ export function cardHtml(card, opts = {}) {
   // Brillante « fondue » (C3) : le fromage remplace le reflet holographique ; tampon « J’y étais » (C4).
   const fondue = !!opts.shiny && !miss && (opts.finish ?? card.finish) === 'fondue';
   const stamp = !!opts.stamp && !miss;
-  const cls = ['hgc', `hgc-${r}`, `hgc-${size}`, opts.shiny ? 'is-shiny' : '', fondue ? 'is-fondue' : '', miss ? 'is-missing' : '', opts.locked ? 'is-locked' : ''].filter(Boolean).join(' ');
+  const genCls = !miss && generationOf(card.member_id) ? `hgc-${generationOf(card.member_id) === 'og' ? 'og' : 'gen2'}` : '';
+  const cls = ['hgc', `hgc-${r}`, `hgc-${size}`, opts.shiny ? 'is-shiny' : '', fondue ? 'is-fondue' : '', miss ? 'is-missing' : '', opts.locked ? 'is-locked' : '', genCls].filter(Boolean).join(' ');
   const name = miss ? '???' : String(card.name ?? '');
   const uniq = r === 'unique';
+  const gen = miss ? null : generationOf(card.member_id);
   // Une carte unique se présente comme une pièce à part : « Exemplaire unique » remplace la famille.
   const famLine = [uniq ? 'Exemplaire unique' : familyLabel(card.family), card.set_name].filter(Boolean).join(' · ');
   const flavor = miss ? '' : card.flavor;
@@ -143,7 +161,7 @@ export function cardHtml(card, opts = {}) {
   const count = opts.count > 1 ? `<span class="hgc-count" aria-hidden="true">×${opts.count}</span>` : '';
   const lock = opts.locked ? '<span class="hgc-lock" title="Bloquée par une offre d\'échange">En échange</span>' : '';
   const label = `${name} — ${rarityLabel(r)}${opts.shiny ? (fondue ? ', brillante fondue' : ', brillante') : ''}${stamp ? ', J’y étais' : ''}${opts.serial ? ', ' + serialLabel(opts.serial, card.max_copies) : ''}`
-    + `${opts.count > 1 ? ', ' + opts.count + ' exemplaires' : ''}${opts.locked ? ', en échange' : ''}${miss ? ' (pas encore obtenue)' : ''}`;
+    + `${gen ? ', ' + generationLabel(gen) : ''}${opts.count > 1 ? ', ' + opts.count + ' exemplaires' : ''}${opts.locked ? ', en échange' : ''}${miss ? ' (pas encore obtenue)' : ''}`;
   const tag = opts.button ? 'button' : 'div';
   const typeAttr = opts.button ? ' type="button"' : '';
   const roleAttr = opts.button ? '' : ' role="img"';
@@ -157,6 +175,7 @@ export function cardHtml(card, opts = {}) {
       <span class="hgc-plate${plateFit}"><span class="hgc-plate-t">${esc(plateTxt)}</span></span>
       ${win}
       ${stamp ? '<span class="hgc-stamp"><span>J’y</span><span>étais</span></span>' : ''}
+      ${gen ? `<span class="hgc-gen">${generationLabel(gen)}</span>` : ''}
       <span class="hgc-fam">${esc(famLine)}</span>
       <span class="hgc-amb${ambFit}">${flavor ? `<em class="hgc-flavor">« ${esc(flavor)} »</em>` : ''}${caption ? `<span class="hgc-cap">${esc(caption)}</span>` : ''}</span>
       <span class="hgc-pied"><span class="hgc-pied-n">${esc(miss ? '' : numberLabel(card))}</span><span class="hgc-pied-s">${esc(serialTxt)}</span></span>

@@ -18,19 +18,24 @@ import { econPanel, updateSum, saveEcon, resetEconGroup } from './economy.js';
 import { openBulkGift } from './bulk.js';
 import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
-import { tradesPanel, cancelTrade } from './trades.js';
+import { tradesPanel, cancelTrade, loadBoardNotes, clearBoardNote } from './trades.js';
 import { Q, loadQuests, questsPanel, questActions } from './quests.js';
 import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
 import { setsListData } from './sets.js';
 import { cardsListData } from './list.js';
 import { mountBoostersTab } from './boosters.js';
 import { mountProposalsAdmin } from './proposals.js';
+import { mountCodesTab } from './codes.js';
+import { mountRecipesTab } from './recipes.js';
+import { mountAuctionsTab } from './auctions.js';
 
 /* =========================================================
    Rendu et événements
    ========================================================= */
 /* Fabrique du HTML de chaque onglet, par identifiant d'onglet. */
-const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, boosters: () => '<div id="acd-boosters"></div>', joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel };
+const PANELS = { series: setsPanel, cartes: cardsPanel, quetes: questsPanel, economie: econPanel, boosters: () => '<div id="acd-boosters"></div>', joueurs: playersPanel, stats: statsPanel, echanges: tradesPanel,
+  // Idées C9, C10, C11 (migration 081) : onglets autonomes, comme les boosters.
+  codes: () => '<div id="acd-codes"></div>', recettes: () => '<div id="acd-recettes"></div>', encheres: () => '<div id="acd-encheres"></div>' };
 /** Dessine l'onglet courant, puis lance les chargements propres à cet onglet (joueurs, quêtes, économie). */
 function render() {
   $$('[data-tab]', C.root).forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tab === C.tab)));
@@ -41,6 +46,10 @@ function render() {
   if (C.tab === 'economie') updateSum();
   if (C.tab === 'boosters') mountBoostersTab($('#acd-boosters', C.panel)); // onglet autonome (boosters.js)
   if (C.tab === 'series') mountProposalsAdmin($('#acd-props', C.panel)); // propositions des membres (migration 080)
+  if (C.tab === 'echanges') loadBoardNotes(); // petits mots du tableau (idée C12)
+  if (C.tab === 'codes') mountCodesTab($('#acd-codes', C.panel));
+  if (C.tab === 'recettes') mountRecipesTab($('#acd-recettes', C.panel));
+  if (C.tab === 'encheres') mountAuctionsTab($('#acd-encheres', C.panel));
 }
 
 /** Listes à rafraîchir seules pendant une recherche (le champ garde le focus). */
@@ -84,6 +93,7 @@ const ACTIONS = {
   'ident-make': (t) => makeIdentities(t),
   'copy-take': (t, id) => takeCopy(t, id),
   'trade-cancel': (t, id) => cancelTrade(t, id),
+  'board-note-clear': (t, id) => clearBoardNote(t, id),
   'econ-reset': () => render(),
   'econ-default': (t) => resetEconGroup(Number(t.dataset.g)),
   'bulk-open': () => openBulkGift(),
