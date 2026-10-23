@@ -1,0 +1,87 @@
+/* ===== Page « Jeux » : Framed (J9) et Heardle (J10), jeux « devine en 6 essais » (maquettes J9, J10) ===== */
+.jd { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.jd-title { font-family: var(--font-display); font-size: 26px; line-height: 1.1; margin: 0; }
+.jd-sub { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.jd-sub > span:first-child { flex: 1; }
+.jd-pts-pill { background: transparent; border: 1px solid var(--sand); color: var(--sand); font-weight: 700; white-space: nowrap; }
+.jd-h2 { font-size: 17px; margin: 0 0 8px; }
+
+/* Framed : image et numéros des images */
+.jf-img { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 16 / 9; background: var(--surface); display: grid; place-items: center; }
+.jf-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.jf-nav { display: flex; justify-content: space-between; gap: 6px; }
+.jf-num { font: inherit; font-weight: 700; width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer; }
+.jf-num:disabled { color: var(--muted); opacity: .6; cursor: default; border-color: var(--border); }
+.jf-num.is-miss { background: var(--ss-bg); color: var(--rose); border-color: transparent; box-shadow: inset 0 0 0 2px var(--accent); }
+.jf-num.is-cur { background: var(--text); color: var(--bg); border-color: var(--text); box-shadow: none; }
+.jf-num:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+
+/* Essais */
+.jd-tries { list-style: none; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.jd-try { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.jd-try-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.jd-try-s { color: var(--muted); white-space: nowrap; }
+.jd-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); flex: none; }
+.jd-try.is-miss .jd-dot { background: var(--accent); }
+.jd-try.is-miss .jd-try-s { color: var(--rose); font-weight: 700; }
+.jd-try.is-win .jd-dot { background: var(--sage); }
+.jd-try.is-win .jd-try-s { color: var(--sage-text); font-weight: 700; }
+.jd-try.is-cur .jd-dot { background: var(--text); }
+
+/* Réponse : champ avec suggestions */
+.jd-form { display: flex; flex-direction: column; gap: 8px; }
+.jd-label { font-weight: 700; font-size: 14px; }
+.jd-combo { position: relative; }
+.jd-combo .input { width: 100%; box-sizing: border-box; min-height: 44px; }
+.jd-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; max-height: 260px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+.jd-opt { padding: 10px 12px; border-radius: 8px; cursor: pointer; min-height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.jd-opt.is-active, .jd-opt:hover { background: var(--border); }
+.jd-opt-sub { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.jd-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.jd-actions .btn { flex: 1 1 140px; min-height: 44px; }
+.jd-hint:empty { display: none; }
+.jd-note { margin: 0; }
+
+/* Fin de partie, veille, classement */
+.jd-end { display: flex; flex-direction: column; gap: 6px; }
+.jd-end.is-win { border-color: var(--sage); }
+.jd-end-t { font-weight: 700; margin: 0; }
+.jd-end-ans { font-family: var(--font-display); font-size: 20px; margin: 0; overflow-wrap: anywhere; }
+.jd-end p { margin: 0; }
+.jd-hier p { margin: 0; }
+.jd-hier-t { font-weight: 700; }
+.jd-board { list-style: none; margin: 0; padding: 0; }
+.jd-board-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--border); }
+.jd-board-row:last-child { border-bottom: 0; }
+.jd-board-row.is-me { background: var(--border); border-radius: 10px; }
+.jd-rank { width: 22px; font-family: var(--font-display); color: var(--muted); }
+.jd-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.jd-pts { font-weight: 700; }
+
+/* Heardle : pochette, lecteur, barre des durées */
+.jh-box { display: flex; gap: 14px; align-items: center; }
+.jd-combo .input:focus { border-color: var(--sand); }
+.jh-cover { position: relative; width: 120px; aspect-ratio: 1; flex: none; border-radius: 12px; overflow: hidden; background: var(--hist-bg); }
+.jh-video { position: absolute; inset: 0; }
+.jh-video iframe, .jh-video > div { width: 100%; height: 100%; border: 0; }
+.jh-sleeve { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(135deg, var(--plum), var(--accent)); }
+.jh-disc { width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, var(--sand) 0 14%, #111 15% 100%); box-shadow: inset 0 0 0 6px rgba(255, 255, 255, .06); }
+.jh-sleeve-t { position: absolute; bottom: 6px; left: 8px; font-size: 12px; font-weight: 700; color: #fff; }
+.jh-box.is-open { flex-direction: column; align-items: stretch; }
+.jh-box.is-open .jh-cover { width: 100%; aspect-ratio: 16 / 9; }
+.jh-ctrl { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; min-width: 0; }
+.jh-ctrl p { margin: 0; }
+.jh-play { width: 64px; height: 64px; border-radius: 50%; padding: 0; }
+.jh-ico { width: 0; height: 0; border-left: 18px solid currentColor; border-top: 11px solid transparent; border-bottom: 11px solid transparent; margin-left: 5px; }
+.jh-play.is-playing .jh-ico { width: 18px; height: 20px; border: 0; margin: 0; background: linear-gradient(90deg, currentColor 0 35%, transparent 35% 65%, currentColor 65%); }
+.jh-bar { display: flex; flex-direction: column; gap: 4px; }
+.jh-segs { position: relative; display: flex; gap: 3px; }
+.jh-seg { height: 14px; border-radius: 3px; background: var(--progress-bg, #26262B); }
+.jh-seg.is-open { background: #6E5A2E; }
+.jh-seg.is-now { background: var(--sand); }
+.jh-prog { position: absolute; left: 0; top: -3px; height: 20px; width: 0; border-right: 2px solid var(--text); pointer-events: none; }
+.jh-labs { display: flex; gap: 3px; font-size: 11px; color: var(--muted); }
+.jh-labs span { text-align: right; }
+.jh-propose { display: flex; flex-direction: column; gap: 10px; }
+@media (max-width: 400px) { .jh-cover { width: 96px; } .jf-num { width: 44px; } .jf-nav { gap: 4px; } }

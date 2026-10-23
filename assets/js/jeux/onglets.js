@@ -28,4 +28,7 @@ export const ONGLETS = [
   { id: 'jour', titre: 'Question du jour', module: './jour.js', idee: 'J4', rythme: 'jour' },
   { id: 'pronos', titre: 'Pronostics', module: './pronos.js', idee: 'J5', rythme: 'competition' },
   { id: 'sutom', titre: 'Sutom', module: './sutom.js', idee: 'J8', rythme: 'jour' },
+  { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
+  { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
+  { id: 'bataille', titre: 'Bataille', module: './bataille.js', idee: 'J15', rythme: 'competition' },
 ];

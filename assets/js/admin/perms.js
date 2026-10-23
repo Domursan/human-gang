@@ -30,6 +30,8 @@ export const SECTION_PERM = {
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
   // Page « Jeux » (migration 083) : GeoGuessr (photos des sorties), jeux du jour (économie), citations (quiz)
   'jeux-geo': 'souvenirs', 'jeux-jdj': 'cartes', 'jeux-citations': 'quiz',
+  // Jeux (paquet xJ3) : preuves des quêtes (J11), Framed et Heardle (J9, J10), Bataille (J15)
+  preuves: 'preuves', 'jeux-medias': 'souvenirs', bataille: 'cartes',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -106,6 +108,9 @@ export const DOMAINS = [
       { id: 'geoguessr', label: 'GeoGuessr', section: 'jeux-geo' },
       { id: 'jeux-du-jour', label: 'Jeux du jour', section: 'jeux-jdj' },
       { id: 'citations', label: 'Citations « Qui a dit ça ? »', section: 'jeux-citations' },
+      { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves' },
+      { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
+      { id: 'bataille', label: 'Bataille', section: 'bataille' },
     ]),
   ] },
   { id: 'communication', label: 'Communication', icon: 'chat', subs: [

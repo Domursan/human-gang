@@ -17,6 +17,7 @@ import { pluralCount } from './utils.js';
 import { createZoom, ICON_ZOOM, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllowed, clearOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : collection hors ligne
+import { openProof, proofCss } from './quest-proofs.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -49,6 +50,7 @@ const REASON_LABEL = {
   moment: 'Moment culte', badge: 'Badge obtenu', capture: 'Capture d’événement', sortie_creee: 'Sortie créée',
   cadeau_santa: 'Cadeau Secret Santa', echange: 'Échange de cartes', admin: 'Ajustement du gang',
   quete: 'Quête de la semaine', defi: 'Défi du gang', don_admin: 'Don du gang',
+  framed: 'Framed du ciné-club', heardle: 'Heardle du gang', bataille: 'Bataille de cartes', bataille_def: 'Défense tenue (Bataille)',
 };
 // Couleur de lueur de l'écran de console selon la rareté (maquette « cartouche ») : table partagée avec cartes-zoom.js (RARITY_TINT = TINT).
 // Tint (couleur d'accent) de la console selon la rareté ; repli sur la couleur de l'identité.
@@ -1213,12 +1215,14 @@ function questHtml(q) {
   const pctDone = Math.round((value / target) * 100);
   const state = q.claimed
     ? '<span class="pill pill-ok">Récompense reçue</span>'
+    : q.proof ? proofState(q)
     : q.done
       ? `<button type="button" class="btn btn-sand cq-btn" data-action="quest-claim" data-code="${esc(q.code)}" ${S.busy ? 'disabled' : ''}>Réclamer · ${fmtPaillettes(q.reward)}</button>`
       : '<span class="pill pill-current">En cours</span>';
   return `<li class="cq-item${q.claimed ? ' is-claimed' : ''}">
       <div class="cq-main">
-        <p class="cq-label">${esc(q.label)}</p>
+        <p class="cq-label">${esc(q.label)}${q.proof && q.proof_game ? ` <span class="cq-proof-game">· ${esc(q.proof_game)}</span>` : ''}</p>
+        ${q.proof && q.proof_status === 'refusee' && !q.claimed ? `<p class="cq-proof-reason">Preuve refusée : « ${esc(q.proof_reason || '')} »</p>` : ''}
         <div class="progress cq-bar" role="progressbar" aria-label="${esc(q.label)}" aria-valuemin="0" aria-valuemax="${target}" aria-valuenow="${value}" aria-valuetext="${nf.format(value)} sur ${nf.format(target)}">
           <span style="width:${pctDone}%"></span>
         </div>
@@ -1226,6 +1230,19 @@ function questHtml(q) {
       </div>
       <div class="cq-act">${state}</div>
     </li>`;
+}
+
+/**
+ * État d'une quête à preuve (J11) : envoyer, en attente, refusée (renvoi possible une fois), validée à réclamer.
+ * @param {object} q quête (proof_status, proof_attempts, done)
+ * @returns {string}
+ */
+function proofState(q) {
+  proofCss();
+  if (q.done) return `<button type="button" class="btn btn-sand cq-btn" data-action="quest-claim" data-code="${esc(q.code)}" ${S.busy ? 'disabled' : ''}>Réclamer · ${fmtPaillettes(q.reward)}</button>`;
+  if (q.proof_status === 'en_attente') return '<span class="pill pill-current">En attente de validation</span>';
+  if (q.proof_status === 'refusee' && q.proof_attempts >= 2) return '<span class="pill">Refusée</span>';
+  return `<button type="button" class="btn btn-primary cq-btn" data-action="quest-proof" data-code="${esc(q.code)}">${q.proof_status === 'refusee' ? 'Renvoyer une preuve' : 'Envoyer une preuve'}</button>`;
 }
 
 /** Dessine la section des quêtes : chargement, erreur, liste vide ou liste des quêtes. */
@@ -2836,6 +2853,7 @@ function onClick(e) {
     case 'resume-multi': return runMulti(null);
     case 'toggle-all-cards': return toggleAllCards();
     case 'quest-claim': return claimQuest(t.dataset.code);
+    case 'quest-proof': return openProof(S.quests.quests.find((q) => q.code === t.dataset.code), { uid: me.id, sb, toast, esc, onDone: loadQuests });
     case 'reveal-all': return skipSeq();
     case 'close-reveal': return closeReveal();
     case 'open-card': return openDetail(t.dataset.card);

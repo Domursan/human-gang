@@ -1,0 +1,40 @@
+/* ===== Admin : preuves des quêtes (J11, maquette J11) ===== */
+.pf { display: flex; flex-direction: column; gap: 14px; }
+.pf-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.pf-top p { margin: 0; }
+.pf-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.pf-chip { font: inherit; font-size: 13px; min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
+.pf-chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 700; }
+.pf-n { font-weight: 700; }
+.pf-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pf-tools select { min-height: 44px; max-width: 100%; }
+.pf-tools .btn { min-height: 44px; margin-left: auto; }
+.pf-body { display: grid; grid-template-columns: minmax(240px, 340px) 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .pf-body { grid-template-columns: 1fr; } }
+.pf-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.pf-item { font: inherit; text-align: left; display: flex; gap: 12px; align-items: center; width: 100%; min-height: 44px; padding: 12px; border-radius: 12px; cursor: pointer;
+  color: var(--text); background: transparent; border: 1px solid var(--border); }
+.pf-item[aria-current="true"] { background: var(--surface); border-color: var(--sand); }
+.pf-item:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.pf-av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 12px; color: #121212; flex: none; }
+.pf-av-lg { width: 40px; height: 40px; font-size: 14px; }
+.pf-it { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere; }
+.pf-when { white-space: nowrap; }
+.pf-card { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.pf-head { display: flex; gap: 12px; align-items: center; }
+.pf-ht { flex: 1; min-width: 0; }
+.pf-ht h3 { margin: 0; font-size: 18px; }
+.pf-ht p { margin: 2px 0 0; }
+.pf-reward { color: var(--sand); font-weight: 700; }
+.pf-shot { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--bg); min-height: 160px; display: grid; place-items: center; }
+.pf-shot img { display: block; width: 100%; max-height: 60vh; object-fit: contain; }
+.pf-shots { display: flex; align-items: center; gap: 8px; }
+.pf-shotb { font: inherit; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
+.pf-shotb[aria-pressed="true"] { border-color: var(--sand); color: var(--sand); }
+.pf-note { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--border); }
+.pf-own { color: var(--muted); }
+.pf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.pf-actions .input { min-height: 44px; flex: 1 1 200px; }
+.pf-ok { background: #15964A; color: #fff; min-height: 44px; }
+.pf-ko { background: transparent; color: var(--rose); border: 1px solid var(--rose); min-height: 44px; }
+.pf-actions kbd { font: inherit; font-size: 12px; opacity: .8; }

@@ -20,7 +20,7 @@ import { actionLabel } from './admin-log.js';
 // Regroupement des permissions dans la fiche (les clés absentes du catalogue vont dans « Autres »)
 const GROUPS = [
   ['Communauté', ['membres', 'evenements', 'souvenirs', 'secret_santa'], 'var(--slate)'],
-  ['Contenu du site', ['cartes', 'badges', 'themes'], 'var(--plum)'],
+  ['Contenu du site', ['cartes', 'badges', 'themes', 'preuves'], 'var(--plum)'],
   ['Messages et support', ['messages', 'support'], 'var(--sage)'],
   ['Technique', ['bot', 'reglages', 'journal'], 'var(--rose)'],
 ];
