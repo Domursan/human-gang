@@ -38,13 +38,14 @@ Accès : **Public** = sans compte ; **Membre** = connecté ; **Staff** = membre 
 | `index.html` | Public | Intro 3D au défilement, rejouée une fois par jour ; redirige ensuite vers l'accueil | `intro.js`, `intro-redirect.js` |
 | `rejoindre.html` | Public | Ouverture d'un lien d'invitation : donne un code et mène à l'inscription | `rejoindre.js` |
 | `compte.html` | Public (connexion) puis Membre | Connexion, inscription, mot de passe oublié ; profil, avatar, infos personnelles, notifications Discord et push, badges, export et suppression des données | `compte.js` |
-| `accueil.html` | Membre | Fil d'activité, défis du gang, quêtes de la semaine, raccourcis Secret Santa / IRL / Historique | `accueil.js` |
+| `accueil.html` | Membre | Fil d'activité, défis du gang, question du jour, quêtes de la semaine, raccourcis Secret Santa / IRL / Historique | `accueil.js` |
 | `secret-santa.html` | Membre | Édition en cours : inscription, avancement, ma cible et sa liste, ma liste de souhaits, mon envoi, messages secrets, inscrits | `secret-santa.js` |
 | `irl.html` | Membre | Prochaine sortie, dates à caler (sondages), à venir, sorties passées, statistiques, carte des lieux, toutes nos rencontres | `irl.js`, `irl-history.js` |
 | `historique.html` | Membre | Frise des années, éditions passées du Secret Santa, albums photo, moments cultes et réactions | `historique.js` |
 | `recap.html` | Membre | Récap de l'année du membre et du gang | `recap.js` |
 | `messages.html` | Membre | Conversations privées, nouveau message, messages avec son Santa (anonymes) | `messages.js` |
 | `cartes.html` | Membre | Onglets Boosters, Collection, Classement, Échanges ; collection d'un autre membre en lecture seule (`#collection/<id>`) ; drops à attraper | `cartes.js` et `cartes-*.js` |
+| `jeux.html` | Membre | Un onglet par jeu (`#<id>`) : Question du jour avec série (J4), Pronostics (J5), Sutom du gang (J8)… | `jeux.js`, `jeux/` |
 | `membre.html` | Membre | Carte de membre d'un joueur : infos partagées, badges, vitrine de cartes, « Voir sa collection » | `membre.js` |
 | `evenements.html` | Membre | Événements en cours et passés (images à attraper), classement des chasseurs | `evenements.js` |
 | `aide.html` | Public | 61 tutos en 6 groupes, recherche, accès à l'assistance | `aide.js`, `tutos/` |
@@ -71,7 +72,7 @@ Adresse d'une section : `admin.html#domaine/sous-section`. Chaque sous-section d
 
 | Tâche | Quand | Rôle |
 | --- | --- | --- |
-| `hg-cron-5min` | Toutes les 5 minutes | Rappels de sorties et du Secret Santa, début et fin des événements |
+| `hg-cron-5min` | Toutes les 5 minutes | Rappels de sorties et du Secret Santa, début et fin des événements, question du jour (9 h, réglable) |
 | `hg-badges-hourly` | Toutes les heures | Attribution des badges |
 | `hg-cards-hourly` | Toutes les heures | Récompenses de présence du jeu de cartes |
 | `hg-challenges-hourly` | Toutes les heures | Progression et récompenses des défis du gang |

@@ -150,6 +150,7 @@ function renderMemberShell() {
     ${recapBanner()}
     <div id="dyn-banner" hidden></div>
     <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
+    <div id="qdj-home" hidden></div>
 
     <section class="grid home-tiles" aria-label="Rubriques">
       <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
@@ -520,6 +521,21 @@ async function loadChallenges() {
   }
 }
 
+/* ---------- Question du jour (J4) ---------- */
+/** Tuile « Question du jour » : seulement si la page Jeux est accessible. Module chargé à la demande (jeux/jour-ui.js). */
+async function loadDailyQuestion() {
+  const box = $('#qdj-home');
+  if (!box || !canAccess('jeux')) return;
+  try {
+    const { mountDaily } = await import('./jeux/jour-ui.js');
+    box.hidden = false;
+    await mountDaily(box, { sb, esc, toast, compact: true, meId: me.id });
+  } catch (e) {
+    console.warn('[question du jour]', e);
+    box.hidden = true;
+  }
+}
+
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 /** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique' };
@@ -543,7 +559,7 @@ if (!me) {
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
+    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(), loadDailyQuestion(),
   ]);
 }
 app.removeAttribute('aria-busy');

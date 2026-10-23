@@ -1,0 +1,52 @@
+/* ===== Humane Gang — Question du jour (J4) : accueil et onglet de la page Jeux ===== */
+.qdj { display: flex; flex-direction: column; gap: 14px; max-width: 640px; }
+.qdj.is-compact { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 20px; }
+@media (min-width: 900px) { .qdj.is-compact { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } .qdj.is-compact .qdj-card { grid-row: span 2; } }
+.qdj .card { min-width: 0; }
+.qdj p { margin: 0; }
+.qdj-card { border: 2px solid var(--sand) !important; display: flex; flex-direction: column; gap: 12px; }
+.qdj-top, .qdj-between, .qdj-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.qdj-tag { display: inline-flex; padding: 5px 11px; border-radius: 999px; background: var(--sand); color: #121212; font-weight: 700; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; }
+.qdj-serie { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--amber); font-size: 14px; }
+.qdj-prompt { font-size: 19px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+.qdj-info { margin-top: -6px !important; }
+.qdj-img { max-width: 100%; border-radius: 12px; }
+.qdj-deja { padding: 8px 12px; border-radius: 12px; background: var(--irl-bg); border: 1px solid var(--irl-border); }
+.qdj-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qdj-choice {
+  font: inherit; font-weight: 600; min-height: 46px; padding: 8px 10px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--surface-2, #1F1F23); color: var(--text); overflow-wrap: anywhere;
+}
+.qdj-choice:hover:not(:disabled) { border-color: var(--sand); }
+.qdj-choice[aria-pressed="true"] { border: 2px solid var(--sand); background: var(--irl-bg); }
+.qdj-choice:focus-visible, .qdj-send:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.qdj-choice:disabled { opacity: .6; cursor: default; }
+.qdj-send { align-self: flex-start; }
+.qdj-form { display: flex; gap: 8px; }
+.qdj-form .input { flex: 1; min-width: 0; min-height: 44px; }
+.qdj-error { color: var(--rust); }
+.qdj-plus { font-family: var(--font-display); color: var(--sand); }
+.qdj-result { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 12px; }
+.qdj-result:focus { outline: none; }
+.qdj-result.is-ok { background: var(--sage-soft); border: 1px solid var(--sage); }
+.qdj-result.is-ko { background: var(--ss-bg); border: 1px solid var(--ss-border); }
+.qdj-verdict { font-weight: 700; font-size: 17px; }
+.qdj-gains { display: flex; flex-wrap: wrap; gap: 6px; }
+.qdj-gains span { padding: 3px 10px; border-radius: 999px; background: var(--bg); color: var(--sand); font-weight: 700; }
+.qdj-h2 { font-size: 17px; font-weight: 700; margin: 0; }
+.qdj-week, .qdj-board { display: flex; flex-direction: column; gap: 10px; }
+.qdj-days { list-style: none; margin: 0; padding: 0; display: flex; justify-content: space-between; gap: 4px; }
+.qdj-day { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.qdj-box { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-2, #1F1F23); color: var(--muted); }
+.qdj-day.is-ok .qdj-box { background: var(--sage-soft); color: var(--sage-text); }
+.qdj-day.is-joker .qdj-box { background: var(--irl-bg); color: var(--sand); }
+.qdj-day.is-today .qdj-box { background: transparent; border: 1px dashed var(--amber); color: var(--amber); }
+.qdj-dl { font-size: 11px; color: var(--muted); }
+.qdj-rows { list-style: none; margin: 0; padding: 0; }
+.qdj-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.qdj-row:last-child { border-bottom: 0; }
+.qdj-row.is-me { background: var(--surface-2, #1F1F23); border-radius: 10px; padding-left: 8px; padding-right: 8px; }
+.qdj-rank { width: 22px; font-family: var(--font-display); color: var(--muted); font-size: 14px; flex: none; }
+.qdj-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qdj-link { color: var(--sand); min-height: 44px; display: inline-flex; align-items: center; }
+.qdj-more { min-height: 44px; }

@@ -129,6 +129,8 @@ const DB = {
       starts_at: iso(-10), ends_at: iso(80), active: false },
   ],
 };
+// Extension par test (ex. tests/fixtures/fake-jeux.js, injecté par openPage({ init })) : complète la base au chargement.
+if (typeof window.__FAKE_SETUP === 'function') window.__FAKE_SETUP(DB, { ME, S });
 /* ---------- Boosters paramétrables (onglet admin « Boosters », migrations 069 et 071) ----------
    hg_booster_types : les 9 types seedés par 069, avec les colonnes de 071 (excluded_rarities, excluded_sets) et les valeurs
    du Collectionneur après 071 (sans identité, sans la série « Les OG »). hg_card_sets : quelques séries (code, name).
@@ -614,6 +616,8 @@ export function createClient() {
         window.__LOG.push(['rpc-401', fn]);
         return { data: null, error: { message: 'permission denied for function ' + fn, code: '42501' } };
       }
+      // Extension par test : RPC simulées en plus (renvoie undefined pour laisser la main aux RPC ci-dessous).
+      if (typeof window.__FAKE_RPC === 'function') { const r = await window.__FAKE_RPC(fn, args); if (r !== undefined) return r; }
       // Pages visibles pour l'utilisateur connecté : toutes pour un admin, sinon celles qui lui sont accordées.
       if (fn === 'hg_my_pages') {
         if (S.pagesFail) return { data: null, error: { message: 'Failed to fetch' } };

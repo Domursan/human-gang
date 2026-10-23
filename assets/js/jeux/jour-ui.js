@@ -4,7 +4,7 @@
 // RPC : hg_quiz_daily_today, hg_quiz_daily_answer, hg_quiz_daily_board (migration 084).
 // Styles : assets/css/jeux-jour.css (ajouté une seule fois par un <link>).
 // Dépendances : core.js (avatarHtml, errMsg). Tout texte venant de la base passe par esc().
-// Exporte : mountDaily(el, { sb, esc, toast, compact }).
+// Exporte : mountDaily(el, { sb, esc, toast, compact, meId }).
 import { avatarHtml, errMsg } from '../core.js';
 
 /* ---------- Constantes ---------- */
@@ -33,13 +33,13 @@ const dateDe = (s) => new Date(`${s}T12:00:00Z`);
 /**
  * Monte la question du jour dans un élément.
  * @param {HTMLElement} el Conteneur (vidé).
- * @param {{sb: object, esc: Function, toast?: Function, compact?: boolean}} ctx compact : version de l'accueil
- *   (classement en trois lignes et lien vers l'onglet Jeux).
+ * @param {{sb: object, esc: Function, toast?: Function, compact?: boolean, meId?: string}} ctx compact : version de
+ *   l'accueil (classement en trois lignes et lien vers l'onglet Jeux) ; meId : membre connecté (sa ligne du classement).
  * @returns {Promise<void>}
  */
-export async function mountDaily(el, { sb, esc, toast, compact = false }) {
+export async function mountDaily(el, { sb, esc, toast, compact = false, meId = null }) {
   styles();
-  const S = { d: null, board: null, busy: false, tout: false, multi: new Set(), retour: null };
+  const S = { d: null, board: null, busy: false, tout: false, multi: new Set(), retour: null, me: meId };
 
   /** Texte d'un choix. */
   const txtChoix = (id) => S.d.question.options.find((o) => o.id === id)?.text ?? String(id);
@@ -213,10 +213,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false }) {
 
   // Chargement : question du jour et classement du mois en parallèle.
   el.innerHTML = '<div class="card qdj-card"><p class="muted">Chargement de la question du jour…</p></div>';
-  const [t, b, u] = await Promise.allSettled([
-    sb.rpc('hg_quiz_daily_today'), sb.rpc('hg_quiz_daily_board', { p_month: null }), sb.auth.getUser?.() ?? Promise.resolve(null),
-  ]);
-  S.me = u.status === 'fulfilled' ? u.value?.data?.user?.id ?? null : null;
+  const [t, b] = await Promise.allSettled([sb.rpc('hg_quiz_daily_today'), sb.rpc('hg_quiz_daily_board', { p_month: null })]);
   if (t.status !== 'fulfilled' || t.value.error) {
     console.warn('[question du jour]', t.reason || t.value?.error);
     el.innerHTML = '<div class="card qdj-card"><p class="muted">Question du jour indisponible pour le moment.</p></div>';

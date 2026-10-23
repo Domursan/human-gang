@@ -8,6 +8,7 @@
     { "id": "support", "label": "Assistance" },
     { "id": "events", "label": "Événements" },
     { "id": "cards", "label": "Cartes" },
+    { "id": "jeux", "label": "Jeux" },
     { "id": "test", "label": "Test" }
   ],
   "templates": {
@@ -94,6 +95,10 @@
     "card_drop_announce": {
       "title": "Une carte sauvage est apparue !",
       "body": "**{carte}** ({rarete}) traîne sur le site : {quantite} à attraper jusqu'à {fin}.\n\nConnecte-toi vite, les premiers qui cliquent dessus la gagnent !"
+    },
+    "quiz_daily": {
+      "title": "Question du jour · {categorie}",
+      "body": "{rappel}\n\n**{question}**\n\n{series}"
     }
   },
   "meta": {
@@ -320,6 +325,20 @@
         "quantite": { "label": "Nombre d'exemplaires à attraper", "example": "3 exemplaires" },
         "fin": { "label": "Heure de fin du drop", "example": "jeudi 22 octobre à 20:30" },
         "lien": { "label": "Lien vers l'accueil du site", "example": "https://humane-gang.example/accueil.html" }
+      }
+    },
+    "quiz_daily": {
+      "group": "jeux", "label": "Question du jour", "target": "Salon des jeux du jour", "color": "#9A88C4",
+      "description": "Publié chaque matin (heure réglable dans Planning) avec un bouton « Répondre sur le site ». Une seule publication par jour ; rien ne part s'il n'y a pas de question. La bonne réponse du jour n'est jamais dans le message. Le vendredi, les trois plus longues séries en cours (3 jours au moins). Désactivable dans les notifications (vacances).",
+      "fields": [["Récompense", "{recompense}"], ["Ferme", "{ferme}"]],
+      "vars": {
+        "categorie": { "label": "Catégorie et difficulté", "example": "Vie du gang · Moyen" },
+        "question": { "label": "Énoncé de la question", "example": "Où s'est tenu le tout premier RDV annuel du gang ?" },
+        "recompense": { "label": "Récompense", "example": "10 Paillettes pour ta série (100 de plus si juste)" },
+        "ferme": { "label": "Fermeture", "example": "demain à 6 h" },
+        "rappel": { "label": "Rappel de la veille (vide le premier jour)", "example": "Hier : 9 bonnes réponses sur 12 · Réponse : « le livre est mieux »" },
+        "series": { "label": "Plus longues séries (le vendredi seulement)", "example": "Plus longues séries en cours : Mycethyst 21 j · Izin 14 j · Terrow 9 j" },
+        "lien": { "label": "Lien vers la question du jour", "example": "https://humane-gang.example/jeux.html#jour" }
       }
     }
   }

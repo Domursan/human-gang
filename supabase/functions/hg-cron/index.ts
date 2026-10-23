@@ -19,6 +19,12 @@
 //   4. Rappels d'envoi de cadeau (Secret Santa) : MP au Santa qui n'a pas marqué son envoi, dans les N jours qui
 //      précèdent hg_ss_editions.send_deadline (N = bot.rappels.ss_jours_avant, défaut 3 ; marqué hg_ss_participants.send_reminder_at, une seule fois).
 //      Désactivé si bot.notify.gift === false.
+//   5. Question du jour (D2, migration 084) : une fois par jour, à l'heure planning.quiz_jour_heure_locale (défaut 9 h,
+//      porte hg_cron_gate('quiz_jour', 9)), message dans les salons du type « quiz » (bot.channels.quiz, repli : salon
+//      d'annonces) avec un bouton « Répondre sur le site » (jeux.html#jour) : question, catégorie, difficulté, récompense,
+//      rappel de la veille (score du gang et réponse) ; le vendredi, les trois plus longues séries (3 jours au moins).
+//      Jamais la bonne réponse du jour. Réservation dans hg_bot_runs ('quiz_daily', jour) AVANT l'envoi, retirée si tous
+//      les salons échouent. Pas de question = rien ne part. Pause : bot.notify.quiz_daily === false (vacances).
 //   Sans bot (DISCORD_BOT_TOKEN absent ou aucun salon), les annonces ne sont pas marquées et les rappels ne partent pas :
 //   ils partiront quand le bot sera prêt (sauf la fin d'un événement terminé depuis plus de 24 h, marquée sans envoi).
 //   Chaque passage qui a fait quelque chose (annonce, rappel, erreur) laisse une ligne dans hg_bot_log (kind « auto:cron ») ;
@@ -62,7 +68,7 @@ type Attempt = { user_id: string; pseudo: string; ok: boolean; status: 'sent' | 
 /** Profil lu par la fonction. remind_irl est facultatif (absent pour les rappels de cadeau). */
 type Prof = { id: string; pseudo: string; discord_id: string | null; bot_optin: boolean; remind_irl?: boolean };
 /** Compteurs d'un passage, renvoyés dans la réponse et résumés dans le journal. */
-type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; errors: number };
+type Counters = { starts: number; ends: number; marked_late: number; pending_no_bot: number; irl_reminders: number; ss_reminders: number; quiz_daily: number; errors: number };
 
 /* ---------- Réservation des envois (idempotence) ---------- */
 
@@ -313,10 +319,75 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
   }
 }
 
+/* ---------- 5 : question du jour (D2) ---------- */
+
+/** Données renvoyées par hg_quiz_daily_bot (migration 084). */
+type QuizBot = {
+  day: string;
+  question: { id: string; prompt: string; category: string | null; difficulty: string; reward: number } | null;
+  bonus?: number;
+  yesterday?: { answered: number; correct: number; solution: string | null } | null;
+  top_streaks?: { pseudo: string; days: number }[];
+};
+const DIFF_FR: Record<string, string> = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile', expert: 'Expert' };
+
+/**
+ * Publie la question du jour (tâche 5) : une seule fois par jour, à l'heure du planning.
+ * @param {Counters} out Compteurs du passage (modifiés).
+ * @param {ChannelBot & MentionBot} bot Réglages du bot.
+ * @param {ChannelLogEntry[]} chanLog Détail par salon, pour le journal (modifié).
+ * @returns {Promise<void>}
+ * @throws {Error} Si la lecture de la question échoue.
+ */
+async function quizDaily(out: Counters, bot: ChannelBot & MentionBot, chanLog: ChannelLogEntry[]) {
+  const { data: gate, error: gateErr } = await db.rpc('hg_cron_gate', { p_tache: 'quiz_jour', p_heure_defaut: 9 });
+  if (gateErr) throw new Error(gateErr.message);
+  if (!gate) return;
+  const channels = channelsFor(bot, 'quiz');
+  if (!channels.length) return; // sans salon : rien n'est réservé, la publication partira quand un salon sera choisi
+  const { data, error } = await db.rpc('hg_quiz_daily_bot');
+  if (error) throw new Error(error.message);
+  const q = data as QuizBot;
+  if (!q?.question) return; // pas de question aujourd'hui : rien ne part
+  // Réservation : une seule publication par jour, même si deux passages se chevauchent.
+  const { data: claimed, error: e2 } = await db.from('hg_bot_runs').upsert({ task: 'quiz_daily', period: q.day }, { onConflict: 'task,period', ignoreDuplicates: true }).select();
+  if (e2) throw new Error(e2.message);
+  if (!claimed?.length) return;
+  const tpl = await loadTemplates(db);
+  const y = q.yesterday;
+  const rappel = y && y.answered ? `Hier : ${y.correct} bonne${y.correct > 1 ? 's' : ''} réponse${y.correct > 1 ? 's' : ''} sur ${y.answered}${y.solution ? ` · Réponse : « ${String(y.solution).slice(0, 200)} »` : ''}` : '';
+  const vendredi = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', weekday: 'short' }).format(new Date()) === 'Fri';
+  const top = vendredi ? (q.top_streaks ?? []).filter((t) => t.days >= 3).slice(0, 3) : [];
+  const series = top.length ? `Plus longues séries en cours : ${top.map((t) => `${t.pseudo} ${t.days} j`).join(' · ')}` : '';
+  const recompense = `${q.bonus ?? 10} Paillettes pour ta série${q.question.reward ? ` (${q.question.reward} de plus si juste, si tu n'y as jamais répondu)` : ''}`;
+  const lien = link('jeux.html#jour');
+  const rendered = renderTemplate('quiz_daily', {
+    categorie: [q.question.category, DIFF_FR[q.question.difficulty] ?? q.question.difficulty].filter(Boolean).join(' · '),
+    question: String(q.question.prompt).slice(0, 500), recompense, ferme: 'demain à 6 h', rappel, series, lien: lien ?? '',
+  }, tpl);
+  const message = {
+    ...mentionFor(bot, 'quiz'),
+    embeds: [{ ...embedFrom(rendered), color: 0x9a88c4, url: lien,
+      fields: [{ name: 'Récompense', value: recompense.slice(0, 1024), inline: true }, { name: 'Ferme', value: 'demain à 6 h', inline: true }],
+      footer: { text: 'Humane Gang · réponds sur le site' }, timestamp: new Date().toISOString() }],
+    ...(lien ? { components: [{ type: 1, components: [{ type: 2, style: 5, label: 'Répondre sur le site', url: lien }] }] } : {}),
+  };
+  const results = await sendToChannels(channels, (id) => sendChannel(id, message), `question du jour ${q.day}`);
+  chanLog.push(...channelLog(results, `question du jour : ${q.day}`));
+  if (!results.some((r) => r.ok)) {
+    // Tous les salons ont échoué : la réservation est retirée pour que le passage suivant (dans l'heure) réessaie.
+    const { error: e3 } = await db.from('hg_bot_runs').delete().eq('task', 'quiz_daily').eq('period', q.day);
+    if (e3) console.error('[hg-cron] libération question du jour', e3);
+    throw new Error(results.map((r) => `salon ${r.id} : ${r.error}`).join(' ; '));
+  }
+  await db.from('hg_bot_runs').update({ message_ids: results.filter((r) => r.ok).map((r) => r.id) }).eq('task', 'quiz_daily').eq('period', q.day);
+  out.quiz_daily++;
+}
+
 /* ---------- Point d'entrée ---------- */
 
 /**
- * Point d'entrée : lance les quatre tâches, chacune dans son propre try (une panne n'arrête pas les autres).
+ * Point d'entrée : lance les cinq tâches, chacune dans son propre try (une panne n'arrête pas les autres).
  * Les rappels IRL et cadeaux ne tournent que si le bot a un jeton et si l'option n'est pas désactivée.
  * @param {Request} req Requête POST de pg_cron avec l'en-tête x-cron-secret.
  * @returns {Promise<Response>} Compteurs du passage ; code 500 seulement si une erreur inattendue remonte.
@@ -324,7 +395,7 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
 Deno.serve(async (req) => {
   if (!(await cronAuthorized(req, db))) return json({ error: 'Non autorisé' }, 401);
 
-  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, errors: 0 };
+  const out: Counters = { starts: 0, ends: 0, marked_late: 0, pending_no_bot: 0, irl_reminders: 0, ss_reminders: 0, quiz_daily: 0, errors: 0 };
   const attempts: Attempt[] = [];
   const chanLog: ChannelLogEntry[] = [];
   try {
@@ -344,15 +415,20 @@ Deno.serve(async (req) => {
       catch (e) { console.error('[hg-cron] rappels cadeau', e); out.errors++; }
     }
 
+    if (canSend && (bot as { notify?: Record<string, boolean> }).notify?.quiz_daily !== false) {
+      try { await quizDaily(out, bot, chanLog); }
+      catch (e) { console.error('[hg-cron] question du jour', e); out.errors++; }
+    }
+
     // Trace pour l'administrateur (historique du bot) : seulement quand il s'est passé quelque chose
-    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.errors;
+    const acted = out.starts + out.ends + out.marked_late + out.irl_reminders + out.ss_reminders + out.quiz_daily + out.errors;
     if (acted || attempts.length) {
       const { error: logErr } = await insertWithChannels((row) => db.from('hg_bot_log').insert(row), {
         kind: 'auto:cron',
-        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau`,
+        title: `Automatisations : ${out.starts} début(s), ${out.ends} fin(s), ${out.irl_reminders} rappel(s) de sortie, ${out.ss_reminders} rappel(s) de cadeau${out.quiz_daily ? ', question du jour publiée' : ''}`,
         body: out.errors ? `${out.errors} échec(s) : voir les journaux de la fonction hg-cron. Les envois en échec sont retentés au prochain passage.` : 'Passage automatique.',
         recipients: attempts,
-        channel: out.starts + out.ends > 0,
+        channel: out.starts + out.ends + out.quiz_daily > 0,
       }, chanLog);
       if (logErr) console.error('[hg-cron] journal', logErr);
     }

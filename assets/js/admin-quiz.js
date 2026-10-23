@@ -12,6 +12,7 @@ import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { confirmBox } from './ui-confirm.js';
 import { openDrawer } from './admin/ui/drawer.js';
 import { mountQuizStats } from './admin-quiz-stats.js';
+import { mountQuizJour } from './admin-quiz-jour.js';
 
 /* ---------- Constantes ---------- */
 // Types de réponse : [valeur en base, libellé].
@@ -48,7 +49,7 @@ const EXEMPLES = [
 /* ---------- État de la section ---------- */
 // root : conteneur ; rows : questions chargées ; rewards : récompenses par défaut ; settingsValue : valeur lue de hg_settings ;
 // diff / statut : filtres ; statsMounted : onglet statistiques déjà monté.
-const Q = { root: null, rows: [], rewards: { ...DEFAULT_REWARDS }, settingsValue: null, diff: '', statut: '', statsMounted: false };
+const Q = { root: null, rows: [], rewards: { ...DEFAULT_REWARDS }, settingsValue: null, diff: '', statut: '', statsMounted: false, jourMounted: false };
 
 /* ---------- Outils ---------- */
 /** Bouton en cours : désactivé avec indicateur (pas de second envoi). */
@@ -150,10 +151,12 @@ export async function mountQuizSection(container) {
   if (!container) return;
   Q.root = container;
   Q.statsMounted = false; // une nouvelle entrée dans la section repart d'un onglet statistiques vide
+  Q.jourMounted = false;
   container.innerHTML = `<div class="adq">
     <div class="adq-tabs" role="tablist" aria-label="Questions du gang">
       <button class="adq-tab" type="button" role="tab" id="adq-tab-q" aria-controls="adq-pan-q" aria-selected="true" data-adq="tab" data-tab="questions">Questions</button>
       <button class="adq-tab" type="button" role="tab" id="adq-tab-s" aria-controls="adq-pan-s" aria-selected="false" tabindex="-1" data-adq="tab" data-tab="stats">Réponses et statistiques</button>
+      <button class="adq-tab" type="button" role="tab" id="adq-tab-j" aria-controls="adq-pan-j" aria-selected="false" tabindex="-1" data-adq="tab" data-tab="jour">Question du jour</button>
     </div>
     <div class="adq-panel" id="adq-pan-q" role="tabpanel" aria-labelledby="adq-tab-q">
       <section class="card adq-rewards" aria-labelledby="adq-rw-title">
@@ -198,6 +201,9 @@ export async function mountQuizSection(container) {
     </div>
     <div class="adq-panel" id="adq-pan-s" role="tabpanel" aria-labelledby="adq-tab-s" hidden>
       <div id="adq-stats-root"></div>
+    </div>
+    <div class="adq-panel" id="adq-pan-j" role="tabpanel" aria-labelledby="adq-tab-j" hidden>
+      <div id="adq-jour-root"></div>
     </div>
   </div>`;
   // Les écouteurs ne sont posés qu'une fois : le conteneur reste dans la page entre deux entrées dans la section.
@@ -352,11 +358,11 @@ async function onClick(e) {
 
 /**
  * Affiche l'onglet demandé (questions ou statistiques). L'onglet statistiques n'est monté qu'une fois.
- * @param {'questions'|'stats'} name Onglet.
+ * @param {'questions'|'stats'|'jour'} name Onglet.
  */
 async function showTab(name) {
   const stats = name === 'stats';
-  for (const [tab, pan, on] of [['adq-tab-q', 'adq-pan-q', !stats], ['adq-tab-s', 'adq-pan-s', stats]]) {
+  for (const [tab, pan, on] of [['adq-tab-q', 'adq-pan-q', name === 'questions'], ['adq-tab-s', 'adq-pan-s', stats], ['adq-tab-j', 'adq-pan-j', name === 'jour']]) {
     const b = Q.root.querySelector(`#${tab}`);
     b.setAttribute('aria-selected', String(on));
     b.tabIndex = on ? 0 : -1;
@@ -366,6 +372,10 @@ async function showTab(name) {
   if (stats && !Q.statsMounted) {
     Q.statsMounted = true;
     await mountQuizStats(Q.root.querySelector('#adq-stats-root'));
+  }
+  if (name === 'jour' && !Q.jourMounted) { // question du jour (J4) : calendrier, monté à la première ouverture
+    Q.jourMounted = true;
+    await mountQuizJour(Q.root.querySelector('#adq-jour-root'));
   }
 }
 

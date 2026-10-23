@@ -1,0 +1,44 @@
+/* ===== Humane Gang — onglet « Sutom » (J8) de la page Jeux ===== */
+.su { display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+.su p { margin: 0; }
+.su-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.su-h { font-family: var(--font-display); font-weight: 400; font-size: 26px; margin: 0; }
+.su-h3 { font-size: 18px; margin: 0; }
+.su-serie { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: var(--amber); font-size: 14px; flex: none; }
+/* Grille : la case s'adapte à la longueur du mot pour tenir dans 360 px. */
+.su-grid { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.su-row { display: flex; gap: 4px; }
+.su-cell {
+  --s: min(38px, calc((100vw - 40px - (var(--n) - 1) * 4px) / var(--n)));
+  width: var(--s); height: var(--s); display: grid; place-items: center; position: relative;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-display); font-size: calc(var(--s) * .52); text-transform: uppercase;
+}
+.su-cell.is-typed { border-color: var(--border-strong); }
+.su-cell.is-2 { background: #B70127; border-color: #B70127; color: #fff; }               /* carré rouge : bien placée */
+.su-cell.is-1 { background: var(--surface-2, #1F1F23); border-color: transparent; }       /* rond jaune : mal placée */
+.su-cell.is-1::before { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #FCA301; }
+.su-cell.is-1 .su-l { position: relative; color: #121212; }
+.su-cell.is-0 { background: var(--surface-2, #1F1F23); border-color: transparent; color: var(--muted); }
+.su-legend { display: flex; justify-content: center; gap: 14px; }
+.su-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.su-sq { width: 14px; height: 14px; background: #B70127; display: inline-block; }
+.su-ci { width: 14px; height: 14px; border-radius: 50%; background: #FCA301; display: inline-block; }
+.su-msg { min-height: 1.4em; text-align: center; }
+.su-end { display: flex; flex-direction: column; gap: 8px; }
+.su-end.is-ok { background: var(--sage-soft); border-color: var(--sage); }
+.su-word { font-family: var(--font-display); letter-spacing: 1px; }
+.su-gain { color: var(--sand); font-weight: 700; }
+/* Clavier AZERTY : 10 touches par rangée tiennent dans 360 px (cibles de 44 px de haut). */
+.su-kbd { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.su-krow { display: flex; gap: 4px; justify-content: center; }
+.su-key {
+  font: inherit; font-weight: 700; flex: 0 1 34px; min-width: 0; height: 44px; border-radius: 6px; border: 0; cursor: pointer;
+  background: var(--border-strong); color: var(--text); padding: 0;
+}
+.su-key.su-wide { flex: 0 1 auto; padding: 0 10px; font-size: 12px; }
+.su-enter { background: var(--accent); color: var(--accent-text); }
+.su-key.is-2 { background: #B70127; color: #fff; }
+.su-key.is-1 { background: #FCA301; color: #121212; }
+.su-key.is-0 { background: var(--bg); color: var(--muted); }
+.su-key:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
