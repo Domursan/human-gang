@@ -43,6 +43,7 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | **à appliquer** (après 042) |
 | `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | **à appliquer** (après 069 ; facultatif : les fonctions savent s'en passer) |
 | `071_boosters_admin.sql` | Boosters paramétrables par l'admin et le Staff « cartes » : raretés et séries exclues par type (`excluded_rarities`, `excluded_sets`), RPC `hg_booster_type_save` et `hg_booster_type_stats`, journal des ouvertures `hg_booster_opens` ; Collectionneur sans identité ni série « Les OG » (`gang-membres`) | **à appliquer** (après 069) |
+| `073_securite_profils_staff.sql` | Sécurité (audit du 23/10, paquet B) : garde des profils élargie (I1, I5), fantôme rattaché seulement par lien nominatif (I2), plus d'accès direct du Staff aux messages (I4) ni d'écriture directe sur l'économie (M5), audit `hg_wallets`, bornes des récompenses `hg_settings`, clés inconnues réservées à l'admin, buckets `photos`/`hg-assets`/`d-files`, `hg_backup_027` retirée | **à appliquer** (après 072) |
 
 ## Les trous et les doublons
 

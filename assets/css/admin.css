@@ -23,6 +23,7 @@
 .field.narrow { max-width: 360px; }
 fieldset.toggles { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
 fieldset.toggles legend { margin-bottom: 10px; padding: 0; }
+fieldset.acc-lock { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .field input[readonly] { color: var(--muted); background: var(--surface-2); }
 
 /* ---------- Interrupteurs ---------- */

@@ -18,8 +18,12 @@ import { isAdminView } from '../admin/perms.js';
 export function profileHtml() {
   const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
   const color = /^#[0-9a-f]{6}$/i.test(p.color || '') ? p.color : '#9E3543';
+  // Le profil d'un admin ne se modifie que par un admin (garde hg_profiles_guard, migration 073) : lecture seule pour le Staff.
+  const locked = !!p.is_admin && !isAdminView();
   return `
     <form class="stack" data-form="profile" novalidate>
+      ${locked ? '<p class="small muted" role="note">Profil d’un administrateur : seul un admin peut le modifier.</p>' : ''}
+      <fieldset class="acc-lock"${locked ? ' disabled' : ''}>
       <div class="grid-2">
         <div class="field"><label for="ap-pseudo">Pseudo</label><input id="ap-pseudo" name="pseudo" required minlength="2" maxlength="32" value="${esc(p.pseudo)}"></div>
         <div class="field"><label for="ap-color">Couleur</label>
@@ -42,6 +46,7 @@ export function profileHtml() {
       </fieldset>
       <p class="small muted">Identifiant : <span class="code acc-uid">${esc(p.id)}</span>${ghost ? ' · fantôme (pas encore inscrit)' : ` · profil créé le ${esc(fmtDateTime(p.created_at))}`}${p.updated_at ? ` · modifié le ${esc(fmtDateTime(p.updated_at))}` : ''}</p>
       <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer le profil</button></div>
+      </fieldset>
     </form>`;
 }
 /**
@@ -53,6 +58,7 @@ export function profileHtml() {
  */
 export async function saveProfile(form, btn) {
   const p = A.d.profile, self = p.id === A.me.id, ghost = !!p.is_ghost;
+  if (p.is_admin && !isAdminView()) throw new Error('Seul un admin peut modifier le profil d’un admin.');
   const pseudo = form.pseudo.value.trim();
   if (pseudo.length < 2 || pseudo.length > 32) throw new Error('Le pseudo doit faire entre 2 et 32 caractères.');
   const discord = form.discord_id.value.trim();

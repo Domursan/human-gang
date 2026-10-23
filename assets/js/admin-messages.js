@@ -2,11 +2,12 @@
 // Communication › Messagerie : conversations en colonne 2 (createList, filtres Toutes / Directes / Secret Santa),
 // lecture en détail dans la zone principale (createThread en lecture seule). Route : #communication/messagerie[/<id>].
 // Métadonnées des conversations via rpc hg_admin_conversations(). Les messages ne sont lus que par rpc
-// hg_admin_read_conversation, qui journalise chaque lecture ; la suppression d'un message passe par hg_messages.
+// hg_admin_read_conversation, qui journalise chaque lecture ; la suppression d'un message passe par hg_admin_message_remove (journal admin).
 // L'admin voit les vrais expéditeurs, y compris le Santa.
 // Dépendances : core.js (Supabase, toast), icons.js (icône corbeille), admin/ui/list.js et admin/ui/thread.js
 // (liste et fil), admin/shell.js (boutons d'en-tête), ui-confirm.js (confirmation de suppression).
-// Tables et RPC : hg_staff_directory, hg_admin_conversations, hg_admin_read_conversation, hg_conversations, hg_messages.
+// RPC seulement (aucun accès direct aux tables) : hg_staff_directory, hg_admin_conversations, hg_admin_read_conversation,
+// hg_admin_conversation_info, hg_admin_message_remove.
 // Exporte : mountMessagesSection (zone de lecture), listMessages (colonne 2), openMessages (affichage à chaque visite).
 import { sb, toast, errMsg, esc, $ } from './core.js';
 import { svg } from './icons.js';
@@ -170,7 +171,8 @@ async function openConv(id) {
   if (M.reader) M.reader.innerHTML = '<div class="empty">Chargement des messages…</div>';
   try {
     const [conv, msgs] = await Promise.all([
-      sb.from('hg_conversations').select('id, kind, santa_id, target_id, edition_id, created_at').eq('id', id).maybeSingle(),
+      // En-tête par RPC : le Staff n'a plus d'accès direct aux tables de la messagerie (migration 073).
+      sb.rpc('hg_admin_conversation_info', { p_conv: id }).then((r) => ({ data: r.data?.[0] ?? null, error: r.error })),
       fetchMessages(id, 0),
     ]);
     if (token !== M.token) return;
@@ -223,9 +225,9 @@ async function del(m, btn) {
   if (!(await confirmDelete(m.body))) return;
   if (btn) btn.disabled = true;
   try {
-    const gone = check(await sb.from('hg_messages').delete().eq('id', m.id).select('id'));
-    // Pas d'erreur mais aucune ligne supprimée : la base refuse (droits RLS). On le signale comme un échec.
-    if (Array.isArray(gone) && !gone.length) throw new Error('suppression refusée');
+    // Retrait par RPC, noté dans le journal admin (hg_admin_message_remove, migration 073).
+    const ok = check(await sb.rpc('hg_admin_message_remove', { p_message: m.id }));
+    if (ok !== true) throw new Error('suppression refusée');
     M.msgs = M.msgs.filter((x) => x.id !== m.id);
     const c = M.convs.find((x) => x.id === M.sel);
     if (c) c.messages = Math.max(0, (c.messages || 1) - 1);

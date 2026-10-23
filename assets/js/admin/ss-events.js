@@ -304,7 +304,9 @@ async function deleteEdition(btn, ed) {
   const count = (table) => sb.from(table).select('*', { count: 'exact', head: true }).eq('edition_id', ed.id)
     .then((r) => { if (r.error) throw r.error; return r.count ?? 0; });
   let assign, wishes, convs;
-  try { [assign, wishes, convs] = await Promise.all([count('hg_ss_assignments'), count('hg_ss_wishes'), count('hg_conversations')]); }
+  // Conversations : par RPC (le Staff n'a plus d'accès direct à hg_conversations, migration 073).
+  const countConvs = () => sb.rpc('hg_ss_edition_conv_count', { p_edition: ed.id }).then((r) => { if (r.error) throw r.error; return r.data ?? 0; });
+  try { [assign, wishes, convs] = await Promise.all([count('hg_ss_assignments'), count('hg_ss_wishes'), countConvs()]); }
   catch (e) { toast(errMsg(e), 'error'); return; }
   const parts = S.participants.length, ex = S.exclusions.length;
   const detail = `Effacé avec l'édition : ${parts} inscrit${parts > 1 ? 's' : ''}, ${ex} exclusion${ex > 1 ? 's' : ''}, ${assign} attribution${assign > 1 ? 's' : ''} du tirage, ${wishes} vœu${wishes > 1 ? 'x' : ''}, ${convs} conversation${convs > 1 ? 's' : ''} de l'édition avec tous leurs messages.`;

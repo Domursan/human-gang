@@ -15,6 +15,7 @@ const NOTE = 'Test CI staff';
 // Appels interdits au Staff { cartes, journal } : RPC et tables des sections qu'il n'a pas.
 const RPC_INTERDITS = ['hg_admin_accounts', 'hg_admin_ghosts', 'hg_members', 'hg_staff_list', 'hg_staff_set', 'hg_ghost_create',
   'hg_ghost_invite', 'hg_ghost_merge', 'hg_ghost_suggestions', 'hg_admin_conversations', 'hg_admin_read_conversation',
+  'hg_admin_conversation_info', 'hg_admin_message_remove',
   'hg_ss_manual_draw', 'hg_ss_draw', 'hg_dyn_leaderboard', 'hg_trade_cancel'];
 // hg_badges, hg_user_badges et hg_pages ne sont pas listées : le contrôle des badges et l'accès aux pages
 // tournent pour tout membre sur toutes les pages (core/badges.js, core/pages-access.js), hors du panel.

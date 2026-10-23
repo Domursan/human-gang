@@ -1,6 +1,7 @@
 // ===== Humane Gang — compression d'image côté client (photos et administration) =====
 // Redimensionne le côté le plus long à MAX_SIDE px et réencode en WebP (qualité 0.85).
-// Repli JPEG si le navigateur ne sait pas écrire de WebP. Les GIF (animés) et SVG passent tels quels.
+// Repli JPEG si le navigateur ne sait pas écrire de WebP. Les GIF (animés) passent tels quels ; les SVG sont convertis
+// en image (le stockage hg-assets refuse les SVG depuis la migration 073 : un SVG peut contenir du script).
 // Une image déjà petite et plus légère en JPEG/WebP d'origine est envoyée telle quelle.
 /*
  * Rôle : réduit le poids des photos avant de les envoyer au stockage (photos des membres, images de l'administration).
@@ -17,8 +18,8 @@ export const MAX_SIDE = 1600;
 export const WEBP_QUALITY = 0.85;
 /** Qualité de l'encodage JPEG de repli (0 à 1). */
 const JPEG_QUALITY = 0.85;
-/** Types non réencodés : un GIF pourrait perdre son animation, un SVG est déjà du vectoriel. */
-const KEEP_AS_IS = new Set(['image/gif', 'image/svg+xml']);
+/** Types non réencodés : un GIF pourrait perdre son animation. Un SVG, lui, est toujours converti en WebP (ou JPEG). */
+const KEEP_AS_IS = new Set(['image/gif']);
 /** Extension de fichier pour chaque type MIME accepté. */
 const EXT = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/svg+xml': 'svg' };
 /** Toutes les extensions possibles pour une image envoyée (utilisé pour nettoyer les anciennes versions). */
@@ -65,7 +66,8 @@ export async function prepareImage(file, { max = MAX_SIDE, quality = WEBP_QUALIT
   const src = await decode(file);
   const w0 = src.width, h0 = src.height;
   if (!w0 || !h0) throw new Error(`Image illisible : ${file.name}`);
-  const k = Math.min(1, max / Math.max(w0, h0));
+  // Un SVG est vectoriel : on le dessine à la taille maximale (jamais à sa petite taille nominale, ex. 24 px).
+  const k = file.type === 'image/svg+xml' ? max / Math.max(w0, h0) : Math.min(1, max / Math.max(w0, h0));
   const w = Math.round(w0 * k), h = Math.round(h0 * k);
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;

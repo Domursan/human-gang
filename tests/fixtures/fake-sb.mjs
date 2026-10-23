@@ -692,6 +692,20 @@ export function createClient() {
         window.__READS = (window.__READS || 0) + 1;
         return { data: DB.hg_messages.filter((m) => m.conversation_id === args.p_conv && m.id > args.p_after).slice(0, args.p_limit), error: null };
       }
+      // Inscription : S.joinError simule un refus de hg_join (ex. pseudo réservé à un fantôme, migration 073).
+      if (fn === 'hg_join' && S.joinError) return { data: null, error: { message: S.joinError, code: 'P0001' } };
+      // Migration 073 : en-tête d'une conversation, retrait d'un message, comptage par édition (le Staff n'a plus d'accès direct aux tables).
+      if (fn === 'hg_admin_conversation_info') {
+        const c = (DB.hg_conversations || []).find((x) => x.id === args.p_conv) || (S.convs || []).find((x) => x.id === args.p_conv);
+        return { data: c ? [{ id: c.id, kind: c.kind, santa_id: c.santa_id ?? null, target_id: c.target_id ?? null, edition_id: c.edition_id ?? null, created_at: c.created_at ?? null }] : [], error: null };
+      }
+      if (fn === 'hg_admin_message_remove') {
+        const i = (DB.hg_messages || []).findIndex((m) => m.id === args.p_message);
+        if (i < 0) return { data: null, error: { message: 'Message introuvable' } };
+        DB.hg_messages.splice(i, 1);
+        return { data: true, error: null };
+      }
+      if (fn === 'hg_ss_edition_conv_count') return { data: (DB.hg_conversations || []).filter((c) => c.edition_id === args.p_edition).length, error: null };
       // Doublon de hg_staff_directory : cette branche n'est jamais atteinte, la première définition répond d'abord.
       if (fn === 'hg_staff_directory') return { data: DB.hg_profiles.map((p) => ({ id: p.id, pseudo: p.pseudo, avatar_url: null, color: p.color, is_ghost: !!p.is_ghost, joined_on: p.joined_on || p.created_at })), error: null };
       // Comptes du panel admin : e-mail fabriqué à partir du pseudo.

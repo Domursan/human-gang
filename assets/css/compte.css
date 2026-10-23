@@ -179,3 +179,6 @@
 .lvl-progress { width: 100%; height: 8px; }
 .lvl-prog-txt { font-size: 13px; color: var(--muted); }
 html[data-mode="clair"] .medal-lvl { color: #FFFFFF; }
+
+/* Champ en lecture seule (ID Discord : enregistré par le Staff, migration 073) */
+#pf-discord[readonly] { color: var(--muted); background: var(--surface-2); cursor: default; }

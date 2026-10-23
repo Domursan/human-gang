@@ -444,8 +444,8 @@ async function renderMember(user) {
         <label class="check"><input type="checkbox" id="pf-share" ${p.share_birthday ? 'checked' : ''}> <span>Partager le jour et le mois de mon anniversaire avec le gang (accueil, bot) ${tagPublic}</span></label>
         <div class="field">
           <label for="pf-discord">ID Discord ${tagPrivate}</label>
-          <input id="pf-discord" inputmode="numeric" pattern="\\d{15,21}" maxlength="21" value="${esc(p.discord_id || '')}" placeholder="ex. 123456789012345678">
-          <p class="small muted hint">Sert uniquement au bot pour t'envoyer des messages privés. Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l'identifiant ».</p>
+          <input id="pf-discord" inputmode="numeric" readonly aria-readonly="true" aria-describedby="pf-discord-hint" value="${esc(p.discord_id || '')}" placeholder="Pas encore enregistré">
+          <p class="small muted hint" id="pf-discord-hint">Sert uniquement au bot pour t’envoyer des messages privés. Pour ta sécurité, seul le Staff l’enregistre ou le modifie : ${p.discord_id ? 'pour le changer' : 'pour l’ajouter'}, <a href="assistance.html">demande au Staff</a> en lui donnant ton identifiant (Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l’identifiant »).</p>
         </div>
         <label class="check"><input type="checkbox" id="pf-bot" ${p.bot_optin ? 'checked' : ''}> <span>Recevoir les messages du bot Discord (tirage, cadeaux, sorties, rappels)</span></label>
         <label class="check"><input type="checkbox" id="pf-remind-irl" ${p.remind_irl ? 'checked' : ''}> <span>Me rappeler mes sorties IRL par message Discord, 24 h et 2 h avant</span></label>
@@ -551,8 +551,8 @@ function refreshIdentity() {
 
 /* ---------- Profil ---------- */
 /**
- * Formulaire « Profil » : pseudo, couleur, anniversaire, identifiant Discord et options du bot.
- * Vérifie le pseudo et le format de l'identifiant Discord (15 à 21 chiffres) avant l'envoi.
+ * Formulaire « Profil » : pseudo, couleur, anniversaire et options du bot.
+ * L'identifiant Discord est affiché en lecture seule : seul le Staff « membres » le modifie (garde hg_profiles_guard, 073).
  */
 function bindProfile() {
   const form = $('#profile-form');
@@ -560,15 +560,12 @@ function bindProfile() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const pseudo = $('#pf-pseudo').value.trim();
-    const discord = $('#pf-discord').value.replace(/\s/g, '');
     if (pseudo.length < 2 || pseudo.length > 32) return formError(form, 'Le pseudo doit faire entre 2 et 32 caractères.');
-    if (discord && !/^\d{15,21}$/.test(discord)) return formError(form, 'L\'ID Discord est un nombre de 15 à 21 chiffres (pas ton nom d\'utilisateur).');
     const patch = {
       pseudo,
       color: $('#pf-color').value,
       birthday: $('#pf-birthday').value || null,
       share_birthday: $('#pf-share').checked,
-      discord_id: discord || null,
       bot_optin: $('#pf-bot').checked,
       remind_irl: $('#pf-remind-irl').checked,
       notify_card_wish: $('#pf-notify-wish').checked,
