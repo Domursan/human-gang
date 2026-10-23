@@ -36,6 +36,7 @@ const NOTIFY = [
   ['trade_offer', 'MP : nouvelle offre d\'échange', 'MP au destinataire d\'une offre ou contre-proposition'],
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
   ['card_drop', 'Drop lancé', 'annonce dans le salon quand un drop est lancé avec « Annoncer sur Discord »'],
+  ['quiz_daily', 'Publier la question du jour', 'chaque matin dans le salon « Question du jour » (à couper pendant les vacances)'],
 ];
 // Seules les clés de NOTIFY, pour parcourir les cases à cocher.
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
@@ -43,7 +44,7 @@ const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 const MENTION_TYPES = [
   ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
   ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
-  ['card_drop', 'Drop lancé'],
+  ['card_drop', 'Drop lancé'], ['quiz', 'Question du jour'],
 ];
 // Modes de mention possibles pour une annonce : aucune, le rôle, ou @everyone.
 const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];
@@ -386,7 +387,7 @@ const SUPPORT_TXT = {
   delai_reponse_jours: ['Délai de réponse annoncé (jours)', 'Affiché au visiteur après l\'envoi. Défaut : 30.'],
 };
 // Valeur par défaut du planning : envoi des anniversaires à 8 h (heure suisse).
-const PLANNING_DEF = { anniversaires_heure_locale: 8 };
+const PLANNING_DEF = { anniversaires_heure_locale: 8, quiz_jour_heure_locale: 9 };
 
 /**
  * HTML d'un champ numérique de réglage : libellé, aide, et bornes min et max acceptées.
@@ -478,6 +479,16 @@ function planningCardHtml() {
             <label for="planning-birthday">Heure d'envoi (heure suisse)</label>
             <select id="planning-birthday" name="anniversaires_heure_locale" aria-describedby="planning-birthday-h">${opts}</select>
             <p class="small muted" id="planning-birthday-h">Fixe toute l'année : les anniversaires partent à cette heure (HH h 05), heure suisse, en été comme en hiver. Défaut : 8 h.</p>
+          </div>
+        </div>
+      </div>
+      ${grpOpen('planning', 'quiz')}
+        ${grpHead('planning', 'quiz', 'Question du jour')}
+        <div class="bot-grp-grid is-1">
+          <div class="field">
+            <label for="planning-quiz">Heure de publication (heure suisse)</label>
+            <select id="planning-quiz" name="quiz_jour_heure_locale" aria-describedby="planning-quiz-h">${opts}</select>
+            <p class="small muted" id="planning-quiz-h">La question du jour change à 6 h ; le bot la publie à cette heure, une fois par jour. Défaut : 9 h.</p>
           </div>
         </div>
       </div>
@@ -1124,20 +1135,25 @@ export function mountBotSection(container) {
     });
   });
 
-  /** Heure d'envoi des anniversaires en vigueur (0 à 23), ou le défaut si la valeur enregistrée est invalide. */
-  const storedHeure = () => {
-    const h = S.planning?.anniversaires_heure_locale;
-    return Number.isInteger(h) && h >= 0 && h <= 23 ? h : PLANNING_DEF.anniversaires_heure_locale;
+  /** Heure en vigueur d'une tâche (0 à 23), ou le défaut si la valeur enregistrée est invalide. */
+  const storedHeure = (k = 'anniversaires_heure_locale') => {
+    const h = S.planning?.[k];
+    return Number.isInteger(h) && h >= 0 && h <= 23 ? h : PLANNING_DEF[k];
   };
-  /** Remplit le formulaire du planning avec l'heure en vigueur. */
-  const fillPlanning = () => { planForm.anniversaires_heure_locale.value = String(storedHeure()); };
+  /** Remplit le formulaire du planning avec les heures en vigueur. */
+  const fillPlanning = () => {
+    planForm.anniversaires_heure_locale.value = String(storedHeure());
+    planForm.quiz_jour_heure_locale.value = String(storedHeure('quiz_jour_heure_locale'));
+  };
   /**
-   * Enregistre hg_settings.planning (heure d'envoi des anniversaires), puis recale le formulaire.
-   * @param {number} h Heure, de 0 à 23.
+   * Enregistre hg_settings.planning (heures des anniversaires et de la question du jour), puis recale le formulaire.
+   * Les autres clés du planning sont conservées.
+   * @param {number} h Heure des anniversaires, de 0 à 23.
+   * @param {number} [q] Heure de la question du jour, de 0 à 23 (défaut : valeur en vigueur).
    */
-  async function savePlanning(h) {
+  async function savePlanning(h, q = storedHeure('quiz_jour_heure_locale')) {
     assertLoaded();
-    const next = { anniversaires_heure_locale: h };
+    const next = { ...(S.planning || {}), anniversaires_heure_locale: h, quiz_jour_heure_locale: q };
     check(await sb.from('hg_settings').upsert({ key: 'planning', value: next, updated_at: new Date().toISOString() }));
     S.planning = next;
     fillPlanning();
@@ -1146,7 +1162,7 @@ export function mountBotSection(container) {
   planForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
     busy(ev.submitter ?? ev.currentTarget, async () => {
-      await savePlanning(Number(planForm.anniversaires_heure_locale.value));
+      await savePlanning(Number(planForm.anniversaires_heure_locale.value), Number(planForm.quiz_jour_heure_locale.value));
       toast('Planning enregistré', 'ok');
     });
   });
@@ -1166,7 +1182,8 @@ export function mountBotSection(container) {
         for (const k of SUPPORT_GROUPS[g].keys) v[k] = SUPPORT_DEF[k];
         await saveSupport(v);
       } else {
-        await savePlanning(PLANNING_DEF.anniversaires_heure_locale);
+        if (g === 'quiz') await savePlanning(storedHeure(), PLANNING_DEF.quiz_jour_heure_locale);
+        else await savePlanning(PLANNING_DEF.anniversaires_heure_locale);
       }
       toast('Valeurs par défaut rétablies', 'ok');
     });
@@ -1909,7 +1926,7 @@ export function mountBotSection(container) {
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = normalizeBot(get('bot') ?? S.bot);
       // Notifications activées par défaut ; l'échange conclu reste coupé par défaut. Les choix enregistrés priment.
-      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, card_drop: true, ...(S.bot.notify || {}) };
+      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, card_drop: true, quiz_daily: true, ...(S.bot.notify || {}) };
       S.support = get('support') ?? {};
       S.planning = get('planning') ?? {};
       const c = get('bot_templates');

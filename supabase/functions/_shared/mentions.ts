@@ -12,7 +12,7 @@
 import { isSnowflake } from './discord.ts';
 
 /** Types d'annonce qui ont leur propre réglage de mention. */
-export const MENTION_TYPES = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade', 'card_drop'] as const;
+export const MENTION_TYPES = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade', 'card_drop', 'quiz'] as const;
 export type MentionType = typeof MENTION_TYPES[number];
 /** Mode de mention possible pour un type d'annonce. */
 export type MentionMode = 'none' | 'role' | 'everyone';

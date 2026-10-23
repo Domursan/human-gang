@@ -1,0 +1,14 @@
+/* ===== Humane Gang — page Jeux (jeux.html) : version minimale du paquet xJ2, remplacée par celle de xJ1 ===== */
+#app [hidden] { display: none !important; }
+.jeux-head { margin-bottom: 8px; }
+/* Barre d'onglets : défile seule sur téléphone, sans faire défiler la page. */
+.jeux-tabs { display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 2px 2px 10px; margin-bottom: 8px; max-width: 100%; }
+.jeux-tabs::-webkit-scrollbar { display: none; }
+.jeux-tab {
+  font: inherit; font-size: 14px; min-height: 44px; padding: 8px 16px; border-radius: 999px; white-space: nowrap; flex: none;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer;
+}
+.jeux-tab[aria-selected="true"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 700; }
+.jeux-tab:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.jeux-panel:focus-visible { outline: none; }
+.jeux-wait { padding: 24px 0; }

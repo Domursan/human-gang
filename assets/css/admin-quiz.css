@@ -64,3 +64,14 @@
   .adq-choice-ok, .adq-choice .btn { justify-self: start; }
   .adq-count { margin: 0; }
 }
+
+/* ---------- Onglet « Question du jour » (J4, admin-quiz-jour.js) ---------- */
+.adqj-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.adqj-row { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 14px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: start; }
+.adqj-row.is-today { background: var(--surface-2, #1F1F23); border-radius: 10px; padding: 10px; }
+.adqj-row.is-past { opacity: .8; }
+.adqj-day { font-weight: 700; }
+.adqj-q { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.adqj-plan { grid-column: 2; display: flex; gap: 8px; flex-wrap: wrap; }
+.adqj-plan select { flex: 1; min-width: 0; max-width: 100%; }
+@media (max-width: 600px) { .adqj-row { grid-template-columns: minmax(0, 1fr); } .adqj-plan { grid-column: 1; } }

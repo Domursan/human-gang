@@ -52,7 +52,7 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * mobile / dpr : téléphone émulé (isMobile, deviceScaleFactor), ex. { mobile: true, dpr: 2.6 }.
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
  */
-async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1 } = {}) {
+async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mjs', scenario = {}, width = 1280, height = 900, reducedMotion = 'no-preference', hash = '', touch = false, now = null, mobile = false, dpr = 1, init = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch || mobile, isMobile: mobile, deviceScaleFactor: dpr }); // touch : écran tactile (pointeur grossier)
   await ctx.addInitScript((s) => {
     window.__SCN = s;
@@ -63,6 +63,8 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       if (!s.intro) localStorage.setItem('hg_intro_day', `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
     } catch (e) { /* stockage bloqué : sans importance pour le test */ }
   }, scenario);
+  // init : script supplémentaire (fichier de tests/fixtures/), exécuté avant la page (ex. fake-jeux.js : RPC des jeux).
+  if (init) await ctx.addInitScript({ path: path.join(FIXTURES, init) });
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
   // Toute requête de la page passe ici : le site est servi depuis le dépôt, le faux Supabase remplace
   // supabase-js, les autres hôtes externes répondent vide (204). Les requêtes vers *.supabase.co sont notées dans EXTERNAL.

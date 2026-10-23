@@ -19,6 +19,7 @@ export const SECTION_PERM = {
   souvenirs: 'souvenirs',
   reglages: 'reglages',
   cartes: 'cartes', drops: 'cartes', defis: 'cartes', quiz: 'quiz',
+  pronos: 'pronos', sutom: 'souvenirs', // jeux du jour (migration 084) : pronostics (J5), Sutom du gang (J8)
   idees: 'support', assistance: 'support',
   messagerie: 'messages',
   journal: 'journal',
@@ -97,6 +98,8 @@ export const DOMAINS = [
     ]),
     ...under('Jeux', [
       { id: 'questions', label: 'Questions du gang', section: 'quiz' },
+      { id: 'pronos', label: 'Pronostics', section: 'pronos' },
+      { id: 'sutom', label: 'Sutom du gang', section: 'sutom' },
       { id: 'secrets', label: 'Secrets', section: 'eggs' },
     ]),
   ] },

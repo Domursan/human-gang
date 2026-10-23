@@ -1,0 +1,18 @@
+/* ===== Humane Gang — administration : Pronostics (admin-pronos.js) et Sutom du gang (admin-sutom.js) ===== */
+.adp-comps { display: flex; flex-wrap: wrap; gap: 8px; }
+.adp-comp { font: inherit; font-size: 13px; min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
+.adp-comp[aria-pressed="true"] { background: var(--text); color: var(--bg); font-weight: 700; }
+.adp-form, .ads-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: end; }
+.adp-form .btn-row, .ads-form .btn-row { grid-column: 1 / -1; }
+.adp-items { list-style: none; margin: 0; padding: 0; }
+.adp-item { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.adp-item:last-child { border-bottom: 0; }
+.adp-item.is-todo { border-left: 3px solid var(--amber); padding-left: 10px; }
+.adp-item p { margin: 0; overflow-wrap: anywhere; }
+.adp-between { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.adp-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.adp-actions .input { width: auto; max-width: 100%; }
+.adp-err { color: var(--rust); }
+.ads-list { list-style: none; margin: 0; padding: 0; }
+.ads-list li { padding: 8px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.ads-list li.is-off { opacity: .55; }
