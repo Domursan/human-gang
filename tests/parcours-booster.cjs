@@ -1,7 +1,6 @@
 // Parcours : ouvrir le booster gratuit dans cartes.html.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (copie du faux de visuel-carte) gère les données de la
-// collection et hg_open_booster. Le code appelle d'abord hg_open_booster_req ; le faux ne le connaît pas,
-// il renvoie null, et le site retombe sur hg_open_booster (comportement attendu, testé ici aussi).
+// collection et hg_open_booster_req. Le site n'appelle plus l'ancienne hg_open_booster (migration 074 : plus de repli).
 // Deux cas : animation normale (tirage « en cours », puis « Tout révéler ») et préférence
 // « réduire les animations » (cartes affichées tout de suite).
 // Lancer : node tests/parcours-booster.cjs
@@ -26,8 +25,9 @@ const GRILLE = '#cartes-reveal .cartes-booster-grid .hgc'; // grille affichée s
   check(/Meilleure carte/.test(await p.textContent('#cartes-reveal').catch(() => '')), 'meilleure carte annoncée');
   check(await p.isVisible('[data-action=close-reveal]'), 'bouton « Fermer » proposé en fin de tirage');
   const journal = await log(p);
-  const ouverture = journal.find((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster');
-  check(!!ouverture && ouverture[2]?.p_free === true, 'ouverture gratuite envoyée à hg_open_booster (repli)');
+  const ouverture = journal.find((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster_req');
+  check(!!ouverture && ouverture[2]?.p_free === true && typeof ouverture[2]?.p_request === 'string', 'ouverture gratuite envoyée à hg_open_booster_req (p_free, id de demande)');
+  check(!journal.some((l) => l[0] === 'rpc' && l[1] === 'hg_open_booster'), 'pas d\'appel à l\'ancienne hg_open_booster');
   check(!p.errs.length, 'animation normale : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 

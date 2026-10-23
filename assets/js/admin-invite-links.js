@@ -207,8 +207,8 @@ function fieldsHtml() {
     <div class="field il-label"><label for="il-label">Libellé</label>
       <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
     <div class="field"><label for="il-max">Limite de codes</label>
-      <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="Illimité"></div>
-    <div class="field"><label for="il-exp">Expire le <span class="muted small">(option)</span>${godTag()}</label>
+      <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="20 par défaut"></div>
+    <div class="field"><label for="il-exp">Expire le <span class="muted small">(30 jours par défaut)</span>${godTag()}</label>
       <input id="il-exp" name="expires_at" type="date" ${godLimitAttr('min', today)}></div>`;
 }
 

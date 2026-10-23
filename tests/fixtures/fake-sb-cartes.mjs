@@ -652,14 +652,16 @@ export function createClient() {
         for (const c of cards) DB.hg_card_copies.push({ id: c.copy_id, card_id: c.card_id, owner_id: ME, shiny: c.shiny, serial: null, source: 'booster', obtained_at: iso(0), locked_trade: null, recycled_at: null });
         return { data: { cards, best, demandees: 5, livrees: 5, offert: !!args.p_offert, offerts_restants: w.gift_boosters }, error: null };
       }
-      // Sans le scénario reqRpc, la nouvelle fonction « n'existe pas » : erreur PGRST202 (comme la base sans la migration), pour tester le repli.
-      if (fn === 'hg_open_booster_req') return { data: null, error: { code: 'PGRST202', message: 'Could not find the function public.hg_open_booster_req' } };
-      // Ancienne ouverture de booster, sans requête : débite 100 Paillettes sauf booster gratuit, renvoie toujours les cinq mêmes cartes.
-      if (fn === 'hg_open_booster') { const w = DB.hg_wallets[0]; if (S.paidFail && !args.p_free) return { data: null, error: { message: 'Pas assez de Paillettes (il en faut 100)' } };
+      // Ancienne ouverture hg_open_booster : chemin payant refusé depuis la migration 074 (le front ne l'appelle plus).
+      if (fn === 'hg_open_booster' && !args.p_free) return { data: null, error: { message: 'Achète tes boosters dans la Boutique' } };
+      // Sans le scénario reqRpc : hg_open_booster_req simplifiée (booster gratuit ou offert), renvoie toujours les cinq mêmes cartes ;
+      // le chemin payant est refusé comme en production (069). hg_open_booster(p_free => true) y mène aussi (074).
+      if (fn === 'hg_open_booster_req' || fn === 'hg_open_booster') { const w = DB.hg_wallets[0];
+        if (!args.p_free && !args.p_offert) return { data: null, error: { message: 'Les boosters s\u2019achètent maintenant dans la Boutique' } };
         const pool = DB.hg_cards.filter((c) => c.rarity !== 'identite').slice(0, 5);
         const cards = pool.map((c, i) => ({ copy_id: 900 + i, card_id: c.id, name: c.name, rarity: i === 4 ? 'legendaire' : c.rarity, family: c.family, image_url: null, flavor: c.flavor, number: c.number, shiny: i === 2, serial: null, max_copies: null }));
-        if (!args.p_free) w.paillettes -= 100;
-        // Comme la vraie fonction (hg_open_booster) : la jauge épique repart à zéro si la meilleure carte est épique ou plus,
+        if (args.p_offert) w.gift_boosters = Math.max((w.gift_boosters || 0) - 1, 0);
+        // Comme la vraie fonction (hg_open_booster_req) : la jauge épique repart à zéro si la meilleure carte est épique ou plus,
         // sinon elle monte, booster gratuit compris. Ici la meilleure carte est une légendaire.
         const RK = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire', 'mythique'];
         w.pity_epique = RK.indexOf('legendaire') >= 3 ? 0 : w.pity_epique + 1;
