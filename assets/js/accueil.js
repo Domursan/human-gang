@@ -539,11 +539,14 @@ if (!me) {
   syncIntro();
   renderMemberShell();
   hideForbiddenTiles();
-  bindIdeas();
+  // Accueil personnalisable (idée P9) : ordre, blocs masqués (retirés avant tout chargement) et blocs ajoutés
+  const home = await import('./home-blocks.js').then((m) => m.applyHomeLayout(app, me)).catch((e) => { console.warn('[accueil perso]', e?.message || e); return null; });
+  if ($('#idea-form')) bindIdeas();
   if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
-    loadFeed(), loadBirthdays(), loadDynBanner(), loadChallenges(),
+    $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null,
+    home?.loadOwn(),
   ]);
 }
 app.removeAttribute('aria-busy');

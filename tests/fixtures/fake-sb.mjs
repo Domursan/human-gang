@@ -230,6 +230,9 @@ const CASCADE = {
 };
 // Fonctions SQL appelables sans session (rôle anon), comme en ligne.
 const ANON_OK = new Set(['hg_support_public', 'hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
+// Compléments par paquet (S.extra = nom d'un fichier de tests/fixtures/) : le module reçoit la base et le scénario,
+// peut y ajouter ses tables et renvoie { rpc(fn, args) } (réponse ou undefined). Servi depuis le dépôt comme le site.
+const EXTRA = S.extra ? (await import(new URL(`tests/fixtures/${S.extra}`, document.baseURI).href)).default({ DB, S, uidNow, ME, U }) : null;
 // Compteur utilisé par uid() pour produire des identifiants distincts.
 let seq = 0;
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */
@@ -614,6 +617,7 @@ export function createClient() {
         window.__LOG.push(['rpc-401', fn]);
         return { data: null, error: { message: 'permission denied for function ' + fn, code: '42501' } };
       }
+      if (EXTRA?.rpc) { const r = await EXTRA.rpc(fn, args); if (r) return r; }
       // Pages visibles pour l'utilisateur connecté : toutes pour un admin, sinon celles qui lui sont accordées.
       if (fn === 'hg_my_pages') {
         if (S.pagesFail) return { data: null, error: { message: 'Failed to fetch' } };

@@ -1,0 +1,157 @@
+/* ===== Humane Gang — idées « Social et profils » (P6, P7, P8, P9) =====
+   Encart « Toi et … » et liste privée (membre.html, friendship.js), compétences (membre.html, compte.html, skills.js),
+   carte « Entraide et liens » (compte.html), accueil personnalisable et semaine d'accueil (accueil.html). */
+
+/* Éléments masqués (attribut hidden) malgré leur display */
+.gang-grid[hidden], .mb-social[hidden], .mb-skills[hidden], .sk-results[hidden], .home-own[hidden], .fr-top-list[hidden], #social-slot[hidden] { display: none; }
+
+/* ---------- P6 : Toi et … ---------- */
+.mb-social { max-width: 640px; margin: 0 0 24px; display: flex; flex-direction: column; gap: 12px; }
+.fr-card { background: var(--sage-soft); border-color: color-mix(in srgb, var(--sage) 35%, var(--border)); padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+.fr-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.fr-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.fr-avs { display: inline-flex; flex: none; }
+.fr-avs .avatar { box-shadow: 0 0 0 2px var(--sage-soft); }
+.fr-avs .avatar + .avatar { margin-left: -6px; }
+.fr-verdict { font-weight: 700; padding: 5px 10px; font-size: 12px; }
+.fr-verdict-ok { background: color-mix(in srgb, var(--bg) 60%, var(--sage-soft)); color: var(--sage-text); }
+.fr-verdict-todo { border: 1px solid var(--border-strong); background: transparent; color: var(--muted); }
+.fr-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fr-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); }
+.fr-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.fr-ic-sand { background: color-mix(in srgb, var(--sand) 14%, transparent); color: var(--sand); }
+.fr-ic-slate { background: color-mix(in srgb, var(--slate) 14%, transparent); color: var(--slate); }
+.fr-ic-rose { background: color-mix(in srgb, var(--rose) 14%, transparent); color: var(--rose); }
+.fr-ic-rust { background: color-mix(in srgb, var(--rust) 14%, transparent); color: var(--rust); }
+.fr-txt { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.fr-big { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.fr-card > p { margin: 0; }
+.fr-actions .btn { flex: 1 1 200px; }
+.fr-actions .btn svg { flex: none; }
+.fr-top { display: flex; flex-direction: column; gap: 10px; }
+.fr-top-btn { align-self: flex-start; }
+.fr-top-list { padding: 16px 20px; }
+.fr-top-list p { margin: 0 0 8px; }
+.fr-top-ol { margin: 0; padding: 0; list-style: none; counter-reset: fr; display: flex; flex-direction: column; gap: 4px; }
+.fr-top-item { display: flex; align-items: center; gap: 12px; min-height: 44px; color: var(--text); text-decoration: none; border-radius: var(--radius-sm); padding: 4px 6px; }
+.fr-top-item:hover { background: var(--surface-2); color: var(--text); }
+.fr-top-name { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+/* ---------- P7 : compétences ---------- */
+.mb-skills { margin: 0 0 32px; max-width: 640px; }
+.sk-title { margin-bottom: 12px; }
+.sk-pills { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sk-pill { padding: 8px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font-size: 14px; overflow-wrap: anywhere; }
+.sk-note { margin: 0 0 12px; }
+.sk-results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sk-result { display: flex; gap: 10px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border); }
+.sk-who { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 220px; color: var(--text); text-decoration: none; min-height: 44px; }
+.sk-who-txt { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.sk-help { flex: 0 1 auto; }
+.sk-edit { border: 0; margin: 0; padding: 0; min-width: 0; }
+.sk-edit legend { padding: 0; margin-bottom: 10px; }
+.sk-edit-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 8px 16px; }
+.sk-edit-item { display: flex; flex-direction: column; gap: 6px; }
+.sk-edit-item .check { min-height: 44px; align-items: center; }
+.sk-edit-note { min-height: 44px; }
+.sk-count { margin: 8px 0; color: var(--muted); }
+
+/* ---------- Compte : Entraide et liens ---------- */
+#social-slot { margin: 20px 0; }
+.acc-social-sub { font-size: 16px; margin: 0; }
+.acc-social-opts { border-top: 1px solid var(--border); padding-top: 14px; }
+.acc-social-opts .check { min-height: 44px; align-items: center; }
+
+/* ---------- P9 : accueil personnalisable ---------- */
+.home-perso-btn { align-self: flex-end; }
+#app > [data-home-id]:not(.recap-banner):not(#dyn-banner), #app > .home-row { margin-top: 0; margin-bottom: 20px; }
+.home-own .card-title { margin-top: 0; }
+.home-own-body { display: flex; flex-direction: column; gap: 10px; }
+.home-own-body p { margin: 0; }
+.home-own-main { font-size: 18px; }
+.home-own-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.home-own-go { align-self: flex-start; }
+.home-hidden-note { text-align: center; margin: 4px 0 24px; }
+.btn-link { font: inherit; background: none; border: 0; padding: 0 4px; min-height: 44px; color: var(--sand); text-decoration: underline; cursor: pointer; }
+
+.home-editing > :not(.home-head):not(.home-editor) { display: none !important; }
+.home-editing .home-perso-btn { display: none; }
+.home-editor { display: flex; flex-direction: column; gap: 14px; max-width: 720px; margin-bottom: 32px; }
+.he-bar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.he-profiles { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.he-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.he-chip { font: inherit; font-size: 13px; font-weight: 700; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.he-chip[aria-pressed="true"] { background: var(--sand); color: #121212; border-color: var(--sand); }
+@media (hover: hover) { .he-chip:hover { color: var(--text); border-color: var(--muted); } }
+.he-done svg { flex: none; }
+.he-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.he-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--border); }
+.he-row.is-off { opacity: .6; }
+.he-row.is-drag { outline: 2px dashed var(--sand); }
+.he-grip { color: var(--muted); cursor: grab; flex: none; display: grid; }
+.he-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.he-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; overflow-wrap: anywhere; }
+.he-new { font-size: 11px; padding: 2px 8px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
+.he-req { font-size: 11px; padding: 4px 8px; flex: none; }
+.he-move { width: 44px; min-width: 44px; min-height: 44px; padding: 0; flex: none; }
+.he-move[disabled] { opacity: .35; }
+.he-switch { flex: none; }
+.he-reserve { border-style: dashed; border-color: var(--border-strong); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.he-reserve-title { font-size: 15px; margin: 0; }
+.he-note { border-top: 1px dashed var(--border-strong); padding-top: 8px; margin: 0; }
+@media (max-width: 420px) {
+  .he-row { gap: 6px; padding: 8px; }
+  .he-grip { display: none; }
+  .he-move { width: 40px; min-width: 40px; }
+  .he-done { width: 100%; }
+}
+
+/* ---------- P8 : semaine d'accueil ---------- */
+.home-own-parrainage { border-color: color-mix(in srgb, var(--sand) 35%, var(--border)); }
+.mt-duo { display: flex; flex-direction: column; gap: 10px; }
+.mt-duo + .mt-duo { border-top: 1px solid var(--border); padding-top: 14px; }
+.mt-lead { margin: 0; }
+.mt-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mt-step { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.mt-step > span:nth-child(2) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mt-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border-strong); flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.mt-step.is-done .mt-check { background: var(--sage); border-color: var(--sage); color: var(--bg); }
+.mt-step.is-done { color: var(--muted); }
+.mt-go { min-height: 44px; display: inline-flex; align-items: center; }
+.sk-filter { margin: 0 0 12px; }
+.sk-filter p { margin: 0 0 6px; }
+.sk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sk-chip { font: inherit; font-size: 13px; font-weight: 700; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--muted); cursor: pointer; }
+.sk-chip[aria-pressed="true"] { background: var(--sand); color: #121212; border-color: var(--sand); }
+@media (hover: hover) { .sk-chip:hover { color: var(--text); } .sk-chip[aria-pressed="true"]:hover { color: #121212; } }
+.sk-result { flex-direction: column; align-items: stretch; padding: 14px 16px; }
+.sk-result-note { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.sk-pill-on { background: color-mix(in srgb, var(--sand) 16%, transparent); border-color: color-mix(in srgb, var(--sand) 45%, transparent); color: var(--sand); padding: 4px 10px; font-size: 13px; }
+.sk-help { align-self: flex-start; }
+/* Semaine d'accueil : maquette P8 (carte bleue) */
+.home-own-parrainage { background: var(--hist-bg); border-color: var(--rb-5); }
+.home-own-parrainage > .card-title { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+.mt-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.mt-kicker { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--hist-fg); font-weight: 700; }
+.mt-duo-head { display: flex; align-items: center; gap: 10px; }
+.mt-duo-head p { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mt-avs { display: inline-flex; flex: none; }
+.mt-avs .avatar + .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--hist-bg); }
+.mt-bar > span { background: var(--hist-fg); }
+.mt-step { background: var(--surface-2); }
+.mt-step:not(.is-done) { background: transparent; border: 1px solid var(--border); }
+.mt-step-txt { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.mt-who { flex: none; }
+.mt-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 10px; }
+.mt-foot p { margin: 0; }
+.mt-cta { width: 100%; }
+.mt-note { margin: 0; text-align: center; }
+
+/* ---------- Admin : parrainage, compétences, accueil des membres ---------- */
+.pr-duos, .cp-list, .ha-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pr-duo, .ha-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.pr-duo select { min-height: 44px; max-width: 100%; }
+.cp-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 8px 12px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2); }
+@media (max-width: 640px) { .cp-row { grid-template-columns: minmax(0, 1fr); } }
+.ha-name { flex: 1 1 160px; min-width: 0; }
+.ha-row .check { min-height: 44px; align-items: center; }

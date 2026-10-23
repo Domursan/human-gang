@@ -27,6 +27,8 @@ export const SECTION_PERM = {
   staff: 'admin',
   // Sections ajoutées avec les sous-menus : réglages (clés eggs, profile_fields, table hg_activity) → droit « reglages »
   eggs: 'reglages', fil: 'reglages', champs: 'reglages',
+  // Idées « Social et profils » (migration 091) : parrainage et compétences → « membres » ; accueil des membres → « reglages »
+  parrainage: 'membres', competences: 'membres', 'accueil-membres': 'reglages',
 };
 
 // Tuiles de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une tuile est permise.
@@ -52,6 +54,10 @@ export const DOMAINS = [
       { id: 'comptes', label: 'Comptes', section: 'comptes' },
       { id: 'invitations', label: 'Invitations', section: 'membres' },
       { id: 'champs', label: 'Champs du profil', section: 'champs' },
+    ]),
+    ...under('Entraide', [
+      { id: 'parrainage', label: 'Parrainage', section: 'parrainage' },
+      { id: 'competences', label: 'Compétences', section: 'competences' },
     ]),
     ...under('Accès aux pages', [
       { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },
@@ -122,6 +128,7 @@ export const DOMAINS = [
     ...under('Fonctionnement', [
       { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
       { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
+      { id: 'accueil', label: 'Accueil des membres', section: 'accueil-membres' },
     ]),
     ...under('Apparence', [
       { id: 'theme', label: 'Thème', section: 'theme' },

@@ -98,9 +98,12 @@ function shell() {
       <div class="card mb-badges"><span class="skeleton-line"></span><span class="skeleton-line short"></span></div>
     </section>
     <div class="mb-actions" id="mb-actions" hidden></div>
+    <div class="mb-social" id="mb-friend" hidden></div>
+    <section class="mb-skills" id="mb-skills" hidden></section>
     ${canAccess('cartes') ? '<section class="mb-showcase" id="mb-showcase" hidden></section>' : ''}
     <section class="mb-gang" aria-labelledby="gang-title">
       <h2 class="mb-section-title" id="gang-title">${ICON.users} Le gang</h2>
+      <div id="gang-skill-filter" hidden></div>
       <ul class="gang-grid" id="gang"><li class="gang-skel"></li><li class="gang-skel"></li><li class="gang-skel"></li></ul>
     </section>`;
 }
@@ -517,6 +520,7 @@ async function addBadgeLevels(card) {
 shell();
 // L'annuaire se charge en parallèle de la carte, sans l'attendre.
 const gangP = loadGang();
+import('./skills.js').then((m) => m.mountSkillFilter($('#gang-skill-filter'), { grid: $('#gang'), meId: me.id })).catch(() => {}); // P7 : « Qui sait faire… »
 try {
   const { data, error } = await sb.rpc('hg_member_card', { p_user: targetId });
   if (error) throw error;
@@ -538,6 +542,9 @@ try {
     }
     if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
     if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
+    // Idées P6 (souvenirs communs) et P7 (compétences) : modules à part, chargés sans bloquer la carte
+    import('./friendship.js').then((m) => m.mountFriendship($('#mb-friend'), { card, isMe, me })).catch((e) => console.warn('[amitié]', e?.message || e));
+    import('./skills.js').then((m) => m.mountSkillPills($('#mb-skills'), card.id, isMe)).catch((e) => console.warn('[compétences]', e?.message || e));
   }
 } catch (e) {
   $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Impossible de charger la carte (${esc(errMsg(e))}).</p></div>`;

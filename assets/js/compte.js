@@ -493,6 +493,8 @@ async function renderMember(user) {
       </div>
     </section>
 
+    <div id="social-slot" hidden></div>
+
     <section class="card acc-infos" id="infos" aria-labelledby="infos-title">
       <form id="info-form" novalidate>
         <div class="acc-infos-head">
@@ -553,6 +555,8 @@ async function renderMember(user) {
   bindData();
   bindInfos();
   loadBadges();
+  // Entraide et liens (idées P6, P7, P8) : module à part, une erreur n'empêche pas le reste du compte
+  import('./compte-social.js').then((m) => m.mountSocialCard($('#social-slot'), me)).catch((e) => console.warn('[entraide]', e?.message || e));
 }
 
 /** Met à jour partout l'identité affichée (avatar, pseudo, en-tête du site) après une modification. */
