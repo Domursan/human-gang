@@ -24,6 +24,7 @@ async function tape(p, mot) {
   check((await p.locator('.su-row').count()) === 6 && (await p.locator('.su-row').first().locator('.su-cell').count()) === 8, 'grille de 6 essais × 8 lettres');
   check((await p.locator('.su-row').first().locator('.su-cell').first().innerText()).trim() === 'R', 'première lettre donnée');
   check(!(await p.content()).includes('RACLETTE'), 'le mot n’est jamais dans la page avant la fin');
+  check((await p.locator('.su-admin').count()) === 0, 'joueur ordinaire : pas d’encart solution');
   check((await p.locator('.su-kbd .su-key').count()) === 28, 'clavier : 26 lettres, Effacer et Entrée');
   check((await p.locator('.su-serie').innerText()).includes('9 jours'), 'série affichée');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
@@ -66,6 +67,16 @@ async function tape(p, mot) {
   p = await openPage(browser, { page: 'jeux', hash: '#sutom', width: 390, init: 'fake-jeux.js', scenario: { jeux: { vide: true } } });
   await p.waitForSelector('.su .card', { timeout: 6000 }).catch(() => {});
   check((await p.locator('.su').innerText()).includes('Pas de grille aujourd’hui'), 'sans mot : message');
+  await p.ctx.close();
+
+  // Compte admin : la solution du jour est disponible, repliée par défaut
+  p = await openPage(browser, { page: 'jeux', hash: '#sutom', width: 390, init: 'fake-jeux.js', scenario: { jeux: { admin: true } } });
+  await p.waitForSelector('.su-admin', { timeout: 6000 }).catch(() => {});
+  check((await p.locator('.su-admin').count()) === 1 && !(await p.locator('.su-admin').evaluate((d) => d.open)), 'admin : encart « Voir la solution » présent et replié');
+  await p.click('.su-admin summary');
+  check((await p.locator('.su-admin').innerText()).includes('RACLETTE'), 'admin : la solution s’affiche à l’ouverture');
+  check((await hscroll(p)) <= 0 && p.errs.length === 0, 'admin : pas de défilement horizontal ni d’erreur JS');
+  await p.screenshot({ path: path.join(SHOTS, 'j8-sutom-admin.png'), fullPage: true });
   await p.ctx.close();
 
   /* ---------- Admin ---------- */

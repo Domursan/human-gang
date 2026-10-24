@@ -102,6 +102,7 @@
       return ok({ valid: true, word: x, colors: colors(g.word, x), solved, finished: fin, tries: g.guesses.length, gain: fin ? (solved ? 10 : 3) : 0,
         answer: fin ? g.word : null, definition: fin ? g.definition : null, streak: fin ? g.streak : null });
     }
+    if (fn === 'hg_sutom_solution') return ok(SC().admin && J.sutom ? { word: J.sutom.word, definition: J.sutom.definition, day: day(0) } : null);
     if (fn === 'hg_sutom_admin') return ok({ today: day(0), dict: 130528, bank: J.bank, planned: J.planned });
     if (fn === 'hg_sutom_bank_save') {
       const w = norm(a.p_word);
