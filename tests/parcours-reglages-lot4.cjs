@@ -9,7 +9,7 @@
 // Les contrôles portent sur l'état du faux Supabase (window.__DB) et sur les appels reçus (window.__LOG).
 // Le faux Supabase ne rejoue pas les fonctions SQL : les replis et bornes SQL sont vérifiés par la migration 053 (revue).
 // Lancer : node tests/parcours-reglages-lot4.cjs
-const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
+const { check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 
 /** Tiroir de dialogue ouvert (dialog.ui-drawer[open]). */
 const drawer = (p) => p.locator('dialog.ui-drawer[open]');
@@ -202,6 +202,103 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   const row = await p.textContent('[data-key-item="badges"]');
   check(row.includes('Badges : critères et affichage') && row.includes('Géré dans'), 'réglages du site : la clé badges est listée avec son libellé et renvoie vers sa section');
   await p.close();
+
+  /* ---------- Réglages du site : les clés qui ont leur écran (competences, echanges, saisons…) ne sont plus listées ---------- */
+  p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
+  await p.evaluate(() => {
+    window.__DB.hg_settings.unshift({ key: 'competences', value: [] }, { key: 'echanges', value: { anciennete_jours: 7 } },
+      { key: 'saisons', value: { avent: {} } }, { key: 'parrainage', value: { paillettes: 50 } }, { key: 'cine', value: { actif: true } });
+  });
+  await adminSection(p, 'mairie/reglages');
+  await p.waitForSelector('[data-key-item="cine"]', { timeout: 8000 }).catch(() => {});
+  check(await p.locator('[data-key-item="competences"], [data-key-item="echanges"], [data-key-item="saisons"], [data-key-item="parrainage"]').count() === 0,
+    'réglages du site : competences, echanges, saisons et parrainage ne sont pas listées (elles ont leur écran)');
+  check(await p.locator('[data-key-item="cine"]').count() === 1, 'réglages du site : les autres clés restent listées (cine)');
+  const dedie = p.locator('.acd-note').filter({ hasText: 'Réglées dans leur écran' });
+  check(await dedie.count() === 1 && (await dedie.textContent()).includes('se règle dans'), 'réglages du site : une note « Réglées dans leur écran » renvoie « se règle dans »');
+  check(await p.getAttribute('.acd-note a[href="#place/competences"]', 'href') === '#place/competences'
+    && (await dedie.textContent()).includes('Membres › Compétences') && (await dedie.textContent()).includes('Salle des ventes'),
+  'réglages du site : la note renvoie vers Membres › Compétences et La Salle des ventes › Échanges');
+  await p.close();
+
+  /* ---------- Cartes : citation, quêtes à preuve, libellés des jeux (Séries) et limites des échanges, enregistrés par fusion ---------- */
+  const SEED = { cards: { quetes_par_semaine: 4, tag_labels: { minecraft: 'Minecraft perso' }, plafonds: { quiz_jour: '7' } },
+    echanges: { anciennete_jours: 7, paillettes_max_semaine: 4000, dons_valeur_max_semaine: 5000, note_admin: 'à garder' } };
+  p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { settingsExtra: SEED } });
+  await adminSection(p, 'fabrique/economie');
+  await p.waitForSelector('#acd-e-rewards_citation', { timeout: 8000 }).catch(() => {});
+  check(await p.inputValue('#acd-e-rewards_citation') === '20', 'économie : citation validée affichée au défaut (20), dans Récompenses');
+  await p.fill('#acd-e-rewards_citation', '35');
+  await p.click('#acd-econ-form [type="submit"]');
+  await sleep(400);
+  let cc = await settingsRow(p, 'cards');
+  check(cc?.rewards?.citation === 35 && cc?.rewards?.daily === 100, 'économie : citation enregistrée (35), autres récompenses gardées');
+  check(JSON.stringify(cc?.tag_labels) === JSON.stringify({ minecraft: 'Minecraft perso' }) && cc?.plafonds?.quiz_jour === '7', 'économie : libellés des jeux et plafonds gardés à l’enregistrement');
+  await p.fill('#acd-e-rewards_citation', '501');
+  await p.click('#acd-econ-form [type="submit"]');
+  await sleep(300);
+  check(await p.isVisible('#acd-econ-form .form-error') && (await p.textContent('#acd-econ-form .form-error')).includes('Citation'), 'économie : citation au-delà de 500 refusée');
+
+  // Quêtes : nombre de quêtes à preuve (cards.quetes_preuve_par_semaine), texte d'aide de l'action « preuve validée ».
+  await adminSection(p, 'fabrique/quetes');
+  await p.waitForSelector('#acd-proof-form', { timeout: 8000 }).catch(() => {});
+  check(await p.inputValue('#acd-proof-n') === '2', 'quêtes : quêtes à preuve affichées au défaut (2)');
+  await p.fill('#acd-proof-n', '3');
+  await p.click('#acd-proof-form [type="submit"]');
+  await sleep(400);
+  cc = await settingsRow(p, 'cards');
+  check(cc?.quetes_preuve_par_semaine === 3 && cc?.quetes_par_semaine === 4 && cc?.plafonds?.quiz_jour === '7',
+    'quêtes : quêtes à preuve enregistrées (3), réglages voisins gardés');
+  await p.click('[data-act="quest-new"]');
+  await p.waitForSelector('#aq-metric', { timeout: 8000 }).catch(() => {});
+  await p.selectOption('#aq-metric', 'preuve_validee');
+  const help = await p.textContent('#aq-metric-h');
+  check(help.includes('3 par semaine') && !help.includes('2 par semaine') && !help.includes('{{preuve}}'), 'quêtes : l’aide « preuve validée » suit le réglage (3 par semaine)');
+  await p.keyboard.press('Escape');
+  await sleep(200);
+
+  // Séries : libellés des jeux (cards.tag_labels).
+  await adminSection(p, 'fabrique/series');
+  await p.waitForSelector('#acd-tags-form', { timeout: 8000 }).catch(() => {});
+  check(await p.inputValue('#acd-tag-minecraft') === 'Minecraft perso', 'séries : libellé enregistré du tag minecraft affiché');
+  await p.fill('#acd-tag-new', 'Bad Tag!');
+  await p.fill('#acd-tag-newl', 'Test');
+  await p.click('#acd-tags-form [type="submit"]');
+  await sleep(300);
+  check(await p.isVisible('#acd-tags-form .form-error') && (await p.textContent('#acd-tags-form .form-error')).includes('minuscules'), 'séries : tag invalide refusé');
+  await p.fill('#acd-tag-new', 'lol');
+  await p.fill('#acd-tag-newl', 'League of Legends');
+  await p.click('#acd-tags-form [type="submit"]');
+  await sleep(400);
+  cc = await settingsRow(p, 'cards');
+  check(JSON.stringify(cc?.tag_labels) === JSON.stringify({ minecraft: 'Minecraft perso', lol: 'League of Legends' }) && cc?.quetes_preuve_par_semaine === 3,
+    'séries : libellé du tag lol ajouté, libellés existants et réglages des quêtes gardés');
+
+  // Salle des ventes › Échanges : limites anti-abus (echanges), fusion.
+  await adminSection(p, 'ventes/echanges');
+  await p.waitForSelector('#acd-echanges-form', { timeout: 8000 }).catch(() => {});
+  check(await p.inputValue('#ace-paillettes_max_semaine') === '4000' && await p.inputValue('#ace-anciennete_jours') === '7', 'échanges : limites affichées depuis le réglage echanges');
+  await p.fill('#ace-anciennete_jours', '400');
+  await p.click('#acd-echanges-form [type="submit"]');
+  await sleep(300);
+  check(await p.isVisible('#acd-echanges-form .form-error'), 'échanges : âge du compte au-delà de 365 jours refusé');
+  await p.fill('#ace-anciennete_jours', '10');
+  await p.fill('#ace-dons_valeur_max_semaine', '6000');
+  await p.click('#acd-echanges-form [type="submit"]');
+  await sleep(400);
+  const ech = await settingsRow(p, 'echanges');
+  check(ech?.anciennete_jours === 10 && ech?.dons_valeur_max_semaine === 6000 && ech?.paillettes_max_semaine === 4000 && ech?.note_admin === 'à garder',
+    'échanges : limites enregistrées, autres sous-clés du réglage gardées');
+  await p.close();
+
+  /* Cartes : pas de défilement horizontal à 390 px (libellés des jeux, limites des échanges). */
+  for (const route of ['fabrique/series', 'ventes/echanges', 'fabrique/quetes']) {
+    p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 390, height: 780, mobile: true, scenario: { settingsExtra: SEED } });
+    await adminSection(p, route);
+    await sleep(400);
+    check(await hscroll(p) <= 0, `${route} 390 px : pas de défilement horizontal (${await hscroll(p)} px)`);
+    await p.close();
+  }
 
   await browser.close();
   finish();

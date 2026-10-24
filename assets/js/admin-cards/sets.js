@@ -14,6 +14,7 @@ import { check, act, friendly, group, nf, nextSetSort, period, setState, removeI
 import { openDrawer } from '../admin/ui/drawer.js';
 import { refresh } from './data.js';
 import { matches, searchHtml } from '../admin/list-tools.js';
+import { ecrireReglage } from '../admin/reglages-merge.js';
 
 /* =========================================================
    Séries
@@ -75,7 +76,65 @@ export function setsPanel() {
     </div>
     ${C.sets.length ? searchHtml({ id: 'acd-search-series', label: 'Rechercher une série', placeholder: 'Nom, code ou description…', value: C.q.series, attrs: 'data-search="series"' }) : ''}
     <div id="acd-sets-list">${setsListData().html}</div>
+    ${tagsPanel()}
     <div id="acd-props"></div>`;
+}
+
+/* Libellé d'un tag sans réglage : mise en forme du tag (« sea-of-thieves » -> « Sea of thieves »), comme la base. */
+const tagFallback = (t) => String(t || '').replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+/**
+ * Libellés des jeux (tags de carte) : cards.tag_labels, tag -> nom affiché. Un champ vide garde le libellé d'origine.
+ * Les tags sont ceux des cartes existantes et ceux déjà renommés ; un nouveau tag s'ajoute en bas.
+ * @returns {string} HTML de la section.
+ */
+export function tagsPanel() {
+  const custom = C.cfgRaw?.tag_labels && typeof C.cfgRaw.tag_labels === 'object' && !Array.isArray(C.cfgRaw.tag_labels) ? C.cfgRaw.tag_labels : {};
+  const tags = [...new Set([...C.cards.map((k) => k.tag).filter(Boolean), ...Object.keys(custom)])].sort();
+  return `<section class="stack acd-tags" aria-labelledby="acd-tags-h">
+    <h3 id="acd-tags-h">Libellés des jeux</h3>
+    <p class="small muted">Nom affiché pour chaque tag de jeu des cartes (regroupement « par jeu » de la Collection, titre « Pilier de … »). Un champ vide garde le libellé d’origine.</p>
+    <form id="acd-tags-form" class="stack acd-form" novalidate>
+      <p class="form-error" role="alert" hidden></p>
+      ${tags.length ? `<div class="acd-grid-2">${tags.map((t) => `<div class="field"><label for="acd-tag-${esc(t)}"><code class="acd-code">${esc(t)}</code></label>
+        <input id="acd-tag-${esc(t)}" data-tag="${esc(t)}" maxlength="40" autocomplete="off" value="${esc(custom[t] ?? '')}" placeholder="${esc(tagFallback(t))}"></div>`).join('')}</div>`
+        : '<p class="small muted">Aucune carte n’a encore de tag de jeu.</p>'}
+      <div class="acd-grid-2">
+        <div class="field"><label for="acd-tag-new">Nouveau tag</label>
+          <input id="acd-tag-new" name="new_tag" maxlength="32" autocomplete="off" placeholder="ex. minecraft" aria-describedby="acd-tag-new-h">
+          <span class="small muted" id="acd-tag-new-h">Minuscules, chiffres et tirets.</span></div>
+        <div class="field"><label for="acd-tag-newl">Libellé du nouveau tag</label>
+          <input id="acd-tag-newl" name="new_label" maxlength="40" autocomplete="off"></div>
+      </div>
+      <div class="btn-row"><button class="btn btn-ghost" type="submit">Enregistrer les libellés</button></div>
+    </form>
+  </section>`;
+}
+
+/**
+ * Enregistre les libellés des jeux (cards.tag_labels) par fusion dans hg_settings.cards : le reste du réglage est gardé.
+ * @param {HTMLFormElement} form formulaire « Libellés des jeux ».
+ * @param {HTMLElement|null} btn bouton d'envoi.
+ */
+export async function saveTagLabels(form, btn) {
+  const err = form.querySelector('.form-error');
+  const fail = (m) => { err.textContent = m; err.hidden = false; };
+  err.hidden = true;
+  const next = {};
+  for (const el of form.querySelectorAll('input[data-tag]')) { const v = el.value.trim(); if (v) next[el.dataset.tag] = v; }
+  const nt = form.elements.new_tag.value.trim().toLowerCase(), nl = form.elements.new_label.value.trim();
+  if (nt || nl) {
+    if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(nt)) return fail('Nouveau tag : minuscules, chiffres et tirets (ex. minecraft, sea-of-thieves).');
+    if (!nl) return fail('Donne un libellé au nouveau tag.');
+    next[nt] = nl;
+  }
+  const trop = Object.values(next).find((l) => l.length > 40);
+  if (trop) return fail(`« ${trop} » dépasse 40 caractères.`);
+  await act(btn, async () => {
+    await ecrireReglage('cards', (c) => { c.tag_labels = next; });
+    toast('Libellés des jeux enregistrés.', 'ok');
+    await refresh();
+  });
 }
 
 /** Formulaire de série, ouvert dans le tiroir. */

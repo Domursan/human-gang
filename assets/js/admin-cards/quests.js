@@ -11,7 +11,9 @@ import { sb, toast, esc, $ } from '../core.js';
 import { ICON, CFG_DEFAULT } from './constants.js';
 import { H, C } from './state.js';
 import { check, act, friendly, nf } from './helpers.js';
+import { refresh } from './data.js';
 import { openDrawer } from '../admin/ui/drawer.js';
+import { ecrireReglage } from '../admin/reglages-merge.js';
 
 export const QUEST_METRICS = [
   ["boosters_ouverts", "Boosters ouverts", "Nombre de boosters ouverts pendant la semaine."],
@@ -75,12 +77,14 @@ export const QUEST_METRICS = [
   ["ss_souhaits", "Souhaits Secret Santa", "Souhaits ajoutés à sa liste Secret Santa."],
   ["ss_messages", "Messages à sa cible", "Messages secrets envoyés à sa cible Secret Santa."],
   ["ss_cadeau_a_temps", "Cadeau envoyé à temps", "Cadeau Secret Santa marqué envoyé avant la date limite."],
-  ["preuve_validee", "Preuve validée par le Staff (capture)", "Quête à preuve : le membre envoie une capture, un membre du Staff « preuves » la valide. Tirée à part (2 par semaine)."],
+  ["preuve_validee", "Preuve validée par le Staff (capture)", "Quête à preuve : le membre envoie une capture, un membre du Staff « preuves » la valide. Tirée à part ({{preuve}} par semaine, réglage de cette page)."],
 ];
 /* Libellé court de chaque action, par identifiant. */
 const METRIC_LABEL = Object.fromEntries(QUEST_METRICS.map(([v, l]) => [v, l]));
-/* Phrase d'aide de chaque action, affichée sous la liste déroulante. */
+/* Phrase d'aide de chaque action, affichée sous la liste déroulante (le marqueur {{preuve}} reçoit le nombre de quêtes à preuve). */
 const METRIC_HELP = Object.fromEntries(QUEST_METRICS.map(([v, , h]) => [v, h]));
+/** Phrase d'aide d'une action, avec le nombre de quêtes à preuve tiré chaque semaine. */
+const helpOf = (metric) => (METRIC_HELP[metric] || METRIC_HELP.boosters_ouverts).replaceAll('{{preuve}}', String(proofPerWeek()));
 /* Forme d'un identifiant technique : minuscules, chiffres et tiret bas, de 2 à 40 caractères. */
 const CODE_RE = /^[a-z0-9_]{2,40}$/;
 
@@ -95,6 +99,15 @@ export const Q = { rows: [], loaded: false, loading: null, error: null };
 export function questsPerWeek() {
   const v = C.cfgRaw?.quetes_par_semaine;
   return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : CFG_DEFAULT.quetes_par_semaine;
+}
+
+/**
+ * Nombre de quêtes à preuve tirées chaque semaine : réglage cards.quetes_preuve_par_semaine (0 à 5), sinon 2.
+ * @returns {number}
+ */
+export function proofPerWeek() {
+  const v = C.cfgRaw?.quetes_preuve_par_semaine;
+  return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : CFG_DEFAULT.quetes_preuve_par_semaine;
 }
 
 /** Charge les modèles de quêtes puis redessine l'onglet. */
@@ -129,6 +142,13 @@ export function questsPanel() {
       <p class="small muted">Chaque semaine (du lundi au dimanche, heure suisse), ${perWeek} quête${perWeek > 1 ? 's' : ''} sont tirées au sort parmi les modèles <strong>actifs</strong> ; le tirage est le même pour tout le monde. Un membre touche les Paillettes une fois par quête et par semaine, en réclamant la quête une fois atteinte.</p>
       <button class="btn btn-primary" type="button" data-act="quest-new">${ICON.plus} Nouvelle quête</button>
     </div>
+    <form class="acd-proof" id="acd-proof-form" novalidate>
+      <p class="form-error" role="alert" hidden></p>
+      <div class="field"><label for="acd-proof-n">Quêtes à preuve tirées chaque semaine</label>
+        <input id="acd-proof-n" name="n" type="number" min="0" max="5" step="1" inputmode="numeric" value="${esc(proofPerWeek())}" aria-describedby="acd-proof-h">
+        <span class="small muted" id="acd-proof-h">Quêtes que le membre valide par une capture (0 à 5). Elles sont tirées à part des quêtes ci-dessus.</span></div>
+      <div class="btn-row"><button class="btn btn-ghost" type="submit">Enregistrer</button></div>
+    </form>
     ${warn ? `<p class="acd-note" role="note">${esc(warn)}</p>` : ''}
     ${Q.rows.length ? `<ul class="acd-list">${Q.rows.map((q) => `<li class="acd-item">
         <div class="acd-item-main">
@@ -158,7 +178,7 @@ function formHtml(q, isNew) {
       <span class="small muted" id="aq-label-h">Le texte de la quête dans la liste de la semaine (120 caractères au maximum).</span></div>
     <div class="field"><label for="aq-metric">Action à compter</label>
       <select id="aq-metric" name="metric" aria-describedby="aq-metric-h">${metricOpts}</select>
-      <span class="small" id="aq-metric-h">${esc(METRIC_HELP[v.metric] || METRIC_HELP.boosters_ouverts)}</span></div>
+      <span class="small" id="aq-metric-h">${esc(helpOf(v.metric))}</span></div>
     <div class="acd-grid-2">
       <div class="field"><label for="aq-target">Objectif</label>
         <input id="aq-target" name="target" type="number" min="1" max="1000000" step="1" inputmode="numeric" required value="${esc(v.target ?? 1)}" aria-describedby="aq-target-h">
@@ -188,7 +208,7 @@ export function openQuestDialog(q = null) {
   });
   const E = dr.form.elements;
   // L'aide de l'action change avec le choix
-  E.metric.addEventListener('change', () => { $('#aq-metric-h', dr.body).textContent = METRIC_HELP[E.metric.value] || ''; });
+  E.metric.addEventListener('change', () => { $('#aq-metric-h', dr.body).textContent = helpOf(E.metric.value); });
   (isNew ? E.code : E.label).focus();
 }
 
@@ -225,6 +245,21 @@ async function saveQuest(form, q) {
   } catch (ex) {
     return fail(`Enregistrement impossible : ${friendly(ex)}`);
   }
+}
+
+/**
+ * Enregistre le nombre de quêtes à preuve (cards.quetes_preuve_par_semaine, 0 à 5) par fusion dans hg_settings.cards.
+ * @param {HTMLFormElement} form formulaire de la page Quêtes.
+ * @param {HTMLElement|null} btn bouton d'envoi.
+ */
+export async function saveProofCount(form, btn) {
+  const v = form.elements.n.value.trim(), n = Number(v);
+  if (v === '' || !Number.isInteger(n) || n < 0 || n > 5) return toast('Indique un nombre entier de 0 à 5.', 'error');
+  await act(btn, async () => {
+    await ecrireReglage('cards', (c) => { c.quetes_preuve_par_semaine = n; });
+    toast('Quêtes à preuve enregistrées.', 'ok');
+    await refresh();
+  });
 }
 
 export const questActions = {

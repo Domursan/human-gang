@@ -39,8 +39,9 @@ export const CFG_DEFAULT = {
   rates: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 },
   recycle: { commune: 5, peu_commune: 10, rare: 25, epique: 60, legendaire: 150, mythique: 400, identite: 1000, shiny_multiplier: 3 },
   craft: { commune: 100, peu_commune: 150, rare: 200, epique: 750, legendaire: 2000, shiny_multiplier: 6 },
-  rewards: { daily: 100, streak_bonus: 20, streak_max: 30, rsvp: 50, presence: 100, photo: 100, moment: 100, gift_sent: 250, badge: 500, capture: 150, event_created: 100, set_complete: 300 },
+  rewards: { daily: 100, streak_bonus: 20, streak_max: 30, rsvp: 50, presence: 100, photo: 100, moment: 100, gift_sent: 250, badge: 500, capture: 150, event_created: 100, set_complete: 300, citation: 20 },
   quetes_par_semaine: 3,
+  quetes_preuve_par_semaine: 2,
   drops: { quantite_max: 50, duree_max_min: 1440, duree_defaut_min: 30 },
   alertes: { paillettes_pct: 25, recyclage_pct: 60, booster_pct: 100, concentration_x: 5 },
 };
@@ -50,7 +51,10 @@ const REWARDS = [
   ['rsvp', 'Réponse « oui » à une sortie'], ['presence', 'Présence à une sortie passée'], ['photo', 'Photo publiée'],
   ['moment', 'Moment publié'], ['gift_sent', 'Cadeau Secret Santa envoyé'], ['badge', 'Badge gagné'],
   ['capture', 'Image attrapée (événement)'], ['event_created', 'Sortie ou événement créé'], ['set_complete', 'Série complète (une fois par série)'],
+  ['citation', 'Citation « Qui a dit ça ? » validée (proposée par un membre)'],
 ];
+/* Plafond des récompenses dont la base borne la valeur (hg_quote_review plafonne la citation à 500). */
+const REWARD_MAX = { citation: 500 };
 // Réglages éditables. k = chemin (« rates.commune ») ; le nom du champ de formulaire remplace chaque point par un tiret bas.
 // help = aide courte affichée sous le champ. Défauts : CFG_DEFAULT.
 export const ECON = [
@@ -77,7 +81,7 @@ export const ECON = [
     { k: 'craft.shiny_multiplier', l: 'Multiplicateur brillante', u: '×', int: true, min: 1, help: 'Coût d\'une version brillante = coût normal × ce nombre.' },
   ] },
   { g: 'Récompenses', hint: 'Gains en Paillettes liés à l\'activité sur le site.', fields: REWARDS.map(([k, l]) => ({
-    k: `rewards.${k}`, l, int: true, min: k === 'streak_max' ? 1 : 0 })) },
+    k: `rewards.${k}`, l, int: true, min: k === 'streak_max' ? 1 : 0, max: REWARD_MAX[k], help: k === 'citation' ? 'Gain de la personne qui a proposé une citation validée par le Staff « souvenirs » (0 à 500).' : undefined })) },
   { g: 'Quêtes de la semaine', hint: 'Les quêtes sont tirées au sort chaque semaine parmi les modèles actifs (onglet Quêtes).', fields: [
     { k: 'quetes_par_semaine', l: 'Quêtes tirées chaque semaine', int: true, min: 0, max: 20, help: 'Nombre de quêtes proposées aux membres. Si moins de modèles sont actifs, on en propose moins.' },
   ] },

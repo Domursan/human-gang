@@ -2,12 +2,13 @@
 /*
  * Rôle : section « Saisons » du panel (Vie du gang › Rendez-vous), trois parties :
  *   - avent : les 24 cases du calendrier de l'Avent (sorte, Paillettes, carte, souvenir, question, booster, case
- *     collective), « Remplir automatiquement » (souvenirs du même jour dans les années passées) et aperçu « comme un
- *     membre le N décembre » ;
+ *     collective), « Remplir automatiquement » (souvenirs du même jour dans les années passées), aperçu « comme un
+ *     membre le N décembre » et réglages du calendrier (saisons.avent : actif, seuil, seuil en %, Paillettes de repli) ;
  *   - worlds : interrupteur « Saison des Worlds » (thème, booster de la saison, quêtes ; badges à l'extinction), dates,
- *     type de booster (identifiant, C1), mots des moments esport ;
- *   - anniv : anniversaire du gang (année de création, fenêtre, carte de l'année, photo de famille), moments retenus pour
- *     la rétrospective, date de test (administrateur seulement, 2 h).
+ *     type de booster (identifiant, C1), mots des moments esport, quêtes de la saison et page des pronostics
+ *     (saisons.worlds.quetes et pronos, enregistrées par fusion) ;
+ *   - anniv : anniversaire du gang (année de création, fenêtre, carte de l'année, photo de famille, booster du cadeau
+ *     saisons.anniversaire.booster), moments retenus pour la rétrospective, date de test (administrateur seulement, 2 h).
  * Droits : Staff « themes » (hg_has_perm côté serveur) ; « souvenirs » pour retenir un moment. Toutes les écritures passent
  * par des RPC qui vérifient, bornent et journalisent.
  * RPC : hg_advent_admin, hg_advent_day_save, hg_advent_autofill, hg_saison_admin, hg_saison_set, hg_anniv_admin,
@@ -17,9 +18,14 @@
  */
 import { sb, esc, toast, errMsg, getCachedPerms } from './core.js';
 import { loadSeasonCss } from './saisons-css.js';
+import { ecrireReglage } from './admin/reglages-merge.js';
 
 const KINDS = [['paillettes', 'Paillettes'], ['carte', 'Carte'], ['souvenir', 'Souvenir'], ['question', 'Question bonus'], ['booster', 'Booster']];
-const Z = { root: null, part: 'avent', year: null, adv: null, lists: null, sai: null, ann: null, preview: null };
+/* Adresse d'une page des pronostics : nom de fichier .html, ancre facultative (même règle que hg_saison_worlds_cfg). */
+const PRONOS_RE = /^[a-z0-9_-]+\.html(#[a-z0-9_-]+)?$/;
+/* Identifiant d'un type de booster (même règle que les RPC). */
+const BOOSTER_RE = /^[a-z0-9_]{2,30}$/;
+const Z = { root: null, part: 'avent', year: null, adv: null, lists: null, sai: null, ann: null, preview: null, tpl: null, types: null };
 
 const defaultYear = () => { const d = new Date(); return d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - (d.getMonth() === 0 ? 1 : 0); };
 const opt = (v, label, sel) => `<option value="${esc(v)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
@@ -38,7 +44,45 @@ async function loadLists() {
   return Z.lists;
 }
 
+/** Modèles de quêtes (hg_card_quests_templates), lus une fois : choix des quêtes de la Saison des Worlds. */
+async function loadQuestTemplates() {
+  if (Z.tpl) return Z.tpl;
+  const { data, error } = await sb.from('hg_card_quests_templates').select('code,label,reward,active').order('sort').order('code');
+  if (error) throw error;
+  Z.tpl = data || [];
+  return Z.tpl;
+}
+
+/** Types de booster (hg_booster_types), lus une fois : choix du cadeau d'anniversaire. */
+async function loadBoosterTypes() {
+  if (Z.types) return Z.types;
+  const { data, error } = await sb.from('hg_booster_types').select('id,name').order('sort');
+  if (error) throw error;
+  Z.types = data || [];
+  return Z.types;
+}
+
 /* ---------- Partie « Calendrier de l'Avent » ---------- */
+/** Réglages du calendrier (saisons.avent) : interrupteur, seuil de la case collective, Paillettes de repli. */
+function aventCfgHtml(c) {
+  return `<details class="zav-cfg" open><summary><strong>Réglages du calendrier</strong> <span class="muted small">actif, seuil de la case collective, Paillettes de repli</span></summary>
+    <form class="stack" data-zac style="padding:12px 0;max-width:640px">
+      <label class="check"><input type="checkbox" name="actif"${c.actif !== false ? ' checked' : ''}> Calendrier actif (les membres peuvent ouvrir les cases)</label>
+      <div class="row" style="gap:12px;flex-wrap:wrap">
+        <div class="field"><label for="zac-s">Seuil de la case collective (membres)</label>
+          <input id="zac-s" name="seuil" type="number" min="1" max="200" step="1" inputmode="numeric" value="${esc(c.seuil ?? 10)}" aria-describedby="zac-s-h">
+          <span class="small muted" id="zac-s-h">Nombre de membres qui doivent ouvrir une case collective pour débloquer son bonus (1 à 200).</span></div>
+        <div class="field"><label for="zac-p">Seuil en % du gang</label>
+          <input id="zac-p" name="seuil_pct" type="number" min="10" max="100" step="1" inputmode="numeric" value="${esc(c.seuil_pct ?? 70)}" aria-describedby="zac-p-h">
+          <span class="small muted" id="zac-p-h">Le seuil ne dépasse jamais ce pourcentage des membres (10 à 100).</span></div>
+      </div>
+      <div class="field"><label for="zac-r">Paillettes de repli (0 à 200)</label>
+        <input id="zac-r" name="carte_repli" type="number" min="0" max="200" step="1" inputmode="numeric" value="${esc(c.carte_repli ?? 20)}" aria-describedby="zac-r-h">
+        <span class="small muted" id="zac-r-h">Versées en plus de la case quand la carte ne peut plus être donnée (plus d'exemplaire disponible).</span></div>
+      <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer le calendrier</button></div>
+    </form></details>`;
+}
+
 /** Formulaire d'une case. */
 function dayForm(d) {
   const L = Z.lists;
@@ -84,6 +128,7 @@ function renderAvent(host) {
     <div class="stack">
       <p class="muted small">Du 1er au 24 décembre, une case s’ouvre chaque matin à 6 h (heure de Zurich) ; une case oubliée se rattrape jusqu’au 31.
         Budget conseillé : environ 500 Paillettes par membre sur le mois (plafond « avent_mois » : ${esc(a.cfg?.plafond ?? 600)}). Gang : ${esc(a.gang)} membres.</p>
+      ${aventCfgHtml(a.cfg || {})}
       <div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end">
         <div class="field"><label for="zav-year">Année</label><input id="zav-year" type="number" min="2024" max="2100" value="${esc(a.year)}"></div>
         <button class="btn btn-ghost" type="button" data-zav="reload">Afficher</button>
@@ -126,12 +171,25 @@ function renderWorlds(host) {
       <div class="field"><label for="zw-b">Booster de la saison</label><select id="zw-b" name="booster"><option value="">—</option>${(s.booster_types || []).map((t) => opt(t.id, `${t.name} (${t.id})`, t.id === w.booster)).join('')}</select></div>
       <div class="field"><label for="zw-m">Mots des moments esport (quête « Réagis à un moment culte esport »), séparés par des virgules</label>
         <input id="zw-m" name="mots" value="${esc((w.mots || []).join(', '))}"></div>
-      <p class="small muted">Quêtes de la saison : ${(s.quests || []).map((q) => `${esc(q.label)} (+${q.reward})`).join(' · ')}</p>
+      <fieldset class="stack" style="border:0;padding:0;margin:0">
+        <legend><strong>Quêtes de la saison</strong> <span class="muted small">(6 au plus, en plus des quêtes de la semaine)</span></legend>
+        ${(Z.tpl || []).map((q) => `<label class="check"><input type="checkbox" name="quete" value="${esc(q.code)}"${(w.quetes || []).includes(q.code) ? ' checked' : ''}> ${esc(q.label)} <span class="muted small">(${esc(q.code)} · ${esc(q.reward)} ✦${q.active ? '' : ' · inactive'})</span></label>`).join('') || '<p class="muted small">Aucun modèle de quête. Crée-en dans Fabrique › Quêtes.</p>'}
+      </fieldset>
+      <div class="field"><label for="zw-p">Page des pronostics</label>
+        <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || 'jeux.html#pronos')}" aria-describedby="zw-p-h">
+        <span class="small muted" id="zw-p-h">Adresse d’une page du site, avec ou sans ancre (ex. jeux.html#pronos). Vide : jeux.html#pronos.</span></div>
       <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer la saison</button></div>
     </form>`;
 }
 
 /* ---------- Partie « Anniversaire du gang » ---------- */
+/** Options du choix de booster : les types existants ; la valeur enregistrée est gardée même si son type n'existe plus. */
+function annivBoosterOptions(cur) {
+  const types = Z.types || [];
+  const known = types.some((t) => t.id === cur);
+  return types.map((t) => opt(t.id, `${t.name} (${t.id})`, t.id === cur)).join('') + (known ? '' : opt(cur, `${cur} (introuvable)`, true));
+}
+
 function renderAnniv(host) {
   const a = Z.ann, i = a.info || {}, c = a.cfg || {};
   const isAdmin = !!getCachedPerms()?.is_admin;
@@ -144,6 +202,8 @@ function renderAnniv(host) {
         <div class="field"><label for="za-y">Année de création du serveur</label><input id="za-y" name="annee" type="number" min="2000" max="2100" value="${esc(c.annee ?? 2022)}"></div>
         <div class="field"><label for="za-f">Jours avant et après le jour J (0 à 3)</label><input id="za-f" name="fenetre" type="number" min="0" max="3" value="${esc(c.fenetre ?? 1)}"></div>
         <div class="field"><label for="za-c">Carte datée ${esc(yCard)} (série « Anniversaires du gang »)</label><select id="za-c" name="carte"><option value="">—</option>${(a.cards || []).map((k) => opt(k.id, k.name, k.id === i.carte)).join('')}</select></div>
+        <div class="field"><label for="za-b">Booster du cadeau d’anniversaire</label><select id="za-b" name="booster" aria-describedby="za-b-h">${annivBoosterOptions(i.booster || 'anniversaire')}</select>
+          <span class="small muted" id="za-b-h">Le booster offert au membre pendant la fenêtre du cadeau. Les types se gèrent dans Fabrique › Boosters.</span></div>
         <div class="field"><label for="za-p">Photo de famille (identifiant d’une photo d’album, facultatif)</label><input id="za-p" name="photo_id" value="${esc(c.photo_id || '')}"></div>
         <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer</button><a class="btn btn-ghost" href="recap.html?retro=1" target="_blank" rel="noopener">Voir la rétrospective</a></div>
       </form>
@@ -165,9 +225,13 @@ async function paint() {
   try {
     if (Z.part === 'avent') { await Promise.all([loadAvent(), loadLists()]); renderAvent(host); }
     else if (Z.part === 'worlds') {
-      const { data, error } = await sb.rpc('hg_saison_admin'); if (error) throw error; Z.sai = data; renderWorlds(host);
+      Z.tpl = null; // modèles relus à chaque visite (une quête ajoutée apparaît tout de suite)
+      const [r] = await Promise.all([sb.rpc('hg_saison_admin'), loadQuestTemplates()]);
+      if (r.error) throw r.error; Z.sai = r.data; renderWorlds(host);
     } else {
-      const { data, error } = await sb.rpc('hg_anniv_admin', { p: null }); if (error) throw error; Z.ann = data; renderAnniv(host);
+      Z.types = null;
+      const [r] = await Promise.all([sb.rpc('hg_anniv_admin', { p: null }), loadBoosterTypes()]);
+      if (r.error) throw r.error; Z.ann = r.data; renderAnniv(host);
     }
   } catch (e) {
     host.innerHTML = `<div class="empty">Impossible de charger (${esc(errMsg(e))}).</div>`;
@@ -200,21 +264,43 @@ async function onSubmit(e) {
       toast(`Case du ${f.dataset.day} enregistrée`, 'success');
       await loadAvent();
       renderAvent(Z.root.querySelector('#zs-body'));
+    } else if (f.matches('[data-zac]')) {
+      const ent = (name, lo, hi, lib) => {
+        const v = f.querySelector(`[name="${name}"]`).value.trim(), x = Number(v);
+        if (v === '' || !Number.isInteger(x) || x < lo || x > hi) throw new Error(`${lib} : nombre entier de ${lo} à ${hi}.`);
+        return x;
+      };
+      const p = { actif: f.querySelector('[name="actif"]').checked, seuil: ent('seuil', 1, 200, 'Seuil de la case collective'),
+        seuil_pct: ent('seuil_pct', 10, 100, 'Seuil en %'), carte_repli: ent('carte_repli', 0, 200, 'Paillettes de repli') };
+      // Fusion dans saisons.avent : les autres sous-clés (worlds, anniversaire) restent en place.
+      await ecrireReglage('saisons', (s) => { s.avent = { ...(s.avent || {}), ...p }; });
+      toast('Réglages du calendrier enregistrés', 'success');
+      await paint();
     } else if (f.matches('[data-zw]')) {
       const val = (n) => f.querySelector(`[name="${n}"]`).value;
       const iso = (s) => (s ? new Date(s).toISOString() : '');
       const p = { actif: f.querySelector('[name="actif"]').checked, debut: iso(val('debut')), fin: iso(val('fin')), booster: val('booster'),
         mots: val('mots').split(',').map((x) => x.trim()).filter(Boolean) };
+      // Quêtes et page des pronostics : pas dans hg_saison_set, enregistrées ensuite dans saisons.worlds (fusion).
+      const quetes = [...f.querySelectorAll('input[name="quete"]:checked')].map((x) => x.value);
+      if (quetes.length > 6) throw new Error('Six quêtes au plus pour la saison.');
+      const pronos = val('pronos').trim() || 'jeux.html#pronos';
+      if (!PRONOS_RE.test(pronos)) throw new Error('Page des pronostics : nom d’une page .html, avec une ancre facultative (ex. jeux.html#pronos).');
       const { data, error } = await sb.rpc('hg_saison_set', { p_slug: 'worlds', p });
       if (error) throw error;
+      await ecrireReglage('saisons', (s) => { s.worlds = { ...(s.worlds || {}), quetes, pronos }; });
       toast(p.actif ? 'Saison des Worlds allumée' : `Saison éteinte${data?.badges ? ` · ${data.badges} badge(s) attribué(s)` : ''}`, 'success');
       await paint();
     } else if (f.matches('[data-za]')) {
       const val = (n) => f.querySelector(`[name="${n}"]`).value;
+      const booster = val('booster');
+      if (!BOOSTER_RE.test(booster)) throw new Error('Type de booster invalide.');
       const p = { annee: val('annee'), fenetre: val('fenetre'), carte: val('carte'), photo_id: val('photo_id') };
-      const { data, error } = await sb.rpc('hg_anniv_admin', { p });
+      const { error } = await sb.rpc('hg_anniv_admin', { p });
       if (error) throw error;
-      Z.ann = data; toast('Anniversaire enregistré', 'success'); renderAnniv(Z.root.querySelector('#zs-body'));
+      await ecrireReglage('saisons', (s) => { s.anniversaire = { ...(s.anniversaire || {}), booster }; });
+      toast('Anniversaire enregistré', 'success');
+      await paint();
     }
   } catch (err) {
     toast(errMsg(err), 'error');
