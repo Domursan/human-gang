@@ -72,7 +72,7 @@ async function allerLieu(p, id) {
 
 /** Total affiché dans le bandeau de la page du lieu (0 si masqué). */
 const totalPage = (p) => p.evaluate(() => {
-  const t = document.querySelector('[data-lieu-count]');
+  const t = document.querySelector('.lieu-total[data-lieu-count]');
   return t && !t.hidden ? Number(t.textContent.replace(/\D+/g, '')) : 0;
 });
 

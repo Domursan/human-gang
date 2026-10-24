@@ -90,3 +90,6 @@
 /* Les liens « À faire » en bouton sable gardent la couleur du bouton (le fil .shell a { color: inherit } l'emporterait) */
 .shell .lieu-todo-actions a.btn-sand { color: #121212; }
 html[data-mode="clair"] .shell .lieu-todo-actions a.btn-sand { color: #FFFFFF; }
+/* Bouton principal (lien) et ligne d'info en direct de chaque case */
+a.plateau-act, a.plateau-act:visited { color: #0D0B0A; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.plateau-info { margin: 0; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); overflow-wrap: anywhere; }

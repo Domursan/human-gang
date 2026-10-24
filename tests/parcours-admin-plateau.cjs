@@ -156,12 +156,12 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
       '(e) clic « Lancer un drop » : événement hg:quick (action drop), pas de navigation');
     await p.ctx.close();
 
-    // Sans écouteur : repli vers la page du lieu
+    // Avec les fenêtres rapides (admin/quick.js) : le clic ouvre la fenêtre, sans quitter le plateau
     const n = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
     await settle(n);
     await n.click('[data-quick="enchere"]');
     await sleep(400);
-    check((await settle(n)) === '#ventes/encheres', '(e) sans écouteur, « Nouvelle enchère » ouvre #ventes/encheres');
+    check((await n.locator('dialog[open]').count()) === 1 && (await settle(n)) === '#plateau', '(e) « Nouvelle enchère » ouvre sa fenêtre rapide sur le plateau');
     await n.ctx.close();
 
     // Give : repli vers la gestion globale (La Fabrique)
@@ -169,7 +169,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     await settle(q);
     await q.click('[data-quick="give"]');
     await sleep(400);
-    check((await settle(q)) === '#fabrique/gestion', '(e) sans écouteur, « Give » ouvre #fabrique/gestion');
+    check((await q.locator('dialog[open]').count()) === 1 && (await settle(q)) === '#plateau', '(e) « Give » ouvre sa fenêtre rapide sur le plateau');
     await q.ctx.close();
 
     // Membre sans le droit « cartes » : aucune action rapide ; seule la Mairie (journal) est sur le plan

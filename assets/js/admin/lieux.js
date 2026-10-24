@@ -44,6 +44,8 @@ async function todoItems(lieuId) {
 
 // Nombre d'éléments « À faire » par lieu (lieuId -> n), pour la pastille du plateau et le total de la page du lieu.
 const TODO_N = new Map();
+// Premier élément « À faire » de chaque lieu (ligne d'info en direct sur le plateau).
+const TODO_FIRST = new Map();
 /** Nombre d'éléments « À faire » d'un lieu (0 tant qu'il n'a pas été compté). */
 export const todoCount = (lieuId) => TODO_N.get(lieuId) || 0;
 const repaint = () => document.dispatchEvent(new CustomEvent('hg:todo-changed'));
@@ -53,7 +55,8 @@ const repaint = () => document.dispatchEvent(new CustomEvent('hg:todo-changed'))
  * Appelé au chargement des compteurs (counts.js) ; une page de lieu se recompte à sa propre visite.
  */
 export async function loadTodoCounts() {
-  await Promise.all(LIEUX.map(async (l) => { TODO_N.set(l.id, (await todoItems(l.id)).length); }));
+  await Promise.all(LIEUX.map(async (l) => { const it = await todoItems(l.id); TODO_N.set(l.id, it.length); TODO_FIRST.set(l.id, it[0] || null); }));
+  paintInfo();
   repaint();
 }
 
@@ -71,6 +74,13 @@ const QUICK = [
   { action: 'drop', label: 'Lancer un drop', aria: 'Lancer un drop', lieu: 'fabrique', sub: 'drops', solid: false },
   { action: 'enchere', label: 'Nouvelle enchère', aria: 'Nouvelle enchère', lieu: 'ventes', sub: 'encheres', solid: true },
 ];
+// Bouton principal de chaque lieu (lien vers la page qui sert le plus), affiché si la page est permise.
+const MAIN = {
+  place: { label: 'Inviter quelqu’un', sub: 'invitations' },
+  poste: { label: 'Répondre', sub: 'assistance' },
+  camp: { label: 'Nouvelle sortie', sub: 'sorties' },
+  fete: { label: 'Nouvel événement', sub: 'evenements' },
+};
 // Ordre du chemin qui relie les lieux sur le plateau (tracé entre les centres des cases).
 const ROAD = ['place', 'poste', 'ventes', 'fete', 'fabrique', 'camp', 'mairie'];
 
@@ -80,6 +90,7 @@ const subOf = (id) => LIEUX.flatMap((l) => l.subs).find((s) => s.id === id);
 /** Une case du plateau : nom du lieu (lien), pastille du nombre à traiter, actions rapides du lieu. */
 function cellHtml(l) {
   const quick = QUICK.filter((q) => q.lieu === l.id && canSub(subOf(q.sub)));
+  const main = MAIN[l.id] && canSub(subOf(MAIN[l.id].sub)) ? MAIN[l.id] : null;
   return `<div class="plateau-cell" data-lieu="${esc(l.id)}" style="--lieu: ${esc(l.color)}">
       <a class="plateau-lieu" href="#${esc(l.id)}">
         <span class="plateau-head">
@@ -90,7 +101,8 @@ function cellHtml(l) {
         <span class="plateau-tag">${esc(l.tagline)}</span>
         <span class="visually-hidden" data-lieu-count="${esc(l.id)}" hidden></span>
       </a>
-      ${quick.length ? `<div class="plateau-quick" role="group" aria-label="Actions rapides : ${esc(l.label)}">${quick.map((q) => `<button type="button" class="plateau-act${q.solid ? '' : ' plateau-act--line'}" data-quick="${q.action}"${q.aria !== q.label ? ` aria-label="${esc(q.aria)}"` : ''}>${esc(q.label)}</button>`).join('')}</div>` : ''}
+      <p class="plateau-info small" data-lieu-info="${esc(l.id)}" hidden></p>
+      ${quick.length || main ? `<div class="plateau-quick" role="group" aria-label="Actions rapides : ${esc(l.label)}">${main ? `<a class="plateau-act" href="#${esc(l.id)}/${esc(main.sub)}">${esc(main.label)}</a>` : ''}${quick.map((q) => `<button type="button" class="plateau-act${q.solid ? '' : ' plateau-act--line'}" data-quick="${q.action}"${q.aria !== q.label ? ` aria-label="${esc(q.aria)}"` : ''}>${esc(q.label)}</button>`).join('')}</div>` : ''}
     </div>`;
 }
 
@@ -139,6 +151,16 @@ export function renderPlateau(root, lieux) {
     ro.observe(board);
   }
   requestAnimationFrame(() => drawRoad(board));
+  paintInfo();
+}
+
+/** Ligne d'info en direct de chaque case : le premier élément « À faire » du lieu (ou rien). */
+function paintInfo() {
+  document.querySelectorAll('[data-lieu-info]').forEach((p) => {
+    const it = TODO_FIRST.get(p.dataset.lieuInfo);
+    p.hidden = !it;
+    p.textContent = it ? it.title : '';
+  });
 }
 
 /**
