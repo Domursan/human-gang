@@ -6,7 +6,7 @@
 // - sensitive : clé technique ; seul l'administrateur peut la modifier (le reste du panel ne suffit pas).
 // Une clé inconnue du registre est affichée sans aide, et modifiable par le Staff (non sensible).
 // Dépendances : keys-lot1.js à keys-lot5.js (descriptions par lot).
-// Exporte : KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue.
+// Exporte : KEYS, DEDIE, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue.
 // =====================================================================
 import { KEYS_LOT1 } from './keys-lot1.js';
 import { KEYS_LOT2 } from './keys-lot2.js'; // lot 2 : comptes et invitations
@@ -24,6 +24,20 @@ const KEYS_BASE = {
   quiz: { label: 'Questions du gang', help: 'Récompenses par défaut selon la difficulté des questions. Modifiable dans la section Questions du gang.', managed: '#fete/questions', managedLabel: 'Questions du gang' },
   eggs: { label: 'Secrets (easter eggs)', help: 'Date d’anniversaire du gang, mot secret et récompenses en Paillettes de chaque secret.', managed: '#fete/secrets', managedLabel: 'Autres jeux · Secrets' },
   admin_initial: { label: 'Administrateur initial', help: 'Trace de l\'administrateur d\'origine du site.', sensitive: true },
+};
+
+/*
+ * Clés qui ont leur propre écran d'édition. Elles sont masquées de la liste « Clés avancées » : une saisie brute
+ * ne doit pas écraser une valeur réglée ailleurs. where = libellé du lieu, route = adresse où le régler.
+ */
+export const DEDIE = {
+  competences: { where: 'Membres › Compétences', route: '#place/competences' },
+  parrainage: { where: 'Membres › Parrainage', route: '#place/parrainage' },
+  social: { where: 'Membres › Vie sociale', route: '#place/social' },
+  home_default: { where: 'Membres › Accueil des membres', route: '#place/accueil' },
+  profile_fields: { where: 'Membres › Champs du profil', route: '#place/champs' },
+  echanges: { where: 'La Salle des ventes › Échanges', route: '#ventes/echanges' },
+  saisons: { where: 'La Fête foraine › Calendrier de l’Avent, Saison des Worlds, Anniversaire du gang', route: '#fete/avent' },
 };
 
 /** Toutes les clés décrites : base + lot 1 (identité et textes, formulaire dédié). */

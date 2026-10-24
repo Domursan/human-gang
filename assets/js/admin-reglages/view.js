@@ -13,7 +13,7 @@ import { sb, toast, errMsg, esc, $, fmtDateTime } from '../core.js';
 import { getCachedProfile } from '../core/profile.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
-import { KEYS, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
+import { KEYS, DEDIE, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
 import { mountIdentite, showIdentitePart } from './identite.js';
 import { PARTS_LOT1 } from './keys-lot1.js';
 
@@ -75,8 +75,10 @@ async function load() {
   render();
 }
 
-/** Clés listées ici : celles qui ont un formulaire dédié (site_identite, site_textes) sont exclues. */
-const listRows = () => R.rows.filter((r) => !KEYS[r.key]?.formulaire);
+/** Clés listées ici : celles qui ont un formulaire dédié (site_identite, site_textes) et celles qui ont leur écran (DEDIE) sont exclues. */
+const listRows = () => R.rows.filter((r) => !KEYS[r.key]?.formulaire && !DEDIE[r.key]);
+/** Clés présentes en base mais réglées dans leur écran : listées dans une note, sans éditeur ici. */
+const dedieRows = () => R.rows.filter((r) => DEDIE[r.key]);
 
 /** Dessine la liste des réglages (ou un message de chargement, d'erreur ou d'absence de réglage). */
 function render() {
@@ -86,8 +88,12 @@ function render() {
     <p class="small muted">Réglages techniques du site : chaque clé porte une valeur (texte, nombre, oui / non ou JSON). Le code du site décide de l'effet d'une clé. Une clé gérée dans une autre section se modifie là-bas.</p>
     ${R.error ? `<div class="empty">Impossible de charger les réglages : ${esc(R.error)} <button class="btn btn-ghost btn-sm" type="button" data-rg="retry">Réessayer</button></div>` : ''}
     ${!R.loaded && !R.error ? '<div class="empty">Chargement des réglages…</div>' : ''}
-    ${R.loaded && !listRows().length ? '<div class="empty">Aucun réglage enregistré.</div>' : ''}
-    ${R.loaded && listRows().length ? `<ul class="rg-list">${listRows().map((r, i) => itemHtml(r, i)).join('')}</ul>` : ''}`;
+    ${R.loaded && !listRows().length && !dedieRows().length ? '<div class="empty">Aucun réglage enregistré.</div>' : ''}
+    ${R.loaded && listRows().length ? `<ul class="rg-list">${listRows().map((r, i) => itemHtml(r, i)).join('')}</ul>` : ''}
+    ${R.loaded && dedieRows().length ? `<div class="acd-note" role="note">
+      <p class="small"><strong>Réglées dans leur écran</strong> : ces clés ne figurent pas dans la liste, pour qu’une saisie brute ne les écrase pas.</p>
+      <ul class="small">${dedieRows().map((r) => `<li>${esc(KEYS[r.key]?.label || r.key)} (<code>${esc(r.key)}</code>) : se règle dans <a href="${esc(DEDIE[r.key].route)}">${esc(DEDIE[r.key].where)}</a></li>`).join('')}</ul>
+    </div>` : ''}`;
 }
 
 /** Une ligne de la liste : nom, clé, badges, résumé de la valeur et bouton Modifier ou Voir. */
@@ -243,6 +249,7 @@ async function addKey(scope) {
   if (!KEY_RE.test(key)) return fail('Le nom doit faire 2 à 41 caractères : lettres minuscules, chiffres ou tiret bas, à partir d\'une lettre.');
   if (R.rows.some((r) => r.key === key)) return fail('Cette clé existe déjà : modifie-la dans la liste.');
   if (managedOf(key)) return fail(`Cette clé se règle dans la section « ${managedOf(key).managedLabel} ».`);
+  if (DEDIE[key]) return fail(`Cette clé se règle dans « ${DEDIE[key].where} ».`);
   const res = parseValue(kind, readControl(scope, kind));
   if (res.error) return fail(res.error);
   try {

@@ -11,15 +11,15 @@ import { TABS } from './constants.js';
 import { C, H } from './state.js';
 import { boot, refresh } from './data.js';
 import { act, check } from './helpers.js';
-import { setsPanel, openSetDialog, toggleSet, deleteSet } from './sets.js';
+import { setsPanel, openSetDialog, toggleSet, deleteSet, saveTagLabels } from './sets.js';
 import { cardsPanel } from './list.js';
 import { openCardDialog, deleteCard, makeIdentities } from './editor.js';
 import { econPanel, updateSum, saveEcon, resetEconGroup } from './economy.js';
 import { openBulkGift } from './bulk.js';
 import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy } from './players.js';
 import { statsPanel } from './stats.js';
-import { tradesPanel, cancelTrade, loadBoardNotes, clearBoardNote } from './trades.js';
-import { Q, loadQuests, questsPanel, questActions } from './quests.js';
+import { tradesPanel, cancelTrade, loadBoardNotes, clearBoardNote, loadTradeLimits, saveTradeLimits } from './trades.js';
+import { Q, loadQuests, questsPanel, questActions, saveProofCount } from './quests.js';
 import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
 import { setsListData } from './sets.js';
 import { cardsListData } from './list.js';
@@ -46,7 +46,7 @@ function render() {
   if (C.tab === 'economie') updateSum();
   if (C.tab === 'boosters') mountBoostersTab($('#acd-boosters', C.panel)); // onglet autonome (boosters.js)
   if (C.tab === 'series') mountProposalsAdmin($('#acd-props', C.panel)); // propositions des membres (migration 080)
-  if (C.tab === 'echanges') loadBoardNotes(); // petits mots du tableau (idée C12)
+  if (C.tab === 'echanges') { loadTradeLimits(); loadBoardNotes(); } // limites anti-abus (echanges) et petits mots du tableau (idée C12)
   if (C.tab === 'codes') mountCodesTab($('#acd-codes', C.panel));
   if (C.tab === 'recettes') mountRecipesTab($('#acd-recettes', C.panel));
   if (C.tab === 'encheres') mountAuctionsTab($('#acd-encheres', C.panel));
@@ -126,10 +126,13 @@ function onInput(e) {
   clearTimeout(timers[key]);
   timers[key] = setTimeout(() => { C.q[key] = t.value; C.shown = PAGE_SIZE; renderList(key); }, SEARCH_DELAY);
 }
-/** Délégation des envois : seul le formulaire de l'économie est traité ici. */
+/** Délégation des envois : formulaires de l'économie, des quêtes à preuve, des libellés de jeux et des échanges. */
 function onSubmit(e) {
   const form = e.target;
   if (form.id === 'acd-econ-form') { e.preventDefault(); return saveEcon(form, e.submitter); }
+  if (form.id === 'acd-proof-form') { e.preventDefault(); return saveProofCount(form, e.submitter); }
+  if (form.id === 'acd-tags-form') { e.preventDefault(); return saveTagLabels(form, e.submitter); }
+  if (form.id === 'acd-echanges-form') { e.preventDefault(); return saveTradeLimits(form, e.submitter); }
 }
 
 /**

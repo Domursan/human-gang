@@ -121,7 +121,20 @@ const H = {
     emitUnwrap(); return ok({ current: nxt?.user_id || null });
   },
   hg_ss_unwrap_reveal: () => { UW.status = 'revelation'; return ok('revelation'); },
+  /* ---------- Administration : Fête foraine › Avent, Worlds, Anniversaire. Les réglages viennent de hg_settings.saisons
+     (lu dans window.__DB) ; les RPC d'écriture sont journalisées, et la fusion côté client est vérifiée sur la base simulée. ---------- */
+  hg_advent_admin: ({ p_year }) => ok({ year: p_year, clock: null, gang: 14, days: [],
+    cfg: { actif: true, seuil: 10, seuil_pct: 70, carte_repli: 20, plafond: 600, ...(sais().avent || {}) } }),
+  hg_saison_admin: () => { const w = sais().worlds || {}; return ok({ worlds: { actif: !!w.actif, debut: null, fin: null, en_cours: false, booster: null,
+      pronos: w.pronos || 'jeux.html#pronos', quetes: w.quetes || [], mots: w.mots || [] }, theme: null, pronos_ready: false, quests: [],
+    booster_types: window.__DB.hg_booster_types.map((t) => ({ id: t.id, name: t.name, active: t.active !== false })) }); },
+  hg_saison_set: () => ok({ badges: 0 }),
+  hg_anniv_admin: () => { const c = sais().anniversaire || {};
+    return ok({ info: { date: '2027-01-08', age: 5, annee: c.annee ?? 2022, debut: '2027-01-07', fin: '2027-01-09', dans_fenetre: false, booster: c.booster || 'anniversaire' },
+      cfg: c, cards: [], claims: 0, moments: [] }); },
 };
+/** Réglages saisonniers courants (hg_settings.saisons) lus dans la base simulée. */
+function sais() { return window.__DB.hg_settings.find((r) => r.key === 'saisons')?.value || {}; }
 window.__UW = UW;
 
 export function createClient(...a) {
