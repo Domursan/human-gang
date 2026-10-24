@@ -1,5 +1,5 @@
 // =====================================================================
-// Comptes admin : fiche d'un membre dans la zone principale (#membres/comptes/<id>/<onglet>), résumé à droite.
+// Comptes admin : fiche d'un membre dans la zone principale (#place/comptes/<id>/<onglet>), résumé à droite.
 // Lectures à la demande : à l'ouverture, seuls le profil et le Staff sont lus ; chaque onglet ne lit que ses
 // données, une fois. Le résumé (colonne droite, écran de 1440 px et plus) lit ses repères à part. Toute lecture
 // est gardée pendant la visite de la page (CACHE, dans state.js) ; une modification la vide.
@@ -210,7 +210,7 @@ export async function reloadDetail() {
   } catch (e) { toast(errMsg(e), 'error'); }
 }
 
-/** Fiche d'un fantôme (adresse #membres/comptes/<id>) : code, note et liaison à un compte inscrit (admin-ghosts.js). */
+/** Fiche d'un fantôme (adresse #place/comptes/<id>) : code, note et liaison à un compte inscrit (admin-ghosts.js). */
 export function showGhostFiche(uid) {
   A.uid = uid; A.d = null; A.ghostView = true; A.showPair = false;
   selectInList(uid);
@@ -229,7 +229,7 @@ export function emptyDetail() {
   paintInfo();
 }
 
-/** Fournisseur `open` de la sous-section : affiche la fiche de l'URL (#membres/comptes/<id>/<onglet>). */
+/** Fournisseur `open` de la sous-section : affiche la fiche de l'URL (#place/comptes/<id>/<onglet>). */
 export function showAccount(uid, tab) {
   if (!uid) { emptyDetail(); return; }
   const t = tabOf(tab);
@@ -243,7 +243,7 @@ export function showAccount(uid, tab) {
 
 /** Ouvre la fiche d'un membre depuis une autre section : change l'URL, la sous-section affiche la fiche. */
 export function openAccountFiche(uid, tab) {
-  const h = `#membres/comptes/${uid}${tab && tab !== 'profil' ? `/${tab}` : ''}`;
+  const h = `#place/comptes/${uid}${tab && tab !== 'profil' ? `/${tab}` : ''}`;
   if (location.hash === h) return openAccount(uid, { tab: tabOf(tab) });
   location.hash = h;
 }
@@ -281,7 +281,7 @@ function paintHead() {
     title: `${p.pseudo || acc.pseudo || 'Membre'}${ghost ? ' (fantôme)' : ''}`,
     subtitle,
     actions: [
-      ...(ghost ? [{ label: 'Détail du fantôme', onClick: () => { location.hash = `#membres/comptes/${A.uid}`; } }] : []),
+      ...(ghost ? [{ label: 'Détail du fantôme', onClick: () => { location.hash = `#place/comptes/${A.uid}`; } }] : []),
       ...(ghost ? [] : [{ label: `Voir le site comme ${p.pseudo || acc.pseudo || 'ce membre'}`, onClick: voirLeSite }]),
       { label: 'Fermer la fiche', onClick: closeDetail },
     ],
@@ -426,7 +426,7 @@ export async function selectTab(k, focus = false) {
   const panel = $('#acc-panel');
   if (!panel) return renderDetail();
   panel.setAttribute('aria-labelledby', `acc-tab-${k}`);
-  if (A.uid) history.replaceState(null, '', `#membres/comptes/${A.uid}${k === 'profil' && !isGhostFiche() ? '' : `/${k}`}`);
+  if (A.uid) history.replaceState(null, '', `#place/comptes/${A.uid}${k === 'profil' && !isGhostFiche() ? '' : `/${k}`}`);
   if (!A.d || tabReady(k)) renderPanel();
   else {
     // Première ouverture de l'onglet : seules ses données sont lues

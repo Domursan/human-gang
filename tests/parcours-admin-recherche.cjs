@@ -40,7 +40,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Boîte à idées (liste + détail) : recherche, filtres, action ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { ideas: IDEAS } });
-    await adminSection(p, 'pilotage/idees');
+    await adminSection(p, 'poste/idees');
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
     /** Nombre de lignes de la colonne liste. */
     const rows = () => p.locator('#shell-col-list .ui-row').count();
@@ -66,7 +66,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     check(await rows() === 3, 'idées : vider la recherche restaure la liste du filtre');
 
     // Action : écarter une idée depuis son détail (statut enregistré, pas de bouton resté en cours)
-    await p.evaluate(() => { location.hash = '#pilotage/idees/i2'; });
+    await p.evaluate(() => { location.hash = '#poste/idees/i2'; });
     await p.waitForSelector('#ideas-root select', { timeout: 5000 });
     await p.selectOption('#ideas-root select', 'ecartee');
     await p.waitForTimeout(400);
@@ -80,7 +80,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Journal (liste + détail) : recherche, « Afficher plus » et lots serveur ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG, accessLog: ACCESS_LOG } });
-    await adminSection(p, 'pilotage/journal');
+    await adminSection(p, 'mairie/journal');
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
     /** Nombre de lignes de la colonne liste. */
     const rows = () => p.locator('#shell-col-list .ui-row').count();
@@ -115,7 +115,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Cartes : recherche et lots de 50 ---------- */
   {
     const p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, scenario: { bigCards: 120 } });
-    await adminSection(p, 'cartes/cartes');
+    await adminSection(p, 'fabrique/cartes');
     await p.waitForSelector('#acd-cards-list tbody tr', { timeout: 5000 });
     check(await p.locator('#acd-cards-list tbody tr').count() === 50, 'cartes : premier lot de 50 lignes sur 133');
     check(await p.isVisible('[data-act="cards-more"]'), 'cartes : bouton « Afficher plus » visible');
@@ -145,7 +145,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     check(await p.locator('#acd-cards-list tbody tr').count() === 50, 'cartes : vider la recherche revient au premier lot');
 
     // Séries : même recherche sur la liste des séries
-    await adminSection(p, 'cartes/series');
+    await adminSection(p, 'fabrique/series');
     await p.waitForSelector('#acd-sets-list .acd-setcard', { timeout: 5000 });
     await p.fill('#acd-search-series', 'saison');
     await sleep(400);
@@ -157,7 +157,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Fiche membre : requêtes à l'ouverture, onglets à la demande, cache de la visite ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { adminLog: ADMIN_LOG } });
-    await adminSection(p, 'membres/comptes');
+    await adminSection(p, 'place/comptes');
     await p.waitForSelector(`#shell-col-list .ui-row[data-id="${ALICE}"]`, { timeout: 5000 });
 
     let mark = await logLength(p);
@@ -199,7 +199,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
 
     // Nouvelle visite du même membre : les lectures déjà faites ne sont pas relues
     await p.keyboard.press('Escape');
-    await p.waitForFunction(() => location.hash === '#membres/comptes', null, { timeout: 4000 }).catch(() => {});
+    await p.waitForFunction(() => location.hash === '#place/comptes', null, { timeout: 4000 }).catch(() => {});
     await p.waitForSelector(`#shell-col-list .ui-row[data-id="${ALICE}"]`, { timeout: 5000 });
     mark = await logLength(p);
     await p.click(`#shell-col-list .ui-row[data-id="${ALICE}"]`);

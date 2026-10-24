@@ -15,7 +15,7 @@ const U2 = '00000002-0000-4000-8000-000000000002';
 
   /* ---------- Admin ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-vd.mjs', width: 1280 });
-  await adminSection(p, 'pilotage/commandes');
+  await adminSection(p, 'poste/commandes');
   await p.waitForSelector('#commandes-root [data-cmd]', { timeout: 6000 });
   check(await p.locator('#commandes-root [data-cmd]').count() === 4, 'quatre interrupteurs de commande');
   check(await p.locator('#commandes-root [data-cmd][role="switch"]:checked').count() === 4, 'toutes actives par défaut');
@@ -23,7 +23,7 @@ const U2 = '00000002-0000-4000-8000-000000000002';
   await sleep(300);
   check(await vd(p, () => window.__VD.commands.carte === false), '/carte coupée et enregistrée');
 
-  await adminSection(p, 'event/rdv');
+  await adminSection(p, 'fete/rdv');
   await p.waitForSelector('#rdv-root .avd-row', { timeout: 6000 });
   check(await p.locator('#rdv-root .avd-row').count() === 2, 'deux rendez-vous récurrents listés');
   await p.fill('#avd-seuil', '50');
@@ -47,8 +47,8 @@ const U2 = '00000002-0000-4000-8000-000000000002';
   /* ---------- Staff « cartes » seulement : ni commandes, ni calendrier ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-vd.mjs', scenario: { uid: U2, staff: ['cartes'] }, width: 1280 });
   await sleep(500);
-  check(await p.locator('.shell-sub[href="#pilotage/commandes"]').count() === 0, 'Staff sans « bot » : pas de Commandes slash');
-  check(await p.locator('.shell-sub[href="#event/rdv"]').count() === 0, 'Staff sans « evenements » : pas de Calendrier et ciné');
+  check(await p.locator('.shell-sub[href="#poste/commandes"]').count() === 0, 'Staff sans « bot » : pas de Commandes slash');
+  check(await p.locator('.shell-sub[href="#fete/rdv"]').count() === 0, 'Staff sans « evenements » : pas de Calendrier et ciné');
   await p.ctx.close();
 
   /* ---------- Mon compte (360 px) ---------- */

@@ -24,7 +24,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Ouvre le tiroir « Don groupé… » depuis Jeu de cartes › Économie. */
 async function ouvrirDonGroupe(p) {
-  await adminSection(p, 'cartes/economie');
+  await adminSection(p, 'fabrique/economie');
   await p.waitForSelector('[data-act="bulk-open"]', { timeout: 8000 });
   await p.click('[data-act="bulk-open"]');
   await p.waitForSelector(`${drawer} #acd-bulk-kind`, { timeout: 5000 });

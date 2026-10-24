@@ -34,7 +34,7 @@ const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.ge
 
   /* ---------- Admin ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
-  await adminSection(p, 'cartes/drops');
+  await adminSection(p, 'fabrique/drops');
   await p.waitForSelector('[data-action="drop-new"]', { timeout: 8000 });
   check((await p.textContent('#drop-list')).includes('Aucun drop'), 'admin : liste vide au départ');
 

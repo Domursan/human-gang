@@ -1,4 +1,4 @@
-// Parcours : Le jeu de cartes › Gestion globale (admin.html, #cartes/gestion ; admin-gestion.js).
+// Parcours : Le jeu de cartes › Gestion globale (admin.html, #fabrique/gestion ; admin-gestion.js).
 // (a) Give : membres (recherche, pastilles, « Tout le gang »), type de don (Paillettes, Cartes, Booster), montant, carte
 //     (recherche, brillante), motif, « Annoncer au membre » ; contrôle, confirmation, puis une seule RPC
 //     hg_cards_admin_bulk_give avec les bons paramètres ; RPC refusée : message dans le bloc, pas de don.
@@ -34,7 +34,7 @@ const attendreJournal = (p) => p.waitForFunction(() => {
 }, null, { timeout: 8000 }).catch(() => {});
 /** Ouvre la section et attend son chargement complet. */
 async function ouvrir(p) {
-  await adminSection(p, 'cartes/gestion');
+  await adminSection(p, 'fabrique/gestion');
   await p.waitForSelector('#gest-list .acd-bulk-row', { timeout: 8000 });
   await attendreEco(p);
   await attendreJournal(p);
@@ -178,7 +178,7 @@ async function ouvrir(p) {
   check(eco.includes('+2 % sur 7 jours'), 'Résumé : variation « +2 % sur 7 jours » (hg_eco_health)');
   check(eco.includes('Enchères en cours') && eco.includes('Le Paleto'), 'Résumé : enchère ouverte et sa carte');
   check(eco.includes('Un membre a gagné 6 fois la médiane'), 'Résumé : alerte de concentration expliquée');
-  check(!!(await p.$('#gest-eco a[href="#cartes/limites"]')) && !!(await p.$('#gest-eco a[href="#cartes/stats"]')), 'Résumé : liens vers Économie › Limites et Suivi › Statistiques');
+  check(!!(await p.$('#gest-eco a[href="#fabrique/limites"]')) && !!(await p.$('#gest-eco a[href="#fabrique/stats"]')), 'Résumé : liens vers Économie › Limites et Suivi › Statistiques');
   check(!eco.includes('4 semaines'), 'Résumé : pas de tendance sur 4 semaines (donnée absente)');
   await p.ctx.close();
 

@@ -17,11 +17,14 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
     const mjScn = { settings, uid: U(3), staff: ['mj'], gameMasters: [{ game_slug: 'ck3', user_id: U(3) }] };
     let p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: mjScn });
     await sleep(500);
-    const subs = await p.$$eval('#shell-subs .shell-sub', (a) => a.map((x) => x.getAttribute('href')));
-    check(JSON.stringify(subs) === JSON.stringify(['#jeux/mes-jeux']), `(a) Staff mj : une seule sous-section (${subs.join(', ')})`);
-    await p.evaluate(() => { location.hash = 'membres/comptes'; }); await sleep(600);
-    check(await p.evaluate(() => location.hash) === '#jeux/mes-jeux', '(a) #membres/comptes redirigée vers Mes jeux');
-    await adminSection(p, 'jeux/mes-jeux');
+    const lieux = await p.$$eval('.plateau-lieu', (a) => a.map((x) => x.getAttribute('href')));
+    check(JSON.stringify(lieux) === JSON.stringify(['#fete']), `(a) Staff mj : un seul lieu sur le plateau (${lieux.join(' ')})`);
+    await p.evaluate(() => { location.hash = '#fete'; }); await sleep(500);
+    const subs = await p.$$eval('#lieu-root .lieu-tile', (a) => a.map((x) => x.dataset.sub));
+    check(JSON.stringify(subs) === JSON.stringify(['mes-jeux']), `(a) Staff mj : une seule page dans La Fête foraine (${subs.join(', ')})`);
+    await p.evaluate(() => { location.hash = 'place/comptes'; }); await sleep(600);
+    check((await p.evaluate(() => location.hash)) === '#plateau', '(a) #place/comptes interdite : retour au plateau (un seul lieu permis)');
+    await adminSection(p, 'fete/mes-jeux');
     await p.waitForSelector('.mj-game');
     check(await p.$$eval('.mj-game', (g) => g.length) === 1 && (await p.textContent('.mj-title')).includes('CK3'), '(b) un seul jeu : CK3');
     check(await p.locator('.mj-masters').count() === 0 && await p.locator('#zone-actions .btn').count() === 0, '(b) ni liste des MJ ni « Nouveau jeu » pour un MJ');
@@ -39,7 +42,7 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
 
     // (d) Admin
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { settings, staffRows: [{ user_id: U(3), perms: ['mj'], active: true, note: '' }] } });
-    await adminSection(p, 'jeux/mes-jeux');
+    await adminSection(p, 'fete/mes-jeux');
     await p.waitForSelector('.mj-game');
     check(await p.$$eval('.mj-game', (g) => g.length) === 2, '(d) admin : tous les jeux (2)');
     await p.selectOption('#mj-add-ck3', U(3));
@@ -55,13 +58,13 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
     await p.fill('#mj-f-name', 'Age of Empires 2'); await p.fill('#mj-f-slug', 'aoe2');
     await p.click('dialog[open] [data-drawer-submit]'); await sleep(600);
     check(await p.$$eval('.mj-game', (g) => g.length) === 3, '(d) nouveau jeu créé');
-    await adminSection(p, 'pilotage/staff'); await sleep(800);
+    await adminSection(p, 'mairie/staff'); await sleep(800);
     check((await p.content()).includes('Maître du jeu'), '(d) permission « Maître du jeu » proposée dans Staff');
     check(p.errs.length === 0, '(d) aucune erreur JS' + (p.errs.length ? ' : ' + p.errs.slice(0, 3).join(' | ') : ''));
     await p.ctx.close();
 
     p = await openPage(browser, { page: 'admin', width: 375, height: 812, scenario: mjScn });
-    await adminSection(p, 'jeux/mes-jeux'); await sleep(500);
+    await adminSection(p, 'fete/mes-jeux'); await sleep(500);
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     await p.ctx.close();
   } catch (e) { check(false, 'arrêt sur erreur : ' + String(e.message).split('\n')[0]); }

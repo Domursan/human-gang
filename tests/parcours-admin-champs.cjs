@@ -5,7 +5,7 @@
 // (d) enregistrement : upsert de profile_fields accepté par validateInfoGroups, clés inconnues conservées,
 //     identifiants figés après enregistrement ; retrait d'un champ enregistré confirmé ;
 // (e) réglage existant lu ; Staff « reglages » ; 375 px sans défilement horizontal ; longueur ≤ 1 400 px ; aucune erreur JS.
-// La section est ouverte par sa route #membres/champs si admin.js la branche, sinon montée directement (mountChampsSection).
+// La section est ouverte par sa route #place/champs si admin.js la branche, sinon montée directement (mountChampsSection).
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-champs.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium } = require('./lib/harness.cjs');
 
@@ -13,8 +13,8 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 
 /** Ouvre la section : route si elle existe, sinon montage direct dans la zone principale. */
 async function openChamps(p) {
-  const routed = await p.locator('a.shell-sub[href="#membres/champs"]').count();
-  if (routed) await adminSection(p, 'membres/champs');
+  const routed = await p.locator('a.shell-sub[href="#place/champs"]').count();
+  if (routed) await adminSection(p, 'place/champs');
   else {
     await p.evaluate(async () => {
       const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'assets/css/admin-champs.css'; document.head.appendChild(l);
@@ -40,7 +40,7 @@ const writes = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] === 'hg_s
   /* (a) Liste d'origine */
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
   const how = await openChamps(p);
-  console.log(`  (section ouverte : ${how === 'route' ? 'route #membres/champs' : 'montage direct'})`);
+  console.log(`  (section ouverte : ${how === 'route' ? 'route #place/champs' : 'montage direct'})`);
   check(await p.locator('.ach-group').count() === 5, '(a) 5 groupes d\'origine');
   check(await p.locator('.ach-group details[open]').count() === 1, '(a) seul le premier groupe est déplié');
   const g0 = await groupK(p, 0);

@@ -15,14 +15,14 @@ import { KEYS_LOT4 } from './keys-lot4.js'; // lot 4 : ajout isolé
 import { KEYS_LOT5 } from './keys-lot5.js'; // lot 5 : bot, planning, assistance
 
 const KEYS_BASE = {
-  theme: { label: 'Thème du site', help: 'Mode du site (clair, sombre, automatique) et thème forcé.', managed: '#pilotage/theme', managedLabel: 'Pilotage · Thème' },
-  bot: { label: 'Bot Discord', help: 'Salon d\'annonce, administrateur Discord et types de notifications.', managed: '#pilotage/bot', managedLabel: 'Pilotage · Bot Discord' },
-  bot_templates: { label: 'Modèles de messages du bot', help: 'Titres et textes des messages envoyés par le bot.', managed: '#pilotage/bot', managedLabel: 'Pilotage · Bot Discord' },
-  cards: { label: 'Économie du jeu de cartes', help: 'Taux de tirage, prix des boosters, récompenses en Paillettes.', managed: '#cartes/economie', managedLabel: 'Le jeu de cartes · Économie' },
+  theme: { label: 'Thème du site', help: 'Mode du site (clair, sombre, automatique) et thème forcé.', managed: '#mairie/theme', managedLabel: 'Pilotage · Thème' },
+  bot: { label: 'Bot Discord', help: 'Salon d\'annonce, administrateur Discord et types de notifications.', managed: '#poste/bot', managedLabel: 'Pilotage · Bot Discord' },
+  bot_templates: { label: 'Modèles de messages du bot', help: 'Titres et textes des messages envoyés par le bot.', managed: '#poste/bot', managedLabel: 'Pilotage · Bot Discord' },
+  cards: { label: 'Économie du jeu de cartes', help: 'Taux de tirage, prix des boosters, récompenses en Paillettes.', managed: '#fabrique/economie', managedLabel: 'Le jeu de cartes · Économie' },
   push_vapid_public: { label: 'Clé publique des notifications (VAPID)', help: 'Clé publique Web Push. Elle doit correspondre à la clé privée de la fonction edge : la modifier casse les notifications des membres.', sensitive: true },
   domursan_owner: { label: 'Propriétaire Domursan', help: 'Identifiant technique du propriétaire de l\'app Domursan.', sensitive: true },
-  quiz: { label: 'Questions du gang', help: 'Récompenses par défaut selon la difficulté des questions. Modifiable dans la section Questions du gang.', managed: '#jeux/questions', managedLabel: 'Questions du gang' },
-  eggs: { label: 'Secrets (easter eggs)', help: 'Date d’anniversaire du gang, mot secret et récompenses en Paillettes de chaque secret.', managed: '#jeux/secrets', managedLabel: 'Autres jeux · Secrets' },
+  quiz: { label: 'Questions du gang', help: 'Récompenses par défaut selon la difficulté des questions. Modifiable dans la section Questions du gang.', managed: '#fete/questions', managedLabel: 'Questions du gang' },
+  eggs: { label: 'Secrets (easter eggs)', help: 'Date d’anniversaire du gang, mot secret et récompenses en Paillettes de chaque secret.', managed: '#fete/secrets', managedLabel: 'Autres jeux · Secrets' },
   admin_initial: { label: 'Administrateur initial', help: 'Trace de l\'administrateur d\'origine du site.', sensitive: true },
 };
 

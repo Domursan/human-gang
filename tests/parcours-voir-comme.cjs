@@ -3,7 +3,7 @@
 //     hg_admin_view_as appelée pour Alice, la vue est gardée dans sessionStorage « hg_view_as », le site s'ouvre dans le même onglet ;
 //     bandeau « Tu vois le site comme Alice · … », menus réduits aux pages d'Alice (pas de « Le jeu de cartes », pas de « Jeux »,
 //     « Questions du gang » sous Autres) ; Admin, Staff et Sans limite masqués ; une page réservée (cartes.html) renvoie à l'accueil ;
-//     « Revenir au panel » efface la vue et ouvre admin.html#membres/comptes. Ouvrir admin.html à la main efface aussi la vue.
+//     « Revenir au panel » efface la vue et ouvre admin.html#place/comptes. Ouvrir admin.html à la main efface aussi la vue.
 // (b) téléphone 390 px : bandeau visible, sans défilement horizontal, cible « Revenir au panel » ≥ 44 px.
 // (c) non-admin avec la clé : la clé est ignorée et effacée (aucun bandeau, menus et pages normaux, pas d'accès à cartes.html).
 // Faux Supabase (fixtures/fake-sb.mjs : hg_admin_view_as, hg_my_pages, hg_pages). Captures : tests/shots/voir-comme-*.png.
@@ -45,7 +45,7 @@ async function poser(p, valeur) {
     /* (a) Bureau 1280 px : de la fiche d'Alice au site vu comme elle, puis retour au panel */
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-      await adminSection(p, 'membres/comptes');
+      await adminSection(p, 'place/comptes');
       await p.click(`#shell-col-list .ui-row[data-id="${U(2)}"]`);
       await p.waitForFunction(() => document.querySelector('#acc-dh .ui-dhead-t')?.textContent.includes('Alice'), null, { timeout: 8000 }).catch(() => {});
       const bouton = p.locator('#acc-dh .ui-btn', { hasText: 'Voir le site comme Alice' });
@@ -85,7 +85,7 @@ async function poser(p, valeur) {
       // Revenir au panel : efface la vue, ouvre le panel sur les comptes
       await p.click('.view-as-back');
       await p.waitForURL(/admin\.html#membres\/comptes$/, { timeout: 8000 }).catch(() => {});
-      check(/admin\.html#membres\/comptes$/.test(p.url()), '(a) « Revenir au panel » : admin.html#membres/comptes');
+      check(/admin\.html#membres\/comptes$/.test(p.url()), '(a) « Revenir au panel » : admin.html#place/comptes');
       check(await p.evaluate((k) => sessionStorage.getItem(k), KEY) === null, '(a) « Revenir au panel » : la vue est effacée');
       check(!(await bandeau(p)) && await p.locator('.view-as-bar').count() === 0, '(a) panel : aucun bandeau');
       check(await p.locator('#app .admin-section, #shell').count() > 0 && !p.errs.length, '(a) panel : retour sans erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));

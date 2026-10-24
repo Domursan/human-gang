@@ -48,10 +48,10 @@ export const CLES_LOT3 = ['ss', 'irl', 'albums', 'photos'];
 
 /** Descripteurs à fusionner dans le registre de keys.js (libellé et aide des clés, lecture seule pour les clés gérées ailleurs). */
 export const KEYS_LOT3 = {
-  ss: { label: 'Réglages du Secret Santa', help: 'Minimum de participants, éviter la même cible, budget proposé, souhaits maximum.', managed: '#irl/secret-santa', managedLabel: 'IRL · Secret Santa' },
-  irl: { label: 'Réglages des sorties IRL', help: 'Passage dans l’historique, sondage de dates, durée par défaut.', managed: '#irl/sorties', managedLabel: 'IRL · Sorties IRL' },
-  albums: { label: 'Réglages des albums', help: 'Nombre de photos et poids maximum d’un album ZIP.', managed: '#irl/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
-  photos: { label: 'Réglages des photos', help: 'Taille et qualité des photos envoyées.', managed: '#irl/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
+  ss: { label: 'Réglages du Secret Santa', help: 'Minimum de participants, éviter la même cible, budget proposé, souhaits maximum.', managed: '#camp/secret-santa', managedLabel: 'IRL · Secret Santa' },
+  irl: { label: 'Réglages des sorties IRL', help: 'Passage dans l’historique, sondage de dates, durée par défaut.', managed: '#camp/sorties', managedLabel: 'IRL · Sorties IRL' },
+  albums: { label: 'Réglages des albums', help: 'Nombre de photos et poids maximum d’un album ZIP.', managed: '#camp/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
+  photos: { label: 'Réglages des photos', help: 'Taille et qualité des photos envoyées.', managed: '#camp/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
 };
 
 /** Valeurs par défaut sous forme d'objets { cle: { champ: défaut } }. */

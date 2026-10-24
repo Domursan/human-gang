@@ -55,7 +55,7 @@ const checked = (p, side) => p.$$eval(`#trd-grid-${side} button[aria-pressed="tr
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 1280, height: 900 });
-  await adminSection(p, 'cartes/echanges');
+  await adminSection(p, 'ventes/echanges');
   await p.waitForSelector('#acd-brd-notes .acd-item', { timeout: 5000 }).catch(() => {});
   check(/David/.test(await txt(p, '#acd-brd-notes')), 'admin : petit mot de David listé');
   await p.click('[data-act=board-note-clear]');

@@ -1,16 +1,18 @@
-// Admin : droits du panel. Source unique des permissions (clé de hg_perm_catalog).
+// Admin : droits du panel et plateau des lieux. Source unique des permissions (clé de hg_perm_catalog).
 // SECTION_PERM : section (id de <section>) -> permission. « admin » : réservé à l'administrateur (gestion du Staff).
-// DOMAINS : coquille du panel (rail, colonne de navigation). Chaque sous-section pointe vers une section existante ;
-// les sous-sections « Le jeu de cartes » partagent la section #cartes (un onglet chacune). Une sous-section sans droit
-// est masquée et jamais montée. Un domaine sans sous-section permise est masqué.
-// Utilisé par shell.js (rail, colonne), router.js (routage), live.js (tables visibles) et les sections (canSection).
-// Dépend de core/perms.js (permissions en cache, hasPerm) et core/util.js ($$).
+// LIEUX : les 7 lieux du plateau (accueil du panel), dans l'ordre d'affichage. Chaque lieu a un id (segment de l'URL,
+// #<lieu>), un libellé, une couleur (bandeau et bordure), une icône (clé de admin/panel-icons.js), une phrase d'accroche
+// (`tagline`) et ses sous-sections. Chaque sous-section pointe vers une section existante ; les sous-sections du jeu de
+// cartes partagent la section #cartes (un onglet chacune). Une sous-section a aussi `heading` (groupe de la page du lieu
+// et de la palette), `help` (ligne d'aide de sa tuile) et `icon`. Une sous-section sans droit est masquée et jamais
+// montée. Un lieu sans sous-section permise n'apparaît nulle part.
+// Utilisé par shell.js (plateau, fil d'Ariane, barre du bas), router.js (routage), lieux.js (pages de lieu), live.js
+// (tables visibles) et les sections (canSection). Dépend de core/perms.js (permissions en cache, hasPerm) et core/util.js ($$).
 import { getCachedPerms, hasPerm } from '../core/perms.js';
 import { $$ } from '../core/util.js';
 
-/** Section (id de <section>) -> permission requise. null : pas de permission (apercu gère ses propres droits). */
+/** Section (id de <section>) -> permission requise. null : pas de permission. */
 export const SECTION_PERM = {
-  apercu: null,
   comptes: 'membres', acces: 'membres', membres: 'membres',
   'secret-santa': 'secret_santa',
   badges: 'badges',
@@ -38,7 +40,7 @@ export const SECTION_PERM = {
   mj: 'mj', relance: 'membres',
   // Idées « Social et profils » (migration 091) : parrainage et compétences → « membres » ; accueil des membres → « reglages »
   parrainage: 'membres', competences: 'membres', 'accueil-membres': 'reglages',
-  // Idées A8 et A9 : Pilotage › Site › Erreurs du site (droit « reglages ») et Archives (administrateur seulement)
+  // Idées A8 et A9 : Site › Erreurs du site (droit « reglages ») et Archives (administrateur seulement)
   erreurs: 'reglages', archives: 'admin',
   // Idées V8, V9 (calendrier, ciné-club) et D3 (commandes slash) : migration 087
   rdv: 'evenements', commandes: 'bot',
@@ -48,128 +50,145 @@ export const SECTION_PERM = {
   roles: 'membres', 'membres-irl': 'membres', 'cartes-gestion': 'cartes', arcade: 'reglages',
 };
 
-// Chiffres clés de la vue d'ensemble : la vue d'ensemble n'est proposée que si au moins une de ces sections est permise.
-const TILE_SECTIONS = ['comptes', 'membres', 'secret-santa', 'idees', 'assistance'];
 // Planning (idée A2) : visible si l'une de ces permissions est accordée (quiz, cartes, événements, sorties, Secret Santa, bot).
 const PLANNING_PERMS = ['quiz', 'cartes', 'themes', 'evenements', 'secret_santa', 'bot'];
 
-// Sous-menus : `heading` (facultatif) = titre du groupe de sous-sections dans la colonne de navigation et dans la palette
-// (« Groupe · Libellé »). Les sous-sections d'un même groupe se suivent. Un groupe sans sous-section permise n'affiche pas
-// son titre. Plusieurs sous-sections peuvent monter la même section (`section`) : ce sont alors des « parties » (onglets
-// des cartes, parties de l'Économie, des Réglages, des Badges, de l'Accès aux pages), ouvertes par admin.js.
-// Les identifiants de sous-section sont uniques sur tout le panel (compteurs de shell.js indexés par identifiant seul).
-/** Donne le titre de groupe `heading` à chaque sous-section de la liste. */
+/** Donne le groupe `heading` à chaque sous-section de la liste (titre de groupe sur la page du lieu et dans la palette). */
 const under = (heading, subs) => subs.map((s) => ({ ...s, heading }));
 
-// Domaines et sous-sections, dans l'ordre d'affichage (6 domaines, migration 103). id = segment de l'URL (#domaine/sous-section).
-// L'id d'une sous-section est unique sur tout le panel. Quand une sous-section est renommée, l'ancienne adresse reste
-// valable : voir ALIAS_SUB dans router.js.
-export const DOMAINS = [
-  { id: 'pilotage', label: 'Pilotage', icon: 'gauge', color: '#E2C77E', subs: [
-    { id: 'apercu', label: "Vue d'ensemble", section: 'apercu' },
-    { id: 'planning', label: 'Planning', section: 'planning' },
-    { id: 'journal', label: 'Journal', section: 'journal' },
-    { id: 'staff', label: 'Staff', section: 'staff' },
-    ...under('Bot', [
-      { id: 'bot', label: 'Bot Discord', section: 'bot' },
-      { id: 'commandes', label: 'Commandes slash', section: 'commandes' },
+// Les 7 lieux, dans l'ordre d'affichage du plateau. Les identifiants de sous-section sont uniques sur tout le panel
+// (compteurs de shell.js indexés par identifiant seul) ; une adresse renommée reste valable : voir router.js.
+export const LIEUX = [
+  { id: 'place', label: 'La Place du gang', color: '#A88BE8', icon: 'place', tagline: 'Les membres, leurs invitations et leurs accès', subs: [
+    ...under('Membres', [
+      { id: 'comptes', label: 'Comptes', section: 'comptes', help: 'Fiches et statuts des membres', icon: 'user' },
+      { id: 'roles', label: 'Rôles', section: 'roles', help: 'IRL, Secret Santa…', icon: 'shield' },
+      { id: 'champs', label: 'Champs du profil', section: 'champs', help: 'Questions du formulaire', icon: 'form' },
+      { id: 'social', label: 'Vie sociale', section: 'social', help: 'Ce que font les membres', icon: 'heart' },
+      { id: 'accueil', label: 'Accueil des membres', section: 'accueil-membres', help: 'Message d’arrivée', icon: 'door' },
     ]),
-    ...under('Site', [
-      { id: 'identite', label: 'Identité et mentions légales', section: 'reglages', part: 'identite' },
-      { id: 'textes', label: 'Textes et intro', section: 'reglages', part: 'textes' },
-      { id: 'menu', label: 'Menu et pied de page', section: 'reglages', part: 'menu' },
-      { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat' },
-      { id: 'erreurs', label: 'Erreurs du site', section: 'erreurs' },
-      { id: 'archives', label: 'Archives', section: 'archives' },
-      { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles' },
-    ]),
-    ...under('Apparence', [
-      { id: 'theme', label: 'Thème', section: 'theme' },
-    ]),
-    ...under('Assistance', [
-      { id: 'assistance', label: 'Assistance', section: 'assistance' },
-      { id: 'idees', label: 'Boîte à idées', section: 'idees' },
-      { id: 'messagerie', label: 'Messagerie', section: 'messagerie' },
-      { id: 'fil', label: 'Fil d’activité', section: 'fil' },
-    ]),
-  ] },
-  { id: 'membres', label: 'Membres', icon: 'users', color: '#7E93C9', subs: [
-    ...under('Comptes', [
-      { id: 'comptes', label: 'Comptes', section: 'comptes' },
-      { id: 'roles', label: 'Rôles', section: 'roles' },
-      { id: 'relance', label: 'À relancer', section: 'relance' },
-      { id: 'invitations', label: 'Invitations', section: 'membres' },
-      { id: 'champs', label: 'Champs du profil', section: 'champs' },
-      { id: 'social', label: 'Vie sociale', section: 'social' },
-      { id: 'accueil', label: 'Accueil des membres', section: 'accueil-membres' },
+    ...under('Relances', [
+      { id: 'relance', label: 'À relancer', section: 'relance', help: 'Membres à relancer', icon: 'bell' },
+      { id: 'invitations', label: 'Invitations', section: 'membres', help: 'Codes et liens d’invitation', icon: 'link' },
     ]),
     ...under('Entraide', [
-      { id: 'parrainage', label: 'Parrainage', section: 'parrainage' },
-      { id: 'competences', label: 'Compétences', section: 'competences' },
+      { id: 'parrainage', label: 'Parrainage', section: 'parrainage', help: 'Qui a invité qui', icon: 'share' },
+      { id: 'competences', label: 'Compétences', section: 'competences', help: 'Ce que chacun sait faire', icon: 'wrench' },
     ]),
-    ...under('Accès aux pages', [
-      { id: 'acces', label: 'Pages', section: 'acces', part: 'pages' },
-      { id: 'acces-matrice', label: 'Matrice membres × pages', section: 'acces', part: 'matrice' },
+    ...under('Accès', [
+      { id: 'acces', label: 'Accès aux pages', section: 'acces', part: 'pages', help: 'Qui voit quoi', icon: 'lock' },
+      { id: 'acces-matrice', label: 'Matrice membres × pages', section: 'acces', part: 'matrice', help: 'Membres × pages', icon: 'grid' },
     ]),
     ...under('Badges', [
-      { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue' },
-      { id: 'badges-attribution', label: 'Attribution', section: 'badges', part: 'attribution' },
-      { id: 'badges-criteres', label: 'Critères automatiques', section: 'badges', part: 'criteres' },
+      { id: 'badges', label: 'Catalogue', section: 'badges', part: 'catalogue', help: 'Tous les badges', icon: 'badge' },
+      { id: 'badges-attribution', label: 'Attribution', section: 'badges', part: 'attribution', help: 'Donner un badge', icon: 'award' },
+      { id: 'badges-criteres', label: 'Critères automatiques', section: 'badges', part: 'criteres', help: 'Règles automatiques', icon: 'bolt' },
     ]),
   ] },
-  { id: 'irl', label: 'IRL', icon: 'pin', color: '#E0909A', subs: [
-    { id: 'membres-irl', label: 'Membres IRL', section: 'membres-irl' },
-    { id: 'sorties', label: 'Sorties IRL', section: 'sorties' },
-    { id: 'souvenirs', label: 'Souvenirs et photos', section: 'souvenirs' },
-    { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa' },
+  { id: 'poste', label: 'La Poste', color: '#FCA301', icon: 'poste', tagline: 'Assistance et boîte à idées', subs: [
+    ...under('Demandes', [
+      { id: 'assistance', label: 'Assistance', section: 'assistance', help: 'Demandes des membres à traiter', icon: 'lifebuoy' },
+      { id: 'idees', label: 'Boîte à idées', section: 'idees', help: 'Propositions à relire ou trier', icon: 'bulb' },
+    ]),
+    ...under('Échanges', [
+      { id: 'messagerie', label: 'Messagerie', section: 'messagerie', help: 'Messages privés avec les membres', icon: 'mail' },
+      { id: 'fil', label: 'Fil d’activité', section: 'fil', help: 'Ce qui se passe à La Poste', icon: 'pulse' },
+    ]),
+    ...under('Discord', [
+      { id: 'bot', label: 'Bot Discord', section: 'bot', help: 'Envoyer un message du bot', icon: 'robot' },
+      { id: 'commandes', label: 'Commandes slash', section: 'commandes', help: 'Activer ou couper les commandes', icon: 'terminal' },
+    ]),
   ] },
-  { id: 'event', label: 'Event', icon: 'calendar', color: '#9A88C4', subs: [
-    { id: 'evenements', label: 'Événements à thème', section: 'evenements' },
-    { id: 'rdv', label: 'Calendrier et cinéma', section: 'rdv' },
-    { id: 'avent', label: 'Calendrier de l’Avent', section: 'saisons', part: 'avent' },
-    { id: 'saison-worlds', label: 'Saison des Worlds', section: 'saisons', part: 'worlds' },
-    { id: 'anniv-gang', label: 'Anniversaire du gang', section: 'saisons', part: 'anniv' },
+  { id: 'ventes', label: 'La Salle des ventes', color: '#6F8FE8', icon: 'ventes', tagline: 'Enchères et échanges entre membres', subs: [
+    ...under('Enchères', [
+      { id: 'encheres', label: 'Enchères', section: 'cartes', tab: 'encheres', help: 'Enchères ouvertes, à venir et passées', icon: 'gavel' },
+    ]),
+    ...under('Entre membres', [
+      { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges', help: 'Échanges entre membres à surveiller', icon: 'swap' },
+    ]),
   ] },
-  { id: 'cartes', label: 'Le jeu de cartes', icon: 'cards', color: '#F0A43C', subs: [
-    { id: 'gestion', label: 'Gestion globale', section: 'cartes-gestion' },
+  { id: 'camp', label: 'Le Camp IRL', color: '#FBD32D', icon: 'camp', tagline: 'Les rencontres en vrai : sorties, souvenirs et Secret Santa', subs: [
+    ...under('Qui', [
+      { id: 'membres-irl', label: 'Membres IRL', section: 'membres-irl', help: 'Qui a le rôle IRL, et qui vient', icon: 'pin' },
+    ]),
+    ...under('Vivre les sorties', [
+      { id: 'sorties', label: 'Sorties IRL', section: 'sorties', help: 'Créer, valider, revoir les sorties', icon: 'calendar' },
+      { id: 'souvenirs', label: 'Souvenirs et photos', section: 'souvenirs', help: 'Les photos des sorties passées', icon: 'camera' },
+    ]),
+    ...under('Rendez-vous', [
+      { id: 'secret-santa', label: 'Secret Santa', section: 'secret-santa', help: 'Inscriptions, tirage et règles', icon: 'gift' },
+    ]),
+  ] },
+  { id: 'fabrique', label: 'La Fabrique de cartes', color: '#159946', icon: 'fabrique', tagline: 'Boosters, drops, dons', subs: [
+    ...under('Agir', [
+      { id: 'gestion', label: 'Gestion globale', section: 'cartes-gestion', help: 'Give cartes et paillettes', icon: 'give' },
+      { id: 'drops', label: 'Drops', section: 'drops', help: 'Lancer un drop', icon: 'gift' },
+      { id: 'codes', label: 'Codes cadeaux', section: 'cartes', tab: 'codes', help: 'Créer et suivre les codes', icon: 'ticket' },
+    ]),
+    ...under('Arène', [
+      { id: 'arene', label: 'Arène', section: 'bataille', help: 'Duels et classements', icon: 'swords' },
+    ]),
     ...under('Catalogue', [
-      { id: 'series', label: 'Séries', section: 'cartes', tab: 'series' },
-      { id: 'cartes', label: 'Cartes', section: 'cartes', tab: 'cartes' },
-      { id: 'boosters', label: 'Boosters', section: 'cartes', tab: 'boosters' },
-    ]),
-    ...under('Économie', [
-      { id: 'economie', label: 'Paillettes et dons', section: 'cartes', tab: 'economie', part: 'paillettes' },
-      { id: 'tirage', label: 'Tirage', section: 'cartes', tab: 'economie', part: 'tirage' },
-      { id: 'recyclage', label: 'Recyclage et fabrication', section: 'cartes', tab: 'economie', part: 'recyclage' },
-      { id: 'limites', label: 'Limites', section: 'cartes', tab: 'economie', part: 'limites' },
-    ]),
-    ...under('Animation', [
-      { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes' },
-      { id: 'defis', label: 'Défis du gang', section: 'defis' },
-      { id: 'drops', label: 'Drops', section: 'drops' },
-      { id: 'cagnotte', label: 'Cagnotte et bulletin', section: 'cagnotte' },
-      { id: 'champions', label: 'Cartes Champions', section: 'champions' },
-      { id: 'codes', label: 'Codes cadeaux', section: 'cartes', tab: 'codes' },
-      { id: 'recettes', label: 'Atelier (recettes)', section: 'cartes', tab: 'recettes' },
-      { id: 'encheres', label: 'Enchères', section: 'cartes', tab: 'encheres' },
+      { id: 'series', label: 'Séries', section: 'cartes', tab: 'series', help: 'Les collections de cartes', icon: 'layers' },
+      { id: 'cartes', label: 'Cartes', section: 'cartes', tab: 'cartes', help: 'Toutes les cartes', icon: 'cards' },
+      { id: 'boosters', label: 'Boosters', section: 'cartes', tab: 'boosters', help: 'Paquets et tirages types', icon: 'box' },
     ]),
     ...under('Suivi', [
-      { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs' },
-      { id: 'echanges', label: 'Échanges', section: 'cartes', tab: 'echanges' },
-      { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats' },
+      { id: 'joueurs', label: 'Joueurs', section: 'cartes', tab: 'joueurs', help: 'Inventaires et soldes', icon: 'users' },
+      { id: 'stats', label: 'Statistiques', section: 'cartes', tab: 'stats', help: 'Chiffres de l’économie', icon: 'chart' },
     ]),
-    { id: 'arene', label: 'Arène', section: 'bataille' },
+    ...under('Économie', [
+      { id: 'economie', label: 'Paillettes et dons', section: 'cartes', tab: 'economie', part: 'paillettes', help: 'Réserve et dons aux membres', icon: 'coin' },
+      { id: 'tirage', label: 'Tirage', section: 'cartes', tab: 'economie', part: 'tirage', help: 'Tirages et probabilités', icon: 'dice' },
+      { id: 'recyclage', label: 'Recyclage et fabrication', section: 'cartes', tab: 'economie', part: 'recyclage', help: 'Transformer les doublons', icon: 'refresh' },
+      { id: 'limites', label: 'Limites', section: 'cartes', tab: 'economie', part: 'limites', help: 'Plafonds par membre', icon: 'gauge' },
+    ]),
+    ...under('Animations', [
+      { id: 'quetes', label: 'Quêtes', section: 'cartes', tab: 'quetes', help: 'Missions pour les membres', icon: 'flag' },
+      { id: 'defis', label: 'Défis du gang', section: 'defis', help: 'Objectifs collectifs', icon: 'trophy' },
+      { id: 'cagnotte', label: 'Cagnotte et bulletin', section: 'cagnotte', help: 'Cagnotte et votes', icon: 'vote' },
+      { id: 'champions', label: 'Cartes Champions', section: 'champions', help: 'Cartes des champions', icon: 'star' },
+      { id: 'recettes', label: 'Atelier (recettes)', section: 'cartes', tab: 'recettes', help: 'Recettes de fabrication', icon: 'flask' },
+    ]),
   ] },
-  { id: 'jeux', label: 'Autres jeux', icon: 'gamepad', color: '#6FA37F', subs: [
-    { id: 'questions', label: 'Questions du gang', section: 'quiz' },
-    { id: 'sutom', label: 'Sutom du gang', section: 'sutom' },
-    { id: 'geoguessr', label: 'GeoGuessr', section: 'jeux-geo' },
-    { id: 'citations', label: 'Citations « Qui a dit ça ? »', section: 'jeux-citations' },
-    { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves' },
-    { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias' },
-    { id: 'arcade', label: 'Arcade (pages 404)', section: 'arcade' },
-    { id: 'secrets', label: 'Secrets', section: 'eggs' },
-    { id: 'mes-jeux', label: 'Mes jeux', section: 'mj' },
+  { id: 'fete', label: 'La Fête foraine', color: '#E0909A', icon: 'fete', tagline: 'Événements et autres jeux', subs: [
+    ...under('Événements', [
+      { id: 'evenements', label: 'Événements à thème', section: 'evenements', help: 'Soirées et événements à thème', icon: 'spark' },
+      { id: 'rdv', label: 'Calendrier et cinéma', section: 'rdv', help: 'Dates et séances du gang', icon: 'calendar' },
+      { id: 'avent', label: 'Calendrier de l’Avent', section: 'saisons', part: 'avent', help: 'Cases et cadeaux du mois', icon: 'tree' },
+      { id: 'saison-worlds', label: 'Saison des Worlds', section: 'saisons', part: 'worlds', help: 'Saison en cours', icon: 'globe' },
+      { id: 'anniv-gang', label: 'Anniversaire du gang', section: 'saisons', part: 'anniv', help: 'Dates et cadeaux', icon: 'cake' },
+    ]),
+    ...under('Jeux', [
+      { id: 'questions', label: 'Questions du gang', section: 'quiz', help: 'Quiz sur le gang', icon: 'chat' },
+      { id: 'sutom', label: 'Sutom du gang', section: 'sutom', help: 'Mot du jour', icon: 'type' },
+      { id: 'geoguessr', label: 'GeoGuessr', section: 'jeux-geo', help: 'Lieux à deviner', icon: 'map' },
+      { id: 'citations', label: 'Citations « Qui a dit ça ? »', section: 'jeux-citations', help: 'Phrases du gang', icon: 'quote' },
+      { id: 'preuves', label: 'Preuves de quêtes', section: 'preuves', help: 'Preuves des quêtes à valider', icon: 'check' },
+      { id: 'framed-heardle', label: 'Framed et Heardle', section: 'jeux-medias', help: 'Images et musiques', icon: 'film' },
+      { id: 'arcade', label: 'Arcade (pages 404)', section: 'arcade', help: 'Page en 404', icon: 'gamepad' },
+      { id: 'secrets', label: 'Secrets', section: 'eggs', help: 'Éléments cachés', icon: 'key' },
+      { id: 'mes-jeux', label: 'Mes jeux', section: 'mj', help: 'Ma liste de jeux', icon: 'list' },
+    ]),
+  ] },
+  { id: 'mairie', label: 'La Mairie', color: '#2EC4B6', icon: 'mairie', tagline: 'Le site et le Staff : tout ce qui règle le fonctionnement', subs: [
+    ...under('Organisation', [
+      { id: 'planning', label: 'Planning', section: 'planning', help: 'Dates, rendez-vous et tâches', icon: 'calendar' },
+      { id: 'journal', label: 'Journal', section: 'journal', help: 'Ce qui s’est passé sur le site', icon: 'book' },
+      { id: 'staff', label: 'Staff', section: 'staff', help: 'Qui fait quoi dans l’équipe', icon: 'shield' },
+    ]),
+    ...under('Le site', [
+      { id: 'identite', label: 'Identité et mentions légales', section: 'reglages', part: 'identite', help: 'Nom, logo et mentions obligatoires', icon: 'id' },
+      { id: 'textes', label: 'Textes et intro', section: 'reglages', part: 'textes', help: 'Accueil et phrases de présentation', icon: 'doc' },
+      { id: 'menu', label: 'Menu et pied de page', section: 'reglages', part: 'menu', help: 'Liens de navigation et bas de page', icon: 'menu' },
+      { id: 'theme', label: 'Thème', section: 'theme', help: 'Couleurs et apparence du site', icon: 'palette' },
+    ]),
+    ...under('Technique', [
+      { id: 'etat', label: 'État du site', section: 'reglages', part: 'etat', help: 'En ligne, maintenance, disponibilité', icon: 'pulse' },
+      { id: 'erreurs', label: 'Erreurs du site', section: 'erreurs', help: 'Erreurs remontées par le site', icon: 'warn' },
+      { id: 'archives', label: 'Archives', section: 'archives', help: 'Anciennes versions rangées', icon: 'archive' },
+      { id: 'reglages', label: 'Clés avancées', section: 'reglages', part: 'cles', help: 'Réglages techniques, à manier avec soin', icon: 'sliders' },
+    ]),
   ] },
 ];
 
@@ -184,11 +203,10 @@ export function disableSubs(...ids) { for (const id of ids) disabled.add(id); }
 
 /**
  * Ai-je accès à cette section ?
- * « apercu » est permis si au moins une de ses tuiles l'est ; « admin » exige l'administrateur.
+ * « admin » exige l'administrateur ; « planning » est permis si une de ses sources l'est.
  * @param {string} id Identifiant de section (voir SECTION_PERM).
  */
 export function canSection(id) {
-  if (id === 'apercu') return TILE_SECTIONS.some(canSection);
   if (id === 'planning') return PLANNING_PERMS.some((k) => hasPerm(k));
   const need = SECTION_PERM[id];
   if (!need) return false;
@@ -200,18 +218,21 @@ export const anySection = (...ids) => ids.some(canSection);
 /** Vrai pour l'administrateur (et non pour un membre du Staff). */
 export const isAdminView = () => !!getCachedPerms()?.is_admin;
 
-/** Sous-section permise ? (sous-section = objet de DOMAINS, dont la section donne le droit) */
+/** Sous-section permise ? (sous-section = objet de LIEUX, dont la section donne le droit) */
 export const canSub = (sub) => !disabled.has(sub.id) && canSection(sub.section);
 
 /**
- * Domaines permis, avec leurs sous-sections permises (sans domaine vide).
- * Une copie : DOMAINS n'est jamais modifié.
+ * Lieux permis, avec leurs sous-sections permises (sans lieu vide).
+ * Une copie : LIEUX n'est jamais modifié.
  */
-export function visibleDomains() {
-  return DOMAINS
+export function visibleLieux() {
+  return LIEUX
     .map((d) => ({ ...d, subs: d.subs.filter(canSub) }))
     .filter((d) => d.subs.length);
 }
+
+/** Identifiant de lieu d'une sous-section (ex. « defis » → « fabrique »), ou null. */
+export const lieuOf = (subId) => LIEUX.find((l) => l.subs.some((s) => s.id === subId))?.id ?? null;
 
 /**
  * Masque les sections non accessibles et les éléments réservés à l'administrateur.

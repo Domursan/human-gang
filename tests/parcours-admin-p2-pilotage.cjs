@@ -1,8 +1,8 @@
-// Parcours : Pilotage du panel admin (phase 2) : Vue d'ensemble, Journal, Staff.
+// Parcours : La Mairie du panel admin (phase 2) : Journal, Staff, plateau.
 // (a) Staff (administrateur) 1440 px : ajout d'un membre depuis la colonne 2, fiche (permissions, barre
 //     d'enregistrement, enregistrement), panneau d'infos, désactivation puis réactivation avec confirmation.
 // (b) Journal : liste, filtres par type (puces), recherche, détail avant / après, consultations.
-// (c) Vue d'ensemble : tuiles, bloc « À traiter » (liens vers les sous-sections), activité récente.
+// (c) Plateau : pastilles « à traiter » et tuiles de la page de La Poste.
 // (d) Staff { journal } : pas de Staff ni de Vue d'ensemble, aucune requête vers hg_staff_list ni hg_staff_set.
 // (e) Mobile 390 px : liste plein écran, puis détail avec retour à la liste.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-p2-pilotage.cjs
@@ -37,7 +37,7 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
   /* (a) Administrateur : Staff, 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goHash(p, '#pilotage/staff', '#staff');
+    await goHash(p, '#mairie/staff', '#staff');
     check(await visible(p, '#staff') && await visible(p, '#shell-col-list .stf-col'), '(a) Staff : zone principale et colonne 2 affichées');
     check((await p.textContent('#shell-col-list [data-staff-add]')).includes('Ajouter au Staff'), '(a) colonne 2 : bouton « + Ajouter au Staff »');
     check(await chip(p, 'Actifs').count() === 1 && await p.locator('#shell-col-list .ui-chip', { hasText: /^\s*Inactifs/ }).count() === 1, '(a) colonne 2 : puces Actifs / Inactifs');
@@ -55,7 +55,7 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
     await p.click('#staff-dialog button[type="submit"]');
     await p.waitForFunction(() => !document.querySelector('#staff-dialog').open, null, { timeout: 5000 }).catch(() => {});
     await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
-    check(await hashOf(p) === '#pilotage/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé s’ouvre (URL #pilotage/staff/<uid>)');
+    check(await hashOf(p) === '#mairie/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé s’ouvre (URL #mairie/staff/<uid>)');
     check(await p.locator('#staff input[data-perm-key]:checked').count() === 2, '(a) fiche : deux permissions cochées');
     check((await p.textContent('#staff .stf-note')).includes(NOTE), '(a) fiche : note affichée');
     check(await visible(p, '#shell-info') && (await p.textContent('#shell-info')).includes('ajouté par'), '(a) panneau d’infos : ajouté par, date');
@@ -101,7 +101,7 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
   /* (b) Journal : 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goHash(p, '#pilotage/journal', '#log-detail');
+    await goHash(p, '#mairie/journal', '#log-detail');
     check(await rowsCount(p) === 4, `(b) journal : 4 entrées (actions et consultations) (${await rowsCount(p)})`);
     check(await chip(p, 'Consultations').count() === 1 && await chip(p, 'Ajustement de Paillettes').count() === 1, '(b) puces par type d’action');
     await chip(p, 'Consultations').click();
@@ -109,7 +109,7 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
     await chip(p, 'Toutes').click();
     await p.click('#shell-col-list .ui-row:has-text("Ajustement de Paillettes")');
     await p.waitForSelector('#log-detail .log-diff', { timeout: 5000 }).catch(() => {});
-    check(await hashOf(p).then((h) => /^#pilotage\/journal\/l\d+$/.test(h)), '(b) sélection : l’URL suit l’entrée');
+    check(await hashOf(p).then((h) => /^#mairie\/journal\/l\d+$/.test(h)), '(b) sélection : l’URL suit l’entrée');
     const diff = await p.$$eval('#log-detail .log-diff tbody tr', (trs) => trs.map((tr) => [...tr.children].map((c) => c.textContent.trim())));
     check(diff.some((r) => r[1] === '120' && r[2] === '150'), '(b) détail : avant (120) et après (150) lisibles côte à côte');
     check(await p.locator('#log-detail tr.is-changed').count() >= 1, '(b) détail : valeurs modifiées mises en évidence');
@@ -124,28 +124,31 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
     await p.ctx.close();
   }
 
-  /* (c) Vue d'ensemble : tuiles, à traiter, activité */
+  /* (c) Plateau : pastilles « à traiter » (La Poste : une demande ouverte), liens vers la page */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900,
       scenario: { support: [{ id: 'sup-1', status: 'ouverte', user_id: U(3), subject: 'Test', message: 'Bonjour', created_at: new Date().toISOString() }] } });
-    await goHash(p, '#pilotage/apercu', '#apercu');
-    check(await p.locator('#stats .stat').count() > 0, '(c) tuiles de chiffres clés affichées');
-    check(await p.locator('#ov-todo .ov-q-item').count() >= 1, '(c) « À traiter » : au moins une ligne');
-    check(await p.locator('#ov-todo a[href^="#pilotage/assistance/"]').count() === 1, '(c) « À traiter » : « Répondre » mène à la demande (Assistance)');
-    check(await p.locator('#ov-activity li').count() >= 1 && await visible(p, '#ov-activity-card'), '(c) activité récente : dernières actions du journal');
-    check((await p.evaluate(() => document.querySelector('#stats').textContent)).includes('demande ouverte'), '(c) chiffre clé Assistance : libellé « demande ouverte »');
-    await p.click('#ov-todo a[href^="#pilotage/assistance/"]');
+    await goHash(p, '#plateau', '#plateau-root');
+    await p.waitForSelector('.plateau-lieu', { timeout: 5000 }).catch(() => {});
+    check(await p.locator('.plateau-lieu').count() === 7, '(c) plateau : sept lieux');
+    await p.waitForFunction(() => document.querySelector('[data-lieu-badge="poste"]')?.textContent?.trim() === '1', null, { timeout: 4000 }).catch(() => {});
+    check((await p.textContent('[data-lieu-badge="poste"]')).trim() === '1', '(c) pastille de La Poste : une demande à traiter');
+    await p.click('.plateau-lieu[href="#poste"]');
+    await p.waitForSelector('#lieu-root .lieu-tile[data-sub="assistance"]', { timeout: 5000 }).catch(() => {});
+    check((await p.textContent('#lieu-root .lieu-tile[data-sub="assistance"] .nav-count')).trim() === '1', '(c) tuile Assistance : compteur 1');
+    await p.click('#lieu-root .lieu-tile[data-sub="assistance"]');
     await sleep(300);
-    check(await hashOf(p) === '#pilotage/assistance/sup-1', '(c) lien « Répondre » : mène à la demande dans Assistance');
+    check(await hashOf(p) === '#poste/assistance', '(c) tuile Assistance : mène à la page Assistance');
     check(!p.errs.length, '(c) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }
 
-  /* (d) Staff { journal } : ni Staff ni Vue d'ensemble, pas de requête Staff */
+  /* (d) Staff { journal } : ni Staff ni autres lieux, pas de requête Staff */
   {
     const p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['journal'] } });
-    const subs = await p.$$eval('#shell-subs .shell-sub', (as) => as.filter((a) => a.getClientRects().length).map((a) => a.dataset.sub));
-    check(JSON.stringify(subs) === JSON.stringify(['journal']), `(d) Staff journal : seul le Journal (${subs.join(', ')})`);
+    await goHash(p, '#mairie/journal', '#shell-col-list .ui-row');
+    const lieux = await p.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
+    check(JSON.stringify(lieux) === JSON.stringify(['#mairie']), `(d) Staff journal : seul La Mairie sur le plateau (${lieux.join(' ')})`);
     check(await rowsCount(p) === 4, '(d) Staff journal : liste du journal en colonne 2');
     const journal = await log(p);
     check(!journal.some((l) => l[0] === 'rpc' && (l[1] === 'hg_staff_list' || l[1] === 'hg_staff_set')), '(d) Staff journal : aucune requête vers le Staff');
@@ -156,12 +159,12 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
   /* (e) Mobile 390 px : liste plein écran, puis détail avec retour */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
-    await goHash(p, '#pilotage/journal', '#shell-col-list');
+    await goHash(p, '#mairie/journal', '#shell-col-list');
     check(await visible(p, '#shell-col-list .ui-list') && !(await visible(p, '#log-detail')), '(e) mobile : liste plein écran (pas de détail)');
     await p.click('#shell-col-list .ui-row >> nth=0');
     await sleep(400);
     check(await visible(p, '#log-detail') && !(await visible(p, '#shell-col-list .ui-list')), '(e) mobile : détail après le choix d’une entrée');
-    check(await p.getAttribute('#zone-back', 'href') === '#pilotage/journal', '(e) mobile : retour ramène à la liste');
+    check(await p.getAttribute('#zone-back', 'href') === '#mairie/journal', '(e) mobile : retour ramène à la liste');
     check(await hscroll(p) <= 0, '(e) mobile : pas de défilement horizontal');
     check(!p.errs.length, '(e) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();

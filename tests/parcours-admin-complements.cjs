@@ -20,10 +20,10 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'cartes/cartes');
+  await adminSection(p, 'fabrique/cartes');
 
   /* ---------- Quêtes de la semaine (onglet « Quêtes » de la section Cartes) ---------- */
-  await adminSection(p, 'cartes/quetes');
+  await adminSection(p, 'fabrique/quetes');
   await p.waitForSelector('#acd-panel .acd-item', { timeout: 5000 });
   check(await p.locator('#acd-panel .acd-item').count() === 5, 'quêtes : les 5 modèles existants sont listés');
 
@@ -59,7 +59,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(toggled.active === false, 'quête désactivée depuis la liste');
 
   /* ---------- Défis du gang ---------- */
-  await adminSection(p, 'cartes/defis');
+  await adminSection(p, 'fabrique/defis');
   await p.waitForSelector('#challenges-root [data-action="adc-edit"]', { timeout: 5000 });
   await p.click('#challenges-root [data-action="adc-edit"]');
   await p.waitForSelector('#adc-title', { timeout: 5000 });
@@ -77,7 +77,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#challenges-root', { hasText: 'Aucun défi' }).count() === 1, 'liste des défis vide après suppression');
 
   /* ---------- Réglages du site (liste ; modification et ajout dans le tiroir) ---------- */
-  await adminSection(p, 'pilotage/reglages');
+  await adminSection(p, 'mairie/reglages');
   await p.waitForSelector('#reglages-root [data-key-item="theme"]', { timeout: 5000 });
   // Admin : la clé sensible reste modifiable, mais après une confirmation explicite
   await p.click('#reglages-root [data-key-item="push_vapid_public"] [data-rg-edit]');
@@ -127,7 +127,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   await p.waitForTimeout(300);
 
   /* ---------- Accès aux pages : créer, modifier, supprimer ---------- */
-  await adminSection(p, 'membres/acces');
+  await adminSection(p, 'place/acces');
   await p.waitForSelector('#zone-actions [data-pa-new]', { timeout: 5000 });
   await p.click('#zone-actions [data-pa-new]'); // « + Nouvelle page » : en-tête de zone, ouvre le tiroir
   await p.waitForSelector('#pa-pg-form', { timeout: 5000 });
@@ -158,8 +158,8 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#access-root [data-slug="galerie-test"]').count() === 0, 'la page a disparu du tableau');
 
   /* ---------- Secret Santa : suppression d'une édition ---------- */
-  // Le détail d'une édition vit à son adresse (#irl/secret-santa/<id>) ; sans identifiant, la zone propose de la choisir
-  await adminSection(p, 'irl/secret-santa');
+  // Le détail d'une édition vit à son adresse (#camp/secret-santa/<id>) ; sans identifiant, la zone propose de la choisir
+  await adminSection(p, 'camp/secret-santa');
   await p.evaluate(() => { location.hash = 'irl/secret-santa/E25'; });
   await p.waitForSelector('#ss-delete', { timeout: 5000 });
   await p.click('#ss-delete');
@@ -173,10 +173,10 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check((await db(p, () => window.__DB.hg_ss_editions.some((e) => e.id === 'E24'))), 'l\'édition 2024 est conservée');
 
   /* ---------- Accès aux pages : vue Matrice (sous-section membres/acces-matrice, setAccessView) ---------- */
-  await adminSection(p, 'membres/acces-matrice');
+  await adminSection(p, 'place/acces-matrice');
   await p.waitForSelector('#access-root .pa-matrix', { timeout: 5000 });
   check(await p.getAttribute('#access-root [data-pa-view="matrice"]', 'aria-pressed') === 'true', 'accès : la sous-section Matrice affiche la matrice (puce de vue à jour)');
-  await adminSection(p, 'membres/acces');
+  await adminSection(p, 'place/acces');
   await p.waitForSelector('#access-root .pa-table', { timeout: 5000 });
   check(!(await p.isVisible('#access-root .pa-ro')) && !(await p.isDisabled('#access-root [data-pa-mode]')), 'accès : administrateur, mode modifiable, pas de note « lecture seule »');
 

@@ -7,7 +7,7 @@ import { A } from './state.js';
 
 /** Quitte la fiche : l'URL revient à la liste ; la sous-section remet la zone à zéro (fiche.js). */
 export function closeDetail() {
-  location.hash = '#membres/comptes';
+  location.hash = '#place/comptes';
 }
 
 // Échap ferme la fiche, sauf si une boîte de dialogue est ouverte (Échap sert alors à la fermer)

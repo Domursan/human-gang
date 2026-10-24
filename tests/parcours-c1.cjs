@@ -64,7 +64,7 @@ const scenario = (until) => ({
 
   // (5) Admin : sous-section « Saison et horaires »
   p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'cartes/boosters');
+  await adminSection(p, 'fabrique/boosters');
   await p.waitForSelector('.abt-row', { timeout: 8000 });
   await p.click('[data-bt="edit"][data-id="dore"]');
   await p.waitForSelector('dialog.ui-drawer.abt-drawer[open]', { timeout: 5000 });

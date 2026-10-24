@@ -60,7 +60,7 @@ const PROPS = [
   // Admin : la proposition d'un autre membre, acceptée.
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280,
     scenario: { c080: { hg_card_sets: [SERGE], hg_card_proposals: [{ ...PROPS[0], proposed_by: U(2) }] } } });
-  await adminSection(p, 'cartes/series');
+  await adminSection(p, 'fabrique/series');
   await p.waitForSelector('.acd-prop', { timeout: 8000 });
   check((await p.textContent('.acd-props')).includes('proposée par Alice'), '(4) proposition listée avec son auteur');
   await p.selectOption('.acd-prop [data-prop-rar]', 'epique');

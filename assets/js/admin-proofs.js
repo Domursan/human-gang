@@ -5,7 +5,7 @@
  * membre), Valider (V) ou Refuser (R) avec un motif court. On ne valide jamais sa propre preuve (le serveur refuse aussi).
  * La validation verse la récompense de la quête (hg_proof_review). Nettoyage des captures de plus de 60 jours.
  * Droits : Staff « preuves » (ou la permission du modèle de quête), administrateur.
- * Route : #jeux/preuves (branchée par admin.js). Section : <section id="preuves">, conteneur #proofs-root.
+ * Route : #fete/preuves (branchée par admin.js). Section : <section id="preuves">, conteneur #proofs-root.
  * RPC : hg_proof_queue, hg_proof_review, hg_proofs_purge_due, hg_proofs_mark_purged. Stockage : hg-proofs (privé).
  * Exporte : mountProofsSection.
  */

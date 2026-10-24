@@ -33,7 +33,7 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   // Récompenses par défaut lues dans hg_settings (valeurs du scénario, différentes de celles de la migration)
   const scenario = { settings: [{ key: 'quiz', value: { recompenses: { facile: 60, moyen: 120, difficile: 260, expert: 800 } } }] };
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario });
-  await adminSection(p, 'jeux/questions');
+  await adminSection(p, 'fete/questions');
   await p.waitForSelector('#adq-list .empty', { timeout: 5000 });
   check((await p.textContent('#adq-list')).includes('Aucune question'), '(a) liste vide au départ');
   check((await p.inputValue('#adq-rw-expert')) === '800', '(c) récompense par défaut « expert » lue dans hg_settings (800)');
@@ -293,11 +293,13 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   {
     const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['quiz'] } });
     // Les sous-menus de chaque domaine restent dans le DOM (un seul affiché à la fois) : on lit les liens permis.
-    const subs = await s.$$eval('#shell-subs [data-dom-subs="jeux"] .shell-sub', (as) => as.map((a) => a.dataset.sub));
+    await s.evaluate(() => { location.hash = '#fete'; });
+    await s.waitForSelector('#lieu-root .lieu-tile', { timeout: 5000 }).catch(() => {});
+    const subs = await s.$$eval('#lieu-root .lieu-tile', (as) => as.map((a) => a.dataset.sub));
     // « citations » (Qui a dit ça ?) relève aussi du droit « quiz » (SECTION_PERM jeux-citations)
     check(JSON.stringify(subs) === JSON.stringify(['questions', 'citations']), `(a) Staff « quiz » : domaine Autres jeux = ${subs.join(', ')}`);
-    const railCartes = await s.$$eval('.shell-dom[data-dom="cartes"]', (as) => as.length);
-    check(railCartes === 0, '(a) Staff « quiz » : domaine Le jeu de cartes absent du rail');
+    const lieux = await s.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
+    check(!lieux.includes('#fabrique'), '(a) Staff « quiz » : La Fabrique de cartes absente du plateau');
     await adminSection(s, 'jeux/questions');
     check(await s.isVisible('#quiz') && await s.isVisible('#adq-list'), '(a) Staff « quiz » : section affichée');
     check(s.errs.length === 0, '(a) Staff « quiz » : aucune erreur JS' + (s.errs.length ? ' (' + s.errs.join(' | ') + ')' : ''));

@@ -65,7 +65,7 @@ const overflow = (p) => p.evaluate(() => {
     check(prices.length && prices.every((x) => x === '120') && (await p.textContent('[data-expr="cartes.booster_price*5"]')) === '600', `(e) prix du Classique lu sur son type (${prices.join(',')})`);
     await p.ctx.close();
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-    await adminSection(p, 'cartes/boosters'); await sleep(500);
+    await adminSection(p, 'fabrique/boosters'); await sleep(500);
     check(await p.getAttribute('a[href="affiches/boosters-gamme-a3.html"]', 'target') === '_blank', '(e) « Voir l’affiche » dans l’éditeur de boosters');
     await p.ctx.close();
   } catch (e) { check(false, 'arrêt sur erreur : ' + String(e.message).split('\n')[0]); }

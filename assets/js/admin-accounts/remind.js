@@ -130,7 +130,7 @@ function fiche() {
   const wait = attentes(m.pending);
   return `<header class="rl-fhead">${avatar(m, true)}
       <div class="rl-fwho"><h3>${esc(m.pseudo)}</h3><p class="small muted">${m.since_year ? `Membre depuis ${m.since_year} · ` : ''}${m.bot_ok ? 'accepte les MP du bot' : 'n’a pas activé les MP du bot'}</p></div>
-      <a class="btn btn-ghost btn-sm" href="#membres/comptes/${esc(m.id)}">Voir la fiche</a></header>
+      <a class="btn btn-ghost btn-sm" href="#place/comptes/${esc(m.id)}">Voir la fiche</a></header>
     <div class="rl-tiles">
       <p class="rl-tile"><span>Dernière visite</span><b>${m.never ? 'pas notée' : m.weeks != null ? `il y a ${m.weeks} sem.` : '—'}</b></p>
       <p class="rl-tile"><span>Dernière sortie</span><b>${esc(m.last_irl || '—')}</b></p>

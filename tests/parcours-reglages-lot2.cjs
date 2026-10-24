@@ -18,7 +18,7 @@ const settingsWrites = async (p) => (await log(p)).filter((e) => e[1] === 'hg_se
 
   /* ---------- Admin : Membres · Invitations, règles des codes ---------- */
   let p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-  await adminSection(p, 'membres/invitations');
+  await adminSection(p, 'place/invitations');
   await p.waitForSelector('.il-rules', { timeout: 8000 });
   check((await p.textContent('.il-rules')).includes('Valeurs par défaut en vigueur'), 'admin : indique que les valeurs par défaut sont en vigueur');
   const resumes = await p.textContent('.il-rules-list');

@@ -100,7 +100,7 @@ export function mountAccountsList(el) {
     empty: A.listError ? `Impossible de charger les comptes : ${errMsg(A.listError)}` : 'Aucun compte ne correspond.',
     onSelect: (it) => {
       if (!it.pseudo || it.id === A.uid) return; // compte sans profil : rien à ouvrir
-      location.hash = `#membres/comptes/${it.id}`;
+      location.hash = `#place/comptes/${it.id}`;
     },
   });
   accList.select(A.uid);

@@ -27,10 +27,10 @@ const PART_OF = {
 };
 /** Libellé et adresse de chaque partie (sous-sections de la coquille). */
 export const ECON_PARTS = {
-  paillettes: { label: 'Paillettes et dons', route: '#cartes/economie' },
-  tirage: { label: 'Tirage', route: '#cartes/tirage' },
-  recyclage: { label: 'Recyclage et fabrication', route: '#cartes/recyclage' },
-  limites: { label: 'Limites', route: '#cartes/limites' },
+  paillettes: { label: 'Paillettes et dons', route: '#fabrique/economie' },
+  tirage: { label: 'Tirage', route: '#fabrique/tirage' },
+  recyclage: { label: 'Recyclage et fabrication', route: '#fabrique/recyclage' },
+  limites: { label: 'Limites', route: '#fabrique/limites' },
 };
 /* Partie affichée ; null = tout le formulaire (comportement d'origine, section non découpée). */
 let econPart = null;

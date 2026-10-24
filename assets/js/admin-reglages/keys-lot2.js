@@ -4,7 +4,7 @@ export const KEYS_LOT2 = {
   invites: {
     label: 'Codes et liens d\'invitation',
     help: 'Durée d\'un code (48 h), codes par heure et par lien (30), durée d\'un compte fantôme (60 jours) et préfixe des codes (HG-). Se règle dans Membres · Invitations.',
-    managed: '#membres/invitations',
+    managed: '#place/invitations',
     managedLabel: 'Membres · Invitations',
   },
   profile_fields: {

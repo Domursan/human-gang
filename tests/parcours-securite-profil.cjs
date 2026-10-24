@@ -50,7 +50,7 @@ const RESERVE = 'Ce pseudo est réservé : demande ton lien personnel au Staff.'
 
   /* (c) Staff « membres » sur la fiche de l'admin */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { uid: U(3), staff: ['membres'] }, hash: `#membres/comptes/${ME}` });
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { uid: U(3), staff: ['membres'] }, hash: `#place/comptes/${ME}` });
     await p.waitForSelector('#acc-tab-profil', { timeout: 8000 }).catch(() => {});
     await p.click('[data-tab="profil"]').catch(() => {});
     await p.waitForSelector('form[data-form="profile"]', { timeout: 5000 }).catch(() => {});
@@ -63,7 +63,7 @@ const RESERVE = 'Ce pseudo est réservé : demande ton lien personnel au Staff.'
 
   /* (d) Admin sur la fiche d'un membre : formulaire actif */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, hash: `#membres/comptes/${U(2)}` });
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, hash: `#place/comptes/${U(2)}` });
     await p.waitForSelector('[data-tab="profil"]', { timeout: 8000 }).catch(() => {});
     await p.click('[data-tab="profil"]').catch(() => {});
     await p.waitForSelector('form[data-form="profile"]', { timeout: 5000 }).catch(() => {});

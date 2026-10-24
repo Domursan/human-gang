@@ -35,7 +35,7 @@ const petites = (p) => p.evaluate(() => [...document.querySelectorAll('#arcade-r
 
   /* (a) Lecture, 1280 px */
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-  await adminSection(p, 'jeux/arcade');
+  await adminSection(p, 'fete/arcade');
   await p.waitForSelector('#arcade-root .arc-game', { timeout: 8000 });
   const noms = await p.locator('.arc-game .card-title').allTextContents();
   check(noms.length === 3 && noms[0] === 'Paillettes' && noms[1] === 'Raclette' && noms[2] === 'Domu-mobile', `(a) trois cartes : ${noms.join(', ')}`);
@@ -50,7 +50,7 @@ const petites = (p) => p.evaluate(() => [...document.querySelectorAll('#arcade-r
   check((await rows(p, 'paillettes').first().textContent()).includes('Alice') && (await rows(p, 'paillettes').first().textContent()).includes('120'), '(a) premier du classement : Alice, 120 points');
   check((await p.locator('.arc-game[data-game="paillettes"] [data-arc="clear"]').first().textContent()).trim() === 'Effacer ce score', '(a) bouton « Effacer ce score » par ligne');
   check((await p.textContent('.arc-reward')).includes('5 Paillettes'), '(a) récompense d\'une partie lue (5 Paillettes)');
-  check((await p.locator('.arc-reward a[href="#jeux/secrets"]').textContent()).includes('Modifier dans Secrets'), '(a) lien « Modifier dans Secrets »');
+  check((await p.locator('.arc-reward a[href="#fete/secrets"]').textContent()).includes('Modifier dans Secrets'), '(a) lien « Modifier dans Secrets »');
   check((await rpcs(p, 'hg_arcade_admin_board')).some((l) => l[2].p_week === null), '(a) première lecture : semaine en cours (p_week null)');
   check((await p.locator('.arc-tag').count()) === 1 && (await p.locator('[data-arc="next"]').isDisabled()), '(b) semaine en cours : étiquette, suivante désactivée');
   await p.screenshot({ path: path.join(SHOTS, 'admin-arcade-1280.png'), fullPage: true });
@@ -93,10 +93,10 @@ const petites = (p) => p.evaluate(() => [...document.querySelectorAll('#arcade-r
   check(p.errs.length === 0, '(a–c) aucune erreur JS' + (p.errs.length ? ' : ' + p.errs.join(' | ') : ''));
 
   /* Lien vers Secrets */
-  await p.click(".arc-reward a[href=\"#jeux/secrets\"]");
-  await p.waitForFunction(() => location.hash === '#jeux/secrets', null, { timeout: 5000 });
+  await p.click(".arc-reward a[href=\"#fete/secrets\"]");
+  await p.waitForFunction(() => location.hash === '#fete/secrets', null, { timeout: 5000 });
   await p.waitForSelector('#aeg-form', { timeout: 8000 }).catch(() => {});
-  check(await p.evaluate(() => location.hash) === '#jeux/secrets', '(a) « Modifier dans Secrets » mène à #jeux/secrets');
+  check(await p.evaluate(() => location.hash) === '#fete/secrets', '(a) « Modifier dans Secrets » mène à #fete/secrets');
   await p.ctx.close();
 
   /* (d) Effacement refusé */
@@ -127,7 +127,7 @@ const petites = (p) => p.evaluate(() => [...document.querySelectorAll('#arcade-r
   check(s.errs.length === 0, '(f) aucune erreur JS (Staff)' + (s.errs.length ? ' : ' + s.errs.join(' | ') : ''));
   await s.ctx.close();
   const c = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(4), staff: ['cartes'] } });
-  check((await c.locator('a.shell-sub[href="#jeux/arcade"]').count()) === 0, '(f) Staff « cartes » : pas de sous-section Arcade');
+  check((await c.locator('a.shell-sub[href="#fete/arcade"]').count()) === 0, '(f) Staff « cartes » : pas de sous-section Arcade');
   await c.ctx.close();
 
   /* (g) 390 px */

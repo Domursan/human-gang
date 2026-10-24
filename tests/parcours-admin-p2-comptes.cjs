@@ -44,14 +44,14 @@ const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAl
   /* (a) Comptes, ordinateur 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
-    await goHash(p, '#membres/comptes');
+    await goHash(p, '#place/comptes');
     check(await waitRows(p, 6), `(a) liste des comptes : filtre Actifs par défaut, 6 membres (${await rowCount(p)})`);
     check(await p.getAttribute('#shell-col-list .ui-chip[data-filter="active"]', 'aria-pressed') === 'true', '(a) puce « Actifs » active par défaut');
     const firstRow = await p.getAttribute('#shell-col-list .ui-row', 'data-id');
     check(firstRow === U(6), `(a) tri : le compte le plus récent (Emma) en tête (${firstRow})`);
     check(await p.isVisible('#shell-col') && await p.isVisible('#shell-col-list .ui-search'), '(a) recherche dans la colonne 2');
     check(await p.locator('#shell-col-list .ui-chip').count() === 4, '(a) puces Actifs / Staff / Fantômes / Toutes');
-    check(await p.isVisible('#acc-root .acc-empty') && (await hashOf(p)) === '#membres/comptes', '(a) sans sélection : zone principale invite à choisir un membre');
+    check(await p.isVisible('#acc-root .acc-empty') && (await hashOf(p)) === '#place/comptes', '(a) sans sélection : zone principale invite à choisir un membre');
 
     await p.click('#shell-col-list .ui-chip[data-filter="ghost"]');
     check(await rowCount(p) === 2, '(a) puce « Fantômes » : deux lignes');
@@ -69,7 +69,7 @@ const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAl
     check(await rowCount(p) === 6, '(a) Échap dans la recherche : liste complète du filtre Actifs (six lignes)');
 
     await p.click(`#shell-col-list .ui-row[data-id="${U(2)}"]`);
-    check(await p.waitForFunction((u) => location.hash === `#membres/comptes/${u}`, U(2), { timeout: 6000 }).then(() => true, () => false), '(a) clic sur Alice : URL #membres/comptes/<id>');
+    check(await p.waitForFunction((u) => location.hash === `#place/comptes/${u}`, U(2), { timeout: 6000 }).then(() => true, () => false), '(a) clic sur Alice : URL #place/comptes/<id>');
     check(await waitVisible(p, '#acc-dh .ui-dhead-t') && (await p.textContent('#acc-dh .ui-dhead-t')).includes('Alice'), '(a) en-tête de fiche : Alice (composant commun)');
     check(await p.locator('#acc-root .acc-tab').count() === 8, '(a) huit onglets de fiche');
     check(await waitVisible(p, '#shell-info') && await p.locator('#shell-info .ui-facts .ui-fact').count() === 6, '(a) panneau d’infos : résumé à six repères');
@@ -77,27 +77,27 @@ const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAl
     check(['Paillettes', 'Cartes', 'Sorties IRL', 'Secret Santa', 'Badges', 'Rôle'].every((l) => labels.includes(l)), `(a) résumé : Paillettes, Cartes, Sorties, Secret Santa, Badges, Rôle (${labels.join(' / ')})`);
 
     await p.click('#acc-root .acc-tab[data-tab="badges"]');
-    check(await p.waitForFunction((u) => location.hash === `#membres/comptes/${u}/badges`, U(2), { timeout: 4000 }).then(() => true, () => false), '(a) onglet Badges : l’URL suit l’onglet');
+    check(await p.waitForFunction((u) => location.hash === `#place/comptes/${u}/badges`, U(2), { timeout: 4000 }).then(() => true, () => false), '(a) onglet Badges : l’URL suit l’onglet');
     check(await p.getAttribute('#acc-root .acc-tab[data-tab="badges"]', 'aria-selected') === 'true', '(a) onglet Badges sélectionné');
 
     await p.locator('#shell-info .ui-linkbtn', { hasText: 'Secret Santa' }).click();
-    check(await p.waitForFunction((u) => location.hash === `#membres/comptes/${u}/ss`, U(2), { timeout: 4000 }).then(() => true, () => false), '(a) action rapide « Secret Santa » du résumé : onglet Secret Santa');
+    check(await p.waitForFunction((u) => location.hash === `#place/comptes/${u}/ss`, U(2), { timeout: 4000 }).then(() => true, () => false), '(a) action rapide « Secret Santa » du résumé : onglet Secret Santa');
 
     // Adresse directe avec onglet
-    await goHash(p, `#membres/comptes/${U(3)}/irl`);
+    await goHash(p, `#place/comptes/${U(3)}/irl`);
     check(await waitVisible(p, '#acc-root .acc-tab[data-tab="irl"][aria-selected="true"]'), '(a) adresse directe avec onglet : Bruno, onglet Sorties IRL');
     check((await p.textContent('#acc-dh .ui-dhead-t')).includes('Bruno'), '(a) adresse directe : en-tête de Bruno');
 
     // Échap ferme la fiche ; Précédent revient à la fiche précédente
     await p.keyboard.press('Escape');
-    check(await p.waitForFunction(() => location.hash === '#membres/comptes', null, { timeout: 4000 }).then(() => true, () => false), '(a) Échap : retour à la liste (URL #membres/comptes)');
+    check(await p.waitForFunction(() => location.hash === '#place/comptes', null, { timeout: 4000 }).then(() => true, () => false), '(a) Échap : retour à la liste (URL #place/comptes)');
     check(await waitVisible(p, '#acc-root .acc-empty'), '(a) Échap : zone principale vide');
     await p.goBack();
-    check(await p.waitForFunction((u) => location.hash.startsWith(`#membres/comptes/${u}`), U(3), { timeout: 4000 }).then(() => true, () => false), '(a) Précédent : fiche de Bruno rouverte');
+    check(await p.waitForFunction((u) => location.hash.startsWith(`#place/comptes/${u}`), U(3), { timeout: 4000 }).then(() => true, () => false), '(a) Précédent : fiche de Bruno rouverte');
 
     // Bouton « Fermer la fiche » de l'en-tête
     await p.click('#acc-dh .ui-btn:has-text("Fermer la fiche")');
-    check(await p.waitForFunction(() => location.hash === '#membres/comptes', null, { timeout: 4000 }).then(() => true, () => false), '(a) « Fermer la fiche » : retour à la liste');
+    check(await p.waitForFunction(() => location.hash === '#place/comptes', null, { timeout: 4000 }).then(() => true, () => false), '(a) « Fermer la fiche » : retour à la liste');
 
     check(p.errs.length === 0, '(a) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
@@ -106,17 +106,17 @@ const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAl
   /* (c) Mobile 390 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844, scenario: SCN });
-    await p.click('#shell-tabs .shell-tab[data-dom="membres"]');
-    await p.click('#shell-subs a[href="#membres/comptes"]');
+    await p.click('.shell-tab[data-lieu="place"]');
+    await p.evaluate((h) => { location.hash = h; }, '#place/comptes');
     check(await waitRows(p, 6), '(c) mobile : liste des comptes plein écran');
     check(await waitVisible(p, '#app', false) && await p.isVisible('#shell-col'), '(c) mobile : zone masquée tant qu’aucun membre n’est choisi');
     check(await hscroll(p) <= 0, '(c) mobile : pas de défilement horizontal (liste)');
     await p.click(`#shell-col-list .ui-row[data-id="${U(2)}"]`);
     check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : fiche d’Alice, liste masquée');
-    check(await p.getAttribute('#zone-back', 'href') === '#membres/comptes', '(c) mobile : retour vers la liste des comptes');
+    check(await p.getAttribute('#zone-back', 'href') === '#place/comptes', '(c) mobile : retour vers la liste des comptes');
     check(await p.isVisible('#acc-dh .ui-dhead-t') && await hscroll(p) <= 0, '(c) mobile : en-tête de fiche, sans défilement horizontal');
     await p.click('#zone-back');
-    check(await waitVisible(p, '#shell-col') && (await hashOf(p)) === '#membres/comptes', '(c) mobile : retour à la liste');
+    check(await waitVisible(p, '#shell-col') && (await hashOf(p)) === '#place/comptes', '(c) mobile : retour à la liste');
     check(p.errs.length === 0, '(c) mobile : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }

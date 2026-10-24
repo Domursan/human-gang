@@ -103,7 +103,7 @@ export const badgeName = (code) => S.badges.find((b) => b.code === code)?.name ?
    ========================================================= */
 /** Libellé et adresse de chaque partie. */
 export const BADGES_PARTS = {
-  catalogue: { label: 'Catalogue', route: '#membres/badges' },
+  catalogue: { label: 'Catalogue', route: '#place/badges' },
   attribution: { label: 'Attribution', route: '#vie/badges-attribution' },
   criteres: { label: 'Critères automatiques', route: '#vie/badges-criteres' },
 };

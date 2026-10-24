@@ -35,7 +35,7 @@ const DAY = 86400000;
 
   /* ---------- Admin, bureau 1280 px ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
-  await adminSection(p, 'cartes/defis');
+  await adminSection(p, 'fabrique/defis');
   await p.waitForSelector('#challenges-root [data-action="adc-edit"]', { timeout: 5000 });
   const before = await db(p, () => window.__DB.hg_challenges.length);
   check(await p.locator('#challenges-root .adc-model').count() === 4, 'modèles : 4 modèles affichés dans la rangée');

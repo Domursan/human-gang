@@ -119,17 +119,17 @@ export function listStaff(el) {
   });
 }
 
-/** Choix d'un membre dans la liste : la fiche suit l'URL (#pilotage/staff/<uid>). */
+/** Choix d'un membre dans la liste : la fiche suit l'URL (#mairie/staff/<uid>). */
 async function pick(it) {
   if (it.id === ST.sel) return;
   if (dirtyCount() && !(await confirmBox('Modifications non enregistrées', 'Quitter cette fiche sans enregistrer les permissions ?', { ok: 'Quitter', danger: true }))) {
     ST.list?.select(ST.sel);
     return;
   }
-  location.hash = `#pilotage/staff/${it.id}`;
+  location.hash = `#mairie/staff/${it.id}`;
 }
 
-/** Affichage d'un membre (registerSub open, à chaque visite de #pilotage/staff[/uid]). */
+/** Affichage d'un membre (registerSub open, à chaque visite de #mairie/staff[/uid]). */
 export async function openStaff(_el, { id } = {}) {
   const next = id ? String(id) : null;
   if (next === ST.sel && ST.draft) { ST.list?.select(next); return; }
@@ -484,7 +484,7 @@ async function openForm(row, btn) {
       await saveStaff({ uid, perms, active: editing ? row.active : true, note });
       toast(editing ? 'Permissions mises à jour' : 'Membre ajouté au Staff', 'ok');
       dlg.close();
-      if (!editing) location.hash = `#pilotage/staff/${uid}`; // la fiche du nouveau membre s'ouvre
+      if (!editing) location.hash = `#mairie/staff/${uid}`; // la fiche du nouveau membre s'ouvre
     } catch (ex) {
       fail(errMsg(ex));
     } finally {

@@ -53,7 +53,7 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     /* (a) Membres › Rôles, 1280 px */
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: SCN });
-      await adminSection(p, 'membres/roles');
+      await adminSection(p, 'place/roles');
       await attendre(p, '#roles-root .rl-item');
       check((await textes(p, '#roles-root .rl-item')).length === 2, '(a) deux rôles dans la liste (IRL, Secret Santa)');
       const items = await textes(p, '#roles-root .rl-item-txt');
@@ -144,12 +144,12 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     /* (b) IRL › Membres IRL */
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: SCN });
-      await adminSection(p, 'irl/membres-irl');
+      await adminSection(p, 'camp/membres-irl');
       await attendre(p, '#membres-irl-root ul.rl-people:not(.rl-results) > li');
       check(JSON.stringify(await textes(p, '#membres-irl-root ul.rl-people:not(.rl-results) .rl-person-name')) === JSON.stringify(['Alice', 'Bruno', 'Chloé']), '(b) membres du rôle IRL : Alice, Bruno, Chloé');
       const depuis = await textes(p, '#membres-irl-root ul.rl-people:not(.rl-results) .rl-person-txt .small');
       check(depuis.length === 3 && depuis.every((t) => t.startsWith('depuis le ')), '(b) chaque membre : « depuis le … »');
-      check(await p.locator('#membres-irl-root a[href="#membres/roles"]').count() === 1, '(b) lien vers Membres › Rôles');
+      check(await p.locator('#membres-irl-root a[href="#place/roles"]').count() === 1, '(b) lien vers Membres › Rôles');
       await p.click('[data-rl-member-rm="' + U(4) + '"]');
       await p.waitForFunction(() => document.querySelectorAll('#membres-irl-root ul.rl-people:not(.rl-results) > li').length === 2, null, { timeout: 8000 }).catch(() => {});
       check(await journal(p, (l) => l[0] === 'rpc' && l[1] === 'hg_member_role_set' && l[2].p_user === U(4) && l[2].p_role === 'irl' && l[2].p_on === false),
@@ -167,8 +167,8 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     /* (c) Fiche d'un membre : onglet « Accès », bloc « Rôles et accès » (Bruno : IRL et Secret Santa) */
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: SCN });
-      await adminSection(p, 'membres/roles');
-      await p.evaluate((h) => { location.hash = h; }, '#membres/comptes/' + U(3) + '/acces');
+      await adminSection(p, 'place/roles');
+      await p.evaluate((h) => { location.hash = h; }, '#place/comptes/' + U(3) + '/acces');
       await attendre(p, '#acc-panel .ra-block');
       check(await p.locator('#acc-panel .ra-chip').count() === 2, '(c) Bruno : deux puces de rôle (IRL, Secret Santa)');
       check(JSON.stringify(await textes(p, '#acc-panel .ra-chip')) === JSON.stringify(['IRL×', 'Secret Santa×']), '(c) puces : libellés des rôles');
@@ -217,14 +217,14 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     /* (d) 390 px : Rôles et fiche sans défilement horizontal, cibles ≥ 44 px */
     {
       const p = await openPage(browser, { page: 'admin', width: 390, height: 844, mobile: true, dpr: 2, scenario: SCN });
-      await adminSection(p, 'membres/roles');
+      await adminSection(p, 'place/roles');
       await attendre(p, '#roles-root .rl-item');
       check(await hscroll(p) === 0, '(d) Rôles, 390 px : pas de défilement horizontal');
       check(await hauteurMin(p, '#roles-root .rl-item') >= 44, '(d) Rôles, 390 px : cibles de liste ≥ 44 px');
       check(await hauteurMin(p, '#roles-root .rl-detail .btn') >= 44, '(d) Rôles, 390 px : boutons du détail ≥ 44 px');
       check(await hauteurMin(p, '#roles-root .rl-page') >= 44, '(d) Rôles, 390 px : cases de pages ≥ 44 px');
       await p.screenshot({ path: path.join(SHOTS, 'admin-roles-390.png') });
-      await p.evaluate((h) => { location.hash = h; }, '#membres/comptes/' + U(3) + '/acces');
+      await p.evaluate((h) => { location.hash = h; }, '#place/comptes/' + U(3) + '/acces');
       await attendre(p, '#acc-panel .ra-block');
       check(await hscroll(p) === 0, '(d) fiche « Accès », 390 px : pas de défilement horizontal');
       check(await hauteurMin(p, '#acc-panel .ra-chip') >= 44, '(d) fiche, 390 px : puces ≥ 44 px');
@@ -234,7 +234,7 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     /* (e) Dialogue « Personnes » d'une page liste : retirer un membre écrit allowed=false (un rôle ne le lui redonne pas) */
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { ...SCN, access: [{ page_slug: 'irl', user_id: U(2), allowed: true }] } });
-      await adminSection(p, 'membres/acces');
+      await adminSection(p, 'place/acces');
       await attendre(p, '[data-pa-manage="irl"]');
       await p.click('[data-pa-manage="irl"]');
       await attendre(p, 'dialog[open] [data-pa-user="' + U(2) + '"]');

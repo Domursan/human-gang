@@ -1,6 +1,6 @@
-// Parcours admin : mise en page « liste + détail » de Vie du gang › Sorties IRL (admin.html#irl/sorties).
+// Parcours admin : mise en page « liste + détail » de Vie du gang › Sorties IRL (admin.html#camp/sorties).
 // Colonne 2 : puces de filtre (À venir par défaut, Passées, Toutes), recherche, lignes compactes.
-// Zone principale : détail de la sortie choisie ; l'URL suit la sélection (#irl/sorties/<id>), Précédent fonctionne.
+// Zone principale : détail de la sortie choisie ; l'URL suit la sélection (#camp/sorties/<id>), Précédent fonctionne.
 // Panneau d'infos (≥ 1440 px) : organisateur, chiffres des réponses, photos liées.
 // Mobile (390 px) : liste plein écran, puis détail avec bouton retour.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-p2-sorties.cjs
@@ -47,7 +47,7 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
 
   // ----- Ordinateur 1440 px : liste, détail, panneau d'infos -----
   const p = await openPage(browser, { page: 'admin', scenario: SCN, width: 1440 });
-  await p.evaluate(() => { location.hash = '#irl/sorties'; });
+  await p.evaluate(() => { location.hash = '#camp/sorties'; });
   await p.waitForSelector('#shell-col .ui-row', { timeout: 5000 }).catch(() => {});
 
   check((await p.locator('#shell-col .ui-row').count()) === 2, 'liste : « À venir » par défaut (2 sorties)');
@@ -58,7 +58,7 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
 
   await row(p, EV_A).click();
   await p.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 });
-  check((await hashOf(p)) === `#irl/sorties/${EV_A}`, 'sélection : l\'adresse suit la sortie (#irl/sorties/<id>)');
+  check((await hashOf(p)) === `#camp/sorties/${EV_A}`, 'sélection : l\'adresse suit la sortie (#camp/sorties/<id>)');
   check((await p.textContent('#ass-d-head h2')) === 'Raclette au chalet', 'détail : titre de la sortie dans l\'en-tête');
   check((await p.locator('#ass-d-head button').allInnerTexts()).join('|').match(/Modifier.*Supprimer/) !== null, 'détail : actions Modifier et Supprimer dans l\'en-tête');
   check((await row(p, EV_A).getAttribute('aria-selected')) === 'true', 'liste : la sortie choisie est sélectionnée');
@@ -70,13 +70,13 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
   // Précédent : revient à la liste sans sélection
   await p.goBack();
   await p.waitForTimeout(400);
-  check((await hashOf(p)) === '#irl/sorties', 'Précédent : retour à la liste sans sélection');
+  check((await hashOf(p)) === '#camp/sorties', 'Précédent : retour à la liste sans sélection');
   check((await p.textContent('#ass-d-body')).includes('Choisis une sortie'), 'Précédent : zone principale vide');
 
   // Adresse directe : la sortie s'ouvre telle quelle
-  await p.evaluate((h) => { location.hash = h; }, `#irl/sorties/${EV_B}`);
+  await p.evaluate((h) => { location.hash = h; }, `#camp/sorties/${EV_B}`);
   await p.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 }).catch(() => {});
-  check((await p.textContent('#ass-d-head h2')) === 'Karaoké surprise', 'adresse directe #irl/sorties/<id> : la sortie s\'ouvre');
+  check((await p.textContent('#ass-d-head h2')) === 'Karaoké surprise', 'adresse directe #camp/sorties/<id> : la sortie s\'ouvre');
   check((await p.locator('#ass-d-body .ass-d-sec').count()) >= 2, 'détail : inscriptions et dates proposées');
   check((await p.locator('#ass-d-body button[data-act="fix"]').count()) === 2, 'sondage : deux dates à fixer');
 
@@ -103,7 +103,7 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
   await p.click('#ass-e-submit');
   await p.waitForSelector('#ass-d-head h2:has-text("Pizzas du jeudi")', { timeout: 5000 }).catch(() => {});
   check((await p.textContent('#ass-d-head h2')) === 'Pizzas du jeudi', 'création : la nouvelle sortie s\'ouvre dans la zone principale');
-  check((await hashOf(p)).startsWith('#irl/sorties/') && !(await hashOf(p)).endsWith('/'), 'création : l\'adresse porte l\'identifiant de la sortie');
+  check((await hashOf(p)).startsWith('#camp/sorties/') && !(await hashOf(p)).endsWith('/'), 'création : l\'adresse porte l\'identifiant de la sortie');
 
   check(!p.errs.length, 'ordinateur : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   check((await hscroll(p)) <= 0, 'ordinateur : pas de défilement horizontal');
@@ -111,16 +111,16 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
 
   // ----- Mobile 390 px : liste plein écran, puis détail avec retour -----
   const m = await openPage(browser, { page: 'admin', scenario: SCN, width: 390 });
-  await m.evaluate(() => { location.hash = '#irl/sorties'; });
+  await m.evaluate(() => { location.hash = '#camp/sorties'; });
   await m.waitForSelector('#shell-col .ui-row', { timeout: 5000 }).catch(() => {});
   check((await screen(m)) === 'list', 'mobile : la liste occupe l\'écran');
   check(!(await m.isVisible('#app')), 'mobile : la zone principale est masquée tant qu\'aucune sortie n\'est choisie');
   check((await m.locator('#shell-col .ui-row').count()) === 2, 'mobile : deux sorties dans la liste');
   await row(m, EV_A).click();
   await m.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 }).catch(() => {});
-  check((await screen(m)) === 'sub' && await m.isVisible('#app'), 'mobile : le détail remplace la liste');
+  check((await screen(m)) === 'page' && await m.isVisible('#app'), 'mobile : le détail remplace la liste');
   check(await m.isVisible('#zone-back'), 'mobile : bouton retour visible');
-  check((await m.getAttribute('#zone-back', 'href')) === '#irl/sorties', 'mobile : le retour mène à la liste de la sous-section');
+  check((await m.getAttribute('#zone-back', 'href')) === '#camp/sorties', 'mobile : le retour mène à la liste de la sous-section');
   await m.click('#zone-back');
   await m.waitForTimeout(400);
   check((await screen(m)) === 'list', 'mobile : le retour ramène à la liste');

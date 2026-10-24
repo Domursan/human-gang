@@ -175,10 +175,10 @@ export async function initAccounts({ me, onChange }) {
     merged: async (ghostId, memberId) => {
       // Après une liaison : la fiche du compte inscrit s'ouvre (rechargée si elle est déjà à l'écran)
       if (A.uid === memberId) return reloadDetail();
-      location.hash = `#membres/comptes/${memberId}`;
+      location.hash = `#place/comptes/${memberId}`;
     },
-    removed: async (ghostId) => { if (A.uid === ghostId) location.hash = '#membres/comptes'; },
-    openFiche: (id) => { location.hash = `#membres/comptes/${id}/profil`; },
+    removed: async (ghostId) => { if (A.uid === ghostId) location.hash = '#place/comptes'; },
+    openFiche: (id) => { location.hash = `#place/comptes/${id}/profil`; },
   });
   try { await Promise.all([loadAccounts(), ensureGhosts()]); } catch (e) { A.listError = e; }
   paintAccountsList();

@@ -41,7 +41,7 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 1280, height: 900 });
-  await adminSection(p, 'cartes/recettes');
+  await adminSection(p, 'fabrique/recettes');
   await p.waitForSelector('[data-rc=new]', { timeout: 5000 });
   check(/La méga-usine du gang/.test(await txt(p, '#acd-recettes')), 'admin : recettes listées');
   await p.click('[data-rc=new]');

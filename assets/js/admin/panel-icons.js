@@ -1,0 +1,90 @@
+// Admin : icônes du panel (plateau, pages de lieu, barre du bas, chrome). Tracés à trait (viewBox 24 × 24).
+// Les lieux et les sous-sections (admin/perms.js) citent ces clés dans leur champ `icon`. Une clé inconnue s'affiche vide.
+// Les icônes des lieux reprennent les maquettes du plateau (La Place du gang, La Poste, etc.).
+// Exporte : panelIcon(nom) (HTML du SVG), ICON (dictionnaire). Dépend de rien.
+
+const ICON = {
+  // Lieux (maquette du plateau)
+  place: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.8.1 5 1.9 5 5"/>',
+  poste: '<path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/>',
+  ventes: '<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7l-7 7 3 3 7-7"/><path d="M4 21h7"/>',
+  camp: '<path d="M3 20L12 5l9 15z"/><path d="M9.5 20L12 14.5 14.5 20"/>',
+  fabrique: '<rect x="4" y="7" width="11" height="14" rx="2"/><path d="M8 4h9a2 2 0 0 1 2 2v11"/><path d="M8 12h5"/>',
+  fete: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.5"/><path d="M12 3.5v17M3.5 12h17M6.4 6.4l11.2 11.2M17.6 6.4L6.4 17.6"/>',
+  mairie: '<path d="M3 10l9-6 9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/>',
+  // Sous-sections
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+  shield: '<path d="M12 3l7 3v5.5c0 4.3-3 7.8-7 9.5-4-1.7-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4"/>',
+  form: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  door: '<path d="M5 21V4h11v17M3 21h18M13 12h.01"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  link: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>',
+  wrench: '<path d="M14.5 6a4 4 0 0 0 5 5l-8.5 8.5a2.1 2.1 0 0 1-3-3L16.5 8A4 4 0 0 0 14.5 6z"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  grid: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+  badge: '<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>',
+  award: '<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7l-7 7 3 3 7-7"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  lifebuoy: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M5.6 5.6l3.3 3.3M15.1 15.1l3.3 3.3M18.4 5.6l-3.3 3.3M8.9 15.1l-3.3 3.3"/>',
+  bulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  pulse: '<path d="M3 12h4l3-7 4 14 3-7h4"/>',
+  robot: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9 17h6"/>',
+  terminal: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3M13 15h4"/>',
+  gavel: '<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7l-7 7 3 3 7-7"/><path d="M4 21h7"/>',
+  swap: '<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/>',
+  camera: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8.5 7l1.5-3h4l1.5 3"/>',
+  gift: '<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3-5-3.5-5-1.2C7 8 9.5 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 14.5 8 12 8z"/>',
+  give: '<path d="M12 4v10M8 10l4 4 4-4"/><rect x="4" y="16" width="16" height="4" rx="1"/>',
+  ticket: '<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M14 7v10"/>',
+  swords: '<path d="M5 3l6 6M19 3l-6 6M3 15l6 6M21 15l-6 6"/>',
+  layers: '<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 14l9 5 9-5"/>',
+  cards: '<rect x="5" y="3.5" width="11" height="14" rx="2.2"/><path d="M8.5 20.5H17a2.5 2.5 0 0 0 2.5-2.5V8.5"/><path d="M9.5 8.2l3 .1M9.5 11.2h4"/>',
+  box: '<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  coin: '<circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5c0-1.4 1.1-2 2.5-2s2.5.6 2.5 2-1.2 1.8-2.5 2-2.5.7-2.5 2 1.1 2 2.5 2 2.5-.6 2.5-2"/>',
+  dice: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.5-4.5L4 9"/><path d="M4 4v5h5"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 15"/><path d="M20 20v-5h-5"/>',
+  gauge: '<path d="M4 15.5a8 8 0 1 1 16 0"/><path d="M12 15.5l3.6-3.6"/><path d="M7 19h10"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4a3 3 0 0 0 4 4M16 6h4a3 3 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/>',
+  vote: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12l3 3 5-6"/>',
+  star: '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  flask: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/>',
+  spark: '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',
+  tree: '<path d="M12 3l5 7h-3l4 6H6l4-6H7z"/><path d="M12 19v2"/>',
+  globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c-2.6 2.6-2.6 14.4 0 17c2.6-2.6 2.6-14.4 0-17z"/>',
+  cake: '<path d="M4 21h16M5 21v-7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7"/><path d="M5 16c2 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3 1.5 4 0"/><path d="M12 12V8M12 5.5v.01"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9.5h8M8 12.5h5"/>',
+  type: '<path d="M4 6h16M12 6v13M9 19h6"/>',
+  map: '<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  quote: '<path d="M4 17c0-4 1.5-7 4-8M13 17c0-4 1.5-7 4-8"/><path d="M4 17h4v-4H4M13 17h4v-4h-4"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  film: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+  gamepad: '<path d="M7 9h10a4 4 0 0 1 3.9 4.9l-.8 3.2a2 2 0 0 1-3.5.6L14.5 16h-5l-2.1 1.7a2 2 0 0 1-3.5-.6l-.8-3.2A4 4 0 0 1 7 9z"/><path d="M8 11.5v2M7 12.5h2"/>',
+  key: '<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M6 16c.6-1.5 1.6-2.2 3-2.2s2.4.7 3 2.2M14 10h4M14 14h3"/>',
+  doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  palette: '<circle cx="12" cy="12" r="8.5"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/>',
+  warn: '<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/>',
+  archive: '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+};
+
+/**
+ * HTML d'une icône du panel (SVG 24 × 24, décoratif : masqué aux lecteurs d'écran).
+ * @param {string} name Clé de ICON. Une clé inconnue donne une icône vide.
+ */
+export function panelIcon(name) {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name] || ''}</svg>`;
+}

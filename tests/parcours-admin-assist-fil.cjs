@@ -6,7 +6,7 @@
 // Faux Supabase (fixtures/fake-sb.mjs, scénario S.support / S.replies). Lancer : node tests/parcours-admin-assist-fil.cjs
 const fs = require('fs');
 const path = require('path');
-const { ROOT, check, finish, openPage, adminSection, hscroll, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, hscroll, countOf, chromium } = require('./lib/harness.cjs');
 
 /* ---------- Aides de test ---------- */
 const ME = '11111111-1111-4111-8111-111111111111';          // admin connecté (fixture)
@@ -51,7 +51,7 @@ const dbReplies = (p, support) => p.evaluate((sid) => window.__DB.hg_support_rep
 /** Puce de filtre de la liste dont le texte contient label. */
 const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: label }).first().textContent();
 /** Compteur affiché à côté de « Assistance » dans la navigation. */
-const navCount = (p) => p.evaluate(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent?.trim() || '');
+const navCount = (p) => countOf(p, 'poste', 'assistance');
 /** Attend que la fonction fn, évaluée dans la page avec arg, renvoie une valeur vraie (ms millisecondes au plus). */
 const waitFor = (p, fn, arg, ms = 4000) => p.waitForFunction(fn, arg, { timeout: ms }).catch(() => {});
 /** Texte du fil de discussion de la demande affichée. */
@@ -65,7 +65,7 @@ const thread = (p) => p.locator('#support-root .ui-thread-log').textContent();
   /* (a) Panel admin, 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
-    await adminSection(p, 'pilotage/assistance');
+    await adminSection(p, 'poste/assistance');
     await waitFor(p, () => document.querySelectorAll('#shell-col-list .ui-row').length === 4);
 
     check(await rows(p) === 4, '(a) liste : quatre demandes');
@@ -79,7 +79,7 @@ const thread = (p) => p.locator('#support-root .ui-thread-log').textContent();
 
     // Ouverture : non lu → lu (écrit en base) ; le fil montre le message initial et la zone de réponse
     await p.click('#shell-col-list .ui-row[data-id="sup-1"]');
-    await waitFor(p, () => location.hash === '#pilotage/assistance/sup-1');
+    await waitFor(p, () => location.hash === '#poste/assistance/sup-1');
     await waitFor(p, () => !!document.querySelector('#support-root .ui-composer'));
     await waitFor(p, () => window.__DB.hg_support.find((r) => r.id === 'sup-1')?.read_at != null);
     check((await dbRow(p, 'hg_support', 'sup-1'))?.read_at != null, '(a) ouverture : read_at posé en base');
@@ -150,7 +150,7 @@ const thread = (p) => p.locator('#support-root .ui-thread-log').textContent();
     check((await thread(p)).includes('Réponse arrivée en direct'), '(a) temps réel : réponse reçue affichée dans le fil');
 
     // Demande déjà en cours avec réponses : le fil montre la prise en charge, la réponse publique et la note interne
-    await p.evaluate(() => { location.hash = '#pilotage/assistance/sup-4'; });
+    await p.evaluate(() => { location.hash = '#poste/assistance/sup-4'; });
     await waitFor(p, () => document.querySelector('#support-root .ui-dhead-t')?.textContent.includes('Badge'));
     check((await p.locator('#support-root .ui-msg').count()) === 3, '(a) sup-4 : message, réponse et note (trois bulles)');
     check(await p.locator('#support-root .ui-msg.is-note').count() === 1, '(a) sup-4 : la note interne est marquée');

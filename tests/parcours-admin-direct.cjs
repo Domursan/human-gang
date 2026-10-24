@@ -1,12 +1,12 @@
 // Parcours : temps réel du panel admin (assets/js/admin/live.js), sur le faux Supabase (fixtures/fake-sb.mjs).
 // (a) admin, temps réel confirmé : indicateur « En direct », abonnements à toutes les tables de ses droits ;
-//     une demande émise en direct met à jour le compteur de navigation, les tuiles et la liste ;
+//     une demande émise en direct met à jour le compteur de la tuile Assistance et la liste ;
 //     pendant la saisie (dialogue Staff ouvert) : bandeau « Mises à jour disponibles », liste inchangée, puis « Actualiser » ;
 //     coupure du canal : indicateur gris, puis reconnexion et indicateur vert.
 // (b) Staff { cartes } : aucun abonnement à hg_support, hg_ideas, hg_staff ni hg_admin_log.
-// (c) sans temps réel : indicateur gris « Hors direct », aucune erreur JS, sections inchangées.
+// (c) sans temps réel : indicateur gris « Hors direct », aucune erreur JS, plateau affiché.
 // Lancer : node tests/parcours-admin-direct.cjs
-const { adminSection, ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
+const { adminSection, countOf, ROOT, check, finish, openPage, chromium } = require('./lib/harness.cjs');
 
 /** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
@@ -40,29 +40,28 @@ const emettre = (p, row) => p.evaluate((r) => {
     check(attendues.every((t) => tables.includes(t)), '(a) admin : abonné aux tables de ses droits');
     check(new Set(tables).size === tables.length, '(a) une seule écoute par table (pas de doublon)');
 
-    check(await p.isHidden('.nav-count[data-count="assistance"]'), '(a) avant l\'événement : aucun compteur Assistance');
+    check((await countOf(p, 'poste', 'assistance')) === '', '(a) avant l\'événement : aucun compteur Assistance');
 
-    await adminSection(p, 'pilotage/assistance');  // la liste est montée à la première visite
+    await adminSection(p, 'poste/assistance');  // la liste est montée à la première visite
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 }).catch(() => {});
     await emettre(p, demande('sup-live-1', 'Message reçu en direct'));
-    await p.waitForFunction(() => document.querySelector('.nav-count[data-count="assistance"]')?.textContent === '1', null, { timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('[data-dom-badge="pilotage"]') && (await p.textContent('.nav-count[data-count="assistance"]')).trim() === '1',
+    await sleep(1500);
+    check((await countOf(p, 'poste', 'assistance')) === '1',
       '(a) événement hg_support : compteur de navigation Assistance mis à jour (1)');
-    check((await p.textContent('#stats a[href="#pilotage/assistance"] .stat-value')).trim() === '1', '(a) événement hg_support : tuile de la vue d\'ensemble mise à jour');
     check((await p.textContent('#shell-col-list')).includes('Message reçu en direct'), '(a) événement hg_support : liste Assistance rafraîchie');
 
     // Saisie en cours : un dialogue est ouvert dans le panel, la liste ne doit pas être remplacée
-    await adminSection(p, 'pilotage/staff');
+    await adminSection(p, 'mairie/staff');
     await p.click('#shell-col-list [data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
     await emettre(p, demande('sup-live-2', 'Message pendant la saisie'));
     await sleep(1500);
     check(await p.locator('#assistance .live-banner').count() === 1, '(a) dialogue ouvert : bandeau « Mises à jour disponibles » dans Assistance');
     check(!(await p.textContent('#shell-col-list')).includes('Message pendant la saisie'), '(a) dialogue ouvert : la liste n\'est pas remplacée');
-    check((await p.textContent('.nav-count[data-count="assistance"]')).trim() === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
+    check((await countOf(p, 'poste', 'assistance')) === '2', '(a) dialogue ouvert : le compteur de navigation reste à jour');
     await p.keyboard.press('Escape');
     await p.waitForFunction(() => !document.querySelector('dialog[open]'), null, { timeout: 5000 }).catch(() => {});
-    await adminSection(p, 'pilotage/assistance');
+    await adminSection(p, 'poste/assistance');
     await p.click('#assistance .live-banner button');
     await p.waitForTimeout(300);
     check((await p.textContent('#shell-col-list')).includes('Message pendant la saisie'), '(a) « Actualiser » : la liste est rafraîchie');
@@ -88,7 +87,7 @@ const emettre = (p, row) => p.evaluate((r) => {
       '(b) Staff cartes : aucun abonnement à hg_support, hg_ideas, hg_staff, hg_admin_log, hg_ss_participants ni hg_profiles');
     await emettre(p, demande('sup-hors-droits', 'Hors droits'));
     await sleep(1200);
-    check(await p.isHidden('#assistance') && await p.isHidden('.nav-count[data-count="assistance"]'), '(b) Staff cartes : Assistance reste masquée, aucun compteur');
+    check(await p.isHidden('#assistance') && (await countOf(p, 'poste', 'assistance')) === '', '(b) Staff cartes : Assistance reste masquée, aucun compteur');
     check(!p.errs.length, '(b) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.context().close();
   }
@@ -98,7 +97,7 @@ const emettre = (p, row) => p.evaluate((r) => {
     const p = await openPage(browser, { page: 'admin' });
     check(await p.getAttribute('.live-status', 'data-state') === 'off', '(c) sans temps réel : indicateur gris');
     check((await p.textContent('.live-status .live-label')).trim() === 'Hors direct', '(c) sans temps réel : libellé « Hors direct »');
-    check(await p.isVisible('#stats') && await p.locator('#stats .stat').count() > 0, '(c) sans temps réel : vue d\'ensemble affichée');
+    check(await p.isVisible('#plateau-root') && await p.locator('.plateau-lieu').count() === 7, '(c) sans temps réel : plateau affiché (7 lieux)');
     check(!p.errs.length, '(c) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.context().close();
   }

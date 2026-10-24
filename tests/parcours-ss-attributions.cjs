@@ -3,8 +3,8 @@
 const { check, finish, openPage, adminSection, chromium } = require('./lib/harness.cjs');
 (async () => {
   const browser = await chromium.launch();
-  const p = await openPage(browser, { page: 'admin', hash: '#irl/secret-santa/E24' });
-  await adminSection(p, 'irl/secret-santa/E24').catch(() => {});
+  const p = await openPage(browser, { page: 'admin', hash: '#camp/secret-santa/E24' });
+  await adminSection(p, 'camp/secret-santa/E24').catch(() => {});
   const btn = p.locator('[data-pairs="show"]').first();
   await btn.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
   check(await btn.count() === 1, 'bouton « Afficher les attributions » présent');

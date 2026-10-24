@@ -1,6 +1,6 @@
 // Admin : Pilotage › Assistance › Boîte à idées. Liste des idées en colonne 2 (createList), idée ouverte dans la zone principale
 // (en-tête avec auteur et statut, fil d'une seule bulle). La base (hg_ideas) ne garde ni réponses ni note : le fil est
-// en lecture seule. Route : #pilotage/idees[/<id>]. Droits : admin/perms.js (section « idees », permission « support »).
+// en lecture seule. Route : #poste/idees[/<id>]. Droits : admin/perms.js (section « idees », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderIdeas). Dépend de core.js, ui-confirm.js, badges.js (badge
 // « Boîte à idées »), shell.js (compteur) et des composants ui/.
 import { sb, toast, errMsg, fmtDateTime } from '../core.js';
@@ -8,7 +8,7 @@ import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf } from './state.js';
 import { check } from './common.js';
 import { loadIdeas } from './loaders.js';
-import { renderStats } from './overview.js';
+import { refreshCounts } from './counts.js';
 import { hasBadge, awardBadge, badgeName } from './badges.js';
 import { setCount } from './shell.js';
 import { createList } from './ui/list.js';
@@ -80,7 +80,7 @@ async function setStatus(idea, status) {
   let reloadErr = null;
   try { await loadIdeas(); } catch (e) { reloadErr = e; }
   renderIdeas();
-  renderStats();
+  refreshCounts();
   toast(reloadErr ? `Statut enregistré, mais la liste n'a pas pu être rechargée : ${errMsg(reloadErr)}` : `Idée ${LABEL[status].toLowerCase()}`, reloadErr ? 'error' : 'ok');
   if (status === 'retenue') await offerBadge(idea.user_id);
   renderIdeas();
@@ -129,7 +129,7 @@ function paintDetail() {
 /* ---------- Liste (colonne 2) ---------- */
 /** Ouvre une idée : la sélection passe par l'adresse, puis la coquille appelle `open`. */
 function go(id) {
-  location.hash = `#pilotage/idees/${id}`;
+  location.hash = `#poste/idees/${id}`;
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
@@ -154,7 +154,7 @@ export const ideasSub = {
       onSelect: (it) => go(it.id),
     });
   },
-  /** À chaque visite : retient l'idée de l'adresse (#pilotage/idees/<id>) et redessine le détail. */
+  /** À chaque visite : retient l'idée de l'adresse (#poste/idees/<id>) et redessine le détail. */
   open(_el, { id } = {}) {
     V.sel = id || null;
     V.list?.select(V.sel);

@@ -5,7 +5,7 @@
 // (d) MP : bouton désactivé sans opt-in ; avec opt-in, confirmation puis hg-notify admin_dm et relance « mp » ;
 // (e) « Ne plus proposer » ; durée 21 / 30 / 60 j ; Staff sans « bot » : pas de MP ; Staff ['cartes'] : pas de sous-section ;
 // (f) 375 px sans défilement horizontal ; hauteur ≤ 1 400 px ; aucun envoi automatique (aucun appel hg-notify sans clic).
-const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, countOf, hscroll, chromium, sleep } = require('./lib/harness.cjs');
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const shots = process.env.SHOTS_DIR;
 const remind = { todo: [
@@ -21,12 +21,12 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
   try {
     let p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { remind } });
     await p.context().grantPermissions(['clipboard-read', 'clipboard-write']).catch(() => {});
-    await adminSection(p, 'membres/relance');
+    await adminSection(p, 'place/relance');
     await p.waitForSelector('.rl-row');
     check(await p.$$eval('.rl-list:first-of-type .rl-row', (r) => r.length) === 3, '(a) 3 membres à relancer');
     check((await p.textContent('.rl-col')).includes('vu il y a 6 semaines · Secret Santa : souhaits vides'), '(a) « vu il y a 6 semaines » et choses en attente');
     check((await p.textContent('.rl-col')).includes('2 échanges de cartes en attente'), '(a) échanges en attente');
-    check((await p.textContent('#shell-subs a[href="#membres/relance"]')).includes('3'), '(a) compteur de la sous-section : 3');
+    check((await countOf(p, 'place', 'relance')) === '3', '(a) compteur de la sous-section : 3');
     check((await p.textContent('.rl-fiche h3')) === 'Chloé' && (await p.textContent('.rl-fiche')).includes('RDV de Lyon'), '(a) fiche de Chloé (dernière sortie)');
     check((await p.inputValue('#rl-msg')).includes('Coucou Chloé') && (await p.getAttribute('.rl-chip[data-i="0"]', 'aria-pressed')) === 'true', '(b) modèle Secret Santa, pseudo remplacé');
     await p.click('.rl-chip[data-i="2"]');
@@ -56,14 +56,14 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
     await p.ctx.close();
 
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { remind, uid: U(2), staff: ['membres'] } });
-    await adminSection(p, 'membres/relance'); await p.waitForSelector('.rl-row');
+    await adminSection(p, 'place/relance'); await p.waitForSelector('.rl-row');
     check(await p.isDisabled('[data-rl="mp"]') && (await p.textContent('.rl-fiche')).includes('Staff « Bot Discord »'), '(e) Staff membres sans bot : MP réservé');
     await p.ctx.close();
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { remind, uid: U(2), staff: ['cartes'] } });
-    check(await p.locator('#shell-subs a[href="#membres/relance"]').count() === 0, '(e) Staff cartes : pas de « À relancer »');
+    check(await p.locator('.plateau-lieu[href="#place"]').count() === 0, '(e) Staff cartes : pas de La Place (donc pas de « À relancer »)');
     await p.ctx.close();
     p = await openPage(browser, { page: 'admin', width: 375, height: 812, scenario: { remind } });
-    await adminSection(p, 'membres/relance'); await p.waitForSelector('.rl-row');
+    await adminSection(p, 'place/relance'); await p.waitForSelector('.rl-row');
     check(await hscroll(p) <= 0, '(f) 375 px : pas de défilement horizontal');
     if (shots) await p.screenshot({ path: `${shots}/A4-relance-mobile.png`, fullPage: true });
     await p.ctx.close();

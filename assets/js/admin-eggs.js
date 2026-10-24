@@ -6,7 +6,7 @@
  * Enregistrement : upsert de la seule clé « eggs », en conservant les clés inconnues (et les récompenses inconnues).
  * Le journal n'est lisible que par l'administrateur (RLS hg_egg_log_own, migration 062) : le Staff voit une explication.
  * Écriture permise à l'admin et au Staff « reglages » (RLS hg_settings_admin, hg_settings_perm('eggs') = 'reglages').
- * Route : #jeux/secrets (branchée par admin.js). Section : <section id="eggs">, conteneur #eggs-root.
+ * Route : #fete/secrets (branchée par admin.js). Section : <section id="eggs">, conteneur #eggs-root.
  * Dépendances : core.js (sb, toast, errMsg, esc, droits en cache), admin/list-tools.js (recherche du journal).
  * Tables et RPC : hg_settings (clé eggs), hg_egg_log (lecture admin), hg_staff_directory (pseudos).
  * Exporte : mountEggsSection, EGGS_DEFAULTS, EGG_NOMS, validateEggs.

@@ -9,7 +9,7 @@
  * Mêmes règles que le site (validateInfoGroups de profile-fields.js) : 1 à 12 groupes, 1 à 60 champs par groupe,
  * identifiants uniques. Le JSON brut reste modifiable dans Site › Clés avancées.
  * Écriture : admin et Staff « reglages » (RLS hg_settings_admin, hg_settings_perm('profile_fields') = 'reglages').
- * Route : #membres/champs (branchée par admin.js). Section : <section id="champs">, conteneur #champs-root.
+ * Route : #place/champs (branchée par admin.js). Section : <section id="champs">, conteneur #champs-root.
  * Dépendances : core.js (sb, toast, errMsg, esc, hasPerm), profile-fields.js (liste en cours, validation, liste d'origine
  * si elle est exportée), ui-confirm.js (confirmations).
  * Exporte : mountChampsSection, slugId.

@@ -21,7 +21,7 @@ const typeRow = (p, id) => p.evaluate((i) => window.__DB.hg_booster_types.find((
 const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
 /** Ouvre l'onglet Boosters et attend la liste. */
 async function openTab(p) {
-  await adminSection(p, 'cartes/boosters');
+  await adminSection(p, 'fabrique/boosters');
   await p.waitForSelector('.abt-row', { timeout: 8000 });
 }
 /** Ouvre l'éditeur du type id. */
@@ -214,7 +214,7 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
 
   /* ---------- (h) Staff sans la permission « cartes » : lecture seule ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: ALICE, staff: ['quiz'] } });
-  check(await p.locator('#shell-subs a[href="#cartes/boosters"]').count() === 0, '(h) Staff « quiz » : pas d\'onglet Boosters dans la navigation');
+  check(await p.locator('#shell-subs a[href="#fabrique/boosters"]').count() === 0, '(h) Staff « quiz » : pas d\'onglet Boosters dans la navigation');
   await p.evaluate(async () => {
     const m = await import(new URL('assets/js/admin-cards/boosters.js', location.href).href);
     const el = document.createElement('div');

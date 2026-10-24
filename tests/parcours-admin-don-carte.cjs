@@ -28,7 +28,7 @@ async function donner(p, { announce = true, notify = true } = {}) {
 
 /** Ouvre la fiche d'Alice dans Jeu de cartes › Joueurs, puis le tiroir « Donner une carte ». */
 async function ouvrirDon(p) {
-  await adminSection(p, 'cartes/joueurs');
+  await adminSection(p, 'fabrique/joueurs');
   await p.evaluate((id) => { location.hash = 'cartes/joueurs/' + id; }, ALICE);
   await p.waitForSelector('[data-act="give-open"]', { timeout: 8000 });
   await p.click('[data-act="give-open"]');

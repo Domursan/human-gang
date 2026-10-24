@@ -53,7 +53,7 @@ const DLG = '#c2-code-dlg[open]';
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, types: true }, width: 1280, height: 900 });
   await p.ctx.route('**/qrcode-generator@1.4.4/**', (r) => r.fulfill({ contentType: 'text/javascript',
     body: 'export default function(){return{addData(){},make(){},createDataURL(){return "data:image/gif;base64,R0lGODlhAQABAAAAACw=";}};}' }));
-  await adminSection(p, 'cartes/codes');
+  await adminSection(p, 'fabrique/codes');
   await p.waitForSelector('#acd-codes-form', { timeout: 5000 });
   check(/Gobelets du RDV/.test(await txt(p, '#acd-codes')), 'admin : lot existant listé (sans les codes)');
   await p.selectOption('#cc-type', 'dore').catch(() => {});

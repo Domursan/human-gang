@@ -70,127 +70,65 @@
   <link rel="stylesheet" href="assets/css/social.css">
   <link rel="stylesheet" href="assets/css/admin-errors.css">
   <link rel="stylesheet" href="assets/css/admin-eco.css">
-  <link rel="stylesheet" href="assets/css/admin-accueil.css">
+  <link rel="stylesheet" href="assets/css/admin-lieux.css">
 </head>
 <body>
-  <div class="shell" id="shell" data-screen="domain" data-info="no">
-    <nav class="shell-rail" id="shell-rail" aria-label="Domaines du panel">
+  <div class="shell" id="shell" data-screen="page" data-list="no" data-info="no">
+    <header class="shell-top" id="shell-top">
       <a class="shell-logo" href="accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang" data-site-identite="initiales">HG</a>
-      <div class="shell-doms" id="shell-doms"></div>
-      <div class="shell-sep" aria-hidden="true"></div>
-      <div class="shell-foot" id="shell-foot">
-        <a class="shell-ico" href="#pilotage/staff" data-admin-only aria-label="Staff" title="Staff"><span data-icon="shield"></span></a>
-        <button class="shell-ico" id="admin-goto" type="button" aria-haspopup="dialog" aria-label="Aller à… (Ctrl K)" title="Aller à… (Ctrl K)"><span data-icon="search"></span></button>
-        <a class="shell-ico" href="#pilotage/identite" data-rail-reglages aria-label="Réglages du site" title="Réglages du site"><span data-icon="sliders"></span></a>
-        <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
-        <div class="shell-live" id="shell-live"></div>
-        <div class="shell-account">
-          <button class="shell-avatar" id="shell-avatar" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shell-menu">··</button>
-          <div class="shell-menu" id="shell-menu" role="menu" aria-label="Compte" hidden>
-            <a role="menuitem" href="accueil.html">Retour au site</a>
-            <button role="menuitem" type="button" data-menu="prefs">Préférences d’affichage</button>
-            <button role="menuitem" type="button" data-menu="logout">Se déconnecter</button>
+      <p class="shell-brand">Humane Gang <span>· Admin</span></p>
+      <button class="shell-all" id="admin-goto" type="button" aria-haspopup="dialog" aria-label="Tout le panel (Ctrl K)" title="Tout le panel (Ctrl K)">
+        <span class="shell-all-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></span>
+        <span class="shell-all-txt">Tout le panel</span>
+      </button>
+      <a class="shell-site" href="accueil.html">Voir le site</a>
+      <div class="shell-live" id="shell-live"></div>
+      <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
+      <div class="shell-account">
+        <button class="shell-avatar" id="shell-avatar" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shell-menu">··</button>
+        <div class="shell-menu" id="shell-menu" role="menu" aria-label="Compte" hidden>
+          <a role="menuitem" href="accueil.html">Retour au site</a>
+          <button role="menuitem" type="button" data-menu="prefs">Préférences d’affichage</button>
+          <button role="menuitem" type="button" data-menu="logout">Se déconnecter</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell-body">
+      <aside class="shell-col" id="shell-col" aria-label="Liste" hidden>
+        <div class="shell-col-list" id="shell-col-list"></div>
+      </aside>
+
+      <main class="shell-zone" id="app" tabindex="-1" aria-labelledby="zone-title">
+        <header class="zone-head">
+          <div class="zone-nav">
+            <a class="zone-back" id="zone-back" href="#plateau" hidden>Plateau</a>
+            <nav class="zone-crumb" id="zone-crumb" aria-label="Fil d’Ariane"></nav>
           </div>
+          <div class="zone-title-row">
+            <h1 class="zone-title" id="zone-title" tabindex="-1"></h1>
+            <div class="zone-actions" id="zone-actions"></div>
+          </div>
+        </header>
+        <div class="shell-noaccess" id="shell-noaccess" hidden>
+          <p>Aucune section n’est accessible pour tes droits.</p>
         </div>
-      </div>
-    </nav>
-
-    <aside class="shell-col" id="shell-col" aria-label="Sous-sections du domaine">
-      <div class="shell-col-head">
-        <p class="eyebrow" id="shell-col-eyebrow">Domaine</p>
-        <h2 class="shell-col-title" id="shell-col-title"></h2>
-        <p class="shell-col-sub" id="shell-col-sub"></p>
-      </div>
-      <nav class="shell-subs" id="shell-subs" aria-label="Sous-sections"></nav>
-      <div class="shell-col-list" id="shell-col-list"></div>
-    </aside>
-
-    <main class="shell-zone" id="app" tabindex="-1" aria-labelledby="zone-title">
-      <header class="zone-head">
-        <a class="zone-back" id="zone-back" href="#pilotage/">Domaine</a>
-        <p class="eyebrow" id="zone-eyebrow"></p>
-        <div class="zone-title-row">
-          <h1 class="zone-title" id="zone-title" tabindex="-1"></h1>
-          <div class="zone-actions" id="zone-actions"></div>
+        <div class="shell-groups" id="shell-groups">
+          <div class="plateau" id="plateau-root" hidden></div>
+          <div class="lieu-page" id="lieu-root" hidden></div>
         </div>
-      </header>
-      <div class="shell-noaccess" id="shell-noaccess" hidden>
-        <p>Aucune section n’est accessible pour tes droits.</p>
-      </div>
-      <div class="shell-groups" id="shell-groups"></div>
-    </main>
+      </main>
 
-    <aside class="shell-info" id="shell-info" aria-label="Informations" hidden>
-      <div id="shell-info-host"></div>
-    </aside>
+      <aside class="shell-info" id="shell-info" aria-label="Informations" hidden>
+        <div id="shell-info-host"></div>
+      </aside>
+    </div>
 
-    <nav class="shell-tabs" id="shell-tabs" aria-label="Domaines"></nav>
+    <nav class="shell-tabs" id="shell-tabs" aria-label="Plateau et lieux"></nav>
   </div>
 
   <!-- Sections du panel : placées dans la zone principale à la première visite (admin/shell.js) -->
   <div id="shell-parking" hidden>
-        <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
-          <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
-          <div class="ov" id="ov">
-            <div class="ov-split">
-              <div class="ov-left">
-                <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
-                <section class="card ov-card ov-short" aria-labelledby="ov-short-title">
-                  <div class="ov-short-head">
-                    <h3 class="card-title" id="ov-short-title">Mes raccourcis</h3>
-                    <button type="button" class="btn btn-ghost btn-sm" data-ov-edit data-ov-k="sc:edit">Modifier</button>
-                  </div>
-                  <div id="ov-shortcuts"><div class="empty">Chargement…</div></div>
-                  <p class="small muted ov-short-note">Tes raccourcis ne sont visibles que par toi.</p>
-                </section>
-                <div class="card ov-card eco-card" id="ov-eco-card" hidden>
-                  <h3 class="card-title">Santé de l’économie</h3>
-                  <div id="ov-eco"><div class="empty">Chargement…</div></div>
-                </div>
-                <div class="card ov-card" id="ov-activity-card" hidden>
-                  <h3 class="card-title">Activité récente</h3>
-                  <div id="ov-activity"><div class="empty">Chargement…</div></div>
-                  <p class="small ov-more"><a href="#pilotage/journal">Voir tout le journal</a></p>
-                </div>
-              </div>
-              <aside class="ov-right card" id="ov-todo-card" aria-label="À traiter">
-                <div class="ov-todo-head" id="ov-todo-head"></div>
-                <div id="ov-todo"><div class="empty">Chargement…</div></div>
-              </aside>
-            </div>
-            <dialog class="ov-dialog" id="ov-dialog" aria-labelledby="ov-dialog-title" aria-describedby="ov-dialog-desc">
-              <form class="ov-dialog-form" id="ov-dialog-form">
-                <header class="ov-dialog-head">
-                  <div>
-                    <h2 class="ov-dialog-title" id="ov-dialog-title">Ajouter un raccourci</h2>
-                    <p class="small muted" id="ov-dialog-desc">Épingle les pages que tu utilises le plus souvent.</p>
-                  </div>
-                  <button type="button" class="ov-dialog-x" data-ov-dialog-close aria-label="Fermer">×</button>
-                </header>
-                <div class="ov-dialog-search">
-                  <input type="search" id="ov-sc-q" placeholder="Chercher une page du panel…" aria-label="Chercher une page du panel" autocomplete="off">
-                </div>
-                <div class="ov-dialog-body">
-                  <section class="ov-order-block" aria-labelledby="ov-order-title">
-                    <div class="ov-order-head">
-                      <h3 class="ov-order-title" id="ov-order-title">Ordre sur la vue d’ensemble</h3>
-                      <span class="small muted" id="ov-sc-count"></span>
-                    </div>
-                    <ul class="ov-order" id="ov-sc-order"></ul>
-                  </section>
-                  <div class="ov-pick-block" id="ov-sc-groups"></div>
-                </div>
-                <footer class="ov-dialog-foot">
-                  <p class="small muted">Tes raccourcis ne sont visibles que par toi.</p>
-                  <div class="ov-dialog-actions">
-                    <button type="button" class="btn btn-ghost" data-ov-dialog-close>Annuler</button>
-                    <button type="submit" class="btn btn-sand" id="ov-sc-save">Enregistrer</button>
-                  </div>
-                </footer>
-              </form>
-            </dialog>
-          </div>
-        </section>
         <section id="comptes" class="admin-section" aria-labelledby="h-comptes">
           <h2 id="h-comptes" class="section-title">Comptes</h2>
           <div id="acc-root"><div class="empty">Chargement des comptes…</div></div>

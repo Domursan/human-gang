@@ -31,12 +31,12 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
   /* (a) Administrateur */
   {
     // Départ sur la section Staff (et non sur la Vue d’ensemble, où le rail est masqué : admin-accueil.css)
-    const p = await openPage(browser, { page: 'admin', hash: '#pilotage/staff' });
+    const p = await openPage(browser, { page: 'admin', hash: '#mairie/staff' });
     // Rail : lien Staff (administrateur) -> section Staff ; compte et mode sans limite dans le rail
-    await p.click('#shell-foot a[href="#pilotage/staff"]');
+    await p.evaluate((h) => { location.hash = h; }, '#mairie/staff');
     await p.waitForSelector('#staff', { state: 'visible', timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#staff'), '(a) admin : section Staff visible (lien du rail)');
-    check(await p.isVisible('#shell-avatar') && await p.isVisible('#shell-foot a[href="#pilotage/staff"]'), '(a) admin : compte et lien Staff dans le rail');
+    check(await p.isVisible('#shell-avatar') && await p.isVisible('#shell-top'), '(a) admin : compte dans l’en-tête unique');
     check(await p.isVisible('#shell-god') && (await p.getAttribute('#shell-god', 'aria-pressed')) === 'false', '(a) admin : mode sans limite visible (rail)');
     await p.click('[data-staff-add]');
     await p.waitForSelector('#staff-dialog[open]', { timeout: 5000 });
@@ -48,10 +48,10 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     await p.fill('#staff-note', NOTE);
     await p.click('#staff-dialog button[type="submit"]');
     await p.waitForFunction(() => !document.querySelector('#staff-dialog').open, null, { timeout: 5000 }).catch(() => {});
-    // Colonne 2 : la liste se met à jour ; la fiche de Chloé s'ouvre (URL #pilotage/staff/<uid>)
+    // Colonne 2 : la liste se met à jour ; la fiche de Chloé s'ouvre (URL #mairie/staff/<uid>)
     await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
     check(await p.locator('#shell-col-list .ui-row', { hasText: 'Chloé' }).count() === 1, '(a) la liste se met à jour : Chloé apparaît dans le Staff');
-    check((await p.evaluate(() => location.hash)) === '#pilotage/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé est ouverte (URL)');
+    check((await p.evaluate(() => location.hash)) === '#mairie/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé est ouverte (URL)');
     check(await p.locator('#staff input[data-perm-key]:checked').count() === 2, '(a) Chloé a deux permissions cochées dans sa fiche');
     check((await p.textContent('#staff .stf-note')).includes(NOTE), '(a) la note est affichée dans la fiche');
     let journal = await log(p);
@@ -77,28 +77,34 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     const p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['cartes', 'journal'] } });
     check(p.url().split('#')[0].endsWith('/admin.html'), '(b) Staff : admin.html s’ouvre (pas de redirection)');
     // Navigation : domaines et sous-sections permis seulement (Pilotage : Journal ; Jeu de cartes : ses parties et les Défis)
-    const domaines = await p.$$eval('#shell-rail .shell-dom', (as) => as.map((a) => a.dataset.dom));
-    check(JSON.stringify(domaines) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${domaines.join(', ')}`);
+    await p.evaluate(() => { location.hash = '#plateau'; });
+    await p.waitForSelector('.plateau-lieu', { timeout: 5000 }).catch(() => {});
+    const domaines = await p.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
+    check(JSON.stringify(domaines) === JSON.stringify(['#ventes', '#fabrique', '#mairie']), `(b) Staff : lieux sur le plateau = ${domaines.join(' ')}`);
     // ordre de la colonne (Pilotage puis Le jeu de cartes) ; Questions [quiz], Secrets [reglages] et Staff [admin] absents.
     // Le droit « cartes » donne tout le domaine Le jeu de cartes, Arène comprise, et le Planning (PLANNING_PERMS).
     const attendu = ['planning', 'journal', 'gestion', 'series', 'cartes', 'boosters', 'economie', 'tirage', 'recyclage', 'limites', 'quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres', 'joueurs', 'echanges', 'stats', 'arene'];
-    const subs = await p.$$eval('#shell-subs .shell-sub', (as) => as.map((a) => a.dataset.sub));
-    check(JSON.stringify(subs) === JSON.stringify(attendu), `(b) Staff : sous-sections = ${subs.join(', ')}`);
+    const subs = [];
+    for (const lieu of ['#ventes', '#fabrique', '#mairie']) {
+      await p.evaluate((h) => { location.hash = h; }, lieu);
+      await p.waitForSelector('#lieu-root .lieu-tile', { timeout: 5000 }).catch(() => {});
+      subs.push(...(await p.$$eval('#lieu-root .lieu-tile', (as) => as.map((a) => a.dataset.sub))));
+    }
+    check(JSON.stringify(subs.slice().sort()) === JSON.stringify(attendu.slice().sort()), `(b) Staff : pages des lieux = ${subs.join(', ')}`);
     const sections = await p.$$eval('.admin-section', (ss) => ss.filter((s) => !s.hidden).map((s) => s.id));
     check(JSON.stringify(sections.sort()) === JSON.stringify(['bataille', 'cagnotte', 'cartes', 'cartes-gestion', 'champions', 'defis', 'drops', 'journal', 'planning']), `(b) Staff : sections permises = ${sections.join(', ')}`);
-    await p.click('#shell-subs [data-dom-subs="pilotage"] .shell-sub[data-sub="journal"]');
+    await p.evaluate((h) => { location.hash = h; }, '#mairie/journal');
     await p.waitForSelector('#journal', { state: 'visible', timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#journal'), '(b) Staff : Journal affiché (sous-section Pilotage › Journal)');
-    await p.click('#shell-rail .shell-dom[data-dom="cartes"]');
+    await p.evaluate((h) => { location.hash = h; }, '#fabrique/gestion');
     await p.waitForSelector('#cartes-gestion', { state: 'visible', timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#cartes-gestion') && !(await p.isVisible('#journal')), '(b) Staff : Jeu de cartes affiché (Gestion globale, première sous-section)');
-    await p.click('#shell-subs [data-dom-subs="cartes"] .shell-sub[data-sub="series"]');
+    await p.evaluate((h) => { location.hash = h; }, '#fabrique/series');
     await p.waitForSelector('#cartes', { state: 'visible', timeout: 5000 }).catch(() => {});
     check(await p.isVisible('#cartes') && !(await p.isVisible('#journal')), '(b) Staff : Jeu de cartes › Séries affiché');
     check(!(await p.isVisible('#staff')), '(b) Staff : pas de section Staff');
     check(await p.locator('[data-staff-add]').count() === 0, '(b) Staff : pas de bouton d’ajout au Staff');
     check(await p.locator('.god-card').count() === 0 && !(await p.isVisible('#shell-god')), '(b) Staff : pas de mode sans limite');
-    check((await p.textContent('#stats')).includes('Aucun indicateur'), '(b) Staff : aucune tuile d’aperçu hors de ses droits');
     const journal = await log(p);
     const rpcs = journal.filter((l) => l[0] === 'rpc').map((l) => l[1]);
     const tables = journal.filter((l) => /^(select|insert|update|upsert|delete)$/.test(l[0])).map((l) => l[1]);
@@ -116,7 +122,7 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
   {
     const p = await openPage(browser, { page: 'admin', scenario: { uid: U(2) } });
     check(/accueil\.html/.test(p.url()), `(c) membre simple : redirigé hors de admin.html (${p.url().replace(/^.*hg\.test/, '')})`);
-    check(await p.locator('#shell-rail, #shell-foot a[href="#pilotage/staff"]').count() === 0, '(c) membre simple : ni rail du panel ni lien Staff');
+    check(await p.locator('#shell-rail, #shell-top').count() === 0, '(c) membre simple : ni en-tête du panel ni rail');
     await p.ctx.close();
   }
 

@@ -5,7 +5,7 @@
  *  - Arène v2 (aperçu admin) : réglages (hg_settings.arena, bornés par le serveur), ouverture aux membres (administrateur
  *    seulement), aperçu du classement, saisons passées, clôture de la saison en cours (récompenses, journalisée).
  *    Règles et chiffres par défaut : docs/ARENE.md.
- * Droits : Staff « cartes » et administrateur. Route : #cartes/arene. Section : <section id="bataille">, #bataille-root.
+ * Droits : Staff « cartes » et administrateur. Route : #fabrique/arene. Section : <section id="bataille">, #bataille-root.
  * RPC : hg_battle_me, hg_battle_settings_save (Arène actuelle) ; hg_arena_admin, hg_arena_settings_save,
  * hg_arena_season_close (Arène v2). Exporte : mountBatailleSection.
  */

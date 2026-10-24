@@ -13,7 +13,7 @@ import { openDrawer } from './ui/drawer.js';
 import { S, pseudoOf, STATUS, STATUS_LABEL } from './state.js';
 import { busy, check, uploadAsset, pickFile, nullIfEmpty } from './common.js';
 import { loadEditions, loadEditionDetails } from './loaders.js';
-import { renderStats } from './overview.js';
+import { refreshCounts } from './counts.js';
 import { renderSS, SSV, ssCurrent, ssOpenEdition } from './ss-render.js';
 import { navigate } from './shell.js';
 import { reglage } from '../reglages-valeurs-lot3.js';
@@ -94,7 +94,7 @@ async function createEdition(form) {
   }
   const row = check(res);
   await loadEditions();
-  renderSS(); renderStats();
+  renderSS(); refreshCounts();
   toast(`Édition ${year} créée, inscriptions ouvertes`, 'ok');
   navigate(`${SS_ROUTE}/${row.id}`);
   return true;
@@ -147,7 +147,7 @@ async function saveEdition(form, ed) {
     shared_fields: readSharedFields(form),
   }).eq('id', ed.id));
   await loadEditions();
-  renderSS(); renderStats();
+  renderSS(); refreshCounts();
   toast('Édition enregistrée', 'ok');
   return true;
 }
@@ -223,7 +223,7 @@ async function draw(btn, ed) {
     const count = check(await sb.rpc('hg_ss_draw', { p_edition: ed.id }));
     S.lastDraw = { edition: ed.id, n: count };
     notify('ss_draw', { edition_id: ed.id }); // le bot prévient (sans jamais révéler les paires)
-    await loadEditions(); renderSS(); renderStats();
+    await loadEditions(); renderSS(); refreshCounts();
     toast(`Tirage OK pour ${count} participants`, 'ok');
   });
 }
@@ -235,7 +235,7 @@ async function drawManual(btn, ed) {
     edition: ed, participants: S.participants.map((p) => p.user_id), exclusions: S.exclusions, editions: S.editions, pseudoOf, isGhost,
     onDone: async (count) => {
       S.lastDraw = { edition: ed.id, n: count };
-      await loadEditions(); renderSS(); renderStats();
+      await loadEditions(); renderSS(); refreshCounts();
       toast(`Tirage manuel enregistré pour ${count} participants`, 'ok');
     },
   }));
@@ -253,7 +253,7 @@ async function deleteAssignments(ed) {
 async function afterFailedRedraw(ed) {
   // Attributions supprimées mais nouveau tirage refusé : l'édition redevient « sans tirage » pour pouvoir relancer.
   try { check(await sb.from('hg_ss_editions').update({ drawn_at: null }).eq('id', ed.id)); } catch (e) { console.warn('[tirage] remise à zéro', e); }
-  await loadEditions(); renderSS(); renderStats();
+  await loadEditions(); renderSS(); refreshCounts();
 }
 
 /**
@@ -272,7 +272,7 @@ async function redraw(btn, ed, manual) {
       },
       onDone: async (count) => {
         S.lastDraw = { edition: ed.id, n: count };
-        await loadEditions(); renderSS(); renderStats();
+        await loadEditions(); renderSS(); refreshCounts();
         toast(`Nouveau tirage manuel enregistré pour ${count} participants`, 'ok');
       },
     }));
@@ -288,7 +288,7 @@ async function redraw(btn, ed, manual) {
     const count = res.data;
     S.lastDraw = { edition: ed.id, n: count };
     if (tell) notify('ss_draw', { edition_id: ed.id });
-    await loadEditions(); renderSS(); renderStats();
+    await loadEditions(); renderSS(); refreshCounts();
     toast(`Nouveau tirage OK pour ${count} participants`, 'ok');
   });
 }
@@ -320,7 +320,7 @@ async function deleteEdition(btn, ed) {
     await loadEditions();
     S.editionId = S.editions[0]?.id ?? null;
     await loadEditionDetails();
-    renderSS(); renderStats();
+    renderSS(); refreshCounts();
     toast(`Édition ${ed.year} supprimée`, 'ok');
     navigate(SS_ROUTE);
   });

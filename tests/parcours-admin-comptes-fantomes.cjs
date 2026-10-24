@@ -57,15 +57,15 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
   /* (a) Redirections, fiche d'un fantôme, liaison par correspondance */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN() });
-    await goHash(p, '#membres/fantomes');
-    check(await waitHash(p, '#membres/comptes'), '(a) ancienne adresse #membres/fantomes redirigée vers #membres/comptes');
+    await goHash(p, '#place/fantomes');
+    check(await waitHash(p, '#place/comptes'), '(a) ancienne adresse #place/fantomes redirigée vers #place/comptes');
     check(await waitRows(p, 6), '(a) liste de Comptes affichée (filtre Actifs)');
     await goHash(p, '#fantomes');
-    check(await waitHash(p, '#membres/comptes'), '(a) ancre #fantomes redirigée vers #membres/comptes');
-    await goHash(p, `#membres/fantomes/${ZOE}`);
-    check(await waitHash(p, `#membres/comptes/${ZOE}`), '(a) #membres/fantomes/<id> redirigée vers #membres/comptes/<id>');
+    check(await waitHash(p, '#place/comptes'), '(a) ancre #fantomes redirigée vers #place/comptes');
+    await goHash(p, `#place/fantomes/${ZOE}`);
+    check(await waitHash(p, `#place/comptes/${ZOE}`), '(a) #place/fantomes/<id> redirigée vers #place/comptes/<id>');
     check(await waitVisible(p, '#acc-root .agh-detail'), '(a) l’adresse redirigée ouvre la fiche du fantôme');
-    check(await p.locator('#shell-subs a[href="#membres/fantomes"]').count() === 0, '(a) plus de sous-section « Comptes fantômes » dans la colonne');
+    check(await p.locator('#shell-subs a[href="#place/fantomes"]').count() === 0, '(a) plus de sous-section « Comptes fantômes » dans la colonne');
 
     check((await p.textContent('#agh-dh .ui-dhead-t')).includes('Zoé'), '(a) en-tête : Zoé (fantôme)');
     check((await p.textContent('#acc-root .agh-code-val')).includes('HG-ABC123'), '(a) code d’invitation affiché');
@@ -80,7 +80,7 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
     check(await p.isEnabled('#agh-lier [data-agh="merge-confirm"]'), '(a) confirmation activée');
 
     await p.click('#agh-lier [data-agh="merge-confirm"]');
-    check(await waitHash(p, `#membres/comptes/${U(4)}`), '(a) après fusion : fiche du compte inscrit (Chloé) ouverte');
+    check(await waitHash(p, `#place/comptes/${U(4)}`), '(a) après fusion : fiche du compte inscrit (Chloé) ouverte');
     check(await waitText(p, '#acc-dh .ui-dhead-t', 'Chloé'), '(a) après fusion : en-tête Chloé');
     const log = await rpcLog(p);
     check(hasCall(log, 'hg_ghost_merge', { p_ghost: ZOE, p_user: U(4) }), '(a) hg_ghost_merge appelé avec le fantôme Zoé et Chloé');
@@ -95,7 +95,7 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
   /* (b) Recherche dans le bloc, code, création, « Lier un fantôme… » */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN() });
-    await goHash(p, `#membres/comptes/${THEO}`);
+    await goHash(p, `#place/comptes/${THEO}`);
     check(await waitVisible(p, '#agh-lier') && (await p.textContent('#agh-dh .ui-dhead-t')).includes('Théo'), '(b) fiche de Théo (sans correspondance)');
     check(await p.locator('#agh-lier .agh-sugg-item').count() === 0, '(b) pas de correspondance pour Théo');
 
@@ -123,7 +123,7 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
     check(await p.waitForFunction(() => document.querySelector('#shell-col-list .ui-chip[data-filter="ghost"] .ui-count')?.textContent.trim() === '3', null, { timeout: 6000 }).then(() => true, () => false), '(b) compteur des fantômes : 3 après création');
 
     // Lier un fantôme… depuis la fiche d'un compte actif
-    await goHash(p, `#membres/comptes/${U(3)}`);
+    await goHash(p, `#place/comptes/${U(3)}`);
     check(await waitText(p, '#acc-dh .ui-dhead-t', 'Bruno'), '(b) fiche de Bruno');
     check(await p.isVisible('#zone-actions button:has-text("Lier un fantôme")') && await p.isVisible('#zone-actions button:has-text("Nouveau fantôme")'), '(b) actions de zone : Lier un fantôme… et + Nouveau fantôme');
     await p.click('#zone-actions button:has-text("Lier un fantôme")');
@@ -133,7 +133,7 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
     await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
     check(await waitGone(p, 'dialog.ui-drawer[open]'), '(b) liaison : tiroir fermé');
     check(hasCall(await rpcLog(p), 'hg_ghost_merge', { p_ghost: THEO, p_user: U(3) }), '(b) hg_ghost_merge appelé : Théo vers Bruno');
-    check(await waitHash(p, `#membres/comptes/${U(3)}`) && await waitText(p, '#acc-dh .ui-dhead-t', 'Bruno'), '(b) après liaison : fiche de Bruno toujours ouverte');
+    check(await waitHash(p, `#place/comptes/${U(3)}`) && await waitText(p, '#acc-dh .ui-dhead-t', 'Bruno'), '(b) après liaison : fiche de Bruno toujours ouverte');
     check(p.errs.length === 0, '(b) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }
@@ -142,17 +142,17 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN() });
     // Fiche d'un fantôme : « Compléter la fiche » ouvre la fiche complète, « Détail du fantôme » revient au fantôme
-    await goHash(p, `#membres/comptes/${ZOE}`);
+    await goHash(p, `#place/comptes/${ZOE}`);
     check(await waitVisible(p, '#agh-lier'), '(c) fiche de Zoé');
     await p.click('#agh-dh .ui-btn:has-text("Compléter la fiche")');
-    check(await waitHash(p, `#membres/comptes/${ZOE}/profil`), '(c) « Compléter la fiche » : fiche complète du fantôme');
+    check(await waitHash(p, `#place/comptes/${ZOE}/profil`), '(c) « Compléter la fiche » : fiche complète du fantôme');
     check(await waitVisible(p, '#acc-root .acc-tab[data-tab="profil"][aria-selected="true"]'), '(c) fiche complète : onglet Profil');
     check(await p.locator('#acc-root .acc-tab').count() === 7, '(c) fiche complète du fantôme : sept onglets (sans Accès)');
     await p.click('#acc-dh .ui-btn:has-text("Détail du fantôme")');
-    check(await waitVisible(p, '#acc-root .agh-detail') && await waitHash(p, `#membres/comptes/${ZOE}`), '(c) « Détail du fantôme » : retour à la fiche du fantôme');
+    check(await waitVisible(p, '#acc-root .agh-detail') && await waitHash(p, `#place/comptes/${ZOE}`), '(c) « Détail du fantôme » : retour à la fiche du fantôme');
 
     // Bandeau sur la fiche d'un compte actif, liaison depuis le tiroir
-    await goHash(p, `#membres/comptes/${U(4)}`);
+    await goHash(p, `#place/comptes/${U(4)}`);
     check(await waitVisible(p, '#acc-sugg .agh-banner'), '(c) bandeau sur la fiche de Chloé');
     check((await p.textContent('#acc-sugg .agh-banner')).includes('Zoé'), '(c) bandeau : « correspond peut-être au fantôme Zoé »');
     await p.click('#acc-sugg [data-agh="sugg-link"]');
@@ -168,14 +168,14 @@ const hasCall = (log, fn, args) => log.some(([f, a]) => f === fn && Object.entri
   /* (d) Mobile 390 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844, scenario: SCN() });
-    await p.click('#shell-tabs .shell-tab[data-dom="membres"]');
-    await p.click('#shell-subs a[href="#membres/comptes"]');
+    await p.click('.shell-tab[data-lieu="place"]');
+    await p.evaluate((h) => { location.hash = h; }, '#place/comptes');
     check(await waitRows(p, 6), '(d) mobile : liste des comptes plein écran');
     await p.click('#shell-col-list .ui-chip[data-filter="ghost"]');
     check(await rowCount(p) === 2, '(d) mobile : puce Fantômes : deux lignes');
     await p.click(`#shell-col-list .ui-row[data-id="${ZOE}"]`);
     check(await waitVisible(p, '#app') && await waitVisible(p, '#agh-lier') && await waitVisible(p, '#shell-col', false), '(d) mobile : fiche du fantôme, liste masquée');
-    check(await p.getAttribute('#zone-back', 'href') === '#membres/comptes', '(d) mobile : retour vers la liste des comptes');
+    check(await p.getAttribute('#zone-back', 'href') === '#place/comptes', '(d) mobile : retour vers la liste des comptes');
     check(await hscroll(p) <= 0, '(d) mobile : pas de défilement horizontal (fiche du fantôme)');
     await p.click('#zone-actions button:has-text("Nouveau fantôme")');
     check(await waitVisible(p, 'dialog.ui-drawer[open] #agh-pseudo'), '(d) mobile : « + Nouveau fantôme » ouvre le tiroir');

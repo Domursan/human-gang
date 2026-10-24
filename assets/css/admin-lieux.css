@@ -1,0 +1,64 @@
+/* ===== Humane Gang — administration : plateau (accueil) et pages de lieu =====
+   Le plateau pose les 7 lieux en cartes colorées (admin/lieux.js, renderPlateau) ; chaque lieu a sa couleur (--lieu, posée
+   en style en ligne). Une page de lieu : bandeau à la couleur du lieu, « À faire maintenant », puis toutes ses pages en
+   grosses tuiles groupées. Couleurs : jetons de base.css (clair et sombre) ; la couleur du lieu sert de filet et d'accent. */
+
+.plateau { display: flex; flex-direction: column; gap: 18px; } /* marges : celles de .shell-groups */
+.plateau-lead { margin: 0; }
+.plateau-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.plateau-grid > li { display: flex; }
+.plateau-lieu { position: relative; flex: 1; display: flex; align-items: center; gap: 14px; min-height: 96px; padding: 18px; border-radius: 20px;
+  background: var(--surface); border: 2px solid var(--lieu); color: var(--text); }
+@media (hover: hover) { .plateau-lieu:hover { background: var(--surface-2); } }
+.plateau-ico { width: 54px; height: 54px; flex: none; border-radius: 16px; display: grid; place-items: center; background: var(--lieu); color: #0D0B0A; }
+.plateau-ico svg { width: 30px; height: 30px; stroke-width: 2; }
+.plateau-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-right: 26px; }
+.plateau-name { font-family: var(--font-display); font-size: 18px; line-height: 1.15; }
+.plateau-tag { font-size: 13px; color: var(--muted); }
+.plateau-pastille { position: absolute; top: 12px; right: 12px; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 13px;
+  background: var(--lieu); color: #0D0B0A; font-size: 13px; font-weight: 700; line-height: 26px; text-align: center; }
+.plateau-pastille[hidden] { display: none; }
+
+.lieu-page { display: flex; flex-direction: column; gap: 24px; }
+.lieu { display: flex; flex-direction: column; gap: 24px; }
+.lieu-banner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 18px 20px 18px 26px; border-radius: 20px; background: color-mix(in srgb, var(--lieu) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--lieu) 50%, transparent); overflow: hidden; }
+.lieu-banner::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--lieu); }
+.lieu-tag { margin: 0; font-size: 15px; }
+.lieu-total { padding: 6px 12px; border-radius: 999px; background: var(--lieu); color: #0D0B0A; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.lieu-total[hidden] { display: none; }
+.lieu-h { margin: 0 0 12px; font-family: var(--font-display); font-weight: 400; font-size: 19px; }
+
+.lieu-todo-box .empty, .lieu-todo-empty { margin: 0; padding: 16px 18px; border-radius: 16px; border: 1px dashed var(--border-strong); color: var(--muted); }
+.lieu-todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.lieu-todo-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 16px;
+  border-radius: 16px; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--lieu); }
+.lieu-todo-title { margin: 0; font-weight: 600; }
+.lieu-todo-meta { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.lieu-todo-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.lieu-pages { display: flex; flex-direction: column; }
+.lieu-group { display: flex; flex-direction: column; gap: 10px; }
+.lieu-group + .lieu-group { margin-top: 18px; }
+.lieu-group-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.lieu-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.lieu-tile { position: relative; display: flex; align-items: flex-start; gap: 14px; min-height: 96px; padding: 16px 44px 16px 16px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+@media (hover: hover) { .lieu-tile:hover { border-color: var(--lieu); background: var(--surface-2); } }
+.lieu-tile-ico { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--lieu) 24%, transparent); color: var(--text); }
+.lieu-tile-ico svg { width: 22px; height: 22px; }
+.lieu-tile-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lieu-tile-name { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.lieu-tile-help { font-size: 13px; color: var(--muted); }
+.lieu-tile-count { position: absolute; top: 12px; right: 12px; }
+
+@media (max-width: 760px) {
+  .plateau-grid { grid-template-columns: 1fr; }
+  .lieu-tiles { grid-template-columns: 1fr; }
+}
+
+/* Les liens « À faire » en bouton sable gardent la couleur du bouton (le fil .shell a { color: inherit } l'emporterait) */
+.shell .lieu-todo-actions a.btn-sand { color: #121212; }
+html[data-mode="clair"] .shell .lieu-todo-actions a.btn-sand { color: #FFFFFF; }

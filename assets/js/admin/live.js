@@ -1,5 +1,5 @@
 // ===== Humane Gang — administration : temps réel du panel =====
-// Le voyant « En direct » est placé dans le rail (#shell-live, admin/shell.js).
+// Le voyant « En direct » est placé dans l'en-tête (#shell-live, admin/shell.js).
 // Un seul canal Supabase Realtime (« postgres_changes ») abonné aux tables publiées par la migration 030,
 // et seulement à celles dont l'utilisateur a le droit (TABLE_PERM). La base ne livre que les lignes que la RLS
 // autorise à lire : le filtre de droits ici n'est qu'un allègement.
@@ -16,7 +16,7 @@ import { hasPerm } from '../core/perms.js';
 import { S } from './state.js';
 import { canSection } from './perms.js';
 import { loadIdeas, loadSupport, loadEditionDetails, loadMembers } from './loaders.js';
-import { renderStats } from './overview.js';
+import { refreshCounts } from './counts.js';
 import { renderIdeas } from './ideas.js';
 import { renderSupport } from './support.js';
 import { renderSS } from './ss-render.js';
@@ -143,7 +143,7 @@ async function flush() {
   pending.clear();
   if (!batch.length) return;
   await Promise.all(batch.map((t) => (LOAD[t] ? LOAD[t]().catch((err) => console.warn('[panel]', t, err?.message || err)) : null)));
-  safeRun(renderStats);
+  safeRun(refreshCounts);
   // Copie de la liste : une section peut se retirer pendant le parcours.
   for (const e of entries.slice()) if (batch.some((t) => e.tables.has(t))) runEntry(e);
   for (const table of batch) document.dispatchEvent(new CustomEvent('hg-admin:changed', { detail: { table } }));

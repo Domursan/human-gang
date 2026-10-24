@@ -6,7 +6,7 @@
  * est lu par hg_member_access (fiche : admin-accounts/fiche.js).
  * Vues : Membres › Rôles (liste des rôles, détail d'un rôle : pages, membres), IRL › Membres IRL (membres du rôle « irl »),
  * et le bloc « Rôles et accès » de la fiche d'un membre (memberRolesHtml).
- * Droits : « membres » (admin/perms.js). Routes : #membres/roles (conteneur #roles-root), #irl/membres-irl (#membres-irl-root).
+ * Droits : « membres » (admin/perms.js). Routes : #place/roles (conteneur #roles-root), #camp/membres-irl (#membres-irl-root).
  * Dépendances : core.js (sb, toast, errMsg, esc, fmtDate, avatarHtml), ui-confirm.js (confirmBox), admin/common.js (busy, check, sectionError).
  * Exporte : mountRolesSection, mountMembresIrlSection, refreshRolesViews (après une modification faite depuis une fiche),
  * memberRolesHtml (bloc des rôles de la fiche), memberRoleChange, memberAccessReset, roleIdFromLabel.
@@ -296,13 +296,13 @@ export async function mountMembresIrlSection(root) {
 /** Dessine la section Membres IRL. focus : sélecteur à remettre au point après le dessin. */
 function renderIrl(focus = null) {
   if (!roleById('irl')) {
-    I.root.innerHTML = '<p class="rl-intro">Le rôle « IRL » n’existe pas. <a href="#membres/roles">Crée-le dans Membres › Rôles</a>.</p>';
+    I.root.innerHTML = '<p class="rl-intro">Le rôle « IRL » n’existe pas. <a href="#place/roles">Crée-le dans Membres › Rôles</a>.</p>';
     return;
   }
   I.root.innerHTML = `
     <div class="rl-head">
       <p class="rl-intro muted">Membres qui participent aux sorties en vrai. Le rôle IRL ouvre les pages de la vie IRL.</p>
-      <a class="rl-link" href="#membres/roles">Voir tous les rôles</a>
+      <a class="rl-link" href="#place/roles">Voir tous les rôles</a>
     </div>
     <section class="rl-detail card" aria-labelledby="irl-members-h">
       <div class="rl-members-head">
@@ -386,7 +386,7 @@ export function memberRolesHtml({ pseudo, roles, mine }) {
     <h4 class="ra-sub">Rôles</h4>
     ${chips}
     ${add}
-    <p class="small"><a href="#membres/roles">Gérer les rôles</a></p>
+    <p class="small"><a href="#place/roles">Gérer les rôles</a></p>
   </div>`;
 }
 

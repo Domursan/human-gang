@@ -1,10 +1,10 @@
-// Parcours : alertes économie (idée A7, migration 093) dans Pilotage › Vue d'ensemble, et éditeur de boosters.
+// Parcours : alertes économie (idée A7, migration 093) dans « À faire » de La Fabrique de cartes, et éditeur de boosters.
 // (a) admin : bloc « Santé de l'économie » (4 indicateurs, feux), alerte rouge expliquée (« Diamant rapporte 112 % »)
 //     avec le lien vers le réglage, tuile et ligne « À traiter » ; « Ignorer cette semaine » (hg_eco_alerts_ignore).
-// (b) Économie › Recyclage et fabrication : groupe « Alertes économie » (seuils) ; vue d'ensemble ≤ 2 000 px (accueil en deux moitiés : tuiles, puis économie et activité sous les tuiles).
+// (b) Économie › Recyclage et fabrication : groupe « Alertes économie » (seuils) ; page de La Fabrique ≤ 2 000 px.
 // (c) Éditeur de boosters : rendement recalculé en direct ; avertissement avant d'enregistrer un type déséquilibré ;
 //     cartes Identité comptées à 0 (non recyclables).
-// (d) Staff sans « cartes » : ni bloc ni appel à hg_eco_health. (e) 375 px sans défilement horizontal (onglet Domaines).
+// (d) Staff sans « cartes » : ni bloc ni appel à hg_eco_health. (e) 375 px sans défilement horizontal.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-eco.cjs
 const { check, finish, openPage, hscroll, adminSection, log, sleep, chromium } = require('./lib/harness.cjs');
 
@@ -13,29 +13,32 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 (async () => {
   const browser = await chromium.launch();
   try {
-    /* ---------- (a) vue d'ensemble ---------- */
+    /* ---------- (a) À faire de La Fabrique : alertes, lien, suspension ---------- */
     let p = await openPage(browser, { page: 'admin' });
-    await adminSection(p, 'pilotage/apercu');
-    await p.waitForSelector('#ov-eco .eco-ind', { timeout: 6000 });
-    check(await p.isVisible('#ov-eco-card') && await p.$$eval('#ov-eco .eco-ind', (x) => x.length) === 4, '(a) bloc « Santé de l’économie » : 4 indicateurs');
-    const tones = await p.$$eval('#ov-eco .eco-ind .eco-dot', (d) => d.map((x) => x.dataset.tone).join(','));
-    check(tones === 'warn,ok,bad,ok', `(a) feux : à surveiller, normal, alerte, normal (${tones})`);
-    const al = await p.textContent('#ov-eco .eco-alert');
-    check(/Le booster Diamant rapporte 112 % de son prix au recyclage/.test(al) && /672/.test(al), '(a) alerte rouge expliquée');
-    check(await p.getAttribute('#ov-eco .eco-alert a.btn', 'href') === '#cartes/boosters', '(a) lien vers le réglage des boosters');
-    check(/1\s*alerte économie/.test(await p.textContent('#stats')), '(a) tuile « 1 alerte économie »');
-    check(/alerte économie/.test(await p.textContent('#ov-todo')), '(a) ligne « À traiter »');
-    check(await p.$$eval('#ov-eco .eco-tbl:not(details .eco-tbl) tbody tr', (r) => r.length) === 3 && await p.isVisible('#ov-eco details.eco-more'), '(a) 3 boosters les plus rentables + « Tous les boosters »');
-    await p.click('#ov-eco [data-eco-ignore="7"]');
-    await sleep(600);
+    await p.evaluate(() => { location.hash = '#fabrique'; });
+    await p.waitForSelector('.lieu-todo-item', { timeout: 6000 }).catch(() => {});
+    const todo = await p.textContent('[data-lieu-todo]');
+    check(/Le booster Diamant rapporte 112 % de son prix au recyclage/.test(todo) && /672/.test(todo), '(a) « À faire » : alerte rouge expliquée (« Diamant rapporte 112 % »)');
+    check(await p.getAttribute('.lieu-todo a[href="#fabrique/boosters"]', 'href') === '#fabrique/boosters', '(a) « À faire » : lien vers le réglage des boosters');
+    check((await p.textContent('[data-lieu-badge="fabrique"]')).trim() === '1', '(a) pastille de La Fabrique : 1 à traiter');
+    check((await p.textContent('.lieu-tile[data-sub="economie"] .nav-count')).trim() === '1', '(a) tuile Paillettes et dons : compteur 1');
+    check((await p.textContent('.lieu-total')).includes('à traiter'), '(a) bandeau du lieu : total « à traiter »');
+    const tab = await p.$$eval('.lieu-tile', (as) => as.length);
+    check(tab === 18, `(a) page de La Fabrique : 18 tuiles (${tab})`);
+    await p.click('.lieu-todo [data-lieu-act="0.1"]');
+    await sleep(900);
     check((await log(p)).some((l) => l[0] === 'eco_ignore' && l[1] === 7), '(a) « Ignorer cette semaine » : hg_eco_alerts_ignore(7)');
-    check(/Alertes suspendues/.test(await p.textContent('#ov-eco')) && !/alerte économie/.test(await p.textContent('#ov-todo')), '(a) alertes suspendues, plus dans « À traiter »');
+    await p.evaluate(() => { location.hash = '#plateau'; });
+    await sleep(200);
+    await p.evaluate(() => { location.hash = '#fabrique'; });
+    await p.waitForSelector('[data-lieu-todo] .lieu-todo-empty', { timeout: 6000 }).catch(() => {});
+    check((await p.textContent('[data-lieu-todo]')).includes('Rien à faire ici'), '(a) alertes suspendues : plus dans « À faire »');
     const h = await p.evaluate(() => document.getElementById('app').scrollHeight);
-    check(h <= 2000, `(b) vue d’ensemble ≤ 2 000 px (${h})`);
+    check(h <= 2000, `(b) page du lieu ≤ 2 000 px (${h})`);
     check(p.errs.length === 0, '(a) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 3).join(' | ') + ')' : ''));
 
     /* ---------- (b) seuils ---------- */
-    await adminSection(p, 'cartes/recyclage');
+    await adminSection(p, 'fabrique/recyclage');
     await sleep(500);
     const legends = await p.$$eval('#acd-econ-form fieldset:not([hidden]) legend', (l) => l.map((x) => x.textContent.trim()));
     check(legends.includes('Alertes économie') && await p.isVisible('#acd-e-alertes_booster_pct'), `(b) seuils dans Recyclage et fabrication (${legends.join(', ')})`);
@@ -44,7 +47,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 
     /* ---------- (c) éditeur de boosters ---------- */
     p = await openPage(browser, { page: 'admin' });
-    await adminSection(p, 'cartes/boosters');
+    await adminSection(p, 'fabrique/boosters');
     await sleep(800);
     const ok = await p.evaluate(async () => {
       const m = await import('/assets/js/admin-cards/boosters.js');
@@ -75,15 +78,15 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 
     /* ---------- (d) Staff sans « cartes » ---------- */
     p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['support'] } });
-    await adminSection(p, 'pilotage/apercu');
+    await p.evaluate(() => { location.hash = '#fabrique'; });
     await sleep(400);
-    check(!(await p.isVisible('#ov-eco-card')) && !(await log(p)).some((l) => l[0] === 'rpc' && l[1] === 'hg_eco_health'), '(d) Staff « support » : ni bloc ni appel');
+    check(!(await p.isVisible('[data-lieu-todo] .lieu-todo-item')) && !(await log(p)).some((l) => l[0] === 'rpc' && l[1] === 'hg_eco_health'), '(d) Staff « support » : ni alerte « À faire » ni appel');
     await p.ctx.close();
 
     /* ---------- (e) 375 px ---------- */
     p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
-    await adminSection(p, 'pilotage/apercu');
-    await p.waitForSelector('#ov-eco .eco-ind', { timeout: 6000 }); // téléphone : une colonne, le bloc économie suit la file
+    await p.evaluate(() => { location.hash = '#fabrique'; });
+    await p.waitForSelector('.lieu-todo-item', { timeout: 6000 }).catch(() => {});
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     await p.ctx.close();
   } catch (e) {

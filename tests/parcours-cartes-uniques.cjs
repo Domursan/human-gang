@@ -104,10 +104,10 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 5. Admin : Hors série listée ; choisir « Unique » verrouille la carte ; l'enregistrement garde ces valeurs.
   p = await openPage(browser, { page: 'admin', fixture: FIXTURE, width: 1280, height: 900, scenario: HS });
-  await adminSection(p, 'cartes/series');
+  await adminSection(p, 'fabrique/series');
   const seriesAdmin = await p.textContent('.acd-setgrid').catch(() => '');
   check(seriesAdmin.includes('Hors série'), 'admin › Séries : « Hors série » est listée');
-  await adminSection(p, 'cartes/cartes');
+  await adminSection(p, 'fabrique/cartes');
   await p.waitForSelector('[data-act="card-new"]', { timeout: 5000 });
   await p.click('[data-act="card-new"]');
   await p.waitForSelector('dialog.ui-drawer[open] #acc-rarity', { timeout: 5000 });
@@ -131,7 +131,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
 
   // 6. Don et Drop : une carte unique déjà attribuée ne peut pas être redonnée ni lancée.
   p = await openPage(browser, { page: 'admin', fixture: FIXTURE, width: 1280, height: 900, scenario: { uniques: true, uniqueTaken: true } });
-  await adminSection(p, 'cartes/joueurs');
+  await adminSection(p, 'fabrique/joueurs');
   await p.evaluate((id) => { location.hash = 'cartes/joueurs/' + id; }, ALICE);
   await p.waitForSelector('[data-act="give-open"]', { timeout: 8000 });
   await p.click('[data-act="give-open"]');
@@ -140,7 +140,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   check(donOpt && donOpt.dis && /déjà attribuée/.test(donOpt.txt), 'Don : la carte unique déjà attribuée est désactivée (« ' + (donOpt && donOpt.txt) + ' »)');
   await p.keyboard.press('Escape');
   await waitClosed(p);
-  await adminSection(p, 'cartes/drops');
+  await adminSection(p, 'fabrique/drops');
   await p.waitForSelector('[data-action="drop-new"]', { timeout: 8000 });
   await p.click('[data-action="drop-new"]');
   await p.waitForSelector('dialog.ui-drawer[open] #drop-card', { timeout: 5000 });

@@ -105,14 +105,14 @@ const MSG = {
         snapshot: { path: `${U(2)}/raclette-1.webp`, caption: 'Le fromage', event_title: 'Raclette de test', event_at: ago(43200), author: 'Alice' }, support_id: 'sup-r1', status: 'ouverte', created_at: ago(20) }],
     };
     p = await openPage(browser, { page: 'admin', scenario: SUP });
-    await adminSection(p, 'pilotage/assistance');
+    await adminSection(p, 'poste/assistance');
     const chip = p.locator('.ui-chip', { hasText: 'Signalements' });
     check(await chip.count() === 1 && /1/.test(await chip.textContent()), '(d) filtre « Signalements » avec son compteur');
     await chip.click();
     await sleep(300);
     const titles = await p.$$eval('.ui-row-title', (t) => t.map((x) => x.textContent.trim()));
     check(titles.length === 1 && /Photo · Raclette de test/.test(titles[0]), `(d) seule la demande de signalement listée (${titles.join(' | ')})`);
-    await p.evaluate(() => { location.hash = '#pilotage/assistance/sup-r1'; });
+    await p.evaluate(() => { location.hash = '#poste/assistance/sup-r1'; });
     await p.waitForSelector('.rp-card', { timeout: 5000 });
     check(await p.isVisible('.rp-card .rp-photo') && /Information privée/.test(await p.textContent('.rp-card .rp-reason')), '(d) aperçu de la photo et raison');
     check(/Signalé par 1 membre/.test(await p.textContent('.rp-card')) && /colis/.test(await p.textContent('.rp-card')), '(d) nombre de signalements et mot du signalement');

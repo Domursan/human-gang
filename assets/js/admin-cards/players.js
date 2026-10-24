@@ -39,7 +39,7 @@ function playersListItems() {
     };
   });
 }
-/** Colonne 2 (registerSub list) : liste des membres ; le choix d'un membre change l'adresse (#cartes/joueurs/<id>). */
+/** Colonne 2 (registerSub list) : liste des membres ; le choix d'un membre change l'adresse (#fabrique/joueurs/<id>). */
 export function mountPlayersList(el) {
   PL.list = createList(el, {
     items: playersListItems(),

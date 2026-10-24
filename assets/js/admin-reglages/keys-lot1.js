@@ -62,10 +62,10 @@ export const GROUPES_LOT1 = [
 
 /** Parties du formulaire (sous-sections de Site) : groupes affichés et adresse de chaque partie. */
 export const PARTS_LOT1 = {
-  identite: { label: 'Identité et mentions légales', groups: ['identite', 'legal'], route: '#pilotage/identite' },
-  textes: { label: 'Textes et intro', groups: ['textes', 'affichage', 'visite', 'hors_ligne'], route: '#pilotage/textes' },
-  menu: { label: 'Menu et pied de page', groups: ['navigation'], route: '#pilotage/menu' },
-  etat: { label: 'État du site', groups: ['etat'], route: '#pilotage/etat' },
+  identite: { label: 'Identité et mentions légales', groups: ['identite', 'legal'], route: '#mairie/identite' },
+  textes: { label: 'Textes et intro', groups: ['textes', 'affichage', 'visite', 'hors_ligne'], route: '#mairie/textes' },
+  menu: { label: 'Menu et pied de page', groups: ['navigation'], route: '#mairie/menu' },
+  etat: { label: 'État du site', groups: ['etat'], route: '#mairie/etat' },
 };
 
 /** Libellés automatiques du menu (pour le placeholder du champ). */

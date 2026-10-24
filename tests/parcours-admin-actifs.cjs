@@ -32,13 +32,13 @@ const now = () => new Date().toISOString();
       DB.hg_cards.push({ ...base, id: 'carte-lea', set_id: DB.hg_card_sets[0].id, number: 90, name: 'Carte Léa', family: 'membre', rarity: 'commune', member_id: g, active: true, max_copies: null, image_url: null });
     }, { g: GHOST, now: now() });
 
-    await adminSection(p, 'cartes/joueurs');
+    await adminSection(p, 'fabrique/joueurs');
     await p.waitForSelector('#shell-col .ui-row', { timeout: 8000 });
     const joueurs = await texts(p, '#shell-col .ui-row');
     check(joueurs.some((t) => t.includes('Alice')), 'joueurs : les comptes actifs sont listés (Alice)');
     check(!joueurs.some((t) => t.includes('Léa')), 'joueurs : le fantôme Léa n\'apparaît pas dans la liste');
 
-    await adminSection(p, 'cartes/cartes');
+    await adminSection(p, 'fabrique/cartes');
     await p.click('[data-act="card-new"]');
     await p.waitForSelector(`${drawer} #acc-member`, { timeout: 5000 });
     const neuve = await texts(p, '#acc-member option');
@@ -84,7 +84,7 @@ const now = () => new Date().toISOString();
     await p.keyboard.press('Escape');
 
     // Sorties : ajout d'un inscrit (choix sans fantôme), présence déjà enregistrée (historique)
-    await adminSection(p, 'irl/sorties');
+    await adminSection(p, 'camp/sorties');
     await p.click(`#shell-col .ui-row[data-id="${EV}"]`);
     await p.waitForSelector('#ass-d-body .ass-person', { timeout: 5000 });
     const inscrits = await texts(p, '#ass-d-body .ass-person-name');
@@ -96,7 +96,7 @@ const now = () => new Date().toISOString();
     check(ajout.includes('Alice') && !ajout.some((t) => t.includes('Léa')), 'sorties : « Ajouter un membre » ne propose pas le fantôme');
 
     // Souvenirs : auteur d'un nouveau souvenir et filtre des réactions
-    await adminSection(p, 'irl/souvenirs');
+    await adminSection(p, 'camp/souvenirs');
     await p.click('#shell-col .sv-views a[data-view="reactions"]');
     await p.waitForSelector('#sv-re-member', { timeout: 5000 });
     const membres = await texts(p, '#sv-re-member option');
@@ -113,7 +113,7 @@ const now = () => new Date().toISOString();
     await p.keyboard.press('Escape');
 
     // Secret Santa : exclusion (choix des deux personnes sans fantôme)
-    await adminSection(p, 'irl/secret-santa');
+    await adminSection(p, 'camp/secret-santa');
     await p.click('.shell-slot:not([hidden]) .ui-row[data-id="E25"]');
     await p.waitForSelector('#ss-dhead h2', { timeout: 5000 });
     await p.click('[data-ss-act="excl-new"]');

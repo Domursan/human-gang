@@ -5,15 +5,15 @@
 // charge (séparateur), les réponses publiques (visibles par le membre) et les notes internes (panel seulement).
 // Prise en charge d'un membre inscrit : hg_support_take ouvre une conversation privée (page Messages) entre le Staff
 // et le membre, nommée d'après le sujet, avec le résumé de la demande en haut (migration 066).
-// Route : #pilotage/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
+// Route : #poste/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderSupport). Dépend de core.js, ui-confirm.js, state.js, loaders.js,
-// overview.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
+// counts.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
 import { sb, toast, fmtDateTime, errMsg } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf, SUBJECT_BUG } from './state.js';
 import { copyText, check } from './common.js';
 import { loadSupport } from './loaders.js';
-import { renderStats } from './overview.js';
+import { refreshCounts } from './counts.js';
 import { hasBadge, awardBadge, badgeName } from './badges.js';
 import { setCount } from './shell.js';
 import { createList } from './ui/list.js';
@@ -133,7 +133,7 @@ export async function setState(id, target) {
   }
   Object.assign(s, patch);
   renderSupport();
-  renderStats();
+  refreshCounts();
   toast(MSG_STATE[target], 'ok');
 }
 
@@ -162,7 +162,7 @@ async function takeCharge(id, { open = false } = {}) {
   Object.assign(s, { taken_by: s.taken_by || S.meId, taken_at: s.taken_at || new Date().toISOString(),
     updated_at: new Date().toISOString(), ...(conv ? { conversation_id: conv } : {}) });
   renderSupport();
-  renderStats();
+  refreshCounts();
   if (!conv) { toast('Demande prise en charge. C\'est un visiteur sans compte : réponds-lui par son contact.', 'ok'); return; }
   if (open) { location.href = convUrl(conv); return; }
   toast('Demande prise en charge : une conversation privée est ouverte avec le membre (page Messages).', 'ok');
@@ -268,7 +268,7 @@ function paintDetail() {
   V.thread.update(threadMessages(s, m));
   // A6 : demande « Signalement » : aperçu du contenu et décision (masquer, supprimer, ne rien faire) au-dessus du fil
   const rep = reportOf(id);
-  const card = rep ? reportCard(rep, async () => { await loadSupport().catch((e) => console.warn('[panel]', e?.message || e)); renderSupport(); renderStats(); }) : null;
+  const card = rep ? reportCard(rep, async () => { await loadSupport().catch((e) => console.warn('[panel]', e?.message || e)); renderSupport(); refreshCounts(); }) : null;
   host.replaceChildren(...[head, card, V.threadEl].filter(Boolean));
 }
 
@@ -320,7 +320,7 @@ function drawInfo(s, stats) {
       .map((x) => ({ id: x.id, title: x.subject, status: stateOf(x), at: x.created_at }))
     : [];
   const actions = uid && S.byId.has(uid)
-    ? [{ label: 'Ouvrir la fiche membre', onClick: () => { location.hash = `#membres/comptes/${uid}`; } }]
+    ? [{ label: 'Ouvrir la fiche membre', onClick: () => { location.hash = `#place/comptes/${uid}`; } }]
     : [];
   V.infoApi = renderInfoPanel(el, {
     member: { pseudo: m.pseudo, color: m.color, avatar_url: m.avatar_url, since: uid ? S.byId.get(uid)?.member_since : null },
@@ -355,7 +355,7 @@ function paintInfo() {
 /* ---------- Liste (colonne 2) ---------- */
 /** Ouvre une demande : la sélection passe par l'adresse, puis la coquille appelle `open`. */
 function go(id) {
-  location.hash = `#pilotage/assistance/${id}`;
+  location.hash = `#poste/assistance/${id}`;
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
@@ -385,7 +385,7 @@ export const supportSub = {
     V.infoEl = el;
     paintInfo();
   },
-  /** À chaque visite : retient la demande de l'adresse (#pilotage/assistance/<id>), puis redessine détail et panneau. */
+  /** À chaque visite : retient la demande de l'adresse (#poste/assistance/<id>), puis redessine détail et panneau. */
   open(_el, { id } = {}) {
     V.sel = id || null;
     V.list?.select(V.sel);

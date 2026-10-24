@@ -40,7 +40,7 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, uniques: true }, width: 1280, height: 900 });
-  await adminSection(p, 'cartes/encheres');
+  await adminSection(p, 'ventes/encheres');
   await p.waitForSelector('#acd-auc-form', { timeout: 5000 });
   check(/Le gobelet du RDV n° 1/.test(await txt(p, '#acd-encheres')) && /Ouverte/.test(await txt(p, '#acd-encheres')), 'admin : enchère en cours listée');
   const start = await p.inputValue('#au-start');

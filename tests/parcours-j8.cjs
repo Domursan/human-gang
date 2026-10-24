@@ -70,7 +70,7 @@ async function tape(p, mot) {
 
   /* ---------- Admin ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, init: 'fake-jeux.js' });
-  await adminSection(p, 'jeux/sutom');
+  await adminSection(p, 'fete/sutom');
   await p.waitForSelector('.ads', { timeout: 5000 }).catch(() => {});
   check(!(await p.locator('#sutom-root').innerText()).includes('RACLETTE'), 'admin : mots masqués par défaut (pas de spoiler)');
   await p.click('[data-voir]');

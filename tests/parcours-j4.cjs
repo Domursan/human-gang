@@ -81,7 +81,7 @@ const fs = require('fs');
 
   /* ---------- Admin : calendrier ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, init: 'fake-jeux.js' });
-  await adminSection(p, 'jeux/questions');
+  await adminSection(p, 'fete/questions');
   await p.click('#adq-tab-j');
   await p.waitForSelector('.adqj-row', { timeout: 5000 }).catch(() => {});
   check((await p.locator('.adqj-row').count()) === 28, 'admin : calendrier de 28 jours');

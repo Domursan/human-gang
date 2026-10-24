@@ -4,7 +4,7 @@
  * jeux proposés en favoris (nom, plateforme associée) et plafonds des mercis, groupes et sondages.
  * Le serveur borne toujours les plafonds (hg_social_cap) et retombe sur la liste par défaut si une liste est invalide.
  * Droits : admin et Staff « reglages » (RLS hg_settings_admin, hg_settings_perm('social') = 'reglages').
- * Route : #membres/social (admin.js). Conteneur : #social-root.
+ * Route : #place/social (admin.js). Conteneur : #social-root.
  * Dépendances : core.js, social.js (valeurs par défaut), ui-confirm.js.
  * Exporte : mountSocialSection, validateSocial.
  * (Ce fichier réunit aussi les sections de la migration 091 : Parrainage, Compétences, Accueil des membres, plus bas.)
@@ -168,13 +168,13 @@ async function save() {
 // ===== Humane Gang — administration : idées « Social et profils » (P6, P7, P8, P9) =====
 /*
  * Trois sous-sections, chacune montée à sa première visite (admin.js, modules facultatifs) :
- *  - Membres › Parrainage (#membres/parrainage, droit « membres ») : réglage hg_settings.parrainage (Paillettes 0 à 200,
+ *  - Membres › Parrainage (#place/parrainage, droit « membres ») : réglage hg_settings.parrainage (Paillettes 0 à 200,
  *    durée, filleuls par parrain, cartes Parrain / Filleul), attribution d'un parrain volontaire à un nouveau
  *    (RPC hg_mentor_assign, journalisée), duos en cours (annulation : hg_mentor_cancel), parrain d'un lien d'invitation
  *    (hg_invite_link_set_mentor).
- *  - Membres › Compétences (#membres/competences, droit « membres ») : catalogue hg_settings.competences (code figé une
+ *  - Membres › Compétences (#place/competences, droit « membres ») : catalogue hg_settings.competences (code figé une
  *    fois enregistré, libellé, ordre). Pas de compétences humoristiques qui visent quelqu'un.
- *  - Site › Accueil des membres (#membres/accueil, droit « reglages ») : accueil par défaut (hg_settings.home_default : ordre,
+ *  - Site › Accueil des membres (#place/accueil, droit « reglages ») : accueil par défaut (hg_settings.home_default : ordre,
  *    blocs affichés, blocs obligatoires) et encart « Toi et … » (hg_settings.social.amitie).
  * Bornes et journal admin : trigger hg_settings_social_guard (migration 091).
  * Dépendances : core.js, home-registry.js, admin-champs.js (slugId). Exporte : mountParrainageSection,

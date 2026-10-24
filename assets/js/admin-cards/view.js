@@ -155,7 +155,7 @@ export async function mountCardsSection(container, { tabs = true } = {}) {
 }
 
 /** Ouvre une partie des cartes (series, cartes, quetes, economie, boosters, joueurs, stats, echanges). Sans effet avant le montage.
-    id : membre affiché dans « joueurs » (adresse #cartes/joueurs/<id>). */
+    id : membre affiché dans « joueurs » (adresse #fabrique/joueurs/<id>). */
 export function openCardsTab(tab, id = null) {
   if (!C.root || !PANELS[tab]) return;
   C.tab = tab;

@@ -139,10 +139,10 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     await pa.evaluate(() => { document.getElementById('rgi-site-identite-nom').value = ''; });
     await save(pa);
     const st = await pa.textContent('#rgi-status');
-    check(/À corriger dans « Identité et mentions légales »/.test(st || '') && await pa.locator('#rgi-status a[href="#pilotage/identite"]').count() === 1,
+    check(/À corriger dans « Identité et mentions légales »/.test(st || '') && await pa.locator('#rgi-status a[href="#mairie/identite"]').count() === 1,
       `parties : erreur d'une partie masquée nommée, avec son lien (« ${st} »)`);
     check(!('bandeau_actif' in ((await overridesOf(pa, 'site_identite')) || {})), 'parties : rien écrit tant que l\'erreur masquée n\'est pas corrigée');
-    await pa.click('#rgi-status a[href="#pilotage/identite"]');
+    await pa.click('#rgi-status a[href="#mairie/identite"]');
     await sleepShort();
     check(await shownGroups() === 'identite,legal', `parties : le lien ouvre la partie fautive (${await shownGroups()})`);
     check((await field(pa, 'site_identite.bandeau_texte').inputValue()) === 'Annonce de test', 'parties : la saisie des autres parties est conservée');

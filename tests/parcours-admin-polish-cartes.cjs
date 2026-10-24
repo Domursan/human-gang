@@ -1,7 +1,7 @@
 // Parcours : finition du Jeu de cartes et des Défis du gang dans le panel admin (admin.html), sur le faux Supabase cartes.
 // Couvre : séries en grille (interrupteur Active / Masquée, Modifier, création dans le tiroir, annulation),
 // éditeur de carte en tiroir large, quêtes et défis en tiroir (ouvrir, annuler, valider), joueurs en liste + détail
-// (adresse #cartes/joueurs/<id>, donner / retirer des Paillettes, donner une carte), aucune erreur console,
+// (adresse #fabrique/joueurs/<id>, donner / retirer des Paillettes, donner une carte), aucune erreur console,
 // mobile 390 px sans défilement horizontal et tiroir pleine largeur. Captures dans scratchpad/qa/polish-cartes/.
 // Les contrôles portent sur l'état du faux (window.__DB) et sur les appels reçus (window.__LOG).
 // Lancer : node tests/parcours-admin-polish-cartes.cjs
@@ -32,7 +32,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
 
   /* ---------- Bureau 1440 px ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900 });
-  await adminSection(p, 'cartes/series');
+  await adminSection(p, 'fabrique/series');
   await p.waitForSelector('#acd-sets-list .acd-setcard', { timeout: 8000 });
   check(await p.locator('#acd-sets-list .acd-setcard').count() > 0, 'séries : affichées en grille de cartes');
   check(await p.locator('#acd-set-form').count() === 0, 'séries : aucun formulaire déplié dans la page');
@@ -69,7 +69,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
   await waitClosed(p);
 
   /* Éditeur de carte : tiroir large */
-  await adminSection(p, 'cartes/cartes');
+  await adminSection(p, 'fabrique/cartes');
   await p.waitForSelector('[data-act="card-new"]', { timeout: 5000 });
   check(await p.locator('#acc-name').count() === 0, 'cartes : éditeur fermé au chargement');
   await p.click('[data-act="card-new"]');
@@ -79,7 +79,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
   await waitClosed(p);
 
   /* Quêtes */
-  await adminSection(p, 'cartes/quetes');
+  await adminSection(p, 'fabrique/quetes');
   await p.waitForSelector('#acd-panel .acd-item', { timeout: 5000 });
   await p.click('[data-act="quest-new"]');
   await p.waitForSelector('dialog.ui-drawer[open]', { timeout: 5000 });
@@ -89,7 +89,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
   check(await p.locator('#acd-panel .acd-item').count() === 2, 'quêtes : liste intacte après annulation');
 
   /* Défis du gang */
-  await adminSection(p, 'cartes/defis');
+  await adminSection(p, 'fabrique/defis');
   await p.waitForSelector('#challenges-root [data-action="adc-edit"]', { timeout: 5000 });
   check(await p.locator('#adc-title').count() === 0, 'défis : aucun formulaire déplié au chargement');
   await p.click('#challenges-root [data-action="adc-new"]');
@@ -110,12 +110,12 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
   await waitClosed(p);
 
   /* Joueurs : liste (colonne 2) + détail */
-  await adminSection(p, 'cartes/joueurs');
+  await adminSection(p, 'fabrique/joueurs');
   await p.waitForSelector('#shell-col-list .ui-row', { timeout: 8000 });
   check(await p.isVisible('.acd-pl-empty'), 'joueurs : aucun membre choisi, invitation affichée');
   await p.click(`#shell-col-list [data-id="${ALICE}"]`);
-  await p.waitForFunction((id) => location.hash === '#cartes/joueurs/' + id, ALICE, { timeout: 5000 }).catch(() => {});
-  check(await p.evaluate(() => location.hash) === '#cartes/joueurs/' + ALICE, 'joueurs : choisir un membre change l\'adresse');
+  await p.waitForFunction((id) => location.hash === '#fabrique/joueurs/' + id, ALICE, { timeout: 5000 }).catch(() => {});
+  check(await p.evaluate(() => location.hash) === '#fabrique/joueurs/' + ALICE, 'joueurs : choisir un membre change l\'adresse');
   await p.waitForSelector('#acd-pl-h', { timeout: 5000 });
   check((await p.textContent('#acd-pl-h')).includes('Alice'), 'joueurs : détail d\'Alice affiché');
   check(await p.locator('[data-act="pay-open"]').count() === 2 && await p.locator('[data-act="give-open"]').count() === 1, 'joueurs : actions Paillettes et carte présentes');
@@ -149,7 +149,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
 
   /* Captures : clair puis sombre */
   await p.emulateMedia({ colorScheme: 'light' });
-  await adminSection(p, 'cartes/series');
+  await adminSection(p, 'fabrique/series');
   await p.waitForSelector('#acd-sets-list .acd-setcard', { timeout: 5000 });
   await p.screenshot({ path: path.join(QA, 'bureau-clair-series.png') });
   await p.emulateMedia({ colorScheme: 'dark' });
@@ -160,7 +160,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
   await p.screenshot({ path: path.join(QA, 'bureau-sombre-tiroir-serie.png') });
   await closeDrawer(p);
   await waitClosed(p);
-  await adminSection(p, 'cartes/joueurs');
+  await adminSection(p, 'fabrique/joueurs');
   await p.click(`#shell-col-list [data-id="${ALICE}"]`);
   await p.waitForSelector('#acd-pl-h', { timeout: 5000 });
   await p.screenshot({ path: path.join(QA, 'bureau-sombre-joueurs.png') });
@@ -170,7 +170,7 @@ const calls = (p, fn) => p.evaluate((f) => (window.__LOG || []).filter((x) => x[
 
   /* ---------- Mobile 390 px ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 390, height: 844 });
-  await adminSection(p, 'cartes/series');
+  await adminSection(p, 'fabrique/series');
   await p.waitForSelector('#acd-sets-list .acd-setcard', { timeout: 8000 });
   check(await hscroll(p) <= 0, 'mobile séries : pas de défilement horizontal');
   await p.screenshot({ path: path.join(QA, 'mobile-series.png') });

@@ -1,5 +1,5 @@
 // Admin : Secret Santa. Colonne 2 : liste des éditions (createList). Zone principale : l'édition choisie
-// (adresse #irl/secret-santa/<id>) avec inscrits, tirage, exclusions, vœux, carte de base et attributions.
+// (adresse #camp/secret-santa/<id>) avec inscrits, tirage, exclusions, vœux, carte de base et attributions.
 // Création, modification et exclusions se font dans le tiroir (ss-events.js) ; rien n'est déplié en permanence.
 // Utilisé par admin.js (registerSub), ss-events.js et live.js. Dépend de core.js, state.js, common.js,
 // admin-accounts.js (pairsBlockHtml), ui/ et des réglages « lot 3 » (blocReglages, chargerReglagesLot3).

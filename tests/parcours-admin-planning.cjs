@@ -18,7 +18,7 @@ const scenario = { settings, sorties: [{ id: 'eeeeeeee-0000-4000-8000-0000000000
   const browser = await chromium.launch();
   try {
     let p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario });
-    await adminSection(p, 'pilotage/planning');
+    await adminSection(p, 'mairie/planning');
     await p.waitForSelector('.pl-cells .pl-cell', { timeout: 5000 });
     await sleep(300);
     check(await p.$$eval('.pl-dow span', (s) => s.length) === 7, '(a) grille de 7 colonnes');
@@ -70,7 +70,7 @@ const scenario = { settings, sorties: [{ id: 'eeeeeeee-0000-4000-8000-0000000000
 
     // (d) Staff
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { ...scenario, uid: U(2), staff: ['cartes'] } });
-    await adminSection(p, 'pilotage/planning');
+    await adminSection(p, 'mairie/planning');
     await sleep(600);
     const kinds = await p.$$eval('[data-pl="kind"]', (b) => b.map((x) => x.dataset.kind));
     check(JSON.stringify(kinds) === JSON.stringify(['carte_drop', 'defi']), `(d) Staff cartes : filtres Drops et Défis seulement (${kinds})`);
@@ -78,12 +78,12 @@ const scenario = { settings, sorties: [{ id: 'eeeeeeee-0000-4000-8000-0000000000
     check(rpc >= 1 && !(await p.textContent('#pl-cal')).includes('Ciné chez Yanninho'), '(d) Staff cartes : aucune sortie');
     await p.ctx.close();
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['membres'] } });
-    check(await p.locator('#shell-subs a[href="#pilotage/planning"]').count() === 0, '(d) Staff membres seul : pas de Planning');
+    check(await p.locator('#shell-subs a[href="#mairie/planning"]').count() === 0, '(d) Staff membres seul : pas de Planning');
     await p.ctx.close();
 
     // (e) Mobile
     p = await openPage(browser, { page: 'admin', width: 375, height: 812, scenario });
-    await adminSection(p, 'pilotage/planning');
+    await adminSection(p, 'mairie/planning');
     await sleep(600);
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     const vis = await p.$$eval('.pl-cell', (c) => c.filter((x) => x.getClientRects().length).every((x) => x.classList.contains('has-items')));

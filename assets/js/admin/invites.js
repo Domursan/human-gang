@@ -7,7 +7,7 @@ import { confirmBox } from '../ui-confirm.js';
 import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, copyText } from './common.js';
 import { loadInvites } from './loaders.js';
-import { renderStats } from './overview.js';
+import { refreshCounts } from './counts.js';
 import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 import { openDrawer } from './ui/drawer.js';
 import { openLinkDrawer } from '../admin-invite-links.js';
@@ -89,7 +89,7 @@ function openCodeDrawer() {
       }
       S.lastCodes = codes;
       await loadInvites();
-      renderInvites(); renderStats();
+      renderInvites(); refreshCounts();
       toast(n > 1 ? `${n} codes générés` : 'Code généré', 'ok');
     },
   });
@@ -131,7 +131,7 @@ export function bindInvites(me) {
         // Seuls les codes non utilisés peuvent être supprimés (filtre de sécurité côté requête).
         check(await sb.from('hg_invites').delete().eq('code', code).is('used_by', null));
         S.lastCodes = S.lastCodes.filter((c) => c !== code);
-        await loadInvites(); renderInvites(); renderStats();
+        await loadInvites(); renderInvites(); refreshCounts();
         toast('Code supprimé', 'ok');
       });
     }
@@ -141,7 +141,7 @@ export function bindInvites(me) {
       await busy(t, async () => {
         check(await sb.from('hg_invites').delete().is('used_by', null).is('link_id', null));
         S.lastCodes = [];
-        await loadInvites(); renderInvites(); renderStats();
+        await loadInvites(); renderInvites(); refreshCounts();
         toast('Codes disponibles supprimés', 'ok');
       });
     }

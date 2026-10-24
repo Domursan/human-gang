@@ -43,7 +43,7 @@ const errs = (p) => (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : '');
   }
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { extra: 'fake-sb-social2.mjs' } });
-    await adminSection(p, 'membres/parrainage').catch((e) => console.log(e.message));
+    await adminSection(p, 'place/parrainage').catch((e) => console.log(e.message));
     await p.waitForSelector('#pr-assign', { timeout: 8000 }).catch(() => {});
     check(await p.isVisible('#pr-cfg') && await p.isVisible('#pr-assign'), '(d) réglages et attribution affichés');
     check(!p.errs.length, '(d) aucune erreur JS' + errs(p));

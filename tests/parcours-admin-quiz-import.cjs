@@ -22,7 +22,7 @@ const shots = process.env.SHOTS_DIR;
     const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
     // Une question existante, pour le doublon
     await p.evaluate(() => window.__DB.hg_quiz_questions.push({ id: 'q-old', prompt: 'Question déjà là ?', qtype: 'vrai_faux', difficulty: 'facile', options: [], reward: 50, starts_at: new Date().toISOString(), active: true, created_at: new Date().toISOString() }));
-    await adminSection(p, 'jeux/questions');
+    await adminSection(p, 'fete/questions');
     await p.click('[data-adq="import"]');
     await p.waitForSelector('dialog.qi-drawer[open]', { timeout: 5000 });
     check(await p.isVisible('dialog[open] [data-qi="model"]') && await p.isVisible('dialog[open] [data-qi="example"]'), '(a) tiroir ouvert : modèle CSV et exemple proposés');

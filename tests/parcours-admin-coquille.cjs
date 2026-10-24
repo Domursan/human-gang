@@ -1,30 +1,27 @@
-// Parcours : coquille du panel admin (rail, colonne de navigation, zone principale, routage, mobile).
-// (a) administrateur 1440 px : rail visible, en-tête du site absent, navigation par domaine et sous-section,
-//     URL directe #membres/comptes, anciennes ancres #cartes et #reglages redirigées, titres de groupe (sous-menus),
-//     précédent/suivant du navigateur.
-// (b) Staff { cartes, journal } : seuls Pilotage (Journal) et Jeu de cartes sont proposés ; pas de mode sans limite.
-// (c) mobile 375 px : barre d'onglets en bas, écran domaine puis écran sous-section, sans défilement horizontal.
+// Parcours : coquille du panel admin (en-tête unique, plateau, pages de lieu, fil d'Ariane, barre du bas, routage).
+// (a) administrateur 1440 px : pas de rail ni de colonne de navigation ; en-tête unique (« Tout le panel », « Voir le site »,
+//     avatar) ; plateau par défaut ; URL directe #place/comptes ; ancienne ancre #cartes redirigée ; fil d'Ariane
+//     « Plateau › Lieu › Page » ; précédent/suivant du navigateur ; route inconnue ramenée à une route permise.
+// (b) Staff { cartes, journal } : seuls ses lieux sur le plateau ; une route interdite retombe sur une page permise.
+// (c) mobile 375 px : barre du bas (Plateau et lieux), liste « Comptes » plein écran puis fiche, retour, sans défilement.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-coquille.cjs
-const { ROOT, check, finish, openPage, hscroll, chromium } = require('./lib/harness.cjs');
+const { ROOT, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
 
 /* ---------- Aides de test ---------- */
 /** Identifiant de test du membre n (U(2) = Alice, comme dans le faux client). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
-
-// Attend qu'un élément soit visible (ou masqué) après un changement de route.
-/** Attend que sel soit visible (want vrai) ou caché (want faux). */
-async function waitVisible(p, sel, want = true) {
-  await p.waitForFunction(([s, w]) => {
-    const e = document.querySelector(s);
-    const vis = !!e && e.getClientRects().length > 0;
-    return vis === w;
-  }, [sel, want], { timeout: 5000 }).catch(() => {});
-  return p.isVisible(sel).then((v) => v === want);
-}
 /** Adresse (hash) courante de la page. */
 const hashOf = (p) => p.evaluate(() => location.hash);
-/** Libellés des domaines visibles dans le rail. */
-const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filter((a) => a.getClientRects().length).map((a) => a.dataset.dom));
+/** Fil d'Ariane, espaces normalisés (« Plateau › Lieu › Page »). */
+const crumbOf = (p) => p.evaluate(() => document.getElementById('zone-crumb').textContent.replace(/\s*›\s*/g, ' › ').replace(/\s+/g, ' ').trim());
+/** Attend que la page courante soit affichée (route dans data-route, section visible). */
+async function waitRoute(p, route) {
+  await p.waitForFunction((r) => document.getElementById('shell')?.dataset.route === r, route, { timeout: 5000 }).catch(() => {});
+  await sleep(150);
+  return (await p.evaluate(() => document.getElementById('shell').dataset.route)) === route;
+}
+/** Lignes de la barre du bas (data-lieu ou data-route). */
+const tabsOf = (p) => p.$$eval('#shell-tabs .shell-tab', (as) => as.map((a) => a.dataset.lieu || a.dataset.route));
 
 /* ---------- Scénario ---------- */
 (async () => {
@@ -34,64 +31,51 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
   /* (a) Administrateur, ordinateur 1440 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    check(/#pilotage\/apercu$/.test(await hashOf(p)), `(a) route par défaut : ${await hashOf(p)}`);
-    check(await waitVisible(p, '#apercu'), '(a) Vue d’ensemble affichée par défaut');
-    check(await p.isVisible('#shell-rail') && !(await p.isVisible('#shell-col')), '(a) accueil (Vue d’ensemble) : rail gardé, colonne masquée (admin-accueil.css)');
-    await p.evaluate(() => { location.hash = '#pilotage/journal'; }); // hors accueil, la coquille habituelle reprend
-    await p.waitForSelector('#shell-rail', { state: 'visible', timeout: 5000 });
-    check(await p.isVisible('#shell-rail'), '(a) rail visible hors accueil');
-    check(await p.locator('nav[aria-label="Domaines du panel"]').count() === 1, '(a) rail : nav aria-label « Domaines du panel »');
-    check((await visibleDomains(p)).length === 6, `(a) six domaines dans le rail (${(await visibleDomains(p)).join(', ')})`);
+    check((await hashOf(p)) === '#plateau', `(a) route par défaut : ${await hashOf(p)}`);
+    check(await p.isVisible('#plateau-root') && (await p.textContent('#zone-title')).trim() === 'Plateau', '(a) plateau affiché, titre « Plateau »');
+    check(await p.locator('#shell-rail').count() === 0 && await p.locator('#shell-subs').count() === 0, '(a) pas de rail ni de colonne de domaines');
+    check(!(await p.isVisible('#shell-col')), '(a) plateau : pas de colonne de liste');
     check(await p.locator('.site-header').count() === 0 && await p.locator('.site-footer').count() === 0, '(a) en-tête et pied du site absents');
-    check(await p.locator('#god-root').count() === 0, '(a) plus de carte « Mode sans limite » dans la page');
-    check(await p.isVisible('#shell-god'), '(a) bouton Mode sans limite dans le rail (administrateur)');
+    check(await p.isVisible('#shell-top') && await p.isVisible('#shell-avatar'), '(a) en-tête unique avec le menu du compte');
+    check((await p.textContent('#shell-top')).includes('Tout le panel'), '(a) en-tête : « Tout le panel »');
+    check(!(await p.isVisible('#shell-tabs')), '(a) ordinateur : pas de barre du bas');
+    check(await p.isVisible('#shell-god'), '(a) bouton Mode sans limite dans l’en-tête (administrateur)');
+    check((await p.evaluate(() => document.querySelectorAll('.plateau-lieu').length)) === 7, '(a) plateau : 7 lieux');
 
-    // Navigation par domaine, puis sous-section
-    await p.click('#shell-rail .shell-dom[data-dom="membres"]');
-    check(await waitVisible(p, '#comptes') && await waitVisible(p, '#apercu', false), '(a) domaine Membres : Comptes affiché, Vue d’ensemble masquée');
-    check((await hashOf(p)) === '#membres/comptes', `(a) domaine cliqué -> #membres/comptes (${await hashOf(p)})`);
-    check(await p.isVisible('#shell-subs a[href="#membres/comptes"]') && await p.locator('#shell-subs a[href="#membres/fantomes"]').count() === 0, '(a) colonne : sous-sections de Membres (Comptes fantômes fusionnés dans Comptes)');
-    check((await p.locator('.shell-sub[aria-current="true"]').textContent()).includes('Comptes'), '(a) sous-section active : Comptes');
-    await p.click('#shell-subs a[href="#membres/invitations"]');
-    check(await waitVisible(p, '#membres') && await waitVisible(p, '#comptes', false), '(a) sous-section Invitations affichée seule');
-    check(await p.isVisible('#zone-title') && (await p.textContent('#zone-title')).trim() === 'Invitations', '(a) titre de zone : Invitations');
-    await p.click('#shell-subs a[href="#membres/comptes"]');
-    check(await waitVisible(p, '#comptes'), '(a) retour à Comptes : la section reste en mémoire (même élément)');
+    // Lieu, puis page : fil d'Ariane et retour
+    await p.evaluate(() => { location.hash = '#place'; });
+    await sleep(300);
+    check((await hashOf(p)) === '#place' && (await p.textContent('#zone-title')).trim() === 'La Place du gang', `(a) #place : page du lieu (${await hashOf(p)})`);
+    check((await p.evaluate(() => document.querySelectorAll('#lieu-root .lieu-tile').length)) === 14, '(a) page de La Place : 14 tuiles');
+    await p.evaluate(() => { location.hash = '#place/invitations'; });
+    check(await waitRoute(p, 'place/invitations'), '(a) sous-section Invitations affichée');
+    check((await p.textContent('#zone-title')).trim() === 'Invitations', '(a) titre de zone : Invitations');
+    check((await crumbOf(p)) === 'Plateau › La Place du gang › Invitations', `(a) fil d’Ariane : ${await crumbOf(p)}`);
+    check(await p.isVisible('#zone-back') && (await p.getAttribute('#zone-back', 'href')) === '#place', '(a) bouton retour vers le lieu');
 
     // Précédent / suivant du navigateur
     await p.goBack();
-    check(await waitVisible(p, '#membres') && (await hashOf(p)) === '#membres/invitations', `(a) précédent du navigateur -> ${await hashOf(p)}`);
+    check((await hashOf(p)) === '#place', `(a) précédent du navigateur -> ${await hashOf(p)}`);
     await p.goForward();
-    check((await hashOf(p)) === '#membres/comptes', `(a) suivant du navigateur -> ${await hashOf(p)}`);
+    check(await waitRoute(p, 'place/invitations') && (await hashOf(p)) === '#place/invitations', `(a) suivant du navigateur -> ${await hashOf(p)}`);
+    await p.click('#zone-crumb a[href="#plateau"]');
+    check(await waitRoute(p, 'plateau') && (await hashOf(p)) === '#plateau', `(a) fil d’Ariane « Plateau » -> ${await hashOf(p)}`);
     await p.ctx.close();
   }
   {
-    // URL directe, ancienne ancre et Jeu de cartes
-    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await p.evaluate(() => { location.hash = '#membres/comptes'; });
-    check(await waitVisible(p, '#comptes') && await waitVisible(p, '#apercu', false), '(a) URL directe #membres/comptes');
+    // URL directe, ancienne ancre et route inconnue
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, hash: '#place/comptes' });
+    check(await waitRoute(p, 'place/comptes') && (await p.textContent('#zone-title')).trim() === 'Comptes', '(a) URL directe #place/comptes');
     await p.evaluate(() => { location.hash = '#cartes'; });
-    await p.waitForFunction(() => location.hash === '#cartes/cartes', null, { timeout: 5000 }).catch(() => {});
-    check((await hashOf(p)) === '#cartes/cartes', `(a) ancienne ancre #cartes redirigée (${await hashOf(p)})`);
-    check(await waitVisible(p, '#cartes') && await p.isVisible('#cards-root .acd'), '(a) Jeu de cartes montée dans la zone principale');
-    check(await p.locator('#cards-root [data-tab]').count() === 0, '(a) pas d’onglets internes : ce sont des sous-sections');
-    await p.click('#shell-subs a[href="#cartes/quetes"]');
-    await p.waitForFunction(() => !!document.querySelector('#cards-root [data-act="quest-new"]') || !!document.querySelector('#acd-panel'), null, { timeout: 5000 }).catch(() => {});
-    check(await waitVisible(p, '#cartes') && (await hashOf(p)) === '#cartes/quetes', 'Quêtes ouvertes depuis la colonne');
-    check(await p.isVisible('[data-act="quest-new"]'), 'Quêtes : contenu de l’onglet affiché');
-    // Sous-menus : #reglages (ancienne ancre du formulaire) mène à Site › Identité et textes ; la liste brute garde #pilotage/reglages
+    await p.waitForFunction(() => location.hash === '#fabrique/cartes', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) === '#fabrique/cartes', `(a) ancienne ancre #cartes redirigée (${await hashOf(p)})`);
+    check(await waitRoute(p, 'fabrique/cartes') && await p.isVisible('#cards-root .acd'), '(a) Jeu de cartes affiché dans la zone principale');
     await p.evaluate(() => { location.hash = '#reglages'; });
-    await p.waitForFunction(() => location.hash === '#pilotage/identite', null, { timeout: 5000 }).catch(() => {});
-    check((await hashOf(p)) === '#pilotage/identite' && await waitVisible(p, '#reglages'), `(a) ancienne ancre #reglages -> #pilotage/identite (${await hashOf(p)})`);
-    check((await p.textContent('#zone-eyebrow')).trim() === 'Pilotage · Site', '(a) en-tête de zone : domaine · titre du groupe');
-    check(await p.locator('[data-dom-subs="pilotage"] .shell-subhead').count() === 4 && (await p.textContent('[data-dom-subs="pilotage"]')).includes('Site'), '(a) colonne Pilotage : titres de groupe Bot, Site, Apparence, Assistance');
-    await p.evaluate(() => { location.hash = '#pilotage/reglages'; });
-    await p.waitForFunction(() => document.querySelector('.shell-sub[aria-current="true"]')?.dataset.sub === 'reglages', null, { timeout: 5000 }).catch(() => {});
-    check((await hashOf(p)) === '#pilotage/reglages' && (await p.textContent('#zone-title')).trim() === 'Clés avancées', '(a) #pilotage/reglages : Clés avancées');
-    // ancienne ancre inconnue : retour à la route par défaut
+    await p.waitForFunction(() => location.hash === '#mairie/identite', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) === '#mairie/identite', `(a) ancienne ancre #reglages -> #mairie/identite (${await hashOf(p)})`);
     await p.evaluate(() => { location.hash = '#inconnu'; });
-    await p.waitForFunction(() => /^#(pilotage|membres|vie|cartes|communication|site)\//.test(location.hash), null, { timeout: 5000 }).catch(() => {});
-    check(/^#(pilotage|membres|vie|cartes|communication|site)\//.test(await hashOf(p)), `route inconnue -> route permise (${await hashOf(p)})`);
+    await p.waitForFunction(() => location.hash !== '#inconnu', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) !== '#inconnu' && (await hashOf(p)).length > 1, `route inconnue -> route permise (${await hashOf(p)})`);
     check(p.errs.length === 0, '(a) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }
@@ -100,21 +84,15 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { uid: U(2), staff: ['cartes', 'journal'] } });
     check(p.url().split('#')[0].endsWith('/admin.html'), '(b) Staff : admin.html s’ouvre');
-    const doms = await visibleDomains(p);
-    check(JSON.stringify(doms) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${doms.join(', ')}`);
-    await p.click('#shell-rail .shell-dom[data-dom="pilotage"]');
-    const subs = await p.$$eval('#shell-subs [data-dom-subs]:not([hidden]) .shell-sub', (as) => as.map((a) => a.dataset.sub));
-    check(JSON.stringify(subs) === JSON.stringify(['planning', 'journal']), `(b) Staff : Pilotage ne propose que Planning et Journal (${subs.join(', ')})`);
-    check((await hashOf(p)) === '#pilotage/planning', `(b) Staff : Pilotage -> #pilotage/planning (${await hashOf(p)})`);
-    await p.click('#shell-subs a[href="#pilotage/journal"]');
-    check(await waitVisible(p, '#journal'), '(b) Staff : Journal affiché');
-    check(await p.locator('#shell-subs a[href="#pilotage/staff"]').count() === 0, '(b) Staff : pas de sous-section Staff');
-    check(!(await p.isVisible('#shell-god')) && await p.locator('.god-card').count() === 0, '(b) Staff : pas de mode sans limite');
+    const lieux = await p.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
+    check(JSON.stringify(lieux) === JSON.stringify(['#ventes', '#fabrique', '#mairie']), `(b) Staff : lieux sur le plateau = ${lieux.join(' ')}`);
+    check(!(await p.isVisible('#shell-god')), '(b) Staff : pas de mode sans limite');
+    await p.evaluate(() => { location.hash = '#mairie/journal'; });
+    check(await waitRoute(p, 'mairie/journal') && await p.isVisible('#journal'), '(b) Staff : Journal affiché');
     check(!(await p.isVisible('#staff')), '(b) Staff : section Staff absente');
-    // Une route interdite retombe sur une section permise
-    await p.evaluate(() => { location.hash = '#membres/comptes'; });
-    await p.waitForFunction(() => location.hash.startsWith('#pilotage/') || location.hash.startsWith('#cartes/'), null, { timeout: 5000 }).catch(() => {});
-    check(/^#(pilotage|cartes)\//.test(await hashOf(p)), `(b) Staff : route interdite redirigée (${await hashOf(p)})`);
+    await p.evaluate(() => { location.hash = '#place/comptes'; });
+    await p.waitForFunction(() => !location.hash.startsWith('#place'), null, { timeout: 5000 }).catch(() => {});
+    check(!(await hashOf(p)).startsWith('#place/comptes'), `(b) Staff : route interdite redirigée (${await hashOf(p)})`);
     check(await p.locator('#comptes').count() === 1 && !(await p.isVisible('#comptes')), '(b) Staff : Comptes jamais affichée');
     check(p.errs.length === 0, '(b) Staff : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
@@ -123,27 +101,26 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
   /* (c) Mobile 375 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
-    check(await p.isVisible('#shell-tabs'), '(c) mobile : barre d’onglets visible');
-    check((await p.$$eval('#shell-tabs .shell-tab', (as) => as.length)) === 6, '(c) mobile : six domaines dans la barre');
-    check(!(await p.isVisible('#shell-rail .shell-doms')), '(c) mobile : pas de rail de domaines latéral');
-    check(await p.isVisible('#app') && !(await p.isVisible('#shell-col')), '(c) mobile : sans route, la première sous-section s’affiche (écran sous-section)');
-    await p.click('#shell-tabs .shell-tab[data-dom="membres"]');
-    await p.waitForFunction(() => document.getElementById('shell').dataset.screen === 'domain', null, { timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('#shell-col') && await p.isVisible('#shell-subs a[href="#membres/comptes"]'), '(c) mobile : écran Membres, liste des sous-sections');
-    await p.click('#shell-subs a[href="#membres/comptes"]');
-    // Comptes est une sous-section « liste + détail » : sur mobile, la liste occupe l'écran tant qu'aucun membre n'est choisi
-    check(await waitVisible(p, '#shell-col') && await waitVisible(p, '#app', false), '(c) mobile : liste des comptes plein écran (zone masquée)');
-    check(await p.isVisible('#shell-tabs') && (await hashOf(p)) === '#membres/comptes', '(c) mobile : barre d’onglets toujours visible');
+    check(await p.isVisible('#shell-tabs'), '(c) mobile : barre du bas visible');
+    const tabs = await tabsOf(p);
+    check(tabs[0] === 'plateau' && tabs.length === 8, `(c) mobile : Plateau et 7 lieux (${tabs.join(', ')})`);
+    check((await p.evaluate(() => document.querySelectorAll('.plateau-lieu').length)) === 7, '(c) mobile : 7 cartes sur le plateau');
+    await p.click('.shell-tab[data-lieu="place"]');
+    await p.waitForFunction(() => location.hash.startsWith('#place'), null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)).startsWith('#place'), `(c) mobile : lieu La Place ouvert (${await hashOf(p)})`);
+    await p.evaluate(() => { location.hash = '#place/comptes'; });
+    check(await waitRoute(p, 'place/comptes'), '(c) mobile : Comptes affiché');
+    // Comptes est une liste + détail : sur mobile, la liste occupe l'écran tant qu'aucun membre n'est choisi
+    check(await waitRoute(p, 'place/comptes') && await p.isVisible('#shell-col') && !(await p.isVisible('#app')), '(c) mobile : liste des comptes plein écran (zone masquée)');
+    check(await p.isVisible('#shell-tabs') && (await hashOf(p)) === '#place/comptes', '(c) mobile : barre du bas toujours visible');
     const hs = await hscroll(p);
     check(hs <= 0, `(c) mobile : pas de défilement horizontal (${hs})`);
     await p.click('#shell-col-list .ui-row');
-    check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : fiche du membre choisi, colonne masquée');
-    check(await p.isVisible('#zone-back') && (await p.getAttribute('#zone-back', 'href')) === '#membres/comptes', '(c) mobile : bouton retour vers la liste des comptes');
-    check(await waitVisible(p, '#comptes'), '(c) mobile : Comptes affichée');
+    await sleep(300);
+    check(await p.isVisible('#zone-back') && (await hashOf(p)).startsWith('#place/comptes/'), `(c) mobile : fiche du membre choisie (${await hashOf(p)})`);
     await p.click('#zone-back');
-    check(await waitVisible(p, '#shell-col') && (await hashOf(p)) === '#membres/comptes', '(c) mobile : retour à la liste des comptes');
-    await p.evaluate(() => { location.hash = '#membres/'; });
-    check(await waitVisible(p, '#shell-col') && await p.isVisible('#shell-subs a[href="#membres/comptes"]'), '(c) mobile : retour à l’écran du domaine');
+    await sleep(300);
+    check((await hashOf(p)) === '#place/comptes' && await p.isVisible('#shell-col'), '(c) mobile : retour à la liste des comptes');
     check(p.errs.length === 0, '(c) mobile : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }

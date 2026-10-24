@@ -2,7 +2,7 @@
 // Colonne 2 : liste chronologique des actions de l'administrateur (hg_admin_log) et des consultations de la
 // messagerie (hg_admin_access_log), filtres par type, recherche. Zone principale : détail de l'entrée, avec
 // avant / après lus dans le JSON `details`. Lecture seule. Pseudos résolus via hg_profiles (lecture admin).
-// Utilisé par admin.js (registerSub « pilotage/journal ») et overview.js (libellés d'actions).
+// Utilisé par admin.js (registerSub « mairie/journal ») et counts.js, anciennement overview.js (libellés d'actions).
 // Dépend de core.js (Supabase, utilitaires), admin/live.js (temps réel), admin/ui/list.js et ui/detail-header.js.
 import { sb, esc, errMsg, fmtDateTime, toast } from './core.js';
 import { onTableChange } from './admin/live.js';
@@ -199,7 +199,7 @@ export function listLog(el) {
     empty: 'Aucune entrée pour ce filtre.',
     search: { placeholder: 'Rechercher dans le journal', label: 'Rechercher dans le journal', fields: (it) => [it.name, it.title, it.excerpt].join(' ') },
     selectedId: LG.sel,
-    onSelect: (it) => { if (it.id !== LG.sel) location.hash = `#pilotage/journal/${it.id}`; },
+    onSelect: (it) => { if (it.id !== LG.sel) location.hash = `#mairie/journal/${it.id}`; },
   });
   more.querySelector('#log-more').addEventListener('click', async (e) => {
     const b = e.currentTarget;
@@ -209,7 +209,7 @@ export function listLog(el) {
   more.hidden = !(LG.more || LG.accessMore);
 }
 
-/** Affichage d'une entrée (registerSub open, à chaque visite de #pilotage/journal[/id]). */
+/** Affichage d'une entrée (registerSub open, à chaque visite de #mairie/journal[/id]). */
 export function openLog(_el, { id } = {}) {
   LG.sel = id ? String(id) : null;
   if (LG.root) renderDetail(LG.sel);

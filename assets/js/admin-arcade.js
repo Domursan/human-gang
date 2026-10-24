@@ -6,7 +6,7 @@
  * La récompense d’une partie est le réglage « arcade » des secrets (hg_settings.eggs.recompenses.arcade) : elle est
  * affichée ici et modifiée dans Autres jeux › Secrets (lien), sans second formulaire.
  * Droit : « reglages » (administrateur ou Staff « reglages »). La section n’est montée que si ce droit est accordé.
- * Route : #jeux/arcade (branchée par admin.js). Section : <section id="arcade">, conteneur #arcade-root.
+ * Route : #fete/arcade (branchée par admin.js). Section : <section id="arcade">, conteneur #arcade-root.
  * RPC : hg_arcade_admin_board(p_week) (lecture de la semaine, lundi par défaut à Zurich), hg_arcade_admin_clear(p_user,
  *   p_game, p_week) (efface le meilleur score d’un membre pour la semaine). Aucune écriture directe dans les tables.
  * Dépendances : core.js (sb, toast, errMsg, esc), ui-confirm.js (boîte de confirmation).
@@ -162,7 +162,7 @@ function render(focus) {
     <div class="arc-reward card">
       <p><strong>Récompense d’une partie :</strong> ${nb(b.reward)} Paillettes, une fois par jour et par membre.
         Ce montant se règle dans les secrets.</p>
-      <a class="btn btn-ghost" href="#jeux/secrets">Modifier dans Secrets</a>
+      <a class="btn btn-ghost" href="#fete/secrets">Modifier dans Secrets</a>
     </div>
     <p class="small muted arc-intro">Le mini-jeu du jour est le même pour tout le gang. Chaque mini-jeu a son classement de la semaine.</p>
     <div class="arc-games">${b.games.map(gameHtml).join('')}</div>

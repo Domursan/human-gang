@@ -1,4 +1,4 @@
-// Parcours : idée J3 · « Qui a dit ça ? » (jeux.html#citations et admin #jeux/citations), faux Supabase
+// Parcours : idée J3 · « Qui a dit ça ? » (jeux.html#citations et admin #fete/citations), faux Supabase
 // fake-sb-jeux.mjs. Citation en grand, quatre membres en choix, réponse unique, bonne réponse / ton choix, contexte et
 // part du gang ; citation suivante ; proposition d'une citation ; accord de l'auteur ; 360 px ; panel : publier, refuser.
 // Lancer : node tests/parcours-j3.cjs
@@ -66,7 +66,7 @@ const FIX = 'fake-sb-jeux.mjs';
 
   /* ---------- Panel ---------- */
   p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, height: 900 });
-  await adminSection(p, 'jeux/citations');
+  await adminSection(p, 'fete/citations');
   await p.waitForSelector('#ajx-cit-list .ajx-row', { timeout: 4000 }).catch(() => {});
   check(await p.locator('#ajx-cit-list .ajx-row').count() === 2, 'panel : file des citations');
   check(await p.locator('[data-ajx="cit-pub"]').nth(1).isDisabled(), 'panel : publication bloquée sans accord de l’auteur');

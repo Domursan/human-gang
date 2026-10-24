@@ -121,24 +121,38 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
 const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 
 /**
- * Admin : ouvre une sous-section comme un clic dans la colonne de navigation et attend qu'elle soit affichée.
- * Les sous-sections se montent à leur première visite : un test qui interagit avec une section doit l'ouvrir d'abord.
- * Ouvre une sous-section du panel par sa route « domaine/sous-section » (ex. 'irl/secret-santa', 'cartes/defis')
- * et attend qu'elle soit affichée : adresse à jour, sous-section active dans la colonne, section visible.
+ * Admin : ouvre une page du panel (lieu/sous-section, ex. 'fabrique/defis', 'place/comptes/<id>') et attend qu'elle soit
+ * affichée : la coquille annonce la page courante (data-route), et la section est visible. Les anciennes adresses
+ * (#cartes/defis…) sont redirigées : seule la sous-section compte pour l'attente.
  */
 async function adminSection(page, route) {
+  const sub = route.split('/')[1] || route.split('/')[0];
   await page.evaluate((r) => { location.hash = r; }, route);
-  await page.waitForFunction((r) => {
-    if (location.hash !== '#' + r) return false;
-    const cur = document.querySelector('.shell-sub[aria-current="true"]');
-    if (!cur || cur.getAttribute('href') !== '#' + r) return false;
-    const s = document.querySelector('#shell-groups > .shell-group:not([hidden]) .admin-section');
-    return !!s && s.getClientRects().length > 0;
-  }, route, { timeout: 8000 });
+  await page.waitForFunction((s) => {
+    const cur = document.getElementById('shell')?.dataset.route || '';
+    if (cur.split('/')[1] !== s && cur !== s) return false;
+    const sec = document.querySelector('#shell-groups > .shell-group:not([hidden]) .admin-section');
+    return !!sec && sec.getClientRects().length > 0;
+  }, sub, { timeout: 8000 });
+}
+
+/**
+ * Admin : compteur « à traiter » d'une page, lu sur la tuile de sa page de lieu (la coquille ne garde pas de compteur
+ * sur la page ouverte). Va sur #<lieu>, lit la pastille de la tuile, puis revient à l'adresse d'origine. Vide si aucun.
+ */
+async function countOf(page, lieu, sub) {
+  const back = await page.evaluate(() => location.hash);
+  await page.evaluate((h) => { location.hash = h; }, '#' + lieu);
+  await page.waitForSelector(`#lieu-root .lieu-tile[data-sub="${sub}"]`, { timeout: 5000 }).catch(() => {});
+  await sleep(150);
+  const n = await page.evaluate((s) => document.querySelector(`#lieu-root .lieu-tile[data-sub="${s}"] .nav-count`)?.textContent?.trim() || '', sub);
+  await page.evaluate((h) => { location.hash = h; }, back);
+  await sleep(300);
+  return n;
 }
 
 /** Journal des appels du faux client (rpc, from, fn, auth…). */
 /** Renvoie le journal des appels du faux client, lu dans la page (window.__LOG). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
-module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, hscroll, log, sleep, chromium };
+module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, countOf, hscroll, log, sleep, chromium };

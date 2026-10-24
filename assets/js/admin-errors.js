@@ -137,7 +137,7 @@ async function ticket(id) {
     const r = E.rows.find((x) => x.id === id);
     if (r && data) r.support_id = data;
     toast('Demande d’assistance prête', 'ok');
-    if (data) location.hash = `#pilotage/assistance/${data}`;
+    if (data) location.hash = `#poste/assistance/${data}`;
   } catch (e) { toast(errMsg(e), 'error'); }
 }
 

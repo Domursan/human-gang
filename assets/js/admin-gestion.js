@@ -1,5 +1,5 @@
 // =====================================================================
-// Admin : Le jeu de cartes › Gestion globale (route #cartes/gestion, section #cartes-gestion, racine #gestion-root).
+// Admin : Le jeu de cartes › Gestion globale (route #fabrique/gestion, section #cartes-gestion, racine #gestion-root).
 // Trois blocs : « Give » (don groupé : même confirmation et même RPC que le tiroir d’Économie), « Résumé de l’économie »
 // (hg_eco_health via admin/eco-health.js, hg_booster_type_stats, hg_auctions_admin : seulement ce que la base renvoie)
 // et « Derniers gives » (hg_admin_log : actions « don_groupe » et « carte_donnee »).
@@ -288,8 +288,8 @@ async function rendreEco() {
         : `<p class="small muted">${alertes.suspendues ? 'Alertes suspendues pour le moment.' : 'Aucune alerte rouge pour le moment.'}</p>`}
     </div>
     <div class="btn-row">
-      <a class="btn btn-ghost btn-sm" href="#cartes/limites">Économie › Limites</a>
-      <a class="btn btn-ghost btn-sm" href="#cartes/stats">Suivi › Statistiques</a>
+      <a class="btn btn-ghost btn-sm" href="#fabrique/limites">Économie › Limites</a>
+      <a class="btn btn-ghost btn-sm" href="#fabrique/stats">Suivi › Statistiques</a>
     </div>`;
 }
 
@@ -353,7 +353,7 @@ async function rendreJournal() {
     if (error) throw error;
     const lignes = (data ?? []).slice().sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 10);
     el.innerHTML = `<div class="gest-entete"><h2 class="card-title" id="gest-journal-h">Derniers gives</h2>
-        <a class="small" href="#pilotage/journal">Voir le journal</a></div>
+        <a class="small" href="#mairie/journal">Voir le journal</a></div>
       ${lignes.length ? `<ul class="acd-list">${lignes.map((r) => (r.action === 'carte_donnee' ? ligneCarteDonnee(r) : ligneDon(r))).join('')}</ul>` : '<p class="small muted">Aucun don pour l’instant.</p>'}`;
   } catch (e) {
     el.innerHTML = `<div class="gest-entete"><h2 class="card-title" id="gest-journal-h">Derniers gives</h2></div>

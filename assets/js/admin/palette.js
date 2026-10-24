@@ -1,4 +1,4 @@
-// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton du rail). Filtre les sous-sections permises (« Groupe · Libellé »)
+// Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton « Tout le panel » de l’en-tête). Filtre les sous-sections permises (« Groupe · Libellé »)
 // et les membres (pseudo).
 // Entrée ouvre la sous-section ou la fiche, par le routeur de la coquille (admin/shell.js). Dialogue modal : focus piégé,
 // Échap ferme, le reste de la page est inerte. Propre à admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
@@ -7,7 +7,7 @@
 import { esc } from '../core.js';
 import { S } from './state.js';
 import { ensureMembers } from './loaders.js';
-import { canSection, visibleDomains } from './perms.js';
+import { canSection, visibleLieux } from './perms.js';
 import { navigate } from './shell.js';
 
 /** Texte normalisé pour la recherche des membres : sans accents, en minuscules, sans espaces autour. */
@@ -53,15 +53,16 @@ function build() {
 }
 
 /**
- * Sous-sections accessibles (domaines de la coquille, déjà filtrés par les droits). La colonne « kind » donne le domaine ;
+ * Plateau, lieux et sous-sections accessibles (déjà filtrés par les droits). La colonne « kind » donne le lieu ;
  * le libellé est « Groupe · Libellé » quand la sous-section a un titre de groupe (sous-menu) différent de son libellé.
  * La recherche porte sur ce libellé complet : taper le titre du groupe (« économie ») propose toutes ses sous-sections.
  */
 function sectionItems() {
-  return visibleDomains().flatMap((d) => d.subs.map((s) => {
+  const lieux = visibleLieux().flatMap((l) => [{ kind: 'Lieu', group: '', label: l.label, path: l.id }, ...l.subs.map((s) => {
     const group = s.heading && s.heading !== s.label ? s.heading : '';
-    return { kind: d.label, group, label: group ? `${group} · ${s.label}` : s.label, path: `${d.id}/${s.id}` };
-  }));
+    return { kind: l.label, group, label: group ? `${group} · ${s.label}` : s.label, path: `${l.id}/${s.id}` };
+  })]);
+  return [{ kind: 'Plateau', group: '', label: 'Plateau', path: 'plateau' }, ...lieux];
 }
 /**
  * Membres dont le pseudo contient la requête (normalisée), au plus MAX_MEMBERS.
@@ -71,7 +72,7 @@ function memberItems(q) {
   if (!q || !canSection('comptes') || ui.membersState !== 'ready') return [];
   // Transforme les membres retenus en éléments de la palette (libellé = pseudo, adresse = fiche membre).
   const pick = (list, kind) => list.filter((m) => m.pseudo && norm(m.pseudo).includes(q))
-    .map((m) => ({ kind, label: m.pseudo, path: `membres/comptes/${m.id}` }));
+    .map((m) => ({ kind, label: m.pseudo, path: `place/comptes/${m.id}` }));
   // Comptes actifs seulement (S.members = hg_members) : les fantômes ne sont pas proposés ici.
   return pick(S.members, 'Membre').slice(0, MAX_MEMBERS);
 }
@@ -164,7 +165,7 @@ function close() {
   if (back && document.contains(back)) back.focus();
 }
 
-/** Branche le raccourci Ctrl/Cmd+K (phase de capture : la recherche du site ne s'ouvre pas en même temps) et le bouton du rail. */
+/** Branche le raccourci Ctrl/Cmd+K (phase de capture : la recherche du site ne s'ouvre pas en même temps) et le bouton « Tout le panel » de l’en-tête. */
 export function setupPalette() {
   window.addEventListener('keydown', (e) => {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || String(e.key).toLowerCase() !== 'k') return;

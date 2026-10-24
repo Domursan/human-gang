@@ -34,7 +34,7 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
 
   /* ---------- (a) Admin 1280 px ---------- */
   let p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-  await adminSection(p, 'cartes/boosters');
+  await adminSection(p, 'fabrique/boosters');
   await p.waitForSelector('.abt-row', { timeout: 8000 });
   check(await p.locator('link[data-abt-css]').count() === 2, '(a) cartes-boosters.css et boosters-styles.css chargées à la demande');
   await p.click('[data-bt="edit"][data-id="serie"]');
@@ -67,14 +67,14 @@ const saves = (p) => p.evaluate(() => (window.__LOG || []).filter((x) => x[0] ==
   // Style inconnu en base (ex. ligne écrite avant 077 ou à la main) : la miniature retombe sur Classique.
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
   await p.evaluate(() => { window.__DB.hg_booster_types.find((t) => t.id === 'dore').style = 'cart--pirate'; });
-  await adminSection(p, 'cartes/boosters');
+  await adminSection(p, 'fabrique/boosters');
   await p.waitForSelector('.abt-row', { timeout: 8000 });
   check(await p.$eval('.abt-row[data-type="dore"] .cart-box', (b) => b.classList.contains('cart--classique') && !b.classList.contains('cart--pirate')), '(a) style inconnu : miniature en Classique');
   await p.ctx.close();
 
   /* ---------- (b) Admin 390 px : éditeur ---------- */
   p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
-  await adminSection(p, 'cartes/boosters');
+  await adminSection(p, 'fabrique/boosters');
   await p.waitForSelector('.abt-row', { timeout: 8000 });
   await p.click('[data-bt="edit"][data-id="serie"]');
   await p.waitForSelector('dialog.ui-drawer.abt-drawer[open]', { timeout: 5000 });

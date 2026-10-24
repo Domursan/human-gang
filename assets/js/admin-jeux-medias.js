@@ -6,7 +6,7 @@
  *  - Heardle : propositions des membres à valider ou écarter, morceaux (lien YouTube, instant de départ), calendrier,
  *    annulation d'une manche (vidéo supprimée ou bloquée).
  * Droits : Staff « souvenirs » et administrateur (contrôlés aussi par les RPC, journalisées).
- * Route : #jeux/framed-heardle (branchée par admin.js). Section : <section id="jeux-medias">, conteneur #jeux-medias-root.
+ * Route : #fete/framed-heardle (branchée par admin.js). Section : <section id="jeux-medias">, conteneur #jeux-medias-root.
  * RPC : hg_framed_admin, hg_framed_film_save, hg_framed_round_save, hg_heardle_admin, hg_heardle_track_save, hg_heardle_round_save.
  * Exporte : mountJeuxMediasSection.
  */

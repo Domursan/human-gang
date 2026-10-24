@@ -1,5 +1,5 @@
 // ===== Humane Gang — administration : événements dynamiques (image qui traverse le site) =====
-// Colonne 2 : liste des événements (createList). Zone principale : l'événement choisi (#event/evenements/<id>) avec ses
+// Colonne 2 : liste des événements (createList). Zone principale : l'événement choisi (#fete/evenements/<id>) avec ses
 // paramètres, son badge, ses annonces Discord et son classement. Création et modification dans le tiroir.
 // Table hg_dyn_events (écriture admin), captures hg_dyn_captures, classement rpc hg_dyn_leaderboard(p_event).
 // Les dates sont saisies en heure suisse (Europe/Zurich), quel que soit le fuseau de l'appareil.

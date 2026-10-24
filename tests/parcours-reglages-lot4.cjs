@@ -30,7 +30,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Cartes › Économie ---------- */
   let p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1440, height: 900 });
-  await adminSection(p, 'cartes/limites');
+  await adminSection(p, 'fabrique/limites');
   await p.waitForSelector('#acd-econ-form', { timeout: 8000 });
   /* Légendes des groupes visibles de l'Économie. */
   const shownLegends = () => p.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length).map((f) => f.querySelector('legend').textContent.trim()).join(' | '));
@@ -53,17 +53,17 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   check(await settingsRow(p, 'cards') === null || (await settingsRow(p, 'cards')).drops === undefined, 'économie : rien n\'est enregistré quand la validation échoue');
 
   // Erreur dans une partie masquée : depuis « Tirage », la durée invalide (partie Limites) est signalée avec son lien
-  await adminSection(p, 'cartes/tirage');
+  await adminSection(p, 'fabrique/tirage');
   await p.waitForTimeout(200);
   check(await shownLegends() === 'Boosters | Taux de tirage | Brillantes et garantie', `parties : « Tirage » ne montre que ses groupes (${await shownLegends()})`);
   check(await p.inputValue('#acd-e-drops_duree_defaut_min') === '2000' && await p.inputValue('#acd-e-quetes_par_semaine') === '5', 'parties : les saisies de « Limites » sont gardées en passant à « Tirage »');
   await p.fill('#acd-e-pity_epique', '25');
   await p.click('#acd-econ-form [type="submit"]');
   await p.waitForTimeout(300);
-  check(/À corriger dans « Limites »/.test(await p.textContent('#acd-econ-form .form-error')) && await p.locator('#acd-econ-form .form-error a[href="#cartes/limites"]').count() === 1,
+  check(/À corriger dans « Limites »/.test(await p.textContent('#acd-econ-form .form-error')) && await p.locator('#acd-econ-form .form-error a[href="#fabrique/limites"]').count() === 1,
     'parties : erreur d\'une partie masquée nommée, avec le lien vers « Limites »');
-  await p.click('#acd-econ-form .form-error a[href="#cartes/limites"]');
-  await p.waitForFunction(() => location.hash === '#cartes/limites');
+  await p.click('#acd-econ-form .form-error a[href="#fabrique/limites"]');
+  await p.waitForFunction(() => location.hash === '#fabrique/limites');
   await p.waitForTimeout(300);
   check(await p.isVisible('#acd-e-drops_duree_defaut_min') && await p.inputValue('#acd-e-pity_epique') === '25', 'parties : le lien ouvre « Limites », la saisie de « Tirage » est gardée');
   await p.fill('#acd-e-drops_duree_defaut_min', '45');
@@ -85,7 +85,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   const reset = await settingsRow(p, 'cards');
   check(reset && reset.drops.quantite_max === 50 && reset.drops.duree_defaut_min === 30, 'économie : après enregistrement, le défaut est bien en base');
   // Enregistrer depuis « Tirage » conserve drops, récompenses et quêtes
-  await adminSection(p, 'cartes/tirage');
+  await adminSection(p, 'fabrique/tirage');
   await p.waitForTimeout(200);
   await p.fill('#acd-e-pity_epique', '30');
   await p.click('#acd-econ-form [type="submit"]');
@@ -93,10 +93,10 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   const fromTirage = await settingsRow(p, 'cards');
   check(fromTirage && fromTirage.pity_epique === 30 && fromTirage.drops.quantite_max === 50 && fromTirage.rewards.daily === 100 && fromTirage.quetes_par_semaine === 5,
     'parties : enregistrer depuis « Tirage » conserve drops, récompenses et quêtes');
-  await adminSection(p, 'cartes/economie');
+  await adminSection(p, 'fabrique/economie');
   await p.waitForTimeout(200);
   check(await shownLegends() === 'Départ | Récompenses' && await p.isVisible('[data-act="bulk-open"]'), `parties : « Paillettes et dons » : Dons, Départ, Récompenses (${await shownLegends()})`);
-  await adminSection(p, 'cartes/recyclage');
+  await adminSection(p, 'fabrique/recyclage');
   await p.waitForTimeout(200);
   check(await shownLegends() === 'Recyclage | Fabrication | Alertes économie', `parties : « Recyclage et fabrication » (${await shownLegends()})`);
   await p.close();
@@ -104,7 +104,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   /* ---------- Cartes › Drops : bornes lues dans cards.drops ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
   await seedCards(p, { drops: { quantite_max: 10, duree_max_min: 120, duree_defaut_min: 15 } });
-  await adminSection(p, 'cartes/drops');
+  await adminSection(p, 'fabrique/drops');
   await p.click('[data-action="drop-new"]');
   await p.waitForSelector('dialog.ui-drawer[open] #drop-qty', { timeout: 5000 });
   check(await p.getAttribute('#drop-qty', 'max') === '10', 'drops : exemplaires max lu dans cards.drops (10)');
@@ -127,7 +127,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   /* ---------- Cartes › Drops : plafond paramétrable (migration 055, borne technique 1 à 1000) ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
   await seedCards(p, { drops: { quantite_max: 120, duree_max_min: 1440, duree_defaut_min: 30 } });
-  await adminSection(p, 'cartes/drops');
+  await adminSection(p, 'fabrique/drops');
   await p.click('[data-action="drop-new"]');
   await p.waitForSelector('dialog.ui-drawer[open] #drop-qty', { timeout: 5000 });
   check(await p.getAttribute('#drop-qty', 'max') === '120', 'drops plafond : avec quantite_max à 120, le champ accepte 120');
@@ -142,7 +142,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Vie › Badges : critères ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
-  await adminSection(p, 'membres/badges-criteres');
+  await adminSection(p, 'place/badges-criteres');
   await p.waitForSelector('#bc-form', { timeout: 8000 });
   check(await p.inputValue('#bc-criteres_toujours_la_sorties') === '5', 'badges : seuil « Toujours là » affiche le défaut (5)');
   check(await p.inputValue('#bc-criteres_paparazzi_photos') === '50', 'badges : seuil « Paparazzi » affiche le défaut (50)');
@@ -175,10 +175,10 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   // Parties de la section Badges
   check(!(await p.isVisible('#badge-grid')) && !(await p.isVisible('#badge-member')) && await p.locator('#zone-actions #badge-new').count() === 0,
     'parties : « Critères automatiques » seul (grille, attribution et « + Nouveau badge » masqués)');
-  await adminSection(p, 'membres/badges-attribution');
+  await adminSection(p, 'place/badges-attribution');
   await p.waitForTimeout(200);
   check(await p.isVisible('#badge-member') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-grid')), 'parties : « Attribution » seule');
-  await adminSection(p, 'membres/badges');
+  await adminSection(p, 'place/badges');
   await p.waitForTimeout(200);
   check(await p.isVisible('#badge-grid') && await p.isVisible('#badge-search') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-member'))
     && await p.locator('#zone-actions #badge-new').count() === 1, 'parties : « Catalogue » : recherche, grille et « + Nouveau badge »');
@@ -187,7 +187,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Vie › Badges : Staff sans le droit Réglages du site (la base refuserait la clé « badges ») ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['badges'] } });
-  await adminSection(p, 'membres/badges-criteres');
+  await adminSection(p, 'place/badges-criteres');
   await p.waitForSelector('#bc-form', { timeout: 8000 });
   check(await p.isVisible('#bc-ro') && /réservé au droit Réglages/.test(await p.textContent('#bc-ro')), 'badges (Staff sans Réglages) : note « lecture seule » affichée');
   check(await p.isDisabled('#bc-criteres_paparazzi_photos') && await p.locator('#bc-form [type="submit"]').count() === 0 && await p.locator('[data-bc-default]').count() === 0,
@@ -197,7 +197,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   /* ---------- Réglages du site : la clé badges est listée et renvoie vers sa section ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
   await p.evaluate(() => { window.__DB.hg_settings.unshift({ key: 'badges', value: { max_carte: 4 } }); });
-  await adminSection(p, 'pilotage/reglages');
+  await adminSection(p, 'mairie/reglages');
   await p.waitForSelector('[data-key-item="badges"]', { timeout: 8000 });
   const row = await p.textContent('[data-key-item="badges"]');
   check(row.includes('Badges : critères et affichage') && row.includes('Géré dans'), 'réglages du site : la clé badges est listée avec son libellé et renvoie vers sa section');
