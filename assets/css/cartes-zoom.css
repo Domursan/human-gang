@@ -12,7 +12,7 @@
 /* Une carte de la collection : la carte, puis la loupe dans le coin haut-droit */
 
 /* ---------- Cartes et loupe ---------- */
-.cz-cell { position: relative; width: 100%; max-width: 168px; display: flex; justify-content: center; }
+.cz-cell { position: relative; width: 100%; max-width: 168px; display: flex; flex-direction: column; align-items: center; }
 .cz-cell > .hgc { width: min(100%, 168px); }
 .cz-zoom { position: absolute; top: 6px; right: 6px; z-index: 4; width: 32px; height: 32px; padding: 0; display: grid; place-items: center;
   border-radius: 999px; border: 1px solid var(--border-strong); background: rgba(14, 14, 16, .88); color: var(--text); cursor: zoom-in;
