@@ -463,8 +463,8 @@ begin
     perform hg_lg__log(p_id, 'info', 'Le Corbeau a désigné ' || hg_lg__nom(p_id, r.cible) || ' : 2 voix contre lui ou elle au vote.');
   end loop;
   -- Montreur d'ours
-  for r in select c.user_id from hg_lg_cartes c join hg_lg_joueurs j using (partie, user_id)
-           where c.partie = p_id and c.role = 'montreur-ours' and j.vivant loop
+  for r in select mo.user_id from hg_lg_cartes mo join hg_lg_joueurs mj using (partie, user_id)
+           where mo.partie = p_id and mo.role = 'montreur-ours' and mj.vivant loop
     select gauche, droite into v_g, v_d from hg_lg__voisins(p_id, r.user_id);
     if exists (select 1 from hg_lg_cartes where partie = p_id and user_id in (v_g, v_d) and camp = 'loups') then
       perform hg_lg__log(p_id, 'info', 'L''ours du Montreur grogne : un loup se cache à côté de lui.');
@@ -545,10 +545,11 @@ begin
   end if;
   update hg_lg_parties set phase = p_phase, pause_reste = null,
     phase_fin = now() + make_interval(secs => hg_lg__duree(p, p_phase)), version = version + 1 where id = p_id;
+  if p_phase = 'revelation' then return; end if;  -- déjà annoncé par « Les rôles sont distribués »
   perform hg_lg__log(p_id, 'phase', case p_phase
     when 'nuit_1' then 'La première nuit tombe sur le village.'
     when 'nuit' then 'La nuit ' || p.manche || ' tombe sur le village.'
-    when 'reveil' then 'La Sorcière se réveille.'
+    when 'reveil' then 'Avant l''aube, certains se réveillent encore.'
     when 'debat' then 'Jour ' || p.manche || ' : le débat commence.'
     when 'vote' then 'Jour ' || p.manche || ' : place au vote.'
     when 'chasseur' then 'Le Chasseur doit tirer avant de mourir.'
@@ -1149,7 +1150,7 @@ begin
       'statut', p.statut, 'phase', p.phase, 'manche', p.manche, 'phase_fin', p.phase_fin, 'pause_reste', p.pause_reste,
       'maintenant', now(), 'nb_joueurs', p.nb_joueurs, 'invites', p.invites, 't_nuit', p.t_nuit, 't_jour', p.t_jour, 't_vote', p.t_vote,
       'annonce_discord', p.annonce_discord, 'composition', p.composition, 'vainqueur', p.vainqueur, 'version', p.version,
-      'hote', p.hote, 'corbeau', p.etat->'corbeau', 'mvp', p.etat->'mvp', 'started_at', p.started_at, 'ended_at', p.ended_at,
+      'hote', p.hote, 'hote_pseudo', coalesce((select pseudo from hg_profiles where id = p.hote), hg_lg__nom(p.id, p.hote)), 'corbeau', p.etat->'corbeau', 'mvp', p.etat->'mvp', 'started_at', p.started_at, 'ended_at', p.ended_at,
       'centre', case when v_fini or v_meneur then (select jsonb_agg(role order by idx) from hg_lg_centre where partie = p.id) end),
     'joueurs', coalesce(v_joueurs, '[]'::jsonb),
     'moi', v_moi,

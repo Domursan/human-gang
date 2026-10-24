@@ -48,6 +48,8 @@ export const SECTION_PERM = {
   // Réorganisation du panel (migration 103) : rôles et Membres IRL → « membres » ; gestion globale des cartes → « cartes » ;
   // arcade (jeux des pages 404) → « reglages ». Les sections pas encore livrées sont retirées (disableSubs, admin.js).
   roles: 'membres', 'membres-irl': 'membres', 'cartes-gestion': 'cartes', arcade: 'reglages',
+  // Loup-Garou (La Fête foraine › Jeux) : réservé à l'administrateur (réglages des Paillettes, badges, parties)
+  'loup-garou': 'admin',
 };
 
 // Planning (idée A2) : visible si l'une de ces permissions est accordée (quiz, cartes, événements, sorties, Secret Santa, bot).
@@ -169,6 +171,7 @@ export const LIEUX = [
       { id: 'arcade', label: 'Arcade (pages 404)', section: 'arcade', help: 'Page en 404', icon: 'gamepad' },
       { id: 'secrets', label: 'Secrets', section: 'eggs', help: 'Éléments cachés', icon: 'key' },
       { id: 'mes-jeux', label: 'Mes jeux', section: 'mj', help: 'Ma liste de jeux', icon: 'list' },
+      { id: 'loup-garou', label: 'Loup-Garou', section: 'loup-garou', help: 'Paillettes, badges et parties', icon: 'users' },
     ]),
   ] },
   { id: 'mairie', label: 'La Mairie', color: '#2EC4B6', icon: 'mairie', tagline: 'Le site et le Staff : tout ce qui règle le fonctionnement', subs: [

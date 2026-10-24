@@ -1,0 +1,39 @@
+/* ===== Humane Gang — Loup-Garou : rejoindre une partie (vues/rejoindre.js) =====
+   Classes préfixées lg-. Les pastilles et alertes sont identiques à celles de creer.css (même règle, dupliquées ici). */
+
+.lg-rejoindre [hidden] { display: none !important; }
+.lg-rejoindre { display: flex; flex-direction: column; align-items: center; padding-top: 16px; }
+.lg-rejoindre > .card, .lg-rejoindre > .lg-chargement { width: 100%; max-width: 560px; }
+
+/* ---------- Carte d'invitation ---------- */
+.lg-invitation { display: flex; flex-direction: column; gap: 14px; padding: 28px; }
+.lg-invitation-titre { margin: 0; font-size: clamp(28px, 5vw, 36px); line-height: 1.15; }
+.lg-surtitre { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lg-invitation-hote { margin: 0; font-size: 15px; color: var(--muted); }
+.lg-invitation-hote strong { color: var(--text); }
+.lg-aide { margin: 0; font-size: 13px; color: var(--muted); }
+.lg-alerte { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 14px; color: var(--rose); }
+.lg-alerte .lg-ico { margin-top: 2px; }
+.lg-pastilles { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-pastille-info { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; }
+
+.lg-rejoindre-action { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.lg-rejoindre-bouton { width: 100%; min-height: 52px; border-radius: 999px; font-size: 16px; }
+.lg-rejoindre-bouton[disabled] { opacity: .6; }
+.lg-mention { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* ---------- Autre code ---------- */
+.lg-autre { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; text-align: center; font-size: 14px; color: var(--muted); }
+.lg-autre p { margin: 0; }
+.lg-lien { min-height: 44px; padding: 10px 4px; border: 0; background: none; color: var(--sand); font: inherit; font-weight: 700;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.lg-code-form { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.lg-code-libelle { font-size: 14px; color: var(--muted); }
+.lg-code-ligne { display: flex; gap: 10px; }
+.lg-champ-code { flex: 1; min-width: 0; min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: 'Courier New', monospace;
+  font-size: 18px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+.lg-champ-code::placeholder { text-transform: none; letter-spacing: 1px; font-weight: 400; }
+.lg-code-bouton { min-height: 48px; padding: 0 20px; border-radius: 999px; }
+.lg-autre .lg-alerte, .lg-code-form .lg-alerte { margin-top: 2px; }

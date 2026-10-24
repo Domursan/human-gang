@@ -1,0 +1,11 @@
+/* Écrans du Loup-Garou : assemblage des feuilles par écran (assets/css/lg/). */
+@import url('lg/accueil.css');
+@import url('lg/catalogue.css');
+@import url('lg/creer.css');
+@import url('lg/rejoindre.css');
+@import url('lg/salle.css');
+@import url('lg/revelation.css');
+@import url('lg/plateau.css');
+@import url('lg/meneur.css');
+@import url('lg/fin.css');
+@import url('lg/stats.css');

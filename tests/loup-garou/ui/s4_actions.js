@@ -1,0 +1,21 @@
+const { ouvrir, shot, fermer } = require('./lib.js');
+const code = process.argv[2];
+(async () => {
+  const p1 = await ouvrir(1, '#partie/' + code);
+  await p1.locator('.lg-siege', { hasText: 'Kaïs' }).first().click();
+  await p1.waitForTimeout(400);
+  await shot(p1, 'voyante-cible', false);
+  await p1.getByRole('button', { name: /découvrir son rôle/i }).click();
+  await p1.waitForTimeout(1500);
+  await shot(p1, 'voyante-resultat', false);
+  const p4 = await ouvrir(4, '#partie/' + code, 390);
+  await p4.locator('.lg-siege', { hasText: 'Lila' }).first().click();
+  await p4.getByRole('button', { name: /dévorer/i }).click();
+  await p4.waitForTimeout(1500);
+  await p4.fill('textarea, input[type="text"]', 'Bien joué la meute').catch(() => {});
+  await p1.waitForTimeout(5000);
+  await shot(p1, 'jour-voyante');
+  const p2 = await ouvrir(2, '#partie/' + code);
+  await shot(p2, 'jour-mort');
+  await fermer();
+})();

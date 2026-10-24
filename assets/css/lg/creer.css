@@ -1,0 +1,157 @@
+/* ===== Humane Gang — Loup-Garou : créer une partie (vues/creer.js) =====
+   Classes préfixées lg-. Les composants partagés (ouvrirFenetre, actions, fil d'Ariane) sont dans loup-garou.css.
+   Les pastilles, alertes et la liste de réglages servent aussi à rejoindre.css (même règle, dupliquée là-bas). */
+
+.lg-creer [hidden], dialog.lg-fenetre [hidden] { display: none !important; }
+
+.lg-creer { padding-bottom: 24px; }
+.lg-titre { margin: 8px 0 0; font-size: clamp(30px, 4vw, 40px); line-height: 1.1; letter-spacing: .5px; }
+.lg-creer-grille { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; margin-top: 20px; }
+.lg-creer-form { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* ---------- Cartes numérotées ---------- */
+.lg-cr-carte { padding: 24px 28px; display: flex; flex-direction: column; gap: 12px; }
+.lg-cr-carte h2 { margin: 0; font-size: 18px; font-weight: 700; font-family: var(--font-body); line-height: 1.3; }
+.lg-cr-carte-tete { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lg-cr-carte-tete-action { justify-content: space-between; }
+.lg-cr-carte-titre { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.lg-num { width: 28px; height: 28px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong);
+  display: grid; place-items: center; font-size: 13px; font-weight: 700; flex: none; }
+.lg-bouton-pilule { min-height: 44px; padding: 0 18px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+.lg-resume-ligne { margin: 0; font-size: 15px; color: var(--muted); }
+
+/* ---------- Champs ---------- */
+.lg-champ { width: 100%; min-height: 52px; box-sizing: border-box; padding: 0 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.lg-nombre-ligne { display: flex; align-items: center; gap: 16px; }
+.lg-curseur { flex: 1; min-width: 0; height: 44px; margin: 0; accent-color: var(--sand); }
+.lg-nombre { width: 96px; height: 44px; box-sizing: border-box; flex: none; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text); font: inherit; font-size: 18px; font-weight: 700; text-align: center; }
+.lg-case { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
+.lg-case input { width: 22px; height: 22px; margin: 0; flex: none; accent-color: var(--accent); }
+
+/* ---------- Segments (visibilité, préréglages) ---------- */
+.lg-segment { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px; padding: 4px; border-radius: 999px;
+  background: var(--bg); border: 1px solid var(--border); }
+.lg-segment-trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lg-segment-bouton { min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--text);
+  font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+.lg-segment-bouton[aria-pressed="true"] { background: var(--sand); color: #121212; font-weight: 700; }
+@media (hover: hover) { .lg-segment-bouton:not([aria-pressed="true"]):hover { background: var(--surface-2); } }
+
+/* ---------- Cartes radio (meneur) ---------- */
+.lg-choix-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.lg-choix { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 16px; border: 1px solid var(--border-strong);
+  background: var(--surface-2); cursor: pointer; }
+.lg-choix:has(input:checked) { border-color: var(--sand); box-shadow: inset 0 0 0 1px var(--sand); }
+.lg-choix-tete { display: flex; align-items: center; gap: 10px; }
+.lg-choix-tete input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--sand); }
+.lg-choix-tete strong { font-size: 16px; }
+.lg-choix-texte { font-size: 14px; color: var(--muted); line-height: 1.4; }
+
+/* ---------- Interrupteur Discord ---------- */
+.lg-ligne-discord { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.lg-ligne-discord-texte { display: flex; flex-direction: column; min-width: 0; }
+.lg-switch { position: relative; width: 60px; height: 44px; flex: none; cursor: pointer; }
+.lg-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.lg-switch-piste { position: absolute; left: 4px; right: 4px; top: 7px; height: 30px; border-radius: 999px; background: var(--border-strong); transition: background .15s; }
+.lg-switch-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; transition: transform .15s; }
+.lg-switch input:checked + .lg-switch-piste { background: var(--accent); }
+.lg-switch input:checked + .lg-switch-piste::after { transform: translateX(26px); }
+.lg-switch input:focus-visible + .lg-switch-piste { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+/* ---------- Rôles : rangée de vignettes et pastilles de composition ---------- */
+.lg-ligne-valide { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.lg-pastille-ok { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px;
+  background: var(--sage-soft); color: var(--sage-text); font-size: 13px; font-weight: 700; }
+.lg-apercu { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
+.lg-mini { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 56px; }
+.lg-mini-n { font-size: 14px; }
+.lg-vide { margin: 0; }
+.lg-alerte { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 14px; color: var(--rose); }
+.lg-alerte .lg-ico { margin-top: 2px; }
+.lg-pastilles { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-pastille-info { display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; }
+
+/* ---------- Résumé (aside) ---------- */
+.lg-resume { position: sticky; top: 24px; align-self: start; padding: 24px 28px; display: flex; flex-direction: column; gap: 14px; }
+.lg-resume-tete { display: flex; flex-direction: column; gap: 4px; }
+.lg-resume-titre { margin: 0; font-size: 26px; line-height: 1.1; }
+.lg-resume-detail { display: flex; flex-direction: column; gap: 14px; }
+.lg-resume-sous { margin: 0; padding-top: 14px; border-top: 1px solid var(--border); font-size: 14px; font-weight: 700; color: var(--muted); }
+.lg-resume-liste { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.lg-ligne-role { display: flex; align-items: center; gap: 12px; }
+.lg-ligne-nom { flex: 1; min-width: 0; }
+.lg-bilan { display: flex; align-items: flex-start; gap: 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+.lg-bilan.ok { color: var(--sage-text); }
+.lg-bilan.ko { color: var(--rose); }
+.lg-bilan-titre { margin: 0; font-family: var(--font-display); font-size: 20px; line-height: 1.2; color: inherit; }
+.lg-bilan-sous { margin: 2px 0 0; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.lg-bilan.ko .lg-bilan-sous { color: var(--text); }
+.lg-creer-bouton { width: 100%; min-height: 56px; border-radius: 999px; font-size: 17px; }
+.lg-creer-bouton[disabled] { opacity: .45; }
+
+/* ---------- Fenêtre des durées ---------- */
+.lg-durees, .lg-cr-roles { display: flex; flex-direction: column; gap: 16px; }
+.lg-champ-duree { display: flex; flex-direction: column; gap: 6px; }
+.lg-champ-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.lg-champ-tete label { font-weight: 700; }
+.lg-champ-tete output { font-size: 18px; font-weight: 700; color: var(--sand); font-variant-numeric: tabular-nums; }
+.lg-champ-titre { font-size: 14px; color: var(--muted); }
+.lg-prereglages { display: flex; flex-direction: column; gap: 8px; }
+.lg-info { display: flex; align-items: flex-start; gap: 10px; margin: 0; font-size: 14px; color: var(--muted); }
+.lg-info .lg-ico { margin-top: 2px; color: var(--sand); }
+
+/* ---------- Fenêtre des rôles ---------- */
+.lg-cr-roles-haut { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.lg-cr-roles-bilan { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lg-cr-cartes-total { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  font-family: var(--font-display); font-size: 20px; }
+.lg-cr-cartes-total.ok { background: var(--sage-soft); color: var(--sage-text); }
+.lg-cr-cartes-total.ko { background: rgba(158, 53, 67, .18); color: var(--rose); }
+.lg-bandeau { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--amber); background: rgba(216, 167, 94, .1); color: var(--text); font-size: 14px; }
+.lg-bandeau .lg-ico { margin-top: 2px; color: var(--amber); }
+.lg-cr-filtres { display: flex; flex-direction: column; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.lg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+.lg-chip[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: #121212; font-weight: 700; }
+.lg-liste-roles { display: flex; flex-direction: column; gap: 18px; }
+.lg-groupe { display: flex; flex-direction: column; }
+.lg-groupe-titre { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; }
+.lg-cr-role { display: flex; flex-direction: column; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.lg-cr-role-ligne { display: flex; align-items: center; gap: 10px; min-height: 60px; }
+.lg-cr-role-nom { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; cursor: pointer; }
+.lg-cr-role-nom > input[type="checkbox"] { width: 22px; height: 22px; margin: 0; flex: none; accent-color: var(--accent); }
+.lg-cr-role-vignette { flex: none; }
+.lg-cr-role-texte { display: flex; flex-direction: column; min-width: 0; }
+.lg-cr-role-texte strong { font-size: 16px; }
+.lg-cr-role-sous { font-size: 13px; color: var(--muted); }
+.lg-cr-role-info { margin: 0; padding: 0 0 6px 82px; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.lg-cr-role.is-bloque .lg-cr-role-nom { opacity: .45; cursor: default; }
+.lg-cr-role .lg-btn-icone:disabled { opacity: .35; cursor: not-allowed; }
+.lg-cr-compteur { display: flex; align-items: center; flex: none; }
+.lg-cr-compteur-n { width: 36px; text-align: center; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lg-cr-compteur .lg-btn-icone:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------- Téléphone : résumé collé en bas, détails repliés ---------- */
+@media (max-width: 760px) {
+  .lg-creer-grille { grid-template-columns: minmax(0, 1fr); }
+  .lg-titre { font-size: 30px; }
+  .lg-creer-form { padding-bottom: 200px; }
+  .lg-cr-carte { padding: 20px; }
+  .lg-choix-grille { grid-template-columns: minmax(0, 1fr); }
+  .lg-segment-bouton { font-size: 14px; }
+  .lg-resume { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 30; padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+    gap: 10px; border-radius: 20px 20px 0 0; border-left: 0; border-right: 0; border-bottom: 0; background: var(--surface);
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, .45); }
+  .lg-resume-tete, .lg-resume-detail { display: none; }
+  .lg-bilan { padding-top: 0; border-top: 0; }
+  .lg-creer-bouton { min-height: 52px; }
+  .lg-cr-role-info { padding-left: 0; }
+  .lg-cr-role-ligne { gap: 6px; }
+  .lg-cr-compteur-n { width: 30px; }
+}

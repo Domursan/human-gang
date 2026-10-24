@@ -19,7 +19,7 @@
 import { signOutDevice } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { getCachedPerms, canPanel, clearPerms } from './perms.js';
-import { getMyPages, canAccess } from './pages-access.js';
+import { getMyPages, canAccess, pageLabel } from './pages-access.js';
 import { viewAsActive } from './view-as.js';
 import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
@@ -42,7 +42,8 @@ const PLACED = new Set(['cartes', 'jeux', 'secret-santa', 'irl', 'historique', '
 const NAV_SHORT = { membre: 'Annuaire', recap: 'Récap de l’année' };
 
 /** Vrai si le lien est accessible (sans profil : aucun lien de page). */
-const allowed = (it, profile) => !!profile && (!it.page || canAccess(it.page));
+// strict : la page doit être déclarée dans hg_pages (sinon masquée, même si canAccess laisse passer les pages inconnues).
+const allowed = (it, profile) => !!profile && (!it.page || canAccess(it.page)) && (!it.strict || !!pageLabel(it.page));
 
 /**
  * Entrées du menu « Autres » : pages du menu (in_nav) accessibles et pas encore rangées, dans l'ordre de la base.

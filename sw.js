@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v81';
+const CACHE_VERSION = 'v82';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -45,7 +45,7 @@ const PRECACHE = [
   'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js', 'assets/js/admin-godmode.js',
   'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
   'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
-  'assets/js/admin-cards/quests.js', 'assets/js/admin-cards/boosters.js', 'assets/js/admin-eggs.js', 'assets/js/admin-fil.js', 'assets/js/admin-champs.js', 'assets/js/core/site-etat.js', 'assets/css/admin-eggs.css', 'assets/css/admin-fil.css', 'assets/css/admin-champs.css', 'assets/css/site-etat.css', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js', 'assets/js/admin-reglages/keys-lot1.js', 'assets/js/admin-reglages/identite.js', 'assets/js/core/site-defaults.js', 'assets/js/core/site-load.js',
+  'assets/js/admin-cards/quests.js', 'assets/js/admin-cards/boosters.js', 'assets/js/admin-eggs.js', 'assets/js/admin-loup-garou.js', 'assets/js/admin-fil.js', 'assets/js/admin-champs.js', 'assets/js/core/site-etat.js', 'assets/css/admin-eggs.css', 'assets/css/admin-loup-garou.css', 'assets/css/admin-fil.css', 'assets/css/admin-champs.css', 'assets/css/site-etat.css', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js', 'assets/js/admin-reglages/keys-lot1.js', 'assets/js/admin-reglages/identite.js', 'assets/js/core/site-defaults.js', 'assets/js/core/site-load.js',
   'assets/js/admin-reglages/keys-lot3.js', 'assets/js/admin-reglages/lot3-ui.js', 'assets/js/reglages-valeurs-lot3.js',
   'assets/js/admin-accounts/activity.js', 'assets/js/admin-accounts/common.js', 'assets/js/admin-accounts/events.js', 'assets/js/admin-accounts/fiche.js',
   'assets/js/admin-accounts/inspect.js', 'assets/js/admin-accounts/list.js', 'assets/js/admin-accounts/profile.js', 'assets/js/admin-accounts/ss-pairs.js',

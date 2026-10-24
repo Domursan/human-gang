@@ -43,6 +43,7 @@ create table if not exists public.hg_lg_parties (
   t_jour int not null default 180 check (t_jour between 20 and 900),
   t_vote int not null default 60 check (t_vote between 15 and 600),
   annonce_discord boolean not null default false,
+  discord_annonce_at timestamptz,  -- réservation de l'annonce par le bot (une seule par partie)
   composition jsonb not null default '{}'::jsonb,       -- {"loup-garou": 3, ...}
   statut text not null default 'attente' check (statut in ('attente', 'revelation', 'en_cours', 'terminee', 'annulee')),
   phase text,                                           -- revelation, nuit_1, nuit, reveil, debat, vote, chasseur, succession, fin
@@ -265,13 +266,13 @@ insert into public.hg_lg_roles(id, nom, camp, extension, actif, mj_seul, sort) v
 ('ange', 'Ange', 'solo', 'personnages', true, false, 19),
 ('chevalier-epee-rouillee', 'Chevalier à l''épée rouillée', 'village', 'personnages', true, false, 20),
 ('chien-loup', 'Chien-loup', 'village', 'personnages', true, false, 21),
-('comedien', 'Comédien', 'solo', 'personnages', false, true, 22),
+('comedien', 'Comédien', 'solo', 'personnages', true, true, 22),
 ('deux-soeurs', 'Deux sœurs', 'village', 'personnages', true, false, 23),
 ('enfant-sauvage', 'Enfant sauvage', 'village', 'personnages', true, false, 24),
 ('grand-mechant-loup', 'Grand méchant loup', 'loups', 'personnages', true, false, 25),
-('gitane', 'Gitane', 'village', 'personnages', false, true, 26),
+('gitane', 'Gitane', 'village', 'personnages', true, true, 26),
 ('infect-pere-des-loups', 'Infect père des loups', 'loups', 'personnages', true, false, 27),
-('juge-begue', 'Juge bègue', 'village', 'personnages', false, true, 28),
+('juge-begue', 'Juge bègue', 'village', 'personnages', true, true, 28),
 ('montreur-ours', 'Montreur d''ours', 'village', 'personnages', true, false, 29),
 ('renard', 'Renard', 'village', 'personnages', true, false, 30),
 ('servante-devouee', 'Servante dévouée', 'village', 'personnages', false, false, 31),

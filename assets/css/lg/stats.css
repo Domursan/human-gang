@@ -1,0 +1,99 @@
+/* ===== Loup-Garou : mes statistiques (vues/stats.js) =====
+   Classes préfixées lg-st-. Le pseudo et l'avatar viennent de ui.js (couleurs du profil en ligne). */
+
+.lg-st { display: flex; flex-direction: column; gap: 16px; padding: 4px 0 24px; }
+.lg-st [hidden] { display: none !important; }
+.lg-st-aide { margin: 0; font-size: 13px; color: var(--muted); }
+.lg-st-unite { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
+
+/* ---------- Profil ---------- */
+.lg-st-profil { display: flex; align-items: center; gap: 24px; padding: 24px 28px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.lg-st-profil .avatar { border: 3px solid var(--rose); }
+.lg-st-profil-texte { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lg-st-eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.lg-st-pseudo { margin: 0; font-size: 44px; line-height: 1.05; overflow-wrap: anywhere; }
+.lg-st-profil-texte .lg-st-aide { font-size: 15px; }
+
+/* ---------- Tuiles ---------- */
+.lg-st-tuiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.lg-st-tuile { display: flex; flex-direction: column; gap: 6px; padding: 20px 22px; min-width: 0; border-radius: var(--radius);
+  border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.lg-st-tuile-nom { font-size: 14px; color: var(--muted); }
+.lg-st-grand { font-family: var(--font-display); font-weight: 400; font-size: 40px; line-height: 1.1; overflow-wrap: anywhere; }
+.lg-st-sous { font-size: 13px; color: var(--muted); }
+.lg-st-tuile.vert .lg-st-grand, .lg-st-tuile.vert .lg-st-sous { color: var(--sage-text); }
+.lg-st-tuile.or .lg-st-grand { color: var(--sand); }
+
+/* ---------- Colonnes ---------- */
+.lg-st-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.lg-st-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.lg-st-carte { display: flex; flex-direction: column; gap: 16px; padding: 24px 28px; min-width: 0; border-radius: var(--radius);
+  border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.lg-st-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lg-st-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.lg-st-lien { font-size: 14px; font-weight: 700; }
+
+/* ---------- Victoires par camp ---------- */
+.lg-st-camps { display: flex; flex-direction: column; gap: 18px; }
+.lg-st-camp { display: flex; flex-direction: column; gap: 6px; }
+.lg-st-camp-tete { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.lg-st-camp-nom { flex: 1; min-width: 0; font-size: 15px; }
+.lg-st-ico { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.lg-st-barre { height: 10px; border-radius: 999px; background: var(--border-strong); overflow: hidden; }
+.lg-st-barre span { display: block; height: 100%; border-radius: 999px; }
+
+/* ---------- Rôles joués ---------- */
+.lg-st-roles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lg-st-role { display: flex; align-items: center; gap: 14px; padding: 8px 0; min-width: 0; border-bottom: 1px solid var(--border); }
+.lg-st-role:last-child { border-bottom: 0; }
+.lg-st-role-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lg-st-role-texte strong { font-size: 15px; }
+.lg-st-pilule { flex: none; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); font-size: 13px; white-space: nowrap; }
+
+/* ---------- Badges ---------- */
+.lg-st-badges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 16px; }
+.lg-st-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; text-align: center; }
+.lg-st-medaille { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; box-sizing: border-box; overflow: hidden;
+  border: 2px solid var(--sand); background: var(--surface-2); color: var(--sand); }
+.lg-st-medaille img { width: 100%; height: 100%; object-fit: cover; }
+.lg-st-badge-nom { font-size: 15px; overflow-wrap: anywhere; }
+.lg-st-badge-desc { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.lg-st-badge-etat { font-size: 12px; font-weight: 700; color: var(--sand); }
+.lg-st-badge.verrouille .lg-st-medaille { border: 2px dashed var(--border-strong); background: var(--surface); color: var(--muted); }
+.lg-st-badge.verrouille .lg-st-badge-nom { color: var(--muted); }
+.lg-st-badge.verrouille .lg-st-badge-etat { color: var(--muted); font-weight: 400; }
+
+/* ---------- Dernières parties ---------- */
+.lg-st-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lg-st-partie { display: flex; align-items: center; gap: 16px; padding: 10px 0; min-width: 0; border-bottom: 1px solid var(--border); }
+.lg-st-partie:last-child { border-bottom: 0; }
+.lg-st-date { width: 64px; flex: none; font-size: 13px; color: var(--muted); }
+.lg-st-partie-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lg-st-partie-texte strong { font-size: 15px; overflow-wrap: anywhere; }
+.lg-st-resultat { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 700; white-space: nowrap; }
+.lg-st-resultat.ok { background: var(--sage-soft); color: var(--sage-text); }
+.lg-st-resultat.ko { background: color-mix(in srgb, var(--rose) 16%, var(--surface)); color: var(--rose); }
+
+/* ---------- Tablette et téléphone ---------- */
+@media (max-width: 900px) {
+  .lg-st-colonnes { grid-template-columns: minmax(0, 1fr); }
+  .lg-st-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .lg-st { gap: 12px; }
+  .lg-st-profil { gap: 16px; padding: 20px; }
+  .lg-st-profil .avatar { width: 76px !important; height: 76px !important; font-size: 22px; }
+  .lg-st-pseudo { font-size: 34px; }
+  .lg-st-tuiles { gap: 10px; }
+  .lg-st-tuile { padding: 14px 16px; }
+  .lg-st-grand { font-size: 32px; }
+  .lg-st-colonne { gap: 12px; }
+  .lg-st-carte { padding: 20px; }
+  .lg-st-badges { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
+  .lg-st-medaille { width: 64px; height: 64px; }
+  .lg-st-badge-nom { font-size: 14px; }
+  .lg-st-date { width: auto; min-width: 48px; }
+  .lg-st-partie { gap: 12px; }
+}

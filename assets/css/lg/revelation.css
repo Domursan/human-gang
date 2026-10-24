@@ -1,0 +1,66 @@
+/* ===== Loup-Garou : révélation du rôle (vues/revelation.js) =====
+   Ambiance nuit : body[data-lg-ambiance="nuit"] (posée par l'écran). La barre de progression .lg-progres
+   vient de salle.css. Les couleurs de camp arrivent en variables (--lg-camp-bord, --lg-camp-fond) depuis roles.js. */
+
+[data-lg-ambiance="nuit"] .lg-revel { color: var(--text); }
+.lg-revel [hidden] { display: none !important; }
+.lg-revel { min-height: calc(100vh - 160px); display: flex; flex-direction: column; }
+
+.lg-revel-corps { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; align-items: center; justify-items: center; padding: 24px 0 40px; }
+@media (min-width: 900px) {
+  .lg-revel-corps { grid-template-columns: auto minmax(0, 1fr); gap: 64px; justify-items: stretch; padding: 40px 0; }
+}
+
+/* ----- Carte de rôle façon carte à jouer ----- */
+.lg-revel-carte { display: flex; justify-content: center; width: 100%; }
+.lg-carte-role { position: relative; width: min(100%, 360px); min-height: 500px; box-sizing: border-box;
+  border: 2px solid var(--lg-camp-bord, var(--rose)); border-radius: 24px; background: var(--lg-camp-fond, var(--surface));
+  padding: 36px 32px 32px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 18px;
+  text-align: center; box-shadow: 0 24px 48px rgba(0, 0, 0, .45); }
+.lg-carte-camp { display: inline-flex; }
+.lg-carte-vignette { display: flex; justify-content: center; }
+.lg-carte-texte { display: flex; flex-direction: column; gap: 10px; }
+.lg-carte-nom { margin: 0; font-size: 36px; line-height: 1.1; color: var(--text); overflow-wrap: anywhere; }
+.lg-carte-desc { margin: 0; max-width: 300px; font-size: 16px; line-height: 1.5; color: var(--text); }
+.lg-carte-gagner { margin: 0; width: 100%; padding-top: 16px; font-size: 14px; color: var(--text);
+  border-top: 1px solid color-mix(in srgb, var(--lg-camp-bord, var(--rose)) 35%, transparent); }
+
+/* ----- Colonne de texte ----- */
+.lg-revel-texte { width: min(100%, 420px); display: flex; flex-direction: column; gap: 20px; }
+.lg-revel-titre { margin: 10px 0 0; font-size: clamp(40px, 7vw, 56px); line-height: 1; }
+
+.lg-allies-bloc { display: flex; flex-direction: column; gap: 10px; }
+.lg-allies-bloc h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.lg-allies-bloc p { margin: 4px 0 0; }
+.lg-allies { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.lg-allie { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lg-allie-infos { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+
+.lg-rappel { margin: 0; display: flex; align-items: flex-start; gap: 12px; padding-top: 18px; font-size: 14px; line-height: 1.5;
+  border-top: 1px solid color-mix(in srgb, var(--rose) 35%, transparent); }
+.lg-rappel-ico { flex: none; display: inline-flex; padding-top: 1px; color: var(--rose); }
+
+/* ----- Pied : progression, minuteur, actions ----- */
+.lg-revel-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px;
+  padding: 20px 24px; border-top: 1px solid var(--hist-border, #252C3D); background: #12151F; }
+.lg-revel-progres { flex: 1 1 260px; max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.lg-revel-progres p { margin: 0; }
+.lg-revel-minuteur { margin: 0; }
+.lg-chrono { font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 1px; color: var(--sand); }
+.lg-revel-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.lg-revel-actions .btn { min-height: 48px; }
+.lg-revel-attente { margin: 0; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; color: var(--sand); }
+.lg-revel-attente:focus-visible { outline: 2px solid var(--sand); outline-offset: 4px; border-radius: 6px; }
+
+/* ----- Téléphone ----- */
+@media (max-width: 600px) {
+  .lg-revel { min-height: 0; }
+  .lg-carte-role { min-height: 0; padding: 24px 20px 20px; gap: 14px; }
+  .lg-carte-nom { font-size: 30px; }
+  .lg-carte-desc { font-size: 15px; }
+  .lg-revel-pied { padding: 18px 16px; }
+  .lg-revel-progres { flex-basis: 100%; max-width: none; }
+  .lg-revel-actions { width: 100%; flex-direction: column; align-items: stretch; }
+  .lg-revel-actions .btn { width: 100%; }
+  .lg-revel-attente { justify-content: center; }
+}

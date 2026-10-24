@@ -42,6 +42,7 @@ export const CHANNEL_LABEL: Record<MentionType, string> = {
   card_drop: 'Drops de cartes',
   quiz: 'Question du jour',
   cine: 'Ciné-club',
+  loup_garou: 'Loup-Garou',
 };
 
 /**

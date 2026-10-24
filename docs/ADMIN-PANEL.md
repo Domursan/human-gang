@@ -40,7 +40,7 @@ Entre crochets : la permission requise (voir section 2). Les sous-sections sans 
 | **IRL** | Membres IRL [membres] · Sorties IRL [evenements] · Souvenirs et photos [souvenirs] · Secret Santa [secret_santa] |
 | **Event** | Événements à thème [themes] · Calendrier et cinéma [evenements] · Calendrier de l'Avent, Saison des Worlds, Anniversaire du gang [themes] |
 | **Le jeu de cartes** | Gestion globale [cartes] · **Catalogue** : Séries, Cartes, Boosters [cartes] · **Économie** : Paillettes et dons, Tirage, Recyclage et fabrication, Limites [cartes] · **Animation** : Quêtes, Défis du gang, Drops, Cagnotte et bulletin, Cartes Champions, Codes cadeaux, Atelier (recettes), Enchères [cartes] · **Suivi** : Joueurs, Échanges, Statistiques [cartes] · Arène [cartes] |
-| **Autres jeux** | Questions du gang [quiz] · Sutom du gang [souvenirs] · GeoGuessr [souvenirs] · Citations « Qui a dit ça ? » [quiz] · Preuves de quêtes [preuves] · Framed et Heardle [souvenirs] · Arcade (pages 404) [reglages] · Secrets [reglages] · Mes jeux [mj] |
+| **Autres jeux** | Questions du gang [quiz] · Sutom du gang [souvenirs] · GeoGuessr [souvenirs] · Citations « Qui a dit ça ? » [quiz] · Preuves de quêtes [preuves] · Framed et Heardle [souvenirs] · Arcade (pages 404) [reglages] · Secrets [reglages] · Mes jeux [mj] · Loup-Garou (administrateur seulement : Paillettes, badges, parties) |
 
 Les sous-sections d'un même groupe se suivent. Plusieurs sous-sections peuvent monter la même section (« parties » :
 onglets des cartes, parties de l'Économie, des Réglages, des Badges, de l'Accès aux pages). Les identifiants de

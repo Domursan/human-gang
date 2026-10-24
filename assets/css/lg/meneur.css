@@ -1,0 +1,104 @@
+/* ===== Loup-Garou · écran du meneur (vues/meneur.js) =====
+   Classes préfixées lg-mj-. Les couleurs de camp viennent de CAMPS (roles.js) ; l'ambiance nuit / jour
+   reprend les teintes du décor. Ordinateur : deux colonnes ; téléphone : une colonne, cartes en liste. */
+
+.lg-mj { display: flex; flex-direction: column; gap: 16px; padding-bottom: 24px; }
+.lg-mj [hidden] { display: none !important; }
+
+/* ---------- Bandeau d'avertissement ---------- */
+.lg-mj-bandeau { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--surface)); color: var(--text); font-size: 15px; }
+.lg-mj-bandeau p { margin: 0; }
+.lg-mj-bandeau .lg-ico { color: var(--amber); margin-top: 2px; }
+
+/* ---------- Barre de contrôle de l'étape ---------- */
+.lg-mj-controle { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; padding: 20px 24px;
+  border-radius: var(--radius); border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 85%, transparent); }
+[data-lg-ambiance="nuit"] .lg-mj-controle { background: rgba(18, 21, 31, .82); border-color: #252C3D; }
+[data-lg-ambiance="jour"] .lg-mj-controle { background: rgba(30, 27, 20, .82); border-color: #3A3424; }
+.lg-mj-etape { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lg-mj-titre { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(22px, 3vw, 28px); line-height: 1.1; }
+.lg-mj-explication { margin: 0; font-size: 15px; color: var(--muted); }
+.lg-mj-commandes { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.lg-mj-minuteur { font-family: 'Courier New', monospace; font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: 2px;
+  min-width: 5.5ch; text-align: center; padding: 4px 16px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--sand); font-variant-numeric: tabular-nums; }
+.lg-mj-minuteur.en-pause { font-family: var(--font-body); font-size: 18px; letter-spacing: 0; color: var(--amber); }
+.lg-mj-boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-mj-boutons .btn { border-radius: 999px; }
+
+/* ---------- Mise en page ---------- */
+.lg-mj-corps { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 960px) { .lg-mj-corps { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); } }
+.lg-mj-colonne { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.lg-mj-bloc { display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 22px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.lg-mj-bloc h2 { margin: 0; font-size: 18px; font-weight: 700; font-family: var(--font-body); }
+.lg-mj-entete { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 12px; }
+.lg-mj-sous-titre { margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lg-mj-label { font-size: 14px; color: var(--muted); }
+
+/* ---------- Joueurs : cartes (ordinateur) ---------- */
+.lg-mj-joueurs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.lg-mj-carte { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 14px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.lg-mj-carte.lg-mj-mort { opacity: .78; }
+.lg-mj-carte.lg-mj-mort .lg-mj-carte-tete { filter: grayscale(.7); }
+.lg-mj-carte-tete { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.lg-mj-carte-nom { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.lg-mj-carte-nom .small { font-size: 12px; }
+.lg-mj-role { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; min-width: 0; }
+.lg-mj-etiquettes { display: flex; flex-wrap: wrap; gap: 6px; }
+.lg-etiquette.lg-mj-vivant { background: var(--sand); border-color: var(--sand); color: #121212; font-weight: 700; }
+.lg-mj-carte-pied { display: flex; }
+.lg-mj-action { width: 100%; min-height: 44px; font-size: 14px; font-weight: 500; padding: 10px 14px; }
+
+/* ---------- Listes : qui doit agir, votes, journal ---------- */
+.lg-mj-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.lg-mj-liste li { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: var(--radius-sm);
+  background: var(--surface-2); overflow-wrap: anywhere; }
+.lg-mj-liste li.lg-mj-attendu { border-left: 3px solid var(--sand); }
+.lg-mj-liste li.lg-mj-fait { flex-direction: row; align-items: flex-start; gap: 10px; color: var(--muted); }
+.lg-mj-liste li.lg-mj-fait .lg-ico { color: var(--sage); margin-top: 3px; }
+.lg-mj-liste li.lg-mj-cible { flex-direction: row; justify-content: space-between; align-items: center; gap: 12px; }
+.lg-mj-liste li.lg-mj-vide { background: transparent; border: 1px dashed var(--border-strong); color: var(--muted); font-style: italic; }
+.lg-mj-cible-voix { flex: none; padding: 2px 10px; border-radius: 999px; background: var(--sand); color: #121212; font-size: 13px; font-weight: 700; }
+.lg-mj-vide { color: var(--muted); font-size: 14px; font-style: italic; }
+
+/* ---------- Révélation : qui a vu son rôle ---------- */
+.lg-mj-vus { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.lg-mj-vus li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; min-width: 0;
+  padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-2); }
+
+/* ---------- Message au village ---------- */
+.lg-mj-message { display: flex; flex-direction: column; gap: 8px; }
+.lg-mj-message-ligne { display: flex; gap: 8px; }
+.lg-mj-message-ligne .input { flex: 1; min-width: 0; }
+.lg-mj-message-ligne .btn { flex: none; }
+
+/* ---------- Journal ---------- */
+.lg-mj-journal { list-style: none; margin: 0; padding: 0 6px 0 0; max-height: 340px; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 8px; font-size: 13px; color: var(--muted); }
+.lg-mj-journal-ligne { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.lg-mj-journal-ligne time { flex: none; font-family: 'Courier New', monospace; color: var(--text); }
+.lg-mj-journal-ligne > span:last-child { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+.lg-mj-journal li.lg-mj-vide { list-style: none; }
+
+/* ---------- Téléphone : une colonne, cartes en liste ---------- */
+@media (max-width: 600px) {
+  .lg-mj { gap: 12px; }
+  .lg-mj-bandeau { padding: 12px 14px; font-size: 14px; }
+  .lg-mj-controle { padding: 16px; }
+  .lg-mj-commandes { width: 100%; justify-content: space-between; }
+  .lg-mj-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); width: 100%; }
+  .lg-mj-boutons .btn-primary { grid-column: span 2; }
+  .lg-mj-bloc { padding: 16px; }
+  .lg-mj-joueurs { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .lg-mj-carte { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 12px; padding: 12px; }
+  .lg-mj-carte-tete { grid-column: 1; grid-row: 1; }
+  .lg-mj-role { grid-column: 1; grid-row: 2; }
+  .lg-mj-etiquettes { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: flex-end; flex-wrap: nowrap; }
+  .lg-mj-carte-pied { grid-column: 1 / -1; }
+  .lg-mj-vus { grid-template-columns: minmax(0, 1fr); }
+  .lg-mj-journal { max-height: 260px; }
+}

@@ -1,0 +1,62 @@
+/* ===== Humane Gang — administration : Loup-Garou (La Fête foraine › Jeux › Loup-Garou) =====
+   Styles de assets/js/admin-loup-garou.js. Préfixe lga-. Les cartes et boutons viennent de admin.css / base.css. */
+
+.lga { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.lga-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.lga-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.lga-pleine { width: 100%; box-sizing: border-box; }
+.lga-colonnes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.lga-pile { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.lga-note { margin: 0; font-size: 14px; color: var(--muted); }
+.lga-aide { font-size: 13px; color: var(--muted); }
+
+/* Paillettes */
+.lga-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.lga-table th, .lga-table td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.lga-table thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
+.lga-table tbody th { font-weight: 400; }
+.lga-table td { width: 160px; }
+.lga-input {
+  min-height: 44px; box-sizing: border-box; width: 100%; padding: 0 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font: inherit; font-size: 15px;
+}
+.lga-input-num { font-weight: 700; }
+.lga-input[aria-invalid="true"] { border-color: var(--rose); }
+.lga-table .lga-input { width: 120px; }
+.lga-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.lga-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lga-champ label { font-size: 14px; color: var(--muted); }
+.lga-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.lga-statut { font-size: 14px; color: var(--muted); }
+.lga-statut.lga-ok { color: var(--sage); }
+.lga-statut.lga-erreur { color: var(--rose); }
+
+/* Badges */
+.lga-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lga-badge { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.lga-medaille {
+  position: relative; width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--sand); color: #121212; display: grid; place-items: center; overflow: hidden;
+}
+.lga-medaille img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.lga-badge-texte { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.lga-badge-texte strong { font-size: 15px; font-weight: 700; }
+.lga-badge-nb { white-space: nowrap; color: var(--muted); }
+
+/* Parties */
+.lga-chiffres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.lga-chiffres div { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 12px; background: var(--surface-2); }
+.lga-chiffres dt { font-size: 13px; color: var(--muted); }
+.lga-chiffres dd { margin: 0; font-size: 28px; font-weight: 700; }
+.lga-card .btn { align-self: flex-start; }
+
+@media (min-width: 900px) {
+  .lga-colonnes { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .lga-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .lga-table td { width: 120px; }
+  .lga-table .lga-input { width: 100%; }
+  .lga-actions .btn { width: 100%; }
+}

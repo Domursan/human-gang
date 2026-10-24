@@ -1,0 +1,109 @@
+/* ===== Loup-Garou : écran d'accueil (vues/accueil.js) =====
+   Classes préfixées lg-acc-. Le héros reprend la lune en éclipse de loup-garou.css (.lg-lune, --lg-lune).
+   Sur téléphone, la lune est repositionnée avec !important : son style inline (260 px) gagne sinon sur la feuille. */
+
+.lg-acc { display: flex; flex-direction: column; gap: 24px; padding-top: 8px; }
+.lg-acc [hidden] { display: none !important; }
+
+/* ---------- Héros ---------- */
+.lg-acc-hero { position: relative; overflow: hidden; display: flex; justify-content: space-between; align-items: center; gap: 32px;
+  padding: 56px 56px 48px; border-radius: var(--radius); border: 1px solid #252C3D; background: rgba(18, 21, 31, .5); }
+.lg-acc-hero-texte { position: relative; display: flex; flex-direction: column; gap: 14px; max-width: 620px; min-width: 0; }
+.lg-acc-titre { margin: 0; font-size: 64px; line-height: 1; letter-spacing: .5px; }
+.lg-acc-intro { margin: 0; color: var(--muted); font-size: 18px; }
+.lg-acc-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.lg-btn-grand { min-height: 52px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 999px; font-weight: 700; box-sizing: border-box; }
+.lg-acc-hero .lg-lune { flex: none; }
+
+/* ---------- Grille : deux colonnes sur ordinateur ---------- */
+.lg-acc-grille { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.lg-acc-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+/* ---------- Cartes ---------- */
+.lg-acc-carte { display: flex; flex-direction: column; gap: 16px; padding: 28px; min-width: 0; border-radius: var(--radius);
+  border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.lg-acc-carte-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.lg-acc-titre-carte { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; }
+.lg-acc-sous { font-size: 14px; color: var(--muted); }
+.lg-acc-aide { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* ---------- Rejoindre avec un code ---------- */
+.lg-acc-rejoindre { display: flex; gap: 10px; margin: 0; }
+.lg-acc-code { flex: 1; min-width: 0; min-height: 52px; box-sizing: border-box; padding: 0 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font-family: 'Courier New', monospace;
+  font-size: 20px; letter-spacing: 3px; text-transform: uppercase; }
+.lg-acc-code::placeholder { color: var(--muted); text-transform: none; }
+.lg-acc-code[aria-invalid="true"] { border-color: var(--rose); }
+.lg-acc-erreur { margin: 0; color: var(--rose); font-size: 14px; font-weight: 700; }
+
+/* ---------- Listes (parties en cours, publiques) ---------- */
+.lg-acc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lg-acc-ligne { display: flex; align-items: center; gap: 14px; padding: 14px 0; min-width: 0; border-bottom: 1px solid var(--border); }
+.lg-acc-liste > li:last-child { border-bottom: 0; }
+.lg-acc-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lg-acc-ligne-texte strong { font-weight: 700; overflow-wrap: anywhere; }
+.lg-acc-puce { width: 44px; height: 44px; border-radius: var(--radius-sm); display: grid; place-items: center; flex: none;
+  background: color-mix(in srgb, #7E93C9 18%, var(--surface-2)); color: #7E93C9; }
+.lg-acc-nb { flex: none; padding: 4px 12px; border-radius: 999px; background: var(--surface-2); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.lg-acc-bouton { flex: none; min-height: 44px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 18px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+.lg-acc-vide { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 8px; text-align: center; color: var(--muted); }
+.lg-acc-vide p { margin: 0; }
+
+/* ---------- Statistiques résumées ---------- */
+.lg-acc-tuiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lg-acc-tuile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 8px; min-width: 0; border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--text); font-size: 12px; text-align: center; }
+.lg-acc-tuile.vert { background: var(--sage-soft); }
+.lg-acc-tuile.rose { background: color-mix(in srgb, var(--rose) 14%, var(--surface-2)); }
+.lg-acc-tuile-nom { color: var(--muted); }
+.lg-acc-tuile.vert .lg-acc-tuile-nom { color: var(--sage-text); }
+.lg-acc-tuile.rose .lg-acc-tuile-nom { color: var(--rose); }
+.lg-acc-tuile.vert .lg-acc-chiffre { color: var(--sage-text); }
+.lg-acc-tuile.rose .lg-acc-chiffre { color: var(--rose); }
+.lg-acc-chiffre { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.lg-acc-lignes { margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.lg-acc-ligne-stat { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.lg-acc-ligne-stat dt { color: var(--muted); }
+.lg-acc-ligne-stat dd { margin: 0; font-weight: 700; text-align: right; }
+.lg-acc-or { color: var(--sand); }
+.lg-acc-lien { font-size: 14px; font-weight: 700; }
+
+/* ---------- Camps ---------- */
+.lg-acc-liste-camps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.lg-acc-camp { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lg-acc-camp-ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.lg-acc-camp-texte { display: flex; flex-direction: column; min-width: 0; }
+.lg-acc-camp-texte strong { font-size: 15px; }
+
+/* ---------- Téléphone : une colonne, lune en coin ---------- */
+@media (max-width: 900px) {
+  .lg-acc-grille { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  .lg-acc-titre { font-size: 52px; }
+  .lg-acc-hero .lg-lune { width: 180px !important; height: 180px !important; --lg-lune: 190px !important; }
+}
+@media (max-width: 700px) {
+  .lg-acc { gap: 14px; padding-top: 4px; }
+  .lg-acc-hero { display: block; padding: 24px 20px; }
+  .lg-acc-hero-texte { max-width: none; }
+  .lg-acc-titre { font-size: 40px; line-height: 1.05; letter-spacing: .3px; }
+  .lg-acc-intro { font-size: 15px; }
+  .lg-acc-hero .lg-lune { position: absolute !important; top: 18px; right: 18px; width: 76px !important; height: 76px !important; --lg-lune: 88px !important; }
+  .lg-acc-actions { flex-direction: column; }
+  .lg-acc-actions .lg-btn-grand { width: 100%; }
+  .lg-acc-carte { padding: 20px; }
+  .lg-acc-colonne { gap: 14px; }
+  .lg-acc-grille { gap: 14px; }
+  .lg-acc-rejoindre { flex-direction: column; }
+  .lg-acc-rejoindre .lg-btn-grand { width: 100%; }
+  .lg-acc-code { font-size: 20px; }
+  /* Sur téléphone, le bouton passe sous le texte pour laisser la place au nom de la partie. */
+  .lg-acc-ligne { flex-wrap: wrap; }
+  .lg-acc-ligne .lg-acc-bouton { flex: 1 0 100%; }
+  .lg-acc-tuiles { gap: 8px; }
+  .lg-acc-tuile { padding: 10px 6px; }
+  .lg-acc-chiffre { font-size: 24px; }
+}

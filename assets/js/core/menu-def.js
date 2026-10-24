@@ -36,6 +36,8 @@ export const MENUS = [
       { label: 'Raclette', href: 'jeux.html#arcade-raclette', page: 'jeux' },
       { label: 'Domu-mobile', href: 'jeux.html#arcade-domu', page: 'jeux' },
     ] },
+    { sep: true },
+    { label: 'Loup-Garou', href: 'loup-garou.html', page: 'loup-garou', strict: true },
   ] },
   { id: 'calendrier', label: 'Calendrier', href: 'calendrier.html', page: 'calendrier' },
   { id: 'autres', label: 'Autres', auto: true },

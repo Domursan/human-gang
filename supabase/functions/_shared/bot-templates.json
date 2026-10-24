@@ -99,6 +99,10 @@
     "quiz_daily": {
       "title": "Question du jour · {categorie}",
       "body": "{rappel}\n\n**{question}**\n\n{series}"
+    },
+    "lg_party_announce": {
+      "title": "Une partie de Loup-Garou se prépare !",
+      "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
     }
   },
   "meta": {
@@ -339,6 +343,18 @@
         "rappel": { "label": "Rappel de la veille (vide le premier jour)", "example": "Hier : 9 bonnes réponses sur 12 · Réponse : « le livre est mieux »" },
         "series": { "label": "Plus longues séries (le vendredi seulement)", "example": "Plus longues séries en cours : Mycethyst 21 j · Izin 14 j · Terrow 9 j" },
         "lien": { "label": "Lien vers la question du jour", "example": "https://humane-gang.example/jeux.html#jour" }
+      }
+    },
+    "lg_party_announce": {
+      "group": "jeux", "label": "Partie de Loup-Garou", "target": "Salon d'annonces", "color": "#7E93C9",
+      "description": "Publié quand un membre crée une partie de Loup-Garou avec l'option « Annoncer sur le Discord du gang ». Une seule annonce par partie. Désactivable dans Bot Discord, activé par défaut.",
+      "fields": [["Code", "{code}"], ["Joueurs", "{places}"]],
+      "vars": {
+        "hote": { "label": "Pseudo de l'hôte", "example": "Domursan" },
+        "nom": { "label": "Nom de la partie", "example": "Soirée du dimanche" },
+        "code": { "label": "Code de la partie", "example": "HGLG-4821" },
+        "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/loup-garou.html?code=HGLG-4821" }
       }
     }
   }

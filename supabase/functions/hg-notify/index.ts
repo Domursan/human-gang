@@ -51,6 +51,9 @@
 //                    salon (carte, rareté, brillance, exemplaires, heure de fin, image si https). Drop créé il y a moins de
 //                    15 min et encore en cours ; une seule annonce par drop (réservation discord_announced_at, migration 064).
 //                    Désactivable (bot.notify.card_drop, activé par défaut).
+//   lg_party         { code: 'HGLG-####' } hôte d'une partie de Loup-Garou créée avec annonce_discord → annonce dans le salon
+//                    (bot.channels.loup_garou) : hôte, nom, places, code, lien d'invitation. Partie en attente créée il y a moins
+//                    de 15 min ; une seule annonce (réservation hg_lg_parties.discord_annonce_at). Désactivable (bot.notify.lg_party).
 // Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade, card_drop) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
 // Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade, card_drop) : bot.channels.<type> (liste de salons),
@@ -104,7 +107,7 @@ type Bot = MentionBot & {
   channels?: Partial<Record<MentionType, string | string[] | null>> | null;
   salons?: { id: string; nom: string }[] | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop' | 'lg_party', boolean>>;
 };
 /** Profil de l'appelant ou d'un destinataire, tel que lu par la fonction. */
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
@@ -1063,6 +1066,58 @@ async function onCardDrop(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   return { channel, channels };
 }
 
+/* Loup-Garou : partie créée avec l'option « Annoncer sur le Discord du gang » (hg_lg_creer, annonce_discord). */
+/**
+ * Annonce d'une partie de Loup-Garou dans le salon : hôte, nom, places, code et lien d'invitation.
+ * Seul l'hôte peut la demander, pour une partie encore en attente, créée il y a moins de 15 min. Une seule annonce par partie.
+ * @param {Profile} me Appelant (l'hôte).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (code).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403, 404.
+ */
+async function onLgParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  const code = String(p.code ?? '');
+  if (!/^HGLG-[0-9]{4}$/.test(code)) throw new HttpError(400, 'code manquant');
+  if (bot.notify?.lg_party === false) return { skipped: 'désactivé' };
+  const lgChannels = channelsFor(bot, 'loup_garou');
+  if (!lgChannels.length) return { skipped: 'aucun salon configuré' };
+  const { data: g } = await db.from('hg_lg_parties').select('id, code, nom, hote, statut, nb_joueurs, annonce_discord, discord_annonce_at, created_at')
+    .eq('code', code).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!g) throw new HttpError(404, 'Partie introuvable');
+  if (g.hote !== me.id) throw new HttpError(403, 'Seul l\'hôte peut annoncer sa partie');
+  if (!g.annonce_discord) return { skipped: 'annonce non demandée' };
+  if (g.statut !== 'attente') return { skipped: 'partie déjà lancée' };
+  if (!recent(g.created_at)) return { skipped: 'partie déjà ancienne' };
+  if (g.discord_annonce_at) return { skipped: 'déjà annoncée' };
+
+  // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
+  const { data: claimed, error: claimErr } = await db.from('hg_lg_parties').update({ discord_annonce_at: new Date().toISOString() })
+    .eq('id', g.id).is('discord_annonce_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà annoncée' };
+
+  const { count } = await db.from('hg_lg_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
+  const n = count ?? 0;
+  const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_joueurs}`;
+  const lien = link(`loup-garou.html?code=${g.code}`) ?? '';
+  const rendered = renderTemplate('lg_party_announce', { hote: me.pseudo, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien }, tpl);
+  const annonce = {
+    ...mentionFor(bot, 'loup_garou'),
+    ...embed({
+      ...embedFrom(rendered), url: lien || undefined, color: COLOR.info,
+      fields: [{ name: 'Code', value: g.code, inline: true }, { name: 'Joueurs', value: places, inline: true }],
+    }),
+  };
+  const channels = await sendToChannels(lgChannels, (id) => sendChannel(id, annonce), 'annonce Loup-Garou', friendlyDiscordError);
+  await logAnnounce(me, 'auto:loup-garou', `Annonce de partie : ${g.code}`, channels, true);
+  const channel = channels.some((c) => c.ok);
+  // Aucun salon n'a reçu l'annonce : on libère la réservation pour qu'un nouvel appel puisse réessayer.
+  if (!channel) await db.from('hg_lg_parties').update({ discord_annonce_at: null }).eq('id', g.id);
+  return { channel, channels };
+}
+
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
 /** Nombre maximal de cartes distinctes traitées par appel (une ouverture de booster). */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
@@ -1187,6 +1242,7 @@ Deno.serve(async (req) => {
       case 'card_wish': result = await onCardWish(me, bot, payload, tpl); break;
       case 'card_gift_admin': result = await onCardGiftAdmin(me, bot, payload, tpl); break;
       case 'card_drop': result = await onCardDrop(me, bot, payload, tpl); break;
+      case 'lg_party': result = await onLgParty(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });
