@@ -82,3 +82,9 @@
 .ar-adm-liste { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
 .ar-adm-rk { font-weight: 700; }
 .ar-adm-saison .btn, .ar-adm-g .input { min-height: 44px; }
+/* Banque de mots du Sutom : recherche, filtres, liste */
+.ads-outils { display: grid; gap: 8px; }
+.ads-filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+.ads-mot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: flex-start; }
+.ads-mot > div:first-child { flex: 1 1 16rem; min-width: 0; }
+.ads-mot .btn-row { margin: 0; }
