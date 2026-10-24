@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=1123">
+<title>Les jeux du gang</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap">
+<link rel="stylesheet" href="affiche.css">
+<style>
+  /* Les jeux : une ligne par jeu. Aucun chiffre écrit en dur : les gains se lisent sur la page Jeux. */
+  .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; }
+  .col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .sec-h { font-size: 40px; margin-bottom: 12px; }
+  .sec-h .num { font-size: 22px; }
+  .liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .jeu { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px 16px 12px 12px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; }
+  .jeu .ico { width: 54px; height: 54px; display: grid; place-items: center; font-size: 30px; line-height: 1; background: var(--surface-2); border-radius: 10px; }
+  .jeu h3 { margin: 0 0 2px; font-family: var(--display); font-weight: 400; font-size: 25px; line-height: 1.05; text-transform: uppercase; color: #fff; }
+  .jeu p { margin: 0; color: var(--muted); line-height: 1.3; }
+  .jeu.arc { border-color: var(--gold); }
+  .box { padding: 16px 20px; background: var(--surface-2); border: 2px solid var(--framboise); border-radius: 16px; }
+  .box h3 { margin: 0 0 8px; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.05; text-transform: uppercase; color: var(--gold); }
+  .box ul { margin: 0; padding-left: 22px; color: var(--muted); line-height: 1.38; }
+  .box li + li { margin-top: 6px; }
+  .box b { color: var(--text); }
+  .note { margin: 0; color: var(--muted); line-height: 1.4; }
+  .note b { color: var(--text); }
+</style>
+</head>
+<body>
+<main class="affiche" data-affiche="jeux">
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <header class="mast">
+    <img class="logo" src="../assets/img/logo-512.webp" alt="Logo Humane Gang">
+    <div>
+      <p class="kicker">Humane Gang · Page Jeux</p>
+      <h1>Les jeux<span class="soft">des missions chaque jour, des jeux à toute heure</span></h1>
+      <p class="lede">Chaque jeu rapporte des Paillettes. Tout se trouve dans le menu <b>Jeux</b>.</p>
+    </div>
+  </header>
+
+  <div class="corps">
+    <div class="cols">
+
+      <div class="col">
+        <section>
+          <h2 class="sec-h"><span class="num">01</span>Les jeux du gang<span class="line"></span></h2>
+          <ul class="liste">
+            <li class="jeu"><span class="ico" aria-hidden="true">📅</span><div><h3>Les missions du jour</h3><p>Le programme du jour : chaque jeu, son état et les Paillettes gagnées.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">🌍</span><div><h3>GeoGuessr</h3><p>Une photo d’une sortie passée. Pose l’épingle sur la carte. Une manche par jour.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">💬</span><div><h3>Qui a dit ça ?</h3><p>Une citation du Discord, quatre membres : touche le bon.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">❓</span><div><h3>Question du jour</h3><p>Une question par jour. La série débloque des paliers.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">🔠</span><div><h3>Sutom HG</h3><p>Le mot du gang, lettre par lettre, en 6 essais.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">🎬</span><div><h3>Framed</h3><p>Le film du ciné-club : les images se dévoilent, 6 essais.</p></div></li>
+            <li class="jeu"><span class="ico" aria-hidden="true">🎵</span><div><h3>Heardle</h3><p>Le morceau du gang à partir d’un extrait, 6 essais.</p></div></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="col">
+        <section>
+          <h2 class="sec-h"><span class="num">02</span>L’arcade<span class="line"></span></h2>
+          <ul class="liste">
+            <li class="jeu arc"><span class="ico" aria-hidden="true">✦</span><div><h3>Paillettes</h3><p>Attrape les paillettes qui tombent, pendant 30 s.</p></div></li>
+            <li class="jeu arc"><span class="ico" aria-hidden="true">🧀</span><div><h3>Raclette</h3><p>Attrape les tranches de fromage, évite les cornichons. 30 s.</p></div></li>
+            <li class="jeu arc"><span class="ico" aria-hidden="true">🚗</span><div><h3>Domu-mobile</h3><p>Change de voie, attrape les jerricans. Fin au premier accrochage.</p></div></li>
+          </ul>
+          <p class="note" style="margin-top:10px">Une partie par jour, au choix parmi les trois.</p>
+        </section>
+
+        <section>
+          <div class="box">
+            <h3>Gagner des Paillettes en jouant</h3>
+            <ul>
+              <li>Chaque jeu rapporte des Paillettes, affichées à côté du jeu.</li>
+              <li>Framed et Heardle : trouver à la première image ou au premier extrait rapporte davantage.</li>
+              <li>GeoGuessr : plus on est près du bon lieu, plus on gagne.</li>
+              <li>Une question du jour répondue chaque jour fait grossir la série.</li>
+              <li>Sur une page introuvable (404), l’Arcade : une partie récompensée par jour.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="pied">
+    <span>✦ Humane Gang</span>
+    <span>Le jeu des missions</span>
+  </footer>
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</main>
+</body>
+</html>

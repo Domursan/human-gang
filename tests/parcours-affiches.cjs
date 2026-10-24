@@ -1,5 +1,5 @@
 // Parcours : affiches A3 et tutos lisent les réglages du site (prix, critères, quêtes).
-// Une valeur changée dans les réglages (par exemple le prix d'un booster à 250) doit apparaître sur l'affiche
+// Le prix du booster Classique se lit sur son type (hg_booster_types, scénario typeOverrides) ; une valeur changée (par exemple 250) doit apparaître sur l'affiche
 // des boosters et dans le tuto « Ouvrir un booster ». Sans lecture des réglages, le texte d'origine reste (repli).
 // Affiches : affiches/boosters-a3.html, affiches/badges-a3.html, affiches/paillettes-a3.html (script affiches/affiches.js).
 // Tutos : aide.html#ouvrir-un-booster (assets/js/aide.js, assets/js/reglages-jetons.js).
@@ -15,7 +15,7 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
   const browser = await chromium.launch();
   try {
     // 1. Affiche des boosters, prix du booster à 250 : tous les prix et le lot de 5 (250 × 5) suivent le réglage.
-    let page = await openPage(browser, { page: 'affiches/boosters-a3', fixture: FIXTURE, scenario: { cardsCfg: { booster_price: 250 } }, width: 1123 });
+    let page = await openPage(browser, { page: 'affiches/boosters-a3', fixture: FIXTURE, scenario: { cardsCfg: { booster_price: 250 }, typeOverrides: { classique: { price: 250 } } }, width: 1123 });
     const prix = await page.evaluate(() => [...document.querySelectorAll('[data-cfg="cartes.booster_price"]')].map((e) => e.textContent));
     check(prix.length >= 1 && prix.every((t) => t === '250'), `affiche boosters : prix du booster affiché 250 (${prix.join(', ') || 'aucun élément'})`);
     const lot = await page.evaluate(() => document.querySelector('[data-expr="cartes.booster_price*5"]')?.textContent ?? '');
@@ -98,46 +98,70 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     check(sup.includes('(1 caractère minimum)'), 'tuto assistance : minimum de caractères lu dans les réglages');
     check(sup.includes('« Compte » ou « Autre »'), 'tuto assistance : sujets lus dans les réglages');
     await page.ctx.close();
-    // 8. Affiche des 12 secrets : récompenses lues sur hg_settings.eggs (recompenses), repli écrit si absent.
+    // 8. Affiche des 18 secrets : récompenses lues sur hg_settings.eggs (recompenses), repli écrit si absent.
     page = await openPage(browser, { page: 'affiches/secrets-a3', fixture: FIXTURE, width: 1123 });
     const repliEggs = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '');
     check(repliEggs === '100', `affiche secrets, réglage eggs absent : repli 100 conservé (« ${repliEggs} »)`);
     const texteSecrets = await page.evaluate(() => document.body.textContent);
-    check(texteSecrets.includes('Les 12 secrets') && texteSecrets.includes('Chasseur de secrets'), 'affiche secrets : titre et récompense « Chasseur de secrets » présents');
+    check(texteSecrets.includes('Les 18 secrets') && texteSecrets.includes('Chasseur de secrets'), 'affiche secrets : titre et récompense « Chasseur de secrets » présents');
+    check(['tzatzikistan', 'kc', 'serge', 'domu', 'Pentakill', 'Le livre est mieux', 'Cueilleur', 'Mycena'].every((m) => texteSecrets.includes(m)), 'affiche secrets : nouveaux secrets et succès (mots tapés, Pentakill, cueilleur) présents');
     check(!texteSecrets.includes('{{'), 'affiche secrets : aucun jeton {{ non remplacé');
     check(page.errs.length === 0, `affiche secrets : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
-    const recompenses = { konami: 250, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 300, secousse: 0, nuit: 30, rembobine: 25 };
+    const recompenses = { konami: 250, logo: 50, humane: 25, jeu404: 5, heure_gang: 13, anniversaire: 100, console: 50, lettres: 300, secousse: 0, nuit: 30, rembobine: 25, tzatziki: 25, kc: 10, serge: 25, domumobile: 15, champi: 20, livre: 10, creeper: 1 };
     page = await openPage(browser, { page: 'affiches/secrets-a3', fixture: FIXTURE, scenario: { settingsExtra: { eggs: { recompenses } } }, width: 1123 });
     const eggsKonami = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '');
     check(eggsKonami === '250', `affiche secrets : récompense du code Konami suit le réglage (${eggsKonami})`);
     const eggsLettres = await page.evaluate(() => document.querySelector('[data-cfg="eggs.recompenses.lettres"]')?.textContent ?? '');
     check(eggsLettres === '300', `affiche secrets : récompense des 7 lettres suit le réglage (${eggsLettres})`);
     const total = await page.evaluate(() => document.querySelector('[data-expr^="eggs.recompenses.konami"]')?.textContent ?? '');
-    // 250 + 50 + 25 + 13 + 100 + 50 + 300 + 30 + 25 = 843.
-    check(total.replace(NBSP, '') === '843', `affiche secrets : total calculé à partir des réglages (${total})`);
+    // Somme : 250 + 50 + 25 + 13 + 100 + 50 + 300 + 30 + 25 (= 843) + tzatziki 25 + champi 20 × 4 (80) + livre 10 + kc 10 + serge 25 + domu 15 = 1 008.
+    check(total.replace(NBSP, '') === '1008', `affiche secrets : total calculé à partir des réglages (${total})`);
     check(page.errs.length === 0, 'affiche secrets, réglage modifié : aucune erreur de page');
     await page.ctx.close();
 
-    // 9. Teaser : 12 cases floutées, « ??? » seulement, aucune récompense, aucun jeton.
+    // 9. Teaser : 18 cases floutées, « ??? » seulement, aucune récompense, aucun jeton.
     page = await openPage(browser, { page: 'affiches/secrets-teaser-a3', fixture: FIXTURE, width: 1123 });
     const teaser = await page.evaluate(() => ({ cases: document.querySelectorAll('.secret').length, mystere: document.querySelectorAll('.mystere').length, texte: document.body.textContent }));
-    check(teaser.cases === 12 && teaser.mystere === 12, `affiche teaser : 12 cases floutées avec « ??? » (${teaser.cases} / ${teaser.mystere})`);
+    check(teaser.cases === 18 && teaser.mystere === 18, `affiche teaser : 18 cases floutées avec « ??? » (${teaser.cases} / ${teaser.mystere})`);
     check(!teaser.texte.includes('{{') && !teaser.texte.includes('par jour') && !teaser.texte.includes('Badge'), 'affiche teaser : aucun jeton et aucune récompense affichée');
     check(!teaser.texte.includes('Indice'), 'affiche teaser : plus aucun indice');
     check(page.errs.length === 0, `affiche teaser : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
 
-    // 10. Solutions : 12 secrets, solutions précises, récompenses qui suivent les réglages.
+    // 10. Solutions : 18 secrets, solutions précises, récompenses qui suivent les réglages.
     page = await openPage(browser, { page: 'affiches/secrets-solutions-a3', fixture: FIXTURE, scenario: { settingsExtra: { eggs: { recompenses } } }, width: 1123 });
-    const sol = await page.evaluate(() => ({ cases: document.querySelectorAll('.secret').length, texte: document.body.textContent,
+    const sol = await page.evaluate(() => ({ cases: document.querySelectorAll('.sol').length, texte: document.body.textContent,
       konami: document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '' }));
-    check(sol.cases === 12, `affiche solutions : 12 secrets (${sol.cases})`);
+    check(sol.cases === 18, `affiche solutions : 18 secrets (${sol.cases})`);
     check(sol.texte.includes('/secret.html') && sol.texte.includes('SECRETS') && sol.texte.includes('humane'), 'affiche solutions : solutions précises (page secrète, mot des lettres, mot humane)');
     check(sol.konami === '250', `affiche solutions : récompense du code Konami suit le réglage (${sol.konami})`);
     check(!sol.texte.includes('{{'), 'affiche solutions : aucun jeton non remplacé');
     check(page.errs.length === 0, `affiche solutions : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
+
+    // 11. Affiche « Les jeux » : missions, GeoGuessr, Raclette, Domu-mobile ; et la gamme des boosters lue sur hg_booster_types.
+    page = await openPage(browser, { page: 'affiches/jeux-a3', fixture: FIXTURE, width: 1123 });
+    const jeux = await page.evaluate(() => document.body.textContent);
+    check(['Les missions du jour', 'GeoGuessr', 'Sutom HG', 'Framed', 'Heardle', 'Raclette', 'Domu-mobile', 'Paillettes'].every((m) => jeux.includes(m)), 'affiche jeux : jeux du gang et arcade présents');
+    check(page.errs.length === 0, `affiche jeux : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
+    await page.ctx.close();
+
+    page = await openPage(browser, { page: 'affiches/boosters-gamme-a3', fixture: FIXTURE, width: 1123 });
+    const colonnes = await page.evaluate(() => document.querySelectorAll('#gamme-tete th.bo').length);
+    check(colonnes === 9, `affiche gamme : 9 boosters en colonnes (${colonnes})`);
+    check(page.errs.length === 0, `affiche gamme : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
+    await page.ctx.close();
+
+    // 12. Aucune fonctionnalité retirée, aucun pseudo de membre sur les affiches.
+    const retires = ['Lexique', 'Ludothèque', 'Gartic', 'Capsule', 'Carnet de voyage', 'Qui main', 'Pronostic', 'Jeux du jour', 'Saisons ', 'CARZY', 'DESTRU'];
+    for (const nom of ['index', 'badges-a3', 'paillettes-a3', 'cartes-a3', 'boosters-a3', 'boosters-gamme-a3', 'secrets-a3', 'secrets-teaser-a3', 'secrets-solutions-a3', 'jeux-a3']) {
+      page = await openPage(browser, { page: 'affiches/' + nom, fixture: FIXTURE, width: 1123 });
+      const texte = await page.evaluate(() => document.body.textContent);
+      const trouves = retires.filter((m) => texte.includes(m));
+      check(trouves.length === 0, `affiche ${nom} : aucun élément retiré ni pseudo (${trouves.join(', ') || 'rien'})`);
+      await page.ctx.close();
+    }
   } catch (e) {
     check(false, 'exception : ' + (e && e.stack ? e.stack.split('\n')[0] : e));
   } finally {

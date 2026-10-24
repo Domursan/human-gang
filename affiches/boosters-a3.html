@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=1123">
 <title>Obtenir des boosters — affiche A3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap">
+<link rel="stylesheet" href="affiche.css">
 <style>
 /* Cartouche de booster : copie fidèle de assets/css/cartes.css (classes cart-*) */
 .cart-box { position: relative; width: 220px; height: 290px; }
-.cart-box.is-idle { filter: saturate(.45) brightness(.8); }
 .cart-body { position: absolute; inset: 0; background: #2b2836;
   clip-path: polygon(0px 12px,4px 12px,4px 8px,8px 8px,8px 4px,12px 4px,12px 0px,208px 0px,208px 4px,212px 4px,212px 8px,216px 8px,216px 12px,220px 12px,220px 282px,216px 282px,216px 286px,212px 286px,212px 290px,8px 290px,8px 286px,4px 286px,4px 282px,0px 282px); }
 .cart-notch { position: absolute; left: 78px; top: 0; width: 64px; height: 6px; background: #0b0508; }
@@ -17,10 +18,8 @@
   clip-path: polygon(0px 8px,4px 8px,4px 4px,8px 4px,8px 0px,168px 0px,168px 4px,172px 4px,172px 8px,176px 8px,176px 142px,172px 142px,172px 146px,168px 146px,168px 150px,8px 150px,8px 146px,4px 146px,4px 142px,0px 142px); }
 .cart-scr { position: absolute; left: 14px; top: 12px; width: 148px; height: 84px; background: #0b0508; overflow: hidden; }
 .cart-scr img { position: absolute; left: 40px; top: 8px; width: 68px; height: 68px; image-rendering: pixelated; }
-.cart-lbl1 { position: absolute; left: 22px; top: 128px; width: 176px; margin: 0; text-align: center; font-size: 16px; font-weight: 700;
-  letter-spacing: .12em; line-height: 1; color: #fff; }
-.cart-lbl2 { position: absolute; left: 22px; top: 150px; width: 176px; margin: 0; text-align: center; font-size: 9.5px; letter-spacing: .2em;
-  line-height: 1.2; color: #FBD32D; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-lbl1 { position: absolute; left: 22px; top: 128px; width: 176px; margin: 0; text-align: center; font-size: 16px; font-weight: 700; letter-spacing: .12em; line-height: 1; color: #fff; }
+.cart-lbl2 { position: absolute; left: 22px; top: 150px; width: 176px; margin: 0; text-align: center; font-size: 9.5px; letter-spacing: .2em; line-height: 1.2; color: #FBD32D; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-stripe { position: absolute; left: 22px; top: 186px; width: 176px; height: 8px; display: flex; }
 .cart-stripe i { flex: 1; display: block; }
 .cart-stripe i:nth-child(1) { background: #FE3104; }
@@ -36,198 +35,154 @@
   line-height: 1.25; letter-spacing: .04em; text-transform: uppercase; color: #fff; text-shadow: 2px 2px 0 #0b0508; transform: rotate(8deg);
   clip-path: polygon(0px 4px,4px 4px,4px 0px,104px 0px,104px 4px,108px 4px,108px 40px,104px 40px,104px 44px,4px 44px,4px 40px,0px 40px); }
 
-
-
-@page { size: A3 portrait; margin: 0; }
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #0b0a10; }
-:root {
-  --ink: #0b0a10; --ink-2: #15131c; --ink-3: #221f2c; --line: #3a3646;
-  --text: #F2EFEA; --muted: #b7b0c4; --gold: #e2c77e; --gold-2: #FBD32D;
-  --framboise: #9E3543; --rb1: #FE3104; --rb2: #FCA301; --rb3: #FBD32D; --rb4: #159946; --rb5: #2B5AE2; --rb6: #4E2398;
-  --display: 'Archivo Black', Impact, 'Arial Black', sans-serif;
-  --body: Inter, system-ui, sans-serif;
-}
-.poster {
-  width: 1123px; height: 1587px; overflow: hidden; position: relative;
-  background: var(--ink); color: var(--text); font-family: var(--body);
-  padding: 0 64px; display: flex; flex-direction: column;
-}
-.band { position: absolute; left: 0; right: 0; top: 0; height: 12px; display: flex; }
-.band i { flex: 1; display: block; }
-.band i:nth-child(1) { background: var(--rb1); }
-.band i:nth-child(2) { background: var(--rb2); }
-.band i:nth-child(3) { background: var(--rb3); }
-.band i:nth-child(4) { background: var(--rb4); }
-.band i:nth-child(5) { background: var(--rb5); }
-.band i:nth-child(6) { background: var(--rb6); }
-
-/* En-tête */
-.head { padding-top: 58px; }
-.brandrow { display: flex; align-items: center; gap: 14px; font-family: var(--display); font-size: 20px; letter-spacing: .16em; color: var(--gold); text-transform: uppercase; }
-.brandrow img { width: 46px; height: 46px; image-rendering: pixelated; }
-h1 { margin: 26px 0 0; font-family: var(--display); font-weight: 400; font-size: 104px; line-height: .92; letter-spacing: -.01em; text-transform: uppercase; color: #fff; }
-h1 .o { color: var(--gold); }
-.accroche { margin-top: 22px; font-size: 32px; font-weight: 800; color: var(--gold-2); letter-spacing: .01em; }
-.intro { margin: 12px 0 0; font-size: 19px; line-height: 1.45; color: var(--muted); max-width: 900px; }
-
-/* Sections */
-.sec { margin-top: 36px; }
-.sec-h { display: flex; align-items: center; gap: 16px; margin: 0 0 18px; font-family: var(--display); font-weight: 400; font-size: 34px; letter-spacing: .03em; text-transform: uppercase; color: #fff; }
-.sec-h .num { color: var(--framboise); font-size: 28px; background: var(--gold); color: var(--ink); padding: 4px 12px 2px; }
-.sec-h .line { flex: 1; height: 3px; background: linear-gradient(90deg, var(--framboise), transparent); }
-
 /* Quatre sources */
-.src { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.tile { background: var(--ink-2); border: 2px solid var(--line); border-radius: 0; padding: 20px 16px 16px; display: flex; flex-direction: column; position: relative; min-width: 0; }
-.tile::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--tint, var(--gold)); }
-.tag { display: inline-block; align-self: flex-start; font-size: 14px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; padding: 5px 9px 4px; background: var(--tint, var(--gold)); color: var(--ink); }
-.cwrap { width: 121px; height: 160px; margin: 12px auto 10px; position: relative; }
+.src { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.tile { position: relative; --tint: var(--gold); display: flex; flex-direction: column; min-width: 0; padding: 22px 16px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
+.tile::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--tint); border-radius: 14px 14px 0 0; }
+.tag { align-self: flex-start; padding: 4px 10px 3px; background: var(--tint); color: var(--bg); font-weight: 900; font-size: 19px; letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; }
+.cwrap { position: relative; width: 121px; height: 160px; margin: 14px auto 12px; }
 .cwrap .cart-box { transform: scale(.55); transform-origin: top left; }
 .cwrap.stack > .st { position: absolute; left: 0; top: 0; width: 220px; height: 290px; transform-origin: top left; }
 .cwrap.stack > .st > .cart-box { transform: none; }
 .cwrap.stack > .st.back { filter: brightness(.68); }
-.tile h3 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; line-height: 1.02; text-transform: uppercase; color: #fff; }
-.fig { margin: 10px 0 8px; font-family: var(--display); font-size: 36px; line-height: 1; color: var(--gold-2); }
-.fig small { display: block; font-family: var(--body); font-size: 14px; font-weight: 700; letter-spacing: .03em; color: var(--muted); margin-top: 4px; }
-.tile p { margin: 0; font-size: 16px; line-height: 1.38; color: var(--text); }
+.tile h3 { margin: 0 0 6px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.02; text-transform: uppercase; color: #fff; }
+.fig { margin: 4px 0 8px; font-family: var(--display); font-size: 42px; line-height: 1; color: var(--gold-2); font-variant-numeric: tabular-nums; }
+.fig small { display: block; margin-top: 4px; font-family: var(--body); font-size: 19px; font-weight: 700; color: var(--muted); }
+.tile p { margin: 0; color: var(--text); line-height: 1.35; }
 
 /* Contenu d'un booster */
-.inside { display: grid; grid-template-columns: 250px 1fr; gap: 36px; align-items: start; }
-.big { width: 220px; height: 290px; margin: 0 auto; position: relative; }
-.big .cart-box { transform: none; }
-.cap { margin: 18px 0 0; text-align: center; font-size: 17px; color: var(--muted); line-height: 1.4; }
+.inside { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 34px; align-items: start; }
+.big { position: relative; width: 220px; height: 290px; margin: 0 auto; }
+.cap { margin: 14px 0 0; text-align: center; color: var(--muted); line-height: 1.35; }
 .facts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.facts li { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; background: var(--ink-2); border-left: 6px solid var(--gold); padding: 12px 18px; }
-.facts b { font-family: var(--display); font-weight: 400; font-size: 40px; color: var(--gold-2); line-height: 1; }
-.facts span { font-size: 17px; line-height: 1.35; }
-.facts span strong { color: #fff; font-weight: 800; }
-.odds-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; margin-top: 16px; }
-.odds { width: 100%; border-collapse: collapse; font-size: 17px; }
-.odds caption { text-align: left; font-weight: 800; font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); padding-bottom: 8px; }
-.odds th, .odds td { padding: 6px 2px; border-bottom: 1px solid var(--line); text-align: left; }
+.facts li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 16px; background: var(--surface); border-left: 6px solid var(--gold); border-radius: 0 12px 12px 0; }
+.facts b { font-family: var(--display); font-weight: 400; font-size: 42px; line-height: 1; color: var(--gold-2); }
+.facts strong { color: #fff; font-weight: 800; }
+.odds-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin-top: 16px; }
+.odds { width: 100%; border-collapse: collapse; }
+.odds caption { padding-bottom: 8px; text-align: left; font-weight: 800; font-size: 19px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.odds th, .odds td { padding: 6px 2px; border-bottom: 1px solid var(--line); text-align: left; font-size: 19px; }
 .odds td { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
-.vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-.odds td .bar { display: inline-block; height: 10px; vertical-align: middle; margin-right: 10px; }
-.rar-commune { color: #c4c9d6; } .rar-peu { color: #2fd17a; } .rar-rare { color: #4f80ff; } .rar-epique { color: #a674f5; }
-.rar-leg { color: #FCA301; } .rar-myth { color: #FE3104; } .rar-id { color: #FBD32D; }
-
-/* Pied */
-.foot { margin-top: auto; padding: 22px 0 40px; border-top: 3px solid var(--framboise); display: flex; justify-content: space-between; align-items: flex-end; gap: 30px; }
-.foot p { margin: 0; font-size: 18px; line-height: 1.45; color: var(--muted); max-width: 720px; }
-.foot strong { color: #fff; }
-.foot .web { font-family: var(--display); font-size: 26px; color: var(--gold); text-transform: uppercase; white-space: nowrap; }
+.odds th { font-weight: 700; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.rar-commune { color: #c4c9d6; } .rar-peu { color: #2fd17a; } .rar-rare { color: #6b96ff; } .rar-epique { color: #b98bff; }
+.rar-leg { color: #FCA301; } .rar-myth { color: #ff6a4d; } .rar-id { color: #FBD32D; }
 </style>
 </head>
-<body data-affiche="boosters">
-<main class="poster" id="poster">
+<body>
+<main class="affiche" data-affiche="boosters">
   <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
-  <header class="head">
-    <div class="brandrow"><img src="../assets/img/logo-512.webp" alt="" aria-hidden="true">Humane Gang</div>
-    <h1>Obtenir<br><span class="o">des boosters</span></h1>
-    <div class="accroche"><span data-cfg="cartes.booster_size">5</span> cartes par booster. Quatre façons de les ouvrir.</div>
+  <header class="mast">
+    <img class="logo" src="../assets/img/logo-512.webp" alt="Logo Humane Gang">
+    <div>
+      <p class="kicker">Humane Gang · Page Cartes</p>
+      <h1>Obtenir des boosters</h1>
+      <p class="lede"><span data-cfg="cartes.booster_size">5</span> cartes par booster. Quatre façons de les ouvrir.</p>
+    </div>
   </header>
 
-  <section class="sec" aria-labelledby="h-src">
-    <h2 class="sec-h" id="h-src"><span class="num">01</span>Les quatre sources<span class="line"></span></h2>
-    <div class="src">
+  <div class="corps">
+    <section>
+      <h2 class="sec-h"><span class="num">01</span>Les quatre sources<span class="line"></span></h2>
+      <div class="src">
 
-      <article class="tile" style="--tint:#159946">
-        <span class="tag">Gratuit</span>
-        <div class="cwrap"><div class="cart-box" aria-hidden="true">
-          <div class="cart-body"></div><div class="cart-notch"></div>
-          <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-          <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-          <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-          <p class="cart-stk">Gratuit du jour</p>
-        </div></div>
-        <h3>Le booster gratuit</h3>
-        <div class="fig">1 fois<small>toutes les <span data-cfg="cartes.free_booster_hours">24</span> h</small></div>
-        <p>Sans Paillettes. Le premier est disponible tout de suite, puis le délai repart à chaque ouverture.</p>
-      </article>
+        <article class="tile" style="--tint:#159946">
+          <span class="tag">Gratuit</span>
+          <div class="cwrap"><div class="cart-box" aria-hidden="true">
+            <div class="cart-body"></div><div class="cart-notch"></div>
+            <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+            <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+            <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+            <p class="cart-stk">Gratuit du jour</p>
+          </div></div>
+          <h3>Le booster gratuit</h3>
+          <div class="fig">1 fois<small>toutes les <span data-cfg="cartes.free_booster_hours">24</span> h</small></div>
+          <p>Sans Paillettes. Le premier est disponible tout de suite, puis le délai repart à chaque ouverture.</p>
+        </article>
 
-      <article class="tile" style="--tint:#FBD32D">
-        <span class="tag">Payant</span>
-        <div class="cwrap"><div class="cart-box" aria-hidden="true">
-          <div class="cart-body"></div><div class="cart-notch"></div>
-          <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-          <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-          <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-        </div></div>
-        <h3>Le booster payant</h3>
-        <div class="fig"><span data-cfg="cartes.booster_price">100</span><small>Paillettes le booster</small></div>
-        <p>Ouvre-le quand tu veux, sans délai, si tu as assez de Paillettes.</p>
-      </article>
+        <article class="tile" style="--tint:#FBD32D">
+          <span class="tag">Payant</span>
+          <div class="cwrap"><div class="cart-box" aria-hidden="true">
+            <div class="cart-body"></div><div class="cart-notch"></div>
+            <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+            <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+            <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+          </div></div>
+          <h3>Le booster payant</h3>
+          <div class="fig"><span data-cfg="cartes.booster_price">100</span><small>Paillettes le booster</small></div>
+          <p>Ouvre-le quand tu veux, sans délai, si tu as assez de Paillettes.</p>
+        </article>
 
-      <article class="tile" style="--tint:#FCA301">
-        <span class="tag">Lot de 5</span>
-        <div class="cwrap stack">
-          <div class="st back" style="transform:translate(12px,-4px) rotate(7deg) scale(.55)"><div class="cart-box" aria-hidden="true">
-              <div class="cart-body"></div><div class="cart-notch"></div>
-              <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-              <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-              <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-            </div></div>
-          <div class="st back" style="transform:translate(-8px,6px) rotate(-6deg) scale(.55)"><div class="cart-box" aria-hidden="true">
-              <div class="cart-body"></div><div class="cart-notch"></div>
-              <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-              <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-              <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-            </div></div>
-          <div class="st" style="transform:scale(.55)"><div class="cart-box" aria-hidden="true">
-              <div class="cart-body"></div><div class="cart-notch"></div>
-              <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-              <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-              <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-            </div></div>
-        </div>
-        <h3>Le lot de 5</h3>
-        <div class="fig"><span data-expr="cartes.booster_price*5">500</span><small>Paillettes pour 5 boosters</small></div>
-        <p>Cinq boosters payants ouverts d'un coup, avec un récapitulatif à la fin.</p>
-      </article>
+        <article class="tile" style="--tint:#FCA301">
+          <span class="tag">Lot de 5</span>
+          <div class="cwrap stack">
+            <div class="st back" style="transform:translate(12px,-4px) rotate(7deg) scale(.55)"><div class="cart-box" aria-hidden="true">
+                <div class="cart-body"></div><div class="cart-notch"></div>
+                <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+                <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+                <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+              </div></div>
+            <div class="st back" style="transform:translate(-8px,6px) rotate(-6deg) scale(.55)"><div class="cart-box" aria-hidden="true">
+                <div class="cart-body"></div><div class="cart-notch"></div>
+                <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+                <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+                <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+              </div></div>
+            <div class="st" style="transform:scale(.55)"><div class="cart-box" aria-hidden="true">
+                <div class="cart-body"></div><div class="cart-notch"></div>
+                <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+                <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+                <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+              </div></div>
+          </div>
+          <h3>Le lot de 5</h3>
+          <div class="fig"><span data-expr="cartes.booster_price*5">500</span><small>Paillettes pour 5 boosters</small></div>
+          <p>Cinq boosters payants ouverts d’un coup, avec un récapitulatif à la fin.</p>
+        </article>
 
-      <article class="tile" style="--tint:#a674f5">
-        <span class="tag">Offert</span>
-        <div class="cwrap"><div class="cart-box" aria-hidden="true">
-          <div class="cart-body"></div><div class="cart-notch"></div>
-          <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-          <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-          <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-        </div></div>
-        <h3>Les boosters offerts</h3>
-        <div class="fig">N restants<small>affiché sur la page Cartes</small></div>
-        <p>Donnés par le gang, à des membres choisis ou à tous. Sans Paillettes, sans délai.</p>
-      </article>
+        <article class="tile" style="--tint:#a674f5">
+          <span class="tag">Offert</span>
+          <div class="cwrap"><div class="cart-box" aria-hidden="true">
+            <div class="cart-body"></div><div class="cart-notch"></div>
+            <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+            <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+            <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+          </div></div>
+          <h3>Les boosters offerts</h3>
+          <div class="fig">N restants<small>affiché sur la page Cartes</small></div>
+          <p>Donnés par le gang, à des membres choisis ou à tous. Sans Paillettes, sans délai.</p>
+        </article>
 
-    </div>
-  </section>
-
-  <section class="sec" aria-labelledby="h-in">
-    <h2 class="sec-h" id="h-in"><span class="num">02</span>Ce qu'il y a dedans<span class="line"></span></h2>
-    <div class="inside">
-      <div>
-        <div class="big"><div class="cart-box" aria-hidden="true">
-          <div class="cart-body"></div><div class="cart-notch"></div>
-          <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
-          <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
-          <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
-        </div></div>
       </div>
-      <div>
-        <ul class="facts">
-          <li><b><span data-cfg="cartes.booster_size">5</span></b><span><strong>cartes par booster</strong>, tirées une à une selon les taux ci-dessous.</span></li>
-          <li><b><span data-cfg="cartes.shiny_rate">3</span> %</b><span><strong>des cartes sont brillantes</strong> : même carte, version à part.</span></li>
-          <li><b><span data-cfg="cartes.pity_epique">20</span></b><span><strong>garantie épique</strong> : une carte Épique ou mieux au moins tous les <span data-cfg="cartes.pity_epique">20</span> boosters.</span></li>
-        </ul>
-        <div class="odds-wrap" role="group" aria-label="Taux de tirage, par carte">
+    </section>
+
+    <section>
+      <h2 class="sec-h"><span class="num">02</span>Ce qu’il y a dedans<span class="line"></span></h2>
+      <div class="inside">
+        <div>
+          <div class="big"><div class="cart-box" aria-hidden="true">
+            <div class="cart-body"></div><div class="cart-notch"></div>
+            <div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>
+            <p class="cart-lbl1">LE GANG</p><p class="cart-lbl2">Collection</p>
+            <div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="cart-ridge"></div><p class="cart-foot"><span data-cfg="cartes.booster_size">5</span> CARTES</p>
+          </div></div>
+          <p class="cap">Le booster Classique, comme il sort de la boîte.</p>
+        </div>
+        <div>
+          <ul class="facts">
+            <li><b><span data-cfg="cartes.booster_size">5</span></b><span><strong>cartes par booster</strong>, tirées une à une selon les taux ci-dessous.</span></li>
+            <li><b><span data-cfg="cartes.shiny_rate">3</span> %</b><span><strong>des cartes sont brillantes</strong> : même carte, version à part.</span></li>
+            <li><b><span data-cfg="cartes.pity_epique">20</span></b><span><strong>garantie épique</strong> : une carte Épique ou mieux au moins tous les <span data-cfg="cartes.pity_epique">20</span> boosters.</span></li>
+          </ul>
+          <div class="odds-wrap" role="group" aria-label="Taux de tirage, par carte">
 <table class="odds"><caption>Taux de tirage, par carte</caption><tbody>
 <tr><th scope="row" class="rar-commune">Commune</th><td><span data-cfg="cartes.rates.commune">60</span> %</td></tr>
 <tr><th scope="row" class="rar-peu">Peu commune</th><td><span data-cfg="cartes.rates.peu_commune">25</span> %</td></tr>
@@ -239,14 +194,16 @@ h1 .o { color: var(--gold); }
 <tr><th scope="row" class="rar-myth">Mythique</th><td><span data-cfg="cartes.rates.mythique">0,1</span> %</td></tr>
 <tr><th scope="row" class="rar-id">Identité</th><td><span data-cfg="cartes.rates.identite">0,02</span> %</td></tr>
 </tbody></table></div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <footer class="foot">
-    <p><strong>Pas de booster dans les quêtes.</strong> Défis, séries, bonus quotidien et présence rapportent des Paillettes.</p>
-    <div class="web">Page Cartes</div>
+  <footer class="pied">
+    <span><b style="color:#fff">Pas de booster dans les quêtes.</b> Défis, séries, bonus quotidien et présence rapportent des Paillettes.</span>
+    <span class="or" style="white-space:nowrap">Page Cartes</span>
   </footer>
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 </main>
 <script type="module" src="affiches.js"></script>
 </body>

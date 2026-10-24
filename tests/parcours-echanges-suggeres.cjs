@@ -7,6 +7,8 @@
 // aucune erreur JS ni console.
 // Lancer : node tests/parcours-echanges-suggeres.cjs
 const { ROOT, check, finish, openPage, log, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+/** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
+const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
 const DIALOG = '#trd-edit[open]';
 const SUGG = '#trd-sugg';
@@ -14,7 +16,7 @@ const ITEM = `${SUGG} .trd-sugg-item`;
 
 /** Ouvre l'onglet Échanges et attend le bloc « Échanges possibles » (ou son message). */
 async function openTab(p) {
-  await p.click('button.cartes-tab[data-tab=echanges]');
+  await goTab(p, 'echanges');
   await p.waitForSelector(`${SUGG} .trd-sugg-box, ${SUGG} .trd-hint`, { timeout: 5000 });
   await sleep(200);
 }

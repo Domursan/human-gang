@@ -64,6 +64,7 @@ const cells = (p) => p.locator('#cartes-p-collection .cz-cell').count();
     check(!p.errs.length, 'hors ligne : aucune erreur : ' + p.errs.join(' | '));
 
     // Déconnexion (toujours hors ligne) : la copie est effacée
+    await p.click('.site-header .nav-me'); // « Se déconnecter » est dans l'éventail de la photo de profil
     await p.click('.site-header .nav-logout');
     await p.waitForURL(/compte\.html/, { timeout: 8000 }).catch(() => {});
     await p.goto(`${ORIGIN}${PREFIX}/cartes.html`); await sleep(1200);

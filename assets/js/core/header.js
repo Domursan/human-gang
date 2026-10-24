@@ -97,8 +97,11 @@ function isHere(href) {
 }
 const curAttr = (href) => (isHere(href) ? ' aria-current="page"' : '');
 
+/** Libellé d'une entrée : celui réglé pour sa page (nav_libelles) quand l'entrée mène à sa propre page. */
+const libelleEntree = (it) => (it.page && it.href === `${it.page}.html` && navLibelle(it.page)) || it.label;
+
 /** Lien d'un menu déroulant. */
-const linkHtml = (it) => `<a class="nav-item" href="${esc(it.href)}"${curAttr(it.href)}>${esc(it.label)}</a>`;
+const linkHtml = (it) => `<a class="nav-item" href="${esc(it.href)}"${curAttr(it.href)}>${esc(libelleEntree(it))}</a>`;
 
 /**
  * Contenu d'un menu déroulant (liens, filets, sous-menu Arcade). Les filets en tête ou en fin sont retirés.
@@ -145,7 +148,7 @@ function navHtml(profile) {
     if (!inner) return '';
     const on = items.some((it) => (it.href && isHere(it.href)) || it.sub?.some((s) => isHere(s.href)));
     return `<div class="nav-group" data-menu="${m.id}">
-        <button class="nav-top${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(m.label)}${ICON_CHEVRON}</button>
+        <button class="nav-top${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(m.id) || m.label)}${ICON_CHEVRON}</button>
         <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
       </div>`;
   }).join('');

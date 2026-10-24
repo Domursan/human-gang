@@ -63,11 +63,12 @@ const fs = require('fs');
   check(r2.includes('Raté') && r2.includes('Bonne réponse : 2022'), 'réponse fausse : « Raté » et bonne réponse');
   check(!r2.includes('pour la bonne réponse'), 'déjà jouée : aucun gain du quiz annoncé');
   // Flèches : passer à l'onglet suivant
-  await p.focus('#jeux-tab-jour');
-  await p.keyboard.press('ArrowRight');
+  // la barre d'onglets est masquée (navigation par le menu) : on envoie la touche sur l'onglet, comme le clavier le ferait
+  await p.evaluate(() => document.getElementById('jeux-tab-jour').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
   await sleep(300);
   check((await p.locator('#jeux-tab-sutom').getAttribute('aria-selected')) === 'true' && p.url().endsWith('#sutom'), 'onglets : flèche droite → onglet suivant, adresse mise à jour');
-  check((await p.locator('.nav a[href="jeux.html"]').count()) === 1, 'menu : lien « Jeux »');
+  check((await p.locator('.nav-group[data-menu="jeux"] .nav-top').innerText()).includes('Jeux'), 'menu : groupe « Jeux »');
+  check((await p.locator('.nav-group[data-menu="jeux"] .nav-menu a[href^="jeux.html#"]').count()) >= 1, 'menu : liens vers les onglets Jeux');
   check((await hscroll(p)) <= 0, 'Jeux 390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'Jeux : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();

@@ -173,7 +173,8 @@ async function routeEvil(p, target) {
     } });
   });
   await p.reload(); await sleep(1500);
-  await p.click('.nav-logout');
+  await p.click('.nav-me'); // « Se déconnecter » est dans l'éventail de la photo de profil
+  await p.click('.me-fan .nav-logout');
   await p.waitForURL(/compte\.html/, { timeout: 6000 }).catch(() => {});
   await sleep(300);
   check(rec.join(',') === 'delete:hg_push_subscriptions,unsubscribe,signOut', `déconnexion : ligne push supprimée, désabonnement, puis signOut (${rec.join(' → ')})`);
@@ -193,8 +194,10 @@ async function routeEvil(p, target) {
   const irl = fsx.readFileSync(px.join(ROOT, 'assets/js/irl-history.js'), 'utf8');
   check(/s\.integrity = LEAFLET_SRI\.js/.test(irl) && /css\.integrity = LEAFLET_SRI\.css/.test(irl), 'Leaflet : script et feuille de style chargés avec integrity');
   const pages = fsx.readdirSync(ROOT).filter((f) => f.endsWith('.html') && !['offline.html', 'simulateur.html'].includes(f));
-  const cspLarge = pages.filter((f) => !/script-src 'self' https:\/\/cdn\.jsdelivr\.net\/npm\/;/.test(fsx.readFileSync(px.join(ROOT, f), 'utf8')));
-  check(!cspLarge.length, 'CSP des pages : script-src limité à \'self\' et /npm/ de jsDelivr' + (cspLarge.length ? ` (${cspLarge.join(', ')})` : ''));
+  // jeux.html ajoute seulement le lecteur YouTube de Heardle (script iframe_api et ses fichiers sur s.ytimg.com).
+  const SCRIPT_OK = { 'jeux.html': "script-src 'self' https://cdn.jsdelivr.net/npm/ https://www.youtube.com https://s.ytimg.com;" };
+  const cspLarge = pages.filter((f) => !fsx.readFileSync(px.join(ROOT, f), 'utf8').includes(SCRIPT_OK[f] || "script-src 'self' https://cdn.jsdelivr.net/npm/;"));
+  check(!cspLarge.length, 'CSP des pages : script-src limité à \'self\' et /npm/ de jsDelivr (plus YouTube pour Heardle)' + (cspLarge.length ? ` (${cspLarge.join(', ')})` : ''));
 
   await browser.close();
   finish();

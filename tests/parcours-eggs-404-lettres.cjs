@@ -1,13 +1,12 @@
 // Parcours : secrets cachés, page 404 et lettres du mot « SECRETS ».
 // 404 : une adresse inconnue reçoit 404.html (statut 404, comme GitHub Pages) ; la page charge ses ressources par des
-// chemins absolus (/human-gang/…), donc le test sert le site sous /human-gang/ par défaut. Le jeu des paillettes tourne
+// chemins absolus à la racine (/assets/…), comme sur humane-gang.com (CNAME) : le test sert le site à la racine. Le jeu des paillettes tourne
 // (horloge factice de Playwright pour passer les 30 s), la fin de partie appelle hg_egg_found('jeu404', { score }) ; un
 // visiteur joue sans appel et voit le message « Connecte-toi… » ; mouvement réduit ; 390 px sans défilement.
 // Lettres : chacune des 7 pages affiche sa lettre dans le pied de page (aria-label « Un secret ? », atteignable au clavier),
 // s'illumine au survol et un clic appelle hg_egg_found('lettre_N').
 // Faux Supabase : fixtures/fake-sb.mjs (réponse hg_egg_found). Lancer : node tests/parcours-eggs-404-lettres.cjs
-// Préfixe : HG_PREFIX=/human-gang si la variable n'est pas définie (le site est servi comme sur GitHub Pages).
-process.env.HG_PREFIX = process.env.HG_PREFIX || '/human-gang';
+// Préfixe : racine par défaut (harnais) ; HG_PREFIX=/human-gang seulement pour un essai sous un sous-chemin.
 const { ORIGIN, PREFIX, check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 
 /** Appels hg_egg_found du faux client (arguments), dans l'ordre. */

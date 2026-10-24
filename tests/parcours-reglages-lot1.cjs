@@ -160,7 +160,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(await pa.locator('#zone-actions [data-rg-add]').count() === 1, 'parties : « + Nouvelle clé » dans la partie Clés avancées');
     await adminSection(pa, 'pilotage/textes');
     await sleepShort();
-    check(await shownGroups() === 'textes,affichage' && await pa.locator('#zone-actions [data-rg-add]').count() === 0, 'parties : « Textes et intro » (sans « + Nouvelle clé »)');
+    check(await shownGroups() === 'textes,affichage,visite,hors_ligne' && await pa.locator('#zone-actions [data-rg-add]').count() === 0, 'parties : « Textes et intro » (sans « + Nouvelle clé »)');
 
     // Erreurs console et défilement à 390 px
     const pm = await openPage(browser, { page: 'admin', fixture: FX, width: 390, height: 844, touch: true });

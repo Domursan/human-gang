@@ -1,0 +1,37 @@
+/* ===== Page « Jeux » : Arène v2 (cotes, ligues, saisons ; règles dans docs/ARENE.md). Complète jeux-bataille.css ===== */
+.ar { max-width: 640px; }
+.ar-banner { margin: 0; padding: 10px 12px; border-left: 4px solid var(--rose); border-radius: 8px; background: var(--surface); font-size: 14px; }
+.ar-new { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ar-new .btn { min-height: 44px; }
+
+/* Onglets */
+.ar-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.ar-tab { min-height: 44px; }
+.ar-tab[aria-current="page"] { text-decoration: underline; text-underline-offset: 4px; font-weight: 700; }
+
+/* Ligues */
+.ar-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #121212; vertical-align: middle; }
+.ar-bronze { background: #C58B5A; }
+.ar-argent { background: #B8C2CC; }
+.ar-or { background: #E0B84F; }
+.ar-diamant { background: #7FC4E6; }
+.ar-legende { background: #C58BE0; }
+.ar-ligue-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ar-cote-n { font-family: var(--font-display); font-size: 24px; }
+.ar-bar { height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ar-bar span { display: block; height: 100%; background: var(--sage-text); border-radius: 999px; transition: width .4s ease; }
+.ar-cote { margin: 0; }
+.ar-rules { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.ar-rules li { overflow-wrap: anywhere; }
+
+/* Classement */
+.ar-top { list-style: none; margin: 0; padding: 0; }
+.ar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 10px 6px; border-bottom: 1px solid var(--border); }
+.ar-row:last-child { border-bottom: 0; }
+.ar-row.is-me { background: var(--sage-soft); border-radius: 8px; }
+.ar-rk { width: 36px; font-family: var(--font-display); font-size: 18px; text-align: center; }
+.ar-nom { flex: 1 1 120px; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.ar-pts { font-weight: 700; white-space: nowrap; }
+.ar-row > .small { flex-basis: 100%; padding-left: 46px; }
+
+@media (prefers-reduced-motion: reduce) { .ar-bar span { transition: none; } }

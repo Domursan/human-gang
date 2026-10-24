@@ -55,14 +55,15 @@ const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./li
 
   // Onglets ARIA et 360 px
   p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#framed', width: 360, height: 800 });
-  await p.focus('#jeux-tab-framed');
-  await p.keyboard.press('ArrowRight');
+  // barre d'onglets masquée (navigation par le menu) : la touche est envoyée à l'onglet, comme le clavier le ferait
+  const fleche = (id, key) => p.evaluate(([i, k]) => document.getElementById(i).dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })), [id, key]);
+  await fleche('jeux-tab-framed', 'ArrowRight');
   await sleep(400);
   check((await p.locator('#jeux-tab-heardle').getAttribute('aria-selected')) === 'true' && (await p.evaluate(() => location.hash)) === '#heardle', 'onglets : flèche droite → Heardle, adresse à jour');
-  await p.keyboard.press('ArrowLeft');
+  await fleche('jeux-tab-heardle', 'ArrowLeft');
   await sleep(300);
   check((await hscroll(p)) <= 0, '360 px : pas de défilement horizontal');
-  check((await p.locator('.nav a[href="jeux.html"]').count()) >= 1, 'menu : lien « Jeux »');
+  check((await p.locator('.nav-group[data-menu="jeux"] .nav-menu a[href^="jeux.html#"]').count()) >= 1, 'menu : liens vers les onglets Jeux');
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#framed', scenario: { noRound: true } });

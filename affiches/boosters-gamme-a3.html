@@ -2,217 +2,66 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/ 'sha256-fGxR/obZwvx/67EfNqD3SwKweBn5lC14NANDg2XA4LQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
-<title>Les boosters, la gamme complète — affiche A3</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=1123">
+<title>La gamme des boosters — affiche A3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap">
+<link rel="stylesheet" href="affiche.css">
 <link rel="stylesheet" href="../assets/css/cartes.css">
 <link rel="stylesheet" href="../assets/css/cartes-boosters.css">
 <style>
-  @page { size: A3 portrait; margin: 0; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #0b0a10; }
-  :root {
-    --bg: #0b0a10;
-    --surface: #17151d;
-    --border: #35303f;
-    --gold: #e2c77e;
-    --gold-2: #FBD32D;
-    --raspberry: #9E3543;
-    --text: #f4f1ea;
-    --muted: #b9b3c4;
-    --rb-1: #FE3104; --rb-2: #FCA301; --rb-3: #FBD32D; --rb-4: #159946; --rb-5: #2B5AE2; --rb-6: #4E2398;
-    --display: "Arial Black", "DejaVu Sans", Impact, sans-serif;
-    --mono: "DejaVu Sans Mono", "Courier New", monospace;
-    --body: Inter, system-ui, "DejaVu Sans", sans-serif;
-  }
-  body {
-    width: 1123px; height: 1587px; overflow: hidden;
-    font-family: var(--body); color: var(--text);
-    background:
-      radial-gradient(circle at 88% 3%, rgba(158,53,67,.30), transparent 46%),
-      radial-gradient(circle at 4% 97%, rgba(226,199,126,.10), transparent 40%),
-      var(--bg);
-    position: relative;
-  }
-  .rainbow {
-    position: absolute; left: 0; right: 0; top: 0; height: 8px;
-    background: linear-gradient(90deg, var(--rb-1) 0 16.6%, var(--rb-2) 16.6% 33.3%, var(--rb-3) 33.3% 50%, var(--rb-4) 50% 66.6%, var(--rb-5) 66.6% 83.3%, var(--rb-6) 83.3% 100%);
-  }
-  .page { position: absolute; inset: 8px 0 0 0; padding: 30px 52px 0; display: flex; flex-direction: column; height: 1579px; }
-
-  /* En-tête (compact) */
-  header { display: flex; align-items: center; gap: 26px; padding-bottom: 18px; border-bottom: 2px solid var(--border); }
-  header img.logo { width: 84px; height: 84px; flex: 0 0 84px; object-fit: contain; image-rendering: pixelated; }
-  .kicker { font-family: var(--mono); font-size: 13px; letter-spacing: .2em; color: var(--gold); text-transform: uppercase; margin: 0 0 6px; }
-  h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: 64px; line-height: .95; letter-spacing: -.01em; text-transform: uppercase; }
-  h1 .soft { display: block; color: var(--gold); font-size: 26px; letter-spacing: .01em; margin-top: 6px; font-family: var(--body); font-weight: 800; text-transform: none; }
-  .intro { margin: 10px 0 0; font-size: 17px; color: var(--text); line-height: 1.35; font-weight: 700; }
-
-  /* Grille des 9 boosters : 3 colonnes × 3 lignes */
-  .sec-title { display: flex; align-items: baseline; gap: 14px; margin: 16px 0 14px; }
-  .sec-title h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 22px; text-transform: uppercase; letter-spacing: .03em; }
-  .sec-title .tag { font-family: var(--mono); font-size: 13px; color: var(--gold); letter-spacing: .12em; text-transform: uppercase; }
-  .sec-title::after { content: ""; flex: 1; height: 2px; background: linear-gradient(90deg, var(--raspberry), transparent); align-self: center; }
-
-  .gamme { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 24px; flex: 1; min-height: 0; }
-  .tile {
-    position: relative; background: var(--surface); border: 2px solid var(--border);
-    padding: 22px 18px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; overflow: hidden;
-  }
-  .tile::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--tint, var(--gold)); }
-
-  .t-head { display: flex; align-items: baseline; gap: 10px; }
-  .t-head .n { font-family: var(--mono); font-size: 13px; color: var(--gold); letter-spacing: .08em; }
-  .tile h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 23px; line-height: 1; text-transform: uppercase; color: #fff; white-space: nowrap; }
-
-  /* Cartouche (40 %) à gauche ; prix et limite à droite */
-  .t-body { display: flex; align-items: center; gap: 16px; }
-  .vitrine { position: relative; width: 88px; height: 116px; flex: none; }
-  .vitrine .cart-box { transform: scale(.4); transform-origin: top left; }
-  .side { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
-  .pill { display: inline-block; padding: 4px 14px 3px; border-radius: 999px; background: var(--gold); color: #1a1407; font-weight: 800; font-size: 17px; letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .cartes { font-size: 14px; color: var(--muted); font-weight: 700; }
-  .lim, .free { display: inline-block; padding: 2px 10px 1px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; border: 1.5px solid; }
-  .lim { color: var(--gold); border-color: var(--gold); }
-  .free { color: #3fd68a; border-color: #159946; }
-
-  /* Taux : 2 colonnes, 4 lignes */
-  .taux { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: repeat(4, auto); grid-auto-flow: column; gap: 0 14px; }
-  .taux li { display: flex; justify-content: space-between; align-items: baseline; gap: 2px; font-size: 14px; line-height: 1.45; letter-spacing: -.02em; white-space: nowrap; border-bottom: 1px solid var(--border); padding: 4px 0 3px; }
-  .taux li span { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap; }
-  .taux li b { font-weight: 700; color: var(--c, var(--text)); }
-  .taux li.zero { opacity: .4; }
-  .taux li.brill b { color: var(--gold); }
-
-  .faits { margin: 0; font-size: 13.5px; line-height: 1.4; }
-  .faits p { margin: 0; color: var(--text); }
-  .faits b { color: var(--muted); font-weight: 700; }
-
-  /* Grille adaptée au nombre de boosters (affiches.js) : 4 colonnes et textes un peu réduits au-delà de 9 */
-  .gamme.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-  .gamme.g4 .tile { padding: 18px 14px 14px; gap: 10px; }
-  .gamme.g4 .tile h2 { font-size: 19px; white-space: normal; }
-  .gamme.g4 .taux li { font-size: 12.5px; padding: 3px 0 2px; }
-  .gamme.g4 .vitrine { width: 70px; height: 93px; }
-  .gamme.g4 .vitrine .cart-box { transform: scale(.32); }
-  .gamme.g4 .faits { font-size: 12.5px; }
-  .until { display: inline-block; padding: 2px 10px 1px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; color: #1a1407; background: var(--gold-2); }
-
-  /* Pied */
-  .foot { margin-top: 14px; padding: 14px 0 24px; border-top: 3px solid var(--raspberry); display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: .04em; line-height: 1.5; }
-  .foot b { color: var(--gold); font-weight: 700; }
-  .foot .r { text-align: right; white-space: nowrap; }
+  /* Tableau de la gamme : une colonne par booster, une ligne par information. Rempli par gamme.js (repli) puis affiches.js (base). */
+  .gamme { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .gamme thead th { vertical-align: top; }
+  .gamme th.lab { width: 120px; text-align: left; vertical-align: bottom; padding: 0 6px 12px 0; font-size: 19px; font-weight: 800; color: var(--muted); }
+  .gamme th.bo { position: relative; padding: 16px 4px 12px; text-align: center; font-size: 19px; font-weight: 800; line-height: 1.15; color: #fff; hyphens: auto; overflow-wrap: anywhere; border-bottom: 2px solid var(--line); }
+  .gamme .barre { position: absolute; left: 4px; right: 4px; top: 0; height: 8px; background: var(--tint, var(--gold)); }
+  .gamme .vitrine { position: relative; display: block; width: 53px; height: 70px; margin: 8px auto 12px; }
+  .gamme .vitrine .cart-box { transform: scale(.24); transform-origin: top left; }
+  .gamme .bn .n { color: var(--gold); font-weight: 800; }
+  .gamme tbody th { padding: 12px 8px 12px 0; text-align: left; font-size: 19px; font-weight: 800; color: var(--text); border-top: 1px solid var(--line); }
+  .gamme tbody th.rar { color: var(--c, var(--text)); }
+  .gamme tbody tr.meta th { color: var(--muted); font-weight: 700; }
+  .gamme tbody td { padding: 12px 4px; text-align: center; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); border-top: 1px solid var(--line); border-left: 1px solid rgba(58, 54, 70, .45); }
+  .gamme tbody td.mc { padding-left: 2px; padding-right: 2px; }
+  .gamme tbody tr.meta td { font-size: 19px; font-weight: 700; color: var(--text); line-height: 1.25; }
+  .gamme .prix { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--gold-2); white-space: nowrap; }
+  .gamme td.zero { opacity: .35; }
+  .gamme tr.brill td, .gamme tr.brill th { color: var(--gold-2); }
+  .gamme tbody tr:last-child { border-bottom: 2px solid var(--line); }
+  .notes { margin: 0; font-size: 19px; line-height: 1.4; color: var(--muted); }
+  .notes b { color: var(--text); }
 </style>
 </head>
-<body data-affiche="boosters-gamme">
-<main class="page" id="poster">
-  <div class="rainbow" aria-hidden="true"></div>
+<body>
+<main class="affiche" data-affiche="boosters-gamme">
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
-  <header>
+  <header class="mast">
     <img class="logo" src="../assets/img/logo-512.webp" alt="Logo Humane Gang">
     <div>
       <p class="kicker">Humane Gang · Page Cartes · Boutique</p>
-      <h1>Les boosters<span class="soft">la gamme complète</span></h1>
-      <p class="intro" id="gamme-intro">Neuf boosters pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.</p>
+      <h1>La gamme des boosters</h1>
+      <p class="lede" id="gamme-intro">Neuf boosters pour agrandir ta collection, achetés avec des Paillettes dans la Boutique.</p>
     </div>
   </header>
 
-  <div class="sec-title"><h2 id="gamme-titre">Les 9 boosters</h2><span class="tag">Du plus simple au plus rare</span></div>
+  <div class="corps">
+    <table class="gamme" aria-label="Les boosters, leurs prix et leurs taux">
+      <thead id="gamme-tete"></thead>
+      <tbody id="gamme"></tbody>
+    </table>
 
-  <section class="gamme" id="gamme" aria-label="Les neuf boosters"></section>
+    <p class="notes"><b>Taux</b> : en % de chaque carte tirée. <b>Tirage</b> : <b>Toutes</b> = toutes les cartes sauf les uniques ; <b>Série choisie</b> = la série choisie à l’ouverture ; <b>Manquantes</b> = seulement les cartes que tu n’as pas (la différence est remboursée). Les boosters s’achètent dans la Boutique. Le Classique est aussi offert 1 fois par jour. Sans pastille de limite : pas de limite.</p>
+  </div>
 
-  <footer class="foot">
-    <span><b>✦</b> Tous les boosters s’achètent dans la Boutique ; le Classique est aussi offert 1 fois par jour. Sans pastille de limite : pas de limite.</span>
-    <span class="r">Taux par carte tirée · <span id="gamme-date">Données écrites dans la page</span></span>
+  <footer class="pied">
+    <span>Taux en % par carte tirée</span>
+    <span id="gamme-date">Données écrites dans la page</span>
   </footer>
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 </main>
-
-<script>
-/* Données des boosters : une seule source, à modifier ici (valeurs de la spécification §1, ordre d'affichage).
-   taux : pourcentage de chaque rareté tirée ; brillante : part de cartes brillantes (par carte). */
-const RARETES = [
-  { k: 'commune', nom: 'Commune', c: '#c4c9d6' },
-  { k: 'peu_commune', nom: 'Peu commune', c: '#2fd17a' },
-  { k: 'rare', nom: 'Rare', c: '#4f80ff' },
-  { k: 'epique', nom: 'Épique', c: '#a674f5' },
-  { k: 'legendaire', nom: 'Légendaire', c: '#FCA301' },
-  { k: 'mythique', nom: 'Mythique', c: '#FE3104' },
-  { k: 'identite', nom: 'Identité', c: '#FBD32D' },
-];
-const BOOSTERS = [
-  { nom: 'Classique', cls: 'cart--classique', lbl2: 'BOOSTER CLASSIQUE', tint: '#c4c9d6', prix: 100, cartes: 5,
-    taux: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 }, brillante: 3,
-    possibles: 'toutes sauf les uniques', limite: null, gratuit: '1 gratuit / jour' },
-  { nom: 'Série', cls: 'cart--serie', lbl2: 'SÉRIE 1', tint: '#2fd17a', prix: 150, cartes: 5,
-    taux: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.88, mythique: 0.1, identite: 0.02 }, brillante: 3,
-    possibles: 'la série choisie à l’ouverture', limite: null },
-  { nom: 'Argenté', cls: 'cart--argente', lbl2: 'BOOSTER ARGENTÉ', tint: '#d9dee9', prix: 250, cartes: 5,
-    taux: { commune: 45, peu_commune: 30, rare: 14.88, epique: 8, legendaire: 2, mythique: 0.1, identite: 0.02 }, brillante: 4,
-    possibles: 'toutes sauf les uniques', limite: null },
-  { nom: 'Doré', cls: 'cart--dore', lbl2: 'BOOSTER DORÉ', tint: '#FBD32D', prix: 350, cartes: 5,
-    taux: { commune: 34, peu_commune: 31, rare: 18.68, epique: 12, legendaire: 4, mythique: 0.3, identite: 0.02 }, brillante: 4,
-    possibles: 'toutes sauf les uniques', limite: null },
-  { nom: 'Diamant', cls: 'cart--diamant', lbl2: 'BOOSTER DIAMANT', tint: '#4f80ff', prix: 500, cartes: 5,
-    taux: { commune: 15, peu_commune: 28, rare: 25, epique: 20, legendaire: 10, mythique: 1.98, identite: 0.02 }, brillante: 10,
-    possibles: 'toutes sauf les uniques', limite: '5 / semaine' },
-  { nom: 'Quitte ou double', cls: 'cart--quitte', lbl2: 'QUITTE OU DOUBLE', tint: '#1f9d5c', prix: 500, cartes: 5,
-    taux: { commune: 90, peu_commune: 1.5, rare: 1.5, epique: 1.5, legendaire: 3.98, mythique: 1.5, identite: 0.02 }, brillante: 10,
-    possibles: 'toutes sauf les uniques', limite: '5 / semaine' },
-  { nom: 'Collectionneur', cls: 'cart--collection', lbl2: 'COLLECTIONNEUR', tint: '#a674f5', prix: 500, cartes: 10,
-    taux: { commune: 60, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.5, mythique: 0.4, identite: 0.1 }, brillante: 3,
-    possibles: 'uniquement les cartes que tu n’as pas, sauf uniques (différence remboursée)', limite: null },
-  { nom: 'Holographique', cls: 'cart--holo', lbl2: 'HOLOGRAPHIQUE', tint: 'linear-gradient(90deg,#FE3104,#FCA301,#FBD32D,#159946,#2B5AE2,#4E2398)', prix: 1000, cartes: 5,
-    taux: { commune: 0, peu_commune: 20, rare: 20, epique: 20, legendaire: 20, mythique: 20, identite: 0 }, brillante: 10,
-    possibles: 'toutes sauf les uniques', limite: '1 / semaine' },
-  { nom: 'Identité', cls: 'cart--identite', lbl2: 'IDENTITÉ', tint: '#FE3104', prix: 10000, cartes: 5,
-    taux: { commune: 45, peu_commune: 25, rare: 10, epique: 4, legendaire: 0.5, mythique: 0.5, identite: 15 }, brillante: 3,
-    possibles: 'toutes sauf les uniques', limite: null },
-];
-
-/* Mise en forme française : espace insécable pour les milliers, virgule pour les décimales. */
-const milliers = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const pct = (n) => String(n).replace('.', ',') + ' %';
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-function cartouche(b) {
-  return '<div class="cart-box ' + b.cls + '" aria-hidden="true">'
-    + '<div class="cart-body"></div><div class="cart-notch"></div>'
-    + '<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>'
-    + '<p class="cart-lbl1">LE GANG</p>'
-    + '<p class="cart-lbl2">' + esc(b.lbl2) + '</p>'
-    + '<div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>'
-    + '<div class="cart-ridge"></div>'
-    + '<p class="cart-foot">' + b.cartes + ' CARTES</p>'
-    + '</div>';
-}
-
-function tuile(b, i) {
-  const lignes = RARETES.map((r) => {
-    const v = b.taux[r.k] ?? 0;
-    return '<li class="' + (v === 0 ? 'zero' : '') + '" style="--c:' + r.c + '"><b>' + esc(r.nom) + '</b><span>' + pct(v) + '</span></li>';
-  });
-  lignes.push('<li class="brill"><b>✦ Brillante</b><span>' + pct(b.brillante) + '</span></li>');
-  const badges = (b.gratuit ? '<span class="free">' + esc(b.gratuit) + '</span>' : '')
-    + (b.limite ? '<span class="lim">' + esc(b.limite) + '</span>' : '')
-    + (b.jusqua ? '<span class="until">' + esc(b.jusqua) + '</span>' : '');
-  return '<article class="tile" style="--tint:' + b.tint + '">'
-    + '<div class="t-head"><span class="n">' + String(i + 1).padStart(2, '0') + '</span><h2>' + esc(b.nom) + '</h2></div>'
-    + '<div class="t-body">'
-    +   '<div class="vitrine">' + cartouche(b) + '</div>'
-    +   '<div class="side">'
-    +     '<span class="pill">' + milliers(b.prix) + ' ✦</span>'
-    +     '<span class="cartes">' + b.cartes + ' cartes</span>'
-    +     badges
-    +   '</div>'
-    + '</div>'
-    + '<ul class="taux">' + lignes.join('') + '</ul>'
-    + '<div class="faits"><p><b>Possibles :</b> ' + esc(b.possibles) + '</p></div>'
-    + '</article>';
-}
-
-document.getElementById('gamme').innerHTML = BOOSTERS.map(tuile).join('');
-// affiches.js (module) relit les boosters actifs en base et redessine la grille avec la même tuile ; cette liste reste le repli.
-window.HG_GAMME = { tuile, BOOSTERS, esc };
-</script>
+<script src="gamme.js"></script>
 <script type="module" src="affiches.js"></script>
 </body>
 </html>

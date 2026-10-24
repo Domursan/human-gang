@@ -5,153 +5,112 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=1123">
 <title>Gagner des cartes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap">
+<link rel="stylesheet" href="affiche.css">
 <style>
-  :root {
-    --bg: #0b0a10;
-    --surface: #17151f;
-    --line: #2c2838;
-    --ink: #f3efe4;
-    --muted: #a8a2b8;
-    --gold: #e2c77e;
-    --raspberry: #9E3543;
-    --rb1: #FE3104; --rb2: #FCA301; --rb3: #FBD32D; --rb4: #159946; --rb5: #2B5AE2; --rb6: #4E2398;
-    --c-commune: #c4c9d6; --c-peu: #2fd17a; --c-rare: #4f80ff; --c-epique: #a674f5;
-    --c-leg: #FCA301; --c-myth: #FE3104; --c-ident: #FBD32D;
-  }
-  * { box-sizing: border-box; }
-  @page { size: A3 portrait; margin: 0; }
-  html, body { margin: 0; padding: 0; background: var(--bg); }
-  body {
-    width: 1123px; height: 1587px; overflow: hidden; position: relative;
-    font-family: 'Inter', system-ui, sans-serif; color: var(--ink);
-    background:
-      radial-gradient(circle at 85% 8%, rgba(158,53,67,.28), transparent 42%),
-      radial-gradient(circle at 10% 70%, rgba(226,199,126,.07), transparent 40%),
-      var(--bg);
-  }
-  .band { position: absolute; left: 0; right: 0; top: 0; height: 8px;
-    background: linear-gradient(90deg, var(--rb1) 0 16.66%, var(--rb2) 0 33.33%, var(--rb3) 0 50%, var(--rb4) 0 66.66%, var(--rb5) 0 83.33%, var(--rb6) 0); }
-  .wrap { position: absolute; left: 56px; right: 56px; top: 38px; bottom: 0; }
+  :root { --c-commune: #c4c9d6; --c-peu: #2fd17a; --c-rare: #4f80ff; --c-epique: #b98bff; --c-leg: #FCA301; --c-myth: #ff6a4d; --c-ident: #FBD32D; }
+  .sec-h .num { font-size: 22px; }
+  .corps { padding-top: 12px; padding-bottom: 6px; }
+  .sec-h { margin-bottom: 6px; }
 
-  .display { font-family: 'Archivo Black', Impact, 'Arial Black', 'DejaVu Sans', sans-serif; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
-  .eyebrow { font-size: 18px; font-weight: 800; letter-spacing: 5px; color: var(--gold); text-transform: uppercase; }
+  /* Six façons */
+  .ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .way { position: relative; padding: 10px 16px 10px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; min-width: 0; }
+  .way.hot { border-color: var(--framboise); }
+  .way .pict { position: absolute; left: 14px; top: 12px; font-size: 26px; line-height: 1; }
+  .way h3 { margin: 0 0 2px; padding-left: 36px; min-height: 26px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; text-transform: uppercase; color: #fff; }
+  .way p { margin: 0; color: var(--muted); line-height: 1.32; }
+  .way p b { color: var(--text); }
+  .way .tag { position: absolute; right: 14px; top: 14px; padding: 3px 9px 2px; border-radius: 4px; background: var(--gold); color: var(--bg); font-weight: 800; font-size: 19px; text-transform: uppercase; letter-spacing: .06em; }
 
-  /* En-tête */
-  header { height: 150px; }
-  h1 { margin: 10px 0 0; font-size: 80px; line-height: .95; color: var(--ink); white-space: nowrap; }
-  h1 .em { font-family: 'Noto Color Emoji', sans-serif; font-size: 56px; vertical-align: 6px; margin-left: 10px; letter-spacing: 0; }
-  .lede { margin: 14px 0 0; font-size: 23px; white-space: nowrap; line-height: 1.35; color: var(--muted); max-width: 900px; }
-  .lede b { color: var(--gold); font-weight: 700; }
-
-  h2 { margin: 0; font-size: 34px; line-height: 1; color: var(--gold); }
-  .sec-head { display: flex; align-items: baseline; gap: 18px; margin-bottom: 14px; }
-  .sec-head .num { font-family: 'Archivo Black', Impact, sans-serif; font-size: 20px; color: var(--raspberry); background: var(--ink); padding: 4px 9px 3px; }
-  .sec-head .rule { flex: 1; height: 2px; background: var(--line); align-self: center; }
-
-  /* Façons */
-  .ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .way { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 14px 20px 14px; position: relative; }
-  .way .pict { font-size: 32px; line-height: 1; height: 34px; }
-  .way h3 { margin: 8px 0 6px; font-family: 'Archivo Black', Impact, sans-serif; font-weight: 900; font-size: 24px; line-height: 1; text-transform: uppercase; letter-spacing: .2px; }
-  .way p { margin: 0; font-size: 17px; line-height: 1.32; color: var(--muted); }
-  .way p b { color: var(--ink); font-weight: 700; }
-  .way.hot { border-color: var(--raspberry); }
-  .way .tag { position: absolute; right: 16px; top: 16px; font-size: 13px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--bg); background: var(--gold); padding: 4px 8px 3px; border-radius: 4px; }
-
-  /* Booster */
-  .boost { margin-top: 22px; display: grid; grid-template-columns: 1fr 1.05fr; gap: 16px; }
-  .panel { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 16px 22px; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
-  .stat { text-align: left; }
-  .stat .big { font-family: 'Archivo Black', Impact, sans-serif; font-size: 50px; line-height: .95; color: var(--ink); }
+  /* Booster : chiffres et filet de sécurité */
+  .boost { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+  .panel { padding: 12px 16px; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat .big { font-family: var(--display); font-size: 46px; line-height: .95; color: #fff; font-variant-numeric: tabular-nums; }
   .stat .big small { font-size: 26px; color: var(--gold); }
-  .stat .lab { margin-top: 6px; font-size: 16px; line-height: 1.25; color: var(--muted); }
+  .stat .lab { margin-top: 4px; color: var(--muted); line-height: 1.2; }
+  .micro { margin: 10px 0 0; color: var(--muted); }
+  .micro b { color: var(--text); }
   .pity { display: flex; gap: 16px; align-items: flex-start; }
-  .pity .ico { flex: 0 0 auto; width: 58px; height: 58px; display: grid; place-items: center; font-size: 34px; background: var(--raspberry); border-radius: 10px; }
-  .pity h3 { margin: 0 0 6px; font-family: 'Archivo Black', Impact, sans-serif; font-size: 23px; line-height: 1.05; text-transform: uppercase; color: var(--ink); }
-  .pity p { margin: 0; font-size: 17px; line-height: 1.35; color: var(--muted); }
-  .pity p b { color: var(--ink); }
-  .micro { margin-top: 8px; font-size: 16px; line-height: 1.35; color: var(--muted); }
+  .pity .ico { flex: 0 0 60px; width: 60px; height: 60px; display: grid; place-items: center; font-size: 32px; background: var(--framboise); border-radius: 10px; }
+  .pity h3 { margin: 0 0 6px; font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1.05; text-transform: uppercase; color: #fff; }
+  .pity p { margin: 0; color: var(--muted); line-height: 1.35; }
+  .pity p b { color: var(--text); }
 
-  /* Raretés */
-  .rar { margin-top: 22px; }
+  /* Tableau des raretés */
   table { width: 100%; border-collapse: collapse; background: var(--surface); border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
-  th { text-align: left; font-size: 14px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: var(--muted); padding: 9px 18px 7px; border-bottom: 2px solid var(--line); }
-  td { padding: 0 18px; height: 34px; font-size: 19px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { padding: 6px 16px 4px; text-align: left; font-size: 19px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--line); }
+  td { height: 33px; padding: 0 16px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 19px; }
   tr:last-child td { border-bottom: 0; }
   td.r { font-weight: 800; }
-  td.rate, td.cost { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-  td.cost .na { color: var(--muted); font-weight: 500; font-size: 17px; }
-  .chip { display: inline-block; width: 22px; height: 22px; border-radius: 4px; vertical-align: -5px; margin-right: 12px; border: 2px solid rgba(0,0,0,.35); }
-  .bar { display: inline-block; height: 12px; border-radius: 2px; vertical-align: middle; margin-left: 14px; }
-  .note-table { margin-top: 8px; font-size: 15px; color: var(--muted); line-height: 1.35; }
-  .note-table b { color: var(--ink); }
+  td.rate, td.cost { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.cost .na { color: var(--muted); font-weight: 500; }
+  .chip { display: inline-block; width: 22px; height: 22px; margin-right: 12px; vertical-align: -5px; border-radius: 4px; border: 2px solid rgba(0, 0, 0, .35); }
+  .note-table { margin: 6px 0 0; color: var(--muted); line-height: 1.4; }
+  .note-table b { color: var(--text); }
 
   /* Galerie */
-  .gallery { margin-top: 22px; }
-  .cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
-  .cardx { text-align: center; }
-  .cardx .frame { background: #0a090e; border: 2px solid var(--line); border-radius: 8px; padding: 4px; aspect-ratio: 3 / 2; display: grid; place-items: center; }
+  .cards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .cardx { margin: 0; text-align: center; min-width: 0; }
+  .cardx .frame { aspect-ratio: 9 / 4; padding: 4px; display: grid; place-items: center; background: #0a090e; border: 2px solid var(--line); border-radius: 8px; }
   .cardx img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; display: block; }
-  .cardx .cap { margin-top: 6px; font-size: 14px; line-height: 1.2; color: var(--muted); }
-  .cardx .cap b { display: block; font-size: 15px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
-  .shiny .frame { border-color: var(--c-ident); box-shadow: 0 0 0 2px #0a090e, 0 0 16px 3px rgba(251,211,45,.55), 0 0 34px 6px rgba(254,49,4,.18); }
+  .cardx figcaption { margin-top: 4px; line-height: 1.15; color: var(--muted); }
+  .cardx figcaption b { display: block; margin-bottom: 2px; font-size: 19px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+  .shiny .frame { border-color: var(--c-ident); box-shadow: 0 0 0 2px #0a090e, 0 0 16px 3px rgba(251, 211, 45, .55), 0 0 34px 6px rgba(254, 49, 4, .18); }
   .shiny img { filter: drop-shadow(0 0 5px #FBD32D) drop-shadow(0 0 2px #FFF6C8); }
 
-  /* Pied */
-  footer { position: absolute; left: 0; right: 0; bottom: 0; height: 104px; border-top: 2px solid var(--line); display: flex; align-items: center; gap: 22px; padding: 0 56px; background: #08070c; }
-  footer .plate { flex: 0 0 auto; width: 74px; height: 74px; border-radius: 50%; background: #f6f1e4; display: grid; place-items: center; overflow: hidden; }
-  footer .plate img { width: 64px; height: 64px; object-fit: contain; }
-  footer .txt { font-size: 17px; line-height: 1.35; color: var(--muted); max-width: 640px; }
-  footer .txt b { color: var(--ink); }
-  footer .brand { margin-left: auto; text-align: right; flex: 0 0 auto; padding-left: 16px; }
-  footer .brand .display { font-size: 26px; color: var(--ink); }
-  footer .brand .sub { font-size: 14px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; font-weight: 700; margin-top: 4px; }
+  /* Pied : une phrase utile en plus du bandeau commun */
+  .pied .txt { max-width: 700px; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 19px; line-height: 1.35; color: var(--muted); }
+  .pied .txt b { color: var(--text); }
 </style>
 </head>
-<body data-affiche="cartes">
-  <div class="band"></div>
+<body>
+<main class="affiche" data-affiche="cartes">
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
-  <div class="wrap">
-    <header>
-      <div class="eyebrow">Humane Gang · le guide des cartes</div>
-      <h1 class="display">Gagner des cartes<span class="em">🃏</span></h1>
-      <p class="lede">Six façons d'en obtenir : boosters, Paillettes, drops et un peu de <b>négociation</b>.</p>
-    </header>
+  <header class="mast">
+    <img class="logo" src="../assets/img/logo-512.webp" alt="Logo Humane Gang">
+    <div>
+      <p class="kicker">Humane Gang · le guide des cartes</p>
+      <h1>Gagner des cartes</h1>
+      <p class="lede">Six façons d’en obtenir : boosters, Paillettes, drops et un peu de <b>négociation</b>.</p>
+    </div>
+  </header>
 
-    <section style="margin-top:16px">
-      <div class="sec-head"><span class="num">01</span><h2 class="display">Les façons d'en obtenir</h2><span class="rule"></span></div>
+  <div class="corps">
+    <section>
+      <h2 class="sec-h"><span class="num">01</span>Les façons d’en obtenir<span class="line"></span></h2>
       <div class="ways">
         <article class="way hot">
-          <span class="tag">Principal</span>
-          <div class="pict">🎴</div>
+          <div class="pict" aria-hidden="true">🎴</div>
           <h3>Booster</h3>
-          <p><b><span data-cfg="cartes.booster_size">5</span> cartes</b> par paquet. Il coûte <b><span data-cfg="cartes.booster_price">100</span> Paillettes</b>, ou il est <b>gratuit toutes les <span data-cfg="cartes.free_booster_hours">24</span> h</b>.</p>
+          <p><b><span data-cfg="cartes.booster_size">5</span> cartes</b>, <b><span data-cfg="cartes.booster_price">100</span> Paillettes</b>, ou <b>gratuit toutes les <span data-cfg="cartes.free_booster_hours">24</span> h</b>.</p>
         </article>
         <article class="way">
-          <div class="pict">🎁</div>
+          <div class="pict" aria-hidden="true">🎁</div>
           <h3>Booster offert</h3>
-          <p>Le gang peut en offrir à un ou plusieurs membres. Ouvert <b>sans coût</b> et <b>sans délai</b>.</p>
+          <p>Offert par le gang, <b>sans coût</b>, <b>sans délai</b>.</p>
         </article>
         <article class="way">
-          <div class="pict">✨</div>
+          <div class="pict" aria-hidden="true">✨</div>
           <h3>Fabrication</h3>
-          <p>Tu paies en Paillettes pour <b>fabriquer une carte précise</b>. Le prix dépend de la rareté.</p>
+          <p>Paie en Paillettes pour <b>fabriquer une carte précise</b>.</p>
         </article>
         <article class="way">
-          <div class="pict">🎯</div>
+          <div class="pict" aria-hidden="true">🎯</div>
           <h3>Drop</h3>
-          <p>Une carte apparaît sur le site. <b>Les premiers qui cliquent</b> la gagnent, un seul gain par drop.</p>
+          <p>Une carte apparaît : <b>le premier qui clique</b> la gagne.</p>
         </article>
         <article class="way">
-          <div class="pict">🛡️</div>
+          <div class="pict" aria-hidden="true">🛡️</div>
           <h3>Don du gang</h3>
-          <p>L'admin peut offrir <b>une carte</b> ou un <b>lot</b> de cartes à un ou plusieurs membres.</p>
+          <p>L’admin peut offrir <b>une carte</b> ou un <b>lot</b> de cartes à un ou plusieurs membres.</p>
         </article>
         <article class="way">
-          <div class="pict">🤝</div>
+          <div class="pict" aria-hidden="true">🤝</div>
           <h3>Échange</h3>
-          <p>Troque avec un autre membre, Paillettes en complément si besoin. Un <b>cadeau direct</b> change une carte de main, sans en créer.</p>
+          <p>Troque avec un membre, Paillettes en complément. <b>Cadeau direct</b> possible.</p>
         </article>
       </div>
 
@@ -159,81 +118,59 @@
         <div class="panel">
           <div class="stats">
             <div class="stat"><div class="big"><span data-cfg="cartes.booster_size">5</span></div><div class="lab">cartes<br>par booster</div></div>
-            <div class="stat"><div class="big"><span data-cfg="cartes.booster_price">100</span><small> P</small></div><div class="lab">Paillettes<br>par booster payant</div></div>
+            <div class="stat"><div class="big"><span data-cfg="cartes.booster_price">100</span><small> ✦</small></div><div class="lab">Paillettes<br>par booster</div></div>
             <div class="stat"><div class="big"><span data-cfg="cartes.free_booster_hours">24</span><small> h</small></div><div class="lab">entre deux<br>boosters gratuits</div></div>
           </div>
-          <p class="micro">Chaque carte a <span data-cfg="cartes.shiny_rate">3</span> % de chance d'être <b style="color:var(--ink)">brillante</b>.</p>
+          <p class="micro">Chaque carte a <b><span data-cfg="cartes.shiny_rate">3</span> %</b> de chance d’être <b>brillante</b>.</p>
         </div>
         <div class="panel pity">
-          <div class="ico">⏳</div>
+          <div class="ico" aria-hidden="true">⏳</div>
           <div>
             <h3>Filet de sécurité</h3>
-            <p>Si <b><span data-expr="cartes.pity_epique-1">19</span> boosters d'affilée</b> n'ont rien donné d'<b>épique</b> ou mieux, le <b><span data-cfg="cartes.pity_epique">20</span>e</b> en garantit au moins une.</p>
+            <p>Si <b><span data-expr="cartes.pity_epique-1">19</span> boosters d’affilée</b> n’ont rien donné d’<b>épique</b> ou mieux, le <b><span data-cfg="cartes.pity_epique">20</span>e</b> en garantit au moins une.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="rar">
-      <div class="sec-head"><span class="num">02</span><h2 class="display">Raretés, taux et fabrication</h2><span class="rule"></span></div>
+    <section>
+      <h2 class="sec-h"><span class="num">02</span>Raretés, taux et fabrication<span class="line"></span></h2>
       <table>
         <thead>
           <tr><th>Rareté</th><th style="text-align:right">Taux par carte</th><th style="text-align:right">Fabrication</th></tr>
         </thead>
         <tbody>
-          <tr><td class="r"><span class="chip" style="background:var(--c-commune)"></span>Commune<span class="bar" style="width:260px;background:var(--c-commune)"></span></td><td class="rate"><span data-cfg="cartes.rates.commune">60</span> %</td><td class="cost"><span data-cfg="cartes.craft.commune">100</span> P</td></tr>
-          <tr><td class="r"><span class="chip" style="background:var(--c-peu)"></span>Peu commune<span class="bar" style="width:108px;background:var(--c-peu)"></span></td><td class="rate"><span data-cfg="cartes.rates.peu_commune">25</span> %</td><td class="cost"><span data-cfg="cartes.craft.peu_commune">150</span> P</td></tr>
-          <tr><td class="r"><span class="chip" style="background:var(--c-rare)"></span>Rare<span class="bar" style="width:43px;background:var(--c-rare)"></span></td><td class="rate"><span data-cfg="cartes.rates.rare">10</span> %</td><td class="cost"><span data-cfg="cartes.craft.rare">200</span> P</td></tr>
-          <tr><td class="r"><span class="chip" style="background:var(--c-epique)"></span>Épique<span class="bar" style="width:17px;background:var(--c-epique)"></span></td><td class="rate"><span data-cfg="cartes.rates.epique">4</span> %</td><td class="cost"><span data-cfg="cartes.craft.epique">750</span> P</td></tr>
-          <tr><td class="r"><span class="chip" style="background:var(--c-leg)"></span>Légendaire</td><td class="rate"><span data-cfg="cartes.rates.legendaire">0,88</span> %</td><td class="cost"><span data-cfg="cartes.craft.legendaire">2 000</span> P</td></tr>
+          <tr><td class="r"><span class="chip" style="background:var(--c-commune)"></span>Commune</td><td class="rate"><span data-cfg="cartes.rates.commune">60</span> %</td><td class="cost"><span data-cfg="cartes.craft.commune">100</span> ✦</td></tr>
+          <tr><td class="r"><span class="chip" style="background:var(--c-peu)"></span>Peu commune</td><td class="rate"><span data-cfg="cartes.rates.peu_commune">25</span> %</td><td class="cost"><span data-cfg="cartes.craft.peu_commune">150</span> ✦</td></tr>
+          <tr><td class="r"><span class="chip" style="background:var(--c-rare)"></span>Rare</td><td class="rate"><span data-cfg="cartes.rates.rare">10</span> %</td><td class="cost"><span data-cfg="cartes.craft.rare">200</span> ✦</td></tr>
+          <tr><td class="r"><span class="chip" style="background:var(--c-epique)"></span>Épique</td><td class="rate"><span data-cfg="cartes.rates.epique">4</span> %</td><td class="cost"><span data-cfg="cartes.craft.epique">750</span> ✦</td></tr>
+          <tr><td class="r"><span class="chip" style="background:var(--c-leg)"></span>Légendaire</td><td class="rate"><span data-cfg="cartes.rates.legendaire">0,88</span> %</td><td class="cost"><span data-cfg="cartes.craft.legendaire">2 000</span> ✦</td></tr>
           <tr><td class="r"><span class="chip" style="background:var(--c-myth)"></span>Mythique</td><td class="rate"><span data-cfg="cartes.rates.mythique">0,10</span> %</td><td class="cost"><span class="na">non fabricable</span></td></tr>
           <tr><td class="r"><span class="chip" style="background:var(--c-ident)"></span>Identité</td><td class="rate"><span data-cfg="cartes.rates.identite">0,02</span> %</td><td class="cost"><span class="na">non fabricable</span></td></tr>
         </tbody>
       </table>
-      <p class="note-table"><b>Brillante</b> : coût de fabrication multiplié par <span data-cfg="cartes.craft.shiny_multiplier">6</span>. Les cartes identité sont limitées à 10 exemplaires. P = Paillettes.<br><b>Carte unique</b> : un seul exemplaire, à gagner lors d'un événement ou offerte par l'admin.</p>
+      <p class="note-table"><b>Brillante</b> : fabrication × <span data-cfg="cartes.craft.shiny_multiplier">6</span>. Identité : 10 exemplaires maximum. <b>Carte unique</b> : un seul exemplaire. <b>Cartes Secrets</b> : jamais en booster, elles viennent des secrets.</p>
     </section>
 
-    <section class="gallery">
-      <div class="sec-head"><span class="num">03</span><h2 class="display">À quoi elles ressemblent</h2><span class="rule"></span></div>
+    <section>
+      <h2 class="sec-h"><span class="num">03</span>À quoi elles ressemblent<span class="line"></span></h2>
       <div class="cards">
-        <figure class="cardx" style="margin:0">
-          <div class="frame"><img src="img/beauf-commune-040.png" alt="Carte commune"></div>
-          <figcaption class="cap"><b style="color:var(--c-commune)">Commune</b>Deux heures sans téléphone</figcaption>
-        </figure>
-        <figure class="cardx" style="margin:0">
-          <div class="frame"><img src="img/beauf-rare-005.png" alt="Carte rare"></div>
-          <figcaption class="cap"><b style="color:var(--c-rare)">Rare</b>Vous allez rire</figcaption>
-        </figure>
-        <figure class="cardx" style="margin:0">
-          <div class="frame"><img src="img/beauf-epique-002.png" alt="Carte épique"></div>
-          <figcaption class="cap"><b style="color:var(--c-epique)">Épique</b>Le Domusique au piano</figcaption>
-        </figure>
-        <figure class="cardx" style="margin:0">
-          <div class="frame"><img src="img/membre-001.png" alt="Carte légendaire"></div>
-          <figcaption class="cap"><b style="color:var(--c-leg)">Légendaire</b>Carzy · Les OG</figcaption>
-        </figure>
-        <figure class="cardx" style="margin:0">
-          <div class="frame"><img src="img/beauf-mythique-001.png" alt="Carte mythique"></div>
-          <figcaption class="cap"><b style="color:var(--c-myth)">Mythique</b>C'EST PAS MOI</figcaption>
-        </figure>
-        <figure class="cardx shiny" style="margin:0">
-          <div class="frame"><img src="img/membre-002.png" alt="Carte brillante"></div>
-          <figcaption class="cap"><b style="color:var(--c-ident)">Brillante</b>Destru · lueur dorée</figcaption>
-        </figure>
+        <figure class="cardx"><div class="frame"><img src="img/beauf-commune-040.png" alt="Carte commune"></div><figcaption><b style="color:var(--c-commune)">Commune</b>Deux heures sans téléphone</figcaption></figure>
+        <figure class="cardx"><div class="frame"><img src="img/beauf-rare-005.png" alt="Carte rare"></div><figcaption><b style="color:var(--c-rare)">Rare</b>Vous allez rire</figcaption></figure>
+        <figure class="cardx"><div class="frame"><img src="img/beauf-epique-002.png" alt="Carte épique"></div><figcaption><b style="color:var(--c-epique)">Épique</b>Le Domusique au piano</figcaption></figure>
+        <figure class="cardx"><div class="frame"><img src="../assets/cards/campagne-serge/005.png" alt="Carte légendaire"></div><figcaption><b style="color:var(--c-leg)">Légendaire</b>La Couronne de Serge</figcaption></figure>
+        <figure class="cardx"><div class="frame"><img src="img/beauf-mythique-001.png" alt="Carte mythique"></div><figcaption><b style="color:var(--c-myth)">Mythique</b>C’EST PAS MOI</figcaption></figure>
+        <figure class="cardx shiny"><div class="frame"><img src="img/beauf-commune-040.png" alt="Carte brillante"></div><figcaption><b style="color:var(--c-ident)">Brillante</b>Même carte, lueur dorée</figcaption></figure>
       </div>
     </section>
   </div>
 
-  <footer>
-    <div class="plate"><img src="../assets/img/logo-512.webp" alt="Logo Humane Gang"></div>
-    <div class="txt">
-      <b>Ne donnent pas de carte</b> mais des <b>Paillettes</b> : quêtes, défis, Secret Santa, sorties, passage du jour.
-    </div>
-    <div class="brand">
-      <div class="display">Humane Gang</div>
-      <div class="sub">Guide des cartes</div>
-    </div>
+  <footer class="pied">
+    <span class="txt"><b>Ne donnent pas de carte</b> mais des <b>Paillettes</b> : quêtes, défis, Secret Santa, sorties, passage du jour.</span>
+    <span>Guide des cartes</span>
   </footer>
+  <div class="band" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+</main>
 <script type="module" src="affiches.js"></script>
 </body>
 </html>

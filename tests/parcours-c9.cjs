@@ -29,7 +29,8 @@ const DLG = '#c2-code-dlg[open]';
   await sleep(300);
   check(await p.getAttribute('#cartes-tab-ouverture', 'aria-selected') === 'true' && !(await p.isVisible(DLG)), '« L’ouvrir » : onglet Ouverture, fenêtre fermée');
   // Saisie à la main dans l'Inventaire
-  await p.click('[data-tab=inventaire]');
+  await p.evaluate(() => { location.hash = 'inventaire'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
+  await p.waitForSelector('#cartes-p-inventaire:not([hidden])', { timeout: 5000 });
   await p.fill('#c2-code-inline', 'hg 2345 6789');
   await p.click('.c2-codebox button[type=submit]');
   await p.waitForSelector('.c2-code-err', { timeout: 4000 }).catch(() => {});

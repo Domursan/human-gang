@@ -1,5 +1,5 @@
 // Parcours : aide et tutos.
-// Bouton « ? » dans la colonne d'outils (et lien « Aide & tutos » dans le menu mobile) sur plusieurs pages ;
+// Bouton « ? » dans l'éventail du profil (membre) ou dans l'en-tête (visiteur) sur plusieurs pages ;
 // page aide.html : liste des groupes, recherche (sans accents ni casse), tuto ouvert par l'adresse aide.html#<slug>,
 // « Y aller » ; visiteur (sans compte) : seulement les tutos « Premiers pas » ; accès à l'assistance depuis l'aide ;
 // plus de lien Assistance dans le pied de page ; 390 px sans défilement horizontal.
@@ -11,6 +11,12 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
+
+/** Membre : le « ? » est dans l'éventail de la photo de profil (.nav-me) ; on ouvre l'éventail d'abord. */
+const ouvrirMoi = async (pg) => {
+  await pg.locator('.nav-me').click();
+  await pg.waitForSelector('.me-fan a.nav-help', { state: 'visible', timeout: 4000 }).catch(() => {});
+};
 
 const MEMBER_SLUG = 'ouvrir-un-booster';   // tuto membre (cartes-base), page cartes.html, 7 étapes, 3 astuces
 const GUEST_SLUG = 'se-connecter';          // tuto « Premiers pas », visible sans compte, 5 étapes
@@ -58,14 +64,15 @@ async function checkData() {
   /* ---------- Bouton « ? » sur plusieurs pages (membre, 1280 px) ---------- */
   for (const pg of ['accueil', 'cartes', 'irl', 'compte', 'assistance', 'legal']) {
     const p = await openPage(browser, { page: pg, width: 1280 });
-    const n = await p.locator('.side-tools a.nav-help[href="aide.html"]').count();
-    check(n === 1, `${pg} : bouton « ? » dans la colonne d'outils (${n})`);
+    await ouvrirMoi(p);
+    const n = await p.locator('.me-fan a.nav-help[href="aide.html"]').count();
+    check(n === 1, `${pg} : bouton « ? » dans l'éventail du profil (${n})`);
     await p.ctx.close();
   }
 
   /* ---------- Visiteur : bouton « ? » aussi, pied de page sans Assistance ---------- */
   let p = await openPage(browser, { page: 'accueil', scenario: { guest: true }, width: 1280 });
-  check(await p.locator('.side-tools a.nav-help').count() === 1, 'visiteur : bouton « ? » présent');
+  check(await p.locator('.site-header a.nav-help').count() === 1, 'visiteur : bouton « ? » présent');
   check(await p.locator('.site-footer a[href="assistance.html"]').count() === 0, 'pied de page : plus de lien Assistance');
   await p.ctx.close();
 
@@ -103,7 +110,8 @@ async function checkData() {
   await p.fill('#aide-q', '');
   await sleep(100);
   check(await p.locator('#aide-count').innerText().then((t) => t === ''), 'recherche vide : pas de compteur');
-  check(await p.locator('.side-tools a.nav-help[aria-current="page"]').count() === 1, 'aide : « ? » marqué comme page courante');
+  await ouvrirMoi(p);
+  check(await p.locator('.me-fan a.nav-help[aria-current="page"]').count() === 1, 'aide : « ? » marqué comme page courante');
   check(await hscroll(p) <= 0, 'aide 1280 : pas de défilement horizontal');
   await p.ctx.close();
 
@@ -159,7 +167,7 @@ async function checkData() {
 
   /* ---------- Téléphone 390 px : bouton, menu, page d'aide sans défilement ---------- */
   p = await openPage(browser, { page: 'accueil', width: 390 });
-  check(await p.locator('.side-tools a.nav-help').isVisible(), '390 px : bouton « ? » visible dans la rangée d\'outils');
+  await p.locator('.nav-me').isVisible().then((ok) => check(ok, '390 px : photo de profil (éventail) visible'));
   check(await hscroll(p) <= 0, '390 px accueil : pas de défilement horizontal');
   // Alignement : le bouton Menu est centré verticalement sur le logo (à 3 px près)
   const centreY = async (sel) => { const b = await p.locator(sel).first().boundingBox(); return b.y + b.height / 2; };
@@ -168,7 +176,11 @@ async function checkData() {
   await p.click('.nav-toggle');
   await sleep(150);
   check(await p.getAttribute('.nav-toggle', 'aria-expanded') === 'true', '390 px : menu ouvert, aria-expanded à true');
-  check(await p.locator('.nav a.nav-help-link').isVisible(), '390 px : « Aide & tutos » dans le menu');
+  check(await p.locator('.nav .nav-group').first().isVisible(), '390 px : menu ouvert, groupes de navigation visibles');
+  await p.ctx.close();
+  p = await openPage(browser, { page: 'accueil', width: 390 });
+  await ouvrirMoi(p);
+  check(await p.locator('.me-fan a.nav-help').isVisible(), '390 px : bouton « ? » visible dans l\'éventail du profil');
   await p.ctx.close();
   p = await openPage(browser, { page: 'aide', width: 390 });
   check(await hscroll(p) <= 0, '390 px aide : pas de défilement horizontal (liste)');

@@ -41,7 +41,8 @@ const scenario = (until) => ({
   const buy = (await log(p)).filter((x) => x[0] === 'rpc' && x[1] === 'hg_booster_buy').pop();
   check(buy && buy[2].p_type === 'worlds_2026', '(1) achat : hg_booster_buy avec p_type worlds_2026');
   await p.screenshot({ path: 'tests/shots/c1-boutique.png', fullPage: false });
-  await p.click('#cartes-tab-ouverture');
+  await p.evaluate(() => { location.hash = 'ouverture'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
+  await p.waitForSelector('#cartes-p-ouverture:not([hidden])', { timeout: 5000 });
   await sleep(500);
   check(await p.$('[data-stock-type="worlds_2025"]'), '(2) stock d’une saison finie : tuile d’ouverture présente');
   // (4) série réservée absente du choix de série

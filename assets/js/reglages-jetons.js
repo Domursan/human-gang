@@ -6,7 +6,7 @@
 // RPC hg_support_public et hg_eggs_public pour « support » et « eggs » (migration 072).
 // Exporte : chargerReglages, valeur, evaluer, fmt, jetons, appliquerReglages.
 // =====================================================================
-import { sb } from './core/supabase.js';
+import { sb, hasSession } from './core/supabase.js';
 
 /* ---------- Sources ---------- */
 // Espaces de noms utilisés dans les jetons : « cartes.<champ> » lit hg_card_cfg(), les autres lisent hg_settings[<clé>].
@@ -54,7 +54,9 @@ export function chargerReglages() {
     } catch (e) {
       console.warn('[réglages] réglages du site illisibles, valeurs actuelles affichées :', e?.message || e);
     }
+    const membre = await hasSession();
     await Promise.all(Object.entries(RPC_SETTINGS).map(async ([cle, rpc]) => {
+      if (cle === 'eggs' && !membre) return; // réservée aux membres connectés (migration 072) : pas d’appel refusé pour un visiteur
       try {
         const { data, error } = await sb.rpc(rpc);
         if (!error && estObjet(data)) out[cle] = data;
