@@ -238,7 +238,7 @@ async function showPlateau() {
   const fn = plateauMount();
   el.plateauRoot.replaceChildren();
   if (fn) await fn(el.plateauRoot, { lieux: visibleLieux(), countOf, totalOf: (l) => todoCount(l.id) });
-  else renderPlateau(el.plateauRoot, visibleLieux());
+  else await renderPlateau(el.plateauRoot, visibleLieux());
   paintCounts();
 }
 
