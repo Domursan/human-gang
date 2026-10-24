@@ -4,7 +4,7 @@ Le site du Humane Gang : le QG du groupe pour le Secret Santa, les sorties IRL, 
 
 - **En ligne** : https://humane-gang.com/
 - **Auteur et administrateur** : Domursan
-- **Plan complet du site** : [PLAN-DU-SITE.md](PLAN-DU-SITE.md)
+- **Plan complet du site** : [docs/PLAN-DU-SITE.md](docs/PLAN-DU-SITE.md)
 
 ---
 

@@ -531,7 +531,7 @@ export function mountBotSection(container) {
         <section class="card stack bot-panel" role="tabpanel" id="bot-p-connexion" aria-labelledby="bot-tab-connexion">
           <div>
             <h3 class="card-title">Connexion</h3>
-            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="https://github.com/domursan/human-gang/blob/main/BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
+            <p class="muted small">Le jeton du bot n'est jamais stocké ici : il se règle dans les secrets Supabase. Toute la marche à suivre est dans le <a href="https://github.com/domursan/human-gang/blob/main/docs/BOT.md" target="_blank" rel="noopener">guide du bot</a>.</p>
           </div>
           <div class="grid-2">
             <div class="field">

@@ -119,7 +119,7 @@ export async function mountCommandesSection(root) {
     <ul class="avd-list">${COMMANDES.map(([k, name, desc]) => `<li class="avd-row">
       <label class="switch-row avd-switch"><input type="checkbox" role="switch" data-cmd="${k}"${on[k] !== false ? ' checked' : ''}>
         <span class="avd-txt"><strong>${esc(name)}</strong><span class="small muted">${esc(desc)}</span></span></label></li>`).join('')}</ul>
-    <p class="small muted">Mise en service : voir BOT.md (section « Commandes slash ») pour l’adresse d’interactions et l’enregistrement des commandes.</p>
+    <p class="small muted">Mise en service : voir docs/BOT.md (section « Commandes slash ») pour l’adresse d’interactions et l’enregistrement des commandes.</p>
   </div>`;
   root.onchange = async (e) => {
     const i = e.target.closest('[data-cmd]'); if (!i) return;
