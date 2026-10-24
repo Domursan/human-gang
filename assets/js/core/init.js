@@ -5,7 +5,8 @@
  * les services du membre (messages non lus, badges, événements dynamiques, drops de cartes).
  * Page : toutes les pages du site.
  * Dépendances : theme-load.js, theme.js, effects.js, profile.js, pages-access.js, perms.js, godmode.js,
- * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js, site-etat.js (bandeau et maintenance).
+ * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js, site-etat.js (bandeau et maintenance),
+ * view-as.js (vue « comme un membre » de l'admin : résolue dès le profil connu, bandeau sous le menu).
  *   Chargés à part (import dynamique, sans bloquer la page) : dyn-events.js, card-drops.js.
  * Exporte : initPage.
  */
@@ -23,6 +24,7 @@ import { checkNewBadges } from './badges.js';
 import { loadSiteSettings } from './site-load.js';
 import { applySiteDom } from './site-defaults.js';
 import { applySiteEtat } from './site-etat.js';
+import { resolveViewAs, viewAsActive, renderViewAsBar } from './view-as.js';
 
 /* ---------- Constantes ---------- */
 
@@ -100,13 +102,15 @@ async function startPage(auth) {
   const siteP = loadSiteSettings(); // réglages du site (nom, menu, pied, textes) : ne lève jamais d'erreur
   const who = auth === 'member' ? requireMember() : auth === 'admin' ? requireAdmin() : getProfile();
   const profile = await withTimeout(who, PROFILE_TIMEOUT_MS);
+  resolveViewAs(profile); // avant tout le reste : la vue change les pages, les menus et le mode sans limite
   await siteP;
   applySiteDom();
   const pagesP = profile ? loadMyPages() : null; // en parallèle du mode sans limite
-  const godP = loadGodMode(profile); // les pages lisent getGodMode() dès leur premier affichage
+  const godP = loadGodMode(viewAsActive() ? null : profile); // les pages lisent getGodMode() dès leur premier affichage ; coupé pendant une vue
   const permsP = profile ? loadMyPerms() : null; // droits sur le panel (Staff/admin) : une requête, en cache
   // En-tête tout de suite (compte, outils) ; les liens arrivent avec les pages accessibles
   renderHeader(profile, { nav: false });
+  renderViewAsBar(); // bandeau « Tu vois le site comme… » (rien si la vue n'est pas active)
   await Promise.all([pagesP, godP, permsP]);
   const slug = currentPageSlug();
   // Page déclarée mais interdite -> accueil (jamais depuis l'accueil lui-même, pour éviter une boucle)
@@ -118,7 +122,7 @@ async function startPage(auth) {
   renderFooter(profile);
   cookieNotice();
   // État du site (bandeau d'annonce, écran de maintenance) : affichage seulement ; admin et Staff ne sont jamais bloqués
-  const etat = applySiteEtat({ isStaff: !!profile && canPanel(getCachedPerms()), connecte: !!profile });
+  const etat = applySiteEtat({ isStaff: !!profile && canPanel(getCachedPerms()) && !viewAsActive(), connecte: !!profile });
   startEffects(getActiveTheme());
   if (profile && !etat.maintenance) {
     startUnread();

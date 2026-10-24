@@ -7,11 +7,13 @@
  * pour construire le menu et renvoyer vers l'accueil une page interdite.
  * Page : toutes les pages (init.js charge la liste puis contrôle la page courante).
  * Dépendances : supabase.js (requêtes), profile.js (savoir si l'on est admin : accès total).
- * Données : table hg_pages (liste déclarée), RPC hg_my_pages (mes pages accessibles).
+ * Données : table hg_pages (liste déclarée), RPC hg_my_pages (mes pages accessibles). Pendant une vue « comme un membre »
+ * (view-as.js), ce sont les pages de ce membre, et l'admin n'a plus l'accès total.
  * Exporte : currentPageSlug, loadMyPages, getMyPages, canAccess, pageLabel.
  */
 import { sb, hasSession, isNavCancel } from './supabase.js';
 import { getCachedProfile } from './profile.js';
+import { viewAsActive, viewAsState } from './view-as.js';
 
 /* ---------- État interne ---------- */
 
@@ -49,9 +51,10 @@ export function loadMyPages({ force = false } = {}) {
   _pagesLoading = (async () => {
     try {
       if (!(await hasSession())) return getMyPages(); // sans session : rien à charger (hg_my_pages est réservée aux membres)
+      const va = viewAsActive() ? viewAsState() : null; // vue « comme un membre » : ses pages, pas les miennes
       const [all, mine] = await Promise.all([
         sb.from('hg_pages').select('slug, label, mode, in_nav, sort'),
-        sb.rpc('hg_my_pages'),
+        va ? Promise.resolve({ data: va.pages, error: null }) : sb.rpc('hg_my_pages'),
       ]);
       if (all.error) throw all.error;
       if (mine.error) throw mine.error;
@@ -88,7 +91,7 @@ export function getMyPages() { return _pages ? _pages.mine.map((p) => ({ ...p })
  */
 export function canAccess(slug) {
   const s = slugOf(slug);
-  if (!_pages || getCachedProfile()?.is_admin) return true;
+  if (!_pages || (!viewAsActive() && getCachedProfile()?.is_admin)) return true;
   if (!_pages.declared.has(s)) return true;
   return _pages.set.has(s);
 }
