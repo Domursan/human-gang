@@ -13,7 +13,7 @@ import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
 import { rarityLabel } from '../cartes-ui.js';
 
-const QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm';
+const QR_LIB = '../../vendor/qrcode-generator-1.4.4.mjs';
 let qrLib = null;
 // État : types de boosters, lots, codes du dernier lot créé (en clair, jamais rechargés), choix du formulaire.
 const K = { el: null, types: [], batches: null, err: '', last: null, kind: 'booster' };
