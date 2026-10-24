@@ -9,8 +9,9 @@ export const KEYS_LOT1 = {
 };
 
 /**
- * Groupes du formulaire. k = « clé_hg_settings.champ ». kind : text, area, url, email, bool, nav, footer.
- * vide : la valeur peut rester vide. max : longueur maximale. aide : texte court sous le champ.
+ * Groupes du formulaire. k = « clé_hg_settings.champ ». kind : text, area, url, email, bool, nav, footer, libelles.
+ * vide : la valeur peut rester vide (vide = texte d'origine). max : longueur maximale. aide : texte court sous le champ.
+ * placeholder : texte affiché quand le champ est vide (sinon la valeur par défaut). items : libellés d'un champ kind « libelles ».
  */
 export const GROUPES_LOT1 = [
   { id: 'identite', titre: 'Identité', aide: 'Le nom et le logo du site, en haut de chaque page et dans le titre des pages.', champs: [
@@ -25,6 +26,21 @@ export const GROUPES_LOT1 = [
     { k: 'site_textes.legal_mentions', kind: 'area', vide: true, max: 3000, label: 'Texte ajouté aux mentions légales', aide: 'Paragraphe(s) ajouté(s) en fin de section. Une ligne vide sépare deux paragraphes.' },
     { k: 'site_textes.legal_confidentialite', kind: 'area', vide: true, max: 3000, label: 'Texte ajouté à la confidentialité', aide: 'Ajouté en fin de la politique de confidentialité.' },
     { k: 'site_textes.legal_cookies', kind: 'area', vide: true, max: 3000, label: 'Texte ajouté aux cookies', aide: 'Ajouté en fin de la section Cookies.' },
+  ] },
+  { id: 'accueil', titre: 'Page d’accueil', aide: 'Titre, présentation et libellés de la page d’accueil. Vide : le texte d’origine (affiché en gris).', champs: [
+    { k: 'site_textes.accueil_titre', kind: 'text', vide: true, max: 80, label: 'Titre de la page', aide: 'Grand titre en haut de l’accueil.' },
+    { k: 'site_textes.accueil_lead', kind: 'area', vide: true, max: 300, label: 'Présentation', aide: 'Paragraphe sous le titre, pour les visiteurs et les membres.' },
+    { k: 'site_textes.accueil_cta_connexion', kind: 'text', vide: true, max: 40, label: 'Bouton de connexion (visiteurs)' },
+    { k: 'site_textes.accueil_note_invitation', kind: 'area', vide: true, max: 200, label: 'Note sous le bouton (visiteurs)', aide: 'Explique comment obtenir un code d’invitation.' },
+    { k: 'site_textes.idees_aide', kind: 'area', vide: true, max: 200, label: 'Boîte à idées : texte d’aide', placeholder: 'Une sortie, une fonctionnalité pour le site, un thème… Ton message est lu uniquement par l’admin.', aide: 'Vide : le texte d’origine, avec « lu uniquement par l’admin » en gras.' },
+    { k: 'site_textes.ss_pas_edition', kind: 'text', vide: true, max: 60, label: 'Secret Santa : aucune édition en cours' },
+    { k: 'site_textes.ss_statuts', kind: 'libelles', label: 'Secret Santa : libellés des étapes', aide: 'Affichés sur la tuile Secret Santa.', items: [
+      { id: 'inscriptions', label: 'Étape « inscriptions »' }, { id: 'tirage', label: 'Étape « tirage »' }, { id: 'envoi', label: 'Étape « envoi des cadeaux »' },
+      { id: 'revelation', label: 'Étape « révélation »' }, { id: 'termine', label: 'Étape « terminée »' }] },
+    { k: 'site_textes.rsvp_libelles', kind: 'libelles', label: 'Réponses aux sorties', aide: 'Affichées sur les tuiles et les sorties.', items: [
+      { id: 'oui', label: 'Réponse « oui »' }, { id: 'peut-etre', label: 'Réponse « peut-être »' }, { id: 'non', label: 'Réponse « non »' }] },
+    { k: 'site_textes.defis_libelles', kind: 'libelles', label: 'Défi du gang : états', aide: 'Affichés sous le défi en cours.', items: [
+      { id: 'atteint_recu', label: 'Défi atteint, récompense reçue' }, { id: 'atteint_verse', label: 'Défi atteint, récompense à venir' }, { id: 'termine', label: 'Défi terminé sans succès' }] },
   ] },
   { id: 'textes', titre: 'Textes des pages', aide: 'Phrases affichées à plusieurs endroits du site.', champs: [
     { k: 'site_textes.intro_indice', kind: 'text', max: 200, label: 'Indice de l\'intro', aide: 'Phrase lue par les lecteurs d\'écran pendant l\'intro.' },
@@ -63,7 +79,7 @@ export const GROUPES_LOT1 = [
 /** Parties du formulaire (sous-sections de Site) : groupes affichés et adresse de chaque partie. */
 export const PARTS_LOT1 = {
   identite: { label: 'Identité et mentions légales', groups: ['identite', 'legal'], route: '#mairie/identite' },
-  textes: { label: 'Textes et intro', groups: ['textes', 'affichage', 'visite', 'hors_ligne'], route: '#mairie/textes' },
+  textes: { label: 'Textes et intro', groups: ['accueil', 'textes', 'affichage', 'visite', 'hors_ligne'], route: '#mairie/textes' },
   menu: { label: 'Menu et pied de page', groups: ['navigation'], route: '#mairie/menu' },
   etat: { label: 'État du site', groups: ['etat'], route: '#mairie/etat' },
 };

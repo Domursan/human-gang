@@ -10,6 +10,8 @@ import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, 
 import { svg } from './icons.js';
 import { maybeStartTour } from './core/tour.js'; // Q1 : visite guidée au premier passage
 import { loadOnThisDay } from './accueil-ce-jour.js';
+import { SITE_DEFAULTS } from './core/site-defaults.js'; // textes d'origine (repli des textes réglables)
+const D = SITE_DEFAULTS.textes;
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
 const app = $('#app');
@@ -57,10 +59,10 @@ const ICON = {
 
 /* Classe de pastille et libellé de chaque statut Secret Santa. Les libellés peuvent être réglés dans l'admin (ss_statuts). */
 const STATUS_PILL = { inscriptions: 'pill-current', tirage: 'pill-current', envoi: 'pill-current', revelation: 'pill-ok', termine: 'pill-todo' };
-const STATUS_TEXT = { inscriptions: 'Inscriptions ouvertes', tirage: 'Tirage en préparation', envoi: 'Envoi des cadeaux', revelation: 'Révélation', termine: 'Terminée' };
+const STATUS_TEXT = D.ss_statuts;
 /** [libellé, classe de pastille] d'un statut Secret Santa (libellés réglables : site_textes.ss_statuts). */
 const STATUS = new Proxy({}, { get: (_, k) => (k in STATUS_TEXT ? [txtIn('ss_statuts', k, STATUS_TEXT[k]), STATUS_PILL[k]] : undefined) });
-const RSVP_TEXT = { oui: 'Tu viens', 'peut-etre': 'Peut-être', non: 'Tu ne viens pas' };
+const RSVP_TEXT = D.rsvp_libelles;
 const RSVP = new Proxy({}, { get: (_, k) => (k in RSVP_TEXT ? txtIn('rsvp_libelles', k, RSVP_TEXT[k]) : undefined) });
 
 /* Formateur « il y a 3 heures », en français. */
@@ -103,13 +105,13 @@ function renderGuest() {
     <section class="home-hero home-hero-guest">
       <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
       <p class="eyebrow">Humane Gang</p>
-      <h1 class="page-title">${esc(txt('accueil_titre', 'Le QG du Humane Gang'))}</h1>
-      <p class="home-lead">${esc(txt('accueil_lead', 'Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L\'espace est réservé aux membres.'))}</p>
+      <h1 class="page-title">${esc(txt('accueil_titre', D.accueil_titre))}</h1>
+      <p class="home-lead">${esc(txt('accueil_lead', D.accueil_lead))}</p>
       <div class="btn-row home-hero-actions">
-        <a class="btn btn-primary" href="compte.html?next=accueil.html">${esc(txt('accueil_cta_connexion', 'Se connecter / Rejoindre'))}</a>
+        <a class="btn btn-primary" href="compte.html?next=accueil.html">${esc(txt('accueil_cta_connexion', D.accueil_cta_connexion))}</a>
         <button class="btn btn-ghost" type="button" id="replay">Revoir l'intro</button>
       </div>
-      <p class="small muted">${esc(txt('accueil_note_invitation', 'Pour rejoindre le gang, il te faut un code d\'invitation donné par un membre.'))}</p>
+      <p class="small muted">${esc(txt('accueil_note_invitation', D.accueil_note_invitation))}</p>
     </section>
     <section class="grid home-tiles" aria-label="Ce qui t'attend">
       <div class="card card-ss tile">
@@ -146,7 +148,7 @@ function renderMemberShell() {
     <section class="page-head home-head">
       <div>
         <p class="eyebrow">Salut ${esc(me.pseudo)}</p>
-        <h1 class="page-title">${esc(txt('accueil_titre', 'Le QG du Humane Gang'))}</h1>
+        <h1 class="page-title">${esc(txt('accueil_titre', D.accueil_titre))}</h1>
       </div>
       <div id="countdown" class="countdown" hidden></div>
     </section>
@@ -242,7 +244,7 @@ async function loadSecretSanta() {
   try {
     const { data: ed, error } = await sb.from('hg_ss_editions').select('*').order('year', { ascending: false }).limit(1).maybeSingle();
     if (error) throw error;
-    if (!ed) { body.innerHTML = `<p class="tile-main">${esc(txt('ss_pas_edition', 'Pas encore d\'édition'))}</p><p class="tile-sub">L'admin lancera la prochaine bientôt.</p>`; return; }
+    if (!ed) { body.innerHTML = `<p class="tile-main">${esc(txt('ss_pas_edition', D.ss_pas_edition))}</p><p class="tile-sub">L'admin lancera la prochaine bientôt.</p>`; return; }
     const [st, cls] = STATUS[ed.status] || [ed.status, 'pill-todo'];
     const [{ data: mine }, { data: prog }] = await Promise.all([
       sb.from('hg_ss_participants').select('user_id').eq('edition_id', ed.id).eq('user_id', me.id).maybeSingle(),
@@ -483,8 +485,8 @@ const CHALLENGE_UNIT = {
  * @returns {string}
  */
 function challengeStatus(c) {
-  if (c.done) return c.credited ? txtIn('defis_libelles', 'atteint_recu', 'Atteint · récompense reçue') : txtIn('defis_libelles', 'atteint_verse', 'Atteint · récompense versée sous peu');
-  if (c.ended) return txtIn('defis_libelles', 'termine', 'Terminé, objectif non atteint');
+  if (c.done) return c.credited ? txtIn('defis_libelles', 'atteint_recu', D.defis_libelles.atteint_recu) : txtIn('defis_libelles', 'atteint_verse', D.defis_libelles.atteint_verse);
+  if (c.ended) return txtIn('defis_libelles', 'termine', D.defis_libelles.termine);
   // Défi programmé : rien n'est compté avant son début, on l'annonce pour éviter un compteur « bloqué » à 0.
   if (c.starts_at && new Date(c.starts_at) > new Date()) {
     const quand = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(c.starts_at));

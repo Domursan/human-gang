@@ -23,6 +23,8 @@ const PART_OF = {
   'Boosters': 'tirage', 'Taux de tirage': 'tirage', 'Brillantes et garantie': 'tirage',
   'Recyclage': 'recyclage', 'Fabrication': 'recyclage',
   'Quêtes de la semaine': 'limites', 'Cartes sauvages (drops)': 'limites', 'Échanges': 'limites', 'Générations des membres': 'limites',
+  'Jeux du jour': 'limites', 'Quiz et citations': 'limites', 'Photos et sorties': 'limites', 'Limites de publication': 'limites',
+  'Codes cadeaux et badges': 'limites', 'Calendrier de l’Avent': 'limites', 'Arène actuelle': 'limites',
   'Alertes économie': 'recyclage', // A7 (dans Limites, l'onglet dépassait 1 400 px)
 };
 /** Libellé et adresse de chaque partie (sous-sections de la coquille). */
@@ -53,6 +55,7 @@ export function showEconPart(part) {
   carry = Object.fromEntries(ECON.flatMap((g) => g.fields).map((f) => [fieldName(f), form.elements[fieldName(f)]?.value ?? '']));
   queueMicrotask(() => { carry = null; }); // seul le rendu synchrone qui suit (openCardsTab) reprend les saisies
   form.querySelectorAll('fieldset[data-g]').forEach((fs) => { fs.hidden = groupHidden(ECON[Number(fs.dataset.g)] || {}); });
+  form.querySelectorAll('details.acd-fold-plaf').forEach((d) => { d.hidden = !!econPart && econPart !== 'limites'; });
   const bulk = $('.acd-bulk-intro', root);
   if (bulk) bulk.hidden = !!econPart && econPart !== 'paillettes';
   const head = $('#acd-econ-part', root);
@@ -89,7 +92,8 @@ function shownValue(f) {
 /** HTML d'un champ de réglage : libellé, unité, valeur actuelle et aide. */
 function econField(f, draft) {
   const name = fieldName(f);
-  const val = draft && name in draft ? draft[name] : shownValue(f);
+  // Champ « ph » (plafonds) : la valeur enregistrée seulement ; vide = défaut, affiché en placeholder.
+  const val = draft && name in draft ? draft[name] : (f.ph ? getPath(cfgSource(), f.k) : shownValue(f));
   if (f.date) { // champ date (AAAA-MM-JJ), ex. bascule des générations
     return `<div class="field"><label for="acd-e-${name}">${esc(f.l)}</label>
     <input id="acd-e-${name}" name="${name}" type="date" min="2015-01-01" max="2100-01-01" value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h">
@@ -97,8 +101,30 @@ function econField(f, draft) {
   }
   return `<div class="field"><label for="acd-e-${name}">${esc(f.l)}${f.u ? ` <span class="muted small">(${esc(f.u)})</span>` : ''}</label>
     <input id="acd-e-${name}" name="${name}" type="number" inputmode="decimal" step="${f.step ?? 1}" min="${f.min ?? 0}"${f.max != null ? ` max="${f.max}"` : ''}
-      value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h"${f.optional ? ' placeholder="vide = non fabricable"' : ''}>
+      value="${val == null ? '' : esc(val)}" aria-describedby="acd-e-${name}-h"${f.optional ? ' placeholder="vide = non fabricable"' : f.ph ? ` placeholder="${esc(getPath(CFG_DEFAULT, f.k))}"` : ''}>
     ${f.help ? `<p class="small muted" id="acd-e-${name}-h">${esc(f.help)}</p>` : ''}</div>`;
+}
+/* Groupes de plafonds (champs « ph ») : réunis dans un seul bloc replié, pour garder la page Limites courte. Les champs restent dans le formulaire. */
+const PLAF_SUMMARY = 'Plafonds de Paillettes';
+/* Bloc des plafonds ouvert par l'admin : gardé après un nouveau rendu (enregistrement, rafraîchissement). */
+let plafOuvert = false;
+document.addEventListener('toggle', (e) => { if (e.target?.classList?.contains('acd-fold-plaf')) plafOuvert = e.target.open; }, true);
+/** HTML des groupes de réglages : chaque groupe est une fieldset ; les groupes de plafonds, contigus, sont dans un bloc replié. */
+function econGroupsHtml(draft) {
+  const plafCount = ECON.filter((g) => g.fields.some((f) => f.ph)).reduce((n, g) => n + g.fields.length, 0);
+  let out = '', open = false;
+  ECON.forEach((g, gi) => {
+    const plaf = g.fields.some((f) => f.ph);
+    if (plaf && !open) { out += `<details class="acd-fold acd-fold-plaf" data-part${plafOuvert ? ' open' : ''}${econPart && econPart !== 'limites' ? ' hidden' : ''}><summary>${PLAF_SUMMARY} : voir les ${plafCount} réglages</summary>`; open = true; }
+    if (!plaf && open) { out += '</details>'; open = false; }
+    out += `<fieldset class="acd-fs" data-g="${gi}" data-part${groupHidden(g) ? ' hidden' : ''}><legend>${esc(g.g)}</legend>
+        ${g.hint ? `<p class="small muted">${esc(g.hint)}</p>` : ''}
+        <div class="acd-grid-2">${g.fields.map((f) => econField(f, draft)).join('')}</div>
+        ${g.rates ? '<p class="acd-sum" id="acd-rate-sum" aria-live="polite"></p>' : ''}
+        <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-act="econ-default" data-g="${gi}">Rétablir les valeurs par défaut de « ${esc(g.g)} »</button></div>
+      </fieldset>`;
+  });
+  return out + (open ? '</details>' : '');
 }
 /** HTML de l'onglet Économie : bloc Dons, puis le formulaire des réglages groupés. */
 export function econPanel() {
@@ -114,12 +140,7 @@ export function econPanel() {
     <p class="small muted">Ces réglages s'appliquent aux prochains boosters, recyclages, fabrications et récompenses.</p>
     <form class="stack acd-econ" id="acd-econ-form" novalidate>
       <p class="form-error" role="alert" hidden></p>
-      ${ECON.map((g, gi) => `<fieldset class="acd-fs" data-g="${gi}" data-part${groupHidden(g) ? ' hidden' : ''}><legend>${esc(g.g)}</legend>
-        ${g.hint ? `<p class="small muted">${esc(g.hint)}</p>` : ''}
-        <div class="acd-grid-2">${g.fields.map((f) => econField(f, draft)).join('')}</div>
-        ${g.rates ? '<p class="acd-sum" id="acd-rate-sum" aria-live="polite"></p>' : ''}
-        <div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-act="econ-default" data-g="${gi}">Rétablir les valeurs par défaut de « ${esc(g.g)} »</button></div>
-      </fieldset>`).join('')}
+      ${econGroupsHtml(draft)}
       <div class="btn-row">
         <button class="btn btn-primary" type="submit">Enregistrer les réglages</button>
         <button class="btn btn-ghost" type="button" data-act="econ-reset">Annuler les modifications</button>
@@ -145,21 +166,21 @@ export function resetEconGroup(gi) {
     const el = form.elements[fieldName(f)];
     if (!el) continue;
     const d = getPath(CFG_DEFAULT, f.k);
-    el.value = d == null ? '' : String(d);
+    el.value = f.ph || d == null ? '' : String(d); // plafond : vide = défaut (le SQL reprend sa valeur)
   }
   updateSum();
   const msg = $('.form-error', form);
   if (msg) { msg.textContent = ''; msg.hidden = true; }
   toast('Valeurs par défaut remplies : enregistre pour les appliquer', 'ok');
 }
-/** Relit le formulaire et renvoie la configuration complète (les clés inconnues sont conservées). */
-function readEcon(form) {
-  const out = structuredClone(C.cfgRaw || {});
+/** Relit le formulaire et renvoie la configuration complète (les clés inconnues sont conservées). base : valeur lue en base. */
+function readEcon(form, base) {
+  const out = structuredClone(base || {});
   for (const g of ECON) for (const f of g.fields) try {
     const name = fieldName(f);
     const path = pathOf(f.k);
     const raw = String(form.elements[name].value).trim();
-    if (f.optional && raw === '') { unsetPath(out, path); continue; }
+    if ((f.optional || f.ph) && raw === '') { unsetPath(out, path); continue; }
     if (f.date) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) || raw < '2015-01-01' || raw > '2100-01-01') throw new Error(`« ${f.l} » : date invalide.`);
       setPath(out, path, raw);
@@ -202,7 +223,13 @@ export async function saveEcon(form, btn) {
   };
   showErr('');
   let next;
-  try { next = readEcon(form); } catch (e) {
+  try {
+    // Base relue en base à l'enregistrement (et non le cache du chargement) : une modification faite entre-temps
+    // (par exemple l'Arène actuelle) n'est pas effacée par ce formulaire. Les clés hors formulaire sont conservées.
+    const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle();
+    if (error) throw error;
+    next = readEcon(form, data?.value && typeof data.value === 'object' && !Array.isArray(data.value) ? data.value : {});
+  } catch (e) {
     const part = PART_OF[e.group];
     return showErr(errMsg(e), econPart && part && part !== econPart ? part : null);
   }

@@ -254,6 +254,12 @@ class Q {
       for (const r of rows) { const i = tab.findIndex((x) => x.page_slug === r.page_slug && x.user_id === r.user_id); if (i >= 0) tab[i] = { ...r }; else tab.push({ ...r }); }
       return { data: rows, error: null };
     }
+    // Upsert sur hg_settings : une ligne par clé, remplacée si elle existe (clé primaire en base).
+    if (this.op === 'upsert' && this.t === 'hg_settings') {
+      const r = { ...this.payload }, i = tab.findIndex((x) => x.key === r.key);
+      if (i >= 0) tab[i] = { ...r }; else tab.unshift({ ...r });
+      return { data: [r], error: null };
+    }
     // Insertion : les lignes reçoivent un identifiant si la table en exige un (comme gen_random_uuid en base).
     if (this.op === 'insert' || this.op === 'upsert') {
       // Scénario guardError : refus de créer une édition tant que la précédente n'est pas terminée.
