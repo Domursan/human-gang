@@ -64,6 +64,8 @@ const OPTIONAL = [
   { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Pilotage › Site › Archives (fonction hg-archive, A8)
   { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Event › Calendrier et cinéma (idées V8, V9)
   { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Pilotage › Bot › Commandes slash (idée D3)
+  { sub: 'roles', url: './admin-roles.js', fn: 'mountRolesSection' },          // Membres › Comptes › Rôles (migration 103)
+  { sub: 'membres-irl', url: './admin-roles.js', fn: 'mountMembresIrlSection' }, // IRL › Membres IRL (migration 103)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -90,7 +92,7 @@ const PROV = await providersP;
 disableSubs(...PROV.filter(([, v]) => !v).map(([p]) => p.route.split('/')[1]));
 // Réorganisation (migration 103) : sous-sections présentes dans l'arborescence, sans module pour l'instant (livrées plus tard).
 // Retirées du panel tant qu'elles n'ont pas de module ; la section n'existe pas dans admin.html (aucune section vide).
-disableSubs('roles', 'membres-irl', 'gestion', 'arcade'); // livrée plus tard
+disableSubs('gestion', 'arcade'); // livrées plus tard
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -188,7 +190,9 @@ if (MOUNT.social) registerSub('membres/social', { main: () => MOUNT.social($('#s
 if (MOUNT.parrainage) registerSub('membres/parrainage', { main: () => MOUNT.parrainage($('#parrainage-root')) });
 if (MOUNT.competences) registerSub('membres/competences', { main: () => MOUNT.competences($('#competences-root')) });
 if (MOUNT.accueil) registerSub('membres/accueil', { main: () => MOUNT.accueil($('#accueil-root')) });
+if (MOUNT.roles) registerSub('membres/roles', { main: () => MOUNT.roles($('#roles-root')) }); // rôles : pages données, membres (migration 103)
 // IRL (Membres IRL, sorties, souvenirs, Secret Santa)
+if (MOUNT['membres-irl']) registerSub('irl/membres-irl', { main: () => MOUNT['membres-irl']($('#membres-irl-root')) }); // membres du rôle IRL (migration 103)
 registerSub('irl/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),
   open: (el, r) => openSortie(r),
