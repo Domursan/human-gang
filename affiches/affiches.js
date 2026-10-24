@@ -24,6 +24,7 @@ const SECTIONS = [
   { titre: 'Fidélité', codes: ['fondateur', 'fidele', 'saisonnier', 'anciennete'] },
   { titre: 'Communauté', codes: ['cupidon', 'paparazzi', 'boite_a_idees', 'chasseur_bugs'] },
   { titre: 'Secrets et cartes', codes: ['initie', 'chasseur_secrets', 'cueilleur', 'pentakill'] },
+  { titre: 'Arène', codes: ['gladiateur'] },
 ];
 // Texte de chaque badge sur l'affiche, avec les critères réglables (jetons). Un badge sans modèle garde sa description de la base.
 const MODELES = {
@@ -47,6 +48,7 @@ const MODELES = {
   chasseur_secrets: 'A réuni les 7 lettres cachées du site.',
   cueilleur: 'A cueilli le champignon caché des quatre saisons.',
   pentakill: 'Des boosters parfaits : 5 cartes de même rareté (rare ou mieux), ou 5 nouvelles.',
+  gladiateur: 'Meilleure ligue atteinte en fin de saison de l’Arène : Argent, Or, Diamant ou Légende.',
 };
 // Liste de repli (sans lecture de hg_badges) : les 21 badges tels qu'ils sont affichés.
 const IMG = (f) => `https://zqbdzokyhgavgmqgiwuw.supabase.co/storage/v1/object/public/hg-assets/badges/${f}`;
@@ -85,6 +87,15 @@ const BADGES_REPLI = [
       { level: 1, threshold: 1, name: null, image_url: null },
       { level: 2, threshold: 3, name: null, image_url: null },
       { level: 3, threshold: 10, name: null, image_url: null },
+    ],
+  },
+  {
+    code: 'gladiateur', name: 'Gladiateur', levels_enabled: true, metric: 'arene_ligue', image_url: null,
+    levels: [
+      { level: 1, threshold: 1, name: 'Argent', image_url: null },
+      { level: 2, threshold: 2, name: 'Or', image_url: null },
+      { level: 3, threshold: 3, name: 'Diamant', image_url: null },
+      { level: 4, threshold: 4, name: 'Légende', image_url: null },
     ],
   },
   { code: 'it_s_halloween_time', name: 'It\'s Halloween Time !', description: 'A attrapé It\'s Halloween Time ! pendant l\'événement.', image_url: null },

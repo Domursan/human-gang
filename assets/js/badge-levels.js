@@ -28,12 +28,16 @@ export const METRICS = [
   ['idees_retenues', 'Idées retenues', 'idée retenue', 'idées retenues'],
   ['event_captures', 'Images attrapées', 'image attrapée', 'images attrapées'],
   ['events_dynamiques', 'Événements auxquels on a participé', 'événement', 'événements'],
+  ['arene_ligue', 'Meilleure ligue d’Arène en fin de saison', 'ligue', 'ligues'],
 ];
 export const METRIC_LABEL = Object.fromEntries(METRICS.map(([k, l]) => [k, l]));
-/** « 3 sorties », « 1 an »… */
+/** Ligues de l'Arène par valeur de la métrique arene_ligue (0 = aucune ligue classée). */
+export const ARENE_LIGUES = ['Bronze', 'Argent', 'Or', 'Diamant', 'Légende'];
+/** « 3 sorties », « 1 an », « Ligue Or »… */
 export function metricCount(metric, n) {
-  const m = METRICS.find(([k]) => k === metric);
   const v = Number(n) || 0;
+  if (metric === 'arene_ligue') return `Ligue ${ARENE_LIGUES[v] ?? ARENE_LIGUES[0]}`;
+  const m = METRICS.find(([k]) => k === metric);
   return m ? `${v} ${v > 1 ? m[3] : m[2]}` : String(v);
 }
 
