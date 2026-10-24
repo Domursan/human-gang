@@ -4,13 +4,13 @@
  * Rôle : crée l'unique client Supabase du site (sb) et fournit deux petites aides :
  * hasSession (y a-t-il une session ouverte ?) et isNavCancel (faut-il ignorer cette erreur, due à une navigation ?).
  * Page : toutes les pages (tous les autres fichiers du socle importent sb depuis ici).
- * Dépendances : config.js (URL et clé publique), supabase-js chargé depuis jsDelivr (version fixée).
+ * Dépendances : config.js (URL et clé publique), supabase-js servi localement (assets/vendor, version 2.45.4).
  * Exporte : sb, hasSession, isNavCancel, authLanding, signOutDevice.
  */
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
 
-// supabase-js est chargé ici et non par une balise <script> : la version est fixée dans l'URL.
-const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
+// supabase-js est chargé ici et non par une balise <script> : le fichier local porte la version (2.45.4).
+const { createClient } = await import('../../vendor/supabase-js-2.45.4.mjs');
 
 /**
  * Verrou simple en mémoire à la place du verrou navigateur (Navigator LockManager) :

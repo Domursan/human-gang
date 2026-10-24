@@ -21,7 +21,7 @@ const IC = {
   qr: svg('qr', { stroke: 2 }),
 };
 // Bibliothèque QR code (version figée), chargée seulement au premier clic sur « QR code ».
-const QR_LIB = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/+esm';
+const QR_LIB = '../vendor/qrcode-generator-1.4.4.mjs';
 
 // État de la section : racine, admin connecté, fonctions de pseudo et de rappel, liens et codes chargés,
 // sections « Codes » ouvertes, erreurs de chargement, règles lues (rulesRaw : undefined = pas encore lues, null = valeurs par défaut).

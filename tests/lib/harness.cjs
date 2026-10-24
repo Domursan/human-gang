@@ -86,9 +86,9 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     const req = route.request(), u = new URL(req.url());
     if (u.origin !== ORIGIN) {
       if (u.hostname.endsWith('supabase.co')) EXTERNAL.push(req.url());
-      if (u.hostname === 'cdn.jsdelivr.net' && u.pathname.includes('supabase-js')) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
       return route.fulfill({ status: 204, body: '' });
     }
+    // supabase-js est servi localement : assets/vendor/supabase-js-2.45.4.mjs (et son .js) reçoivent le faux client.
     if (/\/vendor\/supabase/.test(u.pathname)) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
     if (PREFIX && u.pathname !== PREFIX && !u.pathname.startsWith(PREFIX + '/')) return route.fulfill({ status: 404, body: 'nf' });
     const rel = u.pathname.slice(PREFIX.length) || '/';

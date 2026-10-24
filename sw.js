@@ -97,6 +97,8 @@ const PRECACHE = [
   'assets/js/contenus-ui.js', 'assets/css/contenus.css', 'assets/js/core/tour.js', 'assets/css/tour.css',
   'assets/js/offline-store.js', 'assets/css/offline.css', 'assets/js/quest-proofs.js', 'assets/css/quest-proofs.css',
   'assets/js/leaflet-load.js',
+  // Bibliothèques servies localement (assets/vendor, voir son README.md)
+  'assets/vendor/supabase-js-2.45.4.js', 'assets/vendor/supabase-js-2.45.4.mjs', 'assets/vendor/qrcode-generator-1.4.4.mjs',
   'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
   'assets/img/og-image.png', 'manifest.webmanifest',
   'assets/cards/champions/baton.svg', 'assets/cards/champions/bouclier.svg', 'assets/cards/champions/chateau.svg', 'assets/cards/champions/couronne.svg', 'assets/cards/champions/epee.svg', 'assets/cards/champions/etoile.svg', 'assets/cards/champions/fusee.svg', 'assets/cards/champions/pioche.svg', 'assets/css/boosters-styles.css', 'assets/css/cartes-idees.css', 'assets/css/collection-a4.css', 'assets/js/admin-cards/champions.js', 'assets/js/admin-cards/pots.js', 'assets/js/booster-styles.js', 'assets/js/booster-themes.js', 'assets/js/cartes-bulletin.js', 'assets/js/cartes-cagnotte.js', 'assets/js/cartes-champion.js', 'assets/js/cartes-chance.js', 'assets/js/collection-a4.js', 'collection-a4.html',
@@ -105,9 +107,7 @@ const PRECACHE = [
 ];
 
 // Bibliothèque versionnée (épinglée) : mise en cache si le réseau le permet, sans bloquer l'installation.
-const PRECACHE_REMOTE = [
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm',
-];
+const PRECACHE_REMOTE = []; // vide : plus aucune bibliothèque externe épinglée (tout est dans assets/vendor)
 
 /* ---------- Cycle de vie : installation et activation ---------- */
 
