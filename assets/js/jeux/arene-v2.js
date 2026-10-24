@@ -14,7 +14,7 @@ import { cardHtml, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { loadCss } from './devine.js';
 import { mini, resultHtml, animate } from './bataille.js';
 
-/** Raretés de puissance 6 : une seule par main. */
+/** Raretés limitées : une seule carte de ces raretés par main (règle fondée sur la rareté, non sur la puissance). */
 const TOP = ['mythique', 'identite', 'unique'];
 const LIGUES = { bronze: 'Bronze', argent: 'Argent', or: 'Or', diamant: 'Diamant', legende: 'Légende' };
 const ORDRE = ['bronze', 'argent', 'or', 'diamant', 'legende'];

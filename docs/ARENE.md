@@ -32,10 +32,10 @@ petites récompenses en Paillettes et boosters en fin de saison.
 
 ## 2. Combats
 
-- **Mise en place** : le deck de défense est celui de l'Arène actuelle (5 cartes, dans l'ordre, une seule carte de
-  puissance 6). Il est partagé entre les deux versions.
-- **Duels** : identiques à l'Arène actuelle. Puissance = rareté (1 à 6) + 1 si brillante, + 2 si la famille a
-  l'avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre. Victoire = plus de duels gagnés
+- **Mise en place** : le deck de défense est celui de l'Arène actuelle (5 cartes, dans l'ordre, une seule carte
+  mythique, identité ou unique). Il est partagé entre les deux versions.
+- **Duels** : identiques à l'Arène actuelle. Puissance = valeur de la carte (par rareté, réglable dans le
+  panel, ou propre à la carte) + bonus si brillante, + 2 si la famille a l'avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre. Victoire = plus de duels gagnés
   que l'adversaire. Égalité = autant de duels gagnés de part et d'autre.
 - **Attaques par jour : 5** (le jour se termine à minuit, heure de Zurich). Les défenses ne comptent pas.
 - **Même membre : 2 attaques par jour au plus.** Empêche de passer ses journées sur une même personne.
@@ -106,7 +106,7 @@ Chaque enregistrement est journalisé (avant, après) dans le journal admin.
 ## 7. Pourquoi ces choix (équilibre)
 
 - **Pas d'avantage écrasant pour les grosses collections.** Une collection plus grande offre plus de choix de 5 cartes,
-  mais la puissance vient de la rareté, et une seule carte de puissance 6 par main. Une grosse collection gagne
+  mais la puissance vient de la rareté, et une seule carte mythique, identité ou unique par main. Une grosse collection gagne
   surtout en variété de deck, pas en force brute.
 - **Pas de farm.** Cinq attaques par jour, deux par membre, et les points sont échangés entre deux joueurs (ce que
   gagne l'un, l'autre le perd) : il n'y a rien à créer en tournant en rond. Le plancher empêche seulement de tomber

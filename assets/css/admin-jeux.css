@@ -101,3 +101,23 @@
 .ads-mot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: flex-start; }
 .ads-mot > div:first-child { flex: 1 1 16rem; min-width: 0; }
 .ads-mot .btn-row { margin: 0; }
+
+/* Puissance des cartes (Arène) : catégories, filtres et liste par carte. */
+.puiss { display: grid; gap: 14px; }
+.puiss-bloc { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.puiss-bloc h4 { margin: 0; }
+.puiss-saisie { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.puiss-saisie .input { width: 7rem; max-width: 100%; }
+.puiss-explic { margin: 0; font-weight: 700; font-size: 14px; }
+.puiss-plus { margin: 0; }
+.puiss-plus summary { cursor: pointer; padding: 4px 0; }
+.puiss-filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+.puiss-chip { min-height: 36px; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+.puiss-chip[aria-pressed="true"] { background: var(--sand); font-weight: 700; }
+.puiss-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.puiss-ligne { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); min-width: 0; }
+.puiss-vignette { flex: 0 0 auto; padding: 0 16px; }
+.puiss-infos { flex: 1 1 14rem; min-width: 0; display: grid; gap: 6px; }
+.puiss-nom { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.puiss-infos p { margin: 0; }
+@media (max-width: 480px) { .puiss-ligne { flex-direction: column; } .puiss-saisie .input { width: 6rem; } }

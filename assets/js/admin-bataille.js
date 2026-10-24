@@ -2,15 +2,18 @@
 /*
  * Rôle : Jeux et cartes › Arène. Deux blocs.
  *  - Arène actuelle (membres) : activation, gains et plafonds de l'Arène de cartes (hg_settings.cards), inchangés.
+ *  - Puissance des cartes : valeur par rareté (hg_settings.cards.puissances) et valeur propre de certaines cartes
+ *    (hg_cards.power, RPC hg_card_power_set). Module admin/puissances.js.
  *  - Arène v2 (aperçu admin) : réglages (hg_settings.arena, bornés par le serveur), ouverture aux membres (administrateur
  *    seulement), aperçu du classement, saisons passées, clôture de la saison en cours (récompenses, journalisée).
  *    Règles et chiffres par défaut : docs/ARENE.md.
  * Droits : Staff « cartes » et administrateur. Route : #fabrique/arene. Section : <section id="bataille">, #bataille-root.
- * RPC : hg_battle_me, hg_battle_settings_save (Arène actuelle) ; hg_arena_admin, hg_arena_settings_save,
+ * RPC : hg_battle_me, hg_battle_settings_save (Arène actuelle) ; hg_card_power_set (puissances) ; hg_arena_admin, hg_arena_settings_save,
  * hg_arena_season_close (Arène v2). Exporte : mountBatailleSection.
  */
 import { sb, toast, errMsg, esc } from './core.js';
 import { confirmBox } from './ui-confirm.js';
+import { blocPuissances } from './admin/puissances.js';
 
 /* Arène actuelle (membres) */
 const CHAMPS = [
@@ -57,7 +60,7 @@ export async function mountBatailleSection(root) {
   root.innerHTML = '<div class="empty">Chargement des réglages…</div>';
   const [actuelle, v2] = await Promise.all([sb.rpc('hg_battle_me'), sb.rpc('hg_arena_admin')]);
   root.innerHTML = '';
-  root.append(blocActuelle(actuelle), await blocV2(v2, root));
+  root.append(blocActuelle(actuelle), await blocPuissances(), await blocV2(v2, root));
 }
 
 /* ---------- Arène actuelle (membres) ---------- */
@@ -69,7 +72,7 @@ function blocActuelle({ data, error }) {
   const c = data.cfg;
   bloc.innerHTML = `<h3 id="bt-h">Arène actuelle (membres)</h3>
     <form class="jm-form" id="bt-form">
-    <p class="small muted">Puissance d’une carte = rareté (1 à 6) + 1 si brillante + 2 si sa famille a l’avantage. Les gains se coupent ici si l’équilibre pose problème.</p>
+    <p class="small muted">Puissance d’une carte : sa valeur (voir « Puissance des cartes » plus bas) + bonus si brillante + 2 si sa famille a l’avantage. Les gains se coupent ici si l’équilibre pose problème.</p>
     <label class="check"><input type="checkbox" id="bt-actif" ${c.actif ? 'checked' : ''}> Arène ouverte aux membres</label>
     <label class="check"><input type="checkbox" id="bt-gains" ${c.gains ? 'checked' : ''}> Gains en Paillettes activés</label>
     <div class="jm-grid">${CHAMPS.map(([k, cur, l, min, max]) => `<div class="field"><label for="bt-${k}">${esc(l)}</label>

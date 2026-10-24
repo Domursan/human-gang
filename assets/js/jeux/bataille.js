@@ -3,9 +3,9 @@
 /*
  * Rôle : mini-jeu asynchrone avec les cartes de sa collection. Chacun règle son deck de défense (5 cartes, dans
  * l'ordre) ; pour attaquer, on choisit un membre et on aligne 5 cartes : 5 duels face à face, résolus par le serveur.
- * Puissance = rareté (commune 1 → mythique 6 ; identité et unique 6) + 1 si brillante + 2 si la famille a l'avantage
- * (membre bat objet, objet bat lieu, lieu bat moment, moment bat membre). Aucune carte n'est perdue ni gagnée.
- * Une seule carte de puissance 6 par main. Textes neutres : « duel perdu », jamais de moquerie.
+ * Puissance = valeur de la carte (selon sa rareté, réglée par le Staff ; une carte peut avoir sa propre valeur) + bonus
+ * si brillante + 2 si la famille a l'avantage (membre bat objet, objet bat lieu, lieu bat moment, moment bat membre).
+ * Aucune carte n'est perdue ni gagnée. Une seule carte mythique, identité ou unique par main. Textes neutres : « duel perdu », jamais de moquerie.
  * RPC : hg_battle_me, hg_battle_set_deck, hg_battle_attack, hg_battle_seen. Gains éventuels versés par le serveur.
  * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/css/cartes-card.css.
  * Exporte : mount(panel, ctx) ; mini, resTxt, resultHtml et animate (réutilisés par l'Arène v2, jeux/arene-v2.js).
@@ -13,7 +13,7 @@
 import { cardHtml, rarityLabel, familyLabel } from '../cartes-ui.js';
 import { loadCss } from './devine.js';
 
-/** Raretés de puissance 6 : une seule par main. */
+/** Raretés limitées : une seule carte de ces raretés par main (règle fondée sur la rareté, non sur la puissance). */
 const TOP = ['mythique', 'identite', 'unique'];
 const reduce = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
 let P = null, C = null;
@@ -90,7 +90,7 @@ function homeHtml() {
   }).join('')}</ul>` : '<p class="muted small">Aucune bataille pour l’instant.</p>';
   return `<div class="jb">
     <h2 class="jd-title jb-title">Arène de cartes</h2>
-    <p class="muted small">Puissance = rareté (1 à 6) + 1 si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre. Aucune carte n’est perdue.</p>
+    <p class="muted small">Puissance = valeur de la carte (réglée par le Staff) + bonus si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre. Aucune carte n’est perdue.</p>
     ${gains}
     <section class="card jb-sec" aria-labelledby="jb-deck-h"><div class="jb-sec-h"><h3 id="jb-deck-h">Mon deck de défense</h3>
       <button type="button" class="btn btn-ghost" data-act="deck">${d.deck ? 'Changer' : 'Créer mon deck'}</button></div>${deck}</section>
@@ -163,7 +163,7 @@ export function resultHtml(b, esc = C.esc) {
     ${b.paid ? `<p class="small">+${esc(b.paid)} ✦ crédités</p>` : ''}
     <div class="jb-res-h muted small"><span>${att ? 'Tes cartes' : 'Ta défense'}</span><span>${att ? 'Sa défense' : 'Ses cartes'}</span></div>
     <ol class="jb-duels">${rows}</ol>
-    <p class="muted small">Puissance = rareté (1 à 6) + 1 si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre.</p>
+    <p class="muted small">Puissance = valeur de la carte (réglée par le Staff) + bonus si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre.</p>
     <div class="jd-actions"><button type="button" class="btn btn-ghost" data-act="${att ? 'attaquer' : 'deck'}" data-id="${esc(other.id)}">${att ? 'Changer mes cartes' : 'Changer ma défense'}</button>
       <button type="button" class="btn btn-primary" data-act="${att ? 'revanche' : 'attaquer'}" data-id="${esc(other.id)}">Revanche</button></div>
   </div>`;
