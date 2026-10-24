@@ -20,6 +20,7 @@ const EXCEPTIONS = {
   'place/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard',
   'place/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs',
   'fabrique/limites': 'Limites : quêtes, drops, générations, échanges, puis les plafonds de Paillettes repliés (≈ 1 440 px) ; à répartir en pages plus tard',
+  'mairie/menu': 'Menu et pied de page : libellés de tous les menus et de leurs entrées (≈ 1 650 px), en blocs côte à côte',
   'mairie/textes': 'Textes et intro : groupe « Page d’accueil » replié, puis textes des pages, intro et visite (≈ 1 550 px) ; à répartir en pages plus tard',
 };
 

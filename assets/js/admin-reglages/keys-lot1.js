@@ -65,7 +65,7 @@ export const GROUPES_LOT1 = [
     { k: 'site_identite.cartes_hors_ligne', kind: 'bool', label: 'Garder une copie hors ligne', aide: 'Coupée : plus aucune copie n’est gardée, et la copie existante est effacée à la visite suivante de la page Cartes.' },
   ] },
   { id: 'navigation', titre: 'Menu et pied de page', aide: 'Libellés du menu (en-tête) et liens du pied de page.', champs: [
-    { k: 'site_textes.nav_libelles', kind: 'nav', label: 'Libellés du menu', aide: 'Vide = nom automatique de la page. Le libellé s\'affiche dans l\'en-tête.' },
+    { k: 'site_textes.nav_libelles', kind: 'nav', label: 'Libellés du menu', aide: 'Titres des menus et chacune de leurs entrées, tels qu\'ils s\'affichent dans l\'en-tête. Vide = libellé d\'origine (affiché en gris).' },
     { k: 'site_textes.footer_liens', kind: 'footer', label: 'Liens du pied de page', aide: 'Décoche pour masquer un lien. « Événements » reste réservé aux membres qui y ont accès.' },
   ] },
   { id: 'etat', titre: 'État du site', aide: 'Mode maintenance et bandeau d’annonce affiché en haut de chaque page. C’est un affichage, pas une protection : les données restent protégées par la base.', champs: [

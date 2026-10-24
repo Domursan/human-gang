@@ -31,46 +31,11 @@ import {
 import { bindSearch } from './search.js';
 import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
+import { MENUS, menuKey } from './menu-def.js';
 
 /* ---------- Structure du menu ---------- */
 
-/**
- * Menus de la barre. page : slug dont l'accès conditionne le lien ; sep : filet de séparation ; sub : sous-menu.
- * « Autres » (auto) reçoit les pages du menu (hg_pages.in_nav) qui ne sont rangées nulle part ailleurs.
- */
-const MENUS = [
-  { id: 'cartes', label: 'Le jeu de cartes', items: [
-    { label: 'Ouverture', href: 'cartes.html#ouverture', page: 'cartes' },
-    { label: 'Inventaire', href: 'cartes.html#inventaire', page: 'cartes' },
-    { label: 'Boutique', href: 'cartes.html#boutique', page: 'cartes' },
-    { label: 'Mes cartes', href: 'cartes.html#collection', page: 'cartes' },
-    { label: 'Classement', href: 'cartes.html#classement', page: 'cartes' },
-    { label: 'Échanges', href: 'cartes.html#echanges', page: 'cartes' },
-    { label: 'Arène', href: 'cartes.html#arene', page: 'cartes' },
-  ] },
-  { id: 'irl', label: 'IRL', items: [
-    { label: 'Secret Santa', href: 'secret-santa.html', page: 'secret-santa' },
-    { label: 'IRL', href: 'irl.html', page: 'irl' },
-    { label: 'Historique', href: 'historique.html', page: 'historique' },
-  ] },
-  { id: 'jeux', label: 'Jeux', items: [
-    { label: 'Les missions du jour', href: 'jeux.html#aujourdhui', page: 'jeux' },
-    { sep: true },
-    { label: 'GeoGuessr', href: 'jeux.html#geo', page: 'jeux' },
-    { label: 'Qui a dit ça ?', href: 'jeux.html#citations', page: 'jeux' },
-    { label: 'Question du jour', href: 'jeux.html#jour', page: 'jeux' },
-    { label: 'Sutom HG', href: 'jeux.html#sutom', page: 'jeux' },
-    { label: 'Framed', href: 'jeux.html#framed', page: 'jeux' },
-    { label: 'Heardle', href: 'jeux.html#heardle', page: 'jeux' },
-    { label: 'Arcade', page: 'jeux', sub: [
-      { label: 'Paillettes', href: 'jeux.html#arcade-paillettes', page: 'jeux' },
-      { label: 'Raclette', href: 'jeux.html#arcade-raclette', page: 'jeux' },
-      { label: 'Domu-mobile', href: 'jeux.html#arcade-domu', page: 'jeux' },
-    ] },
-  ] },
-  { id: 'calendrier', label: 'Calendrier', href: 'calendrier.html', page: 'calendrier' },
-  { id: 'autres', label: 'Autres', auto: true },
-];
+// Menus de la barre : définis dans menu-def.js (partagés avec l'éditeur des libellés du panel admin).
 /** Pages déjà rangées dans un menu (ou atteintes autrement) : jamais répétées dans « Autres ». */
 const PLACED = new Set(['cartes', 'jeux', 'secret-santa', 'irl', 'historique', 'calendrier', 'messages', 'accueil', 'aide', 'compte', 'admin']);
 // Libellés courts pour « Autres » (le libellé complet reste celui de hg_pages ailleurs).
@@ -100,7 +65,7 @@ function isHere(href) {
 const curAttr = (href) => (isHere(href) ? ' aria-current="page"' : '');
 
 /** Libellé d'une entrée : celui réglé pour sa page (nav_libelles) quand l'entrée mène à sa propre page. */
-const libelleEntree = (it) => (it.page && it.href === `${it.page}.html` && navLibelle(it.page)) || it.label;
+const libelleEntree = (it) => navLibelle(menuKey(it)) || (it.page && it.href === `${it.page}.html` && navLibelle(it.page)) || it.label;
 
 /** Lien d'un menu déroulant. */
 const linkHtml = (it) => `<a class="nav-item" href="${esc(it.href)}"${curAttr(it.href)}>${esc(libelleEntree(it))}</a>`;
@@ -122,7 +87,7 @@ function itemsHtml(items, id, profile) {
       if (!subs.length) continue;
       const on = subs.some((s) => isHere(s.href)) || isHere('jeux.html#arcade');
       out.push(`<div class="nav-sub">
-          <button class="nav-item nav-sub-btn${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-sub-${id}">${esc(it.label)}${ICON_CHEVRON_RIGHT}</button>
+          <button class="nav-item nav-sub-btn${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-sub-${id}">${esc(navLibelle(menuKey(it)) || it.label)}${ICON_CHEVRON_RIGHT}</button>
           <div class="nav-submenu" id="nav-sub-${id}" hidden>${subs.map(linkHtml).join('')}</div>
         </div>`);
       continue;
@@ -143,14 +108,14 @@ function navHtml(profile) {
   return MENUS.map((m) => {
     if (m.href) {
       if (!allowed(m, profile)) return '';
-      return `<a class="nav-top" href="${esc(m.href)}"${curAttr(m.href)}>${esc(navLibelle(m.page) || m.label)}</a>`;
+      return `<a class="nav-top" href="${esc(m.href)}"${curAttr(m.href)}>${esc(navLibelle(menuKey(m)) || navLibelle(m.page) || m.label)}</a>`;
     }
     const items = m.auto ? otherItems() : m.items;
     const inner = itemsHtml(items, m.id, profile);
     if (!inner) return '';
     const on = items.some((it) => (it.href && isHere(it.href)) || it.sub?.some((s) => isHere(s.href)));
     return `<div class="nav-group" data-menu="${m.id}">
-        <button class="nav-top${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(m.id) || m.label)}${ICON_CHEVRON}</button>
+        <button class="nav-top${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-menu-${m.id}">${esc(navLibelle(menuKey(m)) || navLibelle(m.id) || m.label)}${ICON_CHEVRON}</button>
         <div class="nav-menu" id="nav-menu-${m.id}" hidden>${inner}</div>
       </div>`;
   }).join('');

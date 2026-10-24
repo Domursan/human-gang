@@ -14,7 +14,7 @@ const FX = 'fake-sb-reglages.mjs';
 const REG = {
   site_identite: { nom: 'Crew Test', copyright: '© {annee} {nom} · essai', editeur: 'Ethan Test', bandeau_cookies: false },
   site_textes: {
-    nav_libelles: { irl: 'Sorties' },
+    nav_libelles: { 'menu:irl': 'Sorties', 'jeux.html#sutom': 'Le mot du jour' },
     footer_liens: [
       { id: 'evenements', label: 'Événements', visible: true }, { id: 'assistance', label: 'Aide', visible: true },
       { id: 'mentions', label: 'Mentions légales', visible: true }, { id: 'confidentialite', label: 'Confidentialité', visible: true },
@@ -56,8 +56,11 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(copy1 === `© ${new Date().getFullYear()} Crew Test · essai`, `pied : copyright avec {annee} et {nom} (« ${copy1} »)`);
     const footLinks = await p1.$$eval('.site-footer nav a', (as) => as.map((a) => a.textContent.trim()));
     check(footLinks.includes('Aide') && footLinks.includes('Mentions légales') && !footLinks.includes('Cookies'), `pied : libellés et lien masqué (${footLinks.join(' | ')})`);
-    const navTxt = await p1.$$eval('.site-header .nav a', (as) => as.map((a) => a.textContent.trim()));
-    check(!navTxt.length || navTxt.every((t) => t !== 'IRL'), `menu : libellé « Sorties » si le lien IRL est affiché (${navTxt.join(' | ')})`);
+    // Titres de menu et entrées renommés (menu « IRL » → « Sorties », « Sutom HG » → « Le mot du jour »), si les menus sont affichés
+    const tops = await p1.$$eval('.site-header .nav-top', (b) => b.map((x) => x.textContent.trim()));
+    const items = await p1.$$eval('.site-header .nav-item', (b) => b.map((x) => x.textContent.trim()));
+    check(!tops.length || (tops.includes('Sorties') && !tops.includes('IRL')), `menu : titre « IRL » renommé « Sorties » (${tops.join(' | ')})`);
+    check(!items.some((t) => t === 'Sutom HG') && (!items.length || !tops.some((t) => t.startsWith('Jeux')) || items.includes('Le mot du jour')), `menu : entrée « Sutom HG » renommée (${items.join(' | ')})`);
     await p1.close(); await p1.ctx.close();
 
     const p2 = await openPage(browser, { page: 'legal', fixture: FX, scenario: { reglages: REG } });
@@ -125,9 +128,11 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     await sleepShort();
     check(await shownGroups() === 'navigation', `parties : « Menu et pied de page » ne montre que son groupe (${await shownGroups()})`);
     check(!(await pa.isVisible('#reglages-root')) && await pa.isVisible('#rgi-save'), 'parties : liste des clés masquée, bouton Enregistrer visible');
-    await pa.fill('#rgi-site-textes-nav-libelles-irl', 'Sorties');
+    await pa.fill('#rgi-site-textes-nav-libelles-menu-irl', 'Sorties');
+    check(await pa.isVisible('#rgi-site-textes-nav-libelles-cartes-html-ouverture') && await pa.isVisible('#rgi-site-textes-nav-libelles-menu-arcade'), 'menu : entrées et sous-menus modifiables (Ouverture, Arcade)');
+    await pa.fill('#rgi-site-textes-nav-libelles-cartes-html-ouverture', 'Ouvrir un booster');
     await save(pa);
-    check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.irl === 'Sorties', 'parties : libellé du menu enregistré depuis « Menu »');
+    check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['menu:irl'] === 'Sorties' && ((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['cartes.html#ouverture'] === 'Ouvrir un booster', 'parties : titres de menu et entrées enregistrés depuis « Menu »');
 
     await adminSection(pa, 'pilotage/etat');
     await sleepShort();
@@ -152,7 +157,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     const txP = (await overridesOf(pa, 'site_textes')) || {};
     check(idP.nom === 'Bande Parties' && idP.bandeau_actif === true && idP.bandeau_texte === 'Annonce de test' && !('maintenance_active' in idP),
       `parties : état du site enregistré avec l'identité, défauts non écrits (${JSON.stringify(idP)})`);
-    check(txP.nav_libelles?.irl === 'Sorties', 'parties : enregistrer depuis « Identité » conserve les libellés du menu');
+    check(txP.nav_libelles?.['menu:irl'] === 'Sorties', 'parties : enregistrer depuis « Identité » conserve les libellés du menu');
 
     await adminSection(pa, 'pilotage/reglages');
     await sleepShort();

@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v73';
+const CACHE_VERSION = 'v74';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -70,7 +70,7 @@ const PRECACHE = [
   'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js', 'assets/js/cartes-zoom.js', 'assets/js/cartes-place.js',
   'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js',
   'assets/js/core/badges.js', 'assets/js/core/effects.js', 'assets/js/core/footer.js',
-  'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js', 'assets/js/core/view-as.js',
+  'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js', 'assets/js/core/menu-def.js', 'assets/js/core/view-as.js',
   'assets/js/core/icons.js', 'assets/js/core/init.js', 'assets/js/core/pages-access.js',
   'assets/js/core/prefs-state.js', 'assets/js/core/prefs.js', 'assets/js/core/profile.js',
   'assets/js/core/perms.js', 'assets/js/core/search.js',

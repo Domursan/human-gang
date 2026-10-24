@@ -11,6 +11,7 @@
  *   setSiteRaw, siteIdentite, siteTexte, navLibelle, footerLiens, siteLogo, fmt, applySiteDom.
  */
 import { LOGO_SRC } from '../config.js';
+import { MENU_KEYS } from './menu-def.js';
 
 /* ---------- Constantes et valeurs par défaut ---------- */
 
@@ -146,7 +147,7 @@ function cleanLibelles(v, def) {
 function cleanNav(v) {
   const out = {};
   if (!isObj(v)) return out;
-  for (const slug of NAV_SLUGS) {
+  for (const slug of [...NAV_SLUGS, ...MENU_KEYS]) {
     const t = typeof v[slug] === 'string' ? v[slug].trim() : '';
     if (t) out[slug] = t.slice(0, 40);
   }

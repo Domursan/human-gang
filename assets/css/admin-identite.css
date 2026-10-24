@@ -31,3 +31,11 @@
 /* Groupes longs repliables (Visite guidée, Collection hors ligne) */
 .rgi-fold { display: grid; gap: 12px; }
 .rgi-fold > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+/* Libellés du menu : titres de menu en gras, entrées et sous-entrées en retrait */
+.rgi-nav-d1 label { padding-left: 14px; }
+.rgi-nav-d2 label { padding-left: 28px; }
+.rgi-nav-d0 { margin-top: 6px; }
+.rgi-nav-note { margin: 10px 0 0; }
+.rgi-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); gap: 12px 20px; align-items: start; }
+.rgi-nav-grp { display: grid; gap: 6px; min-width: 0; }
+.rgi-nav-grp .rgi-row { grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr); }

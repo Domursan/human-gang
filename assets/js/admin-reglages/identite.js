@@ -10,6 +10,7 @@
 import { sb, toast, errMsg, esc } from '../core.js';
 import { SITE_DEFAULTS, buildSite, diffFromDefaults, setSiteRaw, NAV_SLUGS } from '../core/site-defaults.js';
 import { GROUPES_LOT1, PARTS_LOT1, NAV_AUTO_LABELS } from './keys-lot1.js';
+import { menuEntries } from '../core/menu-def.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_RE = /^(https:\/\/|assets\/)\S+$/;
@@ -108,9 +109,17 @@ function controlHtml(f) {
       <div class="rgi-field-foot">${hint}${reset}</div>${err}</div>`;
   }
   if (f.kind === 'nav') {
-    const rows = NAV_SLUGS.map((slug) => `<div class="rgi-row"><label for="${id}-${slug}">${esc(NAV_AUTO_LABELS[slug] || slug)}</label>
-      <input id="${id}-${slug}" type="text" maxlength="40" data-nav="${slug}" value="${esc(v[slug] || '')}" placeholder="Automatique"></div>`).join('');
-    return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}<div class="rgi-rows" role="group" aria-label="${esc(f.label)}">${rows}</div>
+    // Tous les titres et entrées du menu (menu-def.js), puis les pages rangées automatiquement dans « Autres ».
+    const row = (key, label, depth) => `<div class="rgi-row rgi-nav-d${depth}"><label for="${id}-${esc(key.replace(/[^a-z0-9-]/gi, '-'))}">${depth ? '' : '<strong>'}${esc(label)}${depth ? '' : '</strong>'}</label>
+      <input id="${id}-${esc(key.replace(/[^a-z0-9-]/gi, '-'))}" type="text" maxlength="40" data-nav="${esc(key)}" value="${esc(v[key] || '')}" placeholder="${esc(label)}"></div>`;
+    // Un bloc par menu (titre puis entrées), blocs côte à côte sur grand écran.
+    const groups = new Map();
+    for (const e of menuEntries()) { if (!groups.has(e.group)) groups.set(e.group, []); groups.get(e.group).push(row(e.key, e.label, e.depth)); }
+    const autres = NAV_SLUGS.filter((slug) => !['secret-santa', 'irl', 'historique', 'cartes'].includes(slug))
+      .map((slug) => row(slug, NAV_AUTO_LABELS[slug] || slug, 1)).join('');
+    if (groups.has('autres')) groups.get('autres').push(`<p class="small muted rgi-nav-note">Pages rangées dans « Autres » :</p>${autres}`);
+    const blocs = [...groups.values()].map((rows) => `<div class="rgi-nav-grp">${rows.join('')}</div>`).join('');
+    return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}<div class="rgi-nav-grid" role="group" aria-label="${esc(f.label)}">${blocs}</div>
       <div class="rgi-field-foot">${hint}</div>${err}</div>`;
   }
   if (f.kind === 'footer') {
