@@ -55,3 +55,6 @@
 .arc-row.is-me .arc-name { font-weight: 700; }
 .arc-best { font-family: var(--font-display); font-size: 14px; flex: none; }
 .arc-empty { padding: 10px 0; }
+
+/* Vies (cœurs) dans l'écran de jeu */
+.arc-coeurs { color: #E0404B; letter-spacing: .12em; }

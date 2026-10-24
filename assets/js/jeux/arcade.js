@@ -155,7 +155,7 @@ export async function mount(panel, ctx) {
       <div class="arc-ecran">
         <canvas id="arc-canvas" class="arc-canvas" width="360" height="420" tabindex="0" role="application"
           aria-label="${esc(`Jeu : ${JEU.titre}. ${JEU.aide}`)}" aria-describedby="arc-aide"></canvas>
-        <div class="arc-hud" aria-hidden="true"><span>SCORE <span id="arc-score">0</span></span><span><span id="arc-temps">–</span> s</span></div>
+        <div class="arc-hud"><span>SCORE <span id="arc-score">0</span></span><span id="arc-vies" hidden><span class="arc-coeurs" aria-hidden="true"></span><span class="visually-hidden" id="arc-vies-txt"></span></span></div>
       </div>
       <p id="arc-aide" class="small muted">${esc(JEU.aide)}</p>
       <p id="arc-msg" class="arc-msg" role="status"></p>
@@ -173,7 +173,7 @@ export async function mount(panel, ctx) {
       </section>`;
 
     const $z = (s) => zone.querySelector(s);
-    const scoreEl = $z('#arc-score'), tempsEl = $z('#arc-temps'), msg = $z('#arc-msg'), bouton = $z('#arc-jouer'), pause = $z('#arc-pause');
+    const scoreEl = $z('#arc-score'), viesEl = $z('#arc-vies'), coeursEl = $z('.arc-coeurs'), viesTxt = $z('#arc-vies-txt'), msg = $z('#arc-msg'), bouton = $z('#arc-jouer'), pause = $z('#arc-pause');
     /** Boîte de récompense : à gagner, ou déjà reçue aujourd'hui (une partie par jour, tous jeux confondus). */
     const peintGain = () => {
       $z('#arc-gain').innerHTML = gain <= 0 ? '<span class="small muted">pour la gloire</span>'
@@ -185,9 +185,16 @@ export async function mount(panel, ctx) {
     borne = creeArcade({
       canvas: $z('#arc-canvas'),
       jeu: JEU,
-      onHud: (sc, t) => {
+      onHud: (sc, v) => {
         if (scoreEl.textContent !== String(sc)) scoreEl.textContent = String(sc);
-        if (tempsEl.textContent !== String(t)) tempsEl.textContent = String(t);
+        // Vies : cœurs à l'écran (♥ pleins, ♡ perdus) et texte pour les lecteurs d'écran ; absentes si le jeu n'en a pas.
+        viesEl.hidden = !v;
+        if (!v) return;
+        const coeurs = '♥'.repeat(v.left) + '♡'.repeat(v.max - v.left);
+        if (coeursEl.textContent !== coeurs) {
+          coeursEl.textContent = coeurs;
+          viesTxt.textContent = `${v.left} vie${v.left > 1 ? 's' : ''} sur ${v.max}`;
+        }
       },
       onDebut: () => {
         enPartie = true;

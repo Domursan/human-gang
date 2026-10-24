@@ -1,15 +1,18 @@
 // ===== Humane Gang — arcade : « Domu-mobile » =====
 /*
  * Rôle : la voiture avance seule sur trois voies ; on change de voie pour éviter les bouchons et attraper les jerricans.
- * La vitesse monte. Score : 1 point par seconde de route + 3 par jerrican. Premier accrochage : « T’es en retard ! »,
- * fin de partie (90 secondes au plus).
+ * La vitesse monte (plafonnée après 60 s). Score : 1 point par seconde
+ * de route + 3 par jerrican. Premier accrochage : « T’es en retard ! », fin de partie. Pas de limite de temps.
+ * Plafond serveur : 8 points par seconde ; ici, au plus 1 + 3 × 2,2 = 7,7 par seconde (un jerrican au plus toutes les 0,45 s).
  * Moteur : eggs/arcade.js (creeArcade ; jeu « à voies » : flèche, appui à gauche ou à droite, glisser).
  * Animation réduite : route plus lente, pas de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
 import { W, H } from './arcade.js';
 
-const MAX = 90, VOIES = 3, LV = W / VOIES, CY = H - 70;
+const VOIES = 3, LV = W / VOIES, CY = H - 70;
+/** Vitesse : plafond à 60 s ; intervalle entre deux rangées : plancher atteint vers 81 s. */
+const PLAFOND_VITESSE = 60, PLAFOND_RYTHME = 81;
 const ROUTE = '#26262A', LIGNE = '#E2C77E', VOITURE = '#9E3543', VITRE = '#7E93C9', BOUCHON = ['#5A5A62', '#7A4F8F', '#4F6A8F'], JERRY = '#CF7055';
 const xVoie = (v) => LV * v + LV / 2;
 
@@ -24,11 +27,11 @@ export const JEU = {
     s.ecoule += dt;
     if (e.pas) s.voie = Math.min(VOIES - 1, Math.max(0, s.voie + e.pas));
     s.x += (xVoie(s.voie) - s.x) * Math.min(1, dt * 16);
-    const v = (170 + s.ecoule * 6) * s.lent;
+    const v = (170 + Math.min(s.ecoule, PLAFOND_VITESSE) * 6) * s.lent;
     s.defile = (s.defile + v * dt) % 40;
     s.pousse -= dt;
     if (s.pousse <= 0) {
-      s.pousse = Math.max(0.45, 1.1 - s.ecoule * 0.008);
+      s.pousse = Math.max(0.45, 1.1 - Math.min(s.ecoule, PLAFOND_RYTHME) * 0.008);
       const libre = Math.floor(Math.random() * VOIES);
       for (let i = 0; i < VOIES; i++) {
         if (i === libre) { if (Math.random() < 0.5) s.items.push({ j: true, voie: i, y: -20 }); continue; }
@@ -76,6 +79,7 @@ export const JEU = {
     }
   },
   score: (s) => Math.floor(s.ecoule) + s.jerry * 3,
-  temps: (s) => Math.max(0, Math.ceil(MAX - s.ecoule)),
-  fini: (s) => s.crash || s.ecoule >= MAX,
+  /* Pas de vies : la partie finit au premier accrochage. */
+  vies: () => null,
+  fini: (s) => s.crash,
 };

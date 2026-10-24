@@ -4,6 +4,7 @@
  * densité, une image par rafraîchissement, commandes (souris, doigt, glisser, flèches), pause automatique quand
  * l'onglet est masqué, « réduire les animations » (jeu plus lent, pas de secousse), fin de partie.
  * Les règles de chaque mini-jeu sont dans eggs/jeu-paillettes.js, eggs/jeu-raclette.js, eggs/jeu-domu.js.
+ * Pas de limite de temps : une partie finit quand le jeu le dit (plus de vies, ou accrochage).
  * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) (sprite partagé).
  */
 
@@ -29,12 +30,13 @@ export function etoile(ctx, x, y, r) {
 
 /**
  * Crée une borne d'arcade sur un canevas pour un mini-jeu.
- * Le mini-jeu est un objet { init(s), update(s, dt, entree), draw(ctx, s), score(s), fini(s), temps(s) } :
+ * Le mini-jeu est un objet { init(s), update(s, dt, entree), draw(ctx, s), score(s), fini(s), vies(s) } :
  *   s est l'état de la partie (créé par init), entree = { cible, fleche, pas } :
  *   cible : position horizontale visée par le pointeur (ou null), fleche : -1, 0 ou 1 (flèche tenue),
  *   pas : -1 ou 1 pour un changement de voie ponctuel (flèche pressée, appui à gauche ou à droite, glissement), sinon 0.
  * @param {{canvas: HTMLCanvasElement, jeu: object, onHud?: Function, onFin?: Function, onDebut?: Function}} o
- *   onHud(score, temps) à chaque image ; onFin(score, s) à la fin ; onDebut() au lancement.
+ *   onHud(score, vies) à chaque image, vies étant { left, max } ou null (pas de vies) ;
+ *   onFin(score, s) à la fin ; onDebut() au lancement.
  * @returns {{demarre: Function, arrete: Function, pause: Function, enJeu: Function, dessine: Function}}
  */
 export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, onDebut = () => {} }) {
@@ -73,7 +75,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     dernierT = t;
     jeu.update(s, dt, entree);
     entree.pas = 0;
-    onHud(jeu.score(s), jeu.temps(s));
+    onHud(jeu.score(s), jeu.vies(s));
     dessine();
     if (jeu.fini(s)) { fin(); return; }
     raf = requestAnimationFrame(boucle);
@@ -87,7 +89,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     dernierT = null; manuelle = false;
     etat = 'jeu';
     onDebut();
-    onHud(jeu.score(s), jeu.temps(s));
+    onHud(jeu.score(s), jeu.vies(s));
     canvas.focus({ preventScroll: true });
     raf = requestAnimationFrame(boucle);
   };

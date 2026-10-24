@@ -2,14 +2,23 @@
 // Les trois mini-jeux sont jouables chaque jour : sélecteur (aria-pressed, « Jeu du jour » sur le tirage du serveur),
 // adresse #arcade-<jeu> (choix au chargement, puis changement d'adresse), récompense « une par jour, tous jeux confondus » ; une partie complète (horloge simulée) ouvre et ferme la partie côté serveur (hg_arcade_start,
 // hg_arcade_finish), affiche le gain du jour une seule fois ; bouton Pause ; score refusé par le serveur ; 360 px.
+// Pas de limite de temps : une partie se termine quand le joueur perd ses trois vies (Paillettes, Raclette) ou au premier accrochage (Domu-mobile).
 // Faux Supabase : fixtures/fake-sb.mjs (scénario arcadeGame, arcadeRewarded, arcadeBadScore).
 const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 
-/** Joue une partie complète dans l'horloge simulée (balayage du canevas), renvoie le score affiché. */
-async function partie(p, pas = 320) {
+/**
+ * Joue une partie complète dans l'horloge simulée (balayage du canevas) jusqu'à la fin (bouton « Jouer » de nouveau actif),
+ * renvoie le score affiché.
+ */
+async function partie(p, pas = 3000) {
   await p.click('#arc-jouer');
+  return balaye(p, pas);
+}
+
+/** Balaye le canevas jusqu'à la fin de la partie en cours (bouton « Jouer » ou « Rejouer » actif), renvoie le score. */
+async function balaye(p, pas = 3000) {
   const box = await p.locator('#arc-canvas').boundingBox();
-  for (let i = 0; i < pas; i++) {
+  for (let i = 0; i < pas && !(await p.locator('#arc-jouer').isEnabled()); i++) {
     await p.mouse.move(box.x + box.width * (0.5 + 0.45 * Math.sin(i * 0.21)), box.y + box.height * 0.85);
     await p.clock.runFor(100);
   }
@@ -46,14 +55,14 @@ async function partie(p, pas = 320) {
   await p.clock.runFor(2000);
   check(!(await p.locator('#arc-pause').isDisabled()), 'pause : active pendant la partie');
   await p.click('#arc-pause');
-  const t1 = await p.textContent('#arc-temps');
+  const sc1 = await p.textContent('#arc-score');
+  const vies1 = await p.textContent('#arc-vies-txt');
   await p.clock.runFor(5000);
-  check((await p.textContent('#arc-temps')) === t1 && (await p.textContent('#arc-pause')).trim() === 'Reprendre', 'pause : le temps est figé, bouton « Reprendre »');
+  check((await p.textContent('#arc-score')) === sc1 && (await p.textContent('#arc-pause')).trim() === 'Reprendre', 'pause : la partie est figée (score), bouton « Reprendre »');
+  check(vies1 === '3 vies sur 3', `pause : vies affichées au départ (« ${vies1} »)`);
   await p.click('#arc-pause');
-  const box = await p.locator('#arc-canvas').boundingBox();
-  for (let i = 0; i < 300; i++) { await p.mouse.move(box.x + box.width * (0.5 + 0.45 * Math.sin(i * 0.21)), box.y + box.height * 0.85); await p.clock.runFor(100); }
-  await sleep(400);
-  const sc = Number(await p.textContent('#arc-score'));
+  const sc = await balaye(p);
+  check(!(await p.locator('#arc-jouer').isDisabled()) && (await p.textContent('#arc-msg')).includes('Score'), 'fin : partie terminée par la perte des vies (bouton actif, score affiché)');
   let calls = (await log(p)).filter((e) => e[0] === 'rpc' && /^hg_arcade_(start|finish)$/.test(e[1]));
   check(calls.filter((c) => c[1] === 'hg_arcade_start').length === 1, 'serveur : hg_arcade_start appelé une fois au lancement');
   const fin = calls.find((c) => c[1] === 'hg_arcade_finish');
@@ -63,7 +72,7 @@ async function partie(p, pas = 320) {
   check((await p.textContent('#arc-jouer')).trim() === 'Rejouer', 'bouton : « Rejouer » après la partie');
   check(Number(await p.textContent('#arc-record')) === sc, 'record : mis à jour');
   check((await p.locator('#arc-top .is-me').count()) === 1, 'scores : ma ligne apparaît au tableau');
-  const sc2 = await partie(p, 310);
+  const sc2 = await partie(p);
   check(!(await p.textContent('#arc-msg')).includes('✦'), `2e partie (${sc2}) : pas de second gain`);
   check(p.errs.length === 0, 'aucune erreur JS pendant les parties' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();

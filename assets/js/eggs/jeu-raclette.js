@@ -1,36 +1,40 @@
 // ===== Humane Gang — arcade : « Raclette » =====
 /*
- * Rôle : des tranches de fromage tombent ; le poêlon les attrape (+1). Les cornichons sont à éviter (−2, jamais
- * en dessous de 0). 30 secondes. Sprites dessinés en pixel art (rectangles), comme les paillettes.
+ * Rôle : des tranches de fromage tombent ; le poêlon les attrape (+1). Les cornichons sont à éviter : chacun coûte
+ * une des trois vies. La partie finit à zéro vie ; pas de limite de temps. La vitesse plafonne après 60 s.
+ * Cadence : au plus une tranche toutes les 0,32 s (3,1 points par seconde, sous le plafond serveur de 6).
+ * Sprites dessinés en pixel art (rectangles), comme les paillettes.
  * Moteur : eggs/arcade.js (creeArcade). Animation réduite : chute plus lente, pas de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
 import { W, H } from './arcade.js';
 
-const DUREE = 30, SOL = H - 50, DEMI = 38;
+const VIES = 3, SOL = H - 50, DEMI = 38;
+/** Au-delà de cette seconde, la vitesse ne monte plus. */
+const PLAFOND = 60;
 const FROMAGE = '#FBD32D', DESSUS = '#FCA301', TROU = '#e2a52c', CROUTE = '#8a5200', CORNICHON = '#5f8f33', CORN_FONCE = '#4f7a2a', CORN_CLAIR = '#8fc35f', POELE = '#2b2f38', MANCHE = '#6b3a12';
 const borne = (v, a, b) => Math.min(b, Math.max(a, v));
 
 export const JEU = {
   id: 'raclette',
   titre: 'Raclette',
-  aide: 'Souris, doigt ou flèches : déplace le poêlon. Attrape le fromage, évite les cornichons ! 30 secondes.',
-  init: ({ reduit }) => ({ reduit, lent: reduit ? 0.75 : 1, score: 0, ecoule: 0, pousse: 0, x: W / 2, cible: W / 2, items: [], secousse: 0, flash: 0 }),
+  aide: 'Souris, doigt ou flèches : déplace le poêlon. Attrape le fromage. 3 vies : chaque cornichon en coûte une !',
+  init: ({ reduit }) => ({ reduit, lent: reduit ? 0.75 : 1, score: 0, vies: VIES, ecoule: 0, pousse: 0, x: W / 2, cible: W / 2, items: [], secousse: 0, flash: 0 }),
   update(s, dt, e) {
     s.ecoule += dt;
     if (e.cible !== null) s.cible = borne(e.cible, DEMI, W - DEMI);
     if (e.fleche) s.cible = borne(s.cible + e.fleche * 300 * dt, DEMI, W - DEMI);
     s.x += (s.cible - s.x) * Math.min(1, dt * 14);
     s.pousse += dt;
-    if (s.pousse >= Math.max(0.32, 0.75 - s.ecoule * 0.012)) {
+    if (s.pousse >= Math.max(0.32, 0.75 - Math.min(s.ecoule, 36) * 0.012)) {
       s.pousse = 0;
-      const corn = Math.random() < Math.min(0.35, 0.15 + s.ecoule * 0.008);
-      s.items.push({ corn, x: 18 + Math.random() * (W - 36), y: -16, v: (95 + s.ecoule * 3.2 + Math.random() * 35) * s.lent, a: Math.random() * 6 });
+      const corn = Math.random() < Math.min(0.35, 0.15 + Math.min(s.ecoule, 44) * 0.008);
+      s.items.push({ corn, x: 18 + Math.random() * (W - 36), y: -16, v: (95 + Math.min(s.ecoule, PLAFOND) * 3.2 + Math.random() * 35) * s.lent, a: Math.random() * 6 });
     }
     for (const p of s.items) { p.y += p.v * dt; p.a += dt * 3; }
     s.items = s.items.filter((p) => {
       if (p.y >= SOL && p.y <= H - 22 && Math.abs(p.x - s.x) < DEMI) {
-        if (p.corn) { s.score = Math.max(0, s.score - 2); s.flash = 0.25; if (!s.reduit) s.secousse = 0.2; } else s.score++;
+        if (p.corn) { s.vies--; s.flash = 0.35; if (!s.reduit) s.secousse = 0.2; } else s.score++;
         return false;
       }
       return p.y < H + 20;
@@ -62,9 +66,9 @@ export const JEU = {
     ctx.fillStyle = '#4b4f5b'; ctx.fillRect(s.x - DEMI + 2, y + 2, DEMI * 2 - 4, 6);
     ctx.fillStyle = FROMAGE; ctx.fillRect(s.x - DEMI + 8, y, DEMI * 2 - 16, 4);
     ctx.restore();
-    if (s.flash > 0) { ctx.fillStyle = `rgba(94, 140, 58, ${s.flash})`; ctx.fillRect(0, 0, W, H); }
+    if (s.flash > 0) { ctx.fillStyle = `rgba(224, 64, 75, ${s.flash})`; ctx.fillRect(0, 0, W, H); }
   },
   score: (s) => s.score,
-  temps: (s) => Math.max(0, Math.ceil(DUREE - s.ecoule)),
-  fini: (s) => s.ecoule >= DUREE,
+  vies: (s) => ({ left: s.vies, max: VIES }),
+  fini: (s) => s.vies <= 0,
 };
