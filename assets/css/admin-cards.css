@@ -304,3 +304,23 @@
 .enr-rules legend { padding: 0 6px; font-weight: 700; }
 .enr-sum { margin: 6px 0 0; padding-left: 1.2em; }
 .enr-edit { margin-top: 10px; }
+
+/* Gestion globale (admin-gestion.js) : Give à gauche, résumé de l'économie à droite, derniers gives dessous */
+.gest { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); align-items: start; }
+.gest > * { min-width: 0; }
+.gest-give, .gest-eco, .gest-journal { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.gest-journal { margin-top: 0; }
+.gest-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 0; }
+.gest-chip { display: inline-flex; align-items: center; gap: 6px; }
+.gest-tabs { margin: 0; }
+.gest-go { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.gest-go .btn { width: 100%; min-height: 48px; }
+.gest-go p { text-align: center; margin: 0; }
+.gest-titre-petit { margin: 0 0 8px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.gest-eco .acd-tile { min-width: 0; overflow-wrap: anywhere; }
+.gest-entete { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.gest-entete .card-title { margin: 0; }
+.gest-entete a { min-height: 44px; display: inline-flex; align-items: center; }
+.gest-journal .acd-item { flex-wrap: wrap; }
+.gest-journal .acd-item > span { white-space: nowrap; }
+@media (max-width: 600px) { .gest-journal .acd-item > span { white-space: normal; } }

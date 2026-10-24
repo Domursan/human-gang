@@ -549,6 +549,35 @@ if (S.ancienneteLevels) DB.hg_badges.push({ code: 'anciennete', name: 'Anciennet
 // Idées C1 à C6 (migration 080) : lignes ajoutées par le scénario, table par table (S.c080 = { hg_cards: [...], ... }).
 if (S.c080) for (const [t, rows] of Object.entries(S.c080)) DB[t] = [...(DB[t] || []), ...rows];
 
+/* ---------- Gestion globale (admin-gestion.js) : économie, boosters, journal des dons ---------- */
+// S.ecoFail : hg_eco_health refuse ; S.boostersFail : hg_booster_type_stats refuse. S.journalDons remplace le journal par défaut.
+const GESTION_ECO = {
+  generated_at: iso(0), ignore_until: null,
+  seuils: { paillettes_pct: 25, recyclage_pct: 60, booster_pct: 100, concentration_x: 5 },
+  paillettes: { total: 48250, net7: 960, pct: 2, days: [100, 200, 150, 0, 300, -50, 200], level: 'ok' },
+  recyclage: { recycled: 12, obtained: 40, pct: 30, days: [0, 0, 0, 0, 0, 0, 0], level: 'ok' },
+  boosters: [{ id: 'classique', name: 'Classique', price: 100, ev: 60, ratio: 60, level: 'ok', updated_at: iso(-30) }],
+  booster_max: { id: 'classique', name: 'Classique', price: 100, ev: 60, ratio: 60, updated_at: iso(-30) },
+  concentration: { earners: 4, median: 410, max: 2460, ratio: 6, level: 'bad',
+    top: { user_id: U(2), pseudo: 'Alice', gains: 2460, sources: { quete: 1800, booster: 660 } } },
+};
+const GESTION_BOOSTERS = { types: [
+  { id: 'classique', name: 'Classique', price: 100, active: true, sort: 1, sales: { d7: { boosters: 30, paillettes: 3000 }, d30: { boosters: 80, paillettes: 8000 }, total: { boosters: 300, paillettes: 30000 } },
+    opens: { d7: 12, d30: 40, total: 90, cards: 450, refund: 0 }, stock: { total: 5, holders: 2 }, gifts: { d7: 0, d30: 2, total: 2, count: 1 } },
+  { id: 'dore', name: 'Doré', price: 250, active: true, sort: 2, sales: { d7: { boosters: 4, paillettes: 1000 }, d30: { boosters: 9, paillettes: 2250 }, total: { boosters: 20, paillettes: 5000 } },
+    opens: { d7: 7, d30: 11, total: 18, cards: 90, refund: 0 }, stock: { total: 0, holders: 0 }, gifts: { d7: 0, d30: 0, total: 0, count: 0 } },
+], opens_since: iso(-200) };
+// Journal : les dons groupés (action « don_groupe ») et une ligne d'une autre action, que la section ne doit pas afficher.
+DB.hg_admin_log = S.journalDons || [
+  { id: 1, admin_id: ME, action: 'carte_donnee', target_user: U(3), target_ref: 'C1', details: {}, created_at: iso(-0.5) },
+  { id: 2, admin_id: ME, action: 'don_groupe', target_user: null, target_ref: 'boosters', created_at: iso(-0.2),
+    details: { lot: 'lot-b', montant: 2, carte: null, brillante: false, membres: 2, tout_le_gang: false, annonce: true, note: null, destinataires: [U(2), U(3)] } },
+  { id: 3, admin_id: ME, action: 'don_groupe', target_user: null, target_ref: 'paillettes', created_at: iso(-1),
+    details: { lot: 'lot-p', montant: 500, carte: null, brillante: false, membres: 9, tout_le_gang: true, annonce: false, note: 'Anniversaire du gang', destinataires: [U(2), U(3), U(4), U(5), U(6), U(7), U(8), U(9), U(1)] } },
+  { id: 4, admin_id: ME, action: 'don_groupe', target_user: null, target_ref: 'carte', created_at: iso(-3),
+    details: { lot: 'lot-c', montant: 1, carte: 'C2', brillante: true, membres: 1, tout_le_gang: false, annonce: true, note: null, destinataires: [U(3)] } },
+];
+
 /* ---------- Client exporté ---------- */
 /** Point d'entrée : crée le faux client que les pages utilisent à la place de supabase-js. */
 /* ---------- Idées C13 à C17 (migration 082) : cagnotte, Ma chance, bulletin, carte Champion ---------- */
@@ -767,7 +796,7 @@ function rpcC2(fn, a = {}) {
       (C2.recipesAdmin ||= []).push({ ...a.p, id: 'R' + Date.now(), output_name: out?.name, uses: 0 });
       return ok('R9');
     }
-    case 'hg_auctions_admin': return ok(C2.auctionsAdmin || []);
+    case 'hg_auctions_admin': return ok(C2.auctionsAdmin || S.gestionEncheres || []); // S.gestionEncheres : enchères de la Gestion globale
     case 'hg_auction_create': (C2.auctionsAdmin ||= []).unshift({ id: 'A9', card_id: a.p.card_id, card_name: DB.hg_cards.find((c) => c.id === a.p.card_id)?.name, starts_at: a.p.starts_at, ends_at: a.p.ends_at, min_bid: a.p.min_bid, step: a.p.step, status: 'prevue', bids: 0 }); return ok('A9');
     case 'hg_auction_cancel': { const x = (C2.auctionsAdmin || []).find((y) => y.id === a.p_id); if (x) x.status = 'annulee'; return ok(null); }
     default: return null;
@@ -852,6 +881,9 @@ export function createClient() {
         return { data: { membres: ids.length, type: args.p_kind, montant: args.p_amount, annonce: args.p_announce, batch: 'lot-test',
           detail: ids.map((id) => ({ user_id: id, pseudo: DB.hg_profiles.find((p) => p.id === id)?.pseudo ?? '' })) }, error: null };
       }
+      // Gestion globale (admin-gestion.js) : santé de l'économie et statistiques des boosters (lecture seule).
+      if (fn === 'hg_eco_health') return S.ecoFail ? { data: null, error: { message: 'Santé de l\'économie indisponible' } } : { data: GESTION_ECO, error: null };
+      if (fn === 'hg_booster_type_stats') return S.boostersFail ? { data: null, error: { message: 'Statistiques indisponibles' } } : { data: GESTION_BOOSTERS, error: null };
       // Retrait de cartes : sans effet ici.
       if (fn === 'hg_cards_admin_take') return { data: null, error: null };
       // Annuaire pour le Staff : pseudo, couleur, fantôme ou non.

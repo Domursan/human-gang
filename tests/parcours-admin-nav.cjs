@@ -156,7 +156,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await openPal(p);
   // « Groupe · Libellé » (sous-menus), dans l'ordre de la colonne ; ni Questions du gang [quiz] ni Secrets [reglages]
   const labels = await palLabels(p);
-  const attendu = ['Planning', 'Catalogue · Séries', 'Catalogue · Cartes', 'Catalogue · Boosters',
+  const attendu = ['Planning', 'Gestion globale', 'Catalogue · Séries', 'Catalogue · Cartes', 'Catalogue · Boosters',
     'Économie · Paillettes et dons', 'Économie · Tirage', 'Économie · Recyclage et fabrication', 'Économie · Limites',
     'Animation · Quêtes', 'Animation · Défis du gang', 'Animation · Drops', 'Animation · Cagnotte et bulletin', 'Animation · Cartes Champions',
     'Animation · Codes cadeaux', 'Animation · Atelier (recettes)', 'Animation · Enchères',

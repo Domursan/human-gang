@@ -67,6 +67,15 @@ function alerts() {
   return out;
 }
 
+/**
+ * Alertes rouges du moment (après loadEco) pour la section Gestion globale : liste expliquée, et suspension en cours.
+ * @returns {{liste: Array<{key: string, title: string, text: string, href: string, act: string}>, suspendues: boolean, erreur: string, donnees: object|null}}
+ *   donnees : la réponse de hg_eco_health (null si pas encore chargée).
+ */
+export function alertesEco() {
+  return { liste: alerts(), suspendues: ignored(), erreur: H.error || '', donnees: H.data };
+}
+
 /** Ligne « À traiter » de la vue d'ensemble : seulement en cas d'alerte rouge non suspendue. */
 export function ecoTodo() {
   const list = ignored() ? [] : alerts();
