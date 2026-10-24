@@ -65,9 +65,10 @@ const ANCIENNES = [
         `(b) six domaines dans l’ordre : ${domaines.join(', ')}`);
       const ids = await p.$$eval('#shell-subs [data-sub]', (x) => x.map((a) => a.dataset.sub));
       check(new Set(ids).size === ids.length, `(b) identifiants de sous-section uniques (${ids.length} liens)`);
-      for (const retire of ['roles', 'membres-irl', 'gestion', 'arcade']) {
+      for (const retire of ['roles', 'membres-irl', 'gestion']) {
         check(await p.locator(`#shell-subs [data-sub="${retire}"]`).count() === 0, `(b) « ${retire} » (livrée plus tard) n’est pas affiché`);
       }
+      check(await p.locator('#shell-subs .shell-sub[data-sub="arcade"]').count() === 1, '(b) « Arcade (pages 404) » (Jeux) est affichée');
       const titres = await p.$$eval('#shell-subs .shell-subhead', (x) => x.map((t) => t.textContent.trim()));
       check(['Bot', 'Site', 'Apparence', 'Assistance', 'Comptes', 'Badges', 'Catalogue', 'Économie', 'Animation', 'Suivi'].every((t) => titres.includes(t)),
         `(b) titres de groupe présents (${titres.join(', ')})`);

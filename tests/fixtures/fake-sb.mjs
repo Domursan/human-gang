@@ -1077,6 +1077,35 @@ export function createClient(_url, _key, opts = {}) {
       // ---- Paquet xJ4 (migration 086) : arcade du jour (J18), saisons (J16), soirées complètes (J19) ----
       // Scénario : arcadeGame ('paillettes' | 'raclette' | 'domu'), arcadeRewarded, arcadeBadScore ; saison (remplace le classement) ;
       // night (soirée en cours ou à venir, null = aucune), nightNotStaff. Les appels restent dans window.__LOG.
+      // Arcade du panel (migration 103) : tableau de la semaine et effacement d'un score (droit « reglages »).
+      // Scénario : arcadeBoardFail (lecture refusée), arcadeClearFail (effacement refusé). Les effacements sont notés dans window.__ARCB.
+      if (fn === 'hg_arcade_admin_board' || fn === 'hg_arcade_admin_clear') {
+        const m = myPermsNow();
+        if (!(m.is_admin || m.perms.includes('reglages'))) return { data: null, error: { message: 'Droit « reglages » requis' } };
+        const AB = (window.__ARCB ||= { cleared: [] });
+        const lundi = (iso) => { const x = new Date(iso + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.toISOString().slice(0, 10); };
+        const cetteSemaine = lundi(new Date().toISOString().slice(0, 10));
+        const wk = lundi(args.p_week || new Date().toISOString().slice(0, 10));
+        if (fn === 'hg_arcade_admin_clear') {
+          if (S.arcadeClearFail) return { data: null, error: { message: 'Effacement refusé (test)' } };
+          AB.cleared.push(`${args.p_user}|${args.p_game}|${args.p_week}`);
+          return { data: null, error: null };
+        }
+        if (S.arcadeBoardFail) return { data: null, error: { message: 'Arcade indisponible (test)' } };
+        const pr = (id) => DB.hg_profiles.find((q) => q.id === id)?.pseudo ?? null;
+        const ago = (h) => new Date(Date.now() - h * 36e5).toISOString();
+        // Semaine en cours : classements pleins ; semaine précédente : un autre jeu sans score, les autres plus bas.
+        const passee = wk !== cetteSemaine;
+        const rules = { paillettes: { max: 150, rate: 6, min_s: 25, titre: 'Paillettes' }, raclette: { max: 150, rate: 6, min_s: 25, titre: 'Raclette' }, domu: { max: 600, rate: 8, min_s: 3, titre: 'Domu-mobile' } };
+        const scores = passee
+          ? { paillettes: [[U(3), 70], [U(2), 55]], raclette: [[U(2), 40]], domu: [] }
+          : { paillettes: [[U(2), 120], [U(3), 95], [uidNow(), 80]], raclette: [[U(3), 60], [U(2), 45]], domu: [[uidNow(), 210], [U(2), 150]] };
+        const stats = passee ? { paillettes: [6, 20], raclette: [4, 10], domu: [1, 0] } : { paillettes: [14, 60], raclette: [9, 35], domu: [3, 0] };
+        const cleared = (u, g) => AB.cleared.includes(`${u}|${g}|${wk}`) || AB.cleared.includes(`${u}|${g}|${args.p_week}`);
+        const games = ['paillettes', 'raclette', 'domu'].map((g) => ({ game: g, rules: rules[g], runs: stats[g][0], paid: stats[g][1],
+          top: scores[g].filter(([u]) => !cleared(u, g)).map(([u, best], i) => ({ user_id: u, pseudo: pr(u), best, at: ago(2 + i) })).slice(0, 10) }));
+        return { data: { week: wk, reward: S.arcadeReward ?? 5, games }, error: null };
+      }
       if (fn.startsWith('hg_arcade_') || fn.startsWith('hg_season_') || fn.startsWith('hg_night') ) {
         const X = (window.__X4 ||= { rewarded: !!S.arcadeRewarded, runs: 0, best: 0, here: false, presents: null });
         const pr = (id) => { const p = DB.hg_profiles.find((q) => q.id === id) || {}; return { user_id: id, pseudo: p.pseudo, avatar_url: null, color: p.color || '#4F6A8F' }; };
