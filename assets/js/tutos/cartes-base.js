@@ -90,10 +90,10 @@ export default {
       summary: 'Transforme un exemplaire en Paillettes, une carte à la fois ou tous les doublons d’un coup.',
       page: 'cartes.html',
       steps: [
-        { title: 'Repère les doublons', text: 'Dans Cartes, onglet « Mes cartes », choisis « Afficher : Doublons ». La liste ne montre que les cartes que tu possèdes en plusieurs exemplaires.' },
+        { title: 'Repère les doublons', text: 'Dans Cartes, onglet « Mes cartes », choisis « Afficher : Doublons ». La liste ne montre que les cartes que tu possèdes en plusieurs exemplaires simples, ou en plusieurs brillantes.' },
         { title: 'Recycle un exemplaire', text: 'Ouvre la fiche d’une carte. Dans « Mes exemplaires », le bouton « Recycler · N » indique ce que rapporte cet exemplaire. Clique dessus pour le recycler.' },
         { title: 'Recycle tous les doublons', text: 'Clique sur « Recycler les doublons ». La fenêtre annonce le nombre de doublons et le total en Paillettes. Le bouton « Recycler » confirme, « Annuler » ferme la fenêtre sans rien faire.' },
-        { title: 'Garde un exemplaire', text: 'Il reste toujours un exemplaire de chaque carte. Le recyclage d’un coup garde la version brillante si tu en as une. Les cartes Identité et celles en cours d’échange ne sont pas touchées.' },
+        { title: 'Garde un exemplaire', text: 'Il reste toujours un exemplaire de chaque carte, et un de chaque brillante : une carte simple et la même en brillante ne comptent pas comme un doublon. Les cartes Identité et celles en cours d’échange ne sont pas touchées.' },
         { title: 'Vérifie ce que ça rapporte', text: 'Un exemplaire vaut : Commune {{cartes.recycle.commune|5}}, Peu commune {{cartes.recycle.peu_commune|10}}, Rare {{cartes.recycle.rare|25}}, Épique {{cartes.recycle.epique|60}}, Légendaire {{cartes.recycle.legendaire|150}} et Mythique {{cartes.recycle.mythique|400}} Paillettes. Une version brillante rapporte {{cartes.recycle.shiny_multiplier|3}} fois plus.' },
       ],
       tips: [

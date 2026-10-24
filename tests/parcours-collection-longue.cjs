@@ -54,9 +54,10 @@ const dernierDessin = (p) => p.evaluate(() => { const m = performance.getEntries
   // Recyclage en masse : calculé sur toute la collection, pas sur le lot
   const attendu = await p.evaluate(() => {
     const by = new Map();
-    for (const c of window.__DB.hg_card_copies.filter((x) => x.owner_id === '11111111-1111-4111-8111-111111111111')) by.set(c.card_id, (by.get(c.card_id) || []).concat(c));
+    // La version simple et la version brillante d'une carte sont comptées à part (une de chaque est gardée).
+    for (const c of window.__DB.hg_card_copies.filter((x) => x.owner_id === '11111111-1111-4111-8111-111111111111')) { const key = c.card_id + '|' + (c.shiny ? 1 : 0); by.set(key, (by.get(key) || []).concat(c)); }
     let n = 0;
-    for (const [id, l] of by) { const k = window.__DB.hg_cards.find((x) => x.id === id); if (!k || k.rarity === 'identite' || k.rarity === 'unique') continue; n += l.slice(1).filter((x) => !x.locked_trade).length; }
+    for (const [key, l] of by) { const k = window.__DB.hg_cards.find((x) => x.id === key.split('|')[0]); if (!k || k.rarity === 'identite' || k.rarity === 'unique') continue; n += Math.max(l.filter((x) => !x.locked_trade).length - 1, 0); }
     return n;
   });
   const massTxt = (await p.textContent('.cartes-mass')).replace(/\s+/g, ' ');

@@ -2419,7 +2419,7 @@ function drawCollection(focusId) {
     if (f.family && c.family !== f.family) return false;
     if (f.owned === 'owned' && n === 0) return false;
     if (f.owned === 'missing' && n > 0) return false;
-    if (f.owned === 'dupes' && n < 2) return false;
+    if (f.owned === 'dupes' && !hasDupes(c.id)) return false;
     if (f.owned === 'fav' && (n === 0 || !S.favs.has(c.id))) return false;
     return true;
   };
@@ -2516,7 +2516,7 @@ function drawCollection(focusId) {
         </div>` : ''}
       </div>
       <div class="cartes-mass">
-        <p class="muted small">${pluralCount(plan.ids.length, 'doublon recyclable', 'doublons recyclables', nf.format)} (on garde un exemplaire de chaque carte)</p>
+        <p class="muted small">${pluralCount(plan.ids.length, 'doublon recyclable', 'doublons recyclables', nf.format)} (on garde un exemplaire de chaque carte, et un de chaque brillante)</p>
         <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
       </div>
       <div class="cz-extra">
@@ -2549,22 +2549,24 @@ function recycleValue(cp, k) {
 }
 
 /**
- * Liste les doublons recyclables : pour chaque carte, on garde un exemplaire (le brillant d'abord, puis
- * le non échangé). Exclut les cartes Identité et les exemplaires en cours d'échange.
+ * Liste les doublons recyclables. La version simple et la version brillante d'une carte comptent comme deux
+ * cartes différentes : on garde un exemplaire de chacune (le non échangé d'abord), et posséder la carte simple
+ * plus la même en brillante n'est pas un doublon. Exclut les cartes Identité et les exemplaires en cours d'échange.
  * @returns {{ids: number[], total: number}} identifiants des exemplaires à recycler et leur valeur en Paillettes
  */
 function massPlan() {
   const groups = new Map();
   for (const cp of S.copies) {
-    if (!groups.has(cp.card_id)) groups.set(cp.card_id, []);
-    groups.get(cp.card_id).push(cp);
+    const key = `${cp.card_id}|${cp.shiny ? 1 : 0}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(cp);
   }
   const ids = [];
   let total = 0;
-  for (const [cardId, list] of groups) {
-    const k = S.cardsById.get(cardId);
+  for (const list of groups.values()) {
+    const k = S.cardsById.get(list[0].card_id);
     if (!k || k.rarity === 'identite' || k.rarity === 'unique' || list.length < 2) continue;
-    const sorted = [...list].sort((a, b) => (Number(b.shiny) - Number(a.shiny)) || (Number(!!a.locked_trade) - Number(!!b.locked_trade)));
+    const sorted = [...list].sort((a, b) => Number(!!a.locked_trade) - Number(!!b.locked_trade));
     for (const cp of sorted.slice(1)) {
       if (cp.locked_trade) continue;
       ids.push(cp.id);
@@ -2574,13 +2576,20 @@ function massPlan() {
   return { ids, total };
 }
 
+/** Vrai si j'ai au moins deux exemplaires simples, ou deux brillants, de cette carte (le filtre « Doublons »). */
+function hasDupes(cardId) {
+  const list = copiesOf(cardId);
+  const shiny = list.filter((cp) => cp.shiny).length;
+  return shiny >= 2 || list.length - shiny >= 2;
+}
+
 /** Ouvre la fenêtre de recyclage de masse, avec le nombre de doublons et leur valeur estimée. */
 function openMass() {
   const plan = massPlan();
   S.massIds = plan.ids;
   $('#cartes-mass-body').innerHTML = plan.ids.length
     ? `<p>Tu vas recycler <strong>${pluralCount(plan.ids.length, 'doublon', 'doublons', nf.format)}</strong> pour environ <strong>${fmtPaillettes(plan.total)}</strong>.</p>
-       <p class="muted small">Il te restera au moins un exemplaire de chaque carte. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
+       <p class="muted small">Il te restera au moins un exemplaire de chaque carte, et un de chaque brillante : une carte simple et la même en brillante ne comptent pas comme un doublon. Les cartes Identité et celles en cours d’échange ne sont pas touchées. Cette action est définitive.</p>`
     : '<p>Aucun doublon à recycler pour le moment.</p>';
   $('#cartes-mass-confirm').hidden = !plan.ids.length;
   const dlg = $('#cartes-mass');
