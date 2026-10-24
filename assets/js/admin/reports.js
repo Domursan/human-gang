@@ -14,8 +14,13 @@ import { S } from './state.js';
 /** Libellés des contenus et des raisons (mêmes clés que la base). */
 export const KIND = { moment: 'Moment', photo: 'Photo', message: 'Message privé' };
 export const REASON = { blessant: 'Blessant ou gênant', prive: 'Information privée', spam: 'Spam ou doublon', autre: 'Autre' };
-/** Seuil de masquage automatique affiché (réglage hg_settings.support.signalements, 3 par défaut). */
-const SEUIL = 3;
+/** Seuil de masquage automatique par défaut (réglage hg_settings.support.signalements.seuil_masquage, 3 si absent). */
+const SEUIL_DEFAUT = 3;
+/** Seuil en vigueur : celui du réglage chargé par loaders.js (S.reportSeuil), borné comme hg_report_rules (2 à 10). */
+export const seuilMasquage = () => {
+  const v = S.reportSeuil;
+  return Number.isInteger(v) && v >= 2 && v <= 10 ? v : SEUIL_DEFAUT;
+};
 
 /** Signalement lié à une demande d'assistance, ou undefined. */
 export const reportOf = (supportId) => (S.reports || []).find((r) => r.support_id === supportId);
@@ -79,7 +84,7 @@ export function reportCard(r, onDone) {
         <span class="rp-reason" data-r="${esc(r.reason)}">${esc(REASON[r.reason] || r.reason)}</span></div>
       ${previewHtml(r, url)}
       ${r.note ? `<div class="rp-note"><span class="er-lbl">Mot du signalement</span><br>${esc(r.note)}</div>` : ''}
-      <p class="small muted">Signalé par ${open.length || all.length} membre${(open.length || all.length) > 1 ? 's' : ''} (identité visible du Staff seulement) · masquage automatique à ${SEUIL} signalements</p>
+      <p class="small muted">Signalé par ${open.length || all.length} membre${(open.length || all.length) > 1 ? 's' : ''} (identité visible du Staff seulement) · masquage automatique à ${seuilMasquage()} signalement${seuilMasquage() > 1 ? 's' : ''}</p>
       ${done ? `<p class="small rp-state">Décision prise : contenu ${esc(actionTxt[r.action] || 'traité')}${r.resolved_at ? ` le ${esc(fmtDateTime(r.resolved_at))}` : ''}.</p>` : ''}
       <div class="rp-actions">
         ${done ? '<span></span>' : '<button type="button" class="btn btn-ghost btn-sm" data-rp="rien">Ne rien faire</button>'}

@@ -2,6 +2,7 @@
 // Un lien public (rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
 // Rôle : créer, activer / désactiver, copier, afficher en QR code et supprimer les liens d'invitation, et voir les codes
 // qu'ils ont générés. Règle aussi les codes (durée, limite par heure, préfixe) dans hg_settings.invites.
+// Valeurs par défaut d'un nouveau lien (limite de codes, durée) : même clé hg_settings.invites, lues par le trigger SQL.
 // Importé par admin.js (section Invitations) et par admin/invites.js (bouton « + Nouveau lien »).
 // Dépendances : core.js, ui-confirm.js, icons.js, invite-config.js (règles des codes), admin/ui/drawer.js.
 // Tables et RPC : hg_invite_links (liens), hg_invites (codes, lien d'origine = link_id), hg_settings (clé 'invites').
@@ -11,7 +12,7 @@ import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, 
 import { confirmBox } from './ui-confirm.js';
 import { svg } from './icons.js';
 import { openDrawer } from './admin/ui/drawer.js';
-import { INVITE_DEFAULTS, INVITE_LIMITS, normalizeInviteConfig, inviteConfig, loadInviteConfig, resetInviteConfig } from './invite-config.js';
+import { INVITE_DEFAULTS, INVITE_LIMITS, LIEN_DEFAULTS, LIEN_LIMITS, normalizeInviteConfig, normalizeLienDefaults, inviteConfig, lienConfig, loadInviteConfig, applyInviteRaw } from './invite-config.js';
 
 /* ---------- Constantes et état ---------- */
 // Icônes SVG des boutons Copier, QR code et Supprimer.
@@ -68,8 +69,21 @@ async function loadRules() {
     if (error) throw error;
     L.rulesRaw = data ? data.value : null;
     L.rulesError = null;
+    applyInviteRaw(L.rulesRaw);
   } catch (e) { L.rulesError = e; }
 }
+/**
+ * Valeur complète de hg_settings.invites, relue juste avant une écriture : les autres clés (valeurs des nouveaux liens
+ * ou règles des codes) sont conservées. Objet vide si la clé n'existe pas.
+ * @returns {Promise<object>}
+ */
+async function readInvitesRaw() {
+  const { data, error } = await sb.from('hg_settings').select('value').eq('key', 'invites').maybeSingle();
+  if (error) throw error;
+  return data?.value && typeof data.value === 'object' && !Array.isArray(data.value) ? data.value : {};
+}
+/** Vrai si au moins une règle des codes est enregistrée (valeurs personnalisées). */
+const hasCodeRules = (raw) => !!raw && RULES.some((r) => raw[r.name] !== undefined && raw[r.name] !== null);
 
 /* ---------- Règles des codes (hg_settings.invites) ---------- */
 /* ---------- Règles des codes (hg_settings.invites) ---------- */
@@ -87,7 +101,7 @@ const RULES = [
  */
 function rulesHtml() {
   const cur = L.rulesRaw && typeof L.rulesRaw === 'object' ? L.rulesRaw : {};
-  const custom = !!L.rulesRaw;
+  const custom = hasCodeRules(cur);
   const eff = { ...INVITE_DEFAULTS, ...Object.fromEntries(RULES.map((r) => [r.name, cur[r.name] ?? INVITE_DEFAULTS[r.name]])) };
   /** Valeur en vigueur d'une règle, suivie de son unité si elle en a une. */
   const shown = (r) => `${esc(eff[r.name])}${r.unit ? ` ${esc(r.unit)}` : ''}`;
@@ -105,6 +119,60 @@ function rulesHtml() {
       ${RULES.map((r) => `<div><dt class="small muted">${esc(r.label)}</dt><dd><strong class="text">${shown(r)}</strong></dd></div>`).join('')}
     </dl>`}
   </section>`;
+}
+
+/**
+ * HTML du bloc « Nouveaux liens » : limite de codes et durée par défaut, avec le bouton de modification.
+ * @returns {string}
+ */
+function lienHtml() {
+  const eff = normalizeLienDefaults(L.rulesRaw).value || LIEN_DEFAULTS;
+  return `<section class="il-rules il-lien" aria-labelledby="il-lien-title">
+    <div class="il-rules-head">
+      <h4 class="card-title" id="il-lien-title">Nouveaux liens</h4>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" type="button" data-il-lien-edit>Modifier les valeurs par défaut</button>
+      </div>
+    </div>
+    <p class="small muted">Valeurs proposées à la création d'un lien quand le champ reste vide. Les liens déjà créés ne changent pas.</p>
+    <dl class="il-rules-list">
+      <div><dt class="small muted">Limite de codes par lien</dt><dd><strong class="text">${esc(eff.lien_max_codes_defaut)}</strong> codes</dd></div>
+      <div><dt class="small muted">Durée de validité du lien</dt><dd><strong class="text">${esc(eff.lien_validite_jours_defaut)}</strong> jours</dd></div>
+    </dl>
+  </section>`;
+}
+
+/** Tiroir « Nouveaux liens » : limite de codes et durée par défaut, validées puis fusionnées avec le reste de hg_settings.invites. */
+function openLienDrawer() {
+  const cur = normalizeLienDefaults(L.rulesRaw).value || LIEN_DEFAULTS;
+  const body = document.createElement('div');
+  body.className = 'il-form';
+  body.innerHTML = [
+    ['lien_max_codes_defaut', 'Limite de codes par lien (par défaut)', 'Nombre de codes qu\'un lien peut donner au total, quand le champ « Limite de codes » reste vide. Entre 1 et 500. Défaut : 20.', 'codes'],
+    ['lien_validite_jours_defaut', 'Durée de validité d\'un lien (jours, par défaut)', 'Date d\'expiration proposée quand le champ « Expire le » reste vide. Entre 1 et 365. Défaut : 30.', 'jours'],
+  ].map(([name, label, help]) => {
+    const id = `il-lien-${name}`, lim = LIEN_LIMITS[name];
+    return `<div class="field"><label for="${id}">${esc(label)}</label>
+      <input id="${id}" name="${name}" type="number" inputmode="numeric" step="1" min="${lim[0]}" max="${lim[1]}" value="${esc(cur[name])}" aria-describedby="${id}-h">
+      <span class="small muted" id="${id}-h">${esc(help)}</span></div>`;
+  }).join('');
+  openDrawer({
+    title: 'Valeurs par défaut des nouveaux liens',
+    subtitle: 'S\'appliquent aux prochains liens créés ; les liens existants ne changent pas.',
+    body, submitLabel: 'Enregistrer',
+    onSubmit: async (form) => {
+      const raw = {};
+      for (const name of Object.keys(LIEN_LIMITS)) raw[name] = form.elements[name].value.trim();
+      const res = normalizeLienDefaults(raw);
+      if (res.error) throw new Error(res.error);
+      const value = { ...(await readInvitesRaw()), ...res.value };
+      check(await sb.from('hg_settings').upsert({ key: 'invites', value, updated_at: new Date().toISOString() }, { onConflict: 'key' }));
+      L.rulesRaw = value;
+      applyInviteRaw(value);
+      toast('Valeurs par défaut des liens enregistrées', 'ok');
+      render();
+    },
+  });
 }
 
 /** Tiroir « Modifier les règles » (même principe que « Nouveau lien ») : champs typés, validés à l'enregistrement. */
@@ -132,9 +200,11 @@ function openRulesDrawer() {
       for (const r of RULES) raw[r.name] = form.elements[r.name].value.trim();
       const res = normalizeInviteConfig(raw);
       if (res.error) throw new Error(res.error);
-      check(await sb.from('hg_settings').upsert({ key: 'invites', value: res.value, updated_at: new Date().toISOString() }, { onConflict: 'key' }));
-      L.rulesRaw = res.value;
-      resetInviteConfig(); await loadInviteConfig();
+      // Fusion : les valeurs des nouveaux liens (lien_*) de la même clé sont conservées.
+      const value = { ...(await readInvitesRaw()), ...res.value };
+      check(await sb.from('hg_settings').upsert({ key: 'invites', value, updated_at: new Date().toISOString() }, { onConflict: 'key' }));
+      L.rulesRaw = value;
+      applyInviteRaw(value);
       toast('Règles des codes enregistrées', 'ok');
       render();
     },
@@ -151,9 +221,13 @@ async function resetRules(btn) {
     { ok: 'Rétablir', danger: false });
   if (!ok) return;
   await busy(btn, async () => {
-    check(await sb.from('hg_settings').delete().eq('key', 'invites'));
-    L.rulesRaw = null;
-    resetInviteConfig(); await loadInviteConfig();
+    // Seules les règles des codes sont retirées ; les valeurs des nouveaux liens restent. La clé disparaît si rien d'autre n'y est.
+    const rest = { ...(await readInvitesRaw()) };
+    for (const r of RULES) delete rest[r.name];
+    if (Object.keys(rest).length) check(await sb.from('hg_settings').upsert({ key: 'invites', value: rest, updated_at: new Date().toISOString() }, { onConflict: 'key' }));
+    else check(await sb.from('hg_settings').delete().eq('key', 'invites'));
+    L.rulesRaw = Object.keys(rest).length ? rest : null;
+    applyInviteRaw(L.rulesRaw);
     toast('Valeurs par défaut rétablies', 'ok');
     render();
   });
@@ -207,8 +281,8 @@ function fieldsHtml() {
     <div class="field il-label"><label for="il-label">Libellé</label>
       <input id="il-label" name="label" maxlength="80" autocomplete="off" placeholder="ex. Soirée du 12 décembre"></div>
     <div class="field"><label for="il-max">Limite de codes</label>
-      <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="20 par défaut"></div>
-    <div class="field"><label for="il-exp">Expire le <span class="muted small">(30 jours par défaut)</span>${godTag()}</label>
+      <input id="il-max" name="max_codes" type="number" min="1" max="500" step="1" inputmode="numeric" placeholder="${esc(lienConfig().lien_max_codes_defaut)} par défaut"></div>
+    <div class="field"><label for="il-exp">Expire le <span class="muted small">(${esc(lienConfig().lien_validite_jours_defaut)} jours par défaut)</span>${godTag()}</label>
       <input id="il-exp" name="expires_at" type="date" ${godLimitAttr('min', today)}></div>`;
 }
 
@@ -292,6 +366,7 @@ function render() {
   r.innerHTML = `
     <h3 class="card-title">Liens d'invitation</h3>
     ${rulesHtml()}
+    ${lienHtml()}
     <p class="muted small">Un lien à partager (Discord, QR code…). Chaque personne qui l'ouvre reçoit son propre code d'invitation, valable ${esc(inviteConfig().validite_heures)} h et utilisable une seule fois. Désactive ou supprime le lien quand tu n'en as plus besoin.</p>
     ${L.error ? `<div class="empty">Impossible de charger les liens : ${esc(errMsg(L.error))}</div>`
       : L.links.length ? `<ul class="il-list">${L.links.map(linkHtml).join('')}</ul>`
@@ -356,6 +431,7 @@ function bind() {
   r.addEventListener('click', (ev) => {
     const edit = ev.target.closest?.('[data-il-rules-edit]');
     if (edit) return openRulesDrawer();
+    if (ev.target.closest?.('[data-il-lien-edit]')) return openLienDrawer();
     const t = ev.target.closest?.('[data-il-rules-reset]');
     if (t) resetRules(t);
   });

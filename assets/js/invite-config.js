@@ -7,8 +7,10 @@
  * Pages : rejoindre.html, compte.html (lien d'invitation), admin-invite-links.js et admin/invites.js (administration).
  * Dépendances : core.js (client Supabase).
  * Table : hg_settings (clé 'invites').
+ * Valeurs par défaut des nouveaux liens (lien_max_codes_defaut, lien_validite_jours_defaut) : même clé, lues par le trigger
+ * hg_invite_links_defaults (SQL) quand un lien est créé sans limite ni date. Édités dans Membres › Invitations.
  * Exporte : INVITE_DEFAULTS, INVITE_LIMITS, PREFIX_RE, normalizeInviteConfig, inviteConfig, loadInviteConfig,
- *   resetInviteConfig, inviteCodeRe.
+ *   resetInviteConfig, inviteCodeRe, LIEN_DEFAULTS, LIEN_LIMITS, normalizeLienDefaults, lienConfig, applyInviteRaw.
  */
 import { sb } from './core.js';
 
@@ -29,6 +31,16 @@ export const INVITE_LIMITS = Object.freeze({
 });
 /** Forme valable d'un préfixe de code : 1 à 8 lettres ou chiffres majuscules, suivis d'un tiret. */
 export const PREFIX_RE = /^[A-Z0-9]{1,8}-$/;
+
+/** Valeurs par défaut d'un nouveau lien : 20 codes au total, lien valable 30 jours (comportement d'origine du trigger). */
+export const LIEN_DEFAULTS = Object.freeze({
+  lien_max_codes_defaut: 20,
+  lien_validite_jours_defaut: 30,
+});
+export const LIEN_LIMITS = Object.freeze({
+  lien_max_codes_defaut: [1, 500],
+  lien_validite_jours_defaut: [1, 365],
+});
 
 /* ---------- Lecture et validation ---------- */
 
@@ -57,8 +69,27 @@ export function normalizeInviteConfig(raw) {
   return { value: out };
 }
 
+/**
+ * Valeurs des nouveaux liens, lues dans hg_settings.invites. Une clé absente, vide ou hors bornes garde son défaut
+ * (même repli que le trigger SQL, qui ignore une valeur mal formée).
+ * @param {*} raw Valeur lue dans hg_settings (clé « invites »).
+ * @returns {{value: object}|{error: string}}
+ */
+export function normalizeLienDefaults(raw) {
+  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const out = { ...LIEN_DEFAULTS };
+  for (const [k, [min, max]] of Object.entries(LIEN_LIMITS)) {
+    if (src[k] === undefined || src[k] === null || src[k] === '') continue;
+    const n = typeof src[k] === 'boolean' ? NaN : Number(src[k]);
+    if (!Number.isInteger(n) || n < min || n > max) return { error: `« ${k} » doit être un nombre entier entre ${min} et ${max}.` };
+    out[k] = n;
+  }
+  return { value: out };
+}
+
 let cache = null;
 let pending = null;
+let lienCache = null;
 
 /* ---------- Cache et accès ---------- */
 
@@ -81,9 +112,11 @@ export function loadInviteConfig() {
         if (error) throw error;
         const r = normalizeInviteConfig(data?.value);
         cache = r.value || INVITE_DEFAULTS;
+        lienCache = normalizeLienDefaults(data?.value).value || LIEN_DEFAULTS;
       } catch (e) {
         console.warn('[invites] réglages non lus, valeurs par défaut :', e?.message || e);
         cache = INVITE_DEFAULTS;
+        lienCache = LIEN_DEFAULTS;
       }
       return cache;
     })();
@@ -92,7 +125,23 @@ export function loadInviteConfig() {
 }
 
 /** Oublie le cache (après une modification dans l'admin) : le prochain loadInviteConfig relit la base. */
-export function resetInviteConfig() { cache = null; pending = null; }
+export function resetInviteConfig() { cache = null; pending = null; lienCache = null; }
+
+/**
+ * Valeurs des nouveaux liens en vigueur (synchrone) : défauts tant que la valeur n'a pas été lue.
+ * @returns {object}
+ */
+export function lienConfig() { return lienCache || LIEN_DEFAULTS; }
+
+/**
+ * Met à jour le cache à partir d'une valeur déjà lue (ou écrite) de hg_settings.invites, sans nouvelle requête.
+ * @param {*} raw Valeur complète de la clé « invites ».
+ */
+export function applyInviteRaw(raw) {
+  cache = normalizeInviteConfig(raw).value || INVITE_DEFAULTS;
+  lienCache = normalizeLienDefaults(raw).value || LIEN_DEFAULTS;
+  pending = Promise.resolve(cache);
+}
 
 /**
  * Expression régulière d'un code d'invitation (préfixe réglé, 4 à 8 caractères ensuite).

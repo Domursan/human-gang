@@ -103,6 +103,7 @@ const MSG = {
       ],
       reports: [{ id: 'rep-1', reporter: U(3), kind: 'photo', ref_id: 'pppppppp-0000-4000-8000-000000000001', reason: 'prive', note: 'On voit l’adresse sur le colis.',
         snapshot: { path: `${U(2)}/raclette-1.webp`, caption: 'Le fromage', event_title: 'Raclette de test', event_at: ago(43200), author: 'Alice' }, support_id: 'sup-r1', status: 'ouverte', created_at: ago(20) }],
+      settings: [{ key: 'support', value: { max_par_heure: 4, signalements: { seuil_masquage: 5 } } }], // seuil réglé : 5 membres
     };
     p = await openPage(browser, { page: 'admin', scenario: SUP });
     await adminSection(p, 'poste/assistance');
@@ -116,11 +117,21 @@ const MSG = {
     await p.waitForSelector('.rp-card', { timeout: 5000 });
     check(await p.isVisible('.rp-card .rp-photo') && /Information privée/.test(await p.textContent('.rp-card .rp-reason')), '(d) aperçu de la photo et raison');
     check(/Signalé par 1 membre/.test(await p.textContent('.rp-card')) && /colis/.test(await p.textContent('.rp-card')), '(d) nombre de signalements et mot du signalement');
+    check(/masquage automatique à 5 signalements/.test(await p.textContent('.rp-card')), '(d) seuil affiché : celui du réglage (5), pas le 3 d\'origine');
     await p.click('.rp-card [data-rp="masquer"]');
     await sleep(500);
     check((await log(p)).some((l) => l[0] === 'report_resolve' && l[1] === 'rep-1' && l[2] === 'masquer'), '(d) « Masquer » appelle hg_report_resolve');
     check(/Décision prise/.test(await p.textContent('.rp-card')), '(d) décision affichée après coup');
     check(p.errs.length === 0, '(d) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 3).join(' | ') + ')' : ''));
+    await p.ctx.close();
+
+    /* ---------- (d bis) Staff « support » sans réglage : seuil par défaut 3 ---------- */
+    p = await openPage(browser, { page: 'admin', scenario: { ...SUP, settings: [] } });
+    await adminSection(p, 'poste/assistance');
+    await p.evaluate(() => { location.hash = '#poste/assistance/sup-r1'; });
+    await p.waitForSelector('.rp-card', { timeout: 5000 });
+    check(/masquage automatique à 3 signalements/.test(await p.textContent('.rp-card')), '(d bis) sans réglage : seuil 3 (défaut)');
+    check(p.errs.length === 0, '(d bis) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 3).join(' | ') + ')' : ''));
     await p.ctx.close();
 
     /* ---------- (e) 360 px ---------- */
