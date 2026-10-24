@@ -182,6 +182,8 @@ const typed = () => Array.isArray(S.types) && S.types.length > 0;
 const typesDown = () => !typed() && S.typesErr;
 /** Type de booster d'après son identifiant (null en mode repli ou si le type est inconnu). */
 const typeOf = (id) => (typed() ? S.types.find((t) => t.id === id) || null : null);
+/** Type du booster gratuit du jour : celui que l'admin a réglé « gratuit chaque jour » (free_daily), sinon le Classique. */
+const freeType = () => (typed() ? S.types.find((t) => t.free_daily && t.active !== false) || typeOf('classique') : null);
 /** Vrai si un type se donne à un membre : les boosters Collectionneur (pool « manquantes ») ne s'offrent pas. */
 const giftable = (t) => t.pool !== 'manquantes';
 /** Types dont le membre a du stock, dans l'ordre d'affichage (vide en mode repli). */
@@ -1503,7 +1505,7 @@ function drawFree() {
   box.dataset.busy = String(busy);
   box.innerHTML = `
     <h2 class="cart-h">Booster gratuit</h2>
-    <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml({ free: true, ready })}</div></div>
+    <div class="fit cart-fit" data-w="220" style="--h:290"><div class="fit-in">${cartridgeHtml({ free: true, ready, type: freeType() })}</div></div>
     <div class="cart-act">${ready
       ? `<button type="button" class="btn btn-primary cart-btn" data-action="open-free" ${busy ? 'disabled' : ''}>Ouvrir le booster gratuit</button>`
       : `<p class="cartes-timer" role="timer">Disponible dans ${fmtDuration(ms)}</p>`}
@@ -3284,7 +3286,7 @@ function onClick(e) {
   switch (t.dataset.action) {
     case 'daily': return claimDaily();
     // Boutons d'ouverture : en mode typé, chaque bouton ouvre un type (dialogue de série si besoin) ; en repli, l'ancien chemin.
-    case 'open-free': if (typed()) return openWithPick('classique', 'gratuit', t); toOuverture(); return openBooster(true);
+    case 'open-free': if (typed()) return openWithPick(freeType()?.id || 'classique', 'gratuit', t); toOuverture(); return openBooster(true);
     case 'open-gift': if (typed()) return openWithPick('classique', 'stock', t); toOuverture(); return openBooster(false, true);
     case 'open-stock': return openWithPick(t.dataset.type, 'stock', t);
     case 'serie-confirm': return confirmSerie();

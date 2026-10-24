@@ -66,6 +66,20 @@ const GRILLE = '#cartes-reveal .cartes-booster-grid .hgc'; // grille affichée s
   check(!p.errs.length, 'réduire les animations : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
+  // 3. Le booster gratuit du jour n'est plus le Classique (réglage admin « gratuit chaque jour » sur le Doré) :
+  //    le site ouvre le bon type au lieu de recevoir « Ce booster ne s'ouvre pas gratuitement ».
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', width: 1280, reducedMotion: 'reduce',
+    scenario: { types: true, bal: 600, typeOverrides: { classique: { free_daily: false }, dore: { free_daily: true } } } });
+  await p.click('[data-tab=boosters]').catch(() => {});
+  await p.waitForSelector('[data-action=open-free]', { timeout: 8000 }).catch(() => {});
+  check(/DOR/i.test(await p.textContent('#cartes-free .cart-lbl2').catch(() => '')), 'gratuit réglé sur le Doré : la cartouche du gratuit montre le Doré');
+  await p.click('[data-action=open-free]');
+  await p.waitForSelector(GRILLE, { timeout: 5000 }).catch(() => {});
+  const call = (await log(p)).filter((l) => l[1] === 'hg_booster_open').pop();
+  check(call && call[2].p_type === 'dore' && call[2].p_mode === 'gratuit', `gratuit réglé sur le Doré : hg_booster_open(dore, gratuit) (${JSON.stringify(call && call[2])})`);
+  check(!p.errs.length, 'gratuit Doré : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
   await browser.close();
   finish();
 })();
