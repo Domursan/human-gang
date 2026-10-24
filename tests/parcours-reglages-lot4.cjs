@@ -142,7 +142,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Vie › Badges : critères ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
-  await adminSection(p, 'vie/badges-criteres');
+  await adminSection(p, 'membres/badges-criteres');
   await p.waitForSelector('#bc-form', { timeout: 8000 });
   check(await p.inputValue('#bc-criteres_toujours_la_sorties') === '5', 'badges : seuil « Toujours là » affiche le défaut (5)');
   check(await p.inputValue('#bc-criteres_paparazzi_photos') === '50', 'badges : seuil « Paparazzi » affiche le défaut (50)');
@@ -175,7 +175,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   // Parties de la section Badges
   check(!(await p.isVisible('#badge-grid')) && !(await p.isVisible('#badge-member')) && await p.locator('#zone-actions #badge-new').count() === 0,
     'parties : « Critères automatiques » seul (grille, attribution et « + Nouveau badge » masqués)');
-  await adminSection(p, 'vie/badges-attribution');
+  await adminSection(p, 'membres/badges-attribution');
   await p.waitForTimeout(200);
   check(await p.isVisible('#badge-member') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-grid')), 'parties : « Attribution » seule');
   await adminSection(p, 'membres/badges');
@@ -187,7 +187,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
 
   /* ---------- Vie › Badges : Staff sans le droit Réglages du site (la base refuserait la clé « badges ») ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['badges'] } });
-  await adminSection(p, 'vie/badges-criteres');
+  await adminSection(p, 'membres/badges-criteres');
   await p.waitForSelector('#bc-form', { timeout: 8000 });
   check(await p.isVisible('#bc-ro') && /réservé au droit Réglages/.test(await p.textContent('#bc-ro')), 'badges (Staff sans Réglages) : note « lecture seule » affichée');
   check(await p.isDisabled('#bc-criteres_paparazzi_photos') && await p.locator('#bc-form [type="submit"]').count() === 0 && await p.locator('[data-bc-default]').count() === 0,

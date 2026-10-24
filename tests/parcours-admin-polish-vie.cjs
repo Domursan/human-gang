@@ -211,7 +211,7 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     check((await db(p, () => window.__DB.hg_badges.find((b) => b.code === 'citrouille').name)) === 'Citrouille révisée', '(c) modification : nom écrit en base');
 
     // Attribution (partie « Attribution » des badges) : un membre, un badge à la main
-    await adminSection(p, 'vie/badges-attribution');
+    await adminSection(p, 'membres/badges-attribution');
     await p.selectOption('#badge-member', { index: 1 });
     await p.waitForSelector('#badge-toggles [data-toggle-badge]', { timeout: 5000 });
     check(await p.locator('#badge-toggles [data-toggle-badge]').count() > 0, '(c) attribution : les badges du membre sont proposés');

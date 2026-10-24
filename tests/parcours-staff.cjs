@@ -79,16 +79,22 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     // Navigation : domaines et sous-sections permis seulement (Pilotage : Journal ; Jeu de cartes : ses parties et les Défis)
     const domaines = await p.$$eval('#shell-rail .shell-dom', (as) => as.map((a) => a.dataset.dom));
     check(JSON.stringify(domaines) === JSON.stringify(['pilotage', 'cartes']), `(b) Staff : domaines = ${domaines.join(', ')}`);
-    // ordre de la colonne (sous-menus Catalogue, Économie, Animation, Suivi) ; Questions [quiz] et Secrets [reglages] absents
-    const attendu = ['journal', 'series', 'cartes', 'boosters', 'economie', 'tirage', 'recyclage', 'limites', 'quetes', 'defis', 'drops', 'joueurs', 'echanges', 'stats'];
+    // ordre de la colonne (Pilotage puis Le jeu de cartes) ; Questions [quiz], Secrets [reglages] et Staff [admin] absents.
+    // Le droit « cartes » donne tout le domaine Le jeu de cartes, Arène comprise, et le Planning (PLANNING_PERMS).
+    const attendu = ['planning', 'journal', 'gestion', 'series', 'cartes', 'boosters', 'economie', 'tirage', 'recyclage', 'limites', 'quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres', 'joueurs', 'echanges', 'stats', 'arene'];
     const subs = await p.$$eval('#shell-subs .shell-sub', (as) => as.map((a) => a.dataset.sub));
     check(JSON.stringify(subs) === JSON.stringify(attendu), `(b) Staff : sous-sections = ${subs.join(', ')}`);
     const sections = await p.$$eval('.admin-section', (ss) => ss.filter((s) => !s.hidden).map((s) => s.id));
-    check(JSON.stringify(sections.sort()) === JSON.stringify(['cartes', 'defis', 'drops', 'journal']), `(b) Staff : sections permises = ${sections.join(', ')}`);
-    check(await p.isVisible('#journal'), '(b) Staff : Journal affiché (première sous-section permise)');
+    check(JSON.stringify(sections.sort()) === JSON.stringify(['bataille', 'cagnotte', 'cartes', 'cartes-gestion', 'champions', 'defis', 'drops', 'journal', 'planning']), `(b) Staff : sections permises = ${sections.join(', ')}`);
+    await p.click('#shell-subs [data-dom-subs="pilotage"] .shell-sub[data-sub="journal"]');
+    await p.waitForSelector('#journal', { state: 'visible', timeout: 5000 }).catch(() => {});
+    check(await p.isVisible('#journal'), '(b) Staff : Journal affiché (sous-section Pilotage › Journal)');
     await p.click('#shell-rail .shell-dom[data-dom="cartes"]');
+    await p.waitForSelector('#cartes-gestion', { state: 'visible', timeout: 5000 }).catch(() => {});
+    check(await p.isVisible('#cartes-gestion') && !(await p.isVisible('#journal')), '(b) Staff : Jeu de cartes affiché (Gestion globale, première sous-section)');
+    await p.click('#shell-subs [data-dom-subs="cartes"] .shell-sub[data-sub="series"]');
     await p.waitForSelector('#cartes', { state: 'visible', timeout: 5000 }).catch(() => {});
-    check(await p.isVisible('#cartes') && !(await p.isVisible('#journal')), '(b) Staff : Jeu de cartes affiché');
+    check(await p.isVisible('#cartes') && !(await p.isVisible('#journal')), '(b) Staff : Jeu de cartes › Séries affiché');
     check(!(await p.isVisible('#staff')), '(b) Staff : pas de section Staff');
     check(await p.locator('[data-staff-add]').count() === 0, '(b) Staff : pas de bouton d’ajout au Staff');
     check(await p.locator('.god-card').count() === 0 && !(await p.isVisible('#shell-god')), '(b) Staff : pas de mode sans limite');

@@ -292,8 +292,12 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   /* (a) Staff avec la permission « quiz » : la section est proposée, sans les autres sous-sections du domaine */
   {
     const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['quiz'] } });
-    const subs = await s.$$eval('#shell-subs [data-dom-subs]:not([hidden]) .shell-sub', (as) => as.map((a) => a.dataset.sub));
-    check(JSON.stringify(subs) === JSON.stringify(['questions']), `(a) Staff « quiz » : domaine Jeu de cartes = ${subs.join(', ')}`);
+    // Les sous-menus de chaque domaine restent dans le DOM (un seul affiché à la fois) : on lit les liens permis.
+    const subs = await s.$$eval('#shell-subs [data-dom-subs="jeux"] .shell-sub', (as) => as.map((a) => a.dataset.sub));
+    // « citations » (Qui a dit ça ?) relève aussi du droit « quiz » (SECTION_PERM jeux-citations)
+    check(JSON.stringify(subs) === JSON.stringify(['questions', 'citations']), `(a) Staff « quiz » : domaine Autres jeux = ${subs.join(', ')}`);
+    const railCartes = await s.$$eval('.shell-dom[data-dom="cartes"]', (as) => as.length);
+    check(railCartes === 0, '(a) Staff « quiz » : domaine Le jeu de cartes absent du rail');
     await adminSection(s, 'jeux/questions');
     check(await s.isVisible('#quiz') && await s.isVisible('#adq-list'), '(a) Staff « quiz » : section affichée');
     check(s.errs.length === 0, '(a) Staff « quiz » : aucune erreur JS' + (s.errs.length ? ' (' + s.errs.join(' | ') + ')' : ''));

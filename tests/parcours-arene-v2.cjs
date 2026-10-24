@@ -1,4 +1,4 @@
-// Parcours Arène v2 (docs/ARENE.md ; cartes.html#arene, réglages dans admin.html#cartes/bataille).
+// Parcours Arène v2 (docs/ARENE.md ; cartes.html#arene, réglages dans admin.html#cartes/arene).
 // Admin : aperçu avec bandeau, accueil (ligue, cote, combats restants, adversaires), attaque d'Alice (5 cartes, résultat,
 // cote), historique, classement de saison, règles ; 1280 et 390 px sans défilement horizontal ; captures.
 // Membre, Arène fermée : l'Arène actuelle, inchangée. Membre, Arène ouverte : la v2 sans bandeau.
@@ -102,7 +102,7 @@ const SHOTS = path.join(__dirname, 'shots');
 
   /* ---------- 4. Panel admin : réglages, ouverture, clôture ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-arene2.mjs', width: 1280, height: 900, scenario: { deck: true } });
-  await adminSection(p, 'cartes/bataille');
+  await adminSection(p, 'cartes/arene');
   await p.waitForSelector('#ar-form', { timeout: 6000 }).catch(() => {});
   check(await p.locator('#bt-form').count() === 1, 'panel : réglages de l’Arène actuelle toujours présents');
   check(await p.locator('#ar-form').count() === 1, 'panel : réglages de l’Arène v2 présents');
