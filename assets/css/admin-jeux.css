@@ -72,6 +72,19 @@
 .jm-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .jm-actions .btn, .jm-form .check { min-height: 44px; }
 .jm-form .check { display: flex; align-items: center; gap: 8px; }
+/* Framed : images depuis une affiche du site, import, ajout en masse */
+.jm-from { display: flex; }
+.jm-from .btn, .jm-bulk .btn { min-height: 44px; }
+.jm-picker { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--border-strong); border-radius: 10px; }
+.jm-picker .field { display: flex; flex-direction: column; gap: 4px; }
+.jm-picker input[type="file"] { max-width: 100%; font-size: 13px; min-height: 44px; }
+.jm-pk-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.jm-pk-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 4px 8px; font: inherit; font-size: 14px; text-align: left; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+.jm-pk-item:hover, .jm-pk-item:focus-visible { border-color: var(--border-strong); }
+.jm-pk-item img { width: 36px; height: 50px; object-fit: cover; border-radius: 4px; flex: none; background: var(--border); }
+.jm-pk-t { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.jm-bulk { display: flex; flex-direction: column; gap: 10px; }
+.jm-bulk p { margin: 0; }
 
 /* Arène v2 (admin-bataille.js) */
 .ar-adm-g { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 0; min-width: 0; }

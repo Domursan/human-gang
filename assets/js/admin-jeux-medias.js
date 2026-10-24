@@ -1,8 +1,10 @@
-// ===== Humane Gang — administration : Framed du ciné-club (J9) et Heardle du gang (J10) =====
+// ===== Humane Gang — administration : Framed (films et affiches) (J9) et Heardle du gang (J10) =====
 /*
  * Rôle : Jeux et cartes › Framed et Heardle. Deux parties :
- *  - Framed : films vus au ciné-club (titre, année, date de séance, spectateurs) avec jusqu'à 6 images envoyées dans le
- *    bucket privé hg-jeux (framed/<film>/<n>.webp, compressées par image-compress.js), et calendrier des manches.
+ *  - Framed : éléments à deviner (films vus au ciné-club, affiches et tutos du site) avec jusqu'à 6 images envoyées dans le
+ *    bucket privé hg-jeux (framed/<id>/<n>.webp, compressées par image-compress.js), et calendrier des manches. Les 6 images
+ *    peuvent être découpées dans une affiche du site ou une image importée (admin/framed-crops.js), et les affiches du site
+ *    peuvent être ajoutées en masse.
  *  - Heardle : propositions des membres à valider ou écarter, morceaux (lien YouTube, instant de départ), calendrier,
  *    annulation d'une manche (vidéo supprimée ou bloquée).
  * Droits : Staff « souvenirs » et administrateur (contrôlés aussi par les RPC, journalisées).
@@ -12,12 +14,17 @@
  */
 import { sb, toast, errMsg, esc } from './core.js';
 import { prepareImage } from './image-compress.js';
+import { cropsFromImage, loadImage, loadManifest, norm } from './admin/framed-crops.js';
 
 const BUCKET = 'hg-jeux';
 const dfmt = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich' });
 const day = (d) => (d ? dfmt.format(new Date(d + 'T12:00:00Z')) : '');
+/** Identifiant d'un film (UUID v4). crypto.randomUUID n'existe que dans un contexte sécurisé (pas en http hors localhost). */
+const newId = () => (crypto.randomUUID ? crypto.randomUUID()
+  : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 let root = null;
-const S = { part: 'framed', F: null, H: null, edit: null, editT: null, urls: {}, files: {}, busy: false };
+// picker : sélecteur d'image source ouvert ({ q }) ; bulk : ajout en masse (confirm, puis run) ; manifest : affiches du site
+const S = { part: 'framed', F: null, H: null, edit: null, editT: null, urls: {}, files: {}, busy: false, picker: null, bulk: null, manifest: null };
 
 /**
  * Monte la section.
@@ -28,12 +35,14 @@ export async function mountJeuxMediasSection(el) {
   root.addEventListener('click', onClick);
   root.addEventListener('submit', onSubmit);
   root.addEventListener('change', onChange);
+  root.addEventListener('input', onInput);
   await load();
 }
 
-/** Charge les deux parties. */
+/** Charge les deux parties et la liste des affiches du site (un échec ne bloque pas le reste). */
 async function load() {
-  const [f, h] = await Promise.all([sb.rpc('hg_framed_admin'), sb.rpc('hg_heardle_admin')]);
+  const [f, h, m] = await Promise.all([sb.rpc('hg_framed_admin'), sb.rpc('hg_heardle_admin'), loadManifest().catch(() => null)]);
+  S.manifest = m;
   S.F = f.error || !f.data ? { error: f.error ? errMsg(f.error) : 'Données indisponibles' } : f.data;
   S.H = h.error || !h.data ? { error: h.error ? errMsg(h.error) : 'Données indisponibles' } : h.data;
   const paths = (S.F.films || []).flatMap((x) => x.frames || []).filter((p) => !S.urls[p]);
@@ -48,7 +57,7 @@ async function load() {
 function render() {
   root.innerHTML = `<div class="jm">
     <div class="jm-tabs" role="group" aria-label="Jeu">
-      <button type="button" class="jm-chip" data-part="framed" aria-pressed="${S.part === 'framed'}">Framed du ciné-club</button>
+      <button type="button" class="jm-chip" data-part="framed" aria-pressed="${S.part === 'framed'}">Framed (films et affiches)</button>
       <button type="button" class="jm-chip" data-part="heardle" aria-pressed="${S.part === 'heardle'}">Heardle du gang</button>
     </div>
     ${S.part === 'framed' ? framedHtml() : heardleHtml()}</div>`;
@@ -66,13 +75,14 @@ function framedHtml() {
       <span class="small muted">${f.seen_on ? `vu le ${esc(day(f.seen_on))} · ` : ''}${esc(f.frames.length)}/6 images${f.day ? ` · manche du ${esc(day(f.day))}` : ''}</span>
       <button type="button" class="btn btn-ghost" data-act="f-edit" data-id="${esc(f.id)}">Modifier</button></li>`).join('');
   return `<section class="jm-sec" aria-labelledby="jm-f-cal"><h3 id="jm-f-cal">Calendrier des manches</h3>
-      <p class="small muted">Rythme conseillé : 3 films par semaine. Un film ne revient jamais ; la manche du jour ne change plus dès qu’un membre a joué.</p>
+      <p class="small muted">Rythme conseillé : 3 par semaine. Un élément ne revient jamais ; la manche du jour ne change plus dès qu’un membre a joué.</p>
       <form class="jm-inline" id="jm-f-round"><label for="jm-f-day">Jour</label><input type="date" id="jm-f-day" class="input" min="${esc(F.today)}" value="${esc(F.today)}" required>
-        <label for="jm-f-film">Film</label><select id="jm-f-film" class="input" required>${usable.map((f) => `<option value="${esc(f.id)}">${esc(f.title)}</option>`).join('') || '<option value="">Aucun film prêt (3 images au moins)</option>'}</select>
+        <label for="jm-f-film">Film ou affiche</label><select id="jm-f-film" class="input" required>${usable.map((f) => `<option value="${esc(f.id)}">${esc(f.title)}</option>`).join('') || '<option value="">Aucun élément prêt (3 images au moins)</option>'}</select>
         <button type="submit" class="btn btn-primary" ${usable.length ? '' : 'disabled'}>Programmer</button></form>
       <ul class="jm-list">${rounds || '<li class="empty">Aucune manche programmée.</li>'}</ul></section>
-    <section class="jm-sec" aria-labelledby="jm-f-films"><div class="jm-sec-h"><h3 id="jm-f-films">Films du ciné-club (${esc(F.films.length)})</h3>
+    <section class="jm-sec" aria-labelledby="jm-f-films"><div class="jm-sec-h"><h3 id="jm-f-films">Films et affiches (${esc(F.films.length)})</h3>
       <button type="button" class="btn btn-primary" data-act="f-new">+ Nouveau film</button></div>
+      ${bulkHtml()}
       ${S.edit ? filmFormHtml() : ''}
       <ul class="jm-list">${films || '<li class="empty">Aucun film.</li>'}</ul></section>`;
 }
@@ -88,20 +98,22 @@ function filmFormHtml() {
   }).join('');
   return `<form class="card jm-form" id="jm-film-form"><h4>${f.id ? 'Modifier le film' : 'Nouveau film'}</h4>
     <div class="jm-grid">
-      <div class="field"><label for="jm-title">Titre</label><input id="jm-title" class="input" maxlength="120" required value="${esc(f.title || '')}"></div>
+      <div class="field"><label for="jm-title">Titre (la réponse)</label><input id="jm-title" class="input" maxlength="120" required value="${esc(f.title || '')}"></div>
       <div class="field"><label for="jm-year">Année</label><input id="jm-year" class="input" type="number" min="1890" max="2100" value="${esc(f.year || '')}"></div>
       <div class="field"><label for="jm-seen">Vu en séance le</label><input id="jm-seen" class="input" type="date" value="${esc(f.seen_on || '')}"></div>
       <div class="field"><label for="jm-viewers">Spectateurs</label><input id="jm-viewers" class="input" type="number" min="0" max="500" value="${esc(f.viewers ?? '')}"></div>
     </div>
     <label class="check"><input type="checkbox" id="jm-active" ${f.active !== false ? 'checked' : ''}> Proposé dans les suggestions</label>
     <p class="small muted">Quelques images fixes, jamais publiques : des plans sans titre ni générique, de la plus énigmatique à la plus parlante.</p>
+    <div class="jm-from"><button type="button" class="btn btn-ghost" data-act="f-from-poster" aria-expanded="${S.picker ? 'true' : 'false'}" aria-controls="jm-picker" ${S.busy ? 'disabled' : ''}>Créer les images depuis une affiche</button></div>
+    ${S.picker ? pickerHtml() : ''}
     <div class="jm-slots">${slots}</div>
     <div class="jm-actions"><button type="button" class="btn btn-ghost" data-act="f-cancel">Annuler</button><button type="submit" class="btn btn-primary" ${S.busy ? 'disabled' : ''}>Enregistrer</button></div></form>`;
 }
 
 /** Enregistre le film : envoie les nouvelles images puis la fiche. */
 async function saveFilm() {
-  const f = S.edit, id = f.id || crypto.randomUUID();
+  const f = S.edit, id = f.id || newId();
   S.busy = true;
   try {
     const frames = [...f.frames];
@@ -123,6 +135,147 @@ async function saveFilm() {
   } catch (e) { toast(errMsg(e), 'error'); }
   S.busy = false;
   await load();
+}
+
+/* ---------- Images depuis une affiche du site ---------- */
+
+/** Sélecteur d'image source : liste des affiches et tutos du site (filtrable) et import d'une image. */
+function pickerHtml() {
+  const q = S.picker.q || '';
+  return `<div class="jm-picker" id="jm-picker" role="group" aria-label="Image source">
+    <div class="field"><label for="jm-pk-q">Chercher une affiche ou un tuto du site</label>
+      <input type="search" id="jm-pk-q" class="input" value="${esc(q)}" autocomplete="off" placeholder="Titre"></div>
+    <ul class="jm-pk-list" id="jm-pk-list">${pickerListHtml(q)}</ul>
+    <div class="field"><label for="jm-pk-file">Importer une image…</label>
+      <input type="file" id="jm-pk-file" accept="image/png,image/jpeg,image/webp"></div>
+    <p class="small muted" id="jm-pk-status" role="status"></p>
+    <div class="jm-actions"><button type="button" class="btn btn-ghost" data-act="f-pick-close">Fermer</button></div></div>`;
+}
+
+/** Lignes du sélecteur : titre et type de chaque affiche du site qui correspond à la recherche. */
+function pickerListHtml(q) {
+  if (!S.manifest) return '<li class="empty">Liste des affiches indisponible.</li>';
+  const n = norm(q);
+  return S.manifest.map((e, i) => ({ e, i })).filter(({ e }) => !n || norm(e.title).includes(n))
+    .map(({ e, i }) => `<li><button type="button" class="jm-pk-item" data-pick="${i}">
+      <img src="${esc(e.src)}" alt="" width="36" height="50" loading="lazy" decoding="async">
+      <span class="jm-pk-t">${esc(e.title)}</span><span class="small muted">${e.kind === 'affiche' ? 'Affiche' : 'Tuto'}</span></button></li>`).join('')
+    || '<li class="empty">Aucune affiche ne correspond.</li>';
+}
+
+/** Garde dans S.edit les valeurs saisies dans le formulaire du film, avant un nouveau dessin. */
+function keepForm() {
+  if (!S.edit || !root.querySelector('#jm-film-form')) return;
+  const v = (s) => root.querySelector(s)?.value;
+  Object.assign(S.edit, { title: v('#jm-title'), year: v('#jm-year'), seen_on: v('#jm-seen'), viewers: v('#jm-viewers'), active: root.querySelector('#jm-active')?.checked });
+}
+
+/** Ouvre ou ferme le sélecteur d'image source. */
+function togglePicker() {
+  keepForm();
+  S.picker = S.picker ? null : { q: '' };
+  render();
+  root.querySelector(S.picker ? '#jm-pk-q' : '[data-act="f-from-poster"]')?.focus();
+}
+
+/** Écrit un message dans le sélecteur sans le redessiner (la recherche garde le focus). */
+function setPickStatus(t) {
+  const el = root.querySelector('#jm-pk-status');
+  if (el) el.textContent = t;
+}
+
+/**
+ * Remplit les 6 emplacements d'image avec les découpes d'une image source (affiche du site ou fichier importé).
+ * Le titre n'est rempli depuis l'affiche que s'il est vide.
+ * @param {() => Promise<HTMLImageElement>} getImg Chargement de l'image.
+ * @param {string} seed Graine des découpes (slug ou nom du fichier).
+ * @param {string} title Titre proposé (vide pour un fichier importé).
+ */
+async function fillFromSource(getImg, seed, title) {
+  if (S.busy) return;
+  keepForm();
+  S.busy = true;
+  setPickStatus('Création des images…');
+  try {
+    const blobs = await cropsFromImage(await getImg(), seed);
+    S.files = {};
+    blobs.forEach((b, i) => { S.files[i] = new File([b], `${seed}-${i + 1}.webp`, { type: 'image/webp' }); });
+    if (title && !S.edit.title) S.edit.title = title;
+    S.picker = null;
+    toast('Six images créées. Vérifie l’ordre, puis enregistre.', 'ok');
+  } catch (e) { toast(errMsg(e), 'error'); }
+  S.busy = false;
+  render();
+}
+
+/* ---------- Ajout en masse des affiches du site ---------- */
+
+/** Affiches du site dont le titre n'est pas encore celui d'un film (sans tenir compte de la casse ni des accents). */
+function missingEntries() {
+  if (!S.manifest || !S.F?.films) return [];
+  const titres = new Set(S.F.films.map((f) => norm(f.title)));
+  return S.manifest.filter((e) => !titres.has(norm(e.title)));
+}
+
+/** Bouton d'ajout en masse, puis confirmation sur place, puis progression. */
+function bulkHtml() {
+  const B = S.bulk;
+  if (B?.phase === 'run') return `<p class="card" role="status" id="jm-bulk-status">${esc(B.done)} / ${esc(B.total)}…${B.failed ? ` · ${esc(B.failed)} en échec` : ''}</p>`;
+  if (!S.manifest) return '<p class="small muted">Liste des affiches du site indisponible.</p>';
+  const n = missingEntries().length;
+  if (B?.phase === 'confirm') return `<div class="card jm-bulk"><p>Créer ${esc(n)} film${n > 1 ? 's' : ''} à partir des affiches et tutos du site ? Chacun reçoit 6 images découpées dans son image, et son titre comme réponse. Ils seront proposés dans les suggestions.</p>
+    <div class="jm-actions"><button type="button" class="btn btn-ghost" data-act="f-bulk-no">Annuler</button><button type="button" class="btn btn-primary" data-act="f-bulk-go">Créer ${esc(n)}</button></div></div>`;
+  return n
+    ? `<div class="jm-from"><button type="button" class="btn btn-ghost" data-act="f-bulk" ${S.busy ? 'disabled' : ''}>Ajouter les affiches du site (${esc(n)})</button></div>`
+    : '<p class="small muted">Toutes les affiches du site sont déjà dans la liste.</p>';
+}
+
+/**
+ * Crée un film à partir d'une entrée du site : 6 images dans hg-jeux (framed/<id>/<n>.webp), puis la fiche.
+ * En cas d'échec, les images déjà envoyées sont retirées du stockage.
+ * @param {{slug: string, title: string, src: string}} e Entrée de la liste des affiches.
+ */
+async function filmFromEntry(e) {
+  const id = newId(), frames = [];
+  const blobs = await cropsFromImage(await loadImage(e.src), e.slug);
+  try {
+    for (let n = 1; n <= 6; n++) {
+      const path = `framed/${id}/${n}.webp`;
+      const { error } = await sb.storage.from(BUCKET).upload(path, blobs[n - 1], { contentType: 'image/webp', upsert: true });
+      if (error) throw error;
+      frames.push(path);
+    }
+    const { error } = await sb.rpc('hg_framed_film_save', { p: { id, title: e.title, year: null, seen_on: null, viewers: null, active: true, frames } });
+    if (error) throw error;
+  } catch (err) {
+    if (frames.length) sb.storage.from(BUCKET).remove(frames).catch(() => {});
+    throw err;
+  }
+}
+
+/** Ajout en masse : une affiche après l'autre, progression, erreurs comptées sans arrêter le lot. */
+async function bulkRun() {
+  if (S.busy) return;
+  const list = missingEntries();
+  S.busy = true;
+  S.bulk = { phase: 'run', done: 0, total: list.length, failed: 0, err: '' };
+  render();
+  for (const e of list) {
+    try { await filmFromEntry(e); } catch (err) { S.bulk.failed++; S.bulk.err = errMsg(err); }
+    S.bulk.done++;
+    setBulkStatus();
+  }
+  const { total, failed, err } = S.bulk;
+  S.bulk = null;
+  S.busy = false;
+  toast(failed ? `${total - failed} ajouté${total - failed > 1 ? 's' : ''}, ${failed} en échec (${err}).` : `${total} film${total > 1 ? 's' : ''} ajouté${total > 1 ? 's' : ''}.`, failed ? 'error' : 'ok');
+  await load();
+}
+
+/** Met à jour la progression sans redessiner la liste. */
+function setBulkStatus() {
+  const el = root.querySelector('#jm-bulk-status');
+  if (el) el.textContent = `${S.bulk.done} / ${S.bulk.total}…${S.bulk.failed ? ` · ${S.bulk.failed} en échec` : ''}`;
 }
 
 /* ---------- Heardle ---------- */
@@ -178,10 +331,16 @@ async function rpc(name, args, ok) {
 function onClick(e) {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.part) { S.part = b.dataset.part; render(); return; }
+  if (b.dataset.pick !== undefined) { const e = S.manifest?.[Number(b.dataset.pick)]; if (e) fillFromSource(() => loadImage(e.src), e.slug, e.title); return; }
   const a = b.dataset.act;
-  if (a === 'f-new') { S.edit = { frames: [], active: true }; S.files = {}; render(); root.querySelector('#jm-title')?.focus(); }
-  if (a === 'f-edit') { S.edit = structuredClone(S.F.films.find((f) => f.id === b.dataset.id)); S.files = {}; render(); root.querySelector('#jm-title')?.focus(); }
-  if (a === 'f-cancel') { S.edit = null; S.files = {}; render(); }
+  if (a === 'f-new') { S.edit = { frames: [], active: true }; S.files = {}; S.picker = null; render(); root.querySelector('#jm-title')?.focus(); }
+  if (a === 'f-edit') { S.edit = structuredClone(S.F.films.find((f) => f.id === b.dataset.id)); S.files = {}; S.picker = null; render(); root.querySelector('#jm-title')?.focus(); }
+  if (a === 'f-cancel') { S.edit = null; S.files = {}; S.picker = null; render(); }
+  if (a === 'f-from-poster') togglePicker();
+  if (a === 'f-pick-close') { S.picker = null; render(); root.querySelector('[data-act="f-from-poster"]')?.focus(); }
+  if (a === 'f-bulk') { S.bulk = { phase: 'confirm' }; render(); root.querySelector('[data-act="f-bulk-go"]')?.focus(); }
+  if (a === 'f-bulk-no') { S.bulk = null; render(); root.querySelector('[data-act="f-bulk"]')?.focus(); }
+  if (a === 'f-bulk-go') bulkRun();
   if (a === 'f-unround') rpc('hg_framed_round_save', { p_day: b.dataset.day, p_film: null }, 'Manche retirée.');
   if (a === 'h-new') { S.editT = { status: 'valide' }; render(); root.querySelector('#jm-t-title')?.focus(); }
   if (a === 'h-edit') { S.editT = { ...S.H.tracks.find((t) => t.id === b.dataset.id) }; render(); root.querySelector('#jm-t-title')?.focus(); }
@@ -191,13 +350,26 @@ function onClick(e) {
 }
 
 function onChange(e) {
+  if (e.target.id === 'jm-pk-file') {
+    // Image importée : découpée comme une affiche, sans titre proposé.
+    const f = e.target.files?.[0];
+    if (f) fillFromSource(() => loadImage(f), f.name.replace(/\.[^.]+$/, '') || 'image', '');
+    return;
+  }
   const i = e.target.dataset?.slot;
   if (i === undefined || !e.target.files?.[0]) return;
   // Mémorise les valeurs saisies avant de redessiner l'aperçu.
-  const v = (s) => root.querySelector(s)?.value;
-  Object.assign(S.edit, { title: v('#jm-title'), year: v('#jm-year'), seen_on: v('#jm-seen'), viewers: v('#jm-viewers'), active: root.querySelector('#jm-active')?.checked });
+  keepForm();
   S.files[i] = e.target.files[0];
   render();
+}
+
+/** Recherche dans le sélecteur d'affiches : seule la liste est redessinée. */
+function onInput(e) {
+  if (e.target.id !== 'jm-pk-q' || !S.picker) return;
+  S.picker.q = e.target.value;
+  const ul = root.querySelector('#jm-pk-list');
+  if (ul) ul.innerHTML = pickerListHtml(S.picker.q);
 }
 
 async function onSubmit(e) {
