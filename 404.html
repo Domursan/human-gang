@@ -27,10 +27,10 @@
       <div class="jeu404" aria-describedby="jeu-aide">
         <canvas id="jeu-canvas" class="jeu404-canvas" width="360" height="420" tabindex="0" role="application"
           aria-label="Jeu des paillettes : déplace le chapeau du gang pour attraper les paillettes qui tombent"></canvas>
-        <p id="jeu-aide" class="small muted">Souris, doigt ou flèches gauche et droite : déplace le chapeau. 30 secondes.</p>
+        <p id="jeu-aide" class="small muted">Souris, doigt ou flèches gauche et droite : déplace le chapeau pour attraper les paillettes. 3 vies : évite les pièges (fausses paillettes violettes, grêlons).</p>
         <div class="jeu404-hud">
           <p>Score : <output id="jeu-score" for="jeu-canvas">0</output></p>
-          <p>Temps : <span id="jeu-temps">30</span> s</p>
+          <p>Vies : <span id="jeu-coeurs" aria-hidden="true">♥ ♥ ♥</span> <span class="visually-hidden" id="jeu-vies-txt">3 vies sur 3</span></p>
         </div>
         <p id="jeu-message" class="jeu404-msg" role="status"></p>
         <button id="jeu-bouton" class="btn btn-primary" type="button">Jouer</button>

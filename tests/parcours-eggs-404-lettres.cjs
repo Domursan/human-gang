@@ -1,8 +1,10 @@
 // Parcours : secrets cachés, page 404 et lettres du mot « SECRETS ».
 // 404 : une adresse inconnue reçoit 404.html (statut 404, comme GitHub Pages) ; la page charge ses ressources par des
-// chemins absolus à la racine (/assets/…), comme sur humane-gang.com (CNAME) : le test sert le site à la racine. Le jeu des paillettes tourne
-// (horloge factice de Playwright pour passer les 30 s), la fin de partie appelle hg_egg_found('jeu404', { score }) ; un
-// visiteur joue sans appel et voit le message « Connecte-toi… » ; mouvement réduit ; 390 px sans défilement.
+// chemins absolus à la racine (/assets/…), comme sur humane-gang.com (CNAME) : le test sert le site à la racine.
+// Le jeu des paillettes est le même que l'arcade (trois vies, pièges, sans chrono) : la partie est pilotée dans
+// l'horloge factice, hasard graîné avant le chargement (déterministe), jusqu'à zéro vie ; la fin appelle
+// hg_egg_found('jeu404', { score }) ; un visiteur joue sans appel et voit le message « Connecte-toi… » ; mouvement réduit ;
+// 390 px sans défilement.
 // Lettres : chacune des 7 pages affiche sa lettre dans le pied de page (aria-label « Un secret ? », atteignable au clavier),
 // s'illumine au survol et un clic appelle hg_egg_found('lettre_N').
 // Faux Supabase : fixtures/fake-sb.mjs (réponse hg_egg_found). Lancer : node tests/parcours-eggs-404-lettres.cjs
@@ -17,15 +19,21 @@ const LETTRES = [
   ['membre', 5, 'E'], ['aide', 6, 'T'], ['secret-santa', 7, 'S'],
 ];
 
+/** Hasard graîné (mulberry32), installé avant la page : la suite de paillettes et de pièges est la même à chaque passage. */
+const GRAINE = () => {
+  let a = 7;
+  Math.random = () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+};
+
 /**
- * Joue une partie complète dans l'horloge factice : balaie le canevas de gauche à droite pendant les 30 s.
- * Renvoie le score affiché à la fin.
+ * Joue une partie complète dans l'horloge factice : balaie le canevas de gauche à droite jusqu'à zéro vie
+ * (bouton « Rejouer » affiché). Pas de chrono. Renvoie le score affiché à la fin.
  */
 async function jouePartie(p) {
   await p.clock.install();
   await p.click('#jeu-bouton');
   const box = await p.locator('#jeu-canvas').boundingBox();
-  for (let i = 0; i < 300; i++) { // 300 pas de 100 ms simulés
+  for (let i = 0; i < 3000 && !(await p.locator('#jeu-bouton').isVisible()); i++) { // pas de 100 ms simulés
     const x = box.x + box.width * (0.5 + 0.45 * Math.sin(i * 0.21));
     await p.mouse.move(x, box.y + box.height * 0.85);
     await p.clock.runFor(100);
@@ -39,12 +47,14 @@ async function jouePartie(p) {
   const browser = await chromium.launch();
 
   /* ---------- Page 404 : adresse inconnue, ressources et mise en page ---------- */
-  let p = await openPage(browser, { page: '404', width: 1280, height: 900 });
+  let p = await openPage(browser, { page: '404', width: 1280, height: 900, init: GRAINE });
   check((await p.textContent('h1')).trim() === 'Page introuvable…', '404 : titre « Page introuvable… »');
   check((await p.textContent('.e404-carte > p:not(.e404-code)')).includes('mais tu peux attraper des paillettes !'), '404 : phrase d\'accroche');
   check(await p.$eval('.e404', (el) => getComputedStyle(el).display) === 'grid', '404 : feuille de style chargée (chemins absolus)');
   check(await p.$eval('body', (el) => getComputedStyle(el).backgroundColor) !== 'rgba(0, 0, 0, 0)', '404 : couleur de fond du thème appliquée');
   check((await p.textContent('#jeu-bouton')).trim() === 'Jouer', '404 : bouton « Jouer » avant la partie');
+  check((await p.textContent('#jeu-vies-txt')) === '3 vies sur 3' && (await p.textContent('#jeu-coeurs')) === '♥ ♥ ♥', '404 : trois vies affichées (cœurs et texte lu)');
+  check((await p.locator('#jeu-temps').count()) === 0, '404 : plus de chrono');
   check(await p.$eval('#jeu-canvas', (el) => getComputedStyle(el).touchAction) === 'none', '404 : le canevas ne fait pas défiler la page au doigt');
   check((await p.getAttribute('a.e404-accueil', 'href')) === `${PREFIX}/`, '404 : lien « Retour à l\'accueil » vers la racine du site');
   check(p.errs.length === 0, '404 : chargement sans erreur' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
@@ -52,6 +62,7 @@ async function jouePartie(p) {
   // Partie avec score : le score part au serveur une fois
   const score = await jouePartie(p);
   check(score >= 1, `404 : partie terminée avec un score ≥ 1 (score ${score})`);
+  check((await p.textContent('#jeu-vies-txt')) === '0 vie sur 3', '404 : la fin arrive à zéro vie (« 0 vie sur 3 »)');
   check((await p.textContent('#jeu-bouton')).trim() === 'Rejouer', '404 : bouton « Rejouer » après la partie');
   let calls = (await eggCalls(p)).filter((a) => a.p_egg === 'jeu404');
   check(calls.length === 1 && calls[0].p_extra?.score === score, 'hg_egg_found(jeu404, { score }) appelé une fois avec le score');
@@ -60,7 +71,7 @@ async function jouePartie(p) {
   await p.ctx.close();
 
   // Visiteur : le jeu tourne, pas d'appel, message d'invitation à se connecter
-  p = await openPage(browser, { page: '404', width: 390, scenario: { guest: true }, reducedMotion: 'reduce' });
+  p = await openPage(browser, { page: '404', width: 390, scenario: { guest: true }, reducedMotion: 'reduce', init: GRAINE });
   check(await hscroll(p) <= 0, '404 visiteur, 390 px : pas de défilement horizontal');
   const scoreV = await jouePartie(p);
   check(scoreV >= 1, `404 visiteur : partie jouable (score ${scoreV})`);
