@@ -731,11 +731,19 @@ function renderAll() {
  * Met à l'échelle les cartouches et consoles à la largeur réelle de leur conteneur (jamais agrandies au-delà de 1).
  * @param {ParentNode} [root] zone à parcourir
  */
+/** Échelle d'un cadre .fit d'après sa largeur réelle. Un cadre masqué (largeur 0) garde son échelle : il sera recalculé dès qu'il s'affiche. */
+function fitOne(el) {
+  const w = Number(el.dataset.w) || 220;
+  el.style.setProperty('--w', w);
+  if (el.clientWidth > 0) el.style.setProperty('--k', Math.min(1, el.clientWidth / w));
+  else if (!el.style.getPropertyValue('--k')) el.style.setProperty('--k', 0);
+}
+// Recalcule l'échelle quand un cadre change de taille ou réapparaît (onglet rouvert, fenêtre d'enchère fermée…).
+const FIT_RO = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => entries.forEach((e) => fitOne(e.target))) : null;
 function fitAll(root = document) {
   root.querySelectorAll('.fit').forEach((el) => {
-    const w = Number(el.dataset.w) || 220;
-    el.style.setProperty('--w', w);
-    el.style.setProperty('--k', Math.min(1, (el.clientWidth / w) || 1));
+    fitOne(el);
+    if (FIT_RO && !el.dataset.fitObs) { el.dataset.fitObs = '1'; FIT_RO.observe(el); }
   });
 }
 
