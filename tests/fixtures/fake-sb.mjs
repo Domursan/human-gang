@@ -859,6 +859,36 @@ export function createClient(_url, _key, opts = {}) {
         if (prof && typeof pr['souhaits.discord'] === 'boolean') prof.notify_card_wish = pr['souhaits.discord'];
         return { data: row, error: null };
       }
+      // Disposition du plateau (migration 111) : une valeur par membre, gardée dans localStorage (survit au rechargement).
+      // Même nettoyage que la fonction SQL : sept lieux seulement, cases dans le cadre (x 0..11, w 2..12, x+w<=12, y 0..40, h 1..6).
+      // Scénarios : plateauGetFail, plateauFail (refus à l'écriture).
+      if (fn === 'hg_admin_plateau_get' || fn === 'hg_admin_plateau_set') {
+        if (fn === 'hg_admin_plateau_get') {
+          if (S.plateauGetFail) return { data: null, error: { message: 'Disposition indisponible' } };
+          let v = null;
+          try { v = JSON.parse(localStorage.getItem('hg_fake_plateau') || 'null'); } catch (e) { v = null; }
+          return { data: v, error: null };
+        }
+        if (S.plateauFail) return { data: null, error: { message: 'Enregistrement refusé' } };
+        const p = args?.p ?? null;
+        let out = null;
+        if (p !== null) {
+          if (!p || typeof p.cells !== 'object' || Array.isArray(p.cells)) return { data: null, error: { message: 'Disposition invalide' } };
+          const LIEU_IDS = ['place', 'poste', 'ventes', 'camp', 'fabrique', 'fete', 'mairie'];
+          const cells = {};
+          for (const [k, c] of Object.entries(p.cells)) {
+            if (!LIEU_IDS.includes(k)) continue;
+            const { x, y, w, h } = c || {};
+            if (![x, y, w, h].every(Number.isInteger) || x < 0 || w < 2 || x + w > 12 || y < 0 || y > 40 || h < 1 || h > 6) {
+              return { data: null, error: { message: `Case « ${k} » hors du cadre` } };
+            }
+            cells[k] = { x, y, w, h };
+          }
+          out = { v: 1, cells };
+        }
+        try { localStorage.setItem('hg_fake_plateau', JSON.stringify(out)); } catch (e) { /* stockage indisponible */ }
+        return { data: out, error: null };
+      }
       // Raccourcis de la Vue d'ensemble (migration 103) : liste ordonnée d'identifiants de sous-section, par membre (privée).
       // null tant que rien n'est enregistré. Scénario : shortcuts (liste de départ), shortcutsFail (écriture refusée).
       // L'écriture garde le même nettoyage que la fonction SQL : identifiants valides, sans doublon, 24 au plus.
