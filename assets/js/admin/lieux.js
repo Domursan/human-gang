@@ -1,7 +1,7 @@
 // Admin : le plateau (accueil du panel) et la page de chaque lieu (admin/perms.js, LIEUX).
 // - Page de lieu (#<lieu>) : bandeau à la couleur du lieu, zone « À faire maintenant » remplie par le registre
 //   registerTodo, puis toutes les pages du lieu en tuiles groupées (icône, libellé, ligne d'aide, compteur).
-// - Plateau (#plateau) : registerPlateau(mountFn) pose le contenu de l'accueil ; sans fournisseur, les 7 lieux en cartes.
+// - Plateau (#plateau) : registerPlateau(mountFn) pose le contenu de l'accueil ; sans fournisseur, les lieux permis disposés en plateau (renderPlateau).
 //
 // Registre « À faire » :
 //   registerTodo(lieuId, async () => [{ title, meta?, actions: [{ label, href? , onClick? }] }])
@@ -10,10 +10,11 @@
 //   registerPlateau((root, { lieux, countOf, totalOf }) => …)   root = #plateau-root (vidé avant l'appel).
 //
 // Exporte : registerTodo, registerPlateau, plateauMount, renderPlateau, renderLieu, lieuTotal.
-// Dépend de core.js (esc), admin/perms.js (LIEUX), admin/panel-icons.js (panelIcon). Ne dépend pas de shell.js.
+// Dépend de core.js (esc), admin/perms.js (LIEUX, canSub), admin/panel-icons.js (panelIcon). Ne dépend pas de shell.js.
 
 import { esc } from '../core.js';
 import { panelIcon } from './panel-icons.js';
+import { LIEUX, canSub } from './perms.js';
 
 // Fournisseurs « À faire » : lieuId -> [fonction]. Un fournisseur qui échoue ne bloque pas les autres.
 const TODO = new Map();
@@ -47,20 +48,81 @@ export const plateauMount = () => plateauFn;
 /** Nombre « à traiter » d'un lieu : somme des compteurs de ses sous-sections permises. */
 export const lieuTotal = (lieu, countOf) => lieu.subs.reduce((t, s) => t + (countOf(s.id) || 0), 0);
 
+// Actions rapides du plateau : bouton, lieu qui le porte, sous-section (droit et adresse de repli).
+// Un clic émet « hg:quick » (détail : { action }) ; sans écouteur qui l'annule (preventDefault), on ouvre la page.
+const QUICK = [
+  { action: 'give', label: 'Give', aria: 'Give, ouvrir la fenêtre de don', lieu: 'fabrique', sub: 'gestion', solid: true },
+  { action: 'drop', label: 'Lancer un drop', aria: 'Lancer un drop', lieu: 'fabrique', sub: 'drops', solid: false },
+  { action: 'enchere', label: 'Nouvelle enchère', aria: 'Nouvelle enchère', lieu: 'ventes', sub: 'encheres', solid: true },
+];
+// Ordre du chemin qui relie les lieux sur le plateau (tracé entre les centres des cases).
+const ROAD = ['place', 'poste', 'ventes', 'fete', 'fabrique', 'camp', 'mairie'];
+
+/** Sous-section de LIEUX par identifiant (pour canSub). */
+const subOf = (id) => LIEUX.flatMap((l) => l.subs).find((s) => s.id === id);
+
+/** Une case du plateau : nom du lieu (lien), pastille du nombre à traiter, actions rapides du lieu. */
+function cellHtml(l) {
+  const quick = QUICK.filter((q) => q.lieu === l.id && canSub(subOf(q.sub)));
+  return `<div class="plateau-cell" data-lieu="${esc(l.id)}" style="--lieu: ${esc(l.color)}">
+      <a class="plateau-lieu" href="#${esc(l.id)}">
+        <span class="plateau-head">
+          <span class="plateau-ico" aria-hidden="true">${panelIcon(l.icon)}</span>
+          <span class="plateau-pastille" data-lieu-badge="${esc(l.id)}" aria-hidden="true" hidden></span>
+        </span>
+        <span class="plateau-name">${esc(l.label)}</span>
+        <span class="plateau-tag">${esc(l.tagline)}</span>
+        <span class="visually-hidden" data-lieu-count="${esc(l.id)}" hidden></span>
+      </a>
+      ${quick.length ? `<div class="plateau-quick" role="group" aria-label="Actions rapides : ${esc(l.label)}">${quick.map((q) => `<button type="button" class="plateau-act${q.solid ? '' : ' plateau-act--line'}" data-quick="${q.action}"${q.aria !== q.label ? ` aria-label="${esc(q.aria)}"` : ''}>${esc(q.label)}</button>`).join('')}</div>` : ''}
+    </div>`;
+}
+
 /**
- * Cartes des lieux (plateau par défaut) : nom, accroche, icône colorée, pastille du nombre à traiter (repeinte par shell.js).
+ * Trace le chemin entre les centres des cases (SVG derrière les cases) ; redessiné quand le plateau change de taille.
+ * Ne fait rien au téléphone (le CSS masque le chemin).
+ */
+function drawRoad(board) {
+  const svg = board.querySelector('.plateau-road');
+  if (!svg) return;
+  const b = board.getBoundingClientRect();
+  const pts = ROAD.map((id) => board.querySelector(`.plateau-cell[data-lieu="${id}"]`)).filter(Boolean).map((c) => {
+    const r = c.getBoundingClientRect();
+    return [r.left - b.left + r.width / 2, r.top - b.top + r.height / 2];
+  });
+  svg.setAttribute('viewBox', `0 0 ${b.width} ${b.height}`);
+  svg.innerHTML = pts.length > 1 ? `<path d="M${pts.map((p) => p.map((v) => v.toFixed(1)).join(' ')).join(' L')}"/>` : '';
+}
+
+/**
+ * Plateau (accueil par défaut) : les lieux permis disposés comme un plan, reliés par un chemin, et les actions rapides
+ * (Give, Lancer un drop, Nouvelle enchère) quand le droit de la section est accordé. Sur téléphone, une colonne.
  * @param {HTMLElement} root Conteneur du plateau (#plateau-root).
  * @param {Array<object>} lieux Lieux permis (visibleLieux).
  */
 export function renderPlateau(root, lieux) {
-  root.innerHTML = `<p class="plateau-lead small muted">Pastille = ce qui attend une action. Chaque lieu s’ouvre sur ses pages.</p>
-    <ul class="plateau-grid" aria-label="Lieux du gang">${lieux.map((l) => `<li>
-        <a class="plateau-lieu" href="#${esc(l.id)}" style="--lieu: ${esc(l.color)}">
-          <span class="plateau-ico" aria-hidden="true">${panelIcon(l.icon)}</span>
-          <span class="plateau-txt"><span class="plateau-name">${esc(l.label)}</span><span class="plateau-tag">${esc(l.tagline)}</span></span>
-          <span class="plateau-pastille" data-lieu-badge="${esc(l.id)}" hidden></span>
-        </a>
-      </li>`).join('')}</ul>`;
+  root.innerHTML = `<p class="plateau-lead small muted">Pastille = ce qui attend une action. Cliquer le nom d’un lieu pour l’ouvrir en entier.</p>
+    <div class="plateau-board" aria-label="Plateau des lieux du gang">
+      <svg class="plateau-road" aria-hidden="true" focusable="false"></svg>
+      ${lieux.map(cellHtml).join('')}
+    </div>`;
+  const board = root.querySelector('.plateau-board');
+  board.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-quick]');
+    if (!b) return;
+    const q = QUICK.find((x) => x.action === b.dataset.quick);
+    const ev = new CustomEvent('hg:quick', { detail: { action: q.action }, cancelable: true });
+    document.dispatchEvent(ev);
+    if (!ev.defaultPrevented) location.hash = `#${q.lieu}/${q.sub}`;
+  });
+  if (typeof ResizeObserver === 'function') {
+    const ro = new ResizeObserver(() => {
+      if (!board.isConnected) { ro.disconnect(); return; }
+      drawRoad(board);
+    });
+    ro.observe(board);
+  }
+  requestAnimationFrame(() => drawRoad(board));
 }
 
 /**
