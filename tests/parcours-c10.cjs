@@ -40,6 +40,15 @@ const txt = (p, sel) => p.textContent(sel).then((t) => (t || '').replace(/\s+/g,
   check(!p.errs.length, 'cartes : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
+  // Ingrédient possédé mais exposé en vitrine : le message le dit (au lieu de « il te manque »)
+  p = await openPage(browser, { page: 'cartes', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true, c2vitrine: true, bal: 900 }, width: 360, height: 800 });
+  await p.evaluate(() => { location.hash = 'collection'; });
+  await p.waitForSelector('.c2-rec-why', { timeout: 5000 }).catch(() => {});
+  const whyV = await txt(p, '.c2-rec-why');
+  check(/« La base du gang » \(dans ta vitrine : retire-la de ta vitrine pour pouvoir l’utiliser\)/.test(whyV) && await p.isDisabled('.c2-rec-go'), `carte en vitrine : raison affichée (${whyV})`);
+  check(!p.errs.length, 'vitrine : aucune erreur JS');
+  await p.ctx.close();
+
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', scenario: { c2: true }, width: 1280, height: 900 });
   await adminSection(p, 'fabrique/recettes');
   await p.waitForSelector('[data-rc=new]', { timeout: 5000 });

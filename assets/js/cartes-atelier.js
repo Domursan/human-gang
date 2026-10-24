@@ -38,10 +38,20 @@ export function plan(r) {
     picks.push({ copy: cp, card: cardOf(cardId) });
     return true;
   };
+  /** Pourquoi une carte que je possède n'est pas proposée : en vitrine ou bloquée par un échange (sinon ''). */
+  const held = (cardId) => {
+    const mine = live.filter((x) => x.card_id === cardId && !taken.has(x.id));
+    if (mine.some((x) => A.showcase.has(Number(x.id)))) return 'dans ta vitrine : retire-la de ta vitrine pour pouvoir l’utiliser';
+    if (mine.some((x) => x.locked_trade)) return 'bloquée par une offre d’échange en cours';
+    return '';
+  };
   const inputs = [...(r.inputs || [])].sort((a, b) => Number(!!b.card) - Number(!!a.card));
   for (const inp of inputs) {
     for (let i = 0; i < inp.qty; i++) {
-      if (inp.card) { if (!take(inp.card)) { missing.push(inp.name || cardOf(inp.card).name); break; } continue; }
+      if (inp.card) {
+        if (!take(inp.card)) { const name = inp.name || cardOf(inp.card).name; const why = held(inp.card); missing.push(why ? `« ${name} » (${why})` : name); break; }
+        continue;
+      }
       const cands = (inp.cards || []).map((id) => ({ id, left: free.filter((x) => x.card_id === id && !taken.has(x.id)).length, spare: (total.get(id) || 0) - (used.get(id) || 0) }))
         .filter((x) => x.left > 0).sort((a, b) => b.spare - a.spare);
       if (!cands.length || !take(cands[0].id)) { missing.push(`${inp.qty - i} carte${inp.qty - i > 1 ? 's' : ''} ${inp.label || tagLabel(inp.tag)}`); break; }

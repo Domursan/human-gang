@@ -731,7 +731,7 @@ function rpcC2(fn, a = {}) {
       else { const w = DB.hg_wallets[0]; w.paillettes += lot.amount; DB.hg_wallet_log.unshift({ user_id: ME, delta: lot.amount, reason: 'code', ref: 'code:' + n, created_at: new Date().toISOString() }); }
       return ok({ ok: true, code, lot, copy_id: null });
     }
-    case 'hg_card_recipes_me': return ok({ recipes: C2.recipes, showcase: [] });
+    case 'hg_card_recipes_me': return ok({ recipes: C2.recipes, showcase: S.c2vitrine ? [304] : [] }); // S.c2vitrine : « La base du gang » (304) en vitrine
     case 'hg_card_recipe_craft': {
       const r = C2.recipes.find((x) => x.id === a.p_recipe);
       if (!r) return ko('Cette recette n’est pas disponible');
