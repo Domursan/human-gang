@@ -1,8 +1,8 @@
 // Admin : compteurs « à traiter » du plateau. Calcule les nombres à partir des données chargées et les pose sur les
-// sous-sections (setCount de shell.js) : pastilles des tuiles, des lieux (plateau, barre du bas), de la palette ;
-// enregistre aussi les éléments « À faire » de La Poste et de La Fabrique (registerTodo).
+// sous-sections (setCount de shell.js) : pastilles des tuiles et de la palette. La pastille de chaque lieu (plateau, barre
+// du bas) est le nombre d'éléments « À faire » du lieu (todos.js, lieux.js loadTodoCounts) : elle n'est pas une somme.
 // refreshCounts() redessine les compteurs à partir des données déjà là (sans requête) ; loadCounts() charge d'abord les
-// données qui les alimentent (échanges de cartes, alertes économie, demandes, idées) puis redessine.
+// données qui les alimentent (échanges de cartes, alertes économie, demandes, idées), redessine, puis recompte les « À faire ».
 // Utilisé par admin.js (plateau), live.js (après chaque changement temps réel), invites.js, ideas.js, support.js,
 // ss-events.js (après chaque modification). Dépend de core.js (sb), state.js, perms.js, shell.js (setCount),
 // eco-health.js (alertes économie) et loaders.js (demandes, idées).
@@ -10,20 +10,9 @@ import { sb } from '../core.js';
 import { S } from './state.js';
 import { canSection } from './perms.js';
 import { setCount } from './shell.js';
-import { loadEco, ecoTile, ecoTodoItems } from './eco-health.js';
+import { loadEco, ecoTile } from './eco-health.js';
 import { ensureSupport, ensureIdeas } from './loaders.js';
-import { registerTodo } from './lieux.js';
-
-// « À faire » des lieux (page de lieu, admin/lieux.js) : alertes économie de La Fabrique, demandes ouvertes de La Poste.
-registerTodo('fabrique', async () => ecoTodoItems());
-registerTodo('poste', async () => {
-  if (!canSection('assistance')) return [];
-  return S.support.filter((s) => s.status === 'ouverte').slice(0, 10).map((s) => ({
-    title: s.subject || 'Demande sans titre',
-    meta: 'Demande à traiter dans l’assistance',
-    actions: [{ label: 'Répondre', href: `#poste/assistance/${s.id}` }],
-  }));
-});
+import { loadTodoCounts } from './lieux.js';
 
 // Donnée hors coquille, chargée par loadCounts : nombre d'échanges de cartes proposés et en attente.
 const OV = { trades: 0 };
@@ -33,7 +22,7 @@ const OV = { trades: 0 };
  * @returns {string[]} Noms de tables.
  */
 export function countTables() {
-  return canSection('cartes') ? ['hg_card_trades'] : [];
+  return canSection('cartes') ? ['hg_card_trades', 'hg_card_proposals'] : [];
 }
 
 /**
@@ -66,7 +55,8 @@ export async function loadCounts() {
   if (canSection('idees')) jobs.push(ensureIdeas());
   await Promise.all(jobs.map((p) => p.catch((e) => console.warn('[plateau]', e))));
   refreshCounts();
+  await loadTodoCounts(); // « À faire » de chaque lieu (pastilles), après les données qui les alimentent
 }
 
-// Alertes économie : « Ignorer cette semaine » a changé leur état, on redessine les compteurs.
-document.addEventListener('hg:eco-changed', () => refreshCounts());
+// Alertes économie : « Ignorer cette semaine » a changé leur état : on redessine les compteurs et les « À faire ».
+document.addEventListener('hg:eco-changed', () => { refreshCounts(); loadTodoCounts(); });

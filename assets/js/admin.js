@@ -28,6 +28,7 @@ import { S, pseudoOf } from './admin/state.js';
 import { sectionError } from './admin/common.js';
 import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
 import { loadCounts, refreshCounts, countTables } from './admin/counts.js';
+import './admin/todos.js'; // « À faire » des 7 lieux (registerTodo, admin/lieux.js)
 import { bindInvites, renderInvites, renderMembers, inviteActions } from './admin/invites.js';
 import { renderSS, ssSub } from './admin/ss-render.js';
 import { bindSecretSanta } from './admin/ss-events.js';
