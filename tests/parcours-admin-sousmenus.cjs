@@ -17,6 +17,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const MAX_H = 1400;
 // Exceptions documentées à la garde de longueur (route → raison). Toute autre route au-delà de MAX_H échoue.
 const EXCEPTIONS = {
+  'jeux/secrets': 'formulaire des 18 secrets, récompenses et cueillette de saison (admin-eggs.js)',
   'pilotage/apercu': 'accueil en deux moitiés : chiffres clés, « Mes raccourcis », économie et activité à gauche ; file à droite (admin-accueil.css)',
   'cartes/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
   'membres/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard (audit §3.3)',
@@ -29,14 +30,14 @@ const TREE = {
   pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']], ['Bot', ['bot', 'commandes']],
     ['Site', ['identite', 'textes', 'menu', 'etat', 'erreurs', 'archives', 'reglages']], ['Apparence', ['theme']],
     ['Assistance', ['assistance', 'idees', 'messagerie', 'fil']]],
-  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social', 'accueil']], ['Entraide', ['parrainage', 'competences']],
+  membres: [['Comptes', ['comptes', 'roles', 'relance', 'invitations', 'champs', 'social', 'accueil']], ['Entraide', ['parrainage', 'competences']],
     ['Accès aux pages', ['acces', 'acces-matrice']], ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
-  irl: [[null, ['sorties', 'souvenirs', 'secret-santa']]],
+  irl: [[null, ['membres-irl', 'sorties', 'souvenirs', 'secret-santa']]],
   event: [[null, ['evenements', 'rdv', 'avent', 'saison-worlds', 'anniv-gang']]],
-  cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
+  cartes: [[null, ['gestion']], ['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres']], ['Suivi', ['joueurs', 'echanges', 'stats']],
     [null, ['arene']]],
-  jeux: [[null, ['questions', 'sutom', 'geoguessr', 'citations', 'preuves', 'framed-heardle', 'secrets', 'mes-jeux']]],
+  jeux: [[null, ['questions', 'sutom', 'geoguessr', 'citations', 'preuves', 'framed-heardle', 'arcade', 'secrets', 'mes-jeux']]],
 };
 const ROUTES = Object.entries(TREE).flatMap(([d, groups]) => groups.flatMap(([, subs]) => subs.map((s) => `${d}/${s}`)));
 
@@ -155,7 +156,7 @@ async function goHash(p, h) {
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['cartes'] } });
   const st = await columnTree(p, 'cartes');
   check(JSON.stringify(st) === JSON.stringify(TREE.cartes),
-    `(d) Staff ['cartes'] : Catalogue, Économie, Animation, Suivi, puis Arène (${JSON.stringify(st)})`);
+    `(d) Staff ['cartes'] : Gestion globale, Catalogue, Économie, Animation, Suivi, puis Arène (${JSON.stringify(st)})`);
   check(await p.locator('#shell-subs a[href="#jeux/secrets"], #shell-subs a[href="#pilotage/fil"], #shell-subs a[href="#jeux/questions"], #shell-subs a[href="#jeux/geoguessr"], #shell-subs a[href="#jeux/citations"]').count() === 0,
     '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang, ni GeoGuessr, ni Citations');
   await goHash(p, 'jeux/secrets');

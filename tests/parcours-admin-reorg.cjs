@@ -65,8 +65,8 @@ const ANCIENNES = [
         `(b) six domaines dans l’ordre : ${domaines.join(', ')}`);
       const ids = await p.$$eval('#shell-subs [data-sub]', (x) => x.map((a) => a.dataset.sub));
       check(new Set(ids).size === ids.length, `(b) identifiants de sous-section uniques (${ids.length} liens)`);
-      for (const retire of ['roles', 'membres-irl', 'gestion']) {
-        check(await p.locator(`#shell-subs [data-sub="${retire}"]`).count() === 0, `(b) « ${retire} » (livrée plus tard) n’est pas affiché`);
+      for (const livre of ['roles', 'membres-irl', 'gestion']) {
+        check(await p.locator(`#shell-subs [data-sub="${livre}"]`).count() === 1, `(b) « ${livre} » (nouvelle sous-section) est affichée`);
       }
       check(await p.locator('#shell-subs .shell-sub[data-sub="arcade"]').count() === 1, '(b) « Arcade (pages 404) » (Jeux) est affichée');
       const titres = await p.$$eval('#shell-subs .shell-subhead', (x) => x.map((t) => t.textContent.trim()));
@@ -86,7 +86,8 @@ const ANCIENNES = [
       await p.waitForFunction(() => location.hash !== '#irl/sorties', null, { timeout: 6000 }).catch(() => {});
       check(await hash(p) === '#pilotage/apercu', `(c) Staff « membres » : #irl/sorties ouvre la première page permise (${await hash(p)})`);
       const domaines = await p.$$eval('.shell-dom', (x) => x.map((a) => a.dataset.dom));
-      check(!domaines.includes('irl') && domaines.includes('membres'), `(c) Staff « membres » : seuls les domaines permis (${domaines.join(', ')})`);
+      // « membres » donne aussi IRL › Membres IRL (droit membres) ; pas Event, Le jeu de cartes ni Autres jeux.
+      check(JSON.stringify(domaines) === JSON.stringify(['pilotage', 'membres', 'irl']), `(c) Staff « membres » : seuls les domaines permis (${domaines.join(', ')})`);
       check(!p.errs.length, '(c) aucune erreur JS' + (p.errs.length ? ` (${p.errs.slice(0, 2).join(' | ')})` : ''));
       await p.ctx.close();
     }
