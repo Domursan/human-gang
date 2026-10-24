@@ -97,6 +97,35 @@ const ITEMS = [
   check(p.errs.length === 0, 'admin : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
+  /* ---------- Admin : réglages des contenus (gain du lexique, vote Gartic), même RPC que la tuile ---------- */
+  p = await openPage(browser, { page: 'admin', fixture: F, scenario: { ceJour: ITEMS } });
+  await adminSection(p, 'camp/souvenirs/ce-jour');
+  await p.waitForFunction(() => document.querySelector('#ct-lex')?.value !== '' && document.querySelector('#ct-lex')?.value != null, null, { timeout: 5000 }).catch(() => {});
+  check(await p.inputValue('#ct-lex') === '20', 'admin contenus : gain d’un mot du lexique 20 par défaut');
+  check(await p.inputValue('#ct-gartic') === 'auto', 'admin contenus : vote Gartic « automatique » par défaut');
+  const rpcSet = async () => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_contenu_reglages_set');
+  await p.fill('#ct-lex', '250');
+  await p.click('#ct-save');
+  await sleep(200);
+  check((await rpcSet()).length === 0, 'admin contenus : gain 250 refusé (aucun appel)');
+  await p.fill('#ct-lex', '35');
+  await p.selectOption('#ct-gartic', 'ouvert');
+  await p.click('#ct-save');
+  await sleep(300);
+  let sets = await rpcSet();
+  check(sets.length === 1 && sets[0][2].p.lexique_gain === 35 && sets[0][2].p.gartic_vote === 'ouvert', 'admin contenus : hg_contenu_reglages_set reçoit lexique_gain 35 et gartic_vote ouvert');
+  check(!('ce_jour_la' in sets[0][2].p), 'admin contenus : l’appel ne touche pas à « Ce jour-là »');
+  const cfgNow = await p.evaluate(() => window.__DB.hg_settings.find((r) => r.key === 'contenu')?.value || {});
+  check(cfgNow.ce_jour_la === true && cfgNow.lexique_gain === 35 && cfgNow.gartic_vote === 'ouvert', 'admin contenus : réglages enregistrés, tuile « Ce jour-là » gardée');
+  check(p.errs.length === 0, 'admin contenus : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
+  await p.ctx.close();
+  const m = await openPage(browser, { page: 'admin', fixture: F, width: 390, height: 844, scenario: { ceJour: ITEMS } });
+  await adminSection(m, 'camp/souvenirs/ce-jour');
+  await m.waitForSelector('#ct-save', { state: 'attached', timeout: 5000 }).catch(() => {});
+  check(await hscroll(m) === 0, 'admin contenus : 390 px, pas de défilement horizontal');
+  check(m.errs.length === 0, 'admin contenus : 390 px, aucune erreur JS');
+  await m.ctx.close();
+
   await browser.close();
   finish();
 })();

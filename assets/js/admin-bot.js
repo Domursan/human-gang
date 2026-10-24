@@ -37,6 +37,7 @@ const NOTIFY = [
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
   ['card_drop', 'Drop lancé', 'annonce dans le salon quand un drop est lancé avec « Annoncer sur Discord »'],
   ['quiz_daily', 'Publier la question du jour', 'chaque matin dans le salon « Question du jour » (à couper pendant les vacances)'],
+  ['unwrap', 'Tour de passage au déballage', 'annonce « C’est au tour de … » pendant la soirée déballage du Secret Santa (désactivé par défaut)'],
 ];
 // Seules les clés de NOTIFY, pour parcourir les cases à cocher.
 const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
@@ -44,7 +45,7 @@ const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 const MENTION_TYPES = [
   ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
   ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
-  ['card_drop', 'Drop lancé'], ['quiz', 'Question du jour'],
+  ['card_drop', 'Drop lancé'], ['quiz', 'Question du jour'], ['cine', 'Ciné-club'],
 ];
 // Modes de mention possibles pour une annonce : aucune, le rôle, ou @everyone.
 const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];
@@ -344,12 +345,13 @@ const dayStamp = () => new Date().toLocaleDateString('sv-SE'); // AAAA-MM-JJ, he
 
 /* ---------- Réglages lot 5 : rappels, envois, assistance, planning ---------- */
 // Défauts = comportement d'avant les réglages (supabase/functions/_shared/reglages.ts). Bornes = celles que le serveur accepte.
-const RULE_DEF = { irl_long: 24, irl_short: 2, ss_jours: 3, dyn_retard: 24, top_n: 3, pieces_max: 4, piece_max_mo: 10, destinataires_max: 100, corps_max: 2000 };
-const RULE_MIN_MAX = { irl_long: [1, 168], irl_short: [1, 167], ss_jours: [1, 30], dyn_retard: [1, 168], top_n: [1, 10], pieces_max: [1, 10], piece_max_mo: [1, 25], destinataires_max: [1, 100], corps_max: [1, 4000] };
+const RULE_DEF = { irl_long: 24, irl_short: 2, ss_jours: 3, dyn_retard: 24, top_n: 3, pieces_max: 4, piece_max_mo: 10, destinataires_max: 100, corps_max: 2000, annonces_heure: 20 };
+const RULE_MIN_MAX = { irl_long: [1, 168], irl_short: [1, 167], ss_jours: [1, 30], dyn_retard: [1, 168], top_n: [1, 10], pieces_max: [1, 10], piece_max_mo: [1, 25], destinataires_max: [1, 100], corps_max: [1, 4000], annonces_heure: [1, 500] };
 const RULE_GROUPS = {
   rappels: { title: 'Rappels', keys: ['irl_long', 'irl_short', 'ss_jours'] },
   dyn: { title: 'Événements dynamiques', keys: ['dyn_retard', 'top_n'] },
   envoi: { title: 'Message manuel (MP et pièces jointes)', keys: ['pieces_max', 'piece_max_mo', 'destinataires_max', 'corps_max'] },
+  limites: { title: 'Anti-abus des membres', keys: ['annonces_heure'] },
 };
 const RULE_TXT = {
   irl_long: ['Rappel de sortie : délai (heures avant)', 'MP aux membres « oui » ou « peut-être » quand la sortie est dans moins de ce délai. Défaut : 24.'],
@@ -361,6 +363,7 @@ const RULE_TXT = {
   piece_max_mo: ['Taille maximale d\'une pièce (Mo)', 'Maximum 25 Mo (limite de Discord pour un bot). Défaut : 10.'],
   destinataires_max: ['Destinataires par envoi', 'Maximum 100. Défaut : 100.'],
   corps_max: ['Longueur du message manuel (caractères)', 'Maximum 4000 (limite d\'un message Discord). Défaut : 2000.'],
+  annonces_heure: ['Annonces et MP déclenchés par un membre, par heure', 'Nouvelle sortie, message, carte, échange, etc. : au-delà de ce nombre sur une heure glissante, les envois de ce membre sont refusés jusqu’à la fin de l’heure (les administrateurs ne sont pas limités). Défaut : 20.'],
 };
 const BUG_SUBJECT = 'Bug sur le site'; // le badge « Chasseur de bugs » s'appuie sur ce sujet (migration 041)
 const SUPPORT_DEF = {
@@ -371,11 +374,16 @@ const SUPPORT_MIN_MAX = {
   max_par_heure: [1, 100], visiteur_max_par_heure: [1, 100], visiteurs_total_par_heure: [1, 10000], message_min: [1, 1000],
   message_max: [1, 4000], mp_max: [100, 4000], delai_reponse_jours: [1, 365],
 };
+// Signalements de contenus (support.signalements, lus par hg_report_rules) : clés imbriquées, bornes comme la base.
+const SIG_DEF = { seuil_masquage: 3, plafond_jour: 10 };
+const SIG_MIN_MAX = { seuil_masquage: [2, 10], plafond_jour: [1, 50] };
+const SIG_KEYS = Object.keys(SIG_MIN_MAX);
 const SUPPORT_GROUPS = {
   sujets: { title: 'Sujets proposés', keys: ['sujets'] },
   limites: { title: 'Limites anti-abus (par heure)', keys: ['max_par_heure', 'visiteur_max_par_heure', 'visiteurs_total_par_heure'] },
   messages: { title: 'Longueur des messages', keys: ['message_min', 'message_max', 'mp_max'] },
   reponse: { title: 'Délai de réponse', keys: ['delai_reponse_jours'] },
+  signalements: { title: 'Signalements de contenus', keys: SIG_KEYS },
 };
 const SUPPORT_TXT = {
   max_par_heure: ['Par compte connecté', 'Demandes maximum par heure pour un membre connecté. Défaut : 5.'],
@@ -386,6 +394,12 @@ const SUPPORT_TXT = {
   mp_max: ['Longueur du message dans le MP à l\'admin', 'Au-delà, le MP est tronqué ; la demande reste complète dans la liste. Défaut : 1500.'],
   delai_reponse_jours: ['Délai de réponse annoncé (jours)', 'Affiché au visiteur après l\'envoi. Défaut : 30.'],
 };
+const SIG_TXT = {
+  seuil_masquage: ['Masquage automatique (nombre de membres)', 'Un contenu signalé par ce nombre de membres différents est masqué tout de suite ; le Staff le voit dans la file. Entre 2 et 10. Défaut : 3.'],
+  plafond_jour: ['Signalements par membre (sur 24 h)', 'Au-delà, le membre ne peut plus signaler pendant 24 h. Entre 1 et 50. Défaut : 10.'],
+};
+// Libellés et bornes de tous les réglages numériques de l'assistance (plats et signalements).
+const NUM_TXT = { ...SUPPORT_TXT, ...SIG_TXT }, NUM_MIN_MAX = { ...SUPPORT_MIN_MAX, ...SIG_MIN_MAX };
 // Valeur par défaut du planning : envoi des anniversaires à 8 h (heure suisse).
 const PLANNING_DEF = { anniversaires_heure_locale: 8, quiz_jour_heure_locale: 9 };
 
@@ -422,7 +436,7 @@ const grpOpen = (form, g) =>`<div class="bot-grp bot-grp-${g}" role="group" aria
  * @returns {string}
  */
 function rulesCardHtml() {
-  const groups = `<div class="bot-groups">${Object.entries(RULE_GROUPS).map(([g, def]) => `
+  const groups = `<div class="bot-groups is-pair">${Object.entries(RULE_GROUPS).map(([g, def]) => `
     ${grpOpen('rules', g)}
       ${grpHead('rules', g, def.title)}
       <div class="bot-grp-grid is-${def.keys.length}">${def.keys.map((k) => numField('rules', k, RULE_TXT[k], RULE_MIN_MAX[k])).join('')}</div>
@@ -449,7 +463,7 @@ function supportCardHtml() {
   const groups = `<div class="bot-groups is-pair">${Object.entries(SUPPORT_GROUPS).map(([g, def]) => `
     ${grpOpen('support', g)}
       ${grpHead('support', g, def.title)}
-      ${g === 'sujets' ? sujets : `<div class="bot-grp-grid is-${def.keys.length}">${def.keys.map((k) => numField('support', k, SUPPORT_TXT[k], SUPPORT_MIN_MAX[k])).join('')}</div>`}
+      ${g === 'sujets' ? sujets : `<div class="bot-grp-grid is-${def.keys.length}">${def.keys.map((k) => numField('support', k, NUM_TXT[k], NUM_MIN_MAX[k])).join('')}</div>`}
     </div>`).join('')}</div>`;
   return `<form class="card stack" id="support-cfg-form" novalidate>
       <div>
@@ -996,8 +1010,8 @@ export function mountBotSection(container) {
       }
       const value = {
         ...S.bot, announce_channel_id: channel || null, birthday_channel_id: channels.birthday?.[0] ?? null, channels, salons,
-        admin_discord_id: admin || null, mention_role_id: role || null, mentions,
-        notify: Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])),
+        admin_discord_id: admin || null, mention_role_id: role || null, mentions: { ...(S.bot.mentions || {}), ...mentions },
+        notify: { ...(S.bot.notify || {}), ...Object.fromEntries(NOTIFY_KEYS.map((k) => [k, form.elements[k].checked])) },
       };
       check(await sb.from('hg_settings').upsert({ key: 'bot', value, updated_at: new Date().toISOString() }));
       S.bot = value;
@@ -1043,25 +1057,26 @@ export function mountBotSection(container) {
     return out;
   };
   // Libellés des réglages, utilisés dans les messages d'erreur.
-  const labelRule = (k) => RULE_TXT[k][0], labelSupport = (k) => SUPPORT_TXT[k][0];
+  const labelRule = (k) => RULE_TXT[k][0], labelSupport = (k) => NUM_TXT[k][0];
   /** Valeur stockée d'un réglage bot (repli sur le défaut si absente ou hors bornes, comme le serveur). */
   const storedRule = (k) => {
-    const r = S.bot.rappels || {}, d = S.bot.dyn || {}, e = S.bot.envoi || {};
+    const r = S.bot.rappels || {}, d = S.bot.dyn || {}, e = S.bot.envoi || {}, l = S.bot.limites || {};
     const heures = Array.isArray(r.irl_heures) ? r.irl_heures : [];
     const raw = { irl_long: heures[0], irl_short: heures[1], ss_jours: r.ss_jours_avant, dyn_retard: d.delai_retard_heures, top_n: d.top_n,
-      pieces_max: e.pieces_max, piece_max_mo: e.piece_max_mo, destinataires_max: e.destinataires_max, corps_max: e.corps_max }[k];
+      pieces_max: e.pieces_max, piece_max_mo: e.piece_max_mo, destinataires_max: e.destinataires_max, corps_max: e.corps_max, annonces_heure: l.annonces_par_heure }[k];
     const [min, max] = RULE_MIN_MAX[k];
     return Number.isInteger(raw) && raw >= min && raw <= max ? raw : RULE_DEF[k];
   };
   /** Tous les réglages de rappels et limites, tels qu'ils sont en vigueur. */
   const currentRules = () => Object.fromEntries(RULE_ALL.map((k) => [k, storedRule(k)]));
-  /** Objet hg_settings.bot avec les réglages de ce bloc (le reste est conservé). */
-  // Forme de hg_settings.bot pour les rappels, les événements dynamiques et les envois (rangée sous des clés imbriquées).
+  /** Objet hg_settings.bot avec les réglages de ce bloc (le reste est conservé, y compris les autres sous-clés de limites). */
+  // Forme de hg_settings.bot pour les rappels, les événements dynamiques, les envois et les limites (sous des clés imbriquées).
   const botWith = (v) => ({
     ...S.bot,
     rappels: { irl_heures: [v.irl_long, v.irl_short], ss_jours_avant: v.ss_jours },
     dyn: { delai_retard_heures: v.dyn_retard, top_n: v.top_n },
     envoi: { pieces_max: v.pieces_max, piece_max_mo: v.piece_max_mo, destinataires_max: v.destinataires_max, corps_max: v.corps_max },
+    limites: { ...(S.bot.limites || {}), annonces_par_heure: v.annonces_heure },
   });
   /** Remplit le formulaire des rappels et limites avec les valeurs en vigueur. */
   const fillRules = () => { for (const k of RULE_ALL) rulesForm[k].value = storedRule(k); };
@@ -1100,12 +1115,23 @@ export function mountBotSection(container) {
   };
   // Sujets en vigueur : la liste enregistrée si elle est valide, sinon la liste par défaut.
   const storedSujets = () => (Array.isArray(S.support?.sujets) && cleanSujets(S.support.sujets.filter((x) => typeof x === 'string')) ) || SUPPORT_DEF.sujets;
-  /** Tous les réglages d'assistance, tels qu'ils sont en vigueur (sujets compris). */
-  const currentSupport = () => ({ sujets: storedSujets(), ...Object.fromEntries(SUPPORT_NUM.map((k) => [k, storedSupport(k)])) });
-  /** Remplit le formulaire de l'assistance (sujets et limites) avec les valeurs en vigueur. */
+  /** Seuil ou plafond des signalements en vigueur (défaut si absent ou hors bornes). */
+  const storedSig = (k) => {
+    const v = S.support?.signalements?.[k], [min, max] = SIG_MIN_MAX[k];
+    return Number.isInteger(v) && v >= min && v <= max ? v : SIG_DEF[k];
+  };
+  /** Tous les réglages d'assistance, tels qu'ils sont en vigueur (sujets et signalements compris). Les autres clés de support sont conservées. */
+  const currentSupport = () => ({
+    ...S.support,
+    sujets: storedSujets(),
+    ...Object.fromEntries(SUPPORT_NUM.map((k) => [k, storedSupport(k)])),
+    signalements: { ...(S.support?.signalements || {}), ...Object.fromEntries(SIG_KEYS.map((k) => [k, storedSig(k)])) },
+  });
+  /** Remplit le formulaire de l'assistance (sujets, limites et signalements) avec les valeurs en vigueur. */
   const fillSupport = () => {
     supportForm.sujets.value = storedSujets().join('\n');
     for (const k of SUPPORT_NUM) supportForm[k].value = storedSupport(k);
+    for (const k of SIG_KEYS) supportForm[k].value = storedSig(k);
   };
   /**
    * Enregistre hg_settings.support avec les nouvelles valeurs, puis recale le formulaire.
@@ -1130,7 +1156,8 @@ export function mountBotSection(container) {
       if (!sujets.includes(BUG)) throw new Error(`Le sujet « ${BUG} » doit rester dans la liste : le badge Chasseur de bugs s'appuie dessus.`);
       const v = readInts(supportForm, SUPPORT_NUM, SUPPORT_MIN_MAX, labelSupport);
       if (v.message_max <= v.message_min) throw new Error('Le maximum du message doit être plus grand que le minimum.');
-      await saveSupport({ sujets, ...v });
+      const sig = readInts(supportForm, SIG_KEYS, SIG_MIN_MAX, labelSupport);
+      await saveSupport({ ...S.support, sujets, ...v, signalements: { ...(S.support?.signalements || {}), ...sig } });
       toast('Assistance enregistrée', 'ok');
     });
   });
@@ -1179,7 +1206,10 @@ export function mountBotSection(container) {
         await saveBot(botWith(v));
       } else if (b.dataset.form === 'support') {
         const v = currentSupport();
-        for (const k of SUPPORT_GROUPS[g].keys) v[k] = SUPPORT_DEF[k];
+        for (const k of SUPPORT_GROUPS[g].keys) {
+          if (SIG_KEYS.includes(k)) v.signalements = { ...v.signalements, [k]: SIG_DEF[k] };
+          else v[k] = SUPPORT_DEF[k];
+        }
         await saveSupport(v);
       } else {
         if (g === 'quiz') await savePlanning(storedHeure(), PLANNING_DEF.quiz_jour_heure_locale);
@@ -1930,7 +1960,7 @@ export function mountBotSection(container) {
       const get = (k) => (settings.value ?? []).find((r) => r.key === k)?.value;
       S.bot = normalizeBot(get('bot') ?? S.bot);
       // Notifications activées par défaut ; l'échange conclu reste coupé par défaut. Les choix enregistrés priment.
-      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, card_drop: true, quiz_daily: true, ...(S.bot.notify || {}) };
+      S.bot.notify = { draw: true, gift: true, irl: true, birthday: true, support: true, messages: true, card_pull: true, card_wish: true, card_trade: false, trade_offer: true, card_gift_admin: true, card_drop: true, quiz_daily: true, unwrap: false, ...(S.bot.notify || {}) };
       S.support = get('support') ?? {};
       S.planning = get('planning') ?? {};
       const c = get('bot_templates');

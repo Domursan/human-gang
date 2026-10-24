@@ -172,8 +172,8 @@
 /* Règles : chaque groupe a son titre et son « Rétablir » sur une même ligne ; ses champs numériques sont en grille
    (selon la largeur du groupe, pas de la page). Sur grand écran, les groupes se rangent deux par deux. */
 .bot-groups { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-/* Assistance (formulaire assez large) : sujets et délai côte à côte ; limites et messages sur toute la largeur, trois colonnes */
-#support-cfg-form { container-type: inline-size; }
+/* Assistance et rappels (formulaires assez larges) : groupes sur deux colonnes ; assistance : sujets et délai côte à côte, limites et messages sur toute la largeur */
+#support-cfg-form, #rules-form { container-type: inline-size; }
 @container (min-width: 700px) {
   .bot-groups.is-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px 14px; }
   .bot-groups.is-pair > .bot-grp-limites, .bot-groups.is-pair > .bot-grp-messages { grid-column: 1 / -1; order: 1; }

@@ -152,6 +152,119 @@ const fill = (p, sel, v) => p.fill(sel, String(v));
     await p.ctx.close();
   }
 
+  /* (e) Bot : tour de passage au déballage, limite des annonces par membre, salon et mention du ciné-club */
+  const BOT_SEED = { key: 'bot', value: {
+    salons: [{ id: '1562528565176832011', nom: 'Flood' }], announce_channel_id: '1562528565176832011', mention_role_id: '445566778899001122',
+    notify: { irl: false, cle_perso: true }, limites: { annonces_par_heure: 7, autre_limite: 2 }, mentions: { cine: 'role', draw: 'none' },
+  } };
+  {
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { settings: [BOT_SEED] } });
+    await goto(p, 'pilotage/bot', '#bot-tablist');
+    await p.waitForSelector('#bot-form [name="unwrap"]', { state: 'attached', timeout: 8000 });
+    check(!(await p.isChecked('#bot-form [name="unwrap"]')), '(e) « tour de passage au déballage » coché par défaut : non');
+    check(!(await p.isChecked('#bot-form [name="irl"]')), '(e) notification déjà coupée dans la base : restée décochée');
+    await p.click('#bot-form label.switch:has([name="unwrap"])');
+    await p.click('#bot-p-connexion button[type="submit"]');
+    await sleep(400);
+    let bot = (await setting(p, 'bot')) || {};
+    check(bot.notify?.unwrap === true, '(e) enregistré : notify.unwrap = true');
+    check(bot.notify?.cle_perso === true && bot.notify?.irl === false, '(e) enregistré : autres notifications gardées (clé inconnue comprise)');
+    check(bot.limites?.autre_limite === 2 && bot.limites?.annonces_par_heure === 7, '(e) enregistré : limites existantes gardées');
+    check(bot.mentions?.cine === 'role' && bot.mentions?.draw === 'none', '(e) enregistré : mentions gardées');
+    check(!!(await p.textContent('#bot-mentions')).includes('Ciné-club'), '(e) mentions : type « Ciné-club » listé');
+    check(await p.isChecked('#bot-form [name="unwrap"]'), '(e) après enregistrement : interrupteur resté coché');
+
+    // Salon du ciné-club (onglet Salons) : une case coche le salon pour ce type
+    await p.click('#bot-tab-salons');
+    await p.waitForSelector('#bot-chan-cine', { state: 'attached', timeout: 5000 });
+    await p.check('#bot-chan-cine input[name="chan_cine"][value="1562528565176832011"]');
+    await sleep(400);
+    bot = (await setting(p, 'bot')) || {};
+    check(JSON.stringify(bot.channels?.cine) === JSON.stringify(['1562528565176832011']), '(e) salon du ciné-club enregistré (bot.channels.cine)');
+    check(bot.channels?.draw === undefined && bot.mentions?.draw === 'none', '(e) enregistrer un salon garde le reste de bot');
+
+    // Mention du ciné-club : passe à @everyone, la mention des autres types reste
+    await p.click('#bot-tab-mentions');
+    await p.waitForSelector('#bot-mention-cine', { state: 'attached', timeout: 5000 });
+    check(await p.inputValue('#bot-mention-cine') === 'role', '(e) mention du ciné-club : « Le rôle » (valeur enregistrée)');
+    await p.selectOption('#bot-mention-cine', 'everyone');
+    await p.click('#bot-p-mentions button[type="submit"]');
+    await sleep(400);
+    bot = (await setting(p, 'bot')) || {};
+    check(bot.mentions?.cine === 'everyone' && bot.mentions?.draw === 'none', '(e) enregistré : mentions.cine = everyone, les autres gardées');
+    check(bot.notify?.unwrap === true && bot.limites?.autre_limite === 2, '(e) enregistrer les mentions garde notifications et limites');
+    check(!p.errs.length, '(e) aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+    await p.ctx.close();
+  }
+  {
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { settings: [BOT_SEED] } });
+    await gotoRegles(p, '#rules-form');
+    check(await p.inputValue('#rules-form [name="annonces_heure"]') === '7', '(e) limite des annonces : 7 par heure (valeur enregistrée)');
+    await fill(p, '#rules-form [name="annonces_heure"]', 30);
+    await p.click('#rules-form button[type="submit"]');
+    await sleep(400);
+    let bot = (await setting(p, 'bot')) || {};
+    check(bot.limites?.annonces_par_heure === 30 && bot.limites?.autre_limite === 2, '(e) enregistré : limites.annonces_par_heure = 30, autre limite gardée');
+    check(JSON.stringify(bot.rappels) === JSON.stringify({ irl_heures: [24, 2], ss_jours_avant: 3 }), '(e) enregistrer les limites écrit aussi les rappels en vigueur');
+    await fill(p, '#rules-form [name="annonces_heure"]', 0);
+    await p.click('#rules-form button[type="submit"]');
+    await sleep(300);
+    check(await p.locator('text=Annonces et MP déclenchés par un membre, par heure : un nombre entier de 1 à 500.').count() > 0 && (await setting(p, 'bot')).limites.annonces_par_heure === 30, '(e) limite à 0 : refusée avec le libellé et les bornes, rien écrit');
+    await p.click('#rules-form [data-reset-group="limites"]');
+    await sleep(400);
+    bot = (await setting(p, 'bot')) || {};
+    check(bot.limites?.annonces_par_heure === 20 && bot.limites?.autre_limite === 2, '(e) « Rétablir » limites : 20, autre limite gardée');
+    check(await p.inputValue('#rules-form [name="annonces_heure"]') === '20', '(e) « Rétablir » limites : champ remis à 20');
+    check(await hscroll(p) === 0, '(e) 1440 px : règles sans défilement horizontal');
+    check(!p.errs.length, '(e) règles : aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+    await p.ctx.close();
+  }
+  {
+    const m = await openPage(browser, { page: 'admin', width: 390, height: 844, scenario: { settings: [BOT_SEED] } });
+    await gotoRegles(m, '#rules-form');
+    check(await hscroll(m) === 0, '(e) 390 px : règles sans défilement horizontal');
+    await gotoRegles(m, '#support-cfg-form', 'assistance');
+    check(await hscroll(m) === 0, '(f) 390 px : assistance sans défilement horizontal');
+    check(!m.errs.length, '(e,f) 390 px : aucune erreur console' + (m.errs.length ? ' (' + m.errs.join(' | ') + ')' : ''));
+    await m.ctx.close();
+  }
+
+  /* (f) Assistance : signalements (seuil de masquage, plafond), réglages voisins conservés */
+  {
+    const SUP_SEED = { key: 'support', value: { sujets: DEF_SUJETS, max_par_heure: 4, signalements: { seuil_masquage: 4, plafond_jour: 12, autre_sig: 'x' } } };
+    const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { settings: [SUP_SEED] } });
+    await gotoRegles(p, '#support-cfg-form', 'assistance');
+    check(await p.inputValue('#support-seuil_masquage') === '4', '(f) seuil de masquage : valeur enregistrée 4');
+    check(await p.inputValue('#support-plafond_jour') === '12', '(f) plafond des signalements : valeur enregistrée 12');
+    await fill(p, '#support-seuil_masquage', 1);
+    await p.click('#support-cfg-form button[type="submit"]');
+    await sleep(300);
+    check(await p.locator('text=Masquage automatique (nombre de membres) : un nombre entier de 2 à 10.').count() > 0, '(f) seuil 1 : refusé avec le libellé et les bornes');
+    check((await setting(p, 'support')).signalements.seuil_masquage === 4, '(f) refus : rien écrit');
+    await fill(p, '#support-seuil_masquage', 5);
+    await fill(p, '#support-plafond_jour', 15);
+    await p.click('#support-cfg-form button[type="submit"]');
+    await sleep(400);
+    let sup = (await setting(p, 'support')) || {};
+    check(sup.signalements?.seuil_masquage === 5 && sup.signalements?.plafond_jour === 15, '(f) enregistré : seuil 5, plafond 15');
+    check(sup.signalements?.autre_sig === 'x', '(f) enregistré : autre clé de signalements gardée');
+    check(sup.max_par_heure === 4 && sup.sujets?.length === 6, '(f) enregistré : limites et sujets gardés');
+    await p.click('#support-cfg-form [data-reset-group="signalements"]');
+    await sleep(400);
+    sup = (await setting(p, 'support')) || {};
+    check(sup.signalements?.seuil_masquage === 3 && sup.signalements?.plafond_jour === 10, '(f) « Rétablir » signalements : 3 et 10');
+    check(sup.signalements?.autre_sig === 'x' && sup.max_par_heure === 4 && sup.sujets?.length === 6, '(f) « Rétablir » signalements : le reste de support est gardé');
+    check(await p.inputValue('#support-seuil_masquage') === '3' && await p.inputValue('#support-plafond_jour') === '10', '(f) « Rétablir » signalements : champs remis à 3 et 10');
+    // Un autre groupe (limites) n'écrit pas les signalements
+    await p.click('#support-cfg-form [data-reset-group="limites"]');
+    await sleep(300);
+    sup = (await setting(p, 'support')) || {};
+    check(sup.signalements?.autre_sig === 'x' && sup.max_par_heure === 5, '(f) « Rétablir » limites : signalements gardés');
+    check(await hscroll(p) === 0, '(f) 1440 px : assistance sans défilement horizontal');
+    check(!p.errs.length, '(f) aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+    await p.ctx.close();
+  }
+
   await browser.close();
   finish();
 })();

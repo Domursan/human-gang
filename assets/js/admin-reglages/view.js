@@ -2,8 +2,12 @@
 // Admin : section « Réglages du site ». Liste des clés de hg_settings ; modification et ajout dans un tiroir (typé et validé).
 // Les clés gérées dans une autre section sont en lecture seule (lien vers cette section).
 // Les clés sensibles ne sont modifiables que par l'administrateur (getCachedProfile()?.is_admin).
-// Remarque : la politique RLS de hg_settings accepte aussi les Staff « reglages » pour toutes les clés ;
-// la restriction des clés sensibles est donc faite ici, côté interface, et doit aussi être posée en base.
+// Droits réels (base, fonction hg_settings_perm) : le Staff « reglages » écrit support, planning, ss, irl, albums, photos,
+// invites, profile_fields, badges, social, site_identite, site_textes et eggs ; le Staff « bot » écrit bot et bot_templates ;
+// les Staff « cartes », « themes » et « quiz » écrivent leurs clés. Les autres clés (arena, echanges, saisons, cine, contenu,
+// recap, relance, bot_commandes, jeux_du_jour, push_vapid_public, clés inconnues) sont réservées à l'administrateur.
+// Quelques politiques dédiées ajoutent des chemins (competences, parrainage, social, home_default, support et planning).
+// Ici, les clés administrateur ne sont proposées qu'à l'administrateur : c'est un reflet de la base, qui reste la référence.
 // Dépendances : core.js, core/profile.js (profil en cache), ui-confirm.js, admin/ui/drawer.js, admin/shell.js,
 // keys.js (registre et validation des valeurs), identite.js (formulaire « Identité et textes »).
 // Exporte : mountReglagesSection (monte la section), reglagesActions (boutons de l'en-tête),

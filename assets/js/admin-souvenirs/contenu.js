@@ -1,6 +1,7 @@
 // =====================================================================
 // Admin : vue « Ce jour-là » de la section Souvenirs et photos (idée S1).
 //   Ce jour-là : interrupteur de la tuile de l'accueil, aperçu d'un jour, retrait / remise d'un souvenir.
+//   Réglages des contenus (même RPC) : gain d'un mot du lexique validé, vote du dessin de l'année (Gartic Phone).
 // Droit : Staff « souvenirs » (vérifié côté serveur par chaque RPC, notée au journal).
 // Dépendances : core.js (sb, esc, toast, errMsg), helpers.js (dates), admin/common.js.
 // RPC : hg_contenu_reglages, hg_contenu_reglages_set, hg_on_this_day, hg_on_this_day_hide (migration 088).
@@ -24,6 +25,8 @@ async function saveCfg(patch, okMsg) {
   return true;
 }
 const KIND = { sortie: 'Sortie', moment: 'Moment culte', secret_santa: 'Secret Santa' };
+// Vote du dessin de l'année (Gartic Phone) : valeurs acceptées par hg_contenu_reglages_set.
+const GARTIC_VOTE = [['auto', 'Automatique (ouvert en décembre)'], ['ouvert', 'Toujours ouvert'], ['ferme', 'Fermé']];
 
 /* ---------- Ce jour-là ---------- */
 export function createCeJourPanel() {
@@ -37,8 +40,24 @@ export function createCeJourPanel() {
     <div class="sv-toolbar"><div class="field"><label for="cj-day">Aperçu du jour</label><input type="date" id="cj-day"></div></div>
     <ul class="sv-items" id="cj-list" aria-live="polite"></ul>
     <h3 class="card-title">Retirés de « Ce jour-là »</h3>
-    <ul class="sv-items" id="cj-hidden" aria-live="polite"></ul>`;
+    <ul class="sv-items" id="cj-hidden" aria-live="polite"></ul>
+    <section class="card stack" aria-labelledby="ct-h">
+      <h3 id="ct-h" class="card-title">Lexique et Gartic Phone</h3>
+      <p class="small muted">Réglages des contenus « Lexique » et « Gartic Phone ». Enregistrés d'un coup, ils s'appliquent tout de suite.</p>
+      <div class="field">
+        <label for="ct-lex">Paillettes gagnées quand un mot du lexique est validé</label>
+        <input id="ct-lex" type="number" min="0" max="200" step="1" inputmode="numeric" aria-describedby="ct-lex-h">
+        <span class="small muted" id="ct-lex-h">Entier de 0 à 200 ; 0 : aucun gain. Défaut : 20.</span>
+      </div>
+      <div class="field">
+        <label for="ct-gartic">Vote du dessin de l’année (Gartic Phone)</label>
+        <select id="ct-gartic" aria-describedby="ct-gartic-h">${GARTIC_VOTE.map(([v, t]) => `<option value="${v}">${esc(t)}</option>`).join('')}</select>
+        <span class="small muted" id="ct-gartic-h">Défaut : automatique.</span>
+      </div>
+      <div class="btn-row"><button type="button" class="btn btn-primary btn-sm" id="ct-save">Enregistrer les réglages des contenus</button></div>
+    </section>`;
   const on = el.querySelector('#cj-on'), day = el.querySelector('#cj-day');
+  const lex = el.querySelector('#ct-lex'), gartic = el.querySelector('#ct-gartic');
   day.value = todayIso();
   const row = (kind, id, title, sub, hidden) => `<li class="sv-row cj-row"><div class="sv-thumb"><span class="thumb-missing" aria-hidden="true"></span></div>
     <div class="sv-main"><p class="sv-title">${esc(title)}</p><p class="small muted">${esc(sub)}</p></div>
@@ -53,6 +72,8 @@ export function createCeJourPanel() {
         sb.from('hg_events').select('id,title,starts_at').eq('hide_on_this_day', true),
       ]);
       on.checked = cfg.ce_jour_la !== false;
+      lex.value = String(cfg.lexique_gain ?? 20);
+      gartic.value = ['auto', 'ouvert', 'ferme'].includes(cfg.gartic_vote) ? cfg.gartic_vote : 'auto';
       if (prev.error) throw prev.error;
       const items = Array.isArray(prev.data) ? prev.data : [];
       list.innerHTML = items.length ? items.map((it) => row(it.kind, it.id, it.title, `${KIND[it.kind] || ''} · ${dayLabel(it.date)} · il y a ${it.years_ago} an${it.years_ago > 1 ? 's' : ''}${it.exact ? '' : ' (semaine)'}`, false)).join('')
@@ -67,6 +88,15 @@ export function createCeJourPanel() {
     load();
   });
   day.addEventListener('change', load);
+  el.querySelector('#ct-save').addEventListener('click', async (e) => {
+    const n = Number(lex.value.trim());
+    if (lex.value.trim() === '' || !Number.isInteger(n) || n < 0 || n > 200) { toast('Gain d’un mot du lexique : entier de 0 à 200.', 'error'); lex.focus(); return; }
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    const ok = await saveCfg({ lexique_gain: n, gartic_vote: gartic.value }, 'Réglages des contenus enregistrés.');
+    btn.disabled = false;
+    if (ok) load();
+  });
   el.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-cj]');
     if (!b) return;

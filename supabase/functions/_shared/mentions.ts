@@ -1,5 +1,6 @@
 // ===== Humane Gang — mentions des annonces du bot (partagé par hg-notify, hg-cron, hg-birthdays) =====
 // Rôle : décider qui est notifié par une annonce du bot Discord (aucun, un rôle, ou tout le serveur).
+// Types : ceux de MENTION_TYPES, dont « cine » (ciné-club, cine-announce.ts ; réglé dans Bot Discord › Mentions).
 // Réglages (hg_settings.bot) : mention_role_id (ID du rôle à mentionner) et mentions = { <type>: 'none' | 'role' | 'everyone' }.
 //   none      : aucune mention (défaut, comportement d'avant).
 //   role      : mention du rôle (<@&ID>) dans le contenu : notifie les membres de ce rôle. Sans ID de rôle : rien.
@@ -12,7 +13,7 @@
 import { isSnowflake } from './discord.ts';
 
 /** Types d'annonce qui ont leur propre réglage de mention. */
-export const MENTION_TYPES = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade', 'card_drop', 'quiz'] as const;
+export const MENTION_TYPES = ['draw', 'irl', 'birthday', 'dyn', 'card_pull', 'card_trade', 'card_drop', 'quiz', 'cine'] as const;
 export type MentionType = typeof MENTION_TYPES[number];
 /** Mode de mention possible pour un type d'annonce. */
 export type MentionMode = 'none' | 'role' | 'everyone';
