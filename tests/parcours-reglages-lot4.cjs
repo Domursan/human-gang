@@ -234,7 +234,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await sleep(400);
   let cc = await settingsRow(p, 'cards');
   check(cc?.rewards?.citation === 35 && cc?.rewards?.daily === 100, 'économie : citation enregistrée (35), autres récompenses gardées');
-  check(JSON.stringify(cc?.tag_labels) === JSON.stringify({ minecraft: 'Minecraft perso' }) && cc?.plafonds?.quiz_jour === '7', 'économie : libellés des jeux et plafonds gardés à l’enregistrement');
+  check(JSON.stringify(cc?.tag_labels) === JSON.stringify({ minecraft: 'Minecraft perso' }) && Number(cc?.plafonds?.quiz_jour) === 7, 'économie : libellés des jeux et plafonds gardés à l’enregistrement' + (Number(cc?.plafonds?.quiz_jour) === 7 ? '' : ' ' + JSON.stringify(cc?.plafonds)));
   await p.fill('#acd-e-rewards_citation', '501');
   await p.click('#acd-econ-form [type="submit"]');
   await sleep(300);
@@ -248,7 +248,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await p.click('#acd-proof-form [type="submit"]');
   await sleep(400);
   cc = await settingsRow(p, 'cards');
-  check(cc?.quetes_preuve_par_semaine === 3 && cc?.quetes_par_semaine === 4 && cc?.plafonds?.quiz_jour === '7',
+  check(cc?.quetes_preuve_par_semaine === 3 && cc?.quetes_par_semaine === 4 && Number(cc?.plafonds?.quiz_jour) === 7,
     'quêtes : quêtes à preuve enregistrées (3), réglages voisins gardés');
   await p.click('[data-act="quest-new"]');
   await p.waitForSelector('#aq-metric', { timeout: 8000 }).catch(() => {});
