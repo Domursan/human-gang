@@ -1,6 +1,6 @@
 // ===== Humane Gang — page « Jeux », onglet Framed du ciné-club (idée J9) =====
 /*
- * Rôle : deviner le film du jour (un film vu ensemble au ciné-club) à partir d'images qui se dévoilent : chaque erreur
+ * Rôle : deviner l'élément du jour (un film du ciné-club, une affiche ou un tuto du site) à partir d'images qui se dévoilent : chaque erreur
  * ou « Passer » dévoile l'image suivante, 6 essais au plus. Trouver à la 1re image rapporte 6 points, à la 6e 1 point.
  * Les images sont privées (bucket hg-jeux) : le stockage ne laisse lire que les images déjà dévoilées (politique
  * hg_jeux_obj_read), lues ici par URL signée courte.
@@ -83,15 +83,15 @@ function render() {
   const board = `<section class="card jd-board-box" aria-labelledby="jf-board-h"><h2 id="jf-board-h" class="jd-h2">Classement de la semaine</h2>${boardHtml(st.board, C.me?.id, esc)}</section>`;
   if (!st.round) {
     P.innerHTML = `<div class="jd"><h2 class="jd-title">Framed du gang</h2>
-      <p class="card muted">Pas de film aujourd’hui.${st.next_day ? ` Prochain Framed le ${esc(day(st.next_day, dateLong))}.` : ' Le projectionniste prépare les prochains.'}</p>${hier}${board}</div>`;
+      <p class="card muted">Pas d’image aujourd’hui.${st.next_day ? ` Prochain Framed le ${esc(day(st.next_day, dateLong))}.` : ' Le projectionniste prépare les prochains.'}</p>${hier}${board}</div>`;
     return;
   }
   const k = st.frames.length, path = st.frames[S.view], url = S.urls[path];
   const pts = st.finished ? st.score : Math.max(1, 7 - k);
   const head = `<div class="jd-head"><h2 class="jd-title">Framed du gang #${esc(st.round)}</h2>
-    <div class="jd-sub"><span class="muted small">Un film vu ensemble au ciné-club · image ${esc(S.view + 1)} sur ${esc(st.total_frames)}</span>
+    <div class="jd-sub"><span class="muted small">Devine l’image du jour · image ${esc(S.view + 1)} sur ${esc(st.total_frames)}</span>
     <span class="pill jd-pts-pill">${st.finished ? `${esc(st.score)} pt${st.score > 1 ? 's' : ''}` : `${esc(pts)} pt${pts > 1 ? 's' : ''} possible${pts > 1 ? 's' : ''}`}</span></div></div>`;
-  const img = `<div class="jf-img">${url ? `<img src="${esc(url)}" alt="Image ${S.view + 1} du film à deviner" decoding="async">` : '<span class="muted small">Image en chargement…</span>'}</div>`;
+  const img = `<div class="jf-img">${url ? `<img src="${esc(url)}" alt="Image ${S.view + 1} du jour à deviner" decoding="async">` : '<span class="muted small">Image en chargement…</span>'}</div>`;
   let bottom;
   if (st.finished) {
     const f = st.film || {};
@@ -104,7 +104,7 @@ function render() {
       <button type="button" class="btn btn-ghost" data-act="livre">Le livre est mieux</button></div></div>`;
   } else {
     bottom = guessFormHtml('jf', 'Ton titre', S.busy)
-      + `<p class="muted small jd-note">Seuls les ${esc(st.films.length)} films du ciné-club sont proposés. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
+      + `<p class="muted small jd-note">Seules les ${esc(st.films.length)} réponses de la liste sont proposées. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
   }
   P.innerHTML = `<div class="jd">${head}${img}${framesNav(st)}${triesHtml(st)}${bottom}${hier}${board}</div>`;
   if (!st.finished) {
