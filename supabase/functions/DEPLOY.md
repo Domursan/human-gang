@@ -238,5 +238,5 @@ Ordre : appliquer `supabase/migrations/087_idees_vd.sql`, puis déployer les deu
   Fichiers MCP : `[{ "name": "index.ts", … }, { "name": "feed.ts", … }]`.
 - `hg-discord` : « Interactions Endpoint URL » de l'application Discord (commandes slash). Secrets : `DISCORD_PUBLIC_KEY` (obligatoire,
   sans elle tout est refusé en 401), `DISCORD_GUILD_ID` (recommandé), `SITE_URL` (facultatif). Fichiers MCP : `index.ts`, `handler.ts`, `lib.ts`.
-  `register.ts` n'est PAS déployé : c'est le script local d'enregistrement des commandes (voir BOT.md, section 10).
+  `register.ts` n'est PAS déployé : c'est le script local d'enregistrement des commandes (voir docs/BOT.md, section 10).
 - Tests hors Deno : `node tests/check-hg-discord.mjs` (signature, rejeu, boutons) et `node tests/check-hg-calendar.mjs` (format ICS).
