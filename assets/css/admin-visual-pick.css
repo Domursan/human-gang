@@ -1,0 +1,76 @@
+/* Sélecteurs visuels de l'admin (assets/js/admin/visual-pick.js) : cartes, boosters, aperçu d'un récapitulatif.
+   Tokens du site (base.css) ; la couleur d'accent de chaque sélecteur est --vp-c (posée par la fenêtre ou le tiroir). */
+
+.vp { display: grid; gap: 12px; min-width: 0; }
+.vp .field { min-width: 0; }
+.vp select, .vp input[type="search"] { min-width: 0; width: 100%; }
+.vp-filtres { display: grid; gap: 10px; }
+@media (min-width: 560px) { .vp-filtres { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; } }
+.vp-compte { margin: 0; }
+
+/* Grilles : 3 colonnes de cartes et 2 de boosters au téléphone (390 px), plus larges sur écran */
+.vp-grid {
+  display: grid; gap: 14px 10px; justify-items: center; align-content: start; min-width: 0;
+  padding: 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg);
+}
+.vp-grid-cartes { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); max-height: 340px; overflow-y: auto; overscroll-behavior: contain; }
+.vp-grid-boost { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
+.vp-grid-past { opacity: .9; }
+.vp-sub { margin: 6px 0 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+
+/* Cartes */
+.vp-tile { display: grid; justify-items: center; gap: 4px; min-width: 0; max-width: 100%; }
+.vp-tile .hgc { --w: 96px; }
+@media (min-width: 600px) { .vp-tile .hgc { --w: 112px; } }
+.vp-tile.is-sel .hgc { outline: 3px solid var(--vp-c, var(--accent)); outline-offset: 3px; }
+.vp-tile.is-off .hgc { opacity: .45; filter: grayscale(.7); cursor: not-allowed; }
+.vp-cap { font-size: 12px; line-height: 1.25; min-height: 15px; color: var(--muted); text-align: center; overflow-wrap: anywhere; }
+.vp-cap.is-warn { color: var(--rose); }
+.vp-plus { justify-self: center; }
+.vp-plus[hidden] { display: none; }
+.vp-choix { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.vp-sum { margin: 0; font-size: 14px; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.vp-sum strong { color: var(--text); }
+.vp-shiny { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--text); cursor: pointer; }
+.vp-shiny[hidden] { display: none; }
+.vp-shiny input { width: 20px; height: 20px; accent-color: var(--vp-c, var(--accent)); flex: none; }
+
+/* Boosters : une cartouche par type, description au survol ou au focus */
+.vp-type {
+  position: relative; display: grid; justify-items: center; gap: 4px; width: 100%; min-width: 0;
+  padding: 10px 6px 12px; border: 2px solid transparent; border-radius: 16px;
+  background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer;
+}
+.vp-type.is-sel { border-color: var(--vp-c, var(--accent)); }
+.vp-type-n { font-weight: 700; font-size: 14px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.vp-type-s { font-size: 12px; color: var(--muted); }
+.vp-desc {
+  display: none; position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); z-index: 4;
+  width: max(190px, 100%); padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text); font-size: 13px; font-weight: 400; line-height: 1.35; text-align: left;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4); pointer-events: none;
+}
+@media (hover: hover) { .vp-type:hover .vp-desc { display: block; } }
+.vp-type:focus .vp-desc { display: block; }
+
+/* Cartouche à l'échelle : la boîte de 220 × 290 est réduite par transform */
+.vp-cart { --s: .4; position: relative; display: block; flex: none; width: calc(220px * var(--s)); height: calc(290px * var(--s)); }
+@media (min-width: 600px) { .vp-cart { --s: .5; } }
+.vp-cart .cart-box { position: absolute; left: 0; top: 0; width: 220px; height: 290px; margin: 0; transform: scale(var(--s)); transform-origin: 0 0; }
+
+/* Focus visible sur tout le sélecteur */
+.vp-grid button:focus-visible, .vp-type:focus-visible, .vp-shiny input:focus-visible {
+  outline: 3px solid var(--vp-c, var(--accent)); outline-offset: 3px;
+}
+
+/* Aperçu (récapitulatif de la fenêtre ou du tiroir) */
+.vp-preview { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.vp-preview:empty { display: none; }
+.vp-preview .hgc { --w: 112px; }
+.vp-preview .vp-cart { --s: .5; }
+.vp-preview[hidden] { display: none; }
+
+@media (max-width: 480px) {
+  .vp-grid { padding: 6px; }
+  .vp-grid-cartes { max-height: 300px; }
+}

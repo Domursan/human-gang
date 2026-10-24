@@ -91,10 +91,13 @@ async function ouvrir(p) {
   await p.click('[data-gest-kind="boosters"]');
   check(await p.getAttribute('[data-gest-kind="boosters"]', 'aria-pressed') === 'true', 'onglet Booster sélectionné');
   check((await p.textContent('#gest-amount-l')).includes('Boosters par membre'), 'Booster : libellé « Boosters par membre »');
+  await p.waitForSelector('[data-vp-type="dore"]', { timeout: 5000 });
+  await p.click('[data-vp-type="dore"]');
+  check(await p.isVisible('#gest-visual .cart-box.cart--dore'), 'Booster : aperçu de la cartouche dans le récapitulatif');
   await p.fill('#gest-amount', '2');
   await p.check(`input[name="gest-who"][value="${ALICE}"]`);
   await p.check(`input[name="gest-who"][value="${BRUNO}"]`);
-  check(/2 membres recevront 2 boosters offerts chacun/.test(await recap(p)), 'récapitulatif : « 2 membres recevront 2 boosters offerts chacun »');
+  check(/2 membres recevront 2 boosters Doré chacun/.test(await recap(p)), 'récapitulatif : « 2 membres recevront 2 boosters Doré chacun »');
   await p.click('#gest-go');
   await p.waitForSelector('dialog.hg-dialog[open] button[value="ok"]', { timeout: 5000 });
   await confirmOk(p);
@@ -102,6 +105,7 @@ async function ouvrir(p) {
   const b2 = await bulkCalls(p);
   check(b2.length === 1 && b2[0].p_kind === 'boosters' && b2[0].p_amount === 2, 'Booster : une RPC, p_kind = boosters, 2 par membre');
   check(b2[0].p_card === null && b2[0].p_note === null, 'Booster : pas de carte, pas de motif (null)');
+  check(b2[0].p_booster === 'dore', 'Booster : p_booster = dore (le booster choisi)');
   check(!p.errs.length, 'Booster : aucune erreur JS');
   await p.ctx.close();
 
@@ -110,11 +114,14 @@ async function ouvrir(p) {
   await ouvrir(p);
   await p.click('[data-gest-kind="carte"]');
   check(await p.isVisible('#gest-cardbox'), 'Cartes : le choix de carte apparaît');
-  await p.fill('#gest-cardq', 'paleto');
-  const options = await p.$$eval('#gest-card option', (o) => o.map((x) => x.value));
-  check(options.length === 1 && options[0] === 'C2', 'recherche « paleto » : une seule carte proposée');
+  await p.waitForSelector('#gest-cardbox [data-vp-card="C2"]', { timeout: 5000 });
+  await p.fill('#gest-cp-q', 'paleto');
+  const options = await p.$$eval('#gest-cardbox [data-vp-card]', (o) => o.map((x) => x.dataset.vpCard));
+  check(options.length === 1 && options[0] === 'C2', 'recherche « paleto » : une seule carte proposée (visuels)');
+  await p.click('#gest-cardbox [data-vp-card="C2"]');
+  check(await p.isVisible('#gest-visual .hgc'), 'Carte : aperçu du visuel dans le récapitulatif');
   await p.fill('#gest-amount', '3');
-  await p.click('label:has(#gest-shiny)');
+  await p.click('label:has(input[name="shiny"])');
   await p.check(`input[name="gest-who"][value="${BRUNO}"]`);
   check(/1 membre recevra 3 exemplaires de « Le Paleto » \(brillante\)/.test(await recap(p)), 'récapitulatif carte : nom et brillance');
   await p.click('#gest-go');
@@ -161,6 +168,8 @@ async function ouvrir(p) {
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { bulkFail: true } });
   await ouvrir(p);
   await p.click('[data-gest-kind="carte"]');
+  await p.waitForSelector('#gest-cardbox [data-vp-card="C1"]', { timeout: 5000 });
+  await p.click('#gest-cardbox [data-vp-card="C1"]');
   await p.check(`input[name="gest-who"][value="${ALICE}"]`);
   await p.click('#gest-go');
   await confirmOk(p);

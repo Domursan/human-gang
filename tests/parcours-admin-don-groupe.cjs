@@ -40,10 +40,11 @@ async function ouvrirDonGroupe(p) {
   await ouvrirDonGroupe(p);
   check((await recap(p)).includes('Choisis au moins un membre'), 'sans destinataire : le récapitulatif le demande');
   await p.selectOption('#acd-bulk-kind', 'boosters');
+  await p.waitForSelector(`${drawer} [data-vp-type="classique"]`, { timeout: 5000 });
   await p.fill('#acd-bulk-amount', '2');
   await p.check(`${drawer} input[name="who"][value="${ALICE}"]`);
   await p.check(`${drawer} input[name="who"][value="${BRUNO}"]`);
-  check(/2 membres recevront 2 boosters offerts chacun/.test(await recap(p)), 'récapitulatif : « 2 membres recevront 2 boosters offerts chacun »');
+  check(/2 membres recevront 2 boosters Classique chacun/.test(await recap(p)), 'récapitulatif : « 2 membres recevront 2 boosters Classique chacun »');
   check((await p.textContent('#acd-bulk-count')).includes('2 choisis'), 'compteur : 2 choisis');
   await submit(p);
   await p.waitForSelector('dialog.hg-dialog[open] button[value="ok"]', { timeout: 5000 }).catch(() => {});
@@ -56,6 +57,7 @@ async function ouvrirDonGroupe(p) {
   check(b1[0]?.p_kind === 'boosters' && b1[0]?.p_amount === 2, 'boosters : type et montant envoyés (2)');
   check(Array.isArray(b1[0]?.p_users) && b1[0].p_users.length === 2 && b1[0].p_users.includes(ALICE) && b1[0].p_users.includes(BRUNO), 'boosters : p_users = les deux membres choisis');
   check(b1[0]?.p_card === null && b1[0]?.p_shiny === false, 'boosters : pas de carte ni de brillance');
+  check(b1[0]?.p_booster === 'classique', 'boosters : p_booster = classique (booster choisi par défaut)');
   check(b1[0]?.p_announce === true, 'fil coché (défaut) : p_announce = true');
   check(!p.errs.length, 'boosters : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
@@ -85,9 +87,11 @@ async function ouvrirDonGroupe(p) {
   await ouvrirDonGroupe(p);
   await p.selectOption('#acd-bulk-kind', 'carte');
   check(await p.isVisible('#acd-bulk-cardbox'), 'carte : le choix de carte apparaît');
-  await p.fill('#acd-bulk-cardq', 'paleto');
-  const options = await p.$$eval('#acd-bulk-card option', (o) => o.map((x) => x.value));
-  check(options.length === 1 && options[0] === 'C2', 'recherche « paleto » : une seule carte proposée');
+  await p.waitForSelector(`${drawer} [data-vp-card="C2"]`, { timeout: 5000 });
+  await p.fill('#acd-bulk-cp-q', 'paleto');
+  const options = await p.$$eval(`${drawer} [data-vp-card]`, (o) => o.map((x) => x.dataset.vpCard));
+  check(options.length === 1 && options[0] === 'C2', 'recherche « paleto » : une seule carte proposée (visuels)');
+  await p.click(`${drawer} [data-vp-card="C2"]`);
   await p.fill('#acd-bulk-amount', '3');
   await p.click(`${drawer} label:has(input[name="shiny"])`);
   await p.check(`${drawer} input[name="who"][value="${BRUNO}"]`);
@@ -115,6 +119,8 @@ async function ouvrirDonGroupe(p) {
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { bulkFail: true } });
   await ouvrirDonGroupe(p);
   await p.selectOption('#acd-bulk-kind', 'carte');
+  await p.waitForSelector(`${drawer} [data-vp-card="C1"]`, { timeout: 5000 });
+  await p.click(`${drawer} [data-vp-card="C1"]`);
   await p.check(`${drawer} input[name="who"][value="${ALICE}"]`);
   await submit(p);
   await confirmOk(p);

@@ -110,7 +110,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   check(await p.getAttribute('#drop-qty', 'max') === '10', 'drops : exemplaires max lu dans cards.drops (10)');
   check(await p.getAttribute('#drop-min', 'max') === '120', 'drops : durée max lue dans cards.drops (120)');
   check(await p.inputValue('#drop-min') === '15', 'drops : durée proposée lue dans cards.drops (15)');
-  await p.selectOption('#drop-card', { index: 0 });
+  await p.click('dialog.ui-drawer[open] [data-vp-card]:not([disabled]) >> nth=0');
   await p.fill('#drop-qty', '11');
   await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await p.waitForTimeout(300);
@@ -131,7 +131,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await p.click('[data-action="drop-new"]');
   await p.waitForSelector('dialog.ui-drawer[open] #drop-qty', { timeout: 5000 });
   check(await p.getAttribute('#drop-qty', 'max') === '120', 'drops plafond : avec quantite_max à 120, le champ accepte 120');
-  await p.selectOption('#drop-card', { index: 0 });
+  await p.click('dialog.ui-drawer[open] [data-vp-card]:not([disabled]) >> nth=0');
   await p.fill('#drop-qty', '120');
   await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await p.waitForTimeout(400);
