@@ -19,8 +19,9 @@
 //   })
 // Le plateau : registerPlateau (admin/lieux.js) pose son contenu dans #plateau-root ; sans lui, les 7 lieux en cartes.
 // Actions de zone : #zone-actions (à droite du titre) est vidé à chaque visite ; open() y pose ses boutons (setActions).
-// setCount(sous-section, n) : compteur « à traiter » ; il alimente la tuile de la page du lieu, la pastille du lieu
-// (plateau, barre du bas) et le total de la page du lieu. Les droits viennent de admin/perms.js (LIEUX, canSection).
+// setCount(sous-section, n) : compteur « à traiter » d'une tuile de la page du lieu. La pastille du lieu (plateau, barre du
+// bas) et le total de la page du lieu sont le nombre d'éléments « À faire » du lieu (lieux.js, todoCount ; l'événement
+// « hg:todo-changed » les repeint). Les droits viennent de admin/perms.js (LIEUX, canSection).
 // ------------------------------------------------------
 
 import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
@@ -28,7 +29,7 @@ import { svg as iconSvg } from '../icons.js';
 import { LIEUX, visibleLieux, canSection } from './perms.js';
 import { resolve } from './router.js';
 import { panelIcon } from './panel-icons.js';
-import { renderPlateau, renderLieu, plateauMount, lieuTotal } from './lieux.js';
+import { renderPlateau, renderLieu, plateauMount, todoCount } from './lieux.js';
 
 // Deux seuils d'affichage : mobile (≤ 760 px) et large (≥ 1440 px, panneau d'infos visible).
 const MOBILE = matchMedia('(max-width: 760px)');
@@ -121,8 +122,8 @@ function buildChrome() {
 /* ---------- Compteurs ---------- */
 
 /**
- * Affiche les compteurs « à traiter » : sur chaque sous-section (tuiles des pages de lieu), puis le total de chaque lieu
- * (pastilles du plateau et de la barre du bas) et le total de la page du lieu. Un compteur à 0 est masqué.
+ * Affiche les compteurs « à traiter » : sur chaque sous-section (tuiles des pages de lieu), puis le nombre d'éléments
+ * « À faire » de chaque lieu (pastilles du plateau et de la barre du bas, total de la page du lieu). Un compteur à 0 est masqué.
  */
 function paintCounts() {
   if (!el.shell) return;
@@ -134,11 +135,14 @@ function paintCounts() {
     }
   }
   for (const l of LIEUX) {
-    const total = lieuTotal(l, countOf);
+    const total = todoCount(l.id);
     for (const b of document.querySelectorAll(`[data-lieu-badge="${l.id}"]`)) { b.hidden = !total; b.textContent = total || ''; }
     for (const b of document.querySelectorAll(`[data-lieu-count="${l.id}"]`)) { b.hidden = !total; b.textContent = total ? `${total} à traiter` : ''; }
   }
 }
+
+// Nombre d'éléments « À faire » recompté (plateau, page de lieu) : on repeint les pastilles.
+document.addEventListener('hg:todo-changed', () => paintCounts());
 
 /* ---------- Bouton « Mode sans limite » (réutilise core/godmode.js) ---------- */
 
@@ -233,7 +237,7 @@ async function showPlateau() {
   markActive('plateau');
   const fn = plateauMount();
   el.plateauRoot.replaceChildren();
-  if (fn) await fn(el.plateauRoot, { lieux: visibleLieux(), countOf, totalOf: (l) => lieuTotal(l, countOf) });
+  if (fn) await fn(el.plateauRoot, { lieux: visibleLieux(), countOf, totalOf: (l) => todoCount(l.id) });
   else renderPlateau(el.plateauRoot, visibleLieux());
   paintCounts();
 }

@@ -6,14 +6,19 @@
 // Registre « À faire » :
 //   registerTodo(lieuId, async () => [{ title, meta?, actions: [{ label, href? , onClick? }] }])
 //   Appelé à chaque visite de la page du lieu. Vide : « Rien à faire ici pour l'instant. » Plusieurs fournisseurs par lieu : possibles.
+//   Les fournisseurs d'un lieu tournent en parallèle ; un fournisseur qui échoue ne fait que perdre ses éléments.
+// Pastille « à traiter » d'un lieu = nombre d'éléments « À faire » de ce lieu (todoCount). Calculé à l'ouverture du
+// plateau (loadTodoCounts) et à chaque visite de la page du lieu (renderLieu) ; les deux préviennent par
+// l'événement « hg:todo-changed » (shell.js repeint les pastilles).
 // Plateau :
 //   registerPlateau((root, { lieux, countOf, totalOf }) => …)   root = #plateau-root (vidé avant l'appel).
 //
-// Exporte : registerTodo, registerPlateau, plateauMount, renderPlateau, renderLieu, lieuTotal.
+// Exporte : registerTodo, registerPlateau, plateauMount, renderPlateau, renderLieu, todoCount, loadTodoCounts.
 // Dépend de core.js (esc), admin/perms.js (LIEUX), admin/panel-icons.js (panelIcon). Ne dépend pas de shell.js.
 
 import { esc } from '../core.js';
 import { panelIcon } from './panel-icons.js';
+import { LIEUX } from './perms.js';
 
 // Fournisseurs « À faire » : lieuId -> [fonction]. Un fournisseur qui échoue ne bloque pas les autres.
 const TODO = new Map();
@@ -28,13 +33,28 @@ export function registerTodo(lieuId, fn) {
   TODO.set(lieuId, list);
 }
 
-/** Éléments « À faire » d'un lieu : ceux de tous ses fournisseurs, dans l'ordre d'enregistrement. */
+/** Éléments « À faire » d'un lieu : ceux de tous ses fournisseurs (en parallèle), dans l'ordre d'enregistrement. */
 async function todoItems(lieuId) {
-  const out = [];
-  for (const fn of TODO.get(lieuId) || []) {
-    try { out.push(...((await fn()) || [])); } catch (e) { console.warn('[lieu]', lieuId, e); }
-  }
-  return out;
+  const parts = await Promise.all((TODO.get(lieuId) || []).map((fn) => Promise.resolve()
+    .then(fn)
+    .then((r) => r || [])
+    .catch((e) => { console.warn('[lieu]', lieuId, e); return []; })));
+  return parts.flat();
+}
+
+// Nombre d'éléments « À faire » par lieu (lieuId -> n), pour la pastille du plateau et le total de la page du lieu.
+const TODO_N = new Map();
+/** Nombre d'éléments « À faire » d'un lieu (0 tant qu'il n'a pas été compté). */
+export const todoCount = (lieuId) => TODO_N.get(lieuId) || 0;
+const repaint = () => document.dispatchEvent(new CustomEvent('hg:todo-changed'));
+
+/**
+ * Recompte les éléments « À faire » de tous les lieux (en parallèle) puis prévient le panel (pastilles).
+ * Appelé au chargement des compteurs (counts.js) ; une page de lieu se recompte à sa propre visite.
+ */
+export async function loadTodoCounts() {
+  await Promise.all(LIEUX.map(async (l) => { TODO_N.set(l.id, (await todoItems(l.id)).length); }));
+  repaint();
 }
 
 // Fournisseur du plateau (registerPlateau). null : les 7 lieux en cartes (renderPlateau).
@@ -43,9 +63,6 @@ let plateauFn = null;
 export function registerPlateau(mountFn) { plateauFn = mountFn; }
 /** Fournisseur du plateau enregistré, ou null. */
 export const plateauMount = () => plateauFn;
-
-/** Nombre « à traiter » d'un lieu : somme des compteurs de ses sous-sections permises. */
-export const lieuTotal = (lieu, countOf) => lieu.subs.reduce((t, s) => t + (countOf(s.id) || 0), 0);
 
 /**
  * Cartes des lieux (plateau par défaut) : nom, accroche, icône colorée, pastille du nombre à traiter (repeinte par shell.js).
@@ -89,7 +106,7 @@ function tileHtml(lieu, s, countOf) {
 
 /** Corps de la page d'un lieu : bandeau, « À faire maintenant » (rempli après), toutes les pages groupées. */
 function lieuHtml(lieu, countOf) {
-  const total = lieuTotal(lieu, countOf);
+  const total = todoCount(lieu.id);
   const groups = groupsOf(lieu).map((g) => `<section class="lieu-group">
         ${g.heading ? `<h3 class="lieu-group-title">${esc(g.heading)}</h3>` : ''}
         <div class="lieu-tiles">${g.subs.map((s) => tileHtml(lieu, s, countOf)).join('')}</div>
@@ -133,6 +150,8 @@ export async function renderLieu(root, lieu, countOf) {
   root.dataset.lieu = lieu.id;
   const box = root.querySelector('[data-lieu-todo]');
   const items = await todoItems(lieu.id);
+  TODO_N.set(lieu.id, items.length);
+  repaint();
   if (root.dataset.lieu !== lieu.id || !box.isConnected) return; // une autre page a pris la place
   box.innerHTML = todoHtml(items);
   // Clics des boutons « À faire » (index i = élément, j = action, comme dans todoHtml)
