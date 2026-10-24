@@ -1,23 +1,47 @@
 /* ===== Humane Gang — administration : plateau (accueil) et pages de lieu =====
-   Le plateau pose les 7 lieux en cartes colorées (admin/lieux.js, renderPlateau) ; chaque lieu a sa couleur (--lieu, posée
+   Le plateau dessine les lieux permis en plan (admin/lieux.js, renderPlateau) ; chaque lieu a sa couleur (--lieu, posée
    en style en ligne). Une page de lieu : bandeau à la couleur du lieu, « À faire maintenant », puis toutes ses pages en
    grosses tuiles groupées. Couleurs : jetons de base.css (clair et sombre) ; la couleur du lieu sert de filet et d'accent. */
 
+/* Plateau : plan des lieux (un lieu = une case), relié par un chemin ; boutons d’action sur le plan. Bureau : grille à
+   3 colonnes, la Mairie sur toute la dernière ligne. Téléphone (≤ 760 px) : une colonne, pas de chemin. */
 .plateau { display: flex; flex-direction: column; gap: 18px; } /* marges : celles de .shell-groups */
 .plateau-lead { margin: 0; }
-.plateau-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.plateau-grid > li { display: flex; }
-.plateau-lieu { position: relative; flex: 1; display: flex; align-items: center; gap: 14px; min-height: 96px; padding: 18px; border-radius: 20px;
-  background: var(--surface); border: 2px solid var(--lieu); color: var(--text); }
-@media (hover: hover) { .plateau-lieu:hover { background: var(--surface-2); } }
-.plateau-ico { width: 54px; height: 54px; flex: none; border-radius: 16px; display: grid; place-items: center; background: var(--lieu); color: #0D0B0A; }
-.plateau-ico svg { width: 30px; height: 30px; stroke-width: 2; }
-.plateau-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-right: 26px; }
-.plateau-name { font-family: var(--font-display); font-size: 18px; line-height: 1.15; }
-.plateau-tag { font-size: 13px; color: var(--muted); }
-.plateau-pastille { position: absolute; top: 12px; right: 12px; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 13px;
-  background: var(--lieu); color: #0D0B0A; font-size: 13px; font-weight: 700; line-height: 26px; text-align: center; }
-.plateau-pastille[hidden] { display: none; }
+.plateau-board { position: relative; display: grid; gap: 28px; padding: 22px; border-radius: 28px; border: 1px solid var(--border);
+  background-color: var(--bg); background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 24px 24px;
+  grid-template-columns: 1fr 1.25fr 1fr; grid-template-areas: "place poste ventes" "camp fabrique fete" "mairie mairie mairie"; }
+.plateau-board > .plateau-road { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 0; }
+.plateau-board > .plateau-road path { fill: none; stroke: var(--border-strong); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 2 14; }
+.plateau-cell { position: relative; z-index: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 20px;
+  background: var(--surface); border: 2px solid var(--lieu); }
+.plateau-cell[data-lieu="place"] { grid-area: place; }
+.plateau-cell[data-lieu="poste"] { grid-area: poste; }
+.plateau-cell[data-lieu="ventes"] { grid-area: ventes; }
+.plateau-cell[data-lieu="camp"] { grid-area: camp; }
+.plateau-cell[data-lieu="fabrique"] { grid-area: fabrique; }
+.plateau-cell[data-lieu="fete"] { grid-area: fete; }
+.plateau-cell[data-lieu="mairie"] { grid-area: mairie; }
+.plateau-cell[data-lieu="poste"], .plateau-cell[data-lieu="fabrique"] { padding: 24px; }
+.plateau-lieu { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; color: var(--text); text-decoration: none; border-radius: 14px; }
+.plateau-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.plateau-ico { width: 60px; height: 60px; flex: none; border-radius: 16px; display: grid; place-items: center; background: var(--lieu); color: #0D0B0A; }
+.plateau-ico svg { width: 32px; height: 32px; stroke-width: 2; }
+.plateau-pastille { min-width: 44px; height: 44px; box-sizing: border-box; padding: 0 14px; border-radius: 999px; background: var(--lieu); color: #0D0B0A;
+  font-family: var(--font-display); font-size: 20px; line-height: 44px; text-align: center; }
+.plateau-name { font-family: var(--font-display); font-size: 24px; line-height: 1.1; overflow-wrap: anywhere; }
+.plateau-tag { font-size: 15px; color: var(--muted); }
+.plateau-pastille[hidden], .plateau-lieu [data-lieu-count][hidden] { display: none; }
+.plateau-lieu:hover .plateau-name { text-decoration: underline; text-underline-offset: 4px; }
+.plateau-quick { margin-top: auto; display: flex; gap: 12px; flex-wrap: wrap; }
+.plateau-act { flex: 1 1 150px; min-height: 60px; padding: 8px 14px; border-radius: 16px; border: 2px solid var(--lieu); background: var(--lieu);
+  color: #0D0B0A; font-family: inherit; font-size: 17px; font-weight: 700; line-height: 1.2; cursor: pointer; }
+.plateau-act--line { background: transparent; color: var(--text); }
+@media (hover: hover) { .plateau-act:hover { filter: brightness(1.08); } .plateau-act--line:hover { background: color-mix(in srgb, var(--lieu) 16%, transparent); filter: none; } }
+.plateau-lieu:focus-visible, .plateau-act:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+.plateau-cell[data-lieu="mairie"] .plateau-lieu { flex-direction: row; align-items: center; gap: 18px; }
+.plateau-cell[data-lieu="mairie"] .plateau-head { flex: none; }
+.plateau-cell[data-lieu="mairie"] .plateau-name { font-size: 22px; }
+.plateau-cell[data-lieu="mairie"] .plateau-tag { flex: 1; }
 
 .lieu-page { display: flex; flex-direction: column; gap: 24px; }
 .lieu { display: flex; flex-direction: column; gap: 24px; }
@@ -55,7 +79,11 @@
 .lieu-tile-count { position: absolute; top: 12px; right: 12px; }
 
 @media (max-width: 760px) {
-  .plateau-grid { grid-template-columns: 1fr; }
+  .plateau-board { grid-template-columns: 1fr; grid-template-areas: none; gap: 14px; padding: 14px; border-radius: 22px; }
+  .plateau-board > .plateau-road { display: none; }
+  .plateau-cell, .plateau-cell[data-lieu] { grid-area: auto; padding: 18px; }
+  .plateau-cell[data-lieu="mairie"] .plateau-lieu { flex-direction: column; align-items: stretch; }
+  .plateau-quick .plateau-act { flex: 1 1 140px; }
   .lieu-tiles { grid-template-columns: 1fr; }
 }
 

@@ -1,10 +1,12 @@
 // Parcours : plateau d'action du panel (admin.html) : accueil par défaut, 7 lieux, page de lieu avec tuiles, fil d'Ariane
 // et retour, anciennes adresses, Staff partiel, téléphone 390 px sans défilement horizontal, aucune erreur JavaScript.
-// (a) administrateur : #plateau par défaut, 7 lieux en cartes ; ouverture de La Fabrique de cartes (18 tuiles) ; une tuile
+// (a) administrateur : #plateau par défaut, 7 lieux sur le plan (chemin, pastilles, actions rapides) ; ouverture de La Fabrique (18 tuiles) ; une tuile
 //     mène à la page (fil « Plateau › Lieu › Page », retour au lieu) ; le fil ramène au plateau.
 // (b) anciennes adresses : #pilotage/…, #membres/…, #irl/…, #event/…, #cartes/…, #jeux/…, #comptes, #apercu, #reglages.
 // (c) Staff { cartes, journal } : seuls les lieux permis (Mairie, Fabrique, Salle des ventes) sont sur le plateau.
 // (d) téléphone 390 px : barre du bas (Plateau et lieux), pas de défilement horizontal ; captures tests/shots/.
+// (e) plan du plateau : 7 cases, nom du lieu = lien (nom accessible avec le nombre à traiter), pastille, actions rapides
+//     (Give, Lancer un drop, Nouvelle enchère) selon les droits, évènement hg:quick, repli vers la page, téléphone sans chemin.
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-plateau.cjs
 const path = require('path');
 const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium } = require('./lib/harness.cjs');
@@ -121,6 +123,78 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     const erreurs = p.errs.filter((e) => !/Failed to load|404|favicon/.test(e));
     check(erreurs.length === 0, `(d) aucune erreur JavaScript${erreurs.length ? ' : ' + erreurs.join(' | ') : ''}`);
     await p.ctx.close();
+  }
+
+  /* (e) Plan du plateau : cases, nom accessible, pastilles, actions rapides (droits), repli, téléphone */
+  {
+    const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    await settle(p);
+    check(await p.isVisible('.plateau-board'), '(e) le plan du plateau est affiché');
+    check((await p.$$('.plateau-board .plateau-cell')).length === 7, '(e) 7 cases sur le plan');
+    check((await p.$$('.plateau-board .plateau-road path')).length === 1, '(e) chemin tracé entre les lieux (bureau)');
+    const noms = await p.$$eval('.plateau-cell > .plateau-lieu', (as) => as.map((a) => a.textContent.replace(/\s+/g, ' ').trim()));
+    check(noms.length === 7 && noms.every((n) => /^(La |Le )/.test(n) || /Mairie|Place|Poste|Camp|Fabrique|Fête|Salle/.test(n)),
+      `(e) chaque case est un lien au nom du lieu : ${noms[0]} …`);
+    const quick = await p.$$eval('[data-quick]', (bs) => bs.map((b) => `${b.dataset.quick}:${b.closest('.plateau-cell').dataset.lieu}`));
+    check(JSON.stringify(quick.slice().sort()) === JSON.stringify(['drop:fabrique', 'enchere:ventes', 'give:fabrique']),
+      `(e) administrateur : trois actions rapides dans leur lieu (${quick.join(' ')})`);
+    const badge = await p.$eval('.plateau-cell[data-lieu="fabrique"] [data-lieu-badge]', (b) => ({ vu: !b.hidden, n: b.textContent.trim() }));
+    const compte = await p.$eval('.plateau-cell[data-lieu="fabrique"] .plateau-lieu', (a) => a.textContent);
+    check(badge.vu && badge.n === '1' && /1 à traiter/.test(compte), `(e) pastille de La Fabrique : ${badge.n}, nom accessible « ${compte.replace(/\s+/g, ' ').trim().slice(-30)} »`);
+    const sansPastille = await p.$eval('.plateau-cell[data-lieu="place"] [data-lieu-badge]', (b) => b.hidden);
+    check(sansPastille, '(e) pas de pastille quand rien n’attend (La Place du gang)');
+    const focus = await p.evaluate(() => { const a = document.querySelector('.plateau-cell .plateau-lieu'); a.focus(); return getComputedStyle(a).outlineStyle; });
+    check(focus === 'solid', `(e) lien de case : contour visible au clavier (${focus})`);
+    const hsPlan = await hscroll(p);
+    check(hsPlan <= 0, `(e) plan au bureau : pas de défilement horizontal (${hsPlan})`);
+
+    // Événement hg:quick : un écouteur qui annule l'événement empêche la navigation de repli
+    await p.evaluate(() => document.addEventListener('hg:quick', (e) => { window.__Q = e.detail.action; e.preventDefault(); }));
+    await p.click('[data-quick="drop"]');
+    await sleep(300);
+    check((await p.evaluate(() => window.__Q)) === 'drop' && (await p.evaluate(() => location.hash)) === '#plateau',
+      '(e) clic « Lancer un drop » : événement hg:quick (action drop), pas de navigation');
+    await p.ctx.close();
+
+    // Sans écouteur : repli vers la page du lieu
+    const n = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    await settle(n);
+    await n.click('[data-quick="enchere"]');
+    await sleep(400);
+    check((await settle(n)) === '#ventes/encheres', '(e) sans écouteur, « Nouvelle enchère » ouvre #ventes/encheres');
+    await n.ctx.close();
+
+    // Give : repli vers la gestion globale (La Fabrique)
+    const q = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    await settle(q);
+    await q.click('[data-quick="give"]');
+    await sleep(400);
+    check((await settle(q)) === '#fabrique/gestion', '(e) sans écouteur, « Give » ouvre #fabrique/gestion');
+    await q.ctx.close();
+
+    // Membre sans le droit « cartes » : aucune action rapide ; seule la Mairie (journal) est sur le plan
+    const m = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['journal'] } });
+    await settle(m);
+    check((await m.$$('[data-quick]')).length === 0, '(e) sans droit « cartes » : aucune action rapide sur le plan');
+    check((await m.$$('.plateau-cell')).length === 1, '(e) sans droit « cartes » : une seule case (La Mairie)');
+    await m.ctx.close();
+
+    // Staff « cartes » : les trois actions rapides, dans leurs lieux
+    const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
+    await settle(s);
+    const qs = await s.$$eval('[data-quick]', (bs) => bs.map((b) => b.dataset.quick));
+    check(qs.length === 3, `(e) Staff « cartes » : trois actions rapides (${qs.join(' ')})`);
+    await s.ctx.close();
+
+    // Téléphone : une colonne, pas de chemin, actions rapides visibles et dans l'écran
+    const t = await openPage(browser, { page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
+    await settle(t);
+    check((await t.$eval('.plateau-road', (r) => getComputedStyle(r).display)) === 'none', '(e) téléphone : pas de chemin');
+    const hsT = await hscroll(t);
+    check(hsT <= 0, `(e) téléphone : plan sans défilement horizontal (${hsT})`);
+    const dedans = await t.$$eval('.plateau-act', (bs) => bs.every((b) => { const r = b.getBoundingClientRect(); return r.width > 0 && r.left >= 0 && r.right <= 390; }));
+    check(dedans, '(e) téléphone : actions rapides visibles et dans la largeur de l’écran');
+    await t.ctx.close();
   }
 
   await browser.close();
