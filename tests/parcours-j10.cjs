@@ -13,6 +13,9 @@ const FAKE_YT = () => {
     playVideo() { this.playing = true; this.t0 = performance.now(); window.__YT.push(['play']); }
     pauseVideo() { const d = Math.round(this.getCurrentTime() - this.o.playerVars.start); this.playing = false; window.__YT.push(['pause', d]); }
     getCurrentTime() { return this.playing ? this.o.playerVars.start + (performance.now() - this.t0) / 1000 : this.t; }
+    setVolume(v) { window.__YT.push(['vol', v]); }
+    mute() { window.__YT.push(['mute']); }
+    unMute() { window.__YT.push(['unmute']); }
   } };
 };
 
@@ -33,6 +36,17 @@ const FAKE_YT = () => {
   check(yt.some((x) => x[0] === 'seek' && x[1] === 12) && yt.some((x) => x[0] === 'play'), 'lecteur : se place au départ et joue');
   const pause = yt.find((x) => x[0] === 'pause');
   check(pause && pause[1] === 1, 'lecteur : coupé au bout de 1 s');
+  // Volume : 70 par défaut, appliqué au lecteur ; curseur et valeur affichée ; mémorisé
+  check(yt.some((x) => x[0] === 'vol' && x[1] === 70), 'volume : 70 appliqué au lecteur au premier extrait');
+  check((await p.locator('#jh-vol').inputValue()) === '70' && (await p.locator('#jh-vol-val').innerText()) === '70', 'volume : curseur réglé sur 70, valeur affichée');
+  check((await p.locator('#jh-vol').boundingBox()).height >= 44 && (await p.locator('#jh-mute').boundingBox()).height >= 44, 'volume : curseur et bouton muet ≥ 44 px');
+  await p.evaluate(() => { const r = document.querySelector('#jh-vol'); r.value = '40'; r.dispatchEvent(new Event('input', { bubbles: true })); });
+  check(await p.evaluate(() => localStorage.getItem('hg_heardle_volume')) === '40', 'volume : 40 mémorisé (hg_heardle_volume)');
+  check((await p.locator('#jh-vol-val').innerText()) === '40' && (await p.evaluate(() => window.__YT)).some((x) => x[0] === 'vol' && x[1] === 40), 'volume : 40 affiché et appliqué au lecteur');
+  await p.click('#jh-mute');
+  check((await p.locator('#jh-mute').getAttribute('aria-pressed')) === 'true' && (await p.evaluate(() => window.__YT)).some((x) => x[0] === 'mute'), 'muet : lecteur coupé, bouton « Rétablir le son »');
+  await p.click('#jh-mute');
+  check((await p.evaluate(() => window.__YT)).some((x) => x[0] === 'unmute') && (await p.locator('#jh-mute').getAttribute('aria-pressed')) === 'false', 'muet : son rétabli');
   // Passer : 2 s
   await p.click('[data-act="passer"]');
   await p.waitForFunction(() => document.querySelector('.jd-pts-pill')?.textContent.includes('2 s'), null, { timeout: 3000 }).catch(() => {});
@@ -75,6 +89,11 @@ const FAKE_YT = () => {
   p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#heardle', scenario: { heardleCancelled: true }, width: 360 });
   check((await p.locator('#jeux-panel-heardle').innerText()).includes('Manche annulée'), 'manche annulée : message clair');
   check((await hscroll(p)) <= 0, '360 px : pas de défilement horizontal');
+  await p.ctx.close();
+  // Volume mémorisé relu à l'ouverture (25 enregistré avant la visite)
+  p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#heardle', width: 390, init: () => { try { localStorage.setItem('hg_heardle_volume', '25'); } catch { /* stockage bloqué */ } } });
+  check((await p.locator('#jh-vol').inputValue()) === '25' && (await p.locator('#jh-vol-val').innerText()) === '25', 'volume : 25 mémorisé relu à l\'ouverture');
+  check((await hscroll(p)) <= 0, '390 px avec curseur : pas de défilement horizontal');
   await p.ctx.close();
   await browser.close();
   finish();

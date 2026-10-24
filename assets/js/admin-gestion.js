@@ -2,7 +2,7 @@
 // Admin : Le jeu de cartes › Gestion globale (route #cartes/gestion, section #cartes-gestion, racine #gestion-root).
 // Trois blocs : « Give » (don groupé : même confirmation et même RPC que le tiroir d’Économie), « Résumé de l’économie »
 // (hg_eco_health via admin/eco-health.js, hg_booster_type_stats, hg_auctions_admin : seulement ce que la base renvoie)
-// et « Derniers gives » (hg_admin_log, action « don_groupe »).
+// et « Derniers gives » (hg_admin_log : actions « don_groupe » et « carte_donnee »).
 // Droit : « cartes ». Écritures : RPC uniquement (hg_cards_admin_bulk_give). Lectures : hg_staff_directory, hg_cards,
 // hg_card_sets, hg_admin_log (lecture seule). Dépendances : core.js (sb, toast, errMsg, esc, $), cartes-ui.js (rarityLabel),
 // admin-cards/bulk.js (KIND, MAX_MEMBRES, recapText, donnerGroupe), admin-cards/helpers.js (check, fetchAll, nf, fmtWhen),
@@ -302,6 +302,24 @@ function nomsDestinataires(ids) {
   return `${noms[0]}, ${noms[1]} et ${noms.length - 2} autres`;
 }
 
+/**
+ * Une ligne « carte donnée » (un destinataire, une carte) : écrite par hg_cards_admin_give (migration 040),
+ * target_user = destinataire, target_ref = id de la carte, details = { exemplaires, brillante, annonce }.
+ */
+function ligneCarteDonnee(r) {
+  const d = r.details || {};
+  const dest = D.membresById.get(r.target_user)?.pseudo ?? 'Ancien membre';
+  const carte = D.cartesById.get(r.target_ref)?.name ?? 'carte';
+  const n = Math.max(1, Number(d.exemplaires) || 1);
+  return `<li class="acd-item acd-item-tight">
+      <div class="acd-item-main">
+        <p><strong>${esc(dest)}</strong> <span class="small muted">Carte donnée</span></p>
+        <p class="small">${esc(plur(n, 'exemplaire', 'exemplaires'))} de « ${esc(carte)} »${d.brillante ? ' (brillante)' : ''}</p>
+      </div>
+      <span class="small muted">${esc(fmtWhen(r.created_at))}</span>
+    </li>`;
+}
+
 /** Une ligne du journal : qui, quoi (par membre et total), quand, motif. */
 function ligneDon(r) {
   const d = r.details || {};
@@ -325,18 +343,18 @@ function ligneDon(r) {
     </li>`;
 }
 
-/** Dessine les 10 derniers dons groupés (hg_admin_log, action « don_groupe »). */
+/** Dessine les 10 derniers dons (hg_admin_log : « don_groupe » et « carte_donnee », un seul destinataire). */
 async function rendreJournal() {
   const el = $('#gest-journal', D.root);
   el.innerHTML = '<p class="small muted">Chargement…</p>';
   try {
     const { data, error } = await sb.from('hg_admin_log').select('id, admin_id, action, target_user, target_ref, details, created_at')
-      .eq('action', 'don_groupe').order('created_at', { ascending: false }).limit(10);
+      .in('action', ['don_groupe', 'carte_donnee']).order('created_at', { ascending: false }).limit(10);
     if (error) throw error;
     const lignes = (data ?? []).slice().sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 10);
     el.innerHTML = `<div class="gest-entete"><h2 class="card-title" id="gest-journal-h">Derniers gives</h2>
         <a class="small" href="#pilotage/journal">Voir le journal</a></div>
-      ${lignes.length ? `<ul class="acd-list">${lignes.map(ligneDon).join('')}</ul>` : '<p class="small muted">Aucun don groupé pour l’instant.</p>'}`;
+      ${lignes.length ? `<ul class="acd-list">${lignes.map((r) => (r.action === 'carte_donnee' ? ligneCarteDonnee(r) : ligneDon(r))).join('')}</ul>` : '<p class="small muted">Aucun don pour l’instant.</p>'}`;
   } catch (e) {
     el.innerHTML = `<div class="gest-entete"><h2 class="card-title" id="gest-journal-h">Derniers gives</h2></div>
       <p class="form-error" role="alert">Journal indisponible : ${esc(errMsg(e))}</p>`;

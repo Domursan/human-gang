@@ -402,18 +402,27 @@ const livreClics = [];
 const LIVRE_SVG = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.6C9 5 6 4.8 3 5.5V19c3-.7 6-.5 9 1 3-1.5 6-1.7 9-1V5.5c-3-.7-6-.5-9 1.1z"/><path d="M12 6.6V20"/></svg>';
 
 /**
- * Fait sortir du coin de l'affiche la bulle « Le livre est mieux. » (3 s, sans animation si le mouvement est réduit),
- * puis signale le secret « livre » au serveur (eggFound affiche le gain).
- * @param {HTMLElement} box zone de l'affiche cliquée (.cine-seen-poster)
+ * Fait sortir du coin de l'affiche la bulle « Le livre est mieux. » (3 s, sans animation si le mouvement est réduit).
+ * @param {HTMLElement} box zone de l'affiche (.cine-seen-poster)
+ * @returns {boolean} false si la bulle est déjà affichée
  */
-function livreSecret(box) {
-  if (box.querySelector('.cine-bulle')) return; // déjà affichée
+function afficheBulle(box) {
+  if (box.querySelector('.cine-bulle')) return false; // déjà affichée
   const bulle = document.createElement('div');
   bulle.className = `cine-bulle${motionAllowed() ? ' is-anim' : ''}`;
   bulle.setAttribute('role', 'status');
   bulle.innerHTML = `${LIVRE_SVG}<span>Le livre est mieux.</span>`;
   box.append(bulle);
   setTimeout(() => bulle.remove(), 3000);
+  return true;
+}
+
+/**
+ * Bulle du livre, puis signalement du secret « livre » au serveur (eggFound affiche le gain).
+ * @param {HTMLElement} box zone de l'affiche cliquée (.cine-seen-poster)
+ */
+function livreSecret(box) {
+  if (!afficheBulle(box)) return;
   eggFound('livre'); // best effort : ne lève jamais d'exception
 }
 
@@ -440,4 +449,9 @@ root.addEventListener('error', (e) => {
   img.replaceWith(t.content);
 }, true);
 
-load();
+// Aperçu admin (?apercu=livre) : la bulle, une fois, sur le premier film vu, sans signaler le secret. Ignoré pour les membres.
+load().then(() => {
+  if (!me?.is_admin || new URLSearchParams(location.search).get('apercu') !== 'livre') return;
+  const box = root.querySelector('.cine-seen-poster');
+  if (box) afficheBulle(box);
+});

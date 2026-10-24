@@ -3507,5 +3507,7 @@ function bootOffline() {
 boot();
 // Secret caché « secousse » : module chargé à part (assets/js/eggs/pages.js).
 import('./eggs/pages.js').then((m) => m.secretsCartes()).catch(() => {});
+// Aperçu admin de la bannière Pentakill (?apercu=pentakill) : une fois, sans appel au serveur ni badge. Ignoré pour les membres.
+if (me?.is_admin && new URLSearchParams(location.search).get('apercu') === 'pentakill') showPentakill({ kind: 'rarete', level: 1, new_level: false });
 // Calendrier de l'Avent (migration 096) : rappel discret en décembre si une case attend sur l'accueil.
 if (new Date().getMonth() === 11) import('./avent.js').then((m) => m.cartesReminder('#cartes-section-h')).catch(() => {});

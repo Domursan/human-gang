@@ -12,16 +12,38 @@ import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } fro
 const STEPS = [1, 2, 4, 7, 11, 16];
 const dateLong = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' });
 let P = null, C = null;
-const S = { st: null, busy: false, err: null, player: null, ready: false, playing: false, pos: 0, timer: null, forVideo: null, propose: false };
+const S = { st: null, busy: false, err: null, player: null, ready: false, playing: false, pos: 0, timer: null, forVideo: null, propose: false, vol: 70, muted: false };
+const VOL_KEY = 'hg_heardle_volume';
 
 /** Monte l'onglet. */
 export async function mount(panel, ctx) {
   P = panel; C = ctx;
+  S.vol = lireVolume();
   loadCss('jeux-devine');
   panel.innerHTML = '<p class="muted">Chargement du Heardle…</p>';
   panel.addEventListener('click', onClick);
+  panel.addEventListener('input', onInput);
   panel.addEventListener('submit', onPropose);
   await load();
+}
+
+/** Volume mémorisé (0 à 100), 70 par défaut. */
+function lireVolume() {
+  try {
+    const v = localStorage.getItem(VOL_KEY);
+    if (v !== null && v.trim() !== '' && Number.isFinite(Number(v))) return Math.min(100, Math.max(0, Math.round(Number(v))));
+  } catch { /* stockage bloqué : volume par défaut */ }
+  return 70;
+}
+
+/** Mémorise le volume choisi. */
+function ecrireVolume(v) {
+  try { localStorage.setItem(VOL_KEY, String(v)); } catch { /* stockage bloqué : sans mémoire */ }
+}
+
+/** Applique le volume et le son coupé au lecteur, s'il existe. */
+function appliquerVolume(p) {
+  try { p?.setVolume?.(S.vol); if (S.muted) p?.mute?.(); else p?.unMute?.(); } catch { /* lecteur absent */ }
 }
 
 /** Coupe la lecture quand on quitte l'onglet. */
@@ -68,7 +90,7 @@ async function ensurePlayer() {
     S.player = new YT.Player('jh-player', {
       host: 'https://www.youtube-nocookie.com', videoId: st.youtube_id, width: '100%', height: '100%',
       playerVars: { start: st.start_s, controls: 0, disablekb: 1, modestbranding: 1, playsinline: 1, rel: 0, fs: 0, iv_load_policy: 3 },
-      events: { onReady: () => { S.ready = true; res(); }, onError: () => { C.toast('Cette vidéo ne se lit pas : préviens le Staff.', 'error'); res(); } },
+      events: { onReady: () => { S.ready = true; appliquerVolume(S.player); res(); }, onError: () => { C.toast('Cette vidéo ne se lit pas : préviens le Staff.', 'error'); res(); } },
     });
   });
   return S.player;
@@ -88,6 +110,7 @@ async function play() {
   try {
     const p = await ensurePlayer();
     const st = S.st, lim = st.finished ? 16 : st.seconds;
+    appliquerVolume(p);
     p.seekTo(st.start_s, true); p.playVideo();
     S.playing = true; S.pos = 0;
     const t0 = performance.now();
@@ -109,6 +132,24 @@ function paintPlay() {
   if (b) { b.setAttribute('aria-label', S.playing ? 'Arrêter' : `Écouter ${lim} seconde${lim > 1 ? 's' : ''}`); b.classList.toggle('is-playing', S.playing); }
   if (t) t.textContent = `${mmss(S.playing ? S.pos : 0)} / ${mmss(lim)}`;
   if (bar) bar.style.width = `${(Math.min(S.pos, 16) / 16) * 100}%`;
+}
+
+/** Curseur de volume, valeur affichée et bouton muet. */
+function volHtml() {
+  return `<div class="jh-vol">
+          <label for="jh-vol">Volume</label>
+          <input type="range" id="jh-vol" min="0" max="100" step="1" value="${S.vol}" aria-valuetext="${S.vol} %">
+          <output id="jh-vol-val" for="jh-vol">${S.vol}</output>
+          <button type="button" class="btn btn-ghost jh-mute" id="jh-mute" data-act="mute" aria-pressed="${S.muted}">${S.muted ? 'Rétablir le son' : 'Couper le son'}</button>
+        </div>`;
+}
+
+/** Met à jour la valeur, le bouton muet et l'état audio sans redessiner l'onglet. */
+function paintVol() {
+  const out = P.querySelector('#jh-vol-val'), b = P.querySelector('#jh-mute'), r = P.querySelector('#jh-vol');
+  if (out) out.textContent = String(S.vol);
+  if (r) { r.value = String(S.vol); r.setAttribute('aria-valuetext', `${S.vol} %`); }
+  if (b) { b.textContent = S.muted ? 'Rétablir le son' : 'Couper le son'; b.setAttribute('aria-pressed', String(S.muted)); }
 }
 
 /* ---------- Rendu ---------- */
@@ -176,6 +217,7 @@ function render() {
         <button type="button" class="btn btn-sand jh-play" id="jh-play" data-act="play" aria-label="Écouter ${esc(lim)} seconde${lim > 1 ? 's' : ''}"><span class="jh-ico" aria-hidden="true"></span></button>
         <p class="small"><strong>Écouter</strong> · <span id="jh-time">0:00 / ${mmss(lim)}</span></p>
         <p class="small muted">${st.finished ? 'La vidéo est dévoilée : réécoute le morceau en entier.' : 'La vidéo reste cachée derrière la pochette jusqu’à la fin.'}</p>
+        ${volHtml()}
       </div></div>`;
   let bottom;
   if (st.finished) {
@@ -225,11 +267,22 @@ async function onClick(e) {
   if (!b || !P.contains(b)) return;
   const a = b.dataset.act;
   if (a === 'play') return play();
+  if (a === 'mute') { S.muted = !S.muted; appliquerVolume(S.player); paintVol(); return; }
   if (a === 'share') C.toast(await copyText(shareText('Heardle du gang', S.st)) ? 'Résultat copié, colle-le sur Discord.' : 'Copie impossible sur cet appareil.', 'ok');
   if (a === 'propose' || a === 'propose-off') {
     S.propose = a === 'propose'; render();
     if (S.propose) P.querySelector('#jh-p-title')?.focus();
   }
+}
+
+/** Curseur de volume : mémorise la valeur, la règle sur le lecteur et retire le son coupé. */
+function onInput(e) {
+  if (e.target.id !== 'jh-vol') return;
+  S.vol = Math.min(100, Math.max(0, Math.round(Number(e.target.value)) || 0));
+  if (S.vol > 0) S.muted = false;
+  ecrireVolume(S.vol);
+  appliquerVolume(S.player);
+  paintVol();
 }
 
 /** Envoi d'une proposition de morceau. */
