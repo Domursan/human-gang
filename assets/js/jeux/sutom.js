@@ -3,7 +3,7 @@
 // navigateur : chaque essai est vérifié par le serveur, qui renvoie seulement les couleurs.
 // Bien placée : carré rouge ; mal placée : rond jaune ; absente : gris (formes en plus des couleurs, lecteur d'écran
 // informé de chaque lettre). Clavier à l'écran (AZERTY) et clavier physique. Partage « Sutom du gang #42 4/6 ».
-// RPC : hg_sutom_state(), hg_sutom_guess(p_word) (migration 084).
+// RPC : hg_sutom_state(), hg_sutom_guess(p_word) (migration 084), hg_sutom_solution() (109 : admin seulement, null sinon).
 // Exporte : mount(panel, ctx).
 import { errMsg } from '../core.js';
 
@@ -26,7 +26,7 @@ function styles() {
  */
 export async function mount(panel, { sb, toast, esc }) {
   styles();
-  const S = { d: null, saisie: '', busy: false, msg: '' };
+  const S = { d: null, saisie: '', busy: false, msg: '', sol: null };
   const root = document.createElement('div');
   root.className = 'su';
   panel.append(root);
@@ -74,6 +74,13 @@ export async function mount(panel, { sb, toast, esc }) {
     return `Sutom du gang #${d.num} ${d.solved ? d.guesses.length : 'X'}/${d.max}\n\n${lignes.join('\n')}`;
   }
 
+  /** Encart repliable réservé au compte admin : le mot du jour (masqué tant qu'on ne l'ouvre pas). */
+  function solution() {
+    if (!S.sol?.word) return '';
+    return `<details class="su-admin"><summary>Voir la solution <span class="small muted">(admin)</span></summary>
+      <p><span class="su-word">${esc(S.sol.word)}</span>${S.sol.definition ? ` : ${esc(S.sol.definition)}` : ''}</p></details>`;
+  }
+
   /** Dessine l'onglet. */
   function dessine() {
     const d = S.d;
@@ -88,6 +95,7 @@ export async function mount(panel, { sb, toast, esc }) {
     root.innerHTML = `<div class="su-head"><div><h2 class="su-h">Sutom du gang</h2>
         <p class="small muted">Grille n°${esc(String(d.num))} · ${esc(String(d.length))} lettres · ${esc(essai)}</p></div>
         <span class="su-serie" aria-label="Série : ${esc(String(d.streak || 0))} jours">${FLAMME}${esc(String(d.streak || 0))} jour${d.streak > 1 ? 's' : ''}</span></div>
+      ${solution()}
       ${grille()}
       <div class="su-legend small muted" aria-hidden="true"><span><span class="su-sq"></span>bien placée</span><span><span class="su-ci"></span>mal placée</span></div>
       <p class="su-msg small" role="status" aria-live="polite">${esc(S.msg)}</p>
@@ -150,6 +158,10 @@ export async function mount(panel, { sb, toast, esc }) {
     if (error) throw error;
     S.d = data || { available: false };
     S.d.guesses ||= [];
+    if (S.d.available) {
+      // Solution : seul un compte admin la reçoit (les autres reçoivent null) ; une erreur ici ne bloque pas le jeu.
+      try { const r = await sb.rpc('hg_sutom_solution'); if (!r.error) S.sol = r.data; } catch { /* rien */ }
+    }
     dessine();
   } catch (e) {
     console.warn('[sutom]', e);

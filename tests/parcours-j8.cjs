@@ -24,6 +24,7 @@ async function tape(p, mot) {
   check((await p.locator('.su-row').count()) === 6 && (await p.locator('.su-row').first().locator('.su-cell').count()) === 8, 'grille de 6 essais × 8 lettres');
   check((await p.locator('.su-row').first().locator('.su-cell').first().innerText()).trim() === 'R', 'première lettre donnée');
   check(!(await p.content()).includes('RACLETTE'), 'le mot n’est jamais dans la page avant la fin');
+  check((await p.locator('.su-admin').count()) === 0, 'joueur ordinaire : pas d’encart solution');
   check((await p.locator('.su-kbd .su-key').count()) === 28, 'clavier : 26 lettres, Effacer et Entrée');
   check((await p.locator('.su-serie').innerText()).includes('9 jours'), 'série affichée');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
@@ -68,6 +69,16 @@ async function tape(p, mot) {
   check((await p.locator('.su').innerText()).includes('Pas de grille aujourd’hui'), 'sans mot : message');
   await p.ctx.close();
 
+  // Compte admin : la solution du jour est disponible, repliée par défaut
+  p = await openPage(browser, { page: 'jeux', hash: '#sutom', width: 390, init: 'fake-jeux.js', scenario: { jeux: { admin: true } } });
+  await p.waitForSelector('.su-admin', { timeout: 6000 }).catch(() => {});
+  check((await p.locator('.su-admin').count()) === 1 && !(await p.locator('.su-admin').evaluate((d) => d.open)), 'admin : encart « Voir la solution » présent et replié');
+  await p.click('.su-admin summary');
+  check((await p.locator('.su-admin').innerText()).includes('RACLETTE'), 'admin : la solution s’affiche à l’ouverture');
+  check((await hscroll(p)) <= 0 && p.errs.length === 0, 'admin : pas de défilement horizontal ni d’erreur JS');
+  await p.screenshot({ path: path.join(SHOTS, 'j8-sutom-admin.png'), fullPage: true });
+  await p.ctx.close();
+
   /* ---------- Admin ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, init: 'fake-jeux.js' });
   await adminSection(p, 'fete/sutom');
@@ -75,6 +86,20 @@ async function tape(p, mot) {
   check(!(await p.locator('#sutom-root').innerText()).includes('RACLETTE'), 'admin : mots masqués par défaut (pas de spoiler)');
   await p.click('[data-voir]');
   check((await p.locator('#sutom-root').innerText()).includes('RACLETTE'), 'admin : « Afficher les mots » montre la banque et le mot du jour');
+  await p.click('[data-banque]');
+  check((await p.locator('.ads-mot').count()) === 2 && (await p.locator('.ads-mot').first().innerText()).includes('GOBELET'), 'banque : consultable, triée par ordre alphabétique');
+  await p.fill('#ads-q', 'lyon');
+  check((await p.locator('.ads-mot').count()) === 1, 'banque : recherche dans les définitions');
+  await p.fill('#ads-q', '');
+  await p.click('[data-filtre="jamais"]');
+  check((await p.locator('.ads-mot').count()) === 1 && (await p.locator('.ads-mot').innerText()).includes('GOBELET'), 'banque : filtre « Jamais servis »');
+  await p.click('[data-filtre="tous"]');
+  await p.click('[data-edit="RACLETTE"]');
+  check((await p.inputValue('#ads-word')) === 'RACLETTE' && (await p.inputValue('#ads-def')).startsWith('Plat'), 'banque : « Modifier » remplit le formulaire');
+  await p.setViewportSize({ width: 390, height: 844 });
+  check((await hscroll(p)) <= 0, 'banque : pas de défilement horizontal à 390 px');
+  await p.screenshot({ path: path.join(SHOTS, 'j8-sutom-banque-390.png'), fullPage: true });
+  await p.setViewportSize({ width: 1280, height: 900 });
   await p.fill('#ads-word', 'crêpe');
   await p.fill('#ads-def', 'Spécialité du nouvel an');
   await p.click('[data-form="bank"] [type="submit"]');

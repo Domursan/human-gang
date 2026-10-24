@@ -32,6 +32,27 @@
   .lvl .lvl-ico { flex: 0 0 48px; width: 48px; height: 48px; font-size: 24px; }
   .lvl b { font-weight: 800; }
   .lvl span { margin-left: auto; padding-left: 8px; font-weight: 800; color: var(--gold-2); text-align: right; line-height: 1.15; }
+
+  /* Plus de 21 badges (jusqu'à ~32) : quatre colonnes, pastilles et textes plus serrés. Ajouté par affiches.js.
+     Minimums d'impression : texte 12 pt (16 px), noms de badges 14 pt (19 px). */
+  .badges-dense #sections { columns: 4; column-gap: 14px; }
+  .badges-dense .sec-title { gap: 2px 10px; margin-bottom: 8px; padding-bottom: 6px; border-bottom-width: 2px; }
+  .badges-dense .sec-title h2 { font-size: 26px; }
+  .badges-dense .sec-title .tag { font-size: 16px; }
+  .badges-dense #sections .bloc { margin: 0 0 16px; }
+  .badges-dense .grid { gap: 7px; }
+  .badges-dense .card { gap: 9px; padding: 7px 9px; border-width: 2px; border-radius: 10px; }
+  .badges-dense .card .ico { flex: 0 0 40px; width: 40px; height: 40px; font-size: 22px; border-radius: 8px; }
+  .badges-dense .card h3 { margin: 0 0 2px; font-size: 19px; line-height: 1.05; }
+  .badges-dense .card p { font-size: 16px; line-height: 1.22; }
+  .badges-dense .anc { padding: 6px 6px; border-radius: 10px; }
+  .badges-dense .anc h3 { margin: 0 0 2px; font-size: 19px; line-height: 1.05; }
+  .badges-dense .anc-desc { margin: 0 0 6px; font-size: 16px; line-height: 1.22; }
+  .badges-dense .levels { gap: 4px; }
+  .badges-dense .lvl { gap: 4px; padding: 2px 5px 2px 2px; border-radius: 8px; flex-wrap: nowrap; }
+  .badges-dense .lvl .lvl-ico { flex: 0 0 22px; width: 22px; height: 22px; font-size: 12px; border-radius: 6px; }
+  .badges-dense .lvl b { font-size: 16px; min-width: 0; white-space: normal; line-height: 1.1; }
+  .badges-dense .lvl span { flex: none; font-size: 16px; padding-left: 2px; white-space: nowrap; }
 </style>
 </head>
 <body>

@@ -212,6 +212,8 @@ async function afficherBadges() {
   const badges = lus.length ? lus : BADGES_REPLI;
   const reste = [...badges];
   const sectionsBox = document.getElementById('sections');
+  // Au-delà de 21 badges (la mise en page de base), quatre colonnes plus serrées : voir badges-dense dans badges-a3.html.
+  document.querySelector('[data-affiche="badges"]')?.classList.toggle('badges-dense', badges.length > 21);
   const blocs = SECTIONS.map((s) => {
     const membres = s.codes.map((c) => reste.find((b) => b.code === c)).filter(Boolean);
     membres.forEach((b) => reste.splice(reste.indexOf(b), 1));
@@ -324,6 +326,17 @@ async function prixClassique() {
   for (const el of document.querySelectorAll('[data-cfg="cartes.booster_size"]')) el.textContent = fmt(Number(c.size) || 5);
 }
 
+/** Noms des boosters dans l'en-tête de la gamme : sans césure, réduits (1 px à la fois, 13 px au plus petit) si un mot ne tient pas. */
+function ajusterNoms() {
+  for (const th of document.querySelectorAll('.gamme th.bo')) {
+    let taille = parseFloat(getComputedStyle(th).fontSize);
+    while (th.scrollWidth > th.clientWidth + 1 && taille > 13) {
+      taille -= 1;
+      th.style.fontSize = `${taille}px`;
+    }
+  }
+}
+
 /* ---------- Démarrage ---------- */
 const page = document.querySelector('[data-affiche]')?.dataset.affiche;
 await chargerReglages();
@@ -339,5 +352,8 @@ appliquerReglages(document, {
   quetes: () => quetes.length || undefined,
 });
 // Boosters : après les réglages, pour que les valeurs du type l'emportent sur cartes.booster_price.
-if (page === 'boosters-gamme') await afficherGamme();
+if (page === 'boosters-gamme') {
+  await afficherGamme();
+  ajusterNoms();
+}
 if (page === 'boosters') await prixClassique();

@@ -2,7 +2,8 @@
 // Enveloppe un faux existant (fake-sb.mjs par défaut, ou window.__SCN.jeuxBase, ex. 'fake-sb-cartes.mjs') chargé depuis le
 // site de test, et répond aux RPC de la migration 085 avec un état en mémoire (window.__J3). Les autres appels passent au faux
 // de base. Scénario (window.__SCN) : jeuxBase, framedDone (partie déjà finie), noRound (pas de manche),
-// heardleCancelled, proofQuests (quêtes à preuve dans hg_card_quests_me), uid / staff comme le faux de base.
+// heardleCancelled, proofQuests (quêtes à preuve dans hg_card_quests_me), saveFailTitle (hg_framed_film_save refuse ce titre),
+// uid / staff comme le faux de base.
 // Exporte createClient().
 const S = window.__SCN || {};
 const prefix = location.pathname.replace(/\/[^/]*$/, '');
@@ -149,7 +150,7 @@ const HANDLERS = {
   hg_proofs_purge_due: () => ok([]),
   hg_proofs_mark_purged: () => ok(0),
   hg_framed_admin: () => ok({ today, films: J.framedFilms, rounds: J.framedFilms.filter((f) => f.day).map((f) => ({ day: f.day, film_id: f.id, title: f.title, players: 4 })) }),
-  hg_framed_film_save: (a) => { const p = a.p; const f = J.framedFilms.find((x) => x.id === p.id); if (f) Object.assign(f, p); else J.framedFilms.push({ ...p, day: null }); return ok(p); },
+  hg_framed_film_save: (a) => { const p = a.p; if (S.saveFailTitle && p.title === S.saveFailTitle) return err('Titre refusé (test)'); const f = J.framedFilms.find((x) => x.id === p.id); if (f) Object.assign(f, p); else J.framedFilms.push({ ...p, day: null }); return ok(p); },
   hg_framed_round_save: (a) => { const f = J.framedFilms.find((x) => x.id === a.p_film); if (f) f.day = a.p_day; return ok(null); },
   hg_heardle_admin: () => ok({ today, tracks: J.heardleTracks, rounds: J.heardleTracks.filter((t) => t.day).map((t) => ({ day: t.day, track_id: t.id, title: t.title, artist: t.artist, cancelled: false, players: 3 })) }),
   hg_heardle_track_save: (a) => { const t = J.heardleTracks.find((x) => x.id === a.p.id); if (t) Object.assign(t, a.p); else J.heardleTracks.push({ ...a.p, id: 't' + J.heardleTracks.length }); return ok(a.p); },

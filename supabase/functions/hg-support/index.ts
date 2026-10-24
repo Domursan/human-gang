@@ -2,7 +2,8 @@
 // Rôle : recevoir le formulaire d'assistance du site (avec ou sans compte), l'enregistrer, puis prévenir l'admin.
 // Reçoit une demande d'assistance (avec ou sans compte), l'enregistre dans hg_support
 // puis prévient l'admin en MP Discord via le bot (si configuré). verify_jwt = false.
-// Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
+// Secrets : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (fournis), 
+// DISCORD_BOT_TOKEN, SITE_URL (facultatifs).
 // Texte du MP : modèle « support_new » (hg_settings.bot_templates, défaut dans ../_shared/bot-templates.json).
 // Réglages (hg_settings.support, lus ici avec repli sur les défauts de _shared/reglages.ts) : sujets, limites par heure
 // (compte ; visiteur par contact et par client, empreinte HMAC de l'adresse dans hg_support.client_hash ; plafond global),
@@ -66,15 +67,26 @@ function clientIp(req: Request): string {
   const xff = (req.headers.get('x-forwarded-for') ?? '').split(',').map((s) => s.trim()).filter(Boolean);
   return xff[0] ?? '';
 }
+let HASH_KEY: string | null = null;
+/** Clé d'empreinte, lue une fois dans le coffre puis gardée en mémoire. */
+async function hashKey(): Promise<string | null> {
+  if (HASH_KEY) return HASH_KEY;
+  const { data, error } = await admin.rpc('hg_support_hash_key');
+  if (error || !data) { console.warn('[hg-support] clé d’empreinte indisponible', error?.message); return null; }
+  HASH_KEY = String(data);
+  return HASH_KEY;
+}
 /**
- * Empreinte HMAC de l'adresse (clé = secret serveur) : l'adresse IP n'est jamais stockée en clair.
+ * Empreinte HMAC de l'adresse : l'adresse IP n'est jamais stockée en clair. La clé est dédiée (coffre chiffré de la base,
+ * lue par hg_support_hash_key, migration 110) : on ne réutilise plus la clé de service.
  * Renvoie les 16 premiers octets en hexadécimal (32 caractères).
  * @param {string} ip Adresse du client.
  * @returns {Promise<string | null>} Empreinte, ou null si pas d'adresse ou pas de secret.
  */
 async function clientHash(ip: string): Promise<string | null> {
-  const secret = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!ip || !secret) return null;
+  if (!ip) return null;
+  const secret = await hashKey();
+  if (!secret) return null;
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip)));
   return [...sig.slice(0, 16)].map((b) => b.toString(16).padStart(2, '0')).join('');
