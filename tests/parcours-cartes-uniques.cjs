@@ -1,10 +1,11 @@
-// Parcours : cartes uniques (rareté « unique », hors série, un seul exemplaire).
+// Parcours : cartes uniques (rareté « unique », hors série, hors boosters, nombre d'exemplaires choisi par l'admin : 1 par défaut).
 // Collection (cartes.html) : la série « Hors série » a son en-tête explicatif ; la carte unique s'affiche avec son style
 // « unique » et « Exemplaire unique », sa mention « Pas encore / Déjà attribuée », pas de bouton recycler ni fabriquer,
 // et la rareté n'apparaît pas dans les chances des boosters.
 // Admin (admin.html) : la série « Hors série » est listée ; choisir « Unique » pré-sélectionne la série, verrouille
-// l'exemplaire maximum à 1 et décoche la fabrication ; l'enregistrement garde ces valeurs. Don et Drop : une carte unique
-// déjà attribuée est désactivée dans la liste.
+// l'exemplaire maximum (1 par défaut, modifiable) et décoche la fabrication ; l'enregistrement garde ces valeurs.
+// Don et Drop : une carte unique dont tous les exemplaires sont attribués est désactivée dans la liste ; avec 1 exemplaire
+// sur 3 attribué, elle reste choisissable. Collection : « n / max exemplaires attribués ».
 // Faux Supabase : fixtures/fake-sb-cartes.mjs, scénarios uniques (série + carte C14), uniqueTaken (Alice l'a), uniqueOwned (moi).
 // Lancer : node tests/parcours-cartes-uniques.cjs   (HG_ROOT / HG_PREFIX comme les autres parcours)
 const { check, finish, openPage, adminSection, hscroll, sleep, chromium } = require('./lib/harness.cjs');
@@ -32,7 +33,7 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   await p.selectOption('#cartes-set', 'SETHS');
   await p.waitForSelector('.hgc-unique', { timeout: 5000 }).catch(() => {});
   const note = await p.textContent('.cartes-hs-note').catch(() => '');
-  check(/Cartes uniques : un seul exemplaire existe, à gagner lors d'un événement ou offert par l'admin\./.test(note), 'Hors série : en-tête explicatif affiché (« ' + note.trim() + ' »)');
+  check(/Cartes uniques : hors boosters, en nombre limité \(exemplaires numérotés\), à gagner lors d'un événement ou offertes par l'admin\./.test(note), 'Hors série : en-tête explicatif affiché (« ' + note.trim() + ' »)');
   check(await p.$$eval('.hgc-unique', (x) => x.length) === 1, 'la carte unique s\'affiche avec le style « unique »');
   const fam = await p.textContent('.hgc-unique .hgc-fam');
   check(fam.includes('Exemplaire unique'), 'ligne sous l\'image : « Exemplaire unique » (' + fam + ')');
@@ -116,16 +117,20 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   check(await p.inputValue('#acc-family') === 'unique', 'éditeur : rareté unique → famille « Unique » proposée');
   await sleep(150);
   check(await p.inputValue('#acc-set') === 'SETHS', 'éditeur : choisir « Unique » pré-sélectionne « Hors série »');
-  check(await p.inputValue('#acc-max') === '1' && await p.getAttribute('#acc-max', 'readonly') !== null, 'éditeur : exemplaires maximum verrouillé à 1');
+  check(await p.inputValue('#acc-max') === '1' && await p.getAttribute('#acc-max', 'readonly') === null, 'éditeur : exemplaires maximum modifiable, 1 par défaut');
   check(await p.isDisabled('dialog.ui-drawer[open] input[name="craftable"]') && !(await p.isChecked('dialog.ui-drawer[open] input[name="craftable"]')), 'éditeur : « Fabricable » décoché et désactivé');
   check(await p.isVisible('#acc-unique-help'), 'éditeur : aide « Unique » affichée');
   await p.selectOption('#acc-family', 'lieu'); // une carte « Membre » exige un membre lié : on choisit une autre famille
   await p.fill('#acc-name', 'Carte unique de test');
+  await p.fill('#acc-max', '');
+  await submitDrawer(p);
+  check(/nombre d.exemplaires/.test(await p.textContent('dialog.ui-drawer[open] .form-error').catch(() => '')), 'éditeur : unique sans nombre d\'exemplaires → refusée');
+  await p.fill('#acc-max', '3');
   await submitDrawer(p);
   await waitClosed(p);
   const creee = await p.evaluate(() => window.__DB.hg_cards.find((k) => k.name === 'Carte unique de test'));
-  check(!!creee && creee.rarity === 'unique' && creee.max_copies === 1 && creee.craftable === false && creee.set_id === 'SETHS',
-    'enregistrement : rareté unique, 1 exemplaire, non fabricable, série Hors série');
+  check(!!creee && creee.rarity === 'unique' && creee.max_copies === 3 && creee.craftable === false && creee.set_id === 'SETHS',
+    'enregistrement : rareté unique, 3 exemplaires choisis, non fabricable, série Hors série');
   check(!p.errs.length, 'admin cartes : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
@@ -143,9 +148,67 @@ const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detach
   await adminSection(p, 'fabrique/drops');
   await p.waitForSelector('[data-action="drop-new"]', { timeout: 8000 });
   await p.click('[data-action="drop-new"]');
-  await p.waitForSelector('dialog.ui-drawer[open] #drop-card', { timeout: 5000 });
-  const dropOpt = await p.$eval('#drop-card option[value="C14"]', (o) => ({ dis: o.disabled, txt: o.textContent })).catch(() => null);
-  check(dropOpt && dropOpt.dis && /déjà attribuée/.test(dropOpt.txt), 'Drop : la carte unique déjà attribuée est désactivée (« ' + (dropOpt && dropOpt.txt) + ' »)');
+  await p.waitForSelector('dialog.ui-drawer[open] #drop-pick [data-vp-card="C14"]', { timeout: 5000 });
+  const dropOpt = await p.$eval('#drop-pick [data-vp-card="C14"]', (b) => ({ dis: b.disabled, cap: b.closest('.vp-tile').querySelector('.vp-cap').textContent })).catch(() => null);
+  check(dropOpt && dropOpt.dis && /Déjà attribuée/.test(dropOpt.cap), 'Drop : la carte unique déjà attribuée est désactivée (« ' + (dropOpt && dropOpt.cap) + ' »)');
+  await p.keyboard.press('Escape');
+  await p.ctx.close();
+
+  // 7. Unique à 3 exemplaires : 1 donné sur 3 → toujours choisissable (Don, Drop), mention « 1 / 3 » ; 3 donnés sur 3 → bloquée.
+  const MULTI = { uniques: true, uniqueMulti: { taken: 1 } };
+  p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: MULTI });
+  await goTab(p, 'collection');
+  await p.selectOption('#cartes-set', 'SETHS');
+  await p.waitForSelector('.cz-cell:has([data-card="C15"])', { timeout: 5000 });
+  const etat1 = await p.textContent('.cz-cell:has([data-card="C15"]) .cartes-uniq-state').catch(() => '');
+  check(etat1.trim() === '1 / 3 exemplaires attribués', 'collection : unique à 3 exemplaires, 1 attribué → « 1 / 3 exemplaires attribués » (« ' + etat1.trim() + ' »)');
+  const fam3 = await p.textContent('.cz-cell:has([data-card="C15"]) .hgc-fam').catch(() => '');
+  check(fam3.includes('Édition de 3') && !fam3.includes('Exemplaire unique'), 'carte à 3 exemplaires : « Édition de 3 » (« ' + fam3 + ' »)');
+  await p.ctx.close();
+  p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900, scenario: { uniques: true, uniqueMulti: { taken: 3 } } });
+  await goTab(p, 'collection');
+  await p.selectOption('#cartes-set', 'SETHS');
+  await p.waitForSelector('.cz-cell:has([data-card="C15"])', { timeout: 5000 });
+  const etat3 = await p.textContent('.cz-cell:has([data-card="C15"]) .cartes-uniq-state').catch(() => '');
+  check(etat3.trim() === 'Tous les exemplaires sont attribués', 'collection : 3 attribués sur 3 → « Tous les exemplaires sont attribués » (« ' + etat3.trim() + ' »)');
+  await p.ctx.close();
+
+  p = await openPage(browser, { page: 'admin', fixture: FIXTURE, width: 1280, height: 900, scenario: MULTI });
+  await adminSection(p, 'fabrique/joueurs');
+  await p.evaluate((id) => { location.hash = 'cartes/joueurs/' + id; }, ALICE);
+  await p.waitForSelector('[data-act="give-open"]', { timeout: 8000 });
+  await p.click('[data-act="give-open"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #acd-give-card', { timeout: 5000 });
+  const don1 = await p.$eval('#acd-give-card option[value="C15"]', (o) => ({ dis: o.disabled, txt: o.textContent })).catch(() => null);
+  check(don1 && !don1.dis, 'Don : unique à 3 exemplaires dont 1 attribué reste donnable (« ' + (don1 && don1.txt) + ' »)');
+  await p.keyboard.press('Escape');
+  await waitClosed(p);
+  await adminSection(p, 'fabrique/drops');
+  await p.waitForSelector('[data-action="drop-new"]', { timeout: 8000 });
+  await p.click('[data-action="drop-new"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #drop-pick [data-vp-card="C15"]', { timeout: 5000 });
+  const drop1 = await p.$eval('#drop-pick [data-vp-card="C15"]', (b) => ({ dis: b.disabled, cap: b.closest('.vp-tile').querySelector('.vp-cap').textContent })).catch(() => null);
+  check(drop1 && !drop1.dis && /2 restants/.test(drop1.cap), 'Drop : unique à 3 exemplaires dont 1 attribué reste lançable, « 2 restants » (« ' + (drop1 && drop1.cap) + ' »)');
+  await p.keyboard.press('Escape');
+  await waitClosed(p);
+  await p.ctx.close();
+
+  p = await openPage(browser, { page: 'admin', fixture: FIXTURE, width: 1280, height: 900, scenario: { uniques: true, uniqueMulti: { taken: 3 } } });
+  await adminSection(p, 'fabrique/joueurs');
+  await p.evaluate((id) => { location.hash = 'cartes/joueurs/' + id; }, ALICE);
+  await p.waitForSelector('[data-act="give-open"]', { timeout: 8000 });
+  await p.click('[data-act="give-open"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #acd-give-card', { timeout: 5000 });
+  const don3 = await p.$eval('#acd-give-card option[value="C15"]', (o) => ({ dis: o.disabled, txt: o.textContent })).catch(() => null);
+  check(don3 && don3.dis && /tous les exemplaires sont attribués/.test(don3.txt), 'Don : unique 3 attribués sur 3 → désactivée (« ' + (don3 && don3.txt) + ' »)');
+  await p.keyboard.press('Escape');
+  await waitClosed(p);
+  await adminSection(p, 'fabrique/drops');
+  await p.waitForSelector('[data-action="drop-new"]', { timeout: 8000 });
+  await p.click('[data-action="drop-new"]');
+  await p.waitForSelector('dialog.ui-drawer[open] #drop-pick [data-vp-card="C15"]', { timeout: 5000 });
+  const drop3 = await p.$eval('#drop-pick [data-vp-card="C15"]', (b) => ({ dis: b.disabled })).catch(() => null);
+  check(drop3 && drop3.dis, 'Drop : unique 3 attribués sur 3 → bloquée dans le sélecteur');
   await p.keyboard.press('Escape');
   await p.ctx.close();
 

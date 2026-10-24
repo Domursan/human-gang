@@ -14,7 +14,7 @@ import { rarityLabel } from '../cartes-ui.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
 import { onTableChange } from '../admin/live.js';
-import { cardPicker, chargerRestants, visuelHtml } from '../admin/visual-pick.js';
+import { cardPicker, chargerRestants, visuelHtml, libelleEpuisee } from '../admin/visual-pick.js';
 import { fetchAll, act, fmtWhen, thumb, nf } from './helpers.js';
 
 /* État du module : racine de la section, drops, réclamations, cartes, séries, exemplaires restants, pseudos, bornes. */
@@ -133,8 +133,8 @@ function openDropForm() {
   if (!cards.length) { toast('Aucune carte active : crée ou active une carte d\'abord.', 'error'); return; }
   const setsById = new Map(D.sets.map((s) => [s.id, s]));
   cards.forEach((k) => { k.set_name = setsById.get(k.set_id)?.name; });
-  /** Motif qui interdit le choix : exemplaire unique déjà attribué, ou plus aucun exemplaire (numéros épuisés). */
-  const bloque = (k) => (D.restants.has(k.id) && D.restants.get(k.id) <= 0 ? (k.rarity === 'unique' ? 'Déjà attribuée' : 'Épuisée') : '');
+  /** Motif qui interdit le choix : tous les exemplaires attribués (unique), ou plus aucun exemplaire (numéros épuisés). */
+  const bloque = (k) => (D.restants.has(k.id) && D.restants.get(k.id) <= 0 ? libelleEpuisee(k) : '');
   /** Sélecteur visuel de carte (monté après l'ouverture du tiroir). */
   let pick = null;
   const drawer = openDrawer({
@@ -173,7 +173,9 @@ function openDropForm() {
       const qty = Number(drawer.form.querySelector('#drop-qty').value);
       const minutes = Number(drawer.form.querySelector('#drop-min').value);
       if (!card) throw new Error('Choisis une carte dans la liste.');
-      if (bloque(v.obj)) throw new Error(v.obj?.rarity === 'unique' ? 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.' : 'Cette carte n’a plus d’exemplaire disponible.');
+      if (bloque(v.obj)) throw new Error(v.obj?.rarity === 'unique'
+        ? (Number(v.obj.max_copies) > 1 ? 'Tous les exemplaires de cette carte unique sont attribués : plus aucun exemplaire disponible.' : 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.')
+        : 'Cette carte n’a plus d’exemplaire disponible.');
       const { qmax, dmax } = D.limits;
       if (!Number.isInteger(qty) || qty < 1 || qty > qmax) throw new Error(`Le nombre d'exemplaires doit être entre 1 et ${fmtN(qmax)}.`);
       if (!Number.isInteger(minutes) || minutes < 1 || minutes > dmax) throw new Error(`La durée doit être entre 1 et ${fmtN(dmax)} minutes.`);

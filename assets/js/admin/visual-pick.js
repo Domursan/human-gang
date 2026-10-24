@@ -51,7 +51,7 @@ export async function chargerBoosters() {
 }
 
 /**
- * Exemplaires restants des cartes à tirage limité, et cartes uniques déjà attribuées.
+ * Exemplaires restants des cartes à tirage limité, et des cartes uniques (nombre choisi par l'admin, 1 par défaut).
  * @param {object[]} cards cartes (id, rarity, max_copies)
  * @returns {Promise<{restants: Map<string, number>}>} restants : identifiant -> nombre restant (absent = illimitée)
  */
@@ -63,13 +63,26 @@ export async function chargerRestants(cards) {
   ]);
   const plusGrand = new Map();
   for (const c of numerotes) plusGrand.set(c.card_id, Math.max(plusGrand.get(c.card_id) || 0, Number(c.serial) || 0));
-  const prise = new Set(vivantes.map((x) => x.card_id));
+  const vivantesParCarte = new Map();
+  for (const x of vivantes) vivantesParCarte.set(x.card_id, (vivantesParCarte.get(x.card_id) || 0) + 1);
   const restants = new Map();
   for (const k of cards) {
-    if (k.rarity === 'unique') restants.set(k.id, prise.has(k.id) ? 0 : 1);
+    // Unique : hors boosters, mais plusieurs exemplaires numérotés possibles. Restants = max − plus grand numéro donné.
+    if (k.rarity === 'unique') restants.set(k.id, Math.max(0, (Number(k.max_copies) || 1) - Math.max(plusGrand.get(k.id) || 0, vivantesParCarte.get(k.id) || 0)));
     else if (k.max_copies) restants.set(k.id, Math.max(0, Number(k.max_copies) - (plusGrand.get(k.id) || 0)));
   }
   return { restants };
+}
+
+/**
+ * Libellé d'une carte épuisée : « Déjà attribuée » pour une unique à un exemplaire, « Tous les exemplaires sont attribués »
+ * pour une unique à plusieurs exemplaires, « Épuisée » pour une carte à tirage limité.
+ * @param {object} k carte (rarity, max_copies)
+ * @returns {string}
+ */
+export function libelleEpuisee(k) {
+  if (k?.rarity !== 'unique') return 'Épuisée';
+  return Number(k.max_copies) > 1 ? 'Tous les exemplaires sont attribués' : 'Déjà attribuée';
 }
 
 /* ---------- Rendus ---------- */

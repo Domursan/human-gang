@@ -16,7 +16,7 @@ import { navigate } from '../admin/shell.js';
 import { ICON, REASON_LABEL } from './constants.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
-import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles, liveCount } from './helpers.js';
+import { check, act, nf, tile, pseudo, fmtWhen, activeProfiles, uniqueRestants } from './helpers.js';
 
 /* Libellé lisible d'une raison de mouvement de Paillettes ; à défaut, la raison telle quelle. */
 const REASON = (r) => REASON_LABEL[r] || r;
@@ -162,10 +162,11 @@ function openGiveDrawer() {
   const uid = C.playerId;
   const cardOptions = C.sets.map((s) => {
     const list = C.cards.filter((k) => k.set_id === s.id && k.active).sort((a, b) => a.number - b.number);
-    // Une carte unique déjà attribuée (son seul exemplaire existe) ne peut pas être redonnée.
+    // Une carte unique dont tous les exemplaires sont attribués ne peut plus être redonnée.
     return list.length ? `<optgroup label="${esc(s.name)}">${list.map((k) => {
-      const taken = k.rarity === 'unique' && liveCount(k.id) > 0;
-      return `<option value="${esc(k.id)}"${taken ? ' disabled' : ''}>#${esc(k.number)} · ${esc(k.name)} (${esc(rarityLabel(k.rarity))})${taken ? ' : déjà attribuée' : ''}</option>`;
+      const taken = k.rarity === 'unique' && uniqueRestants(k) <= 0;
+      const motif = Number(k.max_copies) > 1 ? 'tous les exemplaires sont attribués' : 'déjà attribuée';
+      return `<option value="${esc(k.id)}"${taken ? ' disabled' : ''}>#${esc(k.number)} · ${esc(k.name)} (${esc(rarityLabel(k.rarity))})${taken ? ` : ${motif}` : ''}</option>`;
     }).join('')}</optgroup>` : '';
   }).join('');
   openDrawer({
@@ -199,8 +200,9 @@ async function giveCard(form, uid) {
   if (!cardId) { showErr('Choisis une carte.'); return false; }
   const picked = C.cardById.get(cardId);
   if (picked?.rarity === 'unique') {
-    if (liveCount(cardId) > 0) { showErr('Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.'); return false; }
-    if (count !== 1) { showErr('Une carte unique se donne en un seul exemplaire.'); return false; }
+    const restants = uniqueRestants(picked);
+    if (restants <= 0) { showErr(Number(picked.max_copies) > 1 ? 'Tous les exemplaires de cette carte unique sont attribués : plus aucun exemplaire disponible.' : 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.'); return false; }
+    if (count > restants) { showErr(`Il reste ${nf(restants)} exemplaire${restants > 1 ? 's' : ''} de cette carte unique : indique au plus ${restants}.`); return false; }
   }
   if (!Number.isInteger(count) || count < 1 || count > 100) { showErr('Nombre d\'exemplaires : entre 1 et 100.'); return false; }
   const shiny = form.elements.shiny.checked;

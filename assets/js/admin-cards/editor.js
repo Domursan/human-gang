@@ -55,7 +55,7 @@ export function openCardDialog(k = null) {
             <div class="field"><label for="acc-rarity">Rareté</label>
               <select id="acc-rarity" name="rarity" aria-describedby="acc-unique-help">${RARITIES.map((r) => `<option value="${r.id}"${(k?.rarity ?? 'commune') === r.id ? ' selected' : ''}>${esc(r.label)}</option>`).join('')}</select></div>
           </div>
-          <p class="small muted" id="acc-unique-help"${k?.rarity === 'unique' ? '' : ' hidden'}>Unique : jamais dans les boosters ; à offrir (Don) ou à lancer en carte sauvage (Drop). Un seul exemplaire, pas de fabrication.</p>
+          <p class="small muted" id="acc-unique-help"${k?.rarity === 'unique' ? '' : ' hidden'}>Unique : jamais dans les boosters ; à offrir (Don) ou à lancer en carte sauvage (Drop). Nombre d’exemplaires au choix (1 par défaut), numérotés. Pas de fabrication.</p>
           <fieldset class="acd-fs"><legend>Image</legend>
             <div class="field"><label for="acc-file">Téléverser une image</label>
               <input id="acc-file" name="file" type="file" accept="image/png,image/webp,image/jpeg,image/gif,image/svg+xml"></div>
@@ -75,7 +75,7 @@ export function openCardDialog(k = null) {
             <span class="small muted">Requis pour les familles Membre et la rareté Identité.</span></div>
           <div class="field"><label for="acc-max">Exemplaires numérotés maximum</label>
             <input id="acc-max" name="max_copies" type="number" min="1" step="1" inputmode="numeric" placeholder="illimité" value="${esc(k?.max_copies ?? '')}">
-            <span class="small muted">Identité : 5 à 10 conseillé. Vide = illimité.${used ? ` ${nf(used)} numéro${used > 1 ? 's' : ''} déjà distribué${used > 1 ? 's' : ''}.` : ''}</span></div>
+            <span class="small muted">Identité : 5 à 10 conseillé. Unique : nombre d’exemplaires (1 par défaut). Vide = illimité.${used ? ` ${nf(used)} numéro${used > 1 ? 's' : ''} déjà distribué${used > 1 ? 's' : ''}.` : ''}</span></div>
           <fieldset class="acd-fs"><legend>Options</legend>
             <label class="switch"><input type="checkbox" name="can_shiny"${(k?.can_shiny ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Peut être brillante</span></label>
             <label class="switch"><input type="checkbox" name="tradeable"${(k?.tradeable ?? true) ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Échangeable</span></label>
@@ -90,13 +90,12 @@ export function openCardDialog(k = null) {
   const form = dr.form;
   const E = form.elements;
 
-  /* Rareté « unique » : un seul exemplaire, série « Hors série », jamais fabricable. Le formulaire le fait respecter. */
-  /** Applique ou relâche les verrous de la rareté unique (exemplaires, fabricable, aide). */
+  /* Rareté « unique » : hors boosters, nombre d'exemplaires choisi par l'admin (1 par défaut), série « Hors série », jamais fabricable. */
+  /** Applique les verrous de la rareté unique (fabricable, aide) ; propose 1 exemplaire si le champ est vide. */
   const syncUnique = () => {
     const u = E.rarity.value === 'unique';
-    E.max_copies.readOnly = u;
     E.craftable.disabled = u;
-    if (u) { E.max_copies.value = '1'; E.craftable.checked = false; }
+    if (u) { if (!E.max_copies.value.trim()) E.max_copies.value = '1'; E.craftable.checked = false; }
     $('#acc-unique-help', root).hidden = !u;
   };
   /** Le choix de la rareté unique pré-sélectionne la famille « Unique » et la série « Hors série » (et le premier numéro libre). */
@@ -145,8 +144,11 @@ export function openCardDialog(k = null) {
   /** Valeurs validées du formulaire ; lève une erreur lisible sinon. */
   const validate = () => {
     const v = { ...readRaw(), can_shiny: E.can_shiny.checked, tradeable: E.tradeable.checked, craftable: E.craftable.checked, active: E.active.checked };
-    // Unique : un seul exemplaire et jamais fabricable (la base le vérifie aussi)
-    if (v.rarity === 'unique') { v.max_copies = 1; v.craftable = false; }
+    // Unique : jamais fabricable (la base le vérifie aussi) ; nombre d'exemplaires obligatoire (1 par défaut)
+    if (v.rarity === 'unique') {
+      if (v.max_copies === null) throw new Error('Une carte unique a un nombre d’exemplaires : indique-le (1 par défaut).');
+      v.craftable = false;
+    }
     if (!v.set_id) throw new Error('Choisis une série.');
     if (!Number.isInteger(v.number) || v.number < 1) throw new Error('Le numéro doit être un nombre entier, à partir de 1.');
     if (v.name.length < 2) throw new Error('Donne un nom à la carte (2 caractères minimum).');

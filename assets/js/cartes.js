@@ -140,7 +140,7 @@ const S = {
   state: null, sets: [], cards: [], cardsById: new Map(),
   otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…)
   copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
-  uniqueTaken: null, // ids des cartes uniques dont un exemplaire existe déjà (null = inconnu)
+  uniqueTaken: null, // cartes uniques : Map id -> exemplaires déjà attribués (null = inconnu)
   tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '', q: '' }, jeuOpen: null,
   // Collection très longue (idée Q5) : nombre de cartes dessinées (lot affiché), remis à zéro à chaque changement de filtre.
   colLimit: 0,
@@ -363,14 +363,21 @@ function showMore(which, byButton = true) {
   return true;
 }
 /** En-tête explicatif de la série « Hors série » (cartes uniques). */
-const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : un seul exemplaire existe, à gagner lors d\'un événement ou offert par l\'admin.</p>';
+const HORS_SERIE_NOTE = '<p class="cartes-hs-note">Cartes uniques : hors boosters, en nombre limité (exemplaires numérotés), à gagner lors d\'un événement ou offertes par l\'admin.</p>';
 /**
- * Mention d'une carte unique qu'on ne possède pas : « Déjà attribuée » ou « Pas encore attribuée », si on le sait.
+ * Mention d'une carte unique qu'on ne possède pas, si on le sait : « Déjà attribuée » (un seul exemplaire),
+ * « Pas encore attribuée », « n / max exemplaires attribués », ou « Tous les exemplaires sont attribués ».
  * @param {object} c carte
  * @returns {string} mention, ou chaîne vide si la carte n'est pas unique, est possédée, ou si l'info est inconnue
  */
-const uniqueStateOf = (c) => (c.rarity !== 'unique' || copiesOf(c.id).length || !S.uniqueTaken ? ''
-  : S.uniqueTaken.has(c.id) ? 'Déjà attribuée' : 'Pas encore attribuée');
+const uniqueStateOf = (c) => {
+  if (c.rarity !== 'unique' || copiesOf(c.id).length || !S.uniqueTaken) return '';
+  const max = Number(c.max_copies) || 1;
+  const pris = S.uniqueTaken.get(c.id) || 0;
+  if (max <= 1) return pris ? 'Déjà attribuée' : 'Pas encore attribuée';
+  if (pris >= max) return 'Tous les exemplaires sont attribués';
+  return pris ? `${pris} / ${max} exemplaires attribués` : 'Pas encore attribuée';
+};
 /** Valeur d'une table de réglages pour une rareté (ex. craft.rare), ou null si absente. */
 const tableVal = (table, rarity) => { const v = cfg()[table]?.[rarity]; return v == null ? null : Number(v); };
 /**
@@ -422,12 +429,19 @@ async function loadStatic() {
     ? await fetchAllRows(() => sb.from('hg_cards').select('*').eq('active', true).in('set_id', setIds).order('number').order('id'))
     : [];
   S.cardsById = new Map(S.cards.map((c) => [c.id, c]));
-  // Cartes uniques : seulement savoir si un exemplaire existe déjà (une lecture légère). En cas d'échec, rien n'est affiché.
+  // Cartes uniques : combien d'exemplaires sont déjà attribués (une lecture légère). En cas d'échec, rien n'est affiché.
   const uniqueIds = S.cards.filter((c) => c.rarity === 'unique').map((c) => c.id);
   S.uniqueTaken = null;
   if (uniqueIds.length) {
-    const taken = await sb.from('hg_card_copies').select('card_id').in('card_id', uniqueIds).is('recycled_at', null);
-    if (!taken.error) S.uniqueTaken = new Set((taken.data || []).map((x) => x.card_id));
+    const taken = await sb.from('hg_card_copies').select('card_id, serial').in('card_id', uniqueIds).is('recycled_at', null);
+    if (!taken.error) {
+      const plusGrand = new Map(), nombre = new Map();
+      for (const x of taken.data || []) {
+        nombre.set(x.card_id, (nombre.get(x.card_id) || 0) + 1);
+        plusGrand.set(x.card_id, Math.max(plusGrand.get(x.card_id) || 0, Number(x.serial) || 0));
+      }
+      S.uniqueTaken = new Map(uniqueIds.map((id) => [id, Math.max(nombre.get(id) || 0, plusGrand.get(id) || 0)]));
+    }
   }
   if (S.setId !== ALL && !S.sets.some((s) => s.id === S.setId) && !S.otherSets.has(S.setId)) S.setId = S.sets.at(-1)?.id || null;
 }

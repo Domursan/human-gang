@@ -22,7 +22,7 @@ import { check, fetchAll, fmtWhen, nf } from '../admin-cards/helpers.js';
 import { KIND, recapText, invalide, argsDon } from '../admin-cards/bulk.js';
 import { nextWeekend } from '../admin-cards/auctions.js';
 import { rulesFieldsHtml, readRules } from '../enchere-regles.js';
-import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml } from './visual-pick.js';
+import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml, libelleEpuisee } from './visual-pick.js';
 
 /** Permission exigée pour les trois actions (Jeu de cartes). */
 export const QUICK_PERM = 'cartes';
@@ -242,6 +242,7 @@ async function openGive(trigger) {
     return {
       kind, cfg: KIND[kind], amount: Number(String(st.amountRaw).trim()),
       card: estCarte ? cp.card : '', shiny: estCarte && cp.shiny, carteNom: cp.name,
+      restant: estCarte ? restants.get(cp.card) : undefined,
       booster: estBoost ? bo.id : '', boosterNom: estBoost ? bo.name : '',
       visuel: estCarte ? cp.obj : estBoost ? bo.obj : null,
       all, ids: [...st.ids], n: all ? members.length : st.ids.size,
@@ -314,7 +315,10 @@ async function openGive(trigger) {
   });
 
   // Sélecteurs visuels : montés une fois le contenu en place ; chaque choix relance le récapitulatif.
-  carte = cardPicker(ui.body.querySelector('#qk-g-cardhost'), { cards, sets, restants, idp: 'qk-gc', onChange: () => refresh() });
+  carte = cardPicker(ui.body.querySelector('#qk-g-cardhost'), {
+    cards, sets, restants, idp: 'qk-gc', onChange: () => refresh(),
+    bloque: (k) => (restants.has(k.id) && restants.get(k.id) <= 0 ? libelleEpuisee(k) : ''),
+  });
   if (types) booster = boosterPicker(ui.body.querySelector('#qk-g-boosthost'), { types, idp: 'qk-gb', value: 'classique', onChange: () => refresh() });
   showPane(ui, 'form', { submit: 'Donner' });
   refresh();
@@ -449,11 +453,11 @@ async function openDrop(trigger) {
     ui.btns.innerHTML = '<button class="btn btn-ghost" type="button" data-qk-close>Fermer</button>';
     return;
   }
-  /** Motif qui interdit le choix : exemplaire unique déjà attribué, ou plus aucun exemplaire (numéros épuisés). */
-  const bloque = (k) => (restants.has(k.id) && restants.get(k.id) <= 0 ? (k.rarity === 'unique' ? 'Déjà attribuée' : 'Épuisée') : '');
+  /** Motif qui interdit le choix : tous les exemplaires attribués (unique), ou plus aucun exemplaire (numéros épuisés). */
+  const bloque = (k) => (restants.has(k.id) && restants.get(k.id) <= 0 ? libelleEpuisee(k) : '');
   /** Message d'erreur pour une carte bloquée (même texte que la page des drops). */
   const motifRefus = (k) => (k?.rarity === 'unique'
-    ? 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.'
+    ? (Number(k.max_copies) > 1 ? 'Tous les exemplaires de cette carte unique sont attribués : plus aucun exemplaire disponible.' : 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.')
     : 'Cette carte n’a plus d’exemplaire disponible.');
   /** Sélecteur visuel de carte (monté après le contenu). */
   let pick = null;

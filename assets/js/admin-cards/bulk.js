@@ -10,7 +10,7 @@
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { confirmBox } from '../ui-confirm.js';
 import { openDrawer } from '../admin/ui/drawer.js';
-import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml } from '../admin/visual-pick.js';
+import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml, libelleEpuisee } from '../admin/visual-pick.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
 import { check, nf, activeProfiles } from './helpers.js';
@@ -87,6 +87,7 @@ function lire(form) {
   return {
     kind, cfg, amount,
     card: estCarte ? carte.card : '', shiny: estCarte && carte.shiny, carteNom: carte.name,
+    restant: estCarte ? pk?.restants?.get(carte.card) : undefined, // exemplaires encore disponibles (cartes limitées et uniques)
     booster: estBoost ? boost.id : '', boosterNom: estBoost ? boost.name : '',
     visuel: estCarte ? carte.obj : estBoost ? boost.obj : null,
     all, ids, n, announce: form.elements.announce.checked, note: String(form.elements.note.value).trim(),
@@ -96,7 +97,8 @@ function lire(form) {
 /** Valeurs invalides : même règle que la validation de la RPC côté formulaire (une phrase d'erreur remplace le récapitulatif). */
 export function invalide(v) {
   return !v.n || v.n > MAX_MEMBRES || !Number.isInteger(v.amount) || v.amount < v.cfg.min || v.amount > v.cfg.max
-    || (v.kind === 'carte' && !v.card) || (v.kind === 'boosters' && !v.booster);
+    || (v.kind === 'carte' && !v.card) || (v.kind === 'boosters' && !v.booster)
+    || (v.kind === 'carte' && v.restant != null && v.n * v.amount > v.restant);
 }
 
 /**
@@ -110,6 +112,11 @@ export function recapText(v) {
   if (v.kind === 'carte' && !v.card) return 'Choisis une carte.';
   if (v.kind === 'boosters' && !v.booster) return 'Choisis un booster.';
   const carteNom = v.kind === 'carte' ? v.carteNom ?? C.cardById.get(v.card)?.name ?? '' : '';
+  if (v.kind === 'carte' && v.restant != null && v.n * v.amount > v.restant) {
+    return v.restant > 0
+      ? `Il reste ${plur(v.restant, 'exemplaire', 'exemplaires')} de « ${carteNom} » : ${nf(v.n * v.amount)} demandés. Réduis le nombre d’exemplaires ou de membres.`
+      : `Plus aucun exemplaire disponible pour « ${carteNom} ».`;
+  }
   const obj = v.kind === 'paillettes' ? `${nf(v.amount)} Paillettes`
     : v.kind === 'boosters' ? `${plur(v.amount, 'booster', 'boosters')} ${v.boosterNom || 'offerts'}`
     : `${plur(v.amount, 'exemplaire', 'exemplaires')} de « ${carteNom} »${v.shiny ? ' (brillante)' : ''}`;
@@ -243,12 +250,13 @@ async function monterChoix(form) {
   const restants = r.status === 'fulfilled' ? r.value.restants : new Map();
   const carte = cardPicker($('#acd-bulk-cardhost', form), {
     cards, sets: C.sets, restants, idp: 'acd-bulk-cp', onChange: () => majRecap(form),
+    bloque: (k) => (restants.has(k.id) && restants.get(k.id) <= 0 ? libelleEpuisee(k) : ''),
   });
   const boost = b.status === 'fulfilled'
     ? boosterPicker($('#acd-bulk-boxhost', form), { types: b.value, idp: 'acd-bulk-bp', value: 'classique', onChange: () => majRecap(form) })
     : null;
   if (!boost) $('#acd-bulk-boxhost', form).innerHTML = `<p class="form-error" role="alert">Impossible de charger les boosters : ${esc(errMsg(b.reason))}</p>`;
-  PICK.set(form, { carte, boost });
+  PICK.set(form, { carte, boost, restants });
   majRecap(form);
 }
 

@@ -131,7 +131,9 @@ export function cardHtml(card, opts = {}) {
   const uniq = r === 'unique';
   const gen = miss ? null : generationOf(card.member_id);
   // Une carte unique se présente comme une pièce à part : « Exemplaire unique » remplace la famille.
-  const famLine = [uniq ? 'Exemplaire unique' : familyLabel(card.family), card.set_name].filter(Boolean).join(' · ');
+  // Un seul exemplaire : « Exemplaire unique » ; plusieurs exemplaires numérotés : « Édition de N ».
+  const uniqUn = uniq && (!card.max_copies || Number(card.max_copies) === 1);
+  const famLine = [uniq ? (uniqUn ? 'Exemplaire unique' : `Édition de ${card.max_copies}`) : familyLabel(card.family), card.set_name].filter(Boolean).join(' · ');
   const flavor = miss ? '' : card.flavor;
   const caption = miss ? '' : card.caption;
   const ms = yearOf(card.member_since);
@@ -157,7 +159,7 @@ export function cardHtml(card, opts = {}) {
   }
 
   // Unique : le numéro du seul exemplaire est « 1/1 » (sans zéro de remplissage).
-  const serialTxt = uniq ? (opts.serial && !miss ? '1/1' : '') : (opts.serial ? serialLabel(opts.serial, card.max_copies) : '');
+  const serialTxt = uniqUn ? (opts.serial && !miss ? '1/1' : '') : (opts.serial ? serialLabel(opts.serial, card.max_copies) : '');
   const count = opts.count > 1 ? `<span class="hgc-count" aria-hidden="true">×${opts.count}</span>` : '';
   const lock = opts.locked ? '<span class="hgc-lock" title="Bloquée par une offre d\'échange">En échange</span>' : '';
   const label = `${name} — ${rarityLabel(r)}${opts.shiny ? (fondue ? ', brillante fondue' : ', brillante') : ''}${stamp ? ', J’y étais' : ''}${opts.serial ? ', ' + serialLabel(opts.serial, card.max_copies) : ''}`

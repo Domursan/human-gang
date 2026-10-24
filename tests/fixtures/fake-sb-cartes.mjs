@@ -107,6 +107,9 @@ window.__DB = DB; window.__LOG = [];
     sets.push({ id: 'SETHS', code: 'hors-serie', name: 'Hors série', description: 'Cartes uniques, en un seul exemplaire : à gagner lors d\'un événement ou offertes par l\'admin.', starts_at: null, ends_at: null, active: true, sort: 9999 });
     cards.push({ id: 'C14', set_id: 'SETHS', number: 1, name: 'La Carte unique', family: 'unique', rarity: 'unique', image_url: null, flavor: 'Il n\'en existe qu\'une.',
       member_id: null, can_shiny: false, tradeable: true, craftable: false, max_copies: 1, active: true });
+    // Unique à plusieurs exemplaires (S.uniqueMulti = { taken: n }) : C15, 3 exemplaires numérotés, n déjà donnés à Alice (1, 2, 3…).
+    if (S.uniqueMulti) cards.push({ id: 'C15', set_id: 'SETHS', number: 2, name: 'La Carte à trois', family: 'unique', rarity: 'unique', image_url: null, flavor: 'Il en existe trois.',
+      member_id: null, can_shiny: false, tradeable: true, craftable: false, max_copies: 3, active: true });
   }
   // Scénario « drop d'une série fermée » : série SETX inactive, carte CX1 que le membre connecté a attrapée (drop).
   if (S.closedDrop) {
@@ -138,6 +141,8 @@ if (S.cardImages) for (const id of ['C1', 'C2', 'C3', 'C4', 'C7']) { const k = c
   if (S.uniqueTaken) DB.hg_card_copies.push({ id: 501, card_id: 'C14', owner_id: U(2), shiny: false, serial: 1, source: 'admin', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
   if (S.closedDrop) DB.hg_card_copies.push({ id: 601, card_id: 'CX1', owner_id: ME, shiny: false, serial: null, source: 'drop', obtained_at: iso(0), locked_trade: null, recycled_at: null });
   if (S.uniqueOwned) DB.hg_card_copies.push({ id: 502, card_id: 'C14', owner_id: ME, shiny: false, serial: 1, source: 'evenement', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
+  // Unique à plusieurs exemplaires (S.uniqueMulti.taken) : les numéros 1 à n sont à Alice.
+  if (S.uniqueMulti) for (let i = 1; i <= S.uniqueMulti.taken; i++) DB.hg_card_copies.push({ id: 510 + i, card_id: 'C15', owner_id: U(2), shiny: false, serial: i, source: 'admin', obtained_at: iso(-1), locked_trade: null, recycled_at: null });
   // Scénario « echanges » (parcours-echanges-filtres.cjs) : Alice (U(2)) a des doublons et des cartes d'une autre série ;
   // j'ai aussi une carte de la série « Saison 2 ». Ailleurs, rien ne change.
   if (S.echanges) {

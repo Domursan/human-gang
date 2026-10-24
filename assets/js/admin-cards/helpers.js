@@ -2,7 +2,7 @@
 // Cartes admin : outils communs (formatage, index, dialogues, envoi d'images, lecture paginée).
 // Fonctions pures pour la plupart ; les autres parlent à Supabase (images, lecture complète) ou affichent un message.
 // Dépendances : core.js (sb, toast, errMsg, esc), image-compress.js (prepareImage), state.js (C), constants.js (TZ).
-// Exporte : check, nf, fmtWhen, pseudo, activeProfiles, friendly, group, maxSerialOf, liveCount, nextFreeNumber,
+// Exporte : check, nf, fmtWhen, pseudo, activeProfiles, friendly, group, maxSerialOf, liveCount, uniqueRestants, nextFreeNumber,
 // nextSetSort, identSetId, thumb, tile, selField, setState, period, act, removeImages, uploadCardImage, fetchAll.
 // =====================================================================
 import { sb, toast, errMsg, esc } from '../core.js';
@@ -33,6 +33,9 @@ export const group = (rows, key) => {
 export const maxSerialOf = (cardId) => (C.copiesByCard.get(cardId) || []).reduce((m, x) => Math.max(m, x.serial || 0), 0);
 /* Nombre d'exemplaires d'une carte encore en circulation (non recyclés). */
 export const liveCount = (cardId) => (C.copiesByCard.get(cardId) || []).filter((x) => !x.recycled_at).length;
+/* Exemplaires restants d'une carte unique (nombre choisi par l'admin, 1 par défaut) : max − plus grand numéro donné
+   (ou exemplaires vivants, si d'anciens exemplaires n'ont pas de numéro). */
+export const uniqueRestants = (k) => Math.max(0, (Number(k.max_copies) || 1) - Math.max(maxSerialOf(k.id), liveCount(k.id)));
 /* Premier numéro libre dans une série : on comble les trous avant d'ajouter à la fin. */
 export const nextFreeNumber = (setId) => {
   const used = new Set(C.cards.filter((k) => k.set_id === setId).map((k) => k.number));
