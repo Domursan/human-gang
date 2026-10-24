@@ -81,7 +81,7 @@ async function ouvrir(p) {
   check(b1[0]?.p_card === null && b1[0]?.p_shiny === false, 'Paillettes : pas de carte ni de brillance');
   check(b1[0]?.p_announce === true, 'Annoncer au membre coché (défaut) : p_announce = true');
   check(b1[0]?.p_note === 'Récompense de quête', 'motif transmis en p_note');
-  check((await p.$$('#gest-journal .acd-item')).length === 3, 'journal rechargé après le don (3 dons groupés)');
+  check((await p.$$('#gest-journal .acd-item')).length === 4, 'journal rechargé après le don (3 dons groupés et 1 carte donnée)');
   check(!p.errs.length, '1280 : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
@@ -139,7 +139,7 @@ async function ouvrir(p) {
   await p.click('#gest-go');
   await p.waitForSelector('dialog.hg-dialog[open] button[value="ok"]', { timeout: 5000 });
   await confirmOk(p);
-  await p.waitForFunction(() => !document.querySelector('dialog.hg-dialog[open]'), null, { timeout: 5000 }).catch(() => {});
+  await p.waitForFunction(() => (window.__LOG || []).some((l) => l[0] === 'rpc' && l[1] === 'hg_cards_admin_bulk_give'), null, { timeout: 5000 }).catch(() => {});
   const b4 = await bulkCalls(p);
   check(b4.length === 1 && b4[0].p_users === null, 'tout le gang : p_users = null');
   check(b4[0].p_kind === 'paillettes' && b4[0].p_amount === 500, 'tout le gang : 500 Paillettes');
@@ -192,16 +192,29 @@ async function ouvrir(p) {
   check(!!(await p.$('#gest-give-h')), 'économie en échec : le bloc Give reste utilisable');
   await p.ctx.close();
 
-  // 9. Derniers gives : seulement les dons groupés, 10 au plus, avec destinataires et motif.
+  // 9. Derniers gives : dons groupés et cartes données (un destinataire), 10 au plus, avec destinataires et motif.
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900 });
   await ouvrir(p);
   const journal = await p.textContent('#gest-journal');
   const lignes = await p.$$eval('#gest-journal .acd-item', (x) => x.length);
-  check(lignes === 3, 'derniers gives : 3 dons groupés (la ligne « carte_donnee » est exclue)');
+  check(lignes === 4, 'derniers gives : 3 dons groupés et 1 carte donnée (4 lignes)');
   check(journal.includes('Tout le gang (9 membres)') && journal.includes('Anniversaire du gang'), 'derniers gives : « Tout le gang » et le motif');
   check(journal.includes('Alice et Bruno'), 'derniers gives : destinataires nommés (Alice et Bruno)');
-  check(!journal.includes('C1'), 'derniers gives : pas de ligne d\'une autre action');
+  check(journal.includes('Carte donnée') && journal.includes('1 exemplaire de « '), 'derniers gives : la carte donnée a son libellé');
+  check(!journal.includes('C1'), 'derniers gives : la carte donnée affiche le nom de la carte, pas son id');
   check(!p.errs.length, 'derniers gives : aucune erreur JS');
+  await p.ctx.close();
+
+  // 9b. Carte donnée brillante en deux exemplaires, et une autre action (ajustement) qui ne doit pas apparaître.
+  p = await openPage(browser, { page: 'admin', fixture: 'fake-sb-cartes.mjs', width: 1280, height: 900, scenario: { journalDons: [
+    { id: 11, admin_id: '11111111-1111-4111-8111-111111111111', action: 'carte_donnee', target_user: '00000002-0000-4000-8000-000000000002', target_ref: 'C2', details: { exemplaires: 2, brillante: true, annonce: true }, created_at: new Date(Date.now() - 6e4).toISOString() },
+    { id: 12, admin_id: '11111111-1111-4111-8111-111111111111', action: 'ajustement_paillettes', target_user: '00000003-0000-4000-8000-000000000003', target_ref: 'paillettes', details: {}, created_at: new Date(Date.now() - 3e4).toISOString() },
+  ] } });
+  await ouvrir(p);
+  const j2 = await p.textContent('#gest-journal');
+  check((await p.$$eval('#gest-journal .acd-item', (x) => x.length)) === 1, 'carte donnée seule : une ligne (l\'ajustement est exclu)');
+  check(j2.includes('Alice') && j2.includes('2 exemplaires de « Le Paleto » (brillante)'), 'carte donnée : destinataire, nombre, carte et brillante');
+  check(!j2.includes('Ajustement'), 'carte donnée : pas de ligne d\'une autre action');
   await p.ctx.close();
 
   // 10. Mobile 390 px : une colonne, sans défilement horizontal, cibles ≥ 44 px.
