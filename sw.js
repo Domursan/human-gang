@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v69';
+const CACHE_VERSION = 'v70';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -56,7 +56,7 @@ const PRECACHE = [
   'assets/js/admin/badges-criteres.js', 'assets/js/admin-reglages/keys-lot4.js', // lot 4 (réglages)
   'assets/js/admin-reglages/keys-lot2.js', 'assets/js/admin-reglages/keys-lot5.js', 'assets/js/invite-config.js',
   'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
-  'assets/js/admin/counts.js', 'assets/js/admin/lieux.js', 'assets/js/admin/todos.js', 'assets/js/admin/quick.js', 'assets/css/admin-quick.css', 'assets/js/admin/panel-icons.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
+  'assets/js/admin/counts.js', 'assets/js/admin/lieux.js', 'assets/js/admin/todos.js', 'assets/js/admin/quick.js', 'assets/css/admin-quick.css', 'assets/js/admin/visual-pick.js', 'assets/css/admin-visual-pick.css', 'assets/js/admin/panel-icons.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
   'assets/js/admin/support.js', 'assets/js/admin/live.js', 'assets/css/admin-live.css',
   'assets/js/admin/shell.js', 'assets/js/admin/router.js', 'assets/css/admin-shell.css',
   'assets/js/admin/palette.js', 'assets/css/admin-nav.css', 'assets/css/admin-lieux.css', 'assets/js/admin/list-tools.js',
