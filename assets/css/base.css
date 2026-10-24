@@ -518,6 +518,19 @@ html[data-mode="clair"] .search-dialog::backdrop { background: rgba(30, 28, 34, 
   .search-form { padding: 16px calc(16px + env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left)); }
 }
 
+/* ===== Vue « comme un membre » (admin, view-as.js) : bandeau fixe en haut, contenu décalé de --va-h ===== */
+.view-as-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 9550; display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 8px 16px; padding: 8px 24px; background: var(--accent); color: var(--accent-text);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .35); }
+.view-as-msg { margin: 0; flex: 1 1 260px; min-width: 0; font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.view-as-back { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  background: var(--bg); color: var(--text); border: 1px solid var(--border-strong); font-size: 14px; font-weight: 700; text-decoration: none; }
+.view-as-back:hover { border-color: var(--sand); }
+.view-as-back:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+html[data-view-as="on"] body { padding-top: var(--va-h, 56px); }
+html[data-view-as="on"] { scroll-padding-top: calc(var(--va-h, 56px) + 12px); overflow-anchor: none; } /* pas de saut de défilement quand le bandeau arrive */
+@media (max-width: 600px) { .view-as-bar { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); } }
+
 /* ===== Mode sans limite (admin) : html[data-godmode="on"] posé par core.js =====
    Bandeau fixe en haut (au-dessus de l'en-tête, le contenu est décalé de --god-h), cadre d'écran en bandes
    « danger » jaune/noir (animées lentement, figées si mouvement réduit ou effets coupés). */

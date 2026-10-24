@@ -7,11 +7,12 @@
  *   - À droite, la photo de profil seule. Un clic ouvre un quart de cercle d'icônes autour d'elle, sur deux rangées :
  *     Messages, Recherche, Mon compte ; puis Aide et tutos, Affichage, Mode sans limite (admin), Admin ou Staff,
  *     Déconnexion. La pastille des messages non lus est aussi posée sur la photo.
+ *   - Vue « comme un membre » (admin, view-as.js) : menus et pages du membre ; Admin, Staff et Sans limite sont masqués.
  *   - Téléphone (760 px et moins) : bouton « Menu » qui déplie les menus en accordéon ; même arc, en plus petit.
  * Les boutons gardent leurs classes historiques (.nav-msg, .nav-search-open, .nav-help, .prefs-open, .nav-god,
  * .nav-logout, .nav-account) : unread.js, search.js, godmode.js, shortcuts.js et tour.js les retrouvent.
  * Page : toutes les pages (renderHeader est appelée par init.js, updateNav une fois les pages connues).
- * Dépendances : supabase.js (déconnexion), profile.js, perms.js (Staff/admin), pages-access.js (liens),
+ * Dépendances : supabase.js (déconnexion), profile.js, perms.js (Staff/admin), pages-access.js (liens), view-as.js,
  * theme.js (logo), prefs.js, godmode.js, util.js, icons.js, search.js, shortcuts.js, site-defaults.js.
  * Exporte : updateHeaderProfile, updateNav, renderHeader.
  */
@@ -19,6 +20,7 @@ import { signOutDevice } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { getCachedPerms, canPanel, clearPerms } from './perms.js';
 import { getMyPages, canAccess } from './pages-access.js';
+import { viewAsActive } from './view-as.js';
 import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
@@ -274,7 +276,7 @@ function fanHtml(profile) {
     item('nav-account', 'a', `href="compte.html"${curAttr('compte.html')} aria-label="Mon compte"`, ICON_USER, 'Mon compte'),
     item('nav-help', 'a', `href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos"`, ICON_HELP, 'Aide et tutos'),
     item('prefs-open', 'button', 'type="button" aria-haspopup="dialog" aria-label="Préférences d’affichage"', ICON_PREFS, 'Affichage'),
-    profile.is_admin ? item('nav-god', 'button', 'type="button" aria-pressed="false" aria-label="Activer le mode sans limite"', ICON_BOLT, 'Sans limite') : '',
+    profile.is_admin && !viewAsActive() ? item('nav-god', 'button', 'type="button" aria-pressed="false" aria-label="Activer le mode sans limite"', ICON_BOLT, 'Sans limite') : '',
     item('nav-admin', 'a', `href="admin.html"${curAttr('admin.html')} hidden`, ICON_SHIELD, profile.is_admin ? 'Admin' : 'Staff'),
     item('nav-logout', 'button', 'type="button" aria-label="Se déconnecter"', ICON_DOOR, 'Déconnexion'),
   ].join('');
@@ -386,7 +388,7 @@ export function updateNav(profile = getCachedProfile()) {
 function syncAdmin(header, profile) {
   const adm = header.querySelector('.fan-item.nav-admin');
   if (!adm || !profile) return;
-  const panel = profile.is_admin || canPanel(getCachedPerms());
+  const panel = !viewAsActive() && (profile.is_admin || canPanel(getCachedPerms()));
   adm.hidden = !panel;
   adm.closest('.fan-li').hidden = !panel;
   adm.querySelector('.fan-label').textContent = profile.is_admin ? 'Admin' : 'Staff';

@@ -5,7 +5,8 @@
 // est gardée pendant la visite de la page (CACHE, dans state.js) ; une modification la vide.
 // Dépendances : core.js (sb, toast, errMsg, esc, $, $$, dates), admin-access.js (droits des pages),
 // admin/ui/detail-header.js et admin/ui/info-panel.js (composants communs), state.js, admin/perms.js,
-// admin-staff.js (libellés des permissions), inspect.js, profile.js, ss.js, activity.js, list.js, admin-ghosts.js.
+// admin-staff.js (libellés des permissions), inspect.js, profile.js, ss.js, activity.js, list.js, admin-ghosts.js,
+// core/view-as.js (bouton « Voir le site comme… » : vue d'un membre sur le site).
 // Tables lues : hg_profiles, hg_profile_info, hg_ss_editions / participants / assignments / wishes, hg_events,
 // hg_event_rsvps, hg_photos (+ stockage hg-photos), hg_ideas, hg_support, hg_badges, hg_user_badges,
 // hg_wallets, hg_card_copies ; RPC hg_staff_list.
@@ -25,6 +26,7 @@ import { ssHtml } from './ss.js';
 import { irlHtml, photosHtml, contribHtml, badgesHtml } from './activity.js';
 import { roleOf, selectInList } from './list.js';
 import { ghostBannerHtml, renderGhostView } from '../admin-ghosts.js';
+import { startViewAs } from '../core/view-as.js';
 
 /* =========================================================
    Lectures
@@ -250,6 +252,11 @@ function staffLineHtml(st) {
   return `<div class="acc-staff"><span class="pill pill-ok">Staff</span>${st.active ? '' : ' <span class="pill pill-muted">inactif</span>'} ${perms}</div>`;
 }
 
+/** Bouton « Voir le site comme… » : le site s'ouvre dans cet onglet avec les pages du membre (view-as.js). */
+async function voirLeSite() {
+  try { await startViewAs(A.uid); } catch (e) { toast(errMsg(e), 'error'); }
+}
+
 /** En-tête de la fiche : composant commun (admin/ui/detail-header.js) + ligne Staff / admin. */
 function paintHead() {
   const host = $('#acc-dh'); if (!host) return;
@@ -266,6 +273,7 @@ function paintHead() {
     subtitle,
     actions: [
       ...(ghost ? [{ label: 'Détail du fantôme', onClick: () => { location.hash = `#membres/comptes/${A.uid}`; } }] : []),
+      ...(ghost ? [] : [{ label: `Voir le site comme ${p.pseudo || acc.pseudo || 'ce membre'}`, onClick: voirLeSite }]),
       { label: 'Fermer la fiche', onClick: closeDetail },
     ],
   });

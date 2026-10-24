@@ -811,6 +811,16 @@ export function createClient(_url, _key, opts = {}) {
         return { data: DB.hg_pages.filter((p) => adm || (p.mode === 'membres' && acc(p.slug)?.allowed !== false) || (p.mode === 'liste' && acc(p.slug)?.allowed === true))
           .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort })), error: null };
       }
+      // Voir le site comme un membre (migration 103) : pages du membre, droit « membres » requis.
+      if (fn === 'hg_admin_view_as') {
+        if (!hasP('membres')) return denied;
+        const m = DB.hg_profiles.find((x) => x.id === args.p_user);
+        if (!m) return { data: null, error: { message: 'Membre introuvable' } };
+        const acc = (slug) => DB.hg_page_access.find((a) => a.page_slug === slug && a.user_id === m.id);
+        const pages = DB.hg_pages.filter((p) => m.is_admin || (p.mode === 'membres' && acc(p.slug)?.allowed !== false) || (p.mode === 'liste' && acc(p.slug)?.allowed === true))
+          .sort((a, b) => a.sort - b.sort).map(({ slug, label, in_nav, sort }) => ({ slug, label, in_nav, sort }));
+        return { data: { id: m.id, pseudo: m.pseudo, is_admin: !!m.is_admin, pages, roles: [] }, error: null };
+      }
       if (fn === 'hg_unread_count') return { data: 0, error: null };
       // Migration 076 : écritures du Staff par RPC journalisées (fil, réponses aux sorties, badges).
       if (fn === 'hg_activity_remove') {
