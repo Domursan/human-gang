@@ -1,7 +1,9 @@
-# Humane Gang — spécification de construction (pour les agents)
+# Humane Gang — spécification de construction (pour les développeurs)
+
+> Document historique : la spécification d'origine ; l'état actuel est décrit dans README.md, PLAN-DU-SITE.md et ADMIN-PANEL.md.
 
 Site statique vanilla HTML/CSS/JS (modules ES), destiné à GitHub Pages, backend Supabase (projet `Gestion_RP`, id `zqbdzokyhgavgmqgiwuw`).
-Tout le texte de l'interface est en **français**. Racine du projet : `/home/claude/hg_new`.
+Tout le texte de l'interface est en **français**. Racine du projet : le dépôt.
 
 ## Fichiers déjà fournis (NE PAS réécrire, seulement utiliser ; un ajout mineur est permis s'il est indispensable, en le signalant)
 - `assets/css/base.css` — tokens (couleurs désaturées, `--accent`, sections `--ss-*`, `--irl-*`, `--hist-*`), composants : `.container .card .card-ss .card-irl .card-hist .grid .row .stack .btn .btn-primary .btn-light .btn-sand .btn-ghost .btn-danger .btn-row .field .check .pill .pill-ok .pill-current .pill-todo .progress .avatar .empty .list-row .page-head .eyebrow .page-title .display .muted .small`.
@@ -41,7 +43,7 @@ Le JS de page commence par `import { sb, initPage, ... } from './core.js'; const
 - Ne touche qu'aux fichiers de ton périmètre. Rapport final : liste des fichiers créés, migrations ajoutées, points ouverts.
 
 ## Pages et périmètres
-| Fichier | Rôle | Agent |
+| Fichier | Rôle | Lot |
 |---|---|---|
 | `index.html` + `assets/js/intro.js` + `assets/css/intro.css` | Intro 3D : seul le logo à l'écran, le scroll zoome dans son centre puis fondu vers `accueil.html`. Bouton « Passer l'intro ». Intro sautée si `localStorage hg_intro_seen`. Version réduite si prefers-reduced-motion. | A |
 | `accueil.html` | Héros « Le QG du Humane Gang », 3 tuiles (Secret Santa/IRL/Historique) avec infos réelles, fil d'activité (`hg_activity`), compte à rebours vers `exchange_date` de l'édition en cours, anniversaires du mois (via `hg_members().birthday_dm`). Non connecté → invite à se connecter. | A |
@@ -54,8 +56,8 @@ Le JS de page commence par `import { sb, initPage, ... } from './core.js'; const
 | `assistance.html` | Formulaire (pseudo prérempli si connecté, sujet select, message, contact Discord si non connecté) → `callFn('hg-support', {...})`. auth: optional. | D |
 | `supabase/functions/hg-support/index.ts`, `hg-notify/index.ts`, `BOT.md` | Fonctions edge Deno : hg-support (insert service role + MP Discord à l'admin via bot), hg-notify (vérifie le JWT, construit le message, envoie MP/annonce selon `hg_settings.bot` et opt-in). Secrets : `DISCORD_BOT_TOKEN`. Guide de création du bot. | D |
 
-## Mise à jour v2 (20.10.2026) — racine désormais `/home/claude/human-gang` (clone git du dépôt)
-- Les emojis sont désormais autorisés là où Ethan les demande (tuiles de l'accueil, thèmes).
+## Mise à jour v2 (20.10.2026) — racine : le dépôt (clone git)
+- Les emojis sont désormais autorisés là où l'administrateur les demande (tuiles de l'accueil, thèmes).
 - Logo : `LOGO_SRC` = `assets/img/logo-1600.webp` (pixel art : afficher avec `image-rendering: pixelated`). Favicon `assets/img/favicon-64.png`. Les anciens PNG du logo (`Logo.png`, `logo-1600.png`, `logo-512.png`) ont été retirés du dépôt : seuls les WebP sont utilisés.
 - Base appliquée (voir `supabase/migrations/006_themes_infos_admin.sql`) : `hg_themes`, `hg_profile_info`, `hg_ss_editions.shared_fields`, rpc `hg_ss_target_info(p_edition)`, rpc `hg_admin_accounts()`, l'admin voit/modifie toutes les données (y compris `hg_ss_assignments`).
 - Liste des informations diverses : `assets/js/profile-fields.js` (`INFO_GROUPS`, `INFO_FIELDS`, `INFO_LABEL`). Ne pas dupliquer cette liste.
