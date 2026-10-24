@@ -3,7 +3,7 @@
 /* Toutes les séries : un bloc par série (intertitre, compte, barre, cartes) */
 
 /* ---------- Séries ---------- */
-.cz-groups { display: grid; gap: 28px; }
+.cz-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
 .cz-group-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin: 0 0 8px; }
 .cz-group-title { margin: 0; font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
 .cz-group-count { margin: 0; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
