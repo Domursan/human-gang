@@ -49,6 +49,7 @@ import { setupPalette } from './admin/palette.js';
 // montage retire sa sous-section du panel (disableSubs) au lieu de casser le démarrage.
 const OPTIONAL = [
   { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Autres jeux › Secrets (hg_settings.eggs)
+  { sub: 'arcade', url: './admin-arcade.js', fn: 'mountArcadeSection' }, // Autres jeux › Arcade (pages 404, hg_arcade_admin_board)
   { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Pilotage › Assistance › Fil d'activité (hg_activity)
   { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Comptes › Champs du profil (profile_fields)
   { sub: 'geoguessr', url: './admin-jeux.js', fn: 'mountGeoSection' },         // Autres jeux › GeoGuessr (migration 083)
@@ -90,7 +91,7 @@ const PROV = await providersP;
 disableSubs(...PROV.filter(([, v]) => !v).map(([p]) => p.route.split('/')[1]));
 // Réorganisation (migration 103) : sous-sections présentes dans l'arborescence, sans module pour l'instant (livrées plus tard).
 // Retirées du panel tant qu'elles n'ont pas de module ; la section n'existe pas dans admin.html (aucune section vide).
-disableSubs('roles', 'membres-irl', 'gestion', 'arcade'); // livrée plus tard
+disableSubs('roles', 'membres-irl', 'gestion'); // livrée plus tard
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -240,6 +241,7 @@ registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-
 registerSub('jeux/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 registerSub('jeux/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
 if (MOUNT.secrets) registerSub('jeux/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
+if (MOUNT.arcade) registerSub('jeux/arcade', { main: () => MOUNT.arcade($('#arcade-root')) }); // arcade des pages 404 : classement et effacement des scores
 // Page « Jeux » : GeoGuessr, citations (admin-jeux.js)
 if (MOUNT.geoguessr) registerSub('jeux/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
 if (MOUNT.citations) registerSub('jeux/citations', { main: () => MOUNT.citations($('#citations-admin-root')) });

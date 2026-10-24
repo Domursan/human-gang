@@ -1,0 +1,49 @@
+/* Admin › Autres jeux › Arcade (admin-arcade.js) : semaines, règles anti-triche, classement des mini-jeux des pages 404. */
+.arc { display: grid; gap: 16px; max-width: 1080px; min-width: 0; }
+.arc :focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.arc .btn { min-height: 44px; }
+.arc-intro { margin: 0; }
+.arc-sub { margin: 0 0 8px; font-weight: 700; }
+.arc-sub .small { font-weight: 400; }
+.arc-empty { margin: 0; }
+
+/* Semaines */
+.arc-weeknav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; }
+.arc-week { margin: 0; min-width: 0; flex: 1 1 260px; overflow-wrap: anywhere; }
+.arc-tag { display: inline-block; margin-left: 6px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--sage); color: var(--sage-text); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.arc-navb { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: inherit; font-size: 22px; line-height: 1; cursor: pointer; }
+.arc-navb:disabled { opacity: .4; cursor: default; }
+
+/* Récompense : rappel et lien vers Secrets */
+.arc-reward { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 14px 16px; }
+.arc-reward p { margin: 0; flex: 1 1 280px; min-width: 0; }
+.arc-reward .btn { text-decoration: none; display: inline-flex; align-items: center; }
+
+/* Cartes des jeux */
+.arc-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; min-width: 0; }
+.arc-game { display: grid; align-content: start; gap: 14px; min-width: 0; padding: 16px; }
+.arc-game-head h3 { margin: 0; }
+.arc-game-head h3:focus { outline: none; }
+.arc-game-head h3:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.arc-stats, .arc-rules dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 16px; margin: 0; }
+.arc-stats div, .arc-rules dl div { min-width: 0; }
+.arc-stats dt, .arc-rules dt { font-size: 13px; color: var(--muted); }
+.arc-stats dd, .arc-rules dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.arc-rules { padding-top: 12px; border-top: 1px solid var(--border); display: grid; gap: 8px; }
+.arc-rules > p { margin: 0; }
+.arc-board { display: grid; gap: 4px; min-width: 0; }
+.arc-board .arc-sub { margin-top: 4px; }
+
+/* Classement : une ligne par score */
+.arc-top { list-style: none; margin: 0; padding: 0; min-width: 0; }
+.arc-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.arc-rank { font-weight: 700; color: var(--sand); font-variant-numeric: tabular-nums; }
+.arc-who { min-width: 0; overflow-wrap: anywhere; }
+.arc-clear { min-height: 44px; white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .arc-game { padding: 12px; }
+  .arc-row { grid-template-columns: 28px minmax(0, 1fr); }
+  .arc-clear { grid-column: 2; justify-self: start; }
+  .arc-reward .btn { width: 100%; justify-content: center; }
+}
