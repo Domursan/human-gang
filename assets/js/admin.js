@@ -56,6 +56,7 @@ const OPTIONAL = [
   { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Autres jeux › Preuves de quêtes (J11)
   { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Autres jeux › Framed et Heardle (J9, J10)
   { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Le jeu de cartes › Arène (J15)
+  { sub: 'gestion', url: './admin-gestion.js', fn: 'mountGestionSection' },            // Le jeu de cartes › Gestion globale (Give, résumé, derniers gives)
   { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Comptes › Vie sociale (hg_settings.social, migration 090)
   { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Entraide › Parrainage (idée P8)
   { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Entraide › Compétences (idée P7)
@@ -92,7 +93,7 @@ const PROV = await providersP;
 disableSubs(...PROV.filter(([, v]) => !v).map(([p]) => p.route.split('/')[1]));
 // Réorganisation (migration 103) : sous-sections présentes dans l'arborescence, sans module pour l'instant (livrées plus tard).
 // Retirées du panel tant qu'elles n'ont pas de module ; la section n'existe pas dans admin.html (aucune section vide).
-disableSubs('gestion', 'arcade'); // livrées plus tard
+disableSubs('arcade'); // livrée plus tard
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -250,6 +251,7 @@ if (MOUNT.citations) registerSub('jeux/citations', { main: () => MOUNT.citations
 if (MOUNT.preuves) registerSub('jeux/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
 if (MOUNT['framed-heardle']) registerSub('jeux/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
 if (MOUNT.bataille) registerSub('cartes/arene', { main: () => MOUNT.bataille($('#bataille-root')) });
+if (MOUNT.gestion) registerSub('cartes/gestion', { main: () => MOUNT.gestion($('#gestion-root')) }); // Gestion globale (Give, résumé, derniers gives)
 // Pilotage › Assistance (demandes, idées, messagerie, fil)
 registerSub('pilotage/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
 registerSub('pilotage/idees', ideasSub);

@@ -4,7 +4,7 @@
 // Les MP Discord ne sont pas envoyés par ce tiroir.
 // Dépendances : core.js (sb, toast, errMsg, esc, $), cartes-ui.js (rarityLabel), ui-confirm.js (confirmBox),
 // admin/ui/drawer.js (tiroir), state.js (C), data.js (refresh), helpers.js (check, nf, activeProfiles).
-// Exporte : openBulkGift.
+// Exporte : openBulkGift, donnerGroupe (confirmation + RPC, réutilisée par admin-gestion.js), recapText, KIND, MAX_MEMBRES.
 // =====================================================================
 import { sb, toast, errMsg, esc, $ } from '../core.js';
 import { rarityLabel } from '../cartes-ui.js';
@@ -14,9 +14,9 @@ import { C } from './state.js';
 import { refresh } from './data.js';
 import { check, nf, activeProfiles } from './helpers.js';
 
-const MAX_MEMBRES = 200; // doit correspondre à la migration 042
+export const MAX_MEMBRES = 200; // doit correspondre à la migration 042
 /* Les trois sortes de don : libellé, nom du champ de montant, valeur par défaut et bornes autorisées. */
-const KIND = {
+export const KIND = {
   paillettes: { label: 'Paillettes', champ: 'Paillettes par membre', defaut: 100, min: 1, max: 10000 },
   boosters: { label: 'Boosters offerts', champ: 'Boosters par membre', defaut: 1, min: 1, max: 50 },
   carte: { label: 'Une carte', champ: 'Exemplaires par membre', defaut: 1, min: 1, max: 10 },
@@ -93,13 +93,16 @@ function lire(form) {
   return { kind, cfg, amount, card, shiny, all, ids, n, announce: form.elements.announce.checked, note: String(form.elements.note.value).trim() };
 }
 
-/** Phrase de récapitulatif (affichée en direct, puis reprise dans la confirmation). */
-function recapText(v) {
+/**
+ * Phrase de récapitulatif (affichée en direct, puis reprise dans la confirmation).
+ * v : { kind, cfg, amount, card, shiny, all, ids, n, announce, note } ; v.carteNom (facultatif) évite de lire C.cardById.
+ */
+export function recapText(v) {
   if (!v.n) return 'Choisis au moins un membre, ou « Tout le gang ».';
   if (v.n > MAX_MEMBRES) return `Au plus ${MAX_MEMBRES} membres par don (${nf(v.n)} choisis).`;
   if (!Number.isInteger(v.amount) || v.amount < v.cfg.min || v.amount > v.cfg.max) return `Indique un nombre entre ${nf(v.cfg.min)} et ${nf(v.cfg.max)}.`;
   if (v.kind === 'carte' && !v.card) return 'Choisis une carte.';
-  const carteNom = v.kind === 'carte' ? C.cardById.get(v.card)?.name || '' : '';
+  const carteNom = v.kind === 'carte' ? v.carteNom ?? C.cardById.get(v.card)?.name ?? '' : '';
   const obj = v.kind === 'paillettes' ? `${nf(v.amount)} Paillettes`
     : v.kind === 'boosters' ? plur(v.amount, 'booster offert', 'boosters offerts')
     : `${plur(v.amount, 'exemplaire', 'exemplaires')} de « ${carteNom} »${v.shiny ? ' (brillante)' : ''}`;
@@ -179,18 +182,9 @@ async function envoyer(form) {
     showErr(texte);
     return false;
   }
-  const ok = await confirmBox('Confirmer le don ?', `${texte} Le don est définitif.`, { ok: 'Donner' });
-  if (!ok) return false;
   try {
-    const res = check(await sb.rpc('hg_cards_admin_bulk_give', {
-      p_users: v.all ? null : v.ids,
-      p_kind: v.kind,
-      p_amount: v.amount,
-      p_card: v.kind === 'carte' ? v.card : null,
-      p_shiny: v.kind === 'carte' ? v.shiny : false,
-      p_announce: v.announce,
-      p_note: v.note || null,
-    }));
+    const res = await donnerGroupe(v);
+    if (!res) return false; // annulé dans la confirmation
     const servis = Number(res?.membres) || v.n;
     toast(`Don envoyé à ${plur(servis, 'membre', 'membres')}`, 'ok');
     await refresh();
@@ -199,6 +193,25 @@ async function envoyer(form) {
     showErr(errMsg(e));
     return false;
   }
+}
+
+/**
+ * Confirmation puis appel de hg_cards_admin_bulk_give (tout ou rien, une ligne au journal et une ligne groupée au fil).
+ * @param {object} v valeurs lues (voir recapText).
+ * @returns {Promise<object|null>} réponse de la RPC ({ membres, … }), ou null si la personne annule. Une erreur est relancée.
+ */
+export async function donnerGroupe(v) {
+  const ok = await confirmBox('Confirmer le don ?', `${recapText(v)} Le don est définitif.`, { ok: 'Donner' });
+  if (!ok) return null;
+  return check(await sb.rpc('hg_cards_admin_bulk_give', {
+    p_users: v.all ? null : v.ids,
+    p_kind: v.kind,
+    p_amount: v.amount,
+    p_card: v.kind === 'carte' ? v.card : null,
+    p_shiny: v.kind === 'carte' ? v.shiny : false,
+    p_announce: v.announce,
+    p_note: v.note || null,
+  }));
 }
 
 /** Ouvre le tiroir « Don groupé ». */
