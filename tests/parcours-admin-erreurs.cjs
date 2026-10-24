@@ -48,7 +48,7 @@ const ERRS = [
     p = await openPage(browser, { page: 'admin', scenario: { clientErrors: ERRS } });
     await p.waitForFunction(() => document.querySelector('[data-count="erreurs"]:not([hidden])')?.textContent.trim() === '2', null, { timeout: 6000 }).catch(() => {});
     check((await p.textContent('[data-count="erreurs"]')).trim() === '2', '(b) compteur du rail : 2 nouvelles erreurs');
-    await adminSection(p, 'site/erreurs');
+    await adminSection(p, 'pilotage/erreurs');
     await p.waitForSelector('.er-tbl', { timeout: 5000 });
     check(await p.$$eval('.er-tbl tbody tr', (r) => r.length) === 2, '(b) filtre « Nouvelles » par défaut : 2 groupes');
     check(/cartes-trades\.js:212/.test(await p.textContent('.er-tbl')) && /37/.test(await p.textContent('.er-tbl')), '(b) fichier:ligne et nombre de fois');
@@ -64,24 +64,24 @@ const ERRS = [
     check((await log(p)).some((l) => l[0] === 'rpc' && l[1] === 'hg_client_error_set' && l[2].p_id === 1 && l[2].p_status === 'corrigee'), '(b) « Corrigée » : hg_client_error_set');
     check((await p.textContent('[data-count="erreurs"]')).trim() === '1', '(b) compteur mis à jour (1)');
     await p.click('[data-er-ticket]');
-    await p.waitForFunction(() => location.hash.startsWith('#communication/assistance/sup-err-1'), null, { timeout: 5000 }).catch(() => {});
-    check(await p.evaluate(() => location.hash) === '#communication/assistance/sup-err-1', '(b) « Créer une demande » ouvre la demande d’assistance');
+    await p.waitForFunction(() => location.hash.startsWith('#pilotage/assistance/sup-err-1'), null, { timeout: 5000 }).catch(() => {});
+    check(await p.evaluate(() => location.hash) === '#pilotage/assistance/sup-err-1', '(b) « Créer une demande » ouvre la demande d’assistance');
     check(p.errs.length === 0, '(b) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 3).join(' | ') + ')' : ''));
     await p.ctx.close();
 
     /* ---------- (c) Staff ---------- */
     p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['cartes'], clientErrors: ERRS } });
-    check(await p.locator('#shell-subs a[href="#site/erreurs"]').count() === 0, '(c) Staff sans « reglages » : pas d’Erreurs du site');
+    check(await p.locator('#shell-subs a[href="#pilotage/erreurs"]').count() === 0, '(c) Staff sans « reglages » : pas d’Erreurs du site');
     check(!(await log(p)).some((l) => l[0] === 'select' && l[1] === 'hg_client_errors'), '(c) Staff sans « reglages » : journal jamais lu');
     await p.ctx.close();
     p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['reglages'], clientErrors: ERRS } });
-    check(await p.locator('#shell-subs a[href="#site/erreurs"]').count() === 1 && await p.locator('#shell-subs a[href="#site/archives"]').count() === 0,
+    check(await p.locator('#shell-subs a[href="#pilotage/erreurs"]').count() === 1 && await p.locator('#shell-subs a[href="#pilotage/archives"]').count() === 0,
       '(c) Staff « reglages » : Erreurs du site, sans Archives');
     await p.ctx.close();
 
     /* ---------- (d) 375 px ---------- */
     p = await openPage(browser, { page: 'admin', width: 375, height: 812, scenario: { clientErrors: ERRS } });
-    await adminSection(p, 'site/erreurs');
+    await adminSection(p, 'pilotage/erreurs');
     await p.waitForSelector('.er-tbl', { timeout: 5000 });
     check(await hscroll(p) <= 0, '(d) 375 px : pas de défilement horizontal');
     await p.ctx.close();

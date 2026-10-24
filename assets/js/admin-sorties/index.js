@@ -1,8 +1,8 @@
 // =====================================================================
 // Admin : section « Sorties IRL » — liste en colonne 2, détail dans la zone principale, panneau d'infos.
-// Montage par admin.js (registerSub 'vie/sorties') : main = mountSortiesSection, open = openSortie,
+// Montage par admin.js (registerSub 'irl/sorties') : main = mountSortiesSection, open = openSortie,
 // list = listSorties (colonne 2), info = infoSorties (panneau d'infos, ≥ 1440 px).
-// L'URL suit la sortie choisie : #vie/sorties/<id>. Les écritures passent par data.js (mêmes tables que irl.js) ;
+// L'URL suit la sortie choisie : #irl/sorties/<id>. Les écritures passent par data.js (mêmes tables que irl.js) ;
 // les fenêtres d'édition par dialogs.js. Droits : hg_has_perm('evenements') côté base.
 // Dépendances : core.js, ui-confirm.js, data.js, format.js, dialogs.js, admin/live.js, admin/ui/* (liste, panneau, pastille),
 // admin/common.js, utils.js, admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
@@ -49,7 +49,7 @@ async function load() {
 
 /** Change l'URL pour sélectionner une sortie (le routeur affiche le détail). */
 function setHash(id) {
-  location.hash = `#vie/sorties/${encodeURIComponent(id)}`;
+  location.hash = `#irl/sorties/${encodeURIComponent(id)}`;
 }
 
 /** Lignes de la liste : tri par date (les sorties « à caler » restent en fin de liste), puis filtres et recherche dans createList. */
@@ -149,7 +149,7 @@ async function deleteEvent(ev, btn) {
     toast('Sortie supprimée.', 'ok');
     await load();
     repaint();
-    if (S.selId === ev.id) location.hash = '#vie/sorties';
+    if (S.selId === ev.id) location.hash = '#irl/sorties';
     S.colEl?.querySelector('#ass-new')?.focus();
   } catch (e) {
     toast(`Suppression impossible : ${errMsg(e)}`, 'error');
@@ -179,7 +179,7 @@ export async function mountSortiesSection(root, { me } = {}) {
   repaint();
 }
 
-/** Sélection d'une sortie : appelé à chaque visite de la sous-section (URL #vie/sorties/<id>). */
+/** Sélection d'une sortie : appelé à chaque visite de la sous-section (URL #irl/sorties/<id>). */
 export function openSortie({ id } = {}) {
   S.selId = id || null;
   S.list?.select(S.selId);

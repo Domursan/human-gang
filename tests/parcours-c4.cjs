@@ -51,7 +51,7 @@ const scenario = {
   check((await hscroll(p)) <= 0, '(5) 360 px : pas de défilement horizontal');
   await p.ctx.close();
 
-  p = await openPage(browser, { page: 'admin', scenario, width: 1280, hash: `#vie/sorties/${EV2}` });
+  p = await openPage(browser, { page: 'admin', scenario, width: 1280, hash: `#irl/sorties/${EV2}` });
   await p.waitForSelector('#ass-d-carte .ass-jy-form', { timeout: 8000 });
   check((await p.textContent('#ass-d-carte')).includes('Carte de la sortie'), '(4) section « Carte de la sortie »');
   await p.click('#ass-d-carte [type=submit]');

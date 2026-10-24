@@ -72,7 +72,7 @@ function png(w = 160, h = 100) {
     // Comptes joignables : chacun a un ID Discord et accepte les MP du bot (sans cela, rien à sélectionner)
     await p.evaluate(([ids]) => { window.__DB.hg_profiles.forEach((pr, i) => { pr.discord_id = ids[i] || null; pr.bot_optin = true; }); },
       [['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004', '100000000000000005', '100000000000000006']]);
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
 
     await tab(p, 'mentions');
     check(await p.isDisabled('#bot-mention-draw'), '(a) sans salon : les mentions sont grisées');
@@ -119,7 +119,7 @@ function png(w = 160, h = 100) {
       [['100000000000000001', '100000000000000002', '100000000000000003', '100000000000000004', '100000000000000005', '100000000000000006']]);
     // Réglages déjà enregistrés (rôle configuré) : la mention « Le rôle » doit être proposée
     await p.evaluate((id) => { window.__DB.hg_settings.unshift({ key: 'bot', value: { announce_channel_id: '112233445566778899', mention_role_id: id, mentions: {}, notify: {} } }); }, ROLE);
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await tab(p, 'mp');
     await p.waitForSelector(`#bm-list input[value="${U(2)}"]`, { timeout: 8000 });
 
@@ -197,7 +197,7 @@ function png(w = 160, h = 100) {
   /* (d) Mobile 390 px : pas de défilement horizontal sur les réglages et le message manuel */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await tab(p, 'mp');
     check(await hscroll(p) === 0, '(d) 390 px : pas de défilement horizontal (message manuel)');
     check(!p.errs.length, '(d) mobile : aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));

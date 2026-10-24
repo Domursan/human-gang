@@ -24,7 +24,7 @@ function upsertDe(journal, cle) {
 
   // 1 et 2. Administration : Sorties IRL
   const p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'vie/sorties');
+  await adminSection(p, 'irl/sorties');
   await p.waitForSelector(`${bloc('irl')} summary`, { timeout: 8000 }).catch(() => {});
   check((await p.locator(bloc('irl')).count()) === 1, 'sorties : bloc « Réglages : Sorties IRL » présent');
   await p.locator(`${bloc('irl')} summary`).click();
@@ -66,7 +66,7 @@ function upsertDe(journal, cle) {
   check((await p.inputValue('#rg3-irl-sondage_max')) === '6', 'rétablir : le champ affiche 6');
 
   // Les autres sections ont leur bloc
-  await adminSection(p, 'vie/secret-santa');
+  await adminSection(p, 'irl/secret-santa');
   await p.waitForSelector(bloc('ss'), { timeout: 8000 }).catch(() => {});
   check((await p.locator(bloc('ss')).count()) === 1, 'Secret Santa : bloc « Réglages : Secret Santa » présent');
   await p.locator(`${bloc('ss')} summary`).click();
@@ -78,7 +78,7 @@ function upsertDe(journal, cle) {
   const ss = upsertDe(await log(p), 'ss');
   check(!!ss && ss.value.min_participants === 4 && ss.value.eviter_meme_cible_annee_precedente === true, 'Secret Santa : minimum 4 enregistré, éviter la même cible gardé à true');
 
-  await adminSection(p, 'vie/souvenirs');
+  await adminSection(p, 'irl/souvenirs');
   await p.waitForSelector(bloc('souvenirs'), { timeout: 8000 }).catch(() => {});
   check((await p.locator(bloc('souvenirs')).count()) === 1, 'Souvenirs : bloc « Réglages : Souvenirs et photos » présent');
   await p.locator(`${bloc('souvenirs')} summary`).click();

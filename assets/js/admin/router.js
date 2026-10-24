@@ -4,10 +4,16 @@
 // - #domaine/ (segment vide) = écran du domaine : sur mobile, la liste des sous-sections ; sur ordinateur, redirection
 //   vers la première sous-section permise.
 // - Un domaine ou une sous-section sans droit renvoie vers la première sous-section permise (ou null : aucun accès).
-// - #reglages (ancienne ancre) mène au formulaire « Identité et textes » (#site/identite).
+// - Ancienne adresse (réorganisation du panel, migration 103) : si le domaine n'existe plus ou ne contient plus la
+//   sous-section, la sous-section est cherchée par son identifiant dans tous les domaines (les identifiants sont uniques) ;
+//   ALIAS_SUB donne les identifiants renommés (bataille → arene). Le fragment est remplacé, id et onglet suivent.
+// - #reglages (ancienne ancre) mène au formulaire « Identité et textes » (#pilotage/identite).
 // - Les fiches membres (#comptes/<id>[/<onglet>], ancienne adresse) sont redirigées vers #membres/comptes/<id>[/<onglet>].
 // Utilisé par admin/shell.js (resolve à chaque changement d'adresse). Dépend de admin/perms.js (DOMAINS, droits).
 import { DOMAINS, visibleDomains } from './perms.js';
+
+// Identifiants de sous-section renommés : ancien -> nouveau (les adresses déjà partagées restent valables).
+const ALIAS_SUB = { bataille: 'arene' };
 
 // Ancienne ancre -> route : la sous-section de même nom que la section, sinon la première qui la monte.
 const LEGACY = {};
@@ -16,8 +22,8 @@ for (const d of DOMAINS) for (const s of d.subs) if (!LEGACY[s.section] || s.id 
 const DOMAIN_IDS = new Set(DOMAINS.map((d) => d.id));
 // Adresses retirées : les comptes fantômes sont dans Comptes (#fantomes et #membres/fantomes[/<id>] suivent la liste).
 // #reglages (ancienne ancre du formulaire « Identité et textes ») : première partie du formulaire ; la liste brute des clés
-// garde sa route #site/reglages (« Clés avancées »).
-const MOVED = { fantomes: 'membres/comptes', 'membres/fantomes': 'membres/comptes', reglages: 'site/identite' };
+// garde son identifiant (#pilotage/reglages, « Clés avancées »).
+const MOVED = { fantomes: 'membres/comptes', 'membres/fantomes': 'membres/comptes', reglages: 'pilotage/identite' };
 
 /** Première sous-section permise (« domaine/sous-section »), ou null si l'administrateur n'a aucun droit. */
 export function defaultRoute() {
@@ -58,12 +64,29 @@ export function resolve(hash, { mobile = false } = {}) {
   // Ancienne ancre suivie de segments (#comptes/<id>/<onglet>) : mêmes segments sous la nouvelle route
   if (!DOMAIN_IDS.has(a) && LEGACY[a]) return { redirect: [LEGACY[a], b, id, tab].filter(Boolean).join('/') };
   const visible = visibleDomains().find((d) => d.id === a);
-  if (!visible) return { redirect: fallback };
+  if (!visible) return redirectTo(findSub(b), id, tab, fallback);
   if (!b) {
     if (mobile) return { dom: visible, sub: null, id: null, tab: null };
     return { redirect: `${visible.id}/${visible.subs[0].id}` };
   }
   const sub = visible.subs.find((s) => s.id === b);
-  if (!sub) return { redirect: fallback };
+  if (!sub) return redirectTo(findSub(b), id, tab, fallback);
   return { dom: visible, sub, id, tab };
+}
+
+/** Sous-section permise d'identifiant `subId` (ou renommée via ALIAS_SUB), dans n'importe quel domaine visible ; sinon null. */
+function findSub(subId) {
+  if (!subId) return null;
+  const want = ALIAS_SUB[subId] || subId;
+  for (const d of visibleDomains()) {
+    const s = d.subs.find((x) => x.id === want);
+    if (s) return { dom: d, sub: s };
+  }
+  return null;
+}
+
+/** Redirection d'une ancienne adresse vers la sous-section trouvée (segments id/onglet conservés), ou vers la première permise. */
+function redirectTo(hit, id, tab, fallback) {
+  if (!hit) return { redirect: fallback };
+  return { redirect: [`${hit.dom.id}/${hit.sub.id}`, id, tab].filter(Boolean).join('/') };
 }

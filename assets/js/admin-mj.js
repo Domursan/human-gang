@@ -7,7 +7,7 @@
 // Données : RPC hg_mj_overview, hg_mj_announce, hg_bot_schedule_cancel, hg_game_save, hg_game_master_set (migration 092) ;
 // salons connus du bot : hg_settings.bot (lecture admin).
 // Dépendances : core.js, admin-events.js (heure suisse), admin/ui/drawer.js, ui-confirm.js, admin/shell.js (setActions).
-// Exporte : mjSub ({ main, open }), branché par admin.js sur « cartes/mes-jeux ».
+// Exporte : mjSub ({ main, open }), branché par admin.js sur « jeux/mes-jeux ».
 import { sb, esc, toast, errMsg } from './core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { openDrawer } from './admin/ui/drawer.js';

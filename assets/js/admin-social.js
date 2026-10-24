@@ -174,7 +174,7 @@ async function save() {
  *    (hg_invite_link_set_mentor).
  *  - Membres › Compétences (#membres/competences, droit « membres ») : catalogue hg_settings.competences (code figé une
  *    fois enregistré, libellé, ordre). Pas de compétences humoristiques qui visent quelqu'un.
- *  - Site › Accueil des membres (#site/accueil, droit « reglages ») : accueil par défaut (hg_settings.home_default : ordre,
+ *  - Site › Accueil des membres (#membres/accueil, droit « reglages ») : accueil par défaut (hg_settings.home_default : ordre,
  *    blocs affichés, blocs obligatoires) et encart « Toi et … » (hg_settings.social.amitie).
  * Bornes et journal admin : trigger hg_settings_social_guard (migration 091).
  * Dépendances : core.js, home-registry.js, admin-champs.js (slugId). Exporte : mountParrainageSection,
@@ -239,7 +239,7 @@ export async function mountParrainageSection(root) {
           <div class="field"><label for="pr-cp">Carte du parrain</label>${cardSel('pr-cp', cfg.carte_parrain)}</div>
           <div class="field"><label for="pr-cf">Carte du filleul</label>${cardSel('pr-cf', cfg.carte_filleul)}</div>
         </div>
-        <p class="small muted">Les cartes « Parrain » et « Filleul » se créent dans Jeux et cartes › Cartes (série « Hors série »). Le badge « Parrain » (niveaux 1, 3 et 5 filleuls) est attribué automatiquement.</p>
+        <p class="small muted">Les cartes « Parrain » et « Filleul » se créent dans Le jeu de cartes › Cartes (série « Hors série »). Le badge « Parrain » (niveaux 1, 3 et 5 filleuls) est attribué automatiquement.</p>
         <div class="btn-row"><button class="btn btn-primary" type="submit">Enregistrer</button></div>
       </form>
 

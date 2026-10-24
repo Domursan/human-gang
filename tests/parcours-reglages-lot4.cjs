@@ -178,7 +178,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await adminSection(p, 'vie/badges-attribution');
   await p.waitForTimeout(200);
   check(await p.isVisible('#badge-member') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-grid')), 'parties : « Attribution » seule');
-  await adminSection(p, 'vie/badges');
+  await adminSection(p, 'membres/badges');
   await p.waitForTimeout(200);
   check(await p.isVisible('#badge-grid') && await p.isVisible('#badge-search') && !(await p.isVisible('#bc-form')) && !(await p.isVisible('#badge-member'))
     && await p.locator('#zone-actions #badge-new').count() === 1, 'parties : « Catalogue » : recherche, grille et « + Nouveau badge »');
@@ -197,7 +197,7 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   /* ---------- Réglages du site : la clé badges est listée et renvoie vers sa section ---------- */
   p = await openPage(browser, { page: 'admin', fixture: 'fake-sb.mjs', width: 1280, height: 900 });
   await p.evaluate(() => { window.__DB.hg_settings.unshift({ key: 'badges', value: { max_carte: 4 } }); });
-  await adminSection(p, 'site/reglages');
+  await adminSection(p, 'pilotage/reglages');
   await p.waitForSelector('[data-key-item="badges"]', { timeout: 8000 });
   const row = await p.textContent('[data-key-item="badges"]');
   check(row.includes('Badges : critères et affichage') && row.includes('Géré dans'), 'réglages du site : la clé badges est listée avec son libellé et renvoie vers sa section');

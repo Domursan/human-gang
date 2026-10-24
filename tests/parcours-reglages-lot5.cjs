@@ -22,7 +22,7 @@ async function goto(p, route, sel) {
 // Les rappels, l'assistance et le planning sont dans le sous-onglet Règles du bot (Communication › Bot Discord).
 /** Ouvre le sous-onglet Règles du bot, puis le bloc sub (rappels, assistance ou planning), puis attend le formulaire sel. */
 async function gotoRegles(p, sel, sub = 'rappels') {
-  await goto(p, 'communication/bot', '#bot-tablist');
+  await goto(p, 'pilotage/bot', '#bot-tablist');
   await p.click('#bot-tab-regles');
   await p.click(`#bot-rsub [data-rsub="${sub}"]`);
   await p.waitForSelector(sel, { state: 'visible', timeout: 8000 }).catch(() => {});

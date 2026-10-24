@@ -4,7 +4,7 @@
  * avec recherche, filtre par type et suppression d'une entrée après confirmation.
  * Droits : lecture pour tout membre ; suppression permise à l'admin et au Staff « reglages » (RLS hg_activity_admin,
  * migration 027 : hg_has_perm('reglages')). Aucune autre écriture.
- * Route : #communication/fil (branchée par admin.js). Section : <section id="fil">, conteneur #fil-root.
+ * Route : #pilotage/fil (branchée par admin.js). Section : <section id="fil">, conteneur #fil-root.
  * Dépendances : core.js (sb, toast, errMsg, esc), ui-confirm.js (confirmation), admin/list-tools.js (recherche, compteur),
  * icons.js (icône corbeille).
  * Tables et RPC : hg_activity, hg_staff_directory (pseudos).

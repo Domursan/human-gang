@@ -53,9 +53,9 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await adminSection(p, 'cartes/cartes');
   check(has(await log(p), table('hg_card_sets')), '(a) Cartes : ses requêtes partent à l\'ouverture de la sous-section');
   const beforeBot = (await log(p)).length;
-  await adminSection(p, 'communication/bot');
+  await adminSection(p, 'pilotage/bot');
   check(await p.locator('#bot-root .bot-admin').count() === 1 && (await log(p)).length > beforeBot, '(a) Bot : montée et chargée à l\'ouverture de la sous-section');
-  await adminSection(p, 'communication/messagerie');
+  await adminSection(p, 'pilotage/messagerie');
   L = await log(p);
   check(has(L, rpc('hg_admin_conversations')), '(a) Messagerie : ses requêtes partent à l\'ouverture de la sous-section');
   const membersCalls = L.filter(rpc('hg_members')).length;
@@ -99,8 +99,8 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.click('#acc-tab-infos');
   await p.waitForFunction((id) => location.hash === '#membres/comptes/' + id + '/infos', CHLOE, { timeout: 5000 });
   check(true, '(b) clic sur un onglet : l\'adresse ajoute l\'onglet');
-  await p.evaluate(() => { location.hash = 'vie/secret-santa'; });
-  await p.waitForFunction(() => location.hash === '#vie/secret-santa');
+  await p.evaluate(() => { location.hash = 'irl/secret-santa'; });
+  await p.waitForFunction(() => location.hash === '#irl/secret-santa');
   await p.goBack();
   await p.waitForFunction(() => location.hash.startsWith('#membres/comptes/'), null, { timeout: 5000 });
   await p.waitForSelector('#acc-tab-infos[aria-selected="true"]', { timeout: 5000 });
@@ -134,7 +134,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
   await p.fill('#apal-q', 'secret');
   await p.waitForSelector('.apal-item:has-text("Secret Santa")', { timeout: 5000 });
   await p.keyboard.press('Enter');
-  await p.waitForFunction(() => location.hash === '#vie/secret-santa', null, { timeout: 5000 });
+  await p.waitForFunction(() => location.hash === '#irl/secret-santa', null, { timeout: 5000 });
   check(!(await palOpen(p)), '(c) Entrée sur une sous-section : la palette se ferme');
   await p.waitForFunction(() => !!document.querySelector('#shell-groups #secret-santa'), null, { timeout: 8000 });
   check(await p.isVisible('#secret-santa'), '(c) Entrée sur une sous-section : la section est montée et affichée (rangée hors écran avant)');
@@ -160,7 +160,7 @@ const onRoute = (p, route) => p.waitForFunction((r) => location.hash === '#' + r
     'Économie · Paillettes et dons', 'Économie · Tirage', 'Économie · Recyclage et fabrication', 'Économie · Limites',
     'Animation · Quêtes', 'Animation · Défis du gang', 'Animation · Drops', 'Animation · Cagnotte et bulletin', 'Animation · Cartes Champions',
     'Animation · Codes cadeaux', 'Animation · Atelier (recettes)', 'Animation · Enchères',
-    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques', 'Jeux · Bataille'];
+    'Suivi · Joueurs', 'Suivi · Échanges', 'Suivi · Statistiques', 'Arène'];
   check(JSON.stringify(labels) === JSON.stringify(attendu),
     `(d) Staff ['cartes'] : la palette ne propose que ses sous-sections (${labels.join(' | ')})`);
   await p.fill('#apal-q', 'bruno');

@@ -48,7 +48,7 @@ const SAISON = '2026-11-02T10:00:00Z';
   await p.close();
 
   /* 5. Administration : l'interrupteur de la saison est dans Vie du gang › Rendez-vous. */
-  p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, hash: '#vie/saison-worlds', now: SAISON });
+  p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, hash: '#event/saison-worlds', now: SAISON });
   await p.waitForSelector('#zw-deb, #zs-body .empty', { timeout: 8000 }).catch(() => {});
   check(!!(await p.$('#saisons')) , 'admin : section « Saisons » présente dans le panel');
   check((await log(p)).some((x) => x[1] === 'hg_saison_admin'), 'admin : l’état de la saison est lu (hg_saison_admin)');

@@ -54,7 +54,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
   /* (a) Sous-onglets : ordre, ARIA, un seul panneau */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     const tabs = await p.$$eval('#bot-tablist [role="tab"]', (els) => els.map((e) => ({ text: e.textContent.trim(), id: e.id, controls: e.getAttribute('aria-controls') })));
     check(JSON.stringify(tabs.map((t) => t.text)) === JSON.stringify(LABELS), '(a) sept sous-onglets dans l\'ordre : ' + tabs.map((t) => t.text).join(' · '));
     check(tabs.every((t, i) => t.id === `bot-tab-${TABS[i]}` && t.controls === `bot-p-${TABS[i]}`), '(a) identifiants bot-tab-<id> et aria-controls bot-p-<id>');
@@ -69,7 +69,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
   /* (b) Clavier, (c) mémoire, (d)(e)(f) salons et cases, enregistrement */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
 
     // (b) flèches, Fin, Début ; boucle aux extrémités
     await p.focus('#bot-tab-connexion');
@@ -177,7 +177,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
     // (c) mémoire : après rechargement, le même sous-onglet est ouvert
     await p.reload();
     await sleep(1200);
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     check(await selectedTab(p) === 'bot-tab-salons', '(c) dernier onglet mémorisé : Salons ouvert après rechargement');
     await p.ctx.close();
   }
@@ -187,7 +187,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
     const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { settings: [
       { key: 'bot', value: { announce_channel_id: CHAN, birthday_channel_id: ANIV, channels: { card_pull: CARTES }, mentions: {}, notify: {} } },
     ] } });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await tab(p, 'salons');
     check(await p.isChecked(`#bot-chan-card_pull input[value="${CARTES}"]`), '(g) ancienne chaîne (card_pull) : cochée');
     check(await p.isChecked(`#bot-chan-birthday input[value="${ANIV}"]`), '(g) ancien réglage des anniversaires (birthday_channel_id) : coché');
@@ -207,7 +207,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
       botChannelFail: [CARTES],
       settings: [{ key: 'bot', value: { announce_channel_id: CHAN, mention_role_id: ROLE, salons: [{ id: ANIV, nom: 'Anniversaires' }, { id: CARTES, nom: 'Cartes' }], channels: {}, mentions: {}, notify: {} } }],
     } });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await tab(p, 'annonces');
     check(await p.locator('#ann-chan-list input').count() === 3, '(h) trois salons proposés : salon par défaut + salons connus');
     check(await p.isChecked(`#ann-chan-list input[value="${CHAN}"]`), '(h) le salon d\'annonces par défaut est coché au départ');
@@ -250,7 +250,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
   /* (i) 360 px : pas de défilement horizontal, sous-onglets de 44 px au moins */
   {
     const p = await openPage(browser, { page: 'admin', width: 360, height: 740 });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     check(await hscroll(p) === 0, '(i) 360 px : pas de défilement horizontal (Connexion)');
     const sizes = await p.$$eval('#bot-tablist [role="tab"]', (els) => els.map((e) => e.getBoundingClientRect().height));
     check(sizes.length === 7 && sizes.every((h) => h >= 44), '(i) 360 px : sous-onglets de 44 px au moins');
@@ -265,7 +265,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
   /* (k) Réglages non chargés : bandeau, aucune écriture possible ; test du bot : résumé par salon */
   {
     const p = await openPage({ newContext: (o) => browser.newContext(o) }, { page: 'admin', width: 1280, height: 900, scenario: { botSettingsFail: true } });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     check(await p.isVisible('.bot-unloaded'), '(k) réglages non chargés : bandeau « recharge la page » affiché');
     check(await p.isVisible('#bot-reload'), '(k) réglages non chargés : bouton Recharger présent');
     check(await p.isDisabled('#bot-form button[type="submit"]'), '(k) réglages non chargés : Enregistrer désactivé');
@@ -280,7 +280,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
       settings: [{ key: 'bot', value: { announce_channel_id: CHAN, salons: [{ id: CHAN, nom: 'Annonces' }, { id: X1, nom: 'Bruit' }], channels: {}, mentions: {}, notify: {} } }],
       botChannelFail: [X1],
     } });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await p.click('#bot-test');
     await sleep(500);
     check((await toasts(p)).includes('1 salon OK, 1 en échec : Le bot ne peut pas écrire dans ce salon.'), '(k) test du bot : résumé par salon (« 1 salon OK, 1 en échec : … »)');
@@ -294,7 +294,7 @@ const pdf = () => Buffer.from('%PDF-1.4\n%test\n');
     const p = await openPage(dense, { page: 'admin', width: 1280, height: 900, scenario: {
       settings: [{ key: 'bot', value: { announce_channel_id: CHAN, mention_role_id: ROLE, admin_discord_id: ANIV, salons: [{ id: CHAN, nom: 'Annonces' }, { id: ANIV, nom: 'Anniversaires' }, { id: CARTES, nom: 'Cartes' }], channels: { draw: [CHAN], card_pull: [CARTES, ANIV] }, mentions: { draw: 'role' }, notify: {} } }],
     } });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     for (const id of TABS) {
       await tab(p, id);
       // La zone de contenu défile : on agrandit la fenêtre à la hauteur du contenu pour tout capturer d'un coup.

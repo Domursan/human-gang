@@ -1,4 +1,4 @@
-// ===== Humane Gang — administration : Sutom du gang (J8, route cartes/sutom) =====
+// ===== Humane Gang — administration : Sutom du gang (J8, route jeux/sutom) =====
 // Rôle : le Staff « souvenirs » gère la banque de mots (5 à 9 lettres, définition « à la sauce du gang »), programme le
 // mot d'un jour à venir, et voit les mots déjà fixés. Sans programmation, le mot du jour est tiré dans la banque
 // (jamais servi d'abord). Attention : cette page montre le mot du jour (ne pas l'ouvrir avant d'avoir joué).

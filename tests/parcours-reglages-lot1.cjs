@@ -31,7 +31,7 @@ const storedSettings = (p) => p.evaluate(() => { try { return JSON.parse(localSt
 const overridesOf = async (p, key) => ((await storedSettings(p)).find((r) => r.key === key) || {}).value;
 
 /** Ouvre une partie de Site (identite par défaut : nom, logo, éditeur, mentions) dans le panel admin. */
-async function adminGoto(p, route = 'site/identite') {
+async function adminGoto(p, route = 'pilotage/identite') {
   await p.goto(`${ORIGIN}${PREFIX}/admin.html`);
   await sleep(1200);
   await adminSection(p, route);
@@ -121,7 +121,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     // ---- 4. Parties du formulaire ----
     /* Groupes visibles du formulaire (data-group des fieldsets non masqués). */
     const shownGroups = () => pa.$$eval('#rgi-form fieldset[data-group]', (fs) => fs.filter((f) => !f.hidden && f.getClientRects().length).map((f) => f.dataset.group).join(','));
-    await adminSection(pa, 'site/menu');
+    await adminSection(pa, 'pilotage/menu');
     await sleepShort();
     check(await shownGroups() === 'navigation', `parties : « Menu et pied de page » ne montre que son groupe (${await shownGroups()})`);
     check(!(await pa.isVisible('#reglages-root')) && await pa.isVisible('#rgi-save'), 'parties : liste des clés masquée, bouton Enregistrer visible');
@@ -129,7 +129,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     await save(pa);
     check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.irl === 'Sorties', 'parties : libellé du menu enregistré depuis « Menu »');
 
-    await adminSection(pa, 'site/etat');
+    await adminSection(pa, 'pilotage/etat');
     await sleepShort();
     check(await shownGroups() === 'etat', `parties : « État du site » ne montre que son groupe (${await shownGroups()})`);
     check((await pa.textContent('#rgi-title')).trim() === 'État du site', 'parties : titre de la partie');
@@ -139,10 +139,10 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     await pa.evaluate(() => { document.getElementById('rgi-site-identite-nom').value = ''; });
     await save(pa);
     const st = await pa.textContent('#rgi-status');
-    check(/À corriger dans « Identité et mentions légales »/.test(st || '') && await pa.locator('#rgi-status a[href="#site/identite"]').count() === 1,
+    check(/À corriger dans « Identité et mentions légales »/.test(st || '') && await pa.locator('#rgi-status a[href="#pilotage/identite"]').count() === 1,
       `parties : erreur d'une partie masquée nommée, avec son lien (« ${st} »)`);
     check(!('bandeau_actif' in ((await overridesOf(pa, 'site_identite')) || {})), 'parties : rien écrit tant que l\'erreur masquée n\'est pas corrigée');
-    await pa.click('#rgi-status a[href="#site/identite"]');
+    await pa.click('#rgi-status a[href="#pilotage/identite"]');
     await sleepShort();
     check(await shownGroups() === 'identite,legal', `parties : le lien ouvre la partie fautive (${await shownGroups()})`);
     check((await field(pa, 'site_identite.bandeau_texte').inputValue()) === 'Annonce de test', 'parties : la saisie des autres parties est conservée');
@@ -154,11 +154,11 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
       `parties : état du site enregistré avec l'identité, défauts non écrits (${JSON.stringify(idP)})`);
     check(txP.nav_libelles?.irl === 'Sorties', 'parties : enregistrer depuis « Identité » conserve les libellés du menu');
 
-    await adminSection(pa, 'site/reglages');
+    await adminSection(pa, 'pilotage/reglages');
     await sleepShort();
     check(!(await pa.isVisible('#identite-root')) && await pa.isVisible('#reglages-root .rg-keys-title'), 'parties : « Clés avancées » montre la liste seule');
     check(await pa.locator('#zone-actions [data-rg-add]').count() === 1, 'parties : « + Nouvelle clé » dans la partie Clés avancées');
-    await adminSection(pa, 'site/textes');
+    await adminSection(pa, 'pilotage/textes');
     await sleepShort();
     check(await shownGroups() === 'textes,affichage' && await pa.locator('#zone-actions [data-rg-add]').count() === 0, 'parties : « Textes et intro » (sans « + Nouvelle clé »)');
 

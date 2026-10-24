@@ -79,15 +79,15 @@ const visibleDomains = (p) => p.$$eval('#shell-rail .shell-dom', (as) => as.filt
     await p.waitForFunction(() => !!document.querySelector('#cards-root [data-act="quest-new"]') || !!document.querySelector('#acd-panel'), null, { timeout: 5000 }).catch(() => {});
     check(await waitVisible(p, '#cartes') && (await hashOf(p)) === '#cartes/quetes', 'Quêtes ouvertes depuis la colonne');
     check(await p.isVisible('[data-act="quest-new"]'), 'Quêtes : contenu de l’onglet affiché');
-    // Sous-menus : #reglages (ancienne ancre du formulaire) mène à Site › Identité et textes ; la liste brute garde #site/reglages
+    // Sous-menus : #reglages (ancienne ancre du formulaire) mène à Site › Identité et textes ; la liste brute garde #pilotage/reglages
     await p.evaluate(() => { location.hash = '#reglages'; });
-    await p.waitForFunction(() => location.hash === '#site/identite', null, { timeout: 5000 }).catch(() => {});
-    check((await hashOf(p)) === '#site/identite' && await waitVisible(p, '#reglages'), `(a) ancienne ancre #reglages -> #site/identite (${await hashOf(p)})`);
-    check((await p.textContent('#zone-eyebrow')).trim() === 'Site · Identité et textes', '(a) en-tête de zone : domaine · titre du groupe');
-    check(await p.locator('[data-dom-subs="site"] .shell-subhead').count() === 3, '(a) colonne Site : trois titres de groupe');
-    await p.evaluate(() => { location.hash = '#site/reglages'; });
+    await p.waitForFunction(() => location.hash === '#pilotage/identite', null, { timeout: 5000 }).catch(() => {});
+    check((await hashOf(p)) === '#pilotage/identite' && await waitVisible(p, '#reglages'), `(a) ancienne ancre #reglages -> #pilotage/identite (${await hashOf(p)})`);
+    check((await p.textContent('#zone-eyebrow')).trim() === 'Pilotage · Site', '(a) en-tête de zone : domaine · titre du groupe');
+    check(await p.locator('[data-dom-subs="pilotage"] .shell-subhead').count() === 4 && (await p.textContent('[data-dom-subs="pilotage"]')).includes('Site'), '(a) colonne Pilotage : titres de groupe Bot, Site, Apparence, Assistance');
+    await p.evaluate(() => { location.hash = '#pilotage/reglages'; });
     await p.waitForFunction(() => document.querySelector('.shell-sub[aria-current="true"]')?.dataset.sub === 'reglages', null, { timeout: 5000 }).catch(() => {});
-    check((await hashOf(p)) === '#site/reglages' && (await p.textContent('#zone-title')).trim() === 'Clés avancées', '(a) #site/reglages : Clés avancées');
+    check((await hashOf(p)) === '#pilotage/reglages' && (await p.textContent('#zone-title')).trim() === 'Clés avancées', '(a) #pilotage/reglages : Clés avancées');
     // ancienne ancre inconnue : retour à la route par défaut
     await p.evaluate(() => { location.hash = '#inconnu'; });
     await p.waitForFunction(() => /^#(pilotage|membres|vie|cartes|communication|site)\//.test(location.hash), null, { timeout: 5000 }).catch(() => {});

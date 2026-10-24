@@ -140,8 +140,8 @@ const logOf = (p, kind) => p.evaluate((k) => (window.__LOG || []).filter((e) => 
 
   /* (e) panel admin : le fil montre les pièces jointes du membre */
   const a = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: { ...SCN, uid: ME, realtime: true, staff: ['support'] } });
-  await adminSection(a, 'communication/assistance');
-  await a.evaluate(() => { location.hash = '#communication/assistance/sup-1'; });
+  await adminSection(a, 'pilotage/assistance');
+  await a.evaluate(() => { location.hash = '#pilotage/assistance/sup-1'; });
   await waitFor(a, () => document.querySelectorAll('#support-root .ui-msg .sf-item').length === 2);
   check(await a.locator('#support-root .sf-item').count() === 2, '(e) admin : pièces jointes dans le fil de la demande');
   check((await a.locator('#support-root .sf-item .sf-name').allTextContents()).join(',').includes('capture-boutique.png'), '(e) admin : nom des fichiers affiché');

@@ -7,7 +7,7 @@
  * Toutes les écritures passent par des RPC bornées et journalisées : hg_gang_slot_save, hg_gang_slot_archive,
  * hg_cine_config_set, hg_bot_commands_set (migration 087). Lectures : hg_gang_slots, hg_cine_state, hg_bot_commands_get,
  * hg_staff_directory (pseudos).
- * Routes : #vie/rdv (section #rdv, conteneur #rdv-root) et #communication/commandes (section #commandes, #commandes-root),
+ * Routes : #event/rdv (section #rdv, conteneur #rdv-root) et #pilotage/commandes (section #commandes, #commandes-root),
  * branchées par admin.js (modules facultatifs).
  * Dépendances : core.js, ui-confirm.js. Exporte : mountRdvSection, mountCommandesSection.
  */

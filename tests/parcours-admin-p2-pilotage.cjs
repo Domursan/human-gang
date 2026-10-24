@@ -131,12 +131,12 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
     await goHash(p, '#pilotage/apercu', '#apercu');
     check(await p.locator('#stats .stat').count() > 0, '(c) tuiles de chiffres clés affichées');
     check(await p.locator('#ov-todo .ov-q-item').count() >= 1, '(c) « À traiter » : au moins une ligne');
-    check(await p.locator('#ov-todo a[href^="#communication/assistance/"]').count() === 1, '(c) « À traiter » : « Répondre » mène à la demande (Assistance)');
+    check(await p.locator('#ov-todo a[href^="#pilotage/assistance/"]').count() === 1, '(c) « À traiter » : « Répondre » mène à la demande (Assistance)');
     check(await p.locator('#ov-activity li').count() >= 1 && await visible(p, '#ov-activity-card'), '(c) activité récente : dernières actions du journal');
-    check((await p.evaluate(() => document.querySelector('#ov-tiles').textContent)).includes('demande ouverte'), '(c) tuile Communication : libellé « demande ouverte »');
-    await p.click('#ov-todo a[href^="#communication/assistance/"]');
+    check((await p.evaluate(() => document.querySelector('#stats').textContent)).includes('demande ouverte'), '(c) chiffre clé Assistance : libellé « demande ouverte »');
+    await p.click('#ov-todo a[href^="#pilotage/assistance/"]');
     await sleep(300);
-    check(await hashOf(p) === '#communication/assistance/sup-1', '(c) lien « Répondre » : mène à la demande dans Assistance');
+    check(await hashOf(p) === '#pilotage/assistance/sup-1', '(c) lien « Répondre » : mène à la demande dans Assistance');
     check(!p.errs.length, '(c) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }

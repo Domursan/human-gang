@@ -18,10 +18,10 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
     let p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: mjScn });
     await sleep(500);
     const subs = await p.$$eval('#shell-subs .shell-sub', (a) => a.map((x) => x.getAttribute('href')));
-    check(JSON.stringify(subs) === JSON.stringify(['#cartes/mes-jeux']), `(a) Staff mj : une seule sous-section (${subs.join(', ')})`);
+    check(JSON.stringify(subs) === JSON.stringify(['#jeux/mes-jeux']), `(a) Staff mj : une seule sous-section (${subs.join(', ')})`);
     await p.evaluate(() => { location.hash = 'membres/comptes'; }); await sleep(600);
-    check(await p.evaluate(() => location.hash) === '#cartes/mes-jeux', '(a) #membres/comptes redirigée vers Mes jeux');
-    await adminSection(p, 'cartes/mes-jeux');
+    check(await p.evaluate(() => location.hash) === '#jeux/mes-jeux', '(a) #membres/comptes redirigée vers Mes jeux');
+    await adminSection(p, 'jeux/mes-jeux');
     await p.waitForSelector('.mj-game');
     check(await p.$$eval('.mj-game', (g) => g.length) === 1 && (await p.textContent('.mj-title')).includes('CK3'), '(b) un seul jeu : CK3');
     check(await p.locator('.mj-masters').count() === 0 && await p.locator('#zone-actions .btn').count() === 0, '(b) ni liste des MJ ni « Nouveau jeu » pour un MJ');
@@ -39,7 +39,7 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
 
     // (d) Admin
     p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { settings, staffRows: [{ user_id: U(3), perms: ['mj'], active: true, note: '' }] } });
-    await adminSection(p, 'cartes/mes-jeux');
+    await adminSection(p, 'jeux/mes-jeux');
     await p.waitForSelector('.mj-game');
     check(await p.$$eval('.mj-game', (g) => g.length) === 2, '(d) admin : tous les jeux (2)');
     await p.selectOption('#mj-add-ck3', U(3));
@@ -61,7 +61,7 @@ const ok = async (p) => { await p.waitForSelector('dialog[open] button[value="ok
     await p.ctx.close();
 
     p = await openPage(browser, { page: 'admin', width: 375, height: 812, scenario: mjScn });
-    await adminSection(p, 'cartes/mes-jeux'); await sleep(500);
+    await adminSection(p, 'jeux/mes-jeux'); await sleep(500);
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     await p.ctx.close();
   } catch (e) { check(false, 'arrêt sur erreur : ' + String(e.message).split('\n')[0]); }

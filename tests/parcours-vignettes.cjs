@@ -54,7 +54,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR
   /* ---------- Admin : vignettes manquantes ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { photoUrl: 'assets/img/favicon-64.png' } });
-    await adminSection(p, 'vie/souvenirs');
+    await adminSection(p, 'irl/souvenirs');
     await p.click('#shell-col .sv-views a[data-view="photos"]');
     await p.waitForSelector('#souvenirs-root .sv-photo', { timeout: 5000 }).catch(() => {});
     const btn = p.locator('#sv-ph-gen-btn');

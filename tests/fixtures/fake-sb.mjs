@@ -655,12 +655,12 @@ function xa1Rpc(fn, args = {}) {
     if (to - from > 92 * 864e5) return xErr('Période trop longue (92 jours au plus)');
     const inR = (d) => d && new Date(d) >= from && new Date(d) < to;
     const out = [];
-    if (hasP('quiz')) for (const q of DB.hg_quiz_questions) if (inR(q.starts_at)) out.push({ kind: 'quiz', id: q.id, title: q.prompt, start: q.starts_at, end: q.ends_at, status: 'active', route: 'cartes/questions' });
-    if (hasP('themes')) for (const e of DB.hg_dyn_events) if (new Date(e.starts_at) < to && new Date(e.ends_at) >= from) out.push({ kind: 'evenement', id: e.id, title: e.name, start: e.starts_at, end: e.ends_at, status: 'active', route: 'vie/evenements' });
-    if (hasP('evenements')) for (const e of DB.hg_events) if (inR(e.starts_at)) out.push({ kind: 'sortie', id: e.id, title: e.title, start: e.starts_at, end: null, status: 'prevue', detail: e.location, route: 'vie/sorties' });
+    if (hasP('quiz')) for (const q of DB.hg_quiz_questions) if (inR(q.starts_at)) out.push({ kind: 'quiz', id: q.id, title: q.prompt, start: q.starts_at, end: q.ends_at, status: 'active', route: 'jeux/questions' });
+    if (hasP('themes')) for (const e of DB.hg_dyn_events) if (new Date(e.starts_at) < to && new Date(e.ends_at) >= from) out.push({ kind: 'evenement', id: e.id, title: e.name, start: e.starts_at, end: e.ends_at, status: 'active', route: 'event/evenements' });
+    if (hasP('evenements')) for (const e of DB.hg_events) if (inR(e.starts_at)) out.push({ kind: 'sortie', id: e.id, title: e.title, start: e.starts_at, end: null, status: 'prevue', detail: e.location, route: 'irl/sorties' });
     if (hasP('cartes')) for (const d of S.planningDrops || []) if (inR(d.start)) out.push({ kind: 'carte_drop', route: 'cartes/drops', status: 'normale', ...d });
     if (hasP('bot')) for (const b of DB.hg_bot_scheduled) if (inR(b.send_at)) out.push({ kind: 'bot', id: b.id, title: b.title || b.body.slice(0, 80), start: b.send_at, end: null,
-      status: b.cancelled_at ? 'annulee' : b.sent_at ? 'envoyee' : 'programmee', by: 'Ethan', detail: b.body, channels: b.channels, game: b.game_slug ? 'Campagne Serge (CK3)' : null, route: 'communication/bot' });
+      status: b.cancelled_at ? 'annulee' : b.sent_at ? 'envoyee' : 'programmee', by: 'Ethan', detail: b.body, channels: b.channels, game: b.game_slug ? 'Campagne Serge (CK3)' : null, route: 'pilotage/bot' });
     return { data: out, error: null };
   }
   if (fn === 'hg_bot_schedule_save') {
@@ -789,6 +789,18 @@ export function createClient(_url, _key, opts = {}) {
         if (prof && typeof pr['sorties.discord'] === 'boolean') prof.remind_irl = pr['sorties.discord'];
         if (prof && typeof pr['souhaits.discord'] === 'boolean') prof.notify_card_wish = pr['souhaits.discord'];
         return { data: row, error: null };
+      }
+      // Raccourcis de la Vue d'ensemble (migration 103) : liste ordonnée d'identifiants de sous-section, par membre (privée).
+      // null tant que rien n'est enregistré. Scénario : shortcuts (liste de départ), shortcutsFail (écriture refusée).
+      // L'écriture garde le même nettoyage que la fonction SQL : identifiants valides, sans doublon, 24 au plus.
+      if (fn === 'hg_admin_shortcuts_get' || fn === 'hg_admin_shortcuts_set') {
+        const uid = S.uid || ME;
+        const store = DB.hg_admin_shortcuts || (DB.hg_admin_shortcuts = {});
+        if (fn === 'hg_admin_shortcuts_get') return { data: store[uid] ?? S.shortcuts ?? null, error: null };
+        if (S.shortcutsFail) return { data: null, error: { message: 'Raccourcis indisponibles' } };
+        const clean = [...new Set((args?.p_items || []).filter((x) => /^[a-z0-9-]{1,40}$/.test(x)))].slice(0, 24);
+        store[uid] = clean;
+        return { data: clean, error: null };
       }
       // Pages visibles pour l'utilisateur connecté : toutes pour un admin, sinon celles qui lui sont accordées.
       if (fn === 'hg_my_pages') {

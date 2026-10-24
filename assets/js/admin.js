@@ -48,22 +48,22 @@ import { setupPalette } from './admin/palette.js';
 // Sections facultatives (modules autonomes) : chargées en parallèle de l'identité. Un module absent ou sans sa fonction de
 // montage retire sa sous-section du panel (disableSubs) au lieu de casser le démarrage.
 const OPTIONAL = [
-  { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Jeux et cartes › Secrets (hg_settings.eggs)
-  { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Communication › Fil d'activité (hg_activity)
-  { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Champs du profil (profile_fields)
-  { sub: 'geoguessr', url: './admin-jeux.js', fn: 'mountGeoSection' },         // Jeux et cartes › GeoGuessr (migration 083)
-  { sub: 'citations', url: './admin-jeux.js', fn: 'mountCitationsSection' },   // Jeux et cartes › Citations « Qui a dit ça ? »
-  { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Jeux et cartes › Preuves de quêtes (J11)
-  { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Jeux et cartes › Framed et Heardle (J9, J10)
-  { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Jeux et cartes › Bataille (J15)
-  { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Vie sociale (hg_settings.social, migration 090)
-  { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Parrainage (idée P8)
-  { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Compétences (idée P7)
-  { sub: 'accueil', url: './admin-social.js', fn: 'mountAccueilSection' },         // Site › Accueil des membres (idées P9, P6)
-  { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Site › Erreurs du site (hg_client_errors, A9)
-  { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Site › Archives (fonction hg-archive, A8)
-  { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Vie du gang › Calendrier et ciné (idées V8, V9)
-  { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Communication › Commandes slash (idée D3)
+  { sub: 'secrets', url: './admin-eggs.js', fn: 'mountEggsSection' },   // Autres jeux › Secrets (hg_settings.eggs)
+  { sub: 'fil', url: './admin-fil.js', fn: 'mountFilSection' },         // Pilotage › Assistance › Fil d'activité (hg_activity)
+  { sub: 'champs', url: './admin-champs.js', fn: 'mountChampsSection' }, // Membres › Comptes › Champs du profil (profile_fields)
+  { sub: 'geoguessr', url: './admin-jeux.js', fn: 'mountGeoSection' },         // Autres jeux › GeoGuessr (migration 083)
+  { sub: 'citations', url: './admin-jeux.js', fn: 'mountCitationsSection' },   // Autres jeux › Citations « Qui a dit ça ? »
+  { sub: 'preuves', url: './admin-proofs.js', fn: 'mountProofsSection' },               // Autres jeux › Preuves de quêtes (J11)
+  { sub: 'framed-heardle', url: './admin-jeux-medias.js', fn: 'mountJeuxMediasSection' }, // Autres jeux › Framed et Heardle (J9, J10)
+  { sub: 'bataille', url: './admin-bataille.js', fn: 'mountBatailleSection' },          // Le jeu de cartes › Arène (J15)
+  { sub: 'social', url: './admin-social.js', fn: 'mountSocialSection' }, // Membres › Comptes › Vie sociale (hg_settings.social, migration 090)
+  { sub: 'parrainage', url: './admin-social.js', fn: 'mountParrainageSection' },   // Membres › Entraide › Parrainage (idée P8)
+  { sub: 'competences', url: './admin-social.js', fn: 'mountCompetencesSection' }, // Membres › Entraide › Compétences (idée P7)
+  { sub: 'accueil', url: './admin-social.js', fn: 'mountAccueilSection' },         // Membres › Comptes › Accueil des membres (idées P9, P6)
+  { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Pilotage › Site › Erreurs du site (hg_client_errors, A9)
+  { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Pilotage › Site › Archives (fonction hg-archive, A8)
+  { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Event › Calendrier et cinéma (idées V8, V9)
+  { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Pilotage › Bot › Commandes slash (idée D3)
 ];
 const optionalP = Promise.all(OPTIONAL.map(async (o) => {
   try { const m = await import(o.url); return [o.sub, typeof m[o.fn] === 'function' ? m[o.fn] : null]; }
@@ -71,11 +71,11 @@ const optionalP = Promise.all(OPTIONAL.map(async (o) => {
 }));
 
 // Idées A2, A3, A4 (migration 092) : sous-sections livrées comme fournisseurs complets ({ main, open }). Un module absent
-// retire sa sous-section (comme OPTIONAL).
+// retire sa sous-section (comme OPTIONAL). Réorganisation (migration 103) : les routes suivent les nouveaux domaines.
 const PROVIDERS = [
   { route: 'pilotage/planning', url: './admin/planning.js', name: 'planningSub' },     // Pilotage › Planning
-  { route: 'membres/relance', url: './admin-accounts/remind.js', name: 'remindSub' },  // Membres › À relancer
-  { route: 'cartes/mes-jeux', url: './admin-mj.js', name: 'mjSub' },                   // Jeux et cartes › Mes jeux
+  { route: 'membres/relance', url: './admin-accounts/remind.js', name: 'remindSub' },  // Membres › Comptes › À relancer
+  { route: 'jeux/mes-jeux', url: './admin-mj.js', name: 'mjSub' },                   // Autres jeux › Mes jeux
 ];
 const providersP = Promise.all(PROVIDERS.map(async (p) => {
   try { const m = await import(p.url); return [p, m[p.name] && typeof m[p.name] === 'object' ? m[p.name] : null]; }
@@ -88,6 +88,9 @@ const MOUNT = Object.fromEntries(await optionalP);
 disableSubs(...OPTIONAL.filter((o) => !MOUNT[o.sub]).map((o) => o.sub));
 const PROV = await providersP;
 disableSubs(...PROV.filter(([, v]) => !v).map(([p]) => p.route.split('/')[1]));
+// Réorganisation (migration 103) : sous-sections présentes dans l'arborescence, sans module pour l'instant (livrées plus tard).
+// Retirées du panel tant qu'elles n'ont pas de module ; la section n'existe pas dans admin.html (aucune section vide).
+disableSubs('roles', 'membres-irl', 'gestion', 'arcade'); // livrée plus tard
 applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
@@ -184,23 +187,23 @@ if (MOUNT.champs) registerSub('membres/champs', { main: () => MOUNT.champs($('#c
 if (MOUNT.social) registerSub('membres/social', { main: () => MOUNT.social($('#social-root')) });
 if (MOUNT.parrainage) registerSub('membres/parrainage', { main: () => MOUNT.parrainage($('#parrainage-root')) });
 if (MOUNT.competences) registerSub('membres/competences', { main: () => MOUNT.competences($('#competences-root')) });
-if (MOUNT.accueil) registerSub('site/accueil', { main: () => MOUNT.accueil($('#accueil-root')) });
-// Vie du gang
-registerSub('vie/sorties', {
+if (MOUNT.accueil) registerSub('membres/accueil', { main: () => MOUNT.accueil($('#accueil-root')) });
+// IRL (Membres IRL, sorties, souvenirs, Secret Santa)
+registerSub('irl/sorties', {
   main: () => mountSortiesSection($('#sorties-root'), { me }),
   open: (el, r) => openSortie(r),
   list: listSorties,
   info: infoSorties,
 });
-registerSub('vie/souvenirs', {
+registerSub('irl/souvenirs', {
   main: () => mountSouvenirsSection($('#souvenirs-root'), { me }),
   open: (el, r) => openSouvenirs(r),
   list: listSouvenirs,
 });
-registerSub('vie/secret-santa', ssSub);
-registerSub('vie/evenements', eventsSub({ onBadgesChange: async () => { await loadBadges(); renderBadges(); } }));
-if (MOUNT.rdv) registerSub('vie/rdv', { main: () => MOUNT.rdv($('#rdv-root')) }); // calendrier (rendez-vous récurrents) et ciné-club
-// Badges : une section, trois parties (Catalogue, Attribution, Critères automatiques). « + Nouveau badge » : Catalogue
+registerSub('irl/secret-santa', ssSub);
+registerSub('event/evenements', eventsSub({ onBadgesChange: async () => { await loadBadges(); renderBadges(); } }));
+if (MOUNT.rdv) registerSub('event/rdv', { main: () => MOUNT.rdv($('#rdv-root')) }); // calendrier (rendez-vous récurrents) et ciné-club
+// Badges (Membres) : une section, trois parties (Catalogue, Attribution, Critères automatiques). « + Nouveau badge » : Catalogue
 // seulement (ou partout si la section ne sait pas encore se découper).
 /** Fournisseur `open` de la partie `part` des badges. */
 const badgesOpen = (part) => (el, r) => {
@@ -209,9 +212,9 @@ const badgesOpen = (part) => (el, r) => {
   if (!split || part === 'catalogue') badgesSub.open?.(el, r);
 };
 for (const [sub, part] of [['badges', 'catalogue'], ['badges-attribution', 'attribution'], ['badges-criteres', 'criteres']]) {
-  registerSub(`vie/${sub}`, { ...badgesSub, group: 'badges', open: badgesOpen(part) });
+  registerSub(`membres/${sub}`, { ...badgesSub, group: 'badges', open: badgesOpen(part) });
 }
-// Jeux et cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
+// Le jeu de cartes : une seule section (#cartes) montée une fois ; chaque partie est une sous-section qui ouvre son onglet.
 const cardsGroup = { group: 'cartes', main: () => mountCardsSection($('#cards-root'), { tabs: false }) };
 for (const tab of ['series', 'cartes', 'boosters', 'quetes', 'stats', 'echanges', 'codes', 'recettes', 'encheres']) {
   registerSub(`cartes/${tab}`, { ...cardsGroup, open: () => openCardsTab(tab) });
@@ -226,7 +229,7 @@ registerSub('cartes/joueurs', { ...cardsGroup, list: mountPlayersList, open: (_e
 // Rendez-vous saisonniers (migration 096) : une section, trois parties ; module chargé à la première visite.
 const saisonsMod = () => import('./admin-saisons.js');
 for (const [sub, part] of [['avent', 'avent'], ['saison-worlds', 'worlds'], ['anniv-gang', 'anniv']]) {
-  registerSub(`vie/${sub}`, { group: 'saisons', main: async () => (await saisonsMod()).mountSaisonsSection($('#saisons-root')),
+  registerSub(`event/${sub}`, { group: 'saisons', main: async () => (await saisonsMod()).mountSaisonsSection($('#saisons-root')),
     open: async () => (await saisonsMod()).showSaisonsPart(part) });
 }
 registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
@@ -234,31 +237,31 @@ registerSub('cartes/drops', { main: () => mountDropsSection($('#drops-root')) })
 registerSub('cartes/cagnotte', { main: () => import('./admin-cards/pots.js').then((m) => m.mountPotsSection($('#pots-root'))) });
 registerSub('cartes/champions', { main: () => import('./admin-cards/champions.js').then((m) => m.mountChampionsSection($('#champions-root'))) });
 registerSub('cartes/defis', { main: () => mountChallengesSection($('#challenges-root')) });
-registerSub('cartes/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
-registerSub('cartes/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
-if (MOUNT.secrets) registerSub('cartes/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
+registerSub('jeux/questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
+registerSub('jeux/sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation
+if (MOUNT.secrets) registerSub('jeux/secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
 // Page « Jeux » : GeoGuessr, citations (admin-jeux.js)
-if (MOUNT.geoguessr) registerSub('cartes/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
-if (MOUNT.citations) registerSub('cartes/citations', { main: () => MOUNT.citations($('#citations-admin-root')) });
-if (MOUNT.preuves) registerSub('cartes/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
-if (MOUNT['framed-heardle']) registerSub('cartes/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
-if (MOUNT.bataille) registerSub('cartes/bataille', { main: () => MOUNT.bataille($('#bataille-root')) });
-// Communication
-registerSub('communication/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
-registerSub('communication/idees', ideasSub);
-registerSub('communication/messagerie', {
+if (MOUNT.geoguessr) registerSub('jeux/geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
+if (MOUNT.citations) registerSub('jeux/citations', { main: () => MOUNT.citations($('#citations-admin-root')) });
+if (MOUNT.preuves) registerSub('jeux/preuves', { main: () => MOUNT.preuves($('#proofs-root')) });
+if (MOUNT['framed-heardle']) registerSub('jeux/framed-heardle', { main: () => MOUNT['framed-heardle']($('#jeux-medias-root')) });
+if (MOUNT.bataille) registerSub('cartes/arene', { main: () => MOUNT.bataille($('#bataille-root')) });
+// Pilotage › Assistance (demandes, idées, messagerie, fil)
+registerSub('pilotage/assistance', supportSub); // liste en colonne 2, détail et fiche rapide
+registerSub('pilotage/idees', ideasSub);
+registerSub('pilotage/messagerie', {
   main: (el) => { el.dataset.fill = ''; mountMessagesSection($('#messages-root')); },
   open: openMessages, list: listMessages, // liste en colonne 2, lecture dans la zone (createThread en lecture seule)
 });
-if (MOUNT.fil) registerSub('communication/fil', { main: () => MOUNT.fil($('#fil-root')) }); // modération du fil d'activité de l'accueil
-registerSub('communication/bot', { main: () => mountBotSection($('#bot-root')) });
-if (MOUNT.commandes) registerSub('communication/commandes', { main: () => MOUNT.commandes($('#commandes-root')) }); // commandes slash Discord
-// Site
+if (MOUNT.fil) registerSub('pilotage/fil', { main: () => MOUNT.fil($('#fil-root')) }); // modération du fil d'activité de l'accueil
+registerSub('pilotage/bot', { main: () => mountBotSection($('#bot-root')) });
+if (MOUNT.commandes) registerSub('pilotage/commandes', { main: () => MOUNT.commandes($('#commandes-root')) }); // commandes slash Discord
+// Pilotage › Site (Réglages du site)
 // Réglages du site : une section, cinq parties (identité, textes, menu, état du site : un seul formulaire ; clés avancées :
-// la liste brute de hg_settings, route d'origine #site/reglages). « + Nouvelle clé » : partie Clés avancées seulement.
+// la liste brute de hg_settings, route d'origine #pilotage/reglages). « + Nouvelle clé » : partie Clés avancées seulement.
 const reglagesGroup = { group: 'reglages', main: () => mountReglagesSection($('#reglages-root')) };
 for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['menu', 'menu'], ['etat', 'etat'], ['reglages', 'cles']]) {
-  registerSub(`site/${sub}`, {
+  registerSub(`pilotage/${sub}`, {
     ...reglagesGroup,
     open: () => {
       if (typeof Reg.showReglagesPart !== 'function') { setActions(reglagesActions()); return; } // section entière
@@ -268,9 +271,9 @@ for (const [sub, part] of [['identite', 'identite'], ['textes', 'textes'], ['men
   });
 }
 for (const [p, v] of PROV) if (v) registerSub(p.route, v); // Planning, À relancer, Mes jeux (idées A2 à A4)
-registerSub('site/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
-if (MOUNT.erreurs) registerSub('site/erreurs', { main: () => MOUNT.erreurs($('#errors-root')) }); // A9 : erreurs JavaScript regroupées
-if (MOUNT.archives) registerSub('site/archives', { main: () => MOUNT.archives($('#archives-root')) }); // A8 : archive annuelle (admin)
+registerSub('pilotage/theme', { main: () => mountThemesSection($('#theme-root')), open: () => setActions(themeActions()) });
+if (MOUNT.erreurs) registerSub('pilotage/erreurs', { main: () => MOUNT.erreurs($('#errors-root')) }); // A9 : erreurs JavaScript regroupées
+if (MOUNT.archives) registerSub('pilotage/archives', { main: () => MOUNT.archives($('#archives-root')) }); // A8 : archive annuelle (admin)
 
 /* ---------- Démarrage : seulement les données partagées des sections permises (chaque donnée se charge une fois) ---------- */
 // Les réglages du bot et du thème se chargent avec leur section (admin-bot.js, admin-themes.js).

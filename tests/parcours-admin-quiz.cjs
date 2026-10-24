@@ -33,7 +33,7 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   // Récompenses par défaut lues dans hg_settings (valeurs du scénario, différentes de celles de la migration)
   const scenario = { settings: [{ key: 'quiz', value: { recompenses: { facile: 60, moyen: 120, difficile: 260, expert: 800 } } }] };
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario });
-  await adminSection(p, 'cartes/questions');
+  await adminSection(p, 'jeux/questions');
   await p.waitForSelector('#adq-list .empty', { timeout: 5000 });
   check((await p.textContent('#adq-list')).includes('Aucune question'), '(a) liste vide au départ');
   check((await p.inputValue('#adq-rw-expert')) === '800', '(c) récompense par défaut « expert » lue dans hg_settings (800)');
@@ -243,7 +243,7 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   /* (d) Erreur du serveur affichée dans le formulaire */
   {
     const e = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { quizError: 'Coche la ou les bonnes réponses' } });
-    await adminSection(e, 'cartes/questions');
+    await adminSection(e, 'jeux/questions');
     await e.waitForSelector('#adq-list .empty', { timeout: 5000 });
     await e.click('[data-adq="new"]');
     await e.waitForSelector('dialog.ui-drawer[open] #adq-prompt', { timeout: 5000 });
@@ -265,7 +265,7 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
   /* (d) Case secrète : erreur du serveur à hg_quiz_set_secret ; la question est enregistrée, pas recréée au renvoi */
   {
     const e = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { quizSecretError: 'Réglage secret indisponible' } });
-    await adminSection(e, 'cartes/questions');
+    await adminSection(e, 'jeux/questions');
     await e.waitForSelector('#adq-list .empty', { timeout: 5000 });
     await e.click('[data-adq="new"]');
     await e.waitForSelector('dialog.ui-drawer[open] #adq-prompt', { timeout: 5000 });
@@ -294,7 +294,7 @@ const choice = (id) => `dialog.ui-drawer[open] .adq-choice[data-id="${id}"]`;
     const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['quiz'] } });
     const subs = await s.$$eval('#shell-subs [data-dom-subs]:not([hidden]) .shell-sub', (as) => as.map((a) => a.dataset.sub));
     check(JSON.stringify(subs) === JSON.stringify(['questions']), `(a) Staff « quiz » : domaine Jeu de cartes = ${subs.join(', ')}`);
-    await adminSection(s, 'cartes/questions');
+    await adminSection(s, 'jeux/questions');
     check(await s.isVisible('#quiz') && await s.isVisible('#adq-list'), '(a) Staff « quiz » : section affichée');
     check(s.errs.length === 0, '(a) Staff « quiz » : aucune erreur JS' + (s.errs.length ? ' (' + s.errs.join(' | ') + ')' : ''));
     await s.ctx.close();

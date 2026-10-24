@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : messagerie (lecture + modération) =====
 // Communication › Messagerie : conversations en colonne 2 (createList, filtres Toutes / Directes / Secret Santa),
-// lecture en détail dans la zone principale (createThread en lecture seule). Route : #communication/messagerie[/<id>].
+// lecture en détail dans la zone principale (createThread en lecture seule). Route : #pilotage/messagerie[/<id>].
 // Métadonnées des conversations via rpc hg_admin_conversations(). Les messages ne sont lus que par rpc
 // hg_admin_read_conversation, qui journalise chaque lecture ; la suppression d'un message passe par hg_admin_message_remove (journal admin).
 // L'admin voit les vrais expéditeurs, y compris le Santa.
@@ -275,7 +275,7 @@ export function listMessages(el) {
     search: { placeholder: 'Rechercher un pseudo…', label: 'Rechercher un pseudo', fields: (it) => `${it.name} ${it.title}` },
     selectedId: M.sel,
     empty: 'Aucune conversation pour l’instant.',
-    onSelect: (it) => { location.hash = `#communication/messagerie/${it.id}`; },
+    onSelect: (it) => { location.hash = `#pilotage/messagerie/${it.id}`; },
   });
 }
 

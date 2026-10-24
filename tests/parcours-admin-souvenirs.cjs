@@ -1,4 +1,4 @@
-// Parcours admin : section « Souvenirs et photos » (admin.html#vie/souvenirs).
+// Parcours admin : section « Souvenirs et photos » (admin.html#irl/souvenirs).
 // Liste en colonne 2, détail dans la zone principale ; vues Souvenirs / Photos / Réactions en puces.
 // Créer, modifier et supprimer un souvenir ; supprimer une photo d'album ; masquer une réaction.
 // Faux Supabase (fixtures/fake-sb.mjs) : le test vérifie ce que le client envoie (journal) et ce qui s'affiche.
@@ -20,7 +20,7 @@ const row = (p, titre) => p.locator('#shell-col .ui-row', { hasText: titre });
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', width: 1280 });
-  await adminSection(p, 'vie/souvenirs');
+  await adminSection(p, 'irl/souvenirs');
   await p.waitForSelector('#shell-col .ui-row', { timeout: 5000 }).catch(() => {});
   check(await p.isVisible('#souvenirs'), 'section « Souvenirs et photos » présente');
   check((await p.locator('#shell-col .ui-row').count()) === 3, 'colonne 2 : 3 souvenirs affichés');

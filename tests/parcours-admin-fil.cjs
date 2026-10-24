@@ -4,7 +4,7 @@
 // (c) suppression : annulation → rien ; confirmation → ligne retirée de __DB.hg_activity, notification ;
 // (d) Staff « reglages » : la section fonctionne ; texte venant de la base échappé ;
 // (e) 360 px sans défilement horizontal, cibles ≥ 44 px, aucune erreur JS.
-// La section est ouverte par sa route #communication/fil si admin.js la branche, sinon montée directement (mountFilSection).
+// La section est ouverte par sa route #pilotage/fil si admin.js la branche, sinon montée directement (mountFilSection).
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-fil.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium } = require('./lib/harness.cjs');
 
@@ -22,8 +22,8 @@ const ACTIVITY = [
 
 /** Ouvre la section : route si elle existe, sinon montage direct dans la zone principale. */
 async function openFil(p) {
-  const routed = await p.locator('a.shell-sub[href="#communication/fil"]').count();
-  if (routed) { await adminSection(p, 'communication/fil'); }
+  const routed = await p.locator('a.shell-sub[href="#pilotage/fil"]').count();
+  if (routed) { await adminSection(p, 'pilotage/fil'); }
   else {
     await p.evaluate(async () => {
       if (!document.querySelector('link[href$="admin-fil.css"]')) {
@@ -48,7 +48,7 @@ const shownIds = (p) => p.$$eval('#fil-root .afl-row', (els) => els.map((e) => N
   /* (a) Liste */
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario });
   const how = await openFil(p);
-  console.log(`  (section ouverte : ${how === 'route' ? 'route #communication/fil' : 'montage direct, route pas encore branchée'})`);
+  console.log(`  (section ouverte : ${how === 'route' ? 'route #pilotage/fil' : 'montage direct, route pas encore branchée'})`);
   check(JSON.stringify(await shownIds(p)) === JSON.stringify([105, 104, 103, 102, 101]), '(a) 5 entrées, plus récentes d\'abord');
   const r103 = await p.textContent('.afl-row[data-id="103"]');
   check(r103.includes('Bruno') && r103.includes('Badge'), '(a) auteur (pseudo) et type affichés');

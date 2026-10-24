@@ -1,13 +1,13 @@
 // =====================================================================
-// Admin : section « Souvenirs et photos ». Sous-section unique (vie/souvenirs) avec trois vues, choisies par
+// Admin : section « Souvenirs et photos ». Sous-section unique (irl/souvenirs) avec trois vues, choisies par
 // des puces en haut de la colonne 2 :
-//   #vie/souvenirs            liste des souvenirs (colonne 2) et détail (zone principale)
-//   #vie/souvenirs/<id>       un souvenir sélectionné
-//   #vie/souvenirs/photos     vue Photos (albums des sorties et images des souvenirs)
-//   #vie/souvenirs/reactions  vue Réactions (réactions actives, masquage)
-//   #vie/souvenirs/contenus   vue Contenus proposés (citations, playlist, récap : contenus.js)
-//   #vie/souvenirs/ce-jour    vue Ce jour-là (idée S1 : contenu.js)
-// Montage par admin.js (registerSub 'vie/souvenirs') : main, open, list. Droits : hg_moments, hg_photos, hg_reactions côté base.
+//   #irl/souvenirs            liste des souvenirs (colonne 2) et détail (zone principale)
+//   #irl/souvenirs/<id>       un souvenir sélectionné
+//   #irl/souvenirs/photos     vue Photos (albums des sorties et images des souvenirs)
+//   #irl/souvenirs/reactions  vue Réactions (réactions actives, masquage)
+//   #irl/souvenirs/contenus   vue Contenus proposés (citations, playlist, récap : contenus.js)
+//   #irl/souvenirs/ce-jour    vue Ce jour-là (idée S1 : contenu.js)
+// Montage par admin.js (registerSub 'irl/souvenirs') : main, open, list. Droits : hg_moments, hg_photos, hg_reactions côté base.
 // Dépendances : core.js, photos.js (miniatures, lightbox), admin/ui/* (liste, en-tête), admin/common.js, admin/live.js,
 // helpers.js, moments.js (formulaire), photos.js (vue Photos), reactions.js (vue Réactions),
 // admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
@@ -146,7 +146,7 @@ function repaint() {
 /* ---------- Actions ---------- */
 
 /* Change l'URL de la section (le routeur réaffiche la bonne vue). */
-const setHash = (path) => { location.hash = `#vie/souvenirs${path}`; };
+const setHash = (path) => { location.hash = `#irl/souvenirs${path}`; };
 
 /** Ouvre le formulaire d'un souvenir (création si m est absent). Après enregistrement, ouvre le nouveau souvenir. */
 async function editMoment(m = null) {
@@ -206,7 +206,7 @@ export function mountSouvenirsSection(root, { me }) {
   reload();
 }
 
-/** Sélection de vue ou de souvenir : appelé à chaque visite (URL #vie/souvenirs[/<id|vue>]). */
+/** Sélection de vue ou de souvenir : appelé à chaque visite (URL #irl/souvenirs[/<id|vue>]). */
 export function openSouvenirs({ id } = {}) {
   const view = VIEWS.some(([k]) => k === id) ? id : 'souvenirs';
   const changed = view !== S.view;
@@ -222,7 +222,7 @@ export function openSouvenirs({ id } = {}) {
 export function listSouvenirs(el) {
   el.innerHTML = `<div class="sv-col">
     <nav class="sv-views" aria-label="Vues de la section">
-      ${VIEWS.map(([k, label]) => `<a class="chip" href="#vie/souvenirs${k === 'souvenirs' ? '' : `/${k}`}" data-view="${k}">${label}</a>`).join('')}
+      ${VIEWS.map(([k, label]) => `<a class="chip" href="#irl/souvenirs${k === 'souvenirs' ? '' : `/${k}`}" data-view="${k}">${label}</a>`).join('')}
     </nav>
     <div class="sv-col-tools">
       <button type="button" class="btn btn-primary btn-sm" id="sv-new">+ Nouveau souvenir</button>

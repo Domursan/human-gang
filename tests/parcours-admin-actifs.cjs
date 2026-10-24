@@ -84,7 +84,7 @@ const now = () => new Date().toISOString();
     await p.keyboard.press('Escape');
 
     // Sorties : ajout d'un inscrit (choix sans fantôme), présence déjà enregistrée (historique)
-    await adminSection(p, 'vie/sorties');
+    await adminSection(p, 'irl/sorties');
     await p.click(`#shell-col .ui-row[data-id="${EV}"]`);
     await p.waitForSelector('#ass-d-body .ass-person', { timeout: 5000 });
     const inscrits = await texts(p, '#ass-d-body .ass-person-name');
@@ -96,7 +96,7 @@ const now = () => new Date().toISOString();
     check(ajout.includes('Alice') && !ajout.some((t) => t.includes('Léa')), 'sorties : « Ajouter un membre » ne propose pas le fantôme');
 
     // Souvenirs : auteur d'un nouveau souvenir et filtre des réactions
-    await adminSection(p, 'vie/souvenirs');
+    await adminSection(p, 'irl/souvenirs');
     await p.click('#shell-col .sv-views a[data-view="reactions"]');
     await p.waitForSelector('#sv-re-member', { timeout: 5000 });
     const membres = await texts(p, '#sv-re-member option');
@@ -113,7 +113,7 @@ const now = () => new Date().toISOString();
     await p.keyboard.press('Escape');
 
     // Secret Santa : exclusion (choix des deux personnes sans fantôme)
-    await adminSection(p, 'vie/secret-santa');
+    await adminSection(p, 'irl/secret-santa');
     await p.click('.shell-slot:not([hidden]) .ui-row[data-id="E25"]');
     await p.waitForSelector('#ss-dhead h2', { timeout: 5000 });
     await p.click('[data-ss-act="excl-new"]');

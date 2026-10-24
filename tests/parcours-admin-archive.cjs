@@ -19,7 +19,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
       calls.push(body);
       await route.fulfill({ status: 200, body: Buffer.from('PK\u0005\u0006' + '\0'.repeat(18)), headers: { 'Content-Type': 'application/zip', 'X-Archive-Parts': '2', 'Access-Control-Expose-Headers': 'X-Archive-Parts' } });
     });
-    await adminSection(p, 'site/archives');
+    await adminSection(p, 'pilotage/archives');
     await p.waitForSelector('#ar-form', { timeout: 5000 });
     check(await p.$$eval('#ar-year option', (o) => o.length) >= 5 && await p.$$eval('#ar-form input[name="parts"]:checked', (i) => i.length) === 5, '(a) année et 5 parties cochées');
     check(/Jamais dans l’archive/.test(await p.textContent('#ar-form')), '(a) exclusions annoncées');
@@ -42,13 +42,13 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
     await p.ctx.close();
 
     p = await openPage(browser, { page: 'admin', scenario: { uid: U(2), staff: ['reglages'] } });
-    await p.evaluate(() => { location.hash = '#site/archives'; });
+    await p.evaluate(() => { location.hash = '#pilotage/archives'; });
     await sleep(600);
-    check(await p.evaluate(() => location.hash) !== '#site/archives' && !(await p.isVisible('#archives')), '(c) Staff : Archives redirigée, jamais affichée');
+    check(await p.evaluate(() => location.hash) !== '#pilotage/archives' && !(await p.isVisible('#archives')), '(c) Staff : Archives redirigée, jamais affichée');
     await p.ctx.close();
 
     p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
-    await adminSection(p, 'site/archives');
+    await adminSection(p, 'pilotage/archives');
     await p.waitForSelector('#ar-form', { timeout: 5000 });
     check(await hscroll(p) <= 0, '(d) 375 px : pas de défilement horizontal');
     await p.ctx.close();

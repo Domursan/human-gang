@@ -71,7 +71,7 @@ function alerts() {
 export function ecoTodo() {
   const list = ignored() ? [] : alerts();
   const n = list.length;
-  return n ? { label: `${n} ${n > 1 ? 'alertes' : 'alerte'} économie`, meta: 'Jeux et cartes · Économie', href: list[0].href, act: 'Examiner' } : null;
+  return n ? { label: `${n} ${n > 1 ? 'alertes' : 'alerte'} économie`, meta: 'Le jeu de cartes · Économie', href: list[0].href, act: 'Examiner' } : null;
 }
 /** Tuile de la vue d'ensemble (nombre d'alertes rouges), ou null sans droit / sans données. */
 export function ecoTile() {

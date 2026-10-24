@@ -1,4 +1,4 @@
-// Parcours : gérer les sorties IRL depuis l'administration (admin.html#vie/sorties : liste en colonne 2, détail dans la zone principale).
+// Parcours : gérer les sorties IRL depuis l'administration (admin.html#irl/sorties : liste en colonne 2, détail dans la zone principale).
 // Faux Supabase (fixtures/fake-sb.mjs) : le test vérifie ce que le client envoie (journal), pas ce que la base enregistre.
 // Scénario : créer une sortie, la modifier, ajouter et retirer un inscrit, fixer une date, supprimer avec confirmation.
 // Lancer : node tests/parcours-admin-sorties.cjs
@@ -60,11 +60,11 @@ function dansTrenteJours() {
   console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
   const p = await openPage(browser, { page: 'admin', scenario: SCN, width: 1280 });
-  await adminSection(p, 'vie/sorties');
+  await adminSection(p, 'irl/sorties');
 
   // 1. Navigation et liste
-  check((await p.locator('#shell-subs a[href="#vie/sorties"]').count()) === 1, 'admin : lien « Sorties IRL » dans la colonne de navigation');
-  check((await p.getAttribute('#shell-subs a[href="#vie/sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
+  check((await p.locator('#shell-subs a[href="#irl/sorties"]').count()) === 1, 'admin : lien « Sorties IRL » dans la colonne de navigation');
+  check((await p.getAttribute('#shell-subs a[href="#irl/sorties"]', 'data-perm')) === 'evenements', 'lien de navigation marqué data-perm="evenements"');
   check((await p.getAttribute('#sorties', 'data-perm')) === 'evenements', 'section marquée data-perm="evenements"');
   check((await p.locator('#shell-col .ui-row').count()) === 2, 'filtre « À venir » : deux sorties (datée et à caler)');
   await p.click('#shell-col .ui-chip[data-filter="passees"]');

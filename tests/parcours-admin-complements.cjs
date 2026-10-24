@@ -77,7 +77,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#challenges-root', { hasText: 'Aucun défi' }).count() === 1, 'liste des défis vide après suppression');
 
   /* ---------- Réglages du site (liste ; modification et ajout dans le tiroir) ---------- */
-  await adminSection(p, 'site/reglages');
+  await adminSection(p, 'pilotage/reglages');
   await p.waitForSelector('#reglages-root [data-key-item="theme"]', { timeout: 5000 });
   // Admin : la clé sensible reste modifiable, mais après une confirmation explicite
   await p.click('#reglages-root [data-key-item="push_vapid_public"] [data-rg-edit]');
@@ -158,9 +158,9 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   check(await p.locator('#access-root [data-slug="galerie-test"]').count() === 0, 'la page a disparu du tableau');
 
   /* ---------- Secret Santa : suppression d'une édition ---------- */
-  // Le détail d'une édition vit à son adresse (#vie/secret-santa/<id>) ; sans identifiant, la zone propose de la choisir
-  await adminSection(p, 'vie/secret-santa');
-  await p.evaluate(() => { location.hash = 'vie/secret-santa/E25'; });
+  // Le détail d'une édition vit à son adresse (#irl/secret-santa/<id>) ; sans identifiant, la zone propose de la choisir
+  await adminSection(p, 'irl/secret-santa');
+  await p.evaluate(() => { location.hash = 'irl/secret-santa/E25'; });
   await p.waitForSelector('#ss-delete', { timeout: 5000 });
   await p.click('#ss-delete');
   await p.waitForSelector('dialog[open]', { timeout: 5000 });

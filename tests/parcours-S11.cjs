@@ -41,8 +41,8 @@ const keys = (p) => p.$$eval('.rc-slide', (els) => els.map((e) => [...e.classLis
 
   /* ---------- Admin : Contenus proposés ---------- */
   p = await openPage(browser, { page: 'admin', fixture: FX });
-  await adminSection(p, 'vie/souvenirs').catch(() => {});
-  await p.evaluate(() => { location.hash = '#vie/souvenirs/contenus'; });
+  await adminSection(p, 'irl/souvenirs').catch(() => {});
+  await p.evaluate(() => { location.hash = '#irl/souvenirs/contenus'; });
   await p.waitForSelector('.sv-contenus .sv-ct-row', { timeout: 6000 }).catch(() => {});
   check((await p.locator('.sv-contenus [role="tab"]').count()) === 3, 'admin : 3 onglets (citations, playlist, récap)');
   check((await p.locator('.sv-contenus').innerText()).includes('2 citations en attente'), 'admin : file de validation (2 en attente)');

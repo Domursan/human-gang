@@ -19,7 +19,7 @@ import { navigate } from './shell.js';
 import { reglage } from '../reglages-valeurs-lot3.js';
 
 // Adresse de la sous-section Secret Santa (retour après suppression d'une édition).
-const SS_ROUTE = 'vie/secret-santa';
+const SS_ROUTE = 'irl/secret-santa';
 // Vrai une fois les écouteurs installés : bindSecretSanta ne s'exécute qu'une fois.
 let bound = false;
 

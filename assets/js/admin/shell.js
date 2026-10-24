@@ -22,6 +22,8 @@
 // setActions(nodes) : boutons d'action de la zone principale (#zone-actions). Vidé à chaque visite ; à remplir dans `open`.
 // Vue d'ensemble (#pilotage/apercu) : la classe admin-home est posée sur #shell (rail et colonne masqués en largeur
 // de bureau, voir admin-accueil.css) ; les autres sous-sections gardent la coquille telle quelle.
+// Domaines (DOMAINS, admin/perms.js) : Pilotage, Membres, IRL, Event, Le jeu de cartes, Autres jeux. Chaque domaine a une
+// couleur (`color`) et une icône (`icon`) : les icônes sont dans ICON ci-dessous.
 // ------------------------------------------------------
 
 import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
@@ -48,13 +50,16 @@ const ICON = {
   shield: '<path d="M12 3l7 3v5.5c0 4.3-3 7.8-7 9.5-4-1.7-7-5.2-7-9.5V6z"/><path d="M9 12l2 2 4-4"/>',
   sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  // Réorganisation du panel (migration 103) : épingle de lieu (IRL), manette (Autres jeux)
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  gamepad: '<path d="M7 9h10a4 4 0 0 1 3.9 4.9l-.8 3.2a2 2 0 0 1-3.5.6L14.5 16h-5l-2.1 1.7a2 2 0 0 1-3.5-.6l-.8-3.2A4 4 0 0 1 7 9z"/><path d="M8 11.5v2M7 12.5h2"/>',
 };
 /** HTML d'une icône du rail (SVG 24 × 24, masqué aux lecteurs d'écran). */
 const icon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICON[name] || ''}</svg>`;
-/** Icône d'un domaine (HTML, SVG 24 × 24) pour les tuiles de la vue d'ensemble. */
+/** Icône d'un domaine (HTML, SVG 24 × 24) pour les raccourcis de la vue d'ensemble. */
 export const domainIcon = (name) => icon(name);
 // Libellés courts des onglets de la barre mobile
-const SHORT = { communication: 'Comm.', vie: 'Vie du gang', cartes: 'Jeux', membres: 'Membres', pilotage: 'Pilotage', site: 'Site' };
+const SHORT = { pilotage: 'Pilotage', membres: 'Membres', irl: 'IRL', event: 'Event', cartes: 'Cartes', jeux: 'Jeux' };
 
 // Groupes de sous-sections (un conteneur par groupe) : groupe -> { el, ready }.
 const groups = new Map();
@@ -91,6 +96,9 @@ export function place(host, id) {
   const s = document.getElementById(id);
   if (s && host && s.parentElement !== host) host.append(s);
 }
+
+/** Nombre « à traiter » d'une sous-section (0 si aucun ou non renseigné). Lu par la vue d'ensemble (raccourcis). */
+export const countOf = (sub) => counts.get(sub) || 0;
 
 /**
  * Compteur « à traiter » d'une sous-section (0 = masqué). Met à jour la colonne et les domaines.

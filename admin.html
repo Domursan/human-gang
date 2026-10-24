@@ -79,7 +79,7 @@
       <div class="shell-foot" id="shell-foot">
         <a class="shell-ico" href="#pilotage/staff" data-admin-only aria-label="Staff" title="Staff"><span data-icon="shield"></span></a>
         <button class="shell-ico" id="admin-goto" type="button" aria-haspopup="dialog" aria-label="Aller à… (Ctrl K)" title="Aller à… (Ctrl K)"><span data-icon="search"></span></button>
-        <a class="shell-ico" href="#site/identite" data-rail-reglages aria-label="Réglages du site" title="Réglages du site"><span data-icon="sliders"></span></a>
+        <a class="shell-ico" href="#pilotage/identite" data-rail-reglages aria-label="Réglages du site" title="Réglages du site"><span data-icon="sliders"></span></a>
         <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
         <div class="shell-live" id="shell-live"></div>
         <div class="shell-account">
@@ -129,15 +129,18 @@
   <div id="shell-parking" hidden>
         <section id="apercu" class="admin-section" aria-labelledby="h-apercu">
           <h2 id="h-apercu" class="section-title">Vue d'ensemble</h2>
-          <div class="ov" id="ov" data-mtab="todo">
-            <div class="ov-tabs" role="tablist" aria-label="Vue d’ensemble : domaines ou à traiter">
-              <button type="button" role="tab" id="ov-tab-domains" aria-controls="ov-pane-domains" aria-selected="false" data-ov-tab="domains" data-ov-k="tab:domains">Domaines</button>
-              <button type="button" role="tab" id="ov-tab-todo" aria-controls="ov-pane-todo" aria-selected="true" data-ov-tab="todo" data-ov-k="tab:todo">À traiter</button>
-            </div>
+          <div class="ov" id="ov">
             <div class="ov-split">
-              <div class="ov-left" id="ov-pane-domains" role="tabpanel" aria-labelledby="ov-tab-domains">
+              <div class="ov-left">
                 <div class="stats" id="stats"><div class="empty">Chargement…</div></div>
-                <div class="ov-tiles" id="ov-tiles"><div class="empty">Chargement…</div></div>
+                <section class="card ov-card ov-short" aria-labelledby="ov-short-title">
+                  <div class="ov-short-head">
+                    <h3 class="card-title" id="ov-short-title">Mes raccourcis</h3>
+                    <button type="button" class="btn btn-ghost btn-sm" data-ov-edit data-ov-k="sc:edit">Modifier</button>
+                  </div>
+                  <div id="ov-shortcuts"><div class="empty">Chargement…</div></div>
+                  <p class="small muted ov-short-note">Tes raccourcis ne sont visibles que par toi.</p>
+                </section>
                 <div class="card ov-card eco-card" id="ov-eco-card" hidden>
                   <h3 class="card-title">Santé de l’économie</h3>
                   <div id="ov-eco"><div class="empty">Chargement…</div></div>
@@ -148,11 +151,42 @@
                   <p class="small ov-more"><a href="#pilotage/journal">Voir tout le journal</a></p>
                 </div>
               </div>
-              <aside class="ov-right card" id="ov-todo-card" role="tabpanel" aria-labelledby="ov-tab-todo">
+              <aside class="ov-right card" id="ov-todo-card" aria-label="À traiter">
                 <div class="ov-todo-head" id="ov-todo-head"></div>
                 <div id="ov-todo"><div class="empty">Chargement…</div></div>
               </aside>
             </div>
+            <dialog class="ov-dialog" id="ov-dialog" aria-labelledby="ov-dialog-title" aria-describedby="ov-dialog-desc">
+              <form class="ov-dialog-form" id="ov-dialog-form">
+                <header class="ov-dialog-head">
+                  <div>
+                    <h2 class="ov-dialog-title" id="ov-dialog-title">Ajouter un raccourci</h2>
+                    <p class="small muted" id="ov-dialog-desc">Épingle les pages que tu utilises le plus souvent.</p>
+                  </div>
+                  <button type="button" class="ov-dialog-x" data-ov-dialog-close aria-label="Fermer">×</button>
+                </header>
+                <div class="ov-dialog-search">
+                  <input type="search" id="ov-sc-q" placeholder="Chercher une page du panel…" aria-label="Chercher une page du panel" autocomplete="off">
+                </div>
+                <div class="ov-dialog-body">
+                  <section class="ov-order-block" aria-labelledby="ov-order-title">
+                    <div class="ov-order-head">
+                      <h3 class="ov-order-title" id="ov-order-title">Ordre sur la vue d’ensemble</h3>
+                      <span class="small muted" id="ov-sc-count"></span>
+                    </div>
+                    <ul class="ov-order" id="ov-sc-order"></ul>
+                  </section>
+                  <div class="ov-pick-block" id="ov-sc-groups"></div>
+                </div>
+                <footer class="ov-dialog-foot">
+                  <p class="small muted">Tes raccourcis ne sont visibles que par toi.</p>
+                  <div class="ov-dialog-actions">
+                    <button type="button" class="btn btn-ghost" data-ov-dialog-close>Annuler</button>
+                    <button type="submit" class="btn btn-sand" id="ov-sc-save">Enregistrer</button>
+                  </div>
+                </footer>
+              </form>
+            </dialog>
           </div>
         </section>
         <section id="comptes" class="admin-section" aria-labelledby="h-comptes">

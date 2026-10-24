@@ -10,7 +10,7 @@ const M3 = 'mmmmmmmm-0000-4000-8000-000000000003';
 
 (async () => {
   const browser = await chromium.launch();
-  let p = await openPage(browser, { page: 'admin', width: 1280, hash: `#vie/souvenirs/${M1}` });
+  let p = await openPage(browser, { page: 'admin', width: 1280, hash: `#irl/souvenirs/${M1}` });
   await p.waitForSelector('#sv-d-head .ui-btn', { timeout: 8000 });
   const btn = p.locator('#sv-d-head .ui-btn', { hasText: 'Créer une carte' });
   check(await btn.count() === 1, '(1) bouton « Créer une carte » dans le détail du moment');

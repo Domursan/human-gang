@@ -19,13 +19,13 @@ import { setActions, navigate } from './shell.js';
 /* ---------- Types d'éléments ---------- */
 // kind → libellé du filtre, préfixe court, couleur (jeton CSS), permission (pour « + Programmer »), route d'édition.
 const KINDS = {
-  quiz: { label: 'Questions', short: 'Q', perm: 'quiz', route: 'cartes/questions' },
+  quiz: { label: 'Questions', short: 'Q', perm: 'quiz', route: 'jeux/questions' },
   carte_drop: { label: 'Drops', short: 'Drop', perm: 'cartes', route: 'cartes/drops' },
-  evenement: { label: 'Événements', short: 'Évén.', perm: 'themes', route: 'vie/evenements' },
+  evenement: { label: 'Événements', short: 'Évén.', perm: 'themes', route: 'event/evenements' },
   defi: { label: 'Défis', short: 'Défi', perm: 'cartes', route: 'cartes/defis' },
-  sortie: { label: 'Sorties IRL', short: 'IRL', perm: 'evenements', route: 'vie/sorties' },
-  ss: { label: 'Secret Santa', short: 'SS', perm: 'secret_santa', route: 'vie/secret-santa' },
-  bot: { label: 'Annonces du bot', short: 'Bot', perm: 'bot', route: 'communication/bot' },
+  sortie: { label: 'Sorties IRL', short: 'IRL', perm: 'evenements', route: 'irl/sorties' },
+  ss: { label: 'Secret Santa', short: 'SS', perm: 'secret_santa', route: 'irl/secret-santa' },
+  bot: { label: 'Annonces du bot', short: 'Bot', perm: 'bot', route: 'pilotage/bot' },
 };
 const STATUS = { programmee: 'Programmée', envoyee: 'Envoyée', annulee: 'Annulée', echec: 'Échec', active: 'Active', inactive: 'Inactive',
   secrete: 'Bonus secrète', brillante: 'Brillante', normale: 'Normale', prevue: 'Prévue', retro: 'Rétro', inscriptions: 'Inscriptions',
@@ -367,7 +367,7 @@ async function openBotForm(it = null, day = null) {
       <div class="field"><label for="pl-f-body">Message</label><textarea id="pl-f-body" rows="5" maxlength="2000" required>${esc(it?.detail || '')}</textarea></div>
       <fieldset class="pl-salons"><legend>Salons (5 au plus)</legend>
         ${list.length ? list.map((s) => `<label class="pl-salon"><input type="checkbox" value="${esc(s.id)}"${chosen.has(s.id) ? ' checked' : ''}> #${esc(s.nom)}</label>`).join('')
-          : '<p class="small muted">Aucun salon connu : ajoute-les dans Communication › Bot Discord › Salons.</p>'}
+          : '<p class="small muted">Aucun salon connu : ajoute-les dans Pilotage › Bot Discord › Salons.</p>'}
       </fieldset>
       <div class="field"><label for="pl-f-at">Envoi (heure suisse)</label><input id="pl-f-at" type="datetime-local" required value="${esc(at)}"></div>
       <p class="form-error" id="pl-f-err" role="alert" hidden></p>

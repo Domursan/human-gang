@@ -1,5 +1,5 @@
 // Parcours : panel admin, domaine « Vie du gang » (polish : listes et détails, formulaires dans le tiroir).
-// (a) Secret Santa 1440 px : éditions en colonne 2, édition choisie par adresse (#vie/secret-santa/<id>), détail
+// (a) Secret Santa 1440 px : éditions en colonne 2, édition choisie par adresse (#irl/secret-santa/<id>), détail
 //     (inscrits, tirage, exclusions, vœux, carte, attributions), tiroirs « Nouvelle édition » (verrouillée tant qu'une
 //     édition est ouverte), « Modifier » (écrit en base), exclusion ajoutée, tirage annulé puis confirmé (rpc),
 //     suppression confirmée (édition 2024 effacée, retour à la liste).
@@ -59,7 +59,7 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
   /* ---------- (a) Secret Santa, 1440 px ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: {} });
-    await adminSection(p, 'vie/secret-santa');
+    await adminSection(p, 'irl/secret-santa');
     check(await rowCount(p) === 2, '(a) colonne 2 : les deux éditions (2025 et 2024)');
     check(await p.locator('#zone-actions [data-ss-act="new"]').count() === 1, '(a) barre de zone : « Nouvelle édition »');
     check(await p.locator('.detail-empty').count() === 1, '(a) sans édition choisie : la zone propose de la choisir');
@@ -67,7 +67,7 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     await p.click('.shell-slot:not([hidden]) .ui-row[data-id="E25"]');
     await p.waitForSelector('#ss-dhead h2', { timeout: 5000 });
     check(await p.textContent('#ss-dhead h2') === 'Édition 2025', '(a) clic sur une édition : adresse et détail « Édition 2025 »');
-    check(await p.evaluate(() => location.hash) === '#vie/secret-santa/E25', '(a) l\'adresse suit l\'édition choisie');
+    check(await p.evaluate(() => location.hash) === '#irl/secret-santa/E25', '(a) l\'adresse suit l\'édition choisie');
     check(await p.locator('#ss-h-excl').count() === 1 && await p.locator('[data-del-excl]').count() === 1, '(a) détail : une exclusion affichée');
     check(await p.locator('#ss-h-wish').count() === 1, '(a) détail : carte « Vœux » (lecture seule)');
     check(await p.locator('#ss-h-draw').count() === 1 && await p.locator('#ss-draw').count() === 1, '(a) détail : bloc tirage présent');
@@ -110,13 +110,13 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     check(await logHas(p, 'hg_ss_draw'), '(a) tirage confirmé : appel du tirage');
 
     // Suppression : sur l'édition 2024 (terminée) ; la confirmation annulée ne supprime rien
-    await goto(p, '#vie/secret-santa/E24', '#ss-delete');
+    await goto(p, '#irl/secret-santa/E24', '#ss-delete');
     await p.click('#ss-delete');
     await confirmWith(p, 'cancel');
     check((await db(p, () => window.__DB.hg_ss_editions.some((e) => e.id === 'E24'))), '(a) suppression annulée : l\'édition 2024 est conservée');
     await p.click('#ss-delete');
     await confirmWith(p, 'ok');
-    await p.waitForFunction(() => location.hash === '#vie/secret-santa', null, { timeout: 5000 }).catch(() => {});
+    await p.waitForFunction(() => location.hash === '#irl/secret-santa', null, { timeout: 5000 }).catch(() => {});
     check((await db(p, () => !window.__DB.hg_ss_editions.some((e) => e.id === 'E24'))), '(a) suppression confirmée : édition 2024 effacée');
     check(await rowCount(p) === 1, '(a) après suppression : une seule édition dans la liste');
 
@@ -127,13 +127,13 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
   /* ---------- (b) Événements, 1440 px ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: {} });
-    await adminSection(p, 'vie/evenements');
+    await adminSection(p, 'event/evenements');
     check(await rowCount(p) === 3, '(b) colonne 2 : les trois événements');
     await p.click('.shell-slot:not([hidden]) .ui-chip[data-filter="future"]');
     check(await rowCount(p) === 1, '(b) filtre « À venir » : un événement');
     await p.click('.shell-slot:not([hidden]) .ui-chip[data-filter="all"]');
 
-    await goto(p, `#vie/evenements/${EV_CIT}`, '#ev-dhead h2');
+    await goto(p, `#event/evenements/${EV_CIT}`, '#ev-dhead h2');
     check(await p.textContent('#ev-dhead h2') === 'La citrouille d\'Halloween', '(b) adresse d\'un événement : détail affiché');
     await p.waitForFunction(() => document.querySelector('#ev-board')?.textContent && !document.querySelector('#ev-board')?.textContent.includes('Chargement'), null, { timeout: 5000 }).catch(() => {});
     check(!(await p.textContent('#ev-board')).includes('Chargement'), '(b) classement chargé');
@@ -156,7 +156,7 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     check((await db(p, (id) => window.__DB.hg_dyn_events.find((e) => e.id === id).description, EV_CIT)) === 'Description révisée par le test.', '(b) modification : description écrite en base');
 
     // Suppression de l'événement à venir : annulée puis confirmée
-    await goto(p, `#vie/evenements/${EV_FUT}`, '#ev-dhead h2');
+    await goto(p, `#event/evenements/${EV_FUT}`, '#ev-dhead h2');
     await p.click('[data-ev-act="delete"]');
     await confirmWith(p, 'cancel');
     check((await db(p, () => window.__DB.hg_dyn_events.length)) === 3, '(b) suppression annulée : rien n\'est effacé');
@@ -172,7 +172,7 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
   /* ---------- (c) Badges, 1440 px ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: {} });
-    await adminSection(p, 'vie/badges');
+    await adminSection(p, 'membres/badges');
     const cards = await p.locator('#badge-grid .badge-card').count();
     const total = await db(p, () => window.__DB.hg_badges.length);
     check(cards >= 9 && cards < total && await p.isVisible('#badge-more-btn'), `(c) grille : une page de badges (${cards} sur ${total}) et « Afficher plus »`);
@@ -225,17 +225,17 @@ const logHas = (p, table, op) => p.evaluate(([t, o]) => (window.__LOG || []).som
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844, scenario: {} });
     // Mobile : la liste occupe l'écran tant qu'aucun élément n'est choisi ; le détail a un retour « Liste »
     const pages = [
-      ['#vie/secret-santa', LIST_ROW],
-      ['#vie/secret-santa/E25', '#ss-dhead h2'],
-      ['#vie/evenements', LIST_ROW],
-      ['#vie/evenements/' + EV_CIT, '#ev-dhead h2'],
-      ['#vie/badges', '#badge-grid .badge-card'],
+      ['#irl/secret-santa', LIST_ROW],
+      ['#irl/secret-santa/E25', '#ss-dhead h2'],
+      ['#event/evenements', LIST_ROW],
+      ['#event/evenements/' + EV_CIT, '#ev-dhead h2'],
+      ['#membres/badges', '#badge-grid .badge-card'],
     ];
     for (const [hash, sel] of pages) {
       await goto(p, hash, sel);
       check(await hscroll(p) === 0, `(d) 390 px : ${hash} sans défilement horizontal`);
     }
-    await goto(p, '#vie/badges', '#badge-grid .badge-card');
+    await goto(p, '#membres/badges', '#badge-grid .badge-card');
     await p.click('#badge-new');
     await p.waitForSelector(`${drawer} #bdg-name`, { timeout: 5000 });
     const w = await p.evaluate(() => document.querySelector('dialog.ui-drawer[open]').getBoundingClientRect().width);

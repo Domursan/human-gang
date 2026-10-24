@@ -171,7 +171,7 @@ function openDropForm() {
       </div>
       <div class="field adc-wide">
         <label class="switch"><input type="checkbox" id="drop-discord" checked><span class="switch-ui" aria-hidden="true"></span><span>Annoncer sur Discord</span></label>
-        <p class="small muted">Le bot poste « Une carte sauvage est apparue ! » dans le salon (réglages dans Communication › Bot Discord).</p>
+        <p class="small muted">Le bot poste « Une carte sauvage est apparue ! » dans le salon (réglages dans Pilotage › Bot Discord).</p>
       </div>
     </div>`,
     onSubmit: async (form) => {

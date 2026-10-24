@@ -1,11 +1,11 @@
 // ===== Humane Gang — administration : jeux de la page « Jeux » (idées J1, J3) =====
 /*
  * Rôle : deux sous-sections de Jeux et cartes › Jeux.
- *   GeoGuessr (#cartes/geoguessr, Staff « souvenirs ») : manches programmées et réserve « jouable ». Pour créer une
+ *   GeoGuessr (#jeux/geoguessr, Staff « souvenirs ») : manches programmées et réserve « jouable ». Pour créer une
  *     manche : choisir une sortie, une de ses photos, placer le vrai lieu sur la carte, nommer le lieu, choisir le jour
  *     (vide = réserve). La photo est recopiée dans un dossier neutre (<mon id>/geo/…) après recompression : ni EXIF,
  *     ni identifiant de sortie dans son chemin (sinon la réponse fuiterait avant le vote).
- *   Citations (#cartes/citations, Staff « quiz ») : file des citations proposées (publier en reformulant, refuser),
+ *   Citations (#jeux/citations, Staff « quiz ») : file des citations proposées (publier en reformulant, refuser),
  *     saisie directe d'une citation par le Staff (l'accord de l'auteur reste demandé).
  * Toutes les écritures passent par des RPC qui vérifient les droits et journalisent (migration 083).
  * Dépendances : core.js (sb, toast, errMsg, esc, getUser), photos.js (signatures, envoi), image-compress.js

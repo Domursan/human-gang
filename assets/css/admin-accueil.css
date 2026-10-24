@@ -1,8 +1,9 @@
-/* Administration : accueil « Vue d'ensemble » (Pilotage, #pilotage/apercu), en deux moitiés.
-   Gauche (≈ 60 %) : chiffres clés, tuiles des domaines, économie, activité. Droite (≈ 40 %) : la file « À traiter ».
-   Téléphone (≤ 760 px) : deux onglets, un seul panneau visible. Couleurs : jetons de base.css ; la couleur d'un domaine
-   est --dom (bordures, pastilles, fonds teintés), le texte reste en jetons de texte (clair et sombre).
-   Sur cette route, la coquille masque la colonne de navigation en largeur de bureau ; le rail (compte, recherche, domaines) reste (classe admin-home posée par shell.js). */
+/* Administration : accueil « Vue d'ensemble » (Pilotage, #pilotage/apercu), en deux moitiés (migration 103).
+   Gauche (≈ 60 %) : chiffres clés, « Mes raccourcis » (grandes tuiles), économie, activité. Droite (≈ 40 %) : la file « À traiter ».
+   Téléphone et tablette (≤ 1099 px) : une colonne, dans l'ordre chiffres clés, raccourcis, file, économie, activité.
+   Couleurs : jetons de base.css ; la couleur d'un domaine est --dom (bordures, pastilles, fonds teintés), le texte reste en
+   jetons de texte (clair et sombre). Sur cette route, la coquille masque la colonne de navigation en largeur de bureau ;
+   le rail (compte, recherche, domaines) reste (classe admin-home posée par shell.js). */
 
 /* ---------- Coquille : accueil pleine largeur (les autres sous-sections ne sont pas touchées) ---------- */
 @media (min-width: 761px) {
@@ -11,13 +12,13 @@
   .shell.admin-home .shell-zone { grid-column: 2; }
 }
 
-/* ---------- Couleur par domaine (tuiles et éléments de la file) ---------- */
+/* ---------- Couleur par domaine (raccourcis et éléments de la file) : mêmes couleurs que DOMAINS (perms.js) ---------- */
 .ov [data-dom="pilotage"] { --dom: #E2C77E; }
 .ov [data-dom="membres"] { --dom: #7E93C9; }
-.ov [data-dom="vie"] { --dom: #E0909A; }
+.ov [data-dom="irl"] { --dom: #E0909A; }
+.ov [data-dom="event"] { --dom: #9A88C4; }
 .ov [data-dom="cartes"] { --dom: #F0A43C; }
-.ov [data-dom="communication"] { --dom: #6FA37F; }
-.ov [data-dom="site"] { --dom: #9A88C4; }
+.ov [data-dom="jeux"] { --dom: #6FA37F; }
 
 /* ---------- Disposition ---------- */
 .ov { display: flex; flex-direction: column; gap: 18px; }
@@ -27,28 +28,29 @@
 .ov-card { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; min-width: 0; }
 .ov-card .card-title { margin: 0; }
 
-/* ---------- Tuiles des domaines (grille 3 × 2 sur un grand écran) ---------- */
-.ov-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.ov-tile { --dom: var(--muted); display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px 18px; border-radius: var(--radius);
+/* ---------- Mes raccourcis : grande tuile par sous-section choisie, puis « + Ajouter » ---------- */
+.ov-short-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ov-sc-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ov-sc-item { min-width: 0; display: flex; }
+.ov-sc { --dom: var(--muted); position: relative; flex: 1; min-width: 0; min-height: 88px; box-sizing: border-box; display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: var(--radius); color: var(--text); text-decoration: none;
   border: 1px solid color-mix(in srgb, var(--dom) 38%, var(--border));
   background: linear-gradient(160deg, color-mix(in srgb, var(--dom) 16%, transparent), transparent 70%), var(--surface); }
-.ov-tile.is-on { border-color: var(--dom); box-shadow: inset 0 0 0 1px var(--dom); }
-.ov-tile-head { display: flex; flex-direction: column; gap: 6px; width: 100%; min-width: 0; padding: 0; text-align: left; color: var(--text); background: transparent; border: 0; cursor: pointer; }
-.ov-tile-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ov-tile-ico { width: 42px; height: 42px; flex: none; border-radius: 14px; display: grid; place-items: center; background: var(--dom); color: #0E0E10; }
-.ov-tile-ico svg { width: 21px; height: 21px; }
-.ov-tile-name { font-family: var(--font-display); font-size: 18px; line-height: 1.15; margin-top: 4px; }
-.ov-tile-state { font-size: 13px; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
-.ov-tile-count { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
-.ov-tile-count strong { font-family: var(--font-display); font-size: 26px; font-weight: 400; line-height: 1; }
-.ov-tile-count span { font-size: 11px; color: var(--muted); }
-.ov-tile-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.ov-tile-links a { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 12px;
-  background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 500; }
-.ov-tile-links a::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--dom); flex: none; }
-@media (hover: hover) { .ov-tile-links a:hover { background: var(--surface); } }
-.ov-tile-all { margin-top: auto; align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; font-size: 14px; font-weight: 700; color: var(--text);
-  text-decoration: underline; text-decoration-color: var(--dom); text-decoration-thickness: 2px; text-underline-offset: 5px; }
+.ov-sc:hover { border-color: var(--dom); }
+.ov-sc-ico { width: 42px; height: 42px; flex: none; border-radius: 14px; display: grid; place-items: center; background: var(--dom); color: #0E0E10; }
+.ov-sc-ico svg { width: 21px; height: 21px; }
+.ov-sc-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; padding-right: 4px; }
+.ov-sc-name { font-family: var(--font-display); font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+.ov-sc-path { font-size: 12.5px; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
+.ov-sc-count { flex: none; margin-left: auto; align-self: flex-start; padding: 3px 9px; border-radius: 999px; font-size: 12px; color: var(--text);
+  background: color-mix(in srgb, var(--dom) 22%, transparent); white-space: nowrap; }
+.ov-sc-count strong { font-weight: 700; }
+.ov-sc-add { width: 100%; min-height: 88px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px;
+  border-radius: var(--radius); border: 1.5px dashed var(--border); background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ov-sc-add:hover { color: var(--text); border-color: var(--muted); }
+.ov-sc-plus { font-size: 20px; line-height: 1; }
+.ov-sc-empty { margin: 0; }
+.ov-short-note { margin: 0; }
 
 /* ---------- File « À traiter » (moitié droite, défile seule et reste en vue) ---------- */
 .ov-right { position: sticky; top: 16px; max-height: calc(100vh - 140px); overflow-y: auto; padding: 0; gap: 0; }
@@ -58,10 +60,6 @@
 .ov-todo-badge { min-width: 26px; height: 26px; box-sizing: border-box; padding: 0 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text);
   font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .ov-todo-sub { margin: 4px 0 0; color: var(--muted); }
-.ov-chips { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-.ov-chip { min-height: 44px; padding: 0 14px 0 16px; border-radius: 999px; border: 1px solid var(--dom); background: color-mix(in srgb, var(--dom) 16%, transparent);
-  color: var(--text); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.ov-chip span { font-size: 16px; line-height: 1; }
 .ov-q { list-style: none; margin: 0; padding: 0; }
 .ov-q-item { border-left: 3px solid var(--dom); border-bottom: 1px solid var(--border); }
 .ov-q-item:last-child { border-bottom: 0; }
@@ -76,24 +74,70 @@
 .ov-q-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 .ov-right .empty { margin: 16px; }
 
-/* ---------- Téléphone : onglets (un seul panneau visible) ---------- */
-.ov-tabs { display: none; }
-@media (max-width: 760px) {
-  .ov-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
-  .ov-tabs [role="tab"] { min-height: 44px; padding: 0 12px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .ov-tabs [role="tab"][aria-selected="true"] { background: var(--accent); color: var(--accent-text); }
-  .ov[data-mtab="todo"] .ov-left { display: none; }
-  .ov[data-mtab="domains"] .ov-right { display: none; }
-  .ov-left > .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ov-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .ov-tile { padding: 14px; }
-  .ov-tile-ico { width: 38px; height: 38px; }
-  .ov-tile-links a { font-size: 13.5px; }
-  .ov-left, .ov-right { min-width: 0; max-width: 100%; }
-}
+/* ---------- Dialogue « Ajouter un raccourci » ---------- */
+.ov-dialog { padding: 0; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text);
+  width: min(560px, calc(100vw - 32px)); max-height: min(720px, calc(100vh - 32px)); box-sizing: border-box; overflow: hidden; }
+.ov-dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+.ov-dialog[open] { display: flex; flex-direction: column; }
+.ov-dialog-form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.ov-dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 12px; }
+.ov-dialog-title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 21px; line-height: 1.2; }
+.ov-dialog-head p { margin: 4px 0 0; }
+.ov-dialog-x { flex: none; width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--text); font: inherit; font-size: 22px; line-height: 1; cursor: pointer; }
+.ov-dialog-search { padding: 0 20px 12px; }
+.ov-dialog-search input { width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: 15px; }
+.ov-dialog-body { display: flex; flex-direction: column; gap: 18px; padding: 0 20px 16px; overflow-y: auto; min-height: 0; flex: 1; }
+.ov-order-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.ov-order-title { margin: 0; font-size: 15px; font-weight: 700; }
+.ov-order { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ov-order-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 6px 8px 6px 12px; border-radius: 12px;
+  border-left: 3px solid var(--dom); background: var(--surface-2); }
+.ov-order-text { display: flex; flex-direction: column; min-width: 0; }
+.ov-order-name { font-size: 14.5px; font-weight: 600; overflow-wrap: anywhere; }
+.ov-order-path { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.ov-order-btns { display: flex; gap: 4px; flex: none; }
+.ov-order-btns .btn { min-width: 44px; min-height: 44px; padding: 0; }
+.ov-order-empty { padding: 12px; color: var(--muted); font-size: 14px; }
+.ov-pick-block { display: flex; flex-direction: column; gap: 16px; }
+.ov-pick-group { display: flex; flex-direction: column; gap: 6px; }
+.ov-pick-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.ov-pick-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dom); flex: none; }
+.ov-pick-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; }
+.ov-pick { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 14.5px; }
+.ov-pick:hover { background: var(--surface-2); }
+.ov-pick input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--dom); }
+.ov-pick-label { min-width: 0; overflow-wrap: anywhere; }
+.ov-pick-group-name { margin-left: auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.ov-dialog-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 20px 18px; border-top: 1px solid var(--border); }
+.ov-dialog-foot p { margin: 0; }
+.ov-dialog-actions { display: flex; gap: 10px; margin-left: auto; }
 
-/* Largeur intermédiaire et téléphone : moitiés l'une sous l'autre */
+/* ---------- Tablette et téléphone : une colonne, dans l'ordre chiffres clés, raccourcis, file, économie, activité ---------- */
 @media (max-width: 1099px) {
-  .ov-split { grid-template-columns: minmax(0, 1fr); }
-  .ov-right { position: static; max-height: none; overflow: visible; }
+  .ov-split { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ov-left { display: contents; }
+  .ov-left > .stats { order: 1; }
+  .ov-left > .ov-short { order: 2; }
+  .ov-right { order: 3; position: static; max-height: none; overflow: visible; }
+  .ov-left > .eco-card { order: 4; }
+  .ov-left > #ov-activity-card { order: 5; }
+  .ov-left > .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ov-pick-list { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .ov { gap: 14px; }
+  .ov-split { gap: 14px; }
+  .ov-left > .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-sc-grid { gap: 10px; }
+  .ov-sc { min-height: 84px; padding: 12px; gap: 10px; flex-direction: column; align-items: flex-start; }
+  .ov-sc-ico { width: 38px; height: 38px; }
+  .ov-sc-count { margin-left: 0; }
+  .ov-sc-add { min-height: 84px; font-size: 13.5px; }
+  .ov-card { padding: 16px; }
+  .ov-left, .ov-right { min-width: 0; max-width: 100%; }
+  .ov-dialog { width: calc(100vw - 16px); max-height: calc(100vh - 16px); border-radius: 16px; }
+  .ov-dialog-head, .ov-dialog-search, .ov-dialog-body { padding-left: 16px; padding-right: 16px; }
+  .ov-dialog-foot { padding-left: 16px; padding-right: 16px; }
+  .ov-dialog-actions { width: 100%; margin-left: 0; }
+  .ov-dialog-actions .btn { flex: 1; min-height: 44px; }
 }

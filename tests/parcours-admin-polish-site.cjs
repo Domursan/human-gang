@@ -109,7 +109,7 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
   /* (b) Communication › Messagerie et Bot Discord (1440 px) */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
-    await goto(p, 'communication/messagerie', '#shell-col-list .ui-row');
+    await goto(p, 'pilotage/messagerie', '#shell-col-list .ui-row');
     check(await p.locator('#shell-col-list .ui-row').count() === 2, '(b) Messagerie : conversations en colonne 2');
     await p.click('#shell-col-list .ui-chip[data-filter="santa"]');
     check(await p.locator('#shell-col-list .ui-row').count() === 1, '(b) Messagerie : filtre « Secret Santa »');
@@ -137,7 +137,7 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
   }
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
-    await goto(p, 'communication/bot', '#bot-tablist');
+    await goto(p, 'pilotage/bot', '#bot-tablist');
     await p.click('#bot-tab-modeles'); // les messages types sont dans leur sous-onglet
     await p.waitForSelector('#bt-body .bt-item', { timeout: 8000 }).catch(() => {});
     check(await p.locator('#bt-body .bt-item').count() >= 1, '(b) Bot : modèles en liste');
@@ -155,7 +155,7 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900, scenario: SCN });
     await p.emulateMedia({ colorScheme: 'light' });
-    await goto(p, 'site/reglages', '#reglages-root [data-key-item]');
+    await goto(p, 'pilotage/reglages', '#reglages-root [data-key-item]');
     await zoneBtn(p, 'Nouvelle clé');
     await p.waitForSelector('dialog[open] #rg-new-key', { timeout: 5000 });
     await closeDrawer(p);
@@ -170,7 +170,7 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
     await shot(p, 'reglages-1440-clair.png');
     check(!p.errs.length, '(c) Réglages : aucune erreur console' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
 
-    await goto(p, 'site/theme', '#theme-root');
+    await goto(p, 'pilotage/theme', '#theme-root');
     const themesBefore = await db(p, () => window.__DB.hg_themes.length);
     await zoneBtn(p, 'Nouveau thème');
     await p.waitForSelector('dialog[open] #th-name', { timeout: 5000 });
@@ -201,7 +201,7 @@ const closeDrawer = async (p) => { await p.click('dialog[open] [data-drawer-clos
     await shot(p, 'invitations-390-tiroir.png');
     await closeDrawer(p);
     // Mobile : la liste des conversations occupe l'écran (pas de section visible tant qu'aucune conversation n'est choisie)
-    await p.evaluate(() => { location.hash = 'communication/messagerie'; });
+    await p.evaluate(() => { location.hash = 'pilotage/messagerie'; });
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 8000 });
     check(await hscroll(p) === 0, '(d) Messagerie 390 px : pas de défilement horizontal (liste)');
     await p.click('#shell-col-list .ui-row >> nth=0');

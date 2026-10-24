@@ -40,7 +40,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
   /* ---------- Boîte à idées (liste + détail) : recherche, filtres, action ---------- */
   {
     const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { ideas: IDEAS } });
-    await adminSection(p, 'communication/idees');
+    await adminSection(p, 'pilotage/idees');
     await p.waitForSelector('#shell-col-list .ui-row', { timeout: 5000 });
     /** Nombre de lignes de la colonne liste. */
     const rows = () => p.locator('#shell-col-list .ui-row').count();
@@ -66,7 +66,7 @@ const logLength = (p) => p.evaluate(() => (window.__LOG || []).length);
     check(await rows() === 3, 'idées : vider la recherche restaure la liste du filtre');
 
     // Action : écarter une idée depuis son détail (statut enregistré, pas de bouton resté en cours)
-    await p.evaluate(() => { location.hash = '#communication/idees/i2'; });
+    await p.evaluate(() => { location.hash = '#pilotage/idees/i2'; });
     await p.waitForSelector('#ideas-root select', { timeout: 5000 });
     await p.selectOption('#ideas-root select', 'ecartee');
     await p.waitForTimeout(400);

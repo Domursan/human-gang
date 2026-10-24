@@ -123,7 +123,7 @@ const hscroll = (page) => page.evaluate(() => document.documentElement.scrollWid
 /**
  * Admin : ouvre une sous-section comme un clic dans la colonne de navigation et attend qu'elle soit affichée.
  * Les sous-sections se montent à leur première visite : un test qui interagit avec une section doit l'ouvrir d'abord.
- * Ouvre une sous-section du panel par sa route « domaine/sous-section » (ex. 'vie/secret-santa', 'cartes/defis')
+ * Ouvre une sous-section du panel par sa route « domaine/sous-section » (ex. 'irl/secret-santa', 'cartes/defis')
  * et attend qu'elle soit affichée : adresse à jour, sous-section active dans la colonne, section visible.
  */
 async function adminSection(page, route) {

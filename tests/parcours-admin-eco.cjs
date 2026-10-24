@@ -83,8 +83,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
     /* ---------- (e) 375 px ---------- */
     p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
     await adminSection(p, 'pilotage/apercu');
-    await p.click('#ov-tab-domains'); // téléphone : le bloc économie est dans l'onglet « Domaines » (À traiter s'ouvre par défaut)
-    await p.waitForSelector('#ov-eco .eco-ind', { timeout: 6000 });
+    await p.waitForSelector('#ov-eco .eco-ind', { timeout: 6000 }); // téléphone : une colonne, le bloc économie suit la file
     check(await hscroll(p) <= 0, '(e) 375 px : pas de défilement horizontal');
     await p.ctx.close();
   } catch (e) {

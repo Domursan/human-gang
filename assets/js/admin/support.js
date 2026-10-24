@@ -1,11 +1,11 @@
-// Admin : Communication › Assistance. Liste des demandes en colonne 2 (createList), demande ouverte dans la zone
+// Admin : Pilotage › Assistance. Liste des demandes en colonne 2 (createList), demande ouverte dans la zone
 // principale (en-tête de détail + fil de réponses + zone de réponse), fiche rapide du membre dans le panneau d'infos.
 // Trois états affichés : « Ouverte » (statut ouverte, personne n'a pris la demande), « En cours » (statut ouverte
 // avec taken_by), « Traitée ». Non lu = read_at nul, posé à l'ouverture. Le fil mêle le message initial, la prise en
 // charge (séparateur), les réponses publiques (visibles par le membre) et les notes internes (panel seulement).
 // Prise en charge d'un membre inscrit : hg_support_take ouvre une conversation privée (page Messages) entre le Staff
 // et le membre, nommée d'après le sujet, avec le résumé de la demande en haut (migration 066).
-// Route : #communication/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
+// Route : #pilotage/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderSupport). Dépend de core.js, ui-confirm.js, state.js, loaders.js,
 // overview.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
 import { sb, toast, fmtDateTime, errMsg } from '../core.js';
@@ -355,7 +355,7 @@ function paintInfo() {
 /* ---------- Liste (colonne 2) ---------- */
 /** Ouvre une demande : la sélection passe par l'adresse, puis la coquille appelle `open`. */
 function go(id) {
-  location.hash = `#communication/assistance/${id}`;
+  location.hash = `#pilotage/assistance/${id}`;
 }
 
 /* ---------- API de la coquille (registerSub) ---------- */
@@ -385,7 +385,7 @@ export const supportSub = {
     V.infoEl = el;
     paintInfo();
   },
-  /** À chaque visite : retient la demande de l'adresse (#communication/assistance/<id>), puis redessine détail et panneau. */
+  /** À chaque visite : retient la demande de l'adresse (#pilotage/assistance/<id>), puis redessine détail et panneau. */
   open(_el, { id } = {}) {
     V.sel = id || null;
     V.list?.select(V.sel);

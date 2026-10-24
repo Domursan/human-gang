@@ -2,11 +2,11 @@
 // (Économie, Réglages, Badges, Accès aux pages) et des nouvelles sections (Secrets, Fil d'activité, Champs du profil),
 // garde de longueur des onglets, filtrage Staff, mobile. Sur le faux Supabase (fixtures/fake-sb.mjs).
 // (a) administrateur : chaque domaine affiche ses titres de groupe (texte annoncé, role="group", rien de cliquable)
-// (b) chaque route de l'arbre s'ouvre (adresse et lien actif) ; anciennes adresses : #reglages → #site/identite,
-//     #cartes/economie, #vie/badges, #membres/acces, #site/reglages restent valides ; palette « Groupe · Libellé »
+// (b) chaque route de l'arbre s'ouvre (adresse et lien actif) ; anciennes adresses : #reglages → #pilotage/identite,
+//     #cartes/economie, #membres/badges, #membres/acces, #pilotage/reglages restent valides ; palette « Groupe · Libellé »
 // (c) garde de longueur : à 1 280 × 900, #app.scrollHeight ≤ 1 400 px pour chaque sous-section, partie, onglet du Bot et
 //     onglet de la fiche membre (données du faux Supabase), sauf la liste d'exceptions EXCEPTIONS ci-dessous
-// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions, ni GeoGuessr, ni Citations ; seule « Bataille » (droit cartes) sous « Jeux » ; titres Catalogue, Économie, Animation, Suivi, Jeux
+// (d) Staff ['cartes'] : ni Secrets, ni Fil, ni Questions, ni GeoGuessr, ni Citations ; seule « Arène » (droit cartes) ; titres Catalogue, Économie, Animation, Suivi
 // (e) 375 px : 6 onglets en bas, écran du domaine avec ses titres, sans défilement horizontal
 // Lancer : node tests/parcours-admin-sousmenus.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium, sleep } = require('./lib/harness.cjs');
@@ -17,23 +17,26 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const MAX_H = 1400;
 // Exceptions documentées à la garde de longueur (route → raison). Toute autre route au-delà de MAX_H échoue.
 const EXCEPTIONS = {
-  'pilotage/apercu': 'accueil en deux moitiés : six tuiles de domaines, puis économie et activité sous les tuiles (admin-accueil.css) ; mesuré 1 876 px',
+  'pilotage/apercu': 'accueil en deux moitiés : chiffres clés, « Mes raccourcis », économie et activité à gauche ; file à droite (admin-accueil.css)',
   'cartes/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
   'membres/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard (audit §3.3)',
   'membres/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs (question ouverte pour Ethan)',
 };
 
-// Arbre attendu : domaine → [titre de groupe (null : sans titre), [sous-sections]].
+// Arbre attendu (administrateur, migration 103) : domaine → [titre de groupe (null : sans titre), [sous-sections]].
+// Les sous-sections non livrées (Rôles, Membres IRL, Gestion globale, Arcade) sont absentes : voir admin.js (disableSubs).
 const TREE = {
-  pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']]],
-  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social']], ['Entraide', ['parrainage', 'competences']], ['Accès aux pages', ['acces', 'acces-matrice']]],
-  vie: [['Sorties et souvenirs', ['sorties', 'souvenirs']], ['Rendez-vous', ['secret-santa', 'evenements', 'rdv', 'avent', 'saison-worlds', 'anniv-gang']],
-    ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
+  pilotage: [[null, ['apercu', 'planning', 'journal', 'staff']], ['Bot', ['bot', 'commandes']],
+    ['Site', ['identite', 'textes', 'menu', 'etat', 'erreurs', 'archives', 'reglages']], ['Apparence', ['theme']],
+    ['Assistance', ['assistance', 'idees', 'messagerie', 'fil']]],
+  membres: [['Comptes', ['comptes', 'relance', 'invitations', 'champs', 'social', 'accueil']], ['Entraide', ['parrainage', 'competences']],
+    ['Accès aux pages', ['acces', 'acces-matrice']], ['Badges', ['badges', 'badges-attribution', 'badges-criteres']]],
+  irl: [[null, ['sorties', 'souvenirs', 'secret-santa']]],
+  event: [[null, ['evenements', 'rdv', 'avent', 'saison-worlds', 'anniv-gang']]],
   cartes: [['Catalogue', ['series', 'cartes', 'boosters']], ['Économie', ['economie', 'tirage', 'recyclage', 'limites']],
     ['Animation', ['quetes', 'defis', 'drops', 'cagnotte', 'champions', 'codes', 'recettes', 'encheres']], ['Suivi', ['joueurs', 'echanges', 'stats']],
-    ['Jeux', ['questions', 'sutom', 'secrets', 'geoguessr', 'citations', 'preuves', 'framed-heardle', 'bataille', 'mes-jeux']]],
-  communication: [['Demandes', ['assistance', 'idees']], ['Conversations', ['messagerie', 'fil']], ['Discord', ['bot', 'commandes']]],
-  site: [['Identité et textes', ['identite', 'textes', 'menu']], ['Fonctionnement', ['etat', 'erreurs', 'archives', 'reglages', 'accueil']], ['Apparence', ['theme']]],
+    [null, ['arene']]],
+  jeux: [[null, ['questions', 'sutom', 'geoguessr', 'citations', 'preuves', 'framed-heardle', 'secrets', 'mes-jeux']]],
 };
 const ROUTES = Object.entries(TREE).flatMap(([d, groups]) => groups.flatMap(([, subs]) => subs.map((s) => `${d}/${s}`)));
 
@@ -80,8 +83,8 @@ async function goHash(p, h) {
   await adminSection(p, 'cartes/tirage');
   const look = await p.$eval('[data-dom-subs="cartes"] .shell-subhead', (h) => ({ fs: parseFloat(getComputedStyle(h).fontSize), vis: h.getClientRects().length > 0 }));
   check(look.vis && look.fs >= 11, `(a) titre de groupe visible et lisible (${look.fs} px)`);
-  check((await p.textContent('#zone-eyebrow')).trim() === 'Jeux et cartes · Économie' && (await p.textContent('#zone-title')).trim() === 'Tirage',
-    '(a) en-tête de zone : « Jeux et cartes · Économie » puis « Tirage »');
+  check((await p.textContent('#zone-eyebrow')).trim() === 'Le jeu de cartes · Économie' && (await p.textContent('#zone-title')).trim() === 'Tirage',
+    '(a) en-tête de zone : « Le jeu de cartes · Économie » puis « Tirage »');
 
   /* ---------- (b) Chaque route s'ouvre ; anciennes adresses ---------- */
   const bad = [];
@@ -89,15 +92,15 @@ async function goHash(p, h) {
     try { await adminSection(p, r); } catch { bad.push(r); }
   }
   check(!bad.length, `(b) les ${ROUTES.length} routes s'ouvrent (adresse, lien actif, section visible)${bad.length ? ' — échecs : ' + bad.join(', ') : ''}`);
-  for (const [from, to] of [['#reglages', '#site/identite'], ['#cartes/economie', '#cartes/economie'], ['#vie/badges', '#vie/badges'],
-    ['#membres/acces', '#membres/acces'], ['#site/reglages', '#site/reglages'], ['#eggs', '#cartes/secrets'], ['#fil', '#communication/fil']]) {
+  for (const [from, to] of [['#reglages', '#pilotage/identite'], ['#cartes/economie', '#cartes/economie'], ['#membres/badges', '#membres/badges'],
+    ['#membres/acces', '#membres/acces'], ['#pilotage/reglages', '#pilotage/reglages'], ['#eggs', '#jeux/secrets'], ['#fil', '#pilotage/fil']]) {
     await goHash(p, 'pilotage/apercu');
     await goHash(p, from);
     await p.waitForFunction((t) => location.hash === t, to, { timeout: 4000 }).catch(() => {});
     check(await p.evaluate(() => location.hash) === to, `(b) ${from} → ${to}`);
   }
   // Rail : l'icône Réglages mène au formulaire « Identité et textes »
-  check(await p.getAttribute('#shell-foot [data-rail-reglages]', 'href') === '#site/identite', '(b) rail : Réglages → #site/identite');
+  check(await p.getAttribute('#shell-foot [data-rail-reglages]', 'href') === '#pilotage/identite', '(b) rail : Réglages → #pilotage/identite');
   // Palette : « Groupe · Libellé », recherche sur le titre de groupe
   await p.keyboard.press('Control+k');
   await p.waitForSelector('.apal-backdrop:not([hidden])', { timeout: 5000 });
@@ -120,7 +123,7 @@ async function goHash(p, h) {
   for (const r of ROUTES) {
     await adminSection(p, r).catch(() => {});
     H[r] = await zoneHeight(p);
-    if (r === 'communication/bot') {
+    if (r === 'pilotage/bot') {
       for (const t of ['connexion', 'salons', 'mentions', 'annonces', 'mp', 'modeles', 'regles']) {
         if (!(await p.locator(`#bot-tab-${t}`).count())) { H[`${r} [${t}]`] = -1; continue; }
         await p.click(`#bot-tab-${t}`);
@@ -151,12 +154,12 @@ async function goHash(p, h) {
   /* ---------- (d) Staff ['cartes'] ---------- */
   p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(2), staff: ['cartes'] } });
   const st = await columnTree(p, 'cartes');
-  check(JSON.stringify(st) === JSON.stringify([...TREE.cartes.slice(0, 4), ['Jeux', ['bataille']]]),
-    `(d) Staff ['cartes'] : titres Catalogue, Économie, Animation, Suivi, Jeux (Bataille) (${JSON.stringify(st)})`);
-  check(await p.locator('#shell-subs a[href="#cartes/secrets"], #shell-subs a[href="#communication/fil"], #shell-subs a[href="#cartes/questions"], #shell-subs a[href="#cartes/geoguessr"], #shell-subs a[href="#cartes/citations"]').count() === 0,
+  check(JSON.stringify(st) === JSON.stringify(TREE.cartes),
+    `(d) Staff ['cartes'] : Catalogue, Économie, Animation, Suivi, puis Arène (${JSON.stringify(st)})`);
+  check(await p.locator('#shell-subs a[href="#jeux/secrets"], #shell-subs a[href="#pilotage/fil"], #shell-subs a[href="#jeux/questions"], #shell-subs a[href="#jeux/geoguessr"], #shell-subs a[href="#jeux/citations"]').count() === 0,
     '(d) Staff [\'cartes\'] : ni Secrets, ni Fil d’activité, ni Questions du gang, ni GeoGuessr, ni Citations');
-  await goHash(p, 'cartes/secrets');
-  check(await p.evaluate(() => location.hash) !== '#cartes/secrets' && !(await p.isVisible('#eggs')), '(d) Staff : #cartes/secrets redirigée, section jamais affichée');
+  await goHash(p, 'jeux/secrets');
+  check(await p.evaluate(() => location.hash) !== '#jeux/secrets' && !(await p.isVisible('#eggs')), '(d) Staff : #jeux/secrets redirigée, section jamais affichée');
   await adminSection(p, 'cartes/limites');
   check(await p.isVisible('#cartes'), '(d) Staff : Économie › Limites s\'ouvre');
   check(p.errs.length === 0, '(d) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.slice(0, 5).join(' | ') + ')' : ''));
@@ -165,7 +168,7 @@ async function goHash(p, h) {
   /* ---------- (e) Mobile 375 px ---------- */
   p = await openPage(browser, { page: 'admin', width: 375, height: 812 });
   check((await p.$$eval('#shell-tabs .shell-tab', (as) => as.length)) === 6 && await p.isVisible('#shell-tabs'), '(e) 375 px : 6 onglets de domaine en bas');
-  check((await p.textContent('#shell-tabs .shell-tab[data-dom="cartes"] .shell-tab-label')).trim() === 'Jeux', '(e) libellé court « Jeux »');
+  check((await p.textContent('#shell-tabs .shell-tab[data-dom="cartes"] .shell-tab-label')).trim() === 'Cartes', '(e) libellé court « Cartes »');
   let hsMax = 0;
   /** Ouvre l'écran d'un domaine par son onglet et attend que sa colonne soit affichée. */
   const domScreen = async (dom) => {
@@ -179,7 +182,7 @@ async function goHash(p, h) {
   }
   await domScreen('cartes');
   const mHeads = await p.$$eval('[data-dom-subs="cartes"] .shell-subhead', (hs) => hs.filter((h) => h.getClientRects().length).map((h) => h.textContent.trim()));
-  check(JSON.stringify(mHeads) === JSON.stringify(['Catalogue', 'Économie', 'Animation', 'Suivi', 'Jeux']), `(e) écran du domaine : titres de groupe visibles (${mHeads.join(', ')})`);
+  check(JSON.stringify(mHeads) === JSON.stringify(['Catalogue', 'Économie', 'Animation', 'Suivi']), `(e) écran du domaine : titres de groupe visibles (${mHeads.join(', ')})`);
   check(hsMax <= 0, `(e) écrans des 6 domaines sans défilement horizontal (${hsMax})`);
   await p.click('#shell-subs a[href="#cartes/recyclage"]');
   await p.waitForFunction(() => location.hash === '#cartes/recyclage', null, { timeout: 5000 }).catch(() => {});

@@ -6,7 +6,7 @@
 // (e) journal « Qui a trouvé quoi » groupé par membre (lettres comptées ensemble), recherche ;
 // (f) Staff « reglages » : formulaire actif, journal remplacé par une explication, aucune lecture de hg_egg_log ;
 // (g) Staff « cartes » : pas de sous-section Secrets (si la route est branchée) ; 375 px sans défilement horizontal ; aucune erreur JS.
-// La section est ouverte par sa route #cartes/secrets si admin.js la branche, sinon montée directement (mountEggsSection).
+// La section est ouverte par sa route #jeux/secrets si admin.js la branche, sinon montée directement (mountEggsSection).
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-admin-secrets.cjs
 const { ROOT, check, finish, openPage, adminSection, hscroll, chromium } = require('./lib/harness.cjs');
 
@@ -35,8 +35,8 @@ const LOG = [
  * @returns {Promise<'route'|'direct'>}
  */
 async function openSecrets(p) {
-  const routed = await p.locator('a.shell-sub[href="#cartes/secrets"]').count();
-  if (routed) { await adminSection(p, 'cartes/secrets'); await p.waitForSelector('#eggs-root #aeg-form, #eggs-root .empty', { timeout: 8000 }); return 'route'; }
+  const routed = await p.locator('a.shell-sub[href="#jeux/secrets"]').count();
+  if (routed) { await adminSection(p, 'jeux/secrets'); await p.waitForSelector('#eggs-root #aeg-form, #eggs-root .empty', { timeout: 8000 }); return 'route'; }
   await p.evaluate(async () => {
     if (!document.querySelector('link[href$="admin-eggs.css"]')) {
       const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'assets/css/admin-eggs.css'; document.head.appendChild(l);
@@ -60,7 +60,7 @@ const settingsWrites = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] =
   /* (a) Lecture */
   const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario });
   const how = await openSecrets(p);
-  console.log(`  (section ouverte : ${how === 'route' ? 'route #cartes/secrets' : 'montage direct, route pas encore branchée'})`);
+  console.log(`  (section ouverte : ${how === 'route' ? 'route #jeux/secrets' : 'montage direct, route pas encore branchée'})`);
   await p.waitForSelector('#aeg-form', { timeout: 8000 });
   check((await p.inputValue('#aeg-anniv')) === '08-14', '(a) anniversaire lu (08-14)');
   check((await p.inputValue('#aeg-mot')) === 'SECRETS', '(a) mot secret lu');
@@ -157,8 +157,8 @@ const settingsWrites = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] =
 
   /* (g) Staff « cartes » ; mobile */
   const c = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: U(4), staff: ['cartes'] } });
-  if (how === 'route') check(await c.locator('a.shell-sub[href="#cartes/secrets"]').count() === 0, '(g) Staff « cartes » : pas de sous-section Secrets');
-  else console.log('  (g) route #cartes/secrets non branchée : contrôle du Staff « cartes » laissé au paquet A');
+  if (how === 'route') check(await c.locator('a.shell-sub[href="#jeux/secrets"]').count() === 0, '(g) Staff « cartes » : pas de sous-section Secrets');
+  else console.log('  (g) route #jeux/secrets non branchée : contrôle du Staff « cartes » laissé au paquet A');
   await c.ctx.close();
   const m = await openPage(browser, { page: 'admin', width: 375, height: 800, scenario });
   await openSecrets(m);

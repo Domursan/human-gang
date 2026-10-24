@@ -47,7 +47,7 @@ const testCalls = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'f
   /* (a) (b) (d) Salons, cases par type, validation, enregistrement, test */
   {
     const p = await openPage(browser, { page: 'admin', width: 1440, height: 900 });
-    await goto(p, 'communication/bot');
+    await goto(p, 'pilotage/bot');
     await tab(p, 'salons');
 
     check(await p.locator('#bot-channels').count() === 1, '(a) section « Où part chaque type d\'annonce » présente');
@@ -109,7 +109,7 @@ const testCalls = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'f
     const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { settings: [
       { key: 'bot', value: { announce_channel_id: ANNONCES, birthday_channel_id: ANIV, notify: {} } },
     ] } });
-    await goto(p, 'communication/bot');
+    await goto(p, 'pilotage/bot');
     await tab(p, 'salons');
     check(await p.isChecked(`#bot-chan-birthday input[value="${ANIV}"]`), '(c) ancien réglage des anniversaires coché dans « Anniversaires »');
     check((await p.textContent('#bot-salon-list')).includes(`Salon ${ANIV}`), '(c) salon absent de la liste : ajouté comme « Salon <id> »');
@@ -120,7 +120,7 @@ const testCalls = (p) => p.evaluate(() => window.__LOG.filter((e) => e[0] === 'f
   /* (e) Mobile 390 px */
   {
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844 });
-    await goto(p, 'communication/bot');
+    await goto(p, 'pilotage/bot');
     await tab(p, 'salons');
     await p.locator('#bot-channels').scrollIntoViewIfNeeded();
     check(await hscroll(p) === 0, '(e) 390 px : pas de défilement horizontal (salons)');

@@ -1,4 +1,4 @@
-// Parcours : idée J1 · GeoGuessr du gang (jeux.html#geo et admin #cartes/geoguessr), faux Supabase fake-sb-jeux.mjs
+// Parcours : idée J1 · GeoGuessr du gang (jeux.html#geo et admin #jeux/geoguessr), faux Supabase fake-sb-jeux.mjs
 // et faux Leaflet (fixtures/fake-leaflet.js, servi à la place du CDN).
 // Photo de la manche ; pas de réponse avant le vote ; épingle posée puis validée (une seule tentative) ; résultat :
 // score, distance, Paillettes, lieu et lien vers l'album ; classements jour / semaine ; archive pour l'honneur ;
@@ -94,7 +94,7 @@ async function ouvrir(browser, opts) {
 
   /* ---------- Panel : manches GeoGuessr ---------- */
   p = await ouvrir(browser, { page: 'admin', width: 1280, height: 900 });
-  await adminSection(p, 'cartes/geoguessr');
+  await adminSection(p, 'jeux/geoguessr');
   await p.waitForSelector('#ajx-geo-list .ajx-row', { timeout: 4000 }).catch(() => {});
   check(await p.locator('#ajx-geo-list .ajx-row').count() === 3, 'panel : 3 manches listées');
   check((await p.locator('#ajx-geo-stats').innerText()).includes('en réserve'), 'panel : réserve comptée');
@@ -121,8 +121,8 @@ async function ouvrir(browser, opts) {
 
   /* ---------- Panel : un Staff sans « souvenirs » ne voit pas la sous-section ---------- */
   p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['quiz'] } });
-  check(await p.locator('.shell-sub[href="#cartes/geoguessr"]').count() === 0, 'Staff « quiz » : pas de sous-section GeoGuessr');
-  check(await p.locator('.shell-sub[href="#cartes/citations"]').count() === 1, 'Staff « quiz » : sous-section Citations');
+  check(await p.locator('.shell-sub[href="#jeux/geoguessr"]').count() === 0, 'Staff « quiz » : pas de sous-section GeoGuessr');
+  check(await p.locator('.shell-sub[href="#jeux/citations"]').count() === 1, 'Staff « quiz » : sous-section Citations');
   await p.ctx.close();
 
   await browser.close();

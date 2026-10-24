@@ -5,9 +5,9 @@
 // Types : entier, decimal, bool, texte. « nullable » : vide (null) = pas de limite / valeur absente.
 
 export const DOMAINES_LOT3 = {
-  ss: { titre: 'Secret Santa', section: 'vie/secret-santa' },
-  irl: { titre: 'Sorties IRL', section: 'vie/sorties' },
-  souvenirs: { titre: 'Souvenirs et photos', section: 'vie/souvenirs' },
+  ss: { titre: 'Secret Santa', section: 'irl/secret-santa' },
+  irl: { titre: 'Sorties IRL', section: 'irl/sorties' },
+  souvenirs: { titre: 'Souvenirs et photos', section: 'irl/souvenirs' },
 };
 
 /** Champs : cle = clé de hg_settings, champ = propriété dans la valeur JSON. */
@@ -48,10 +48,10 @@ export const CLES_LOT3 = ['ss', 'irl', 'albums', 'photos'];
 
 /** Descripteurs à fusionner dans le registre de keys.js (libellé et aide des clés, lecture seule pour les clés gérées ailleurs). */
 export const KEYS_LOT3 = {
-  ss: { label: 'Réglages du Secret Santa', help: 'Minimum de participants, éviter la même cible, budget proposé, souhaits maximum.', managed: '#vie/secret-santa', managedLabel: 'Vie · Secret Santa' },
-  irl: { label: 'Réglages des sorties IRL', help: 'Passage dans l’historique, sondage de dates, durée par défaut.', managed: '#vie/sorties', managedLabel: 'Vie · Sorties' },
-  albums: { label: 'Réglages des albums', help: 'Nombre de photos et poids maximum d’un album ZIP.', managed: '#vie/souvenirs', managedLabel: 'Souvenirs' },
-  photos: { label: 'Réglages des photos', help: 'Taille et qualité des photos envoyées.', managed: '#vie/souvenirs', managedLabel: 'Souvenirs' },
+  ss: { label: 'Réglages du Secret Santa', help: 'Minimum de participants, éviter la même cible, budget proposé, souhaits maximum.', managed: '#irl/secret-santa', managedLabel: 'IRL · Secret Santa' },
+  irl: { label: 'Réglages des sorties IRL', help: 'Passage dans l’historique, sondage de dates, durée par défaut.', managed: '#irl/sorties', managedLabel: 'IRL · Sorties IRL' },
+  albums: { label: 'Réglages des albums', help: 'Nombre de photos et poids maximum d’un album ZIP.', managed: '#irl/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
+  photos: { label: 'Réglages des photos', help: 'Taille et qualité des photos envoyées.', managed: '#irl/souvenirs', managedLabel: 'IRL · Souvenirs et photos' },
 };
 
 /** Valeurs par défaut sous forme d'objets { cle: { champ: défaut } }. */

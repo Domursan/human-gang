@@ -1,4 +1,4 @@
-// ===== Humane Gang — administration : Questions du gang (route cartes/questions) =====
+// ===== Humane Gang — administration : Questions du gang (route jeux/questions) =====
 // Rôle : l'admin (ou le Staff « quiz ») crée les questions que les membres peuvent ensuite régler pour gagner des
 // Paillettes. Deux onglets : « Questions » (ce module) et « Réponses et statistiques » (admin-quiz-stats.js).
 // Lecture : table hg_quiz_questions (RLS : permission quiz). Écritures : RPC hg_quiz_save, hg_quiz_key, hg_quiz_remove

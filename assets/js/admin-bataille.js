@@ -2,7 +2,7 @@
 /*
  * Rôle : Jeux et cartes › Bataille. Activation du jeu, gains, montants et plafonds
  * (hg_settings.cards.bataille et cards.plafonds), bornés par le serveur et journalisés.
- * Droits : Staff « cartes » et administrateur. Route : #cartes/bataille. Section : <section id="bataille">, #bataille-root.
+ * Droits : Staff « cartes » et administrateur. Route : #cartes/arene. Section : <section id="bataille">, #bataille-root.
  * RPC : hg_battle_me (lecture des réglages), hg_battle_settings_save. Exporte : mountBatailleSection.
  */
 import { sb, toast, errMsg, esc } from './core.js';

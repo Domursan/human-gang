@@ -81,8 +81,8 @@ const ITEMS = [
 
   /* ---------- Admin : vue « Ce jour-là » ---------- */
   p = await openPage(browser, { page: 'admin', fixture: F, scenario: { ceJour: ITEMS } });
-  await adminSection(p, 'vie/souvenirs');
-  await p.evaluate(() => { location.hash = 'vie/souvenirs/ce-jour'; });
+  await adminSection(p, 'irl/souvenirs');
+  await p.evaluate(() => { location.hash = 'irl/souvenirs/ce-jour'; });
   await p.waitForSelector('#cj-list .cj-row', { timeout: 5000 }).catch(() => {});
   check((await p.locator('#cj-list .cj-row').count()) === 3, 'admin : aperçu des 3 souvenirs du jour');
   check(await p.locator('#cj-on').isChecked(), 'admin : interrupteur allumé');

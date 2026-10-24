@@ -1,4 +1,4 @@
-// Admin : signalements de contenus (idée A6), dans Communication › Assistance.
+// Admin : signalements de contenus (idée A6), dans Pilotage › Assistance.
 // Un signalement est une demande d'assistance « Signalement » liée à une ligne de hg_reports (migration 093).
 // La demande ouverte montre un aperçu du seul contenu signalé (vignette de la photo, texte du moment, ou le seul
 // message signalé, jamais le reste de la conversation), la raison, le mot facultatif, le nombre de signalements sur ce
