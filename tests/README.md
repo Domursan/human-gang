@@ -131,6 +131,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-reglages-lot2.cjs` | `node tests/parcours-reglages-lot2.cjs` | à la main | Réglages « Comptes et invitations » : règles, préfixe refusé, enregistrement, rétablissement |
 | `parcours-reglages-lot3.cjs` | `node tests/parcours-reglages-lot3.cjs` | à la main | Réglages Secret Santa, sorties IRL et souvenirs : validation, enregistrement, rétablissement par champ |
 | `parcours-reglages-lot4.cjs` | `node tests/parcours-reglages-lot4.cjs` | à la main | Réglages des cartes : économie, drops, quêtes, bornes lues par la page |
+| `parcours-reglages-textes-plafonds.cjs` | `node tests/parcours-reglages-textes-plafonds.cjs` | à la main | Textes de la page d’accueil (Mairie › Textes et intro) et plafonds de Paillettes (Fabrique › Limites) : édition, défauts, enregistrement sans effacer les autres clés |
 | `parcours-reglages-lot5.cjs` | `node tests/parcours-reglages-lot5.cjs` | à la main | Réglages Bot Discord, rappels, limites, planning d'anniversaires, assistance |
 | `parcours-visite.cjs` | `node tests/parcours-visite.cjs` | `test` | Q1 · visite guidée : premier passage (390 et 1280 px), Échap, page masquée sautée, bandeau des anciens membres, « Revoir la visite » |
 | `parcours-vignettes.cjs` | `node tests/parcours-vignettes.cjs` | `test` | Q3 · vignettes des albums : dimensions dans la grille, envoi photo + vignette, « Générer les vignettes manquantes » (admin) |

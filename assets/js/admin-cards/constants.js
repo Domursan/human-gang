@@ -43,7 +43,20 @@ export const CFG_DEFAULT = {
   quetes_par_semaine: 3,
   drops: { quantite_max: 50, duree_max_min: 1440, duree_defaut_min: 30 },
   alertes: { paillettes_pct: 25, recyclage_pct: 60, booster_pct: 100, concentration_x: 5 },
+  // Plafonds (cards.plafonds) : valeurs des fonctions SQL (hg_eco_cap, hg_jeux_cap et défauts en dur), vérifiées en base le 24/10/2026.
+  // Le formulaire « Limites » n'enregistre que les écarts : un champ vide retire la clé, et le SQL reprend ce défaut.
+  plafonds: {
+    framed_gain: 10, framed_consolation: 3, heardle_gain: 10, heardle_consolation: 3, sutom_trouve: 10, sutom_perdu: 3,
+    jeu_du_jour_gain: 5, jeux_du_jour: 3,
+    quiz_jour: 10, quiz_serie_7: 50, quiz_serie_30: 200, quiz_serie_100: 1000, citations_jour: 3, citations_semaine: 3,
+    photos_jour: 5, souvenirs_jour: 5, sorties_semaine: 1, reponses_semaine: 7, presences_semaine: 7,
+    photos_max_jour: 100, souvenirs_max_jour: 20, sorties_max_jour: 20, idees_max_jour: 10, playlist_jour: 3,
+    code_paillettes: 1000, badges_manuels_jour: 10, avent_mois: 600,
+    bataille_gain: 10, batailles_jour: 3, defense_gain: 5, defenses_jour: 3, bataille_meme_adversaire: 2, batailles_max_jour: 20,
+  },
 };
+/* Plafond de Paillettes (cards.plafonds) : entier de 0 à max (1 000 au plus : bornes de hg_settings_bounds). Vide = défaut. */
+const PLAF = (k, l, u, max = 1000, min = 0) => ({ k: `plafonds.${k}`, l, u, int: true, min, max, ph: true });
 /* Récompenses en Paillettes avec leur libellé ; les clés correspondent à rewards.* de CFG_DEFAULT. */
 const REWARDS = [
   ['daily', 'Passage du jour'], ['streak_bonus', 'Bonus par jour de série (en plus)'], ['streak_max', 'Série maximale (jours)'],
@@ -91,6 +104,47 @@ export const ECON = [
     { k: 'generations.og_before', l: 'OG si arrivé avant le', date: true, optional: true, help: 'Vide = 1er septembre 2023.' },
   ] },
   { g: 'Échanges', fields: [{ k: 'max_open_trades', l: 'Offres en cours maximum par personne', int: true, min: 1, help: 'Nombre d\'offres d\'échange qu\'un membre peut avoir ouvertes en même temps.' }] },
+  // Plafonds de Paillettes (cards.plafonds) : chaque groupe reprend un thème du site. Vide = valeur par défaut (affichée en gris).
+  { g: 'Jeux du jour', hint: 'Paillettes données une fois par jour et par jeu, dans la limite de ce plafond. Vide = valeur par défaut.', fields: [
+    PLAF('framed_gain', 'Framed : partie gagnée', '✦', 200), PLAF('framed_consolation', 'Framed : partie perdue', '✦', 200),
+    PLAF('heardle_gain', 'Heardle : partie gagnée', '✦', 200), PLAF('heardle_consolation', 'Heardle : partie perdue', '✦', 200),
+    PLAF('sutom_trouve', 'Sutom : mot trouvé', '✦', 100), PLAF('sutom_perdu', 'Sutom : mot non trouvé', '✦', 100),
+    PLAF('jeu_du_jour_gain', 'Autres jeux du jour : Paillettes par jeu déclaré', '✦', 50),
+    PLAF('jeux_du_jour', 'Autres jeux du jour : jeux payés par jour', 'jeux', 10),
+  ] },
+  { g: 'Quiz et citations', hint: 'Bonus de la question du jour, paliers des séries de réponses, et limites des citations « Qui a dit ça ? ».', fields: [
+    PLAF('quiz_jour', 'Question du jour : bonus', '✦', 100),
+    PLAF('quiz_serie_7', 'Série de 7 bonnes réponses : palier', '✦'),
+    PLAF('quiz_serie_30', 'Série de 30 jours : palier', '✦'),
+    PLAF('quiz_serie_100', 'Série de 100 jours : palier', '✦'),
+    PLAF('citations_jour', 'Citations proposées par membre et par jour', '', 20),
+    PLAF('citations_semaine', 'Citations validées récompensées par membre et par semaine', '', 100),
+  ] },
+  { g: 'Photos et sorties', hint: 'Paillettes données pour une publication, dans la limite de ces plafonds par membre. Au-delà, la publication reste possible, sans Paillettes.', fields: [
+    PLAF('photos_jour', 'Photos payées par jour', ''), PLAF('souvenirs_jour', 'Souvenirs payés par jour', ''),
+    PLAF('sorties_semaine', 'Sorties créées payées par semaine', ''), PLAF('reponses_semaine', 'Réponses « oui » payées par semaine', ''),
+    PLAF('presences_semaine', 'Présences payées par semaine', ''),
+  ] },
+  { g: 'Limites de publication', hint: 'Plafonds de sécurité : au-delà, le site refuse la publication. Aucune Paillettes en jeu.', fields: [
+    PLAF('photos_max_jour', 'Photos publiées par jour', ''), PLAF('souvenirs_max_jour', 'Souvenirs publiés par jour', ''),
+    PLAF('sorties_max_jour', 'Sorties créées par jour', ''), PLAF('idees_max_jour', 'Idées envoyées par jour', ''),
+    PLAF('playlist_jour', 'Morceaux partagés par jour', ''),
+  ] },
+  { g: 'Codes cadeaux et badges', fields: [
+    PLAF('code_paillettes', 'Paillettes maximum par code cadeau', '✦'),
+    PLAF('badges_manuels_jour', 'Badges attribués à la main par jour (Staff)', '', 100),
+  ] },
+  { g: 'Calendrier de l’Avent', hint: 'Budget mensuel de Paillettes du calendrier (affiché comme « budget conseillé » dans Saisons › Avent).', fields: [
+    PLAF('avent_mois', 'Budget mensuel de Paillettes', '✦'),
+  ] },
+  { g: 'Arène actuelle', hint: 'Mêmes plafonds que dans Jeux et cartes › Arène actuelle : un seul réglage, partagé par les deux écrans.', fields: [
+    PLAF('bataille_gain', 'Paillettes par victoire en attaque', '✦', 100),
+    PLAF('batailles_jour', 'Victoires payées par jour', '', 20),
+    PLAF('defense_gain', 'Paillettes quand la défense tient', '✦', 100),
+    PLAF('defenses_jour', 'Défenses payées par jour', '', 20),
+    PLAF('bataille_meme_adversaire', 'Attaques par jour contre un même membre', '', 10, 1),
+    PLAF('batailles_max_jour', 'Batailles par jour au plus (toutes)', '', 100, 1),
+  ] },
   // A7 : seuils du bloc « Santé de l'économie » (Pilotage › Vue d'ensemble), bornés aussi par hg_eco_health.
   { g: 'Alertes économie', hint: 'Seuils des alertes du bloc « Santé de l’économie » (Pilotage › Vue d’ensemble).', fields: [
     { k: 'alertes.paillettes_pct', l: 'Hausse des Paillettes en 7 jours', u: '%', int: true, min: 5, max: 500, help: 'Alerte au-delà (25 % par défaut).' },

@@ -55,6 +55,17 @@ export const SITE_DEFAULTS = {
     visite_recherche: 'Une sortie, un souvenir ou un membre (Ctrl+K sur ordinateur).',
     visite_aide: 'Plus de 60 tutos pas à pas, et l’assistance si tu bloques.',
     visite_bandeau: 'la visite du site en 30 secondes.',
+    // Page d'accueil (accueil.js) : titre, présentation, bouton et libellés. Vide = texte d'origine.
+    accueil_titre: 'Le QG du Humane Gang',
+    accueil_lead: 'Secret Santa, sorties IRL et souvenirs : tout ce qui fait le gang, au même endroit. L\'espace est réservé aux membres.',
+    accueil_cta_connexion: 'Se connecter / Rejoindre',
+    accueil_note_invitation: 'Pour rejoindre le gang, il te faut un code d\'invitation donné par un membre.',
+    // Boîte à idées : vide = texte d'origine (avec une mise en forme), affiché par accueil.js.
+    idees_aide: '',
+    ss_pas_edition: 'Pas encore d\'édition',
+    rsvp_libelles: { oui: 'Tu viens', 'peut-etre': 'Peut-être', non: 'Tu ne viens pas' },
+    defis_libelles: { atteint_recu: 'Atteint · récompense reçue', atteint_verse: 'Atteint · récompense versée sous peu', termine: 'Terminé, objectif non atteint' },
+    ss_statuts: { inscriptions: 'Inscriptions ouvertes', tirage: 'Tirage en préparation', envoi: 'Envoi des cadeaux', revelation: 'Révélation', termine: 'Terminée' },
     nav_libelles: {},
     footer_liens: [
       { id: 'evenements', label: 'Événements', visible: true },
@@ -68,7 +79,7 @@ export const SITE_DEFAULTS = {
 
 /** Champs dont la valeur vide est permise (affichée « à compléter » ou absente). */
 export const VIDE_OK = new Set(['editeur', 'contact_email', 'logo_url', 'legal_mentions', 'legal_confidentialite', 'legal_cookies',
-  'maintenance_message', 'bandeau_texte']);
+  'maintenance_message', 'bandeau_texte', 'idees_aide']);
 /** Liens du menu (en-tête) dont on peut régler le libellé. */
 export const NAV_SLUGS = ['secret-santa', 'irl', 'historique', 'messages', 'cartes', 'membre', 'recap'];
 /** Identifiants des liens du pied de page, dans l'ordre par défaut. */
@@ -108,6 +119,23 @@ function cleanField(k, v, def) {
   if (t && k === 'contact_email' && !EMAIL_RE.test(t)) return def;
   if (t && k === 'logo_url' && !URL_RE.test(t)) return def;
   return t;
+}
+
+/**
+ * Libellés d'un objet { sous-clé: texte } (ex. rsvp_libelles) : chaque sous-clé de la valeur par défaut reçoit le texte
+ * enregistré s'il est non vide (coupé à 80 caractères), sinon le texte par défaut.
+ * @param {*} v Objet enregistré.
+ * @param {Object<string, string>} def Libellés par défaut.
+ * @returns {Object<string, string>}
+ */
+function cleanLibelles(v, def) {
+  const out = clone(def);
+  if (!isObj(v)) return out;
+  for (const sub of Object.keys(def)) {
+    const t = typeof v[sub] === 'string' ? v[sub].trim() : '';
+    if (t) out[sub] = t.slice(0, 80);
+  }
+  return out;
 }
 
 /**
@@ -158,9 +186,11 @@ export function buildSite(raw = {}) {
   const identite = {}, textes = {};
   for (const k of Object.keys(SITE_DEFAULTS.identite)) identite[k] = cleanField(k, r1[k], SITE_DEFAULTS.identite[k]);
   for (const k of Object.keys(SITE_DEFAULTS.textes)) {
+    const def = SITE_DEFAULTS.textes[k];
     if (k === 'nav_libelles') textes[k] = cleanNav(r2[k]);
     else if (k === 'footer_liens') textes[k] = cleanFooter(r2[k]);
-    else textes[k] = cleanField(k, r2[k], SITE_DEFAULTS.textes[k]);
+    else if (isObj(def)) textes[k] = cleanLibelles(r2[k], def);
+    else textes[k] = cleanField(k, r2[k], def);
   }
   return { identite, textes };
 }

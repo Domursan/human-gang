@@ -33,7 +33,8 @@ const seedCards = (p, value) => p.evaluate((v) => { window.__DB.hg_settings.unsh
   await adminSection(p, 'fabrique/limites');
   await p.waitForSelector('#acd-econ-form', { timeout: 8000 });
   /* Légendes des groupes visibles de l'Économie. */
-  const shownLegends = () => p.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length).map((f) => f.querySelector('legend').textContent.trim()).join(' | '));
+  // Une fieldset dans un bloc <details> fermé (plafonds de Paillettes) n'est pas affichée, même si elle garde sa boîte.
+  const shownLegends = () => p.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length && !(f.closest('details') && !f.closest('details').open)).map((f) => f.querySelector('legend').textContent.trim()).join(' | '));
   check(await shownLegends() === 'Quêtes de la semaine | Cartes sauvages (drops) | Générations des membres | Échanges', `parties : « Limites » ne montre que ses groupes (${await shownLegends()})`);
   check((await p.textContent('#acd-econ-part')).trim() === 'Limites' && !(await p.isVisible('.acd-bulk-intro')), 'parties : titre « Limites », bloc Dons masqué');
   check(await p.inputValue('#acd-e-drops_quantite_max') === '50', 'économie : exemplaires max d\'un drop affiche le défaut (50) sans configuration');

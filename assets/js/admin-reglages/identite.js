@@ -15,7 +15,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_RE = /^(https:\/\/|assets\/)\S+$/;
 const BUCKET = { site_identite: 'identite', site_textes: 'textes' };
 /* part : partie affichée (clé de PARTS_LOT1) ; null = tous les groupes (comportement d'origine). */
-const S = { root: null, site: null, error: null, part: null };
+const S = { root: null, site: null, error: null, part: null, ouverts: new Set() };
 
 /* Identifiant HTML d'un champ, dérivé de sa clé (les points deviennent des tirets). */
 const fieldId = (k) => `rgi-${k.replace(/[^a-z0-9]/gi, '-')}`;
@@ -71,6 +71,8 @@ export async function mountIdentite(root) {
   root.innerHTML = '<div class="empty">Chargement de l\'identité et des textes…</div>';
   root.addEventListener('click', onClick);
   root.addEventListener('submit', onSubmit);
+  // Groupes repliés ouverts par l'admin : gardés après un nouveau rendu (enregistrement, rétablissement).
+  root.addEventListener('toggle', (e) => { const g = e.target.closest?.('details.rgi-fold')?.closest('[data-group]')?.dataset.group; if (g) (e.target.open ? S.ouverts.add(g) : S.ouverts.delete(g)); }, true);
   await load();
 }
 
@@ -118,23 +120,33 @@ function controlHtml(f) {
     return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}<div class="rgi-rows" role="group" aria-label="${esc(f.label)}">${rows}</div>
       <div class="rgi-field-foot">${hint}</div>${err}</div>`;
   }
+  if (f.kind === 'libelles') {
+    const d = defaultOf(f.k);
+    const rows = f.items.map((it) => `<div class="rgi-row"><label for="${id}-${it.id}">${esc(it.label)}</label>
+      <input id="${id}-${it.id}" type="text" maxlength="80" data-libelle="${esc(f.k)}" data-sub="${esc(it.id)}" value="${esc(v[it.id] ?? '')}" placeholder="${esc(d[it.id] ?? '')}"></div>`).join('');
+    return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}<div class="rgi-rows" role="group" aria-label="${esc(f.label)}">${rows}</div>
+      <div class="rgi-field-foot">${hint}</div>${err}</div>`;
+  }
+  // Placeholder : le texte d'origine (ou f.placeholder), affiché tant que le champ est vide.
+  const ph = f.placeholder ?? defaultOf(f.k);
+  const phAttr = typeof ph === 'string' && ph ? ` placeholder="${esc(ph)}"` : '';
   const tag = f.kind === 'area'
-    ? `<textarea id="${id}" rows="3" data-k="${esc(f.k)}" aria-describedby="${id}-h"${f.max ? ` maxlength="${f.max}"` : ''}>${esc(v)}</textarea>`
-    : `<input id="${id}" type="${f.kind === 'email' ? 'email' : 'text'}" data-k="${esc(f.k)}" value="${esc(v)}" aria-describedby="${id}-h" autocomplete="off"${f.max ? ` maxlength="${f.max}"` : ''}>`;
+    ? `<textarea id="${id}" rows="3" data-k="${esc(f.k)}" aria-describedby="${id}-h"${f.max ? ` maxlength="${f.max}"` : ''}${phAttr}>${esc(v)}</textarea>`
+    : `<input id="${id}" type="${f.kind === 'email' ? 'email' : 'text'}" data-k="${esc(f.k)}" value="${esc(v)}" aria-describedby="${id}-h" autocomplete="off"${f.max ? ` maxlength="${f.max}"` : ''}${phAttr}>`;
   return `<div class="rgi-field" data-champ="${esc(f.k)}">${head}${tag}<div class="rgi-field-foot">${hint}</div>${err}</div>`;
 }
 
 /** Groupes longs, repliés par défaut pour garder la page Textes courte. */
-const REPLIES = new Set(['visite', 'hors_ligne']);
+const REPLIES = new Set(['accueil', 'visite', 'hors_ligne']);
 
 /** Dessine le formulaire complet (tous les groupes) dans la zone de la page. */
 function render() {
   if (!S.root) return;
-  const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group" data-group="${g.id}" data-part${groupHidden(g.id) ? ' hidden' : ''}>
+  const groups = GROUPES_LOT1.map((g) => `<fieldset class="rgi-group${g.id === 'accueil' ? ' rgi-wide' : ''}" data-group="${g.id}" data-part${groupHidden(g.id) ? ' hidden' : ''}>
       <legend class="rgi-legend">${esc(g.titre)}</legend>
       <p class="small muted">${esc(g.aide)}</p>
       ${REPLIES.has(g.id)
-        ? `<details class="rgi-fold"><summary>Voir les ${g.champs.length} réglage${g.champs.length > 1 ? 's' : ''}</summary>${g.champs.map(controlHtml).join('')}</details>`
+        ? `<details class="rgi-fold"${S.ouverts.has(g.id) ? ' open' : ''}><summary>Voir les ${g.champs.length} réglage${g.champs.length > 1 ? 's' : ''}</summary>${g.champs.map(controlHtml).join('')}</details>`
         : g.champs.map(controlHtml).join('')}
       <div class="rgi-group-foot"><button class="btn btn-ghost btn-sm" type="button" data-reset-group="${g.id}">Rétablir ces valeurs par défaut</button></div>
     </fieldset>`).join('');
@@ -169,6 +181,11 @@ function readField(f) {
       return { id, label: el.value.trim(), visible: vis ? vis.checked : true };
     });
   }
+  if (f.kind === 'libelles') {
+    const d = defaultOf(f.k), out = {};
+    root.querySelectorAll(`[data-libelle="${f.k}"]`).forEach((el) => { out[el.dataset.sub] = el.value.trim() || d[el.dataset.sub]; });
+    return out;
+  }
   return root.querySelector(`[data-k="${f.k}"]`)?.value.trim() ?? '';
 }
 
@@ -184,6 +201,7 @@ function writeField(f, v) {
     });
     return;
   }
+  if (f.kind === 'libelles') { root.querySelectorAll(`[data-libelle="${f.k}"]`).forEach((el) => { el.value = (v && v[el.dataset.sub]) || ''; }); return; }
   const el = root.querySelector(`[data-k="${f.k}"]`); if (el) el.value = v ?? '';
 }
 
@@ -193,7 +211,7 @@ function validate() {
   for (const f of allFields()) {
     const v = readField(f);
     if (f.kind === 'bool') continue;
-    if (f.kind === 'nav') continue; // longueur gérée par maxlength
+    if (f.kind === 'nav' || f.kind === 'libelles') continue; // longueur gérée par maxlength ; vide = valeur par défaut
     if (f.kind === 'footer') { if (v.some((l) => !l.label)) errors[f.k] = 'Chaque lien du pied de page a besoin d\'un libellé.'; continue; }
     if (!v && !f.vide) errors[f.k] = f.k === 'site_identite.nom' ? 'Le nom du site ne peut pas être vide.' : 'Ce champ ne peut pas être vide.';
     else if (f.kind === 'email' && v && !EMAIL_RE.test(v)) errors[f.k] = 'Adresse e-mail invalide (ex. contact@exemple.ch).';
@@ -208,7 +226,9 @@ function readAll() {
   const identite = {}, textes = {};
   for (const f of allFields()) {
     const { bucket, champ } = parseK(f.k);
-    (bucket === 'identite' ? identite : textes)[champ] = readField(f);
+    let v = readField(f);
+    if (v === '') v = defaultOf(f.k); // champ vidé : valeur par défaut, comme le site la lit
+    (bucket === 'identite' ? identite : textes)[champ] = v;
   }
   return { identite, textes };
 }
@@ -273,10 +293,10 @@ async function onSubmit(e) {
   const btn = S.root.querySelector('#rgi-save');
   btn.disabled = true;
   try {
-    await saveKey('site_identite', identiteOver);
-    await saveKey('site_textes', textesOver);
-    setSiteRaw({ identite: identiteOver, textes: textesOver });
-    S.site = buildSite({ identite: identiteOver, textes: textesOver });
+    const identiteSaved = await saveMerged('site_identite', 'identite', identiteOver);
+    const textesSaved = await saveMerged('site_textes', 'textes', textesOver);
+    setSiteRaw({ identite: identiteSaved, textes: textesSaved });
+    S.site = buildSite({ identite: identiteSaved, textes: textesSaved });
     toast('Identité et textes enregistrés.', 'ok');
     render();
   } catch (ex) {
@@ -285,6 +305,26 @@ async function onSubmit(e) {
   } finally {
     btn.disabled = false;
   }
+}
+
+/**
+ * Enregistre les écarts du formulaire dans une clé de hg_settings sans effacer les autres clés de cette valeur.
+ * Lit la valeur en base : les clés du formulaire (celles de SITE_DEFAULTS[bucket]) sont remplacées par les écarts,
+ * les autres clés (ex. réglages écrits ailleurs) sont conservées telles quelles.
+ * @param {string} key clé hg_settings (site_identite ou site_textes).
+ * @param {'identite'|'textes'} bucket partie de SITE_DEFAULTS correspondante.
+ * @param {object} overrides écarts aux valeurs par défaut.
+ * @returns {Promise<object>} la valeur enregistrée.
+ */
+async function saveMerged(key, bucket, overrides) {
+  const { data, error } = await sb.from('hg_settings').select('value').eq('key', key).maybeSingle();
+  if (error) throw error;
+  const current = data?.value && typeof data.value === 'object' && !Array.isArray(data.value) ? data.value : {};
+  const next = { ...current };
+  for (const k of Object.keys(SITE_DEFAULTS[bucket])) delete next[k];
+  Object.assign(next, overrides);
+  await saveKey(key, next);
+  return next;
 }
 
 /** Met à jour une clé (ou la crée si la ligne n'existe pas encore). */
