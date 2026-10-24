@@ -11,13 +11,14 @@ import { safeUrl } from '../utils.js';
 import { busy, check, fromLocalInput } from './common.js';
 import { A, IDEA } from './state.js';
 import { loadAccounts, paintAccountsList } from './list.js';
-import { selectTab, renderPanel, renderDetail, reloadDetail, paintSugg } from './fiche.js';
+import { selectTab, renderPanel, renderDetail, reloadDetail, paintSugg, refreshAccessTab, accessChanged } from './fiche.js';
 import { bindGhostPanel, setGhostHooks, ensureGhosts } from '../admin-ghosts.js';
 import { closeDetail } from './inspect.js';
 import { saveProfile, saveInfos } from './profile.js';
 import { ssJoin, ssLeave, setPair, clearPair, curEdition } from './ss.js';
 import { setRsvp, deletePhoto, toggleBadge } from './activity.js';
 import { setAccess, accessPages } from '../admin-access.js';
+import { memberRoleChange, memberAccessReset } from '../admin-roles.js';
 import { bindSharedFields } from './ss-shared.js';
 
 /* =========================================================
@@ -51,6 +52,14 @@ function bindAccounts() {
     const act = t.dataset.act;
     if (act === 'back') { closeDetail(); return; }
     if (act === 'clear-joined') { const i = $('#ap-joined'); i.value = ''; t.disabled = true; i.focus(); return; }
+    // Rôles et accès (onglet Accès) : retirer un rôle, en ajouter un, remettre une page au réglage par défaut
+    if (t.dataset.roleRemove) return busy(t, () => accessChanged(() => memberRoleChange(A.uid, t.dataset.roleRemove, false)).then(() => toast('Rôle retiré', 'ok')));
+    if (t.dataset.roleAdd !== undefined) {
+      const role = $('#ra-role-select', sec)?.value;
+      if (!role) return;
+      return busy(t, () => accessChanged(() => memberRoleChange(A.uid, role, true)).then(() => toast('Rôle ajouté', 'ok')));
+    }
+    if (t.dataset.accessReset) return busy(t, () => accessChanged(() => memberAccessReset(A.uid, t.dataset.accessReset)).then(() => toast('Réglage remis par défaut', 'ok')));
     if (act === 'show-pair' || act === 'hide-pair') { A.showPair = act === 'show-pair'; renderPanel(); return; }
     if (act === 'ss-join') return busy(t, async () => { await ssJoin(); await afterSS(); });
     if (act === 'ss-leave') return busy(t, async () => { if (await ssLeave()) await afterSS(); });
@@ -89,10 +98,11 @@ function bindAccounts() {
       const slug = el.dataset.pageAccess, on = el.checked;
       el.disabled = true;
       try {
-        await setAccess(slug, [A.uid], on); // déclenche 'hg:access' -> nouveau rendu de l'onglet
+        await setAccess(slug, [A.uid], on); // page « membres » : retirer = ligne bloquée ; page « liste » : retirer = ligne à false
         const label = accessPages().find((x) => x.slug === slug)?.label || slug;
         toast(on ? `Accès à « ${label} » donné` : `Accès à « ${label} » retiré`, 'ok');
       } catch (e) { toast(errMsg(e), 'error'); el.checked = !on; el.disabled = false; }
+      await refreshAccessTab(); // origine des accès relue, l'onglet redessiné
       $(`[data-page-access="${CSS.escape(slug)}"]`)?.focus();
       return;
     }

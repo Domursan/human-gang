@@ -144,11 +144,13 @@ export async function setAccess(slug, uids, allow) {
   if (ALWAYS_OPEN.has(slug)) throw new Error('L\'accueil reste toujours accessible.');
   const ids = [...new Set(uids)].filter((id) => !AC.members.find((m) => m.id === id)?.is_admin);
   if (!ids.length) return;
-  const keepRow = page.mode === 'membres' ? !allow : allow;
-  if (keepRow) {
-    check(await sb.from('hg_page_access').upsert(ids.map((id) => ({ page_slug: slug, user_id: id, allowed: page.mode === 'liste' })), { onConflict: 'page_slug,user_id' }));
-  } else {
+  // Seul le retour au défaut d'une page « Tous les membres » supprime la ligne. Partout ailleurs la ligne est écrite
+  // avec allowed explicite : sur une page « Membres choisis », retirer l'accès écrit allowed=false, qui l'emporte sur un rôle
+  // qui donnerait la page (hg_page_ok) ; sans cela le rôle la redonnerait.
+  if (page.mode === 'membres' && allow) {
     check(await sb.from('hg_page_access').delete().eq('page_slug', slug).in('user_id', ids));
+  } else {
+    check(await sb.from('hg_page_access').upsert(ids.map((id) => ({ page_slug: slug, user_id: id, allowed: page.mode === 'liste' ? allow : false })), { onConflict: 'page_slug,user_id' }));
   }
   await loadRows();
   emit();
@@ -163,28 +165,40 @@ async function updatePage(slug, patch) {
 /* =========================================================
    Onglet « Accès » de la fiche membre (admin-accounts.js)
    ========================================================= */
-/** HTML de l'onglet : accès effectif de ce membre à chaque page, avec interrupteur. */
-export function memberAccessHtml(member) {
-  if (AC.error && !AC.loaded) return `<div class="empty">Impossible de charger les accès : ${esc(errMsg(AC.error))}</div>`;
-  if (!AC.loaded) return '<div class="empty">Chargement des accès…</div>';
+/** Libellé de l'origine d'un accès (hg_member_access) : administrateur, réglage à la main, rôle, ouverte à tous, aucun. */
+function originText(r, isAdmin) {
+  if (isAdmin || r.source === 'admin') return 'administrateur';
+  if (r.source === 'main') return 'réglé à la main';
+  if (r.source === 'role') return `via le rôle ${(r.roles ?? []).join(', ') || '—'}`;
+  if (r.source === 'tous') return 'ouverte à tous';
+  return r.mode === 'admin' ? 'réservée aux admins' : 'aucun rôle ne la donne';
+}
+/**
+ * HTML de l'onglet « Accès » (bloc « Rôles et accès » de la fiche) : accès effectif de ce membre à chaque page, avec
+ * son origine et un interrupteur. origin : lignes de hg_member_access (fiche : admin-accounts/fiche.js).
+ * L’interrupteur règle la page à la main (setAccess) ; « Revenir au réglage par défaut » retire ce réglage.
+ */
+export function memberAccessHtml(member, origin = []) {
   const isAdmin = !!member.is_admin;
-  return `
-    <p class="small muted">${isAdmin
-      ? `${esc(member.pseudo)} est admin : accès à toutes les pages.`
-      : `Accès effectif de ${esc(member.pseudo)}. L'interrupteur crée ou retire une exception selon le mode de la page (section « Accès aux pages »).`}</p>
-    <ul class="pa-member">${AC.pages.map((p) => {
-      const on = hasAccess(p, member);
-      const fixed = isAdmin || p.mode === 'admin' || ALWAYS_OPEN.has(p.slug);
-      const why = isAdmin ? 'admin' : ALWAYS_OPEN.has(p.slug) ? 'toujours accessible' : p.mode === 'admin' ? 'réservée aux admins' : '';
-      const ex = !isAdmin && rowOf(p.slug, member.id) && ((p.mode === 'membres' && rowOf(p.slug, member.id).allowed === false) || (p.mode === 'liste' && rowOf(p.slug, member.id).allowed === true));
+  const intro = isAdmin
+    ? `${esc(member.pseudo)} est admin : accès à toutes les pages.`
+    : `Accès effectif de ${esc(member.pseudo)}, avec son origine. L’interrupteur règle la page à la main.`;
+  return `<p class="small muted">${intro}</p>
+    <ul class="pa-member">${origin.map((r) => {
+      const on = !!r.allowed;
+      const fixed = isAdmin || r.mode === 'admin' || ALWAYS_OPEN.has(r.slug);
+      const reset = !isAdmin && r.source === 'main'
+        ? `<button type="button" class="btn btn-ghost btn-sm pa-reset" data-access-reset="${esc(r.slug)}" aria-label="Revenir au réglage par défaut pour ${esc(r.label)}">Revenir au réglage par défaut</button>`
+        : '';
       return `<li class="pa-member-row">
         <label class="switch">
-          <input type="checkbox" role="switch" data-page-access="${esc(p.slug)}"${on ? ' checked' : ''}${fixed ? ' disabled' : ''}>
+          <input type="checkbox" role="switch" data-page-access="${esc(r.slug)}"${on ? ' checked' : ''}${fixed ? ' disabled' : ''}>
           <span class="switch-ui" aria-hidden="true"></span>
-          <span class="pa-member-txt"><strong>${esc(p.label)}</strong>
-            <span class="small muted">${esc(MODE_LABEL[p.mode] ?? p.mode)}${why ? ` · ${esc(why)}` : ''}${ex ? ' · exception' : ''}</span></span>
+          <span class="pa-member-txt"><strong>${esc(r.label)}</strong>
+            <span class="small muted">${esc(MODE_LABEL[r.mode] ?? r.mode)} · ${esc(originText(r, isAdmin))}</span></span>
         </label>
-        <span class="pill ${on ? 'pill-ok' : 'pill-muted'} pa-state">${on ? 'Accès' : 'Pas d\'accès'}</span>
+        <span class="pill ${on ? 'pill-ok' : 'pill-muted'} pa-state">${on ? 'Accès' : 'Pas d’accès'}</span>
+        ${reset}
       </li>`;
     }).join('')}</ul>`;
 }

@@ -1,0 +1,83 @@
+/* ===== Humane Gang — administration : rôles et accès par rôle (migration 103) =====
+   Membres › Rôles (liste et détail), IRL › Membres IRL, bloc « Rôles et accès » de la fiche membre.
+   Chargé par admin.html ; styles de base et composants (card, btn, field, switch, pill) dans admin.css et base.css. */
+
+/* ---------- En-tête et mise en page : liste à gauche, détail à droite ; une colonne sur petit écran ---------- */
+.rl-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.rl-intro { margin: 0; font-size: 14px; max-width: 60ch; }
+.rl-link { font-size: 14px; min-height: 44px; display: inline-flex; align-items: center; }
+.rl-layout { display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.rl-list { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rl-detail { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+@media (max-width: 860px) { .rl-layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Liste des rôles ---------- */
+.rl-item {
+  display: flex; align-items: stretch; gap: 14px; width: 100%; min-height: 64px; box-sizing: border-box;
+  text-align: left; padding: 14px 16px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font: inherit; cursor: pointer;
+}
+.rl-item[aria-pressed="true"] { border-color: var(--sand); background: var(--surface-2); box-shadow: inset 3px 0 0 var(--sand); }
+.rl-item:focus-visible, .rl-new:focus-visible, .rl-link:focus-visible, .ra-chip:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.rl-bar { flex: none; width: 6px; border-radius: 999px; background: var(--rl-c, var(--muted)); }
+.rl-item-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.rl-item-name { font-family: var(--font-display); font-size: 17px; overflow-wrap: anywhere; }
+
+/* ---------- Détail d'un rôle ---------- */
+.rl-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rl-h, .rl-detail .rl-h { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.15; } /* .rl-detail : bat « .card h2 » de base.css */
+.rl-count { display: inline-block; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border-strong); font-size: 12px; font-weight: 700; color: var(--muted); }
+.rl-form { display: flex; flex-direction: column; gap: 16px; }
+.rl-form textarea { min-height: 88px; }
+.rl-color input[type="color"] { width: 88px; height: 44px; padding: 4px; cursor: pointer; }
+.rl-pages { margin: 0; padding: 0; border: 0; min-width: 0; }
+.rl-pages legend { padding: 0; margin-bottom: 10px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rl-page-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rl-page {
+  display: flex; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 6px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; margin: 0; cursor: pointer;
+}
+.rl-page input { width: 18px; height: 18px; margin: 0; accent-color: var(--sand); flex: none; }
+.rl-page-fixed { cursor: default; justify-content: space-between; flex-wrap: wrap; }
+.rl-page-fixed .small { font-size: 12px; }
+@media (max-width: 520px) { .rl-page-grid { grid-template-columns: minmax(0, 1fr); } }
+.rl-note { margin: 0; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--surface-2); border-left: 3px solid var(--sand); font-size: 14px; line-height: 1.5; }
+.rl-members { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.rl-members-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rl-sub { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- Membres : listes, recherche d'ajout ---------- */
+.rl-people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; min-width: 0; }
+.rl-people > li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); min-width: 0; }
+.rl-people > li.small { border-top: 0; }
+.rl-person-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.rl-person-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.rl-people .btn { min-height: 44px; flex: none; }
+.rl-picker { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.rl-results { max-height: 320px; overflow-y: auto; }
+
+/* ---------- Bloc « Rôles et accès » de la fiche membre ---------- */
+.ra-block { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ra-title { margin: 0; font-size: 17px; font-weight: 700; }
+.ra-roles { display: flex; flex-direction: column; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.ra-sub { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ra-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ra-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--ra-c, var(--border-strong)); background: transparent; color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+}
+.ra-chip::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--ra-c, var(--muted)); }
+.ra-x { color: var(--muted); font-size: 16px; line-height: 1; }
+.ra-add { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.ra-add .field { flex: 1 1 200px; min-width: 0; }
+.ra-add select { min-height: 44px; }
+.ra-add .btn { min-height: 44px; }
+.pa-member-row { flex-wrap: wrap; }
+.pa-member-row .pa-reset { margin-left: auto; }
+
+/* ---------- Petit écran : cibles de 44 px, pas de défilement horizontal ---------- */
+@media (max-width: 760px) {
+  .rl-item { min-height: 56px; }
+  .rl-people .btn, .ra-add .btn { width: auto; }
+  .pa-member-row .pa-reset { width: 100%; margin-left: 0; }
+}

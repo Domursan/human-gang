@@ -223,6 +223,14 @@ DB.hg_egg_log = S.eggLog || [];
 if (S.activity) DB.hg_activity = S.activity.map((r) => ({ ...r }));
 // Rend la base et le journal lisibles par les tests (page.evaluate).
 window.__DB = DB; window.__LOG = [];
+// Rôles (migration 103, parcours-admin-roles) : rôles de départ et liens membre-rôle. scenario.roles = tableau : rôles remplacés ;
+// scenario.roles = true : pages des rôles passées en mode « liste » (comme en ligne). scenario.memberRoles : liens membre-rôle.
+DB.hg_roles = (Array.isArray(S.roles) ? S.roles : [
+  { id: 'irl', label: 'IRL', description: 'Membres qui participent aux sorties.', color: '#E0909A', pages: ['irl', 'historique'], sort: 1 },
+  { id: 'secret-santa', label: 'Secret Santa', description: 'Participants au Secret Santa.', color: '#9A88C4', pages: ['secret-santa'], sort: 2 },
+]).map((r) => ({ created_at: iso(-30), updated_at: iso(-30), ...r }));
+DB.hg_member_roles = (S.memberRoles ?? []).map((l) => ({ added_by: ME, added_at: iso(-3), ...l }));
+if (S.roles) for (const p of DB.hg_pages) if (['irl', 'historique', 'secret-santa'].includes(p.slug)) p.mode = 'liste';
 /* ---------- Session ---------- */
 // Session : un visiteur (S.guest) n'est connecté qu'après signInWithPassword. La session tient dans
 // localStorage, comme le vrai client, pour survivre à la redirection qui suit la connexion.
@@ -736,6 +744,67 @@ function xa1Rpc(fn, args = {}) {
   return null;
 }
 
+/* ---------- Rôles et accès par rôle (migration 103) : hg_role_save, hg_role_remove, hg_member_role_set, hg_member_access, hg_member_access_reset ---------- */
+/** RPC des rôles ; undefined pour les autres fonctions. Les écritures sont notées dans window.__LOG. */
+function rolesRpc(fn, args = {}) {
+  const pageSlugs = () => DB.hg_pages.map((p) => p.slug);
+  if (fn === 'hg_role_save') {
+    const p = args.p || {};
+    const id = String(p.id ?? '').trim().toLowerCase();
+    if (!/^[a-z0-9-]{2,30}$/.test(id)) return xErr('Identifiant de rôle invalide');
+    const old = DB.hg_roles.find((r) => r.id === id);
+    const row = { id, label: String(p.label ?? '').trim() || id, description: p.description ?? '',
+      color: /^#[0-9a-f]{6}$/i.test(p.color ?? '') ? p.color : '#7E93C9',
+      pages: [...new Set((p.pages ?? []).filter((x) => pageSlugs().includes(x)))], sort: Number(p.sort) || 0,
+      created_at: old?.created_at ?? iso(0), updated_at: iso(0) };
+    if (old) Object.assign(old, row); else DB.hg_roles.push(row);
+    window.__LOG.push(['role_save', id, JSON.parse(JSON.stringify(p))]);
+    return { data: row, error: null };
+  }
+  if (fn === 'hg_role_remove') {
+    const id = args.p_id;
+    DB.hg_roles = DB.hg_roles.filter((r) => r.id !== id);
+    DB.hg_member_roles = DB.hg_member_roles.filter((l) => l.role_id !== id);
+    window.__LOG.push(['role_remove', id]);
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_member_role_set') {
+    const u = args.p_user, r = args.p_role, on = !!args.p_on;
+    if (!DB.hg_roles.some((x) => x.id === r)) return xErr('Rôle inconnu');
+    const i = DB.hg_member_roles.findIndex((l) => l.user_id === u && l.role_id === r);
+    if (on && i < 0) DB.hg_member_roles.push({ user_id: u, role_id: r, added_by: uidNow(), added_at: iso(0) });
+    if (!on && i >= 0) DB.hg_member_roles.splice(i, 1);
+    window.__LOG.push(['role_member', u, r, on]);
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_member_access_reset') {
+    const u = args.p_user, slug = args.p_slug;
+    DB.hg_page_access = DB.hg_page_access.filter((a) => !(a.user_id === u && a.page_slug === slug));
+    window.__LOG.push(['acces_reset', u, slug]);
+    return { data: null, error: null };
+  }
+  if (fn === 'hg_member_access') {
+    // Même logique que hg_page_ok / hg_member_access (migration 103) : admin, réglage à la main, rôle, ouverte à tous, aucun.
+    const u = args.p_user;
+    const isAdm = !!DB.hg_profiles.find((p) => p.id === u)?.is_admin;
+    const rowsOf = (slug) => DB.hg_page_access.filter((a) => a.page_slug === slug && a.user_id === u);
+    const mine = DB.hg_member_roles.filter((l) => l.user_id === u).map((l) => DB.hg_roles.find((r) => r.id === l.role_id)).filter(Boolean);
+    const granting = (slug) => mine.filter((r) => (r.pages ?? []).includes(slug)).sort((a, b) => a.sort - b.sort);
+    const ok = (p) => {
+      if (isAdm) return true;
+      const rows = rowsOf(p.slug);
+      if (p.mode === 'membres') return !rows.some((a) => a.allowed === false);
+      if (p.mode === 'liste') return rows.some((a) => a.allowed === true) || (rows.length === 0 && granting(p.slug).length > 0);
+      return false;
+    };
+    const source = (p) => (isAdm ? 'admin' : rowsOf(p.slug).length ? 'main' : (p.mode === 'liste' && granting(p.slug).length) ? 'role' : p.mode === 'membres' ? 'tous' : 'aucun');
+    const data = DB.hg_pages.slice().sort((a, b) => a.sort - b.sort).map((p) => ({
+      slug: p.slug, label: p.label, mode: p.mode, allowed: ok(p), source: source(p), roles: granting(p.slug).map((r) => r.label) }));
+    return { data, error: null };
+  }
+  return undefined;
+}
+
 export function createClient(_url, _key, opts = {}) {
   // Options passées par core/supabase.js (detectSessionInUrl, flowType…), lisibles par les tests.
   window.__SB_OPTS = JSON.parse(JSON.stringify({ auth: { ...(opts.auth || {}), lock: undefined } }));
@@ -1205,6 +1274,7 @@ export function createClient(_url, _key, opts = {}) {
         const rows = DB.hg_ss_assignments.filter((a) => a.edition_id === args.p_edition).map((a) => ({ giver: pseudo(a.giver_id), receiver: pseudo(a.receiver_id) }));
         return { data: rows.sort((x, y) => x.giver.localeCompare(y.giver, 'fr')), error: null };
       }
+      { const x = rolesRpc(fn, args); if (x) return x; } // rôles et accès par rôle (migration 103)
       { const x = xa1Rpc(fn, args); if (x) return x; } // idées A1 à A4 (migration 092)
       return { data: null, error: null };
     },

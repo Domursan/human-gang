@@ -8,12 +8,13 @@
 // admin-staff.js (libellés des permissions), inspect.js, profile.js, ss.js, activity.js, list.js, admin-ghosts.js.
 // Tables lues : hg_profiles, hg_profile_info, hg_ss_editions / participants / assignments / wishes, hg_events,
 // hg_event_rsvps, hg_photos (+ stockage hg-photos), hg_ideas, hg_support, hg_badges, hg_user_badges,
-// hg_wallets, hg_card_copies ; RPC hg_staff_list.
+// hg_wallets, hg_card_copies, hg_roles, hg_member_roles, hg_member_access (RPC) ; RPC hg_staff_list.
 // Exporte : openAccount, reloadDetail, showGhostFiche, emptyDetail, showAccount, openAccountFiche, renderDetail,
-// paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo, foldInfoGroups (groupes repliables de l'onglet Informations).
+// paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo, foldInfoGroups, refreshAccessTab, accessChanged (onglet Accès : rôles et origine des accès) (groupes repliables de l'onglet Informations).
 // =====================================================================
 import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
+import { memberRolesHtml, refreshRolesViews } from '../admin-roles.js';
 import { renderDetailHeader } from '../admin/ui/detail-header.js';
 import { renderInfoPanel } from '../admin/ui/info-panel.js';
 import { A, H, TABS, root, CACHE, dropFicheCache } from './state.js';
@@ -33,7 +34,7 @@ import { ghostBannerHtml, renderGhostView } from '../admin-ghosts.js';
 async function q(p) { const r = await p; return { data: r.data, error: r.error }; }
 /* Noms des lectures stockées dans A.d : on les efface pour relire la fiche après une modification. */
 const DATA_FIELDS = ['info', 'editions', 'parts', 'assigns', 'wishes', 'events', 'rsvps', 'photos', 'ideas', 'support',
-  'badges', 'ubadges', 'wallet', 'cards', 'ssCount'];
+  'badges', 'ubadges', 'wallet', 'cards', 'ssCount', 'access', 'mroles', 'rlist'];
 const WIDE = matchMedia('(min-width: 1440px)'); // résumé à droite : affiché (et donc lu) seulement sur grand écran
 
 /** Renseigne A.d[name] une seule fois (depuis le cache si la lecture existe déjà). */
@@ -74,6 +75,10 @@ const SOURCE = {
   wallet: (uid) => () => q(sb.from('hg_wallets').select('paillettes').eq('user_id', uid).maybeSingle()),
   cards: (uid) => () => q(sb.from('hg_card_copies').select('id').eq('owner_id', uid)),
   ssCount: (uid) => () => q(sb.from('hg_ss_participants').select('edition_id').eq('user_id', uid)),
+  // Accès (onglet « Accès ») : origine de chaque page (hg_member_access), rôles du membre, liste des rôles
+  access: (uid) => () => q(sb.rpc('hg_member_access', { p_user: uid })),
+  mroles: (uid) => () => q(sb.from('hg_member_roles').select('role_id, added_at').eq('user_id', uid)),
+  rlist: () => q(sb.from('hg_roles').select('id, label, color, description, pages, sort').order('sort')),
 };
 
 /** Lectures nécessaires à un onglet (le profil et le Staff sont toujours chargés). */
@@ -100,7 +105,11 @@ async function loadTab(k, uid) {
   });
   if (k === 'contrib') return Promise.all([fill('ideas', `${uid}|ideas`, SOURCE.ideas(uid)), fill('support', `${uid}|support`, SOURCE.support(uid))]);
   if (k === 'badges') return Promise.all([fill('badges', 'badges', SOURCE.badges), fill('ubadges', `${uid}|ubadges`, SOURCE.ubadges(uid))]);
-  if (k === 'acces') { await ensureAccessData().catch(() => null); return; } // l'erreur s'affiche dans l'onglet
+  if (k === 'acces') { // l'erreur s'affiche dans l'onglet
+    await ensureAccessData().catch(() => null);
+    await Promise.all([fill('access', `${uid}|access`, SOURCE.access(uid)), fill('mroles', `${uid}|mroles`, SOURCE.mroles(uid)), fill('rlist', 'rlist', SOURCE.rlist)]);
+    return;
+  }
 }
 
 /** Charge l'onglet demandé (sans toucher aux autres). */
@@ -350,6 +359,19 @@ export function foldInfoGroups(scope) {
   });
 }
 
+/** Onglet « Accès » : bloc « Rôles et accès » (rôles du membre, puis chaque page avec son origine). */
+function accessTabHtml() {
+  const d = A.d, p = d.profile;
+  const err = d.access?.error || d.mroles?.error || d.rlist?.error;
+  if (err) return `<div class="empty">Impossible de charger les accès : ${esc(errMsg(err))}</div>`;
+  if (d.access === undefined || d.mroles === undefined || d.rlist === undefined) return '<div class="empty">Chargement des accès…</div>';
+  return `<section class="ra-block" aria-labelledby="ra-titre">
+    <h3 id="ra-titre" class="ra-title">Rôles et accès</h3>
+    ${memberRolesHtml({ pseudo: p.pseudo, roles: d.rlist.data ?? [], mine: (d.mroles.data ?? []).map((r) => r.role_id) })}
+    ${memberAccessHtml({ id: p.id, pseudo: p.pseudo, is_admin: !!p.is_admin }, d.access.data ?? [])}
+  </section>`;
+}
+
 /** HTML du panneau correspondant à l'onglet courant. */
 function panelHtml() {
   switch (A.tab) {
@@ -360,9 +382,33 @@ function panelHtml() {
     case 'photos': return photosHtml();
     case 'contrib': return contribHtml();
     case 'badges': return badgesHtml();
-    case 'acces': return memberAccessHtml({ id: A.d.profile.id, pseudo: A.d.profile.pseudo, is_admin: !!A.d.profile.is_admin });
+    case 'acces': return accessTabHtml();
     default: return '';
   }
+}
+
+let accessInflight = null;
+/**
+ * Relit l'origine des accès et les rôles du membre ouvert, puis redessine l'onglet « Accès » si c'est lui qui est affiché.
+ * Les appels simultanés partagent la même lecture (l'interrupteur et l'événement hg:access peuvent arriver ensemble).
+ */
+export function refreshAccessTab() {
+  if (accessInflight) return accessInflight;
+  accessInflight = (async () => {
+    const uid = A.uid; if (!uid || !A.d) return;
+    CACHE.delete(`${uid}|access`); CACHE.delete(`${uid}|mroles`); CACHE.delete('rlist');
+    delete A.d.access; delete A.d.mroles; delete A.d.rlist;
+    try { await loadTab('acces', uid); } catch (e) { toast(errMsg(e), 'error'); }
+    if (A.uid === uid && A.tab === 'acces') renderPanel();
+  })().finally(() => { accessInflight = null; });
+  return accessInflight;
+}
+
+/** Modification des rôles ou des accès depuis la fiche : relit l'onglet « Accès » et les sections Rôles / Membres IRL. */
+export async function accessChanged(fn) {
+  await fn();
+  await refreshAccessTab();
+  await refreshRolesViews();
 }
 
 /** Change d'onglet : lit ce que l'onglet demande (une fois), met à jour l'URL sans nouvelle entrée d'historique. */
@@ -449,9 +495,7 @@ export function paintInfo() {
 // Accès aux pages modifiés (ici ou dans la section « Accès aux pages ») : l'onglet « Accès » se met à jour
 window.addEventListener('hg:access', () => {
   if (!A.uid || !A.d || A.tab !== 'acces') return;
-  const f = document.activeElement?.dataset?.pageAccess;
-  renderPanel();
-  if (f) $(`[data-page-access="${CSS.escape(f)}"]`)?.focus();
+  refreshAccessTab(); // relit l'origine des accès (hg_member_access) puis redessine
 });
 
 H.renderPanel = renderPanel;
