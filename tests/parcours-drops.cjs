@@ -40,17 +40,17 @@ const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.ge
 
   // Quantité hors bornes : le formulaire refuse, aucun appel
   await p.click('[data-action="drop-new"]');
-  await p.waitForSelector('dialog.ui-drawer[open] #drop-card', { timeout: 5000 });
+  await p.waitForSelector('dialog.ui-drawer[open] [data-vp-card="C2"]', { timeout: 5000 });
   await p.fill('#drop-q', 'Paleto');
-  check(await p.locator('dialog.ui-drawer[open] #drop-card option').count() === 1, 'admin : recherche « Paleto » réduit la liste à 1 carte');
-  await p.selectOption('#drop-card', { index: 0 });
+  check(await p.locator('dialog.ui-drawer[open] [data-vp-card]').count() === 1, 'admin : recherche « Paleto » réduit les visuels à 1 carte');
+  await p.click('dialog.ui-drawer[open] [data-vp-card="C2"]');
   await p.fill('#drop-qty', '60');
   await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await sleep(300);
   check((await rpcCalls(p, 'hg_drop_create')).length === 0, 'admin : 60 exemplaires refusés côté formulaire (aucun appel)');
   await p.fill('#drop-qty', '3');
   await p.fill('#drop-min', '20');
-  await p.click('dialog.ui-drawer[open] label:has(#drop-shiny)');
+  await p.click('dialog.ui-drawer[open] label:has(input[name="shiny"])');
   await p.click('dialog.ui-drawer[open] [data-drawer-submit]');
   await p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
   await sleep(300);
@@ -74,8 +74,8 @@ const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.ge
   check((await p.textContent('#drop-list')).includes('Terminé'), 'admin : le drop arrêté est Terminé');
   // Drop sans annonce Discord : la case décochée, aucun appel de hg-notify
   await p.click('[data-action="drop-new"]');
-  await p.waitForSelector('dialog.ui-drawer[open] #drop-card', { timeout: 5000 });
-  await p.selectOption('#drop-card', { index: 0 });
+  await p.waitForSelector('dialog.ui-drawer[open] [data-vp-card="C2"]', { timeout: 5000 });
+  await p.click('dialog.ui-drawer[open] [data-vp-card="C2"]');
   await p.fill('#drop-qty', '1');
   await p.click('dialog.ui-drawer[open] label:has(#drop-discord)');
   await p.click('dialog.ui-drawer[open] [data-drawer-submit]');

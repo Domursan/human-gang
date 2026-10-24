@@ -71,7 +71,7 @@ const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('
   await p.click('dialog.qk-dlg[open] [data-kind="carte"]');
   check(await p.isVisible('dialog.qk-dlg[open] .qk-card'), 'give carte : bloc carte affiché');
   check((await p.inputValue('#qk-g-amt')) === '1', 'give carte : montant ramené à 1 (défaut de la carte)');
-  await p.selectOption('#qk-g-card', { value: 'C2' });
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C2"]');
   await p.click('dialog.qk-dlg[open] input[name="shiny"]');
   await p.click('dialog.qk-dlg[open] input[name="all"]');
   check(await p.isDisabled(`dialog.qk-dlg[open] .qk-chip[data-id="${ALICE}"]`), 'give tout le gang : les cases membres sont désactivées');
@@ -110,6 +110,7 @@ const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('
   calls = await rpcCalls(p, 'hg_cards_admin_bulk_give');
   check(calls.length === 1 && calls[0]?.p_kind === 'boosters' && calls[0]?.p_amount === 1 && JSON.stringify(calls[0]?.p_users) === JSON.stringify([BRUNO]), 'give boosters : p_kind boosters, 1 booster, Bruno seul');
   check(calls[0]?.p_note === null && calls[0]?.p_announce === true, 'give boosters : note vide, fil coché');
+  check(calls[0]?.p_booster === 'classique', 'give boosters : p_booster « classique » par défaut');
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, height: 900 });
@@ -188,11 +189,11 @@ const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('
   await waitDlg(p);
   check((await p.textContent('dialog.qk-dlg[open] .qk-title')) === 'Lancer un drop', 'drop : titre « Lancer un drop »');
   check(await p.isVisible('dialog.qk-dlg[open] a.qk-link[href="admin.html#fabrique/drops"]'), 'drop : lien vers Fabrique › Drops');
-  await p.waitForSelector('#qk-d-card option[value="C2"]', { timeout: 5000, state: 'attached' });
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C2"]', { timeout: 5000 });
   await p.fill('#qk-d-q', 'Ethan');
-  check((await p.$$eval('#qk-d-card option', (os) => os.length)) === 1, 'drop : recherche filtre la liste (« Ethan » seulement)');
+  check((await p.locator('dialog.qk-dlg[open] [data-vp-card]').count()) === 1, 'drop : recherche filtre les visuels (« Ethan » seulement)');
   await p.fill('#qk-d-q', '');
-  await p.selectOption('#qk-d-card', { value: 'C2' });
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C2"]');
   await p.fill('#qk-d-qty', '3');
   await p.fill('#qk-d-min', '15');
   await p.click('dialog.qk-dlg[open] input[name="shiny"]');
@@ -216,8 +217,8 @@ const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('
   await focusTrigger(p);
   await quick(p, 'drop');
   await waitDlg(p);
-  await p.waitForSelector('#qk-d-card option[value="C1"]', { timeout: 5000, state: 'attached' });
-  await p.selectOption('#qk-d-card', { value: 'C1' });
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C1"]', { timeout: 5000 });
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C1"]');
   await p.fill('#qk-d-qty', '0');
   await p.click('dialog.qk-dlg[open] [data-qk-submit]');
   await p.waitForSelector('dialog.qk-dlg[open] .qk-err:not([hidden])', { timeout: 3000 }).catch(() => {});
@@ -283,6 +284,114 @@ const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('
     await waitClosed(p);
   }
   check(!p.errs.length, 'parcours complet : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
+  // 12. Sélecteurs visuels : cartes et boosters se choisissent sur leurs visuels (Give), restants, brillance, filtres,
+  //     « Voir plus », clavier, boosters passés, drop (carte unique attribuée non proposable), aperçus dans les récapitulatifs.
+  const VISU = { uniques: true, uniqueTaken: true, cardImages: true, bigCards: 80, boostersPast: true };
+  p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, height: 900, scenario: VISU });
+  await quick(p, 'give');
+  await waitDlg(p);
+  await p.click('dialog.qk-dlg[open] [data-kind="carte"]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C2"]', { timeout: 5000 });
+  check((await p.locator('dialog.qk-dlg[open] .qk-card .hgc-win-img').count()) > 0, 'visuels : les cartes avec image affichent leur image');
+  check((await p.textContent('dialog.qk-dlg[open] .vp-tile:has([data-vp-card="C11"]) .vp-cap')).includes('2 restants'), 'visuels : carte à exemplaires limités (C11) : « 2 restants »');
+  check(await p.isHidden('dialog.qk-dlg[open] .vp-shiny'), 'brillante : case masquée tant qu\'aucune carte n\'est choisie');
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C1"]');
+  check(await p.isHidden('dialog.qk-dlg[open] .vp-shiny'), 'brillante : C1 (non brillante) → case masquée');
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C2"]');
+  check(await p.isVisible('dialog.qk-dlg[open] .vp-shiny'), 'brillante : C2 (brillante possible) → case visible');
+  check((await p.textContent('dialog.qk-dlg[open] .vp-sum')).includes('Le Paleto'), 'choix : « Carte choisie : Le Paleto » sous la grille');
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-card="C2"]', 'aria-pressed') === 'true', 'choix : la carte choisie est marquée (aria-pressed)');
+  // Filtres : recherche, série, rareté
+  await p.fill('#qk-gc-q', 'paleto');
+  check((await p.locator('dialog.qk-dlg[open] [data-vp-card]').count()) === 1, 'filtre recherche « paleto » : une seule carte');
+  await p.fill('#qk-gc-q', '');
+  await p.selectOption('#qk-gc-set', 'SET2');
+  check((await p.$$eval('dialog.qk-dlg[open] [data-vp-card]', (b) => b.map((x) => x.dataset.vpCard).join(','))) === 'C13', 'filtre série « Saison 2 » : C13 seule');
+  await p.selectOption('#qk-gc-set', '');
+  await p.selectOption('#qk-gc-rar', 'identite');
+  check((await p.$$eval('dialog.qk-dlg[open] [data-vp-card]', (b) => b.map((x) => x.dataset.vpCard).join(','))) === 'C11', 'filtre rareté « Identité » : C11 seule');
+  await p.selectOption('#qk-gc-rar', '');
+  // Pagination : 60 au départ, puis le reste
+  check((await p.locator('dialog.qk-dlg[open] [data-vp-card]').count()) === 60, 'Voir plus : 60 cartes au départ');
+  check(await p.isVisible('dialog.qk-dlg[open] #qk-gc-plus'), 'Voir plus : bouton visible');
+  await p.click('dialog.qk-dlg[open] #qk-gc-plus');
+  check((await p.locator('dialog.qk-dlg[open] [data-vp-card]').count()) === 94, 'Voir plus : les 94 cartes après un clic');
+  check(await p.isHidden('dialog.qk-dlg[open] #qk-gc-plus'), 'Voir plus : bouton masqué une fois tout affiché');
+  // Clavier : flèche droite, puis Entrée choisit
+  await p.focus('dialog.qk-dlg[open] [data-vp-card="C1"]');
+  await p.keyboard.press('ArrowRight');
+  check((await p.evaluate(() => document.activeElement?.dataset?.vpCard)) === 'C2', 'clavier : flèche droite passe à la carte suivante');
+  await p.keyboard.press('Enter');
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-card="C2"]', 'aria-pressed') === 'true', 'clavier : Entrée choisit la carte');
+  // Boosters : groupe des passés, description au focus, choix d'un booster passé, récapitulatif avec visuel
+  await p.click('dialog.qk-dlg[open] [data-kind="boosters"]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-type="dore"]', { timeout: 5000 });
+  check((await p.textContent('dialog.qk-dlg[open] [data-vp-type="dore"] .vp-type-s')).includes('5 cartes'), 'boosters : « 5 cartes » sur la cartouche');
+  check(await p.isVisible('dialog.qk-dlg[open] .vp-grid-past [data-vp-type="noel2025"]'), 'boosters : le booster passé est listé à part');
+  await p.focus('dialog.qk-dlg[open] [data-vp-type="noel2025"]');
+  check(await p.isVisible('dialog.qk-dlg[open] [data-vp-type="noel2025"] .vp-desc'), 'boosters : description visible au focus');
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-type="classique"]', 'aria-pressed') === 'true', 'boosters : « classique » choisi par défaut');
+  await p.click('dialog.qk-dlg[open] [data-vp-type="noel2025"]');
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-type="noel2025"]', 'aria-pressed') === 'true', 'boosters : le booster passé se choisit');
+  check((await p.textContent('dialog.qk-dlg[open] .vp-boost .vp-sum')).includes('Noël 2025'), 'boosters : « Booster choisi : Noël 2025 » sous les cartouches');
+  await p.fill('#qk-g-amt', '2');
+  await p.click(`dialog.qk-dlg[open] .qk-chip[data-id="${BRUNO}"]`);
+  await p.click('dialog.qk-dlg[open] [data-qk-submit]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-qk-confirm]', { timeout: 3000 });
+  check((await p.textContent('dialog.qk-dlg[open] [data-confirm]')).includes('1 membre recevra 2 boosters Noël 2025'), 'boosters : récapitulatif « 2 boosters Noël 2025 »');
+  check((await p.locator('dialog.qk-dlg[open] [data-confirm-visual] .cart-box.cart--theme-noel').count()) === 1, 'boosters : la confirmation montre la cartouche du booster');
+  await p.click('dialog.qk-dlg[open] [data-qk-confirm]');
+  await waitClosed(p);
+  calls = await rpcCalls(p, 'hg_cards_admin_bulk_give');
+  check(calls.length === 1 && calls[0]?.p_booster === 'noel2025' && calls[0]?.p_amount === 2 && JSON.stringify(calls[0]?.p_users) === JSON.stringify([BRUNO]), 'boosters : p_booster = noel2025, 2 boosters, Bruno seul');
+  check(!p.errs.length, 'visuels give : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
+  // 13. Lancer un drop : carte unique attribuée non proposable, brillance, aperçu dans la confirmation.
+  p = await openPage(browser, { page: 'admin', fixture: FIX, width: 1280, height: 900, scenario: VISU });
+  await quick(p, 'drop');
+  await waitDlg(p);
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C2"]', { timeout: 5000 });
+  for (let i = 0; i < 5 && await p.isVisible('dialog.qk-dlg[open] #qk-d-plus'); i++) await p.click('dialog.qk-dlg[open] #qk-d-plus');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C14"]', { timeout: 5000 });
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-card="C14"]', 'disabled') !== null, 'drop : carte unique déjà attribuée (C14) non proposable');
+  check((await p.textContent('dialog.qk-dlg[open] .vp-tile:has([data-vp-card="C14"]) .vp-cap')).includes('Déjà attribuée'), 'drop : « Déjà attribuée » sous C14');
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C14"]', { force: true }).catch(() => {});
+  check(await p.getAttribute('dialog.qk-dlg[open] [data-vp-card="C14"]', 'aria-pressed') === 'false', 'drop : cliquer sur C14 ne la choisit pas');
+  await p.click('dialog.qk-dlg[open] [data-vp-card="C2"]');
+  await p.click('dialog.qk-dlg[open] label:has(input[name="shiny"])');
+  await p.fill('#qk-d-qty', '2');
+  await p.click('dialog.qk-dlg[open] [data-qk-submit]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-qk-confirm]', { timeout: 3000 });
+  check((await p.locator('dialog.qk-dlg[open] [data-confirm-visual] .hgc').count()) === 1, 'drop : la confirmation montre le visuel de la carte');
+  check((await p.textContent('dialog.qk-dlg[open] [data-confirm]')).includes('(brillante)'), 'drop : confirmation « (brillante) »');
+  await p.click('dialog.qk-dlg[open] [data-qk-confirm]');
+  await waitClosed(p);
+  calls = await rpcCalls(p, 'hg_drop_create');
+  check(calls.length === 1 && calls[0]?.p_card === 'C2' && calls[0]?.p_shiny === true && calls[0]?.p_quantity === 2, 'drop : hg_drop_create avec C2, brillante, 2 exemplaires');
+  check(!p.errs.length, 'drop visuels : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
+  await p.ctx.close();
+
+  // 14. 390 px : grilles de 2 à 3 colonnes, pas de défilement horizontal (page ni fenêtre), boosters et cartes.
+  p = await openPage(browser, { page: 'admin', fixture: FIX, width: 390, height: 844, mobile: true, dpr: 2, scenario: VISU });
+  await quick(p, 'give');
+  await waitDlg(p);
+  await p.click('dialog.qk-dlg[open] [data-kind="carte"]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-card="C2"]', { timeout: 5000 });
+  const colonnes = (id) => p.evaluate((sel) => { const g = document.querySelector(sel); return g ? getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean).length : 0; }, id);
+  const cc = await colonnes('dialog.qk-dlg[open] #qk-gc-grid');
+  check(cc >= 2 && cc <= 3, `390 px : grille de cartes en ${cc} colonnes`);
+  check((await hscroll(p)) === 0, '390 px : pas de défilement horizontal de la page (cartes)');
+  check((await p.evaluate(() => { const d = document.querySelector('dialog.qk-dlg[open]'); return d.scrollWidth - d.clientWidth; })) <= 0, '390 px : pas de défilement horizontal dans la fenêtre (cartes)');
+  await p.click('dialog.qk-dlg[open] [data-kind="boosters"]');
+  await p.waitForSelector('dialog.qk-dlg[open] [data-vp-type="dore"]', { timeout: 5000 });
+  const bc = await colonnes('dialog.qk-dlg[open] #qk-gb-grid');
+  check(bc >= 2 && bc <= 3, `390 px : grille de boosters en ${bc} colonnes`);
+  check((await hscroll(p)) === 0, '390 px : pas de défilement horizontal de la page (boosters)');
+  check((await p.evaluate(() => { const d = document.querySelector('dialog.qk-dlg[open]'); return d.scrollWidth - d.clientWidth; })) <= 0, '390 px : pas de défilement horizontal dans la fenêtre (boosters)');
+  check(!p.errs.length, '390 px visuels : aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
   await p.ctx.close();
 
   await browser.close();

@@ -5,21 +5,24 @@
 // et ouvre une petite fenêtre (<dialog>) ; sans la permission, il ne fait rien et le bouton suit son lien (repli).
 // Chaque fenêtre garde les mêmes contrôles et la même charge (RPC) que la page complète, qu'elle renvoie en lien
 // « Ouvrir la page complète » :
-//   give    : hg_cards_admin_bulk_give (validation et récapitulatif : admin-cards/bulk.js). Page : Fabrique › Gestion globale.
+//   give    : hg_cards_admin_bulk_give (validation, récapitulatif et arguments : admin-cards/bulk.js). Carte et booster
+//             se choisissent sur leurs visuels (admin/visual-pick.js). Page : Fabrique › Gestion globale.
 //   enchere : hg_auctions_admin (lecture), hg_auction_create (règles : enchere-regles.js). Page : Fabrique › Enchères.
-//   drop    : hg_drop_create, puis hg-notify « card_drop » si la case Discord est cochée. Page : Fabrique › Drops.
-// Lectures : hg_members, hg_card_sets, hg_cards, hg_card_copies, hg_settings (clé « cards », bornes des drops).
+//   drop    : hg_drop_create, puis hg-notify « card_drop » si la case Discord est cochée. Carte choisie sur ses visuels.
+//             Page : Fabrique › Drops.
+// Lectures : hg_members, hg_card_sets, hg_cards, hg_card_copies (restants), hg_booster_types, hg_settings (clé « cards », bornes des drops).
 // Focus : la fenêtre est modale (<dialog>), Tab reste dedans, Échap ferme, le focus revient au bouton d'origine.
 // Exporte : initQuick (à appeler une fois, dans admin.js), QUICK_PERM.
-// Dépendances : core.js, cartes-ui.js (rarityLabel), admin-cards/helpers.js (check, fetchAll, nf, fmtWhen),
-// admin-cards/bulk.js (KIND, MAX_MEMBRES, recapText), admin-cards/auctions.js (nextWeekend), enchere-regles.js.
+// Dépendances : core.js, cartes-ui.js (rarityLabel), admin-cards/helpers.js (check, fetchAll, fmtWhen, nf),
+// admin-cards/bulk.js (KIND, recapText, invalide, argsDon), admin-cards/auctions.js (nextWeekend), enchere-regles.js,
+// admin/visual-pick.js (sélecteurs visuels).
 // =====================================================================
 import { sb, toast, errMsg, esc, notify, getCachedPerms, hasPerm } from '../core.js';
-import { rarityLabel } from '../cartes-ui.js';
 import { check, fetchAll, fmtWhen, nf } from '../admin-cards/helpers.js';
-import { KIND, MAX_MEMBRES, recapText } from '../admin-cards/bulk.js';
+import { KIND, recapText, invalide, argsDon } from '../admin-cards/bulk.js';
 import { nextWeekend } from '../admin-cards/auctions.js';
 import { rulesFieldsHtml, readRules } from '../enchere-regles.js';
+import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml } from './visual-pick.js';
 
 /** Permission exigée pour les trois actions (Jeu de cartes). */
 export const QUICK_PERM = 'cartes';
@@ -166,25 +169,22 @@ async function openGive(trigger) {
     [members, sets, cards] = await Promise.all([
       sb.rpc('hg_members').then(check),
       fetchAll(() => sb.from('hg_card_sets').select('id, name, sort').order('sort')),
-      fetchAll(() => sb.from('hg_cards').select('id, name, rarity, number, set_id, active').eq('active', true).order('number')),
+      fetchAll(() => sb.from('hg_cards').select('*').eq('active', true).order('number')),
     ]);
   } catch (e) { failLoad(ui, e); return; }
   members = members ?? [];
   sets = (sets ?? []).sort((a, b) => a.sort - b.sort);
   cards = cards ?? [];
-  const cardById = new Map(cards.map((k) => [k.id, k]));
-  const st = { kind: 'paillettes', amountRaw: String(KIND.paillettes.defaut), ids: new Set(), all: false, card: '', shiny: false, announce: true, note: '' };
+  const setsById = new Map(sets.map((s) => [s.id, s]));
+  cards.forEach((k) => { k.set_name = setsById.get(k.set_id)?.name; });
+  // Exemplaires restants et boosters : une lecture qui échoue ne bloque pas la fenêtre (le sélecteur reste utilisable).
+  const [rest, boost] = await Promise.allSettled([chargerRestants(cards), chargerBoosters()]);
+  const restants = rest.status === 'fulfilled' ? rest.value.restants : new Map();
+  const types = boost.status === 'fulfilled' ? boost.value : null;
+  const st = { kind: 'paillettes', amountRaw: String(KIND.paillettes.defaut), ids: new Set(), all: false, announce: true, note: '' };
   const titles = { paillettes: 'Montant par membre', carte: KIND.carte.champ, boosters: KIND.boosters.champ };
-
-  /** Options des cartes actives groupées par série, filtrées par le texte de recherche. */
-  const cardOptions = (q = '') => {
-    const needle = norm(q.trim());
-    const html = sets.map((s) => {
-      const list = cards.filter((k) => k.set_id === s.id && (!needle || norm(k.name).includes(needle))).sort((a, b) => a.number - b.number);
-      return list.length ? `<optgroup label="${esc(s.name)}">${list.map((k) => `<option value="${esc(k.id)}"${k.id === st.card ? ' selected' : ''}>#${esc(k.number)} · ${esc(k.name)} (${esc(rarityLabel(k.rarity))})</option>`).join('')}</optgroup>` : '';
-    }).join('');
-    return html || '<option value="">Aucune carte trouvée</option>';
-  };
+  /** Sélecteurs visuels (montés après le contenu) : carte et booster. */
+  let carte = null, booster = null;
 
   ui.body.innerHTML = `
     <p class="qk-err" role="alert" hidden></p>
@@ -204,9 +204,12 @@ async function openGive(trigger) {
         </div>
       </section>
       <section class="qk-sec qk-card" hidden>
-        <div class="field"><label for="qk-g-cq">Rechercher une carte</label><input id="qk-g-cq" type="search" autocomplete="off" placeholder="Nom de la carte"></div>
-        <div class="field"><label for="qk-g-card">Carte</label><select id="qk-g-card" name="card">${cardOptions()}</select></div>
-        <label class="check"><input type="checkbox" name="shiny"> <span>Brillante</span></label>
+        <p class="qk-label">Carte</p>
+        <div id="qk-g-cardhost"></div>
+      </section>
+      <section class="qk-sec qk-boost" hidden>
+        <p class="qk-label">Booster</p>
+        <div id="qk-g-boosthost">${types ? '' : `<p class="form-error" role="alert">Impossible de charger les boosters : ${esc(errMsg(boost.reason))}</p>`}</div>
       </section>
       <section class="qk-sec">
         <p class="qk-label" id="qk-g-amt-l">${esc(titles.paillettes)}</p>
@@ -223,29 +226,34 @@ async function openGive(trigger) {
       <p class="qk-sum" aria-live="polite"></p>
     </div>
     <div class="qk-pane" data-pane="confirm" hidden>
+      <div class="vp-preview" data-confirm-visual></div>
       <p class="qk-sum qk-sum-strong" data-confirm></p>
       <p class="small muted" data-confirm-who></p>
       <p class="small muted">Le don est définitif. Les MP Discord ne sont pas envoyés par ce formulaire.</p>
     </div>`;
 
-  /** Lecture du formulaire, au format attendu par recapText (admin-cards/bulk.js). */
+  /** Lecture du formulaire, au format attendu par recapText et argsDon (admin-cards/bulk.js). */
   const read = () => {
     const kind = st.kind;
     const all = st.all;
+    const cp = carte ? carte.value() : { card: '', name: '', obj: null, shiny: false };
+    const bo = booster ? booster.value() : { id: '', name: '', obj: null };
+    const estCarte = kind === 'carte', estBoost = kind === 'boosters';
     return {
       kind, cfg: KIND[kind], amount: Number(String(st.amountRaw).trim()),
-      card: kind === 'carte' ? st.card : '', shiny: kind === 'carte' && st.shiny,
+      card: estCarte ? cp.card : '', shiny: estCarte && cp.shiny, carteNom: cp.name,
+      booster: estBoost ? bo.id : '', boosterNom: estBoost ? bo.name : '',
+      visuel: estCarte ? cp.obj : estBoost ? bo.obj : null,
       all, ids: [...st.ids], n: all ? members.length : st.ids.size,
-      announce: st.announce, note: st.note.trim(), carteNom: cardById.get(st.card)?.name ?? '',
+      announce: st.announce, note: st.note.trim(),
     };
   };
-  /** Valeurs invalides : mêmes conditions que le tiroir « Don groupé ». */
-  const invalid = (v) => !v.n || v.n > MAX_MEMBRES || !Number.isInteger(v.amount) || v.amount < v.cfg.min || v.amount > v.cfg.max || (v.kind === 'carte' && !v.card);
-  /** Met à jour les états affichés (type, carte, montant, compteur, récapitulatif). */
+  /** Met à jour les états affichés (type, carte ou booster, montant, compteur, récapitulatif). */
   const refresh = () => {
     const v = read();
     ui.body.querySelectorAll('[data-kind]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === st.kind)));
     ui.body.querySelector('.qk-card').hidden = st.kind !== 'carte';
+    ui.body.querySelector('.qk-boost').hidden = st.kind !== 'boosters';
     ui.body.querySelector('#qk-g-amt-l').textContent = titles[st.kind];
     const amt = ui.body.querySelector('#qk-g-amt');
     amt.min = v.cfg.min; amt.max = v.cfg.max;
@@ -253,17 +261,18 @@ async function openGive(trigger) {
     ui.body.querySelectorAll('.qk-chip').forEach((c) => { c.setAttribute('aria-pressed', String(st.ids.has(c.dataset.id))); c.disabled = st.all; });
     const sum = ui.body.querySelector('.qk-sum:not(.qk-sum-strong)');
     sum.textContent = recapText(v);
-    sum.classList.toggle('is-warn', invalid(v));
+    sum.classList.toggle('is-warn', invalide(v));
   };
 
   bindActions(ui, {
     onBack: () => showPane(ui, 'form', { submit: 'Donner' }),
     onReview: () => {
       const v = read();
-      if (invalid(v)) { showErr(ui, recapText(v)); ui.body.querySelector('[data-pane="form"]').scrollIntoView?.({ block: 'nearest' }); return; }
+      if (invalide(v)) { showErr(ui, recapText(v)); ui.body.querySelector('[data-pane="form"]').scrollIntoView?.({ block: 'nearest' }); return; }
       const who = v.all ? 'Destinataires : tout le gang.' : `Destinataires : ${[...st.ids].map((id) => (members.find((m) => m.id === id)?.pseudo ?? '')).filter(Boolean).join(', ')}.`;
       ui.body.querySelector('[data-confirm]').textContent = recapText(v);
       ui.body.querySelector('[data-confirm-who]').textContent = who;
+      ui.body.querySelector('[data-confirm-visual]').innerHTML = visuelHtml(v.kind, v.visuel);
       showPane(ui, 'confirm', { submit: 'Donner', confirm: 'Confirmer le don' });
     },
     onConfirm: (btn) => sendGive(ui, read(), btn),
@@ -293,10 +302,6 @@ async function openGive(trigger) {
     if (t.id === 'qk-g-q') {
       const needle = norm(t.value.trim());
       ui.body.querySelectorAll('.qk-chip').forEach((c) => { c.hidden = !!needle && !c.dataset.name.includes(needle); });
-    } else if (t.id === 'qk-g-cq') {
-      const sel = ui.body.querySelector('#qk-g-card');
-      sel.innerHTML = cardOptions(t.value);
-      if ([...sel.options].some((o) => o.value === st.card)) sel.value = st.card; else st.card = sel.value;
     } else if (t.id === 'qk-g-amt') { st.amountRaw = t.value; }
     else if (t.id === 'qk-g-note') { st.note = t.value; }
     refresh();
@@ -305,10 +310,12 @@ async function openGive(trigger) {
     const t = e.target;
     if (t.name === 'all') st.all = t.checked;
     else if (t.name === 'announce') st.announce = t.checked;
-    else if (t.name === 'shiny') st.shiny = t.checked;
-    else if (t.id === 'qk-g-card') st.card = t.value;
     refresh();
   });
+
+  // Sélecteurs visuels : montés une fois le contenu en place ; chaque choix relance le récapitulatif.
+  carte = cardPicker(ui.body.querySelector('#qk-g-cardhost'), { cards, sets, restants, idp: 'qk-gc', onChange: () => refresh() });
+  if (types) booster = boosterPicker(ui.body.querySelector('#qk-g-boosthost'), { types, idp: 'qk-gb', value: 'classique', onChange: () => refresh() });
   showPane(ui, 'form', { submit: 'Donner' });
   refresh();
 }
@@ -320,18 +327,10 @@ async function openGive(trigger) {
  * @param {HTMLButtonElement} btn bouton « Confirmer le don »
  */
 async function sendGive(ui, v, btn) {
-  if (invalid(v)) { showErr(ui, recapText(v)); return; }
+  if (invalide(v)) { showErr(ui, recapText(v)); return; }
   busyOn(btn);
   try {
-    const res = check(await sb.rpc('hg_cards_admin_bulk_give', {
-      p_users: v.all ? null : v.ids,
-      p_kind: v.kind,
-      p_amount: v.amount,
-      p_card: v.kind === 'carte' ? v.card : null,
-      p_shiny: v.kind === 'carte' ? v.shiny : false,
-      p_announce: v.announce,
-      p_note: v.note || null,
-    }));
+    const res = check(await sb.rpc('hg_cards_admin_bulk_give', argsDon(v)));
     const servis = Number(res?.membres) || v.n;
     toast(`Don envoyé à ${plur(servis, 'membre', 'membres')}`, 'ok');
     ui.close();
@@ -340,8 +339,6 @@ async function sendGive(ui, v, btn) {
     busyOff(btn);
   }
 }
-/** Validité d'un don (même règle que recapText : une phrase d'erreur à la place du récapitulatif). */
-function invalid(v) { return !v.n || v.n > MAX_MEMBRES || !Number.isInteger(v.amount) || v.amount < v.cfg.min || v.amount > v.cfg.max || (v.kind === 'carte' && !v.card); }
 
 /* =========================================================
    2. Nouvelle enchère : une carte unique, planifiée
@@ -434,36 +431,39 @@ async function sendAuction(ui, btn) {
 /** Ouvre « Lancer un drop ». Mêmes bornes, mêmes contrôles et même RPC que admin-cards/drops.js. */
 async function openDrop(trigger) {
   const ui = openShell({ title: 'Lancer un drop', sub: 'La carte apparaît sur le site pour les membres connectés.', color: '#2B5AE2', href: 'admin.html#fabrique/drops', trigger });
-  let cards, taken, cfg;
+  let cards, sets, restants, cfg;
   try {
-    [cards, cfg] = await Promise.all([
-      fetchAll(() => sb.from('hg_cards').select('id, name, rarity, can_shiny, active').order('id')),
+    [cards, sets, cfg] = await Promise.all([
+      fetchAll(() => sb.from('hg_cards').select('*').order('id')),
+      fetchAll(() => sb.from('hg_card_sets').select('id, name, sort').order('sort')),
       sb.from('hg_settings').select('value').eq('key', 'cards').maybeSingle(),
     ]);
-    const uniqueIds = cards.filter((k) => k.rarity === 'unique').map((k) => k.id);
-    taken = new Set(uniqueIds.length ? (await fetchAll(() => sb.from('hg_card_copies').select('card_id').in('card_id', uniqueIds).is('recycled_at', null))).map((x) => x.card_id) : []);
+    ({ restants } = await chargerRestants(cards));
   } catch (e) { failLoad(ui, e); return; }
   const limits = limitsOf(cfg.error ? null : cfg.data?.value);
   const actives = cards.filter((k) => k.active).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-  const byId = new Map(cards.map((k) => [k.id, k]));
+  const setsById = new Map((sets ?? []).map((s) => [s.id, s]));
+  actives.forEach((k) => { k.set_name = setsById.get(k.set_id)?.name; });
   if (!actives.length) {
     ui.body.innerHTML = '<p class="qk-empty">Aucune carte active : crée ou active une carte d’abord.</p>';
     ui.btns.innerHTML = '<button class="btn btn-ghost" type="button" data-qk-close>Fermer</button>';
     return;
   }
-  /** Options de la liste : une carte unique déjà attribuée est désactivée (comme la page). */
-  const optionsHtml = (list) => list.map((k) => {
-    const dead = taken.has(k.id) && k.rarity === 'unique';
-    return `<option value="${esc(k.id)}"${dead ? ' disabled' : ''}>${esc(k.name)} — ${esc(rarityLabel(k.rarity))}${k.can_shiny ? '' : ' (pas brillante)'}${dead ? ' : déjà attribuée' : ''}</option>`;
-  }).join('');
+  /** Motif qui interdit le choix : exemplaire unique déjà attribué, ou plus aucun exemplaire (numéros épuisés). */
+  const bloque = (k) => (restants.has(k.id) && restants.get(k.id) <= 0 ? (k.rarity === 'unique' ? 'Déjà attribuée' : 'Épuisée') : '');
+  /** Message d'erreur pour une carte bloquée (même texte que la page des drops). */
+  const motifRefus = (k) => (k?.rarity === 'unique'
+    ? 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.'
+    : 'Cette carte n’a plus d’exemplaire disponible.');
+  /** Sélecteur visuel de carte (monté après le contenu). */
+  let pick = null;
 
   ui.body.innerHTML = `
     <p class="qk-err" role="alert" hidden></p>
     <div class="qk-pane" data-pane="form">
       <section class="qk-sec">
-        <div class="field"><label for="qk-d-q">Rechercher une carte</label><input id="qk-d-q" type="search" autocomplete="off" placeholder="Nom de la carte…" data-focus></div>
-        <div class="field"><label for="qk-d-card">Carte</label><select id="qk-d-card" size="6">${optionsHtml(actives)}</select>
-          <p class="small muted" id="qk-d-n" aria-live="polite">${plur(actives.length, 'carte affichée', 'cartes affichées')}</p></div>
+        <p class="qk-label">Carte</p>
+        <div id="qk-d-pick"></div>
         <div class="qk-pair">
           <div class="field"><label for="qk-d-qty">Exemplaires à attraper</label>
             <input id="qk-d-qty" type="number" min="1" max="${limits.qmax}" step="1" inputmode="numeric" value="1">
@@ -472,44 +472,31 @@ async function openDrop(trigger) {
             <input id="qk-d-min" type="number" min="1" max="${limits.dmax}" step="1" inputmode="numeric" value="${limits.dflt}">
             <p class="small muted">De 1 à ${fmtN(limits.dmax)} minutes.</p></div>
         </div>
-        <label class="check"><input type="checkbox" name="shiny"> <span>Brillante</span></label>
         <label class="check"><input type="checkbox" name="announce" checked> <span>Annoncer dans le fil d'actualité</span></label>
         <label class="check"><input type="checkbox" name="discord" checked> <span>Annoncer sur Discord</span></label>
       </section>
     </div>
     <div class="qk-pane" data-pane="confirm" hidden>
+      <div class="vp-preview" data-confirm-visual></div>
       <p class="qk-sum qk-sum-strong" data-confirm></p>
       <p class="small muted" data-confirm-opts></p>
     </div>`;
 
-  const sel = ui.body.querySelector('#qk-d-card');
-  const shiny = ui.body.querySelector('[name="shiny"]');
-  /** Case « brillante » active seulement si la carte peut être brillante. */
-  const syncShiny = () => { const k = byId.get(sel.value); shiny.disabled = !k?.can_shiny; if (shiny.disabled) shiny.checked = false; };
-  ui.body.querySelector('#qk-d-q').addEventListener('input', (e) => {
-    const term = e.target.value.trim().toLowerCase();
-    const keep = sel.value;
-    const shown = actives.filter((k) => !term || k.name.toLowerCase().includes(term));
-    sel.innerHTML = optionsHtml(shown);
-    ui.body.querySelector('#qk-d-n').textContent = plur(shown.length, 'carte affichée', 'cartes affichées');
-    if (shown.some((k) => k.id === keep)) sel.value = keep;
-    syncShiny();
-  });
-  sel.addEventListener('change', syncShiny);
-  syncShiny();
+  pick = cardPicker(ui.body.querySelector('#qk-d-pick'), { cards: actives, sets, restants, bloque, idp: 'qk-d' });
+  ui.body.querySelector('#qk-d-q')?.setAttribute('data-focus', '');
 
   /** Lecture et contrôle, mêmes messages que la page des drops. Renvoie { error } ou les valeurs. */
   const lire = () => {
-    const card = sel.value;
+    const v = pick.value();
     const qty = Number(ui.body.querySelector('#qk-d-qty').value);
     const minutes = Number(ui.body.querySelector('#qk-d-min').value);
-    if (!card) return { error: 'Choisis une carte dans la liste.' };
-    if (taken.has(card) && byId.get(card)?.rarity === 'unique') return { error: 'Cette carte unique est déjà attribuée : plus aucun exemplaire disponible.' };
+    if (!v.card) return { error: 'Choisis une carte dans la liste.' };
+    if (bloque(v.obj)) return { error: motifRefus(v.obj) };
     if (!Number.isInteger(qty) || qty < 1 || qty > limits.qmax) return { error: `Le nombre d'exemplaires doit être entre 1 et ${fmtN(limits.qmax)}.` };
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > limits.dmax) return { error: `La durée doit être entre 1 et ${fmtN(limits.dmax)} minutes.` };
     return {
-      card, qty, minutes,
-      shiny: !!shiny.checked,
+      card: v.card, obj: v.obj, qty, minutes,
+      shiny: !!v.shiny,
       announce: ui.body.querySelector('[name="announce"]').checked,
       discord: ui.body.querySelector('[name="discord"]').checked,
     };
@@ -520,11 +507,11 @@ async function openDrop(trigger) {
     onReview: () => {
       const v = lire();
       if (v.error) { showErr(ui, v.error); return; }
-      const k = byId.get(v.card);
       ui.body.querySelector('[data-confirm]').textContent =
-        `Lancer « ${k?.name ?? 'cette carte'} »${v.shiny ? ' (brillante)' : ''} : ${plur(v.qty, 'exemplaire à attraper', 'exemplaires à attraper')} pendant ${nf(v.minutes)} min.`;
+        `Lancer « ${v.obj?.name ?? 'cette carte'} »${v.shiny ? ' (brillante)' : ''} : ${plur(v.qty, 'exemplaire à attraper', 'exemplaires à attraper')} pendant ${nf(v.minutes)} min.`;
       ui.body.querySelector('[data-confirm-opts]').textContent =
         `${v.announce ? 'Annoncé dans le fil.' : 'Hors du fil.'} ${v.discord ? 'Annonce Discord : oui (le bot poste dans le salon).' : 'Annonce Discord : non.'}`;
+      ui.body.querySelector('[data-confirm-visual]').innerHTML = visuelHtml('carte', v.obj);
       showPane(ui, 'confirm', { submit: 'Lancer le drop', confirm: 'Lancer le drop' });
     },
     onConfirm: (btn) => { const v = lire(); if (v.error) { showErr(ui, v.error); return; } sendDrop(ui, v, btn); },

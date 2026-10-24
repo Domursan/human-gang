@@ -123,6 +123,8 @@ window.__DB = DB; window.__LOG = [];
       image_url: null, flavor: null, member_id: null, can_shiny: true, tradeable: true, craftable: true, max_copies: null, active: true });
   }
   DB.hg_card_sets = sets; DB.hg_cards = cards;
+// Scénario « cardImages » (parcours admin des visuels) : quelques cartes avec une image (le visuel du site, pas le logo).
+if (S.cardImages) for (const id of ['C1', 'C2', 'C3', 'C4', 'C7']) { const k = cards.find((c) => c.id === id); if (k) k.image_url = PUMPKIN; }
   // Mes exemplaires : C1 x3 (dont une brillante), C2 x1, C3 x2, C7 x1 brillante, C11 (identite) x1 numéroté, C9 x1 (en échange)
   /** Fabrique un exemplaire possédé par le membre connecté ; extra remplace les champs par défaut. */
   const cp = (id, card, extra = {}) => ({ id, card_id: card, owner_id: ME, shiny: false, serial: null, source: 'booster', obtained_at: iso(-2), locked_trade: null, recycled_at: null, ...extra });
@@ -195,6 +197,8 @@ const TYPES_BASE = [
 ];
 // Table des types (toujours présente ; les RPC typées n'répondent que si scenario.types est vrai).
 DB.hg_booster_types = TYPES_BASE.map((t) => ({ description: null, active: true, ...t, ...(S.typeOverrides?.[t.id] ?? {}) }));
+// Scénario « boostersPast » (parcours admin des visuels) : un booster d'événement passé (inactif), listé à part dans les sélecteurs.
+if (S.boostersPast) DB.hg_booster_types.push({ id: 'noel2025', name: 'Noël 2025', price: 300, size: 5, rates: TAUX(60, 25, 10, 4, 0.88, 0.1, 0.02), shiny_rate: 3, pity_epique: 0, pool: 'tous', weekly_limit: null, free_daily: false, style: 'cart--theme-noel', sort: 100, active: false, description: 'Le booster de l’hiver dernier, plus disponible à la vente.' });
 // Stock par type (S.stock = { dore: 2, serie: 1 }), compteurs de garantie épique (S.typePity = { dore: 7 }),
 // achats de la semaine (S.boughtWeek = { holographique: 1 }, comptés dans la limite). Tout pour le membre connecté.
 // Le stock générique (wallet gift_boosters, S.gift) est compté dans « classique ».
