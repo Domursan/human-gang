@@ -44,6 +44,7 @@ import * as Access from './admin-access.js';           // setAccessView(view)
 import { initLive, onTableChange } from './admin/live.js';
 import { initShell, registerSub, startShell, navigate, setActions } from './admin/shell.js';
 import { setupPalette } from './admin/palette.js';
+import { initQuick } from './admin/quick.js';
 
 // Sections facultatives (modules autonomes) : chargées en parallèle de l'identité. Un module absent ou sans sa fonction de
 // montage retire sa sous-section du panel (disableSubs) au lieu de casser le démarrage.
@@ -96,6 +97,7 @@ applyPanelAccess();
 const has = canSection;
 initShell({ me }); // rail et colonnes tout de suite ; le routage démarre quand les données sont chargées
 setupPalette();    // « Aller à… » (Ctrl/Cmd+K, bouton du rail)
+initQuick();       // actions rapides du plateau (hg:quick : Give, enchère, drop ; admin/quick.js)
 
 /* ---------- Comptes : fiche complète de chaque membre (initialisée à la première visite d'une sous-section qui en a besoin) ---------- */
 // Promesse de l'initialisation des comptes : créée une seule fois.

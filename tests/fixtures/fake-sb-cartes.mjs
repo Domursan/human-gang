@@ -863,7 +863,8 @@ export function createClient() {
         return { data: window.__CARDS.config, error: null };
       }
       // Droits codés en dur : admin avec tout le catalogue, pour cette fixture.
-      if (fn === 'hg_my_perms') return { data: { is_admin: true, perms: ['membres', 'evenements', 'souvenirs', 'secret_santa', 'cartes', 'badges', 'themes', 'messages', 'support', 'bot', 'reglages', 'journal'] }, error: null };
+      // S.myPerms : droits simulés (ex. { is_admin: false, perms: ['membres'] } pour tester l'absence de la permission « cartes »).
+      if (fn === 'hg_my_perms') return { data: S.myPerms || { is_admin: true, perms: ['membres', 'evenements', 'souvenirs', 'secret_santa', 'cartes', 'badges', 'themes', 'messages', 'support', 'bot', 'reglages', 'journal'] }, error: null };
       // Ajustement de Paillettes : seul le membre connecté est crédité.
       if (fn === 'hg_cards_admin_paillettes') {
         if (args.p_user === ME) { DB.hg_wallets[0].paillettes += args.p_delta; return { data: DB.hg_wallets[0].paillettes, error: null }; }
