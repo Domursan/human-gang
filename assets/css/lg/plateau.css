@@ -159,3 +159,28 @@
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(90, 8, 12, .45) 85%, rgba(60, 4, 8, .75) 100%); }
 .lg-sang-fond .lg-sang-coulures { height: 90px; opacity: .85; }
 body.lg-spectateur .lg-pl-bandeau { border-color: #8A1A20; }
+
+/* ---------- Thème du rôle (version « Horizon », themes.js) ----------
+   Variables posées par plateau.js : --th-a (accent), --th-rgb, --th-bg, --th-motif, --th-scene (images). */
+.lg-app { overflow-x: clip; }
+.lg-pl { position: relative; }
+.lg-pl > :not(.lg-pl-horizon) { position: relative; z-index: 1; }
+.lg-pl-horizon { display: none; }
+.lg-pl[data-theme] { padding-bottom: 240px; }
+.lg-pl[data-theme] .lg-pl-horizon { display: block; position: absolute; z-index: 0; left: 50%; transform: translateX(-50%); width: 100vw;
+  bottom: -48px; height: 720px; pointer-events: none;
+  background: var(--th-scene) center bottom / cover no-repeat;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 35%); mask-image: linear-gradient(180deg, transparent 0, #000 35%); }
+.lg-pl[data-theme] .lg-pl-carte { background: color-mix(in srgb, var(--lg-pl-fond) 90%, transparent); }
+.lg-pl[data-theme] .lg-pl-action-carte { position: relative; isolation: isolate; border-color: var(--th-a); box-shadow: 0 0 32px rgba(var(--th-rgb), .22);
+  background-image: linear-gradient(160deg, rgba(var(--th-rgb), .14) 0, transparent 55%); }
+/* Motif du rôle, discret, dans le coin du panneau d'action (derrière le texte) */
+.lg-pl[data-theme] .lg-pl-action-carte::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: var(--th-motif) 0 0 / 160px 160px; opacity: .3;
+  -webkit-mask-image: linear-gradient(225deg, #000 0, transparent 50%); mask-image: linear-gradient(225deg, #000 0, transparent 50%); }
+.lg-pl[data-theme] .lg-pl-role { border-color: rgba(var(--th-rgb), .45); }
+.lg-pl-devise { margin: 10px 0 0; font-style: italic; color: var(--th-a, var(--lg-pl-accent)); }
+.lg-pl-table { position: relative; }
+.lg-pl-table-corps { position: relative; z-index: 1; }
+.lg-pl-embleme { position: absolute; z-index: 0; left: 50%; top: 50%; width: 78%; max-width: 520px; aspect-ratio: 1;
+  transform: translate(-50%, -50%); opacity: .16; pointer-events: none; }

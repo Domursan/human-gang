@@ -3,7 +3,9 @@
  * Rôle : le plateau pendant la partie. Bandeau de phase et minuteur, table autour du feu, panneau d'action
  * (actions.js), annonce du matin, rôle et rôles restants, chat (chat.js), journal, et l'écran ensanglanté
  * quand on meurt. Le HTML n'est réécrit que si son contenu change (pas de saut de page toutes les 4 s).
- * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, actions.js, api.js (erreurTexte).
+ * Thème du rôle (version « Horizon ») : couleur d'accent, emblème en filigrane derrière la table, motif dans le panneau
+ *   d'action, devise sur la carte du rôle et paysage dessiné en bas de page (themes.js).
+ * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte).
  * Exporte : monter.
  */
 import { esc } from '../../core.js';
@@ -11,6 +13,7 @@ import { icone, pseudo, vignetteRole, pastilleCamp, chrono, libellePhase, estNui
 import { tableHtml } from '../table.js';
 import { monterChat } from '../chat.js';
 import { roleById } from '../roles.js';
+import { themeDe, imagesTheme } from '../themes.js';
 import { erreurTexte } from '../api.js';
 import {
   typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS,
@@ -27,6 +30,7 @@ const TITRE_MORT = {
 };
 
 const SQUELETTE = `<div class="lg-pl" data-ambiance="nuit">
+  <div class="lg-pl-horizon" data-ref="horizon" aria-hidden="true"></div>
   <section class="lg-pl-carte lg-pl-bandeau" aria-label="Étape en cours">
     <div class="lg-pl-phase">
       <span class="lg-pl-lueur" data-ref="lueur" aria-hidden="true"></span>
@@ -41,7 +45,7 @@ const SQUELETTE = `<div class="lg-pl" data-ambiance="nuit">
     </div>
     <div class="lg-pl-barre" role="progressbar" aria-label="Temps restant" aria-valuemin="0" data-ref="barre"><span data-ref="fill"></span></div>
   </section>
-  <div class="lg-pl-table" data-ref="table"></div>
+  <div class="lg-pl-table"><img class="lg-pl-embleme" data-ref="embleme" alt="" aria-hidden="true" hidden><div class="lg-pl-table-corps" data-ref="table"></div></div>
   <div class="lg-pl-colonne">
     <div class="lg-pl-annonce-zone" data-ref="annonce"></div>
     <div class="lg-pl-action-zone" data-ref="action"></div>
@@ -149,6 +153,7 @@ function htmlRole(e) {
   }).join('');
   return `<div class="lg-pl-role-tete">${vignetteRole(r.id, 56)}<div>`
     + `<p class="lg-pl-role-nom">${esc(r.nom)}</p>${pastilleCamp(r.camp)}</div></div>`
+    + (themeDe(r.id)?.devise ? `<p class="lg-pl-devise">${esc(themeDe(r.id).devise)}</p>` : '')
     + (m.envoute ? '<p class="lg-pl-note">Tu es envoûté·e.</p>' : '')
     + (m.amoureux ? '<p class="lg-pl-note">Tu es amoureux·se.</p>' : '')
     + (r.description ? `<p class="small muted lg-pl-desc">${esc(r.description)}</p>` : '')
@@ -217,7 +222,7 @@ export function monter(root, s) {
   const refs = {
     lueur: ref('lueur'), titre: ref('titre'), sous: ref('sous'), tlabel: ref('tlabel'), chrono: ref('chrono'),
     barre: ref('barre'), fill: ref('fill'), table: ref('table'), annonce: ref('annonce'), action: ref('action'),
-    role: ref('role'), restants: ref('restants'), chat: ref('chat'), journal: ref('journal'), journalCorps: ref('journalCorps'),
+    role: ref('role'), restants: ref('restants'), horizon: ref('horizon'), embleme: ref('embleme'), chat: ref('chat'), journal: ref('journal'), journalCorps: ref('journalCorps'),
   };
 
   const st = { etat: null, sel: {}, cle: '', cleAct: '', depart: 0, envoi: false, nuit: null, sigChat: '', sangVu: false };
@@ -226,6 +231,25 @@ export function monter(root, s) {
   let surTouche = null;
 
   const chat = monterChat(refs.chat, s, { canaux: canauxPour, titre: 'Discussion' });
+
+  /** Thème du rôle : posé une fois par rôle (le Voleur ou le Chien-loup peuvent en changer). */
+  function appliquerTheme(role) {
+    if (st.theme === role) return;
+    st.theme = role;
+    const th = themeDe(role);
+    if (!th) { delete el.dataset.theme; refs.embleme.hidden = true; return; }
+    const img = imagesTheme(role);
+    el.dataset.theme = role;
+    el.style.setProperty('--th-a', th.a);
+    el.style.setProperty('--th-rgb', th.rgb);
+    el.style.setProperty('--th-bg', th.bg);
+    // Adresses absolues : une url() dans une variable CSS se résout par rapport à la feuille qui l'utilise
+    const abs = (u) => new URL(u, document.baseURI).href;
+    el.style.setProperty('--th-motif', `url("${abs(img.motif)}")`);
+    el.style.setProperty('--th-scene', `url("${abs(img.scene)}")`);
+    refs.embleme.src = img.embleme;
+    refs.embleme.hidden = false;
+  }
 
   /** Redessine ce qui dépend de l'état (sans toucher au minuteur ni au chat). */
   function maj(e) {
@@ -237,6 +261,7 @@ export function monter(root, s) {
     const amb = nuit ? 'nuit' : 'jour';
     document.body.dataset.lgAmbiance = amb;
     el.dataset.ambiance = amb;
+    appliquerTheme(m.role);
 
     const cle = `${p.phase}|${p.manche}`;
     if (cle !== st.cle) { st.cle = cle; st.depart = s.secondesRestantes() || 0; st.sel = {}; }
