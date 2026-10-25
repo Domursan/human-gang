@@ -7,7 +7,7 @@
  * Exporte : afficher.
  */
 import { esc } from '../../core.js';
-import { lg, erreurTexte } from '../api.js';
+import { lg, erreurTexte, estInvite, jetonInvite } from '../api.js';
 import { icone, pseudo, filAriane } from '../ui.js';
 
 /** « 4821 », « hglg4821 » ou « HGLG-4821 » donnent « HGLG-4821 ». Renvoie null si le format ne colle pas. */
@@ -97,7 +97,120 @@ function brancherSaisie(zone, naviguer) {
   }));
 }
 
+/* ---------- Invité : lien d'invitation, sans compte ---------- */
+
+/** Carte invité : contenu (HTML) puis lien secondaire vers la connexion. */
+function carteInvite(code, contenu) {
+  const suite = encodeURIComponent(`loup-garou.html?code=${code}`);
+  return `<section class="card lg-invitation" aria-labelledby="lg-titre-partie">
+    ${contenu}
+    <p class="lg-invite-compte"><a class="lg-invite-lien" href="${esc(`compte.html?next=${suite}`)}">J'ai un compte : me connecter</a></p>
+  </section>`;
+}
+
+/** Carte d'un message seul (partie introuvable, annulée, réservée, commencée, complète, erreur). */
+function carteInviteMessage(code, titre, texte) {
+  return carteInvite(code, `<h1 id="lg-titre-partie" class="lg-invitation-titre display">${esc(titre)}</h1>
+    <p class="lg-alerte" role="status">${icone('info', 18)}<span>${esc(texte)}</span></p>`);
+}
+
+/** Carte d'invitation avec le formulaire « Ton pseudo ». */
+function carteInvitePartie(code, ap) {
+  const inscrits = Number(ap.inscrits) || 0;
+  const places = ap.nb_joueurs ?? '?';
+  const meneur = ap.mode === 'mj' ? 'Meneur humain' : 'Meneur automatique';
+  return carteInvite(code, `<p class="lg-surtitre">Tu es invité·e à rejoindre</p>
+    <h1 id="lg-titre-partie" class="lg-invitation-titre display">${esc(ap.nom || 'Partie')}</h1>
+    <p class="lg-invitation-hote">Créée par <strong>${pseudo({ pseudo: ap.hote_pseudo })}</strong> · code <span class="lg-code">${esc(code)}</span></p>
+    <ul class="lg-pastilles" aria-label="Infos sur la partie">
+      <li class="lg-pastille-info">${inscrits} / ${esc(places)} joueurs</li>
+      <li class="lg-pastille-info">${meneur}</li>
+    </ul>
+    <form class="lg-invite-form" id="lg-invite-form" novalidate autocomplete="off">
+      <label class="lg-invite-libelle" for="lg-invite-pseudo">Ton pseudo</label>
+      <input id="lg-invite-pseudo" class="lg-champ-pseudo" type="text" name="pseudo" autocomplete="off" spellcheck="false" aria-describedby="lg-invite-aide">
+      <p class="lg-aide" id="lg-invite-aide">De 2 à 24 caractères.</p>
+      <button type="submit" class="btn btn-primary lg-rejoindre-bouton" id="lg-invite-bouton">Jouer en invité</button>
+      <p class="lg-alerte" id="lg-invite-erreur" role="alert" hidden></p>
+    </form>
+    <p class="lg-mention">En invité, tu joues sans compte : pas de Paillettes ni de statistiques.</p>`);
+}
+
+/** Parcours invité : aperçu, pseudo, puis la salle. Les membres ne passent jamais ici. */
+async function afficherInvite(root, code, naviguer) {
+  root.innerHTML = '<div class="lg-rejoindre" id="lg-rejoindre-zone"></div>';
+  const zone = root.querySelector('#lg-rejoindre-zone');
+
+  // Déjà inscrit dans ce navigateur : on va directement à la salle.
+  if (jetonInvite(code)) { naviguer(`#partie/${code}`); return; }
+
+  zone.innerHTML = '<p class="lg-chargement" role="status">Chargement de la partie…</p>';
+  let ap;
+  try {
+    ap = await lg.apercu(code);
+  } catch (err) {
+    zone.innerHTML = carteInviteMessage(code, 'Impossible d\'ouvrir la partie', erreurTexte(err));
+    return;
+  }
+  if (!ap) {
+    zone.innerHTML = carteInviteMessage(code, 'Partie introuvable', 'Vérifie le lien, ou demande un nouveau lien à la personne qui a créé la partie.');
+    return;
+  }
+  if (ap.statut === 'annulee') {
+    zone.innerHTML = carteInviteMessage(code, 'Cette partie a été annulée', 'Ce lien ne mène plus à une partie.');
+    return;
+  }
+  if (!ap.invites) {
+    zone.innerHTML = carteInviteMessage(code, 'Cette partie est réservée aux membres', 'Connecte-toi si tu fais partie du gang.');
+    return;
+  }
+  if (ap.statut !== 'attente') {
+    zone.innerHTML = carteInviteMessage(code, 'La partie a déjà commencé', 'Demande une nouvelle invitation pour la prochaine partie.');
+    return;
+  }
+  if ((Number(ap.inscrits) || 0) >= (Number(ap.nb_joueurs) || 0)) {
+    zone.innerHTML = carteInviteMessage(code, 'La partie est complète', 'Toutes les places sont prises.');
+    return;
+  }
+
+  zone.innerHTML = carteInvitePartie(code, ap);
+  const form = zone.querySelector('#lg-invite-form');
+  const champ = zone.querySelector('#lg-invite-pseudo');
+  const bouton = zone.querySelector('#lg-invite-bouton');
+  const erreur = zone.querySelector('#lg-invite-erreur');
+  let envoi = false;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (envoi) return;
+    const saisi = champ.value.trim();
+    if (saisi.length < 2 || saisi.length > 24) {
+      champ.setAttribute('aria-invalid', 'true');
+      erreur.textContent = 'Ton pseudo doit faire entre 2 et 24 caractères.';
+      erreur.hidden = false;
+      champ.focus();
+      return;
+    }
+    champ.removeAttribute('aria-invalid');
+    envoi = true;
+    bouton.disabled = true;
+    bouton.textContent = 'Connexion…';
+    erreur.hidden = true;
+    try {
+      const codeRejoint = await lg.rejoindreInvite(code, saisi);
+      naviguer(`#partie/${codeRejoint || code}`);
+    } catch (err) {
+      envoi = false;
+      bouton.disabled = false;
+      bouton.textContent = 'Jouer en invité';
+      erreur.textContent = erreurTexte(err);
+      erreur.hidden = false;
+    }
+  });
+}
+
 export async function afficher(root, { code, naviguer }) {
+  if (estInvite()) { await afficherInvite(root, code, naviguer); return; }
   root.innerHTML = `${filAriane('Rejoindre')}<div class="lg-rejoindre" id="lg-rejoindre-zone"></div>`;
   const zone = root.querySelector('#lg-rejoindre-zone');
 

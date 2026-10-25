@@ -60,7 +60,7 @@ async function handle(route, n) {
   const req = route.request(); const url = new URL(req.url()); const user = n ? uid(n) : null;
   const json = (status, body) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) });
   if (req.method() === 'OPTIONS') return route.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
-  if (url.pathname.startsWith('/auth/v1/user')) return json(200, { id: user, aud: 'authenticated', role: 'authenticated', email: `j${n}@test` });
+  if (url.pathname.startsWith('/auth/v1/user')) return n ? json(200, { id: user, aud: 'authenticated', role: 'authenticated', email: `j${n}@test` }) : json(401, { message: 'no session' });
   if (url.pathname.startsWith('/auth/v1/')) return json(200, {});
   if (url.pathname.startsWith('/storage/') || url.pathname.startsWith('/functions/')) return json(200, {});
   const rpc = /^\/rest\/v1\/rpc\/([a-z_0-9]+)$/.exec(url.pathname);
@@ -89,7 +89,9 @@ async function handle(route, n) {
   return json(200, null);
 }
 async function attach(context, n) {
-  await context.addInitScript(([key, val]) => { try { localStorage.setItem(key, val); localStorage.setItem('hg_cookie_ok', '1'); } catch {} }, ['sb-zqbdzokyhgavgmqgiwuw-auth-token', JSON.stringify({
+  if (!n) {   // visiteur sans compte
+    await context.addInitScript(() => { try { localStorage.setItem('hg_cookie_ok', '1'); } catch {} });
+  } else await context.addInitScript(([key, val]) => { try { localStorage.setItem(key, val); localStorage.setItem('hg_cookie_ok', '1'); } catch {} }, ['sb-zqbdzokyhgavgmqgiwuw-auth-token', JSON.stringify({
     access_token: jwt(n), refresh_token: 'r' + n, token_type: 'bearer', expires_in: 3600 * 24 * 365, expires_at: 4102444800,
     user: { id: uid(n), aud: 'authenticated', role: 'authenticated', email: `j${n}@test` } })]);
   await context.route((u) => !/^http:\/\/localhost:8080\//.test(u.toString()) && !u.toString().startsWith(SB), (r) => r.abort());

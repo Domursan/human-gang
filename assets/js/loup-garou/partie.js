@@ -9,7 +9,7 @@
  * Exporte : afficher.
  */
 import { esc } from '../core.js';
-import { lg, messages, suivrePartie } from './api.js';
+import { lg, messages, suivrePartie, estInvite } from './api.js';
 import { filAriane } from './ui.js';
 
 const ECRANS = {
@@ -33,7 +33,7 @@ function ecranPour(e) {
 
 export async function afficher(root, { code, naviguer }) {
   if (!code) { naviguer(''); return; }
-  root.innerHTML = `${filAriane('Partie')}<p class="lg-chargement">Connexion à la partie ${esc(code)}…</p>`;
+  root.innerHTML = `${estInvite() ? '' : filAriane('Partie')}<p class="lg-chargement">Connexion à la partie ${esc(code)}…</p>`;
   let courant = null;          // { nom, vue }
   let charge = null;           // chargement d'écran en cours
   let file = [];               // messages arrivés pendant un chargement
@@ -64,16 +64,16 @@ export async function afficher(root, { code, naviguer }) {
     onMessage: (m) => { if (courant && !charge) courant.vue.message?.(m); else file.push(m); },
     onErreur: (err) => {
       if (!courant) {
-        root.innerHTML = `${filAriane('Partie')}<section class="card lg-erreur"><h1 class="display">Partie introuvable</h1>
+        root.innerHTML = `${estInvite() ? '' : filAriane('Partie')}<section class="card lg-erreur"><h1 class="display">Partie introuvable</h1>
           <p>${esc(err?.message || 'Cette partie n\'existe pas ou n\'est plus disponible.')}</p>
-          <p><a class="btn btn-primary" href="loup-garou.html">Retour au Loup-Garou</a></p></section>`;
+          <p><a class="btn btn-primary" href="${estInvite() ? `loup-garou.html#rejoindre/${encodeURIComponent(code)}` : 'loup-garou.html'}">${estInvite() ? 'Rejoindre à nouveau' : 'Retour au Loup-Garou'}</a></p></section>`;
       }
     },
   });
 
   const s = {
     code, lg, naviguer,
-    messages: (canal, depuis = 0) => messages(session.etat()?.partie?.id, canal, depuis),
+    messages: (canal, depuis = 0) => messages(session.etat()?.partie?.id, canal, depuis, code),
     etat: () => session.etat(),
     secondesRestantes: () => session.secondesRestantes(),
     rafraichir: () => session.rafraichir(),

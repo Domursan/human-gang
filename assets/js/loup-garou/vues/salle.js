@@ -8,7 +8,7 @@
  * Exporte : monter.
  */
 import { esc } from '../../core.js';
-import { erreurTexte } from '../api.js';
+import { erreurTexte, estInvite } from '../api.js';
 import { icone, avatar, pseudo, vignetteRole, confirmer, notifier } from '../ui.js';
 import { ROLES, roleById, CAMPS } from '../roles.js';
 import { monterChat } from '../chat.js';
@@ -27,18 +27,23 @@ function zone(el, cle, html) {
 
 export function monter(root, s) {
   const code = s.code;
+  const invite = estInvite();
   let busy = false;
   let fini = false;
 
+  // Invité : pas de fil d'Ariane (il mène aux pages membres).
+  const ariane = invite ? '' : `<nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="loup-garou.html">Loup-Garou</a> › <span>Salle d'attente</span></nav>`;
+  const retourAnnulee = invite ? '' : '<p><a class="btn btn-primary" href="loup-garou.html">Retour au Loup-Garou</a></p>';
+
   root.innerHTML = `
     <div class="lg-salle">
-      <nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="loup-garou.html">Loup-Garou</a> › <span>Salle d'attente</span></nav>
+      ${ariane}
       <h1 class="lg-salle-titre display" data-zone="titre"></h1>
 
       <div data-zone-annulee hidden class="card lg-salle-annulee">
         <h2>Cette partie a été annulée</h2>
         <p>Le code <span class="lg-code">${esc(code)}</span> ne mène plus à cette partie.</p>
-        <p><a class="btn btn-primary" href="loup-garou.html">Retour au Loup-Garou</a></p>
+        ${retourAnnulee}
       </div>
 
       <div data-zone-normale class="lg-salle-grille">
@@ -139,7 +144,8 @@ export function monter(root, s) {
     if (!ok) return;
     essayer(async () => {
       await s.lg.quitter(code);
-      s.naviguer('');
+      // Invité : retour à son lien d'invitation (il peut rejoindre à nouveau) ; membre : accueil.
+      s.naviguer(invite ? `#rejoindre/${code}` : '');
     });
   });
 
@@ -207,7 +213,7 @@ export function monter(root, s) {
         <span style="width:${pct}%"></span>
       </div>
       <p class="small muted">La partie peut commencer quand tout le monde est prêt.</p>
-      ${meneurHumain ? `<p class="lg-meneur-ligne">${icone('etoile', 14)} Meneur : <strong>${esc(meneurPseudo)}</strong></p>` : ''}
+      ${meneurHumain ? `<p class="lg-meneur-ligne">${icone('etoile', 14)} Meneur : <strong>${esc(meneurPseudo)}</strong> (anime la partie sans jouer, il n'occupe pas de place)</p>` : ''}
       <ul class="lg-joueurs">${lignes || '<li class="small muted">Personne n\'a encore rejoint la partie.</li>'}</ul>`;
     const cle = JSON.stringify([n, nb, meneurHumain, meneurPseudo, estHote, moi.user_id, p.hote, p.mode,
       joueurs.map((j) => [j.user_id, j.pseudo, j.pret, j.invite, j.couleur, j.avatar_url, j.user_id === p.hote])]);

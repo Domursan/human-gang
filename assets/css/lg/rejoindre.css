@@ -37,3 +37,18 @@
 .lg-champ-code::placeholder { text-transform: none; letter-spacing: 1px; font-weight: 400; }
 .lg-code-bouton { min-height: 48px; padding: 0 20px; border-radius: 999px; }
 .lg-autre .lg-alerte, .lg-code-form .lg-alerte { margin-top: 2px; }
+
+/* ---------- Mode invité (sans compte) ---------- */
+.lg-invite-form { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; text-align: left; }
+.lg-invite-libelle { font-size: 14px; font-weight: 700; color: var(--text); }
+.lg-champ-pseudo { width: 100%; min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.lg-champ-pseudo[aria-invalid="true"] { border-color: var(--rose); }
+.lg-invite-form .lg-alerte { margin-top: 2px; }
+.lg-invite-compte { margin: 4px 0 0; text-align: center; font-size: 14px; }
+.lg-invite-lien { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; color: var(--sand);
+  font-weight: 700; text-underline-offset: 3px; }
+.lg-invite-fin { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 22px 24px; }
+.lg-invite-fin-titre { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.2; }
+.lg-invite-fin p { margin: 0; color: var(--muted); font-size: 15px; }
+.lg-invite-fin .btn { min-height: 48px; padding: 0 24px; text-decoration: none; }

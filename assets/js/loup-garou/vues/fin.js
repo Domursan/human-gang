@@ -11,6 +11,7 @@ import { esc } from '../../core.js';
 import { icone, vignetteRole, pastilleCamp, pseudo, avatar, libelleCause, filAriane } from '../ui.js';
 import { roleById, CAMPS } from '../roles.js';
 import { monterChat } from '../chat.js';
+import { estInvite } from '../api.js';
 
 /** Bannière par vainqueur : ton (clé de CAMPS, ou neutre), icône et titre. */
 const BANNIERES = {
@@ -70,7 +71,9 @@ function carteMoi(e) {
   const ancien = moi.role_initial && moi.role_initial !== moi.role ? roleById(moi.role_initial).nom : null;
   const pailles = mon.paillettes || 0;
   let recompense = '';
-  if (pailles > 0) {
+  if (estInvite()) {
+    recompense = '';   // invité : pas de Paillettes
+  } else if (pailles > 0) {
     recompense = `<strong class="lg-fin-pailles">+ ${pailles} ${pailles > 1 ? 'Paillettes' : 'Paillette'}</strong>`;
   } else if ((p.nb_joueurs || 0) < 6) {
     recompense = '<p class="small muted lg-fin-note">Pas de Paillettes pour les parties de moins de 6 joueurs.</p>';
@@ -202,14 +205,23 @@ function corps(e) {
  * @returns {{ maj(etat:object):void, message(msg:object):void, detruire():void }}
  */
 export function monter(root, s) {
+  const invite = estInvite();
+  // Invité : pas de fil d'Ariane ni de liens vers les pages membres, seulement un message et l'inscription.
+  const pied = invite
+    ? `<section class="card lg-invite-fin" aria-labelledby="lg-invite-fin-titre">
+        <h2 id="lg-invite-fin-titre" class="lg-invite-fin-titre">Merci d'avoir joué !</h2>
+        <p>Tu as joué sans compte. Crée ou connecte-toi à ton compte pour garder tes statistiques et tes Paillettes.</p>
+        <a class="btn btn-primary" href="compte.html">Rejoindre le gang</a>
+      </section>`
+    : `<nav class="lg-fin-actions" aria-label="Après la partie">
+        <a class="btn btn-ghost" href="loup-garou.html">Retour au Loup-Garou</a>
+        <a class="btn btn-primary" href="loup-garou.html#creer">Nouvelle partie</a>
+      </nav>`;
   root.innerHTML = `<div class="lg-fin">
-    ${filAriane('Fin de partie')}
+    ${invite ? '' : filAriane('Fin de partie')}
     <div class="lg-fin-corps"></div>
     <div class="card lg-fin-chat"></div>
-    <nav class="lg-fin-actions" aria-label="Après la partie">
-      <a class="btn btn-ghost" href="loup-garou.html">Retour au Loup-Garou</a>
-      <a class="btn btn-primary" href="loup-garou.html#creer">Nouvelle partie</a>
-    </nav>
+    ${pied}
   </div>`;
   const zoneCorps = root.querySelector('.lg-fin-corps');
   const chat = monterChat(root.querySelector('.lg-fin-chat'), s, {

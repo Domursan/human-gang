@@ -8,7 +8,7 @@
  * Exporte : monter.
  */
 import { esc } from '../../core.js';
-import { erreurTexte } from '../api.js';
+import { erreurTexte, estInvite } from '../api.js';
 import { icone, avatar, pseudo, vignetteRole, pastilleCamp, chrono, notifier } from '../ui.js';
 import { roleById, CAMPS } from '../roles.js';
 
@@ -64,7 +64,7 @@ export function monter(root, s) {
         </div>
         <p class="lg-revel-minuteur small muted">Temps restant <strong class="lg-chrono" data-chrono>--:--</strong></p>
         <div class="lg-revel-actions">
-          <a class="btn btn-ghost" href="#roles">Revoir les règles de mon rôle</a>
+          ${estInvite() ? '' : '<a class="btn btn-ghost" href="#roles">Revoir les règles de mon rôle</a>'}
           <button type="button" class="btn btn-sand" data-vu>J'ai compris</button>
           <p class="lg-revel-attente" data-attente tabindex="-1" hidden>En attente des autres…</p>
         </div>

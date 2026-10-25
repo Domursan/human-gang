@@ -3,9 +3,30 @@
  * Rôle : seul point de contact avec Supabase pour le jeu. Les écrans n'appellent jamais sb directement.
  * Toute la logique de jeu est côté serveur (migrations 118 et 119) : ici on envoie des intentions et on relit l'état.
  * Dépendances : core.js (sb, errMsg).
- * Exporte : lg (appels), suivrePartie (abonnement temps réel + secours périodique), messages, erreurTexte.
+ * Mode invité (migration 120) : un visiteur sans compte joue avec un jeton secret gardé dans son navigateur ;
+ *   tous ses appels passent par hg_lg_invite (pas de temps réel : relecture toutes les 4 s).
+ * Exporte : lg (appels), suivrePartie (abonnement temps réel + secours périodique), messages, erreurTexte,
+ *   activerInvite, estInvite, jetonInvite.
  */
 import { sb, errMsg } from '../core.js';
+
+/* ---------- Mode invité ---------- */
+let invite = false;
+/** Active le mode invité (visiteur sans compte), appelé par la page au démarrage. */
+export function activerInvite(oui) { invite = !!oui; }
+/** Vrai si le visiteur joue en invité. */
+export function estInvite() { return invite; }
+const CLE_JETON = (code) => `hg_lg_invite:${String(code || '').toUpperCase()}`;
+/** Jeton d'invité pour une partie (lecture ; null si absent ou stockage indisponible). */
+export function jetonInvite(code) { try { return localStorage.getItem(CLE_JETON(code)); } catch { return null; } }
+function garderJeton(code, jeton) { try { localStorage.setItem(CLE_JETON(code), jeton); } catch { /* navigation privée stricte */ } }
+function oublierJeton(code) { try { localStorage.removeItem(CLE_JETON(code)); } catch { /* sans effet */ } }
+/** Appel invité : action de jeu au nom du jeton de cette partie. */
+async function rpcInvite(action, code, args = {}) {
+  return rpc('hg_lg_invite', { p_action: action, p_code: code, p_jeton: jetonInvite(code), p_args: args });
+}
+/** Aiguille vers l'appel membre ou l'appel invité. */
+const deux = (membre, inv) => (...a) => (invite ? inv(...a) : membre(...a));
 
 /** Appel d'une fonction serveur ; lève une Error avec un message lisible. */
 async function rpc(nom, args = {}) {
@@ -26,18 +47,30 @@ export function erreurTexte(e) {
 export const lg = {
   creer: (params) => rpc('hg_lg_creer', { p: params }),
   rejoindre: (code, pseudo = null) => rpc('hg_lg_rejoindre', { p_code: code, p_pseudo: pseudo }),
-  quitter: (code) => rpc('hg_lg_quitter', { p_code: code }),
-  pret: (code, pret) => rpc('hg_lg_pret', { p_code: code, p_pret: pret }),
+  /** Aperçu public d'une partie (sans compte) : { nom, code, statut, invites, nb_joueurs, inscrits, mode, hote_pseudo } ou null. */
+  apercu: (code) => rpc('hg_lg_invite', { p_action: 'apercu', p_code: code }),
+  /** Invité : rejoint avec un pseudo, garde le jeton dans le navigateur, renvoie le code. */
+  async rejoindreInvite(code, pseudo) {
+    const r = await rpc('hg_lg_invite', { p_action: 'rejoindre', p_code: code, p_args: { pseudo } });
+    if (!r?.jeton) throw new Error('Impossible de rejoindre la partie.');
+    garderJeton(r.code || code, r.jeton);
+    return r.code || code;
+  },
+  oublierInvite: (code) => oublierJeton(code),
+  quitter: deux((code) => rpc('hg_lg_quitter', { p_code: code }), async (code) => { await rpcInvite('quitter', code); oublierJeton(code); }),
+  pret: deux((code, pret) => rpc('hg_lg_pret', { p_code: code, p_pret: pret }), (code, pret) => rpcInvite('pret', code, { pret })),
   exclure: (code, user) => rpc('hg_lg_exclure', { p_code: code, p_user: user }),
   lancer: (code) => rpc('hg_lg_lancer', { p_code: code }),
-  vu: (code) => rpc('hg_lg_vu', { p_code: code }),
+  vu: deux((code) => rpc('hg_lg_vu', { p_code: code }), (code) => rpcInvite('vu', code)),
   /** Action de nuit ou réaction : type = devorer, sonder, proteger, sorciere, cupidon, voleur, chasseur, succession, passer... */
-  agir: (code, type, { cible = null, cible2 = null, choix = null } = {}) =>
+  agir: deux((code, type, { cible = null, cible2 = null, choix = null } = {}) =>
     rpc('hg_lg_agir', { p_code: code, p_type: type, p_cible: cible, p_cible2: cible2, p_choix: choix }),
-  voter: (code, cible) => rpc('hg_lg_voter', { p_code: code, p_cible: cible }),
-  message: (code, canal, texte) => rpc('hg_lg_message', { p_code: code, p_canal: canal, p_texte: texte }),
-  avancer: (code, forcer = false) => rpc('hg_lg_avancer', { p_code: code, p_forcer: forcer }),
-  etat: (code) => rpc('hg_lg_etat', { p_code: code }),
+  (code, type, { cible = null, cible2 = null, choix = null } = {}) => rpcInvite('agir', code, { type, cible, cible2, choix })),
+  voter: deux((code, cible) => rpc('hg_lg_voter', { p_code: code, p_cible: cible }), (code, cible) => rpcInvite('voter', code, { cible })),
+  message: deux((code, canal, texte) => rpc('hg_lg_message', { p_code: code, p_canal: canal, p_texte: texte }),
+    (code, canal, texte) => rpcInvite('message', code, { canal, texte })),
+  avancer: deux((code, forcer = false) => rpc('hg_lg_avancer', { p_code: code, p_forcer: forcer }), (code) => rpcInvite('avancer', code)),
+  etat: deux((code) => rpc('hg_lg_etat', { p_code: code }), (code) => rpcInvite('etat', code)),
   /** Meneur : action = eliminer, ressusciter, message, pause, reprendre, plus, arreter. */
   mj: (code, action, { cible = null, texte = null, secondes = 30 } = {}) =>
     rpc('hg_lg_mj', { p_code: code, p_action: action, p_cible: cible, p_texte: texte, p_secondes: secondes }),
@@ -49,7 +82,11 @@ export const lg = {
 };
 
 /** Messages d'un salon (lecture directe : la base ne renvoie que ce que le joueur a le droit de lire). */
-export async function messages(partieId, canal, depuisId = 0) {
+export async function messages(partieId, canal, depuisId = 0, code = null) {
+  if (invite) {
+    const tous = await rpcInvite('messages', code);
+    return (tous || []).filter((m) => m.canal === canal && m.id > depuisId).sort((a, b) => a.id - b.id);
+  }
   const { data, error } = await sb.from('hg_lg_messages').select('id, canal, user_id, texte, created_at')
     .eq('partie', partieId).eq('canal', canal).gt('id', depuisId).order('id', { ascending: true }).limit(200);
   if (error) throw new Error(erreurTexte(error));
@@ -96,7 +133,7 @@ export function suivrePartie(code, { onEtat, onMessage, onErreur } = {}) {
 
   const abonner = (e) => {
     const id = e?.partie?.id;
-    if (!id || canal) return;
+    if (!id || canal || invite) return;   // invité : pas de temps réel, la relecture suffit
     try {
       canal = sb.channel(`lg:${id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'hg_lg_parties', filter: `id=eq.${id}` }, () => rafraichir())

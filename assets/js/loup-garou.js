@@ -4,18 +4,23 @@
  * puis affiche l'écran demandé par l'adresse :
  *   (vide) accueil · #roles catalogue · #creer création · #rejoindre/CODE rejoindre · #partie/CODE partie · #stats statistiques.
  *   loup-garou.html?code=HGLG-1234 (lien d'invitation) mène à #rejoindre/HGLG-1234.
+ * Visiteur sans compte (lien d'invitation) : mode invité (migration 120), seuls #rejoindre et #partie sont ouverts.
  * Chaque écran est un module de assets/js/loup-garou/vues/ qui exporte afficher(root, ctx) et peut renvoyer une
  * fonction de nettoyage. La partie elle-même est pilotée par loup-garou/partie.js.
  * Dépendances : core.js (initPage, $), loup-garou/*.
  * Exporte : rien.
  */
 import { initPage, $, motionAllowed, loadMyPages, pageLabel } from './core.js';
+import { activerInvite } from './loup-garou/api.js';
 
-const moi = await initPage();
-// Garde-fou : tant que la page n'est pas déclarée dans hg_pages (migrations pas encore appliquées), seul l'admin entre.
-// Une fois déclarée (mode « admin »), initPage applique déjà la règle d'accès normale.
-await loadMyPages();
-if (!pageLabel('loup-garou') && !moi?.is_admin) {
+const moi = await initPage({ auth: 'optional' });
+// Visiteur sans compte : il joue en invité (lien d'invitation) ; le reste du jeu lui est fermé.
+const INVITE = !moi;
+activerInvite(INVITE);
+// Garde-fou membre : tant que la page n'est pas déclarée dans hg_pages (migrations pas encore appliquées), seul l'admin entre.
+// Une fois déclarée, initPage applique la règle d'accès normale (et renvoie à l'accueil un membre sans accès).
+if (!INVITE) await loadMyPages();
+if (!INVITE && !pageLabel('loup-garou') && !moi?.is_admin) {
   location.replace('jeux.html');
   await new Promise(() => {});
 }
@@ -55,6 +60,14 @@ async function afficher() {
   try { nettoyer?.(); } catch { /* sans effet */ }
   nettoyer = null;
   const r = route();
+  if (INVITE && !(['rejoindre', 'partie'].includes(r.nom) && r.arg)) {
+    // Invité sans lien de partie : rien à afficher ici
+    app.innerHTML = `<section class="card lg-erreur"><h1 class="display">Loup-Garou</h1>
+      <p>Le Loup-Garou se joue sur invitation. Ouvre le lien de partie qu'on t'a envoyé, ou connecte-toi si tu es membre du gang.</p>
+      <p><a class="btn btn-primary" href="compte.html?next=${encodeURIComponent('loup-garou.html')}">Me connecter</a></p></section>`;
+    app.setAttribute('aria-busy', 'false');
+    return;
+  }
   const charger = ECRANS[r.nom] || ECRANS.accueil;
   app.setAttribute('aria-busy', 'true');
   try {
