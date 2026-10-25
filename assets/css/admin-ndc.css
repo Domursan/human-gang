@@ -1,0 +1,95 @@
+/* ===== Humane Gang — administration : Nom de code (La Fête foraine › Jeux › Nom de code) =====
+   Styles de assets/js/admin-ndc.js. Préfixe ndc-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+
+.ndc { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ndc-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ndc-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.ndc-sous-titre { margin: 0; font-size: 15px; font-weight: 700; }
+.ndc-colonnes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.ndc-note { margin: 0; font-size: 14px; color: var(--muted); }
+.ndc-aide { font-size: 13px; color: var(--muted); }
+.ndc-card > .btn { align-self: flex-start; }
+.ndc-entete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+
+/* Paillettes */
+.ndc-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.ndc-table th, .ndc-table td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.ndc-table thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
+.ndc-table tbody th { font-weight: 400; }
+.ndc-table td { width: 140px; }
+.ndc-input {
+  min-height: 44px; box-sizing: border-box; width: 100%; padding: 0 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font: inherit; font-size: 15px;
+}
+.ndc-input-num { font-weight: 700; }
+.ndc-input[aria-invalid="true"] { border-color: var(--rose); }
+.ndc-table .ndc-input { max-width: 120px; }
+.ndc-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.ndc-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ndc-champ label { font-size: 14px; color: var(--muted); }
+.ndc-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.ndc-statut { font-size: 14px; color: var(--muted); }
+.ndc-statut.ndc-ok { color: var(--sage); }
+.ndc-statut.ndc-erreur { color: var(--rose); }
+
+/* Badges */
+.ndc-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ndc-badge { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.ndc-medaille {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--sand); color: #121212; display: grid; place-items: center;
+}
+.ndc-badge-texte { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.ndc-badge-texte strong { font-size: 15px; font-weight: 700; }
+.ndc-switch { flex: none; }
+
+/* Paquets de mots */
+.ndc-paquets { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ndc-paquet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ndc-paquet-bouton {
+  min-height: 44px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; text-align: left;
+}
+.ndc-paquet-bouton[aria-pressed="true"] { background: var(--sand); color: #121212; border-color: var(--sand); }
+.ndc-paquet-bouton[aria-pressed="true"] .muted { color: #121212; }
+.ndc-alerte { color: var(--rose); font-weight: 600; }
+.ndc-paquet-nouveau { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.ndc-ligne { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ndc-ligne .ndc-input { flex: 1 1 200px; width: auto; }
+.ndc-editeur { display: flex; flex-direction: column; gap: 14px; padding-top: 16px; border-top: 1px solid var(--border); }
+.ndc-compte { margin: 0; color: var(--text); }
+.ndc-texte { min-height: 110px; padding: 10px 12px; resize: vertical; }
+
+/* Liste des mots du paquet */
+.ndc-mots {
+  list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; min-width: 0;
+  border-top: 1px solid var(--border);
+}
+.ndc-mot { display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.ndc-mot-nom { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 44px; cursor: pointer; overflow-wrap: anywhere; }
+.ndc-mot-nom input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--sand); }
+.ndc-mot-retire .ndc-mot-nom { color: var(--muted); cursor: default; }
+.ndc-mot-retire .ndc-mot-nom span { text-decoration: line-through; }
+.ndc-mot-action { min-height: 44px; flex: none; }
+
+/* Parties en cours */
+.ndc-scroll { overflow-x: auto; min-width: 0; }
+.ndc-parties { min-width: 760px; }
+.ndc-parties td { width: auto; padding: 12px 12px 12px 0; }
+.ndc-parties th { padding-right: 12px; }
+.ndc-code { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.ndc-action { text-align: right; }
+.ndc-arreter { min-height: 44px; border-color: var(--rose); color: var(--rose); }
+
+@media (min-width: 900px) {
+  .ndc-colonnes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .ndc-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .ndc-table td { width: 110px; }
+  .ndc-table .ndc-input { max-width: none; }
+  .ndc-actions .btn, .ndc-ligne .btn { width: 100%; }
+  .ndc-card > .btn { align-self: stretch; }
+  .ndc-paquet-bouton { width: 100%; }
+}
