@@ -139,7 +139,6 @@
   .lg-pl-journal { grid-column: 2; grid-row: 3; order: 0; }
   .lg-pl-bandeau { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px 24px; }
   .lg-pl-bandeau .lg-pl-barre { grid-column: 1 / -1; }
-  .lg-pl-table { position: sticky; top: 16px; }
 }
 
 /* ---------- Petits écrans : titres et lignes resserrés ---------- */
@@ -154,3 +153,9 @@
 @media (prefers-reduced-motion: reduce) {
   .lg-pl-barre > span { transition: none; }
 }
+
+/* ---------- Mort qui observe : bords ensanglantés en permanence (ne capte aucun clic) ---------- */
+.lg-sang-fond { position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(90, 8, 12, .45) 85%, rgba(60, 4, 8, .75) 100%); }
+.lg-sang-fond .lg-sang-coulures { height: 90px; opacity: .85; }
+body.lg-spectateur .lg-pl-bandeau { border-color: #8A1A20; }

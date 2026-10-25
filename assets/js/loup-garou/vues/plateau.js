@@ -262,6 +262,7 @@ export function monter(root, s) {
     const sig = JSON.stringify(canauxPour(e));
     if (sig !== st.sigChat) { st.sigChat = sig; chat.maj(e); }
     verifierSang(e);
+    fondSang(e);
     tick();
   }
 
@@ -351,6 +352,23 @@ export function monter(root, s) {
 
   /* ---------- Écran ensanglanté (une seule fois par partie et joueur) ---------- */
 
+  /* Effet ensanglanté permanent tant que le joueur est mort et observe la partie (ne bloque aucun clic). */
+  let fondEl = null;
+  function fondSang(e) {
+    const mort = e?.moi?.joueur && e.moi.vivant === false && e.partie?.statut !== 'terminee';
+    if (mort && !fondEl) {
+      fondEl = document.createElement('div');
+      fondEl.className = 'lg-sang-fond';
+      fondEl.setAttribute('aria-hidden', 'true');
+      fondEl.innerHTML = coulures();
+      document.body.appendChild(fondEl);
+      document.body.classList.add('lg-spectateur');
+    } else if (!mort && fondEl) {
+      fondEl.remove(); fondEl = null;
+      document.body.classList.remove('lg-spectateur');
+    }
+  }
+
   function verifierSang(e) {
     const m = e.moi;
     if (m.vivant !== false || st.sangVu) return;
@@ -417,6 +435,8 @@ export function monter(root, s) {
     detruire() {
       clearInterval(timer);
       fermerSang(false);
+      if (fondEl) { fondEl.remove(); fondEl = null; }
+      document.body.classList.remove('lg-spectateur');
       chat.detruire();
       delete document.body.dataset.lgAmbiance;
       root.innerHTML = '';
