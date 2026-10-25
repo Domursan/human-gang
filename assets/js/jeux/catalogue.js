@@ -29,23 +29,23 @@ const IMG = 'assets/img/jeux/';
 /** Cartes, dans l'ordre d'affichage de chaque section. */
 export const CARTES = [
   // Jeux flash : les onglets actuels de jeux.html
-  { id: 'geo', titre: 'GeoGuessr', texte: 'Devine où la photo a été prise.', section: 'flash', href: '#geo', onglet: 'geo', couleur: 'var(--sage)',
+  { id: 'geo', image: `${IMG}geo.webp`, titre: 'GeoGuessr', texte: 'Devine où la photo a été prise.', section: 'flash', href: '#geo', onglet: 'geo', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/>' },
-  { id: 'citations', titre: 'Qui a dit ça ?', texte: 'Retrouve l’auteur de la citation.', section: 'flash', href: '#citations', onglet: 'citations', couleur: 'var(--slate)',
+  { id: 'citations', image: `${IMG}citations.webp`, titre: 'Qui a dit ça ?', texte: 'Retrouve l’auteur de la citation.', section: 'flash', href: '#citations', onglet: 'citations', couleur: 'var(--slate)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
-  { id: 'jour', titre: 'Question du jour', texte: 'Une question, une réponse par jour.', section: 'flash', href: '#jour', onglet: 'jour', couleur: 'var(--sand)',
+  { id: 'jour', image: `${IMG}jour.webp`, titre: 'Question du jour', texte: 'Une question, une réponse par jour.', section: 'flash', href: '#jour', onglet: 'jour', couleur: 'var(--sand)',
     icone: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>' },
-  { id: 'sutom', titre: 'Sutom HG', texte: 'Trouve le mot caché, lettre par lettre.', section: 'flash', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
+  { id: 'sutom', image: `${IMG}sutom.webp`, titre: 'Sutom HG', texte: 'Trouve le mot caché, lettre par lettre.', section: 'flash', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
     icone: '<rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/>' },
-  { id: 'framed', titre: 'Framed', texte: 'Devine le film à partir d’une image.', section: 'flash', href: '#framed', onglet: 'framed', couleur: 'var(--plum)',
+  { id: 'framed', image: `${IMG}framed.webp`, titre: 'Framed', texte: 'Devine le film à partir d’une image.', section: 'flash', href: '#framed', onglet: 'framed', couleur: 'var(--plum)',
     icone: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>' },
-  { id: 'heardle', titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'flash', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
+  { id: 'heardle', image: `${IMG}heardle.webp`, titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'flash', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
     icone: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
-  { id: 'arcade-paillettes', titre: 'Paillettes', texte: 'Attrape les Paillettes, évite le reste.', section: 'flash', href: '#arcade-paillettes', couleur: 'var(--sand)',
+  { id: 'arcade-paillettes', image: `${IMG}arcade-paillettes.webp`, titre: 'Paillettes', texte: 'Attrape les Paillettes, évite le reste.', section: 'flash', href: '#arcade-paillettes', couleur: 'var(--sand)',
     icone: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>' },
-  { id: 'arcade-raclette', titre: 'Raclette', texte: 'Un jeu d’arcade qui sent bon le fromage.', section: 'flash', href: '#arcade-raclette', couleur: 'var(--amber)',
+  { id: 'arcade-raclette', image: `${IMG}arcade-raclette.webp`, titre: 'Raclette', texte: 'Un jeu d’arcade qui sent bon le fromage.', section: 'flash', href: '#arcade-raclette', couleur: 'var(--amber)',
     icone: '<path d="M3 15l9-8 9 8z"/><path d="M7 15v3h10v-3"/><path d="M10 12h.01M14 13h.01"/>' },
-  { id: 'arcade-domu', titre: 'Domu-mobile', texte: 'Conduis, esquive, arrive en premier.', section: 'flash', href: '#arcade-domu', couleur: 'var(--rust)',
+  { id: 'arcade-domu', image: `${IMG}arcade-domu.webp`, titre: 'Domu-mobile', texte: 'Conduis, esquive, arrive en premier.', section: 'flash', href: '#arcade-domu', couleur: 'var(--rust)',
     icone: '<path d="M3 15l2-5h11l3 5"/><path d="M3 15h18v2H3z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>' },
 
   // Jeux multijoueurs : en préparation (admins seulement tant qu'ils ne sont pas ouverts)
@@ -57,8 +57,8 @@ export const CARTES = [
   { id: 'nom-de-code', titre: 'Nom de code', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', bientot: true, image: `${IMG}nom-de-code.webp` },
 
   // Jeux spéciaux : pages à part, visibles selon l'accès de la page
-  { id: 'loup-garou', titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: 'loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',
+  { id: 'loup-garou', image: `${IMG}loup-garou.webp`, titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: 'loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',
     icone: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>' },
-  { id: 'uno', titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: 'uno.html', page: 'uno', couleur: 'var(--rose)',
+  { id: 'uno', image: `${IMG}uno.webp`, titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: 'uno.html', page: 'uno', couleur: 'var(--rose)',
     icone: '<rect x="4" y="5" width="10" height="15" rx="2" transform="rotate(-10 9 12)"/><rect x="10" y="4" width="10" height="15" rx="2" transform="rotate(8 15 11)"/>' },
 ];
