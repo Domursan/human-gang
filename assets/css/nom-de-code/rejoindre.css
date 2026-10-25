@@ -1,0 +1,58 @@
+/* ===== Humane Gang — Nom de code : rejoindre une partie (vues/rejoindre.js) =====
+   Une carte centrée (480 px au plus), pleine largeur sur téléphone. Le fond d'équipe n'apparaît pas ici :
+   les réglages sont des étiquettes en texte, la barre des joueurs a son chiffre à côté. */
+
+.ndc-rej-carte { width: min(100%, 480px); margin: 24px auto 0; display: flex; flex-direction: column; gap: 18px;
+  padding: 26px 28px; box-sizing: border-box; min-width: 0; border-top: 3px solid var(--ndc-rose); }
+.ndc-rej-titre { margin: 0; }
+.ndc-rej-statut { margin: 0; color: var(--muted); }
+.ndc-rej-erreur { margin: 0; padding: 10px 12px; border-radius: 10px; background: #3A1518; color: #FFB4B8; font-size: 15px; }
+.ndc-rej-retour { min-height: 44px; }
+.ndc-rej-aide { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ndc-rej-centre { text-align: center; }
+
+.ndc-rej-surtitre { margin: 0; font-family: 'Oswald', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ndc-rose-clair); }
+.ndc-rej-entete { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ndc-rej-nom { margin: 0; font-family: 'Oswald', 'Archivo Black', sans-serif; font-weight: 700; text-transform: uppercase;
+  font-size: 34px; line-height: 1.05; letter-spacing: .4px; overflow-wrap: anywhere; }
+.ndc-rej-hote { margin: 0; font-size: 15px; color: var(--muted); }
+.ndc-rej-hote-nom { color: var(--text); }
+
+/* Joueurs : texte + chiffre, la barre n'est que la représentation */
+.ndc-rej-places { display: flex; flex-direction: column; gap: 8px; }
+.ndc-rej-places-ligne { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
+.ndc-rej-places-val { color: var(--text); font-weight: 700; }
+.ndc-rej-barre { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.ndc-rej-barre > span { display: block; height: 100%; background: var(--ndc-jaune); }
+
+/* Réglages en étiquettes */
+.ndc-rej-reglages { display: flex; flex-direction: column; gap: 8px; }
+.ndc-rej-label { font-size: 14px; color: var(--muted); }
+.ndc-rej-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.ndc-rej-chips li { padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong);
+  font-size: 14px; }
+
+/* Formulaire */
+.ndc-rej-form { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.ndc-rej-champ { display: flex; flex-direction: column; gap: 8px; }
+.ndc-rej-champ > label { font-size: 14px; font-weight: 700; }
+.ndc-rej-input { width: 100%; min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: 400 16px 'Inter', system-ui, sans-serif; }
+.ndc-rej-input:focus-visible { outline: 3px solid var(--ndc-jaune); outline-offset: 2px; border-color: var(--ndc-jaune); }
+.ndc-rej-form .ndc-rej-erreur { font-size: 14px; }
+.ndc-rej-bouton { width: 100%; min-height: 52px; font-size: 16px; font-weight: 700; margin-top: 4px;
+  background: var(--ndc-jaune); color: #2A1C00; border: 1px solid var(--ndc-jaune); }
+.ndc-rej-bouton:hover { background: var(--ndc-jaune-clair); border-color: var(--ndc-jaune-clair); color: #2A1C00; }
+.ndc-rej-bouton:focus-visible { outline: 3px solid var(--ndc-rose-clair); outline-offset: 3px; }
+.ndc-rej-bouton:disabled { opacity: .6; cursor: progress; }
+
+.ndc-rej-lien { display: flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;
+  font-size: 15px; font-weight: 700; text-decoration: none; color: var(--ndc-jaune-clair); }
+.ndc-rej-lien:hover { color: var(--ndc-jaune); text-decoration: underline; }
+.ndc-rej-lien:focus-visible, .ndc-rej-retour:focus-visible { outline: 3px solid var(--ndc-jaune); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .ndc-rej-carte { margin-top: 16px; padding: 22px 20px; }
+  .ndc-rej-nom { font-size: 28px; }
+}

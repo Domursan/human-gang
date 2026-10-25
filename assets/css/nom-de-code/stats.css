@@ -1,0 +1,63 @@
+/* ===== Humane Gang — Nom de code : mes statistiques (vues/stats.js) =====
+   Tuiles (4 puis 3 par ligne), meilleur indice et badges côte à côte (une colonne sous 760 px).
+   Teintes jaune et rose en fond léger : chaque tuile porte son libellé, la couleur ne fait que renforcer. */
+
+.ndc-st { display: flex; flex-direction: column; gap: 20px; padding-top: 4px; padding-bottom: 16px; min-width: 0; }
+.ndc-st .ndc-fil { margin: 16px 0 0; }
+.ndc-st-aide { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.ndc-st-sous { margin: 0; font-size: 13px; color: var(--muted); }
+.ndc-st .ndc-st-titre { margin: 0; font-family: 'Oswald', 'Archivo Black', sans-serif; font-size: 20px; font-weight: 600;
+  letter-spacing: .6px; text-transform: uppercase; line-height: 1.2; }
+
+/* ---------- Tuiles ---------- */
+.ndc-st-grille { display: grid; gap: 16px; }
+.ndc-st-grille-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ndc-st-grille-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ndc-st-tuile { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ndc-st-tuile.jaune { background: color-mix(in srgb, var(--ndc-jaune) 12%, var(--surface)); border-color: color-mix(in srgb, var(--ndc-jaune) 40%, transparent); }
+.ndc-st-tuile.rose { background: color-mix(in srgb, var(--ndc-rose) 12%, var(--surface)); border-color: color-mix(in srgb, var(--ndc-rose) 40%, transparent); }
+.ndc-st-tuile.jaune .ndc-st-chiffre { color: var(--ndc-jaune); }
+.ndc-st-tuile.rose .ndc-st-chiffre { color: var(--ndc-rose-clair); }
+.ndc-st-chiffre { font-family: 'Oswald', sans-serif; font-size: 40px; font-weight: 600; line-height: 1.1; overflow-wrap: anywhere; }
+.ndc-st-tuile-nom { font-size: 14px; color: var(--muted); }
+
+/* ---------- Sections côte à côte ---------- */
+.ndc-st-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ndc-st .ndc-st-section { display: flex; flex-direction: column; gap: 16px; padding: 24px 28px; box-sizing: border-box; min-width: 0; }
+
+/* Meilleur indice : « Plage 3 → 4 mots » en grand */
+.ndc-st-indice { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+.ndc-st-mot { font-family: 'Oswald', sans-serif; font-size: 40px; font-weight: 700; line-height: 1; text-transform: uppercase;
+  letter-spacing: .5px; color: var(--ndc-rose-clair); overflow-wrap: anywhere; }
+.ndc-st-nb { font-family: 'Oswald', sans-serif; font-size: 40px; font-weight: 600; line-height: 1; color: var(--ndc-jaune); }
+.ndc-st-fleche { font-size: 28px; color: var(--muted); }
+.ndc-st-trouves { font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 600; line-height: 1.2; }
+
+/* ---------- Badges ---------- */
+.ndc-st-liste-badges { list-style: none; margin: 0; padding: 0; }
+.ndc-st-badge { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.ndc-st-badge:last-child { border-bottom: 0; }
+.ndc-st-medaille { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border-strong);
+  background: var(--surface-2); color: var(--muted); display: grid; place-items: center; }
+.ndc-st-badge.obtenu .ndc-st-medaille { border-color: var(--ndc-jaune); color: #2A1C00;
+  background: radial-gradient(circle at 50% 40%, var(--ndc-jaune-clair) 0, var(--ndc-jaune) 80%); }
+.ndc-st-badge-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ndc-st-badge-texte strong { font-size: 15px; font-weight: 700; }
+.ndc-st-badge:not(.obtenu) .ndc-st-badge-texte strong { color: #9A9A9F; }
+.ndc-st-badge .ndc-st-sous, .ndc-st-badge .ndc-st-statut { font-size: 13px; color: var(--muted); }
+.ndc-st-badge.obtenu .ndc-st-statut { color: var(--ndc-jaune-clair); }
+
+/* ---------- Téléphone et tablette ---------- */
+@media (max-width: 760px) {
+  .ndc-st { gap: 16px; }
+  .ndc-st-grille { gap: 10px; }
+  .ndc-st-grille-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ndc-st-grille-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ndc-st-grille-3 > :last-child { grid-column: 1 / -1; }
+  .ndc-st-tuile { padding: 14px 16px; }
+  .ndc-st-chiffre { font-size: 32px; }
+  .ndc-st-duo { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ndc-st .ndc-st-section { padding: 20px; }
+  .ndc-st-mot, .ndc-st-nb { font-size: 32px; }
+}

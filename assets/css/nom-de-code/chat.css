@@ -1,0 +1,43 @@
+/* ===== Humane Gang — Nom de code : chat à onglets (vues/chat.js) =====
+   Onglets « Général » et « Équipe », pastille de non-lus, saisie en bas (ou phrase de lecture seule).
+   Les styles sont posés sur .ndc-chat, qui prend la largeur de son conteneur.
+   Cibles tactiles 44 px. Le fil est borné en hauteur et défile. */
+
+.ndc-chat { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; box-sizing: border-box; padding: 18px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); }
+.ndc-chat [hidden] { display: none !important; }
+
+/* ----- Onglets ----- */
+.ndc-chat-onglets { display: flex; flex-wrap: wrap; gap: 8px; }
+.ndc-chat-onglet { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: inherit; font-size: 15px; font-weight: 500;
+  cursor: pointer; }
+@media (hover: hover) { .ndc-chat-onglet:hover { background: var(--surface-2); } }
+.ndc-chat-onglet.is-actif { background: var(--surface-2); color: var(--sand); border-color: var(--sand); font-weight: 700; }
+.ndc-chat-onglet.is-jaune::before, .ndc-chat-onglet.is-rose::before { content: ''; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.ndc-chat-onglet.is-jaune::before { background: var(--ndc-jaune); }
+.ndc-chat-onglet.is-rose::before { background: var(--ndc-rose); }
+
+/* Pastille de non-lus (le nombre est aussi annoncé dans le nom de l'onglet) */
+.ndc-chat-pastille { min-width: 22px; height: 22px; box-sizing: border-box; padding: 0 6px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-text); font-size: 12px; font-weight: 700; line-height: 1; display: grid; place-items: center; }
+
+/* ----- Panneau et fils ----- */
+.ndc-chat-panneau { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.ndc-chat-fil { display: flex; flex-direction: column; gap: 12px; min-height: 120px; max-height: min(44vh, 380px); overflow-y: auto;
+  padding-right: 4px; overscroll-behavior: contain; }
+.ndc-chat-msg { margin: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.ndc-chat-auteur { font-weight: 700; margin-right: 4px; }
+.ndc-chat-msg.is-moi { padding-left: 8px; border-left: 2px solid var(--border-strong); }
+.ndc-chat-vide { margin: 0; font-size: 14px; color: var(--muted); }
+.ndc-chat-lecture { margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--border-strong);
+  color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+/* ----- Saisie ----- */
+.ndc-chat-form { display: flex; gap: 8px; margin: 0; }
+.ndc-chat-champ { flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 16px; }
+.ndc-chat-champ::placeholder { color: var(--muted); }
+.ndc-chat-champ:disabled { opacity: .6; }
+.ndc-chat-envoyer { min-width: 44px; min-height: 44px; padding: 0 14px; }
+.ndc-chat-envoyer:disabled { opacity: .5; cursor: not-allowed; }

@@ -159,7 +159,7 @@ async function rejoindreInvite(root, code, naviguer) {
   if (!p) return montrerErreur(root, "Partie introuvable. Demande un nouveau lien à l'hôte.");
   if (p.statut !== 'attente') return montrerErreur(root, 'La partie a déjà commencé. Tu ne peux plus la rejoindre.');
   if (!p.invites) {
-    return montrerErreur(root, "Cette partie n'accepte pas les invités. Connecte-toi pour la rejoindre.", { extra: `<p>${lienCompte(code)}</p>` });
+    return montrerErreur(root, "Cette partie n'accepte pas les invités. Connecte-toi pour la rejoindre.", `<p>${lienCompte(code)}</p>`);
   }
 
   root.innerHTML = vuePartie(p, code, true);
