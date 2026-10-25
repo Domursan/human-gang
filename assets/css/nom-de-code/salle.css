@@ -1,0 +1,136 @@
+/* ===== Humane Gang — Nom de code : salle d'attente (vues/salle.js) =====
+   Fidèle à la maquette NDCSalle. Grille : téléphone (une colonne : panneau, Jaune, Rose, chat) ;
+   tablette (760 à 959 px) : panneau sur toute la largeur, Jaune et Rose côte à côte, chat dessous ;
+   ordinateur (960 px et plus) : Jaune à gauche, panneau au centre, Rose à droite, chat dessous.
+   Les colonnes d'équipe prennent la couleur de l'équipe ; l'information passe aussi par le texte (« Jaune », « Espion »).
+   Cibles tactiles 44 px. Les classes de base (.card, .btn, .pill, .visually-hidden) sont dans base.css. */
+
+.ndc-salle { display: flex; flex-direction: column; gap: 18px; padding-bottom: 8px; color: var(--text); }
+.ndc-salle [hidden] { display: none !important; }
+.ndc-salle .ndc-titre { margin: 0; }
+
+/* ----- Grille ----- */
+.ndc-salle-corps { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); align-items: start;
+  grid-template-areas: "centre" "jaune" "rose" "chat"; }
+@media (min-width: 760px) and (max-width: 959px) {
+  .ndc-salle-corps { grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "centre centre" "jaune rose" "chat chat"; }
+}
+@media (min-width: 960px) {
+  .ndc-salle-corps { grid-template-columns: 240px minmax(0, 1fr) 240px;
+    grid-template-areas: "jaune centre rose" "chat chat chat"; }
+}
+.ndc-salle-centre { grid-area: centre; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.ndc-salle-equipe.is-jaune { grid-area: jaune; }
+.ndc-salle-equipe.is-rose { grid-area: rose; }
+.ndc-salle-chat { grid-area: chat; min-width: 0; }
+
+/* ----- Panneau central ----- */
+.ndc-salle-panneau { display: flex; flex-direction: column; gap: 18px; padding: 26px 28px; box-sizing: border-box; min-width: 0;
+  border-radius: 20px; border: 1px solid var(--border); background: var(--surface); }
+.ndc-salle-entete { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.ndc-salle-titre { font-size: clamp(32px, 5vw, 44px); }
+.ndc-salle-sous { margin: 0; font-size: 16px; color: var(--muted); }
+
+.ndc-salle-codeligne { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; }
+.ndc-salle-codebloc { display: flex; align-items: center; gap: 12px; min-height: 56px; box-sizing: border-box; padding: 0 18px;
+  border-radius: 14px; border: 1px solid var(--border-strong); background: var(--bg); min-width: 0; max-width: 100%; }
+.ndc-salle-etiq { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.ndc-salle .ndc-salle-codeaff { font-size: 26px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; overflow-x: auto; }
+.ndc-salle-codeligne .btn { min-height: 56px; padding: 0 22px; }
+
+.ndc-lien { display: flex; flex-direction: column; gap: 6px; }
+.ndc-champ-lien { width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 15px; }
+
+/* Réglages (rappel) */
+.ndc-reglages { margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.ndc-reglages > div { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 14px;
+  background: var(--surface-2); min-width: 0; }
+.ndc-reglages dt { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+.ndc-reglages dd { margin: 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .ndc-reglages { grid-template-columns: minmax(0, 1fr); } }
+
+.ndc-salle-bilan { margin: 0; text-align: center; font-size: 15px; color: var(--muted); }
+
+/* Mes actions */
+.ndc-salle-actions { display: flex; flex-direction: column; gap: 12px; padding: 16px; box-sizing: border-box; min-width: 0;
+  border-radius: 16px; border: 1px solid var(--border); background: var(--surface-2); }
+.ndc-salle-sous-titre { margin: 0; font-family: var(--font-display, 'Oswald', sans-serif); font-weight: 700; font-size: 18px;
+  letter-spacing: 1px; text-transform: uppercase; }
+.ndc-actions-groupe { display: flex; flex-direction: column; gap: 8px; }
+.ndc-actions-liste { display: flex; flex-wrap: wrap; gap: 10px; }
+.ndc-actions-liste .btn { min-height: 44px; }
+.ndc-actions-fin { padding-top: 6px; border-top: 1px solid var(--border); }
+.ndc-salle-note { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* Lancement (hôte) */
+.ndc-lancement { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: auto; }
+.ndc-lancer { min-height: 72px; width: 100%; box-sizing: border-box; padding: 0 20px; border: 0; border-radius: 999px;
+  background: #3BB54A; color: #0E0E10; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 30px;
+  letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+.ndc-lancer:disabled { opacity: .45; cursor: not-allowed; }
+.ndc-raison { margin: 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--rose); }
+.ndc-raison:empty { display: none; }
+.ndc-equilibrer { align-self: center; min-height: 44px; }
+.ndc-attente-hote { margin: 0; text-align: center; font-size: 15px; color: var(--muted); }
+
+/* ----- Sans équipe ----- */
+.ndc-salle-sans { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; box-sizing: border-box; min-width: 0;
+  border-radius: 20px; border: 1px solid var(--border); background: var(--surface); }
+.ndc-sans-titre { margin: 0; font-family: var(--font-display, 'Oswald', sans-serif); font-weight: 700; font-size: 20px;
+  letter-spacing: 1px; text-transform: uppercase; }
+.ndc-sans-note { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* ----- Colonnes d'équipe ----- */
+.ndc-salle-equipe { display: flex; flex-direction: column; gap: 12px; padding: 14px; box-sizing: border-box; min-width: 0;
+  border-radius: 16px; border: 1px solid var(--border); background: var(--surface); }
+.ndc-salle-equipe.is-jaune { background: linear-gradient(180deg, var(--ndc-jaune) 0%, var(--ndc-jaune-fonce) 100%);
+  border-color: transparent; color: #2A1C00; }
+.ndc-salle-equipe.is-rose { background: linear-gradient(180deg, var(--ndc-rose) 0%, var(--ndc-rose-fonce) 100%);
+  border-color: transparent; color: #FFFFFF; }
+.ndc-eq-tete { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; }
+.ndc-eq-titre { margin: 0; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: 1px;
+  text-transform: uppercase; color: inherit; }
+.ndc-eq-compte { font-size: 13px; font-weight: 700; color: inherit; }
+.ndc-vide { margin: 0; font-size: 14px; }
+
+/* ----- Listes de joueurs ----- */
+.ndc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ndc-joueur { position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; min-height: 56px;
+  box-sizing: border-box; padding: 6px 8px 6px 6px; border-radius: 14px; background: rgba(14, 14, 16, .55); color: #F2EFEA; }
+.ndc-joueur.is-moi { box-shadow: inset 3px 0 0 var(--sand); }
+.ndc-joueur .avatar { flex: none; border-radius: 50%; }
+.ndc-joueur-infos { flex: 1 1 120px; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ndc-pseudo { font-weight: 700; overflow-wrap: anywhere; }
+.ndc-joueur .ndc-statut { flex: none; }
+.ndc-tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid #3A3A40; font-size: 11px; color: #ABA7A0; }
+.ndc-insigne { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 0 8px; border-radius: 999px;
+  background: #0E0E10; border: 1px solid #3A3A40; color: #E2C77E; font-size: 12px; font-weight: 700; }
+.ndc-icone { flex: none; }
+
+/* Menu de l'hôte (ouvre vers le bas, par-dessus la liste) */
+.ndc-menu { position: relative; flex: none; }
+.ndc-menu-ouvrir { list-style: none; min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px;
+  border: 1px solid #3A3A40; background: transparent; color: #F2EFEA; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ndc-menu-ouvrir::-webkit-details-marker { display: none; }
+.ndc-menu[open] > .ndc-menu-ouvrir { background: #1F1F23; }
+.ndc-menu-liste { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 220px; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 14px; background: #17171A; border: 1px solid #3A3A40;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .45); }
+.ndc-menu-bouton { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: #F2EFEA;
+  font: inherit; font-size: 15px; text-align: left; white-space: nowrap; cursor: pointer; }
+@media (hover: hover) { .ndc-menu-bouton:hover { background: #2A2A2F; } }
+.ndc-menu-bouton:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ----- Adieu (invité qui a quitté) ----- */
+.ndc-salle-adieu { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin: 24px auto; }
+.ndc-salle-adieu h2 { margin: 0; font-size: 22px; }
+
+/* ----- Téléphone : titres et cibles ----- */
+@media (max-width: 559px) {
+  .ndc-salle-panneau { padding: 20px 18px; }
+  .ndc-lancer { font-size: 26px; }
+  .ndc-joueur { padding-right: 6px; }
+}
