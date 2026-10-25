@@ -108,6 +108,10 @@
       "title": "Une partie de Uno se prépare !",
       "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
     },
+    "ndc_party_announce": {
+      "title": "Une partie de Nom de code se prépare !",
+      "body": "**{hote}** lance « {nom} » : {places}. Deux équipes, deux espions, 25 mots.\n\nCode : **{code}**. Rejoins la salle : {lien}"
+    },
     "duel_defi_dm": {
       "title": "{pseudo} te défie !",
       "body": "**{pseudo}** te défie au **{jeu}** ({format}).\n\nLe défi expire dans 10 minutes. Accepte-le ici : {lien}"
@@ -375,6 +379,18 @@
         "code": { "label": "Code de la partie", "example": "HGUNO-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
         "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/uno.html?code=HGUNO-4821" }
+      }
+    },
+    "ndc_party_announce": {
+      "group": "jeux", "label": "Partie de Nom de code", "target": "Salon d'annonces", "color": "#E8559A",
+      "description": "Publié quand un membre crée une partie de Nom de code avec l'option « Annoncer sur le Discord du gang ». Une seule annonce par partie. Désactivable dans Bot Discord, activé par défaut.",
+      "fields": [["Code", "{code}"], ["Joueurs", "{places}"]],
+      "vars": {
+        "hote": { "label": "Pseudo de l'hôte", "example": "Domursan" },
+        "nom": { "label": "Nom de la partie", "example": "Espions du samedi" },
+        "code": { "label": "Code de la partie", "example": "HGNDC-4821" },
+        "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 12" },
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/nom-de-code.html?code=HGNDC-4821" }
       }
     },
     "duel_defi_dm": {

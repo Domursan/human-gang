@@ -1,0 +1,50 @@
+/* ===== Humane Gang — Nom de code : décor et éléments partagés (nom-de-code.html) =====
+   Feuilles par écran : assets/css/nom-de-code/*.css (importées ci-dessous).
+   Équipes : Jaune et Rose ; police des mots et des titres de jeu : Oswald (maquettes validées).
+   Animations coupées par <body class="ndc-calme"> (préférence du membre) et prefers-reduced-motion. */
+@import url('nom-de-code/accueil.css');
+@import url('nom-de-code/creer.css');
+@import url('nom-de-code/rejoindre.css');
+@import url('nom-de-code/stats.css');
+@import url('nom-de-code/salle.css');
+@import url('nom-de-code/chat.css');
+@import url('nom-de-code/table.css');
+@import url('nom-de-code/fin.css');
+
+:root {
+  --ndc-jaune: #F2B71F; --ndc-jaune-fonce: #7A5200; --ndc-jaune-clair: #FFD970;
+  --ndc-rose: #E8559A; --ndc-rose-fonce: #8C1F55; --ndc-rose-clair: #FF9CCB;
+  --ndc-papier: #F3DFC4; --ndc-papier-2: #E8D2B4; --ndc-encre: #121212; --ndc-neutre: #8F7558; --ndc-assassin: #121212;
+}
+
+/* ---------- Décor ---------- */
+body.ndc-page {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, #241A22 0, var(--bg) 70%);
+  background-repeat: no-repeat;
+}
+.ndc-app { padding-bottom: 48px; }
+.ndc-app .card { background: color-mix(in srgb, var(--surface) 90%, transparent); }
+.ndc-chargement { padding: 48px 0; color: var(--muted); text-align: center; }
+.ndc-erreur { margin: 32px auto; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+.ndc-fil { font-size: 13px; color: var(--muted); margin: 16px 0 8px; }
+.ndc-fil a { color: inherit; }
+.ndc-titre { font-family: 'Oswald', 'Archivo Black', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  font-size: clamp(30px, 5vw, 44px); line-height: 1.05; margin: 0 0 16px; }
+.ndc-code { font-family: 'Courier New', monospace; letter-spacing: 3px; }
+.ndc-invite-tag { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border, #3A3A40); border-radius: 999px;
+  font-size: 11px; color: var(--muted); vertical-align: middle; }
+/* Pastille d'équipe (texte + couleur, jamais la couleur seule) */
+.ndc-eq { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .5px; font-family: 'Oswald', sans-serif; }
+.ndc-eq.is-jaune { background: var(--ndc-jaune); color: #2A1C00; }
+.ndc-eq.is-rose { background: var(--ndc-rose); color: #FFFFFF; }
+/* Avatar rond (photo, sinon initiales sur la couleur du membre) */
+.ndc-av { flex: none; display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; background: var(--ndc-av, #6B6B73);
+  color: #121212; font-weight: 800; font-size: 13px; }
+.ndc-av img { width: 100%; height: 100%; object-fit: cover; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ndc-app *, .ndc-app *::before, .ndc-app *::after { animation: none !important; transition: none !important; }
+}
+body.ndc-calme .ndc-app *, body.ndc-calme .ndc-app *::before, body.ndc-calme .ndc-app *::after { animation: none !important; transition: none !important; }

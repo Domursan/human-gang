@@ -54,6 +54,7 @@ export const SECTION_PERM = {
   uno: 'admin',
   // Duels (La Fête foraine › Jeux) : Puissance 4, Morpion, Mastermind ; réservé à l'administrateur
   duels: 'admin',
+  'nom-de-code': 'admin',
 };
 
 // Planning (idée A2) : visible si l'une de ces permissions est accordée (quiz, cartes, événements, sorties, Secret Santa, bot).
@@ -177,6 +178,7 @@ export const LIEUX = [
       { id: 'mes-jeux', label: 'Mes jeux', section: 'mj', help: 'Ma liste de jeux', icon: 'list' },
       { id: 'loup-garou', label: 'Loup-Garou', section: 'loup-garou', help: 'Paillettes, badges et parties', icon: 'users' },
       { id: 'uno', label: 'Uno', section: 'uno', help: 'Paillettes, badges et parties en cours', icon: 'users' },
+      { id: 'nom-de-code', label: 'Nom de code', section: 'nom-de-code', help: 'Paquets de mots, Paillettes, badges et parties en cours', icon: 'users' },
       { id: 'duels', label: 'Duels', section: 'duels', help: 'Puissance 4, Morpion, Mastermind, Bataille navale, Qui est-ce ?', icon: 'users' },
     ]),
   ] },
