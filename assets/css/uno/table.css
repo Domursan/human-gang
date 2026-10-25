@@ -32,7 +32,7 @@
 .uno-table.chat-masque .uno-chat { display: none; }
 
 /* ---------- Table ---------- */
-.uno-plateau { position: relative; height: 600px; min-width: 0; }
+.uno-plateau { position: relative; height: clamp(340px, calc(100vh - 380px), 600px); min-width: 0; }
 .uno-sieges { position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; list-style: none; }
 .uno-siege { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 124px; box-sizing: border-box;
   display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 8px; text-align: center;
@@ -188,4 +188,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .uno-sens-icone, .uno-anneau circle[data-anneau], .uno-pioche .ub, .uno-corps .uno-chat { transition: none !important; }
+}
+
+/* Écran peu haut (portable 720-800 px) : la table rétrécit pour garder la main visible, les sièges aussi. */
+@media (min-width: 761px) {
+  .uno-plateau { container-type: size; }
+  @container (max-height: 470px) {
+    .uno-siege { transform: translate(-50%, -50%) scale(.78); }
+    .uno-tapis-centre { top: 60%; transform: translate(-50%, -50%) scale(.85); }
+  }
 }
