@@ -1,0 +1,98 @@
+/* ===== Humane Gang — Nom de code : accueil (vues/accueil.js) =====
+   En-tête (fil, titre Oswald, image), grille de blocs (une colonne sous 900 px), règles en 4 points.
+   Accents jaune (CTA, étiquette « À toi ») et rose (étiquettes, numéros). Aucune information n'est portée par la couleur seule :
+   chaque pastille, étiquette et état porte son texte. Gouttière 16 px sur téléphone. */
+
+.ndc-acc { display: flex; flex-direction: column; gap: 24px; padding-top: 4px; min-width: 0; }
+.ndc-acc-aide { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.ndc-acc-sous { font-size: 13px; color: var(--muted); }
+.ndc-acc .ndc-acc-titre { margin: 0; font-family: 'Oswald', 'Archivo Black', sans-serif; font-size: 20px; font-weight: 600;
+  line-height: 1.2; letter-spacing: .6px; text-transform: uppercase; }
+.ndc-acc .ndc-acc-carte { display: flex; flex-direction: column; gap: 14px; padding: 24px 28px; box-sizing: border-box; min-width: 0; }
+.ndc-acc-carte-tete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ndc-acc-vide { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ndc-acc-vide p { margin: 0; }
+
+/* Étiquettes (rose par défaut, « À toi » en jaune) */
+.ndc-acc-tag { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: 999px;
+  border: 1px solid var(--border-strong); color: var(--muted); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.ndc-acc-tag-rose { align-self: flex-start; min-height: 28px; padding: 0 12px; border-color: var(--ndc-rose);
+  color: var(--ndc-rose-clair); letter-spacing: 2px; text-transform: uppercase; }
+.ndc-acc-etiquette { flex: none; display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: 999px;
+  background: var(--ndc-jaune); color: #2A1C00; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.ndc-acc-pseudo { font-weight: 700; }
+
+/* Boutons d'action principaux : jaune, texte sombre (contraste ≥ 7:1) */
+.ndc-acc .ndc-acc-cta { background: var(--ndc-jaune); color: #2A1C00; border: 1px solid var(--ndc-jaune); font-weight: 700; }
+.ndc-acc .ndc-acc-cta:hover { background: var(--ndc-jaune-clair); border-color: var(--ndc-jaune-clair); color: #2A1C00; }
+.ndc-acc .ndc-acc-cta:focus-visible { outline: 3px solid var(--ndc-rose-clair); outline-offset: 3px; }
+
+/* ---------- Héros ---------- */
+.ndc-acc-hero { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  padding: 44px 52px; border-radius: 24px; border: 1px solid var(--border-strong); box-sizing: border-box; min-width: 0;
+  background:
+    radial-gradient(ellipse 560px 300px at 90% 45%, color-mix(in srgb, var(--ndc-rose) 26%, transparent) 0, transparent 70%),
+    radial-gradient(ellipse 500px 260px at 8% 0%, color-mix(in srgb, var(--ndc-jaune) 20%, transparent) 0, transparent 70%),
+    var(--surface); }
+.ndc-acc-hero-texte { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 14px; max-width: 560px; min-width: 0; }
+.ndc-acc .ndc-acc-hero-titre { margin: 0; font-size: clamp(48px, 8vw, 72px); line-height: 1; }
+.ndc-acc-intro { margin: 0; font-size: 18px; color: #D9D3CB; line-height: 1.45; }
+.ndc-acc-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.ndc-acc .ndc-acc-grand { min-height: 52px; padding: 0 26px; }
+.ndc-acc-image { position: relative; z-index: 1; flex: none; width: min(300px, 40%); height: auto;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, .45)); }
+
+/* ---------- Grille ---------- */
+.ndc-acc-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ndc-acc-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+/* Rejoindre avec un code */
+.ndc-acc-rejoindre { display: flex; gap: 12px; margin: 0; }
+.ndc-acc-code { flex: 1; min-width: 0; min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font-family: 'Courier New', monospace; font-size: 20px; letter-spacing: 3px; text-transform: uppercase; }
+.ndc-acc-code:focus-visible { outline: 3px solid var(--ndc-jaune); outline-offset: 2px; border-color: var(--ndc-jaune); }
+.ndc-acc-code[aria-invalid="true"] { border-color: var(--ndc-rose); }
+.ndc-acc-erreur { margin: 0; font-size: 14px; color: var(--ndc-rose-clair); }
+
+/* Lignes de partie (mes parties, publiques) */
+.ndc-acc-liste { list-style: none; margin: 0; padding: 0; }
+.ndc-acc-ligne { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.ndc-acc-ligne:last-child { border-bottom: 0; }
+.ndc-acc-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ndc-acc-ligne-texte strong { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.ndc-acc-badges { flex: none; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ndc-acc .ndc-av { width: 40px; height: 40px; font-size: 14px; }
+.ndc-acc-nb { flex: none; font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; color: var(--muted); letter-spacing: .5px; }
+.ndc-acc-bouton { flex: none; min-height: 44px; padding: 0 16px; }
+.ndc-acc-stats-lien { align-self: flex-start; }
+
+/* ---------- Règles ---------- */
+.ndc-acc .ndc-acc-regles { gap: 18px; }
+.ndc-acc-regles-liste { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 28px; }
+.ndc-acc-regles-liste li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 15px; line-height: 1.5; }
+.ndc-acc-num { font-family: 'Oswald', sans-serif; font-size: 30px; font-weight: 700; line-height: 1; color: var(--ndc-jaune); }
+
+/* ---------- Téléphone et tablette ---------- */
+@media (max-width: 900px) {
+  .ndc-acc-grille { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ndc-acc-colonne { gap: 16px; }
+  .ndc-acc-regles-liste { grid-template-columns: minmax(0, 1fr); }
+  .ndc-acc-hero { padding: 36px 32px; }
+}
+@media (max-width: 760px) {
+  .ndc-acc { gap: 16px; }
+  .ndc-acc-hero { flex-direction: column; align-items: flex-start; padding: 28px 22px; border-radius: 20px; gap: 22px; }
+  .ndc-acc-image { width: min(220px, 62%); align-self: center; }
+  .ndc-acc .ndc-acc-carte { padding: 20px; }
+}
+@media (max-width: 480px) {
+  .ndc-acc-hero { padding: 24px 18px; }
+  .ndc-acc-actions .btn { width: 100%; }
+  .ndc-acc-rejoindre { flex-direction: column; }
+  .ndc-acc-rejoindre .btn { width: 100%; }
+  .ndc-acc-ligne { flex-wrap: wrap; }
+  .ndc-acc-ligne-texte { flex-basis: calc(100% - 60px); }
+  .ndc-acc-bouton { margin-left: auto; }
+}

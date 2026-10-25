@@ -1,0 +1,98 @@
+/* ===== Humane Gang — Nom de code : créer une partie (vues/creer.js) =====
+   Deux colonnes sur ordinateur (réglages à gauche, « Ta partie » à droite, collée en défilant),
+   une seule colonne sous 760 px. Segments, interrupteurs et choix : texte + état, jamais la couleur seule.
+   Accents : jaune pour l'action et l'état choisi, rose pour l'interrupteur allumé et le curseur. */
+
+.ndc-cre { margin: 0; }
+.ndc-cre-sous { margin: -8px 0 24px; font-size: 16px; color: var(--muted); }
+.ndc-cre-aide { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ndc-cre-centre { text-align: center; }
+
+.ndc-cre-input { width: 100%; min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: 400 16px 'Inter', system-ui, sans-serif; }
+.ndc-cre-input:focus-visible { outline: 3px solid var(--ndc-jaune); outline-offset: 2px; border-color: var(--ndc-jaune); }
+
+.ndc-cre-grille { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+.ndc-cre-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+.ndc-cre-bloc, .ndc-cre-resume { display: flex; flex-direction: column; gap: 18px; padding: 24px 28px; box-sizing: border-box;
+  min-width: 0; }
+.ndc-cre-bloc-titre { margin: 0; font-family: 'Oswald', 'Archivo Black', sans-serif; font-size: 20px; font-weight: 600;
+  letter-spacing: .6px; text-transform: uppercase; line-height: 1.2; }
+
+/* Réglages : grille de deux colonnes */
+.ndc-cre-reglages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
+.ndc-cre-large { grid-column: 1 / -1; }
+.ndc-cre-champ { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ndc-cre-champ > label, .ndc-cre-label { font-size: 14px; font-weight: 700; }
+.ndc-cre-entete { display: flex; justify-content: space-between; align-items: baseline; }
+.ndc-cre-entete > label { margin: 0; }
+.ndc-cre-entete output { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; color: var(--ndc-jaune); }
+.ndc-cre-champ input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: var(--ndc-rose); }
+.ndc-cre-echelle { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+
+.ndc-cre-groupe { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ndc-cre-groupe legend { padding: 0; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+
+/* Segments (choix unique) */
+.ndc-cre-seg { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--bg); }
+.ndc-cre-seg-choix { position: relative; flex: 1; min-height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; color: var(--text); }
+.ndc-cre-seg-choix:has(input:checked) { background: var(--ndc-jaune); color: #2A1C00; }
+.ndc-cre-seg-choix:has(input:focus-visible) { outline: 3px solid var(--ndc-jaune-clair); outline-offset: 2px; }
+
+/* Révélation : deux cartes de choix, la radio reste visible */
+.ndc-cre-choix-liste { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ndc-cre-choix { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; min-height: 44px; box-sizing: border-box;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); cursor: pointer; min-width: 0; }
+.ndc-cre-choix:has(input:checked) { border-color: var(--ndc-jaune); box-shadow: inset 0 0 0 1px var(--ndc-jaune); }
+.ndc-cre-choix:has(input:focus-visible) { outline: 3px solid var(--ndc-jaune-clair); outline-offset: 2px; }
+.ndc-cre-choix input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--ndc-jaune); }
+.ndc-cre-choix-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ndc-cre-choix-texte strong { font-size: 15px; }
+
+/* Paquet : une pastille, pas encore de choix */
+.ndc-cre-paquet-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.ndc-cre-pastille { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--ndc-rose); color: var(--ndc-rose-clair); font-family: 'Oswald', sans-serif; font-size: 15px;
+  font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+
+/* Interrupteurs */
+.ndc-cre-interrupteurs { display: flex; flex-direction: column; }
+.ndc-cre-switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 60px; padding: 10px 0;
+  border-bottom: 1px solid var(--border); cursor: pointer; }
+.ndc-cre-switch:last-child { border-bottom: 0; }
+.ndc-cre-switch-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ndc-cre-switch-texte strong { font-size: 15px; }
+.ndc-cre-piste { position: relative; width: 52px; height: 30px; flex: none; box-sizing: border-box; border-radius: 999px;
+  background: var(--border-strong); transition: background-color .2s ease; }
+.ndc-cre-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #FFFFFF; transition: left .2s ease; }
+.ndc-cre-switch input:checked + .ndc-cre-piste { background: var(--ndc-rose); }
+.ndc-cre-switch input:checked + .ndc-cre-piste::after { left: 25px; }
+.ndc-cre-switch input:focus-visible + .ndc-cre-piste { outline: 3px solid var(--ndc-jaune-clair); outline-offset: 3px; }
+
+/* Résumé « Ta partie » */
+.ndc-cre-resume-liste { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ndc-cre-resume-ligne { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.ndc-cre-resume-ligne dt { color: var(--muted); }
+.ndc-cre-resume-ligne dd { margin: 0; font-weight: 700; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+
+.ndc-cre-erreur { margin: 0; padding: 10px 12px; border-radius: 10px; background: #3A1518; color: #FFB4B8; font-size: 14px; }
+.ndc-cre .ndc-cre-bouton { width: 100%; min-height: 52px; font-size: 16px; font-weight: 700; background: var(--ndc-jaune);
+  color: #2A1C00; border: 1px solid var(--ndc-jaune); }
+.ndc-cre .ndc-cre-bouton:hover { background: var(--ndc-jaune-clair); border-color: var(--ndc-jaune-clair); color: #2A1C00; }
+.ndc-cre .ndc-cre-bouton:focus-visible { outline: 3px solid var(--ndc-rose-clair); outline-offset: 3px; }
+.ndc-cre .ndc-cre-bouton:disabled { opacity: .6; cursor: progress; }
+
+/* Ordinateur : le résumé reste visible en défilant */
+@media (min-width: 761px) {
+  .ndc-cre-resume { position: sticky; top: 16px; }
+}
+
+/* Téléphone : une colonne, le résumé passe sous le formulaire */
+@media (max-width: 760px) {
+  .ndc-cre-grille { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .ndc-cre-reglages, .ndc-cre-choix-liste { grid-template-columns: minmax(0, 1fr); }
+  .ndc-cre-bloc, .ndc-cre-resume { padding: 20px; }
+}
