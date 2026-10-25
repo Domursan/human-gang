@@ -30,11 +30,11 @@ function raisonLancement(e) {
   const liste = actifs(e);
   const n = liste.length;
   if (n < 4) return 'Il faut au moins 4 joueurs.';
-  const sans = liste.filter((j) => !j.equipe).length;
-  if (sans) return `${sans} joueur${sans > 1 ? 's' : ''} sans équipe. Chacun doit rejoindre une équipe.`;
-  for (const eq of ['jaune', 'rose']) {
-    if (liste.filter((j) => j.equipe === eq).length < 2) return 'Chaque équipe a besoin de 2 joueurs.';
-  }
+  // Les joueurs sans équipe complètent la plus petite au lancement (comme le serveur).
+  let jaune = liste.filter((j) => j.equipe === 'jaune').length;
+  let rose = liste.filter((j) => j.equipe === 'rose').length;
+  for (let s = liste.filter((j) => !j.equipe).length; s > 0; s -= 1) { if (jaune <= rose) jaune += 1; else rose += 1; }
+  if (jaune < 2 || rose < 2) return 'Chaque équipe a besoin de 2 joueurs : un espion et un agent.';
   const pasPrets = liste.filter((j) => !j.pret).length;
   if (pasPrets) return `Il manque ${pasPrets} joueur${pasPrets > 1 ? 's' : ''} prêt${pasPrets > 1 ? 's' : ''}.`;
   return '';
@@ -241,7 +241,7 @@ export function creer(root, ctx) {
     const liste = actifs(e).filter((j) => !j.equipe);
     const cle = JSON.stringify([liste.map(cleLigne), mon.user_id || null, !!mon.hote, p.hote || null]);
     zone('sans', cle, liste.length
-      ? `<p class="ndc-sans-note">Pas encore dans une équipe. Il peut rejoindre Jaune ou Rose.</p><ul class="ndc-liste">${liste.map((j) => ligneJoueur(j, mon, p)).join('')}</ul>`
+      ? `<p class="ndc-sans-note">Pas encore dans une équipe. Chacun peut rejoindre Jaune ou Rose ; sinon, il est placé dans la plus petite équipe au lancement.</p><ul class="ndc-liste">${liste.map((j) => ligneJoueur(j, mon, p)).join('')}</ul>`
       : '<p class="ndc-vide">Tout le monde a une équipe.</p>');
   }
 

@@ -63,6 +63,7 @@ function squelette(idChat) {
       <span class="ndc-chrono-texte" data-chrono>–</span>
       <span class="visually-hidden" aria-live="polite" data-chrono-annonce></span>
     </div>
+    <button type="button" class="btn btn-ghost ndc-bouton-equipes" data-tiroir-ouvrir aria-haspopup="dialog">Équipes et historique</button>
     <button type="button" class="btn btn-ghost ndc-bouton-quitter" data-quitter>${ICONE_QUITTER}<span>Quitter</span></button>
     <button type="button" class="btn btn-ghost ndc-bouton-chat" data-chat-bouton aria-controls="${idChat}" aria-expanded="false">${ICONE_CHAT}<span class="ndc-chat-libelle">Chat</span><span class="ndc-pastille-nonlu" data-non-lus hidden></span></button>
   </header>
@@ -157,7 +158,7 @@ export function creer(root, ctx) {
   let nonLus = 0;
   let tiroirOuvert = false;
   let dernierTour;
-  let voirChat = false;
+  let voirChat = grand.matches;                    // ordinateur : chat visible au départ ; téléphone : fermé
   let proposition = { code: null, pos: null };     // ma proposition en mode libre (affiche « Valider »)
   let saisieIndice = { mot: '', nombre: '1' };     // garde ce qui est tapé pendant une mise à jour
 
@@ -254,6 +255,9 @@ export function creer(root, ctx) {
     if (estAgentAuTour()) {
       const libre = etat.partie.validation === 'libre';
       const arretOk = (etat.indice?.mots?.length || 0) > 0;
+      // Ma proposition, lue dans l'état serveur (survit à un rechargement)
+      const moiPos = (etat.cartes || []).findIndex((c) => !c.revelee && c.propositions?.includes(monId()));
+      proposition = moiPos >= 0 ? { code, pos: moiPos } : { code: null, pos: null };
       zone.dataset.mode = 'agent';
       zone.innerHTML = `
         <p class="ndc-consigne">${etat.indice ? 'Clique sur un mot. Re-clique pour retirer ton jeton.' : 'En attente de l\'indice.'}</p>
@@ -294,6 +298,9 @@ export function creer(root, ctx) {
     if (!revelee && !espion) classes.push('is-cache');
     if (espion && !revelee) classes.push('is-espion');
     if (estMoi) classes.push('is-ma-proposition');
+    // Retournement discret quand la carte vient d'être révélée (coupé par ndc-calme / reduced-motion en CSS)
+    if (revelee && b.dataset.revelee !== '1') { if (b.dataset.revelee === '0') classes.push('is-tourne'); }
+    b.dataset.revelee = revelee ? '1' : '0';
     if (teinte === 'assassin') classes.push('is-assassin');
     if (teinte === 'neutre') classes.push('is-passant');
     if (b.className !== classes.join(' ')) b.className = classes.join(' ');
@@ -356,7 +363,7 @@ export function creer(root, ctx) {
     const membres = (etat.joueurs || []).filter((j) => j.equipe === eq);
     const espion = membres.filter((j) => j.espion);
     const agents = membres.filter((j) => !j.espion);
-    const ligne = (j, role) => `<li class="ndc-membre${j.parti ? ' is-parti' : ''}">${avatar(j)}<span class="ndc-membre-nom">${pseudoHtml(j)}${j.parti ? ' <span class="ndc-tag-parti">parti</span>' : ''}</span><span class="visually-hidden">, ${role}</span></li>`;
+    const ligne = (j, role) => `<li class="ndc-membre${j.parti ? ' is-parti' : ''}">${avatar(j)}<span class="ndc-membre-nom">${pseudoHtml(j)}${role === 'espion' ? ' <span class="ndc-tag-espion">Espion</span>' : ''}${j.parti ? ' <span class="ndc-tag-parti">parti</span>' : ''}</span>${role === 'espion' ? '' : `<span class="visually-hidden">, ${role}</span>`}</li>`;
     const corps = [
       ...espion.map((j) => ligne(j, 'espion')),
       ...agents.map((j) => ligne(j, 'agent')),
@@ -443,19 +450,17 @@ export function creer(root, ctx) {
     refs.chatBouton.focus();
   }
 
+  /** Ordinateur : affiche ou masque le chat (colonne de droite). Téléphone : ouvre ou ferme le volet. */
+  function peindreChat() {
+    if (grand.matches) el.classList.toggle('chat-masque', !voirChat);
+    else el.classList.toggle('chat-ouvert', voirChat);
+    refs.chatBouton.setAttribute('aria-expanded', String(voirChat));
+    refs.chatBouton.querySelector('.ndc-chat-libelle').textContent = voirChat ? 'Fermer le chat' : 'Chat';
+    if (voirChat) { nonLus = 0; peindreNonLus(); }
+  }
   function surBoutonChat() {
-    if (grand.matches) {
-      voirChat = !voirChat;
-      el.classList.toggle('chat-ouvert', voirChat);
-      refs.chatBouton.setAttribute('aria-expanded', String(voirChat));
-      if (voirChat) { nonLus = 0; peindreNonLus(); }
-    } else {
-      // Téléphone : le bouton ouvre le volet du chat (il reste accessible depuis le tiroir aussi)
-      voirChat = !voirChat;
-      el.classList.toggle('chat-ouvert', voirChat);
-      refs.chatBouton.setAttribute('aria-expanded', String(voirChat));
-      if (voirChat) { nonLus = 0; peindreNonLus(); }
-    }
+    voirChat = !voirChat;
+    peindreChat();
   }
 
   /* ---------- Actions ---------- */
@@ -515,13 +520,14 @@ export function creer(root, ctx) {
   /* ---------- Écouteurs ---------- */
 
   refs.quitter.addEventListener('click', surQuitter);
+  q('[data-tiroir-ouvrir]').addEventListener('click', ouvrirTiroir);
   refs.chatBouton.addEventListener('click', surBoutonChat);
   refs.chatFermer.addEventListener('click', () => {
     voirChat = false;
-    el.classList.remove('chat-ouvert');
-    refs.chatBouton.setAttribute('aria-expanded', 'false');
+    peindreChat();
     refs.chatBouton.focus();
   });
+  grand.addEventListener('change', () => { voirChat = grand.matches; peindreChat(); });
   refs.tiroirFermer.addEventListener('click', fermerTiroir);
   refs.tiroirFond.addEventListener('click', fermerTiroir);
   refs.tiroir.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') fermerTiroir(); });
@@ -534,6 +540,7 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   peindreNonLus();
+  peindreChat();
   const minuterie = setInterval(tic, 250);
 
   return {

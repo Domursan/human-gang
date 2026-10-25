@@ -208,9 +208,7 @@ export function creer(root, ctx) {
       const items = liste.length ? liste.map((i) => {
         const nombre = Number(i.nombre) === 0 ? 'illimité' : esc(i.nombre);
         const mots = Array.isArray(i.mots) && i.mots.length ? esc(i.mots.join(', ')) : 'aucun mot';
-        const espion = typeof i.espion === 'string'
-          ? i.espion
-          : (joueurs.find((j) => j.user_id === i.espion)?.pseudo || '');
+        const espion = joueurs.find((j) => j.user_id === i.espion)?.pseudo || '';
         return `<li><strong>${esc(i.mot)}</strong> · ${nombre} → ${mots}`
           + (espion ? ` <span class="ndc-fin-par">par ${esc(espion)}</span>` : '')
           + '</li>';

@@ -139,7 +139,7 @@ function squelette() {
     <section class="card ndc-card" aria-labelledby="ndc-h-pai">
       <h3 id="ndc-h-pai" class="ndc-titre">Récompenses en Paillettes</h3>
       <table class="ndc-table">
-        <thead><tr><th scope="col">Action</th><th scope="col">Paillettes</th></tr></thead>
+        <thead class="visually-hidden"><tr><th scope="col">Moment</th><th scope="col">Paillettes</th></tr></thead>
         <tbody>
           ${LIGNES.map(([cle, libelle]) => `<tr>
             <th scope="row"><label for="ndc-pai-${cle}">${esc(libelle)}</label></th>
