@@ -12,7 +12,7 @@
 
 /* ---------- Barre d'onglets (téléphone) : pastilles avec icône, défilement de la barre seulement ---------- */
 .jeux-layout { min-width: 0; }
-/* Barre d'onglets masquée (toutes tailles) : la navigation est dans le menu du haut (header.js). Les onglets restent la
+/* Barre d'onglets masquée (toutes tailles) : on navigue par les cartes de la vue de départ (jeux.js). Les onglets restent la
    mécanique qui affiche le panneau (adresse, JS). Le panneau occupe toute la largeur, son titre est dans le panneau. */
 .jeux-tabs-wrap { display: none; position: relative; margin: 0 0 16px; min-width: 0; }
 .jeux-hub-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.1; margin: 0 0 16px; }
@@ -133,3 +133,68 @@
 
 /* Bouton pleine largeur sur téléphone */
 @media (max-width: 600px) { .jg-wide-sm { width: 100%; } .jg-card { padding: 16px; } }
+
+/* ---------- Vue de départ : tous les jeux en cartes (jeux.html, jeux.html#tous) ---------- */
+.jeux-retour { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 0 8px; color: var(--muted); font-weight: 700; text-decoration: none; }
+.jeux-retour[hidden] { display: none; }
+.jeux-retour:hover, .jeux-retour:focus-visible { color: var(--sand); }
+.jx { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.jx-outils { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.jx-filtres { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.jx-filtres::-webkit-scrollbar { display: none; }
+.jx-filtre { flex: none; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: 600 15px var(--font-body); cursor: pointer; }
+.jx-filtre[aria-pressed="true"] { border-color: var(--sand); color: var(--sand); background: var(--surface); }
+.jx-filtre:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.jx-cherche input { width: 260px; max-width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); font: 15px var(--font-body); }
+.jx-section[hidden] { display: none; }
+.jx-sh { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+.jx-h { margin: 0; font-size: 22px; font-weight: 700; }
+.jx-sh p { margin: 0; }
+.jx-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.jx-carte[hidden] { display: none; }
+.jx-carte { min-width: 0; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); overflow: hidden; transition: border-color .15s, transform .15s; }
+.jx-lien { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
+.jx-lien:focus-visible { outline: 2px solid var(--sand); outline-offset: -2px; border-radius: var(--radius); }
+@media (hover: hover) { .jx-carte:not(.is-prep):hover { border-color: var(--sand); transform: translateY(-2px); } .jx-carte:not(.is-prep):hover .jx-t { color: var(--sand); } }
+@media (prefers-reduced-motion: reduce) { .jx-carte { transition: none; } .jx-carte:not(.is-prep):hover { transform: none; } }
+.jx-carte.is-prep { display: flex; flex-direction: column; border-style: dashed; }
+.jx-carte.is-prep .jx-img { filter: saturate(.75) brightness(.8); }
+.jx-vig { position: relative; display: block; }
+.jx-img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-bottom: 1px solid var(--border); background: var(--surface-2, #1F1F23); }
+.jx-ico { display: grid; place-items: center; color: var(--jx); background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--jx) 22%, transparent) 0, transparent 70%), var(--surface-2, #1F1F23); }
+.jx-gi { width: 56px; height: 56px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.jx-pills { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; gap: 6px; pointer-events: none; }
+.jx-pills .pill { background: var(--bg); }
+.jx-prep { border: 1px solid var(--sand); color: var(--sand); font-weight: 700; }
+
+/* Chantier : ce qui n'est visible que des admins (jeu en préparation, page en mode admin) */
+.jx-section.is-chantier { position: relative; padding: 22px 20px 20px; border-radius: var(--radius); border: 1px solid #3A3220;
+  background: repeating-linear-gradient(-45deg, rgba(242, 183, 5, .045) 0 18px, transparent 18px 36px), #15130D; }
+.jx-section.is-chantier::before, .jx-section.is-chantier::after { content: ''; position: absolute; left: 0; right: 0; height: 10px;
+  background: repeating-linear-gradient(-45deg, #F2B705 0 14px, #121212 14px 28px); }
+.jx-section.is-chantier::before { top: 0; border-radius: var(--radius) var(--radius) 0 0; }
+.jx-section.is-chantier::after { bottom: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.jx-section.is-chantier .jx-sh { margin-top: 4px; }
+.jx-chantier { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 0 auto !important; padding: 6px 14px 6px 8px; border-radius: 999px;
+  background: #F2B705; color: #121212; font-size: 13px; }
+.jx-chantier strong { font-weight: 800; }
+.jx-panneau { width: 38px; height: 34px; flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); }
+.jx-carte.is-chantier { border: 2px dashed #B8900F; }
+.jx-carte.is-chantier .jx-vig::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
+  background: repeating-linear-gradient(-45deg, #F2B705 0 10px, #121212 10px 20px); }
+.jx-carte.is-chantier .jx-prep { background: #F2B705; border-color: #F2B705; color: #121212; }
+.jx-section.is-chantier .jx-carte.is-chantier { border-color: #6A5512; }
+@media (hover: hover) { .jx-carte.is-chantier:not(.is-prep):hover { border-color: #F2B705; } }
+@media (max-width: 760px) { .jx-section.is-chantier { padding: 20px 12px 18px; } .jx-chantier { margin: 4px 0 0 !important; } }
+.jx-txt { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; }
+.jx-t { font-size: 17px; font-weight: 700; }
+.jx-s { font-size: 14px; color: var(--muted); }
+@media (max-width: 1023px) { .jx-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .jx-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .jx-cherche, .jx-cherche input { width: 100%; }
+  .jx-txt { padding: 10px 12px 12px; }
+  .jx-t { font-size: 15px; }
+  .jx-s { font-size: 13px; }
+  .jx-gi { width: 40px; height: 40px; }
+}

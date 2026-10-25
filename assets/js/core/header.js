@@ -37,7 +37,8 @@ import { MENUS, menuKey } from './menu-def.js';
 
 // Menus de la barre : définis dans menu-def.js (partagés avec l'éditeur des libellés du panel admin).
 /** Pages déjà rangées dans un menu (ou atteintes autrement) : jamais répétées dans « Autres ». */
-const PLACED = new Set(['cartes', 'jeux', 'secret-santa', 'irl', 'historique', 'calendrier', 'messages', 'accueil', 'aide', 'compte', 'admin']);
+// Les jeux à page propre (Loup-Garou, Uno…) sont rangés dans la page Jeux (cartes), pas dans le menu.
+const PLACED = new Set(['cartes', 'jeux', 'loup-garou', 'uno', 'secret-santa', 'irl', 'historique', 'calendrier', 'messages', 'accueil', 'aide', 'compte', 'admin']);
 // Libellés courts pour « Autres » (le libellé complet reste celui de hg_pages ailleurs).
 const NAV_SHORT = { membre: 'Annuaire', recap: 'Récap de l’année' };
 

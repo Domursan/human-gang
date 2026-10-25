@@ -101,3 +101,9 @@ export function canAccess(slug) {
  * @returns {string}
  */
 export function pageLabel(slug) { return _pages?.declared.get(slugOf(slug))?.label || ''; }
+/**
+ * Mode d'accès d'une page déclarée ('membres', 'liste', 'admin'…), ou '' si inconnue.
+ * @param {string} slug Slug ou nom de fichier de la page.
+ * @returns {string}
+ */
+export function pageMode(slug) { return _pages?.declared.get(slugOf(slug))?.mode || ''; }

@@ -22,24 +22,8 @@ export const MENUS = [
     { label: 'IRL', href: 'irl.html', page: 'irl' },
     { label: 'Historique', href: 'historique.html', page: 'historique' },
   ] },
-  { id: 'jeux', label: 'Jeux', items: [
-    { label: 'Les missions du jour', href: 'jeux.html#aujourdhui', page: 'jeux' },
-    { sep: true },
-    { label: 'GeoGuessr', href: 'jeux.html#geo', page: 'jeux' },
-    { label: 'Qui a dit ça ?', href: 'jeux.html#citations', page: 'jeux' },
-    { label: 'Question du jour', href: 'jeux.html#jour', page: 'jeux' },
-    { label: 'Sutom HG', href: 'jeux.html#sutom', page: 'jeux' },
-    { label: 'Framed', href: 'jeux.html#framed', page: 'jeux' },
-    { label: 'Heardle', href: 'jeux.html#heardle', page: 'jeux' },
-    { label: 'Arcade', page: 'jeux', sub: [
-      { label: 'Paillettes', href: 'jeux.html#arcade-paillettes', page: 'jeux' },
-      { label: 'Raclette', href: 'jeux.html#arcade-raclette', page: 'jeux' },
-      { label: 'Domu-mobile', href: 'jeux.html#arcade-domu', page: 'jeux' },
-    ] },
-    { sep: true },
-    { label: 'Loup-Garou', href: 'loup-garou.html', page: 'loup-garou', strict: true },
-    { label: 'Uno', href: 'uno.html', page: 'uno', strict: true },
-  ] },
+  // Jeux : un lien direct vers la page des cartes de jeux (jeux.html), qui range tous les jeux par section.
+  { id: 'jeux', label: 'Jeux', href: 'jeux.html', page: 'jeux' },
   { id: 'calendrier', label: 'Calendrier', href: 'calendrier.html', page: 'calendrier' },
   { id: 'autres', label: 'Autres', auto: true },
 ];
