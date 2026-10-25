@@ -43,6 +43,7 @@ export const CHANNEL_LABEL: Record<MentionType, string> = {
   quiz: 'Question du jour',
   cine: 'Ciné-club',
   loup_garou: 'Loup-Garou',
+  uno: 'Uno',
 };
 
 /**

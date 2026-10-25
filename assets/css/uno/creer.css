@@ -1,0 +1,86 @@
+/* ===== Humane Gang — Uno : créer une partie (vues/creer.js) =====
+   Deux colonnes sur ordinateur (réglages à gauche, « Ta partie » à droite), une seule colonne sous 760 px.
+   Ce fichier définit aussi les petites classes partagées : .uno-vh (champ caché accessible), .uno-input, .uno-aide,
+   .uno-centre, .uno-sous-titre. rejoindre.css les réutilise. */
+
+.uno-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: -1px; padding: 0; border: 0; }
+.uno-sous-titre { margin: 0 0 24px; font-size: 16px; color: var(--muted, #ABA7A0); }
+.uno-aide { margin: 0; font-size: 13px; color: var(--muted, #ABA7A0); line-height: 1.45; }
+.uno-centre { text-align: center; }
+
+.uno-input { width: 100%; min-height: 52px; box-sizing: border-box; padding: 0 16px; border-radius: 12px; border: 1px solid #3A3A40;
+  background: #0E0E10; color: #F2EFEA; font: 400 16px Inter, system-ui, sans-serif; }
+.uno-input:focus-visible { outline: 3px solid #E2C77E; outline-offset: 2px; border-color: #E2C77E; }
+
+.uno-creer { margin: 0; }
+.uno-creer-grille { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px; align-items: start; }
+.uno-creer-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+.uno-bloc { display: flex; flex-direction: column; gap: 18px; padding: 24px 28px; box-sizing: border-box; border-radius: 20px; min-width: 0; }
+.uno-bloc-titre { margin: 0; font-size: 20px; font-weight: 700; }
+
+/* Réglages */
+.uno-reglages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; }
+.uno-champ-large { grid-column: 1 / -1; }
+.uno-champ { display: flex; flex-direction: column; min-width: 0; }
+.uno-champ > label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.uno-champ-entete { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.uno-champ-entete > label { margin: 0; }
+.uno-champ-entete output { font-family: 'Archivo Black', sans-serif; font-size: 18px; }
+.uno-champ input[type="range"] { width: 100%; height: 44px; margin: 0; accent-color: #9E3543; }
+.uno-echelle { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted, #ABA7A0); }
+
+.uno-groupe { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-direction: column; }
+.uno-groupe legend { padding: 0; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+
+/* Segments (choix unique) */
+.uno-seg { display: flex; gap: 4px; padding: 3px; border: 1px solid #3A3A40; border-radius: 999px; background: #0E0E10; }
+.uno-seg-choix { position: relative; flex: 1; min-height: 44px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+  padding: 6px 10px; border-radius: 999px; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; color: #F2EFEA; }
+.uno-seg-choix:has(input:checked) { background: #F2EFEA; color: #121212; }
+.uno-seg-choix:has(input:focus-visible) { outline: 3px solid #E2C77E; outline-offset: 2px; }
+
+/* Interrupteur */
+.uno-switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; cursor: pointer; }
+.uno-switch-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.uno-switch-texte strong { font-size: 15px; }
+.uno-piste { position: relative; width: 52px; height: 30px; flex: none; box-sizing: border-box; border-radius: 999px; background: #3A3A40; transition: background-color .2s ease; }
+.uno-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #FFFFFF; transition: left .2s ease; }
+.uno-switch input:checked + .uno-piste { background: #9E3543; }
+.uno-switch input:checked + .uno-piste::after { left: 25px; }
+.uno-switch input:focus-visible + .uno-piste { outline: 3px solid #E2C77E; outline-offset: 3px; }
+
+/* Variantes */
+.uno-variantes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+.uno-variante { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid #2A2A2F; cursor: pointer; min-width: 0; }
+.uno-variante-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.uno-variante-texte strong { font-size: 15px; }
+.uno-variante-texte .uno-aide { font-size: 14px; }
+.uno-case-boite { width: 24px; height: 24px; flex: none; margin-top: 2px; box-sizing: border-box; border-radius: 7px; border: 2px solid #4A4A52;
+  background: #0E0E10; display: grid; place-items: center; }
+.uno-case-boite svg { display: none; }
+.uno-variante input:checked + .uno-case-boite { background: #9E3543; border-color: #9E3543; }
+.uno-variante input:checked + .uno-case-boite svg { display: block; }
+.uno-variante input:focus-visible + .uno-case-boite { outline: 3px solid #E2C77E; outline-offset: 3px; }
+
+/* Résumé « Ta partie » */
+.uno-resume { display: flex; flex-direction: column; gap: 18px; padding: 24px 28px; box-sizing: border-box; border-radius: 20px; min-width: 0; }
+.uno-resume-liste { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.uno-resume-ligne { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.uno-resume-ligne dt { color: var(--muted, #ABA7A0); }
+.uno-resume-ligne dd { margin: 0; font-weight: 700; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.uno-creer-erreur { margin: 0; padding: 10px 12px; border-radius: 10px; background: #3A1518; color: #FFB4B8; font-size: 14px; }
+.uno-creer-bouton { width: 100%; min-height: 52px; font-size: 16px; }
+.uno-creer-bouton:disabled { opacity: .6; cursor: progress; }
+
+/* Ordinateur : le résumé reste visible en défilant */
+@media (min-width: 761px) {
+  .uno-resume { position: sticky; top: 16px; }
+}
+
+/* Téléphone : une colonne, le résumé passe sous le formulaire */
+@media (max-width: 760px) {
+  .uno-creer-grille { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .uno-reglages, .uno-variantes { grid-template-columns: minmax(0, 1fr); }
+  .uno-bloc, .uno-resume { padding: 20px; }
+}

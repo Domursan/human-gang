@@ -1,0 +1,191 @@
+/* ===== Humane Gang — Uno : table de jeu « Nuit arc-en-ciel » et chat de table (vues/table.js, vues/chat.js) =====
+   Classes préfixées uno-. Le chat (.uno-chat, .uno-chat-*) sert aussi à la salle d'attente : ces styles sont
+   chargés pour tout le Uno (uno.css importe cette feuille).
+   Ordinateur (> 760 px) : table à gauche, chat à droite, joueurs posés sur l'anneau.
+   Téléphone (≤ 760 px) : une colonne ; les joueurs défilent en bande ; le chat s'ouvre en volet par le bas.
+   Cartes, dos et bouton UNO ! : uno.css. Roue des couleurs : uno.css (.uno-roue-voile, .uno-roue). */
+
+.uno-table { display: flex; flex-direction: column; gap: 12px; min-width: 0; max-width: 100%; color: var(--text); }
+.uno-table [hidden] { display: none !important; }
+.uno-table :focus-visible { outline: 3px solid #FFFFFF; outline-offset: 2px; }
+
+/* ---------- Barre du haut ---------- */
+.uno-barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; box-sizing: border-box;
+  margin-top: 12px; padding: 8px 20px; background: rgba(23, 23, 26, .92); border: 1px solid #2A2A2F; border-radius: 20px; }
+.uno-barre-titre { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.uno-nom { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uno-nom:focus { outline: none; }
+.uno-nom:focus-visible { outline: 2px solid #E2C77E; outline-offset: 4px; border-radius: 4px; }
+.uno-barre .uno-code { font-size: 13px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+.uno-sens { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.uno-sens-icone { display: inline-flex; transition: transform .2s ease; }
+.uno-chrono { display: flex; align-items: center; gap: 10px; flex: none; }
+.uno-anneau { width: 40px; height: 40px; flex: none; }
+.uno-anneau circle[data-anneau] { transition: stroke-dasharray .25s linear; }
+.uno-chrono-texte { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3.2em; }
+.uno-bouton-chat { min-height: 44px; padding: 0 16px; gap: 8px; flex: none; }
+.uno-bouton-chat svg { flex: none; }
+
+/* ---------- Corps : table et chat ---------- */
+.uno-corps { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: stretch; min-width: 0; }
+.uno-table.chat-masque .uno-corps { grid-template-columns: minmax(0, 1fr); }
+.uno-table.chat-masque .uno-chat { display: none; }
+
+/* ---------- Table ---------- */
+.uno-plateau { position: relative; height: 600px; min-width: 0; }
+.uno-sieges { position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; list-style: none; }
+.uno-siege { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 124px; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 8px; text-align: center;
+  background: rgba(14, 14, 16, .85); border-radius: 16px; }
+.uno-siege.exclu { opacity: .4; }
+.uno-siege.uno-serre { width: 96px; }
+.uno-siege.uno-serre .uno-avatar { width: 44px; height: 44px; font-size: 12px; }
+.uno-siege-infos { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.uno-siege-nom { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; }
+.uno-siege-cartes { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+
+.uno-avatar { width: 56px; height: 56px; flex: none; box-sizing: border-box; border-radius: 50%; background: #1F1F23;
+  border: 2px solid var(--c, #3A3A40); color: #F2EFEA; display: grid; place-items: center; font-size: 15px; font-weight: 700; }
+.uno-avatar-moi { width: 52px; height: 52px; }
+.uno-avatar.est-tour, .uno-siege.est-tour .uno-avatar { box-shadow: 0 0 0 3px #0E0E10, 0 0 0 5px #E2C77E; }
+
+/* Dos en éventail : trois petits dos au plus, puis le nombre écrit */
+.uno-eventail { position: relative; display: inline-block; width: 40px; height: 34px; flex: none; }
+.uno-eventail-carte { position: absolute; left: calc(var(--i) * 7px); top: 0; width: 52px; height: 78px; transform-origin: 0 0;
+  transform: scale(.42) rotate(calc((var(--i) - 1) * 12deg)); }
+
+.uno-etiquettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.uno-badge-uno { display: inline-flex; align-items: center; min-height: 20px; padding: 1px 8px; border-radius: 999px;
+  background: #D93A3F; color: #FFFFFF; font-size: 12px; font-weight: 700; }
+.uno-tag { display: inline-flex; align-items: center; min-height: 20px; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid #3A3A40; font-size: 12px; color: var(--muted); }
+
+/* Anneau arc-en-ciel posé sous les joueurs (ordinateur : ellipse ; les joueurs sont sur son bord) */
+.uno-tapis { position: absolute; inset: 0; z-index: 1; }
+.uno-ovale { position: absolute; left: 10%; right: 10%; top: 16%; bottom: 16%; border-radius: 50%;
+  background: conic-gradient(#FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398, #FE3104);
+  box-shadow: 0 0 28px rgba(254, 120, 4, .35), 0 0 60px rgba(43, 90, 226, .2); }
+.uno-ovale::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #16161B; box-shadow: inset 0 0 50px rgba(0, 0, 0, .5); }
+
+/* Centre : pilules, pioche, défausse, dernière ligne du journal */
+.uno-centre { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; width: min(400px, 70%);
+  display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.uno-pilules { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.uno-pilule { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; box-sizing: border-box; padding: 0 14px;
+  border-radius: 999px; background: rgba(14, 14, 16, .7); border: 1px solid #3A3A40; font-size: 14px; }
+.uno-pilule-cumul { border-color: #D93A3F; background: rgba(217, 58, 63, .25); color: #FFFFFF; font-weight: 700; }
+.uno-pilule-or { min-height: 24px; padding: 2px 10px; background: #E2C77E; color: #121212; border-color: transparent; font-size: 12px; font-weight: 700; }
+.uno-point { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.uno-pile { display: flex; align-items: flex-start; gap: 28px; }
+.uno-pile-bloc { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.uno-pioche { border: 0; padding: 0; margin: 0; background: none; cursor: pointer; color: inherit; border-radius: 10px; display: block; }
+.uno-pioche:disabled { cursor: not-allowed; opacity: .55; }
+.uno-pioche .ub { box-shadow: 2px 2px 0 #2A2A2F, 4px 4px 0 #1A1A1F, 0 3px 8px rgba(0, 0, 0, .45); transition: transform .15s ease; }
+.uno-pioche:not(:disabled):hover .ub, .uno-pioche:not(:disabled):focus-visible .ub { transform: translateY(-3px); }
+.uno-legende { font-size: 13px; color: #F2EFEA; }
+.uno-defausse { display: block; }
+.uno-dernier { margin: 0; min-height: 1.5em; font-size: 13px; color: var(--muted); text-align: center; }
+.uno-vide { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* ---------- Bas : moi, ma main, commandes ---------- */
+.uno-bas { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.uno-bas-ligne { display: grid; grid-template-columns: 180px minmax(0, 1fr) 210px; gap: 16px; align-items: end; }
+.uno-moi { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.uno-moi-texte { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.uno-moi-texte > strong { font-size: 15px; font-weight: 700; }
+.uno-moi-detail { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.uno-main-zone { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.uno-indice { margin: 0; font-size: 13px; color: #E2C77E; font-weight: 700; }
+.uno-main-cartes { display: flex; justify-content: center; align-items: flex-end; min-height: 150px; padding: 18px 0 4px; box-sizing: border-box; max-width: 100%; }
+.uno-eventail-main { flex: none; margin: 0 -10px; transform: rotate(var(--rot, 0deg)); transform-origin: 50% 240%; }
+.uno-eventail-main:first-child { margin-left: 0; }
+.uno-eventail-main:last-child { margin-right: 0; }
+.uno-commandes { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.uno-cmd { width: 100%; min-height: 52px; font-size: 16px; }
+.uno-commandes .uno-btn { width: 100%; min-height: 64px; box-sizing: border-box; }
+
+.uno-defi { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px;
+  border-radius: 16px; border: 1px solid #E2C77E; background: rgba(23, 23, 26, .92); }
+.uno-defi-texte { margin: 0; font-size: 15px; }
+.uno-defi-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.uno-defi-actions .btn { min-height: 44px; }
+
+/* ---------- Journal ---------- */
+.uno-journal-zone { background: rgba(23, 23, 26, .92); border: 1px solid #2A2A2F; border-radius: 20px; padding: 14px 18px; min-width: 0; }
+.uno-journal-titre { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.uno-journal { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+.uno-journal-ligne { font-size: 14px; color: #D9D5CD; overflow-wrap: anywhere; }
+.uno-journal-ligne:first-child { color: #F2EFEA; font-weight: 700; }
+
+/* ---------- Fenêtres : choix de l'adversaire (la roue vient de uno.css) ---------- */
+.uno-cibles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; width: min(360px, 86vw); }
+.uno-cible { width: 100%; min-height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 14px;
+  border-radius: 16px; border: 1px solid #3A3A40; background: #17171A; color: #F2EFEA; font: inherit; text-align: left; cursor: pointer; }
+.uno-cible:hover, .uno-cible:focus-visible { border-color: #E2C77E; }
+.uno-cible .uno-avatar { width: 40px; height: 40px; font-size: 13px; }
+.uno-cible-nom { flex: 1; font-weight: 700; }
+.uno-cible-nb { font-size: 13px; color: var(--muted); }
+
+/* ---------- Chat (aussi utilisé par la salle d'attente) ---------- */
+.uno-chat { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; box-sizing: border-box; padding: 18px;
+  background: rgba(23, 23, 26, .92); border: 1px solid #2A2A2F; border-radius: 20px; }
+.uno-chat-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.uno-chat-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.uno-chat-fermer { display: none; min-height: 44px; }
+.uno-chat-zone, .uno-chat-corps { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.uno-chat-fil { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+.uno-chat-msg { margin: 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.uno-chat-auteur { font-weight: 700; margin-right: 4px; }
+.uno-chat-moi { padding-left: 8px; border-left: 2px solid #3A3A40; }
+.uno-chat-vide { margin: 0; font-size: 14px; color: var(--muted); }
+.uno-chat-form { display: flex; gap: 8px; margin: 0; }
+.uno-chat-champ { flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px;
+  border: 1px solid #3A3A40; background: #0E0E10; color: #F2EFEA; font: inherit; font-size: 14px; }
+.uno-chat-champ:disabled { opacity: .6; }
+.uno-chat-envoyer { min-width: 44px; min-height: 44px; padding: 0 14px; }
+
+/* ---------- Téléphone : une colonne, bande de joueurs, chat en volet ---------- */
+@media (max-width: 760px) {
+  .uno-barre { flex-wrap: wrap; gap: 8px 12px; margin-top: 8px; padding: 10px 12px; border-radius: 16px; }
+  .uno-barre-titre { flex: 1 1 0; min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .uno-nom { font-size: 16px; max-width: 100%; }
+  .uno-sens { order: 4; flex-basis: 100%; font-size: 13px; }
+  .uno-chrono { order: 2; }
+  .uno-chrono-texte { font-size: 14px; min-width: 0; }
+  .uno-anneau { width: 44px; height: 44px; }
+  .uno-bouton-chat { order: 3; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
+  .uno-bouton-chat .uno-chat-libelle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .uno-corps { display: flex; flex-direction: column; gap: 12px; }
+  .uno-plateau { height: auto; display: flex; flex-direction: column; gap: 10px; }
+  .uno-sieges { position: relative; inset: auto; z-index: 2; display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 6px;
+    scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .uno-siege, .uno-siege.uno-serre { position: relative; left: auto; top: auto; transform: none; flex: none; width: 104px; scroll-snap-align: start; }
+  .uno-siege-cartes { flex-direction: column; gap: 2px; white-space: nowrap; }
+  .uno-siege.uno-serre .uno-avatar { width: 56px; height: 56px; font-size: 15px; }
+  .uno-tapis { position: relative; inset: auto; height: 300px; }
+  .uno-ovale { left: 0; right: 0; top: 0; bottom: 0; }
+  .uno-centre { width: calc(100% - 44px); }
+  .uno-pile { gap: 20px; }
+  .uno-pilule { font-size: 13px; }
+
+  .uno-bas-ligne { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .uno-moi { order: 0; }
+  .uno-main-cartes { justify-content: flex-start; overflow-x: auto; min-height: 150px; padding: 18px 12px 6px; scrollbar-width: none; }
+  .uno-eventail-main { margin: 0 4px; transform: none; }
+  .uno-commandes { flex-direction: row; flex-wrap: wrap; }
+  .uno-cmd { flex: 1 1 120px; width: auto; }
+  .uno-commandes .uno-btn { flex: 1.4 1 200px; }
+  .uno-journal { max-height: 140px; }
+
+  .uno-corps .uno-chat { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; height: 72vh; max-height: 72vh; border-radius: 20px 20px 0 0;
+    background: #17171A; box-shadow: 0 -12px 40px rgba(0, 0, 0, .5); transform: translateY(105%); visibility: hidden;
+    transition: transform .25s ease, visibility .25s ease; }
+  .uno-table.chat-ouvert .uno-corps .uno-chat { transform: none; visibility: visible; }
+  .uno-table.chat-masque .uno-corps .uno-chat { display: flex; }
+  .uno-chat-fermer { display: inline-flex; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uno-sens-icone, .uno-anneau circle[data-anneau], .uno-pioche .ub, .uno-corps .uno-chat { transition: none !important; }
+}

@@ -10,7 +10,7 @@ function psql(user, sql) {
   const claims = JSON.stringify(user ? { sub: user, role: 'authenticated' } : { role: 'anon' });
   const full = `begin;\nselect set_config('request.jwt.claims', ${lit(claims)}, true) \\g /dev/null\nset local role ${user ? 'authenticated' : 'anon'};\n${sql};\ncommit;`;
   try {
-    const out = execFileSync('psql', ['-h', '/tmp', '-p', '54329', '-U', 'postgres', '-d', 'lg', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1'], { input: full, encoding: 'utf8' });
+    const out = execFileSync('psql', ['-h', '/tmp', '-p', '54329', '-U', 'postgres', '-d', process.env.FAKE_DB || 'lg', '-X', '-q', '-t', '-A', '-v', 'ON_ERROR_STOP=1'], { input: full, encoding: 'utf8' });
     const lines = out.split('\n').filter((l) => l.length && l !== 'BEGIN' && l !== 'COMMIT' && l !== 'SET');
     return { ok: true, text: lines.length ? lines[lines.length - 1] : '' };
   } catch (e) {

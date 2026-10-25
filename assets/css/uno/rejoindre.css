@@ -1,0 +1,45 @@
+/* ===== Humane Gang — Uno : rejoindre une partie (vues/rejoindre.js) =====
+   Une carte centrée (480 px au plus), pleine largeur sur téléphone. Utilise .uno-input, .uno-aide et .uno-centre
+   définis dans creer.css. */
+
+.uno-rejoindre-carte { width: min(100%, 480px); margin: 24px auto 0; display: flex; flex-direction: column; gap: 16px;
+  padding: 24px 28px; box-sizing: border-box; border-radius: 20px; min-width: 0; }
+.uno-rejoindre-surtitre { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.3; }
+.uno-rejoindre-statut { margin: 0; color: var(--muted, #ABA7A0); }
+.uno-rejoindre-erreur { margin: 0; padding: 10px 12px; border-radius: 10px; background: #3A1518; color: #FFB4B8; font-size: 15px; }
+.uno-erreur-carte .uno-titre { margin-bottom: 0; }
+
+.uno-rejoindre-entete { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uno-rejoindre-nom { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 32px; line-height: 1.1; overflow-wrap: anywhere; }
+.uno-rejoindre-hote { margin: 0; font-size: 15px; color: var(--muted, #ABA7A0); }
+.uno-hote { color: #E8B04B; }
+
+/* Places */
+.uno-places-ligne { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted, #ABA7A0); }
+.uno-places-ligne .uno-places-val { color: #F2EFEA; font-weight: 700; }
+.uno-places-barre { margin-top: 8px; height: 8px; border-radius: 999px; background: #2A2A2F; overflow: hidden; }
+.uno-places-barre > span { display: block; height: 100%; background: #8FC39F; }
+
+/* Règles (variantes, tours, mode) */
+.uno-chips-bloc { display: flex; flex-direction: column; gap: 8px; }
+.uno-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.uno-chips li { padding: 6px 12px; border-radius: 999px; background: #1F1F23; border: 1px solid #3A3A40; font-size: 14px; }
+
+/* Formulaire du pseudo */
+.uno-rejoindre-form { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.uno-rejoindre-form > label { font-size: 14px; font-weight: 700; }
+.uno-rejoindre-form .uno-rejoindre-erreur { font-size: 14px; }
+.uno-rejoindre-bouton { width: 100%; min-height: 52px; font-size: 16px; margin-top: 4px; }
+.uno-rejoindre-bouton:disabled { opacity: .6; cursor: progress; }
+
+.uno-lien-compte { display: flex; align-items: center; justify-content: center; min-height: 44px; box-sizing: border-box;
+  font-size: 15px; font-weight: 700; text-decoration: none; color: #E2C77E; }
+.uno-lien-compte:hover { color: #F0D898; text-decoration: underline; }
+.uno-lien-compte:focus-visible, .uno-retour:focus-visible { outline: 3px solid #E2C77E; outline-offset: 3px; }
+
+.uno-retour { min-height: 44px; }
+
+@media (max-width: 760px) {
+  .uno-rejoindre-carte { margin-top: 16px; padding: 20px; }
+  .uno-rejoindre-nom { font-size: 28px; }
+}

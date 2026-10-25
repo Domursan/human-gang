@@ -1,0 +1,64 @@
+/* ===== Humane Gang — administration : Uno (La Fête foraine › Jeux › Uno) =====
+   Styles de assets/js/admin-uno.js. Préfixe una-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+
+.una { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.una-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.una-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.una-colonnes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.una-pile { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.una-note { margin: 0; font-size: 14px; color: var(--muted); }
+.una-aide { font-size: 13px; color: var(--muted); }
+.una-card .btn { align-self: flex-start; }
+
+/* Paillettes */
+.una-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.una-table th, .una-table td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.una-table thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
+.una-table tbody th { font-weight: 400; }
+.una-table td { width: 160px; }
+.una-input {
+  min-height: 44px; box-sizing: border-box; width: 100%; padding: 0 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font: inherit; font-size: 15px;
+}
+.una-input-num { font-weight: 700; }
+.una-input[aria-invalid="true"] { border-color: var(--rose); }
+.una-table .una-input { width: 120px; }
+.una-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.una-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.una-champ label { font-size: 14px; color: var(--muted); }
+.una-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.una-statut { font-size: 14px; color: var(--muted); }
+.una-statut.una-ok { color: var(--sage); }
+.una-statut.una-erreur { color: var(--rose); }
+
+/* Badges */
+.una-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.una-badge { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.una-medaille {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--sand); color: #121212; display: grid; place-items: center;
+}
+.una-badge-texte { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.una-badge-texte strong { font-size: 15px; font-weight: 700; }
+.una-switch { flex: none; }
+
+/* Parties */
+.una-scroll { overflow-x: auto; min-width: 0; }
+.una-parties { min-width: 560px; }
+.una-parties td { width: auto; padding: 12px 12px 12px 0; }
+.una-parties th { padding-right: 12px; }
+.una-code { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.una-action { text-align: right; }
+.una-arreter { min-height: 44px; border-color: var(--rose); color: var(--rose); }
+
+@media (min-width: 900px) {
+  .una-colonnes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .una-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .una-table td { width: 120px; }
+  .una-table .una-input { width: 100%; }
+  .una-actions .btn { width: 100%; }
+  .una-card .btn { align-self: stretch; }
+}

@@ -29,7 +29,7 @@ export async function callFn(name, body) {
 const NOTIFY_LABELS = {
   ss_draw: 'tirage Secret Santa', ss_gift_sent: 'cadeau envoyé', ss_gift_received: 'cadeau reçu', irl_new: 'sortie IRL',
   message_new: 'message', dyn_announce: 'annonce', card_pull: 'tirage de carte', card_trade: 'échange de cartes',
-  bot_test: 'test du bot', admin_dm: 'message admin', card_gift_admin: 'don de carte', card_drop: 'annonce de drop', lg_party: 'partie de Loup-Garou',
+  bot_test: 'test du bot', admin_dm: 'message admin', card_gift_admin: 'don de carte', card_drop: 'annonce de drop', lg_party: 'partie de Loup-Garou', uno_party: 'partie de Uno',
 };
 
 /**

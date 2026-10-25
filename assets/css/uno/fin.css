@@ -1,0 +1,57 @@
+/* ===== Humane Gang — Uno : fin de manche ou de partie (vues/fin.js) =====
+   Mise en page : podium et tableau côte à côte à partir de 760 px, empilés sur téléphone.
+   Les classes de base (.card, .btn, .uno-titre, .uno-fil, .uno-invite-tag…) sont dans base.css et uno.css. */
+
+.uno-fin { display: flex; flex-direction: column; gap: 22px; padding: 8px 0 48px; color: var(--text); }
+.uno-fin [hidden] { display: none !important; }
+.uno-fin .uno-titre { margin-bottom: 6px; overflow-wrap: anywhere; }
+.uno-fin-sous { margin: 0; font-size: 16px; }
+
+.uno-fin-grille { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .uno-fin-grille { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; } }
+.uno-fin-carte { display: flex; flex-direction: column; gap: 16px; padding: 24px 28px; min-width: 0; box-sizing: border-box; }
+.uno-fin-carte h2 { margin: 0; font-size: 20px; font-weight: 700; }
+
+/* ----- Podium ----- */
+.uno-podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; min-height: 300px; }
+.uno-podium-col { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0;
+  width: min(150px, 30vw); }
+.uno-podium-col.rang-1 { width: min(170px, 34vw); }
+.uno-podium-col.vide { width: min(150px, 30vw); }
+.uno-podium-avatar { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--border-strong);
+  background: var(--surface-2); overflow: hidden; flex: none; box-sizing: border-box; }
+.uno-podium-nom { font-size: 15px; text-align: center; overflow-wrap: anywhere; max-width: 150px; }
+.uno-podium-marche { width: 100%; box-sizing: border-box; border-radius: 14px 14px 0 0; background: var(--surface-2);
+  border: 1px solid var(--border-strong); border-bottom: 0; display: flex; justify-content: center; align-items: flex-start; padding-top: 12px; }
+.uno-podium-col.rang-1 .uno-podium-marche { background: #2A2414; border-color: var(--sand); }
+.uno-podium-rang { font-family: var(--font-display); font-size: 40px; line-height: 1; color: #C9C5BE; }
+.uno-podium-col.rang-1 .uno-podium-rang { font-size: 52px; color: var(--sand); }
+.uno-podium-col.rang-3 .uno-podium-rang { color: #B7A88C; }
+
+/* ----- Tableau ----- */
+.uno-tableau { width: 100%; border-collapse: collapse; font-size: 15px; }
+.uno-tableau caption { text-align: left; padding-bottom: 8px; }
+.uno-tableau th, .uno-tableau td { padding: 12px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.uno-tableau tbody tr:last-child th, .uno-tableau tbody tr:last-child td { border-bottom: 0; }
+.uno-tableau thead th { padding: 8px 0; font-weight: 500; font-size: 13px; color: var(--muted); }
+.uno-tableau th[scope="row"] { font-weight: 700; }
+.uno-tableau .num { text-align: right; white-space: nowrap; }
+.uno-tableau td.num { color: var(--muted); }
+.uno-tableau td.num strong { color: var(--text); }
+
+/* ----- Récompense ----- */
+.uno-fin-recompense { flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 28px; }
+.uno-fin-recompense-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uno-fin-recompense-texte h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.uno-fin-recompense-texte p { margin: 0; font-size: 15px; color: var(--muted); }
+.uno-or { color: var(--sand); font-weight: 700; }
+.uno-fin-pailles { display: inline-flex; align-items: center; flex: none; min-height: 40px; padding: 0 16px; border-radius: 999px;
+  background: #26201A; border: 1px solid #5A4A2A; color: #E8C27A; font-family: var(--font-display); font-size: 16px; }
+
+/* ----- Actions ----- */
+.uno-fin-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.uno-fin-actions .btn { min-height: 52px; padding: 0 28px; }
+.uno-attente-revanche { margin: 0; align-self: center; }
+
+/* ----- Mouvement réduit ----- */
+@media (prefers-reduced-motion: reduce) { .uno-fin * { transition: none !important; } }

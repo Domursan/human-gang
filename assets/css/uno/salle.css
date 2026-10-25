@@ -1,0 +1,84 @@
+/* ===== Humane Gang — Uno : salle d'attente (vues/salle.js) =====
+   Mise en page : deux colonnes à partir de 760 px (code et règles à gauche, joueurs et chat à droite),
+   une colonne en dessous. Les classes de base (.card, .btn, .pill, .uno-titre, .uno-code…) sont dans base.css et uno.css.
+   Cibles tactiles : 44 px minimum. */
+
+.uno-salle { display: flex; flex-direction: column; gap: 20px; padding-bottom: 8px; color: var(--text); }
+.uno-salle [hidden] { display: none !important; }
+.uno-salle .uno-titre { margin-bottom: 0; overflow-wrap: anywhere; }
+
+/* ----- Grille ----- */
+.uno-salle-grille { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "code" "joueurs" "regles" "chat"; align-items: start; }
+@media (min-width: 760px) {
+  .uno-salle-grille { grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    grid-template-areas: "code joueurs" "regles chat"; }
+}
+.uno-salle-code { grid-area: code; }
+.uno-salle-grille > .card:nth-child(2) { grid-area: joueurs; }
+.uno-salle-grille > .card:nth-child(3) { grid-area: regles; }
+.uno-salle-chat { grid-area: chat; }
+
+.uno-salle-carte { display: flex; flex-direction: column; gap: 16px; padding: 24px; min-width: 0; box-sizing: border-box; }
+.uno-salle-carte h2 { margin: 0; font-size: 20px; font-weight: 700; }
+
+/* ----- Carte du code ----- */
+.uno-salle-etiq { font-size: 13px; color: var(--muted); }
+.uno-salle .uno-salle-codeaff { margin: 0; font-size: clamp(28px, 4.2vw, 36px); line-height: 1.2; letter-spacing: 2px;
+  white-space: nowrap; overflow-x: auto; }
+.uno-salle-boutons { display: flex; flex-wrap: wrap; gap: 10px; }
+.uno-salle-boutons .btn { min-height: 44px; }
+
+/* ----- Joueurs ----- */
+.uno-salle-entete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.uno-salle-entete strong { font-size: 14px; color: var(--muted); font-weight: 500; }
+.uno-progres { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.uno-progres span { display: block; height: 100%; background: var(--sand); border-radius: 999px; transition: width .3s ease; }
+
+.uno-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.uno-joueur { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 56px; padding: 8px 0;
+  border-bottom: 1px solid var(--border); }
+.uno-joueur:last-child { border-bottom: 0; }
+.uno-joueur-infos { flex: 1 1 140px; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.uno-pseudo { overflow-wrap: anywhere; }
+.uno-joueur .pill { flex: none; }
+.uno-joueur.moi .uno-pseudo { text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 4px; }
+
+.uno-etiquette { display: inline-flex; align-items: center; padding: 0 10px; min-height: 24px; border-radius: 999px;
+  border: 1px solid var(--border-strong); font-size: 12px; color: var(--muted); }
+
+.uno-place-vide { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed var(--border-strong); box-sizing: border-box; flex: none; }
+.uno-place-libre { border-bottom-style: dashed; border-bottom-color: var(--border-strong); }
+.uno-place-libre .uno-joueur-infos { color: var(--muted); }
+
+.uno-btn-icone { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong);
+  background: transparent; color: var(--text); font-size: 22px; line-height: 1; cursor: pointer; }
+@media (hover: hover) { .uno-btn-icone:hover { background: var(--surface-2); } }
+.uno-btn-icone:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+/* ----- Règles ----- */
+.uno-regles { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+.uno-regles li { display: flex; align-items: center; gap: 10px; }
+.uno-regles li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--sand); flex: none; }
+
+/* ----- Chat (le composant vit dans chat.js) ----- */
+.uno-salle-chat { display: flex; flex-direction: column; gap: 14px; padding: 24px; min-width: 0; box-sizing: border-box; }
+.uno-salle-chat .lg-chat-fil { max-height: 360px; overflow-y: auto; }
+
+/* ----- Actions ----- */
+.uno-salle-actions { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px; box-sizing: border-box; }
+.uno-salle-actions-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.uno-salle-actions-ligne .btn { min-height: 52px; padding: 0 26px; font-size: 16px; }
+.uno-salle-bilan { margin: 0; font-size: 15px; }
+.uno-salle [data-raison]:empty { display: none; }
+.uno-salle-quitter { margin: 0; }
+.uno-salle .uno-lien-action { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--muted);
+  font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.uno-salle .uno-lien-action:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ----- Adieu (invité qui a quitté) ----- */
+.uno-salle-adieu { display: flex; flex-direction: column; gap: 12px; max-width: 560px; margin: 24px auto; }
+.uno-salle-adieu h2 { margin: 0; font-size: 22px; }
+
+/* ----- Mouvement réduit ----- */
+@media (prefers-reduced-motion: reduce) { .uno-progres span { transition: none; } }

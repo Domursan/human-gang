@@ -54,6 +54,8 @@
 //   lg_party         { code: 'HGLG-####' } hôte d'une partie de Loup-Garou créée avec annonce_discord → annonce dans le salon
 //                    (bot.channels.loup_garou) : hôte, nom, places, code, lien d'invitation. Partie en attente créée il y a moins
 //                    de 15 min ; une seule annonce (réservation hg_lg_parties.discord_annonce_at). Désactivable (bot.notify.lg_party).
+//   uno_party        { code: 'HGUNO-####' } même principe pour une partie de Uno (bot.channels.uno, bot.notify.uno_party,
+//                    réservation hg_uno_parties.discord_annonce_at).
 // Mentions des annonces du salon (draw, irl, dyn, card_pull, card_trade, card_drop) : bot.mentions.<type> = none | role | everyone,
 // rôle : bot.mention_role_id (voir ../_shared/mentions.ts). Défaut : aucune mention.
 // Salons des annonces (draw, irl, birthday, dyn, card_pull, card_trade, card_drop) : bot.channels.<type> (liste de salons),
@@ -82,6 +84,8 @@ import {
 import { loadAttachments, MediaError, validAttachmentPaths } from '../_shared/bot-media.ts';
 import { botRules } from '../_shared/reglages.ts';
 import { loadNotifPrefs, notifAllowed, type NotifCat } from '../_shared/notif-prefs.ts';
+/** Espace de largeur nulle : Discord refuse les champs vides. */
+const ZWSP = String.fromCharCode(0x200b);
 
 /* ---------- Constantes et clients ---------- */
 
@@ -107,7 +111,7 @@ type Bot = MentionBot & {
   channels?: Partial<Record<MentionType, string | string[] | null>> | null;
   salons?: { id: string; nom: string }[] | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop' | 'lg_party', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop' | 'lg_party' | 'uno_party', boolean>>;
 };
 /** Profil de l'appelant ou d'un destinataire, tel que lu par la fonction. */
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
@@ -503,7 +507,7 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
     const ok = await trySend(() => sendDM(other.discord_id!, embed({
       ...embedFrom(rendered), url,
       color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
-      ...(url ? { fields: [{ name: '\u200b', value: `[Répondre sur le site](${url})` }] } : {}),
+      ...(url ? { fields: [{ name: ZWSP, value: `[Répondre sur le site](${url})` }] } : {}),
     })), `MP message ${uid}`);
     ok ? dms++ : failed++;
   }
@@ -655,7 +659,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     const t = truncate(withPseudo(title, pseudo).trim(), 256);
     const d = truncate(withPseudo(body, pseudo).trim(), 4096);
     return embed({
-      ...(t ? { title: t } : {}), description: d || '\u200b', color: COLOR.accent,
+      ...(t ? { title: t } : {}), description: d || ZWSP, color: COLOR.accent,
       ...(image ? { image: { url: `attachment://${image.name}` } } : {}), // première image affichée dans l'embed
     });
   };
@@ -1118,6 +1122,57 @@ async function onLgParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   return { channel, channels };
 }
 
+/**
+ * Annonce d'une partie de Uno dans le salon : hôte, nom, places, code et lien d'invitation.
+ * Seul l'hôte peut la demander, pour une partie encore en attente, créée il y a moins de 15 min. Une seule annonce par partie.
+ * @param {Profile} me Appelant (l'hôte).
+ * @param {Bot} bot Réglages du bot.
+ * @param {Record<string, unknown>} p Corps de la requête (code).
+ * @param {Templates} tpl Modèles personnalisés.
+ * @returns {Promise<object>} { channel } ou une raison de non-envoi.
+ * @throws {HttpError} 400, 403, 404.
+ */
+async function onUnoParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  const code = String(p.code ?? '');
+  if (!/^HGUNO-[0-9]{4}$/.test(code)) throw new HttpError(400, 'code manquant');
+  if (bot.notify?.uno_party === false) return { skipped: 'désactivé' };
+  const unoChannels = channelsFor(bot, 'uno');
+  if (!unoChannels.length) return { skipped: 'aucun salon configuré' };
+  const { data: g } = await db.from('hg_uno_parties').select('id, code, nom, hote, statut, nb_places, annonce_discord, discord_annonce_at, created_at')
+    .eq('code', code).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!g) throw new HttpError(404, 'Partie introuvable');
+  if (g.hote !== me.id) throw new HttpError(403, 'Seul l\'hôte peut annoncer sa partie');
+  if (!g.annonce_discord) return { skipped: 'annonce non demandée' };
+  if (g.statut !== 'attente') return { skipped: 'partie déjà lancée' };
+  if (!recent(g.created_at)) return { skipped: 'partie déjà ancienne' };
+  if (g.discord_annonce_at) return { skipped: 'déjà annoncée' };
+
+  // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
+  const { data: claimed, error: claimErr } = await db.from('hg_uno_parties').update({ discord_annonce_at: new Date().toISOString() })
+    .eq('id', g.id).is('discord_annonce_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà annoncée' };
+
+  const { count } = await db.from('hg_uno_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
+  const n = count ?? 0;
+  const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_places}`;
+  const lien = link(`uno.html?code=${g.code}`) ?? '';
+  const rendered = renderTemplate('uno_party_announce', { hote: me.pseudo, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien }, tpl);
+  const annonce = {
+    ...mentionFor(bot, 'uno'),
+    ...embed({
+      ...embedFrom(rendered), url: lien || undefined, color: COLOR.info,
+      fields: [{ name: 'Code', value: g.code, inline: true }, { name: 'Joueurs', value: places, inline: true }],
+    }),
+  };
+  const channels = await sendToChannels(unoChannels, (id) => sendChannel(id, annonce), 'annonce Uno', friendlyDiscordError);
+  await logAnnounce(me, 'auto:uno', `Annonce de partie : ${g.code}`, channels, true);
+  const channel = channels.some((c) => c.ok);
+  // Aucun salon n'a reçu l'annonce : on libère la réservation pour qu'un nouvel appel puisse réessayer.
+  if (!channel) await db.from('hg_uno_parties').update({ discord_annonce_at: null }).eq('id', g.id);
+  return { channel, channels };
+}
+
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
 /** Nombre maximal de cartes distinctes traitées par appel (une ouverture de booster). */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
@@ -1243,6 +1298,7 @@ Deno.serve(async (req) => {
       case 'card_gift_admin': result = await onCardGiftAdmin(me, bot, payload, tpl); break;
       case 'card_drop': result = await onCardDrop(me, bot, payload, tpl); break;
       case 'lg_party': result = await onLgParty(me, bot, payload, tpl); break;
+      case 'uno_party': result = await onUnoParty(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

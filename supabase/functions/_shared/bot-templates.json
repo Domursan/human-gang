@@ -103,6 +103,10 @@
     "lg_party_announce": {
       "title": "Une partie de Loup-Garou se prépare !",
       "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
+    },
+    "uno_party_announce": {
+      "title": "Une partie de Uno se prépare !",
+      "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
     }
   },
   "meta": {
@@ -355,6 +359,18 @@
         "code": { "label": "Code de la partie", "example": "HGLG-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
         "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/loup-garou.html?code=HGLG-4821" }
+      }
+    },
+    "uno_party_announce": {
+      "group": "jeux", "label": "Partie de Uno", "target": "Salon d'annonces", "color": "#E2C77E",
+      "description": "Publié quand un membre crée une partie de Uno avec l'option « Annoncer sur le Discord du gang ». Une seule annonce par partie. Désactivable dans Bot Discord, activé par défaut.",
+      "fields": [["Code", "{code}"], ["Joueurs", "{places}"]],
+      "vars": {
+        "hote": { "label": "Pseudo de l'hôte", "example": "Domursan" },
+        "nom": { "label": "Nom de la partie", "example": "Uno du dimanche" },
+        "code": { "label": "Code de la partie", "example": "HGUNO-4821" },
+        "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/uno.html?code=HGUNO-4821" }
       }
     }
   }

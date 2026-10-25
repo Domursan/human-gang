@@ -38,6 +38,7 @@ export const MENUS = [
     ] },
     { sep: true },
     { label: 'Loup-Garou', href: 'loup-garou.html', page: 'loup-garou', strict: true },
+    { label: 'Uno', href: 'uno.html', page: 'uno', strict: true },
   ] },
   { id: 'calendrier', label: 'Calendrier', href: 'calendrier.html', page: 'calendrier' },
   { id: 'autres', label: 'Autres', auto: true },

@@ -1,0 +1,123 @@
+/* ===== Humane Gang — Uno : décor et composants partagés (uno.html) =====
+   Feuilles par écran : assets/css/uno/*.css (importées ci-dessous).
+   Cartes : style « art déco » (.uc.v3), dos D « arc-en-ciel doré » (.ub.d), validés en maquette.
+   Animations coupées par <body class="uno-calme"> (préférence du membre) et prefers-reduced-motion. */
+@import url('uno/accueil.css');
+@import url('uno/creer.css');
+@import url('uno/rejoindre.css');
+@import url('uno/salle.css');
+@import url('uno/table.css');
+@import url('uno/fin.css');
+@import url('uno/stats.css');
+
+/* ---------- Décor ---------- */
+body.uno-page {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, #1C1A2A 0, var(--bg) 70%);
+  background-repeat: no-repeat;
+}
+.uno-app { padding-bottom: 48px; }
+.uno-app .card { background: color-mix(in srgb, var(--surface) 90%, transparent); }
+.uno-chargement { padding: 48px 0; color: var(--muted); text-align: center; }
+.uno-erreur { margin: 32px auto; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+.uno-fil { font-size: 13px; color: var(--muted); margin: 16px 0 8px; }
+.uno-fil a { color: inherit; }
+.uno-titre { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(30px, 5vw, 40px); line-height: 1.1; margin: 0 0 16px; }
+.uno-code { font-family: 'Courier New', monospace; letter-spacing: 3px; }
+.uno-invite-tag { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border, #3A3A40); border-radius: 999px; font-size: 11px; color: var(--muted); vertical-align: middle; }
+
+/* ---------- Cartes : base ---------- */
+.uc { position: relative; display: block; flex: none; width: 72px; height: 108px; border-radius: 10px; background: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .45); border: 0; padding: 0; font-family: 'Archivo Black', sans-serif; --c: #17171A; color: inherit; }
+.uc .f { position: absolute; inset: 4px; border-radius: 7px; display: grid; place-items: center; overflow: hidden; background: var(--c); }
+.uc.r { --c: #D93A3F; } .uc.y { --c: #F2B705; } .uc.g { --c: #1F9D55; } .uc.b { --c: #2A6FDB; } .uc.k { --c: #17171A; }
+.uc .m { width: 64%; aspect-ratio: 1; display: grid; place-items: center; background: #FFFFFF; }
+.uc .m > span { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; line-height: 1; text-align: center;
+  font-size: 32px; color: var(--c); text-box: trim-both cap alphabetic; font-variant-numeric: lining-nums; }
+.uc .m > span.t { font-size: 24px; }
+.uc .m > span > svg { width: 30px; height: 30px; }
+.uc.y .m > span { color: #8A6400; }
+.uc.k .m { background: conic-gradient(#D93A3F 0 25%, #2A6FDB 0 50%, #F2B705 0 75%, #1F9D55 0); }
+.uc.k .m > span { color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+.uc .co { position: absolute; font-size: 15px; line-height: 1; color: #FFFFFF; display: grid; place-items: center; text-box: trim-both cap alphabetic; }
+.uc .co > svg { width: 14px; height: 14px; }
+.uc .co.tl { left: 8px; top: 8px; } .uc .co.br { right: 8px; bottom: 8px; transform: rotate(180deg); }
+.uc.y .co { color: #1A1A1A; }
+
+/* Tailles */
+.uc.s { width: 52px; height: 78px; border-radius: 8px; } .uc.s .f { inset: 3px; border-radius: 6px; }
+.uc.s .m > span { font-size: 23px; } .uc.s .m > span.t { font-size: 17px; } .uc.s .m > span > svg { width: 21px; height: 21px; }
+.uc.s .co { font-size: 11px; } .uc.s .co > svg { width: 11px; height: 11px; } .uc.s .co.tl { left: 6px; top: 6px; } .uc.s .co.br { right: 6px; bottom: 6px; }
+.uc.l { width: 88px; height: 132px; border-radius: 12px; } .uc.l .f { inset: 5px; border-radius: 8px; }
+.uc.l .m > span { font-size: 42px; } .uc.l .m > span.t { font-size: 31px; } .uc.l .m > span > svg { width: 36px; height: 36px; }
+.uc.l .co { font-size: 18px; } .uc.l .co > svg { width: 16px; height: 16px; } .uc.l .co.tl { left: 10px; top: 10px; } .uc.l .co.br { right: 10px; bottom: 10px; }
+
+/* Style art déco (.v3) */
+.uc.v3 .f { background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, .16) 0 6deg, transparent 6deg 18deg), var(--c);
+  box-shadow: inset 0 0 0 3px var(--c), inset 0 0 0 4px #E2C77E; }
+.uc.v3 .m { width: 72%; border-radius: 50%; background: #FFFDF6; box-shadow: 0 0 0 2px #E2C77E, 0 0 0 4px var(--c), 0 0 0 5px #E2C77E; }
+.uc.v3 .m > span { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; font-size: 34px; font-feature-settings: "lnum" 1; }
+.uc.v3 .m > span.t { font-size: 25px; }
+.uc.v3.s .m > span { font-size: 24px; } .uc.v3.s .m > span.t { font-size: 18px; }
+.uc.v3.l .m > span { font-size: 42px; } .uc.v3.l .m > span.t { font-size: 31px; }
+.uc.v3 .co { font-family: 'Playfair Display', Georgia, serif; font-weight: 900; }
+.uc.v3.k .m { background: conic-gradient(#D93A3F 0 25%, #2A6FDB 0 50%, #F2B705 0 75%, #1F9D55 0); }
+
+/* Cartes dans la main : jouable surlignée, sinon assombrie */
+button.uc { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+button.uc.jouable { box-shadow: 0 0 0 3px #E2C77E, 0 8px 18px rgba(0, 0, 0, .5); }
+button.uc.jouable:hover, button.uc.jouable:focus-visible { transform: translateY(-14px); }
+button.uc.bloquee { filter: brightness(.55); cursor: not-allowed; }
+button.uc:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; }
+
+/* ---------- Dos de carte D : bande arc-en-ciel, anneau doré ---------- */
+.ub { position: relative; display: block; flex: none; width: 72px; height: 108px; border-radius: 10px; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0, 0, 0, .45); }
+.ub .f { position: absolute; inset: 4px; border-radius: 7px; overflow: hidden; display: grid; place-items: center; }
+.ub.s { width: 52px; height: 78px; border-radius: 8px; } .ub.s .f { inset: 3px; border-radius: 6px; }
+.ub.l { width: 88px; height: 132px; border-radius: 12px; } .ub.l .f { inset: 5px; border-radius: 8px; }
+.ub.d .f { background: #16161B; }
+.ub.d .f > span { position: absolute; left: -30%; right: -30%; top: 38%; height: 24%; transform: rotate(-35deg);
+  background: linear-gradient(180deg, #FE3104 0 16.6%, #FCA301 0 33.3%, #FBD32D 0 50%, #159946 0 66.6%, #2B5AE2 0 83.3%, #4E2398 0); }
+.ub.d .f > i { position: relative; width: 58%; aspect-ratio: 1; border-radius: 50%; background: #0E0E10; border: 2px solid #E2C77E;
+  box-shadow: 0 0 12px rgba(226, 199, 126, .55); display: grid; place-items: center; font-style: normal; }
+.ub.d .f > i > b { font: 400 14px 'Archivo Black', sans-serif; color: #E2C77E; }
+.ub.s.d .f > i > b { font-size: 11px; }
+
+/* ---------- Bouton UNO festif ---------- */
+.uno-btn { position: relative; border: 0; border-radius: 999px; cursor: pointer; color: #FFFFFF; font-family: 'Archivo Black', sans-serif;
+  font-size: 26px; letter-spacing: 2px; min-height: 64px; padding: 0 28px;
+  background: linear-gradient(120deg, #FE3104 0, #FCA301 22%, #E0A800 40%, #159946 60%, #2B5AE2 80%, #4E2398 100%);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .55), 0 0 10px rgba(0, 0, 0, .35);
+  box-shadow: 0 0 0 3px #0E0E10, 0 0 0 5px #F2EFEA, 0 10px 28px rgba(254, 120, 4, .45);
+  transform: rotate(-2deg); display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.uno-btn.actif { animation: uno-pulse 1.6s ease-in-out infinite; }
+.uno-btn svg { flex: none; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .5)); }
+.uno-btn[disabled] { filter: grayscale(.85) brightness(.6); cursor: not-allowed; animation: none; }
+@keyframes uno-pulse { 50% { transform: rotate(2deg) scale(1.04);
+  box-shadow: 0 0 0 3px #0E0E10, 0 0 0 5px #F2EFEA, 0 12px 36px rgba(254, 120, 4, .7), 0 0 40px rgba(43, 90, 226, .45); } }
+
+/* ---------- Roue des couleurs (après un Joker) ---------- */
+.uno-roue-voile { position: fixed; inset: 0; z-index: 60; background: rgba(4, 4, 8, .62); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px; padding: 16px; }
+.uno-roue-voile h2 { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 28px; text-shadow: 0 2px 8px rgba(0, 0, 0, .6); }
+.uno-roue { position: relative; width: min(300px, 78vw); aspect-ratio: 1; border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(14, 14, 16, .9), 0 0 0 8px #E2C77E, 0 0 60px rgba(226, 199, 126, .35); }
+.uno-roue button { position: absolute; width: calc(50% - 3px); height: calc(50% - 3px); padding: 0; border: 0; cursor: pointer;
+  color: #FFFFFF; font: 700 15px Inter, sans-serif; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .25); transition: filter .15s ease; }
+.uno-roue button:hover, .uno-roue button:focus-visible { filter: brightness(1.15); outline: 3px solid #FFFFFF; outline-offset: -6px; }
+.uno-roue button span { position: absolute; }
+.uno-roue .q-r { left: 0; top: 0; border-radius: 100% 0 0 0; background: #D93A3F; }
+.uno-roue .q-b { right: 0; top: 0; border-radius: 0 100% 0 0; background: #2A6FDB; }
+.uno-roue .q-g { right: 0; bottom: 0; border-radius: 0 0 100% 0; background: #1F9D55; }
+.uno-roue .q-y { left: 0; bottom: 0; border-radius: 0 0 0 100%; background: #F2B705; color: #1A1A1A; }
+.uno-roue .q-r span { right: 44%; bottom: 44%; transform: translate(50%, 50%); }
+.uno-roue .q-b span { left: 44%; bottom: 44%; transform: translate(-50%, 50%); }
+.uno-roue .q-g span { left: 44%; top: 44%; transform: translate(-50%, -50%); }
+.uno-roue .q-y span { right: 44%; top: 44%; transform: translate(50%, -50%); }
+.uno-roue .centre { position: absolute; left: 50%; top: 50%; width: 36%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: #0E0E10; box-shadow: 0 0 0 4px #0E0E10, 0 0 0 6px #E2C77E; display: grid; place-items: center; }
+.uno-roue-voile p { margin: 0; font-size: 14px; color: #D9D5CD; }
+
+/* ---------- Animations coupées ---------- */
+body.uno-calme .uno-btn, body.uno-calme * { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .uno-btn.actif { animation: none; } button.uc { transition: none; } }

@@ -37,6 +37,7 @@ const NOTIFY = [
   ['card_gift_admin', 'MP : carte offerte par l\'admin', 'MP au membre qui reçoit une carte de l\'admin ou du Staff (Cartes)'],
   ['card_drop', 'Drop lancé', 'annonce dans le salon quand un drop est lancé avec « Annoncer sur Discord »'],
   ['lg_party', 'Partie de Loup-Garou', 'annonce dans le salon quand un membre crée une partie avec « Annoncer sur le Discord du gang »'],
+  ['uno_party', 'Partie de Uno', 'annonce dans le salon quand un membre crée une partie de Uno avec « Annoncer sur le Discord du gang »'],
   ['quiz_daily', 'Publier la question du jour', 'chaque matin dans le salon « Question du jour » (à couper pendant les vacances)'],
   ['unwrap', 'Tour de passage au déballage', 'annonce « C’est au tour de … » pendant la soirée déballage du Secret Santa (désactivé par défaut)'],
 ];
@@ -46,7 +47,7 @@ const NOTIFY_KEYS = NOTIFY.map(([k]) => k);
 const MENTION_TYPES = [
   ['draw', 'Tirage du Secret Santa'], ['irl', 'Nouvelles sorties IRL'], ['birthday', 'Anniversaires'],
   ['dyn', 'Événements dynamiques'], ['card_pull', 'Belle carte obtenue'], ['card_trade', 'Échange conclu'],
-  ['card_drop', 'Drop lancé'], ['quiz', 'Question du jour'], ['cine', 'Ciné-club'], ['loup_garou', 'Partie de Loup-Garou'],
+  ['card_drop', 'Drop lancé'], ['quiz', 'Question du jour'], ['cine', 'Ciné-club'], ['loup_garou', 'Partie de Loup-Garou'], ['uno', 'Partie de Uno'],
 ];
 // Modes de mention possibles pour une annonce : aucune, le rôle, ou @everyone.
 const MENTION_MODES = [['none', 'Aucune'], ['role', 'Le rôle'], ['everyone', '@everyone']];

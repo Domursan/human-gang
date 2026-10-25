@@ -67,6 +67,7 @@ const OPTIONAL = [
   { sub: 'erreurs', url: './admin-errors.js', fn: 'mountErrorsSection' }, // Pilotage › Site › Erreurs du site (hg_client_errors, A9)
   { sub: 'archives', url: './admin-archive.js', fn: 'mountArchiveSection' }, // Pilotage › Site › Archives (fonction hg-archive, A8)
   { sub: 'loup-garou', url: './admin-loup-garou.js', fn: 'mountLoupGarouSection' }, // La Fête foraine › Jeux › Loup-Garou (Paillettes, badges, parties ; administrateur)
+  { sub: 'uno', url: './admin-uno.js', fn: 'mountUnoSection' }, // La Fête foraine › Jeux › Uno (Paillettes, badges, parties en cours ; administrateur)
   { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Event › Calendrier et cinéma (idées V8, V9)
   { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Pilotage › Bot › Commandes slash (idée D3)
   { sub: 'roles', url: './admin-roles.js', fn: 'mountRolesSection' },          // Membres › Comptes › Rôles (migration 103)
@@ -245,6 +246,7 @@ regSub('sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom d
 if (MOUNT.secrets) regSub('secrets', { main: () => MOUNT.secrets($('#eggs-root')) }); // easter eggs : hg_settings.eggs et trouvailles
 if (MOUNT.arcade) regSub('arcade', { main: () => MOUNT.arcade($('#arcade-root')) }); // arcade des pages 404 : classement et effacement des scores
 if (MOUNT['loup-garou']) regSub('loup-garou', { main: () => MOUNT['loup-garou']($('#loup-garou-root')) }); // Loup-Garou : Paillettes, badges, parties (administrateur)
+if (MOUNT.uno) regSub('uno', { main: () => MOUNT.uno($('#uno-root')) }); // Uno : Paillettes, badges, parties en cours (administrateur)
 // Page « Jeux » : GeoGuessr, citations (admin-jeux.js)
 if (MOUNT.geoguessr) regSub('geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
 if (MOUNT.citations) regSub('citations', { main: () => MOUNT.citations($('#citations-admin-root')) });

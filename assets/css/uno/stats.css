@@ -1,0 +1,61 @@
+/* ===== Humane Gang — Uno : mes statistiques (uno/vues/stats.js) =====
+   Tuiles (4 puis 3 par ligne), badges et dernières parties côte à côte (une colonne sous 760 px). */
+
+.uno-st { display: flex; flex-direction: column; gap: 20px; padding-top: 8px; padding-bottom: 16px; min-width: 0; }
+.uno-st .uno-fil { margin: 16px 0 0; }
+.uno-st-aide { margin: 0; font-size: 14px; color: var(--muted); }
+.uno-st-sous { margin: 0; font-size: 13px; color: var(--muted); }
+.uno-st .uno-st-titre { margin: 0; font-family: var(--font-body); font-size: 20px; font-weight: 700; line-height: 1.3; }
+
+/* ---------- Tuiles ---------- */
+.uno-st-grille { display: grid; gap: 16px; }
+.uno-st-grille-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.uno-st-grille-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.uno-st-tuile { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 20px 22px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.uno-st-tuile.vert { background: var(--sage-soft); border-color: #24402E; color: var(--sage-text); }
+.uno-st-tuile.or { background: #26201A; border-color: #443822; color: #E8C27A; }
+.uno-st-tuile.rose { background: var(--ss-bg); border-color: #4A2A30; color: var(--rose); }
+.uno-st-chiffre { font-family: var(--font-display); font-size: 40px; line-height: 1.1; overflow-wrap: anywhere; }
+.uno-st-tuile-nom { font-size: 14px; color: inherit; }
+.uno-st-tuile:not(.vert):not(.or):not(.rose) .uno-st-tuile-nom { color: var(--muted); }
+
+/* ---------- Sections côte à côte ---------- */
+.uno-st-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.uno-st .uno-st-section { display: flex; flex-direction: column; gap: 16px; padding: 24px 28px; box-sizing: border-box; min-width: 0; }
+
+/* ---------- Badges ---------- */
+.uno-st-liste-badges { list-style: none; margin: 0; padding: 0; }
+.uno-st-badge { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.uno-st-badge:last-child { border-bottom: 0; }
+.uno-st-medaille { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border-strong);
+  background: var(--surface-2); color: var(--muted); display: grid; place-items: center; }
+.uno-st-badge.obtenu .uno-st-medaille { border-color: var(--sand); color: var(--sand);
+  background: radial-gradient(circle at 50% 40%, #B8434F 0, #7E2733 75%); }
+.uno-st-badge-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.uno-st-badge-texte strong { font-size: 15px; font-weight: 700; }
+.uno-st-badge:not(.obtenu) .uno-st-badge-texte strong { color: #9A9A9F; }
+.uno-st-sous, .uno-st-statut { font-size: 13px; color: var(--muted); }
+.uno-st-badge.obtenu .uno-st-statut { color: var(--sage-text); }
+
+/* ---------- Dernières parties ---------- */
+.uno-st-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.uno-st-table th { text-align: left; font-size: 13px; font-weight: 500; color: var(--muted); padding: 0 0 10px; border-bottom: 1px solid var(--border); }
+.uno-st-table td { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.uno-st-table tbody tr:last-child td { border-bottom: 0; }
+.uno-st-table .droite { text-align: right; }
+.uno-st-table td strong { font-weight: 700; }
+.uno-st-premier { color: #E8C27A; font-weight: 700; }
+
+/* ---------- Téléphone et tablette ---------- */
+@media (max-width: 760px) {
+  .uno-st { gap: 16px; }
+  .uno-st-grille { gap: 10px; }
+  .uno-st-grille-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .uno-st-grille-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .uno-st-grille-3 > :last-child { grid-column: 1 / -1; }
+  .uno-st-tuile { padding: 14px 16px; }
+  .uno-st-chiffre { font-size: 32px; }
+  .uno-st-duo { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .uno-st .uno-st-section { padding: 20px; }
+}
