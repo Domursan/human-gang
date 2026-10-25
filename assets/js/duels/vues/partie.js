@@ -1,7 +1,8 @@
 // ===== Humane Gang — Duels : pilotage d'un duel (#partie/CODE) =====
 /*
  * Rôle : suit la partie en temps réel (duels/api.js) et affiche la bonne vue selon son statut :
- *   attente → vues/salle.js · en_cours → vues/p4.js, vues/morpion.js ou vues/mastermind.js (selon le jeu) ·
+ *   attente → vues/salle.js · en_cours → vues/p4.js, vues/morpion.js, vues/mastermind.js,
+ *   vues/bataille.js ou vues/quiestce.js (selon le jeu) ·
  *   terminee / annulee → vues/fin.js. Un spectateur (duel public) voit la même table, sans pouvoir jouer.
  * La vue n'est recréée que si le statut change ; sinon on appelle vue.maj(etat).
  * Les messages du chat (anciens puis nouveaux) sont passés à la vue par vue.message(msg).
@@ -19,6 +20,8 @@ const VUES = {
   p4: () => import('./p4.js'),
   morpion: () => import('./morpion.js'),
   mastermind: () => import('./mastermind.js'),
+  bataille: () => import('./bataille.js'),
+  quiestce: () => import('./quiestce.js'),
   fin: () => import('./fin.js'),
 };
 

@@ -31,7 +31,7 @@
 .duels-acc-aide { margin: 0; font-size: 14px; color: var(--muted); }
 
 /* ---------- Les trois jeux ---------- */
-.duels-acc-jeux { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.duels-acc-jeux { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
 .duels-acc-jeu { border-radius: var(--radius); border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 92%, transparent);
   overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
 .duels-acc-jeu .duels-vignette { border-bottom: 1px solid var(--border); }
@@ -79,10 +79,10 @@
 @media (max-width: 900px) {
   .duels-acc-tete { grid-template-columns: minmax(0, 1fr); }
   .duels-acc-grille { grid-template-columns: minmax(0, 1fr); }
-  .duels-acc-jeux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .duels-acc-jeux { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
-  .duels-acc-jeux { grid-template-columns: minmax(0, 1fr); }
+  .duels-acc-jeux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .duels-acc-carte { padding: 18px; }
   .duels-acc-form-ligne .btn { width: 100%; }
   .duels-acc-code { font-size: 16px; }

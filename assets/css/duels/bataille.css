@@ -1,0 +1,116 @@
+/* ===== Humane Gang — Duels : table Bataille navale (vues/bataille.js) ===== */
+/* Couleurs de la mer et des navires : tons désaturés du site (voir maquettes BNPlacement / BNTable). */
+
+.duels-bn .duels-plateau { align-items: stretch; width: 100%; }
+
+/* Zones et panneaux */
+.duels-bn .bn-zone { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 16px; width: 100%; align-items: start; }
+.duels-bn .bn-zone-saisie { grid-template-columns: max-content minmax(0, 1fr); }
+.duels-bn .bn-panneau { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.duels-bn .bn-entete { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.duels-bn .bn-entete .duels-h3 { margin: 0; font-size: 18px; }
+.duels-bn .bn-sous { font-size: 13px; color: var(--muted); }
+.duels-bn .bn-conteneur { display: flex; justify-content: center; min-width: 0; }
+.duels-bn .bn-attente { margin: 0; text-align: center; color: var(--sand); font-weight: 700; }
+.duels-bn .bn-apercu { margin: 0; min-height: 1.4em; font-size: 14px; font-weight: 700; color: var(--muted); }
+.duels-bn .bn-apercu.is-ok { color: var(--sage-text); }
+.duels-bn .bn-apercu.is-ko { color: var(--rose); }
+.duels-bn .bn-legende { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; font-size: 13px; color: var(--muted); }
+.duels-bn .bn-pastille { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid; box-sizing: border-box; }
+.duels-bn .bn-pastille.is-ok { background: rgba(143, 195, 159, .45); border-color: #8FC39F; }
+.duels-bn .bn-pastille.is-ko { background: #B5485A; border-color: #7A2A36; }
+
+/* Grille 10 × 10 (labels A-J, 1-10) */
+.duels-bn .bn-grille { --bn-lbl: 22px; --bn-cell: 40px; position: relative; display: grid; width: max-content;
+  grid-template-columns: var(--bn-lbl) repeat(10, var(--bn-cell)); grid-template-rows: var(--bn-lbl) repeat(10, var(--bn-cell)); }
+.duels-bn .bn-coin { display: block; }
+.duels-bn .bn-lbl { display: grid; place-items: center; font-size: 12px; font-weight: 500; color: var(--muted); }
+.duels-bn .bn-c { box-sizing: border-box; width: 100%; height: 100%; margin: 0; padding: 0; position: relative; display: grid; place-items: center;
+  border: 1px solid #2E5A7A; background: #12395A; color: var(--text); font: 700 11px Inter, sans-serif; }
+button.bn-c { cursor: pointer; }
+button.bn-c:hover:not(:disabled) { background: #17496F; }
+button.bn-c:disabled { cursor: default; }
+button.bn-c:focus-visible { outline: 3px solid var(--sand); outline-offset: -3px; z-index: 1; }
+.duels-bn .bn-c.is-navire { background: #173F63; border-color: #3B6A91; }
+.duels-bn .bn-c.is-choisi { background: #1B4A72; }
+.duels-bn .bn-c.is-ap-ok { background: rgba(143, 195, 159, .45); border-color: #8FC39F; }
+.duels-bn .bn-c.is-ap-ko { background: #B5485A; border-color: #7A2A36; }
+.duels-bn .bn-c.is-carre { background: #1C4A6E; box-shadow: inset 0 0 0 1px rgba(226, 199, 126, .55); }
+.duels-bn .bn-c.is-cible:hover { box-shadow: inset 0 0 0 3px var(--sand); }
+.duels-bn .bn-c.is-touche { background: radial-gradient(circle at 50% 62%, #F07A2A 0, #B5452A 58%, #6E2418 100%); border-color: #8E2E1C; box-shadow: inset 0 0 10px rgba(255, 140, 60, .6); }
+.duels-bn .bn-c.is-coule { background: linear-gradient(45deg, transparent 44%, #F2EFEA 44%, #F2EFEA 56%, transparent 56%),
+  linear-gradient(-45deg, transparent 44%, #F2EFEA 44%, #F2EFEA 56%, transparent 56%), #3E444D; border-color: #2A2F36; box-shadow: none; }
+.duels-bn .bn-c.is-radar { background: #1C3A57; }
+
+/* Icônes des cases (le texte donne toujours l'état, pour ne pas dépendre de la couleur) */
+.duels-bn .bn-eau { width: 40%; height: 40%; border-radius: 50%; border: 2px solid #CFE6F5; box-sizing: border-box;
+  box-shadow: 0 0 0 4px rgba(158, 195, 222, .22); animation: bn-onde .3s ease-out; }
+.duels-bn .bn-feu { position: absolute; left: 50%; top: 50%; width: 70%; height: 90%; transform: translate(-50%, -55%); pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(255, 120, 40, .85)); animation: bn-flamme 1.2s ease-in-out infinite alternate; }
+.duels-bn .bn-radar-ico { width: 46%; height: 46%; border-radius: 50%; border: 2px dashed #9EC3DE; box-sizing: border-box; }
+.duels-bn .bn-valeur { position: absolute; inset: 0; display: grid; place-items: center; font: 800 16px Inter, sans-serif; color: var(--sand);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7); pointer-events: none; }
+
+/* Navires dessinés par-dessus la grille (calque) */
+.duels-bn .bn-calque { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.duels-bn .bn-coque { position: absolute; z-index: 2; overflow: visible; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+.duels-bn .bn-coque.bn-tourne { transform: rotate(90deg); }
+.duels-bn .bn-coque.is-coule { filter: brightness(.42) saturate(.45) drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+.duels-bn .bn-coque.is-fantome { opacity: .6; }
+.duels-bn .bn-coque.is-fantome.is-ko { opacity: .45; filter: sepia(1) saturate(6) hue-rotate(-45deg); }
+.duels-bn .bn-coque.is-choisi:not(.is-fantome) { filter: drop-shadow(0 0 3px var(--sand)) drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+
+/* Placement : liste des navires */
+.duels-bn .bn-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.duels-bn .bn-nav { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px;
+  background: var(--surface-2); border: 0; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.duels-bn .bn-nav:hover { background: #26262C; }
+.duels-bn .bn-nav.is-choisi { box-shadow: inset 0 0 0 2px var(--sand); }
+.duels-bn .bn-nav-nom { flex: 1; min-width: 0; font-size: 15px; }
+.duels-bn .bn-nav-nom strong { font-weight: 700; }
+.duels-bn .bn-nav-taille { font-size: 13px; color: var(--muted); }
+.duels-bn .bn-nav-statut { flex: none; font-size: 13px; font-weight: 700; color: var(--muted); }
+.duels-bn .bn-nav.is-choisi .bn-nav-statut { color: var(--sand); }
+.duels-bn .bn-minis { display: flex; gap: 3px; }
+.duels-bn .bn-mini { display: inline-block; width: 12px; height: 12px; border-radius: 3px; background: #6B7480; box-sizing: border-box; }
+.duels-bn .bn-mini.is-off { background: transparent; border: 1px dashed #5A5A62; }
+.duels-bn .bn-compte { margin: 0; font-size: 14px; color: var(--muted); }
+.duels-bn .bn-compte span { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.duels-bn .bn-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.duels-bn .bn-boutons .btn { min-height: 44px; }
+.duels-bn .bn-boutons .bn-pleine { grid-column: 1 / -1; }
+.duels-bn .bn-boutons .btn-primary { min-height: 52px; }
+.duels-bn .bn-boutons .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Phase de jeu : deux grilles côte à côte */
+.duels-bn .bn-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; width: 100%; align-items: start; }
+.duels-bn .bn-tirs { min-width: 0; }
+.duels-bn .bn-radar { min-height: 44px; }
+.duels-bn .bn-radar[aria-pressed="true"] { border-color: var(--sand); color: var(--sand); }
+.duels-bn .bn-radar:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Colonne latérale : restants et règles */
+.duels-bn .bn-cote { display: flex; flex-direction: column; gap: 12px; }
+.duels-bn .bn-titre-bloc { margin: 0 0 6px; font-size: 15px; font-weight: 700; }
+.duels-bn .bn-restes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.duels-bn .bn-rest { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.duels-bn .bn-rest.is-coule { color: var(--muted); text-decoration: line-through; }
+.duels-bn .bn-rest-etat { font-size: 12px; text-decoration: none; color: var(--muted); }
+.duels-bn .bn-rappel { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* Animations (coupées par body.duels-calme et prefers-reduced-motion) */
+@keyframes bn-flamme { from { transform: translate(-50%, -55%) scale(1, 1); } to { transform: translate(-50%, -55%) scale(.92, 1.08); } }
+@keyframes bn-onde { from { transform: scale(.4); opacity: 0; } }
+body.duels-calme .duels-bn .bn-feu, body.duels-calme .duels-bn .bn-eau { animation: none; }
+@media (prefers-reduced-motion: reduce) { .duels-bn .bn-feu, .duels-bn .bn-eau { animation: none; } }
+
+/* Téléphone : grilles à la largeur de l'écran, colonnes empilées, tir en premier quand c'est mon tour */
+@media (max-width: 760px) {
+  .duels-bn .bn-grille { --bn-lbl: 20px; --bn-cell: clamp(26px, calc((100vw - 96px) / 10), 44px); }
+  .duels-bn .bn-lbl { font-size: 11px; }
+  .duels-bn .bn-zone, .duels-bn .bn-zone-saisie { grid-template-columns: minmax(0, 1fr); }
+  .duels-bn .bn-duo { grid-template-columns: minmax(0, 1fr); }
+  .duels-bn .bn-duo.is-mon-tour > .bn-tirs:last-child { order: -1; }
+  .duels-bn .bn-panneau { padding: 14px 14px; }
+  .duels-bn .bn-conteneur { overflow-x: hidden; }
+}

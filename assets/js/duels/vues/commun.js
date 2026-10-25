@@ -21,6 +21,14 @@ export function nomJoueur(j) {
   if (!j) return '?';
   return `<span style="color:${couleurJoueur(j)}">${esc(j.pseudo || '?')}</span>${j.invite ? ' <span class="duels-invite-tag">invité</span>' : ''}`;
 }
+/** « de X » avec le nom en couleur, « du robot » pour le robot. */
+export function deJoueur(j) {
+  return j?.robot ? 'du <span style="color:#9A9A9F">robot</span>' : `de ${nomJoueur(j)}`;
+}
+/** « de X » pour un pseudo en texte (déjà échappé ou non), « du robot » pour le robot. */
+export function deNom(pseudo) {
+  return pseudo === 'Le robot' ? 'du robot' : `de ${pseudo}`;
+}
 /** Avatar rond : photo de profil, sinon initiales sur la couleur du joueur. */
 export function avatarHtml(j, { tour = false, taille = 44 } = {}) {
   const ini = esc(String(j?.pseudo || '?').replace(/[^\p{L}\p{N}]/gu, '').slice(0, 2).toUpperCase() || '?');

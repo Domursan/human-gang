@@ -63,6 +63,9 @@ function etatInitial(arg, arg2) {
     visibilite: 'publique',
     invites: false,
     codes: 'choisis',
+    contact: false,      // Bataille navale : navires collés permis
+    rejouer: true,       // Bataille navale : un tir réussi permet de rejouer
+    libres: true,        // Qui est-ce ? : questions libres permises
   };
 }
 
@@ -139,12 +142,19 @@ export async function afficher(root, { arg, arg2, naviguer }) {
             <div class="duels-reglages-trois">
               ${groupe('Qui commence', COMMENCE.map(([v, t]) => choix('commence', v, t)).join(''))}
               ${groupe('Format', FORMATS.map(([v, t]) => choix('format', v, t)).join(''))}
-              <fieldset class="duels-groupe"><legend>Temps par coup</legend><div class="duels-choix-liste" data-temps></div></fieldset>
+              <fieldset class="duels-groupe"><legend>Temps par tour</legend><div class="duels-choix-liste" data-temps></div></fieldset>
             </div>
             <fieldset class="duels-groupe duels-groupe-large"><legend>Variante</legend><div class="duels-variantes" data-variantes></div></fieldset>
             <fieldset class="duels-groupe" data-codes hidden><legend>Les codes</legend>
               <div class="duels-choix-liste">${CODES.map(([v, t]) => choix('codes', v, t)).join('')}</div>
             </fieldset>
+            <div class="duels-groupe" data-opt-jeu="bataille" hidden>
+              ${interrupteur('rejouer', 'Rejouer après un tir réussi', 'Variante Classique : tu tires encore tant que tu touches', true)}
+              ${interrupteur('contact', 'Navires collés permis', 'Sinon, une case libre entre deux navires', false)}
+            </div>
+            <div class="duels-groupe" data-opt-jeu="quiestce" hidden>
+              ${interrupteur('libres', 'Questions libres', 'En plus des questions toutes prêtes, l\'autre répond par oui ou non (pas contre le robot)', true)}
+            </div>
           </section>
         </div>
 
@@ -194,6 +204,9 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     if (fd.get('codes')) s.codes = fd.get('codes');
     s.visibilite = form.querySelector('[name="publique"]').checked ? 'publique' : 'privee';
     s.invites = form.querySelector('[name="invites"]').checked;
+    s.contact = form.querySelector('[name="contact"]').checked;
+    s.rejouer = form.querySelector('[name="rejouer"]').checked;
+    s.libres = form.querySelector('[name="libres"]').checked;
   }
 
   /** Variantes et temps du jeu choisi (reconstruits seulement quand le jeu change, pour garder le focus). */
@@ -219,6 +232,10 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     form.querySelector('[name="invites"]').checked = s.invites;
     form.querySelectorAll('[data-panneau]').forEach((p) => { p.hidden = p.dataset.panneau !== s.adversaire; });
     codesEl.hidden = s.jeu !== 'mastermind';
+    form.querySelector('[name="contact"]').checked = s.contact;
+    form.querySelector('[name="rejouer"]').checked = s.rejouer;
+    form.querySelector('[name="libres"]').checked = s.libres;
+    form.querySelectorAll('[data-opt-jeu]').forEach((el) => { el.hidden = el.dataset.optJeu !== s.jeu; });
   }
 
   /** Récapitulatif « Ton duel ». */
@@ -312,6 +329,8 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     if (s.adversaire === 'robot') p.robot = s.robot;
     if (s.adversaire === 'code') p.invites = s.invites;
     if (s.jeu === 'mastermind') p.codes = s.codes;
+    if (s.jeu === 'bataille') { p.contact = s.contact; p.rejouer = s.rejouer; }
+    if (s.jeu === 'quiestce') p.libres = s.libres && s.adversaire !== 'robot';
 
     erreur('');
     occupe = true;

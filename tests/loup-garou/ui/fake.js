@@ -2,7 +2,10 @@
 const { execFileSync } = require('child_process');
 const SB = 'https://zqbdzokyhgavgmqgiwuw.supabase.co';
 const uid = (n) => '00000000-0000-0000-0000-0000000000' + String(n).padStart(2, '0');
-const lit = (v) => v === null || v === undefined ? 'null' : "'" + (typeof v === 'object' ? JSON.stringify(v) : String(v)).replace(/'/g, "''") + "'";
+// Tableau de valeurs simples → tableau Postgres ('{1,2}'), comme PostgREST pour un paramètre int[] / text[] ; le reste en JSON.
+const tabPg = (v) => '{' + v.map((x) => (typeof x === 'number' ? String(x) : '"' + String(x).replace(/["\\]/g, '\\$&') + '"')).join(',') + '}';
+const lit = (v) => v === null || v === undefined ? 'null' : "'" + (Array.isArray(v) && v.every((x) => x !== null && typeof x !== 'object') ? tabPg(v)
+  : typeof v === 'object' ? JSON.stringify(v) : String(v)).replace(/'/g, "''") + "'";
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
 const jwt = (n) => `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: uid(n), role: 'authenticated', exp: 4102444800 })}.x`;
 

@@ -28,6 +28,8 @@ const DEFAUT = Object.freeze({
     morpion_classique: Object.freeze({ partie: 10, victoire: 30 }),
     morpion: Object.freeze({ partie: 20, victoire: 60 }),
     mastermind: Object.freeze({ partie: 20, victoire: 60 }),
+    bataille: Object.freeze({ partie: 20, victoire: 60 }),
+    quiestce: Object.freeze({ partie: 20, victoire: 60 }),
     code_du_jour: 30,
   }),
   plafond_jour: 500,
@@ -43,9 +45,11 @@ const LIGNES = Object.freeze([
   ['morpion_classique', 'Morpion classique'],
   ['morpion', 'Morpion Ultime et Gomoku'],
   ['mastermind', 'Mastermind'],
+  ['bataille', 'Bataille navale'],
+  ['quiestce', 'Qui est-ce ?'],
 ]);
 /** Libellés des jeux (colonne jeu des parties) pour le bloc des duels terminés. */
-const JEUX_NOM = Object.freeze({ p4: 'Puissance 4', morpion: 'Morpion', mastermind: 'Mastermind' });
+const JEUX_NOM = Object.freeze({ p4: 'Puissance 4', morpion: 'Morpion', mastermind: 'Mastermind', bataille: 'Bataille navale', quiestce: 'Qui est-ce ?' });
 const STATUT_NOM = Object.freeze({ attente: 'En attente', en_cours: 'En cours' });
 /** Niveaux du robot (valeurs 1 à 3 de la colonne robot). */
 const ROBOT_NOM = Object.freeze({ 1: 'Facile', 2: 'Moyen', 3: 'Difficile' });

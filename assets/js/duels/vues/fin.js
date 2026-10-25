@@ -1,11 +1,14 @@
 // ===== Humane Gang — Duels : fin d'un duel (#partie/CODE, duel terminé ou annulé, tous jeux) =====
 /*
  * Rôle : résultat (titre, scores, avatars avec couronne sur le gagnant), dernière grille (Puissance 4, Morpion classique
- * et Gomoku, Ultime) ou codes (Mastermind), détail des manches, Paillettes et badges gagnés, actions, chat.
+ * et Gomoku, Ultime), codes (Mastermind), les deux flottes (Bataille navale), les personnages secrets (Qui est-ce ?),
+ * détail des manches, Paillettes et badges gagnés, actions, chat.
  * Membre joueur : Revanche (duel.rejouer → #partie/<nouveau code>), ou « Rejoindre la revanche » si partie.suite existe
  * (#partie/<suite> : vues/partie.js renvoie vers #rejoindre/ si je ne joue pas encore).
  * Spectateur : résultat et chat, sans action de revanche, sans Paillettes.
  * Invité : seulement le résultat et un message de remerciement (pas de liens, pas de chat, pas de Paillettes).
+ * Qui est-ce : les personnages sont chargés une fois avec duel.plateau(code). Le portrait (./portrait.js) est chargé
+ *   à la demande par import dynamique : si ce module manque, seuls les prénoms s'affichent.
  * Contrat : export function creer(root, ctx) → { maj(etat), message(msg), detruire() } (vues/partie.js).
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite, COULEURS_MM), ./commun.js (avatarHtml, nomJoueur),
  *   ./chat.js (creerChat). Le cadre des tables n'est pas utilisé ici.
@@ -13,12 +16,14 @@
  */
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, estInvite, COULEURS_MM } from '../api.js';
-import { avatarHtml, nomJoueur } from './commun.js';
+import { avatarHtml, nomJoueur, deJoueur } from './commun.js';
 import { creerChat } from './chat.js';
 
 /** Couleurs des jetons par place (même code que la table) et symboles du Morpion. */
 const COULEUR = { 1: '#D93A3F', 2: '#F2B705' };
 const SYMBOLE = { 1: 'X', 2: 'O' };
+/** Libellé de la colonne « coups » du détail des manches, selon le jeu. */
+const LIBELLE_COUPS = { mastermind: 'Essais', bataille: 'Tirs', quiestce: 'Questions' };
 /** Icône de médaille (badge débloqué). */
 const MEDAILLE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 20L20 4M4 4h4M4 4v4M20 20h-4M20 20v-4"/></svg>';
 /** Couronne du gagnant. */
@@ -115,10 +120,95 @@ function blocCodes(d, js) {
   }).join('');
 }
 
-/** Détail des manches : vainqueur et nombre de coups (essais au Mastermind). */
+/** Bataille navale : navires d'un joueur. Moi : ma flotte ; sinon les navires révélés à la fin (coules[uid]). */
+function flotteDe(b, uid, moiUid) {
+  if (uid === moiUid && b.ma_flotte && b.ma_flotte.length) return b.ma_flotte;
+  return (b.coules && b.coules[uid]) || [];
+}
+
+/** Bataille navale : tirs reçus par un joueur, ce sont les tirs de son adversaire. */
+function tirsRecus(b, uid, js) {
+  const autre = js.find((j) => j.user_id !== uid);
+  return (autre && b.tirs && b.tirs[autre.user_id]) || [];
+}
+
+/** Bataille navale : une flotte 10 × 10 (navires, navires coulés, tirs reçus) avec son nom. */
+function carteFlotte(j, navires, tirs) {
+  const cases = new Set(navires.flatMap((n) => n.cases || []));
+  const touches = new Set(tirs.filter((t) => t.resultat === 'touche' || t.resultat === 'coule').map((t) => t.case));
+  const eaux = new Set(tirs.filter((t) => t.resultat === 'eau').map((t) => t.case));
+  const coules = navires.filter((n) => (n.cases || []).length && n.cases.every((c) => touches.has(c)));
+  const casesCoulees = new Set(coules.flatMap((n) => n.cases));
+  const cellules = Array.from({ length: 100 }, (_, c) => {
+    const k = ['duels-fin-bcase'];
+    if (casesCoulees.has(c)) k.push('is-coule');
+    else if (cases.has(c)) k.push('is-navire');
+    if (touches.has(c)) k.push('is-touche');
+    if (eaux.has(c)) k.push('is-eau');
+    return `<span class="${k.join(' ')}"></span>`;
+  }).join('');
+  const nc = coules.length;
+  const resume = navires.length
+    ? `Flotte de ${j.pseudo || '?'} : ${nc} navire${nc > 1 ? 's' : ''} coulé${nc > 1 ? 's' : ''} sur ${navires.length}. ${touches.size} tirs au but, ${eaux.size} dans l'eau.`
+    : `Flotte de ${j.pseudo || '?'} : non révélée.`;
+  return `<figure class="duels-fin-flotte">
+    <div class="duels-fin-bgrille" role="img" aria-label="${esc(resume)}">${cellules}</div>
+    <figcaption class="duels-fin-flotte-nom">Flotte ${deJoueur(j)}
+      <span class="duels-fin-note">${navires.length ? `${nc} coulé${nc > 1 ? 's' : ''} sur ${navires.length}` : 'Non révélée'}</span></figcaption>
+  </figure>`;
+}
+
+/** Bataille navale : les deux flottes côte à côte. */
+function blocFlottes(e, js, moiUid) {
+  const b = e.bataille || {};
+  const titre = '<h2 id="duels-fin-grille-titre" class="duels-h3">Les deux flottes</h2>';
+  const cartes = js.map((j) => carteFlotte(j, flotteDe(b, j.user_id, moiUid), tirsRecus(b, j.user_id, js))).join('');
+  return `${titre}
+    <div class="duels-fin-flottes">${cartes}</div>
+    <p class="duels-fin-note">Navire à flot : case claire. Navire coulé : case rouge. Croix : tir au but. Point : tir dans l'eau.</p>`;
+}
+
+/** Image d'un personnage : portraitSvg (./portrait.js) renvoie du SVG ou un élément ; vide si indisponible. */
+function portraitHtml(mod, perso) {
+  if (!mod || typeof mod.portraitSvg !== 'function') return '';
+  try {
+    const r = mod.portraitSvg(perso.attributs || {}, { titre: perso.prenom || '' });
+    return typeof r === 'string' ? r : ((r && r.outerHTML) || '');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Qui est-ce ? : le personnage de chaque joueur (perso_adverse, à la fin), portrait et prénom.
+ * @param {object} e état du duel terminé.
+ * @param {object[]} js joueurs.
+ * @param {object|null|undefined} charge {plateau, portrait} ; undefined pendant le chargement, null si échec.
+ */
+function blocPersos(e, js, charge) {
+  const titre = '<h2 id="duels-fin-grille-titre" class="duels-h3">Les personnages secrets</h2>';
+  if (charge === undefined) return `${titre}<p class="duels-fin-note">Chargement des personnages…</p>`;
+  if (!charge) return `${titre}<p class="duels-fin-note">Personnages indisponibles pour le moment.</p>`;
+  const choisis = (e.quiestce && e.quiestce.perso_adverse) || {};
+  const persos = charge.plateau.persos || [];
+  const cartes = js.map((j) => {
+    const perso = persos.find((x) => x.id === choisis[j.user_id]);
+    if (!perso) {
+      return `<figure class="duels-fin-perso"><figcaption class="duels-fin-legende"><span class="duels-fin-note">Personnage ${deJoueur(j)} : inconnu</span></figcaption></figure>`;
+    }
+    const image = portraitHtml(charge.portrait, perso);
+    return `<figure class="duels-fin-perso">
+      ${image ? `<div class="duels-fin-portrait" aria-hidden="true">${image}</div>` : ''}
+      <figcaption class="duels-fin-legende"><span class="duels-fin-note">Personnage ${deJoueur(j)} :</span> <strong class="duels-fin-prenom">${esc(perso.prenom || '?')}</strong></figcaption>
+    </figure>`;
+  }).join('');
+  return `${titre}<div class="duels-fin-persos">${cartes}</div>`;
+}
+
+/** Détail des manches : vainqueur et nombre de coups (essais, tirs ou questions selon le jeu). */
 function blocManches(p, js) {
   const h = p.historique || [];
-  const mm = p.jeu === 'mastermind';
+  const libelle = LIBELLE_COUPS[p.jeu] || 'Coups';
   const titre = `<h2 id="duels-fin-manches-titre" class="duels-h3">${h.length > 1 ? `Détail des ${h.length} manches` : 'Détail de la manche'}</h2>`;
   if (!h.length) return `${titre}<p class="duels-fin-note">Aucune manche jouée.</p>`;
   const lignes = h.map((d) => {
@@ -129,7 +219,7 @@ function blocManches(p, js) {
   }).join('');
   return `${titre}
     <div class="duels-fin-table-cadre"><table class="duels-fin-table">
-      <thead><tr><th scope="col">Manche</th><th scope="col">Vainqueur</th><th scope="col">${mm ? 'Essais' : 'Coups'}</th></tr></thead>
+      <thead><tr><th scope="col">Manche</th><th scope="col">Vainqueur</th><th scope="col">${libelle}</th></tr></thead>
       <tbody>${lignes}</tbody>
     </table></div>`;
 }
@@ -172,6 +262,11 @@ function blocActions(p, joue) {
  */
 export function creer(root, ctx) {
   const invite = estInvite();
+  let vivant = true;
+  let dernier = null;
+  /** Qui est-ce : undefined tant que chargé, puis {plateau, portrait}, ou null si le chargement échoue. */
+  let quiEst;
+  let chargement = null;
   root.innerHTML = `
     <div class="duels-fin" data-fin>
       <section class="card duels-fin-bandeau" data-bandeau aria-labelledby="duels-fin-titre"></section>
@@ -206,6 +301,18 @@ export function creer(root, ctx) {
       b.disabled = false;
     }
   });
+
+  /** Qui est-ce : charge une fois les personnages du plateau et le module de portrait, puis redessine. */
+  function chargerQuiEst() {
+    if (chargement) return;
+    chargement = Promise.all([
+      duel.plateau(ctx.code).catch(() => null),
+      import('./portrait.js').catch(() => null),
+    ]).then(([plateau, portrait]) => {
+      quiEst = plateau ? { plateau, portrait } : null;
+      if (vivant && dernier) rendre(dernier);
+    });
+  }
 
   /** Remplit les blocs à partir de l'état du duel terminé ou annulé. */
   function rendre(e) {
@@ -243,10 +350,13 @@ export function creer(root, ctx) {
     q('[data-actions]').hidden = invite;
     q('[data-chat-boite]').hidden = invite;
     if (!invite) {
+      if (p.jeu === 'quiestce' && quiEst === undefined) chargerQuiEst();
       q('[data-grille]').innerHTML = p.jeu === 'mastermind' ? blocCodes(derniere, js)
-        : !derniere ? '<h2 id="duels-fin-grille-titre" class="duels-h3">Dernière grille</h2><p class="duels-fin-note">Aucune manche jouée.</p>'
-          : p.variante === 'ultime' ? blocUltime(p, derniere, js)
-            : blocGrilleSimple(p, derniere, js);
+        : p.jeu === 'bataille' ? blocFlottes(e, js, moiJ?.user_id)
+          : p.jeu === 'quiestce' ? blocPersos(e, js, quiEst)
+            : !derniere ? '<h2 id="duels-fin-grille-titre" class="duels-h3">Dernière grille</h2><p class="duels-fin-note">Aucune manche jouée.</p>'
+              : p.variante === 'ultime' ? blocUltime(p, derniere, js)
+                : blocGrilleSimple(p, derniere, js);
       q('[data-manches]').innerHTML = blocManches(p, js);
       q('[data-gains]').innerHTML = blocGains(e, moiJ, js);
       q('[data-actions]').innerHTML = blocActions(p, joue);
@@ -258,12 +368,14 @@ export function creer(root, ctx) {
   return {
     /** Met à jour l'écran avec l'état du duel terminé. */
     maj(e) {
+      dernier = e;
       rendre(e);
       chat?.maj(e);
     },
     /** Ajoute un message au chat. */
     message(m) { chat?.ajouter(m); },
     detruire() {
+      vivant = false;
       chat?.detruire();
       root.innerHTML = '';
     },

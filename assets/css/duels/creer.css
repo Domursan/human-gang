@@ -16,7 +16,7 @@
 .duels-panneau[hidden] { display: none; }
 
 /* ---------- 1. Jeux (tuiles avec image) ---------- */
-.duels-jeux-liste { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.duels-jeux-liste { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .duels-jeu { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 10px; min-height: 44px; box-sizing: border-box;
   border: 1px solid var(--border-strong); border-radius: 14px; background: transparent; cursor: pointer; }
 .duels-jeu .duels-vignette { border-radius: 10px; }
@@ -114,3 +114,6 @@
   .duels-seg-choix .duels-choix-txt strong { font-size: 14px; }
   .duels-etape { padding: 16px; }
 }
+/* Cinq jeux : 5 colonnes sur grand écran, 3 puis 2 en dessous. */
+@media (max-width: 1180px) { .duels-jeux-liste { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .duels-jeux-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

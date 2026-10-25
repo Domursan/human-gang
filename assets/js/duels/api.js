@@ -27,7 +27,24 @@ export const JEUX = {
   mastermind: { nom: 'Mastermind', image: 'mastermind', texte: 'Perce le code de l’autre avant lui.',
     variantes: [['duel', 'Chacun son code', 'Vous percez le code de l’autre en même temps. Le moins d’essais gagne.']],
     temps: [60, 90, 120], tempsDefaut: 90 },
+  bataille: { nom: 'Bataille navale', image: 'bataille-navale', texte: 'Coule la flotte de l’autre avant la tienne.',
+    variantes: [['classique', 'Classique', 'Un tir par tour ; un tir réussi permet de rejouer (réglable).'],
+      ['salve', 'Salve', 'Autant de tirs par tour que de navires encore à flot.']],
+    temps: [15, 30, 60], tempsDefaut: 30 },
+  quiestce: { nom: 'Qui est-ce ?', image: 'qui-est-ce', texte: 'Devine le personnage secret de l’autre.',
+    variantes: [['paleto', 'Les habitants de Paleto', '24 personnages, des questions toutes prêtes ou libres.']],
+    temps: [60, 90, 120], tempsDefaut: 90 },
 };
+/** Flotte de la Bataille navale (le serveur la renvoie aussi dans etat.bataille.flotte). */
+export const FLOTTE = [
+  { type: 'porte_avions', nom: 'Porte-avions', longueur: 5 },
+  { type: 'cuirasse', nom: 'Cuirassé', longueur: 4 },
+  { type: 'croiseur', nom: 'Croiseur', longueur: 3 },
+  { type: 'sous_marin', nom: 'Sous-marin', longueur: 3 },
+  { type: 'torpilleur', nom: 'Torpilleur', longueur: 2 },
+];
+/** Nom d'une case de la Bataille navale (0 → A1, 99 → J10). */
+export const nomCase = (c) => `${String.fromCharCode(65 + (c % 10))}${Math.floor(c / 10) + 1}`;
 /** Couleurs du Mastermind (lettre du serveur → nom, couleur désaturée, lettre du mode daltonien). */
 export const COULEURS_MM = [
   { c: 'r', nom: 'Rouge', hex: '#C4574B', lettre: 'R' },
@@ -102,6 +119,29 @@ export const duel = {
   codeSecret: deux((code, secret) => rpc('hg_duel_code_secret', { p_code: code, p_secret: secret }), (code, secret) => rpcInvite('code', code, { secret })),
   /** Mastermind : un essai (4 lettres parmi r o y g b p). */
   essayer: deux((code, essai) => rpc('hg_duel_essayer', { p_code: code, p_essai: essai }), (code, essai) => rpcInvite('essayer', code, { essai })),
+  /* Bataille navale */
+  /** Pose ma flotte : [{type, cases:[0..99]}] (phase 'placement'). */
+  placer: deux((code, navires) => rpc('hg_duel_placer', { p_code: code, p_navires: navires }), (code, navires) => rpcInvite('placer', code, { navires })),
+  /** Proposition de flotte au hasard (non enregistrée) : [{type, cases}]. */
+  flotteHasard: deux((code) => rpc('hg_duel_flotte_hasard', { p_code: code }), (code) => rpcInvite('flotte_hasard', code)),
+  /** Un tir → 'eau' | 'touche' | 'coule'. */
+  tirer: deux((code, c) => rpc('hg_duel_tirer', { p_code: code, p_case: c }), (code, c) => rpcInvite('tirer', code, { case: c })),
+  /** Radar (une fois par manche, remplace le tir du tour) → nombre de cases de navire dans le carré 3 × 3. */
+  radar: deux((code, c) => rpc('hg_duel_radar', { p_code: code, p_case: c }), (code, c) => rpcInvite('radar', code, { case: c })),
+  /* Qui est-ce ? */
+  /** Question toute prête → true (oui) ou false (non), réponse immédiate ; le tour passe. */
+  question: deux((code, cle, valeur) => rpc('hg_duel_question', { p_code: code, p_cle: cle, p_valeur: valeur }),
+    (code, cle, valeur) => rpcInvite('question', code, { cle, valeur })),
+  /** Question libre (4-140 caractères) : l'adversaire répond oui ou non. */
+  questionLibre: deux((code, texte) => rpc('hg_duel_question_libre', { p_code: code, p_texte: texte }), (code, texte) => rpcInvite('question_libre', code, { texte })),
+  /** Réponse à la question libre qui m'attend. */
+  repondre: deux((code, oui) => rpc('hg_duel_repondre', { p_code: code, p_oui: !!oui }), (code, oui) => rpcInvite('repondre', code, { oui: !!oui })),
+  /** « Je pense que c'est… » → true (manche gagnée) ou false (manche perdue). */
+  deviner: deux((code, perso) => rpc('hg_duel_deviner', { p_code: code, p_perso: perso }), (code, perso) => rpcInvite('deviner', code, { perso })),
+  /** Mes personnages baissés (aide-mémoire gardé côté serveur). */
+  baisser: deux((code, persos) => rpc('hg_duel_baisser', { p_code: code, p_persos: persos }), (code, persos) => rpcInvite('baisser', code, { persos })),
+  /** Personnages du plateau et questions toutes prêtes : {persos:[{id, prenom, attributs}], questions:[{cle, valeur, texte}]}. */
+  plateau: deux((code, plateau = 'paleto') => rpc('hg_duel_plateau', { p_plateau: plateau }), (code) => rpcInvite('plateau', code)),
   message: deux((code, texte) => rpc('hg_duel_message', { p_code: code, p_texte: texte }), (code, texte) => rpcInvite('message', code, { texte })),
   avancer: deux((code) => rpc('hg_duel_avancer', { p_code: code }), (code) => rpcInvite('avancer', code)),
   etat: deux((code) => rpc('hg_duel_etat', { p_code: code }), (code) => rpcInvite('etat', code)),

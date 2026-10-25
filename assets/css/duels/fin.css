@@ -72,6 +72,28 @@
 .duels-fin-pastille { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 15px; }
 .duels-fin-noms { margin: 0; font-size: 13px; color: var(--muted); }
 
+/* Bataille navale : deux flottes 10 × 10 (12 px par case). Couleurs fixes : la lecture ne dépend pas du thème. */
+.duels-fin-flottes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+.duels-fin-flotte { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+.duels-fin-flotte-nom { display: flex; flex-direction: column; align-items: center; gap: 2px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
+.duels-fin-bgrille { display: grid; grid-template-columns: repeat(10, 12px); gap: 1px; padding: 6px; background: #0B2540; border-radius: 10px; }
+.duels-fin-bcase { width: 12px; height: 12px; background-color: #16375A; }
+.duels-fin-bcase.is-navire { background-color: #A9C4DB; }
+.duels-fin-bcase.is-coule { background-color: #D93A3F; --croix: #FFFFFF; }
+.duels-fin-bcase.is-touche {
+  background-image: linear-gradient(45deg, transparent 40%, var(--croix, #121212) 40%, var(--croix, #121212) 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, var(--croix, #121212) 40%, var(--croix, #121212) 60%, transparent 60%);
+}
+.duels-fin-bcase.is-eau { background-image: radial-gradient(circle, #F2EFEA 0, #F2EFEA 1.5px, transparent 2.5px); }
+
+/* Qui est-ce : personnages secrets (portrait et prénom) */
+.duels-fin-persos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px; }
+.duels-fin-perso { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; border-radius: var(--radius-sm); background: var(--surface-2); min-width: 0; }
+.duels-fin-portrait { width: 140px; max-width: 100%; aspect-ratio: 1; }
+.duels-fin-portrait svg { width: 100%; height: 100%; display: block; }
+.duels-fin-legende { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; overflow-wrap: anywhere; }
+.duels-fin-prenom { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; line-height: 1.2; color: var(--sand); }
+
 /* Chat du bloc latéral : la hauteur suit le contenu */
 .duels-fin-corps .duels-chat-fil { max-height: 280px; }
 

@@ -12,7 +12,7 @@
  */
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, COULEURS_MM, estInvite } from '../api.js';
-import { creerCadre, nomJoueur } from './commun.js';
+import { creerCadre, nomJoueur, deNom } from './commun.js';
 
 const CLE_DALTO = 'hg_duel_daltonien';
 const ESSAIS_MAX = 10;
@@ -145,7 +145,7 @@ export function creer(root, ctx) {
       if (!peut) {
         html = `<p class="mm-attente">Le code est en cours de choix.</p>`;
       } else if (ms.mon_code_pret) {
-        html = `<p class="mm-attente">Ton code est prêt. En attente de ${nomAdv}…</p>`;
+        html = `<p class="mm-attente">Ton code est prêt. En attente ${deNom(nomAdv)}…</p>`;
       } else {
         const cases = st.brouillon.map((c, i) => (c
           ? `<button type="button" class="mm-case-btn" data-act="trou" data-i="${i}" data-k="trou-${i}" aria-label="${esc(infoCouleur(c).nom)}, vider ce trou" style="--mm-c:${infoCouleur(c).hex}">${st.dalto ? esc(infoCouleur(c).lettre) : ''}</button>`
@@ -177,10 +177,10 @@ export function creer(root, ctx) {
       } else if (fini) {
         const trouve = moiJ?.trouve_en;
         const texte = trouve ? `Code trouvé en ${trouve} essai${trouve > 1 ? 's' : ''} !` : 'Plus d\'essais.';
-        bas = `<p class="mm-fin" aria-live="polite">${esc(texte)}</p>${adv && !adv.trouve_en ? `<p class="mm-attente">En attente de ${nomAdv}</p>` : ''}`;
+        bas = `<p class="mm-fin" aria-live="polite">${esc(texte)}</p>${adv && !adv.trouve_en ? `<p class="mm-attente">En attente ${deNom(nomAdv)}</p>` : ''}`;
       }
       html = `<div class="mm-titre"><h2 class="duels-h3">${peut ? 'Mon plateau' : 'Plateau'}</h2>
-          ${peut ? `<span class="mm-sous">Trouve le code de ${nomAdv} en ${ESSAIS_MAX} essais</span>` : ''}</div>
+          ${peut ? `<span class="mm-sous">Trouve le code ${deNom(nomAdv)} en ${ESSAIS_MAX} essais</span>` : ''}</div>
         <ol class="mm-plateau" aria-label="Rangées">${lignes.join('')}</ol>
         <p class="mm-legende"><span class="mm-fb mm-fb-ok" aria-hidden="true"></span>Bien placé
           <span class="mm-fb mm-fb-no" aria-hidden="true"></span>Mal placé</p>

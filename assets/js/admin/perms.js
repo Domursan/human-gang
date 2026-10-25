@@ -177,7 +177,7 @@ export const LIEUX = [
       { id: 'mes-jeux', label: 'Mes jeux', section: 'mj', help: 'Ma liste de jeux', icon: 'list' },
       { id: 'loup-garou', label: 'Loup-Garou', section: 'loup-garou', help: 'Paillettes, badges et parties', icon: 'users' },
       { id: 'uno', label: 'Uno', section: 'uno', help: 'Paillettes, badges et parties en cours', icon: 'users' },
-      { id: 'duels', label: 'Duels', section: 'duels', help: 'Puissance 4, Morpion, Mastermind', icon: 'users' },
+      { id: 'duels', label: 'Duels', section: 'duels', help: 'Puissance 4, Morpion, Mastermind, Bataille navale, Qui est-ce ?', icon: 'users' },
     ]),
   ] },
   { id: 'mairie', label: 'La Mairie', color: '#2EC4B6', icon: 'mairie', tagline: 'Le site et le Staff : tout ce qui règle le fonctionnement', subs: [

@@ -24,7 +24,7 @@ export const NOTIF_ROWS = [
   ['santa', 'Secret Santa', 'Tirage, colis envoyé ou reçu, rappel d’envoi', false],
   ['anniversaires', 'Anniversaires', 'Ton message d’anniversaire', false],
   ['quiz', 'Quiz et défis', 'Nouveau défi du gang, résultats', false],
-  ['jeux', 'Jeux · duels', 'Un membre te défie au Puissance 4, au Morpion ou au Mastermind', false, 'duels'],
+  ['jeux', 'Jeux · duels', 'Un membre te défie à un duel (Puissance 4, Bataille navale…)', false, 'duels'],
 ];
 /** Heures calmes proposées quand on les active. */
 const QUIET_DEFAULT = [23, 8];

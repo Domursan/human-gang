@@ -21,7 +21,7 @@ const fs = require('fs');
     const prep = await p.$$eval('.jx-carte.is-prep', (xs) => xs.length);
     const sections = await p.$$eval('.jx-section:not([hidden]) .jx-h', (xs) => xs.map((x) => x.textContent));
     console.log(nom, '·', sections.join(' / '), '·', titres.join(', '));
-    if (n === 1) { check(prep === 6, 'admin : 6 jeux en préparation'); check(titres.includes('Loup-Garou'), 'admin : Loup-Garou visible');
+    if (n === 1) { check(prep === 1, 'admin : 1 jeu en préparation (Nom de code ; les duels suivent la page « duels », absente de cette base)'); check(titres.includes('Loup-Garou'), 'admin : Loup-Garou visible');
       check(await p.$$eval('.jx-carte.is-chantier .jx-t', (xs) => xs.some((x) => x.textContent === 'Loup-Garou')), 'admin : Loup-Garou en chantier');
       check(await p.$$eval('.jx-section.is-chantier', (xs) => xs.length) === 1, 'admin : section multijoueurs en chantier'); }
     else { check(prep === 0, 'membre : aucun jeu en préparation'); check(!titres.includes('Loup-Garou'), 'membre : Loup-Garou masqué (page admin)');

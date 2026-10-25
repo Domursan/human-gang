@@ -1,6 +1,6 @@
 // ===== Humane Gang — Duels : accueil (duels.html, sans adresse de duel) =====
 /*
- * Rôle : écran d'accueil des duels. Rejoindre avec un code, les trois jeux (Puissance 4, Morpion, Mastermind),
+ * Rôle : écran d'accueil des duels. Rejoindre avec un code, les cinq jeux (Puissance 4, Morpion, Mastermind, Bataille navale, Qui est-ce ?),
  * code du jour, défis reçus (accepter ou refuser), mes duels, duels ouverts, duels en direct, défier un membre
  * (liste avec recherche), jouer contre le robot et résumé des statistiques (lien vers #stats).
  * Les blocs viennent de duel.accueil(), relu toutes les 10 s tant que l'écran est ouvert ; la liste des membres
@@ -58,7 +58,7 @@ function tempsTour(fin) {
 function reglages(d) {
   const morceaux = [];
   if (d.format) morceaux.push(Number(d.format) === 1 ? 'manche unique' : `au meilleur des ${d.format}`);
-  if (d.t_coup) morceaux.push(d.jeu === 'mastermind' ? `délai de ${d.t_coup} s` : `coups de ${d.t_coup} s`);
+  if (d.t_coup) morceaux.push(d.jeu === 'mastermind' ? `délai de ${d.t_coup} s` : d.jeu === 'quiestce' ? `tours de ${d.t_coup} s` : `coups de ${d.t_coup} s`);
   return morceaux.join(' · ');
 }
 
@@ -71,7 +71,7 @@ function squelette() {
       <div class="duels-acc-titre">
         <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="jeux.html">Jeux</a> › Duels</nav>
         <h1 class="duels-titre">Duels</h1>
-        <p class="duels-acc-intro">Trois jeux à deux. Défie un membre, partage un code ou entraîne-toi contre le robot.</p>
+        <p class="duels-acc-intro">Cinq jeux à deux. Défie un membre, partage un code ou entraîne-toi contre le robot.</p>
       </div>
       <section class="card duels-acc-carte duels-acc-rejoindre" aria-labelledby="acc-rejoindre-titre">
         <h2 id="acc-rejoindre-titre" class="duels-acc-titre-carte">Rejoindre un duel</h2>
@@ -140,7 +140,7 @@ function squelette() {
   </div>`;
 }
 
-/** Les trois jeux : image, nom, texte et bouton « Jouer » vers la création du duel. */
+/** Les cinq jeux : image, nom, texte et bouton « Jouer » vers la création du duel. */
 function htmlJeux() {
   return Object.entries(JEUX).map(([cle, j]) => `
     <article class="duels-acc-jeu">

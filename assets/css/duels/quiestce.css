@@ -1,0 +1,102 @@
+/* ===== Humane Gang — Duels : table « Qui est-ce ? » (vues/quiestce.js) =====
+   Dos de carte Uno : règles recopiées (classes qec-dos*), sans dépendre de la feuille du Uno.
+   Bascule téléphone / ordinateur au même seuil que table.css (900 px) : .qec-tel (téléphone) et .qec-ord (ordinateur). */
+
+.duels-qec .duels-plateau { align-items: stretch; }
+.duels-qec button:focus-visible, .duels-qec input:focus-visible, .duels-qec summary:focus-visible {
+  outline: 3px solid var(--sand); outline-offset: 2px; }
+
+.qec-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; width: 100%; }
+.qec-entete .duels-h3 { margin: 0; font-size: 18px; }
+.qec-btn { min-height: 44px; padding: 0 18px; }
+.qec-petit, .qec-aide { margin: 0; font-size: 13px; color: var(--muted); }
+.qec-attente { margin: 0; font-size: 14px; color: var(--muted); }
+.qec-grand-nom { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 26px; line-height: 1.05; }
+.duels-qec .qec-bloc { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.duels-qec .qec-bloc > .duels-h3 { margin: 0; }
+
+/* Plateau : 24 cartes (6 par ligne ; 4 sur téléphone) */
+.qec-grille { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.qec-carte { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 6px; min-height: 44px; box-sizing: border-box;
+  border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font: inherit; text-align: center; cursor: pointer; }
+.qec-carte:hover:not(:disabled), .qec-carte:focus-visible { outline: 2px solid var(--sand); outline-offset: 1px; }
+.qec-carte:disabled { cursor: default; }
+.qec-carte.is-mon { box-shadow: inset 0 0 0 2px var(--sand); }
+.qec-carte.is-cible:not(:disabled) { outline: 2px dashed var(--sand); outline-offset: 2px; }
+.qec-portrait { display: block; width: 100%; aspect-ratio: 5 / 6; border-radius: 10px; overflow: hidden; background: var(--bg); }
+.qec-portrait svg { display: block; width: 100%; height: 100%; }
+.qec-nom { font-weight: 700; font-size: 13px; line-height: 1.3; }
+.qec-tag { font-size: 11px; font-weight: 700; color: var(--sand); }
+.qec-carte.is-baisse .qec-nom { color: #6A6870; font-weight: 500; text-decoration: line-through; }
+
+/* Dos de carte Uno (carte baissée) */
+.qec-dos { position: relative; display: block; width: 100%; aspect-ratio: 5 / 6; border-radius: 10px; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0, 0, 0, .45); }
+.qec-dos-f { position: absolute; inset: 4px; border-radius: 7px; overflow: hidden; display: grid; place-items: center; background: #16161B; }
+.qec-dos-bande { position: absolute; left: -30%; right: -30%; top: 38%; height: 24%; transform: rotate(-35deg);
+  background: linear-gradient(180deg, #FE3104 0 16.6%, #FCA301 0 33.3%, #FBD32D 0 50%, #159946 0 66.6%, #2B5AE2 0 83.3%, #4E2398 0); }
+.qec-dos-rond { position: relative; width: 58%; aspect-ratio: 1; border-radius: 50%; background: #0E0E10; border: 2px solid #E2C77E;
+  box-shadow: 0 0 12px rgba(226, 199, 126, .55); display: grid; place-items: center; }
+.qec-dos-hg { font: 400 14px 'Archivo Black', sans-serif; color: #E2C77E; }
+.qec-carte.is-baisse .qec-dos { animation: qec-pose .18s ease-out; }
+@keyframes qec-pose { from { transform: scale(.9); opacity: .4; } }
+
+/* Côté (ordinateur) : personnage secret, compteurs, questions */
+.qec-perso { align-items: center; text-align: center; }
+.qec-portrait-grand { width: 180px; }
+.qec-groupes { display: flex; flex-direction: column; gap: 10px; }
+.qec-groupe { display: flex; flex-direction: column; gap: 6px; }
+.qec-groupe-titre { margin: 0; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.qec-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.qec-chip { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent;
+  color: var(--text); font: inherit; font-size: 14px; line-height: 1.25; text-align: left; cursor: pointer; }
+.qec-chip:not(:disabled):hover { background: var(--surface-2); }
+.qec-chip:disabled { opacity: .5; cursor: not-allowed; }
+.qec-deja { font-size: 12px; color: var(--muted); }
+.qec-libre { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.qec-libre-lab { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.qec-libre input { width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text); font: inherit; font-size: 15px; }
+.qec-actions .btn { width: 100%; min-height: 44px; }
+.qec-attend, .qec-desig { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 14px; background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--sand); }
+.qec-attend p, .qec-desig p { margin: 0; font-size: 14px; }
+.qec-oui-non { display: flex; gap: 8px; }
+.qec-oui-non .btn { flex: 1; }
+.qec-retour { margin: 0; font-size: 13px; color: var(--muted); }
+.qec-details summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer; }
+.qec-histo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; max-height: 260px; overflow-y: auto; }
+.qec-histo li { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.qec-histo-qui { font-weight: 700; }
+.qec-rep { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; font-size: 12px; font-weight: 700; }
+.qec-rep.is-oui { color: var(--sage-text); }
+.qec-rep.is-non { color: var(--rose); }
+.qec-rep.is-attente { color: var(--muted); }
+
+/* Téléphone : barre compacte, questions collées en bas du plateau (cachés sur ordinateur) */
+.qec-tel { display: none; }
+.qec-mini { width: 36px; height: 43px; border-radius: 8px; overflow: hidden; flex: none; box-shadow: 0 0 0 2px var(--sand); }
+.qec-mini .qec-portrait { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 0; }
+
+@media (max-width: 900px) {
+  .qec-tel { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+  .qec-ord { display: none !important; }
+  .qec-barre-tel { flex-direction: row; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--border); }
+  .qec-barre-tel > div { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .qec-barre-tel .qec-grand-nom { font-size: 18px; }
+  .qec-droite { text-align: right; flex: none; }
+  .qec-ask-tel { position: sticky; bottom: 0; z-index: 5; gap: 8px; padding: 10px 0 12px; background: var(--bg);
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, .35); max-height: 55vh; overflow-y: auto; }
+  .qec-ask-tel .qec-attend, .qec-ask-tel .qec-desig { margin: 0; }
+  .qec-ask-tel .qec-actions { margin: 0; }
+}
+
+@media (max-width: 560px) {
+  .qec-grille { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .qec-carte { padding: 4px; gap: 3px; }
+  .qec-nom { font-size: 12px; }
+  .qec-dos-hg { font-size: 11px; }
+}
+
+/* Mouvements coupés par le réglage « calme » et par prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) { .qec-carte.is-baisse .qec-dos { animation: none; } }
+body.duels-calme .qec-carte.is-baisse .qec-dos { animation: none; }
