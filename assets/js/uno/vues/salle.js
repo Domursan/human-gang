@@ -249,7 +249,7 @@ export function creer(root, ctx) {
     const pretsN = joueurs.filter(estPret).length;
 
     // « Je suis prêt » : seulement pour les joueurs inscrits (pas l'hôte, qui lance).
-    const afficherPret = !!mon.joue;
+    const afficherPret = !!mon.joue && !mon.hote;
     btnPret.hidden = !afficherPret;
     btnPret.setAttribute('aria-pressed', String(monPret));
     btnPret.classList.toggle('btn-sand', monPret);

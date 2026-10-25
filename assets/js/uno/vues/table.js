@@ -74,7 +74,7 @@ function squelette(idChat) {
       <ol class="uno-sieges" aria-label="Autres joueurs" data-sieges></ol>
       <div class="uno-tapis">
         <div class="uno-ovale" aria-hidden="true"></div>
-        <div class="uno-centre">
+        <div class="uno-tapis-centre">
           <p class="uno-pilules">
             <span class="uno-pilule" data-couleur hidden></span>
             <span class="uno-pilule uno-pilule-cumul" data-cumul hidden></span>
