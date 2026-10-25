@@ -1,0 +1,61 @@
+/* ===== Humane Gang — Duels : table du Morpion (vues/morpion.js) =====
+   --mc = taille d'une case. Classique : grandes cases ; ultime et gomoku : cases plus petites (au moins 28 px). */
+.morpion-tab { --mc: 96px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.morpion-tab.is-ultime { --mc: 44px; }
+.morpion-tab.is-gomoku { --mc: clamp(28px, calc((100vw - 64px) / 15), 36px); }
+@media (max-width: 900px) {
+  .morpion-tab.is-classique { --mc: 90px; }
+  .morpion-tab.is-ultime { --mc: 30px; }
+}
+
+.morpion-consigne { margin: 0; font-size: 15px; color: var(--muted); text-align: center; }
+.morpion-consigne strong { color: var(--sand); }
+.morpion-defile { max-width: 100%; overflow-x: auto; padding: 4px; border-radius: 12px; }
+.morpion-defile:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.morpion-cadre { position: relative; width: max-content; margin: 0 auto; }
+.morpion-barre { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.morpion-barre line { stroke: var(--sand); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: morpion-trace .45s ease-out forwards; }
+
+/* Classique et gomoku : une grille simple */
+.morpion-grille { display: grid; gap: 8px; padding: 12px; box-sizing: border-box; background: #15182B; border: 1px solid var(--border); border-radius: 20px; }
+.morpion-tab.is-gomoku .morpion-grille { gap: 2px; padding: 8px; border-radius: 12px; }
+
+/* Case : bouton (vide) ou span (marque) */
+.morpion-case { box-sizing: border-box; width: var(--mc); height: var(--mc); margin: 0; padding: 0; position: relative; display: grid; place-items: center;
+  border: 1px solid var(--border); border-radius: 14px; background: #1F1F23; color: inherit; font: inherit; }
+.morpion-tab.is-ultime .morpion-case, .morpion-tab.is-gomoku .morpion-case { border-radius: 6px; }
+button.morpion-case { cursor: pointer; }
+button.morpion-case:hover:not(:disabled) { border-color: var(--border-strong); background: #26262C; }
+button.morpion-case:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+button.morpion-case:disabled { cursor: default; }
+.morpion-case.is-dernier { border-color: var(--border-strong); }
+
+.morpion-marque { display: block; width: 64%; height: 64%; overflow: visible; }
+.morpion-marque.is-trace path, .morpion-marque.is-trace circle { stroke-dasharray: 1; stroke-dashoffset: 1; animation: morpion-trace .35s ease-out forwards; }
+.morpion-point { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: #F2EFEA; box-shadow: 0 0 0 2px #121212; }
+@keyframes morpion-trace { to { stroke-dashoffset: 0; } }
+
+/* Ultime : neuf petites grilles dans une grande */
+.morpion-grand { display: grid; grid-template-columns: repeat(3, auto); gap: 8px; padding: 8px; box-sizing: border-box; background: #15182B;
+  border: 1px solid var(--border); border-radius: 20px; }
+.morpion-petite { position: relative; display: grid; grid-template-columns: repeat(3, var(--mc)); gap: 2px; padding: 4px; box-sizing: border-box;
+  background: #15151A; border: 1px solid var(--border); border-radius: 10px; }
+.morpion-petite.is-cible { outline: 4px solid var(--sand); outline-offset: 3px; }
+.morpion-petite.is-libre { box-shadow: 0 0 0 2px rgba(226, 199, 126, .35); }
+.morpion-petite.is-nulle { opacity: .45; filter: grayscale(1); }
+
+.morpion-voile { position: absolute; inset: 0; border-radius: 10px; background: rgba(14, 14, 16, .78); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px; text-align: center; pointer-events: none; }
+.morpion-voile svg { width: 60%; height: 60%; opacity: .55; }
+.morpion-voile-txt { font-size: 13px; font-weight: 700; padding: 0 4px; }
+.morpion-voile.is-croix .morpion-voile-txt { color: #6FB3F2; }
+.morpion-voile.is-rond .morpion-voile-txt { color: #E8B04B; }
+.morpion-voile.is-nulle .morpion-voile-txt { color: var(--muted); }
+
+/* Légende, note, règle et score (cote) */
+.morpion-legende, .morpion-note { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
+.morpion-note { font-size: 14px; max-width: 46ch; }
+.morpion-regle { margin: 0 0 12px; padding-left: 18px; font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.morpion-score { margin: 0 0 4px; font-size: 15px; }

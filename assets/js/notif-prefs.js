@@ -10,9 +10,10 @@
  * Exporte : NOTIF_ROWS, mountNotifPrefs.
  */
 import { sb, toast, errMsg, esc } from './core.js';
+import { loadMyPages, canAccess, pageLabel } from './core/pages-access.js';
 
 /**
- * Catégories affichées : [clé, titre, détail, push disponible]. Le push n'est envoyé aujourd'hui que pour les messages :
+ * Catégories affichées : [clé, titre, détail, push disponible, page requise (facultatif : la ligne n'apparaît que si la page est déclarée et ouverte au membre)]. Le push n'est envoyé aujourd'hui que pour les messages :
  * les autres lignes montrent « Bientôt » dans la colonne téléphone au lieu d'un interrupteur sans effet.
  */
 export const NOTIF_ROWS = [
@@ -23,6 +24,7 @@ export const NOTIF_ROWS = [
   ['santa', 'Secret Santa', 'Tirage, colis envoyé ou reçu, rappel d’envoi', false],
   ['anniversaires', 'Anniversaires', 'Ton message d’anniversaire', false],
   ['quiz', 'Quiz et défis', 'Nouveau défi du gang, résultats', false],
+  ['jeux', 'Jeux · duels', 'Un membre te défie au Puissance 4, au Morpion ou au Mastermind', false, 'duels'],
 ];
 /** Heures calmes proposées quand on les active. */
 const QUIET_DEFAULT = [23, 8];
@@ -55,7 +57,7 @@ function blockHtml(me, row) {
   const quietOn = row.quiet_start != null;
   const [qs, qe] = quietOn ? [row.quiet_start, row.quiet_end] : QUIET_DEFAULT;
   const sw = (key, label) => `<input class="pref-switch np-sw" type="checkbox" role="switch" data-key="${key}" aria-label="${esc(label)}"${current(prefs, me, key) ? ' checked' : ''}>`;
-  const rows = NOTIF_ROWS.map(([k, t, d, push]) => `<div class="np-row" role="row">
+  const rows = NOTIF_ROWS.filter(([, , , , page]) => !page || (pageLabel(page) && canAccess(page))).map(([k, t, d, push]) => `<div class="np-row" role="row">
       <div class="np-cat" role="rowheader"><b>${esc(t)}</b><span>${esc(d)}</span></div>
       <div class="np-cell" role="cell">${push ? sw(`${k}.push`, `${t} : sur ce téléphone`) : '<span class="np-soon">Bientôt</span>'}</div>
       <div class="np-cell np-discord" role="cell">${sw(`${k}.discord`, `${t} : sur Discord`)}</div></div>`).join('');
@@ -112,6 +114,7 @@ export async function mountNotifPrefs(container, me, onProfile = () => {}) {
     const { data, error } = await sb.from('hg_notif_prefs').select('prefs, quiet_start, quiet_end').eq('user_id', me.id).maybeSingle();
     if (!error && data) row = data;
   } catch {}
+  try { await loadMyPages(); } catch {}
   container.innerHTML = blockHtml(me, row);
   container.hidden = false;
   const form = container.querySelector('#np-form');

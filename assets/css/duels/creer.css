@@ -1,0 +1,116 @@
+/* ===== Humane Gang — Duels : nouveau duel (vues/creer.js) ===== */
+.duels-sous { margin: 0 0 20px; color: var(--muted); }
+
+.duels-creer-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+.duels-etapes { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.duels-etape { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px; }
+.duels-etape-titre { margin: 0; font-size: 18px; font-weight: 700; }
+
+/* Fieldsets nus : on garde la sémantique, pas la boîte par défaut du navigateur. */
+.duels-groupe, .duels-seg-fs, .duels-membres-fs, .duels-jeux { margin: 0; padding: 0; border: none; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.duels-groupe legend, .duels-jeux legend { padding: 0; margin-bottom: 6px; font-size: 13px; color: var(--muted); }
+.duels-groupe-large { width: 100%; }
+.duels-groupe[hidden] { display: none; }
+.duels-choix-liste { display: flex; flex-direction: column; gap: 8px; }
+.duels-panneau { display: flex; flex-direction: column; gap: 12px; }
+.duels-panneau[hidden] { display: none; }
+
+/* ---------- 1. Jeux (tuiles avec image) ---------- */
+.duels-jeux-liste { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.duels-jeu { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 10px; min-height: 44px; box-sizing: border-box;
+  border: 1px solid var(--border-strong); border-radius: 14px; background: transparent; cursor: pointer; }
+.duels-jeu .duels-vignette { border-radius: 10px; }
+.duels-jeu-nom { font-weight: 700; font-size: 15px; line-height: 1.2; }
+.duels-jeu-aide { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.duels-jeu:has(input:checked) { border: 2px solid var(--sand); background: var(--surface-2); padding: 9px; }
+.duels-jeu:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.duels-jeu .duels-choix-etat { position: absolute; top: 14px; right: 14px; display: none; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 999px; padding: 2px 8px; }
+.duels-jeu:has(input:checked) .duels-choix-etat { display: inline-flex; }
+.duels-jeu .duels-choix-etat span { font-size: 12px; font-weight: 700; color: var(--sand); }
+
+/* ---------- Pastilles de choix (radio stylé) ---------- */
+.duels-choix { position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 8px 14px; border-radius: 14px;
+  border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
+.duels-choix:has(input:checked) { border: 2px solid var(--sand); background: var(--surface-2); padding: 7px 13px; }
+.duels-choix:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.duels-choix-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.duels-choix-txt strong { font-size: 15px; font-weight: 700; line-height: 1.25; }
+.duels-choix-aide { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.duels-choix-etat { display: none; align-items: center; gap: 6px; color: var(--sand); font-size: 12px; font-weight: 700; flex: none; }
+.duels-choix:has(input:checked) .duels-choix-etat { display: inline-flex; }
+/* Dans les pastilles, « Sélectionné » est lu par les lecteurs d'écran seulement ; la coche suffit à l'œil. */
+.duels-choix:not(.duels-choix-large) .duels-choix-etat span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Variante : carte avec explication */
+.duels-variantes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.duels-choix-large { flex-direction: column; align-items: flex-start; min-height: 76px; padding: 12px 14px; }
+.duels-choix-large .duels-choix-txt { gap: 2px; }
+.duels-choix-large .duels-choix-etat { position: static; }
+.duels-choix-large:has(input:checked) { padding: 11px 13px; }
+
+/* Segments (Un membre / Un code / Le robot) */
+.duels-seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 4px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.duels-seg-choix { min-height: 44px; justify-content: center; padding: 8px 12px; border: none; border-radius: 999px; text-align: center; }
+.duels-seg-choix:has(input:checked) { padding: 8px 12px; background: var(--text); color: #121212; border: none; }
+.duels-seg-choix .duels-choix-txt strong { font-weight: 500; font-size: 15px; text-align: center; }
+.duels-seg-choix:has(input:checked) .duels-choix-txt strong { font-weight: 700; }
+.duels-seg-choix:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+/* Membres : recherche + liste */
+.duels-membres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding: 2px; }
+.duels-membre { min-height: 56px; padding: 8px 12px; }
+.duels-membre-nom { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+.duels-membre .duels-choix-etat span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.duels-membre[hidden] { display: none; }
+
+/* ---------- Interrupteurs (partie publique, invités) ---------- */
+.duels-switch { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 14px; min-height: 44px; box-sizing: border-box;
+  border-radius: 14px; background: var(--surface-2); cursor: pointer; }
+.duels-switch-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.duels-switch-txt strong { font-size: 15px; }
+.duels-piste { position: relative; width: 52px; height: 28px; border-radius: 999px; background: var(--border-strong); flex: none; transition: background .15s; }
+.duels-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--text); transition: transform .15s; }
+.duels-switch:has(input:checked) .duels-piste { background: var(--accent); }
+.duels-switch:has(input:checked) .duels-piste::after { transform: translateX(24px); }
+.duels-switch:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+.duels-pastille-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.duels-pastille { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--sand); color: var(--sand); font-size: 12px; font-weight: 700; }
+
+/* ---------- 3. Réglages ---------- */
+.duels-reglages-trois { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.duels-reglages-trois .duels-choix { min-height: 44px; border-radius: 999px; padding: 6px 14px; }
+.duels-reglages-trois .duels-choix:has(input:checked) { padding: 5px 13px; }
+
+/* ---------- Récapitulatif « Ton duel » ---------- */
+.duels-recap { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; padding: 24px 26px; align-self: start; }
+.duels-recap-titre { margin: 0; font-size: 20px; font-weight: 700; }
+.duels-recap-liste { margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+.duels-recap-liste > div { display: flex; justify-content: space-between; gap: 12px; }
+.duels-recap-liste dt { color: var(--muted); }
+.duels-recap-liste dd { margin: 0; font-weight: 700; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.duels-recap-liste dd .muted { font-weight: 500; }
+.duels-recap-liste [hidden] { display: none; }
+.duels-envoyer { width: 100%; min-height: 52px; border-radius: 999px; font-size: 16px; }
+.duels-envoyer:disabled { opacity: .55; cursor: not-allowed; }
+.duels-erreur-envoi { margin: 0; color: var(--rose); font-weight: 700; }
+.duels-erreur-envoi[hidden] { display: none; }
+.duels-aide-envoi { margin: 0; }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 900px) {
+  .duels-creer-colonnes { grid-template-columns: minmax(0, 1fr); }
+  .duels-recap { position: static; }
+}
+@media (max-width: 760px) {
+  .duels-reglages-trois, .duels-variantes { grid-template-columns: minmax(0, 1fr); }
+  .duels-membres { grid-template-columns: minmax(0, 1fr); }
+  .duels-jeux-liste { gap: 8px; }
+  .duels-jeu { padding: 8px; }
+  .duels-jeu:has(input:checked) { padding: 7px; }
+  .duels-jeu-nom { font-size: 14px; }
+  .duels-jeu-aide { display: none; }
+  .duels-jeu .duels-choix-etat { top: 10px; right: 10px; }
+  .duels-seg-choix .duels-choix-txt strong { font-size: 14px; }
+  .duels-etape { padding: 16px; }
+}

@@ -1,0 +1,45 @@
+/* ===== Humane Gang — Duels : code du jour (vues/jour.js) ===== */
+/* Le plateau, les pions et les indices viennent de mastermind.css (classes mm-*). */
+.duels-jour { display: flex; flex-direction: column; gap: 18px; padding: 24px 0 8px; }
+.duels-jour-tete .duels-fil { margin-top: 0; }
+.duels-jour-expl { margin: 0 0 8px; color: var(--muted); max-width: 60ch; }
+.duels-jour-serie { margin: 0; color: var(--sand); }
+.duels-jour-corps { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.duels-jour .card { padding: 18px 20px; }
+.duels-jour-plateau { display: flex; flex-direction: column; gap: 14px; }
+.duels-jour-plateau .mm-titre { width: 100%; }
+.duels-jour-plateau .mm-plateau { width: 100%; box-sizing: border-box; }
+.duels-jour-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.duels-jour .mm-bloc { display: flex; flex-direction: column; gap: 8px; }
+.duels-jour .mm-dalto { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.duels-jour .mm-aide { margin: 0; font-size: 13px; color: var(--muted); }
+.duels-jour .mm-codes { display: flex; gap: 8px; }
+.duels-jour .mm-fin { margin: 4px 0; font-size: 18px; font-weight: 800; color: var(--sand); text-align: center; }
+.duels-jour-bilan { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.duels-jour-suite { margin: 0; color: var(--muted); }
+
+/* Classement du jour */
+.duels-jour-nb { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.duels-jour-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.duels-jour-ligne { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; font-size: 14px; }
+.duels-jour-ligne.is-moi { background: color-mix(in srgb, var(--sand) 14%, transparent); box-shadow: inset 0 0 0 1px var(--sand); font-weight: 700; }
+.duels-jour-rang { font-family: 'Archivo Black', sans-serif; color: var(--muted); text-align: right; }
+.duels-jour-pseudo { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duels-jour-essais { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.duels-jour-ligne time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Interrupteur daltonien (mêmes gestes que la table) */
+.duels-jour .mm-dalto-titre { font-size: 15px; font-weight: 700; display: block; }
+.duels-jour .mm-switch { position: relative; width: 52px; height: 44px; flex: none; border: 0; background: transparent; padding: 0; cursor: pointer; }
+.duels-jour .mm-switch::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 26px; border-radius: 999px; background: var(--border-strong); }
+.duels-jour .mm-switch-bille { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--text); transition: left .15s; }
+.duels-jour .mm-switch.is-on::before { background: var(--sage); }
+.duels-jour .mm-switch.is-on .mm-switch-bille { left: 28px; }
+.duels-jour .mm-switch:focus-visible, .duels-jour .mm-case-btn:focus-visible, .duels-jour .mm-pal:focus-visible, .duels-jour .btn:focus-visible, .duels-jour a:focus-visible {
+  outline: 3px solid var(--sand); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .duels-jour-corps { grid-template-columns: minmax(0, 1fr); }
+  .duels-jour-ligne { grid-template-columns: 22px minmax(0, 1fr) auto; }
+  .duels-jour-ligne time { display: none; }
+}

@@ -1,0 +1,83 @@
+/* ===== Humane Gang — Duels : table Mastermind (vues/mastermind.js) ===== */
+.duels-mm .duels-plateau { align-items: stretch; }
+.mm-titre { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; width: 100%; }
+.mm-titre .duels-h3 { font-size: 18px; margin: 0; }
+.mm-sous { font-size: 13px; color: var(--muted); }
+.mm-attente { margin: 8px 0; color: var(--sand); font-weight: 700; text-align: center; }
+.mm-fin { margin: 4px 0; font-size: 18px; font-weight: 800; color: var(--sand); text-align: center; }
+
+/* Plateau : 10 rangées (numéro, 4 cases, indices) */
+.mm-plateau { list-style: none; margin: 0; padding: 14px 16px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+.mm-rangee { display: flex; align-items: center; gap: 12px; min-height: 44px; border-radius: 14px; padding: 0 6px; box-sizing: border-box; }
+.mm-rangee.is-cur { background: var(--surface-2); box-shadow: inset 0 0 0 2px var(--sand); }
+.mm-num { width: 24px; flex: none; text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mm-rangee.is-cur .mm-num { color: var(--sand); font-weight: 700; }
+.mm-rangee.is-vide .mm-num { color: var(--border-strong); }
+.mm-cases { display: flex; gap: 8px; align-items: center; flex: none; }
+.mm-cases-grandes { justify-content: center; gap: 12px; }
+.mm-droite { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mm-droite-txt { font-size: 13px; color: var(--sand); font-weight: 700; }
+.mm-indices { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text); }
+.mm-fbs { display: inline-grid; grid-template-columns: repeat(2, 12px); gap: 4px; min-width: 28px; }
+.mm-indices-txt { white-space: nowrap; }
+
+/* Pions et trous */
+.mm-pion, .mm-case-btn, .mm-trou { width: 40px; height: 40px; border-radius: 50%; flex: none; box-sizing: border-box; display: grid; place-items: center;
+  font-family: 'Archivo Black', sans-serif; font-size: 16px; color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+.mm-pion { background: var(--mm-c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22); }
+.mm-pion.is-petit { width: 26px; height: 26px; font-size: 12px; }
+.mm-trou { border: 2px dashed var(--border-strong); }
+.mm-case-btn { padding: 0; border: 0; cursor: pointer; background: var(--mm-c, transparent); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .22); }
+.mm-case-btn { width: 44px; height: 44px; }
+.mm-case-btn.is-trou { background: transparent; border: 2px dashed var(--border-strong); box-shadow: none; }
+.mm-case-btn:disabled { cursor: default; }
+.mm-case-btn:not(:disabled):hover { filter: brightness(1.08); }
+.mm-cases-grandes .mm-case-btn, .mm-cases-grandes .mm-trou { width: 52px; height: 52px; }
+
+/* Indices : bien placé = rond plein or ; mal placé = rond blanc cerclé */
+.mm-fb { width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; display: inline-block; }
+.mm-fb-ok { background: var(--sand); }
+.mm-fb-no { border: 2px solid var(--text); background: transparent; }
+.mm-legende { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; font-size: 13px; color: var(--muted); }
+.mm-legende .mm-fb { margin-left: 8px; }
+
+/* Palette et commandes */
+.mm-palette { display: grid; grid-template-columns: repeat(6, minmax(0, 56px)); gap: 12px; justify-content: center; }
+.mm-pal { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--bg); box-shadow: 0 0 0 1px var(--border-strong); padding: 0; cursor: pointer;
+  background: var(--mm-c); color: #121212; font-family: 'Archivo Black', sans-serif; font-size: 18px; display: grid; place-items: center; }
+.mm-pal:focus-visible, .mm-case-btn:focus-visible, .mm-switch:focus-visible, .mm-commandes .btn:focus-visible, .duels-mm a:focus-visible {
+  outline: 3px solid var(--sand); outline-offset: 3px; }
+.mm-commandes { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.mm-commandes .btn { min-height: 52px; padding: 0 24px; }
+.mm-commandes .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Colonne latérale */
+.duels-mm .mm-bloc { display: flex; flex-direction: column; gap: 8px; }
+.duels-mm .mm-bloc .duels-h3 { margin: 0; }
+.mm-aide { margin: 0; font-size: 13px; color: var(--muted); }
+.mm-codes { display: flex; gap: 8px; }
+.mm-progs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mm-prog { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+.mm-dalto { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 12px; }
+.mm-dalto-titre { font-size: 15px; font-weight: 700; display: block; }
+.mm-switch { position: relative; width: 52px; height: 44px; flex: none; border: 0; background: transparent; padding: 0; cursor: pointer; }
+.mm-switch::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 26px; border-radius: 999px; background: var(--border-strong); }
+.mm-switch-bille { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--text); transition: left .15s; }
+.mm-switch.is-on::before { background: var(--sage); }
+.mm-switch.is-on .mm-switch-bille { left: 28px; }
+.duels-mm .mm-bloc > a { color: var(--sand); font-weight: 700; }
+
+/* Animation légère d'apparition d'un pion (coupée par duels-calme) */
+.mm-pion, .mm-case-btn:not(.is-trou) { animation: mm-pop .18s ease-out; }
+@keyframes mm-pop { from { transform: scale(.6); opacity: 0; } }
+
+@media (max-width: 760px) {
+  .mm-palette { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+  .mm-pal { width: 100%; height: 52px; }
+  .mm-cases { gap: 6px; }
+  .mm-rangee { gap: 8px; }
+  .mm-pion, .mm-trou { width: 34px; height: 34px; font-size: 14px; }
+  .mm-case-btn { width: 44px; height: 44px; font-size: 14px; }
+  .mm-rangee { min-height: 44px; }
+}

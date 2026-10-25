@@ -107,6 +107,10 @@
     "uno_party_announce": {
       "title": "Une partie de Uno se prépare !",
       "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
+    },
+    "duel_defi_dm": {
+      "title": "{pseudo} te défie !",
+      "body": "**{pseudo}** te défie au **{jeu}** ({format}).\n\nLe défi expire dans 10 minutes. Accepte-le ici : {lien}"
     }
   },
   "meta": {
@@ -371,6 +375,18 @@
         "code": { "label": "Code de la partie", "example": "HGUNO-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
         "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/uno.html?code=HGUNO-4821" }
+      }
+    },
+    "duel_defi_dm": {
+      "group": "jeux", "label": "Défi de duel", "target": "MP au membre défié", "color": "#E2C77E",
+      "description": "Envoyé au membre défié au Puissance 4, au Morpion ou au Mastermind, s'il accepte les MP du bot et la catégorie « Jeux ». Une seule fois par défi.",
+      "fields": [],
+      "vars": {
+        "pseudo": { "label": "Pseudo de l'auteur du défi", "example": "Domursan" },
+        "jeu": { "label": "Jeu", "example": "Puissance 4" },
+        "format": { "label": "Format", "example": "au meilleur des 3" },
+        "code": { "label": "Code du duel", "example": "HGP4-2190" },
+        "lien": { "label": "Lien pour accepter", "example": "https://humane-gang.example/duels.html#rejoindre/HGP4-2190" }
       }
     }
   }

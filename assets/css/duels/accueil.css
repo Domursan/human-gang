@@ -1,0 +1,89 @@
+/* ===== Humane Gang — Duels : accueil (vues/accueil.js) =====
+   Mise en page : deux colonnes sur ordinateur, une colonne sous 900 px. Cibles tactiles de 44 px au minimum. */
+.duels-acc { display: flex; flex-direction: column; gap: 24px; padding-top: 8px; min-width: 0; }
+.duels-acc .btn { min-height: 44px; box-sizing: border-box; }
+.duels-acc a:focus-visible, .duels-acc button:focus-visible, .duels-acc input:focus-visible {
+  outline: 3px solid var(--sand); outline-offset: 2px;
+}
+
+/* ---------- En-tête : titre et rejoindre ---------- */
+.duels-acc-tete { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 24px; align-items: end; }
+.duels-acc-titre { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.duels-acc-titre .duels-titre { margin-bottom: 0; }
+.duels-acc-intro { margin: 0; font-size: 17px; color: var(--muted); }
+
+/* ---------- Cartes ---------- */
+.duels-acc-carte { padding: 24px 28px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.duels-acc-titre-carte { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; }
+.duels-acc-entete { display: flex; align-items: center; gap: 10px; }
+.duels-acc-nb { font-size: 13px; font-weight: 700; color: #121212; background: var(--sand); border-radius: 999px; padding: 2px 10px; }
+.duels-acc-alignee { align-self: flex-start; }
+
+/* ---------- Rejoindre avec un code ---------- */
+.duels-acc-form { margin: 0; }
+.duels-acc-form-ligne { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.duels-acc-champ-nom { font-size: 13px; color: var(--muted); }
+.duels-acc-code { flex: 1; min-width: 160px; min-height: 48px; box-sizing: border-box; padding: 0 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font-family: 'Courier New', monospace; font-size: 18px; letter-spacing: 2px; }
+.duels-acc-code[aria-invalid="true"] { border-color: var(--rose); }
+.duels-acc-erreur { margin: 0; color: var(--rose); font-weight: 700; font-size: 14px; }
+.duels-acc-aide { margin: 0; font-size: 14px; color: var(--muted); }
+
+/* ---------- Les trois jeux ---------- */
+.duels-acc-jeux { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.duels-acc-jeu { border-radius: var(--radius); border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 92%, transparent);
+  overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.duels-acc-jeu .duels-vignette { border-bottom: 1px solid var(--border); }
+.duels-acc-jeu-corps { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.duels-acc-jeu-nom { margin: 0; font-size: 18px; font-weight: 700; }
+.duels-acc-jeu-texte { margin: 0 0 8px; font-size: 14px; color: var(--muted); flex: 1; }
+.duels-acc-jouer { margin-top: auto; width: 100%; }
+
+/* ---------- Grille des blocs ---------- */
+.duels-acc-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.duels-acc-colonne { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+
+/* ---------- Listes de duels ---------- */
+.duels-acc-liste, .duels-acc-membres { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.duels-acc-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--surface-2); flex-wrap: wrap; }
+.duels-acc-ligne.is-tour { box-shadow: inset 0 0 0 2px var(--sand); }
+.duels-acc-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.duels-acc-ligne-texte strong { overflow-wrap: anywhere; }
+.duels-acc-sous { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+.duels-acc-pseudo { font-weight: 700; }
+.duels-acc-etiquette { display: inline-flex; align-items: center; padding: 2px 10px; margin-left: 6px; border-radius: 999px;
+  background: var(--sand); color: #121212; font-size: 12px; font-weight: 800; vertical-align: middle; }
+.duels-acc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.duels-acc-bouton { padding: 0 16px; }
+.duels-acc-lien { align-self: flex-start; min-height: 44px; display: inline-flex; align-items: center; color: var(--sand); font-weight: 700; }
+
+/* ---------- Défier un membre ---------- */
+.duels-acc-recherche { width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: 15px var(--font-body); }
+.duels-acc-membres { max-height: 320px; overflow-y: auto; padding-right: 4px; }
+.duels-acc-membre { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.duels-acc-membre-nom { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+
+/* ---------- Résumé des statistiques ---------- */
+.duels-acc-tuiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.duels-acc-tuile { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 8px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; color: var(--text); }
+.duels-acc-tuile.is-vert { background: var(--sage-soft); color: var(--sage-text); }
+.duels-acc-tuile.is-or { background: color-mix(in srgb, var(--sand) 14%, var(--surface)); color: var(--sand); }
+.duels-acc-chiffre { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.duels-acc-tuile-nom { font-size: 12px; opacity: 0.85; }
+
+/* ---------- Petits écrans ---------- */
+@media (max-width: 900px) {
+  .duels-acc-tete { grid-template-columns: minmax(0, 1fr); }
+  .duels-acc-grille { grid-template-columns: minmax(0, 1fr); }
+  .duels-acc-jeux { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .duels-acc-jeux { grid-template-columns: minmax(0, 1fr); }
+  .duels-acc-carte { padding: 18px; }
+  .duels-acc-form-ligne .btn { width: 100%; }
+  .duels-acc-code { font-size: 16px; }
+}

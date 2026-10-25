@@ -1,0 +1,59 @@
+/* ===== Humane Gang — Duels : décor et composants partagés (duels.html) =====
+   Feuilles par écran : assets/css/duels/*.css (importées ci-dessous).
+   Animations coupées par <body class="duels-calme"> (préférence du membre) et prefers-reduced-motion. */
+@import url('duels/accueil.css');
+@import url('duels/creer.css');
+@import url('duels/rejoindre.css');
+@import url('duels/salle.css');
+@import url('duels/table.css');
+@import url('duels/p4.css');
+@import url('duels/morpion.css');
+@import url('duels/mastermind.css');
+@import url('duels/fin.css');
+@import url('duels/stats.css');
+@import url('duels/jour.css');
+
+/* ---------- Décor ---------- */
+body.duels-page {
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, #1B1F33 0, var(--bg) 70%);
+  background-repeat: no-repeat;
+}
+.duels-app { padding-bottom: 48px; }
+.duels-app .card { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.duels-chargement { padding: 48px 0; color: var(--muted); text-align: center; }
+.duels-erreur { margin: 32px auto; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+.duels-fil { font-size: 13px; color: var(--muted); margin: 16px 0 8px; }
+.duels-fil a { color: inherit; }
+.duels-titre { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0 0 12px; }
+.duels-code { font-family: 'Courier New', monospace; letter-spacing: 3px; }
+.duels-invite-tag { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: 11px; color: var(--muted); vertical-align: middle; }
+.duels-vignette { display: block; width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; }
+
+/* ---------- Avatar rond (initiales dans la couleur du membre) ---------- */
+.duels-av { width: 44px; height: 44px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 800; font-size: 14px;
+  color: #121212; background: var(--duels-av, #9A9A9F); overflow: hidden; }
+.duels-av img { width: 100%; height: 100%; object-fit: cover; }
+.duels-av.is-tour { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--sand); }
+
+/* ---------- Chrono (anneau) ---------- */
+.duels-chrono { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.duels-chrono svg { width: 36px; height: 36px; transform: rotate(-90deg); }
+.duels-chrono .fond { fill: none; stroke: var(--border); stroke-width: 4; }
+.duels-chrono .arc { fill: none; stroke: var(--sand); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.duels-chrono.is-urgent .arc { stroke: var(--rose); }
+.duels-chrono.is-urgent { color: var(--rose); }
+
+/* ---------- Chat (vues/chat.js) ---------- */
+.duels-chat-corps { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.duels-chat-fil { flex: 1; min-height: 120px; max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+.duels-chat-msg { margin: 0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.duels-chat-auteur { margin-right: 6px; }
+.duels-chat-vide { margin: 0; color: var(--muted); font-size: 14px; }
+.duels-chat-form { display: flex; gap: 8px; }
+.duels-chat-champ { flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-strong);
+  background: var(--bg); color: var(--text); font: 15px var(--font-body); }
+.duels-chat-envoyer { min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) { .duels-app * { animation: none !important; transition: none !important; } }
+body.duels-calme .duels-app * { animation: none !important; transition: none !important; }

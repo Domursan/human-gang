@@ -1,0 +1,29 @@
+/* ===== Humane Gang — Duels : rejoindre un duel (vues/rejoindre.js) ===== */
+.duels-rejoindre { max-width: 520px; margin: 32px auto 0; display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 24px; }
+.duels-rejoindre .duels-titre { margin: 0; font-size: clamp(26px, 5vw, 34px); text-align: center; }
+.duels-rejoindre .muted { text-align: center; margin: 0; }
+.duels-rejoindre .small a { color: var(--sand); }
+.duels-erreur-texte { margin: 0; color: var(--rose); font-weight: 700; }
+.duels-erreur .duels-titre { margin: 0; font-size: clamp(26px, 5vw, 34px); }
+.duels-erreur .btn { align-self: flex-start; }
+.duels-invitation { margin: 0; text-align: center; font-size: 16px; line-height: 1.4; }
+.duels-invitation strong { color: var(--sand); }
+
+.duels-pleine { width: 100%; min-height: 52px; border-radius: 999px; }
+.duels-rejoindre .btn-ghost.duels-pleine { min-height: 44px; }
+.duels-pleine:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Défi reçu */
+.duels-defi { border-color: var(--border-strong); }
+.duels-defi-tete { display: flex; justify-content: center; }
+.duels-defi-titre { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.3; text-align: center; }
+.duels-decompte { margin: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--sand); font-variant-numeric: tabular-nums; min-height: 1.4em; }
+
+/* Réglages en pastilles (défi et invitation) */
+.duels-reglages-pastilles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.duels-reglages-pastilles li { padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong); font-size: 13px; }
+
+/* Formulaire pseudo (invité) */
+.duels-invite-form { display: flex; flex-direction: column; gap: 12px; }
+.duels-invite-form .input { min-height: 48px; }
+.duels-invite-form .input:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }

@@ -7,7 +7,7 @@
 // Exporte : NOTIF_CATS, TYPE_CAT, NotifCat, NotifCanal, NotifRow, zurichHour, inQuietHours, notifAllowed, loadNotifPrefs.
 
 /** Catégories connues (même liste blanche que hg_set_notif_prefs). */
-export const NOTIF_CATS = ['messages', 'sorties', 'echanges', 'souhaits', 'santa', 'anniversaires', 'quiz'] as const;
+export const NOTIF_CATS = ['messages', 'sorties', 'echanges', 'souhaits', 'santa', 'anniversaires', 'quiz', 'jeux'] as const;
 export type NotifCat = typeof NOTIF_CATS[number];
 export type NotifCanal = 'push' | 'discord';
 /** Ligne de hg_notif_prefs (les champs absents valent « rien de coupé »). */
@@ -27,6 +27,7 @@ export const TYPE_CAT: Record<string, NotifCat> = {
   irl_new: 'sorties',
   irl_reminder: 'sorties',
   birthday: 'anniversaires',
+  duel_defi: 'jeux',
 };
 
 /**

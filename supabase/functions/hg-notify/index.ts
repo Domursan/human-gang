@@ -1132,6 +1132,40 @@ async function onLgParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
  * @returns {Promise<object>} { channel } ou une raison de non-envoi.
  * @throws {HttpError} 400, 403, 404.
  */
+/**
+ * MP au membre défié en duel (Puissance 4, Morpion, Mastermind). Appelé par le créateur du défi juste après hg_duel_creer.
+ * Garde-fous : défi récent, encore en attente, créé par l'appelant ; une seule fois (réservation defi_notifie_at) ;
+ * le membre défié accepte les MP du bot et la catégorie « Jeux ».
+ */
+async function onDuelDefi(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  const code = String(p.code ?? '');
+  if (!/^HG(P4|MO|MM)-[0-9]{4}$/.test(code)) throw new HttpError(400, 'code manquant');
+  if (bot.notify?.duel_defi === false) return { skipped: 'désactivé' };
+  const { data: g } = await db.from('hg_duel_parties').select('id, code, jeu, variante, hote, defie, statut, format, created_at, defi_notifie_at')
+    .eq('code', code).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!g) throw new HttpError(404, 'Duel introuvable');
+  if (g.hote !== me.id) throw new HttpError(403, 'Seul l\'auteur du défi peut le notifier');
+  if (!g.defie || g.statut !== 'attente') return { skipped: 'défi non ouvert' };
+  if (!recent(g.created_at)) return { skipped: 'défi déjà ancien' };
+  if (g.defi_notifie_at) return { skipped: 'déjà notifié' };
+  const other = await getProfile(g.defie);
+  if (!canDM(other)) return { dm: false, reason: 'destinataire sans Discord ou opt-out' };
+  if (!(await dmAllowed(other.id, 'jeux'))) return { dm: false, reason: CAT_OFF };
+  await takeQuota(me, bot, 'duel_defi');
+  const { data: claimed, error: claimErr } = await db.from('hg_duel_parties').update({ defi_notifie_at: new Date().toISOString() })
+    .eq('id', g.id).is('defi_notifie_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà notifié' };
+  const JEU: Record<string, string> = { p4: 'Puissance 4', mastermind: 'Mastermind' };
+  const jeu = JEU[g.jeu] ?? (g.variante === 'ultime' ? 'Morpion Ultime' : g.variante === 'gomoku' ? 'Gomoku' : 'Morpion');
+  const format = g.format > 1 ? `au meilleur des ${g.format}` : 'en une manche';
+  const lien = link(`duels.html#rejoindre/${g.code}`) ?? '';
+  const rendered = renderTemplate('duel_defi_dm', { pseudo: mdSafe(me.pseudo), jeu, format, code: g.code, lien }, tpl);
+  const ok = await trySend(() => sendDM(other.discord_id!, embed({ ...embedFrom(rendered), url: lien || undefined, color: COLOR.info })), `MP défi ${other.id}`);
+  if (!ok) await db.from('hg_duel_parties').update({ defi_notifie_at: null }).eq('id', g.id);
+  return { dm: ok };
+}
+
 async function onUnoParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   const code = String(p.code ?? '');
   if (!/^HGUNO-[0-9]{4}$/.test(code)) throw new HttpError(400, 'code manquant');
@@ -1299,6 +1333,7 @@ Deno.serve(async (req) => {
       case 'card_drop': result = await onCardDrop(me, bot, payload, tpl); break;
       case 'lg_party': result = await onLgParty(me, bot, payload, tpl); break;
       case 'uno_party': result = await onUnoParty(me, bot, payload, tpl); break;
+      case 'duel_defi': result = await onDuelDefi(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }
     return json({ ok: true, event, ...result });

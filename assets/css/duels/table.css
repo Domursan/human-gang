@@ -1,0 +1,47 @@
+/* ===== Humane Gang — Duels : cadre commun des tables (vues/commun.js) ===== */
+.duels-table { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; }
+.duels-barre { display: flex; align-items: center; gap: 16px; padding: 14px 20px; flex-wrap: wrap; }
+.duels-barre-jeu { display: flex; flex-direction: column; min-width: 0; }
+.duels-barre-nom { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 22px; line-height: 1.1; }
+.duels-barre-sous { font-size: 13px; color: var(--muted); }
+.duels-face { flex: 1; display: flex; align-items: center; justify-content: center; gap: 14px; min-width: 0; flex-wrap: wrap; }
+.duels-face-j { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; border: 1px solid transparent; }
+.duels-face-j.is-tour { border-color: var(--sand); background: color-mix(in srgb, var(--sand) 8%, transparent); }
+.duels-face-txt { display: flex; flex-direction: column; line-height: 1.25; }
+.duels-face-etat { font-size: 13px; color: var(--muted); }
+.duels-face-j.is-tour .duels-face-etat { color: var(--sand); font-weight: 700; }
+.duels-face-score { font-family: 'Archivo Black', sans-serif; font-size: 22px; min-width: 28px; text-align: center; }
+.duels-contre { font-size: 13px; color: var(--muted); }
+.duels-barre-outils { display: flex; align-items: center; gap: 8px; }
+.duels-btn-icone { position: relative; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 999px; }
+.duels-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent);
+  color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.duels-statut { margin: 0; min-height: 1.4em; text-align: center; color: var(--sand); font-weight: 700; }
+.duels-corps { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.duels-plateau { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.duels-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.duels-cote .card { padding: 16px 18px; }
+.duels-cote-jeu:empty { display: none; }
+.duels-h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+.duels-journal-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted);
+  max-height: 180px; overflow-y: auto; }
+.duels-journal-liste li:first-child { color: var(--text); }
+.duels-manche { position: fixed; left: 50%; top: 96px; transform: translateX(-50%); z-index: 30; padding: 12px 22px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--sand); box-shadow: 0 12px 30px rgba(0, 0, 0, .5); animation: duels-pop .25s ease-out; }
+.duels-manche p { margin: 0; }
+@keyframes duels-pop { from { opacity: 0; transform: translate(-50%, -8px); } }
+
+@media (max-width: 900px) {
+  .duels-corps { grid-template-columns: minmax(0, 1fr); }
+  .duels-cote { display: none; }
+  .duels-table.panneau-ouvert .duels-cote { display: flex; position: fixed; inset: auto 0 0 0; z-index: 40; max-height: 70vh; overflow-y: auto;
+    padding: 12px; background: var(--bg); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .5); }
+  .duels-barre { padding: 10px 12px; gap: 10px; }
+  .duels-barre-nom { font-size: 17px; }
+  .duels-face { order: 3; flex-basis: 100%; justify-content: space-between; gap: 6px; }
+  .duels-face-j { padding: 4px 8px 4px 4px; }
+  .duels-contre { display: none; }
+  .duels-barre-outils { margin-left: auto; }
+  [data-abandon] { padding: 0 12px; }
+}
+@media (min-width: 901px) { [data-ouvrir-chat] { display: none; } }

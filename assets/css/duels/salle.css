@@ -1,0 +1,26 @@
+/* ===== Humane Gang — Duels : salle d'attente (vues/salle.js) ===== */
+.duels-salle { max-width: 560px; margin: 32px auto 0; display: flex; flex-direction: column; align-items: stretch; gap: 16px; padding: 24px; }
+.duels-salle .duels-titre { margin: 0; font-size: clamp(26px, 5vw, 34px); text-align: center; }
+.duels-salle-attente { margin: 0; text-align: center; color: var(--muted); font-size: 16px; line-height: 1.4; }
+.duels-salle-attente strong { color: var(--text); }
+
+.duels-salle .duels-decompte { font-size: 15px; }
+
+/* Code à partager, en grand */
+.duels-salle-code { margin: 4px 0; padding: 18px 12px; text-align: center; font-size: clamp(30px, 8vw, 52px); font-weight: 700;
+  letter-spacing: 4px; color: var(--sand); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 14px;
+  user-select: all; overflow-wrap: anywhere; }
+.duels-salle-lien-bloc { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.duels-salle-lien-bloc .btn { min-width: 200px; }
+.duels-salle-lien { margin: 0; text-align: center; word-break: break-all; }
+
+/* Réglages (lecture seule) */
+.duels-salle-reglages { margin: 0; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.duels-salle-reglages > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.duels-salle-reglages dt { color: var(--muted); font-size: 14px; }
+.duels-salle-reglages dd { margin: 0; font-weight: 700; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+
+.duels-pleine { width: 100%; min-height: 52px; border-radius: 999px; }
+.duels-pleine:disabled { opacity: .55; cursor: not-allowed; }
+.duels-salle .btn-ghost.duels-pleine { min-height: 44px; }
+.duels-salle .btn:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }

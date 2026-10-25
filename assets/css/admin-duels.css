@@ -1,0 +1,64 @@
+/* ===== Humane Gang — administration : Duels (La Fête foraine › Jeux › Duels) =====
+   Styles de assets/js/admin-duels.js. Préfixe dls-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+
+.dls { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dls-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.dls-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.dls-colonnes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.dls-note { margin: 0; font-size: 14px; color: var(--muted); }
+.dls-aide { font-size: 13px; color: var(--muted); }
+.dls-card .btn { align-self: flex-start; }
+
+/* Paillettes */
+.dls-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.dls-table th, .dls-table td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.dls-table thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
+.dls-table tbody th { font-weight: 400; }
+.dls-table td { width: 140px; }
+.dls-input {
+  min-height: 44px; box-sizing: border-box; width: 100%; padding: 0 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font: inherit; font-size: 15px;
+}
+.dls-input-num { font-weight: 700; }
+.dls-input[aria-invalid="true"] { border-color: var(--rose); }
+.dls-table .dls-input { width: 100%; max-width: 120px; }
+.dls-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.dls-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dls-champ label { font-size: 14px; color: var(--muted); }
+.dls-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.dls-statut { font-size: 14px; color: var(--muted); }
+.dls-statut.dls-ok { color: var(--sage); }
+.dls-statut.dls-erreur { color: var(--rose); }
+
+/* Badges */
+.dls-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dls-badge { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.dls-medaille {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--sand); color: #121212; display: grid; place-items: center;
+}
+.dls-badge-texte { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.dls-badge-texte strong { font-size: 15px; font-weight: 700; }
+.dls-switch { flex: none; }
+
+/* Duels en cours et terminés */
+.dls-scroll { overflow-x: auto; min-width: 0; }
+.dls-parties { min-width: 680px; }
+.dls-parties td { width: auto; padding: 12px 12px 12px 0; }
+.dls-parties th { padding-right: 12px; }
+.dls-terminees td { width: 120px; }
+.dls-code { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.dls-action { text-align: right; }
+.dls-arreter { min-height: 44px; border-color: var(--rose); color: var(--rose); }
+
+@media (min-width: 900px) {
+  .dls-colonnes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dls-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .dls-table td { width: 110px; }
+  .dls-table .dls-input { max-width: none; }
+  .dls-actions .btn { width: 100%; }
+  .dls-card .btn { align-self: stretch; }
+}

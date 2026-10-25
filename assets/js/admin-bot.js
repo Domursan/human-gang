@@ -38,6 +38,7 @@ const NOTIFY = [
   ['card_drop', 'Drop lancé', 'annonce dans le salon quand un drop est lancé avec « Annoncer sur Discord »'],
   ['lg_party', 'Partie de Loup-Garou', 'annonce dans le salon quand un membre crée une partie avec « Annoncer sur le Discord du gang »'],
   ['uno_party', 'Partie de Uno', 'annonce dans le salon quand un membre crée une partie de Uno avec « Annoncer sur le Discord du gang »'],
+  ['duel_defi', 'MP : défi de duel', 'MP au membre défié au Puissance 4, au Morpion ou au Mastermind (s\'il accepte la catégorie « Jeux »)'],
   ['quiz_daily', 'Publier la question du jour', 'chaque matin dans le salon « Question du jour » (à couper pendant les vacances)'],
   ['unwrap', 'Tour de passage au déballage', 'annonce « C’est au tour de … » pendant la soirée déballage du Secret Santa (désactivé par défaut)'],
 ];

@@ -41,6 +41,7 @@ export const CARTES = [
     icone: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>' },
   { id: 'heardle', image: `${IMG}heardle.webp`, titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'flash', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
     icone: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
+  { id: 'code-du-jour', titre: 'Code du jour', texte: 'Un code secret, dix essais, le même pour tous.', section: 'flash', href: 'duels.html#jour', page: 'duels', image: `${IMG}mastermind.webp` },
   { id: 'arcade-paillettes', image: `${IMG}arcade-paillettes.webp`, titre: 'Paillettes', texte: 'Attrape les Paillettes, évite le reste.', section: 'flash', href: '#arcade-paillettes', couleur: 'var(--sand)',
     icone: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>' },
   { id: 'arcade-raclette', image: `${IMG}arcade-raclette.webp`, titre: 'Raclette', texte: 'Un jeu d’arcade qui sent bon le fromage.', section: 'flash', href: '#arcade-raclette', couleur: 'var(--amber)',
@@ -48,11 +49,13 @@ export const CARTES = [
   { id: 'arcade-domu', image: `${IMG}arcade-domu.webp`, titre: 'Domu-mobile', texte: 'Conduis, esquive, arrive en premier.', section: 'flash', href: '#arcade-domu', couleur: 'var(--rust)',
     icone: '<path d="M3 15l2-5h11l3 5"/><path d="M3 15h18v2H3z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>' },
 
-  // Jeux multijoueurs : en préparation (admins seulement tant qu'ils ne sont pas ouverts)
-  { id: 'puissance4', titre: 'Puissance 4', texte: 'Aligne 4 jetons avant l’autre.', section: 'multi', bientot: true, image: `${IMG}p4.webp` },
-  { id: 'morpion', titre: 'Morpion', texte: 'Classique, Ultime ou Gomoku.', section: 'multi', bientot: true, image: `${IMG}morpion.webp` },
+  // Jeux multijoueurs : pages à part (accès de la page « duels »), ou en préparation (admins seulement)
+  { id: 'duels', titre: 'Mes duels', texte: 'Défis reçus, duels en cours, statistiques.', section: 'multi', href: 'duels.html', page: 'duels', couleur: 'var(--sand)',
+    icone: '<path d="M4 4l8 8M4 4h4M4 4v4M20 4l-8 8M20 4h-4M20 4v4M8 16l-4 4M16 16l4 4M9 15l6-6M15 15L9 9"/>' },
+  { id: 'puissance4', titre: 'Puissance 4', texte: 'Aligne 4 jetons avant l’autre.', section: 'multi', href: 'duels.html#creer/p4', page: 'duels', image: `${IMG}p4.webp` },
+  { id: 'morpion', titre: 'Morpion', texte: 'Classique, Ultime ou Gomoku.', section: 'multi', href: 'duels.html#creer/morpion', page: 'duels', image: `${IMG}morpion.webp` },
   { id: 'bataille-navale', titre: 'Bataille navale', texte: 'Cache ta flotte, coule la sienne.', section: 'multi', bientot: true, image: `${IMG}bataille-navale.webp` },
-  { id: 'mastermind', titre: 'Mastermind', texte: 'Perce le code secret.', section: 'multi', bientot: true, image: `${IMG}mastermind.webp` },
+  { id: 'mastermind', titre: 'Mastermind', texte: 'Perce le code secret.', section: 'multi', href: 'duels.html#creer/mastermind', page: 'duels', image: `${IMG}mastermind.webp` },
   { id: 'qui-est-ce', titre: 'Qui est-ce ?', texte: 'Devine son personnage secret.', section: 'multi', bientot: true, image: `${IMG}qui-est-ce.webp` },
   { id: 'nom-de-code', titre: 'Nom de code', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', bientot: true, image: `${IMG}nom-de-code.webp` },
 

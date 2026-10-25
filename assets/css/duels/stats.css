@@ -1,0 +1,60 @@
+/* ===== Humane Gang — Duels : mes statistiques (vues/stats.js) =====
+   Tuiles en grille automatique, badges et derniers duels côte à côte sur ordinateur, en colonne sur petit écran. */
+.duels-st { display: flex; flex-direction: column; gap: 20px; padding-top: 8px; min-width: 0; }
+.duels-st .btn { min-height: 44px; box-sizing: border-box; }
+.duels-st a:focus-visible, .duels-st button:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+
+/* ---------- Filtres par jeu ---------- */
+.duels-st-filtres { display: flex; gap: 8px; flex-wrap: wrap; }
+.duels-st-filtre { padding: 0 16px; }
+.duels-st-filtre[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: #121212; font-weight: 700; }
+
+/* ---------- Cartes ---------- */
+.duels-st-carte { padding: 24px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.duels-st-titre { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.25; }
+.duels-st-texte { margin: 0; }
+.duels-st-aide { margin: 0; color: var(--muted); font-size: 14px; }
+.duels-st-sous { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.duels-st-pseudo { font-weight: 700; }
+
+/* ---------- Tuiles de chiffres ---------- */
+.duels-st-tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.duels-st-tuile { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 8px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; color: var(--text); }
+.duels-st-tuile.is-vert { background: var(--sage-soft); color: var(--sage-text); }
+.duels-st-tuile.is-rose { color: var(--rose); }
+.duels-st-tuile.is-or { background: color-mix(in srgb, var(--sand) 14%, var(--surface)); color: var(--sand); }
+.duels-st-chiffre { font-family: var(--font-display); font-size: 26px; line-height: 1.1; }
+.duels-st-tuile-nom { font-size: 12px; opacity: 0.85; }
+
+/* ---------- Deux blocs côte à côte ---------- */
+.duels-st-blocs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+
+/* ---------- Badges ---------- */
+.duels-st-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.duels-st-badge { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-2); }
+.duels-st-badge > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.duels-st-badge-icone { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: color-mix(in srgb, var(--sand) 18%, transparent); color: var(--sand); }
+.duels-st-badge.is-verrou { color: var(--muted); }
+.duels-st-badge.is-verrou strong { color: var(--muted); }
+.duels-st-badge.is-verrou .duels-st-badge-icone { background: var(--border); color: var(--muted); }
+
+/* ---------- Derniers duels ---------- */
+.duels-st-lignes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.duels-st-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--surface-2); flex-wrap: wrap; }
+.duels-st-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.duels-st-ligne-texte strong { overflow-wrap: anywhere; }
+.duels-st-resultat { font-weight: 700; font-size: 14px; }
+.duels-st-ligne.is-victoire .duels-st-resultat { color: var(--sage-text); }
+.duels-st-ligne.is-defaite .duels-st-resultat { color: var(--rose); }
+.duels-st-ligne.is-nul .duels-st-resultat { color: var(--muted); }
+.duels-st-score { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 56px; text-align: center; }
+.duels-st-pail { font-size: 13px; color: var(--sand); font-weight: 700; }
+
+/* ---------- Petits écrans ---------- */
+@media (max-width: 760px) {
+  .duels-st-blocs { grid-template-columns: minmax(0, 1fr); }
+  .duels-st-carte { padding: 18px; }
+  .duels-st-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
