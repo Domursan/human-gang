@@ -170,6 +170,12 @@ const valide = async (p) => { await p.click('[data-act="valider"]'); await sleep
   check((await p.locator('.ng-essais .ng-ligne').count()) === 6, 'nerdle : six lignes d’essai');
   check((await p.locator('.ng-key').count()) === 17, 'nerdle : clavier à l’écran de 17 touches');
   check((await p.locator('.ng-pills').textContent()).includes('Essai 1 / 6'), 'nerdle : « Essai 1 / 6 »');
+  // Indice à la demande : la 1re case (1) se montre en pâle dans la ligne en cours, 1/3, « Points max » baisse de 1
+  await p.click('[data-act="indice"]');
+  await sleep(350);
+  check((await p.locator('.ng-ligne.is-saisie .ng-c.is-indice').count()) === 1 && (await p.locator('.ng-ligne.is-saisie .ng-c.is-indice').textContent()) === '1', 'nerdle indice : case 1 révélée en pâle dans la ligne en cours');
+  check((await p.locator('[data-act="indice"]').textContent()).includes('1/3') && (await p.locator('.ng-indices').textContent()).includes('case 1'), 'nerdle indice : bouton « 1/3 » et liste des indices');
+  check((await p.locator('.ng-pills').textContent()).includes('Essai 1 / 6') && (await p.locator('.ng-pills').textContent()).replace(/\s+/g, ' ').match(/Points max\s*5/), 'nerdle indice : pas d’essai compté, points max 5');
   for (const t of ['1', '0', '+', '3', '7', '=', '4', '7']) await p.click(`.ng-key[data-touche="${t}"]`);
   check((await p.locator('.ng-ligne.is-saisie .ng-c').allTextContents()).join('') === '10+37=47', 'nerdle : saisie affichée dans la ligne en cours');
   await p.click('[data-act="entrer"]');
@@ -199,7 +205,7 @@ const valide = async (p) => { await p.click('[data-act="valider"]'); await sleep
   await p.evaluate(CLIP_FAUX);
   await p.click('[data-act="copier"]');
   await sleep(200);
-  check((await p.evaluate(() => window.__CLIP)) === 'Nerdle #16 2/6\n🟩⬛🟩🟩⬛🟩🟩🟩\n🟩🟩🟩🟩🟩🟩🟩🟩', 'copier : carrés verts, ambres et noirs, une ligne par essai');
+  check((await p.evaluate(() => window.__CLIP)) === 'Nerdle #16 2/6 · 1 indice\n🟩⬛🟩🟩⬛🟩🟩🟩\n🟩🟩🟩🟩🟩🟩🟩🟩', 'copier : carrés verts, ambres et noirs, une ligne par essai');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
   await p.screenshot({ path: SHOTS + '/nj-grilles-nerdle-390.png', fullPage: true });
   check(mesErreurs(p).length === 0, 'nerdle 390 px : aucune erreur JS' + (mesErreurs(p).length ? ' — ' + mesErreurs(p).join(' | ') : ''));

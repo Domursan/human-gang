@@ -181,3 +181,7 @@
   .ang-tuile { min-width: 40px; min-height: 44px; font-size: 16px; }
   .ang-cases, .ang-tuiles { gap: 5px; }
 }
+/* Nerdle : indice à la demande (case révélée en pâle dans la ligne en cours, bouton et liste sous la grille) */
+.ng-c.is-indice { color: var(--sand); opacity: .75; border-style: dashed; border-color: var(--sand); }
+.ng-indice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; margin: 0; text-align: center; }
+.ng-indices { font-size: 14px; color: var(--muted, inherit); }

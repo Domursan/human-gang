@@ -14,3 +14,4 @@ supabase/migrations/145_pictionary.sql
 supabase/migrations/146_grilles_correctif.sql
 supabase/migrations/147_nj_images_cron.sql
 supabase/migrations/148_grilles_correctif2.sql
+supabase/migrations/149_nerdle_indice.sql

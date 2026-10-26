@@ -4,7 +4,7 @@
  * juste (le serveur refuse les autres, sans compter d'essai). Couleurs comme Wordle : vert = bonne place, ambre = présent
  * ailleurs, gris = absent ; le clavier à l'écran prend la meilleure couleur connue de chaque touche. Saisie au clavier à
  * l'écran (0-9, + - × ÷ =, Effacer, Entrer) ou au clavier physique (* et / acceptés, × et ÷ affichés). Le chrono ne sert
- * qu'au classement du jour. Moteur : nj-grilles.js (hg_nj_grille_etat / hg_nj_grille_essai).
+ * qu'au classement du jour. Indice à la demande (migration 149) : révèle une case, 3 par jour, −1 point chacun. Moteur : nj-grilles.js (hg_nj_grille_etat / hg_nj_grille_essai).
  * Exporte : mount(panel, ctx), resume(ctx).
  */
 import { monterGrille, resumerGrille } from './nj-grilles.js';
@@ -12,6 +12,8 @@ import { monterGrille, resumerGrille } from './nj-grilles.js';
 const JEU = 'nerdle';
 /** Longueur du calcul et nombre d'essais. */
 const LONGUEUR = 8, ESSAIS = 6;
+/** Indices à la demande par jour (migration 149) : chacun révèle une case et retire 1 point. */
+const INDICES_MAX = 3;
 /** Touches du clavier à l'écran, ligne par ligne (Effacer et Entrer ont leur propre largeur). */
 const LIGNES = [['1', '2', '3', '4', '5', '6'], ['7', '8', '9', '0', '+', '-'], ['×', '÷', '=', 'Effacer'], ['Entrer']];
 /** Libellés des couleurs (texte lu par les lecteurs d'écran). */
@@ -51,9 +53,15 @@ function corps(st, ui, esc) {
   const p = st.partie || {};
   const fini = !!p.fini;
   const essais = p.etat?.essais || [];
+  const indices = p.etat?.indices || [];
+  /** Caractère révélé par un indice à la position j (ou undefined). */
+  const revele = (j) => indices.find((x) => x.pos === j)?.ch;
   ui.saisie = ui.saisie || '';
-  const cellules = (texte, classe, extra = '') => Array.from({ length: LONGUEUR }, (_, j) => {
-    const ch = texte[j] ? aff(texte[j]) : '';
+  const cellules = (texte, classe, extra = '', indice = false) => Array.from({ length: LONGUEUR }, (_, j) => {
+    // Ligne en cours : une case vide montre en pâle le caractère révélé par un indice.
+    const r = indice && !texte[j] ? revele(j) : undefined;
+    const ch = texte[j] ? aff(texte[j]) : (r ? aff(r) : '');
+    if (r) return `<span class="ng-c is-indice ${classe(j)}" role="gridcell" aria-label="Indice : ${esc(aff(r))}">${esc(ch)}</span>`;
     return `<span class="ng-c ${classe(j)}" role="gridcell"${extra ? ` aria-label="${extra(j)}"` : ''}>${esc(ch)}</span>`;
   }).join('');
   let lignes = '';
@@ -64,7 +72,7 @@ function corps(st, ui, esc) {
         ${cellules(x.calcul, (j) => `is-${x.couleurs[j]}`, (j) => `${esc(aff(x.calcul[j]))}, ${LIBELLE[x.couleurs[j]]}`)}</div>`;
     } else if (i === essais.length && !fini) {
       lignes += `<div class="ng-ligne is-saisie" role="row" aria-label="Saisie en cours : ${esc(ui.saisie || 'vide')}">
-        ${cellules(ui.saisie, (j) => (j === ui.saisie.length ? 'is-cur' : ''))}</div>`;
+        ${cellules(ui.saisie, (j) => (j === ui.saisie.length ? 'is-cur' : ''), '', true)}</div>`;
     } else {
       lignes += `<div class="ng-ligne" role="row">${cellules('', () => '')}</div>`;
     }
@@ -79,9 +87,16 @@ function corps(st, ui, esc) {
     const attr = k === 'Effacer' ? 'data-act="effacer"' : k === 'Entrer' ? 'data-act="entrer"' : `data-touche="${esc(k)}"`;
     return `<button type="button" class="ng-key ${cls}" ${attr}${fini ? ' disabled' : ''}>${esc(k)}</button>`;
   }).join('')}</div>`).join('');
+  const listeIndices = indices.length
+    ? `<span class="ng-indices">${indices.slice().sort((a, b) => a.pos - b.pos).map((x) => `case ${x.pos + 1} : <strong>${esc(aff(x.ch))}</strong>`).join(' · ')}</span>` : '';
+  const zoneIndice = fini ? (indices.length ? `<p class="ng-indice muted small">Indices pris : ${indices.length}</p>` : '')
+    : `<div class="ng-indice">
+      <button type="button" class="btn btn-ghost btn-sm" data-act="indice"${indices.length >= INDICES_MAX ? ' disabled' : ''}>Indice (−1 point) · ${indices.length}/${INDICES_MAX}</button>
+      ${listeIndices}</div>`;
   const solution = fini ? `<p class="ng-calcul">Calcul : <strong>${esc(aff(st.solution?.calcul || ''))}</strong></p>` : '';
   return `<div class="ng-essais" role="grid" aria-label="Essais, ${LONGUEUR} caractères, ${ESSAIS} essais">${lignes}</div>
     ${solution}
+    ${zoneIndice}
     ${fini ? '' : `<div class="ng-clavier" role="group" aria-label="Clavier du calcul">${touches}</div>`}`;
 }
 
@@ -91,6 +106,7 @@ function lier(racine, st, ui, env) {
   racine.querySelectorAll('[data-touche]').forEach((b) => b.addEventListener('click', () => ajoute(ui, env, b.dataset.touche, true)));
   racine.querySelector('[data-act="effacer"]').addEventListener('click', () => efface(ui, env));
   racine.querySelector('[data-act="entrer"]').addEventListener('click', () => entrer(ui, env));
+  racine.querySelector('[data-act="indice"]')?.addEventListener('click', () => env.envoyer({ indice: true }, '[data-act="indice"]'));
 }
 
 /**
@@ -116,12 +132,14 @@ function init(panel, env) {
 
 /** Message après un essai : bravo, ou rien (la ligne suffit). */
 function reponse(res) {
+  if (res.indice) return { texte: `Indice : case ${res.indice.pos + 1} = ${aff(res.indice.ch)}`, ton: 'ok' };
   if (res.ok) return { texte: 'Bravo, c’est le bon calcul !', ton: 'ok' };
   return null;
 }
 
 /** Après un essai accepté par le serveur : la saisie repart à zéro. */
-function apresEssai(ui) {
+function apresEssai(ui, res) {
+  if (res?.indice) return; // un indice ne vide pas la saisie en cours
   ui.saisie = '';
 }
 
@@ -132,7 +150,8 @@ function copie(st) {
   const essais = p.etat?.essais || [];
   const carres = { v: '🟩', j: '🟨', g: '⬛' };
   const lignes = essais.map((x) => [...x.couleurs].map((c) => carres[c]).join(''));
-  return [`Nerdle #${st.numero} ${p.gagne ? essais.length : 'X'}/${ESSAIS}`, ...lignes].join('\n');
+  const nb = (p.etat?.indices || []).length;
+  return [`Nerdle #${st.numero} ${p.gagne ? essais.length : 'X'}/${ESSAIS}${nb ? ` · ${nb} indice${nb > 1 ? 's' : ''}` : ''}`, ...lignes].join('\n');
 }
 
 /** Configuration du jeu (voir monterGrille). */
@@ -143,6 +162,7 @@ const CFG = {
     'Trouve le calcul caché de huit caractères, en six essais.',
     'Chiffres, + - × ÷ et = : chaque essai doit être un calcul juste, par ex. 12+35=47.',
     'Vert : bonne place. Ambre : présent ailleurs. Gris : absent.',
+    'Bloqué ? « Indice » révèle une case du calcul (3 au plus, −1 point chacun).',
     'Au clavier physique, * et / remplacent × et ÷.',
     'Le chrono ne sert qu’au classement du jour.',
   ],
@@ -150,7 +170,8 @@ const CFG = {
   pills: (st) => {
     const n = (st.partie?.etat?.essais || []).length;
     if (st.partie?.fini) return [['Essais', `${n} / ${ESSAIS}`]];
-    return [['Essai', `${Math.min(n + 1, ESSAIS)} / ${ESSAIS}`], ['Points max', Math.max(1, ESSAIS - n)]];
+    const ni = (st.partie?.etat?.indices || []).length;
+    return [['Essai', `${Math.min(n + 1, ESSAIS)} / ${ESSAIS}`], ['Points max', Math.max(1, ESSAIS - n - ni)]];
   },
   corps,
   lier,

@@ -88,7 +88,7 @@ const MC_PUB = (() => {
 const J = window.__NG = {
   connexions: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, essais: [], trouves: [] },
   motmele: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, trouves: [] },
-  nerdle: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, essais: [] },
+  nerdle: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, essais: [], indices: [] },
   anagramme: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, mots: {} },
   motscroises: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null },
 };
@@ -114,7 +114,7 @@ function grilleVue(jeu) {
 function etat(jeu) {
   const g = J[jeu];
   if (S.noGrille) return { jeu, day: today, grille: null, board: BOARD(jeu) };
-  const etatPartie = { connexions: { essais: g.essais, trouves: g.trouves }, motmele: { trouves: g.trouves }, anagramme: { mots: g.mots }, motscroises: {} }[jeu] || { essais: g.essais };
+  const etatPartie = { connexions: { essais: g.essais, trouves: g.trouves }, motmele: { trouves: g.trouves }, anagramme: { mots: g.mots }, motscroises: {} }[jeu] || { essais: g.essais, indices: g.indices };
   const partie = g.debut ? {
     etat: etatPartie,
     erreurs: g.erreurs, fini: g.fini, gagne: g.gagne, score: g.score, secondes: g.secondes, debut: g.debut, reward: g.reward,
@@ -228,13 +228,22 @@ function essaiNerdle(p) {
   const g = J.nerdle;
   if (S.noGrille) return err('Pas de grille aujourd’hui.');
   if (g.fini) return err('Tu as déjà terminé la grille du jour. Reviens demain !');
+  if (p.indice) {
+    // Indice (migration 149) : première case pas encore trouvée en vert ni révélée, 3 au plus.
+    if (g.indices.length >= 3) return err('Tu as déjà pris les 3 indices du jour.');
+    demarre('nerdle');
+    const pos = [...Array(8).keys()].find((j) => !g.indices.some((x) => x.pos === j) && !g.essais.some((e) => e.calcul[j] === NERDLE_SOL[j]));
+    if (pos === undefined) return err('Toutes les cases sont déjà trouvées.');
+    g.indices.push({ pos, ch: NERDLE_SOL[pos] });
+    return ok({ resultat: { indice: { pos, ch: NERDLE_SOL[pos] } }, etat: etat('nerdle') });
+  }
   const calcul = String(p.calcul || '').replace(/×/g, '*').replace(/÷/g, '/').trim();
   if (!calculJuste(calcul)) return err('Ce n\'est pas un calcul juste de 8 caractères.');
   demarre('nerdle');
   const couls = couleurs(calcul, NERDLE_SOL);
   g.essais.push({ calcul, couleurs: couls });
   const n = g.essais.length;
-  if (calcul === NERDLE_SOL) termine('nerdle', true, 7 - n);
+  if (calcul === NERDLE_SOL) termine('nerdle', true, Math.max(1, 7 - n - g.indices.length));
   else if (n >= 6) termine('nerdle', false, 0);
   return ok({ resultat: { ok: calcul === NERDLE_SOL, couleurs: couls }, etat: etat('nerdle') });
 }
