@@ -3,3 +3,4 @@
 2026-10-26T16:14:37.085Z ok supabase/migrations/140_nj_grilles.sql
 2026-10-26T16:24:57.957Z ok supabase/migrations/141_duels_nouveaux.sql
 2026-10-26T16:25:49.457Z ok supabase/migrations/142_duels_correctif.sql
+2026-10-26T16:32:15.526Z ok supabase/migrations/143_plateaux_cartes.sql
