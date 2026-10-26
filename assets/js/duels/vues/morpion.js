@@ -1,7 +1,7 @@
 // ===== Humane Gang — Duels : table du Morpion (classique 3×3, ultime, gomoku 15×15) =====
 /*
  * Rôle : dessine le plateau dans le cadre commun (vues/commun.js) et envoie les coups (duel.jouer).
- *   Croix bleues = place 1 (#6FB3F2), ronds dorés = place 2 (#E8B04B). Le dernier coup s'anime (tracé) ;
+ *   Croix bleues = place 1 (#6FB3F2), ronds dorés = place 2 (#E8B04B). Le dernier coup s'anime (la marque se pose : agrandissement et fondu) ;
  *   au gomoku il est aussi marqué d'un point.
  *   Ultime : case = grille * 9 + position (partie.grille : 81 caractères). Les petites grilles gagnées sont
  *   recouvertes, la nulle est grisée, la grille imposée est entourée d'or (ou tout est libre si cible est null).
@@ -31,12 +31,13 @@ const REGLES = {
     'Le dernier coup est marqué d’un point.'],
 };
 
-/** Marque d'une case : '1' croix bleue, '2' rond doré. anime : tracé progressif (dernier coup). */
+/** Marque d'une case : '1' croix bleue, '2' rond doré. anime : apparition animée (dernier coup). */
 function svgMarque(c, anime) {
   const trace = anime ? ' is-trace' : '';
   return c === '1'
-    ? `<svg class="morpion-marque${trace}" viewBox="0 0 32 32" aria-hidden="true"><path pathLength="1" d="M8 8L24 24M24 8L8 24" fill="none" stroke="${CROIX}" stroke-width="4" stroke-linecap="round"/></svg>`
-    : `<svg class="morpion-marque${trace}" viewBox="0 0 32 32" aria-hidden="true"><circle pathLength="1" cx="16" cy="16" r="10" fill="none" stroke="${ROND}" stroke-width="4"/></svg>`;
+    // Deux traits séparés (et non un seul chemin à deux morceaux) : certains navigateurs ne traçaient que le premier.
+    ? `<svg class="morpion-marque${trace}" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 8L24 24" fill="none" stroke="${CROIX}" stroke-width="4" stroke-linecap="round"/><path d="M24 8L8 24" fill="none" stroke="${CROIX}" stroke-width="4" stroke-linecap="round"/></svg>`
+    : `<svg class="morpion-marque${trace}" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="10" fill="none" stroke="${ROND}" stroke-width="4"/></svg>`;
 }
 
 /** Grande marque semi-transparente posée sur une petite grille gagnée. */
@@ -70,7 +71,7 @@ function tracerBarre(cadreEl, cases) {
   const [x1, y1] = centre(pts[0]);
   const [x2, y2] = centre(pts[pts.length - 1]);
   svg.setAttribute('viewBox', `0 0 ${base.width} ${base.height}`);
-  svg.innerHTML = `<line pathLength="1" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  svg.innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   svg.hidden = false;
 }
 
@@ -82,7 +83,10 @@ function tracerBarre(cadreEl, cases) {
  */
 export function creer(root, ctx) {
   const cadre = creerCadre(root, ctx, { classe: 'duels-morpion' });
-  const st = { etat: null, nbManches: null, recap: null, timer: null, dernierVu: '', envoi: false, vivant: true };
+  // provisoire : case que je viens de jouer, affichée tout de suite (avant la réponse du serveur) ;
+  // masque : coup du robot reçu en même temps que le mien, montré un instant après (on voit d'abord son propre coup).
+  const st = { etat: null, nbManches: null, recap: null, timer: null, dernierVu: '', envoi: false, vivant: true,
+    provisoire: null, masque: null, tMasque: null };
 
   // Délégation : un seul écouteur sur le plateau, même après les redessins.
   cadre.plateau.addEventListener('click', (ev) => {
@@ -94,12 +98,14 @@ export function creer(root, ctx) {
   /** Envoie un coup. Les cases restent désactivées jusqu'à la mise à jour de l'état (maj). */
   async function jouer(i) {
     st.envoi = true;
+    st.provisoire = i;
     rendre();
     try {
       await duel.jouer(ctx.code, i);
       ctx.suivi?.rafraichir?.();
     } catch (err) {
       st.envoi = false;
+      st.provisoire = null;
       toast(erreurTexte(err), 'error');
       rendre();
     }
@@ -173,13 +179,19 @@ export function creer(root, ctx) {
 
     const dernier = !recap && p.dernier && p.dernier.case != null ? Number(p.dernier.case) : -1;
     const cleDernier = `${p.id}:${p.manche}:${p.nb_coups}:${dernier}`;
-    const animer = !recap && dernier >= 0 && cleDernier !== st.dernierVu;
-    if (!recap) st.dernierVu = cleDernier;
+    const masque = recap ? null : st.masque;
+    const animer = !recap && masque === null && dernier >= 0 && cleDernier !== st.dernierVu;
+    if (!recap && masque === null) st.dernierVu = cleDernier;
+    const maMarque = String(e.moi?.place ?? '');
 
     /** Une case : marque (span) ou case vide (bouton). */
     const caseHtml = (i) => {
       const c = g[i];
       const estDernier = i === dernier;
+      if (i === masque) return `<button type="button" class="morpion-case" data-case="${i}" aria-label="${esc(libelleCase(v, w, i))}" disabled></button>`;
+      if (c === '.' && st.envoi && st.provisoire === i && (maMarque === '1' || maMarque === '2')) {
+        return `<span class="morpion-case is-dernier" data-case="${i}" role="img" aria-label="${maMarque === '1' ? 'Croix' : 'Rond'} jouée">${svgMarque(maMarque, true)}</span>`;
+      }
       if (c === '1' || c === '2') {
         const etiquette = `${c === '1' ? 'Croix' : 'Rond'} de ${nomDe(c)}`;
         const point = estDernier && v === 'gomoku' ? '<span class="morpion-point" aria-hidden="true"></span>' : '';
@@ -265,6 +277,15 @@ export function creer(root, ctx) {
       st.envoi = false;
       cadre.maj(e);
       suivreManche(e);
+      // Contre le robot, sa réponse arrive avec mon coup : on la montre 450 ms plus tard, pour voir les deux coups l'un après l'autre.
+      const prov = st.provisoire;
+      st.provisoire = null;
+      const d = e.partie?.dernier?.case;
+      if (prov !== null && d != null && Number(d) !== prov && !st.recap && e.partie?.grille?.[prov] === String(e.moi?.place)) {
+        st.masque = Number(d);
+        clearTimeout(st.tMasque);
+        st.tMasque = setTimeout(() => { st.masque = null; if (st.vivant && st.etat) rendre(); }, 450);
+      }
       rendre();
       statut(e);
     },
@@ -273,6 +294,7 @@ export function creer(root, ctx) {
     detruire() {
       st.vivant = false;
       clearTimeout(st.timer);
+      clearTimeout(st.tMasque);
       cadre.detruire();
     },
   };
