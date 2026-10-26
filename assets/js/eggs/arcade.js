@@ -8,7 +8,8 @@
  * Codes de triche cachés (pour toute la page, jusqu'au rechargement ; retaper le code l'annule), à taper sur la borne :
  *   « domu » (lettres)                    → s.triche.coeurs : plus aucun piège, tout ce qui s'attrape devient un cœur rouge ;
  *   → → ← ← ↓ ↑ ↓ ↑ (flèches)            → s.triche.immortel : les pièges et accrochages ne coûtent plus rien.
- *   Les flèches et glissements ne comptent pour les codes qu'en dehors d'une partie (en partie, ils servent au jeu) ;
+ *   Pendant une partie d'un jeu qui utilise haut et bas (jeu.directions ou jeu.action), flèches et glissements servent
+ *   au jeu et ne comptent pas pour les codes (ailleurs, ils comptent) ;
  *   « domu » peut se taper à tout moment.
  *   Chaque mini-jeu lit s.triche (même objet pendant toute la partie : un code tapé en jeu s'applique tout de suite).
  *   Une partie jouée avec un code compte comme les autres (record, classement, Paillettes).
@@ -191,14 +192,17 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   /** Arrête la borne (onglet quitté) sans fin de partie. */
   const arrete = () => { cancelAnimationFrame(raf); etat = 'attente'; document.removeEventListener('visibilitychange', visibilite); document.removeEventListener('keydown', codesClavier, true); };
 
+  /** Vrai pendant une partie d'un jeu qui utilise haut et bas (Snake, Tetris, Flappy…) : flèches et glissements jouent. */
+  const flechesAuJeu = () => etat === 'jeu' && !!(jeu.directions || jeu.action);
+
   /* ---------- Codes de triche : clavier n'importe où sur la page (la borne visible), glissements sur la borne ---------- */
   const codesClavier = (e) => {
     if (!canvas.isConnected || !canvas.offsetParent || e.ctrlKey || e.metaKey || e.altKey) return;
     const t = e.target;
     if (t instanceof Element && t !== canvas && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
-    // Pendant une partie, les flèches servent au jeu : elles ne comptent pas pour les codes (sinon une suite de
-    // déplacements peut activer « immortel » sans le vouloir). Les lettres comptent toujours.
-    if (!(etat === 'jeu' && e.key.startsWith('Arrow'))) noteTouche(e.key);
+    // Pendant une partie d'un jeu où haut et bas servent (directions ou action), les flèches ne comptent pas pour
+    // les codes : une suite de déplacements activerait « immortel » sans le vouloir. Les lettres comptent toujours.
+    if (!(flechesAuJeu() && e.key.startsWith('Arrow'))) noteTouche(e.key);
     // Haut et bas ne servent qu'aux codes : la page ne défile pas pendant qu'on joue ou qu'on tape un code.
     if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || (e.key === ' ' && jeu.action)) && (document.activeElement === canvas || etat === 'jeu')) e.preventDefault();
   };
@@ -234,7 +238,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
       const gx = posX(e) - depart.x, gy = ((e.clientY - r.top) / r.height) * H - depart.y;
       if (Math.max(Math.abs(gx), Math.abs(gy)) > 30) {
         const k = Math.abs(gx) > Math.abs(gy) ? (gx > 0 ? 'ArrowRight' : 'ArrowLeft') : (gy > 0 ? 'ArrowDown' : 'ArrowUp');
-        if (etat !== 'jeu') noteTouche(k); // en partie, un glissement sert au jeu, pas aux codes
+        if (!flechesAuJeu()) noteTouche(k); // glissement qui sert au jeu : pas compté pour les codes
         if (jeu.directions && etat === 'jeu') { entree.dir = { ArrowRight: 'droite', ArrowLeft: 'gauche', ArrowDown: 'bas', ArrowUp: 'haut' }[k]; entree.glisse = true; }
       } else if (jeu.action && jeu.tapeSeul && etat === 'jeu' && performance.now() - depart.t < 350) entree.action = true; // tape
     } else if (depart && jeu.action && jeu.tapeSeul && etat === 'jeu') entree.action = true; // clic de souris

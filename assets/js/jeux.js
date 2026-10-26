@@ -50,7 +50,7 @@ const ICONE_DEF = '<rect x="2" y="7" width="20" height="10" rx="4"/><path d="M7 
 /** Jeux valides, sans doublon, rangés par groupe (l'ordre de onglets.js est gardé dans chaque groupe). */
 /** Vrai pour un admin qui ne regarde pas le site « en tant que » un membre (jeux en développement, cartes « admin »). */
 const adminVrai = () => !viewAsActive() && !!getCachedProfile()?.is_admin;
-const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.test(o.id) && o.id !== HUB && o.id !== TOUS && o.module && (!o.admin || adminVrai())
+const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.test(o.id) && o.id !== HUB && o.id !== TOUS && o.module && (!o.admin || adminVrai()) && (!o.page || (canAccess(o.page) && !!pageLabel(o.page)))
   && a.findIndex((x) => x.id === o.id) === i && (GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour') === g)
   .map((o) => ({ ...o, rythme: GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour' })));
 /** Tous les onglets : la vue de départ, le tableau de bord puis les jeux. */

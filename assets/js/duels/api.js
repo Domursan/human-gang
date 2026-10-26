@@ -12,6 +12,7 @@
 import { sb, errMsg, notify } from '../core.js';
 import { getCachedProfile } from '../core/profile.js';
 import { viewAsActive } from '../core/view-as.js';
+import { canAccess, pageLabel, pageMode } from '../core/pages-access.js';
 
 /* ---------- Jeux et réglages (textes affichés) ---------- */
 /** Jeux, variantes et temps proposés. Images : assets/img/jeux/<image>.webp. */
@@ -36,25 +37,30 @@ export const JEUX = {
   quiestce: { nom: 'Qui est-ce ?', image: 'qui-est-ce', texte: 'Devine le personnage secret de l’autre.',
     variantes: [['quartier', 'Les habitants du quartier', '24 personnages, des questions toutes prêtes ou libres.']],
     temps: [60, 90, 120], tempsDefaut: 90 },
-  /* Jeux en développement (dev) : visibles des seuls admins, voir jeuxVisibles(). */
-  dames: { nom: 'Dames', image: 'dames', texte: 'Prises obligatoires, rafles et dames volantes.', dev: true,
+  /* Nouveaux jeux (page) : accès réglé dans « Accès aux pages » du panel (hg_pages, migration 150), voir jeuxVisibles(). */
+  dames: { nom: 'Dames', image: 'dames', texte: 'Prises obligatoires, rafles et dames volantes.', page: 'duel-dames',
     variantes: [['internationales', 'Internationales 10 × 10', 'Damier 10 × 10 : la prise est obligatoire, et la plus longue l’emporte.']],
     temps: [30, 60, 90, 120], tempsDefaut: 90 },
-  echecs: { nom: 'Échecs', image: 'echecs', texte: 'Le grand classique, contre un membre ou le robot.', dev: true,
+  echecs: { nom: 'Échecs', image: 'echecs', texte: 'Le grand classique, contre un membre ou le robot.', page: 'duel-echecs',
     variantes: [['classique', 'Classique', 'Roques, prise en passant et promotion, comme aux échecs.']],
     temps: [30, 60, 90, 120], tempsDefaut: 90 },
-  othello: { nom: 'Othello', image: 'othello', texte: 'Encadre et retourne les pions adverses.', dev: true,
+  othello: { nom: 'Othello', image: 'othello', texte: 'Encadre et retourne les pions adverses.', page: 'duel-othello',
     variantes: [['classique', 'Classique 8 × 8', 'Encadre des pions adverses pour les retourner. Le plus de pions à la fin gagne.']],
     temps: [15, 30, 60], tempsDefaut: 30 },
-  pfc: { nom: 'Pierre-feuille-ciseaux', image: 'pfc', texte: 'Un geste caché, révélé en même temps.', dev: true,
+  pfc: { nom: 'Pierre-feuille-ciseaux', image: 'pfc', texte: 'Un geste caché, révélé en même temps.', page: 'duel-pfc',
     variantes: [['classique', 'Classique', 'La pierre bat les ciseaux, les ciseaux battent la feuille, la feuille bat la pierre. Égalité : on relance.']],
     temps: [15, 30, 60], tempsDefaut: 30 },
 };
 /** Vrai si le membre voit les jeux en développement : admin, et pas en mode « voir comme ». */
 export const peutVoirJeuxDev = () => !!getCachedProfile()?.is_admin && !viewAsActive();
-/** Jeux proposés à ce membre (les jeux en développement seulement pour les admins). */
+/**
+ * Jeux proposés à ce membre : un jeu avec une page d'accès (j.page) n'apparaît que si cette page lui est ouverte.
+ * j.dev = vrai tant que la page est en mode « admin » (pastille « En développement »).
+ */
 export function jeuxVisibles() {
-  return Object.fromEntries(Object.entries(JEUX).filter(([, j]) => !j.dev || peutVoirJeuxDev()));
+  return Object.fromEntries(Object.entries(JEUX)
+    .filter(([, j]) => !j.page || (canAccess(j.page) && !!pageLabel(j.page)))
+    .map(([k, j]) => [k, j.page ? { ...j, dev: pageMode(j.page) === 'admin' } : j]));
 }
 /** Flotte de la Bataille navale (le serveur la renvoie aussi dans etat.bataille.flotte). */
 export const FLOTTE = [
