@@ -3,7 +3,7 @@ do $$
 declare r text; v record; n int := 0;
 begin
   for v in select * from (values ('p4','classique'),('p4','grande'),('p4','popout'),('morpion','classique'),('morpion','ultime'),
-      ('morpion','gomoku'),('mastermind','duel'),('bataille','classique'),('bataille','salve'),('quiestce','paleto')) x(jeu, var) loop
+      ('morpion','gomoku'),('mastermind','duel'),('bataille','classique'),('bataille','salve'),('quiestce','quartier')) x(jeu, var) loop
     for i in 1 .. 4 loop
       r := t_simuler(v.jeu, v.var, (array[1,3,5,3])[i], 1 + (i % 3), 4 + (i % 3), 2, i = 4); n := n + 1;
       if i = 1 then raise notice '%', r; end if;

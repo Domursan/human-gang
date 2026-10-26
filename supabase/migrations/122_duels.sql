@@ -4,7 +4,7 @@
 -- Mastermind : les codes secrets ne sont jamais lisibles directement ; chacun ne voit que ses essais et les indices de l'autre.
 -- Jeux : 'p4' (Puissance 4 : classique 7×6, grande 9×7, Pop Out), 'morpion' (classique 3×3, ultime 9×9, gomoku 15×15),
 --   'mastermind' (duel : chacun perce le code de l'autre ; code du jour : défi solo quotidien avec classement),
---   'bataille' (Bataille navale : classique ou salve ; flottes cachées, radar), 'quiestce' (Qui est-ce ? : plateau « paleto », 24 personnages).
+--   'bataille' (Bataille navale : classique ou salve ; flottes cachées, radar), 'quiestce' (Qui est-ce ? : plateau « quartier », 24 personnages).
 -- Adversaire : un membre défié, un code à partager (membre ou invité), ou le robot (facile, moyen, difficile ; sans Paillettes).
 -- Fonctions publiques (authenticated) : hg_duel_creer, hg_duel_rejoindre, hg_duel_refuser, hg_duel_quitter, hg_duel_jouer,
 --   hg_duel_code_secret, hg_duel_essayer, hg_duel_avancer, hg_duel_message, hg_duel_messages, hg_duel_rejouer, hg_duel_etat,
@@ -66,7 +66,7 @@ create table if not exists public.hg_duel_parties (
   code text not null check (code ~ '^HG(P4|MO|MM|BN|QE)-[0-9]{4}$'),
   jeu text not null check (jeu in ('p4', 'morpion', 'mastermind', 'bataille', 'quiestce')),
   variante text not null,                                -- p4 : classique|grande|popout ; morpion : classique|ultime|gomoku ; mastermind : duel ;
-                                                         -- bataille : classique|salve ; quiestce : plateau (paleto)
+                                                         -- bataille : classique|salve ; quiestce : plateau (quartier)
   hote uuid not null,
   defie uuid,                                            -- membre défié (null : code à partager ou robot)
   defi_expire timestamptz,
@@ -278,32 +278,32 @@ create table if not exists public.hg_duel_qec_questions (
 create index if not exists hg_duel_qec_questions_partie on public.hg_duel_qec_questions(partie, manche);
 alter table public.hg_duel_qec_questions enable row level security;
 
--- Plateau « Les habitants de Paleto » : 24 personnages originaux.
+-- Plateau « Les habitants du quartier » : 24 personnages originaux.
 insert into public.hg_duel_qec_persos(plateau, id, prenom, attributs) values
-  ('paleto', 0, 'Abel', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"marron","peau":3,"haut":"#4E73C4"}'),
-  ('paleto', 1, 'Bianca', '{"cheveux":"blonds","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"bleus","peau":1,"haut":"#8466B8"}'),
-  ('paleto', 2, 'Cyril', '{"cheveux":"gris","longs":false,"lunettes":true,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"bleus","peau":2,"haut":"#4F9A6A"}'),
-  ('paleto', 3, 'Dalia', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":4,"haut":"#C4574B"}'),
-  ('paleto', 4, 'Elio', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"verts","peau":2,"haut":"#D4B54A"}'),
-  ('paleto', 5, 'Fanny', '{"cheveux":"roux","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"verts","peau":1,"haut":"#4E73C4"}'),
-  ('paleto', 6, 'Gaspard', '{"cheveux":"aucun","longs":false,"lunettes":true,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"marron","peau":3,"haut":"#5A6475"}'),
-  ('paleto', 7, 'Hana', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"bonnet","barbe":false,"boucles":false,"yeux":"marron","peau":2,"haut":"#D08A3E"}'),
-  ('paleto', 8, 'Igor', '{"cheveux":"blonds","longs":false,"lunettes":false,"chapeau":"chapeau","barbe":true,"boucles":false,"yeux":"bleus","peau":1,"haut":"#8F4A3A"}'),
-  ('paleto', 9, 'Jade', '{"cheveux":"bruns","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"verts","peau":3,"haut":"#4F9A6A"}'),
-  ('paleto', 10, 'Kenji', '{"cheveux":"noirs","longs":false,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"marron","peau":2,"haut":"#C4574B"}'),
-  ('paleto', 11, 'Léa', '{"cheveux":"blonds","longs":false,"lunettes":false,"chapeau":"chapeau","barbe":false,"boucles":true,"yeux":"bleus","peau":1,"haut":"#4E73C4"}'),
-  ('paleto', 12, 'Malo', '{"cheveux":"roux","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"verts","peau":1,"haut":"#5A6475"}'),
-  ('paleto', 13, 'Nadia', '{"cheveux":"noirs","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":5,"haut":"#D4B54A"}'),
-  ('paleto', 14, 'Oscar', '{"cheveux":"gris","longs":false,"lunettes":false,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"marron","peau":4,"haut":"#4F9A6A"}'),
-  ('paleto', 15, 'Paula', '{"cheveux":"bruns","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"bleus","peau":2,"haut":"#C4574B"}'),
-  ('paleto', 16, 'Quentin', '{"cheveux":"aucun","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"bleus","peau":5,"haut":"#4E73C4"}'),
-  ('paleto', 17, 'Rosa', '{"cheveux":"roux","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":3,"haut":"#C4574B"}'),
-  ('paleto', 18, 'Samy', '{"cheveux":"noirs","longs":false,"lunettes":true,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"marron","peau":4,"haut":"#5A6475"}'),
-  ('paleto', 19, 'Thea', '{"cheveux":"gris","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"verts","peau":1,"haut":"#8466B8"}'),
-  ('paleto', 20, 'Ugo', '{"cheveux":"roux","longs":false,"lunettes":false,"chapeau":"bonnet","barbe":true,"boucles":false,"yeux":"verts","peau":2,"haut":"#D08A3E"}'),
-  ('paleto', 21, 'Vera', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"bonnet","barbe":false,"boucles":true,"yeux":"marron","peau":4,"haut":"#8F4A3A"}'),
-  ('paleto', 22, 'Willy', '{"cheveux":"blonds","longs":false,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"bleus","peau":2,"haut":"#4F9A6A"}'),
-  ('paleto', 23, 'Zoé', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"marron","peau":5,"haut":"#8466B8"}')
+  ('quartier', 0, 'Abel', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"marron","peau":3,"haut":"#4E73C4"}'),
+  ('quartier', 1, 'Bianca', '{"cheveux":"blonds","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"bleus","peau":1,"haut":"#8466B8"}'),
+  ('quartier', 2, 'Cyril', '{"cheveux":"gris","longs":false,"lunettes":true,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"bleus","peau":2,"haut":"#4F9A6A"}'),
+  ('quartier', 3, 'Dalia', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":4,"haut":"#C4574B"}'),
+  ('quartier', 4, 'Elio', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"verts","peau":2,"haut":"#D4B54A"}'),
+  ('quartier', 5, 'Fanny', '{"cheveux":"roux","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"verts","peau":1,"haut":"#4E73C4"}'),
+  ('quartier', 6, 'Gaspard', '{"cheveux":"aucun","longs":false,"lunettes":true,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"marron","peau":3,"haut":"#5A6475"}'),
+  ('quartier', 7, 'Hana', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"bonnet","barbe":false,"boucles":false,"yeux":"marron","peau":2,"haut":"#D08A3E"}'),
+  ('quartier', 8, 'Igor', '{"cheveux":"blonds","longs":false,"lunettes":false,"chapeau":"chapeau","barbe":true,"boucles":false,"yeux":"bleus","peau":1,"haut":"#8F4A3A"}'),
+  ('quartier', 9, 'Jade', '{"cheveux":"bruns","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"verts","peau":3,"haut":"#4F9A6A"}'),
+  ('quartier', 10, 'Kenji', '{"cheveux":"noirs","longs":false,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"marron","peau":2,"haut":"#C4574B"}'),
+  ('quartier', 11, 'Léa', '{"cheveux":"blonds","longs":false,"lunettes":false,"chapeau":"chapeau","barbe":false,"boucles":true,"yeux":"bleus","peau":1,"haut":"#4E73C4"}'),
+  ('quartier', 12, 'Malo', '{"cheveux":"roux","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"verts","peau":1,"haut":"#5A6475"}'),
+  ('quartier', 13, 'Nadia', '{"cheveux":"noirs","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":5,"haut":"#D4B54A"}'),
+  ('quartier', 14, 'Oscar', '{"cheveux":"gris","longs":false,"lunettes":false,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"marron","peau":4,"haut":"#4F9A6A"}'),
+  ('quartier', 15, 'Paula', '{"cheveux":"bruns","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"bleus","peau":2,"haut":"#C4574B"}'),
+  ('quartier', 16, 'Quentin', '{"cheveux":"aucun","longs":false,"lunettes":false,"chapeau":"aucun","barbe":true,"boucles":false,"yeux":"bleus","peau":5,"haut":"#4E73C4"}'),
+  ('quartier', 17, 'Rosa', '{"cheveux":"roux","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"marron","peau":3,"haut":"#C4574B"}'),
+  ('quartier', 18, 'Samy', '{"cheveux":"noirs","longs":false,"lunettes":true,"chapeau":"casquette","barbe":false,"boucles":false,"yeux":"marron","peau":4,"haut":"#5A6475"}'),
+  ('quartier', 19, 'Thea', '{"cheveux":"gris","longs":true,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":true,"yeux":"verts","peau":1,"haut":"#8466B8"}'),
+  ('quartier', 20, 'Ugo', '{"cheveux":"roux","longs":false,"lunettes":false,"chapeau":"bonnet","barbe":true,"boucles":false,"yeux":"verts","peau":2,"haut":"#D08A3E"}'),
+  ('quartier', 21, 'Vera', '{"cheveux":"bruns","longs":false,"lunettes":false,"chapeau":"bonnet","barbe":false,"boucles":true,"yeux":"marron","peau":4,"haut":"#8F4A3A"}'),
+  ('quartier', 22, 'Willy', '{"cheveux":"blonds","longs":false,"lunettes":true,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"bleus","peau":2,"haut":"#4F9A6A"}'),
+  ('quartier', 23, 'Zoé', '{"cheveux":"noirs","longs":true,"lunettes":false,"chapeau":"aucun","barbe":false,"boucles":false,"yeux":"marron","peau":5,"haut":"#8466B8"}')
 on conflict (plateau, id) do update set prenom = excluded.prenom, attributs = excluded.attributs;
 
 /* =====================================================================
@@ -1627,7 +1627,7 @@ begin
   end if;
   if v_jeu not in ('p4', 'morpion', 'mastermind', 'bataille', 'quiestce') then raise exception 'Jeu inconnu.'; end if;
   v_var := coalesce(nullif(p->>'variante', ''), case v_jeu when 'p4' then 'classique' when 'morpion' then 'classique'
-    when 'bataille' then 'classique' when 'quiestce' then 'paleto' else 'duel' end);
+    when 'bataille' then 'classique' when 'quiestce' then 'quartier' else 'duel' end);
   if (v_jeu = 'p4' and v_var not in ('classique', 'grande', 'popout')) or (v_jeu = 'morpion' and v_var not in ('classique', 'ultime', 'gomoku'))
      or (v_jeu = 'mastermind' and v_var <> 'duel') or (v_jeu = 'bataille' and v_var not in ('classique', 'salve'))
      or (v_jeu = 'quiestce' and not exists (select 1 from hg_duel_qec_persos where plateau = v_var)) then raise exception 'Variante inconnue.'; end if;
@@ -1878,11 +1878,11 @@ begin
 end $$;
 
 -- Personnages d'un plateau (public) et questions toutes prêtes.
-create or replace function public.hg_duel_plateau(p_plateau text default 'paleto')
+create or replace function public.hg_duel_plateau(p_plateau text default 'quartier')
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'persos', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'prenom', prenom, 'attributs', attributs) order by id)
-                        from hg_duel_qec_persos where plateau = coalesce(p_plateau, 'paleto')), '[]'::jsonb),
+                        from hg_duel_qec_persos where plateau = coalesce(p_plateau, 'quartier')), '[]'::jsonb),
     'questions', (select jsonb_agg(jsonb_build_object('cle', cle, 'valeur', valeur, 'texte', texte)) from hg_duel__qec_questions()))
 $$;
 

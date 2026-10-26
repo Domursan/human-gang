@@ -124,7 +124,7 @@ begin
   perform t_ok((e->'quiestce'->>'mon_perso') is not null and e->'quiestce'->'perso_adverse' = 'null'::jsonb, 'chacun voit son personnage, pas celui de l''autre');
   select perso into v_perso from hg_duel_qec_secrets where partie = v_id and user_id = u3;
   r := t_call(2, format('hg_duel_question(%L, %L, %L)', v_code, 'lunettes', 'oui')) #>> '{}';
-  perform t_ok(r::boolean = coalesce(((select attributs from hg_duel_qec_persos where plateau = 'paleto' and id = v_perso)->>'lunettes')::boolean, false),
+  perform t_ok(r::boolean = coalesce(((select attributs from hg_duel_qec_persos where plateau = 'quartier' and id = v_perso)->>'lunettes')::boolean, false),
     'question toute prête : réponse exacte');
   perform t_ok((select tour from hg_duel_parties where id = v_id) = u3, 'après une question, le tour passe');
   perform t_ok(t_err(3, format('hg_duel_question(%L, %L, %L)', v_code, 'nez', 'oui')) like 'Question inconnue%', 'question inconnue refusée');
@@ -140,7 +140,7 @@ begin
   perform t_ok(t_call(2, format('hg_duel_etat(%L)', v_code))->'quiestce'->'mes_baisses' = '[1,3,7]'::jsonb, 'personnages baissés gardés');
   perform t_ok((t_call(3, format('hg_duel_etat(%L)', v_code))->'quiestce'->'restants_adverses'->>(u2::text))::int = 21, 'l''autre voit combien il m''en reste');
   -- Mauvaise réponse : manche perdue
-  select id into v_faux from hg_duel_qec_persos where plateau = 'paleto' and id <> v_perso order by id limit 1;
+  select id into v_faux from hg_duel_qec_persos where plateau = 'quartier' and id <> v_perso order by id limit 1;
   r := t_call(2, format('hg_duel_deviner(%L, %s)', v_code, v_faux)) #>> '{}';
   perform t_ok(r = 'false' and (select manches from hg_duel_joueurs where partie = v_id and user_id = u3) = 1, 'mauvaise désignation : l''autre gagne la manche');
   perform t_ok((select manche from hg_duel_parties where id = v_id) = 2 and (select count(*) from hg_duel_qec_secrets where partie = v_id and manche = 2) = 2

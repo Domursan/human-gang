@@ -32,7 +32,7 @@ export const JEUX = {
       ['salve', 'Salve', 'Autant de tirs par tour que de navires encore à flot.']],
     temps: [15, 30, 60], tempsDefaut: 30 },
   quiestce: { nom: 'Qui est-ce ?', image: 'qui-est-ce', texte: 'Devine le personnage secret de l’autre.',
-    variantes: [['paleto', 'Les habitants de Paleto', '24 personnages, des questions toutes prêtes ou libres.']],
+    variantes: [['quartier', 'Les habitants du quartier', '24 personnages, des questions toutes prêtes ou libres.']],
     temps: [60, 90, 120], tempsDefaut: 90 },
 };
 /** Flotte de la Bataille navale (le serveur la renvoie aussi dans etat.bataille.flotte). */
@@ -141,7 +141,7 @@ export const duel = {
   /** Mes personnages baissés (aide-mémoire gardé côté serveur). */
   baisser: deux((code, persos) => rpc('hg_duel_baisser', { p_code: code, p_persos: persos }), (code, persos) => rpcInvite('baisser', code, { persos })),
   /** Personnages du plateau et questions toutes prêtes : {persos:[{id, prenom, attributs}], questions:[{cle, valeur, texte}]}. */
-  plateau: deux((code, plateau = 'paleto') => rpc('hg_duel_plateau', { p_plateau: plateau }), (code) => rpcInvite('plateau', code)),
+  plateau: deux((code, plateau = 'quartier') => rpc('hg_duel_plateau', { p_plateau: plateau }), (code) => rpcInvite('plateau', code)),
   message: deux((code, texte) => rpc('hg_duel_message', { p_code: code, p_texte: texte }), (code, texte) => rpcInvite('message', code, { texte })),
   avancer: deux((code) => rpc('hg_duel_avancer', { p_code: code }), (code) => rpcInvite('avancer', code)),
   etat: deux((code) => rpc('hg_duel_etat', { p_code: code }), (code) => rpcInvite('etat', code)),

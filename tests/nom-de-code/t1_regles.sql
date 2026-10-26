@@ -161,6 +161,6 @@ begin
   perform t_ok(hg_ndc_invite('apercu', 'HGNDC-0000') is null, 'aperçu d''un code inconnu : null');
 
   -- Admin des mots
-  perform t_ok((t_call(1, format('hg_ndc_admin_enregistrer_mots(%L, %L::text[])', 'gang', '{raclette,Paleto," ",Discord}')) #>> '{}')::int = 3, 'admin : ajout d''un paquet');
+  perform t_ok((t_call(1, format('hg_ndc_admin_enregistrer_mots(%L, %L::text[])', 'gang', '{raclette,Lagon," ",Discord}')) #>> '{}')::int = 3, 'admin : ajout d''un paquet');
   perform t_ok(t_err(3, format('hg_ndc_admin_mots(%L)', 'gang')) like 'Réservé%', 'paquets réservés à l''admin');
 end $$;

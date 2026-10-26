@@ -359,7 +359,7 @@ export function creer(root, ctx) {
 
     cadre.plateau.innerHTML = `
       <div class="qec-entete">
-        <h2 class="duels-h3">Les habitants de Paleto</h2>
+        <h2 class="duels-h3">Les habitants du quartier</h2>
         ${ouvert ? `<button type="button" class="btn btn-ghost qec-btn" data-act="auto" data-k="auto" ${st.occupe || !liste.length ? 'disabled' : ''}>Baisser automatiquement</button>` : ''}
       </div>
       ${ouvert && monPerso ? barreTel(monPerso, nbMoi, nbAdv) : ''}

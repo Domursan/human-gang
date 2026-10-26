@@ -318,7 +318,7 @@ function openEvent(ev = null) {
       <div class="field"><label for="ev-time">Heure (facultatif)</label><input id="ev-time" name="time" type="time" value="${esc(v.time || '')}" aria-describedby="ev-time-h">
         <p class="small muted" id="ev-time-h">Vide : toute la journée.</p></div>
     </div>
-    <div class="field"><label for="ev-loc">Lieu (facultatif)</label><input id="ev-loc" name="location" maxlength="200" value="${esc(v.location || '')}" placeholder="Ferme de Grapeseed"></div>
+    <div class="field"><label for="ev-loc">Lieu (facultatif)</label><input id="ev-loc" name="location" maxlength="200" value="${esc(v.location || '')}" placeholder="Chez Lila"></div>
     <div class="field"><label for="ev-link">Lien (facultatif)</label><input id="ev-link" name="link" type="url" maxlength="500" inputmode="url" value="${esc(v.link || '')}" placeholder="https://discord.com/channels/…" aria-describedby="ev-link-h">
       <p class="small muted" id="ev-link-h">Adresse en https:// seulement.</p></div>
     <div class="field"><label for="ev-note">Note (facultatif)</label><textarea id="ev-note" name="note" maxlength="500" rows="3">${esc(v.note || '')}</textarea></div>
