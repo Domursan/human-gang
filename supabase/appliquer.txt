@@ -18,3 +18,4 @@ supabase/migrations/149_nerdle_indice.sql
 supabase/migrations/150_nj_acces_pages.sql
 supabase/migrations/151_blackjack_journal.sql
 supabase/migrations/152_plat_nom.sql
+supabase/migrations/153_presence_notifs.sql

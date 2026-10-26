@@ -21,7 +21,8 @@
 // Exporte : rien (point d'entrée Deno.serve).
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom } from '../_shared/templates.ts';
-import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
+import { dmOuSite } from '../_shared/presence.ts';
 import { mentionMode, mentionWith, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
@@ -157,10 +158,10 @@ Deno.serve(async (req) => {
         await mark(p.id, year, 'dm_sent_at');
       } else {
         try {
-          await sendDM(p.discord_id!, { embeds: [{
+          await dmOuSite(db, p.id, p.discord_id!, { embeds: [{
             ...embedFrom(renderTemplate('birthday_dm', { pseudo: p.pseudo, lien: home }, tpl)),
             color: 0xe0909a, url: home || undefined, footer: { text: 'Humane Gang' },
-          }] });
+          }] }, 'anniversaires');
           out.dms++;
           attempts.push({ user_id: p.id, pseudo: p.pseudo, ok: true, status: 'sent', reason: null });
           await mark(p.id, year, 'dm_sent_at');

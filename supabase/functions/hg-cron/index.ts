@@ -45,7 +45,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent, type DynPhase } from '../_shared/dyn-announce.ts';
-import { hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { hasBotToken, isSnowflake, jsonResponse, sendChannel } from '../_shared/discord.ts';
+import { dmOuSite } from '../_shared/presence.ts';
 import { mentionFor, type MentionBot } from '../_shared/mentions.ts';
 import { channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, type ChannelBot, type ChannelLogEntry } from '../_shared/channels.ts';
 import { cronAuthorized } from '../_shared/cron-auth.ts';
@@ -315,7 +316,7 @@ async function irlReminders(out: Counters, attempts: Attempt[], rules: BotRules)
       lien: link('irl.html') ?? '',
     }, tpl);
     try {
-      await sendDM(person.discord_id!, embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl }));
+      await dmOuSite(db, r.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl }), 'sorties');
       out.irl_reminders++;
       attempts.push({ user_id: r.user_id, pseudo: person.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
@@ -375,7 +376,7 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
       pseudo: person.pseudo, annee: ed.year, date_limite: fmtZurichDay(ed.send_deadline), lien: link('secret-santa.html') ?? '',
     }, tpl);
     try {
-      await sendDM(person.discord_id!, embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss }));
+      await dmOuSite(db, p.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss }), 'santa');
       out.ss_reminders++;
       attempts.push({ user_id: p.user_id, pseudo: person.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {

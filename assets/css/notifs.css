@@ -1,0 +1,41 @@
+/* ===== Humane Gang — cloche des notifications et pastilles « en ligne » (core/presence.js, migration 153) =====
+   Pastille : en ligne = disque plein vert, hors ligne = anneau creux gris (la forme change aussi : lisible sans
+   distinguer les couleurs). Le libellé « En ligne » / « Hors ligne » est donné aux lecteurs d'écran (aria-label). */
+
+.presence-wrap { position: relative; display: inline-flex; flex: none; }
+.presence-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; flex: none;
+  border: 2px solid var(--muted); background: var(--surface); box-shadow: 0 0 0 2px var(--surface); vertical-align: middle; }
+.presence-dot.is-online { border-color: var(--sage); background: var(--sage); }
+.presence-wrap > .presence-dot { position: absolute; right: -1px; bottom: -1px; }
+
+/* Cloche */
+.notif-wrap { position: relative; }
+.notif-btn { position: relative; }
+.notif-badge { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
+  background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+  box-shadow: 0 0 0 2px var(--surface); }
+.notif-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(380px, calc(100vw - 24px));
+  max-height: min(70vh, 560px); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 12px;
+  background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .45); display: flex; flex-direction: column; gap: 10px; text-align: left; }
+@media (max-width: 520px) {
+  .notif-panel { position: fixed; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right));
+    top: calc(64px + env(safe-area-inset-top)); width: auto; max-height: calc(100dvh - 90px - env(safe-area-inset-top)); }
+}
+.notif-panel[hidden] { display: none; }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.notif-h { margin: 0; font-size: 16px; }
+.notif-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.notif-item { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 10px 12px; min-height: 44px; box-sizing: border-box;
+  border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); text-decoration: none; }
+a.notif-item:hover, a.notif-item:focus-visible { border-color: var(--border-strong); }
+a.notif-item:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.notif-item.is-new { border-left: 4px solid var(--sand); }
+.notif-cat { grid-column: 1; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.notif-quand { grid-column: 2; grid-row: 1; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.notif-titre { grid-column: 1 / -1; font-size: 14px; }
+.notif-texte { grid-column: 1 / -1; font-size: 13px; color: var(--muted); white-space: pre-line; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.notif-vide { margin: 4px 0; }
+.notif-statut { font-size: 14px; min-height: 44px; display: flex; align-items: center; gap: 8px; }
+.notif-aide { margin: 0; }

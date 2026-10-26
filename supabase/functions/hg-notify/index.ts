@@ -79,6 +79,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import { loadTemplates, renderTemplate, embedFrom, mdSafe, truncate, type Templates } from '../_shared/templates.ts';
 import { buildDynAnnounce, type DynEvent } from '../_shared/dyn-announce.ts';
 import { CORS, hasBotToken, isSnowflake, jsonResponse, sendChannel, sendDM } from '../_shared/discord.ts';
+import { dmOuSite } from '../_shared/presence.ts';
 import { mentionFor, mentionMode, mentionWith, MENTION_TYPES, type MentionBot, type MentionType } from '../_shared/mentions.ts';
 import {
   channelLog, channelsFor, insertWithChannels, isKnownChannel, sendToChannels, CHANNEL_LABEL, type ChannelResult,
@@ -338,10 +339,10 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   let dms = 0, failed = 0;
   const drawPrefs = await loadNotifPrefs(db, people.map((x) => x.id));
   for (const person of people.filter(canDM).filter((x) => notifAllowed(drawPrefs.get(x.id), 'santa', 'discord'))) {
-    const ok = await trySend(() => sendDM(person.discord_id!, embed({
+    const ok = await trySend(() => dmOuSite(db, person.id, person.discord_id!, embed({
       ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: mdSafe(person.pseudo) }, tpl)),
       url: link('secret-santa.html'), color: COLOR.ss, fields,
-    })), `MP tirage ${person.id}`);
+    }), 'santa'), `MP tirage ${person.id}`);
     ok ? dms++ : failed++;
     await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
   }
@@ -394,7 +395,7 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   const col = kind === 'sent' ? 'gift_notified_at' : 'received_notified_at';
   const keys = { edition_id: p.edition_id, user_id: me.id };
   if (!(await claim('hg_ss_participants', col, keys))) return { skipped: 'déjà notifié' };
-  const dm = await trySend(() => sendDM(other.discord_id!, message), `MP cadeau ${kind}`);
+  const dm = await trySend(() => dmOuSite(db, other.id, other.discord_id!, message, 'santa'), `MP cadeau ${kind}`);
   if (!dm) await release('hg_ss_participants', col, keys);
   return { dm };
 }
@@ -506,11 +507,11 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
     const rendered = anonymous
       ? renderTemplate('message_new_santa', { pseudo: mdSafe(other.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl)
       : renderTemplate('message_new', { pseudo: mdSafe(other.pseudo), expediteur: mdSafe(me.pseudo), extrait: excerpt || '(message vide)', lien: url ?? '' }, tpl);
-    const ok = await trySend(() => sendDM(other.discord_id!, embed({
+    const ok = await trySend(() => dmOuSite(db, uid, other.discord_id!, embed({
       ...embedFrom(rendered), url,
       color: conv.kind === 'santa' ? COLOR.ss : COLOR.info,
       ...(url ? { fields: [{ name: ZWSP, value: `[Répondre sur le site](${url})` }] } : {}),
-    })), `MP message ${uid}`);
+    }), 'messages'), `MP message ${uid}`);
     ok ? dms++ : failed++;
   }
   if (!dms && failed) await release('hg_messages', 'dm_notified_at', { id: latest.id });
@@ -679,7 +680,7 @@ async function onAdminDm(me: Profile, bot: Bot, p: Record<string, unknown>) {
     if (!first) await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
     first = false;
     try {
-      await sendDM(prof.discord_id, build(mdSafe(prof.pseudo)), files);
+      await dmOuSite(db, id, prof.discord_id, build(mdSafe(prof.pseudo)), 'annonces', files);
       recipients.push({ user_id: id, pseudo: prof.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
       console.error(`[hg-notify] MP manuel ${id}`, e);
@@ -925,9 +926,9 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
     demande: tradeSide(names('to'), t.to_paillettes ?? 0),
     lien: link('cartes.html') ?? '',
   }, tpl);
-  const ok = await trySend(() => sendDM(other.discord_id!, embed({
+  const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
-  })), `MP offre ${other.id}`);
+  }), 'echanges'), `MP offre ${other.id}`);
   // Échec : on libère la réservation pour qu'un nouvel appel dans la fenêtre de 15 min puisse réessayer.
   if (!ok) await db.from('hg_card_trades').update({ notified_at: null }).eq('id', t.id);
   return { dm: ok };
@@ -1005,10 +1006,10 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
   }, tpl);
   // L'image n'est reprise dans le MP que si elle est en https (Discord ne charge pas les autres).
   const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
-  const ok = await trySend(() => sendDM(other.discord_id!, embed({
+  const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({
     ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
     ...(image ? { image: { url: image } } : {}),
-  })), `MP don carte ${other.id}`);
+  }), 'souhaits'), `MP don carte ${other.id}`);
   if (!ok) {
     const { error: relErr } = await db.from('hg_card_copies').update({ gift_dm_at: null }).in('id', claimedIds);
     if (relErr) console.error('[hg-notify] libération hg_card_copies.gift_dm_at', relErr);
@@ -1163,7 +1164,7 @@ async function onDuelDefi(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const format = g.format > 1 ? `au meilleur des ${g.format}` : 'en une manche';
   const lien = link(`duels.html#rejoindre/${g.code}`) ?? '';
   const rendered = renderTemplate('duel_defi_dm', { pseudo: mdSafe(me.pseudo), jeu, format, code: g.code, lien }, tpl);
-  const ok = await trySend(() => sendDM(other.discord_id!, embed({ ...embedFrom(rendered), url: lien || undefined, color: COLOR.info })), `MP défi ${other.id}`);
+  const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({ ...embedFrom(rendered), url: lien || undefined, color: COLOR.info }), 'jeux'), `MP défi ${other.id}`);
   if (!ok) await db.from('hg_duel_parties').update({ defi_notifie_at: null }).eq('id', g.id);
   return { dm: ok };
 }
@@ -1357,9 +1358,9 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
       if (sent + failed >= WISH_MAX_DMS) { skipped++; continue; }
       const carte = `${names.get(cardId) ?? 'Une carte'}${info.shiny ? ' (brillante)' : ''}`;
       const rendered = renderTemplate('card_wish_dm', { carte, lien: link('cartes.html') ?? '' }, tpl);
-      const ok = await trySend(() => sendDM(prof.discord_id!, embed({
+      const ok = await trySend(() => dmOuSite(db, prof.id, prof.discord_id!, embed({
         ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
-      })), `MP souhait ${prof.id}`);
+      }), 'souhaits'), `MP souhait ${prof.id}`);
       if (ok) { sent++; cardSent++; } else { failed++; cardFailed++; }
       await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
     }

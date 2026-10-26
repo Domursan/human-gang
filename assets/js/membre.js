@@ -12,6 +12,7 @@ import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge
 import { mountShowcase } from './cartes-showcase.js';
 import { svg } from './icons.js';
 import { questTrack } from './quest-track.js';
+import { avatarPresence } from './core/presence.js';
 import { isOffline, startOfflinePage, saveOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : sa carte hors ligne
 import { loadGenerations } from './cartes-gen.js';
 import { generationLabel } from './cartes-ui.js';
@@ -491,7 +492,7 @@ async function loadGang() {
     if (!list.length) { ul.innerHTML = '<li class="empty">Personne pour l\'instant.</li>'; return; }
     ul.innerHTML = list.map((m) => `
       <li><a class="gang-item${m.id === targetId ? ' is-current' : ''}" href="membre.html?id=${encodeURIComponent(m.id)}"${m.id === targetId ? ' aria-current="page"' : ''}>
-        ${avatarHtml(m, 44)}
+        ${avatarPresence(avatarHtml(m, 44), m.id)}
         <span class="gang-txt"><strong>${esc(m.pseudo)}${m.id === me.id ? ' <span class="gang-me">toi</span>' : ''}</strong>
           <span class="small muted">depuis ${esc(sinceLabel(m.member_since))}</span></span>
       </a></li>`).join('');

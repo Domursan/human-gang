@@ -10,6 +10,7 @@ import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.
 import { svg } from './icons.js';
 import * as G from './messages-groupes.js'; // groupes et discussions de sortie (migration 090)
 import { reportButtonHtml } from './report.js'; // A6 : « Signaler » un message
+import { avatarPresence } from './core/presence.js'; // pastille « en ligne » (migration 153)
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -213,9 +214,10 @@ function convAvatar(c, size = 44) {
   if (side === 'target') return `<span class="msg-av msg-av-santa" style="width:${size}px;height:${size}px" aria-hidden="true">${I.mask}</span>`;
   const m = memberOf(c.other_id) || { pseudo: c.title };
   if (isSupport(c)) return `<span class="msg-av-wrap">${avatarHtml(m, size)}<span class="msg-av-badge is-support" aria-hidden="true">${I.help}</span></span>`;
+  // Conversation simple : pastille « en ligne » (jamais pour le Secret Santa : l'anonymat d'abord)
   return side === 'santa'
     ? `<span class="msg-av-wrap">${avatarHtml(m, size)}<span class="msg-av-badge" aria-hidden="true">${I.mask}</span></span>`
-    : avatarHtml(m, size);
+    : (c.other_id ? avatarPresence(avatarHtml(m, size), c.other_id) : avatarHtml(m, size));
 }
 /** Dessine la liste des conversations (aperçu, heure, non-lus, étiquette Secret Santa) et branche les clics. */
 function renderConvs() {
