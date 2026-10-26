@@ -16,6 +16,7 @@ import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, FLOTTE, nomCase } from '../api.js';
 import { creerCadre, nomJoueur, deJoueur, deNom } from './commun.js';
 import { boutonReponses } from '../../core/admin-reponses.js';
+import { voisinGrille } from '../../grille-clavier.js';
 
 const TAILLE = 10;
 const NB_CASES = 100;
@@ -173,6 +174,20 @@ const ICONE = {
  * role : 'tir' (cases cliquables), 'pose' (placement) ou 'passive' (lecture seule).
  * Retourne { el, cases: Map(c → bouton/span), calque }.
  */
+/** Une seule case de la grille dans l'ordre de tabulation (roving tabindex) : celle que l'on désigne. */
+function rouler(grille, cible) {
+  grille.querySelectorAll('button[data-case]').forEach((n) => { n.tabIndex = n === cible ? 0 : -1; });
+}
+
+/** Case active suivante (ou précédente) d'une grille, pour garder le focus quand la case courante devient inactive. */
+function caseActiveVoisine(n) {
+  const grille = n.closest('.bn-grille');
+  if (!grille) return null;
+  const cases = [...grille.querySelectorAll('button[data-case]')];
+  const pos = cases.indexOf(n);
+  return cases.slice(pos + 1).find((x) => !x.disabled) || cases.slice(0, pos).reverse().find((x) => !x.disabled) || null;
+}
+
 function creerGrille(parent, { role, titre }) {
   const lettres = [...RANG_LETTRES].map((l) => `<span class="bn-lbl" aria-hidden="true">${l}</span>`).join('');
   let corps = '';
@@ -191,6 +206,8 @@ function creerGrille(parent, { role, titre }) {
   el.setAttribute('aria-label', titre);
   el.innerHTML = `<span class="bn-coin" aria-hidden="true"></span>${lettres}${corps}<div class="bn-calque" aria-hidden="true"></div>`;
   parent.appendChild(el);
+  const premiere = el.querySelector('button[data-case]');
+  if (premiere) rouler(el, premiere);
   const cases = new Map();
   el.querySelectorAll('[data-case]').forEach((n) => cases.set(Number(n.dataset.case), n));
   return { el, cases, calque: el.querySelector('.bn-calque'), cleCalque: null };
@@ -204,7 +221,12 @@ function peindreCase(n, { etat, classes = '', label, icone = 'rien', actif = fal
   n.dataset.etat = etat;
   n.className = `bn-c${classes ? ' ' + classes : ''}`;
   n.setAttribute('aria-label', label);
-  if (n.tagName === 'BUTTON') n.disabled = !actif;
+  if (n.tagName === 'BUTTON') {
+    const avait = document.activeElement === n;
+    n.disabled = !actif;
+    // Case qui vient d'être visée : le focus passe à une case active voisine (sinon il tomberait hors de la grille).
+    if (avait && n.disabled) caseActiveVoisine(n)?.focus();
+  }
   n.innerHTML = `${ICONE[icone] || ''}${valeur !== null ? `<span class="bn-valeur" aria-hidden="true">${esc(String(valeur))}</span>` : ''}`;
 }
 
@@ -766,13 +788,37 @@ export function creer(root, ctx) {
     else if (act === 'radar') basculerRadar();
   };
 
-  /** Touches : R pivote, Échap annule le radar ou la sélection. */
+  /** Flèches (et Début, Fin) : case par case dans la grille de placement ou de tir ; les cases inactives sont sautées. */
+  const surFleche = (ev) => {
+    const cel = ev.target.closest?.('button[data-case]');
+    const grille = cel?.closest('.bn-grille');
+    if (!cel || !grille) return;
+    const caseDe = (k) => grille.querySelector(`button[data-case="${k}"]`);
+    const c = Number(cel.dataset.case);
+    const cible = voisinGrille(ev.key, Math.floor(c / TAILLE), c % TAILLE, TAILLE, TAILLE,
+      (r, k) => { const n = caseDe(r * TAILLE + k); return !!n && !n.disabled; });
+    if (!cible) return;
+    ev.preventDefault();
+    const n = caseDe(cible[0] * TAILLE + cible[1]);
+    rouler(grille, n);
+    n.focus();
+  };
+
+  /** Le focus qui entre dans une grille devient sa case de tabulation (roving tabindex). */
+  const surRoulage = (ev) => {
+    const cel = ev.target.closest?.('button[data-case]');
+    const grille = cel?.closest('.bn-grille');
+    if (grille) rouler(grille, cel);
+  };
+
+  /** Touches : R pivote, Échap annule le radar ou la sélection, flèches déplacent dans la grille. */
   const surTouche = (ev) => {
     if (ev.key === 'Escape') {
       if (st.radar) { st.radar = false; peindreJeu(st.etat); maj_actions(); }
       if (st.choisi) { st.choisi = null; dire(''); peindreListe(); peindrePlacement(); }
       return;
     }
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) { surFleche(ev); return; }
     if ((ev.key === 'r' || ev.key === 'R') && st.vue === 'saisie' && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
       ev.preventDefault();
       pivoter();
@@ -804,6 +850,7 @@ export function creer(root, ctx) {
   root.addEventListener('keydown', surTouche);
   root.addEventListener('mouseover', surSurvol);
   root.addEventListener('focusin', surSurvol);
+  root.addEventListener('focusin', surRoulage);
   root.addEventListener('mouseout', surSortie);
 
   return {
@@ -844,6 +891,7 @@ export function creer(root, ctx) {
       root.removeEventListener('keydown', surTouche);
       root.removeEventListener('mouseover', surSurvol);
       root.removeEventListener('focusin', surSurvol);
+      root.removeEventListener('focusin', surRoulage);
       root.removeEventListener('mouseout', surSortie);
       cadre.detruire();
     },

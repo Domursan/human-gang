@@ -103,7 +103,7 @@
   .shell-brand, .shell-site { display: none; }
   .shell-all { width: 40px; padding: 0; justify-content: center; }
   .shell-all-txt { display: none; }
-  .shell-live .live-status { font-size: 11.5px; }
+  .shell-live .live-status { font-size: 12px; }
   .shell-live .live-label { display: inline; }
   .shell-avatar { width: 36px; height: 36px; }
   .shell-body { grid-template-columns: minmax(0, 1fr) !important; }
@@ -118,7 +118,7 @@
     padding: 8px 6px calc(env(safe-area-inset-bottom, 0px) + 6px); background: var(--shell-bar); border-top: 1px solid var(--border); }
   .shell-tabs::-webkit-scrollbar { display: none; }
   .shell-tab { position: relative; flex: 0 0 auto; min-width: 60px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: var(--muted); font-size: 10.5px; font-weight: 500; }
+    color: var(--muted); font-size: 12px; font-weight: 500; }
   .shell-tab-pic { position: relative; width: 46px; height: 30px; border-radius: 15px; display: grid; place-items: center; }
   .shell-tab-pic svg { width: 20px; height: 20px; }
   .shell-tab[aria-current="true"] { color: var(--text); font-weight: 600; }
@@ -130,5 +130,16 @@
 
 /* Pastille d'un lieu (barre du bas et plateau) */
 .shell-badge { position: absolute; top: -3px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-text);
-  font-size: 10.5px; font-weight: 700; line-height: 18px; text-align: center; border: 2px solid var(--shell-bar); }
+  font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; border: 2px solid var(--shell-bar); }
 .shell-badge[hidden] { display: none; }
+
+/* Tactile (doigt) : boutons de l'en-tête à 44 px au moins. Souris : tailles d'origine. */
+@media (pointer: coarse) {
+  .shell-logo { width: 44px; height: 44px; }
+  .shell-all { height: 44px; }
+  .shell-ico { width: 44px; height: 44px; }
+  .shell-avatar { width: 44px; height: 44px; }
+}
+@media (pointer: coarse) and (max-width: 760px) {
+  .shell-all { width: 44px; }
+}

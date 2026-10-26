@@ -172,7 +172,7 @@
 /* ---------- Badges à niveaux ---------- */
 .badge-medal { position: relative; }
 .medal-lvl { position: absolute; right: -2px; bottom: -2px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; display: grid; place-items: center;
-  font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
+  font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
 .badge.has-levels .badge-medal { overflow: visible; }
 .badge.has-levels .badge-medal img { border-radius: 50%; }
 .badge-levels { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; margin-top: 2px; }
@@ -187,15 +187,24 @@ html[data-mode="clair"] .medal-lvl { color: #FFFFFF; }
 .np-master { background: var(--surface-2); border: 0; border-radius: 12px; padding: 10px 12px; }
 .np-table { display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; align-items: center; column-gap: 6px; }
 .np-row, .np-head { display: contents; }
-.np-head > span { font-size: 11px; line-height: 1.2; color: var(--muted); text-align: center; padding-bottom: 6px; }
+.np-head > span { font-size: 12px; line-height: 1.2; color: var(--muted); text-align: center; padding-bottom: 6px; }
 .np-cat { padding: 9px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .np-cat b { font-size: 13px; }
-.np-cat span { font-size: 11px; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
+.np-cat span { font-size: 12px; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
 .np-cell { border-top: 1px solid var(--border); align-self: stretch; display: flex; align-items: center; justify-content: center; padding: 9px 0; min-height: 44px; }
-.np-soon { font-size: 10px; color: var(--muted); text-align: center; }
+.np-soon { font-size: 12px; color: var(--muted); text-align: center; }
 .np-table .pref-switch { width: 44px; height: 26px; }
 .np-table .pref-switch::after { width: 18px; height: 18px; }
 .np-table .pref-switch:checked::after { transform: translateX(18px); }
+/* Doigt : la case fait 44 px de haut ; l'interrupteur (44 × 26) est dessiné par ::before, centré dedans. */
+@media (pointer: coarse) {
+  .np-table .pref-switch { height: 44px; background: none; border: 0; }
+  .np-table .pref-switch:checked { background: none; border: 0; }
+  .np-table .pref-switch::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 26px; margin-top: -13px; box-sizing: border-box;
+    border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong); }
+  .np-table .pref-switch:checked::before { background: var(--accent); border-color: var(--accent); }
+  .np-table .pref-switch::after { top: 50%; margin-top: -9px; left: 4px; }
+}
 .np-card.is-bot-off .np-discord { opacity: .45; }
 .np-quiet { border-top: 1px solid var(--border); }
 .np-quiet-row { border-bottom: 0; }

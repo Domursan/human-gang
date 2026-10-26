@@ -17,6 +17,7 @@ import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, pseudoHtml } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauHtml } from './plateau.js';
+import { voisinSpatial } from '../../../grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const CAUTION_PRISON = 50;
@@ -602,6 +603,13 @@ export function creer(root, ctx) {
 
   /** Clic sur une case : fiche, fermée si on clique la même. */
   refs.cases.addEventListener('click', surClic);
+  // Clavier : flèches vers la case la plus proche dans la direction (les 40 cases forment un anneau) ; Entrée ou Espace ouvrent la fiche.
+  refs.cases.addEventListener('keydown', (ev) => {
+    const b = ev.target.closest?.('button[data-case]');
+    if (!b || !ev.key.startsWith('Arrow')) return;
+    const voisine = voisinSpatial(ev.key, b, [...refs.cases.querySelectorAll('button[data-case]')]);
+    if (voisine) { ev.preventDefault(); voisine.focus({ preventScroll: true }); }
+  });
   refs.fiche.addEventListener('click', surClic);
   refs.titres.addEventListener('click', surClic);
   refs.raccourcis.addEventListener('click', surClic);

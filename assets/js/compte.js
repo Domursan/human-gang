@@ -566,9 +566,11 @@ async function renderMember(user) {
             <summary><span class="info-group-name">${esc(g.label)}</span><span class="info-group-count small muted" data-count="${esc(g.id)}"></span></summary>
             <div class="info-fields">${g.fields.map((f) => {
               const id = `inf-${f.id}`, ph = f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : '';
+              // Téléphone : clavier numérique sur téléphone (type tel, autocomplétion du numéro)
+              const tel = f.id === 'telephone' ? ' type="tel" autocomplete="tel"' : '';
               const input = f.type === 'textarea'
                 ? `<textarea id="${id}" data-key="${esc(f.id)}" rows="3" maxlength="1000"${ph}></textarea>`
-                : `<input id="${id}" data-key="${esc(f.id)}" maxlength="300"${ph}>`;
+                : `<input id="${id}" data-key="${esc(f.id)}" maxlength="300"${tel}${ph}>`;
               return `<div class="field${f.type === 'textarea' ? ' field-wide' : ''}"><label for="${id}">${esc(f.label)}</label>${input}</div>`;
             }).join('')}</div>
           </details>`).join('')}

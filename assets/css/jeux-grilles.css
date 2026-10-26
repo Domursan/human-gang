@@ -44,6 +44,7 @@
 .ng-band { margin: 0; padding: 10px 12px; border-radius: 12px; color: #0E0E10; min-width: 0; }
 .ng-band-t { margin: 0; font-family: var(--font-display); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
 .ng-band-m { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.ng-band-n { margin: 0 0 2px; font-family: 'Silkscreen', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 .ng-n1 { background: #E2C77E; }
 .ng-n2 { background: #6FA37F; }
 .ng-n3 { background: #7E93C9; }
@@ -72,7 +73,8 @@
 .ng-row { display: contents; }
 .ng-cell { aspect-ratio: 1 / 1; min-width: 0; display: grid; place-items: center; border-radius: 6px; background: var(--surface-2); color: var(--text);
   font-size: clamp(12px, 3.3vw, 17px); font-weight: 700; cursor: pointer; }
-.ng-cell.is-trouve { background: color-mix(in srgb, var(--c) 42%, transparent); }
+.ng-cell.is-trouve { background: color-mix(in srgb, var(--c) 42%, transparent);
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .22) 0 2px, transparent 2px 6px); } /* motif : un trouvé ne tient pas à la couleur seule */
 .ng-cell.is-apercu { background: color-mix(in srgb, var(--sand) 34%, transparent); box-shadow: inset 0 0 0 1px var(--sand); }
 .ng-cell.is-depart { box-shadow: inset 0 0 0 2px var(--text); }
 .ng-liste { min-width: 0; }
@@ -90,6 +92,13 @@
 .ng-c.is-v { background: #159946; border-color: #159946; color: #0E0E10; }
 .ng-c.is-j { background: #FCA301; border-color: #FCA301; color: #0E0E10; }
 .ng-c.is-g { background: #3A3A40; border-color: #3A3A40; color: #F2EFEA; }
+/* Daltonisme : chaque état porte aussi un symbole (✓ bonne place, ~ présent ailleurs, ✕ absent), pas seulement sa couleur */
+.ng-c { position: relative; }
+.ng-c.is-v::after, .ng-c.is-j::after, .ng-c.is-g::after, .ng-key.is-v::after, .ng-key.is-j::after, .ng-key.is-g::after {
+  position: absolute; top: 1px; right: 3px; font-size: 9px; line-height: 1; font-weight: 700; pointer-events: none; }
+.ng-c.is-v::after, .ng-key.is-v::after { content: '✓'; }
+.ng-c.is-j::after, .ng-key.is-j::after { content: '~'; }
+.ng-c.is-g::after, .ng-key.is-g::after { content: '✕'; }
 .ng-calcul { margin: 0; text-align: center; font-size: 18px; }
 .ng-clavier { display: flex; flex-direction: column; gap: 6px; width: min(100%, 440px); margin: 0 auto; }
 .ng-touches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
@@ -98,6 +107,7 @@
 .ng-key.is-v { background: #159946; border-color: #159946; color: #0E0E10; }
 .ng-key.is-j { background: #FCA301; border-color: #FCA301; color: #0E0E10; }
 .ng-key.is-g { background: #2A2A2F; color: var(--muted); }
+.ng-key { position: relative; }
 .ng-key-large { grid-column: span 3; font-size: 14px; }
 .ng-key-full { grid-column: 1 / -1; font-size: 14px; min-height: 48px; }
 

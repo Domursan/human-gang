@@ -15,4 +15,7 @@ for m in 131_plateaux_robots 136_nouveaux_jeux_socle 137_nj_devine 140_nj_grille
   psql -h /tmp -p 54329 -U postgres -d $B -X -q -f $D/../../supabase/migrations/$m.sql >/dev/null 2>&1
 done
 $P -d $B -f $D/helpers.sql 2>&1 | grep -E "ERROR"
+# Robot de test du Risk (fonction t_rk_tour, utilisée par s3) : seulement sa définition (lignes 1 à 38 de t_risk.sql),
+# pas les simulations de t_risk.sql, qui durent plusieurs minutes.
+sed -n '1,38p' $D/t_risk.sql | $P -d $B 2>&1 | grep -E "ERROR|LINE"
 echo "base $B prête"

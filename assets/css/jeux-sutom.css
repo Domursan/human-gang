@@ -40,7 +40,12 @@
 .su-enter { background: var(--accent); color: var(--accent-text); }
 .su-key.is-2 { background: #B70127; color: #fff; }
 .su-key.is-1 { background: #FCA301; color: #121212; }
-.su-key.is-0 { background: var(--bg); color: var(--muted); }
+.su-key.is-0 { background: var(--bg); color: var(--muted); text-decoration: line-through; }
+/* Daltonisme : la forme porte l'état aussi (carré = bien placée, rond = mal placée, lettre barrée = absente) */
+.su-key { position: relative; }
+.su-key.is-2::after, .su-key.is-1::after { position: absolute; top: 2px; right: 3px; font-size: 8px; line-height: 1; pointer-events: none; }
+.su-key.is-2::after { content: '■'; }
+.su-key.is-1::after { content: '●'; }
 .su-key:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 
 /* Encart admin : solution du jour, repliée par défaut */

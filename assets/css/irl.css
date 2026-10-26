@@ -131,6 +131,7 @@
 .seg span { display: flex; align-items: center; justify-content: center; min-height: 40px; border-radius: 9px; font-weight: 700; font-size: 14px; color: var(--muted); }
 .seg input:checked + span { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
 .seg input:focus-visible + span { outline: 2px solid var(--sand); outline-offset: 1px; }
+@media (pointer: coarse) { .seg span { min-height: 44px; } }
 .date-row { display: flex; gap: 8px; }
 .date-row .input { flex: 1; min-width: 0; }
 .date-row .btn { flex: none; width: 44px; padding: 0; }

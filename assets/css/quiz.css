@@ -24,7 +24,7 @@
 .quiz-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .quiz-chip { font: inherit; font-size: 14px; font-weight: 500; min-height: 44px; padding: 8px 16px; border-radius: 999px;
   border: 1px solid var(--border-strong); background: transparent; color: var(--text); cursor: pointer; }
-.quiz-chip[aria-pressed="true"] { background: var(--text); color: #121212; border-color: var(--text); font-weight: 700; }
+.quiz-chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 700; } /* texte = fond du thème : contraste dans les deux modes */
 .quiz-chip:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
 
 .quiz-section h2 { font-family: var(--font-body); font-size: 18px; font-weight: 700; margin: 0 0 12px; }

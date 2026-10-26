@@ -144,5 +144,8 @@ $('#url-form').addEventListener('submit', (e) => { e.preventDefault(); go($('#ur
 $('#reload').addEventListener('click', () => { for (const f of document.querySelectorAll('iframe')) f.contentWindow.location.reload(); });
 $('#back').addEventListener('click', () => { for (const f of document.querySelectorAll('iframe')) { try { f.contentWindow.history.back(); } catch { /* sans effet */ } } });
 window.addEventListener('resize', applyZoom);
+// Au premier rendu, la barre d'outils et les polices ne sont pas encore mises en page : on recalcule à la fin du chargement
+window.addEventListener('load', applyZoom);
+document.fonts?.ready.then(applyZoom);
 
 render();

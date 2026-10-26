@@ -228,6 +228,14 @@ export function creer(root, ctx) {
     if (ev.target.closest('[data-valider]')) { if (st.choix !== null) jouer(st.choix); return; }
     if (ev.target.closest('[data-annuler]')) { st.choix = null; peindre(); }
   });
+  // Échap annule la case choisie (téléphone), comme le bouton « Annuler » ; le focus revient sur la case du plateau.
+  cadre.plateau.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape' || st.choix === null) return;
+    ev.preventDefault();
+    st.choix = null;
+    peindre();
+    st.cases[st.foc]?.focus();
+  });
 
   return {
     /** Met à jour la table avec l'état du duel (cadre commun, plateau, compte, statut). */

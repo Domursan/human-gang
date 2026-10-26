@@ -18,6 +18,7 @@ import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml, pseudoHtml } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauHtml, marquer } from './plateau.js';
+import { voisinSpatial } from '../../../grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
@@ -800,6 +801,23 @@ export function creer(root, ctx) {
   /* ---------- Écouteurs ---------- */
 
   refs.carte.addEventListener('click', surCarte);
+  // Clavier : flèches vers le territoire cliquable le plus proche ; Entrée ou Espace le choisissent (boutons natifs).
+  // Échap annule la sélection : d'abord l'arrivée, puis le départ.
+  refs.carte.addEventListener('keydown', (ev) => {
+    const b = ev.target.closest?.('button[data-terr]');
+    if (!b) return;
+    if (ev.key === 'Escape' && (choix.vers || choix.de)) {
+      ev.preventDefault();
+      if (choix.vers) choix.vers = null; else choix.de = null;
+      rendrePanneau();
+      majMarquage();
+      b.focus({ preventScroll: true });
+      return;
+    }
+    if (!ev.key.startsWith('Arrow')) return;
+    const voisin = voisinSpatial(ev.key, b, [...refs.carte.querySelectorAll('button[data-terr]:not(:disabled)')]);
+    if (voisin) { ev.preventDefault(); voisin.focus({ preventScroll: true }); }
+  });
   refs.panneau.addEventListener('click', surPanneau);
   refs.panneau.addEventListener('input', surCurseur);
   refs.panneau.addEventListener('change', surCurseur);

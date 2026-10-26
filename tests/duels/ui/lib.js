@@ -3,9 +3,10 @@ process.env.FAKE_DB = 'duels';
 const { chromium } = require('playwright');
 const { attach, log, psql, uid } = require('../../loup-garou/ui/fake.js');
 let browser;
-async function ouvrir(n, path, w = 1280) {
+// extra : options Playwright ajoutées au contexte (ex. { isMobile: true, hasTouch: true } pour un téléphone).
+async function ouvrir(n, path, w = 1280, extra = {}) {
   browser = browser || await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: w, height: w < 600 ? 844 : 900 }, serviceWorkers: 'block' });
+  const ctx = await browser.newContext({ viewport: { width: w, height: w < 600 ? 844 : 900 }, serviceWorkers: 'block', ...extra });
   await attach(ctx, n);
   const p = await ctx.newPage();
   p.on('pageerror', (e) => console.log(`[J${n}] pageerror`, e.message));

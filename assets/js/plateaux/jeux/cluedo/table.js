@@ -17,6 +17,7 @@ import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauHtml } from './plateau.js';
+import { voisinSpatial } from '../../../grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const CARNET_CLE = (code) => `hg_cluedo_carnet:${String(code || '').toUpperCase()}`;
@@ -548,6 +549,13 @@ export function creer(root, ctx) {
     const b = ev.target.closest('button[data-piece]');
     if (!b || !peutAgir() || !(phase() === 'deplacer' && monTour())) return;
     agir(b, 'deplacer', { piece: b.dataset.piece });
+  });
+  // Clavier : flèches entre les pièces voisines où l'on peut aller (boutons natifs : Entrée ou Espace pour y aller).
+  refs.plateau.addEventListener('keydown', (ev) => {
+    const b = ev.target.closest?.('button[data-piece]');
+    if (!b || !ev.key.startsWith('Arrow')) return;
+    const voisin = voisinSpatial(ev.key, b, [...refs.plateau.querySelectorAll('button[data-piece]')]);
+    if (voisin) { ev.preventDefault(); voisin.focus({ preventScroll: true }); }
   });
 
   // Image du plateau si elle existe (sinon, le dessin de repli).

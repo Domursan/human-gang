@@ -179,7 +179,8 @@ export async function monter(panel, ctx, jeu) {
     if (jeu === 'carte') {
       const r = RARETES[m.rarete] ? m.rarete : 'commune';
       const flou = fini ? 0 : FLOU[borne(st.erreurs, 0, 5, 0)];
-      return `<div class="nj-scene nj-carte nj-rare-${r}">${media(st.image, 'Carte à deviner', `filter: blur(${flou}px)`)}</div>`;
+      // La rareté est écrite sous la carte : la couleur du cadre ne suffit pas à la donner (daltonisme).
+      return `<div class="nj-scene nj-carte nj-rare-${r}">${media(st.image, 'Carte à deviner', `filter: blur(${flou}px)`)}<p class="nj-rare-nom">Rareté : ${esc(RARETES[r])}</p></div>`;
     }
     if (jeu === 'jv') {
       const z = fini ? 1 : ZOOM[borne(st.erreurs, 0, 5, 0)];

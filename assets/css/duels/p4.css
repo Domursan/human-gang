@@ -12,6 +12,11 @@
 .duels-p4-jeton { position: absolute; inset: 0; border-radius: 50%; box-sizing: border-box;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .35) 0, rgba(255, 255, 255, 0) 45%), var(--p4-jeton, #F2EFEA); }
 
+/* Daltonisme : forme propre à chaque joueur (point au centre pour le rouge, anneau pour le jaune) */
+.duels-p4-jeton[data-j]::after { content: ''; position: absolute; box-sizing: border-box; border-radius: 50%; }
+.duels-p4-jeton[data-j="1"]::after { inset: 36%; background: rgba(14, 20, 48, .6); }
+.duels-p4-jeton[data-j="2"]::after { inset: 28%; border: 3px solid rgba(14, 20, 48, .55); }
+
 /* Chute du dernier jeton (gravité : accélère, sans rebond) */
 .duels-p4-jeton.is-chute { animation: duels-p4-chute .5s cubic-bezier(.55, 0, 1, .45) both; }
 @keyframes duels-p4-chute { from { transform: translateY(calc(var(--rang) * -115%)); } to { transform: none; } }

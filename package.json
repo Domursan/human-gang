@@ -12,7 +12,8 @@
     "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
     "test": "node tests/run-all.cjs",
     "test:a11y": "node tests/a11y-pages.cjs",
-    "test:perf": "node tests/perf-budget.cjs"
+    "test:perf": "node tests/perf-budget.cjs",
+    "test:a11y-mobile": "node tests/a11y-mobile.cjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.1",

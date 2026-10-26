@@ -13,6 +13,7 @@
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
+import { voisinGrille } from '../../grille-clavier.js';
 
 const CROIX = '#6FB3F2';
 const ROND = '#E8B04B';
@@ -86,7 +87,10 @@ export function creer(root, ctx) {
   // provisoire : case que je viens de jouer, affichée tout de suite (avant la réponse du serveur) ;
   // masque : coup du robot reçu en même temps que le mien, montré un instant après (on voit d'abord son propre coup).
   const st = { etat: null, nbManches: null, recap: null, timer: null, dernierVu: '', envoi: false, vivant: true,
-    provisoire: null, masque: null, tMasque: null };
+    provisoire: null, masque: null, tMasque: null,
+    /* curseur : case de la tabulation (une seule, roving tabindex) ; par : cases affichées (index → élément) ;
+       geo : forme de la grille affichée (lignes, colonnes, passage index ↔ ligne/colonne). */
+    curseur: 0, par: new Map(), geo: null };
 
   // Délégation : un seul écouteur sur le plateau, même après les redessins.
   cadre.plateau.addEventListener('click', (ev) => {
@@ -94,6 +98,27 @@ export function creer(root, ctx) {
     if (!b || b.disabled || st.envoi) return;
     jouer(Number(b.dataset.case));
   });
+
+  // Clavier : flèches (et Début, Fin) pour passer d'une case à l'autre, marques comprises ; Entrée ou Espace jouent
+  // la case (bouton natif). Les cases désactivées sont sautées.
+  cadre.plateau.addEventListener('keydown', (ev) => {
+    const cel = ev.target.closest?.('[data-case]');
+    const geo = st.geo;
+    if (!cel || !geo) return;
+    const [r, c] = geo.versRC(Number(cel.dataset.case));
+    const cible = voisinGrille(ev.key, r, c, geo.lignes, geo.colonnes,
+      (rr, cc) => { const el = st.par.get(geo.versI(rr, cc)); return !!el && !el.disabled; });
+    if (!cible) return;
+    ev.preventDefault();
+    allerA(geo.versI(cible[0], cible[1]));
+  });
+
+  /** Place le focus (et le curseur) sur la case i. */
+  function allerA(i) {
+    st.curseur = i;
+    st.par.forEach((el, k) => { el.tabIndex = k === i ? 0 : -1; });
+    st.par.get(i)?.focus();
+  }
 
   /** Envoie un coup. Les cases restent désactivées jusqu'à la mise à jour de l'état (maj). */
   async function jouer(i) {
@@ -190,12 +215,12 @@ export function creer(root, ctx) {
       const estDernier = i === dernier;
       if (i === masque) return `<button type="button" class="morpion-case" data-case="${i}" aria-label="${esc(libelleCase(v, w, i))}" disabled></button>`;
       if (c === '.' && st.envoi && st.provisoire === i && (maMarque === '1' || maMarque === '2')) {
-        return `<span class="morpion-case is-dernier" data-case="${i}" role="img" aria-label="${maMarque === '1' ? 'Croix' : 'Rond'} jouée">${svgMarque(maMarque, true)}</span>`;
+        return `<span class="morpion-case is-dernier" data-case="${i}" tabindex="-1" role="img" aria-label="${maMarque === '1' ? 'Croix' : 'Rond'} jouée">${svgMarque(maMarque, true)}</span>`;
       }
       if (c === '1' || c === '2') {
         const etiquette = `${c === '1' ? 'Croix' : 'Rond'} de ${nomDe(c)}`;
         const point = estDernier && v === 'gomoku' ? '<span class="morpion-point" aria-hidden="true"></span>' : '';
-        return `<span class="morpion-case${estDernier ? ' is-dernier' : ''}" data-case="${i}" role="img" aria-label="${esc(etiquette)}">${svgMarque(c, estDernier && animer)}${point}</span>`;
+        return `<span class="morpion-case${estDernier ? ' is-dernier' : ''}" data-case="${i}" tabindex="-1" role="img" aria-label="${esc(etiquette)}">${svgMarque(c, estDernier && animer)}${point}</span>`;
       }
       const off = jouable(i) ? '' : ' disabled';
       return `<button type="button" class="morpion-case" data-case="${i}" aria-label="${esc(libelleCase(v, w, i))}"${off}></button>`;
@@ -259,7 +284,21 @@ export function creer(root, ctx) {
     const foc = cadre.plateau.contains(document.activeElement) ? document.activeElement.dataset?.case : undefined;
     cadre.plateau.innerHTML = `<div class="morpion-tab is-${v}">${consigne}<div class="morpion-defile"${v === 'gomoku' ? ' tabindex="0" role="region" aria-label="Plateau du gomoku, défilable"' : ''}><div class="morpion-cadre">${corps}<svg class="morpion-barre" hidden aria-hidden="true"></svg></div></div>
       <p class="morpion-legende">${legende}</p>${note}</div>`;
-    if (foc !== undefined) cadre.plateau.querySelector(`button[data-case="${foc}"]:not([disabled])`)?.focus({ preventScroll: true });
+    // Forme de la grille affichée (ultime : 9 × 9 visuel, les petites grilles de 3 × 3 ; sinon w × w) et cases affichées.
+    st.geo = v === 'ultime'
+      ? { lignes: 9, colonnes: 9,
+        versRC: (i) => [Math.floor(Math.floor(i / 9) / 3) * 3 + Math.floor((i % 9) / 3), (Math.floor(i / 9) % 3) * 3 + (i % 9) % 3],
+        versI: (r, c) => (Math.floor(r / 3) * 3 + Math.floor(c / 3)) * 9 + (r % 3) * 3 + (c % 3) }
+      : { lignes: w, colonnes: w, versRC: (i) => [Math.floor(i / w), i % w], versI: (r, c) => r * w + c };
+    st.par = new Map([...cadre.plateau.querySelectorAll('[data-case]')].map((el) => [Number(el.dataset.case), el]));
+    const accessible = (i) => { const el = st.par.get(i); return !!el && !el.disabled; };
+    // Une seule case dans l'ordre de tabulation : le curseur, ou la première case accessible.
+    if (!accessible(st.curseur)) st.curseur = [...st.par.keys()].find(accessible) ?? 0;
+    st.par.forEach((el, k) => { el.tabIndex = k === st.curseur ? 0 : -1; });
+    if (foc !== undefined) {
+      const el = st.par.get(Number(foc));
+      if (el && !el.disabled) el.focus({ preventScroll: true });
+    }
 
     const cadreEl = cadre.plateau.querySelector('.morpion-cadre');
     requestAnimationFrame(() => {

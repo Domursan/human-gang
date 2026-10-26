@@ -19,6 +19,7 @@ import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
 import { boutonReponses } from '../../core/admin-reponses.js';
 import { portraitSvg } from './portrait.js';
+import { voisinSpatial } from '../../grille-clavier.js';
 
 const DELAI_ENVOI = 600;
 const ANNONCE_MS = 6000;
@@ -413,6 +414,11 @@ export function creer(root, ctx) {
   }
   function surTouche(ev) {
     if (ev.key === 'Escape' && st.mode === 'designation') { st.mode = 'normal'; majStatut(); rendre(); }
+    // Flèches entre les cartes de personnages actives (les copies masquées et les cartes désactivées sont sautées).
+    if (ev.key.startsWith('Arrow') && ev.target.closest?.('[data-act="carte"]')) {
+      const voisine = voisinSpatial(ev.key, ev.target, [...root.querySelectorAll('[data-act="carte"]:not(:disabled)')]);
+      if (voisine) { ev.preventDefault(); voisine.focus({ preventScroll: true }); }
+    }
   }
   function surOuverture(ev) {
     if (ev.target.classList?.contains('qec-details')) st.telOuvert = ev.target.open;

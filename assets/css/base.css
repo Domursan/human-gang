@@ -421,6 +421,13 @@ html[data-mode="clair"] {
 html[data-mode="clair"] .btn-light { background: var(--text); color: #FFFFFF; }
 html[data-mode="clair"] .btn-sand { color: #FFFFFF; }
 html[data-mode="clair"] .nav-badge { color: #FFFFFF; }
+/* Sur un fond « sable » (--sand), le texte sombre (#121212) n'a plus assez de contraste en mode clair : --sand y est plus foncé
+   que le sable des modes sombre et daltonien. Texte blanc (≥ 5,9:1 sur ces fonds). Liste des éléments qui posent --sand en fond. */
+html[data-mode="clair"] :is(.nav-me-badge, .lvl-pip.is-on, .champ-chip input:checked + span, .shw-badge, .pv-tag.is-picked, .medal-lvl,
+  .ct-chip[aria-pressed="true"], .vote-btn[aria-pressed="true"], .arc-tire-badge, .qdj-tag, .sol-pave .btn[aria-pressed="true"],
+  .lg-siege-badge, .badge-lvl, .pl-cov, .quiz-secret-tag, .gm-tab[aria-selected="true"], .he-chip[aria-pressed="true"],
+  .sk-chip[aria-pressed="true"], .dls-medaille, .lga-medaille, .ndc-medaille, .una-medaille, .jp-medaille, .jp-pastille,
+  .ndc-paquet-bouton[aria-pressed="true"], .jp-onglet[aria-selected="true"], .sv-ct-tabs [aria-selected="true"]) { color: #FFFFFF; }
 html[data-mode="clair"] .toast { box-shadow: 0 8px 24px rgba(0, 0, 0, .12); }
 html[data-mode="clair"] .fx-neige span { background: #9DB0D6; }
 html[data-mode="clair"] .prefs-dialog { box-shadow: 0 24px 80px rgba(0, 0, 0, .18); }
@@ -468,7 +475,7 @@ html[data-mode="daltonien"] :focus-visible { outline-width: 3px; }
 /* ===== Badges à niveaux : pastilles I, II, III… (badge-levels.js) ===== */
 .lvl-pips { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
 .lvl-pip { min-width: 22px; height: 18px; padding: 0 4px; border-radius: 5px; display: inline-grid; place-items: center;
-  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em;
+  font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em;
   color: var(--muted); border: 1px solid var(--border-strong); background: transparent; }
 .lvl-pip.is-on { color: #121212; background: var(--sand); border-color: var(--sand); }
 .lvl-pip.is-cur { box-shadow: 0 0 0 2px color-mix(in srgb, var(--sand) 35%, transparent); }
@@ -648,6 +655,14 @@ html[data-mode="clair"] .god-dialog { box-shadow: 0 24px 80px rgba(0, 0, 0, .2);
   /* Tactile : pas d'état « survolé » collé après un tap */
   .btn:active:not([disabled]) { filter: brightness(.92); }
   .nav a:active { background: var(--surface-2); }
+}
+/* Doigt (pointer: coarse) : logo d'en-tête à 44 px de haut ; champs de saisie à 16 px au moins
+   (sous 16 px, iOS zoome à la mise au point). Souris : inchangé. */
+@media (pointer: coarse) {
+  .brand { min-height: 44px; }
+  :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=button]):not([type=submit]):not([type=reset]):not([type=color]), select, textarea) {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* ===== Raccourcis clavier (idée Q8) : aide-mémoire et étiquette « g… » ===== */

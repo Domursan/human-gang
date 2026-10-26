@@ -63,7 +63,7 @@
 .idc-logo { width: calc(var(--u) * 9.5); height: calc(var(--u) * 9.5); object-fit: contain; image-rendering: pixelated; }
 .idc-brand { display: flex; flex-direction: column; min-width: 0; }
 .idc-brand-name { font-family: var(--font-display); font-size: calc(var(--u) * 4.2); line-height: 1; letter-spacing: .02em; white-space: nowrap; }
-.idc-brand-sub { font-family: var(--font-pixel); font-weight: 700; font-size: clamp(9px, calc(var(--u) * 2), 13px); letter-spacing: .2em; text-transform: uppercase; color: var(--sand, #E2C77E); margin-top: calc(var(--u) * .8); }
+.idc-brand-sub { font-family: var(--font-pixel); font-weight: 700; font-size: clamp(12px, calc(var(--u) * 2), 13px); letter-spacing: .2em; text-transform: uppercase; color: var(--sand, #E2C77E); margin-top: calc(var(--u) * .8); }
 .idc-no { text-align: right; }
 .idc-no-val { display: block; font-family: var(--font-pixel); font-weight: 700; font-size: calc(var(--u) * 6); line-height: 1; letter-spacing: .06em; }
 
@@ -94,9 +94,9 @@
   background: #1F1F23; box-shadow: 0 0 0 clamp(1.5px, calc(var(--u) * .5), 3px) rgba(226,199,126,.55); overflow: visible; }
 .idc-bdg img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 .idc-bdg-init { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); line-height: 1;
-  font-size: clamp(8px, calc(var(--u) * 2.2), 13px); color: #E2C77E; }
+  font-size: clamp(12px, calc(var(--u) * 2.2), 13px); color: #E2C77E; }
 .idc-bdg-lvl { position: absolute; right: -5px; bottom: -4px; z-index: 1; padding: 1px 3px; border-radius: 3px; background: #E2C77E; color: #121212;
-  font-family: var(--font-pixel); font-weight: 700; font-size: clamp(7px, calc(var(--u) * 1.3), 10px); line-height: 1.2; }
+  font-family: var(--font-pixel); font-weight: 700; font-size: 12px; line-height: 1.2; }
 .idc-bdg-more { width: auto; min-width: clamp(26px, calc(var(--u) * 5.4), 40px); padding: 0 calc(var(--u) * .9); border-radius: 999px; background: rgba(242,239,234,.08);
   box-shadow: inset 0 0 0 1px rgba(242,239,234,.2); font-family: var(--font-pixel); font-weight: 700; font-size: clamp(8px, calc(var(--u) * 1.9), 12px); color: #F2EFEA; }
 
@@ -115,7 +115,7 @@
 .idc-barcode { display: flex; height: calc(var(--u) * 4); max-width: calc(var(--u) * 34); }
 .idc-barcode i { background: rgba(242,239,234,.72); flex-basis: 0; }
 .idc-barcode i.gap { background: transparent; }
-.idc-serial { font-family: var(--font-pixel); font-size: clamp(9px, calc(var(--u) * 1.8), 13px); letter-spacing: .12em; color: #ABA7A0; }
+.idc-serial { font-family: var(--font-pixel); font-size: clamp(12px, calc(var(--u) * 1.8), 13px); letter-spacing: .12em; color: #ABA7A0; }
 
 /* ---------- Calques holographiques ---------- */
 .idc-holo, .idc-glare { pointer-events: none; transition: opacity .4s ease; }
@@ -134,7 +134,7 @@
   .idc-k { font-size: 12px; }
   .idc-logo { width: calc(var(--u) * 15); height: calc(var(--u) * 15); }
   .idc-brand-name { font-size: calc(var(--u) * 7); }
-  .idc-brand-sub { font-size: 11px; margin-top: 4px; }
+  .idc-brand-sub { font-size: 12px; margin-top: 4px; }
   .idc-top { grid-template-columns: auto minmax(0, 1fr); }
   .idc-no { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; text-align: left; }
   .idc-no-val { font-size: calc(var(--u) * 10); }
@@ -154,7 +154,7 @@
   .idc-stats span { font-size: 12px; }
   .idc-chip { width: 34px; height: 26px; }
   .idc-barcode { height: 24px; }
-  .idc-serial { font-size: 11px; }
+  .idc-serial { font-size: 12px; }
 }
 
 /* ---------- Badges ---------- */
@@ -192,7 +192,7 @@
 .badge-img:has(.badge-lvl) { overflow: visible; }
 .badge-img:has(.badge-lvl) img { border-radius: 50%; }
 .badge-lvl { position: absolute; right: -8px; bottom: -6px; min-width: 24px; height: 20px; padding: 0 5px; border-radius: 6px; display: grid; place-items: center;
-  font: 700 11px/1 var(--font-pixel); color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
+  font: 700 12px/1 var(--font-pixel); color: #121212; background: var(--sand); border: 2px solid var(--surface-2); }
 .badge-item .lvl-pips { margin: 2px 0; }
 .badge-item .lvl-name { font-size: 12px; }
 .mb-actions { display: flex; justify-content: center; margin: 0 0 16px; }

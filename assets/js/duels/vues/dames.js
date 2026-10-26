@@ -8,7 +8,7 @@
  *   Quand un chemin peut encore continuer, « Jouer ici » permet de s'arrêter. « Annuler la sélection » reprend tout.
  * Les arrivées viennent de hg_duel_possibles (pendant mon tour seulement). Prise obligatoire : signalée, et les pièces
  *   qui peuvent prendre sont marquées. Pendant une rafle, les pièces sautées sont surlignées.
- * Clavier : flèches vers la prochaine case jouable dans la direction, Entrée ou Espace pour choisir, Échap pour annuler.
+ * Clavier : flèches vers la case la plus proche dans la direction (les arrivées de la sélection d'abord), Entrée ou Espace pour choisir, Échap pour annuler.
  * Dernier coup surligné (départ et arrivée). Une seule case est dans l'ordre de tabulation.
  * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
@@ -17,6 +17,7 @@ import { toast } from '../../core.js';
 import { duel, erreurTexte } from '../api.js';
 import { chargerCss } from '../plateau-commun.js';
 import { creerCadre, nomJoueur } from './commun.js';
+import { voisinSpatial } from '../../grille-clavier.js';
 
 chargerCss('dames');
 
@@ -209,16 +210,6 @@ export function creer(root, ctx) {
     if (departs().has(i)) { st.sel = i; st.trajet = [i]; paint(); }
   }
 
-  /** Clavier : case jouable voisine dans la direction (les cases claires sont sautées). */
-  function voisin(i, dl, dc) {
-    let r = ligne(i) + dl, c = colonne(i) + dc;
-    while (r >= 0 && r < N && c >= 0 && c < N) {
-      const j = r * N + c;
-      if (jouable(j)) return j;
-      r += dl; c += dc;
-    }
-    return i;
-  }
   /** Place le curseur (et le focus) sur une case. */
   function allerA(i) {
     st.curseur = i;
@@ -310,16 +301,19 @@ export function creer(root, ctx) {
     if (ev.target.closest?.('[data-jouer-ici]') && st.sel !== null && etatTrajet().fin) envoyer(st.trajet);
   });
 
-  // Clavier : flèches vers la prochaine case jouable (sens inversé pour les « 2 »), Échap annule la sélection.
+  // Clavier : flèches vers la case la plus proche dans la direction (géométrie de l'écran, donc le sens est juste même
+  // retourné). Pendant une sélection, les flèches visent d'abord les arrivées possibles, qui sont en diagonale.
+  // Entrée ou Espace jouent la case (bouton natif), Échap annule la sélection.
   cadre.plateau.addEventListener('keydown', (ev) => {
     const b = ev.target.closest?.('[data-sq]');
     if (!b) return;
-    const i = Number(b.dataset.sq);
-    const ecart = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] }[ev.key];
-    if (ecart) {
+    if (ev.key.startsWith('Arrow')) {
       ev.preventDefault();
-      const s = st.flip ? -1 : 1;
-      allerA(voisin(i, ecart[0] * s, ecart[1] * s));
+      const toutes = [...el.damier.querySelectorAll('[data-sq]')];
+      const suite = st.sel !== null ? etatTrajet().suite : null;
+      const cible = (suite && suite.size ? voisinSpatial(ev.key, b, toutes.filter((x) => suite.has(Number(x.dataset.sq)))) : null)
+        || voisinSpatial(ev.key, b, toutes);
+      if (cible) allerA(Number(cible.dataset.sq));
       return;
     }
     if (ev.key === 'Escape' && st.sel !== null) { ev.preventDefault(); annuler(); }

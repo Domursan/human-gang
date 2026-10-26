@@ -26,7 +26,7 @@
 .morpion-tab.is-ultime .morpion-case, .morpion-tab.is-gomoku .morpion-case { border-radius: 6px; }
 button.morpion-case { cursor: pointer; }
 button.morpion-case:hover:not(:disabled) { border-color: var(--border-strong); background: #26262C; }
-button.morpion-case:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.morpion-case:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
 button.morpion-case:disabled { cursor: default; }
 .morpion-case.is-dernier { border-color: var(--border-strong); }
 

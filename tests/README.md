@@ -137,6 +137,7 @@ et doit être lancé avec `node tests/<fichier>`.
 | `parcours-vignettes.cjs` | `node tests/parcours-vignettes.cjs` | `test` | Q3 · vignettes des albums : dimensions dans la grille, envoi photo + vignette, « Générer les vignettes manquantes » (admin) |
 | `parcours-collection-hors-ligne.cjs` | `node tests/parcours-collection-hors-ligne.cjs` | `test` | Q4 · collection et carte de membre hors ligne : bandeau daté, onglets grisés, aucune requête, effacement à la déconnexion |
 | `a11y-pages.cjs` | `node tests/a11y-pages.cjs` | `test:a11y` | Q2 · axe-core sur les pages publiques (390 et 1280 px) ; `A11Y_MODE=bloquer` pour bloquer sur les défauts graves |
+| `a11y-mobile.cjs` | `node tests/a11y-mobile.cjs` | `test:a11y-mobile` | Audit tactile de toutes les pages à 360 et 390 px (mode tactile) : défilement horizontal, cibles ≥ 44 px, texte ≥ 12 px, champs ≥ 16 px et type email/tel, meta viewport, encoches (safe-area), menu du haut, fenêtres modales, paysage des jeux (740 × 360). Écrit `tests/shots/a11y-mobile.json` |
 | `perf-budget.cjs` | `node tests/perf-budget.cjs` | `test:perf` | Q3 · budget mobile (LCP, octets, requêtes, CLS) en 4G lente simulée ; seuils dans `perf-budget.json` |
 | `ci-resume.cjs` | `node tests/ci-resume.cjs <dossier>` | CI | Q2 · résumé global de la CI (bilans des 4 morceaux, accessibilité, performance) |
 

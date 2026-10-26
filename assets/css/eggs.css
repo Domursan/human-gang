@@ -469,6 +469,12 @@ html.egg-arc .egg-arc-calque {
   opacity: 1; color: var(--sand); cursor: pointer; text-shadow: 0 0 8px rgba(226, 199, 126, .6);
 }
 .site-footer .lettre-secret:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+/* Doigt : zone tactile de 44 × 44 px pour la lettre, sans la décaler ni déborder de l'écran
+   (marge gauche négative, retrait interne pour que la lettre reste à sa place). */
+@media (pointer: coarse) {
+  .site-footer .lettre-secret { min-width: 44px; min-height: 44px; margin: -11px -4px -11px -20px; padding: 0 0 0 30px;
+    display: inline-flex; align-items: center; justify-content: center; }
+}
 .site-footer .lettre-secret.trouvee { animation: lettre-saut .6s ease-out; }
 @keyframes lettre-saut {
   0% { transform: scale(1); }

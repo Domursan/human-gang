@@ -228,7 +228,10 @@ export function themeVars(colors = {}, mode = getPrefs().mode) {
   if (mode === 'clair') {
     const bg = mix('#F5F2ED', c.accent, 0.025), surface = '#FFFFFF', text = '#1B1A1F', muted = '#57534C';
     const accent = ensureContrast(c.accent, '#FFFFFF', 4.5);
-    const sand = ensureContrast(c.highlight, bg, 4.6);
+    // Les jaunes de texte doivent tenir aussi sur les surfaces, un peu plus sombres que le fond (cartes, pastilles) :
+    // le contraste est calculé contre une surface moyenne (fond + 6 % de texte), pas seulement contre le fond.
+    const plusFonce = mix(bg, text, 0.06);
+    const sand = ensureContrast(c.highlight, plusFonce, 4.8);
     return {
       '--accent': accent, '--accent-text': accentText(accent),
       '--bg': bg, '--surface': surface,
@@ -237,7 +240,7 @@ export function themeVars(colors = {}, mode = getPrefs().mode) {
       '--border-strong': mix(surface, text, 0.26),
       '--text': text, '--muted': muted,
       '--sand': sand,
-      '--amber': ensureContrast(mix(c.highlight, c.accent, 0.3), bg, 4.6),
+      '--amber': ensureContrast(mix(c.highlight, c.accent, 0.3), plusFonce, 4.8),
     };
   }
   let accent = c.accent;

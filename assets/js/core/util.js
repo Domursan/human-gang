@@ -71,6 +71,18 @@ export function daysUntil(d) {
  */
 export function initials(name) { return String(name || '?').trim().slice(0, 2).toUpperCase(); }
 /**
+ * Texte noir ou blanc qui contraste le mieux sur un fond hexadécimal (#rrggbb). Seuil de luminance relative 0,179
+ * (point où le contraste avec le noir et avec le blanc est égal).
+ * @param {string} hex Couleur de fond (#rrggbb).
+ * @returns {string} '#121212' ou '#FFFFFF'.
+ */
+export function texteSur(hex) {
+  const lin = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const L = 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+  return L > 0.179 ? '#121212' : '#FFFFFF';
+}
+/**
  * Avatar d'un membre : son image si elle vient du bucket autorisé, sinon ses initiales sur sa couleur.
  * @param {object} p Profil (pseudo, color, avatar_url).
  * @param {number} [size=40] Taille en pixels (largeur et hauteur).
@@ -79,9 +91,11 @@ export function initials(name) { return String(name || '?').trim().slice(0, 2).t
 export function avatarHtml(p, size = 40) {
   // Vérification à l'affichage (la base impose déjà ces formats, migration 021) :
   // seule une couleur hexadécimale et une image du bucket hg-avatars sont acceptées.
-  const color = /^#[0-9a-f]{6}$/i.test(p?.color || '') ? p.color : 'var(--surface-2)';
+  const hex = /^#[0-9a-f]{6}$/i.test(p?.color || '');
+  const color = hex ? p.color : 'var(--surface-2)';
   const avatarOk = /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/hg-avatars\/[^\s"'<>]+$/i.test(p?.avatar_url || '');
-  const style = `width:${size}px;height:${size}px;background:${esc(color)}`;
+  // Initiales : texte clair ou foncé selon le fond choisi par le membre (contraste WCAG AA, quel que soit le thème).
+  const style = `width:${size}px;height:${size}px;background:${esc(color)}${hex ? `;color:${texteSur(p.color)}` : ''}`;
   return avatarOk
     ? `<img class="avatar" src="${esc(p.avatar_url)}" alt="" style="${style}">`
     : `<span class="avatar" aria-hidden="true" style="${style}">${esc(initials(p?.pseudo))}</span>`;

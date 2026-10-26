@@ -56,6 +56,7 @@
 .nj-rare-epique { --rc: var(--plum); }
 .nj-rare-legendaire { --rc: var(--sand); }
 .nj-rare-mythique { background: conic-gradient(#FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398, #FE3104); }
+.nj-rare-nom { margin: 6px 0 0; padding: 4px 10px; border-radius: 999px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.3; background: var(--surface); color: var(--text); }
 
 /* Jeu vidéo : capture zoomée */
 .nj-jv .nj-media { aspect-ratio: 16 / 9; }

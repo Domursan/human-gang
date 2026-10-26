@@ -16,6 +16,7 @@
 import { toast } from '../../core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
+import { voisinGrille } from '../../grille-clavier.js';
 
 /** Couleur des jetons par place, et leur nom affiché dans la légende. */
 const COULEUR = { 1: '#D93A3F', 2: '#F2B705' };
@@ -48,7 +49,7 @@ export function creer(root, ctx) {
 
   const st = {
     etat: null, w: 0, h: 0, cases: [], boutons: [],
-    version: null, nbHist: null, choix: null, mode: 'pose', regle: false,
+    version: null, nbHist: null, choix: null, mode: 'pose', regle: false, curseur: 0,
     envoi: false, attente: false, overlay: null, chute: null, timers: [],
   };
 
@@ -139,7 +140,8 @@ export function creer(root, ctx) {
       if (cel.dataset.j !== ch) {
         cel.dataset.j = ch;
         const rang = st.chute && st.chute.i === i ? st.chute.rang : 0;
-        cel.innerHTML = ch ? `<i class="duels-p4-jeton${rang ? ' is-chute' : ''}" style="--p4-jeton:${COULEUR[ch]};--rang:${rang}"></i>` : '';
+        // data-j : le jeton porte aussi une forme (point pour le rouge, anneau pour le jaune), pas seulement sa couleur.
+        cel.innerHTML = ch ? `<i class="duels-p4-jeton${rang ? ' is-chute' : ''}" data-j="${ch}" style="--p4-jeton:${COULEUR[ch]};--rang:${rang}"></i>` : '';
       }
       cel.classList.toggle('is-gagnante', gagnantes.has(i));
     });
@@ -157,6 +159,12 @@ export function creer(root, ctx) {
       if (surOrdi) b.removeAttribute('aria-pressed');
       else b.setAttribute('aria-pressed', String(st.choix === c));
     });
+    // Une seule colonne dans l'ordre de tabulation (roving tabindex) : la colonne courante, ou la première jouable.
+    if (st.boutons[st.curseur]?.disabled) {
+      const premiere = st.boutons.findIndex((b) => !b.disabled);
+      if (premiere >= 0) st.curseur = premiere;
+    }
+    st.boutons.forEach((b, c) => { b.tabIndex = c === st.curseur ? 0 : -1; });
 
     const js = e.joueurs || [];
     const legende = (pl) => {
@@ -199,6 +207,20 @@ export function creer(root, ctx) {
       st.choix = null;
       peindre();
     }
+  });
+
+  // Clavier : flèches gauche et droite entre les colonnes jouables (Début et Fin aussi), Entrée ou Espace jouent ou
+  // sélectionnent la colonne (boutons natifs). Échap annule la colonne choisie sur téléphone.
+  cadre.plateau.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && st.choix !== null) { ev.preventDefault(); st.choix = null; peindre(); return; }
+    const col = ev.target.closest?.('[data-col]');
+    if (!col) return;
+    const cible = voisinGrille(ev.key, 0, Number(col.dataset.col), 1, st.w, (_, k) => !st.boutons[k]?.disabled);
+    if (!cible) return;
+    ev.preventDefault();
+    st.curseur = cible[1];
+    st.boutons[cible[1]].focus();
+    peindre();
   });
 
   return {

@@ -48,7 +48,7 @@
 @media (max-width: 760px) {
   .cal-head { padding: 28px 0 16px; }
   .cal-today { display: none; }
-  .cal-dow, .cal-row { gap: 4px; }
+  .cal-dow, .cal-row { gap: 3px; }
   .cal-grid { gap: 4px; }
   .cal-cell { min-height: 54px; align-items: center; padding: 6px 2px; border-radius: 10px; }
   .cal-num { font-size: 13px; }

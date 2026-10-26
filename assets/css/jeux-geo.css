@@ -4,7 +4,7 @@
 .geo-photo { position: relative; margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); }
 .geo-photo-btn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .geo-photo img { display: block; width: 100%; height: clamp(180px, 42vw, 420px); object-fit: cover; background: var(--surface-2); }
-.geo-photo-tag { position: absolute; left: 10px; top: 10px; background: rgba(14, 14, 16, .85); color: var(--text); font-size: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none; }
+.geo-photo-tag { position: absolute; left: 10px; top: 10px; background: rgba(14, 14, 16, .85); color: #F2EFEA; font-size: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none; }
 
 /* Carte et vote */
 .geo-play { display: flex; flex-direction: column; gap: 12px; }

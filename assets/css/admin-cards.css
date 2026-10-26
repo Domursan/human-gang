@@ -179,7 +179,7 @@
 .cart-scr img { position: absolute; left: 40px; top: 8px; width: 68px; height: 68px; image-rendering: pixelated; }
 .cart-lbl1 { position: absolute; left: 22px; top: 128px; width: 176px; margin: 0; text-align: center; font-size: 16px; font-weight: 700;
   letter-spacing: .12em; line-height: 1; color: #fff; }
-.cart-lbl2 { position: absolute; left: 22px; top: 150px; width: 176px; margin: 0; text-align: center; font-size: 9.5px; letter-spacing: .2em;
+.cart-lbl2 { position: absolute; left: 22px; top: 150px; width: 176px; margin: 0; text-align: center; font-size: 12px; letter-spacing: .2em;
   line-height: 1.2; color: #FBD32D; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-stripe { position: absolute; left: 22px; top: 186px; width: 176px; height: 8px; display: flex; }
 .cart-stripe i { flex: 1; display: block; }
@@ -190,7 +190,7 @@
 .cart-stripe i:nth-child(5) { background: #2B5AE2; }
 .cart-stripe i:nth-child(6) { background: #4E2398; }
 .cart-ridge { position: absolute; left: 30px; top: 206px; width: 160px; height: 38px; background: repeating-linear-gradient(90deg, #15131c 0 4px, #4a4658 4px 8px); }
-.cart-foot { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 11px; letter-spacing: .2em; color: #b7b0c4; }
+.cart-foot { position: absolute; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 12px; letter-spacing: .2em; color: #b7b0c4; }
 
 /* Liste des types */
 .abt { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

@@ -18,6 +18,7 @@ import { plat, erreurTexte } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, estMonTour, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauSvg, RESSOURCES, nomTuile } from './plateau.js';
+import { voisinSpatial } from '../../../grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const RES = ['bois', 'argile', 'ble', 'mouton', 'pierre'];
@@ -593,6 +594,12 @@ export function creer(root, ctx) {
     if ((ev.key === 'Enter' || ev.key === ' ') && cible && refs.plateau.contains(cible)) {
       ev.preventDefault();
       cliquerPlateau(cible);
+      return;
+    }
+    // Flèches : la cible cliquable la plus proche dans la direction (sommets, routes et tuiles mêlés).
+    if (ev.key.startsWith('Arrow') && cible && refs.plateau.contains(cible)) {
+      const voisine = voisinSpatial(ev.key, cible, [...refs.plateau.querySelectorAll('[data-sommet],[data-arete],[data-hexe]')]);
+      if (voisine) { ev.preventDefault(); voisine.focus({ preventScroll: true }); }
     }
   }
 
