@@ -109,3 +109,75 @@
   .ng-pills { gap: 6px; }
   .ng-pill { padding: 0 10px; }
 }
+
+/* Anagramme : cinq cartes de mots (définition, cases de réponse, tuiles, actions) */
+.ang-liste { display: flex; flex-direction: column; gap: 12px; }
+.ang-mot { display: flex; flex-direction: column; gap: 10px; padding: 12px; min-width: 0; border-radius: 14px; border: 1px solid var(--border);
+  background: var(--surface-2); transition: border-color .15s, background-color .15s; }
+.ang-mot.is-actif { border-color: var(--sand); box-shadow: inset 0 0 0 1px var(--sand); }
+.ang-mot.is-trouve { border-color: var(--sage); }
+.ang-mot.is-passe { border-color: var(--border-strong); }
+.ang-mot.is-secoue { border-color: var(--rust); }
+@media (prefers-reduced-motion: no-preference) { .ang-mot.is-secoue { animation: ang-secoue .42s ease-in-out; } }
+@keyframes ang-secoue { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+.ang-entete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.ang-entete .ng-label { margin: 0; }
+.ang-statut { font-family: 'Silkscreen', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.ang-mot.is-trouve .ang-statut { color: var(--sage-text); }
+.ang-def { margin: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.ang-def-t { display: block; font-family: 'Silkscreen', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.ang-mot-revele { margin: 0; font-family: var(--font-display); font-size: clamp(20px, 5vw, 26px); letter-spacing: .08em; overflow-wrap: anywhere; color: var(--text); }
+.ang-cases, .ang-tuiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.ang-case { display: inline-grid; place-items: center; min-width: 40px; height: 44px; flex: 0 0 auto; border-radius: 10px; border: 1px dashed var(--border-strong);
+  background: transparent; color: var(--text); font: inherit; font-weight: 700; font-size: 18px; }
+.ang-case.is-pleine { border: 1px solid var(--sand); background: color-mix(in srgb, var(--sand) 18%, transparent); cursor: pointer; }
+.ang-tuile { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; flex: 0 0 auto; padding: 0 6px; border-radius: 12px; border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text); font: inherit; font-weight: 700; font-size: 18px; cursor: pointer; }
+.ang-tuile.is-posee { opacity: .3; cursor: default; }
+.ang-tuile:focus-visible, .ang-case:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.ang-aide-mot { margin: 0; text-align: center; }
+.ang-mot .ng-actions { justify-content: center; }
+.ang-mot .ng-actions .btn { flex: 1 1 110px; }
+.ang-mot .btn:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+
+/* Mots croisés : grille carrée (jusqu'à 9 × 9), définitions, saisie cachée */
+.mc { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.mc-rappel { margin: 0; min-height: 1.4em; font-size: 14px; color: var(--text); text-align: center; overflow-wrap: anywhere; }
+.mc-zone { position: relative; min-width: 0; }
+.mc-saisie { position: absolute; left: 0; top: 0; width: 1px; height: 1px; padding: 0; border: 0; opacity: 0; font-size: 16px; color: transparent; background: transparent; }
+.mc-grille { display: grid; grid-template-columns: repeat(var(--w, 9), minmax(0, 1fr)); gap: 3px; width: 100%; max-width: 520px; margin: 0 auto; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+.mc-case { position: relative; min-width: 0; aspect-ratio: 1 / 1; display: grid; place-items: center; border-radius: 6px; border: 1px solid var(--border-strong);
+  background: var(--surface-2); color: var(--text); cursor: pointer; }
+.mc-case.is-noire { background: var(--bg); border-color: var(--bg); cursor: default; }
+.mc-num { position: absolute; top: 1px; left: 3px; font-size: clamp(8px, 2.2vw, 10px); line-height: 1; color: var(--muted); }
+.mc-lettre { font-weight: 700; font-size: clamp(14px, 4.2vw, 24px); line-height: 1; }
+.mc-case.is-mot { background: color-mix(in srgb, var(--sand) 22%, var(--surface-2)); }
+.mc-case.is-pos { background: var(--sand); border-color: var(--sand); color: #0E0E10; }
+.mc-case.is-pos .mc-num { color: #0E0E10; }
+.mc-case.is-faux { background: #B5423A; border-color: #B5423A; color: #fff; }
+.mc-case.is-faux .mc-num { color: #fff; }
+.mc-zone:focus-within .mc-case.is-pos { outline: 2px solid var(--text); outline-offset: 1px; }
+.mc-defs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 640px) { .mc-defs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.mc-col { min-width: 0; }
+.mc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.mc-def { width: 100%; min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: var(--text); font: inherit; font-size: 14px; line-height: 1.3; text-align: left; cursor: pointer; }
+.mc-def:hover { background: var(--surface-2); }
+.mc-def.is-actif { background: color-mix(in srgb, var(--sand) 18%, transparent); border-color: var(--sand); }
+.mc-def:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.mc-def-ligne { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px; font-size: 14px; line-height: 1.3; }
+.mc-def-n { flex: none; min-width: 22px; font-weight: 700; color: var(--sand); font-variant-numeric: tabular-nums; }
+.mc-def-t { min-width: 0; overflow-wrap: anywhere; }
+.mc-def-l { flex: none; margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mc-progres { margin: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.mc .ng-actions { justify-content: center; }
+.mc .ng-actions .btn { flex: 0 1 220px; }
+
+@media (max-width: 400px) {
+  .ang-mot { padding: 10px; }
+  .ang-case { min-width: 36px; height: 40px; font-size: 16px; }
+  .ang-tuile { min-width: 40px; min-height: 44px; font-size: 16px; }
+  .ang-cases, .ang-tuiles { gap: 5px; }
+}

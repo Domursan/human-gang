@@ -1,4 +1,4 @@
-// Faux client Supabase des grilles du jour (migration 140) : Connexions, Mot mêlé, Nerdle du gang. Enveloppe un faux existant
+// Faux client Supabase des grilles du jour (migration 140) : Connexions, Mot mêlé, Nerdle du gang, Anagramme, Mots croisés. Enveloppe un faux existant
 // (fake-sb.mjs par défaut, ou window.__SCN.jeuxBase) chargé depuis le site de test, et répond aux RPC hg_nj_grille_etat et
 // hg_nj_grille_essai avec un état en mémoire (window.__NG). Les autres appels passent au faux de base.
 // Scénario (window.__SCN) : noGrille (pas de grille aujourd'hui), jeuxBase.
@@ -49,11 +49,48 @@ const MM = (() => {
 /* ---------- Contenu : Nerdle (calcul de 8 caractères) ---------- */
 const NERDLE_SOL = '12+35=47';
 
+/* ---------- Contenu : Anagramme (cinq mots ; lettres mélangées à la main, définitions neutres) ---------- */
+const ANA = [
+  { mot: 'MAISON', lettres: 'NISAOM', def: 'Lieu où l’on vit en famille' },
+  { mot: 'CHOCOLAT', lettres: 'TOCALOCH', def: 'Gourmandise brune faite à partir de cacao' },
+  { mot: 'PARAPLUIE', lettres: 'IUPRAPELA', def: 'Il protège de la pluie' },
+  { mot: 'TABLE', lettres: 'ELBAT', def: 'Meuble sur lequel on pose les assiettes' },
+  { mot: 'LUNETTES', lettres: 'TESLNUTE', def: 'Elles corrigent la vue' },
+].map((m) => ({ ...m, n: m.mot.length }));
+
+/* ---------- Contenu : Mots croisés (9 × 9 : lignes paires pleines, colonnes paires pleines ; lettres de test) ---------- */
+const MC_W = 9, MC_H = 9;
+const MC_MOTIF = Array.from({ length: MC_H }, (_, r) => (r % 2 === 0 ? '#########' : '#.#.#.#.#'));
+/** Solution à plat (une lettre ou « . » par case), comme la colonne secret.solution du serveur. */
+const MC_SOL = Array.from({ length: MC_H * MC_W }, (_, q) => {
+  const r = Math.floor(q / MC_W), c = q % MC_W;
+  return MC_MOTIF[r][c] === '#' ? 'ABCDEFGHIJKLMNOPRSTUVWXY'[(r * 7 + c * 3) % 24] : '.';
+});
+const mcBlanche = (r, c) => r >= 0 && r < MC_H && c >= 0 && c < MC_W && MC_MOTIF[r][c] === '#';
+/** Vue publique : numéros et définitions calculés comme le fait la migration (mots de deux lettres ou plus, lecture ligne par ligne). */
+const MC_PUB = (() => {
+  const numeros = [], defs = { h: [], v: [] };
+  let n = 0;
+  for (let r = 0; r < MC_H; r++) for (let c = 0; c < MC_W; c++) {
+    if (!mcBlanche(r, c)) continue;
+    const debutH = !mcBlanche(r, c - 1) && mcBlanche(r, c + 1);
+    const debutV = !mcBlanche(r - 1, c) && mcBlanche(r + 1, c);
+    if (!debutH && !debutV) continue;
+    n++;
+    numeros.push([r, c, n]);
+    if (debutH) { let len = 0; while (mcBlanche(r, c + len)) len++; defs.h.push({ n, r, c, len, def: `Définition de test ${n}` }); }
+    if (debutV) { let len = 0; while (mcBlanche(r + len, c)) len++; defs.v.push({ n, r, c, len, def: `Définition de test ${n}` }); }
+  }
+  return { w: MC_W, h: MC_H, motif: MC_MOTIF, numeros, defs };
+})();
+
 /** Parties en mémoire : une par jeu. */
 const J = window.__NG = {
   connexions: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, essais: [], trouves: [] },
   motmele: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, trouves: [] },
   nerdle: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, essais: [] },
+  anagramme: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null, mots: {} },
+  motscroises: { debut: null, fini: false, gagne: false, erreurs: 0, score: 0, secondes: null, reward: null },
 };
 const BOARD = (jeu) => ({
   semaine: [{ user_id: U(2), pseudo: 'Alice', color: '#D97757', points: 14, wins: 3 }, { user_id: ME, pseudo: 'Ethan', color: '#4F6A8F', points: 9, wins: 2 }],
@@ -68,6 +105,8 @@ function grilleVue(jeu) {
     const trouves = Object.fromEntries(g.trouves.map((m) => [m, MM.positions[m]]));
     return { theme: MM.theme, taille: T, grille: MM.lignes, mots: Object.keys(MM.positions).sort(), trouves };
   }
+  if (jeu === 'anagramme') return { mots: ANA.map(({ lettres, def, n }) => ({ lettres, def, n })) };
+  if (jeu === 'motscroises') return MC_PUB;
   return { longueur: 8 };
 }
 
@@ -75,12 +114,19 @@ function grilleVue(jeu) {
 function etat(jeu) {
   const g = J[jeu];
   if (S.noGrille) return { jeu, day: today, grille: null, board: BOARD(jeu) };
+  const etatPartie = { connexions: { essais: g.essais, trouves: g.trouves }, motmele: { trouves: g.trouves }, anagramme: { mots: g.mots }, motscroises: {} }[jeu] || { essais: g.essais };
   const partie = g.debut ? {
-    etat: jeu === 'connexions' ? { essais: g.essais, trouves: g.trouves } : jeu === 'motmele' ? { trouves: g.trouves } : { essais: g.essais },
+    etat: etatPartie,
     erreurs: g.erreurs, fini: g.fini, gagne: g.gagne, score: g.score, secondes: g.secondes, debut: g.debut, reward: g.reward,
   } : null;
   const out = { jeu, day: today, numero: 16, grille: grilleVue(jeu), partie, gain: 10, board: BOARD(jeu) };
-  if (g.fini) out.solution = jeu === 'connexions' ? { groupes: CONNEXIONS.groupes } : jeu === 'motmele' ? { positions: MM.positions } : { calcul: NERDLE_SOL };
+  if (g.fini) {
+    out.solution = jeu === 'connexions' ? { groupes: CONNEXIONS.groupes }
+      : jeu === 'motmele' ? { positions: MM.positions }
+        : jeu === 'anagramme' ? { mots: ANA.map(({ mot, def }) => ({ mot, def })) }
+          : jeu === 'motscroises' ? { solution: MC_SOL }
+            : { calcul: NERDLE_SOL };
+  }
   return out;
 }
 
@@ -193,14 +239,66 @@ function essaiNerdle(p) {
   return ok({ resultat: { ok: calcul === NERDLE_SOL, couleurs: couls }, etat: etat('nerdle') });
 }
 
+function essaiAnagramme(p) {
+  const g = J.anagramme;
+  if (S.noGrille) return err('Pas de grille aujourd’hui.');
+  if (g.fini) return err('Tu as déjà terminé la grille du jour. Reviens demain !');
+  const i = Number(p.i);
+  if (!Number.isInteger(i) || i < 0 || i >= ANA.length) return err('Mot inconnu.');
+  if (g.mots[i]) return err('Déjà joué.');
+  demarre('anagramme');
+  let res;
+  if (p.passer) {
+    g.mots[i] = 'passe';
+    res = { ok: false, passe: true, mot: ANA[i].mot };
+  } else if (String(p.mot || '').toUpperCase() === ANA[i].mot) {
+    g.mots[i] = 'trouve';
+    res = { ok: true, mot: ANA[i].mot };
+  } else {
+    g.erreurs++;
+    res = { ok: false };
+  }
+  if (Object.keys(g.mots).length === ANA.length) {
+    const score = Object.values(g.mots).filter((v) => v === 'trouve').length;
+    termine('anagramme', score === ANA.length, score);
+  }
+  return ok({ resultat: res, etat: etat('anagramme') });
+}
+
+function essaiMotscroises(p) {
+  const g = J.motscroises;
+  if (S.noGrille) return err('Pas de grille aujourd’hui.');
+  if (g.fini) return err('Tu as déjà terminé la grille du jour. Reviens demain !');
+  const lignes = Array.isArray(p.lignes) ? p.lignes : null;
+  if (!lignes || lignes.length !== MC_H) return err('Grille incomplète.');
+  const lu = lignes.map((l) => String(l).padEnd(MC_W, ' ').slice(0, MC_W).toUpperCase()).join('');
+  const sol = MC_SOL.join('');
+  if (lu.length !== sol.length) return err('Grille incomplète.');
+  demarre('motscroises');
+  const verifier = !!p.verifier;
+  // Même règle que le serveur : une case remplie fausse compte ; une case vide compte seulement avec « Vérifier ».
+  const faux = [];
+  for (let q = 0; q < sol.length; q++) {
+    if (sol[q] !== '.' && lu[q] !== sol[q] && (verifier || lu[q] !== ' ')) faux.push(q);
+  }
+  if (!faux.length && !lu.includes(' ')) {
+    termine('motscroises', true, Math.max(1, 5 - g.erreurs));
+    return ok({ resultat: { ok: true }, etat: etat('motscroises') });
+  }
+  if (verifier) g.erreurs++;
+  return ok({ resultat: { ok: false, faux }, etat: etat('motscroises') });
+}
+
 /* ---------- RPC ---------- */
-const JEU_OK = (p) => ['connexions', 'motmele', 'nerdle'].includes(p);
+const JEU_OK = (p) => ['connexions', 'motmele', 'nerdle', 'anagramme', 'motscroises'].includes(p);
 const HANDLERS = {
   hg_nj_grille_etat: (a) => (JEU_OK(a.p_jeu) ? ok(etat(a.p_jeu)) : err('Jeu inconnu')),
   hg_nj_grille_essai: (a) => {
     if (!JEU_OK(a.p_jeu)) return err('Jeu inconnu');
     if (a.p_jeu === 'connexions') return essaiConnexions(a.p || {});
     if (a.p_jeu === 'motmele') return essaiMotmele(a.p || {});
+    if (a.p_jeu === 'anagramme') return essaiAnagramme(a.p || {});
+    if (a.p_jeu === 'motscroises') return essaiMotscroises(a.p || {});
     return essaiNerdle(a.p || {});
   },
 };
