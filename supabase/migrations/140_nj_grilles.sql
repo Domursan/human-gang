@@ -401,8 +401,8 @@ begin
     sol := (select string_agg(l, '' order by o) from jsonb_array_elements_text(g.secret->'solution') with ordinality x(l, o));
     lu := upper(coalesce((select string_agg(rpad(l, (g.public->>'w')::int), '' order by o) from jsonb_array_elements_text(p->'lignes') with ordinality x(l, o)), ''));
     if char_length(lu) <> char_length(sol) then raise exception 'Grille incomplète.'; end if;
-    faux := coalesce((select jsonb_agg(k - 1) from generate_series(1, char_length(sol)) k
-      where substr(sol, k, 1) <> '.' and substr(lu, k, 1) <> substr(sol, k, 1) and (coalesce((p->>'verifier')::boolean, false) or substr(lu, k, 1) <> ' ')), '[]'::jsonb);
+    faux := coalesce((select jsonb_agg(q - 1) from generate_series(1, char_length(sol)) q
+      where substr(sol, q, 1) <> '.' and substr(lu, q, 1) <> substr(sol, q, 1) and (coalesce((p->>'verifier')::boolean, false) or substr(lu, q, 1) <> ' ')), '[]'::jsonb);
     if jsonb_array_length(faux) = 0 and position(' ' in translate(lu, '.', '')) = 0 then
       pa.fini := true; pa.gagne := true; pa.score := greatest(1, 5 - pa.erreurs); res := jsonb_build_object('ok', true);
     else

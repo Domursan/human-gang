@@ -11,3 +11,4 @@ supabase/migrations/142_duels_correctif.sql
 supabase/migrations/143_plateaux_cartes.sql
 supabase/migrations/144_catan.sql
 supabase/migrations/145_pictionary.sql
+supabase/migrations/146_grilles_correctif.sql
