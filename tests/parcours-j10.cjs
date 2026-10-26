@@ -1,7 +1,7 @@
 // Parcours J10 : Heardle du gang (jeux.html#heardle), avec un lecteur YouTube simulé (aucun appel à YouTube).
 // 1 s au départ ; « Écouter » lance le lecteur au bon instant et l'arrête à la durée débloquée ; « Passer » débloque 2 s ;
 // une erreur débloque 4 s ; deviner au 3e essai ; fin : morceau et « proposé par » dévoilés ; proposer un morceau ;
-// manche annulée ; 360 px sans défilement horizontal ; aucune erreur JS. Faux Supabase : fixtures/fake-sb-jeux3.mjs.
+// manche annulée ; vidéo refusée par YouTube signalée au serveur ; 360 px sans défilement horizontal ; aucune erreur JS. Faux Supabase : fixtures/fake-sb-jeux3.mjs.
 const { check, finish, openPage, hscroll, log, sleep, chromium } = require('./lib/harness.cjs');
 
 /** Lecteur YouTube simulé : note les appels dans window.__YT. */
@@ -94,6 +94,16 @@ const FAKE_YT = () => {
   p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#heardle', width: 390, init: () => { try { localStorage.setItem('hg_heardle_volume', '25'); } catch { /* stockage bloqué */ } } });
   check((await p.locator('#jh-vol').inputValue()) === '25' && (await p.locator('#jh-vol-val').innerText()) === '25', 'volume : 25 mémorisé relu à l\'ouverture');
   check((await hscroll(p)) <= 0, '390 px avec curseur : pas de défilement horizontal');
+  await p.ctx.close();
+  // Vidéo que YouTube refuse de lire dans le site (code 150) : le morceau est signalé au serveur (hg_heardle_signaler)
+  p = await openPage(browser, { page: 'jeux', fixture: 'fake-sb-jeux3.mjs', hash: '#heardle', width: 390 });
+  await p.evaluate(() => { window.__HG_FAKE_YT = { Player: class { constructor(el, o) { setTimeout(() => o.events.onError({ data: 150 }), 10); } } }; });
+  await p.waitForSelector('#jh-play', { timeout: 5000 }).catch(() => {});
+  await p.click('#jh-play');
+  await sleep(800);
+  const sig = (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_heardle_signaler');
+  check(sig.length === 1 && sig[0][2].p_code === 150, 'vidéo bloquée (code 150) : signalée une fois au serveur');
+  check(p.errs.length === 0, 'vidéo bloquée : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
   await browser.close();
   finish();

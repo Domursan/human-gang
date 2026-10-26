@@ -5,7 +5,7 @@
  * Lecteur : API iframe YouTube chargée à la demande, domaine youtube-nocookie, vidéo cachée derrière une pochette
  * dessinée jusqu'à la fin. Les tests remplacent le lecteur par window.__HG_FAKE_YT (aucun appel à YouTube).
  * Les membres peuvent proposer un morceau (le Staff « souvenirs » valide).
- * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose. Exporte : mount(panel, ctx), unmount().
+ * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose, hg_heardle_signaler (vidéo qui ne se lit plus). Exporte : mount(panel, ctx), unmount().
  */
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
 import { boutonReponses } from '../core/admin-reponses.js';
@@ -91,10 +91,32 @@ async function ensurePlayer() {
     S.player = new YT.Player('jh-player', {
       host: 'https://www.youtube-nocookie.com', videoId: st.youtube_id, width: '100%', height: '100%',
       playerVars: { start: st.start_s, controls: 0, disablekb: 1, modestbranding: 1, playsinline: 1, rel: 0, fs: 0, iv_load_policy: 3 },
-      events: { onReady: () => { S.ready = true; appliquerVolume(S.player); res(); }, onError: () => { C.toast('Cette vidéo ne se lit pas : préviens le Staff.', 'error'); res(); } },
+      events: { onReady: () => { S.ready = true; appliquerVolume(S.player); res(); }, onError: (e) => { res(); videoBloquee(e?.data); } },
     });
   });
   return S.player;
+}
+
+/**
+ * La vidéo ne se lit pas. Codes YouTube 100 (vidéo introuvable), 101 / 150 / 153 (lecture intégrée refusée) : le
+ * morceau ne marchera pour personne, on le signale (hg_heardle_signaler, migration 135) ; le serveur met un autre
+ * morceau à la place si personne n'a encore joué aujourd'hui, sinon il annule la manche. Autres codes : problème
+ * de ce navigateur (réseau, extension…), on le dit simplement.
+ * @param {number|undefined} code code d'erreur du lecteur YouTube
+ */
+async function videoBloquee(code) {
+  stop();
+  if (![100, 101, 150, 153].includes(Number(code))) { C.toast('Cette vidéo ne se lit pas sur cet appareil. Réessaie un peu plus tard.', 'error'); return; }
+  try {
+    const { data, error } = await C.sb.rpc('hg_heardle_signaler', { p_code: Number(code) });
+    if (error) throw error;
+    if (data?.action === 'remplacee') C.toast('Ce morceau ne se lit plus sur YouTube : il est remplacé par un autre. Bonne chance !', 'success');
+    else if (data?.action === 'annulee') C.toast('Ce morceau ne se lit plus sur YouTube : la manche du jour est annulée.', 'error');
+    else C.toast('Cette vidéo ne se lit pas : préviens le Staff.', 'error');
+    if (data?.ok) await load();
+  } catch {
+    C.toast('Cette vidéo ne se lit pas : préviens le Staff.', 'error');
+  }
 }
 
 /** Arrête la lecture et le compteur. */
