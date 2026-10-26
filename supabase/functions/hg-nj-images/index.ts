@@ -23,7 +23,7 @@ const jsonResponse = (body: unknown, status = 200) => new Response(JSON.stringif
 const RESERVES = 'https://raw.githubusercontent.com/Domursan/human-gang/main/outils/nj/reserves/';
 const FICHIERS: Record<string, string> = { jv: 'jv.json', pays: 'pays.json', plat: 'plats.json', pochette: 'pochettes.json', replique: 'repliques.json' };
 /** Contenus des grilles du jour (migration 140), chargés par hg_nj_contenu_lot. */
-const CONTENUS: Record<string, string> = { connexions: 'connexions.json', motmele: 'mot-mele.json', dico: 'dico.json', motscroises: 'mots-croises.json' };
+const CONTENUS: Record<string, string> = { connexions: 'connexions.json', motmele: 'mot-mele.json', dico: 'dico.json', motscroises: 'mots-croises.json', pictionary: 'pictionary.json' };
 const BUCKET = 'hg-nj';
 const UA = 'HumaneGang/1.0 (+https://humane-gang.com; jeux du jour)';
 /** Taille maximale d'une image téléchargée. */
