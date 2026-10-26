@@ -462,7 +462,7 @@ returns text language sql stable set search_path = public as $$
 
 create or replace function public.hg_duel__appliquer2(p_id uuid, p_user uuid, p_coup int, p_action text, p_auto boolean default false)
 returns void language plpgsql security definer set search_path = public as $$
-declare p hg_duel_parties; c text; o text; v_autre uuid; g text; res jsonb; ok boolean; v_texte text; ec jsonb; s text; de int; a int; pr text;
+declare p hg_duel_parties; c text; o text; v_autre uuid; g text; res jsonb; ok boolean; v_texte text; ec jsonb; s text; v_de int; v_a int; pr text;
   cs text[]; n1 int; n2 int; nom text; coups_adv int; calme int;
 begin
   select * into p from hg_duel_parties where id = p_id for update;
@@ -508,16 +508,16 @@ begin
     ec := coalesce(p.etat->'echecs', '{}'::jsonb);
     s := (case c when '1' then 'w' else 'b' end);
     if p_coup is null then raise exception 'Coup invalide.'; end if;
-    de := p_coup / 64; a := p_coup % 64; pr := case when p_action in ('q', 'r', 'b', 'n') then p_action else '' end;
+    v_de := p_coup / 64; v_a := p_coup % 64; pr := case when p_action in ('q', 'r', 'b', 'n') then p_action else '' end;
     if not exists (select 1 from hg_ec__coups(p.grille, s, coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1)) m
-                   where m.de = de and m.a = a and (m.promo = pr or (m.promo = 'q' and pr = ''))) then
+                   where m.de = v_de and m.a = v_a and (m.promo = pr or (m.promo = 'q' and pr = ''))) then
       raise exception 'Coup impossible.';
     end if;
-    if pr = '' and upper(substr(p.grille, de + 1, 1)) = 'P' and (a / 8 = 0 or a / 8 = 7) then pr := 'q'; end if;
-    g := hg_ec__appliquer(p.grille, de, a, pr, coalesce((ec->>'ep')::int, -1));
-    ec := ec || hg_ec__suite(p.grille, de, a, coalesce(ec->>'roque', ''), coalesce((ec->>'demi')::int, 0));
+    if pr = '' and upper(substr(p.grille, v_de + 1, 1)) = 'P' and (v_a / 8 = 0 or v_a / 8 = 7) then pr := 'q'; end if;
+    g := hg_ec__appliquer(p.grille, v_de, v_a, pr, coalesce((ec->>'ep')::int, -1));
+    ec := ec || hg_ec__suite(p.grille, v_de, v_a, coalesce(ec->>'roque', ''), coalesce((ec->>'demi')::int, 0));
     update hg_duel_parties set etat = jsonb_set(etat, '{echecs}', ec, true) where id = p_id;
-    v_texte := nom || ' joue ' || chr(97 + de % 8) || (8 - de / 8) || '-' || chr(97 + a % 8) || (8 - a / 8)
+    v_texte := nom || ' joue ' || chr(97 + v_de % 8) || (8 - v_de / 8) || '-' || chr(97 + v_a % 8) || (8 - v_a / 8)
       || case when pr <> '' then ' (promotion)' else '' end || '.';
   end if;
 

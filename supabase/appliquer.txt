@@ -7,3 +7,4 @@ supabase/migrations/141_duels_nouveaux.sql
 # relance 141 (2)
 # relance 141 (3)
 # relance 141 (4)
+supabase/migrations/142_duels_correctif.sql
