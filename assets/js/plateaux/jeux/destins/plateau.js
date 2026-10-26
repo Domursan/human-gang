@@ -18,12 +18,15 @@ const LARGEUR = 640;
 const HAUTEUR = 560;
 
 /* Polylignes du tracé, en repère 640 × 560. Chaque segment part du point de jonction (exclu de l'échantillon). */
-const UNIVERSITE = [[60, 90], [120, 30], [250, 30], [330, 30], [410, 90]];   // 10 cases : indices 1 à 10
-const CARRIERE = [[60, 90], [120, 150], [250, 150], [330, 150], [410, 150]];  // 10 cases : indices 11 à 20
-const MAIN = [[410, 150], [480, 110], [560, 190], [500, 250], [420, 260], [340, 250], [260, 300], [180, 330], [90, 300], [60, 200]]; // 31 : 21 à 51
-const FAMILLE = [[60, 200], [70, 300], [160, 400], [300, 460], [420, 430]];   // 10 : 52 à 61
-const AVENTURE = [[60, 200], [200, 500], [360, 520], [520, 470]];            // 10 : 62 à 71
-const RETRAITE = [[520, 470], [600, 460], [600, 360], [520, 340], [440, 360], [460, 460]]; // 19 : 72 à 90
+// Tracé sans croisement : départ à gauche, deux voies parallèles (Université en haut, Carrière dessous), chemin principal
+// en lacet, embranchement Famille (à droite) / Aventure (en bas), puis le dernier lacet jusqu'à la retraite.
+const DEPART = [40, 60];
+const UNIVERSITE = [[40, 60], [40, 25], [470, 25]];                                   // 10 cases : 1 à 10
+const CARRIERE = [[40, 60], [40, 95], [470, 95]];                                     // 10 cases : 11 à 20
+const MAIN = [[470, 60], [600, 60], [600, 160], [40, 160], [40, 230], [300, 230]];    // 31 cases : 21 à 51 (choix)
+const FAMILLE = [[300, 230], [600, 230], [600, 300]];                                 // 10 cases : 52 à 61
+const AVENTURE = [[300, 230], [300, 370], [600, 370]];                                // 10 cases : 62 à 71
+const RETRAITE = [[620, 335], [620, 440], [40, 440], [40, 520], [400, 520]];          // 19 cases : 72 à 90
 
 /** Longueur cumulée des segments d'une polyligne. */
 function longueurs(points) {
@@ -56,7 +59,7 @@ function echantillon(points, n) {
 
 /** Positions des 91 cases, en % du plan. */
 function construire() {
-  const brut = [[60, 90]]
+  const brut = [DEPART]
     .concat(echantillon(UNIVERSITE, 10), echantillon(CARRIERE, 10), echantillon(MAIN, 31),
       echantillon(FAMILLE, 10), echantillon(AVENTURE, 10), echantillon(RETRAITE, 19));
   return brut.map(([x, y]) => [+((x / LARGEUR) * 100).toFixed(3), +((y / HAUTEUR) * 100).toFixed(3)]);
@@ -108,7 +111,7 @@ export function plateauHtml({ image = null, types = [], pions = [], prochaine = 
     if (i === prochaine) classes.push('is-prochaine');
     if (i === moi) classes.push('is-moi');
     const etiquette = i === prochaine ? '<span class="dp-tag">Prochaine case</span>' : '';
-    return `<div class="${classes.join(' ')}" style="left:${x}%;top:${y}%" aria-label="Case ${i}, ${esc(nom)}">` +
+    return `<div class="${classes.join(' ')}" style="left:${x}%;top:${y}%" title="${esc(nom)}" aria-label="Case ${i}, ${esc(nom)}">` +
       `<span class="dp-disque" aria-hidden="true">${esc(lettre)}</span>` +
       `<span class="dp-nom" aria-hidden="true">${esc(nom)}</span>${etiquette}</div>`;
   }).join('');

@@ -64,4 +64,10 @@ export const CARTES = [
     icone: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>' },
   { id: 'uno', image: `${IMG}uno.webp`, titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: 'uno.html', page: 'uno', couleur: 'var(--rose)',
     icone: '<rect x="4" y="5" width="10" height="15" rx="2" transform="rotate(-10 9 12)"/><rect x="10" y="4" width="10" height="15" rx="2" transform="rotate(8 15 11)"/>' },
+  // Jeux de plateau (migrations 125 à 130) : pages en mode admin au lancement
+  { id: 'cluedo', titre: 'Cluedo', texte: 'Qui a tué le Docteur Lenoir ? Mène l’enquête.', section: 'speciaux', href: 'cluedo.html', page: 'cluedo', image: `${IMG}cluedo.webp` },
+  { id: 'shadow-hunters', titre: 'Shadow Hunters', texte: 'Hunters, Shadows ou Neutres : qui est qui ?', section: 'speciaux', href: 'shadow-hunters.html', page: 'shadow-hunters', image: `${IMG}shadow-hunter.webp` },
+  { id: 'destins', titre: 'Destins', texte: 'Fais tourner la roue de la vie.', section: 'speciaux', href: 'destins.html', page: 'destins', image: `${IMG}destins.webp` },
+  { id: 'monopoly', titre: 'Monopoly', texte: 'Achète, construis, ruine tes amis.', section: 'speciaux', href: 'monopoly.html', page: 'monopoly', image: `${IMG}monopoly.webp` },
+  { id: 'risk', titre: 'Risk', texte: 'Conquiers le monde, ou remplis ta mission.', section: 'speciaux', href: 'risk.html', page: 'risk', image: `${IMG}risk.webp` },
 ];

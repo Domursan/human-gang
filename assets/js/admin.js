@@ -69,7 +69,8 @@ const OPTIONAL = [
   { sub: 'loup-garou', url: './admin-loup-garou.js', fn: 'mountLoupGarouSection' }, // La Fête foraine › Jeux › Loup-Garou (Paillettes, badges, parties ; administrateur)
   { sub: 'uno', url: './admin-uno.js', fn: 'mountUnoSection' }, // La Fête foraine › Jeux › Uno (Paillettes, badges, parties en cours ; administrateur)
   { sub: 'nom-de-code', url: './admin-ndc.js', fn: 'mountNdcSection' }, // La Fête foraine › Jeux › Nom de code (mots, Paillettes, badges, parties ; administrateur)
-  { sub: 'duels', url: './admin-duels.js', fn: 'mountDuelsSection' }, // La Fête foraine › Jeux › Duels (Puissance 4, Morpion, Mastermind ; administrateur)
+  { sub: 'duels', url: './admin-duels.js', fn: 'mountDuelsSection' },
+  { sub: 'plateaux', url: './admin-plateaux.js', fn: 'mountPlateauxSection' }, // La Fête foraine › Jeux › Jeux de plateau (noms, Paillettes, badges, parties ; administrateur) // La Fête foraine › Jeux › Duels (Puissance 4, Morpion, Mastermind ; administrateur)
   { sub: 'rdv', url: './admin-vd.js', fn: 'mountRdvSection' },          // Event › Calendrier et cinéma (idées V8, V9)
   { sub: 'commandes', url: './admin-vd.js', fn: 'mountCommandesSection' }, // Pilotage › Bot › Commandes slash (idée D3)
   { sub: 'roles', url: './admin-roles.js', fn: 'mountRolesSection' },          // Membres › Comptes › Rôles (migration 103)
@@ -250,7 +251,8 @@ if (MOUNT.arcade) regSub('arcade', { main: () => MOUNT.arcade($('#arcade-root'))
 if (MOUNT['loup-garou']) regSub('loup-garou', { main: () => MOUNT['loup-garou']($('#loup-garou-root')) }); // Loup-Garou : Paillettes, badges, parties (administrateur)
 if (MOUNT.uno) regSub('uno', { main: () => MOUNT.uno($('#uno-root')) }); // Uno : Paillettes, badges, parties en cours (administrateur)
 if (MOUNT['nom-de-code']) regSub('nom-de-code', { main: () => MOUNT['nom-de-code']($('#nom-de-code-root')) }); // Nom de code (administrateur)
-if (MOUNT.duels) regSub('duels', { main: () => MOUNT.duels($('#duels-root')) }); // Duels : Paillettes, badges, duels en cours (administrateur)
+if (MOUNT.duels) regSub('duels', { main: () => MOUNT.duels($('#duels-root')) });
+if (MOUNT.plateaux) regSub('plateaux', { main: () => MOUNT.plateaux($('#plateaux-root')) }); // Jeux de plateau (administrateur) // Duels : Paillettes, badges, duels en cours (administrateur)
 // Page « Jeux » : GeoGuessr, citations (admin-jeux.js)
 if (MOUNT.geoguessr) regSub('geoguessr', { main: () => MOUNT.geoguessr($('#geo-admin-root')) });
 if (MOUNT.citations) regSub('citations', { main: () => MOUNT.citations($('#citations-admin-root')) });

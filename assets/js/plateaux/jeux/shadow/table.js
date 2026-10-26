@@ -168,7 +168,7 @@ export function creer(root, ctx) {
 
   const monId = () => moiJoueur(etat)?.user_id ?? null;
   const moiEtat = () => moiJoueur(etat)?.etat || {};
-  const moiPerso = () => etat?.moi?.perso || moiEtat().perso || null;
+  const moiPerso = () => jeu().moi?.perso || moiEtat().perso || null;
   const jeu = () => etat?.jeu || {};
   const phase = () => jeu().phase || '';
   const partieEnCours = () => etat?.partie?.statut === 'en_cours';
@@ -315,7 +315,7 @@ export function creer(root, ctx) {
   }
 
   function vueDonner() {
-    const main = etat?.moi?.vision_main || '';
+    const main = jeu().moi?.vision_main || '';
     const cibles = autresVivants();
     let h = titre('Donne une carte Vision');
     if (!main) return h + '<p>Tu n\'as pas de carte Vision à donner.</p>';
@@ -355,7 +355,7 @@ export function creer(root, ctx) {
   }
 
   function vueAttaque() {
-    const portee = (etat?.moi?.portee || []).map((uid) => joueurDe(etat, uid)).filter(Boolean);
+    const portee = (jeu().moi?.portee || []).map((uid) => joueurDe(etat, uid)).filter(Boolean);
     const attaques = jeu().attaques ?? 0;
     let h = titre('Attaque') + noteDes();
     h += `<p class="sh-note">Attaques ce tour : ${esc(attaques)}.</p>`;
@@ -400,7 +400,7 @@ export function creer(root, ctx) {
   function cleTour() {
     return JSON.stringify([
       phase(), etat?.partie?.tour, etat?.partie?.statut, monId(), jeAiSorti(), monTour(),
-      jeu().des, jeu().options, jeu().carte, jeu().vision, jeu().attaques, etat?.moi, moiEtat(),
+      jeu().des, jeu().options, jeu().carte, jeu().vision, jeu().attaques, jeu().moi, moiEtat(),
       (etat?.joueurs || []).map((j) => [j.user_id, j.elimine, j.parti, j.pseudo, j.etat?.lieu, (j.etat?.equip || []).length, j.etat?.revele]),
     ]);
   }
@@ -418,7 +418,7 @@ export function creer(root, ctx) {
     const perso = moiPerso();
     if (!perso) return '<h2 id="sh-perso-titre" class="sh-bloc-titre">Ton personnage</h2><p class="sh-note">Tu regardes la partie.</p>';
     const mon = moiEtat();
-    const camp = etat.moi?.camp || campDe(perso);
+    const camp = jeu().moi?.camp || campDe(perso);
     const info = persoInfo(perso);
     const max = PV_MAX[perso] ?? null;
     const pv = max != null ? Math.max(0, max - (mon.degats ?? 0)) : null;
@@ -456,7 +456,7 @@ export function creer(root, ctx) {
 
   function joueursHtml() {
     const moi = monId();
-    const connus = etat.moi?.connus || {};
+    const connus = jeu().moi?.connus || {};
     const pvMax = etat.pv || {};
     const tour = etat.partie?.tour;
     return (etat.joueurs || []).filter((j) => !j.parti).map((j) => {
@@ -470,7 +470,7 @@ export function creer(root, ctx) {
       else if (apprisPar) identite = `Tu sais : ${nomPerso(apprisPar)} · ${CAMP_LIBELLE[campDe(apprisPar)] || ''}`;
       else identite = 'Camp inconnu';
       const deg = s.degats ?? 0;
-      const max = s.revele ? (pvMax[j.user_id] ?? null) : (estMoi ? (etat.moi?.pv ?? null) : null);
+      const max = s.revele ? (pvMax[j.user_id] ?? null) : (estMoi ? (jeu().moi?.pv ?? null) : null);
       const pvTxt = max != null ? `${Math.max(0, max - deg)} / ${max} PV` : plur(deg, 'blessure');
       const lieuTxt = j.elimine ? 'Éliminé' : (s.lieu ? `Lieu : ${nomLieu(s.lieu)}` : 'Pas encore entré');
       const etiquettes = [];

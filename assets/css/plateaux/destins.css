@@ -181,3 +181,7 @@
   .ds-roue.is-tourne { animation: none; }
   .ds-btn, .ds-carte-choix { transition: none !important; }
 }
+
+/* Chemin dense : les noms des cases sont dans la légende et l'aide (aria-label, title), pas sous chaque disque. */
+.dp-case { width: 30px; height: 30px; }
+.dp-nom { display: none; }

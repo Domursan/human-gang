@@ -1,11 +1,12 @@
 // Parcours navigateur de la page « Jeux » (vue des cartes) : un admin voit les jeux en préparation, un membre non.
 // Prérequis : base locale « uno » (tests/uno/rebuild.sh), serveur sur 8080. Le test règle les pages comme sur le site :
-// jeux et uno ouvertes aux membres ; loup-garou, duels et nom-de-code en mode admin.
+// jeux et uno ouvertes aux membres ; loup-garou, duels, nom-de-code et les 5 jeux de plateau en mode admin.
 process.env.FAKE_DB = 'uno';
 const { chromium } = require('playwright');
 const { attach } = require('../loup-garou/ui/fake.js');
 require('child_process').execFileSync('psql', ['-h', '/tmp', '-p', '54329', '-U', 'postgres', '-d', 'uno', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-c', `insert into hg_pages(slug, label, mode) values ('jeux', 'Jeux', 'membres'), ('loup-garou', 'Loup-Garou', 'admin'), ('uno', 'Uno', 'membres'),
-  ('duels', 'Duels', 'admin'), ('nom-de-code', 'Nom de code', 'admin')
+  ('duels', 'Duels', 'admin'), ('nom-de-code', 'Nom de code', 'admin'),
+  ('cluedo', 'Cluedo', 'admin'), ('shadow-hunters', 'Shadow Hunters', 'admin'), ('destins', 'Destins', 'admin'), ('monopoly', 'Monopoly', 'admin'), ('risk', 'Risk', 'admin')
   on conflict (slug) do update set mode = excluded.mode`]);
 const fs = require('fs');
 (async () => {
@@ -23,10 +24,12 @@ const fs = require('fs');
     const sections = await p.$$eval('.jx-section:not([hidden]) .jx-h', (xs) => xs.map((x) => x.textContent));
     console.log(nom, '·', sections.join(' / '), '·', titres.join(', '));
     if (n === 1) { check(prep === 0, 'admin : plus aucun jeu « bientôt »'); check(titres.includes('Loup-Garou'), 'admin : Loup-Garou visible');
+      check(['Cluedo', 'Shadow Hunters', 'Destins', 'Monopoly', 'Risk'].every((t) => titres.includes(t)), 'admin : les 5 jeux de plateau visibles');
       check(await p.$$eval('.jx-carte.is-chantier .jx-t', (xs) => xs.some((x) => x.textContent === 'Loup-Garou')), 'admin : Loup-Garou en chantier');
       check(await p.$$eval('.jx-section.is-chantier', (xs) => xs.length) === 1, 'admin : section multijoueurs en chantier'); }
     else { check(prep === 0, 'membre : aucun jeu en préparation'); check(!titres.includes('Loup-Garou'), 'membre : Loup-Garou masqué (page admin)');
       check(!sections.includes('Jeux multijoueurs'), 'membre : section multijoueurs masquée'); check(titres.includes('Uno'), 'membre : Uno visible');
+      check(!['Cluedo', 'Shadow Hunters', 'Destins', 'Monopoly', 'Risk'].some((t) => titres.includes(t)), 'membre : jeux de plateau masqués');
       check(!(await p.$('.is-chantier')), 'membre : aucun chantier'); }
     check(!(await p.$('.nav-group[data-menu="jeux"]')), `${nom} : plus de menu déroulant Jeux`);
     await p.screenshot({ path: `${__dirname}/shots/${nom}.png`, fullPage: true });
