@@ -692,7 +692,7 @@ select public.hg__patch('public.hg_duel_creer(jsonb)'::regprocedure,
 select public.hg__patch('public.hg_duel_creer(jsonb)'::regprocedure,
   $o$  if (v_jeu in ('mastermind', 'quiestce') and v_t not in (60, 90, 120)) or (v_jeu not in ('mastermind', 'quiestce') and v_t not in (15, 30, 60)) then$o$,
   $n$  if v_jeu in ('echecs', 'dames') and v_t not in (30, 60, 90, 120) then raise exception 'Temps par coup invalide.'; end if;
-  if v_jeu not in ('echecs', 'dames') and ((v_jeu in ('mastermind', 'quiestce') and v_t not in (60, 90, 120)) or (v_jeu not in ('mastermind', 'quiestce') and v_t not in (15, 30, 60)))) then$n$);
+  if v_jeu not in ('echecs', 'dames') and ((v_jeu in ('mastermind', 'quiestce') and v_t not in (60, 90, 120)) or (v_jeu not in ('mastermind', 'quiestce') and v_t not in (15, 30, 60))) then$n$);
 select public.hg__patch('public.hg_duel_creer(jsonb)'::regprocedure,
   $o$    if not exists (select 1 from hg_profiles where id = v_membre and not is_ghost) or not hg_page_ok(v_membre, 'duels') then$o$,
   $n$    if v_jeu in ('dames', 'echecs', 'othello', 'pfc') and not exists (select 1 from hg_profiles where id = v_membre and is_admin) then
