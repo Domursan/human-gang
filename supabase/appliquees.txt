@@ -6,3 +6,4 @@
 2026-10-26T16:32:15.526Z ok supabase/migrations/143_plateaux_cartes.sql
 2026-10-26T16:40:43.587Z ok supabase/migrations/144_catan.sql
 2026-10-26T16:42:59.374Z ok supabase/migrations/145_pictionary.sql
+2026-10-26T16:44:17.285Z ok supabase/migrations/146_grilles_correctif.sql
