@@ -1,0 +1,1 @@
+2026-10-26T16:07:04.829Z ok supabase/migrations/138_nj_solo.sql
