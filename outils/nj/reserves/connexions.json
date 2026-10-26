@@ -1,0 +1,1762 @@
+[
+ {
+  "groupes": [
+   {
+    "titre": "Fromages suisses",
+    "mots": [
+     "GRUYÈRE",
+     "EMMENTAL",
+     "SBRINZ",
+     "VACHERIN"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Personnages Nintendo",
+    "mots": [
+     "MARIO",
+     "LINK",
+     "KIRBY",
+     "PEACH"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Techniques de cuisson",
+    "mots": [
+     "BLANCHIR",
+     "MIJOTER",
+     "POCHER",
+     "RÔTIR"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Nombres cachés",
+    "mots": [
+     "SEPTEMBRE",
+     "HUÎTRE",
+     "DIXIÈME",
+     "NEUFCHÂTEL"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Instruments de musique",
+    "mots": [
+     "PIANO",
+     "VIOLON",
+     "FLÛTE",
+     "TUBA"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Villes suisses",
+    "mots": [
+     "GENÈVE",
+     "BERNE",
+     "ZURICH",
+     "LAUSANNE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Sports de raquette",
+    "mots": [
+     "TENNIS",
+     "BADMINTON",
+     "SQUASH",
+     "PADEL"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Animaux cachés",
+    "mots": [
+     "COQUILLE",
+     "CHEVALIER",
+     "PORCELAINE",
+     "PIGEONNIER"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Planètes",
+    "mots": [
+     "VÉNUS",
+     "SATURNE",
+     "NEPTUNE",
+     "JUPITER"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Films Pixar",
+    "mots": [
+     "UP",
+     "COCO",
+     "RATATOUILLE",
+     "WALL-E"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Pâtes",
+    "mots": [
+     "PENNE",
+     "FUSILLI",
+     "RIGATONI",
+     "FARFALLE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Couleurs cachées",
+    "mots": [
+     "VERTICAL",
+     "ROUGEOLE",
+     "NOIRCEUR",
+     "BLEUET"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Sports d'hiver",
+    "mots": [
+     "SKI",
+     "LUGE",
+     "BOBSLEIGH",
+     "PATINAGE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Jeux vidéo",
+    "mots": [
+     "TETRIS",
+     "DOOM",
+     "PONG",
+     "MINECRAFT"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Montagnes et cols suisses",
+    "mots": [
+     "JUNGFRAU",
+     "EIGER",
+     "MATTERHORN",
+     "SIMPLON"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Homophones",
+    "mots": [
+     "VERT",
+     "CENT",
+     "SEIN",
+     "MAIRE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Fruits",
+    "mots": [
+     "POMME",
+     "POIRE",
+     "CERISE",
+     "ABRICOT"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Jeux de société",
+    "mots": [
+     "MONOPOLY",
+     "RISK",
+     "DOBBLE",
+     "UNO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Physique",
+    "mots": [
+     "ATOME",
+     "PHOTON",
+     "NEUTRON",
+     "QUARK"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Fruits cachés",
+    "mots": [
+     "FIGURE",
+     "POMMETTE",
+     "PÊCHEUR",
+     "CERISIER"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Sports olympiques",
+    "mots": [
+     "JUDO",
+     "ESCRIME",
+     "AVIRON",
+     "BOXE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Rivières suisses",
+    "mots": [
+     "RHÔNE",
+     "AARE",
+     "LIMMAT",
+     "REUSS"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Prix du cinéma",
+    "mots": [
+     "OSCAR",
+     "PALME",
+     "CÉSAR",
+     "LION"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Métaux cachés",
+    "mots": [
+     "PLOMBIER",
+     "ARGENTIN",
+     "FERMIER",
+     "ORAGE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Animaux de la ferme",
+    "mots": [
+     "VACHE",
+     "COCHON",
+     "POULE",
+     "CHÈVRE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Signes de ponctuation",
+    "mots": [
+     "POINT",
+     "VIRGULE",
+     "TIRET",
+     "DEUX-POINTS"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Termes de musique",
+    "mots": [
+     "ACCORD",
+     "MESURE",
+     "CLÉ",
+     "PORTÉE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Homophones",
+    "mots": [
+     "PAIN",
+     "VIN",
+     "MAIS",
+     "DON"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Capitales",
+    "mots": [
+     "PARIS",
+     "ROME",
+     "MADRID",
+     "LISBONNE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Îles",
+    "mots": [
+     "CORSE",
+     "CRÈTE",
+     "MALTE",
+     "SICILE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Vins",
+    "mots": [
+     "BORDEAUX",
+     "CHABLIS",
+     "PORTO",
+     "SANCERRE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Pays cachés",
+    "mots": [
+     "MACHINE",
+     "MALINE",
+     "LIBANAIS",
+     "INDEX"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Notes de musique",
+    "mots": [
+     "DO",
+     "RÉ",
+     "MI",
+     "SOL"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Groupes de rock britanniques",
+    "mots": [
+     "QUEEN",
+     "BLUR",
+     "OASIS",
+     "MUSE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Films de Tarantino",
+    "mots": [
+     "DJANGO",
+     "KILL BILL",
+     "PULP FICTION",
+     "JACKIE BROWN"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Prénoms cachés",
+    "mots": [
+     "LOUISE",
+     "ALBERTINE",
+     "DANIELLE",
+     "JULIETTE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Oiseaux",
+    "mots": [
+     "MERLE",
+     "PINSON",
+     "MOINEAU",
+     "MÉSANGE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Sports de combat",
+    "mots": [
+     "KARATÉ",
+     "LUTTE",
+     "SUMO",
+     "KENDO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Pierres précieuses",
+    "mots": [
+     "ÉMERAUDE",
+     "RUBIS",
+     "SAPHIR",
+     "OPALE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui suit « de poule »",
+    "mots": [
+     "PIED",
+     "PEAU",
+     "CHAIR",
+     "NID"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Vocabulaire du football",
+    "mots": [
+     "BUT",
+     "PENALTY",
+     "CORNER",
+     "HORS-JEU"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Clubs suisses",
+    "mots": [
+     "BÂLE",
+     "SERVETTE",
+     "LUCERNE",
+     "SAINT-GALL"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Ustensiles de cuisine",
+    "mots": [
+     "FOUET",
+     "PASSOIRE",
+     "ÉPLUCHEUR",
+     "RÂPE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « de vue »",
+    "mots": [
+     "POINT",
+     "LIGNE",
+     "CHAMP",
+     "ANGLE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Réalisateurs français",
+    "mots": [
+     "TRUFFAUT",
+     "GODARD",
+     "RENOIR",
+     "VARDA"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Films de Christopher Nolan",
+    "mots": [
+     "INCEPTION",
+     "TENET",
+     "MEMENTO",
+     "DUNKERQUE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Villes françaises",
+    "mots": [
+     "NANTES",
+     "LILLE",
+     "LYON",
+     "DIJON"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « d'or »",
+    "mots": [
+     "PALME",
+     "BALLON",
+     "PÉPITE",
+     "TOISON"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Éléments chimiques",
+    "mots": [
+     "HÉLIUM",
+     "OXYGÈNE",
+     "CARBONE",
+     "AZOTE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Organes",
+    "mots": [
+     "FOIE",
+     "REIN",
+     "RATE",
+     "POUMON"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Os du squelette",
+    "mots": [
+     "FÉMUR",
+     "RADIUS",
+     "TIBIA",
+     "CRÂNE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui complète « SCOPE »",
+    "mots": [
+     "MICRO",
+     "TÉLÉ",
+     "PÉRI",
+     "STÉTHO"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Parties du visage",
+    "mots": [
+     "FRONT",
+     "MENTON",
+     "JOUE",
+     "NEZ"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Séries télévisées",
+    "mots": [
+     "LOST",
+     "FRIENDS",
+     "DEXTER",
+     "FARGO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Cartes à jouer",
+    "mots": [
+     "ROI",
+     "DAME",
+     "VALET",
+     "AS"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « de sable »",
+    "mots": [
+     "GRAIN",
+     "CHÂTEAU",
+     "TAS",
+     "TEMPÊTE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Grands fleuves",
+    "mots": [
+     "NIL",
+     "AMAZONE",
+     "MISSISSIPPI",
+     "YANGTZE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Déserts",
+    "mots": [
+     "SAHARA",
+     "GOBI",
+     "KALAHARI",
+     "ATACAMA"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Lacs suisses",
+    "mots": [
+     "LÉMAN",
+     "ZUG",
+     "MORAT",
+     "THOUNE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « de fer »",
+    "mots": [
+     "RIDEAU",
+     "CHEMIN",
+     "FILS",
+     "BARRE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Consoles de jeux",
+    "mots": [
+     "SWITCH",
+     "XBOX",
+     "WII",
+     "MEGADRIVE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Pokémon",
+    "mots": [
+     "PIKACHU",
+     "SALAMÈCHE",
+     "RONFLEX",
+     "DRACAUFEU"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Jeux de course",
+    "mots": [
+     "MARIO KART",
+     "NEED FOR SPEED",
+     "FORZA",
+     "ASPHALT"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « man »",
+    "mots": [
+     "PAC",
+     "BAT",
+     "SPIDER",
+     "IRON"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Chanteurs français",
+    "mots": [
+     "BREL",
+     "BRASSENS",
+     "AZNAVOUR",
+     "FERRÉ"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Groupes de rock français",
+    "mots": [
+     "TÉLÉPHONE",
+     "NOIR DÉSIR",
+     "INDOCHINE",
+     "PHOENIX"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Instruments à cordes",
+    "mots": [
+     "HARPE",
+     "LUTH",
+     "THEORBE",
+     "VIELLE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un animal",
+    "mots": [
+     "CHATON",
+     "LIONNE",
+     "OURSON",
+     "RATON"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Fromages français",
+    "mots": [
+     "BRIE",
+     "CAMEMBERT",
+     "COMTÉ",
+     "REBLOCHON"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Pains et viennoiseries",
+    "mots": [
+     "BRIOCHE",
+     "BAGUETTE",
+     "FOUGASSE",
+     "PAIN DE MIE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Desserts",
+    "mots": [
+     "CRÈME BRÛLÉE",
+     "TIRAMISU",
+     "ÉCLAIR",
+     "MILLEFEUILLE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Homophones d'aliments",
+    "mots": [
+     "VEAU",
+     "POIS",
+     "THON",
+     "CHOU"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Félins",
+    "mots": [
+     "LION",
+     "TIGRE",
+     "PUMA",
+     "OCELOT"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Oiseaux de proie et autres oiseaux",
+    "mots": [
+     "AIGLE",
+     "HIBOU",
+     "GRUE",
+     "PIE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Animaux marins",
+    "mots": [
+     "DAUPHIN",
+     "PIEUVRE",
+     "RAIE",
+     "HOMARD"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « de chien »",
+    "mots": [
+     "VIE",
+     "TEMPS",
+     "COUP",
+     "NUIT"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Capitales africaines",
+    "mots": [
+     "RABAT",
+     "DAKAR",
+     "NAIROBI",
+     "ACCRA"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Pays d'Amérique du Sud",
+    "mots": [
+     "PÉROU",
+     "CHILI",
+     "BOLIVIE",
+     "URUGUAY"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Cantons suisses",
+    "mots": [
+     "VAUD",
+     "VALAIS",
+     "JURA",
+     "GENÈVE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un nombre",
+    "mots": [
+     "DEUXIÈME",
+     "SIXIÈME",
+     "CENTRE",
+     "SEPTIÈME"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Langages de programmation",
+    "mots": [
+     "PYTHON",
+     "RUBY",
+     "JAVA",
+     "PERL"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Navigateurs web",
+    "mots": [
+     "CHROME",
+     "FIREFOX",
+     "SAFARI",
+     "OPERA"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Formats d'image",
+    "mots": [
+     "JPEG",
+     "PNG",
+     "GIF",
+     "WEBP"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par une note de musique",
+    "mots": [
+     "DOSSIER",
+     "MIRACLE",
+     "SOLDAT",
+     "RÉVEIL"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Plats suisses",
+    "mots": [
+     "RÖSTI",
+     "FONDUE",
+     "RACLETTE",
+     "PAPET"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Cépages",
+    "mots": [
+     "CHASSELAS",
+     "MERLOT",
+     "GAMAY",
+     "SYRAH"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Chocolats suisses",
+    "mots": [
+     "TOBLERONE",
+     "LINDT",
+     "CAILLER",
+     "SPRÜNGLI"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « au chocolat »",
+    "mots": [
+     "MOUSSE",
+     "GÂTEAU",
+     "CRÊPE",
+     "PAIN"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Dieux grecs",
+    "mots": [
+     "ZEUS",
+     "HÉRA",
+     "ARÈS",
+     "HADÈS"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Dieux nordiques",
+    "mots": [
+     "ODIN",
+     "THOR",
+     "LOKI",
+     "FREYA"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Constellations",
+    "mots": [
+     "ORION",
+     "CASSIOPÉE",
+     "CYGNE",
+     "LYRE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un dieu",
+    "mots": [
+     "MARSEILLE",
+     "PLUTONIUM",
+     "VÉNUSIEN",
+     "THÉMISTOCLE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Peintres impressionnistes",
+    "mots": [
+     "MONET",
+     "DEGAS",
+     "SISLEY",
+     "PISSARRO"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Mouvements artistiques",
+    "mots": [
+     "CUBISME",
+     "DADAÏSME",
+     "FAUVISME",
+     "BAROQUE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Techniques de peinture",
+    "mots": [
+     "AQUARELLE",
+     "PASTEL",
+     "GOUACHE",
+     "FUSAIN"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un pronom",
+    "mots": [
+     "MOIRE",
+     "TOILE",
+     "SOIE",
+     "LEURRE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Planètes naines",
+    "mots": [
+     "PLUTON",
+     "CÉRÈS",
+     "ÉRIS",
+     "MAKÉMAKÉ"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Missions spatiales",
+    "mots": [
+     "APOLLO",
+     "GEMINI",
+     "VOSTOK",
+     "MIR"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Objets du ciel",
+    "mots": [
+     "COMÈTE",
+     "ÉCLIPSE",
+     "NÉBULEUSE",
+     "GALAXIE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « spatiale »",
+    "mots": [
+     "STATION",
+     "NAVETTE",
+     "SONDE",
+     "FUSÉE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Temps de conjugaison",
+    "mots": [
+     "PASSÉ",
+     "FUTUR",
+     "PRÉSENT",
+     "CONDITIONNEL"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Modes verbaux",
+    "mots": [
+     "INDICATIF",
+     "IMPÉRATIF",
+     "SUBJONCTIF",
+     "INFINITIF"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Types de phrases",
+    "mots": [
+     "INTERROGATIVE",
+     "EXCLAMATIVE",
+     "NÉGATIVE",
+     "DÉCLARATIVE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un article",
+    "mots": [
+     "LAPIN",
+     "LEVAIN",
+     "UNIQUE",
+     "DESSERT"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Tournois de tennis",
+    "mots": [
+     "ROLAND-GARROS",
+     "WIMBLEDON",
+     "US OPEN",
+     "MELBOURNE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Disciplines d'athlétisme",
+    "mots": [
+     "SAUT",
+     "LANCER",
+     "MARATHON",
+     "HAIE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Sports nautiques",
+    "mots": [
+     "SURF",
+     "VOILE",
+     "KAYAK",
+     "PLONGÉE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui suit « coup de »",
+    "mots": [
+     "TÊTE",
+     "PIED",
+     "POING",
+     "BOULE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Types de nuages",
+    "mots": [
+     "CUMULUS",
+     "STRATUS",
+     "CIRRUS",
+     "NIMBUS"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Vents",
+    "mots": [
+     "MISTRAL",
+     "BISE",
+     "FÖHN",
+     "SIROCCO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Roches",
+    "mots": [
+     "GRANITE",
+     "BASALTE",
+     "CALCAIRE",
+     "SCHISTE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Anagrammes de mots français",
+    "mots": [
+     "NEIGE",
+     "GRÊLE",
+     "CIEL",
+     "ÉTOILE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Films Disney",
+    "mots": [
+     "BAMBI",
+     "DUMBO",
+     "MULAN",
+     "ALADDIN"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Personnages Disney",
+    "mots": [
+     "DONALD",
+     "GOOFY",
+     "PLUTO",
+     "MICKEY"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Films du studio Ghibli",
+    "mots": [
+     "TOTORO",
+     "PONYO",
+     "KIKI",
+     "CHIHIRO"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « de la jungle »",
+    "mots": [
+     "LIVRE",
+     "ROI",
+     "LOI",
+     "RÈGLE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Fruits exotiques",
+    "mots": [
+     "MANGUE",
+     "GOYAVE",
+     "PAPAYE",
+     "LITCHI"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Poissons d'eau douce",
+    "mots": [
+     "BROCHET",
+     "TRUITE",
+     "PERCHE",
+     "OMBRE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Vêtements",
+    "mots": [
+     "VESTE",
+     "MANTEAU",
+     "ÉCHARPE",
+     "JUPON"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Cachent une partie du corps",
+    "mots": [
+     "MENTONNIÈRE",
+     "JAMBIÈRE",
+     "ÉPAULETTE",
+     "GENOUILLÈRE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Ustensiles de pâtisserie",
+    "mots": [
+     "ROULEAU",
+     "SPATULE",
+     "PINCEAU",
+     "TAMIS"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Herbes aromatiques",
+    "mots": [
+     "THYM",
+     "ROMARIN",
+     "SAUGE",
+     "LAURIER"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Fromages italiens",
+    "mots": [
+     "MOZZARELLA",
+     "PARMESAN",
+     "RICOTTA",
+     "GORGONZOLA"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « à la crème »",
+    "mots": [
+     "ŒUFS",
+     "POULET",
+     "CHAMPIGNONS",
+     "ÉPINARDS"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Massifs français",
+    "mots": [
+     "VOSGES",
+     "PYRÉNÉES",
+     "CÉVENNES",
+     "MASSIF CENTRAL"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Montagnes du monde",
+    "mots": [
+     "EVEREST",
+     "K2",
+     "ANNAPURNA",
+     "ELBRUS"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Régions françaises",
+    "mots": [
+     "BRETAGNE",
+     "NORMANDIE",
+     "PROVENCE",
+     "ALSACE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Anagrammes de villes",
+    "mots": [
+     "PARIS",
+     "ARLES",
+     "ANGERS",
+     "NÎMES"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Jeux d'enfants",
+    "mots": [
+     "MARELLE",
+     "CACHE-CACHE",
+     "COLIN-MAILLARD",
+     "BILLES"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Pâtisseries",
+    "mots": [
+     "FINANCIER",
+     "MADELEINE",
+     "CANELÉ",
+     "SABLÉ"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Monnaies",
+    "mots": [
+     "EURO",
+     "FRANC",
+     "YEN",
+     "LIVRE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Cachent un fleuve",
+    "mots": [
+     "CORNE",
+     "EUREKA",
+     "SOMMEIL",
+     "CHAINE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Auteurs français",
+    "mots": [
+     "HUGO",
+     "ZOLA",
+     "PROUST",
+     "CAMUS"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Pièces de théâtre",
+    "mots": [
+     "PHÈDRE",
+     "TARTUFFE",
+     "HERNANI",
+     "ANDROMAQUE"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Figures de style",
+    "mots": [
+     "MÉTAPHORE",
+     "HYPERBOLE",
+     "ANAPHORE",
+     "ZEUGME"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par un genre littéraire",
+    "mots": [
+     "FABULEUX",
+     "ROMANCIER",
+     "SONNETTE",
+     "COMÉDIEN"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Figures géométriques",
+    "mots": [
+     "CARRÉ",
+     "LOSANGE",
+     "TRAPÈZE",
+     "ROMBOÏDE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Opérations",
+    "mots": [
+     "ADDITION",
+     "SOUSTRACTION",
+     "DIVISION",
+     "PRODUIT"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Unités de mesure",
+    "mots": [
+     "MÈTRE",
+     "LITRE",
+     "GRAMME",
+     "KELVIN"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Homophones de nombres",
+    "mots": [
+     "CENT",
+     "SEPT",
+     "HUIT",
+     "DIX"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Genres de jeux vidéo",
+    "mots": [
+     "RPG",
+     "FPS",
+     "MOBA",
+     "PLATEFORME"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Termes du jeu en ligne",
+    "mots": [
+     "LAG",
+     "SPAWN",
+     "NOOB",
+     "RESPAWN"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Monstres de Minecraft",
+    "mots": [
+     "CREEPER",
+     "ENDERMAN",
+     "ZOMBIE",
+     "SQUELETTE"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Mots français pour du matériel informatique",
+    "mots": [
+     "MANETTE",
+     "CLAVIER",
+     "SOURIS",
+     "ÉCRAN"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Cuivres",
+    "mots": [
+     "TROMPETTE",
+     "TROMBONE",
+     "COR",
+     "BUGLE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Instruments à anche et à bois",
+    "mots": [
+     "HAUTBOIS",
+     "CLARINETTE",
+     "BASSON",
+     "PICCOLO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Genres musicaux",
+    "mots": [
+     "JAZZ",
+     "BLUES",
+     "SOUL",
+     "FUNK"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui précède « d'orchestre »",
+    "mots": [
+     "CHEF",
+     "FOSSE",
+     "SALLE",
+     "PLACE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Chaussures",
+    "mots": [
+     "BOTTINE",
+     "MOCASSIN",
+     "ESCARPIN",
+     "SANDALE"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Tissus",
+    "mots": [
+     "COTON",
+     "LAINE",
+     "LIN",
+     "VELOURS"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Coiffures",
+    "mots": [
+     "CHIGNON",
+     "TRESSE",
+     "NATTE",
+     "CARRÉ"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Commencent par une couleur",
+    "mots": [
+     "VERTÈBRE",
+     "NOIRAUD",
+     "BLANCHE",
+     "GRISÂTRE"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Unités SI",
+    "mots": [
+     "NEWTON",
+     "PASCAL",
+     "JOULE",
+     "WATT"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Particules élémentaires",
+    "mots": [
+     "BOSON",
+     "MUON",
+     "HIGGS",
+     "GLUON"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "États de la matière",
+    "mots": [
+     "SOLIDE",
+     "LIQUIDE",
+     "GAZ",
+     "PLASMA"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Lettres grecques homophones de mots",
+    "mots": [
+     "PSI",
+     "MU",
+     "NU",
+     "TAU"
+    ],
+    "niveau": 4
+   }
+  ]
+ },
+ {
+  "groupes": [
+   {
+    "titre": "Jeux de cartes",
+    "mots": [
+     "POKER",
+     "BRIDGE",
+     "BELOTE",
+     "TAROT"
+    ],
+    "niveau": 1
+   },
+   {
+    "titre": "Jeux de plateau",
+    "mots": [
+     "ÉCHECS",
+     "DAMES",
+     "GO",
+     "OTHELLO"
+    ],
+    "niveau": 2
+   },
+   {
+    "titre": "Pièces aux échecs",
+    "mots": [
+     "ROI",
+     "DAME",
+     "FOU",
+     "TOUR"
+    ],
+    "niveau": 3
+   },
+   {
+    "titre": "Ce qui suit « carte »",
+    "mots": [
+     "BLANCHE",
+     "POSTALE",
+     "GRISE",
+     "VERTE"
+    ],
+    "niveau": 4
+   }
+  ]
+ }
+]
