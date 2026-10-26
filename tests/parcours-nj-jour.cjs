@@ -167,7 +167,9 @@ const ouvre = (browser, hash, extra = {}) => openPage(browser, { page: 'jeux', f
   p = await ouvre(browser, '#plat');
   check((await p.locator('.nj-title').textContent()) === 'Plat du jour', 'plat : titre « Plat du jour »');
   check((await p.locator('.nj-plat img').count()) === 1 && (await p.locator('#nj-form').count()) === 1, 'plat : photo et champ « Pays d’origine »');
-  check((await p.locator('.nj-form label').textContent()).includes('Pays'), 'plat : libellé « Pays d’origine »');
+  check((await p.locator('.nj-form label').textContent()).includes('De quel pays vient ce plat'), 'plat : libellé « De quel pays vient ce plat ? »');
+  await tape(p, 'churro');
+  check((await p.locator('#nj-hint').textContent()).includes('pas son nom'), 'plat : nom du plat tapé → « On cherche le pays d’origine, pas son nom »');
   check((await hscroll(p)) <= 0, 'plat : 390 px sans défilement horizontal');
   check(mesErreurs(p).length === 0, 'plat : aucune erreur JS' + (mesErreurs(p).length ? ' — ' + mesErreurs(p).join(' | ') : ''));
   await p.ctx.close();

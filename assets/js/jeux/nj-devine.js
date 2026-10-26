@@ -12,7 +12,10 @@
 import { loadCss, boardHtml, copyText, normalize } from './devine.js';
 import { boutonReponses } from '../core/admin-reponses.js';
 
-/** Présentation des six jeux : titre, consignes et libellé du champ de réponse. */
+/**
+ * Présentation des six jeux : titre, consignes et libellé du champ de réponse ; facultatifs : exemple (texte d'attente
+ * du champ) et horsListe (indication quand la saisie ne correspond à aucune suggestion).
+ */
 const JEUX = {
   carte: { titre: 'Carte mystère', champ: 'Nom de la carte', regles: [
     'Une carte du jeu de cartes du site, floutée.',
@@ -34,7 +37,8 @@ const JEUX = {
     'La silhouette d’un pays, à l’échelle.',
     'Chaque essai donne la distance et la direction depuis sa capitale.',
     'La photo du pays arrive à la 3e erreur.'] },
-  plat: { titre: 'Plat du jour', champ: 'Pays d’origine', regles: [
+  plat: { titre: 'Plat du jour', champ: 'De quel pays vient ce plat ?', exemple: 'Un pays : Italie, Japon…',
+    horsListe: 'On cherche le pays d’origine du plat (par ex. Espagne), pas son nom : choisis un pays dans la liste.', regles: [
     'La photo d’un plat : devine le pays dont il vient.',
     'Chaque essai donne la distance et la direction depuis la capitale du pays.',
     'Choisis le pays dans la liste des suggestions.'] },
@@ -242,7 +246,7 @@ export async function monter(panel, ctx, jeu) {
     return `<form class="jd-form nj-form" id="nj-form" autocomplete="off">
       <label for="nj-input" class="jd-label">${esc(cfg.champ)}</label>
       <div class="jd-combo">
-        <input id="nj-input" class="input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nj-list" maxlength="120" placeholder="Tape quelques lettres…" value="${esc(e.draft)}" ${e.busy ? 'disabled' : ''}>
+        <input id="nj-input" class="input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nj-list" maxlength="120" placeholder="${esc(cfg.exemple || 'Tape quelques lettres…')}" value="${esc(e.draft)}" ${e.busy ? 'disabled' : ''}>
         <ul class="jd-list" id="nj-list" role="listbox" aria-label="Suggestions" hidden></ul>
       </div>
       <div class="jd-actions">
@@ -321,7 +325,7 @@ export async function monter(panel, ctx, jeu) {
       const c = trouve(input.value);
       const doublon = !!c && tentes.has(normalize(c));
       hint.textContent = doublon ? 'Tu as déjà proposé cette réponse.'
-        : (input.value.trim() && !c ? 'Choisis une réponse dans la liste des suggestions.' : '');
+        : (input.value.trim() && !c ? (cfg.horsListe || 'Choisis une réponse dans la liste des suggestions.') : '');
       valider.disabled = !c || doublon || e.busy;
     };
     const peint = () => {
@@ -359,7 +363,7 @@ export async function monter(panel, ctx, jeu) {
     form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       const c = trouve(input.value);
-      if (!c) { hint.textContent = 'Choisis une réponse dans la liste des suggestions.'; input.focus(); return; }
+      if (!c) { hint.textContent = cfg.horsListe || 'Choisis une réponse dans la liste des suggestions.'; input.focus(); return; }
       if (tentes.has(normalize(c))) { hint.textContent = 'Tu as déjà proposé cette réponse.'; return; }
       jouer(c);
     });
