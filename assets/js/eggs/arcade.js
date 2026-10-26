@@ -9,7 +9,7 @@
  *   « domu » (lettres)                    → s.triche.coeurs : plus aucun piège, tout ce qui s'attrape devient un cœur rouge ;
  *   → → ← ← ↓ ↑ ↓ ↑ (flèches)            → s.triche.immortel : les pièges et accrochages ne coûtent plus rien.
  *   Chaque mini-jeu lit s.triche (même objet pendant toute la partie : un code tapé en jeu s'applique tout de suite).
- *   Une partie jouée avec un code n'est pas enregistrée (jeux/arcade.js).
+ *   Une partie jouée avec un code compte comme les autres (record, classement, Paillettes).
  * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) et coeur(ctx, x, y, r, couleur)
  * (sprites partagés), triche (état des codes).
  */
@@ -140,7 +140,6 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     if (etat !== 'jeu') return;
     const dt = dernierT === null ? 0 : Math.min(0.05, (t - dernierT) / 1000);
     dernierT = t;
-    if (triche.coeurs || triche.immortel) s.trichee = true; // partie avec code : non enregistrée
     jeu.update(s, dt, entree);
     entree.pas = 0;
     onHud(jeu.score(s), jeu.vies(s));

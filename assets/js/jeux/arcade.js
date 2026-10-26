@@ -207,14 +207,12 @@ export async function mount(panel, ctx) {
         // Le serveur ouvre la partie (heure de départ fixée par lui, jeu demandé par le joueur).
         run = sb.rpc('hg_arcade_start', { p_game: g }).then(({ data, error }) => (error ? null : data?.run || null)).catch(() => null);
       },
-      onFin: async (sc, etatPartie) => {
+      onFin: async (sc) => {
         enPartie = false;
         peindreChoix();
         bouton.disabled = false;
         pause.disabled = true;
         pause.textContent = 'Pause';
-        // Code de triche utilisé pendant la partie : rien n'est enregistré (ni record, ni classement, ni Paillettes).
-        if (etatPartie?.trichee) { msg.textContent = `Score : ${sc} (code de triche : partie non enregistrée).`; return; }
         const best = record.lire(g);
         if (sc > best) { record.ecrire(g, sc); $z('#arc-record').textContent = String(sc); }
         msg.textContent = sc > 0 ? `Score : ${sc} !` : 'Aucun point cette fois. Rejoue !';
