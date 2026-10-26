@@ -1,0 +1,19 @@
+{
+  "outils/images/maquettes/jeu-stardew.webp": {
+    "source": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/ss_9ac899fe2cda15d48b0549bba77ef8c4a090a71c.1920x1080.jpg?t=1786554168",
+    "appid": 413150,
+    "le": "2026-10-26T15:40:27.703Z"
+  },
+  "outils/images/maquettes/plat-pad-thai.webp": {
+    "source": "https://upload.wikimedia.org/wikipedia/commons/3/39/Phat_Thai_kung_Chang_Khien_street_stall.jpg?utm_source=fr.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "le": "2026-10-26T15:40:28.336Z"
+  },
+  "outils/images/maquettes/pays-chili.webp": {
+    "source": "https://upload.wikimedia.org/wikipedia/commons/5/52/Torres_del_Paine.jpg?utm_source=fr.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "le": "2026-10-26T15:40:28.582Z"
+  },
+  "outils/images/maquettes/countries-50m.json": {
+    "source": "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json",
+    "le": "2026-10-26T15:40:28.623Z"
+  }
+}
