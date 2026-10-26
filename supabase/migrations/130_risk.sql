@@ -168,7 +168,8 @@ returns text[] language sql stable security definer set search_path = public as 
 $$;
 create or replace function public.hg_plat__rk_possede(p_id uuid, p_u uuid, p_cont text)
 returns boolean language sql stable security definer set search_path = public as $$
-  select bool_and(hg_plat__rk_proprio(p_id, t) = p_u) from unnest(hg_plat__rk_tous()) t where hg_plat__rk_continent(t) = p_cont
+  select coalesce(bool_and((v->>'j')::uuid = p_u), false) from hg_plat_parties p, jsonb_each(p.etat->'territoires') x(k, v)
+  where p.id = p_id and hg_plat__rk_continent(k) = p_cont
 $$;
 create or replace function public.hg_plat__rk_cartes(p_id uuid, p_u uuid)
 returns text[] language sql stable security definer set search_path = public as $$
@@ -180,11 +181,12 @@ returns void language sql security definer set search_path = public as $$
   where partie = p_id and user_id = p_u
 $$;
 
--- Renforts de début de tour (sans les cartes).
+-- Renforts de début de tour (sans les cartes) : territoires / 3 (minimum 3) + bonus des continents tenus (une seule lecture de la carte).
 create or replace function public.hg_plat__rk_renforts(p_id uuid, p_u uuid)
 returns int language sql stable security definer set search_path = public as $$
-  select greatest(3, cardinality(hg_plat__rk_mes(p_id, p_u)) / 3)
-    + coalesce((select sum(hg_plat__rk_bonus(c)) from unnest(array['amn','ams','eur','afr','asi','oce']) c where hg_plat__rk_possede(p_id, p_u, c)), 0)::int
+  with t as (select k, (v->>'j')::uuid j from hg_plat_parties p, jsonb_each(p.etat->'territoires') x(k, v) where p.id = p_id),
+  c as (select hg_plat__rk_continent(k) cont, bool_and(j = p_u) tenu from t group by 1)
+  select greatest(3, (select count(*) from t where j = p_u)::int / 3) + coalesce((select sum(hg_plat__rk_bonus(cont)) from c where tenu), 0)::int
 $$;
 
 -- Valeur du n-ième échange de cartes (1er = 4).
