@@ -5,3 +5,4 @@
 2026-10-26T16:25:49.457Z ok supabase/migrations/142_duels_correctif.sql
 2026-10-26T16:32:15.526Z ok supabase/migrations/143_plateaux_cartes.sql
 2026-10-26T16:40:43.587Z ok supabase/migrations/144_catan.sql
+2026-10-26T16:42:59.374Z ok supabase/migrations/145_pictionary.sql
