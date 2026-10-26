@@ -45,6 +45,7 @@ export const CHANNEL_LABEL: Record<MentionType, string> = {
   loup_garou: 'Loup-Garou',
   uno: 'Uno',
   nom_de_code: 'Nom de code',
+  plateaux: 'Jeux de plateau',
 };
 
 /**

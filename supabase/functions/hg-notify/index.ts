@@ -113,7 +113,7 @@ type Bot = MentionBot & {
   channels?: Partial<Record<MentionType, string | string[] | null>> | null;
   salons?: { id: string; nom: string }[] | null;
   admin_discord_id?: string | null;
-  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop' | 'lg_party' | 'uno_party' | 'ndc_party' | 'duel_defi', boolean>>;
+  notify?: Partial<Record<'draw' | 'gift' | 'irl' | 'birthday' | 'support' | 'messages' | 'card_pull' | 'card_trade' | 'trade_offer' | 'card_wish' | 'card_gift_admin' | 'card_drop' | 'lg_party' | 'uno_party' | 'ndc_party' | 'plat_party' | 'duel_defi', boolean>>;
 };
 /** Profil de l'appelant ou d'un destinataire, tel que lu par la fonction. */
 type Profile = { id: string; pseudo: string; is_admin: boolean; discord_id: string | null; bot_optin: boolean };
@@ -1250,6 +1250,55 @@ async function onNdcParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   return { channel, channels };
 }
 
+// Jeux de plateau (migration 125) : Cluedo, Shadow Hunters, Destins, Monopoly, Risk ; un seul salon « Jeux de plateau ».
+const PLAT_JEUX: Record<string, { nom: string; page: string }> = {
+  cluedo: { nom: 'Cluedo', page: 'cluedo.html' }, shadow: { nom: 'Shadow Hunters', page: 'shadow-hunters.html' },
+  destins: { nom: 'Destins', page: 'destins.html' }, monopoly: { nom: 'Monopoly', page: 'monopoly.html' }, risk: { nom: 'Risk', page: 'risk.html' },
+};
+async function onPlatParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
+  const code = String(p.code ?? '');
+  if (!/^HG(CLU|SHH|DES|MON|RSK)-[0-9]{4}$/.test(code)) throw new HttpError(400, 'code manquant');
+  if (bot.notify?.plat_party === false) return { skipped: 'désactivé' };
+  const platChannels = channelsFor(bot, 'plateaux');
+  if (!platChannels.length) return { skipped: 'aucun salon configuré' };
+  const { data: g } = await db.from('hg_plat_parties').select('id, jeu, code, nom, hote, statut, nb_places, annonce_discord, discord_annonce_at, created_at')
+    .eq('code', code).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (!g) throw new HttpError(404, 'Partie introuvable');
+  if (g.hote !== me.id) throw new HttpError(403, 'Seul l\'hôte peut annoncer sa partie');
+  if (!g.annonce_discord) return { skipped: 'annonce non demandée' };
+  if (g.statut !== 'attente') return { skipped: 'partie déjà lancée' };
+  if (!recent(g.created_at)) return { skipped: 'partie déjà ancienne' };
+  if (g.discord_annonce_at) return { skipped: 'déjà annoncée' };
+
+  // Réservation : seul un appel qui passe de null à « maintenant » publie l'annonce.
+  const { data: claimed, error: claimErr } = await db.from('hg_plat_parties').update({ discord_annonce_at: new Date().toISOString() })
+    .eq('id', g.id).is('discord_annonce_at', null).select('id');
+  if (claimErr) throw new Error(claimErr.message);
+  if (!claimed?.length) return { skipped: 'déjà annoncée' };
+
+  const jeu = PLAT_JEUX[String(g.jeu)] ?? { nom: 'Jeu de plateau', page: 'jeux.html' };
+  const { data: nomJeu } = await db.from('hg_plat_contenus').select('valeur').eq('jeu', g.jeu).eq('cle', 'nom').maybeSingle();
+  const { count } = await db.from('hg_plat_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
+  const n = count ?? 0;
+  const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_places}`;
+  const lien = link(`${jeu.page}?code=${g.code}`) ?? '';
+  const rendered = renderTemplate('plat_party_announce', {
+    hote: me.pseudo, jeu: typeof nomJeu?.valeur === 'string' ? nomJeu.valeur : jeu.nom, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien,
+  }, tpl);
+  const annonce = {
+    ...mentionFor(bot, 'plateaux'),
+    ...embed({
+      ...embedFrom(rendered), url: lien || undefined, color: COLOR.info,
+      fields: [{ name: 'Code', value: g.code, inline: true }, { name: 'Joueurs', value: places, inline: true }],
+    }),
+  };
+  const channels = await sendToChannels(platChannels, (id) => sendChannel(id, annonce), 'annonce de jeu de plateau', friendlyDiscordError);
+  await logAnnounce(me, 'auto:plateaux', `Annonce de partie : ${g.code}`, channels, true);
+  const channel = channels.some((c) => c.ok);
+  if (!channel) await db.from('hg_plat_parties').update({ discord_annonce_at: null }).eq('id', g.id);
+  return { channel, channels };
+}
+
 /* F12 : un membre obtient une carte que d'autres souhaitent → MP aux souhaitants qui ont activé l'alerte */
 /** Nombre maximal de cartes distinctes traitées par appel (une ouverture de booster). */
 const WISH_MAX_CARDS = 10; // cartes distinctes par appel (une ouverture de booster)
@@ -1377,6 +1426,7 @@ Deno.serve(async (req) => {
       case 'lg_party': result = await onLgParty(me, bot, payload, tpl); break;
       case 'uno_party': result = await onUnoParty(me, bot, payload, tpl); break;
       case 'ndc_party': result = await onNdcParty(me, bot, payload, tpl); break;
+      case 'plat_party': result = await onPlatParty(me, bot, payload, tpl); break;
       case 'duel_defi': result = await onDuelDefi(me, bot, payload, tpl); break;
       default: throw new HttpError(400, `Événement inconnu : ${event || '(vide)'}`);
     }

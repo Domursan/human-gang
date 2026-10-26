@@ -6,10 +6,10 @@
  * Mode invité : un visiteur sans compte joue avec un jeton secret gardé dans son navigateur ;
  *   tous ses appels passent par hg_plat_invite (pas de temps réel : relecture toutes les 2 s).
  * Contenus (noms des suspects, rues, territoires…) : modifiables dans le panel admin, chargés une fois (contenus()).
- * Dépendances : core.js (sb, errMsg).
+ * Dépendances : core.js (sb, errMsg, notify : annonce Discord de la partie).
  * Exporte : JEUX, choisirJeu, jeu, plat, contenus, nomDe, suivrePartie, messages, erreurTexte, activerInvite, estInvite, imageExiste.
  */
-import { sb, errMsg } from '../core.js';
+import { sb, errMsg, notify } from '../core.js';
 
 /** Description fixe des jeux (le nom affiché vient des contenus, modifiable en admin). */
 export const JEUX = {
@@ -62,7 +62,11 @@ const deux = (membre, inv) => (...a) => (invite ? inv(...a) : membre(...a));
 /** Appels (noms calqués sur les fonctions serveur de la migration 125). */
 export const plat = {
   /** Crée une partie : p = { nom, visibilite, nb_places, invites, t_tour, annonce_discord, options }. Renvoie le code. */
-  creer: (p) => rpc('hg_plat_creer', { p: { ...p, jeu: JEU.id } }),
+  async creer(p) {
+    const code = await rpc('hg_plat_creer', { p: { ...p, jeu: JEU.id } });
+    if (p?.annonce_discord) notify('plat_party', { code }).catch(() => {});
+    return code;
+  },
   rejoindre: (code) => rpc('hg_plat_rejoindre', { p_code: code }),
   /** Aperçu public d'une partie (sans compte) ou null : { jeu, nom_jeu, nom, code, statut, invites, nb_places, inscrits, hote_pseudo, t_tour }. */
   apercu: (code) => rpc('hg_plat_invite', { p_action: 'apercu', p_code: code }),

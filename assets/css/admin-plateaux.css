@@ -1,0 +1,107 @@
+/* ===== Humane Gang — administration : Jeux de plateau (La Fête foraine › Jeux › Jeux de plateau) =====
+   Styles de assets/js/admin-plateaux.js. Préfixe jp- (jeux de plateau). Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+
+.jp-corps { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin-top: 16px; }
+.jp-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.jp-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.jp-card > .btn, .jp-card > a.btn { align-self: flex-start; }
+.jp-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.jp-note { margin: 0; font-size: 14px; color: var(--muted); }
+.jp-aide { font-size: 13px; color: var(--muted); }
+.jp-entete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.jp-bloc { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.jp-champ { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.jp-champ label { font-size: 14px; color: var(--muted); }
+.jp-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
+.jp-card > .jp-actions { justify-content: flex-start; }
+.jp-statut { font-size: 14px; color: var(--muted); }
+.jp-statut.jp-ok { color: var(--sage); }
+.jp-statut.jp-erreur { color: var(--rose); }
+.jp-scroll { overflow-x: auto; min-width: 0; }
+
+/* Onglets des jeux */
+.jp-onglets { display: flex; flex-wrap: wrap; gap: 8px; }
+.jp-onglet {
+  min-height: 44px; padding: 0 16px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); font: inherit; font-size: 15px;
+}
+.jp-onglet[aria-selected="true"] { background: var(--sand); color: #121212; border-color: var(--sand); font-weight: 700; }
+
+/* Tableaux (Paillettes, listes, parties) */
+.jp-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.jp-table th, .jp-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.jp-table thead th { font-size: 13px; font-weight: 500; color: var(--muted); }
+.jp-table tbody th { font-weight: 400; }
+.jp-table td { width: auto; }
+.jp-liste { min-width: 520px; }
+.jp-parties { min-width: 760px; }
+.jp-id { font-family: 'Courier New', monospace; font-weight: 700; white-space: nowrap; }
+.jp-autres { font-size: 13px; color: var(--muted); min-width: 160px; }
+.jp-autre { display: block; overflow-wrap: anywhere; }
+.jp-code { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+.jp-action { text-align: right; }
+.jp-arreter { min-height: 44px; border-color: var(--rose); color: var(--rose); }
+
+/* Champs */
+.jp-input {
+  min-height: 44px; box-sizing: border-box; width: 100%; padding: 0 12px;
+  border-radius: 12px; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text);
+  font: inherit; font-size: 15px;
+}
+.jp-input[aria-invalid="true"] { border-color: var(--rose); }
+.jp-input-num { font-weight: 700; max-width: 140px; }
+.jp-table .jp-input { min-width: 140px; }
+.jp-table tbody .jp-input { max-width: 260px; }
+
+/* Couleurs (sélecteur et code hexadécimal) */
+.jp-couleur { min-width: 200px; }
+.jp-ligne-couleur { display: flex; gap: 8px; align-items: center; }
+.jp-ligne-couleur input[type="color"] {
+  width: 44px; height: 44px; padding: 0; flex: none; cursor: pointer;
+  border: 1px solid var(--border-strong); border-radius: 12px; background: var(--bg);
+}
+.jp-hex { max-width: 120px; font-family: 'Courier New', monospace; }
+
+/* Contenus repliables */
+.jp-contenus { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.jp-carte { padding: 0; min-width: 0; }
+.jp-resume {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  min-height: 44px; padding: 14px 20px; cursor: pointer; font-size: 16px; font-weight: 700; list-style: none;
+}
+.jp-resume::-webkit-details-marker { display: none; }
+.jp-resume:focus-visible { outline: 2px solid var(--sand); outline-offset: -2px; border-radius: 12px; }
+.jp-carte[open] > .jp-resume { border-bottom: 1px solid var(--border); }
+.jp-contenu-corps { display: flex; flex-direction: column; gap: 14px; padding: 16px 20px 20px; min-width: 0; }
+.jp-pastille {
+  font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px;
+  background: var(--sand); color: #121212;
+}
+
+/* Badges */
+.jp-badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.jp-badge { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); min-width: 0; }
+.jp-medaille {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  background: var(--sand); color: #121212; display: grid; place-items: center;
+}
+.jp-badge-texte { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.jp-badge-texte strong { font-size: 15px; font-weight: 700; }
+.jp-switch { flex: none; }
+
+/* Mise en page large */
+@media (min-width: 900px) {
+  .jp-grille { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .jp-grille > .jp-card:first-child { align-self: stretch; }
+}
+
+/* Téléphone */
+@media (max-width: 480px) {
+  .jp-input-num { max-width: none; }
+  .jp-table tbody .jp-input { max-width: none; }
+  .jp-card > .btn, .jp-card > a.btn, .jp-actions .btn { width: 100%; align-self: stretch; }
+  .jp-actions { justify-content: stretch; }
+  .jp-onglet { flex: 1 1 auto; }
+  .jp-resume { padding: 12px 16px; }
+  .jp-contenu-corps { padding: 14px 16px 16px; }
+}
