@@ -1,3 +1,4 @@
 2026-10-26T16:07:04.829Z ok supabase/migrations/138_nj_solo.sql
 2026-10-26T16:10:49.045Z ok supabase/migrations/139_nj_images.sql
 2026-10-26T16:14:37.085Z ok supabase/migrations/140_nj_grilles.sql
+2026-10-26T16:24:16.682Z ERREUR supabase/migrations/141_duels_nouveaux.sql : {"message":"Failed to run sql query: ERROR: 42601: mismatched parentheses at or near \")\"\nQUERY: \ndeclare v_jeu text := coalesce(p->>'jeu', ''); v_var text; v_adv text := coalesce(p->>'adversaire', 'code'); v_membre uuid; v_robot int := 0;\nv_t int; v_f int; v_code text; v_id uuid; me record;\nbegin\nif not hg_duel_peut() or exists (select 1 from hg_duel_invites where user_id = auth.uid()) then\nraise exception 'Accès réservé.' using errcode = '42501';\nend if;\n if v_jeu not in ('p4', 'morpion', 'mastermind', 'bataille', 'quiestce', 'dames', 'echecs', 'othello', 'pfc') then raise exception
