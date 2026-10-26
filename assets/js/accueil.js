@@ -191,6 +191,13 @@ function renderMemberShell() {
       </div>
     </section>
 
+    ${ideasHtml()}`;
+}
+
+/* ---------- Boîte à idées ---------- */
+/** Bloc « Une idée pour le gang ? » (formulaire de la boîte à idées). */
+function ideasHtml() {
+  return `
     <section class="card home-ideas" id="idees" aria-labelledby="ideas-title">
       <form class="stack" id="idea-form" novalidate>
         <div class="ideas-head">
@@ -208,7 +215,21 @@ function renderMemberShell() {
     </section>`;
 }
 
-/* ---------- Boîte à idées ---------- */
+/**
+ * Lien « accueil.html#idees » (aide, tutos, compte…) : montre la boîte à idées même si le membre l'a retirée de son
+ * accueil personnalisé, puis y fait défiler et place le curseur dans le champ.
+ * @param {boolean} [focus] true : place aussi le curseur dans « Ton idée ».
+ */
+function allerAuxIdees(focus = false) {
+  if (location.hash !== '#idees') return;
+  if (!$('#idees')) {
+    app.insertAdjacentHTML('beforeend', ideasHtml());
+    bindIdeas();
+  }
+  $('#idees')?.scrollIntoView({ block: 'start' });
+  if (focus) $('#idea-body')?.focus({ preventScroll: true });
+}
+
 /**
  * Boîte à idées : compteur de caractères, envoi à la table hg_ideas (lue seulement par l'admin), et message de confirmation.
  */
@@ -583,13 +604,17 @@ if (!me) {
   // Accueil personnalisable (idée P9) : ordre, blocs masqués (retirés avant tout chargement) et blocs ajoutés
   const home = await import('./home-blocks.js').then((m) => m.applyHomeLayout(app, me)).catch((e) => { console.warn('[accueil perso]', e?.message || e); return null; });
   if ($('#idea-form')) bindIdeas();
-  if (location.hash === '#idees') requestAnimationFrame(() => $('#idees')?.scrollIntoView({ block: 'start' }));
+  // Boîte à idées demandée par le lien : montrée tout de suite, puis de nouveau une fois les blocs du dessus chargés
+  // (sinon leur contenu la repousse plus bas et le lien semble ne rien faire).
+  requestAnimationFrame(() => allerAuxIdees());
+  window.addEventListener('hashchange', () => allerAuxIdees(true));
   await Promise.allSettled([
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
     home?.loadOwn(),
     tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null,
   ]);
+  allerAuxIdees(true);
   maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }
 app.removeAttribute('aria-busy');

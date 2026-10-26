@@ -58,6 +58,18 @@ const order = (p) => p.evaluate(() => [...document.querySelectorAll('#app [data-
     await p.ctx.close();
   }
   {
+    // (g) Lien « accueil.html#idees » (aide, tutos…) alors que le membre a retiré la boîte à idées : elle s'affiche quand même
+    const p = await openPage(browser, { page: 'accueil', hash: '#idees', width: 360, height: 900, scenario: { extra: 'fake-sb-social2.mjs',
+      homeLayout: [{ id: 'fil', on: true }, { id: 'evenement', on: true }, { id: 'idees', on: false }], uid: '00000002-0000-4000-8000-000000000002' } });
+    await p.waitForSelector('#idees', { timeout: 8000 }).catch(() => {});
+    await p.waitForTimeout(800);
+    check(await p.locator('#idees #idea-body').count() === 1, '(g) #idees : boîte à idées affichée malgré la disposition qui la masque');
+    const vu = await p.evaluate(() => { const r = document.getElementById('idees')?.getBoundingClientRect(); return !!r && r.top < window.innerHeight && r.bottom > 0; });
+    check(vu, '(g) #idees : la page défile jusqu’à la boîte à idées');
+    check(!p.errs.length, '(g) aucune erreur JS' + errs(p));
+    await p.ctx.close();
+  }
+  {
     // (e) Autre appareil : la base fournit la disposition, pas de copie locale
     const p = await openPage(browser, { page: 'accueil', width: 360, height: 900, scenario: { extra: 'fake-sb-social2.mjs',
       homeLayout: [{ id: 'fil', on: true }, { id: 'evenement', on: true }, { id: 'quetes', on: true }, { id: 'idees', on: false }, { id: 'inconnu', on: true }],
