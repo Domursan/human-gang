@@ -1,2 +1,183 @@
-/* ===== Humane Gang — Destins : styles propres à la table (assets/css/plateaux/destins.css) =====
-   Vide pour l'instant : les styles de la table Destins seront ajoutés ici. Les écrans communs sont dans plateaux.css. */
+/* ===== Humane Gang — Destins : table de jeu et écran de fin =====
+   Fichier : assets/css/plateaux/destins.css. Classes préfixées ds- (table) et dp- (chemin de vie et fin).
+   Reprend la maquette DestinsPlateau (ordinateur), DestinsCarteTel (téléphone) et DestinsFin (fin).
+   Ordinateur (> 760 px) : chemin à gauche ; roue, carte et panneau au centre ; fiche, classement, journal et chat à droite.
+   Téléphone (≤ 760 px) : chemin en haut, roue et panneau en dessous, chat en tiroir. Le chemin est en % : il suit la largeur. */
+
+:root {
+  --ds-fond: #0E0E10;
+  --ds-carte: #17171A;
+  --ds-bord: #2A2A2F;
+  --ds-bord-fort: #3A3A40;
+  --ds-texte: #F2EFEA;
+  --ds-muet: #ABA7A0;
+  --ds-or: #E2C77E;
+  --ds-or-vif: #E8B04B;
+  --ds-accent: #9E3543;
+  --ds-vert: #8FC39F;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ds-fond: #0E0E10; }
+}
+:root[data-theme="dark"] { --ds-fond: #0E0E10; }
+
+/* ---------- Coque ---------- */
+.ds-table, .dp-fin { color: var(--ds-texte); font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.5; min-width: 0; max-width: 100%; position: relative; }
+.ds-table [hidden], .dp-fin [hidden] { display: none !important; }
+.ds-table :focus-visible, .dp-fin :focus-visible { outline: 3px solid var(--ds-texte); outline-offset: 2px; }
+.ds-table .visually-hidden, .dp-fin .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ds-table .small, .dp-fin .small { font-size: 13px; }
+.ds-muet { color: var(--ds-muet); }
+.ds-note { margin: 0; font-size: 13px; color: var(--ds-muet); }
+.ds-vide { margin: 0; font-size: 14px; color: var(--ds-muet); list-style: none; }
+.ds-titre { margin: 0; font-size: 20px; font-weight: 700; color: var(--ds-or); }
+.ds-invite, .dp-invite { font-size: 12px; color: var(--ds-muet); border: 1px solid var(--ds-bord-fort); border-radius: 999px; padding: 0 8px; font-weight: 500; }
+
+.ds-bloc, .dp-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ds-bord); min-width: 0; }
+.ds-bloc-titre, .dp-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
+
+/* ---------- Boutons et cartes de choix ---------- */
+.ds-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--ds-bord-fort); color: var(--ds-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.ds-btn:disabled { opacity: .5; cursor: default; }
+.ds-btn-primary { background: var(--ds-accent); color: #FFFFFF; }
+.ds-btn-ghost { background: transparent; border: 1px solid var(--ds-bord-fort); color: var(--ds-texte); font-weight: 500; }
+.ds-grand { min-height: 52px; width: 100%; font-size: 16px; }
+.ds-quitter { font-size: 13px; }
+.ds-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ds-carte-choix { min-height: 44px; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--ds-bord-fort); background: #1F1F23; color: var(--ds-texte);
+  text-align: left; font: 500 14px Inter, sans-serif; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.ds-carte-choix strong { font-size: 15px; }
+.ds-carte-choix span { font-size: 13px; color: var(--ds-muet); }
+.ds-carte-choix:hover:not(:disabled) { border-color: var(--ds-or); }
+.ds-carte-choix:disabled { opacity: .5; cursor: default; }
+.ds-pied { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ds-pied .ds-btn { flex: 1 1 140px; }
+
+/* ---------- Barre et bandeau ---------- */
+.ds-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.ds-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: #E0909A; font-weight: 700; font-size: 14px; }
+.ds-bandeau { min-width: 0; }
+
+/* ---------- Corps ---------- */
+.ds-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+.ds-colonne-plan { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ds-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.ds-tiroir-chat { display: none; }
+.ds-chat-zone { min-width: 0; }
+
+/* ---------- Chemin de vie ---------- */
+.ds-plan-zone { min-width: 0; width: 100%; max-width: 760px; }
+.ds-plan-tete { margin-bottom: 8px; }
+.ds-tag { font-size: 13px; font-weight: 700; background: rgba(14, 14, 16, .7); border-radius: 999px; padding: 4px 12px; }
+.dp-plan { position: relative; width: 100%; aspect-ratio: 640 / 560; box-sizing: border-box; border-radius: 20px; border: 1px solid var(--ds-bord);
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #3A5E45 0, #2E4A36 70%); overflow: hidden; }
+.dp-plan-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dp-case { position: absolute; transform: translate(-50%, -50%); width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10;
+  display: grid; place-items: center; background: #F2EFEA; }
+.dp-disque { font: 700 14px Inter, sans-serif; color: #121212; line-height: 1; }
+.dp-nom { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 11px Inter, sans-serif; color: #F2EFEA;
+  text-shadow: 0 0 3px #0E0E10, 0 0 3px #0E0E10; pointer-events: none; }
+.dp-case.dp-t-depart { background: #F2EFEA; }
+.dp-case.dp-t-paie, .dp-case.dp-t-augmentation { background: #8FC39F; }
+.dp-case.dp-t-evenement { background: #B07ED0; }
+.dp-case.dp-t-vacances { background: #7E93C9; }
+.dp-case.dp-t-assurance { background: #6FB3F2; }
+.dp-case.dp-t-diplome { background: #E8B04B; }
+.dp-case.dp-t-mariage { background: #E0909A; }
+.dp-case.dp-t-bebe, .dp-case.dp-t-jumeaux { background: #5BB8C9; }
+.dp-case.dp-t-achat { background: #D98E5A; }
+.dp-case.dp-t-impots, .dp-case.dp-t-proces { background: #C95B5B; }
+.dp-case.dp-t-choix { background: #FFFFFF; }
+.dp-case.dp-t-risque { background: #D9A441; }
+.dp-case.dp-t-retraite { background: #A89A80; }
+.dp-case.is-prochaine { box-shadow: 0 0 0 4px #E2C77E; }
+.dp-case.is-moi { border-color: #E2C77E; }
+.dp-tag { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 700; background: #121212; color: #E2C77E; border-radius: 999px; padding: 2px 8px; }
+.dp-pion { position: absolute; transform: translate(-50%, -50%); z-index: 2; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.dp-pion-disque { width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10; display: grid; place-items: center; color: #121212; font: 800 11px Inter, sans-serif; }
+.dp-pion-tag { font: 700 10px Inter, sans-serif; color: #F2EFEA; text-shadow: 0 0 3px #0E0E10, 0 0 3px #0E0E10; white-space: nowrap; }
+
+/* ---------- Roue ---------- */
+.ds-roue-zone { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-width: 0; }
+.ds-roue-bloc { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ds-roue { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #0E0E10; display: grid; place-items: center; position: relative;
+  background: conic-gradient(#9E3543 0 10%, #E2C77E 0 20%, #6FB3F2 0 30%, #8FC39F 0 40%, #B07ED0 0 50%, #D98E5A 0 60%, #E8B04B 0 70%, #5BB8C9 0 80%, #7E93C9 0 90%, #E0909A 0 100%); }
+.ds-roue span { width: 52px; height: 52px; border-radius: 50%; background: #121212; color: #E2C77E; border: 3px solid #E2C77E; display: grid; place-items: center;
+  font: 400 20px 'Archivo Black', sans-serif; }
+.ds-roue.is-tourne { animation: ds-tourne 1.5s cubic-bezier(.2, .7, .2, 1); }
+.ds-prochaines { margin: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.ds-prochaines div { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #1F1F23; }
+.ds-prochaines dt { font-size: 12px; color: var(--ds-muet); }
+.ds-prochaines dd { margin: 0; font-weight: 700; font-size: 14px; text-align: right; }
+.ds-carte-zone { min-width: 0; }
+.ds-carte { display: flex; flex-direction: column; gap: 8px; }
+.ds-carte-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ds-etiquette { font-size: 12px; font-weight: 700; color: #121212; background: #B07ED0; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: .5px; }
+.ds-carte-titre { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.25; }
+.ds-carte-effet { margin: 0; font-size: 14px; color: #D6DCE4; }
+
+/* ---------- Panneau d'action ---------- */
+.ds-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ds-bord); min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ds-panneau p { margin: 0; font-size: 15px; color: #D6DCE4; }
+.ds-form-assur { display: flex; flex-direction: column; gap: 10px; }
+.ds-coche { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; cursor: pointer; }
+.ds-coche input { width: 22px; height: 22px; accent-color: var(--ds-accent); }
+
+/* ---------- Colonne de droite ---------- */
+.ds-fiche { display: flex; flex-direction: column; gap: 8px; border-color: #3A3226; }
+.ds-fiche-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ds-fiche-tete .ds-bloc-titre { margin: 0; }
+.ds-argent { font-family: 'Archivo Black', sans-serif; font-size: 18px; color: var(--ds-or-vif); }
+.ds-dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
+.ds-dl dt { color: var(--ds-muet); }
+.ds-dl dd { margin: 0; }
+.ds-classement { margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+.ds-classement .ds-invite { margin-left: 4px; }
+.ds-table .ds-bloc .ds-bloc-titre { font-size: 16px; }
+.ds-table ul.ds-journal, .ds-table .plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #D6DCE4; max-height: 260px; overflow-y: auto; }
+
+/* ---------- Écran de fin : podium et chemin de chacun ---------- */
+.dp-fin { display: grid; gap: 16px; }
+.dp-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.dp-podium-carte { box-sizing: border-box; border-radius: 16px; background: #1F1F23; border: 1px solid var(--ds-bord-fort); padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.dp-podium-carte.is-gagnant { background: #26201A; border-color: var(--ds-or); }
+.dp-podium-rang { font-size: 13px; font-weight: 700; color: var(--ds-muet); }
+.dp-podium-carte.is-gagnant .dp-podium-rang { color: var(--ds-or); }
+.dp-podium-disque { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #121212; font: 800 15px Inter, sans-serif; }
+.dp-podium-pseudo { font-size: 17px; text-align: center; overflow-wrap: anywhere; }
+.dp-podium-total { font-family: 'Archivo Black', sans-serif; font-size: 22px; font-weight: 400; text-align: center; }
+.dp-podium-detail { font-size: 14px; color: var(--ds-muet); text-align: center; }
+.dp-liste-chemins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+.dp-chemin { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #1F1F23; }
+.dp-chemin-pseudo { overflow-wrap: anywhere; }
+.dp-chemin-texte { color: #F2EFEA; }
+.dp-chemin-fortune { font-weight: 700; text-align: right; }
+.dp-chemin-fortune small { display: block; font-size: 12px; font-weight: 400; color: var(--ds-muet); }
+
+/* ---------- Téléphone (≤ 760 px) ---------- */
+@media (max-width: 760px) {
+  .ds-corps { grid-template-columns: minmax(0, 1fr); }
+  .ds-roue-zone { grid-template-columns: minmax(0, 1fr); }
+  .ds-plan-zone { max-width: none; }
+  .dp-case { width: 30px; height: 30px; }
+  .dp-disque { font-size: 12px; }
+  .dp-nom { display: none; }
+  .dp-pion-disque { width: 24px; height: 24px; font-size: 10px; }
+  .dp-pion-tag { display: none; }
+  .ds-tiroir-chat { display: block; }
+  .ds-chat-zone { display: none; }
+  .ds-panneau { position: sticky; bottom: 0; z-index: 20; box-shadow: 0 -10px 24px rgba(0, 0, 0, .45); }
+  .ds-choix { grid-template-columns: minmax(0, 1fr); }
+  .ds-bloc-titre { font-size: 15px; }
+  .dp-podium { grid-template-columns: minmax(0, 1fr); }
+  .dp-chemin { grid-template-columns: minmax(0, 1fr); }
+  .dp-chemin-fortune { text-align: left; }
+}
+
+/* ---------- Mouvement réduit ---------- */
+@keyframes ds-tourne { from { transform: rotate(0deg); } to { transform: rotate(1080deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-roue.is-tourne { animation: none; }
+  .ds-btn, .ds-carte-choix { transition: none !important; }
+}
