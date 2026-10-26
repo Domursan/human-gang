@@ -1,2 +1,189 @@
-/* ===== Humane Gang — Risk : styles propres à la table (assets/css/plateaux/risk.css) =====
-   Vide pour l'instant : les styles de la table Risk seront ajoutés ici. Les écrans communs sont dans plateaux.css. */
+/* ===== Humane Gang — Risk : table de jeu et écran de fin (assets/css/plateaux/risk.css) =====
+   Classes préfixées rk-. Reprend les maquettes ComteCarte (ordinateur), ComteRenfortsTel (téléphone) et ComteFin (fin).
+   Ordinateur (> 760 px) : carte à gauche, panneau d'action, cartes, joueurs, mission et journal à droite, chat en bas à droite.
+   Téléphone (≤ 760 px) : onglets « Carte et actions » / « Joueurs et journal », carte défilable et zoomable.
+   La carte est en proportion fixe (960 × 520) : les territoires sont placés en %, donc ils suivent la largeur. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap');
+
+:root {
+  --rk-fond: #0E0E10;
+  --rk-carte: #17171A;
+  --rk-bord: #2A2A2F;
+  --rk-bord-fort: #3A3A40;
+  --rk-texte: #F2EFEA;
+  --rk-muet: #ABA7A0;
+  --rk-or: #E2C77E;
+  --rk-or-vif: #E8B04B;
+  --rk-accent: #9E3543;
+  --rk-ok: #8FC39F;
+  --rk-non: #E0909A;
+  --rk-mer: #0B2C48;
+}
+
+/* ---------- Coque ---------- */
+.rk-table, .rk-fin { color: var(--rk-texte); font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.5; min-width: 0; max-width: 100%; position: relative; }
+.rk-table [hidden], .rk-fin [hidden] { display: none !important; }
+.rk-table :focus-visible, .rk-fin :focus-visible { outline: 3px solid var(--rk-texte); outline-offset: 2px; }
+.rk-table .visually-hidden, .rk-fin .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rk-table a, .rk-fin a { color: var(--rk-or); }
+.rk-table button:disabled { cursor: default; }
+
+.rk-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--rk-bord); min-width: 0; }
+.rk-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
+.rk-titre { margin: 0; font-size: 20px; font-weight: 700; color: var(--rk-or); }
+.rk-note, .rk-compte { margin: 0; font-size: 13px; color: var(--rk-muet); }
+.rk-alerte { margin: 0; font-size: 14px; color: var(--rk-non); font-weight: 700; }
+.rk-vide { margin: 0; font-size: 14px; color: var(--rk-muet); list-style: none; }
+.rk-table p { margin: 0; }
+
+/* ---------- Boutons ---------- */
+.rk-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--rk-bord-fort, #3A3A40); color: var(--rk-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.rk-btn:disabled { opacity: .45; }
+.rk-btn-primary { background: var(--rk-accent); color: #FFFFFF; }
+.rk-btn-ghost { background: transparent; border: 1px solid var(--rk-bord-fort); color: var(--rk-texte); font-weight: 500; }
+.rk-rond { width: 44px; padding: 0; font-size: 20px; flex: none; }
+.rk-choix { background: #1F1F23; border: 1px solid var(--rk-bord-fort); color: var(--rk-texte); }
+.rk-choix[aria-pressed="true"] { border-color: var(--rk-or); color: var(--rk-or); background: #2A2412; }
+.rk-quitter { font-size: 13px; }
+
+/* ---------- Barre (onglets téléphone, quitter) ---------- */
+.rk-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.rk-onglets { display: none; gap: 6px; }
+.rk-onglet { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--rk-bord-fort); background: #1F1F23; color: var(--rk-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; }
+.rk-onglet[aria-pressed="true"] { border-color: var(--rk-or); color: var(--rk-or); }
+.rk-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--rk-non); font-weight: 700; font-size: 14px; }
+
+/* ---------- Mise en page ---------- */
+.rk-corps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); gap: 16px; align-items: start; }
+.rk-colonne-carte, .rk-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* ---------- Étapes du tour ---------- */
+.rk-etapes-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.rk-etape { min-height: 36px; box-sizing: border-box; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; border: 1px solid var(--rk-bord-fort); color: var(--rk-muet); font-size: 14px; font-weight: 500; }
+.rk-etape.is-fait { border-color: #2E4A36; background: #18241C; color: var(--rk-ok); }
+.rk-etape.is-actuelle { background: var(--rk-or); color: #121212; border-color: var(--rk-or); font-weight: 700; }
+
+/* ---------- Carte ---------- */
+.rk-zoom { display: none; justify-content: flex-end; gap: 6px; }
+.rk-carte-zone { width: 100%; box-sizing: border-box; border-radius: 18px; border: 1px solid var(--rk-bord); overflow: hidden; background: var(--rk-mer); }
+.rk-carte { position: relative; width: calc(var(--rk-zoom, 1) * 100%); aspect-ratio: 960 / 520; }
+.rk-fond-svg, .rk-fond-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.rk-pions { position: absolute; inset: 0; }
+
+.rk-terr { position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; box-sizing: border-box; padding: 0; margin: 0;
+  border: 0; background: transparent; color: inherit; font: inherit; display: grid; place-items: center; }
+.rk-pastille { width: 26px; height: 26px; box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; color: #FFFFFF;
+  font: 800 12px Inter, sans-serif; box-shadow: 0 0 0 2px #0E0E10, 0 2px 6px rgba(0, 0, 0, .5); position: relative; }
+.rk-pastille.is-clair { color: #121212; }
+.rk-plus { position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: var(--rk-or); white-space: nowrap; text-shadow: 0 0 3px #000; }
+.rk-terr.is-moi .rk-pastille { box-shadow: 0 0 0 2px #0E0E10, 0 0 0 4px var(--rk-texte); }
+.rk-terr.is-clic:not(:disabled) .rk-pastille { outline: 2px dashed var(--rk-texte); outline-offset: 3px; }
+.rk-terr.is-clic:not(:disabled):hover .rk-pastille { outline-style: solid; }
+.rk-terr.is-hl .rk-pastille { outline: 2px dotted var(--rk-or); outline-offset: 4px; }
+.rk-terr.is-vers .rk-pastille { outline: 3px solid var(--rk-non); outline-offset: 4px; }
+.rk-terr.is-sel .rk-pastille { outline: 3px solid var(--rk-or); outline-offset: 4px; transform: scale(1.15); }
+
+/* ---------- Continents ---------- */
+.rk-continents { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.rk-continent { box-sizing: border-box; min-height: 56px; border-radius: 12px; border: 1px solid var(--rk-bord); background: #1F1F23; padding: 6px 10px; display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: center; font-size: 13px; }
+.rk-continent.is-tenu { border-color: #3A3226; }
+.rk-continent-nom { display: flex; flex-direction: column; min-width: 0; }
+.rk-continent-etat { color: var(--rk-muet); font-size: 12px; }
+.rk-continent-bonus { grid-column: 2; font-size: 12px; color: var(--rk-or); font-weight: 700; }
+.rk-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+/* ---------- Panneau d'action ---------- */
+.rk-panneau { box-sizing: border-box; padding: 14px 18px; border-radius: 20px; border: 1px solid #3A3226; background: rgba(23, 23, 26, .92); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rk-pied { display: flex; flex-wrap: wrap; gap: 8px; }
+.rk-brouillon { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.rk-brouillon-ligne { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.rk-brouillon-nom { flex: 1; min-width: 0; font-size: 14px; }
+.rk-brouillon-n { min-width: 28px; text-align: center; font-family: 'Archivo Black', sans-serif; font-size: 18px; }
+.rk-curseur { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rk-curseur label { font-size: 14px; color: var(--rk-muet); }
+.rk-curseur input[type="range"] { flex: 1 1 180px; min-height: 44px; accent-color: var(--rk-or); }
+.rk-curseur output { min-width: 28px; text-align: center; font-family: 'Archivo Black', sans-serif; font-size: 20px; }
+.rk-des { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.rk-combat { margin-top: 4px; padding: 12px; border-radius: 14px; background: #1F1F23; display: flex; flex-direction: column; gap: 8px; }
+.rk-combat-titre { font-size: 14px; }
+.rk-combat-issue { font-size: 14px; font-weight: 700; }
+.rk-des-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rk-des-groupe { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rk-des-nom, .rk-des-contre { font-size: 13px; color: var(--rk-muet); }
+.rk-de { width: 40px; height: 40px; box-sizing: border-box; border-radius: 10px; display: grid; place-items: center; font: 800 20px Inter, sans-serif; }
+.rk-de.is-att { background: #D9534F; color: #FFFFFF; }
+.rk-de.is-def { background: #F6F4EF; color: #121212; }
+
+/* ---------- Mes cartes ---------- */
+.rk-liste-cartes { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.rk-carte-main { width: 100%; min-height: 56px; box-sizing: border-box; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--rk-bord-fort); background: #1F1F23; color: var(--rk-texte);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; cursor: pointer; font: inherit; }
+.rk-carte-main[aria-pressed="true"] { border: 2px solid var(--rk-or); background: #2A2412; }
+.rk-carte-main:disabled { opacity: .6; cursor: default; }
+.rk-carte-symbole { font-weight: 700; font-size: 14px; }
+.rk-carte-nom { font-size: 12px; color: var(--rk-muet); }
+
+/* ---------- Joueurs ---------- */
+.rk-liste-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rk-joueur { display: flex; align-items: flex-start; gap: 10px; padding: 6px 8px; border-radius: 12px; }
+.rk-joueur.is-tour { background: #2A2412; box-shadow: inset 0 0 0 1px var(--rk-or); }
+.rk-joueur.is-elimine { opacity: .6; }
+.rk-joueur-corps { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
+.rk-joueur-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rk-joueur-armee { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--rk-muet); }
+.rk-joueur-chiffres { font-size: 13px; color: var(--rk-muet); }
+.rk-etiquette { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--rk-bord-fort); font-size: 12px; font-weight: 700; color: var(--rk-muet); }
+.rk-etiquette.is-tour { border-color: var(--rk-or); color: var(--rk-or); }
+.rk-table .plat-invite { font-size: 12px; }
+
+/* ---------- Mission secrète ---------- */
+.rk-mission { border-radius: 14px; background: #1F1F23; padding: 0 12px; }
+.rk-mission summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; list-style: none; font-weight: 700; font-size: 15px; color: var(--rk-or); }
+.rk-mission summary::-webkit-details-marker { display: none; }
+.rk-mission p { margin: 0 0 12px; font-size: 14px; }
+
+/* ---------- Chat ---------- */
+.rk-tiroir-chat { display: none; }
+.rk-chat-zone { min-width: 0; }
+
+/* ---------- Fin de partie ---------- */
+.rk-fin { display: grid; gap: 16px; }
+.rk-fin-entete { background: linear-gradient(160deg, #1B2A44 0%, rgba(23, 23, 26, .92) 70%); border-color: #2E3D5C; }
+.rk-fin-titre { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 26px; line-height: 1.2; }
+.rk-fin-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rk-fin-mission { display: grid; grid-template-columns: minmax(70px, auto) 1fr auto; gap: 8px 12px; align-items: baseline; font-size: 14px; }
+.rk-fin-qui { font-weight: 700; }
+.rk-fin-texte { color: var(--rk-muet); }
+.rk-fin-issue { font-size: 12px; font-weight: 700; color: var(--rk-muet); }
+.rk-fin-issue.is-ok { color: var(--rk-ok); }
+.rk-fin-rang { display: flex; align-items: center; gap: 12px; min-height: 52px; box-sizing: border-box; padding: 6px 14px; border-radius: 14px; background: #1F1F23; }
+.rk-fin-rang.is-gagnant { background: #1F2A3C; box-shadow: inset 0 0 0 2px var(--rk-or); }
+.rk-fin-place { font-family: 'Archivo Black', sans-serif; font-size: 22px; width: 28px; }
+.rk-fin-nom { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rk-fin-armee { font-size: 13px; color: var(--rk-muet); }
+.rk-fin-chiffres { font-size: 13px; color: var(--rk-muet); white-space: nowrap; }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 760px) {
+  .rk-onglets { display: inline-flex; }
+  .rk-zoom { display: flex; }
+  .rk-corps { grid-template-columns: minmax(0, 1fr); }
+  .rk-table[data-onglet="carte"] .rk-colonne-cote { display: none; }
+  .rk-table[data-onglet="infos"] .rk-colonne-carte { display: none; }
+  .rk-carte-zone { overflow: auto; }
+  .rk-carte { min-width: 100%; }
+  .rk-continents { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rk-tiroir-chat { display: block; }
+  .rk-chat-zone { display: none; }
+  .rk-bloc-titre { font-size: 15px; }
+  .rk-pastille { width: 24px; height: 24px; font-size: 11px; }
+  .rk-fin-mission { grid-template-columns: 1fr; }
+}
+
+/* ---------- Mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .rk-terr, .rk-pastille, .rk-btn { transition: none !important; }
+}

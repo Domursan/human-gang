@@ -1,2 +1,210 @@
-/* ===== Humane Gang — Monopoly : styles propres à la table (assets/css/plateaux/monopoly.css) =====
-   Vide pour l'instant : les styles de la table Monopoly seront ajoutés ici. Les écrans communs sont dans plateaux.css. */
+/* ===== Humane Gang — Monopoly : table de jeu et encart de fin (assets/css/plateaux/monopoly.css) =====
+   Classes préfixées mo-. Reprend la maquette PolyPlateau (ordinateur), PolyEchange (échange) et PolyTel (téléphone).
+   Ordinateur (> 760 px) : plateau carré 736 px à gauche, colonne joueurs / titres / journal / chat à droite.
+   Téléphone (≤ 760 px) : plateau défilable horizontalement (736 px), onglets « Plateau » et « Joueurs et journal »,
+   chat en tiroir. Les cases sont en % du plateau : elles suivent sa taille. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap');
+
+.mo-table {
+  --mo-fond: #0E0E10;
+  --mo-carte: #17171A;
+  --mo-bord: #2A2A2F;
+  --mo-bord-fort: #3A3A40;
+  --mo-texte: #F2EFEA;
+  --mo-muet: #ABA7A0;
+  --mo-or: #E2C77E;
+  --mo-accent: #9E3543;
+  --mo-vert: #2FB35A;
+  --mo-rouge: #B3262F;
+  --mo-plateau: #0F1822;
+  color: var(--mo-texte);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  min-width: 0;
+  max-width: 100%;
+  position: relative;
+}
+.mo-table [hidden] { display: none !important; }
+.mo-table :focus-visible { outline: 3px solid var(--mo-texte); outline-offset: 2px; }
+.mo-table .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mo-table .muted { color: var(--mo-muet); }
+.mo-table .small { font-size: 13px; margin: 0; }
+
+.mo-bloc { box-sizing: border-box; padding: 12px 14px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--mo-bord); min-width: 0; }
+.mo-bloc-titre { margin: 0 0 8px; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.mo-vide { margin: 0; font-size: 14px; color: var(--mo-muet); }
+.mo-note { margin: 0; font-size: 13px; color: var(--mo-muet); }
+.mo-alerte-douce { margin: 0; padding: 8px 10px; border-radius: 12px; background: #1F1F23; color: var(--mo-muet); font-size: 14px; }
+.mo-titre-panneau { margin: 0 0 4px; font-size: 20px; font-weight: 700; color: var(--mo-or); }
+.mo-panneau > p { margin: 0 0 8px; font-size: 15px; }
+
+/* ---------- Boutons ---------- */
+.mo-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid var(--mo-bord-fort); background: #1F1F23; color: var(--mo-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.mo-btn:disabled { opacity: .5; cursor: default; }
+.mo-btn-primary { background: var(--mo-accent); border-color: transparent; color: #FFFFFF; }
+.mo-btn-danger { background: #6B1D27; border-color: var(--mo-accent); color: #FFFFFF; }
+.mo-btn-ghost { background: transparent; font-weight: 500; }
+.mo-pleine { width: 100%; }
+
+/* ---------- Barre ---------- */
+.mo-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.mo-onglets { display: none; gap: 6px; }
+.mo-onglet { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--mo-bord-fort); background: #1F1F23; color: var(--mo-texte); font: 700 14px Inter, sans-serif; cursor: pointer; }
+.mo-onglet[aria-pressed="true"] { border-color: var(--mo-or); color: var(--mo-or); }
+.mo-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: #E0909A; font-weight: 700; font-size: 14px; }
+.mo-etiquette { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--mo-bord-fort); font-size: 12px; color: var(--mo-muet); }
+.mo-etiquette.is-tour { border-color: var(--mo-or); color: var(--mo-or); font-weight: 700; }
+
+/* ---------- Corps ---------- */
+.mo-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+.mo-colonne-jeu, .mo-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.mo-tiroir-chat { display: none; }
+
+/* ---------- Plateau ---------- */
+.mo-plan-zone { min-width: 0; max-width: 100%; }
+.mo-plan { position: relative; width: min(736px, 100%); aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 14px; background: var(--mo-plateau);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5), inset 0 0 0 2px #22303F; background-size: 100% 100%; background-repeat: no-repeat; }
+.mo-plan.has-img { background-color: transparent; }
+.mo-cases { position: absolute; inset: 0; }
+.mo-case { position: absolute; box-sizing: border-box; margin: 0; padding: 4px 3px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 1px;
+  background: #1B2430; border: 1px solid #3B4757; border-color: var(--proprio, #3B4757); border-width: 1px; color: var(--mo-texte); font: inherit; font-size: 10px; line-height: 1.1;
+  text-align: center; cursor: pointer; overflow: hidden; min-width: 0; min-height: 0; }
+.mo-plan.has-img .mo-case { background: transparent; border-color: transparent; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.mo-plan.has-img .mo-case.has-proprio { border-color: var(--proprio); border-width: 2px; }
+.mo-case:hover { background-color: #26344A; }
+.mo-case.is-moi { box-shadow: inset 0 0 0 2px var(--mo-or); }
+.mo-case.is-hypo { opacity: .6; }
+.mo-case.mo-cn { background: #222B38; justify-content: center; padding: 6px; font-size: 12px; }
+.mo-case.mo-bt { padding-top: 16px; }
+.mo-case.mo-tp { padding-bottom: 16px; }
+.mo-case.mo-lf { padding-right: 16px; }
+.mo-case.mo-rt { padding-left: 16px; }
+.mo-bande { position: absolute; background: var(--bande, #6B6660); }
+.mo-bt .mo-bande { left: 0; right: 0; top: 0; height: 12px; }
+.mo-tp .mo-bande { left: 0; right: 0; bottom: 0; height: 12px; }
+.mo-lf .mo-bande { top: 0; bottom: 0; right: 0; width: 12px; }
+.mo-rt .mo-bande { top: 0; bottom: 0; left: 0; width: 12px; }
+.mo-nom { display: block; width: 100%; max-height: 3.3em; overflow: hidden; font-weight: 700; font-size: 10px; line-height: 1.1; overflow-wrap: anywhere; }
+.mo-cn .mo-nom { font-size: 12px; }
+.mo-prix { font-size: 10px; color: var(--mo-muet); line-height: 1.1; }
+.mo-etat { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 2px; min-height: 12px; }
+.mo-proprio { display: inline-grid; place-items: center; min-width: 16px; height: 14px; padding: 0 2px; border-radius: 4px; color: #121212; font-weight: 700; font-size: 9px; }
+.mo-maison { display: inline-block; width: 7px; height: 7px; background: var(--mo-vert); border: 1px solid #0E0E10; }
+.mo-hotel { display: inline-block; padding: 0 3px; border-radius: 3px; background: var(--mo-rouge); color: #FFFFFF; font-size: 8px; font-weight: 700; }
+.mo-hypo-tag { font-size: 8px; color: var(--mo-muet); }
+.mo-pions { position: absolute; left: 2px; bottom: 2px; display: flex; gap: 2px; z-index: 2; }
+.mo-tp .mo-pions { top: auto; bottom: -10px; left: 50%; transform: translateX(-50%); }
+.mo-bt .mo-pions { top: -10px; bottom: auto; left: 50%; transform: translateX(-50%); }
+.mo-lf .mo-pions { right: -10px; left: auto; top: 50%; bottom: auto; transform: translateY(-50%); flex-direction: column; }
+.mo-rt .mo-pions { left: -10px; right: auto; top: 50%; bottom: auto; transform: translateY(-50%); flex-direction: column; }
+.mo-pion { display: inline-grid; place-items: center; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10; color: #121212; font-size: 8px; font-weight: 800; }
+
+/* Centre : dés, carte, panneau (entre les cases) */
+.mo-centre { position: absolute; left: 10.87%; top: 10.87%; width: 78.26%; height: 78.26%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 10px; padding: 12px; border-radius: 8px; overflow: auto;
+  background: radial-gradient(ellipse at 50% 40%, #1E3A4A 0, #14202E 80%); border: 1px solid #2F4256; }
+.mo-centre-haut { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.mo-des { display: flex; gap: 12px; }
+.mo-carte { width: min(320px, 100%); box-sizing: border-box; padding: 8px 12px; border-radius: 12px; background: rgba(14, 14, 16, .9); border: 1px solid var(--mo-bord); }
+.mo-carte-pioche { margin: 0; font-size: 12px; color: var(--mo-or); font-weight: 700; }
+.mo-carte-texte { margin: 0; font-size: 14px; }
+.mo-panneau { width: min(340px, 100%); box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: rgba(14, 14, 16, .9); border: 1px solid var(--mo-bord); }
+.mo-pied { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.mo-pied .mo-btn { flex: 1 1 auto; }
+.mo-offre { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: #2A2618; border: 2px solid var(--mo-or); }
+.mo-offre p { margin: 0 0 4px; font-size: 14px; }
+.mo-dette { margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: #3A1A20; border: 2px solid #9E3543; color: #F4C6CC; }
+.mo-dette p { margin: 0 0 4px; font-size: 14px; }
+
+/* Fiche d'un lieu */
+.mo-fiche { box-sizing: border-box; }
+.mo-fiche-carte { display: flex; border-radius: 16px; overflow: hidden; background: var(--mo-carte); border: 1px solid var(--mo-bord); }
+.mo-fiche-bande { width: 12px; flex: none; }
+.mo-fiche-corps { flex: 1; min-width: 0; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.mo-fiche-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mo-fiche-titre { margin: 0; font-size: 20px; font-weight: 700; }
+.mo-loyers { margin: 4px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; font-size: 13px; }
+.mo-loyers div { display: flex; justify-content: space-between; gap: 8px; }
+.mo-loyers dd { margin: 0; font-weight: 700; }
+.mo-loyers dt { margin: 0; color: var(--mo-muet); }
+.mo-pied-fiche { margin-top: 8px; }
+
+/* ---------- Colonne de droite ---------- */
+.mo-liste-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mo-joueur { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 4px 8px; border-radius: 12px; }
+.mo-joueur.is-moi { background: #1F1F23; box-shadow: inset 0 0 0 2px var(--mo-or); }
+.mo-joueur.is-elimine { opacity: .6; }
+.mo-joueur-corps { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mo-joueur-argent { font-size: 14px; white-space: nowrap; }
+.mo-groupe { margin-bottom: 8px; }
+.mo-groupe-titre { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+.mo-pastille { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+.mo-titres { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mo-titre-bouton { width: 100%; min-height: 44px; box-sizing: border-box; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--mo-bord); background: #1F1F23; color: var(--mo-texte);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.mo-titre-info { font-size: 12px; color: var(--mo-muet); white-space: nowrap; }
+.mo-raccourcis { display: flex; flex-direction: column; gap: 8px; }
+.mo-raccourcis:empty { display: none; }
+.mo-journal ul, .mo-journal { margin: 0; }
+.mo-table .plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.mo-chat-zone { min-width: 0; }
+
+/* ---------- Fenêtre d'échange ---------- */
+.mo-echange-zone { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+.mo-echange-fond { position: absolute; inset: 0; background: rgba(8, 8, 10, .72); }
+.mo-echange { position: relative; width: min(1040px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box; border-radius: 20px; background: #17171A;
+  border: 1px solid var(--mo-bord); box-shadow: 0 20px 50px rgba(0, 0, 0, .6); display: flex; flex-direction: column; }
+.mo-echange-tete { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border-bottom: 1px solid var(--mo-bord); }
+.mo-echange-titre { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 24px; line-height: 1.1; }
+.mo-echange-corps { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 260px; min-height: 0; }
+.mo-ech-col { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; border-right: 1px solid var(--mo-bord); }
+.mo-ech-cote { padding: 18px 20px; background: #141417; display: flex; flex-direction: column; gap: 10px; }
+.mo-ech-titre { margin: 0; font-size: 18px; font-weight: 700; }
+.mo-ech-label { font-size: 14px; font-weight: 700; }
+.mo-ech-liste { display: flex; flex-direction: column; gap: 6px; }
+.mo-ech-lieu { min-height: 48px; box-sizing: border-box; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--mo-bord-fort); background: #1F1F23; color: var(--mo-texte);
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; font: inherit; text-align: left; cursor: pointer; }
+.mo-ech-lieu[aria-pressed="true"] { border: 2px solid var(--mo-or); background: #2A2618; }
+.mo-ech-lieu-nom { font-weight: 700; font-size: 14px; }
+.mo-ech-coche { grid-column: 1 / -1; font-size: 12px; font-weight: 700; color: var(--mo-or); min-height: 0; }
+.mo-ech-coche:empty { display: none; }
+.mo-ech-nombre, .mo-select { min-height: 44px; box-sizing: border-box; padding: 0 10px; border-radius: 12px; border: 1px solid var(--mo-bord-fort); background: #1F1F23; color: var(--mo-texte); font: 500 15px Inter, sans-serif; width: 100%; }
+.mo-range { width: 100%; min-height: 44px; accent-color: var(--mo-or); }
+.mo-echange-pied { display: flex; justify-content: flex-end; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--mo-bord); flex-wrap: wrap; }
+.mo-echange-pied .mo-btn { min-width: 44px; }
+
+/* ---------- Fin de partie ---------- */
+.mo-fin { display: flex; flex-direction: column; gap: 10px; }
+.mo-fin-titre { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 22px; }
+.mo-classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mo-classe { display: grid; grid-template-columns: 36px 36px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 14px; border-radius: 16px; background: rgba(23, 23, 26, .92); border: 1px solid var(--mo-bord); }
+.mo-classe.is-elimine { opacity: .7; }
+.mo-rang { font-family: 'Archivo Black', sans-serif; font-size: 22px; }
+.mo-classe-avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #121212; font-weight: 800; font-size: 12px; }
+.mo-classe-corps { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mo-classe-tete { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mo-classe-fortune { margin-left: auto; font-weight: 700; }
+.mo-titres .mo-titre { display: flex; justify-content: space-between; gap: 8px; border-left: 6px solid var(--c); padding: 4px 8px; font-size: 13px; }
+.mo-titre.is-hypo { opacity: .7; }
+.mo-titre-info { font-size: 12px; color: var(--mo-muet); }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 760px) {
+  .mo-onglets { display: flex; }
+  .mo-corps { grid-template-columns: minmax(0, 1fr); }
+  .mo-table[data-onglet="jeu"] .mo-colonne-cote { display: none; }
+  .mo-table[data-onglet="cote"] .mo-colonne-jeu { display: none; }
+  .mo-plan-zone { overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+  .mo-plan { width: 736px; }
+  .mo-chat-zone { display: none; }
+  .mo-tiroir-chat { display: block; }
+  .mo-echange-corps { grid-template-columns: minmax(0, 1fr); }
+  .mo-ech-col { border-right: 0; border-bottom: 1px solid var(--mo-bord); }
+  .mo-classe { grid-template-columns: 30px 32px minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mo-table * { transition: none !important; animation: none !important; }
+}

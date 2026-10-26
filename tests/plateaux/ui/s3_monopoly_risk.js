@@ -27,7 +27,8 @@ const actif = (code) => Number(su(`select t_num(coalesce(tour, (etat->>'actif'):
   await shot(rt, 'rk_tel');
   su(`select t_rk_tour('${code}')`);
   await r.waitForTimeout(5000); await shot(r, 'rk_apres_tour');
-  for (let i = 0; i < 300; i++) { if (su(`select statut from hg_plat_parties where code='${code}'`) !== 'en_cours') break; su(`select t_rk_tour('${code}')`); }
+  for (let i = 0; i < 60; i++) { if (su(`select statut from hg_plat_parties where code='${code}'`) !== 'en_cours') break; su(`select t_rk_tour('${code}')`); }
+  if (su(`select statut from hg_plat_parties where code='${code}'`) === 'en_cours') su(`select hg_plat__terminer(t_pid('${code}'), array[t_uid(1)], 'monde')`);
   await r.waitForTimeout(5000); await shot(r, 'rk_fin');
   await fermer();
 })();

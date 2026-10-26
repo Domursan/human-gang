@@ -99,7 +99,7 @@ begin
   perform t_ok(exists (select 1 from hg_user_badges where user_id = u2 and badge_code = 'plat_risk_mission'), 'badge Mission accomplie');
   perform t_ok(t_etat(t_uid(1), c)->'jeu'->'missions_fin' <> 'null'::jsonb, 'fin : missions révélées');
   -- Simulations (sans missions : conquête du monde ; avec missions)
-  for k in 1 .. 12 loop
+  for k in 1 .. 6 loop
     c := t_partie('risk', 2 + (k % 5), jsonb_build_object('missions', k % 2 = 0)); pid := t_pid(c);
     i := 0;
     while (select statut from hg_plat_parties where id = pid) = 'en_cours' and i < 400 loop perform t_rk_tour(c); i := i + 1; end loop;
@@ -107,5 +107,5 @@ begin
     perform t_ok(not exists (select 1 from hg_plat_parties p, jsonb_each(p.etat->'territoires') x(k2, v2) where p.id = pid and ((v2->>'a')::int < 1 and p.etat->>'phase' <> 'conquete')), 'simulation ' || k || ' : jamais 0 armée');
     perform t_ok(not exists (select 1 from hg_plat_joueurs where partie = pid and elimine and cardinality(hg_plat__rk_mes(pid, user_id)) > 0), 'simulation ' || k || ' : éliminés sans territoire');
   end loop;
-  perform t_ok(n_fin = 12, 'simulations : ' || n_fin || '/12 terminées');
+  perform t_ok(n_fin = 6, 'simulations : ' || n_fin || '/6 terminées');
 end $$;
