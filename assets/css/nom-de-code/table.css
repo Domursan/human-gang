@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Nom de code : la table de jeu (vues/table.js) =====
+/* ===== Humane Gang — Codenames : la table de jeu (vues/table.js) =====
    Classes préfixées ndc-. Cartes-mots beiges (--ndc-papier), mot en Oswald majuscules, bandeau, équipes jaune et rose.
    Ordinateur (> 760 px) : grille à gauche, côté (équipes, historique, journal) à droite, chat en volet.
    Téléphone (≤ 760 px) : grille pleine largeur, indice et actions sous la grille, équipes / historique / chat dans un tiroir.

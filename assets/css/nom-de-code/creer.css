@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Nom de code : créer une partie (vues/creer.js) =====
+/* ===== Humane Gang — Codenames : créer une partie (vues/creer.js) =====
    Deux colonnes sur ordinateur (réglages à gauche, « Ta partie » à droite, collée en défilant),
    une seule colonne sous 760 px. Segments, interrupteurs et choix : texte + état, jamais la couleur seule.
    Accents : jaune pour l'action et l'état choisi, rose pour l'interrupteur allumé et le curseur. */

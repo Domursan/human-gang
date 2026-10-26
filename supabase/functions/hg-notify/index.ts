@@ -54,7 +54,7 @@
 //   lg_party         { code: 'HGLG-####' } hôte d'une partie de Loup-Garou créée avec annonce_discord → annonce dans le salon
 //                    (bot.channels.loup_garou) : hôte, nom, places, code, lien d'invitation. Partie en attente créée il y a moins
 //                    de 15 min ; une seule annonce (réservation hg_lg_parties.discord_annonce_at). Désactivable (bot.notify.lg_party).
-//   ndc_party        { code: 'HGNDC-####' } même principe pour une partie de Nom de code (bot.channels.nom_de_code, bot.notify.ndc_party,
+//   ndc_party        { code: 'HGNDC-####' } même principe pour une partie de Codenames (bot.channels.nom_de_code, bot.notify.ndc_party,
 //                    réservation hg_ndc_parties.discord_annonce_at).
 //   uno_party        { code: 'HGUNO-####' } même principe pour une partie de Uno (bot.channels.uno, bot.notify.uno_party,
 //                    réservation hg_uno_parties.discord_annonce_at).
@@ -1242,7 +1242,7 @@ async function onNdcParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
       fields: [{ name: 'Code', value: g.code, inline: true }, { name: 'Joueurs', value: places, inline: true }],
     }),
   };
-  const channels = await sendToChannels(ndcChannels, (id) => sendChannel(id, annonce), 'annonce Nom de code', friendlyDiscordError);
+  const channels = await sendToChannels(ndcChannels, (id) => sendChannel(id, annonce), 'annonce Codenames', friendlyDiscordError);
   await logAnnounce(me, 'auto:nom_de_code', `Annonce de partie : ${g.code}`, channels, true);
   const channel = channels.some((c) => c.ok);
   // Aucun salon n'a reçu l'annonce : on libère la réservation pour qu'un nouvel appel puisse réessayer.

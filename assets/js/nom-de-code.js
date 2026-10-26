@@ -1,4 +1,4 @@
-// ===== Humane Gang — Nom de code (nom-de-code.html) : démarrage et navigation entre les écrans =====
+// ===== Humane Gang — Codenames (nom-de-code.html) : démarrage et navigation entre les écrans =====
 /*
  * Rôle : initialise la page (session membre, accès à la page « nom-de-code » : admins seulement au lancement),
  * puis affiche l'écran demandé par l'adresse :
@@ -54,8 +54,8 @@ async function afficher() {
   nettoyer = null;
   const r = route();
   if (INVITE && !(['rejoindre', 'partie'].includes(r.nom) && r.arg)) {
-    app.innerHTML = `<section class="card ndc-erreur"><h1 class="display">Nom de code</h1>
-      <p>Nom de code se joue sur invitation. Ouvre le lien de partie qu'on t'a envoyé, ou connecte-toi si tu es membre du gang.</p>
+    app.innerHTML = `<section class="card ndc-erreur"><h1 class="display">Codenames</h1>
+      <p>Codenames se joue sur invitation. Ouvre le lien de partie qu'on t'a envoyé, ou connecte-toi si tu es membre du gang.</p>
       <p><a class="btn btn-primary" href="compte.html?next=${encodeURIComponent('nom-de-code.html')}">Me connecter</a></p></section>`;
     app.setAttribute('aria-busy', 'false');
     return;
@@ -72,7 +72,7 @@ async function afficher() {
     nettoyer = typeof res === 'function' ? res : null;
   } catch (e) {
     console.error('[nom-de-code]', e);
-    app.innerHTML = '<section class="card ndc-erreur"><h1 class="display">Oups</h1><p>Cet écran n\'a pas pu s\'afficher.</p><p><a class="btn btn-primary" href="nom-de-code.html">Retour à Nom de code</a></p></section>';
+    app.innerHTML = '<section class="card ndc-erreur"><h1 class="display">Oups</h1><p>Cet écran n\'a pas pu s\'afficher.</p><p><a class="btn btn-primary" href="nom-de-code.html">Retour à Codenames</a></p></section>';
   } finally {
     app.setAttribute('aria-busy', 'false');
     window.scrollTo({ top: 0 });

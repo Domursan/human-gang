@@ -57,7 +57,7 @@ export const CARTES = [
   { id: 'bataille-navale', titre: 'Bataille navale', texte: 'Cache ta flotte, coule la sienne.', section: 'multi', href: 'duels.html#creer/bataille', page: 'duels', image: `${IMG}bataille-navale.webp` },
   { id: 'mastermind', titre: 'Mastermind', texte: 'Perce le code secret.', section: 'multi', href: 'duels.html#creer/mastermind', page: 'duels', image: `${IMG}mastermind.webp` },
   { id: 'qui-est-ce', titre: 'Qui est-ce ?', texte: 'Devine son personnage secret.', section: 'multi', href: 'duels.html#creer/quiestce', page: 'duels', image: `${IMG}qui-est-ce.webp` },
-  { id: 'nom-de-code', titre: 'Nom de code', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: 'nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
+  { id: 'nom-de-code', titre: 'Codenames', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: 'nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
 
   // Jeux spéciaux : pages à part, visibles selon l'accès de la page
   { id: 'loup-garou', image: `${IMG}loup-garou.webp`, titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: 'loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',

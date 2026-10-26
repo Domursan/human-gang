@@ -72,6 +72,7 @@ export function creer(root, ctx) {
         <div class="plat-boutons">
           <button type="button" class="btn btn-primary" data-pret aria-pressed="false">Je suis prêt</button>
           <button type="button" class="btn btn-sand" data-lancer disabled hidden aria-describedby="plat-salle-raison">Lancer la partie</button>
+          <button type="button" class="btn btn-ghost" data-robot hidden>Ajouter un robot</button>
         </div>
         <p id="plat-salle-raison" class="small muted" data-raison></p>
         <p class="plat-quitter"><button type="button" class="plat-lien-action" data-quitter></button></p>
@@ -88,6 +89,7 @@ export function creer(root, ctx) {
   const bilan = q('[data-bilan]');
   const btnPret = q('[data-pret]');
   const btnLancer = q('[data-lancer]');
+  const btnRobot = q('[data-robot]');
   const raison = q('[data-raison]');
   const btnQuitter = q('[data-quitter]');
   const btnCopier = q('[data-copier]');
@@ -117,6 +119,8 @@ export function creer(root, ctx) {
     envoyer(btnPret, () => plat.pret(code, !monPret), suivi);
   });
   btnLancer.addEventListener('click', () => envoyer(btnLancer, () => plat.lancer(code), suivi));
+  // Robots (administrateurs seulement) : pour tester un jeu seul ; ils jouent automatiquement au bout de 5 secondes.
+  btnRobot.addEventListener('click', () => envoyer(btnRobot, () => plat.ajouterRobot(code), suivi));
 
   btnQuitter.addEventListener('click', async () => {
     const hote = !!dernierEtat?.moi?.hote;
@@ -215,6 +219,7 @@ export function creer(root, ctx) {
     if (n < J.min) raisonTexte = `Il faut au moins ${J.min} joueurs pour lancer la partie.`;
     else if (pretsN < n) raisonTexte = `${n - pretsN} joueur${n - pretsN > 1 ? 's ne sont pas prêts' : ' n\'est pas prêt'}.`;
     btnLancer.hidden = !estHote;
+    btnRobot.hidden = !(estHote && moi?.is_admin && !estInvite() && n < (p.nb_places || 0));
     btnLancer.disabled = !!raisonTexte;
     raison.textContent = estHote ? raisonTexte : '';
     bilan.textContent = `${pretsN} joueur${pretsN > 1 ? 's' : ''} sur ${n} ${pretsN > 1 ? 'sont prêts' : 'est prêt'}${p.nb_places ? ` (${p.nb_places} places)` : ''}`;

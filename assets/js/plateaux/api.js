@@ -82,6 +82,8 @@ export const plat = {
   pret: deux((code, pret) => rpc('hg_plat_pret', { p_code: code, p_pret: pret }), (code, pret) => rpcInvite('pret', code, { pret })),
   exclure: (code, user) => rpc('hg_plat_exclure', { p_code: code, p_user: user }),
   lancer: (code) => rpc('hg_plat_lancer', { p_code: code }),
+  /** Administrateur hôte : ajoute un robot (joue automatiquement) pour tester seul. */
+  ajouterRobot: (code) => rpc('hg_plat_ajouter_robot', { p_code: code }),
   /** Action de jeu (voir le moteur du jeu) : agir(code, 'deplacer', { piece: 'hall' }). */
   agir: deux((code, action, args = {}) => rpc('hg_plat_agir', { p_code: code, p_action: action, p_args: args }),
     (code, action, args = {}) => rpcInvite('agir', code, { action, args })),

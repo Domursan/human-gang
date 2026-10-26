@@ -1,4 +1,4 @@
-// ===== Humane Gang — Nom de code : rejoindre une partie (#rejoindre/CODE) =====
+// ===== Humane Gang — Codenames : rejoindre une partie (#rejoindre/CODE) =====
 /*
  * Rôle : deux parcours selon le visiteur, avec le même aperçu de la partie (ndc.apercu : nom, hôte, joueurs, réglages).
  *   Membre : bouton « Rejoindre la partie » (ndc.rejoindre), puis salle d'attente. Si je suis déjà dans la partie,
@@ -13,7 +13,7 @@
 import { esc, toast } from '../../core.js';
 import { ndc, erreurTexte, estInvite, jetonInvite } from '../api.js';
 
-const LIEN_ACCUEIL = '<a class="btn btn-ghost ndc-rej-retour" href="nom-de-code.html">Retour à Nom de code</a>';
+const LIEN_ACCUEIL = '<a class="btn btn-ghost ndc-rej-retour" href="nom-de-code.html">Retour à Codenames</a>';
 
 /** Lien de connexion qui revient sur la même partie après le compte. */
 const lienCompte = (code) => `<a class="ndc-rej-lien" href="compte.html?next=${encodeURIComponent(`nom-de-code.html?code=${code}`)}">J'ai un compte, me connecter</a>`;
@@ -54,7 +54,7 @@ function vuePartie(p, code, invite) {
   const inscrits = Number(p.inscrits) || 0;
   const places = Number(p.nb_places) || 0;
   return `<section class="card ndc-rej-carte" aria-labelledby="ndc-rej-nom" data-rejoindre>
-    <p class="ndc-rej-surtitre">${invite ? 'Tu es invité à une partie de Nom de code' : 'Rejoindre une partie'}</p>
+    <p class="ndc-rej-surtitre">${invite ? 'Tu es invité à une partie de Codenames' : 'Rejoindre une partie'}</p>
     <div class="ndc-rej-entete">
       <h1 id="ndc-rej-nom" class="ndc-rej-nom">${esc(p.nom)}</h1>
       <p class="ndc-rej-hote">Hôte : <strong class="ndc-rej-hote-nom">${esc(p.hote_pseudo || '?')}</strong>

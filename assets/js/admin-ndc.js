@@ -1,9 +1,9 @@
-// ===== Humane Gang — administration : Nom de code (La Fête foraine › Jeux › Nom de code) =====
+// ===== Humane Gang — administration : Codenames (La Fête foraine › Jeux › Codenames) =====
 /*
- * Rôle : réglages de Nom de code pour l'administrateur, en cinq blocs.
+ * Rôle : réglages de Codenames pour l'administrateur, en cinq blocs.
  *   - Récompenses en Paillettes : partie terminée, victoire, bonus de l'espion gagnant, plafond par jour,
  *     nombre minimum de joueurs pour être récompensé.
- *   - Badges Nom de code : les badges « ndc_* » avec leur interrupteur actif et leur nombre de membres. Les codes désactivés
+ *   - Badges Codenames : les badges « ndc_* » avec leur interrupteur actif et leur nombre de membres. Les codes désactivés
  *     partent dans badges_inactifs à l'enregistrement.
  *   - Paquets de mots : liste des paquets, mots du paquet choisi (recherche, actif / inactif, retrait), ajout de mots,
  *     nouveau paquet. Un paquet doit avoir au moins 25 mots actifs pour servir à une partie.
@@ -57,7 +57,7 @@ const N = { root: null, data: null, paquets: new Map(), paquet: PAQUET_DEFAUT, m
 /* ---------- Montage ---------- */
 
 /**
- * Monte la section Nom de code dans son conteneur et lit les réglages.
+ * Monte la section Codenames dans son conteneur et lit les réglages.
  * @param {HTMLElement} root Conteneur (#ndc-root).
  * @returns {Promise<void>}
  */
@@ -71,7 +71,7 @@ export async function mountNdcSection(root) {
     root.addEventListener('change', onChange);
     root.addEventListener('input', onInput);
   }
-  root.innerHTML = '<div class="empty">Chargement de Nom de code…</div>';
+  root.innerHTML = '<div class="empty">Chargement de Codenames…</div>';
   await load();
 }
 
@@ -165,8 +165,8 @@ function squelette() {
     </section>
 
     <section class="card ndc-card" aria-labelledby="ndc-h-badges">
-      <h3 id="ndc-h-badges" class="ndc-titre">Badges Nom de code</h3>
-      ${badges.length ? `<ul class="ndc-badges">${badges.map(badgeHtml).join('')}</ul>` : '<p class="muted small">Aucun badge Nom de code pour l’instant.</p>'}
+      <h3 id="ndc-h-badges" class="ndc-titre">Badges Codenames</h3>
+      ${badges.length ? `<ul class="ndc-badges">${badges.map(badgeHtml).join('')}</ul>` : '<p class="muted small">Aucun badge Codenames pour l’instant.</p>'}
       <p class="small muted ndc-note">Les interrupteurs se désactivent ici, puis se valident avec Enregistrer.
         Les images et textes des badges se modifient dans <a href="#place/badges">Badges</a>.</p>
     </section>
@@ -571,7 +571,7 @@ function onClick(e) {
   if (!el) return;
   switch (el.dataset.ndc) {
     case 'retry':
-      N.root.innerHTML = '<div class="empty">Chargement de Nom de code…</div>';
+      N.root.innerHTML = '<div class="empty">Chargement de Codenames…</div>';
       load();
       break;
     case 'paquet': choisirPaquet(el.dataset.paquet); break;
@@ -682,11 +682,11 @@ async function enregistrer(form) {
     };
     statut.textContent = 'Réglages enregistrés.';
     statut.className = 'ndc-statut ndc-ok';
-    toast('Réglages de Nom de code enregistrés', 'ok');
+    toast('Réglages de Codenames enregistrés', 'ok');
   } catch (err) {
     statut.textContent = `Enregistrement impossible : ${errMsg(err)}`;
     statut.className = 'ndc-statut ndc-erreur';
-    toast(`Réglages Nom de code non enregistrés : ${errMsg(err)}`, 'error');
+    toast(`Réglages Codenames non enregistrés : ${errMsg(err)}`, 'error');
   } finally {
     btn.disabled = false;
     btn.removeAttribute('aria-busy');

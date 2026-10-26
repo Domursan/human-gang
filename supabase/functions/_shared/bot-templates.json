@@ -109,7 +109,7 @@
       "body": "**{hote}** lance « {nom} » : {places}.\n\nCode : **{code}**. Rejoins la table : {lien}"
     },
     "ndc_party_announce": {
-      "title": "Une partie de Nom de code se prépare !",
+      "title": "Une partie de Codenames se prépare !",
       "body": "**{hote}** lance « {nom} » : {places}. Deux équipes, deux espions, 25 mots.\n\nCode : **{code}**. Rejoins la salle : {lien}"
     },
     "plat_party_announce": {
@@ -386,8 +386,8 @@
       }
     },
     "ndc_party_announce": {
-      "group": "jeux", "label": "Partie de Nom de code", "target": "Salon d'annonces", "color": "#E8559A",
-      "description": "Publié quand un membre crée une partie de Nom de code avec l'option « Annoncer sur le Discord du gang ». Une seule annonce par partie. Désactivable dans Bot Discord, activé par défaut.",
+      "group": "jeux", "label": "Partie de Codenames", "target": "Salon d'annonces", "color": "#E8559A",
+      "description": "Publié quand un membre crée une partie de Codenames avec l'option « Annoncer sur le Discord du gang ». Une seule annonce par partie. Désactivable dans Bot Discord, activé par défaut.",
       "fields": [["Code", "{code}"], ["Joueurs", "{places}"]],
       "vars": {
         "hote": { "label": "Pseudo de l'hôte", "example": "Domursan" },

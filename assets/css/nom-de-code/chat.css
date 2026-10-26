@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Nom de code : chat à onglets (vues/chat.js) =====
+/* ===== Humane Gang — Codenames : chat à onglets (vues/chat.js) =====
    Onglets « Général » et « Équipe », pastille de non-lus, saisie en bas (ou phrase de lecture seule).
    Les styles sont posés sur .ndc-chat, qui prend la largeur de son conteneur.
    Cibles tactiles 44 px. Le fil est borné en hauteur et défile. */

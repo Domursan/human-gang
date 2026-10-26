@@ -1,4 +1,4 @@
-/* ===== Humane Gang — administration : Nom de code (La Fête foraine › Jeux › Nom de code) =====
+/* ===== Humane Gang — administration : Codenames (La Fête foraine › Jeux › Codenames) =====
    Styles de assets/js/admin-ndc.js. Préfixe ndc-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
 
 .ndc { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

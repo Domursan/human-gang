@@ -1,4 +1,4 @@
-// ===== Humane Gang — Nom de code : la table de jeu (#partie, partie en cours) =====
+// ===== Humane Gang — Codenames : la table de jeu (#partie, partie en cours) =====
 /*
  * Rôle : affiche une partie en cours. Bandeau du haut (score, équipe au tour, chrono, indice, Quitter),
  *   grille 5 × 5 de cartes-mots, actions de l'agent (proposer, valider, arrêter) ou de l'espion (indice),
