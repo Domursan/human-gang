@@ -7,6 +7,7 @@
  * Dépendances : theme-load.js, theme.js, effects.js, profile.js, pages-access.js, perms.js, godmode.js,
  * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js, site-etat.js (bandeau et maintenance),
  * view-as.js (vue « comme un membre » de l'admin : résolue dès le profil connu, bandeau sous le menu).
+ * light-dismiss.js (fermer une fenêtre en cliquant à côté).
  *   Chargés à part (import dynamique, sans bloquer la page) : dyn-events.js, card-drops.js.
  * Exporte : initPage.
  */
@@ -25,6 +26,7 @@ import { loadSiteSettings } from './site-load.js';
 import { applySiteDom } from './site-defaults.js';
 import { applySiteEtat } from './site-etat.js';
 import { resolveViewAs, viewAsActive, renderViewAsBar } from './view-as.js';
+import { installLightDismiss } from './light-dismiss.js';
 
 /* ---------- Constantes ---------- */
 
@@ -144,6 +146,7 @@ async function startPage(auth) {
  * @returns {Promise<object|null>} Le profil connecté, ou null.
  */
 export async function initPage({ auth = 'member' } = {}) {
+  installLightDismiss(); // clic à côté d'une fenêtre = fermer (toutes les pages)
   for (;;) {
     try {
       return await startPage(auth);
