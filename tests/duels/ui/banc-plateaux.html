@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Banc des tables à cases</title>
+  <link rel="stylesheet" href="../../../assets/css/base.css">
+  <link rel="stylesheet" href="../../../assets/css/duels.css">
+</head>
+<body>
+  <main id="app" style="max-width: 1100px; margin: 0 auto; padding: 0 16px;"></main>
+  <script type="module">
+    // Banc de test des vues Échecs et Dames (tests/duels/ui/s4_echecs_dames.js) : monte une vue avec un état fourni,
+    // sans passer par duels.html ni par la vue de partie. Le faux Supabase répond aux coups possibles et enregistre les coups.
+    import { creer as echecs } from '../../../assets/js/duels/vues/echecs.js';
+    import { creer as dames } from '../../../assets/js/duels/vues/dames.js';
+    const VUES = { echecs, dames };
+    const racine = document.getElementById('app');
+    let vue = null;
+    window.__DUELS = window.__DUELS || { possibles: [], etat: null, appels: [] };
+    window.banc = {
+      /** Monte la vue du jeu avec l'état et les coups possibles donnés. */
+      monter(jeu, etat, possibles = []) {
+        vue?.detruire();
+        racine.innerHTML = '';
+        window.__DUELS.possibles = possibles;
+        window.__DUELS.etat = etat;
+        vue = VUES[jeu](racine, {
+          code: etat.partie.code, naviguer() {}, moi: null,
+          suivi: { rafraichir() {}, secondesRestantes: () => 42 },
+        });
+        vue.maj(etat);
+        return true;
+      },
+      /** Nouvel état (autre version) de la même vue, avec ses coups possibles. */
+      maj(etat, possibles = []) {
+        window.__DUELS.possibles = possibles;
+        window.__DUELS.etat = etat;
+        vue.maj(etat);
+        return true;
+      },
+    };
+    window.bancPret = true;
+  </script>
+</body>
+</html>

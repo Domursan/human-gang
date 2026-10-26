@@ -1,0 +1,77 @@
+/* ===== Humane Gang — Duels : échiquier (vues/echecs.js) ===== */
+/* Tailles en cqi : 1 cqi = 1 % de la largeur de l'échiquier (container-type sur .duels-echecs-plateau). */
+
+.duels-echecs-jeu { width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.duels-echecs-zone { position: relative; width: min(100%, 560px); }
+
+.duels-echecs-plateau { width: 100%; aspect-ratio: 1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr)); container-type: inline-size; box-sizing: border-box; border-radius: 10px; overflow: hidden;
+  border: 2px solid #3B2A1E; box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
+
+.duels-echecs-case { position: relative; appearance: none; margin: 0; padding: 0; border: 0; border-radius: 0; min-width: 0; min-height: 0;
+  display: grid; place-items: center; cursor: pointer; font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.duels-echecs-case.is-claire { background: #E9D9B4; }
+.duels-echecs-case.is-sombre { background: #B58863; }
+.duels-echecs-case[aria-disabled="true"] { cursor: default; }
+.duels-echecs-case:focus-visible { outline: 3px solid #F6D660; outline-offset: -3px; z-index: 2; }
+.duels-echecs-case.is-mienne { cursor: grab; }
+.duels-echecs-case.is-dernier { box-shadow: inset 0 0 0 999px rgba(246, 214, 96, .42); }
+.duels-echecs-case.is-sel { box-shadow: inset 0 0 0 999px rgba(62, 143, 209, .5); }
+.duels-echecs-case.is-echec { box-shadow: inset 0 0 0 999px rgba(217, 58, 63, .62); }
+
+/* Arrivées possibles : point (case vide) ou anneau (prise). */
+.duels-echecs-case.is-cible::after { content: ''; position: absolute; width: 3.6cqi; height: 3.6cqi; border-radius: 50%;
+  background: rgba(20, 24, 18, .34); pointer-events: none; z-index: 2; }
+.duels-echecs-case.is-prise::after { content: ''; position: absolute; inset: 1.2cqi; border-radius: 50%;
+  border: 0.8cqi solid rgba(20, 24, 18, .42); pointer-events: none; z-index: 2; }
+
+.duels-echecs-piece { position: relative; z-index: 1; font-size: 10.5cqi; line-height: 1; pointer-events: none;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', 'Apple Symbols', serif; }
+.duels-echecs-piece.is-blanc { color: #FFFFFF; -webkit-text-stroke: 1.1px #2A1D12; text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
+.duels-echecs-piece.is-noir { color: #17120E; -webkit-text-stroke: .7px #EFE4CC; text-shadow: 0 0 3px rgba(255, 255, 255, .22); }
+
+.duels-echecs-coord { position: absolute; font: 700 max(9px, 2.5cqi) / 1 'Inter', system-ui, sans-serif; color: rgba(40, 28, 18, .8); pointer-events: none; }
+.duels-echecs-case.is-sombre .duels-echecs-coord { color: rgba(255, 246, 230, .9); }
+.duels-echecs-coord.is-rang { top: 3px; left: 4px; }
+.duels-echecs-coord.is-fichier { right: 4px; bottom: 2px; }
+
+/* Glisser-déposer : pièce suivant le pointeur (position fixe, hors du plateau). */
+.duels-echecs-fantome { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -55%); font-size: 46px; line-height: 1;
+  font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', serif; }
+.duels-echecs-fantome.is-blanc { color: #FFFFFF; -webkit-text-stroke: 1.2px #2A1D12; }
+.duels-echecs-fantome.is-noir { color: #17120E; -webkit-text-stroke: .6px #EFE4CC; }
+
+/* Fenêtre de promotion, posée sur le centre de l'échiquier. */
+.duels-echecs-promo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; width: min(86%, 300px); box-sizing: border-box;
+  padding: 12px; border-radius: 16px; background: var(--surface-2, #221E1A); border: 1px solid var(--sand, #E9D9B4); box-shadow: 0 18px 40px rgba(0, 0, 0, .6);
+  display: flex; flex-direction: column; gap: 8px; }
+.duels-echecs-promo[hidden] { display: none; }
+.duels-echecs-promo-titre { margin: 0; font-weight: 700; font-size: 15px; text-align: center; }
+.duels-echecs-promo-choix { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.duels-echecs-promo-bouton { min-height: 48px; font-size: 15px; }
+.duels-echecs-promo .duels-echecs-piece { font-size: 26px; line-height: 1; }
+.duels-echecs-promo-bouton:focus-visible { outline: 3px solid #F6D660; outline-offset: 2px; }
+
+.duels-echecs-pris { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; font-size: 14px; color: var(--muted, #B9B2A8); }
+.duels-echecs-pris-groupe { display: inline-flex; align-items: center; gap: 4px; }
+.duels-echecs-pris-symboles { font-size: 19px; letter-spacing: 1px; font-family: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'DejaVu Sans', serif; }
+.duels-echecs-pris-symboles { padding: 0 5px; border-radius: 6px; }
+.duels-echecs-pris-symboles.is-blanc { color: #FFFFFF; background: #3B2A1E; -webkit-text-stroke: .6px #2A1D12; }
+.duels-echecs-pris-symboles.is-noir { color: #17120E; background: #E9D9B4; }
+
+.duels-echecs-annonce { margin: 0; min-height: 1.3em; font-weight: 800; font-size: 17px; text-align: center; color: #F08A8D; }
+.duels-echecs-legende { margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 10px; font-size: 14px; color: var(--muted, #B9B2A8); }
+.duels-echecs-legende-j { display: inline; }
+.duels-echecs-pastille { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; border: 1px solid #8A7F70; }
+.duels-echecs-pastille.is-blanc { background: #FFFFFF; }
+.duels-echecs-pastille.is-noir { background: #17120E; border-color: #EFE4CC; }
+
+.duels-echecs-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.duels-echecs-actions:empty { display: none; }
+.duels-echecs-annuler { min-height: 44px; }
+.duels-echecs-regle { margin: 0 0 8px; font-size: 14px; color: var(--muted, #B9B2A8); }
+
+@media (max-width: 420px) {
+  .duels-echecs-jeu { gap: 8px; }
+  .duels-echecs-pris { font-size: 13px; }
+}
