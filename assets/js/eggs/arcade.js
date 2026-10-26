@@ -177,7 +177,18 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     return false;
   };
   /** Arrête la borne (onglet quitté) sans fin de partie. */
-  const arrete = () => { cancelAnimationFrame(raf); etat = 'attente'; document.removeEventListener('visibilitychange', visibilite); };
+  const arrete = () => { cancelAnimationFrame(raf); etat = 'attente'; document.removeEventListener('visibilitychange', visibilite); document.removeEventListener('keydown', codesClavier, true); };
+
+  /* ---------- Codes de triche : clavier n'importe où sur la page (la borne visible), glissements sur la borne ---------- */
+  const codesClavier = (e) => {
+    if (!canvas.isConnected || !canvas.offsetParent || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target;
+    if (t instanceof Element && t !== canvas && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+    noteTouche(e.key);
+    // Haut et bas ne servent qu'aux codes : la page ne défile pas pendant qu'on joue ou qu'on tape un code.
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && (document.activeElement === canvas || etat === 'jeu')) e.preventDefault();
+  };
+  document.addEventListener('keydown', codesClavier, true);
 
   /** Onglet masqué : pause ; de retour : reprise (le temps masqué ne compte pas). */
   const visibilite = () => {
@@ -190,13 +201,19 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   canvas.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || depart) entree.cible = posX(e); });
   canvas.addEventListener('pointerdown', (e) => {
     const x = posX(e);
-    depart = { x, t: performance.now() };
+    depart = { x, y: ((e.clientY - canvas.getBoundingClientRect().top) / canvas.getBoundingClientRect().height) * H, t: performance.now() };
     entree.cible = x;
     if (etat === 'pause') return;
     if (etat !== 'jeu') { demarre(); return; }
     if (jeu.voies) entree.pas = x < W / 2 ? -1 : 1; // jeu à voies : appui à gauche ou à droite
   });
   canvas.addEventListener('pointerup', (e) => {
+    // Glissement net sur la borne (doigt) : compte comme une flèche pour les codes de triche.
+    if (depart && e.pointerType !== 'mouse') {
+      const r = canvas.getBoundingClientRect();
+      const gx = posX(e) - depart.x, gy = ((e.clientY - r.top) / r.height) * H - depart.y;
+      if (Math.max(Math.abs(gx), Math.abs(gy)) > 30) noteTouche(Math.abs(gx) > Math.abs(gy) ? (gx > 0 ? 'ArrowRight' : 'ArrowLeft') : (gy > 0 ? 'ArrowDown' : 'ArrowUp'));
+    }
     if (depart && jeu.voies) {
       const dx = posX(e) - depart.x;
       if (Math.abs(dx) > 24) entree.pas = dx < 0 ? -1 : 1; // glissement
@@ -206,8 +223,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   });
   canvas.addEventListener('pointercancel', () => { depart = null; });
   canvas.addEventListener('keydown', (e) => {
-    noteTouche(e.key);
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); return; } // utiles aux codes seulement
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return; // utiles aux codes seulement (codesClavier)
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
     const d = e.key === 'ArrowLeft' ? -1 : 1;
