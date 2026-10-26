@@ -80,7 +80,7 @@ const valide = async (p) => { await p.click('[data-act="valider"]'); await sleep
   await p.evaluate(CLIP_FAUX);
   await p.click('[data-act="copier"]');
   await sleep(200);
-  check((await p.evaluate(() => window.__CLIP)) === 'Connexions #16 trouvé, 1 erreur\n⬜⬜⬜⬜\n🟨🟨🟨🟨\n🟩🟩🟩🟩\n🟦🟦🟦🟦\n🟪🟪🟪🟪', 'copier : carrés colorés par niveau, une ligne par essai');
+  check((await p.evaluate(() => window.__CLIP)) === 'Connexions #16 trouvé, 1 erreur\n⬜⬜⬜⬜ ✗\n🟨🟨🟨🟨 1\n🟩🟩🟩🟩 2\n🟦🟦🟦🟦 3\n🟪🟪🟪🟪 4', 'copier : carrés colorés et numéro du niveau, une ligne par essai');
   check((await p.locator('[data-chrono]').textContent()).match(/^\d+:\d\d$/) !== null, 'connexions : temps final affiché');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
   await p.screenshot({ path: SHOTS + '/nj-grilles-connexions-390.png', fullPage: true });

@@ -25,12 +25,15 @@
 .duels-dames-case.is-prise::after { content: ''; position: absolute; inset: 1.5cqi; border-radius: 50%;
   border: 0.7cqi solid #F6D660; pointer-events: none; z-index: 2; }
 
-/* Pions : rondes, avec un relief léger. Couleurs bien distinctes : crème (« 1 ») et rouge brun (« 2 »). */
+/* Pions : rondes, avec un relief léger. Couleurs bien distinctes : crème (« 1 ») et rouge brun (« 2 »).
+   Le rouge porte en plus un point clair au centre (forme différente : lisible sans distinguer les couleurs). */
 .duels-dames-pion { position: relative; z-index: 1; width: 76%; aspect-ratio: 1; border-radius: 50%; box-sizing: border-box;
   display: grid; place-items: center; pointer-events: none; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 2px 4px rgba(0, 0, 0, .35); }
 .duels-dames-pion.is-1 { background: radial-gradient(circle at 35% 30%, #FFFBF1, #E9DCC0 70%); border: 3px solid #8C7A5A; }
 .duels-dames-pion.is-2 { background: radial-gradient(circle at 35% 30%, #C25A43, #8E3424 72%); border: 3px solid #4D1A12; }
-.duels-dames-couronne { width: 56%; height: 56%; fill: #E8B04B; stroke: #3B2A12; stroke-width: 0.9; stroke-linejoin: round; }
+.duels-dames-pion.is-2::before { content: ''; position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #F3EAD6; box-shadow: 0 0 0 2px #4D1A12; }
+.duels-dames-couronne { position: relative; z-index: 1; width: 56%; height: 56%; fill: #E8B04B; stroke: #3B2A12; stroke-width: 0.9; stroke-linejoin: round; }
 
 .duels-dames-info { margin: 0; min-height: 1.3em; text-align: center; font-weight: 700; font-size: 15px; color: #F6D660; }
 .duels-dames-info:empty { min-height: 0; }
@@ -38,7 +41,7 @@
 .duels-dames-legende-j { display: inline; }
 .duels-dames-pastille { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; border: 1px solid #5C1F16; }
 .duels-dames-pastille.is-1 { background: #F3EAD6; border-color: #8C7A5A; }
-.duels-dames-pastille.is-2 { background: #A8402C; }
+.duels-dames-pastille.is-2 { background: radial-gradient(circle, #F3EAD6 0 22%, #4D1A12 23% 34%, #A8402C 35%); }
 
 .duels-dames-actions { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .duels-dames-actions:empty { display: none; }

@@ -121,7 +121,8 @@ function copie(st) {
   const lignes = (p.etat?.essais || []).map((essai) => {
     const ens = new Set(essai);
     const g = sol.find((x) => x.mots.length === ens.size && x.mots.every((m) => ens.has(m)));
-    return g ? NIVEAU[g.niveau].carre.repeat(4) : '⬜⬜⬜⬜';
+    // Le niveau est aussi écrit en chiffre (et ✗ pour un essai raté) : les carrés de couleur seuls ne le disent pas aux daltoniens.
+    return g ? `${NIVEAU[g.niveau].carre.repeat(4)} ${g.niveau}` : '⬜⬜⬜⬜ ✗';
   });
   const bilan = p.gagne ? `trouvé, ${p.erreurs} erreur${p.erreurs > 1 ? 's' : ''}` : 'perdu';
   return [`Connexions #${st.numero} ${bilan}`, ...lignes].join('\n');
