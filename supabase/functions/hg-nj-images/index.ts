@@ -1,7 +1,7 @@
 // ===== Humane Gang — fonction edge « hg-nj-images » =====
 // Rôle : alimenter les jeux du jour « devine » (migrations 137 et 139).
 //   action 'charger' { jeu } : lit la réserve du dépôt (outils/nj/reserves/<fichier>.json, sur GitHub) et l'enregistre
-//     en base (hg_nj_import_lot, par lots de 40). Les éléments déjà présents sont mis à jour (pas de doublon).
+//     en base (hg_nj_import_lot, ou hg_nj_contenu_lot pour les grilles : connexions, motmele, dico, motscroises ; lots de 40). Les éléments déjà présents sont mis à jour (pas de doublon).
 //   action 'images' { limite? } : prend un lot d'éléments sans image (hg_nj_images_a_faire), trouve l'image à sa source
 //     (capture d'écran Steam, image principale d'un article Wikipédia, ou adresse directe), la télécharge, la dépose dans le
 //     bucket public hg-nj sous un nom ALÉATOIRE (rien ne trahit la réponse) et note l'adresse (hg_nj_image_ok).
@@ -22,6 +22,8 @@ const jsonResponse = (body: unknown, status = 200) => new Response(JSON.stringif
 /** Réserves publiées dans le dépôt (branche main). */
 const RESERVES = 'https://raw.githubusercontent.com/Domursan/human-gang/main/outils/nj/reserves/';
 const FICHIERS: Record<string, string> = { jv: 'jv.json', pays: 'pays.json', plat: 'plats.json', pochette: 'pochettes.json', replique: 'repliques.json' };
+/** Contenus des grilles du jour (migration 140), chargés par hg_nj_contenu_lot. */
+const CONTENUS: Record<string, string> = { connexions: 'connexions.json', motmele: 'mot-mele.json', dico: 'dico.json', motscroises: 'mots-croises.json' };
 const BUCKET = 'hg-nj';
 const UA = 'HumaneGang/1.0 (+https://humane-gang.com; jeux du jour)';
 /** Taille maximale d'une image téléchargée. */
@@ -107,12 +109,13 @@ Deno.serve(async (req: Request) => {
   const corps = await req.json().catch(() => ({}));
   try {
     if (corps.action === 'charger') {
-      const f = FICHIERS[corps.jeu];
+      const f = FICHIERS[corps.jeu] || CONTENUS[corps.jeu];
       if (!f) return jsonResponse({ error: 'jeu inconnu' }, 400);
+      const rpc = FICHIERS[corps.jeu] ? 'hg_nj_import_lot' : 'hg_nj_contenu_lot';
       const liste: any[] = await json(`${RESERVES}${f}?t=${Date.now()}`);
       let n = 0;
       for (let i = 0; i < liste.length; i += 40) {
-        const { data, error } = await db.rpc('hg_nj_import_lot', { p_jeu: corps.jeu, p_items: liste.slice(i, i + 40) });
+        const { data, error } = await db.rpc(rpc, { p_jeu: corps.jeu, p_items: liste.slice(i, i + 40) });
         if (error) throw new Error(error.message);
         n += Number(data) || 0;
       }
