@@ -13,6 +13,7 @@
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, COULEURS_MM, estInvite } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const CLE_DALTO = 'hg_duel_daltonien';
 const ESSAIS_MAX = 10;
@@ -52,6 +53,7 @@ const ordinal = (n) => (n === 1 ? '1er' : `${n}e`);
  */
 export function creer(root, ctx) {
   const cadre = creerCadre(root, ctx, { classe: 'duels-mm' });
+  boutonReponses(root.querySelector('.duels-barre-outils'), 'mastermind', () => st.etat?.partie?.id ?? null);
   const st = { etat: null, brouillon: vide(), occupe: false, phaseVue: null, dalto: lireDalto() };
 
   /** Vrai si je peux agir maintenant (joueur, duel en cours, pas déjà fini, pas d'envoi en cours). */

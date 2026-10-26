@@ -12,6 +12,7 @@ import { errMsg } from '../core.js';
 import { signedUrl, signedUrls, openLightbox } from '../photos.js';
 import { loadLeaflet, addOsmTiles } from '../leaflet-load.js';
 import { chargerCss, nf, km, gainHtml, classementHtml, jourLong } from './commun.js';
+import { boutonReponses } from '../core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 /** Vue de départ de la carte : Suisse et pays voisins. */
@@ -89,6 +90,7 @@ export async function mount(panel, ctx) {
   panel.addEventListener('click', onClick);
   q('#geo-archive').addEventListener('toggle', () => { if (q('#geo-archive').open && !G.archive) chargerArchive(); });
   panel.addEventListener('jeux:show', () => G?.map?.invalidateSize());
+  boutonReponses(panel.querySelector('.geo > header'), 'geo');
   await charger();
 }
 

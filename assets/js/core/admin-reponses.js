@@ -6,8 +6,8 @@
  * Les réponses viennent du serveur, au clic seulement : RPC hg_admin_reponses(p_jeu, p_ref) (migration 133), qui
  * refuse tout compte non administrateur et note la consultation dans le journal admin.
  * Format renvoyé : { titre, note?, sections: [{ titre, lignes?: [{ label, valeur, ton? }], liste?: [texte], grille?: [[texte]] }] }
- *   ton : 'ok' | 'ko' | 'neutre' | 'rouge' | 'bleu' | 'noir' (pastille de couleur).
- * Page : tous les jeux (voir la liste des appels dans docs/ADMIN-REPONSES.md).
+ *   ton : 'ok' | 'ko' | 'neutre' | 'rouge' | 'bleu' | 'noir' | 'rose' | 'jaune' | 'vert' (pastille de couleur).
+ * Page : tous les jeux (appels : grep boutonReponses).
  * Dépendances : supabase.js, profile.js, view-as.js, util.js. Styles : base.css (.adrep-*).
  * Exporte : boutonReponses, ouvrirReponses, estAdminJeux.
  */

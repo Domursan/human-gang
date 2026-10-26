@@ -69,12 +69,16 @@ async function tape(p, mot) {
   check((await p.locator('.su').innerText()).includes('Pas de grille aujourd’hui'), 'sans mot : message');
   await p.ctx.close();
 
-  // Compte admin : la solution du jour est disponible, repliée par défaut
+  // Compte admin : bouton « Réponses », la solution ne s'affiche qu'au clic, dans la fenêtre spéciale
   p = await openPage(browser, { page: 'jeux', hash: '#sutom', width: 390, init: 'fake-jeux.js', scenario: { jeux: { admin: true } } });
-  await p.waitForSelector('.su-admin', { timeout: 6000 }).catch(() => {});
-  check((await p.locator('.su-admin').count()) === 1 && !(await p.locator('.su-admin').evaluate((d) => d.open)), 'admin : encart « Voir la solution » présent et replié');
-  await p.click('.su-admin summary');
-  check((await p.locator('.su-admin').innerText()).includes('RACLETTE'), 'admin : la solution s’affiche à l’ouverture');
+  await p.waitForSelector('.adrep-btn[data-jeu="sutom"]', { timeout: 6000 }).catch(() => {});
+  check((await p.locator('.adrep-btn[data-jeu="sutom"]').count()) === 1 && !(await p.content()).includes('RACLETTE'), 'admin : bouton « Réponses » présent, mot absent de la page');
+  await p.click('.adrep-btn[data-jeu="sutom"]');
+  await p.waitForSelector('dialog.adrep[open] .adrep-l', { timeout: 4000 }).catch(() => {});
+  check((await p.locator('dialog.adrep[open]').innerText()).includes('RACLETTE'), 'admin : la solution s’affiche dans la fenêtre « Réponses »');
+  await p.mouse.click(5, 5);
+  await p.waitForTimeout(200);
+  check((await p.locator('dialog.adrep').count()) === 0, 'admin : clic à côté, la fenêtre se ferme');
   check((await hscroll(p)) <= 0 && p.errs.length === 0, 'admin : pas de défilement horizontal ni d’erreur JS');
   await p.screenshot({ path: path.join(SHOTS, 'j8-sutom-admin.png'), fullPage: true });
   await p.ctx.close();

@@ -4,10 +4,11 @@
  * une des trois vies. La partie finit à zéro vie ; pas de limite de temps. La vitesse plafonne après 60 s.
  * Cadence : au plus une tranche toutes les 0,32 s (3,1 points par seconde, sous le plafond serveur de 6).
  * Sprites dessinés en pixel art (rectangles), comme les paillettes.
+ * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de cornichons et fromage en cœurs ; immortel = cornichons sans effet.
  * Moteur : eggs/arcade.js (creeArcade). Animation réduite : chute plus lente, pas de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
-import { W, H } from './arcade.js';
+import { W, H, coeur } from './arcade.js';
 
 const VIES = 3, SOL = H - 50, DEMI = 38;
 /** Au-delà de cette seconde, la vitesse ne monte plus. */
@@ -28,13 +29,14 @@ export const JEU = {
     s.pousse += dt;
     if (s.pousse >= Math.max(0.32, 0.75 - Math.min(s.ecoule, 36) * 0.012)) {
       s.pousse = 0;
-      const corn = Math.random() < Math.min(0.35, 0.15 + Math.min(s.ecoule, 44) * 0.008);
+      const corn = !s.triche?.coeurs && Math.random() < Math.min(0.35, 0.15 + Math.min(s.ecoule, 44) * 0.008);
       s.items.push({ corn, x: 18 + Math.random() * (W - 36), y: -16, v: (95 + Math.min(s.ecoule, PLAFOND) * 3.2 + Math.random() * 35) * s.lent, a: Math.random() * 6 });
     }
+    if (s.triche?.coeurs) s.items = s.items.filter((p) => !p.corn); // code « domu » : plus aucun cornichon
     for (const p of s.items) { p.y += p.v * dt; p.a += dt * 3; }
     s.items = s.items.filter((p) => {
       if (p.y >= SOL && p.y <= H - 22 && Math.abs(p.x - s.x) < DEMI) {
-        if (p.corn) { s.vies--; s.flash = 0.35; if (!s.reduit) s.secousse = 0.2; } else s.score++;
+        if (p.corn) { if (!s.triche?.immortel) { s.vies--; s.flash = 0.35; if (!s.reduit) s.secousse = 0.2; } } else s.score++;
         return false;
       }
       return p.y < H + 20;
@@ -51,6 +53,8 @@ export const JEU = {
         ctx.fillStyle = CORN_FONCE; ctx.fillRect(p.x - 4, p.y - 11, 8, 22);
         ctx.fillStyle = CORNICHON; ctx.fillRect(p.x - 6, p.y - 9, 12, 18);
         ctx.fillStyle = CORN_CLAIR; ctx.fillRect(p.x - 3, p.y - 6, 2, 2); ctx.fillRect(p.x + 1, p.y, 2, 2);
+      } else if (s.triche?.coeurs) {
+        coeur(ctx, p.x, p.y + Math.sin(p.a) * 1.5, 13);
       } else {
         const w = 30, h = 16, x = Math.round(p.x - w / 2), y = Math.round(p.y - h / 2 + Math.sin(p.a) * 1.5);
         ctx.fillStyle = FROMAGE; ctx.fillRect(x, y, w, h);

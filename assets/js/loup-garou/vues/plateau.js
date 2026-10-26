@@ -15,6 +15,7 @@ import { monterChat } from '../chat.js';
 import { roleById } from '../roles.js';
 import { themeDe, imagesTheme } from '../themes.js';
 import { erreurTexte } from '../api.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 import {
   typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS,
 } from './actions.js';
@@ -218,6 +219,7 @@ function coulures() {
 export function monter(root, s) {
   root.innerHTML = SQUELETTE;
   const el = root.querySelector('.lg-pl');
+  boutonReponses(root.querySelector('.lg-pl-bandeau'), 'loupgarou', () => s.etat()?.partie?.id ?? null);
   const ref = (nom) => root.querySelector(`[data-ref="${nom}"]`);
   const refs = {
     lueur: ref('lueur'), titre: ref('titre'), sous: ref('sous'), tlabel: ref('tlabel'), chrono: ref('chrono'),

@@ -15,6 +15,7 @@
 import { esc, initials, toast } from '../../core.js';
 import { ndc, erreurTexte, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const RAYON = 16;
 const CIRCONFERENCE = 2 * Math.PI * RAYON;
@@ -122,6 +123,7 @@ export function creer(root, ctx) {
   el.className = 'ndc-table';
   el.innerHTML = squelette(idChat);
   root.append(el);
+  boutonReponses(el.querySelector('.ndc-bandeau'), 'codenames', () => etat?.partie?.id ?? null);
 
   const q = (s) => el.querySelector(s);
   const refs = {

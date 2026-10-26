@@ -15,6 +15,7 @@
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, FLOTTE, nomCase } from '../api.js';
 import { creerCadre, nomJoueur, deJoueur, deNom } from './commun.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const TAILLE = 10;
 const NB_CASES = 100;
@@ -228,6 +229,7 @@ const TEXTE_OK = 'Position possible';
  */
 export function creer(root, ctx) {
   const cadre = creerCadre(root, ctx, { classe: 'duels-bn' });
+  boutonReponses(root.querySelector('.duels-barre-outils'), 'bataille', () => st.etat?.partie?.id ?? null);
   const st = {
     etat: null,
     vue: null,          // 'saisie' | 'attente' | 'spectateur-placement' | 'jeu'

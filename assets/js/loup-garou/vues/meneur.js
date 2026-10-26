@@ -9,6 +9,7 @@
  */
 import { esc } from '../../core.js';
 import { erreurTexte } from '../api.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 import {
   icone, vignetteRole, pastilleCamp, pseudo, avatar, chrono, libellePhase, estNuit, libelleCause, confirmer, notifier,
 } from '../ui.js';
@@ -338,6 +339,7 @@ export function monter(root, s) {
     if (b && root.contains(b)) agir(b);
   }, { signal: ac.signal });
   z('message').addEventListener('submit', envoyerMessage, { signal: ac.signal });
+  boutonReponses(root.querySelector('.lg-mj-controle'), 'loupgarou', () => s.etat()?.partie?.id ?? null);
 
   const tic = setInterval(peindreMinuteur, 1000);
 

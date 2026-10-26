@@ -58,7 +58,7 @@
   };
 
   window.__FAKE_RPC = (fn, a) => {
-    if (!/^hg_(quiz_daily|sutom)_/.test(fn)) return undefined;
+    if (!/^hg_(quiz_daily|sutom)_/.test(fn) && fn !== 'hg_admin_reponses') return undefined;
     J.calls.push([fn, a]);
     const s = SC();
     if (s.fail === fn) return ko('Failed to fetch');
@@ -102,6 +102,7 @@
       return ok({ valid: true, word: x, colors: colors(g.word, x), solved, finished: fin, tries: g.guesses.length, gain: fin ? (solved ? 10 : 3) : 0,
         answer: fin ? g.word : null, definition: fin ? g.definition : null, streak: fin ? g.streak : null });
     }
+    if (fn === 'hg_admin_reponses') return SC().admin ? ok(a.p_jeu === 'sutom' && J.sutom ? { titre: 'Sutom : réponses', sections: [{ titre: 'Mot du jour', lignes: [{ label: 'Mot', valeur: J.sutom.word, ton: 'ok' }, { label: 'Définition', valeur: J.sutom.definition || '—' }] }] } : { titre: 'Réponses', note: 'Rien à révéler.', sections: [] }) : ko('Réservé aux administrateurs');
     if (fn === 'hg_sutom_solution') return ok(SC().admin && J.sutom ? { word: J.sutom.word, definition: J.sutom.definition, day: day(0) } : null);
     if (fn === 'hg_sutom_admin') return ok({ today: day(0), dict: 130528, bank: J.bank, planned: J.planned });
     if (fn === 'hg_sutom_bank_save') {

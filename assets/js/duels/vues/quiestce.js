@@ -17,6 +17,7 @@
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 import { portraitSvg } from './portrait.js';
 
 const DELAI_ENVOI = 600;
@@ -74,6 +75,7 @@ function groupesDe(liste) {
  */
 export function creer(root, ctx) {
   const cadre = creerCadre(root, ctx, { classe: 'duels-qec' });
+  boutonReponses(root.querySelector('.duels-barre-outils'), 'quiestce', () => st.etat?.partie?.id ?? null);
   const st = {
     etat: null,
     detruit: false,

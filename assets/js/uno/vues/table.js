@@ -15,6 +15,7 @@ import { esc, initials, toast } from '../../core.js';
 import { uno, erreurTexte } from '../api.js';
 import { carteHtml, dosHtml, COULEURS } from '../cartes.js';
 import { creerChat } from './chat.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const RAYON = 16;
 const CIRCONFERENCE = 2 * Math.PI * RAYON;
@@ -145,6 +146,7 @@ export function creer(root, ctx) {
   el.className = 'uno-table';
   el.innerHTML = squelette(idChat);
   root.append(el);
+  boutonReponses(el.querySelector('.uno-barre'), 'uno', () => etat?.partie?.id ?? null);
 
   const q = (s) => el.querySelector(s);
   const refs = {

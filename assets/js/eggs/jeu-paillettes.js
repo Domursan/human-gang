@@ -6,10 +6,11 @@
  * La partie finit à zéro vie ; pas de limite de temps. Les pièges et la vitesse montent doucement puis plafonnent
  * (PLAFOND) : la partie reste jouable longtemps. Cadence des paillettes : au plus une toutes les 0,3 s (3,3 par seconde,
  * sous le plafond serveur de 6 points par seconde).
+ * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de pièges et paillettes en cœurs ; immortel = pièges sans effet.
  * Moteur : eggs/arcade.js (creeArcade). Animation réduite : chute plus lente, pas d'étincelles ni de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
-import { W, H, etoile } from './arcade.js';
+import { W, H, etoile, coeur } from './arcade.js';
 
 const VIES = 3, SOL = H - 52, DEMI = 36;
 /** Au-delà de cette seconde, la vitesse ne monte plus (la partie reste jouable longtemps). */
@@ -79,7 +80,7 @@ export const JEU = {
     if (s.pousse >= Math.max(0.3, 0.7 - Math.min(s.ecoule, 40) * 0.01)) {
       s.pousse = 0;
       // Pièges : 8 % au début, 25 % au plafond (atteint vers 57 s). Le grêlon apparaît après 30 s.
-      const piege = Math.random() < Math.min(0.25, 0.08 + t * 0.003);
+      const piege = !s.triche?.coeurs && Math.random() < Math.min(0.25, 0.08 + t * 0.003);
       const type = !piege ? null : (t >= 30 && Math.random() < 0.4 ? 'grele' : 'fausse');
       s.items.push({
         x: 14 + Math.random() * (W - 28), y: -14,
@@ -88,10 +89,11 @@ export const JEU = {
         t: Math.random() * 6, piege: type,
       });
     }
+    if (s.triche?.coeurs) s.items = s.items.filter((p) => !p.piege); // code « domu » : plus aucun piège
     for (const p of s.items) { p.y += p.v * dt; p.t += dt; }
     s.items = s.items.filter((p) => {
       if (p.y >= SOL && p.y <= H - 24 && Math.abs(p.x - s.x) < DEMI) {
-        if (p.piege) { perdUneVie(s); return false; }
+        if (p.piege) { if (!s.triche?.immortel) perdUneVie(s); return false; }
         s.score++;
         if (!s.reduit) for (let i = 0; i < 6; i++) { const a = (Math.PI * 2 * i) / 6; s.eclats.push({ x: p.x, y: p.y, vx: Math.cos(a) * 80, vy: Math.sin(a) * 80 - 40, vie: 0.5 }); }
         return false;
@@ -110,6 +112,7 @@ export const JEU = {
     for (const p of s.items) {
       if (p.piege === 'fausse') fausse(ctx, p.x, p.y, p.r);
       else if (p.piege === 'grele') greleon(ctx, p.x, p.y, p.r);
+      else if (s.triche?.coeurs) coeur(ctx, p.x, p.y, p.r * (0.9 + 0.1 * Math.sin(p.t * 6)));
       else { ctx.fillStyle = OR; etoile(ctx, p.x, p.y, p.r * (0.85 + 0.15 * Math.sin(p.t * 6))); ctx.fill(); }
     }
     ctx.fillStyle = OR;

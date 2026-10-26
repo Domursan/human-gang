@@ -27,6 +27,8 @@ body.plat-monopoly { --plat-teinte: #0F2E22; --plat-or: #E2C77E; }
 body.plat-risk { --plat-teinte: #3B2A18; --plat-or: #D8A75E; }
 
 .plat-app { padding-bottom: 48px; }
+.plat-reponses-admin { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+.plat-reponses-admin:empty { display: none; }
 .plat-app .card { background: color-mix(in srgb, var(--surface) 92%, transparent); }
 .plat-chargement, .plat-rej-statut { padding: 48px 0; color: var(--muted); text-align: center; }
 .plat-erreur { margin: 32px auto; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }

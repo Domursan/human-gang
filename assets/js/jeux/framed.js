@@ -8,6 +8,7 @@
  * Exporte : mount(panel, ctx).
  */
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
+import { boutonReponses } from '../core/admin-reponses.js';
 
 const BUCKET = 'hg-jeux';
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich' });
@@ -82,8 +83,9 @@ function render() {
       <p class="muted small">trouvé par ${esc(st.hier.solvers)} membre${st.hier.solvers > 1 ? 's' : ''}${st.hier.avg ? ` · moyenne ${esc(String(st.hier.avg).replace('.', ','))} / 6` : ''}</p></div>` : '';
   const board = `<section class="card jd-board-box" aria-labelledby="jf-board-h"><h2 id="jf-board-h" class="jd-h2">Classement de la semaine</h2>${boardHtml(st.board, C.me?.id, esc)}</section>`;
   if (!st.round) {
-    P.innerHTML = `<div class="jd"><h2 class="jd-title">Framed du gang</h2>
+    P.innerHTML = `<div class="jd"><div class="jd-head"><h2 class="jd-title">Framed du gang</h2></div>
       <p class="card muted">Pas d’image aujourd’hui.${st.next_day ? ` Prochain Framed le ${esc(day(st.next_day, dateLong))}.` : ' Le projectionniste prépare les prochains.'}</p>${hier}${board}</div>`;
+    boutonReponses(P.querySelector('.jd-head'), 'framed');
     return;
   }
   const k = st.frames.length, path = st.frames[S.view], url = S.urls[path];
@@ -107,6 +109,7 @@ function render() {
       + `<p class="muted small jd-note">Seules les ${esc(st.films.length)} réponses de la liste sont proposées. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
   }
   P.innerHTML = `<div class="jd">${head}${img}${framesNav(st)}${triesHtml(st)}${bottom}${hier}${board}</div>`;
+  boutonReponses(P.querySelector('.jd-head'), 'framed');
   if (!st.finished) {
     const passBtn = P.querySelector('[data-act="passer"]');
     if (passBtn && k < (st.total_frames || 6)) passBtn.textContent = `Passer · image ${k + 1}`;

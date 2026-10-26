@@ -4,11 +4,12 @@
  * La vitesse monte (plafonnée après 60 s). Score : 1 point par seconde
  * de route + 3 par jerrican. Premier accrochage : « T’es en retard ! », fin de partie. Pas de limite de temps.
  * Plafond serveur : 8 points par seconde ; ici, au plus 1 + 3 × 2,2 = 7,7 par seconde (un jerrican au plus toutes les 0,45 s).
+ * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de bouchons, jerricans et voiture en cœurs ; immortel = bouchons traversés.
  * Moteur : eggs/arcade.js (creeArcade ; jeu « à voies » : flèche, appui à gauche ou à droite, glisser).
  * Animation réduite : route plus lente, pas de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
-import { W, H } from './arcade.js';
+import { W, H, coeur } from './arcade.js';
 
 const VOIES = 3, LV = W / VOIES, CY = H - 70;
 /** Vitesse : plafond à 60 s ; intervalle entre deux rangées : plancher atteint vers 81 s. */
@@ -35,14 +36,15 @@ export const JEU = {
       const libre = Math.floor(Math.random() * VOIES);
       for (let i = 0; i < VOIES; i++) {
         if (i === libre) { if (Math.random() < 0.5) s.items.push({ j: true, voie: i, y: -20 }); continue; }
-        if (Math.random() < 0.45) s.items.push({ j: false, voie: i, y: -30, c: BOUCHON[Math.floor(Math.random() * BOUCHON.length)] });
+        if (!s.triche?.coeurs && Math.random() < 0.45) s.items.push({ j: false, voie: i, y: -30, c: BOUCHON[Math.floor(Math.random() * BOUCHON.length)] });
       }
     }
+    if (s.triche?.coeurs) s.items = s.items.filter((it) => it.j); // code « domu » : plus aucun bouchon
     for (const it of s.items) it.y += v * dt;
     s.items = s.items.filter((it) => {
       const touche = Math.abs(xVoie(it.voie) - s.x) < LV * 0.45 && Math.abs(it.y - CY) < (it.j ? 26 : 38);
       if (touche && it.j) { s.jerry++; return false; }
-      if (touche && !it.j) { s.crash = true; s.secousse = s.reduit ? 0 : 0.35; }
+      if (touche && !it.j) { if (s.triche?.immortel) return false; s.crash = true; s.secousse = s.reduit ? 0 : 0.35; }
       return it.y < H + 40;
     });
   },
@@ -55,7 +57,8 @@ export const JEU = {
     for (let i = 1; i < VOIES; i++) for (let y = -40 + s.defile; y < H; y += 40) ctx.fillRect(LV * i - 2, y, 4, 20);
     for (const it of s.items) {
       const x = xVoie(it.voie);
-      if (it.j) {
+      if (it.j && s.triche?.coeurs) coeur(ctx, x, it.y, 13);
+      else if (it.j) {
         ctx.fillStyle = JERRY; ctx.fillRect(x - 10, it.y - 13, 20, 26);
         ctx.fillStyle = '#F2EFEA'; ctx.fillRect(x - 6, it.y - 17, 8, 5); ctx.fillRect(x - 6, it.y - 4, 12, 3);
       } else {
@@ -64,7 +67,8 @@ export const JEU = {
         ctx.fillStyle = '#E0909A'; ctx.fillRect(x - 20, it.y + 24, 8, 4); ctx.fillRect(x + 12, it.y + 24, 8, 4);
       }
     }
-    // Domu-mobile
+    // Domu-mobile (en cœur rouge avec le code « domu »)
+    if (s.triche?.coeurs) { coeur(ctx, s.x, CY, 30); ctx.restore(); return; }
     ctx.fillStyle = VOITURE; ctx.fillRect(s.x - 20, CY - 32, 40, 64);
     ctx.fillStyle = VITRE; ctx.fillRect(s.x - 14, CY - 22, 28, 14);
     ctx.fillStyle = '#FBD32D'; ctx.fillRect(s.x - 18, CY - 34, 8, 4); ctx.fillRect(s.x + 10, CY - 34, 8, 4);

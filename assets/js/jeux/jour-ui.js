@@ -6,6 +6,7 @@
 // Dépendances : core.js (avatarHtml, errMsg). Tout texte venant de la base passe par esc().
 // Exporte : mountDaily(el, { sb, esc, toast, compact, meId }).
 import { avatarHtml, errMsg } from '../core.js';
+import { boutonReponses } from '../core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 const nf = new Intl.NumberFormat('fr-CH');
@@ -155,6 +156,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false, meId = n
   /** Dessine tout. */
   function dessine() {
     el.innerHTML = `<div class="qdj${compact ? ' is-compact' : ''}">${carteQuestion()}${carteSemaine()}${carteClassement()}</div>`;
+    if (!compact) boutonReponses(el.querySelector('.qdj-top'), 'jour');
   }
 
   /** Envoie la réponse. */

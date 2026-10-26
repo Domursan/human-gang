@@ -10,6 +10,7 @@
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, COULEURS_MM } from '../api.js';
 import { nomJoueur } from './commun.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const CLE_DALTO = 'hg_duel_daltonien';
 const ESSAIS_MAX = 10;
@@ -164,6 +165,7 @@ export async function afficher(root) {
       </div>
     </section>`;
     if (focus) root.querySelector(`[data-k="${focus}"]:not([disabled])`)?.focus();
+    boutonReponses(root.querySelector('.duels-jour-tete'), 'codejour');
   }
 
   /** Clics : palette, trous, effacer, valider, interrupteur daltonien. */

@@ -14,12 +14,29 @@
  */
 import { esc } from '../../core.js';
 import { suivrePartie, messages, estInvite, contenus, jeu } from '../api.js';
+import { boutonReponses } from '../../core/admin-reponses.js';
 
 const VUES = {
   salle: () => import('./salle.js'),
   table: () => import(`../jeux/${jeu().id}/table.js`),
   fin: () => import('./fin.js'),
 };
+
+/* Jeux dont la partie a de l'information cachée (migration 134 : hg_adrep_<jeu>). Destins n'en a pas : pas de bouton. */
+const JEUX_AVEC_REPONSES = new Set(['cluedo', 'shadow', 'monopoly', 'risk']);
+
+/**
+ * Pose le bouton « Réponses » (administrateurs seulement) en tête de la vue, après chaque création de vue.
+ * La référence est l'id de la partie suivie, lue au moment du clic.
+ */
+function ajouterReponses(root, refDe) {
+  if (!JEUX_AVEC_REPONSES.has(jeu()?.id)) return;
+  root.querySelector(':scope > .plat-reponses-admin')?.remove();
+  const barre = document.createElement('div');
+  barre.className = 'plat-reponses-admin';
+  root.prepend(barre);
+  boutonReponses(barre, jeu().id, refDe).catch((err) => console.warn('[plateaux] réponses', err));
+}
 
 /** Nom de la vue à afficher pour cet état. */
 function vuePour(e) {
@@ -101,6 +118,7 @@ export async function afficher(root, { code, naviguer, moi }) {
       root.innerHTML = '';
       const vue = mod.creer(root, { code, naviguer, moi, suivi, contenus: contenusCache });
       courant = { nom, vue };
+      ajouterReponses(root, () => dernier?.partie?.id ?? null);
       vue.maj(dernier || e);
       msgs.forEach((m) => vue.message?.(m));
     })()

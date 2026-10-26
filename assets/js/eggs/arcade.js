@@ -5,7 +5,13 @@
  * l'onglet est masqué, « réduire les animations » (jeu plus lent, pas de secousse), fin de partie.
  * Les règles de chaque mini-jeu sont dans eggs/jeu-paillettes.js, eggs/jeu-raclette.js, eggs/jeu-domu.js.
  * Pas de limite de temps : une partie finit quand le jeu le dit (plus de vies, ou accrochage).
- * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) (sprite partagé).
+ * Codes de triche cachés (pour toute la page, jusqu'au rechargement ; retaper le code l'annule), à taper sur la borne :
+ *   « domu » (lettres)                    → s.triche.coeurs : plus aucun piège, tout ce qui s'attrape devient un cœur rouge ;
+ *   → → ← ← ↓ ↑ ↓ ↑ (flèches)            → s.triche.immortel : les pièges et accrochages ne coûtent plus rien.
+ *   Chaque mini-jeu lit s.triche (même objet pendant toute la partie : un code tapé en jeu s'applique tout de suite).
+ *   Une partie jouée avec un code n'est pas enregistrée (jeux/arcade.js).
+ * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) et coeur(ctx, x, y, r, couleur)
+ * (sprites partagés), triche (état des codes).
  */
 
 /** Taille logique du canevas (pixels CSS) ; la taille réelle suit la densité de l'écran. */
@@ -29,6 +35,32 @@ export function etoile(ctx, x, y, r) {
 }
 
 /**
+ * Trace un cœur plein (le cœur du gang), centré en (x, y).
+ * @param {CanvasRenderingContext2D} ctx contexte du canevas
+ * @param {number} x centre
+ * @param {number} y centre
+ * @param {number} r demi-largeur
+ * @param {string} [couleur]
+ */
+export function coeur(ctx, x, y, r, couleur = '#E0303F') {
+  ctx.beginPath();
+  ctx.moveTo(x, y + r * 0.95);
+  ctx.bezierCurveTo(x - r * 1.35, y + r * 0.05, x - r * 0.95, y - r * 1.05, x, y - r * 0.4);
+  ctx.bezierCurveTo(x + r * 0.95, y - r * 1.05, x + r * 1.35, y + r * 0.05, x, y + r * 0.95);
+  ctx.closePath();
+  ctx.fillStyle = couleur; ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.45)';
+  ctx.beginPath(); ctx.ellipse(x - r * 0.42, y - r * 0.35, r * 0.18, r * 0.12, -0.6, 0, Math.PI * 2); ctx.fill();
+}
+
+/** Codes de triche actifs (partagés par toutes les bornes de la page). */
+export const triche = { coeurs: false, immortel: false };
+const CODES = [
+  { cle: 'coeurs', suite: ['d', 'o', 'm', 'u'], nom: 'Mode Domu' },
+  { cle: 'immortel', suite: ['ArrowRight', 'ArrowRight', 'ArrowLeft', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'ArrowDown', 'ArrowUp'], nom: 'Immortel' },
+];
+
+/**
  * Crée une borne d'arcade sur un canevas pour un mini-jeu.
  * Le mini-jeu est un objet { init(s), update(s, dt, entree), draw(ctx, s), score(s), fini(s), vies(s) } :
  *   s est l'état de la partie (créé par init), entree = { cible, fleche, pas } :
@@ -49,7 +81,10 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
 
   let etat = 'attente'; // 'attente' | 'jeu' | 'pause' | 'fin'
   let s = jeu.init({ reduit });
+  s.triche = triche;
   let dernierT = null, raf = 0;
+  const touches = []; // dernières touches (codes de triche)
+  let bandeau = null; // { texte, t } : message « code activé » affiché un instant
   const entree = { cible: null, fleche: 0, pas: 0 };
   let depart = null; // appui du doigt (pour reconnaître un glissement)
   let manuelle = false; // pause demandée par le joueur (l'onglet visible ne la lève pas)
@@ -66,13 +101,46 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     ctx.fillStyle = '#18162f';
     for (let y = 0; y < H; y += 24) for (let x = (y / 24) % 2 ? 24 : 0; x < W; x += 48) ctx.fillRect(x, y, 24, 24);
   };
-  const dessine = () => { ctx.clearRect(0, 0, W, H); fond(); jeu.draw(ctx, s); };
+  /** Pastilles des codes actifs (coin haut gauche) et message d'activation. */
+  const surcouche = () => {
+    // Pastilles en haut au centre (le score est en haut à gauche, les vies en haut à droite).
+    const n = (triche.coeurs ? 1 : 0) + (triche.immortel ? 1 : 0);
+    let x = W / 2 - (n * 22) / 2 + 11;
+    if (triche.coeurs) { coeur(ctx, x, 16, 7); x += 22; }
+    if (triche.immortel) { ctx.fillStyle = '#FBD32D'; ctx.font = 'bold 18px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('∞', x, 16); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'start'; }
+    if (bandeau) {
+      const a = Math.max(0, 1 - (performance.now() - bandeau.t) / 1800);
+      if (a <= 0) { bandeau = null; return; }
+      ctx.globalAlpha = a;
+      ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0, H / 2 - 26, W, 52);
+      ctx.fillStyle = '#F2EFEA'; ctx.font = '18px "Archivo Black", system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(bandeau.texte, W / 2, H / 2 + 7); ctx.textAlign = 'start';
+      ctx.globalAlpha = 1;
+    }
+  };
+  const dessine = () => { ctx.clearRect(0, 0, W, H); fond(); jeu.draw(ctx, s); surcouche(); };
+
+  /** Note une touche ; si les dernières forment un code, il s'active (ou se désactive). */
+  const noteTouche = (k) => {
+    touches.push(k.length === 1 ? k.toLowerCase() : k);
+    if (touches.length > 8) touches.shift();
+    for (const c of CODES) {
+      const fin = touches.slice(-c.suite.length);
+      if (fin.length === c.suite.length && fin.every((t, i) => t === c.suite[i])) {
+        triche[c.cle] = !triche[c.cle];
+        touches.length = 0;
+        bandeau = { texte: `${c.nom} ${triche[c.cle] ? 'activé' : 'désactivé'}`, t: performance.now() };
+        if (etat !== 'jeu') { dessine(); const re = () => { if (etat === 'jeu' || !bandeau) return; dessine(); requestAnimationFrame(re); }; requestAnimationFrame(re); }
+      }
+    }
+  };
 
   /** Une image : avance le jeu, affiche, termine si le jeu le dit. */
   const boucle = (t) => {
     if (etat !== 'jeu') return;
     const dt = dernierT === null ? 0 : Math.min(0.05, (t - dernierT) / 1000);
     dernierT = t;
+    if (triche.coeurs || triche.immortel) s.trichee = true; // partie avec code : non enregistrée
     jeu.update(s, dt, entree);
     entree.pas = 0;
     onHud(jeu.score(s), jeu.vies(s));
@@ -85,6 +153,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   const demarre = () => {
     if (etat === 'jeu' || etat === 'pause') return;
     s = jeu.init({ reduit });
+    s.triche = triche;
     entree.cible = null; entree.fleche = 0; entree.pas = 0;
     dernierT = null; manuelle = false;
     etat = 'jeu';
@@ -138,6 +207,8 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   });
   canvas.addEventListener('pointercancel', () => { depart = null; });
   canvas.addEventListener('keydown', (e) => {
+    noteTouche(e.key);
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); return; } // utiles aux codes seulement
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
     const d = e.key === 'ArrowLeft' ? -1 : 1;
@@ -153,5 +224,5 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   canvas.addEventListener('blur', () => { entree.fleche = 0; });
 
   dessine();
-  return { demarre, arrete, pause, enJeu: () => etat === 'jeu' || etat === 'pause', dessine };
+  return { demarre, arrete, pause, enJeu: () => etat === 'jeu' || etat === 'pause', dessine, triche };
 }

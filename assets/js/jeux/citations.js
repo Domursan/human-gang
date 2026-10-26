@@ -11,6 +11,7 @@
  */
 import { avatarHtml, errMsg } from '../core.js';
 import { chargerCss, nf } from './commun.js';
+import { boutonReponses } from '../core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 const DIFF = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile', expert: 'Expert' };
@@ -64,6 +65,7 @@ export async function mount(panel, ctx) {
   </div>`;
   panel.addEventListener('click', onClick);
   q('#cit-form').addEventListener('submit', proposer);
+  boutonReponses(panel.querySelector('.cit > header'), 'citations', () => C?.cur ?? null);
   q('#cit-quote').addEventListener('input', () => { q('#cit-count').textContent = nf(q('#cit-quote').value.length); });
   await Promise.all([charger(), chargerMine()]);
 }

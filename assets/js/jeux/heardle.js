@@ -8,6 +8,7 @@
  * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose. Exporte : mount(panel, ctx), unmount().
  */
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
+import { boutonReponses } from '../core/admin-reponses.js';
 
 const STEPS = [1, 2, 4, 7, 11, 16];
 const dateLong = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' });
@@ -199,9 +200,10 @@ function render() {
       <p class="muted small">trouvé par ${esc(st.hier.solvers)} membre${st.hier.solvers > 1 ? 's' : ''}${st.hier.avg ? ` · moyenne ${esc(String(st.hier.avg).replace('.', ','))} / 6` : ''}</p></div>` : '';
   const board = `<section class="card jd-board-box" aria-labelledby="jh-board-h"><h2 id="jh-board-h" class="jd-h2">Classement de la semaine</h2>${boardHtml(st.board, C.me?.id, esc)}</section>`;
   if (!st.round) {
-    P.innerHTML = `<div class="jd"><h2 class="jd-title">Heardle du gang</h2>
+    P.innerHTML = `<div class="jd"><div class="jd-head"><h2 class="jd-title">Heardle du gang</h2></div>
       <p class="card muted">${st.cancelled ? 'Manche annulée aujourd’hui (la vidéo ne se lit plus). Rendez-vous demain !' : 'Pas de morceau aujourd’hui.'}${st.next_day ? ` Prochain Heardle le ${esc(dateLong.format(new Date(st.next_day + 'T12:00:00Z')))}.` : ''}</p>
       ${hier}${board}${proposeHtml()}</div>`;
+    boutonReponses(P.querySelector('.jd-head'), 'heardle');
     return;
   }
   const lim = st.finished ? 16 : st.seconds;
@@ -232,6 +234,7 @@ function render() {
       + `<p class="muted small jd-note">Seuls les ${esc(st.tracks.length)} morceaux du gang sont proposés. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
   }
   P.innerHTML = `<div class="jd">${head}${playerBox}${barHtml(st)}${triesHtml(st)}${bottom}${hier}${board}${proposeHtml()}</div>`;
+  boutonReponses(P.querySelector('.jd-head'), 'heardle');
   if (!st.finished) {
     const g = st.guesses?.length || 0;
     const passBtn = P.querySelector('[data-act="passer"]');
