@@ -1,0 +1,2 @@
+# Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
+hg-nj-images

@@ -11,6 +11,10 @@
 name: Déployer une fonction
 
 on:
+  # Envoi sur main qui modifie supabase/functions/a-deployer.txt : déploie les fonctions listées (une par ligne).
+  push:
+    branches: [main]
+    paths: ['supabase/functions/a-deployer.txt']
   workflow_dispatch:
     inputs:
       fonction:
@@ -18,7 +22,7 @@ on:
         type: choice
         required: true
         default: hg-notify
-        options: [hg-notify, hg-support, hg-birthdays, hg-cron, hg-album, hg-archive, hg-push, hg-discord, hg-calendar, toutes]
+        options: [hg-notify, hg-support, hg-birthdays, hg-cron, hg-album, hg-archive, hg-push, hg-discord, hg-calendar, hg-nj-images, toutes]
 
 permissions:
   contents: read
@@ -49,8 +53,10 @@ jobs:
         run: |
           # Fonctions appelées par les membres connectés : jeton vérifié par Supabase. Les autres (cron, webhooks, Discord) : non.
           jwt() { case "$1" in hg-notify|hg-album|hg-archive) echo "";; *) echo "--no-verify-jwt";; esac; }
-          if [ "${{ inputs.fonction }}" = "toutes" ]; then
-            liste="hg-notify hg-support hg-birthdays hg-cron hg-album hg-archive hg-push hg-discord hg-calendar"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            liste=$(grep -v '^#' supabase/functions/a-deployer.txt | tr -s ' \n' ' ')
+          elif [ "${{ inputs.fonction }}" = "toutes" ]; then
+            liste="hg-notify hg-support hg-birthdays hg-cron hg-album hg-archive hg-push hg-discord hg-calendar hg-nj-images"
           else
             liste="${{ inputs.fonction }}"
           fi

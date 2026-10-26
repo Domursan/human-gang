@@ -1,6 +1,6 @@
 # Déploiement des fonctions edge (Humane Gang)
 
-**Le plus simple : depuis GitHub.** Onglet « Actions » › « Déployer une fonction » › « Run workflow » › choisir la fonction.
+**Le plus simple : depuis GitHub.** Modifier `supabase/functions/a-deployer.txt` (une fonction par ligne) sur main les déploie aussi. Onglet « Actions » › « Déployer une fonction » › « Run workflow » › choisir la fonction.
 Le workflow `.github/workflows/deploy-functions.yml` déploie la version de main avec le bon `verify_jwt` (tableau ci-dessous).
 Il demande une fois le secret GitHub `SUPABASE_ACCESS_TOKEN` (jeton personnel Supabase, Account › Access Tokens).
 
@@ -20,6 +20,7 @@ importent aussi `../_shared/dyn-announce.ts`).
 | `hg-push` | `hg-push/index.ts`, `_shared/cron-auth.ts` | `false` |
 | `hg-discord` | `hg-discord/index.ts`, `hg-discord/handler.ts`, `hg-discord/lib.ts` (pas de `_shared`) | `false` |
 | `hg-calendar` | `hg-calendar/index.ts`, `hg-calendar/feed.ts` (pas de `_shared`) | `false` |
+| `hg-nj-images` | `hg-nj-images/index.ts`, `_shared/cron-auth.ts` ; migrations 137 et 139 appliquées avant | `false` |
 
 `_shared/discord.ts` (client Discord : MP, salon, 429) est commun aux quatre fonctions ; `_shared/cron-auth.ts` contrôle
 l'en-tête `x-cron-secret` de `hg-cron` et `hg-birthdays`.
