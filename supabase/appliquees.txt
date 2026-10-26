@@ -1,3 +1,4 @@
 2026-10-26T16:07:04.829Z ok supabase/migrations/138_nj_solo.sql
 2026-10-26T16:10:49.045Z ok supabase/migrations/139_nj_images.sql
 2026-10-26T16:14:37.085Z ok supabase/migrations/140_nj_grilles.sql
+2026-10-26T16:24:57.957Z ok supabase/migrations/141_duels_nouveaux.sql
