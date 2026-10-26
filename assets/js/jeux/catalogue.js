@@ -108,6 +108,15 @@ export const CARTES = [
     icone: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>' },
   { id: 'uno', image: `${IMG}uno.webp`, titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: 'uno.html', page: 'uno', couleur: 'var(--rose)',
     icone: '<rect x="4" y="5" width="10" height="15" rx="2" transform="rotate(-10 9 12)"/><rect x="10" y="4" width="10" height="15" rx="2" transform="rotate(8 15 11)"/>' },
+  // Nouveaux jeux de plateau en développement (admins seulement)
+  { id: 'nj-blackjack', titre: 'Blackjack', texte: 'Contre la banque, à qui s’approche de 21.', section: 'speciaux', href: 'blackjack.html', admin: true, couleur: 'var(--sage)',
+    icone: '<rect x="3" y="5" width="11" height="15" rx="2"/><rect x="10" y="3" width="11" height="15" rx="2"/><path d="M14 9l2 3-2 3-2-3z"/>' },
+  { id: 'nj-poker', titre: 'Poker', texte: 'Texas Hold’em, en jetons.', section: 'speciaux', href: 'poker.html', admin: true, couleur: 'var(--rust)',
+    icone: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>' },
+  { id: 'nj-catan', titre: 'Catan du gang', texte: 'Récolte, construis, atteins 10 points.', section: 'speciaux', href: 'catan.html', admin: true, couleur: 'var(--amber)',
+    icone: '<path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M12 2v18M4 6.5l16 9M20 6.5l-16 9"/>' },
+  { id: 'nj-pictionary', titre: 'Pictionary', texte: 'Dessine, les autres devinent.', section: 'speciaux', href: 'pictionary.html', admin: true, couleur: 'var(--plum)',
+    icone: '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>' },
   // Jeux de plateau (migrations 125 à 130) : pages en mode admin au lancement
   { id: 'cluedo', titre: 'Cluedo', texte: 'Qui a tué le Docteur Lenoir ? Mène l’enquête.', section: 'speciaux', href: 'cluedo.html', page: 'cluedo', image: `${IMG}cluedo.webp` },
   { id: 'shadow-hunters', titre: 'Shadow Hunters', texte: 'Hunters, Shadows ou Neutres : qui est qui ?', section: 'speciaux', href: 'shadow-hunters.html', page: 'shadow-hunters', image: `${IMG}shadow-hunter.webp` },
