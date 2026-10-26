@@ -1,5 +1,9 @@
 # Déploiement des fonctions edge (Humane Gang)
 
+**Le plus simple : depuis GitHub.** Onglet « Actions » › « Déployer une fonction » › « Run workflow » › choisir la fonction.
+Le workflow `.github/workflows/deploy-functions.yml` déploie la version de main avec le bon `verify_jwt` (tableau ci-dessous).
+Il demande une fois le secret GitHub `SUPABASE_ACCESS_TOKEN` (jeton personnel Supabase, Account › Access Tokens).
+
 Les fonctions importent le dossier partagé `_shared/` (modèles des messages du bot, annonces des événements).
 Chaque déploiement doit donc envoyer `index.ts` **et** les fichiers partagés, en gardant les chemins relatifs
 (`index.ts` importe `../_shared/templates.ts`, qui importe `./bot-templates.json` ; `hg-notify` et `hg-cron`
