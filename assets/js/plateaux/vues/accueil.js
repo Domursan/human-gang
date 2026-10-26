@@ -14,7 +14,7 @@ import { plat, contenus, erreurTexte, jeu } from '../api.js';
 const INTERVALLE_PUBLIQUES = 15000;
 
 /** Image d'en-tête par jeu (dossier assets/img/jeux). */
-const IMAGE = { cluedo: 'cluedo', shadow: 'shadow-hunter', destins: 'destins', monopoly: 'monopoly', risk: 'risk' };
+const IMAGE = { cluedo: 'cluedo', shadow: 'shadow-hunter', destins: 'destins', monopoly: 'monopoly', risk: 'risk', blackjack: 'blackjack', poker: 'poker', catan: 'catan', pictionary: 'pictionary' };
 
 /** Règles en bref, par jeu (règles officielles, versions adaptées à l'appli). */
 const REGLES = {
