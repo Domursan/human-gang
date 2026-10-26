@@ -1,8 +1,8 @@
 // ===== Humane Gang — Cluedo : dessin du manoir (plateaux/jeux/cluedo/plateau.js) =====
 /*
  * Rôle : plan du manoir en grille 3 × 4 (disposition de la maquette ChateauPlateau).
- *   Si une image de fond existe (assets/img/plateaux/cluedo/plateau.webp, 2400 × 1500), elle sert de fond
- *   et les pièces deviennent des zones transparentes par-dessus ; sinon, dessin de repli (couleurs, noms, passages).
+ *   Si une image de fond existe (assets/img/plateaux/cluedo/plateau.webp, 1376 × 768), elle sert de fond
+ *   et les pièces deviennent des zones transparentes posées sur ses pièces (ZONES_IMAGE) ; sinon, dessin de repli (couleurs, noms, passages).
  *   Les pions des suspects et les armes sont posés au centre de leur pièce.
  *   Ce module ne fait que du HTML : c'est table.js qui le monte et décide quand le refaire.
  * Dépendances : core.js (esc).
@@ -34,13 +34,36 @@ export const PIECES = {
   bureau:       { c: 2, r: 3, h: 1, fond: 'repeating-linear-gradient(0deg, #3E2A18 0 22px, #33220F 22px 24px), #3E2A18', passage: 'cuisine' },
 };
 
+/** Zones des pièces sur l'image du manoir (assets/img/plateaux/cluedo/plateau.webp, 1376 × 768), en % : gauche, haut, largeur, hauteur.
+ *  L'image a 3 rangées : billard et bibliothèque sont côte à côte à droite de l'escalier. */
+const ZONES_IMAGE = {
+  cuisine:      [2.9, 4.6, 27.6, 27.3],
+  bal:          [37.4, 4.6, 25.1, 27.3],
+  veranda:      [69.4, 3.9, 28.3, 28.0],
+  manger:       [2.9, 33.2, 27.6, 33.2],
+  billard:      [69.4, 33.2, 12.7, 33.9],
+  bibliotheque: [82.8, 33.2, 14.6, 33.9],
+  salon:        [2.9, 67.7, 27.6, 26.7],
+  hall:         [37.4, 67.7, 25.1, 26.7],
+  bureau:       [69.4, 67.7, 28.0, 26.7],
+};
+let avecImage = false;
+
 /** Centre d'une zone (en %), pour poser les pions. */
-const centre = (c, r, h) => ({
+const centreGrille = (c, r, h) => ({
   x: ((MARGE + c * PAS_X + L_CASE / 2) / LARGEUR) * 100,
   y: ((MARGE + r * PAS_Y + (H_CASE + (h - 1) * PAS_Y) / 2) / HAUTEUR) * 100,
 });
-/** Position d'une zone en % (gauche, haut, largeur, hauteur). */
-const zoneStyle = ({ c, r, h }) =>
+function centre(c, r, h, id) {
+  const z = avecImage && id && ZONES_IMAGE[id];
+  return z ? { x: z[0] + z[2] / 2, y: z[1] + z[3] / 2 } : centreGrille(c, r, h);
+}
+/** Position d'une zone en % (gauche, haut, largeur, hauteur) : sur l'image si elle existe, sinon dans la grille. */
+const zoneStyle = (z, id) => {
+  const zi = avecImage && id && ZONES_IMAGE[id];
+  return zi ? `left:${zi[0]}%;top:${zi[1]}%;width:${zi[2]}%;height:${zi[3]}%` : zoneStyleGrille(z);
+};
+const zoneStyleGrille = ({ c, r, h }) =>
   `left:${((MARGE + c * PAS_X) / LARGEUR) * 100}%;top:${((MARGE + r * PAS_Y) / HAUTEUR) * 100}%;` +
   `width:${(L_CASE / LARGEUR) * 100}%;height:${((H_CASE + (h - 1) * PAS_Y) / HAUTEUR) * 100}%`;
 
@@ -57,6 +80,7 @@ const ABREV_ARME = { chandelier: 'Ch', poignard: 'Po', revolver: 'Re', corde: 'C
 export function plateauHtml({ image = null, noms = {}, pions = [], armes = [], voisines = [], maPiece = null, cliquable = false } = {}) {
   const voisinesSet = new Set(voisines);
   const nom = (p) => esc(noms[p] || p);
+  avecImage = !!image;
 
   const pieces = Object.entries(PIECES).map(([id, z]) => {
     const estVoisine = cliquable && voisinesSet.has(id);
@@ -73,7 +97,7 @@ export function plateauHtml({ image = null, noms = {}, pions = [], armes = [], v
       etiquettes.push(`<span class="ch-passage"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E2C77E" stroke-width="2" aria-hidden="true"><path d="M3 20h4v-4h4v-4h4V8h6"></path></svg>Passage vers ${nom(z.passage)}</span>`);
     }
     const contenu = `<span class="ch-name">${nom(id)}</span>${etiquettes.join('')}`;
-    const style = `${zoneStyle(z)};${fond}`;
+    const style = `${zoneStyle(z, id)};${fond}`;
     if (estVoisine) {
       return `<button type="button" class="${classes.join(' ')}" style="${style}" data-piece="${esc(id)}" aria-label="Aller dans ${nom(id)}">${contenu}</button>`;
     }
@@ -89,7 +113,7 @@ export function plateauHtml({ image = null, noms = {}, pions = [], armes = [], v
   const pionsHtml = Object.entries(parPiece).flatMap(([piece, liste]) => {
     const z = PIECES[piece];
     if (!z) return [];
-    const base = centre(z.c, z.r, z.h);
+    const base = centre(z.c, z.r, z.h, piece);
     return liste.map((p, i) => {
       const { dx, dy } = decalage(i, liste.length);
       const tag = p.pseudo ? `<span class="ch-tag">${esc(p.pseudo)}</span>` : '';
@@ -104,14 +128,14 @@ export function plateauHtml({ image = null, noms = {}, pions = [], armes = [], v
   const armesHtml = Object.entries(parArme).flatMap(([piece, liste]) => {
     const z = PIECES[piece];
     if (!z) return [];
-    const base = centre(z.c, z.r, z.h);
+    const base = centre(z.c, z.r, z.h, piece);
     return liste.map((a, i) => {
       const abr = ABREV_ARME[String(a.nom).toLowerCase()] || String(a.nom).slice(0, 2);
       return `<span class="ch-arme" style="left:calc(${base.x}% - ${28 - i * 26}px);top:calc(${base.y}% + 30px)" title="${esc(a.nom)}"><span class="visually-hidden">${esc(a.nom)}</span><span aria-hidden="true">${esc(abr)}</span></span>`;
     });
   }).join('');
 
-  const fondImage = image ? `<img class="ch-plan-img" src="${esc(image)}" alt="" width="860" height="540">` : '';
+  const fondImage = image ? `<img class="ch-plan-img" src="${esc(image)}" alt="" width="1376" height="768">` : '';
 
-  return `<div class="ch-plan" role="group" aria-label="Plan du manoir">${fondImage}${escalier}${pieces}${armesHtml}${pionsHtml}</div>`;
+  return `<div class="ch-plan${image ? ' ch-plan--image' : ''}" role="group" aria-label="Plan du manoir">${fondImage}${escalier}${pieces}${armesHtml}${pionsHtml}</div>`;
 }

@@ -187,3 +187,6 @@
 @media (prefers-reduced-motion: reduce) {
   .rk-terr, .rk-pastille, .rk-btn { transition: none !important; }
 }
+
+/* Avec l'image de la carte (1376 × 768) : ses proportions. */
+.rk-carte.rk-carte--image { aspect-ratio: 1376 / 768; }

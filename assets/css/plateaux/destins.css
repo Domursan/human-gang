@@ -185,3 +185,7 @@
 /* Chemin dense : les noms des cases sont dans la légende et l'aide (aria-label, title), pas sous chaque disque. */
 .dp-case { width: 30px; height: 30px; }
 .dp-nom { display: none; }
+
+/* Avec l'image du chemin de vie (carrée) : proportions de l'image, cases un peu transparentes pour laisser voir le décor. */
+.dp-plan.dp-plan--image { aspect-ratio: 1 / 1; max-width: 860px; margin-inline: auto; }
+.dp-plan--image .dp-case { width: 26px; height: 26px; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }

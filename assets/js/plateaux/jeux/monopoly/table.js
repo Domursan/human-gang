@@ -631,6 +631,14 @@ export function creer(root, ctx) {
     cles.cases = null;
     if (etat) rendreCases();
   });
+  // Illustration du centre du plateau (assets/img/plateaux/monopoly/centre.webp), sous les dés et le panneau d'action.
+  const urlCentre = imagePlateau('monopoly', 'centre');
+  imageExiste(urlCentre).then((ok) => {
+    if (!ok || !refs.centre) return;
+    refs.centre.classList.add('mo-centre--image');
+    // En style direct : une adresse dans une variable CSS serait résolue depuis la feuille de style, pas depuis la page.
+    refs.centre.style.backgroundImage = `linear-gradient(rgba(14, 14, 16, .35), rgba(14, 14, 16, .35)), url("${urlCentre}")`;
+  });
 
   /* ---------- Chat et contrat de la vue ---------- */
 

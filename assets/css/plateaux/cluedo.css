@@ -199,3 +199,9 @@ button.ch-room { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .ch-room, .ch-carte-choix, .ch-btn { transition: none !important; }
 }
+
+/* Plan avec l'image du manoir (1376 × 768) : proportions de l'image, noms plus petits dans les pièces étroites. */
+.ch-plan.ch-plan--image { aspect-ratio: 1376 / 768; }
+.ch-plan--image .ch-room { background: transparent; border-color: transparent; box-shadow: none; }
+.ch-plan--image .ch-name { font-size: 12px; }
+.ch-plan--image .ch-passage { font-size: 11px; }

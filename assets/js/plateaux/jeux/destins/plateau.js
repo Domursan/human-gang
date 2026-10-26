@@ -65,8 +65,29 @@ function construire() {
   return brut.map(([x, y]) => [+((x / LARGEUR) * 100).toFixed(3), +((y / HAUTEUR) * 100).toFixed(3)]);
 }
 
-/** Positions des 91 cases (index = case). */
+/** Positions des 91 cases (index = case), dessin de repli. */
 export const POSITIONS = construire();
+
+/* Tracé sur l'image du chemin de vie (assets/img/plateaux/destins/plateau.webp, 1024 × 1024) : le long de ses routes,
+   départ au village en haut à gauche, Université vers le campus en haut à droite, Carrière par la route du milieu,
+   vie d'adulte à travers la ville, Famille vers le quartier des jardins, Aventure vers le lac et l'aérodrome,
+   retraite par le domaine jusqu'au village du bord de mer. */
+const IMG = {
+  depart: [160, 170],
+  universite: [[160, 170], [220, 140], [320, 118], [430, 100], [495, 115], [535, 185], [615, 225], [700, 245], [790, 215], [850, 160]],
+  carriere: [[160, 170], [205, 225], [215, 280], [160, 330], [130, 380], [230, 400], [330, 400], [400, 340], [460, 270], [560, 255], [640, 300]],
+  main: [[730, 300], [850, 320], [860, 400], [800, 460], [720, 505], [640, 560], [560, 620], [470, 650], [370, 630], [290, 580], [220, 530], [140, 520], [90, 590], [130, 660], [230, 680], [300, 690]],
+  famille: [[300, 690], [400, 705], [500, 700], [590, 690], [690, 650], [790, 690], [800, 760]],
+  aventure: [[300, 690], [330, 770], [440, 790], [560, 790], [680, 800], [780, 820], [860, 850]],
+  retraite: [[830, 900], [740, 930], [640, 965], [540, 985], [440, 975], [360, 930], [320, 860], [260, 800], [180, 770], [110, 740]],
+};
+function construireImage() {
+  const brut = [IMG.depart].concat(echantillon(IMG.universite, 10), echantillon(IMG.carriere, 10), echantillon(IMG.main, 31),
+    echantillon(IMG.famille, 10), echantillon(IMG.aventure, 10), echantillon(IMG.retraite, 19));
+  return brut.map(([x, y]) => [+((x / 1024) * 100).toFixed(3), +((y / 1024) * 100).toFixed(3)]);
+}
+/** Positions des 91 cases quand l'image du chemin de vie est affichée. */
+export const POSITIONS_IMAGE = construireImage();
 
 /** Nom affiché et lettre de chaque type de case (couleurs dans destins.css, classe dp-t-<type>). */
 export const LIBELLES = {
@@ -104,7 +125,8 @@ function decalage(index, total) {
  * @returns {string} HTML (<div class="dp-plan">).
  */
 export function plateauHtml({ image = null, types = [], pions = [], prochaine = null, moi = null } = {}) {
-  const cases = POSITIONS.map(([x, y], i) => {
+  const POS = image ? POSITIONS_IMAGE : POSITIONS;
+  const cases = POS.map(([x, y], i) => {
     const type = types[i] || 'vacances';
     const { lettre, nom } = libelleDe(type);
     const classes = ['dp-case', `dp-t-${esc(type)}`];
@@ -120,7 +142,7 @@ export function plateauHtml({ image = null, types = [], pions = [], prochaine = 
   const parCase = {};
   pions.forEach((p) => { (parCase[p.case] ||= []).push(p); });
   const pionsHtml = Object.entries(parCase).flatMap(([c, liste]) => {
-    const pos = POSITIONS[Number(c)];
+    const pos = POS[Number(c)];
     if (!pos) return [];
     return liste.map((p, i) => {
       const { dx, dy } = decalage(i, liste.length);
@@ -132,6 +154,6 @@ export function plateauHtml({ image = null, types = [], pions = [], prochaine = 
     });
   }).join('');
 
-  const fond = image ? `<img class="dp-plan-img" src="${esc(image)}" alt="" width="640" height="560">` : '';
-  return `<div class="dp-plan" role="group" aria-label="Chemin de vie">${fond}${cases}${pionsHtml}</div>`;
+  const fond = image ? `<img class="dp-plan-img" src="${esc(image)}" alt="" width="1024" height="1024">` : '';
+  return `<div class="dp-plan${image ? ' dp-plan--image' : ''}" role="group" aria-label="Chemin de vie">${fond}${cases}${pionsHtml}</div>`;
 }

@@ -1,7 +1,7 @@
 // ===== Humane Gang — Risk : carte du monde (plateaux/jeux/risk/plateau.js) =====
 /*
  * Rôle : la carte des 42 territoires.
- *   Si l'image assets/img/plateaux/risk/carte.webp existe (2400 × 1300), elle sert de fond. Sinon, dessin de repli :
+ *   Si l'image assets/img/plateaux/risk/carte.webp existe (1376 × 768), elle sert de fond, avec ses propres centres (CENTRES_IMAGE). Sinon, dessin de repli :
  *   chaque continent est une enveloppe colorée autour de ses territoires, les liaisons maritimes sont en pointillés.
  *   Chaque territoire est un bouton placé en % (coordonnées de la maquette, 960 × 520 : valable pour l'image aussi).
  *   Ce module ne fait que du HTML et des classes : table.js le monte, décide quand le refaire et marque la sélection.
@@ -99,6 +99,18 @@ function fondDessine(continents) {
     <rect width="${LARGEUR}" height="${HAUTEUR}" fill="#0B2C48"></rect>${zones}${mers}</svg>`;
 }
 
+/** Centres des 42 territoires sur l'image de la carte (assets/img/plateaux/risk/carte.webp, 1376 × 768, en pixels). */
+export const CENTRES_IMAGE = {
+  alaska: [110, 160], tno: [235, 140], groenland: [520, 95], alberta: [230, 230], ontario: [320, 240], quebec: [420, 230],
+  ouest: [260, 300], est: [350, 300], amcentrale: [320, 370],
+  venezuela: [420, 440], perou: [410, 520], bresil: [490, 490], argentine: [430, 620],
+  islande: [600, 160], scandinavie: [750, 170], gb: [650, 225], europenord: [730, 240], europeouest: [660, 285], europesud: [750, 285], ukraine: [820, 210],
+  afnord: [660, 400], egypte: [770, 380], afest: [810, 460], congo: [740, 490], afsud: [760, 570], madagascar: [835, 540],
+  oural: [920, 200], siberie: [1000, 150], yakoutie: [1120, 130], irkoutsk: [1100, 200], kamtchatka: [1270, 160], japon: [1160, 295],
+  mongolie: [1080, 250], chine: [1030, 315], afghanistan: [900, 280], moyenorient: [840, 350], inde: [950, 385], siam: [1030, 395],
+  indonesie: [1080, 470], nouvelleguinee: [1180, 485], australieouest: [1120, 580], australieest: [1190, 590],
+};
+
 /**
  * Carte complète : fond (image ou dessin), puis un bouton par territoire.
  * @param {{image?: string|null, terrs: object[], continents: object[]}} opts voir l'en-tête.
@@ -106,11 +118,12 @@ function fondDessine(continents) {
  */
 export function plateauHtml({ image = null, terrs = [], continents = [] } = {}) {
   const fond = image
-    ? `<img class="rk-fond-img" src="${esc(image)}" alt="" width="2400" height="1300">`
+    ? `<img class="rk-fond-img" src="${esc(image)}" alt="" width="1376" height="768">`
     : fondDessine(continents);
+  const [centres, l, h] = image ? [CENTRES_IMAGE, 1376, 768] : [CENTRES, LARGEUR, HAUTEUR];
   const pions = terrs.map((t) => {
-    const [x, y] = CENTRES[t.id] || [0, 0];
-    const style = `left:${pct(x, LARGEUR)}%;top:${pct(y, HAUTEUR)}%`;
+    const [x, y] = centres[t.id] || [0, 0];
+    const style = `left:${pct(x, l)}%;top:${pct(y, h)}%`;
     const classes = ['rk-terr'];
     if (t.mine) classes.push('is-moi');
     const armee = t.armee ? `, armée ${t.armee}` : '';
@@ -119,7 +132,7 @@ export function plateauHtml({ image = null, terrs = [], continents = [] } = {}) 
     const pastille = `<span class="rk-pastille${t.clair ? ' is-clair' : ''}" style="background:${esc(t.couleur)}" aria-hidden="true">${esc(t.a)}</span>`;
     return `<button type="button" class="${classes.join(' ')}" style="${style}" data-terr="${esc(t.id)}" title="${esc(t.nom)}" aria-label="${esc(nom)}"${t.clic ? '' : ' disabled'}>${pastille}</button>`;
   }).join('');
-  return `<div class="rk-carte">${fond}<div class="rk-pions">${pions}</div></div>`;
+  return `<div class="rk-carte${image ? ' rk-carte--image' : ''}">${fond}<div class="rk-pions">${pions}</div></div>`;
 }
 
 /**

@@ -208,3 +208,6 @@
 @media (prefers-reduced-motion: reduce) {
   .mo-table * { transition: none !important; animation: none !important; }
 }
+
+/* Illustration du centre (carrée) : couvre le centre, assombrie pour que dés et panneau restent lisibles. */
+.mo-centre.mo-centre--image { background-position: center; background-size: cover; background-repeat: no-repeat; }
