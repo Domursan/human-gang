@@ -43,6 +43,17 @@ export const ONGLETS = [
     icone: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>' },
   { id: 'plat', titre: 'Plat du jour', module: './nj-plat.js', idee: 'N6', rythme: 'jour', admin: true, couleur: 'var(--amber)',
     icone: '<path d="M3 13h18a9 9 0 0 1-18 0z"/><path d="M8 9c0-2 2-2 2-4M13 9c0-2 2-2 2-4"/>' },
+  // Grilles du jour (moteur nj-grilles : hg_nj_grille_etat / hg_nj_grille_essai)
+  { id: 'connexions', titre: 'Connexions', module: './nj-connexions.js', idee: 'N10', rythme: 'jour', admin: true, couleur: 'var(--sage)',
+    icone: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>' },
+  { id: 'mots-croises', titre: 'Mots croisés', module: './nj-motscroises.js', idee: 'N11', rythme: 'jour', admin: true, couleur: 'var(--sand)',
+    icone: '<path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/><path d="M15 15h6v6h-6z" fill="currentColor"/>' },
+  { id: 'mot-mele', titre: 'Mot mêlé', module: './nj-motmele.js', idee: 'N12', rythme: 'jour', admin: true, couleur: 'var(--slate)',
+    icone: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7l10 10"/>' },
+  { id: 'anagramme', titre: 'Anagramme', module: './nj-anagramme.js', idee: 'N13', rythme: 'jour', admin: true, couleur: 'var(--rose)',
+    icone: '<path d="M4 17l4-10 4 10M5.5 13h5M14 7h6l-6 10h6"/>' },
+  { id: 'nerdle', titre: 'Nerdle du gang', module: './nj-nerdle.js', idee: 'N14', rythme: 'jour', admin: true, couleur: 'var(--plum)',
+    icone: '<path d="M5 8h4M7 6v4M15 8h4M5 16h4M15 15h4M15 17h4"/>' },
   // Jeux solo (classement de la semaine)
   { id: 'demineur', titre: 'Démineur', module: './nj-demineur.js', idee: 'N7', rythme: 'competition', admin: true, couleur: 'var(--rust)',
     icone: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>' },

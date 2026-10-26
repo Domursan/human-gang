@@ -1,0 +1,4502 @@
+[
+ {
+  "mot": "AIL",
+  "def": "Bulbe qui parfume l'aïoli",
+  "niveau": 1
+ },
+ {
+  "mot": "AIR",
+  "def": "Ce qu'on respire à pleins poumons",
+  "niveau": 1
+ },
+ {
+  "mot": "AMI",
+  "def": "Copain, pote, compagnon de route",
+  "niveau": 1
+ },
+ {
+  "mot": "ANE",
+  "def": "Bourricot, animal réputé très têtu",
+  "niveau": 1
+ },
+ {
+  "mot": "ARC",
+  "def": "Arme qui envoie des flèches",
+  "niveau": 1
+ },
+ {
+  "mot": "ART",
+  "def": "Peinture, sculpture ou musique, par exemple",
+  "niveau": 1
+ },
+ {
+  "mot": "BAC",
+  "def": "Diplôme de fin de lycée, ou grand bateau",
+  "niveau": 1
+ },
+ {
+  "mot": "BAL",
+  "def": "Soirée où l'on danse en habits",
+  "niveau": 1
+ },
+ {
+  "mot": "BAS",
+  "def": "Chaussette longue, ou situé en dessous",
+  "niveau": 2
+ },
+ {
+  "mot": "BEC",
+  "def": "Bouche pointue d'un oiseau",
+  "niveau": 1
+ },
+ {
+  "mot": "BIS",
+  "def": "Encore une fois, cri du public",
+  "niveau": 1
+ },
+ {
+  "mot": "BOA",
+  "def": "Long serpent qui étouffe ses proies",
+  "niveau": 2
+ },
+ {
+  "mot": "BOL",
+  "def": "Récipient rond pour le café au lait",
+  "niveau": 1
+ },
+ {
+  "mot": "BUS",
+  "def": "Grand véhicule qui fait des arrêts en ville",
+  "niveau": 1
+ },
+ {
+  "mot": "BUT",
+  "def": "Objectif, ou cage au football",
+  "niveau": 1
+ },
+ {
+  "mot": "CAP",
+  "def": "Pointe de terre qui avance dans la mer",
+  "niveau": 2
+ },
+ {
+  "mot": "CAS",
+  "def": "Situation particulière, circonstance",
+  "niveau": 2
+ },
+ {
+  "mot": "CEP",
+  "def": "Champignon forestier très recherché",
+  "niveau": 2
+ },
+ {
+  "mot": "CIL",
+  "def": "Petit poil qui protège l'oeil",
+  "niveau": 1
+ },
+ {
+  "mot": "CLE",
+  "def": "Outil qui ouvre une serrure",
+  "niveau": 1
+ },
+ {
+  "mot": "COL",
+  "def": "Passage entre deux montagnes",
+  "niveau": 2
+ },
+ {
+  "mot": "COQ",
+  "def": "Volatile qui chante à l'aube",
+  "niveau": 1
+ },
+ {
+  "mot": "COU",
+  "def": "Partie entre la tête et les épaules",
+  "niveau": 1
+ },
+ {
+  "mot": "CRI",
+  "def": "Son fort qu'on pousse en surprise",
+  "niveau": 1
+ },
+ {
+  "mot": "CRU",
+  "def": "Pas cuit, sans détour",
+  "niveau": 2
+ },
+ {
+  "mot": "DIX",
+  "def": "Nombre juste après neuf",
+  "niveau": 1
+ },
+ {
+  "mot": "DON",
+  "def": "Cadeau, ou talent naturel",
+  "niveau": 1
+ },
+ {
+  "mot": "DOS",
+  "def": "Partie qu'on ne voit jamais de face",
+  "niveau": 2
+ },
+ {
+  "mot": "DOT",
+  "def": "Somme d'argent apportée au mariage",
+  "niveau": 2
+ },
+ {
+  "mot": "DUO",
+  "def": "Deux personnes qui font un spectacle ensemble",
+  "niveau": 1
+ },
+ {
+  "mot": "EAU",
+  "def": "Liquide transparent indispensable à la vie",
+  "niveau": 1
+ },
+ {
+  "mot": "ECU",
+  "def": "Ancienne pièce, ou bouclier médiéval",
+  "niveau": 2
+ },
+ {
+  "mot": "EGO",
+  "def": "Le moi qu'on cultive parfois trop",
+  "niveau": 2
+ },
+ {
+  "mot": "ELU",
+  "def": "Choisi par les urnes",
+  "niveau": 2
+ },
+ {
+  "mot": "EMU",
+  "def": "Grand échassier australien qui ne vole pas",
+  "niveau": 3
+ },
+ {
+  "mot": "ETE",
+  "def": "Saison la plus chaude de l'année",
+  "niveau": 1
+ },
+ {
+  "mot": "FAN",
+  "def": "Admirateur passionné",
+  "niveau": 1
+ },
+ {
+  "mot": "FAR",
+  "def": "Dessert breton aux pruneaux",
+  "niveau": 3
+ },
+ {
+  "mot": "FEE",
+  "def": "Créature magique qui exauce les voeux",
+  "niveau": 1
+ },
+ {
+  "mot": "FER",
+  "def": "Métal qui rouille, ou repassage",
+  "niveau": 1
+ },
+ {
+  "mot": "FEU",
+  "def": "Flamme qui réchauffe, ou crépite",
+  "niveau": 1
+ },
+ {
+  "mot": "FIL",
+  "def": "Long brin de coton, de lin ou de soie pour coudre",
+  "niveau": 1
+ },
+ {
+  "mot": "FIN",
+  "def": "Dernier moment, ou délié",
+  "niveau": 1
+ },
+ {
+  "mot": "FOI",
+  "def": "Croyance sans preuve, ou confiance",
+  "niveau": 2
+ },
+ {
+  "mot": "FOU",
+  "def": "Un brin cinglé, déraisonnable",
+  "niveau": 1
+ },
+ {
+  "mot": "GAG",
+  "def": "Blague courte au théâtre ou au cinéma",
+  "niveau": 2
+ },
+ {
+  "mot": "GAZ",
+  "def": "Fluide qui chauffe la cuisinière",
+  "niveau": 1
+ },
+ {
+  "mot": "GEL",
+  "def": "Eau figée par le froid, ou produit coiffant",
+  "niveau": 1
+ },
+ {
+  "mot": "GIN",
+  "def": "Alcool transparent parfumé au genièvre",
+  "niveau": 2
+ },
+ {
+  "mot": "GNU",
+  "def": "Antilope africaine à longues cornes",
+  "niveau": 2
+ },
+ {
+  "mot": "ICI",
+  "def": "En ce lieu précis",
+  "niveau": 1
+ },
+ {
+  "mot": "ILE",
+  "def": "Terre entourée d'eau de toutes parts",
+  "niveau": 1
+ },
+ {
+  "mot": "JEU",
+  "def": "Partie, divertissement, pièce d'un tout",
+  "niveau": 1
+ },
+ {
+  "mot": "JUS",
+  "def": "Boisson qui sort d'un fruit pressé",
+  "niveau": 1
+ },
+ {
+  "mot": "KIR",
+  "def": "Apéritif au cassis et au vin blanc",
+  "niveau": 2
+ },
+ {
+  "mot": "LAC",
+  "def": "Grande étendue d'eau douce",
+  "niveau": 1
+ },
+ {
+  "mot": "LIE",
+  "def": "Dépôt au fond d'un vin",
+  "niveau": 2
+ },
+ {
+  "mot": "LIT",
+  "def": "Meuble où l'on dort, ou il a une tête",
+  "niveau": 1
+ },
+ {
+  "mot": "LOI",
+  "def": "Règle votée par le Parlement",
+  "niveau": 2
+ },
+ {
+  "mot": "LOT",
+  "def": "Ensemble ou portion d'un tout",
+  "niveau": 2
+ },
+ {
+  "mot": "MAI",
+  "def": "Mois du muguet et des élections de printemps",
+  "niveau": 1
+ },
+ {
+  "mot": "MAL",
+  "def": "Douleur, ou contraire du bien",
+  "niveau": 1
+ },
+ {
+  "mot": "MAT",
+  "def": "Sans éclat, mais aussi fin de partie aux échecs",
+  "niveau": 2
+ },
+ {
+  "mot": "MER",
+  "def": "Grande étendue d'eau salée",
+  "niveau": 1
+ },
+ {
+  "mot": "MIL",
+  "def": "Dix fois cent",
+  "niveau": 1
+ },
+ {
+  "mot": "MOT",
+  "def": "Ce qu'on écrit entre deux espaces",
+  "niveau": 1
+ },
+ {
+  "mot": "MOU",
+  "def": "Ni dur ni ferme, un peu flasque",
+  "niveau": 2
+ },
+ {
+  "mot": "MUR",
+  "def": "Paroi qui sépare deux pièces",
+  "niveau": 1
+ },
+ {
+  "mot": "NEF",
+  "def": "Partie centrale d'une église, ou bateau",
+  "niveau": 3
+ },
+ {
+  "mot": "NEZ",
+  "def": "Organe qui sent, et qui sert à porter les lunettes",
+  "niveau": 1
+ },
+ {
+  "mot": "NID",
+  "def": "Maison des oiseaux, faite de brindilles",
+  "niveau": 1
+ },
+ {
+  "mot": "NOM",
+  "def": "Appellation d'une personne ou d'une chose",
+  "niveau": 1
+ },
+ {
+  "mot": "NON",
+  "def": "Réponse négative, le contraire de oui",
+  "niveau": 1
+ },
+ {
+  "mot": "NUE",
+  "def": "Nuage blanc, ou sans vêtement",
+  "niveau": 2
+ },
+ {
+  "mot": "NUL",
+  "def": "Pas bon du tout, ou zéro",
+  "niveau": 1
+ },
+ {
+  "mot": "OIE",
+  "def": "Palmipède qui cancane dans la basse-cour",
+  "niveau": 1
+ },
+ {
+  "mot": "OUI",
+  "def": "Réponse positive, un petit mot d'accord",
+  "niveau": 1
+ },
+ {
+  "mot": "PAN",
+  "def": "Bruit d'un coup sec, ou pièce de vêtement",
+  "niveau": 2
+ },
+ {
+  "mot": "PAR",
+  "def": "Via, en passant à travers",
+  "niveau": 2
+ },
+ {
+  "mot": "PAS",
+  "def": "Petit déplacement à pied",
+  "niveau": 1
+ },
+ {
+  "mot": "PEU",
+  "def": "Presque rien, guère",
+  "niveau": 1
+ },
+ {
+  "mot": "PIE",
+  "def": "Oiseau noir et blanc qui jacasse",
+  "niveau": 1
+ },
+ {
+  "mot": "PIN",
+  "def": "Conifère aux aiguilles persistantes",
+  "niveau": 2
+ },
+ {
+  "mot": "PLI",
+  "def": "Marque laissée sur une feuille qu'on a repassée",
+  "niveau": 1
+ },
+ {
+  "mot": "POT",
+  "def": "Récipient qui sert à conserver la confiture",
+  "niveau": 1
+ },
+ {
+  "mot": "PRE",
+  "def": "Prairie fauchée au printemps",
+  "niveau": 3
+ },
+ {
+  "mot": "PUB",
+  "def": "Réclame à la télé, ou bar anglais",
+  "niveau": 1
+ },
+ {
+  "mot": "RAS",
+  "def": "Tondu de près, ou plat et uni",
+  "niveau": 2
+ },
+ {
+  "mot": "RAT",
+  "def": "Rongeur qui fréquente les égouts",
+  "niveau": 1
+ },
+ {
+  "mot": "RIZ",
+  "def": "Céréale de base du risotto",
+  "niveau": 1
+ },
+ {
+  "mot": "ROC",
+  "def": "Gros bloc de pierre dure au bord de la mer",
+  "niveau": 1
+ },
+ {
+  "mot": "ROI",
+  "def": "Monarque, ou carte la plus haute après la reine",
+  "niveau": 1
+ },
+ {
+  "mot": "RUE",
+  "def": "Voie bordée de maisons, en ville",
+  "niveau": 1
+ },
+ {
+  "mot": "SAC",
+  "def": "Bagage souple qu'on porte en bandoulière",
+  "niveau": 1
+ },
+ {
+  "mot": "SEC",
+  "def": "Qui n'est pas humide, ou raide",
+  "niveau": 1
+ },
+ {
+  "mot": "SEL",
+  "def": "Assaisonnement blanc qui fait ressortir le goût",
+  "niveau": 1
+ },
+ {
+  "mot": "SIX",
+  "def": "Nombre juste après cinq",
+  "niveau": 1
+ },
+ {
+  "mot": "SKI",
+  "def": "Planche glissante qu'on chausse sur la neige",
+  "niveau": 1
+ },
+ {
+  "mot": "SOL",
+  "def": "Terre sous nos pieds, ou note de musique",
+  "niveau": 1
+ },
+ {
+  "mot": "SON",
+  "def": "Ce qu'on entend, ou à lui",
+  "niveau": 2
+ },
+ {
+  "mot": "SOU",
+  "def": "Ancienne petite pièce, ou presque rien",
+  "niveau": 2
+ },
+ {
+  "mot": "SUD",
+  "def": "Direction opposée au nord",
+  "niveau": 1
+ },
+ {
+  "mot": "SUR",
+  "def": "Certain, en sécurité, ou au-dessus",
+  "niveau": 2
+ },
+ {
+  "mot": "TAS",
+  "def": "Amoncellement de choses empilées",
+  "niveau": 1
+ },
+ {
+  "mot": "TIC",
+  "def": "Mouvement nerveux qui revient sans cesse",
+  "niveau": 2
+ },
+ {
+  "mot": "TIR",
+  "def": "Action de viser une cible",
+  "niveau": 2
+ },
+ {
+  "mot": "TON",
+  "def": "Qui t'appartient, ou la hauteur de la voix",
+  "niveau": 2
+ },
+ {
+  "mot": "TOP",
+  "def": "Signal de départ, ou sommet du classement",
+  "niveau": 1
+ },
+ {
+  "mot": "TRI",
+  "def": "Action de classer ses déchets",
+  "niveau": 2
+ },
+ {
+  "mot": "UNE",
+  "def": "Première page d'un journal, ou article féminin",
+  "niveau": 2
+ },
+ {
+  "mot": "VAN",
+  "def": "Petit véhicule utilitaire à portes coulissantes",
+  "niveau": 2
+ },
+ {
+  "mot": "VER",
+  "def": "Petit animal sans pattes qui vit dans la terre",
+  "niveau": 1
+ },
+ {
+  "mot": "VIE",
+  "def": "Existence, durée de notre passage",
+  "niveau": 1
+ },
+ {
+  "mot": "VIF",
+  "def": "Rapide, alerte, éveillé",
+  "niveau": 1
+ },
+ {
+  "mot": "VIN",
+  "def": "Boisson issue du raisin fermenté",
+  "niveau": 1
+ },
+ {
+  "mot": "VIS",
+  "def": "Petite tige métallique filetée qu'on tourne",
+  "niveau": 1
+ },
+ {
+  "mot": "VOL",
+  "def": "Déplacement aérien, ou larcin",
+  "niveau": 1
+ },
+ {
+  "mot": "VUE",
+  "def": "Ce que voient les yeux, un panorama",
+  "niveau": 1
+ },
+ {
+  "mot": "YEN",
+  "def": "Monnaie japonaise",
+  "niveau": 2
+ },
+ {
+  "mot": "ZEN",
+  "def": "Calme, sérénité, philosophie japonaise",
+  "niveau": 2
+ },
+ {
+  "mot": "ZOO",
+  "def": "Parc où l'on observe des animaux",
+  "niveau": 1
+ },
+ {
+  "mot": "BAR",
+  "def": "Comptoir où l'on sert à boire",
+  "niveau": 1
+ },
+ {
+  "mot": "EPI",
+  "def": "Tige de blé qui porte les grains",
+  "niveau": 2
+ },
+ {
+  "mot": "EST",
+  "def": "Point cardinal où le soleil se lève",
+  "niveau": 1
+ },
+ {
+  "mot": "MIE",
+  "def": "Intérieur tendre du pain",
+  "niveau": 2
+ },
+ {
+  "mot": "OUF",
+  "def": "Soupir de soulagement",
+  "niveau": 1
+ },
+ {
+  "mot": "RAP",
+  "def": "Style musical parlé sur un rythme",
+  "niveau": 1
+ },
+ {
+  "mot": "SAS",
+  "def": "Pièce étanche entre deux espaces, ou tamis",
+  "niveau": 3
+ },
+ {
+  "mot": "AGE",
+  "def": "Nombre d'années vécues",
+  "niveau": 1
+ },
+ {
+  "mot": "ODE",
+  "def": "Poème qui chante un sujet élevé",
+  "niveau": 2
+ },
+ {
+  "mot": "PIC",
+  "def": "Sommet pointu de montagne",
+  "niveau": 2
+ },
+ {
+  "mot": "PUR",
+  "def": "Sans mélange, sans défaut",
+  "niveau": 1
+ },
+ {
+  "mot": "TOT",
+  "def": "Avant l'heure habituelle, de bonne heure",
+  "niveau": 2
+ },
+ {
+  "mot": "PRO",
+  "def": "Expert qui gagne sa vie avec son métier",
+  "niveau": 1
+ },
+ {
+  "mot": "LIS",
+  "def": "Fleur blanche des jardins, emblème royal",
+  "niveau": 2
+ },
+ {
+  "mot": "VAL",
+  "def": "Creux étroit entre deux reliefs",
+  "niveau": 3
+ },
+ {
+  "mot": "NET",
+  "def": "Propre, sans équivoque",
+  "niveau": 2
+ },
+ {
+  "mot": "GAI",
+  "def": "Joyeux, plein d'entrain",
+  "niveau": 2
+ },
+ {
+  "mot": "CAR",
+  "def": "Autobus de voyage pour les excursions",
+  "niveau": 1
+ },
+ {
+  "mot": "BIO",
+  "def": "Produit cultivé sans engrais chimiques",
+  "niveau": 1
+ },
+ {
+  "mot": "SUC",
+  "def": "Liquide contenu dans une plante ou un fruit",
+  "niveau": 2
+ },
+ {
+  "mot": "PUS",
+  "def": "Liquide jaunâtre sortant d'une plaie infectée",
+  "niveau": 3
+ },
+ {
+  "mot": "ACTE",
+  "def": "Division d'une pièce de théâtre, ou document officiel",
+  "niveau": 2
+ },
+ {
+  "mot": "AGIR",
+  "def": "Passer à l'action, se mettre au travail",
+  "niveau": 2
+ },
+ {
+  "mot": "AIDE",
+  "def": "Coup de main, assistance",
+  "niveau": 1
+ },
+ {
+  "mot": "AILE",
+  "def": "Organe de vol, ou partie latérale d'un bâtiment",
+  "niveau": 1
+ },
+ {
+  "mot": "AMER",
+  "def": "Au goût piquant, pas du tout sucré",
+  "niveau": 2
+ },
+ {
+  "mot": "ANGE",
+  "def": "Messager céleste aux ailes blanches",
+  "niveau": 1
+ },
+ {
+  "mot": "AVIS",
+  "def": "Opinion, point de vue, ou conseil",
+  "niveau": 2
+ },
+ {
+  "mot": "AXE",
+  "def": "Ligne imaginaire qui traverse un objet en son centre",
+  "niveau": 2
+ },
+ {
+  "mot": "BAIE",
+  "def": "Petit fruit juteux, ou large ouverture vitrée",
+  "niveau": 2
+ },
+ {
+  "mot": "BAIN",
+  "def": "Moment passé dans l'eau chaude",
+  "niveau": 1
+ },
+ {
+  "mot": "BANC",
+  "def": "Siège long pour plusieurs personnes dehors",
+  "niveau": 1
+ },
+ {
+  "mot": "BASE",
+  "def": "Fondement, point de départ",
+  "niveau": 1
+ },
+ {
+  "mot": "BEAU",
+  "def": "Joli à regarder, esthétique",
+  "niveau": 1
+ },
+ {
+  "mot": "BIEN",
+  "def": "Bonne chose, avantage, ou en bonne santé",
+  "niveau": 1
+ },
+ {
+  "mot": "BLEU",
+  "def": "Couleur du ciel et de la mer",
+  "niveau": 1
+ },
+ {
+  "mot": "BLOC",
+  "def": "Gros morceau massif, ou carnet détachable",
+  "niveau": 2
+ },
+ {
+  "mot": "BOIS",
+  "def": "Matière tirée des arbres, forêt",
+  "niveau": 1
+ },
+ {
+  "mot": "BORD",
+  "def": "Côté, pourtour, extrémité d'un objet",
+  "niveau": 1
+ },
+ {
+  "mot": "BOUE",
+  "def": "Terre mouillée et collante",
+  "niveau": 1
+ },
+ {
+  "mot": "BOUT",
+  "def": "Extrémité, ou petit morceau",
+  "niveau": 1
+ },
+ {
+  "mot": "BRAS",
+  "def": "Membre supérieur qui sert à porter",
+  "niveau": 1
+ },
+ {
+  "mot": "BRIN",
+  "def": "Petit morceau de paille ou d'herbe fine",
+  "niveau": 2
+ },
+ {
+  "mot": "CAGE",
+  "def": "Enclos grillagé pour les oiseaux, ou but au hockey",
+  "niveau": 1
+ },
+ {
+  "mot": "CAMP",
+  "def": "Lieu de vacances sous la tente",
+  "niveau": 1
+ },
+ {
+  "mot": "CAVE",
+  "def": "Pièce souterraine où l'on garde le vin",
+  "niveau": 1
+ },
+ {
+  "mot": "CERF",
+  "def": "Grand animal dont le mâle porte des bois",
+  "niveau": 2
+ },
+ {
+  "mot": "CHAT",
+  "def": "Félin de compagnie qui ronronne",
+  "niveau": 1
+ },
+ {
+  "mot": "CHEF",
+  "def": "Responsable, ou cuisinier en tête de brigade",
+  "niveau": 1
+ },
+ {
+  "mot": "CHER",
+  "def": "Coûteux, ou très aimé",
+  "niveau": 1
+ },
+ {
+  "mot": "CHIC",
+  "def": "Élégant, de bon goût",
+  "niveau": 1
+ },
+ {
+  "mot": "CIEL",
+  "def": "Espace bleu au-dessus de nos têtes",
+  "niveau": 1
+ },
+ {
+  "mot": "CINQ",
+  "def": "Nombre entre quatre et six",
+  "niveau": 1
+ },
+ {
+  "mot": "CIRE",
+  "def": "Matière qui fait les bougies",
+  "niveau": 2
+ },
+ {
+  "mot": "CLAN",
+  "def": "Groupe de familles très soudées",
+  "niveau": 2
+ },
+ {
+  "mot": "CODE",
+  "def": "Ensemble de règles, ou mot de passe",
+  "niveau": 2
+ },
+ {
+  "mot": "COIN",
+  "def": "Angle, ou endroit tranquille à l'écart",
+  "niveau": 1
+ },
+ {
+  "mot": "COLA",
+  "def": "Boisson gazeuse brune très sucrée",
+  "niveau": 2
+ },
+ {
+  "mot": "CONE",
+  "def": "Forme de la glace dans sa gaufrette",
+  "niveau": 2
+ },
+ {
+  "mot": "CORS",
+  "def": "Durillon au pied, ou instrument à vent",
+  "niveau": 3
+ },
+ {
+  "mot": "COUP",
+  "def": "Choc, ou fois",
+  "niveau": 1
+ },
+ {
+  "mot": "CRAN",
+  "def": "Encoche qui règle une ceinture",
+  "niveau": 3
+ },
+ {
+  "mot": "CUBE",
+  "def": "Solide à six faces égales",
+  "niveau": 1
+ },
+ {
+  "mot": "CUIR",
+  "def": "Peau tannée d'un animal",
+  "niveau": 2
+ },
+ {
+  "mot": "DAME",
+  "def": "Femme respectée, ou pièce du jeu de plateau",
+  "niveau": 1
+ },
+ {
+  "mot": "DANS",
+  "def": "Au sein de, à l'intérieur",
+  "niveau": 1
+ },
+ {
+  "mot": "DARD",
+  "def": "Pointe de l'abeille qui pique",
+  "niveau": 2
+ },
+ {
+  "mot": "DATE",
+  "def": "Jour précis du calendrier",
+  "niveau": 1
+ },
+ {
+  "mot": "DEMI",
+  "def": "Moitié, ou petite bière pression",
+  "niveau": 1
+ },
+ {
+  "mot": "DENT",
+  "def": "Petit os blanc qui mord dans la bouche",
+  "niveau": 1
+ },
+ {
+  "mot": "DOUX",
+  "def": "Pas amer, ou tendre au toucher",
+  "niveau": 1
+ },
+ {
+  "mot": "DRAP",
+  "def": "Grand tissu qu'on met sur le lit",
+  "niveau": 1
+ },
+ {
+  "mot": "DUEL",
+  "def": "Combat entre deux personnes",
+  "niveau": 2
+ },
+ {
+  "mot": "DUNE",
+  "def": "Colline de sable au bord de la mer",
+  "niveau": 2
+ },
+ {
+  "mot": "ECHO",
+  "def": "Son qui revient après avoir heurté une paroi",
+  "niveau": 2
+ },
+ {
+  "mot": "EGAL",
+  "def": "Identique, pareil, ou indifférent",
+  "niveau": 1
+ },
+ {
+  "mot": "ELAN",
+  "def": "Vitalité, énergie soudaine",
+  "niveau": 2
+ },
+ {
+  "mot": "EPEE",
+  "def": "Arme blanche des escrimeurs",
+  "niveau": 2
+ },
+ {
+  "mot": "ETAT",
+  "def": "Condition, ou nation organisée",
+  "niveau": 2
+ },
+ {
+  "mot": "ETRE",
+  "def": "Exister, se trouver quelque part",
+  "niveau": 1
+ },
+ {
+  "mot": "FACE",
+  "def": "Visage, ou côté avant",
+  "niveau": 1
+ },
+ {
+  "mot": "FAIT",
+  "def": "Événement réel, ou accompli",
+  "niveau": 1
+ },
+ {
+  "mot": "FARD",
+  "def": "Maquillage qu'on applique sur les joues",
+  "niveau": 2
+ },
+ {
+  "mot": "FAUX",
+  "def": "Pas vrai, ou outil de faucheur",
+  "niveau": 1
+ },
+ {
+  "mot": "FETE",
+  "def": "Célébration, jour férié",
+  "niveau": 1
+ },
+ {
+  "mot": "FILE",
+  "def": "Rangée de personnes qui attendent",
+  "niveau": 1
+ },
+ {
+  "mot": "FINI",
+  "def": "Achevé, terminé, qui a une limite",
+  "niveau": 1
+ },
+ {
+  "mot": "FLAN",
+  "def": "Dessert à la crème et à la pâte",
+  "niveau": 1
+ },
+ {
+  "mot": "FLOT",
+  "def": "Grande foule, ou masse d'eau en mouvement",
+  "niveau": 2
+ },
+ {
+  "mot": "FOIE",
+  "def": "Organe qui filtre le sang, ou abat",
+  "niveau": 2
+ },
+ {
+  "mot": "FOND",
+  "def": "Partie la plus basse, ou arrière-plan",
+  "niveau": 1
+ },
+ {
+  "mot": "FORT",
+  "def": "Robuste, solide, ou bastion",
+  "niveau": 1
+ },
+ {
+  "mot": "FOUR",
+  "def": "Appareil qui fait cuire les plats",
+  "niveau": 1
+ },
+ {
+  "mot": "FRIT",
+  "def": "Cuit dans un bain d'huile bouillante",
+  "niveau": 2
+ },
+ {
+  "mot": "GANT",
+  "def": "Accessoire qui protège les mains",
+  "niveau": 1
+ },
+ {
+  "mot": "GARE",
+  "def": "Bâtiment où l'on prend le train",
+  "niveau": 1
+ },
+ {
+  "mot": "GITE",
+  "def": "Logement de vacances à la campagne",
+  "niveau": 2
+ },
+ {
+  "mot": "GOUT",
+  "def": "Saveur, ou plaisir gustatif",
+  "niveau": 1
+ },
+ {
+  "mot": "GRAS",
+  "def": "Riche en matière huileuse, ou épais",
+  "niveau": 1
+ },
+ {
+  "mot": "GRIS",
+  "def": "Couleur entre le noir et le blanc",
+  "niveau": 1
+ },
+ {
+  "mot": "GRUE",
+  "def": "Oiseau migrateur, ou engin de chantier",
+  "niveau": 2
+ },
+ {
+  "mot": "HAIE",
+  "def": "Clôture faite d'arbustes alignés",
+  "niveau": 1
+ },
+ {
+  "mot": "HALO",
+  "def": "Cercle lumineux qui entoure la lune",
+  "niveau": 2
+ },
+ {
+  "mot": "HAUT",
+  "def": "Élevé, ou partie supérieure",
+  "niveau": 1
+ },
+ {
+  "mot": "HIER",
+  "def": "La veille d'aujourd'hui",
+  "niveau": 1
+ },
+ {
+  "mot": "HUIT",
+  "def": "Nombre entre sept et neuf",
+  "niveau": 1
+ },
+ {
+  "mot": "IDEE",
+  "def": "Pensée, concept qui germe dans la tête",
+  "niveau": 1
+ },
+ {
+  "mot": "ILOT",
+  "def": "Petite île, ou zone isolée au milieu d'une ville",
+  "niveau": 2
+ },
+ {
+  "mot": "JOIE",
+  "def": "Grand bonheur, allégresse",
+  "niveau": 1
+ },
+ {
+  "mot": "JOUE",
+  "def": "Partie du visage sous l'oeil",
+  "niveau": 1
+ },
+ {
+  "mot": "JOUR",
+  "def": "Période de vingt-quatre heures",
+  "niveau": 1
+ },
+ {
+  "mot": "JUGE",
+  "def": "Personne qui tranche au tribunal",
+  "niveau": 1
+ },
+ {
+  "mot": "JUIN",
+  "def": "Mois des longues journées d'été",
+  "niveau": 1
+ },
+ {
+  "mot": "KART",
+  "def": "Petit bolide de course sans carrosserie",
+  "niveau": 2
+ },
+ {
+  "mot": "LAIT",
+  "def": "Boisson blanche produite par les vaches",
+  "niveau": 1
+ },
+ {
+  "mot": "LAME",
+  "def": "Partie tranchante d'un couteau",
+  "niveau": 1
+ },
+ {
+  "mot": "LARD",
+  "def": "Graisse de porc qui se tartine",
+  "niveau": 2
+ },
+ {
+  "mot": "LAVE",
+  "def": "Roche en fusion qui sort des volcans",
+  "niveau": 2
+ },
+ {
+  "mot": "LENT",
+  "def": "Qui avance doucement, sans se presser",
+  "niveau": 1
+ },
+ {
+  "mot": "LIEN",
+  "def": "Attache, relation qui unit",
+  "niveau": 1
+ },
+ {
+  "mot": "LIME",
+  "def": "Râpe métallique à dents, ou agrume vert",
+  "niveau": 2
+ },
+ {
+  "mot": "LIRE",
+  "def": "Déchiffrer un texte des yeux",
+  "niveau": 1
+ },
+ {
+  "mot": "LION",
+  "def": "Roi de la savane à la crinière",
+  "niveau": 1
+ },
+ {
+  "mot": "LOIN",
+  "def": "À grande distance",
+  "niveau": 1
+ },
+ {
+  "mot": "LOUP",
+  "def": "Canidé sauvage qui hurle à la lune",
+  "niveau": 1
+ },
+ {
+  "mot": "LUNE",
+  "def": "Astre qui tourne autour de la Terre",
+  "niveau": 1
+ },
+ {
+  "mot": "LYRE",
+  "def": "Instrument antique à cordes pincées",
+  "niveau": 3
+ },
+ {
+  "mot": "MAGE",
+  "def": "Sorcier, ou enchanteur des légendes",
+  "niveau": 1
+ },
+ {
+  "mot": "MAIN",
+  "def": "Partie du bras qui attrape",
+  "niveau": 1
+ },
+ {
+  "mot": "MALE",
+  "def": "Qui appartient au sexe fort, selon l'usage",
+  "niveau": 2
+ },
+ {
+  "mot": "MARE",
+  "def": "Petit étang au milieu des champs",
+  "niveau": 2
+ },
+ {
+  "mot": "MARI",
+  "def": "Époux, conjoint",
+  "niveau": 1
+ },
+ {
+  "mot": "MERE",
+  "def": "Maman, génitrice",
+  "niveau": 1
+ },
+ {
+  "mot": "MIEL",
+  "def": "Produit doré fabriqué par les abeilles",
+  "niveau": 1
+ },
+ {
+  "mot": "MINE",
+  "def": "Gisement, ou air du visage",
+  "niveau": 2
+ },
+ {
+  "mot": "MODE",
+  "def": "Tendance du moment, ou manière de faire",
+  "niveau": 1
+ },
+ {
+  "mot": "MOIS",
+  "def": "Douze par an, un calendrier",
+  "niveau": 1
+ },
+ {
+  "mot": "MONT",
+  "def": "Relief élevé, ou colline",
+  "niveau": 2
+ },
+ {
+  "mot": "MORT",
+  "def": "Fin de la vie, ou décédé",
+  "niveau": 2
+ },
+ {
+  "mot": "MOTO",
+  "def": "Deux-roues qui vrombit sur la route",
+  "niveau": 1
+ },
+ {
+  "mot": "MUSE",
+  "def": "Source d'inspiration des artistes",
+  "niveau": 2
+ },
+ {
+  "mot": "NAGE",
+  "def": "Façon de se déplacer dans l'eau",
+  "niveau": 1
+ },
+ {
+  "mot": "NAIN",
+  "def": "Petit personnage des contes, ou très petit",
+  "niveau": 1
+ },
+ {
+  "mot": "NOEL",
+  "def": "Fête de décembre avec un sapin",
+  "niveau": 1
+ },
+ {
+  "mot": "NOIR",
+  "def": "Couleur de la nuit, ou de l'encre",
+  "niveau": 1
+ },
+ {
+  "mot": "NORD",
+  "def": "Direction opposée au sud",
+  "niveau": 1
+ },
+ {
+  "mot": "NOUS",
+  "def": "Pronom désignant plusieurs personnes dont moi",
+  "niveau": 1
+ },
+ {
+  "mot": "NUIT",
+  "def": "Moment sombre où l'on dort",
+  "niveau": 1
+ },
+ {
+  "mot": "OCRE",
+  "def": "Couleur jaune terreuse",
+  "niveau": 3
+ },
+ {
+  "mot": "ONDE",
+  "def": "Vague, ou signal de radio",
+  "niveau": 1
+ },
+ {
+  "mot": "ORGE",
+  "def": "Céréale utilisée pour la bière",
+  "niveau": 2
+ },
+ {
+  "mot": "OSER",
+  "def": "Avoir le courage de tenter",
+  "niveau": 1
+ },
+ {
+  "mot": "OTER",
+  "def": "Retirer un vêtement, enlever",
+  "niveau": 2
+ },
+ {
+  "mot": "PAIN",
+  "def": "Aliment de base vendu à la boulangerie",
+  "niveau": 1
+ },
+ {
+  "mot": "PAIX",
+  "def": "Absence de guerre, tranquillité",
+  "niveau": 1
+ },
+ {
+  "mot": "PALE",
+  "def": "Blême, décoloré",
+  "niveau": 2
+ },
+ {
+  "mot": "PAON",
+  "def": "Oiseau à la queue en éventail",
+  "niveau": 1
+ },
+ {
+  "mot": "PARC",
+  "def": "Espace vert où l'on se promène",
+  "niveau": 1
+ },
+ {
+  "mot": "PEAU",
+  "def": "Enveloppe qui recouvre le corps",
+  "niveau": 1
+ },
+ {
+  "mot": "PERE",
+  "def": "Papa, géniteur",
+  "niveau": 1
+ },
+ {
+  "mot": "PIED",
+  "def": "Partie basse de la jambe, ou base d'un meuble",
+  "niveau": 1
+ },
+ {
+  "mot": "PILE",
+  "def": "Batterie, ou tas bien rangé",
+  "niveau": 1
+ },
+ {
+  "mot": "PIRE",
+  "def": "Plus mauvais que tout",
+  "niveau": 1
+ },
+ {
+  "mot": "PLAT",
+  "def": "Assiette ou sans relief",
+  "niveau": 1
+ },
+ {
+  "mot": "PLUS",
+  "def": "Davantage, en surplus",
+  "niveau": 1
+ },
+ {
+  "mot": "POIL",
+  "def": "Filament qui pousse sur le corps",
+  "niveau": 1
+ },
+ {
+  "mot": "PONT",
+  "def": "Passage construit au-dessus de l'eau",
+  "niveau": 1
+ },
+ {
+  "mot": "PORC",
+  "def": "Cochon, animal de la ferme",
+  "niveau": 1
+ },
+ {
+  "mot": "PORT",
+  "def": "Abri où accostent les bateaux",
+  "niveau": 1
+ },
+ {
+  "mot": "POSE",
+  "def": "Attitude, ou position figée devant l'objectif",
+  "niveau": 2
+ },
+ {
+  "mot": "PRIX",
+  "def": "Montant à payer en caisse",
+  "niveau": 1
+ },
+ {
+  "mot": "PRET",
+  "def": "Emprunt d'argent, ou disponible",
+  "niveau": 2
+ },
+ {
+  "mot": "PUCE",
+  "def": "Petit insecte sauteur, ou composant électronique",
+  "niveau": 1
+ },
+ {
+  "mot": "PUIT",
+  "def": "Trou profond où l'on tire de l'eau",
+  "niveau": 2
+ },
+ {
+  "mot": "RAGE",
+  "def": "Colère violente, folie",
+  "niveau": 2
+ },
+ {
+  "mot": "RAME",
+  "def": "Pagaie, ou train de métro",
+  "niveau": 2
+ },
+ {
+  "mot": "RANG",
+  "def": "Ligne de personnes ou de places",
+  "niveau": 1
+ },
+ {
+  "mot": "RAYE",
+  "def": "Strié de traits, ou zébré",
+  "niveau": 2
+ },
+ {
+  "mot": "REIN",
+  "def": "Organe qui filtre le sang",
+  "niveau": 2
+ },
+ {
+  "mot": "RIRE",
+  "def": "Éclater en sons joyeux",
+  "niveau": 1
+ },
+ {
+  "mot": "RIVE",
+  "def": "Bord d'un cours d'eau",
+  "niveau": 2
+ },
+ {
+  "mot": "ROBE",
+  "def": "Vêtement d'un seul tenant, ou couleur du vin",
+  "niveau": 1
+ },
+ {
+  "mot": "ROSE",
+  "def": "Fleur épineuse, ou rouge très pâle",
+  "niveau": 1
+ },
+ {
+  "mot": "ROUE",
+  "def": "Cercle qui tourne sous une voiture",
+  "niveau": 1
+ },
+ {
+  "mot": "RUSE",
+  "def": "Stratagème pour tromper",
+  "niveau": 2
+ },
+ {
+  "mot": "SAGE",
+  "def": "Sensé, prudent, ou plante aromatique",
+  "niveau": 1
+ },
+ {
+  "mot": "SALE",
+  "def": "Qui n'est pas propre, crasseux",
+  "niveau": 1
+ },
+ {
+  "mot": "SANG",
+  "def": "Liquide rouge qui circule dans les veines",
+  "niveau": 1
+ },
+ {
+  "mot": "SEIN",
+  "def": "Poitrine de la femme",
+  "niveau": 1
+ },
+ {
+  "mot": "SOIE",
+  "def": "Fil précieux produit par des vers",
+  "niveau": 2
+ },
+ {
+  "mot": "SOIR",
+  "def": "Fin de journée, avant la nuit",
+  "niveau": 1
+ },
+ {
+  "mot": "SOLE",
+  "def": "Poisson plat, ou semelle",
+  "niveau": 2
+ },
+ {
+  "mot": "SORT",
+  "def": "Hasard, ou destin",
+  "niveau": 1
+ },
+ {
+  "mot": "SOUS",
+  "def": "Plus bas que, en contrebas",
+  "niveau": 1
+ },
+ {
+  "mot": "TANT",
+  "def": "Autant, en si grande quantité",
+  "niveau": 1
+ },
+ {
+  "mot": "TAPE",
+  "def": "Coup donné avec la main, petit claque",
+  "niveau": 2
+ },
+ {
+  "mot": "TARD",
+  "def": "Après l'heure prévue",
+  "niveau": 1
+ },
+ {
+  "mot": "TENU",
+  "def": "Serré, maintenu en place",
+  "niveau": 2
+ },
+ {
+  "mot": "TEST",
+  "def": "Épreuve, examen rapide",
+  "niveau": 1
+ },
+ {
+  "mot": "TETE",
+  "def": "Partie supérieure du corps qui pense",
+  "niveau": 1
+ },
+ {
+  "mot": "TIGE",
+  "def": "Partie fine d'une plante qui pousse",
+  "niveau": 2
+ },
+ {
+  "mot": "TOIT",
+  "def": "Couverture qui protège une maison",
+  "niveau": 1
+ },
+ {
+  "mot": "TOUR",
+  "def": "Construction haute, ou promenade",
+  "niveau": 1
+ },
+ {
+  "mot": "TROU",
+  "def": "Ouverture dans un mur ou dans le sol",
+  "niveau": 1
+ },
+ {
+  "mot": "TUBE",
+  "def": "Chanson à succès, ou tuyau",
+  "niveau": 2
+ },
+ {
+  "mot": "URNE",
+  "def": "Vase pour les cendres, ou boîte de vote",
+  "niveau": 3
+ },
+ {
+  "mot": "VASE",
+  "def": "Récipient pour les fleurs, ou boue",
+  "niveau": 1
+ },
+ {
+  "mot": "VENT",
+  "def": "Air qui se déplace, ou souffle",
+  "niveau": 1
+ },
+ {
+  "mot": "VERT",
+  "def": "Couleur de l'herbe, ou pas mûr",
+  "niveau": 1
+ },
+ {
+  "mot": "VIDE",
+  "def": "Absence de contenu, sans rien dedans",
+  "niveau": 1
+ },
+ {
+  "mot": "VITE",
+  "def": "Rapidement, à toute allure",
+  "niveau": 1
+ },
+ {
+  "mot": "VOIE",
+  "def": "Route, ou moyen d'arriver",
+  "niveau": 1
+ },
+ {
+  "mot": "VOIR",
+  "def": "Regarder, apercevoir des yeux",
+  "niveau": 1
+ },
+ {
+  "mot": "VOIX",
+  "def": "Son qui sort de la bouche",
+  "niveau": 1
+ },
+ {
+  "mot": "VOLE",
+  "def": "Dérobe, ou s'élance dans les airs",
+  "niveau": 1
+ },
+ {
+  "mot": "ZONE",
+  "def": "Région, espace délimité",
+  "niveau": 1
+ },
+ {
+  "mot": "ACIER",
+  "def": "Alliage de fer et de carbone, très solide",
+  "niveau": 2
+ },
+ {
+  "mot": "ALBUM",
+  "def": "Livre de photos, ou disque de chansons",
+  "niveau": 1
+ },
+ {
+  "mot": "AMOUR",
+  "def": "Sentiment fort qui fait battre le coeur",
+  "niveau": 1
+ },
+ {
+  "mot": "ANNEE",
+  "def": "Période de douze mois, un an",
+  "niveau": 1
+ },
+ {
+  "mot": "ARBRE",
+  "def": "Grande plante à tronc et branches",
+  "niveau": 1
+ },
+ {
+  "mot": "ASTRE",
+  "def": "Corps céleste, comme le soleil",
+  "niveau": 2
+ },
+ {
+  "mot": "AVION",
+  "def": "Engin qui décolle sur une piste",
+  "niveau": 1
+ },
+ {
+  "mot": "BALAI",
+  "def": "Ustensile pour faire le sol, ou sorcière s'en sert",
+  "niveau": 1
+ },
+ {
+  "mot": "BALLE",
+  "def": "Petit objet rond qu'on lance et qu'on rebondit",
+  "niveau": 1
+ },
+ {
+  "mot": "BANDE",
+  "def": "Groupe de copains, ou ruban étroit",
+  "niveau": 1
+ },
+ {
+  "mot": "BARRE",
+  "def": "Tige rigide, ou tablette de chocolat",
+  "niveau": 2
+ },
+ {
+  "mot": "BLANC",
+  "def": "Couleur de la neige, ou vide",
+  "niveau": 1
+ },
+ {
+  "mot": "BOEUF",
+  "def": "Viande rouge, ou gros bovin",
+  "niveau": 1
+ },
+ {
+  "mot": "BOITE",
+  "def": "Contenant avec un couvercle, ou club de nuit",
+  "niveau": 1
+ },
+ {
+  "mot": "BOTTE",
+  "def": "Chaussure montante, ou bouquet de foin",
+  "niveau": 1
+ },
+ {
+  "mot": "BRUME",
+  "def": "Brouillard léger du matin",
+  "niveau": 2
+ },
+ {
+  "mot": "CABLE",
+  "def": "Fil épais qui relie les appareils",
+  "niveau": 1
+ },
+ {
+  "mot": "CADRE",
+  "def": "Bordure qui entoure un tableau",
+  "niveau": 1
+ },
+ {
+  "mot": "CANAL",
+  "def": "Voie d'eau creusée par l'homme",
+  "niveau": 2
+ },
+ {
+  "mot": "CARTE",
+  "def": "Jeu de cinquante-deux pièces, ou plan",
+  "niveau": 1
+ },
+ {
+  "mot": "CHAMP",
+  "def": "Terrain cultivé, ou espace libre",
+  "niveau": 1
+ },
+ {
+  "mot": "CHAUD",
+  "def": "Brûlant, ou avec de la chaleur",
+  "niveau": 1
+ },
+ {
+  "mot": "CHIEN",
+  "def": "Meilleur ami de l'homme, il aboie",
+  "niveau": 1
+ },
+ {
+  "mot": "CHOSE",
+  "def": "Objet quelconque, ce dont on parle",
+  "niveau": 1
+ },
+ {
+  "mot": "CIME",
+  "def": "Sommet d'une montagne, ou d'un arbre",
+  "niveau": 2
+ },
+ {
+  "mot": "CIRQUE",
+  "def": "Spectacle avec clowns et trapézistes",
+  "niveau": 1
+ },
+ {
+  "mot": "CLOCHE",
+  "def": "Instrument de bronze qui sonne en haut du beffroi",
+  "niveau": 1
+ },
+ {
+  "mot": "COEUR",
+  "def": "Organe qui bat, siège des sentiments",
+  "niveau": 1
+ },
+ {
+  "mot": "COLIS",
+  "def": "Paquet envoyé par la poste",
+  "niveau": 1
+ },
+ {
+  "mot": "COMTE",
+  "def": "Noble, ou titre de noblesse",
+  "niveau": 2
+ },
+ {
+  "mot": "CORPS",
+  "def": "Ensemble de nos organes, ou groupe",
+  "niveau": 1
+ },
+ {
+  "mot": "COTON",
+  "def": "Fibre blanche qui fait les vêtements",
+  "niveau": 1
+ },
+ {
+  "mot": "COURS",
+  "def": "Leçon à l'école, ou écoulement",
+  "niveau": 1
+ },
+ {
+  "mot": "CRABE",
+  "def": "Crustacé qui marche de côté",
+  "niveau": 1
+ },
+ {
+  "mot": "CRAIE",
+  "def": "Bâton blanc pour écrire au tableau",
+  "niveau": 2
+ },
+ {
+  "mot": "CROIX",
+  "def": "Signe de deux traits qui se croisent",
+  "niveau": 2
+ },
+ {
+  "mot": "DANSE",
+  "def": "Mouvements rythmés sur la musique",
+  "niveau": 1
+ },
+ {
+  "mot": "DEUIL",
+  "def": "Tristesse après une perte",
+  "niveau": 2
+ },
+ {
+  "mot": "DOUCE",
+  "def": "Qui n'est pas amère, tendre",
+  "niveau": 2
+ },
+ {
+  "mot": "DRAME",
+  "def": "Œuvre tragique, ou gros problème",
+  "niveau": 1
+ },
+ {
+  "mot": "ECLAT",
+  "def": "Brillance vive, ou morceau détaché",
+  "niveau": 2
+ },
+ {
+  "mot": "ECOLE",
+  "def": "Lieu où l'on apprend sur les bancs",
+  "niveau": 1
+ },
+ {
+  "mot": "ENFER",
+  "def": "Lieu de tourments après la mort",
+  "niveau": 2
+ },
+ {
+  "mot": "ENTRE",
+  "def": "Au milieu de deux choses",
+  "niveau": 1
+ },
+ {
+  "mot": "FARCE",
+  "def": "Comédie légère, ou préparation à la viande",
+  "niveau": 3
+ },
+ {
+  "mot": "FAUTE",
+  "def": "Erreur, ou manquement",
+  "niveau": 1
+ },
+ {
+  "mot": "FEMME",
+  "def": "Être humain de sexe féminin",
+  "niveau": 1
+ },
+ {
+  "mot": "FENTE",
+  "def": "Ouverture étroite et longue",
+  "niveau": 2
+ },
+ {
+  "mot": "FERME",
+  "def": "Exploitation agricole, ou non ouvert",
+  "niveau": 1
+ },
+ {
+  "mot": "FLEUR",
+  "def": "Partie colorée d'une plante",
+  "niveau": 1
+ },
+ {
+  "mot": "FORET",
+  "def": "Grand espace couvert d'arbres",
+  "niveau": 1
+ },
+ {
+  "mot": "FORME",
+  "def": "Contour, silhouette, ou bonne condition",
+  "niveau": 1
+ },
+ {
+  "mot": "FOUET",
+  "def": "Instrument pour battre les oeufs",
+  "niveau": 2
+ },
+ {
+  "mot": "FRAIS",
+  "def": "Peu froid, ou nouvellement produit",
+  "niveau": 1
+ },
+ {
+  "mot": "FRUIT",
+  "def": "Pomme, poire ou banane par exemple",
+  "niveau": 1
+ },
+ {
+  "mot": "GAZON",
+  "def": "Herbe bien tondue du jardin",
+  "niveau": 1
+ },
+ {
+  "mot": "GENOU",
+  "def": "Articulation au milieu de la jambe",
+  "niveau": 1
+ },
+ {
+  "mot": "GLACE",
+  "def": "Eau gelée, ou dessert froid",
+  "niveau": 1
+ },
+ {
+  "mot": "GLOBE",
+  "def": "Sphère, ou la Terre",
+  "niveau": 2
+ },
+ {
+  "mot": "GOMME",
+  "def": "Objet qui efface le crayon",
+  "niveau": 1
+ },
+ {
+  "mot": "GRAIN",
+  "def": "Petite particule, graine de céréale",
+  "niveau": 1
+ },
+ {
+  "mot": "GRAND",
+  "def": "Qui dépasse, de haute taille",
+  "niveau": 1
+ },
+ {
+  "mot": "GUIDE",
+  "def": "Livre de voyage, ou personne qui montre le chemin",
+  "niveau": 1
+ },
+ {
+  "mot": "HAMAC",
+  "def": "Lit suspendu entre deux arbres",
+  "niveau": 2
+ },
+ {
+  "mot": "HERBE",
+  "def": "Plante verte qui pousse dans le pré",
+  "niveau": 1
+ },
+ {
+  "mot": "HIBOU",
+  "def": "Oiseau nocturne au grand regard",
+  "niveau": 2
+ },
+ {
+  "mot": "HONTE",
+  "def": "Gêne profonde, embarras",
+  "niveau": 2
+ },
+ {
+  "mot": "HOMME",
+  "def": "Être humain de sexe masculin",
+  "niveau": 1
+ },
+ {
+  "mot": "IDOLE",
+  "def": "Vedette adorée, ou statue de culte",
+  "niveau": 2
+ },
+ {
+  "mot": "IGLOO",
+  "def": "Maison de glace des Inuits",
+  "niveau": 2
+ },
+ {
+  "mot": "JAUNE",
+  "def": "Couleur du soleil et du citron",
+  "niveau": 1
+ },
+ {
+  "mot": "JOUET",
+  "def": "Objet pour s'amuser quand on est petit",
+  "niveau": 1
+ },
+ {
+  "mot": "JUPON",
+  "def": "Sous-vêtement long porté sous une jupe",
+  "niveau": 3
+ },
+ {
+  "mot": "LAINE",
+  "def": "Fibre du mouton, pour tricoter",
+  "niveau": 1
+ },
+ {
+  "mot": "LAPIN",
+  "def": "Petit rongeur aux longues oreilles",
+  "niveau": 1
+ },
+ {
+  "mot": "LARME",
+  "def": "Goutte d'eau qui coule des yeux",
+  "niveau": 1
+ },
+ {
+  "mot": "LEGER",
+  "def": "Qui pèse peu, ou facile",
+  "niveau": 1
+ },
+ {
+  "mot": "LIVRE",
+  "def": "Ouvrage à lire, ou ancienne unité de poids",
+  "niveau": 1
+ },
+ {
+  "mot": "LOTUS",
+  "def": "Fleur aquatique sacrée d'Asie",
+  "niveau": 3
+ },
+ {
+  "mot": "LUNDI",
+  "def": "Premier jour de la semaine",
+  "niveau": 1
+ },
+ {
+  "mot": "MAGIE",
+  "def": "Art de faire des tours surnaturels",
+  "niveau": 1
+ },
+ {
+  "mot": "MANCHE",
+  "def": "Partie du vêtement qui couvre le bras",
+  "niveau": 1
+ },
+ {
+  "mot": "MARCHE",
+  "def": "Déplacement à pied, ou escalier",
+  "niveau": 1
+ },
+ {
+  "mot": "MASSE",
+  "def": "Grand volume, ou gros marteau",
+  "niveau": 2
+ },
+ {
+  "mot": "MATIN",
+  "def": "Début de la journée jusqu'à midi",
+  "niveau": 1
+ },
+ {
+  "mot": "MELON",
+  "def": "Gros fruit sucré à chair orange",
+  "niveau": 1
+ },
+ {
+  "mot": "MERCI",
+  "def": "Formule de politesse exprimant sa gratitude",
+  "niveau": 1
+ },
+ {
+  "mot": "MINCE",
+  "def": "Fin et peu épais, ou svelte",
+  "niveau": 1
+ },
+ {
+  "mot": "MOINS",
+  "def": "En quantité réduite, à la baisse",
+  "niveau": 1
+ },
+ {
+  "mot": "MOTIF",
+  "def": "Dessin répété, ou raison d'agir",
+  "niveau": 2
+ },
+ {
+  "mot": "MOULE",
+  "def": "Coquillage bleu, ou forme à gâteau",
+  "niveau": 1
+ },
+ {
+  "mot": "MOUSSE",
+  "def": "Crème aérienne, ou plante qui pousse sur les pierres",
+  "niveau": 2
+ },
+ {
+  "mot": "NAPPE",
+  "def": "Grand tissu qui couvre la table",
+  "niveau": 1
+ },
+ {
+  "mot": "NATTE",
+  "def": "Tresse de cheveux, ou tapis végétal",
+  "niveau": 2
+ },
+ {
+  "mot": "NAVET",
+  "def": "Légume blanc ou violet, ou film raté",
+  "niveau": 2
+ },
+ {
+  "mot": "NEIGE",
+  "def": "Précipitation blanche de l'hiver",
+  "niveau": 1
+ },
+ {
+  "mot": "NOYAU",
+  "def": "Graine dure au centre d'une pêche",
+  "niveau": 2
+ },
+ {
+  "mot": "OASIS",
+  "def": "Point d'eau au milieu du désert",
+  "niveau": 2
+ },
+ {
+  "mot": "OBJET",
+  "def": "Chose matérielle, ou but poursuivi",
+  "niveau": 1
+ },
+ {
+  "mot": "OCEAN",
+  "def": "Immense étendue d'eau salée",
+  "niveau": 1
+ },
+ {
+  "mot": "ORAGE",
+  "def": "Tempête avec éclairs et tonnerre",
+  "niveau": 1
+ },
+ {
+  "mot": "ORDRE",
+  "def": "Rangement, ou commandement",
+  "niveau": 1
+ },
+ {
+  "mot": "ORGUE",
+  "def": "Grand instrument à tuyaux d'église",
+  "niveau": 2
+ },
+ {
+  "mot": "OUTIL",
+  "def": "Objet pratique pour bricoler",
+  "niveau": 1
+ },
+ {
+  "mot": "PALME",
+  "def": "Accessoire pour nager vite, ou feuille de dattier",
+  "niveau": 2
+ },
+ {
+  "mot": "PANNE",
+  "def": "Arrêt soudain d'un appareil en panne",
+  "niveau": 1
+ },
+ {
+  "mot": "PATIN",
+  "def": "Chaussure munie de lames sur la glace",
+  "niveau": 1
+ },
+ {
+  "mot": "PERLE",
+  "def": "Bille précieuse qui vient de l'huître",
+  "niveau": 1
+ },
+ {
+  "mot": "PHARE",
+  "def": "Tour lumineuse au bord de la mer",
+  "niveau": 1
+ },
+ {
+  "mot": "PIANO",
+  "def": "Instrument à touches et à cordes",
+  "niveau": 1
+ },
+ {
+  "mot": "PIECE",
+  "def": "Morceau, salle de maison, ou monnaie",
+  "niveau": 1
+ },
+ {
+  "mot": "PIERRE",
+  "def": "Roc dur, caillou pour bâtir",
+  "niveau": 1
+ },
+ {
+  "mot": "PILOTE",
+  "def": "Personne qui conduit un avion",
+  "niveau": 1
+ },
+ {
+  "mot": "PLAGE",
+  "def": "Bande de sable au bord de la mer",
+  "niveau": 1
+ },
+ {
+  "mot": "PLAIE",
+  "def": "Blessure ouverte sur la peau",
+  "niveau": 2
+ },
+ {
+  "mot": "PLANE",
+  "def": "Outil qui rabote le bois",
+  "niveau": 3
+ },
+ {
+  "mot": "PLUIE",
+  "def": "Eau qui tombe des nuages",
+  "niveau": 1
+ },
+ {
+  "mot": "POIDS",
+  "def": "Masse d'un objet, ou charge",
+  "niveau": 1
+ },
+ {
+  "mot": "POINT",
+  "def": "Marque minuscule, ou score marqué",
+  "niveau": 1
+ },
+ {
+  "mot": "POMME",
+  "def": "Fruit rouge ou vert croquant, Newton s'en souvient",
+  "niveau": 1
+ },
+ {
+  "mot": "PONEY",
+  "def": "Petit cheval de manège ou de compétition",
+  "niveau": 1
+ },
+ {
+  "mot": "PORTE",
+  "def": "Ouverture fermée par un battant",
+  "niveau": 1
+ },
+ {
+  "mot": "POUCE",
+  "def": "Doigt le plus gros de la main",
+  "niveau": 1
+ },
+ {
+  "mot": "POULE",
+  "def": "Femelle du coq qui pond",
+  "niveau": 1
+ },
+ {
+  "mot": "PRISE",
+  "def": "Point de branchement électrique, ou capture",
+  "niveau": 1
+ },
+ {
+  "mot": "PROSE",
+  "def": "Texte écrit sans vers ni rimes",
+  "niveau": 2
+ },
+ {
+  "mot": "PUITS",
+  "def": "Trou creusé pour trouver de l'eau",
+  "niveau": 2
+ },
+ {
+  "mot": "QUEUE",
+  "def": "Prolongement de l'animal à l'arrière",
+  "niveau": 1
+ },
+ {
+  "mot": "RAPIDE",
+  "def": "Qui va très vite, ou train express",
+  "niveau": 1
+ },
+ {
+  "mot": "REGLE",
+  "def": "Instrument pour tracer des traits droits",
+  "niveau": 1
+ },
+ {
+  "mot": "REINE",
+  "def": "Épouse du roi, ou abeille mère",
+  "niveau": 1
+ },
+ {
+  "mot": "ROCHE",
+  "def": "Masse de pierre naturelle",
+  "niveau": 1
+ },
+ {
+  "mot": "ROUGE",
+  "def": "Couleur du sang et des tomates",
+  "niveau": 1
+ },
+ {
+  "mot": "ROUTE",
+  "def": "Voie carrossable entre deux villes",
+  "niveau": 1
+ },
+ {
+  "mot": "RUBAN",
+  "def": "Bande étroite de tissu pour les cadeaux",
+  "niveau": 1
+ },
+ {
+  "mot": "RUCHE",
+  "def": "Maison des abeilles, où le miel se fabrique",
+  "niveau": 2
+ },
+ {
+  "mot": "SABLE",
+  "def": "Poudre fine qui forme les plages",
+  "niveau": 1
+ },
+ {
+  "mot": "SALON",
+  "def": "Pièce de réception, ou grand événement",
+  "niveau": 1
+ },
+ {
+  "mot": "SAUCE",
+  "def": "Liquide qui accompagne les pâtes",
+  "niveau": 1
+ },
+ {
+  "mot": "SERRE",
+  "def": "Abri vitré où poussent les plantes",
+  "niveau": 2
+ },
+ {
+  "mot": "SIROP",
+  "def": "Liquide très sucré pour la toux ou les cocktails",
+  "niveau": 1
+ },
+ {
+  "mot": "SOLDE",
+  "def": "Réduction de prix, ou reste d'un compte",
+  "niveau": 1
+ },
+ {
+  "mot": "SOMME",
+  "def": "Total d'une addition, ou sieste",
+  "niveau": 2
+ },
+ {
+  "mot": "SOUPE",
+  "def": "Plat chaud et liquide servi dans un bol",
+  "niveau": 1
+ },
+ {
+  "mot": "SOURCE",
+  "def": "Endroit où jaillit l'eau du sol",
+  "niveau": 2
+ },
+ {
+  "mot": "STADE",
+  "def": "Vaste enceinte sportive",
+  "niveau": 1
+ },
+ {
+  "mot": "STYLO",
+  "def": "Instrument qu'on remplit d'encre",
+  "niveau": 1
+ },
+ {
+  "mot": "SUCRE",
+  "def": "Condiment blanc qui rend le café doux",
+  "niveau": 1
+ },
+ {
+  "mot": "TABAC",
+  "def": "Plante aux feuilles séchées qu'on fume",
+  "niveau": 2
+ },
+ {
+  "mot": "TAPIS",
+  "def": "Revêtement qui couvre le sol",
+  "niveau": 1
+ },
+ {
+  "mot": "TASSE",
+  "def": "Récipient à anse pour boire le thé",
+  "niveau": 1
+ },
+ {
+  "mot": "TERRE",
+  "def": "Planète où nous vivons, ou sol",
+  "niveau": 1
+ },
+ {
+  "mot": "TIGRE",
+  "def": "Grand félin rayé de noir",
+  "niveau": 1
+ },
+ {
+  "mot": "TISSU",
+  "def": "Étoffe tissée dans du fil",
+  "niveau": 1
+ },
+ {
+  "mot": "TONNE",
+  "def": "Mille kilos, ou gros poids",
+  "niveau": 2
+ },
+ {
+  "mot": "TOQUE",
+  "def": "Haut chapeau blanc du cuisinier",
+  "niveau": 2
+ },
+ {
+  "mot": "TRAIN",
+  "def": "Convoi qui roule sur des rails",
+  "niveau": 1
+ },
+ {
+  "mot": "TRAME",
+  "def": "Fil horizontal du tissage, ou fil conducteur",
+  "niveau": 3
+ },
+ {
+  "mot": "USINE",
+  "def": "Bâtiment où l'on fabrique en série",
+  "niveau": 1
+ },
+ {
+  "mot": "VAGUE",
+  "def": "Lame d'eau qui roule, ou imprécis",
+  "niveau": 1
+ },
+ {
+  "mot": "VALSE",
+  "def": "Danse à trois temps en tournoyant",
+  "niveau": 2
+ },
+ {
+  "mot": "VERRE",
+  "def": "Récipient transparent pour boire",
+  "niveau": 1
+ },
+ {
+  "mot": "VESTE",
+  "def": "Vêtement court qui se boutonne sur la chemise",
+  "niveau": 1
+ },
+ {
+  "mot": "VIGNE",
+  "def": "Plante grimpante qui donne du raisin",
+  "niveau": 1
+ },
+ {
+  "mot": "VILLE",
+  "def": "Grande agglomération de nombreux habitants",
+  "niveau": 1
+ },
+ {
+  "mot": "VOILE",
+  "def": "Tissu léger, ou grande pièce du bateau",
+  "niveau": 2
+ },
+ {
+  "mot": "YACHT",
+  "def": "Grand bateau de plaisance de luxe",
+  "niveau": 2
+ },
+ {
+  "mot": "ZEBRE",
+  "def": "Équidé rayé de noir et de blanc",
+  "niveau": 1
+ },
+ {
+  "mot": "ACCORD",
+  "def": "Entente entre deux personnes, ou harmonie",
+  "niveau": 2
+ },
+ {
+  "mot": "ADIEU",
+  "def": "Au revoir définitif, ou formule d'au revoir",
+  "niveau": 1
+ },
+ {
+  "mot": "ALARME",
+  "def": "Sonnerie qui prévient d'un danger",
+  "niveau": 1
+ },
+ {
+  "mot": "AMANDE",
+  "def": "Fruit sec sous une coque, ou forme de yeux",
+  "niveau": 2
+ },
+ {
+  "mot": "ANIMAL",
+  "def": "Être vivant qui n'est pas une plante",
+  "niveau": 1
+ },
+ {
+  "mot": "ANNEAU",
+  "def": "Petit cercle, bague de mariage ou de rideau",
+  "niveau": 2
+ },
+ {
+  "mot": "ARGILE",
+  "def": "Terre grasse qu'on modèle au tour de potier",
+  "niveau": 2
+ },
+ {
+  "mot": "AVENIR",
+  "def": "Temps qui vient après le présent",
+  "niveau": 1
+ },
+ {
+  "mot": "BAGAGE",
+  "def": "Valises et sacs qu'on emporte en voyage",
+  "niveau": 1
+ },
+ {
+  "mot": "BALCON",
+  "def": "Petite terrasse sur une façade d'immeuble",
+  "niveau": 1
+ },
+ {
+  "mot": "BANANE",
+  "def": "Fruit jaune qui glisse dans les mains",
+  "niveau": 1
+ },
+ {
+  "mot": "BATEAU",
+  "def": "Embarcation qui flotte sur l'eau",
+  "niveau": 1
+ },
+ {
+  "mot": "BEAUTE",
+  "def": "Qualité de ce qui plaît aux yeux",
+  "niveau": 2
+ },
+ {
+  "mot": "BOUGIE",
+  "def": "Cylindre de cire avec une mèche",
+  "niveau": 1
+ },
+ {
+  "mot": "BOUTON",
+  "def": "Petit disque qui ferme la chemise, ou bourgeon",
+  "niveau": 1
+ },
+ {
+  "mot": "CACHET",
+  "def": "Comprimé à avaler, ou marque imprimée",
+  "niveau": 2
+ },
+ {
+  "mot": "CALCUL",
+  "def": "Opération mathématique, ou raisonnement",
+  "niveau": 2
+ },
+ {
+  "mot": "CANARD",
+  "def": "Oiseau palmipède qui fait coin-coin",
+  "niveau": 1
+ },
+ {
+  "mot": "CASQUE",
+  "def": "Coiffe rigide qui protège la tête",
+  "niveau": 1
+ },
+ {
+  "mot": "CERISE",
+  "def": "Petit fruit rouge à noyau, en haut du gâteau",
+  "niveau": 1
+ },
+ {
+  "mot": "CHAISE",
+  "def": "Siège à dossier pour une personne",
+  "niveau": 1
+ },
+ {
+  "mot": "CHARME",
+  "def": "Séduction, grâce, ou arbre des forêts",
+  "niveau": 2
+ },
+ {
+  "mot": "CHEMIN",
+  "def": "Voie tracée pour aller d'un point à un autre",
+  "niveau": 1
+ },
+ {
+  "mot": "CHEVAL",
+  "def": "Grand animal qu'on monte, il hennit",
+  "niveau": 1
+ },
+ {
+  "mot": "CITRON",
+  "def": "Fruit jaune très acide",
+  "niveau": 1
+ },
+ {
+  "mot": "CLIMAT",
+  "def": "Conditions météo habituelles d'une région",
+  "niveau": 2
+ },
+ {
+  "mot": "COFFRE",
+  "def": "Grand meuble où l'on range du linge, ou malle",
+  "niveau": 2
+ },
+ {
+  "mot": "COMBAT",
+  "def": "Lutte entre deux adversaires",
+  "niveau": 1
+ },
+ {
+  "mot": "COMPTE",
+  "def": "Calcul, ou compte en banque",
+  "niveau": 1
+ },
+ {
+  "mot": "COUTEAU",
+  "def": "Ustensile tranchant pour couper la viande",
+  "niveau": 1
+ },
+ {
+  "mot": "CRAYON",
+  "def": "Bâton de bois avec une mine pour écrire",
+  "niveau": 1
+ },
+ {
+  "mot": "DANGER",
+  "def": "Risque de blessure ou de mort",
+  "niveau": 1
+ },
+ {
+  "mot": "DEMAIN",
+  "def": "Jour qui suit aujourd'hui",
+  "niveau": 1
+ },
+ {
+  "mot": "DEPART",
+  "def": "Moment où l'on quitte un lieu",
+  "niveau": 1
+ },
+ {
+  "mot": "DESSIN",
+  "def": "Image tracée au crayon",
+  "niveau": 1
+ },
+ {
+  "mot": "DIABLE",
+  "def": "Démon, ou petit chariot à deux roues",
+  "niveau": 2
+ },
+ {
+  "mot": "DIVAN",
+  "def": "Canapé bas sans accoudoir",
+  "niveau": 2
+ },
+ {
+  "mot": "DOUCHE",
+  "def": "Jet d'eau pour se laver debout",
+  "niveau": 1
+ },
+ {
+  "mot": "DRAGON",
+  "def": "Créature ailée qui crache du feu",
+  "niveau": 1
+ },
+ {
+  "mot": "ECRAN",
+  "def": "Surface lumineuse de l'ordinateur ou de la télé",
+  "niveau": 1
+ },
+ {
+  "mot": "EMPIRE",
+  "def": "Vaste territoire gouverné par un souverain",
+  "niveau": 2
+ },
+ {
+  "mot": "ENFANT",
+  "def": "Petit d'homme qui joue beaucoup",
+  "niveau": 1
+ },
+ {
+  "mot": "ENVOL",
+  "def": "Action de s'élever dans les airs",
+  "niveau": 2
+ },
+ {
+  "mot": "ESPRIT",
+  "def": "Intelligence, ou fantôme",
+  "niveau": 1
+ },
+ {
+  "mot": "ETOILE",
+  "def": "Astre qui brille la nuit au ciel",
+  "niveau": 1
+ },
+ {
+  "mot": "FAGOT",
+  "def": "Petit tas de bois pour la cheminée",
+  "niveau": 2
+ },
+ {
+  "mot": "FAUTEUIL",
+  "def": "Siège confortable à bras",
+  "niveau": 2
+ },
+ {
+  "mot": "FENETRE",
+  "def": "Ouverture vitrée qui laisse entrer la lumière",
+  "niveau": 1
+ },
+ {
+  "mot": "FIGURE",
+  "def": "Visage, ou forme dessinée",
+  "niveau": 1
+ },
+ {
+  "mot": "FLAMME",
+  "def": "Partie lumineuse du feu",
+  "niveau": 1
+ },
+ {
+  "mot": "FOURMI",
+  "def": "Petit insecte qui vit en colonie",
+  "niveau": 1
+ },
+ {
+  "mot": "FRAISE",
+  "def": "Petit fruit rouge à graines à l'extérieur",
+  "niveau": 1
+ },
+ {
+  "mot": "FROMAGE",
+  "def": "Il peut être à raclette ou à fondue",
+  "niveau": 1
+ },
+ {
+  "mot": "GARCON",
+  "def": "Jeune homme, ou serveur de café",
+  "niveau": 1
+ },
+ {
+  "mot": "GATEAU",
+  "def": "Dessert sucré cuit au four pour les anniversaires",
+  "niveau": 1
+ },
+ {
+  "mot": "GIRAFE",
+  "def": "Animal au très long cou qui mange les feuilles",
+  "niveau": 1
+ },
+ {
+  "mot": "GOUTTE",
+  "def": "Petite quantité de liquide qui tombe",
+  "niveau": 1
+ },
+ {
+  "mot": "GRENIER",
+  "def": "Dernier étage sous le toit, pour stocker",
+  "niveau": 2
+ },
+ {
+  "mot": "HARPON",
+  "def": "Lance barbelée pour pêcher les baleines",
+  "niveau": 3
+ },
+ {
+  "mot": "HERISSON",
+  "def": "Petit mammifère couvert de piquants",
+  "niveau": 2
+ },
+ {
+  "mot": "HORLOGE",
+  "def": "Grand appareil qui indique l'heure au mur",
+  "niveau": 2
+ },
+ {
+  "mot": "IMAGE",
+  "def": "Reproduction visuelle d'une personne ou d'une chose",
+  "niveau": 1
+ },
+ {
+  "mot": "JARDIN",
+  "def": "Terrain où poussent fleurs et légumes",
+  "niveau": 1
+ },
+ {
+  "mot": "JUMEAU",
+  "def": "Frère ou soeur né le même jour",
+  "niveau": 2
+ },
+ {
+  "mot": "LAMPE",
+  "def": "Appareil qui éclaire la pièce",
+  "niveau": 1
+ },
+ {
+  "mot": "LECTURE",
+  "def": "Action de déchiffrer un texte",
+  "niveau": 1
+ },
+ {
+  "mot": "LEGUME",
+  "def": "Carotte, poireau ou haricot par exemple",
+  "niveau": 1
+ },
+ {
+  "mot": "LOGIQUE",
+  "def": "Raisonnement cohérent, bon sens",
+  "niveau": 2
+ },
+ {
+  "mot": "LUMIERE",
+  "def": "Clarté qui permet de voir",
+  "niveau": 1
+ },
+ {
+  "mot": "MAGASIN",
+  "def": "Boutique où l'on achète",
+  "niveau": 1
+ },
+ {
+  "mot": "MALLE",
+  "def": "Grand bagage rigide de voyage",
+  "niveau": 1
+ },
+ {
+  "mot": "MANTEAU",
+  "def": "Vêtement long qui couvre le corps en hiver",
+  "niveau": 1
+ },
+ {
+  "mot": "MARBRE",
+  "def": "Pierre polie des statues antiques",
+  "niveau": 2
+ },
+ {
+  "mot": "MARMITE",
+  "def": "Grand récipient pour cuire la soupe",
+  "niveau": 2
+ },
+ {
+  "mot": "MATELAS",
+  "def": "Partie molle du lit où l'on s'allonge",
+  "niveau": 1
+ },
+ {
+  "mot": "MESSAGE",
+  "def": "Texte envoyé à quelqu'un",
+  "niveau": 1
+ },
+ {
+  "mot": "METAL",
+  "def": "Matière dure et brillante, comme le fer",
+  "niveau": 1
+ },
+ {
+  "mot": "MINUIT",
+  "def": "Douze heures de la nuit",
+  "niveau": 1
+ },
+ {
+  "mot": "MIROIR",
+  "def": "Surface qui renvoie notre reflet",
+  "niveau": 1
+ },
+ {
+  "mot": "MOUTON",
+  "def": "Animal à laine qui bêle",
+  "niveau": 1
+ },
+ {
+  "mot": "MUSIQUE",
+  "def": "Art des sons organisés en mélodies",
+  "niveau": 1
+ },
+ {
+  "mot": "NAVIRE",
+  "def": "Grand bateau de haute mer",
+  "niveau": 2
+ },
+ {
+  "mot": "NUAGE",
+  "def": "Amas de vapeur d'eau dans le ciel",
+  "niveau": 1
+ },
+ {
+  "mot": "OISEAU",
+  "def": "Animal à plumes qui vole",
+  "niveau": 1
+ },
+ {
+  "mot": "ORANGE",
+  "def": "Fruit rond et juteux, ou couleur vive",
+  "niveau": 1
+ },
+ {
+  "mot": "OREILLE",
+  "def": "Organe de l'ouïe, de chaque côté de la tête",
+  "niveau": 1
+ },
+ {
+  "mot": "PAGAIE",
+  "def": "Rame courte pour faire avancer le canoë",
+  "niveau": 2
+ },
+ {
+  "mot": "PALAIS",
+  "def": "Résidence royale, ou partie haute de la bouche",
+  "niveau": 2
+ },
+ {
+  "mot": "PANIER",
+  "def": "Récipient tressé pour faire les courses",
+  "niveau": 1
+ },
+ {
+  "mot": "PAPIER",
+  "def": "Feuille où l'on écrit ou dessine",
+  "niveau": 1
+ },
+ {
+  "mot": "PARASOL",
+  "def": "Ombrelle géante qui protège du soleil",
+  "niveau": 2
+ },
+ {
+  "mot": "PATATE",
+  "def": "Tubercule jaune qu'on fait frire",
+  "niveau": 1
+ },
+ {
+  "mot": "PEIGNE",
+  "def": "Ustensile à dents pour démêler",
+  "niveau": 1
+ },
+ {
+  "mot": "PIGEON",
+  "def": "Oiseau gris des villes, qui roucoule",
+  "niveau": 1
+ },
+ {
+  "mot": "PINCEAU",
+  "def": "Outil au bout de poils pour peindre",
+  "niveau": 2
+ },
+ {
+  "mot": "PIRATE",
+  "def": "Bandit des mers, avec cache-oeil",
+  "niveau": 1
+ },
+ {
+  "mot": "PLANCHE",
+  "def": "Morceau de bois plat et long",
+  "niveau": 1
+ },
+ {
+  "mot": "PLATEAU",
+  "def": "Surface plate à servir, ou décor de cinéma",
+  "niveau": 2
+ },
+ {
+  "mot": "POISSON",
+  "def": "Animal aquatique qui nage avec des nageoires",
+  "niveau": 1
+ },
+ {
+  "mot": "POTAGE",
+  "def": "Soupe de légumes, en hiver",
+  "niveau": 2
+ },
+ {
+  "mot": "PRAIRIE",
+  "def": "Grande étendue d'herbe pour les vaches",
+  "niveau": 2
+ },
+ {
+  "mot": "PRINCE",
+  "def": "Fils de roi, ou héros de conte",
+  "niveau": 1
+ },
+ {
+  "mot": "PUZZLE",
+  "def": "Jeu de pièces à assembler",
+  "niveau": 1
+ },
+ {
+  "mot": "RADEAU",
+  "def": "Embarcation faite de planches liées",
+  "niveau": 2
+ },
+ {
+  "mot": "RAISIN",
+  "def": "Fruit en grappe pour faire le vin",
+  "niveau": 1
+ },
+ {
+  "mot": "RECETTE",
+  "def": "Liste d'ingrédients et de gestes pour cuisiner",
+  "niveau": 1
+ },
+ {
+  "mot": "REGARD",
+  "def": "Action de poser les yeux sur quelque chose",
+  "niveau": 1
+ },
+ {
+  "mot": "RENARD",
+  "def": "Petit canidé roux à la queue touffue",
+  "niveau": 1
+ },
+ {
+  "mot": "RIDEAU",
+  "def": "Tissu qui cache la fenêtre ou la scène",
+  "niveau": 1
+ },
+ {
+  "mot": "RIVAGE",
+  "def": "Bord de la mer ou d'un lac",
+  "niveau": 2
+ },
+ {
+  "mot": "ROCHER",
+  "def": "Gros bloc de pierre dressé",
+  "niveau": 1
+ },
+ {
+  "mot": "ROSEAU",
+  "def": "Grande herbe creuse qui pousse au bord de l'eau",
+  "niveau": 3
+ },
+ {
+  "mot": "SALADE",
+  "def": "Plat de feuilles vertes assaisonnées",
+  "niveau": 1
+ },
+ {
+  "mot": "SAVANE",
+  "def": "Vaste prairie tropicale d'Afrique",
+  "niveau": 2
+ },
+ {
+  "mot": "SCIENCE",
+  "def": "Connaissance méthodique du monde",
+  "niveau": 1
+ },
+ {
+  "mot": "SERPENT",
+  "def": "Reptile sans pattes, qui se glisse",
+  "niveau": 1
+ },
+ {
+  "mot": "SIFFLET",
+  "def": "Petit instrument pour appeler ou arbitrer",
+  "niveau": 2
+ },
+ {
+  "mot": "SILENCE",
+  "def": "Absence totale de bruit",
+  "niveau": 1
+ },
+ {
+  "mot": "SOLEIL",
+  "def": "Étoile qui éclaire la Terre",
+  "niveau": 1
+ },
+ {
+  "mot": "SORCIER",
+  "def": "Personnage qui jette des sorts",
+  "niveau": 1
+ },
+ {
+  "mot": "SOURIS",
+  "def": "Petit rongeur, ou périphérique de l'ordinateur",
+  "niveau": 1
+ },
+ {
+  "mot": "SPORT",
+  "def": "Activité physique pratiquée en compétition",
+  "niveau": 1
+ },
+ {
+  "mot": "SUCETTE",
+  "def": "Bonbon sur un bâton, ou tétine",
+  "niveau": 1
+ },
+ {
+  "mot": "TABLIER",
+  "def": "Vêtement qui protège le devant du corps",
+  "niveau": 1
+ },
+ {
+  "mot": "TEMPETE",
+  "def": "Vent violent et pluie torrentielle",
+  "niveau": 2
+ },
+ {
+  "mot": "TERRIER",
+  "def": "Trou souterrain d'un lapin, ou chien de chasse",
+  "niveau": 2
+ },
+ {
+  "mot": "TIROIR",
+  "def": "Compartiment coulissant d'un meuble",
+  "niveau": 1
+ },
+ {
+  "mot": "TOMATE",
+  "def": "Fruit rouge qu'on met dans la salade",
+  "niveau": 1
+ },
+ {
+  "mot": "TORTUE",
+  "def": "Reptile qui vit dans une carapace",
+  "niveau": 1
+ },
+ {
+  "mot": "TOUPIE",
+  "def": "Jouet qui tourne sur sa pointe",
+  "niveau": 2
+ },
+ {
+  "mot": "TRESOR",
+  "def": "Richesse cachée, ou très précieux",
+  "niveau": 1
+ },
+ {
+  "mot": "TRUFFE",
+  "def": "Champignon noir très cher, ou nez du chien",
+  "niveau": 2
+ },
+ {
+  "mot": "TUNNEL",
+  "def": "Passage souterrain sous une montagne",
+  "niveau": 1
+ },
+ {
+  "mot": "VALISE",
+  "def": "Bagage rigide qu'on roule au départ",
+  "niveau": 1
+ },
+ {
+  "mot": "VENTRE",
+  "def": "Partie du corps qui contient les intestins",
+  "niveau": 1
+ },
+ {
+  "mot": "VERGER",
+  "def": "Terrain planté d'arbres fruitiers",
+  "niveau": 2
+ },
+ {
+  "mot": "VIANDE",
+  "def": "Chair des animaux qu'on mange",
+  "niveau": 1
+ },
+ {
+  "mot": "VOLCAN",
+  "def": "Montagne qui crache de la lave",
+  "niveau": 1
+ },
+ {
+  "mot": "VOYAGE",
+  "def": "Déplacement loin de chez soi",
+  "niveau": 1
+ },
+ {
+  "mot": "ATELIER",
+  "def": "Pièce où l'on bricole, ou lieu de travail des artisans",
+  "niveau": 2
+ },
+ {
+  "mot": "BALEINE",
+  "def": "Plus grand mammifère des mers, qui souffle de l'eau",
+  "niveau": 2
+ },
+ {
+  "mot": "BICYCLE",
+  "def": "Véhicule à deux roues qu'on pédale",
+  "niveau": 3
+ },
+ {
+  "mot": "CARREAU",
+  "def": "Carré de faïence pour carreler le sol",
+  "niveau": 3
+ },
+ {
+  "mot": "CHAPEAU",
+  "def": "Coiffure qu'on enlève pour saluer",
+  "niveau": 1
+ },
+ {
+  "mot": "CHATEAU",
+  "def": "Grande demeure de roi ou de vignoble",
+  "niveau": 1
+ },
+ {
+  "mot": "CHAMEAU",
+  "def": "Animal du désert qui a des bosses",
+  "niveau": 2
+ },
+ {
+  "mot": "CLAVIER",
+  "def": "Ensemble de touches sur un piano ou un ordinateur",
+  "niveau": 2
+ },
+ {
+  "mot": "COLONNE",
+  "def": "Pilier rond qui soutient un édifice",
+  "niveau": 2
+ },
+ {
+  "mot": "CONCERT",
+  "def": "Représentation de musique devant un public",
+  "niveau": 1
+ },
+ {
+  "mot": "CONSEIL",
+  "def": "Recommandation, ou assemblée de décideurs",
+  "niveau": 2
+ },
+ {
+  "mot": "COUSSIN",
+  "def": "Petit coussin mou posé sur le canapé",
+  "niveau": 1
+ },
+ {
+  "mot": "CRAPAUD",
+  "def": "Amphibien à la peau rugueuse qui coasse",
+  "niveau": 2
+ },
+ {
+  "mot": "CRISTAL",
+  "def": "Verre très pur, ou solide organisé",
+  "niveau": 2
+ },
+ {
+  "mot": "CUISINE",
+  "def": "Pièce où l'on prépare les repas",
+  "niveau": 1
+ },
+ {
+  "mot": "DAUPHIN",
+  "def": "Mammifère marin joueur et intelligent",
+  "niveau": 1
+ },
+ {
+  "mot": "DESSERT",
+  "def": "Dernier plat du repas, souvent sucré",
+  "niveau": 1
+ },
+ {
+  "mot": "DIAMANT",
+  "def": "Pierre précieuse très dure et brillante",
+  "niveau": 2
+ },
+ {
+  "mot": "DRAPEAU",
+  "def": "Étoffe aux couleurs d'un pays",
+  "niveau": 1
+ },
+ {
+  "mot": "ECHELLE",
+  "def": "Outil à barreaux pour grimper",
+  "niveau": 2
+ },
+ {
+  "mot": "ELEGANT",
+  "def": "Raffiné, de bon goût, plein de classe",
+  "niveau": 2
+ },
+ {
+  "mot": "FAMILLE",
+  "def": "Ensemble des proches, parents et enfants",
+  "niveau": 1
+ },
+ {
+  "mot": "FERMIER",
+  "def": "Agriculteur qui cultive sa terre",
+  "niveau": 1
+ },
+ {
+  "mot": "GALERIE",
+  "def": "Lieu d'exposition de tableaux",
+  "niveau": 2
+ },
+ {
+  "mot": "GARDIEN",
+  "def": "Protecteur, ou joueur qui défend le but",
+  "niveau": 1
+ },
+ {
+  "mot": "GAZELLE",
+  "def": "Petite antilope rapide des savanes",
+  "niveau": 2
+ },
+ {
+  "mot": "GOUDRON",
+  "def": "Revêtement noir des routes, ou produit de cigarette",
+  "niveau": 2
+ },
+ {
+  "mot": "GRIMACE",
+  "def": "Expression faciale qui déforme le visage",
+  "niveau": 2
+ },
+ {
+  "mot": "GUITARE",
+  "def": "Instrument à six cordes qu'on gratte",
+  "niveau": 1
+ },
+ {
+  "mot": "HERBIER",
+  "def": "Recueil de plantes séchées et collées",
+  "niveau": 3
+ },
+ {
+  "mot": "INSECTE",
+  "def": "Petit animal à six pattes, comme la mouche",
+  "niveau": 1
+ },
+ {
+  "mot": "JOURNAL",
+  "def": "Publication de nouvelles qui paraît chaque jour",
+  "niveau": 1
+ },
+ {
+  "mot": "LEGENDE",
+  "def": "Récit ancien à moitié vrai, ou texte d'une carte",
+  "niveau": 2
+ },
+ {
+  "mot": "MACHINE",
+  "def": "Appareil mécanique qui fonctionne",
+  "niveau": 1
+ },
+ {
+  "mot": "MARTEAU",
+  "def": "Outil à tête lourde pour enfoncer les clous",
+  "niveau": 1
+ },
+ {
+  "mot": "MELANGE",
+  "def": "Assemblage de plusieurs choses ensemble",
+  "niveau": 2
+ },
+ {
+  "mot": "MINERAI",
+  "def": "Roche qui contient du métal à extraire",
+  "niveau": 3
+ },
+ {
+  "mot": "MOISSON",
+  "def": "Récolte des céréales en été",
+  "niveau": 2
+ },
+ {
+  "mot": "NAVETTE",
+  "def": "Véhicule qui fait l'aller-retour régulier",
+  "niveau": 2
+ },
+ {
+  "mot": "OLIVIER",
+  "def": "Arbre méditerranéen qui donne des fruits à huile",
+  "niveau": 2
+ },
+ {
+  "mot": "PAYSAGE",
+  "def": "Étendue de terrain visible d'un coup d'oeil",
+  "niveau": 1
+ },
+ {
+  "mot": "PELUCHE",
+  "def": "Jouet doux et moelleux pour dormir",
+  "niveau": 1
+ },
+ {
+  "mot": "PELOTON",
+  "def": "Petit groupe serré, ou boule de fil",
+  "niveau": 3
+ },
+ {
+  "mot": "PLANETE",
+  "def": "Corps céleste qui tourne autour d'une étoile",
+  "niveau": 2
+ },
+ {
+  "mot": "PLAFOND",
+  "def": "Surface au-dessus de la tête dans une pièce",
+  "niveau": 1
+ },
+ {
+  "mot": "PLUMAGE",
+  "def": "Ensemble des plumes d'un oiseau",
+  "niveau": 2
+ },
+ {
+  "mot": "POMPIER",
+  "def": "Secouriste qui éteint les incendies",
+  "niveau": 1
+ },
+ {
+  "mot": "PORTAIL",
+  "def": "Grande porte d'entrée d'un jardin ou d'un parc",
+  "niveau": 2
+ },
+ {
+  "mot": "POUSSIN",
+  "def": "Petit poulet qui vient d'éclore",
+  "niveau": 2
+ },
+ {
+  "mot": "RIVIERE",
+  "def": "Cours d'eau qui se jette dans un fleuve",
+  "niveau": 1
+ },
+ {
+  "mot": "SCULPTURE",
+  "def": "Œuvre d'art taillée dans la pierre",
+  "niveau": 2
+ },
+ {
+  "mot": "SOUFFLE",
+  "def": "Air qu'on expulse, ou haleine légère",
+  "niveau": 2
+ },
+ {
+  "mot": "TAMBOUR",
+  "def": "Instrument à percussion qu'on frappe avec des baguettes",
+  "niveau": 2
+ },
+ {
+  "mot": "TRAPEZE",
+  "def": "Agrès suspendu au cirque, ou quadrilatère",
+  "niveau": 3
+ },
+ {
+  "mot": "VOITURE",
+  "def": "Véhicule à quatre roues pour la famille",
+  "niveau": 1
+ },
+ {
+  "mot": "ARMOIRE",
+  "def": "Grand meuble à portes qui range les habits",
+  "niveau": 1
+ },
+ {
+  "mot": "BISCUIT",
+  "def": "Petit gâteau sec à tremper dans le thé",
+  "niveau": 1
+ },
+ {
+  "mot": "BOUCHON",
+  "def": "Cylindre qui ferme la bouteille de vin",
+  "niveau": 1
+ },
+ {
+  "mot": "BRIQUET",
+  "def": "Petit appareil qui fait jaillir une flamme",
+  "niveau": 2
+ },
+ {
+  "mot": "CAROTTE",
+  "def": "Légume orange qui pousse sous la terre",
+  "niveau": 1
+ },
+ {
+  "mot": "COMPOTE",
+  "def": "Fruits cuits et écrasés en purée sucrée",
+  "niveau": 1
+ },
+ {
+  "mot": "COULEUR",
+  "def": "Teinte que perçoit l'oeil",
+  "niveau": 1
+ },
+ {
+  "mot": "ECRITURE",
+  "def": "Façon de tracer les lettres à la main",
+  "niveau": 2
+ },
+ {
+  "mot": "ENCRIER",
+  "def": "Petit pot qui contient l'encre",
+  "niveau": 3
+ },
+ {
+  "mot": "GRAINE",
+  "def": "Petit germe qui peut devenir une plante",
+  "niveau": 1
+ },
+ {
+  "mot": "HAMEAU",
+  "def": "Petit groupe de maisons à la campagne",
+  "niveau": 2
+ },
+ {
+  "mot": "LIEVRE",
+  "def": "Rongeur rapide aux longues oreilles, qui court vite",
+  "niveau": 2
+ },
+ {
+  "mot": "PARTIE",
+  "def": "Morceau d'un tout, ou match",
+  "niveau": 1
+ },
+ {
+  "mot": "UNIVERS",
+  "def": "Ensemble de tout ce qui existe",
+  "niveau": 2
+ },
+ {
+  "mot": "VIOLON",
+  "def": "Instrument à quatre cordes qu'on frotte avec un archet",
+  "niveau": 1
+ },
+ {
+  "mot": "ALPHABET",
+  "def": "Suite des lettres qu'on apprend à l'école",
+  "niveau": 2
+ },
+ {
+  "mot": "ASPIRINE",
+  "def": "Comprimé blanc contre la fièvre et les maux de tête",
+  "niveau": 2
+ },
+ {
+  "mot": "BAGUETTE",
+  "def": "Pain long et croustillant, ou petit bâton magique",
+  "niveau": 1
+ },
+ {
+  "mot": "CAMPAGNE",
+  "def": "Région loin des villes, avec champs et vaches",
+  "niveau": 1
+ },
+ {
+  "mot": "CASSEROLE",
+  "def": "Ustensile de cuisine qu'on pose sur le feu",
+  "niveau": 1
+ },
+ {
+  "mot": "CHEVALIER",
+  "def": "Noble guerrier de l'époque médiévale",
+  "niveau": 2
+ },
+ {
+  "mot": "CHOCOLAT",
+  "def": "Gourmandise brune qu'on déguste en tablette",
+  "niveau": 1
+ },
+ {
+  "mot": "COMPTOIR",
+  "def": "Table longue où l'on paie au bar",
+  "niveau": 2
+ },
+ {
+  "mot": "CROCODILE",
+  "def": "Reptile géant aux dents acérées des marais",
+  "niveau": 2
+ },
+ {
+  "mot": "CROISSANT",
+  "def": "Viennoiserie en forme de demi-lune au beurre",
+  "niveau": 1
+ },
+ {
+  "mot": "CUILLERE",
+  "def": "Ustensile creux qui sert à manger la soupe",
+  "niveau": 1
+ },
+ {
+  "mot": "DECEMBRE",
+  "def": "Dernier mois de l'année, avec Noël",
+  "niveau": 1
+ },
+ {
+  "mot": "DIMANCHE",
+  "def": "Jour de repos, septième de la semaine",
+  "niveau": 1
+ },
+ {
+  "mot": "ELEPHANT",
+  "def": "Grand mammifère à trompe et défenses d'ivoire",
+  "niveau": 1
+ },
+ {
+  "mot": "ENTONNOIR",
+  "def": "Cône pour verser un liquide dans une bouteille",
+  "niveau": 2
+ },
+ {
+  "mot": "ESCALIER",
+  "def": "Suite de marches pour monter à l'étage",
+  "niveau": 1
+ },
+ {
+  "mot": "ESCARGOT",
+  "def": "Mollusque qui traîne sa maison sur le dos",
+  "niveau": 1
+ },
+ {
+  "mot": "FEUILLAGE",
+  "def": "Ensemble des feuilles d'un arbre",
+  "niveau": 2
+ },
+ {
+  "mot": "FRAGMENT",
+  "def": "Petit morceau détaché d'un ensemble",
+  "niveau": 2
+ },
+ {
+  "mot": "GALAXIE",
+  "def": "Immense amas d'étoiles, comme la Voie lactée",
+  "niveau": 2
+ },
+ {
+  "mot": "HAMBURGER",
+  "def": "Pain rond garni de viande et de salade",
+  "niveau": 1
+ },
+ {
+  "mot": "HARMONIE",
+  "def": "Accord agréable entre des sons ou des personnes",
+  "niveau": 2
+ },
+ {
+  "mot": "INSTINCT",
+  "def": "Réaction naturelle, sans réflexion",
+  "niveau": 2
+ },
+ {
+  "mot": "JARDINIER",
+  "def": "Personne qui s'occupe des plantes du parc",
+  "niveau": 2
+ },
+ {
+  "mot": "JONQUILLE",
+  "def": "Fleur jaune qui sent bon au printemps",
+  "niveau": 3
+ },
+ {
+  "mot": "LANTERNE",
+  "def": "Lampe enfermée dans une cage de verre",
+  "niveau": 2
+ },
+ {
+  "mot": "LIBELLULE",
+  "def": "Insecte aux ailes transparentes qui vole au-dessus de l'eau",
+  "niveau": 2
+ },
+ {
+  "mot": "LIMONADE",
+  "def": "Boisson gazeuse au citron",
+  "niveau": 1
+ },
+ {
+  "mot": "MAGICIEN",
+  "def": "Illusionniste qui sort des lapins de son chapeau",
+  "niveau": 1
+ },
+ {
+  "mot": "MANIVELLE",
+  "def": "Poignée coudée qui fait tourner un mécanisme",
+  "niveau": 3
+ },
+ {
+  "mot": "MARCHAND",
+  "def": "Vendeur qui tient une boutique",
+  "niveau": 1
+ },
+ {
+  "mot": "MEDAILLE",
+  "def": "Pièce métallique décernée aux vainqueurs",
+  "niveau": 2
+ },
+ {
+  "mot": "MONTAGNE",
+  "def": "Très grande élévation de terrain, pour skier",
+  "niveau": 1
+ },
+ {
+  "mot": "MOUCHOIR",
+  "def": "Petit carré de tissu pour se moucher",
+  "niveau": 1
+ },
+ {
+  "mot": "MOUTARDE",
+  "def": "Condiment jaune ou brun qui pique le nez",
+  "niveau": 1
+ },
+ {
+  "mot": "NAUFRAGE",
+  "def": "Bateau coulé en pleine mer",
+  "niveau": 2
+ },
+ {
+  "mot": "NOCTURNE",
+  "def": "Qui se passe de nuit, ou pièce de piano douce",
+  "niveau": 3
+ },
+ {
+  "mot": "NOISETTE",
+  "def": "Petit fruit sec brun, ou café avec un nuage de lait",
+  "niveau": 2
+ },
+ {
+  "mot": "OBSTACLE",
+  "def": "Barrière à franchir sur un parcours",
+  "niveau": 2
+ },
+ {
+  "mot": "OREILLER",
+  "def": "Coussin où l'on pose la tête pour dormir",
+  "niveau": 1
+ },
+ {
+  "mot": "ORCHESTRE",
+  "def": "Groupe de musiciens qui jouent ensemble",
+  "niveau": 1
+ },
+ {
+  "mot": "ORCHIDEE",
+  "def": "Plante exotique aux fleurs élégantes",
+  "niveau": 2
+ },
+ {
+  "mot": "PANTALON",
+  "def": "Vêtement long qui couvre les deux jambes",
+  "niveau": 1
+ },
+ {
+  "mot": "PAPILLON",
+  "def": "Insecte aux ailes colorées, ou noeud de cravate",
+  "niveau": 1
+ },
+ {
+  "mot": "PARADIS",
+  "def": "Séjour idéal, selon les croyances",
+  "niveau": 2
+ },
+ {
+  "mot": "PARAPLUIE",
+  "def": "Abri pliant qu'on tient au-dessus de la tête",
+  "niveau": 1
+ },
+ {
+  "mot": "PASSEPORT",
+  "def": "Document de voyage avec sa photo",
+  "niveau": 2
+ },
+ {
+  "mot": "PASTEQUE",
+  "def": "Gros fruit vert à chair rouge et pépins noirs",
+  "niveau": 2
+ },
+ {
+  "mot": "PATINOIRE",
+  "def": "Surface glacée pour glisser sur des lames",
+  "niveau": 2
+ },
+ {
+  "mot": "PEINTURE",
+  "def": "Couche de couleur sur un mur, ou tableau",
+  "niveau": 1
+ },
+ {
+  "mot": "PERCHOIR",
+  "def": "Branche où les oiseaux se posent",
+  "niveau": 3
+ },
+ {
+  "mot": "PERROQUET",
+  "def": "Oiseau coloré qui répète les mots",
+  "niveau": 1
+ },
+ {
+  "mot": "PERSONNE",
+  "def": "Être humain, ou nul",
+  "niveau": 1
+ },
+ {
+  "mot": "PORTRAIT",
+  "def": "Tableau ou photo d'une personne",
+  "niveau": 2
+ },
+ {
+  "mot": "PROMENADE",
+  "def": "Balade à pied pour le plaisir",
+  "niveau": 1
+ },
+ {
+  "mot": "QUESTION",
+  "def": "Interrogation, ou sujet à débattre",
+  "niveau": 1
+ },
+ {
+  "mot": "RACCOURCI",
+  "def": "Chemin plus court, ou itinéraire direct",
+  "niveau": 3
+ },
+ {
+  "mot": "REVOLVER",
+  "def": "Pistolet dont le barillet tourne",
+  "niveau": 2
+ },
+ {
+  "mot": "ROSSIGNOL",
+  "def": "Petit oiseau brun qui chante la nuit",
+  "niveau": 2
+ },
+ {
+  "mot": "SERVIETTE",
+  "def": "Carré de tissu pour s'essuyer à table",
+  "niveau": 1
+ },
+ {
+  "mot": "SOUVENIR",
+  "def": "Image gardée du passé, ou objet rapporté de voyage",
+  "niveau": 1
+ },
+ {
+  "mot": "SPECTACLE",
+  "def": "Représentation théâtrale ou sportive devant un public",
+  "niveau": 1
+ },
+ {
+  "mot": "TABOURET",
+  "def": "Siège sans dossier ni bras",
+  "niveau": 2
+ },
+ {
+  "mot": "TELEPHONE",
+  "def": "Appareil qui sert à parler à distance",
+  "niveau": 1
+ },
+ {
+  "mot": "TOURNESOL",
+  "def": "Grande fleur jaune qui suit le soleil",
+  "niveau": 1
+ },
+ {
+  "mot": "TRACTEUR",
+  "def": "Engin agricole qui tire la charrue",
+  "niveau": 2
+ },
+ {
+  "mot": "TROMPETTE",
+  "def": "Instrument de cuivre à trois pistons",
+  "niveau": 2
+ },
+ {
+  "mot": "VACANCES",
+  "def": "Période de repos loin du travail",
+  "niveau": 1
+ },
+ {
+  "mot": "VAISSEAU",
+  "def": "Grand bateau, ou engin spatial",
+  "niveau": 2
+ },
+ {
+  "mot": "VICTOIRE",
+  "def": "Succès au terme d'une compétition",
+  "niveau": 1
+ },
+ {
+  "mot": "VIGNOBLE",
+  "def": "Terrain couvert de pieds de vigne",
+  "niveau": 2
+ },
+ {
+  "mot": "VITAMINE",
+  "def": "Substance indispensable pour la santé, dans les fruits",
+  "niveau": 2
+ },
+ {
+  "mot": "BOUTEILLE",
+  "def": "Récipient en verre au goulot étroit",
+  "niveau": 1
+ },
+ {
+  "mot": "CAMOMILLE",
+  "def": "Plante aux fleurs blanches en tisane apaisante",
+  "niveau": 2
+ },
+ {
+  "mot": "EPICERIE",
+  "def": "Boutique qui vend des produits alimentaires",
+  "niveau": 1
+ },
+ {
+  "mot": "MOUSTIQUE",
+  "def": "Petit insecte piqueur qui bourdonne le soir",
+  "niveau": 1
+ },
+ {
+  "mot": "PRINTEMPS",
+  "def": "Saison des fleurs, entre l'hiver et l'été",
+  "niveau": 1
+ },
+ {
+  "mot": "AIE",
+  "def": "Cri de douleur qui fait mal",
+  "niveau": 1
+ },
+ {
+  "mot": "HOP",
+  "def": "Cri pour faire sauter ou pour relever quelqu'un",
+  "niveau": 1
+ },
+ {
+  "mot": "UNI",
+  "def": "Sans motif, d'une seule couleur",
+  "niveau": 2
+ },
+ {
+  "mot": "CAFE",
+  "def": "Boisson noire et chaude du matin",
+  "niveau": 1
+ },
+ {
+  "mot": "ANIS",
+  "def": "Plante aromatique au goût de réglisse",
+  "niveau": 2
+ },
+ {
+  "mot": "RIEN",
+  "def": "Aucune chose, le néant",
+  "niveau": 1
+ },
+ {
+  "mot": "PAPA",
+  "def": "Père, en langage d'enfant",
+  "niveau": 1
+ },
+ {
+  "mot": "TOUT",
+  "def": "La totalité, l'ensemble",
+  "niveau": 1
+ },
+ {
+  "mot": "OURS",
+  "def": "Grand plantigrade qui hiberne",
+  "niveau": 1
+ },
+ {
+  "mot": "ANCRE",
+  "def": "Objet de fer qui retient le bateau au fond",
+  "niveau": 1
+ },
+ {
+  "mot": "BIJOU",
+  "def": "Petit objet précieux qu'on porte, comme une bague",
+  "niveau": 1
+ },
+ {
+  "mot": "DOUTE",
+  "def": "Incertitude, hésitation",
+  "niveau": 1
+ },
+ {
+  "mot": "ECUME",
+  "def": "Mousse blanche qui couronne les vagues",
+  "niveau": 2
+ },
+ {
+  "mot": "ENNUI",
+  "def": "Lassitude, sentiment de s'embêter",
+  "niveau": 1
+ },
+ {
+  "mot": "FROID",
+  "def": "Basse température, ou sans chaleur",
+  "niveau": 1
+ },
+ {
+  "mot": "GRAVE",
+  "def": "Sérieux, important, ou note basse",
+  "niveau": 2
+ },
+ {
+  "mot": "LOUPE",
+  "def": "Lentille qui grossit les petits objets",
+  "niveau": 2
+ },
+ {
+  "mot": "MARIN",
+  "def": "Qui vit sur ou dans la mer, ou matelot",
+  "niveau": 2
+ },
+ {
+  "mot": "NUQUE",
+  "def": "Arrière du cou",
+  "niveau": 2
+ },
+ {
+  "mot": "OMBRE",
+  "def": "Zone sans lumière projetée par un objet",
+  "niveau": 1
+ },
+ {
+  "mot": "ORTIE",
+  "def": "Plante qui pique quand on la touche",
+  "niveau": 2
+ },
+ {
+  "mot": "PERIL",
+  "def": "Danger imminent",
+  "niveau": 3
+ },
+ {
+  "mot": "PRIME",
+  "def": "Bonus versé en plus du salaire",
+  "niveau": 1
+ },
+ {
+  "mot": "RADIS",
+  "def": "Petite racine rouge à croquer",
+  "niveau": 1
+ },
+ {
+  "mot": "SAVON",
+  "def": "Produit moussant pour la toilette",
+  "niveau": 1
+ },
+ {
+  "mot": "TABLE",
+  "def": "Meuble plat posé sur quatre pieds",
+  "niveau": 1
+ },
+ {
+  "mot": "TAUPE",
+  "def": "Petit mammifère aveugle qui creuse",
+  "niveau": 2
+ },
+ {
+  "mot": "TOILE",
+  "def": "Tissu, ou tableau peint, ou réseau",
+  "niveau": 1
+ },
+ {
+  "mot": "VALET",
+  "def": "Serviteur, ou carte entre la dame et le roi",
+  "niveau": 2
+ },
+ {
+  "mot": "VOLET",
+  "def": "Panneau mobile qui ferme une fenêtre",
+  "niveau": 1
+ },
+ {
+  "mot": "FILET",
+  "def": "Maille tressée pour pêcher, ou morceau de viande",
+  "niveau": 2
+ },
+ {
+  "mot": "BORNE",
+  "def": "Pierre qui marque une limite",
+  "niveau": 2
+ },
+ {
+  "mot": "ENCRE",
+  "def": "Liquide coloré pour écrire au stylo",
+  "niveau": 1
+ },
+ {
+  "mot": "ETAGE",
+  "def": "Niveau d'un bâtiment",
+  "niveau": 1
+ },
+ {
+  "mot": "GENIE",
+  "def": "Esprit créatif exceptionnel, ou esprit magique",
+  "niveau": 2
+ },
+ {
+  "mot": "OPERA",
+  "def": "Spectacle chanté avec orchestre",
+  "niveau": 2
+ },
+ {
+  "mot": "TRIBU",
+  "def": "Groupe de personnes d'un même clan",
+  "niveau": 2
+ },
+ {
+  "mot": "AIGLE",
+  "def": "Grand rapace aux yeux perçants",
+  "niveau": 1
+ },
+ {
+  "mot": "MALIN",
+  "def": "Rusé, habile à tromper",
+  "niveau": 2
+ },
+ {
+  "mot": "PETIT",
+  "def": "De faible taille, menu",
+  "niveau": 1
+ },
+ {
+  "mot": "PLUME",
+  "def": "Poil d'oiseau qui vole, ou stylo",
+  "niveau": 1
+ },
+ {
+  "mot": "SOUCI",
+  "def": "Inquiétude, ou fleur jaune orangée",
+  "niveau": 2
+ },
+ {
+  "mot": "FEUTRE",
+  "def": "Étoffe épaisse en laine, ou crayon à pointe souple",
+  "niveau": 2
+ },
+ {
+  "mot": "HANCHE",
+  "def": "Partie du corps entre la taille et la cuisse",
+  "niveau": 2
+ },
+ {
+  "mot": "MOTEUR",
+  "def": "Machine qui transforme l'énergie en mouvement",
+  "niveau": 1
+ },
+ {
+  "mot": "PARTIR",
+  "def": "S'en aller, quitter les lieux",
+  "niveau": 1
+ },
+ {
+  "mot": "PIOCHE",
+  "def": "Outil à long manche, ou carte tirée au hasard",
+  "niveau": 2
+ },
+ {
+  "mot": "SOUPIR",
+  "def": "Expiration bruyante qui trahit la fatigue",
+  "niveau": 2
+ },
+ {
+  "mot": "TIMBRE",
+  "def": "Petit papier collé sur le courrier, ou sonnette",
+  "niveau": 1
+ },
+ {
+  "mot": "TULIPE",
+  "def": "Fleur en forme de coupe, issue d'un bulbe",
+  "niveau": 1
+ },
+ {
+  "mot": "BROSSE",
+  "def": "Ustensile à poils pour nettoyer",
+  "niveau": 1
+ },
+ {
+  "mot": "BOUCLE",
+  "def": "Anneau de cheveux frisés, ou de ceinture",
+  "niveau": 2
+ },
+ {
+  "mot": "CHEVRE",
+  "def": "Animal qui donne du lait, ou fromage frais",
+  "niveau": 1
+ },
+ {
+  "mot": "CAMION",
+  "def": "Gros véhicule de transport de marchandises",
+  "niveau": 1
+ },
+ {
+  "mot": "CARTON",
+  "def": "Matière rigide des boîtes d'emballage",
+  "niveau": 1
+ },
+ {
+  "mot": "CASTOR",
+  "def": "Rongeur qui construit des barrages",
+  "niveau": 2
+ },
+ {
+  "mot": "COUSIN",
+  "def": "Enfant de l'oncle ou de la tante",
+  "niveau": 1
+ },
+ {
+  "mot": "EPAULE",
+  "def": "Articulation qui relie le bras au tronc",
+  "niveau": 2
+ },
+ {
+  "mot": "FAMINE",
+  "def": "Manque de nourriture pendant longtemps",
+  "niveau": 3
+ },
+ {
+  "mot": "FLOCON",
+  "def": "Petit morceau de neige ou d'avoine",
+  "niveau": 1
+ },
+ {
+  "mot": "GUERRE",
+  "def": "Conflit armé entre nations",
+  "niveau": 1
+ },
+ {
+  "mot": "HOCHET",
+  "def": "Jouet de bébé qui fait du bruit",
+  "niveau": 3
+ },
+ {
+  "mot": "LIVRET",
+  "def": "Petit livre, ou carnet d'épargne",
+  "niveau": 2
+ },
+ {
+  "mot": "MAITRE",
+  "def": "Celui qui enseigne, ou qui commande",
+  "niveau": 1
+ },
+ {
+  "mot": "NUANCE",
+  "def": "Légère différence de teinte ou de sens",
+  "niveau": 2
+ },
+ {
+  "mot": "PERRON",
+  "def": "Escalier extérieur devant une porte",
+  "niveau": 3
+ },
+ {
+  "mot": "POISON",
+  "def": "Substance qui tue ou rend malade",
+  "niveau": 1
+ },
+ {
+  "mot": "POLICE",
+  "def": "Force chargée de faire respecter l'ordre",
+  "niveau": 1
+ },
+ {
+  "mot": "POULIE",
+  "def": "Roue à gorge pour soulever des charges",
+  "niveau": 3
+ },
+ {
+  "mot": "PRESSE",
+  "def": "Journaux, ou machine qui écrase",
+  "niveau": 1
+ },
+ {
+  "mot": "REGIME",
+  "def": "Alimentation contrôlée, ou type de gouvernement",
+  "niveau": 2
+ },
+ {
+  "mot": "RESEAU",
+  "def": "Ensemble de liens, de routes ou de contacts",
+  "niveau": 2
+ },
+ {
+  "mot": "SAFARI",
+  "def": "Expédition pour observer les animaux sauvages",
+  "niveau": 1
+ },
+ {
+  "mot": "SALAMI",
+  "def": "Saucisson sec italien très épicé",
+  "niveau": 2
+ },
+ {
+  "mot": "SECRET",
+  "def": "Ce qu'on ne dit pas, ou caché",
+  "niveau": 1
+ },
+ {
+  "mot": "SOLIDE",
+  "def": "Dur et stable, qui ne se déforme pas",
+  "niveau": 1
+ },
+ {
+  "mot": "TROMPE",
+  "def": "Nez de l'éléphant, ou instrument de chasse",
+  "niveau": 2
+ },
+ {
+  "mot": "DRAGEE",
+  "def": "Bonbon enrobé de sucre, ou comprimé",
+  "niveau": 2
+ },
+ {
+  "mot": "CANAPE",
+  "def": "Petit toast garni, ou siège long",
+  "niveau": 1
+ },
+ {
+  "mot": "CHANCE",
+  "def": "Hasard heureux, bonne fortune",
+  "niveau": 1
+ },
+ {
+  "mot": "FANTOME",
+  "def": "Esprit d'un défunt qui hante les lieux",
+  "niveau": 1
+ },
+ {
+  "mot": "HORIZON",
+  "def": "Ligne où le ciel semble toucher la mer",
+  "niveau": 2
+ },
+ {
+  "mot": "SCOOTER",
+  "def": "Deux-roues léger à plateforme",
+  "niveau": 1
+ },
+ {
+  "mot": "TABLEAU",
+  "def": "Peinture encadrée, ou planche noire de classe",
+  "niveau": 1
+ },
+ {
+  "mot": "SERIEUX",
+  "def": "Grave, sans rire, réfléchi",
+  "niveau": 2
+ },
+ {
+  "mot": "FOUGERE",
+  "def": "Plante verte sans fleur des sous-bois",
+  "niveau": 2
+ },
+ {
+  "mot": "CHIFFRE",
+  "def": "Nombre écrit avec un symbole",
+  "niveau": 2
+ },
+ {
+  "mot": "RUISSEAU",
+  "def": "Petit cours d'eau qui gargouille",
+  "niveau": 2
+ },
+ {
+  "mot": "CUISINIER",
+  "def": "Personne qui prépare les plats",
+  "niveau": 1
+ },
+ {
+  "mot": "GARDENIA",
+  "def": "Fleur blanche très parfumée",
+  "niveau": 3
+ },
+ {
+  "mot": "MAGNOLIA",
+  "def": "Arbre à grandes fleurs parfumées",
+  "niveau": 3
+ },
+ {
+  "mot": "MECANIQUE",
+  "def": "Qui relève des machines et des moteurs",
+  "niveau": 2
+ },
+ {
+  "mot": "MOTOCYCLE",
+  "def": "Deux-roues à moteur de grosse cylindrée",
+  "niveau": 2
+ },
+ {
+  "mot": "PHARMACIE",
+  "def": "Boutique où l'on achète des médicaments",
+  "niveau": 1
+ },
+ {
+  "mot": "PRESIDENT",
+  "def": "Chef d'un État ou d'une association",
+  "niveau": 1
+ },
+ {
+  "mot": "SANDWICH",
+  "def": "Pain garni de charcuterie ou de fromage",
+  "niveau": 1
+ },
+ {
+  "mot": "SAUCISSON",
+  "def": "Charcuterie sèche à couper en rondelles",
+  "niveau": 1
+ },
+ {
+  "mot": "TELESCOPE",
+  "def": "Instrument qui rapproche les astres",
+  "niveau": 2
+ },
+ {
+  "mot": "CHAMPION",
+  "def": "Vainqueur d'une compétition",
+  "niveau": 1
+ },
+ {
+  "mot": "CARAVANE",
+  "def": "Convoi de chameaux, ou maison roulante",
+  "niveau": 2
+ },
+ {
+  "mot": "COUTURIER",
+  "def": "Créateur de mode qui dessine des robes",
+  "niveau": 2
+ },
+ {
+  "mot": "DINOSAURE",
+  "def": "Reptile géant disparu depuis des millions d'années",
+  "niveau": 1
+ },
+ {
+  "mot": "INVENTION",
+  "def": "Création nouvelle, ou trouvaille",
+  "niveau": 2
+ },
+ {
+  "mot": "JARDINAGE",
+  "def": "Activité qui consiste à soigner les plantes",
+  "niveau": 2
+ },
+ {
+  "mot": "MARMOTTE",
+  "def": "Rongeur des montagnes qui hiberne",
+  "niveau": 2
+ },
+ {
+  "mot": "MONSTRE",
+  "def": "Créature effrayante, ou énorme",
+  "niveau": 1
+ },
+ {
+  "mot": "PATISSIER",
+  "def": "Artisan qui fabrique gâteaux et tartes",
+  "niveau": 2
+ },
+ {
+  "mot": "TIRELIRE",
+  "def": "Petit pot pour économiser des pièces",
+  "niveau": 1
+ },
+ {
+  "mot": "VENDREDI",
+  "def": "Jour qui précède le samedi",
+  "niveau": 1
+ }
+]
