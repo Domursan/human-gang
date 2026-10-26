@@ -1,0 +1,1402 @@
+[
+  {
+    "mot": "raclette",
+    "niveau": 1
+  },
+  {
+    "mot": "fondue",
+    "niveau": 1
+  },
+  {
+    "mot": "chocolat",
+    "niveau": 1
+  },
+  {
+    "mot": "vache",
+    "niveau": 1
+  },
+  {
+    "mot": "chat",
+    "niveau": 1
+  },
+  {
+    "mot": "chien",
+    "niveau": 1
+  },
+  {
+    "mot": "poisson",
+    "niveau": 1
+  },
+  {
+    "mot": "pomme",
+    "niveau": 1
+  },
+  {
+    "mot": "banane",
+    "niveau": 1
+  },
+  {
+    "mot": "gâteau",
+    "niveau": 1
+  },
+  {
+    "mot": "pizza",
+    "niveau": 1
+  },
+  {
+    "mot": "hamburger",
+    "niveau": 1
+  },
+  {
+    "mot": "ballon",
+    "niveau": 1
+  },
+  {
+    "mot": "vélo",
+    "niveau": 1
+  },
+  {
+    "mot": "voiture",
+    "niveau": 1
+  },
+  {
+    "mot": "avion",
+    "niveau": 1
+  },
+  {
+    "mot": "train",
+    "niveau": 1
+  },
+  {
+    "mot": "bateau",
+    "niveau": 1
+  },
+  {
+    "mot": "maison",
+    "niveau": 1
+  },
+  {
+    "mot": "arbre",
+    "niveau": 1
+  },
+  {
+    "mot": "soleil",
+    "niveau": 1
+  },
+  {
+    "mot": "lune",
+    "niveau": 1
+  },
+  {
+    "mot": "étoile",
+    "niveau": 1
+  },
+  {
+    "mot": "nuage",
+    "niveau": 1
+  },
+  {
+    "mot": "parapluie",
+    "niveau": 1
+  },
+  {
+    "mot": "lunettes",
+    "niveau": 1
+  },
+  {
+    "mot": "chapeau",
+    "niveau": 1
+  },
+  {
+    "mot": "chaussure",
+    "niveau": 1
+  },
+  {
+    "mot": "montre",
+    "niveau": 1
+  },
+  {
+    "mot": "téléphone",
+    "niveau": 1
+  },
+  {
+    "mot": "ordinateur",
+    "niveau": 1
+  },
+  {
+    "mot": "clé",
+    "niveau": 1
+  },
+  {
+    "mot": "ciseaux",
+    "niveau": 1
+  },
+  {
+    "mot": "marteau",
+    "niveau": 1
+  },
+  {
+    "mot": "cuillère",
+    "niveau": 1
+  },
+  {
+    "mot": "fourchette",
+    "niveau": 1
+  },
+  {
+    "mot": "assiette",
+    "niveau": 1
+  },
+  {
+    "mot": "tasse",
+    "niveau": 1
+  },
+  {
+    "mot": "bouteille",
+    "niveau": 1
+  },
+  {
+    "mot": "chaise",
+    "niveau": 1
+  },
+  {
+    "mot": "table",
+    "niveau": 1
+  },
+  {
+    "mot": "lit",
+    "niveau": 1
+  },
+  {
+    "mot": "horloge",
+    "niveau": 1
+  },
+  {
+    "mot": "ampoule",
+    "niveau": 1
+  },
+  {
+    "mot": "bougie",
+    "niveau": 1
+  },
+  {
+    "mot": "cactus",
+    "niveau": 1
+  },
+  {
+    "mot": "champignon",
+    "niveau": 1
+  },
+  {
+    "mot": "manette",
+    "niveau": 1
+  },
+  {
+    "mot": "épée",
+    "niveau": 1
+  },
+  {
+    "mot": "escargot",
+    "niveau": 1
+  },
+  {
+    "mot": "grenouille",
+    "niveau": 1
+  },
+  {
+    "mot": "canard",
+    "niveau": 1
+  },
+  {
+    "mot": "lapin",
+    "niveau": 1
+  },
+  {
+    "mot": "hibou",
+    "niveau": 1
+  },
+  {
+    "mot": "papillon",
+    "niveau": 1
+  },
+  {
+    "mot": "araignée",
+    "niveau": 1
+  },
+  {
+    "mot": "serpent",
+    "niveau": 1
+  },
+  {
+    "mot": "tortue",
+    "niveau": 1
+  },
+  {
+    "mot": "girafe",
+    "niveau": 1
+  },
+  {
+    "mot": "éléphant",
+    "niveau": 1
+  },
+  {
+    "mot": "pingouin",
+    "niveau": 1
+  },
+  {
+    "mot": "cheval",
+    "niveau": 1
+  },
+  {
+    "mot": "cochon",
+    "niveau": 1
+  },
+  {
+    "mot": "mouton",
+    "niveau": 1
+  },
+  {
+    "mot": "oignon",
+    "niveau": 1
+  },
+  {
+    "mot": "carotte",
+    "niveau": 1
+  },
+  {
+    "mot": "citron",
+    "niveau": 1
+  },
+  {
+    "mot": "fraise",
+    "niveau": 1
+  },
+  {
+    "mot": "raisin",
+    "niveau": 1
+  },
+  {
+    "mot": "croissant",
+    "niveau": 1
+  },
+  {
+    "mot": "baguette",
+    "niveau": 1
+  },
+  {
+    "mot": "fromage",
+    "niveau": 1
+  },
+  {
+    "mot": "saucisse",
+    "niveau": 1
+  },
+  {
+    "mot": "glace",
+    "niveau": 1
+  },
+  {
+    "mot": "bonhomme de neige",
+    "niveau": 1
+  },
+  {
+    "mot": "boulanger",
+    "niveau": 2
+  },
+  {
+    "mot": "pompier",
+    "niveau": 2
+  },
+  {
+    "mot": "médecin",
+    "niveau": 2
+  },
+  {
+    "mot": "policier",
+    "niveau": 2
+  },
+  {
+    "mot": "pêcheur",
+    "niveau": 2
+  },
+  {
+    "mot": "jardinier",
+    "niveau": 2
+  },
+  {
+    "mot": "cuisinier",
+    "niveau": 2
+  },
+  {
+    "mot": "facteur",
+    "niveau": 2
+  },
+  {
+    "mot": "astronaute",
+    "niveau": 2
+  },
+  {
+    "mot": "pilote",
+    "niveau": 2
+  },
+  {
+    "mot": "plombier",
+    "niveau": 2
+  },
+  {
+    "mot": "coiffeur",
+    "niveau": 2
+  },
+  {
+    "mot": "chef d'orchestre",
+    "niveau": 2
+  },
+  {
+    "mot": "montagne",
+    "niveau": 2
+  },
+  {
+    "mot": "plage",
+    "niveau": 2
+  },
+  {
+    "mot": "aéroport",
+    "niveau": 2
+  },
+  {
+    "mot": "hôpital",
+    "niveau": 2
+  },
+  {
+    "mot": "bibliothèque",
+    "niveau": 2
+  },
+  {
+    "mot": "cathédrale",
+    "niveau": 2
+  },
+  {
+    "mot": "phare",
+    "niveau": 2
+  },
+  {
+    "mot": "château",
+    "niveau": 2
+  },
+  {
+    "mot": "moulin",
+    "niveau": 2
+  },
+  {
+    "mot": "volcan",
+    "niveau": 2
+  },
+  {
+    "mot": "glacier",
+    "niveau": 2
+  },
+  {
+    "mot": "chalet",
+    "niveau": 2
+  },
+  {
+    "mot": "tunnel",
+    "niveau": 2
+  },
+  {
+    "mot": "pyramide",
+    "niveau": 2
+  },
+  {
+    "mot": "sous-marin",
+    "niveau": 2
+  },
+  {
+    "mot": "fusée",
+    "niveau": 2
+  },
+  {
+    "mot": "tracteur",
+    "niveau": 2
+  },
+  {
+    "mot": "trottinette",
+    "niveau": 2
+  },
+  {
+    "mot": "parachute",
+    "niveau": 2
+  },
+  {
+    "mot": "boomerang",
+    "niveau": 2
+  },
+  {
+    "mot": "cerf-volant",
+    "niveau": 2
+  },
+  {
+    "mot": "hamac",
+    "niveau": 2
+  },
+  {
+    "mot": "sablier",
+    "niveau": 2
+  },
+  {
+    "mot": "boussole",
+    "niveau": 2
+  },
+  {
+    "mot": "microscope",
+    "niveau": 2
+  },
+  {
+    "mot": "télescope",
+    "niveau": 2
+  },
+  {
+    "mot": "enclume",
+    "niveau": 2
+  },
+  {
+    "mot": "balance",
+    "niveau": 2
+  },
+  {
+    "mot": "scie",
+    "niveau": 2
+  },
+  {
+    "mot": "seau",
+    "niveau": 2
+  },
+  {
+    "mot": "éponge",
+    "niveau": 2
+  },
+  {
+    "mot": "poulie",
+    "niveau": 2
+  },
+  {
+    "mot": "aspirateur",
+    "niveau": 2
+  },
+  {
+    "mot": "machine à café",
+    "niveau": 2
+  },
+  {
+    "mot": "fer à repasser",
+    "niveau": 2
+  },
+  {
+    "mot": "thermomètre",
+    "niveau": 2
+  },
+  {
+    "mot": "manchot",
+    "niveau": 2
+  },
+  {
+    "mot": "flamant rose",
+    "niveau": 2
+  },
+  {
+    "mot": "paresseux",
+    "niveau": 2
+  },
+  {
+    "mot": "hérisson",
+    "niveau": 2
+  },
+  {
+    "mot": "pieuvre",
+    "niveau": 2
+  },
+  {
+    "mot": "méduse",
+    "niveau": 2
+  },
+  {
+    "mot": "castor",
+    "niveau": 2
+  },
+  {
+    "mot": "chamois",
+    "niveau": 2
+  },
+  {
+    "mot": "ours en peluche",
+    "niveau": 2
+  },
+  {
+    "mot": "bonnet",
+    "niveau": 2
+  },
+  {
+    "mot": "flocon de neige",
+    "niveau": 2
+  },
+  {
+    "mot": "nain de jardin",
+    "niveau": 2
+  },
+  {
+    "mot": "maquillage",
+    "niveau": 2
+  },
+  {
+    "mot": "sifflet",
+    "niveau": 2
+  },
+  {
+    "mot": "tirelire",
+    "niveau": 2
+  },
+  {
+    "mot": "pendule",
+    "niveau": 2
+  },
+  {
+    "mot": "coup de foudre",
+    "niveau": 3
+  },
+  {
+    "mot": "faire la grasse matinée",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir le cafard",
+    "niveau": 3
+  },
+  {
+    "mot": "poser un lapin",
+    "niveau": 3
+  },
+  {
+    "mot": "tomber dans les pommes",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir la pêche",
+    "niveau": 3
+  },
+  {
+    "mot": "appeler un chat un chat",
+    "niveau": 3
+  },
+  {
+    "mot": "mettre les pieds dans le plat",
+    "niveau": 3
+  },
+  {
+    "mot": "filer à l'anglaise",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir un chat dans la gorge",
+    "niveau": 3
+  },
+  {
+    "mot": "tirer le diable par la queue",
+    "niveau": 3
+  },
+  {
+    "mot": "être dans les nuages",
+    "niveau": 3
+  },
+  {
+    "mot": "jeter l'éponge",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir un poil dans la main",
+    "niveau": 3
+  },
+  {
+    "mot": "rompre la glace",
+    "niveau": 3
+  },
+  {
+    "mot": "voir la vie en rose",
+    "niveau": 3
+  },
+  {
+    "mot": "monter sur ses grands chevaux",
+    "niveau": 3
+  },
+  {
+    "mot": "le cœur sur la main",
+    "niveau": 3
+  },
+  {
+    "mot": "tourner en rond",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir la main verte",
+    "niveau": 3
+  },
+  {
+    "mot": "couper la poire en deux",
+    "niveau": 3
+  },
+  {
+    "mot": "être au bout du rouleau",
+    "niveau": 3
+  },
+  {
+    "mot": "marcher sur des œufs",
+    "niveau": 3
+  },
+  {
+    "mot": "faire d'une pierre deux coups",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir une faim de loup",
+    "niveau": 3
+  },
+  {
+    "mot": "le temps c'est de l'argent",
+    "niveau": 3
+  },
+  {
+    "mot": "boire comme un trou",
+    "niveau": 3
+  },
+  {
+    "mot": "tomber des nues",
+    "niveau": 3
+  },
+  {
+    "mot": "se mettre au vert",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir la gueule de bois",
+    "niveau": 3
+  },
+  {
+    "mot": "sauter du coq à l'âne",
+    "niveau": 3
+  },
+  {
+    "mot": "sortir de ses gonds",
+    "niveau": 3
+  },
+  {
+    "mot": "ouvrir la boîte de Pandore",
+    "niveau": 3
+  },
+  {
+    "mot": "nager entre deux eaux",
+    "niveau": 3
+  },
+  {
+    "mot": "le cheval de Troie",
+    "niveau": 3
+  },
+  {
+    "mot": "cerise",
+    "niveau": 1
+  },
+  {
+    "mot": "poire",
+    "niveau": 1
+  },
+  {
+    "mot": "kiwi",
+    "niveau": 1
+  },
+  {
+    "mot": "ananas",
+    "niveau": 1
+  },
+  {
+    "mot": "melon",
+    "niveau": 1
+  },
+  {
+    "mot": "noix",
+    "niveau": 1
+  },
+  {
+    "mot": "noisette",
+    "niveau": 1
+  },
+  {
+    "mot": "myrtille",
+    "niveau": 1
+  },
+  {
+    "mot": "tomate",
+    "niveau": 1
+  },
+  {
+    "mot": "concombre",
+    "niveau": 1
+  },
+  {
+    "mot": "poivron",
+    "niveau": 1
+  },
+  {
+    "mot": "brocoli",
+    "niveau": 1
+  },
+  {
+    "mot": "haricot",
+    "niveau": 1
+  },
+  {
+    "mot": "maïs",
+    "niveau": 1
+  },
+  {
+    "mot": "pain",
+    "niveau": 1
+  },
+  {
+    "mot": "œuf",
+    "niveau": 1
+  },
+  {
+    "mot": "crêpe",
+    "niveau": 1
+  },
+  {
+    "mot": "gaufre",
+    "niveau": 1
+  },
+  {
+    "mot": "bretzel",
+    "niveau": 1
+  },
+  {
+    "mot": "sandwich",
+    "niveau": 1
+  },
+  {
+    "mot": "hot dog",
+    "niveau": 1
+  },
+  {
+    "mot": "bonbon",
+    "niveau": 1
+  },
+  {
+    "mot": "sucette",
+    "niveau": 1
+  },
+  {
+    "mot": "popcorn",
+    "niveau": 1
+  },
+  {
+    "mot": "muffin",
+    "niveau": 1
+  },
+  {
+    "mot": "tarte",
+    "niveau": 1
+  },
+  {
+    "mot": "macaron",
+    "niveau": 1
+  },
+  {
+    "mot": "bière",
+    "niveau": 1
+  },
+  {
+    "mot": "verre de vin",
+    "niveau": 1
+  },
+  {
+    "mot": "thé",
+    "niveau": 1
+  },
+  {
+    "mot": "café",
+    "niveau": 1
+  },
+  {
+    "mot": "lait",
+    "niveau": 1
+  },
+  {
+    "mot": "poule",
+    "niveau": 1
+  },
+  {
+    "mot": "coq",
+    "niveau": 1
+  },
+  {
+    "mot": "taureau",
+    "niveau": 1
+  },
+  {
+    "mot": "âne",
+    "niveau": 1
+  },
+  {
+    "mot": "singe",
+    "niveau": 1
+  },
+  {
+    "mot": "ours",
+    "niveau": 1
+  },
+  {
+    "mot": "loup",
+    "niveau": 1
+  },
+  {
+    "mot": "renard",
+    "niveau": 1
+  },
+  {
+    "mot": "écureuil",
+    "niveau": 1
+  },
+  {
+    "mot": "souris",
+    "niveau": 1
+  },
+  {
+    "mot": "hamster",
+    "niveau": 1
+  },
+  {
+    "mot": "perroquet",
+    "niveau": 1
+  },
+  {
+    "mot": "dauphin",
+    "niveau": 1
+  },
+  {
+    "mot": "requin",
+    "niveau": 1
+  },
+  {
+    "mot": "baleine",
+    "niveau": 1
+  },
+  {
+    "mot": "crabe",
+    "niveau": 1
+  },
+  {
+    "mot": "homard",
+    "niveau": 1
+  },
+  {
+    "mot": "abeille",
+    "niveau": 1
+  },
+  {
+    "mot": "fourmi",
+    "niveau": 1
+  },
+  {
+    "mot": "coccinelle",
+    "niveau": 1
+  },
+  {
+    "mot": "libellule",
+    "niveau": 1
+  },
+  {
+    "mot": "chenille",
+    "niveau": 1
+  },
+  {
+    "mot": "coquillage",
+    "niveau": 1
+  },
+  {
+    "mot": "lampadaire",
+    "niveau": 1
+  },
+  {
+    "mot": "porte",
+    "niveau": 1
+  },
+  {
+    "mot": "fenêtre",
+    "niveau": 1
+  },
+  {
+    "mot": "miroir",
+    "niveau": 1
+  },
+  {
+    "mot": "balai",
+    "niveau": 1
+  },
+  {
+    "mot": "brosse à dents",
+    "niveau": 1
+  },
+  {
+    "mot": "peigne",
+    "niveau": 1
+  },
+  {
+    "mot": "savon",
+    "niveau": 1
+  },
+  {
+    "mot": "lampe de poche",
+    "niveau": 1
+  },
+  {
+    "mot": "casquette",
+    "niveau": 1
+  },
+  {
+    "mot": "gants",
+    "niveau": 1
+  },
+  {
+    "mot": "sac à dos",
+    "niveau": 1
+  },
+  {
+    "mot": "valise",
+    "niveau": 1
+  },
+  {
+    "mot": "stylo",
+    "niveau": 1
+  },
+  {
+    "mot": "crayon",
+    "niveau": 1
+  },
+  {
+    "mot": "gomme",
+    "niveau": 1
+  },
+  {
+    "mot": "dé",
+    "niveau": 1
+  },
+  {
+    "mot": "crampons",
+    "niveau": 1
+  },
+  {
+    "mot": "gourde",
+    "niveau": 1
+  },
+  {
+    "mot": "bûche de Noël",
+    "niveau": 1
+  },
+  {
+    "mot": "cèpe",
+    "niveau": 2
+  },
+  {
+    "mot": "pêche",
+    "niveau": 2
+  },
+  {
+    "mot": "pastèque",
+    "niveau": 2
+  },
+  {
+    "mot": "avocat",
+    "niveau": 2
+  },
+  {
+    "mot": "bouée",
+    "niveau": 2
+  },
+  {
+    "mot": "canne à pêche",
+    "niveau": 2
+  },
+  {
+    "mot": "tente",
+    "niveau": 2
+  },
+  {
+    "mot": "feu de camp",
+    "niveau": 2
+  },
+  {
+    "mot": "sac de couchage",
+    "niveau": 2
+  },
+  {
+    "mot": "skis",
+    "niveau": 2
+  },
+  {
+    "mot": "luge",
+    "niveau": 2
+  },
+  {
+    "mot": "igloo",
+    "niveau": 2
+  },
+  {
+    "mot": "patinoire",
+    "niveau": 2
+  },
+  {
+    "mot": "téléski",
+    "niveau": 2
+  },
+  {
+    "mot": "cabane dans un arbre",
+    "niveau": 2
+  },
+  {
+    "mot": "gare",
+    "niveau": 2
+  },
+  {
+    "mot": "quai",
+    "niveau": 2
+  },
+  {
+    "mot": "péage",
+    "niveau": 2
+  },
+  {
+    "mot": "feu rouge",
+    "niveau": 2
+  },
+  {
+    "mot": "passage piéton",
+    "niveau": 2
+  },
+  {
+    "mot": "cabine téléphonique",
+    "niveau": 2
+  },
+  {
+    "mot": "boîte aux lettres",
+    "niveau": 2
+  },
+  {
+    "mot": "pompe à essence",
+    "niveau": 2
+  },
+  {
+    "mot": "ascenseur",
+    "niveau": 2
+  },
+  {
+    "mot": "escalier roulant",
+    "niveau": 2
+  },
+  {
+    "mot": "musée",
+    "niveau": 2
+  },
+  {
+    "mot": "théâtre",
+    "niveau": 2
+  },
+  {
+    "mot": "cinéma",
+    "niveau": 2
+  },
+  {
+    "mot": "stade",
+    "niveau": 2
+  },
+  {
+    "mot": "piscine",
+    "niveau": 2
+  },
+  {
+    "mot": "armoire",
+    "niveau": 2
+  },
+  {
+    "mot": "forge",
+    "niveau": 2
+  },
+  {
+    "mot": "carrousel",
+    "niveau": 2
+  },
+  {
+    "mot": "trampoline",
+    "niveau": 2
+  },
+  {
+    "mot": "toboggan",
+    "niveau": 2
+  },
+  {
+    "mot": "balançoire",
+    "niveau": 2
+  },
+  {
+    "mot": "manège",
+    "niveau": 2
+  },
+  {
+    "mot": "sapin de Noël",
+    "niveau": 2
+  },
+  {
+    "mot": "cloche",
+    "niveau": 2
+  },
+  {
+    "mot": "lanterne",
+    "niveau": 2
+  },
+  {
+    "mot": "cadenas",
+    "niveau": 2
+  },
+  {
+    "mot": "coffre au trésor",
+    "niveau": 2
+  },
+  {
+    "mot": "console de jeu",
+    "niveau": 2
+  },
+  {
+    "mot": "casque audio",
+    "niveau": 2
+  },
+  {
+    "mot": "clavier",
+    "niveau": 2
+  },
+  {
+    "mot": "écran plat",
+    "niveau": 2
+  },
+  {
+    "mot": "disquette",
+    "niveau": 2
+  },
+  {
+    "mot": "cassette audio",
+    "niveau": 2
+  },
+  {
+    "mot": "vinyle",
+    "niveau": 2
+  },
+  {
+    "mot": "guitare",
+    "niveau": 2
+  },
+  {
+    "mot": "tambour",
+    "niveau": 2
+  },
+  {
+    "mot": "piano",
+    "niveau": 2
+  },
+  {
+    "mot": "trompette",
+    "niveau": 2
+  },
+  {
+    "mot": "harpe",
+    "niveau": 2
+  },
+  {
+    "mot": "accordéon",
+    "niveau": 2
+  },
+  {
+    "mot": "pixel",
+    "niveau": 2
+  },
+  {
+    "mot": "fantôme",
+    "niveau": 2
+  },
+  {
+    "mot": "dragon",
+    "niveau": 2
+  },
+  {
+    "mot": "pirate",
+    "niveau": 2
+  },
+  {
+    "mot": "robot",
+    "niveau": 2
+  },
+  {
+    "mot": "soucoupe volante",
+    "niveau": 2
+  },
+  {
+    "mot": "extraterrestre",
+    "niveau": 2
+  },
+  {
+    "mot": "licorne",
+    "niveau": 2
+  },
+  {
+    "mot": "zombie",
+    "niveau": 2
+  },
+  {
+    "mot": "ninja",
+    "niveau": 2
+  },
+  {
+    "mot": "boss de fin",
+    "niveau": 3
+  },
+  {
+    "mot": "niveau caché",
+    "niveau": 3
+  },
+  {
+    "mot": "tomber dans le piège",
+    "niveau": 3
+  },
+  {
+    "mot": "gagner au loto",
+    "niveau": 3
+  },
+  {
+    "mot": "mettre la charrue avant les bœufs",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir un cœur d'artichaut",
+    "niveau": 3
+  },
+  {
+    "mot": "être dans la lune",
+    "niveau": 3
+  },
+  {
+    "mot": "faire le pont",
+    "niveau": 3
+  },
+  {
+    "mot": "le temps passe vite",
+    "niveau": 3
+  },
+  {
+    "mot": "faire le poireau",
+    "niveau": 3
+  },
+  {
+    "mot": "jouer les trouble-fête",
+    "niveau": 3
+  },
+  {
+    "mot": "ça coûte les yeux de la tête",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir du pain sur la planche",
+    "niveau": 3
+  },
+  {
+    "mot": "chercher la petite bête",
+    "niveau": 3
+  },
+  {
+    "mot": "être sur les dents",
+    "niveau": 3
+  },
+  {
+    "mot": "voir trente-six chandelles",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir la mémoire courte",
+    "niveau": 3
+  },
+  {
+    "mot": "se prendre un vent",
+    "niveau": 3
+  },
+  {
+    "mot": "tourner autour du pot",
+    "niveau": 3
+  },
+  {
+    "mot": "prendre ses jambes à son cou",
+    "niveau": 3
+  },
+  {
+    "mot": "noyer le poisson",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir le bras long",
+    "niveau": 3
+  },
+  {
+    "mot": "casser les pieds",
+    "niveau": 3
+  },
+  {
+    "mot": "mettre la main à la pâte",
+    "niveau": 3
+  },
+  {
+    "mot": "rester sur sa faim",
+    "niveau": 3
+  },
+  {
+    "mot": "marcher à pas de loup",
+    "niveau": 3
+  },
+  {
+    "mot": "une fois n'est pas coutume",
+    "niveau": 3
+  },
+  {
+    "mot": "faire le tour du propriétaire",
+    "niveau": 3
+  },
+  {
+    "mot": "battre la campagne",
+    "niveau": 3
+  },
+  {
+    "mot": "le bout du tunnel",
+    "niveau": 3
+  },
+  {
+    "mot": "faire la sourde oreille",
+    "niveau": 3
+  },
+  {
+    "mot": "pleuvoir des cordes",
+    "niveau": 3
+  },
+  {
+    "mot": "tuer le temps",
+    "niveau": 3
+  },
+  {
+    "mot": "fou rire",
+    "niveau": 3
+  },
+  {
+    "mot": "avoir la tête dans le guidon",
+    "niveau": 3
+  }
+]
