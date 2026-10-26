@@ -502,11 +502,15 @@ export function creer(root, ctx) {
     const f = ev.target;
     if (f.hasAttribute('data-form-hyp')) {
       if (occupe) return;
-      return agir(ev.submitter || f.querySelector('button[type=submit]'), 'hypothese', { suspect: saisie.suspect, arme: saisie.arme });
+      // Valeurs lues dans le formulaire : la première option affichée compte même si l'on n'a rien changé.
+      const d = new FormData(f);
+      return agir(ev.submitter || f.querySelector('button[type=submit]'), 'hypothese', { suspect: d.get('suspect') || saisie.suspect, arme: d.get('arme') || saisie.arme });
     }
     if (f.hasAttribute('data-form-acc')) {
       if (occupe) return;
-      return agir(ev.submitter || f.querySelector('button[type=submit]'), 'accuser', { suspect: saisie.suspect, arme: saisie.arme, piece: saisie.piece });
+      const d = new FormData(f);
+      return agir(ev.submitter || f.querySelector('button[type=submit]'), 'accuser',
+        { suspect: d.get('suspect') || saisie.suspect, arme: d.get('arme') || saisie.arme, piece: d.get('piece') || saisie.piece });
     }
   }
 

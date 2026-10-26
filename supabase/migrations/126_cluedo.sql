@@ -227,7 +227,7 @@ begin
   elsif p_action = 'hypothese' then
     if ph <> 'hypothese' then raise exception 'Déplace-toi d''abord dans une pièce.'; end if;
     v_s := a->>'suspect'; v_a := a->>'arme';
-    if not (v_s = any(hg_plat__cl_ids('suspects'))) or not (v_a = any(hg_plat__cl_ids('armes'))) then raise exception 'Choisis un suspect et une arme.'; end if;
+    if v_s is null or v_a is null or not (v_s = any(hg_plat__cl_ids('suspects'))) or not (v_a = any(hg_plat__cl_ids('armes'))) then raise exception 'Choisis un suspect et une arme.'; end if;
     -- Le suspect et l'arme sont amenés dans la pièce.
     update hg_plat_parties set etat = jsonb_set(jsonb_set(etat, array['pions', v_s], to_jsonb(v_ici)), array['armes', v_a], to_jsonb(v_ici)),
       tour_fin = now() + make_interval(secs => t_tour) where id = p_id;
@@ -245,7 +245,7 @@ begin
   elsif p_action = 'accuser' then
     if ph not in ('deplacer', 'hypothese', 'apres') then raise exception 'Attends la fin de l''hypothèse en cours.'; end if;
     v_s := a->>'suspect'; v_a := a->>'arme'; v_pc := a->>'piece';
-    if not (v_s = any(hg_plat__cl_ids('suspects'))) or not (v_a = any(hg_plat__cl_ids('armes'))) or not (v_pc = any(hg_plat__cl_ids('pieces'))) then
+    if v_s is null or v_a is null or v_pc is null or not (v_s = any(hg_plat__cl_ids('suspects'))) or not (v_a = any(hg_plat__cl_ids('armes'))) or not (v_pc = any(hg_plat__cl_ids('pieces'))) then
       raise exception 'Choisis un suspect, une arme et une pièce.';
     end if;
     env := p.secret->'enveloppe';
