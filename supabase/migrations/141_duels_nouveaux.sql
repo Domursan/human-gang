@@ -48,7 +48,7 @@ update public.hg_settings set value = jsonb_set(value, '{paillettes}', coalesce(
 -- Pions retournés si c joue en case i (tableau vide = coup impossible).
 create or replace function public.hg_ot__retournes(g text, i int, c text)
 returns int[] language plpgsql immutable set search_path = public as $$
-declare o text := case c when '1' then '2' else '1' end; res int[] := '{}'; ligne int[]; dr int; dc int; r int; k int;
+declare o text := (case c when '1' then '2' else '1' end); res int[] := '{}'; ligne int[]; dr int; dc int; r int; k int;
   dirs int[] := array[-1,-1, -1,0, -1,1, 0,-1, 0,1, 1,-1, 1,0, 1,1]; d int;
 begin
   if substr(g, i + 1, 1) <> '.' then return res; end if;
@@ -85,12 +85,12 @@ begin
     x := substr(g, i + 1, 1);
     if x = c then s := s + w[i + 1]; elsif x <> '.' then s := s - w[i + 1]; end if;
   end loop;
-  return s + 3 * (cardinality(public.hg_ot__coups(g, c)) - cardinality(public.hg_ot__coups(g, case c when '1' then '2' else '1' end)));
+  return s + 3 * (cardinality(public.hg_ot__coups(g, c)) - cardinality(public.hg_ot__coups(g, (case c when '1' then '2' else '1' end))));
 end $$;
 
 create or replace function public.hg_ot__robot(g text, c text, lvl int)
 returns int language plpgsql volatile set search_path = public as $$
-declare cs int[] := public.hg_ot__coups(g, c); o text := case c when '1' then '2' else '1' end; m int; m2 int; best int; bv int := -1000000; v int; pire int; g2 text;
+declare cs int[] := public.hg_ot__coups(g, c); o text := (case c when '1' then '2' else '1' end); m int; m2 int; best int; bv int := -1000000; v int; pire int; g2 text;
 begin
   if cardinality(cs) = 0 then return null; end if;
   if lvl <= 1 then
@@ -215,7 +215,7 @@ end $$;
 -- Robot : 1 hasard, 2 meilleur matériel après la réponse adverse, 3 idem avec un coup de plus.
 create or replace function public.hg_dm__robot(g text, c text, lvl int)
 returns text language plpgsql volatile set search_path = public as $$
-declare cs text[] := public.hg_dm__coups(g, c); o text := case c when '1' then '2' else '1' end; m text; m2 text; m3 text; best text;
+declare cs text[] := public.hg_dm__coups(g, c); o text := (case c when '1' then '2' else '1' end); m text; m2 text; m3 text; best text;
   bv int := -1000000; v int; pire int; g2 text; g3 text; mieux int;
 begin
   if cardinality(cs) = 0 then return null; end if;
@@ -250,9 +250,9 @@ returns boolean language plpgsql immutable set search_path = public as $$
 declare r int := sq / 8; c int := sq % 8; dr int; dc int; rr int; cc int; x text; d int;
   cav int[] := array[-2,-1, -2,1, -1,-2, -1,2, 1,-2, 1,2, 2,-1, 2,1];
   dirs int[] := array[-1,0, 1,0, 0,-1, 0,1, -1,-1, -1,1, 1,-1, 1,1];
-  p text := case par when 'w' then 'P' else 'p' end; n text := case par when 'w' then 'N' else 'n' end;
-  k text := case par when 'w' then 'K' else 'k' end; ro text := case par when 'w' then 'R' else 'r' end;
-  fo text := case par when 'w' then 'B' else 'b' end; da text := case par when 'w' then 'Q' else 'q' end;
+  p text := (case par when 'w' then 'P' else 'p' end); n text := (case par when 'w' then 'N' else 'n' end);
+  k text := (case par when 'w' then 'K' else 'k' end); ro text := (case par when 'w' then 'R' else 'r' end);
+  fo text := (case par when 'w' then 'B' else 'b' end); da text := (case par when 'w' then 'Q' else 'q' end);
 begin
   -- pions : un pion blanc attaque vers le haut (il est donc en dessous de la case)
   rr := r + case par when 'w' then 1 else -1 end;
@@ -287,8 +287,8 @@ begin
   g := overlay(g placing '.' from de + 1 for 1);
   if upper(x) = 'P' and a = ep then g := overlay(g placing '.' from (de / 8) * 8 + a % 8 + 1 for 1); end if;
   if upper(x) = 'K' and abs(a - de) = 2 then
-    if a > de then g := overlay(overlay(g placing '.' from (de / 8) * 8 + 8 for 1) placing case x when 'K' then 'R' else 'r' end from a for 1);
-    else g := overlay(overlay(g placing '.' from (de / 8) * 8 + 1 for 1) placing case x when 'K' then 'R' else 'r' end from a + 2 for 1); end if;
+    if a > de then g := overlay(overlay(g placing '.' from (de / 8) * 8 + 8 for 1) placing (case x when 'K' then 'R' else 'r' end) from a for 1);
+    else g := overlay(overlay(g placing '.' from (de / 8) * 8 + 1 for 1) placing (case x when 'K' then 'R' else 'r' end) from a + 2 for 1); end if;
   end if;
   if upper(x) = 'P' and (a / 8 = 0 or a / 8 = 7) then
     x := case when x = 'P' then upper(coalesce(nullif(promo, ''), 'q')) else lower(coalesce(nullif(promo, ''), 'q')) end;
@@ -302,7 +302,7 @@ returns table (de int, a int, promo text) language plpgsql immutable set search_
 declare i int; x text; r int; c int; d int; dr int; dc int; rr int; cc int; y text; t int; av int; cand int[]; pr text;
   cav int[] := array[-2,-1, -2,1, -1,-2, -1,2, 1,-2, 1,2, 2,-1, 2,1];
   dirs int[] := array[-1,0, 1,0, 0,-1, 0,1, -1,-1, -1,1, 1,-1, 1,1];
-  o text := case s when 'w' then 'b' else 'w' end; roi int; g2 text; m record;
+  o text := (case s when 'w' then 'b' else 'w' end); roi int; g2 text; m record;
   pseudo int[] := '{}';
 begin
   for i in 0..63 loop
@@ -340,10 +340,10 @@ begin
       -- roques (le roi n'est pas en échec, ne traverse ni n'arrive sur une case attaquée)
       if upper(x) = 'K' and i = (case s when 'w' then 60 else 4 end) and not hg_ec__attaque(g, i, o) then
         if position(case s when 'w' then 'K' else 'k' end in roque) > 0 and substr(g, i + 2, 2) = '..'
-           and substr(g, i + 4, 1) = case s when 'w' then 'R' else 'r' end
+           and substr(g, i + 4, 1) = (case s when 'w' then 'R' else 'r' end)
            and not hg_ec__attaque(g, i + 1, o) and not hg_ec__attaque(g, i + 2, o) then cand := cand || (i + 2); end if;
         if position(case s when 'w' then 'Q' else 'q' end in roque) > 0 and substr(g, i - 2, 3) = '...'
-           and substr(g, i - 3, 1) = case s when 'w' then 'R' else 'r' end
+           and substr(g, i - 3, 1) = (case s when 'w' then 'R' else 'r' end)
            and not hg_ec__attaque(g, i - 1, o) and not hg_ec__attaque(g, i - 2, o) then cand := cand || (i - 2); end if;
       end if;
     end if;
@@ -401,7 +401,7 @@ end $$;
 -- Robot : 1 hasard (préfère les prises), 2 meilleur coup après la meilleure réponse (matériel), 3 un coup de plus pour les prises.
 create or replace function public.hg_ec__robot(g text, s text, roque text, ep int, lvl int)
 returns jsonb language plpgsql volatile set search_path = public as $$
-declare m record; m2 record; o text := case s when 'w' then 'b' else 'w' end; best record; bv int := -10000000; v int; pire int; g2 text; st jsonb; n int;
+declare m record; m2 record; o text := (case s when 'w' then 'b' else 'w' end); best record; bv int := -10000000; v int; pire int; g2 text; st jsonb; n int;
 begin
   if lvl <= 1 then
     select * into best from hg_ec__coups(g, s, roque, ep) c order by (substr(g, c.a + 1, 1) <> '.') desc, random() limit 1;
@@ -477,7 +477,7 @@ begin
   end if;
 
   if p.tour is distinct from p_user then raise exception 'Ce n''est pas ton tour.'; end if;
-  c := hg_duel__pion2(p, p_user); o := case c when '1' then '2' else '1' end;
+  c := hg_duel__pion2(p, p_user); o := (case c when '1' then '2' else '1' end);
 
   if p.jeu = 'othello' then
     if p_coup is null or p_coup not between 0 and 63 or cardinality(hg_ot__retournes(p.grille, p_coup, c)) = 0 then
@@ -503,7 +503,7 @@ begin
       else ' avance.' end;
   else -- echecs
     ec := coalesce(p.etat->'echecs', '{}'::jsonb);
-    s := case c when '1' then 'w' else 'b' end;
+    s := (case c when '1' then 'w' else 'b' end);
     if p_coup is null then raise exception 'Coup invalide.'; end if;
     de := p_coup / 64; a := p_coup % 64; pr := case when p_action in ('q', 'r', 'b', 'n') then p_action else '' end;
     if not exists (select 1 from hg_ec__coups(p.grille, s, coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1)) m
@@ -542,11 +542,11 @@ begin
     end if;
     perform hg_duel__donner_tour(p_id, v_autre);
   else
-    s := case o when '1' then 'w' else 'b' end;
+    s := (case o when '1' then 'w' else 'b' end);
     ec := p.etat->'echecs';
     select count(*) into coups_adv from hg_ec__coups(g, s, coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1));
     if coups_adv = 0 then
-      if hg_ec__attaque(g, position(case s when 'w' then 'K' else 'k' end in g) - 1, case s when 'w' then 'b' else 'w' end) then
+      if hg_ec__attaque(g, position(case s when 'w' then 'K' else 'k' end in g) - 1, (case s when 'w' then 'b' else 'w' end)) then
         perform hg_duel__log(p_id, p_user, 'info', 'Échec et mat !');
         perform hg_duel__fin_manche(p_id, p_user);
       else
@@ -559,7 +559,7 @@ begin
       perform hg_duel__log(p_id, null, 'info', case when hg_ec__insuffisant(g) then 'Matériel insuffisant pour mater : partie nulle.' else 'Règle des 50 coups : partie nulle.' end);
       perform hg_duel__fin_manche(p_id, null); return;
     end if;
-    if hg_ec__attaque(g, position(case s when 'w' then 'K' else 'k' end in g) - 1, case s when 'w' then 'b' else 'w' end) then
+    if hg_ec__attaque(g, position(case s when 'w' then 'K' else 'k' end in g) - 1, (case s when 'w' then 'b' else 'w' end)) then
       perform hg_duel__log(p_id, v_autre, 'info', 'Échec !');
     end if;
     perform hg_duel__donner_tour(p_id, v_autre);
@@ -625,7 +625,7 @@ begin
     perform hg_duel__appliquer2(p_id, p_user, split_part(ch, ',', 1)::int, 'chemin:' || ch, p_auto);
   elsif p.jeu = 'echecs' then
     ec := coalesce(p.etat->'echecs', '{}'::jsonb);
-    m := hg_ec__robot(p.grille, case c when '1' then 'w' else 'b' end, coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1), lvl);
+    m := hg_ec__robot(p.grille, (case c when '1' then 'w' else 'b' end), coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1), lvl);
     if m is null then return; end if;
     perform hg_duel__appliquer2(p_id, p_user, (m->>'de')::int * 64 + (m->>'a')::int, coalesce(nullif(m->>'promo', ''), 'pose'), p_auto);
   elsif p.jeu = 'pfc' then
@@ -646,7 +646,7 @@ begin
   if p.jeu = 'echecs' then
     ec := coalesce(p.etat->'echecs', '{}'::jsonb);
     return coalesce((select jsonb_agg(jsonb_build_object('de', m.de, 'a', m.a, 'promo', m.promo))
-      from hg_ec__coups(p.grille, case c when '1' then 'w' else 'b' end, coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1)) m), '[]'::jsonb);
+      from hg_ec__coups(p.grille, (case c when '1' then 'w' else 'b' end), coalesce(ec->>'roque', ''), coalesce((ec->>'ep')::int, -1)) m), '[]'::jsonb);
   end if;
   return '[]'::jsonb;
 end $$;
