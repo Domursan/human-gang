@@ -8,7 +8,7 @@
  * Le chrono ne sert qu'au classement du jour. Moteur : nj-grilles.js (hg_nj_grille_etat / hg_nj_grille_essai).
  * Exporte : mount(panel, ctx), resume(ctx).
  */
-import { monterGrille, resumerGrille, formatDuree } from './nj-grilles.js';
+import { monterGrille, resumerGrille, formatDuree, voisinFleche } from './nj-grilles.js';
 
 const JEU = 'anagramme';
 
@@ -165,6 +165,13 @@ function lier(racine, st, ui, env) {
   racine.addEventListener('focusin', (ev) => {
     const c = ev.target.closest('.ang-mot');
     if (c && !statutDe(env.etat(), Number(c.dataset.i))) choisir(Number(c.dataset.i));
+  });
+  // Flèches : d'une tuile à l'autre dans le groupe de tuiles du mot (Entrée et Espace posent la tuile, par le bouton).
+  racine.addEventListener('keydown', (ev) => {
+    const t = ev.target;
+    if (!ev.key.startsWith('Arrow') || !t.classList?.contains('ang-tuile')) return;
+    ev.preventDefault();
+    voisinFleche(t, ev.key, [...t.parentElement.querySelectorAll('.ang-tuile')])?.focus();
   });
   racine.addEventListener('click', (ev) => {
     const b = ev.target.closest('button[data-act]');

@@ -131,7 +131,7 @@ function corps(st, ui, esc) {
     <div class="mc-defs">${colonne('h', 'Horizontalement')}${colonne('v', 'Verticalement')}</div>
     ${fini ? '' : `<div class="ng-actions"><button type="button" class="btn btn-ghost" data-act="verifier">Vérifier</button></div>
       <p class="mc-progres muted small"></p>
-      <p class="ng-aide muted small">Clique une case, puis tape les lettres. Tab passe au mot suivant, les flèches déplacent la case.</p>`}
+      <p class="ng-aide muted small">Clique une case, puis tape les lettres. Tab ou Entrée passe au mot suivant, Espace change de sens, les flèches déplacent la case.</p>`}
   </div>`;
 }
 
@@ -266,10 +266,20 @@ function lier(racine, st, ui, env) {
     rafraichis();
   };
 
+  /** Espace : bascule le sens (horizontal, vertical) quand la case appartient aussi à l'autre mot. */
+  const changeSens = () => {
+    if (!ui.pos) return;
+    const e = mod.par.get(`${ui.pos.r},${ui.pos.c}`);
+    const autre = ui.dir === 'h' ? 'v' : 'h';
+    if (e && e[autre] >= 0) { ui.dir = autre; rafraichis(); }
+  };
+
   if (saisie) {
     saisie.addEventListener('keydown', (ev) => {
       const k = ev.key;
       if (k === 'Tab') { ev.preventDefault(); motSuivant(ev.shiftKey ? -1 : 1); return; }
+      if (k === 'Enter') { ev.preventDefault(); motSuivant(1); return; }
+      if (k === ' ') { ev.preventDefault(); changeSens(); return; }
       if (k.startsWith('Arrow')) { ev.preventDefault(); fleche(k); return; }
       if (k === 'Backspace') { ev.preventDefault(); efface(); return; }
       if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
@@ -334,7 +344,7 @@ const CFG = {
   titre: 'Mots croisés',
   regles: [
     'Remplis la grille à partir des définitions : une case par lettre, les cases noires restent vides.',
-    'Clique une case, puis tape les lettres. Tab passe au mot suivant, les flèches déplacent la case.',
+    'Clique une case, puis tape les lettres. Tab ou Entrée passe au mot suivant, Espace change de sens, les flèches déplacent la case.',
     'Clique une définition pour aller à son mot.',
     '« Vérifier » signale les cases fausses en rouge et compte comme une erreur.',
     'La grille se vérifie toute seule quand elle est pleine. Ta saisie est gardée sur cet appareil.',

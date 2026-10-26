@@ -252,6 +252,12 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   });
   canvas.addEventListener('pointercancel', () => { depart = null; entree.tenu = false; });
   canvas.addEventListener('keydown', (e) => {
+    // Entrée, ou Espace dans un jeu sans action : lance la partie (ou une nouvelle après la fin). La page ne défile pas.
+    if (e.key === 'Enter' || (e.key === ' ' && !jeu.action)) {
+      e.preventDefault();
+      if (etat !== 'pause' && etat !== 'jeu') demarre();
+      return;
+    }
     // Espace (et flèche haut sans jeu.directions) : action du jeu (saut, tir, rotation…).
     if (jeu.action && (e.key === ' ' || (e.key === 'ArrowUp' && !jeu.directions))) {
       e.preventDefault();

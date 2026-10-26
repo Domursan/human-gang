@@ -6,7 +6,7 @@
  * sont montrés. « Mélanger » réordonne les tuiles en local. Moteur : nj-grilles.js (hg_nj_grille_etat / hg_nj_grille_essai).
  * Exporte : mount(panel, ctx), resume(ctx).
  */
-import { monterGrille, resumerGrille } from './nj-grilles.js';
+import { monterGrille, resumerGrille, voisinFleche } from './nj-grilles.js';
 
 const JEU = 'connexions';
 /** Erreurs permises avant la défaite. */
@@ -21,7 +21,9 @@ const NIVEAU = {
 
 /** Bandeau d'un groupe (titre et mots). */
 function bandeau(g, esc, etat = '') {
-  return `<li class="ng-band ${NIVEAU[g.niveau]?.cls || 'ng-n1'}${etat ? ` ${etat}` : ''}"><p class="ng-band-t">${esc(g.titre)}</p>
+  // Le niveau est écrit (« Niveau 2 ») : la couleur du bandeau ne suffit pas à le dire aux daltoniens.
+  const niveau = NIVEAU[g.niveau] ? `<p class="ng-band-n">Niveau ${g.niveau}</p>` : '';
+  return `<li class="ng-band ${NIVEAU[g.niveau]?.cls || 'ng-n1'}${etat ? ` ${etat}` : ''}">${niveau}<p class="ng-band-t">${esc(g.titre)}</p>
     <p class="ng-band-m">${esc((g.mots || []).join(' · '))}</p></li>`;
 }
 
@@ -94,6 +96,13 @@ function lier(racine, st, ui, env) {
   });
   racine.querySelector('[data-act="valider"]').addEventListener('click', () => {
     if (ui.sel.length === ERREURS_MAX) env.envoyer({ mots: [...ui.sel] }, '[data-act="melanger"]');
+  });
+  // Flèches : d'une tuile à l'autre dans la grille (Entrée et Espace sélectionnent, par le bouton).
+  const tuiles = racine.querySelector('.ng-tiles');
+  tuiles?.addEventListener('keydown', (ev) => {
+    if (!ev.key.startsWith('Arrow')) return;
+    ev.preventDefault();
+    voisinFleche(ev.target, ev.key, [...tuiles.querySelectorAll('.ng-tile')])?.focus();
   });
 }
 

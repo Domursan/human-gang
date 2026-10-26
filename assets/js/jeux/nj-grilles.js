@@ -37,6 +37,33 @@ export async function lireEtat(ctx, jeu) {
 }
 
 /**
+ * Élément voisin dans la direction d'une flèche, parmi des boutons en grille (tuiles, touches du clavier à l'écran) :
+ * le plus proche dans cette direction, l'écart latéral comptant double. Les éléments désactivés sont ignorés.
+ * @param {HTMLElement} el Élément actif.
+ * @param {string} touche « ArrowLeft », « ArrowRight », « ArrowUp » ou « ArrowDown ».
+ * @param {HTMLElement[]} candidats Éléments parmi lesquels chercher (el est ignoré).
+ * @returns {HTMLElement|null} Le voisin, ou null s'il n'y en a pas dans cette direction.
+ */
+export function voisinFleche(el, touche, candidats) {
+  const sens = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[touche];
+  if (!sens || !el) return null;
+  const centre = (x) => { const r = x.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; };
+  const o = centre(el);
+  let meilleur = null, score = Infinity;
+  for (const x of candidats) {
+    if (x === el || x.disabled) continue;
+    const c = centre(x);
+    const dx = c.x - o.x, dy = c.y - o.y;
+    const devant = dx * sens[0] + dy * sens[1];
+    if (devant <= 1) continue;
+    const cote = Math.abs(dx * sens[1]) + Math.abs(dy * sens[0]);
+    const s = devant + 2 * cote;
+    if (s < score) { score = s; meilleur = x; }
+  }
+  return meilleur;
+}
+
+/**
  * Classement du jour (temps des parties gagnées), affiché en fin de partie.
  * @param {Array} rows Lignes { user_id, pseudo, secondes, score }.
  * @param {string} meId Identifiant du membre connecté.

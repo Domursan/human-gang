@@ -182,7 +182,7 @@ export async function mount(panel, ctx) {
           aria-label="${esc(`Jeu : ${JEU.titre}. ${JEU.aide}`)}" aria-describedby="arc-aide"></canvas>
         <div class="arc-hud"><span>SCORE <span id="arc-score">0</span></span><span id="arc-vies" hidden><span class="arc-coeurs" aria-hidden="true"></span><span class="visually-hidden" id="arc-vies-txt"></span></span></div>
       </div>
-      <p id="arc-aide" class="small muted">${esc(JEU.aide)}</p>
+      <p id="arc-aide" class="small muted">${esc(JEU.aide)} Entrée lance la partie, Échap la met en pause.</p>
       <p id="arc-msg" class="arc-msg" role="status"></p>
       <div class="arc-boutons">
         <button id="arc-pause" class="btn btn-ghost" type="button" disabled>Pause</button>
@@ -261,6 +261,12 @@ export async function mount(panel, ctx) {
       const enPause = borne.pause();
       pause.textContent = enPause ? 'Reprendre' : 'Pause';
       msg.textContent = enPause ? 'Pause. Reprends quand tu veux.' : '';
+    });
+    // Échap sur la borne : pause ou reprise, comme le bouton (sans effet hors partie).
+    $z('#arc-canvas').addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || pause.disabled) return;
+      e.preventDefault();
+      pause.click();
     });
   }
 

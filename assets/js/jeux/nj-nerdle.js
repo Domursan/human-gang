@@ -7,7 +7,7 @@
  * qu'au classement du jour. Indice à la demande (migration 149) : révèle une case, 3 par jour, −1 point chacun. Moteur : nj-grilles.js (hg_nj_grille_etat / hg_nj_grille_essai).
  * Exporte : mount(panel, ctx), resume(ctx).
  */
-import { monterGrille, resumerGrille } from './nj-grilles.js';
+import { monterGrille, resumerGrille, voisinFleche } from './nj-grilles.js';
 
 const JEU = 'nerdle';
 /** Longueur du calcul et nombre d'essais. */
@@ -85,7 +85,9 @@ function corps(st, ui, esc) {
   const touches = LIGNES.map((ligne) => `<div class="ng-touches">${ligne.map((k) => {
     const cls = k === 'Effacer' ? 'ng-key-large' : k === 'Entrer' ? 'ng-key-full' : (etatTouche[k] ? `is-${etatTouche[k]}` : '');
     const attr = k === 'Effacer' ? 'data-act="effacer"' : k === 'Entrer' ? 'data-act="entrer"' : `data-touche="${esc(k)}"`;
-    return `<button type="button" class="ng-key ${cls}" ${attr}${fini ? ' disabled' : ''}>${esc(k)}</button>`;
+    // L'état (couleur + symbole) est aussi dit au lecteur d'écran : « A, présent ailleurs ».
+    const nom = etatTouche[k] && LIBELLE[etatTouche[k]] ? ` aria-label="${esc(k)}, ${LIBELLE[etatTouche[k]]}"` : '';
+    return `<button type="button" class="ng-key ${cls}" ${attr}${nom}${fini ? ' disabled' : ''}>${esc(k)}</button>`;
   }).join('')}</div>`).join('');
   const listeIndices = indices.length
     ? `<span class="ng-indices">${indices.slice().sort((a, b) => a.pos - b.pos).map((x) => `case ${x.pos + 1} : <strong>${esc(aff(x.ch))}</strong>`).join(' · ')}</span>` : '';
@@ -107,6 +109,13 @@ function lier(racine, st, ui, env) {
   racine.querySelector('[data-act="effacer"]').addEventListener('click', () => efface(ui, env));
   racine.querySelector('[data-act="entrer"]').addEventListener('click', () => entrer(ui, env));
   racine.querySelector('[data-act="indice"]')?.addEventListener('click', () => env.envoyer({ indice: true }, '[data-act="indice"]'));
+  // Flèches : d'une touche à l'autre sur le clavier à l'écran (Espace tape la touche, Entrée envoie le calcul).
+  const clavier = racine.querySelector('.ng-clavier');
+  clavier?.addEventListener('keydown', (ev) => {
+    if (!ev.key.startsWith('Arrow')) return;
+    ev.preventDefault();
+    voisinFleche(ev.target, ev.key, [...clavier.querySelectorAll('.ng-key')])?.focus();
+  });
 }
 
 /**
