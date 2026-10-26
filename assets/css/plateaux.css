@@ -1,0 +1,248 @@
+/* ===== Humane Gang — Jeux de plateau : décor et écrans communs (plateaux.html) =====
+   Feuilles par jeu : assets/css/plateaux/<jeu>.css (chargées après celle-ci).
+   Décor selon <body class="plat-<jeu>"> : cluedo bordeaux et or, shadow violet nuit, destins bleu ciel et vert,
+   monopoly vert sapin, risk brun et ocre. Une colonne sous 760 px. Animations coupées par
+   <body class="plat-calme"> (préférence du membre) et prefers-reduced-motion. */
+
+:root {
+  --plat-or: #C9A24A;
+  --plat-or-clair: #E8CC85;
+  --plat-brume: rgba(255, 255, 255, 0.04);
+  --plat-ombre: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --plat-tour: #E2C77E;
+  --plat-urgent: #E0909A;
+  --plat-gris-invite: #9A968F;
+}
+
+/* ---------- Décor par jeu ---------- */
+body.plat-page {
+  background-color: var(--bg);
+  background-repeat: no-repeat;
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, var(--plat-teinte, #1a1418) 0, var(--bg) 70%);
+}
+body.plat-cluedo { --plat-teinte: #3A1219; --plat-or: #C9A24A; }
+body.plat-shadow { --plat-teinte: #1E1530; --plat-or: #9A88C4; }
+body.plat-destins { --plat-teinte: #16324A; --plat-or: #7FB8D8; }
+body.plat-monopoly { --plat-teinte: #0F2E22; --plat-or: #E2C77E; }
+body.plat-risk { --plat-teinte: #3B2A18; --plat-or: #D8A75E; }
+
+.plat-app { padding-bottom: 48px; }
+.plat-app .card { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.plat-chargement, .plat-rej-statut { padding: 48px 0; color: var(--muted); text-align: center; }
+.plat-erreur { margin: 32px auto; max-width: 560px; display: flex; flex-direction: column; gap: 12px; }
+.plat-fil { font-size: 13px; color: var(--muted); margin: 16px 0 8px; }
+.plat-fil a { color: inherit; }
+.plat-titre { font-size: clamp(26px, 4.6vw, 40px); line-height: 1.1; margin: 8px 0 12px; }
+.plat-sous-titre { color: var(--muted); margin: 0 0 20px; }
+.plat-centre { text-align: center; }
+.plat-carte { margin-bottom: 16px; }
+.plat-carte h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.plat-boutons { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.plat-boutons .btn, .plat-app .btn { min-height: 44px; }
+.plat-aide { color: var(--muted); font-size: 14px; margin: 0; }
+.plat-code { font-family: 'Courier New', monospace; letter-spacing: 2px; }
+.plat-code-grand { font-family: 'Courier New', monospace; font-size: clamp(26px, 5vw, 36px); letter-spacing: 4px; margin: 6px 0 14px; color: var(--plat-or-clair); }
+.plat-etiquette-haut { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.plat-erreur-ligne { color: var(--rose); margin: 8px 0 0; }
+.plat-vh, .plat-app .plat-vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.num { text-align: right; }
+.plat-or { color: var(--plat-or-clair); }
+
+/* Pastilles et étiquettes : toujours du texte, la couleur ne porte jamais seule le sens */
+.plat-etiquette { display: inline-flex; align-items: center; padding: 1px 8px; border: 1px solid var(--border-strong); border-radius: 999px;
+  font-size: 11px; color: var(--muted); vertical-align: middle; white-space: nowrap; }
+.plat-etiquette.is-tour { border-color: var(--plat-tour); color: var(--plat-tour); font-weight: 700; }
+.plat-invite { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 999px;
+  font-size: 11px; color: var(--muted); vertical-align: middle; font-weight: 400; }
+.plat-pseudo { font-weight: 700; }
+
+/* ---------- Formulaires ---------- */
+.plat-champ { display: flex; flex-direction: column; gap: 6px; margin: 14px 0; }
+.plat-champ label, .plat-code-form label { font-weight: 700; font-size: 14px; }
+.plat-champ-entete { display: flex; justify-content: space-between; align-items: baseline; }
+.plat-input { font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); padding: 10px 14px; min-height: 44px; width: 100%; }
+.plat-input:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.plat-echelle { display: flex; justify-content: space-between; }
+.plat-groupe { border: 0; margin: 14px 0; padding: 0; min-width: 0; }
+.plat-groupe legend { font-weight: 700; font-size: 14px; margin-bottom: 8px; padding: 0; }
+.plat-seg { display: flex; flex-wrap: wrap; gap: 8px; }
+.plat-seg-choix { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: var(--surface-2); cursor: pointer; font-size: 14px; }
+.plat-seg-choix:has(input:checked) { border-color: var(--plat-or); background: color-mix(in srgb, var(--plat-or) 18%, var(--surface-2)); font-weight: 700; }
+.plat-seg-choix:has(input:focus-visible) { outline: 2px solid var(--sand); outline-offset: 2px; }
+.plat-switch { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 44px; margin: 14px 0; cursor: pointer; }
+.plat-switch-texte { display: flex; flex-direction: column; gap: 2px; }
+.plat-piste { flex: none; width: 46px; height: 26px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border-strong); position: relative; }
+.plat-piste::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--muted); transition: transform .15s ease; }
+.plat-switch input:checked + .plat-piste { background: var(--plat-or); border-color: var(--plat-or); }
+.plat-switch input:checked + .plat-piste::after { transform: translateX(20px); background: #121212; }
+.plat-switch input:focus-visible + .plat-piste { outline: 2px solid var(--sand); outline-offset: 2px; }
+
+/* Création */
+.plat-creer-grille { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+.plat-creer-colonne { min-width: 0; }
+.plat-resume { position: sticky; top: 16px; }
+.plat-resume-liste { margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.plat-resume-liste div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.plat-resume-liste dt { color: var(--muted); }
+.plat-resume-liste dd { margin: 0; font-weight: 700; text-align: right; }
+.plat-creer-bouton { width: 100%; margin-top: 8px; }
+.plat-champ-large { width: 100%; }
+
+/* ---------- Accueil ---------- */
+.plat-accueil-tete { display: flex; align-items: center; gap: 20px; margin: 8px 0 18px; }
+.plat-accueil-image { width: 120px; height: 120px; object-fit: contain; flex: none; }
+.plat-accroche { font-size: 17px; margin: 0 0 6px; }
+.plat-accueil-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.plat-accueil-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.plat-accueil-grille .plat-regles { grid-column: 1 / -1; }
+.plat-code-form { display: flex; flex-direction: column; gap: 8px; }
+.plat-code-form .plat-boutons { flex-wrap: nowrap; }
+.plat-code-form .plat-input { flex: 1 1 auto; min-width: 0; }
+.plat-liste-parties { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.plat-partie { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.plat-partie.is-tour { border-color: var(--plat-tour); }
+.plat-partie a { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 44px; color: var(--text); text-decoration: none; flex: 1 1 auto; min-width: 0; }
+.plat-partie-nom { font-weight: 700; }
+.plat-regles-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.plat-regles-tete h2 { margin: 0; }
+.plat-regles-liste { margin: 14px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Rejoindre */
+.plat-rej-carte { max-width: 640px; margin: 24px auto; }
+.plat-rej-surtitre { font-size: 13px; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+.plat-rej-entete { margin-bottom: 14px; }
+.plat-rej-nom { font-size: clamp(24px, 4.4vw, 34px); margin: 0 0 6px; }
+.plat-rej-places { margin: 12px 0; }
+.plat-rej-places-ligne { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.plat-rej-barre { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.plat-rej-barre span { display: block; height: 100%; background: var(--plat-or); width: 0; }
+.plat-rej-chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 16px; }
+.plat-rej-chips li { padding: 4px 12px; border-radius: 999px; border: 1px solid var(--border-strong); font-size: 13px; }
+.plat-rej-form { display: flex; flex-direction: column; gap: 10px; }
+.plat-rej-bouton { width: 100%; background: var(--accent); color: var(--accent-text); min-height: 48px; }
+.plat-rej-erreur { color: var(--rose); }
+.plat-rej-lien { display: inline-flex; min-height: 44px; align-items: center; color: var(--sand); }
+.plat-rej-retour { margin-top: 12px; }
+
+/* Statistiques */
+.plat-st-grille { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 8px 0 18px; }
+.plat-st-tuile { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+.plat-st-chiffre { font-family: var(--font-display); font-size: 26px; }
+.plat-st-nom { font-size: 13px; color: var(--muted); }
+.plat-st-tuile.vert .plat-st-chiffre { color: var(--sage-text); }
+.plat-st-tuile.or .plat-st-chiffre { color: var(--plat-or-clair); }
+.plat-st-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.plat-st-aide, .plat-st-sous { color: var(--muted); font-size: 14px; margin: 0 0 10px; }
+.plat-st-liste-badges { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.plat-st-badge { display: flex; gap: 12px; align-items: flex-start; }
+.plat-st-medaille { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--border-strong); color: var(--muted); }
+.plat-st-badge.is-obtenu .plat-st-medaille { border-color: var(--plat-or); color: var(--plat-or-clair); }
+.plat-st-statut { display: block; font-size: 13px; color: var(--muted); }
+.plat-st-table-cadre { overflow-x: auto; }
+.plat-st-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.plat-st-table th, .plat-st-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+.plat-st-table .num { text-align: right; }
+.plat-st-premier { color: var(--plat-or-clair); font-weight: 700; }
+
+/* ---------- Salle d'attente ---------- */
+.plat-salle-corps { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+.plat-salle-principal { min-width: 0; }
+.plat-salle-chat { position: sticky; top: 16px; }
+.plat-salle-tiroir { display: none; }
+.plat-entete-liste { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.plat-entete-liste h2 { margin: 0; }
+.plat-progres { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin: 12px 0 16px; }
+.plat-progres span { display: block; height: 100%; background: var(--plat-or); }
+.plat-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.plat-joueur { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); min-height: 56px; }
+.plat-joueur.is-moi { border-color: var(--border-strong); background: var(--surface-2); }
+.plat-joueur-infos { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.plat-joueur.plat-place-libre { border-style: dashed; color: var(--muted); }
+.plat-place-vide { width: 40px; height: 40px; border-radius: 50%; border: 1px dashed var(--border-strong); flex: none; }
+.plat-icone { flex: none; min-width: 44px; min-height: 44px; border-radius: 999px; border: 1px solid var(--border-strong); background: transparent; color: var(--text); font: inherit; font-size: 18px; cursor: pointer; }
+.plat-icone:focus-visible, .plat-lien-action:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.plat-actions { position: sticky; bottom: 0; z-index: 5; margin-top: 16px; }
+.plat-actions .plat-boutons { margin: 10px 0; }
+.plat-quitter { margin: 8px 0 0; }
+.plat-lien-action { font: inherit; background: none; border: 0; color: var(--rose); text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 4px; }
+.plat-adieu { margin: 24px auto; max-width: 560px; }
+
+/* ---------- Chat ---------- */
+.plat-chat { display: flex; flex-direction: column; gap: 8px; }
+.plat-chat-titre { font-size: 16px; margin: 0; }
+.plat-chat-fil { min-height: 180px; max-height: 42vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.plat-chat-msg { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.plat-chat-msg.is-moi { color: var(--text); }
+.plat-chat-auteur { margin-right: 4px; }
+.plat-chat-vide { margin: auto; text-align: center; }
+.plat-chat-form { display: flex; gap: 8px; }
+.plat-chat-champ { flex: 1 1 auto; min-width: 0; font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 10px 12px; min-height: 44px; }
+.plat-chat-envoyer { min-height: 44px; }
+.plat-chat-lecture { margin: 0; }
+.plat-fin-chat { margin-top: 16px; }
+
+/* Tiroir (téléphone) */
+.plat-tiroir-zone { position: relative; }
+.plat-tiroir-bouton { min-height: 44px; display: inline-flex; gap: 8px; align-items: center; }
+.plat-pastille { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--plat-or); color: #121212; font-size: 12px; font-weight: 700; }
+.plat-tiroir { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 70vh; overflow-y: auto; background: var(--surface); border-top: 1px solid var(--border-strong); border-radius: var(--radius) var(--radius) 0 0; padding: 16px; box-shadow: var(--plat-ombre); }
+.plat-tiroir-tete { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.plat-tiroir-fermer { min-height: 44px; }
+
+/* ---------- Bandeau de table ---------- */
+.plat-bandeau { background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+.plat-bandeau-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.plat-bandeau-titres { min-width: 0; }
+.plat-bandeau-jeu { margin: 0; }
+.plat-bandeau-titre { font-size: clamp(20px, 3.6vw, 28px); margin: 2px 0; }
+.plat-bandeau-sous { margin: 0; }
+.plat-bandeau-joueurs { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.plat-bandeau-joueur { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid var(--border); min-height: 36px; }
+.plat-bandeau-joueur.is-tour { border-color: var(--plat-tour); background: color-mix(in srgb, var(--plat-tour) 12%, transparent); }
+.plat-bandeau-joueur.is-elimine { opacity: .6; }
+.plat-bandeau-nom { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.plat-chrono { font-family: 'Courier New', monospace; font-size: 26px; font-weight: 700; min-width: 4.5ch; text-align: right; color: var(--plat-or-clair); }
+.plat-chrono.is-urgent { color: var(--plat-urgent); }
+
+/* ---------- Journal ---------- */
+.plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.plat-journal-ligne { padding: 6px 10px; border-left: 3px solid var(--border-strong); background: var(--plat-brume); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.plat-journal-ligne.is-prive { border-left-color: var(--plat-or); border-left-style: dashed; }
+.plat-journal-tag { display: inline-block; font-size: 11px; color: var(--plat-or-clair); text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
+
+/* ---------- Fin de partie ---------- */
+.plat-fin-sous { color: var(--muted); margin: 0 0 12px; }
+.plat-gagnants { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0; }
+.plat-gagnant { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 999px; border: 1px solid var(--plat-or); background: color-mix(in srgb, var(--plat-or) 10%, transparent); }
+.plat-fin-grille { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.plat-fin-cote { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.plat-classement { width: 100%; border-collapse: collapse; font-size: 14px; }
+.plat-classement th, .plat-classement td { padding: 8px 6px; border-bottom: 1px solid var(--border); text-align: left; }
+.plat-recompense h2 { margin: 0 0 6px; }
+.plat-recompense p { margin: 0 0 6px; }
+.plat-recap { min-width: 0; }
+.plat-fin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.plat-fin-actions .btn { min-height: 44px; }
+
+/* ---------- Affichage étroit ---------- */
+@media (max-width: 760px) {
+  .plat-creer-grille, .plat-accueil-grille, .plat-salle-corps, .plat-fin-grille, .plat-st-duo { grid-template-columns: 1fr; }
+  .plat-resume { position: static; }
+  .plat-accueil-grille .plat-regles { grid-column: auto; }
+  .plat-st-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plat-salle-chat { display: none; }
+  .plat-salle-tiroir { display: block; }
+  .plat-accueil-tete { flex-direction: column; align-items: flex-start; }
+  .plat-accueil-image { width: 96px; height: 96px; }
+  .plat-actions { position: static; }
+  .plat-chrono { font-size: 22px; }
+}
+
+/* ---------- Animations coupées ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .plat-app *, .plat-app *::before, .plat-app *::after { animation: none !important; transition: none !important; }
+}
+body.plat-calme .plat-app *, body.plat-calme .plat-app *::before, body.plat-calme .plat-app *::after { animation: none !important; transition: none !important; }

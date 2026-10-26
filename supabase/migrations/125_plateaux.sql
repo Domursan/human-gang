@@ -342,12 +342,14 @@ end $$;
 -- Échéance dépassée : le jeu joue pour le joueur attendu (3 fois de suite → absent, il joue alors vite).
 create or replace function public.hg_plat__echeances(p_id uuid)
 returns boolean language plpgsql security definer set search_path = public as $$
-declare p hg_plat_parties; n int := 0; v_ok boolean;
+declare p hg_plat_parties; n int := 0; v_ok boolean; v_dernier uuid;
 begin
   loop
     select * into p from hg_plat_parties where id = p_id for update;
     exit when p.statut <> 'en_cours' or p.tour_fin is null or now() < p.tour_fin or n >= 30;
-    if p.tour is not null then
+    -- Un tour manqué compte une seule fois, même si le jeu joue plusieurs étapes pour ce joueur.
+    if p.tour is not null and p.tour is distinct from v_dernier then
+      v_dernier := p.tour;
       update hg_plat_joueurs set manques = manques + 1, absent = absent or manques + 1 >= 3 where partie = p_id and user_id = p.tour;
     end if;
     execute format('select public.hg_plat__%s_auto($1)', p.jeu) into v_ok using p_id;
@@ -745,7 +747,8 @@ begin
 end $$;
 
 -- Modifie un contenu (ou le rétablit si p_valeur est null). Les listes gardent leurs identifiants et leur nombre d'éléments ;
--- seuls les champs texte (nom, texte, description, couleur…) changent ; les nombres d'origine (prix, PV…) restent ceux du défaut.
+-- seuls les champs texte affichés (nom, texte, description, couleur, victoire, pouvoir, libelle, court) changent ;
+-- les nombres et les champs de règles (prix, salaire, effet…) restent ceux du défaut.
 create or replace function public.hg_plat_admin_contenu(p_jeu text, p_cle text, p_valeur jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare c hg_plat_contenus; v jsonb; i int; d jsonb; n jsonb; k text;
@@ -767,7 +770,8 @@ begin
       n := (select x from jsonb_array_elements(p_valeur) x where x->>'id' = d->>'id' limit 1);
       if n is null then raise exception 'Élément manquant : %.', d->>'id'; end if;
       for k in select jsonb_object_keys(d) loop
-        continue when k = 'id' or jsonb_typeof(d->k) <> 'string' or not (n ? k);
+        -- Seuls les textes affichés changent ; les champs de règles (effet, type…) restent ceux d'origine.
+        continue when k not in ('nom', 'texte', 'description', 'couleur', 'victoire', 'pouvoir', 'libelle', 'court') or jsonb_typeof(d->k) <> 'string' or not (n ? k);
         if jsonb_typeof(n->k) <> 'string' or char_length(trim(n->>k)) not between 1 and 300 then raise exception 'Texte invalide pour %.', d->>'id'; end if;
         if k = 'couleur' and n->>k !~ '^#[0-9A-Fa-f]{6}$' then raise exception 'Couleur invalide pour %.', d->>'id'; end if;
         d := jsonb_set(d, array[k], to_jsonb(trim(n->>k)));
