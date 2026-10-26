@@ -37,11 +37,11 @@ const JEUX = {
     'La silhouette d’un pays, à l’échelle.',
     'Chaque essai donne la distance et la direction depuis sa capitale.',
     'La photo du pays arrive à la 3e erreur.'] },
-  plat: { titre: 'Plat du jour', champ: 'De quel pays vient ce plat ?', exemple: 'Un pays : Italie, Japon…',
-    horsListe: 'On cherche le pays d’origine du plat (par ex. Espagne), pas son nom : choisis un pays dans la liste.', regles: [
-    'La photo d’un plat : devine le pays dont il vient.',
-    'Chaque essai donne la distance et la direction depuis la capitale du pays.',
-    'Choisis le pays dans la liste des suggestions.'] },
+  plat: { titre: 'Plat du jour', champ: 'Nom du plat', regles: [
+    'La photo d’un plat : devine son nom.',
+    'Un essai raté donne la distance et la direction entre le pays de ton plat et celui du plat à trouver (0 km : même pays).',
+    'Chaque erreur ou « Passer » débloque un indice (le 4e donne le pays).',
+    'Choisis le plat dans la liste des suggestions.'] },
 };
 /** Points par essai (essai 1 = 6 points … essai 6 = 1 point). */
 const BAREME = [6, 5, 4, 3, 2, 1];
@@ -231,8 +231,11 @@ export async function monter(panel, ctx, jeu) {
       let detail = `<span class="nj-try-s">${x.ok ? 'Trouvé' : passe ? '+1 indice' : 'Raté'}</span>`;
       if (geo && !x.ok && !passe && x.km != null) {
         const pct = borne(x.pct, 0, 100, 0);
-        detail = `<span class="nj-km">${esc(km(x.km))}</span><span class="nj-dir" aria-label="direction">${esc(x.dir || '')}</span>
+        // Plat : 0 km = un plat du même pays (mais pas le bon).
+        if (jeu === 'plat' && Number(x.km) === 0) detail = '<span class="nj-km">Même pays</span><span class="nj-dir" aria-hidden="true">≈</span>';
+        else detail = `<span class="nj-km">${esc(km(x.km))}</span><span class="nj-dir" aria-label="direction">${esc(x.dir || '')}</span>
           <span class="nj-prox" aria-label="Proximité ${pct} %"><span style="width: ${pct}%"></span></span>`;
+        if (jeu === 'plat' && Number(x.km) === 0) detail += '<span class="nj-prox" aria-label="Proximité 100 %"><span style="width: 100%"></span></span>';
       }
       return `<li class="nj-try ${cls}"><span class="nj-dot" aria-hidden="true"></span><span class="nj-try-t">${i + 1} · ${passe ? 'Passé' : esc(x.t)}</span>${detail}</li>`;
     }).join('');
@@ -261,8 +264,8 @@ export async function monter(panel, ctx, jeu) {
   function finHtml(st, n) {
     const rep = st.reponse || {};
     const d = rep.details || {};
-    const titre = jeu === 'plat' ? `Pays : ${rep.reponse || ''}` : (rep.titre || rep.reponse || '');
-    const plat = jeu === 'plat' && (d.plat || rep.titre) ? `<p class="muted small">Plat : <strong>${esc(d.plat || rep.titre)}</strong></p>` : '';
+    const titre = rep.titre || rep.reponse || '';
+    const plat = jeu === 'plat' && rep.pays ? `<p class="muted small">Pays d’origine : <strong>${esc(rep.pays)}</strong></p>` : '';
     const det = Object.entries(d).filter(([k, v]) => k !== 'plat' && (typeof v === 'string' || typeof v === 'number') && v !== '')
       .map(([k, v]) => `<dt>${esc(LIBELLES[k] || k.replace(/_/g, ' '))}</dt><dd>${esc(v)}</dd>`).join('');
     return `<section class="card jd-end nj-fin${st.solved ? ' is-win' : ''}" role="status">

@@ -58,7 +58,7 @@ export const CARTES = [
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h1M12 9h1M8 12h5"/>' },
   { id: 'nj-pays', image: `${IMG}nj-pays.webp`, titre: 'Pays du jour', texte: 'Une silhouette, six essais.', section: 'flash', href: '#pays', onglet: 'pays', page: 'nj-pays', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>' },
-  { id: 'nj-plat', image: `${IMG}nj-plat.webp`, titre: 'Plat du jour', texte: 'D’où vient ce plat ?', section: 'flash', href: '#plat', onglet: 'plat', page: 'nj-plat', couleur: 'var(--amber)',
+  { id: 'nj-plat', image: `${IMG}nj-plat.webp`, titre: 'Plat du jour', texte: 'Devine le plat sur la photo.', section: 'flash', href: '#plat', onglet: 'plat', page: 'nj-plat', couleur: 'var(--amber)',
     icone: '<path d="M3 13h18a9 9 0 0 1-18 0z"/><path d="M8 9c0-2 2-2 2-4M13 9c0-2 2-2 2-4"/>' },
   { id: 'nj-connexions', image: `${IMG}nj-connexions.webp`, titre: 'Connexions', texte: '16 mots, 4 groupes cachés.', section: 'flash', href: '#connexions', onglet: 'connexions', page: 'nj-connexions', couleur: 'var(--sage)',
     icone: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>' },

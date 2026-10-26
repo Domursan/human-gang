@@ -52,9 +52,12 @@ const CONTENU = {
   pays: { titre: 'Chili', image: 'assets/img/jeux/geo.webp', cible: 'Chili', choix: ['Argentine', 'Brésil', 'Chili', 'Chine', 'Pérou'],
     media: { svg: 'M30 0 L60 10 L55 60 L70 120 L40 190 L25 150 L20 80 Z', vb: '0 0 100 200' },
     indices: ['Continent : Amérique du Sud', 'Population : environ 19,6 millions', 'Langue officielle : espagnol'], details: { capitale: 'Santiago' } },
-  plat: { titre: 'Pad thaï', image: 'assets/img/jeux/geo.webp', cible: 'Thaïlande', choix: ['Argentine', 'Italie', 'Japon', 'Mexique', 'Thaïlande'], media: {},
-    indices: ['Nouilles de riz sautées', 'Cacahuètes et citron vert'], details: { plat: 'Pad thaï' } },
+  // Plat (migration 152) : on devine le NOM du plat ; un essai raté donne la distance entre les pays des deux plats.
+  plat: { titre: 'Pad thaï', image: 'assets/img/jeux/geo.webp', cible: 'Thaïlande', pays: 'Thaïlande', choix: ['Empanadas', 'Pad thaï', 'Pizza', 'Ramen', 'Tacos', 'Tom yum'], media: {},
+    indices: ['Nouilles de riz sautées', 'Cacahuètes et citron vert', 'Pays d’origine : Thaïlande', 'Commence par « P » · 8 caractères'], details: { plat: 'Pad thaï' } },
 };
+/** Pays d'origine des plats proposés (distances du Plat du jour). */
+const PAYS_PLAT = { Empanadas: 'Argentine', 'Pad thaï': 'Thaïlande', Pizza: 'Italie', Ramen: 'Japon', Tacos: 'Mexique', 'Tom yum': 'Thaïlande' };
 /** Parties en cours : essais, terminée, gagnée. */
 const J = window.__NJ = Object.fromEntries(Object.keys(CONTENU).map((k) => [k, { essais: [], finished: false, solved: false }]));
 const BOARD = () => [{ user_id: U(2), pseudo: 'Alice', color: '#D97757', points: 14, wins: 3 }, { user_id: ME, pseudo: 'Ethan', color: '#4F6A8F', points: 9, wins: 2 }];
@@ -73,7 +76,7 @@ function etat(jeu) {
     photo_bientot: jeu === 'pays' && !fini && erreurs < 3 && !!c.image,
     essais: g.essais.map((x) => ({ ...x })), erreurs, solved: g.solved, finished: fini,
     score: g.solved ? 7 - n : 0, reward: fini ? (g.solved ? 10 : 3) : null, gain: 10, consolation: 3,
-    reponse: fini ? { titre: c.titre, reponse: c.titre, details: c.details, image: c.image } : undefined,
+    reponse: fini ? { titre: c.titre, reponse: c.titre, pays: c.pays, details: c.details, image: c.image } : undefined,
     choix: [...c.choix].sort((a, b) => a.localeCompare(b, 'fr')), board: BOARD(), hier: null,
   };
 }
@@ -89,7 +92,8 @@ function essai(jeu, texte) {
     if (g.essais.some((x) => x.t === texte)) return err('Tu as déjà proposé cette réponse.');
     const juste = texte === c.titre;
     const x = { t: texte, ok: juste };
-    if (!juste && (jeu === 'pays' || jeu === 'plat')) Object.assign(x, geo(VILLE[texte], VILLE[c.cible]));
+    if (!juste && jeu === 'pays') Object.assign(x, geo(VILLE[texte], VILLE[c.cible]));
+    if (!juste && jeu === 'plat') Object.assign(x, geo(VILLE[PAYS_PLAT[texte]], VILLE[c.cible]));
     g.essais.push(x);
     if (juste) { g.solved = true; g.finished = true; }
   }
