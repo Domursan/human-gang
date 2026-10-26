@@ -1,0 +1,41 @@
+# Applique sur la base Supabase les fichiers SQL listés dans supabase/appliquer.txt (un chemin par ligne, relatif au dépôt).
+# Se lance quand ce fichier change sur main. Chaque fichier n'est appliqué qu'une fois : le résultat (ok ou erreur) est noté
+# dans supabase/appliquees.txt, ajouté au dépôt par un commit au nom de Domursan.
+# Utilise le secret GitHub SUPABASE_ACCESS_TOKEN (API de gestion Supabase, requête SQL en tant que propriétaire de la base).
+name: Appliquer du SQL
+
+on:
+  push:
+    branches: [main]
+    paths: ['supabase/appliquer.txt']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appliquer-sql
+  cancel-in-progress: false
+
+jobs:
+  appliquer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: zqbdzokyhgavgmqgiwuw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Appliquer
+        run: node outils/appliquer-sql.mjs
+      - name: Noter le résultat
+        run: |
+          git config user.name Domursan
+          git config user.email domursan1@gmail.com
+          git add supabase/appliquees.txt
+          if git diff --cached --quiet; then echo "Rien à noter."; exit 0; fi
+          git commit -m "SQL appliqué [skip ci]"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done

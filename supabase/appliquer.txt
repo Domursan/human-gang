@@ -1,0 +1,2 @@
+# Fichiers SQL à appliquer sur la base (un par ligne) : voir .github/workflows/appliquer-sql.yml
+supabase/migrations/138_nj_solo.sql
