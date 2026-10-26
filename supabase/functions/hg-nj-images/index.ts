@@ -46,10 +46,21 @@ async function adresse(s: Record<string, any>): Promise<string> {
   if (s.type === 'url' && typeof s.url === 'string') return s.url;
   if (s.type === 'wiki') {
     const lang = /^[a-z]{2}$/.test(s.lang || '') ? s.lang : 'fr';
-    const q = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail|name&pithumbsize=1280&titles=${encodeURIComponent(s.article)}`;
+    const q = `https://${lang}.wikipedia.org/w/api.php?action=query&format=json&redirects=1&prop=pageimages|pageprops&piprop=thumbnail|name&pilicense=any&pithumbsize=1280&ppprop=wikibase_item&titles=${encodeURIComponent(s.article)}`;
     const j = await json(q);
     const page: any = Object.values(j?.query?.pages || {})[0];
-    const src = page?.thumbnail?.source;
+    let src = page?.thumbnail?.source;
+    // Repli : image principale de l'élément Wikidata de l'article (propriété P18), via Wikimedia Commons.
+    const qid = page?.pageprops?.wikibase_item;
+    if (!src && qid) {
+      const w = await json(`https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`);
+      const fichier = w?.entities?.[qid]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+      if (fichier) {
+        const c = await json(`https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=1280&titles=${encodeURIComponent('File:' + fichier)}`);
+        const p2: any = Object.values(c?.query?.pages || {})[0];
+        src = p2?.imageinfo?.[0]?.thumburl || p2?.imageinfo?.[0]?.url;
+      }
+    }
     if (!src) throw new Error(`pas d'image pour l'article « ${s.article} » (${lang})`);
     if (/\.svg(\.png)?$/i.test(src) || /\.svg\//i.test(src)) throw new Error(`image dessinée (svg) pour « ${s.article} »`);
     return src;
@@ -57,12 +68,16 @@ async function adresse(s: Record<string, any>): Promise<string> {
   if (s.type === 'steam') {
     let id = Number(s.appid) || 0;
     if (!id) {
-      for (const cc of ['CH', 'US']) {
-        const r = await json(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(s.nom)}&cc=${cc}&l=french`);
-        const items: any[] = r?.items || [];
-        const net = (x: string) => x.toLowerCase().replace(/[^a-z0-9]+/g, '');
-        const hit = items.find((i) => net(i.name) === net(s.nom)) || items[0];
-        if (hit) { id = hit.id; break; }
+      // Nom exact, puis sans sous-titre d'édition (« - Definitive Edition », « : … »).
+      const noms = [...new Set([s.nom, String(s.nom).split(' - ')[0], String(s.nom).split(':')[0]].map((x) => x.trim()).filter(Boolean))];
+      const net = (x: string) => x.toLowerCase().replace(/[^a-z0-9]+/g, '');
+      chercher: for (const nom of noms) {
+        for (const cc of ['CH', 'US']) {
+          const r = await json(`https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(nom)}&cc=${cc}&l=french`);
+          const items: any[] = r?.items || [];
+          const hit = items.find((i) => net(i.name) === net(s.nom)) || items.find((i) => net(i.name).startsWith(net(nom))) || items[0];
+          if (hit) { id = hit.id; break chercher; }
+        }
       }
       if (!id) throw new Error(`jeu introuvable sur Steam : ${s.nom}`);
     }
