@@ -1,0 +1,1202 @@
+[
+  {
+    "theme": "Jeux vidéo",
+    "mots": [
+      "MANETTE",
+      "CONSOLE",
+      "PIXEL",
+      "NIVEAU",
+      "BOSS",
+      "SCORE",
+      "JOYSTICK",
+      "CHECKPOINT",
+      "SPEEDRUN",
+      "MULTIJOUEUR",
+      "COOP",
+      "PLATEFORME",
+      "POWERUP",
+      "RESPAWN",
+      "QUETE"
+    ]
+  },
+  {
+    "theme": "Montagne",
+    "mots": [
+      "SOMMET",
+      "NEIGE",
+      "GLACIER",
+      "ALPES",
+      "TELESIEGE",
+      "CHALET",
+      "RANDO",
+      "CORDE",
+      "PIOLET",
+      "REFUGE",
+      "VALLEE",
+      "CRETE",
+      "ROCHER",
+      "AVALANCHE",
+      "EDELWEISS"
+    ]
+  },
+  {
+    "theme": "Cuisine suisse",
+    "mots": [
+      "FONDUE",
+      "RACLETTE",
+      "ROSTI",
+      "MERINGUE",
+      "GRUYERE",
+      "CHOCOLAT",
+      "ZOPF",
+      "BRATWURST",
+      "CHASSELAS",
+      "TOMME",
+      "MAGGI",
+      "ENGADINE",
+      "CARNOTZET",
+      "MOUTARDE",
+      "CAQUELON"
+    ]
+  },
+  {
+    "theme": "Cinéma",
+    "mots": [
+      "ECRAN",
+      "ACTEUR",
+      "SCENARIO",
+      "CAMERA",
+      "OSCAR",
+      "TRAILER",
+      "POPCORN",
+      "SALLE",
+      "FESTIVAL",
+      "SEQUEL",
+      "GENERIQUE",
+      "PROJECTEUR",
+      "SUSPENSE",
+      "COMEDIE",
+      "CLAP"
+    ]
+  },
+  {
+    "theme": "Animaux de la ferme",
+    "mots": [
+      "VACHE",
+      "COCHON",
+      "POULE",
+      "CHEVAL",
+      "MOUTON",
+      "CANARD",
+      "CHEVRE",
+      "LAPIN",
+      "ANE",
+      "DINDE",
+      "OIE",
+      "TAUREAU",
+      "CHIEN",
+      "COQ",
+      "POULAIN"
+    ]
+  },
+  {
+    "theme": "Noël",
+    "mots": [
+      "SAPIN",
+      "CADEAU",
+      "NEIGE",
+      "GUIRLANDE",
+      "BOULE",
+      "ETOILE",
+      "RENNE",
+      "TRAINEAU",
+      "BOUGIE",
+      "CRECHE",
+      "MARCHE",
+      "LUTIN",
+      "CHANT",
+      "REVEILLON",
+      "HOTTE"
+    ]
+  },
+  {
+    "theme": "Plage",
+    "mots": [
+      "SABLE",
+      "VAGUE",
+      "PARASOL",
+      "SERVIETTE",
+      "CREME",
+      "MAILLOT",
+      "SURF",
+      "COQUILLAGE",
+      "CRABE",
+      "BRONZAGE",
+      "GLACE",
+      "CHAISE",
+      "ETE",
+      "LUNETTES",
+      "MOUETTE"
+    ]
+  },
+  {
+    "theme": "Sport",
+    "mots": [
+      "FOOTBALL",
+      "TENNIS",
+      "BASKET",
+      "HOCKEY",
+      "SKI",
+      "ESCRIME",
+      "JUDO",
+      "SQUASH",
+      "CYCLISME",
+      "ATHLETE",
+      "MEDAILLE",
+      "STADE",
+      "ARBITRE",
+      "EQUIPE",
+      "ENTRAINEUR"
+    ]
+  },
+  {
+    "theme": "Informatique",
+    "mots": [
+      "CLAVIER",
+      "SOURIS",
+      "ECRAN",
+      "PROCESSEUR",
+      "MEMOIRE",
+      "DISQUE",
+      "CODE",
+      "BUG",
+      "SERVEUR",
+      "RESEAU",
+      "CLOUD",
+      "ALGORITHME",
+      "BINAIRE",
+      "TERMINAL",
+      "PIXEL"
+    ]
+  },
+  {
+    "theme": "Fromages suisses",
+    "mots": [
+      "GRUYERE",
+      "EMMENTAL",
+      "APPENZELL",
+      "SBRINZ",
+      "VACHERIN",
+      "TILSITER",
+      "TOMME",
+      "GOMSER",
+      "SCHABZIGER",
+      "ETIVAZ",
+      "BAGNES",
+      "MEULE",
+      "AFFINAGE",
+      "CROUTE",
+      "FROMAGE"
+    ]
+  },
+  {
+    "theme": "Musique",
+    "mots": [
+      "GUITARE",
+      "PIANO",
+      "BATTERIE",
+      "VIOLON",
+      "TROMPETTE",
+      "MICRO",
+      "REFRAIN",
+      "COUPLET",
+      "RYTHME",
+      "ACCORD",
+      "MELODIE",
+      "CHANSON",
+      "CONCERT",
+      "ALBUM",
+      "PLAYLIST"
+    ]
+  },
+  {
+    "theme": "Espace",
+    "mots": [
+      "PLANETE",
+      "ETOILE",
+      "FUSEE",
+      "ORBITE",
+      "COMETE",
+      "GALAXIE",
+      "ASTRONAUTE",
+      "SATELLITE",
+      "NEBULEUSE",
+      "METEORITE",
+      "LUNE",
+      "SOLEIL",
+      "COSMOS",
+      "APOLLO",
+      "NOVA"
+    ]
+  },
+  {
+    "theme": "Météo",
+    "mots": [
+      "PLUIE",
+      "NEIGE",
+      "ORAGE",
+      "BROUILLARD",
+      "VENT",
+      "GRELE",
+      "NUAGE",
+      "SOLEIL",
+      "TEMPETE",
+      "ARCENCIEL",
+      "DEGEL",
+      "BISE",
+      "FOEHN",
+      "GEL",
+      "CANICULE"
+    ]
+  },
+  {
+    "theme": "Cuisine italienne",
+    "mots": [
+      "PIZZA",
+      "PASTA",
+      "RISOTTO",
+      "LASAGNE",
+      "TIRAMISU",
+      "GNOCCHI",
+      "PESTO",
+      "MOZZARELLA",
+      "BASILIC",
+      "OLIVE",
+      "PARMESAN",
+      "CARBONARA",
+      "RAVIOLI",
+      "BRUSCHETTA",
+      "ESPRESSO"
+    ]
+  },
+  {
+    "theme": "Jardin",
+    "mots": [
+      "ARROSOIR",
+      "BECHE",
+      "RATEAU",
+      "SEMIS",
+      "TERREAU",
+      "GAZON",
+      "ROSIER",
+      "COMPOST",
+      "TOMATE",
+      "HAIE",
+      "SERRE",
+      "PLANTE",
+      "PELLE",
+      "ENGRAIS",
+      "FLEUR"
+    ]
+  },
+  {
+    "theme": "Océan",
+    "mots": [
+      "BALEINE",
+      "DAUPHIN",
+      "MEDUSE",
+      "CORAIL",
+      "REQUIN",
+      "PIEUVRE",
+      "POISSON",
+      "RECIF",
+      "ALGUE",
+      "HOMARD",
+      "ABYSSE",
+      "COURANT",
+      "PLANCTON",
+      "OCEAN",
+      "TORTUE"
+    ]
+  },
+  {
+    "theme": "Animaux sauvages",
+    "mots": [
+      "RENARD",
+      "CERF",
+      "BLAIREAU",
+      "MARMOTTE",
+      "CHAMOIS",
+      "LYNX",
+      "HERISSON",
+      "HIBOU",
+      "CHOUETTE",
+      "ECUREUIL",
+      "SANGLIER",
+      "HERON",
+      "BOUQUETIN",
+      "LOUTRE",
+      "BISON"
+    ]
+  },
+  {
+    "theme": "Café et boissons",
+    "mots": [
+      "CAFE",
+      "THE",
+      "LATTE",
+      "CAPPUCCINO",
+      "MOCHA",
+      "SIROP",
+      "GLACONS",
+      "JUS",
+      "SODA",
+      "LIMONADE",
+      "CIDRE",
+      "BIERE",
+      "VIN",
+      "ESPRESSO",
+      "SUCRE"
+    ]
+  },
+  {
+    "theme": "Jeux de société",
+    "mots": [
+      "ECHECS",
+      "DAMES",
+      "MONOPOLY",
+      "UNO",
+      "CARTES",
+      "DES",
+      "PLATEAU",
+      "PION",
+      "JETON",
+      "TRICHE",
+      "DOMINOS",
+      "SCRABBLE",
+      "PUZZLE",
+      "RUMMY",
+      "TAROT"
+    ]
+  },
+  {
+    "theme": "Voyage",
+    "mots": [
+      "VALISE",
+      "AVION",
+      "TRAIN",
+      "PASSEPORT",
+      "HOTEL",
+      "CARTE",
+      "GARE",
+      "BAGAGE",
+      "ETRANGER",
+      "TOURISME",
+      "VISA",
+      "ITINERAIRE",
+      "CARNET",
+      "BOUSSOLE",
+      "DESTINATION"
+    ]
+  },
+  {
+    "theme": "École",
+    "mots": [
+      "CAHIER",
+      "STYLO",
+      "GOMME",
+      "COURS",
+      "EXAMEN",
+      "DEVOIR",
+      "PROF",
+      "ELEVE",
+      "CARTABLE",
+      "REGLE",
+      "CRAIE",
+      "TABLEAU",
+      "RECREATION",
+      "DIPLOME",
+      "RENTREE"
+    ]
+  },
+  {
+    "theme": "Horlogerie suisse",
+    "mots": [
+      "HORLOGER",
+      "BALANCIER",
+      "RESSORT",
+      "ROUAGE",
+      "CADRAN",
+      "AIGUILLE",
+      "ETANCHE",
+      "SAPHIR",
+      "GOUSSET",
+      "REMONTOIR",
+      "CHRONO",
+      "GENEVE",
+      "JURA",
+      "MOUVEMENT",
+      "BRACELET"
+    ]
+  },
+  {
+    "theme": "Lieux de Suisse",
+    "mots": [
+      "LAC",
+      "ZURICH",
+      "BERNE",
+      "LUCERNE",
+      "LAUSANNE",
+      "LUGANO",
+      "ZERMATT",
+      "GRINDELWALD",
+      "VALAIS",
+      "TESSIN",
+      "RHIN",
+      "LEMAN",
+      "ENGELBERG",
+      "GENEVE",
+      "BALE"
+    ]
+  },
+  {
+    "theme": "Pâques",
+    "mots": [
+      "OEUF",
+      "CHOCOLAT",
+      "LAPIN",
+      "PRINTEMPS",
+      "CLOCHE",
+      "PANIER",
+      "FLEURS",
+      "POUSSIN",
+      "DRAGEE",
+      "CHASSE",
+      "JONQUILLE",
+      "AGNEAU",
+      "PAQUES",
+      "PEINTURE",
+      "COULEUR"
+    ]
+  },
+  {
+    "theme": "Halloween",
+    "mots": [
+      "CITROUILLE",
+      "SORCIERE",
+      "FANTOME",
+      "VAMPIRE",
+      "SQUELETTE",
+      "ZOMBIE",
+      "MASQUE",
+      "BONBON",
+      "CERCUEIL",
+      "GRIMOIRE",
+      "MOMIE",
+      "GOBLIN",
+      "MINUIT",
+      "CRYPTE",
+      "SORCELLERIE"
+    ]
+  },
+  {
+    "theme": "Fête d'anniversaire",
+    "mots": [
+      "GATEAU",
+      "BOUGIE",
+      "BALLON",
+      "CONFETTI",
+      "INVITES",
+      "CHAPEAU",
+      "SURPRISE",
+      "CADEAU",
+      "DANSE",
+      "PINATA",
+      "SERPENTIN",
+      "TOAST",
+      "FETE",
+      "GOUTER",
+      "SOUFFLER"
+    ]
+  },
+  {
+    "theme": "Dinosaures",
+    "mots": [
+      "FOSSILE",
+      "ARCHEO",
+      "RAPTOR",
+      "ANKYLOSAURE",
+      "SAUROPODE",
+      "PLESIOSAURE",
+      "TRICERATOPS",
+      "DIPLODOCUS",
+      "STEGOSAURE",
+      "ALLOSAURE",
+      "JURASSIQUE",
+      "CRETACE",
+      "MEGALODON",
+      "TRIAS",
+      "PREHISTOIRE"
+    ]
+  },
+  {
+    "theme": "Bricolage",
+    "mots": [
+      "MARTEAU",
+      "TOURNEVIS",
+      "PERCEUSE",
+      "SCIE",
+      "CLOU",
+      "VIS",
+      "PINCE",
+      "ETABLI",
+      "RABOT",
+      "CISEAU",
+      "CHEVILLE",
+      "ECHELLE",
+      "MESURE",
+      "NIVEAU",
+      "CLE"
+    ]
+  },
+  {
+    "theme": "Véhicules",
+    "mots": [
+      "VOITURE",
+      "CAMION",
+      "MOTO",
+      "VELO",
+      "TRAM",
+      "BUS",
+      "TAXI",
+      "AMBULANCE",
+      "TRACTEUR",
+      "SCOOTER",
+      "BATEAU",
+      "METRO",
+      "TROTTINETTE",
+      "TANDEM",
+      "TRAIN"
+    ]
+  },
+  {
+    "theme": "Légumes",
+    "mots": [
+      "CAROTTE",
+      "POIREAU",
+      "COURGETTE",
+      "ARTICHAUT",
+      "EPINARD",
+      "BROCOLI",
+      "RADIS",
+      "NAVET",
+      "POIVRON",
+      "AUBERGINE",
+      "CHOU",
+      "OIGNON",
+      "SALADE",
+      "FENOUIL",
+      "CELERI"
+    ]
+  },
+  {
+    "theme": "Fruits",
+    "mots": [
+      "POMME",
+      "POIRE",
+      "CERISE",
+      "ABRICOT",
+      "BANANE",
+      "FRAISE",
+      "MANGUE",
+      "ANANAS",
+      "PECHE",
+      "RAISIN",
+      "MURE",
+      "FIGUE",
+      "KIWI",
+      "CITRON",
+      "MELON"
+    ]
+  },
+  {
+    "theme": "Boulangerie",
+    "mots": [
+      "BAGUETTE",
+      "CROISSANT",
+      "BRIOCHE",
+      "PAIN",
+      "FOUGASSE",
+      "PRETZEL",
+      "BRETZEL",
+      "MIE",
+      "LEVAIN",
+      "FARINE",
+      "PETRISSAGE",
+      "FOURNEE",
+      "GRIGNE",
+      "TRESSE",
+      "ZOPF"
+    ]
+  },
+  {
+    "theme": "Bande dessinée",
+    "mots": [
+      "CASE",
+      "BULLE",
+      "HEROS",
+      "PLANCHE",
+      "DESSIN",
+      "CAPE",
+      "PANEL",
+      "ENCRE",
+      "VILAIN",
+      "MANGA",
+      "TOME",
+      "PAGE",
+      "DESSINATEUR",
+      "STRIP",
+      "CRAYON"
+    ]
+  },
+  {
+    "theme": "Robotique",
+    "mots": [
+      "ROBOT",
+      "CAPTEUR",
+      "MOTEUR",
+      "CIRCUIT",
+      "ROBOTIQUE",
+      "SERVO",
+      "LASER",
+      "PUCE",
+      "ANDROIDE",
+      "AUTOMATE",
+      "DRONE",
+      "SOUDURE",
+      "PILOTE",
+      "BATTERIE",
+      "CAMERA"
+    ]
+  },
+  {
+    "theme": "Ski",
+    "mots": [
+      "SKI",
+      "PISTE",
+      "TELESKI",
+      "BONNET",
+      "GANTS",
+      "LUGE",
+      "SNOWBOARD",
+      "PATINS",
+      "VERGLAS",
+      "POUDREUSE",
+      "DESCENTE",
+      "SLALOM",
+      "COMBINAISON",
+      "BOTTES",
+      "APRESSKI"
+    ]
+  },
+  {
+    "theme": "Fantasy",
+    "mots": [
+      "DRAGON",
+      "ELFE",
+      "MAGICIEN",
+      "EPEE",
+      "CHATEAU",
+      "LICORNE",
+      "GOBELIN",
+      "TROLL",
+      "SORT",
+      "PHENIX",
+      "GRIFFON",
+      "ORC",
+      "RUNE",
+      "DONJON",
+      "SORTILEGE"
+    ]
+  },
+  {
+    "theme": "Cuisine française",
+    "mots": [
+      "MOUSSE",
+      "SOUFFLE",
+      "CREPE",
+      "RATATOUILLE",
+      "BOEUF",
+      "BOURGUIGNON",
+      "QUICHE",
+      "CONFIT",
+      "GRATIN",
+      "TARTE",
+      "ECLAIR",
+      "SAUCE",
+      "BEURRE",
+      "VINAIGRETTE",
+      "FONDANT"
+    ]
+  },
+  {
+    "theme": "Cuisine asiatique",
+    "mots": [
+      "SUSHI",
+      "RAMEN",
+      "WOK",
+      "TOFU",
+      "NOUILLES",
+      "WASABI",
+      "SOJA",
+      "CURRY",
+      "DUMPLING",
+      "MISO",
+      "TEMPURA",
+      "GYOZA",
+      "PHO",
+      "KIMCHI",
+      "MATCHA"
+    ]
+  },
+  {
+    "theme": "Mode",
+    "mots": [
+      "CHEMISE",
+      "JEAN",
+      "VESTE",
+      "ECHARPE",
+      "CHAUSSETTES",
+      "SNEAKERS",
+      "BONNET",
+      "ROBE",
+      "PULL",
+      "MANTEAU",
+      "CEINTURE",
+      "SACOCHE",
+      "CASQUETTE",
+      "GILET",
+      "SHORT"
+    ]
+  },
+  {
+    "theme": "Mathématiques",
+    "mots": [
+      "NOMBRE",
+      "ADDITION",
+      "FRACTION",
+      "EQUATION",
+      "GEOMETRIE",
+      "ANGLE",
+      "CERCLE",
+      "TRIANGLE",
+      "VARIABLE",
+      "SOMME",
+      "DIVISION",
+      "RACINE",
+      "FORMULE",
+      "ALGEBRE",
+      "GRAPHE"
+    ]
+  },
+  {
+    "theme": "Camping",
+    "mots": [
+      "TENTE",
+      "SAC",
+      "LAMPE",
+      "FEU",
+      "GOURDE",
+      "CAMPING",
+      "BIVOUAC",
+      "HAMAC",
+      "MATELAS",
+      "BOUSSOLE",
+      "CANIF",
+      "ALLUMETTE",
+      "MARSHMALLOW",
+      "FORET",
+      "SENTIER"
+    ]
+  },
+  {
+    "theme": "Animaux domestiques",
+    "mots": [
+      "CHATON",
+      "CHIOT",
+      "HAMSTER",
+      "PERROQUET",
+      "GRIFFES",
+      "PATTE",
+      "COLLIER",
+      "LAISSE",
+      "CROQUETTES",
+      "PELAGE",
+      "MIAOU",
+      "CANICHE",
+      "GAMELLE",
+      "JOUET",
+      "TORTUE"
+    ]
+  },
+  {
+    "theme": "Meubles",
+    "mots": [
+      "CANAPE",
+      "TABLE",
+      "LIT",
+      "ARMOIRE",
+      "TAPIS",
+      "RIDEAU",
+      "COMMODE",
+      "MIROIR",
+      "ETAGERE",
+      "COUSSIN",
+      "BUREAU",
+      "PLACARD",
+      "FAUTEUIL",
+      "CHAISE",
+      "LAMPE"
+    ]
+  },
+  {
+    "theme": "Ustensiles de cuisine",
+    "mots": [
+      "POELE",
+      "CASSEROLE",
+      "COUTEAU",
+      "FOURCHETTE",
+      "CUILLERE",
+      "PASSOIRE",
+      "ROULEAU",
+      "SPATULE",
+      "MIXEUR",
+      "BOL",
+      "ASSIETTE",
+      "VERRE",
+      "MOULE",
+      "RAPE",
+      "ECUMOIRE"
+    ]
+  },
+  {
+    "theme": "Streaming et internet",
+    "mots": [
+      "ABONNE",
+      "LIVE",
+      "CHAT",
+      "DON",
+      "STREAMER",
+      "PSEUDO",
+      "REPLAY",
+      "PODCAST",
+      "VIDEO",
+      "COMMENT",
+      "LIKE",
+      "ALGO",
+      "TENDANCE",
+      "MEME",
+      "HASHTAG"
+    ]
+  },
+  {
+    "theme": "Architecture",
+    "mots": [
+      "PONT",
+      "TOUR",
+      "COLONNE",
+      "VOUTE",
+      "FACADE",
+      "CLOCHER",
+      "BALCON",
+      "ARCADE",
+      "ARDOISE",
+      "BRIQUE",
+      "MURAILLE",
+      "TOIT",
+      "FRONTON",
+      "PILIER",
+      "CHEMINEE"
+    ]
+  },
+  {
+    "theme": "Couleurs",
+    "mots": [
+      "ROUGE",
+      "BLEU",
+      "VERT",
+      "JAUNE",
+      "ORANGE",
+      "VIOLET",
+      "ROSE",
+      "NOIR",
+      "BLANC",
+      "GRIS",
+      "BEIGE",
+      "TURQUOISE",
+      "INDIGO",
+      "ARGENT",
+      "OCRE"
+    ]
+  },
+  {
+    "theme": "Jeux de cartes",
+    "mots": [
+      "POKER",
+      "BELOTE",
+      "JASS",
+      "BRIDGE",
+      "SCOPA",
+      "MANILLE",
+      "COEUR",
+      "PIQUE",
+      "CARREAU",
+      "TREFLE",
+      "ROI",
+      "DAME",
+      "VALET",
+      "ATOUT",
+      "MISE"
+    ]
+  },
+  {
+    "theme": "Fitness",
+    "mots": [
+      "YOGA",
+      "PILATES",
+      "HALTERE",
+      "COURSE",
+      "ETIREMENT",
+      "CARDIO",
+      "SQUAT",
+      "PLANCHE",
+      "ABDOS",
+      "PROTEINE",
+      "SHAKER",
+      "SEANCE",
+      "PULSATION",
+      "ENDURANCE",
+      "MUSCLE"
+    ]
+  },
+  {
+    "theme": "Capitales",
+    "mots": [
+      "PARIS",
+      "ROME",
+      "MADRID",
+      "LONDRES",
+      "BERLIN",
+      "VIENNE",
+      "OSLO",
+      "LISBONNE",
+      "TOKYO",
+      "SEOUL",
+      "DUBLIN",
+      "PRAGUE",
+      "BRUXELLES",
+      "ATHENES",
+      "LIMA"
+    ]
+  },
+  {
+    "theme": "Amour",
+    "mots": [
+      "BISOU",
+      "CALIN",
+      "DATE",
+      "BAGUE",
+      "CHARME",
+      "TENDRESSE",
+      "FLIRT",
+      "PASSION",
+      "SERMENT",
+      "MARIAGE",
+      "ETREINTE",
+      "ROMANCE",
+      "AMOUREUX",
+      "ROSE",
+      "COEUR"
+    ]
+  },
+  {
+    "theme": "Biologie",
+    "mots": [
+      "CELLULE",
+      "ADN",
+      "ATOME",
+      "MOLECULE",
+      "BACTERIE",
+      "VIRUS",
+      "ENZYME",
+      "ORGANE",
+      "NEURONE",
+      "MITOSE",
+      "PIGMENT",
+      "EVOLUTION",
+      "GENOME",
+      "ECOSYSTEME",
+      "ESPECE"
+    ]
+  },
+  {
+    "theme": "Pâtisserie",
+    "mots": [
+      "MACARON",
+      "TARTELETTE",
+      "MERINGUE",
+      "PROFITEROLE",
+      "CHANTILLY",
+      "GANACHE",
+      "NOUGAT",
+      "CARAMEL",
+      "PRALINE",
+      "MADELEINE",
+      "FLAN",
+      "BISCUIT",
+      "PATE",
+      "ECLAIR",
+      "CREME"
+    ]
+  },
+  {
+    "theme": "Bière",
+    "mots": [
+      "HOUBLON",
+      "MALT",
+      "LAGER",
+      "BRASSEUR",
+      "IPA",
+      "STOUT",
+      "FUT",
+      "DEGUSTATION",
+      "PINTE",
+      "TIRAGE",
+      "LEVURE",
+      "BOCK",
+      "CHOPE",
+      "AMBREE",
+      "MOUSSE"
+    ]
+  },
+  {
+    "theme": "Art",
+    "mots": [
+      "TOILE",
+      "PINCEAU",
+      "AQUARELLE",
+      "SCULPTURE",
+      "MUSEE",
+      "GALERIE",
+      "PALETTE",
+      "FRESQUE",
+      "COLLAGE",
+      "ARTISTE",
+      "CHEVALET",
+      "ESQUISSE",
+      "BRONZE",
+      "ARGILE",
+      "PORTRAIT"
+    ]
+  },
+  {
+    "theme": "Santé et pharmacie",
+    "mots": [
+      "PILULE",
+      "FIEVRE",
+      "RHUME",
+      "SERINGUE",
+      "MEDECIN",
+      "INFIRMIER",
+      "PANSEMENT",
+      "RADIO",
+      "VACCIN",
+      "ORDONNANCE",
+      "URGENCE",
+      "SOMMEIL",
+      "VITAMINE",
+      "PHARMACIE",
+      "SIROP"
+    ]
+  },
+  {
+    "theme": "Rétro années 90",
+    "mots": [
+      "CASSETTE",
+      "BALADEUR",
+      "DISQUETTE",
+      "MINITEL",
+      "VINYLE",
+      "TAMAGOTCHI",
+      "BIPPER",
+      "ZAPPING",
+      "VHS",
+      "MAGNETO",
+      "TELEPHONE",
+      "FLOPPY",
+      "KARAOKE",
+      "ARCADE",
+      "MIXTAPE"
+    ]
+  },
+  {
+    "theme": "Régions suisses",
+    "mots": [
+      "VAUD",
+      "VALAIS",
+      "TESSIN",
+      "GRISONS",
+      "FRIBOURG",
+      "NEUCHATEL",
+      "ARGOVIE",
+      "SOLEURE",
+      "THURGOVIE",
+      "GLARIS",
+      "SCHWYZ",
+      "ZOUG",
+      "URI",
+      "JURA",
+      "OBWALD"
+    ]
+  },
+  {
+    "theme": "Séries TV",
+    "mots": [
+      "SAISON",
+      "EPISODE",
+      "CLIFFHANGER",
+      "BINGE",
+      "SPOILER",
+      "STREAMING",
+      "SERIE",
+      "FINALE",
+      "CASTING",
+      "RATING",
+      "CRITIQUE",
+      "MARATHON",
+      "SOUSTITRE",
+      "PILOTE",
+      "FLASHBACK"
+    ]
+  },
+  {
+    "theme": "Festival",
+    "mots": [
+      "SCENE",
+      "BADGE",
+      "LINEUP",
+      "MOSH",
+      "PIT",
+      "CASQUE",
+      "SONO",
+      "FOULE",
+      "ENERGIE",
+      "SOIREE",
+      "GUINGUETTE",
+      "BASSE",
+      "BEATS",
+      "REFRAIN",
+      "BRACELET"
+    ]
+  }
+]
