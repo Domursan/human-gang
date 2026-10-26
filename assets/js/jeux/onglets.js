@@ -8,7 +8,8 @@
  *   idee    référence du catalogue ;
  *   rythme  facultatif : 'jour' (Chaque jour, défaut), 'semaine' (Chaque semaine) ou 'competition' (Compétition) ;
  *   icone   facultatif : contenu SVG (viewBox 0 0 24 24, trait) de l'icône ;
- *   couleur facultatif : couleur de l'icône dans le tableau de bord (variable CSS ou hexadécimal).
+ *   couleur facultatif : couleur de l'icône dans le tableau de bord (variable CSS ou hexadécimal) ;
+ *   admin   facultatif : true = jeu en développement, onglet visible des seuls admins (le serveur le vérifie aussi).
  * Contrat d'un module :
  *   export async function mount(panel, ctx)  panel = <section role="tabpanel"> vide, ctx = { sb, me, toast, esc, sub } (sub : choix
  *     tiré de l'adresse, jeux.html#<id>-<choix>, ou null) ; un changement de choix alors que le module est monté arrive par « jeux:sub » ;

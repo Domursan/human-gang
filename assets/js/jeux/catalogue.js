@@ -3,7 +3,8 @@
  * Rôle : déclare les cartes de la page d'accueil des jeux, rangées en sections. La page (jeux.js) n'affiche une carte
  * que si le membre y a droit :
  *   - page : slug de hg_pages dont l'accès conditionne la carte (canAccess + page déclarée, comme le menu) ;
- *   - bientot : jeu pas encore sorti, visible des seuls admins (pastille « En préparation », pas de lien).
+ *   - bientot : jeu pas encore sorti, visible des seuls admins (pastille « En préparation », pas de lien) ;
+ *   - admin : jeu en développement, jouable par les seuls admins (pastille « En développement », lien actif).
  * Une section vide pour le membre n'est pas affichée.
  * Champs d'une carte :
  *   id      identifiant unique (minuscules, chiffres, tirets) ;

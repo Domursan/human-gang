@@ -1,6 +1,7 @@
 // ===== Humane Gang — page Jeux, onglet « Arcade » (idée J18 : les mini-jeux de la borne) =====
 /*
- * Rôle : trois mini-jeux (« Paillettes », « Raclette », « Domu-mobile »), jouables tous les jours. Le joueur choisit le sien
+ * Rôle : les mini-jeux (« Paillettes », « Raclette », « Domu-mobile », et ceux en développement réservés aux admins :
+ * Flappy Domu, Casse-briques, Snake, Tetris, Space Invaders, Tape-taupe), jouables tous les jours. Le joueur choisit le sien
  * (sélecteur) ; au départ, c'est celui de l'adresse (jeux.html#arcade-<jeu>, ctx.sub), sinon le jeu du jour (game_of_day).
  * Le serveur fixe le jeu de chaque tableau (hg_arcade_board(p_game)) et de chaque partie (hg_arcade_start(p_game)) ;
  * la partie est fermée par le serveur (hg_arcade_finish : durée et score vérifiés). Une seule partie par jour est
@@ -13,6 +14,8 @@
  */
 import { creeArcade } from '../eggs/arcade.js';
 import { avatarHtml } from '../core/util.js';
+import { getCachedProfile } from '../core/profile.js';
+import { viewAsActive } from '../core/view-as.js';
 
 /** Mini-jeux connus : identifiant du serveur → module, nom, icône en pixel art (SVG 16 × 16). */
 const JEUX = {
@@ -25,7 +28,30 @@ const JEUX = {
   domu: { module: '../eggs/jeu-domu.js', nom: 'Domu-mobile',
     icone: (c) => `<rect x="3" y="5" width="10" height="4" fill="${c[0]}"/><rect x="5" y="3" width="6" height="3" fill="${c[1]}"/><rect x="4" y="9" width="3" height="3" fill="${c[2]}"/><rect x="9" y="9" width="3" height="3" fill="${c[2]}"/>`,
     couleurs: ['#9E3543', '#7E93C9', '#121212'] },
+  // Jeux en développement (admin: true) : visibles et jouables par les seuls admins (le serveur le vérifie aussi).
+  flappy: { module: '../eggs/jeu-flappy.js', nom: 'Flappy Domu', admin: true,
+    icone: (c) => `<rect x="1" y="6" width="2" height="1" fill="${c[1]}"/><rect x="1" y="7" width="2" height="1" fill="${c[2]}"/><rect x="1" y="8" width="2" height="1" fill="${c[3]}"/><rect x="4" y="4" width="3" height="2" fill="${c[0]}"/><rect x="8" y="4" width="3" height="2" fill="${c[0]}"/><rect x="3" y="6" width="9" height="3" fill="${c[0]}"/><rect x="4" y="9" width="7" height="2" fill="${c[0]}"/><rect x="6" y="11" width="3" height="2" fill="${c[0]}"/>`,
+    couleurs: ['#B0102A', '#FE3104', '#FBD32D', '#2B5AE2'] },
+  briques: { module: '../eggs/jeu-briques.js', nom: 'Casse-briques', admin: true,
+    icone: (c) => `<rect x="1" y="2" width="4" height="2" fill="${c[0]}"/><rect x="6" y="2" width="4" height="2" fill="${c[1]}"/><rect x="11" y="2" width="4" height="2" fill="${c[2]}"/><rect x="3" y="5" width="4" height="2" fill="${c[1]}"/><rect x="8" y="5" width="4" height="2" fill="${c[0]}"/><rect x="7" y="10" width="2" height="2" fill="${c[3]}"/><rect x="4" y="13" width="8" height="2" fill="${c[3]}"/>`,
+    couleurs: ['#FE3104', '#FBD32D', '#2B5AE2', '#F2EFEA'] },
+  snake: { module: '../eggs/jeu-snake.js', nom: 'Snake', admin: true,
+    icone: (c) => `<rect x="2" y="3" width="8" height="2" fill="${c[0]}"/><rect x="8" y="5" width="2" height="5" fill="${c[0]}"/><rect x="3" y="10" width="7" height="2" fill="${c[0]}"/><rect x="2" y="3" width="2" height="2" fill="${c[1]}"/><rect x="12" y="10" width="2" height="2" fill="${c[2]}"/>`,
+    couleurs: ['#159946', '#0B5A2A', '#FCA301'] },
+  tetris: { module: '../eggs/jeu-tetris.js', nom: 'Tetris du gang', admin: true,
+    icone: (c) => `<rect x="2" y="10" width="4" height="4" fill="${c[0]}"/><rect x="6" y="10" width="4" height="4" fill="${c[1]}"/><rect x="10" y="10" width="4" height="4" fill="${c[2]}"/><rect x="6" y="6" width="4" height="4" fill="${c[1]}"/><rect x="10" y="2" width="4" height="4" fill="${c[3]}"/><rect x="10" y="6" width="4" height="4" fill="${c[3]}"/>`,
+    couleurs: ['#FE3104', '#FBD32D', '#2B5AE2', '#4E2398'] },
+  invaders: { module: '../eggs/jeu-invaders.js', nom: 'Space Invaders', admin: true,
+    icone: (c) => `<rect x="4" y="2" width="8" height="2" fill="${c[0]}"/><rect x="2" y="4" width="12" height="3" fill="${c[0]}"/><rect x="4" y="5" width="2" height="1" fill="${c[1]}"/><rect x="10" y="5" width="2" height="1" fill="${c[1]}"/><rect x="2" y="7" width="2" height="2" fill="${c[0]}"/><rect x="12" y="7" width="2" height="2" fill="${c[0]}"/><rect x="7" y="12" width="2" height="3" fill="${c[2]}"/>`,
+    couleurs: ['#6FA37F', '#121212', '#E2C77E'] },
+  taupe: { module: '../eggs/jeu-taupe.js', nom: 'Tape-taupe', admin: true,
+    icone: (c) => `<rect x="2" y="12" width="12" height="2" fill="${c[0]}"/><rect x="5" y="5" width="6" height="7" fill="${c[1]}"/><rect x="6" y="7" width="1" height="1" fill="${c[2]}"/><rect x="9" y="7" width="1" height="1" fill="${c[2]}"/><rect x="7" y="9" width="2" height="1" fill="${c[3]}"/>`,
+    couleurs: ['#5A3A24', '#9E3543', '#121212', '#E0909A'] },
 };
+/** Vrai pour un admin qui ne regarde pas le site « en tant que » un membre. */
+const adminVrai = () => !viewAsActive() && !!getCachedProfile()?.is_admin;
+/** Mini-jeux proposés au membre connecté (les jeux en développement pour les seuls admins). */
+const visibles = () => Object.fromEntries(Object.entries(JEUX).filter(([, j]) => !j.admin || adminVrai()));
 const jourFmt = new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'short' });
 /** Moteur de la partie en cours (une seule borne à la fois). */
 let borne = null;
@@ -85,12 +111,12 @@ export async function mount(panel, ctx) {
       <section class="card arc-tirage" aria-labelledby="arc-choix-h">
         <div class="arc-between"><h3 class="arc-h" id="arc-choix-h">Choisis ton mini-jeu</h3><span class="small muted" id="arc-jour"></span></div>
         <div class="arc-choix" role="group" aria-labelledby="arc-choix-h">
-          ${Object.entries(JEUX).map(([id, j]) => `<button class="arc-jeu" type="button" data-game="${id}" aria-pressed="false">
+          ${Object.entries(visibles()).map(([id, j]) => `<button class="arc-jeu${j.admin ? ' is-dev' : ''}" type="button" data-game="${id}" aria-pressed="false"${j.admin ? ' title="En développement : visible des admins seulement"' : ''}>
             <span class="arc-tire-badge" hidden>Jeu du jour</span>
             <svg width="34" height="34" viewBox="0 0 16 16" aria-hidden="true" shape-rendering="crispEdges">${j.icone(j.couleurs)}</svg>
             <span class="arc-tire-nom">${esc(j.nom)}</span></button>`).join('')}
         </div>
-        <p class="small muted">Les trois mini-jeux sont jouables chaque jour. Une seule partie par jour est récompensée, tous jeux confondus.</p>
+        <p class="small muted">Les mini-jeux sont jouables chaque jour. Une seule partie par jour est récompensée, tous jeux confondus.</p>
       </section>
       <div class="arc-partie" id="arc-partie" aria-busy="true"></div>
     </div>`;
@@ -247,10 +273,10 @@ export async function mount(panel, ctx) {
   });
   // Adresse jeux.html#arcade-<jeu> (ou #arcade) suivie alors que l'onglet est ouvert : null = jeu du jour
   panel.addEventListener('jeux:sub', (e) => {
-    const cible = JEUX[e.detail?.sub] ? e.detail.sub : duDuJour;
+    const cible = visibles()[e.detail?.sub] ? e.detail.sub : duDuJour;
     if (cible && cible !== courant) charger(cible);
   });
-  await charger(JEUX[ctx.sub] ? ctx.sub : null);
+  await charger(visibles()[ctx.sub] ? ctx.sub : null);
 }
 
 /** Quitte l'onglet : la boucle d'animation de la borne s'arrête. */

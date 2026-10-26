@@ -48,7 +48,9 @@ const ICONE_HUB = '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2
 /** Icône par défaut d'un jeu (manette). */
 const ICONE_DEF = '<rect x="2" y="7" width="20" height="10" rx="4"/><path d="M7 10v4M5 12h4M15 11h.01M18 13h.01"/>';
 /** Jeux valides, sans doublon, rangés par groupe (l'ordre de onglets.js est gardé dans chaque groupe). */
-const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.test(o.id) && o.id !== HUB && o.id !== TOUS && o.module
+/** Vrai pour un admin qui ne regarde pas le site « en tant que » un membre (jeux en développement, cartes « admin »). */
+const adminVrai = () => !viewAsActive() && !!getCachedProfile()?.is_admin;
+const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.test(o.id) && o.id !== HUB && o.id !== TOUS && o.module && (!o.admin || adminVrai())
   && a.findIndex((x) => x.id === o.id) === i && (GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour') === g)
   .map((o) => ({ ...o, rythme: GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour' })));
 /** Tous les onglets : la vue de départ, le tableau de bord puis les jeux. */
@@ -220,18 +222,18 @@ function peindreHub() {
 
 /* ---------- Vue de départ : tous les jeux en cartes ---------- */
 /** Vrai pour un admin qui ne regarde pas le site « en tant que » un membre. */
-const estAdmin = () => !viewAsActive() && !!getCachedProfile()?.is_admin;
+const estAdmin = adminVrai;
 /**
  * Vrai si le membre peut voir la carte : jeu pas encore sorti → admins seulement ; page à part → accès de la page,
  * qui doit être déclarée (comme les entrées « strict » du menu).
  */
 function carteVisible(c) {
-  if (c.bientot) return estAdmin();
+  if (c.bientot || c.admin) return estAdmin();
   if (c.page) return canAccess(c.page) && !!pageLabel(c.page);
   return true;
 }
 /** Vrai si la carte n'est visible que des admins (jeu en préparation, ou page encore réservée aux admins) : ambiance chantier. */
-const reserveAdmin = (c) => !!c.bientot || (!!c.page && pageMode(c.page) === 'admin');
+const reserveAdmin = (c) => !!c.bientot || !!c.admin || (!!c.page && pageMode(c.page) === 'admin');
 /** Petit panneau de chantier (triangle « travaux » avec un ouvrier qui pelle). */
 const PANNEAU = `<svg class="jx-panneau" viewBox="0 0 64 58" aria-hidden="true" focusable="false">
   <path d="M32 3L61 54H3z" fill="#FFFFFF" stroke="#D93A3F" stroke-width="5" stroke-linejoin="round"/>
@@ -249,7 +251,7 @@ function vignetteHtml(c) {
 /** HTML d'une carte de jeu (lien, ou bloc inerte si le jeu est en préparation). */
 function carteHtml(c) {
   const corps = `<span class="jx-vig">${vignetteHtml(c)}
-      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : 'Admins seulement'}</span>` : ''}<span data-cbadge="${esc(c.onglet || '')}"></span></span></span>
+      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : c.admin ? 'En développement' : 'Admins seulement'}</span>` : ''}<span data-cbadge="${esc(c.onglet || '')}"></span></span></span>
     <span class="jx-txt"><span class="jx-t">${esc(c.titre)}</span><span class="jx-s">${esc(c.texte)}</span></span>`;
   return c.bientot
     ? `<li class="jx-carte is-prep is-chantier" data-nom="${esc(c.titre.toLowerCase())}" aria-label="${esc(`${c.titre} : en préparation, visible des admins seulement`)}">${corps}</li>`

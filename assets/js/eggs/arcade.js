@@ -63,9 +63,19 @@ const CODES = [
 /**
  * Crée une borne d'arcade sur un canevas pour un mini-jeu.
  * Le mini-jeu est un objet { init(s), update(s, dt, entree), draw(ctx, s), score(s), fini(s), vies(s) } :
- *   s est l'état de la partie (créé par init), entree = { cible, fleche, pas } :
+ *   s est l'état de la partie (créé par init), entree = { cible, cibleY, fleche, pas, vertical, dir, action, tenu } :
  *   cible : position horizontale visée par le pointeur (ou null), fleche : -1, 0 ou 1 (flèche tenue),
  *   pas : -1 ou 1 pour un changement de voie ponctuel (flèche pressée, appui à gauche ou à droite, glissement), sinon 0.
+ *   Options du mini-jeu (facultatives) :
+ *   jeu.directions = true : les flèches haut et bas servent au jeu (la page ne défile pas) ; entree.vertical = -1 (haut),
+ *     0 ou 1 (bas) tant qu'une flèche est tenue ; entree.dir = 'haut' | 'bas' | 'gauche' | 'droite' pour une flèche
+ *     pressée ou un glissement du doigt (une seule image, puis null) ; cibleY = position verticale du pointeur (ou null).
+ *   jeu.action = true : espace, flèche haut (si pas jeu.directions), clic ou appui du doigt donnent entree.action = true
+ *     pendant une image (saut, tir, rotation…) ; entree.tenu = vrai tant que l'espace ou le doigt reste appuyé.
+ *   jeu.tapeSeul = true (avec jeu.action) : au doigt et à la souris, l'action vient d'une TAPE (appui court sans glisser,
+ *     au relâcher) et non de l'appui : un glissement ne déclenche pas d'action.
+ *   entree.glisse = true pendant l'image où entree.dir vient d'un glissement du doigt (et non d'une flèche du clavier).
+ *   Les codes de triche restent actifs : les flèches tapées comptent aussi pour eux.
  * @param {{canvas: HTMLCanvasElement, jeu: object, onHud?: Function, onFin?: Function, onDebut?: Function}} o
  *   onHud(score, vies) à chaque image, vies étant { left, max } ou null (pas de vies) ;
  *   onFin(score, s) à la fin ; onDebut() au lancement.
@@ -85,7 +95,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   let dernierT = null, raf = 0;
   const touches = []; // dernières touches (codes de triche)
   let bandeau = null; // { texte, t } : message « code activé » affiché un instant
-  const entree = { cible: null, fleche: 0, pas: 0 };
+  const entree = { cible: null, cibleY: null, fleche: 0, pas: 0, vertical: 0, dir: null, glisse: false, action: false, tenu: false };
   let depart = null; // appui du doigt (pour reconnaître un glissement)
   let manuelle = false; // pause demandée par le joueur (l'onglet visible ne la lève pas)
 
@@ -141,7 +151,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     const dt = dernierT === null ? 0 : Math.min(0.05, (t - dernierT) / 1000);
     dernierT = t;
     jeu.update(s, dt, entree);
-    entree.pas = 0;
+    entree.pas = 0; entree.dir = null; entree.glisse = false; entree.action = false;
     onHud(jeu.score(s), jeu.vies(s));
     dessine();
     if (jeu.fini(s)) { fin(); return; }
@@ -153,7 +163,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     if (etat === 'jeu' || etat === 'pause') return;
     s = jeu.init({ reduit });
     s.triche = triche;
-    entree.cible = null; entree.fleche = 0; entree.pas = 0;
+    entree.cible = null; entree.cibleY = null; entree.fleche = 0; entree.pas = 0; entree.vertical = 0; entree.dir = null; entree.action = false; entree.tenu = false;
     dernierT = null; manuelle = false;
     etat = 'jeu';
     onDebut();
@@ -186,7 +196,7 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     if (t instanceof Element && t !== canvas && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
     noteTouche(e.key);
     // Haut et bas ne servent qu'aux codes : la page ne défile pas pendant qu'on joue ou qu'on tape un code.
-    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && (document.activeElement === canvas || etat === 'jeu')) e.preventDefault();
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || (e.key === ' ' && jeu.action)) && (document.activeElement === canvas || etat === 'jeu')) e.preventDefault();
   };
   document.addEventListener('keydown', codesClavier, true);
 
@@ -198,13 +208,19 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
   document.addEventListener('visibilitychange', visibilite);
 
   /* ---------- Commandes ---------- */
-  canvas.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || depart) entree.cible = posX(e); });
+  /** Position verticale (coordonnées du canevas) d'un pointeur. */
+  const posY = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return ((e.clientY - r.top) / r.height) * H;
+  };
+  canvas.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' || depart) { entree.cible = posX(e); entree.cibleY = posY(e); } });
   canvas.addEventListener('pointerdown', (e) => {
     const x = posX(e);
     depart = { x, y: ((e.clientY - canvas.getBoundingClientRect().top) / canvas.getBoundingClientRect().height) * H, t: performance.now() };
-    entree.cible = x;
+    entree.cible = x; entree.cibleY = posY(e);
     if (etat === 'pause') return;
     if (etat !== 'jeu') { demarre(); return; }
+    if (jeu.action && !jeu.tapeSeul) { entree.action = true; entree.tenu = true; }
     if (jeu.voies) entree.pas = x < W / 2 ? -1 : 1; // jeu à voies : appui à gauche ou à droite
   });
   canvas.addEventListener('pointerup', (e) => {
@@ -212,8 +228,13 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     if (depart && e.pointerType !== 'mouse') {
       const r = canvas.getBoundingClientRect();
       const gx = posX(e) - depart.x, gy = ((e.clientY - r.top) / r.height) * H - depart.y;
-      if (Math.max(Math.abs(gx), Math.abs(gy)) > 30) noteTouche(Math.abs(gx) > Math.abs(gy) ? (gx > 0 ? 'ArrowRight' : 'ArrowLeft') : (gy > 0 ? 'ArrowDown' : 'ArrowUp'));
-    }
+      if (Math.max(Math.abs(gx), Math.abs(gy)) > 30) {
+        const k = Math.abs(gx) > Math.abs(gy) ? (gx > 0 ? 'ArrowRight' : 'ArrowLeft') : (gy > 0 ? 'ArrowDown' : 'ArrowUp');
+        noteTouche(k);
+        if (jeu.directions && etat === 'jeu') { entree.dir = { ArrowRight: 'droite', ArrowLeft: 'gauche', ArrowDown: 'bas', ArrowUp: 'haut' }[k]; entree.glisse = true; }
+      } else if (jeu.action && jeu.tapeSeul && etat === 'jeu' && performance.now() - depart.t < 350) entree.action = true; // tape
+    } else if (depart && jeu.action && jeu.tapeSeul && etat === 'jeu') entree.action = true; // clic de souris
+    entree.tenu = false;
     if (depart && jeu.voies) {
       const dx = posX(e) - depart.x;
       if (Math.abs(dx) > 24) entree.pas = dx < 0 ? -1 : 1; // glissement
@@ -221,22 +242,41 @@ export function creeArcade({ canvas, jeu, onHud = () => {}, onFin = () => {}, on
     depart = null;
     if (e.pointerType !== 'mouse') entree.cible = null;
   });
-  canvas.addEventListener('pointercancel', () => { depart = null; });
+  canvas.addEventListener('pointercancel', () => { depart = null; entree.tenu = false; });
   canvas.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') return; // utiles aux codes seulement (codesClavier)
+    // Espace (et flèche haut sans jeu.directions) : action du jeu (saut, tir, rotation…).
+    if (jeu.action && (e.key === ' ' || (e.key === 'ArrowUp' && !jeu.directions))) {
+      e.preventDefault();
+      if (etat === 'pause') return;
+      if (etat !== 'jeu') { demarre(); return; }
+      if (!e.repeat) entree.action = true;
+      entree.tenu = true;
+      return;
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (!jeu.directions) return; // utiles aux codes seulement (codesClavier)
+      e.preventDefault();
+      if (etat === 'pause') return;
+      if (etat !== 'jeu') { demarre(); return; }
+      if (!e.repeat) entree.dir = e.key === 'ArrowUp' ? 'haut' : 'bas';
+      entree.vertical = e.key === 'ArrowUp' ? -1 : 1;
+      return;
+    }
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
     const d = e.key === 'ArrowLeft' ? -1 : 1;
     entree.cible = null;
     if (etat === 'pause') return;
     if (etat !== 'jeu') { demarre(); return; }
-    if (!e.repeat) entree.pas = d;
+    if (!e.repeat) { entree.pas = d; if (jeu.directions) entree.dir = d < 0 ? 'gauche' : 'droite'; }
     entree.fleche = d;
   });
   canvas.addEventListener('keyup', (e) => {
     if ((e.key === 'ArrowLeft' && entree.fleche < 0) || (e.key === 'ArrowRight' && entree.fleche > 0)) entree.fleche = 0;
+    if ((e.key === 'ArrowUp' && entree.vertical < 0) || (e.key === 'ArrowDown' && entree.vertical > 0)) entree.vertical = 0;
+    if (e.key === ' ' || e.key === 'ArrowUp') entree.tenu = false;
   });
-  canvas.addEventListener('blur', () => { entree.fleche = 0; });
+  canvas.addEventListener('blur', () => { entree.fleche = 0; entree.vertical = 0; entree.tenu = false; });
 
   dessine();
   return { demarre, arrete, pause, enJeu: () => etat === 'jeu' || etat === 'pause', dessine, triche };
