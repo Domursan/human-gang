@@ -333,8 +333,14 @@ export function creer(root, ctx) {
     const item = carteItem(c);
     let h = titre(carteNom(c)) + (item?.texte ? `<p>${esc(item.texte)}</p>` : '');
     if (CARTE_UTILISER.includes(id)) {
+      // Condition de la carte, connue de moi seul (mon personnage) : sans elle, seul « Ne pas l'utiliser » est proposé.
+      const perso = jeu().moi?.perso;
+      const camp = jeu().moi?.camp;
+      const ok = (id === 'avenement' && camp === 'hunter') || (id === 'rituel' && camp === 'shadow')
+        || (id === 'chocolat' && ['allie', 'emi', 'inconnu'].includes(perso));
       return h + `<div class="sh-pied">
-        <button type="button" class="sh-btn sh-btn-primary" data-act="carte" data-utiliser="true">Utiliser la carte</button>
+        ${ok ? '<button type="button" class="sh-btn sh-btn-primary" data-act="carte" data-utiliser="true">Utiliser la carte</button>'
+          : '<p class="sh-note">Tu ne remplis pas la condition de cette carte.</p>'}
         <button type="button" class="sh-btn sh-btn-ghost" data-act="carte" data-utiliser="false">Ne pas l'utiliser</button></div>`;
     }
     const equipement = CARTE_EQUIPEMENT.includes(id);
