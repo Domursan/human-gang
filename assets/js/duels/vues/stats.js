@@ -4,15 +4,16 @@
  * tuiles (duels, victoires, nuls, défaites, % de victoires, série, meilleure série), rival favori, badges
  * (obtenus en couleur avec la date, verrouillés en gris avec leur condition) et derniers duels (jeu, adversaire,
  * résultat, score, Paillettes). Le résultat est toujours écrit en toutes lettres, pas seulement en couleur.
- * Dépendances : core.js (esc), duels/api.js (duel, erreurTexte, JEUX), vues/commun.js (couleurJoueur).
+ * Dépendances : core.js (esc), duels/api.js (duel, erreurTexte, jeuxVisibles), vues/commun.js (couleurJoueur).
  * Exporte : afficher.
  */
 import { esc } from '../../core.js';
-import { duel, erreurTexte, JEUX } from '../api.js';
+import { duel, erreurTexte, jeuxVisibles } from '../api.js';
 import { couleurJoueur } from './commun.js';
 
 /** Filtres par jeu : [clé envoyée au serveur (vide = tous), libellé]. */
-const FILTRES = [['', 'Tous'], ...Object.entries(JEUX).map(([cle, j]) => [cle, j.nom])];
+/** Filtres : Tous, puis les jeux visibles pour ce membre (les jeux en développement seulement pour les admins). */
+const filtresJeux = () => [['', 'Tous'], ...Object.entries(jeuxVisibles()).map(([cle, j]) => [cle, j.nom])];
 const RESULTATS = { victoire: 'Victoire', nul: 'Nul', defaite: 'Défaite' };
 const ICONE_OK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const ICONE_CADENAS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -41,7 +42,7 @@ function squelette() {
     <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="duels.html">Duels</a> › Statistiques</nav>
     <h1 class="duels-titre">Mes statistiques de duels</h1>
     <div class="duels-st-filtres" role="group" aria-label="Filtrer par jeu">
-      ${FILTRES.map(([cle, nom], i) => `<button type="button" class="btn btn-ghost duels-st-filtre" data-jeu="${esc(cle)}" aria-pressed="${i === 0 ? 'true' : 'false'}">${esc(nom)}</button>`).join('')}
+      ${filtresJeux().map(([cle, nom], i) => `<button type="button" class="btn btn-ghost duels-st-filtre" data-jeu="${esc(cle)}" aria-pressed="${i === 0 ? 'true' : 'false'}">${esc(nom)}</button>`).join('')}
     </div>
     <div id="st-contenu" aria-live="polite" aria-busy="true"><p class="duels-st-aide">Chargement…</p></div>
   </div>`;

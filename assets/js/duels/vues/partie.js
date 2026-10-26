@@ -2,7 +2,7 @@
 /*
  * Rôle : suit la partie en temps réel (duels/api.js) et affiche la bonne vue selon son statut :
  *   attente → vues/salle.js · en_cours → vues/p4.js, vues/morpion.js, vues/mastermind.js,
- *   vues/bataille.js ou vues/quiestce.js (selon le jeu) ·
+ *   vues/bataille.js, vues/quiestce.js, vues/dames.js, vues/echecs.js, vues/othello.js ou vues/pfc.js (selon le jeu) ·
  *   terminee / annulee → vues/fin.js. Un spectateur (duel public) voit la même table, sans pouvoir jouer.
  * La vue n'est recréée que si le statut change ; sinon on appelle vue.maj(etat).
  * Les messages du chat (anciens puis nouveaux) sont passés à la vue par vue.message(msg).
@@ -22,6 +22,10 @@ const VUES = {
   mastermind: () => import('./mastermind.js'),
   bataille: () => import('./bataille.js'),
   quiestce: () => import('./quiestce.js'),
+  dames: () => import('./dames.js'),
+  echecs: () => import('./echecs.js'),
+  othello: () => import('./othello.js'),
+  pfc: () => import('./pfc.js'),
   fin: () => import('./fin.js'),
 };
 

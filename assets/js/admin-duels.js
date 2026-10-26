@@ -30,6 +30,10 @@ const DEFAUT = Object.freeze({
     mastermind: Object.freeze({ partie: 20, victoire: 60 }),
     bataille: Object.freeze({ partie: 20, victoire: 60 }),
     quiestce: Object.freeze({ partie: 20, victoire: 60 }),
+    dames: Object.freeze({ partie: 20, victoire: 60 }),
+    echecs: Object.freeze({ partie: 30, victoire: 80 }),
+    othello: Object.freeze({ partie: 20, victoire: 60 }),
+    pfc: Object.freeze({ partie: 5, victoire: 15 }),
     code_du_jour: 30,
   }),
   plafond_jour: 500,
@@ -47,9 +51,14 @@ const LIGNES = Object.freeze([
   ['mastermind', 'Mastermind'],
   ['bataille', 'Bataille navale'],
   ['quiestce', 'Qui est-ce ?'],
+  ['dames', 'Dames'],
+  ['echecs', 'Échecs'],
+  ['othello', 'Othello'],
+  ['pfc', 'Pierre-feuille-ciseaux'],
 ]);
 /** Libellés des jeux (colonne jeu des parties) pour le bloc des duels terminés. */
-const JEUX_NOM = Object.freeze({ p4: 'Puissance 4', morpion: 'Morpion', mastermind: 'Mastermind', bataille: 'Bataille navale', quiestce: 'Qui est-ce ?' });
+const JEUX_NOM = Object.freeze({ p4: 'Puissance 4', morpion: 'Morpion', mastermind: 'Mastermind', bataille: 'Bataille navale', quiestce: 'Qui est-ce ?',
+  dames: 'Dames', echecs: 'Échecs', othello: 'Othello', pfc: 'Pierre-feuille-ciseaux' });
 const STATUT_NOM = Object.freeze({ attente: 'En attente', en_cours: 'En cours' });
 /** Niveaux du robot (valeurs 1 à 3 de la colonne robot). */
 const ROBOT_NOM = Object.freeze({ 1: 'Facile', 2: 'Moyen', 3: 'Difficile' });

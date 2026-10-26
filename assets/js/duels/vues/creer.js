@@ -10,7 +10,7 @@
  * Exporte : afficher.
  */
 import { esc, toast } from '../../core.js';
-import { duel, erreurTexte, JEUX, ROBOTS } from '../api.js';
+import { duel, erreurTexte, JEUX, ROBOTS, jeuxVisibles } from '../api.js';
 import { avatarHtml, nomJoueur } from './commun.js';
 
 const FORMATS = [[1, '1 manche'], [3, 'Au meilleur des 3'], [5, 'Au meilleur des 5']];
@@ -50,7 +50,7 @@ function interrupteur(nom, titre, aide, coche) {
 
 /** Réglages lus et écrits par le formulaire. */
 function etatInitial(arg, arg2) {
-  const jeu = Object.hasOwn(JEUX, arg) ? arg : 'p4';
+  const jeu = Object.hasOwn(jeuxVisibles(), arg) ? arg : 'p4';
   return {
     jeu,
     variante: JEUX[jeu].variantes[0][0],
@@ -81,10 +81,11 @@ export async function afficher(root, { arg, arg2, naviguer }) {
   let dernierJeu = null;
   let occupe = false;
 
-  const jeuxHtml = Object.entries(JEUX).map(([cle, j]) => `<label class="duels-jeu">
+  const jeuxHtml = Object.entries(jeuxVisibles()).map(([cle, j]) => `<label class="duels-jeu">
       <input class="visually-hidden" type="radio" name="jeu" value="${esc(cle)}">
       <img class="duels-vignette" src="assets/img/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
       <span class="duels-jeu-nom">${esc(j.nom)}</span>
+      ${j.dev ? '<span class="duels-dev">En développement</span>' : ''}
       <span class="duels-choix-etat">${CHECK}<span>Sélectionné</span></span>
       <span class="duels-jeu-aide">${esc(j.texte)}</span>
     </label>`).join('');
@@ -140,7 +141,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
           <section class="card duels-etape" aria-labelledby="creer-etape3">
             <h2 id="creer-etape3" class="duels-etape-titre">3. Les réglages</h2>
             <div class="duels-reglages-trois">
-              ${groupe('Qui commence', COMMENCE.map(([v, t]) => choix('commence', v, t)).join(''))}
+              ${groupe('Qui commence', COMMENCE.map(([v, t]) => choix('commence', v, t)).join(''), 'data-commence')}
               ${groupe('Format', FORMATS.map(([v, t]) => choix('format', v, t)).join(''))}
               <fieldset class="duels-groupe"><legend>Temps par tour</legend><div class="duels-choix-liste" data-temps></div></fieldset>
             </div>
@@ -232,6 +233,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     form.querySelector('[name="invites"]').checked = s.invites;
     form.querySelectorAll('[data-panneau]').forEach((p) => { p.hidden = p.dataset.panneau !== s.adversaire; });
     codesEl.hidden = s.jeu !== 'mastermind';
+    form.querySelectorAll('[data-commence]').forEach((el) => { el.hidden = s.jeu === 'pfc'; });
     form.querySelector('[name="contact"]').checked = s.contact;
     form.querySelector('[name="rejouer"]').checked = s.rejouer;
     form.querySelector('[name="libres"]').checked = s.libres;

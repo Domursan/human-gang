@@ -12,7 +12,7 @@
 .duels-face-j.is-tour .duels-face-etat { color: var(--sand); font-weight: 700; }
 .duels-face-score { font-family: 'Archivo Black', sans-serif; font-size: 22px; min-width: 28px; text-align: center; }
 .duels-contre { font-size: 13px; color: var(--muted); }
-.duels-barre-outils { display: flex; align-items: center; gap: 8px; }
+.duels-barre-outils { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 100%; }
 .duels-btn-icone { position: relative; width: 44px; height: 44px; padding: 0; display: grid; place-items: center; border-radius: 999px; }
 .duels-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent);
   color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }

@@ -1,0 +1,74 @@
+/* ===== Humane Gang — Duels : table Pierre-feuille-ciseaux (vues/pfc.js) ===== */
+
+.duels-pfc-zone { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 18px; }
+
+/* Manche et score */
+.duels-pfc-entete { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.duels-pfc-manche { margin: 0; font-family: 'Archivo Black', sans-serif; font-size: clamp(18px, 4vw, 24px); }
+.duels-pfc-score { margin: 0; display: flex; align-items: baseline; gap: 8px; font-size: 15px; color: var(--muted); }
+.duels-pfc-score strong { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(26px, 6vw, 36px); color: var(--text); font-variant-numeric: tabular-nums; }
+.duels-pfc-score-nom { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duels-pfc-score-tiret { color: var(--muted); }
+
+/* Arène : le dernier lancer, deux faces côte à côte */
+.duels-pfc-arene { display: flex; flex-direction: column; gap: 10px; padding: 16px; box-sizing: border-box;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.duels-pfc-arene-titre { margin: 0; font-size: 13px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.duels-pfc-cartes { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
+.duels-pfc-face { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 12px 6px; box-sizing: border-box;
+  border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); }
+.duels-pfc-face-titre { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; }
+.duels-pfc-face-dessin { display: grid; place-items: center; width: clamp(72px, 22vw, 112px); aspect-ratio: 1; }
+.duels-pfc-face-nom { font-size: 14px; color: var(--muted); min-height: 1.4em; }
+.duels-pfc-face.is-gauche .duels-pfc-face-dessin { color: var(--sand); }
+.duels-pfc-face.is-droite .duels-pfc-face-dessin { color: var(--slate); }
+.duels-pfc-face.is-cache .duels-pfc-face-dessin { color: var(--border-strong); }
+.duels-pfc-inconnu { font-family: 'Archivo Black', sans-serif; font-size: 48px; line-height: 1; color: var(--muted); }
+.duels-pfc-vs { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.duels-pfc-resultat { margin: 0; min-height: 1.5em; text-align: center; font-weight: 700; font-size: 16px; }
+.duels-pfc-vide { margin: 0; color: var(--muted); font-size: 14px; text-align: center; }
+.duels-pfc-svg { display: block; width: 100%; height: 100%; }
+
+/* Révélation : les faces se retournent l'une après l'autre (sans effet si mouvement réduit) */
+.duels-pfc-cartes.is-revele .duels-pfc-face { animation: duels-pfc-revele .5s ease-out both; }
+.duels-pfc-cartes.is-revele .duels-pfc-face.is-droite { animation-delay: .15s; }
+.duels-pfc-cartes.is-revele .duels-pfc-vs { animation: duels-pfc-fondu .4s ease-out .3s both; }
+@keyframes duels-pfc-revele { from { transform: perspective(600px) rotateY(90deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes duels-pfc-fondu { from { opacity: 0; } to { opacity: 1; } }
+
+/* Compte à rebours personnel */
+.duels-pfc-compte { margin: 0; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.duels-pfc-compte[hidden] { display: none; }
+
+/* Gestes : trois grandes cartes, dessins à trait */
+.duels-pfc-gestes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.duels-pfc-gestes[hidden] { display: none; }
+.duels-pfc-geste { appearance: none; min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px 12px;
+  box-sizing: border-box; border: 2px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text);
+  font: inherit; cursor: pointer; transition: transform .15s ease, border-color .15s ease, background-color .15s ease; }
+.duels-pfc-geste .duels-pfc-dessin { display: grid; place-items: center; width: clamp(64px, 20vw, 104px); aspect-ratio: 1; }
+.duels-pfc-geste .duels-pfc-nom { font-family: 'Archivo Black', sans-serif; font-size: clamp(14px, 3.6vw, 18px); }
+.duels-pfc-geste:hover:not(:disabled) { border-color: var(--sand); transform: translateY(-2px); }
+.duels-pfc-geste:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.duels-pfc-geste:disabled { cursor: default; opacity: .55; }
+.duels-pfc-geste.is-choisi { opacity: 1; border-color: var(--sand); background: color-mix(in srgb, var(--sand) 14%, var(--surface)); }
+.duels-pfc-gestes:has(.is-choisi) .duels-pfc-geste:not(.is-choisi) { opacity: .35; }
+
+/* Historique des lancers (colonne latérale) */
+.duels-pfc-historique { margin: 0 0 14px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px;
+  max-height: 320px; overflow-y: auto; font-size: 14px; }
+.duels-pfc-historique li { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.duels-pfc-h-manche { font-weight: 700; color: var(--muted); white-space: nowrap; }
+.duels-pfc-h-duel { min-width: 0; overflow-wrap: anywhere; }
+.duels-pfc-h-res { grid-column: 2; color: var(--sand); }
+.duels-pfc-historique .duels-pfc-vide { display: block; text-align: left; }
+.duels-pfc-regle { margin: 0 0 8px; font-size: 14px; color: var(--muted); }
+
+@media (max-width: 380px) {
+  .duels-pfc-cartes { gap: 6px; }
+  .duels-pfc-gestes { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .duels-pfc-cartes.is-revele .duels-pfc-face, .duels-pfc-cartes.is-revele .duels-pfc-vs { animation: none; }
+  .duels-pfc-geste { transition: none; }
+}

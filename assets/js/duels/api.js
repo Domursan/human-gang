@@ -7,9 +7,11 @@
  * Défi à un membre (création ou revanche) : le bot lui envoie un MP (hg-notify, duel_defi), sans bloquer l'écran.
  * Dépendances : core.js (sb, errMsg, notify).
  * Exporte : duel (appels), suivrePartie, messages, erreurTexte, activerInvite, estInvite, jetonInvite,
- *   JEUX (noms et réglages des jeux), COULEURS_MM (couleurs du Mastermind).
+ *   JEUX (noms et réglages des jeux), jeuxVisibles, peutVoirJeuxDev, COULEURS_MM (couleurs du Mastermind).
  */
 import { sb, errMsg, notify } from '../core.js';
+import { getCachedProfile } from '../core/profile.js';
+import { viewAsActive } from '../core/view-as.js';
 
 /* ---------- Jeux et réglages (textes affichés) ---------- */
 /** Jeux, variantes et temps proposés. Images : assets/img/jeux/<image>.webp. */
@@ -34,7 +36,26 @@ export const JEUX = {
   quiestce: { nom: 'Qui est-ce ?', image: 'qui-est-ce', texte: 'Devine le personnage secret de l’autre.',
     variantes: [['quartier', 'Les habitants du quartier', '24 personnages, des questions toutes prêtes ou libres.']],
     temps: [60, 90, 120], tempsDefaut: 90 },
+  /* Jeux en développement (dev) : visibles des seuls admins, voir jeuxVisibles(). */
+  dames: { nom: 'Dames', image: 'dames', texte: 'Prises obligatoires, rafles et dames volantes.', dev: true,
+    variantes: [['internationales', 'Internationales 10 × 10', 'Damier 10 × 10 : la prise est obligatoire, et la plus longue l’emporte.']],
+    temps: [30, 60, 90, 120], tempsDefaut: 90 },
+  echecs: { nom: 'Échecs', image: 'echecs', texte: 'Le grand classique, contre un membre ou le robot.', dev: true,
+    variantes: [['classique', 'Classique', 'Roques, prise en passant et promotion, comme aux échecs.']],
+    temps: [30, 60, 90, 120], tempsDefaut: 90 },
+  othello: { nom: 'Othello', image: 'othello', texte: 'Encadre et retourne les pions adverses.', dev: true,
+    variantes: [['classique', 'Classique 8 × 8', 'Encadre des pions adverses pour les retourner. Le plus de pions à la fin gagne.']],
+    temps: [15, 30, 60], tempsDefaut: 30 },
+  pfc: { nom: 'Pierre-feuille-ciseaux', image: 'pfc', texte: 'Un geste caché, révélé en même temps.', dev: true,
+    variantes: [['classique', 'Classique', 'La pierre bat les ciseaux, les ciseaux battent la feuille, la feuille bat la pierre. Égalité : on relance.']],
+    temps: [15, 30, 60], tempsDefaut: 30 },
 };
+/** Vrai si le membre voit les jeux en développement : admin, et pas en mode « voir comme ». */
+export const peutVoirJeuxDev = () => !!getCachedProfile()?.is_admin && !viewAsActive();
+/** Jeux proposés à ce membre (les jeux en développement seulement pour les admins). */
+export function jeuxVisibles() {
+  return Object.fromEntries(Object.entries(JEUX).filter(([, j]) => !j.dev || peutVoirJeuxDev()));
+}
 /** Flotte de la Bataille navale (le serveur la renvoie aussi dans etat.bataille.flotte). */
 export const FLOTTE = [
   { type: 'porte_avions', nom: 'Porte-avions', longueur: 5 },
@@ -113,6 +134,8 @@ export const duel = {
   /** En attente : annule ; en cours : abandon (l'adversaire gagne). */
   quitter: deux((code) => rpc('hg_duel_quitter', { p_code: code }), async (code) => { await rpcInvite('quitter', code); oublierJeton(code); }),
   /** coup : colonne (Puissance 4) ou case (Morpion ; Ultime 0 à 80) ; action : 'pose' ou 'retire' (Pop Out). */
+  /** Coups jouables pour le membre connecté, quand c'est son tour (Othello : [cases] ; Dames : [chemins] ; Échecs : [{de, a, promo}]). */
+  possibles: deux((code) => rpc('hg_duel_possibles', { p_code: code }), async () => []),
   jouer: deux((code, coup, action = 'pose') => rpc('hg_duel_jouer', { p_code: code, p_coup: coup, p_action: action }),
     (code, coup, action = 'pose') => rpcInvite('jouer', code, { coup, action })),
   /** Mastermind : le code que l'adversaire devra percer (4 lettres parmi r o y g b p). */

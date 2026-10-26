@@ -23,7 +23,10 @@ import { creerChat } from './chat.js';
 const COULEUR = { 1: '#D93A3F', 2: '#F2B705' };
 const SYMBOLE = { 1: 'X', 2: 'O' };
 /** Libellé de la colonne « coups » du détail des manches, selon le jeu. */
-const LIBELLE_COUPS = { mastermind: 'Essais', bataille: 'Tirs', quiestce: 'Questions' };
+const LIBELLE_COUPS = { mastermind: 'Essais', bataille: 'Tirs', quiestce: 'Questions', pfc: 'Lancers' };
+/** Lettres des pièces d'échecs (notation française) et noms des gestes du pierre-feuille-ciseaux. */
+const LETTRE_PIECE = { k: 'R', q: 'D', r: 'T', b: 'F', n: 'C', p: 'P' };
+const NOM_GESTE = { pierre: 'Pierre', feuille: 'Feuille', ciseaux: 'Ciseaux' };
 /** Icône de médaille (badge débloqué). */
 const MEDAILLE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 20L20 4M4 4h4M4 4v4M20 20h-4M20 20v-4"/></svg>';
 /** Couronne du gagnant. */
@@ -75,6 +78,55 @@ function blocGrilleSimple(p, d, js) {
       style="grid-template-columns:repeat(${w}, minmax(0, 1fr))">${cellules}</div>
     <p class="duels-fin-note">${legende}</p>
     <p class="duels-fin-note">${esc(note)}</p>`;
+}
+
+/** Grille d'un jeu de cases (Othello, Dames, Échecs), lecture seule : pions en rond, dames marquées D, pièces en lettres. */
+function blocCases(p, e, d, js) {
+  const w = p.w || 8, h = p.h || 8;
+  const g = String(d.grille || '').padEnd(w * h, '.');
+  const pions = e.pions || {};
+  const duDe = (c) => js.find((j) => String(pions[j.user_id]) === c) || null;
+  const nom1 = nomJoueur(duDe('1')), nom2 = nomJoueur(duDe('2'));
+  const compte = (cars) => [...g].filter((x) => cars.includes(x)).length;
+  let legende;
+  if (p.jeu === 'othello') legende = `Noirs : ${nom1} (${compte(['1'])}) · Blancs : ${nom2} (${compte(['2'])})`;
+  else if (p.jeu === 'echecs') legende = `Blancs : ${nom1} · Noirs : ${nom2}`;
+  else legende = `${nom1} (${compte(['1', 'A'])} pions) · ${nom2} (${compte(['2', 'B'])} pions)`;
+  const cellules = Array.from({ length: w * h }, (_, i) => {
+    const x = g[i];
+    const r = Math.floor(i / w), c = i % w;
+    let classe = 'is-vert', contenu = '';
+    if (p.jeu === 'othello') {
+      if (x === '1' || x === '2') contenu = `<i class="duels-fin-pion ${x === '1' ? 'is-noir' : 'is-blanc'}"></i>`;
+    } else if (p.jeu === 'dames') {
+      classe = (r + c) % 2 === 1 ? 'is-sombre' : 'is-clair';
+      if (['1', '2', 'A', 'B'].includes(x)) {
+        contenu = `<i class="duels-fin-pion ${x === '1' || x === 'A' ? 'is-noir' : 'is-blanc'}"></i>${x === 'A' || x === 'B' ? '<b class="duels-fin-dame" aria-hidden="true">D</b>' : ''}`;
+      }
+    } else {
+      classe = (r + c) % 2 === 0 ? 'is-clair' : 'is-sombre';
+      if (x !== '.' && LETTRE_PIECE[x.toLowerCase()]) {
+        contenu = `<b class="duels-fin-piece ${x === x.toUpperCase() ? 'is-blanc' : 'is-noir'}">${esc(LETTRE_PIECE[x.toLowerCase()])}</b>`;
+      }
+    }
+    return `<span class="duels-fin-case ${classe}">${contenu}</span>`;
+  }).join('');
+  return `<h2 id="duels-fin-grille-titre" class="duels-h3">Dernière grille</h2>
+    <div class="duels-fin-mini duels-fin-mini--cases" role="img" aria-label="Grille de ${w} colonnes sur ${h}" style="grid-template-columns:repeat(${w}, minmax(0, 1fr))">${cellules}</div>
+    <p class="duels-fin-note">${legende}</p>`;
+}
+
+/** Pierre-feuille-ciseaux : pas de grille ; la liste des lancers de la partie, du premier au dernier. */
+function blocLancers(e, js) {
+  const titre = '<h2 id="duels-fin-grille-titre" class="duels-h3">Les lancers</h2>';
+  const lancers = (e.pfc && e.pfc.lancers) || [];
+  if (!lancers.length) return `${titre}<p class="duels-fin-note">Aucun lancer.</p>`;
+  const nomDe = (uid) => { const j = js.find((x) => x.user_id === uid); return j?.robot ? 'le robot' : (j?.pseudo || '?'); };
+  const [j1, j2] = [js.find((j) => j.place === 1), js.find((j) => j.place === 2)];
+  const lignes = lancers.map((l) => `<li>Manche ${esc(l.manche)} : ${esc(nomDe(j1?.user_id))} ${esc(NOM_GESTE[l[j1?.user_id]] || '—')}
+      · ${esc(nomDe(j2?.user_id))} ${esc(NOM_GESTE[l[j2?.user_id]] || '—')}
+      · ${l.gagnant ? `${esc(nomDe(l.gagnant))} gagne` : 'égalité, relance'}</li>`).join('');
+  return `${titre}<ol class="duels-fin-lancers">${lignes}</ol>`;
 }
 
 /** Ultime : les 9 petites grilles, d'après l'état de chacune (X, O, = ou en cours). */
@@ -206,7 +258,7 @@ function blocPersos(e, js, charge) {
 }
 
 /** Détail des manches : vainqueur et nombre de coups (essais, tirs ou questions selon le jeu). */
-function blocManches(p, js) {
+function blocManches(p, js, lancers = null) {
   const h = p.historique || [];
   const libelle = LIBELLE_COUPS[p.jeu] || 'Coups';
   const titre = `<h2 id="duels-fin-manches-titre" class="duels-h3">${h.length > 1 ? `Détail des ${h.length} manches` : 'Détail de la manche'}</h2>`;
@@ -215,7 +267,7 @@ function blocManches(p, js) {
     const g = js.find((j) => j.user_id === d.gagnant);
     return `<tr><th scope="row">${esc(d.manche)}</th>
       <td>${g ? `${nomJoueur(g)} <span class="duels-fin-ok">· gagné</span>` : 'Nulle'}</td>
-      <td>${esc(d.coups ?? '')}</td></tr>`;
+      <td>${esc(lancers ? lancers.filter((l) => l.manche === d.manche).length : (d.coups ?? ''))}</td></tr>`;
   }).join('');
   return `${titre}
     <div class="duels-fin-table-cadre"><table class="duels-fin-table">
@@ -354,10 +406,12 @@ export function creer(root, ctx) {
       q('[data-grille]').innerHTML = p.jeu === 'mastermind' ? blocCodes(derniere, js)
         : p.jeu === 'bataille' ? blocFlottes(e, js, moiJ?.user_id)
           : p.jeu === 'quiestce' ? blocPersos(e, js, quiEst)
-            : !derniere ? '<h2 id="duels-fin-grille-titre" class="duels-h3">Dernière grille</h2><p class="duels-fin-note">Aucune manche jouée.</p>'
-              : p.variante === 'ultime' ? blocUltime(p, derniere, js)
-                : blocGrilleSimple(p, derniere, js);
-      q('[data-manches]').innerHTML = blocManches(p, js);
+            : p.jeu === 'pfc' ? blocLancers(e, js)
+              : !derniere ? '<h2 id="duels-fin-grille-titre" class="duels-h3">Dernière grille</h2><p class="duels-fin-note">Aucune manche jouée.</p>'
+                : p.variante === 'ultime' ? blocUltime(p, derniere, js)
+                  : ['othello', 'dames', 'echecs'].includes(p.jeu) ? blocCases(p, e, derniere, js)
+                    : blocGrilleSimple(p, derniere, js);
+      q('[data-manches]').innerHTML = blocManches(p, js, p.jeu === 'pfc' ? (e.pfc?.lancers || []) : null);
       q('[data-gains]').innerHTML = blocGains(e, moiJ, js);
       q('[data-actions]').innerHTML = blocActions(p, joue);
     } else {

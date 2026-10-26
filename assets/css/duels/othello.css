@@ -1,0 +1,50 @@
+/* ===== Humane Gang — Duels : table Othello (vues/othello.js) ===== */
+/* Plateau vert sauge sombre, 8 × 8 en grille CSS : il s'adapte seul à la largeur du téléphone. */
+
+.duels-oth-jeu { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Compte des pions, au-dessus du plateau */
+.duels-oth-compte { display: flex; gap: 8px; }
+.duels-oth-chip { margin: 0; flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 14px; }
+.duels-oth-chip-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duels-oth-chip-n { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
+.duels-oth-pastille { width: 16px; height: 16px; border-radius: 50%; flex: none; }
+.duels-oth-pastille.is-noir, .duels-oth-pion.is-noir {
+  background: radial-gradient(circle at 35% 30%, #5b5b61 0, #17171a 60%, #050506 100%); }
+.duels-oth-pastille.is-blanc, .duels-oth-pion.is-blanc {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0, #e9e6df 60%, #b9b5ac 100%); }
+
+/* Plateau */
+.duels-oth-plateau { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 2px; padding: 6px; box-sizing: border-box;
+  background: #34503D; border-radius: 16px; box-shadow: 0 18px 40px rgba(0, 0, 0, .45); }
+.duels-oth-case { appearance: none; position: relative; margin: 0; padding: 0; min-width: 0; aspect-ratio: 1; border: 0; border-radius: 3px;
+  background: #4A6B55; color: inherit; cursor: pointer; display: grid; place-items: center; }
+.duels-oth-case:disabled { cursor: default; }
+.duels-oth-case:focus-visible { outline: 3px solid var(--sand); outline-offset: -3px; z-index: 1; }
+.duels-oth-case.is-choix { outline: 3px solid var(--sand); outline-offset: -3px; }
+
+/* Coup possible : un point clair au centre de la case vide */
+.duels-oth-case.is-possible::after { content: ''; width: 26%; aspect-ratio: 1; border-radius: 50%; background: rgba(242, 239, 234, .55); }
+.duels-oth-case.is-possible:hover::after { background: rgba(242, 239, 234, .85); }
+
+/* Pion : léger relief (ombre portée et bord bas) */
+.duels-oth-pion { display: block; width: 82%; aspect-ratio: 1; border-radius: 50%; box-sizing: border-box;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, .45), inset 0 -3px 0 rgba(0, 0, 0, .22); }
+.duels-oth-case.is-dernier .duels-oth-pion { box-shadow: 0 0 0 3px var(--sand), 0 3px 4px rgba(0, 0, 0, .45), inset 0 -3px 0 rgba(0, 0, 0, .22); }
+
+/* Animations légères : pose d'un pion, retournement des pions encadrés */
+.duels-oth-pion.is-pose { animation: duels-oth-pose .35s ease-out both; }
+.duels-oth-case.is-retourne .duels-oth-pion { animation: duels-oth-retourne .6s ease-in-out both; }
+@keyframes duels-oth-pose { from { transform: scale(.35); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes duels-oth-retourne { 0% { transform: scaleX(1); } 50% { transform: scaleX(.08); } 100% { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .duels-oth-pion.is-pose, .duels-oth-case.is-retourne .duels-oth-pion { animation: none; }
+}
+
+/* Boutons du téléphone : jouer la case sélectionnée, ou annuler */
+.duels-oth-actions { display: flex; flex-wrap: wrap; gap: 10px; min-height: 0; }
+.duels-oth-actions:empty { display: none; }
+.duels-oth-actions .btn { min-height: 44px; }
+
+.duels-oth-regle { margin: 0 0 8px; font-size: 14px; color: var(--muted); }

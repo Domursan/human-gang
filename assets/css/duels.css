@@ -11,6 +11,8 @@
 @import url('duels/mastermind.css');
 @import url('duels/bataille.css');
 @import url('duels/quiestce.css');
+@import url('duels/othello.css');
+@import url('duels/pfc.css');
 @import url('duels/fin.css');
 @import url('duels/stats.css');
 @import url('duels/jour.css');
@@ -30,6 +32,10 @@ body.duels-page {
 .duels-titre { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0 0 12px; }
 .duels-code { font-family: 'Courier New', monospace; letter-spacing: 3px; }
 .duels-invite-tag { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 999px; font-size: 11px; color: var(--muted); vertical-align: middle; }
+/* Jeux en développement : étiquette (admins seulement, voir jeuxVisibles dans duels/api.js) */
+.duels-dev { display: inline-flex; align-items: center; max-width: 100%; margin: 4px 0 0 0; padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+  font-size: 11px; font-weight: 700; line-height: 1.3; letter-spacing: .04em; text-align: center; white-space: normal; color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent); }
 .duels-vignette { display: block; width: 100%; aspect-ratio: 3 / 2; height: auto; object-fit: cover; }
 
 /* ---------- Avatar rond (initiales dans la couleur du membre) ---------- */

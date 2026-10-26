@@ -104,7 +104,8 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
   const peindreChrono = () => {
     const e = st.etat; if (!e) return;
     const moiJ = joueurMoi(e);
-    const fin = e.partie.tour_fin || (e.partie.jeu === 'mastermind' ? (moiJ?.fin || adversaire(e)?.fin) : null);
+    const fin = e.partie.tour_fin || (e.partie.jeu === 'mastermind' ? (moiJ?.fin || adversaire(e)?.fin)
+      : e.partie.jeu === 'pfc' ? (moiJ?.fin || null) : null);
     if (!fin || e.partie.statut !== 'en_cours') { el.chrono.hidden = true; return; }
     const reste = ctx.suivi?.secondesRestantes(fin) ?? 0;
     const total = e.partie.phase === 'codes' ? 60 : e.partie.t_coup;
@@ -145,10 +146,14 @@ export function creerCadre(root, ctx, { classe = '' } = {}) {
       const [a, b] = [js.find((j) => j.place === 1), js.find((j) => j.place === 2)];
       el.score.textContent = p.format > 1 ? `Manche ${p.manche} · au meilleur des ${p.format} · ${a?.manches ?? 0} – ${b?.manches ?? 0}` : `Manche unique`;
       el.face.innerHTML = js.map((j) => {
-        const tour = p.tour === j.user_id || (p.jeu === 'mastermind' && !!j.fin);
+        const pfc = p.jeu === 'pfc';
+        const aChoisi = !!e.pfc?.a_choisi?.[j.user_id];
+        const tour = p.tour === j.user_id || (p.jeu === 'mastermind' && !!j.fin) || (pfc && !!j.fin);
+        const moi = j.user_id === e.moi.user_id;
         const etatTxt = p.jeu === 'mastermind'
           ? (j.trouve_en ? `Code trouvé en ${j.trouve_en}` : `${j.essais} essai${j.essais > 1 ? 's' : ''} sur 10`)
-          : (p.tour === j.user_id ? (j.user_id === e.moi.user_id ? 'À toi de jouer' : 'À son tour') : 'En attente');
+          : pfc ? (aChoisi ? (moi ? 'Choix fait, gardé secret' : 'A choisi') : (moi ? 'À toi de choisir' : 'Réfléchit…'))
+          : (p.tour === j.user_id ? (moi ? 'À toi de jouer' : 'À son tour') : 'En attente');
         return `<div class="duels-face-j${tour ? ' is-tour' : ''}">${avatarHtml(j, { tour })}
           <span class="duels-face-txt"><strong>${nomJoueur(j)}</strong><span class="duels-face-etat">${esc(etatTxt)}</span></span>
           ${p.format > 1 ? `<span class="duels-face-score" aria-label="${j.manches} manches gagnées">${j.manches}</span>` : ''}</div>`;
