@@ -1,4 +1,3 @@
 2026-10-26T16:07:04.829Z ok supabase/migrations/138_nj_solo.sql
 2026-10-26T16:10:49.045Z ok supabase/migrations/139_nj_images.sql
 2026-10-26T16:14:37.085Z ok supabase/migrations/140_nj_grilles.sql
-2026-10-26T16:22:29.537Z ERREUR supabase/migrations/141_duels_nouveaux.sql : {"message":"Failed to run sql query: ERROR: 42601: syntax error at end of input\nLINE 341: if upper(x) = 'K' and i = case s when 'w' then 60 else 4 end and not hg_ec__attaque(g, i, o) then\n ^\n"}

@@ -338,7 +338,7 @@ begin
         end loop;
       end loop;
       -- roques (le roi n'est pas en échec, ne traverse ni n'arrive sur une case attaquée)
-      if upper(x) = 'K' and i = case s when 'w' then 60 else 4 end and not hg_ec__attaque(g, i, o) then
+      if upper(x) = 'K' and i = (case s when 'w' then 60 else 4 end) and not hg_ec__attaque(g, i, o) then
         if position(case s when 'w' then 'K' else 'k' end in roque) > 0 and substr(g, i + 2, 2) = '..'
            and substr(g, i + 4, 1) = case s when 'w' then 'R' else 'r' end
            and not hg_ec__attaque(g, i + 1, o) and not hg_ec__attaque(g, i + 2, o) then cand := cand || (i + 2); end if;
@@ -682,7 +682,7 @@ select public.hg__patch('public.hg_duel_creer(jsonb)'::regprocedure,
   $o$    when 'bataille' then 'classique' when 'quiestce' then 'quartier' else 'duel' end);$o$,
   $n$    when 'bataille' then 'classique' when 'quiestce' then 'quartier' when 'dames' then 'internationales'
     when 'echecs' then 'classique' when 'othello' then 'classique' when 'pfc' then 'classique' else 'duel' end);
-  if v_jeu in ('dames', 'echecs', 'othello', 'pfc') and v_var <> case v_jeu when 'dames' then 'internationales' else 'classique' end then raise exception 'Variante inconnue.'; end if;$n$);
+  if v_jeu in ('dames', 'echecs', 'othello', 'pfc') and v_var <> (case v_jeu when 'dames' then 'internationales' else 'classique' end) then raise exception 'Variante inconnue.'; end if;$n$);
 select public.hg__patch('public.hg_duel_creer(jsonb)'::regprocedure,
   $o$     or (v_jeu = 'quiestce' and not exists$o$,
   $n$     or (v_jeu = 'quiestce' and v_jeu not in ('dames', 'echecs', 'othello', 'pfc') and not exists$n$);
