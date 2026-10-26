@@ -1,0 +1,151 @@
+/* ===== Humane Gang — page Jeux : jeux solo (Démineur, Sudoku du jour, 2048 Paillettes) =====
+   Chargé par assets/js/jeux/nj-demineur.js, nj-sudoku.js et nj-2048.js (chargerCss('solo')).
+   Les cartes, titres et classements viennent de jeux.css (.jg, .jg-card, .jg-board…). Maquettes : jeux-maquettes/project/solo-*.dc.html. */
+
+/* ---------- En-tête commun ---------- */
+.sol { min-width: 0; }
+.sol-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; }
+.sol-head > div:first-child { min-width: 0; }
+.sol-eyebrow { font-family: 'Silkscreen', var(--font-body), sans-serif; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--sand); margin: 0 0 6px; }
+.sol-titre { font-family: var(--font-display); font-weight: 400; font-size: clamp(26px, 4vw, 36px); line-height: 1.05; margin: 0; }
+.sol-pills { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sol-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+.sol-pill strong { color: var(--text); font-family: var(--font-display); font-weight: 400; font-size: 15px; font-variant-numeric: tabular-nums; }
+.sol-gain { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0; min-height: 36px; padding: 5px 12px; border-radius: 999px;
+  background: var(--irl-bg); border: 1px solid var(--irl-border); color: var(--sand); font-weight: 700; font-size: 13px; line-height: 1.25; }
+.sol-gain small { font-weight: 500; font-size: 11px; color: var(--muted); }
+
+/* Zone de jeu, statut, boutons, fin de partie */
+.sol-jeu { display: flex; flex-direction: column; gap: 14px; }
+.sol-statut { margin: 0; min-height: 1.5em; font-size: 15px; font-weight: 600; }
+.sol-statut.is-ok { color: var(--sage-text); }
+.sol-statut.is-ko { color: var(--rose); }
+.sol-aide { margin: 0; }
+.sol-boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+.sol-boutons .btn { min-height: 44px; flex: 1 1 140px; }
+.sol-banniere { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--irl-bg); border: 1px solid var(--irl-border);
+  color: var(--irl-fg); font-size: 14px; font-weight: 600; }
+.sol-fin { border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-2); padding: 12px 14px; }
+.sol-fin[hidden] { display: none; }
+.sol-fin p { margin: 0; }
+.sol-fin p + p { margin-top: 4px; }
+.sol-grand { font-family: var(--font-display); font-size: 22px; line-height: 1.1; margin: 0 0 4px; }
+
+/* Colonne de droite : règles, légende, niveaux */
+.sol-regles { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--muted); }
+.sol-regles li { display: flex; gap: 10px; align-items: flex-start; }
+.sol-regles li::before { content: attr(data-n); flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border-strong);
+  display: grid; place-items: center; font-family: var(--font-display); font-size: 11px; color: var(--text); margin-top: 1px; }
+.sol-legende { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.sol-legende svg { width: 16px; height: 16px; flex: none; display: block; }
+.sol-niv-detail { margin: 8px 0 0; font-size: 13px; }
+.sol-seg-niv button { flex: 1 1 0; min-width: 0; }
+
+/* Classement : lignes en gras pour le meilleur temps, valeur à droite */
+.sol-board-val { font-family: var(--font-display); font-size: 15px; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; flex: none; }
+
+/* ---------- Démineur ---------- */
+.sol-champ { display: grid; gap: 2px; width: 100%; grid-template-columns: repeat(var(--cols, 9), minmax(0, 1fr)); user-select: none; -webkit-user-select: none; }
+.sol-case { position: relative; aspect-ratio: 1; min-width: 0; min-height: 0; padding: 0; margin: 0; border: 0; border-radius: 4px;
+  background: #2B2B31; color: var(--text); font: inherit; font-family: var(--font-display); font-size: clamp(10px, 2.5vw, 15px); line-height: 1;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.sol-case:focus-visible { outline: 2px solid var(--sand); outline-offset: 1px; z-index: 1; }
+.sol-case.is-ouverte { background: var(--surface-2); cursor: default; }
+.sol-case.is-ouverte:not([data-n]) { background: #1A1A1E; }
+.sol-case.is-drapeau .sol-drapeau, .sol-case.is-coeur .sol-coeur { width: 62%; height: auto; display: block; }
+.sol-case.is-explose { background: rgba(176, 16, 42, .45); }
+.sol-case.is-faux { box-shadow: inset 0 0 0 2px var(--rose); }
+.sol-case[data-n="1"] { color: var(--sage-text); }
+.sol-case[data-n="2"] { color: var(--slate); }
+.sol-case[data-n="3"] { color: var(--rust); }
+.sol-case[data-n="4"] { color: var(--plum); }
+.sol-case[data-n="5"] { color: var(--sand); }
+.sol-case[data-n="6"] { color: var(--rose); }
+.sol-case[data-n="7"] { color: var(--text); }
+.sol-case[data-n="8"] { color: var(--muted); }
+@media (hover: hover) { .sol-case:not(.is-ouverte):hover { background: #34343B; } }
+
+/* ---------- Sudoku ---------- */
+.sol-grille { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); width: 100%; max-width: 540px; margin: 0 auto;
+  border: 2px solid #4A4A52; border-radius: 10px; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.sol-s { position: relative; aspect-ratio: 1; min-width: 0; margin: 0; padding: 0; border: 0; border-right: 1px solid #2A2A2F; border-bottom: 1px solid #2A2A2F;
+  background: #17171A; color: #E2C77E; font: inherit; font-family: var(--font-body), sans-serif; font-size: clamp(16px, 4.6vw, 26px); font-weight: 400;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.sol-s.is-br { border-right: 2px solid #4A4A52; }
+.sol-s.is-bb { border-bottom: 2px solid #4A4A52; }
+.sol-s.is-meme-bloc, .sol-s.is-meme-ligne { background: #1F1F23; }
+.sol-s.is-active { background: #3A3322; box-shadow: inset 0 0 0 2px var(--sand); z-index: 1; }
+.sol-s.is-meme-val { background: #2E2A22; }
+.sol-s.is-donnee { color: var(--text); font-weight: 700; cursor: default; }
+.sol-s.is-conflit { color: #FF7B8A; }
+.sol-s:focus-visible { outline: 2px solid var(--sand); outline-offset: -2px; z-index: 2; }
+.sol-s-notes { position: absolute; inset: 6%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; }
+.sol-s-notes span { display: grid; place-items: center; font-size: clamp(7px, 1.6vw, 10px); line-height: 1; color: var(--muted); }
+.sol-pave { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 540px; margin: 0 auto; }
+.sol-pave .btn { min-height: 48px; padding: 0; font-family: var(--font-display); font-weight: 400; font-size: 18px; min-width: 0; }
+.sol-pave .sol-effacer { font-family: var(--font-body); font-weight: 700; font-size: 13px; }
+.sol-pave .btn[aria-pressed="true"] { background: var(--sand); color: #121212; border-color: var(--sand); }
+.sol-outils { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.sol-outils .btn { min-height: 44px; }
+
+/* ---------- 2048 Paillettes ---------- */
+.sol-plateau2048 { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1; margin: 0 auto; padding: 8px; box-sizing: border-box;
+  background: #1F1F23; border: 1px solid var(--border); border-radius: 16px; touch-action: none; overscroll-behavior: contain;
+  -webkit-user-select: none; user-select: none; --g: 8px; }
+.sol-plateau2048:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.sol-2048-zone { position: relative; width: 100%; height: 100%; container-type: inline-size; }
+.sol-2048-fond { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); gap: var(--g); width: 100%; height: 100%; }
+.sol-2048-fond span { background: #17171A; border-radius: 10px; }
+.sol-tuile { position: absolute; top: 0; left: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; gap: .1em;
+  width: calc((100% - 3 * var(--g)) / 4); height: calc((100% - 3 * var(--g)) / 4);
+  left: calc(var(--c, 0) * ((100% - 3 * var(--g)) / 4 + var(--g)));
+  top: calc(var(--r, 0) * ((100% - 3 * var(--g)) / 4 + var(--g)));
+  border-radius: 10px; font-family: var(--font-display); line-height: 1; font-variant-numeric: tabular-nums;
+  background: #2B2B31; color: #ABA7A0; box-shadow: 0 6px 14px rgba(0, 0, 0, .35);
+  transition: left .12s ease-out, top .12s ease-out; }
+.sol-tuile-v { white-space: nowrap; }
+.sol-tuile-s { font-family: var(--font-body), sans-serif; font-size: .42em; opacity: .85; }
+.sol-tuile[data-len="1"] { font-size: 13cqi; }
+.sol-tuile[data-len="2"] { font-size: 11cqi; }
+.sol-tuile[data-len="3"] { font-size: 9cqi; }
+.sol-tuile[data-len="4"] { font-size: 7.4cqi; }
+.sol-tuile[data-len="5"] { font-size: 6cqi; }
+.sol-tuile[data-rang="2"] { background: #6FA37F; color: #0E0E10; }
+.sol-tuile[data-rang="3"] { background: #7E93C9; color: #0E0E10; }
+.sol-tuile[data-rang="4"] { background: #9A88C4; color: #0E0E10; }
+.sol-tuile[data-rang="5"] { background: #E2C77E; color: #0E0E10; }
+.sol-tuile[data-rang="6"] { color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
+  background: linear-gradient(135deg, #FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398); }
+.sol-tuile[data-brille="1"] { color: #0E0E10; background: linear-gradient(135deg, #E2C77E, #FFF1BE 50%, #D8A75E); box-shadow: 0 0 12px rgba(226, 199, 126, .5); }
+.sol-tuile[data-brille="2"] { color: #0E0E10; background: linear-gradient(135deg, #FFF6D5, #E2C77E 45%, #FFFFFF 70%, #E2C77E); box-shadow: 0 0 18px rgba(255, 241, 190, .65); }
+.sol-tuile[data-brille="3"] { color: #FFFFFF; text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  background: linear-gradient(135deg, #FE3104, #FCA301, #FBD32D, #FFFFFF, #2B5AE2, #4E2398); box-shadow: 0 0 24px rgba(251, 211, 45, .75); }
+.sol-tuile[data-brille="4"] { color: #FFFFFF; text-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+  background: conic-gradient(from 0deg, #FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398, #FE3104);
+  box-shadow: 0 0 30px rgba(255, 255, 255, .75), 0 0 64px rgba(251, 211, 45, .6); }
+.sol-tuile.is-neuve { animation: sol-apparait .16s ease-out; }
+.sol-tuile.is-fusion { animation: sol-fusion .18s ease-out; }
+.sol-tuile.is-absorbee { opacity: 0; transition: left .12s ease-out, top .12s ease-out, opacity .12s; }
+.sol-rarete { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+.sol-rarete-v { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; font-family: var(--font-display); font-size: 13px; color: #0E0E10; }
+.sol-rarete-n { color: var(--text); font-weight: 600; }
+.sol-rarete-s { font-variant-numeric: tabular-nums; }
+.sol-score-grand { font-family: var(--font-display); font-size: clamp(22px, 3vw, 28px); line-height: 1; font-variant-numeric: tabular-nums; }
+
+@keyframes sol-apparait { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes sol-fusion { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
+@keyframes sol-scintille { to { filter: hue-rotate(360deg); } }
+.sol-tuile[data-brille="4"] { animation: sol-scintille 3s linear infinite; }
+
+/* ---------- Mouvement réduit et écrans étroits ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sol-tuile, .sol-tuile.is-absorbee { transition: none; }
+  .sol-tuile.is-neuve, .sol-tuile.is-fusion, .sol-tuile[data-brille="4"] { animation: none; }
+}
+@media (max-width: 600px) {
+  .sol-head { gap: 10px; }
+  .sol-pills { width: 100%; }
+  .sol-jeu { gap: 12px; }
+  .sol-pave { gap: 6px; }
+}
