@@ -1,0 +1,6 @@
+[
+  { "dest": "outils/images/maquettes/jeu-stardew.webp", "type": "steam", "nom": "Stardew Valley", "capture": 1 },
+  { "dest": "outils/images/maquettes/plat-pad-thai.webp", "type": "wiki", "article": "Pad thaï" },
+  { "dest": "outils/images/maquettes/pays-chili.webp", "type": "wiki", "article": "Parc national Torres del Paine" },
+  { "dest": "outils/images/maquettes/countries-50m.json", "type": "url", "url": "https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json", "brut": true }
+]

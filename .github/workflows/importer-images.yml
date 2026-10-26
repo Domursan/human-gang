@@ -1,0 +1,39 @@
+# Importe dans le dépôt les images listées dans outils/images/a-importer.json (captures Steam, images Wikipédia, adresses).
+# Se lance tout seul quand cette liste change sur main, ou avec le bouton « Run workflow ».
+# Les images sont converties en .webp puis ajoutées au dépôt par un commit au nom de Domursan.
+name: Importer des images
+
+on:
+  push:
+    branches: [main]
+    paths: ['outils/images/a-importer.json', 'outils/images/importer.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: importer-images
+  cancel-in-progress: false
+
+jobs:
+  importer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer sharp
+        run: npm i --no-save --no-package-lock sharp@0.33.5
+      - name: Importer
+        run: node outils/images/importer.mjs
+      - name: Ajouter au dépôt
+        run: |
+          git config user.name Domursan
+          git config user.email domursan1@gmail.com
+          git add outils/images assets/img
+          if git diff --cached --quiet; then echo "Rien de nouveau."; exit 0; fi
+          git commit -m "Images importées [skip ci]"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
