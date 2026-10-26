@@ -1,0 +1,156 @@
+/* ===== Humane Gang — Blackjack : table de jeu et écran de fin (assets/css/plateaux/blackjack.css) =====
+   Classes préfixées bj- (table) et bf- (encart de fin). Les cartes viennent de cartes.css (cd-).
+   Reprend la maquette BlackjackTable : tapis vert, banque en haut, sièges en grille, panneau d'action dessous.
+   Ordinateur (> 760 px) : jeu à gauche (tapis et panneau), résultats, classement, journal et chat à droite.
+   Téléphone (≤ 760 px) : une colonne, chat en tiroir. Aucune largeur fixe : tout se replie à 360 px. */
+
+:root {
+  --bj-fond: #0E0E10;
+  --bj-carte: #17171A;
+  --bj-bord: #2A2A2F;
+  --bj-bord-fort: #3A3A40;
+  --bj-texte: #F2EFEA;
+  --bj-muet: #ABA7A0;
+  --bj-or: #E2C77E;
+  --bj-accent: #9E3543;
+  --bj-vert: #8FC39F;
+  --bj-rouge: #E0909A;
+}
+body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
+
+/* ---------- Coque ---------- */
+.bj-table, .bf-bloc { color: var(--bj-texte); font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.5; min-width: 0; max-width: 100%; }
+.bj-table [hidden] { display: none !important; }
+.bj-table :focus-visible { outline: 3px solid var(--bj-texte); outline-offset: 2px; }
+.bj-table .visually-hidden, .bf-bloc .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.bj-table .small { font-size: 13px; }
+.bj-muet { color: var(--bj-muet); }
+.bj-note { margin: 4px 0 10px; font-size: 14px; color: var(--bj-muet); }
+.bj-vide { font-size: 14px; color: var(--bj-muet); list-style: none; }
+.bj-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; color: var(--bj-or); }
+.bj-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 8px; font-size: 11px; color: var(--bj-or); font-weight: 500; white-space: nowrap; }
+.bj-etiquette.is-tour { font-weight: 700; }
+.bj-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--bj-rouge); font-weight: 700; font-size: 14px; }
+
+.bj-bloc, .bf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--bj-bord); min-width: 0; }
+.bj-bloc-titre, .bf-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
+
+/* ---------- Boutons ---------- */
+.bj-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--bj-bord-fort); color: var(--bj-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.bj-btn:disabled { opacity: .5; cursor: default; }
+.bj-btn-primary { background: var(--bj-accent); color: #FFFFFF; }
+.bj-btn-ghost { background: transparent; border: 1px solid var(--bj-bord-fort); font-weight: 500; }
+.bj-grand { min-height: 52px; width: 100%; font-size: 16px; }
+.bj-quitter { font-size: 13px; }
+
+/* ---------- Barre et corps ---------- */
+.bj-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.bj-bandeau { min-width: 0; }
+.bj-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+.bj-colonne-jeu, .bj-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.bj-chat-zone { min-width: 0; }
+.bj-tiroir-chat { display: none; }
+
+/* ---------- Tapis ---------- */
+.bj-tapis {
+  box-sizing: border-box;
+  padding: 18px 16px 18px;
+  border-radius: 28px;
+  border: 10px solid #5A3A1E;
+  background: radial-gradient(ellipse at 50% 15%, #2E8052 0, #1F5A37 55%, #123A24 100%);
+  box-shadow: inset 0 0 0 2px rgba(226, 199, 126, .45), 0 14px 30px rgba(0, 0, 0, .4);
+}
+.bj-banque { text-align: center; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px dashed rgba(226, 199, 126, .5); }
+.bj-banque-tete { display: flex; justify-content: center; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
+.bj-banque-titre { font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--bj-or); }
+.bj-banque-phase { color: #D7EBDD; }
+.bj-banque-total { margin: 8px 0 0; color: #E6F2EA; font-size: 14px; }
+.bj-banque-total strong { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 18px; color: #FFFFFF; }
+.bj-cartes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: flex-start; min-height: 40px; }
+.bj-cartes-banque { min-height: 92px; }
+.bj-cartes-banque .cd { --cd-l: 60px; --cd-h: 86px; }
+
+/* ---------- Sièges ---------- */
+.bj-sieges { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: 10px; }
+.bj-siege { box-sizing: border-box; min-width: 0; padding: 10px; border-radius: 16px; background: rgba(14, 14, 16, .55); border: 1px solid rgba(226, 199, 126, .35); color: var(--bj-texte); }
+.bj-siege.is-tour { border-color: var(--bj-or); box-shadow: 0 0 0 2px rgba(226, 199, 126, .35); }
+.bj-siege.is-moi { background: rgba(14, 14, 16, .75); }
+.bj-siege.is-sorti, .bj-siege.is-parti { opacity: .55; }
+.bj-siege-tete { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bj-siege-nom { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+.bj-pseudo { overflow-wrap: anywhere; }
+.bj-pastille { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 13px Inter, sans-serif; color: #121212; }
+.bj-jetons { margin: 6px 0 4px; }
+.bj-jetons-nombre { font-family: 'Archivo Black', sans-serif; font-size: 20px; }
+.bj-attente { margin: 6px 0 0; color: #CFE3D4; }
+.bj-mains { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.bj-main { box-sizing: border-box; padding: 6px; border-radius: 12px; background: rgba(0, 0, 0, .22); border: 1px solid transparent; }
+.bj-main.is-active { border-color: var(--bj-or); }
+.bj-main.is-saute { opacity: .75; }
+.bj-main-tete { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 13px; }
+.bj-main-titre { font-weight: 700; }
+.bj-main .bj-cartes { justify-content: flex-start; gap: 4px; min-height: 0; }
+.bj-main .cd { --cd-l: 40px; --cd-h: 56px; }
+.bj-main-info { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 4px 0 0; color: #D9D5CC; }
+.bj-statut { font-weight: 700; }
+.bj-statut.is-saute { color: var(--bj-rouge); }
+.bj-statut.is-blackjack { color: var(--bj-or); }
+.bj-statut.is-double, .bj-statut.is-reste { color: var(--bj-vert); }
+.bj-resultat { margin: 6px 0 0; font-weight: 700; }
+.bj-resultat.is-gain { color: var(--bj-vert); }
+.bj-resultat.is-perte { color: var(--bj-rouge); }
+
+/* ---------- Panneau d'action ---------- */
+.bj-panneau { min-height: 150px; }
+.bj-form-mise { display: flex; flex-direction: column; gap: 10px; }
+.bj-curseur-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.bj-curseur-val { font-family: 'Archivo Black', sans-serif; font-size: 28px; color: var(--bj-or); }
+.bj-curseur { width: 100%; min-height: 44px; accent-color: var(--bj-or); }
+.bj-rapides { display: flex; flex-wrap: wrap; gap: 8px; }
+.bj-rapide { min-width: 56px; min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--bj-or); background: transparent; color: var(--bj-or); font: 700 14px Inter, sans-serif; cursor: pointer; }
+.bj-rapide:disabled { opacity: .35; cursor: default; }
+.bj-rapide:hover:not(:disabled) { background: rgba(226, 199, 126, .15); }
+.bj-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.bj-actions .bj-btn { flex: 1 1 120px; }
+.bj-pied { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- Colonne de droite ---------- */
+.bj-classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.bj-classement li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(255, 255, 255, .03); }
+.bj-classement-jetons { margin-left: auto; font-family: 'Archivo Black', sans-serif; color: var(--bj-or); }
+
+/* ---------- Fin de partie (encart) ---------- */
+.bf-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.bf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: #1F1F23; border: 1px solid var(--bj-bord-fort); min-width: 0; }
+.bf-carte.is-gagnant { border-color: var(--bj-or); }
+.bf-carte.is-parti { opacity: .7; }
+.bf-rang { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--bj-muet); }
+.bf-carte.is-gagnant .bf-rang { color: var(--bj-or); font-weight: 700; }
+.bf-disque { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 700 14px Inter, sans-serif; color: #121212; }
+.bf-pseudo { overflow-wrap: anywhere; }
+.bf-etiquette { font-size: 11px; color: var(--bj-muet); border: 1px solid var(--bj-bord-fort); border-radius: 999px; padding: 0 8px; font-weight: 500; }
+.bf-jetons { font-family: 'Archivo Black', sans-serif; font-size: 24px; color: var(--bj-texte); }
+.bf-ecart { color: var(--bj-muet); }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 760px) {
+  .bj-corps { grid-template-columns: minmax(0, 1fr); }
+  .bj-tapis { padding: 12px 8px; border-width: 6px; border-radius: 20px; }
+  .bj-cartes-banque .cd { --cd-l: 44px; --cd-h: 64px; }
+  .bj-sieges { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .bj-siege { padding: 8px; }
+  .bj-main .cd { --cd-l: 36px; --cd-h: 50px; }
+  .bj-chat-zone { display: none; }
+  .bj-tiroir-chat { display: block; }
+  .bj-jetons-nombre { font-size: 18px; }
+}
+@media (max-width: 360px) {
+  .bj-main .cd { --cd-l: 34px; --cd-h: 48px; }
+  .bj-cartes-banque .cd { --cd-l: 40px; --cd-h: 58px; }
+}
+
+/* ---------- Animations coupées ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .bj-table *, .bj-table *::before, .bj-table *::after { animation: none !important; transition: none !important; }
+}

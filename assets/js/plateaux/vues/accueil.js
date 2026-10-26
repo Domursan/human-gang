@@ -58,6 +58,38 @@ const REGLES = {
     'Gagne en accomplissant ta mission secrète ou, sans mission, en conquérant le monde.',
     'Un joueur éliminé est retiré, et ses cartes vont à celui qui l\'a éliminé.',
   ],
+  blackjack: [
+    'Tu joues contre la banque. Le but : approcher 21 sans le dépasser, et faire mieux que la banque.',
+    'À ton tour, mise de 10 à 500 jetons. Chacun reçoit deux cartes ; la banque en montre une, l\'autre reste cachée.',
+    'Les figures valent 10, l\'as vaut 1 ou 11. Un blackjack (as et figure dès la distribution) rapporte 3 pour 2.',
+    'Tire une carte, reste, double (une seule carte de plus, mise doublée) ou sépare une paire en deux mains.',
+    'La banque tire jusqu\'à 17 et reste sur 17 souple. Battre la banque rapporte la mise ; une égalité ne change rien.',
+    'La partie dure le nombre de manches choisi. Le joueur qui a le plus de jetons à la fin gagne. Avec moins de 10 jetons, on ne peut plus miser.',
+  ],
+  poker: [
+    'Texas Hold\'em : chacun reçoit deux cartes cachées, puis cinq cartes communes sont posées au centre.',
+    'Les deux joueurs après le donneur paient les blindes (petite et grosse) pour lancer la main.',
+    'À ton tour : suivre la mise, relancer, te coucher, ou faire tapis (tout ton tapis).',
+    'Il y a un tour de parole après le préflop, le flop, le turn et la river.',
+    'À l\'abattage, la meilleure main de cinq cartes parmi sept gagne le pot. Les pots secondaires vont aux meilleures mains encore en lice.',
+    'Les blindes doublent à intervalles réguliers. Un joueur sans jetons est éliminé ; le dernier qui reste gagne.',
+  ],
+  catan: [
+    'Chacun pose une colonie et une route, puis une deuxième dans l\'ordre inverse ; la deuxième rapporte les ressources voisines.',
+    'À ton tour, lance les dés : le total désigne les tuiles qui produisent. Une colonie rapporte une ressource, une ville deux.',
+    'Un 7 déplace le voleur : tu voles une carte à un voisin, et ceux qui ont plus de 7 cartes en défaussent la moitié.',
+    'Construis une route (bois et argile), une colonie (bois, argile, blé, mouton) ou une ville (2 blés et 3 pierres).',
+    'Échange 4 cartes identiques contre une carte de ton choix avec la banque, puis finis ton tour.',
+    'Une colonie vaut 1 point, une ville 2 points. Le premier à 10 points (ou 8, réglé à la création) gagne.',
+  ],
+  pictionary: [
+    'Chacun dessine à son tour un mot choisi parmi trois ; les autres écrivent leur proposition pour le deviner.',
+    'Le dessinateur a 20 secondes pour choisir ; sans choix, le premier mot est pris.',
+    'Le dessin dure 60, 80 ou 100 secondes. Des lettres du mot se dévoilent à mi-temps et aux trois quarts.',
+    'Trouver rapporte 10 points, plus un point par tranche de 10 secondes restantes. Le dessinateur gagne 4 points par joueur qui trouve.',
+    'Une proposition presque juste n\'est montrée qu\'à son auteur. Le tour finit quand tout le monde a trouvé ou quand le temps est écoulé.',
+    'Le joueur qui a le plus de points à la fin gagne.',
+  ],
 };
 
 const nombre = (n) => Number(n || 0).toLocaleString('fr-CH');

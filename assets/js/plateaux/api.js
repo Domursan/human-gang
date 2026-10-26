@@ -1,7 +1,7 @@
 // ===== Humane Gang — Jeux de plateau : accès aux données (fonctions serveur hg_plat_*, temps réel) =====
 /*
- * Rôle : seul point de contact avec Supabase pour les 5 jeux de plateau (Cluedo, Shadow Hunters, Destins, Monopoly, Risk).
- * Toute la logique est côté serveur (migrations 125 à 130) : on envoie des intentions (plat.agir) et on relit l'état.
+ * Rôle : seul point de contact avec Supabase pour les 7 jeux de plateau (Cluedo, Shadow Hunters, Destins, Monopoly, Risk, Blackjack, Poker).
+ * Toute la logique est côté serveur (migrations 125 à 131 et 143 pour blackjack et poker) : on envoie des intentions (plat.agir) et on relit l'état.
  * Le jeu de la page est fixé une fois au démarrage (choisirJeu), d'après <body data-jeu="…">.
  * Mode invité : un visiteur sans compte joue avec un jeton secret gardé dans son navigateur ;
  *   tous ses appels passent par hg_plat_invite (pas de temps réel : relecture toutes les 2 s).
@@ -11,7 +11,7 @@
  */
 import { sb, errMsg, notify } from '../core.js';
 
-/** Description fixe des jeux (le nom affiché vient des contenus, modifiable en admin). */
+/** Description fixe des jeux (le nom affiché vient des contenus, modifiable en admin). Blackjack et poker : en développement (admins). */
 export const JEUX = {
   cluedo: { id: 'cluedo', page: 'cluedo.html', slug: 'cluedo', nom: 'Cluedo', min: 3, max: 6, prefixe: 'HGCLU',
     accroche: 'Une victime, six suspects, six armes, neuf pièces. Mène l\'enquête.' },
@@ -23,6 +23,14 @@ export const JEUX = {
     accroche: 'Achète, construis, échange… et ruine tes amis en une heure.' },
   risk: { id: 'risk', page: 'risk.html', slug: 'risk', nom: 'Risk', min: 2, max: 6, prefixe: 'HGRSK',
     accroche: '42 territoires, 6 continents, une mission secrète.' },
+  blackjack: { id: 'blackjack', page: 'blackjack.html', slug: 'blackjack', nom: 'Blackjack', min: 1, max: 7, prefixe: 'HGBJK',
+    accroche: 'Vingt-et-un contre la banque : tire, reste, double ou sépare.' },
+  poker: { id: 'poker', page: 'poker.html', slug: 'poker', nom: 'Poker', min: 2, max: 8, prefixe: 'HGPOK',
+    accroche: 'Texas Hold\'em : deux cartes, cinq cartes communes et l\'art du bluff.' },
+  catan: { id: 'catan', page: 'catan.html', slug: 'catan', nom: 'Catan du gang', min: 2, max: 4, prefixe: 'HGCAT',
+    accroche: 'Récolte, construis routes, colonies et villes : le premier à 10 points gagne.' },
+  pictionary: { id: 'pictionary', page: 'pictionary.html', slug: 'pictionary', nom: 'Pictionary', min: 2, max: 10, prefixe: 'HGPIC',
+    accroche: 'Un dessine, les autres devinent. Le temps file.' },
 };
 
 let JEU = null;

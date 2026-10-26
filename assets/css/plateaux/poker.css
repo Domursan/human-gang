@@ -1,0 +1,189 @@
+/* ===== Humane Gang — Poker : table ovale et écran de fin (assets/css/plateaux/poker.css) =====
+   Classes préfixées pk- (table) et pf- (encart de fin). Les cartes viennent de cartes.css (cd-).
+   Reprend la maquette PokerTable : table ovale verte bordée de bois, cartes communes au centre, sièges autour.
+   Les sièges sont placés par --cx / --cy (cosinus et sinus de leur angle) : calc() les étale selon --rx et --ry.
+   Ordinateur (> 760 px) : table à gauche, « Tes cartes » et actions dessous ; classement, journal et chat à droite.
+   Téléphone (≤ 760 px) : table pleine largeur, sièges plus petits, chat en tiroir. Rien de fixe au-delà de 360 px. */
+
+:root {
+  --pk-fond: #0E0E10;
+  --pk-carte: #17171A;
+  --pk-bord: #2A2A2F;
+  --pk-bord-fort: #3A3A40;
+  --pk-texte: #F2EFEA;
+  --pk-muet: #ABA7A0;
+  --pk-or: #E2C77E;
+  --pk-accent: #9E3543;
+  --pk-vert: #8FC39F;
+  --pk-rouge: #E0909A;
+}
+body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
+
+/* ---------- Coque ---------- */
+.pk-table, .pf-bloc { color: var(--pk-texte); font-family: Inter, system-ui, sans-serif; font-size: 16px; line-height: 1.5; min-width: 0; max-width: 100%; }
+.pk-table [hidden] { display: none !important; }
+.pk-table :focus-visible { outline: 3px solid var(--pk-texte); outline-offset: 2px; }
+.pk-table .visually-hidden, .pf-bloc .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pk-table .small { font-size: 13px; }
+.pk-muet { color: var(--pk-muet); }
+.pk-note { margin: 4px 0 10px; font-size: 14px; color: var(--pk-muet); }
+.pk-vide { font-size: 14px; color: var(--pk-muet); list-style: none; }
+.pk-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; color: var(--pk-or); }
+.pk-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 7px; font-size: 11px; color: var(--pk-or); font-weight: 500; white-space: nowrap; }
+.pk-etiquette.is-donneur { background: var(--pk-or); color: #121212; font-weight: 700; }
+.pk-etiquette.is-tapis { border-color: var(--pk-rouge); color: var(--pk-rouge); font-weight: 700; }
+.pk-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--pk-rouge); font-weight: 700; font-size: 14px; }
+
+.pk-bloc, .pf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--pk-bord); min-width: 0; }
+.pk-bloc-titre, .pf-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
+
+/* ---------- Boutons ---------- */
+.pk-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--pk-bord-fort); color: var(--pk-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.pk-btn:disabled { opacity: .5; cursor: default; }
+.pk-btn-primary { background: var(--pk-accent); color: #FFFFFF; }
+.pk-btn-tapis { border-color: var(--pk-rouge); color: var(--pk-rouge); background: transparent; }
+.pk-btn-ghost { background: transparent; border: 1px solid var(--pk-bord-fort); font-weight: 500; }
+.pk-btn:hover:not(:disabled) { filter: brightness(1.12); }
+.pk-quitter { font-size: 13px; }
+
+/* ---------- Barre et corps ---------- */
+.pk-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.pk-bandeau { min-width: 0; }
+.pk-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+.pk-colonne-jeu, .pk-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pk-chat-zone { min-width: 0; }
+.pk-tiroir-chat { display: none; }
+
+/* ---------- Table ovale ---------- */
+.pk-tapis { --rx: 40%; --ry: 38%; --sw: 150px; position: relative; width: 100%; aspect-ratio: 16 / 10; box-sizing: border-box; }
+.pk-tapis::before {
+  content: '';
+  position: absolute;
+  inset: 11% 5%;
+  border-radius: 50%;
+  border: 12px solid #5A3A1E;
+  background: radial-gradient(ellipse at 50% 40%, #2E8052 0, #1F5A37 65%, #123A24 100%);
+  box-shadow: inset 0 0 0 2px rgba(226, 199, 126, .45), 0 14px 30px rgba(0, 0, 0, .45);
+}
+.pk-centre { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(62%, 480px); text-align: center; z-index: 1; }
+.pk-phase { margin: 0; font-family: 'Archivo Black', sans-serif; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; color: var(--pk-or); }
+.pk-blindes { margin: 0; color: #D7EBDD; }
+.pk-board { display: flex; justify-content: center; gap: 6px; margin: 8px 0; min-height: 90px; }
+.pk-board .cd { --cd-l: 56px; --cd-h: 80px; }
+.pk-emplacement { display: inline-block; width: 56px; height: 80px; box-sizing: border-box; border-radius: 9px; border: 2px dashed rgba(226, 199, 126, .45); }
+.pk-pot { margin: 0; font-size: 16px; }
+.pk-pot strong { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 22px; color: #FFFFFF; }
+
+.pk-sieges { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.pk-siege {
+  position: absolute;
+  left: calc(50% + var(--cx) * var(--rx));
+  top: calc(50% + var(--cy) * var(--ry));
+  transform: translate(-50%, -50%);
+  width: var(--sw);
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border-radius: 14px;
+  background: rgba(14, 14, 16, .86);
+  border: 1px solid rgba(226, 199, 126, .4);
+  text-align: center;
+  color: var(--pk-texte);
+  z-index: 2;
+}
+.pk-siege.is-tour { border-color: var(--pk-or); box-shadow: 0 0 0 3px rgba(226, 199, 126, .35); }
+.pk-siege.is-moi { background: rgba(14, 14, 16, .95); }
+.pk-siege.is-couche { opacity: .5; filter: grayscale(.6); }
+.pk-siege.is-sorti, .pk-siege.is-parti { opacity: .4; }
+.pk-siege-cartes { display: flex; justify-content: center; gap: 4px; min-height: 40px; margin-bottom: 4px; }
+.pk-siege-cartes .cd { --cd-l: 30px; --cd-h: 44px; }
+.pk-siege-nom { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; min-width: 0; }
+.pk-pseudo { overflow-wrap: anywhere; font-size: 14px; }
+.pk-pastille { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11px Inter, sans-serif; color: #121212; }
+.pk-siege-etiquettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin: 3px 0 0; min-height: 0; }
+.pk-siege-etiquettes:empty { display: none; }
+.pk-jetons { margin: 3px 0 0; font-size: 13px; }
+.pk-jetons-n { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 15px; }
+.pk-mise, .pk-action, .pk-main { margin: 2px 0 0; font-size: 12px; }
+.pk-action { color: var(--pk-or); font-weight: 700; }
+.pk-main { color: var(--pk-vert); font-weight: 700; }
+
+/* ---------- Mes cartes, abattage, panneau ---------- */
+.pk-mes { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.pk-mes .pk-bloc-titre { align-self: stretch; text-align: left; }
+.pk-mes-cartes { display: flex; justify-content: center; gap: 12px; }
+.pk-mes-cartes .cd { --cd-l: 76px; --cd-h: 108px; }
+.pk-mes .pk-note { margin: 0; }
+.pk-abattage .pk-cartes { display: flex; flex-wrap: wrap; gap: 4px; }
+.pk-abattage .pk-cartes-communes { margin: 6px 0; }
+.pk-abattage .pk-cartes .cd { --cd-l: 40px; --cd-h: 56px; }
+.pk-abat-liste { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pk-abat-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: rgba(0, 0, 0, .2); }
+.pk-abat-ligne .pk-cartes { grid-column: 1 / -1; }
+.pk-abat-nom { min-width: 0; overflow-wrap: anywhere; }
+.pk-abat-main { font-weight: 700; color: var(--pk-vert); }
+
+.pk-panneau { min-height: 150px; }
+.pk-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.pk-actions .pk-btn { flex: 1 1 120px; }
+.pk-relance { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pk-bord); }
+.pk-curseur-tete { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.pk-curseur-val { font-family: 'Archivo Black', sans-serif; font-size: 26px; color: var(--pk-or); }
+.pk-curseur { width: 100%; min-height: 44px; accent-color: var(--pk-or); }
+.pk-rapides { display: flex; flex-wrap: wrap; gap: 8px; }
+.pk-rapides .pk-btn { flex: 1 1 140px; border: 1px solid var(--pk-or); background: transparent; color: var(--pk-or); }
+.pk-pied { display: flex; }
+.pk-pied .pk-btn { flex: 1 1 auto; }
+
+/* ---------- Colonne de droite ---------- */
+.pk-classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.pk-classement li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(255, 255, 255, .03); }
+.pk-classement-jetons { margin-left: auto; font-family: 'Archivo Black', sans-serif; color: var(--pk-or); }
+
+/* ---------- Fin de partie (encart) ---------- */
+.pf-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.pf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: #1F1F23; border: 1px solid var(--pk-bord-fort); min-width: 0; }
+.pf-carte.is-gagnant { border-color: var(--pk-or); }
+.pf-carte.is-elimine, .pf-carte.is-parti { opacity: .72; }
+.pf-rang { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--pk-muet); }
+.pf-carte.is-gagnant .pf-rang { color: var(--pk-or); font-weight: 700; }
+.pf-disque { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 700 14px Inter, sans-serif; color: #121212; }
+.pf-pseudo { overflow-wrap: anywhere; }
+.pf-etiquette { font-size: 11px; color: var(--pk-muet); border: 1px solid var(--pk-bord-fort); border-radius: 999px; padding: 0 8px; font-weight: 500; }
+.pf-jetons { font-family: 'Archivo Black', sans-serif; font-size: 24px; color: var(--pk-texte); }
+.pf-muet { color: var(--pk-muet); }
+
+/* ---------- Téléphone ---------- */
+@media (max-width: 760px) {
+  .pk-corps { grid-template-columns: minmax(0, 1fr); }
+  .pk-tapis { --rx: 31%; --ry: 37%; --sw: 84px; aspect-ratio: 1 / 1.08; }
+  .pk-jetons .pk-muet { display: none; }
+  .pk-tapis::before { inset: 9% 3%; border-width: 7px; }
+  .pk-centre { width: 66%; }
+  .pk-board { gap: 3px; min-height: 0; margin: 4px 0; }
+  .pk-board .cd, .pk-emplacement { --cd-l: 36px; --cd-h: 50px; width: 36px; height: 50px; }
+  .pk-phase { font-size: 12px; }
+  .pk-pot strong { font-size: 18px; }
+  .pk-siege { padding: 4px 5px; border-radius: 12px; }
+  .pk-siege-cartes { min-height: 0; gap: 2px; }
+  .pk-siege-cartes .cd { --cd-l: 22px; --cd-h: 32px; }
+  .pk-siege-cartes .cd-valeur { font-size: 9px; }
+  .pk-siege-cartes .cd-sym { font-size: 8px; }
+  .pk-siege-cartes .cd-centre { display: none; }
+  .pk-pseudo { font-size: 12px; }
+  .pk-jetons { font-size: 11px; }
+  .pk-jetons-n { font-size: 13px; }
+  .pk-mise, .pk-action, .pk-main { font-size: 11px; }
+  .pk-mes-cartes .cd { --cd-l: 64px; --cd-h: 92px; }
+  .pk-chat-zone { display: none; }
+  .pk-tiroir-chat { display: block; }
+}
+@media (max-width: 360px) {
+  .pk-siege { --sw: 84px; }
+  .pk-mes-cartes .cd { --cd-l: 58px; --cd-h: 84px; }
+}
+
+/* ---------- Animations coupées ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pk-table *, .pk-table *::before, .pk-table *::after { animation: none !important; transition: none !important; }
+}

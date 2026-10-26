@@ -1,0 +1,169 @@
+/* ===== Humane Gang — Pictionary : table de jeu et encart de fin (assets/css/plateaux/pictionary.css) =====
+   Classes préfixées pi-. La toile garde son ratio 4:3 (960 × 720 en coordonnées) ; sur grand écran elle est au plus
+   720 px de large, à gauche ; scores, propositions et chat sont à droite. Téléphone (≤ 760 px) : une colonne, chat en
+   tiroir, toile pleine largeur. Aucune largeur fixe : tout se replie à 360 px. */
+
+body.plat-pictionary { --plat-teinte: #3A2A16; --plat-or: #E8CC85; }
+
+.pi-table {
+  --pi-carte: #17171A;
+  --pi-bord: #2A2A2F;
+  --pi-bord-fort: #3A3A40;
+  --pi-texte: #F2EFEA;
+  --pi-muet: #ABA7A0;
+  --pi-or: #E8CC85;
+  --pi-accent: #9E3543;
+  --pi-vert: #8FC39F;
+  --pi-rouge: #E0909A;
+  color: var(--pi-texte);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  min-width: 0;
+  max-width: 100%;
+}
+.pi-table [hidden] { display: none !important; }
+.pi-table :focus-visible { outline: 3px solid var(--pi-texte); outline-offset: 2px; }
+.pi-table .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pi-table .small { font-size: 13px; }
+.pi-table .muted { color: var(--pi-muet); }
+
+/* ---------- Titres et étiquettes ---------- */
+.pi-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
+.pi-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(20px, 3.4vw, 26px); line-height: 1.2; color: var(--pi-or); }
+.pi-note { margin: 0 0 12px; }
+.pi-label { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--pi-muet); }
+.pi-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(232, 204, 133, .55); border-radius: 999px; padding: 0 8px; font-size: 11px; color: var(--pi-or); white-space: nowrap; }
+.pi-tag { display: inline-flex; border-radius: 999px; padding: 0 7px; font-size: 11px; font-weight: 700; color: #1B1A1F; background: var(--pi-or); }
+.pi-vide { margin: 0; }
+
+/* ---------- Boutons ---------- */
+.pi-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--pi-bord-fort); color: var(--pi-texte);
+  font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.pi-btn:disabled { opacity: .5; cursor: default; }
+.pi-btn-primary { background: var(--pi-accent); color: #FFFFFF; }
+.pi-btn-ghost { background: transparent; border: 1px solid var(--pi-bord-fort); font-weight: 500; }
+.pi-btn[aria-pressed="true"] { background: var(--pi-or); color: #1B1A1F; border-color: var(--pi-or); }
+
+/* ---------- Bandeau et barre ---------- */
+.pi-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.pi-bandeau { min-width: 0; }
+.pi-bandeau-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.pi-bandeau-titres { min-width: 0; }
+.pi-bandeau-jeu { margin: 0 0 2px; }
+.pi-bandeau-titre { margin: 0; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(22px, 4vw, 30px); line-height: 1.15; overflow-wrap: anywhere; }
+.pi-chrono { flex: 0 0 auto; min-width: 4.5em; text-align: center; padding: 6px 12px; border-radius: 999px; background: var(--pi-carte); border: 1px solid var(--pi-bord-fort);
+  font-family: 'Archivo Black', sans-serif; font-size: 20px; font-variant-numeric: tabular-nums; }
+.pi-chrono:empty { visibility: hidden; }
+.pi-chrono.is-urgent { color: var(--pi-rouge); border-color: var(--pi-rouge); }
+
+/* ---------- Corps : deux colonnes sur ordinateur ---------- */
+.pi-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+.pi-colonne-jeu, .pi-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pi-chat-zone { min-width: 0; }
+.pi-tiroir-chat { display: none; }
+
+.pi-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--pi-bord); min-width: 0; }
+.pi-scene { padding: 18px; }
+
+/* ---------- Mot du tour précédent ---------- */
+.pi-revele { margin: 0; }
+.pi-revele:not([hidden]) { display: block; }
+.pi-revele-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px; border-radius: 20px; background: #2A2418; border: 1px solid #5A4A2A; text-align: center; pointer-events: none; }
+.pi-revele-titre { font-size: 16px; color: var(--pi-or); }
+.pi-revele-mot { font-family: 'Archivo Black', sans-serif; font-weight: 400; color: #FFFFFF; }
+.pi-revele-toile { width: min(100%, 260px); height: auto; aspect-ratio: 4 / 3; border-radius: 12px; border: 1px solid var(--pi-bord-fort); }
+
+/* ---------- Choix du mot ---------- */
+.pi-mots { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.pi-mot-choix { min-height: 64px; box-sizing: border-box; padding: 10px 16px; border-radius: 16px; border: 2px solid var(--pi-or); background: #221C12; color: var(--pi-texte);
+  font-family: 'Archivo Black', sans-serif; font-size: clamp(20px, 4vw, 26px); cursor: pointer; overflow-wrap: anywhere; }
+.pi-mot-choix:hover:not(:disabled) { background: #2E2616; }
+.pi-mot-choix:disabled { opacity: .5; cursor: default; }
+.pi-attente { margin: 0; padding: 18px 4px; font-size: 18px; color: var(--pi-muet); }
+
+/* ---------- Entête de la zone de dessin : mot ou indice ---------- */
+.pi-entete { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.pi-mot-dessin { min-width: 0; }
+.pi-mot-grand { display: block; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: clamp(30px, 6vw, 44px); line-height: 1.1; color: var(--pi-or); overflow-wrap: anywhere; }
+.pi-indice-zone { min-width: 0; }
+.pi-cases { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; }
+.pi-case { display: inline-flex; align-items: center; justify-content: center; min-width: .9em; min-height: 1.5em; padding: 0 2px; font-family: 'Archivo Black', sans-serif; font-size: clamp(24px, 4.5vw, 34px); line-height: 1.1; text-transform: uppercase; border-bottom: 4px solid var(--pi-or); }
+.pi-case.is-vide { border-bottom-color: var(--pi-muet); }
+.pi-mot-espace { display: inline-block; width: .6em; }
+.pi-dessinateur { margin: 0; }
+
+/* ---------- Toile ---------- */
+.pi-toile-zone { width: 100%; max-width: 720px; margin: 0 auto; }
+.pi-toile { display: block; box-sizing: border-box; width: 100%; height: auto; aspect-ratio: 4 / 3; background: #F6F1E7; border-radius: 16px; border: 2px solid var(--pi-bord-fort); touch-action: none; user-select: none; -webkit-user-select: none; }
+.pi-toile.is-dessin { cursor: crosshair; }
+
+/* ---------- Outils de dessin ---------- */
+.pi-outils { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 12px; max-width: 720px; margin-left: auto; margin-right: auto; }
+.pi-palette, .pi-epaisseurs, .pi-actions-dessin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pi-actions-dessin { flex-basis: 100%; }
+.pi-couleur { width: 44px; height: 44px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--pi-bord-fort); background: var(--pi-c); cursor: pointer; padding: 0; }
+.pi-couleur[aria-pressed="true"] { outline: 3px solid var(--pi-texte); outline-offset: 2px; }
+.pi-epaisseur { width: 44px; height: 44px; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--pi-bord-fort); background: var(--pi-carte); color: var(--pi-texte); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.pi-epaisseur[aria-pressed="true"] { border-color: var(--pi-or); background: #2A2418; }
+.pi-point { display: block; width: var(--pi-d); height: var(--pi-d); border-radius: 50%; background: currentColor; }
+.pi-palette { margin-right: 6px; }
+
+/* ---------- Devinette ---------- */
+.pi-devine { margin-top: 14px; max-width: 720px; margin-left: auto; margin-right: auto; }
+.pi-devine .pi-label { margin-bottom: 6px; }
+.pi-devine-ligne { display: flex; gap: 8px; flex-wrap: wrap; }
+.pi-champ { flex: 1 1 200px; min-width: 0; min-height: 48px; box-sizing: border-box; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--pi-bord-fort); background: #0E0E10; color: var(--pi-texte); font: 500 17px Inter, sans-serif; }
+.pi-champ:disabled { opacity: .55; }
+.pi-champ:focus-visible { outline: 3px solid var(--pi-or); outline-offset: 2px; }
+.pi-bravo { margin: 12px auto 0; max-width: 720px; padding: 12px 16px; border-radius: 14px; background: #18241C; color: var(--pi-vert); font-weight: 700; }
+
+/* ---------- Scores ---------- */
+.pi-scores { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pi-score { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 8px; border-radius: 12px; min-width: 0; }
+.pi-score.is-moi { background: rgba(255, 255, 255, .04); }
+.pi-score.is-dessin { outline: 1px dashed var(--pi-or); outline-offset: -1px; }
+.pi-rang { width: 1.4em; flex: 0 0 auto; text-align: center; font-size: 13px; color: var(--pi-muet); }
+.pi-score-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pi-score .plat-pseudo { font-weight: 700; }
+.pi-coche { color: var(--pi-vert); font-weight: 700; white-space: nowrap; }
+.pi-points { flex: 0 0 auto; font-family: 'Archivo Black', sans-serif; font-variant-numeric: tabular-nums; }
+
+/* ---------- Propositions ---------- */
+.pi-fil-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+.pi-fil-ligne { font-size: 14px; padding: 6px 10px; border-radius: 12px; background: rgba(255, 255, 255, .03); overflow-wrap: anywhere; }
+.pi-fil-ligne.is-trouve { color: var(--pi-vert); font-weight: 700; }
+.pi-fil-ligne.is-propose { color: var(--pi-texte); }
+.pi-fil-ligne.is-info { color: var(--pi-muet); }
+.pi-fil-ligne.is-prive { border-left: 3px solid var(--pi-or); }
+
+/* ---------- Tiroir du chat (téléphone) ---------- */
+.pi-table .plat-chat { min-width: 0; }
+
+/* ---------- Encart de fin ---------- */
+.pi-fin { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--pi-bord); margin-top: 12px; }
+.pi-fin-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pi-fin-ligne { display: flex; align-items: center; gap: 10px; min-height: 44px; min-width: 0; }
+.pi-fin-nom { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Téléphone et ordinateur ---------- */
+@media (max-width: 760px) {
+  .pi-corps { grid-template-columns: minmax(0, 1fr); }
+  .pi-chat-zone { display: none; }
+  .pi-tiroir-chat { display: block; }
+  .pi-scene { padding: 14px; }
+}
+@media (min-width: 600px) {
+  .pi-mots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .pi-barre { gap: 8px; }
+  .pi-chrono { font-size: 17px; }
+  .pi-actions-dessin .pi-btn { flex: 1 1 auto; }
+}
+
+/* ---------- Mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .pi-table *, .pi-table *::before, .pi-table *::after { transition: none !important; animation: none !important; }
+}
+body.plat-calme .pi-table * { transition: none !important; animation: none !important; }

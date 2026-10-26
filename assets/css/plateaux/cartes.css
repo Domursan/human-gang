@@ -1,0 +1,69 @@
+/* ===== Humane Gang — Jeux de plateau : cartes à jouer (blackjack et poker) =====
+   Fichier : assets/css/plateaux/cartes.css, chargé avant blackjack.css et poker.css. Classes cd- (carte) et cd-dos (dos).
+   Une carte : rectangle blanc arrondi, valeur et symbole dans les coins, grand symbole au centre. Rouge pour cœur et carreau.
+   Le dos reprend le motif or du site sur fond bleu nuit. Format réduit : .is-petite (sièges, cartes communes). */
+
+.cd {
+  --cd-l: 64px;
+  --cd-h: 90px;
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: var(--cd-l);
+  height: var(--cd-h);
+  box-sizing: border-box;
+  padding: 5px 6px;
+  border-radius: 9px;
+  border: 1px solid #C9C2B4;
+  background: #FBF8F2;
+  color: #17161B;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, .38);
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+  overflow: hidden;
+}
+.cd.is-rouge { color: #B3262F; }
+.cd.is-petite {
+  --cd-l: 40px;
+  --cd-h: 56px;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+.cd-coin { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.cd-valeur { font-size: 17px; }
+.cd-sym { font-size: 15px; }
+.cd-centre {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--cd-l) * .5);
+  opacity: .9;
+  pointer-events: none;
+}
+.cd.is-petite .cd-valeur { font-size: 12px; }
+.cd.is-petite .cd-sym { font-size: 11px; }
+.cd.is-petite .cd-centre { font-size: calc(var(--cd-l) * .42); }
+
+/* Dos : motif or sur bleu nuit */
+.cd-dos {
+  background:
+    repeating-linear-gradient(45deg, rgba(226, 199, 126, .32) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(-45deg, rgba(226, 199, 126, .18) 0 2px, transparent 2px 9px),
+    #1B2638;
+  border: 2px solid var(--plat-or-clair, #E8CC85);
+  box-shadow: inset 0 0 0 3px #1B2638, 0 6px 14px rgba(0, 0, 0, .38);
+}
+.cd-dos > * { display: none; }
+
+@media (max-width: 360px) {
+  .cd { --cd-l: 56px; --cd-h: 80px; }
+  .cd.is-petite { --cd-l: 36px; --cd-h: 50px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cd { transition: none !important; }
+}

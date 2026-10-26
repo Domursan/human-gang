@@ -3,9 +3,13 @@
  * Rôle : formulaire de création (nom, places, durée d'un tour, visibilité, invités, annonce Discord) et, pour
  * chaque jeu, ses options propres. « Créer la partie » envoie plat.creer puis ouvre la salle d'attente.
  * OPTIONS (exporté) : réglages propres à chaque jeu, indexés par id de jeu. Vide pour cluedo, shadow, destins.
- *   monopoly : { duree: { valeurs: [45, 60, 90], defaut: 60 } }   (minutes)
+ *   monopoly : { duree: { valeurs: [45, 60, 90], defaut: 60, titre?, unite? } }   (unité par défaut : minutes)
  *   risk     : { missions: { defaut: true } }
- * Le formulaire envoie options = { duree: 60 } ou { missions: true }.
+ *   blackjack: { manches: { valeurs: [5, 8, 12], defaut: 8, titre, unite: ' manches' } }
+ *   poker    : { jetons: { valeurs: [500, 1000, 2000], defaut: 1000, titre, unite: ' jetons' },
+ *                montee: { valeurs: [5, 8, 12], defaut: 8, titre, unite: ' mains' } }
+ * Un réglage à valeurs est présenté en segments (titre = légende du groupe, unite = suffixe de chaque valeur).
+ * Le formulaire envoie options = { duree: 60 } ou { missions: true } ou { manches: 8 }.
  * Dépendances : core.js (esc), plateaux/api.js (plat, contenus, erreurTexte, jeu).
  * Exporte : afficher, OPTIONS.
  */
@@ -19,6 +23,16 @@ export const OPTIONS = {
   destins: {},
   monopoly: { duree: { valeurs: [45, 60, 90], defaut: 60 } },
   risk: { missions: { defaut: true } },
+  blackjack: { manches: { valeurs: [5, 8, 12], defaut: 8, titre: 'Nombre de manches', unite: ' manches' } },
+  poker: {
+    jetons: { valeurs: [500, 1000, 2000], defaut: 1000, titre: 'Jetons de départ', unite: ' jetons' },
+    montee: { valeurs: [5, 8, 12], defaut: 8, titre: 'Blindes doublées toutes les', unite: ' mains' },
+  },
+  catan: { objectif: { valeurs: [8, 10], defaut: 10, titre: 'Points pour gagner', unite: ' points' } },
+  pictionary: {
+    manches: { valeurs: [1, 2, 3], defaut: 2, titre: 'Manches (chacun dessine une fois par manche)', unite: '' },
+    duree: { valeurs: [60, 80, 100], defaut: 80, titre: 'Temps par dessin', unite: ' s' },
+  },
 };
 
 const DUREES_TOUR = [30, 60, 90, 120];
@@ -65,7 +79,7 @@ function lire(form, options) {
 function blocOptions(options) {
   const lignes = Object.entries(options).map(([cle, spec]) => {
     if (spec.valeurs) {
-      return segments(`opt-${cle}`, 'Durée de la partie', spec.valeurs.map((v) => ({ valeur: v, libelle: `${v} min` })), spec.defaut);
+      return segments(`opt-${cle}`, spec.titre || 'Durée de la partie', spec.valeurs.map((v) => ({ valeur: v, libelle: `${v}${spec.unite ?? ' min'}` })), spec.defaut);
     }
     return interrupteur(`opt-${cle}`, 'Missions secrètes', 'Chaque joueur reçoit une mission secrète à accomplir.', !!spec.defaut);
   });
