@@ -1,0 +1,219 @@
+// ===== Humane Gang — page « Jeux » : moteur commun des grilles du jour (Connexions, Mot mêlé, Nerdle) =====
+/*
+ * Rôle : briques communes des trois grilles du jour, une seule partie par personne et par jour, la même grille pour tous.
+ * Le moteur charge l'état (hg_nj_grille_etat), envoie les essais (hg_nj_grille_essai) et dessine la mise en page :
+ * en-tête « GRILLE DU JOUR · N°<numéro> », pastilles (gain, chrono), jeu à gauche ; règles en bref et classement de la
+ * semaine à droite ; fin de partie avec Paillettes, temps, classement du jour et « Copier le résultat ». Le bouton
+ * « Réponses » (administrateurs) est posé dans l'en-tête. Les réponses s'affichent dans la page ; seules les erreurs du serveur
+ * (messages en français) font un toast. Chaque jeu fournit sa configuration (voir cfg dans monterGrille) : corps du jeu, interactions, texte
+ * de partage. Le chrono ne sert qu'au classement du jour : il n'empêche jamais de jouer.
+ * Dépendances : jeux/devine.js (loadCss, boardHtml, copyText), core/admin-reponses.js. Styles : jeux-grilles.css.
+ * Exporte : monterGrille, lireEtat, resumerGrille, formatDuree, classementJourHtml.
+ */
+import { loadCss, boardHtml, copyText } from './devine.js';
+import { boutonReponses } from '../core/admin-reponses.js';
+
+/**
+ * Durée affichée : « 1:05 », ou « 1:02:05 » au-delà d'une heure.
+ * @param {number} s Secondes.
+ * @returns {string}
+ */
+export function formatDuree(s) {
+  const t = Math.max(0, Math.floor(Number(s) || 0));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = String(t % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
+}
+
+/**
+ * Lit l'état de la grille du jour (RPC hg_nj_grille_etat). Lève une erreur si le serveur refuse.
+ * @param {{sb: object}} ctx Contexte des modules d'onglet.
+ * @param {string} jeu connexions, motmele ou nerdle.
+ * @returns {Promise<object>} L'état : grille (null sans grille du jour), partie, board, solution en fin de partie.
+ */
+export async function lireEtat(ctx, jeu) {
+  const { data, error } = await ctx.sb.rpc('hg_nj_grille_etat', { p_jeu: jeu });
+  if (error) throw error;
+  return data || {};
+}
+
+/**
+ * Classement du jour (temps des parties gagnées), affiché en fin de partie.
+ * @param {Array} rows Lignes { user_id, pseudo, secondes, score }.
+ * @param {string} meId Identifiant du membre connecté.
+ * @param {Function} esc Échappement HTML.
+ * @returns {string} HTML.
+ */
+export function classementJourHtml(rows, meId, esc) {
+  if (!rows?.length) return '<p class="muted small">Personne n’a encore gagné aujourd’hui.</p>';
+  return `<ol class="jd-board">${rows.map((r, i) => `<li class="jd-board-row${r.user_id === meId ? ' is-me' : ''}">
+    <span class="jd-rank">${i + 1}</span><span class="jd-name">${esc(r.pseudo)}</span>
+    <span class="jd-pts">${esc(formatDuree(r.secondes))}</span><span class="muted small">${esc(r.score)} pt${r.score > 1 ? 's' : ''}</span></li>`).join('')}</ol>`;
+}
+
+/**
+ * Carte d'accueil « Les missions du jour » d'une grille : état, texte, pastille, Paillettes gagnées.
+ * @param {{sb: object}} ctx Contexte des modules d'onglet.
+ * @param {string} jeu Identifiant du jeu.
+ * @param {{fini: Function, enCours: Function, aFaire: string, badgeMax?: string}} textes Textes selon l'état de la partie.
+ * @returns {Promise<{etat: string, texte: string, badge: string, gain?: number}>}
+ */
+export async function resumerGrille(ctx, jeu, textes) {
+  try {
+    const st = await lireEtat(ctx, jeu);
+    if (!st.grille) return { etat: 'info', texte: 'Pas de grille aujourd’hui', badge: '' };
+    const p = st.partie;
+    if (p?.fini) return { etat: 'fait', texte: textes.fini(p), badge: `${p.score} pt${p.score > 1 ? 's' : ''}`, gain: Number(p.reward) || 0 };
+    if (p) return { etat: 'en_cours', texte: textes.enCours(p), badge: '' };
+    return { etat: 'a_jouer', texte: textes.aFaire, badge: textes.badgeMax || '' };
+  } catch {
+    return { etat: 'info', texte: 'Indisponible pour le moment', badge: '' };
+  }
+}
+
+/**
+ * Pastilles de l'en-tête : valeurs propres au jeu, gain avant la fin, chrono dès le premier essai.
+ * @param {object} st État de la grille.
+ * @param {object} cfg Configuration du jeu.
+ * @param {Function} esc Échappement HTML.
+ * @returns {string} HTML.
+ */
+function pastillesHtml(st, cfg, esc) {
+  if (!st.grille) return '';
+  const fini = !!st.partie?.fini;
+  const liste = [...(cfg.pills?.(st) || [])];
+  if (!fini) liste.push(['Jusqu’à', `${Number(st.gain) || 0} ✦`]);
+  if (st.partie?.debut) liste.push(['Chrono', { html: `<span data-chrono>${fini ? esc(formatDuree(st.partie.secondes)) : '0:00'}</span>` }]);
+  return liste.map(([l, v]) => `<span class="pill ng-pill">${esc(l)} <strong>${typeof v === 'object' ? v.html : esc(v)}</strong></span>`).join('');
+}
+
+/**
+ * Monte une grille du jour dans son onglet.
+ * cfg (une configuration par jeu) :
+ *   jeu, titre, regles (liste de phrases), chrono (vrai : mention du chrono dans les règles) ;
+ *   corps(st, ui, esc) → HTML du jeu (fonctionne aussi en fin de partie) ; lier(racine, st, ui, env) → écouteurs ;
+ *   pills(st) → [libellé, valeur] ; apresEssai(ui, res, st) → remise à zéro après un essai accepté par le serveur ;
+ *   reponse(res, st) → { texte } | null (message affiché dans la page après un essai) ; finTexte(st) → titre de fin ;
+ *   copie(st) → texte de partage ou null ; init(panneau, env) → une fois, au montage (clavier physique, etc.).
+ * env : { ctx, ui, etat(), visible(), envoyer(p, selecteurFocus), dire(texte), rerendre(selecteurFocus) }.
+ * @param {HTMLElement} panel Panneau de l'onglet.
+ * @param {{sb: object, me: object, toast: Function, esc: Function}} ctx Contexte des modules d'onglet.
+ * @param {object} cfg Configuration du jeu.
+ */
+export async function monterGrille(panel, ctx, cfg) {
+  loadCss('jeux-devine');
+  loadCss('jeux-grilles');
+  const esc = ctx.esc;
+  const e = { st: null, err: null, busy: false, msg: '', ui: {} };
+  let minuteur = null;
+  const env = {
+    ctx,
+    ui: e.ui,
+    etat: () => e.st,
+    visible: () => panel.isConnected && panel.getClientRects().length > 0,
+    envoyer,
+    dire: (t) => { const l = panel.querySelector('.ng-live'); if (l) l.textContent = t; },
+    rerendre: (sel = null) => dessiner(sel),
+  };
+
+  panel.innerHTML = '<p class="muted">Chargement de la grille…</p>';
+  panel.addEventListener('click', (ev) => {
+    if (ev.target.closest('[data-act="copier"]') && e.st && cfg.copie) copier();
+  });
+  cfg.init?.(panel, env);
+  await charger();
+
+  /** Lit l'état du jour puis dessine. */
+  async function charger() {
+    try {
+      e.st = await lireEtat(ctx, cfg.jeu);
+      e.err = null;
+    } catch (err) { e.err = err?.message || String(err); }
+    dessiner();
+  }
+
+  /**
+   * Envoie un essai au serveur, puis redessine avec l'état renvoyé. Une erreur du serveur s'affiche en toast.
+   * @returns {Promise<object|null>} Le résultat de l'essai, ou null en cas d'erreur.
+   */
+  async function envoyer(p, focusSel = null) {
+    if (e.busy || !e.st?.grille || e.st.partie?.fini) return null;
+    e.busy = true;
+    let res = null;
+    try {
+      const { data, error } = await ctx.sb.rpc('hg_nj_grille_essai', { p_jeu: cfg.jeu, p });
+      if (error) throw error;
+      res = data?.resultat || {};
+      e.st = data.etat;
+      cfg.apresEssai?.(e.ui, res, e.st);
+      // Le message de la réponse reste dans la page (zone « live ») : pas de toast, qui recouvrirait la grille sur téléphone.
+      e.msg = cfg.reponse?.(res, e.st)?.texte || '';
+    } catch (err) {
+      res = null;
+      ctx.toast(err?.message || String(err), 'error');
+    }
+    e.busy = false;
+    dessiner(focusSel);
+    return res;
+  }
+
+  /** Texte de partage dans le presse-papiers. */
+  function copier() {
+    const txt = cfg.copie(e.st);
+    if (!txt) return;
+    copyText(txt).then((ok) => ctx.toast(ok ? 'Résultat copié, colle-le sur Discord.' : 'Copie impossible sur cet appareil.', ok ? 'ok' : 'error'));
+  }
+
+  /** Bloc de fin de partie : titre, temps et score, Paillettes, copie, classement du jour. */
+  function finHtml(st) {
+    const p = st.partie;
+    const gagne = !!p.gagne;
+    const texte = cfg.finTexte ? cfg.finTexte(st) : (gagne ? 'Bien joué !' : 'Pas cette fois.');
+    const stats = [gagne && p.secondes != null ? `Temps ${formatDuree(p.secondes)}` : null, `Score ${p.score} pt${p.score > 1 ? 's' : ''}`].filter(Boolean).join(' · ');
+    return `<section class="ng-fin${gagne ? ' is-win' : ''}" aria-label="Fin de partie">
+      <p class="ng-fin-t">${esc(texte)}</p>
+      <p class="ng-fin-s">${esc(stats)}</p>
+      <p class="ng-reward">${p.reward ? `+${esc(p.reward)} ✦ crédités` : 'Aucune Paillette cette fois'}</p>
+      ${cfg.copie ? '<div class="ng-actions"><button type="button" class="btn btn-sand" data-act="copier">Copier le résultat</button></div>' : ''}
+      <h3 class="ng-label">Classement du jour</h3>${classementJourHtml(st.board?.jour || [], ctx.me?.id, esc)}
+    </section>`;
+  }
+
+  /** Dessine tout l'onglet d'après e.st ; focusSel : élément à reprendre au clavier après le rendu. */
+  function dessiner(focusSel = null) {
+    if (minuteur) { clearInterval(minuteur); minuteur = null; }
+    if (e.err) { panel.innerHTML = `<p class="card ng-erreur" role="alert">Jeu indisponible : ${esc(e.err)}</p>`; return; }
+    const st = e.st;
+    if (!st) return;
+    const jour = !!st.grille;
+    const fini = !!st.partie?.fini;
+    const head = `<div class="ng-head"><div class="ng-head-t"><p class="ng-kicker">GRILLE DU JOUR${st.numero ? ` · N°${esc(st.numero)}` : ''}</p>
+      <h2 class="ng-title">${esc(cfg.titre)}</h2></div><div class="ng-pills">${pastillesHtml(st, cfg, esc)}</div></div>`;
+    const main = jour
+      ? `<section class="card ng-jeu" aria-label="${esc(cfg.titre)}">${cfg.corps(st, e.ui, esc)}${fini ? finHtml(st) : ''}<p class="ng-live" role="status" aria-live="polite">${esc(e.msg)}</p></section>`
+      : '<div class="card ng-vide"><p>Pas de grille aujourd’hui, reviens demain.</p></div>';
+    const regles = `<section class="card ng-regles" aria-labelledby="ng-regles-h"><h2 id="ng-regles-h" class="jd-h2">Règles en bref</h2>
+      <ul class="ng-rules">${cfg.regles.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>`;
+    const semaine = `<section class="card ng-board" aria-labelledby="ng-board-h"><h2 id="ng-board-h" class="jd-h2">Classement de la semaine</h2>${boardHtml(st.board?.semaine || [], ctx.me?.id, esc)}</section>`;
+    panel.innerHTML = `<div class="ng ng-${cfg.jeu}">${head}<div class="ng-main">${main}</div><aside class="ng-aside">${regles}${semaine}</aside></div>`;
+    boutonReponses(panel.querySelector('.ng-head'), 'njg', () => cfg.jeu);
+    if (jour) cfg.lier?.(panel.querySelector('.ng-jeu'), st, e.ui, env);
+    demarrerChrono(st);
+    if (focusSel) panel.querySelector(focusSel)?.focus({ preventScroll: true });
+  }
+
+  /** Chrono de la partie (affichage seulement) : figé à la fin, arrêté quand l'onglet disparaît. */
+  function demarrerChrono(st) {
+    const el = panel.querySelector('[data-chrono]');
+    const p = st.partie;
+    if (!el || !p?.debut) return;
+    if (p.fini) { el.textContent = formatDuree(p.secondes); return; }
+    const t0 = Date.parse(String(p.debut).replace(/(\.\d{3})\d+/, '$1'));
+    if (Number.isNaN(t0)) return;
+    const tick = () => {
+      if (!panel.isConnected) { clearInterval(minuteur); minuteur = null; return; }
+      el.textContent = formatDuree((Date.now() - t0) / 1000);
+    };
+    tick();
+    minuteur = setInterval(tick, 1000);
+  }
+}

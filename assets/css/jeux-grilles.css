@@ -1,0 +1,111 @@
+/* ===== Page « Jeux » : grilles du jour (Connexions, Mot mêlé, Nerdle du gang) =====
+   Grand écran : jeu à gauche, règles et classement de la semaine à droite. Mobile : une colonne, sans défilement horizontal.
+   Cartes, boutons et pastilles de base viennent de base.css et jeux-devine.css (jd-*). Les couleurs des carrés (Nerdle) sont
+   fixes, comme sur le site ; les couleurs des groupes et des mots trouvés viennent des variables du thème. */
+
+.ng { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; width: 100%; max-width: 1180px; min-width: 0; box-sizing: border-box; }
+.ng > * { min-width: 0; grid-column: 1; }
+.ng-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ng-kicker { margin: 0 0 6px; font-family: 'Silkscreen', monospace; font-size: 13px; letter-spacing: .14em; color: var(--sand); }
+.ng-title { margin: 0; font-family: var(--font-display); font-size: clamp(30px, 5vw, 40px); line-height: 1; font-weight: 400; }
+.ng-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.ng-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; color: var(--muted); font-size: 13px; }
+.ng-pill strong { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ng-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ng-aside { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ng-jeu { display: flex; flex-direction: column; gap: 16px; padding: 18px; min-width: 0; }
+.ng-vide, .ng-erreur { text-align: center; color: var(--muted); padding: 28px 18px; }
+.ng-label { margin: 0 0 8px; font-family: 'Silkscreen', monospace; font-size: 12px; font-weight: 400; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.ng-live { min-height: 1.4em; margin: 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+.ng-aide { margin: 0; }
+.ng-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.ng-actions .btn { flex: 1 1 140px; min-height: 44px; }
+
+@media (min-width: 1024px) {
+  .ng { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  .ng-head { grid-column: 1 / -1; }
+  .ng-main { grid-column: 1; grid-row: 2; }
+  .ng-aside { grid-column: 2; grid-row: 2; }
+}
+
+/* Règles et classement */
+.ng-rules { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.ng-rules li + li { margin-top: 4px; }
+.ng-regles .jd-h2, .ng-board .jd-h2 { margin-bottom: 10px; }
+
+/* Erreurs restantes (Connexions) */
+.ng-err { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 14px; }
+.ng-dots { display: inline-flex; gap: 6px; }
+.ng-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--border-strong); background: transparent; }
+.ng-dot.is-on { background: var(--rose); border-color: var(--rose); }
+
+/* Connexions : bandeaux des groupes, tuiles */
+.ng-bands { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ng-band { margin: 0; padding: 10px 12px; border-radius: 12px; color: #0E0E10; min-width: 0; }
+.ng-band-t { margin: 0; font-family: var(--font-display); font-size: 14px; letter-spacing: .04em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ng-band-m { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.ng-n1 { background: #E2C77E; }
+.ng-n2 { background: #6FA37F; }
+.ng-n3 { background: #7E93C9; }
+.ng-n4 { background: #9A88C4; }
+.ng-band.is-rate { opacity: .55; }
+.ng-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.ng-tile { font: inherit; min-height: 56px; padding: 6px 4px; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface-2);
+  color: var(--text); font-size: 13px; font-weight: 700; line-height: 1.15; cursor: pointer; overflow-wrap: anywhere; min-width: 0; }
+.ng-tile.is-sel { background: var(--sand); border-color: var(--sand); color: #0E0E10; }
+.ng-tile:focus-visible, .ng-key:focus-visible, .ng-cell:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+.ng-actions .btn:disabled, .ng-tile:disabled, .ng-key:disabled { opacity: .5; cursor: default; }
+@media (prefers-reduced-motion: no-preference) { .ng-tile, .ng-key, .ng-cell { transition: background-color .15s, color .15s; } }
+
+/* Fin de partie */
+.ng-fin { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; border: 1px solid var(--border); background: var(--surface-2); }
+.ng-fin.is-win { border-color: var(--sage); }
+.ng-fin p { margin: 0; }
+.ng-fin-t { font-family: var(--font-display); font-size: 22px; line-height: 1.15; overflow-wrap: anywhere; }
+.ng-fin-s { color: var(--muted); font-size: 14px; }
+.ng-reward { color: var(--sand); font-weight: 700; }
+
+/* Mot mêlé : grille 12 × 12 (pas de défilement), surlignage, liste */
+.ng-theme { margin: 0; font-size: 15px; }
+.ng-plateau { width: 100%; box-sizing: border-box; }
+.ng-grille { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 2px; width: 100%; max-width: 560px; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+.ng-row { display: contents; }
+.ng-cell { aspect-ratio: 1 / 1; min-width: 0; display: grid; place-items: center; border-radius: 6px; background: var(--surface-2); color: var(--text);
+  font-size: clamp(12px, 3.3vw, 17px); font-weight: 700; cursor: pointer; }
+.ng-cell.is-trouve { background: color-mix(in srgb, var(--c) 42%, transparent); }
+.ng-cell.is-apercu { background: color-mix(in srgb, var(--sand) 34%, transparent); box-shadow: inset 0 0 0 1px var(--sand); }
+.ng-cell.is-depart { box-shadow: inset 0 0 0 2px var(--text); }
+.ng-liste { min-width: 0; }
+.ng-mots { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; }
+.ng-mots li { display: flex; align-items: center; min-width: 0; min-height: 30px; font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+.ng-mots li::before { content: ''; flex: none; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--c, var(--border-strong)); }
+.ng-mots li.is-trouve { text-decoration: line-through; opacity: .5; }
+
+/* Nerdle : essais, calcul, clavier */
+.ng-essais { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.ng-ligne { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; width: min(100%, 440px); }
+.ng-c { aspect-ratio: 1 / 1; min-width: 0; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface-2);
+  font-weight: 700; font-size: clamp(15px, 4.4vw, 22px); }
+.ng-c.is-cur { border-color: var(--sand); box-shadow: inset 0 0 0 1px var(--sand); }
+.ng-c.is-v { background: #159946; border-color: #159946; color: #0E0E10; }
+.ng-c.is-j { background: #FCA301; border-color: #FCA301; color: #0E0E10; }
+.ng-c.is-g { background: #3A3A40; border-color: #3A3A40; color: #F2EFEA; }
+.ng-calcul { margin: 0; text-align: center; font-size: 18px; }
+.ng-clavier { display: flex; flex-direction: column; gap: 6px; width: min(100%, 440px); margin: 0 auto; }
+.ng-touches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.ng-key { font: inherit; min-height: 46px; min-width: 0; border-radius: 12px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text);
+  font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; }
+.ng-key.is-v { background: #159946; border-color: #159946; color: #0E0E10; }
+.ng-key.is-j { background: #FCA301; border-color: #FCA301; color: #0E0E10; }
+.ng-key.is-g { background: #2A2A2F; color: var(--muted); }
+.ng-key-large { grid-column: span 3; font-size: 14px; }
+.ng-key-full { grid-column: 1 / -1; font-size: 14px; min-height: 48px; }
+
+@media (max-width: 400px) {
+  .ng-jeu { padding: 14px; }
+  .ng-tiles { gap: 6px; }
+  .ng-tile { min-height: 52px; font-size: 12px; }
+  .ng-key { font-size: 16px; min-height: 44px; }
+  .ng-pills { gap: 6px; }
+  .ng-pill { padding: 0 10px; }
+}
