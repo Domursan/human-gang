@@ -55,11 +55,12 @@ function editorHtml() {
         <div class="field"><label for="rc-p">Paillettes demandées</label><input id="rc-p" name="paillettes" type="number" min="0" max="100000" value="${Number(r.paillettes) || 0}" inputmode="numeric"></div>
         <div class="field"><label for="rc-start">Début (facultatif)</label><input id="rc-start" name="starts_at" type="datetime-local" value="${esc(toLocal(r.starts_at))}"></div>
         <div class="field"><label for="rc-end">Fin (facultatif)</label><input id="rc-end" name="ends_at" type="datetime-local" value="${esc(toLocal(r.ends_at))}"></div>
-        <div class="field"><label for="rc-max">Nombre total de fabrications (facultatif)</label><input id="rc-max" name="max_total" type="number" min="1" max="10000" value="${r.max_total ?? ''}" inputmode="numeric"></div>
+        <div class="field"><label for="rc-max">Nombre total de fabrications, tous membres confondus (facultatif)</label><input id="rc-max" name="max_total" type="number" min="1" max="10000" value="${r.max_total ?? ''}" inputmode="numeric"></div>
         <div class="field"><label for="rc-sort">Ordre</label><input id="rc-sort" name="sort" type="number" value="${Number(r.sort) || 0}" inputmode="numeric"></div>
       </div>
       <label class="check"><input type="checkbox" name="output_shiny" ${r.output_shiny ? 'checked' : ''}> <span>Carte obtenue brillante</span></label>
       <label class="check"><input type="checkbox" name="once_per_user" ${r.once_per_user ? 'checked' : ''}> <span>Une fois par membre</span></label>
+      <p class="small muted">Exemple : 25 au total et « Une fois par membre » = jusqu’à 25 membres différents. Une recette épuisée n’est plus proposée.</p>
       <label class="check"><input type="checkbox" name="active" ${r.active ? 'checked' : ''}> <span>Active</span></label>
       <div class="stack" id="rc-inputs">${r.inputs.map(inputRow).join('')}</div>
       ${r.inputs.length < 6 ? '<div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" data-rc="in-add">Ajouter un ingrédient</button></div>' : ''}
