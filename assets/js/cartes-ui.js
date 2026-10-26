@@ -37,6 +37,7 @@ export const FAMILIES = [
   { id: 'objet', label: 'Objet' },
   { id: 'evenement', label: 'Événement' },
   { id: 'jeu', label: 'Jeu vidéo' },
+  { id: 'musique', label: 'Musique' },
   { id: 'unique', label: 'Unique' },
 ];
 /** Libellé d'une famille (« Jeu vidéo »). Renvoie l'identifiant brut si inconnue. */
@@ -153,7 +154,10 @@ export function cardHtml(card, opts = {}) {
       + `<span class="hgc-idinfo"><span class="hgc-idk">Pseudo</span><span class="hgc-idv">${esc(name)}</span>`
       + (ms ? `<span class="hgc-idk">Membre depuis</span><span class="hgc-idv">${esc(ms)}</span>` : '') + '</span></span>';
   } else {
-    win = card.image_url
+    // Musique : la pochette (carrée) est montrée en entier, sur un fond flouté de la même image.
+    win = card.image_url && card.family === 'musique'
+      ? `<span class="hgc-win hgc-win-cover"><img class="hgc-win-blur" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" referrerpolicy="no-referrer"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" referrerpolicy="no-referrer"></span>`
+      : card.image_url
       ? `<span class="hgc-win"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy"></span>`
       : `<span class="hgc-win"><img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy"></span>`;
   }
