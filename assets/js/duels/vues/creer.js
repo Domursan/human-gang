@@ -11,6 +11,7 @@
  */
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, JEUX, ROBOTS, jeuxVisibles } from '../api.js';
+import { avatarPresence } from '../../core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, nomJoueur } from './commun.js';
 
 const FORMATS = [[1, '1 manche'], [3, 'Au meilleur des 3'], [5, 'Au meilleur des 5']];
@@ -297,7 +298,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     }
     listeEl.innerHTML = membres.map((m) => `<label class="duels-choix duels-membre" data-membre data-cherche="${esc(normaliser(m.pseudo))}">
         <input class="visually-hidden" type="radio" name="membre" value="${esc(m.user_id)}">
-        ${avatarHtml(m, { taille: 36 })}
+        ${avatarPresence(avatarHtml(m, { taille: 36 }), m.user_id)}
         <span class="duels-membre-nom">${nomJoueur(m)}</span>
         <span class="duels-choix-etat">${CHECK}<span>Sélectionné</span></span>
       </label>`).join('');

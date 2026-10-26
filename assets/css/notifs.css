@@ -1,11 +1,15 @@
 /* ===== Humane Gang — cloche des notifications et pastilles « en ligne » (core/presence.js, migration 153) =====
-   Pastille : en ligne = disque plein vert, hors ligne = anneau creux gris (la forme change aussi : lisible sans
-   distinguer les couleurs). Le libellé « En ligne » / « Hors ligne » est donné aux lecteurs d'écran (aria-label). */
+   Pastille : en ligne = disque VERT plein ; hors ligne = disque ROUGE barré d'un petit trait blanc (la forme change
+   aussi : lisible sans distinguer le vert du rouge). Le libellé « En ligne » / « Hors ligne » est donné aux lecteurs
+   d'écran (aria-label) et au survol (title). */
 
 .presence-wrap { position: relative; display: inline-flex; flex: none; }
-.presence-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; flex: none;
-  border: 2px solid var(--muted); background: var(--surface); box-shadow: 0 0 0 2px var(--surface); vertical-align: middle; }
-.presence-dot.is-online { border-color: var(--sage); background: var(--sage); }
+.presence-dot { --presence-on: #2FB463; --presence-off: #E5484D; position: relative; display: inline-block; width: 12px; height: 12px;
+  border-radius: 50%; box-sizing: border-box; flex: none; background: var(--presence-off); box-shadow: 0 0 0 2px var(--surface);
+  vertical-align: middle; }
+.presence-dot::after { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: #fff; }
+.presence-dot.is-online { background: var(--presence-on); }
+.presence-dot.is-online::after { content: none; }
 .presence-wrap > .presence-dot { position: absolute; right: -1px; bottom: -1px; }
 
 /* Cloche */

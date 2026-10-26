@@ -10,6 +10,7 @@
  */
 import { esc, toast } from '../../core.js';
 import { duel, erreurTexte, jeuxVisibles } from '../api.js';
+import { avatarPresence } from '../../core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, couleurJoueur } from './commun.js';
 
 /** Intervalle de rafraîchissement de l'accueil (ms). */
@@ -246,7 +247,7 @@ function htmlResume(s) {
 /** Une ligne de la liste des membres, avec son bouton « Défier ». */
 function ligneMembre(m) {
   return `<li class="duels-acc-membre">
-    ${avatarHtml(m, { taille: 36 })}
+    ${avatarPresence(avatarHtml(m, { taille: 36 }), m.user_id)}
     <span class="duels-acc-membre-nom">${pseudo(m.pseudo, m.couleur)}</span>
     <a class="btn btn-ghost duels-acc-bouton" href="#creer/membre/${encodeURIComponent(m.user_id)}">Défier<span class="visually-hidden"> ${esc(m.pseudo || '')}</span></a>
   </li>`;
