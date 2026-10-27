@@ -193,7 +193,7 @@ function momentCard(m) {
   return `<article class="tl-card tl-card-moment" id="moment-${esc(m.id)}">
     <div class="tl-kind">${I.star}<span>Moment culte · ${esc(fmtDate(dayDate(m.happened_on)))}</span>${inCard ? '<a class="tl-incard" href="/pages/cartes/cartes.html#collection">En carte</a>' : ''}</div>
     <h3 class="tl-title">${esc(m.title)}</h3>
-    ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy"></button>` : ''}
+    ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy" decoding="async"></button>` : ''}
     ${m.body ? `<p class="tl-body">${esc(m.body)}</p>` : ''}
     ${m.hidden_at ? hiddenNoteHtml('moment') : ''}
     ${reactionBarHtml('moment', m.id)}

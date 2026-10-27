@@ -37,7 +37,7 @@ import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.j
 import { initAtelier, drawAtelier } from './cartes-atelier.js';
 import { initEnchere, drawEnchere } from './cartes-enchere.js';
 import { LOT as COL_LOT, SEUIL as COL_SEUIL, lotsAnticipes, gardeFocus, mesurerGroupes, attrGroupe } from './cartes-lots.js';
-import { foldText } from '../../commun/core/search.js';
+import { foldText } from '../../commun/core/recherche-lien.js';
 import { refreshCompteurs } from '../../commun/core/badges-compteur.js';
 
 /* ---------- Constantes et outils de formatage ---------- */

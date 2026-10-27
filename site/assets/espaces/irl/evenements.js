@@ -51,7 +51,7 @@ function remaining(iso) {
  */
 function visual(ev, size) {
   return `<span class="evp-visual" style="--s:${size}px">${ev.image_url
-    ? `<img src="${esc(ev.image_url)}" alt="" loading="lazy">`
+    ? `<img src="${esc(ev.image_url)}" alt="" loading="lazy" decoding="async">`
     : `<span class="evp-emoji">${esc(ev.emoji || '✨')}</span>`}</span>`;
 }
 /**
@@ -69,7 +69,7 @@ function badgeBlock(b, mine, live) {
   const img = lv ? levelImage(b, has ? level : 1) : b.image_url;
   const scope = b.metric === 'event_captures' && !b.event_id ? ' (tous événements confondus)' : '';
   return `<div class="evp-badge${has ? ' is-got' : ''}">
-    <span class="evp-badge-img">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ICON.badge}${has && lv ? `<span class="evp-badge-lvl" aria-hidden="true">${roman(level)}</span>` : ''}</span>
+    <span class="evp-badge-img">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : ICON.badge}${has && lv ? `<span class="evp-badge-lvl" aria-hidden="true">${roman(level)}</span>` : ''}</span>
     <div class="evp-badge-txt">
       <p class="evp-k">${ICON.badge} ${live && !has ? 'Badge à gagner' : 'Badge de l\'événement'}</p>
       <strong>${esc(b.name)}</strong>

@@ -298,7 +298,7 @@ function buildRetroSlides(r, familyUrl) {
   S.push({
     key: 'fin', emoji: '❤️', final: true,
     html: `<p class="rc-eyebrow">Merci d’être là</p>
-      ${familyUrl ? `<img class="rc-family" src="${esc(familyUrl)}" alt="Photo de famille du dernier rendez-vous" style="max-width:100%;max-height:42vh;border-radius:16px;object-fit:cover" data-on-error="remove">` : ''}
+      ${familyUrl ? `<img class="rc-family" src="${esc(familyUrl)}" alt="Photo de famille du dernier rendez-vous" decoding="async" style="max-width:100%;max-height:42vh;border-radius:16px;object-fit:cover" data-on-error="remove">` : ''}
       <h2 class="rc-title rc-title-sm">Joyeux anniversaire au gang</h2>
       <div class="rc-actions">
         <button class="btn btn-light" type="button" data-act="replay">${ICON.replay} Revoir</button>

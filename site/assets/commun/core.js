@@ -26,7 +26,7 @@ export {
   themeVars,
 } from './core/theme-calc.js';
 export { effectsEnabled, motionAllowed } from './core/effects.js';
-export { paintTheme, getActiveTheme, getSiteTheme, currentLogo } from './core/theme.js';
+export { paintTheme, getActiveTheme, getSiteTheme, currentLogo, logoAttrs } from './core/theme.js';
 export { applyTheme } from './core/theme-load.js';
 export { openPrefs, setPrefs } from './core/prefs.js';
 

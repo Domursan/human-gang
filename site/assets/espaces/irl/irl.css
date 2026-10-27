@@ -5,7 +5,8 @@
 .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 16px;
   padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .sec-title { font-family: var(--font-display); font-weight: 400; font-size: 26px; }
-.irl-loading { color: var(--muted); }
+/* Place réservée pendant le chargement de la prochaine sortie : à peu près la hauteur de la carte « rien de calé » (évite un décalage) */
+.irl-loading { color: var(--muted); min-height: 285px; }
 .ev-title { font-size: 20px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
 
 /* Méta (date, lieu, organisateur) */

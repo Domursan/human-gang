@@ -94,7 +94,7 @@ function beforeHtml() {
 function albumHtml() {
   const ev = U.st.event;
   if (!ev) return '';
-  const imgs = U.photos.map((p, i) => U.urls.get(p.path) ? `<button type="button" class="uw-add" data-zoom="${i}" aria-label="Agrandir la photo ${i + 1}"><img src="${esc(U.urls.get(p.path))}" alt=""></button>` : '').join('');
+  const imgs = U.photos.map((p, i) => U.urls.get(p.path) ? `<button type="button" class="uw-add" data-zoom="${i}" aria-label="Agrandir la photo ${i + 1}"><img src="${esc(U.urls.get(p.path))}" alt="" loading="lazy" decoding="async"></button>` : '').join('');
   return `<section class="sz-card" aria-labelledby="uw-a-t"><div class="sz-between"><h3 class="sz-h3" id="uw-a-t">Album de la soirée</h3>
     <span class="sz-small sz-muted">${U.photos.length} ${U.photos.length > 1 ? 'photos' : 'photo'}</span></div>
     <div class="uw-album">${imgs}<label class="uw-add" title="Ajouter une photo de ton cadeau">${svg('upload', { size: 18 })}<span class="visually-hidden">Ajouter une photo de ton cadeau</span>

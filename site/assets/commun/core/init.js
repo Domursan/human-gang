@@ -139,8 +139,10 @@ async function startPage(auth) {
     import('../../espaces/cartes/card-drops.js').then((m) => m.startCardDrops(profile)).catch((e) => console.warn('[drops]', e));
   }
   // Raccourcis Staff (admin et Staff seulement, pas sur /pages/admin/admin.html ni en vue « comme un membre ») : même en maintenance,
-  // car le Staff n'est jamais bloqué par l'état du site
-  if (profile) import('./staff-dock.js').then((m) => m.startStaffDock(profile)).catch((e) => console.warn('[raccourcis Staff]', e));
+  // car le Staff n'est jamais bloqué par l'état du site. Le module (et les droits du panel qu'il importe) n'est chargé que pour eux.
+  if (profile && canPanel(getCachedPerms()) && !viewAsActive() && currentPageSlug() !== 'admin') {
+    import('./staff-dock.js').then((m) => m.startStaffDock(profile)).catch((e) => console.warn('[raccourcis Staff]', e));
+  }
   return profile;
 }
 

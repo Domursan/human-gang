@@ -142,7 +142,7 @@ export function celebrateBadges(list) {
     const b = queue[idx];
     const box = d.querySelector('.bc-badge');
     box.innerHTML = b.image_url
-      ? `<img src="${esc(b.image_url)}" alt="">`
+      ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" decoding="async">`
       : `<span class="bc-initials" aria-hidden="true">${esc(badgeInitials(b.name))}</span>`;
     d.querySelector('#bc-title').textContent = b.name || b.code;
     d.querySelector('.bc-eyebrow').textContent = b.levelUp ? 'Nouveau niveau atteint' : 'Nouveau badge débloqué';

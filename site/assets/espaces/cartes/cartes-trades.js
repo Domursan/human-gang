@@ -853,7 +853,7 @@ export async function mountTrades(el, ctx = {}) {
     root.dataset.state = 'card';
     $('name').textContent = card.name;
     $('sub').textContent = `${rarityLabel(card.rarity)}${card.set_name ? ' · ' + card.set_name : ''}`;
-    $('thumb').innerHTML = `<img src="${esc(card.image_url || currentLogo())}" alt="">`;
+    $('thumb').innerHTML = `<img src="${esc(card.image_url || currentLogo())}" alt="" decoding="async">`;
     $('stage').hidden = false;
     $('stage').innerHTML = cardHtml(card, { size: 'md', shiny: c.shiny, serial: c.serial });
     $('empty').hidden = true;

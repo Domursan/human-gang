@@ -84,7 +84,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
 
   const jeuxHtml = Object.entries(jeuxVisibles()).map(([cle, j]) => `<label class="duels-jeu">
       <input class="visually-hidden" type="radio" name="jeu" value="${esc(cle)}">
-      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
+      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy" decoding="async">
       <span class="duels-jeu-nom">${esc(j.nom)}</span>
       ${j.dev ? '<span class="duels-dev">En développement</span>' : ''}
       <span class="duels-choix-etat">${CHECK}<span>Sélectionné</span></span>

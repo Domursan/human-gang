@@ -50,7 +50,7 @@ export async function mount(panel, ctx) {
     <div class="jg-grid2">
       <div class="jg-col">
         <figure class="geo-photo" id="geo-photo" hidden>
-          <button class="geo-photo-btn" type="button" data-geo="zoom" aria-label="Agrandir la photo"><img id="geo-img" alt="Photo de la manche : où a-t-elle été prise ?"></button>
+          <button class="geo-photo-btn" type="button" data-geo="zoom" aria-label="Agrandir la photo"><img id="geo-img" alt="Photo de la manche : où a-t-elle été prise ?" decoding="async"></button>
           <figcaption class="geo-photo-tag">Photo d’une sortie passée</figcaption>
         </figure>
         <section class="jg-card geo-play" id="geo-play" aria-labelledby="geo-play-h">
@@ -295,7 +295,7 @@ async function chargerArchive() {
   G.archive = Array.isArray(data) ? data : [];
   if (!G.archive.length) { grid.innerHTML = '<p class="jg-empty-row">Pas encore de manche passée.</p>'; return; }
   grid.innerHTML = G.archive.map((r, i) => `<button class="geo-arch" type="button" data-geo="arch" data-i="${i}"${G.round?.id === r.id ? ' aria-current="true"' : ''}>
-      <span class="geo-arch-img"><img alt="" data-path="${esc(r.image_path)}" loading="lazy"></span>
+      <span class="geo-arch-img"><img alt="" data-path="${esc(r.image_path)}" loading="lazy" decoding="async"></span>
       <span class="geo-arch-txt"><b>N°${nf(r.number)}</b> · ${esc(jourLong(r.day))}</span>
       <span class="small ${r.score == null ? 'jg-sand' : 'muted'}">${r.score == null ? 'À jouer' : `${nf(r.score)} pts${r.label ? ` · ${esc(r.label)}` : ''}`}</span>
     </button>`).join('');

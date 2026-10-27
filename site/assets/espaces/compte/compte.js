@@ -848,7 +848,7 @@ async function loadBadges() {
       const tint = BADGE_TINTS[i % BADGE_TINTS.length];
       const img = hasLevels(b) ? levelImage(b, has ? level : 1) : b.image_url;
       const medal = img
-        ? `<img src="${esc(img)}" alt="" loading="lazy">`
+        ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">`
         : `<span class="badge-initials display">${esc(badgeInitials(b.name))}</span>`;
       return `<li class="badge ${has ? 'is-got' : 'is-locked'}${hasLevels(b) ? ' has-levels' : ''}" style="--tint:${tint}">
         <span class="badge-medal">${medal}${has && hasLevels(b) ? `<span class="medal-lvl" aria-hidden="true">${roman(level)}</span>` : ''}</span>

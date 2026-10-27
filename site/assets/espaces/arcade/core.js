@@ -102,7 +102,7 @@ const rnd = (a, b) => a + Math.random() * (b - a);
  * Charge la feuille de style des secrets (/assets/espaces/arcade/eggs.css), une seule fois.
  */
 function chargeCss() {
-  if (document.querySelector('link[data-eggs]')) return;
+  if (document.querySelector('link[data-eggs], link[data-eggs-css]')) return; // une seule balise (lettres.js la pose aussi)
   const l = document.createElement('link');
   l.rel = 'stylesheet';
   l.href = new URL('./eggs.css', import.meta.url).href;

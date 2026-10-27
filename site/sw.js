@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v117';
+const CACHE_VERSION = 'v119';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -83,7 +83,7 @@ const PRECACHE = [
   '/assets/commun/paillettes.js', '/assets/espaces/irl/photos.js', '/assets/espaces/compte/profile-fields.js',
   '/assets/espaces/irl/recap.js', '/assets/espaces/infos/rejoindre.js', '/assets/espaces/irl/secret-santa.js',
   '/assets/commun/site-boot.js', '/assets/commun/sound.js', '/assets/espaces/irl/ss-card.js', '/assets/espaces/irl/ss-pairs.js',
-  '/assets/commun/theme-boot.js', '/assets/commun/icons.js', '/assets/commun/ui-confirm.js', '/assets/commun/utils.js', '/assets/images/marque/logo-1600.webp', '/assets/images/marque/favicon-64.png',
+  '/assets/commun/theme-boot.js', '/assets/commun/icons.js', '/assets/commun/ui-confirm.js', '/assets/commun/utils.js', '/assets/images/marque/logo-1600.webp', '/assets/images/marque/logo-96.webp', '/assets/images/marque/logo-192.webp', '/assets/commun/core/godmode-dialog.js', '/assets/commun/core/recherche-lien.js', '/assets/commun/core/tour-etat.js', '/assets/espaces/accueil/avent-date.js', '/assets/images/marque/favicon-64.png',
   '/assets/espaces/quiz/quiz.js', '/assets/espaces/arcade/secret.js', '/assets/espaces/admin/admin-quiz.js', '/assets/espaces/admin/admin-quiz-stats.js',
   '/assets/espaces/arcade/api.js', '/assets/espaces/arcade/core.js', '/assets/espaces/arcade/lettres.js', '/assets/espaces/arcade/creeper.js', '/assets/espaces/arcade/champignon.js', '/assets/espaces/arcade/pages.js', '/assets/espaces/arcade/jeu404.js',
   '/assets/espaces/quiz/quiz.css', '/assets/espaces/admin/admin-quiz.css', '/assets/espaces/admin/admin-quiz-stats.css', '/assets/espaces/arcade/eggs.css', '/assets/espaces/arcade/eggs-pages.css', '/assets/espaces/arcade/eggs-f.css',

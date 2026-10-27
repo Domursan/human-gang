@@ -142,7 +142,7 @@ function idcBadgesHtml(c) {
     const name = b.name || b.code || '';
     const label = b.lv ? `${name} · ${levelLabel(b.lv, b.level)}` : name;
     return `<li class="idc-bdg" title="${esc(label)}">${b.lv ? `<span class="idc-bdg-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url
-      ? `<img src="${esc(b.image_url)}" alt="${esc(label)}" loading="lazy" data-on-error="initials" data-fallback-class="idc-bdg-init" data-fallback="${esc(initials(name))}">`
+      ? `<img src="${esc(b.image_url)}" alt="${esc(label)}" loading="lazy" decoding="async" data-on-error="initials" data-fallback-class="idc-bdg-init" data-fallback="${esc(initials(name))}">`
       : `<span class="idc-bdg-init" role="img" aria-label="${esc(label)}">${esc(initials(name))}</span>`}</li>`;
   }).join('');
   const more = rest > 0 ? `<li class="idc-bdg idc-bdg-more" title="${rest} autre${rest > 1 ? 's' : ''} badge${rest > 1 ? 's' : ''}">+${rest}</li>` : '';
@@ -178,7 +178,7 @@ function cardHtml(c) {
           <div class="idc-rainbow" aria-hidden="true">${RAINBOW.map((r) => `<span style="background:${r}"></span>`).join('')}</div>
           <div class="idc-body">
             <div class="idc-photo">${c.avatar_url
-              ? `<img src="${esc(c.avatar_url)}" alt="" crossorigin="anonymous" data-on-error="initials" data-fallback-class="idc-initials" data-fallback="${esc(initials(c.pseudo))}">`
+              ? `<img src="${esc(c.avatar_url)}" alt="" crossorigin="anonymous" loading="lazy" decoding="async" data-on-error="initials" data-fallback-class="idc-initials" data-fallback="${esc(initials(c.pseudo))}">`
               : `<span class="idc-initials">${esc(initials(c.pseudo))}</span>`}</div>
             <dl class="idc-fields">
               <div class="idc-field idc-field-pseudo"><dt class="idc-k">Pseudo</dt><dd class="idc-pseudo">${esc(c.pseudo)}</dd></div>
@@ -220,7 +220,7 @@ function badgesHtml(c) {
     ${list.length ? `<ul class="badge-grid">
       ${list.map((b) => `
         <li class="badge-item" title="${esc(b.description || b.name)}">
-          <span class="badge-img">${b.lv ? `<span class="badge-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" data-on-error="text" data-fallback="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
+          <span class="badge-img">${b.lv ? `<span class="badge-lvl" aria-hidden="true">${roman(b.level)}</span>` : ''}${b.image_url ? `<img src="${esc(b.image_url)}" alt="" loading="lazy" decoding="async" data-on-error="text" data-fallback="${esc(initials(b.name))}">` : esc(initials(b.name))}</span>
           <span class="badge-name">${esc(b.name)}</span>
           ${b.lv ? `${levelPipsHtml(b.lv, b.level, { max: 5 })}<span class="lvl-name">${esc(levelLabel(b.lv, b.level))}</span>` : ''}
           ${b.description ? `<span class="badge-desc">${esc(b.description)}</span>` : ''}

@@ -6,11 +6,10 @@
 // accueil-ce-jour.js (tuile « Ce jour-là »).
 // Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
-import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from '../../commun/core.js';
+import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, logoAttrs, canAccess, pageLabel } from '../../commun/core.js';
 import { svg } from '../../commun/icons.js';
-import { maybeStartTour } from '../../commun/core/tour.js'; // Q1 : visite guidée au premier passage
-import { loadOnThisDay } from './accueil-ce-jour.js';
-import { SITE_DEFAULTS } from '../../commun/core/site-defaults.js'; // textes d'origine (repli des textes réglables)
+import { tourState } from '../../commun/core/tour-etat.js'; // Q1 : visite guidée au premier passage (tour.js ne se charge que si une visite est due)
+import { SITE_DEFAULTS, siteIdentite } from '../../commun/core/site-defaults.js'; // textes d'origine (repli des textes réglables)
 const D = SITE_DEFAULTS.textes;
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
@@ -101,9 +100,10 @@ function syncIntro() {
  * Le bouton « Revoir l'intro » efface le jour de l'intro puis renvoie à /index.html.
  */
 function renderGuest() {
+  const logo = logoAttrs();
   app.innerHTML = `
     <section class="home-hero home-hero-guest">
-      <img class="home-hero-logo" src="${esc(currentLogo())}" alt="" data-on-error="remove">
+      <img class="home-hero-logo" src="${esc(logo.src)}"${logo.srcset ? ` srcset="${esc(logo.srcset)}" sizes="88px"` : ''} width="88" height="88" alt="" data-on-error="remove">
       <p class="eyebrow">Humane Gang</p>
       <h1 class="page-title">${esc(txt('accueil_titre', D.accueil_titre))}</h1>
       <p class="home-lead">${esc(txt('accueil_lead', D.accueil_lead))}</p>
@@ -422,7 +422,7 @@ async function loadDynBanner() {
     const ev = [...list].sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
     const more = list.length > 1 ? ` (+${list.length - 1} autre${list.length > 2 ? 's' : ''})` : '';
     const vis = ev.image_url
-      ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" data-on-error="remove">`
+      ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" data-on-error="remove" decoding="async">`
       : `<span class="recap-banner-emoji" aria-hidden="true">${esc(ev.emoji || '✨')}</span>`;
     box.innerHTML = `<a class="recap-banner dyn-banner" href="/pages/irl/evenements.html">
         ${vis}
@@ -449,9 +449,10 @@ async function loadFeed() {
       return;
     }
     const byId = new Map(all.map((m) => [m.id, m]));
+    const logo = logoAttrs();
     ul.innerHTML = data.map((a) => {
       const m = a.user_id ? byId.get(a.user_id) : null;
-      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(currentLogo())}" alt="" data-on-error="remove"></span>`;
+      const av = m ? avatarHtml(m, 36) : `<span class="avatar feed-sys" aria-hidden="true" style="width:36px;height:36px"><img src="${esc(logo.src)}"${logo.srcset ? ` srcset="${esc(logo.srcset)}" sizes="36px"` : ''} alt="" data-on-error="remove"></span>`;
       return `<li class="feed-item" data-kind="${esc(a.kind)}"${a.ref ? ` data-ref="${esc(a.ref)}"` : ''}>
         ${av}
         <div class="feed-text">
@@ -582,6 +583,18 @@ async function loadSeasonal() {
   }
 }
 
+/* ---------- Visite guidée (Q1) ---------- */
+/**
+ * Lance la visite (ou son bandeau) quand elle peut s'afficher : le module tour.js n'est chargé que dans ce cas.
+ * Même condition que maybeStartTour (core/tour.js) : adresse #visite, visite non coupée et jamais vue ou bandeau à proposer.
+ * @param {object} profil Profil du membre connecté.
+ */
+function lanceVisite(profil) {
+  if (!profil) return;
+  const due = location.hash === '#visite' || (siteIdentite().visite_active !== false && ['jamais', 'ancien'].includes(tourState(profil)));
+  if (due) import('../../commun/core/tour.js').then((m) => m.maybeStartTour(profil)).catch((e) => console.warn('[visite]', e));
+}
+
 /* ---------- Tuiles vers des pages interdites : retirées ---------- */
 /** Tuile → page protégée qu'elle ouvre (pour retirer les tuiles auxquelles la personne n'a pas accès). */
 const TILE_PAGE = { 'tile-ss': 'secret-santa', 'tile-irl': 'irl', 'tile-hist': 'historique', 'tile-day': 'historique' };
@@ -612,9 +625,9 @@ if (!me) {
     tileOn('tile-ss') ? loadSecretSanta() : null, tileOn('tile-irl') ? loadIrl() : null, tileOn('tile-hist') ? loadHistory() : null,
     $('#feed') ? loadFeed() : null, $('#bdays') ? loadBirthdays() : null, loadDynBanner(), $('#defi') ? loadChallenges() : null, loadDailyQuestion(), loadSeasonal(),
     home?.loadOwn(),
-    tileOn('tile-day') ? loadOnThisDay($('#tile-day'), me) : null,
+    tileOn('tile-day') ? import('./accueil-ce-jour.js').then((m) => m.loadOnThisDay($('#tile-day'), me)) : null, // module chargé seulement si la tuile existe
   ]);
   allerAuxIdees(true);
-  maybeStartTour(me); // après les tuiles : la visite éclaire des éléments déjà en place
+  lanceVisite(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }
 app.removeAttribute('aria-busy');

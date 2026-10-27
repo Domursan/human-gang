@@ -30,15 +30,24 @@ const STATUTS_MS = 60000;
 const CATS = { messages: 'Message', sorties: 'Sortie', echanges: 'Échange', souhaits: 'Cartes', santa: 'Secret Santa',
   anniversaires: 'Anniversaire', jeux: 'Jeux', annonces: 'Annonce', info: 'Info' };
 
-/** Feuille de style de la cloche et des pastilles (/assets/commun/notifs.css), ajoutée une fois. */
+/**
+ * Feuille de style de la cloche et des pastilles (/assets/commun/notifs.css), ajoutée une fois.
+ * Renvoie une promesse résolue quand elle est appliquée : sans elle, le voyant serait posé en ligne (sans style)
+ * puis repositionné, ce qui fait bouger l'en-tête (CLS).
+ * @returns {Promise<void>}
+ */
 function chargerCss() {
-  if (document.querySelector('link[data-css="notifs"]')) return;
-  const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../notifs.css', import.meta.url).href; l.dataset.css = 'notifs';
-  document.head.append(l);
+  let l = document.querySelector('link[data-css="notifs"]');
+  if (!l) {
+    l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = new URL('../notifs.css', import.meta.url).href; l.dataset.css = 'notifs';
+    document.head.append(l);
+  }
+  if (l.sheet) return Promise.resolve();
+  return new Promise((ok) => { l.addEventListener('load', ok, { once: true }); l.addEventListener('error', ok, { once: true }); });
 }
 
-const P = { me: null, timer: null, nonLues: 0, liste: null, masque: false, canal: null, ouvert: false, demarre: false, docBound: false };
+const P = { me: null, timer: null, nonLues: 0, liste: null, masque: false, canal: null, ouvert: false, demarre: false, docBound: false, css: false };
 /** Téléphone : même seuil que le menu replié et l'éventail de la photo (header.js). */
 const TEL = '(max-width: 760px)';
 const surTel = () => matchMedia(TEL).matches;
@@ -327,10 +336,12 @@ export function startPresence(profile) {
   P.demarre = true;
   P.me = profile;
   try {
-    chargerCss();
-    monterVoyant();
-    // État du membre au départ (statut masqué ou non, non lues) : une lecture de la liste, sans bloquer le reste
-    charger().then(peindreVoyant).catch((e) => console.warn('[notifs] état initial', e?.message || e));
+    // Voyant posé une fois la feuille de style appliquée ; état du membre au départ (statut masqué ou non, non lues)
+    // lu ensuite : une lecture de la liste, sans bloquer le reste
+    chargerCss()
+      .then(() => { P.css = true; monterVoyant(); return charger(); })
+      .then(peindreVoyant)
+      .catch((e) => console.warn('[notifs] état initial', e?.message || e));
     ping();
     P.timer = setInterval(ping, PING_MS);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { ping(); majStatuts(); } });
@@ -340,7 +351,7 @@ export function startPresence(profile) {
     statutsTimer = setInterval(() => { if (!document.hidden) majStatuts(); }, STATUTS_MS);
     new MutationObserver((muts) => {
       // En-tête reconstruit (renderHeader) : le voyant est reposé sur la nouvelle photo
-      if (!document.getElementById('statut-btn') && document.querySelector('.site-header .nav-me-wrap')) monterVoyant();
+      if (P.css && !document.getElementById('statut-btn') && document.querySelector('.site-header .nav-me-wrap')) monterVoyant();
       if (muts.some((m) => [...m.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.('[data-presence]') || n.querySelector?.('[data-presence]'))))) majStatutsBientot();
     }).observe(document.body, { childList: true, subtree: true });
   } catch (e) {

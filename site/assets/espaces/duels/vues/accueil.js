@@ -145,7 +145,7 @@ function squelette() {
 function htmlJeux() {
   return Object.entries(jeuxVisibles()).map(([cle, j]) => `
     <article class="duels-acc-jeu">
-      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
+      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy" decoding="async">
       <div class="duels-acc-jeu-corps">
         <h2 class="duels-acc-jeu-nom">${esc(j.nom)}${j.dev ? ' <span class="duels-dev">En développement</span>' : ''}</h2>
         <p class="duels-acc-jeu-texte">${esc(j.texte)}</p>

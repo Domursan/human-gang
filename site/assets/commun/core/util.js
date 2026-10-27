@@ -97,7 +97,7 @@ export function avatarHtml(p, size = 40) {
   // Initiales : texte clair ou foncé selon le fond choisi par le membre (contraste WCAG AA, quel que soit le thème).
   const style = `width:${size}px;height:${size}px;background:${esc(color)}${hex ? `;color:${texteSur(p.color)}` : ''}`;
   return avatarOk
-    ? `<img class="avatar" src="${esc(p.avatar_url)}" alt="" style="${style}">`
+    ? `<img class="avatar" src="${esc(p.avatar_url)}" alt="" style="${style}" loading="lazy" decoding="async">`
     : `<span class="avatar" aria-hidden="true" style="${style}">${esc(initials(p?.pseudo))}</span>`;
 }
 

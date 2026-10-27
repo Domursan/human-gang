@@ -6,13 +6,13 @@
  *     identifiant) et quêtes saisonnières.
  * L'anniversaire du gang (T4) est monté par eggs/core.js (anniv.js), sur l'accueil et la page Cartes.
  * RPC : hg_advent_me (avent.js), hg_saison_state. Rien n'est affiché hors saison.
- * Dépendances : core.js (sb, esc, errMsg), avent.js, icons.js, cartes-ui.js (fmtP), saisons-css.js.
+ * Dépendances : core.js (sb, esc, errMsg), avent-date.js (adventSeason), avent.js (chargé en décembre seulement), icons.js, cartes-ui.js (fmtP), saisons-css.js.
  * Exporte : mountSeasonal(box).
  */
 import { sb, esc } from '../../commun/core.js';
 import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
-import { adventSeason, mountAdvent } from './avent.js';
+import { adventSeason } from './avent-date.js'; // le calendrier (avent.js) ne se charge qu'en décembre
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const nf = new Intl.NumberFormat('fr-CH');
@@ -76,7 +76,7 @@ export async function mountSeasonal(box) {
   box.append(advBox, wdBox);
   const jobs = [];
   if (adventSeason()) {
-    jobs.push(mountAdvent(advBox).then((on) => {
+    jobs.push(import('./avent.js').then((m) => m.mountAdvent(advBox)).then((on) => {
       if (on) { box.hidden = false; const dyn = document.getElementById('dyn-banner'); if (dyn) dyn.dataset.avent = '1'; }
     }).catch((e) => console.warn('[avent]', e)));
   }

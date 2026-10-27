@@ -121,7 +121,7 @@ function champs(q) {
  */
 function carteOuverte(q) {
   const cat = q.category ? `<span class="quiz-cat">${esc(q.category)}</span>` : '';
-  const img = q.image_url ? `<img class="quiz-img" src="${esc(q.image_url)}" alt="Illustration de la question" loading="lazy" data-on-error="remove">` : '';
+  const img = q.image_url ? `<img class="quiz-img" src="${esc(q.image_url)}" alt="Illustration de la question" loading="lazy" decoding="async" data-on-error="remove">` : '';
   const fin = q.ends_at ? `<p class="small muted quiz-end">Jusqu’au ${esc(dateFin.format(new Date(q.ends_at)))}</p>` : '';
   // Question bonus secrète : libellé visible (le texte porte l'information, pas seulement le cadre doré).
   const secrete = q.secret ? '<p class="quiz-secret-tag">Question secrète <span aria-hidden="true">🔍</span></p>' : '';

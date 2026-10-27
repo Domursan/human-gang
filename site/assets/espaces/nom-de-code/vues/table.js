@@ -38,7 +38,7 @@ const ligneJournal = (j) => `<li class="ndc-journal-ligne">${esc(j.texte)}</li>`
 /** Avatar rond : photo si fournie, sinon initiales sur la couleur du membre. */
 const avatar = (j) => {
   const c = couleurJoueur(j);
-  const img = j?.avatar_url && !j?.invite ? `<img src="${esc(j.avatar_url)}" alt="">` : esc(initials(j?.pseudo));
+  const img = j?.avatar_url && !j?.invite ? `<img src="${esc(j.avatar_url)}" alt="" loading="lazy" decoding="async">` : esc(initials(j?.pseudo));
   return `<span class="ndc-av" style="--ndc-av:${c}" aria-hidden="true">${img}</span>`;
 };
 /** Pseudo dans sa couleur, « invité » pour un invité. */

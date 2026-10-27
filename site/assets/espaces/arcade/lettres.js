@@ -30,7 +30,7 @@ const pageCourante = () => location.pathname.split('/').pop().replace(/\.html$/,
  * Le chemin est relatif à ce module, donc il marche sous /human-gang/ comme dans les tests.
  */
 function ajouteStyle() {
-  if (document.querySelector('link[data-eggs-css]')) return;
+  if (document.querySelector('link[data-eggs-css], link[data-eggs]')) return; // une seule balise pour eggs.css (core.js la pose aussi)
   const l = document.createElement('link');
   l.rel = 'stylesheet';
   l.href = new URL('./eggs.css', import.meta.url).href;

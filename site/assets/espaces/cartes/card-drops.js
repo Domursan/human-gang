@@ -9,7 +9,6 @@
 // Sans mouvement (prefers-reduced-motion ou effets coupés) : la carte reste immobile dans le coin, sans vol.
 // Une seule carte vole à la fois, et jamais en même temps qu'une image d'événement (dyn-events.js attend).
 import { sb, toast, esc, playSound, motionAllowed, hasSession, isNavCancel } from '../../commun/core.js';
-import { cardHtml } from './cartes-ui.js';
 import { rnd } from '../../commun/utils.js';
 import { trajectory, KINDS } from '../../commun/dyn-events.js';
 
@@ -96,7 +95,7 @@ function show(d) {
   const n = Number(d.remaining) || 0;
   item.innerHTML = `
     <button type="button" class="cd-x" data-cd-hide aria-label="Masquer cette carte sur cette page">×</button>
-    ${cardHtml(cardOf(d), { size: 'sm', shiny: !!d.shiny, button: true,
+    ${ui.cardHtml(cardOf(d), { size: 'sm', shiny: !!d.shiny, button: true,
       attrs: `data-cd-claim="${esc(d.drop_id)}" aria-describedby="cd-hint-${esc(d.drop_id)}"` })}
     <p class="cd-hint" id="cd-hint-${esc(d.drop_id)}">${esc(countText(n))}</p>`;
   const entry = { el: item, remaining: n, timer: null, anim: null };
@@ -179,6 +178,7 @@ function sync(list) {
 /** Relit les drops actifs et met l'écran d'accord avec eux (ne fait rien si la lecture échoue). */
 async function refresh() {
   const list = await fetchActive();
+  if (list?.length) await chargeUi(); // rien à montrer : ni la carte ni sa feuille ne se chargent
   if (list) sync(list);
 }
 
@@ -243,7 +243,7 @@ function reveal(item, c) {
   item.className = `cd-item cd-won${motionAllowed() ? '' : ' is-still'}`;
   item.innerHTML = `<div class="cd-reveal" role="status">
       <p class="cd-reveal-t">Tu as attrapé « ${esc(name)} » !</p>
-      ${cardHtml(cardOf(c), { size: 'md', shiny: !!c.shiny, serial: c.serial || null })}
+      ${ui.cardHtml(cardOf(c), { size: 'md', shiny: !!c.shiny, serial: c.serial || null })}
       <p class="small">Ajoutée à ta collection.</p>
     </div>`;
   playSound('success');
@@ -295,12 +295,18 @@ function ensureCardCss() {
   });
 }
 
+/** Module d'affichage des cartes (cartes-ui.js) et feuille des cartes : chargés au premier drop à montrer, pas sur chaque page. */
+let ui = null;
+/** Chargement en cours (promesse partagée), pour ne lancer l'import qu'une fois. */
+let uiPromesse = null;
+/** Charge l'affichage des cartes et sa feuille de style une seule fois ; ui contient ensuite le module. */
+const chargeUi = () => (uiPromesse ||= Promise.all([import('./cartes-ui.js'), ensureCardCss()]).then(([m]) => { ui = m; return m; }));
+
 /** Lance la surveillance des drops pour un membre connecté. Ne jette jamais. */
 export async function startCardDrops(profile) {
   if (S.started || !profile?.id || !(await hasSession())) return;
   S.started = true;
   try {
-    await ensureCardCss();
     await refresh();
     sb.channel('hg-card-drops')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'hg_card_drops' }, () => refresh())

@@ -21,7 +21,7 @@ import { getCachedProfile } from './profile.js';
 import { getCachedPerms, canPanel, clearPerms } from './perms.js';
 import { getMyPages, canAccess, pageLabel, pageHref } from './pages-access.js';
 import { viewAsActive } from './view-as.js';
-import { currentLogo } from './theme.js';
+import { logoAttrs } from './theme.js';
 import { openPrefs } from './prefs.js';
 import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js';
 import { avatarHtml, esc, reducedMotion } from './util.js';
@@ -29,7 +29,7 @@ import {
   ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP, ICON_MENU, ICON_SEARCH, ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD,
   ICON_STATUT,
 } from './icons.js';
-import { bindSearch } from './search.js';
+import { bindRechercheLien } from './recherche-lien.js';
 import { bindShortcuts } from './shortcuts.js';
 import { siteIdentite, navLibelle } from './site-defaults.js';
 import { MENUS, menuKey } from './menu-def.js';
@@ -410,12 +410,13 @@ export function renderHeader(profile, { nav = true } = {}) {
        </span>`
     : `<a class="nav-icon nav-help" href="/pages/infos/aide.html"${curAttr('/pages/infos/aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>
        <a class="nav-account is-guest" href="/pages/compte/compte.html"${curAttr('/pages/compte/compte.html')}>Connexion</a>`;
+  const logo = logoAttrs();
   const header = document.createElement('header');
   header.className = 'site-header';
   header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>
     <div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
-      <a class="brand" href="/pages/compte/accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
+      <a class="brand" href="/pages/compte/accueil.html"><img class="brand-logo" src="${esc(logo.src)}"${logo.srcset ? ` srcset="${esc(logo.srcset)}" sizes="44px"` : ''} width="44" height="44" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
       <div class="nav-tools">${toggle}${right}</div>
     </div>`;
@@ -478,7 +479,7 @@ export function renderHeader(profile, { nav = true } = {}) {
     else openGodDialog(e);
   });
   paintGod();
-  bindSearch(header);
+  bindRechercheLien(header);
   // Déconnexion : on coupe la session, on oublie les droits et les badges vus pour cette session, puis on va à la page de connexion
   header.querySelector('.nav-logout').addEventListener('click', async (e) => {
     const b = e.currentTarget; b.disabled = true;

@@ -8,7 +8,7 @@
  * Dépendances : site-defaults.js (logo du site), prefs-state.js (préférences), theme-calc.js (couleurs, thème par défaut),
  * effects.js (calque d'effets et classe fx-fromage).
  * Stockage : lit localStorage « hg_theme » (dernier thème du jour connu).
- * Exporte : paintTheme, paintSiteTheme, paintActiveTheme, commitSiteTheme, getActiveTheme, getSiteTheme, currentLogo.
+ * Exporte : paintTheme, paintSiteTheme, paintActiveTheme, commitSiteTheme, getActiveTheme, getSiteTheme, currentLogo, logoAttrs.
  */
 import { siteLogo } from './site-defaults.js';
 import { getPrefs, applyPrefsAttrs } from './prefs-state.js';
@@ -66,8 +66,12 @@ export function paintTheme(theme) {
   const t = theme || DEFAULT_THEME;
   setRootVars(t);
   _theme = t;
-  const logo = currentLogo();
-  document.querySelectorAll('img.brand-logo').forEach((img) => { if (img.getAttribute('src') !== logo) img.src = logo; });
+  const a = logoAttrs();
+  document.querySelectorAll('img.brand-logo').forEach((img) => {
+    if (img.getAttribute('src') === a.src) return;
+    img.src = a.src;
+    if (a.srcset) img.srcset = a.srcset; else img.removeAttribute('srcset');
+  });
   startEffects(t);
   return t;
 }
@@ -103,6 +107,21 @@ export function getSiteTheme() { return _siteTheme; }
  * @returns {string} Adresse de l'image.
  */
 export function currentLogo() { return _theme?.logo_url || siteLogo(); }
+
+/* Versions réduites du logo par défaut (en-tête, accueil) : 96 et 192 px, pour les écrans haute densité */
+const LOGO_DEFAUT = new URL('../../images/marque/logo-1600.webp', import.meta.url).href;
+const LOGO_PETIT = new URL('../../images/marque/logo-192.webp', import.meta.url).href;
+const LOGO_PETIT_SRCSET = `${new URL('../../images/marque/logo-96.webp', import.meta.url).href} 96w, ${LOGO_PETIT} 192w`;
+
+/**
+ * Attributs de l'image d'un logo affiché en petit. Pour le logo par défaut : version réduite et srcset.
+ * Pour un logo de thème ou personnalisé : son adresse telle quelle, sans srcset (on ne connaît pas ses tailles).
+ * @param {string} [logo] Logo à afficher (logo courant par défaut).
+ * @returns {{src: string, srcset: string}} src, et srcset (vide si absent).
+ */
+export function logoAttrs(logo = currentLogo()) {
+  return logo === LOGO_DEFAUT ? { src: LOGO_PETIT, srcset: LOGO_PETIT_SRCSET } : { src: logo, srcset: '' };
+}
 
 /* ---------- Démarrage (avant tout appel réseau) ---------- */
 

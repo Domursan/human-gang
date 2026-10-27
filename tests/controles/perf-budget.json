@@ -13,7 +13,7 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "cls": 0.3
+        "cls": 0.12
       }
     },
     "cartes": {
@@ -32,7 +32,6 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "cls": 1.05,
         "ko": 700,
         "requetes": 70
       }
@@ -43,7 +42,6 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "cls": 0.2,
         "requetes": 70
       }
     },
@@ -52,9 +50,7 @@
       "ko": 600,
       "requetes": 60,
       "cls": 0.1,
-      "plafond": {
-        "cls": 0.2
-      }
+      "plafond": {}
     }
   }
 }

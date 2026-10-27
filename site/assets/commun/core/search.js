@@ -43,7 +43,8 @@ const GROUPS = {
  * @param {string|null|undefined} s Texte source.
  * @returns {string} Texte prêt à comparer.
  */
-export const foldText = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+import { foldText } from './recherche-lien.js';
+export { foldText };
 
 /* ---------- Données (une fois par type, mises en cache si le chargement a réussi) ---------- */
 const cache = {};   // clé -> { items } ; absent tant que non chargé ou en erreur

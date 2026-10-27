@@ -25,7 +25,7 @@ const appelsSecrets = (lg) => lg.filter((x) => x[0] === 'rpc' && /^hg_egg/.test(
 
 /** Attend que le module des secrets soit lancé (sa feuille de style est injectée). */
 async function attendSecrets(p) {
-  await p.waitForSelector('link[data-eggs]', { state: 'attached', timeout: 8000 });
+  await p.waitForSelector('link[data-eggs], link[data-eggs-css]', { state: 'attached', timeout: 8000 });
 }
 
 /** Tape le code Konami au clavier, touche par touche. */

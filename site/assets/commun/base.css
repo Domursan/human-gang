@@ -68,6 +68,9 @@ button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color
 /* ---------- En-tête (refonte du 23/10 : menus déroulants + photo de profil qui ouvre un menu en arc) ---------- */
 .site-header { border-bottom: 1px solid var(--border); position: relative; z-index: 45; }
 .site-header .container { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
+/* En-tête posé par JS (init.js) : tant qu'il n'est pas là, sa hauteur est réservée (sinon le contenu descend d'un coup, CLS) */
+body:has(#app):not(:has(> .site-header))::before { content: ''; display: block; height: 83px; }
+@media (max-width: 760px) { body:has(#app):not(:has(> .site-header))::before { height: 71px; } }
 .brand { display: flex; align-items: center; gap: 12px; color: var(--text); text-decoration: none; flex: none; }
 .brand img { width: 44px; height: 44px; object-fit: contain; image-rendering: pixelated; }
 .brand span { font-family: var(--font-display); font-size: 20px; }

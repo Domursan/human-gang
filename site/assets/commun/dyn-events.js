@@ -181,7 +181,7 @@ export async function flyDynImage(ev, { preview = false, host = document.body, o
   btn.setAttribute('aria-label', `Attraper ${name}`);
   btn.style.width = `${size}px`; btn.style.height = `${size}px`;
   btn.innerHTML = hasImg
-    ? `<img src="${esc(ev.image_url)}" alt="" draggable="false">`
+    ? `<img src="${esc(ev.image_url)}" alt="" draggable="false" loading="lazy" decoding="async">`
     : `<span class="dyn-emoji" style="font-size:${Math.round(size * 0.82)}px">${esc(ev.emoji || FALLBACK_EMOJI)}</span>`;
   layer.append(btn);
   announce(layer, `${name} vient d'apparaître ! Appuie sur le bouton « Attraper » pour l'attraper.`);

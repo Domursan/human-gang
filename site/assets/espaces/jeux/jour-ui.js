@@ -103,7 +103,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false, meId = n
     const info = [q.category, DIFF[q.difficulty]].filter(Boolean).join(' · ');
     const deja = d.already_played && !d.answered
       ? '<p class="small qdj-deja">Tu as déjà répondu à cette question dans le quiz : réponds quand même pour garder ta série (tes Paillettes du quiz ne changent pas).</p>' : '';
-    const img = q.image_url ? `<img class="qdj-img" src="${esc(q.image_url)}" alt="Illustration de la question" loading="lazy" data-on-error="remove">` : '';
+    const img = q.image_url ? `<img class="qdj-img" src="${esc(q.image_url)}" alt="Illustration de la question" loading="lazy" decoding="async" data-on-error="remove">` : '';
     const corps = d.answered ? resultat() : `${champs(q)}
       <p class="qdj-error small" role="alert" hidden></p>
       <div class="qdj-foot"><span class="small muted">Réponds pour garder ta série</span><span class="qdj-plus">+${esc(nf.format(d.bonus || 0))}</span></div>`;

@@ -272,7 +272,7 @@ function albumHtml(ev) {
 /** Image de couverture d'une sortie, ou à défaut une tuile colorée avec le jour et le mois. */
 function coverHtml(ev) {
   const url = ev.cover_path ? S.urls.get(ev.cover_path) : null;
-  if (url) return `<div class="feat-cover"><img src="${esc(url)}" alt=""></div>`;
+  if (url) return `<div class="feat-cover"><img src="${esc(url)}" alt="" loading="lazy" decoding="async"></div>`;
   const d = new Date(ev.starts_at);
   return `<div class="feat-cover feat-cover-block" style="--tint:${tint(ev.id)}" aria-hidden="true">
     <span class="fc-day">${d.getDate()}</span>

@@ -54,7 +54,7 @@ export function openProof(q, o) {
   const $ = (s) => dlg.querySelector(s);
   let files = [];
   const thumbs = () => {
-    $('#qp-thumbs').innerHTML = files.map((f, i) => `<li class="qp-thumb"><img src="${esc(URL.createObjectURL(f))}" alt="Capture ${i + 1}"><span class="small">${esc(f.name)}</span></li>`).join('');
+    $('#qp-thumbs').innerHTML = files.map((f, i) => `<li class="qp-thumb"><img src="${esc(URL.createObjectURL(f))}" alt="Capture ${i + 1}" decoding="async"><span class="small">${esc(f.name)}</span></li>`).join('');
   };
   $('#qp-files').addEventListener('change', (e) => {
     files = [...e.target.files].slice(0, MAX);

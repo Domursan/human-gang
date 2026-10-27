@@ -10,7 +10,7 @@
  */
 import { getPrefs } from './prefs-state.js';
 import { setPrefs } from './prefs.js';
-import { openSearch } from './search.js';
+import { ouvreRecherche } from './recherche-lien.js';
 import { canAccess, pageHref } from './pages-access.js';
 import { esc } from './util.js';
 import { ICON_CLOSE } from './icons.js';
@@ -192,7 +192,7 @@ function onKey(e) {
   } else if (k === '/') {
     if (!document.querySelector('.site-header .nav-search-open')) return;
     e.preventDefault();
-    openSearch();
+    ouvreRecherche();
   } else if (k === '?') {
     e.preventDefault();
     openShortcutsHelp();

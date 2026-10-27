@@ -15,17 +15,14 @@ import { cardHtml, rarityLabel } from '../cartes/cartes-ui.js';
 import { signedUrls } from '../irl/photos.js';
 import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
+import { adventSeason } from './avent-date.js';
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const KIND_LABEL = { paillettes: 'Paillettes', carte: 'Carte', souvenir: 'Souvenir', question: 'Question', booster: 'Booster' };
 const ICON_LOCK = svg('lock', { size: 14 });
 const ICON_GANG = svg('users', { size: 12 });
 
-/** Vrai entre le 30 novembre et le 1er janvier (heure locale) : on ne demande le calendrier au serveur qu'à ce moment-là. */
-export function adventSeason(d = new Date()) {
-  const m = d.getMonth(), j = d.getDate();
-  return m === 11 || (m === 10 && j === 30) || (m === 0 && j === 1);
-}
+export { adventSeason } from './avent-date.js';
 
 /** État de la tuile : réponse de hg_advent_me, case choisie, dernier résultat d'ouverture. */
 const A = { data: null, sel: null, box: null, urls: new Map() };
@@ -94,7 +91,7 @@ function revealHtml(d) {
     const url = path ? A.urls.get(path) : null;
     const when = m?.happened_on ? fmtDay(m.happened_on) : e?.starts_at ? fmtDay(e.starts_at) : '';
     const title = m?.title || e?.title || 'Un souvenir du gang';
-    return `<div class="av-reveal">${url ? `<div class="av-reveal-media"><img class="av-photo" src="${esc(url)}" alt="" data-on-error="remove"></div>` : ''}
+    return `<div class="av-reveal">${url ? `<div class="av-reveal-media"><img class="av-photo" src="${esc(url)}" alt="" data-on-error="remove" loading="lazy" decoding="async"></div>` : ''}
       <div class="av-reveal-body">${head}<h3 class="av-reveal-title">${esc(when ? `${when} : ${title}` : title)}</h3>
       ${m?.body ? `<p class="sz-small sz-muted">${esc(m.body)}</p>` : ''}${e?.location ? `<p class="sz-small sz-muted">${esc(e.location)}</p>` : ''}
       ${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}${c.paid ? `<p class="sz-small">+${Number(c.paid)} Paillettes</p>` : ''}
@@ -117,7 +114,7 @@ function revealHtml(d) {
         <button class="btn btn-sand" type="submit">Répondre</button></form>`;
     }
     return `<div class="av-reveal"><div class="av-reveal-body">${head}<h3 class="av-reveal-title">Question bonus</h3>
-      <p>${esc(q.prompt)}</p>${q.image_url ? `<img class="av-photo" src="${esc(q.image_url)}" alt="" data-on-error="remove">` : ''}${form}</div></div>`;
+      <p>${esc(q.prompt)}</p>${q.image_url ? `<img class="av-photo" src="${esc(q.image_url)}" alt="" data-on-error="remove" loading="lazy" decoding="async">` : ''}${form}</div></div>`;
   }
   if (c.kind === 'booster') {
     const b = c.booster || {};

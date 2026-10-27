@@ -150,17 +150,17 @@ export function cardHtml(card, opts = {}) {
   if (miss) {
     win = '<span class="hgc-win"><span class="hgc-q" aria-hidden="true">?</span></span>';
   } else if (ident) {
-    const photo = card.image_url ? `<img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy">` : `<img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy">`;
+    const photo = card.image_url ? `<img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async">` : `<img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy" decoding="async">`;
     win = `<span class="hgc-win hgc-win-id"><span class="hgc-photo">${photo}</span>`
       + `<span class="hgc-idinfo"><span class="hgc-idk">Pseudo</span><span class="hgc-idv">${esc(name)}</span>`
       + (ms ? `<span class="hgc-idk">Membre depuis</span><span class="hgc-idv">${esc(ms)}</span>` : '') + '</span></span>';
   } else {
     // Musique : la pochette (carrée) est montrée en entier, sur un fond flouté de la même image.
     win = card.image_url && card.family === 'musique'
-      ? `<span class="hgc-win hgc-win-cover"><img class="hgc-win-blur" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" referrerpolicy="no-referrer"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" referrerpolicy="no-referrer"></span>`
+      ? `<span class="hgc-win hgc-win-cover"><img class="hgc-win-blur" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>`
       : card.image_url
-      ? `<span class="hgc-win"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy"></span>`
-      : `<span class="hgc-win"><img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy"></span>`;
+      ? `<span class="hgc-win"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async"></span>`
+      : `<span class="hgc-win"><img class="hgc-win-logo" src="${esc(currentLogo())}" alt="" aria-hidden="true" loading="lazy" decoding="async"></span>`;
   }
 
   // Unique : le numéro du seul exemplaire est « 1/1 » (sans zéro de remplissage).

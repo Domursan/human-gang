@@ -32,7 +32,7 @@ export function deNom(pseudo) {
 /** Avatar rond : photo de profil, sinon initiales sur la couleur du joueur. */
 export function avatarHtml(j, { tour = false, taille = 44 } = {}) {
   const ini = esc(String(j?.pseudo || '?').replace(/[^\p{L}\p{N}]/gu, '').slice(0, 2).toUpperCase() || '?');
-  const img = j?.avatar_url && /^https:\/\//.test(j.avatar_url) ? `<img src="${esc(j.avatar_url)}" alt="" loading="lazy">` : ini;
+  const img = j?.avatar_url && /^https:\/\//.test(j.avatar_url) ? `<img src="${esc(j.avatar_url)}" alt="" loading="lazy" decoding="async">` : ini;
   return `<span class="duels-av${tour ? ' is-tour' : ''}" aria-hidden="true" style="--duels-av:${couleurJoueur(j)};width:${taille}px;height:${taille}px">${img}</span>`;
 }
 

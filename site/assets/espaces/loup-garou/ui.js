@@ -56,7 +56,7 @@ export function vignetteRole(roleId, taille = 48, { rond = false } = {}) {
   const c = CAMPS[r.camp] || CAMPS.village;
   const forme = rond ? '50%' : `${Math.round(taille / 4)}px`;
   return `<span class="lg-vignette" style="width:${taille}px;height:${taille}px;border-radius:${forme};background:${c.fond};color:${c.texte}">`
-    + (r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy" width="${taille}" height="${taille}" data-on-error="remove">` : '')
+    + (r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy" decoding="async" width="${taille}" height="${taille}" data-on-error="remove">` : '')
     + icone(ICONE_CAMP[r.camp] || 'maison', Math.round(taille * 0.45)) + '</span>';
 }
 

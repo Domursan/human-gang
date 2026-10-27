@@ -248,9 +248,13 @@ const PANNEAU = `<svg class="jx-panneau" viewBox="0 0 64 58" aria-hidden="true" 
   <path d="M15 43.5l5.5 2.6-2.3 3.6z" fill="#121212"/>
   <path d="M38 47h9l-4.5-5z" fill="#121212"/>
 </svg>`;
+/** Version 320 px (dossier petit/) d'une image de jeu, en srcset avec l'originale : vignette plus légère sur téléphone. */
+const srcsetVignette = (src) => (src.startsWith('/assets/images/jeux/')
+  ? ` srcset="${esc(src.replace('/assets/images/jeux/', '/assets/images/jeux/petit/'))} 320w, ${esc(src)} 600w" sizes="(max-width: 600px) 40vw, 300px"`
+  : '');
 /** Vignette d'une carte : image, ou icône sur un fond de la couleur du jeu. */
 function vignetteHtml(c) {
-  if (c.image) return `<img class="jx-img" src="${esc(c.image)}" alt="" loading="lazy" decoding="async" width="900" height="600">`;
+  if (c.image) return `<img class="jx-img" src="${esc(c.image)}"${srcsetVignette(c.image)} alt="" loading="lazy" decoding="async" width="900" height="600">`;
   return `<span class="jx-img jx-ico" style="--jx:${couleur(c.couleur)}">${svg(c.icone, 'jx-gi')}</span>`;
 }
 /** HTML d'une carte de jeu (lien, ou bloc inerte si le jeu est en préparation). */
