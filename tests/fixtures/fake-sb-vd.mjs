@@ -1,4 +1,4 @@
-// Faux client Supabase des idées V8 (calendrier), V9 (ciné-club) et D3 (commandes slash) : tests/parcours-v8.cjs, parcours-v9.cjs,
+// Faux client Supabase des idées V8 (calendrier), V9 (ciné-club) et D3 (commandes slash) : tests/parcours/irl/parcours-v8.cjs, parcours-v9.cjs,
 // parcours-d3.cjs. Reprend le faux client du site (fake-sb.mjs, chargé depuis le dépôt) et ajoute les RPC de la migration 087,
 // avec les mêmes contrôles que la base (plafonds, bornes, droits) pour que les erreurs affichées soient réalistes.
 // Scénario (window.__SCN) : discord (ID Discord enregistré), cineEmpty (aucune séance ni film), cineHost (le membre connecté est projectionniste),
@@ -62,15 +62,15 @@ function calendar(from, to) {
   const items = [];
   const inRange = (d) => d >= from && d <= to;
   const ev = { id: 'eeeeeeee-0000-4000-8000-0000000000aa', title: 'Raclette sans raclette à Lausanne', starts_at: (() => { const d = new Date(now + 5 * 864e5); d.setUTCHours(11, 0, 0, 0); return d.toISOString(); })() };
-  if (inRange(dayZ(ev.starts_at))) items.push({ kind: 'irl', ref: ev.id, title: ev.title, starts_at: ev.starts_at, all_day: false, day: dayZ(ev.starts_at), link: `irl.html#event-${ev.id}`, meta: { oui: 6, mine: null } });
+  if (inRange(dayZ(ev.starts_at))) items.push({ kind: 'irl', ref: ev.id, title: ev.title, starts_at: ev.starts_at, all_day: false, day: dayZ(ev.starts_at), link: `/pages/irl/irl.html#event-${ev.id}`, meta: { oui: 6, mine: null } });
   if (VD.session && inRange(dayZ(VD.session.starts_at))) {
     const f = filmById(VD.session.film_id);
-    items.push({ kind: 'cine', ref: VD.session.id, title: f ? `Ciné : ${f.title}` : 'Ciné-club : vote en cours', starts_at: VD.session.starts_at, all_day: false, day: dayZ(VD.session.starts_at), link: 'cine.html', meta: { status: VD.session.status, presents: VD.presence.length } });
+    items.push({ kind: 'cine', ref: VD.session.id, title: f ? `Ciné : ${f.title}` : 'Ciné-club : vote en cours', starts_at: VD.session.starts_at, all_day: false, day: dayZ(VD.session.starts_at), link: '/pages/irl/cine.html', meta: { status: VD.session.status, presents: VD.presence.length } });
   }
   const bd = dayZ(iso(10));
-  if (inRange(bd)) items.push({ kind: 'anniv', ref: `${U(2)}:${bd.slice(0, 4)}`, title: 'Anniversaire de Alice', starts_at: null, all_day: true, day: bd, link: `membre.html?id=${U(2)}`, meta: { user_id: U(2) } });
+  if (inRange(bd)) items.push({ kind: 'anniv', ref: `${U(2)}:${bd.slice(0, 4)}`, title: 'Anniversaire de Alice', starts_at: null, all_day: true, day: bd, link: `/pages/compte/membre.html?id=${U(2)}`, meta: { user_id: U(2) } });
   const ss = dayZ(iso(12));
-  if (inRange(ss)) items.push({ kind: 'site', ref: 'ss-echange:E25', title: 'Secret Santa 2025 : échange des cadeaux', starts_at: null, all_day: true, day: ss, link: 'secret-santa.html', meta: {} });
+  if (inRange(ss)) items.push({ kind: 'site', ref: 'ss-echange:E25', title: 'Secret Santa 2025 : échange des cadeaux', starts_at: null, all_day: true, day: ss, link: '/pages/irl/secret-santa.html', meta: {} });
   for (const s of VD.slots.filter((x) => !x.archived_at)) {
     for (let d = new Date(`${from}T12:00:00Z`); dayZ(d) <= to; d = new Date(d.getTime() + 864e5)) {
       const day = d.toISOString().slice(0, 10), dow = ((d.getUTCDay() + 6) % 7) + 1;
@@ -79,7 +79,7 @@ function calendar(from, to) {
       if (VD.skips.some((k) => k.slot === s.id && k.day === day)) continue;
       const [h, m] = s.at_time.split(':').map(Number);
       const st = new Date(`${day}T00:00:00Z`); st.setUTCHours(h - 1, m); // approximation : heure d'hiver (UTC+1)
-      items.push({ kind: 'groupe', ref: `${s.id}:${day}`, title: s.title, starts_at: st.toISOString(), all_day: false, day, link: s.link || 'calendrier.html',
+      items.push({ kind: 'groupe', ref: `${s.id}:${day}`, title: s.title, starts_at: st.toISOString(), all_day: false, day, link: s.link || '/pages/irl/calendrier.html',
         meta: { slot_id: s.id, kind: s.kind, by: s.created_by, every_weeks: s.every_weeks, weekday: s.weekday, at_time: s.at_time.slice(0, 5) } });
     }
   }

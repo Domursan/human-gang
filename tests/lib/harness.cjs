@@ -16,7 +16,7 @@ const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.reso
 /** Dépôt complet (sources hors site/ : supabase/, docs/…). */
 const DEPOT = path.resolve(ROOT, '..');
 /**
- * Adresse d'une page à partir de son nom court (ex. 'jeux' -> '/pages/jeux/jeux.html', 'index' -> '/index.html').
+ * Adresse d'une page à partir de son nom court (ex. 'jeux' -> '/pages/jeux/pages/jeux/jeux.html', 'index' -> '/index.html').
  * @param {string} slug nom de la page, sans .html
  * @returns {string}
  */
@@ -67,7 +67,7 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
  * touch : true pour un écran tactile (page.tap possible).
  * mobile / dpr : téléphone émulé (isMobile, deviceScaleFactor), ex. { mobile: true, dpr: 2.6 }.
  * hash : fragment d'adresse à l'ouverture (ex. '#cartes/quetes').
- * Mesure de performance (tests/perf-budget.cjs) : delay(octets) → millisecondes d'attente avant chaque réponse du site
+ * Mesure de performance (tests/controles/perf-budget.cjs) : delay(octets) → millisecondes d'attente avant chaque réponse du site
  * (réseau lent simulé), cpu : ralentissement du processeur (×N, protocole Chrome), init : script ajouté avant le chargement.
  * Le contexte renvoyé (page.ctx) compte les requêtes servies et leurs octets : page.ctx.__net = { requetes, octets }.
  */

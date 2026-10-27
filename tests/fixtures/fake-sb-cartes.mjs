@@ -1,6 +1,6 @@
 // Faux client Supabase avec état et données de la collection de cartes (copie de visuel-carte/fake-sb.mjs).
 // Sert aux tests de la collection et du panel Jeu de cartes (fixture 'fake-sb-cartes.mjs' passée à openPage() dans lib/harness.cjs).
-// Sert au test d'ouverture de booster dans cartes.html (hg_open_booster, hg_cards_me, …).
+// Sert au test d'ouverture de booster dans /pages/cartes/cartes.html (hg_open_booster, hg_cards_me, …).
 // Exporte createClient(). Lit window.__SCN ; expose window.__DB, window.__LOG et window.__CARDS (configuration du jeu).
 // Boosters typés (SPEC booster-system), seulement si scenario.types = true : RPC hg_booster_types_me, hg_booster_buy (p_type),
 // hg_booster_open, hg_booster_gift (p_type), hg_booster_gifts_me (type_id/type_name). Sans types, les deux premières

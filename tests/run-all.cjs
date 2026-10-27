@@ -1,6 +1,6 @@
 /**
  * Lance toute la suite de tests, l'un après l'autre : vérifications statiques, tests de fumée,
- * puis chaque tests/parcours-*.cjs et composants-admin-ui.cjs.
+ * puis chaque tests/parcours/undefined/parcours-*.cjs et composants-admin-ui.cjs.
  * Chaque fichier a une limite de temps (4 min) et, s'il échoue ou dépasse la limite, il est relancé une fois :
  * un navigateur lent ou bloqué (fréquent sur les machines de GitHub) ne fait pas échouer toute la suite.
  * Sur un poste : s'arrête au premier fichier qui échoue deux fois.

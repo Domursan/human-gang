@@ -40,20 +40,20 @@ function geo(a, b) {
 
 /* ---------- Contenu des six jeux (une manche par jeu) ---------- */
 const CONTENU = {
-  carte: { titre: 'Le chalet', image: 'assets/cards/abysses/001.png', choix: ['Le chalet', 'Xali', 'Wae', 'Serge'], media: { rarete: 'rare' },
+  carte: { titre: 'Le chalet', image: 'assets/cartes/abysses/001.png', choix: ['Le chalet', 'Xali', 'Wae', 'Serge'], media: { rarete: 'rare' },
     indices: ['Série : Abysses', 'Rareté : rare · famille lieu', 'Carte n°1 sur 12 de la série', 'Commence par « L » · 9 caractères'], details: { serie: 'Abysses', numero: 1 } },
-  jv: { titre: 'Stardew Valley', image: 'assets/img/jeux/geo.webp', choix: ['Celeste', 'Hades', 'Stardew Valley', 'Undertale'], media: { fx: 0.3, fy: 0.6 },
+  jv: { titre: 'Stardew Valley', image: 'assets/images/jeux/geo.webp', choix: ['Celeste', 'Hades', 'Stardew Valley', 'Undertale'], media: { fx: 0.3, fy: 0.6 },
     indices: ['Sorti en 2016', 'Simulation de ferme', 'Un fermier quitte la ville'], details: { editeur: 'ConcernedApe' } },
-  pochette: { titre: 'Abbey Road', image: 'assets/img/jeux/geo.webp', choix: ['Abbey Road', 'Random Access Memories', 'Thriller'], media: {},
+  pochette: { titre: 'Abbey Road', image: 'assets/images/jeux/geo.webp', choix: ['Abbey Road', 'Random Access Memories', 'Thriller'], media: {},
     indices: ['Groupe britannique', 'Sorti en 1969', 'Une photo sur un passage piéton'], details: { artiste: 'The Beatles' } },
   replique: { titre: 'Le Dîner de cons', image: null, choix: ['Le Dîner de cons', 'Intouchables', 'Les Visiteurs', 'Le Prestige'],
     media: { citation: 'Tu sais ce que j’en pense, de ce dîner.', contexte: 'Comédie française, 1998' },
     indices: ['Comédie', 'Un dîner entre amis'], details: { annee: 1998 } },
-  pays: { titre: 'Chili', image: 'assets/img/jeux/geo.webp', cible: 'Chili', choix: ['Argentine', 'Brésil', 'Chili', 'Chine', 'Pérou'],
+  pays: { titre: 'Chili', image: 'assets/images/jeux/geo.webp', cible: 'Chili', choix: ['Argentine', 'Brésil', 'Chili', 'Chine', 'Pérou'],
     media: { svg: 'M30 0 L60 10 L55 60 L70 120 L40 190 L25 150 L20 80 Z', vb: '0 0 100 200' },
     indices: ['Continent : Amérique du Sud', 'Population : environ 19,6 millions', 'Langue officielle : espagnol'], details: { capitale: 'Santiago' } },
   // Plat (migration 152) : on devine le NOM du plat ; un essai raté donne la distance entre les pays des deux plats.
-  plat: { titre: 'Pad thaï', image: 'assets/img/jeux/geo.webp', cible: 'Thaïlande', pays: 'Thaïlande', choix: ['Empanadas', 'Pad thaï', 'Pizza', 'Ramen', 'Tacos', 'Tom yum'], media: {},
+  plat: { titre: 'Pad thaï', image: 'assets/images/jeux/geo.webp', cible: 'Thaïlande', pays: 'Thaïlande', choix: ['Empanadas', 'Pad thaï', 'Pizza', 'Ramen', 'Tacos', 'Tom yum'], media: {},
     indices: ['Nouilles de riz sautées', 'Cacahuètes et citron vert', 'Pays d’origine : Thaïlande', 'Commence par « P » · 8 caractères'], details: { plat: 'Pad thaï' } },
 };
 /** Pays d'origine des plats proposés (distances du Plat du jour). */

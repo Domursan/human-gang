@@ -6,7 +6,7 @@
   const now = Date.now();
   const P = window.__PRES = { pings: 0, lues: [], masque: false };
   const LISTE = [
-    { id: 2, cat: 'messages', titre: 'Nouveau message de Alice', texte: 'On se voit samedi ?', lien: 'messages.html', created_at: new Date(now - 5 * 60000).toISOString(), lu: false },
+    { id: 2, cat: 'messages', titre: 'Nouveau message de Alice', texte: 'On se voit samedi ?', lien: '/pages/compte/messages.html', created_at: new Date(now - 5 * 60000).toISOString(), lu: false },
     { id: 1, cat: 'jeux', titre: 'Bob te défie au Morpion', texte: null, lien: null, created_at: new Date(now - 3 * 3600000).toISOString(), lu: true },
   ];
   const ok = (data) => ({ data, error: null });

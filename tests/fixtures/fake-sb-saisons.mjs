@@ -126,7 +126,7 @@ const H = {
   hg_advent_admin: ({ p_year }) => ok({ year: p_year, clock: null, gang: 14, days: [],
     cfg: { actif: true, seuil: 10, seuil_pct: 70, carte_repli: 20, plafond: 600, ...(sais().avent || {}) } }),
   hg_saison_admin: () => { const w = sais().worlds || {}; return ok({ worlds: { actif: !!w.actif, debut: null, fin: null, en_cours: false, booster: null,
-      pronos: w.pronos || 'jeux.html#pronos', quetes: w.quetes || [], mots: w.mots || [] }, theme: null, pronos_ready: false, quests: [],
+      pronos: w.pronos || '/pages/jeux/jeux.html#pronos', quetes: w.quetes || [], mots: w.mots || [] }, theme: null, pronos_ready: false, quests: [],
     booster_types: window.__DB.hg_booster_types.map((t) => ({ id: t.id, name: t.name, active: t.active !== false })) }); },
   hg_saison_set: () => ok({ badges: 0 }),
   hg_anniv_admin: () => { const c = sais().anniversaire || {};

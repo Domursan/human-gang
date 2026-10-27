@@ -4,7 +4,8 @@ Le site du Humane Gang : le QG du groupe pour le Secret Santa, les sorties IRL, 
 
 - **En ligne** : https://humane-gang.com/
 - **Auteur et administrateur** : Domursan
-- **Plan du site** : [docs/PLAN-DU-SITE.md](docs/PLAN-DU-SITE.md)
+- **Plan du site** : [PLAN-DU-SITE.md](PLAN-DU-SITE.md)
+- **Plan du dépôt** (où est quoi, où ranger un fichier) : [PLAN-DU-DEPOT.md](PLAN-DU-DEPOT.md)
 
 ---
 
@@ -230,7 +231,8 @@ Un seul parcours se lance avec `node tests/<nom-du-fichier>` (par exemple `node 
 
 | Document | Contenu |
 | --- | --- |
-| [docs/PLAN-DU-SITE.md](docs/PLAN-DU-SITE.md) | Plan du site : pages, accès, tâches de fond |
+| [PLAN-DU-SITE.md](PLAN-DU-SITE.md) | Plan du site : pages, accès, tâches de fond |
+| [PLAN-DU-DEPOT.md](PLAN-DU-DEPOT.md) | Plan du dépôt : arborescence commentée, où ranger un nouveau fichier, workflows |
 | [docs/ADMIN-PANEL.md](docs/ADMIN-PANEL.md) | Organisation du panel, permissions Staff, ajouter une permission ou une sous-section |
 | [docs/ARENE.md](docs/ARENE.md) | Règles et chiffres de l'Arène v2 |
 | [docs/SECURITE.md](docs/SECURITE.md) | Audit de sécurité (constats, migration 105, décisions à prendre) |

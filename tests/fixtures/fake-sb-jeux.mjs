@@ -1,4 +1,4 @@
-// Faux client Supabase de la page « Jeux » (jeux.html) et de ses sous-sections admin (migration 083).
+// Faux client Supabase de la page « Jeux » (/pages/jeux/jeux.html) et de ses sous-sections admin (migration 083).
 // Enveloppe fake-sb.mjs (chargé depuis le dépôt) : ajoute la page « jeux » au menu et simule les RPC GeoGuessr (J1),
 // « Qui a dit ça ? » (J3), avec les mêmes règles que la base (une tentative, plafonds, masquage).
 // Scénario (window.__SCN) : geoNone (pas de manche), geoPlayed (manche déjà jouée), quotesNone, quoteConsent (une citation

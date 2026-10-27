@@ -1,7 +1,7 @@
 // Faux Supabase des jeux de cartes du moteur des plateaux (migration 143) : Blackjack et Poker, en mémoire.
 // Enveloppe le faux de base (fake-sb.mjs) et répond aux RPC hg_plat_* d'une partie : état (hg_plat_etat), action (hg_plat_agir),
 // création, rejoindre, messages, contenus. Les règles ne sont PAS rejouées ici : chaque action fait passer l'état à l'étape suivante
-// prévue par le scénario (les règles réelles sont testées côté SQL, tests/plateaux/t_*.sql). Chaque appel est journalisé dans
+// prévue par le scénario (les règles réelles sont testées côté SQL, tests/bancs/plateaux/t_*.sql). Chaque appel est journalisé dans
 // window.__LOG (['rpc', fonction, arguments]).
 // Scénario (window.__SCN) : jeu ('blackjack' par défaut, ou 'poker') ; fin : true pour une partie terminée.
 // Expose window.__CARTES : { etat(), tourDe(uid) } pour faire passer la main dans un test (la page se met à jour à la relecture).

@@ -1,5 +1,5 @@
 // Faux client Supabase des pages « Contenu et souvenirs » (idées S7, S8, S11, S12, S13) :
-// citations.html, playlist.html, carnet.html, capsule.html, recap.html et la vue admin « Contenus proposés ».
+// citations.html, playlist.html, carnet.html, capsule.html, /pages/irl/recap.html et la vue admin « Contenus proposés ».
 // Reprend le faux client général (fake-sb.mjs, chargé depuis le site de test) et y ajoute les tables et les RPC de la
 // migration 089, avec les mêmes formes de réponse et les mêmes refus que la base (plafonds, vote pour soi, etc.).
 // Scénarios (window.__SCN) : uid (membre connecté, Ethan admin par défaut), capsuleOpen (capsule ouverte),

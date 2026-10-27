@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Démonstration des composants du panel admin (tests/composants-admin-ui.cjs).
+  Démonstration des composants du panel admin (tests/controles/composants-admin-ui.cjs).
   Page statique : liste des demandes d'assistance (colonne 2), fil de messages (colonne 3) et panneau d'infos (colonne 4).
   Charge les modules de assets/js/admin/ui/ avec des données factices. Pas de réseau, pas de Supabase.
 -->
@@ -9,8 +9,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Démo composants admin (écran Assistance)</title>
-<link rel="stylesheet" href="../../assets/css/base.css">
-<link rel="stylesheet" href="../../assets/css/admin-ui.css">
+<link rel="stylesheet" href="/assets/commun/base.css">
+<link rel="stylesheet" href="/assets/espaces/admin/admin-ui.css">
 <style>
 /* Coquille de démonstration : grille et rail repris de la maquette C-rail (desktop.html). */
 
@@ -254,10 +254,10 @@ body { overflow:hidden; padding:0 !important; }
 </div>
 
 <script type="module">
-import { createList } from '../../assets/js/admin/ui/list.js';
-import { createThread } from '../../assets/js/admin/ui/thread.js';
-import { renderInfoPanel } from '../../assets/js/admin/ui/info-panel.js';
-import { renderDetailHeader } from '../../assets/js/admin/ui/detail-header.js';
+import { createList } from '/assets/espaces/admin/ui/list.js';
+import { createThread } from '/assets/espaces/admin/ui/thread.js';
+import { renderInfoPanel } from '/assets/espaces/admin/ui/info-panel.js';
+import { renderDetailHeader } from '/assets/espaces/admin/ui/detail-header.js';
 
 /* ---------- Données de démonstration : demandes d'assistance et messages, avec des dates relatives à maintenant ---------- */
 const NOW = Date.now();

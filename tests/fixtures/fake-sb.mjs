@@ -491,7 +491,7 @@ function quizSave(args) {
   return { data: row.id, error: null };
 }
 
-/* ---------- Questions du gang (quiz.html) ----------
+/* ---------- Questions du gang (/pages/jeux/quiz.html) ----------
    QUIZ : questions de démonstration, une par type, avec leur clé (correction côté faux serveur, jamais renvoyée telle quelle).
    QUIZ_ANS : réponses déjà données par le membre connecté (clé = identifiant de la question). */
 const QUIZ = [

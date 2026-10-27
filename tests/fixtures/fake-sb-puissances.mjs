@@ -1,4 +1,4 @@
-// Faux client Supabase du panel Arène, bloc « Puissance des cartes » (assets/js/admin/puissances.js).
+// Faux client Supabase du panel Arène, bloc « Puissance des cartes » (assets/espaces/admin/puissances.js).
 // Enveloppe le faux de l'Arène v2 (fake-sb-arene2.mjs, donc l'Arène actuelle et le fake de base) et ajoute :
 // - des cartes (hg_cards) : mythiques, uniques, série « Les OG » (gang-membres), « Hors série » (hors-serie), et des
 //   cartes qui ne doivent pas apparaître dans la liste ;

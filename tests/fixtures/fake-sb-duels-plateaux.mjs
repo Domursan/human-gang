@@ -1,8 +1,8 @@
 // Faux client Supabase des tables à cases (Échecs, Dames) : enveloppe fake-sb.mjs et répond aux RPC des duels
-// avec window.__DUELS (écrit par le banc tests/duels/ui/banc-plateaux.html) : hg_duel_possibles renvoie window.__DUELS.possibles,
+// avec window.__DUELS (écrit par le banc tests/bancs/duels/ui/banc-plateaux.html) : hg_duel_possibles renvoie window.__DUELS.possibles,
 // hg_duel_etat renvoie window.__DUELS.etat, hg_duel_jouer enregistre le coup dans window.__DUELS.appels. Les autres appels
 // passent au faux de base. Exporte createClient().
-// Le banc est sous tests/duels/ui/ : le socle est tests/fixtures/fake-sb.mjs, relatif à la racine du site servi.
+// Le banc est sous tests/bancs/duels/ui/ : le socle est tests/fixtures/fake-sb.mjs, relatif à la racine du site servi.
 const racine = location.pathname.slice(0, Math.max(0, location.pathname.indexOf('/tests/')));
 const base = await import(`${location.origin}${racine}/tests/fixtures/fake-sb.mjs`);
 

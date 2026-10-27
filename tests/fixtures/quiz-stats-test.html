@@ -1,16 +1,16 @@
 <!doctype html>
 <!--
-  Page de test de l'onglet « Réponses et statistiques » des Questions du gang (tests/parcours-admin-quiz-stats.cjs).
-  Monte assets/js/admin-quiz-stats.js dans un conteneur vide. Les données viennent du faux client (fixtures/fake-sb-quiz.mjs).
+  Page de test de l'onglet « Réponses et statistiques » des Questions du gang (tests/parcours/admin/parcours-admin-quiz-stats.cjs).
+  Monte assets/espaces/admin/admin-quiz-stats.js dans un conteneur vide. Les données viennent du faux client (fixtures/fake-sb-quiz.mjs).
 -->
 <html lang="fr" data-mode="sombre">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Test : statistiques des questions du gang</title>
-<link rel="stylesheet" href="../../assets/css/base.css">
-<link rel="stylesheet" href="../../assets/css/admin-ui.css">
-<link rel="stylesheet" href="../../assets/css/admin-quiz-stats.css">
+<link rel="stylesheet" href="/assets/commun/base.css">
+<link rel="stylesheet" href="/assets/espaces/admin/admin-ui.css">
+<link rel="stylesheet" href="/assets/espaces/admin/admin-quiz-stats.css">
 <style>
   body { margin: 0; padding: 16px; background: var(--bg); color: var(--text); }
 </style>
@@ -18,7 +18,7 @@
 <body>
 <main id="qs-root"></main>
 <script type="module">
-  import { mountQuizStats } from '../../assets/js/admin-quiz-stats.js';
+  import { mountQuizStats } from '/assets/espaces/admin/admin-quiz-stats.js';
   const conteneur = document.getElementById('qs-root');
   // Rappel possible par les tests : rafraîchit l'onglet dans le même conteneur.
   window.__montage = () => mountQuizStats(conteneur);

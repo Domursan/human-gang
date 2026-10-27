@@ -1,4 +1,4 @@
-// Faux client Supabase pour l'onglet « Réponses et statistiques » des Questions du gang (tests/parcours-admin-quiz-stats.cjs).
+// Faux client Supabase pour l'onglet « Réponses et statistiques » des Questions du gang (tests/parcours/admin/parcours-admin-quiz-stats.cjs).
 // Servi à la place de supabase-js (voir lib/harness.cjs). Simule les RPC hg_quiz_stats, hg_quiz_answers_list et
 // hg_quiz_validate à partir de données de démonstration, avec les mêmes formes de réponse que la base (migration 061).
 // Scénarios (window.__SCN) : empty (aucune question), statsError (hg_quiz_stats échoue), validateError (validation refusée).

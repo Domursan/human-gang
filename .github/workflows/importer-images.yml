@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name Domursan
           git config user.email domursan1@gmail.com
-          git add outils/images assets/img
+          git add outils/images
           if git diff --cached --quiet; then echo "Rien de nouveau."; exit 0; fi
           git commit -m "Images importées [skip ci]"
           for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
