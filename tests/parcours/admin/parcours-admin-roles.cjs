@@ -66,8 +66,10 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
       check(cases.find(([v]) => v === 'irl')?.[1] === true && cases.find(([v]) => v === 'historique')?.[1] === true && cases.find(([v]) => v === 'secret-santa')?.[1] === false,
         '(a) cases cochées : IRL et Historique, pas Secret Santa');
       const fixes = await textes(p, '#roles-root .rl-page-fixed');
-      check(fixes.filter((t) => t.includes('déjà ouverte à tous')).length === 6 && fixes.filter((t) => t.includes('réservée aux admins')).length === 2,
-        '(a) pages non cochables : six « déjà ouverte à tous », deux « réservée aux admins »');
+      // Pages non cochables : six « déjà ouverte à tous » ; les pages « réservée aux admins » (jeux en développement compris) sont nombreuses
+      const reservees = fixes.filter((t) => t.includes('réservée aux admins')).length;
+      check(fixes.filter((t) => t.includes('déjà ouverte à tous')).length === 6 && reservees > 0 && reservees + 6 === fixes.length,
+        `(a) pages non cochables : six « déjà ouverte à tous », ${reservees} « réservée aux admins »`);
       check((await p.textContent('#roles-root')).includes('Un réglage fait à la main sur un membre l’emporte sur ses rôles.'), '(a) note : réglage à la main prioritaire');
       check(JSON.stringify(await textes(p, '#roles-root ul.rl-people:not(.rl-results) .rl-person-name')) === JSON.stringify(['Alice', 'Bruno', 'Chloé']), '(a) membres du rôle IRL, par pseudo');
 

@@ -14,7 +14,7 @@ const FX = 'fake-sb-reglages.mjs';
 const REG = {
   site_identite: { nom: 'Crew Test', copyright: '© {annee} {nom} · essai', editeur: 'Ethan Test', bandeau_cookies: false },
   site_textes: {
-    nav_libelles: { 'menu:irl': 'Sorties', '/pages/jeux/jeux.html#sutom': 'Le mot du jour' },
+    nav_libelles: { 'menu:irl': 'Sorties', 'jeux.html': 'Jeux du gang' },
     footer_liens: [
       { id: 'evenements', label: 'Événements', visible: true }, { id: 'assistance', label: 'Aide', visible: true },
       { id: 'mentions', label: 'Mentions légales', visible: true }, { id: 'confidentialite', label: 'Confidentialité', visible: true },
@@ -56,11 +56,12 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(copy1 === `© ${new Date().getFullYear()} Crew Test · essai`, `pied : copyright avec {annee} et {nom} (« ${copy1} »)`);
     const footLinks = await p1.$$eval('.site-footer nav a', (as) => as.map((a) => a.textContent.trim()));
     check(footLinks.includes('Aide') && footLinks.includes('Mentions légales') && !footLinks.includes('Cookies'), `pied : libellés et lien masqué (${footLinks.join(' | ')})`);
-    // Titres de menu et entrées renommés (menu « IRL » → « Sorties », « Sutom HG » → « Le mot du jour »), si les menus sont affichés
+    // Titres de menu et entrées renommés (menu « IRL » → « Sorties », lien « Jeux » → « Jeux du gang »), si les menus sont affichés
     const tops = await p1.$$eval('.site-header .nav-top', (b) => b.map((x) => x.textContent.trim()));
     const items = await p1.$$eval('.site-header .nav-item', (b) => b.map((x) => x.textContent.trim()));
     check(!tops.length || (tops.includes('Sorties') && !tops.includes('IRL')), `menu : titre « IRL » renommé « Sorties » (${tops.join(' | ')})`);
-    check(!items.some((t) => t === 'Sutom HG') && (!items.length || !tops.some((t) => t.startsWith('Jeux')) || items.includes('Le mot du jour')), `menu : entrée « Sutom HG » renommée (${items.join(' | ')})`);
+    // « Jeux » est un lien direct (sans sous-menu) : son libellé réglé remplace « Jeux »
+    check(!tops.length || (tops.includes('Jeux du gang') && !tops.includes('Jeux')), `menu : lien « Jeux » renommé « Jeux du gang » (${tops.join(' | ')})`);
     await p1.close(); await p1.ctx.close();
 
     const p2 = await openPage(browser, { page: 'legal', fixture: FX, scenario: { reglages: REG } });
@@ -129,7 +130,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(await shownGroups() === 'navigation', `parties : « Menu et pied de page » ne montre que son groupe (${await shownGroups()})`);
     check(!(await pa.isVisible('#reglages-root')) && await pa.isVisible('#rgi-save'), 'parties : liste des clés masquée, bouton Enregistrer visible');
     await pa.fill('#rgi-site-textes-nav-libelles-menu-irl', 'Sorties');
-    check(await pa.isVisible('#rgi-site-textes-nav-libelles-cartes-html-ouverture') && await pa.isVisible('#rgi-site-textes-nav-libelles-menu-arcade'), 'menu : entrées et sous-menus modifiables (Ouverture, Arcade)');
+    check(await pa.isVisible('#rgi-site-textes-nav-libelles-cartes-html-ouverture') && await pa.isVisible('#rgi-site-textes-nav-libelles-menu-cartes') && await pa.isVisible('#rgi-site-textes-nav-libelles-jeux-html'), 'menu : titres, entrées et lien « Jeux » modifiables (Le jeu de cartes, Ouverture, Jeux)');
     await pa.fill('#rgi-site-textes-nav-libelles-cartes-html-ouverture', 'Ouvrir un booster');
     await save(pa);
     check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['menu:irl'] === 'Sorties' && ((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['cartes.html#ouverture'] === 'Ouvrir un booster', 'parties : titres de menu et entrées enregistrés depuis « Menu »');

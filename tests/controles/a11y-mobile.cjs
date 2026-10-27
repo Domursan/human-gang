@@ -65,6 +65,9 @@ function scanDom(o) {
   for (const el of root.querySelectorAll(SEL)) {
     if (el.disabled || !visible(el)) continue;
     if (el.closest('[aria-hidden="true"]')) continue; // champ piège (anti-spam) et décor : ni touché ni lu
+    // Voyant de statut : 24 × 24 px visibles, zone tactile étendue au doigt (site/assets/commun/notifs.css, choix documenté : pas 44 px,
+    // pour ne pas couvrir la photo du menu). Exempt de la règle des 44 px ; à revoir si le design change.
+    if (el.classList.contains('statut-voyant')) continue;
     const cs = getComputedStyle(el);
     if (el.tagName === 'A' && cs.display === 'inline') continue; // lien dans un texte courant : exempt
     let cible = el;

@@ -33,9 +33,10 @@ async function balaye(p, pas = 3000) {
   let p = await openPage(browser, { page: 'jeux', hash: '#arcade', width: 390, height: 900, scenario: { arcadeGame: 'raclette' } });
   await p.waitForSelector('.arc-choix', { timeout: 5000 }).catch(() => {});
   check((await p.getAttribute('#jeux-tab-arcade', 'aria-selected')) === 'true', 'onglet : « Arcade » sélectionné depuis /pages/jeux/jeux.html#arcade');
-  check((await p.locator('.arc-jeu').count()) === 3 && (await p.locator('.arc-jeu:not([disabled])').count()) === 3, 'sélecteur : les trois mini-jeux jouables');
+  // Les jeux en développement (classe is-dev) ne sont visibles que des admins : on compte les trois jeux publics
+  check((await p.locator('.arc-jeu:not(.is-dev)').count()) === 3 && (await p.locator('.arc-jeu:not(.is-dev):not([disabled])').count()) === 3, 'sélecteur : les trois mini-jeux jouables (hors jeux en développement)');
   check(/Raclette/.test(await p.locator('.arc-jeu[aria-pressed="true"]').innerText()) && /jeu du jour/i.test(await p.locator('.arc-jeu[aria-pressed="true"]').innerText()), 'sélecteur : Raclette (jeu du jour) choisi par défaut'); // badge affiché en capitales par la CSS
-  check((await p.locator('.arc-jeu[aria-pressed="false"]').count()) === 2, 'sélecteur : les deux autres non choisis (aria-pressed=false)');
+  check((await p.locator('.arc-jeu:not(.is-dev)[aria-pressed="false"]').count()) === 2, 'sélecteur : les deux autres non choisis (aria-pressed=false)');
   check(/une seule partie par jour/i.test(await p.locator('.arc-tirage').innerText()), 'sélecteur : une seule partie par jour récompensée, tous jeux confondus');
   check((await p.locator('#arc-scores-h').innerText()).includes('Raclette'), 'scores : « Meilleurs scores · Raclette »');
   check((await p.locator('#arc-top .arc-row').count()) === 2, 'scores : tableau de la semaine (2 lignes)');
@@ -44,7 +45,7 @@ async function balaye(p, pas = 3000) {
   check(await p.$eval('#arc-canvas', (el) => getComputedStyle(el).touchAction) === 'none', 'canevas : pas de défilement au doigt');
   check(await hscroll(p) <= 0, '390 px : pas de défilement horizontal');
   check(p.errs.length === 0, 'aucune erreur JS au chargement' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
-  check((await p.locator('.nav-group[data-menu="jeux"] .nav-menu a[href^="/pages/jeux/jeux.html#"]').count()) >= 1, 'menu : liens vers les onglets Jeux');
+  check((await p.locator('.site-header a.nav-top[href="/pages/jeux/jeux.html"]').count()) === 1, 'menu : lien « Jeux » vers la page des jeux (sans sous-menu)');
   await p.ctx.close();
 
   /* ---------- Partie complète (horloge simulée), pause, gain une fois ---------- */
