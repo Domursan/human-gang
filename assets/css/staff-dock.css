@@ -72,6 +72,10 @@
     z-index: 55; width: auto; background: transparent; border: 0; box-shadow: none; overflow: visible;
   }
   .sd:hover, .sd:focus-within { width: auto; box-shadow: none; }
+  /* Espace en bas pour que le bouton ne cache jamais le dernier élément ; masqué pendant une partie (actions en bas) */
+  html[data-staff-dock] body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  html[data-sd-partie] .sd { display: none; }
+  html[data-sd-partie][data-staff-dock] body { padding-bottom: 0; }
   .sd-fab { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border-radius: 50%;
     border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }

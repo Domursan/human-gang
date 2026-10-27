@@ -165,6 +165,9 @@ function chargerCss() {
   document.head.append(l);
 }
 
+/** Pages de partie (plateaux, jeux de cartes, quiz) : pas de bouton flottant sur téléphone. */
+const PAGES_PARTIE = new Set(['blackjack', 'catan', 'cluedo', 'destins', 'duels', 'loup-garou', 'monopoly', 'nom-de-code', 'pictionary', 'poker', 'quiz', 'risk', 'shadow-hunters', 'uno', 'simulateur']);
+
 /**
  * Lance le panneau Staff sur la page, si la personne a accès au panel et n'est pas en vue « comme un membre ».
  * Les droits sont déjà en cache (init.js attend loadMyPerms). Ne lève jamais d'erreur vers la page.
@@ -178,6 +181,8 @@ export async function startStaffDock(profil) {
   if (!permis.length || document.getElementById('staff-dock')) return;
 
   chargerCss();
+  /* Pages de partie : sur téléphone, le bouton flottant recouvrirait les actions du jeu (masqué en CSS) */
+  if (PAGES_PARTIE.has(currentPageSlug())) document.documentElement.dataset.sdPartie = '';
   const uid = profil.id;
   const prefs = lirePrefs(uid) || {};
   const valides = permis.map((r) => r.id);
