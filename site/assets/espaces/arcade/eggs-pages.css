@@ -5,6 +5,8 @@
   border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 20px; line-height: 1;
   opacity: .6; cursor: pointer; }
 @media (hover: hover) { .egg-motion-btn:hover { opacity: 1; } }
+/* Téléphone : le bouton « En ligne » (core/en-ligne.js) occupe déjà le coin bas droit : le 📳 se pose au-dessus */
+@media (max-width: 719.98px) { html[data-en-ligne]:not([data-ol-partie]) .egg-motion-btn { bottom: calc(76px + env(safe-area-inset-bottom)); } }
 
 @keyframes egg-tremble {
   0%, 100% { transform: translate(0, 0); }

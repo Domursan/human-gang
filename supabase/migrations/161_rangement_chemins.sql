@@ -73,9 +73,51 @@ update public.hg_site_notifs n set lien = 'https://humane-gang.com/' || m.neuf |
   ) as m(ancien, neuf)
   where n.lien like 'https://humane-gang.com/' || m.ancien || '%';
 
--- Réglages : pronos du monde (saisons) et libellés du menu (la clé d'un libellé est l'adresse de l'entrée).
-update public.hg_settings set value = jsonb_set(value, '{worlds,pronos}', '"/pages/jeux/jeux.html#pronos"')
-  where key = 'saisons' and value #>> '{worlds,pronos}' = 'jeux.html#pronos';
+-- Notifications déjà écrites avec un lien court (« cartes.html#… ») : même conversion, adresse depuis la racine du site.
+update public.hg_site_notifs n set lien = '/' || m.neuf || substr(n.lien, length(m.ancien) + 1)
+  from (values
+  ('accueil.html', 'pages/compte/accueil.html'),
+  ('admin.html', 'pages/admin/admin.html'),
+  ('aide.html', 'pages/infos/aide.html'),
+  ('assistance.html', 'pages/infos/assistance.html'),
+  ('blackjack.html', 'pages/jeux/blackjack.html'),
+  ('calendrier.html', 'pages/irl/calendrier.html'),
+  ('cartes.html', 'pages/cartes/cartes.html'),
+  ('catan.html', 'pages/jeux/catan.html'),
+  ('cine.html', 'pages/irl/cine.html'),
+  ('citations.html', 'pages/irl/citations.html'),
+  ('cluedo.html', 'pages/jeux/cluedo.html'),
+  ('collection-a4.html', 'pages/cartes/collection-a4.html'),
+  ('compte.html', 'pages/compte/compte.html'),
+  ('destins.html', 'pages/jeux/destins.html'),
+  ('duels.html', 'pages/jeux/duels.html'),
+  ('evenements.html', 'pages/irl/evenements.html'),
+  ('historique.html', 'pages/irl/historique.html'),
+  ('irl.html', 'pages/irl/irl.html'),
+  ('jeux.html', 'pages/jeux/jeux.html'),
+  ('legal.html', 'pages/infos/legal.html'),
+  ('loup-garou.html', 'pages/jeux/loup-garou.html'),
+  ('membre.html', 'pages/compte/membre.html'),
+  ('messages.html', 'pages/compte/messages.html'),
+  ('monopoly.html', 'pages/jeux/monopoly.html'),
+  ('nom-de-code.html', 'pages/jeux/nom-de-code.html'),
+  ('pictionary.html', 'pages/jeux/pictionary.html'),
+  ('playlist.html', 'pages/irl/playlist.html'),
+  ('poker.html', 'pages/jeux/poker.html'),
+  ('quiz.html', 'pages/jeux/quiz.html'),
+  ('recap.html', 'pages/irl/recap.html'),
+  ('rejoindre.html', 'pages/infos/rejoindre.html'),
+  ('risk.html', 'pages/jeux/risk.html'),
+  ('secret.html', 'pages/jeux/secret.html'),
+  ('secret-santa.html', 'pages/irl/secret-santa.html'),
+  ('shadow-hunters.html', 'pages/jeux/shadow-hunters.html'),
+  ('simulateur.html', 'pages/jeux/simulateur.html'),
+  ('uno.html', 'pages/jeux/uno.html')
+  ) as m(ancien, neuf)
+  where n.lien like m.ancien || '%' and substr(n.lien, length(m.ancien) + 1, 1) in ('', '#', '?');
+
+-- Réglages : la page des pronostics (saisons.worlds.pronos) et les libellés du menu gardent leur forme courte
+-- « page.html#onglet » (validée par la base, convertie à l'affichage ; les anciennes adresses sont redirigées par 404.html).
 
 -- Libellés du menu (site_textes.nav_libelles) : inchangés, la clé reste « page.html#onglet » (core/menu-def.js, menuKey).
 
@@ -83,7 +125,8 @@ update public.hg_settings set value = jsonb_set(value, '{worlds,pronos}', '"/pag
 -- 2. Fonctions (textes remplacés ; la signature et la logique ne changent pas)
 -- ---------------------------------------------------------------------
 -- Notifications du site : seul un lien absolu ou un chemin /pages/<cat>/… est gardé.
-select public.hg__rangement_tout('hg_site_notif', $o$'^[a-z0-9-]+\.html'$o$, $o$'^/pages/[a-z]+/[a-z0-9-]+\.html'$o$);
+-- La forme courte « page.html » reste acceptée (anciennes fonctions qui l'écrivent : redirigée par 404.html).
+select public.hg__rangement_tout('hg_site_notif', $o$'^[a-z0-9-]+\.html'$o$, $o$'^(/pages/[a-z]+/)?[a-z0-9-]+\.html'$o$);
 
 -- Calendrier : liens des événements (sortie, ciné, calendrier, anniversaires, Secret Santa, événements).
 select public.hg__rangement_tout('hg_calendar_items', $o$'irl.html#event-'$o$, $o$'/pages/irl/irl.html#event-'$o$);
@@ -98,9 +141,7 @@ select public.hg__rangement_tout('hg_event_card_set', $o$'^(https://|assets/)'$o
 select public.hg__rangement_tout('hg_card_proposal_review', $o$'^(https://|assets/)'$o$, $o$'^(https://|/assets/)'$o$);
 select public.hg__rangement_tout('hg_champion_review', $o$'assets/cards/champions/'$o$, $o$'/assets/cartes/champions/'$o$);
 
--- Saisons : pronos du monde (réglage validé) et liens des rappels de l'avent / du déballage.
-select public.hg__rangement_tout('hg_saison_worlds_cfg', $o$'^[a-z0-9_-]+\.html(#[a-z0-9_-]+)?$'$o$, $o$'^/pages/[a-z]+/[a-z0-9_-]+\.html(#[a-z0-9_-]+)?$'$o$);
-select public.hg__rangement_tout('hg_saison_worlds_cfg', $o$'jeux.html#pronos'$o$, $o$'/pages/jeux/jeux.html#pronos'$o$);
+-- Saisons : liens des rappels de l'avent / du déballage.
 select public.hg__rangement_tout('hg_saisons_bot_due', $o$'accueil.html#avent'$o$, $o$'/pages/compte/accueil.html#avent'$o$);
 select public.hg__rangement_tout('hg_saisons_bot_due', $o$'secret-santa.html#deballage'$o$, $o$'/pages/irl/secret-santa.html#deballage'$o$);
 select public.hg__rangement_tout('hg_saisons_bot_due', $o$'recap.html?retro=1'$o$, $o$'/pages/irl/recap.html?retro=1'$o$);
@@ -117,7 +158,7 @@ begin
   if n > 0 then raise exception 'rangement : % notifications gardent un ancien lien', n; end if;
   select count(*) into n from pg_proc p
     where p.pronamespace = 'public'::regnamespace
-      and p.proname in ('hg_calendar_items', 'hg_saisons_bot_due', 'hg_saison_worlds_cfg', 'hg_site_notif', 'hg_champion_review')
+      and p.proname in ('hg_calendar_items', 'hg_saisons_bot_due', 'hg_site_notif', 'hg_champion_review')
       and (p.prosrc ~ '''[a-z0-9-]+\.html' or p.prosrc ~ '''assets/cards/');
   if n > 0 then raise exception 'rangement : % fonctions gardent un ancien chemin', n; end if;
 end $$;
