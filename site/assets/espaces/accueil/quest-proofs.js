@@ -6,6 +6,7 @@
  * puis la RPC hg_proof_submit enregistre la preuve (quête de la semaine, 2 tentatives au plus).
  * Exporte : openProof(quest, { uid, sb, toast, esc, onDone }), proofCss().
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { prepareImage } from '../../commun/image-compress.js';
 
 const BUCKET = 'hg-proofs';
@@ -38,7 +39,7 @@ export function openProof(q, o) {
       <h2 id="qp-title" class="qp-title">${again ? 'Renvoyer une preuve' : 'Envoyer une preuve'}</h2>
       <p class="qp-quest"><strong>${esc(q.label)}</strong>${q.proof_game ? ` <span class="muted">· ${esc(q.proof_game)}</span>` : ''}</p>
       ${again ? `<p class="qp-refus" role="note">Refusée : « ${esc(q.proof_reason || '')} ». Dernière tentative possible.</p>` : ''}
-      <p class="muted small">Un membre du Staff regarde ta capture puis valide : la récompense (${esc(q.reward)} ✦) arrive à ce moment-là. Recadre ta capture : pas de conversation, de pseudo d’inconnu ni de bureau perso.</p>
+      <p class="muted small">Un membre du Staff regarde ta capture puis valide : la récompense (${esc(q.reward)} ${paillSym()}) arrive à ce moment-là. Recadre ta capture : pas de conversation, de pseudo d’inconnu ni de bureau perso.</p>
       <div class="field"><label for="qp-files">Captures (1 à ${MAX})</label>
         <input id="qp-files" type="file" accept="image/png,image/jpeg,image/webp" multiple required></div>
       <ul class="qp-thumbs" id="qp-thumbs" aria-label="Captures choisies"></ul>

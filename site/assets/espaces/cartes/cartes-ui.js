@@ -5,6 +5,7 @@
 // Exporte : les listes de raretés et de familles (et leurs libellés), le numéro d'exemplaire, le numéro de carte,
 // les générations des membres (setGenerations, generationOf, generationLabel : idée C8),
 // le HTML d'une carte (cardHtml), le dos de carte (cardBackHtml) et le format des Paillettes (fmtP).
+import { paillSym } from '../../commun/paillettes.js';
 import { esc, currentLogo } from '../../commun/core.js';
 
 /* ---------- Raretés et familles : listes de référence et libellés ---------- */
@@ -200,4 +201,4 @@ export function cardBackHtml(size = 'md') {
 }
 
 /** Formate un nombre de Paillettes, avec séparateurs de milliers à la suisse et le symbole ✦. */
-export const fmtP = (n) => `${new Intl.NumberFormat('fr-CH').format(n || 0)} ✦`;
+export const fmtP = (n) => `${new Intl.NumberFormat('fr-CH').format(n || 0)} ${paillSym()}`;

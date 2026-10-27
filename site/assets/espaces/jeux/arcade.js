@@ -12,6 +12,7 @@
  * core/util.js (avatarHtml) ; core/pages-access.js (accès des nouveaux jeux).
  * Exporte : mount(panel, ctx), unmount().
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { creeArcade } from '../arcade/arcade.js';
 import { avatarHtml } from '../../commun/core/util.js';
 import { canAccess, pageLabel, pageMode } from '../../commun/core/pages-access.js';
@@ -202,7 +203,7 @@ export async function mount(panel, ctx) {
     /** Boîte de récompense : à gagner, ou déjà reçue aujourd'hui (une partie par jour, tous jeux confondus). */
     const peintGain = () => {
       $z('#arc-gain').innerHTML = gain <= 0 ? '<span class="small muted">pour la gloire</span>'
-        : `+${gain} ✦ <span class="small muted arc-unite">${recu ? 'reçue aujourd’hui' : 'à gagner aujourd’hui'}</span>`;
+        : `+${gain} ${paillSym()} <span class="small muted arc-unite">${recu ? 'reçue aujourd’hui' : 'à gagner aujourd’hui'}</span>`;
     };
     peintGain();
 
@@ -247,7 +248,7 @@ export async function mount(panel, ctx) {
           const { data, error } = await sb.rpc('hg_arcade_finish', { p_run: id, p_score: sc });
           if (error) throw error;
           if (data?.ok === false) { msg.textContent += ` Score non retenu : ${data.error}.`; return; }
-          if (data?.reward > 0) { recu = true; peintGain(); toast(`🕹️ Arcade : +${data.reward} ✦`, 'success'); msg.textContent += ` +${data.reward} ✦`; }
+          if (data?.reward > 0) { recu = true; peintGain(); toast(`🕹️ Arcade : +${data.reward} ${paillSym()}`, 'success'); msg.textContent += ` +${data.reward} ${paillSym()}`; }
           if (data?.new_best) msg.textContent += ' Nouveau record de la semaine !';
           if (Array.isArray(data?.top)) $z('#arc-top').innerHTML = topHtml(data.top, me?.id, esc);
           $z('#arc-record').textContent = String(Math.max(record.lire(g), Number(data?.best) || 0));

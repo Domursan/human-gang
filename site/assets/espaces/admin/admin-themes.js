@@ -3,7 +3,7 @@
 // et éditeur (tiroir) : nom, identifiant, période, priorité, logo, emojis, effet et couleurs avec contrôle de contraste.
 // Dépendances : core.js (Supabase, application du thème, contrastes, périodes), icons.js, ui-confirm.js,
 // image-compress.js (préparation du logo), admin/list-tools.js (recherche), admin/ui/drawer.js (tiroir).
-// Tables et stockage : hg_themes (thèmes), hg_settings (clé 'theme' : mode et thème forcé), bucket hg-assets (logos themes/).
+// Tables et stockage : hg_themes (thèmes, dont free_booster), hg_settings (clé 'theme' : mode et thème forcé), hg_booster_types (lecture seule : choix du booster gratuit), bucket hg-assets (logos themes/).
 // Exporte : themeActions (boutons de l'en-tête), mountThemesSection (montage de la section).
 import {
   sb, toast, errMsg, esc, $,
@@ -126,7 +126,8 @@ export async function mountThemesSection(container) {
 
   // État de la section : thèmes, réglage (mode, thème forcé), brouillon de l'éditeur, id en cours de modification,
   // thème en aperçu, recherche. slugTouched : l'identifiant ne suit plus le nom une fois modifié à la main.
-  const S = { themes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false, query: '' };
+  // boosterTypes : types de boosters (hg_booster_types) pour le champ « booster gratuit pendant ce thème » (migration 162).
+  const S = { themes: [], boosterTypes: [], setting: { mode: 'auto', forced_slug: null }, draft: null, editingId: null, previewing: null, slugTouched: false, query: '' };
 
   // Éditeur : nœud persistant, rattaché au corps du tiroir large à chaque ouverture (les écouteurs restent liés)
   const editorHost = document.createElement('div');
@@ -178,6 +179,9 @@ export async function mountThemesSection(container) {
       sb.from('hg_settings').select('value').eq('key', 'theme').maybeSingle(),
     ]);
     S.themes = check(t) ?? [];
+    // Lecture non bloquante : sans la liste, le champ « booster gratuit » n'offre que la valeur déjà enregistrée.
+    const bt = await sb.from('hg_booster_types').select('id,name,active').order('sort');
+    S.boosterTypes = bt.error ? [] : (bt.data ?? []);
     const v = check(s)?.value ?? {};
     S.setting = { mode: v.mode === 'forced' ? 'forced' : 'auto', forced_slug: v.forced_slug ?? v.forced ?? null };
   }
@@ -274,6 +278,7 @@ export async function mountThemesSection(container) {
             <div><dt>Période</dt><dd>${t.is_default ? 'Toute l\'année (secours)' : esc(rangeLabel(t))}${inRange && t.slug !== now.slug ? ' <span class="muted">· couvert par un thème prioritaire</span>' : ''}</dd></div>
             <div><dt>Priorité</dt><dd>${esc(t.priority ?? 0)}</dd></div>
             <div><dt>Effet</dt><dd>${esc(THEME_EFFECTS[t.effect] || 'Aucun')}</dd></div>
+            <div><dt>Booster gratuit</dt><dd>${t.free_booster ? esc(S.boosterTypes.find((b) => b.id === t.free_booster)?.name || t.free_booster) : 'Règle normale'}</dd></div>
             <div><dt>Logo</dt><dd>${t.logo_url ? 'Personnalisé' : 'Logo du site'}</dd></div>
           </dl>
         </div>
@@ -362,6 +367,17 @@ export async function mountThemesSection(container) {
   // Relie le bouton « + Nouveau thème » de l'en-tête à cet éditeur.
   openNewTheme = () => openEditor(null);
 
+  /**
+   * Options du champ « booster gratuit » : les types connus, plus la valeur enregistrée si elle n'est pas dans la liste.
+   * @param {object} d Brouillon du thème.
+   * @returns {string} Balises <option>.
+   */
+  function freeBoosterOptions(d) {
+    const list = S.boosterTypes.map((b) => ({ id: b.id, label: `${b.name}${b.active === false ? ' (hors vente)' : ''}` }));
+    if (d.free_booster && !list.some((b) => b.id === d.free_booster)) list.push({ id: d.free_booster, label: d.free_booster });
+    return list.map((b) => `<option value="${esc(b.id)}"${d.free_booster === b.id ? ' selected' : ''}>${esc(b.label)}</option>`).join('');
+  }
+
   /** Écrit le formulaire de l'éditeur à partir du brouillon (S.draft), puis le met à jour. */
   function renderEditor() {
     const d = S.draft;
@@ -423,6 +439,11 @@ export async function mountThemesSection(container) {
           <div class="field"><label for="th-effect">Effet visuel</label><select id="th-effect" name="effect">${Object.entries(THEME_EFFECTS).map(([k, v]) => `<option value="${k}"${d.effect === k ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select>
             <span class="muted small">Léger, derrière le contenu ; coupé si l'appareil demande moins d'animations.</span></div>
         </div>
+        <div class="field"><label for="th-paillette">Emoji des Paillettes <span class="muted small">(optionnel)</span></label><input id="th-paillette" name="paillette_emoji" maxlength="16" value="${esc(d.paillette_emoji || '')}" autocomplete="off" spellcheck="false">
+          <span class="muted small">Pendant ce thème, l'emoji remplace l'étoile des Paillettes partout sur le site. Vide = étoile normale.</span></div>
+
+        <div class="field"><label for="th-free-booster">Booster gratuit pendant ce thème</label><select id="th-free-booster" name="free_booster"><option value="">Aucun (le booster gratuit habituel)</option>${freeBoosterOptions(d)}</select>
+          <span class="muted small">Pendant ce thème, ce booster remplace le booster gratuit du jour. Il s'ouvre gratuitement même s'il est hors vente, sans être vendu.</span></div>
 
         <fieldset class="th-fieldset">
           <legend class="label">Couleurs</legend>
@@ -482,6 +503,10 @@ export async function mountThemesSection(container) {
     d.logo_url = logo || null;
     d.emojis = parseEmojis(f.emojis.value);
     d.effect = THEME_EFFECTS[f.effect.value] ? f.effect.value : 'aucun';
+    const pe = f.paillette_emoji.value.trim();
+    if (Array.from(pe).length > 16) errors.push("L'emoji des Paillettes est trop long (16 caractères au plus).");
+    d.paillette_emoji = pe || null;
+    d.free_booster = f.free_booster.value || null;
     for (const k of THEME_COLOR_KEYS) {
       const h = f[`h_${k}`].value.trim();
       if (isHex(h)) d.colors[k] = h.toUpperCase();
@@ -612,7 +637,8 @@ export async function mountThemesSection(container) {
     if (errors.length) { errBox.focus?.(); return false; }
     const d = S.draft;
     const row = {
-      slug: d.slug, name: d.name, logo_url: d.logo_url, emojis: d.emojis, effect: d.effect,
+      slug: d.slug, name: d.name, logo_url: d.logo_url, emojis: d.emojis, effect: d.effect, paillette_emoji: d.paillette_emoji,
+      free_booster: d.free_booster ?? null,
       colors: Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, d.colors[k]])),
     };
     if (!d.is_default) Object.assign(row, { active: d.active, start_md: d.start_md, end_md: d.end_md, priority: d.priority });

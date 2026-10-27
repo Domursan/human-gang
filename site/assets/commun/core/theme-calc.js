@@ -20,7 +20,7 @@ export const DEFAULT_THEME = Object.freeze({
   colors: { accent: '#9E3543', bg: '#0E0E10', surface: '#17171A', text: '#F2EFEA', muted: '#ABA7A0', highlight: '#E2C77E' },
 });
 /** Effets visuels proposés dans l'éditeur de thèmes, avec leur libellé. */
-export const THEME_EFFECTS = { aucun: 'Aucun', pluie: "Pluie d'emojis", neige: 'Neige', etoiles: 'Étoiles scintillantes', fromage: 'Fromage fondu et gourmandises' };
+export const THEME_EFFECTS = { aucun: 'Aucun', pluie: "Pluie d'emojis", neige: 'Neige', 'neige-emojis': 'Neige et emojis qui tombent', etoiles: 'Étoiles scintillantes', fromage: 'Fromage fondu et gourmandises', braises: 'Braises qui montent' };
 /** Couleurs qu'un thème peut définir (les autres variables sont calculées). */
 export const THEME_COLOR_KEYS = ['accent', 'bg', 'surface', 'text', 'muted', 'highlight'];
 

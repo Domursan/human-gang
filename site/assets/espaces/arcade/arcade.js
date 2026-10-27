@@ -13,9 +13,11 @@
  *   « domu » peut se taper à tout moment.
  *   Chaque mini-jeu lit s.triche (même objet pendant toute la partie : un code tapé en jeu s'applique tout de suite).
  *   Une partie jouée avec un code compte comme les autres (record, classement, Paillettes).
- * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r) et coeur(ctx, x, y, r, couleur)
+ * Exporte : W, H (taille logique du canevas), creeArcade(options), etoile(ctx, x, y, r), paillette(ctx, x, y, r, couleur) et coeur(ctx, x, y, r, couleur)
  * (sprites partagés), triche (état des codes).
  */
+
+import { paillettesEmoji } from '../../commun/paillettes.js';
 
 /** Taille logique du canevas (pixels CSS) ; la taille réelle suit la densité de l'écran. */
 export const W = 360, H = 420;
@@ -35,6 +37,31 @@ export function etoile(ctx, x, y, r) {
   ctx.quadraticCurveTo(x, y, x - r, y);
   ctx.quadraticCurveTo(x, y, x, y - r);
   ctx.closePath();
+}
+
+/**
+ * Dessine une Paillette d'or centrée en (x, y) : l'étoile, ou l'emoji du thème affiché (paillette_emoji, ex. 🧀 pour
+ * Raclette) à la même place et à peu près à la même taille. Le remplissage couleur ne sert qu'à l'étoile.
+ * @param {CanvasRenderingContext2D} ctx contexte du canevas
+ * @param {number} x centre
+ * @param {number} y centre
+ * @param {number} r rayon de l'étoile
+ * @param {string} couleur couleur de remplissage de l'étoile
+ */
+export function paillette(ctx, x, y, r, couleur) {
+  const em = paillettesEmoji();
+  if (em) {
+    ctx.save();
+    ctx.font = `${Math.round(r * 2.3)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(em, x, y);
+    ctx.restore();
+    return;
+  }
+  ctx.fillStyle = couleur;
+  etoile(ctx, x, y, r);
+  ctx.fill();
 }
 
 /**

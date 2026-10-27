@@ -16,6 +16,7 @@
  * Dépendances : core.js (sb, esc, toast, errMsg, getCachedPerms), saisons-css.js (styles de l'aperçu).
  * Exporte : mountSaisonsSection(root), showSaisonsPart(part).
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, esc, toast, errMsg, getCachedPerms } from '../../commun/core.js';
 import { loadSeasonCss } from '../accueil/saisons-css.js';
 import { ecrireReglage } from './reglages-merge.js';
@@ -88,7 +89,7 @@ function dayForm(d) {
   const L = Z.lists;
   const k = d.kind || 'paillettes';
   const grp = d.group_target != null;
-  const sum = !d.ready ? 'à remplir' : `${KINDS.find((x) => x[0] === k)?.[1] || k}${d.reward ? ` · ${d.reward} ✦` : ''}${grp ? ' · collective' : ''} · ${d.opens || 0} ouverture(s)`;
+  const sum = !d.ready ? 'à remplir' : `${KINDS.find((x) => x[0] === k)?.[1] || k}${d.reward ? ` · ${d.reward} ${paillSym()}` : ''}${grp ? ' · collective' : ''} · ${d.opens || 0} ouverture(s)`;
   const id = `zav-${d.day}`;
   return `<details class="zav-day" data-day="${d.day}"><summary><strong>${d.day} décembre</strong> <span class="muted small">${esc(sum)}</span></summary>
     <form class="stack zav-form" data-day="${d.day}" style="padding:12px 0">
@@ -173,7 +174,7 @@ function renderWorlds(host) {
         <input id="zw-m" name="mots" value="${esc((w.mots || []).join(', '))}"></div>
       <fieldset class="stack" style="border:0;padding:0;margin:0">
         <legend><strong>Quêtes de la saison</strong> <span class="muted small">(6 au plus, en plus des quêtes de la semaine)</span></legend>
-        ${(Z.tpl || []).map((q) => `<label class="check"><input type="checkbox" name="quete" value="${esc(q.code)}"${(w.quetes || []).includes(q.code) ? ' checked' : ''}> ${esc(q.label)} <span class="muted small">(${esc(q.code)} · ${esc(q.reward)} ✦${q.active ? '' : ' · inactive'})</span></label>`).join('') || '<p class="muted small">Aucun modèle de quête. Crée-en dans Fabrique › Quêtes.</p>'}
+        ${(Z.tpl || []).map((q) => `<label class="check"><input type="checkbox" name="quete" value="${esc(q.code)}"${(w.quetes || []).includes(q.code) ? ' checked' : ''}> ${esc(q.label)} <span class="muted small">(${esc(q.code)} · ${esc(q.reward)} ${paillSym()}${q.active ? '' : ' · inactive'})</span></label>`).join('') || '<p class="muted small">Aucun modèle de quête. Crée-en dans Fabrique › Quêtes.</p>'}
       </fieldset>
       <div class="field"><label for="zw-p">Page des pronostics</label>
         <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || 'jeux.html#pronos')}" aria-describedby="zw-p-h">

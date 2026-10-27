@@ -8,6 +8,7 @@
  * Dépendances : core.js (sb, esc), core/util.js (avatarHtml), core/profile.js (membre connecté).
  * Exporte : CLE_JEU (onglet de /pages/jeux/jeux.html → clé du classement), monterClassement(conteneur, cle), rafraichirClassements().
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, esc } from '../../commun/core.js';
 import { avatarHtml } from '../../commun/core/util.js';
 import { getCachedProfile } from '../../commun/core/profile.js';
@@ -54,7 +55,7 @@ function lignes(liste, moi, tout, general, total) {
       ${avatarHtml({ pseudo: x.pseudo, color: x.color, avatar_url: x.avatar_url }, 28)}
       <span class="jc-nom">${esc(x.pseudo || 'Membre')}${x.user_id === moi ? ' <span class="jc-toi">toi</span>' : ''}${x.bonus ? ' <span class="jc-bonus" title="Les 16 jeux terminés">bonus</span>' : ''}</span>
       ${general ? `<span class="jc-faits">${nf(x.parties)}${total ? `/${total}` : ''} jeu${x.parties > 1 ? 'x' : ''}</span>` : ''}
-      <span class="jc-pts">${nf(x.points)} ✦</span></li>`).join('')}</ol>
+      <span class="jc-pts">${nf(x.points)} ${paillSym()}</span></li>`).join('')}</ol>
     ${!tout && liste.length > COURT ? `<button type="button" class="btn btn-ghost btn-sm jc-tout" data-jc="tout">Voir tout le classement (${liste.length})</button>` : ''}`;
 }
 
@@ -83,7 +84,7 @@ export function monterClassement(el, cle = null) {
     const liste = d ? (st.onglet === 'jour' ? d.jour : d.semaine) || [] : [];
     const prog = general && d ? (() => {
       const f = Number(d.moi?.faits) || 0, t = Number(d.total_jeux) || 16;
-      return `<div class="jc-prog"><p class="jc-prog-t">${d.moi?.bonus ? `Bonus de ${nf(d.bonus)} ✦ obtenu aujourd’hui : bravo !` : `Tes jeux du jour : <strong>${f}/${t}</strong> · termine les ${t} pour gagner <strong>${nf(d.bonus)} ✦</strong> de bonus`}</p>
+      return `<div class="jc-prog"><p class="jc-prog-t">${d.moi?.bonus ? `Bonus de ${nf(d.bonus)} ${paillSym()} obtenu aujourd’hui : bravo !` : `Tes jeux du jour : <strong>${f}/${t}</strong> · termine les ${t} pour gagner <strong>${nf(d.bonus)} ${paillSym()}</strong> de bonus`}</p>
         <div class="progress jc-barre" role="progressbar" aria-label="Jeux du jour terminés" aria-valuemin="0" aria-valuemax="${t}" aria-valuenow="${f}"><span style="width:${Math.round((f / t) * 100)}%"></span></div></div>`;
     })() : '';
     el.innerHTML = `<section class="card jc" aria-labelledby="jc-h-${esc(cle || 'tous')}">
@@ -93,7 +94,7 @@ export function monterClassement(el, cle = null) {
           <button type="button" class="jc-o" data-jc-o="semaine" aria-pressed="${st.onglet === 'semaine'}">Cette semaine</button></div></div>
       ${prog}
       ${st.err ? `<p class="jc-vide">Classement indisponible (${esc(st.err)}).</p>` : !d ? '<p class="jc-vide">Chargement…</p>' : lignes(liste, moi, st.tout, general, general ? d.total_jeux : 0)}
-      ${d && !general ? `<p class="jc-note">Points = Paillettes gagnées : ${nf(d.max)} ✦ du premier coup, puis 10 de moins par essai ou palier ; 10 ✦ si c’est raté.</p>` : ''}
+      ${d && !general ? `<p class="jc-note">Points = Paillettes gagnées : ${nf(d.max)} ${paillSym()} du premier coup, puis 10 de moins par essai ou palier ; 10 ${paillSym()} si c’est raté.</p>` : ''}
     </section>`;
   }
   el.addEventListener('click', (ev) => {

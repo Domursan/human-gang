@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v115';
+const CACHE_VERSION = 'v116';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -34,7 +34,7 @@ const PRECACHE = [
   '/assets/espaces/admin/admin-access.css', '/assets/espaces/admin/admin-accounts.css', '/assets/espaces/admin/admin-bot.css',
   '/assets/espaces/admin/admin-cards.css', '/assets/espaces/admin/admin-reglages.css', '/assets/espaces/admin/admin-identite.css', '/assets/espaces/admin/admin-events.css', '/assets/espaces/admin/admin-ghosts.css',
   '/assets/espaces/admin/admin-messages.css', '/assets/espaces/admin/admin-themes.css', '/assets/espaces/admin/admin-tools.css',
-  '/assets/espaces/admin/admin-staff.css', '/assets/espaces/admin/admin-pilotage.css', '/assets/espaces/admin/admin.css', '/assets/espaces/admin/admin-sorties.css', '/assets/espaces/infos/aide.css', '/assets/espaces/infos/assistance.css', '/assets/commun/base.css',
+  '/assets/espaces/admin/admin-staff.css', '/assets/espaces/admin/admin-pilotage.css', '/assets/espaces/admin/admin.css', '/assets/espaces/admin/admin-sorties.css', '/assets/espaces/infos/aide.css', '/assets/espaces/infos/assistance.css', '/assets/commun/base.css', '/assets/commun/themes-decor.css', '/assets/commun/fromage/coulure.svg', '/assets/commun/fromage/coulure-vert.svg',
   '/assets/espaces/cartes/cartes-card.css', '/assets/espaces/cartes/cartes-boosters.css', '/assets/espaces/cartes/cartes-showcase.css', '/assets/espaces/cartes/cartes-trades.css',
   '/assets/espaces/cartes/cartes.css', '/assets/espaces/cartes/cartes-x5.css', '/assets/espaces/cartes/cartes-zoom.css', '/assets/espaces/cartes/cartes-pentakill.css', '/assets/espaces/cartes/cartes-pentakill.js', '/assets/espaces/compte/compte.css', '/assets/espaces/irl/evenements.css',
   '/assets/espaces/irl/historique.css', '/assets/espaces/accueil/intro.css', '/assets/espaces/irl/irl-history.css',

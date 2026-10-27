@@ -4,6 +4,8 @@
 // Un champ laissé vide = aucune limite (mise maximale, plafond, offres par membre).
 // Exporte : DEFAULT_RULES, rulesFieldsHtml(id, rules, opts), readRules(form), rulesSummary(rules).
 
+import { paillSym } from '../../commun/paillettes.js';
+
 /** Règles par défaut (identiques au comportement d'avant 097). */
 export const DEFAULT_RULES = {
   min_bid: 500, step: 50, max_bid: null, cap_pct: 50, extend_min: 5, extend_cap_min: 60, max_bids_user: null, block_last_winner: true,
@@ -27,9 +29,9 @@ export function rulesFieldsHtml(id, rules = DEFAULT_RULES, opts = {}) {
       ${help ? `<p class="small muted" id="${id}-${name}-h">${help}</p>` : ''}</div>`;
   return `<fieldset class="enr-rules"><legend>Règles de l’enchère</legend>
     <div class="acd-grid-2">
-      ${f('min_bid', 'Mise de départ (✦)', `min="1" max="100000" required${opts.lockMin ? ' readonly' : ''}`, opts.lockMin ? 'Figée : une offre a déjà été faite.' : '')}
-      ${f('step', 'Pas minimal entre deux offres (✦)', 'min="1" max="10000" required', '')}
-      ${f('max_bid', 'Mise maximale par offre (✦)', 'min="1" max="1000000" placeholder="Aucune"', 'Vide : pas de maximum.')}
+      ${f('min_bid', `Mise de départ (${paillSym()})`, `min="1" max="100000" required${opts.lockMin ? ' readonly' : ''}`, opts.lockMin ? 'Figée : une offre a déjà été faite.' : '')}
+      ${f('step', `Pas minimal entre deux offres (${paillSym()})`, 'min="1" max="10000" required', '')}
+      ${f('max_bid', `Mise maximale par offre (${paillSym()})`, 'min="1" max="1000000" placeholder="Aucune"', 'Vide : pas de maximum.')}
       ${f('cap_pct', 'Plafond d’un membre (% de son solde du lundi)', 'min="1" max="100" placeholder="Aucun"', 'Vide : seul son solde compte. 50 = la moitié.')}
       ${f('max_bids_user', 'Nombre d’offres par membre', 'min="1" max="1000" placeholder="Illimité"', 'Vide : illimité.')}
       ${f('extend_min', 'Prolongation anti-dernière seconde (min)', 'min="0" max="60" required', 'Une offre dans les N dernières minutes prolonge de N minutes. 0 : aucune.')}
@@ -61,7 +63,7 @@ export function readRules(form) {
  */
 export function rulesSummary(r) {
   if (!r) return [];
-  const p = (n) => `${nf.format(n)} ✦`;
+  const p = (n) => `${nf.format(n)} ${paillSym()}`;
   const out = [`Mise de départ ${p(r.min_bid)}, puis au moins ${p(r.step)} de plus que la meilleure offre.`];
   if (r.max_bid) out.push(`Mise maximale : ${p(r.max_bid)}.`);
   out.push(r.cap_pct ? `Plafond : ${r.cap_pct} % de ton solde de lundi.` : 'Pas de plafond lié à la semaine : ton solde suffit.');

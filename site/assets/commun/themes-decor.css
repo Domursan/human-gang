@@ -1,0 +1,142 @@
+/* ===== Décors des thèmes saisonniers (chargé après base.css) =====
+   Chaque thème a sa section, ciblée par html[data-theme="<slug>"]. Tout est en CSS et en SVG (data: URI), décoratif :
+   pointer-events: none, aucun élément ajouté au flux, rien qui gêne la lecture. */
+
+/* ===== Saint-Nicolas ===== */
+/* Fond : lueur rouge mitre en haut de page et semis d'étoiles dorées (tuile répétée). */
+html[data-theme="saint-nicolas"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 55% at 50% -8%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='%23F2C14E' opacity='.22'%3E%3Cpath transform='translate(18,26) scale(.55)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(98,14) scale(.45)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(116,92) scale(.6)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(44,108) scale(.4)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(70,58) scale(.3)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] body {
+  background-image:
+    radial-gradient(120% 60% at 50% -8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 75%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='%23B07A12' opacity='.2'%3E%3Cpath transform='translate(18,26) scale(.55)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(98,14) scale(.45)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(116,92) scale(.6)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3Cpath transform='translate(44,108) scale(.4)' d='M5 .5l1.3 3.1 3.3.2-2.6 2.1.9 3.3L5 7.3 2.1 9.2l.9-3.3L.4 3.8l3.3-.2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Frise sous l'en-tête : une étoile dorée et une perle rouge (mitre) en alternance, filet doré en bas */
+html[data-theme="saint-nicolas"] .site-header::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='10' viewBox='0 0 36 10'%3E%3Cg transform='translate(14,0.5) scale(.8)'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/g%3E%3Ccircle cx='0' cy='4.5' r='2.4' fill='%23D42630'/%3E%3Ccircle cx='36' cy='4.5' r='2.4' fill='%23D42630'/%3E%3Crect x='0' y='9' width='36' height='1' fill='%23F2C14E' opacity='.7'/%3E%3C/svg%3E") repeat-x left bottom;
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] .site-header::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='10' viewBox='0 0 36 10'%3E%3Cg transform='translate(14,0.5) scale(.8)'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23B07A12'/%3E%3C/g%3E%3Ccircle cx='0' cy='4.5' r='2.4' fill='%23A3262E'/%3E%3Ccircle cx='36' cy='4.5' r='2.4' fill='%23A3262E'/%3E%3Crect x='0' y='9' width='36' height='1' fill='%23B07A12' opacity='.7'/%3E%3C/svg%3E");
+}
+
+/* Titres : petite étoile dorée devant l'accroche et les titres de cadre */
+html[data-theme="saint-nicolas"] .eyebrow::before,
+html[data-theme="saint-nicolas"] .card h2::before {
+  content: ""; display: inline-block; width: .8em; height: .8em; margin-right: .45em; vertical-align: -.05em; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] .eyebrow::before,
+html[data-theme="saint-nicolas"][data-mode="clair"] .card h2::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23B07A12'/%3E%3C/svg%3E");
+}
+
+/* Cadres : liseré intérieur doré, étoiles aux coins et bourrelet de neige sur le bord haut */
+html[data-theme="saint-nicolas"] .card:not(form .card) {
+  position: relative; border-color: color-mix(in srgb, var(--sand) 34%, var(--border));
+  outline: 1px solid color-mix(in srgb, var(--sand) 38%, transparent); outline-offset: -6px;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpolygon points='5,0.5 6.3,3.6 9.6,3.8 7,5.9 7.9,9.2 5,7.3 2.1,9.2 3,5.9 0.4,3.8 3.7,3.6' fill='%23F2C14E'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-size: 12px 12px; background-origin: border-box;
+  background-position: -1px -1px, right -1px top -1px, left -1px bottom -1px, right -1px bottom -1px;
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] .card:not(form .card) {
+  outline-color: color-mix(in srgb, var(--sand) 60%, transparent);
+}
+html[data-theme="saint-nicolas"] .card:not(form .card)::before {
+  content: ""; position: absolute; left: 26px; right: 26px; top: -6px; height: 11px; pointer-events: none;
+  background: linear-gradient(#FFFFFF, #E3EAF8); border-radius: 50% 50% 40% 40% / 80% 80% 30% 30%;
+  box-shadow: 0 1px 2px rgba(8, 14, 36, .45);
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] .card:not(form .card)::before {
+  box-shadow: 0 1px 3px rgba(40, 50, 90, .35);
+}
+
+/* Boutons principaux : rouge mitre avec liseré doré */
+html[data-theme="saint-nicolas"] .btn-primary {
+  border-color: color-mix(in srgb, var(--sand) 80%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* Pied de page : filet doré */
+html[data-theme="saint-nicolas"] .site-footer { border-top-color: color-mix(in srgb, var(--sand) 40%, var(--border)); }
+
+/* Neige au sol, en bas de la fenêtre, derrière le contenu */
+html[data-theme="saint-nicolas"] body::after {
+  content: ""; position: fixed; left: 0; right: 0; bottom: 0; height: 24px; z-index: -1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='24' viewBox='0 0 200 24'%3E%3Cpath d='M0 24V15Q25 5 50 13T100 12T150 10T200 14V24Z' fill='%23FFFFFF' opacity='.85'/%3E%3C/svg%3E") repeat-x left bottom;
+}
+html[data-theme="saint-nicolas"][data-mode="clair"] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='24' viewBox='0 0 200 24'%3E%3Cpath d='M0 24V15Q25 5 50 13T100 12T150 10T200 14V24Z' fill='%23DDE5F5' opacity='.95'/%3E%3C/svg%3E");
+}
+/* ===== fin Saint-Nicolas ===== */
+
+/* ===== Pâté-saucisse ===== */
+/* Fond : nappe vichy rouge sur brun bois (carreaux SVG), lueur dorée de four en haut de page. Le contenu reste sur des surfaces unies. */
+html[data-theme="pate-saucisse"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 55% at 50% -10%, color-mix(in srgb, var(--sand) 24%, transparent), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='16' height='16' fill='%23C8262C' fill-opacity='.22'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23C8262C' fill-opacity='.22'/%3E%3C/svg%3E");
+}
+html[data-theme="pate-saucisse"][data-mode="clair"] body {
+  background-image:
+    radial-gradient(120% 50% at 50% -10%, color-mix(in srgb, var(--sand) 14%, transparent), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect width='16' height='16' fill='%23C8262C' fill-opacity='.17'/%3E%3Crect x='16' y='16' width='16' height='16' fill='%23C8262C' fill-opacity='.17'/%3E%3C/svg%3E");
+}
+
+/* Bord de nappe festonné sous l'en-tête : bande vichy rouge et crème, bord en festons */
+html[data-theme="pate-saucisse"] .site-header::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 14px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, #C8262C 0 16px, #FFF4E0 16px 32px);
+  -webkit-mask: radial-gradient(circle at 16px 0, #000 15px, transparent 15.5px) 0 0 / 32px 16px repeat-x;
+          mask: radial-gradient(circle at 16px 0, #000 15px, transparent 15.5px) 0 0 / 32px 16px repeat-x;
+}
+
+/* Cadres : bord de nappe vichy en haut de chaque cadre, sur fond de surface unie */
+html[data-theme="pate-saucisse"] .card:not(form .card) { position: relative; }
+html[data-theme="pate-saucisse"] .card:not(form .card)::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; pointer-events: none;
+  background: repeating-linear-gradient(90deg, #C8262C 0 14px, #FFF4E0 14px 28px);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* Titres de cadre : petite saucisse devant le titre */
+html[data-theme="pate-saucisse"] .card h2::before {
+  content: ""; display: inline-block; width: 1.05em; height: .7em; margin-right: .45em; vertical-align: .05em; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 10'%3E%3Crect x='.5' y='1' width='15' height='8' rx='4' fill='%23B5562A'/%3E%3Cpath d='M4.5 3v4M8 2.8v4.4M11.5 3v4' stroke='%23FFF4E0' stroke-width='.9' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Boutons principaux : rouge vichy avec une croûte dorée en bas */
+html[data-theme="pate-saucisse"] .btn-primary {
+  background-color: var(--accent);
+  background-image: repeating-linear-gradient(90deg, rgba(255, 244, 224, .14) 0 6px, transparent 6px 12px);
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--sand) 75%, transparent);
+}
+
+/* Pluie d'emojis plus présente que le réglage de base (opacité .28) */
+html[data-theme="pate-saucisse"] .fx-pluie span { opacity: .5; }
+html[data-theme="pate-saucisse"][data-mode="clair"] .fx-pluie span { opacity: .4; }
+
+/* Effet « braises » : étincelles qui montent doucement du bas de la fenêtre, derrière le contenu (calque .fx-layer.fx-braises) */
+.fx-braises span {
+  top: auto; bottom: -24px; border-radius: 50%;
+  background: radial-gradient(circle, #FFE7A3 0%, #F2B441 45%, #C8262C 100%);
+  box-shadow: 0 0 6px 1px rgba(242, 180, 65, .7);
+  opacity: 0; animation: fx-braise linear infinite;
+}
+@keyframes fx-braise {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: .9; }
+  80% { opacity: .5; }
+  100% { transform: translate3d(var(--dx, 0px), -105vh, 0); opacity: 0; }
+}
+/* ===== fin Pâté-saucisse ===== */

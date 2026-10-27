@@ -9,6 +9,7 @@
 // admin-cards/helpers.js (check, fetchAll, nf, fmtWhen), admin/eco-health.js (loadEco, alertesEco), admin/visual-pick.js.
 // Exporte : mountGestionSection.
 // =====================================================================
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, toast, errMsg, esc, $ } from '../../commun/core.js';
 import { KIND, MAX_MEMBRES, recapText, invalide, donnerGroupe } from './cartes/bulk.js';
 import { check, fetchAll, nf, fmtWhen } from './cartes/helpers.js';
@@ -249,7 +250,7 @@ async function rendreEco() {
   if (donnees?.paillettes) {
     const p = donnees.paillettes;
     const pct = p.pct == null ? 'pas de référence' : `${p.pct >= 0 ? '+' : ''}${nf1.format(p.pct)} % sur 7 jours`;
-    chiffres.push(['Paillettes en circulation', `${nf(p.total ?? 0)} ✦`, esc(pct)]);
+    chiffres.push(['Paillettes en circulation', `${nf(p.total ?? 0)} ${paillSym()}`, esc(pct)]);
   } else {
     chiffres.push(['Paillettes en circulation', '–', esc(eco.status === 'rejected' ? errMsg(eco.reason) : 'indisponible')]);
   }

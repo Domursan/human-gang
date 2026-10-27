@@ -10,6 +10,7 @@
  * jeux/devine.js (loadCss), assets/espaces/jeux/jeux-arene.css.
  * Exporte : mount(panel, ctx).
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';
 import { loadCss } from './devine.js';
 import { mini, resultHtml, animate } from './bataille.js';
@@ -145,7 +146,7 @@ function accueilHtml() {
     </section>
     <section class="card jb-sec" aria-labelledby="ar-jour-h"><h3 id="ar-jour-h">Aujourd’hui</h3>
       <p>${esc(m.attacks_left)} attaque${m.attacks_left > 1 ? 's' : ''} restante${m.attacks_left > 1 ? 's' : ''} sur ${esc(cfg.attaques_jour)}</p>
-      <p class="small muted">Paillettes d’Arène : ${esc(m.paid_today)} ✦ sur ${esc(cfg.plafond_jour)} ✦ au plus. Défense reçue : ${esc(m.received_today)} sur ${esc(cfg.defenses_recues_jour)}.</p>
+      <p class="small muted">Paillettes d’Arène : ${esc(m.paid_today)} ${paillSym()} sur ${esc(cfg.plafond_jour)} ${paillSym()} au plus. Défense reçue : ${esc(m.received_today)} sur ${esc(cfg.defenses_recues_jour)}.</p>
     </section>
     <section class="card jb-sec" aria-labelledby="ar-deck-h"><div class="jb-sec-h"><h3 id="ar-deck-h">Mon deck de défense</h3>
       <button type="button" class="btn btn-ghost" data-act="deck">${d.deck ? 'Changer' : 'Créer mon deck'}</button></div>${deck}</section>
@@ -198,7 +199,7 @@ function historiqueHtml() {
       const autre = att ? b.defender : b.attacker;
       const txt = att ? `Contre la défense de ${esc(autre.pseudo)} : ${esc(b.result === 'victoire' ? 'victoire' : b.result === 'defaite' ? 'défaite' : 'égalité')} ${esc(b.wins_a)} – ${esc(b.wins_d)}`
         : `${esc(autre.pseudo)} a attaqué ta défense : ${b.result === 'victoire' ? `duel perdu ${esc(b.wins_d)}–${esc(b.wins_a)}` : b.result === 'defaite' ? `défense tenue ${esc(b.wins_d)}–${esc(b.wins_a)}` : `égalité ${esc(b.wins_d)}–${esc(b.wins_a)}`}`;
-      const gains = [`${sg(b.delta)} pts`, b.paid ? `+${esc(b.paid)} ✦` : ''].filter(Boolean).join(' · ');
+      const gains = [`${sg(b.delta)} pts`, b.paid ? `+${esc(b.paid)} ${paillSym()}` : ''].filter(Boolean).join(' · ');
       return `<li class="jb-h${!att && !b.seen ? ' is-new' : ''}"><span class="jb-h-t">${!att && !b.seen ? '<span class="pill pill-current">Nouveau</span> ' : ''}${txt}<br><span class="small muted">${esc(gains)} · ${esc(jour(b.created_at))}</span></span>
         <span class="jb-h-a"><button type="button" class="btn btn-ghost" data-act="voir" data-id="${esc(b.id)}">Voir</button>
         ${att ? `<button type="button" class="btn btn-ghost" data-act="attaquer" data-id="${esc(autre.id)}" data-nom="${esc(autre.pseudo)}">Revanche</button>` : ''}</span></li>`;
@@ -229,7 +230,7 @@ function classementHtml() {
     const b = S.board;
     const lignes = b.top.map((x) => `<li class="ar-row${x.user_id === d.me_id ? ' is-me' : ''}"><span class="ar-rk">${esc(x.rank)}</span>
       <span class="ar-nom">${esc(x.pseudo)}</span>${pastille(x.league)}<span class="ar-pts">${esc(x.rating)} pts</span>
-      <span class="small muted">${esc(x.wins)} victoire${x.wins > 1 ? 's' : ''} · ${esc(x.matches)} combat${x.matches > 1 ? 's' : ''}${x.paid ? ` · +${esc(x.paid)} ✦` : ''}</span></li>`).join('');
+      <span class="small muted">${esc(x.wins)} victoire${x.wins > 1 ? 's' : ''} · ${esc(x.matches)} combat${x.matches > 1 ? 's' : ''}${x.paid ? ` · +${esc(x.paid)} ${paillSym()}` : ''}</span></li>`).join('');
     corps = `<p class="muted small">${esc(pl(b.participants, 'membre'))} classé${b.participants > 1 ? 's' : ''}${b.season.status === 'close' ? ' · saison terminée' : ''}</p>
       ${b.top.length ? `<ol class="ar-top" aria-label="Classement de la saison">${lignes}</ol>` : '<p class="muted">Personne n’est encore classé.</p>'}
       ${b.me ? `<p class="small">Toi : ${esc(b.me.rank ? `${b.me.rank}ᵉ` : 'non classé')} · ${esc(b.me.rating)} pts · ${pastille(b.me.league)}</p>` : ''}`;
@@ -262,17 +263,17 @@ function reglesHtml() {
       </ul></section>
     <section class="card jb-sec"><h3>Paillettes</h3>
       <ul class="ar-rules">
-        <li>1re victoire du jour : ${esc(c.gain_jour)} ✦.</li>
-        <li>Défense tenue : ${esc(c.gain_defense)} ✦, ${esc(c.defenses_jour)} par jour au plus.</li>
-        <li>Plafond Arène : ${esc(c.plafond_jour)} ✦ par jour.</li>
+        <li>1re victoire du jour : ${esc(c.gain_jour)} ${paillSym()}.</li>
+        <li>Défense tenue : ${esc(c.gain_defense)} ${paillSym()}, ${esc(c.defenses_jour)} par jour au plus.</li>
+        <li>Plafond Arène : ${esc(c.plafond_jour)} ${paillSym()} par jour.</li>
       </ul></section>
     <section class="card jb-sec"><h3>Saisons</h3>
       <p>Une saison dure ${esc(c.duree_jours)} jours. Au début de la suivante, ${esc(c.reset_pct)} % de l’écart avec ${esc(c.depart)} points est gardé. Il faut ${esc(c.min_combats)} combats pour être classé.</p>
       <ul class="ar-rules">
-        <li>Argent : ${esc(c.recompenses.argent)} ✦ · Or : ${esc(c.recompenses.or)} ✦</li>
-        <li>Diamant : ${esc(c.recompenses.diamant)} ✦ et ${esc(c.boosters.diamant)} booster Classique</li>
-        <li>Légende : ${esc(c.recompenses.legende)} ✦ et ${esc(c.boosters.legende)} boosters Classique</li>
-        <li>Podium : 1er ${esc(c.podium['1'])} ✦, 2e ${esc(c.podium['2'])} ✦, 3e ${esc(c.podium['3'])} ✦. Plafond : ${esc(c.plafond_saison)} ✦ par saison.</li>
+        <li>Argent : ${esc(c.recompenses.argent)} ${paillSym()} · Or : ${esc(c.recompenses.or)} ${paillSym()}</li>
+        <li>Diamant : ${esc(c.recompenses.diamant)} ${paillSym()} et ${esc(c.boosters.diamant)} booster Classique</li>
+        <li>Légende : ${esc(c.recompenses.legende)} ${paillSym()} et ${esc(c.boosters.legende)} boosters Classique</li>
+        <li>Podium : 1er ${esc(c.podium['1'])} ${paillSym()}, 2e ${esc(c.podium['2'])} ${paillSym()}, 3e ${esc(c.podium['3'])} ${paillSym()}. Plafond : ${esc(c.plafond_saison)} ${paillSym()} par saison.</li>
       </ul></section>`;
 }
 

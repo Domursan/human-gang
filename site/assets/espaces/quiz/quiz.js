@@ -10,6 +10,7 @@
  * Dépendances : core.js (initPage, sb, esc, $, errMsg).
  * Données : RPC hg_quiz_list et hg_quiz_answer ; dates affichées à l'heure de Zurich.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, initPage, esc, $, errMsg } from '../../commun/core.js';
 
 /* ---------- Initialisation : session membre requise ---------- */
@@ -34,7 +35,7 @@ const S = { list: [], filtre: 'tous', busy: false, erreur: false };
 /** Paillettes en texte, avec séparateurs à la suisse. */
 const pts = (n) => nf.format(Number(n) || 0);
 /** Récompense affichée : « +100 ✦ ». */
-const plus = (n) => `+${pts(n)} ✦`;
+const plus = (n) => `+${pts(n)} ${paillSym()}`;
 
 /**
  * Pastille de difficulté : étoiles et libellé (la couleur seule ne suffit pas).
@@ -168,7 +169,7 @@ function dessineResume() {
   const tuile = (n, l) => `<div class="quiz-tile"><span class="quiz-tile-n">${n}</span><span class="quiz-tile-l">${l}</span></div>`;
   $('#quiz-summary').innerHTML = tuile(pts(ouvertes), ouvertes > 1 ? 'questions ouvertes' : 'question ouverte')
     + tuile(pts(bonnes), bonnes > 1 ? 'bonnes réponses' : 'bonne réponse')
-    + tuile(`${pts(gagnees)} ✦`, 'Paillettes gagnées');
+    + tuile(`${pts(gagnees)} ${paillSym()}`, 'Paillettes gagnées');
 }
 
 /** Boutons de filtre par difficulté ; le bouton actif porte aria-pressed. */

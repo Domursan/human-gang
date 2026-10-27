@@ -7,6 +7,7 @@
 // Dépendances : core.js (sb, toast, errMsg, esc, $), ui-confirm.js (confirmBox), helpers.js (act).
 // Exporte : mountPotsSection.
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, errMsg, esc, $ } from '../../../commun/core.js';
 import { confirmBox } from '../../../commun/ui-confirm.js';
 import { act } from './helpers.js';
@@ -36,7 +37,7 @@ function potRow(p) {
   const pct = Math.min(100, Math.floor(p.total / p.goal * 100));
   return `<article class="card adc-row" aria-labelledby="pot-a-${p.id}">
     <div class="adc-row-head"><h4 class="adc-row-title" id="pot-a-${p.id}">${esc(p.title)}</h4><span class="pill ${p.status === 'ouverte' ? 'pill-current' : ''}">${esc(STATUS[p.status] || p.status)}</span></div>
-    <p class="small muted">${nf.format(p.total)} / ${nf.format(p.goal)} ✦ (${pct} %) · ${nf.format(p.contributors)} donateur${p.contributors > 1 ? 's' : ''} · récompense : ${nf.format(p.reward_qty)} × « ${esc(p.reward_name)} »${p.rewarded ? ` · ${nf.format(p.rewarded)} membres servis` : ''}</p>
+    <p class="small muted">${nf.format(p.total)} / ${nf.format(p.goal)} ${paillSym()} (${pct} %) · ${nf.format(p.contributors)} donateur${p.contributors > 1 ? 's' : ''} · récompense : ${nf.format(p.reward_qty)} × « ${esc(p.reward_name)} »${p.rewarded ? ` · ${nf.format(p.rewarded)} membres servis` : ''}</p>
     <p class="small muted">Du ${esc(whenFmt.format(new Date(p.starts_at)))} au ${esc(whenFmt.format(new Date(p.ends_at)))}${p.badge_code ? ` · badge ${esc(p.badge_code)}` : ''}</p>
     <div class="progress" role="progressbar" aria-label="Avancement de ${esc(p.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
     ${p.status === 'ouverte' ? `<div class="btn-row"><button type="button" class="btn btn-danger" data-pot-act="cancel" data-id="${p.id}">Annuler et rembourser</button></div>` : ''}
@@ -49,16 +50,16 @@ function render() {
   P.root.innerHTML = `<div class="adc">
     <section class="card adc-form" aria-labelledby="pot-new-h">
       <h3 class="adc-h" id="pot-new-h">Nouvelle cagnotte</h3>
-      <p class="small muted">Les membres versent des Paillettes (10 ✦ minimum, 25 % de l’objectif au plus chacun). Objectif atteint : chaque membre actif reçoit la récompense, même sans avoir versé. Pas atteint à la date de fin : tout le monde est remboursé. Une seule cagnotte à la fois.</p>
+      <p class="small muted">Les membres versent des Paillettes (10 ${paillSym()} minimum, 25 % de l’objectif au plus chacun). Objectif atteint : chaque membre actif reçoit la récompense, même sans avoir versé. Pas atteint à la date de fin : tout le monde est remboursé. Une seule cagnotte à la fois.</p>
       ${open ? '<p class="small"><strong>Une cagnotte est déjà ouverte.</strong> Attends sa fin ou annule-la pour en créer une autre.</p>' : `
       <form id="pot-new" class="adc-form" novalidate>
         <div class="adc-grid">
           <div class="field adc-wide"><label for="pot-t">Titre</label><input id="pot-t" name="title" maxlength="80" required placeholder="Un booster Raclette pour tout le monde"></div>
-          <div class="field"><label for="pot-g">Objectif (✦)</label><input id="pot-g" name="goal" type="number" min="500" max="1000000" step="50" value="20000" required></div>
-          <div class="field"><label for="pot-ty">Booster offert</label><select id="pot-ty" name="reward_type">${P.types.map((t) => `<option value="${esc(t.id)}">${esc(t.name)} (${nf.format(t.price)} ✦)</option>`).join('')}</select></div>
+          <div class="field"><label for="pot-g">Objectif (${paillSym()})</label><input id="pot-g" name="goal" type="number" min="500" max="1000000" step="50" value="20000" required></div>
+          <div class="field"><label for="pot-ty">Booster offert</label><select id="pot-ty" name="reward_type">${P.types.map((t) => `<option value="${esc(t.id)}">${esc(t.name)} (${nf.format(t.price)} ${paillSym()})</option>`).join('')}</select></div>
           <div class="field"><label for="pot-q">Boosters par membre</label><select id="pot-q" name="reward_qty"><option>1</option><option>2</option><option>3</option></select></div>
           <div class="field"><label for="pot-e">Fin</label><input id="pot-e" name="ends_at" type="datetime-local" value="${defaultEnd()}" required></div>
-          <div class="adc-check adc-wide"><label><input type="checkbox" name="badge" checked> Badge « Cagnotte » pour les donateurs (100 ✦ versés ou plus)</label></div>
+          <div class="adc-check adc-wide"><label><input type="checkbox" name="badge" checked> Badge « Cagnotte » pour les donateurs (100 ${paillSym()} versés ou plus)</label></div>
         </div>
         <p class="small muted">Garde-fou : la récompense ne doit pas valoir plus que l’objectif (prix × boosters × membres actifs).</p>
         <div class="btn-row"><button type="submit" class="btn btn-primary">Ouvrir la cagnotte</button></div>

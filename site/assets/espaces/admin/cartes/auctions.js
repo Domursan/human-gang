@@ -7,6 +7,7 @@
 // RPC : hg_auctions_admin, hg_auction_create, hg_auction_update, hg_auction_cancel (Staff « cartes », journal admin).
 // Exporte : mountAuctionsTab(el), nextWeekend(now). Les cartes viennent de C (state.js).
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, esc, errMsg } from '../../../commun/core.js';
 import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
@@ -56,9 +57,9 @@ function listHtml() {
   return `<ul class="acd-list">${X.list.map((a) => `<li class="acd-item">
       <div class="acd-item-main">
         <p><strong>${esc(a.card_name)}</strong> <span class="pill">${esc(STATUS[a.status] || a.status)}</span></p>
-        <p class="small muted">${esc(fmtWhen(a.starts_at))} → ${esc(fmtWhen(a.ends_at))} · mise ${nf(a.min_bid)} ✦, pas ${nf(a.step)} ✦ · ${nf(a.bids)} offre${a.bids > 1 ? 's' : ''}</p>
-        <p class="small">${a.status === 'close' ? (a.winner ? `Remportée par ${esc(a.winner)} pour ${nf(a.price)} ✦` : 'Sans offre : carte en réserve')
-          : a.top ? `Meilleure offre : ${nf(a.top)} ✦ (${esc(a.top_pseudo || 'membre')})` : 'Pas encore d’offre'}</p>
+        <p class="small muted">${esc(fmtWhen(a.starts_at))} → ${esc(fmtWhen(a.ends_at))} · mise ${nf(a.min_bid)} ${paillSym()}, pas ${nf(a.step)} ${paillSym()} · ${nf(a.bids)} offre${a.bids > 1 ? 's' : ''}</p>
+        <p class="small">${a.status === 'close' ? (a.winner ? `Remportée par ${esc(a.winner)} pour ${nf(a.price)} ${paillSym()}` : 'Sans offre : carte en réserve')
+          : a.top ? `Meilleure offre : ${nf(a.top)} ${paillSym()} (${esc(a.top_pseudo || 'membre')})` : 'Pas encore d’offre'}</p>
       </div>
       ${a.status === 'prevue' || a.status === 'ouverte' ? `<div class="btn-row">
         <button class="btn btn-ghost btn-sm" type="button" data-au="edit" data-id="${esc(a.id)}" aria-expanded="${X.edit === a.id}">${X.edit === a.id ? 'Fermer' : 'Modifier les règles'}</button>

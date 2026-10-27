@@ -396,15 +396,70 @@ html.fx-fromage .site-header::before {
 html.fx-fromage .site-header .container { padding-top: 66px; }
 /* La règle générale « * { animation: none }» ne touche pas les pseudo-éléments : la coulée est figée ici */
 @media (prefers-reduced-motion: reduce) { html.fx-fromage .site-header::before { animation: none; } }
+/* Cadres et boutons qui reçoivent une coulure sous leur bord bas (jamais dans un formulaire) */
 html.fx-fromage .btn-primary:not(form .btn-primary),
-html.fx-fromage .card:not(form .card):not(form.card) { position: relative; }
+html.fx-fromage .card:not(form .card):not(form.card),
+html.fx-fromage .cartes-block:not(form .cartes-block),
+html.fx-fromage .bot-panel:not(form .bot-panel),
+html.fx-fromage .duels-panneau:not(form .duels-panneau),
+html.fx-fromage .bn-panneau:not(form .bn-panneau),
+html.fx-fromage .jg-card:not(form .jg-card),
+html.fx-fromage .pl-card:not(form .pl-card) { position: relative; }
 html.fx-fromage .btn-primary:not(form .btn-primary)::after,
-html.fx-fromage .card:not(form .card):not(form.card)::after {
-  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 22px; margin-top: -3px; pointer-events: none;
-  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20120%2022%22%3E%3Cpath%20fill%3D%22%23F2C14E%22%20d%3D%22M0%200%20H120%20V3%20H0%20Z%20M14%203%20V11%20A4%204%200%200%200%2022%2011%20V3%20Z%20M40%203%20V15%20A5%205%200%200%200%2050%2015%20V3%20Z%20M72%203%20V8%20A3.5%203.5%200%200%200%2079%208%20V3%20Z%20M98%203%20V18%20A5.5%205.5%200%200%200%20109%2018%20V3%20Z%22%2F%3E%3Cpath%20fill%3D%22%23FFF3C4%22%20opacity%3D%22.6%22%20d%3D%22M17%204%20V9%20M43%204%20V13%20M101%204%20V15%22%2F%3E%3C%2Fsvg%3E") 0 0 / 120px 22px repeat-x;
+html.fx-fromage .card:not(form .card):not(form.card)::after,
+html.fx-fromage .cartes-block:not(form .cartes-block)::after,
+html.fx-fromage .bot-panel:not(form .bot-panel)::after,
+html.fx-fromage .duels-panneau:not(form .duels-panneau)::after,
+html.fx-fromage .bn-panneau:not(form .bn-panneau)::after,
+html.fx-fromage .jg-card:not(form .jg-card)::after,
+html.fx-fromage .pl-card:not(form .pl-card)::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 23px; margin-top: -4px; pointer-events: none;
+  background: url("/assets/commun/fromage/coulure.svg") 0 0 / 240px 23px repeat-x;
 }
 .fx-layer.fx-fromage > span { animation: fx-derive ease-in-out infinite alternate; opacity: .92; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .35)); }
 .fx-layer.fx-fromage svg { display: block; width: 100%; height: 100%; }
+/* Emojis du thème et gouttes qui tombent (effects.js) : plus lentes et plus légères que la pluie */
+.fx-layer.fx-fromage > span.fx-emo { animation: fx-fall linear infinite; opacity: .9; line-height: 1; }
+.fx-layer.fx-fromage > span.fx-goutte { animation: fx-fall ease-in infinite; opacity: .8; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 30%, #FFF3C4 0 14%, #F2C14E 45%, #C98A1B 100%); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .3)); }
+
+/* Fromage fondu étendu (décor seulement : pointer-events:none, jamais sur un champ de formulaire) */
+/* Titres de page : une coulure sous le titre */
+html.fx-fromage #app > h2, html.fx-fromage .cartes-section-h, html.fx-fromage .mb-section-title, html.fx-fromage .section-title {
+  position: relative; padding-bottom: 6px; }
+html.fx-fromage #app > h2::after, html.fx-fromage .cartes-section-h::after, html.fx-fromage .mb-section-title::after, html.fx-fromage .section-title::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 23px; margin-top: -4px; pointer-events: none;
+  background: url("/assets/commun/fromage/coulure.svg") 0 0 / 200px 19px repeat-x; }
+/* Onglets : l'onglet choisi est nappé de fromage ; la barre de comptes et de connexion fond aussi */
+html.fx-fromage .tab[aria-selected="true"], html.fx-fromage .cartes-tab[aria-selected="true"], html.fx-fromage .jeux-tab[aria-selected="true"] {
+  background-color: rgba(242, 193, 78, .16); box-shadow: inset 0 -4px 0 #F2C14E; }
+html.fx-fromage .tabs { position: relative; }
+html.fx-fromage .tabs::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 23px; margin-top: -4px; pointer-events: none;
+  background: url("/assets/commun/fromage/coulure.svg") 0 0 / 240px 23px repeat-x; }
+/* Menus déroulants de l'en-tête : la coulure descend sous le panneau */
+html.fx-fromage .nav-menu::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 23px; margin-top: -4px; pointer-events: none;
+  background: url("/assets/commun/fromage/coulure.svg") 0 0 / 240px 23px repeat-x; }
+/* Pied de page : la coulure pend sous la ligne du haut */
+html.fx-fromage .site-footer { background: url("/assets/commun/fromage/coulure.svg") 0 0 / 240px 23px repeat-x; }
+/* Fenêtres (dialogues) : une coulure en haut du cadre, sans toucher au contenu */
+html.fx-fromage .hg-dialog, html.fx-fromage .prefs-dialog {
+  background-image: url("/assets/commun/fromage/coulure.svg"); background-repeat: repeat-x; background-position: 0 0; background-size: 240px 23px; }
+/* Barres latérales (ordinateur seulement) : raccourcis à gauche, « En ligne » à droite */
+@media (min-width: 720px) {
+  html.fx-fromage .sd { overflow: visible; }
+  html.fx-fromage .sd::after {
+    content: ''; position: absolute; top: 0; bottom: 0; left: 100%; width: 20px; pointer-events: none;
+    background: url("/assets/commun/fromage/coulure-vert.svg") 0 0 / 20px 212px repeat-y; }
+  html.fx-fromage .ol::before {
+    content: ''; position: absolute; top: 0; bottom: 0; right: 100%; width: 20px; pointer-events: none;
+    background: url("/assets/commun/fromage/coulure-vert.svg") 0 0 / 20px 212px repeat-y; transform: scaleX(-1); }
+}
+/* Cartouches de boosters : la coulure pend sous chaque cartouche */
+html.fx-fromage .cart-box::after {
+  content: ''; position: absolute; left: 4%; right: 4%; top: 100%; height: 23px; margin-top: -8px; pointer-events: none;
+  background: url("/assets/commun/fromage/coulure.svg") 0 0 / 200px 19px repeat-x; }
 @keyframes fx-derive {
   from { transform: translate3d(0, 0, 0) rotate(var(--r0, 0deg)); }
   to { transform: translate3d(var(--dx, 0px), var(--dy, 0px), 0) rotate(var(--r1, 0deg)); }

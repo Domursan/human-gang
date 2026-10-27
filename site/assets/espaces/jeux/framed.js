@@ -7,6 +7,7 @@
  * RPC : hg_framed_state, hg_framed_guess. Gains versés par le serveur (10 ✦ trouvé, 3 ✦ sinon, réglables).
  * Exporte : mount(panel, ctx).
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
 import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
@@ -101,12 +102,12 @@ function render() {
       <p class="jd-end-t">${st.solved ? `Trouvé en ${esc(st.guesses.length)} essai${st.guesses.length > 1 ? 's' : ''} !` : 'Pas trouvé cette fois.'}</p>
       <p class="jd-end-ans">${esc(f.title || '')}${f.year ? ` <span class="muted">(${esc(f.year)})</span>` : ''}</p>
       ${f.seen_on ? `<p class="muted small">vu le ${esc(day(f.seen_on, dateLong))}${f.viewers ? `, ${esc(f.viewers)} spectateurs` : ''}</p>` : ''}
-      <p class="small">${st.reward ? `+${esc(st.reward)} ✦ crédités` : ''}</p>
+      <p class="small">${st.reward ? `+${esc(st.reward)} ${paillSym()} crédités` : ''}</p>
       <div class="jd-actions"><button type="button" class="btn btn-sand" data-act="share">Partager le résultat</button>
       <button type="button" class="btn btn-ghost" data-act="livre">Le livre est mieux</button></div></div>`;
   } else {
     bottom = guessFormHtml('jf', 'Ton titre', S.busy)
-      + `<p class="muted small jd-note">Seules les ${esc(st.films.length)} réponses de la liste sont proposées. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
+      + `<p class="muted small jd-note">Seules les ${esc(st.films.length)} réponses de la liste sont proposées. Trouvé : ${esc(st.gain)} ${paillSym()} · pas trouvé : ${esc(st.consolation)} ${paillSym()}.</p>`;
   }
   P.innerHTML = `<div class="jd">${head}${img}${framesNav(st)}${triesHtml(st)}${bottom}${hier}${board}</div>`;
   boutonReponses(P.querySelector('.jd-head'), 'framed');
@@ -131,7 +132,7 @@ async function guess(id) {
     S.st = data;
     await signFrames();
     S.view = data.frames.length - 1;
-    if (data.finished) C.toast(data.solved ? `Bravo ! +${data.reward} ✦` : `C’était « ${data.film?.title} ». +${data.reward} ✦`, 'ok');
+    if (data.finished) C.toast(data.solved ? `Bravo ! +${data.reward} ${paillSym()}` : `C’était « ${data.film?.title} ». +${data.reward} ${paillSym()}`, 'ok');
   } catch (e) { C.toast(e?.message || String(e), 'error'); }
   S.busy = false; render();
   P.querySelector('#jf-input')?.focus();

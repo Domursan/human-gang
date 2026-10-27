@@ -10,6 +10,7 @@
  * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/espaces/cartes/cartes-card.css.
  * Exporte : mount(panel, ctx) ; mini, resTxt, resultHtml et animate (réutilisés par l'Arène v2, jeux/arene-v2.js).
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';
 import { loadCss } from './devine.js';
 
@@ -67,7 +68,7 @@ function render() {
 function homeHtml() {
   const esc = C.esc, d = S.d, cfg = d.cfg;
   const gains = !cfg.actif ? '<p class="card jb-note">L’Arène est en pause pour le moment.</p>'
-    : cfg.gains ? `<p class="muted small">+${esc(cfg.gain)} ✦ par victoire (${esc(Math.min(d.paid_today, cfg.cap_jour))}/${esc(cfg.cap_jour)} payées aujourd’hui) · +${esc(cfg.defense_gain)} ✦ quand ta défense tient (${esc(cfg.cap_defense)} par jour).</p>`
+    : cfg.gains ? `<p class="muted small">+${esc(cfg.gain)} ${paillSym()} par victoire (${esc(Math.min(d.paid_today, cfg.cap_jour))}/${esc(cfg.cap_jour)} payées aujourd’hui) · +${esc(cfg.defense_gain)} ${paillSym()} quand ta défense tient (${esc(cfg.cap_defense)} par jour).</p>`
       : '<p class="muted small">Bêta : on joue pour la gloire, pas encore de Paillettes.</p>';
   const deck = d.deck
     ? `<div class="jb-row5">${d.deck.map((c) => mini(c)).join('')}</div>`
@@ -84,7 +85,7 @@ function homeHtml() {
     const other = att ? b.defender : b.attacker;
     const txt = att ? `Contre la défense de ${esc(other.pseudo)} : ${esc(resTxt(b.result, b.wins_a, b.wins_d)).toLowerCase()}`
       : `${esc(other.pseudo)} a attaqué ton deck : ${b.result === 'victoire' ? `duel perdu ${esc(b.wins_d)}-${esc(b.wins_a)}` : b.result === 'defaite' ? `défense tenue ${esc(b.wins_d)}-${esc(b.wins_a)}` : `égalité ${esc(b.wins_d)}-${esc(b.wins_a)}`}`;
-    return `<li class="jb-h${!att && !b.seen ? ' is-new' : ''}"><span class="jb-h-t">${!att && !b.seen ? '<span class="pill pill-current">Nouveau</span> ' : ''}${txt}${b.paid ? ` · +${esc(b.paid)} ✦` : ''}</span>
+    return `<li class="jb-h${!att && !b.seen ? ' is-new' : ''}"><span class="jb-h-t">${!att && !b.seen ? '<span class="pill pill-current">Nouveau</span> ' : ''}${txt}${b.paid ? ` · +${esc(b.paid)} ${paillSym()}` : ''}</span>
       <span class="jb-h-a"><button type="button" class="btn btn-ghost" data-act="voir" data-id="${esc(b.id)}">Voir</button>
       ${!att ? `<button type="button" class="btn btn-ghost" data-act="attaquer" data-id="${esc(other.id)}">Revanche</button>` : ''}</span></li>`;
   }).join('')}</ul>` : '<p class="muted small">Aucune bataille pour l’instant.</p>';
@@ -160,7 +161,7 @@ export function resultHtml(b, esc = C.esc) {
     <button type="button" class="btn btn-ghost jb-back" data-act="retour">← Retour</button>
     <p class="muted small">Arène · ${att ? `contre la défense de ${esc(other.pseudo)}` : `${esc(other.pseudo)} contre ta défense`}</p>
     <h2 class="jd-title" role="status">${esc(big)}</h2>
-    ${b.paid ? `<p class="small">+${esc(b.paid)} ✦ crédités</p>` : ''}
+    ${b.paid ? `<p class="small">+${esc(b.paid)} ${paillSym()} crédités</p>` : ''}
     <div class="jb-res-h muted small"><span>${att ? 'Tes cartes' : 'Ta défense'}</span><span>${att ? 'Sa défense' : 'Ses cartes'}</span></div>
     <ol class="jb-duels">${rows}</ol>
     <p class="muted small">Puissance = valeur de la carte (réglée par le Staff) + bonus si brillante + 2 si la famille a l’avantage. Membre bat objet, objet bat lieu, lieu bat moment, moment bat membre.</p>

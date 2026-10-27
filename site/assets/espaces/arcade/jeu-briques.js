@@ -11,7 +11,7 @@
  * Moteur : eggs/arcade.js (creeArcade ; jeu.action = true). Animation réduite : balle un peu plus lente, pas de secousse ni d'éclats.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
-import { W, H, etoile, coeur } from './arcade.js';
+import { W, H, paillette, coeur } from './arcade.js';
 
 const NC = 8, NR = 6, CW = 28, CH = 36, ECART_X = 8, ECART_Y = 6;
 const X0 = (W - (NC * CW + (NC - 1) * ECART_X)) / 2, Y0 = 44;
@@ -261,7 +261,7 @@ export const JEU = {
     for (const b of s.briques) carte(ctx, b);
     for (const p of s.chutes) {
       if (s.triche?.coeurs) coeur(ctx, p.x, p.y, 7);
-      else { ctx.fillStyle = OR; etoile(ctx, p.x, p.y, 7 * (0.85 + 0.15 * Math.sin(p.t * 6))); ctx.fill(); }
+      else paillette(ctx, p.x, p.y, 7 * (0.85 + 0.15 * Math.sin(p.t * 6)), OR);
     }
     for (const c of s.eclats) { ctx.globalAlpha = Math.max(0, c.vie / DUREE_ECLAT); ctx.fillStyle = c.c; ctx.fillRect(c.x - 1.5, c.y - 1.5, 3, 3); }
     ctx.globalAlpha = 1;

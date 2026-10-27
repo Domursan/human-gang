@@ -1,7 +1,8 @@
 // Effets visuels légers (calque derrière le contenu, sans interaction) : étoiles, neige, pluie d'emojis, fromage.
 /*
  * Rôle : dessine, sur toute la page, une couche décorative (étoiles, neige, emojis qui tombent, ou gourmandises
- * qui dérivent pour le thème « fromage ») selon le thème actif. Le calque n'intercepte aucun clic (aria-hidden, décoratif).
+ * qui dérivent pour le thème « fromage », avec quelques emojis et gouttes qui tombent) selon le thème actif. Le calque
+ * n'intercepte aucun clic (aria-hidden, décoratif).
  * Le thème « fromage » pose aussi la classe fx-fromage sur <html> : coulée de fromage sous l'en-tête et gouttes sous
  * les boutons principaux et les cadres (dessinées en CSS, base.css). Pas de gouttes sur la page d'administration.
  * Page : toutes les pages (appelé par init.js à l'initialisation, et à chaque changement de thème).
@@ -46,7 +47,7 @@ export function applyFromageClass(theme) {
 /**
  * Redessine le calque d'effets pour le thème donné (ou le retire).
  * Le calque précédent est toujours supprimé d'abord, pour ne jamais empiler deux couches.
- * @param {object|null} theme Thème actif ; son champ `effect` vaut 'pluie', 'neige', 'etoiles', 'fromage' ou 'aucun'.
+ * @param {object|null} theme Thème actif ; son champ `effect` vaut 'pluie', 'neige', 'neige-emojis', 'etoiles', 'fromage' ou 'aucun'.
  */
 export function startEffects(theme) {
   document.querySelector('.fx-layer')?.remove();
@@ -61,7 +62,7 @@ export function startEffects(theme) {
   /** Nombre aléatoire entre a et b. */
   const rnd = (a, b) => a + Math.random() * (b - a);
   const small = innerWidth < 600; // petit écran : moins d'éléments pour rester fluide
-  const count = { pluie: small ? 9 : 18, neige: small ? 18 : 34, etoiles: small ? 16 : 30, fromage: small ? 4 : 7 }[fx] ?? 0;
+  const count = { pluie: small ? 9 : 18, neige: small ? 18 : 34, 'neige-emojis': small ? 26 : 48, etoiles: small ? 16 : 30, fromage: small ? 4 : 7, braises: small ? 10 : 20 }[fx] ?? 0;
   // Répartition régulière sur toute la largeur (une colonne par élément, position aléatoire dans sa colonne)
   /** Position horizontale (en %) de l'élément i, tirée au hasard dans sa colonne. */
   const col = (i) => (((i + rnd(0.15, 0.85)) / count) * 100).toFixed(1);
@@ -75,6 +76,18 @@ export function startEffects(theme) {
       if (!e) break;
       const d = rnd(16, 28); // durée chute, en s
       html += `<span style="left:min(${col(order[i])}%, calc(100% - 30px));font-size:${rnd(16, 26).toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--r:${rnd(-160, 160).toFixed(0)}deg">${esc(e)}</span>`;
+    } else if (fx === 'neige-emojis') {
+      // Neige plus marquée, avec un emoji du thème sur cinq qui tombe au milieu des flocons (sur fond clair, flocons bleutés)
+      const clair = document.documentElement.dataset.mode === 'clair';
+      const e = i % 5 === 4 ? emojiAt(theme.emojis, Math.floor(i / 5)) : null;
+      const d = rnd(12, 24);
+      if (e) {
+        html += `<span style="left:min(${col(order[i])}%, calc(100% - 30px));font-size:${rnd(18, 26).toFixed(0)}px;line-height:1;opacity:${clair ? 0.6 : 0.85};animation:fx-fall linear infinite;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-40, 40).toFixed(0)}px;--r:${rnd(-120, 120).toFixed(0)}deg">${esc(e)}</span>`;
+      } else {
+        const s = rnd(4, 9); // flocons plus gros que la neige ordinaire, pour qu'ils se voient
+        const c = clair ? '#7D92C4' : '#FFFFFF';
+        html += `<span style="left:${col(order[i])}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;border-radius:50%;background:${c};box-shadow:0 0 ${(s / 2).toFixed(1)}px ${c};animation:fx-fall linear infinite;animation-duration:${(d * 1.15).toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-50, 50).toFixed(0)}px;opacity:${rnd(0.5, 0.95).toFixed(2)}"></span>`;
+      }
     } else if (fx === 'neige') {
       const d = rnd(12, 24), s = rnd(3, 7); // durée de chute et taille du flocon
       html += `<span style="left:${col(order[i])}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-50, 50).toFixed(0)}px;opacity:${rnd(0.35, 0.8).toFixed(2)}"></span>`;
@@ -82,11 +95,29 @@ export function startEffects(theme) {
       // Étoiles qui scintillent : délai négatif pour que tout ne commence pas en même temps
       const d = rnd(3, 7), s = rnd(2, 3.5);
       html += `<span style="left:${col(order[i])}%;top:${rnd(0, 99).toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s"></span>`;
+    } else if (fx === 'braises') {
+      // Étincelles qui montent doucement du bas de l'écran (calque .fx-braises, CSS dans themes-decor.css)
+      const d = rnd(7, 12), s = rnd(4, 8); // durée de montée et taille de l'étincelle
+      html += `<span style="left:${col(order[i])}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-30, 30).toFixed(0)}px"></span>`;
     } else if (fx === 'fromage') {
       // Gourmandises qui dérivent lentement derrière le contenu : un aller dure 30 à 60 s, trajectoires variées
       const kind = GOURMANDISE_KINDS[i % GOURMANDISE_KINDS.length];
       const s = small ? rnd(36, 48) : rnd(46, 64), d = rnd(30, 60);
       html += `<span style="left:${col(order[i])}%;top:${rnd(0, 100).toFixed(1)}%;width:${s.toFixed(0)}px;height:${s.toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-22, 22).toFixed(1)}vw;--dy:${rnd(-14, 14).toFixed(1)}vh;--r0:${rnd(-30, 30).toFixed(0)}deg;--r1:${rnd(-30, 30).toFixed(0)}deg"><svg viewBox="0 0 60 60" aria-hidden="true" focusable="false">${GOURMANDISES[kind]}</svg></span>`;
+    }
+  }
+  // Thème « fromage » : en plus des gourmandises, peu d'emojis du thème et de gouttes de fromage qui tombent lentement
+  if (fx === 'fromage') {
+    const nEmo = small ? 3 : 5, nGouttes = small ? 3 : 6;
+    for (let i = 0; i < nEmo; i++) {
+      const e = emojiAt(theme.emojis, i);
+      if (!e) break;
+      const d = rnd(22, 34);
+      html += `<span class="fx-emo" style="left:${rnd(4, 94).toFixed(1)}%;font-size:${rnd(16, 22).toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-30, 30).toFixed(0)}px;--r:${rnd(-120, 120).toFixed(0)}deg">${esc(e)}</span>`;
+    }
+    for (let i = 0; i < nGouttes; i++) {
+      const d = rnd(18, 30), w = rnd(6, 10);
+      html += `<span class="fx-goutte" style="left:${rnd(4, 96).toFixed(1)}%;width:${w.toFixed(0)}px;height:${(w * 1.4).toFixed(0)}px;animation-duration:${d.toFixed(1)}s;animation-delay:-${rnd(0, d).toFixed(1)}s;--dx:${rnd(-14, 14).toFixed(0)}px"></span>`;
     }
   }
   if (!html) return;

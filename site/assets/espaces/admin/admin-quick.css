@@ -60,7 +60,7 @@
 .qk-amount input {
   height: 52px; padding: 0 44px 0 12px; text-align: center; font-family: var(--font-display); font-size: 22px; border-radius: 14px;
 }
-.qk-amount::after { content: '✦'; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--sand); font-size: 18px; pointer-events: none; }
+.qk-amount::after { content: var(--paill-emoji, "✦"); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--sand); font-size: 18px; pointer-events: none; }
 
 /* Cases à cocher : couleur de la fenêtre */
 .qk-dlg .check { align-items: center; min-height: 44px; font-size: 15px; color: var(--text); }

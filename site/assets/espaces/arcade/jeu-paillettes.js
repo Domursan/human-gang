@@ -10,7 +10,7 @@
  * Moteur : eggs/arcade.js (creeArcade). Animation réduite : chute plus lente, pas d'étincelles ni de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
  */
-import { W, H, etoile, coeur } from './arcade.js';
+import { W, H, paillette, coeur } from './arcade.js';
 
 const VIES = 3, SOL = H - 52, DEMI = 36;
 /** Au-delà de cette seconde, les pièges ne deviennent plus fréquents (la vitesse, elle, continue de monter). */
@@ -116,7 +116,7 @@ export const JEU = {
       if (p.piege === 'fausse') fausse(ctx, p.x, p.y, p.r);
       else if (p.piege === 'grele') greleon(ctx, p.x, p.y, p.r);
       else if (s.triche?.coeurs) coeur(ctx, p.x, p.y, p.r * (0.9 + 0.1 * Math.sin(p.t * 6)));
-      else { ctx.fillStyle = OR; etoile(ctx, p.x, p.y, p.r * (0.85 + 0.15 * Math.sin(p.t * 6))); ctx.fill(); }
+      else paillette(ctx, p.x, p.y, p.r * (0.85 + 0.15 * Math.sin(p.t * 6)), OR);
     }
     ctx.fillStyle = OR;
     for (const c of s.eclats) { ctx.globalAlpha = Math.max(0, c.vie / 0.5); ctx.beginPath(); ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2); ctx.fill(); }

@@ -34,7 +34,8 @@ const etat = (p) => p.evaluate(() => {
     theme: root.dataset.theme,
     classe: root.classList.contains('fx-fromage'),
     calque: !!layer,
-    gourmandises: layer ? layer.children.length : 0,
+    // Gourmandises seulement : les emojis (.fx-emo) et gouttes (.fx-goutte) du thème sont comptés à part
+    gourmandises: layer ? layer.querySelectorAll(':scope > span:not(.fx-emo):not(.fx-goutte)').length : 0,
     pointer: layer ? getComputedStyle(layer).pointerEvents : null,
     spanPointer: layer && layer.children[0] ? getComputedStyle(layer.children[0]).pointerEvents : null,
     z: layer ? getComputedStyle(layer).zIndex : null,

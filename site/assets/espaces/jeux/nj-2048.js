@@ -13,6 +13,7 @@
  * Données : RPC hg_nj_solo_etat, hg_nj_solo_debut, hg_nj_solo_fin (migration 138). Variante : 'classique'.
  * Exporte : mount, unmount, resume.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml } from './commun.js';
 
@@ -285,7 +286,7 @@ function creer(r, c, v, neuve = false) {
   const el = document.createElement('div');
   el.className = 'sol-tuile' + (neuve ? ' is-neuve' : '');
   el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = '<span class="sol-tuile-v"></span><span class="sol-tuile-s">✦</span>';
+  el.innerHTML = `<span class="sol-tuile-v"></span><span class="sol-tuile-s">${paillSym()}</span>`;
   G.zone.appendChild(el);
   const t = { id, v, r, c, el };
   G.tuiles.set(id, t);
@@ -417,7 +418,7 @@ function majMeilleur() {
 function majGain() {
   const el = q('#g-gain');
   if (!el) return;
-  el.innerHTML = `<span>+${esc(nf(G.gain))} ✦ par jour</span>${G.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
+  el.innerHTML = `<span>+${esc(nf(G.gain))} ${paillSym()} par jour</span>${G.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
 }
 
 /** Classement de la semaine, par score. */
@@ -442,7 +443,7 @@ function majFin({ type, cause, score = 0, reward = 0 }) {
   let titre, detail = '', ton = 'is-ko';
   if (type === 'ok') {
     titre = `Partie enregistrée : ${nf(score)} pts`; ton = 'is-ok';
-    detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ✦` : (G.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Score enregistré dans le classement.');
+    detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ${paillSym()}` : (G.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Score enregistré dans le classement.');
   } else if (type === 'refuse') {
     titre = 'Partie non comptée'; detail = 'Le serveur n’a pas accepté ce score.';
   } else {

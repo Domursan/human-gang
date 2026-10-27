@@ -7,6 +7,7 @@
 // Lit : hg_wallet_log (journal). RPC : hg_cards_admin_paillettes, hg_cards_admin_give, hg_cards_admin_take.
 // Exporte : mountPlayersList, refreshPlayersList, playersPanel, refreshLog, playerActions, takeCopy.
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, errMsg, esc, $, avatarHtml, notify } from '../../../commun/core.js';
 import { rarityLabel, serialLabel, fmtP } from '../../cartes/cartes-ui.js';
 import { confirmBox } from '../../../commun/ui-confirm.js';
@@ -109,7 +110,7 @@ export async function refreshLog() {
     if (uid !== C.playerId) return;
     box.innerHTML = rows.length
       ? `<ul class="acd-list">${rows.map((r) => `<li class="acd-log-row">
-          <span class="acd-log-delta ${r.delta < 0 ? 'is-neg' : 'is-pos'}">${r.delta > 0 ? '+' : ''}${esc(nf(r.delta))} ✦</span>
+          <span class="acd-log-delta ${r.delta < 0 ? 'is-neg' : 'is-pos'}">${r.delta > 0 ? '+' : ''}${esc(nf(r.delta))} ${paillSym()}</span>
           <span>${esc(REASON(r.reason))}</span><span class="small muted">${esc(fmtWhen(r.created_at))}</span></li>`).join('')}</ul>`
       : '<p class="small muted">Aucun mouvement de Paillettes.</p>';
   } catch (e) { if (box.isConnected) box.innerHTML = `<p class="small muted">Journal indisponible : ${esc(errMsg(e))}</p>`; }

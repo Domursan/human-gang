@@ -9,6 +9,7 @@
  *         secousse, nuit, rembobine, tzatziki, champi_<saison> (printemps, ete, automne, hiver), livre, kc, creeper,
  *         serge, domumobile.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, hasSession } from '../../commun/core/supabase.js';
 import { toast } from '../../commun/core/ui.js';
 
@@ -32,7 +33,7 @@ export async function eggFound(code, extra = {}, opts = {}) {
     const { data, error } = await sb.rpc('hg_egg_found', { p_egg: code, p_extra: extra });
     if (error) { dejaEnvoyes.delete(cle); return null; }
     if (data?.new) {
-      const gains = [data.reward > 0 ? `+${data.reward} ✦` : '', data.card ? `carte « ${data.card} »` : '', data.badge ? `badge « ${data.badge} »` : '']
+      const gains = [data.reward > 0 ? `+${data.reward} ${paillSym()}` : '', data.card ? `carte « ${data.card} »` : '', data.badge ? `badge « ${data.badge} »` : '']
         .filter(Boolean).join(' · ');
       toast(`🔍 ${data.message}${gains ? ` (${gains})` : ''}`, 'success');
     } else if (data && !opts.silencieux) {

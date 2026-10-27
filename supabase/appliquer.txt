@@ -25,3 +25,6 @@ supabase/migrations/158_quetes_profil_etat.sql
 supabase/migrations/159_membres_en_ligne.sql
 supabase/migrations/160_flappy_rythme.sql
 supabase/migrations/161_rangement_chemins.sql
+supabase/migrations/162_theme_booster_gratuit.sql
+supabase/migrations/163_theme_paillettes.sql
+supabase/migrations/164_themes_saint_nicolas_pate.sql

@@ -11,6 +11,7 @@
  * RPC : hg_battle_me, hg_battle_settings_save (Arène actuelle) ; hg_card_power_set (puissances) ; hg_arena_admin, hg_arena_settings_save,
  * hg_arena_season_close (Arène v2). Exporte : mountBatailleSection.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { confirmBox } from '../../commun/ui-confirm.js';
 import { blocPuissances } from './puissances.js';
@@ -116,7 +117,7 @@ async function blocV2({ data, error }, root) {
     <div class="ar-adm-top"><h4>Aperçu du classement (top 10)</h4>
       ${data.board?.top?.length ? `<ol class="ar-adm-liste">${data.board.top.slice(0, 10).map((x) => `<li><span class="ar-adm-rk">${esc(x.rank)}</span> ${esc(x.pseudo)} <span class="small muted">· ${esc(LIGUES[x.league] || x.league)} · ${esc(x.rating)} pts · ${esc(x.wins)} victoire${x.wins > 1 ? 's' : ''}</span></li>`).join('')}</ol>` : '<p class="small muted">Personne n’est encore classé.</p>'}</div>
     <div class="ar-adm-past"><h4>Saisons</h4>
-      ${data.seasons?.length ? `<ul class="ar-adm-liste">${data.seasons.map((x) => `<li>${esc(x.label)} · ${x.status === 'close' ? 'close' : 'en cours'} · ${esc(x.participants)} classé${x.participants > 1 ? 's' : ''} · ${esc(x.paid)} ✦ versés</li>`).join('')}</ul>` : '<p class="small muted">Aucune saison.</p>'}</div>`;
+      ${data.seasons?.length ? `<ul class="ar-adm-liste">${data.seasons.map((x) => `<li>${esc(x.label)} · ${x.status === 'close' ? 'close' : 'en cours'} · ${esc(x.participants)} classé${x.participants > 1 ? 's' : ''} · ${esc(x.paid)} ${paillSym()} versés</li>`).join('')}</ul>` : '<p class="small muted">Aucune saison.</p>'}</div>`;
 
   bloc.querySelector('#ar-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -131,7 +132,7 @@ async function blocV2({ data, error }, root) {
     if (!ok) return;
     const r = await sb.rpc('hg_arena_season_close');
     if (r.error) { toast(errMsg(r.error), 'error'); return; }
-    toast(`Saison clôturée : ${r.data?.classes ?? 0} classé${(r.data?.classes ?? 0) > 1 ? 's' : ''}, ${r.data?.paillettes ?? 0} ✦ versés.`, 'ok');
+    toast(`Saison clôturée : ${r.data?.classes ?? 0} classé${(r.data?.classes ?? 0) > 1 ? 's' : ''}, ${r.data?.paillettes ?? 0} ${paillSym()} versés.`, 'ok');
     mountBatailleSection(root);
   });
   return bloc;

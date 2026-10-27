@@ -9,6 +9,7 @@
  * RPC : hg_proof_queue, hg_proof_review, hg_proofs_purge_due, hg_proofs_mark_purged. Stockage : hg-proofs (privé).
  * Exporte : mountProofsSection.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { setCount } from './shell.js';
 
@@ -127,7 +128,7 @@ async function review(ok) {
   const { data, error } = await sb.rpc('hg_proof_review', { p_id: x.id, p_ok: ok, p_reason: reason });
   S.busy = false;
   if (error) { toast(errMsg(error), 'error'); render(); return; }
-  toast(ok ? `Preuve de ${x.pseudo} validée${data?.paid ? ` : +${x.reward} ✦ versés` : ''}.` : `Preuve de ${x.pseudo} refusée.`, 'ok');
+  toast(ok ? `Preuve de ${x.pseudo} validée${data?.paid ? ` : +${x.reward} ${paillSym()} versés` : ''}.` : `Preuve de ${x.pseudo} refusée.`, 'ok');
   await load();
   root.querySelector('.pf-item[aria-current="true"]')?.focus();
 }

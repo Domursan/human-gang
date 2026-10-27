@@ -20,6 +20,7 @@
  * Dépendances : core.js (initPage, sb, toast, esc, $), jeux/onglets.js, jeux/commun.js, modules jeux/<id>.js.
  * Le fichier n'exporte rien.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, initPage, toast, esc, $ } from '../../commun/core.js';
 import { ONGLETS } from './onglets.js';
 import { nf, jourLong, zurichIso } from './commun.js';
@@ -221,7 +222,7 @@ function peindreHub() {
   setCompteurs('jeux', Object.fromEntries(JEUX.map((o) => [o.id, S.resumes.get(o.id)?.etat === 'a_jouer' ? 1 : 0])));
   // Paillettes gagnées aujourd'hui (en-tête)
   const bal = $('#jeux-bal');
-  if (bal) { bal.hidden = false; $('#jeux-bal-v').textContent = `+${nf(gain)} ✦`; }
+  if (bal) { bal.hidden = false; $('#jeux-bal-v').textContent = `+${nf(gain)} ${paillSym()}`; }
 }
 
 /* ---------- Vue de départ : tous les jeux en cartes ---------- */

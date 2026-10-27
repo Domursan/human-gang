@@ -13,6 +13,7 @@
  * Données : RPC hg_nj_solo_etat, hg_nj_solo_debut, hg_nj_solo_fin (migration 138).
  * Exporte : mount, unmount, resume.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml, zurichIso, jourLong } from './commun.js';
 
@@ -362,7 +363,7 @@ function maj() {
 function majGain() {
   const el = q('#su-gain');
   if (!el) return;
-  el.innerHTML = `<span>+${esc(nf(S.gain))} ✦ par jour</span>${S.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
+  el.innerHTML = `<span>+${esc(nf(S.gain))} ${paillSym()} par jour</span>${S.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
 }
 
 /** Classement du jour (temps). */
@@ -385,7 +386,7 @@ function majFin({ type, secondes, reward = 0 }) {
   const box = q('#su-fin');
   if (!box) return;
   let titre, detail = '', ton = 'is-ko';
-  if (type === 'gagne') { titre = `Grille du jour terminée en ${fmtTemps(secondes)}`; ton = 'is-ok'; detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ✦` : (S.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Grille enregistrée.'); }
+  if (type === 'gagne') { titre = `Grille du jour terminée en ${fmtTemps(secondes)}`; ton = 'is-ok'; detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ${paillSym()}` : (S.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Grille enregistrée.'); }
   else if (type === 'incorrecte') { titre = 'Grille incorrecte'; detail = 'Corrige une case, puis valide à nouveau : une nouvelle partie chronométrée a démarré.'; }
   else if (type === 'deja') { titre = `Grille du jour terminée en ${fmtTemps(secondes)}`; ton = 'is-ok'; detail = 'Tu peux la rejouer pour le plaisir : sans score ni Paillettes.'; }
   else if (type === 'rejoue') { titre = 'Bravo, grille rejouée'; ton = 'is-ok'; detail = `Temps local : ${fmtTemps(secondes)}. Pas de score : la grille du jour est déjà terminée.`; }

@@ -13,6 +13,7 @@
  * Tests : window.__SCN.demineurCoeurs, liste de couples [ligne, colonne], remplace la pose au hasard (jamais en production).
  * Exporte : mount, unmount, resume.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml } from './commun.js';
 
@@ -438,7 +439,7 @@ function maj() {
 function majGain() {
   const el = q('#dm-gain');
   if (!el) return;
-  el.innerHTML = `<span>+${esc(nf(D.gain))} ✦ par jour</span>${D.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
+  el.innerHTML = `<span>+${esc(nf(D.gain))} ${paillSym()} par jour</span>${D.recompense ? '<small>Déjà reçues aujourd’hui</small>' : ''}`;
 }
 
 /** Classement de la semaine pour le niveau affiché. */
@@ -462,7 +463,7 @@ function majFin({ gagne, ok, secondes, reward = 0, sansEnvoi = false }) {
   if (sansEnvoi) { titre = gagne ? 'Gagné' : 'Perdu'; detail = 'Partie non enregistrée : le serveur n’a pas ouvert la partie.'; }
   else if (gagne && ok) {
     titre = `Gagné en ${t}`; ton = 'is-ok';
-    detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ✦` : (D.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Partie enregistrée.');
+    detail = reward > 0 ? `Paillettes reçues : +${nf(reward)} ${paillSym()}` : (D.recompense ? 'Paillettes déjà reçues aujourd’hui.' : 'Partie enregistrée.');
   } else if (gagne) { titre = 'Partie non comptée'; detail = 'Le serveur n’a pas accepté ce temps.'; }
   else { titre = `Perdu en ${t}`; detail = 'Le temps est mesuré par le serveur.'; }
   box.hidden = false;

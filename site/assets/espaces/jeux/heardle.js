@@ -7,6 +7,7 @@
  * Les membres peuvent proposer un morceau (le Staff « souvenirs » valide).
  * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose, hg_heardle_signaler (vidéo qui ne se lit plus). Exporte : mount(panel, ctx), unmount().
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
 import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
@@ -249,11 +250,11 @@ function render() {
       <p class="jd-end-t">${st.solved ? `Trouvé en ${esc(st.guesses.length)} essai${st.guesses.length > 1 ? 's' : ''} !` : 'Pas trouvé cette fois.'}</p>
       <p class="jd-end-ans">${esc(t.artist || '')} — ${esc(t.title || '')}</p>
       ${t.proposed_by || t.shared_on ? `<p class="muted small">« proposé par ${esc(t.proposed_by || 'le gang')}${t.shared_on ? ` dans ${esc(t.shared_on)}` : ''} »</p>` : ''}
-      <p class="small">${st.reward ? `+${esc(st.reward)} ✦ crédités` : ''}</p>
+      <p class="small">${st.reward ? `+${esc(st.reward)} ${paillSym()} crédités` : ''}</p>
       <div class="jd-actions"><button type="button" class="btn btn-sand" data-act="share">Partager le résultat</button></div></div>`;
   } else {
     bottom = guessFormHtml('jh', 'Titre ou artiste', S.busy)
-      + `<p class="muted small jd-note">Seuls les ${esc(st.tracks.length)} morceaux du gang sont proposés. Trouvé : ${esc(st.gain)} ✦ · pas trouvé : ${esc(st.consolation)} ✦.</p>`;
+      + `<p class="muted small jd-note">Seuls les ${esc(st.tracks.length)} morceaux du gang sont proposés. Trouvé : ${esc(st.gain)} ${paillSym()} · pas trouvé : ${esc(st.consolation)} ${paillSym()}.</p>`;
   }
   P.innerHTML = `<div class="jd">${head}${playerBox}${barHtml(st)}${triesHtml(st)}${bottom}${hier}${board}${proposeHtml()}</div>`;
   boutonReponses(P.querySelector('.jd-head'), 'heardle');
@@ -280,7 +281,7 @@ async function guess(id) {
     const { data, error } = await C.sb.rpc('hg_heardle_guess', { p_track: id });
     if (error) throw error;
     S.st = data;
-    if (data.finished) C.toast(data.solved ? `Bravo ! +${data.reward} ✦` : `C’était « ${data.track?.title} ». +${data.reward} ✦`, 'ok');
+    if (data.finished) C.toast(data.solved ? `Bravo ! +${data.reward} ${paillSym()}` : `C’était « ${data.track?.title} ». +${data.reward} ${paillSym()}`, 'ok');
   } catch (e) { C.toast(e?.message || String(e), 'error'); }
   S.busy = false; render();
   P.querySelector('#jh-input')?.focus();

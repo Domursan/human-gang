@@ -183,8 +183,12 @@ const typed = () => Array.isArray(S.types) && S.types.length > 0;
 const typesDown = () => !typed() && S.typesErr;
 /** Type de booster d'après son identifiant (null en mode repli ou si le type est inconnu). */
 const typeOf = (id) => (typed() ? S.types.find((t) => t.id === id) || null : null);
-/** Type du booster gratuit du jour : celui que l'admin a réglé « gratuit chaque jour » (free_daily), sinon le Classique. */
-const freeType = () => (typed() ? S.types.find((t) => t.free_daily && t.active !== false) || typeOf('classique') : null);
+/**
+ * Type du booster gratuit du jour : le serveur marque free_daily le type du jour (celui du thème, sinon celui réglé
+ * « gratuit chaque jour » dans l'admin ; migration 162). Il peut être hors vente (free_only) : il reste ouvrable, mais
+ * la Boutique ne le montre pas (onShelf). Sinon le Classique.
+ */
+const freeType = () => (typed() ? S.types.find((t) => t.free_daily) || typeOf('classique') : null);
 /** Vrai si un type se donne à un membre : les boosters Collectionneur (pool « manquantes ») ne s'offrent pas. */
 const giftable = (t) => t.pool !== 'manquantes';
 /** Types dont le membre a du stock, dans l'ordre d'affichage (vide en mode repli). */

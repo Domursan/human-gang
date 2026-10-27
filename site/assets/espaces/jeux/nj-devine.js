@@ -9,6 +9,7 @@
  * RPC : hg_nj_etat(p_jeu), hg_nj_essai(p_jeu, p_texte) (p_texte null = passer). Les modules d'onglet sont dans jeux/nj-*.js.
  * Exporte : monter(panel, ctx, jeu), resumer(ctx, jeu).
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { loadCss, boardHtml, copyText, normalize } from './devine.js';
 import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
@@ -108,7 +109,7 @@ export async function monter(panel, ctx, jeu) {
       const { data, error } = await ctx.sb.rpc('hg_nj_essai', { p_jeu: jeu, p_texte: texte });
       if (error) throw error;
       e.st = data; e.draft = '';
-      if (data.finished) ctx.toast(data.solved ? `Bravo ! +${data.reward} ✦` : `Pas trouvé cette fois. +${data.reward} ✦`, data.solved ? 'ok' : undefined);
+      if (data.finished) ctx.toast(data.solved ? `Bravo ! +${data.reward} ${paillSym()}` : `Pas trouvé cette fois. +${data.reward} ${paillSym()}`, data.solved ? 'ok' : undefined);
     } catch (err) { ctx.toast(err?.message || String(err), 'error'); }
     e.busy = false; dessiner();
     if (e.st && !e.st.finished) panel.querySelector('#nj-input')?.focus();
@@ -272,7 +273,7 @@ export async function monter(panel, ctx, jeu) {
     return `<section class="card jd-end nj-fin${st.solved ? ' is-win' : ''}" role="status">
       <p class="jd-end-t">${st.solved ? `Trouvé en ${esc(pluriel(n, 'essai'))} !` : 'Pas trouvé cette fois.'}</p>
       <p class="jd-end-ans">${esc(titre)}</p>${plat}${det ? `<dl class="nj-det">${det}</dl>` : ''}
-      <p class="small">${st.reward ? `+${esc(st.reward)} ✦ crédités` : ''}</p>
+      <p class="small">${st.reward ? `+${esc(st.reward)} ${paillSym()} crédités` : ''}</p>
       <div class="jd-actions"><button type="button" class="btn btn-sand" data-act="copier">Copier le résultat</button></div>
     </section>`;
   }

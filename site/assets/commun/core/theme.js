@@ -47,6 +47,11 @@ function setRootVars(t) {
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
   if (t.is_default) for (let i = 1; i <= 6; i++) root.style.removeProperty(`--rb-${i}`);
   root.dataset.theme = t.slug || 'classique';
+  // Emoji de la Paillette pendant ce thème (ex. 🧀 pour Raclette) : lu par paillettes.js ; retiré sinon
+  if (t.paillette_emoji) root.dataset.paillette = t.paillette_emoji; else delete root.dataset.paillette;
+  // Le même emoji en variable CSS (--paill-emoji, lue par var() dans les feuilles de style) ; retirée sinon
+  if (t.paillette_emoji) root.style.setProperty('--paill-emoji', JSON.stringify(t.paillette_emoji));
+  else root.style.removeProperty('--paill-emoji');
 }
 
 /* ---------- Peinture ---------- */

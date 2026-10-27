@@ -6,6 +6,7 @@
 // RPC : hg_card_recipes_admin, hg_card_recipe_save (Staff « cartes », journal admin).
 // Exporte : mountRecipesTab(el). Les cartes et les tags viennent de C (state.js).
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, esc, errMsg } from '../../../commun/core.js';
 import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
@@ -22,7 +23,7 @@ const cardName = (id) => C.cardById.get(id)?.name || 'carte';
 
 /** Texte des ingrédients d'une recette. */
 const inputsText = (r) => (r.inputs || []).map((i) => (i.card ? `${i.qty} × ${cardName(i.card)}` : `${i.qty} × ${tagLabel(i.tag)} au choix`)).join(' + ')
-  + (r.paillettes ? ` + ${nf(r.paillettes)} ✦` : '');
+  + (r.paillettes ? ` + ${nf(r.paillettes)} ${paillSym()}` : '');
 
 /** Une ligne d'ingrédient de l'éditeur. */
 function inputRow(inp, i) {

@@ -4,6 +4,7 @@
 // Dépendances : icons.js (svg), cartes-ui.js (RARITIES_TIRAGE, rarityLabel : libellés des raretés).
 // Exporte : TZ, ICON, TABS, RARITY_IDS, REASON_LABEL, CFG_DEFAULT, ECON.
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { svg } from '../../../commun/icons.js';
 import { RARITIES_TIRAGE, rarityLabel } from '../../cartes/cartes-ui.js';
 
@@ -72,10 +73,10 @@ const REWARD_MAX = { citation: 500 };
 // help = aide courte affichée sous le champ. Défauts : CFG_DEFAULT.
 export const ECON = [
   { g: 'Départ', hint: 'Paillettes offertes une seule fois à chaque nouveau joueur.', fields: [
-    { k: 'starting_paillettes', l: 'Capital de départ', u: '✦', int: true, help: 'Paillettes données à l\'inscription.' },
+    { k: 'starting_paillettes', l: 'Capital de départ', u: paillSym(), int: true, help: 'Paillettes données à l\'inscription.' },
   ] },
   { g: 'Boosters', fields: [
-    { k: 'booster_price', l: 'Prix d\'un booster', u: '✦', int: true, help: 'Coût d\'un booster acheté par un membre.' },
+    { k: 'booster_price', l: 'Prix d\'un booster', u: paillSym(), int: true, help: 'Coût d\'un booster acheté par un membre.' },
     { k: 'booster_size', l: 'Cartes par booster', int: true, min: 1, max: 10, help: 'Nombre de cartes tirées dans un booster (1 à 10).' },
     { k: 'free_booster_hours', l: 'Délai du booster gratuit', u: 'heures', step: 0.5, help: 'Un booster gratuit est offert toutes les N heures.' },
   ] },
@@ -86,11 +87,11 @@ export const ECON = [
     { k: 'pity_epique', l: 'Garantie épique : une carte Épique ou mieux tous les N boosters (0 = aucune)', int: true, help: 'Garantit une carte Épique ou mieux après N boosters sans elle.' },
   ] },
   { g: 'Recyclage', hint: 'Paillettes reçues en recyclant un exemplaire.', fields: [
-    ...RARITY_IDS.map((r) => ({ k: `recycle.${r}`, l: rarityLabel(r), u: '✦', int: true })),
+    ...RARITY_IDS.map((r) => ({ k: `recycle.${r}`, l: rarityLabel(r), u: paillSym(), int: true })),
     { k: 'recycle.shiny_multiplier', l: 'Multiplicateur brillante', u: '×', int: true, min: 1 },
   ] },
   { g: 'Fabrication', hint: 'Coût pour fabriquer une carte précise. Vide = non fabricable. Mythique et Identité ne se fabriquent jamais.', fields: [
-    ...CRAFT_IDS.map((r) => ({ k: `craft.${r}`, l: rarityLabel(r), u: '✦', int: true, optional: true })),
+    ...CRAFT_IDS.map((r) => ({ k: `craft.${r}`, l: rarityLabel(r), u: paillSym(), int: true, optional: true })),
     { k: 'craft.shiny_multiplier', l: 'Multiplicateur brillante', u: '×', int: true, min: 1, help: 'Coût d\'une version brillante = coût normal × ce nombre.' },
   ] },
   { g: 'Récompenses', hint: 'Gains en Paillettes liés à l\'activité sur le site.', fields: REWARDS.map(([k, l]) => ({
@@ -110,17 +111,17 @@ export const ECON = [
   { g: 'Échanges', fields: [{ k: 'max_open_trades', l: 'Offres en cours maximum par personne', int: true, min: 1, help: 'Nombre d\'offres d\'échange qu\'un membre peut avoir ouvertes en même temps.' }] },
   // Plafonds de Paillettes (cards.plafonds) : chaque groupe reprend un thème du site. Vide = valeur par défaut (affichée en gris).
   { g: 'Jeux du jour', hint: 'Paillettes données une fois par jour et par jeu, dans la limite de ce plafond. Vide = valeur par défaut.', fields: [
-    PLAF('framed_gain', 'Framed : partie gagnée', '✦', 200), PLAF('framed_consolation', 'Framed : partie perdue', '✦', 200),
-    PLAF('heardle_gain', 'Heardle : partie gagnée', '✦', 200), PLAF('heardle_consolation', 'Heardle : partie perdue', '✦', 200),
-    PLAF('sutom_trouve', 'Sutom : mot trouvé', '✦', 100), PLAF('sutom_perdu', 'Sutom : mot non trouvé', '✦', 100),
-    PLAF('jeu_du_jour_gain', 'Autres jeux du jour : Paillettes par jeu déclaré', '✦', 50),
+    PLAF('framed_gain', 'Framed : partie gagnée', paillSym(), 200), PLAF('framed_consolation', 'Framed : partie perdue', paillSym(), 200),
+    PLAF('heardle_gain', 'Heardle : partie gagnée', paillSym(), 200), PLAF('heardle_consolation', 'Heardle : partie perdue', paillSym(), 200),
+    PLAF('sutom_trouve', 'Sutom : mot trouvé', paillSym(), 100), PLAF('sutom_perdu', 'Sutom : mot non trouvé', paillSym(), 100),
+    PLAF('jeu_du_jour_gain', 'Autres jeux du jour : Paillettes par jeu déclaré', paillSym(), 50),
     PLAF('jeux_du_jour', 'Autres jeux du jour : jeux payés par jour', 'jeux', 10),
   ] },
   { g: 'Quiz et citations', hint: 'Bonus de la question du jour, paliers des séries de réponses, et limites des citations « Qui a dit ça ? ».', fields: [
-    PLAF('quiz_jour', 'Question du jour : bonus', '✦', 100),
-    PLAF('quiz_serie_7', 'Série de 7 bonnes réponses : palier', '✦'),
-    PLAF('quiz_serie_30', 'Série de 30 jours : palier', '✦'),
-    PLAF('quiz_serie_100', 'Série de 100 jours : palier', '✦'),
+    PLAF('quiz_jour', 'Question du jour : bonus', paillSym(), 100),
+    PLAF('quiz_serie_7', 'Série de 7 bonnes réponses : palier', paillSym()),
+    PLAF('quiz_serie_30', 'Série de 30 jours : palier', paillSym()),
+    PLAF('quiz_serie_100', 'Série de 100 jours : palier', paillSym()),
     PLAF('citations_jour', 'Citations proposées par membre et par jour', '', 20),
     PLAF('citations_semaine', 'Citations validées récompensées par membre et par semaine', '', 100),
   ] },
@@ -135,16 +136,16 @@ export const ECON = [
     PLAF('playlist_jour', 'Morceaux partagés par jour', ''),
   ] },
   { g: 'Codes cadeaux et badges', fields: [
-    PLAF('code_paillettes', 'Paillettes maximum par code cadeau', '✦'),
+    PLAF('code_paillettes', 'Paillettes maximum par code cadeau', paillSym()),
     PLAF('badges_manuels_jour', 'Badges attribués à la main par jour (Staff)', '', 100),
   ] },
   { g: 'Calendrier de l’Avent', hint: 'Budget mensuel de Paillettes du calendrier (affiché comme « budget conseillé » dans Saisons › Avent).', fields: [
-    PLAF('avent_mois', 'Budget mensuel de Paillettes', '✦'),
+    PLAF('avent_mois', 'Budget mensuel de Paillettes', paillSym()),
   ] },
   { g: 'Arène actuelle', hint: 'Mêmes plafonds que dans Jeux et cartes › Arène actuelle : un seul réglage, partagé par les deux écrans.', fields: [
-    PLAF('bataille_gain', 'Paillettes par victoire en attaque', '✦', 100),
+    PLAF('bataille_gain', 'Paillettes par victoire en attaque', paillSym(), 100),
     PLAF('batailles_jour', 'Victoires payées par jour', '', 20),
-    PLAF('defense_gain', 'Paillettes quand la défense tient', '✦', 100),
+    PLAF('defense_gain', 'Paillettes quand la défense tient', paillSym(), 100),
     PLAF('defenses_jour', 'Défenses payées par jour', '', 20),
     PLAF('bataille_meme_adversaire', 'Attaques par jour contre un même membre', '', 10, 1),
     PLAF('batailles_max_jour', 'Batailles par jour au plus (toutes)', '', 100, 1),

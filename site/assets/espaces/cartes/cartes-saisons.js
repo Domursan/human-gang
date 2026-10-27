@@ -3,6 +3,7 @@
 // available_until (fin de la saison), opens_at / closes_at (plage horaire), per_window_limit / remaining_window (limite par soirée).
 // Toutes les heures sont affichées en heure de Zurich ; le serveur fait foi pour l'achat (hg_booster_buy).
 // Exporte : onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml, windowLeft, nextOpenLabel.
+import { paillSym } from '../../commun/paillettes.js';
 import { esc } from '../../commun/core.js';
 
 const TZ = 'Europe/Zurich';
@@ -97,7 +98,7 @@ export function discountHtml(t, types) {
   const ref = Number(types.find((x) => x.id === 'classique')?.price) || 0;
   const p = Number(t.price) || 0;
   if (!(ref > p)) return '';
-  return ` <s class="shop-ref">${nf.format(ref)} ✦</s> <span class="shop-off">−${nf.format(Math.round((1 - p / ref) * 100))} %</span>`;
+  return ` <s class="shop-ref">${nf.format(ref)} ${paillSym()}</s> <span class="shop-off">−${nf.format(Math.round((1 - p / ref) * 100))} %</span>`;
 }
 
 /**
@@ -109,6 +110,6 @@ export function closedRowHtml(t) {
   return `<article class="card shop-closed" data-type="${esc(t.id)}" aria-label="${esc(t.name)} : ${esc(nextOpenLabel(t.opens_at))}">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
       <span class="shop-closed-t"><strong>${esc(t.name)}</strong><span class="muted small">${esc(nextOpenLabel(t.opens_at))}</span></span>
-      <span class="muted small">${nf.format(Number(t.price) || 0)} ✦</span>
+      <span class="muted small">${nf.format(Number(t.price) || 0)} ${paillSym()}</span>
     </article>`;
 }

@@ -15,6 +15,7 @@
 // Contrat 071 : création { create: true, id, … } ; modification { id, …champs changés } ; réponse { type, created, free_daily_removed_from }.
 // Statistiques : { types: [{ id, sales: { d7|d30|total: { boosters, paillettes } }, opens: { total… }, stock: { total, holders }, gifts: { total… } }], opens_since }.
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, errMsg, esc, $, $$, currentLogo, hasPerm } from '../../../commun/core.js';
 import { rarityLabel } from '../../cartes/cartes-ui.js';
 import { openDrawer } from '../ui/drawer.js';
@@ -273,7 +274,7 @@ const sv = (id, k) => {
 /** HTML d'une ligne de la liste des types. */
 function rowHtml(t, i, n) {
   const sold7 = B.stats.has(t.id) ? `${nf(sv(t.id, 'bought_7d'))} vendus sur 7 j` : '';
-  const meta = [`${nf(t.price)} ✦`, `${nf(t.size)} cartes`, t.weekly_limit ? `${nf(t.weekly_limit)} par semaine` : 'sans limite', sold7].filter(Boolean);
+  const meta = [`${nf(t.price)} ${paillSym()}`, `${nf(t.size)} cartes`, t.weekly_limit ? `${nf(t.weekly_limit)} par semaine` : 'sans limite', sold7].filter(Boolean);
   const pending = B.confirm === t.id;
   const actions = !B.canWrite
     ? `<button class="btn btn-ghost btn-sm" type="button" data-bt="edit" data-id="${esc(t.id)}">Voir les réglages</button>`
@@ -306,7 +307,7 @@ function rowHtml(t, i, n) {
 function statsHtml() {
   if (B.statsErr) return `<p class="small muted">${esc(B.statsErr)}</p>`;
   if (!B.stats.size) return '<p class="small muted">Aucune vente pour l’instant.</p>';
-  const cell = (id, n, p) => `<td>${nf(sv(id, n))}<span class="small muted"> · ${nf(sv(id, p))} ✦</span></td>`;
+  const cell = (id, n, p) => `<td>${nf(sv(id, n))}<span class="small muted"> · ${nf(sv(id, p))} ${paillSym()}</span></td>`;
   return `<div class="acd-scroll"><table class="acd-table abt-stats">
       <thead><tr><th scope="col">Type</th><th scope="col">7 jours</th><th scope="col">30 jours</th><th scope="col">Total</th>
         <th scope="col">Ouverts</th><th scope="col">En stock</th><th scope="col">Offerts</th></tr></thead>
@@ -460,14 +461,14 @@ function editorHtml(t, isNew) {
       ${styleGridHtml(t)}
     </fieldset>
     <div class="acd-grid-2">
-      ${numField('price', 'Prix', t.price, { unit: '✦', help: '0 = gratuit.' })}
+      ${numField('price', 'Prix', t.price, { unit: paillSym(), help: '0 = gratuit.' })}
       ${numField('size', 'Cartes par booster', t.size, { min: 1, max: 10, help: 'De 1 à 10.' })}
     </div>
     <div class="acd-grid-2">
       <label class="switch"><input type="checkbox" name="active"${t.active !== false ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>En vente dans la Boutique</span></label>
       <label class="switch"><input type="checkbox" name="free_daily" aria-describedby="abt-free-h"${t.free_daily ? ' checked' : ''}><span class="switch-ui" aria-hidden="true"></span><span>Booster gratuit du jour</span></label>
     </div>
-    <p class="small muted" id="abt-free-h">Un seul type peut être le gratuit du jour : le cocher ici le retire des autres.</p>`;
+    <p class="small muted" id="abt-free-h">Un seul type peut être le gratuit du jour : le cocher ici le retire des autres. Un thème peut remplacer ce gratuit pendant sa période (réglage dans la section Thème) ; le booster du thème reste ouvrable gratuitement même hors vente.</p>`;
 
   const chances = `
     <p class="small muted">Part de chaque rareté pour chaque carte tirée. Le total doit faire exactement 100 %.</p>
@@ -634,7 +635,7 @@ function updateLive(form) {
           <div><dt>Au moins une Épique ou mieux</dt><dd>${pct(odds.epique)}</dd></div>
           <div><dt>Au moins une Légendaire ou mieux</dt><dd>${pct(odds.legendaire)}</dd></div>
           <div><dt>Au moins une Mythique ou mieux</dt><dd>${pct(odds.mythique)}</dd></div>
-          <div class="${warn ? 'is-warn' : ''}"><dt>Valeur moyenne au recyclage</dt><dd>${nf(Math.round(rv))} ✦${share != null ? ` · ${pct(share)} du prix` : ''}</dd></div>
+          <div class="${warn ? 'is-warn' : ''}"><dt>Valeur moyenne au recyclage</dt><dd>${nf(Math.round(rv))} ${paillSym()}${share != null ? ` · ${pct(share)} du prix` : ''}</dd></div>
         </dl>
         <p class="small muted">Par booster de ${nf(size)} cartes, sans la garantie Épique, brillantes comprises (barème de recyclage de l’onglet Économie).</p>
         ${bad ? `<p class="abt-warn abt-bad" role="status">Machine à Paillettes : ce booster rapporte ${pct(share)} de son prix au recyclage (seuil ${nf(B.alertPct ?? 100)} %). Ouvrir puis tout recycler ferait gagner des Paillettes.</p>`

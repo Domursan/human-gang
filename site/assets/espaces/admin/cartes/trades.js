@@ -5,6 +5,7 @@
 // Exporte : tradesPanel (HTML de l'onglet), cancelTrade (annulation), loadTradeLimits et saveTradeLimits (limites anti-abus,
 // réglage hg_settings « echanges », enregistré par fusion).
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, esc, errMsg } from '../../../commun/core.js';
 import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
@@ -85,7 +86,7 @@ export function tradesPanel() {
     ${open.length ? `<ul class="acd-list">${open.map((t) => `<li class="acd-item">
       <div class="acd-item-main">
         <p><strong>${esc(pseudo(t.from_user))}</strong> → <strong>${esc(pseudo(t.to_user))}</strong></p>
-        <p class="small muted">Offre du ${esc(fmtWhen(t.created_at))} · ${nf(count(t.id, 'from'))} carte(s) offerte(s) contre ${nf(count(t.id, 'to'))} demandée(s)${t.from_paillettes || t.to_paillettes ? ` · ${nf(t.from_paillettes)} ✦ et ${nf(t.to_paillettes)} ✦` : ''}</p>
+        <p class="small muted">Offre du ${esc(fmtWhen(t.created_at))} · ${nf(count(t.id, 'from'))} carte(s) offerte(s) contre ${nf(count(t.id, 'to'))} demandée(s)${t.from_paillettes || t.to_paillettes ? ` · ${nf(t.from_paillettes)} ${paillSym()} et ${nf(t.to_paillettes)} ${paillSym()}` : ''}</p>
         ${t.message ? `<p class="small acd-msg">« ${esc(t.message)} »</p>` : ''}
       </div>
       <div class="btn-row"><button class="btn btn-danger btn-sm" type="button" data-act="trade-cancel" data-id="${esc(t.id)}">Annuler l'offre</button></div>

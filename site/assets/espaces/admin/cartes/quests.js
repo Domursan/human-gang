@@ -7,6 +7,7 @@
 // Exporte : QUEST_METRICS (actions qu'une quête peut compter), Q (état de la liste), loadQuests, questsPanel,
 // openQuestDialog, questActions (gestionnaires des boutons data-act).
 // =====================================================================
+import { paillSym } from '../../../commun/paillettes.js';
 import { sb, toast, esc, $ } from '../../../commun/core.js';
 import { ICON, CFG_DEFAULT } from './constants.js';
 import { H, C } from './state.js';
@@ -153,7 +154,7 @@ export function questsPanel() {
     ${Q.rows.length ? `<ul class="acd-list">${Q.rows.map((q) => `<li class="acd-item">
         <div class="acd-item-main">
           <p><strong>${esc(q.label)}</strong> <code class="acd-code">${esc(q.code)}</code> <span class="pill ${q.active ? 'pill-ok' : 'pill-todo'}">${q.active ? 'Active' : 'Inactive'}</span></p>
-          <p class="small muted">${esc(METRIC_LABEL[q.metric] || q.metric)} · objectif ${esc(nf(q.target))} · ${esc(nf(q.reward))} ✦ · ordre ${esc(q.sort)}</p>
+          <p class="small muted">${esc(METRIC_LABEL[q.metric] || q.metric)} · objectif ${esc(nf(q.target))} · ${esc(nf(q.reward))} ${paillSym()} · ordre ${esc(q.sort)}</p>
         </div>
         <div class="btn-row acd-set-actions">
           <button class="btn ${q.active ? 'btn-ghost' : 'btn-primary'} acd-set-toggle" type="button" data-act="quest-toggle" data-id="${esc(q.code)}" aria-pressed="${q.active ? 'true' : 'false'}">${q.active ? `${ICON.off} Désactiver` : `${ICON.on} Activer`}</button>

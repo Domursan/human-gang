@@ -5,18 +5,60 @@
 /*
  * Rôle : la monnaie du site (les « Paillettes ») s'affiche de trois façons : icône, nombre formaté, ou afficheur
  * 7 segments animé (pastille de solde, avec variation « +N » et clignotement au gain).
+ * Thème : si le thème affiché a un emoji de paillette (champ paillette_emoji, ex. 🧀 pour Raclette), l'icône est cet
+ * emoji à la place de l'étoile ; sinon, le dessin normal.
  * Page : /pages/cartes/cartes.html (utilisé par cartes.js : solde et affichage des gains).
- * Dépendances : aucune (HTML pur + Intl pour le format des nombres).
- * Exporte : paillettesIcon, fmtPaillettes, lcdNumHtml, pastilleHtml, lcdSet, lcdBlink, lcdDelta.
+ * Dépendances : aucune. L'emoji est lu sur <html data-paillette>, posé par core/theme.js (setRootVars) : pas d'import du
+ *   moteur de thème ici, donc pas d'effet de bord au chargement (tests Node des jeux d'arcade importent ce module).
+ * Exporte : paillettesIcon, paillettesEmoji, paillSym, fmtPaillettes, lcdNumHtml, pastilleHtml, lcdSet, lcdBlink, lcdDelta.
  */
-
 /* ---------- Format des nombres ---------- */
 
 /** Format des nombres à la suisse (espace comme séparateur de milliers). */
 const nf = new Intl.NumberFormat('fr-CH');
 
-/** Icône C « style pop » : étoile à quatre pointes droites, aplat jaune, contour noir épais. */
+/**
+ * Emoji qui remplace le dessin de la Paillette pendant le thème affiché (null = dessin normal).
+ * @returns {string|null}
+ */
+export function paillettesEmoji() {
+  try {
+    const e = typeof document !== 'undefined' ? document.documentElement.dataset.paillette : '';
+    return e && e.trim() ? e.trim() : null;
+  } catch { return null; }
+}
+
+/**
+ * Symbole texte de la Paillette, pour les libellés (« 250 ✦ », « coût : 10 ✦ ») : l'emoji du thème affiché s'il en a un
+ * (ex. 🧀 pour Raclette), sinon « ✦ ». Sans document (Node), renvoie « ✦ ».
+ * @returns {string}
+ */
+export function paillSym() {
+  const e = paillettesEmoji();
+  // Garde-fou : un emoji court et sans caractère spécial HTML (la valeur vient de la base)
+  return e && e.length <= 16 && !/[<>"'&`]/.test(e) ? e : '✦';
+}
+
+/** Échappe un texte inséré dans du HTML (l'emoji vient de la base). */
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+/**
+ * Icône de la Paillette. Thème à emoji : l'emoji dans un <span class="paill-emoji"> (même place et même taille que le
+ * dessin). Sinon : icône C « style pop » (étoile à quatre pointes droites, aplat jaune, contour noir épais).
+ * @param {number|null} size Taille en px (carré) ; null = taille de la police (1.1em, voir cartes.css).
+ * @returns {string} HTML.
+ */
 export function paillettesIcon(size = null) {
+  const em = paillettesEmoji();
+  if (em) {
+    // Style en ligne : la pastille marche sur toutes les pages, sans feuille de style propre (même boîte que le dessin)
+    const box = size ? `${size}px` : '1.1em';
+    const fs = size ? `${Math.round(size * 0.9)}px` : '1em';
+    return `<span class="paill-emoji" style="display:inline-flex;align-items:center;justify-content:center;flex:none;`
+      + `width:${box};height:${box};font-size:${fs};line-height:1" aria-hidden="true">${escHtml(em)}</span>`;
+  }
   const pts = '50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39';
   const dim = size ? ` width="${size}" height="${size}"` : '';
   return `<svg class="paill-svg"${dim} viewBox="-6 -6 112 112" aria-hidden="true" focusable="false">`

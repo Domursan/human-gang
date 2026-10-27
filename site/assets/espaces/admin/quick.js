@@ -17,6 +17,7 @@
 // admin-cards/bulk.js (KIND, recapText, invalide, argsDon), admin-cards/auctions.js (nextWeekend), enchere-regles.js,
 // admin/visual-pick.js (sélecteurs visuels).
 // =====================================================================
+import { paillSym } from '../../commun/paillettes.js';
 import { sb, toast, errMsg, esc, notify, getCachedPerms, hasPerm } from '../../commun/core.js';
 import { check, fetchAll, fmtWhen, nf } from './cartes/helpers.js';
 import { KIND, recapText, invalide, argsDon } from './cartes/bulk.js';
@@ -402,7 +403,7 @@ async function openEnchere(trigger) {
       const r = readRules(f);
       ui.body.querySelector('[data-confirm]').textContent =
         `« ${card.name} » aux enchères du ${fmtWhen(new Date(s).toISOString())} au ${fmtWhen(new Date(e).toISOString())}. `
-        + `Mise de départ ${nf(r.min_bid)} ✦, pas de ${nf(r.step)} ✦.`;
+        + `Mise de départ ${nf(r.min_bid)} ${paillSym()}, pas de ${nf(r.step)} ${paillSym()}.`;
       showPane(ui, 'confirm', { submit: 'Planifier l’enchère', confirm: 'Planifier l’enchère' });
     },
     onConfirm: (btn) => sendAuction(ui, btn),

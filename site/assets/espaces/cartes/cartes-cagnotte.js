@@ -7,7 +7,7 @@
 // Tout texte venant de la base passe par esc(). Sans la migration (fonction absente) ou sans cagnotte : l'encart reste vide.
 // Exporte : mountPot(el, ctx) — ctx : { me, refresh, balance } (refresh recharge le solde de la page, balance() le renvoie).
 import { sb, toast, errMsg, esc, avatarHtml } from '../../commun/core.js';
-import { fmtPaillettes } from '../../commun/paillettes.js';
+import { fmtPaillettes, paillSym } from '../../commun/paillettes.js';
 
 const nf = new Intl.NumberFormat('fr-CH');
 /** Date de fin « 24 déc. à 18 h » (heure de Zurich). */
@@ -60,14 +60,14 @@ function formHtml(p) {
   const a = Math.min(Math.max(P.amount, 10), Math.max(max, 10));
   return `<section class="pot-form" aria-labelledby="pot-form-h">
     <div class="pot-between"><h3 id="pot-form-h" class="pot-form-h">Verser</h3><span class="muted small">Max. ${fmtPaillettes(Number(p.cap))} par membre</span></div>
-    ${max < 10 ? `<p class="pot-note">${Number(P.data.my_left) < 10 ? 'Tu as déjà versé ton maximum : merci !' : 'Pas assez de Paillettes pour verser (10 ✦ minimum).'}</p>` : `
+    ${max < 10 ? `<p class="pot-note">${Number(P.data.my_left) < 10 ? 'Tu as déjà versé ton maximum : merci !' : `Pas assez de Paillettes pour verser (10 ${paillSym()} minimum).`}</p>` : `
     <div class="pot-quick" role="group" aria-label="Montants rapides">
       ${QUICK.filter((q) => q <= max).map((q) => `<button type="button" class="pot-chip" data-pot="quick" data-v="${q}" aria-pressed="${q === a}">${nf.format(q)}</button>`).join('')}
       <label class="pot-amount"><span class="visually-hidden">Montant en Paillettes</span>
-        <input type="number" id="pot-amount" inputmode="numeric" min="10" max="${max}" step="1" value="${a}" data-pot="amount"><span aria-hidden="true">✦</span></label>
+        <input type="number" id="pot-amount" inputmode="numeric" min="10" max="${max}" step="1" value="${a}" data-pot="amount"><span aria-hidden="true">${paillSym()}</span></label>
     </div>
     <label class="pot-check"><input type="checkbox" id="pot-anon" data-pot="anon" ${P.anon ? 'checked' : ''}> Verser anonymement</label>
-    <p class="pot-note">Si l’objectif n’est pas atteint le ${esc(endFmt.format(new Date(p.ends_at)))}, tout le monde est remboursé. Atteint : chaque membre reçoit ${rewardText(p)}, même sans avoir versé.${p.badge ? ' Dès 100 ✦ versés, tu gagnes aussi le badge de la cagnotte.' : ''}</p>
+    <p class="pot-note">Si l’objectif n’est pas atteint le ${esc(endFmt.format(new Date(p.ends_at)))}, tout le monde est remboursé. Atteint : chaque membre reçoit ${rewardText(p)}, même sans avoir versé.${p.badge ? ` Dès 100 ${paillSym()} versés, tu gagnes aussi le badge de la cagnotte.` : ''}</p>
     <div class="btn-row">
       <button type="button" class="btn btn-primary pot-confirm" data-pot="confirm" ${P.busy ? 'disabled' : ''}>Confirmer · ${fmtPaillettes(a)}</button>
       <button type="button" class="btn btn-ghost" data-pot="close">Annuler</button>
@@ -141,8 +141,8 @@ async function confirm() {
   if (!p || P.busy) return;
   const input = P.el.querySelector('#pot-amount');
   const a = Math.floor(Number(input?.value ?? P.amount));
-  if (!(a >= 10)) return toast('Versement minimal : 10 ✦', 'error');
-  if (a > maxAmount()) return toast(`Tu peux verser ${nf.format(maxAmount())} ✦ au plus`, 'error');
+  if (!(a >= 10)) return toast(`Versement minimal : 10 ${paillSym()}`, 'error');
+  if (a > maxAmount()) return toast(`Tu peux verser ${nf.format(maxAmount())} ${paillSym()} au plus`, 'error');
   P.amount = a;
   P.req = P.req || newReq();
   P.busy = true;
@@ -153,7 +153,7 @@ async function confirm() {
     P.req = null;
     P.open = false;
     if (data && typeof data === 'object' && data.pot) P.data = data;
-    toast(data?.reached ? 'Objectif atteint : les boosters partent pour tout le gang !' : `Merci ! ${nf.format(a)} ✦ versées dans la cagnotte`, 'ok');
+    toast(data?.reached ? 'Objectif atteint : les boosters partent pour tout le gang !' : `Merci ! ${nf.format(a)} ${paillSym()} versées dans la cagnotte`, 'ok');
     await P.ctx?.refresh?.();
   } catch (e) {
     toast(errMsg(e), 'error');

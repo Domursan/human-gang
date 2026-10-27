@@ -10,6 +10,7 @@
  * Dépendances : jeux/devine.js (loadCss, boardHtml, copyText), core/admin-reponses.js. Styles : jeux-grilles.css.
  * Exporte : monterGrille, lireEtat, resumerGrille, formatDuree, classementJourHtml.
  */
+import { paillSym } from '../../commun/paillettes.js';
 import { loadCss, boardHtml, copyText } from './devine.js';
 import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
@@ -108,7 +109,7 @@ function pastillesHtml(st, cfg, esc) {
   if (!st.grille) return '';
   const fini = !!st.partie?.fini;
   const liste = [...(cfg.pills?.(st) || [])];
-  if (!fini) liste.push(['Jusqu’à', `${Number(st.gain) || 0} ✦`]);
+  if (!fini) liste.push(['Jusqu’à', `${Number(st.gain) || 0} ${paillSym()}`]);
   if (st.partie?.debut) liste.push(['Chrono', { html: `<span data-chrono>${fini ? esc(formatDuree(st.partie.secondes)) : '0:00'}</span>` }]);
   return liste.map(([l, v]) => `<span class="pill ng-pill">${esc(l)} <strong>${typeof v === 'object' ? v.html : esc(v)}</strong></span>`).join('');
 }
@@ -199,7 +200,7 @@ export async function monterGrille(panel, ctx, cfg) {
     return `<section class="ng-fin${gagne ? ' is-win' : ''}" aria-label="Fin de partie">
       <p class="ng-fin-t">${esc(texte)}</p>
       <p class="ng-fin-s">${esc(stats)}</p>
-      <p class="ng-reward">${p.reward ? `+${esc(p.reward)} ✦ crédités` : 'Aucune Paillette cette fois'}</p>
+      <p class="ng-reward">${p.reward ? `+${esc(p.reward)} ${paillSym()} crédités` : 'Aucune Paillette cette fois'}</p>
       ${cfg.copie ? '<div class="ng-actions"><button type="button" class="btn btn-sand" data-act="copier">Copier le résultat</button></div>' : ''}
       <h3 class="ng-label">Classement du jour</h3>${classementJourHtml(st.board?.jour || [], ctx.me?.id, esc)}
     </section>`;

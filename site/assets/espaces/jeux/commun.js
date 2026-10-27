@@ -2,10 +2,11 @@
 /*
  * Rôle : petites briques partagées par les modules de jeux : feuille de style chargée une fois, nombres à la suisse,
  * icône de Paillette, liste de classement (rang, avatar, pseudo, valeur), dates à l'heure de Zurich.
- * Dépendances : core.js (esc, avatarHtml).
+ * Dépendances : core.js (esc, avatarHtml), commun/paillettes.js (emoji de Paillette du thème).
  * Exporte : chargerCss, nf, km, PAILLETTE, gainHtml, classementHtml, jourLong, zurichIso.
  */
 import { esc, avatarHtml } from '../../commun/core.js';
+import { paillettesEmoji, paillettesIcon } from '../../commun/paillettes.js';
 
 /**
  * Ajoute une seule fois la feuille de style d'un jeu (/assets/espaces/jeux/jeux-<nom>.css).
@@ -45,7 +46,8 @@ export const PAILLETTE = '<svg width="14" height="14" viewBox="0 0 24 24" aria-h
  * @returns {string} HTML.
  */
 export function gainHtml(n) {
-  return `<span class="pill jg-gain">${PAILLETTE}+${nf(n)} Paillette${Number(n) > 1 ? 's' : ''}</span>`;
+  const icone = paillettesEmoji() ? paillettesIcon(14) : PAILLETTE; // thème à emoji (ex. Raclette) : l'emoji à la place
+  return `<span class="pill jg-gain">${icone}+${nf(n)} Paillette${Number(n) > 1 ? 's' : ''}</span>`;
 }
 
 /**
