@@ -4,7 +4,9 @@
  * et le nombre de lignes. Sept pièces (I O T S Z J L) tirées par sacs de sept, aux couleurs de l'arc-en-ciel du logo
  * (le sable pour la L). Cases à reflet façon pixel. Rotation avec décalage contre les murs (0, -1, +1, -2, +2 cases).
  * Fantôme : contour pâle de l'endroit où la pièce tomberait. Pose : la pièce se verrouille après une demi-seconde posée.
- * Points : 1 par pièce posée ; 1 ligne = 10, 2 = 30, 3 = 50, 4 = 80. La vitesse monte toutes les 10 lignes (plafonnée).
+ * Points : 1 par pièce posée ; 1 ligne = 10, 2 = 30, 3 = 50, 4 = 80. La vitesse monte de 7 % toutes les 10 lignes, sans
+ * plafond (un plancher technique de 0,05 s par case la borne, bien au-delà de ce qu'un joueur suit).
+ * Le panneau affiche le niveau de vitesse (« VITESSE », un niveau par tranche de 10 lignes).
  * Pas de limite de temps : la partie finit quand une nouvelle pièce ne peut pas apparaître.
  * Commandes : clavier ← → (la pièce file si la flèche reste tenue), ↑ ou espace = rotation, ↓ = chute immédiate,
  *   ↓ tenue = descente rapide ; souris : clic = rotation ; doigt : glisser à gauche ou à droite = une case,
@@ -28,8 +30,10 @@ const POINTS_LIGNES = [0, 10, 30, 50, 80];
 const DELAI_POSE = 0.5, DELAI_APPARITION = 0.25, DESCENTE_RAPIDE = 0.05;
 /** Répétition des flèches tenues : délai avant la répétition, puis cadence. */
 const DAS = 0.17, CADENCE_REPETITION = 0.05;
-/** La vitesse ne monte plus au-delà de ce niveau (lignes / 10), ni après ce nombre de rotations à terre. */
-const NIVEAU_MAX = 12, REPRISES_MAX = 15;
+/** Accélération : +7 % de vitesse par niveau (tranche de 10 lignes), sans plafond. */
+const HAUSSE = 0.07;
+/** Nombre de remises à zéro du délai de pose après rotation ou déplacement à terre (anti-blocage). */
+const REPRISES_MAX = 15;
 const DECALAGES = [0, -1, 1, -2, 2];
 
 /** Formes de base des sept pièces (I O T S Z J L), 1 = case pleine. */
@@ -127,13 +131,13 @@ function apparait(s) {
 }
 
 /**
- * Intervalle de chute, en secondes par case : 0,85 fois moins par niveau (un niveau tous les 10 lignes).
+ * Intervalle de chute, en secondes par case : 7 % plus court par niveau (un niveau tous les 10 lignes), sans plafond.
  * @param {object} s état de la partie
  * @returns {number} secondes par case
  */
 function intervalleChute(s) {
-  const n = Math.min(NIVEAU_MAX, Math.floor(s.lignes / 10));
-  return Math.max(0.12, 0.85 ** n) * s.lent;
+  const n = Math.floor(s.lignes / 10);
+  return Math.max(0.05, (1 / (1 + HAUSSE)) ** n) * s.lent;
 }
 
 /**
@@ -340,6 +344,13 @@ export const JEU = {
     ctx.fillStyle = '#F2EFEA';
     ctx.font = '26px "Archivo Black", system-ui, sans-serif';
     ctx.fillText(String(s.lignes), PX, 232);
+    // Niveau de vitesse : un par tranche de 10 lignes.
+    ctx.fillStyle = COULEURS[6];
+    ctx.font = '12px "Archivo Black", system-ui, sans-serif';
+    ctx.fillText('VITESSE', PX, 270);
+    ctx.fillStyle = '#F2EFEA';
+    ctx.font = '26px "Archivo Black", system-ui, sans-serif';
+    ctx.fillText(String(Math.floor(s.lignes / 10) + 1), PX, 302);
     ctx.textAlign = 'start';
   },
   score: (s) => s.score,

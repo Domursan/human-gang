@@ -5,7 +5,7 @@
  * les 0,35 s. Les cornichons lâchent des gouttes de vinaigre : chaque goutte qui touche le vaisseau coûte une vie
  * (trois vies). Trois abris en briques sable s'abîment sous les tirs et sous les cornichons. Parfois une soucoupe-raclette
  * passe en haut (50 points). Points : 30 pour la rangée du haut, 20 pour les deux suivantes, 10 pour les deux du bas.
- * Quand tout est détruit, vague suivante (plus rapide, plafonnée). La partie finit à zéro vie, ou quand les cornichons
+ * Quand tout est détruit, vague suivante (plus rapide : +7 % par vague, sans plafond ; la vague affichée est le palier). La partie finit à zéro vie, ou quand les cornichons
  * atteignent le bas. Pas de limite de temps.
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = les cornichons deviennent des cœurs et ne tirent plus, le vaisseau
  * aussi devient un cœur ; immortel = les gouttes ne font rien, et si les cornichons atteignent le bas, la vague recommence.
@@ -18,6 +18,8 @@
 import { W, H, coeur } from './arcade.js';
 
 const VIES = 3;
+/** Accélération par vague : +7 %, sans plafond (le plancher technique de la formation reste en place). */
+const HAUSSE = 0.07;
 /* Formation : 8 colonnes × 5 rangées ; cornichon de 7 × 10 pixels à l'échelle 3. */
 const COLS = 8, LIGNES = 5, TOTAL = COLS * LIGNES;
 const PIX = 3, AW = 7 * PIX, AH = 10 * PIX;
@@ -166,13 +168,13 @@ function bilan(s) {
 }
 
 /**
- * Délai entre deux pas de la formation : court quand il reste peu de cornichons, plus court à chaque vague (plafonné).
+ * Délai entre deux pas de la formation : court quand il reste peu de cornichons, plus court de 7 % à chaque vague (sans plafond).
  * @param {object} s état de la partie
  * @param {number} n cornichons vivants
  * @returns {number} secondes
  */
 function intervalle(s, n) {
-  const facteur = Math.max(0.5, 1 - 0.08 * (s.vague - 1));
+  const facteur = (1 / (1 + HAUSSE)) ** (s.vague - 1);
   return Math.max(0.03, (0.02 + (0.45 * n) / TOTAL) * facteur * (s.reduit ? 1.4 : 1));
 }
 
@@ -273,21 +275,21 @@ function gouttesMax(s) {
 }
 
 /**
- * Vitesse de chute des gouttes de vinaigre (pixels par seconde).
+ * Vitesse de chute des gouttes de vinaigre (pixels par seconde) : +7 % par vague, sans plafond.
  * @param {object} s état de la partie
  * @returns {number}
  */
 function vitesseGoutte(s) {
-  return Math.min(210, 120 + 12 * (s.vague - 1)) * (s.reduit ? 0.7 : 1);
+  return 120 * (1 + HAUSSE) ** (s.vague - 1) * (s.reduit ? 0.7 : 1);
 }
 
 /**
- * Délai avant le prochain tir des cornichons (secondes), plus court à chaque vague (plafonné).
+ * Délai avant le prochain tir des cornichons (secondes), plus court de 7 % à chaque vague (sans plafond).
  * @param {object} s état de la partie
  * @returns {number}
  */
 function prochainTir(s) {
-  const r = Math.min(2, 1 + 0.1 * (s.vague - 1));
+  const r = (1 + HAUSSE) ** (s.vague - 1);
   return ((0.8 + Math.random() * 0.9) / r) * (s.reduit ? 1.3 : 1);
 }
 

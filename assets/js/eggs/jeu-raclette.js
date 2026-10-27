@@ -1,7 +1,8 @@
 // ===== Humane Gang — arcade : « Raclette » =====
 /*
  * Rôle : des tranches de fromage tombent ; le poêlon les attrape (+1). Les cornichons sont à éviter : chacun coûte
- * une des trois vies. La partie finit à zéro vie ; pas de limite de temps. La vitesse plafonne après 60 s.
+ * une des trois vies. La partie finit à zéro vie ; pas de limite de temps. La vitesse monte par paliers de 10 s (+7 %),
+ * sans plafond : la partie finit par devenir injouable.
  * Cadence : au plus une tranche toutes les 0,32 s (3,1 points par seconde, sous le plafond serveur de 6).
  * Sprites dessinés en pixel art (rectangles), comme les paillettes.
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de cornichons et fromage en cœurs ; immortel = cornichons sans effet.
@@ -11,8 +12,9 @@
 import { W, H, coeur } from './arcade.js';
 
 const VIES = 3, SOL = H - 50, DEMI = 38;
-/** Au-delà de cette seconde, la vitesse ne monte plus. */
-const PLAFOND = 60;
+/** Accélération : +7 % de vitesse toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
 const FROMAGE = '#FBD32D', DESSUS = '#FCA301', TROU = '#e2a52c', CROUTE = '#8a5200', CORNICHON = '#5f8f33', CORN_FONCE = '#4f7a2a', CORN_CLAIR = '#8fc35f', POELE = '#2b2f38', MANCHE = '#6b3a12';
 const borne = (v, a, b) => Math.min(b, Math.max(a, v));
 
@@ -30,7 +32,7 @@ export const JEU = {
     if (s.pousse >= Math.max(0.32, 0.75 - Math.min(s.ecoule, 36) * 0.012)) {
       s.pousse = 0;
       const corn = !s.triche?.coeurs && Math.random() < Math.min(0.35, 0.15 + Math.min(s.ecoule, 44) * 0.008);
-      s.items.push({ corn, x: 18 + Math.random() * (W - 36), y: -16, v: (95 + Math.min(s.ecoule, PLAFOND) * 3.2 + Math.random() * 35) * s.lent, a: Math.random() * 6 });
+      s.items.push({ corn, x: 18 + Math.random() * (W - 36), y: -16, v: (95 + Math.random() * 35) * s.lent * paliers(s.ecoule), a: Math.random() * 6 });
     }
     if (s.triche?.coeurs) s.items = s.items.filter((p) => !p.corn); // code « domu » : plus aucun cornichon
     for (const p of s.items) { p.y += p.v * dt; p.a += dt * 3; }

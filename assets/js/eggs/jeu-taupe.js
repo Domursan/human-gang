@@ -3,8 +3,9 @@
  * Rôle : neuf terriers ; des membres du gang (avatars ronds à l'initiale) sortent un instant puis rentrent. On les tape
  * (clic, doigt, ou espace sur la case du curseur aux flèches) : +1 point, avec un « Paf ! ».
  * Pièges : parfois un cornichon sort à la place. Le taper coûte une vie. Un membre raté (rentré sans être tapé) ne coûte
- * rien, sauf cinq ratés de suite : une vie. Trois vies ; pas de limite de temps. Le rythme accélère doucement (plafonné).
- * Cadence : une sortie au plus toutes les 0,5 s, donc au plus 3 points dans une même seconde (2 par seconde en moyenne),
+ * rien, sauf cinq ratés de suite : une vie. Trois vies ; pas de limite de temps. Le rythme accélère par paliers de 10 s
+ * (+7 %), sans plafond ; la durée de sortie raccourcit avec lui.
+ * Cadence : une sortie au plus toutes les 0,25 s (plancher technique), donc au plus 4 points dans une même seconde,
  * sous le plafond serveur de 5 points par seconde. Au plus trois avatars sortis en même temps.
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de cornichons, les avatars deviennent des cœurs ;
  * immortel = aucune vie perdue.
@@ -18,8 +19,11 @@ const VIES = 3, SERIE_RATEE = 5, TERRIERS = 9;
 const XS = [70, 180, 290], YS = [125, 225, 325];
 /** Hauteur dont un avatar sort du terrier, et durée de la montée ou de la descente (secondes). */
 const ALT = 30, MONTEE = 0.12;
-/** Rythme : une sortie toutes les « intervalle » secondes, plancher à 0,5 s ; sortie tenue de 1,6 s à 0,8 s. */
-const PLANCHER_SORTIE = 0.5, PLAFOND = 60;
+/** Rythme : une sortie toutes les « intervalle » secondes, plancher à 0,25 s ; sortie tenue de 1,6 s, divisée par les paliers. */
+const PLANCHER_SORTIE = 0.25;
+/** Accélération : +7 % toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
 const CORNICHON_P = 0.2;
 const LETTRES = ['D', 'S', 'N', 'W', 'Z', 'T'];
 /** Couleurs du site par initiale, et couleur de l'initiale (sombre sur les fonds clairs). */
@@ -190,7 +194,7 @@ export const JEU = {
       }
     }
     // Sorties : une seule à la fois par intervalle (au plus une toutes les 0,5 s).
-    const intervalle = (s.reduit ? 1.25 : 1) * Math.max(PLANCHER_SORTIE, 1 - 0.5 * Math.min(s.ecoule, PLAFOND) / PLAFOND) / s.lent;
+    const intervalle = (s.reduit ? 1.25 : 1) / (paliers(s.ecoule) * s.lent);
     s.pousse += dt;
     if (s.pousse >= Math.max(PLANCHER_SORTIE, intervalle)) {
       s.pousse = 0;
@@ -199,7 +203,7 @@ export const JEU = {
         const t = libres[Math.floor(Math.random() * libres.length)];
         const cornichonCeTour = !s.triche?.coeurs && Math.random() < CORNICHON_P;
         t.etat = 'monte'; t.t = 0; t.h = 0; t.h0 = 0;
-        t.duree = Math.max(0.8, 1.6 - 0.8 * Math.min(s.ecoule, PLAFOND) / PLAFOND) * (s.reduit ? 1.3 : 1);
+        t.duree = Math.max(0.4, 1.6 / paliers(s.ecoule)) * (s.reduit ? 1.3 : 1);
         t.cornichon = cornichonCeTour;
         t.lettre = cornichonCeTour ? null : LETTRES[Math.floor(Math.random() * LETTRES.length)];
         t.fait = false; t.paf = 0;

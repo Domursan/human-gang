@@ -1,7 +1,7 @@
 // ===== Humane Gang — arcade : « Domu-mobile » =====
 /*
  * Rôle : la voiture avance seule sur trois voies ; on change de voie pour éviter les bouchons et attraper les jerricans.
- * La vitesse monte (plafonnée après 60 s). Score : 1 point par seconde
+ * La vitesse monte par paliers de 10 s (+7 %), sans plafond : la route finit par devenir injouable. Score : 1 point par seconde
  * de route + 3 par jerrican. Premier accrochage : « T’es en retard ! », fin de partie. Pas de limite de temps.
  * Plafond serveur : 8 points par seconde ; ici, au plus 1 + 3 × 2,2 = 7,7 par seconde (un jerrican au plus toutes les 0,45 s).
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de bouchons, jerricans et voiture en cœurs ; immortel = bouchons traversés.
@@ -12,8 +12,11 @@
 import { W, H, coeur } from './arcade.js';
 
 const VOIES = 3, LV = W / VOIES, CY = H - 70;
-/** Vitesse : plafond à 60 s ; intervalle entre deux rangées : plancher atteint vers 81 s. */
-const PLAFOND_VITESSE = 60, PLAFOND_RYTHME = 81;
+/** Accélération : +7 % de vitesse toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
+/** Intervalle entre deux rangées : plancher atteint vers 81 s (cadence des jerricans et bouchons). */
+const PLAFOND_RYTHME = 81;
 const ROUTE = '#26262A', LIGNE = '#E2C77E', VOITURE = '#9E3543', VITRE = '#7E93C9', BOUCHON = ['#5A5A62', '#7A4F8F', '#4F6A8F'], JERRY = '#CF7055';
 const xVoie = (v) => LV * v + LV / 2;
 
@@ -28,7 +31,7 @@ export const JEU = {
     s.ecoule += dt;
     if (e.pas) s.voie = Math.min(VOIES - 1, Math.max(0, s.voie + e.pas));
     s.x += (xVoie(s.voie) - s.x) * Math.min(1, dt * 16);
-    const v = (170 + Math.min(s.ecoule, PLAFOND_VITESSE) * 6) * s.lent;
+    const v = 170 * s.lent * paliers(s.ecoule);
     s.defile = (s.defile + v * dt) % 40;
     s.pousse -= dt;
     if (s.pousse <= 0) {

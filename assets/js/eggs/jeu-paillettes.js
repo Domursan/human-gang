@@ -3,9 +3,9 @@
  * Rôle : des paillettes tombent ; le chapeau du gang les attrape. 1 point par paillette, rien si on en rate une.
  * Trois vies (cœurs). Pièges : la « fausse paillette » (étoile violet sombre à huit pointes acérées, contour et cœur rouges) et, à partir
  * de 30 s, le « grêlon » (cristal bleu pâle hexagonal, plus rapide). Attraper un piège coûte une vie.
- * La partie finit à zéro vie ; pas de limite de temps. Les pièges et la vitesse montent doucement puis plafonnent
- * (PLAFOND) : la partie reste jouable longtemps. Cadence des paillettes : au plus une toutes les 0,3 s (3,3 par seconde,
- * sous le plafond serveur de 6 points par seconde).
+ * La partie finit à zéro vie ; pas de limite de temps. La vitesse de chute monte par paliers de 10 s (+7 %), sans plafond :
+ * la partie finit par devenir injouable. Les pièges plafonnent (PLAFOND, 25 % des chutes) ; cadence des paillettes : au plus une
+ * toutes les 0,3 s (3,3 par seconde, sous le plafond serveur de 6 points par seconde).
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = plus de pièges et paillettes en cœurs ; immortel = pièges sans effet.
  * Moteur : eggs/arcade.js (creeArcade). Animation réduite : chute plus lente, pas d'étincelles ni de secousse.
  * Exporte : JEU (règles du mini-jeu pour creeArcade).
@@ -13,8 +13,11 @@
 import { W, H, etoile, coeur } from './arcade.js';
 
 const VIES = 3, SOL = H - 52, DEMI = 36;
-/** Au-delà de cette seconde, la vitesse ne monte plus (la partie reste jouable longtemps). */
+/** Au-delà de cette seconde, les pièges ne deviennent plus fréquents (la vitesse, elle, continue de monter). */
 const PLAFOND = 60;
+/** Accélération : +7 % de vitesse toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
 const OR = '#FBD32D', COURONNE = '#9E3543', BANDE = '#E2C77E', BORD = '#F2EFEA';
 const VIOLET = '#4A2070', ROUGE = '#FF5A6A', GLACE = '#CFEAF7', GLACE_FONCE = '#5FA8D3';
 const borne = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -84,7 +87,7 @@ export const JEU = {
       const type = !piege ? null : (t >= 30 && Math.random() < 0.4 ? 'grele' : 'fausse');
       s.items.push({
         x: 14 + Math.random() * (W - 28), y: -14,
-        v: (90 + t * 3 + Math.random() * 30) * s.lent * (type === 'grele' ? 1.5 : 1),
+        v: (90 + Math.random() * 30) * s.lent * paliers(s.ecoule) * (type === 'grele' ? 1.5 : 1),
         r: type === 'fausse' ? 10 + Math.random() * 3 : 7 + Math.random() * 5,
         t: Math.random() * 6, piege: type,
       });

@@ -36,13 +36,13 @@ check(!erreur1, `joueur adroit : 120 s sans exception${erreur1 ? ' (' + erreur1.
 const sc1 = B.score(r1.s);
 console.log(`       adroit : score ${sc1}, ${(sc1 / r1.t).toFixed(1)} par seconde, niveau ${r1.s.niveau}, vies ${r1.s.vies}, vitesse ${r1.s.vit.toFixed(0)}`);
 check(Number.isInteger(sc1) && sc1 >= 100 && sc1 <= 14 * r1.t + VAL_MAX_ARRONDI, `joueur adroit : score entier et plausible (${sc1}, au plus la cadence du compteur)`);
-// 1 bis. Niveau suivant : une partie plus longue (400 s, même graine) passe au moins un niveau, la vitesse reste plafonnée.
+// 1 bis. Niveau suivant : une partie plus longue (400 s, même graine) passe au moins un niveau, la vitesse monte (sans plafond).
 const r1b = avecGraine(1, () => simule(B, { secondes: 400, triche: triche(false, false), entree: adroit }));
-check(r1b.s.niveau >= 2 && r1b.s.vit <= 320 + 1e-9, `joueur adroit : niveau suivant atteint en 400 s (niveau ${r1b.s.niveau}, vitesse ${r1b.s.vit.toFixed(0)} px/s)`);
+check(r1b.s.niveau >= 2 && r1b.s.vit > 210, `joueur adroit : niveau suivant atteint en 400 s, balle plus rapide (niveau ${r1b.s.niveau}, vitesse ${r1b.s.vit.toFixed(0)} px/s)`);
 
 // 2. Cadence : jamais plus de CIBLE points par seconde, et jamais au-dessus du plafond serveur.
 check(r1.maxParSeconde <= CIBLE && sc1 / r1.t <= CIBLE, `joueur adroit : pic ${r1.maxParSeconde} par seconde, moyenne ${(sc1 / r1.t).toFixed(1)} (cible ${CIBLE}, serveur ${CADENCE_SERVEUR})`);
-check(r1.s.vit <= 320 + 1e-9, `vitesse de balle plafonnée (${r1.s.vit.toFixed(0)} px/s)`);
+check(r1.s.vit >= 210 - 1e-9, `vitesse de balle à la base ou plus, sans plafond (${r1.s.vit.toFixed(0)} px/s)`);
 
 // 3. Codes de triche : la partie continue même en jouant mal (balle qui rebondit sur le bas, aucune vie perdue).
 const r2 = avecGraine(2, () => simule(B, { secondes: 120, triche: triche(true, false), entree: maladroit }));

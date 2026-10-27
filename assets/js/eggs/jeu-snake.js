@@ -6,7 +6,8 @@
  * Cadence : une raclette n'apparaît qu'1,7 s après la précédente mangée (REPAS_MIN) : au plus un repas toutes les 1,7 s,
  * soit 5,9 points par seconde au plus, sous le plafond serveur de 12 points par seconde. Un repas seul fait 10 points
  * dans une seconde, jamais deux.
- * Vitesse : le serpent avance plus vite au fil du temps (plafonné après 50 s).
+ * Vitesse : le serpent avance plus vite par paliers de 10 s (+7 %), sans plafond ; un plancher technique (0,03 s par
+ * case, ~33 cases par seconde) rend la partie injouable bien avant.
  * Codes de triche (s.triche, eggs/arcade.js) : coeurs = la nourriture devient des cœurs ; immortel = les murs font passer
  * de l'autre côté et se mordre ne tue pas.
  * Moteur : eggs/arcade.js (creeArcade ; jeu « directions » et action pour tourner au doigt). Animation réduite : pas plus lent.
@@ -20,8 +21,11 @@ const OX = (W - COLS * CASE) / 2, OY = (H - LIGNES * CASE) / 2;
 const POINTS = 10;
 /** Délai minimal entre deux raclettes (secondes) : au plus un repas toutes les 1,7 s. */
 const REPAS_MIN = 1.7;
-/** Au-delà de cette seconde, le serpent n'accélère plus. */
-const PLAFOND_VITESSE = 50;
+/** Accélération : +7 % de vitesse toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
+/** Plancher technique : durée minimale d'une case (secondes). */
+const PAS_PLANCHER = 0.03;
 const ARC = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
 const DIRS = { haut: { x: 0, y: -1 }, bas: { x: 0, y: 1 }, gauche: { x: -1, y: 0 }, droite: { x: 1, y: 0 } };
 const FOND_A = '#171528', FOND_B = '#1C1A33', PLATEAU = '#0E0E10', SABLE = '#E2C77E';
@@ -115,7 +119,7 @@ export const JEU = {
   init: ({ reduit }) => {
     const milieu = Math.floor(COLS / 2), ligne = Math.floor(LIGNES / 2);
     return {
-      reduit, pas: reduit ? 0.26 : 0.2, pasMin: reduit ? 0.14 : 0.09,
+      reduit, pas: reduit ? 0.26 : 0.2,
       ecoule: 0, aTemps: 0, score: 0,
       corps: [{ x: milieu, y: ligne }, { x: milieu - 1, y: ligne }, { x: milieu - 2, y: ligne }], // tête en premier
       dir: DIRS.droite, file: [], nourriture: null, reserve: REPAS_MIN, mort: null, secousse: 0,
@@ -132,7 +136,7 @@ export const JEU = {
       tourne(s, Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? DIRS.gauche : DIRS.droite) : (dy < 0 ? DIRS.haut : DIRS.bas));
     }
     if (!s.nourriture) { s.reserve -= dt; if (s.reserve <= 0) placeRaclette(s); }
-    const pas = Math.max(s.pasMin, s.pas - (Math.min(s.ecoule, PLAFOND_VITESSE) / PLAFOND_VITESSE) * (s.pas - s.pasMin));
+    const pas = Math.max(PAS_PLANCHER, s.pas / paliers(s.ecoule));
     s.aTemps += dt;
     while (s.aTemps >= pas && !s.mort) { s.aTemps -= pas; avance(s); }
   },

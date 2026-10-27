@@ -3,8 +3,8 @@
  * Rôle : le cœur du logo bat des ailes entre des tuyaux (sable et ardoise) qui défilent de droite à gauche. Il laisse
  * derrière lui une traînée arc-en-ciel à six bandes qui suit sa trajectoire et s'estompe. 1 point par tuyau franchi.
  * Une seule vie : un contact avec un tuyau, le sol ou le plafond finit la partie. Pas de limite de temps. Le passage
- * rétrécit un peu et la vitesse monte doucement, plafonnées vers 120 s : au plus 0,7 point par seconde (le plafond
- * serveur est de 2 par seconde).
+ * rétrécit un peu (jusqu'à 112 px, vers 120 s) et la vitesse monte par paliers de 10 s (+7 %), sans plafond : au départ
+ * au plus 0,44 point par seconde (le plafond serveur est de 2 par seconde).
  * Commandes : espace, flèche haut, clic ou appui = battement d'ailes (impulsion vers le haut). Avant le premier
  * battement, le cœur flotte sur place : la gravité attend cet appui.
  * Codes de triche (s.triche, eggs/arcade.js) :
@@ -28,7 +28,10 @@ const RAYON_C = 7;
 const GRAVITE = 900, BATTEMENT = 300, CHUTE_MAX = 520;
 /** Distance (px) entre deux tuyaux, largeur d'un tuyau, hauteur de son rebord, débord du rebord. */
 const ESPACE = 240, PW = 46, REBORD = 18, DEBORD = 5;
-/** Au-delà de cette seconde, la vitesse et le rétrécissement ne changent plus. */
+/** Accélération : +7 % de vitesse toutes les 10 s, sans plafond. */
+const HAUSSE = 0.07, PALIER_S = 10;
+const paliers = (t) => (1 + HAUSSE) ** Math.floor(t / PALIER_S);
+/** Au-delà de cette seconde, le passage ne rétrécit plus. */
 const PLAFOND = 120;
 /** Ouverture d'un passage : de 150 px au départ jusqu'à 112 px. */
 const OUVERTURE_MAX = 150, OUVERTURE_MIN = 112;
@@ -60,12 +63,12 @@ const COEUR_PX = [
 ];
 
 /**
- * Vitesse de défilement (px/s) selon le temps écoulé : monte doucement, plafonnée à 120 s.
+ * Vitesse de défilement (px/s) selon le temps écoulé : paliers de 10 s (+7 %), sans plafond.
  * @param {number} ecoule secondes de jeu
  * @returns {number}
  */
 function vitesse(ecoule) {
-  return 105 + Math.min(ecoule, PLAFOND) * 0.5;
+  return 105 * paliers(ecoule);
 }
 
 /**

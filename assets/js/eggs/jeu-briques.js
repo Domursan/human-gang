@@ -2,7 +2,7 @@
 /*
  * Rôle : une balle rebondit sur la raquette (souris, doigt ou flèches) et casse des cartes à jouer aux couleurs de l'arc-en-ciel
  * du logo, une rangée par couleur. Certaines cartes sont « blindées » (deux coups, bord sable). Quand tout tombe, niveau suivant :
- * la balle accélère (plafonnée) et un autre motif apparaît. Trois vies. La balle reste posée sur la raquette jusqu'à une action
+ * la balle accélère (+7 % par niveau, sans plafond) et un autre motif apparaît. Trois vies. La balle reste posée sur la raquette jusqu'à une action
  * (clic, appui, espace) au départ et après chaque vie perdue. Une carte sur douze lâche une Paillette : la rattraper = +15.
  * Points : 10 par carte, 20 pour une blindée (à sa destruction). Cadence : les points rejoignent le compteur au plus à
  * 14 par seconde (compteur qui défile), donc une tunnel de cartes ne dépasse jamais la cadence serveur (40 par seconde).
@@ -16,7 +16,9 @@ import { W, H, etoile, coeur } from './arcade.js';
 const NC = 8, NR = 6, CW = 28, CH = 36, ECART_X = 8, ECART_Y = 6;
 const X0 = (W - (NC * CW + (NC - 1) * ECART_X)) / 2, Y0 = 44;
 const PY = H - 34, PH = 10, DEMI = 36, R = 5, VITESSE_RAQ = 300;
-const VIES = 3, V0 = 210, VMAX = 320, PAS_VITESSE = 14;
+const VIES = 3, V0 = 210;
+/** Accélération de la balle : +7 % par niveau, sans plafond (la balle finit par être injouable). */
+const HAUSSE = 0.07;
 const CADENCE = 14, VAL_CARTE = 10, VAL_BLINDEE = 20, VAL_PAILLETTE = 15, UNE_SUR = 12;
 const CHUTE = 105, DUREE_ECLAT = 0.45;
 const COULEURS = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398'];
@@ -57,13 +59,13 @@ function grille(niveau) {
 }
 
 /**
- * Vitesse de la balle à un niveau : un peu plus rapide à chaque niveau, plafonnée ; un peu plus lente en animation réduite.
+ * Vitesse de la balle à un niveau : +7 % à chaque niveau, sans plafond ; un peu plus lente en animation réduite.
  * @param {number} niveau
  * @param {boolean} reduit
  * @returns {number} pixels logiques par seconde
  */
 function vitesse(niveau, reduit) {
-  return Math.min(VMAX, V0 + (niveau - 1) * PAS_VITESSE) * (reduit ? 0.8 : 1);
+  return V0 * (1 + HAUSSE) ** (niveau - 1) * (reduit ? 0.8 : 1);
 }
 
 /**
