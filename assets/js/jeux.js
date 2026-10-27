@@ -255,7 +255,7 @@ function vignetteHtml(c) {
 /** HTML d'une carte de jeu (lien, ou bloc inerte si le jeu est en préparation). */
 function carteHtml(c) {
   const corps = `<span class="jx-vig">${vignetteHtml(c)}
-      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : c.admin ? 'En développement' : 'Admins seulement'}</span>` : ''}<span data-cbadge="${esc(c.onglet || '')}"></span></span></span>
+      <span class="jx-pills">${reserveAdmin(c) ? `<span class="pill jx-prep">${c.bientot ? 'En préparation' : c.admin ? 'En développement' : '<span class="jx-l-long">Admins seulement</span><span class="jx-l-court" aria-hidden="true">Admins</span>'}</span>` : ''}<span data-cbadge="${esc(c.onglet || '')}"></span></span></span>
     <span class="jx-txt"><span class="jx-t">${esc(c.titre)}</span><span class="jx-s">${esc(c.texte)}</span></span>`;
   return c.bientot
     ? `<li class="jx-carte is-prep is-chantier" data-nom="${esc(c.titre.toLowerCase())}" aria-label="${esc(`${c.titre} : en préparation, visible des admins seulement`)}">${corps}</li>`

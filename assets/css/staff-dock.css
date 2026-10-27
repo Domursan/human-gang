@@ -1,10 +1,10 @@
 /* ===== Humane Gang — raccourcis Staff (core/staff-dock.js) =====
-   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite (icônes avec info-bulle), élargie au focus clavier.
+   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite, icônes toujours visibles ; le nom sort en bulle au survol ou au focus.
    Le contenu est décalé de la largeur de la barre (html[data-staff-dock] body) : rien n'est masqué.
    Téléphone (moins de 720 px) : bouton flottant en bas à gauche ; la liste s'ouvre au-dessus, sans décaler la page.
    Couleurs : jetons de base.css (--surface, --surface-2, --border, --text, --muted, --accent, --sand). */
 
-:root { --sd-w: 56px; --sd-w-replie: 40px; --sd-w-open: 232px; }
+:root { --sd-w: 56px; }
 
 /* Attribut hidden toujours respecté dans la barre (les règles display ci-dessous ne doivent pas le contredire) */
 .sd [hidden], .sd-dialog [hidden] { display: none !important; }
@@ -15,36 +15,26 @@
     position: fixed; left: 0; top: calc(var(--god-h, 0px) + var(--va-h, 0px)); bottom: 0; z-index: 55;
     width: var(--sd-w); display: flex; flex-direction: column;
     background: var(--surface); border-right: 1px solid var(--border); color: var(--text);
-    overflow: hidden; transition: width .18s ease, box-shadow .18s ease;
   }
-  /* Élargie au focus clavier seulement (pas au survol : elle recouvrirait le bord gauche de la page sous la souris ;
-     à la souris, chaque icône a une info-bulle) */
-  .sd:focus-within { width: var(--sd-w-open); box-shadow: 8px 0 24px rgba(0, 0, 0, .35); }
-  /* Barre repliée : seulement le bouton d'ouverture, sans survol qui l'élargit */
-  .sd.is-replie, .sd.is-replie:hover, .sd.is-replie:focus-within { width: var(--sd-w-replie); box-shadow: none; }
   .sd-fab { display: none; }
   .sd-body { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; padding: 10px 6px; }
-  .sd-toggle { align-self: flex-end; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; flex: none;
-    border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; }
-  /* Chevron « < » : replier (barre ouverte) ; pivoté en « > » pour déplier (barre repliée) */
-  .sd-toggle .sd-ico { transition: transform .18s ease; }
-  .sd-toggle[aria-expanded="false"] .sd-ico { transform: rotate(180deg); }
-  .sd.is-replie .sd-toggle { align-self: center; }
-  .sd.is-replie .sd-links, .sd.is-replie .sd-config { display: none; }
   .sd-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
   .sd-links:empty { display: none; }
-  /* Une ligne par raccourci : icône à gauche, libellé révélé à l'élargissement */
-  .sd-links a, .sd-config { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px;
-    padding: 0 10px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text);
-    font: inherit; font-size: 14px; font-weight: 600; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; }
-  .sd-links a:hover, .sd-config:hover { background: var(--surface-2); border-color: var(--border); }
-  .sd-config { margin-top: auto; }
+  /* Une icône par raccourci, toujours visible */
+  .sd-links a, .sd-config { position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+    border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text);
+    font: inherit; text-decoration: none; cursor: pointer; }
+  .sd-links a:hover, .sd-config:hover, .sd-links a:focus-visible, .sd-config:focus-visible { background: var(--surface-2); border-color: var(--border); }
+  .sd-config { margin-top: auto; color: var(--muted); }
+  /* Nom du raccourci : bulle qui sort à droite de l'icône au survol ou au focus clavier (toujours lu par les lecteurs d'écran) */
+  .sd-label { position: absolute; left: calc(100% + 10px); top: 50%; z-index: 2; padding: 7px 12px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border-strong, var(--border)); color: var(--text);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .28); font-size: 14px; font-weight: 600; white-space: nowrap; pointer-events: none;
+    opacity: 0; transform: translate(-6px, -50%) scale(.92); transform-origin: left center; transition: opacity .14s ease, transform .14s ease; }
+  .sd-links a:hover .sd-label, .sd-config:hover .sd-label, .sd-links a:focus-visible .sd-label, .sd-config:focus-visible .sd-label {
+    opacity: 1; transform: translate(0, -50%) scale(1); }
 }
-
-/* Libellés : masqués à l'état replié, visibles quand la barre est élargie ou au focus (texte présent pour les lecteurs d'écran) */
-.sd-label { opacity: 0; overflow: hidden; text-overflow: ellipsis; transition: opacity .12s ease; }
-.sd:focus-within .sd-label { opacity: 1; }
-.sd.is-replie .sd-label { opacity: 0; }
+@media (min-width: 720px) and (prefers-reduced-motion: reduce) { .sd-label { transition: none; } }
 
 .sd-ico { width: 22px; height: 22px; flex: none; }
 
@@ -52,7 +42,7 @@
 .sd-count { position: absolute; left: 20px; top: 4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
   background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
 .sd-count[hidden] { display: none; }
-.sd-links a:focus-visible, .sd-config:focus-visible, .sd-toggle:focus-visible, .sd-fab:focus-visible, .sd-dlg-ok:focus-visible,
+.sd-links a:focus-visible, .sd-config:focus-visible, .sd-fab:focus-visible, .sd-dlg-ok:focus-visible,
 .sd-opt input:focus-visible {
   outline: 2px solid var(--sand); outline-offset: 2px;
 }
@@ -60,9 +50,7 @@
 /* Décalage du contenu : la page laisse la place à la barre (la vue « comme un membre » et la barre ne vont pas ensemble) */
 @media (min-width: 720px) {
   html[data-staff-dock="on"] body { padding-left: var(--sd-w); }
-  html[data-staff-dock="replie"] body { padding-left: var(--sd-w-replie); }
   html[data-staff-dock] .kbd-hint { left: calc(var(--sd-w) + 16px); }
-  html[data-staff-dock="replie"] .kbd-hint { left: calc(var(--sd-w-replie) + 16px); }
 }
 
 /* ---------- Téléphone : bouton flottant et liste ---------- */

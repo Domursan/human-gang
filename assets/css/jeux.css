@@ -166,6 +166,7 @@
 .jx-pills { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 4px 6px; pointer-events: none; }
 .jx-pills .pill { background: var(--bg); padding: 3px 8px; font-size: 11px; line-height: 1.2; gap: 4px; white-space: nowrap; max-width: 100%; }
 .jx-prep { border: 1px solid var(--sand); color: var(--sand); font-weight: 700; }
+.jx-l-court { display: none; }
 
 /* Chantier : ce qui n'est visible que des admins (jeu en préparation, page en mode admin) */
 .jx-section.is-chantier { position: relative; padding: 22px 20px 20px; border-radius: var(--radius); border: 1px solid var(--border);
@@ -202,4 +203,6 @@
   .jx-gi { width: 30px; height: 30px; }
   .jx-pills { top: 4px; left: 4px; right: 4px; gap: 3px 4px; }
   .jx-pills .pill { font-size: 10px; padding: 2px 5px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jx-l-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .jx-l-court { display: inline; }
 }

@@ -4,7 +4,7 @@
 // (c) membre simple : aucune barre. Vue « comme un membre » (admin) : aucune barre. admin.html : aucune barre.
 // (d) Staff { assistance } seul : seuls les raccourcis permis (Assistance, Boîte à idées) sont affichés.
 // (e) choix mémorisé par membre (localStorage hg_staff_dock:<id>) : retrait de Bot Discord, puis rechargement.
-// (f) repli de la barre, mémorisé après rechargement.
+// (f) pas de bouton de repli : icônes toujours visibles.
 // (g) chaque raccourci ouvre la bonne section du panel.
 // (h) compteurs « à traiter » : Assistance (demandes ouvertes) et Boîte à idées (idées nouvelles).
 // Faux Supabase (fixtures/fake-sb.mjs). Lancer : node tests/parcours-staff-dock.cjs
@@ -48,19 +48,20 @@ const visibles = (p) => p.$$eval('#sd-links li', (lis) => lis.filter((li) => !li
     const pad = await p.evaluate(() => getComputedStyle(document.body).paddingLeft);
     check(pad === '56px', `(a) contenu décalé de la barre (padding gauche ${pad})`);
     check(await p.evaluate(() => document.documentElement.dataset.staffDock) === 'on', '(a) html[data-staff-dock] = on');
-    // Survol : la barre reste fine (elle ne recouvre pas la page sous la souris) ; info-bulle sur chaque icône
+    // Icônes toujours visibles ; au survol, la barre reste fine et le nom sort en bulle à droite de l'icône
+    const opRepos = await p.evaluate(() => getComputedStyle(document.querySelector('#sd-links .sd-label')).opacity);
     await p.hover('#sd-links a');
     await p.waitForTimeout(350);
     const w0 = await p.evaluate(() => document.getElementById('staff-dock').getBoundingClientRect().width);
-    check(w0 < 80 && !!(await p.getAttribute('#sd-links a', 'title')), `(a) survol : la barre reste fine, info-bulle sur l’icône (largeur ${Math.round(w0)} px)`);
-    // Clavier : le focus élargit la barre et montre les libellés
+    const bulle = await p.evaluate(() => { const l = document.querySelector('#sd-links .sd-label'); const r = l.getBoundingClientRect(); return { op: getComputedStyle(l).opacity, x: r.left }; });
+    check(opRepos === '0' && w0 < 80 && bulle.op === '1' && bulle.x >= w0, `(a) survol : barre fine, nom en bulle à droite (largeur ${Math.round(w0)} px, opacité ${bulle.op}, x ${Math.round(bulle.x)})`);
+    // Clavier : le focus montre aussi le nom
     await p.mouse.move(700, 500);
     await p.focus('#sd-links a');
     await p.keyboard.press('Shift+Tab'); await p.keyboard.press('Tab');
     await p.waitForTimeout(350);
-    const w = await p.evaluate(() => document.getElementById('staff-dock').getBoundingClientRect().width);
-    const op = await p.evaluate(() => getComputedStyle(document.querySelector('#sd-links .sd-label')).opacity);
-    check(w > 150 && op === '1', `(a) clavier : la barre s’élargit et montre les libellés (largeur ${Math.round(w)} px, opacité ${op})`);
+    const op = await p.evaluate(() => getComputedStyle(document.activeElement.querySelector('.sd-label')).opacity);
+    check(op === '1', `(a) clavier : le focus montre le nom du raccourci (opacité ${op})`);
     await p.evaluate(() => document.activeElement?.blur());
     await p.mouse.move(700, 500);
     check((await hscroll(p)) === 0, '(a) 1280 px : pas de défilement horizontal');
@@ -149,21 +150,11 @@ const visibles = (p) => p.$$eval('#sd-links li', (lis) => lis.filter((li) => !li
     await p.ctx.close();
   }
 
-  /* (f) Repli de la barre, mémorisé */
+  /* (f) Plus de bouton de repli : les icônes restent toujours visibles */
   {
     const p = await openPage(browser, { page: 'accueil' });
-    await p.click('#staff-dock .sd-toggle');
-    await p.waitForTimeout(250);
-    check((await p.evaluate(() => document.documentElement.dataset.staffDock)) === 'replie', '(f) barre repliée : html[data-staff-dock] = replie');
-    check(!(await p.isVisible('#sd-links')), '(f) barre repliée : les liens sont masqués');
-    check((await p.evaluate(() => getComputedStyle(document.body).paddingLeft)) === '40px', '(f) barre repliée : contenu décalé de 40 px');
-    await p.reload();
-    await p.waitForSelector('#staff-dock', { timeout: 5000 }).catch(() => {});
-    check((await p.evaluate(() => document.documentElement.dataset.staffDock)) === 'replie', '(f) le repli est gardé après rechargement');
-    await p.click('#staff-dock .sd-toggle');
-    await p.waitForTimeout(250);
-    check(await p.isVisible('#sd-links'), '(f) déplier rétablit les liens');
-    check((await hscroll(p)) === 0, '(f) pas de défilement horizontal après repli');
+    check(!(await p.$('#staff-dock .sd-toggle')), '(f) pas de bouton « Replier »');
+    check(await p.isVisible('#sd-links'), '(f) les icônes sont visibles');
     check(!p.errs.length, '(f) aucune erreur JS' + (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : ''));
     await p.ctx.close();
   }
@@ -200,13 +191,13 @@ const visibles = (p) => p.$$eval('#sd-links li', (lis) => lis.filter((li) => !li
     await p.ctx.close();
   }
 
-  /* Accessibilité au clavier : Échap retire le focus de la barre (elle se replie) */
+  /* Accessibilité au clavier : Échap retire le focus de la barre */
   {
     const p = await openPage(browser, { page: 'accueil', width: 1280, height: 900 });
     await p.focus('#sd-links a');
-    await p.waitForTimeout(350); /* fin de la transition de largeur (.18s) */
+    await p.waitForTimeout(350); /* fin de l'apparition de la bulle */
     check(await p.evaluate(() => document.getElementById('staff-dock').contains(document.activeElement)), '(k) le focus au clavier entre dans la barre');
-    check((await p.evaluate(() => getComputedStyle(document.getElementById('staff-dock')).width)) !== '56px', '(k) le focus élargit la barre (libellés lisibles)');
+    check((await p.evaluate(() => getComputedStyle(document.activeElement.querySelector('.sd-label')).opacity)) === '1', '(k) le focus montre le nom du raccourci');
     await p.keyboard.press('Escape');
     check(await p.evaluate(() => !document.getElementById('staff-dock').contains(document.activeElement)), '(k) Échap retire le focus de la barre');
     check(await p.evaluate(() => document.getElementById('staff-dock').getAttribute('aria-label') === 'Raccourcis Staff'), '(k) nav étiquetée « Raccourcis Staff »');

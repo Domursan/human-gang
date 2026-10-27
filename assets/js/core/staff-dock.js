@@ -4,14 +4,13 @@
  * Drops de cartes, Événement de cartes). Chacun choisit les siens (« Choisir mes raccourcis »). Seuls les raccourcis que
  * la personne peut ouvrir sont proposés : le droit vient de canSection (admin/perms.js), comme dans le panel.
  * Pas affiché sur admin.html, ni quand l'admin regarde le site « comme un membre » (view-as.js).
- *   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite (icônes), qui s'élargit au survol ou au focus
- *   pour montrer les libellés. Le contenu est décalé (html[data-staff-dock] body) : rien n'est masqué. Bouton « Replier »
- *   en haut : la barre ne garde qu'un fin bouton (mémorisé).
+ *   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite, icônes toujours visibles ; le nom de chaque
+ *   raccourci sort en bulle à droite de l'icône au survol ou au focus clavier. Le contenu est décalé (html[data-staff-dock] body).
  *   Téléphone (moins de 720 px) : bouton flottant en bas à gauche ; il ouvre la liste au-dessus de lui (Échap ferme).
  * Compteurs : Assistance (demandes « ouverte ») et Boîte à idées (idées « nouvelle ») : une requête de comptage seule,
  * à l'ouverture de la page (même critères que le panel, admin/counts.js). Sans recalcul en direct.
- * Choix et repli : localStorage « hg_staff_dock:<user_id> » = { choix: [identifiants], replie: booléen }.
- * Par défaut : tous les raccourcis permis, barre ouverte. Lecture et écriture protégées (stockage bloqué = pas de mémoire).
+ * Choix : localStorage « hg_staff_dock:<user_id> » = { choix: [identifiants] }.
+ * Par défaut : tous les raccourcis permis. Lecture et écriture protégées (stockage bloqué = pas de mémoire).
  * Styles : assets/css/staff-dock.css, chargée par ce module (les membres simples ne la chargent jamais).
  * Page : toutes les pages (init.js appelle startStaffDock avec le profil connecté). Pas admin.html.
  * Dépendances : supabase.js (comptages), pages-access.js (page courante), perms.js (droits en cache, canPanel),
@@ -50,7 +49,6 @@ const PICTO = {
   gift: '<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8S9 3.5 7.5 5.5 9 8 12 8zM12 8s3-4.5 4.5-2.5S15 8 12 8z"/>',
   sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
   sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
-  chev: '<path d="M15 6l-6 6 6 6"/>',
 };
 
 /* ---------- Fabriques de HTML ---------- */
@@ -76,7 +74,7 @@ const cle = (uid) => `hg_staff_dock:${uid}`;
 /**
  * Lit les préférences du membre. Renvoie null si absentes ou illisibles.
  * @param {string} uid Identifiant du membre.
- * @returns {{choix?: unknown, replie?: unknown}|null}
+ * @returns {{choix?: unknown}|null}
  */
 function lirePrefs(uid) {
   try {
@@ -88,7 +86,7 @@ function lirePrefs(uid) {
 /**
  * Écrit les préférences du membre. Un échec n'est pas grave : le choix vaut alors pour cette page seulement.
  * @param {string} uid Identifiant du membre.
- * @param {{choix: string[], replie: boolean}} v Préférences à garder.
+ * @param {{choix: string[]}} v Préférences à garder.
  */
 function ecrirePrefs(uid, v) {
   try { localStorage.setItem(cle(uid), JSON.stringify(v)); } catch { /* stockage bloqué : rien à garder */ }
@@ -128,13 +126,12 @@ function construire(permis) {
   nav.id = 'staff-dock';
   nav.className = 'sd';
   nav.setAttribute('aria-label', 'Raccourcis Staff');
-  const items = permis.map((r) => `<li data-id="${r.id}"><a href="${r.href}" title="${r.label}">${ico(r.icone)}<span class="sd-label">${r.label}</span><span class="sd-count" hidden></span></a></li>`).join('');
+  const items = permis.map((r) => `<li data-id="${r.id}"><a href="${r.href}">${ico(r.icone)}<span class="sd-label">${r.label}</span><span class="sd-count" hidden></span></a></li>`).join('');
   nav.innerHTML = `
     <button type="button" class="sd-fab" aria-expanded="false" aria-controls="sd-body" aria-label="Ouvrir les raccourcis Staff" title="Raccourcis Staff">${ico('sliders')}<span class="sd-fab-n" hidden></span></button>
     <div class="sd-body" id="sd-body">
-      <button type="button" class="sd-toggle" aria-expanded="true" aria-controls="sd-links" aria-label="Replier les raccourcis Staff">${ico('chev')}</button>
       <ul class="sd-links" id="sd-links">${items}</ul>
-      <button type="button" class="sd-config" aria-haspopup="dialog" aria-controls="sd-dialog" title="Choisir mes raccourcis">${ico('sliders')}<span class="sd-label">Choisir mes raccourcis</span></button>
+      <button type="button" class="sd-config" aria-haspopup="dialog" aria-controls="sd-dialog">${ico('sliders')}<span class="sd-label">Choisir mes raccourcis</span></button>
     </div>`;
   const dialog = document.createElement('dialog');
   dialog.id = 'sd-dialog';
@@ -189,22 +186,17 @@ export async function startStaffDock(profil) {
   const etat = {
     // Sans choix enregistré, tous les raccourcis permis sont affichés ; un choix vide reste un choix (barre sans liens)
     choix: Array.isArray(prefs.choix) ? prefs.choix.filter((id) => valides.includes(id)) : valides.slice(),
-    replie: prefs.replie === true,
   };
 
   const { nav, dialog } = construire(permis);
   document.body.append(nav, dialog);
   const fab = nav.querySelector('.sd-fab');
-  const toggle = nav.querySelector('.sd-toggle');
   const config = nav.querySelector('.sd-config');
   const comptes = { };
 
   /** Redessine la barre et la fenêtre à partir de l'état (sans requête). */
   const appliquer = () => {
-    document.documentElement.dataset.staffDock = etat.replie ? 'replie' : 'on';
-    nav.classList.toggle('is-replie', etat.replie);
-    toggle.setAttribute('aria-expanded', String(!etat.replie));
-    toggle.setAttribute('aria-label', etat.replie ? 'Déplier les raccourcis Staff' : 'Replier les raccourcis Staff');
+    document.documentElement.dataset.staffDock = 'on';
     let total = 0;
     for (const li of nav.querySelectorAll('.sd-links li')) {
       const r = RACCOURCIS.find((x) => x.id === li.dataset.id);
@@ -217,7 +209,7 @@ export async function startStaffDock(profil) {
     const fabN = nav.querySelector('.sd-fab-n');
     fabN.hidden = total === 0;
     fabN.textContent = total > 99 ? '99+' : String(total);
-    ecrirePrefs(uid, { choix: etat.choix.slice(), replie: etat.replie });
+    ecrirePrefs(uid, { choix: etat.choix.slice() });
   };
 
   /**
@@ -230,7 +222,6 @@ export async function startStaffDock(profil) {
   };
 
   fab.addEventListener('click', () => liste(fab.getAttribute('aria-expanded') !== 'true'));
-  toggle.addEventListener('click', () => { etat.replie = !etat.replie; appliquer(); toggle.focus(); });
   config.addEventListener('click', () => {
     if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
   });
@@ -242,7 +233,7 @@ export async function startStaffDock(profil) {
   });
   // Fermer la fenêtre rend le focus au bouton « Choisir mes raccourcis »
   dialog.addEventListener('close', () => config.focus());
-  // Échap : referme la liste sur téléphone (et rend le focus au bouton), sinon retire le focus de la barre (elle se replie)
+  // Échap : referme la liste sur téléphone (et rend le focus au bouton), sinon retire le focus de la barre
   nav.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (nav.dataset.open === '1' && getComputedStyle(fab).display !== 'none') { liste(false); fab.focus(); }
