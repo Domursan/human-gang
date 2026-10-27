@@ -30,6 +30,28 @@ const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
  */
 const slugOf = (s) => String(s ?? '').split(/[?#]/)[0].split('/').pop().replace(/\.html$/, '');
 
+/** Dossier de chaque page publiée : /pages/<dossier>/<slug>.html. Une page absente de cette table part de /pages/<slug>.html. */
+const PAGE_DIR = {
+  accueil: 'compte', compte: 'compte', membre: 'compte', messages: 'compte',
+  admin: 'admin',
+  cartes: 'cartes', 'collection-a4': 'cartes',
+  aide: 'infos', assistance: 'infos', legal: 'infos', rejoindre: 'infos',
+  calendrier: 'irl', cine: 'irl', citations: 'irl', evenements: 'irl', historique: 'irl', irl: 'irl',
+  playlist: 'irl', recap: 'irl', 'secret-santa': 'irl',
+  blackjack: 'jeux', catan: 'jeux', cluedo: 'jeux', destins: 'jeux', duels: 'jeux', jeux: 'jeux',
+  'loup-garou': 'jeux', monopoly: 'jeux', 'nom-de-code': 'jeux', pictionary: 'jeux', poker: 'jeux', quiz: 'jeux',
+  risk: 'jeux', secret: 'jeux', 'shadow-hunters': 'jeux', simulateur: 'jeux', uno: 'jeux',
+};
+/**
+ * Adresse absolue d'une page publiée (ex. 'irl' -> '/pages/irl/irl.html').
+ * @param {string} slug Slug ou nom de fichier de la page.
+ * @returns {string}
+ */
+export function pageHref(slug) {
+  const s = slugOf(slug);
+  return `/pages/${PAGE_DIR[s] ? `${PAGE_DIR[s]}/` : ''}${s}.html`;
+}
+
 /* ---------- Page courante ---------- */
 
 /**

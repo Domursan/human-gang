@@ -6,9 +6,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
-const { check, finish } = require('../lib/harness.cjs');
+const { check, finish, ROOT } = require('../lib/harness.cjs');
 
-const ROOT = path.resolve(__dirname, '..');
 const PAGE = `<!doctype html><meta charset="utf-8"><title>vendor-check</title>
 <script type="module">
   import { createClient } from '/assets/vendor/supabase-js-2.45.4.mjs';

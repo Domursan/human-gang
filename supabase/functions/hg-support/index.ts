@@ -221,20 +221,20 @@ Deno.serve(async (req) => {
       const rendered = renderTemplate('support_new', {
         sujet: subject, message: mdSafe(truncate(message, rules.mp_max)), pseudo: mdPseudo,
         contact: mdContact, compte: userId ? 'Membre connecté' : 'Visiteur',
-        lien: site ? `${site}/admin.html#assistance` : '',
+        lien: site ? `${site}/pages/admin/admin.html#assistance` : '',
       }, await loadTemplates(admin));
       await sendDM(bot.admin_discord_id, {
         content: 'Nouvelle demande d\'assistance',
         embeds: [{
           ...embedFrom(rendered),
           color: 0x9e3543,
-          url: site ? `${site}/admin.html#assistance` : undefined,
+          url: site ? `${site}/pages/admin/admin.html#assistance` : undefined,
           fields: [
             { name: 'Pseudo', value: mdPseudo, inline: true },
             { name: 'Compte', value: userId ? 'Membre connecté' : 'Visiteur', inline: true },
             { name: 'Contact', value: mdContact, inline: true },
             ...(files.length ? [{ name: 'Pièces jointes', value: files.length === 1 ? '1 pièce jointe' : `${files.length} pièces jointes`, inline: true }] : []),
-            ...(site ? [{ name: 'Traiter', value: `${site}/admin.html#assistance` }] : []),
+            ...(site ? [{ name: 'Traiter', value: `${site}/pages/admin/admin.html#assistance` }] : []),
           ],
           timestamp: new Date().toISOString(),
           footer: { text: 'Humane Gang · assistance' },

@@ -19,11 +19,11 @@ Gravité : haute / moyenne / basse / info. « Corrigé » = correctif dans le d�
 |---|---|---|---|---|---|
 | 1 | Moyenne | `anon` et `authenticated` ont INSERT, UPDATE, TRUNCATE, REFERENCES et TRIGGER sur des tables sans politique qui les accorde. La RLS les bloque aujourd'hui, mais une politique future mal écrite ouvrirait l'écriture directe ; TRUNCATE n'est pas soumis à la RLS. | Base, `public.hg_*` (16 couples de privilèges) | `information_schema.role_table_grants` en production. Test à blanc : `update hg_wallets` par un membre renvoie « 0 ligne » avant, « permission denied » après | Migration 105 (bloc DO) |
 | 2 | Basse | `hg_role_grants(uuid, text)` est exécutable par `authenticated` et renvoie les rôles d'un autre membre. Elle n'est appelée que par `hg_page_ok` (SECURITY DEFINER). | Base, `public.hg_role_grants` | `has_function_privilege` : `t` pour authenticated. Test à blanc : `t` avant, « permission denied » après | Migration 105 (`revoke execute`) |
-| 3 | Moyenne | Pas d'empreinte SRI sur `supabase-js` chargé depuis jsDelivr par `import()` (version figée `@2.45.4`, mais un CDN compromis servirait du code à tous les visiteurs). | `assets/js/core/supabase.js` et autres imports | Lecture du code : aucun `integrity` | À décider (voir plus bas) |
+| 3 | Moyenne | Pas d'empreinte SRI sur `supabase-js` chargé depuis jsDelivr par `import()` (version figée `@2.45.4`, mais un CDN compromis servirait du code à tous les visiteurs). | `site/assets/commun/core/supabase.js` et autres imports | Lecture du code : aucun `integrity` | À décider (voir plus bas) |
 | 4 | Moyenne | Protection contre les mots de passe fuités désactivée dans Auth. | Réglage du tableau de bord Supabase | Advisor de sécurité Supabase | À décider (réglage du tableau de bord, pas de code) |
-| 5 | Basse | Pas de SRI sur `qrcode-generator@1.4.4` (admin : codes et liens d'invitation). | `assets/js/admin-cards/codes.js`, `admin-invite-links.js` | Lecture du code | À décider |
-| 6 | Basse | Le chargeur Leaflet partagé (jeux.html, admin.html) ne vérifiait pas l'empreinte du script ni de la feuille de style. | `assets/js/leaflet-load.js` | Lecture du code | Corrigé : mêmes empreintes que `irl-history.js`, `crossOrigin` ajouté |
-| 7 | Basse | Déconnexion depuis la page Compte et le panel admin : la copie hors ligne (IndexedDB « hg-offline ») n'était pas effacée, contrairement au menu d'en-tête. Risque sur un poste partagé. | `assets/js/core/supabase.js` (`signOutDevice`) | Lecture du code comparée à `core/header.js` | Corrigé : `clearOffline()` avant `signOut` |
+| 5 | Basse | Pas de SRI sur `qrcode-generator@1.4.4` (admin : codes et liens d'invitation). | `site/assets/espaces/admin/cartes/codes.js`, `admin-invite-links.js` | Lecture du code | À décider |
+| 6 | Basse | Le chargeur Leaflet partagé (pages/jeux/jeux.html, pages/admin/admin.html) ne vérifiait pas l'empreinte du script ni de la feuille de style. | `site/assets/commun/leaflet-load.js` | Lecture du code | Corrigé : mêmes empreintes que `irl-history.js`, `crossOrigin` ajouté |
+| 7 | Basse | Déconnexion depuis la page Compte et le panel admin : la copie hors ligne (IndexedDB « hg-offline ») n'était pas effacée, contrairement au menu d'en-tête. Risque sur un poste partagé. | `site/assets/commun/core/supabase.js` (`signOutDevice`) | Lecture du code comparée à `core/header.js` | Corrigé : `clearOffline()` avant `signOut` |
 | 8 | Basse | La clé `service_role` sert de secret HMAC dans `hg-support` (signature des liens). Si la clé change, les liens cassent ; si elle fuit, la signature est compromise avec elle. | `supabase/functions/hg-support/index.ts` | Lecture du code | À décider |
 | 9 | Basse | Politiques `*_own` sur les tables `d_*` : vérifiées en lecture seule, non modifiées. | Base, politiques `d_*` | `pg_policies` | À décider (à relire avec le propriétaire) |
 | 10 | Basse | Dans le bucket `hg-assets`, le dossier `cine/` accepte l'écriture de tout membre. | Base, `storage.objects` | `pg_policies` | À décider |
@@ -59,7 +59,7 @@ Gravité : haute / moyenne / basse / info. « Corrigé » = correctif dans le d�
 
 - `npm run -s check` : 444 fichiers JavaScript sans erreur ; publication sans problème.
 - Tests navigateur : `parcours-j1` (40 OK), `parcours-collection-hors-ligne` (28 OK), `parcours-connexion` (9 OK), `parcours-session` (13 OK).
-- `parcours-securite-front` : 26 OK, 1 ECHEC préexistant (la CSP de `jeux.html` autorise YouTube, le test attend `script-src` limité à `'self'` et `/npm/`). Non introduit par ces changements, non corrigé ici.
+- `parcours-securite-front` : 26 OK, 1 ECHEC préexistant (la CSP de `pages/jeux/jeux.html` autorise YouTube, le test attend `script-src` limité à `'self'` et `/npm/`). Non introduit par ces changements, non corrigé ici.
 - `parcours-j1` : le faux Leaflet ne correspond pas à l'empreinte SRI. Le test ignore donc `integrity` pour ses propres pages ; la production garde la SRI.
 
 ## À décider
@@ -73,4 +73,4 @@ Gravité : haute / moyenne / basse / info. « Corrigé » = correctif dans le d�
 7. **`pg_net` dans `public`** : le déplacer dans un schéma dédié.
 8. **Plafond de `hg_client_error`** : le passer par visiteur ou par IP, plutôt que global.
 9. **`supabase/migrations/README.md`** : périmé (indique 072 à 079 « à appliquer » alors qu'elles sont appliquées). Non modifié.
-10. **Test CSP `parcours-securite-front`** : mettre à jour l'attendu (YouTube dans `jeux.html`) ou retirer YouTube de la CSP.
+10. **Test CSP `parcours-securite-front`** : mettre à jour l'attendu (YouTube dans `pages/jeux/jeux.html`) ou retirer YouTube de la CSP.

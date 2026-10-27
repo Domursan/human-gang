@@ -19,7 +19,7 @@
 import { signOutDevice } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { getCachedPerms, canPanel, clearPerms } from './perms.js';
-import { getMyPages, canAccess, pageLabel } from './pages-access.js';
+import { getMyPages, canAccess, pageLabel, pageHref } from './pages-access.js';
 import { viewAsActive } from './view-as.js';
 import { currentLogo } from './theme.js';
 import { openPrefs } from './prefs.js';
@@ -54,20 +54,20 @@ function otherItems() {
   const mine = getMyPages();
   if (!mine) return [];
   return mine.filter((p) => p.in_nav && !PLACED.has(p.slug))
-    .map((p) => ({ label: navLibelle(p.slug) || NAV_SHORT[p.slug] || p.label || p.slug, href: `${p.slug}.html`, page: p.slug }));
+    .map((p) => ({ label: navLibelle(p.slug) || NAV_SHORT[p.slug] || p.label || p.slug, href: pageHref(p.slug), page: p.slug }));
 }
 
 /** Vrai si le lien pointe vers la page affichée (avec son ancre si le lien en a une). */
 function isHere(href) {
   const [file, hash] = href.split('#');
-  const cur = location.pathname.split('/').pop() || '/index.html';
-  if (file !== cur) return false;
+  const norm = (p) => p.replace(/\/$/, '/index.html');
+  if (norm(new URL(file, location.href).pathname) !== norm(location.pathname)) return false;
   return !hash || location.hash.slice(1).split(/[/?]/)[0] === hash;
 }
 const curAttr = (href) => (isHere(href) ? ' aria-current="page"' : '');
 
 /** Libellé d'une entrée : celui réglé pour sa page (nav_libelles) quand l'entrée mène à sa propre page. */
-const libelleEntree = (it) => navLibelle(menuKey(it)) || (it.page && it.href === `${it.page}.html` && navLibelle(it.page)) || it.label;
+const libelleEntree = (it) => navLibelle(menuKey(it)) || (it.page && it.href === pageHref(it.page) && navLibelle(it.page)) || it.label;
 
 /** Lien d'un menu déroulant. */
 // data-cpt : pastille de compteur (badges-compteur.js), posée toute seule après le rendu du menu.

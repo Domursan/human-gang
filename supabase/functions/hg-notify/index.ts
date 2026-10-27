@@ -323,14 +323,14 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   ];
   const vars = {
     annee: ed.year, participants: people.length, budget: ed.budget ?? '', date_limite: fmtDate(ed.send_deadline) ?? '',
-    date_echange: fmtDate(ed.exchange_date) ?? '', lien: link('secret-santa.html') ?? '',
+    date_echange: fmtDate(ed.exchange_date) ?? '', lien: link('pages/irl/secret-santa.html') ?? '',
   };
   const drawChannels = channelsFor(bot, 'draw');
   let channels: ChannelResult[] = [];
   if (drawChannels.length) {
     const annonce = {
       ...mentionFor(bot, 'draw'),
-      ...embed({ ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)), url: link('secret-santa.html'), color: COLOR.ss, fields }),
+      ...embed({ ...embedFrom(renderTemplate('ss_draw_announce', vars, tpl)), url: link('pages/irl/secret-santa.html'), color: COLOR.ss, fields }),
     };
     channels = await sendToChannels(drawChannels, (id) => sendChannel(id, annonce), 'annonce tirage', friendlyDiscordError);
     await logAnnounce(me, 'auto:tirage', `Annonce du tirage ${ed.year}`, channels, true);
@@ -341,7 +341,7 @@ async function onDraw(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   for (const person of people.filter(canDM).filter((x) => notifAllowed(drawPrefs.get(x.id), 'santa', 'discord'))) {
     const ok = await trySend(() => dmOuSite(db, person.id, person.discord_id!, embed({
       ...embedFrom(renderTemplate('ss_draw_dm', { ...vars, pseudo: mdSafe(person.pseudo) }, tpl)),
-      url: link('secret-santa.html'), color: COLOR.ss, fields,
+      url: link('pages/irl/secret-santa.html'), color: COLOR.ss, fields,
     }), 'santa'), `MP tirage ${person.id}`);
     ok ? dms++ : failed++;
     await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord
@@ -385,11 +385,11 @@ async function onGift(me: Profile, bot: Bot, p: Record<string, unknown>, kind: '
   if (!(await dmAllowed(other.id, 'santa'))) return { dm: false, reason: CAT_OFF };
 
   // ss_gift_sent part chez la cible : aucune variable ne désigne le Santa. ss_gift_received part chez le Santa : {cible} = me.
-  const base = { pseudo: mdSafe(other.pseudo), annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('secret-santa.html') ?? '' };
+  const base = { pseudo: mdSafe(other.pseudo), annee: ed?.year ?? '', date_echange: fmtDate(ed?.exchange_date) ?? '', lien: link('pages/irl/secret-santa.html') ?? '' };
   const rendered = kind === 'sent'
     ? renderTemplate('ss_gift_sent', base, tpl)
     : renderTemplate('ss_gift_received', { ...base, cible: mdSafe(me.pseudo) }, tpl);
-  const message = embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss });
+  const message = embed({ ...embedFrom(rendered), url: link('pages/irl/secret-santa.html'), color: COLOR.ss });
   // Un seul MP par participant, édition et sens (I7) : rappeler l'événement ne renvoie rien.
   await takeQuota(me, bot, `ss_gift_${kind}`);
   const col = kind === 'sent' ? 'gift_notified_at' : 'received_notified_at';
@@ -436,11 +436,11 @@ async function onIrl(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Tem
   const rendered = renderTemplate('irl_new', {
     titre: mdSafe(String(ev.title).slice(0, 200)),
     description: ev.description ? mdSafe(String(ev.description).slice(0, 600)) : 'Dis si tu viens sur le site.',
-    lieu: where, date: when, organisateur: orga, lien: link('irl.html') ?? '',
+    lieu: where, date: when, organisateur: orga, lien: link('pages/irl/irl.html') ?? '',
   }, tpl);
   const annonce = {
     ...mentionFor(bot, 'irl'),
-    ...embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl, fields }),
+    ...embed({ ...embedFrom(rendered), url: link('pages/irl/irl.html'), color: COLOR.irl, fields }),
   };
   // Réservation (I7) : une seule annonce par sortie, libérée si aucun salon ne l'a reçue.
   await takeQuota(me, bot, 'irl_new');
@@ -493,7 +493,7 @@ async function onMessage(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const raw = String(latest.body ?? '').replace(/\s+/g, ' ').trim();
   // Texte libre : Markdown neutralisé après la coupe (pas de lien masqué dans un MP du bot).
   const excerpt = mdSafe(raw.length > 200 ? `${raw.slice(0, 199)}…` : raw);
-  const url = link(`messages.html?c=${encodeURIComponent(convId)}`);
+  const url = link(`pages/compte/messages.html?c=${encodeURIComponent(convId)}`);
 
   // Réservation (I7) : un seul lot de MP par message ; libérée si aucun MP n'est parti alors qu'il y a eu des échecs.
   await takeQuota(me, bot, 'message_new');
@@ -537,8 +537,8 @@ async function onTest(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
     if (!chans.length) return { error: 'Aucun salon pour ce type : renseigne son salon, ou le salon d\'annonces, puis enregistre.' };
     out.type = type;
     const test = embed({
-      ...embedFrom(renderTemplate('bot_test', { canal: `les annonces « ${CHANNEL_LABEL[type]} »`, pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
-      color: COLOR.info, url: link('accueil.html'),
+      ...embedFrom(renderTemplate('bot_test', { canal: `les annonces « ${CHANNEL_LABEL[type]} »`, pseudo: me.pseudo, lien: link('pages/compte/accueil.html') ?? '' }, tpl)),
+      color: COLOR.info, url: link('pages/compte/accueil.html'),
     });
     const channels = await sendToChannels(chans, (id) => sendChannel(id, test), `test salon ${type}`, friendlyDiscordError);
     out.channel = channels.some((c) => c.ok);
@@ -551,13 +551,13 @@ async function onTest(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Te
   if (!announceId && !adminId) return { error: 'Renseigne d\'abord l\'ID du salon ou ton ID Discord (17 à 20 chiffres), puis enregistre.' };
   if (announceId) {
     out.channel = await trySend(() => sendChannel(announceId, embed({
-      ...embedFrom(renderTemplate('bot_test', { canal: 'les annonces', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
-      color: COLOR.info, url: link('accueil.html'),
+      ...embedFrom(renderTemplate('bot_test', { canal: 'les annonces', pseudo: me.pseudo, lien: link('pages/compte/accueil.html') ?? '' }, tpl)),
+      color: COLOR.info, url: link('pages/compte/accueil.html'),
     })), 'test salon');
   }
   if (adminId) {
     out.dm = await trySend(() => sendDM(adminId, embed({
-      ...embedFrom(renderTemplate('bot_test', { canal: 'les messages privés', pseudo: me.pseudo, lien: link('accueil.html') ?? '' }, tpl)),
+      ...embedFrom(renderTemplate('bot_test', { canal: 'les messages privés', pseudo: me.pseudo, lien: link('pages/compte/accueil.html') ?? '' }, tpl)),
       color: COLOR.info,
     })), 'test MP');
   }
@@ -798,10 +798,10 @@ async function onCardPull(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
   // Nom affiché : « (brillante) » si l'exemplaire l'est, « N° x/y » si l'exemplaire a un numéro de série.
   const carte = `${card.name}${copy.shiny ? ' (brillante)' : ''}${copy.serial ? ` N° ${copy.serial}${card.max_copies ? `/${card.max_copies}` : ''}` : ''}`;
-  const rendered = renderTemplate('card_pull_announce', { pseudo: mdSafe(me.pseudo), carte, rarete, verbe, lien: link('cartes.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_pull_announce', { pseudo: mdSafe(me.pseudo), carte, rarete, verbe, lien: link('pages/cartes/cartes.html') ?? '' }, tpl);
   const annonce = {
     ...mentionFor(bot, 'card_pull'),
-    ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
+    ...embed({ ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card, fields: [{ name: 'Rareté', value: rarete, inline: true }] }),
   };
   const channels = await sendToChannels(pullChannels, (id) => sendChannel(id, annonce), 'annonce carte', friendlyDiscordError);
   await logAnnounce(me, 'auto:carte', `Annonce de carte : ${carte} (${me.pseudo})`, channels, false);
@@ -833,10 +833,10 @@ async function onCardTrade(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (!recent(t.resolved_at)) return { skipped: 'échange déjà ancien' };
   if (t.announced_at) return { skipped: 'déjà annoncé' };
   const other = await getProfile(t.from_user);
-  const rendered = renderTemplate('card_trade_announce', { pseudo: mdSafe(me.pseudo), partenaire: mdSafe(other?.pseudo ?? ''), lien: link('cartes.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_trade_announce', { pseudo: mdSafe(me.pseudo), partenaire: mdSafe(other?.pseudo ?? ''), lien: link('pages/cartes/cartes.html') ?? '' }, tpl);
   const annonce = {
     ...mentionFor(bot, 'card_trade'),
-    ...embed({ ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card }),
+    ...embed({ ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card }),
   };
   // Réservation (I7) : une seule annonce par échange, libérée si aucun salon ne l'a reçue.
   await takeQuota(me, bot, 'card_trade');
@@ -924,10 +924,10 @@ async function onTradeOffer(me: Profile, bot: Bot, p: Record<string, unknown>, t
     contre: t.parent_id ? ' (contre-proposition)' : '',
     donne: tradeSide(names('from'), t.from_paillettes ?? 0),
     demande: tradeSide(names('to'), t.to_paillettes ?? 0),
-    lien: link('cartes.html') ?? '',
+    lien: link('pages/cartes/cartes.html') ?? '',
   }, tpl);
   const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({
-    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+    ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card,
   }), 'echanges'), `MP offre ${other.id}`);
   // Échec : on libère la réservation pour qu'un nouvel appel dans la fenêtre de 15 min puisse réessayer.
   if (!ok) await db.from('hg_card_trades').update({ notified_at: null }).eq('id', t.id);
@@ -1007,7 +1007,7 @@ async function onCardGiftAdmin(me: Profile, bot: Bot, p: Record<string, unknown>
   // L'image n'est reprise dans le MP que si elle est en https (Discord ne charge pas les autres).
   const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
   const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({
-    ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+    ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card,
     ...(image ? { image: { url: image } } : {}),
   }), 'souhaits'), `MP don carte ${other.id}`);
   if (!ok) {
@@ -1054,13 +1054,13 @@ async function onCardDrop(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const carte = `${truncate(String(card.name), 100)}${d.shiny ? ' (brillante)' : ''}`;
   const quantite = `${d.quantity} exemplaire${d.quantity > 1 ? 's' : ''}`;
   const fin = fmtDate(d.ends_at, true) ?? '';
-  const rendered = renderTemplate('card_drop_announce', { carte, rarete, quantite, fin, lien: link('accueil.html') ?? '' }, tpl);
+  const rendered = renderTemplate('card_drop_announce', { carte, rarete, quantite, fin, lien: link('pages/compte/accueil.html') ?? '' }, tpl);
   // L'image n'est reprise que si elle est en https (Discord ne charge pas les autres).
   const image = typeof card.image_url === 'string' && /^https:\/\//.test(card.image_url) ? card.image_url : null;
   const annonce = {
     ...mentionFor(bot, 'card_drop'),
     ...embed({
-      ...embedFrom(rendered), url: link('accueil.html'), color: COLOR.card,
+      ...embedFrom(rendered), url: link('pages/compte/accueil.html'), color: COLOR.card,
       fields: [{ name: 'Exemplaires', value: quantite, inline: true }, ...(fin ? [{ name: 'Jusqu\'à', value: fin, inline: true }] : [])],
       ...(image ? { image: { url: image } } : {}),
     }),
@@ -1108,7 +1108,7 @@ async function onLgParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl:
   const { count } = await db.from('hg_lg_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
   const n = count ?? 0;
   const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_joueurs}`;
-  const lien = link(`loup-garou.html?code=${g.code}`) ?? '';
+  const lien = link(`pages/jeux/loup-garou.html?code=${g.code}`) ?? '';
   const rendered = renderTemplate('lg_party_announce', { hote: me.pseudo, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien }, tpl);
   const annonce = {
     ...mentionFor(bot, 'loup_garou'),
@@ -1162,7 +1162,7 @@ async function onDuelDefi(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const JEU: Record<string, string> = { p4: 'Puissance 4', mastermind: 'Mastermind' };
   const jeu = JEU[g.jeu] ?? (g.variante === 'ultime' ? 'Morpion Ultime' : g.variante === 'gomoku' ? 'Gomoku' : 'Morpion');
   const format = g.format > 1 ? `au meilleur des ${g.format}` : 'en une manche';
-  const lien = link(`duels.html#rejoindre/${g.code}`) ?? '';
+  const lien = link(`pages/jeux/duels.html#rejoindre/${g.code}`) ?? '';
   const rendered = renderTemplate('duel_defi_dm', { pseudo: mdSafe(me.pseudo), jeu, format, code: g.code, lien }, tpl);
   const ok = await trySend(() => dmOuSite(db, other.id, other.discord_id!, embed({ ...embedFrom(rendered), url: lien || undefined, color: COLOR.info }), 'jeux'), `MP défi ${other.id}`);
   if (!ok) await db.from('hg_duel_parties').update({ defi_notifie_at: null }).eq('id', g.id);
@@ -1193,7 +1193,7 @@ async function onUnoParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const { count } = await db.from('hg_uno_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
   const n = count ?? 0;
   const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_places}`;
-  const lien = link(`uno.html?code=${g.code}`) ?? '';
+  const lien = link(`pages/jeux/uno.html?code=${g.code}`) ?? '';
   const rendered = renderTemplate('uno_party_announce', { hote: me.pseudo, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien }, tpl);
   const annonce = {
     ...mentionFor(bot, 'uno'),
@@ -1234,7 +1234,7 @@ async function onNdcParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
   const { count } = await db.from('hg_ndc_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
   const n = count ?? 0;
   const places = `${n} joueur${n > 1 ? 's' : ''} sur ${g.nb_places}`;
-  const lien = link(`nom-de-code.html?code=${g.code}`) ?? '';
+  const lien = link(`pages/jeux/nom-de-code.html?code=${g.code}`) ?? '';
   const rendered = renderTemplate('ndc_party_announce', { hote: me.pseudo, nom: truncate(String(g.nom ?? 'Partie'), 80), code: g.code, places, lien }, tpl);
   const annonce = {
     ...mentionFor(bot, 'nom_de_code'),
@@ -1253,8 +1253,8 @@ async function onNdcParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
 
 // Jeux de plateau (migration 125) : Cluedo, Shadow Hunters, Destins, Monopoly, Risk ; un seul salon « Jeux de plateau ».
 const PLAT_JEUX: Record<string, { nom: string; page: string }> = {
-  cluedo: { nom: 'Cluedo', page: 'cluedo.html' }, shadow: { nom: 'Shadow Hunters', page: 'shadow-hunters.html' },
-  destins: { nom: 'Destins', page: 'destins.html' }, monopoly: { nom: 'Monopoly', page: 'monopoly.html' }, risk: { nom: 'Risk', page: 'risk.html' },
+  cluedo: { nom: 'Cluedo', page: 'pages/jeux/cluedo.html' }, shadow: { nom: 'Shadow Hunters', page: 'pages/jeux/shadow-hunters.html' },
+  destins: { nom: 'Destins', page: 'pages/jeux/destins.html' }, monopoly: { nom: 'Monopoly', page: 'pages/jeux/monopoly.html' }, risk: { nom: 'Risk', page: 'pages/jeux/risk.html' },
 };
 async function onPlatParty(me: Profile, bot: Bot, p: Record<string, unknown>, tpl: Templates) {
   const code = String(p.code ?? '');
@@ -1277,7 +1277,7 @@ async function onPlatParty(me: Profile, bot: Bot, p: Record<string, unknown>, tp
   if (claimErr) throw new Error(claimErr.message);
   if (!claimed?.length) return { skipped: 'déjà annoncée' };
 
-  const jeu = PLAT_JEUX[String(g.jeu)] ?? { nom: 'Jeu de plateau', page: 'jeux.html' };
+  const jeu = PLAT_JEUX[String(g.jeu)] ?? { nom: 'Jeu de plateau', page: 'pages/jeux/jeux.html' };
   const { data: nomJeu } = await db.from('hg_plat_contenus').select('valeur').eq('jeu', g.jeu).eq('cle', 'nom').maybeSingle();
   const { count } = await db.from('hg_plat_joueurs').select('user_id', { count: 'exact', head: true }).eq('partie', g.id);
   const n = count ?? 0;
@@ -1357,9 +1357,9 @@ async function onCardWish(me: Profile, bot: Bot, p: Record<string, unknown>, tpl
       if (!reachable) { skipped++; continue; }
       if (sent + failed >= WISH_MAX_DMS) { skipped++; continue; }
       const carte = `${names.get(cardId) ?? 'Une carte'}${info.shiny ? ' (brillante)' : ''}`;
-      const rendered = renderTemplate('card_wish_dm', { carte, lien: link('cartes.html') ?? '' }, tpl);
+      const rendered = renderTemplate('card_wish_dm', { carte, lien: link('pages/cartes/cartes.html') ?? '' }, tpl);
       const ok = await trySend(() => dmOuSite(db, prof.id, prof.discord_id!, embed({
-        ...embedFrom(rendered), url: link('cartes.html'), color: COLOR.card,
+        ...embedFrom(rendered), url: link('pages/cartes/cartes.html'), color: COLOR.card,
       }), 'souhaits'), `MP souhait ${prof.id}`);
       if (ok) { sent++; cardSent++; } else { failed++; cardFailed++; }
       await new Promise((r) => setTimeout(r, 300)); // reste sous les limites de Discord

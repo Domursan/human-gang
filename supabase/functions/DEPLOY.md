@@ -139,7 +139,7 @@ select cron.schedule(
 
 ## Album téléchargeable (hg-album)
 Fonction `hg-album` : assemble en ZIP, en flux, les photos d'une sortie (bucket privé `hg-photos`), pour le bouton
-« Tout télécharger » de l'album (`assets/js/irl.js`, `downloadAlbum` dans `assets/js/photos.js`).
+« Tout télécharger » de l'album (`site/assets/espaces/irl/irl.js`, `downloadAlbum` dans `site/assets/espaces/irl/photos.js`).
 - Déployer `supabase/functions/hg-album/index.ts` seul, avec `verify_jwt` à `true` (tableau ci-dessus).
 - Aucun secret à créer : la fonction agit avec le JWT de l'appelant et la clé publique envoyée par le site (`apikey`) ;
   elle ne reçoit jamais la clé de service. La RLS (membres) s'applique aux photos, aux sorties et au stockage.
@@ -190,7 +190,7 @@ Tant que les clés VAPID ne sont pas insérées, la fonction répond `vapid_abse
    `_shared/bot-templates.json`, `_shared/dyn-announce.ts`, `_shared/mentions.ts`, `_shared/channels.ts`, `_shared/reglages.ts`.
 4. **Déployer `hg-birthdays`** : `hg-birthdays/index.ts`, `_shared/discord.ts`, `_shared/cron-auth.ts`, `_shared/templates.ts`,
    `_shared/bot-templates.json`, `_shared/mentions.ts`, `_shared/channels.ts`.
-5. **Ensuite seulement, publier le site** (`assets/js/admin-bot.js` et le reste du front) : la page admin enregistre
+5. **Ensuite seulement, publier le site** (`site/assets/espaces/admin/admin-bot.js` et le reste du front) : la page admin enregistre
    `channels[type]` en **liste** et envoie `admin_dm` avec `channels` ; les anciennes fonctions liraient une liste comme un
    identifiant invalide (annonce dans le salon par défaut, ou nulle part) et ignoreraient `channels` d'`admin_dm`.
 

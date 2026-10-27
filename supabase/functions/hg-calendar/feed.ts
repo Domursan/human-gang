@@ -1,6 +1,6 @@
 // ===== Humane Gang — flux d'agenda du gang (RFC 5545) : fabrication du texte, sans réseau ni base =====
 // Rôle : transformer les rendez-vous de hg_calendar_feed (migration 087) en fichier .ics d'abonnement.
-// Mêmes règles que assets/js/ics.js (échappement TEXT, pliage à 75 octets, UID stables), portées en TypeScript, avec :
+// Mêmes règles que site/assets/espaces/irl/ics.js (échappement TEXT, pliage à 75 octets, UID stables), portées en TypeScript, avec :
 //   - heures locales en Europe/Zurich et TZID explicite (VTIMEZONE fournie) ;
 //   - journées entières (anniversaires, dates du Secret Santa) en VALUE=DATE ;
 //   - ni lieu, ni participants (le jeton donne seulement accès aux titres) ; un lien vers la page du site.
@@ -80,9 +80,9 @@ export function buildFeed(items: FeedItem[], site: string, now = new Date()): st
     if (!it || !it.title || !it.day || !/^\d{4}-\d{2}-\d{2}$/.test(it.day)) continue;
     const uid = `${String(it.kind).replace(/[^a-z]/g, '')}-${String(it.ref).replace(/[^0-9a-zA-Z:-]/g, '')}@humane-gang`;
     const link = String(it.link || '');
-    // Page du site (lien relatif) ou lien https d'un rendez-vous récurrent (salon, partie…)
+    // Page du site (chemin absolu /pages/<cat>/<nom>.html) ou lien https d'un rendez-vous récurrent (salon, partie…)
     const url = /^https:\/\/[^\s<>"]{1,290}$/.test(link) ? link
-      : site && /^[a-z0-9-]+\.html([?#][\w=:#.-]*)?$/i.test(link) ? `${site}/${link}` : '';
+      : site && /^\/pages\/[a-z]+\/[a-z0-9-]+\.html([?#][\w=:#./-]*)?$/i.test(link) ? `${site}${link}` : '';
     lines.push('BEGIN:VEVENT', `UID:${uid}`, `DTSTAMP:${utc(now)}`);
     if (it.all_day || !it.starts_at) {
       lines.push(`DTSTART;VALUE=DATE:${dayVal(it.day)}`, `DTEND;VALUE=DATE:${nextDay(it.day)}`, 'TRANSP:TRANSPARENT');

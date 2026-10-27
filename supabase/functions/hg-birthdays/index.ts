@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
   if (!botOn) return json({ ok: true, ...out, skipped: 'bot désactivé : anniversaires non consommés' });
 
   const tpl = await loadTemplates(db);
-  const home = SITE ? `${SITE}/accueil.html` : '';
+  const home = SITE ? `${SITE}/pages/compte/accueil.html` : '';
   const attempts: Attempt[] = [];
   /** Détail par salon des annonces de ce passage (journal hg_bot_log.channels). */
   const chanLog: ChannelLogEntry[] = [];

@@ -80,7 +80,7 @@ export function classementText(rows: { pseudo: string; captures: number }[]) {
 // deno-lint-ignore no-explicit-any
 export async function buildDynAnnounce(db: any, ev: DynEvent, phase: DynPhase, tpl: Templates, site: string,
   mention: MentionPart = { allowed_mentions: { parse: [] } }, topN = 3) {
-  const lien = site ? `${site}/evenements.html` : '';
+  const lien = site ? `${site}/pages/irl/evenements.html` : '';
   const vars: Record<string, string> = {
     nom: ev.name, description: ev.description ?? '', fin: fmtZurich(ev.ends_at), lien,
   };

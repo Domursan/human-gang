@@ -1,5 +1,5 @@
 // ===== Humane Gang — fonction edge « hg-archive » (idée A8) =====
-// Rôle : donner à l'administrateur une année complète du gang en ZIP (Site › Archives, assets/js/admin-archive.js).
+// Rôle : donner à l'administrateur une année complète du gang en ZIP (Site › Archives, site/assets/espaces/admin/admin-archive.js).
 // verify_jwt = true. Le client Supabase agit avec le JWT de l'appelant : aucune clé de service.
 // Entrée : POST { year, parts: ['moments'|'sorties'|'secret_santa'|'cartes'|'recap'], part: 1.. }.
 // Sortie : application/zip (flux, mode « stocké ») ; en-tête X-Archive-Parts = nombre total de parties ; erreurs en JSON.

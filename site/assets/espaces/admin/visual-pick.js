@@ -21,18 +21,19 @@ import { fetchAll, nf } from './cartes/helpers.js';
 /** Nombre de cartes affichées à chaque « Voir plus ». */
 const PAGE = 60;
 /** Feuilles de style du module et des cartouches de booster (chargées une fois). */
-const FEUILLES = ['admin-visual-pick.css', 'cartes-boosters.css', 'boosters-styles.css'];
+/** Feuilles et dossier de chacune (relatif à ce module : les CSS sont à côté des JS de leur espace). */
+const FEUILLES = { 'admin-visual-pick.css': './', 'cartes-boosters.css': '../cartes/', 'boosters-styles.css': '../cartes/' };
 
 /** Texte normalisé pour la recherche : minuscules, sans accents. */
 const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /** Charge les feuilles de style du module et des cartouches (une seule fois). */
 export function ensureVisualCss() {
-  for (const f of FEUILLES) {
+  for (const f of Object.keys(FEUILLES)) {
     if (document.querySelector(`link[data-vp-css="${f}"]`)) continue;
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = new URL(`../../css/${f}`, import.meta.url).href;
+    l.href = new URL(`${FEUILLES[f]}${f}`, import.meta.url).href;
     l.dataset.vpCss = f;
     document.head.append(l);
   }

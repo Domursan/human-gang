@@ -8,8 +8,8 @@ Aucune page n'a d'en-tête `---` : Jekyll copie tout tel quel, sans modèle ni m
 
 `docs/`, `tests/`, `qa/`, `supabase/migrations/`, `supabase/schema/`, `supabase/functions/hg-*` (code des fonctions edge),
 et tous les fichiers `.md`, `.sql`, `.ts`, `.sh`, `.toml`, ainsi que `package.json`.
-Ne sont pas servis non plus : `simulateur.html` et `assets/js/simulateur.js` (outil de développement, à ouvrir en local)
-et `affiches/secrets-solutions-a3.html` (solutions des 12 secrets, à imprimer depuis une copie locale du dépôt).
+Ne sont pas servis non plus : `pages/jeux/simulateur.html` et `site/assets/espaces/jeux/simulateur.js` (outil de développement, à ouvrir en local)
+et `impression/secrets-solutions-a3.html` (solutions des 12 secrets, à imprimer depuis une copie locale du dépôt).
 
 Seul fichier publié sous `supabase/` : `supabase/functions/_shared/bot-templates.json` (textes par défaut du bot,
 lus par l'admin, onglet Bot). Le guide du bot (`BOT.md`) est lié depuis l'admin vers le dépôt GitHub.

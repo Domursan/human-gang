@@ -61,7 +61,7 @@ export async function cineAnnouncements(db: Db, bot: ChannelBot & MentionBot & {
   const { data: films } = filmIds.size ? await db.from('hg_cine_films').select('id, title, year').in('id', [...filmIds]) : { data: [] };
   const title = (id: string | null) => { const f = (films ?? []).find((x: { id: string }) => x.id === id); return f ? `${f.title}${f.year ? ` (${f.year})` : ''}` : 'un film'; };
   const mention = mentionFor(bot, 'cine' as MentionType);
-  const url = site ? `${site}/cine.html` : undefined;
+  const url = site ? `${site}/pages/irl/cine.html` : undefined;
 
   /** Réserve, envoie, libère si aucun salon n'a reçu. */
   const post = async (s: Session, col: keyof Session, embed: Record<string, unknown>, stale: boolean) => {

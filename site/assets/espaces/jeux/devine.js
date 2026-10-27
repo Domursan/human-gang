@@ -6,9 +6,15 @@
  * Exporte : loadCss, boardHtml, shareText, copyText, bindGuess, guessFormHtml, normalize.
  */
 
-/** Ajoute une feuille de style une seule fois (assets/css/<nom>.css). */
+/** Dossier de chaque feuille de style, relatif à ce module (les CSS sont à côté des JS de leur espace). */
+const FEUILLES = {
+  'jeux-devine': './', 'jeux-nj': './', 'jeux-grilles': './', 'jeux-bataille': './', 'jeux-arene': './',
+  'cartes-card': '../cartes/',
+};
+
+/** Ajoute une feuille de style une seule fois (<espace>/<nom>.css). */
 export function loadCss(name) {
-  const href = new URL(`../../css/${name}.css`, import.meta.url).href;
+  const href = new URL(`${FEUILLES[name] ?? './'}${name}.css`, import.meta.url).href;
   if (document.querySelector(`link[data-jeux-css="${name}"]`)) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet'; l.href = href; l.dataset.jeuxCss = name;

@@ -96,7 +96,7 @@ async function tracer(p) {
   r = await dernierRpc(p, 'hg_plat_agir');
   check(r && r[2].p_action === 'dessin' && r[2].p_args.traits.length >= 1, 'enregistrement : le dessin complet est enregistré toutes les 5 s');
   check((await hscroll(p)) <= 0, '1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/pictionary-dessin-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/pictionary-dessin-1280.png', fullPage: true });
   check(p.errs.length === 0, '1280 px (dessinateur) : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -106,14 +106,14 @@ async function tracer(p) {
   check((await p.locator('.pi-mot-choix').first().boundingBox()).height >= 44, '390 px : boutons de mot à 44 px au moins');
   check((await p.locator('.pi-tiroir-chat').evaluate((el) => getComputedStyle(el).display)) === 'block', '390 px : chat en tiroir');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal (choix)');
-  await p.screenshot({ path: __dirname + '/shots/pictionary-choix-390.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/pictionary-choix-390.png', fullPage: true });
   await p.click('[data-mot="0"]');
   await p.waitForSelector('.pi-toile', { state: 'visible', timeout: 4000 }).catch(() => {});
   await p.waitForFunction(() => document.querySelector('.pi-mot-grand')?.textContent === 'raclette', null, { timeout: 4000 }).catch(() => {});
   check((await p.locator('.pi-toile').boundingBox()).width <= 390 - 2 * 14 + 1, '390 px : toile dans la largeur de l\'écran');
   check((await p.locator('[data-palette] [data-couleur]').first().boundingBox()).height >= 44, '390 px : pastilles de couleur à 44 px');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal (dessin)');
-  await p.screenshot({ path: __dirname + '/shots/pictionary-dessin-390.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/pictionary-dessin-390.png', fullPage: true });
   check(p.errs.length === 0, '390 px (dessinateur) : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -165,7 +165,7 @@ async function tracer(p) {
   check((await p.locator('.pi-coche').count()) >= 1, 'scores : coche sur mon nom');
   check((await p.locator('.pi-case').count()) === 8, 'indice : toujours huit cases');
   check((await hscroll(p)) <= 0, '1280 px (devineur) : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/pictionary-devineur-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/pictionary-devineur-1280.png', fullPage: true });
   check(p.errs.length === 0, '1280 px (devineur) : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 

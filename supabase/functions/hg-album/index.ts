@@ -1,5 +1,5 @@
 // ===== Humane Gang — fonction edge « hg-album » =====
-// Rôle : donner à un membre un ZIP de toutes les photos d'une sortie. Appelée par downloadAlbum (assets/js/photos.js).
+// Rôle : donner à un membre un ZIP de toutes les photos d'une sortie. Appelée par downloadAlbum (site/assets/espaces/irl/photos.js).
 // Assemble en ZIP, en flux, les photos d'une sortie (bucket privé hg-photos).
 // verify_jwt = true. Le client Supabase agit avec le JWT de l'appelant : la RLS s'applique
 // (lecture des photos, des sorties et du stockage réservée aux membres). La clé de service (fournie par Supabase)

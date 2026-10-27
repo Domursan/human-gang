@@ -1,6 +1,6 @@
 // Vérifie que chaque table, vue ou fonction RPC appelée par le site existe dans la base de référence.
 //
-// Source des appels : `.rpc('nom'` et `.from('nom'` dans assets/js/**/*.js, les pages *.html et sw.js,
+// Source des appels : `.rpc('nom'` et `.from('nom'` dans site/assets/**/*.js, les pages site/**/*.html et site/sw.js,
 // ainsi que les fonctions edge supabase/functions/**/*.ts (Deno).
 // Source des définitions : supabase/schema/schema_reel_2026-10-21b.sql (état réel de la base) et les
 // migrations supabase/migrations/NNN_*.sql numérotées 020 et plus (postérieures au schéma).
@@ -9,15 +9,17 @@
 // Un appel non trouvé fait échouer le script, sauf s'il figure dans EXCEPTIONS ci-dessous.
 // Les appels dont le nom n'est pas une chaîne littérale (ex. sb.from(table)) sont listés pour information.
 //
-// Lancer : node tests/controles/check-rpc.mjs   (ou npm run test:rpc)
+// Lancer : node tests/controles/check-rpc.mjs   (ou npm run test:rpc, depuis tests/)
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SCHEMA = path.join(ROOT, 'supabase/schema/schema_reel_2026-10-21b.sql');
-const MIGRATIONS = path.join(ROOT, 'supabase/migrations');
+// DEPOT : racine du dépôt (supabase/, site/). Le site publié est dans site/.
+const DEPOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SITE = path.join(DEPOT, 'site');
+const SCHEMA = path.join(DEPOT, 'supabase/schema/schema_reel_2026-10-21b.sql');
+const MIGRATIONS = path.join(DEPOT, 'supabase/migrations');
 const MIGRATION_MIN = 20;
 
 /**
@@ -28,7 +30,7 @@ const EXCEPTIONS = {
   // 'rpc:hg_exemple': 'Définie hors dépôt (extension Supabase), donc absente du schéma',
 };
 
-const JS_DIRS = ['assets/js'];
+const JS_DIRS = ['assets'];
 const EXTRA_FILES = ['sw.js'];
 const SCAN_DIRS = ['supabase/functions'];
 
@@ -67,10 +69,10 @@ for (const f of migrationFiles) for (const n of definedNames(stripSqlComments(fs
 
 // ---- 2. Ce qui est appelé ----
 const files = [
-  ...JS_DIRS.flatMap((d) => walk(path.join(ROOT, d), ['.js'])),
-  ...EXTRA_FILES.map((f) => path.join(ROOT, f)).filter((f) => fs.existsSync(f)),
-  ...fs.readdirSync(ROOT).filter((f) => f.endsWith('.html')).map((f) => path.join(ROOT, f)),
-  ...SCAN_DIRS.flatMap((d) => walk(path.join(ROOT, d), ['.ts'])),
+  ...JS_DIRS.flatMap((d) => walk(path.join(SITE, d), ['.js'])),
+  ...EXTRA_FILES.map((f) => path.join(SITE, f)).filter((f) => fs.existsSync(f)),
+  ...walk(SITE, ['.html']),
+  ...SCAN_DIRS.flatMap((d) => walk(path.join(DEPOT, d), ['.ts'])),
 ];
 
 const LITERAL = /(?<![\w$])([A-Za-z_$][\w$]*)\s*\.\s*(rpc|from)\s*\(\s*(['"`])([^'"`$]+)\3/g;

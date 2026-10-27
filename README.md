@@ -49,10 +49,10 @@ Un bot Discord prévient les membres (MP et annonces) : tirage, sorties, anniver
 
 | Menu | Contenu (fichier) |
 | --- | --- |
-| Le jeu de cartes | `cartes.html` : Ouverture, Inventaire, Boutique, Mes cartes, Classement, Échanges, Arène |
-| IRL | `secret-santa.html`, `irl.html`, `historique.html` |
-| Jeux | `jeux.html` : Les missions du jour, GeoGuessr, Qui a dit ça ?, Question du jour, Sutom HG, Framed, Heardle, puis Arcade (Paillettes, Raclette, Domu-mobile) |
-| Calendrier | `calendrier.html` |
+| Le jeu de cartes | `pages/cartes/cartes.html` : Ouverture, Inventaire, Boutique, Mes cartes, Classement, Échanges, Arène |
+| IRL | `pages/irl/secret-santa.html`, `pages/irl/irl.html`, `pages/irl/historique.html` |
+| Jeux | `pages/jeux/jeux.html` : Les missions du jour, GeoGuessr, Qui a dit ça ?, Question du jour, Sutom HG, Framed, Heardle, puis Arcade (Paillettes, Raclette, Domu-mobile) |
+| Calendrier | `pages/irl/calendrier.html` |
 | Autres | Les pages du menu qui ne sont rangées nulle part ailleurs (liste venant de la base) |
 
 Un lien n'apparaît que si le membre a accès à la page, et un menu vide disparaît. Les libellés se règlent dans Administration › Site › Menu et pied de page ; les pages accessibles dans Administration › Membres › Accès aux pages.
@@ -60,46 +60,46 @@ Un lien n'apparaît que si le membre a accès à la page, et un menu vide dispar
 ### Menu en arc (photo de profil)
 
 Un clic sur la photo ouvre un quart de cercle d'icônes :
-- rangée proche : Messages (`messages.html`), Recherche (Ctrl ou Cmd + K), Mon compte (`compte.html`) ;
-- rangée extérieure : Aide et tutos (`aide.html`), Affichage (préférences), Sans limite (administrateur seul), Admin ou Staff (`admin.html`), Déconnexion.
+- rangée proche : Messages (`pages/compte/messages.html`), Recherche (Ctrl ou Cmd + K), Mon compte (`pages/compte/compte.html`) ;
+- rangée extérieure : Aide et tutos (`pages/infos/aide.html`), Affichage (préférences), Sans limite (administrateur seul), Admin ou Staff (`pages/admin/admin.html`), Déconnexion.
 
 ### Pages principales
 
 | Page | Rôle |
 | --- | --- |
 | `index.html` | Intro animée au défilement, une fois par jour, puis redirection vers l'accueil |
-| `rejoindre.html` | Ouverture d'un lien d'invitation |
-| `compte.html` | Connexion, inscription, profil, notifications, export et suppression des données |
-| `accueil.html` | Accueil des membres |
-| `secret-santa.html` | Secret Santa de l'édition en cours |
-| `irl.html` | Sorties IRL : prochaine sortie, dates à caler, sorties passées, carte des lieux |
-| `historique.html` | Frise des années, éditions passées du Secret Santa, albums photo |
-| `recap.html` | Récap de l'année, du membre et du gang |
-| `messages.html` | Conversations privées |
-| `cartes.html` | Jeu de cartes : boosters, collection, classement, échanges, Arène, drops |
-| `jeux.html` | Les jeux du gang, un onglet par jeu (`jeux.html#<jeu>`) |
-| `calendrier.html` | Calendrier du gang |
-| `cine.html` | Ciné-club : vote de la séance du dimanche |
-| `citations.html` | Mur des citations |
-| `playlist.html` | Playlist du gang |
-| `quiz.html` | Questions du gang |
-| `evenements.html` | Événements à thème (images à attraper) et classement des chasseurs |
-| `membre.html` | Carte de membre d'un joueur |
-| `collection-a4.html` | Planche imprimable d'une collection (paramètres dans l'adresse) |
-| `secret.html` | Le carnet des secrets (page cachée, hors menu) |
-| `aide.html` | Aide et tutos |
-| `assistance.html` | Formulaire d'aide (bug, question, idée) et suivi des demandes |
-| `legal.html` | Mentions légales, confidentialité, cookies |
-| `admin.html` | Administration (voir plus bas) |
+| `pages/infos/rejoindre.html` | Ouverture d'un lien d'invitation |
+| `pages/compte/compte.html` | Connexion, inscription, profil, notifications, export et suppression des données |
+| `pages/compte/accueil.html` | Accueil des membres |
+| `pages/irl/secret-santa.html` | Secret Santa de l'édition en cours |
+| `pages/irl/irl.html` | Sorties IRL : prochaine sortie, dates à caler, sorties passées, carte des lieux |
+| `pages/irl/historique.html` | Frise des années, éditions passées du Secret Santa, albums photo |
+| `pages/irl/recap.html` | Récap de l'année, du membre et du gang |
+| `pages/compte/messages.html` | Conversations privées |
+| `pages/cartes/cartes.html` | Jeu de cartes : boosters, collection, classement, échanges, Arène, drops |
+| `pages/jeux/jeux.html` | Les jeux du gang, un onglet par jeu (`pages/jeux/jeux.html#<jeu>`) |
+| `pages/irl/calendrier.html` | Calendrier du gang |
+| `pages/irl/cine.html` | Ciné-club : vote de la séance du dimanche |
+| `pages/irl/citations.html` | Mur des citations |
+| `pages/irl/playlist.html` | Playlist du gang |
+| `pages/jeux/quiz.html` | Questions du gang |
+| `pages/irl/evenements.html` | Événements à thème (images à attraper) et classement des chasseurs |
+| `pages/compte/membre.html` | Carte de membre d'un joueur |
+| `pages/cartes/collection-a4.html` | Planche imprimable d'une collection (paramètres dans l'adresse) |
+| `pages/jeux/secret.html` | Le carnet des secrets (page cachée, hors menu) |
+| `pages/infos/aide.html` | Aide et tutos |
+| `pages/infos/assistance.html` | Formulaire d'aide (bug, question, idée) et suivi des demandes |
+| `pages/infos/legal.html` | Mentions légales, confidentialité, cookies |
+| `pages/admin/admin.html` | Administration (voir plus bas) |
 | `offline.html`, `404.html` | Page hors connexion, page introuvable |
-| `simulateur.html` | Simulateur de téléphone, outil de développement (non publié) |
+| `pages/jeux/simulateur.html` | Simulateur de téléphone, outil de développement (non publié) |
 | `affiches/` | Affiches A3 imprimables : badges, Paillettes, cartes, boosters |
 
 ---
 
 ## Administration
 
-Tout se règle depuis **Administration** (`admin.html`), sans toucher au code. L'adresse d'une section est `admin.html#domaine/sous-section`.
+Tout se règle depuis **Administration** (`pages/admin/admin.html`), sans toucher au code. L'adresse d'une section est `pages/admin/admin.html#domaine/sous-section`.
 
 ### Vue d'ensemble et « Mes raccourcis »
 
@@ -130,7 +130,7 @@ Depuis la fiche d'un membre (Membres › Comptes), **Voir le site comme…** ouv
 
 ### Arène v2 (aperçu admin)
 
-Jeu de cartes › **Arène** (`cartes.html#arene` pour le site, `admin.html#cartes/arene` pour le panel) contient deux blocs :
+Jeu de cartes › **Arène** (`pages/cartes/cartes.html#arene` pour le site, `pages/admin/admin.html#cartes/arene` pour le panel) contient deux blocs :
 - l'**Arène actuelle**, ouverte aux membres, avec ses gains et plafonds ;
 - l'**Arène v2**, visible des seuls administrateurs : réglages, aperçu du classement, saisons passées, clôture de saison. Elle ne s'ouvre aux membres que si le réglage `arena.v2_public` est activé. Règles et chiffres : `docs/ARENE.md`.
 
@@ -140,7 +140,7 @@ Jeu de cartes › **Arène** (`cartes.html#arene` pour le site, `admin.html#cart
 
 ```
 .
-├── *.html                  Une page = un fichier (accueil.html, cartes.html, admin.html…)
+├── *.html                  Une page = un fichier (pages/compte/accueil.html, pages/cartes/cartes.html, pages/admin/admin.html…)
 ├── 404.html, offline.html  Pages d'erreur et hors connexion
 ├── sw.js                   Service worker (cache hors ligne, notifications push)
 ├── manifest.webmanifest    Application installable
@@ -158,7 +158,7 @@ Jeu de cartes › **Arène** (`cartes.html#arene` pour le site, `admin.html#cart
 │   │   ├── admin-*.js, admin-*/   Sections du panel (comptes, cartes, réglages, sorties, souvenirs…)
 │   │   ├── eggs/, tutos/   Easter eggs et contenu des tutos de la page d'aide
 │   │   └── config.js       URL et clé publique Supabase
-│   ├── cards/              Images des cartes, par série (chemins relatifs « assets/cards/… » enregistrés en base)
+│   ├── cards/              Images des cartes, par série (chemins relatifs « site/assets/cartes/… » enregistrés en base)
 │   └── img/                Logo, icônes
 ├── supabase/
 │   ├── migrations/         Historique du schéma (numérotées, appliquées dans l'ordre)
@@ -171,7 +171,7 @@ Jeu de cartes › **Arène** (`cartes.html#arene` pour le site, `admin.html#cart
 └── .github/workflows/      Intégration continue (vérifications et tests)
 ```
 
-Les pages HTML restent à la racine parce que les images des cartes sont enregistrées en base avec des chemins relatifs (`assets/cards/…`), et que les adresses publiques des pages (`humane-gang.com/cartes.html`, etc.) ne doivent pas changer.
+Les pages HTML restent à la racine parce que les images des cartes sont enregistrées en base avec des chemins relatifs (`site/assets/cartes/…`), et que les adresses publiques des pages (`humane-gang.com/pages/cartes/cartes.html`, etc.) ne doivent pas changer.
 
 ---
 
@@ -185,7 +185,7 @@ npx serve .          # ou : python3 -m http.server 8000
 Puis ouvrir l'adresse indiquée (par exemple http://localhost:3000 ou :8000). Le site se connecte à la vraie base Supabase.
 
 ### Ajouter ou modifier une page
-1. Copier une page existante (par exemple `historique.html`) et changer le titre et le script chargé.
+1. Copier une page existante (par exemple `pages/irl/historique.html`) et changer le titre et le script chargé.
 2. Le script commence toujours par :
    ```js
    import { sb, initPage } from './core.js';
@@ -248,10 +248,10 @@ Un seul parcours se lance avec `node tests/<nom-du-fichier>` (par exemple `node 
 
 ## Sécurité et vie privée
 
-- Aucune clé secrète dans le dépôt : seules l'URL et la clé publique Supabase sont dans `assets/js/config.js`.
+- Aucune clé secrète dans le dépôt : seules l'URL et la clé publique Supabase sont dans `site/assets/commun/config.js`.
 - Les secrets (jeton du bot Discord, secret des tâches programmées) sont stockés côté Supabase uniquement.
 - Les données personnelles sont protégées par les règles d'accès de la base ; chaque membre peut exporter ou supprimer ses données depuis son compte.
-- Mentions légales, confidentialité et cookies : `legal.html`. Audit de sécurité : `docs/SECURITE.md`.
+- Mentions légales, confidentialité et cookies : `pages/infos/legal.html`. Audit de sécurité : `docs/SECURITE.md`.
 
 ---
 

@@ -27,7 +27,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
   await p.fill('#qp-note', '12 fours en ligne');
   await p.check('#qp-share');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal (fenêtre)');
-  await p.screenshot({ path: __dirname + '/shots/j11-envoi.png' });
+  await p.screenshot({ path: __dirname + '/../../shots/j11-envoi.png' });
   await p.click('#qp-send');
   await p.waitForFunction(() => !document.querySelector('dialog.qp-dialog'), null, { timeout: 5000 }).catch(() => {});
   const L = await log(p);
@@ -48,7 +48,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR
   check((await p.locator('.pf-card').innerText()).includes('Construis une ferme automatique'), 'détail : la 1re preuve est ouverte');
   check((await p.locator('.pf-shot img').count()) === 1 && (await p.locator('.pf-shotb').count()) === 2, 'détail : capture agrandie et 2 captures');
   check((await p.locator('.pf-note').innerText()).includes('12 fours'), 'détail : le mot du membre');
-  await p.screenshot({ path: __dirname + '/shots/j11-staff.png' });
+  await p.screenshot({ path: __dirname + '/../../shots/j11-staff.png' });
   // Sa propre preuve
   await p.click('.pf-item[data-id="pr-2"]');
   check((await p.locator('.pf-own').count()) === 1 && (await p.locator('[data-act="ok"]').count()) === 0, 'sa propre preuve : pas de bouton Valider');

@@ -48,7 +48,7 @@ const titrePanneau = (p) => p.locator('.ct-panneau h2').first().innerText().catc
   check((await p.locator('.ct-etapes li').count()) === 4, 'règles : « Comment on joue » en quatre étapes');
   check((await p.locator('.ct-couts .ct-cout-ligne').count()) === 3, 'coûts : route, colonie, ville');
   check((await hscroll(p)) <= 0, '1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/catan-placement-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/catan-placement-1280.png', fullPage: true });
   check(p.errs.length === 0, '1280 px : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -73,7 +73,7 @@ const titrePanneau = (p) => p.locator('.ct-panneau h2').first().innerText().catc
   const boite = await p.locator('[data-finir]').boundingBox();
   check(boite && boite.height >= 44, '390 px : boutons d\'action à 44 px au moins');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/catan-action-390.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/catan-action-390.png', fullPage: true });
   check(p.errs.length === 0, '390 px : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -117,7 +117,7 @@ const titrePanneau = (p) => p.locator('.ct-panneau h2').first().innerText().catc
   check((await p.locator('.ct-fin-liste li').count()) === 3, 'fin : un bilan par joueur (trois)');
   check((await p.locator('.ct-fin-ligne.is-gagnant').count()) === 1, 'fin : un gagnant mis en avant');
   check((await hscroll(p)) <= 0, 'fin 1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/catan-fin-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/catan-fin-1280.png', fullPage: true });
   check(p.errs.length === 0, 'fin : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 

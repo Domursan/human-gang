@@ -31,7 +31,7 @@ Le bot ne révèle jamais les paires du Secret Santa. Par défaut, les annonces 
 ## 2. Récupérer le token
 
 1. Toujours dans **Bot**, clique sur **Reset Token**, confirme, puis **Copy**.
-2. Garde-le de côté pour l'étape 4. **Ne le partage jamais**, ne le colle ni dans le code du site ni dans `admin.html` :
+2. Garde-le de côté pour l'étape 4. **Ne le partage jamais**, ne le colle ni dans le code du site ni dans `pages/admin/admin.html` :
    avec ce token, n'importe qui peut parler au nom du bot. Si tu penses qu'il a fuité, refais **Reset Token**
    et mets le nouveau dans Supabase.
 
@@ -71,7 +71,7 @@ Ce sont des nombres de 17 à 20 chiffres.
 
 ## 6. Régler le bot dans le site
 
-1. Connecte-toi au site, ouvre **Admin** → section **Bot Discord** (`admin.html#bot`).
+1. Connecte-toi au site, ouvre **Admin** → section **Bot Discord** (`pages/admin/admin.html#bot`).
 2. Colle l'ID du salon d'annonces et ton ID Discord.
 3. Choisis les notifications à activer, puis **Enregistrer**.
    **Mention dans le salon** (facultatif) : pour chaque type d'annonce, « Aucune » (défaut), « Le rôle » (notifie les membres d'un rôle dont tu colles l'ID, clic droit sur le rôle › *Copier l'identifiant*) ou **@everyone**, qui **notifie tout le serveur** : à réserver aux annonces vraiment importantes.

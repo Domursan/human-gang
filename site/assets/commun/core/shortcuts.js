@@ -11,7 +11,7 @@
 import { getPrefs } from './prefs-state.js';
 import { setPrefs } from './prefs.js';
 import { openSearch } from './search.js';
-import { canAccess } from './pages-access.js';
+import { canAccess, pageHref } from './pages-access.js';
 import { esc } from './util.js';
 import { ICON_CLOSE } from './icons.js';
 
@@ -182,7 +182,7 @@ function onKey(e) {
     const hit = SHORTCUT_PAGES.find(([key]) => key === String(k).toLowerCase());
     if (!hit || !canAccess(hit[1])) return;
     e.preventDefault();
-    if (currentSlug() !== hit[1]) location.href = `${hit[1]}.html`;
+    if (currentSlug() !== hit[1]) location.href = pageHref(hit[1]);
     return;
   }
   if (k === 'g' || k === 'G') {

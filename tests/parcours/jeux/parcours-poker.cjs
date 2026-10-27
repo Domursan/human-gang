@@ -40,7 +40,7 @@ const attendreAction = (p, sel) => p.waitForSelector(sel, { timeout: 8000 }).cat
   check((await p.locator('#pk-relance-curseur').count()) === 1, 'relance : curseur proposé (j\'ai assez de jetons)');
   check((await p.locator('#pk-relance-curseur').getAttribute('min')) === '20', 'relance : minimum 20 (10 + relance minimale 10)');
   check((await hscroll(p)) <= 0, '1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/poker-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/poker-1280.png', fullPage: true });
 
   // Suivre
   await p.click('[data-action="suivre"]');
@@ -82,7 +82,7 @@ const attendreAction = (p, sel) => p.waitForSelector(sel, { timeout: 8000 }).cat
   check((await p.locator('.pk-tiroir-chat').evaluate((el) => getComputedStyle(el).display)) === 'block', '390 px : chat en tiroir');
   check((await p.locator('[data-action="suivre"]').boundingBox()).height >= 44, '390 px : boutons d\'action à 44 px au moins');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/poker-390.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/poker-390.png', fullPage: true });
   check(p.errs.length === 0, '390 px : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -100,7 +100,7 @@ const attendreAction = (p, sel) => p.waitForSelector(sel, { timeout: 8000 }).cat
   check((await p.locator('.pf-carte').count()) === 4, 'fin : une carte par joueur (quatre)');
   check((await p.locator('.pf-carte.is-gagnant').count()) === 1, 'fin : un seul gagnant mis en avant');
   check((await hscroll(p)) <= 0, 'fin 1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/poker-fin-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/poker-fin-1280.png', fullPage: true });
   check(p.errs.length === 0, 'fin : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 

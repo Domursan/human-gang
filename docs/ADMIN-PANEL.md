@@ -1,6 +1,6 @@
 # Panel d'administration (Humane Gang)
 
-Ce document décrit l'organisation du panel `admin.html`, le système de permissions Staff, ce qui reste réservé
+Ce document décrit l'organisation du panel `pages/admin/admin.html`, le système de permissions Staff, ce qui reste réservé
 à l'administrateur, et la marche à suivre pour ajouter une permission ou une sous-section. Il ne contient aucune
 donnée personnelle. Pour retrouver l'accès administrateur, voir `supabase/ADMIN.md`.
 
@@ -10,9 +10,9 @@ donnée personnelle. Pour retrouver l'accès administrateur, voir `supabase/ADMI
 - **Colonne de navigation** : les sous-sections du domaine choisi, réparties en groupes (Comptes, Badges, Économie…).
   Une sous-section sans droit n'est ni affichée ni montée. Un domaine sans sous-section permise est masqué.
 - **Zone principale** : liste et détail de la sous-section. Panneau d'infos à droite, à partir de 1440 px.
-- **URL** : `admin.html#domaine/sous-section[/id[/onglet]]`, par exemple `#membres/comptes/<id>/<onglet>` ou `#cartes/quetes`.
+- **URL** : `pages/admin/admin.html#domaine/sous-section[/id[/onglet]]`, par exemple `#membres/comptes/<id>/<onglet>` ou `#cartes/quetes`.
   - Un domaine ou une sous-section sans droit renvoie vers la première sous-section permise. Sans aucun droit, rien ne s'ouvre.
-- **Anciennes adresses** (`assets/js/admin/router.js`) :
+- **Anciennes adresses** (`site/assets/espaces/admin/router.js`) :
   - une ancienne ancre de section (`#comptes`, `#cartes`, `#journal`…) est redirigée vers la sous-section de même nom,
     sinon vers la première qui monte cette section ; `#membres` seul ouvre Invitations ;
   - `#bataille` mène à `#cartes/arene` (Arène) ; `#fantomes` et `#membres/fantomes` mènent à `#membres/comptes` ;
@@ -26,7 +26,7 @@ donnée personnelle. Pour retrouver l'accès administrateur, voir `supabase/ADMI
   « Mises à jour disponibles — Actualiser » au lieu de se recharger. Le voyant « En direct » est dans le rail.
 - **Mobile (375 px)** : domaine, puis liste des sous-sections, puis détail avec retour.
 
-Sources : `assets/js/admin/perms.js` (sections, permissions, domaines) et `assets/js/admin/router.js` (URL).
+Sources : `site/assets/espaces/admin/perms.js` (sections, permissions, domaines) et `site/assets/espaces/admin/router.js` (URL).
 Côté base : `hg_has_perm()` et le catalogue `hg_perm_catalog`.
 
 ### Domaines et sous-sections
@@ -115,7 +115,7 @@ Les raccourcis sont personnels : chaque membre du Staff ne voit que les siens (t
 
 ### Rôles et accès par rôle (Membres › Comptes › Rôles, `#membres/roles`)
 
-Source : `assets/js/admin-roles.js`, migration 103. Droit : `membres`.
+Source : `site/assets/espaces/admin/admin-roles.js`, migration 103. Droit : `membres`.
 
 - Un **rôle** (`hg_roles` : identifiant, libellé, description, couleur, pages « sur liste », ordre) pré-règle l'accès à des pages
   pour les membres qui le portent (`hg_member_roles`). Des rôles de départ sont créés par la migration (IRL, Secret Santa) ; ils se modifient dans le panel.
@@ -126,36 +126,36 @@ Source : `assets/js/admin-roles.js`, migration 103. Droit : `membres`.
 - Écritures par RPC qui vérifient les droits et journalisent dans `hg_admin_log` : `hg_role_save`, `hg_role_remove`, `hg_member_role_set`.
 - Membres IRL (IRL › Membres IRL, droit `membres`) : liste des membres du rôle IRL.
 
-### Voir le site comme un membre (`assets/js/core/view-as.js`)
+### Voir le site comme un membre (`site/assets/commun/core/view-as.js`)
 
 - Depuis la fiche d'un membre (Membres › Comptes), le bouton « Voir le site comme… » ouvre le site dans l'onglet
   avec les menus et les pages de ce membre. La RPC `hg_admin_view_as` renvoie les pages que verrait ce membre (droit `membres`).
 - La vue est gardée dans `sessionStorage` (clé `hg_view_as`, propre à l'onglet) et s'affiche avec un bandeau « Tu vois le site comme… ».
-  Elle n'est gardée que si le profil connecté est administrateur. Sur le panel (`admin.html`), la clé est effacée.
+  Elle n'est gardée que si le profil connecté est administrateur. Sur le panel (`pages/admin/admin.html`), la clé est effacée.
 - Dans cette vue, Admin, Staff et Sans limite sont masqués dans le menu en arc (`core/header.js`).
 - Les données restent celles de l'administrateur : la base contrôle tout, ce module ne change que l'interface.
 
 ### Le jeu de cartes › Gestion globale (`#cartes/gestion`)
 
-Source : `assets/js/admin-gestion.js`, section `cartes-gestion`, droit `cartes`. Trois blocs :
+Source : `site/assets/espaces/admin/admin-gestion.js`, section `cartes-gestion`, droit `cartes`. Trois blocs :
 - **Give** : don groupé, avec la même confirmation et la même RPC que le tiroir d'Économie ;
 - **Résumé de l'économie** : santé de l'économie (`hg_eco_health`), statistiques des types de boosters (`hg_booster_type_stats`), enchères (`hg_auctions_admin`), seulement ce que la base renvoie ;
 - **Derniers gives**.
 
 ### Autres jeux › Arcade, pages 404 (`#jeux/arcade`)
 
-Source : `assets/js/admin-arcade.js`, section `arcade`, droit `reglages`. Suit les trois mini-jeux des pages 404
+Source : `site/assets/espaces/admin/admin-arcade.js`, section `arcade`, droit `reglages`. Suit les trois mini-jeux des pages 404
 (Paillettes, Raclette, Domu-mobile) semaine par semaine : parties jouées, Paillettes versées, règles anti-triche en lecture seule,
 et classement des dix meilleurs scores. L'administrateur peut effacer le score d'un membre (migration 103, partie 4 ; droit `reglages`).
 
 ### Le jeu de cartes › Arène (`#cartes/arene`, ancien `#bataille`)
 
-Source : `assets/js/admin-bataille.js`, section `bataille`, droit `cartes`. Deux blocs :
+Source : `site/assets/espaces/admin/admin-bataille.js`, section `bataille`, droit `cartes`. Deux blocs :
 - **Arène actuelle** (membres) : activation, gains et plafonds de l'Arène de cartes (`hg_settings.cards`), inchangés.
 - **Arène v2** (cotes, ligues, saisons) : ses chiffres se règlent ici (`hg_settings.arena`, bornés par le serveur).
   L'option « Ouvrir l'Arène v2 aux membres » (`arena.v2_public`) est réservée à l'administrateur.
   Tant qu'elle n'est pas ouverte, les membres voient l'Arène actuelle et seul l'administrateur voit l'aperçu v2 (bandeau « Aperçu admin »).
-  Règles et chiffres détaillés : `docs/ARENE.md`. Page membre : `cartes.html#arene`.
+  Règles et chiffres détaillés : `docs/ARENE.md`. Page membre : `pages/cartes/cartes.html#arene`.
 
 ### Anciennes adresses
 
@@ -171,13 +171,13 @@ par `router.js` vers la nouvelle sous-section. Les liens partagés continuent do
      (même approche que la migration 027, qui ne touche pas aux règles déjà converties).
    - Si le domaine porte des clés de `hg_settings`, les ajouter à `hg_settings_perm` (migration 029).
    - Publier les tables temps réel utiles (`alter publication supabase_realtime add table …`).
-2. **`assets/js/admin/perms.js`** : ajouter la section dans `SECTION_PERM` (section → clé), la sous-section dans `DOMAINS`
+2. **`site/assets/espaces/admin/perms.js`** : ajouter la section dans `SECTION_PERM` (section → clé), la sous-section dans `DOMAINS`
    (dans le domaine voulu, avec son groupe), et la section dans `TILE_SECTIONS` si elle doit figurer dans la vue d'ensemble.
-3. **`assets/js/admin/live.js`** : ajouter la table dans `TABLE_PERM` si elle doit être rafraîchie en direct.
-4. **`admin.html`** : ajouter `<section id="<section>" class="admin-section" aria-labelledby="h-<section>">` dans `#shell-parking`,
+3. **`site/assets/espaces/admin/live.js`** : ajouter la table dans `TABLE_PERM` si elle doit être rafraîchie en direct.
+4. **`pages/admin/admin.html`** : ajouter `<section id="<section>" class="admin-section" aria-labelledby="h-<section>">` dans `#shell-parking`,
    avec son conteneur de racine (`<div id="…-root">`), sur le modèle des sections existantes.
 5. **Module** : créer le fichier (`assets/js/admin-<nom>.js`, ou `assets/js/admin/<nom>.js`) et l'enregistrer dans
-   `assets/js/admin.js` : `registerSub('<domaine>/<sous-section>', { main, open, list, info, group })`. Les données partagées
+   `site/assets/espaces/admin/admin.js` : `registerSub('<domaine>/<sous-section>', { main, open, list, info, group })`. Les données partagées
    passent par `once()` ou un `ensure…` de `admin/loaders.js`.
 6. **Service worker** : les modules `assets/js/admin/*.js` et les fichiers `admin-*.js` sont listés dans `PRECACHE` de `sw.js`.
    Ajouter le nouveau fichier à cette liste, et incrémenter `CACHE_VERSION`.

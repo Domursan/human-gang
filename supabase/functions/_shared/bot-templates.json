@@ -132,7 +132,7 @@
         "budget": { "label": "Budget", "example": "20 CHF" },
         "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
         "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
-        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/pages/irl/secret-santa.html" }
       }
     },
     "ss_draw_dm": {
@@ -146,7 +146,7 @@
         "budget": { "label": "Budget", "example": "20 CHF" },
         "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
         "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
-        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/pages/irl/secret-santa.html" }
       }
     },
     "ss_gift_sent": {
@@ -156,7 +156,7 @@
         "pseudo": { "label": "Pseudo de la cible (destinataire)", "example": "Alex" },
         "annee": { "label": "Année de l'édition", "example": "2026" },
         "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
-        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/pages/irl/secret-santa.html" }
       }
     },
     "ss_gift_received": {
@@ -167,7 +167,7 @@
         "cible": { "label": "Pseudo de sa cible", "example": "Alex" },
         "annee": { "label": "Année de l'édition", "example": "2026" },
         "date_echange": { "label": "Date de l'échange", "example": "24 décembre 2026" },
-        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/pages/irl/secret-santa.html" }
       }
     },
     "irl_new": {
@@ -180,7 +180,7 @@
         "lieu": { "label": "Lieu", "example": "Lausanne" },
         "date": { "label": "Date et heure (ou « Date à choisir » si sondage)", "example": "samedi 14 novembre à 19:00" },
         "organisateur": { "label": "Pseudo de l'organisateur", "example": "Sam" },
-        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/irl.html" }
+        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/pages/irl/irl.html" }
       }
     },
     "message_new": {
@@ -190,7 +190,7 @@
         "pseudo": { "label": "Pseudo du destinataire", "example": "Alex" },
         "expediteur": { "label": "Pseudo de l'expéditeur", "example": "Sam" },
         "extrait": { "label": "Début du message (200 caractères)", "example": "Tu viens samedi ? On cherche encore quelqu'un pour les desserts." },
-        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/messages.html" }
+        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/pages/compte/messages.html" }
       }
     },
     "message_new_santa": {
@@ -199,7 +199,7 @@
       "vars": {
         "pseudo": { "label": "Pseudo de la cible (destinataire)", "example": "Alex" },
         "extrait": { "label": "Début du message (200 caractères)", "example": "Petite question : tu préfères le thé ou le café ?" },
-        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/messages.html" }
+        "lien": { "label": "Lien vers la conversation", "example": "https://humane-gang.example/pages/compte/messages.html" }
       }
     },
     "birthday_dm": {
@@ -207,7 +207,7 @@
       "description": "Envoyé chaque matin (8 h) en MP au membre dont c'est l'anniversaire.",
       "vars": {
         "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
-        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/pages/compte/accueil.html" }
       }
     },
     "birthday_announce": {
@@ -216,7 +216,7 @@
       "content": "Joyeux anniversaire @{pseudo} !",
       "vars": {
         "pseudo": { "label": "Pseudo du membre", "example": "Alex" },
-        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/pages/compte/accueil.html" }
       }
     },
     "support_new": {
@@ -231,7 +231,7 @@
         "pseudo": { "label": "Pseudo de l'auteur", "example": "Alex" },
         "contact": { "label": "Contact Discord (ou « non précisé »)", "example": "alex#1234" },
         "compte": { "label": "« Membre connecté » ou « Visiteur »", "example": "Membre connecté" },
-        "lien": { "label": "Lien vers l'administration", "example": "https://humane-gang.example/admin.html#assistance" }
+        "lien": { "label": "Lien vers l'administration", "example": "https://humane-gang.example/pages/admin/admin.html#assistance" }
       }
     },
     "bot_test": {
@@ -240,7 +240,7 @@
       "vars": {
         "canal": { "label": "« les annonces » ou « les messages privés »", "example": "les annonces" },
         "pseudo": { "label": "Pseudo de l'admin", "example": "Ethan" },
-        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/accueil.html" }
+        "lien": { "label": "Lien vers l'accueil", "example": "https://humane-gang.example/pages/compte/accueil.html" }
       }
     },
     "dyn_start": {
@@ -250,7 +250,7 @@
         "nom": { "label": "Nom de l'événement", "example": "La citrouille d'Halloween" },
         "description": { "label": "Description de l'événement", "example": "Des citrouilles se baladent sur le site cette semaine." },
         "fin": { "label": "Date et heure de fin", "example": "samedi 31 octobre à 23:59" },
-        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/evenements.html" }
+        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/pages/irl/evenements.html" }
       }
     },
     "dyn_end": {
@@ -261,7 +261,7 @@
         "description": { "label": "Description de l'événement", "example": "Des citrouilles se baladent sur le site cette semaine." },
         "fin": { "label": "Date et heure de fin", "example": "samedi 31 octobre à 23:59" },
         "classement": { "label": "Top 3 (une ligne par personne)", "example": "1. Alex : 14 images\n2. Sam : 9 images\n3. Chloé : 7 images" },
-        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/evenements.html" }
+        "lien": { "label": "Lien vers la page des événements", "example": "https://humane-gang.example/pages/irl/evenements.html" }
       }
     },
     "card_pull_announce": {
@@ -273,7 +273,7 @@
         "verbe": { "label": "« a obtenu » ou « a fabriqué » (selon la façon dont la carte a été obtenue)", "example": "a fabriqué" },
         "carte": { "label": "Nom de la carte (avec « brillante » et le numéro si besoin)", "example": "Le Four à raclette N° 03/10" },
         "rarete": { "label": "Rareté", "example": "Légendaire" },
-        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/pages/cartes/cartes.html" }
       }
     },
     "card_trade_announce": {
@@ -282,7 +282,7 @@
       "vars": {
         "pseudo": { "label": "Pseudo de celui qui accepte", "example": "Alex" },
         "partenaire": { "label": "Pseudo de l'autre membre", "example": "Sam" },
-        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/pages/cartes/cartes.html" }
       }
     },
     "irl_reminder": {
@@ -293,7 +293,7 @@
         "delai": { "label": "Délai (« dans moins de 24 heures » ou « dans moins de 2 heures »)", "example": "dans moins de 24 heures" },
         "quand": { "label": "Date et heure", "example": "samedi 14 novembre à 19:00" },
         "lieu": { "label": "Lieu (ou « lieu à préciser »)", "example": "Lausanne" },
-        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/irl.html" }
+        "lien": { "label": "Lien vers la page IRL", "example": "https://humane-gang.example/pages/irl/irl.html" }
       }
     },
     "ss_send_reminder": {
@@ -303,7 +303,7 @@
         "pseudo": { "label": "Pseudo du Santa (destinataire)", "example": "Sam" },
         "annee": { "label": "Année de l'édition", "example": "2026" },
         "date_limite": { "label": "Date limite d'envoi", "example": "15 décembre 2026" },
-        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/secret-santa.html" }
+        "lien": { "label": "Lien vers la page Secret Santa", "example": "https://humane-gang.example/pages/irl/secret-santa.html" }
       }
     },
     "card_wish_dm": {
@@ -311,7 +311,7 @@
       "description": "Envoyé en MP à un membre qui a mis la carte dans sa liste de souhaits, quand un autre membre l'obtient. Le membre qui l'a obtenue n'est pas nommé. Désactivé par défaut, et seulement pour les membres qui ont activé cette alerte.",
       "vars": {
         "carte": { "label": "Nom de la carte (avec « brillante » si besoin)", "example": "Le Four à raclette" },
-        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/pages/cartes/cartes.html" }
       }
     },
     "trade_offer_dm": {
@@ -322,7 +322,7 @@
         "contre": { "label": "« (contre-proposition) » si c'est une contre-proposition", "example": " (contre-proposition)" },
         "donne": { "label": "Ce qui est donné (cartes et Paillettes)", "example": "2 cartes (Le Four à raclette, Tracteur) + 50 Paillettes" },
         "demande": { "label": "Ce qui est demandé (cartes et Paillettes)", "example": "1 carte (Soirée pizza)" },
-        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/cartes.html" }
+        "lien": { "label": "Lien vers la page Cartes", "example": "https://humane-gang.example/pages/cartes/cartes.html" }
       }
     },
     "card_gift_admin_dm": {
@@ -344,7 +344,7 @@
         "rarete": { "label": "Rareté", "example": "Légendaire" },
         "quantite": { "label": "Nombre d'exemplaires à attraper", "example": "3 exemplaires" },
         "fin": { "label": "Heure de fin du drop", "example": "jeudi 22 octobre à 20:30" },
-        "lien": { "label": "Lien vers l'accueil du site", "example": "https://humane-gang.example/accueil.html" }
+        "lien": { "label": "Lien vers l'accueil du site", "example": "https://humane-gang.example/pages/compte/accueil.html" }
       }
     },
     "quiz_daily": {
@@ -358,7 +358,7 @@
         "ferme": { "label": "Fermeture", "example": "demain à 6 h" },
         "rappel": { "label": "Rappel de la veille (vide le premier jour)", "example": "Hier : 9 bonnes réponses sur 12 · Réponse : « le livre est mieux »" },
         "series": { "label": "Plus longues séries (le vendredi seulement)", "example": "Plus longues séries en cours : Mycethyst 21 j · Izin 14 j · Terrow 9 j" },
-        "lien": { "label": "Lien vers la question du jour", "example": "https://humane-gang.example/jeux.html#jour" }
+        "lien": { "label": "Lien vers la question du jour", "example": "https://humane-gang.example/pages/jeux/jeux.html#jour" }
       }
     },
     "lg_party_announce": {
@@ -370,7 +370,7 @@
         "nom": { "label": "Nom de la partie", "example": "Soirée du dimanche" },
         "code": { "label": "Code de la partie", "example": "HGLG-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
-        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/loup-garou.html?code=HGLG-4821" }
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/pages/jeux/loup-garou.html?code=HGLG-4821" }
       }
     },
     "uno_party_announce": {
@@ -382,7 +382,7 @@
         "nom": { "label": "Nom de la partie", "example": "Uno du dimanche" },
         "code": { "label": "Code de la partie", "example": "HGUNO-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 10" },
-        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/uno.html?code=HGUNO-4821" }
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/pages/jeux/uno.html?code=HGUNO-4821" }
       }
     },
     "ndc_party_announce": {
@@ -394,7 +394,7 @@
         "nom": { "label": "Nom de la partie", "example": "Espions du samedi" },
         "code": { "label": "Code de la partie", "example": "HGNDC-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 12" },
-        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/nom-de-code.html?code=HGNDC-4821" }
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/pages/jeux/nom-de-code.html?code=HGNDC-4821" }
       }
     },
     "plat_party_announce": {
@@ -407,7 +407,7 @@
         "nom": { "label": "Nom de la partie", "example": "Enquête du samedi" },
         "code": { "label": "Code de la partie", "example": "HGCLU-4821" },
         "places": { "label": "Joueurs inscrits et places", "example": "1 joueur sur 6" },
-        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/cluedo.html?code=HGCLU-4821" }
+        "lien": { "label": "Lien d'invitation", "example": "https://humane-gang.example/pages/jeux/cluedo.html?code=HGCLU-4821" }
       }
     },
     "duel_defi_dm": {
@@ -419,7 +419,7 @@
         "jeu": { "label": "Jeu", "example": "Puissance 4" },
         "format": { "label": "Format", "example": "au meilleur des 3" },
         "code": { "label": "Code du duel", "example": "HGP4-2190" },
-        "lien": { "label": "Lien pour accepter", "example": "https://humane-gang.example/duels.html#rejoindre/HGP4-2190" }
+        "lien": { "label": "Lien pour accepter", "example": "https://humane-gang.example/pages/jeux/duels.html#rejoindre/HGP4-2190" }
       }
     }
   }

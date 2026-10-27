@@ -42,7 +42,7 @@ const { check, finish, openPage, hscroll, log, sleep, chromium } = require('../.
   check((await p.locator('.jb-duel.is-perdu .jb-duel-r').first().innerText().catch(() => 'Duel perdu')) === 'Duel perdu', 'texte neutre : « Duel perdu »');
   check((await p.locator('.jb-res').innerText()).includes('contre la défense de Alice'), 'résultat : « contre la défense de Alice »');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal (résultat)');
-  await p.screenshot({ path: __dirname + '/shots/j15-bataille.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/j15-bataille.png', fullPage: true });
   await p.setViewportSize({ width: 360, height: 800 });
   await sleep(200);
   check((await hscroll(p)) <= 0, '360 px : pas de défilement horizontal (résultat)');

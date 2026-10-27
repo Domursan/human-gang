@@ -1,7 +1,7 @@
 // ===== Humane Gang — fonction edge « hg-calendar » : abonnement d'agenda personnel (flux ICS) =====
 // Rôle : GET /functions/v1/hg-calendar?t=<jeton> renvoie le calendrier du gang (60 jours passés, 365 à venir) au format
 // text/calendar, pour Google Agenda, Calendrier (Apple), Outlook… Le jeton est personnel (hg_calendar_tokens, migration 087),
-// régénérable par le membre sur calendrier.html : l'ancienne adresse cesse alors de fonctionner.
+// régénérable par le membre sur pages/irl/calendrier.html : l'ancienne adresse cesse alors de fonctionner.
 // Sécurité : lecture seule par la clé service (RPC hg_calendar_feed, refusée aux clients) ; jeton inconnu ou mal formé : 404 ;
 // le flux ne contient ni lieu, ni participants ; il respecte les accès aux pages du membre. Cache 30 minutes.
 // verify_jwt = false (les applications d'agenda n'envoient pas de JWT).

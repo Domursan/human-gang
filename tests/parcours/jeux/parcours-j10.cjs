@@ -72,7 +72,7 @@ const FAKE_YT = () => {
   check((await p.locator('.jd-end').innerText()).includes('proposé par Alice dans #musique, mars 2023'), 'fin : « proposé par Alice dans #musique, mars 2023 »');
   check((await p.locator('.jh-sleeve').count()) === 0 && (await p.locator('.jh-box.is-open').count()) === 1, 'fin : la vidéo se dévoile');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/j10-heardle.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/j10-heardle.png', fullPage: true });
   // Proposer un morceau
   await p.click('[data-act="propose"]');
   await p.fill('#jh-p-title', 'Le morceau du RDV');

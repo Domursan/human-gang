@@ -56,7 +56,7 @@ const { ROOT, check, finish, openPage, adminSection, hscroll, log, sleep, chromi
   const calls = (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_framed_guess');
   check(calls.length === 2 && calls[0][2].p_film === 'f-prestige' && calls[1][2].p_film === 'f-nope', 'appels : 2 essais envoyés avec les bons films');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/j9-framed.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/j9-framed.png', fullPage: true });
   check(p.errs.length === 0, 'aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 

@@ -108,8 +108,11 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     if (/\/vendor\/supabase/.test(u.pathname)) return serve(route, { body: fakeBody, contentType: 'text/javascript' });
     if (PREFIX && u.pathname !== PREFIX && !u.pathname.startsWith(PREFIX + '/')) return route.fulfill({ status: 404, body: 'nf' });
     const rel = u.pathname.slice(PREFIX.length) || '/';
-    let f = path.join(ROOT, decodeURIComponent(rel));
-    if (!f.startsWith(ROOT + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
+    // Les bancs et les fixtures sont sous /tests/ (dossier tests/, hors du site servi) : seul ce préfixe leur est ouvert.
+    const sousTests = /^\/tests\//.test(rel);
+    const base = sousTests ? TESTS : ROOT;
+    let f = path.join(base, decodeURIComponent(sousTests ? rel.slice('/tests'.length) : rel));
+    if (!f.startsWith(base + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
     if (!fs.existsSync(f)) { // comme GitHub Pages : une adresse inconnue reçoit 404.html, avec le statut 404
       const page404 = path.join(ROOT, '404.html');

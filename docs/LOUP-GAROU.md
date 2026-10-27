@@ -1,6 +1,6 @@
 # Loup-Garou — architecture et contrat technique
 
-Page `loup-garou.html` (accès selon la page « loup-garou » de Membres › Accès aux pages : **admins seulement** au lancement).
+Page `pages/jeux/loup-garou.html` (accès selon la page « loup-garou » de Membres › Accès aux pages : **admins seulement** au lancement).
 Toute la logique de jeu est côté serveur (migrations `118_loup_garou_tables.sql` et `119_loup_garou_moteur.sql`).
 Le navigateur n'envoie que des intentions et relit son état personnalisé.
 
@@ -8,17 +8,17 @@ Le navigateur n'envoie que des intentions et relit son état personnalisé.
 
 | Fichier | Rôle |
 | --- | --- |
-| `loup-garou.html` | Coquille de la page |
-| `assets/js/loup-garou.js` | Démarrage, routes : (vide) accueil · `#roles` · `#creer` · `#rejoindre/CODE` · `#partie/CODE` · `#stats` ; `?code=HGLG-1234` mène à `#rejoindre/HGLG-1234` |
-| `assets/js/loup-garou/api.js` | Seul accès à Supabase : `lg.*` (fonctions serveur), `messages()`, `suivrePartie()` |
-| `assets/js/loup-garou/ui.js` | Composants partagés : `icone`, `vignetteRole`, `pastilleCamp`, `pseudo`, `avatar`, `chrono`, `libellePhase`, `estNuit`, `libelleCause`, `filAriane`, `ouvrirFenetre`, `confirmer`, `notifier`, `CANAUX` |
-| `assets/js/loup-garou/roles.js` | Catalogue des 39 rôles : `ROLES`, `EXTENSIONS`, `CAMPS`, `roleById` |
-| `assets/js/loup-garou/table.js` | `tableHtml(joueurs, options)` : la table autour du feu de camp |
-| `assets/js/loup-garou/chat.js` | `monterChat(el, s, { canaux, titre })` : salons, non-lus, envoi |
-| `assets/js/loup-garou/partie.js` | Suit une partie et choisit l'écran : salle, révélation, plateau, meneur, fin |
+| `pages/jeux/loup-garou.html` | Coquille de la page |
+| `site/assets/espaces/loup-garou/loup-garou.js` | Démarrage, routes : (vide) accueil · `#roles` · `#creer` · `#rejoindre/CODE` · `#partie/CODE` · `#stats` ; `?code=HGLG-1234` mène à `#rejoindre/HGLG-1234` |
+| `site/assets/espaces/loup-garou/api.js` | Seul accès à Supabase : `lg.*` (fonctions serveur), `messages()`, `suivrePartie()` |
+| `site/assets/espaces/loup-garou/ui.js` | Composants partagés : `icone`, `vignetteRole`, `pastilleCamp`, `pseudo`, `avatar`, `chrono`, `libellePhase`, `estNuit`, `libelleCause`, `filAriane`, `ouvrirFenetre`, `confirmer`, `notifier`, `CANAUX` |
+| `site/assets/espaces/loup-garou/roles.js` | Catalogue des 39 rôles : `ROLES`, `EXTENSIONS`, `CAMPS`, `roleById` |
+| `site/assets/espaces/loup-garou/table.js` | `tableHtml(joueurs, options)` : la table autour du feu de camp |
+| `site/assets/espaces/loup-garou/chat.js` | `monterChat(el, s, { canaux, titre })` : salons, non-lus, envoi |
+| `site/assets/espaces/loup-garou/partie.js` | Suit une partie et choisit l'écran : salle, révélation, plateau, meneur, fin |
 | `assets/js/loup-garou/vues/*.js` | Un module par écran |
-| `assets/css/loup-garou.css` | Décor (village, nuit/jour), composants partagés, table, écran de mort |
-| `assets/css/loup-garou-ecrans.css` | Styles des écrans (assemblés depuis `assets/css/lg/*.css`) |
+| `site/assets/espaces/loup-garou/loup-garou.css` | Décor (village, nuit/jour), composants partagés, table, écran de mort |
+| `site/assets/espaces/loup-garou/loup-garou-ecrans.css` | Styles des écrans (assemblés depuis `assets/css/lg/*.css`) |
 | `assets/img/loup-garou/` | Illustrations des rôles (`roles/*.webp`), village, feu de nuit et de jour |
 
 ## Contrat des écrans

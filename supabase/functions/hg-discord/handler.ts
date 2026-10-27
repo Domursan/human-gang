@@ -158,7 +158,7 @@ export function makeHandler(d: Deps) {
     try { user = await rpc('hg_bot_user', { p_discord: discordId }); } catch (e) { console.error('[hg-discord] membre', why(e)); }
     if (!user) {
       return reply(textMessage('Ton compte Discord n’est pas encore relié au site. Demande au Staff via l’assistance du site'
-        + (SITE ? ` (${SITE}/assistance.html)` : '') + ' : donne-lui ton identifiant Discord (Paramètres › Avancés › Mode développeur, puis clic droit sur ton profil › « Copier l’identifiant »).'));
+        + (SITE ? ` (${SITE}/pages/infos/assistance.html)` : '') + ' : donne-lui ton identifiant Discord (Paramètres › Avancés › Mode développeur, puis clic droit sur ton profil › « Copier l’identifiant »).'));
     }
 
     // Idempotence : une interaction n'agit qu'une fois.

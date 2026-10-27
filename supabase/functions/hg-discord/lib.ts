@@ -142,7 +142,7 @@ export function paillettesMessage(me: Me, site: string, now = Date.now()) {
         { name: 'Prochain booster gratuit', value: fmtUntil(me.free_booster_at, now), inline: true },
       ],
     }],
-    components: linkRow(site, 'cartes.html', 'Ouvrir mes cartes'),
+    components: linkRow(site, 'pages/cartes/cartes.html', 'Ouvrir mes cartes'),
   };
 }
 
@@ -167,7 +167,7 @@ export function carteMessage(c: Card | null, query: string, site: string) {
       ],
       ...(c.craftable ? { footer: { text: 'Fabrication possible sur la page Cartes' } } : {}),
     }],
-    components: c.tradeable && c.doubles?.length ? linkRow(site, 'cartes.html', 'Proposer un échange') : linkRow(site, 'cartes.html', 'Ouvrir mes cartes'),
+    components: c.tradeable && c.doubles?.length ? linkRow(site, 'pages/cartes/cartes.html', 'Proposer un échange') : linkRow(site, 'pages/cartes/cartes.html', 'Ouvrir mes cartes'),
   };
 }
 
@@ -182,7 +182,7 @@ export function sortieMessage(o: Outing, site: string, ephemeral = true) {
   const btn = (status: string, label: string, style: number) =>
     ({ type: 2, style: o.mine === status ? 3 : style, label: o.mine === status ? `${label} ✓` : label, custom_id: customId('rsvp', o.id, status) });
   const rows: unknown[] = [{ type: 1, components: [btn('oui', 'J’y vais', 1), btn('peut-etre', 'Peut-être', 2), btn('non', 'Non', 2)] }];
-  if (site) rows.push({ type: 1, components: [{ type: 2, style: 5, label: 'Voir la sortie', url: `${site}/irl.html#event-${o.id}` }] });
+  if (site) rows.push({ type: 1, components: [{ type: 2, style: 5, label: 'Voir la sortie', url: `${site}/pages/irl/irl.html#event-${o.id}` }] });
   return {
     flags: ephemeral ? EPHEMERAL : 0, allowed_mentions: { parse: [] },
     embeds: [{
@@ -211,7 +211,7 @@ export function quizMessage(q: Quiz, site: string) {
   const label = (o: { id: string; text?: string }) => (q.qtype === 'vrai_faux' ? (o.id === 'vrai' ? 'Vrai' : 'Faux') : String(o.text || o.id)).slice(0, 80);
   const components = choice
     ? [{ type: 1, components: q.options.map((o) => ({ type: 2, style: 2, label: label(o), custom_id: customId('quiz', q.id, String(o.id)) })) }]
-    : linkRow(site, 'quiz.html', 'Répondre sur le site');
+    : linkRow(site, 'pages/jeux/quiz.html', 'Répondre sur le site');
   return {
     flags: EPHEMERAL, allowed_mentions: { parse: [] },
     embeds: [{

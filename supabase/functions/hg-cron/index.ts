@@ -21,7 +21,7 @@
 //      Désactivé si bot.notify.gift === false.
 //   5. Question du jour (D2, migration 084) : une fois par jour, à l'heure planning.quiz_jour_heure_locale (défaut 9 h,
 //      porte hg_cron_gate('quiz_jour', 9)), message dans les salons du type « quiz » (bot.channels.quiz, repli : salon
-//      d'annonces) avec un bouton « Répondre sur le site » (jeux.html#jour) : question, catégorie, difficulté, récompense,
+//      d'annonces) avec un bouton « Répondre sur le site » (pages/jeux/jeux.html#jour) : question, catégorie, difficulté, récompense,
 //      rappel de la veille (score du gang et réponse) ; le vendredi, les trois plus longues séries (3 jours au moins).
 //      Jamais la bonne réponse du jour. Réservation dans hg_bot_runs ('quiz_daily', jour) AVANT l'envoi, retirée si tous
 //      les salons échouent. Pas de question = rien ne part. Pause : bot.notify.quiz_daily === false (vacances).
@@ -313,10 +313,10 @@ async function irlReminders(out: Counters, attempts: Attempt[], rules: BotRules)
       delai: left <= SHORT ? `dans moins de ${rules.irl_short} heure${rules.irl_short > 1 ? 's' : ''}` : `dans moins de ${rules.irl_long} heures`,
       quand: fmtZurichWhen(ev.starts_at),
       lieu: String(ev.location || 'lieu à préciser').slice(0, 200),
-      lien: link('irl.html') ?? '',
+      lien: link('pages/irl/irl.html') ?? '',
     }, tpl);
     try {
-      await dmOuSite(db, r.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('irl.html'), color: COLOR.irl }), 'sorties');
+      await dmOuSite(db, r.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('pages/irl/irl.html'), color: COLOR.irl }), 'sorties');
       out.irl_reminders++;
       attempts.push({ user_id: r.user_id, pseudo: person.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
@@ -373,10 +373,10 @@ async function ssReminders(out: Counters, attempts: Attempt[], rules: BotRules) 
     const keys = { edition_id: p.edition_id, user_id: p.user_id };
     if (!(await claimRow('hg_ss_participants', keys, 'send_reminder_at'))) continue;
     const rendered = renderTemplate('ss_send_reminder', {
-      pseudo: person.pseudo, annee: ed.year, date_limite: fmtZurichDay(ed.send_deadline), lien: link('secret-santa.html') ?? '',
+      pseudo: person.pseudo, annee: ed.year, date_limite: fmtZurichDay(ed.send_deadline), lien: link('pages/irl/secret-santa.html') ?? '',
     }, tpl);
     try {
-      await dmOuSite(db, p.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('secret-santa.html'), color: COLOR.ss }), 'santa');
+      await dmOuSite(db, p.user_id, person.discord_id!, embed({ ...embedFrom(rendered), url: link('pages/irl/secret-santa.html'), color: COLOR.ss }), 'santa');
       out.ss_reminders++;
       attempts.push({ user_id: p.user_id, pseudo: person.pseudo, ok: true, status: 'sent', reason: null });
     } catch (e) {
@@ -430,7 +430,7 @@ async function quizDaily(out: Counters, bot: ChannelBot & MentionBot, chanLog: C
   const top = vendredi ? (q.top_streaks ?? []).filter((t) => t.days >= 3).slice(0, 3) : [];
   const series = top.length ? `Plus longues séries en cours : ${top.map((t) => `${t.pseudo} ${t.days} j`).join(' · ')}` : '';
   const recompense = `${q.bonus ?? 10} Paillettes pour ta série${q.question.reward ? ` (${q.question.reward} de plus si juste, si tu n'y as jamais répondu)` : ''}`;
-  const lien = link('jeux.html#jour');
+  const lien = link('pages/jeux/jeux.html#jour');
   const rendered = renderTemplate('quiz_daily', {
     categorie: [q.question.category, DIFF_FR[q.question.difficulty] ?? q.question.difficulty].filter(Boolean).join(' · '),
     question: String(q.question.prompt).slice(0, 500), recompense, ferme: 'demain à 6 h', rappel, series, lien: lien ?? '',

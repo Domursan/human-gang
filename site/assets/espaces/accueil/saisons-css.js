@@ -9,12 +9,15 @@
  * Ajoute une feuille de style si elle n'est pas déjà là.
  * @param {string} file Nom du fichier dans assets/css.
  */
+/** Dossier de chaque feuille, relatif à ce module. */
+const DOSSIER = { 'saisons.css': './', 'cartes-card.css': '../cartes/' };
+
 function addCss(file) {
-  if ([...document.styleSheets].some((s) => s.href && s.href.endsWith(`/css/${file}`))
+  if ([...document.styleSheets].some((s) => s.href && s.href.endsWith(`/${file}`))
     || document.querySelector(`link[data-season-css="${file}"]`)) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL(`../css/${file}`, import.meta.url).href;
+  l.href = new URL(`${DOSSIER[file]}${file}`, import.meta.url).href;
   l.dataset.seasonCss = file;
   document.head.append(l);
 }

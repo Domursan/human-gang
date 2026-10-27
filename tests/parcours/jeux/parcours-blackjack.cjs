@@ -55,7 +55,7 @@ const dernierRpc = async (p, fn) => (await log(p)).filter((e) => e[0] === 'rpc' 
   check((await p.locator('.bj-panneau h2').innerText()) === 'Fais ta mise', 'manche suivante : de nouveau « Fais ta mise »');
   check((await p.locator('[aria-labelledby="bj-derniere-titre"]').innerText()).includes('Ethan gagne 100 jetons.'), 'dernière manche : « Ethan gagne 100 jetons. »');
   check((await hscroll(p)) <= 0, '1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/blackjack-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/blackjack-1280.png', fullPage: true });
   check(p.errs.length === 0, '1280 px : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -66,7 +66,7 @@ const dernierRpc = async (p, fn) => (await log(p)).filter((e) => e[0] === 'rpc' 
   check((await p.locator('.bj-tiroir-chat').evaluate((el) => getComputedStyle(el).display)) === 'block', '390 px : chat en tiroir');
   check((await p.locator('[data-rapide="500"]').boundingBox()).height >= 44, '390 px : boutons de mise à 44 px au moins');
   check((await hscroll(p)) <= 0, '390 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/blackjack-390.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/blackjack-390.png', fullPage: true });
   check(p.errs.length === 0, '390 px : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
@@ -85,7 +85,7 @@ const dernierRpc = async (p, fn) => (await log(p)).filter((e) => e[0] === 'rpc' 
   check((await p.locator('.bf-carte.is-gagnant').innerText()).includes('Alice'), 'fin : Alice, première avec 1 225 jetons, est gagnante');
   check((await p.locator('.bf-carte').first().textContent()).includes('1er'), 'fin : rang « 1er » en tête');
   check((await hscroll(p)) <= 0, 'fin 1280 px : pas de défilement horizontal');
-  await p.screenshot({ path: __dirname + '/shots/blackjack-fin-1280.png', fullPage: true });
+  await p.screenshot({ path: __dirname + '/../../shots/blackjack-fin-1280.png', fullPage: true });
   check(p.errs.length === 0, 'fin : aucune erreur JS' + (p.errs.length ? ' — ' + p.errs.join(' | ') : ''));
   await p.ctx.close();
 
