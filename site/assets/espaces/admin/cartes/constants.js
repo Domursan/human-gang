@@ -110,12 +110,12 @@ export const ECON = [
   ] },
   { g: 'Échanges', fields: [{ k: 'max_open_trades', l: 'Offres en cours maximum par personne', int: true, min: 1, help: 'Nombre d\'offres d\'échange qu\'un membre peut avoir ouvertes en même temps.' }] },
   // Plafonds de Paillettes (cards.plafonds) : chaque groupe reprend un thème du site. Vide = valeur par défaut (affichée en gris).
-  { g: 'Jeux du jour', hint: 'Paillettes données une fois par jour et par jeu, dans la limite de ce plafond. Vide = valeur par défaut.', fields: [
+  { g: 'Jeux quotidiens', hint: 'Paillettes données une fois par jour et par jeu, dans la limite de ce plafond. Vide = valeur par défaut.', fields: [
     PLAF('framed_gain', 'Framed : partie gagnée', paillSym(), 200), PLAF('framed_consolation', 'Framed : partie perdue', paillSym(), 200),
     PLAF('heardle_gain', 'Heardle : partie gagnée', paillSym(), 200), PLAF('heardle_consolation', 'Heardle : partie perdue', paillSym(), 200),
     PLAF('sutom_trouve', 'Sutom : mot trouvé', paillSym(), 100), PLAF('sutom_perdu', 'Sutom : mot non trouvé', paillSym(), 100),
-    PLAF('jeu_du_jour_gain', 'Autres jeux du jour : Paillettes par jeu déclaré', paillSym(), 50),
-    PLAF('jeux_du_jour', 'Autres jeux du jour : jeux payés par jour', 'jeux', 10),
+    PLAF('jeu_du_jour_gain', 'Autres jeux quotidiens : Paillettes par jeu déclaré', paillSym(), 50),
+    PLAF('jeux_du_jour', 'Autres jeux quotidiens : jeux payés par jour', 'jeux', 10),
   ] },
   { g: 'Quiz et citations', hint: 'Bonus de la question du jour, paliers des séries de réponses, et limites des citations « Qui a dit ça ? ».', fields: [
     PLAF('quiz_jour', 'Question du jour : bonus', paillSym(), 100),

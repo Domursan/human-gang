@@ -31,6 +31,32 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   check(await p.locator('#jeux-tab-tous').getAttribute('aria-selected') === 'true', 'défaut : onglet « Tous les jeux » sélectionné (sans adresse)');
   check(await p.evaluate(() => location.hash) === '', 'défaut : aucune adresse ajoutée');
   check(await p.locator('#jeux-panel-tous .jx-carte').count() > 0, 'vue de départ : cartes des jeux');
+  // Jeux quotidiens (une partie par jour) avant les jeux flash (à volonté) ; un filtre par section
+  const sec = (s) => p.locator(`#jeux-panel-tous .jx-section[data-s="${s}"]`);
+  check((await p.locator('#jeux-panel-tous .jx-h').allInnerTexts()).slice(0, 2).join(' / ') === 'Jeux quotidiens / Jeux flash', 'sections : « Jeux quotidiens » puis « Jeux flash »');
+  check((await p.locator('#jeux-panel-tous .jx-filtre').allInnerTexts()).slice(0, 3).join(',') === 'Tous,Quotidiens,Flash', 'filtres : Tous, Quotidiens, Flash');
+  // Chaque jeu à onglet « Chaque jour » (onglets.js) a sa carte dans « Jeux quotidiens », sauf l’Arcade (à volonté)
+  const manquants = [];
+  for (const id of RYTHMES.filter(([i, r]) => r === 'jour' && i !== 'arcade').map((x) => x[0])) {
+    if (!(await sec('quotidien').locator(`a[href="#${id}"]`).count())) manquants.push(id);
+  }
+  check(manquants.length === 0, `quotidiens : chaque jeu « Chaque jour » a sa carte ${manquants.length ? '(manque : ' + manquants.join(', ') + ')' : ''}`);
+  const titresQ = await sec('quotidien').locator('.jx-t').allInnerTexts();
+  const titresF = await sec('flash').locator('.jx-t').allInnerTexts();
+  // (Code du jour dépend de la page duels, fermée à ce membre dans le faux Supabase : pas attendu ici)
+  check(['Sutom HG', 'Carte mystère', 'Sudoku du jour'].every((t) => titresQ.includes(t)), 'quotidiens : Sutom HG, Carte mystère, Sudoku du jour');
+  check(['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile'].every((t) => titresF.includes(t)), 'flash : Paillettes, Raclette, Démineur, Domu-mobile');
+  check(!titresQ.some((t) => ['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile', '2048 Paillettes'].includes(t)), 'quotidiens : aucun jeu à volonté');
+  await p.click('.jx-filtre[data-f="quotidien"]'); await sleep(150);
+  check(await sec('quotidien').isVisible() && await sec('flash').isHidden(), 'filtre « Quotidiens » : seulement les jeux quotidiens');
+  await p.click('.jx-filtre[data-f="flash"]'); await sleep(150);
+  check(await sec('flash').isVisible() && await sec('quotidien').isHidden(), 'filtre « Flash » : seulement les jeux flash');
+  await p.click('.jx-filtre[data-f=""]'); await sleep(150);
+  check(await sec('quotidien').isVisible() && await sec('flash').isVisible(), 'filtre « Tous » : les deux sections');
+  await p.fill('#jx-q', 'démineur'); await sleep(150);
+  check(await sec('flash').isVisible() && await sec('quotidien').isHidden(), 'recherche « démineur » : dans « Jeux flash » seulement');
+  await p.fill('#jx-q', ''); await sleep(150);
+  check(await sec('quotidien').isVisible() && await sec('flash').isVisible(), 'recherche vidée : les deux sections');
   check(await p.locator('[role="tab"][tabindex="0"]').count() === 1, 'ARIA : un seul onglet dans l’ordre de tabulation');
   check(await p.locator('#jeux-tabs').getAttribute('aria-orientation') === 'horizontal', 'ARIA : barre horizontale sur téléphone');
   check(await p.locator('#jeux-panel-tous').getAttribute('aria-labelledby') === 'jeux-tab-tous', 'ARIA : panneau relié à son onglet');

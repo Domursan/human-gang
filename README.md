@@ -19,7 +19,7 @@ Le site du Humane Gang : le QG du groupe pour le Secret Santa, les sorties IRL, 
 | Historique | Membres | Frise des rencontres passées, éditions du Secret Santa, albums photo |
 | Messages | Membres | Messagerie privée entre membres (et avec son Santa, anonymement) |
 | Jeu de cartes | Membres | Boosters, collection, échanges, fabrication, drops, classement, Arène |
-| Jeux | Membres | Missions du jour, GeoGuessr, « Qui a dit ça ? », question du jour, Sutom, Framed, Heardle, Arcade |
+| Jeux | Membres | Missions quotidiennes, jeux quotidiens (GeoGuessr, « Qui a dit ça ? », question du jour, Sutom, Framed, Heardle…), jeux flash (Arcade) |
 | Événements | Membres | Images à attraper qui traversent le site pendant un événement |
 | Calendrier et ciné | Membres | Calendrier du gang, séances du ciné-club, playlist |
 | Compte | Membres | Profil, infos personnelles, notifications, badges, export et suppression des données |
@@ -51,7 +51,7 @@ Un bot Discord prévient les membres (MP et annonces) : tirage, sorties, anniver
 | --- | --- |
 | Le jeu de cartes | `pages/cartes/cartes.html` : Ouverture, Inventaire, Boutique, Mes cartes, Classement, Échanges, Arène |
 | IRL | `pages/irl/secret-santa.html`, `pages/irl/irl.html`, `pages/irl/historique.html` |
-| Jeux | `pages/jeux/jeux.html` : Les missions du jour, GeoGuessr, Qui a dit ça ?, Question du jour, Sutom HG, Framed, Heardle, puis Arcade (Paillettes, Raclette, Domu-mobile) |
+| Jeux | `pages/jeux/jeux.html` : Missions quotidiennes, puis les jeux quotidiens (une partie par jour : GeoGuessr, Qui a dit ça ?, Question du jour, Sutom HG, Framed, Heardle…), puis les jeux flash à volonté (Arcade : Paillettes, Raclette, Domu-mobile…) |
 | Calendrier | `pages/irl/calendrier.html` |
 | Autres | Les pages du menu qui ne sont rangées nulle part ailleurs (liste venant de la base) |
 

@@ -1,4 +1,4 @@
-/* Admin › Jeux et cartes › GeoGuessr, Jeux du jour, Citations (admin-jeux.js). */
+/* Admin › Jeux et cartes › GeoGuessr, Jeux quotidiens, Citations (admin-jeux.js). */
 .ajx { display: grid; gap: 16px; max-width: 980px; min-width: 0; }
 .ajx-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .ajx-intro { margin: 0; max-width: 60ch; }

@@ -97,7 +97,7 @@ Les chemins de code sont relatifs à `site/assets/espaces/` (« espace » = un d
 
 | Page (adresse) | Accès | Contenu principal | Code (espaces/…) |
 | --- | --- | --- | --- |
-| `/pages/jeux/jeux.html` | Membre (selon Accès aux pages) | Onglet « Les missions du jour » (`#aujourdhui`, programme du jour et Paillettes gagnées), puis un onglet par jeu (liste des anchors plus bas) | `jeux/jeux.js`, `jeux/onglets.js`, `jeux/<id>.js` |
+| `/pages/jeux/jeux.html` | Membre (selon Accès aux pages) | Onglet « Missions quotidiennes » (`#aujourdhui`, programme du jour et Paillettes gagnées), puis un onglet par jeu (liste des anchors plus bas). La vue « Tous les jeux » range les cartes en sections : Jeux quotidiens (une partie par jour), Jeux flash (à volonté), Jeux multijoueurs, Jeux spéciaux | `jeux/jeux.js`, `jeux/onglets.js`, `jeux/<id>.js` |
 | `/pages/jeux/quiz.html` | Selon Accès aux pages | Questions du gang : réponses (une tentative par question), explication après réponse, Paillettes gagnées, historique | `quiz/quiz.js` |
 | `/pages/jeux/duels.html` | Membre (à confirmer) | Duels entre deux membres : bataille, dames, échecs, morpion, Puissance 4, Othello, Mastermind, pierre-feuille-ciseaux, Qui est-ce ? | `duels/duels.js`, `duels/vues/` |
 | `/pages/jeux/uno.html` | Membre (à confirmer) | Uno en ligne, 2 à 20 joueurs ; lien d'invitation `?code=` ou `#rejoindre/<code>` | `uno/uno.js`, `uno/vues/` |
@@ -123,7 +123,7 @@ Une ancre choisit l'onglet ou la vue à l'ouverture. Elle ne charge pas une autr
 
 **Cartes** (`/pages/cartes/cartes.html`) : `#ouverture`, `#inventaire`, `#boutique`, `#collection`, `#classement`, `#echanges`, `#arene`, `#collection/<id>` (collection d'un autre membre, lecture seule).
 
-**Jeux** (`/pages/jeux/jeux.html`) : `#aujourdhui` (missions du jour), puis un onglet par jeu :
+**Jeux** (`/pages/jeux/jeux.html`) : `#aujourdhui` (missions quotidiennes), puis un onglet par jeu. Les onglets du tableau ci-dessous sont des jeux quotidiens (une partie par jour), sauf les jeux flash (jouables à volonté) : l’Arcade (`#arcade-…`), le Démineur et le 2048. Une seule partie par jour est récompensée pour l’Arcade, tous jeux confondus. Le détail des sections est dans `site/assets/espaces/jeux/catalogue.js` :
 
 | Ancre | Jeu | Ancre | Jeu |
 | --- | --- | --- | --- |

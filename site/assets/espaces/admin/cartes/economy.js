@@ -23,7 +23,7 @@ const PART_OF = {
   'Boosters': 'tirage', 'Taux de tirage': 'tirage', 'Brillantes et garantie': 'tirage',
   'Recyclage': 'recyclage', 'Fabrication': 'recyclage',
   'Quêtes de la semaine': 'limites', 'Cartes sauvages (drops)': 'limites', 'Échanges': 'limites', 'Générations des membres': 'limites',
-  'Jeux du jour': 'limites', 'Quiz et citations': 'limites', 'Photos et sorties': 'limites', 'Limites de publication': 'limites',
+  'Jeux quotidiens': 'limites', 'Quiz et citations': 'limites', 'Photos et sorties': 'limites', 'Limites de publication': 'limites',
   'Codes cadeaux et badges': 'limites', 'Calendrier de l’Avent': 'limites', 'Arène actuelle': 'limites',
   'Alertes économie': 'recyclage', // A7 (dans Limites, l'onglet dépassait 1 400 px)
 };

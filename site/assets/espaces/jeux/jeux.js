@@ -1,7 +1,7 @@
 // ===== Humane Gang — page « Jeux » (/pages/jeux/jeux.html) : tous les jeux en cartes, « Les missions du jour » et un onglet par jeu flash =====
 /*
  * Rôle : la vue de départ (/pages/jeux/jeux.html, ou /pages/jeux/jeux.html#tous) présente tous les jeux en cartes, rangés en sections
- * (catalogue : assets/espaces/jeux/catalogue.js) : Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
+ * (catalogue : assets/espaces/jeux/catalogue.js) : Jeux quotidiens et Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
  * (pages à part). Une carte n'est affichée que si le membre y a droit : accès de sa page (comme le menu), et les jeux
  * pas encore sortis (« bientot ») pour les seuls admins. Ce qui n'est visible que des admins (jeu en préparation,
  * page encore en mode admin) a une ambiance « chantier » : bandes jaunes et noires et petit panneau de travaux. Le menu du haut mène directement à cette vue.
@@ -58,7 +58,7 @@ const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.tes
   .map((o) => ({ ...o, rythme: GROUPES.some(([k]) => k === o.rythme) ? o.rythme : 'jour' })));
 /** Tous les onglets : la vue de départ, le tableau de bord puis les jeux. */
 const LISTE = [{ id: TOUS, titre: 'Tous les jeux', icone: ICONE_DEF, catalogue: true },
-  { id: HUB, titre: 'Les missions du jour', icone: ICONE_HUB, hub: true }, ...JEUX];
+  { id: HUB, titre: 'Les missions quotidiennes', icone: ICONE_HUB, hub: true }, ...JEUX];
 /** Dossier des modules (les chemins de onglets.js lui sont relatifs). */
 const BASE = new URL('./', import.meta.url);
 /** Contexte passé aux modules. sub : choix propre à un jeu tiré de l'adresse (null si aucun). */
@@ -140,7 +140,7 @@ function badgeHtml(r) {
 /** Monte le tableau de bord (structure), puis le remplit avec les résumés des jeux. */
 function monterHub(panel) {
   panel.innerHTML = `<div class="jeux-hub">
-      <h2 class="jeux-hub-title">Les missions du jour</h2>
+      <h2 class="jeux-hub-title">Les missions quotidiennes</h2>
       <section class="jg-card jeux-prog" aria-labelledby="jeux-prog-h">
         <div class="jg-between"><h2 class="jg-h3" id="jeux-prog-h">Ton programme du jour</h2>
           <span class="jeux-serie" id="jeux-serie" hidden></span></div>

@@ -18,9 +18,15 @@
  * Exporte : SECTIONS, CARTES.
  */
 
-/** Sections de la page, dans l'ordre. */
+/**
+ * Sections de la page, dans l'ordre. « quotidien » : une seule partie par jour (la même pour tout le gang, ou une nouvelle
+ * énigme chaque jour) ; « flash » : jouables à volonté. Les jeux quotidiens sont ceux de l'onglet « Chaque jour »
+ * (onglets.js, champ rythme), hors Arcade, et le Code du jour (duels.html) ; les 16 qui comptent pour le bonus « tous les
+ * jeux » sont dans hg_jeux_liste() (migration 157).
+ */
 export const SECTIONS = [
-  { id: 'flash', titre: 'Jeux flash', texte: 'Quelques minutes, chaque jour.' },
+  { id: 'quotidien', titre: 'Jeux quotidiens', texte: 'Une nouvelle partie chaque jour.' },
+  { id: 'flash', titre: 'Jeux flash', texte: 'Des parties à volonté, quand tu veux.' },
   { id: 'multi', titre: 'Jeux multijoueurs', texte: 'À deux ou en équipe, en direct.' },
   { id: 'speciaux', titre: 'Jeux spéciaux', texte: 'Les grandes parties du gang.' },
 ];
@@ -29,48 +35,48 @@ const IMG = '/assets/images/jeux/';
 
 /** Cartes, dans l'ordre d'affichage de chaque section. */
 export const CARTES = [
-  // Jeux flash : les onglets actuels de /pages/jeux/jeux.html
-  { id: 'geo', image: `${IMG}geo.webp`, titre: 'GeoGuessr', texte: 'Devine où la photo a été prise.', section: 'flash', href: '#geo', onglet: 'geo', couleur: 'var(--sage)',
+  // Jeux quotidiens : une partie par jour (voir SECTIONS)
+  { id: 'geo', image: `${IMG}geo.webp`, titre: 'GeoGuessr', texte: 'Devine où la photo a été prise.', section: 'quotidien', href: '#geo', onglet: 'geo', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/>' },
-  { id: 'citations', image: `${IMG}citations.webp`, titre: 'Qui a dit ça ?', texte: 'Retrouve l’auteur de la citation.', section: 'flash', href: '#citations', onglet: 'citations', couleur: 'var(--slate)',
+  { id: 'citations', image: `${IMG}citations.webp`, titre: 'Qui a dit ça ?', texte: 'Retrouve l’auteur de la citation.', section: 'quotidien', href: '#citations', onglet: 'citations', couleur: 'var(--slate)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
-  { id: 'jour', image: `${IMG}jour.webp`, titre: 'Question du jour', texte: 'Une question, une réponse par jour.', section: 'flash', href: '#jour', onglet: 'jour', couleur: 'var(--sand)',
+  { id: 'jour', image: `${IMG}jour.webp`, titre: 'Question du jour', texte: 'Une question, une réponse par jour.', section: 'quotidien', href: '#jour', onglet: 'jour', couleur: 'var(--sand)',
     icone: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>' },
-  { id: 'sutom', image: `${IMG}sutom.webp`, titre: 'Sutom HG', texte: 'Trouve le mot caché, lettre par lettre.', section: 'flash', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
+  { id: 'sutom', image: `${IMG}sutom.webp`, titre: 'Sutom HG', texte: 'Trouve le mot caché, lettre par lettre.', section: 'quotidien', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
     icone: '<rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/>' },
-  { id: 'framed', image: `${IMG}framed.webp`, titre: 'Framed', texte: 'Devine le film à partir d’une image.', section: 'flash', href: '#framed', onglet: 'framed', couleur: 'var(--plum)',
+  { id: 'framed', image: `${IMG}framed.webp`, titre: 'Framed', texte: 'Devine le film à partir d’une image.', section: 'quotidien', href: '#framed', onglet: 'framed', couleur: 'var(--plum)',
     icone: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>' },
-  { id: 'heardle', image: `${IMG}heardle.webp`, titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'flash', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
+  { id: 'heardle', image: `${IMG}heardle.webp`, titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'quotidien', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
     icone: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
-  { id: 'code-du-jour', titre: 'Code du jour', texte: 'Un code secret, dix essais, le même pour tous.', section: 'flash', href: '/pages/jeux/duels.html#jour', page: 'duels', image: `${IMG}jour.webp` },
+  { id: 'code-du-jour', titre: 'Code du jour', texte: 'Un code secret, dix essais, le même pour tous.', section: 'quotidien', href: '/pages/jeux/duels.html#jour', page: 'duels', image: `${IMG}jour.webp` },
   { id: 'arcade-paillettes', image: `${IMG}arcade-paillettes.webp`, titre: 'Paillettes', texte: 'Attrape les Paillettes, évite le reste.', section: 'flash', href: '#arcade-paillettes', couleur: 'var(--sand)',
     icone: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>' },
   { id: 'arcade-raclette', image: `${IMG}arcade-raclette.webp`, titre: 'Raclette', texte: 'Un jeu d’arcade qui sent bon le fromage.', section: 'flash', href: '#arcade-raclette', couleur: 'var(--amber)',
     icone: '<path d="M3 15l9-8 9 8z"/><path d="M7 15v3h10v-3"/><path d="M10 12h.01M14 13h.01"/>' },
   // Nouveaux jeux : accès réglé dans « Accès aux pages » du panel (page : slug de hg_pages, migration 150)
-  { id: 'nj-carte', image: `${IMG}nj-carte.webp`, titre: 'Carte mystère', texte: 'Reconnais la carte floutée.', section: 'flash', href: '#carte-mystere', onglet: 'carte-mystere', page: 'nj-carte', couleur: 'var(--plum)',
+  { id: 'nj-carte', image: `${IMG}nj-carte.webp`, titre: 'Carte mystère', texte: 'Reconnais la carte floutée.', section: 'quotidien', href: '#carte-mystere', onglet: 'carte-mystere', page: 'nj-carte', couleur: 'var(--plum)',
     icone: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M10 9.5a2 2 0 1 1 2.8 1.8c-.5.3-.8.7-.8 1.2V13M12 16.5v.01"/>' },
-  { id: 'nj-jv', image: `${IMG}nj-jv.webp`, titre: 'Jeu vidéo du jour', texte: 'Une capture zoomée : quel jeu ?', section: 'flash', href: '#jeu-video', onglet: 'jeu-video', page: 'nj-jv', couleur: 'var(--slate)',
+  { id: 'nj-jv', image: `${IMG}nj-jv.webp`, titre: 'Jeu vidéo du jour', texte: 'Une capture zoomée : quel jeu ?', section: 'quotidien', href: '#jeu-video', onglet: 'jeu-video', page: 'nj-jv', couleur: 'var(--slate)',
     icone: '<rect x="2" y="7" width="20" height="10" rx="4"/><path d="M7 10v4M5 12h4M15 11h.01M18 13h.01"/>' },
-  { id: 'nj-pochette', image: `${IMG}nj-pochette.webp`, titre: 'Pochette du jour', texte: 'Retrouve l’album derrière le flou.', section: 'flash', href: '#pochette', onglet: 'pochette', page: 'nj-pochette', couleur: 'var(--rose)',
+  { id: 'nj-pochette', image: `${IMG}nj-pochette.webp`, titre: 'Pochette du jour', texte: 'Retrouve l’album derrière le flou.', section: 'quotidien', href: '#pochette', onglet: 'pochette', page: 'nj-pochette', couleur: 'var(--rose)',
     icone: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5"/>' },
-  { id: 'nj-replique', image: `${IMG}nj-replique.webp`, titre: 'Réplique du jour', texte: 'Une réplique culte : quel film ?', section: 'flash', href: '#replique', onglet: 'replique', page: 'nj-replique', couleur: 'var(--sand)',
+  { id: 'nj-replique', image: `${IMG}nj-replique.webp`, titre: 'Réplique du jour', texte: 'Une réplique culte : quel film ?', section: 'quotidien', href: '#replique', onglet: 'replique', page: 'nj-replique', couleur: 'var(--sand)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h1M12 9h1M8 12h5"/>' },
-  { id: 'nj-pays', image: `${IMG}nj-pays.webp`, titre: 'Pays du jour', texte: 'Une silhouette, six essais.', section: 'flash', href: '#pays', onglet: 'pays', page: 'nj-pays', couleur: 'var(--sage)',
+  { id: 'nj-pays', image: `${IMG}nj-pays.webp`, titre: 'Pays du jour', texte: 'Une silhouette, six essais.', section: 'quotidien', href: '#pays', onglet: 'pays', page: 'nj-pays', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>' },
-  { id: 'nj-plat', image: `${IMG}nj-plat.webp`, titre: 'Plat du jour', texte: 'Devine le plat sur la photo.', section: 'flash', href: '#plat', onglet: 'plat', page: 'nj-plat', couleur: 'var(--amber)',
+  { id: 'nj-plat', image: `${IMG}nj-plat.webp`, titre: 'Plat du jour', texte: 'Devine le plat sur la photo.', section: 'quotidien', href: '#plat', onglet: 'plat', page: 'nj-plat', couleur: 'var(--amber)',
     icone: '<path d="M3 13h18a9 9 0 0 1-18 0z"/><path d="M8 9c0-2 2-2 2-4M13 9c0-2 2-2 2-4"/>' },
-  { id: 'nj-connexions', image: `${IMG}nj-connexions.webp`, titre: 'Connexions', texte: '16 mots, 4 groupes cachés.', section: 'flash', href: '#connexions', onglet: 'connexions', page: 'nj-connexions', couleur: 'var(--sage)',
+  { id: 'nj-connexions', image: `${IMG}nj-connexions.webp`, titre: 'Connexions', texte: '16 mots, 4 groupes cachés.', section: 'quotidien', href: '#connexions', onglet: 'connexions', page: 'nj-connexions', couleur: 'var(--sage)',
     icone: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>' },
-  { id: 'nj-motscroises', image: `${IMG}nj-motscroises.webp`, titre: 'Mots croisés', texte: 'Une mini grille par jour.', section: 'flash', href: '#mots-croises', onglet: 'mots-croises', page: 'nj-motscroises', couleur: 'var(--sand)',
+  { id: 'nj-motscroises', image: `${IMG}nj-motscroises.webp`, titre: 'Mots croisés', texte: 'Une mini grille par jour.', section: 'quotidien', href: '#mots-croises', onglet: 'mots-croises', page: 'nj-motscroises', couleur: 'var(--sand)',
     icone: '<path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/>' },
-  { id: 'nj-motmele', image: `${IMG}nj-motmele.webp`, titre: 'Mot mêlé', texte: 'Retrouve les mots cachés.', section: 'flash', href: '#mot-mele', onglet: 'mot-mele', page: 'nj-motmele', couleur: 'var(--slate)',
+  { id: 'nj-motmele', image: `${IMG}nj-motmele.webp`, titre: 'Mot mêlé', texte: 'Retrouve les mots cachés.', section: 'quotidien', href: '#mot-mele', onglet: 'mot-mele', page: 'nj-motmele', couleur: 'var(--slate)',
     icone: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7l10 10"/>' },
-  { id: 'nj-anagramme', image: `${IMG}nj-anagramme.webp`, titre: 'Anagramme', texte: 'Remets les lettres dans l’ordre.', section: 'flash', href: '#anagramme', onglet: 'anagramme', page: 'nj-anagramme', couleur: 'var(--rose)',
+  { id: 'nj-anagramme', image: `${IMG}nj-anagramme.webp`, titre: 'Anagramme', texte: 'Remets les lettres dans l’ordre.', section: 'quotidien', href: '#anagramme', onglet: 'anagramme', page: 'nj-anagramme', couleur: 'var(--rose)',
     icone: '<path d="M4 17l4-10 4 10M5.5 13h5M14 7h6l-6 10h6"/>' },
-  { id: 'nj-nerdle', image: `${IMG}nj-nerdle.webp`, titre: 'Nerdle du gang', texte: 'Devine le calcul en 6 essais.', section: 'flash', href: '#nerdle', onglet: 'nerdle', page: 'nj-nerdle', couleur: 'var(--plum)',
+  { id: 'nj-nerdle', image: `${IMG}nj-nerdle.webp`, titre: 'Nerdle du gang', texte: 'Devine le calcul en 6 essais.', section: 'quotidien', href: '#nerdle', onglet: 'nerdle', page: 'nj-nerdle', couleur: 'var(--plum)',
     icone: '<path d="M5 8h4M7 6v4M15 8h4M5 16h4M15 15h4M15 17h4"/>' },
-  { id: 'nj-sudoku', image: `${IMG}nj-sudoku.webp`, titre: 'Sudoku du jour', texte: 'La même grille pour tout le gang.', section: 'flash', href: '#sudoku', onglet: 'sudoku', page: 'nj-sudoku', couleur: 'var(--slate)',
+  { id: 'nj-sudoku', image: `${IMG}nj-sudoku.webp`, titre: 'Sudoku du jour', texte: 'La même grille pour tout le gang.', section: 'quotidien', href: '#sudoku', onglet: 'sudoku', page: 'nj-sudoku', couleur: 'var(--slate)',
     icone: '<rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>' },
   { id: 'nj-demineur', image: `${IMG}nj-demineur.webp`, titre: 'Démineur', texte: 'Évite les cœurs cachés, au chrono.', section: 'flash', href: '#demineur', page: 'nj-demineur', couleur: 'var(--rust)',
     icone: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>' },

@@ -348,7 +348,7 @@
       }
     },
     "quiz_daily": {
-      "group": "jeux", "label": "Question du jour", "target": "Salon des jeux du jour", "color": "#9A88C4",
+      "group": "jeux", "label": "Question du jour", "target": "Salon des jeux quotidiens", "color": "#9A88C4",
       "description": "Publié chaque matin (heure réglable dans Planning) avec un bouton « Répondre sur le site ». Une seule publication par jour ; rien ne part s'il n'y a pas de question. La bonne réponse du jour n'est jamais dans le message. Le vendredi, les trois plus longues séries en cours (3 jours au moins). Désactivable dans les notifications (vacances).",
       "fields": [["Récompense", "{recompense}"], ["Ferme", "{ferme}"]],
       "vars": {

@@ -2,7 +2,7 @@
 // 1. Admin › Mairie › Textes et intro : groupe « Page d'accueil » (titre, présentation, libellés en une case par item),
 //    valeur actuelle, défaut en placeholder, « Valeur par défaut » par champ ; enregistrement sans effacer les clés de
 //    site_textes que le formulaire ne gère pas ; accueil du site qui affiche le texte réglé ; 390 px sans défilement.
-// 2. Fabrique › Limites : groupes de plafonds (Jeux du jour, Quiz et citations, …), valeur enregistrée ou défaut en
+// 2. Fabrique › Limites : groupes de plafonds (Jeux quotidiens, Quiz et citations, …), valeur enregistrée ou défaut en
 //    placeholder, bornes (0 à 1 000), enregistrement qui garde les autres sous-clés de cards.plafonds et les autres
 //    réglages (y compris la configuration écrite par l'Arène actuelle), rétablissement d'un groupe, 390 px.
 // Aucune erreur console. Lancer : node tests/parcours/compte/parcours-reglages-textes-plafonds.cjs
@@ -104,7 +104,7 @@ async function goto(p, route, waitFor) {
     await goto(pl, 'fabrique/limites', '#acd-econ-form');
     await pl.evaluate(() => document.querySelectorAll('details.acd-fold-plaf').forEach((d) => { d.open = true; })); // plafonds repliés : ouverts pour les saisir
     const legends = await pl.$$eval('#acd-econ-form fieldset', (fs) => fs.filter((f) => f.getClientRects().length).map((f) => f.querySelector('legend').textContent.trim()));
-    const wanted = ['Jeux du jour', 'Quiz et citations', 'Photos et sorties', 'Limites de publication', 'Codes cadeaux et badges', 'Calendrier de l’Avent', 'Arène actuelle'];
+    const wanted = ['Jeux quotidiens', 'Quiz et citations', 'Photos et sorties', 'Limites de publication', 'Codes cadeaux et badges', 'Calendrier de l’Avent', 'Arène actuelle'];
     check(wanted.every((w) => legends.includes(w)), `plafonds : groupes thématiques dans « Limites » (${legends.join(' | ')})`);
     check(await pl.inputValue('#acd-e-plafonds_bataille_gain') === '12', 'plafonds : valeur enregistrée affichée (Arène : 12)');
     check(await pl.inputValue('#acd-e-plafonds_quiz_serie_7') === '' && await pl.getAttribute('#acd-e-plafonds_quiz_serie_7', 'placeholder') === '50',
@@ -131,7 +131,7 @@ async function goto(p, route, waitFor) {
 
     // Rétablir un groupe : ses champs se vident (défauts), les autres groupes ne bougent pas
     await pl.fill('#acd-e-plafonds_framed_gain', '30');
-    await pl.click('fieldset:has(legend:text-is("Jeux du jour")) [data-act="econ-default"]');
+    await pl.click('fieldset:has(legend:text-is("Jeux quotidiens")) [data-act="econ-default"]');
     await sleep(200);
     check(await pl.inputValue('#acd-e-plafonds_framed_gain') === '' && await pl.inputValue('#acd-e-plafonds_quiz_serie_7') === '75',
       'plafonds : « Rétablir » remplit le groupe avec les défauts sans toucher aux autres');

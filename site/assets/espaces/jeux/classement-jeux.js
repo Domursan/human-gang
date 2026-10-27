@@ -69,7 +69,7 @@ export function monterClassement(el, cle = null) {
   css();
   const st = { onglet: 'jour', tout: false, data: null, err: null };
   const general = !cle;
-  const titre = general ? 'Classement des jeux du jour' : 'Classement';
+  const titre = general ? 'Classement des jeux quotidiens' : 'Classement';
   async function charger() {
     try {
       const { data, error } = await sb.rpc('hg_jeux_classement', { p_jeu: cle });
@@ -84,7 +84,7 @@ export function monterClassement(el, cle = null) {
     const liste = d ? (st.onglet === 'jour' ? d.jour : d.semaine) || [] : [];
     const prog = general && d ? (() => {
       const f = Number(d.moi?.faits) || 0, t = Number(d.total_jeux) || 16;
-      return `<div class="jc-prog"><p class="jc-prog-t">${d.moi?.bonus ? `Bonus de ${nf(d.bonus)} ${paillSym()} obtenu aujourd’hui : bravo !` : `Tes jeux du jour : <strong>${f}/${t}</strong> · termine les ${t} pour gagner <strong>${nf(d.bonus)} ${paillSym()}</strong> de bonus`}</p>
+      return `<div class="jc-prog"><p class="jc-prog-t">${d.moi?.bonus ? `Bonus de ${nf(d.bonus)} ${paillSym()} obtenu aujourd’hui : bravo !` : `Tes jeux quotidiens : <strong>${f}/${t}</strong> · termine les ${t} pour gagner <strong>${nf(d.bonus)} ${paillSym()}</strong> de bonus`}</p>
         <div class="progress jc-barre" role="progressbar" aria-label="Jeux du jour terminés" aria-valuemin="0" aria-valuemax="${t}" aria-valuenow="${f}"><span style="width:${Math.round((f / t) * 100)}%"></span></div></div>`;
     })() : '';
     el.innerHTML = `<section class="card jc" aria-labelledby="jc-h-${esc(cle || 'tous')}">
