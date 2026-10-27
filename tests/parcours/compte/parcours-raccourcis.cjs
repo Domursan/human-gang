@@ -5,7 +5,7 @@
 // Lancer : node tests/parcours/compte/parcours-raccourcis.cjs
 const { ROOT, check, finish, openPage, sleep, chromium } = require('../../lib/harness.cjs');
 
-const page = (p) => p.evaluate(() => location.pathname.split('/').pop());
+const page = (p) => p.evaluate(() => location.pathname);
 
 (async () => {
   console.log('Racine testée : ' + ROOT);

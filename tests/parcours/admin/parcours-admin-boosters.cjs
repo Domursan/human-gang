@@ -216,7 +216,7 @@ const KEYS = ['id', 'name', 'price', 'size', 'rates', 'shiny_rate', 'pity_epique
   p = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: ALICE, staff: ['quiz'] } });
   check(await p.locator('#shell-subs a[href="#fabrique/boosters"]').count() === 0, '(h) Staff « quiz » : pas d\'onglet Boosters dans la navigation');
   await p.evaluate(async () => {
-    const m = await import(new URL('assets/espaces/admin/cartes/boosters.js', location.href).href);
+    const m = await import(new URL(window.__HG_RACINE + '/assets/espaces/admin/cartes/boosters.js', location.origin).href);
     const el = document.createElement('div');
     el.id = 'abt-test-ro';
     el.className = 'acd';

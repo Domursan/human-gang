@@ -85,7 +85,7 @@ export function reportError({ message, file = '', line = null, col = null }) {
         const { sb } = await import('./core/supabase.js');
         await sb.rpc('hg_client_error', { p: {
           message: msg, file: f, line: Number.isFinite(line) ? line : null, col: Number.isFinite(col) ? col : null,
-          page: location.pathname.split('/').pop() || '/', browser: navigateur(), version: await versionSite(),
+          page: location.pathname || '/', browser: navigateur(), version: await versionSite(),
         } });
       } catch { /* pas de réseau ou client indisponible : on abandonne sans bruit */ }
     };

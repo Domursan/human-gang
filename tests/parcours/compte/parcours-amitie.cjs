@@ -11,7 +11,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
   const browser = await chromium.launch();
   {
     const p = await openPage(browser, { page: 'membre', hash: '', width: 360, height: 900, scenario: { extra: 'fake-sb-social2.mjs' } });
-    await p.goto(p.url().replace(/membre\.html.*/, `/pages/compte/membre.html?id=${U(2)}`));
+    await p.goto(p.url().replace(/membre\.html.*/, `membre.html?id=${U(2)}`));
     await p.waitForSelector('.fr-card', { timeout: 8000 }).catch(() => {});
     check(await p.isVisible('.fr-card'), '(a) encart « Toi et … » affiché');
     const t = await p.textContent('.fr-card');
@@ -30,7 +30,7 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
   }
   for (const [k, sc, lbl] of [['b', { amitieHidden: true }, 'membre qui masque'], ['c', { amitieOff: true }, 'réglage coupé']]) {
     const p = await openPage(browser, { page: 'membre', scenario: { extra: 'fake-sb-social2.mjs', ...sc } });
-    await p.goto(p.url().replace(/membre\.html.*/, `/pages/compte/membre.html?id=${U(2)}`));
+    await p.goto(p.url().replace(/membre\.html.*/, `membre.html?id=${U(2)}`));
     await p.waitForSelector('.idc', { timeout: 8000 }).catch(() => {});
     await p.waitForTimeout(500);
     check(await p.locator('.fr-card').count() === 0, `(${k}) ${lbl} : aucun encart`);

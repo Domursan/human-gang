@@ -39,11 +39,11 @@ async function openSecrets(p) {
   if (routed) { await adminSection(p, 'fete/secrets'); await p.waitForSelector('#eggs-root #aeg-form, #eggs-root .empty', { timeout: 8000 }); return 'route'; }
   await p.evaluate(async () => {
     if (!document.querySelector('link[href$="admin-eggs.css"]')) {
-      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'assets/espaces/admin/admin-eggs.css'; document.head.appendChild(l);
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = window.__HG_RACINE + '/assets/espaces/admin/admin-eggs.css'; document.head.appendChild(l);
     }
     const app = document.querySelector('#app');
     app.innerHTML = '<div id="eggs-root"></div>';
-    const m = await import(new URL('assets/espaces/admin/admin-eggs.js', location.href).href);
+    const m = await import(new URL(window.__HG_RACINE + '/assets/espaces/admin/admin-eggs.js', location.origin).href);
     await m.mountEggsSection(document.querySelector('#eggs-root'));
   });
   return 'direct';

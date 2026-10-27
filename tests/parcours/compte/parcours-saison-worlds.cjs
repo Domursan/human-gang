@@ -15,7 +15,7 @@ const SAISON = '2026-11-02T10:00:00Z';
 /** Réglages saisonniers de départ (hg_settings.saisons), avec des sous-clés que l'admin ne règle pas ici. */
 const SETTINGS = [{ key: 'saisons', value: {
   avent: { actif: true, seuil: 10, seuil_pct: 70, carte_repli: 30 },
-  worlds: { actif: false, quetes: ['boosters_5'], pronos: '/pages/jeux/jeux.html#pronos', theme: 'worlds', mots: ['worlds'] },
+  worlds: { actif: false, quetes: ['boosters_5'], pronos: 'jeux.html#pronos', theme: 'worlds', mots: ['worlds'] },
   anniversaire: { annee: 2022, fenetre: 1, booster: 'classique', cartes: { 2027: 'k1' } },
 } }];
 /** Enregistrements de saisons.* envoyés (upsert de hg_settings). */
@@ -94,18 +94,18 @@ const saisons = (p) => p.evaluate(() => window.__DB.hg_settings.find((r) => r.ke
   await p.waitForSelector('[data-zw]', { timeout: 8000 }).catch(() => {});
   check(await p.isChecked('input[name="quete"][value="boosters_5"]') && !(await p.isChecked('input[name="quete"][value="echange_1"]')),
     'worlds : quêtes de la saison cochées depuis saisons.worlds.quetes');
-  check(await p.inputValue('#zw-p') === '/pages/jeux/jeux.html#pronos', 'worlds : page des pronostics affichée (/pages/jeux/jeux.html#pronos)');
+  check(await p.inputValue('#zw-p') === 'jeux.html#pronos', 'worlds : page des pronostics affichée (jeux.html#pronos)');
   await p.check('input[name="quete"][value="echange_1"]');
   await p.fill('#zw-p', 'Pronos Page !');
   await p.click('[data-zw] [type="submit"]');
   await sleep(300);
   check(!(await log(p)).some((x) => x[0] === 'rpc' && x[1] === 'hg_saison_set'), 'worlds : page des pronostics invalide refusée, rien n’est enregistré');
-  await p.fill('#zw-p', '/pages/jeux/jeux.html#worlds');
+  await p.fill('#zw-p', 'jeux.html#worlds');
   await p.click('[data-zw] [type="submit"]');
   await sleep(500);
   check((await log(p)).some((x) => x[0] === 'rpc' && x[1] === 'hg_saison_set' && x[2]?.p_slug === 'worlds'), 'worlds : enregistrement par hg_saison_set');
   const ws = (await saisons(p))?.worlds || {};
-  check(JSON.stringify(ws.quetes) === JSON.stringify(['boosters_5', 'echange_1']) && ws.pronos === '/pages/jeux/jeux.html#worlds',
+  check(JSON.stringify(ws.quetes) === JSON.stringify(['boosters_5', 'echange_1']) && ws.pronos === 'jeux.html#worlds',
     'worlds : quêtes (2) et pronostics enregistrés dans saisons.worlds');
   check(ws.theme === 'worlds' && JSON.stringify(ws.mots) === '["worlds"]', 'worlds : thème et mots des moments gardés');
   await p.close();

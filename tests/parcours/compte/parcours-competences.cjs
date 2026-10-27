@@ -26,7 +26,7 @@ const errs = (p) => (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : '');
     check(/« cèpes et girolles »/.test(t) && /aussi : Cuisine/.test(t), '(a) précision et autres compétences');
     check(/2 volontaires/.test(await p.textContent('#sk-hint')), '(a) nombre de volontaires annoncé');
     const href = await p.getAttribute('.sk-result .sk-help', 'href');
-    check(/^messages\.html\?to=/.test(href) && /brouillon=/.test(href) && /coup%20de%20main/.test(href), '(a) lien vers une conversation préremplie');
+    check(/^(\/pages\/compte\/)?messages\.html\?to=/.test(href) &&/brouillon=/.test(href) && /coup%20de%20main/.test(href), '(a) lien vers une conversation préremplie');
     check(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), '(a) 360 px : pas de défilement horizontal');
     await p.click('.sk-chip[data-sk-code=""]');
     check(await p.isVisible('#gang') && await p.isHidden('#sk-results'), '(a) « Tout le gang » rend la grille');
@@ -36,7 +36,7 @@ const errs = (p) => (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : '');
   {
     const draft = 'Salut Alice, tu pourrais me donner un coup de main pour « Cuisine » ? ';
     const p = await openPage(browser, { page: 'messages', scenario: { extra: 'fake-sb-social2.mjs', conversations: [{ id: 'c0000000-0000-4000-8000-000000000001', kind: 'direct', last_message_at: new Date().toISOString() }], convMembers: [{ conversation_id: 'c0000000-0000-4000-8000-000000000001', user_id: ME }, { conversation_id: 'c0000000-0000-4000-8000-000000000001', user_id: U(2) }] } });
-    await p.goto(p.url().replace(/messages\.html.*/, `/pages/compte/messages.html?to=${U(2)}&brouillon=${encodeURIComponent(draft)}`));
+    await p.goto(p.url().replace(/messages\.html.*/, `messages.html?to=${U(2)}&brouillon=${encodeURIComponent(draft)}`));
     await p.waitForTimeout(1500);
     const rpcs = (await log(p)).filter((l) => l[0] === 'rpc');
     check(rpcs.some((l) => l[1] === 'hg_open_direct'), '(b) conversation directe ouverte');
@@ -77,7 +77,7 @@ const errs = (p) => (p.errs.length ? ' (' + p.errs.join(' | ') + ')' : '');
   }
   {
     const p = await openPage(browser, { page: 'membre', scenario: { extra: 'fake-sb-social2.mjs' } });
-    await p.goto(p.url().replace(/membre\.html.*/, `/pages/compte/membre.html?id=${U(2)}`));
+    await p.goto(p.url().replace(/membre\.html.*/, `membre.html?id=${U(2)}`));
     await p.waitForSelector('.sk-pill', { timeout: 8000 }).catch(() => {});
     check(await p.locator('#mb-skills .sk-pill').count() === 2, '(d) 2 pastilles « Peut aider pour »');
     check(/cèpes et girolles/.test(await p.textContent('#mb-skills')), '(d) précision affichée');

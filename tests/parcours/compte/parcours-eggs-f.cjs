@@ -8,16 +8,15 @@
 // (hg_eggs_me le compte comme trouvé) ; un visiteur ne le voit pas.
 // Faux Supabase : fixtures/fake-sb.mjs (hg_eggs_public renvoie champi depuis le scénario, hg_egg_found répond).
 // Lancer : node tests/parcours/compte/parcours-eggs-f.cjs
-// Préfixe : HG_PREFIX=/human-gang si la variable n'est pas définie (le site est servi comme sur GitHub Pages).
-process.env.HG_PREFIX = process.env.HG_PREFIX || '/human-gang';
-const { ROOT, ORIGIN, PREFIX, check, finish, openPage, log, sleep, chromium } = require('../../lib/harness.cjs');
+// Préfixe : aucun par défaut (le site est servi à la racine, humane-gang.com) ; HG_PREFIX=/human-gang teste le mode sous-dossier.
+const { ROOT, ORIGIN, PREFIX, urlPage, check, finish, openPage, log, sleep, chromium } = require('../../lib/harness.cjs');
 
 /** Appels hg_egg_found du faux client (arguments), dans l'ordre. */
 const eggCalls = async (p) => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_egg_found').map((e) => e[2]);
 
 /** Ouvre une page puis la recharge avec une adresse de test (?creeper=1), sans quitter le contexte. */
 async function avecQuery(p, page, query) {
-  await p.goto(`${ORIGIN}${PREFIX}/${page}.html${query}`);
+  await p.goto(`${ORIGIN}${PREFIX}${urlPage(page)}${query}`);
   await sleep(1200);
   return p;
 }

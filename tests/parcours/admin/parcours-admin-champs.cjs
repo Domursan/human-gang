@@ -17,9 +17,9 @@ async function openChamps(p) {
   if (routed) await adminSection(p, 'place/champs');
   else {
     await p.evaluate(async () => {
-      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'assets/espaces/admin/admin-champs.css'; document.head.appendChild(l);
+      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = window.__HG_RACINE + '/assets/espaces/admin/admin-champs.css'; document.head.appendChild(l);
       document.querySelector('#app').innerHTML = '<div id="champs-root"></div>';
-      const m = await import(new URL('assets/espaces/admin/admin-champs.js', location.href).href);
+      const m = await import(new URL(window.__HG_RACINE + '/assets/espaces/admin/admin-champs.js', location.origin).href);
       await m.mountChampsSection(document.querySelector('#champs-root'));
     });
   }
@@ -89,7 +89,7 @@ const writes = (p) => p.evaluate(() => window.__LOG.filter((l) => l[1] === 'hg_s
   const w = await writes(p);
   check(w.length === 1 && w[0][0] === 'upsert' && w[0][2].key === 'profile_fields', '(d) une écriture : upsert de profile_fields');
   const ok = await p.evaluate(async () => {
-    const m = await import(new URL('assets/espaces/compte/profile-fields.js', location.href).href);
+    const m = await import(new URL(window.__HG_RACINE + '/assets/espaces/compte/profile-fields.js', location.origin).href);
     const v = window.__DB.hg_settings.find((r) => r.key === 'profile_fields').value;
     const g = m.validateInfoGroups(v.groups);
     return { valid: !!g, n: v.groups.length, first: v.groups[0].fields[0], last: v.groups[5], newf: v.groups[0].fields.find((f) => f.id === 'code_de_la_porte_d_entree') };

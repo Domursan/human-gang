@@ -176,8 +176,8 @@ function renderWorlds(host) {
         ${(Z.tpl || []).map((q) => `<label class="check"><input type="checkbox" name="quete" value="${esc(q.code)}"${(w.quetes || []).includes(q.code) ? ' checked' : ''}> ${esc(q.label)} <span class="muted small">(${esc(q.code)} · ${esc(q.reward)} ✦${q.active ? '' : ' · inactive'})</span></label>`).join('') || '<p class="muted small">Aucun modèle de quête. Crée-en dans Fabrique › Quêtes.</p>'}
       </fieldset>
       <div class="field"><label for="zw-p">Page des pronostics</label>
-        <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || '/pages/jeux/jeux.html#pronos')}" aria-describedby="zw-p-h">
-        <span class="small muted" id="zw-p-h">Adresse d’une page du site, avec ou sans ancre (ex. /pages/jeux/jeux.html#pronos). Vide : /pages/jeux/jeux.html#pronos.</span></div>
+        <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || 'jeux.html#pronos')}" aria-describedby="zw-p-h">
+        <span class="small muted" id="zw-p-h">Adresse d’une page du site, avec ou sans ancre (ex. jeux.html#pronos). Vide : jeux.html#pronos.</span></div>
       <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer la saison</button></div>
     </form>`;
 }
@@ -284,8 +284,8 @@ async function onSubmit(e) {
       // Quêtes et page des pronostics : pas dans hg_saison_set, enregistrées ensuite dans saisons.worlds (fusion).
       const quetes = [...f.querySelectorAll('input[name="quete"]:checked')].map((x) => x.value);
       if (quetes.length > 6) throw new Error('Six quêtes au plus pour la saison.');
-      const pronos = val('pronos').trim() || '/pages/jeux/jeux.html#pronos';
-      if (!PRONOS_RE.test(pronos)) throw new Error('Page des pronostics : nom d’une page .html, avec une ancre facultative (ex. /pages/jeux/jeux.html#pronos).');
+      const pronos = val('pronos').trim() || 'jeux.html#pronos';
+      if (!PRONOS_RE.test(pronos)) throw new Error('Page des pronostics : nom d’une page .html, avec une ancre facultative (ex. jeux.html#pronos).');
       const { data, error } = await sb.rpc('hg_saison_set', { p_slug: 'worlds', p });
       if (error) throw error;
       await ecrireReglage('saisons', (s) => { s.worlds = { ...(s.worlds || {}), quetes, pronos }; });

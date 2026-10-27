@@ -27,10 +27,10 @@ async function openFil(p) {
   else {
     await p.evaluate(async () => {
       if (!document.querySelector('link[href$="admin-fil.css"]')) {
-        const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'assets/espaces/admin/admin-fil.css'; document.head.appendChild(l);
+        const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = window.__HG_RACINE + '/assets/espaces/admin/admin-fil.css'; document.head.appendChild(l);
       }
       document.querySelector('#app').innerHTML = '<div id="fil-root"></div>';
-      const m = await import(new URL('assets/espaces/admin/admin-fil.js', location.href).href);
+      const m = await import(new URL(window.__HG_RACINE + '/assets/espaces/admin/admin-fil.js', location.origin).href);
       await m.mountFilSection(document.querySelector('#fil-root'));
     });
   }
