@@ -31,4 +31,4 @@
 .pl-hof li { overflow-wrap: anywhere; }
 .pl-hof .small { display: block; }
 .pl-older summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; gap: 6px; }
-@media (max-width: 600px) { .pl-actions .btn { flex: 1 1 auto; } }
+@media (max-width: 600px) { .pl-actions .btn { flex: 1 1 auto; } .pl-plat { font-size: 12px; } }

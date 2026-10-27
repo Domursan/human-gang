@@ -1,6 +1,12 @@
 // Audit d'accessibilité TÉLÉPHONE de toutes les pages du site (tests/controles/a11y-mobile.cjs).
-// Toutes les pages à la racine du dépôt (*.html), à 360 et 390 px de large, en mode tactile (hasTouch, isMobile).
-// Contrôles, par page et par largeur :
+// Pages couvertes : les trois pages à la racine de site/ (index, 404, offline) et toutes les pages de site/pages/<catégorie>/
+// (sauf la planche d'impression collection-a4, exclue). Chaque page est ouverte à 360 et 390 px, en mode tactile (hasTouch, isMobile),
+// connectée comme membre (membre de test non administrateur) ET comme administrateur, quand la page est ouverte à tous les membres.
+// Une page réservée aux administrateurs (ADMIN_SEUL) n'est contrôlée qu'en administrateur.
+// Chaque page est ouverte avec le faux Supabase et le scénario que les parcours utilisent (SPEC) : données de la collection,
+// des jeux de plateau, du calendrier, etc. Les jeux à salons (loup-garou, uno, nom-de-code, duels) n'ont pas de faux dédié :
+// on contrôle leur écran d'accueil, pas leurs écrans de partie (ceux-ci sont testés par les bancs, sur une base locale).
+// Contrôles, par page, par rôle et par largeur :
 //   - pas de défilement horizontal de la page ;
 //   - cibles tactiles d'au moins 44 × 44 px (boutons, liens isolés, cases, onglets, icônes). Exempts : liens
 //     dans un texte courant (display inline), éléments masqués ou désactivés ; une case ou un bouton radio
@@ -15,9 +21,12 @@
 // qui occupent plus de 40 % de la hauteur signalées en avis.
 // Exceptions documentées (non comptées comme défauts) :
 //   - champ piège anti-spam (zone aria-hidden, hors écran) : ni touché ni lu ;
-//   - textes de la planche A4 (collection-a4, aperçu mis à l'échelle par transform, format d'impression) ;
+//   - voyant de statut (classe statut-voyant, site/assets/commun/notifs.css) : 24 × 24 px visibles, zone tactile étendue,
+//     choix documenté pour ne pas couvrir la photo du menu ;
+//   - textes de la planche A4 (collection-a4 n'est pas contrôlée : format d'impression) ;
 //   - bouton Menu couvert par une superposition (récap : diaporama plein écran) : signalé comme « navCouvert ».
-// Ne mesure pas : barres fixes qui masquent le contenu, clavier virtuel, encoches réelles (à vérifier sur un appareil).
+// Ne mesure pas : barres fixes qui masquent le contenu, clavier virtuel, encoches réelles (à vérifier sur un appareil),
+// écrans de partie des jeux à salons (faux Supabase absent).
 // Faux Supabase (tests/fixtures/) : aucune donnée réelle. Écrit tests/shots/a11y-mobile.json.
 // Lancer : node tests/controles/a11y-mobile.cjs   (ou : npm run test:a11y-mobile)
 const fs = require('fs');
@@ -30,6 +39,22 @@ const PAYSAGE = { width: 740, height: 360 };
 const MIN_CIBLE = 44, MIN_TEXTE = 12, MIN_CHAMP = 16;
 /** Pages de jeux : contrôle supplémentaire en paysage. */
 const JEUX = new Set(['blackjack', 'catan', 'cluedo', 'destins', 'duels', 'jeux', 'loup-garou', 'monopoly', 'nom-de-code', 'pictionary', 'poker', 'risk', 'shadow-hunters', 'uno']);
+/** Planche d'impression : hors contrôle (format A4 mis à l'échelle). */
+const EXCLUES = new Set(['collection-a4']);
+/** Pages réservées aux administrateurs (mode « admin » du faux site, plateaux non déclarés) : pas de contrôle en membre. */
+const ADMIN_SEUL = new Set(['admin', 'cartes', 'jeux', 'blackjack', 'poker', 'catan', 'pictionary', 'cluedo', 'destins', 'monopoly', 'risk', 'shadow-hunters']);
+/** Membre de test non administrateur (même identifiant que les parcours : U(2) dans fixtures/fake-sb.mjs). */
+const MEMBRE = { uid: '00000002-0000-4000-8000-000000000002' };
+/** Fixture et scénario de chaque page, comme les parcours les ouvrent (défaut : fake-sb.mjs, scénario vide). */
+const SPEC = {
+  admin: {}, cartes: { fixture: 'fake-sb-cartes.mjs' }, jeux: { fixture: 'fake-sb-jeux.mjs' },
+  blackjack: { fixture: 'fake-sb-plateaux-cartes.mjs', scenario: { jeu: 'blackjack' } },
+  poker: { fixture: 'fake-sb-plateaux-cartes.mjs', scenario: { jeu: 'poker' } },
+  catan: { fixture: 'fake-sb-catan.mjs' }, pictionary: { fixture: 'fake-sb-pictionary.mjs' },
+  membre: { fixture: 'fake-sb-social.mjs' },
+  calendrier: { fixture: 'fake-sb-vd.mjs' }, cine: { fixture: 'fake-sb-vd.mjs' },
+  citations: { fixture: 'fake-sb-contenus.mjs' }, playlist: { fixture: 'fake-sb-contenus.mjs' }, recap: { fixture: 'fake-sb-contenus.mjs' },
+};
 
 /**
  * Lit la page dans le navigateur. o = { rootSel, minCible, minTexte, minChamp, rootAttr }.
@@ -194,118 +219,167 @@ function exemples(s) {
 }
 
 const OPTS = { minCible: MIN_CIBLE, minTexte: MIN_TEXTE, minChamp: MIN_CHAMP };
+/** Nombre de pages ouvertes en même temps (navigateurs séparés, chacun dans son contexte isolé). */
+const PARALLELE = 4;
+
+/**
+ * Contrôle d'une page, pour un rôle et une largeur. Renvoie { rapport, messages } : messages = [{ ok, msg }] à afficher dans l'ordre.
+ * rapport est gardé pour le fichier de sortie. Le paysage (pages de jeux) n'est fait qu'à la première largeur.
+ */
+async function controler(browser, { pg, role, scenario, fixture, w }) {
+  const messages = [];
+  const libelle = `${pg} [${role}]`;
+  const rapport = { page: pg, role, fixture, largeur: w, meta: null, fixes: [], nav: null, dialogues: [], paysage: null, erreur: null, avis: [] };
+  const p = await openPage(browser, { page: pg, fixture, scenario, width: w, height: HAUTEUR[w], mobile: true, dpr: 2, reducedMotion: 'reduce' });
+  try {
+    rapport.meta = await p.evaluate(() => { const m = document.querySelector('meta[name="viewport"]'); return m ? m.content : null; });
+    const s = await p.evaluate(scanDom, { ...OPTS, rootSel: null });
+    rapport.scan = s;
+
+    // Menu du haut : ouvert puis refermé au bouton « Menu »
+    const tog = await p.$('.nav-toggle');
+    // Atteignable au doigt ? Sinon (ex. récap : diaporama plein écran qui couvre l'en-tête) : signalé à part.
+    const couvert = tog && await p.evaluate(() => {
+      const t = document.querySelector('.nav-toggle'); const r = t.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return !!hit && !t.contains(hit);
+    });
+    if (tog && await tog.isVisible() && couvert) rapport.navCouvert = true;
+    else if (tog && await tog.isVisible()) {
+      await tog.click(); await sleep(350);
+      const ouvert = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') === true);
+      const sNav = await p.evaluate(scanDom, { ...OPTS, rootSel: '.site-header' });
+      await tog.click(); await sleep(350);
+      const ferme = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') !== true);
+      rapport.nav = { ouvert, ferme, scan: sNav };
+    }
+
+    // Fenêtres modales : ouvertes, mesurées, refermées au clavier (Échap) ou par leur bouton Fermer
+    const nd = await p.evaluate(() => document.querySelectorAll('dialog').length);
+    for (let i = 0; i < nd; i++) {
+      const ok = await p.evaluate((i) => {
+        const d = document.querySelectorAll('dialog')[i];
+        if (d.open) return false;
+        try { d.showModal(); d.setAttribute('data-a11y-root', ''); return true; } catch (e) { return false; }
+      }, i);
+      if (!ok) continue;
+      await sleep(250);
+      const info = await p.evaluate(() => {
+        const d = document.querySelector('dialog[data-a11y-root]');
+        const r = d.getBoundingClientRect();
+        const de = document.documentElement;
+        return { id: d.id || d.className || 'dialog', tientEcran: r.left >= -0.5 && r.right <= de.clientWidth + 0.5 };
+      });
+      const sD = await p.evaluate(scanDom, { ...OPTS, rootSel: 'dialog[data-a11y-root]' });
+      await p.keyboard.press('Escape'); await sleep(200);
+      const fermeEchap = await p.evaluate(() => !document.querySelector('dialog[data-a11y-root]')?.open);
+      const boutonFermer = await p.evaluate(() => {
+        const d = document.querySelector('dialog[data-a11y-root]');
+        return [...d.querySelectorAll('button, [role=button], a')].some((b) => {
+          const t = ((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).toLowerCase();
+          return b.getClientRects().length > 0 && /ferm|close|annul|retour|×|✕|✖/.test(t);
+        });
+      });
+      if (!fermeEchap) await p.evaluate(() => { const d = document.querySelector('dialog[data-a11y-root]'); d.close(); });
+      await p.evaluate(() => document.querySelectorAll('[data-a11y-root]').forEach((x) => x.removeAttribute('data-a11y-root')));
+      rapport.dialogues.push({ ...info, fermeEchap, boutonFermer, scan: sD });
+    }
+  } catch (e) {
+    rapport.erreur = e.message.split('\n')[0].slice(0, 160);
+  }
+  // Erreurs JavaScript de la page : signalées en avis (le contrôle de fumée les compte, ici elles ne sont pas des défauts d'accessibilité)
+  rapport.avis = (p.errs || []).slice(0, 2);
+  await p.ctx.close();
+
+  // Une ligne par page et largeur (les défauts de la page entière et des éléments ouverts)
+  const tous = [rapport.scan, rapport.nav?.scan, ...rapport.dialogues.map((d) => d.scan)].filter(Boolean);
+  const ds = [...new Set(tous.flatMap(defauts))];
+  // Zoom permis : pas de user-scalable=no / 0, ni maximum-scale inférieur à 2
+  const m = rapport.meta;
+  if (m === null) ds.push('balise meta viewport absente');
+  else if (/user-scalable\s*=\s*(no|0)\b/i.test(m)) ds.push('zoom bloqué (user-scalable=no)');
+  else { const ms = /maximum-scale\s*=\s*([\d.]+)/i.exec(m); if (ms && Number(ms[1]) < 2) ds.push(`zoom limité (maximum-scale=${ms[1]})`); }
+  if (rapport.nav && !rapport.nav.ouvert) ds.push('menu du haut ne s\'ouvre pas');
+  if (rapport.nav && !rapport.nav.ferme) ds.push('menu du haut ne se referme pas');
+  for (const d of rapport.dialogues) {
+    if (!d.tientEcran) ds.push(`fenêtre « ${d.id} » dépasse l'écran`);
+    if (!d.fermeEchap && !d.boutonFermer) ds.push(`fenêtre « ${d.id} » sans fermeture accessible`);
+  }
+  if (rapport.erreur) ds.push('analyse impossible : ' + rapport.erreur);
+  rapport.defauts = ds;
+  const ex = [...(rapport.scan ? exemples(rapport.scan) : []), ...(rapport.nav?.scan ? exemples(rapport.nav.scan).map((x) => 'menu : ' + x) : [])];
+  messages.push({ ok: ds.length === 0, msg: `${libelle} ${w} : ${ds.length ? ds.join(' ; ') : 'OK'}${ex.length && ds.length ? '  [' + ex.slice(0, 3).join(' | ') + ']' : ''}` });
+
+  // Paysage (pages de jeux) : défilement horizontal et barres fixes trop hautes. Une seule fois par page et rôle.
+  if (JEUX.has(pg) && w === LARGEURS[0]) {
+    const q = await openPage(browser, { page: pg, fixture, scenario, width: PAYSAGE.width, height: PAYSAGE.height, mobile: true, dpr: 2, reducedMotion: 'reduce' });
+    try {
+      const s = await q.evaluate(scanDom, { ...OPTS, rootSel: null });
+      const hautes = s.fixes.filter((f) => f.pourcentHauteur > 40);
+      const pd = [];
+      if (s.hscroll > 0) pd.push(`défilement horizontal ${s.hscroll} px`);
+      const av = hautes.map((f) => `barre fixe ${f.pourcentHauteur} % de la hauteur : ${f.el}`);
+      rapport.paysage = { hscroll: s.hscroll, avis: av };
+      messages.push({ ok: pd.length === 0, msg: `${libelle} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}` });
+    } catch (e) {
+      messages.push({ ok: false, msg: `${libelle} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})` });
+    }
+    await q.ctx.close();
+  }
+  return { rapport, messages };
+}
+
+/** Exécute les tâches en parallèle (au plus n à la fois), en gardant l'ordre des résultats. */
+async function enParallele(taches, n, fn) {
+  const out = new Array(taches.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: n }, async () => {
+    while (i < taches.length) { const k = i++; out[k] = await fn(taches[k]); }
+  }));
+  return out;
+}
 
 (async () => {
-  const pages = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)).sort();
-  const browser = await chromium.launch();
-  const resultats = [];
+  // Pages : racine (index, 404, offline) avec le scénario par défaut, puis chaque page de site/pages/<catégorie>/
+  const racine = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)).sort();
+  const dossierPages = path.join(ROOT, 'pages');
+  const categories = fs.readdirSync(dossierPages).filter((c) => fs.statSync(path.join(dossierPages, c)).isDirectory()).sort();
+  const pagesRangees = categories.flatMap((c) => fs.readdirSync(path.join(dossierPages, c)).filter((f) => f.endsWith('.html')).map((f) => f.slice(0, -5)));
+  const exclues = pagesRangees.filter((pg) => EXCLUES.has(pg));
+  const pages = pagesRangees.filter((pg) => !EXCLUES.has(pg)).sort();
+  // Tâches : une par page, rôle et largeur. Racine : scénario par défaut (rôle « défaut »).
+  const taches = [];
+  for (const pg of racine) for (const w of LARGEURS) taches.push({ pg, role: 'défaut', fixture: 'fake-sb.mjs', scenario: {}, w });
   for (const pg of pages) {
-    for (const w of LARGEURS) {
-      const p = await openPage(browser, { page: pg, width: w, height: HAUTEUR[w], mobile: true, dpr: 2, reducedMotion: 'reduce' });
-      const rapport = { page: pg, largeur: w, meta: null, fixes: [], nav: null, dialogues: [], paysage: null, erreur: null };
-      try {
-        rapport.meta = await p.evaluate(() => { const m = document.querySelector('meta[name="viewport"]'); return m ? m.content : null; });
-        const s = await p.evaluate(scanDom, { ...OPTS, rootSel: null });
-        rapport.scan = s;
-
-        // Menu du haut : ouvert puis refermé au bouton « Menu »
-        const tog = await p.$('.nav-toggle');
-        // Atteignable au doigt ? Sinon (ex. récap : diaporama plein écran qui couvre l'en-tête) : signalé à part.
-        const couvert = tog && await p.evaluate(() => {
-          const t = document.querySelector('.nav-toggle'); const r = t.getBoundingClientRect();
-          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-          return !!hit && !t.contains(hit);
-        });
-        if (tog && await tog.isVisible() && couvert) rapport.navCouvert = true;
-        else if (tog && await tog.isVisible()) {
-          await tog.click(); await sleep(350);
-          const ouvert = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') === true);
-          const sNav = await p.evaluate(scanDom, { ...OPTS, rootSel: '.site-header' });
-          await tog.click(); await sleep(350);
-          const ferme = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') !== true);
-          rapport.nav = { ouvert, ferme, scan: sNav };
-        }
-
-        // Fenêtres modales : ouvertes, mesurées, refermées au clavier (Échap) ou par leur bouton Fermer
-        const nd = await p.evaluate(() => document.querySelectorAll('dialog').length);
-        for (let i = 0; i < nd; i++) {
-          const ok = await p.evaluate((i) => {
-            const d = document.querySelectorAll('dialog')[i];
-            if (d.open) return false;
-            try { d.showModal(); d.setAttribute('data-a11y-root', ''); return true; } catch (e) { return false; }
-          }, i);
-          if (!ok) continue;
-          await sleep(250);
-          const info = await p.evaluate(() => {
-            const d = document.querySelector('dialog[data-a11y-root]');
-            const r = d.getBoundingClientRect();
-            const de = document.documentElement;
-            return { id: d.id || d.className || 'dialog', tientEcran: r.left >= -0.5 && r.right <= de.clientWidth + 0.5 };
-          });
-          const sD = await p.evaluate(scanDom, { ...OPTS, rootSel: 'dialog[data-a11y-root]' });
-          await p.keyboard.press('Escape'); await sleep(200);
-          const fermeEchap = await p.evaluate(() => !document.querySelector('dialog[data-a11y-root]')?.open);
-          const boutonFermer = await p.evaluate(() => {
-            const d = document.querySelector('dialog[data-a11y-root]');
-            return [...d.querySelectorAll('button, [role=button], a')].some((b) => {
-              const t = ((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).toLowerCase();
-              return b.getClientRects().length > 0 && /ferm|close|annul|retour|×|✕|✖/.test(t);
-            });
-          });
-          if (!fermeEchap) await p.evaluate(() => { const d = document.querySelector('dialog[data-a11y-root]'); d.close(); });
-          await p.evaluate(() => document.querySelectorAll('[data-a11y-root]').forEach((x) => x.removeAttribute('data-a11y-root')));
-          rapport.dialogues.push({ ...info, fermeEchap, boutonFermer, scan: sD });
-        }
-      } catch (e) {
-        rapport.erreur = e.message.split('\n')[0].slice(0, 160);
-      }
-      await p.ctx.close();
-
-      // Une ligne par page et largeur (les défauts de la page entière et des éléments ouverts)
-      const tous = [rapport.scan, rapport.nav?.scan, ...rapport.dialogues.map((d) => d.scan)].filter(Boolean);
-      const ds = [...new Set(tous.flatMap(defauts))];
-      // Zoom permis : pas de user-scalable=no / 0, ni maximum-scale inférieur à 2
-      const m = rapport.meta;
-      if (m === null) ds.push('balise meta viewport absente');
-      else if (/user-scalable\s*=\s*(no|0)\b/i.test(m)) ds.push('zoom bloqué (user-scalable=no)');
-      else { const ms = /maximum-scale\s*=\s*([\d.]+)/i.exec(m); if (ms && Number(ms[1]) < 2) ds.push(`zoom limité (maximum-scale=${ms[1]})`); }
-      if (rapport.nav && !rapport.nav.ouvert) ds.push('menu du haut ne s\'ouvre pas');
-      if (rapport.nav && !rapport.nav.ferme) ds.push('menu du haut ne se referme pas');
-      for (const d of rapport.dialogues) {
-        if (!d.tientEcran) ds.push(`fenêtre « ${d.id} » dépasse l'écran`);
-        if (!d.fermeEchap && !d.boutonFermer) ds.push(`fenêtre « ${d.id} » sans fermeture accessible`);
-      }
-      if (rapport.erreur) ds.push('analyse impossible : ' + rapport.erreur);
-      rapport.defauts = ds;
-      resultats.push(rapport);
-      const ex = [...(rapport.scan ? exemples(rapport.scan) : []), ...(rapport.nav?.scan ? exemples(rapport.nav.scan).map((x) => 'menu : ' + x) : [])];
-      check(ds.length === 0, `${pg} ${w} : ${ds.length ? ds.join(' ; ') : 'OK'}${ex.length && ds.length ? '  [' + ex.slice(0, 3).join(' | ') + ']' : ''}`);
-
-      // Paysage (pages de jeux) : défilement horizontal et barres fixes trop hautes
-      if (JEUX.has(pg)) {
-        const q = await openPage(browser, { page: pg, width: PAYSAGE.width, height: PAYSAGE.height, mobile: true, dpr: 2, reducedMotion: 'reduce' });
-        try {
-          const s = await q.evaluate(scanDom, { ...OPTS, rootSel: null });
-          const hautes = s.fixes.filter((f) => f.pourcentHauteur > 40);
-          const pd = [];
-          if (s.hscroll > 0) pd.push(`défilement horizontal ${s.hscroll} px`);
-          const av = hautes.map((f) => `barre fixe ${f.pourcentHauteur} % de la hauteur : ${f.el}`);
-          rapport.paysage = { hscroll: s.hscroll, avis: av };
-          check(pd.length === 0, `${pg} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}`);
-        } catch (e) {
-          check(false, `${pg} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})`);
-        }
-        await q.ctx.close();
-      }
+    const sp = SPEC[pg] || {};
+    const roles = [];
+    if (!ADMIN_SEUL.has(pg)) roles.push(['membre', MEMBRE]);
+    roles.push(['admin', {}]);
+    for (const [role, scn] of roles) for (const w of LARGEURS) {
+      taches.push({ pg, role, fixture: sp.fixture || 'fake-sb.mjs', scenario: { ...(sp.scenario || {}), ...scn }, w });
     }
   }
+  const browser = await chromium.launch();
+  const resultats = await enParallele(taches, PARALLELE, (t) => controler(browser, t).catch((e) => ({
+    rapport: { page: t.pg, role: t.role, largeur: t.w, defauts: ['échec du contrôle : ' + e.message.split('\n')[0].slice(0, 160)], erreur: e.message },
+    messages: [{ ok: false, msg: `${t.pg} [${t.role}] ${t.w} : échec du contrôle (${e.message.split('\n')[0].slice(0, 120)})` }],
+  })));
   await browser.close();
 
+  // Affichage dans l'ordre des tâches
+  for (const { messages } of resultats) for (const m of messages) check(m.ok, m.msg);
+  const rapports = resultats.map((r) => r.rapport);
+
   fs.mkdirSync(SHOTS, { recursive: true });
-  const bilan = { pages: pages.length, largeurs: LARGEURS, resultats: resultats.map((r) => ({ page: r.page, largeur: r.largeur, meta: r.meta, defauts: r.defauts, scan: r.scan, nav: r.nav, dialogues: r.dialogues, paysage: r.paysage })) };
+  const bilan = {
+    pages: pages.length + racine.length, pages_site: pages, pages_racine: racine, exclues, largeurs: LARGEURS, controles: rapports.length,
+    resultats: rapports.map((r) => ({ page: r.page, role: r.role, fixture: r.fixture, largeur: r.largeur, meta: r.meta, defauts: r.defauts, avis: r.avis, scan: r.scan, nav: r.nav, dialogues: r.dialogues, paysage: r.paysage })),
+  };
   fs.writeFileSync(path.join(SHOTS, 'a11y-mobile.json'), JSON.stringify(bilan, null, 2));
-  const total = (k) => resultats.reduce((n, r) => n + (r.scan ? r.scan[k].length : 0), 0);
-  console.log(`\nAudit mobile : ${pages.length} pages × ${LARGEURS.join('/')} px ; cibles < 44 px : ${total('petites')} ; textes < 12 px : ${total('texte')} ; ` +
-    `pages avec défilement horizontal : ${resultats.filter((r) => r.scan && r.scan.hscroll > 0).length}`);
+  const total = (k) => rapports.reduce((n, r) => n + (r.scan ? r.scan[k].length : 0), 0);
+  const pagesHs = new Set(rapports.filter((r) => r.scan && r.scan.hscroll > 0).map((r) => `${r.page} [${r.role}] ${r.largeur}`));
+  console.log(`\nAudit mobile : ${pages.length + racine.length} pages (${racine.length} à la racine, ${pages.length} dans site/pages/, ${exclues.length} exclue(s)), ` +
+    `${rapports.length} contrôles (360/390 px, membre et admin) ; cibles < 44 px : ${total('petites')} ; textes < 12 px : ${total('texte')} ; ` +
+    `défilements horizontaux : ${pagesHs.size}`);
   finish();
 })();
