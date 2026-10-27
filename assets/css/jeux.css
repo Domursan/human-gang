@@ -201,5 +201,5 @@
   .jx-s { display: none; }
   .jx-gi { width: 30px; height: 30px; }
   .jx-pills { top: 4px; left: 4px; right: 4px; gap: 3px 4px; }
-  .jx-pills .pill { font-size: 10px; padding: 2px 5px; line-height: 1.15; white-space: normal; }
+  .jx-pills .pill { font-size: 10px; padding: 2px 5px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
