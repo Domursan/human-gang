@@ -19,7 +19,7 @@ const scenario = {
   ],
   rsvps: [{ event_id: EV, user_id: ME, status: 'oui', self_answered: true }, { event_id: EV, user_id: U(2), status: 'oui', self_answered: true }, { event_id: EV, user_id: U(3), status: 'oui', self_answered: true }],
   c080: {
-    hg_cards: [{ id: 'CJY1', set_id: 'SET-SO', number: 1, name: 'RDV Lyon 2026', family: 'lieu', rarity: 'epique', image_url: 'assets/cartes/hiver-raclette/001.png',
+    hg_cards: [{ id: 'CJY1', set_id: 'SET-SO', number: 1, name: 'RDV Lyon 2026', family: 'lieu', rarity: 'epique', image_url: '/assets/cartes/hiver-raclette/001.png',
       flavor: 'La photo de famille, enfin tout le monde dessus.', caption: '20.10.2026 · J’y étais', tradeable: false, craftable: false, can_shiny: false, active: true }],
     hg_event_card_claims: [{ event_id: EV, user_id: ME }, { event_id: EV, user_id: U(2) }],
   },

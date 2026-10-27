@@ -23,7 +23,7 @@ const F = 'fake-sb-cartes.mjs';
   await sleep(150);
   const prev = await p.$eval('#champ-preview', (e) => ({ t: e.innerText, src: e.querySelector('img')?.getAttribute('src') }));
   check(/main Ahri/i.test(prev.t) && /Je ne ban jamais Yasuo/i.test(prev.t) && /LoL · édition 2026/.test(prev.t), 'aperçu en direct : main, phrase, jeu et édition');
-  check(/assets\/cards\/champions\/fusee\.svg$/.test(prev.src || ''), 'aperçu : emblème choisi');
+  check(/assets\/cartes\/champions\/fusee\.svg$/.test(prev.src || ''), 'aperçu : emblème choisi');
   check(/23 \/ 60/.test(await p.$eval('#champ-fl-count', (e) => e.innerText)), 'compteur de la phrase');
   await p.click('.champ-chip:has(input[value="ck3"])');
   await sleep(100);

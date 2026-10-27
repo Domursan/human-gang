@@ -6,7 +6,9 @@
 // Faux Supabase : fixtures/fake-sb-cartes.mjs ; scénarios cardsCfg (surcharge de la configuration du jeu),
 // badgesCfg (hg_settings.badges), cardsFail (la RPC hg_card_cfg refuse).
 // Lancer : node tests/parcours/infos/parcours-affiches.cjs   (HG_ROOT / HG_PREFIX comme les autres parcours)
-const { check, finish, openPage, sleep, chromium } = require('../../lib/harness.cjs');
+const fs = require('fs');
+const path = require('path');
+const { check, finish, openPage, sleep, chromium, ROOT, DEPOT } = require('../../lib/harness.cjs');
 
 const FIXTURE = 'fake-sb-cartes.mjs';
 const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour comparer les nombres
@@ -69,7 +71,7 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
       const f = document.querySelector('.aide-affiche iframe');
       return { a: a?.width ?? 0, b: b?.width ?? 0, src: f?.getAttribute('src') ?? '', t: f?.style.transform ?? '' };
     });
-    check(duo.src === 'affiches/boosters-a3.html', `tuto « Ouvrir un booster » : affiche des boosters à côté (${duo.src})`);
+    check(duo.src === '/affiches/boosters-a3.html', `tuto « Ouvrir un booster » : affiche des boosters à côté (${duo.src})`);
     check(duo.a > 0 && Math.abs(duo.a - duo.b) < 2, `tuto : texte et affiche en deux moitiés égales (${Math.round(duo.a)} / ${Math.round(duo.b)})`);
     check(/^scale\(0\.\d+\)$/.test(duo.t), `tuto : affiche réduite à la largeur du cadre (${duo.t})`);
     check(page.errs.length === 0, `tuto : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
@@ -129,16 +131,12 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     check(page.errs.length === 0, `affiche teaser : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
 
-    // 10. Solutions : 18 secrets, solutions précises, récompenses qui suivent les réglages.
-    page = await openPage(browser, { page: 'affiches/secrets-solutions-a3', fixture: FIXTURE, scenario: { settingsExtra: { eggs: { recompenses } } }, width: 1123 });
-    const sol = await page.evaluate(() => ({ cases: document.querySelectorAll('.sol').length, texte: document.body.textContent,
-      konami: document.querySelector('[data-cfg="eggs.recompenses.konami"]')?.textContent ?? '' }));
-    check(sol.cases === 18, `affiche solutions : 18 secrets (${sol.cases})`);
-    check(sol.texte.includes('/pages/jeux/secret.html') && sol.texte.includes('SECRETS') && sol.texte.includes('humane'), 'affiche solutions : solutions précises (page secrète, mot des lettres, mot humane)');
-    check(sol.konami === '250', `affiche solutions : récompense du code Konami suit le réglage (${sol.konami})`);
-    check(!sol.texte.includes('{{'), 'affiche solutions : aucun jeton non remplacé');
-    check(page.errs.length === 0, `affiche solutions : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
-    await page.ctx.close();
+    // 10. Solutions : page volontairement non publiée (impression/, hors du site). On vérifie qu'elle n'est pas servie
+    // et que son fichier porte les 18 solutions ; ses récompenses dynamiques ne se lisent pas hors du site.
+    const solFichier = fs.readFileSync(path.join(DEPOT, 'impression', 'secrets-solutions-a3.html'), 'utf8');
+    check(!fs.existsSync(path.join(ROOT, 'affiches', 'secrets-solutions-a3.html')), 'affiche solutions : non publiée dans site/affiches/ (volontaire)');
+    check((solFichier.match(/class="sol[ "]/g) || []).length === 18, 'affiche solutions : 18 secrets dans impression/secrets-solutions-a3.html');
+    check(solFichier.includes('SECRETS') && solFichier.includes('humane'), 'affiche solutions : mot des lettres et mot humane présents');
 
     // 11. Affiche « Les jeux » : missions, GeoGuessr, Raclette, Domu-mobile ; et la gamme des boosters lue sur hg_booster_types.
     page = await openPage(browser, { page: 'affiches/jeux-a3', fixture: FIXTURE, width: 1123 });
@@ -155,7 +153,7 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
 
     // 12. Aucune fonctionnalité retirée, aucun pseudo de membre sur les affiches.
     const retires = ['Lexique', 'Ludothèque', 'Gartic', 'Capsule', 'Carnet de voyage', 'Qui main', 'Pronostic', 'Jeux du jour', 'Saisons ', 'CARZY', 'DESTRU'];
-    for (const nom of ['index', 'badges-a3', 'paillettes-a3', 'cartes-a3', 'boosters-a3', 'boosters-gamme-a3', 'secrets-a3', 'secrets-teaser-a3', 'secrets-solutions-a3', 'jeux-a3']) {
+    for (const nom of ['index', 'badges-a3', 'paillettes-a3', 'cartes-a3', 'boosters-a3', 'boosters-gamme-a3', 'secrets-a3', 'secrets-teaser-a3', 'jeux-a3']) {
       page = await openPage(browser, { page: 'affiches/' + nom, fixture: FIXTURE, width: 1123 });
       const texte = await page.evaluate(() => document.body.textContent);
       const trouves = retires.filter((m) => texte.includes(m));

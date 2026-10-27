@@ -150,7 +150,7 @@ function subOf(it) {
 }
 
 const isMineSlot = (slotId) => { const s = S.slots.find((x) => x.id === slotId); return !!s && (s.created_by === me.id || canStaff); };
-const safeHref = (l) => (/^https:\/\//.test(l || '') ? l : /^[a-z0-9-]+\.html([?#][\w=:#.-]*)?$/i.test(l || '') ? l : null);
+const safeHref = (l) => (/^https:\/\//.test(l || '') ? l : /^(\/pages\/[a-z0-9-]+\/)?[a-z0-9-]+\.html([?#][\w=:#.-]*)?$/i.test(l || '') ? l : null);
 
 function renderDay() {
   const box = $('#cal-day');

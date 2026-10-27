@@ -53,7 +53,7 @@ const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR
 
   /* ---------- Admin : vignettes manquantes ---------- */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { photoUrl: 'assets/images/marque/favicon-64.png' } });
+    const p = await openPage(browser, { page: 'admin', width: 1280, scenario: { photoUrl: '/assets/images/marque/favicon-64.png' } });
     await adminSection(p, 'camp/souvenirs');
     await p.click('#shell-col .sv-views a[data-view="photos"]');
     await p.waitForSelector('#souvenirs-root .sv-photo', { timeout: 5000 }).catch(() => {});
