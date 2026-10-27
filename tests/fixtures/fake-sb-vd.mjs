@@ -61,7 +61,8 @@ function calendar(from, to) {
   if (S.calFail) return err('Failed to fetch');
   const items = [];
   const inRange = (d) => d >= from && d <= to;
-  const ev = { id: 'eeeeeeee-0000-4000-8000-0000000000aa', title: 'Raclette sans raclette à Lausanne', starts_at: (() => { const d = new Date(now + 5 * 864e5); d.setUTCHours(11, 0, 0, 0); return d.toISOString(); })() };
+  // Jour de Zurich + 5 (comme le test) : à partir de l'heure UTC, la sortie tombe la veille entre 23 h et minuit à Zurich
+  const ev = { id: 'eeeeeeee-0000-4000-8000-0000000000aa', title: 'Raclette sans raclette à Lausanne', starts_at: new Date(`${dayZ(now + 5 * 864e5)}T11:00:00Z`).toISOString() };
   if (inRange(dayZ(ev.starts_at))) items.push({ kind: 'irl', ref: ev.id, title: ev.title, starts_at: ev.starts_at, all_day: false, day: dayZ(ev.starts_at), link: `/pages/irl/irl.html#event-${ev.id}`, meta: { oui: 6, mine: null } });
   if (VD.session && inRange(dayZ(VD.session.starts_at))) {
     const f = filmById(VD.session.film_id);
