@@ -88,7 +88,18 @@ jobs:
         run: npx playwright install-deps chromium
       - name: Tests de parcours et de fumée
         working-directory: tests
-        run: node run-all.cjs --shard=${{ matrix.shard }}/4
+        shell: bash
+        run: |
+          set -o pipefail
+          node run-all.cjs --shard=${{ matrix.shard }}/4 2>&1 | tee resultats-tests.log
+      - name: Signaler les échecs (annotations lisibles sans les journaux)
+        if: failure()
+        working-directory: tests
+        shell: bash
+        run: |
+          grep -E "en échec|^ECHEC|Error:|TimeoutError|Timeout [0-9]+ms" resultats-tests.log | sort -u | head -40 | while IFS= read -r l; do
+            echo "::error title=Tests morceau ${{ matrix.shard }}::${l:0:300}"
+          done
       - name: Bilan et captures
         # Toujours déposé : le bilan JSON sert au résumé global ; les captures n'ont que les fausses données des fixtures.
         if: always()
