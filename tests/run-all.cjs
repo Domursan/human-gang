@@ -1,6 +1,6 @@
 /**
  * Lance toute la suite de tests, l'un après l'autre : vérifications statiques, tests de fumée,
- * puis chaque tests/parcours/undefined/parcours-*.cjs et composants-admin-ui.cjs.
+ * puis chaque parcours/<catégorie>/parcours-*.cjs (les vérifications sont dans unitaires/ et controles/).
  * Chaque fichier a une limite de temps (4 min) et, s'il échoue ou dépasse la limite, il est relancé une fois :
  * un navigateur lent ou bloqué (fréquent sur les machines de GitHub) ne fait pas échouer toute la suite.
  * Sur un poste : s'arrête au premier fichier qui échoue deux fois.
@@ -14,7 +14,7 @@
  * Résumé : si GITHUB_STEP_SUMMARY est défini (GitHub Actions), un tableau Markdown y est ajouté (fichier,
  * résultat, durée, relancé ou non). Le bilan JSON est aussi écrit dans tests/shots/resultats[-K].json, pour le
  * résumé global de la CI (tests/ci-resume.cjs).
- * Lancer : npm test   (ou : node tests/run-all.cjs [--shard=1/4] [--continuer])
+ * Lancer, depuis tests/ : npm test   (ou : node run-all.cjs [--shard=1/4] [--continuer])
  */
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -37,9 +37,13 @@ if (shardArg) {
 const continuer = args.includes('--continuer') || !!shard || process.env.CI === 'true';
 
 /* ---------- Liste des fichiers ---------- */
-const parcours = fs.readdirSync(dir).filter((f) => /^parcours-.*\.cjs$/.test(f)).sort();
-const STATIQUES = ['check-js.cjs', 'check-rpc.mjs', 'check-hg-discord.mjs', 'check-hg-calendar.mjs', 'check-notif-prefs.mjs', 'hg-archive-lib.mjs'];
-const NAVIGATEUR = ['smoke.cjs', 'smoke-admin.cjs', 'composants-admin-ui.cjs', ...parcours];
+/** Fichiers parcours-*.cjs de parcours/<catégorie>/, chemins relatifs à tests/ (triés). */
+const parcours = fs.readdirSync(path.join(dir, 'parcours'), { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .flatMap((d) => fs.readdirSync(path.join(dir, 'parcours', d.name)).filter((f) => /^parcours-.*\.cjs$/.test(f)).map((f) => `parcours/${d.name}/${f}`))
+  .sort();
+const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
+const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', ...parcours];
 /** Suite complète, ou le morceau demandé (un fichier sur N, liste triée : la découpe ne dépend que des noms). */
 const suite = shard
   ? NAVIGATEUR.filter((_, i) => i % shard.n === shard.k - 1)

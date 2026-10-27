@@ -61,13 +61,15 @@ supabase functions deploy hg-cron --no-verify-jwt
 ## Notes
 - Secrets inchangés : `DISCORD_BOT_TOKEN`, `SITE_URL` (facultatif), `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` (fournis).
 - Base : `hg_settings` clé `bot_templates` et table `hg_bot_log` (migration 011, déjà appliquée).
-- `bot-templates.json` est aussi lu par la page d'administration (`fetch('supabase/functions/_shared/bot-templates.json')`).
+- `bot-templates.json` est aussi lu par l'éditeur de l'administration (`TEMPLATES_URL` dans `site/assets/espaces/admin/admin-bot.js`) : voir le point d'attention ci-dessous.
 
-### Attention : dossier `_shared` et GitHub Pages
-GitHub Pages (Jekyll) **ignore les dossiers dont le nom commence par `_`**. Un fichier vide `.nojekyll` a donc été
-ajouté à la racine du dépôt pour que `supabase/functions/_shared/bot-templates.json` soit publié. Effet de bord :
-les `.md` (ex. `BOT.md`) sont servis tels quels (texte brut) au lieu d'être convertis par Jekyll.
-Sans ce fichier, l'admin affiche un avertissement et ne peut pas éditer les modèles.
+### Attention : `_shared` n'est pas publié
+Seul le dossier `site/` est publié sur GitHub Pages (voir `docs/PUBLICATION.md`). `supabase/functions/_shared/bot-templates.json`
+n'est donc plus servi par le site. Les fonctions edge l'importent depuis le dépôt : pas de problème pour elles.
+En revanche, l'éditeur de l'administration le lit à une adresse relative qui sort du dossier publié
+(`TEMPLATES_URL` dans `site/assets/espaces/admin/admin-bot.js`) : avant la mise en ligne du rangement, il faut une copie
+sous `site/` (ou une lecture de l'adresse brute GitHub) et mettre `TEMPLATES_URL` à jour. Sans cela, l'admin affiche
+un avertissement et ne peut pas éditer les modèles.
 
 ## Rappels, secret cron et anti-doublons : ordre à suivre
 

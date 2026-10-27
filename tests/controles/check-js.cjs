@@ -8,7 +8,8 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const ROOT = path.resolve(__dirname, '..');
+// Racine du dépôt (supabase/, site/, tests/…) : tests/controles/ est à deux niveaux de la racine.
+const ROOT = path.resolve(__dirname, '..', '..');
 const SKIP = new Set(['node_modules', '.git', 'shots']);
 const ESM = /^\s*(import\s|export\s)/m;
 

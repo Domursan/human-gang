@@ -138,28 +138,31 @@ Jeu de cartes › **Arène** (`pages/cartes/cartes.html#arene` pour le site, `pa
 
 ## Arborescence
 
+Seul `site/` est publié (voir [docs/PUBLICATION.md](docs/PUBLICATION.md)) ; le reste du dépôt ne sort pas du GitHub.
+
 ```
 .
-├── *.html                  Une page = un fichier (pages/compte/accueil.html, pages/cartes/cartes.html, pages/admin/admin.html…)
-├── 404.html, offline.html  Pages d'erreur et hors connexion
-├── sw.js                   Service worker (cache hors ligne, notifications push)
-├── manifest.webmanifest    Application installable
-├── _config.yml             Choix des fichiers publiés par GitHub Pages (voir docs/PUBLICATION.md)
-├── CNAME                   Nom de domaine (humane-gang.com)
-├── package.json            Scripts de vérification et de test
-├── affiches/               Affiches A3 imprimables (badges, Paillettes, cartes, boosters)
-├── assets/
-│   ├── css/                base.css (styles communs) + un fichier par page ou composant
-│   ├── js/
-│   │   ├── core/           Socle commun : session, en-tête, pied de page, thème, utilitaires
-│   │   ├── core.js         Point d'entrée du socle (ré-exporte core/)
-│   │   ├── <page>.js       Script de chaque page
-│   │   ├── admin/          Coquille du panel (navigation, permissions, temps réel)
-│   │   ├── admin-*.js, admin-*/   Sections du panel (comptes, cartes, réglages, sorties, souvenirs…)
-│   │   ├── eggs/, tutos/   Easter eggs et contenu des tutos de la page d'aide
-│   │   └── config.js       URL et clé publique Supabase
-│   ├── cards/              Images des cartes, par série (chemins relatifs « site/assets/cartes/… » enregistrés en base)
-│   └── img/                Logo, icônes
+├── site/                   Le site publié (GitHub Pages)
+│   ├── index.html          Intro d'entrée (redirige vers l'accueil)
+│   ├── 404.html, offline.html   Pages d'erreur et hors connexion
+│   ├── pages/              Une page = un fichier, rangé par catégorie
+│   │   ├── admin/          Panel d'administration (admin.html)
+│   │   ├── cartes/        Jeu de cartes (cartes.html, collection-a4.html)
+│   │   ├── compte/         Compte et messages (accueil, compte, membre, messages)
+│   │   ├── infos/          Aide, assistance, légal, rejoindre
+│   │   ├── irl/            Sorties et événements (irl, calendrier, cine, secret-santa…)
+│   │   └── jeux/           Les jeux (jeux.html, un fichier par jeu)
+│   ├── affiches/           Affiches A3 imprimables (badges, Paillettes, cartes, boosters)
+│   ├── assets/
+│   │   ├── commun/         Socle partagé : core/ (session, en-tête, pied de page, thème), base.css, config.js (URL et clé publique Supabase)
+│   │   ├── espaces/        Scripts et styles de chaque page, par catégorie (admin/, irl/, jeux/…)
+│   │   ├── cartes/         Images des cartes, par série (adresse publique « /assets/cartes/… », chemins enregistrés en base)
+│   │   ├── images/         Logo, favicon, visuels
+│   │   └── vendor/         Bibliothèques tierces
+│   ├── sw.js               Service worker (cache hors ligne, notifications push)
+│   ├── manifest.webmanifest   Application installable
+│   └── CNAME               Nom de domaine (humane-gang.com)
+├── impression/             Documents à imprimer qui ne sont pas publiés (solutions des secrets)
 ├── supabase/
 │   ├── migrations/         Historique du schéma (numérotées, appliquées dans l'ordre)
 │   ├── schema/             Schéma reconstitué de la base (source de vérité)
@@ -168,10 +171,10 @@ Jeu de cartes › **Arène** (`pages/cartes/cartes.html#arene` pour le site, `pa
 │   └── ADMIN.md            Administrateur de secours
 ├── docs/                   Documentation (voir la liste plus bas) et captures de recette (docs/captures/qa)
 ├── tests/                  Tests automatiques (Playwright) et faux Supabase
-└── .github/workflows/      Intégration continue (vérifications et tests)
+└── .github/workflows/      Intégration continue et publication du site (publier-site.yml)
 ```
 
-Les pages HTML restent à la racine parce que les images des cartes sont enregistrées en base avec des chemins relatifs (`site/assets/cartes/…`), et que les adresses publiques des pages (`humane-gang.com/pages/cartes/cartes.html`, etc.) ne doivent pas changer.
+Les adresses publiques des pages suivent la catégorie (`humane-gang.com/pages/cartes/cartes.html`, etc.). Les images des cartes sont enregistrées en base avec des chemins absolus (`/assets/cartes/…`) : ne pas déplacer `site/assets/cartes/` sans mettre la base à jour.
 
 ---
 
@@ -199,7 +202,7 @@ Puis ouvrir l'adresse indiquée (par exemple http://localhost:3000 ou :8000). Le
 ### Mettre en ligne une nouvelle version
 1. Si un fichier précaché (JS ou CSS) a changé, ou si la liste `PRECACHE` ou la logique de `sw.js` a changé, **augmenter `CACHE_VERSION`** dans `sw.js` (ex. `v62` → `v63`). Sans ça, les membres gardent l'ancienne version en cache.
 2. Lancer les vérifications et les tests (voir plus bas).
-3. Pousser sur `main`. GitHub Pages publie le site en une à deux minutes. Ce qui est publié et ce qui ne l'est pas : [docs/PUBLICATION.md](docs/PUBLICATION.md).
+3. Pousser sur `main` : le workflow `publier-site.yml` publie le contenu de `site/` sur GitHub Pages en une à deux minutes. Détails : [docs/PUBLICATION.md](docs/PUBLICATION.md).
 
 ### Modifier la base de données
 - Le **numéro le plus haut** actuellement présent est `105_securite.sql`. Une nouvelle migration prend le numéro suivant (ex. `106_mon_changement.sql`), dans `supabase/migrations/`.
@@ -236,7 +239,7 @@ Un seul parcours se lance avec `node tests/<nom-du-fichier>` (par exemple `node 
 | [docs/ADMIN-PANEL.md](docs/ADMIN-PANEL.md) | Organisation du panel, permissions Staff, ajouter une permission ou une sous-section |
 | [docs/ARENE.md](docs/ARENE.md) | Règles et chiffres de l'Arène v2 |
 | [docs/SECURITE.md](docs/SECURITE.md) | Audit de sécurité (constats, migration 105, décisions à prendre) |
-| [docs/PUBLICATION.md](docs/PUBLICATION.md) | Publication GitHub Pages et fichiers non publiés |
+| [docs/PUBLICATION.md](docs/PUBLICATION.md) | Publication GitHub Pages (dossier site/ uniquement) |
 | [docs/BOT.md](docs/BOT.md) | Installation et fonctionnement du bot Discord |
 | [docs/SPEC.md](docs/SPEC.md) | Spécification de construction des pages (pour les agents) |
 | [supabase/ADMIN.md](supabase/ADMIN.md) | Retrouver l'accès administrateur |

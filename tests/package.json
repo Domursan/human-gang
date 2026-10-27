@@ -2,18 +2,18 @@
   "name": "human-gang",
   "version": "0.0.0",
   "private": true,
-  "description": "Site du Humane Gang : tests et vérifications statiques (le site lui-même n'a pas de build)",
+  "description": "Tests du site Humane Gang (à lancer depuis tests/) : vérifications statiques et parcours navigateur",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "check": "node tests/check-js.cjs && node tests/check-publication.cjs",
-    "test:rpc": "node tests/check-rpc.mjs",
-    "test:smoke": "node tests/smoke.cjs && node tests/smoke-admin.cjs",
-    "test": "node tests/run-all.cjs",
-    "test:a11y": "node tests/a11y-pages.cjs",
-    "test:perf": "node tests/perf-budget.cjs",
-    "test:a11y-mobile": "node tests/a11y-mobile.cjs"
+    "check": "node controles/check-js.cjs && node controles/check-publication.cjs",
+    "test:rpc": "node controles/check-rpc.mjs",
+    "test:smoke": "node controles/smoke.cjs && node controles/smoke-admin.cjs",
+    "test": "node run-all.cjs",
+    "test:a11y": "node controles/a11y-pages.cjs",
+    "test:perf": "node controles/perf-budget.cjs",
+    "test:a11y-mobile": "node controles/a11y-mobile.cjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.1",

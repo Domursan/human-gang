@@ -21,7 +21,8 @@ import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH
 import { openDrawer } from './ui/drawer.js';
 
 // Adresse du fichier de modèles partagé avec les fonctions edge (textes par défaut des messages types).
-const TEMPLATES_URL = new URL('../../../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
+// Copié dans le site au moment de la publication (.github/workflows/publier-site.yml) depuis supabase/functions/_shared/.
+const TEMPLATES_URL = new URL('./bot-templates.json', import.meta.url).href;
 // Types de notifications du bot : [clé, libellé, ce qui part et où]. Chaque type peut être activé ou coupé.
 const NOTIFY = [
   ['draw', 'Tirage du Secret Santa', 'annonce + MP aux participants'],
@@ -1984,7 +1985,7 @@ export function mountBotSection(container) {
       S.defs = defs.value;
       renderTemplatesShell();
     } else {
-      tplBody.innerHTML = `<div class="empty">Impossible de charger les textes par défaut (<code>supabase/functions/_shared/bot-templates.json</code>)${defs.status === 'rejected' ? ` : ${esc(errMsg(defs.reason))}` : ''}. Sur GitHub Pages, vérifie que <code>_config.yml</code> publie toujours ce fichier (<code>include: _shared</code>).</div>`;
+      tplBody.innerHTML = `<div class="empty">Impossible de charger les textes par défaut (<code>supabase/functions/_shared/bot-templates.json</code>)${defs.status === 'rejected' ? ` : ${esc(errMsg(defs.reason))}` : ''}. La publication du site (workflow publier-site.yml) doit le copier dans site/assets/espaces/admin/.</div>`;
     }
 
     // Comptes

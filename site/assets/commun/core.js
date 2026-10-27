@@ -35,7 +35,7 @@ export { sb, hasSession, isNavCancel, authLanding, signOutDevice } from './core/
 export { getUser, getProfile, requireMember, requireAdmin } from './core/profile.js';
 export { loadMyPerms, getCachedPerms, canPanel, hasPerm, clearPerms } from './core/perms.js';
 export { callFn, notify } from './core/functions.js';
-export { currentPageSlug, loadMyPages, getMyPages, canAccess, pageLabel } from './core/pages-access.js';
+export { currentPageSlug, loadMyPages, getMyPages, canAccess, pageLabel, pageHref } from './core/pages-access.js';
 
 /* ---------- Mode sans limite (admin) ---------- */
 export { GOD_MINUTES, GOD_PHRASE, GOD_LIFTS, getGodMode, isGodMode, godTag, godLimitAttr, godLimit, setGodMode, disableGodMode, openGodDialog } from './core/godmode.js';

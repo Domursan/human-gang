@@ -9,7 +9,7 @@
 // Tables, RPC et stockage : hg_profiles, hg_profile_info, hg_badges, hg_user_badges, hg_my_badge_progress, hg_dyn_captures,
 // hg_join, hg_export_my_data, hg_delete_my_account, hg_photos, hg_moments, stockage hg-avatars et hg-photos.
 // N'exporte rien.
-import { sb, authLanding, signOutDevice, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from '../../commun/core.js';
+import { sb, authLanding, signOutDevice, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile, pageHref } from '../../commun/core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
 import { mountPushBlock } from '../../commun/push.js';
 import { mountNotifPrefs } from './notif-prefs.js';
@@ -25,7 +25,8 @@ const isRecoveryLink = hashParams.get('type') === 'recovery' || url.searchParams
 // (il pourrait être écrit par n'importe qui) : voir renderLinkError.
 const linkError = !!(hashParams.get('error_description') || url.searchParams.get('error_description') || hashParams.get('error_code') || url.searchParams.get('error_code'));
 const rawNext = url.searchParams.get('next') || '';
-const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
+// Accepte un nom de fichier (« irl.html », envoyé par le menu) ou une adresse absolue de page (« /pages/jeux/uno.html?code=… »).
+const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) || /^\/pages\/[\w-]+\/[\w-]+\.html(\?[\w=&%.-]*)?(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
 /**
  * Clé du stockage local où l'on garde le code et le pseudo en attente pendant la confirmation par e-mail.
  * Stockage local et non de session : le lien de confirmation s'ouvre souvent dans un autre onglet, qui ne voit pas
@@ -169,7 +170,7 @@ function pendingGet() {
 /** Enregistre le code en attente, ou le supprime si v est vide. Sans effet si le stockage local est indisponible. */
 function pendingSet(v) { try { v ? localStorage.setItem(PENDING_KEY, JSON.stringify(v)) : localStorage.removeItem(PENDING_KEY); } catch {} }
 /** Va à la page demandée (?next=), sinon à l'accueil, une fois connecté. */
-function goAfterAuth() { location.replace(NEXT || '/pages/compte/accueil.html'); }
+function goAfterAuth() { location.replace(NEXT ? NEXT.replace(/^[\w-]+\.html/, (f) => pageHref(f)) : '/pages/compte/accueil.html'); }
 /** Retire l'état « occupé » de la page : le contenu est prêt à être lu. */
 function done() { app.removeAttribute('aria-busy'); }
 

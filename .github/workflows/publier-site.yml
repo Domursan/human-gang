@@ -26,6 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # Textes par défaut du bot : source unique dans supabase/functions/_shared/, lus aussi par l'admin (admin-bot.js)
+      - name: Copier les modèles du bot dans le site
+        run: cp supabase/functions/_shared/bot-templates.json site/assets/espaces/admin/bot-templates.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

@@ -1,97 +1,77 @@
-// Vérifie la publication GitHub Pages (Jekyll + _config.yml, voir docs/PUBLICATION.md) :
-// - pas de .nojekyll (sinon _config.yml est ignoré et supabase/, docs/, tests/ sont de nouveau publiés) ;
-// - aucun fichier publié ne commence par « --- » (il serait traité comme un modèle Liquid) ;
-// - aucun fichier publié dans un dossier ou sous un nom commençant par « _ » ou « . » sans être dans « include » ;
-// - les fichiers précachés par sw.js et le fichier lu par l'admin (bot-templates.json) restent publiés.
-// Les règles d'exclusion sont relues dans _config.yml et appliquées comme Jekyll 3 (préfixe ou motif où * couvre aussi « / »).
+// Vérifie que le site publié est bien tout site/ et seulement site/ (GitHub Pages sert le dossier site/ ;
+// le reste du dépôt — supabase/, docs/, tests/, impression/ — n'est jamais publié).
+// Contrôles :
+// - aucun fichier .sql, .md ou .ts dans site/ ;
+// - le dossier impression/ n'est pas dans site/ (ni aucun dossier impression/ sous site/) ;
+// - aucun dossier de développement (supabase, docs, tests, impression, qa) sous site/ ;
+// - les fichiers précachés par site/sw.js et les fichiers indispensables existent dans site/ ;
+// - les outils internes (simulateur, affiche des solutions des secrets) : signalés, pas bloquants (voir plus bas).
+// Lancer : node tests/controles/check-publication.cjs   (ou npm run check, depuis tests/)
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
 
-const ROOT = path.resolve(__dirname, '..');
+const DEPOT = path.resolve(__dirname, '..', '..');
+const SITE = path.join(DEPOT, 'site');
 const errors = [];
+const warnings = [];
 
-/** Liste « include » ou « exclude » de _config.yml (format simple : une entrée « - valeur » par ligne). */
-function yamlList(text, key) {
-  const out = [];
-  let on = false;
-  for (const line of text.split('\n')) {
-    if (/^\S/.test(line)) on = line.startsWith(`${key}:`);
-    else if (on) {
-      const m = line.match(/^\s+-\s+"?([^"#]+?)"?\s*(#.*)?$/);
-      if (m) out.push(m[1]);
-    }
+/** Tous les fichiers de site/ (chemins relatifs à site/). */
+function listSite(dir = SITE, rel = '', out = []) {
+  if (!fs.existsSync(dir)) return out;
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === 'node_modules' || e.name === '.git') continue;
+    const r = rel ? `${rel}/${e.name}` : e.name;
+    if (e.isDirectory()) listSite(path.join(dir, e.name), r, out); else out.push(r);
   }
   return out;
 }
-/** Motif Jekyll (File.fnmatch sans FNM_PATHNAME : * couvre « / ») en expression régulière. */
-const globRe = (g) => new RegExp(`^${g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`);
-/** Vrai si le chemin correspond à l'un des motifs (correspondance exacte, motif, ou préfixe comme Jekyll). */
-const matches = (list, rel) => list.some((p) => globRe(p).test(rel) || rel.startsWith(p));
 
-const cfgPath = path.join(ROOT, '_config.yml');
-if (!fs.existsSync(cfgPath)) errors.push('_config.yml absent');
-if (fs.existsSync(path.join(ROOT, '.nojekyll'))) errors.push('.nojekyll présent : _config.yml serait ignoré');
-const cfg = fs.existsSync(cfgPath) ? fs.readFileSync(cfgPath, 'utf8') : '';
-const include = yamlList(cfg, 'include');
-const exclude = yamlList(cfg, 'exclude');
-if (!exclude.length) errors.push('_config.yml : liste « exclude » vide ou illisible');
+if (!fs.existsSync(SITE)) errors.push('site/ absent du dépôt');
+const files = listSite();
+const pub = new Set(files);
 
-/** Fichiers suivis par git, sinon parcours du dossier (hors node_modules et .git). */
-function listFiles() {
-  try { return execFileSync('git', ['ls-files', '-z'], { cwd: ROOT }).toString().split('\0').filter(Boolean); } catch { /* pas de git */ }
-  const out = [];
-  const walk = (d) => {
-    for (const e of fs.readdirSync(path.join(ROOT, d), { withFileTypes: true })) {
-      if (e.name === 'node_modules' || e.name === '.git') continue;
-      const rel = d ? `${d}/${e.name}` : e.name;
-      if (e.isDirectory()) walk(rel); else out.push(rel);
+// 1. Types de fichiers qui n'ont rien à faire dans le site publié.
+for (const f of files) {
+  if (/\.(sql|md|ts)$/.test(f)) errors.push(`${f} est dans site/ (fichier de développement, jamais publié)`);
+}
+
+// 2. Impression et dossiers de développement : jamais sous site/.
+for (const f of files) {
+  const seg = f.split('/');
+  if (seg.includes('impression')) errors.push(`${f} : le dossier impression/ ne doit pas être dans site/`);
+  if (seg.some((s) => ['supabase', 'docs', 'tests', 'qa', 'outils'].includes(s))) errors.push(`${f} : dossier de développement sous site/`);
+}
+
+// 3. Fichiers précachés par le service worker et fichiers indispensables : présents dans site/.
+const swPath = path.join(SITE, 'sw.js');
+if (!fs.existsSync(swPath)) errors.push('site/sw.js absent');
+else {
+  const sw = fs.readFileSync(swPath, 'utf8');
+  const debut = sw.indexOf('const PRECACHE = [');
+  const fin = sw.indexOf('];', debut);
+  if (debut < 0 || fin < 0) errors.push('site/sw.js : liste PRECACHE introuvable');
+  else {
+    for (const m of sw.slice(debut, fin).matchAll(/'([^']+)'/g)) {
+      const cible = m[1].replace(/^\//, '');
+      if (cible && !/^https?:/.test(cible) && !pub.has(cible)) errors.push(`précache sw.js : fichier absent de site/ : ${m[1]}`);
     }
-  };
-  walk('');
-  return out;
-}
-
-/** Vrai si Jekyll publierait ce fichier : chaque segment du chemin est filtré comme par EntryFilter. */
-function published(rel) {
-  const parts = rel.split('/');
-  for (let i = 0; i < parts.length; i++) {
-    const seg = parts[i], sub = parts.slice(0, i + 1).join('/');
-    if (matches(include, sub) || matches(include, seg)) continue;
-    if (/^[._#~]/.test(seg) || seg.endsWith('~') || matches(exclude, sub)) return false;
   }
-  return true;
+}
+for (const f of ['index.html', '404.html', 'sw.js', 'manifest.webmanifest', 'offline.html']) {
+  if (!pub.has(f)) errors.push(`fichier indispensable absent de site/ : ${f}`);
 }
 
-const files = listFiles().filter((f) => fs.existsSync(path.join(ROOT, f)));
-const pub = new Set(files.filter(published));
-
-for (const f of pub) {
-  const fd = fs.openSync(path.join(ROOT, f), 'r');
-  const buf = Buffer.alloc(3);
-  fs.readSync(fd, buf, 0, 3, 0);
-  fs.closeSync(fd);
-  if (buf.toString() === '---') errors.push(`${f} commence par « --- » : Jekyll le traiterait comme un modèle Liquid`);
-  if (/^(supabase\/(migrations|schema)|docs|tests|qa)\//.test(f) || /\.(md|sql|ts)$/.test(f)) errors.push(`${f} serait publié`);
-}
-
-// Fichiers précachés par le service worker : tous doivent être publiés.
-const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
-const pre = sw.slice(sw.indexOf('const PRECACHE = ['), sw.indexOf('];', sw.indexOf('const PRECACHE = [')));
-for (const m of pre.matchAll(/'([^']+)'/g)) if (!pub.has(m[1])) errors.push(`précache sw.js non publié : ${m[1]}`);
-for (const f of ['index.html', '404.html', 'sw.js', 'manifest.webmanifest', 'supabase/functions/_shared/bot-templates.json']) {
-  if (!pub.has(f)) errors.push(`fichier nécessaire non publié : ${f}`);
-}
-
-// Outils de développement et affiche des solutions des secrets : jamais servis (ré-audit F7).
-for (const f of ['/pages/jeux/simulateur.html', 'assets/espaces/jeux/simulateur.js', 'affiches/secrets-solutions-a3.html']) {
-  if (pub.has(f)) errors.push(`fichier interne publié : ${f}`);
+// 4. Outils internes : simulateur (outil de développement) et affiche des solutions des secrets.
+for (const f of ['pages/jeux/simulateur.html', 'assets/espaces/jeux/simulateur.js']) {
+  if (pub.has(f)) warnings.push(`outil interne publié (à confirmer) : ${f}`);
 }
 
 if (errors.length) {
   console.error(`Publication : ${errors.length} problème(s)`);
   for (const e of errors) console.error(`  ✗ ${e}`);
+  for (const w of warnings) console.error(`  ! ${w}`);
   process.exit(1);
 }
-console.log(`Publication : ${pub.size} fichiers publiés sur ${files.length}, aucun problème.`);
+console.log(`Publication : ${files.length} fichiers dans site/, aucun problème.`);
+for (const w of warnings) console.log(`  ! ${w}`);

@@ -2,3 +2,4 @@ node_modules/
 tests/shots/
 shots/
 qa/
+site/assets/espaces/admin/bot-templates.json

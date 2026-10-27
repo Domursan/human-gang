@@ -158,7 +158,7 @@ Migration `074_securite_echanges.sql` (paquet C de l'audit de sécurité du 23/1
 - **M8** : `hg_push_subscriptions` : contrainte `hg_push_subscriptions_endpoint_check` (FCM, Mozilla, Apple, WNS ; `not valid`
   seulement si une ligne existante ne passe pas) et 5 appareils au plus par membre (trigger : les plus anciens sont retirés).
 
-Ordre : 072, 073, puis 074, puis le front (`assets/js/cartes.js`, `assets/js/admin-invite-links.js`). Aucune fonction
+Ordre : 072, 073, puis 074, puis le front (`site/assets/espaces/cartes/cartes.js`, `site/assets/espaces/admin/admin-invite-links.js`). Aucune fonction
 edge à redéployer, aucun secret.
 
 ## Pour appliquer 081
@@ -167,7 +167,7 @@ Migration `081_idees_c2.sql` (idées du gang C7 à C12, thème « Cartes et éco
 
 - **C7** : colonne `hg_cards.tag` (format `minecraft`, `sea-of-thieves`), RPC `hg_card_tags_complete(p_user)` (titres
   « Pilier de … », calculés, sans Paillettes). Série `le-gang-joue` créée **inactive** avec 24 cartes **inactives**, déjà
-  illustrées (6 jeux × 4 ; SVG dans `assets/cards/le-gang-joue/`, chemin relatif dans `image_url`) : le Staff valide les
+  illustrées (6 jeux × 4 ; SVG dans `site/assets/cartes/le-gang-joue/`, chemin absolu dans `image_url`, migration 161) : le Staff valide les
   légendes, puis active la série et les cartes **depuis l'admin**. Rejouer la migration remplit les images manquantes.
 - **C8** : `hg_profiles.show_generation` (défaut vrai), réglage `cards.generations.og_before` (défaut 2023-09-01, Économie ›
   Limites), RPC `hg_card_generations()`.
