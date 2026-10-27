@@ -131,6 +131,8 @@ async function startPage(auth) {
     startUnread();
     // Présence (en ligne / hors ligne), cloche des notifications du site, pastilles de statut (migration 153)
     import('./presence.js').then((m) => m.startPresence(profile)).catch((e) => console.warn('[présence]', e));
+    // Menu « En ligne » à droite : membres connectés, raccourcis « Écrire » et « Défier » (migration 159)
+    import('./en-ligne.js').then((m) => m.startEnLigne(profile)).catch((e) => console.warn('[en ligne]', e));
     checkNewBadges();
     // Événements dynamiques (image qui traverse le site) : chargé à part, sans jamais bloquer ni casser la page
     import('../dyn-events.js').then((m) => m.startDynEvents(profile)).catch((e) => console.warn('[événements]', e));

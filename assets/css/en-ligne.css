@@ -1,0 +1,86 @@
+/* ===== Humane Gang — menu « En ligne » (core/en-ligne.js) =====
+   Ordinateur (à partir de 720 px) : barre verticale fixe à droite (avatars, pseudo en bulle au survol, raccourcis au clic).
+   Téléphone : bouton flottant en bas à droite qui ouvre la liste avec « Écrire » et « Défier ».
+   Couleurs : jetons de base.css (--surface, --surface-2, --border, --text, --muted, --accent). */
+
+:root { --ol-w: 60px; --ol-vert: #2fbf71; }
+
+.ol-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ol-ico { width: 18px; height: 18px; flex: none; }
+.ol .avatar { display: grid; place-items: center; border-radius: 50%; font-size: 13px; font-weight: 700; object-fit: cover; }
+.ol-dot { position: absolute; right: 2px; bottom: 2px; width: 11px; height: 11px; border-radius: 50%;
+  background: var(--ol-vert); box-shadow: 0 0 0 2px var(--surface); }
+.ol-point { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ol-vert); }
+.ol.is-vide .ol-point { background: var(--muted); }
+.ol-vide { display: none; margin: 0; color: var(--muted); font-size: 12px; }
+.ol.is-vide .ol-vide { display: block; }
+
+/* Raccourcis (liste téléphone et fenêtre ordinateur) */
+.ol-act { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 14px; font-weight: 600;
+  text-decoration: none; white-space: nowrap; }
+.ol-act:hover { border-color: var(--accent); }
+.ol-act:focus-visible, .ol-av:focus-visible, .ol-fab:focus-visible { outline: 2px solid var(--sand, var(--accent)); outline-offset: 2px; }
+
+/* Fenêtre des raccourcis (ordinateur), posée à gauche de l'avatar cliqué */
+.ol-pop { position: fixed; z-index: 60; display: flex; flex-direction: column; gap: 6px; min-width: 190px; padding: 10px;
+  border-radius: 14px; background: var(--surface); border: 1px solid var(--border-strong, var(--border)); color: var(--text);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .32); }
+.ol-pop[hidden] { display: none; }
+.ol-pop-nom { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-weight: 700; }
+.ol-pop .avatar { display: grid; place-items: center; border-radius: 50%; font-size: 11px; font-weight: 700; flex: none; }
+
+/* ---------- Ordinateur : barre à droite ---------- */
+@media (min-width: 720px) {
+  .ol { position: fixed; right: 0; top: calc(var(--god-h, 0px) + var(--va-h, 0px)); bottom: 0; z-index: 54; width: var(--ol-w);
+    background: var(--surface); border-left: 1px solid var(--border); color: var(--text); }
+  html[data-en-ligne] body { padding-right: var(--ol-w); }
+  .ol-fab, .ol-acts-tel { display: none; }
+  .ol-corps { display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; padding: 12px 0; }
+  .ol-tete { display: flex; flex-direction: column; align-items: center; gap: 3px; margin: 0; font-size: 10px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .ol-n { font-size: 13px; color: var(--text); }
+  .ol-vide { padding: 0 6px; text-align: center; font-size: 11px; }
+  .ol-liste { list-style: none; margin: 0; padding: 4px 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    overflow-y: auto; overflow-x: visible; scrollbar-width: none; min-height: 0; width: 100%; }
+  .ol-liste li { position: relative; }
+  .ol-av { position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0;
+    border-radius: 50%; background: transparent; cursor: pointer; }
+  .ol-av[aria-expanded="true"] .avatar { box-shadow: 0 0 0 2px var(--accent); }
+  /* Pseudo en bulle au survol, à gauche (fixe : la liste peut défiler) */
+  .ol-nom { position: fixed; right: calc(var(--ol-w) + 8px); padding: 6px 11px; border-radius: 999px; background: var(--surface);
+    border: 1px solid var(--border-strong, var(--border)); box-shadow: 0 6px 18px rgba(0, 0, 0, .28); font-size: 13px; font-weight: 600;
+    white-space: nowrap; pointer-events: none; opacity: 0; transform: translate(6px, -50%); transition: opacity .14s ease, transform .14s ease; }
+  .ol-av:hover .ol-nom { opacity: 1; transform: translate(0, -50%); }
+  .ol-av[aria-expanded="true"] .ol-nom { opacity: 0; }
+}
+
+/* ---------- Téléphone : bouton flottant et liste ---------- */
+@media (max-width: 719.98px) {
+  .ol { position: fixed; right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 54; }
+  html[data-ol-partie] .ol { display: none; }
+  html[data-en-ligne]:not([data-ol-partie]) body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .ol-fab { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--border-strong, var(--border)); background: var(--surface); color: var(--text); cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .3); }
+  .ol-fab .ol-ico { width: 22px; height: 22px; }
+  .ol-fab-n { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px;
+    background: var(--ol-vert); color: #0b2416; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
+  .ol.is-vide .ol-fab-n { background: var(--surface-2); color: var(--muted); }
+  .ol-corps { display: none; position: absolute; right: 0; bottom: calc(100% + 10px); width: min(300px, calc(100vw - 24px));
+    max-height: min(420px, 70dvh); overflow-y: auto; padding: 12px; border-radius: 16px; background: var(--surface);
+    border: 1px solid var(--border-strong, var(--border)); box-shadow: 0 12px 32px rgba(0, 0, 0, .35); }
+  .ol[data-open="1"] .ol-corps { display: flex; flex-direction: column; gap: 10px; }
+  .ol-tete { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 700; }
+  .ol-n { color: var(--muted); font-weight: 600; }
+  .ol-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ol-liste li { display: flex; align-items: center; gap: 10px; }
+  .ol-av { position: relative; display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 0; border: 0;
+    background: transparent; color: var(--text); font: inherit; font-weight: 600; text-align: left; cursor: default; }
+  .ol-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ol-dot { left: 26px; right: auto; }
+  .ol-acts-tel { display: flex; gap: 6px; }
+  .ol-acts-tel .ol-act { padding: 0 10px; }
+  .ol-acts-tel .ol-act span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+@media (prefers-reduced-motion: reduce) { .ol-nom { transition: none; } }

@@ -22,3 +22,4 @@ supabase/migrations/153_presence_notifs.sql
 supabase/migrations/154_theme_worlds_retire.sql
 supabase/migrations/157_jeux_classement.sql
 supabase/migrations/158_quetes_profil_etat.sql
+supabase/migrations/159_membres_en_ligne.sql
