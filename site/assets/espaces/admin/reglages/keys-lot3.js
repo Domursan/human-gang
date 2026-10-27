@@ -1,7 +1,7 @@
 // Réglages du lot 3 : Secret Santa, sorties IRL, souvenirs et albums.
 // Chaque champ est rangé dans une clé de hg_settings (ss, irl, albums, photos). Le défaut de chaque champ
 // est la valeur codée en dur jusqu'ici : sans réglage enregistré, le comportement ne change pas.
-// Le code lit ces valeurs via assets/js/reglages-valeurs-lot3.js (repli sur le défaut, bornes vérifiées).
+// Le code lit ces valeurs via assets/espaces/admin/reglages-valeurs-lot3.js (repli sur le défaut, bornes vérifiées).
 // Types : entier, decimal, bool, texte. « nullable » : vide (null) = pas de limite / valeur absente.
 
 export const DOMAINES_LOT3 = {

@@ -2,7 +2,7 @@
 // Module autonome, en lecture seule : il n'écrit rien et ne rafraîchit pas la page.
 // cartes.js lui fournit deux fonctions : ids() (cartes affichées, dans l'ordre affiché) et info(id) (fiche d'une carte).
 // Ordinateur (pointeur fin) : loupe ronde ×2,5 qui suit le curseur. Tactile : appui long = loupe sous le doigt,
-// le pincement reste le zoom natif de la page. Styles : assets/css/cartes-zoom.css.
+// le pincement reste le zoom natif de la page. Styles : assets/espaces/cartes/cartes-zoom.css.
 import { esc } from '../../commun/core.js';
 import { cardHtml, rarityLabel, familyLabel, numberLabel } from './cartes-ui.js';
 

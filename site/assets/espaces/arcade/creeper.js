@@ -12,7 +12,7 @@
  * Test : ?creeper=1 force l'apparition immédiate, seulement pour un administrateur ou en local.
  * Page : toutes les pages (importé par site-boot.js) ; une page sans session ne fait rien.
  * Dépendances : ../core.js (effectsEnabled, motionAllowed, getPrefs, getProfile, hasSession), ./api.js (eggFound),
- *   feuille assets/css/eggs-f.css (ajoutée ici).
+ *   feuille assets/espaces/arcade/eggs-f.css (ajoutée ici).
  * Exporte : rien (effets de bord).
  */
 import { effectsEnabled, motionAllowed, getPrefs, getProfile, hasSession } from '../../commun/core.js';

@@ -1,5 +1,5 @@
 /* ===== Humane Gang — Jeux de plateau : cartes à jouer (blackjack et poker) =====
-   Fichier : assets/css/plateaux/cartes.css, chargé avant blackjack.css et poker.css. Classes cd- (carte) et cd-dos (dos).
+   Fichier : assets/espaces/plateaux/cartes.css, chargé avant blackjack.css et poker.css. Classes cd- (carte) et cd-dos (dos).
    Une carte : rectangle blanc arrondi, valeur et symbole dans les coins, grand symbole au centre. Rouge pour cœur et carreau.
    Le dos reprend le motif or du site sur fond bleu nuit. Format réduit : .is-petite (sièges, cartes communes). */
 

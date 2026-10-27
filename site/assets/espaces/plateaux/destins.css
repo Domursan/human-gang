@@ -1,5 +1,5 @@
 /* ===== Humane Gang — Destins : table de jeu et écran de fin =====
-   Fichier : assets/css/plateaux/destins.css. Classes préfixées ds- (table) et dp- (chemin de vie et fin).
+   Fichier : assets/espaces/plateaux/destins.css. Classes préfixées ds- (table) et dp- (chemin de vie et fin).
    Reprend la maquette DestinsPlateau (ordinateur), DestinsCarteTel (téléphone) et DestinsFin (fin).
    Ordinateur (> 760 px) : chemin à gauche ; roue, carte et panneau au centre ; fiche, classement, journal et chat à droite.
    Téléphone (≤ 760 px) : chemin en haut, roue et panneau en dessous, chat en tiroir. Le chemin est en % : il suit la largeur. */

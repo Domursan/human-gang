@@ -1,5 +1,5 @@
 /* ===== Humane Gang — page Jeux : jeux solo (Démineur, Sudoku du jour, 2048 Paillettes) =====
-   Chargé par assets/js/jeux/nj-demineur.js, nj-sudoku.js et nj-2048.js (chargerCss('solo')).
+   Chargé par assets/espaces/jeux/nj-demineur.js, nj-sudoku.js et nj-2048.js (chargerCss('solo')).
    Les cartes, titres et classements viennent de jeux.css (.jg, .jg-card, .jg-board…). Maquettes : jeux-maquettes/project/solo-*.dc.html. */
 
 /* ---------- En-tête commun ---------- */

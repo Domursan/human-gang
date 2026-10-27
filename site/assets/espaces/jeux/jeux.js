@@ -1,11 +1,11 @@
 // ===== Humane Gang — page « Jeux » (/pages/jeux/jeux.html) : tous les jeux en cartes, « Les missions du jour » et un onglet par jeu flash =====
 /*
  * Rôle : la vue de départ (/pages/jeux/jeux.html, ou /pages/jeux/jeux.html#tous) présente tous les jeux en cartes, rangés en sections
- * (catalogue : assets/js/jeux/catalogue.js) : Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
+ * (catalogue : assets/espaces/jeux/catalogue.js) : Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
  * (pages à part). Une carte n'est affichée que si le membre y a droit : accès de sa page (comme le menu), et les jeux
  * pas encore sortis (« bientot ») pour les seuls admins. Ce qui n'est visible que des admins (jeu en préparation,
  * page encore en mode admin) a une ambiance « chantier » : bandes jaunes et noires et petit panneau de travaux. Le menu du haut mène directement à cette vue.
- * Construit aussi la barre d'onglets (liste de assets/js/jeux/onglets.js), précédée de l'onglet « Les missions du jour »
+ * Construit aussi la barre d'onglets (liste de assets/espaces/jeux/onglets.js), précédée de l'onglet « Les missions du jour »
  * (programme du jour : chaque jeu avec son état, Paillettes gagnées aujourd'hui). Charge le module d'un jeu à la
  * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (/pages/jeux/jeux.html#geo) ;
  * sans adresse, la page s'ouvre sur tous les jeux. Un choix propre à un jeu suit le nom de l'onglet dans l'adresse

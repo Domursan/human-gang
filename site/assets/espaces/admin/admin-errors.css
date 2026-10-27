@@ -1,5 +1,5 @@
 /* ===== Humane Gang — admin : Erreurs du site (A9) et Archives (A8) ===== */
-/* Erreurs : tableau des groupes + détail. Archives : carte de téléchargement (assets/js/admin-archive.js). */
+/* Erreurs : tableau des groupes + détail. Archives : carte de téléchargement (assets/espaces/admin/admin-archive.js). */
 
 /* ---------- Erreurs du site ---------- */
 .er-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: start; }

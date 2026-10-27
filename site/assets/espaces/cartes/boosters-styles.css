@@ -2,7 +2,7 @@
    Même construction que les 9 styles d’origine : dégradé du corps + motif, étiquette unie, sous-titre clair,
    tranche rayée, pied contrasté (≥ 4,5:1, vérifié aussi motif renforcé). Chaque style a un motif propre et un
    niveau de luminosité (clair, moyen, sombre) : il reste reconnaissable sans distinguer les teintes.
-   Mode daltonien : --bs-k renforce l’opacité des motifs (×1,8). Liste et familles : assets/js/booster-styles.js.
+   Mode daltonien : --bs-k renforce l’opacité des motifs (×1,8). Liste et familles : assets/espaces/cartes/booster-styles.js.
    Généré à partir d’un seul tableau (couleurs relevées et contrastes calculés) ; garder les blocs homogènes. */
 html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
 
@@ -358,7 +358,7 @@ html[data-mode="daltonien"] .cart-box { --bs-k: 1.8; }
    Dessins génériques faits pour le gang : aucun logo, nom de marque, personnage ni élément officiel.
    Plaque, nom et prix : contraste ≥ 4,5:1 sur leur fond. Motif et couleur différents, donc lisibles en daltonien.
    Dix thèmes (Pâté, Saucisse, Pâté + saucisse, Raclette, Fondue, Usine, Halloween, Saint-Nicolas, Feux d’artifice, Gâteau)
-   ont un décor dessiné en SVG (assets/js/booster-themes.js : SVG du corps, de l’écran et calque .bs-over) ; ces calques
+   ont un décor dessiné en SVG (assets/espaces/cartes/booster-themes.js : SVG du corps, de l’écran et calque .bs-over) ; ces calques
    ne reçoivent jamais le pointeur. Animations : coupées si l’utilisateur demande moins de mouvement (prefers-reduced-motion)
    ou désactive les effets (html[data-fx="off"]). Les blocs de décor sont repris des maquettes validées. */
 

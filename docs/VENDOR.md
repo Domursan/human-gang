@@ -18,12 +18,12 @@ Le contenu n'a pas été modifié, sauf l'ajout du wrapper ESM (`.mjs`) et de l'
 
 ## Utilisation
 
-- Le client Supabase est chargé par `assets/js/core/supabase.js` :
+- Le client Supabase est chargé par `assets/commun/core/supabase.js` :
   `await import('../../vendor/supabase-js-2.45.4.mjs')`.
   Le `.mjs` charge le `.js` UMD comme script classique (et non par `import`) : son runtime webpack a besoin de
   `document.currentScript`, absent dans un module. Le `.js` n'est donc pas modifié.
 - Les pages le précharge avec `<link rel="modulepreload" href="assets/vendor/supabase-js-2.45.4.mjs">`.
-- Le QR code est chargé au premier usage par `assets/js/admin-cards/codes.js` et `assets/js/admin-invite-links.js`
+- Le QR code est chargé au premier usage par `assets/espaces/admin/cartes/codes.js` et `assets/espaces/admin/admin-invite-links.js`
   (`import('…/qrcode-generator-1.4.4.mjs')`, `.default(0, 'M')`).
 - Les fichiers sont mis en cache hors ligne par `sw.js` (liste `PRECACHE`).
 

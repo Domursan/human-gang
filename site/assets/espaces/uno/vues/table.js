@@ -4,7 +4,7 @@
  * de la table ovale (anneau arc-en-ciel), pioche et défausse, couleur et cumul, ma main, boutons Piocher / Passer /
  * UNO ! / Contrer, défi d'un Joker +4, journal et chat.
  * Sur ordinateur : table à gauche, chat à droite. Sous 760 px : une colonne, les joueurs défilent en bande et le chat
- * s'ouvre en volet. La mise en page est dans assets/css/uno/table.css ; ici, seulement le contenu et les actions.
+ * s'ouvre en volet. La mise en page est dans assets/espaces/uno/table.css ; ici, seulement le contenu et les actions.
  * Une seule action à la fois (anti double clic). Après chaque action : ctx.suivi.rafraichir().
  * Dépendances : core.js (esc, initials, toast), uno/api.js (uno, erreurTexte), uno/cartes.js (carteHtml, dosHtml, COULEURS),
  *   ./chat.js (creerChat), uno.css (.uno-btn, .uno-roue, .uno-roue-voile, .uno-invite-tag).

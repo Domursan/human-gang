@@ -4,7 +4,7 @@
  *   Bandeau (joueurs, chrono, quitter), plan du manoir, panneau « Ton tour » selon la phase,
  *   montrer une carte (quand c'est à moi), mes cartes, carnet du détective (cases à cocher locales),
  *   historique des hypothèses, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
- *   La mise en page est dans assets/css/plateaux/cluedo.css ; ici, le contenu et les actions.
+ *   La mise en page est dans assets/espaces/plateaux/cluedo.css ; ici, le contenu et les actions.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les listes restent en place).
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml),

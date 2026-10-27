@@ -6,7 +6,7 @@
  * Emplacement : le pied de page, commun à toutes les pages, après le texte de droits. Le pied est parfois reconstruit
  * par le socle : un observateur remet la lettre en place.
  * Page : toutes les pages (importé dynamiquement par site-boot.js) ; une page sans lettre ne fait rien.
- * Dépendances : eggs/api.js (eggFound), feuille assets/css/eggs.css (ajoutée ici).
+ * Dépendances : eggs/api.js (eggFound), feuille assets/espaces/arcade/eggs.css (ajoutée ici).
  * Exporte : rien (effets de bord).
  */
 import { eggFound } from './api.js';

@@ -1,5 +1,5 @@
 /* ===== Humane Gang — secrets cachés (easter eggs) ===== */
-/* Chargée par assets/js/eggs/core.js (balise <link data-eggs>) et par secret.html.
+/* Chargée par assets/espaces/arcade/core.js (balise <link data-eggs>) et par secret.html.
    Tous les calques sont fixes, sans interaction (pointer-events: none) et coupés dans leur boîte (overflow: hidden),
    pour ne jamais gêner la navigation ni créer de défilement horizontal. */
 

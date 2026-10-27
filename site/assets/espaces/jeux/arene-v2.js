@@ -7,7 +7,7 @@
  * l'Arène actuelle), résultat (duels réutilisés), historique, classement de saison, règles (chiffres du réglage).
  * RPC : hg_arena_me, hg_arena_attack, hg_arena_seen, hg_arena_board ; deck de défense : hg_battle_set_deck (partagé).
  * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel), jeux/bataille.js (mini, resultHtml, animate),
- * jeux/devine.js (loadCss), assets/css/jeux-arene.css.
+ * jeux/devine.js (loadCss), assets/espaces/jeux/jeux-arene.css.
  * Exporte : mount(panel, ctx).
  */
 import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';

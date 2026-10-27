@@ -1,7 +1,7 @@
 // ===== Humane Gang — Uno : dessin des cartes (style art déco validé en maquette) =====
 /*
  * Rôle : produit le HTML d'une carte (face ou dos D « arc-en-ciel doré ») et les libellés lisibles.
- * Styles : assets/css/uno.css (classes .uc, .ub). Aucune image : tout est en CSS et SVG.
+ * Styles : assets/espaces/uno/uno.css (classes .uc, .ub). Aucune image : tout est en CSS et SVG.
  * Couleurs : r rouge, y jaune, g vert, b bleu, k noir (Joker). Valeurs : 0-9, +2, inv, passe, joker, +4.
  * Exporte : COULEURS, nomCouleur, nomCarte, carteHtml, dosHtml, pointsCarte.
  */

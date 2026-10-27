@@ -5,7 +5,7 @@
  *   Centre : panneau « Ton tour » selon la phase, plan des 3 groupes de lieux, piste des blessures.
  *   Droite : joueurs (camps, PV, équipements), journal, chat (en tiroir sur téléphone).
  *   Une carte Vision reçue s'affiche dans une fenêtre (maquette OmbresVisionTel).
- *   La mise en page est dans assets/css/plateaux/shadow.css ; les dessins dans ./plateau.js.
+ *   La mise en page est dans assets/espaces/plateaux/shadow.css ; les dessins dans ./plateau.js.
  *   Chaque zone n'est reconstruite que si son HTML change (le focus et les listes restent en place).
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau,

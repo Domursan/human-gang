@@ -1,7 +1,7 @@
 // ===== Humane Gang — administration : images Framed découpées dans une affiche =====
 /*
  * Rôle : fabriquer les 6 images d'un Framed (« devine l'image ») à partir d'une seule image : une affiche, un tuto du site
- * (liste assets/data/framed-affiches.json, images assets/img/framed/) ou une image importée. Les découpes vont du détail
+ * (liste assets/espaces/jeux/donnees/framed-affiches.json, images assets/img/framed/) ou une image importée. Les découpes vont du détail
  * serré (1re image) à l'image entière (6e). Toutes contiennent un même point de mise au point, choisi au hasard mais de
  * façon déterministe (graine = slug ou nom du fichier). Les 4 premières n'empiètent pas sur le haut de l'image (20 %),
  * où se trouvent souvent les titres, qui donneraient la réponse.

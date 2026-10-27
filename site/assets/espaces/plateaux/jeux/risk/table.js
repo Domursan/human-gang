@@ -4,7 +4,7 @@
  *   (42 territoires), panneau d'action selon la phase (mise en place, renforts, attaque, conquête, déplacement),
  *   mes cartes et échanges, joueurs, continents et bonus, ma mission secrète, journal, chat
  *   (à droite sur ordinateur, en tiroir sur téléphone).
- *   Le style est dans assets/css/plateaux/risk.css ; ici, le contenu et les actions.
+ *   Le style est dans assets/espaces/plateaux/risk.css ; ici, le contenu et les actions.
  *   Les zones ne sont reconstruites que si leur contenu change. Les choix (territoires, dés, curseurs, cartes)
  *   se mettent à jour sur place, pour garder le focus et les saisies en cours.
  * Dépendances : core.js (esc, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),

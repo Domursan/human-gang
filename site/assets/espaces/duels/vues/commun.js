@@ -3,7 +3,7 @@
  * Rôle : barre du duel (jeu, code, score, joueurs face à face, chrono, chat, abandon), panneau latéral (journal + chat),
  * bandeau de fin de manche, avatars et chrono. Les tables (vues/p4.js, vues/morpion.js, vues/mastermind.js) s'en servent
  * pour avoir le même cadre ; elles ne dessinent que leur plateau.
- * Classes CSS : assets/css/duels/table.css (cadre), assets/css/duels.css (avatar, chrono, chat).
+ * Classes CSS : assets/espaces/duels/table.css (cadre), assets/espaces/duels/duels.css (avatar, chrono, chat).
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite), ./chat.js (creerChat).
  * Exporte : avatarHtml, couleurJoueur, nomJoueur, creerCadre.
  */

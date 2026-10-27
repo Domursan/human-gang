@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Jeux › GeoGuessr du gang (assets/js/jeux/geo.js) ===== */
+/* ===== Humane Gang — Jeux › GeoGuessr du gang (assets/espaces/jeux/geo.js) ===== */
 
 /* Photo de la manche */
 .geo-photo { position: relative; margin: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); }

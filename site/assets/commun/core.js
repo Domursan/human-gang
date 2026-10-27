@@ -9,7 +9,7 @@
  * Rôle : ce fichier ne contient aucune logique. Il rassemble, en un seul endroit, tout ce qu'une page
  * peut importer depuis le socle. Les pages font « import { ... } from './core.js' » ou « '../core.js' » (admin).
  * Le détail de chaque élément est dans assets/js/core/<nom>.js ; les utilitaires sans dépendance
- * sont dans assets/js/utils.js et ne passent pas par ici.
+ * sont dans assets/commun/utils.js et ne passent pas par ici.
  * Exporte : tous les noms listés ci-dessous (ré-exports uniquement).
  */
 

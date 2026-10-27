@@ -17,7 +17,7 @@ human-gang/
 │
 ├── site/                  Tout le site publié (GitHub Pages, domaine humane-gang.com)
 │   ├── index.html         Accueil du site = intro animée, qui redirige ensuite
-│   ├── 404.html           Page introuvable, avec les mini-jeux de l'Arcade
+│   ├── 404.html           Redirige les anciennes adresses ; sinon page introuvable + mini-jeux
 │   ├── offline.html       Page affichée hors connexion
 │   ├── sw.js              Service worker : cache hors ligne, liste PRECACHE, CACHE_VERSION
 │   ├── manifest.webmanifest  Fiche de l'application installable
@@ -142,7 +142,7 @@ Règles générales :
 
 Règle du service worker :
 
-- **`CACHE_VERSION` dans `site/sw.js`** : l'en-tête de `sw.js` demande de l'augmenter quand la liste `PRECACHE` ou la logique du service worker change. Les fichiers `/assets/` sont mis à jour en arrière-plan à chaque chargement (stale-while-revalidate) : un changement de JS ou de CSS arrive donc au chargement suivant, sans toucher à la version. Un fichier qui doit être disponible hors ligne s'ajoute à `PRECACHE`.
+- **`CACHE_VERSION` dans `site/sw.js`** : à augmenter d'un cran (`'v110'` → `'v111'`) à chaque changement de JS ou de CSS, pour que tous les membres reçoivent la nouvelle version sans vider leur cache. Un fichier qui doit être disponible hors ligne s'ajoute aussi à la liste `PRECACHE`.
 
 ## Lancer les vérifications
 

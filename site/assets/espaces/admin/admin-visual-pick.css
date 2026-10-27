@@ -1,4 +1,4 @@
-/* Sélecteurs visuels de l'admin (assets/js/admin/visual-pick.js) : cartes, boosters, aperçu d'un récapitulatif.
+/* Sélecteurs visuels de l'admin (assets/espaces/admin/visual-pick.js) : cartes, boosters, aperçu d'un récapitulatif.
    Tokens du site (base.css) ; la couleur d'accent de chaque sélecteur est --vp-c (posée par la fenêtre ou le tiroir). */
 
 .vp { display: grid; gap: 12px; min-width: 0; }

@@ -5,7 +5,7 @@
 // Boosters : la gamme (boosters-gamme) est reconstruite depuis hg_booster_types (types actifs, ordre « sort ») ;
 // la liste BOOSTERS écrite dans gamme.js reste le repli (sans session). boosters : prix et taille du Classique lus sur son type.
 // Les chiffres sont des éléments data-cfg (valeur d'un réglage), data-expr (calcul) ou data-cfg-calc
-// (calcul de la page) : voir assets/js/reglages-jetons.js. Le texte écrit dans la page est le repli :
+// (calcul de la page) : voir assets/espaces/admin/reglages-jetons.js. Le texte écrit dans la page est le repli :
 // il reste affiché si un réglage est illisible (par exemple sans session, les affiches sont imprimées connecté).
 // Les badges viennent de hg_badges (noms, images, niveaux, critères) ; sans lecture, BADGES_REPLI est affiché.
 // Les quêtes viennent de hg_card_quests_templates ; sans lecture, la liste écrite dans la page reste.

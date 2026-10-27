@@ -4,7 +4,7 @@
  *   Bandeau (joueurs, chrono, manche n / N), barre (code, quitter), tapis (banque, sièges, mains : plateau.js),
  *   panneau d'action selon la phase : mise (curseur, boutons rapides, « Miser ») ; jeu (Tirer, Rester, Doubler,
  *   Séparer) pour la main active ; résultats de la dernière manche, classement aux jetons, journal, chat
- *   (à droite sur ordinateur, en tiroir sur téléphone). Mise en page : assets/css/plateaux/blackjack.css.
+ *   (à droite sur ordinateur, en tiroir sur téléphone). Mise en page : assets/espaces/plateaux/blackjack.css.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et le curseur restent en place).
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml,
  *   brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.

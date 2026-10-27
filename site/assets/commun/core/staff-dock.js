@@ -11,7 +11,7 @@
  * à l'ouverture de la page (même critères que le panel, admin/counts.js). Sans recalcul en direct.
  * Choix : localStorage « hg_staff_dock:<user_id> » = { choix: [identifiants] }.
  * Par défaut : tous les raccourcis permis. Lecture et écriture protégées (stockage bloqué = pas de mémoire).
- * Styles : assets/css/staff-dock.css, chargée par ce module (les membres simples ne la chargent jamais).
+ * Styles : assets/commun/staff-dock.css, chargée par ce module (les membres simples ne la chargent jamais).
  * Page : toutes les pages (init.js appelle startStaffDock avec le profil connecté). Pas /pages/admin/admin.html.
  * Dépendances : supabase.js (comptages), pages-access.js (page courante), perms.js (droits en cache, canPanel),
  *   admin/perms.js (canSection, mêmes droits que le panel), view-as.js (vue « comme un membre »).

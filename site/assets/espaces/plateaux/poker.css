@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Poker : table ovale et écran de fin (assets/css/plateaux/poker.css) =====
+/* ===== Humane Gang — Poker : table ovale et écran de fin (assets/espaces/plateaux/poker.css) =====
    Classes préfixées pk- (table) et pf- (encart de fin). Les cartes viennent de cartes.css (cd-).
    Reprend la maquette PokerTable : table ovale verte bordée de bois, cartes communes au centre, sièges autour.
    Les sièges sont placés par --cx / --cy (cosinus et sinus de leur angle) : calc() les étale selon --rx et --ry.

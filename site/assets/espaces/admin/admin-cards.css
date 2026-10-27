@@ -89,7 +89,7 @@
 .acd-log-delta.is-neg { color: var(--rose); }
 .acd-log-delta.is-pos { color: var(--sage-text); }
 
-/* Formulaires dans le tiroir (assets/js/admin/ui/drawer.js) */
+/* Formulaires dans le tiroir (assets/espaces/admin/ui/drawer.js) */
 .acd-dlg-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
 .acd-dlg-grid > .stack { min-width: 0; }
 .acd-form input:not([type="checkbox"]):not([type="file"]), .acd-form select, .acd-form textarea { min-height: 44px; }

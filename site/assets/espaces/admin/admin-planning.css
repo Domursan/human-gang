@@ -1,4 +1,4 @@
-/* ===== Admin : Pilotage › Planning (idée A2, assets/js/admin/planning.js) =====
+/* ===== Admin : Pilotage › Planning (idée A2, assets/espaces/admin/planning.js) =====
    Calendrier mois / semaine, légende-filtre, panneau du détail et « À surveiller ». Couleurs : jetons du site (clair et sombre).
    Sous 760 px, la grille devient la liste des jours remplis. */
 .pl { display: grid; gap: 14px; min-width: 0; }

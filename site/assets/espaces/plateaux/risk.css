@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Risk : table de jeu et écran de fin (assets/css/plateaux/risk.css) =====
+/* ===== Humane Gang — Risk : table de jeu et écran de fin (assets/espaces/plateaux/risk.css) =====
    Classes préfixées rk-. Reprend les maquettes ComteCarte (ordinateur), ComteRenfortsTel (téléphone) et ComteFin (fin).
    Ordinateur (> 760 px) : carte à gauche, panneau d'action, cartes, joueurs, mission et journal à droite, chat en bas à droite.
    Téléphone (≤ 760 px) : onglets « Carte et actions » / « Joueurs et journal », carte défilable et zoomable.

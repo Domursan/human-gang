@@ -1,5 +1,5 @@
 /* ===== Humane Gang — Cluedo : table de jeu et écran de fin =====
-   Fichier : assets/css/plateaux/cluedo.css. Classes préfixées ch-.
+   Fichier : assets/espaces/plateaux/cluedo.css. Classes préfixées ch-.
    Reprend la maquette ChateauPlateau (ordinateur), ChateauMontrerTel (téléphone) et ChateauFin (fin).
    Ordinateur (> 760 px) : plan et panneau à gauche, carnet, historique, journal et chat à droite.
    Téléphone (≤ 760 px) : plan en haut (défilable), panneau d'action collé en bas, carnet dans un onglet,

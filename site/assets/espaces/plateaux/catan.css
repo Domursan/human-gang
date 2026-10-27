@@ -1,5 +1,5 @@
 /* ===== Humane Gang — Catan du gang : table de jeu et écran de fin =====
-   Fichier : assets/css/plateaux/catan.css. Classes préfixées ct- (table, plateau SVG, fin).
+   Fichier : assets/espaces/plateaux/catan.css. Classes préfixées ct- (table, plateau SVG, fin).
    Ordinateur (> 760 px) : plateau et panneau d'action à gauche ; règles, coûts, main, points, journal et chat à droite.
    Téléphone (≤ 760 px) : une colonne (plateau, panneau, puis le reste), chat en tiroir.
    Le plateau est un SVG (viewBox calculée par plateau.js) : il s'adapte à la largeur, sans défilement horizontal. */

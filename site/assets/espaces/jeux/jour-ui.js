@@ -2,7 +2,7 @@
 // Carte de la question (réponse sans quitter la page, puis explication et score du gang), carte « Ta semaine »
 // (série, joker de la semaine) et classement du mois. Le serveur corrige : la bonne réponse n'arrive qu'après la réponse.
 // RPC : hg_quiz_daily_today, hg_quiz_daily_answer, hg_quiz_daily_board (migration 084).
-// Styles : assets/css/jeux-jour.css (ajouté une seule fois par un <link>).
+// Styles : assets/espaces/jeux/jeux-jour.css (ajouté une seule fois par un <link>).
 // Dépendances : core.js (avatarHtml, errMsg). Tout texte venant de la base passe par esc().
 // Exporte : mountDaily(el, { sb, esc, toast, compact, meId }).
 import { avatarHtml, errMsg } from '../../commun/core.js';

@@ -1,5 +1,5 @@
 /* ===== Humane Gang — administration : Duels (La Fête foraine › Jeux › Duels) =====
-   Styles de assets/js/admin-duels.js. Préfixe dls-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+   Styles de assets/espaces/admin/admin-duels.js. Préfixe dls-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
 
 .dls { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .dls-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }

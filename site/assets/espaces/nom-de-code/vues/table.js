@@ -4,7 +4,7 @@
  *   grille 5 × 5 de cartes-mots, actions de l'agent (proposer, valider, arrêter) ou de l'espion (indice),
  *   côté droit (ordinateur) : équipes, historique des indices, aide-mémoire de l'espion, journal, chat.
  *   Téléphone : grille pleine largeur, indice et boutons sous la grille, équipes / historique / chat dans un tiroir.
- *   La mise en page est dans assets/css/nom-de-code/table.css ; ici, seulement le contenu et les actions.
+ *   La mise en page est dans assets/espaces/nom-de-code/table.css ; ici, seulement le contenu et les actions.
  *   La grille est construite une fois : chaque mise à jour change les classes et le texte des cartes existantes
  *   (le focus reste sur la même carte).
  * Dépendances : core.js (esc, initials, toast), nom-de-code/api.js (ndc, erreurTexte, EQUIPES),

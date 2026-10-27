@@ -4,7 +4,7 @@
  *   Bandeau (joueurs, chrono, quitter), chemin de vie avec les pions, roue (1 à 10) et « Tourner la roue »,
  *   carte Événement tirée, panneau de choix selon la phase, ma fiche (avec Rembourser), classement provisoire,
  *   journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
- *   La mise en page est dans assets/css/plateaux/destins.css ; ici, le contenu et les actions.
+ *   La mise en page est dans assets/espaces/plateaux/destins.css ; ici, le contenu et les actions.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les saisies restent en place).
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe),

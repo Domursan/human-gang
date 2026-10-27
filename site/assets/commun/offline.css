@@ -1,5 +1,5 @@
 /* ===== Collection hors ligne (Q4) : bandeau « Hors ligne · lecture seule » et actions masquées =====
-   Utilisé par cartes.html et membre.html (assets/js/offline-store.js). Couleurs : variables du thème (base.css). */
+   Utilisé par cartes.html et membre.html (assets/commun/offline-store.js). Couleurs : variables du thème (base.css). */
 .offline-banner { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; margin: 16px 0 4px;
   border-radius: 14px; background: var(--irl-bg); border: 1px solid var(--irl-border); color: var(--text); }
 .offline-banner svg { flex: none; color: var(--sand); margin-top: 2px; }

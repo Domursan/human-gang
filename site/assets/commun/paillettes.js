@@ -1,7 +1,7 @@
 // ===== Paillettes : icône, formatage et pastille de solde (compteur LCD 7 segments) =====
 // Toutes les fonctions renvoient du HTML à insérer par innerHTML ; les chiffres réels restent
 // lisibles par les lecteurs d'écran (texte masqué visuellement), les segments sont décoratifs.
-// Styles : assets/css/cartes.css (section « Paillettes »).
+// Styles : assets/espaces/cartes/cartes.css (section « Paillettes »).
 /*
  * Rôle : la monnaie du site (les « Paillettes ») s'affiche de trois façons : icône, nombre formaté, ou afficheur
  * 7 segments animé (pastille de solde, avec variation « +N » et clignotement au gain).

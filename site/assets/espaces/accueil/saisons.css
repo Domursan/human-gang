@@ -1,6 +1,6 @@
 /* ===== Humane Gang — rendez-vous saisonniers (migration 096) =====
    T1 calendrier de l'Avent (accueil), T3 saison des Worlds (accueil), T4 anniversaire du gang (accueil, cartes),
-   T2 soirée déballage (Secret Santa). Chargé à la demande par assets/js/avent.js, saisons.js, anniv.js, ss-unwrap.js. */
+   T2 soirée déballage (Secret Santa). Chargé à la demande par assets/espaces/accueil/avent.js, saisons.js, anniv.js, ss-unwrap.js. */
 
 /* ---------- Commun ---------- */
 .sz-stack { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }

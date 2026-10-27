@@ -2,7 +2,7 @@
 // Cartes admin : drops de cartes (Jeu de cartes › Drops). Une carte apparaît sur le site pour les membres connectés ;
 // les premiers qui cliquent la gagnent. Un membre n'en gagne qu'une par drop.
 // Tables hg_card_drops / hg_card_drop_claims (lecture : permission cartes). Écritures uniquement par RPC :
-// hg_drop_create (lancer) et hg_drop_stop (arrêter). Affichage côté membre : assets/js/card-drops.js.
+// hg_drop_create (lancer) et hg_drop_stop (arrêter). Affichage côté membre : assets/espaces/cartes/card-drops.js.
 // La carte se choisit sur ses visuels (admin/visual-pick.js). Une carte unique déjà attribuée, ou sans exemplaire
 // disponible, ne peut pas être lancée (chargerRestants). Annonce Discord facultative : hg-notify, événement card_drop.
 // Dépendances : core.js (sb, toast, errMsg, esc, $, notify), cartes-ui.js (rarityLabel), ui-confirm.js, admin/ui/drawer.js,

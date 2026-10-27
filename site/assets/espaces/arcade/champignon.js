@@ -8,7 +8,7 @@
  * Page : toutes les pages (importé par site-boot.js) ; ne fait rien sans session de membre, ni sur une autre page
  *   que celle de la saison. Le pied ou le contenu peuvent être redessinés : un observateur le remet en place.
  * Mouvement réduit ou effets coupés : pas d'épanouissement ni de spores, la bulle reste.
- * Dépendances : ../core.js (sb, hasSession, motionAllowed), ./api.js (eggFound, eggsMe), feuille assets/css/eggs-f.css.
+ * Dépendances : ../core.js (sb, hasSession, motionAllowed), ./api.js (eggFound, eggsMe), feuille assets/espaces/arcade/eggs-f.css.
  * Exporte : rien (effets de bord).
  */
 import { sb, hasSession, motionAllowed } from '../../commun/core.js';

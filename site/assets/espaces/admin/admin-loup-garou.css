@@ -1,5 +1,5 @@
 /* ===== Humane Gang — administration : Loup-Garou (La Fête foraine › Jeux › Loup-Garou) =====
-   Styles de assets/js/admin-loup-garou.js. Préfixe lga-. Les cartes et boutons viennent de admin.css / base.css. */
+   Styles de assets/espaces/admin/admin-loup-garou.js. Préfixe lga-. Les cartes et boutons viennent de admin.css / base.css. */
 
 .lga { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .lga-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }

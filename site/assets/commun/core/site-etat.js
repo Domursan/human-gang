@@ -9,7 +9,7 @@
  * Sans les champs (site en ligne avant leur ajout) ou avec des valeurs invalides : aucun effet.
  * Page : toutes les pages qui appellent initPage (core/init.js l'appelle une fois l'en-tête et les droits prêts).
  * Dépendances : site-defaults.js (siteIdentite, fmt), util.js (esc), pages-access.js (currentPageSlug).
- * Styles : assets/css/site-etat.css, ajouté à la page seulement quand il sert (aucun <link> à poser dans les pages).
+ * Styles : assets/commun/site-etat.css, ajouté à la page seulement quand il sert (aucun <link> à poser dans les pages).
  * Stockage : sessionStorage « hg_bandeau_ferme » (empreinte du texte fermé : un nouveau texte réapparaît).
  * Exporte : applySiteEtat, MAINTENANCE_DEFAUT, PAGES_LIBRES.
  */

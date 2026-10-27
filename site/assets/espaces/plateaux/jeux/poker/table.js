@@ -5,7 +5,7 @@
  *   « Tes cartes » en grand avec la force de ta main, dernier abattage (cartes montrées et nom de chaque main), panneau
  *   d'action : quand c'est ton tour, Se coucher, Suivre ou Parole, Relancer (curseur de relance minimale à ton tapis,
  *   boutons ½ pot et pot) et Tapis. Classement aux jetons, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
- *   Mise en page : assets/css/plateaux/poker.css. Les zones sont reconstruites seulement quand leur contenu change.
+ *   Mise en page : assets/espaces/plateaux/poker.css. Les zones sont reconstruites seulement quand leur contenu change.
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml,
  *   brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe), ../../vues/chat.js (creerChat, tiroirChat),
  *   ../cartes.js (carteHtml), ./plateau.js (tableHtml, PHASES).

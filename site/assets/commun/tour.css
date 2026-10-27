@@ -1,5 +1,5 @@
 /* ===== Visite guidée (Q1) : fond assombri, élément éclairé, bulle d'explication, bandeau « Nouveau » =====
-   Utilisé par assets/js/core/tour.js (page d'accueil). Couleurs : variables du thème (base.css). */
+   Utilisé par assets/commun/core/tour.js (page d'accueil). Couleurs : variables du thème (base.css). */
 
 .tour { position: fixed; inset: 0; z-index: 9300; }
 /* Fond : assombri par le voile quand rien n'est éclairé, sinon par l'ombre de l'éclairage (le voile reste pour bloquer les clics). */

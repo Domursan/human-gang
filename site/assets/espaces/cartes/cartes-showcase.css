@@ -1,4 +1,4 @@
-/* ===== Vitrine de cartes (fiche membre) — assets/js/cartes-showcase.js ===== */
+/* ===== Vitrine de cartes (fiche membre) — assets/espaces/cartes/cartes-showcase.js ===== */
 /* Préfixe shw- ; les cartes elles-mêmes viennent de cartes-card.css (.hgc). */
 .shw { margin-top: 56px; }
 .shw-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }

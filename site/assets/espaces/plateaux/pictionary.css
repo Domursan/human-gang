@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Pictionary : table de jeu et encart de fin (assets/css/plateaux/pictionary.css) =====
+/* ===== Humane Gang — Pictionary : table de jeu et encart de fin (assets/espaces/plateaux/pictionary.css) =====
    Classes préfixées pi-. La toile garde son ratio 4:3 (960 × 720 en coordonnées) ; sur grand écran elle est au plus
    720 px de large, à gauche ; scores, propositions et chat sont à droite. Téléphone (≤ 760 px) : une colonne, chat en
    tiroir, toile pleine largeur. Aucune largeur fixe : tout se replie à 360 px. */

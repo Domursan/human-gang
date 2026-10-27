@@ -1,5 +1,5 @@
 /* ===== Humane Gang — page Jeux, onglet « Arcade » (J18 : l'arcade du jour) ===== */
-/* Chargé par assets/js/jeux/arcade.js. Maquette : idees-design/project/J18.dc.html (téléphone 390 px). */
+/* Chargé par assets/espaces/jeux/arcade.js. Maquette : idees-design/project/J18.dc.html (téléphone 390 px). */
 .arc { display: flex; flex-direction: column; gap: 12px; max-width: 640px; }
 .arc p { margin: 0; }
 .arc .card { padding: 14px; }

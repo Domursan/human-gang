@@ -9,7 +9,7 @@
 /*
  * Rôle : ouvre une boîte de dialogue de confirmation (ou de saisie courte) et attend la réponse.
  * Page : toutes les pages qui demandent une confirmation (suppressions, validations, saisies).
- * Dépendances : feuille de style assets/css/ui-confirm.css (chargée une seule fois).
+ * Dépendances : feuille de style assets/commun/ui-confirm.css (chargée une seule fois).
  * Exporte : confirmBox.
  */
 

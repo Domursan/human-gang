@@ -1,7 +1,7 @@
 // ===== Humane Gang — Risk : carte du monde (plateaux/jeux/risk/plateau.js) =====
 /*
  * Rôle : la carte des 42 territoires.
- *   Si l'image assets/img/plateaux/risk/carte.webp existe (1376 × 768), elle sert de fond, avec ses propres centres (CENTRES_IMAGE). Sinon, dessin de repli :
+ *   Si l'image assets/images/plateaux/risk/carte.webp existe (1376 × 768), elle sert de fond, avec ses propres centres (CENTRES_IMAGE). Sinon, dessin de repli :
  *   chaque continent est une enveloppe colorée autour de ses territoires, les liaisons maritimes sont en pointillés.
  *   Chaque territoire est un bouton placé en % (coordonnées de la maquette, 960 × 520 : valable pour l'image aussi).
  *   Ce module ne fait que du HTML et des classes : table.js le monte, décide quand le refaire et marque la sélection.

@@ -1,4 +1,4 @@
-/* Admin : Questions du gang (assets/js/admin-quiz.js). Onglets, filtres, liste, formulaire du tiroir. */
+/* Admin : Questions du gang (assets/espaces/admin/admin-quiz.js). Onglets, filtres, liste, formulaire du tiroir. */
 
 .adq { display: grid; gap: 16px; }
 .adq-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--line, #d9d4e6); }

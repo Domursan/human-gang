@@ -6,7 +6,7 @@
  *    remonte en défilant, façon magnétoscope, puis le secret est signalé. Un clic simple garde le comportement normal.
  * Les effets respectent « réduire les animations » : sans mouvement, seul le secret est signalé.
  * Dépendances : eggs/api.js (eggFound, qui affiche le message du serveur), core.js (motionAllowed).
- * Exporte : secretsCartes(), secretsHistorique(). La feuille de style assets/css/eggs-pages.css est ajoutée ici.
+ * Exporte : secretsCartes(), secretsHistorique(). La feuille de style assets/espaces/arcade/eggs-pages.css est ajoutée ici.
  */
 import { eggFound } from './api.js';
 import { motionAllowed } from '../../commun/core.js';

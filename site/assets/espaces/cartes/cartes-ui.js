@@ -1,6 +1,6 @@
 // ===== Cartes à collectionner — composant partagé (rendu d'une carte, raretés, familles) =====
 // Utilisé par cartes.js, cartes-trades.js, cartes-showcase.js, admin-cards.js et membre.js (vitrine).
-// Styles : assets/css/cartes-card.css (à inclure sur chaque page qui affiche des cartes).
+// Styles : assets/espaces/cartes/cartes-card.css (à inclure sur chaque page qui affiche des cartes).
 // Côté serveur : tables hg_cards / hg_card_copies, réglages hg_settings.cards, fonctions hg_* (migrations 018).
 // Exporte : les listes de raretés et de familles (et leurs libellés), le numéro d'exemplaire, le numéro de carte,
 // les générations des membres (setGenerations, generationOf, generationLabel : idée C8),

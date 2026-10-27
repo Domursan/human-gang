@@ -5,7 +5,7 @@
  *   points de chacun, journal, chat (à droite sur ordinateur, en tiroir sur téléphone).
  *   Seuls les emplacements permis sont cliquables sur le plateau (sommets, arêtes, tuiles) : calculés ici, avec les
  *   mêmes règles que le serveur. Tout se fait au clavier (Entrée ou Espace ; Échap annule un mode).
- *   La mise en page est dans assets/css/plateaux/catan.css ; ici, le contenu et les actions.
+ *   La mise en page est dans assets/espaces/plateaux/catan.css ; ici, le contenu et les actions.
  * Dépendances : core.js (esc, toast), ../../api.js (plat, erreurTexte), ../../vues/commun.js (bandeauHtml, brancherChrono,
  *   journalHtml, envoyer, moiJoueur, estMonTour, joueurDe), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.

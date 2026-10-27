@@ -1,5 +1,5 @@
 /* ===== Humane Gang — administration : Uno (La Fête foraine › Jeux › Uno) =====
-   Styles de assets/js/admin-uno.js. Préfixe una-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+   Styles de assets/espaces/admin/admin-uno.js. Préfixe una-. Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
 
 .una { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .una-card { display: flex; flex-direction: column; gap: 14px; min-width: 0; }

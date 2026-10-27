@@ -239,7 +239,7 @@ html[data-mode="clair"] { --sand-ink: #6B4F00; }
   .ui-dhead-actions .ui-status { height: 44px; }
 }
 
-/* ---------- Tiroir latéral (assets/js/admin/ui/drawer.js) ---------- */
+/* ---------- Tiroir latéral (assets/espaces/admin/ui/drawer.js) ---------- */
 .ui-drawer { margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh; width: min(480px, 100vw); max-width: 100vw; padding: 0;
   border: 0; border-left: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .ui-drawer.is-wide { width: min(720px, 100vw); }

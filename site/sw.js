@@ -18,7 +18,7 @@
 const CACHE_VERSION = 'v110';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
-// Q4 : images des cartes (même nom et même plafond que assets/js/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
+// Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
 const IMG_CACHE = 'hg-cartes-img';
 const IMG_MAX = 400;
 const CARD_IMG_PATH = '/storage/v1/object/public/hg-assets/cards/';

@@ -4,7 +4,7 @@
  *   échanges, dettes). Bandeau (joueurs, chrono, quitter), plateau carré (plateau.js) avec un centre (dés, carte,
  *   panneau d'action), fiche d'un lieu au clic, joueurs, mes titres groupés par couleur, journal, chat
  *   (à droite sur ordinateur, en tiroir sur téléphone). Fenêtre d'échange (comme PolyEchange) et offre reçue.
- *   La mise en page est dans assets/css/plateaux/monopoly.css ; ici, le contenu et les actions.
+ *   La mise en page est dans assets/espaces/plateaux/monopoly.css ; ici, le contenu et les actions.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les saisies restent en place).
  * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, pseudoHtml),

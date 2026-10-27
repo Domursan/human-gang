@@ -1,5 +1,5 @@
 /* ===== Humane Gang — secrets F : le drôle de bloc (creeper) et le champignon (Mycena) ===== */
-/* Chargée par assets/js/eggs/creeper.js et assets/js/eggs/champignon.js (balise <link data-eggs-f>).
+/* Chargée par assets/espaces/arcade/creeper.js et assets/espaces/arcade/champignon.js (balise <link data-eggs-f>).
    Les calques du bloc sont fixes, sans interaction (pointer-events: none) sauf le bloc lui-même, et coupés dans leur
    boîte (overflow: hidden) : rien ne gêne la navigation ni ne crée de défilement horizontal.
    Le champignon vit dans la section de la page (position: absolute), jamais hors de sa boîte.

@@ -1,5 +1,5 @@
 /* ===== Humane Gang — administration : Jeux de plateau (La Fête foraine › Jeux › Jeux de plateau) =====
-   Styles de assets/js/admin-plateaux.js. Préfixe jp- (jeux de plateau). Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
+   Styles de assets/espaces/admin/admin-plateaux.js. Préfixe jp- (jeux de plateau). Les cartes, boutons et interrupteurs (.switch) viennent de admin.css / base.css. */
 
 .jp-corps { display: flex; flex-direction: column; gap: 16px; min-width: 0; margin-top: 16px; }
 .jp-grille { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }

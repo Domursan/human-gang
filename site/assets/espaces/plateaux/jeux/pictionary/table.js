@@ -8,7 +8,7 @@
  *   l'indice en lettres espacées, un champ « Ta proposition » et le fil des propositions. Quand un tour commence,
  *   le mot du tour précédent et son dessin s'affichent quelques secondes.
  *   Bandeau (manche, dessinateur, chrono), scores (points ; coche pour ceux qui ont trouvé), chat à droite
- *   (en tiroir sur téléphone). Mise en page : assets/css/plateaux/pictionary.css.
+ *   (en tiroir sur téléphone). Mise en page : assets/espaces/plateaux/pictionary.css.
  * Dépendances : core.js (esc, toast, sb), ../../api.js (plat, erreurTexte), ../../vues/commun.js (avatarHtml, pseudoHtml,
  *   joueurDe, moiJoueur, brancherChrono, envoyer), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (toile, palette).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.

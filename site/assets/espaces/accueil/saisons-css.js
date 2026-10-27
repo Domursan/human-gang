@@ -1,6 +1,6 @@
 // ===== Humane Gang — feuilles de style des rendez-vous saisonniers (chargées à la demande) =====
 /*
- * Rôle : ajoute une seule fois les feuilles assets/css/saisons.css et, si besoin, assets/css/cartes-card.css (cartes).
+ * Rôle : ajoute une seule fois les feuilles assets/espaces/accueil/saisons.css et, si besoin, assets/espaces/cartes/cartes-card.css (cartes).
  * Utilisé par avent.js, saisons.js, anniv.js et ss-unwrap.js (migration 096), pour ne pas toucher aux pages HTML.
  * Exporte : loadSeasonCss({ cards }).
  */

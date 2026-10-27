@@ -1,5 +1,5 @@
 /* ===== Humane Gang — Shadow Hunters : styles propres à la table et à l'encart de fin =====
-   Fichier : assets/css/plateaux/shadow.css. Classes préfixées sh-.
+   Fichier : assets/espaces/plateaux/shadow.css. Classes préfixées sh-.
    Reprend la maquette OmbresPlateau (ordinateur), OmbresVisionTel (fenêtre Vision) et OmbresFin (fin).
    Ordinateur (> 760 px) : mon personnage à gauche, plan et panneau au centre, joueurs, journal et chat à droite.
    Téléphone (≤ 760 px) : une colonne ; le panneau « Ton tour » vient en premier, le chat est en tiroir.

@@ -1,4 +1,4 @@
-/* ===== Humane Gang — Jeux › « Qui a dit ça ? » (assets/js/jeux/citations.js) ===== */
+/* ===== Humane Gang — Jeux › « Qui a dit ça ? » (assets/espaces/jeux/citations.js) ===== */
 
 .cit-card { display: flex; flex-direction: column; gap: 14px; border-color: var(--border-strong); }
 .cit-pills { gap: 8px; }

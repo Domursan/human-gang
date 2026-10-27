@@ -7,7 +7,7 @@
  * si brillante + 2 si la famille a l'avantage (membre bat objet, objet bat lieu, lieu bat moment, moment bat membre).
  * Aucune carte n'est perdue ni gagnée. Une seule carte mythique, identité ou unique par main. Textes neutres : « duel perdu », jamais de moquerie.
  * RPC : hg_battle_me, hg_battle_set_deck, hg_battle_attack, hg_battle_seen. Gains éventuels versés par le serveur.
- * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/css/cartes-card.css.
+ * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/espaces/cartes/cartes-card.css.
  * Exporte : mount(panel, ctx) ; mini, resTxt, resultHtml et animate (réutilisés par l'Arène v2, jeux/arene-v2.js).
  */
 import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';

@@ -721,7 +721,7 @@ kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; m
 .adrep-err { color: #E0909A; }
 .adrep-pied { margin: 16px 0 0; }
 
-/* Pastilles de compteur « 3 à faire » (assets/js/core/badges-compteur.js) : entrées de menu, menus et onglets de page.
+/* Pastilles de compteur « 3 à faire » (assets/commun/core/badges-compteur.js) : entrées de menu, menus et onglets de page.
    Même style que la pastille des messages non lus ; le nombre est lu avec son libellé (texte masqué). */
 .cpt-badge { display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 20px; height: 20px; padding: 0 6px;
   box-sizing: border-box; margin-left: 6px; border-radius: 999px; background: var(--sand); color: #121212; font-size: 12px; font-weight: 700;

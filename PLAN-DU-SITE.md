@@ -111,7 +111,7 @@ Les chemins de code sont relatifs à `site/assets/espaces/` (« espace » = un d
 | Page (adresse) | Accès | Contenu principal | Code (espaces/…) |
 | --- | --- | --- | --- |
 | `/pages/admin/admin.html` | Staff / Admin | Panel d'administration (détail dans ADMIN-PANEL.md) | `admin/admin.js`, `admin/admin-*.js`, `admin/admin-*.css` |
-| `/404.html` | Public | Page introuvable, avec les mini-jeux de l'Arcade (Paillettes, Raclette, Domu-mobile) | `arcade/jeu404.js`, `arcade/eggs.css` |
+| `/404.html` | Public | Redirige les anciennes adresses vers les nouvelles ; sinon page introuvable, avec les mini-jeux de l'Arcade (Paillettes, Raclette, Domu-mobile) | `arcade/jeu404.js`, `arcade/eggs.css` |
 | `/offline.html` | Public | Page affichée hors connexion | `commun/offline.css` |
 | `/affiches/` (`site/affiches/`) | Public | Affiches A3 imprimables : badges, Paillettes, cartes, boosters, gamme | `affiches/affiches.js`, `affiches/gamme.js` |
 
@@ -199,7 +199,7 @@ Avant le rangement, les pages étaient toutes à la racine du site (`/jeux.html`
 | `/simulateur.html` | `/pages/jeux/simulateur.html` |
 | `/blackjack.html`, `/catan.html`, `/cluedo.html`, `/destins.html`, `/monopoly.html`, `/pictionary.html`, `/poker.html`, `/risk.html`, `/shadow-hunters.html` | `/pages/jeux/<même nom>.html` |
 
-**Redirection : non en place.** Le fichier `site/404.html` affiche aujourd'hui la page « Page introuvable » avec l'Arcade ; il ne contient aucun script qui envoie les anciennes adresses vers les nouvelles. Une ancienne adresse comme `/jeux.html` donne donc une erreur 404 tant qu'une redirection n'est pas ajoutée (par exemple une page de renvoi à l'ancien nom, ou une règle dans `404.html` qui lit le nom demandé et le remplace par le chemin ci-dessus).
+**Redirection automatique.** GitHub Pages sert `site/404.html` pour toute adresse inconnue. Son tout premier script lit le nom de page demandé : si c'est une page connue (`/jeux.html`, ou un lien parti dans la mauvaise catégorie comme `/pages/compte/duels.html`), il renvoie aussitôt vers la bonne adresse (`/pages/jeux/jeux.html`, `/pages/jeux/duels.html`) en gardant `?…` et `#…`. Les anciens liens (Discord, notifications, favoris, appli installée) continuent donc de marcher. Une page ajoutée au site doit aussi être ajoutée à sa table, en haut de `site/404.html`, et à `PAGE_DIR` dans `site/assets/commun/core/pages-access.js`.
 
 ## Ce qui tourne en arrière-plan
 
