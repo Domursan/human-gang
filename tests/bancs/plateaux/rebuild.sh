@@ -6,13 +6,13 @@ P="psql -h /tmp -p 54329 -U postgres -v ON_ERROR_STOP=1 -q"
 bash $D/../loup-garou/start.sh >/dev/null
 $P -c "drop database if exists $B" -c "create database $B" 2>&1 | grep -v NOTICE
 $P -d $B -f $D/../loup-garou/mock.sql 2>&1 | grep -E "ERROR"
-for f in $D/../../supabase/migrations/12[5-9]_*.sql $D/../../supabase/migrations/130_*.sql; do
+for f in $D/../../../supabase/migrations/12[5-9]_*.sql $D/../../../supabase/migrations/130_*.sql; do
   [ -f "$f" ] && $P -d $B -f "$f" 2>&1 | grep -E "ERROR|LINE|^\s+\^"
 done
 # Robots, socle des nouveaux jeux, Blackjack, Poker, Catan, Pictionary. Sans ON_ERROR_STOP : les tables des autres jeux
 # n'existent pas dans la base de test ; seules comptent les fonctions des plateaux.
 for m in 131_plateaux_robots 136_nouveaux_jeux_socle 137_nj_devine 140_nj_grilles 141_duels_nouveaux 143_plateaux_cartes 144_catan 145_pictionary; do
-  psql -h /tmp -p 54329 -U postgres -d $B -X -q -f $D/../../supabase/migrations/$m.sql >/dev/null 2>&1
+  psql -h /tmp -p 54329 -U postgres -d $B -X -q -f $D/../../../supabase/migrations/$m.sql >/dev/null 2>&1
 done
 $P -d $B -f $D/helpers.sql 2>&1 | grep -E "ERROR"
 # Robot de test du Risk (fonction t_rk_tour, utilisée par s3) : seulement sa définition (lignes 1 à 38 de t_risk.sql),

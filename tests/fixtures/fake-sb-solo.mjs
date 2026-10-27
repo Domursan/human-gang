@@ -7,7 +7,7 @@
 // Le faux ne vérifie pas le temps minimal du démineur ni la limite de points du 2048 : ce sont des règles serveur.
 // Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/${S.jeuxBase || 'fake-sb.mjs'}`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

@@ -5,7 +5,7 @@
 //   gartic.vote_open (vote ouvert), uid (membre connecté), staff (permissions), lexFail (lecture du lexique en erreur).
 // Exporte createClient().
 
-const base = await import(new URL('tests/fixtures/fake-sb.mjs', location.href).href);
+const base = await import(`${location.origin}${window.__HG_RACINE || ''}/tests/fixtures/fake-sb.mjs`);
 const S = window.__SCN || {};
 const DB = window.__DB;
 const ME = '11111111-1111-4111-8111-111111111111';

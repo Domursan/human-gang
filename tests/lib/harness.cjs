@@ -75,6 +75,8 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion, hasTouch: touch || mobile, isMobile: mobile, deviceScaleFactor: dpr }); // touch : écran tactile (pointeur grossier)
   // Avec now (horloge simulée), le jour de l'intro vient de now : le script d'initialisation s'exécute avant l'horloge.
   const dayKey = now ? (() => { const d = new Date(now); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; })() : null;
+  // Préfixe du site servi (HG_PREFIX) : les faux clients des fixtures s'en servent pour atteindre /tests/fixtures/.
+  await ctx.addInitScript((p) => { window.__HG_RACINE = p; }, PREFIX);
   await ctx.addInitScript(({ s, dayKey }) => {
     window.__SCN = s;
     try {

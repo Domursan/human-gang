@@ -3,7 +3,7 @@
 // hg_duel_etat renvoie window.__DUELS.etat, hg_duel_jouer enregistre le coup dans window.__DUELS.appels. Les autres appels
 // passent au faux de base. Exporte createClient().
 // Le banc est sous tests/bancs/duels/ui/ : le socle est tests/fixtures/fake-sb.mjs, relatif à la racine du site servi.
-const racine = location.pathname.slice(0, Math.max(0, location.pathname.indexOf('/tests/')));
+const racine = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${racine}/tests/fixtures/fake-sb.mjs`);
 
 const ok = (data) => ({ data, error: null });

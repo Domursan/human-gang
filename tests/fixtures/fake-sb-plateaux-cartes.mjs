@@ -7,7 +7,7 @@
 // Expose window.__CARTES : { etat(), tourDe(uid) } pour faire passer la main dans un test (la page se met à jour à la relecture).
 // Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/${S.jeuxBase || 'fake-sb.mjs'}`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

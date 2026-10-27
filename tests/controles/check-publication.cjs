@@ -63,8 +63,10 @@ for (const f of ['index.html', '404.html', 'sw.js', 'manifest.webmanifest', 'off
 }
 
 // 4. Outils internes : simulateur (outil de développement) et affiche des solutions des secrets.
+// Ils restent dans site/ pour l'usage local ; le workflow de publication doit les retirer avant la mise en ligne.
+const workflow = fs.readFileSync(path.join(__dirname, '..', '..', '.github', 'workflows', 'publier-site.yml'), 'utf8');
 for (const f of ['pages/jeux/simulateur.html', 'assets/espaces/jeux/simulateur.js']) {
-  if (pub.has(f)) warnings.push(`outil interne publié (à confirmer) : ${f}`);
+  if (pub.has(f) && !workflow.includes(`site/${f}`)) errors.push(`outil interne publié : ${f} (à retirer dans publier-site.yml)`);
 }
 
 if (errors.length) {

@@ -86,7 +86,7 @@ const lineOf = (text, idx) => text.slice(0, idx).split('\n').length;
 
 for (const file of files) {
   const text = fs.readFileSync(file, 'utf8');
-  const rel = path.relative(ROOT, file);
+  const rel = path.relative(DEPOT, file);
   for (const m of text.matchAll(LITERAL)) {
     const [, obj, kind, , name] = m;
     if (IGNORE_OBJECTS.has(obj) || (kind === 'from' && obj === 'storage')) continue;

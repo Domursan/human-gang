@@ -29,6 +29,9 @@ jobs:
       # Textes par défaut du bot : source unique dans supabase/functions/_shared/, lus aussi par l'admin (admin-bot.js)
       - name: Copier les modèles du bot dans le site
         run: cp supabase/functions/_shared/bot-templates.json site/assets/espaces/admin/bot-templates.json
+      # Outil de test de l'admin (simulateur de téléphone) : gardé dans le dépôt pour l'usage local, jamais mis en ligne
+      - name: Retirer les outils non publiés
+        run: rm -f site/pages/jeux/simulateur.html site/assets/espaces/jeux/simulateur.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

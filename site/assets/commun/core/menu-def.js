@@ -30,7 +30,9 @@ export const MENUS = [
 ];
 
 /** Clé de libellé d'un menu, d'un sous-menu ou d'une entrée. */
-export const menuKey = (it) => (it.items || it.auto || it.sub ? `menu:${it.id || it.label.toLowerCase()}` : it.href ? it.href : '');
+// Clé d'une entrée = son adresse sans le dossier (« cartes.html#ouverture » pour /pages/cartes/cartes.html#ouverture) :
+// les libellés enregistrés (hg_settings.site_textes.nav_libelles) gardent la même clé si une page change de dossier.
+export const menuKey = (it) => (it.items || it.auto || it.sub ? `menu:${it.id || it.label.toLowerCase()}` : it.href ? it.href.replace(/^\/pages\/[a-z0-9-]+\//, '') : '');
 
 /**
  * Libellés modifiables, dans l'ordre du menu : { key, label (par défaut), depth (0 menu, 1 entrée, 2 sous-entrée), group }.

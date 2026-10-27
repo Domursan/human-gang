@@ -5,7 +5,7 @@
 // Réponses, indices et distances suivent les règles du serveur (hg_nj__juste, hg_nj_geo) ; « Réponse inconnue » si hors liste.
 // Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/${S.jeuxBase || 'fake-sb.mjs'}`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

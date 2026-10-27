@@ -14,7 +14,7 @@ const me = await initPage({ auth: 'optional' });
 
 /* ---------- Constantes et outils ---------- */
 const BASE_TITLE = 'Aide et tutos · Humane Gang';
-const SAFE_PAGE = /^[a-z0-9-]+\.html(#[\w-]*)?$/i; // lien « Y aller » : une page du site, rien d'autre
+const SAFE_PAGE = /^(\/pages\/[a-z0-9-]+\/)?[a-z0-9-]+\.html(#[\w-]*)?$/i; // lien « Y aller » : une page du site, rien d'autre
 const SAFE_IMG = /^assets\/tutos\/[\w.-]+$/;        // capture : un fichier du dépôt, rien d'autre
 /** Met en minuscules et retire les accents, pour que « Sortie » trouve « sortie » ou « Séance ». */
 /* ---------- Affiches A3 à côté des tutos ---------- */

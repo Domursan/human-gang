@@ -5,7 +5,7 @@
 // Scénarios (window.__SCN) : uid (membre connecté, Ethan admin par défaut), capsuleOpen (capsule ouverte),
 //   capsuleClosed (dépôts fermés), recapYear (année du récap simulé), emptyWall (aucune citation).
 // Expose window.__DB (base) et window.__LOG (journal) comme fake-sb.mjs.
-const base = await import(new URL('tests/fixtures/fake-sb.mjs', document.baseURI).href);
+const base = await import(`${location.origin}${window.__HG_RACINE || ''}/tests/fixtures/fake-sb.mjs`);
 
 const S = window.__SCN || {};
 const DB = window.__DB;

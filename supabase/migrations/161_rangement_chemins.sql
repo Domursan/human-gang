@@ -77,10 +77,7 @@ update public.hg_site_notifs n set lien = 'https://humane-gang.com/' || m.neuf |
 update public.hg_settings set value = jsonb_set(value, '{worlds,pronos}', '"/pages/jeux/jeux.html#pronos"')
   where key = 'saisons' and value #>> '{worlds,pronos}' = 'jeux.html#pronos';
 
-update public.hg_settings set value = jsonb_set(value, '{nav_libelles}', (
-    select coalesce(jsonb_object_agg(case when x.k like 'jeux.html#%' then '/pages/jeux/' || x.k else x.k end, x.v), '{}'::jsonb)
-    from jsonb_each(value -> 'nav_libelles') as x(k, v)))
-  where key = 'site_textes' and jsonb_typeof(value -> 'nav_libelles') = 'object';
+-- Libellés du menu (site_textes.nav_libelles) : inchangés, la clé reste « page.html#onglet » (core/menu-def.js, menuKey).
 
 -- ---------------------------------------------------------------------
 -- 2. Fonctions (textes remplacés ; la signature et la logique ne changent pas)

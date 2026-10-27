@@ -1,4 +1,4 @@
-// Wrapper ESM de qrcode-generator 1.4.4 (MIT, Kazuhiko Arase). Voir assets/vendor/README.md.
+// Wrapper ESM de qrcode-generator 1.4.4 (MIT, Kazuhiko Arase). Voir docs/VENDOR.md.
 // Source inchangée ; seul l'export ESM est ajouté en fin de fichier.
 //---------------------------------------------------------------------
 //

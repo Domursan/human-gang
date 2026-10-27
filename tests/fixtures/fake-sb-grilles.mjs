@@ -6,7 +6,7 @@
 // calcul juste de 8 caractères, couleurs v/j/g comme hg_nj__couleurs ; « Ce n'est pas un calcul juste… » sans essai compté.
 // Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/${S.jeuxBase || 'fake-sb.mjs'}`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

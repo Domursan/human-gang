@@ -1,4 +1,4 @@
-// Wrapper ESM de supabase-js 2.45.4 (MIT). Voir assets/vendor/README.md.
+// Wrapper ESM de supabase-js 2.45.4 (MIT). Voir docs/VENDOR.md.
 // Le build UMD voisin (supabase-js-2.45.4.js) est chargé comme script classique : son runtime webpack a besoin de
 // document.currentScript pour trouver son chemin, ce qui n'existe pas dans un module. Il pose window.supabase.
 if (!globalThis.supabase) {

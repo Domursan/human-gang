@@ -5,7 +5,7 @@
 // État en mémoire (window.__ARENE) ; chaque appel est journalisé dans window.__LOG comme les autres RPC.
 // Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/fake-sb-jeux3.mjs`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

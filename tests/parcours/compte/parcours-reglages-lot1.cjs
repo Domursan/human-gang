@@ -132,7 +132,7 @@ const save = async (p) => { await p.click('#rgi-save'); await sleepShort(); };
     check(await pa.isVisible('#rgi-site-textes-nav-libelles-cartes-html-ouverture') && await pa.isVisible('#rgi-site-textes-nav-libelles-menu-arcade'), 'menu : entrées et sous-menus modifiables (Ouverture, Arcade)');
     await pa.fill('#rgi-site-textes-nav-libelles-cartes-html-ouverture', 'Ouvrir un booster');
     await save(pa);
-    check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['menu:irl'] === 'Sorties' && ((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['/pages/cartes/cartes.html#ouverture'] === 'Ouvrir un booster', 'parties : titres de menu et entrées enregistrés depuis « Menu »');
+    check(((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['menu:irl'] === 'Sorties' && ((await overridesOf(pa, 'site_textes')) || {}).nav_libelles?.['cartes.html#ouverture'] === 'Ouvrir un booster', 'parties : titres de menu et entrées enregistrés depuis « Menu »');
 
     await adminSection(pa, 'pilotage/etat');
     await sleepShort();

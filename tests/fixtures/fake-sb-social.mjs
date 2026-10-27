@@ -3,7 +3,7 @@
 // tout le reste part vers le faux client commun. Lit window.__SCN (scénario) ; état dans window.__SOC.
 // Scénario : gaming (user_id → profil), thanks, polls, votes, groups (conversations de groupe), groupMembers, groupMessages,
 // rsvps (via le faux commun), merciPlafond (raison 'plafond').
-const base = await import(new URL('tests/fixtures/fake-sb.mjs', document.baseURI).href);
+const base = await import(`${location.origin}${window.__HG_RACINE || ''}/tests/fixtures/fake-sb.mjs`);
 const S = window.__SCN || {};
 const ME = '11111111-1111-4111-8111-111111111111';
 const now = () => new Date().toISOString();

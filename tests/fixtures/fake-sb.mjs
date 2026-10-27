@@ -252,7 +252,7 @@ const CASCADE = {
 const ANON_OK = new Set(['hg_client_error', 'hg_support_public', 'hg_auth_user_gone', 'hg_card_rank', 'hg_card_roll', 'hg_cards_admin_audit_del', 'hg_claim_invite_link', 'hg_msg_push_trg', 'hg_msg_realtime_trg']);
 // Compléments par paquet (S.extra = nom d'un fichier de tests/fixtures/) : le module reçoit la base et le scénario,
 // peut y ajouter ses tables et renvoie { rpc(fn, args) } (réponse ou undefined). Servi depuis le dépôt comme le site.
-const EXTRA = S.extra ? (await import(new URL(`tests/fixtures/${S.extra}`, document.baseURI).href)).default({ DB, S, uidNow, ME, U }) : null;
+const EXTRA = S.extra ? (await import(`${location.origin}${window.__HG_RACINE || ''}/tests/fixtures/${S.extra}`)).default({ DB, S, uidNow, ME, U }) : null;
 // Compteur utilisé par uid() pour produire des identifiants distincts.
 let seq = 0;
 /** Lit la colonne c d'une ligne (valeur brute, sans transformation). */

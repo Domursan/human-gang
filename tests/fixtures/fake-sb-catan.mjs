@@ -4,7 +4,7 @@
 // (les règles réelles sont testées côté SQL). Chaque appel de fonction RPC est journalisé dans window.__LOG.
 // Expose window.__CATAN : { etat() }. Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/fake-sb.mjs`);
 
 /* Géométrie exacte renvoyée par hg_ct__geo (migration 144). */

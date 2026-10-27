@@ -4,7 +4,7 @@
 // Scénario (window.__SCN) : geoNone (pas de manche), geoPlayed (manche déjà jouée), quotesNone, quoteConsent (une citation
 // attend l'accord du membre), jeuxFail (toutes les RPC des jeux échouent).
 // Exporte createClient().
-const base = await import(new URL('tests/fixtures/fake-sb.mjs', location.href).href);
+const base = await import(`${location.origin}${window.__HG_RACINE || ''}/tests/fixtures/fake-sb.mjs`);
 
 const S = window.__SCN || {};
 const ME = '11111111-1111-4111-8111-111111111111';

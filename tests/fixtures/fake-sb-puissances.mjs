@@ -7,7 +7,7 @@
 // Scénario (window.__SCN) : uid (membre connecté ; par défaut l'administrateur Ethan), staff (Staff « cartes » sans être admin).
 // Les données sont posées à la création du client (window.__DB existe alors). Exporte createClient().
 const S = window.__SCN || {};
-const prefix = location.pathname.replace(/\/[^/]*$/, '');
+const prefix = window.__HG_RACINE || ''; // préfixe du site servi (HG_PREFIX), injecté par le harnais
 const base = await import(`${location.origin}${prefix}/tests/fixtures/fake-sb-arene2.mjs`);
 
 const ME = '11111111-1111-4111-8111-111111111111';

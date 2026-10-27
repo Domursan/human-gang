@@ -42,11 +42,11 @@ const count401 = async (p) => (await log(p)).filter((l) => l[0] === 'rpc-401');
     const base = location.href;
     /** Importe un module JavaScript du site (chemin relatif f) pour vérifier son contenu. */
     const m = (f) => import(new URL(f, base).href);
-    const sbm = await m('assets/commun/core/supabase.js');
-    const unread = await m('assets/commun/core/unread.js');
-    const badges = await m('assets/commun/core/badges.js');
-    const pages = await m('assets/commun/core/pages-access.js');
-    const dyn = await m('assets/commun/dyn-events.js');
+    const sbm = await m('/assets/commun/core/supabase.js');
+    const unread = await m('/assets/commun/core/unread.js');
+    const badges = await m('/assets/commun/core/badges.js');
+    const pages = await m('/assets/commun/core/pages-access.js');
+    const dyn = await m('/assets/commun/dyn-events.js');
     await sbm.sb.auth.signOut();
     await Promise.allSettled([
       unread.refreshUnread(),
