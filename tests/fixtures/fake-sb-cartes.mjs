@@ -26,7 +26,7 @@ const DB = {
   hg_profiles: people.map(([p, id], i) => ({ id, pseudo: p, is_admin: id === ME, color: '#4F6A8F', avatar_url: null, created_at: iso(-300 + i), joined_on: i === 1 ? '2019-03-12' : null, birthday: null })),
   // S.themeSetting : réglage du thème (forçage) ; S.themes : thèmes supplémentaires (test du thème Raclette)
   hg_settings: [{ key: 'theme', value: S.themeSetting || { mode: 'auto' } }, { key: 'bot', value: { notify: {} } }],
-  hg_themes: [{ slug: 'classique', name: 'Classique', is_default: true, active: true, effect: 'aucun', emojis: [], colors: {} }, ...(S.themes || [])],
+  hg_themes: [...((S.themes || []).some((t) => t.slug === 'classique') ? [] : [{ slug: 'classique', name: 'Classique', is_default: true, active: true, effect: 'aucun', emojis: [], colors: {} }]), ...(S.themes || [])],
   hg_badges: [...AUTO.map((c, i) => ({ code: c, name: c.replace(/_/g, ' '), description: 'Badge automatique', image_url: null, sort: i * 10 })),
     { code: 'roi_karaoke', name: 'Roi du karaoké', description: 'A chanté plus fort que tout le monde', image_url: null, sort: 200 },
     { code: 'citrouille', name: 'Chasseur de citrouilles', description: 'A attrapé des citrouilles d\'Halloween', image_url: PUMPKIN, sort: 210, levels_enabled: true, metric: 'event_captures', event_id: 'aaaaaaaa-0000-4000-8000-000000000001',
