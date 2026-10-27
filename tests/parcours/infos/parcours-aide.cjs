@@ -3,7 +3,7 @@
 // page /pages/infos/aide.html : liste des groupes, recherche (sans accents ni casse), tuto ouvert par l'adresse /pages/infos/aide.html#<slug>,
 // « Y aller » ; visiteur (sans compte) : seulement les tutos « Premiers pas » ; accès à l'assistance depuis l'aide ;
 // plus de lien Assistance dans le pied de page ; 390 px sans défilement horizontal.
-// Données : assets/js/tutos/<groupe>.js (61 tutos). Contrôles sans navigateur : slugs uniques, pages existantes,
+// Données : assets/espaces/infos/tutos/<groupe>.js (61 tutos). Contrôles sans navigateur : slugs uniques, pages existantes,
 // nombre d'étapes (3 à 7).
 // Faux Supabase : fixtures/fake-sb.mjs (scenario.guest pour un visiteur).
 // Lancer : node tests/parcours/infos/parcours-aide.cjs   (HG_ROOT / HG_PREFIX comme les autres parcours)
@@ -30,7 +30,7 @@ async function checkData() {
   let total = 0, groupsOk = 0;
   for (const id of GROUP_IDS) {
     let g = null;
-    try { g = (await import(pathToFileURL(path.join(ROOT, 'assets/js/tutos', id + '.js')).href)).default; } catch (e) { /* signalé plus bas */ }
+    try { g = (await import(pathToFileURL(path.join(ROOT, 'assets/espaces/infos/tutos', id + '.js')).href)).default; } catch (e) { /* signalé plus bas */ }
     if (!g || !Array.isArray(g.tutos)) { badPage.push(`groupe ${id} illisible`); continue; }
     groupsOk++;
     for (const t of g.tutos) {

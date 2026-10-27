@@ -7,13 +7,13 @@
 //   - compte (membre) : groupes de champs réglés (profile_fields) ; valeur invalide ⇒ liste d'origine.
 // Le SQL (migration 051) n'est pas exécuté ici : les fonctions hg_claim_invite_link et hg_ghost_invite
 // sont simulées par le faux client. Lancer : node tests/parcours/compte/parcours-reglages-lot2.cjs
-const { check, finish, openPage, adminSection, log, sleep, chromium, ORIGIN, PREFIX } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, log, sleep, chromium, ORIGIN, PREFIX } = require('../../lib/harness.cjs');
 
 /** Écritures sur hg_settings (upsert ou delete) dans le journal du faux client. */
 const settingsWrites = async (p) => (await log(p)).filter((e) => e[1] === 'hg_settings' && (e[0] === 'upsert' || e[0] === 'delete' || e[0] === 'insert'));
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   /* ---------- Admin : Membres · Invitations, règles des codes ---------- */

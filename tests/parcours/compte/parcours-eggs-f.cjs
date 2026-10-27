@@ -10,7 +10,7 @@
 // Lancer : node tests/parcours/compte/parcours-eggs-f.cjs
 // Préfixe : HG_PREFIX=/human-gang si la variable n'est pas définie (le site est servi comme sur GitHub Pages).
 process.env.HG_PREFIX = process.env.HG_PREFIX || '/human-gang';
-const { ORIGIN, PREFIX, check, finish, openPage, log, sleep, chromium } = require('../../lib/harness.cjs');
+const { ROOT, ORIGIN, PREFIX, check, finish, openPage, log, sleep, chromium } = require('../../lib/harness.cjs');
 
 /** Appels hg_egg_found du faux client (arguments), dans l'ordre. */
 const eggCalls = async (p) => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_egg_found').map((e) => e[2]);
@@ -26,7 +26,7 @@ const BLOC = '.egg-f-monstre';
 const CHAMPI = '.champi-f-bouton';
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT + ' (préfixe ' + PREFIX + ')');
+  console.log('Racine testée : ' + ROOT + ' (préfixe ' + PREFIX + ')');
   const browser = await chromium.launch();
 
   /* ---------- Drôle de bloc : forcé pour l'administrateur ---------- */

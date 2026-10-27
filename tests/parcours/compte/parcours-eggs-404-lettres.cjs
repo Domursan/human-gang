@@ -9,7 +9,7 @@
 // s'illumine au survol et un clic appelle hg_egg_found('lettre_N').
 // Faux Supabase : fixtures/fake-sb.mjs (réponse hg_egg_found). Lancer : node tests/parcours/compte/parcours-eggs-404-lettres.cjs
 // Préfixe : racine par défaut (harnais) ; HG_PREFIX=/human-gang seulement pour un essai sous un sous-chemin.
-const { ORIGIN, PREFIX, check, finish, openPage, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
+const { ROOT, ORIGIN, PREFIX, check, finish, openPage, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
 
 /** Appels hg_egg_found du faux client (arguments), dans l'ordre. */
 const eggCalls = async (p) => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === 'hg_egg_found').map((e) => e[2]);
@@ -43,7 +43,7 @@ async function jouePartie(p) {
 }
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT + ' (préfixe ' + PREFIX + ')');
+  console.log('Racine testée : ' + ROOT + ' (préfixe ' + PREFIX + ')');
   const browser = await chromium.launch();
 
   /* ---------- Page 404 : adresse inconnue, ressources et mise en page ---------- */

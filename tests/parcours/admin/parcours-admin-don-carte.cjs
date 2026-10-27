@@ -3,7 +3,7 @@
 // hg_cards_admin_give échoue, aucun appel hg-notify n'est fait et l'erreur reste dans le tiroir.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (scenario.giveFail = true fait échouer la RPC).
 // Lancer : node tests/parcours/admin/parcours-admin-don-carte.cjs
-const { check, finish, openPage, adminSection, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, chromium } = require('../../lib/harness.cjs');
 
 const ALICE = '00000002-0000-4000-8000-000000000002';
 /** Tiroir de dialogue ouvert (dialog.ui-drawer[open]). */
@@ -36,7 +36,7 @@ async function ouvrirDon(p) {
 }
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   // 1. Don réussi : hg-notify reçoit card_gift_admin avec le membre, la carte, 3 exemplaires et la brillance.

@@ -35,7 +35,8 @@ export async function seasonAnnouncements(db: any, bot: ChannelBot & MentionBot,
       if (e) console.error('[saisons] libération', d.task, d.period, e);
     };
     if (!channels.length) { await release(); continue; } // aucun salon : on réessaiera quand il sera configuré
-    const url = site ? `${site}/${d.page}` : undefined;
+    // d.page : chemin absolu du site (« /pages/compte/accueil.html#avent ») ou relatif (« pages/… ») selon la base
+    const url = site ? `${site}${String(d.page).startsWith('/') ? '' : '/'}${d.page}` : undefined;
     const message = {
       ...mentionFor(bot, d.type),
       embeds: [{ title: d.title, description: d.body, url, color: COLOR[d.type] ?? 0xe2c77e, footer: { text: 'Humane Gang' }, timestamp: new Date().toISOString() }],

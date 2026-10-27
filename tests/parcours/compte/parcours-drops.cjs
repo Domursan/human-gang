@@ -7,7 +7,7 @@
 // Une carte en vol est cliquée après pause de son animation (figée à l'endroit où elle est) : le clic est réel.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (scenario.drops, scenario.dropLate, scenario.guest).
 // Lancer : node tests/parcours/compte/parcours-drops.cjs
-const { check, finish, openPage, adminSection, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
 
 const ME = '11111111-1111-4111-8111-111111111111';
 const CARD = 'C2'; // « Le Paleto », commune, brillante possible
@@ -29,7 +29,7 @@ const freeze = (p) => p.evaluate(() => {
 const flyingBox = (p) => p.$eval('.cd-item.is-flying', (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top]; }).catch(() => null);
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   /* ---------- Admin ---------- */

@@ -8,7 +8,7 @@
 // sur 3 attribué, elle reste choisissable. Collection : « n / max exemplaires attribués ».
 // Faux Supabase : fixtures/fake-sb-cartes.mjs, scénarios uniques (série + carte C14), uniqueTaken (Alice l'a), uniqueOwned (moi).
 // Lancer : node tests/parcours/cartes/parcours-cartes-uniques.cjs   (HG_ROOT / HG_PREFIX comme les autres parcours)
-const { check, finish, openPage, adminSection, hscroll, sleep, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, hscroll, sleep, chromium } = require('../../lib/harness.cjs');
 /** Ouvre un onglet de Cartes par son adresse : les onglets internes sont masqués (nouvel en-tête). */
 const goTab = (p, id) => p.evaluate((id) => { if (location.hash === '#' + id) location.hash = ''; location.hash = id; }, id);
 
@@ -21,7 +21,7 @@ const submitDrawer = (p) => p.click('dialog.ui-drawer[open] [data-drawer-submit]
 const waitClosed = (p) => p.waitForSelector('dialog.ui-drawer', { state: 'detached', timeout: 5000 }).catch(() => {});
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   // 1. Collection : Hors série, carte unique non possédée, personne ne l'a encore.

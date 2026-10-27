@@ -10,7 +10,7 @@
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (scenario.bulkFail, ecoFail, boostersFail, gestionEncheres, journalDons).
 // Lancer : node tests/parcours/admin/parcours-admin-gestion.cjs
 const path = require('path');
-const { SHOTS, check, finish, openPage, adminSection, hscroll, log, chromium } = require('../../lib/harness.cjs');
+const { ROOT, SHOTS, check, finish, openPage, adminSection, hscroll, log, chromium } = require('../../lib/harness.cjs');
 
 /* ---------- Aides de test ---------- */
 const ALICE = '00000002-0000-4000-8000-000000000002';
@@ -42,7 +42,7 @@ async function ouvrir(p) {
 
 /* ---------- Scénario ---------- */
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   // 1. Bureau 1280 px : état initial du Give, recherche, pastilles, contrôles.

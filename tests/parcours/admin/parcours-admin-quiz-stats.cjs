@@ -4,7 +4,7 @@
 // Contrôles : tuiles, synthèse, validation d'une réponse en attente, détail d'une question, tri du tableau, export CSV,
 // états vides et erreurs, pas de défilement horizontal à 390 px, aucune erreur JS.
 // Lancer : node tests/parcours/admin/parcours-admin-quiz-stats.cjs
-const { check, finish, openPage, hscroll, log, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, hscroll, log, chromium } = require('../../lib/harness.cjs');
 
 const PAGE = 'tests/fixtures/quiz-stats-test';
 const FIXTURE = 'fake-sb-quiz.mjs';
@@ -20,7 +20,7 @@ const attendreOnglet = (p) => p.waitForSelector('[data-stat="pending"]', { timeo
 const appels = async (p, nom) => (await log(p)).filter((e) => e[0] === 'rpc' && e[1] === nom).map((e) => e[2]);
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   // Attendus : calculés depuis les données de démonstration, pas écrits en dur.

@@ -6,7 +6,7 @@
 // horizontal, aucune erreur JavaScript.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs (scenario.uniques : carte unique C14 ; scenario.myPerms : droits simulés).
 // Lancer : node tests/parcours/admin/parcours-admin-quick.cjs
-const { check, finish, openPage, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
 
 const ALICE = '00000002-0000-4000-8000-000000000002';
 const BRUNO = '00000003-0000-4000-8000-000000000003';
@@ -29,7 +29,7 @@ const notifyCalls = async (p, event) => (await log(p)).filter((e) => e[0] === 'f
 const focusTrigger = (p) => p.evaluate(() => { let b = document.getElementById('qk-test'); if (!b) { b = document.createElement('button'); b.id = 'qk-test'; b.type = 'button'; b.textContent = 'Déclencheur de test'; document.body.append(b); } b.focus(); });
 
 (async () => {
-  console.log('Racine testée : ' + require('../../lib/harness.cjs').ROOT);
+  console.log('Racine testée : ' + ROOT);
   const browser = await chromium.launch();
 
   // 1. Give : paillettes à deux membres, avec note, sans annonce au fil. Confirmation puis appel de la RPC.
