@@ -6,7 +6,7 @@
  * Page : toutes les pages (via header.js, footer.js, search.js, etc.).
  * Dépendances : aucune.
  * Exporte : ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_ALERT, ICON_CLOSE, ICON_SEARCH, ICON_HELP, ICON_MENU,
- *   ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD.
+ *   ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD, ICON_STATUT.
  * Les icônes utilisent currentColor : elles prennent la couleur du texte qui les entoure.
  */
 
@@ -25,3 +25,4 @@ export const ICON_MENU = '<svg class="nav-toggle-ico" viewBox="0 0 24 24" width=
 export const ICON_CHEVRON = '<svg class="nav-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
 export const ICON_CHEVRON_RIGHT = '<svg class="nav-chev-r" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg>';
 export const ICON_SHIELD = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>';
+export const ICON_STATUT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';

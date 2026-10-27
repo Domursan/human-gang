@@ -23,6 +23,10 @@
   display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
 .statut-voyant:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
 @media (pointer: coarse) { .statut-voyant::before { content: ''; position: absolute; left: -3px; top: -3px; right: -10px; bottom: -10px; } }
+/* Téléphone (760 px et moins) : le voyant n'est qu'un indicateur, il ne reçoit aucun toucher (la photo dessous le reçoit,
+   et le statut s'ouvre depuis le menu de la photo : entrée « Statut », header.js). */
+.statut-voyant--indicateur { pointer-events: none; cursor: default; }
+.statut-voyant--indicateur::before { content: none; }
 /* Badge du nombre de non lues, à gauche du voyant */
 .statut-n { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
   background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;

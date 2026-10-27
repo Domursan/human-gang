@@ -5,10 +5,12 @@
  *      « en ligne » pendant 2 minutes après le dernier signal ; le bot Discord ne lui envoie alors pas de MP (une
  *      notification du site suffit, voir supabase/functions/_shared/presence.ts).
  *   2. Voyant de statut sur la photo du membre (#statut-btn, dans .nav-me-wrap, posé ici) : vert = en ligne, rouge barré =
- *      statut masqué (« Masquer mon statut »). Son badge = nombre de notifications non lues. Un clic ouvre le panneau
- *      (#notif-panel) : liste (hg_mes_notifs), « Tout marquer comme lu » (hg_notifs_lues), réglage « Masquer mon statut en
- *      ligne » (hg_presence_masquer). Une nouvelle notification arrive en direct (canal privé Realtime « notif:<id> ») et
- *      s'affiche aussi en message temporaire.
+ *      statut masqué (« Masquer mon statut »). Son badge = nombre de notifications non lues. Sur ordinateur, le voyant est
+ *      un bouton : un clic ouvre le panneau (#notif-panel) : liste (hg_mes_notifs), « Tout marquer comme lu » (hg_notifs_lues),
+ *      réglage « Masquer mon statut en ligne » (hg_presence_masquer). Sur téléphone (760 px et moins), le voyant n'est qu'un
+ *      indicateur (aria-hidden, sans clic ni focus) : le statut et le panneau s'ouvrent depuis l'entrée « Statut » du menu
+ *      en arc de la photo, et la photo porte alors le libellé du statut. Une nouvelle notification arrive en direct (canal
+ *      privé Realtime « notif:<id> ») et s'affiche aussi en message temporaire.
  *   3. Pastilles de statut : tout élément [data-presence="<uuid>"] reçoit la classe is-online et un libellé « En ligne »
  *      ou « Hors ligne » (hg_en_ligne, par lots, rafraîchi toutes les 60 s et à chaque ajout dans la page).
  *      presenceDot(id) fabrique cette pastille ; avatarPresence(html, id) l'ajoute sur un avatar.
@@ -37,6 +39,14 @@ function chargerCss() {
 }
 
 const P = { me: null, timer: null, nonLues: 0, liste: null, masque: false, canal: null, ouvert: false, demarre: false, docBound: false };
+/** Téléphone : même seuil que le menu replié et l'éventail de la photo (header.js). */
+const TEL = '(max-width: 760px)';
+const surTel = () => matchMedia(TEL).matches;
+
+/** Où rendre le focus quand le panneau se ferme : la photo au téléphone (le voyant n'est pas focusable), le voyant sinon. */
+function retourFocus() {
+  (surTel() ? document.querySelector('.site-header .nav-me') : document.getElementById('statut-btn'))?.focus();
+}
 
 /* ---------- Pastilles de statut ---------- */
 
@@ -130,16 +140,28 @@ async function charger() {
  * membres le voient hors ligne). Son badge affiche le nombre de notifications non lues, quand il y en a.
  */
 function peindreVoyant() {
-  const b = document.getElementById('statut-btn');
-  if (!b) return;
   const n = P.nonLues;
-  const badge = b.querySelector('.statut-n');
-  badge.textContent = n > 99 ? '99+' : String(n);
-  badge.hidden = n <= 0;
-  b.querySelector('.presence-dot').classList.toggle('is-online', !P.masque);
   const nb = n ? `${n} non lue${n > 1 ? 's' : ''}` : 'aucune non lue';
-  b.setAttribute('aria-label', `Statut et notifications : ${P.masque ? 'statut masqué' : 'en ligne'}, ${nb}`);
-  b.title = b.getAttribute('aria-label');
+  const etat = P.masque ? 'statut masqué' : 'en ligne';
+  const compte = n > 99 ? '99+' : String(n);
+  const b = document.getElementById('statut-btn');
+  if (b) {
+    const badge = b.querySelector('.statut-n');
+    badge.textContent = compte;
+    badge.hidden = n <= 0;
+    b.querySelector('.presence-dot').classList.toggle('is-online', !P.masque);
+    // Ordinateur (bouton) : le libellé est sur le voyant. Téléphone (indicateur aria-hidden) : c'est la photo qui le porte.
+    if (b.tagName === 'BUTTON') { b.setAttribute('aria-label', `Statut et notifications : ${etat}, ${nb}`); b.title = b.getAttribute('aria-label'); }
+  }
+  const photo = document.querySelector('.site-header .nav-me');
+  if (photo && P.me?.pseudo) photo.setAttribute('aria-label', surTel() ? `Mon menu (${P.me.pseudo}), statut : ${etat}, ${nb}` : `Mon menu (${P.me.pseudo})`);
+  // Entrée « Statut » du menu en arc (téléphone seulement, voir header.js)
+  const entree = document.querySelector('.site-header .nav-statut-open');
+  if (entree) {
+    entree.setAttribute('aria-label', `Statut et notifications : ${etat}, ${nb}`);
+    const bd = entree.querySelector('.nav-badge');
+    if (bd) { bd.textContent = compte; bd.hidden = n <= 0; }
+  }
 }
 
 /** Contenu du panneau (liste, actions, réglage du statut). */
@@ -171,7 +193,8 @@ async function basculer(ouvrir = !P.ouvert) {
   const box = document.getElementById('notif-panel');
   if (!b || !box) return;
   P.ouvert = ouvrir;
-  b.setAttribute('aria-expanded', String(ouvrir));
+  if (b.tagName === 'BUTTON') b.setAttribute('aria-expanded', String(ouvrir));
+  document.querySelector('.site-header .nav-statut-open')?.setAttribute('aria-expanded', String(ouvrir));
   box.hidden = !ouvrir;
   if (!ouvrir) return;
   box.innerHTML = panneauHtml();
@@ -205,13 +228,19 @@ function monterVoyant() {
   const wrap = document.querySelector('.site-header .nav-me-wrap');
   if (!wrap || document.getElementById('statut-btn')) return;
   P.ouvert = false;
-  // Voyant : un bouton distinct de la photo (qui, elle, ouvre toujours le menu en arc).
-  const b = document.createElement('button');
-  b.type = 'button';
+  // Voyant : sur ordinateur, un bouton distinct de la photo (qui, elle, ouvre toujours le menu en arc).
+  // Sur téléphone, un simple indicateur (span aria-hidden, sans clic ni focus) : le statut s'ouvre depuis le menu de la photo.
+  const tel = surTel();
+  const b = document.createElement(tel ? 'span' : 'button');
   b.id = 'statut-btn';
-  b.className = 'statut-voyant';
-  b.setAttribute('aria-expanded', 'false');
-  b.setAttribute('aria-controls', 'notif-panel');
+  b.className = tel ? 'statut-voyant statut-voyant--indicateur' : 'statut-voyant';
+  if (tel) {
+    b.setAttribute('aria-hidden', 'true');
+  } else {
+    b.type = 'button';
+    b.setAttribute('aria-expanded', 'false');
+    b.setAttribute('aria-controls', 'notif-panel');
+  }
   b.innerHTML = '<span class="statut-n" aria-hidden="true" hidden>0</span><span class="presence-dot" aria-hidden="true"></span>';
   // Panneau des notifications : rattaché au même conteneur (positionné sous la photo sur ordinateur, en bandeau sur téléphone).
   const box = document.createElement('div');
@@ -221,7 +250,7 @@ function monterVoyant() {
   box.setAttribute('aria-labelledby', 'notif-h');
   box.hidden = true;
   wrap.append(b, box);
-  b.addEventListener('click', () => {
+  if (!tel) b.addEventListener('click', () => {
     // Le voile du menu en arc couvre la page : on le referme d'abord, sinon le panneau s'ouvre sous le voile.
     if (document.querySelector('.site-header.fan-open')) document.querySelector('.me-fan .fan-scrim')?.click();
     basculer();
@@ -246,15 +275,22 @@ function monterVoyant() {
   if (!P.docBound) {
     P.docBound = true;
     document.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape' && P.ouvert) { basculer(false); document.getElementById('statut-btn')?.focus(); }
+      if (ev.key === 'Escape' && P.ouvert) { basculer(false); retourFocus(); }
     });
-    // composedPath : le panneau a pu être redessiné pendant le clic (la cible n'est alors plus dans la page).
-    // Un clic hors du voyant et du panneau (y compris sur la photo) referme le panneau.
+    // Téléphone : l'entrée « Statut » du menu en arc ouvre le panneau (l'arc se referme, voir header.js). Traitée avant le
+    // contrôle « clic ailleurs », pour que ce clic ne referme pas le panneau qu'il vient d'ouvrir.
     document.addEventListener('click', (ev) => {
+      if (ev.target.closest?.('.site-header .nav-statut-open')) { basculer(true); return; }
       if (!P.ouvert) return;
       const chemin = ev.composedPath();
       const dedans = chemin.includes(document.getElementById('statut-btn')) || chemin.includes(document.getElementById('notif-panel'));
       if (!dedans) basculer(false);
+    });
+    // Passage du téléphone à l'ordinateur (ou l'inverse) : le voyant est reconstruit dans la bonne forme.
+    matchMedia(TEL).addEventListener('change', () => {
+      document.getElementById('statut-btn')?.remove();
+      document.getElementById('notif-panel')?.remove();
+      monterVoyant();
     });
   }
   peindreVoyant();

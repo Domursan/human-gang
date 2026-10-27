@@ -27,6 +27,7 @@ import { paintGod, openGodDialog, disableGodMode, isGodMode } from './godmode.js
 import { avatarHtml, esc, reducedMotion } from './util.js';
 import {
   ICON_MSG, ICON_DOOR, ICON_PREFS, ICON_BOLT, ICON_USER, ICON_HELP, ICON_MENU, ICON_SEARCH, ICON_CHEVRON, ICON_CHEVRON_RIGHT, ICON_SHIELD,
+  ICON_STATUT,
 } from './icons.js';
 import { bindSearch } from './search.js';
 import { bindShortcuts } from './shortcuts.js';
@@ -243,6 +244,9 @@ function fanHtml(profile) {
       <${tag} class="fan-item ${cls}" ${attrs}><span class="fan-ico">${icon}</span>${extra}<span class="fan-label">${esc(label)}</span></${tag}></li>`;
   return [
     item('nav-msg', 'a', `href="/pages/compte/messages.html"${curAttr('/pages/compte/messages.html')} aria-label="Messages"`, ICON_MSG, 'Messages', '<span class="nav-badge" hidden></span>'),
+    // Statut et notifications : au téléphone seulement (le voyant de la photo n'est plus cliquable). Caché par layoutFan
+    // sur ordinateur ; son libellé et son compteur sont tenus à jour par presence.js (peindreVoyant).
+    item('nav-statut-open', 'button', 'type="button" aria-controls="notif-panel" aria-label="Statut et notifications" hidden', ICON_STATUT, 'Statut', '<span class="nav-badge" hidden></span>'),
     item('nav-search-open', 'button', 'type="button" aria-haspopup="dialog" aria-label="Rechercher (Ctrl ou Cmd + K)"', ICON_SEARCH, 'Recherche'),
     item('nav-account', 'a', `href="/pages/compte/compte.html"${curAttr('/pages/compte/compte.html')} aria-label="Mon compte"`, ICON_USER, 'Mon compte'),
     item('nav-help', 'a', `href="/pages/infos/aide.html"${curAttr('/pages/infos/aide.html')} aria-label="Aide et tutos"`, ICON_HELP, 'Aide et tutos'),
@@ -254,7 +258,9 @@ function fanHtml(profile) {
 }
 
 /** Rayons (px) des deux rangées et taille des boutons, selon la largeur d'écran. */
-const fanGeom = () => (matchMedia('(max-width: 760px)').matches ? { r1: 88, r2: 168, size: 46 } : { r1: 110, r2: 205, size: 52 });
+const fanGeom = () => (matchMedia('(max-width: 760px)').matches
+  ? { telephone: true, r1: 96, pas: 92, size: 46 }   // téléphone : rangées de 3 sur des arcs concentriques (pas entre arcs)
+  : { telephone: false, r1: 110, r2: 205, size: 52 });
 
 /**
  * Place les icônes visibles en quart de cercle (vers le bas et la gauche) autour de la photo : 3 sur la rangée proche,
@@ -267,15 +273,24 @@ function layoutFan(header) {
   if (!me || !fan) return;
   const r = me.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  const { r1, r2, size } = fanGeom();
+  const g = fanGeom();
+  const { r1, size } = g;
   fan.style.setProperty('--fan-x', `${cx}px`);
   fan.style.setProperty('--fan-y', `${cy}px`);
-  fan.style.setProperty('--fan-r2', `${r2 + size}px`);
   fan.style.setProperty('--fan-size', `${size}px`);
-  const lis = [...fan.querySelectorAll('.fan-li')].filter((li) => !li.querySelector('.fan-item[hidden]'));
-  const rows = [lis.slice(0, 3), lis.slice(3)];
+  // Entrée « Statut » : seulement au téléphone (même seuil que fanGeom et le menu replié)
+  const statut = fan.querySelector('.nav-statut-open');
+  if (statut) { const tel = !matchMedia('(min-width: 761px)').matches; statut.hidden = !tel; statut.closest('.fan-li').hidden = !tel; }
+  const lis =[...fan.querySelectorAll('.fan-li')].filter((li) => !li.querySelector('.fan-item[hidden]'));
+  // Bureau : 3 entrées près de la photo, le reste sur un second arc (inchangé).
+  // Téléphone : 3 entrées par arc, arcs concentriques espacés de « pas » (le rayon grandit avec le nombre d'entrées).
+  const rows = g.telephone
+    ? Array.from({ length: Math.ceil(lis.length / 3) }, (_, k) => lis.slice(3 * k, 3 * k + 3))
+    : [lis.slice(0, 3), lis.slice(3)];
+  const rayon = (k) => (g.telephone ? r1 + k * g.pas : (k ? g.r2 : r1));
+  fan.style.setProperty('--fan-r2', `${rayon(Math.max(0, rows.length - 1)) + size}px`);
   rows.forEach((row, k) => {
-    const rad = k ? r2 : r1;
+    const rad = rayon(k);
     row.forEach((li, i) => {
       const a = row.length > 1 ? (Math.PI / 2) * (i / (row.length - 1)) : Math.PI / 4;
       li.style.setProperty('--x', `${Math.round(cx - rad * Math.cos(a))}px`);
@@ -437,7 +452,8 @@ export function renderHeader(profile, { nav = true } = {}) {
     const it = e.target.closest('.fan-item');
     if (!it) return;
     // Recherche, affichage, mode sans limite : leur dialogue s'ouvre, l'arc se ferme sans reprendre le focus.
-    if (it.matches('.prefs-open, .nav-god, .nav-search-open, a')) setFan(header, false);
+    // Statut : l'arc se ferme, c'est presence.js qui ouvre le panneau des notifications (clic délégué sur le document).
+    if (it.matches('.prefs-open, .nav-god, .nav-search-open, .nav-statut-open, a')) setFan(header, false);
   });
   fan.addEventListener('focusout', (e) => {
     if (header.classList.contains('fan-open') && e.relatedTarget && !fan.contains(e.relatedTarget) && e.relatedTarget !== me) setFan(header, false);
