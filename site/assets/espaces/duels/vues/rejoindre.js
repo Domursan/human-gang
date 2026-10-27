@@ -1,17 +1,21 @@
 // ===== Humane Gang — Duels : rejoindre un duel (#rejoindre/CODE) =====
 /*
  * Rôle : quatre parcours selon le visiteur et l'état du duel.
- *   Membre défié (duel.etat → moi.defie) : carte du défi avec l'hôte, les réglages et le décompte (duel.etat → defi_expire),
- *     « Accepter le duel » (duel.rejoindre) ou « Refuser » (duel.refuser).
- *   Membre déjà joueur : ouvre directement #partie/CODE.
+ *   Membre déjà joueur (y compris un défi déjà accepté) : ouvre directement #partie/CODE.
+ *   Membre défié (duel.etat → moi.defie), défi encore ouvert (statut « attente ») : carte du défi avec l'hôte, les réglages
+ *     et le décompte (duel.etat → defi_expire), « Accepter le duel » (duel.rejoindre) ou « Refuser » (duel.refuser).
+ *     Tant que la carte est ouverte, l'état est suivi (suivrePartie : temps réel + relecture) : si l'hôte annule ou si le défi
+ *     expire, la carte est remplacée par « Ce défi n'est plus ouvert ».
+ *   Membre défié, défi annulé, expiré ou déjà joué sans lui : carte « Ce défi n'est plus ouvert » (pas de bouton Accepter :
+ *     hg_duel_etat renvoie moi.defie même pour un défi annulé, et l'ancien écran proposait d'accepter un défi mort).
  *   Autre membre : rejoint (duel.rejoindre) puis #partie/CODE. Erreur lisible dans une carte.
  *   Invité (estInvite) : si un jeton existe pour ce duel, #partie/CODE ; sinon l'invitation (duel.apercu),
  *     champ « Ton pseudo » et duel.rejoindreInvite. Pas de lien vers l'accueil.
- * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, estInvite, jetonInvite, JEUX), vues/commun.js (avatarHtml, nomJoueur).
+ * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, estInvite, jetonInvite, suivrePartie, JEUX), vues/commun.js (avatarHtml, nomJoueur).
  * Exporte : afficher.
  */
 import { esc, toast } from '../../../commun/core.js';
-import { duel, erreurTexte, estInvite, jetonInvite, JEUX } from '../api.js';
+import { duel, erreurTexte, estInvite, jetonInvite, suivrePartie, JEUX } from '../api.js';
 import { avatarHtml, nomJoueur } from './commun.js';
 
 const FORMATS = { 1: '1 manche', 3: 'Au meilleur des 3', 5: 'Au meilleur des 5' };
@@ -35,17 +39,55 @@ function reglages(p) {
   return `<ul class="duels-reglages-pastilles" aria-label="Réglages du duel">${items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
 }
 
+/** Hôte du défi (joueur de l'état), ou un nom générique. */
+const hoteDe = (e) => (e.joueurs || []).find((j) => j.user_id === e.partie?.hote) || { pseudo: 'Un membre' };
+
+/** Vrai si le défi reçu est encore ouvert : en attente et pas expiré (heure du serveur). */
+function defiOuvert(e) {
+  const p = e?.partie;
+  if (!p || p.statut !== 'attente') return false;
+  if (!p.defi_expire) return true;
+  const maintenant = e.maintenant ? new Date(e.maintenant).getTime() : Date.now();
+  return new Date(p.defi_expire).getTime() > maintenant;
+}
+
 /**
- * Membre défié : affiche le défi, décompte l'expiration, accepte ou refuse.
- * @returns {Function} nettoyage (arrête le décompte).
+ * Défi qui n'est plus ouvert (annulé par l'hôte, refusé, expiré, ou déjà commencé sans moi) : explication, puis
+ * « Le défier à ton tour » (nouveau défi vers l'hôte) et le retour aux duels.
+ */
+function defiFerme(root, e) {
+  const p = e.partie || {};
+  const hote = hoteDe(e);
+  const nom = esc(hote.pseudo || 'Un membre');
+  let texte;
+  if (p.statut === 'attente') texte = `Le défi de ${nom} a expiré.`;
+  else if (p.statut === 'annulee') texte = `Le défi de ${nom} n'est plus ouvert : il a été annulé ou le délai de réponse est passé.`;
+  else if (p.statut === 'en_cours') texte = 'Ce duel a déjà commencé.';
+  else texte = 'Ce duel est terminé.';
+  const revanche = p.hote
+    ? `<a class="btn btn-primary duels-pleine" href="#creer/membre/${encodeURIComponent(p.hote)}">Le défier à ton tour</a>` : '';
+  root.innerHTML = `<section class="card duels-rejoindre duels-defi duels-defi-ferme" aria-labelledby="defi-titre">
+    <div class="duels-defi-tete">${avatarHtml(hote, { taille: 72 })}</div>
+    <h1 id="defi-titre" class="duels-defi-titre">Ce défi n'est plus ouvert</h1>
+    <p class="duels-invitation" role="status">${texte}</p>
+    ${revanche}
+    <a class="btn btn-ghost duels-pleine" href="/pages/jeux/duels.html">Retour aux duels</a>
+  </section>`;
+}
+
+/**
+ * Membre défié : affiche le défi, décompte l'expiration, accepte ou refuse. Suit l'état du duel tant que la carte
+ * est ouverte (annulation par l'hôte, expiration côté serveur).
+ * @returns {Function} nettoyage (arrête le décompte et le suivi).
  */
 function defi(root, code, e, naviguer) {
   const p = e.partie;
-  const hote = (e.joueurs || []).find((j) => j.user_id === p.hote) || { pseudo: 'Un membre' };
+  const hote = hoteDe(e);
   const decalage = new Date(e.maintenant).getTime() - Date.now();
   const fin = p.defi_expire ? new Date(p.defi_expire).getTime() : null;
   let occupe = false;
   let expire = false;
+  let ferme = false;
 
   root.innerHTML = `<section class="card duels-rejoindre duels-defi" aria-labelledby="defi-titre">
     <div class="duels-defi-tete">${avatarHtml(hote, { taille: 72 })}</div>
@@ -81,8 +123,26 @@ function defi(root, code, e, naviguer) {
   maj();
   const tic = setInterval(maj, 1000);
 
+  let suivi = null;
+  /** Le défi n'est plus ouvert : la carte est remplacée (une seule fois), le suivi s'arrête. */
+  const fermer = (etat) => {
+    if (ferme) return;
+    ferme = true;
+    clearInterval(tic);
+    suivi?.arreter();
+    defiFerme(root, etat);
+  };
+  /** Suivi de l'état (temps réel + relecture) : l'hôte peut annuler pendant que la carte est affichée. */
+  suivi = suivrePartie(code, {
+    onEtat: (etat) => {
+      if (ferme || occupe || !etat?.partie) return;
+      if (etat.moi?.joue) { naviguer(`#partie/${encodeURIComponent(code)}`); return; }
+      if (etat.partie.statut !== 'attente') fermer(etat);
+    },
+  });
+
   accepter.addEventListener('click', async () => {
-    if (occupe || expire) return;
+    if (occupe || expire || ferme) return;
     occupe = true;
     accepter.textContent = 'Connexion…';
     boutons();
@@ -90,7 +150,13 @@ function defi(root, code, e, naviguer) {
       await duel.rejoindre(code);
       naviguer(`#partie/${encodeURIComponent(code)}`);
     } catch (err) {
+      // Défi fermé entre-temps (annulé, expiré) : le serveur répond « Ce duel a déjà commencé. », ce qui est trompeur.
+      // On relit l'état pour afficher la vraie raison.
+      let etat = null;
+      try { etat = await duel.etat(code); } catch { etat = null; }
       occupe = false;
+      if (etat?.moi?.joue) { naviguer(`#partie/${encodeURIComponent(code)}`); return; }
+      if (etat?.partie && !defiOuvert(etat)) { fermer(etat); return; }
       accepter.textContent = 'Accepter le duel';
       boutons();
       toast(erreurTexte(err), 'error');
@@ -104,21 +170,29 @@ function defi(root, code, e, naviguer) {
       await duel.refuser(code);
       naviguer('');
     } catch (err) {
+      let etat = null;
+      try { etat = await duel.etat(code); } catch { etat = null; }
       occupe = false;
+      if (etat?.partie && !defiOuvert(etat)) { fermer(etat); return; }
       boutons();
       toast(erreurTexte(err), 'error');
     }
   });
 
-  return () => clearInterval(tic);
+  return () => { clearInterval(tic); suivi.arreter(); };
 }
 
 /** Membre (pas défié) : rejoint le duel puis ouvre sa page. */
 async function membre(root, code, naviguer) {
   let e = null;
   try { e = await duel.etat(code); } catch { e = null; } // pas encore joueur : l'état peut être refusé
-  if (e?.moi?.defie) return defi(root, code, e, naviguer);
+  // Déjà joueur d'abord : un défi accepté garde moi.defie (le lien de la notification mène alors à la partie).
   if (e?.moi?.joue) { naviguer(`#partie/${encodeURIComponent(code)}`); return undefined; }
+  if (e?.moi?.defie) {
+    if (defiOuvert(e)) return defi(root, code, e, naviguer);
+    defiFerme(root, e);
+    return undefined;
+  }
 
   try {
     await duel.rejoindre(code);

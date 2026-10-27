@@ -320,7 +320,12 @@ export async function afficher(root, { naviguer }) {
       await duel.refuser(code);
       toast('Défi refusé.');
     } catch (err) {
-      toast(erreurTexte(err), 'error');
+      // Défi annulé ou expiré depuis la dernière relecture : le serveur répond « Ce duel a déjà commencé. » (trompeur).
+      let ferme = false;
+      if (bouton.dataset.action === 'accepter') {
+        try { ferme = (await duel.etat(code))?.partie?.statut !== 'attente'; } catch { ferme = false; }
+      }
+      toast(ferme ? 'Ce défi n’est plus ouvert : il a été annulé ou le délai de réponse est passé.' : erreurTexte(err), 'error');
     }
     occupes.delete(code);
     delete rendu.defis;
