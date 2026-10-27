@@ -111,8 +111,11 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
     // Les bancs et les fixtures sont sous /tests/ (dossier tests/, hors du site servi) : seul ce préfixe leur est ouvert.
     const sousTests = /^\/tests\//.test(rel);
     const base = sousTests ? TESTS : ROOT;
-    let f = path.join(base, decodeURIComponent(sousTests ? rel.slice('/tests'.length) : rel));
-    if (!f.startsWith(base + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
+    // Modèles du bot : publiés depuis supabase/functions/_shared/ (copie faite par publier-site.yml), jamais dans site/.
+    const MODELES_BOT = '/assets/espaces/admin/bot-templates.json';
+    const modeles = rel === MODELES_BOT ? path.join(DEPOT, 'supabase/functions/_shared/bot-templates.json') : null;
+    let f = modeles || path.join(base, decodeURIComponent(sousTests ? rel.slice('/tests'.length) : rel));
+    if (!modeles && !f.startsWith(base + path.sep)) return route.fulfill({ status: 403, body: 'interdit' });
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
     if (!fs.existsSync(f)) { // comme GitHub Pages : une adresse inconnue reçoit 404.html, avec le statut 404
       const page404 = path.join(ROOT, '404.html');
