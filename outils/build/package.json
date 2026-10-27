@@ -1,0 +1,16 @@
+{
+  "name": "human-gang-build",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Outil de publication du site Humane Gang : regroupe et compresse le JS et le CSS dans _site/ (voir construire.mjs)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "construire": "node construire.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

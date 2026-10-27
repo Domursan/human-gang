@@ -1,7 +1,8 @@
-# Publication du site (dossier site/) sur GitHub Pages, à chaque envoi sur main.
+# Publication du site sur GitHub Pages, à chaque envoi sur main.
 #
 # À faire UNE fois dans GitHub : Settings > Pages > Source : « GitHub Actions » (et non « Deploy from a branch »).
-# Seul le contenu de site/ est publié : le reste du dépôt (supabase/, outils/, tests/…) ne sort pas.
+# Le site publié est construit depuis site/ dans _site/ (outils/build/construire.mjs : JS et CSS regroupés) ;
+# seul _site/ est publié : le reste du dépôt (supabase/, outils/, tests/…) ne sort pas.
 # site/.nojekyll désactive Jekyll ; site/CNAME garde le domaine humane-gang.com.
 name: Publier le site
 
@@ -32,9 +33,19 @@ jobs:
       # Outil de test de l'admin (simulateur de téléphone) : gardé dans le dépôt pour l'usage local, jamais mis en ligne
       - name: Retirer les outils non publiés
         run: rm -f site/pages/jeux/simulateur.html site/assets/espaces/jeux/simulateur.js
+      # Construction du site publié (dossier _site/) : JS et CSS regroupés et compressés, site/ reste lisible.
+      # Outil : outils/build/construire.mjs (esbuild, voir outils/build/package.json).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer l'outil de construction (esbuild)
+        working-directory: outils/build
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+      - name: Construire le site publié (_site/)
+        run: node outils/build/construire.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
 
   deploy:
     needs: build
