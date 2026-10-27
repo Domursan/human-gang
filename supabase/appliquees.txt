@@ -15,3 +15,4 @@
 2026-10-26T21:22:11.963Z ok supabase/migrations/152_plat_nom.sql
 2026-10-26T21:59:24.716Z ok supabase/migrations/153_presence_notifs.sql
 2026-10-27T13:46:06.354Z ok supabase/migrations/154_theme_worlds_retire.sql
+2026-10-27T14:29:09.800Z ok supabase/migrations/157_jeux_classement.sql
