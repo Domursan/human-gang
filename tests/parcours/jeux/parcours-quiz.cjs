@@ -7,6 +7,7 @@
 const { ROOT, SHOTS, check, finish, openPage, hscroll, log, sleep, chromium } = require('../../lib/harness.cjs');
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 /** Attend que la question id ait quitté les ouvertes (elle est répondue) : le bandeau du tour est alors à jour. */
 async function attendApres(p, id) {
@@ -151,9 +152,13 @@ async function attendApres(p, id) {
   await p.ctx.close();
 
   /* ---------- Tuto ---------- */
-  const tuto = fs.existsSync(path.join(ROOT, 'assets/espaces/infos/tutos/cartes-avance.js'))
-    ? fs.readFileSync(path.join(ROOT, 'assets/espaces/infos/tutos/cartes-avance.js'), 'utf8') : '';
-  check(tuto.includes("slug: 'questions-du-gang'") && tuto.includes("page: '/pages/jeux/quiz.html'"), 'tuto : « questions-du-gang » pointe vers /pages/jeux/quiz.html');
+  // Lu comme module, pas comme texte : dans une version construite ce fichier est un relais vers assets/_b/ (adresse absolue
+  // « /assets/_b/… », que Node ne résout pas depuis le disque) ; on suit alors le relais jusqu'au fichier regroupé.
+  const origine = path.join(ROOT, 'assets/espaces/infos/tutos/cartes-avance.js');
+  const relais = fs.readFileSync(origine, 'utf8').match(/from "\/(assets\/_b\/[^"]+)"/);
+  let tuto = null;
+  try { tuto = (await import(pathToFileURL(relais ? path.join(ROOT, relais[1]) : origine).href)).default.tutos.find((t) => t.slug === 'questions-du-gang') || null; } catch (e) { /* signalé plus bas */ }
+  check(!!tuto && tuto.page === '/pages/jeux/quiz.html', 'tuto : « questions-du-gang » pointe vers /pages/jeux/quiz.html');
 
   await browser.close();
   finish();
