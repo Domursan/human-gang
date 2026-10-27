@@ -4,7 +4,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { ROOT, check, finish, chromium } = require('../lib/harness.cjs');
+const { ROOT, TESTS, check, finish, chromium } = require('../lib/harness.cjs');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' };
 
@@ -13,8 +13,10 @@ function serve() {
   return new Promise((resolve) => {
     const srv = http.createServer((req, res) => {
       const url = decodeURIComponent(req.url.split('?')[0]);
-      const file = path.join(ROOT, url);
-      if (!file.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+      // /tests/… (fixtures) est servi depuis tests/, le reste depuis le site.
+      const base = url.startsWith('/tests/') ? TESTS : ROOT;
+      const file = path.join(base, url.startsWith('/tests/') ? url.slice('/tests'.length) : url);
+      if (!file.startsWith(base)) { res.writeHead(403); return res.end(); }
       fs.readFile(file, (err, data) => {
         if (err) { res.writeHead(404); return res.end('introuvable'); }
         res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });

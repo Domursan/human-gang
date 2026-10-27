@@ -27,7 +27,7 @@ const PAGES = [
 /* ---------- État ---------- */
 
 const $ = (s) => document.querySelector(s);
-const base = new URL('./', location.href);
+const base = new URL('/', location.href); // racine du site : les chemins de la liste sont absolus
 /** Préférences mémorisées dans ce navigateur (appareil, zoom, page). */
 const saved = (() => { try { return JSON.parse(localStorage.getItem('hg_simulateur') || '{}'); } catch { return {}; } })();
 const state = {
@@ -104,7 +104,7 @@ function applyZoom() {
 function onFrameLoad(frame) {
   try {
     const loc = frame.contentWindow.location;
-    const rel = loc.href.startsWith(base.href) ? loc.href.slice(base.href.length) : loc.href;
+    const rel = loc.href.startsWith(base.href) ? '/' + loc.href.slice(base.href.length) : loc.href;
     if (rel && rel !== state.path) { state.path = rel; persist(); }
     $('#url').value = state.path;
     syncPageSelect();
@@ -119,7 +119,7 @@ function syncPageSelect() {
 
 /** Charge une page dans tous les téléphones affichés. */
 function go(path) {
-  state.path = path.replace(/^\.?\//, '') || '/pages/compte/accueil.html';
+  state.path = '/' + (path.replace(/^\.?\/+/, '') || 'pages/compte/accueil.html');
   persist();
   $('#url').value = state.path;
   syncPageSelect();

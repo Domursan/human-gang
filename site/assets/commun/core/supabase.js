@@ -41,7 +41,7 @@ const VERIFIER_KEY = `sb-${PROJECT_REF}-auth-token-code-verifier`;
 /** Pages qui reçoivent les retours d'e-mail. */
 const URL_SESSION_PAGES = new Set(['/pages/compte/compte.html']);
 const _here = new URL(location.href);
-const _page = _here.pathname.split('/').pop() || '/index.html';
+const _page = _here.pathname; // adresse complète (les pages sont rangées par dossier)
 const _code = _here.searchParams.get('code') || '';
 const _isAuthCode = /^[0-9a-f-]{36}$/i.test(_code);
 let _verifier = false;
