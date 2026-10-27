@@ -1,4 +1,4 @@
-// ===== Humane Gang — accueil personnalisable : mode édition (idée P9, accueil.html) =====
+// ===== Humane Gang — accueil personnalisable : mode édition (idée P9, /pages/compte/accueil.html) =====
 // Chargé au clic sur « Personnaliser ». La page passe en mode édition : liste des blocs affichés avec poignée
 // (glisser-déposer à la souris), boutons Monter / Descendre (clavier et tactile), interrupteur Affiché / Masqué,
 // étiquette « Obligatoire » ou « Nouveau » ; réserve « Blocs disponibles » ; profils types en un tap
@@ -6,7 +6,7 @@
 // « Terminé » enregistre (base + copie locale) : un simple changement d'ordre est appliqué sur place, un bloc affiché
 // ou masqué recharge la page (seuls les blocs visibles chargent leurs données).
 // Dépendances : core.js, home-registry.js. Exporte : openHomeEditor(o).
-import { esc, toast, errMsg } from './core.js';
+import { esc, toast, errMsg } from '../../commun/core.js';
 import { HOME_PROFILES } from './home-registry.js';
 
 const GRIP = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>';

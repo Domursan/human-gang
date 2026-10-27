@@ -73,7 +73,7 @@ async function fetchGroup(key) {
         const id = okId(e.id);
         if (!id) return [];
         const sub = [e.location, fmtDate(e.starts_at)].filter(Boolean).join(' · ');
-        return [{ title: e.title || 'Sans titre', sub, href: `irl.html#event-${id}`, hay: foldText(`${e.title ?? ''}\n${e.location ?? ''}`) }];
+        return [{ title: e.title || 'Sans titre', sub, href: `/pages/irl/irl.html#event-${id}`, hay: foldText(`${e.title ?? ''}\n${e.location ?? ''}`) }];
       });
       return { items };
     }
@@ -83,7 +83,7 @@ async function fetchGroup(key) {
       if (error) throw error;
       const items = (data ?? []).flatMap((m) => {
         if (!okId(m.id)) return [];
-        return [{ title: m.title || 'Sans titre', sub: fmtDate(m.happened_on), href: 'historique.html', hay: foldText(`${m.title ?? ''}\n${m.body ?? ''}`) }];
+        return [{ title: m.title || 'Sans titre', sub: fmtDate(m.happened_on), href: '/pages/irl/historique.html', hay: foldText(`${m.title ?? ''}\n${m.body ?? ''}`) }];
       });
       return { items };
     }
@@ -97,7 +97,7 @@ async function fetchGroup(key) {
       .flatMap((p) => {
         const id = okId(p.id);
         if (!id) return [];
-        return [{ title: p.pseudo || 'Membre', avatar: p, href: `membre.html?id=${id}`, hay: foldText(p.pseudo ?? '') }];
+        return [{ title: p.pseudo || 'Membre', avatar: p, href: `/pages/compte/membre.html?id=${id}`, hay: foldText(p.pseudo ?? '') }];
       });
     return { items };
   } catch (e) {
@@ -195,7 +195,7 @@ function renderResults(d, q) {
  */
 function essaieMotSecret(d, valeur) {
   if (!/^[a-z]{2,12}$/i.test(valeur.trim())) { renderResults(d, valeur); return; }
-  import('../eggs/core.js')
+  import('../../espaces/arcade/core.js')
     .then((m) => {
       if (d.querySelector('#search-q')?.value !== valeur) return; // la saisie a changé entre-temps
       if (m.tryWordSecret(valeur)) d.close();

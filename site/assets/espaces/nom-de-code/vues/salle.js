@@ -9,7 +9,7 @@
  * Dépendances : core.js (esc, avatarHtml, toast), nom-de-code/api.js (ndc, erreurTexte, estInvite, EQUIPES), vues/chat.js (creerChat).
  * Exporte : creer.
  */
-import { esc, avatarHtml, toast } from '../../core.js';
+import { esc, avatarHtml, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, estInvite, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
 
@@ -75,7 +75,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="ndc-salle">
-      <nav class="ndc-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="nom-de-code.html">Codenames</a> › <span>Salle d'attente</span></nav>
+      <nav class="ndc-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span>Salle d'attente</span></nav>
 
       <div data-zone-adieu hidden class="card ndc-salle-adieu">
         <h2>Tu as quitté la salle</h2>

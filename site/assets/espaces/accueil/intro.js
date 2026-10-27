@@ -1,12 +1,12 @@
-// ===== Intro « 3D » (index.html) : le défilement pilote une caméra qui plonge dans le cœur du logo, sous un ciel étoilé =====
+// ===== Intro « 3D » (/index.html) : le défilement pilote une caméra qui plonge dans le cœur du logo, sous un ciel étoilé =====
 // Pas de Supabase ici : la page doit rester légère. Le logo est déjà dans le HTML (préchargé).
 // Dépendances : utils.js (rnd), core/site-defaults.js (textes de l'intro), et le localStorage (hg_intro_day, hg_prefs).
-// Deux versions : mouvement réduit (ciel fixe, fondu) ou complète (défilement, caméra 3D). Sortie vers accueil.html.
+// Deux versions : mouvement réduit (ciel fixe, fondu) ou complète (défilement, caméra 3D). Sortie vers /pages/compte/accueil.html.
 // N'exporte rien.
 
 /* ---------- Imports, constantes et éléments de la page ---------- */
-import { rnd } from './utils.js';
-const NEXT = 'accueil.html';
+import { rnd } from '../../commun/utils.js';
+const NEXT = '/pages/compte/accueil.html';
 const PERSPECTIVE = 1000;       // doit correspondre à .intro-stage { perspective }
 const MAX_SCALE = 26;           // grossissement du logo en fin de course
 
@@ -16,7 +16,7 @@ const world = $('world'), logo = $('logo'), img = $('logo-img');
 const glow = $('glow'), hint = $('hint'), fade = $('fade'), canvas = $('sky');
 const progressEl = $('progress'), fill = $('progress-fill'), skip = $('skip'), enterBtn = $('enter');
 
-import { applySiteDom } from './core/site-defaults.js';
+import { applySiteDom } from '../../commun/core/site-defaults.js';
 applySiteDom(); // textes de l'intro (cache des réglages du site)
 
 /* ---------- Jour de l'intro (une fois par jour, comme intro-daily.js) ---------- */

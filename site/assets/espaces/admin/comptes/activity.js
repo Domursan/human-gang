@@ -6,8 +6,8 @@
 // Tables/Storage : hg_event_rsvps, hg_photos + bucket hg-photos, hg_ideas, hg_support, hg_user_badges.
 // Exporte : irlHtml, setRsvp, photosHtml, deletePhoto, contribHtml, badgesHtml, toggleBadge.
 // =====================================================================
-import { sb, toast, errMsg, esc, fmtDate, fmtDateTime } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, errMsg, esc, fmtDate, fmtDateTime } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { IC, check, tabError } from './common.js';
 import { A, RSVP, IDEA, dropFicheCache } from './state.js';
 

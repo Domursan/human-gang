@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), uno/api.js (uno, erreurTexte, estInvite, jetonInvite).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite, jetonInvite } from '../api.js';
 
 const VARIANTES_NOMS = {
@@ -17,7 +17,7 @@ const VARIANTES_NOMS = {
   interception: 'Interception',
 };
 const MODES_NOMS = { manche: 'Manche simple', points: 'Partie en 500 points' };
-const LIEN_UNO = '<a class="btn btn-ghost uno-retour" href="uno.html">Retour au Uno</a>';
+const LIEN_UNO = '<a class="btn btn-ghost uno-retour" href="/pages/jeux/uno.html">Retour au Uno</a>';
 
 /** Carte d'erreur (la page reste utilisable : retour au Uno). */
 function carteErreur(msg) {
@@ -36,7 +36,7 @@ function montrerErreur(root, msg) {
 /** Membre : rejoint la partie puis ouvre la salle d'attente. */
 async function rejoindreMembre(root, code, naviguer) {
   root.innerHTML = `<section class="card uno-rejoindre-carte" data-rejoindre>
-    <p class="uno-fil">Jeux › <a href="uno.html">Uno</a> › Rejoindre</p>
+    <p class="uno-fil">Jeux › <a href="/pages/jeux/uno.html">Uno</a> › Rejoindre</p>
     <p class="uno-rejoindre-statut" role="status">Connexion à la partie <span class="uno-code">${esc(code)}</span>…</p>
   </section>`;
   try {
@@ -81,7 +81,7 @@ function vueInvitation(p, code) {
       <button type="submit" class="btn btn-primary uno-rejoindre-bouton" data-envoyer>Rejoindre la partie</button>
     </form>
     <p class="uno-aide uno-centre">Pas besoin de compte. Tu joues en invité : pas de Paillettes ni de statistiques.</p>
-    <a class="uno-lien-compte" href="compte.html?next=${encodeURIComponent(`uno.html?code=${code}`)}">J'ai un compte, me connecter</a>
+    <a class="uno-lien-compte" href="/pages/compte/compte.html?next=${encodeURIComponent(`/pages/jeux/uno.html?code=${code}`)}">J'ai un compte, me connecter</a>
   </section>`;
 }
 

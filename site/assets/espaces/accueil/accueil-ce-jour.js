@@ -4,23 +4,23 @@
  *   (moment culte, sortie passée avec ses photos, soirée d'échange du Secret Santa), ou à 3 jours près. Le choix est fait
  *   par le serveur (même souvenir pour tout le monde ce jour-là, heure de Zurich). « Un autre » fait défiler (5 au plus).
  *   Sans souvenir, la tuile reste masquée.
- * Page : accueil.html (vue membre), appelé par accueil.js.
+ * Page : /pages/compte/accueil.html (vue membre), appelé par accueil.js.
  * Dépendances : core.js (sb, esc, errMsg), photos.js (URL signées, visionneuse), reactions.js (barre de réactions), icons.js.
  * RPC : hg_on_this_day.
  * Exporte : loadOnThisDay, dayHeadline.
  */
-import { sb, esc } from './core.js';
-import { signedUrls, openLightbox } from './photos.js';
-import { loadReactions, reactionBarHtml } from './reactions.js';
-import { svg } from './icons.js';
+import { sb, esc } from '../../commun/core.js';
+import { signedUrls, openLightbox } from '../irl/photos.js';
+import { loadReactions, reactionBarHtml } from '../../commun/reactions.js';
+import { svg } from '../../commun/icons.js';
 
 /** Libellé du genre de souvenir, sous la date. */
 const KIND_LABEL = { sortie: 'sortie IRL', moment: 'moment culte', secret_santa: 'Secret Santa' };
 /** Lien et libellé du bouton principal, selon le genre. */
 const KIND_LINK = {
-  sortie: (it) => [`irl.html#event-${encodeURIComponent(it.id)}`, it.photos ? 'Voir l’album' : 'Voir la sortie'],
-  moment: () => ['historique.html', 'Voir l’historique'],
-  secret_santa: () => ['historique.html', 'Voir l’historique'],
+  sortie: (it) => [`/pages/irl/irl.html#event-${encodeURIComponent(it.id)}`, it.photos ? 'Voir l’album' : 'Voir la sortie'],
+  moment: () => ['/pages/irl/historique.html', 'Voir l’historique'],
+  secret_santa: () => ['/pages/irl/historique.html', 'Voir l’historique'],
 };
 /** Date « 23 octobre 2024 » (date SQL lue sans décalage de fuseau). */
 const dayFmt = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -66,7 +66,7 @@ export async function loadOnThisDay(box, me) {
       <div class="day-body" aria-live="polite"></div>
       <div class="day-actions">
         ${items.length > 1 ? '<button type="button" class="btn btn-ghost day-next">Un autre</button>' : ''}
-        <a class="btn btn-sand day-go" href="historique.html"><span>Voir</span>${ARROW}</a>
+        <a class="btn btn-sand day-go" href="/pages/irl/historique.html"><span>Voir</span>${ARROW}</a>
       </div>`;
     const body = box.querySelector('.day-body');
     /** Affiche le souvenir n° i. */

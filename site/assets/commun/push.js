@@ -3,7 +3,7 @@
 // publique lue dans hg_settings), enregistré dans hg_push_subscriptions. Masqué si le navigateur ne gère pas le push.
 /*
  * Rôle : permet au membre d'activer ou de désactiver les notifications push sur CET appareil, depuis la page Mon compte.
- * Page : compte.html (bloc « Notifications sur cet appareil »).
+ * Page : /pages/compte/compte.html (bloc « Notifications sur cet appareil »).
  * Dépendances : core.js (client Supabase, toast, errMsg), sw.js (service worker qui reçoit les notifications).
  * Tables / RPC : hg_settings (clé 'push_vapid_public'), hg_push_subscriptions (une ligne par appareil).
  * Exporte : mountPushBlock.

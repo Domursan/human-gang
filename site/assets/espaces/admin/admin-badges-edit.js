@@ -6,11 +6,11 @@
 // image-compress.js (préparation et variantes des images), ui-confirm.js (confirmation), admin/ui/drawer.js (tiroir).
 // Tables et stockage : hg_badges (lignes, niveaux en JSON), hg_dyn_events (liste des événements), bucket hg-assets (dossier badges/).
 // Exporte : AUTO_BADGES, isAutoBadge, slugify, uniqueCode, openBadgeEditor, deleteBadge.
-import { sb, toast, errMsg, esc, $, fmtDate } from './core.js';
-import { METRICS, roman, sortedLevels } from './badge-levels.js';
-import { prepareImage, otherVariants } from './image-compress.js';
-import { confirmBox } from './ui-confirm.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { sb, toast, errMsg, esc, $, fmtDate } from '../../commun/core.js';
+import { METRICS, roman, sortedLevels } from '../compte/badge-levels.js';
+import { prepareImage, otherVariants } from '../../commun/image-compress.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { openDrawer } from './ui/drawer.js';
 
 /* ---------- Badges automatiques ---------- */
 // Codes des badges attribués automatiquement par la base. Ils ne sont pas créés à la main.

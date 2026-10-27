@@ -22,7 +22,7 @@ const LETTRES = {
   'secret-santa': { n: 7, lettre: 'S' },
 };
 
-/** Nom de la page courante, sans chemin ni extension (« accueil » pour accueil.html). */
+/** Nom de la page courante, sans chemin ni extension (« accueil » pour /pages/compte/accueil.html). */
 const pageCourante = () => location.pathname.split('/').pop().replace(/\.html$/, '');
 
 /**
@@ -33,7 +33,7 @@ function ajouteStyle() {
   if (document.querySelector('link[data-eggs-css]')) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL('../../css/eggs.css', import.meta.url).href;
+  l.href = new URL('./eggs.css', import.meta.url).href;
   l.dataset.eggsCss = '';
   document.head.append(l);
 }

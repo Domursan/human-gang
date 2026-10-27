@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <script src="assets/js/theme-boot.js"></script>
+  <script src="/assets/commun/theme-boot.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Administration · Humane Gang</title>
   <meta name="description" content="Administration du Humane Gang, réservée à l'administrateur.">
-  <link rel="canonical" href="https://humane-gang.com/admin.html">
+  <link rel="canonical" href="https://humane-gang.com/pages/admin/admin.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Humane Gang">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:title" content="Administration · Humane Gang">
   <meta property="og:description" content="Administration du Humane Gang, réservée à l'administrateur.">
-  <meta property="og:url" content="https://humane-gang.com/admin.html">
+  <meta property="og:url" content="https://humane-gang.com/pages/admin/admin.html">
   <meta property="og:image" content="https://humane-gang.com/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -23,76 +23,76 @@
   <meta name="twitter:description" content="Administration du Humane Gang, réservée à l'administrateur.">
   <meta name="twitter:image" content="https://humane-gang.com/assets/img/og-image.png">
   <meta name="robots" content="noindex">
-  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/images/marque/favicon-64.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/images/marque/apple-touch-icon.png">
   <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
-  <link rel="modulepreload" href="assets/vendor/supabase-js-2.45.4.mjs">
+  <link rel="modulepreload" href="/assets/vendor/supabase-js-2.45.4.mjs">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="assets/css/base.css">
-  <link rel="stylesheet" href="assets/css/card-drops.css">
-  <link rel="stylesheet" href="assets/css/ui-confirm.css">
-  <link rel="stylesheet" href="assets/css/admin.css">
-  <link rel="stylesheet" href="assets/css/admin-shell.css">
-  <link rel="stylesheet" href="assets/css/admin-nav.css">
-  <link rel="stylesheet" href="assets/css/admin-ui.css">
-  <link rel="stylesheet" href="assets/css/admin-live.css">
-  <link rel="stylesheet" href="assets/css/admin-accounts.css">
-  <link rel="stylesheet" href="assets/css/admin-messages.css">
-  <link rel="stylesheet" href="assets/css/admin-tools.css">
-  <link rel="stylesheet" href="assets/css/admin-events.css">
-  <link rel="stylesheet" href="assets/css/admin-access.css">
-  <link rel="stylesheet" href="assets/css/admin-roles.css">
-  <link rel="stylesheet" href="assets/css/admin-ghosts.css">
-  <link rel="stylesheet" href="assets/css/cartes-card.css">
-  <link rel="stylesheet" href="assets/css/admin-cards.css">
-  <link rel="stylesheet" href="assets/css/admin-staff.css">
-  <link rel="stylesheet" href="assets/css/admin-sorties.css">
-  <link rel="stylesheet" href="assets/css/admin-souvenirs.css">
-  <link rel="stylesheet" href="assets/css/admin-reglages.css">
-  <link rel="stylesheet" href="assets/css/admin-identite.css">
-  <link rel="stylesheet" href="assets/css/admin-pilotage.css">
-  <link rel="stylesheet" href="assets/css/admin-quiz.css">
-  <link rel="stylesheet" href="assets/css/admin-jeux.css">
-  <link rel="stylesheet" href="assets/css/admin-quiz-stats.css">
-  <link rel="stylesheet" href="assets/css/admin-eggs.css">
-  <link rel="stylesheet" href="assets/css/admin-arcade.css">
-  <link rel="stylesheet" href="assets/css/admin-loup-garou.css">
-  <link rel="stylesheet" href="assets/css/admin-uno.css">
-  <link rel="stylesheet" href="assets/css/admin-duels.css">
-  <link rel="stylesheet" href="assets/css/admin-ndc.css">
-  <link rel="stylesheet" href="assets/css/admin-plateaux.css">
-  <link rel="stylesheet" href="assets/css/admin-fil.css">
-  <link rel="stylesheet" href="assets/css/admin-vd.css">
-  <link rel="stylesheet" href="assets/css/admin-champs.css">
-  <link rel="stylesheet" href="assets/css/admin-proofs.css">
-  <link rel="stylesheet" href="assets/css/admin-planning.css">
-  <link rel="stylesheet" href="assets/css/admin-mj.css">
-  <link rel="stylesheet" href="assets/css/admin-relance.css">
-  <link rel="stylesheet" href="assets/css/social.css">
-  <link rel="stylesheet" href="assets/css/admin-errors.css">
-  <link rel="stylesheet" href="assets/css/admin-eco.css">
-  <link rel="stylesheet" href="assets/css/admin-lieux.css">
+  <link rel="stylesheet" href="/assets/commun/base.css">
+  <link rel="stylesheet" href="/assets/espaces/cartes/card-drops.css">
+  <link rel="stylesheet" href="/assets/commun/ui-confirm.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-shell.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-nav.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-ui.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-live.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-accounts.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-messages.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-tools.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-events.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-access.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-roles.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-ghosts.css">
+  <link rel="stylesheet" href="/assets/espaces/cartes/cartes-card.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-cards.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-staff.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-sorties.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-souvenirs.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-reglages.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-identite.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-pilotage.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-quiz.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-jeux.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-quiz-stats.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-eggs.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-arcade.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-loup-garou.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-uno.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-duels.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-ndc.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-plateaux.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-fil.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-vd.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-champs.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-proofs.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-planning.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-mj.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-relance.css">
+  <link rel="stylesheet" href="/assets/espaces/compte/social.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-errors.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-eco.css">
+  <link rel="stylesheet" href="/assets/espaces/admin/admin-lieux.css">
 </head>
 <body>
   <div class="shell" id="shell" data-screen="page" data-list="no" data-info="no">
     <header class="shell-top" id="shell-top">
-      <a class="shell-logo" href="accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang" data-site-identite="initiales">HG</a>
+      <a class="shell-logo" href="/pages/compte/accueil.html" title="Retour à l'accueil" aria-label="Retour à l'accueil du Humane Gang" data-site-identite="initiales">HG</a>
       <p class="shell-brand">Humane Gang <span>· Admin</span></p>
       <button class="shell-all" id="admin-goto" type="button" aria-haspopup="dialog" aria-label="Tout le panel (Ctrl K)" title="Tout le panel (Ctrl K)">
         <span class="shell-all-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></span>
         <span class="shell-all-txt">Tout le panel</span>
       </button>
-      <a class="shell-site" href="accueil.html">Voir le site</a>
+      <a class="shell-site" href="/pages/compte/accueil.html">Voir le site</a>
       <div class="shell-live" id="shell-live"></div>
       <button class="shell-ico shell-god" id="shell-god" type="button" aria-pressed="false" data-admin-only aria-label="Mode sans limite" title="Mode sans limite"></button>
       <div class="shell-account">
         <button class="shell-avatar" id="shell-avatar" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="shell-menu">··</button>
         <div class="shell-menu" id="shell-menu" role="menu" aria-label="Compte" hidden>
-          <a role="menuitem" href="accueil.html">Retour au site</a>
+          <a role="menuitem" href="/pages/compte/accueil.html">Retour au site</a>
           <button role="menuitem" type="button" data-menu="prefs">Préférences d’affichage</button>
           <button role="menuitem" type="button" data-menu="logout">Se déconnecter</button>
         </div>
@@ -361,7 +361,7 @@
         </section>
   </div>
 
-  <script type="module" src="assets/js/site-boot.js"></script>
-  <script type="module" src="assets/js/admin.js"></script>
+  <script type="module" src="/assets/commun/site-boot.js"></script>
+  <script type="module" src="/assets/espaces/admin/admin.js"></script>
 </body>
 </html>

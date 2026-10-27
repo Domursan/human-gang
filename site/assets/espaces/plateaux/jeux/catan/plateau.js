@@ -9,7 +9,7 @@
  * Exporte : RESSOURCES, pips(n), nomTuile(t), enumerer(liste), plateauSvg(opts) -> HTML (<svg>).
  *   opts = { geo, tuiles, voleur, colonies, villes, routes, couleurs: {uid: '#rrggbb'}, dernier, cibles: { sommets, aretes, hexes } }
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 /** Ressources : nom affiché, couleur de la tuile et couleur du texte posé dessus (le désert compris). */
 export const RESSOURCES = {

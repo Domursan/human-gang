@@ -13,10 +13,10 @@
  * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { toast } from '../../core.js';
+import { toast } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
-import { voisinGrille } from '../../grille-clavier.js';
+import { voisinGrille } from '../../../commun/grille-clavier.js';
 
 /** Couleur des jetons par place, et leur nom affiché dans la légende. */
 const COULEUR = { 1: '#D93A3F', 2: '#F2B705' };

@@ -19,7 +19,7 @@ import { getSiteTheme } from './theme.js';
 import { motionAllowed } from './effects.js';
 import { esc } from './util.js';
 import { playSound } from '../sound.js';
-import { hasLevels, levelDef, levelImage, roman } from '../badge-levels.js';
+import { hasLevels, levelDef, levelImage, roman } from '../../espaces/compte/badge-levels.js';
 
 /* ---------- Constantes ---------- */
 
@@ -130,7 +130,7 @@ export function celebrateBadges(list) {
       <p class="bc-count small muted" hidden></p>
       <div class="btn-row bc-actions">
         <button class="btn btn-primary bc-ok" type="button">Super !</button>
-        <a class="btn btn-ghost bc-link" href="compte.html">Voir mes badges</a>
+        <a class="btn btn-ghost bc-link" href="/pages/compte/compte.html">Voir mes badges</a>
       </div>
     </div>`;
   document.body.append(d);

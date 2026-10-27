@@ -6,9 +6,9 @@
 // Droits : permission « cartes » (RLS hg_cards et stockage hg-assets) ; « souvenirs » seule ne suffit pas.
 // Exporte : momentCardsMap, openMomentCard, suggestRarity.
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
-import { cardHtml, rarityLabel } from '../cartes-ui.js';
-import { uploadCardImage } from '../admin-cards/helpers.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
+import { cardHtml, rarityLabel } from '../../cartes/cartes-ui.js';
+import { uploadCardImage } from '../cartes/helpers.js';
 import { dayLabel } from './helpers.js';
 
 const RARS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire'];

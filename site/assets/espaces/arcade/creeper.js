@@ -15,7 +15,7 @@
  *   feuille assets/css/eggs-f.css (ajoutée ici).
  * Exporte : rien (effets de bord).
  */
-import { effectsEnabled, motionAllowed, getPrefs, getProfile, hasSession } from '../core.js';
+import { effectsEnabled, motionAllowed, getPrefs, getProfile, hasSession } from '../../commun/core.js';
 import { eggFound } from './api.js';
 
 /* ---------- Constantes ---------- */
@@ -81,7 +81,7 @@ function chargeCss() {
   if (document.querySelector('link[data-eggs-f]')) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL('../../css/eggs-f.css', import.meta.url).href;
+  l.href = new URL('./eggs-f.css', import.meta.url).href;
   l.dataset.eggsF = '';
   document.head.append(l);
 }

@@ -7,10 +7,10 @@
 // ui-confirm.js, helpers.js (todayIso, peopleOptions), reglages-valeurs-lot3.js (qualité des photos).
 // Exporte : openMomentForm, removeMoment.
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
-import { prepareImage } from '../image-compress.js';
-import { uploadImage, removeObjects, uuid } from '../photos.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
+import { prepareImage } from '../../../commun/image-compress.js';
+import { uploadImage, removeObjects, uuid } from '../../irl/photos.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { todayIso, peopleOptions } from './helpers.js';
 import { optionsPhoto } from '../reglages-valeurs-lot3.js';
 

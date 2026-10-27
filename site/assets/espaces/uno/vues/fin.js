@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc, avatarHtml, toast), uno/api.js (uno, erreurTexte, estInvite).
  * Exporte : creer.
  */
-import { esc, toast, avatarHtml } from '../../core.js';
+import { esc, toast, avatarHtml } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite } from '../api.js';
 
 /** Couleur de pseudo (profil ; invités en gris). */
@@ -42,7 +42,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="uno-fin">
-      <nav class="uno-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="uno.html">Uno</a> › <span>Fin de partie</span></nav>
+      <nav class="uno-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/uno.html">Uno</a> › <span>Fin de partie</span></nav>
       <div data-zone="entete"></div>
 
       <div class="uno-fin-grille">
@@ -187,11 +187,11 @@ export function creer(root, ctx) {
     if (hote) {
       rejouerHtml = `<button type="button" class="btn btn-primary" data-rejouer>Rejouer avec la même table</button>`;
     } else if (suite) {
-      rejouerHtml = `<a class="btn btn-primary" href="uno.html#rejoindre/${encodeURIComponent(suite)}">Rejoindre la revanche</a>`;
+      rejouerHtml = `<a class="btn btn-primary" href="/pages/jeux/uno.html#rejoindre/${encodeURIComponent(suite)}">Rejoindre la revanche</a>`;
     } else {
       rejouerHtml = '<p class="small muted uno-attente-revanche">En attente de l\'hôte pour la revanche.</p>';
     }
-    const accueil = invite ? '' : '<a class="btn btn-ghost" href="uno.html">Retour à l\'accueil</a>';
+    const accueil = invite ? '' : '<a class="btn btn-ghost" href="/pages/jeux/uno.html">Retour à l\'accueil</a>';
     // Le bouton hôte peut être désactivé pendant une requête : on le reconstruit seulement si la clé change.
     zone(zActions, JSON.stringify([hote, suite, invite]), `${rejouerHtml}${accueil}`);
   }

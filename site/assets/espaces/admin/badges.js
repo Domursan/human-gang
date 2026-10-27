@@ -5,11 +5,11 @@
 // Parties (sous-sections de la coquille) : catalogue (recherche, grille, création), attribution (« Attribuer ou retirer »),
 // criteres (formulaire des critères automatiques). Sans partie choisie, tout est affiché (comportement d'origine).
 // Dépend de core.js, confirm, admin-badges-edit.js (édition et suppression), admin-events.js, badge-levels.js (niveaux).
-import { sb, toast, esc, $ } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
-import { openBadgeEditor, deleteBadge, isAutoBadge } from '../admin-badges-edit.js';
-import { refreshEventsSection } from '../admin-events.js';
-import { hasLevels, sortedLevels, roman, METRIC_LABEL } from '../badge-levels.js';
+import { sb, toast, esc, $ } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { openBadgeEditor, deleteBadge, isAutoBadge } from './admin-badges-edit.js';
+import { refreshEventsSection } from './admin-events.js';
+import { hasLevels, sortedLevels, roman, METRIC_LABEL } from '../compte/badge-levels.js';
 import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, uploadAsset, pickFile } from './common.js';
 import { loadBadges } from './loaders.js';

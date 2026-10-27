@@ -8,7 +8,7 @@
  *   etat.joueurs[i] = { user_id, pseudo, elimine, gagne, etat: { revele, perso, camp, degats } } ;
  *   etat.partie.raison = 'hunters' | 'shadows' | 'neutre' (camp qui a gagné, fixé par le serveur).
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 import { campDe, CAMP_LIBELLE, couleurCamp, PV_MAX } from './plateau.js';
 

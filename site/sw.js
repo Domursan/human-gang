@@ -1,5 +1,5 @@
 /* Service worker du Humane Gang : mode hors ligne (coque du site et derniers contenus lus).
-   - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis offline.html.
+   - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis /offline.html.
    - Fichiers du site (/assets/) : copie en cache servie tout de suite, mise à jour en arrière-plan
      (stale-while-revalidate) : une nouvelle version est utilisée dès le chargement suivant.
    - Bibliothèque jsDelivr épinglée (/npm/, version exacte x.y.z) : cache d'abord ; seules les réponses lisibles et réussies
@@ -28,82 +28,82 @@ const CARD_IMG_PATH = '/storage/v1/object/public/hg-assets/cards/';
    Un fichier ajouté au site doit aussi être ajouté ici s'il doit marcher hors ligne. Ne pas modifier sans
    incrémenter CACHE_VERSION (voir l'en-tête). */
 const PRECACHE = [
-  'index.html', 'accueil.html', 'admin.html', 'aide.html', 'quiz.html', 'secret.html', 'assistance.html', 'cartes.html', 'compte.html',
-  'evenements.html', 'historique.html', 'irl.html', 'legal.html', 'membre.html', 'messages.html',
-  'recap.html', 'rejoindre.html', 'secret-santa.html', 'offline.html', 'assets/css/accueil.css',
-  'assets/css/admin-access.css', 'assets/css/admin-accounts.css', 'assets/css/admin-bot.css',
-  'assets/css/admin-cards.css', 'assets/css/admin-reglages.css', 'assets/css/admin-identite.css', 'assets/css/admin-events.css', 'assets/css/admin-ghosts.css',
-  'assets/css/admin-messages.css', 'assets/css/admin-themes.css', 'assets/css/admin-tools.css',
-  'assets/css/admin-staff.css', 'assets/css/admin-pilotage.css', 'assets/css/admin.css', 'assets/css/admin-sorties.css', 'assets/css/aide.css', 'assets/css/assistance.css', 'assets/css/base.css',
-  'assets/css/cartes-card.css', 'assets/css/cartes-boosters.css', 'assets/css/cartes-showcase.css', 'assets/css/cartes-trades.css',
-  'assets/css/cartes.css', 'assets/css/cartes-x5.css', 'assets/css/cartes-zoom.css', 'assets/css/cartes-pentakill.css', 'assets/js/cartes-pentakill.js', 'assets/css/compte.css', 'assets/css/evenements.css',
-  'assets/css/historique.css', 'assets/css/intro.css', 'assets/css/irl-history.css',
-  'assets/css/irl.css', 'assets/css/legal.css', 'assets/css/membre.css', 'assets/css/messages.css',
-  'assets/css/photos.css', 'assets/css/recap.css', 'assets/css/rejoindre.css', 'assets/css/ui-confirm.css',
-  'assets/css/secret-santa.css', 'assets/css/ss-pairs.css', 'assets/js/accueil.js', 'assets/js/admin-access.js',
-  'assets/js/admin-accounts.js', 'assets/js/admin-badges-edit.js', 'assets/js/admin-bot.js',
-  'assets/js/admin-cards.js', 'assets/js/admin-events.js', 'assets/js/admin-ghosts.js', 'assets/js/admin-godmode.js',
-  'assets/js/admin-invite-links.js', 'assets/js/admin-messages.js',
-  'assets/js/admin-ss-manual.js', 'assets/js/admin-themes.js', 'assets/js/admin.js',
-  'assets/js/admin-cards/quests.js', 'assets/js/admin-cards/boosters.js', 'assets/js/admin-eggs.js', 'assets/js/admin-loup-garou.js', 'assets/js/admin-fil.js', 'assets/js/admin-champs.js', 'assets/js/core/site-etat.js', 'assets/css/admin-eggs.css', 'assets/css/admin-loup-garou.css', 'assets/css/admin-fil.css', 'assets/css/admin-champs.css', 'assets/css/site-etat.css', 'assets/js/admin-reglages/keys.js', 'assets/js/admin-reglages/view.js', 'assets/js/admin-reglages/keys-lot1.js', 'assets/js/admin-reglages/identite.js', 'assets/js/core/site-defaults.js', 'assets/js/core/site-load.js',
-  'assets/js/admin-reglages/keys-lot3.js', 'assets/js/admin-reglages/lot3-ui.js', 'assets/js/reglages-valeurs-lot3.js',
-  'assets/js/admin-accounts/activity.js', 'assets/js/admin-accounts/common.js', 'assets/js/admin-accounts/events.js', 'assets/js/admin-accounts/fiche.js',
-  'assets/js/admin-accounts/inspect.js', 'assets/js/admin-accounts/list.js', 'assets/js/admin-accounts/profile.js', 'assets/js/admin-accounts/ss-pairs.js',
-  'assets/js/admin-accounts/ss-shared.js', 'assets/js/admin-accounts/ss.js', 'assets/js/admin-accounts/state.js', 'assets/js/admin-cards/constants.js',
-  'assets/js/admin-cards/bulk.js', 'assets/js/admin-cards/data.js', 'assets/js/admin-cards/economy.js', 'assets/js/admin-cards/editor.js', 'assets/js/admin-cards/helpers.js',
-  'assets/js/admin-cards/list.js', 'assets/js/admin-cards/players.js', 'assets/js/admin-cards/sets.js', 'assets/js/admin-cards/state.js',
-  'assets/js/admin-cards/stats.js', 'assets/js/admin-cards/trades.js', 'assets/js/admin-cards/view.js', 'assets/js/admin/badges.js',
-  'assets/js/admin/badges-criteres.js', 'assets/js/admin-reglages/keys-lot4.js', // lot 4 (réglages)
-  'assets/js/admin-reglages/keys-lot2.js', 'assets/js/admin-reglages/keys-lot5.js', 'assets/js/invite-config.js',
-  'assets/js/admin/common.js', 'assets/js/admin/ideas.js', 'assets/js/admin/invites.js', 'assets/js/admin/loaders.js',
-  'assets/js/admin/counts.js', 'assets/js/admin/lieux.js', 'assets/js/admin/todos.js', 'assets/js/admin/quick.js', 'assets/css/admin-quick.css', 'assets/js/admin/visual-pick.js', 'assets/js/admin/reglages-merge.js', 'assets/js/admin/puissances.js', 'assets/css/admin-visual-pick.css', 'assets/js/admin/panel-icons.js', 'assets/js/admin/perms.js', 'assets/js/admin/ss-events.js', 'assets/js/admin/ss-render.js', 'assets/js/admin/state.js',
-  'assets/js/admin/support.js', 'assets/js/admin/live.js', 'assets/css/admin-live.css',
-  'assets/js/admin/shell.js', 'assets/js/admin/router.js', 'assets/css/admin-shell.css',
-  'assets/js/admin/palette.js', 'assets/css/admin-nav.css', 'assets/css/admin-lieux.css', 'assets/js/admin/list-tools.js',
-  'assets/js/admin-sorties/data.js', 'assets/js/admin-sorties/dialogs.js', 'assets/js/admin-sorties/format.js', 'assets/js/admin-sorties/index.js',
-  'assets/css/admin-souvenirs.css', 'assets/js/admin-souvenirs/helpers.js', 'assets/js/admin-souvenirs/index.js', 'assets/js/admin-souvenirs/moments.js',
-  'assets/js/admin-souvenirs/photos.js', 'assets/js/admin-souvenirs/reactions.js',
-  'assets/js/aide.js', 'assets/js/assistance.js',
-  'assets/js/reglages-jetons.js', 'assets/js/quest-track.js', 'assets/js/tutos/index.js', 'assets/js/tutos/premiers-pas.js', 'assets/js/tutos/secret-santa.js',
-  'assets/js/tutos/irl-historique.js', 'assets/js/tutos/cartes-base.js', 'assets/js/tutos/cartes-avance.js',
-  'assets/js/tutos/communaute.js', 'assets/js/badge-levels.js', 'assets/js/cartes-showcase.js',
-  'assets/js/cartes-trades.js', 'assets/js/cartes-ui.js', 'assets/js/cartes.js', 'assets/js/cartes-zoom.js', 'assets/js/cartes-place.js',
-  'assets/js/compte.js', 'assets/js/config.js', 'assets/js/core.js',
-  'assets/js/core/badges.js', 'assets/js/core/effects.js', 'assets/js/core/footer.js',
-  'assets/js/core/functions.js', 'assets/js/core/godmode.js', 'assets/js/core/header.js', 'assets/js/core/menu-def.js', 'assets/js/core/view-as.js',
-  'assets/js/core/icons.js', 'assets/js/core/init.js', 'assets/js/core/light-dismiss.js', 'assets/js/core/admin-reponses.js', 'assets/js/core/pages-access.js',
-  'assets/js/core/prefs-state.js', 'assets/js/core/prefs.js', 'assets/js/core/profile.js',
-  'assets/js/core/perms.js', 'assets/js/core/search.js',
-  'assets/js/core/supabase.js', 'assets/js/core/theme-calc.js', 'assets/js/core/theme-load.js',
-  'assets/js/core/theme.js', 'assets/js/core/ui.js', 'assets/js/core/unread.js',
-  'assets/js/core/util.js', 'assets/js/dyn-events.js', 'assets/js/card-drops.js', 'assets/css/card-drops.css', 'assets/js/admin-cards/drops.js',
-  'assets/js/evenements.js', 'assets/js/historique.js', 'assets/js/intro-logo.js',
-  'assets/js/intro-daily.js', 'assets/js/intro-redirect.js', 'assets/js/intro.js', 'assets/js/irl-history.js',
-  'assets/js/irl.js', 'assets/js/eco-quota.js', 'assets/js/legal.js', 'assets/js/membre.js', 'assets/js/messages.js',
-  'assets/js/paillettes.js', 'assets/js/photos.js', 'assets/js/profile-fields.js',
-  'assets/js/recap.js', 'assets/js/rejoindre.js', 'assets/js/secret-santa.js',
-  'assets/js/site-boot.js', 'assets/js/sound.js', 'assets/js/ss-card.js', 'assets/js/ss-pairs.js',
-  'assets/js/theme-boot.js', 'assets/js/icons.js', 'assets/js/ui-confirm.js', 'assets/js/utils.js', 'assets/img/logo-1600.webp', 'assets/img/favicon-64.png',
-  'assets/js/quiz.js', 'assets/js/secret.js', 'assets/js/admin-quiz.js', 'assets/js/admin-quiz-stats.js',
-  'assets/js/eggs/api.js', 'assets/js/eggs/core.js', 'assets/js/eggs/lettres.js', 'assets/js/eggs/creeper.js', 'assets/js/eggs/champignon.js', 'assets/js/eggs/pages.js', 'assets/js/eggs/jeu404.js',
-  'assets/css/quiz.css', 'assets/css/admin-quiz.css', 'assets/css/admin-quiz-stats.css', 'assets/css/eggs.css', 'assets/css/eggs-pages.css', 'assets/css/eggs-f.css',
-  'assets/js/admin-challenges.js', 'assets/js/admin-log.js', 'assets/js/admin-staff.js', 'assets/js/ics.js', 'assets/js/image-compress.js', 'assets/js/push.js', 'assets/js/reactions.js',
-  'assets/css/admin-ui.css', 'assets/js/admin/ui/common.js', 'assets/js/admin/ui/time.js', 'assets/js/admin/ui/list.js', 'assets/js/admin/ui/drawer.js',
-  'assets/js/admin/ui/thread.js', 'assets/js/admin/ui/info-panel.js', 'assets/js/admin/ui/detail-header.js',
+  '/index.html', '/pages/compte/accueil.html', '/pages/admin/admin.html', '/pages/infos/aide.html', '/pages/jeux/quiz.html', '/pages/jeux/secret.html', '/pages/infos/assistance.html', '/pages/cartes/cartes.html', '/pages/compte/compte.html',
+  '/pages/irl/evenements.html', '/pages/irl/historique.html', '/pages/irl/irl.html', '/pages/infos/legal.html', '/pages/compte/membre.html', '/pages/compte/messages.html',
+  '/pages/irl/recap.html', '/pages/infos/rejoindre.html', '/pages/irl/secret-santa.html', '/offline.html', '/assets/espaces/accueil/accueil.css',
+  '/assets/espaces/admin/admin-access.css', '/assets/espaces/admin/admin-accounts.css', '/assets/espaces/admin/admin-bot.css',
+  '/assets/espaces/admin/admin-cards.css', '/assets/espaces/admin/admin-reglages.css', '/assets/espaces/admin/admin-identite.css', '/assets/espaces/admin/admin-events.css', '/assets/espaces/admin/admin-ghosts.css',
+  '/assets/espaces/admin/admin-messages.css', '/assets/espaces/admin/admin-themes.css', '/assets/espaces/admin/admin-tools.css',
+  '/assets/espaces/admin/admin-staff.css', '/assets/espaces/admin/admin-pilotage.css', '/assets/espaces/admin/admin.css', '/assets/espaces/admin/admin-sorties.css', '/assets/espaces/infos/aide.css', '/assets/espaces/infos/assistance.css', '/assets/commun/base.css',
+  '/assets/espaces/cartes/cartes-card.css', '/assets/espaces/cartes/cartes-boosters.css', '/assets/espaces/cartes/cartes-showcase.css', '/assets/espaces/cartes/cartes-trades.css',
+  '/assets/espaces/cartes/cartes.css', '/assets/espaces/cartes/cartes-x5.css', '/assets/espaces/cartes/cartes-zoom.css', '/assets/espaces/cartes/cartes-pentakill.css', '/assets/espaces/cartes/cartes-pentakill.js', '/assets/espaces/compte/compte.css', '/assets/espaces/irl/evenements.css',
+  '/assets/espaces/irl/historique.css', '/assets/espaces/accueil/intro.css', '/assets/espaces/irl/irl-history.css',
+  '/assets/espaces/irl/irl.css', '/assets/espaces/infos/legal.css', '/assets/espaces/compte/membre.css', '/assets/espaces/messages/messages.css',
+  '/assets/espaces/irl/photos.css', '/assets/espaces/irl/recap.css', '/assets/espaces/infos/rejoindre.css', '/assets/commun/ui-confirm.css',
+  '/assets/espaces/irl/secret-santa.css', '/assets/espaces/irl/ss-pairs.css', '/assets/espaces/accueil/accueil.js', '/assets/espaces/admin/admin-access.js',
+  '/assets/espaces/admin/admin-accounts.js', '/assets/espaces/admin/admin-badges-edit.js', '/assets/espaces/admin/admin-bot.js',
+  '/assets/espaces/admin/admin-cards.js', '/assets/espaces/admin/admin-events.js', '/assets/espaces/admin/admin-ghosts.js', '/assets/espaces/admin/admin-godmode.js',
+  '/assets/espaces/admin/admin-invite-links.js', '/assets/espaces/admin/admin-messages.js',
+  '/assets/espaces/admin/admin-ss-manual.js', '/assets/espaces/admin/admin-themes.js', '/assets/espaces/admin/admin.js',
+  '/assets/espaces/admin/cartes/quests.js', '/assets/espaces/admin/cartes/boosters.js', '/assets/espaces/admin/admin-eggs.js', '/assets/espaces/admin/admin-loup-garou.js', '/assets/espaces/admin/admin-fil.js', '/assets/espaces/admin/admin-champs.js', '/assets/commun/core/site-etat.js', '/assets/espaces/admin/admin-eggs.css', '/assets/espaces/admin/admin-loup-garou.css', '/assets/espaces/admin/admin-fil.css', '/assets/espaces/admin/admin-champs.css', '/assets/commun/site-etat.css', '/assets/espaces/admin/reglages/keys.js', '/assets/espaces/admin/reglages/view.js', '/assets/espaces/admin/reglages/keys-lot1.js', '/assets/espaces/admin/reglages/identite.js', '/assets/commun/core/site-defaults.js', '/assets/commun/core/site-load.js',
+  '/assets/espaces/admin/reglages/keys-lot3.js', '/assets/espaces/admin/reglages/lot3-ui.js', '/assets/espaces/admin/reglages-valeurs-lot3.js',
+  '/assets/espaces/admin/comptes/activity.js', '/assets/espaces/admin/comptes/common.js', '/assets/espaces/admin/comptes/events.js', '/assets/espaces/admin/comptes/fiche.js',
+  '/assets/espaces/admin/comptes/inspect.js', '/assets/espaces/admin/comptes/list.js', '/assets/espaces/admin/comptes/profile.js', '/assets/espaces/admin/comptes/ss-pairs.js',
+  '/assets/espaces/admin/comptes/ss-shared.js', '/assets/espaces/admin/comptes/ss.js', '/assets/espaces/admin/comptes/state.js', '/assets/espaces/admin/cartes/constants.js',
+  '/assets/espaces/admin/cartes/bulk.js', '/assets/espaces/admin/cartes/data.js', '/assets/espaces/admin/cartes/economy.js', '/assets/espaces/admin/cartes/editor.js', '/assets/espaces/admin/cartes/helpers.js',
+  '/assets/espaces/admin/cartes/list.js', '/assets/espaces/admin/cartes/players.js', '/assets/espaces/admin/cartes/sets.js', '/assets/espaces/admin/cartes/state.js',
+  '/assets/espaces/admin/cartes/stats.js', '/assets/espaces/admin/cartes/trades.js', '/assets/espaces/admin/cartes/view.js', '/assets/espaces/admin/badges.js',
+  '/assets/espaces/admin/badges-criteres.js', '/assets/espaces/admin/reglages/keys-lot4.js', // lot 4 (réglages)
+  '/assets/espaces/admin/reglages/keys-lot2.js', '/assets/espaces/admin/reglages/keys-lot5.js', '/assets/espaces/compte/invite-config.js',
+  '/assets/espaces/admin/common.js', '/assets/espaces/admin/ideas.js', '/assets/espaces/admin/invites.js', '/assets/espaces/admin/loaders.js',
+  '/assets/espaces/admin/counts.js', '/assets/espaces/admin/lieux.js', '/assets/espaces/admin/todos.js', '/assets/espaces/admin/quick.js', '/assets/espaces/admin/admin-quick.css', '/assets/espaces/admin/visual-pick.js', '/assets/espaces/admin/reglages-merge.js', '/assets/espaces/admin/puissances.js', '/assets/espaces/admin/admin-visual-pick.css', '/assets/espaces/admin/panel-icons.js', '/assets/espaces/admin/perms.js', '/assets/espaces/admin/ss-events.js', '/assets/espaces/admin/ss-render.js', '/assets/espaces/admin/state.js',
+  '/assets/espaces/admin/support.js', '/assets/espaces/admin/live.js', '/assets/espaces/admin/admin-live.css',
+  '/assets/espaces/admin/shell.js', '/assets/espaces/admin/router.js', '/assets/espaces/admin/admin-shell.css',
+  '/assets/espaces/admin/palette.js', '/assets/espaces/admin/admin-nav.css', '/assets/espaces/admin/admin-lieux.css', '/assets/espaces/admin/list-tools.js',
+  '/assets/espaces/admin/sorties/data.js', '/assets/espaces/admin/sorties/dialogs.js', '/assets/espaces/admin/sorties/format.js', '/assets/espaces/admin/sorties/index.js',
+  '/assets/espaces/admin/admin-souvenirs.css', '/assets/espaces/admin/souvenirs/helpers.js', '/assets/espaces/admin/souvenirs/index.js', '/assets/espaces/admin/souvenirs/moments.js',
+  '/assets/espaces/admin/souvenirs/photos.js', '/assets/espaces/admin/souvenirs/reactions.js',
+  '/assets/espaces/infos/aide.js', '/assets/espaces/infos/assistance.js',
+  '/assets/espaces/admin/reglages-jetons.js', '/assets/commun/quest-track.js', '/assets/espaces/infos/tutos/index.js', '/assets/espaces/infos/tutos/premiers-pas.js', '/assets/espaces/infos/tutos/secret-santa.js',
+  '/assets/espaces/infos/tutos/irl-historique.js', '/assets/espaces/infos/tutos/cartes-base.js', '/assets/espaces/infos/tutos/cartes-avance.js',
+  '/assets/espaces/infos/tutos/communaute.js', '/assets/espaces/compte/badge-levels.js', '/assets/espaces/cartes/cartes-showcase.js',
+  '/assets/espaces/cartes/cartes-trades.js', '/assets/espaces/cartes/cartes-ui.js', '/assets/espaces/cartes/cartes.js', '/assets/espaces/cartes/cartes-zoom.js', '/assets/espaces/cartes/cartes-place.js',
+  '/assets/espaces/compte/compte.js', '/assets/commun/config.js', '/assets/commun/core.js',
+  '/assets/commun/core/badges.js', '/assets/commun/core/effects.js', '/assets/commun/core/footer.js',
+  '/assets/commun/core/functions.js', '/assets/commun/core/godmode.js', '/assets/commun/core/header.js', '/assets/commun/core/menu-def.js', '/assets/commun/core/view-as.js',
+  '/assets/commun/core/icons.js', '/assets/commun/core/init.js', '/assets/commun/core/light-dismiss.js', '/assets/commun/core/admin-reponses.js', '/assets/commun/core/pages-access.js',
+  '/assets/commun/core/prefs-state.js', '/assets/commun/core/prefs.js', '/assets/commun/core/profile.js',
+  '/assets/commun/core/perms.js', '/assets/commun/core/search.js',
+  '/assets/commun/core/supabase.js', '/assets/commun/core/theme-calc.js', '/assets/commun/core/theme-load.js',
+  '/assets/commun/core/theme.js', '/assets/commun/core/ui.js', '/assets/commun/core/unread.js',
+  '/assets/commun/core/util.js', '/assets/commun/dyn-events.js', '/assets/espaces/cartes/card-drops.js', '/assets/espaces/cartes/card-drops.css', '/assets/espaces/admin/cartes/drops.js',
+  '/assets/espaces/irl/evenements.js', '/assets/espaces/irl/historique.js', '/assets/espaces/accueil/intro-logo.js',
+  '/assets/espaces/accueil/intro-daily.js', '/assets/espaces/accueil/intro-redirect.js', '/assets/espaces/accueil/intro.js', '/assets/espaces/irl/irl-history.js',
+  '/assets/espaces/irl/irl.js', '/assets/commun/eco-quota.js', '/assets/espaces/infos/legal.js', '/assets/espaces/compte/membre.js', '/assets/espaces/messages/messages.js',
+  '/assets/commun/paillettes.js', '/assets/espaces/irl/photos.js', '/assets/espaces/compte/profile-fields.js',
+  '/assets/espaces/irl/recap.js', '/assets/espaces/infos/rejoindre.js', '/assets/espaces/irl/secret-santa.js',
+  '/assets/commun/site-boot.js', '/assets/commun/sound.js', '/assets/espaces/irl/ss-card.js', '/assets/espaces/irl/ss-pairs.js',
+  '/assets/commun/theme-boot.js', '/assets/commun/icons.js', '/assets/commun/ui-confirm.js', '/assets/commun/utils.js', '/assets/images/marque/logo-1600.webp', '/assets/images/marque/favicon-64.png',
+  '/assets/espaces/quiz/quiz.js', '/assets/espaces/arcade/secret.js', '/assets/espaces/admin/admin-quiz.js', '/assets/espaces/admin/admin-quiz-stats.js',
+  '/assets/espaces/arcade/api.js', '/assets/espaces/arcade/core.js', '/assets/espaces/arcade/lettres.js', '/assets/espaces/arcade/creeper.js', '/assets/espaces/arcade/champignon.js', '/assets/espaces/arcade/pages.js', '/assets/espaces/arcade/jeu404.js',
+  '/assets/espaces/quiz/quiz.css', '/assets/espaces/admin/admin-quiz.css', '/assets/espaces/admin/admin-quiz-stats.css', '/assets/espaces/arcade/eggs.css', '/assets/espaces/arcade/eggs-pages.css', '/assets/espaces/arcade/eggs-f.css',
+  '/assets/espaces/admin/admin-challenges.js', '/assets/espaces/admin/admin-log.js', '/assets/espaces/admin/admin-staff.js', '/assets/espaces/irl/ics.js', '/assets/commun/image-compress.js', '/assets/commun/push.js', '/assets/commun/reactions.js',
+  '/assets/espaces/admin/admin-ui.css', '/assets/espaces/admin/ui/common.js', '/assets/espaces/admin/ui/time.js', '/assets/espaces/admin/ui/list.js', '/assets/espaces/admin/ui/drawer.js',
+  '/assets/espaces/admin/ui/thread.js', '/assets/espaces/admin/ui/info-panel.js', '/assets/espaces/admin/ui/detail-header.js',
   // Nouvelles pages et modules (23/10 : Jeux, citations, playlist, visite guidée, hors ligne)
-  'jeux.html', 'citations.html', 'playlist.html',
-  'assets/js/jeux.js', 'assets/js/jeux/onglets.js', 'assets/js/jeux/commun.js', 'assets/css/jeux.css',
-  'assets/js/citations.js', 'assets/css/citations.css', 'assets/js/playlist.js', 'assets/css/playlist.css',
-  'assets/js/contenus-ui.js', 'assets/css/contenus.css', 'assets/js/core/tour.js', 'assets/css/tour.css',
-  'assets/js/offline-store.js', 'assets/css/offline.css', 'assets/js/quest-proofs.js', 'assets/css/quest-proofs.css',
-  'assets/js/leaflet-load.js',
-  // Bibliothèques servies localement (assets/vendor, voir son README.md)
-  'assets/vendor/supabase-js-2.45.4.js', 'assets/vendor/supabase-js-2.45.4.mjs', 'assets/vendor/qrcode-generator-1.4.4.mjs',
-  'assets/img/icon-192.png', 'assets/img/icon-512.png', 'assets/img/apple-touch-icon.png',
-  'assets/img/og-image.png', 'manifest.webmanifest',
-  'assets/cards/champions/baton.svg', 'assets/cards/champions/bouclier.svg', 'assets/cards/champions/chateau.svg', 'assets/cards/champions/couronne.svg', 'assets/cards/champions/epee.svg', 'assets/cards/champions/etoile.svg', 'assets/cards/champions/fusee.svg', 'assets/cards/champions/pioche.svg', 'assets/css/boosters-styles.css', 'assets/css/cartes-idees.css', 'assets/css/collection-a4.css', 'assets/js/admin-cards/champions.js', 'assets/js/admin-cards/pots.js', 'assets/js/booster-styles.js', 'assets/js/booster-themes.js', 'assets/js/cartes-bulletin.js', 'assets/js/cartes-cagnotte.js', 'assets/js/cartes-champion.js', 'assets/js/cartes-chance.js', 'assets/js/collection-a4.js', 'collection-a4.html',
+  '/pages/jeux/jeux.html', '/pages/irl/citations.html', '/pages/irl/playlist.html',
+  '/assets/espaces/jeux/jeux.js', '/assets/espaces/jeux/onglets.js', '/assets/espaces/jeux/commun.js', '/assets/espaces/jeux/jeux.css',
+  '/assets/espaces/irl/citations.js', '/assets/espaces/irl/citations.css', '/assets/espaces/irl/playlist.js', '/assets/espaces/irl/playlist.css',
+  '/assets/espaces/irl/contenus-ui.js', '/assets/espaces/irl/contenus.css', '/assets/commun/core/tour.js', '/assets/commun/tour.css',
+  '/assets/commun/offline-store.js', '/assets/commun/offline.css', '/assets/espaces/accueil/quest-proofs.js', '/assets/espaces/accueil/quest-proofs.css',
+  '/assets/commun/leaflet-load.js',
+  // Bibliothèques servies localement (/assets/vendor, voir son README.md)
+  '/assets/vendor/supabase-js-2.45.4.js', '/assets/vendor/supabase-js-2.45.4.mjs', '/assets/vendor/qrcode-generator-1.4.4.mjs',
+  '/assets/images/marque/icon-192.png', '/assets/images/marque/icon-512.png', '/assets/images/marque/apple-touch-icon.png',
+  '/assets/images/marque/og-image.png', 'manifest.webmanifest',
+  '/assets/cartes/champions/baton.svg', '/assets/cartes/champions/bouclier.svg', '/assets/cartes/champions/chateau.svg', '/assets/cartes/champions/couronne.svg', '/assets/cartes/champions/epee.svg', '/assets/cartes/champions/etoile.svg', '/assets/cartes/champions/fusee.svg', '/assets/cartes/champions/pioche.svg', '/assets/espaces/cartes/boosters-styles.css', '/assets/espaces/cartes/cartes-idees.css', '/assets/espaces/cartes/collection-a4.css', '/assets/espaces/admin/cartes/champions.js', '/assets/espaces/admin/cartes/pots.js', '/assets/espaces/cartes/booster-styles.js', '/assets/espaces/cartes/booster-themes.js', '/assets/espaces/cartes/cartes-bulletin.js', '/assets/espaces/cartes/cartes-cagnotte.js', '/assets/espaces/cartes/cartes-champion.js', '/assets/espaces/cartes/cartes-chance.js', '/assets/espaces/cartes/collection-a4.js', '/pages/cartes/collection-a4.html',
   // Lot 3 (23/10) : calendrier, ciné-club, saisons, social, raccourcis, notifications
-  'assets/cards/le-gang-joue/01-torii.svg', 'assets/cards/le-gang-joue/02-usine-a-fer.svg', 'assets/cards/le-gang-joue/03-base-du-gang.svg', 'assets/cards/le-gang-joue/04-coffre-des-trouvailles.svg', 'assets/cards/le-gang-joue/05-la-merveille.svg', 'assets/cards/le-gang-joue/06-moine-qui-convertit.svg', 'assets/cards/le-gang-joue/07-trebuchet.svg', 'assets/cards/le-gang-joue/08-villageois-oisif.svg', 'assets/cards/le-gang-joue/09-le-nexus.svg', 'assets/cards/le-gang-joue/10-tour-du-milieu.svg', 'assets/cards/le-gang-joue/11-pickem-du-gang.svg', 'assets/cards/le-gang-joue/12-balise-de-vision.svg', 'assets/cards/le-gang-joue/13-le-bateau.svg', 'assets/cards/le-gang-joue/14-le-coffre-maudit.svg', 'assets/cards/le-gang-joue/15-la-carte-au-tresor.svg', 'assets/cards/le-gang-joue/16-le-seau-d-eau.svg', 'assets/cards/le-gang-joue/17-la-planete-a-industrialiser.svg', 'assets/cards/le-gang-joue/18-le-convoyeur-sans-fin.svg', 'assets/cards/le-gang-joue/19-l-usine-repartie.svg', 'assets/cards/le-gang-joue/20-la-foreuse-geante.svg', 'assets/cards/le-gang-joue/21-le-bouton-d-urgence.svg', 'assets/cards/le-gang-joue/22-la-bouche-d-aeration.svg', 'assets/cards/le-gang-joue/23-la-grille-de-mots.svg', 'assets/cards/le-gang-joue/24-le-dessin-incomprehensible.svg', 'assets/css/admin-eco.css', 'assets/css/admin-errors.css', 'assets/css/admin-vd.css', 'assets/css/calendrier.css', 'assets/css/cartes-saisons.css', 'assets/css/cine.css', 'assets/css/jeux-arcade.css', 'assets/css/report.css', 'assets/css/saisons.css', 'assets/css/social.css', 'assets/js/accueil-ce-jour.js', 'assets/js/admin-archive.js', 'assets/js/admin-cards/auctions.js', 'assets/js/admin-cards/boosters-saison.js', 'assets/js/admin-cards/codes.js', 'assets/js/admin-cards/proposals.js', 'assets/js/admin-cards/recipes.js', 'assets/js/admin-errors.js', 'assets/js/admin-saisons.js', 'assets/js/admin-social.js', 'assets/js/admin-sorties/carte.js', 'assets/js/admin-souvenirs/contenu.js', 'assets/js/admin-souvenirs/moment-card.js', 'assets/js/admin-vd.js', 'assets/js/admin/eco-health.js', 'assets/js/admin/reports.js', 'assets/js/anniv.js', 'assets/js/avent.js', 'assets/js/blason.js', 'assets/js/calendrier.js', 'assets/js/cartes-atelier.js', 'assets/js/cartes-codes.js', 'assets/js/cartes-enchere.js', 'assets/js/enchere-regles.js', 'assets/js/cartes-gen.js', 'assets/js/cartes-lots.js', 'assets/js/cartes-jeux.js', 'assets/js/cartes-propositions.js', 'assets/js/cartes-saisons.js', 'assets/js/cartes-tableau.js', 'assets/js/cine.js', 'assets/js/compte-social.js', 'assets/js/core/shortcuts.js', 'assets/js/eggs/arcade.js', 'assets/js/eggs/jeu-domu.js', 'assets/js/eggs/jeu-paillettes.js', 'assets/js/eggs/jeu-raclette.js', 'assets/js/error-report.js', 'assets/js/friendship.js', 'assets/js/home-blocks.js', 'assets/js/home-edit.js', 'assets/js/home-mentor.js', 'assets/js/home-registry.js', 'assets/js/irl-carte.js', 'assets/js/jeux/arcade.js', 'assets/js/mercis.js', 'assets/js/messages-groupes.js', 'assets/js/notif-prefs.js', 'assets/js/polls.js', 'assets/js/profil-gaming.js', 'assets/js/report.js', 'assets/js/saisons-css.js', 'assets/js/saisons.js', 'assets/js/skills.js', 'assets/js/social.js', 'assets/js/ss-unwrap.js', 'assets/js/support-files.js', 'calendrier.html', 'cine.html', 
+  '/assets/cartes/le-gang-joue/01-torii.svg', '/assets/cartes/le-gang-joue/02-usine-a-fer.svg', '/assets/cartes/le-gang-joue/03-base-du-gang.svg', '/assets/cartes/le-gang-joue/04-coffre-des-trouvailles.svg', '/assets/cartes/le-gang-joue/05-la-merveille.svg', '/assets/cartes/le-gang-joue/06-moine-qui-convertit.svg', '/assets/cartes/le-gang-joue/07-trebuchet.svg', '/assets/cartes/le-gang-joue/08-villageois-oisif.svg', '/assets/cartes/le-gang-joue/09-le-nexus.svg', '/assets/cartes/le-gang-joue/10-tour-du-milieu.svg', '/assets/cartes/le-gang-joue/11-pickem-du-gang.svg', '/assets/cartes/le-gang-joue/12-balise-de-vision.svg', '/assets/cartes/le-gang-joue/13-le-bateau.svg', '/assets/cartes/le-gang-joue/14-le-coffre-maudit.svg', '/assets/cartes/le-gang-joue/15-la-carte-au-tresor.svg', '/assets/cartes/le-gang-joue/16-le-seau-d-eau.svg', '/assets/cartes/le-gang-joue/17-la-planete-a-industrialiser.svg', '/assets/cartes/le-gang-joue/18-le-convoyeur-sans-fin.svg', '/assets/cartes/le-gang-joue/19-l-usine-repartie.svg', '/assets/cartes/le-gang-joue/20-la-foreuse-geante.svg', '/assets/cartes/le-gang-joue/21-le-bouton-d-urgence.svg', '/assets/cartes/le-gang-joue/22-la-bouche-d-aeration.svg', '/assets/cartes/le-gang-joue/23-la-grille-de-mots.svg', '/assets/cartes/le-gang-joue/24-le-dessin-incomprehensible.svg', '/assets/espaces/admin/admin-eco.css', '/assets/espaces/admin/admin-errors.css', '/assets/espaces/admin/admin-vd.css', '/assets/espaces/irl/calendrier.css', '/assets/espaces/cartes/cartes-saisons.css', '/assets/espaces/irl/cine.css', '/assets/espaces/jeux/jeux-arcade.css', '/assets/commun/report.css', '/assets/espaces/accueil/saisons.css', '/assets/espaces/compte/social.css', '/assets/espaces/accueil/accueil-ce-jour.js', '/assets/espaces/admin/admin-archive.js', '/assets/espaces/admin/cartes/auctions.js', '/assets/espaces/admin/cartes/boosters-saison.js', '/assets/espaces/admin/cartes/codes.js', '/assets/espaces/admin/cartes/proposals.js', '/assets/espaces/admin/cartes/recipes.js', '/assets/espaces/admin/admin-errors.js', '/assets/espaces/admin/admin-saisons.js', '/assets/espaces/admin/admin-social.js', '/assets/espaces/admin/sorties/carte.js', '/assets/espaces/admin/souvenirs/contenu.js', '/assets/espaces/admin/souvenirs/moment-card.js', '/assets/espaces/admin/admin-vd.js', '/assets/espaces/admin/eco-health.js', '/assets/espaces/admin/reports.js', '/assets/espaces/accueil/anniv.js', '/assets/espaces/accueil/avent.js', '/assets/espaces/compte/blason.js', '/assets/espaces/irl/calendrier.js', '/assets/espaces/cartes/cartes-atelier.js', '/assets/espaces/cartes/cartes-codes.js', '/assets/espaces/cartes/cartes-enchere.js', '/assets/espaces/cartes/enchere-regles.js', '/assets/espaces/cartes/cartes-gen.js', '/assets/espaces/cartes/cartes-lots.js', '/assets/espaces/cartes/cartes-jeux.js', '/assets/espaces/cartes/cartes-propositions.js', '/assets/espaces/cartes/cartes-saisons.js', '/assets/espaces/cartes/cartes-tableau.js', '/assets/espaces/irl/cine.js', '/assets/espaces/compte/compte-social.js', '/assets/commun/core/shortcuts.js', '/assets/espaces/arcade/arcade.js', '/assets/espaces/arcade/jeu-domu.js', '/assets/espaces/arcade/jeu-paillettes.js', '/assets/espaces/arcade/jeu-raclette.js', '/assets/commun/error-report.js', '/assets/espaces/compte/friendship.js', '/assets/espaces/accueil/home-blocks.js', '/assets/espaces/accueil/home-edit.js', '/assets/espaces/accueil/home-mentor.js', '/assets/espaces/accueil/home-registry.js', '/assets/espaces/irl/irl-carte.js', '/assets/espaces/jeux/arcade.js', '/assets/espaces/accueil/mercis.js', '/assets/espaces/messages/messages-groupes.js', '/assets/espaces/compte/notif-prefs.js', '/assets/espaces/accueil/polls.js', '/assets/espaces/compte/profil-gaming.js', '/assets/commun/report.js', '/assets/espaces/accueil/saisons-css.js', '/assets/espaces/accueil/saisons.js', '/assets/espaces/compte/skills.js', '/assets/espaces/compte/social.js', '/assets/espaces/irl/ss-unwrap.js', '/assets/espaces/infos/support-files.js', '/pages/irl/calendrier.html', '/pages/irl/cine.html', 
 ];
 
 // Bibliothèque versionnée (épinglée) : mise en cache si le réseau le permet, sans bloquer l'installation.
@@ -188,7 +188,7 @@ function pageKey(req) {
 }
 
 /**
- * Réseau d'abord : essaie le réseau et garde une copie. Hors ligne, sert la copie en cache, sinon offline.html.
+ * Réseau d'abord : essaie le réseau et garde une copie. Hors ligne, sert la copie en cache, sinon /offline.html.
  * @param {Request} req Requête à traiter.
  * @param {boolean} [revalidate] Si vrai, demande au serveur de vérifier la version (évite le cache HTTP du navigateur).
  * @returns {Promise<Response>} La réponse réseau, la copie en cache, ou une erreur réseau.
@@ -203,7 +203,7 @@ async function networkFirst(req, revalidate = false) {
     if (res.ok) cache.put(key, res.clone());
     return res;
   } catch (e) {
-    return (await cache.match(key)) || (await cache.match('offline.html')) || Response.error();
+    return (await cache.match(key)) || (await cache.match('/offline.html')) || Response.error();
   }
 }
 
@@ -274,7 +274,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: String(data.body || '').slice(0, 120),
     tag: String(data.tag || 'hg-message').slice(0, 120),
-    icon: new URL('assets/img/icon-192.png', self.registration.scope).href,
+    icon: new URL('/assets/images/marque/icon-192.png', self.registration.scope).href,
     data: { conversation_id: data.conversation_id || null },
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -284,7 +284,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const conv = event.notification.data?.conversation_id;
-  const target = new URL('messages.html', self.registration.scope);
+  const target = new URL('/pages/compte/messages.html', self.registration.scope);
   if (conv && /^[0-9a-f-]{36}$/i.test(conv)) target.searchParams.set('c', conv);
   event.waitUntil((async () => {
     const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

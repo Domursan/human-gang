@@ -1,4 +1,4 @@
-// ===== Humane Gang — Questions du gang (quiz.html) =====
+// ===== Humane Gang — Questions du gang (/pages/jeux/quiz.html) =====
 // Les membres répondent aux questions créées par l'admin ; une bonne réponse rapporte des Paillettes, créditées par le serveur.
 // RPC : hg_quiz_list (questions ouvertes et répondues), hg_quiz_answer (une seule tentative par question).
 // Filtre par difficulté, historique repliable, explication et bonne réponse affichées après la réponse.
@@ -6,11 +6,11 @@
 /*
  * Rôle : affiche le résumé (questions ouvertes, bonnes réponses, Paillettes gagnées), les questions ouvertes
  * selon leur type (choix, cases, texte, nombre), et l'historique des réponses déjà données.
- * Page : quiz.html (session membre requise).
+ * Page : /pages/jeux/quiz.html (session membre requise).
  * Dépendances : core.js (initPage, sb, esc, $, errMsg).
  * Données : RPC hg_quiz_list et hg_quiz_answer ; dates affichées à l'heure de Zurich.
  */
-import { sb, initPage, esc, $, errMsg } from './core.js';
+import { sb, initPage, esc, $, errMsg } from '../../commun/core.js';
 
 /* ---------- Initialisation : session membre requise ---------- */
 await initPage();

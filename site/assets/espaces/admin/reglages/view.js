@@ -13,10 +13,10 @@
 // Exporte : mountReglagesSection (monte la section), reglagesActions (boutons de l'en-tête),
 // showReglagesPart (partie affichée : identite | textes | menu | etat = formulaire, cles = liste des clés avancées).
 // =====================================================================
-import { sb, toast, errMsg, esc, $, fmtDateTime } from '../core.js';
-import { getCachedProfile } from '../core/profile.js';
-import { confirmBox } from '../ui-confirm.js';
-import { openDrawer } from '../admin/ui/drawer.js';
+import { sb, toast, errMsg, esc, $, fmtDateTime } from '../../../commun/core.js';
+import { getCachedProfile } from '../../../commun/core/profile.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { openDrawer } from '../ui/drawer.js';
 import { KEYS, DEDIE, KIND_LABEL, KEY_RE, isSensitive, managedOf, kindOf, parseValue, displayValue } from './keys.js';
 import { mountIdentite, showIdentitePart } from './identite.js';
 import { PARTS_LOT1 } from './keys-lot1.js';

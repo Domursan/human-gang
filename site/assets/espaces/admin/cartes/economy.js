@@ -7,7 +7,7 @@
 // Exporte : econPanel (HTML), updateSum (total des taux), resetEconGroup (défauts d'un groupe), saveEcon (enregistrement),
 // showEconPart (n'affiche qu'une partie du formulaire : la coquille en fait des sous-sections ; le formulaire reste unique).
 // =====================================================================
-import { sb, toast, errMsg, esc, $ } from '../core.js';
+import { sb, toast, errMsg, esc, $ } from '../../../commun/core.js';
 import { C } from './state.js';
 import { ECON, CFG_DEFAULT, RARITY_IDS } from './constants.js';
 import { check, act, nf } from './helpers.js';

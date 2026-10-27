@@ -1,11 +1,11 @@
-// ===== Rejoindre (rejoindre.html) : un lien d'invitation (rejoindre.html?l=<token>) donne un code unique HG-XXXXXX valable 48 h (réglable) =====
+// ===== Rejoindre (/pages/infos/rejoindre.html) : un lien d'invitation (/pages/infos/rejoindre.html?l=<token>) donne un code unique HG-XXXXXX valable 48 h (réglable) =====
 // Module de la page d'invitation. Le lien contient un jeton (paramètre « l »). Le serveur (RPC hg_claim_invite_link)
-// transforme ce jeton en un code personnel, que la personne utilise ensuite sur compte.html pour créer son compte.
+// transforme ce jeton en un code personnel, que la personne utilise ensuite sur /pages/compte/compte.html pour créer son compte.
 // Dépendances : core.js, icons.js, invite-config.js. Le code est mémorisé en sessionStorage pour survivre à un rechargement.
 // N'exporte rien.
-import { sb, initPage, esc, $, toast, errMsg, getUser, currentLogo } from './core.js';
-import { svg } from './icons.js';
-import { loadInviteConfig, inviteConfig, inviteCodeRe } from './invite-config.js';
+import { sb, initPage, esc, $, toast, errMsg, getUser, currentLogo } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { loadInviteConfig, inviteConfig, inviteCodeRe } from '../compte/invite-config.js';
 
 /* ---------- Constantes et clés de stockage ---------- */
 const TOKEN = new URL(location.href).searchParams.get('l')?.trim() || '';
@@ -68,7 +68,7 @@ function done() { box.removeAttribute('aria-busy'); }
 function renderMember() {
   box.innerHTML = `${head('Déjà dans la place', `Salut ${me.pseudo} !`)}
     <p class="rj-lead">Tu fais déjà partie du Humane Gang : pas besoin de code d'invitation. Si tu veux inviter quelqu'un, partage-lui simplement ce lien.</p>
-    <div class="rj-actions"><a class="btn btn-primary" href="accueil.html">${IC.home} Aller à l'accueil</a></div>`;
+    <div class="rj-actions"><a class="btn btn-primary" href="/pages/compte/accueil.html">${IC.home} Aller à l'accueil</a></div>`;
   done();
 }
 
@@ -82,18 +82,18 @@ function renderError(msg) {
     <p class="rj-lead">${esc(msg)}</p>
     <p class="rj-lead">Demande un nouveau lien à la personne qui t'a invité·e, ou écris-nous.</p>
     <div class="rj-actions">
-      <a class="btn btn-primary" href="assistance.html">Contacter l'assistance</a>
-      <a class="btn btn-ghost" href="compte.html">J'ai déjà un compte</a>
+      <a class="btn btn-primary" href="/pages/infos/assistance.html">Contacter l'assistance</a>
+      <a class="btn btn-ghost" href="/pages/compte/compte.html">J'ai déjà un compte</a>
     </div>`;
   done();
 }
 
 /**
- * Écran du code : affiche le code, le bouton « Copier » et le lien vers l'inscription (compte.html).
+ * Écran du code : affiche le code, le bouton « Copier » et le lien vers l'inscription (/pages/compte/compte.html).
  * @param {{token: string, code: string, at: number, loggedIn: boolean}} v code obtenu et état de connexion
  */
 function renderCode(v) {
-  const signupHref = `compte.html?code=${encodeURIComponent(v.code)}#inscription`;
+  const signupHref = `/pages/compte/compte.html?code=${encodeURIComponent(v.code)}#inscription`;
   box.innerHTML = `${head('Tu es invité·e', 'Bienvenue dans le Humane Gang')}
     <p class="rj-lead">${v.loggedIn ? 'Il ne te reste qu\'à choisir ton pseudo.' : 'Le QG du gang : Secret Santa, sorties IRL et souvenirs. Voici ton code personnel pour créer ton compte.'}</p>
     <div class="rj-code-box">
@@ -105,7 +105,7 @@ function renderCode(v) {
     <div class="rj-actions">
       <a class="btn btn-primary" href="${esc(signupHref)}" id="rj-go">${v.loggedIn ? 'Continuer' : 'Créer mon compte'}</a>
     </div>
-    <p class="rj-foot">Déjà membre ? <a href="compte.html">Se connecter</a> · Un souci ? <a href="assistance.html">Assistance</a></p>`;
+    <p class="rj-foot">Déjà membre ? <a href="/pages/compte/compte.html">Se connecter</a> · Un souci ? <a href="/pages/infos/assistance.html">Assistance</a></p>`;
   done();
   $('#rj-copy').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(v.code); toast('Code copié', 'ok'); }

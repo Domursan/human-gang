@@ -13,7 +13,7 @@
  * Dépendances : core.js (esc), plateaux/api.js (plat, contenus, erreurTexte, jeu).
  * Exporte : afficher, OPTIONS.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { plat, contenus, erreurTexte, jeu } from '../api.js';
 
 /** Options propres à chaque jeu (voir l'en-tête). */

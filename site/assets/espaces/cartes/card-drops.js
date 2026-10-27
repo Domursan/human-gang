@@ -8,10 +8,10 @@
 // Clic → rpc hg_drop_claim → révélation + confettis + toast (dans le coin), ou « trop tard ».
 // Sans mouvement (prefers-reduced-motion ou effets coupés) : la carte reste immobile dans le coin, sans vol.
 // Une seule carte vole à la fois, et jamais en même temps qu'une image d'événement (dyn-events.js attend).
-import { sb, toast, esc, playSound, motionAllowed, hasSession, isNavCancel } from './core.js';
+import { sb, toast, esc, playSound, motionAllowed, hasSession, isNavCancel } from '../../commun/core.js';
 import { cardHtml } from './cartes-ui.js';
-import { rnd } from './utils.js';
-import { trajectory, KINDS } from './dyn-events.js';
+import { rnd } from '../../commun/utils.js';
+import { trajectory, KINDS } from '../../commun/dyn-events.js';
 
 /* ---------- Constantes et état ---------- */
 const MAX_VISIBLE = 3; // nombre maximum de cartes affichées en même temps
@@ -289,7 +289,7 @@ function ensureCardCss() {
   return new Promise((res) => {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = new URL('../css/cartes-card.css', import.meta.url).href;
+    l.href = new URL('./cartes-card.css', import.meta.url).href;
     l.onload = l.onerror = () => res();
     document.head.append(l);
   });

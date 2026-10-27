@@ -4,9 +4,9 @@
 // Envoi : hg_card_proposal_submit ; retrait : hg_card_proposal_cancel. Le Staff « cartes » valide dans l'admin
 // (admin-cards/proposals.js). Lecture : hg_card_proposals (RLS : seulement les siennes).
 // Exporte : mountProposals(app, me).
-import { sb, toast, errMsg, esc } from './core.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { cardHtml } from './cartes-ui.js';
-import { FIGURES, PARTITIONS, PALETTE, DEFAULT_BLASON, blasonDataUrl } from './blason.js';
+import { FIGURES, PARTITIONS, PALETTE, DEFAULT_BLASON, blasonDataUrl } from '../compte/blason.js';
 
 const STATUS = { en_attente: ['En attente', 'is-wait'], acceptee: ['Acceptée', 'is-ok'], refusee: ['Refusée', 'is-no'], retiree: ['Retirée', 'is-off'] };
 const FAMS = [['lieu', 'Lieu (un fief)'], ['moment', 'Moment'], ['objet', 'Objet']];

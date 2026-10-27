@@ -11,12 +11,12 @@
  * Exporte : PHOTO_BUCKET, PHOTO_COLS, uuid, uploadImage, removeObjects, signedUrls, signedUrl, openLightbox, thumbHtml, downloadAlbum,
  *   thumbPathOf, gridPath, uploadAlbumPhoto, insertPhotoRow, selectPhotos.
  */
-import { sb, esc } from './core.js';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { reactionBarHtml } from './reactions.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { prepareImage, prepareThumb } from './image-compress.js';
+import { sb, esc } from '../../commun/core.js';
+import { SUPABASE_URL, SUPABASE_KEY } from '../../commun/config.js';
+import { reactionBarHtml } from '../../commun/reactions.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { prepareImage, prepareThumb } from '../../commun/image-compress.js';
 
 /* ---------- Constantes ---------- */
 
@@ -189,7 +189,7 @@ function ensureLightbox() {
   d.addEventListener('close', () => { d.querySelector('img').removeAttribute('src'); lb.opener?.focus?.(); });
   d.querySelector('.lb-report').addEventListener('click', (e) => {
     const it = lb.items[lb.i];
-    if (it?.report) import('./report.js').then((m) => m.openReport('photo', it.report, e.currentTarget)).catch(() => {});
+    if (it?.report) import('../../commun/report.js').then((m) => m.openReport('photo', it.report, e.currentTarget)).catch(() => {});
   });
   d.querySelector('.lb-del').addEventListener('click', async () => {
     const it = lb.items[lb.i];

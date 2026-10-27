@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite), ./chat.js (creerChat).
  * Exporte : avatarHtml, couleurJoueur, nomJoueur, creerCadre.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, estInvite } from '../api.js';
 import { creerChat } from './chat.js';
 

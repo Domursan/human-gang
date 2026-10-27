@@ -6,9 +6,9 @@
 // La base refuse qu'un membre du Staff valide sa propre proposition.
 // Exporte : mountProposalsAdmin(host).
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
-import { cardHtml, rarityLabel } from '../cartes-ui.js';
-import { blasonDataUrl, blasonPng } from '../blason.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
+import { cardHtml, rarityLabel } from '../../cartes/cartes-ui.js';
+import { blasonDataUrl, blasonPng } from '../../compte/blason.js';
 import { C } from './state.js';
 import { check, uploadCardImage } from './helpers.js';
 import { refresh } from './data.js';

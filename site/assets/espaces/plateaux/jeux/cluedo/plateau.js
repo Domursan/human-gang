@@ -1,7 +1,7 @@
 // ===== Humane Gang — Cluedo : dessin du manoir (plateaux/jeux/cluedo/plateau.js) =====
 /*
  * Rôle : plan du manoir en grille 3 × 4 (disposition de la maquette ChateauPlateau).
- *   Si une image de fond existe (assets/img/plateaux/cluedo/plateau.webp, 1376 × 768), elle sert de fond
+ *   Si une image de fond existe (/assets/images/plateaux/cluedo/plateau.webp, 1376 × 768), elle sert de fond
  *   et les pièces deviennent des zones transparentes posées sur ses pièces (ZONES_IMAGE) ; sinon, dessin de repli (couleurs, noms, passages).
  *   Les pions des suspects et les armes sont posés au centre de leur pièce.
  *   Ce module ne fait que du HTML : c'est table.js qui le monte et décide quand le refaire.
@@ -10,7 +10,7 @@
  *   opts = { image: string|null, noms: {piece: nom}, pions: [{suspect, nom, couleur, initiale, piece, pseudo}],
  *            armes: [{arme, nom, piece}], voisines: [piece], maPiece: piece|null, cliquable: bool }
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 /* Grille : colonnes 0..2, rangées 0..3. Largeur 860 px, hauteur 540 px (maquette). */
 const LARGEUR = 860;
@@ -34,7 +34,7 @@ export const PIECES = {
   bureau:       { c: 2, r: 3, h: 1, fond: 'repeating-linear-gradient(0deg, #3E2A18 0 22px, #33220F 22px 24px), #3E2A18', passage: 'cuisine' },
 };
 
-/** Zones des pièces sur l'image du manoir (assets/img/plateaux/cluedo/plateau.webp, 1376 × 768), en % : gauche, haut, largeur, hauteur.
+/** Zones des pièces sur l'image du manoir (/assets/images/plateaux/cluedo/plateau.webp, 1376 × 768), en % : gauche, haut, largeur, hauteur.
  *  L'image a 3 rangées : billard et bibliothèque sont côte à côte à droite de l'escalier. */
 const ZONES_IMAGE = {
   cuisine:      [2.9, 4.6, 27.6, 27.3],

@@ -5,17 +5,17 @@
  * Dépendances : core.js (esc, avatarHtml).
  * Exporte : chargerCss, nf, km, PAILLETTE, gainHtml, classementHtml, jourLong, zurichIso.
  */
-import { esc, avatarHtml } from '../core.js';
+import { esc, avatarHtml } from '../../commun/core.js';
 
 /**
- * Ajoute une seule fois la feuille de style d'un jeu (assets/css/jeux-<nom>.css).
+ * Ajoute une seule fois la feuille de style d'un jeu (/assets/espaces/jeux/jeux-<nom>.css).
  * @param {string} nom Par exemple 'geo'.
  */
 export function chargerCss(nom) {
   if (document.querySelector(`link[data-jeux-css="${nom}"]`)) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL(`../../css/jeux-${nom}.css`, import.meta.url).href;
+  l.href = new URL(`./jeux-${nom}.css`, import.meta.url).href;
   l.dataset.jeuxCss = nom;
   document.head.append(l);
 }

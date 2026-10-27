@@ -5,8 +5,8 @@
 // informé de chaque lettre). Clavier à l'écran (AZERTY) et clavier physique. Partage « Sutom du gang #42 4/6 ».
 // RPC : hg_sutom_state(), hg_sutom_guess(p_word) (migration 084). Mot du jour pour l'admin : bouton « Réponses » (migration 134).
 // Exporte : mount(panel, ctx).
-import { errMsg } from '../core.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { errMsg } from '../../commun/core.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 const RANGEES = ['AZERTYUIOP', 'QSDFGHJKLM', 'WXCVBN'];
 const ETAT = { 2: 'bien placée', 1: 'mal placée', 0: 'absente' };
@@ -16,7 +16,7 @@ const FLAMME = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="tru
 function styles() {
   if (document.querySelector('link[data-jeux-css="sutom"]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../../css/jeux-sutom.css', import.meta.url).href; l.dataset.jeuxCss = 'sutom';
+  l.rel = 'stylesheet'; l.href = new URL('./jeux-sutom.css', import.meta.url).href; l.dataset.jeuxCss = 'sutom';
   document.head.append(l);
 }
 

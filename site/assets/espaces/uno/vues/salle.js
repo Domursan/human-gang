@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, avatarHtml, toast), uno/api.js (uno, erreurTexte, estInvite), uno/vues/chat.js (creerChat).
  * Exporte : creer.
  */
-import { esc, toast, avatarHtml } from '../../core.js';
+import { esc, toast, avatarHtml } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite } from '../api.js';
 import { creerChat } from './chat.js';
 
@@ -56,7 +56,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="uno-salle">
-      <nav class="uno-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="uno.html">Uno</a> › <span>Salle d'attente</span></nav>
+      <nav class="uno-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/uno.html">Uno</a> › <span>Salle d'attente</span></nav>
       <h1 class="uno-titre display" data-zone="titre"></h1>
 
       <div data-zone-adieu hidden class="card uno-salle-adieu">

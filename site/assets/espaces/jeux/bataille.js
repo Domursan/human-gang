@@ -1,5 +1,5 @@
 // ===== Humane Gang — page « Jeux », onglet Arène (idée J15, ex-« Bataille ») =====
-// Page : cartes.html#arene (onglet « Arène » de la page Cartes, monté par cartes.js). L'ancienne adresse jeux.html#bataille redirige vers elle.
+// Page : /pages/cartes/cartes.html#arene (onglet « Arène » de la page Cartes, monté par cartes.js). L'ancienne adresse /pages/jeux/jeux.html#bataille redirige vers elle.
 /*
  * Rôle : mini-jeu asynchrone avec les cartes de sa collection. Chacun règle son deck de défense (5 cartes, dans
  * l'ordre) ; pour attaquer, on choisit un membre et on aligne 5 cartes : 5 duels face à face, résolus par le serveur.
@@ -10,7 +10,7 @@
  * Dépendances : cartes-ui.js (cardHtml, rarityLabel, familyLabel) et assets/css/cartes-card.css.
  * Exporte : mount(panel, ctx) ; mini, resTxt, resultHtml et animate (réutilisés par l'Arène v2, jeux/arene-v2.js).
  */
-import { cardHtml, rarityLabel, familyLabel } from '../cartes-ui.js';
+import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';
 import { loadCss } from './devine.js';
 
 /** Raretés limitées : une seule carte de ces raretés par main (règle fondée sur la rareté, non sur la puissance). */

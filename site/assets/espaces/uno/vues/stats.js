@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc, avatarHtml), uno/api.js (uno, erreurTexte, estInvite).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite } from '../api.js';
 
 const nombre = (n) => Number(n || 0).toLocaleString('fr-CH');
@@ -98,7 +98,7 @@ export async function afficher(root) {
   const invite = estInvite();
 
   root.innerHTML = `<div class="uno-st">
-    <nav class="uno-fil" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="uno.html">Uno</a> › <span aria-current="page">Statistiques</span></nav>
+    <nav class="uno-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/uno.html">Uno</a> › <span aria-current="page">Statistiques</span></nav>
     <h1 class="uno-titre display" id="uno-st-titre">Mes statistiques Uno</h1>
     <div id="uno-st-zone" aria-live="polite"><p class="uno-st-aide">Chargement…</p></div>
   </div>`;

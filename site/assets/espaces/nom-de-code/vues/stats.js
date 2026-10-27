@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc), nom-de-code/api.js (ndc, erreurTexte).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { ndc, erreurTexte } from '../api.js';
 
 const nombre = (n) => Number(n || 0).toLocaleString('fr-CH');
@@ -92,7 +92,7 @@ export async function afficher(root) {
   let actif = true;
 
   root.innerHTML = `<div class="ndc-st">
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="nom-de-code.html">Codenames</a> › <span aria-current="page">Statistiques</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span aria-current="page">Statistiques</span></nav>
     <h1 class="ndc-titre">Mes statistiques</h1>
     <div id="ndc-st-zone" aria-live="polite"><p class="ndc-st-aide">Chargement…</p></div>
   </div>`;

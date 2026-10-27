@@ -1,17 +1,17 @@
-// ===== Humane Gang — Loup-Garou (loup-garou.html) : démarrage et navigation entre les écrans =====
+// ===== Humane Gang — Loup-Garou (/pages/jeux/loup-garou.html) : démarrage et navigation entre les écrans =====
 /*
  * Rôle : initialise la page (session membre, accès à la page « loup-garou » : admins seulement au lancement),
  * puis affiche l'écran demandé par l'adresse :
  *   (vide) accueil · #roles catalogue · #creer création · #rejoindre/CODE rejoindre · #partie/CODE partie · #stats statistiques.
- *   loup-garou.html?code=HGLG-1234 (lien d'invitation) mène à #rejoindre/HGLG-1234.
+ *   /pages/jeux/loup-garou.html?code=HGLG-1234 (lien d'invitation) mène à #rejoindre/HGLG-1234.
  * Visiteur sans compte (lien d'invitation) : mode invité (migration 120), seuls #rejoindre et #partie sont ouverts.
  * Chaque écran est un module de assets/js/loup-garou/vues/ qui exporte afficher(root, ctx) et peut renvoyer une
  * fonction de nettoyage. La partie elle-même est pilotée par loup-garou/partie.js.
  * Dépendances : core.js (initPage, $), loup-garou/*.
  * Exporte : rien.
  */
-import { initPage, $, motionAllowed, loadMyPages, pageLabel } from './core.js';
-import { activerInvite } from './loup-garou/api.js';
+import { initPage, $, motionAllowed, loadMyPages, pageLabel } from '../../commun/core.js';
+import { activerInvite } from './api.js';
 
 const moi = await initPage({ auth: 'optional' });
 // Visiteur sans compte : il joue en invité (lien d'invitation) ; le reste du jeu lui est fermé.
@@ -21,7 +21,7 @@ activerInvite(INVITE);
 // Une fois déclarée, initPage applique la règle d'accès normale (et renvoie à l'accueil un membre sans accès).
 if (!INVITE) await loadMyPages();
 if (!INVITE && !pageLabel('loup-garou') && !moi?.is_admin) {
-  location.replace('jeux.html');
+  location.replace('/pages/jeux/jeux.html');
   await new Promise(() => {});
 }
 // Animations (éclipse, feu, lueurs) coupées si le membre les a désactivées : classe lg-calme sur <body>.
@@ -35,7 +35,7 @@ let jeton = 0;
 function route() {
   const q = new URLSearchParams(location.search).get('code');
   if (q && !location.hash) {
-    history.replaceState(null, '', `loup-garou.html#rejoindre/${encodeURIComponent(q.toUpperCase())}`);
+    history.replaceState(null, '', `/pages/jeux/loup-garou.html#rejoindre/${encodeURIComponent(q.toUpperCase())}`);
   }
   const [nom, arg] = location.hash.replace(/^#/, '').split('/');
   return { nom: nom || 'accueil', arg: arg ? decodeURIComponent(arg).toUpperCase() : null };
@@ -47,12 +47,12 @@ export function naviguer(hash) {
 }
 
 const ECRANS = {
-  accueil: () => import('./loup-garou/vues/accueil.js'),
-  roles: () => import('./loup-garou/vues/catalogue.js'),
-  creer: () => import('./loup-garou/vues/creer.js'),
-  rejoindre: () => import('./loup-garou/vues/rejoindre.js'),
-  partie: () => import('./loup-garou/partie.js'),
-  stats: () => import('./loup-garou/vues/stats.js'),
+  accueil: () => import('./vues/accueil.js'),
+  roles: () => import('./vues/catalogue.js'),
+  creer: () => import('./vues/creer.js'),
+  rejoindre: () => import('./vues/rejoindre.js'),
+  partie: () => import('./partie.js'),
+  stats: () => import('./vues/stats.js'),
 };
 
 async function afficher() {
@@ -64,7 +64,7 @@ async function afficher() {
     // Invité sans lien de partie : rien à afficher ici
     app.innerHTML = `<section class="card lg-erreur"><h1 class="display">Loup-Garou</h1>
       <p>Le Loup-Garou se joue sur invitation. Ouvre le lien de partie qu'on t'a envoyé, ou connecte-toi si tu es membre du gang.</p>
-      <p><a class="btn btn-primary" href="compte.html?next=${encodeURIComponent('loup-garou.html')}">Me connecter</a></p></section>`;
+      <p><a class="btn btn-primary" href="/pages/compte/compte.html?next=${encodeURIComponent('/pages/jeux/loup-garou.html')}">Me connecter</a></p></section>`;
     app.setAttribute('aria-busy', 'false');
     return;
   }
@@ -80,7 +80,7 @@ async function afficher() {
     nettoyer = typeof res === 'function' ? res : null;
   } catch (e) {
     console.error('[loup-garou]', e);
-    app.innerHTML = '<section class="card lg-erreur"><h1 class="display">Oups</h1><p>Cet écran n\'a pas pu s\'afficher.</p><p><a class="btn btn-primary" href="loup-garou.html">Retour au Loup-Garou</a></p></section>';
+    app.innerHTML = '<section class="card lg-erreur"><h1 class="display">Oups</h1><p>Cet écran n\'a pas pu s\'afficher.</p><p><a class="btn btn-primary" href="/pages/jeux/loup-garou.html">Retour au Loup-Garou</a></p></section>';
   } finally {
     app.setAttribute('aria-busy', 'false');
     window.scrollTo({ top: 0 });

@@ -3,11 +3,11 @@
 // réimporter le fichier met à jour l'événement au lieu de le dupliquer.
 /*
  * Rôle : fabrique un fichier .ics (agenda) pour une sortie IRL et le télécharge. Le format suit la RFC 5545.
- * Page : irl.html, evenements.html et les pages qui proposent « Ajouter à mon agenda ».
+ * Page : /pages/irl/irl.html, /pages/irl/evenements.html et les pages qui proposent « Ajouter à mon agenda ».
  * Dépendances : reglages-valeurs-lot3.js (durée par défaut d'une sortie sans heure de fin).
  * Exporte : icsText, icsDate, buildIcs, icsFilename, downloadIcs, addToCalendar.
  */
-import { dureeDefautMs } from './reglages-valeurs-lot3.js';
+import { dureeDefautMs } from '../admin/reglages-valeurs-lot3.js';
 
 /** Identifiant du produit, inscrit dans le fichier (PRODID, obligatoire en RFC 5545). */
 const PRODID = '-//Humane Gang//Sorties//FR';

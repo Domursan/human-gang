@@ -11,9 +11,9 @@
  * Exporte : mountRolesSection, mountMembresIrlSection, refreshRolesViews (après une modification faite depuis une fiche),
  * memberRolesHtml (bloc des rôles de la fiche), memberRoleChange, memberAccessReset, roleIdFromLabel.
  */
-import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { busy, check, sectionError } from './admin/common.js';
+import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { busy, check, sectionError } from './common.js';
 
 /* ---------- Constantes et outils ---------- */
 const ID_RE = /^[a-z0-9-]{2,30}$/;       // identifiant d'un rôle (même règle que la base)

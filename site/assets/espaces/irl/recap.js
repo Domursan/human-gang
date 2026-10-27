@@ -1,13 +1,13 @@
-// ===== Humane Gang — récap annuel au format « story » (recap.html) =====
+// ===== Humane Gang — récap annuel au format « story » (/pages/irl/recap.html) =====
 // Lecteur plein écran des chiffres de l'année (sorties, photos, Secret Santa, moments, badges, messages) et
 // image verticale 1080 × 1920 téléchargeable. Données : RPC hg_year_recap (année) et hg_members (première année).
 // Dépendances : core.js, ss-card.js (chargement d'image et téléchargement), icons.js, utils.js (pluralWord).
 // Le récap est réservé aux membres. N'exporte que renderRecapImage (image du récap).
-import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from './core.js';
+import { sb, initPage, esc, $, $$, errMsg, toast, currentLogo } from '../../commun/core.js';
 import { loadImage, downloadCanvas } from './ss-card.js';
-import { svg } from './icons.js';
-import { pluralWord } from './utils.js';
-import { cardHtml, rarityLabel } from './cartes-ui.js';
+import { svg } from '../../commun/icons.js';
+import { pluralWord } from '../../commun/utils.js';
+import { cardHtml, rarityLabel } from '../cartes/cartes-ui.js';
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -86,7 +86,7 @@ function buildSlides(r) {
         <p class="rc-sub">Aucune sortie, photo ni Secret Santa enregistrés pour ${esc(year)}. Pas grave : les plus belles histoires du gang restent à écrire.</p>
         <div class="rc-actions">
           ${year > minYear ? `<button class="btn btn-light" type="button" data-year="${year - 1}">Voir ${year - 1}</button>` : ''}
-          <a class="btn btn-ghost rc-btn-ghost" href="irl.html">Proposer une sortie</a>
+          <a class="btn btn-ghost rc-btn-ghost" href="/pages/irl/irl.html">Proposer une sortie</a>
         </div>`,
     });
     return S;
@@ -249,7 +249,7 @@ function buildSlides(r) {
 }
 
 /* =========================================================
-   Rétrospective de l'anniversaire du gang (recap.html?retro=1, migration 096)
+   Rétrospective de l'anniversaire du gang (/pages/irl/recap.html?retro=1, migration 096)
    ========================================================= */
 /** Mode rétrospective : toute la vie du serveur (RPC hg_gang_retro) au lieu d'une année. */
 const RETRO = new URLSearchParams(location.search).get('retro') === '1';
@@ -302,7 +302,7 @@ function buildRetroSlides(r, familyUrl) {
       <h2 class="rc-title rc-title-sm">Joyeux anniversaire au gang</h2>
       <div class="rc-actions">
         <button class="btn btn-light" type="button" data-act="replay">${ICON.replay} Revoir</button>
-        <a class="btn btn-ghost rc-btn-ghost" href="accueil.html">Retour à l’accueil</a>
+        <a class="btn btn-ghost rc-btn-ghost" href="/pages/compte/accueil.html">Retour à l’accueil</a>
       </div>`,
   });
   return S;
@@ -348,7 +348,7 @@ function renderStage(minYear) {
             <select id="rc-year">${yearOptions(minYear)}</select></label>
           <span class="rc-counter" id="rc-counter" aria-live="polite"></span>
           <button class="rc-icon-btn" type="button" id="rc-pause" aria-pressed="false" aria-label="Mettre en pause">${ICON.pause}</button>
-          <a class="rc-icon-btn" href="accueil.html" aria-label="Fermer le récap">${ICON.close}</a>
+          <a class="rc-icon-btn" href="/pages/compte/accueil.html" aria-label="Fermer le récap">${ICON.close}</a>
         </div>
       </div>
       <div class="rc-slides" id="rc-slides">
@@ -490,7 +490,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') { e.preventDefault(); show(P.i + 1); }
   else if (e.key === 'ArrowLeft') { e.preventDefault(); show(P.i - 1); }
   else if (e.key === ' ' && !e.target.closest?.('button, a')) { e.preventDefault(); setPaused(!P.paused); }
-  else if (e.key === 'Escape') location.href = 'accueil.html';
+  else if (e.key === 'Escape') location.href = '/pages/compte/accueil.html';
 });
 
 /**
@@ -624,7 +624,7 @@ async function onDownload(btn) {
     const slug = String(me.pseudo || 'moi').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'moi';
     await downloadCanvas(canvas, `recap-hg-${year}-${slug}.png`);
     toast('Récap téléchargé', 'ok');
-    import('./sound.js').then((m) => m.playSound?.('success')).catch(() => {});
+    import('../../commun/sound.js').then((m) => m.playSound?.('success')).catch(() => {});
   } catch (e) {
     toast(`Téléchargement impossible : ${errMsg(e)}`, 'error');
   } finally {
@@ -667,12 +667,12 @@ async function load() {
       P.slides = buildSlides(P.recap);
       document.title = `Récap ${year} · Humane Gang`;
     }
-    $('#rc-fallback').innerHTML = `Le récap ${esc(year)} s'affiche en plein écran. <a href="accueil.html">Retour à l'accueil</a>`;
+    $('#rc-fallback').innerHTML = `Le récap ${esc(year)} s'affiche en plein écran. <a href="/pages/compte/accueil.html">Retour à l'accueil</a>`;
     renderStage(minYear);
     if (RETRO) { // rétrospective : pas de choix d'année
       document.querySelector('.rc-year-pick')?.remove();
       document.querySelector('.rc-stage')?.setAttribute('aria-label', 'Rétrospective du Humane Gang');
-      $('#rc-fallback').innerHTML = 'La rétrospective s’affiche en plein écran. <a href="accueil.html">Retour à l’accueil</a>';
+      $('#rc-fallback').innerHTML = 'La rétrospective s’affiche en plein écran. <a href="/pages/compte/accueil.html">Retour à l’accueil</a>';
     }
     setPaused(false);
     show(0);
@@ -682,7 +682,7 @@ async function load() {
   } catch (e) {
     document.querySelector('.rc-stage')?.remove();
     document.body.classList.remove('rc-open');
-    $('#rc-fallback').innerHTML = `Impossible de charger le récap ${esc(year)} (${esc(errMsg(e))}). <a href="accueil.html">Retour à l'accueil</a>`;
+    $('#rc-fallback').innerHTML = `Impossible de charger le récap ${esc(year)} (${esc(errMsg(e))}). <a href="/pages/compte/accueil.html">Retour à l'accueil</a>`;
   }
   app.removeAttribute('aria-busy');
 }

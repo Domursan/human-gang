@@ -9,10 +9,10 @@
  * Exporte : duel (appels), suivrePartie, messages, erreurTexte, activerInvite, estInvite, jetonInvite,
  *   JEUX (noms et réglages des jeux), jeuxVisibles, peutVoirJeuxDev, COULEURS_MM (couleurs du Mastermind).
  */
-import { sb, errMsg, notify } from '../core.js';
-import { getCachedProfile } from '../core/profile.js';
-import { viewAsActive } from '../core/view-as.js';
-import { canAccess, pageLabel, pageMode } from '../core/pages-access.js';
+import { sb, errMsg, notify } from '../../commun/core.js';
+import { getCachedProfile } from '../../commun/core/profile.js';
+import { viewAsActive } from '../../commun/core/view-as.js';
+import { canAccess, pageLabel, pageMode } from '../../commun/core/pages-access.js';
 
 /* ---------- Jeux et réglages (textes affichés) ---------- */
 /** Jeux, variantes et temps proposés. Images : assets/img/jeux/<image>.webp. */

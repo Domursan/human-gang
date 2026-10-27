@@ -9,12 +9,12 @@
 // icons.js, admin/common.js (sectionError), helpers.js (pagination, dates, annuaire).
 // Exporte : createPhotosPanel (fabrique la vue : élément HTML et fonction de rechargement).
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
-import { removeObjects, signedUrls, signedUrl, thumbHtml, openLightbox, selectPhotos, gridPath, thumbPathOf, uploadImage } from '../photos.js';
-import { prepareThumb } from '../image-compress.js';
-import { confirmBox } from '../ui-confirm.js';
-import { svg } from '../icons.js';
-import { sectionError } from '../admin/common.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
+import { removeObjects, signedUrls, signedUrl, thumbHtml, openLightbox, selectPhotos, gridPath, thumbPathOf, uploadImage } from '../../irl/photos.js';
+import { prepareThumb } from '../../../commun/image-compress.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { svg } from '../../../commun/icons.js';
+import { sectionError } from '../common.js';
 import { pageRange, pageOf, pagerHtml, dayLabel, peopleOptions } from './helpers.js';
 
 /* Icônes des boutons Légende et Supprimer. */

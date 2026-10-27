@@ -7,7 +7,7 @@
  *   loup-garou/ui.js (icone, filAriane, avatar, pseudo, vignetteRole).
  * Exporte : afficher.
  */
-import { esc, getProfile } from '../../core.js';
+import { esc, getProfile } from '../../../commun/core.js';
 import { lg, erreurTexte } from '../api.js';
 import { CAMPS, ROLES, roleById } from '../roles.js';
 import { icone, filAriane, avatar, pseudo, vignetteRole } from '../ui.js';

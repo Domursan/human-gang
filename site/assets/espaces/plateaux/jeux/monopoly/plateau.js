@@ -10,7 +10,7 @@
  * Exporte : positionCase(i) -> { col, row, cote }, plateauHtml(opts) -> HTML des cases (sans le cadre).
  *   opts = { plateau: [40 cases], contenus, joueurs, proprietes, maCase: case de mon pion|null, cliquable: bool }
  */
-import { esc, initials } from '../../../core.js';
+import { esc, initials } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 
 /** Dimension de référence du plateau (la grille de la maquette fait 736 px). */

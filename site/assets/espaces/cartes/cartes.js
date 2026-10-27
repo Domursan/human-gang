@@ -5,24 +5,24 @@
 // Règle de conception : la Boutique n'achète que des boosters (ils vont dans l'inventaire) ; on les ouvre dans l'onglet Ouverture (un seul, ou plusieurs d'un coup).
 // Sans hg_booster_types_me (migration pas encore déployée), la page garde l'ancien mode : un seul booster classique et un stock générique (repli, voir typed()).
 // Lecture : hg_card_sets, hg_cards, hg_card_copies, hg_card_wishlist, hg_wallet_log. Rendu : cartes-ui.js.
-// Collection d'un autre membre (lecture seule) : cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
+// Collection d'un autre membre (lecture seule) : /pages/cartes/cartes.html#collection/<id> ; RPC hg_members pour le pseudo.
 // Paillettes (icône, solde LCD) : paillettes.js. Tout le texte de l'interface est en français ; tout texte venant de la base passe par esc().
 // Succès « Pentakill » (F9, migration 101) : hg_pentakill_check après un booster de 5 cartes ; bannière (cartes-pentakill.js).
-// Fichier de la page cartes.html : il n'exporte rien. boot() (en bas) lance la page.
+// Fichier de la page /pages/cartes/cartes.html : il n'exporte rien. boot() (en bas) lance la page.
 // Plan : données, squelette, solde, onglets, boosters (cartouches, ouverture, révélation), collection,
 // recyclage, fiche détail, collection d'un autre membre, classement, échanges, Arène, historique, événements, démarrage.
 // Arène (onglet arene) : le module jeux/arene-v2.js est chargé et monté à la première ouverture de l'onglet (mountArene) ; il affiche l'Arène v2 ou, si elle n'est pas ouverte, l'Arène actuelle (jeux/bataille.js).
 // La barre d'onglets est masquée (CSS) : la navigation est dans le menu du haut (core/header.js). Les onglets restent la
-// mécanique qui affiche le bon panneau, pilotée par l'adresse (cartes.html#<onglet>) et par les boutons internes ;
+// mécanique qui affiche le bon panneau, pilotée par l'adresse (/pages/cartes/cartes.html#<onglet>) et par les boutons internes ;
 // le titre visible de la section (#cartes-section-h) dit où l'on est.
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo, getPrefs, setPrefs } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, avatarHtml, playSound, motionAllowed, effectsEnabled, notify, currentLogo, getPrefs, setPrefs } from '../../commun/core.js';
 import { RARITIES, RARITIES_TIRAGE, rarityLabel, rarityRank, FAMILIES, familyLabel, cardHtml, cardBackHtml, fmtP, serialLabel } from './cartes-ui.js';
-import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from './paillettes.js';
-import { pluralCount } from './utils.js';
+import { fmtPaillettes, pastilleHtml, lcdSet, lcdDelta, lcdBlink } from '../../commun/paillettes.js';
+import { pluralCount } from '../../commun/utils.js';
 import { createZoom, ICON_ZOOM, ICON_STAR, TINT as RARITY_TINT } from './cartes-zoom.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
-import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllowed, clearOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : collection hors ligne
-import { openProof, proofCss } from './quest-proofs.js';
+import { isOffline, startOfflinePage, saveOffline, cacheCardImages, offlineAllowed, clearOffline, offlineBannerHtml } from '../../commun/offline-store.js'; // Q4 : collection hors ligne
+import { openProof, proofCss } from '../accueil/quest-proofs.js';
 import { boosterStyleClass } from './booster-styles.js';
 import { themeDecor, playOpeningFx } from './booster-themes.js';
 import { onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml } from './cartes-saisons.js';
@@ -37,8 +37,8 @@ import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.j
 import { initAtelier, drawAtelier } from './cartes-atelier.js';
 import { initEnchere, drawEnchere } from './cartes-enchere.js';
 import { LOT as COL_LOT, SEUIL as COL_SEUIL, lotsAnticipes, gardeFocus, mesurerGroupes, attrGroupe } from './cartes-lots.js';
-import { foldText } from './core/search.js';
-import { refreshCompteurs } from './core/badges-compteur.js';
+import { foldText } from '../../commun/core/search.js';
+import { refreshCompteurs } from '../../commun/core/badges-compteur.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -691,7 +691,7 @@ let arene = null;
 function mountArene() {
   if (arene) return;
   const panel = $('#cartes-p-arene');
-  arene = import('./jeux/arene-v2.js')
+  arene = import('../jeux/arene-v2.js')
     .then((m) => m.mount(panel, { sb, me, toast, esc }))
     .catch((e) => {
       console.warn('[arène]', e);
@@ -1469,7 +1469,7 @@ function drawQuests() {
   const Q = S.quests;
   const head = '<h2 id="cartes-quests-h">Quêtes de la semaine</h2>';
   // Encart « Questions du gang » : toujours affiché sous les quêtes, même pendant le chargement ou en erreur
-  const encart = '<p class="cq-encart">Questions du gang : gagne des Paillettes en répondant aux questions de l’admin, sur la page <a href="quiz.html">Questions du gang</a>.</p>';
+  const encart = '<p class="cq-encart">Questions du gang : gagne des Paillettes en répondant aux questions de l’admin, sur la page <a href="/pages/jeux/quiz.html">Questions du gang</a>.</p>';
   if (!Q) { box.innerHTML = `${head}<p class="muted small">Chargement des quêtes…</p>${encart}`; return; }
   if (Q.error) { box.innerHTML = `${head}<p class="muted small">Quêtes indisponibles pour le moment.</p>${encart}`; return; }
   const list = Q.quests || [];
@@ -2546,7 +2546,7 @@ function drawCollection(focusId) {
         <button type="button" class="btn btn-ghost" data-action="mass">Recycler les doublons</button>
       </div>
       <div class="cz-extra">
-        <a class="btn btn-ghost" href="collection-a4.html?set=${all ? 'all' : esc(set.id)}">Imprimer ma planche</a>
+        <a class="btn btn-ghost" href="/pages/cartes/collection-a4.html?set=${all ? 'all' : esc(set.id)}">Imprimer ma planche</a>
         <button type="button" class="btn btn-ghost" data-action="champion">Ma carte Champion</button>
       </div>
     </section>
@@ -2704,7 +2704,7 @@ function renderDetail() {
     </button>
     ${n ? `<button type="button" class="cd-wish cd-fav${S.favs.has(k.id) ? ' is-on' : ''}" data-action="fav" data-card="${esc(k.id)}" aria-pressed="${S.favs.has(k.id) ? 'true' : 'false'}">${ICON_STAR}<span>${S.favs.has(k.id) ? 'Dans mes favoris' : 'Ajouter aux favoris'}</span></button>` : ''}
     ${k.flavor ? `<p class="cartes-flavor">${esc(k.flavor)}</p>` : ''}
-    ${k.moment_id ? `<p><a class="cd-moment" href="historique.html#moment-${esc(k.moment_id)}">Voir le moment dans l’historique</a></p>` : ''}
+    ${k.moment_id ? `<p><a class="cd-moment" href="/pages/irl/historique.html#moment-${esc(k.moment_id)}">Voir le moment dans l’historique</a></p>` : ''}
     <section class="cd-sec">
       <h3 class="cd-h">Mes exemplaires</h3>
       ${n ? `<ul class="cartes-copies">${cps.map((cp) => copyRow(cp, k)).join('')}</ul>` : `<p class="cd-empty">${esc(uniqueStateOf(k) || 'Pas encore obtenue.')}</p>`}
@@ -2816,7 +2816,7 @@ async function detailAction(action, el) {
 
 /* ---------- Collection d'un autre membre (lecture seule) ---------- */
 /* Vue ouverte par l'adresse #collection/<id> ou par un lien du classement (voir routeFromHash). */
-// Adresse : cartes.html#collection/<id>. Mêmes données et mêmes composants que « Collection » (cartes-zoom.js compris),
+// Adresse : /pages/cartes/cartes.html#collection/<id>. Mêmes données et mêmes composants que « Collection » (cartes-zoom.js compris),
 // mais rien n'est modifiable : on voit ses cartes, on coche celles qu'on lui demande, puis on ouvre l'éditeur d'offre.
 // S.peer = { id, member, copies, byCard, loading, error, setId, filters, picks (Set de cartes demandées), shownIds }.
 /** Forme de l'adresse d'une collection (#collection/<uuid>). */
@@ -2893,7 +2893,7 @@ function cleanHash() {
 
 /** Suit l'adresse : #collection/<id> ouvre la collection du membre, #<onglet> ouvre cet onglet, sinon la vue revient aux onglets. */
 function routeFromHash() {
-  // QR d'un code cadeau (idée C9) : cartes.html#code=HG-XXXX-XXXX ouvre la fenêtre déjà remplie, puis l'adresse est nettoyée.
+  // QR d'un code cadeau (idée C9) : /pages/cartes/cartes.html#code=HG-XXXX-XXXX ouvre la fenêtre déjà remplie, puis l'adresse est nettoyée.
   const code = codeFromHash(location.hash);
   if (code) {
     history.replaceState(null, '', location.pathname + location.search);
@@ -2903,7 +2903,7 @@ function routeFromHash() {
   }
   const m = PEER_RE.exec(location.hash);
   if (m) { openPeer(m[1].toLowerCase()); return; }
-  // Lien direct vers un onglet (cartes.html#boutique, #collection…) : on quitte la collection d'un membre s'il y en a une, puis l'onglet s'affiche
+  // Lien direct vers un onglet (/pages/cartes/cartes.html#boutique, #collection…) : on quitte la collection d'un membre s'il y en a une, puis l'onglet s'affiche
   const onglet = location.hash.slice(1);
   if (TABS.some(([id]) => id === onglet)) {
     if (S.peer) leavePeer();
@@ -3027,7 +3027,7 @@ function peerHead(P) {
         <p class="cartes-small" id="peer-sel" aria-live="polite">${pluralCount(n, 'carte sélectionnée', 'cartes sélectionnées', nf.format)}${n ? ' · elles seront pré-cochées dans « Je demande »' : ''}</p>
         <button type="button" class="btn btn-primary" data-action="peer-offer">Proposer un échange</button>
         ${n ? '<button type="button" class="btn btn-ghost" data-action="peer-clear">Vider la sélection</button>' : ''}
-        <a class="btn btn-ghost" href="collection-a4.html?user=${esc(P.id)}&amp;set=all">Imprimer sa planche</a>
+        <a class="btn btn-ghost" href="/pages/cartes/collection-a4.html?user=${esc(P.id)}&amp;set=all">Imprimer sa planche</a>
       </div>
     </section>`;
 }
@@ -3464,7 +3464,7 @@ async function boot() {
   });
   window.addEventListener('resize', () => fitAll(app));
   const fromHash = location.hash.slice(1);
-  if (TABS.some(([id]) => id === fromHash)) { S.tab = fromHash; showTab(); } // lien direct vers un onglet : cartes.html#boutique
+  if (TABS.some(([id]) => id === fromHash)) { S.tab = fromHash; showTab(); } // lien direct vers un onglet : /pages/cartes/cartes.html#boutique
   try {
     await Promise.all([loadStatic(), loadGenerations(), loadTagLabels()]); // générations (C8) et libellés des jeux (C7) : jamais d'erreur
     await refreshData();
@@ -3506,7 +3506,7 @@ function bootOffline() {
   if (!me || !c) {
     app.innerHTML = `<section class="page-head"><div><p class="eyebrow">Jeu de cartes</p><h1 class="page-title">Cartes</h1></div></section>
       ${offlineBannerHtml(null, 'ta collection')}
-      <div class="btn-row"><a class="btn btn-ghost" href="accueil.html">Aller à l'accueil</a></div>`;
+      <div class="btn-row"><a class="btn btn-ghost" href="/pages/compte/accueil.html">Aller à l'accueil</a></div>`;
     app.removeAttribute('aria-busy');
     return;
   }
@@ -3540,9 +3540,9 @@ function bootOffline() {
 }
 
 boot();
-// Secret caché « secousse » : module chargé à part (assets/js/eggs/pages.js).
-import('./eggs/pages.js').then((m) => m.secretsCartes()).catch(() => {});
+// Secret caché « secousse » : module chargé à part (/assets/espaces/arcade/pages.js).
+import('../arcade/pages.js').then((m) => m.secretsCartes()).catch(() => {});
 // Aperçu admin de la bannière Pentakill (?apercu=pentakill) : une fois, sans appel au serveur ni badge. Ignoré pour les membres.
 if (me?.is_admin && new URLSearchParams(location.search).get('apercu') === 'pentakill') showPentakill({ kind: 'rarete', level: 1, new_level: false });
 // Calendrier de l'Avent (migration 096) : rappel discret en décembre si une case attend sur l'accueil.
-if (new Date().getMonth() === 11) import('./avent.js').then((m) => m.cartesReminder('#cartes-section-h')).catch(() => {});
+if (new Date().getMonth() === 11) import('../accueil/avent.js').then((m) => m.cartesReminder('#cartes-section-h')).catch(() => {});

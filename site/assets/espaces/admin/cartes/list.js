@@ -5,12 +5,12 @@
 // helpers.js (utilitaires d'affichage), admin/list-tools.js (recherche, pagination).
 // Exporte : filteredCards (cartes retenues par filtres et recherche), cardsListData (liste paginée), cardsPanel (onglet).
 // =====================================================================
-import { esc } from '../core.js';
-import { RARITIES, FAMILIES, rarityLabel, familyLabel } from '../cartes-ui.js';
+import { esc } from '../../../commun/core.js';
+import { RARITIES, FAMILIES, rarityLabel, familyLabel } from '../../cartes/cartes-ui.js';
 import { ICON } from './constants.js';
 import { C } from './state.js';
 import { activeProfiles, identSetId, liveCount, maxSerialOf, nf, pseudo, selField, thumb } from './helpers.js';
-import { matches, searchHtml, moreHtml, emptyHtml } from '../admin/list-tools.js';
+import { matches, searchHtml, moreHtml, emptyHtml } from '../list-tools.js';
 
 /* =========================================================
    Cartes

@@ -10,13 +10,13 @@
  * Dépendances : core.js (esc, toast), nom-de-code/api.js (ndc, erreurTexte, estInvite, jetonInvite).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, estInvite, jetonInvite } from '../api.js';
 
-const LIEN_ACCUEIL = '<a class="btn btn-ghost ndc-rej-retour" href="nom-de-code.html">Retour à Codenames</a>';
+const LIEN_ACCUEIL = '<a class="btn btn-ghost ndc-rej-retour" href="/pages/jeux/nom-de-code.html">Retour à Codenames</a>';
 
 /** Lien de connexion qui revient sur la même partie après le compte. */
-const lienCompte = (code) => `<a class="ndc-rej-lien" href="compte.html?next=${encodeURIComponent(`nom-de-code.html?code=${code}`)}">J'ai un compte, me connecter</a>`;
+const lienCompte = (code) => `<a class="ndc-rej-lien" href="/pages/compte/compte.html?next=${encodeURIComponent(`/pages/jeux/nom-de-code.html?code=${code}`)}">J'ai un compte, me connecter</a>`;
 
 /** Réglages de la partie en étiquettes (texte, jamais la couleur seule). */
 function reglesChips(p) {

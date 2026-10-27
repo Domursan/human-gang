@@ -1,5 +1,5 @@
 // ===== Cartes à collectionner — « Ma carte Champion » (idée C17, Champions du gang) =====
-// Fenêtre ouverte depuis l'onglet Collection (cartes.html) : le membre compose sa carte « main » (jeu, main, emblème, phrase)
+// Fenêtre ouverte depuis l'onglet Collection (/pages/cartes/cartes.html) : le membre compose sa carte « main » (jeu, main, emblème, phrase)
 // avec un aperçu en direct (cardHtml), puis la propose ; le Staff « cartes » la valide dans le panel (admin-cards/champions.js).
 // Acceptée : carte rare de la série « Champions du gang <année> », famille Jeu vidéo, tirable dans les boosters,
 // et un exemplaire brillant offert au membre. Une carte par membre et par an ; personne ne crée la carte d'un autre.
@@ -7,7 +7,7 @@
 // RPC (migration 082) : hg_champion_me(), hg_champion_propose(p jsonb), hg_champion_withdraw().
 // Tout texte venant de la base ou saisi passe par esc() (cardHtml échappe aussi).
 // Exporte : GAMES, EMBLEMS, championCardPreview, openChampion(ctx) — ctx : { refresh } (recharge la collection après une acceptation).
-import { sb, toast, errMsg, esc } from './core.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { cardHtml } from './cartes-ui.js';
 
 /** Jeux proposés (identifiant, libellé) : liste blanche, identique à celle de la base. */
@@ -39,7 +39,7 @@ const C = { me: null, form: { game: 'lol', main: '', emblem: 'epee', flavor: '' 
 export function championCardPreview(f) {
   return {
     name: `${f.pseudo || 'Moi'} · main ${f.main || '…'}`, rarity: 'rare', family: 'jeu',
-    image_url: `assets/cards/champions/${EMBLEMS.some(([e]) => e === f.emblem) ? f.emblem : 'etoile'}.svg`,
+    image_url: `/assets/cartes/champions/${EMBLEMS.some(([e]) => e === f.emblem) ? f.emblem : 'etoile'}.svg`,
     flavor: f.flavor || '', caption: `${gameLabel(f.game)} · édition ${f.year}`, set_name: `Champions ${f.year}`,
   };
 }

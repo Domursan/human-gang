@@ -1,9 +1,9 @@
 // Admin : outils communs aux sections (icônes, busy, copie, envoi d'images, message d'erreur de section).
 // Utilisé par presque toutes les sections admin/. Dépend de core.js (Supabase, toast, erreurs), icons.js (SVG)
 // et image-compress.js (compression des images avant envoi).
-import { sb, toast, errMsg, esc } from '../core.js';
-import { svg } from '../icons.js';
-import { prepareImage, otherVariants } from '../image-compress.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { prepareImage, otherVariants } from '../../commun/image-compress.js';
 
 /* ---------- Icônes (SVG à trait) ---------- */
 /** Icônes des boutons d'action des sections (copier, supprimer, téléverser…). */

@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc, avatarHtml), uno/api.js (uno, erreurTexte, estInvite), uno/cartes.js (carteHtml, dosHtml).
  * Exporte : afficher.
  */
-import { esc, avatarHtml } from '../../core.js';
+import { esc, avatarHtml } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite } from '../api.js';
 import { carteHtml, dosHtml } from '../cartes.js';
 

@@ -12,11 +12,11 @@
 // Dépendances : core.js (sb, esc, currentLogo), cartes-ui.js (RARITIES, rarityLabel, cardHtml), booster-styles.js,
 // booster-themes.js (themeDecor), admin-cards/helpers.js (fetchAll, nf).
 // =====================================================================
-import { sb, esc, currentLogo } from '../core.js';
-import { RARITIES, rarityLabel, cardHtml } from '../cartes-ui.js';
-import { boosterStyleClass } from '../booster-styles.js';
-import { themeDecor } from '../booster-themes.js';
-import { fetchAll, nf } from '../admin-cards/helpers.js';
+import { sb, esc, currentLogo } from '../../commun/core.js';
+import { RARITIES, rarityLabel, cardHtml } from '../cartes/cartes-ui.js';
+import { boosterStyleClass } from '../cartes/booster-styles.js';
+import { themeDecor } from '../cartes/booster-themes.js';
+import { fetchAll, nf } from './cartes/helpers.js';
 
 /** Nombre de cartes affichées à chaque « Voir plus ». */
 const PAGE = 60;

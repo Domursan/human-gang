@@ -12,12 +12,12 @@
 // setAccessView (vue affichée : pages ou matrice, pour les sous-sections de la coquille).
 // Droits : hg_pages (mode, menu, ordre) exige le droit « reglages » en base, hg_page_access le droit « membres ».
 // Sans « reglages », le mode, le menu et l'ordre sont affichés en lecture seule (note explicative) ; « Personnes » reste actif.
-import { sb, toast, errMsg, esc, $, $$, avatarHtml } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { getCachedProfile } from './core/profile.js';
-import { openDrawer } from './admin/ui/drawer.js';
-import { setActions, currentSub } from './admin/shell.js';
+import { sb, toast, errMsg, esc, $, $$, avatarHtml } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { getCachedProfile } from '../../commun/core/profile.js';
+import { openDrawer } from './ui/drawer.js';
+import { setActions, currentSub } from './shell.js';
 
 export const MODES = [
   ['membres', 'Tous les membres'],

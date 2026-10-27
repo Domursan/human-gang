@@ -1,4 +1,4 @@
-// ===== Humane Gang — catalogue de l'onglet « Jeux » (jeux.html, vue « Tous les jeux ») =====
+// ===== Humane Gang — catalogue de l'onglet « Jeux » (/pages/jeux/jeux.html, vue « Tous les jeux ») =====
 /*
  * Rôle : déclare les cartes de la page d'accueil des jeux, rangées en sections. La page (jeux.js) n'affiche une carte
  * que si le membre y a droit :
@@ -12,8 +12,8 @@
  *   texte   une ligne de description ;
  *   section id de SECTIONS ;
  *   href    lien (une ancre « #geo » ouvre l'onglet du jeu dans cette page) ;
- *   onglet  facultatif : id de l'onglet de jeux.html dont le résumé du jour donne la pastille (« Fait », « À jouer ») ;
- *   image   facultatif : image 3:2 (assets/img/jeux/…) ; sans image, une vignette avec l'icône et la couleur ;
+ *   onglet  facultatif : id de l'onglet de /pages/jeux/jeux.html dont le résumé du jour donne la pastille (« Fait », « À jouer ») ;
+ *   image   facultatif : image 3:2 (/assets/images/jeux/…) ; sans image, une vignette avec l'icône et la couleur ;
  *   icone   facultatif : contenu SVG (viewBox 0 0 24 24, trait) ; couleur : variable CSS ou hexadécimal.
  * Exporte : SECTIONS, CARTES.
  */
@@ -25,11 +25,11 @@ export const SECTIONS = [
   { id: 'speciaux', titre: 'Jeux spéciaux', texte: 'Les grandes parties du gang.' },
 ];
 
-const IMG = 'assets/img/jeux/';
+const IMG = '/assets/images/jeux/';
 
 /** Cartes, dans l'ordre d'affichage de chaque section. */
 export const CARTES = [
-  // Jeux flash : les onglets actuels de jeux.html
+  // Jeux flash : les onglets actuels de /pages/jeux/jeux.html
   { id: 'geo', image: `${IMG}geo.webp`, titre: 'GeoGuessr', texte: 'Devine où la photo a été prise.', section: 'flash', href: '#geo', onglet: 'geo', couleur: 'var(--sage)',
     icone: '<circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/>' },
   { id: 'citations', image: `${IMG}citations.webp`, titre: 'Qui a dit ça ?', texte: 'Retrouve l’auteur de la citation.', section: 'flash', href: '#citations', onglet: 'citations', couleur: 'var(--slate)',
@@ -42,7 +42,7 @@ export const CARTES = [
     icone: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>' },
   { id: 'heardle', image: `${IMG}heardle.webp`, titre: 'Heardle', texte: 'Reconnais la chanson en quelques notes.', section: 'flash', href: '#heardle', onglet: 'heardle', couleur: 'var(--amber)',
     icone: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
-  { id: 'code-du-jour', titre: 'Code du jour', texte: 'Un code secret, dix essais, le même pour tous.', section: 'flash', href: 'duels.html#jour', page: 'duels', image: `${IMG}jour.webp` },
+  { id: 'code-du-jour', titre: 'Code du jour', texte: 'Un code secret, dix essais, le même pour tous.', section: 'flash', href: '/pages/jeux/duels.html#jour', page: 'duels', image: `${IMG}jour.webp` },
   { id: 'arcade-paillettes', image: `${IMG}arcade-paillettes.webp`, titre: 'Paillettes', texte: 'Attrape les Paillettes, évite le reste.', section: 'flash', href: '#arcade-paillettes', couleur: 'var(--sand)',
     icone: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>' },
   { id: 'arcade-raclette', image: `${IMG}arcade-raclette.webp`, titre: 'Raclette', texte: 'Un jeu d’arcade qui sent bon le fromage.', section: 'flash', href: '#arcade-raclette', couleur: 'var(--amber)',
@@ -86,41 +86,41 @@ export const CARTES = [
     icone: '<path d="M3 15l2-5h11l3 5"/><path d="M3 15h18v2H3z"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/>' },
 
   // Jeux multijoueurs : pages à part (accès de la page « duels »), ou en préparation (admins seulement)
-  { id: 'duels', titre: 'Mes duels', texte: 'Défis reçus, duels en cours, statistiques.', section: 'multi', href: 'duels.html', page: 'duels', couleur: 'var(--sand)',
+  { id: 'duels', titre: 'Mes duels', texte: 'Défis reçus, duels en cours, statistiques.', section: 'multi', href: '/pages/jeux/duels.html', page: 'duels', couleur: 'var(--sand)',
     icone: '<path d="M4 4l8 8M4 4h4M4 4v4M20 4l-8 8M20 4h-4M20 4v4M8 16l-4 4M16 16l4 4M9 15l6-6M15 15L9 9"/>' },
-  { id: 'puissance4', titre: 'Puissance 4', texte: 'Aligne 4 jetons avant l’autre.', section: 'multi', href: 'duels.html#creer/p4', page: 'duels', image: `${IMG}p4.webp` },
-  { id: 'morpion', titre: 'Morpion', texte: 'Classique, Ultime ou Gomoku.', section: 'multi', href: 'duels.html#creer/morpion', page: 'duels', image: `${IMG}morpion.webp` },
-  { id: 'bataille-navale', titre: 'Bataille navale', texte: 'Cache ta flotte, coule la sienne.', section: 'multi', href: 'duels.html#creer/bataille', page: 'duels', image: `${IMG}bataille-navale.webp` },
-  { id: 'mastermind', titre: 'Mastermind', texte: 'Perce le code secret.', section: 'multi', href: 'duels.html#creer/mastermind', page: 'duels', image: `${IMG}mastermind.webp` },
-  { id: 'nj-dames', image: `${IMG}dames.webp`, titre: 'Dames', texte: 'Prises obligatoires, rafles et dames volantes.', section: 'multi', href: 'duels.html#creer/dames', page: 'duel-dames', couleur: 'var(--slate)',
+  { id: 'puissance4', titre: 'Puissance 4', texte: 'Aligne 4 jetons avant l’autre.', section: 'multi', href: '/pages/jeux/duels.html#creer/p4', page: 'duels', image: `${IMG}p4.webp` },
+  { id: 'morpion', titre: 'Morpion', texte: 'Classique, Ultime ou Gomoku.', section: 'multi', href: '/pages/jeux/duels.html#creer/morpion', page: 'duels', image: `${IMG}morpion.webp` },
+  { id: 'bataille-navale', titre: 'Bataille navale', texte: 'Cache ta flotte, coule la sienne.', section: 'multi', href: '/pages/jeux/duels.html#creer/bataille', page: 'duels', image: `${IMG}bataille-navale.webp` },
+  { id: 'mastermind', titre: 'Mastermind', texte: 'Perce le code secret.', section: 'multi', href: '/pages/jeux/duels.html#creer/mastermind', page: 'duels', image: `${IMG}mastermind.webp` },
+  { id: 'nj-dames', image: `${IMG}dames.webp`, titre: 'Dames', texte: 'Prises obligatoires, rafles et dames volantes.', section: 'multi', href: '/pages/jeux/duels.html#creer/dames', page: 'duel-dames', couleur: 'var(--slate)',
     icone: '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="16" r="3"/><path d="M3 3h18v18H3z"/>' },
-  { id: 'nj-echecs', image: `${IMG}echecs.webp`, titre: 'Échecs', texte: 'Le grand classique, contre un membre ou le robot.', section: 'multi', href: 'duels.html#creer/echecs', page: 'duel-echecs', couleur: 'var(--sand)',
+  { id: 'nj-echecs', image: `${IMG}echecs.webp`, titre: 'Échecs', texte: 'Le grand classique, contre un membre ou le robot.', section: 'multi', href: '/pages/jeux/duels.html#creer/echecs', page: 'duel-echecs', couleur: 'var(--sand)',
     icone: '<path d="M9 21h6M8 18h8M10 18l-1-6h6l-1 6M9 12a3 3 0 1 1 6 0M12 3v3M10.5 4.5h3"/>' },
-  { id: 'nj-othello', image: `${IMG}othello.webp`, titre: 'Othello', texte: 'Encadre et retourne les pions.', section: 'multi', href: 'duels.html#creer/othello', page: 'duel-othello', couleur: 'var(--sage)',
+  { id: 'nj-othello', image: `${IMG}othello.webp`, titre: 'Othello', texte: 'Encadre et retourne les pions.', section: 'multi', href: '/pages/jeux/duels.html#creer/othello', page: 'duel-othello', couleur: 'var(--sage)',
     icone: '<circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4" fill="currentColor"/>' },
-  { id: 'nj-pfc', image: `${IMG}pfc.webp`, titre: 'Pierre-feuille-ciseaux', texte: 'En 1, 3 ou 5 manches.', section: 'multi', href: 'duels.html#creer/pfc', page: 'duel-pfc', couleur: 'var(--rose)',
+  { id: 'nj-pfc', image: `${IMG}pfc.webp`, titre: 'Pierre-feuille-ciseaux', texte: 'En 1, 3 ou 5 manches.', section: 'multi', href: '/pages/jeux/duels.html#creer/pfc', page: 'duel-pfc', couleur: 'var(--rose)',
     icone: '<circle cx="7" cy="16" r="3"/><rect x="12" y="4" width="8" height="10" rx="1"/><path d="M5 4l6 8M11 4l-6 8"/>' },
-  { id: 'qui-est-ce', titre: 'Qui est-ce ?', texte: 'Devine son personnage secret.', section: 'multi', href: 'duels.html#creer/quiestce', page: 'duels', image: `${IMG}qui-est-ce.webp` },
-  { id: 'nom-de-code', titre: 'Codenames', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: 'nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
+  { id: 'qui-est-ce', titre: 'Qui est-ce ?', texte: 'Devine son personnage secret.', section: 'multi', href: '/pages/jeux/duels.html#creer/quiestce', page: 'duels', image: `${IMG}qui-est-ce.webp` },
+  { id: 'nom-de-code', titre: 'Codenames', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: '/pages/jeux/nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
 
   // Jeux spéciaux : pages à part, visibles selon l'accès de la page
-  { id: 'loup-garou', image: `${IMG}loup-garou.webp`, titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: 'loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',
+  { id: 'loup-garou', image: `${IMG}loup-garou.webp`, titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: '/pages/jeux/loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',
     icone: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>' },
-  { id: 'uno', image: `${IMG}uno.webp`, titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: 'uno.html', page: 'uno', couleur: 'var(--rose)',
+  { id: 'uno', image: `${IMG}uno.webp`, titre: 'Uno', texte: 'Vide ta main avant les autres.', section: 'speciaux', href: '/pages/jeux/uno.html', page: 'uno', couleur: 'var(--rose)',
     icone: '<rect x="4" y="5" width="10" height="15" rx="2" transform="rotate(-10 9 12)"/><rect x="10" y="4" width="10" height="15" rx="2" transform="rotate(8 15 11)"/>' },
   // Nouveaux jeux de plateau en développement (admins seulement)
-  { id: 'nj-blackjack', image: `${IMG}blackjack.webp`, titre: 'Blackjack', texte: 'Contre la banque, à qui s’approche de 21.', section: 'speciaux', href: 'blackjack.html', page: 'blackjack', couleur: 'var(--sage)',
+  { id: 'nj-blackjack', image: `${IMG}blackjack.webp`, titre: 'Blackjack', texte: 'Contre la banque, à qui s’approche de 21.', section: 'speciaux', href: '/pages/jeux/blackjack.html', page: 'blackjack', couleur: 'var(--sage)',
     icone: '<rect x="3" y="5" width="11" height="15" rx="2"/><rect x="10" y="3" width="11" height="15" rx="2"/><path d="M14 9l2 3-2 3-2-3z"/>' },
-  { id: 'nj-poker', image: `${IMG}poker.webp`, titre: 'Poker', texte: 'Texas Hold’em, en jetons.', section: 'speciaux', href: 'poker.html', page: 'poker', couleur: 'var(--rust)',
+  { id: 'nj-poker', image: `${IMG}poker.webp`, titre: 'Poker', texte: 'Texas Hold’em, en jetons.', section: 'speciaux', href: '/pages/jeux/poker.html', page: 'poker', couleur: 'var(--rust)',
     icone: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>' },
-  { id: 'nj-catan', image: `${IMG}catan.webp`, titre: 'Catan du gang', texte: 'Récolte, construis, atteins 10 points.', section: 'speciaux', href: 'catan.html', page: 'catan', couleur: 'var(--amber)',
+  { id: 'nj-catan', image: `${IMG}catan.webp`, titre: 'Catan du gang', texte: 'Récolte, construis, atteins 10 points.', section: 'speciaux', href: '/pages/jeux/catan.html', page: 'catan', couleur: 'var(--amber)',
     icone: '<path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"/><path d="M12 2v18M4 6.5l16 9M20 6.5l-16 9"/>' },
-  { id: 'nj-pictionary', image: `${IMG}pictionary.webp`, titre: 'Pictionary', texte: 'Dessine, les autres devinent.', section: 'speciaux', href: 'pictionary.html', page: 'pictionary', couleur: 'var(--plum)',
+  { id: 'nj-pictionary', image: `${IMG}pictionary.webp`, titre: 'Pictionary', texte: 'Dessine, les autres devinent.', section: 'speciaux', href: '/pages/jeux/pictionary.html', page: 'pictionary', couleur: 'var(--plum)',
     icone: '<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>' },
   // Jeux de plateau (migrations 125 à 130) : pages en mode admin au lancement
-  { id: 'cluedo', titre: 'Cluedo', texte: 'Qui a tué le Docteur Lenoir ? Mène l’enquête.', section: 'speciaux', href: 'cluedo.html', page: 'cluedo', image: `${IMG}cluedo.webp` },
-  { id: 'shadow-hunters', titre: 'Shadow Hunters', texte: 'Hunters, Shadows ou Neutres : qui est qui ?', section: 'speciaux', href: 'shadow-hunters.html', page: 'shadow-hunters', image: `${IMG}shadow-hunter.webp` },
-  { id: 'destins', titre: 'Destins', texte: 'Fais tourner la roue de la vie.', section: 'speciaux', href: 'destins.html', page: 'destins', image: `${IMG}destins.webp` },
-  { id: 'monopoly', titre: 'Monopoly', texte: 'Achète, construis, ruine tes amis.', section: 'speciaux', href: 'monopoly.html', page: 'monopoly', image: `${IMG}monopoly.webp` },
-  { id: 'risk', titre: 'Risk', texte: 'Conquiers le monde, ou remplis ta mission.', section: 'speciaux', href: 'risk.html', page: 'risk', image: `${IMG}risk.webp` },
+  { id: 'cluedo', titre: 'Cluedo', texte: 'Qui a tué le Docteur Lenoir ? Mène l’enquête.', section: 'speciaux', href: '/pages/jeux/cluedo.html', page: 'cluedo', image: `${IMG}cluedo.webp` },
+  { id: 'shadow-hunters', titre: 'Shadow Hunters', texte: 'Hunters, Shadows ou Neutres : qui est qui ?', section: 'speciaux', href: '/pages/jeux/shadow-hunters.html', page: 'shadow-hunters', image: `${IMG}shadow-hunter.webp` },
+  { id: 'destins', titre: 'Destins', texte: 'Fais tourner la roue de la vie.', section: 'speciaux', href: '/pages/jeux/destins.html', page: 'destins', image: `${IMG}destins.webp` },
+  { id: 'monopoly', titre: 'Monopoly', texte: 'Achète, construis, ruine tes amis.', section: 'speciaux', href: '/pages/jeux/monopoly.html', page: 'monopoly', image: `${IMG}monopoly.webp` },
+  { id: 'risk', titre: 'Risk', texte: 'Conquiers le monde, ou remplis ta mission.', section: 'speciaux', href: '/pages/jeux/risk.html', page: 'risk', image: `${IMG}risk.webp` },
 ];

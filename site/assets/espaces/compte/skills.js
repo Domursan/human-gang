@@ -1,12 +1,12 @@
 // ===== Humane Gang — « Qui sait faire quoi » (idée P7) =====
 // Compétences déclarées volontairement (8 au plus) dans une liste tenue par le Staff (hg_settings.competences).
-//  - fiche membre : pastilles « Peut aider pour… » (membre.html) ;
+//  - fiche membre : pastilles « Peut aider pour… » (/pages/compte/membre.html) ;
 //  - annuaire « Le gang » : filtre « Qui sait faire… » et bouton « Demander un coup de main » (conversation préremplie) ;
-//  - compte : saisie des compétences et d'une précision courte (compte.html, via compte-social.js).
+//  - compte : saisie des compétences et d'une précision courte (/pages/compte/compte.html, via compte-social.js).
 // Pas de notes, pas de niveaux, pas d'avis : c'est déclaratif et bienveillant. Aucune récompense.
 // Tables et RPC : hg_settings (competences), hg_member_skills, hg_skills_list (migration 091).
 // Exporte : SKILLS_MAX, loadSkillCatalog, mountSkillPills, mountSkillFilter, mountSkillEditor.
-import { sb, esc, avatarHtml, errMsg, toast } from './core.js';
+import { sb, esc, avatarHtml, errMsg, toast } from '../../commun/core.js';
 
 /** Nombre maximum de compétences par membre (même limite que la base). */
 export const SKILLS_MAX = 8;
@@ -51,7 +51,7 @@ export async function mountSkillPills(el, userId, isMe) {
       <h2 class="mb-section-title sk-title">Peut aider pour</h2>
       ${list.length ? `<ul class="sk-pills">${list.map((s) => `
         <li class="sk-pill"><strong>${esc(labelOf(cat, s.skill_code))}</strong>${s.note ? `<span class="small muted"> · ${esc(s.note)}</span>` : ''}</li>`).join('')}</ul>`
-        : '<p class="small muted">Tu n’as encore rien indiqué. <a href="compte.html#entraide">Dis au gang pour quoi tu peux donner un coup de main</a>.</p>'}`;
+        : '<p class="small muted">Tu n’as encore rien indiqué. <a href="/pages/compte/compte.html#entraide">Dis au gang pour quoi tu peux donner un coup de main</a>.</p>'}`;
     el.hidden = false;
   } catch (e) { console.warn('[compétences]', e?.message || e); }
 }
@@ -62,7 +62,7 @@ export async function mountSkillPills(el, userId, isMe) {
  * @param {string} pseudo pseudo du destinataire
  * @param {string} label compétence
  */
-const helpHref = (userId, pseudo, label) => `messages.html?to=${encodeURIComponent(userId)}&brouillon=${encodeURIComponent(`Salut ${pseudo}, tu pourrais me donner un coup de main pour « ${label} » ? `)}`;
+const helpHref = (userId, pseudo, label) => `/pages/compte/messages.html?to=${encodeURIComponent(userId)}&brouillon=${encodeURIComponent(`Salut ${pseudo}, tu pourrais me donner un coup de main pour « ${label} » ? `)}`;
 
 /**
  * Filtre « Qui sait faire… » de l'annuaire : une rangée de pastilles (une par compétence, bouton à bascule) ; une compétence
@@ -109,12 +109,12 @@ export async function mountSkillFilter(el, { grid, meId }) {
       const others = (uid) => all.filter((r) => r.user_id === uid && r.skill_code !== code && cat.some((c) => c.code === r.skill_code)).map((r) => labelOf(cat, r.skill_code));
       hint.innerHTML = list.length
         ? `${list.length} volontaire${list.length > 1 ? 's' : ''} pour <strong>${esc(label)}</strong>. C’est volontaire : chacun aide quand il peut.`
-        : `Personne n’a encore coché « ${esc(label)} ». Et toi ? <a href="compte.html#entraide">Indique tes compétences</a>`;
+        : `Personne n’a encore coché « ${esc(label)} ». Et toi ? <a href="/pages/compte/compte.html#entraide">Indique tes compétences</a>`;
       out.innerHTML = list.map((r) => {
         const also = others(r.user_id);
         return `
         <li class="card sk-result">
-          <a class="sk-who" href="membre.html?id=${encodeURIComponent(r.user_id)}">${avatarHtml({ ...r, id: r.user_id }, 40)}
+          <a class="sk-who" href="/pages/compte/membre.html?id=${encodeURIComponent(r.user_id)}">${avatarHtml({ ...r, id: r.user_id }, 40)}
             <span class="sk-who-txt"><strong>${esc(r.pseudo)}${r.user_id === meId ? ' <span class="gang-me">toi</span>' : ''}</strong>${also.length ? `<span class="small muted">aussi : ${esc(also.join(', '))}</span>` : ''}</span></a>
           <p class="sk-result-note"><span class="sk-pill sk-pill-on">${esc(label)}</span>${r.note ? ` <span class="small">« ${esc(r.note)} »</span>` : ''}</p>
           ${r.user_id === meId ? '' : `<a class="btn btn-ghost sk-help" href="${esc(helpHref(r.user_id, r.pseudo, label))}">Demander un coup de main</a>`}
@@ -142,7 +142,7 @@ export async function mountSkillEditor(el, me) {
   if (!cat.length) { el.innerHTML = '<p class="small muted">La liste des compétences n’est pas encore prête.</p>'; return; }
   el.innerHTML = `
     <fieldset class="sk-edit">
-      <legend class="small muted">Coche jusqu’à ${SKILLS_MAX} compétences. Une compétence manque ? Propose-la dans la <a href="accueil.html#idees">boîte à idées</a>.</legend>
+      <legend class="small muted">Coche jusqu’à ${SKILLS_MAX} compétences. Une compétence manque ? Propose-la dans la <a href="/pages/compte/accueil.html#idees">boîte à idées</a>.</legend>
       <ul class="sk-edit-list">${cat.map((c) => {
         const on = saved.has(c.code);
         return `<li class="sk-edit-item">

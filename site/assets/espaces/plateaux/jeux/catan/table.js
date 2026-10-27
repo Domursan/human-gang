@@ -13,12 +13,12 @@
  *   etat.jeu = forme de hg_plat__catan_vue (geo, tuiles, voleur, colonies, villes, routes, phase, sous, dernier, de,
  *   objectif, mes_ressources, couts) ; etat.partie.tour = joueur dont c'est le tour.
  */
-import { esc, toast } from '../../../core.js';
+import { esc, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, estMonTour, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauSvg, RESSOURCES, nomTuile } from './plateau.js';
-import { voisinSpatial } from '../../../grille-clavier.js';
+import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const RES = ['bois', 'argile', 'ble', 'mouton', 'pierre'];

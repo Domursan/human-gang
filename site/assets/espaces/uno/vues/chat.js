@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, toast), ../api.js (uno, erreurTexte).
  * Exporte : creerChat.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { uno, erreurTexte } from '../api.js';
 
 const LONGUEUR_MAX = 300;

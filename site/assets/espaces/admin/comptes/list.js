@@ -6,10 +6,10 @@
 // Lit : RPC hg_admin_accounts, hg_members, hg_staff_list ; table hg_profiles (date d'arrivée joined_on).
 // Exporte : loadAccounts, roleOf, accountItems, mountAccountsList, refreshAccounts, paintAccountsList, selectInList.
 // =====================================================================
-import { sb, errMsg } from '../core.js';
+import { sb, errMsg } from '../../../commun/core.js';
 import { fetchAdminGhosts } from '../admin-ghosts.js';
-import { createList } from '../admin/ui/list.js';
-import { isAdminView } from '../admin/perms.js';
+import { createList } from '../ui/list.js';
+import { isAdminView } from '../perms.js';
 import { check } from './common.js';
 import { A } from './state.js';
 

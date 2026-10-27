@@ -28,7 +28,7 @@ const GOURMANDISES = {
 const GOURMANDISE_KINDS = ['cornichon', 'salami', 'jambon', 'sechee'];
 
 /**
- * Vrai sur la page d'administration (admin.html) : le thème ne met pas de gouttes sous ses boutons et cadres.
+ * Vrai sur la page d'administration (/pages/admin/admin.html) : le thème ne met pas de gouttes sous ses boutons et cadres.
  * @returns {boolean}
  */
 const onAdminPage = () => /(^|\/)admin\.html$/.test(location.pathname);

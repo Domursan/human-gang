@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), duels/api.js (duel, erreurTexte, jeuxVisibles), vues/commun.js (couleurJoueur).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { duel, erreurTexte, jeuxVisibles } from '../api.js';
 import { couleurJoueur } from './commun.js';
 
@@ -39,7 +39,7 @@ function pseudo(nom, couleur, robot = false) {
 /** Squelette : fil d'Ariane, titre, filtres par jeu, zone de contenu (remplie après chargement). */
 function squelette() {
   return `<div class="duels-st">
-    <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="duels.html">Duels</a> › Statistiques</nav>
+    <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="/pages/jeux/duels.html">Duels</a> › Statistiques</nav>
     <h1 class="duels-titre">Mes statistiques de duels</h1>
     <div class="duels-st-filtres" role="group" aria-label="Filtrer par jeu">
       ${filtresJeux().map(([cle, nom], i) => `<button type="button" class="btn btn-ghost duels-st-filtre" data-jeu="${esc(cle)}" aria-pressed="${i === 0 ? 'true' : 'false'}">${esc(nom)}</button>`).join('')}

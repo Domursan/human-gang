@@ -7,11 +7,11 @@
 // icons.js (svg), admin/common.js (sectionError), helpers.js (pagination, dates, annuaire).
 // Exporte : createReactionsPanel (fabrique la vue : élément HTML et fonction de rechargement).
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
-import { REACTION_LABEL } from '../reactions.js';
-import { signedUrls, thumbHtml } from '../photos.js';
-import { svg } from '../icons.js';
-import { sectionError } from '../admin/common.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
+import { REACTION_LABEL } from '../../../commun/reactions.js';
+import { signedUrls, thumbHtml } from '../../irl/photos.js';
+import { svg } from '../../../commun/icons.js';
+import { sectionError } from '../common.js';
 import { pageRange, pageOf, pagerHtml, stampLabel, peopleOptions } from './helpers.js';
 
 /* Cibles des idées S8, S13 (le détail se consulte dans la vue « Contenus proposés »). */

@@ -11,8 +11,8 @@
 // Sans temps réel (réseau coupé, publication absente, client de test), le panel fonctionne comme avant :
 // l'indicateur reste gris et rien n'est journalisé dans la console.
 // Utilisé par admin.js (initLive) et par les sections (onTableChange). Dépend de core.js (sb), state.js, loaders.js.
-import { sb } from '../core.js';
-import { hasPerm } from '../core/perms.js';
+import { sb } from '../../commun/core.js';
+import { hasPerm } from '../../commun/core/perms.js';
 import { S } from './state.js';
 import { canSection } from './perms.js';
 import { loadIdeas, loadSupport, loadEditionDetails, loadMembers } from './loaders.js';

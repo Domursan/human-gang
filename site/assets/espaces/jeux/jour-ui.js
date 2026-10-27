@@ -5,8 +5,8 @@
 // Styles : assets/css/jeux-jour.css (ajouté une seule fois par un <link>).
 // Dépendances : core.js (avatarHtml, errMsg). Tout texte venant de la base passe par esc().
 // Exporte : mountDaily(el, { sb, esc, toast, compact, meId }).
-import { avatarHtml, errMsg } from '../core.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { avatarHtml, errMsg } from '../../commun/core.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 const nf = new Intl.NumberFormat('fr-CH');
@@ -22,7 +22,7 @@ const NOMBRE = /^-?\d+([.,]\d+)?$/;
 function styles() {
   if (document.querySelector('link[data-jeux-css="jour"]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../../css/jeux-jour.css', import.meta.url).href; l.dataset.jeuxCss = 'jour';
+  l.rel = 'stylesheet'; l.href = new URL('./jeux-jour.css', import.meta.url).href; l.dataset.jeuxCss = 'jour';
   document.head.append(l);
 }
 
@@ -142,7 +142,7 @@ export async function mountDaily(el, { sb, esc, toast, compact = false, meId = n
     const max = compact ? 3 : (S.tout ? 50 : 10);
     const rows = (b.rows || []).slice(0, max);
     const lien = compact
-      ? '<a class="small qdj-link" href="jeux.html#jour">Tout le classement</a>'
+      ? '<a class="small qdj-link" href="/pages/jeux/jeux.html#jour">Tout le classement</a>'
       : ((b.rows || []).length > 10 ? `<button type="button" class="btn btn-ghost btn-sm qdj-more" data-tout aria-expanded="${S.tout}">${S.tout ? 'Moins' : 'Tout le classement'}</button>` : '');
     const li = rows.map((r) => `<li class="qdj-row${r.user_id === S.me ? ' is-me' : ''}"><span class="qdj-rank">${esc(String(r.rank))}</span>${avatarHtml(r, 26)}<span class="qdj-name">${esc(r.pseudo)}</span><span class="small muted">${esc(nf.format(r.bonnes))} bonne${r.bonnes > 1 ? 's' : ''}</span></li>`).join('');
     const moi = b.me && !rows.some((r) => r.user_id === S.me) ? `<p class="small muted">Toi : ${esc(String(b.me.rank))}e, ${esc(nf.format(b.me.bonnes))} bonne${b.me.bonnes > 1 ? 's' : ''}.</p>` : '';

@@ -1,0 +1,42 @@
+# Publication du site (dossier site/) sur GitHub Pages, à chaque envoi sur main.
+#
+# À faire UNE fois dans GitHub : Settings > Pages > Source : « GitHub Actions » (et non « Deploy from a branch »).
+# Seul le contenu de site/ est publié : le reste du dépôt (supabase/, outils/, tests/…) ne sort pas.
+# site/.nojekyll désactive Jekyll ; site/CNAME garde le domaine humane-gang.com.
+name: Publier le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Une seule publication à la fois ; une publication en cours n'est jamais interrompue.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

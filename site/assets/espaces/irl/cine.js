@@ -1,4 +1,4 @@
-// ===== Humane Gang — page « Ciné-club » (cine.html, idée V9) =====
+// ===== Humane Gang — page « Ciné-club » (/pages/irl/cine.html, idée V9) =====
 /*
  * Rôle : le ciné du dimanche du gang.
  *   - Prochaine séance : vote entre 2 et 4 films (barres et totaux), « Je serai là », lien du salon vocal Discord.
@@ -21,11 +21,11 @@
  * Dépendances : core.js, icons.js, ui-confirm.js, image-compress.js, eggs/api.js. Page réservée aux membres (auth: 'member').
  * N'exporte rien.
  */
-import { sb, initPage, esc, $, errMsg, toast, avatarHtml, hasPerm, motionAllowed } from './core.js';
-import { svg } from './icons.js';
-import { confirmBox } from './ui-confirm.js';
-import { prepareImage } from './image-compress.js';
-import { eggFound } from './eggs/api.js';
+import { sb, initPage, esc, $, errMsg, toast, avatarHtml, hasPerm, motionAllowed } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { eggFound } from '../arcade/api.js';
 
 /* ---------- Initialisation ---------- */
 const me = await initPage({ auth: 'member' });

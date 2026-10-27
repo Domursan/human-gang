@@ -1,10 +1,10 @@
 // Admin : palette « Aller à… » (Ctrl/Cmd+K ou bouton « Tout le panel » de l’en-tête). Filtre les sous-sections permises (« Groupe · Libellé »)
 // et les membres (pseudo).
 // Entrée ouvre la sous-section ou la fiche, par le routeur de la coquille (admin/shell.js). Dialogue modal : focus piégé,
-// Échap ferme, le reste de la page est inerte. Propre à admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
+// Échap ferme, le reste de la page est inerte. Propre à /pages/admin/admin.html : la recherche globale du site (core/search.js) ne s'ouvre pas en même temps.
 // Utilisé par admin.js (setupPalette). Dépend de core.js (esc), state.js (membres), loaders.js (chargement des membres),
 // perms.js (droits) et shell.js (navigate : ouvre l'adresse choisie). Aucune requête propre.
-import { esc } from '../core.js';
+import { esc } from '../../commun/core.js';
 import { S } from './state.js';
 import { ensureMembers } from './loaders.js';
 import { canSection, visibleLieux } from './perms.js';

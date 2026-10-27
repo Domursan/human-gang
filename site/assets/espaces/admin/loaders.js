@@ -2,8 +2,8 @@
 // Chaque donnée se charge une seule fois (ensureX) : les sections qui en ont besoin attendent la même promesse.
 // Les fonctions loadX rechargent la donnée sans passer par le cache (après une écriture, par exemple).
 // Dépendances : core.js (Supabase, utilisateur courant), admin-ghosts.js (comptes fantômes), state.js, common.js.
-import { sb, getUser } from '../core.js';
-import { fetchAdminGhosts } from '../admin-ghosts.js';
+import { sb, getUser } from '../../commun/core.js';
+import { fetchAdminGhosts } from './admin-ghosts.js';
 import { S } from './state.js';
 import { check } from './common.js';
 

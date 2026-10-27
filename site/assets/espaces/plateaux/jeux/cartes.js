@@ -8,7 +8,7 @@
  * Exporte : carteHtml(code, opts) -> HTML ; dosHtml(opts) -> HTML ; nomCarte(code) -> « Dame de cœur » ; estCarte(code).
  *   opts = { petite: boolean, cachee: boolean } ; petite = format réduit (sièges, cartes communes).
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 
 const SYMBOLES = { S: '♠', H: '♥', D: '♦', C: '♣' };
 const COULEURS = { S: 'pique', H: 'cœur', D: 'carreau', C: 'trèfle' };

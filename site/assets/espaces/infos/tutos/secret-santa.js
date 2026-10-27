@@ -1,6 +1,6 @@
 // ===== Humane Gang — tutos : groupe « Secret Santa » =====
 // Données pures (aucun import), lisibles dans le navigateur ET dans Node.
-// Libellés et chiffres vérifiés sur secret-santa.html / secret-santa.js / messages.js / membre.js,
+// Libellés et chiffres vérifiés sur /pages/irl/secret-santa.html / secret-santa.js / messages.js / membre.js,
 // et en base (hg_badges, hg_settings.cards -> rewards : gift_sent = 250, badge = 500).
 
 /*
@@ -17,7 +17,7 @@ export default {
       slug: 'sinscrire-a-une-edition',
       title: 'S’inscrire à une édition',
       summary: 'Rejoindre le tirage du Secret Santa pendant que les inscriptions sont ouvertes.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Va sur la page Secret Santa', text: 'La carte « Inscription » indique le nombre d’inscrits et le statut de l’édition (« inscriptions ouvertes »).' },
         { title: 'Clique sur « S’inscrire »', text: 'Le bouton est dans la carte « Inscription ». Ton avatar apparaît dans « Les inscrits », avec le petit tag « toi ».' },
@@ -34,7 +34,7 @@ export default {
       slug: 'remplir-sa-liste-de-souhaits',
       title: 'Remplir sa liste de souhaits',
       summary: 'Ajouter des idées de cadeaux, avec un lien si tu veux, pour aider ton Santa.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Repère la carte « Ma liste de souhaits »', text: 'Elle est visible dès que tu es inscrit·e. Le rappel en dessous dit qu’elle n’est visible que par ton Santa.' },
         { title: 'Écris ton souhait dans le champ « Souhait »', text: 'Une idée, un titre de livre, une couleur préférée : 200 caractères maximum.' },
@@ -52,7 +52,7 @@ export default {
       slug: 'decouvrir-sa-cible',
       title: 'Découvrir sa cible après le tirage',
       summary: 'Retourner la carte pour savoir à qui tu offres ton cadeau, et voir sa liste de souhaits.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Attends le tirage', text: 'Quand l’admin a fait le tirage, la carte « Ta cible » apparaît sur la page Secret Santa, avec le titre « Retourne la carte ».' },
         { title: 'Retourne la carte', text: 'Clique sur la carte, ou sur le bouton « Retourner la carte ». Le titre devient « Ta carte » et la section « Tu offres à » affiche ta cible.' },
@@ -69,7 +69,7 @@ export default {
       slug: 'messages-secrets-cible-santa',
       title: 'Écrire à sa cible ou à son Santa, anonymement',
       summary: 'Poser une question ou dire un mot sans dévoiler son identité, grâce à la messagerie secrète.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Ouvre la section « Messages secrets »', text: 'Elle est sur la page Secret Santa, à côté de la carte de ta cible.' },
         { title: 'Écris à ton Santa', text: 'Clique sur « Écrire à mon Santa ». Tu peux le faire dès maintenant : il reste anonyme.' },
@@ -86,7 +86,7 @@ export default {
       slug: 'marquer-son-cadeau-envoye-ou-recu',
       title: 'Marquer son cadeau envoyé ou reçu',
       summary: 'Signaler à tout le monde où en est ton envoi, et voir l’avancement du gang.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Va à la section « Mon envoi »', text: 'Elle apparaît après le tirage, sous la carte de ta cible. Elle contient deux lignes : « Cadeau envoyé » et « Mon cadeau reçu ».' },
         { title: 'Clique sur « J’ai envoyé le cadeau »', text: 'La ligne passe à « Envoyé » avec la date et l’heure. Le bot Discord prévient ton destinataire, sans dire qui tu es.' },
@@ -103,7 +103,7 @@ export default {
       slug: 'revelation-qui-a-offert-a-qui',
       title: 'La révélation : qui a offert à qui',
       summary: 'Découvrir la chaîne des cadeaux une fois l’édition révélée.',
-      page: 'secret-santa.html',
+      page: '/pages/irl/secret-santa.html',
       steps: [
         { title: 'Attends la révélation', text: 'Quand l’admin passe l’édition à l’étape « Révélation », la section « Qui offrait à qui » apparaît en bas de la page Secret Santa.' },
         { title: 'Repère ta paire', text: 'Chaque ligne montre qui offre à qui. Ta propre paire est mise en avant.' },
@@ -119,7 +119,7 @@ export default {
       slug: 'badges-et-paillettes-secret-santa',
       title: 'Badges et Paillettes du Secret Santa',
       summary: 'Ce qui rapporte un badge ou des Paillettes pendant une édition.',
-      page: 'membre.html',
+      page: '/pages/compte/membre.html',
       steps: [
         { title: 'Envoie ton cadeau', text: 'Marquer « J’ai envoyé le cadeau » rapporte {{cartes.rewards.gift_sent|250}} Paillettes.' },
         { title: 'Écris une liste avant le tirage', text: 'Au moins un souhait ajouté avant le tirage donne le badge « Liste parfaite ».' },

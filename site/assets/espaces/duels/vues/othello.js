@@ -11,7 +11,7 @@
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
 

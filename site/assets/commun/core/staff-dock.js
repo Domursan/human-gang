@@ -1,9 +1,9 @@
-// ===== Humane Gang — raccourcis Staff : barre à gauche (admin et Staff, sur toutes les pages sauf admin.html) =====
+// ===== Humane Gang — raccourcis Staff : barre à gauche (admin et Staff, sur toutes les pages sauf /pages/admin/admin.html) =====
 /*
  * Rôle : donne aux admins et au Staff un accès direct à cinq sections du panel (Assistance, Boîte à idées, Bot Discord,
  * Drops de cartes, Événement de cartes). Chacun choisit les siens (« Choisir mes raccourcis »). Seuls les raccourcis que
  * la personne peut ouvrir sont proposés : le droit vient de canSection (admin/perms.js), comme dans le panel.
- * Pas affiché sur admin.html, ni quand l'admin regarde le site « comme un membre » (view-as.js).
+ * Pas affiché sur /pages/admin/admin.html, ni quand l'admin regarde le site « comme un membre » (view-as.js).
  *   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite, icônes toujours visibles ; le nom de chaque
  *   raccourci sort en bulle à droite de l'icône au survol ou au focus clavier. Le contenu est décalé (html[data-staff-dock] body).
  *   Téléphone (moins de 720 px) : bouton flottant en bas à gauche ; il ouvre la liste au-dessus de lui (Échap ferme).
@@ -12,7 +12,7 @@
  * Choix : localStorage « hg_staff_dock:<user_id> » = { choix: [identifiants] }.
  * Par défaut : tous les raccourcis permis. Lecture et écriture protégées (stockage bloqué = pas de mémoire).
  * Styles : assets/css/staff-dock.css, chargée par ce module (les membres simples ne la chargent jamais).
- * Page : toutes les pages (init.js appelle startStaffDock avec le profil connecté). Pas admin.html.
+ * Page : toutes les pages (init.js appelle startStaffDock avec le profil connecté). Pas /pages/admin/admin.html.
  * Dépendances : supabase.js (comptages), pages-access.js (page courante), perms.js (droits en cache, canPanel),
  *   admin/perms.js (canSection, mêmes droits que le panel), view-as.js (vue « comme un membre »).
  * Exporte : startStaffDock.
@@ -20,13 +20,13 @@
 import { sb } from './supabase.js';
 import { currentPageSlug } from './pages-access.js';
 import { getCachedPerms, canPanel } from './perms.js';
-import { canSection } from '../admin/perms.js';
+import { canSection } from '../../espaces/admin/perms.js';
 import { viewAsActive } from './view-as.js';
 
 /* ---------- Constantes ---------- */
 
 /** Feuille de style du module, résolue par rapport à ce fichier (fonctionne sous un préfixe GitHub Pages). */
-const CSS_HREF = new URL('../../css/staff-dock.css', import.meta.url).href;
+const CSS_HREF = new URL('../staff-dock.css', import.meta.url).href;
 
 /**
  * Raccourcis possibles. section : section du panel (droits = canSection). href : adresse du panel (lieu/sous-section,
@@ -34,11 +34,11 @@ const CSS_HREF = new URL('../../css/staff-dock.css', import.meta.url).href;
  * des tuiles du panel, sauf « Événement de cartes » (section Événements à thème, où se règlent les captures de cartes).
  */
 const RACCOURCIS = [
-  { id: 'assistance', label: 'Assistance', section: 'assistance', href: 'admin.html#poste/assistance', icone: 'lifebuoy', compte: 'assistance' },
-  { id: 'idees', label: 'Boîte à idées', section: 'idees', href: 'admin.html#poste/idees', icone: 'bulb', compte: 'idees' },
-  { id: 'bot', label: 'Bot Discord', section: 'bot', href: 'admin.html#poste/bot', icone: 'robot' },
-  { id: 'drops', label: 'Drops de cartes', section: 'drops', href: 'admin.html#fabrique/drops', icone: 'gift' },
-  { id: 'evenements', label: 'Événement de cartes', section: 'evenements', href: 'admin.html#fete/evenements', icone: 'sparkle' },
+  { id: 'assistance', label: 'Assistance', section: 'assistance', href: '/pages/admin/admin.html#poste/assistance', icone: 'lifebuoy', compte: 'assistance' },
+  { id: 'idees', label: 'Boîte à idées', section: 'idees', href: '/pages/admin/admin.html#poste/idees', icone: 'bulb', compte: 'idees' },
+  { id: 'bot', label: 'Bot Discord', section: 'bot', href: '/pages/admin/admin.html#poste/bot', icone: 'robot' },
+  { id: 'drops', label: 'Drops de cartes', section: 'drops', href: '/pages/admin/admin.html#fabrique/drops', icone: 'gift' },
+  { id: 'evenements', label: 'Événement de cartes', section: 'evenements', href: '/pages/admin/admin.html#fete/evenements', icone: 'sparkle' },
 ];
 
 /** Tracés des icônes (viewBox 0 0 24 24, trait courant). Définis ici pour ne pas dépendre de icons.js (qui n'a pas tous ces noms). */

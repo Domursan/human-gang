@@ -21,7 +21,7 @@
 // Exporte : registerTodo, registerPlateau, plateauMount, renderPlateau, renderLieu, todoCount, loadTodoCounts.
 // Dépend de core.js (esc, sb, toast), admin/perms.js (LIEUX, canSub), admin/panel-icons.js (panelIcon). Ne dépend pas de shell.js.
 
-import { esc, sb, toast } from '../core.js';
+import { esc, sb, toast } from '../../commun/core.js';
 import { panelIcon } from './panel-icons.js';
 import { LIEUX, canSub } from './perms.js';
 

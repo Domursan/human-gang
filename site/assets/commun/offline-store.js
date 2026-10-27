@@ -10,7 +10,7 @@
  *   rempli par la page et servi par sw.js hors ligne, plafonné à 400 images (les plus anciennes partent).
  * - Effacement : à la déconnexion (core/header.js), ou quand l'admin coupe la fonction (site_identite.cartes_hors_ligne).
  * - Sans réseau, cartes.js et membre.js démarrent avec startOfflinePage() au lieu d'initPage().
- * Page : cartes.js, membre.js (lecture et écriture), core/header.js (effacement), offline.html (lien « Voir ma collection »).
+ * Page : cartes.js, membre.js (lecture et écriture), core/header.js (effacement), /offline.html (lien « Voir ma collection »).
  * Dépendances : core/supabase.js (session locale), core/site-defaults.js, core/theme-load.js, core/header.js, core/util.js.
  * Exporte : IMG_CACHE, IMG_MAX, isOffline, offlineAllowed, localUserId, readOffline, saveOffline, clearOffline,
  *   cacheCardImages, startOfflinePage, offlineBannerHtml, fmtOfflineDate.

@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc), ui.js, roles.js.
  * Exporte : tableHtml.
  */
-import { esc } from '../core.js';
+import { esc } from '../../commun/core.js';
 import { icone, avatar } from './ui.js';
 import { roleById } from './roles.js';
 
@@ -26,7 +26,7 @@ import { roleById } from './roles.js';
 export function tableHtml(joueurs, o = {}) {
   const assis = joueurs.filter((j) => j.place != null).sort((a, b) => a.place - b.place);
   const n = assis.length || 1;
-  const feu = o.ambiance === 'jour' ? 'assets/img/loup-garou/feu-jour.svg' : 'assets/img/loup-garou/feu-nuit.svg';
+  const feu = o.ambiance === 'jour' ? '/assets/images/loup-garou/feu-jour.svg' : '/assets/images/loup-garou/feu-nuit.svg';
   const sieges = assis.map((j, k) => {
     const a = -Math.PI / 2 + (2 * Math.PI * k) / n;
     const x = 50 + 39 * Math.cos(a);

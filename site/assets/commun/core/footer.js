@@ -16,7 +16,7 @@ import { siteIdentite, siteTexte, footerLiens, fmt } from './site-defaults.js';
 import { esc } from './util.js';
 
 /** Adresse de chaque lien du pied de page, par identifiant (les identifiants viennent des réglages du site). */
-const FOOTER_HREF = { evenements: 'evenements.html', assistance: 'assistance.html', mentions: 'legal.html#mentions', confidentialite: 'legal.html#confidentialite', cookies: 'legal.html#cookies' };
+const FOOTER_HREF = { evenements: '/pages/irl/evenements.html', assistance: '/pages/infos/assistance.html', mentions: '/pages/infos/legal.html#mentions', confidentialite: '/pages/infos/legal.html#confidentialite', cookies: '/pages/infos/legal.html#cookies' };
 
 /**
  * Reconstruit le pied de page. Remplace l'ancien s'il existe.
@@ -52,7 +52,7 @@ export function cookieNotice() {
   const n = document.createElement('div');
   n.className = 'cookie-notice';
   n.setAttribute('role', 'region'); n.setAttribute('aria-label', 'Information cookies');
-  n.innerHTML = `<p>${esc(fmt(siteTexte('cookies_texte')))} <a href="legal.html#cookies">En savoir plus</a></p>
+  n.innerHTML = `<p>${esc(fmt(siteTexte('cookies_texte')))} <a href="/pages/infos/legal.html#cookies">En savoir plus</a></p>
     <button class="btn btn-light" type="button">OK, compris</button>`;
   n.querySelector('button').addEventListener('click', () => { try { localStorage.setItem('hg_cookie_ok', '1'); } catch {} n.remove(); });
   document.body.append(n);

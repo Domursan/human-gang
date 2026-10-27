@@ -1,15 +1,15 @@
 // ===== Cartes à collectionner — « Ma chance en chiffres » (idée C14) =====
-// Encart repliable en tête de l'onglet Collection (cartes.html) : mes tirages comparés aux taux annoncés, rareté par rareté
+// Encart repliable en tête de l'onglet Collection (/pages/cartes/cartes.html) : mes tirages comparés aux taux annoncés, rareté par rareté
 // (barre grise = annoncé, barre de couleur = obtenu), verdict honnête (seulement à partir de 100 cartes, écart en écarts-types
 // calculé côté serveur), taux de brillantes, garanties Épique en cours, plus longue série sans Épique, meilleure ouverture,
 // et une petite image « Ma chance » à partager (sans solde), dessinée en canvas.
 // RPC (migration 082) : hg_card_luck_me() — personnel, lecture seule. Sans la fonction (migration pas déployée) : rien n'est affiché.
 // Seules les cartes tirées dans les boosters du membre comptent (pas les cadeaux, drops, fabrications) : c'est dit sous l'encart.
 // Exporte : mountLuck(slot) — remplit slot (rendu immédiat depuis le cache, rechargement si les données ont plus d'une minute).
-import { sb, esc, fmtDate } from './core.js';
+import { sb, esc, fmtDate } from '../../commun/core.js';
 import { cardHtml, rarityLabel } from './cartes-ui.js';
 import { TINT } from './cartes-zoom.js';
-import { downloadCanvas } from './ss-card.js';
+import { downloadCanvas } from '../irl/ss-card.js';
 
 const nf1 = new Intl.NumberFormat('fr-CH', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 const nf = new Intl.NumberFormat('fr-CH');

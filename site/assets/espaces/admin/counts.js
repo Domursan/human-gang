@@ -6,7 +6,7 @@
 // Utilisé par admin.js (plateau), live.js (après chaque changement temps réel), invites.js, ideas.js, support.js,
 // ss-events.js (après chaque modification). Dépend de core.js (sb), state.js, perms.js, shell.js (setCount),
 // eco-health.js (alertes économie) et loaders.js (demandes, idées).
-import { sb } from '../core.js';
+import { sb } from '../../commun/core.js';
 import { S } from './state.js';
 import { canSection } from './perms.js';
 import { setCount } from './shell.js';

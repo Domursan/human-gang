@@ -9,7 +9,7 @@
  * Dépendances : core.js (esc, toast), plateaux/api.js (plat, erreurTexte, estInvite, jeu), vues/commun.js, vues/chat.js.
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { plat, estInvite, jeu } from '../api.js';
 import { avatarHtml, pseudoHtml, envoyer } from './commun.js';
 import { creerChat, tiroirChat } from './chat.js';

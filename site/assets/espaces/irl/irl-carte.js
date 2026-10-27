@@ -5,9 +5,9 @@
 // (journalisée). La carte se crée dans l'admin (Sorties IRL) ; la distribution est faite par la base (pg_cron).
 // Lecture : hg_cards (carte), hg_event_card_claims (qui l'a reçue). Sans la migration 080, rien n'est affiché.
 // Exporte : loadSortieCards, sortieCardHtml, onSortieCardClick.
-import { sb, toast, errMsg, esc, loadMyPerms, hasPerm } from './core.js';
-import { cardHtml } from './cartes-ui.js';
-import { pluralCount } from './utils.js';
+import { sb, toast, errMsg, esc, loadMyPerms, hasPerm } from '../../commun/core.js';
+import { cardHtml } from '../cartes/cartes-ui.js';
+import { pluralCount } from '../../commun/utils.js';
 
 /** Cartes des sorties (Map id → carte) et destinataires par sortie (Map event_id → [user_id]). */
 const K = { cards: new Map(), claims: new Map(), staff: false };

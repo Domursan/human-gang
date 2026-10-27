@@ -11,15 +11,15 @@
  *   - Accès : rappel de la visibilité (administrateurs seulement tant que la page « nom-de-code » est en mode admin).
  * Droit : administrateur seulement (attribut data-admin-only). Aucune permission Staff.
  * Route : #fete/nom-de-code (à brancher dans admin.js). Section : <section id="nom-de-code">, conteneur #ndc-root.
- * Appels : via ndc (assets/js/nom-de-code/api.js) : adminReglages, adminEnregistrer, adminArreter, adminMots, adminEnregistrerMots.
+ * Appels : via ndc (/assets/espaces/nom-de-code/api.js) : adminReglages, adminEnregistrer, adminArreter, adminMots, adminEnregistrerMots.
  *   Les écritures sont bornées côté serveur (migration 123) ; ici on vérifie la saisie pour un retour immédiat.
  * Dépendances : core.js (toast, errMsg, esc), admin/common.js (sectionError, ICON), ui-confirm.js (confirmBox), nom-de-code/api.js (ndc).
  * Exporte : mountNdcSection.
  */
-import { toast, errMsg, esc } from './core.js';
-import { sectionError, ICON } from './admin/common.js';
-import { confirmBox } from './ui-confirm.js';
-import { ndc } from './nom-de-code/api.js';
+import { toast, errMsg, esc } from '../../commun/core.js';
+import { sectionError, ICON } from './common.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { ndc } from '../nom-de-code/api.js';
 
 /* ---------- Constantes ---------- */
 

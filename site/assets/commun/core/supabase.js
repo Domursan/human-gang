@@ -4,7 +4,7 @@
  * Rôle : crée l'unique client Supabase du site (sb) et fournit deux petites aides :
  * hasSession (y a-t-il une session ouverte ?) et isNavCancel (faut-il ignorer cette erreur, due à une navigation ?).
  * Page : toutes les pages (tous les autres fichiers du socle importent sb depuis ici).
- * Dépendances : config.js (URL et clé publique), supabase-js servi localement (assets/vendor, version 2.45.4).
+ * Dépendances : config.js (URL et clé publique), supabase-js servi localement (/assets/vendor, version 2.45.4).
  * Exporte : sb, hasSession, isNavCancel, authLanding, signOutDevice.
  */
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
@@ -29,19 +29,19 @@ const memoryLock = (() => {
 })();
 
 /* ---------- Retour d'un lien reçu par e-mail (confirmation d'inscription, mot de passe oublié) ----------
-   Flux PKCE : le lien ramène sur compte.html avec ?code=<uuid>, échangeable contre une session seulement avec le
+   Flux PKCE : le lien ramène sur /pages/compte/compte.html avec ?code=<uuid>, échangeable contre une session seulement avec le
    « code_verifier » gardé par CE navigateur au moment de la demande. Un lien fabriqué par quelqu'un d'autre
    (session d'un autre compte en #access_token=…, ou ?code= sans verifier) n'ouvre donc aucune session (fixation refusée).
-   La lecture de l'adresse n'est active que sur compte.html, seule page de retour des e-mails ; ailleurs l'adresse
-   est ignorée. Sur compte.html, ?code=HG-XXXX est un code d'invitation et non un code d'authentification : la lecture
+   La lecture de l'adresse n'est active que sur /pages/compte/compte.html, seule page de retour des e-mails ; ailleurs l'adresse
+   est ignorée. Sur /pages/compte/compte.html, ?code=HG-XXXX est un code d'invitation et non un code d'authentification : la lecture
    est coupée dans ce cas, pour ne pas consommer le verifier d'une inscription en attente. */
 const PROJECT_REF = new URL(SUPABASE_URL).hostname.split('.')[0];
 /** Clé de stockage du verifier PKCE (nom imposé par supabase-js : sb-<projet>-auth-token-code-verifier). */
 const VERIFIER_KEY = `sb-${PROJECT_REF}-auth-token-code-verifier`;
 /** Pages qui reçoivent les retours d'e-mail. */
-const URL_SESSION_PAGES = new Set(['compte.html']);
+const URL_SESSION_PAGES = new Set(['/pages/compte/compte.html']);
 const _here = new URL(location.href);
-const _page = _here.pathname.split('/').pop() || 'index.html';
+const _page = _here.pathname.split('/').pop() || '/index.html';
 const _code = _here.searchParams.get('code') || '';
 const _isAuthCode = /^[0-9a-f-]{36}$/i.test(_code);
 let _verifier = false;

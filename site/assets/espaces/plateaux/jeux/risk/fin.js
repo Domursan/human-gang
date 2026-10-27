@@ -7,7 +7,7 @@
  *   etat.joueurs[i] = { user_id, pseudo, etat: {armee}, gagne, elimine } ; etat.jeu.territoires = {id: {j, a}} ;
  *   etat.jeu.missions_fin = {user_id: {id, type, cible}} ; etat.partie.raison = 'mission' | 'monde' (autres : fin anticipée).
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { avatarHtml } from '../../vues/commun.js';
 
 /** Armée (nom et couleur) d'un joueur, d'après ses contenus. */

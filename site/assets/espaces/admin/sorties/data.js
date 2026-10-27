@@ -5,9 +5,9 @@
 // Dépendances : core.js (sb, notify), admin-ghosts.js (annuaire des fantômes), photos.js (suppression de fichiers).
 // Exporte : loadAll, createEvent, updateEvent, fixDate, syncDates, deleteEvent, setRsvp, removeRsvp, setVote, announceNew.
 // =====================================================================
-import { sb, notify } from '../core.js';
+import { sb, notify } from '../../../commun/core.js';
 import { ghostDirectory } from '../admin-ghosts.js';
-import { removeObjects } from '../photos.js';
+import { removeObjects } from '../../irl/photos.js';
 
 /* Renvoie les données d'une réponse Supabase, ou lève l'erreur reçue. */
 const ok = ({ data, error }) => { if (error) throw error; return data; };

@@ -1,37 +1,37 @@
-// ===== Humane Gang — page « Jeux » (jeux.html) : tous les jeux en cartes, « Les missions du jour » et un onglet par jeu flash =====
+// ===== Humane Gang — page « Jeux » (/pages/jeux/jeux.html) : tous les jeux en cartes, « Les missions du jour » et un onglet par jeu flash =====
 /*
- * Rôle : la vue de départ (jeux.html, ou jeux.html#tous) présente tous les jeux en cartes, rangés en sections
+ * Rôle : la vue de départ (/pages/jeux/jeux.html, ou /pages/jeux/jeux.html#tous) présente tous les jeux en cartes, rangés en sections
  * (catalogue : assets/js/jeux/catalogue.js) : Jeux flash (les onglets de cette page), Jeux multijoueurs, Jeux spéciaux
  * (pages à part). Une carte n'est affichée que si le membre y a droit : accès de sa page (comme le menu), et les jeux
  * pas encore sortis (« bientot ») pour les seuls admins. Ce qui n'est visible que des admins (jeu en préparation,
  * page encore en mode admin) a une ambiance « chantier » : bandes jaunes et noires et petit panneau de travaux. Le menu du haut mène directement à cette vue.
  * Construit aussi la barre d'onglets (liste de assets/js/jeux/onglets.js), précédée de l'onglet « Les missions du jour »
  * (programme du jour : chaque jeu avec son état, Paillettes gagnées aujourd'hui). Charge le module d'un jeu à la
- * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (jeux.html#geo) ;
+ * première ouverture de son onglet et lui confie son panneau. L'onglet choisi est dans l'adresse (/pages/jeux/jeux.html#geo) ;
  * sans adresse, la page s'ouvre sur tous les jeux. Un choix propre à un jeu suit le nom de l'onglet dans l'adresse
- * (jeux.html#arcade-raclette) : il est passé au module dans ctx.sub, et l'événement « jeux:sub » le signale quand il change.
+ * (/pages/jeux/jeux.html#arcade-raclette) : il est passé au module dans ctx.sub, et l'événement « jeux:sub » le signale quand il change.
  * La barre d'onglets est masquée (CSS) : on navigue par les cartes de la vue de départ. Le panneau de l'onglet
- * choisi occupe toute la largeur ; le tableau de bord et chaque jeu portent leur titre. L'Arène n'est plus ici (cartes.html#arene) :
- * l'ancienne adresse jeux.html#bataille y redirige.
+ * choisi occupe toute la largeur ; le tableau de bord et chaque jeu portent leur titre. L'Arène n'est plus ici (/pages/cartes/cartes.html#arene) :
+ * l'ancienne adresse /pages/jeux/jeux.html#bataille y redirige.
  * Un lien « Tous les jeux » ramène à la vue de départ depuis un jeu.
  * Accessibilité : motif ARIA des onglets, flèches (gauche/droite et haut/bas), Début et Fin, un seul onglet dans
  * l'ordre de tabulation.
- * Page : jeux.html (session membre requise).
+ * Page : /pages/jeux/jeux.html (session membre requise).
  * Dépendances : core.js (initPage, sb, toast, esc, $), jeux/onglets.js, jeux/commun.js, modules jeux/<id>.js.
  * Le fichier n'exporte rien.
  */
-import { sb, initPage, toast, esc, $ } from './core.js';
-import { ONGLETS } from './jeux/onglets.js';
-import { nf, jourLong, zurichIso } from './jeux/commun.js';
-import { SECTIONS, CARTES } from './jeux/catalogue.js';
-import { CLE_JEU, monterClassement } from './jeux/classement-jeux.js'; // classements des jeux du jour (migration 157)
-import { canAccess, pageLabel, pageMode } from './core/pages-access.js';
-import { getCachedProfile } from './core/profile.js';
-import { viewAsActive } from './core/view-as.js';
-import { setCompteurs } from './core/badges-compteur.js';
+import { sb, initPage, toast, esc, $ } from '../../commun/core.js';
+import { ONGLETS } from './onglets.js';
+import { nf, jourLong, zurichIso } from './commun.js';
+import { SECTIONS, CARTES } from './catalogue.js';
+import { CLE_JEU, monterClassement } from './classement-jeux.js'; // classements des jeux du jour (migration 157)
+import { canAccess, pageLabel, pageMode } from '../../commun/core/pages-access.js';
+import { getCachedProfile } from '../../commun/core/profile.js';
+import { viewAsActive } from '../../commun/core/view-as.js';
+import { setCompteurs } from '../../commun/core/badges-compteur.js';
 
 /* ---------- Ancienne adresse de l'Arène : elle vit dans la page Cartes ---------- */
-if (location.hash === '#bataille') location.replace('cartes.html#arene');
+if (location.hash === '#bataille') location.replace('/pages/cartes/cartes.html#arene');
 
 /* ---------- Initialisation : session membre requise ---------- */
 const me = await initPage();
@@ -59,7 +59,7 @@ const JEUX = GROUPES.flatMap(([g]) => ONGLETS.filter((o, i, a) => o && ID_RE.tes
 const LISTE = [{ id: TOUS, titre: 'Tous les jeux', icone: ICONE_DEF, catalogue: true },
   { id: HUB, titre: 'Les missions du jour', icone: ICONE_HUB, hub: true }, ...JEUX];
 /** Dossier des modules (les chemins de onglets.js lui sont relatifs). */
-const BASE = new URL('./jeux/', import.meta.url);
+const BASE = new URL('./', import.meta.url);
 /** Contexte passé aux modules. sub : choix propre à un jeu tiré de l'adresse (null si aucun). */
 const CTX = { sb, me, toast, esc, sub: null };
 // État : onglet affiché ; modules montés (id -> module) ; montages en cours ; modules importés ; résumés (id -> résumé).
@@ -423,7 +423,7 @@ tablist.addEventListener('keydown', (e) => {
   e.preventDefault();
   choisir(tabs[j].dataset.id, { focus: true });
 });
-// Lien direct ou retour arrière vers jeux.html#<id> ou jeux.html#<id>-<choix>
+// Lien direct ou retour arrière vers /pages/jeux/jeux.html#<id> ou /pages/jeux/jeux.html#<id>-<choix>
 window.addEventListener('hashchange', () => { const a = lireAdresse(); if (a.id) choisir(a.id, { adresse: false, sub: a.sub }); });
 // En quittant la page : chaque module chargé peut libérer ses ressources (minuteurs, abonnements…)
 window.addEventListener('pagehide', () => { for (const m of S.mods.values()) { try { m.unmount?.(); } catch { /* sans importance */ } } });

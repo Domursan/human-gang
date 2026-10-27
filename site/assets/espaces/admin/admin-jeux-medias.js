@@ -12,9 +12,9 @@
  * RPC : hg_framed_admin, hg_framed_film_save, hg_framed_round_save, hg_heardle_admin, hg_heardle_track_save, hg_heardle_round_save.
  * Exporte : mountJeuxMediasSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { prepareImage } from './image-compress.js';
-import { cropsFromImage, loadImage, loadManifest, norm } from './admin/framed-crops.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { cropsFromImage, loadImage, loadManifest, norm } from './framed-crops.js';
 
 const BUCKET = 'hg-jeux';
 const dfmt = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich' });

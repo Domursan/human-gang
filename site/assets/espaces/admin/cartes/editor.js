@@ -7,10 +7,10 @@
 // Tables : hg_cards (insert, update, delete). Image : bucket hg-assets via uploadCardImage.
 // Exporte : openCardDialog, deleteCard, makeIdentities.
 // =====================================================================
-import { sb, toast, esc, $ } from '../core.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { RARITIES, FAMILIES, cardHtml } from '../cartes-ui.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, $ } from '../../../commun/core.js';
+import { openDrawer } from '../ui/drawer.js';
+import { RARITIES, FAMILIES, cardHtml } from '../../cartes/cartes-ui.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
 import { activeProfiles, check, act, friendly, nf, nextFreeNumber, identSetId, maxSerialOf, removeImages, uploadCardImage } from './helpers.js';
@@ -156,7 +156,7 @@ export function openCardDialog(k = null) {
     if (v.tag && !/^[a-z0-9][a-z0-9-]{0,31}$/.test(v.tag)) throw new Error('Tag de jeu : minuscules, chiffres et tirets (ex. minecraft, sea-of-thieves).');
     if (v.max_copies !== null && (!Number.isInteger(v.max_copies) || v.max_copies < 1)) throw new Error('Exemplaires maximum : un nombre entier à partir de 1 (ou vide pour illimité).');
     if (k && v.max_copies !== null && v.max_copies < used) throw new Error(`Des exemplaires sont déjà numérotés jusqu'au n° ${used} : le maximum ne peut pas descendre en dessous.`);
-    // Adresse web, ou image dessinée livrée avec le site (assets/cards/<série>/<fichier>.svg : cartes Champions, Le gang joue)
+    // Adresse web, ou image dessinée livrée avec le site (/assets/cartes/<série>/<fichier>.svg : cartes Champions, Le gang joue)
     if (v.image_url && !/^https?:\/\//.test(v.image_url) && !/^assets\/cards\/[a-z0-9-]+\/[a-z0-9-]+\.svg$/.test(v.image_url)) throw new Error('L\'URL de l\'image doit commencer par https://');
     if ((v.family === 'membre' || v.rarity === 'identite') && !v.member_id) throw new Error('Une carte Membre ou Identité doit être liée à un membre.');
     return v;

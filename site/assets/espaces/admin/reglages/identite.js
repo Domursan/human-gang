@@ -7,10 +7,10 @@
 // Exporte : mountIdentite (monte le formulaire, appelé par view.js), showIdentitePart (n'affiche qu'une partie des groupes ;
 // le formulaire reste unique : un seul bouton Enregistrer, toutes les valeurs relues et enregistrées ensemble).
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
-import { SITE_DEFAULTS, buildSite, diffFromDefaults, setSiteRaw, NAV_SLUGS } from '../core/site-defaults.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
+import { SITE_DEFAULTS, buildSite, diffFromDefaults, setSiteRaw, NAV_SLUGS } from '../../../commun/core/site-defaults.js';
 import { GROUPES_LOT1, PARTS_LOT1, NAV_AUTO_LABELS } from './keys-lot1.js';
-import { menuEntries } from '../core/menu-def.js';
+import { menuEntries } from '../../../commun/core/menu-def.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_RE = /^(https:\/\/|assets\/)\S+$/;

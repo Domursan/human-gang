@@ -6,7 +6,7 @@
  * Exporte : recap(etat) -> HTML (chaîne).
  *   etat.joueurs[i].etat = { points, colonies, villes, routes, cartes, rang } ; etat.jeu.objectif (10 ou 8).
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 /** Couleur de profil sûre (sinon crème). */
 const couleurDe = (j) => (/^#[0-9a-f]{6}$/i.test(j?.couleur || '') ? j.couleur : '#F2EFEA');

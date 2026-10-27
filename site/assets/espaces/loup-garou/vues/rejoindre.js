@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc), loup-garou/api.js (lg, erreurTexte), loup-garou/ui.js (icone, pseudo, filAriane).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { lg, erreurTexte, estInvite, jetonInvite } from '../api.js';
 import { icone, pseudo, filAriane } from '../ui.js';
 
@@ -101,10 +101,10 @@ function brancherSaisie(zone, naviguer) {
 
 /** Carte invité : contenu (HTML) puis lien secondaire vers la connexion. */
 function carteInvite(code, contenu) {
-  const suite = encodeURIComponent(`loup-garou.html?code=${code}`);
+  const suite = encodeURIComponent(`/pages/jeux/loup-garou.html?code=${code}`);
   return `<section class="card lg-invitation" aria-labelledby="lg-titre-partie">
     ${contenu}
-    <p class="lg-invite-compte"><a class="lg-invite-lien" href="${esc(`compte.html?next=${suite}`)}">J'ai un compte : me connecter</a></p>
+    <p class="lg-invite-compte"><a class="lg-invite-lien" href="${esc(`/pages/compte/compte.html?next=${suite}`)}">J'ai un compte : me connecter</a></p>
   </section>`;
 }
 

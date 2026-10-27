@@ -7,10 +7,10 @@
 // admin/ui/drawer.js (tiroir), admin/visual-pick.js (sélecteurs), state.js (C), data.js (refresh), helpers.js (check, nf, activeProfiles).
 // Exporte : openBulkGift, donnerGroupe (confirmation + RPC, réutilisée par admin-gestion.js), recapText, invalide, argsDon, KIND, MAX_MEMBRES.
 // =====================================================================
-import { sb, toast, errMsg, esc, $ } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml, libelleEpuisee } from '../admin/visual-pick.js';
+import { sb, toast, errMsg, esc, $ } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { openDrawer } from '../ui/drawer.js';
+import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml, libelleEpuisee } from '../visual-pick.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
 import { check, nf, activeProfiles } from './helpers.js';

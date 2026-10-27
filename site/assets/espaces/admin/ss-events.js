@@ -4,11 +4,11 @@
 // délégation de clics installée une seule fois sur le document (la barre de zone et les tiroirs sont hors de la section).
 // Dépend de core.js, confirm, admin-godmode.js (confirmation « Refaire le tirage »), admin-ss-manual.js (tirage manuel),
 // admin-accounts.js (champs partagés), ui/drawer.js, state.js, loaders.js, ss-render.js et reglages-valeurs-lot3.js.
-import { sb, toast, errMsg, esc, fmtDateTime, $, isGodMode, notify, godTag } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
-import { confirmRedo } from '../admin-godmode.js';
-import { openManualDraw } from '../admin-ss-manual.js';
-import { readSharedFields, sharedFieldsHtml } from '../admin-accounts.js';
+import { sb, toast, errMsg, esc, fmtDateTime, $, isGodMode, notify, godTag } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { confirmRedo } from './admin-godmode.js';
+import { openManualDraw } from './admin-ss-manual.js';
+import { readSharedFields, sharedFieldsHtml } from './admin-accounts.js';
 import { openDrawer } from './ui/drawer.js';
 import { S, pseudoOf, STATUS, STATUS_LABEL } from './state.js';
 import { busy, check, uploadAsset, pickFile, nullIfEmpty } from './common.js';
@@ -16,7 +16,7 @@ import { loadEditions, loadEditionDetails } from './loaders.js';
 import { refreshCounts } from './counts.js';
 import { renderSS, SSV, ssCurrent, ssOpenEdition } from './ss-render.js';
 import { navigate } from './shell.js';
-import { reglage } from '../reglages-valeurs-lot3.js';
+import { reglage } from './reglages-valeurs-lot3.js';
 
 // Adresse de la sous-section Secret Santa (retour après suppression d'une édition).
 const SS_ROUTE = 'irl/secret-santa';

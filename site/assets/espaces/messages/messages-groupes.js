@@ -2,17 +2,17 @@
 /*
  * Rôle : création d'un groupe libre (nom, couleur, membres), pile d'avatars, panneau du groupe (membres, ajout, retrait,
  * renommage pour le responsable ; sourdine et départ pour chacun), messages système centrés.
- * Les discussions de sortie (créées depuis irl.html, lien messages.html?event=<id>) sont des groupes liés à une sortie.
+ * Les discussions de sortie (créées depuis /pages/irl/irl.html, lien /pages/compte/messages.html?event=<id>) sont des groupes liés à une sortie.
  * Modèle de sécurité inchangé : tout passe par des RPC qui vérifient l'appartenance (aucun accès direct aux tables).
  * Dépendances : core.js, social.js (réglages, boîte de dialogue), ui-confirm.js, icons.js.
  * RPC : hg_group_create, hg_group_info, hg_group_add, hg_group_remove, hg_group_rename, hg_group_leave, hg_group_mute,
  * hg_event_conv_open.
  * Exporte : isGroup, groupAvatarHtml, groupSubtitle, systemRowHtml, openGroupCreate, openGroupPanel, openEventConv, muteLabel.
  */
-import { sb, esc, toast, errMsg, avatarHtml } from './core.js';
-import { socialSettings, openDialog } from './social.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
+import { sb, esc, toast, errMsg, avatarHtml } from '../../commun/core.js';
+import { socialSettings, openDialog } from '../compte/social.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
 
 const I = {
   users: svg('users2', { size: 16, stroke: 2 }),
@@ -151,7 +151,7 @@ export async function openGroupPanel(conv, { members, me, onChange, onLeft }) {
   const room = Math.max(0, (g.max || 30) - inside.size);
   const muted = muteLabel(g.muted_until);
   const dlg = openDialog({ id: 'grp-dlg', title: g.title || 'Groupe', body: `
-    ${g.event_id ? `<p class="small grp-event">${I.cal}<span>Discussion de la sortie « ${esc(g.event_title || g.title)} » : les réponses « oui » et « peut-être » y entrent d’elles-mêmes. <a href="irl.html#event-${esc(g.event_id)}">Voir la sortie</a></span></p>` : ''}
+    ${g.event_id ? `<p class="small grp-event">${I.cal}<span>Discussion de la sortie « ${esc(g.event_title || g.title)} » : les réponses « oui » et « peut-être » y entrent d’elles-mêmes. <a href="/pages/irl/irl.html#event-${esc(g.event_id)}">Voir la sortie</a></span></p>` : ''}
     ${resp ? `<form class="stack grp-rename" id="grp-rename" novalidate>
       <div class="field"><label for="grp-rn">Nom du groupe</label><input id="grp-rn" maxlength="60" value="${esc(g.title || '')}"></div>
       <fieldset class="grp-colors"><legend>Couleur</legend><div class="grp-color-row">${GROUP_COLORS.map((c) => `<label class="grp-color">

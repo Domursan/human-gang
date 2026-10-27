@@ -3,9 +3,9 @@
 // pill(statut) : pastille colorée { id, label, tone } ; tone : open | prog | done | muted.
 // statusSelect({ id, value, options, label }) : sélecteur de statut natif stylé ; bindStatus(select, onStatus) le branche.
 // Utilisé par ui/list.js, ui/detail-header.js, ui/info-panel.js et les sections (support, idées).
-import { svg } from '../../icons.js';
-import { esc } from '../../core/util.js';
-import { toast } from '../../core/ui.js';
+import { svg } from '../../../commun/icons.js';
+import { esc } from '../../../commun/core/util.js';
+import { toast } from '../../../commun/core/ui.js';
 
 /** Texte replié pour la recherche : sans accents (signes diacritiques retirés), en minuscules. */
 export function fold(text) {

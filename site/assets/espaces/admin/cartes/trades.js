@@ -5,12 +5,12 @@
 // Exporte : tradesPanel (HTML de l'onglet), cancelTrade (annulation), loadTradeLimits et saveTradeLimits (limites anti-abus,
 // réglage hg_settings « echanges », enregistré par fusion).
 // =====================================================================
-import { sb, toast, esc, errMsg } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, errMsg } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
 import { refresh } from './data.js';
 import { act, check, fmtWhen, nf, pseudo } from './helpers.js';
-import { lireReglage, ecrireReglage } from '../admin/reglages-merge.js';
+import { lireReglage, ecrireReglage } from '../reglages-merge.js';
 
 /* =========================================================
    Limites anti-abus (réglage echanges)

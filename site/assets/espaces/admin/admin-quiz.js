@@ -7,10 +7,10 @@
 // Dépendances : core.js (client Supabase, toast, échappement), admin-events.js (heure suisse), ui-confirm.js (confirmation),
 // admin/ui/drawer.js (tiroir du formulaire), admin-quiz-stats.js (onglet statistiques).
 // Exporte : mountQuizSection(container), qui monte la section dans son conteneur.
-import { sb, toast, errMsg, esc } from './core.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
-import { confirmBox } from './ui-confirm.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { openDrawer } from './ui/drawer.js';
 import { mountQuizStats } from './admin-quiz-stats.js';
 import { mountQuizJour } from './admin-quiz-jour.js';
 import { openQuizImport } from './admin-quiz-import.js'; // idée A1 : import d'un fichier CSV (tiroir)

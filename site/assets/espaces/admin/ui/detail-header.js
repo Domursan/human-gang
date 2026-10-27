@@ -5,7 +5,7 @@
 //   primary  : { label, onClick, icon? (défaut : coche), disabled? } : bouton principal, ex. « Résoudre »
 //   actions  : [{ label, onClick, icon? }] boutons secondaires, avant le principal
 // Utilisé par les détails de l'assistance, des idées et du journal. Dépend de ui/common.js.
-import { esc, avatarHtml } from '../../core/util.js';
+import { esc, avatarHtml } from '../../../commun/core/util.js';
 import { statusSelect, bindStatus, ICON } from './common.js';
 
 // Identifiant unique par en-tête (pour relier le libellé au sélecteur).

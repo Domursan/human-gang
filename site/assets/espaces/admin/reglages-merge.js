@@ -5,7 +5,7 @@
 // Dépendances : core.js (sb).
 // Exporte : lireReglage (valeur d'une clé, objet vide si absente), ecrireReglage (modification puis enregistrement).
 // =====================================================================
-import { sb } from '../core.js';
+import { sb } from '../../commun/core.js';
 
 /**
  * Valeur d'une clé de hg_settings, relue en base. Renvoie un objet vide si la clé est absente ou n'est pas un objet.

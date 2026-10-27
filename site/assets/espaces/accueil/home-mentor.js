@@ -1,11 +1,11 @@
-// ===== Humane Gang — carte « Semaine d'accueil » du parrainage (idée P8, accueil.html) =====
+// ===== Humane Gang — carte « Semaine d'accueil » du parrainage (idée P8, /pages/compte/accueil.html) =====
 // Pendant 7 jours, le parrain et son filleul voient sur l'accueil la quête commune : profil complété (avatar),
 // premier message du parrain, un échange ou un don de carte entre eux, une réponse « oui » à une sortie.
 // Quand les 4 étapes sont faites, chacun réclame sa récompense (RPC hg_mentor_claim : Paillettes plafonnées et
 // idempotentes, carte « Parrain » ou « Filleul » si le Staff l'a choisie, badge Parrain). Sans parrainage en cours,
 // le bloc reste masqué. Si la semaine passe sans tout finir, la carte disparaît sans reproche.
 // RPC : hg_mentor_progress, hg_mentor_claim (migration 091). Exporte : loadMentorBlock(box, ctx), STEP_TEXT.
-import { sb, esc, errMsg, toast, avatarHtml } from './core.js';
+import { sb, esc, errMsg, toast, avatarHtml } from '../../commun/core.js';
 
 /** Libellé de chaque étape, selon le rôle de la personne qui regarde. */
 export const STEP_TEXT = {
@@ -69,7 +69,7 @@ function duoHtml(d, reward) {
           : all ? `<button class="btn btn-sand" type="button" data-claim="${esc(d.mentee_id)}">Réclamer ma récompense</button>`
             : `<span class="small muted">${left} étape${left > 1 ? 's' : ''} restante${left > 1 ? 's' : ''}</span>`}
       </div>
-      ${!d.claimed && exchangeTodo ? `<a class="btn btn-sand mt-cta" href="cartes.html#collection/${encodeURIComponent(otherId)}">Proposer un échange à ${esc(other)}</a>` : ''}
+      ${!d.claimed && exchangeTodo ? `<a class="btn btn-sand mt-cta" href="/pages/cartes/cartes.html#collection/${encodeURIComponent(otherId)}">Proposer un échange à ${esc(other)}</a>` : ''}
       <p class="small muted mt-note">Si la semaine passe sans tout finir, la carte disparaît sans reproche.</p>
     </div>`;
 }

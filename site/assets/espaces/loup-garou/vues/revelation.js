@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), api.js (lg, erreurTexte), ui.js, roles.js.
  * Exporte : monter.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { erreurTexte, estInvite } from '../api.js';
 import { icone, avatar, pseudo, vignetteRole, pastilleCamp, chrono, notifier } from '../ui.js';
 import { roleById, CAMPS } from '../roles.js';

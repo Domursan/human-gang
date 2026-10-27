@@ -5,7 +5,7 @@
 // Accès : admin, ou Staff avec des permissions. Droits : admin/perms.js (source unique).
 // Ce fichier ne fait que brancher : il relie chaque sous-section à son fournisseur (registerSub), charge les données
 // nécessaires, puis démarre le routage. Le code des sections est dans leurs propres modules.
-import { initPage, $, toast, errMsg } from './core.js';
+import { initPage, $, toast, errMsg } from '../../commun/core.js';
 import { mountThemesSection, themeActions } from './admin-themes.js';
 import { mountMessagesSection, listMessages, openMessages } from './admin-messages.js';
 import { mountLogSection, listLog, openLog } from './admin-log.js';
@@ -20,32 +20,32 @@ import { mountChallengesSection } from './admin-challenges.js';
 import { mountQuizSection } from './admin-quiz.js';
 import { mountSutomSection } from './admin-sutom.js';
 import { mountStaffSection, listStaff, openStaff, infoStaff } from './admin-staff.js';
-import { mountSortiesSection, openSortie, listSorties, infoSorties } from './admin-sorties/index.js';
-import { mountSouvenirsSection, openSouvenirs, listSouvenirs } from './admin-souvenirs/index.js';
-import { mountReglagesSection, reglagesActions } from './admin-reglages/view.js';
-import { A } from './admin-accounts/state.js';
-import { S, pseudoOf } from './admin/state.js';
-import { sectionError } from './admin/common.js';
-import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './admin/loaders.js';
-import { loadCounts, refreshCounts, countTables } from './admin/counts.js';
-import './admin/todos.js'; // « À faire » des 7 lieux (registerTodo, admin/lieux.js)
-import { bindInvites, renderInvites, renderMembers, inviteActions } from './admin/invites.js';
-import { renderSS, ssSub } from './admin/ss-render.js';
-import { bindSecretSanta } from './admin/ss-events.js';
-import { bindBadges, renderBadges, badgesSub } from './admin/badges.js';
-import { ideasSub, renderIdeas } from './admin/ideas.js';
-import { supportSub, renderSupport } from './admin/support.js';
-import { canSection, anySection, applyPanelAccess, disableSubs, lieuOf } from './admin/perms.js';
+import { mountSortiesSection, openSortie, listSorties, infoSorties } from './sorties/index.js';
+import { mountSouvenirsSection, openSouvenirs, listSouvenirs } from './souvenirs/index.js';
+import { mountReglagesSection, reglagesActions } from './reglages/view.js';
+import { A } from './comptes/state.js';
+import { S, pseudoOf } from './state.js';
+import { sectionError } from './common.js';
+import { loadMembers, loadInvites, loadEditionDetails, loadBadges, loadIdeas, loadSupport, ensureMembers, ensureInvites, ensureSS, ensureBadges, ensureIdeas, ensureSupport, safe } from './loaders.js';
+import { loadCounts, refreshCounts, countTables } from './counts.js';
+import './todos.js'; // « À faire » des 7 lieux (registerTodo, admin/lieux.js)
+import { bindInvites, renderInvites, renderMembers, inviteActions } from './invites.js';
+import { renderSS, ssSub } from './ss-render.js';
+import { bindSecretSanta } from './ss-events.js';
+import { bindBadges, renderBadges, badgesSub } from './badges.js';
+import { ideasSub, renderIdeas } from './ideas.js';
+import { supportSub, renderSupport } from './support.js';
+import { canSection, anySection, applyPanelAccess, disableSubs, lieuOf } from './perms.js';
 // Parties des sections découpées (sous-menus) : importées par espace de noms, pour qu'une fonction absente (module pas
 // encore à jour) ne casse pas le panel. Sans elle, la sous-section affiche la section entière (comportement d'origine).
-import * as Econ from './admin-cards/economy.js';       // showEconPart(part)
-import * as Reg from './admin-reglages/view.js';        // showReglagesPart(part)
-import * as BadgesParts from './admin/badges.js';       // showBadgesPart(part)
+import * as Econ from './cartes/economy.js';       // showEconPart(part)
+import * as Reg from './reglages/view.js';        // showReglagesPart(part)
+import * as BadgesParts from './badges.js';       // showBadgesPart(part)
 import * as Access from './admin-access.js';           // setAccessView(view)
-import { initLive, onTableChange } from './admin/live.js';
-import { initShell, registerSub, startShell, navigate, setActions } from './admin/shell.js';
-import { setupPalette } from './admin/palette.js';
-import { initQuick } from './admin/quick.js';
+import { initLive, onTableChange } from './live.js';
+import { initShell, registerSub, startShell, navigate, setActions } from './shell.js';
+import { setupPalette } from './palette.js';
+import { initQuick } from './quick.js';
 
 // Sections facultatives (modules autonomes) : chargées en parallèle de l'identité. Un module absent ou sans sa fonction de
 // montage retire sa sous-section du panel (disableSubs) au lieu de casser le démarrage.
@@ -84,8 +84,8 @@ const optionalP = Promise.all(OPTIONAL.map(async (o) => {
 // Idées A2, A3, A4 (migration 092) : sous-sections livrées comme fournisseurs complets ({ main, open }). Un module absent
 // retire sa sous-section (comme OPTIONAL). Réorganisation (migration 103) : les routes suivent les nouveaux domaines.
 const PROVIDERS = [
-  { route: 'mairie/planning', url: './admin/planning.js', name: 'planningSub' },       // La Mairie › Planning
-  { route: 'place/relance', url: './admin-accounts/remind.js', name: 'remindSub' },    // La Place du gang › À relancer
+  { route: 'mairie/planning', url: './planning.js', name: 'planningSub' },       // La Mairie › Planning
+  { route: 'place/relance', url: './comptes/remind.js', name: 'remindSub' },    // La Place du gang › À relancer
   { route: 'fete/mes-jeux', url: './admin-mj.js', name: 'mjSub' },                   // La Fête foraine › Mes jeux
 ];
 const providersP = Promise.all(PROVIDERS.map(async (p) => {
@@ -241,8 +241,8 @@ for (const [sub, part] of [['avent', 'avent'], ['saison-worlds', 'worlds'], ['an
 }
 regSub('drops', { main: () => mountDropsSection($('#drops-root')) }); // drops : un tirage manuel, les premiers qui cliquent
 // Idées C13/C15 (cagnotte, bulletin) et C17 (cartes Champions) : modules chargés à la demande
-regSub('cagnotte', { main: () => import('./admin-cards/pots.js').then((m) => m.mountPotsSection($('#pots-root'))) });
-regSub('champions', { main: () => import('./admin-cards/champions.js').then((m) => m.mountChampionsSection($('#champions-root'))) });
+regSub('cagnotte', { main: () => import('./cartes/pots.js').then((m) => m.mountPotsSection($('#pots-root'))) });
+regSub('champions', { main: () => import('./cartes/champions.js').then((m) => m.mountChampionsSection($('#champions-root'))) });
 regSub('defis', { main: () => mountChallengesSection($('#challenges-root')) });
 regSub('questions', { main: () => mountQuizSection($('#quiz-root')) }); // questions du gang : un onglet réponses et statistiques
 regSub('sutom', { main: () => mountSutomSection($('#sutom-root')) }); // Sutom du gang (J8) : banque de mots, programmation

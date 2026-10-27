@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), plateaux/api.js (plat, erreurTexte, jeu).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { plat, erreurTexte, jeu } from '../api.js';
 
 const nombre = (n) => Number(n || 0).toLocaleString('fr-CH');
@@ -94,7 +94,7 @@ export async function afficher(root) {
   const J = jeu();
 
   root.innerHTML = `<div class="plat-st">
-    <nav class="plat-fil" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="${esc(J.page)}">${esc(J.nom)}</a> › <span aria-current="page">Statistiques</span></nav>
+    <nav class="plat-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="${esc(J.page)}">${esc(J.nom)}</a> › <span aria-current="page">Statistiques</span></nav>
     <h1 class="plat-titre display">Mes statistiques ${esc(J.nom)}</h1>
     <div data-zone aria-live="polite"><p class="plat-st-aide">Chargement…</p></div>
   </div>`;

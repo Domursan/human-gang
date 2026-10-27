@@ -10,7 +10,7 @@
  * Dépendances : core.js (esc), uno/api.js (suivrePartie, messages, estInvite).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { suivrePartie, messages, estInvite } from '../api.js';
 
 const VUES = {
@@ -32,8 +32,8 @@ function vuePour(e) {
 function erreurCarte(root, code, message) {
   const invite = estInvite();
   const lien = invite
-    ? `uno.html#rejoindre/${encodeURIComponent(code)}`
-    : 'uno.html';
+    ? `/pages/jeux/uno.html#rejoindre/${encodeURIComponent(code)}`
+    : '/pages/jeux/uno.html';
   root.innerHTML = `<section class="card uno-erreur">
     <h1 class="display">Partie introuvable</h1>
     <p>${esc(message || 'Cette partie n\'existe pas ou n\'est plus disponible.')}</p>

@@ -8,7 +8,7 @@
  * Exporte : mount(panel, ctx).
  */
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 const BUCKET = 'hg-jeux';
 const dateFmt = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich' });

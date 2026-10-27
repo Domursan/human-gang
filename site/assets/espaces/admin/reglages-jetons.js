@@ -6,7 +6,7 @@
 // RPC hg_support_public et hg_eggs_public pour « support » et « eggs » (migration 072).
 // Exporte : chargerReglages, valeur, evaluer, fmt, jetons, appliquerReglages.
 // =====================================================================
-import { sb, hasSession } from './core/supabase.js';
+import { sb, hasSession } from '../../commun/core/supabase.js';
 
 /* ---------- Sources ---------- */
 // Espaces de noms utilisés dans les jetons : « cartes.<champ> » lit hg_card_cfg(), les autres lisent hg_settings[<clé>].

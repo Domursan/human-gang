@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc), ui.js (filAriane, icone, vignetteRole, pastilleCamp), roles.js (ROLES, EXTENSIONS, CAMPS).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { filAriane, icone, vignetteRole, pastilleCamp } from '../ui.js';
 import { ROLES, EXTENSIONS, CAMPS } from '../roles.js';
 

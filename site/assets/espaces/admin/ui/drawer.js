@@ -8,7 +8,7 @@
 // onSubmit reçoit le <form> ; s'il renvoie false ou lève une erreur, le tiroir reste ouvert
 // (l'erreur est affichée par toast). Le bouton principal est désactivé pendant l'envoi.
 // Utilisé par les sections admin (Secret Santa, invitations, idées…). Dépend de core.js (toast, errMsg, esc).
-import { esc, toast, errMsg } from '../../core.js';
+import { esc, toast, errMsg } from '../../../commun/core.js';
 
 // Identifiant unique par tiroir (pour relier le titre au dialogue).
 let seq = 0;

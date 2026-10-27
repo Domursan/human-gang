@@ -1,19 +1,19 @@
 // ===== Humane Gang — secret de la page 404 : le jeu des paillettes (même règles que l'arcade) =====
 /*
- * Rôle : petit jeu sur la page introuvable (404.html), le même Paillettes que l'arcade (eggs/jeu-paillettes.js) :
+ * Rôle : petit jeu sur la page introuvable (/404.html), le même Paillettes que l'arcade (eggs/jeu-paillettes.js) :
  * pas de chrono, trois vies, pièges (fausses paillettes violettes, grêlons). Le joueur déplace le chapeau du gang
  * (souris, doigt ou flèches) pour attraper les paillettes. Fin de partie (zéro vie) avec au moins une paillette :
  * le score est signalé au serveur (secret « jeu404 », une récompense par jour). Sans compte, le jeu reste jouable
  * et un message invite à se connecter.
  * Moteur : eggs/arcade.js (creeArcade) ; animation réduite : chute plus lente, pas d'étincelles ni de secousse.
- * Page : 404.html uniquement (module chargé en fin de page).
+ * Page : /404.html uniquement (module chargé en fin de page).
  * Dépendances : eggs/arcade.js (moteur), eggs/jeu-paillettes.js (règles), eggs/api.js (eggFound), core/supabase.js (hasSession).
  * Exporte : rien (effets de bord : lance le jeu sur le canevas #jeu-canvas).
  */
 import { creeArcade } from './arcade.js';
 import { JEU } from './jeu-paillettes.js';
 import { eggFound } from './api.js';
-import { hasSession } from '../core/supabase.js';
+import { hasSession } from '../../commun/core/supabase.js';
 
 /* ---------- Éléments de la page ---------- */
 

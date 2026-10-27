@@ -8,7 +8,7 @@
  *   filAriane), loup-garou/roles.js (ROLES, CAMPS, EXTENSIONS, roleById).
  * Exporte : afficher.
  */
-import { esc, notify } from '../../core.js';
+import { esc, notify } from '../../../commun/core.js';
 import { lg, erreurTexte } from '../api.js';
 import { icone, vignetteRole, ouvrirFenetre, filAriane } from '../ui.js';
 import { ROLES, CAMPS, EXTENSIONS, roleById } from '../roles.js';

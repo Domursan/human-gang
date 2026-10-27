@@ -8,7 +8,7 @@
  * Exporte : lg (appels), suivrePartie (abonnement temps réel + secours périodique), messages, erreurTexte,
  *   activerInvite, estInvite, jetonInvite.
  */
-import { sb, errMsg } from '../core.js';
+import { sb, errMsg } from '../../commun/core.js';
 
 /* ---------- Mode invité ---------- */
 let invite = false;

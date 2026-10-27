@@ -1,5 +1,5 @@
 // ===== Humane Gang — page « Jeux », Arène v2 (cotes, ligues, saisons ; règles dans docs/ARENE.md) =====
-// Page : cartes.html#arene (onglet « Arène » de la page Cartes, monté par cartes.js). Visible des administrateurs seulement
+// Page : /pages/cartes/cartes.html#arene (onglet « Arène » de la page Cartes, monté par cartes.js). Visible des administrateurs seulement
 // tant que hg_settings.arena.v2_public n'est pas vrai (bandeau « Aperçu admin »). Sinon, ou si la v2 est refusée, on
 // affiche l'Arène actuelle (jeux/bataille.js), inchangée.
 /*
@@ -10,7 +10,7 @@
  * jeux/devine.js (loadCss), assets/css/jeux-arene.css.
  * Exporte : mount(panel, ctx).
  */
-import { cardHtml, rarityLabel, familyLabel } from '../cartes-ui.js';
+import { cardHtml, rarityLabel, familyLabel } from '../cartes/cartes-ui.js';
 import { loadCss } from './devine.js';
 import { mini, resultHtml, animate } from './bataille.js';
 

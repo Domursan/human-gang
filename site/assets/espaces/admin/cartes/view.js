@@ -6,7 +6,7 @@
 // quests.js, boosters.js (onglet Boosters, autonome), admin/list-tools.js (recherche, compteurs, pagination).
 // Exporte : mountCardsSection (monte la section), openCardsTab (ouvre une partie).
 // =====================================================================
-import { sb, toast, $, $$ } from '../core.js';
+import { sb, toast, $, $$ } from '../../../commun/core.js';
 import { TABS } from './constants.js';
 import { C, H } from './state.js';
 import { boot, refresh } from './data.js';
@@ -20,7 +20,7 @@ import { playersPanel, refreshLog, refreshPlayersList, playerActions, takeCopy }
 import { statsPanel } from './stats.js';
 import { tradesPanel, cancelTrade, loadBoardNotes, clearBoardNote, loadTradeLimits, saveTradeLimits } from './trades.js';
 import { Q, loadQuests, questsPanel, questActions, saveProofCount } from './quests.js';
-import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../admin/list-tools.js';
+import { SEARCH_DELAY, PAGE_SIZE, setCount } from '../list-tools.js';
 import { setsListData } from './sets.js';
 import { cardsListData } from './list.js';
 import { mountBoostersTab } from './boosters.js';

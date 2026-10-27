@@ -12,7 +12,7 @@
  * Dépendances : core.js (toast), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { toast } from '../../core.js';
+import { toast } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { chargerCss } from '../plateau-commun.js';
 import { creerCadre, nomJoueur } from './commun.js';

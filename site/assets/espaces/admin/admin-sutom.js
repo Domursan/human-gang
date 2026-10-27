@@ -5,7 +5,7 @@
 // RPC : hg_sutom_admin, hg_sutom_bank_save, hg_sutom_program (migration 084). Actions journalisées côté serveur.
 // Dépendances : core.js (sb, toast, esc, errMsg).
 // Exporte : mountSutomSection(container).
-import { sb, toast, esc, errMsg } from './core.js';
+import { sb, toast, esc, errMsg } from '../../commun/core.js';
 
 const JOUR = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 

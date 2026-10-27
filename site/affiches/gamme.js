@@ -53,7 +53,7 @@
   function cartouche(b) {
     return '<div class="cart-box ' + b.cls + '" aria-hidden="true">'
       + '<div class="cart-body"></div><div class="cart-notch"></div>'
-      + '<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/img/logo-512.webp" alt=""></div></div>'
+      + '<div class="cart-label"><div class="cart-label-fl"></div><div class="cart-scr"><img src="../assets/images/marque/logo-512.webp" alt=""></div></div>'
       + '<p class="cart-lbl1">LE GANG</p>'
       + '<p class="cart-lbl2">' + esc(b.lbl2) + '</p>'
       + '<div class="cart-stripe"><i></i><i></i><i></i><i></i><i></i><i></i></div>'

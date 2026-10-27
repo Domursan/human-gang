@@ -28,11 +28,11 @@ const STATUTS_MS = 60000;
 const CATS = { messages: 'Message', sorties: 'Sortie', echanges: 'Échange', souhaits: 'Cartes', santa: 'Secret Santa',
   anniversaires: 'Anniversaire', jeux: 'Jeux', annonces: 'Annonce', info: 'Info' };
 
-/** Feuille de style de la cloche et des pastilles (assets/css/notifs.css), ajoutée une fois. */
+/** Feuille de style de la cloche et des pastilles (/assets/commun/notifs.css), ajoutée une fois. */
 function chargerCss() {
   if (document.querySelector('link[data-css="notifs"]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../../css/notifs.css', import.meta.url).href; l.dataset.css = 'notifs';
+  l.rel = 'stylesheet'; l.href = new URL('../notifs.css', import.meta.url).href; l.dataset.css = 'notifs';
   document.head.append(l);
 }
 

@@ -8,7 +8,7 @@
  * Dépendances : core.js (sb, errMsg, notify).
  * Exporte : ndc (appels), suivrePartie, messages, erreurTexte, activerInvite, estInvite, jetonInvite, EQUIPES.
  */
-import { sb, errMsg, notify } from '../core.js';
+import { sb, errMsg, notify } from '../../commun/core.js';
 
 /** Les deux équipes : nom affiché, couleur de fond, couleur du texte posé dessus. */
 export const EQUIPES = {

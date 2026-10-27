@@ -12,8 +12,8 @@
  * Dépendances : core.js (sb, toast, errMsg, esc), admin/common.js (sectionError, ICON).
  * Exporte : mountLoupGarouSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { sectionError, ICON } from './admin/common.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { sectionError, ICON } from './common.js';
 
 /* ---------- Constantes ---------- */
 
@@ -142,7 +142,7 @@ function render() {
             <div><dt>En cours</dt><dd>${nb(parties.en_cours)}</dd></div>
             <div><dt>Terminées</dt><dd>${nb(parties.terminees)}</dd></div>
           </dl>
-          <a class="btn btn-ghost" href="loup-garou.html" target="_blank" rel="noopener">Ouvrir le Loup-Garou<span class="visually-hidden"> (nouvel onglet)</span></a>
+          <a class="btn btn-ghost" href="/pages/jeux/loup-garou.html" target="_blank" rel="noopener">Ouvrir le Loup-Garou<span class="visually-hidden"> (nouvel onglet)</span></a>
         </section>
 
         <section class="card lga-card" aria-labelledby="lga-h-acces">

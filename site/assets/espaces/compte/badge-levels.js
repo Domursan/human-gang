@@ -4,7 +4,7 @@
 /*
  * Rôle : fonctions de lecture des badges à niveaux (nom des niveaux, chiffres romains, pastilles, libellés de métriques).
  * Aucun appel réseau : tout est calculé à partir de la définition du badge reçue.
- * Pages : compte.html, membre.html, evenements.html, la célébration de badges (core/badges.js) et l'administration
+ * Pages : /pages/compte/compte.html, /pages/compte/membre.html, /pages/irl/evenements.html, la célébration de badges (core/badges.js) et l'administration
  *   des badges (admin/badges.js, admin-badges-edit.js, admin-events.js).
  * Dépendances : aucune.
  * Exporte : METRICS, METRIC_LABEL, metricCount, roman, sortedLevels, hasLevels, levelDef, nextLevelDef,

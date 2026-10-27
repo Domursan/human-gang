@@ -10,7 +10,7 @@
  * Dépendances : core.js (esc), nom-de-code/api.js (suivrePartie, messages, estInvite).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { suivrePartie, messages, estInvite } from '../api.js';
 
 const VUES = {
@@ -32,8 +32,8 @@ function vuePour(e) {
 function erreurCarte(root, code, message) {
   const invite = estInvite();
   const lien = invite
-    ? `nom-de-code.html#rejoindre/${encodeURIComponent(code)}`
-    : 'nom-de-code.html';
+    ? `/pages/jeux/nom-de-code.html#rejoindre/${encodeURIComponent(code)}`
+    : '/pages/jeux/nom-de-code.html';
   root.innerHTML = `<section class="card ndc-erreur">
     <h1 class="display">Partie introuvable</h1>
     <p>${esc(message || 'Cette partie n\'existe pas ou n\'est plus disponible.')}</p>

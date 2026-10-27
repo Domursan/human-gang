@@ -4,7 +4,7 @@
 // Dépendances : core.js (fmtDateTime), reglages-valeurs-lot3.js (delaiPassee).
 // Exporte : RSVP_ORDER, RSVP_LABEL, isPast, statusOf, whenLabel, rsvpCounts, memberName.
 // =====================================================================
-import { fmtDateTime } from '../core.js';
+import { fmtDateTime } from '../../../commun/core.js';
 import { delaiPassee } from '../reglages-valeurs-lot3.js';
 
 /* Ordre d'affichage des réponses : je viens, peut-être, pas dispo. */

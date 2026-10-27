@@ -4,7 +4,7 @@
 /*
  * Rôle : réglages des codes d'invitation (durée de validité, nombre de codes par heure, délai avant qu'un compte
  * fantôme soit proposé à la suppression, préfixe des codes). Lecture seule côté site ; l'admin les modifie.
- * Pages : rejoindre.html, compte.html (lien d'invitation), admin-invite-links.js et admin/invites.js (administration).
+ * Pages : /pages/infos/rejoindre.html, /pages/compte/compte.html (lien d'invitation), admin-invite-links.js et admin/invites.js (administration).
  * Dépendances : core.js (client Supabase).
  * Table : hg_settings (clé 'invites').
  * Valeurs par défaut des nouveaux liens (lien_max_codes_defaut, lien_validite_jours_defaut) : même clé, lues par le trigger
@@ -12,7 +12,7 @@
  * Exporte : INVITE_DEFAULTS, INVITE_LIMITS, PREFIX_RE, normalizeInviteConfig, inviteConfig, loadInviteConfig,
  *   resetInviteConfig, inviteCodeRe, LIEN_DEFAULTS, LIEN_LIMITS, normalizeLienDefaults, lienConfig, applyInviteRaw.
  */
-import { sb } from './core.js';
+import { sb } from '../../commun/core.js';
 
 /* ---------- Valeurs et bornes ---------- */
 

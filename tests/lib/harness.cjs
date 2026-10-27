@@ -11,7 +11,23 @@ const { chromium } = require('playwright');
 
 /* ---------- Constantes : chemins (dépôt, tests, fixtures, captures) et adresse du faux site ---------- */
 const TESTS = path.resolve(__dirname, '..');
-const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.resolve(TESTS, '..');
+// Racine du site publié : le dossier site/ du dépôt (les pages sont rangées dans site/pages/<catégorie>/).
+const ROOT = process.env.HG_ROOT ? path.resolve(process.env.HG_ROOT) : path.resolve(TESTS, '..', 'site');
+/** Dépôt complet (sources hors site/ : supabase/, docs/…). */
+const DEPOT = path.resolve(ROOT, '..');
+/**
+ * Adresse d'une page à partir de son nom court (ex. 'jeux' -> '/pages/jeux/jeux.html', 'index' -> '/index.html').
+ * @param {string} slug nom de la page, sans .html
+ * @returns {string}
+ */
+function urlPage(slug) {
+  if (fs.existsSync(path.join(ROOT, `${slug}.html`))) return `/${slug}.html`;
+  const pagesDir = path.join(ROOT, 'pages');
+  for (const cat of fs.existsSync(pagesDir) ? fs.readdirSync(pagesDir) : []) {
+    if (fs.existsSync(path.join(pagesDir, cat, `${slug}.html`))) return `/pages/${cat}/${slug}.html`;
+  }
+  return `/${slug}.html`;
+}
 const FIXTURES = path.join(TESTS, 'fixtures');
 const SHOTS = path.join(TESTS, 'shots');
 const ORIGIN = 'http://hg.test';
@@ -110,7 +126,7 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   page.on('pageerror', (e) => page.errs.push('PAGEERR ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errs.push(m.text().slice(0, 200)); });
   page.on('response', (r) => { if (r.status() === 404) page.errs.push('404 ' + r.url()); });
-  await page.goto(`${ORIGIN}${PREFIX}/${slug}.html${hash}`); // hash : adresse de départ (lien direct), ex. '#membres/comptes/<id>'
+  await page.goto(`${ORIGIN}${PREFIX}${urlPage(slug)}${hash}`); // hash : adresse de départ (lien direct), ex. '#membres/comptes/<id>'
   await sleep(1200);
   page.ctx = ctx;
   return page;
@@ -155,4 +171,4 @@ async function countOf(page, lieu, sub) {
 /** Renvoie le journal des appels du faux client, lu dans la page (window.__LOG). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
-module.exports = { ROOT, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, countOf, hscroll, log, sleep, chromium };
+module.exports = { ROOT, DEPOT, urlPage, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, countOf, hscroll, log, sleep, chromium };

@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, toast), plateaux/api.js (plat, erreurTexte, estInvite).
  * Exporte : creerChat, tiroirChat.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { plat, erreurTexte } from '../api.js';
 
 const LONGUEUR_MAX = 300;

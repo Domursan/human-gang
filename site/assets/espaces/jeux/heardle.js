@@ -8,7 +8,7 @@
  * RPC : hg_heardle_state, hg_heardle_guess, hg_heardle_propose, hg_heardle_signaler (vidéo qui ne se lit plus). Exporte : mount(panel, ctx), unmount().
  */
 import { loadCss, guessFormHtml, bindGuess, boardHtml, shareText, copyText } from './devine.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 const STEPS = [1, 2, 4, 7, 11, 16];
 const dateLong = new Intl.DateTimeFormat('fr-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' });

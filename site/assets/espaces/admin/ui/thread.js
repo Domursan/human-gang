@@ -11,8 +11,8 @@
 //   files : pièces jointes du message [{ path, name, mime, size }] (assistance) : vignettes ou PDF, liens signés.
 //   rowAction(m) : HTML optionnel sous la bulle (ex. bouton « Supprimer » avec data-row-act="<id>") ; onRowAction(message, bouton).
 // Utilisé par support.js (fil de l'assistance) et ideas.js (idée en lecture seule). Dépend de core/util.js, core/ui.js, time.js, common.js.
-import { esc, avatarHtml } from '../../core/util.js';
-import { toast } from '../../core/ui.js';
+import { esc, avatarHtml } from '../../../commun/core/util.js';
+import { toast } from '../../../commun/core/ui.js';
 import { clock } from './time.js';
 import { ICON } from './common.js';
 // support-files.js (et donc core.js, Supabase) n'est chargé qu'au premier message avec pièces jointes : le composant reste autonome.
@@ -92,7 +92,7 @@ export function createThread(el, opts = {}) {
     $log.scrollTop = $log.scrollHeight;
     if (state.messages.some((m) => m.files?.length)) {
       if (SF) SF.hydrateAttachments($log);
-      else import('../../support-files.js').then((mod) => { SF = mod; paintLog(); }).catch(() => {});
+      else import('../../infos/support-files.js').then((mod) => { SF = mod; paintLog(); }).catch(() => {});
     }
   }
 

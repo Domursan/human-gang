@@ -7,7 +7,7 @@
 //   - shiny_style : style des brillantes ('fondue' ou rien).
 // Exporte : SAISON_STYLES, saisonDefaults, saisonSectionHtml, readSaison, validateSaison, saisonPayload.
 // =====================================================================
-import { esc } from '../core.js';
+import { esc } from '../../../commun/core.js';
 
 /** Styles de cartouche ajoutés par la migration 080 (classe, libellé). */
 export const SAISON_STYLES = [['cart--esport', 'Saison esport'], ['cart--pate', 'Pâté-saucisses'], ['cart--raclette', 'Raclette']];

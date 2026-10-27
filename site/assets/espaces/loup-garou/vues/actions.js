@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), ui.js (icone, pseudo, vignetteRole, pastilleCamp), roles.js (roleById, CAMPS).
  * Exporte : typeAction, choisissable, badgesCible, comptesVote, votesMeute, panneauAction, choisir, executer, attenteTexte, LIENS.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { icone, pseudo, vignetteRole, pastilleCamp } from '../ui.js';
 import { roleById } from '../roles.js';
 

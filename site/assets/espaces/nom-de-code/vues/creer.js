@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, toast), nom-de-code/api.js (ndc, erreurTexte).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte } from '../api.js';
 
 const PAQUET = { valeur: 'classique', libelle: 'Classique' };
@@ -92,7 +92,7 @@ function majResume(root, p) {
  */
 export async function afficher(root, { naviguer }) {
   root.innerHTML = `
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="nom-de-code.html">Codenames</a> › <span aria-current="page">Créer</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span aria-current="page">Créer</span></nav>
     <h1 class="ndc-titre">Créer une partie</h1>
     <p class="ndc-cre-sous">Règle ta partie, puis invite tes joueurs avec le code.</p>
 

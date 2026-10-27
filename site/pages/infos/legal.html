@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <script src="assets/js/theme-boot.js"></script>
+  <script src="/assets/commun/theme-boot.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mentions légales et confidentialité · Humane Gang</title>
-  <link rel="canonical" href="https://humane-gang.com/legal.html">
+  <link rel="canonical" href="https://humane-gang.com/pages/infos/legal.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Humane Gang">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:title" content="Mentions légales et confidentialité · Humane Gang">
   <meta property="og:description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
-  <meta property="og:url" content="https://humane-gang.com/legal.html">
+  <meta property="og:url" content="https://humane-gang.com/pages/infos/legal.html">
   <meta property="og:image" content="https://humane-gang.com/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -22,18 +22,18 @@
   <meta name="twitter:description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
   <meta name="twitter:image" content="https://humane-gang.com/assets/img/og-image.png">
   <meta name="description" content="Mentions légales, politique de confidentialité, cookies et droits des membres du Humane Gang.">
-  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/images/marque/favicon-64.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/images/marque/apple-touch-icon.png">
   <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
-  <link rel="modulepreload" href="assets/vendor/supabase-js-2.45.4.mjs">
+  <link rel="modulepreload" href="/assets/vendor/supabase-js-2.45.4.mjs">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="assets/css/base.css">
-  <link rel="stylesheet" href="assets/css/card-drops.css">
-  <link rel="stylesheet" href="assets/css/legal.css">
+  <link rel="stylesheet" href="/assets/commun/base.css">
+  <link rel="stylesheet" href="/assets/espaces/cartes/card-drops.css">
+  <link rel="stylesheet" href="/assets/espaces/infos/legal.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -57,7 +57,7 @@
       </nav>
 
       <div class="legal-body">
-        <p class="legal-summary"><strong>En bref :</strong> Humane Gang est un espace privé et non commercial, réservé aux membres d'un groupe d'amis. Les données servent uniquement à faire fonctionner le site (Secret Santa, sorties, souvenirs). Aucune publicité, aucun traceur, aucune revente. Tu peux exporter ou supprimer tes données à tout moment depuis <a href="compte.html">Mon compte</a>.</p>
+        <p class="legal-summary"><strong>En bref :</strong> Humane Gang est un espace privé et non commercial, réservé aux membres d'un groupe d'amis. Les données servent uniquement à faire fonctionner le site (Secret Santa, sorties, souvenirs). Aucune publicité, aucun traceur, aucune revente. Tu peux exporter ou supprimer tes données à tout moment depuis <a href="/pages/compte/compte.html">Mon compte</a>.</p>
 
         <!-- ================================================================ -->
         <section id="mentions" class="legal-section" aria-labelledby="h-mentions">
@@ -65,7 +65,7 @@
 
           <h3>Éditeur du site</h3>
           <p><span data-field="editeur"></span>, personne privée domiciliée en Suisse.<br>
-          Contact : <span data-field="contact_email"></span> ou via la page <a href="assistance.html">Assistance</a>.</p>
+          Contact : <span data-field="contact_email"></span> ou via la page <a href="/pages/infos/assistance.html">Assistance</a>.</p>
           <p>Le site Humane Gang est un projet personnel, privé et non commercial, réservé aux membres du groupe d'amis « Humane Gang », sur invitation. Il ne contient aucune publicité et ne vend rien.</p>
 
           <h3>Hébergement</h3>
@@ -128,7 +128,7 @@
           <h3>4. Base légale</h3>
           <ul>
             <li><strong>Exécution du service que tu demandes</strong> (art. 6, par. 1, let. b RGPD) : compte, Secret Santa, sorties, historique.</li>
-            <li><strong>Consentement</strong> (art. 6, par. 1, let. a RGPD) : date d'anniversaire et son partage, informations diverses, identifiant Discord et messages du bot, photos publiées. Tu peux le retirer à tout moment dans <a href="compte.html">Mon compte</a> ou en supprimant la donnée concernée.</li>
+            <li><strong>Consentement</strong> (art. 6, par. 1, let. a RGPD) : date d'anniversaire et son partage, informations diverses, identifiant Discord et messages du bot, photos publiées. Tu peux le retirer à tout moment dans <a href="/pages/compte/compte.html">Mon compte</a> ou en supprimant la donnée concernée.</li>
             <li><strong>Intérêt légitime</strong> (art. 6, par. 1, let. f RGPD) : sécurité du site, journaux techniques, traitement des demandes d'assistance.</li>
           </ul>
           <p>En droit suisse, les traitements respectent les principes de la nLPD (licéité, bonne foi, proportionnalité, finalité, exactitude et sécurité). Tes données ne sont jamais utilisées pour du profilage ou de la publicité.</p>
@@ -242,8 +242,8 @@
           </div>
           <h3>Comment les exercer</h3>
           <ul>
-            <li>Directement dans <a href="compte.html">Mon compte</a> : modifier ton profil, « Exporter mes données », « Supprimer mon compte ».</li>
-            <li>Ou en écrivant à <span data-field="contact_email"></span>, ou via la page <a href="assistance.html">Assistance</a>. Une réponse t'est apportée dans un délai de 30 jours.</li>
+            <li>Directement dans <a href="/pages/compte/compte.html">Mon compte</a> : modifier ton profil, « Exporter mes données », « Supprimer mon compte ».</li>
+            <li>Ou en écrivant à <span data-field="contact_email"></span>, ou via la page <a href="/pages/infos/assistance.html">Assistance</a>. Une réponse t'est apportée dans un délai de 30 jours.</li>
           </ul>
           <h3>Réclamation</h3>
           <p>Si tu estimes que tes droits ne sont pas respectés, tu peux t'adresser à l'autorité de contrôle :</p>
@@ -256,7 +256,7 @@
       </div>
     </div>
   </main>
-  <script type="module" src="assets/js/site-boot.js"></script>
-  <script type="module" src="assets/js/legal.js"></script>
+  <script type="module" src="/assets/commun/site-boot.js"></script>
+  <script type="module" src="/assets/espaces/infos/legal.js"></script>
 </body>
 </html>

@@ -2,12 +2,12 @@
 /*
  * Rôle : réglages effectifs (hg_social_settings : plateformes et jeux du profil gaming, plafonds), copie dans le
  * presse-papiers avec message, et petite boîte de dialogue accessible réutilisée par les mercis, les sondages et les groupes.
- * Pages : membre.html, compte.html, accueil.html, messages.html.
+ * Pages : /pages/compte/membre.html, /pages/compte/compte.html, /pages/compte/accueil.html, /pages/compte/messages.html.
  * Dépendances : core.js (sb, toast, esc, errMsg), icons.js.
  * Exporte : socialSettings, copyText, openDialog, DEFAULT_SOCIAL.
  */
-import { sb, toast, esc } from './core.js';
-import { svg } from './icons.js';
+import { sb, toast, esc } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 
 /** Réglages de repli si la RPC est indisponible (mêmes valeurs que hg_social_defaults côté serveur). */
 export const DEFAULT_SOCIAL = Object.freeze({

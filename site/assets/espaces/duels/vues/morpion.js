@@ -10,10 +10,10 @@
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer(root, ctx) → { maj(etat), message(msg), detruire() } (contrat de vues/partie.js).
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
-import { voisinGrille } from '../../grille-clavier.js';
+import { voisinGrille } from '../../../commun/grille-clavier.js';
 
 const CROIX = '#6FB3F2';
 const ROND = '#E8B04B';

@@ -7,13 +7,13 @@
  * Clic droit, appui long ou « Mode drapeau » : drapeau. Clavier : flèches, Entrée (ouvrir), F (drapeau).
  * Le temps officiel est celui du serveur : hg_nj_solo_debut au premier coup, hg_nj_solo_fin à la fin. Le chrono affiché
  * pendant la partie est local ; à la fin, c'est le temps renvoyé par le serveur qui s'affiche.
- * Onglet : jeux.html#demineur. Contrat : mount(panel, ctx), unmount(), resume(ctx).
+ * Onglet : /pages/jeux/jeux.html#demineur. Contrat : mount(panel, ctx), unmount(), resume(ctx).
  * Dépendances : core.js (esc, errMsg), jeux/commun.js (chargerCss, nf, classementHtml).
  * Données : RPC hg_nj_solo_etat, hg_nj_solo_debut, hg_nj_solo_fin (migration 138).
  * Tests : window.__SCN.demineurCoeurs, liste de couples [ligne, colonne], remplace la pose au hasard (jamais en production).
  * Exporte : mount, unmount, resume.
  */
-import { esc, errMsg } from '../core.js';
+import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml } from './commun.js';
 
 /* ---------- Constantes ---------- */

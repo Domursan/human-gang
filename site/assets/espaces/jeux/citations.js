@@ -5,13 +5,13 @@
  * contexte et la part du gang qui a trouvé. Une citation n'est jamais montrée à son auteur.
  * Les membres proposent des citations (3 par jour au plus) ; l'auteur donne son accord ou refuse depuis cet onglet ;
  * le Staff « quiz » publie (panel › Jeux et cartes › Citations).
- * Onglet : jeux.html#citations. Contrat : mount(panel, ctx).
+ * Onglet : /pages/jeux/jeux.html#citations. Contrat : mount(panel, ctx).
  * Dépendances : core.js (avatarHtml, errMsg), jeux/commun.js.
  * Données : RPC hg_quote_list, hg_quiz_answer, hg_quote_propose, hg_quote_mine, hg_quote_author_reply, hg_members.
  */
-import { avatarHtml, errMsg } from '../core.js';
+import { avatarHtml, errMsg } from '../../commun/core.js';
 import { chargerCss, nf } from './commun.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 const DIFF = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile', expert: 'Expert' };

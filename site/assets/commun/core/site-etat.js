@@ -30,7 +30,7 @@ const MAX_MESSAGE = 400, MAX_BANDEAU = 300;
 /** Clé sessionStorage : empreinte du dernier bandeau fermé. */
 const FERME_KEY = 'hg_bandeau_ferme';
 /** Feuille de style, chargée à la demande (chemin relatif à ce module : fonctionne aussi sous /human-gang/). */
-const CSS_URL = new URL('../../css/site-etat.css', import.meta.url).href;
+const CSS_URL = new URL('../site-etat.css', import.meta.url).href;
 
 /* ---------- Utilitaires ---------- */
 
@@ -113,7 +113,7 @@ function poseMaintenance(message, connecte) {
   sec.innerHTML = `<h1 id="site-maint-titre" class="display">Site en maintenance</h1>
     <p class="site-maint-texte">${esc(fmt(message || MAINTENANCE_DEFAUT))}</p>
     <p class="small muted">${connecte ? 'Tu fais partie du Staff ? Connecte-toi avec ton compte Staff pour continuer.' : 'Tu fais partie du Staff ? Connecte-toi pour continuer.'}</p>
-    <p><a class="btn btn-ghost" href="compte.html">${connecte ? 'Changer de compte' : 'Se connecter'}</a></p>`;
+    <p><a class="btn btn-ghost" href="/pages/compte/compte.html">${connecte ? 'Changer de compte' : 'Se connecter'}</a></p>`;
   const main = document.getElementById('app') || document.querySelector('main');
   if (main) main.before(sec); else document.body.appendChild(sec);
   document.body.classList.add('site-maint-on');

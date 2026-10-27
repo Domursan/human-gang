@@ -6,9 +6,9 @@
 // peut être réaffiché. Chaque signaleur reçoit une réponse courte ; la décision est journalisée (hg_report_resolve).
 // L'identité du signaleur n'est visible que du Staff « support » (jamais de l'auteur).
 // Utilisé par support.js (reportOf, reportItem, reportCard). Dépend de core.js, ui-confirm.js, state.js, photos.js.
-import { sb, toast, errMsg, esc, fmtDateTime } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
-import { signedUrl, removeObjects } from '../photos.js';
+import { sb, toast, errMsg, esc, fmtDateTime } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { signedUrl, removeObjects } from '../irl/photos.js';
 import { S } from './state.js';
 
 /** Libellés des contenus et des raisons (mêmes clés que la base). */

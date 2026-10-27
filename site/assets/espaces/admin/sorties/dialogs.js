@@ -7,11 +7,11 @@
 // utils.js (pluralCount), admin/ui/detail-header.js, data.js (écritures), format.js (libellés), reglages-valeurs-lot3.js.
 // Exporte : mountDialogs, mountDetail, openEdit, showDetail, refreshDetail.
 // =====================================================================
-import { toast, errMsg, esc, fmtDateTime } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { toast, errMsg, esc, fmtDateTime } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { toZurichInput, fromZurichInput } from '../admin-events.js';
-import { pluralCount } from '../utils.js';
-import { renderDetailHeader } from '../admin/ui/detail-header.js';
+import { pluralCount } from '../../../commun/utils.js';
+import { renderDetailHeader } from '../ui/detail-header.js';
 import * as api from './data.js';
 import { RSVP_ORDER, RSVP_LABEL, whenLabel, memberName, statusOf } from './format.js';
 import { bornesSondage } from '../reglages-valeurs-lot3.js';

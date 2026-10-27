@@ -6,7 +6,7 @@
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.joueurs[i] = { pseudo, couleur, invite, rang, parti, etat: { jetons } } ; etat.partie.options.jetons = départ.
  */
-import { esc, initials } from '../../../core.js';
+import { esc, initials } from '../../../../commun/core.js';
 
 /** Couleur de profil sûre (sinon texte clair). */
 const couleurDe = (j) => (/^#[0-9a-f]{6}$/i.test(j?.couleur || '') && !j?.invite ? j.couleur : '#F2EFEA');

@@ -6,7 +6,7 @@
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.joueurs[i].etat.points : points de chaque joueur ; joueurs triés du plus au moins de points.
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { avatarHtml, pseudoHtml } from '../../vues/commun.js';
 
 /**

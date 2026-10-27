@@ -4,7 +4,7 @@
 // Dépendances : core.js ($, pour trouver la zone d'affichage).
 // Exporte : A (état), pseudoOf, TABS, SS_STATUS, RSVP, IDEA, root, CACHE, dropFicheCache, H.
 // =====================================================================
-import { $ } from '../core.js';
+import { $ } from '../../../commun/core.js';
 
 /* ---------- État ---------- */
 // État global de la page Comptes. Les champs sont expliqués en ligne.

@@ -13,12 +13,12 @@
  * Dépendances : core.js, photos.js, image-compress.js, ui-confirm.js, saisons-css.js.
  * Exporte : mountUnwrap(el, { ed, me, members, onReveal }).
  */
-import { sb, esc, toast, errMsg, avatarHtml } from './core.js';
+import { sb, esc, toast, errMsg, avatarHtml } from '../../commun/core.js';
 import { uploadImage, removeObjects, signedUrls, uuid, openLightbox } from './photos.js';
-import { prepareImage } from './image-compress.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { loadSeasonCss } from './saisons-css.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { loadSeasonCss } from '../accueil/saisons-css.js';
 
 const ST_LABEL = { attente: 'À venir', en_cours: 'En cours', fait: 'Déballé', passe: 'Absent', en_route: 'Cadeau en route' };
 const fmtWhen = (iso) => new Intl.DateTimeFormat('fr-CH', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));

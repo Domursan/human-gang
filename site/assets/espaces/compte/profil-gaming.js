@@ -9,9 +9,9 @@
  * RPC : hg_gaming_get, hg_gaming_save, hg_gaming_list ; table hg_profile_info (ma ligne seulement, lecture).
  * Exporte : mountGamingEditor, mountGamingBlock, mountWhoPlays, gamingFromInfo.
  */
-import { sb, esc, toast, errMsg, avatarHtml } from './core.js';
+import { sb, esc, toast, errMsg, avatarHtml } from '../../commun/core.js';
 import { socialSettings, copyText } from './social.js';
-import { svg } from './icons.js';
+import { svg } from '../../commun/icons.js';
 
 const I = {
   pad: svg('dice', { size: 18, stroke: 1.8 }),
@@ -148,7 +148,7 @@ export async function mountGamingBlock(el, userId, isMe) {
     if (isMe) {
       el.hidden = false;
       el.innerHTML = `<div class="card gm-block gm-empty"><p class="small muted">Ajoute tes pseudos en jeu (Riot, Steam, Switch…) pour que le gang puisse t’inviter en un clic.</p>
-        <div class="btn-row"><a class="btn btn-ghost" href="compte.html#gaming">Remplir mon profil gaming</a></div></div>`;
+        <div class="btn-row"><a class="btn btn-ghost" href="/pages/compte/compte.html#gaming">Remplir mon profil gaming</a></div></div>`;
     }
     return;
   }
@@ -207,7 +207,7 @@ export async function mountWhoPlays(el) {
     const line = (m) => (p && m.game_account ? `${m.pseudo} : ${m.game_account}` : m.pseudo);
     const accountOf = (m) => (p ? m.accounts?.[p.key] : '') || '';
     panel.innerHTML = `<ul class="gm-players">${j.players.map((m) => `<li class="gm-player">
-        <a class="gm-player-link" href="membre.html?id=${encodeURIComponent(m.user_id)}">${avatarHtml({ id: m.user_id, pseudo: m.pseudo, avatar_url: m.avatar_url, color: m.color }, 32)}<strong>${esc(m.pseudo)}</strong></a>
+        <a class="gm-player-link" href="/pages/compte/membre.html?id=${encodeURIComponent(m.user_id)}">${avatarHtml({ id: m.user_id, pseudo: m.pseudo, avatar_url: m.avatar_url, color: m.color }, 32)}<strong>${esc(m.pseudo)}</strong></a>
         ${accountOf(m) ? `<span class="gm-player-acc small"><span class="muted">${esc(p.label)}</span> ${esc(accountOf(m))}</span>
           <button type="button" class="btn btn-ghost gm-copy" data-copy="${esc(accountOf(m))}" aria-label="Copier ${esc(p.label)} de ${esc(m.pseudo)}">${I.copy}<span>Copier</span></button>` : ''}
       </li>`).join('')}</ul>

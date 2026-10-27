@@ -11,9 +11,9 @@
  * RPC : hg_battle_me, hg_battle_settings_save (Arène actuelle) ; hg_card_power_set (puissances) ; hg_arena_admin, hg_arena_settings_save,
  * hg_arena_season_close (Arène v2). Exporte : mountBatailleSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { blocPuissances } from './admin/puissances.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { blocPuissances } from './puissances.js';
 
 /* Arène actuelle (membres) */
 const CHAMPS = [

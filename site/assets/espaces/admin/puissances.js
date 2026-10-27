@@ -8,9 +8,9 @@
 // cartes-ui.js (cardHtml, rarityLabel, rarityRank).
 // Exporte : blocPuissances (élément de la section Arène, chargé à l'affichage).
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { lireReglage, ecrireReglage } from './reglages-merge.js';
-import { cardHtml, rarityLabel, rarityRank } from '../cartes-ui.js';
+import { cardHtml, rarityLabel, rarityRank } from '../cartes/cartes-ui.js';
 
 /* Valeurs par défaut (celles du serveur, migration 115) et bornes saisies dans le panel. */
 const DEFAUT = { commune: 1, peu_commune: 2, rare: 3, epique: 4, legendaire: 5, mythique: 6, identite: 6, unique: 6, brillante: 1 };

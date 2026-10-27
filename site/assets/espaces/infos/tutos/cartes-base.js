@@ -14,7 +14,7 @@ export default {
       slug: 'paillettes-passage-du-jour',
       title: 'Les Paillettes et le passage du jour',
       summary: 'Les Paillettes sont la monnaie du jeu, et le passage du jour t’en donne chaque jour.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Regarde ton solde', text: 'En haut de la page Cartes, la pastille lumineuse affiche ton solde de Paillettes. Tu démarres avec {{cartes.starting_paillettes|1 000}} Paillettes.' },
         { title: 'Prends le passage du jour', text: 'Une fois par jour, le bouton « Passage du jour (+{{cartes.rewards.daily|100}}) » apparaît en haut de la page. Clique dessus pour encaisser les Paillettes. Le jour se compte à l’heure de Zurich.' },
@@ -31,7 +31,7 @@ export default {
       slug: 'ouvrir-un-booster',
       title: 'Ouvrir un booster',
       summary: 'Un booster contient {{cartes.booster_size|5}} cartes. Tu ouvres un gratuit toutes les {{cartes.free_booster_hours|24}} h, un booster de ton stock, ou un booster acheté dans la Boutique à {{cartes.booster_price|100}} Paillettes.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Va sur Cartes, onglet Ouverture', text: 'Ouvre Cartes dans le menu du haut. L’onglet « Ouverture » s’affiche par défaut : c’est là que tu ouvres tes boosters.' },
         { title: 'Ouvre le booster gratuit', text: 'Dans la tuile « Booster gratuit », clique sur « Ouvrir le booster gratuit » quand il est disponible. Sinon, un compte à rebours « Disponible dans … » s’affiche. Le gratuit revient {{cartes.free_booster_hours|24}} h après ton dernier booster gratuit.' },
@@ -52,7 +52,7 @@ export default {
       slug: 'lire-une-carte',
       title: 'Lire une carte',
       summary: 'Chaque carte indique sa rareté, sa famille, sa série et son numéro. Les brillantes et les numérotées se repèrent vite.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre la fiche', text: 'Dans Cartes, onglet « Mes cartes », clique sur une carte. Sa fiche s’ouvre dans une fenêtre.' },
         { title: 'Lis la rareté et la famille', text: 'La ligne sous le nom donne la rareté (Commune, Peu commune, Rare, Épique, Légendaire, Mythique ou Identité), la famille (Membre, Moment, Lieu, Objet, Événement ou Jeu vidéo) et le numéro « n° … ».' },
@@ -70,7 +70,7 @@ export default {
       slug: 'collection-filtres-et-loupe',
       title: 'Mes cartes : filtres, carte agrandie et loupe',
       summary: 'Mes cartes range toutes tes cartes, avec des filtres, la progression de chaque série et une carte agrandie.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre l’onglet Mes cartes', text: 'Sur la page Cartes, clique sur l’onglet « Mes cartes ».' },
         { title: 'Choisis une série', text: 'Le menu « Série » propose chaque série ouverte. Avec « Toutes les séries », toutes les cartes sont affichées groupées par série, avec une barre de progression pour chacune.' },
@@ -88,7 +88,7 @@ export default {
       slug: 'recycler-ses-doublons',
       title: 'Recycler ses doublons',
       summary: 'Transforme un exemplaire en Paillettes, une carte à la fois ou tous les doublons d’un coup.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Repère les doublons', text: 'Dans Cartes, onglet « Mes cartes », choisis « Afficher : Doublons ». La liste ne montre que les cartes que tu possèdes en plusieurs exemplaires simples, ou en plusieurs brillantes.' },
         { title: 'Recycle un exemplaire', text: 'Ouvre la fiche d’une carte. Dans « Mes exemplaires », le bouton « Recycler · N » indique ce que rapporte cet exemplaire. Clique dessus pour le recycler.' },
@@ -106,7 +106,7 @@ export default {
       slug: 'fabriquer-une-carte',
       title: 'Fabriquer une carte',
       summary: 'Fabriquer une carte te la donne directement, contre des Paillettes, sans passer par un booster.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet « Mes cartes », clique sur la carte voulue. Tu peux la fabriquer même si tu ne l’as pas encore.' },
         { title: 'Trouve la section Fabriquer', text: 'La section « Fabriquer » de la fiche indique si la carte peut être fabriquée et ce qu’elle coûte.' },
@@ -124,7 +124,7 @@ export default {
       slug: 'liste-de-souhaits',
       title: 'La liste de souhaits et ses alertes',
       summary: 'Mets de côté les cartes que tu veux, et demande à être prévenu quand un membre les obtient.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre la fiche de la carte', text: 'Dans Cartes, onglet « Mes cartes », clique sur la carte que tu veux.' },
         { title: 'Ajoute-la à ta liste', text: 'Clique sur « Ajouter à ma liste de souhaits ». Le bouton passe à « Dans ma liste de souhaits ».' },

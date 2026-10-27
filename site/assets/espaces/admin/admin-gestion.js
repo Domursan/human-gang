@@ -9,11 +9,11 @@
 // admin-cards/helpers.js (check, fetchAll, nf, fmtWhen), admin/eco-health.js (loadEco, alertesEco), admin/visual-pick.js.
 // Exporte : mountGestionSection.
 // =====================================================================
-import { sb, toast, errMsg, esc, $ } from './core.js';
-import { KIND, MAX_MEMBRES, recapText, invalide, donnerGroupe } from './admin-cards/bulk.js';
-import { check, fetchAll, nf, fmtWhen } from './admin-cards/helpers.js';
-import { loadEco, alertesEco } from './admin/eco-health.js';
-import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml } from './admin/visual-pick.js';
+import { sb, toast, errMsg, esc, $ } from '../../commun/core.js';
+import { KIND, MAX_MEMBRES, recapText, invalide, donnerGroupe } from './cartes/bulk.js';
+import { check, fetchAll, nf, fmtWhen } from './cartes/helpers.js';
+import { loadEco, alertesEco } from './eco-health.js';
+import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml } from './visual-pick.js';
 
 const nf1 = new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 1 });
 /* Texte normalisé pour la recherche : minuscules et sans accents. */

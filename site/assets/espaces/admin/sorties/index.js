@@ -8,18 +8,18 @@
 // admin/common.js, utils.js, admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
 // Exporte : mountSortiesSection, openSortie, listSorties, infoSorties.
 // =====================================================================
-import { toast, errMsg, esc } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { toast, errMsg, esc } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import * as api from './data.js';
 import { statusOf, whenLabel, rsvpCounts } from './format.js';
 import { mountDialogs, mountDetail, openEdit, showDetail } from './dialogs.js';
-import { onTableChange } from '../admin/live.js';
-import { createList } from '../admin/ui/list.js';
-import { renderInfoPanel } from '../admin/ui/info-panel.js';
-import { pill } from '../admin/ui/common.js';
-import { sectionError } from '../admin/common.js';
-import { pluralCount } from '../utils.js';
-import { blocReglages } from '../admin-reglages/lot3-ui.js';
+import { onTableChange } from '../live.js';
+import { createList } from '../ui/list.js';
+import { renderInfoPanel } from '../ui/info-panel.js';
+import { pill } from '../ui/common.js';
+import { sectionError } from '../common.js';
+import { pluralCount } from '../../../commun/utils.js';
+import { blocReglages } from '../reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 /* État de la section : zones d'affichage, sorties, réponses, dates, votes, photos, tri et sortie choisie. */

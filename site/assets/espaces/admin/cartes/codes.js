@@ -2,24 +2,24 @@
 // Cartes admin : onglet « Codes cadeaux » (idée C9, migration 081).
 // Créer un lot de codes (booster d'un type, Paillettes ou carte), les afficher une seule fois en clair, imprimer une
 // planche A4 de 24 étiquettes QR ou un grand QR pour une affiche ; lister les lots (utilisations, sans les codes) et
-// désactiver un lot entier. Le QR ouvre cartes.html#code=HG-XXXX-XXXX.
+// désactiver un lot entier. Le QR ouvre /pages/cartes/cartes.html#code=HG-XXXX-XXXX.
 // QR : bibliothèque qrcode-generator chargée à la demande (même source que les liens d'invitation, déjà dans la CSP).
 // RPC : hg_gift_codes_create, hg_gift_codes_batches, hg_gift_codes_batch_active (Staff « cartes », journal admin).
 // Exporte : mountCodesTab(el). Autonome : lit ses propres données (types de boosters) ; les cartes viennent de C.
 // =====================================================================
-import { sb, toast, esc, errMsg } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, errMsg } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
-import { rarityLabel } from '../cartes-ui.js';
+import { rarityLabel } from '../../cartes/cartes-ui.js';
 
-const QR_LIB = '../../vendor/qrcode-generator-1.4.4.mjs';
+const QR_LIB = '../../../vendor/qrcode-generator-1.4.4.mjs';
 let qrLib = null;
 // État : types de boosters, lots, codes du dernier lot créé (en clair, jamais rechargés), choix du formulaire.
 const K = { el: null, types: [], batches: null, err: '', last: null, kind: 'booster' };
 
 /** Adresse ouverte par un QR. */
-export const codeUrl = (code) => `${new URL('cartes.html', location.href).href.split('#')[0]}#code=${encodeURIComponent(code)}`;
+export const codeUrl = (code) => `${new URL('/pages/cartes/cartes.html', location.href).href.split('#')[0]}#code=${encodeURIComponent(code)}`;
 /** Texte d'un lot (« 3 boosters Doré », « 100 Paillettes », « Carte « X » (Rare, brillante) »). */
 function lotLabel(b) {
   const l = b.lot || b;

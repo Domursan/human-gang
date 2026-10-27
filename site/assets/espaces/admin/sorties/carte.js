@@ -6,11 +6,11 @@
 // hg_event_card_add (journalisée). Lecture : hg_cards, hg_event_card_claims.
 // Exporte : mountCarte.
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
-import { cardHtml, rarityLabel } from '../cartes-ui.js';
-import { signedUrls } from '../photos.js';
-import { uploadCardImage } from '../admin-cards/helpers.js';
-import { pluralCount } from '../utils.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
+import { cardHtml, rarityLabel } from '../../cartes/cartes-ui.js';
+import { signedUrls } from '../../irl/photos.js';
+import { uploadCardImage } from '../cartes/helpers.js';
+import { pluralCount } from '../../../commun/utils.js';
 
 const RARS = ['commune', 'peu_commune', 'rare', 'epique', 'legendaire'];
 /** Rareté suggérée selon la taille de la sortie (inscrits « Je viens »). */

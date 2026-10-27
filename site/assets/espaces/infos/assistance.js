@@ -1,10 +1,10 @@
-// ===== Humane Gang — assistance (assistance.html, accessible sans compte) =====
+// ===== Humane Gang — assistance (/pages/infos/assistance.html, accessible sans compte) =====
 // Formulaire de demande d'aide (envoyé par la fonction edge hg-support), suivi des demandes du membre connecté
 // (« Mes demandes », avec les réponses publiques), et préremplissage du sujet depuis l'adresse (?sujet=…).
 // Pièces jointes (membres connectés) : support-files.js ; fichiers déposés dans le bucket privé, puis chemins envoyés à hg-support.
 // Dépendances : core.js (initPage, callFn, sb = Supabase), tables hg_settings, hg_support, hg_support_replies, hg_support_files, RPC hg_members.
 // N'exporte rien.
-import { initPage, callFn, $, errMsg, sb, esc, fmtDateTime } from './core.js';
+import { initPage, callFn, $, errMsg, sb, esc, fmtDateTime } from '../../commun/core.js';
 import { SUPPORT_MAX_FILES, prepareSupportFile, uploadSupportFile, removeSupportFiles, fileSize, attachmentsHtml, hydrateAttachments } from './support-files.js';
 
 /* ---------- Initialisation : session facultative (un visiteur peut écrire sans compte) ---------- */
@@ -312,7 +312,7 @@ async function openMine(id) {
   // Prise en charge : la discussion avec le Staff continue dans une conversation privée (page Messages).
   if (d.conversation_id) {
     thread.insertAdjacentHTML('afterbegin', `<div class="my-support-convbox"><p>Ta demande a été prise en charge : la discussion se passe dans une conversation privée avec le Staff.</p>
-      <a class="btn btn-primary" href="messages.html?c=${encodeURIComponent(d.conversation_id)}">Ouvrir la conversation</a></div>`);
+      <a class="btn btn-primary" href="/pages/compte/messages.html?c=${encodeURIComponent(d.conversation_id)}">Ouvrir la conversation</a></div>`);
   }
   try {
     const res = await sb.from('hg_support_replies').select('id, author_id, body, created_at, internal')

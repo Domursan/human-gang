@@ -3,13 +3,13 @@
  * Rôle : l'hôte attend que l'autre joueur arrive. Deux cas :
  *   Défi à un membre (partie.defie renseigné) : « En attente de la réponse de X », décompte de l'expiration,
  *     « Annuler le défi » (duel.quitter). Quand le défi expire, on demande au serveur de constater l'échéance (duel.avancer).
- *   Code à partager : le code en grand, « Copier le lien » (duels.html?code=CODE), réglages du duel, « Annuler ».
+ *   Code à partager : le code en grand, « Copier le lien » (/pages/jeux/duels.html?code=CODE), réglages du duel, « Annuler ».
  * Quand l'adversaire rejoint, le statut passe à en_cours : partie.js change de vue tout seul. Pas de chat ici.
  * Contrat (vues/partie.js) : export function creer(root, ctx) → { maj(etat), message(msg), detruire() }, ctx = { code, naviguer, moi, suivi }.
  * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, JEUX).
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, JEUX } from '../api.js';
 
 const FORMATS = { 1: '1 manche', 3: 'Au meilleur des 3', 5: 'Au meilleur des 5' };
@@ -36,7 +36,7 @@ export function creer(root, ctx) {
   let etat = null;
   let occupe = false;
   let avanceDemandee = false;
-  const lien = () => new URL(`duels.html?code=${encodeURIComponent(code)}`, location.href).href;
+  const lien = () => new URL(`/pages/jeux/duels.html?code=${encodeURIComponent(code)}`, location.href).href;
 
   /** Décompte de l'expiration du défi. Demande au serveur de constater l'échéance une seule fois. */
   function majCompte() {

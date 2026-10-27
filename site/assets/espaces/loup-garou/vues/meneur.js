@@ -7,9 +7,9 @@
  * Dépendances : core.js (esc), ui.js, roles.js (CAMPS, roleById), api.js (erreurTexte), chat.js (monterChat).
  * Exporte : monter.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { erreurTexte } from '../api.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import {
   icone, vignetteRole, pastilleCamp, pseudo, avatar, chrono, libellePhase, estNuit, libelleCause, confirmer, notifier,
 } from '../ui.js';

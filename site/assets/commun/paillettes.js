@@ -5,7 +5,7 @@
 /*
  * Rôle : la monnaie du site (les « Paillettes ») s'affiche de trois façons : icône, nombre formaté, ou afficheur
  * 7 segments animé (pastille de solde, avec variation « +N » et clignotement au gain).
- * Page : cartes.html (utilisé par cartes.js : solde et affichage des gains).
+ * Page : /pages/cartes/cartes.html (utilisé par cartes.js : solde et affichage des gains).
  * Dépendances : aucune (HTML pur + Intl pour le format des nombres).
  * Exporte : paillettesIcon, fmtPaillettes, lcdNumHtml, pastilleHtml, lcdSet, lcdBlink, lcdDelta.
  */

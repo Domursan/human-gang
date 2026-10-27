@@ -12,8 +12,8 @@
  * Dépendances : core.js (sb, toast, errMsg, esc), ui-confirm.js (boîte de confirmation).
  * Exporte : mountArcadeSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { confirmBox } from './ui-confirm.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 /* ---------- Constantes et dates ---------- */
 

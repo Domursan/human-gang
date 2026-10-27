@@ -1,13 +1,13 @@
-// ===== Humane Gang — page « Événements » (evenements.html) : événements dynamiques en cours et passés =====
+// ===== Humane Gang — page « Événements » (/pages/irl/evenements.html) : événements dynamiques en cours et passés =====
 // Lecture membres : hg_dyn_events, hg_dyn_captures, hg_badges, hg_user_badges ; classement rpc hg_dyn_leaderboard.
 // Les événements à venir ne sont pas montrés (surprise).
 // Dépendances : core.js (accès Supabase, page), badge-levels.js (niveaux de badge), ics.js (agenda), icons.js, utils.js.
 // Page réservée aux membres (auth: 'member'). N'exporte rien.
-import { sb, initPage, esc, $, errMsg, avatarHtml } from './core.js';
-import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
+import { sb, initPage, esc, $, errMsg, avatarHtml } from '../../commun/core.js';
+import { hasLevels, sortedLevels, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from '../compte/badge-levels.js';
 import { addToCalendar } from './ics.js';
-import { svg } from './icons.js';
-import { fmtDayInZone } from './utils.js';
+import { svg } from '../../commun/icons.js';
+import { fmtDayInZone } from '../../commun/utils.js';
 
 /* ---------- Initialisation : conteneur et session membre ---------- */
 const app = $('#app');
@@ -91,7 +91,7 @@ function boardHtml(rows) {
   if (!rows.length) return '<p class="small muted">Personne n\'a encore attrapé d\'image. À toi de jouer !</p>';
   return `<ol class="evp-lb">${rows.slice(0, 10).map((r, i) => `
     <li class="${r.user_id === me.id ? 'is-me' : ''}"><span class="evp-rank${i < 3 ? ' top' : ''}">${i + 1}</span>${avatarHtml(r, 32)}
-      <a class="evp-lb-name" href="membre.html?id=${encodeURIComponent(r.user_id)}">${esc(r.pseudo)}${r.user_id === me.id ? ' <span class="evp-me">toi</span>' : ''}</a>
+      <a class="evp-lb-name" href="/pages/compte/membre.html?id=${encodeURIComponent(r.user_id)}">${esc(r.pseudo)}${r.user_id === me.id ? ' <span class="evp-me">toi</span>' : ''}</a>
       <strong>${esc(r.captures)}</strong></li>`).join('')}</ol>
     ${(() => { const i = rows.findIndex((r) => r.user_id === me.id); return i >= 10 ? `<p class="small muted">Ta place : ${i + 1}<sup>e</sup> avec ${rows[i].captures} capture${rows[i].captures > 1 ? 's' : ''}.</p>` : ''; })()}`;
 }
@@ -174,7 +174,7 @@ app.addEventListener('click', (e) => {
   const b = e.target.closest('[data-act="ics"]');
   if (!b) return;
   const ev = shown?.events.find((x) => x.id === b.dataset.id);
-  if (ev) addToCalendar({ id: ev.id, title: ev.name, start: ev.starts_at, end: ev.ends_at, description: ev.description }, new URL('evenements.html', location.href).href);
+  if (ev) addToCalendar({ id: ev.id, title: ev.name, start: ev.starts_at, end: ev.ends_at, description: ev.description }, new URL('/pages/irl/evenements.html', location.href).href);
 });
 
 /* ---------- Page : rendu complet, puis chargement initial ---------- */

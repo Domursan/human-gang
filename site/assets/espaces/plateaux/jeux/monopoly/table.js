@@ -12,12 +12,12 @@
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
-import { esc, initials, toast } from '../../../core.js';
+import { esc, initials, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, pseudoHtml } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { plateauHtml } from './plateau.js';
-import { voisinSpatial } from '../../../grille-clavier.js';
+import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const CAUTION_PRISON = 50;
@@ -639,7 +639,7 @@ export function creer(root, ctx) {
     cles.cases = null;
     if (etat) rendreCases();
   });
-  // Illustration du centre du plateau (assets/img/plateaux/monopoly/centre.webp), sous les dés et le panneau d'action.
+  // Illustration du centre du plateau (/assets/images/plateaux/monopoly/centre.webp), sous les dés et le panneau d'action.
   const urlCentre = imagePlateau('monopoly', 'centre');
   imageExiste(urlCentre).then((ok) => {
     if (!ok || !refs.centre) return;

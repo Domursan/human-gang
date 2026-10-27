@@ -10,15 +10,15 @@
  * Dépendances : core.js (initPage, $, motionAllowed, loadMyPages, pageLabel), plateaux/api.js (choisirJeu, JEUX, activerInvite).
  * Exporte : naviguer.
  */
-import { initPage, $, motionAllowed, loadMyPages, pageLabel, esc } from './core.js';
-import { choisirJeu, jeu, activerInvite } from './plateaux/api.js';
+import { initPage, $, motionAllowed, loadMyPages, pageLabel, esc } from '../../commun/core.js';
+import { choisirJeu, jeu, activerInvite } from './api.js';
 
 const id = document.body.dataset.jeu || '';
 const JEU = choisirJeu(id);
 const app = $('#app');
 
 /** Affiche une carte d'erreur simple dans #app. */
-function carteErreur(titre, texte, lien = { href: 'jeux.html', nom: 'Retour aux jeux' }) {
+function carteErreur(titre, texte, lien = { href: '/pages/jeux/jeux.html', nom: 'Retour aux jeux' }) {
   app.innerHTML = `<section class="card plat-erreur"><h1 class="display">${esc(titre)}</h1>
     <p>${esc(texte)}</p>
     <p><a class="btn btn-primary" href="${esc(lien.href)}">${esc(lien.nom)}</a></p></section>`;
@@ -36,7 +36,7 @@ activerInvite(INVITE);
 // Garde-fou : tant que la page du jeu n'est pas déclarée (migration pas encore appliquée), seul l'admin entre.
 if (!INVITE) await loadMyPages();
 if (!INVITE && !pageLabel(JEU.slug) && !moi?.is_admin) {
-  location.replace('jeux.html');
+  location.replace('/pages/jeux/jeux.html');
   await new Promise(() => {});
 }
 document.body.classList.toggle('plat-calme', !motionAllowed());
@@ -60,11 +60,11 @@ export function naviguer(hash) {
 }
 
 const ECRANS = {
-  accueil: () => import('./plateaux/vues/accueil.js'),
-  creer: () => import('./plateaux/vues/creer.js'),
-  rejoindre: () => import('./plateaux/vues/rejoindre.js'),
-  partie: () => import('./plateaux/vues/partie.js'),
-  stats: () => import('./plateaux/vues/stats.js'),
+  accueil: () => import('./vues/accueil.js'),
+  creer: () => import('./vues/creer.js'),
+  rejoindre: () => import('./vues/rejoindre.js'),
+  partie: () => import('./vues/partie.js'),
+  stats: () => import('./vues/stats.js'),
 };
 
 async function afficher() {
@@ -75,7 +75,7 @@ async function afficher() {
   if (INVITE && !(['rejoindre', 'partie'].includes(r.nom) && r.arg)) {
     app.innerHTML = `<section class="card plat-erreur"><h1 class="display">${esc(JEU.nom)}</h1>
       <p>${esc(JEU.nom)} se joue sur invitation. Ouvre le lien de partie qu'on t'a envoyé, ou connecte-toi si tu es membre du gang.</p>
-      <p><a class="btn btn-primary" href="compte.html?next=${encodeURIComponent(JEU.page)}">Me connecter</a></p></section>`;
+      <p><a class="btn btn-primary" href="/pages/compte/compte.html?next=${encodeURIComponent(JEU.page)}">Me connecter</a></p></section>`;
     app.setAttribute('aria-busy', 'false');
     return;
   }

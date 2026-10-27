@@ -11,7 +11,7 @@
  * Exporte : monterGrille, lireEtat, resumerGrille, formatDuree, classementJourHtml.
  */
 import { loadCss, boardHtml, copyText } from './devine.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 /**
  * Durée affichée : « 1:05 », ou « 1:02:05 » au-delà d'une heure.

@@ -6,7 +6,7 @@
  * Dépendances : core.js (esc, notify, getProfile), uno/api.js (uno, erreurTexte).
  * Exporte : afficher.
  */
-import { esc, notify, getProfile } from '../../core.js';
+import { esc, notify, getProfile } from '../../../commun/core.js';
 import { uno, erreurTexte } from '../api.js';
 
 const VISIBILITES = [{ valeur: 'publique', libelle: 'Publique' }, { valeur: 'privee', libelle: 'Privée' }];
@@ -91,7 +91,7 @@ export async function afficher(root, { naviguer }) {
   const pseudo = profil?.pseudo || '';
 
   root.innerHTML = `
-    <p class="uno-fil">Jeux › <a href="uno.html">Uno</a> › Créer</p>
+    <p class="uno-fil">Jeux › <a href="/pages/jeux/uno.html">Uno</a> › Créer</p>
     <h1 class="uno-titre">Créer une partie</h1>
     <p class="uno-sous-titre">Règle ta partie, puis invite tes amis avec le code.</p>
 

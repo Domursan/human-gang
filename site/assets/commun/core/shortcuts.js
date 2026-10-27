@@ -1,7 +1,7 @@
 // Raccourcis clavier du site (idée Q8) : « g » puis une lettre pour changer de page, « / » pour la recherche, « ? » pour l'aide-mémoire.
 /*
  * Rôle : installe les raccourcis d'une seule touche pour un membre connecté, et l'aide-mémoire (<dialog>).
- * Page : toutes les pages avec en-tête, sauf admin.html (l'admin garde sa propre palette « Aller à… »).
+ * Page : toutes les pages avec en-tête, sauf /pages/admin/admin.html (l'admin garde sa propre palette « Aller à… »).
  * Règles : ignorés dans un champ de saisie, quand un dialogue est ouvert, avec Ctrl, Alt ou Cmd, et dans une zone
  * marquée data-shortcuts="off" (jeux du site) ; une page masquée par l'admin n'a pas de raccourci (canAccess).
  * Coupables dans les Préférences d'affichage (clé « shortcuts », WCAG 2.1.4). La touche lue est event.key (claviers AZERTY).
@@ -53,10 +53,10 @@ function inField() {
 }
 
 /**
- * Slug de la page courante (« cartes » pour cartes.html).
+ * Slug de la page courante (« cartes » pour /pages/cartes/cartes.html).
  * @returns {string}
  */
-const currentSlug = () => (location.pathname.split('/').pop() || 'index.html').replace(/\.html$/, '');
+const currentSlug = () => (location.pathname.split('/').pop() || '/index.html').replace(/\.html$/, '');
 
 /**
  * Affiche ou masque l'étiquette « g… » en bas de l'écran.
@@ -200,7 +200,7 @@ function onKey(e) {
 }
 
 /**
- * Branche les raccourcis pour un membre connecté (une seule fois par page). Rien sur admin.html.
+ * Branche les raccourcis pour un membre connecté (une seule fois par page). Rien sur /pages/admin/admin.html.
  * @param {object|null} profile profil du membre connecté
  */
 export function bindShortcuts(profile) {

@@ -5,7 +5,7 @@
 // Le détail des gains concentrés (qui, d'où) n'est renvoyé par la base qu'à l'administrateur, sans jugement.
 // Utilisé par counts.js (loadEco, ecoTile, ecoTodoItems via admin.js), admin-gestion.js (alertesEco). Dépend de core.js
 // (sb, toast, errMsg) et perms.js.
-import { sb, toast, errMsg } from '../core.js';
+import { sb, toast, errMsg } from '../../commun/core.js';
 import { canSection } from './perms.js';
 
 // Dernière réponse de hg_eco_health (null : pas encore chargée ou pas de droit), et erreur éventuelle.

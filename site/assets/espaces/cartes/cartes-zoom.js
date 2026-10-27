@@ -3,7 +3,7 @@
 // cartes.js lui fournit deux fonctions : ids() (cartes affichées, dans l'ordre affiché) et info(id) (fiche d'une carte).
 // Ordinateur (pointeur fin) : loupe ronde ×2,5 qui suit le curseur. Tactile : appui long = loupe sous le doigt,
 // le pincement reste le zoom natif de la page. Styles : assets/css/cartes-zoom.css.
-import { esc } from './core.js';
+import { esc } from '../../commun/core.js';
 import { cardHtml, rarityLabel, familyLabel, numberLabel } from './cartes-ui.js';
 
 export const ICON_ZOOM = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/></svg>';

@@ -16,7 +16,7 @@
 /* ---------- Constantes et état ---------- */
 
 /** Adresse de la feuille de style, relative à ce fichier. */
-const CSS_HREF = new URL('../css/ui-confirm.css', import.meta.url).href;
+const CSS_HREF = new URL('./ui-confirm.css', import.meta.url).href;
 /** Compteur qui rend unique l'identifiant du titre et du texte de chaque boîte ouverte. */
 let seq = 0;
 

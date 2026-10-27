@@ -9,7 +9,7 @@
  * Exporte : LIEUX, GROUPES, PV_MAX, CAMP_LIBELLE, campDe, couleurCamp, lieuxAplatis, voisinsDe,
  *           plateauHtml, pisteHtml, persoVisuelHtml.
  */
-import { esc, initials } from '../../../core.js';
+import { esc, initials } from '../../../../commun/core.js';
 
 /** Dés de chaque lieu (règle fixe, affichée sur la carte du lieu). */
 export const LIEUX = {

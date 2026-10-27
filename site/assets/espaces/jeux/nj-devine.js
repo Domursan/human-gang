@@ -10,7 +10,7 @@
  * Exporte : monter(panel, ctx, jeu), resumer(ctx, jeu).
  */
 import { loadCss, boardHtml, copyText, normalize } from './devine.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 /**
  * Présentation des six jeux : titre, consignes et libellé du champ de réponse ; facultatifs : exemple (texte d'attente

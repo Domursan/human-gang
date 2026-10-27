@@ -1,4 +1,4 @@
-// ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données (compte.html) =====
+// ===== Mon compte : connexion, inscription, profil, informations diverses, badges, données (/pages/compte/compte.html) =====
 // Une seule page, qui affiche un écran selon l'état de la session :
 //  - visiteur : onglets Se connecter / Rejoindre le gang, mot de passe oublié ;
 //  - lien de réinitialisation ou lien expiré : formulaire de nouveau mot de passe, ou message ;
@@ -9,12 +9,12 @@
 // Tables, RPC et stockage : hg_profiles, hg_profile_info, hg_badges, hg_user_badges, hg_my_badge_progress, hg_dyn_captures,
 // hg_join, hg_export_my_data, hg_delete_my_account, hg_photos, hg_moments, stockage hg-avatars et hg-photos.
 // N'exporte rien.
-import { sb, authLanding, signOutDevice, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from './core.js';
+import { sb, authLanding, signOutDevice, initPage, getProfile, esc, $, $$, toast, errMsg, fmtDate, fmtDateTime, avatarHtml, updateHeaderProfile } from '../../commun/core.js';
 import { INFO_GROUPS, INFO_FIELDS } from './profile-fields.js';
-import { mountPushBlock } from './push.js';
+import { mountPushBlock } from '../../commun/push.js';
 import { mountNotifPrefs } from './notif-prefs.js';
 import { hasLevels, sortedLevels, levelDef, nextLevelDef, levelImage, levelLabel, levelPipsHtml, metricCount, roman, METRIC_LABEL } from './badge-levels.js';
-import { svg } from './icons.js';
+import { svg } from '../../commun/icons.js';
 import { loadInviteConfig, inviteCodeRe } from './invite-config.js';
 
 /* ---------- Indices lus AVANT que le client Supabase ne nettoie l'URL ---------- */
@@ -36,8 +36,8 @@ const PENDING_KEY = 'hg_pending_join';
 /** Durée de vie du code en attente : 1 heure (au-delà, le code et le pseudo sont redemandés). */
 const PENDING_TTL_MS = 3600000;
 /** Adresse absolue de cette page : sert de lien de retour dans les e-mails de confirmation et de réinitialisation. */
-const PAGE_URL = new URL('compte.html', location.href).href;
-// Code d'invitation reçu via un lien (rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
+const PAGE_URL = new URL('/pages/compte/compte.html', location.href).href;
+// Code d'invitation reçu via un lien (/pages/infos/rejoindre.html) : ?code=HG-XXXXXX ou sessionStorage
 const INVITE_KEY = 'hg_invite_code';
 await loadInviteConfig(); // préfixe des codes (hg_settings.invites)
 /**
@@ -169,7 +169,7 @@ function pendingGet() {
 /** Enregistre le code en attente, ou le supprime si v est vide. Sans effet si le stockage local est indisponible. */
 function pendingSet(v) { try { v ? localStorage.setItem(PENDING_KEY, JSON.stringify(v)) : localStorage.removeItem(PENDING_KEY); } catch {} }
 /** Va à la page demandée (?next=), sinon à l'accueil, une fois connecté. */
-function goAfterAuth() { location.replace(NEXT || 'accueil.html'); }
+function goAfterAuth() { location.replace(NEXT || '/pages/compte/accueil.html'); }
 /** Retire l'état « occupé » de la page : le contenu est prêt à être lu. */
 function done() { app.removeAttribute('aria-busy'); }
 
@@ -183,10 +183,10 @@ function renderLinkError() {
       <div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">Lien expiré</h1></div></div>
       <div class="card stack">
         <p>Ce lien n'est plus valable. Les liens envoyés par e-mail ne fonctionnent qu'une fois et pendant une durée limitée.</p>
-        <div class="btn-row"><a class="btn btn-primary" href="compte.html">Revenir à la connexion</a></div>
+        <div class="btn-row"><a class="btn btn-primary" href="/pages/compte/compte.html">Revenir à la connexion</a></div>
       </div>
     </section>`;
-  history.replaceState(null, '', 'compte.html');
+  history.replaceState(null, '', '/pages/compte/compte.html');
   done();
 }
 
@@ -204,10 +204,10 @@ function renderOtherBrowser() {
         ${recovery
           ? '<p>Ce lien doit s’ouvrir dans le navigateur où tu as demandé le nouveau mot de passe (pour ta sécurité, il ne marche pas ailleurs).</p><p>Redemande un lien depuis ce navigateur-ci, ou ouvre le lien reçu dans le navigateur de ta demande.</p>'
           : '<p>Si tu viens de cliquer sur le lien de confirmation, ton adresse e-mail est confirmée. Connecte-toi avec ton e-mail et ton mot de passe pour continuer.</p>'}
-        <div class="btn-row"><a class="btn btn-primary" href="compte.html">${recovery ? 'Redemander un lien' : 'Se connecter'}</a></div>
+        <div class="btn-row"><a class="btn btn-primary" href="/pages/compte/compte.html">${recovery ? 'Redemander un lien' : 'Se connecter'}</a></div>
       </div>
     </section>`;
-  history.replaceState(null, '', 'compte.html');
+  history.replaceState(null, '', '/pages/compte/compte.html');
   done();
 }
 
@@ -240,7 +240,7 @@ function renderRecovery() {
     busy(btn, false);
     if (error) return formError(form, authMsg(error));
     toast('Mot de passe modifié.', 'ok');
-    setTimeout(() => location.replace('compte.html'), 900);
+    setTimeout(() => location.replace('/pages/compte/compte.html'), 900);
   });
   $('#rp1').focus();
 }
@@ -278,7 +278,7 @@ function renderGuest(initialTab = 'login') {
           <div class="field"><label for="su-pseudo">Pseudo <span class="small">(2 à 32 caractères, visible par le gang)</span></label><input id="su-pseudo" autocomplete="nickname" minlength="2" maxlength="32" required></div>
           <div class="field"><label for="su-email">E-mail <span class="small">(privé)</span></label><input id="su-email" type="email" autocomplete="email" inputmode="email" required></div>
           <div class="field"><label for="su-pass">Mot de passe <span class="small">(au moins 8 caractères)</span></label><input id="su-pass" type="password" autocomplete="new-password" minlength="8" required></div>
-          <label class="check"><input type="checkbox" id="su-privacy" required> <span>J'ai lu et j'accepte la <a href="legal.html#confidentialite" target="_blank" rel="noopener">politique de confidentialité</a>.</span></label>
+          <label class="check"><input type="checkbox" id="su-privacy" required> <span>J'ai lu et j'accepte la <a href="/pages/infos/legal.html#confidentialite" target="_blank" rel="noopener">politique de confidentialité</a>.</span></label>
           <div class="btn-row acc-actions"><button class="btn btn-primary" type="submit">Créer mon compte</button></div>
         </form>
 
@@ -292,7 +292,7 @@ function renderGuest(initialTab = 'login') {
           </div>
         </form>
       </div>
-      <p class="small muted acc-foot">Un souci pour te connecter ? <a href="assistance.html">Contacte l'assistance</a>.</p>
+      <p class="small muted acc-foot">Un souci pour te connecter ? <a href="/pages/infos/assistance.html">Contacte l'assistance</a>.</p>
     </section>`;
   done();
 
@@ -375,7 +375,7 @@ function renderGuest(initialTab = 'login') {
     busy(btn, false);
     if (error) return formError(form, authMsg(error));
     form.innerHTML = `<h2>Vérifie ta boîte mail</h2><p>Si un compte existe pour <strong>${esc(email)}</strong>, un lien pour choisir un nouveau mot de passe vient d'être envoyé. Pense à regarder dans les indésirables.</p>
-      <div class="btn-row"><a class="btn btn-ghost" href="compte.html">Retour à la connexion</a></div>`;
+      <div class="btn-row"><a class="btn btn-ghost" href="/pages/compte/compte.html">Retour à la connexion</a></div>`;
   });
 }
 
@@ -387,7 +387,7 @@ function renderCheckMail(email) {
       <div class="card stack acc-mail">
         <span class="acc-mail-icon">${ICON.mail}</span>
         <p>Un lien de confirmation a été envoyé à <strong>${esc(email)}</strong>. Clique dessus pour activer ton compte, de préférence dans ce même navigateur : tu seras connecté directement, et ton code d'invitation et ton pseudo seront appliqués automatiquement.</p>
-        <p class="small muted">Rien reçu ? Regarde dans les indésirables, ou <a href="assistance.html">contacte l'assistance</a>.</p>
+        <p class="small muted">Rien reçu ? Regarde dans les indésirables, ou <a href="/pages/infos/assistance.html">contacte l'assistance</a>.</p>
       </div>
     </section>`;
 }
@@ -396,7 +396,7 @@ function renderCheckMail(email) {
 async function afterLogin() {
   try { me = await getProfile(true); }
   catch { // réseau : la session est ouverte, on recharge la page (elle proposera de réessayer)
-    location.replace(`compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
+    location.replace(`/pages/compte/compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
     return;
   }
   if (!me) {
@@ -404,10 +404,10 @@ async function afterLogin() {
     if (pend?.code && pend?.pseudo) {
       const { error } = await sb.rpc('hg_join', { p_code: pend.code, p_pseudo: pend.pseudo });
       if (!error) { pendingSet(null); clearInvite(); toast('Bienvenue dans le gang !', 'ok'); setTimeout(goAfterAuth, 500); return; }
-      location.replace(`compte.html?joinerr=${joinErrCode(error)}${NEXT ? `&next=${encodeURIComponent(NEXT)}` : ''}`);
+      location.replace(`/pages/compte/compte.html?joinerr=${joinErrCode(error)}${NEXT ? `&next=${encodeURIComponent(NEXT)}` : ''}`);
       return;
     }
-    location.replace(`compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
+    location.replace(`/pages/compte/compte.html${NEXT ? `?next=${encodeURIComponent(NEXT)}` : ''}`);
     return;
   }
   goAfterAuth();
@@ -429,7 +429,7 @@ function renderJoin(prefill = {}, error = '') {
         <p>Ton compte est créé. Entre le code d'invitation reçu d'un membre et choisis ton pseudo.</p>
         <div class="field"><label for="jn-code">Code d'invitation</label><input id="jn-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="HG-XXXX" required value="${esc(prefill.code || '')}"></div>
         <div class="field"><label for="jn-pseudo">Pseudo <span class="small">(2 à 32 caractères, visible par le gang)</span></label><input id="jn-pseudo" autocomplete="nickname" minlength="2" maxlength="32" required value="${esc(prefill.pseudo || '')}"></div>
-        <label class="check"><input type="checkbox" id="jn-privacy" required> <span>J'ai lu et j'accepte la <a href="legal.html#confidentialite" target="_blank" rel="noopener">politique de confidentialité</a>.</span></label>
+        <label class="check"><input type="checkbox" id="jn-privacy" required> <span>J'ai lu et j'accepte la <a href="/pages/infos/legal.html#confidentialite" target="_blank" rel="noopener">politique de confidentialité</a>.</span></label>
         <div class="btn-row">
           <button class="btn btn-primary" type="submit">Rejoindre</button>
           <button class="btn btn-ghost" type="button" id="jn-logout">Se déconnecter</button>
@@ -460,7 +460,7 @@ function renderJoin(prefill = {}, error = '') {
 /** Déconnecte la personne (et retire l'abonnement push de l'appareil) puis renvoie à l'accueil. Une erreur de déconnexion est ignorée. */
 async function logout() {
   await signOutDevice();
-  location.replace('accueil.html');
+  location.replace('/pages/compte/accueil.html');
 }
 
 /* ======================================================================
@@ -480,7 +480,7 @@ async function renderMember(user) {
         <div><p class="eyebrow">Mon compte</p><h1 class="page-title" id="head-pseudo">${esc(p.pseudo)}</h1></div>
       </div>
       <div class="btn-row acc-head-actions">
-        <a class="btn btn-primary" href="membre.html">${ICON.badge} Voir ma carte d'identité</a>
+        <a class="btn btn-primary" href="/pages/compte/membre.html">${ICON.badge} Voir ma carte d'identité</a>
         <button class="btn btn-ghost" type="button" id="logout">${ICON.out} Se déconnecter</button>
       </div>
     </section>
@@ -514,8 +514,8 @@ async function renderMember(user) {
         <div class="field">
           <label for="pf-discord">ID Discord ${tagPrivate}</label>
           <input id="pf-discord" inputmode="numeric" readonly aria-readonly="true" aria-describedby="pf-discord-hint" value="${esc(p.discord_id || '')}" placeholder="Pas encore enregistré">
-          <p class="small muted hint" id="pf-discord-hint">Sert uniquement au bot pour t’envoyer des messages privés. Pour ta sécurité, seul le Staff l’enregistre ou le modifie : ${p.discord_id ? 'pour le changer' : 'pour l’ajouter'}, <a href="assistance.html">demande au Staff</a> en lui donnant ton identifiant (Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l’identifiant »).</p>
-          ${p.discord_id ? '<p class="small muted hint">Commandes Discord disponibles sur le serveur du gang : /paillettes, /carte, /sortie et /quiz (<a href="aide.html#commandes-discord">mode d’emploi</a>).</p>' : ''}
+          <p class="small muted hint" id="pf-discord-hint">Sert uniquement au bot pour t’envoyer des messages privés. Pour ta sécurité, seul le Staff l’enregistre ou le modifie : ${p.discord_id ? 'pour le changer' : 'pour l’ajouter'}, <a href="/pages/infos/assistance.html">demande au Staff</a> en lui donnant ton identifiant (Discord : Paramètres &gt; Avancés &gt; Mode développeur, puis clic droit sur ton profil &gt; « Copier l’identifiant »).</p>
+          ${p.discord_id ? '<p class="small muted hint">Commandes Discord disponibles sur le serveur du gang : /paillettes, /carte, /sortie et /quiz (<a href="/pages/infos/aide.html#commandes-discord">mode d’emploi</a>).</p>' : ''}
         </div>
         <p class="small muted">Messages du bot Discord, rappels et alertes : <a href="#notifs">Mes notifications</a>, plus bas.</p>
         ${'show_generation' in p ? `<label class="check"><input type="checkbox" id="pf-show-gen" ${p.show_generation !== false ? 'checked' : ''}> <span>Afficher ma génération (OG ou 2e gen) sur mes cartes et ma fiche</span></label>` : ''}
@@ -593,7 +593,7 @@ async function renderMember(user) {
     <section class="acc-row">
       <div class="card stack" id="data-card">
         <h2 class="card-title">${ICON.data} Mes données</h2>
-        <p class="small muted">Tu peux récupérer à tout moment une copie de toutes les données liées à ton compte (format JSON), ou supprimer ton compte. Une idée pour le gang ? La <a href="accueil.html#idees">boîte à idées</a> est sur l'accueil. <a href="legal.html#droits">Tes droits</a></p>
+        <p class="small muted">Tu peux récupérer à tout moment une copie de toutes les données liées à ton compte (format JSON), ou supprimer ton compte. Une idée pour le gang ? La <a href="/pages/compte/accueil.html#idees">boîte à idées</a> est sur l'accueil. <a href="/pages/infos/legal.html#droits">Tes droits</a></p>
         <div class="btn-row">
           <button class="btn btn-ghost" type="button" id="export">${ICON.download} Exporter mes données</button>
           <button class="btn btn-danger" type="button" id="delete">${ICON.trash} Supprimer mon compte</button>
@@ -985,7 +985,7 @@ function bindData() {
       updateHeaderProfile(null);
       app.innerHTML = `<section class="acc-narrow"><div class="page-head"><div><p class="eyebrow">Mon compte</p><h1 class="page-title">Compte supprimé</h1></div></div>
         <div class="card stack"><p>Ton compte et tes données ont été supprimés. Merci d'avoir fait partie du gang.</p>
-        <div class="btn-row"><a class="btn btn-ghost" href="accueil.html">Retour à l'accueil</a></div></div></section>`;
+        <div class="btn-row"><a class="btn btn-ghost" href="/pages/compte/accueil.html">Retour à l'accueil</a></div></div></section>`;
     } catch (err) {
       busy(go, false);
       formError($('#delete-form'), `Suppression impossible : ${authMsg(err)}`);

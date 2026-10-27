@@ -7,7 +7,7 @@
  *   etat.jeu.enveloppe = {suspect, arme, piece} ; etat.jeu.accusations = [{par, suspect, arme, piece, juste}] ;
  *   etat.jeu.mains = {user_id: ['s:<suspect>' | 'a:<arme>' | 'p:<pièce>']}.
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 
 const LISTE = { s: 'suspects', a: 'armes', p: 'pieces' };

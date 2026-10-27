@@ -5,13 +5,13 @@
 // « Champions du gang <année> » (rare, tirable dans les boosters) et le membre reçoit un exemplaire brillant offert.
 // RPC (migration 082) : hg_champion_pending(), hg_champion_review(p_id, p_accept, p_note) — journal admin côté serveur.
 // Dépendances : core.js (sb, toast, errMsg, esc, avatarHtml), cartes-ui.js (cardHtml), cartes-champion.js (aperçu),
-// ui-confirm.js (confirmBox avec saisie), helpers.js (act). Styles des cartes : cartes-card.css (déjà chargée par admin.html).
+// ui-confirm.js (confirmBox avec saisie), helpers.js (act). Styles des cartes : cartes-card.css (déjà chargée par /pages/admin/admin.html).
 // Exporte : mountChampionsSection.
 // =====================================================================
-import { sb, toast, errMsg, esc, avatarHtml } from '../core.js';
-import { cardHtml } from '../cartes-ui.js';
-import { championCardPreview } from '../cartes-champion.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, errMsg, esc, avatarHtml } from '../../../commun/core.js';
+import { cardHtml } from '../../cartes/cartes-ui.js';
+import { championCardPreview } from '../../cartes/cartes-champion.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { act } from './helpers.js';
 
 const R = { root: null, list: [] };

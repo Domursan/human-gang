@@ -10,10 +10,10 @@
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, COULEURS_MM, estInvite), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, COULEURS_MM, estInvite } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 
 const CLE_DALTO = 'hg_duel_daltonien';
 const ESSAIS_MAX = 10;

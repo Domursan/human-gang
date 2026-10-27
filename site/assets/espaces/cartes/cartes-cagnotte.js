@@ -1,13 +1,13 @@
 // ===== Cartes à collectionner — cagnotte collective de Paillettes (idée C13) =====
-// Encart en haut de la page Cartes (cartes.html) : jauge de la cagnotte en cours, participants, 5 derniers versements
+// Encart en haut de la page Cartes (/pages/cartes/cartes.html) : jauge de la cagnotte en cours, participants, 5 derniers versements
 // (pseudo, ou « Anonyme »), fenêtre de versement (montants rapides, montant libre, case « anonymement »).
 // RPC (migration 082) : hg_pot_current() (lecture, clôt une cagnotte échue), hg_pot_contribute(p_pot, p_amount, p_anonymous, p_request).
 // Règles affichées : 10 ✦ minimum, 25 % de l'objectif au plus par membre, remboursement si l'objectif n'est pas atteint,
 // récompense pour tous les membres (même sans versement) dès que l'objectif est atteint.
 // Tout texte venant de la base passe par esc(). Sans la migration (fonction absente) ou sans cagnotte : l'encart reste vide.
 // Exporte : mountPot(el, ctx) — ctx : { me, refresh, balance } (refresh recharge le solde de la page, balance() le renvoie).
-import { sb, toast, errMsg, esc, avatarHtml } from './core.js';
-import { fmtPaillettes } from './paillettes.js';
+import { sb, toast, errMsg, esc, avatarHtml } from '../../commun/core.js';
+import { fmtPaillettes } from '../../commun/paillettes.js';
 
 const nf = new Intl.NumberFormat('fr-CH');
 /** Date de fin « 24 déc. à 18 h » (heure de Zurich). */

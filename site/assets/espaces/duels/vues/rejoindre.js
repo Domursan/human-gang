@@ -10,12 +10,12 @@
  * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, estInvite, jetonInvite, JEUX), vues/commun.js (avatarHtml, nomJoueur).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, estInvite, jetonInvite, JEUX } from '../api.js';
 import { avatarHtml, nomJoueur } from './commun.js';
 
 const FORMATS = { 1: '1 manche', 3: 'Au meilleur des 3', 5: 'Au meilleur des 5' };
-const LIEN_ACCUEIL = '<p><a class="btn btn-ghost" href="duels.html">Retour aux duels</a></p>';
+const LIEN_ACCUEIL = '<p><a class="btn btn-ghost" href="/pages/jeux/duels.html">Retour aux duels</a></p>';
 
 /** Nom lisible d'une variante (ou la clé brute si inconnue). */
 const nomVariante = (jeu, variante) => JEUX[jeu]?.variantes.find(([id]) => id === variante)?.[1] || variante || '';
@@ -163,7 +163,7 @@ async function invitation(root, code, naviguer) {
       <button type="submit" class="btn btn-primary duels-pleine" data-envoyer>Rejoindre le duel</button>
     </form>
     <p class="muted small">Pas besoin de compte. Tu joues en invité : pas de Paillettes ni de statistiques.</p>
-    <p class="small"><a href="compte.html?next=${encodeURIComponent(`duels.html#rejoindre/${code}`)}">J'ai un compte, me connecter</a></p>
+    <p class="small"><a href="/pages/compte/compte.html?next=${encodeURIComponent(`/pages/jeux/duels.html#rejoindre/${code}`)}">J'ai un compte, me connecter</a></p>
   </section>`;
 
   const form = root.querySelector('[data-form]');

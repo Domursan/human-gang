@@ -7,13 +7,13 @@
 // Exporte : QUEST_METRICS (actions qu'une quête peut compter), Q (état de la liste), loadQuests, questsPanel,
 // openQuestDialog, questActions (gestionnaires des boutons data-act).
 // =====================================================================
-import { sb, toast, esc, $ } from '../core.js';
+import { sb, toast, esc, $ } from '../../../commun/core.js';
 import { ICON, CFG_DEFAULT } from './constants.js';
 import { H, C } from './state.js';
 import { check, act, friendly, nf } from './helpers.js';
 import { refresh } from './data.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { ecrireReglage } from '../admin/reglages-merge.js';
+import { openDrawer } from '../ui/drawer.js';
+import { ecrireReglage } from '../reglages-merge.js';
 
 export const QUEST_METRICS = [
   ["boosters_ouverts", "Boosters ouverts", "Nombre de boosters ouverts pendant la semaine."],

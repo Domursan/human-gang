@@ -4,8 +4,8 @@
 // Dépendances : icons.js (svg), cartes-ui.js (RARITIES_TIRAGE, rarityLabel : libellés des raretés).
 // Exporte : TZ, ICON, TABS, RARITY_IDS, REASON_LABEL, CFG_DEFAULT, ECON.
 // =====================================================================
-import { svg } from '../icons.js';
-import { RARITIES_TIRAGE, rarityLabel } from '../cartes-ui.js';
+import { svg } from '../../../commun/icons.js';
+import { RARITIES_TIRAGE, rarityLabel } from '../../cartes/cartes-ui.js';
 
 /* Fuseau horaire d'affichage des dates (Suisse). */
 export const TZ = 'Europe/Zurich';

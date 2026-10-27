@@ -9,8 +9,8 @@
  * Dépendances : core.js (sb, esc, errMsg), avent.js, icons.js, cartes-ui.js (fmtP), saisons-css.js.
  * Exporte : mountSeasonal(box).
  */
-import { sb, esc } from './core.js';
-import { svg } from './icons.js';
+import { sb, esc } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
 import { adventSeason, mountAdvent } from './avent.js';
 
@@ -34,7 +34,7 @@ function boosterHtml(w) {
     <div class="sz-stack" style="gap:6px;margin:0"><p class="sz-eyebrow">En boutique</p>
       <h3 class="sz-h3" id="wd-b-t">${esc(b.name)}</h3>
       <p class="sz-small sz-muted">${Number(b.size) || 5} cartes · ${nf.format(Number(b.price) || 0)} Paillettes${fin}</p>
-      <p style="margin:0"><a class="btn wd-btn" href="cartes.html#boutique">Voir la boutique</a></p></div></div></section>`;
+      <p style="margin:0"><a class="btn wd-btn" href="/pages/cartes/cartes.html#boutique">Voir la boutique</a></p></div></div></section>`;
 }
 
 /** Tuile « Quêtes de la saison ». */
@@ -52,7 +52,7 @@ function questsHtml(w) {
   const claim = qs.some((q) => !q.claimed && (Number(q.progress) || 0) >= (Number(q.target) || 1));
   return `<section class="sz-card wd-card" aria-labelledby="wd-q-t"><h3 class="sz-eyebrow" id="wd-q-t">Quêtes de la saison</h3>
     <ul class="wd-quests">${li}</ul>
-    ${claim ? '<p style="margin:12px 0 0"><a class="btn wd-btn" href="cartes.html#ouverture">Réclamer dans les quêtes</a></p>' : ''}</section>`;
+    ${claim ? '<p style="margin:12px 0 0"><a class="btn wd-btn" href="/pages/cartes/cartes.html#ouverture">Réclamer dans les quêtes</a></p>' : ''}</section>`;
 }
 
 /** Bloc complet de la saison des Worlds. */

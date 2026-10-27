@@ -1,15 +1,15 @@
-// ===== Planche imprimable d'une collection de cartes (idée C16) — page collection-a4.html =====
+// ===== Planche imprimable d'une collection de cartes (idée C16) — page /pages/cartes/collection-a4.html =====
 // Page A4 portrait prête à imprimer ou à enregistrer en PDF : en-tête (« Collection de <pseudo> », séries, version),
 // progression (« 41 / 60 cartes possédées »), bande arc-en-ciel, grille de 6 × 5 cases par page : cartes possédées en couleur
 // (brillante = pastille étoilée, rendu fixe : pas d'effet animé à l'impression), manquantes en cases pointillées avec leur
 // numéro et leur nom (pour cocher à la main), pied de page (légende, date, numéro de page).
-// Adresse : collection-a4.html?user=<uuid>&set=<uuid|all>&theme=clair|sombre&missing=1|0 (sans user : ma collection).
+// Adresse : /pages/cartes/collection-a4.html?user=<uuid>&set=<uuid|all>&theme=clair|sombre&missing=1|0 (sans user : ma collection).
 // Les options se changent dans la barre d'outils (cachée à l'impression) ; l'adresse suit, pour pouvoir la partager.
 // Lectures existantes seulement (aucune migration) : hg_card_sets, hg_cards, hg_card_copies (exemplaires non recyclés),
 // RPC hg_members (pseudo d'un autre membre). Aucune donnée privée : ni solde, ni date d'arrivée des cartes.
 // Accès : comme la page Cartes (canAccess('cartes')). Tout texte venant de la base passe par esc() (cardHtml échappe aussi).
 // Exporte : rien (page). Styles : collection-a4.css (+ cartes-card.css pour les cartes).
-import { sb, initPage, esc, errMsg, $, canAccess } from './core.js';
+import { sb, initPage, esc, errMsg, $, canAccess } from '../../commun/core.js';
 import { cardHtml } from './cartes-ui.js';
 
 const me = await initPage({ auth: 'member' });
@@ -107,7 +107,7 @@ function pagesHtml() {
 
 /** Barre d'outils (écran seulement). */
 function toolsHtml() {
-  const back = O.user === me.id ? 'cartes.html#collection' : `cartes.html#collection/${esc(O.user)}`;
+  const back = O.user === me.id ? '/pages/cartes/cartes.html#collection' : `/pages/cartes/cartes.html#collection/${esc(O.user)}`;
   return `<section class="a4-tools card" aria-labelledby="a4-tools-h">
     <div class="a4-tools-head"><a class="btn btn-ghost" href="${back}">← Retour à la collection</a>
       <h2 id="a4-tools-h" class="a4-tools-h">Planche à imprimer</h2></div>
@@ -165,7 +165,7 @@ async function printNow(btn) {
 
 /** Démarrage : accès, données, barre d'outils, planche. */
 async function boot() {
-  if (!canAccess('cartes')) { location.replace('accueil.html?refus=cartes'); return; }
+  if (!canAccess('cartes')) { location.replace('/pages/compte/accueil.html?refus=cartes'); return; }
   try {
     await load();
   } catch (e) {

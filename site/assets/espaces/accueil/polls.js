@@ -10,10 +10,10 @@
  * RPC : hg_polls_get, hg_poll_create, hg_poll_vote, hg_poll_close, hg_poll_remove.
  * Exporte : mountPolls, pollCardHtml (tests).
  */
-import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime } from './core.js';
-import { socialSettings, openDialog } from './social.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
+import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime } from '../../commun/core.js';
+import { socialSettings, openDialog } from '../compte/social.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
 
 const I = {
   poll: svg('pulse', { size: 16, stroke: 2 }),

@@ -6,7 +6,7 @@
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   La fortune vient de etat.jeu.fortunes[user_id] (sinon de joueur.etat.fortune). Les titres viennent de etat.jeu.proprietes.
  */
-import { esc, initials } from '../../../core.js';
+import { esc, initials } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 
 const EUR = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR')} €`;

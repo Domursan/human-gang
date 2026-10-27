@@ -5,9 +5,9 @@
 // state.js, list.js, fiche.js, admin-ghosts.js, inspect.js, profile.js, ss.js, activity.js, admin-access.js, ss-shared.js.
 // Exporte : initAccounts (point d'entrée appelé par admin.js).
 // =====================================================================
-import { sb, toast, errMsg, $, $$ } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
-import { safeUrl } from '../utils.js';
+import { sb, toast, errMsg, $, $$ } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { safeUrl } from '../../../commun/utils.js';
 import { busy, check, fromLocalInput } from './common.js';
 import { A, IDEA } from './state.js';
 import { loadAccounts, paintAccountsList } from './list.js';

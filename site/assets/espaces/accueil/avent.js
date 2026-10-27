@@ -10,10 +10,10 @@
  * Dépendances : core.js (sb, esc, toast, errMsg, motionAllowed), cartes-ui.js (cardHtml), photos.js (signedUrls), icons.js.
  * Exporte : adventSeason(), mountAdvent(box), cartesReminder(selector).
  */
-import { sb, esc, toast, errMsg, motionAllowed } from './core.js';
-import { cardHtml, rarityLabel } from './cartes-ui.js';
-import { signedUrls } from './photos.js';
-import { svg } from './icons.js';
+import { sb, esc, toast, errMsg, motionAllowed } from '../../commun/core.js';
+import { cardHtml, rarityLabel } from '../cartes/cartes-ui.js';
+import { signedUrls } from '../irl/photos.js';
+import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -82,7 +82,7 @@ function revealHtml(d) {
     return `<div class="av-reveal"><div class="av-reveal-media">${cardHtml(card, { size: 'sm', shiny: !!c.shiny, serial: c.serial })}</div>
       <div class="av-reveal-body">${head}<h3 class="av-reveal-title">Tu gagnes une carte ${esc(rarityLabel(card.rarity))}</h3>
       <p class="sz-small sz-muted">« ${esc(card.name)} » rejoint ta collection${card.set_name ? ` (${esc(card.set_name)})` : ''}.${c.paid ? ` Et +${Number(c.paid)} Paillettes.` : ''}</p>
-      <a class="btn btn-ghost" href="cartes.html#collection">Voir dans ma collection</a></div></div>`;
+      <a class="btn btn-ghost" href="/pages/cartes/cartes.html#collection">Voir dans ma collection</a></div></div>`;
   }
   if (c.kind === 'carte') {
     return `<div class="av-reveal"><div class="av-reveal-body">${head}<h3 class="av-reveal-title">Plus d’exemplaire de cette carte</h3>
@@ -98,7 +98,7 @@ function revealHtml(d) {
       <div class="av-reveal-body">${head}<h3 class="av-reveal-title">${esc(when ? `${when} : ${title}` : title)}</h3>
       ${m?.body ? `<p class="sz-small sz-muted">${esc(m.body)}</p>` : ''}${e?.location ? `<p class="sz-small sz-muted">${esc(e.location)}</p>` : ''}
       ${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}${c.paid ? `<p class="sz-small">+${Number(c.paid)} Paillettes</p>` : ''}
-      <a class="btn btn-ghost" href="historique.html">Revoir l’historique</a></div></div>`;
+      <a class="btn btn-ghost" href="/pages/irl/historique.html">Revoir l’historique</a></div></div>`;
   }
   if (c.kind === 'question' && c.question) {
     const q = c.question;
@@ -124,7 +124,7 @@ function revealHtml(d) {
     return `<div class="av-reveal"><div class="av-reveal-media"><div class="av-booster"><span><b>Booster</b>${esc(b.name || 'Booster')}<br>${Number(b.size) || 5} cartes</span></div></div>
       <div class="av-reveal-body">${head}<h3 class="av-reveal-title">Un booster ${esc(b.name || '')} pour toi</h3>
       <p class="sz-small sz-muted">Il t’attend dans ton stock, à ouvrir quand tu veux.</p>
-      <a class="btn btn-ghost" href="cartes.html#ouverture">L’ouvrir</a></div></div>`;
+      <a class="btn btn-ghost" href="/pages/cartes/cartes.html#ouverture">L’ouvrir</a></div></div>`;
   }
   return `<div class="av-reveal"><div class="av-reveal-body">${head}<p class="av-big">+${Number(c.paid ?? c.reward) || 0}</p>
     <p class="sz-small sz-muted">Paillettes ajoutées à ton portefeuille.</p>${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}</div></div>`;
@@ -289,7 +289,7 @@ export async function cartesReminder(selector) {
     loadSeasonCss();
     const a = document.createElement('a');
     a.className = 'av-remind';
-    a.href = 'accueil.html#avent';
+    a.href = '/pages/compte/accueil.html#avent';
     a.innerHTML = `<span aria-hidden="true">🎁</span><span>${todo > 1 ? `${todo} cases du calendrier de l’Avent t’attendent` : 'Une case du calendrier de l’Avent t’attend'} sur l’accueil.</span>`;
     target.before(a);
   } catch { /* rappel facultatif */ }

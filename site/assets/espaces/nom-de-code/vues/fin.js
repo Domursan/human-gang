@@ -7,7 +7,7 @@
  *   vues/chat.js (creerChat).
  * Exporte : creer.
  */
-import { esc, avatarHtml, toast } from '../../core.js';
+import { esc, avatarHtml, toast } from '../../../commun/core.js';
 import { ndc, erreurTexte, estInvite, EQUIPES } from '../api.js';
 import { creerChat } from './chat.js';
 
@@ -52,7 +52,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="ndc-fin">
-      <nav class="ndc-fil ndc-fin-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="nom-de-code.html">Codenames</a> › <span>Fin de partie</span></nav>
+      <nav class="ndc-fil ndc-fin-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span>Fin de partie</span></nav>
 
       <div class="ndc-fin-entete" data-zone="entete"></div>
 
@@ -256,13 +256,13 @@ export function creer(root, ctx) {
     const suite = e.partie.suite || null;
     let html = '';
     if (suite) {
-      html += `<a class="btn btn-primary" href="nom-de-code.html#rejoindre/${encodeURIComponent(suite)}">Rejoindre la revanche</a>`;
+      html += `<a class="btn btn-primary" href="/pages/jeux/nom-de-code.html#rejoindre/${encodeURIComponent(suite)}">Rejoindre la revanche</a>`;
     } else if (!invite) {
       html += '<button type="button" class="btn btn-primary" data-rejouer>Revanche</button>';
     }
     if (!invite) {
-      html += '<a class="btn btn-ghost" href="nom-de-code.html">Retour à Codenames</a>'
-        + '<a class="btn btn-ghost" href="nom-de-code.html#stats">Mes statistiques</a>';
+      html += '<a class="btn btn-ghost" href="/pages/jeux/nom-de-code.html">Retour à Codenames</a>'
+        + '<a class="btn btn-ghost" href="/pages/jeux/nom-de-code.html#stats">Mes statistiques</a>';
     }
     zone(zActions, html);
   }

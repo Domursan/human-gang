@@ -10,7 +10,7 @@
  * Dépendances : core.js (esc, toast), plateaux/api.js (plat, erreurTexte, estInvite, jeu).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { plat, erreurTexte, estInvite, jeu } from '../api.js';
 
 /** Le jeton d'invité de cette partie est-il déjà gardé dans le navigateur ? (même clé que plateaux/api.js) */
@@ -22,7 +22,7 @@ function aDejaJeton(code) {
 const lienAccueil = () => `<a class="btn btn-ghost plat-rej-retour" href="${esc(jeu().page)}">Retour à ${esc(jeu().nom)}</a>`;
 
 /** Lien de connexion qui revient sur la même partie après le compte. */
-const lienCompte = (code) => `<a class="plat-rej-lien" href="compte.html?next=${encodeURIComponent(`${jeu().page}?code=${code}`)}">J'ai un compte, me connecter</a>`;
+const lienCompte = (code) => `<a class="plat-rej-lien" href="/pages/compte/compte.html?next=${encodeURIComponent(`${jeu().page}?code=${code}`)}">J'ai un compte, me connecter</a>`;
 
 /** Carte d'erreur ou d'information, à la place du contenu courant. */
 function carteMessage(msg, { extra = '' } = {}) {

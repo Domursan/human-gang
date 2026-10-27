@@ -1,5 +1,5 @@
 // ===== Cartes à collectionner — « Le Cours de la Paillette », bulletin économique hebdomadaire (idée C15) =====
-// En tête de l'onglet Classement (cartes.html) : une carte d'appel (numéro, titre, Paillettes en circulation) ; « Lire le bulletin »
+// En tête de l'onglet Classement (/pages/cartes/cartes.html) : une carte d'appel (numéro, titre, Paillettes en circulation) ; « Lire le bulletin »
 // ouvre le bulletin complet à la place du classement : grand chiffre avec la courbe des 8 dernières semaines (SVG en ligne),
 // rubriques courtes (carte la plus échangée, booster le plus vendu, carte la plus cherchée, plus gros recycleur, brillantes tirées,
 // série la plus complétée, cagnotte), archives (12 derniers numéros) et la case « Apparaître dans le bulletin ».
@@ -7,8 +7,8 @@
 // hg_eco_bulletin_get(p_week), hg_eco_public_set(p_on). Aucun solde de membre n'est affiché ; pseudos seulement avec accord.
 // Sans la fonction (migration pas déployée) ou sans bulletin : rien n'est affiché. Tout texte venant de la base passe par esc().
 // Exporte : mountBulletin(panel) — ajoute l'encart en tête du panneau Classement (appelé après chaque rendu du classement).
-import { sb, toast, errMsg, esc } from './core.js';
-import { fmtPaillettes } from './paillettes.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { fmtPaillettes } from '../../commun/paillettes.js';
 
 const nf = new Intl.NumberFormat('fr-CH');
 const nf1 = new Intl.NumberFormat('fr-CH', { maximumFractionDigits: 1, signDisplay: 'always' });

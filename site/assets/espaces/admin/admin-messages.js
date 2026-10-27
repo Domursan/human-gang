@@ -9,12 +9,12 @@
 // RPC seulement (aucun accès direct aux tables) : hg_staff_directory, hg_admin_conversations, hg_admin_read_conversation,
 // hg_admin_conversation_info, hg_admin_message_remove.
 // Exporte : mountMessagesSection (zone de lecture), listMessages (colonne 2), openMessages (affichage à chaque visite).
-import { sb, toast, errMsg, esc, $ } from './core.js';
-import { svg } from './icons.js';
-import { createList } from './admin/ui/list.js';
-import { createThread } from './admin/ui/thread.js';
-import { setActions } from './admin/shell.js';
-import { confirmBox } from './ui-confirm.js';
+import { sb, toast, errMsg, esc, $ } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { createList } from './ui/list.js';
+import { createThread } from './ui/thread.js';
+import { setActions } from './shell.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 /* ---------- Constantes ---------- */
 const PAGE = 200; // messages par lecture journalisée (limite de la RPC : 500)

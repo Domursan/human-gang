@@ -7,8 +7,8 @@
 // Dépendances : core.js (sb, toast, errMsg, esc, $), ui-confirm.js (confirmBox), helpers.js (act).
 // Exporte : mountPotsSection.
 // =====================================================================
-import { sb, toast, errMsg, esc, $ } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, errMsg, esc, $ } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { act } from './helpers.js';
 
 const nf = new Intl.NumberFormat('fr-CH');

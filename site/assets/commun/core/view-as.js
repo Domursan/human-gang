@@ -3,7 +3,7 @@
  * Rôle : garde la vue dans sessionStorage « hg_view_as » (même onglet) ; dit si elle s'applique à la page courante ;
  * affiche le bandeau « Tu vois le site comme … » ; lance la vue depuis la fiche d'un membre (rpc hg_admin_view_as).
  * Les données restent celles de l'admin : la base contrôle tout, ce module ne change que l'interface.
- * Règles : la clé n'est gardée que si le profil connecté est admin ; sur le panel (admin.html) elle est effacée.
+ * Règles : la clé n'est gardée que si le profil connecté est admin ; sur le panel (/pages/admin/admin.html) elle est effacée.
  * Page : toutes les pages (init.js résout la vue au chargement ; pages-access.js et header.js la lisent) ;
  *   admin-accounts/fiche.js (bouton « Voir le site comme… »).
  * Dépendances : supabase.js (rpc), util.js (esc).
@@ -92,7 +92,7 @@ export async function startViewAs(uid) {
   const v = normalize(data);
   if (!v) throw new Error('Réponse inattendue du serveur.');
   try { sessionStorage.setItem(KEY, JSON.stringify(v)); } catch { throw new Error('Impossible de garder la vue : le stockage du navigateur est bloqué.'); }
-  location.href = 'accueil.html';
+  location.href = '/pages/compte/accueil.html';
 }
 
 /* ---------- Bandeau ---------- */
@@ -107,7 +107,7 @@ export function renderViewAsBar() {
   bar.className = 'view-as-bar';
   bar.setAttribute('role', 'status');
   bar.innerHTML = `<p class="view-as-msg">Tu vois le site comme <strong>${esc(_state.pseudo)}</strong> · les pages et les menus sont les siens, les données restent les tiennes</p>
-    <a class="view-as-back" href="admin.html#membres/comptes">Revenir au panel</a>`;
+    <a class="view-as-back" href="/pages/admin/admin.html#membres/comptes">Revenir au panel</a>`;
   bar.querySelector('.view-as-back').addEventListener('click', clearStore);
   document.body.prepend(bar);
   document.documentElement.dataset.viewAs = 'on';

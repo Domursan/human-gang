@@ -10,10 +10,10 @@
 // Toujours à l'heure suisse (admin-events.js). Sur mobile (≤ 760 px), la grille devient une liste des jours remplis.
 // Dépendances : core.js, admin-events.js, admin/ui/drawer.js, ui-confirm.js, admin/shell.js (setActions, navigate).
 // Exporte : planningSub ({ main, open }), branché par admin.js sur « pilotage/planning ».
-import { sb, esc, toast, errMsg, hasPerm } from '../core.js';
-import { toZurichInput, fromZurichInput } from '../admin-events.js';
+import { sb, esc, toast, errMsg, hasPerm } from '../../commun/core.js';
+import { toZurichInput, fromZurichInput } from './admin-events.js';
 import { openDrawer } from './ui/drawer.js';
-import { confirmBox } from '../ui-confirm.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 import { setActions, navigate } from './shell.js';
 
 /* ---------- Types d'éléments ---------- */

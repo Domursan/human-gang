@@ -9,27 +9,27 @@
  * Dépendances : core.js (sb, errMsg, notify : annonce Discord de la partie).
  * Exporte : JEUX, choisirJeu, jeu, plat, contenus, nomDe, suivrePartie, messages, erreurTexte, activerInvite, estInvite, imageExiste.
  */
-import { sb, errMsg, notify } from '../core.js';
+import { sb, errMsg, notify } from '../../commun/core.js';
 
 /** Description fixe des jeux (le nom affiché vient des contenus, modifiable en admin). Blackjack et poker : en développement (admins). */
 export const JEUX = {
-  cluedo: { id: 'cluedo', page: 'cluedo.html', slug: 'cluedo', nom: 'Cluedo', min: 3, max: 6, prefixe: 'HGCLU',
+  cluedo: { id: 'cluedo', page: '/pages/jeux/cluedo.html', slug: 'cluedo', nom: 'Cluedo', min: 3, max: 6, prefixe: 'HGCLU',
     accroche: 'Une victime, six suspects, six armes, neuf pièces. Mène l\'enquête.' },
-  shadow: { id: 'shadow', page: 'shadow-hunters.html', slug: 'shadow-hunters', nom: 'Shadow Hunters', min: 4, max: 8, prefixe: 'HGSHH',
+  shadow: { id: 'shadow', page: '/pages/jeux/shadow-hunters.html', slug: 'shadow-hunters', nom: 'Shadow Hunters', min: 4, max: 8, prefixe: 'HGSHH',
     accroche: 'Hunters, Shadows et Neutres : personne ne sait qui est qui.' },
-  destins: { id: 'destins', page: 'destins.html', slug: 'destins', nom: 'Destins', min: 2, max: 6, prefixe: 'HGDES',
+  destins: { id: 'destins', page: '/pages/jeux/destins.html', slug: 'destins', nom: 'Destins', min: 2, max: 6, prefixe: 'HGDES',
     accroche: 'Études, métier, mariage, maison : fais tourner la roue de la vie.' },
-  monopoly: { id: 'monopoly', page: 'monopoly.html', slug: 'monopoly', nom: 'Monopoly', min: 2, max: 6, prefixe: 'HGMON',
+  monopoly: { id: 'monopoly', page: '/pages/jeux/monopoly.html', slug: 'monopoly', nom: 'Monopoly', min: 2, max: 6, prefixe: 'HGMON',
     accroche: 'Achète, construis, échange… et ruine tes amis en une heure.' },
-  risk: { id: 'risk', page: 'risk.html', slug: 'risk', nom: 'Risk', min: 2, max: 6, prefixe: 'HGRSK',
+  risk: { id: 'risk', page: '/pages/jeux/risk.html', slug: 'risk', nom: 'Risk', min: 2, max: 6, prefixe: 'HGRSK',
     accroche: '42 territoires, 6 continents, une mission secrète.' },
-  blackjack: { id: 'blackjack', page: 'blackjack.html', slug: 'blackjack', nom: 'Blackjack', min: 1, max: 7, prefixe: 'HGBJK',
+  blackjack: { id: 'blackjack', page: '/pages/jeux/blackjack.html', slug: 'blackjack', nom: 'Blackjack', min: 1, max: 7, prefixe: 'HGBJK',
     accroche: 'Vingt-et-un contre la banque : tire, reste, double ou sépare.' },
-  poker: { id: 'poker', page: 'poker.html', slug: 'poker', nom: 'Poker', min: 2, max: 8, prefixe: 'HGPOK',
+  poker: { id: 'poker', page: '/pages/jeux/poker.html', slug: 'poker', nom: 'Poker', min: 2, max: 8, prefixe: 'HGPOK',
     accroche: 'Texas Hold\'em : deux cartes, cinq cartes communes et l\'art du bluff.' },
-  catan: { id: 'catan', page: 'catan.html', slug: 'catan', nom: 'Catan du gang', min: 2, max: 4, prefixe: 'HGCAT',
+  catan: { id: 'catan', page: '/pages/jeux/catan.html', slug: 'catan', nom: 'Catan du gang', min: 2, max: 4, prefixe: 'HGCAT',
     accroche: 'Récolte, construis routes, colonies et villes : le premier à 10 points gagne.' },
-  pictionary: { id: 'pictionary', page: 'pictionary.html', slug: 'pictionary', nom: 'Pictionary', min: 2, max: 10, prefixe: 'HGPIC',
+  pictionary: { id: 'pictionary', page: '/pages/jeux/pictionary.html', slug: 'pictionary', nom: 'Pictionary', min: 2, max: 10, prefixe: 'HGPIC',
     accroche: 'Un dessine, les autres devinent. Le temps file.' },
 };
 
@@ -102,7 +102,7 @@ export const plat = {
   publiques: () => rpc('hg_plat_publiques', { p_jeu: JEU.id }),
   mesParties: () => rpc('hg_plat_mes_parties', { p_jeu: JEU.id }),
   stats: (user = null) => rpc('hg_plat_stats', { p_jeu: JEU.id, p_user: user }),
-  // Administration (assets/js/admin-plateaux.js)
+  // Administration (/assets/espaces/admin/admin-plateaux.js)
   adminReglages: (jeuId) => rpc('hg_plat_admin_reglages', { p_jeu: jeuId }),
   adminEnregistrer: (jeuId, p) => rpc('hg_plat_admin_enregistrer', { p_jeu: jeuId, p }),
   adminContenu: (jeuId, cle, valeur) => rpc('hg_plat_admin_contenu', { p_jeu: jeuId, p_cle: cle, p_valeur: valeur }),

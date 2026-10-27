@@ -10,7 +10,7 @@
  *     sieges: [{ id, pseudo, couleur, initiale, invite, jetons, mise, tour, moi, sorti, parti, mains: [{ cartes, mise, statut, total, active }] }]
  *   }
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { carteHtml } from '../cartes.js';
 
 /** Libellé affiché pour chaque statut de main renvoyé par le serveur. */

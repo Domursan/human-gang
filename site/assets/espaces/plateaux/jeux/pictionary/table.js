@@ -17,7 +17,7 @@
  *   'trait' { n, s, c, e, k, p } (points p à partir du rang k du trait s), 'annuler' { n, s }, 'effacer' { n }.
  *   n est le numéro du tour : un message d'un tour plus ancien est ignoré ; un tour plus récent remet la toile à zéro.
  */
-import { esc, toast, sb } from '../../../core.js';
+import { esc, toast, sb } from '../../../../commun/core.js';
 import { plat, erreurTexte } from '../../api.js';
 import { avatarHtml, pseudoHtml, joueurDe, moiJoueur, brancherChrono, envoyer } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';

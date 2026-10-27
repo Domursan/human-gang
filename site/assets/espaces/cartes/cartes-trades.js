@@ -7,10 +7,10 @@
 // les données (S, E) sont partagées par les fonctions imbriquées et réinitialisées à chaque ouverture de la page.
 // RPC : hg_members, hg_trade_propose, hg_trade_respond, hg_trade_cancel, hg_card_gift. Tables : hg_card_copies,
 // hg_card_trades, hg_card_trade_items, hg_card_wishlist, hg_cards, hg_card_sets, hg_wallets. Notifications : notify().
-import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify, currentLogo } from './core.js';
+import { sb, esc, toast, errMsg, avatarHtml, fmtDateTime, getUser, notify, currentLogo } from '../../commun/core.js';
 import { cardHtml, rarityRank, rarityLabel, numberLabel, serialLabel, RARITIES, fmtP } from './cartes-ui.js';
-import { confirmBox } from './ui-confirm.js';
-import { pluralCount } from './utils.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { pluralCount } from '../../commun/utils.js';
 import { keepPlace, holdHeight } from './cartes-place.js';
 import { LOT, SEUIL, lotsAnticipes, gardeFocus } from './cartes-lots.js';
 

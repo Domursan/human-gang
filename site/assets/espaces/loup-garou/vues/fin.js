@@ -7,7 +7,7 @@
  *   loup-garou/roles.js (roleById, CAMPS), loup-garou/chat.js (monterChat).
  * Exporte : monter.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { icone, vignetteRole, pastilleCamp, pseudo, avatar, libelleCause, filAriane } from '../ui.js';
 import { roleById, CAMPS } from '../roles.js';
 import { monterChat } from '../chat.js';
@@ -211,11 +211,11 @@ export function monter(root, s) {
     ? `<section class="card lg-invite-fin" aria-labelledby="lg-invite-fin-titre">
         <h2 id="lg-invite-fin-titre" class="lg-invite-fin-titre">Merci d'avoir joué !</h2>
         <p>Tu as joué sans compte. Crée ou connecte-toi à ton compte pour garder tes statistiques et tes Paillettes.</p>
-        <a class="btn btn-primary" href="compte.html">Rejoindre le gang</a>
+        <a class="btn btn-primary" href="/pages/compte/compte.html">Rejoindre le gang</a>
       </section>`
     : `<nav class="lg-fin-actions" aria-label="Après la partie">
-        <a class="btn btn-ghost" href="loup-garou.html">Retour au Loup-Garou</a>
-        <a class="btn btn-primary" href="loup-garou.html#creer">Nouvelle partie</a>
+        <a class="btn btn-ghost" href="/pages/jeux/loup-garou.html">Retour au Loup-Garou</a>
+        <a class="btn btn-primary" href="/pages/jeux/loup-garou.html#creer">Nouvelle partie</a>
       </nav>`;
   root.innerHTML = `<div class="lg-fin">
     ${invite ? '' : filAriane('Fin de partie')}

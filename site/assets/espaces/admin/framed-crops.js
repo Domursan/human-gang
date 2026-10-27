@@ -22,7 +22,7 @@ const OUT_MIN = 512;
 /** Qualité de l'encodage WebP des découpes. */
 const WEBP_QUALITY = 0.86;
 /** Liste des affiches et tutos du site, relative à la racine du site. */
-const MANIFEST = 'assets/data/framed-affiches.json';
+const MANIFEST = '/assets/espaces/jeux/donnees/framed-affiches.json';
 
 /* ---------- Outils ---------- */
 

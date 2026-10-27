@@ -8,14 +8,14 @@
  * Dépendances : core.js (esc), ui.js, table.js, chat.js, roles.js, themes.js, actions.js, api.js (erreurTexte).
  * Exporte : monter.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { icone, pseudo, vignetteRole, pastilleCamp, chrono, libellePhase, estNuit, libelleCause, notifier } from '../ui.js';
 import { tableHtml } from '../table.js';
 import { monterChat } from '../chat.js';
 import { roleById } from '../roles.js';
 import { themeDe, imagesTheme } from '../themes.js';
 import { erreurTexte } from '../api.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import {
   typeAction, choisissable, badgesCible, comptesVote, panneauAction, choisir, executer, LIENS,
 } from './actions.js';

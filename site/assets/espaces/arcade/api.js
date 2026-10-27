@@ -9,8 +9,8 @@
  *         secousse, nuit, rembobine, tzatziki, champi_<saison> (printemps, ete, automne, hiver), livre, kc, creeper,
  *         serge, domumobile.
  */
-import { sb, hasSession } from '../core/supabase.js';
-import { toast } from '../core/ui.js';
+import { sb, hasSession } from '../../commun/core/supabase.js';
+import { toast } from '../../commun/core/ui.js';
 
 /** Secrets déjà signalés dans cet onglet, pour ne pas rappeler le serveur à chaque répétition. */
 const dejaEnvoyes = new Set();

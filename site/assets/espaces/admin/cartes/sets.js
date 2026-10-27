@@ -5,16 +5,16 @@
 // constants.js (ICON), state.js (C), helpers.js, data.js (refresh), admin/ui/drawer.js, admin/list-tools.js.
 // Exporte : setsListData (liste retenue par la recherche), setsPanel (onglet), openSetDialog, toggleSet, deleteSet.
 // =====================================================================
-import { sb, toast, esc, $ } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, $ } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { toZurichInput, fromZurichInput } from '../admin-events.js';
 import { ICON } from './constants.js';
 import { C } from './state.js';
 import { check, act, friendly, group, nf, nextSetSort, period, setState, removeImages } from './helpers.js';
-import { openDrawer } from '../admin/ui/drawer.js';
+import { openDrawer } from '../ui/drawer.js';
 import { refresh } from './data.js';
-import { matches, searchHtml } from '../admin/list-tools.js';
-import { ecrireReglage } from '../admin/reglages-merge.js';
+import { matches, searchHtml } from '../list-tools.js';
+import { ecrireReglage } from '../reglages-merge.js';
 
 /* =========================================================
    Séries

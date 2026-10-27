@@ -7,9 +7,9 @@
 // RPC : hg_contenu_reglages, hg_contenu_reglages_set, hg_on_this_day, hg_on_this_day_hide (migration 088).
 // Exporte : createCeJourPanel (renvoie { el, load }).
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
 import { dayLabel, todayIso } from './helpers.js';
-import { sectionError } from '../admin/common.js';
+import { sectionError } from '../common.js';
 
 /** Réglages « contenu » (lus une fois par chargement de vue). */
 async function readCfg() {

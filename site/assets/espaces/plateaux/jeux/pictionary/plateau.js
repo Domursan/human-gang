@@ -8,7 +8,7 @@
  *   indiceHtml(indice), nombreCachees(indice), arrondi(n), borne(n, min, max), couleurValide(c).
  *   Un trait : { s: identifiant, c: '#rrggbb', e: épaisseur (part de la largeur), p: [[x, y], …] }.
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 /** Dimensions du canevas (ratio 4:3) : les coordonnées normalisées sont multipliées par ces valeurs. */
 export const LARGEUR = 960;

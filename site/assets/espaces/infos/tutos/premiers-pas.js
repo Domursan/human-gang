@@ -1,7 +1,7 @@
 // Groupe « Premiers pas » : tutos pour découvrir le site (compte, profil, préférences, navigation, données).
 // Données pures (aucun import) : lisibles dans le navigateur ET dans Node.
-// Libellés relevés dans compte.html / compte.js, core/header.js, core/prefs.js, core/search.js,
-// intro.js, intro-daily.js, legal.html, rejoindre.js et manifest.webmanifest.
+// Libellés relevés dans /pages/compte/compte.html / compte.js, core/header.js, core/prefs.js, core/search.js,
+// intro.js, intro-daily.js, /pages/infos/legal.html, rejoindre.js et manifest.webmanifest.
 
 /*
  * Structure d'un groupe : { id, title, icon, tutos: [...] }.
@@ -17,7 +17,7 @@ export default {
       slug: 'creer-son-compte',
       title: 'Créer son compte avec un code d\'invitation',
       summary: 'Rejoindre le gang avec le code HG-XXXX reçu d\'un membre, puis confirmer son e-mail.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Récupère ton code', text: 'Un membre te donne un code de la forme HG-XXXX. S\'il t\'envoie un lien d\'invitation, ouvre-le : il affiche ton code personnel, avec un bouton « Copier le code ». Le code est valable {{invites.validite_heures|48}} h, pour un seul compte.' },
         { title: 'Ouvre l\'onglet « Rejoindre le gang »', text: 'Sur la page Mon compte, clique sur l\'onglet « Rejoindre le gang ». Si tu viens du lien d\'invitation, ton code est déjà rempli.' },
@@ -35,7 +35,7 @@ export default {
       slug: 'se-connecter',
       title: 'Se connecter',
       summary: 'Retrouver son compte avec son e-mail et son mot de passe.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Clique sur « Connexion »', text: 'Dans la colonne d\'outils de l\'en-tête (à droite sur ordinateur, sous l\'en-tête sur téléphone), clique sur « Connexion ». Tu arrives sur la page Mon compte.' },
         { title: 'Reste sur « Se connecter »', text: 'C\'est l\'onglet ouvert par défaut.' },
@@ -52,7 +52,7 @@ export default {
       slug: 'mot-de-passe-oublie',
       title: 'Mot de passe oublié',
       summary: 'Recevoir un lien par e-mail pour choisir un nouveau mot de passe.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Clique sur « Mot de passe oublié ? »', text: 'Sur l\'onglet « Se connecter » de Mon compte, le bouton « Mot de passe oublié ? » se trouve à côté de « Se connecter ».' },
         { title: 'Envoie le lien', text: 'Indique ton e-mail (il est recopié s\'il était déjà saisi), puis clique sur « Envoyer le lien ».' },
@@ -70,7 +70,7 @@ export default {
       slug: 'completer-son-profil',
       title: 'Compléter son profil',
       summary: 'Choisir son pseudo, son avatar, sa couleur et son anniversaire.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Ouvre Mon compte', text: 'Clique sur ton avatar et ton pseudo, en haut à droite. Tu arrives sur la page Mon compte.' },
         { title: 'Change ton avatar', text: 'Dans la carte « Avatar », clique sur « Changer l\'avatar » et choisis une image JPG, PNG ou WebP (15 Mo maximum). Elle est recadrée en carré et réduite automatiquement. Le bouton « Retirer » enlève la photo. L\'avatar s\'enregistre dès le choix.' },
@@ -88,7 +88,7 @@ export default {
       slug: 'remplir-ses-informations',
       title: 'Remplir ses informations diverses',
       summary: 'Adresse, tailles, goûts : de quoi aider ton Santa à viser juste, en privé.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Descends jusqu\'à « Informations diverses »', text: 'Sur Mon compte, la carte « Informations diverses » se trouve sous le profil et la connexion.' },
         { title: 'Ouvre un groupe', text: 'Les champs sont rangés en cinq groupes : Livraison, Tailles, Goûts, Réseaux sociaux & gaming, À savoir. Clique sur le nom d\'un groupe pour le déplier. Le compteur indique combien de champs sont remplis.' },
@@ -105,7 +105,7 @@ export default {
       slug: 'activer-mp-discord',
       title: 'Recevoir les messages privés du bot Discord',
       summary: 'Renseigner son ID Discord et accepter les messages du bot : tirage, cadeaux, rappels.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Copie ton ID Discord', text: 'Dans Discord : Paramètres > Avancés, puis active le « Mode développeur ». Ensuite, fais un clic droit sur ton profil et choisis « Copier l\'identifiant ».' },
         { title: 'Colle-le dans Mon compte', text: 'Sur Mon compte, carte « Profil », champ « ID Discord » : colle le nombre de 15 à 21 chiffres. Ce n\'est pas ton nom d\'utilisateur.' },
@@ -158,7 +158,7 @@ export default {
       slug: 'naviguer-sur-le-site',
       title: 'Naviguer sur le site',
       summary: 'Trouver les pages grâce au menu, à la colonne d\'outils et au pied de page.',
-      page: 'accueil.html',
+      page: '/pages/compte/accueil.html',
       steps: [
         { title: 'Utilise le menu', text: 'En haut, les liens vers les pages (Secret Santa, IRL, Historique, Messages…) sont ceux auxquels ton compte a accès. Sur téléphone, ils sont derrière le bouton « Menu ».' },
         { title: 'Repère la colonne d\'outils', text: 'À côté du menu : « Rechercher », « Préférences d\'affichage », ton compte (avatar et pseudo) et, une fois connecté, « Se déconnecter ». Sur téléphone, cette colonne passe sous l\'en-tête.' },
@@ -176,7 +176,7 @@ export default {
       slug: 'visite-guidee',
       title: 'La visite guidée',
       summary: 'Quatre bulles qui montrent l\'essentiel du site : le menu, les cartes, la recherche et l\'aide.',
-      page: 'accueil.html#visite',
+      page: '/pages/compte/accueil.html#visite',
       steps: [
         { title: 'Elle se lance toute seule la première fois', text: 'À ta première connexion, après l\'intro, la page d\'accueil s\'assombrit et une bulle « Bienvenue dans le gang ! » apparaît. Clique sur « C\'est parti ».' },
         { title: 'Suis les bulles', text: 'Chaque étape éclaire un élément de la page et l\'explique en deux lignes. Le compteur « 2 / 4 » indique où tu en es ; clique sur « Suivant », puis sur « Terminer ».' },
@@ -211,7 +211,7 @@ export default {
       slug: 'intro-quotidienne',
       title: 'L\'intro du gang, une fois par jour',
       summary: 'Pourquoi l\'animation d\'accueil revient chaque jour, et comment la passer.',
-      page: 'accueil.html',
+      page: '/pages/compte/accueil.html',
       steps: [
         { title: 'La première visite du jour', text: 'Quand tu ouvres l\'accueil pour la première fois de la journée sur cet appareil, l\'intro se lance avant le reste du site.' },
         { title: 'Fais défiler', text: 'Fais défiler vers le bas : la caméra plonge dans le logo. Une barre de progression indique l\'avancement.' },
@@ -245,7 +245,7 @@ export default {
       slug: 'exporter-ses-donnees',
       title: 'Exporter mes données',
       summary: 'Télécharger une copie, au format JSON, de tout ce que le site garde sur toi.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Ouvre Mon compte', text: 'Clique sur ton avatar et ton pseudo, en haut à droite.' },
         { title: 'Va à « Mes données »', text: 'Descends jusqu\'à la carte « Mes données ».' },
@@ -262,7 +262,7 @@ export default {
       slug: 'supprimer-son-compte',
       title: 'Supprimer son compte',
       summary: 'Effacer définitivement son compte et les données qui y sont liées, après deux confirmations.',
-      page: 'compte.html',
+      page: '/pages/compte/compte.html',
       steps: [
         { title: 'Exporte tes données d\'abord', text: 'La suppression est définitive. Si tu veux garder une copie, fais-la avant (tuto « Exporter mes données »).' },
         { title: 'Clique sur « Supprimer mon compte »', text: 'Ce bouton se trouve dans la carte « Mes données », en bas de Mon compte. Une fenêtre s\'ouvre.' },
@@ -280,7 +280,7 @@ export default {
       slug: 'vie-privee',
       title: 'Vie privée : ce que le site garde',
       summary: 'Où lire la politique de confidentialité, les cookies et tes droits.',
-      page: 'legal.html',
+      page: '/pages/infos/legal.html',
       steps: [
         { title: 'Ouvre les mentions légales', text: 'En bas de n\'importe quelle page, clique sur « Mentions légales », « Confidentialité » ou « Cookies ». Tout est sur la même page.' },
         { title: 'Lis le résumé', text: 'En haut de la page, « En bref » résume l\'essentiel : espace privé et non commercial, aucune publicité, aucun traceur, aucune revente.' },

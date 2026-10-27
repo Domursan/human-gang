@@ -12,9 +12,9 @@
 // Dépendances : core/supabase.js (sb), reglages-jetons.js (valeurs et mise en forme), badge-levels.js (niveaux).
 // Ne fait rien d'autre que remplir la page : la mise en page A3 est celle du HTML et de affiche.css (impression inchangée).
 // =====================================================================
-import { sb } from '../assets/js/core/supabase.js';
-import { chargerReglages, appliquerReglages, jetons, fmt } from '../assets/js/reglages-jetons.js';
-import { sortedLevels, hasLevels, levelImage, metricCount } from '../assets/js/badge-levels.js';
+import { sb } from '../assets/commun/core/supabase.js';
+import { chargerReglages, appliquerReglages, jetons, fmt } from '../assets/espaces/admin/reglages-jetons.js';
+import { sortedLevels, hasLevels, levelImage, metricCount } from '../assets/espaces/compte/badge-levels.js';
 
 /* ---------- Badges : regroupement, textes et liste de repli ---------- */
 // Sections de l'affiche, dans l'ordre. Un badge absent de ces listes va dans la section « Événements » (fin de page).

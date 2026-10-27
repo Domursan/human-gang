@@ -2,16 +2,16 @@
 // Deux listes : codes disponibles (non utilisés) et codes utilisés, avec recherche. Les codes issus d'un lien
 // d'invitation sont listés sous leur lien (admin-invite-links.js), pas ici.
 // Utilisé par admin.js (bindInvites, renderInvites, inviteActions). Dépend de core.js, confirm, loaders, list-tools.
-import { sb, toast, esc, $, fmtDate } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, $, fmtDate } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 import { S, pseudoOf } from './state.js';
 import { ICON, busy, check, copyText } from './common.js';
 import { loadInvites } from './loaders.js';
 import { refreshCounts } from './counts.js';
 import { matches, mountSearch, bindSearch, setCount, emptyHtml } from './list-tools.js';
 import { openDrawer } from './ui/drawer.js';
-import { openLinkDrawer } from '../admin-invite-links.js';
-import { inviteConfig } from '../invite-config.js';
+import { openLinkDrawer } from './admin-invite-links.js';
+import { inviteConfig } from '../compte/invite-config.js';
 
 /* =========================================================
    Membres & invitations

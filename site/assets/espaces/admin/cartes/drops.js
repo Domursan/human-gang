@@ -9,12 +9,12 @@
 // admin/live.js (écoute temps réel), admin/visual-pick.js (sélecteur de carte, restants, aperçu), helpers.js (fetchAll, act, fmtWhen, nf).
 // Exporte : mountDropsSection (monte la section, appelé par admin-cards.js).
 // =====================================================================
-import { sb, toast, errMsg, esc, $, notify } from '../core.js';
-import { rarityLabel } from '../cartes-ui.js';
-import { confirmBox } from '../ui-confirm.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { onTableChange } from '../admin/live.js';
-import { cardPicker, chargerRestants, visuelHtml, libelleEpuisee } from '../admin/visual-pick.js';
+import { sb, toast, errMsg, esc, $, notify } from '../../../commun/core.js';
+import { rarityLabel } from '../../cartes/cartes-ui.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { openDrawer } from '../ui/drawer.js';
+import { onTableChange } from '../live.js';
+import { cardPicker, chargerRestants, visuelHtml, libelleEpuisee } from '../visual-pick.js';
 import { fetchAll, act, fmtWhen, thumb, nf } from './helpers.js';
 
 /* État du module : racine de la section, drops, réclamations, cartes, séries, exemplaires restants, pseudos, bornes. */

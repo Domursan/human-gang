@@ -1,6 +1,6 @@
 // ===== Humane Gang — administration : coquille du panel (en-tête, fil d'Ariane, zone principale) =====
 //
-// Structure (admin.html) : en-tête unique (#shell-top : logo, « Tout le panel », « Voir le site », voyant, menu compte)
+// Structure (/pages/admin/admin.html) : en-tête unique (#shell-top : logo, « Tout le panel », « Voir le site », voyant, menu compte)
 // puis le corps (#shell-body) : liste facultative (#shell-col, sous-sections « liste + détail ») | zone principale (#app) |
 // panneau d'infos facultatif (#shell-info). Sur téléphone, une barre du bas (#shell-tabs) : Plateau et les lieux.
 // Il n'y a plus de rail ni de colonne de navigation : tout passe par le plateau (#plateau), les pages de lieu (#<lieu>)
@@ -24,8 +24,8 @@
 // « hg:todo-changed » les repeint). Les droits viennent de admin/perms.js (LIEUX, canSection).
 // ------------------------------------------------------
 
-import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../core.js';
-import { svg as iconSvg } from '../icons.js';
+import { $, sb, esc, signOutDevice, openPrefs, openGodDialog, disableGodMode, isGodMode, getGodMode, clearPerms } from '../../commun/core.js';
+import { svg as iconSvg } from '../../commun/icons.js';
 import { LIEUX, visibleLieux, canSection } from './perms.js';
 import { resolve } from './router.js';
 import { panelIcon } from './panel-icons.js';
@@ -182,7 +182,7 @@ function bindMenu() {
       await signOutDevice(); // retire aussi l'abonnement push de l'appareil
       try { sessionStorage.removeItem('hg_badges_checked'); } catch { /* stockage bloqué */ }
       clearPerms();
-      location.href = 'compte.html';
+      location.href = '/pages/compte/compte.html';
     }
   });
   document.addEventListener('click', (e) => { if (!el.menu.hidden && !el.menu.contains(e.target) && e.target !== el.avatar) setMenu(false); });

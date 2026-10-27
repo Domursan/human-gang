@@ -1,11 +1,11 @@
 // ===== Cartes : codes cadeaux (idée C9, migration 081) — côté membre =====
-// Un QR imprimé ouvre cartes.html#code=HG-XXXX-XXXX : la fenêtre « Code cadeau » s'ouvre, déjà remplie, avec le lot
+// Un QR imprimé ouvre /pages/cartes/cartes.html#code=HG-XXXX-XXXX : la fenêtre « Code cadeau » s'ouvre, déjà remplie, avec le lot
 // (aperçu hg_gift_code_peek) ; « Utiliser le code » appelle hg_gift_code_redeem puis recharge la page (solde, stock,
 // collection). On peut aussi taper le code à la main (encart de l'onglet Inventaire, codeBoxHtml).
 // Les erreurs du serveur (déjà utilisé, expiré, trop d'essais) sont renvoyées comme réponses, pas comme exceptions.
 // Exporte : initCodes(ctx), codeBoxHtml(), codeFromHash(hash), openCode(code).
 // ctx = { app, refresh: async () => {}, goTab: (id) => void } (fourni par cartes.js).
-import { sb, esc, toast, errMsg } from './core.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
 import { fmtP, rarityLabel } from './cartes-ui.js';
 
 let C = null;

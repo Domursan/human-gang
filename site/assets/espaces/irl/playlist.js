@@ -1,17 +1,17 @@
-// ===== Humane Gang — Playlist du gang (playlist.html), idée S8 =====
+// ===== Humane Gang — Playlist du gang (/pages/irl/playlist.html), idée S8 =====
 /*
  * Rôle : partager un morceau (lien YouTube, Spotify, Deezer ou SoundCloud ; titre et artiste remplis par l'oEmbed
  * public de YouTube ou Spotify quand c'est possible), voter pour le morceau de la semaine, réagir, écouter.
  * Le lecteur intégré (iframe) ne se charge qu'au clic sur « Écouter ici » : aucun service tiers avant ce clic.
- * Page : playlist.html (membres).
+ * Page : /pages/irl/playlist.html (membres).
  * Dépendances : core.js, reactions.js (cible « track »), contenus-ui.js.
  * Données : RPC hg_playlist (morceaux, votes, palmarès), hg_track_add, hg_track_vote, hg_members.
  * Tout texte venant de la base passe par esc(). Le fichier n'exporte rien.
  */
-import { sb, initPage, esc, $, toast, errMsg } from './core.js';
-import { loadReactions, reactionBarHtml } from './reactions.js';
+import { sb, initPage, esc, $, toast, errMsg } from '../../commun/core.js';
+import { loadReactions, reactionBarHtml } from '../../commun/reactions.js';
 import { loadPeople, pseudoOf, formDialog, fmtJour, chipsHtml, setPressed } from './contenus-ui.js';
-import { pluralWord } from './utils.js';
+import { pluralWord } from '../../commun/utils.js';
 
 const me = await initPage();
 

@@ -6,7 +6,7 @@
 // RPC hg_staff_directory (profils des membres), hg_settings (clé « cards », réglages de l'économie).
 // Exporte : refresh (relire et redessiner), boot (premier affichage).
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
 import { C, H } from './state.js';
 import { check, group, fetchAll } from './helpers.js';
 

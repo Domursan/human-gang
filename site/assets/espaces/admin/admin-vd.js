@@ -11,8 +11,8 @@
  * branchées par admin.js (modules facultatifs).
  * Dépendances : core.js, ui-confirm.js. Exporte : mountRdvSection, mountCommandesSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { confirmBox } from './ui-confirm.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 const WEEKDAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const JOURS_CINE = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];

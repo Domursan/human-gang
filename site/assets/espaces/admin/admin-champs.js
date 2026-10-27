@@ -14,9 +14,9 @@
  * si elle est exportée), ui-confirm.js (confirmations).
  * Exporte : mountChampsSection, slugId.
  */
-import { sb, toast, errMsg, esc, hasPerm } from './core.js';
-import * as PF from './profile-fields.js';
-import { confirmBox } from './ui-confirm.js';
+import { sb, toast, errMsg, esc, hasPerm } from '../../commun/core.js';
+import * as PF from '../compte/profile-fields.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 /* ---------- Constantes ---------- */
 

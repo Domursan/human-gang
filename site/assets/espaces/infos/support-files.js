@@ -1,11 +1,11 @@
 // ===== Humane Gang — pièces jointes de l'assistance (images et PDF) =====
-// Côté membre (assistance.html) : choix, compression, envoi dans le bucket privé « hg-support-files », retrait avant envoi.
+// Côté membre (/pages/infos/assistance.html) : choix, compression, envoi dans le bucket privé « hg-support-files », retrait avant envoi.
 // Côté membre et admin (fil) : affichage des pièces jointes avec des liens signés courts (5 min), vignette pour une image,
 // icône pour un PDF. Le bucket n'accepte que jpeg, png, webp, gif et PDF, 5 Mo au plus ; aucun SVG ni HTML.
 // Dépendances : core.js (sb, esc), image-compress.js (prepareImage). Exporte : constantes, prepareSupportFile,
 // uploadSupportFile, removeSupportFiles, attachmentsHtml, hydrateAttachments, fileSize.
-import { sb, esc } from './core.js';
-import { prepareImage } from './image-compress.js';
+import { sb, esc } from '../../commun/core.js';
+import { prepareImage } from '../../commun/image-compress.js';
 
 /** Bucket privé des pièces jointes (migration 078). */
 export const SUPPORT_BUCKET = 'hg-support-files';

@@ -13,13 +13,13 @@
 // Exporte : openAccount, reloadDetail, showGhostFiche, emptyDetail, showAccount, openAccountFiche, renderDetail,
 // paintSugg, selectTab, renderPanel, mountAccountsInfo, paintInfo, foldInfoGroups, refreshAccessTab, accessChanged (onglet Accès : rôles et origine des accès) (groupes repliables de l'onglet Informations).
 // =====================================================================
-import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../core.js';
+import { sb, toast, errMsg, esc, $, $$, fmtDate, fmtDateTime } from '../../../commun/core.js';
 import { ensureAccessData, memberAccessHtml } from '../admin-access.js';
 import { memberRolesHtml, refreshRolesViews } from '../admin-roles.js';
-import { renderDetailHeader } from '../admin/ui/detail-header.js';
-import { renderInfoPanel } from '../admin/ui/info-panel.js';
+import { renderDetailHeader } from '../ui/detail-header.js';
+import { renderInfoPanel } from '../ui/info-panel.js';
 import { A, H, TABS, root, CACHE, dropFicheCache } from './state.js';
-import { isAdminView } from '../admin/perms.js';
+import { isAdminView } from '../perms.js';
 import { permLabel } from '../admin-staff.js';
 import { closeDetail } from './inspect.js';
 import { profileHtml, infosHtml } from './profile.js';
@@ -27,7 +27,7 @@ import { ssHtml } from './ss.js';
 import { irlHtml, photosHtml, contribHtml, badgesHtml } from './activity.js';
 import { roleOf, selectInList } from './list.js';
 import { ghostBannerHtml, renderGhostView } from '../admin-ghosts.js';
-import { startViewAs } from '../core/view-as.js';
+import { startViewAs } from '../../../commun/core/view-as.js';
 
 /* =========================================================
    Lectures

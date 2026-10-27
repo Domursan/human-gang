@@ -1,4 +1,4 @@
-// ===== Humane Gang — page Secret Santa (secret-santa.html) =====
+// ===== Humane Gang — page Secret Santa (/pages/irl/secret-santa.html) =====
 // Une édition par an. Étapes : inscriptions, tirage, envoi des cadeaux, révélation, terminée.
 // Le membre voit : son inscription, sa liste de souhaits, la carte de sa cible (retournable, téléchargeable),
 // la liste de souhaits de la cible et ce qu'il faut savoir sur elle, la messagerie anonyme, son envoi,
@@ -7,14 +7,14 @@
 // ui-confirm.js, ss-pairs.js (paires), reglages-valeurs-lot3.js (limite de souhaits), utils.js (liens sûrs).
 // Tables et RPC : hg_ss_editions, hg_ss_participants, hg_ss_wishes, hg_ss_progress, hg_members, hg_ss_my_target,
 // hg_ss_target_info, hg_ss_reveal, hg_open_santa. N'exporte rien.
-import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC, isGodMode, godTag } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, fmtDate, fmtDateTime, daysUntil, avatarHtml, notify, LOGO_SRC, isGodMode, godTag } from '../../commun/core.js';
 import { renderCardFront, renderCardBack, downloadCanvas } from './ss-card.js';
-import { INFO_GROUPS, INFO_LABEL } from './profile-fields.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { safeUrl } from './utils.js';
+import { INFO_GROUPS, INFO_LABEL } from '../compte/profile-fields.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { safeUrl } from '../../commun/utils.js';
 import { pairsHtml, peopleByPseudo } from './ss-pairs.js';
-import { chargerReglagesLot3, reglage } from './reglages-valeurs-lot3.js';
+import { chargerReglagesLot3, reglage } from '../admin/reglages-valeurs-lot3.js';
 
 // me = personne connectée (la page exige un membre). Les réglages du lot 3 sont chargés avant le premier rendu.
 const me = await initPage({ auth: 'member' });
@@ -551,7 +551,7 @@ async function openSantaChat(btn, role) {
     if (error) throw error;
     const id = Array.isArray(data) ? data[0] : data;
     if (!id) throw new Error('conversation non créée');
-    location.href = `messages.html?c=${encodeURIComponent(id)}`;
+    location.href = `/pages/compte/messages.html?c=${encodeURIComponent(id)}`;
   } catch (e) { toast(`Messagerie indisponible : ${errMsg(e)}`, 'error'); btn.disabled = false; }
 }
 
@@ -653,7 +653,7 @@ function renderNoTarget() {
   const el = $('#ss-notarget'); if (!el) return;
   el.innerHTML = S.mine
     ? `<h2>Ta cible n’est pas encore disponible</h2>
-       <p class="muted">Tu es inscrit·e mais aucune cible ne t’a été attribuée (inscription après le tirage ?). Contacte l’admin via l’<a href="assistance.html">assistance</a>.</p>`
+       <p class="muted">Tu es inscrit·e mais aucune cible ne t’a été attribuée (inscription après le tirage ?). Contacte l’admin via l’<a href="/pages/infos/assistance.html">assistance</a>.</p>`
     : `<h2>Tu ne participes pas à cette édition</h2>
        <p class="muted">Les inscriptions sont closes. Tu peux suivre l’avancement ci-dessous${isReveal() ? ' et découvrir la révélation' : ''}. Rendez-vous l’an prochain !</p>`;
 }

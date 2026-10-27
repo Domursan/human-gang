@@ -3,7 +3,7 @@
 // Édition (sur sa propre fiche seulement) : une <dialog> qui liste ses exemplaires non recyclés.
 // Rendu : cardHtml() de cartes-ui.js. Styles : cartes-card.css + cartes-showcase.css (préfixe shw-).
 // Exporte : mountShowcase(el, { userId, isMe }) qui affiche la vitrine dans un élément de la fiche membre.
-import { sb, esc, errMsg, toast, canAccess } from './core.js';
+import { sb, esc, errMsg, toast, canAccess } from '../../commun/core.js';
 import { cardHtml, rarityRank } from './cartes-ui.js';
 
 /* ---------- Constantes ---------- */

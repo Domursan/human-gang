@@ -15,9 +15,9 @@
  * Dépendances : core.js (sb, toast, errMsg, esc), admin/common.js (sectionError, ICON), ui-confirm.js (confirmBox).
  * Exporte : mountDuelsSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { sectionError, ICON } from './admin/common.js';
-import { confirmBox } from './ui-confirm.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { sectionError, ICON } from './common.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 /* ---------- Constantes ---------- */
 

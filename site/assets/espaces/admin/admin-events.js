@@ -8,18 +8,18 @@
 // badge-levels.js, image-compress.js, ui-confirm.js, icons.js, admin/ui/* (liste, détail, drawer, pastille), admin/shell.js (navigation).
 // Exporte : toZurichInput et fromZurichInput (conversion heure suisse, réutilisées ailleurs), eventsSub (section Événements),
 // refreshEventsSection (rechargement après une modification des badges).
-import { sb, toast, errMsg, esc, $, callFn, avatarHtml, getProfile } from './core.js';
+import { sb, toast, errMsg, esc, $, callFn, avatarHtml, getProfile } from '../../commun/core.js';
 import { openBadgeEditor } from './admin-badges-edit.js';
-import { flyDynImage } from './dyn-events.js';
-import { hasLevels, sortedLevels, METRIC_LABEL } from './badge-levels.js';
-import { prepareImage } from './image-compress.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { openDrawer } from './admin/ui/drawer.js';
-import { createList } from './admin/ui/list.js';
-import { renderDetailHeader } from './admin/ui/detail-header.js';
-import { pill } from './admin/ui/common.js';
-import { navigate } from './admin/shell.js';
+import { flyDynImage } from '../../commun/dyn-events.js';
+import { hasLevels, sortedLevels, METRIC_LABEL } from '../compte/badge-levels.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { openDrawer } from './ui/drawer.js';
+import { createList } from './ui/list.js';
+import { renderDetailHeader } from './ui/detail-header.js';
+import { pill } from './ui/common.js';
+import { navigate } from './shell.js';
 
 // Fuseau de toutes les dates affichées et saisies dans cette section.
 const TZ = 'Europe/Zurich';

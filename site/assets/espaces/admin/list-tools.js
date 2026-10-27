@@ -1,8 +1,8 @@
 // Admin : outils communs des listes (recherche insensible aux accents et à la casse, compteur,
 // état vide « Aucun résultat », « Afficher plus » par lots de 50).
 // Utilisé par la plupart des sections (membres, badges, thèmes, cartes, bot…). Dépend de core.js (esc) et icons.js (loupe).
-import { esc } from '../core.js';
-import { svg } from '../icons.js';
+import { esc } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 
 // Lignes par lot (« Afficher plus ») et délai (ms) de la recherche après la dernière frappe.
 export const PAGE_SIZE = 50;

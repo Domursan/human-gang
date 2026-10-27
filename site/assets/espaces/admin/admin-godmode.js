@@ -2,7 +2,7 @@
 // Ce module ne fait qu'une chose : demander confirmation avant de supprimer les attributions d'une édition Secret Santa
 // et de refaire le tirage. Le choix « prévenir les participants par le bot » est renvoyé à l'appelant.
 // Utilisé par admin/ss-events.js. Dépendances : core.js (esc, $). Export : confirmRedo.
-import { esc, $ } from './core.js';
+import { esc, $ } from '../../commun/core.js';
 
 /* ---------- Confirmation « Refaire le tirage » (dialog dédié, avec choix de prévenir les participants) ---------- */
 // Dialogue créé une seule fois, puis réutilisé à chaque demande.

@@ -14,7 +14,7 @@ export default {
       slug: 'envoyer-un-message-prive',
       title: 'Envoyer un message privé',
       summary: "Écris à un membre en tête à tête, sans passer par le groupe.",
-      page: "messages.html",
+      page: "/pages/compte/messages.html",
       steps: [
         { title: "Ouvre Messages", text: "Depuis le menu, ouvre la page Messages. Les conversations en cours sont listées à gauche (sur mobile, sur tout l'écran)." },
         { title: "Clique sur « Nouveau message »", text: "Le bouton est en haut de la page. Une fenêtre s'ouvre avec le champ « Chercher un membre… »." },
@@ -32,7 +32,7 @@ export default {
       slug: 'lire-le-fil-d-activite',
       title: "Lire le fil d'activité",
       summary: "Suis en un coup d'œil ce qui se passe dans le gang sur l'accueil.",
-      page: "accueil.html",
+      page: "/pages/compte/accueil.html",
       steps: [
         { title: "Ouvre l'accueil", text: "La page d'accueil est le QG du Humane Gang. Le bloc « Fil d'activité » se trouve dans la rangée du bas de l'accueil, à côté des anniversaires." },
         { title: "Lis les entrées", text: "Chaque ligne indique un événement récent : une inscription, une sortie, un souvenir, un badge gagné… Le plus récent est en haut." },
@@ -48,7 +48,7 @@ export default {
       slug: 'partager-son-anniversaire',
       title: 'Partager son anniversaire',
       summary: "Fais apparaître ton anniversaire sur l'accueil du gang, sans jamais révéler ton année de naissance.",
-      page: "compte.html",
+      page: "/pages/compte/compte.html",
       steps: [
         { title: "Ouvre ton compte", text: "Depuis le menu, ouvre la page Compte." },
         { title: "Renseigne la date", text: "Dans le bloc « Profil », remplis « Date d'anniversaire ». Ce champ reste privé : seul l'admin le voit." },
@@ -66,7 +66,7 @@ export default {
       slug: 'voir-la-fiche-d-un-membre',
       title: "Voir la fiche d'un membre",
       summary: "Ouvre la carte d'identité d'un membre et parcours l'annuaire du gang.",
-      page: "membre.html",
+      page: "/pages/compte/membre.html",
       steps: [
         { title: "Ouvre l'annuaire", text: "Ouvre la page Carte de membre (ta carte s'affiche). Plus bas, la section « Le gang » liste tous les membres par ordre alphabétique." },
         { title: "Clique sur un membre", text: "Chaque ligne affiche son avatar, son pseudo et « depuis » avec le mois et l'année d'arrivée. Clique pour ouvrir sa carte." },
@@ -83,7 +83,7 @@ export default {
       slug: 'telecharger-sa-carte-d-identite',
       title: "Télécharger sa carte d'identité",
       summary: "Récupère ta carte de membre en image haute définition, à partager ou garder.",
-      page: "membre.html",
+      page: "/pages/compte/membre.html",
       steps: [
         { title: "Ouvre ta carte", text: "Depuis le menu, ouvre « Carte de membre » ou clique sur « Voir ma carte d'identité » dans la page Compte. Le titre affiché est « Ma carte »." },
         { title: "Passe la souris (facultatif)", text: "Sur ordinateur, déplace le pointeur sur la carte : elle s'incline et un reflet holographique suit la souris. Sur téléphone, cet effet est désactivé." },
@@ -100,7 +100,7 @@ export default {
       slug: 'gagner-des-badges',
       title: 'Gagner des badges',
       summary: "Découvre comment obtenir chaque badge du gang : les critères sont ceux du site.",
-      page: "membre.html",
+      page: "/pages/compte/membre.html",
       steps: [
         { title: "Ouvre tes badges", text: "Sur ta carte de membre, la section « Badges » liste ceux que tu as obtenus, avec la date d'obtention." },
         { title: "Participe au Secret Santa", text: "« Premier Noël » : une édition révélée ou terminée. « Vétéran » : {{badges.criteres.veteran_editions|5}} Secret Santa. « Liste parfaite » : au moins un souhait avant le tirage, un seul suffit. « Lutin express » : cadeau envoyé le premier de l'édition. « Sur le fil » : cadeau envoyé le dernier jour." },
@@ -118,7 +118,7 @@ export default {
       slug: 'monter-les-niveaux-d-anciennete',
       title: "Monter les niveaux de l'Ancienneté",
       summary: "Le badge Ancienneté grandit avec toi : un nouveau niveau à chaque palier d'années dans le gang.",
-      page: "membre.html",
+      page: "/pages/compte/membre.html",
       steps: [
         { title: "Repère le badge", text: "Sur ta carte de membre, cherche le badge « Ancienneté » dans la section « Badges »." },
         { title: "Lis ton niveau", text: "Le niveau actuel s'affiche sous le badge avec son nom ({{anciennete.noms_texte|Bronze, Argent, Or, Platine ou Diamant}}) et des pastilles de progression." },
@@ -135,7 +135,7 @@ export default {
       slug: 'demander-de-l-aide',
       title: "Demander de l'aide",
       summary: "Envoie une demande à l'admin depuis la page Assistance, même sans compte.",
-      page: "assistance.html",
+      page: "/pages/infos/assistance.html",
       steps: [
         { title: "Ouvre Assistance", text: "La page Assistance s\'ouvre depuis la page Aide et tutos (bouton « Contacter l\'assistance »), avec ou sans connexion." },
         { title: "Indique ton pseudo", text: "Connecté, ton pseudo est rempli tout seul. Sans compte, tape le pseudo que tu utilises dans le gang." },
@@ -153,7 +153,7 @@ export default {
       slug: 'signaler-un-bug',
       title: 'Signaler un bug',
       summary: "Dis-nous ce qui ne marche pas, et gagne peut-être le badge « Chasseur de bugs ».",
-      page: "assistance.html",
+      page: "/pages/infos/assistance.html",
       steps: [
         { title: "Ouvre le formulaire", text: "Depuis la page Aide et tutos, clique sur « Signaler un bug » : le sujet est déjà choisi." },
         { title: "Vérifie le sujet", text: "Dans la liste « Sujet », « Bug sur le site » doit être sélectionné." },
@@ -171,7 +171,7 @@ export default {
       slug: 'proposer-une-idee',
       title: 'Proposer une idée',
       summary: "Une sortie, une fonctionnalité, un thème : envoie ton idée à l'admin depuis l'accueil.",
-      page: "accueil.html#idees",
+      page: "/pages/compte/accueil.html#idees",
       steps: [
         { title: "Ouvre l'accueil", text: "Fais défiler jusqu'au bloc « Une idée pour le gang ? » tout en bas de l'accueil." },
         { title: "Écris ton idée", text: "Dans « Ton idée », décris ta proposition : une sortie, une fonctionnalité du site, un thème… 2000 caractères maximum." },
@@ -187,7 +187,7 @@ export default {
       slug: 'calendrier-du-gang',
       title: 'Suivre le calendrier du gang',
       summary: "Toutes les sorties, séances ciné, rendez-vous des groupes et anniversaires sur un seul mois, et dans ton agenda.",
-      page: "calendrier.html",
+      page: "/pages/irl/calendrier.html",
       steps: [
         { title: "Ouvre Calendrier", text: "Depuis le menu, ouvre la page Calendrier. Chaque jour porte des pastilles de couleur : sable pour les sorties IRL, vert pour les soirées, prune pour le ciné, bleu pour les groupes, rose pour les anniversaires, rouille pour le site." },
         { title: "Choisis un jour", text: "Touche un jour : la liste de ses rendez-vous s'affiche dessous, avec un bouton « Ouvrir » vers la sortie, la séance ou la page concernée." },
@@ -205,7 +205,7 @@ export default {
       slug: 'cine-club',
       title: 'Participer au ciné-club',
       summary: "Propose des films, vote pour la séance du dimanche, puis note le film vu.",
-      page: "cine.html",
+      page: "/pages/irl/cine.html",
       steps: [
         { title: "Ouvre Ciné-club", text: "Depuis le menu, ouvre la page Ciné-club. En haut, la prochaine séance : le vote en cours ou le film choisi." },
         { title: "Vote", text: "Clique sur « Voter » sous le film de ton choix. Tu peux changer d'avis jusqu'à la clôture. S'il y a trop peu de votants, la séance est reportée d'une semaine." },
@@ -223,7 +223,7 @@ export default {
       slug: 'commandes-discord',
       title: 'Utiliser les commandes Discord',
       summary: "Consulte ton solde, une carte, la prochaine sortie ou une question du gang sans ouvrir le site.",
-      page: "compte.html",
+      page: "/pages/compte/compte.html",
       steps: [
         { title: "Fais enregistrer ton ID Discord", text: "Les commandes te reconnaissent grâce à ton identifiant Discord, que seul le Staff enregistre. Vérifie sur la page Mon compte qu'il est bien rempli ; sinon, demande-le via l'assistance." },
         { title: "Tape / dans un salon", text: "Sur le serveur du gang, tape / puis choisis /paillettes, /carte, /sortie ou /quiz dans la liste du bot." },

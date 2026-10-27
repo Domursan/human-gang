@@ -4,10 +4,10 @@
 // avant / après lus dans le JSON `details`. Lecture seule. Pseudos résolus via hg_profiles (lecture admin).
 // Utilisé par admin.js (registerSub « mairie/journal ») et counts.js, anciennement overview.js (libellés d'actions).
 // Dépend de core.js (Supabase, utilitaires), admin/live.js (temps réel), admin/ui/list.js et ui/detail-header.js.
-import { sb, esc, errMsg, fmtDateTime, toast } from './core.js';
-import { onTableChange } from './admin/live.js';
-import { createList } from './admin/ui/list.js';
-import { renderDetailHeader } from './admin/ui/detail-header.js';
+import { sb, esc, errMsg, fmtDateTime, toast } from '../../commun/core.js';
+import { onTableChange } from './live.js';
+import { createList } from './ui/list.js';
+import { renderDetailHeader } from './ui/detail-header.js';
 
 // Entrées chargées par page (« Charger plus » en ajoute une autre).
 const PAGE = 50;

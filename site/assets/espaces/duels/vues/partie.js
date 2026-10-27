@@ -12,7 +12,7 @@
  * Dépendances : core.js (esc), duels/api.js (suivrePartie, messages, estInvite).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { suivrePartie, messages, estInvite } from '../api.js';
 
 const VUES = {
@@ -42,8 +42,8 @@ function vuePour(e) {
 function erreurCarte(root, code, message) {
   const invite = estInvite();
   const lien = invite
-    ? `duels.html#rejoindre/${encodeURIComponent(code)}`
-    : 'duels.html';
+    ? `/pages/jeux/duels.html#rejoindre/${encodeURIComponent(code)}`
+    : '/pages/jeux/duels.html';
   root.innerHTML = `<section class="card duels-erreur">
     <h1 class="display">Duel introuvable</h1>
     <p>${esc(message || 'Ce duel n\'existe pas ou n\'est plus disponible.')}</p>

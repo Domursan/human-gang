@@ -7,7 +7,7 @@
 // hg_quiz_questions (lecture Staff « quiz »).
 // Dépendances : core.js (sb, toast, esc, errMsg).
 // Exporte : mountQuizJour(container).
-import { sb, toast, esc, errMsg } from './core.js';
+import { sb, toast, esc, errMsg } from '../../commun/core.js';
 
 const JOUR = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
 const DIFF = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile', expert: 'Expert' };

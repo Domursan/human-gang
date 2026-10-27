@@ -7,7 +7,7 @@
  *   loup-garou/ui.js (icone, avatar, pseudo, libellePhase).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { lg, erreurTexte } from '../api.js';
 import { CAMPS, EXTENSIONS, ROLES, roleById } from '../roles.js';
 import { icone, avatar, pseudo, libellePhase } from '../ui.js';

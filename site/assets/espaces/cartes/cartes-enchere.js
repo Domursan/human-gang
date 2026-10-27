@@ -7,7 +7,7 @@
 // (« Régler cette enchère », formulaire partagé enchere-regles.js).
 // RPC : hg_auction_current (clôt aussi les enchères échues), hg_auction_bid, hg_auction_update.
 // Exporte : initEnchere(ctx), drawEnchere(). ctx = { app, visible: () => boolean, refresh: async () => {} }.
-import { sb, esc, toast, errMsg, avatarHtml } from './core.js';
+import { sb, esc, toast, errMsg, avatarHtml } from '../../commun/core.js';
 import { cardHtml, fmtP } from './cartes-ui.js';
 import { rulesFieldsHtml, readRules, rulesSummary } from './enchere-regles.js';
 

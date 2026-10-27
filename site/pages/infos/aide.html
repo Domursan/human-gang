@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://zqbdzokyhgavgmqgiwuw.supabase.co wss://zqbdzokyhgavgmqgiwuw.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <script src="assets/js/theme-boot.js"></script>
+  <script src="/assets/commun/theme-boot.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Aide et tutos · Humane Gang</title>
   <meta name="description" content="Aide du Humane Gang : des tutos pas à pas pour utiliser le site, et de quoi demander de l'aide.">
   <meta name="robots" content="noindex">
-  <link rel="canonical" href="https://humane-gang.com/aide.html">
+  <link rel="canonical" href="https://humane-gang.com/pages/infos/aide.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Humane Gang">
   <meta property="og:locale" content="fr_FR">
   <meta property="og:title" content="Aide et tutos · Humane Gang">
   <meta property="og:description" content="Des tutos pas à pas pour utiliser le site du Humane Gang.">
-  <meta property="og:url" content="https://humane-gang.com/aide.html">
+  <meta property="og:url" content="https://humane-gang.com/pages/infos/aide.html">
   <meta property="og:image" content="https://humane-gang.com/assets/img/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -23,18 +23,18 @@
   <meta name="twitter:title" content="Aide et tutos · Humane Gang">
   <meta name="twitter:description" content="Des tutos pas à pas pour utiliser le site du Humane Gang.">
   <meta name="twitter:image" content="https://humane-gang.com/assets/img/og-image.png">
-  <link rel="icon" type="image/png" href="assets/img/favicon-64.png">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/assets/images/marque/favicon-64.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/images/marque/apple-touch-icon.png">
   <meta name="theme-color" content="#0b0a10">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://zqbdzokyhgavgmqgiwuw.supabase.co">
-  <link rel="modulepreload" href="assets/vendor/supabase-js-2.45.4.mjs">
+  <link rel="modulepreload" href="/assets/vendor/supabase-js-2.45.4.mjs">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;700&display=swap">
-  <link rel="stylesheet" href="assets/css/base.css">
-  <link rel="stylesheet" href="assets/css/card-drops.css">
-  <link rel="stylesheet" href="assets/css/aide.css">
+  <link rel="stylesheet" href="/assets/commun/base.css">
+  <link rel="stylesheet" href="/assets/espaces/cartes/card-drops.css">
+  <link rel="stylesheet" href="/assets/espaces/infos/aide.css">
 </head>
 <body>
   <main class="container" id="app">
@@ -51,7 +51,7 @@
         <input id="aide-q" type="search" autocomplete="off" placeholder="ex. booster, secret santa, sortie…" maxlength="80">
         <p class="small muted" id="aide-count" aria-live="polite"></p>
       </div>
-      <p class="small muted aide-guest" id="aide-guest" hidden>Tu n'es pas connecté : tu ne vois que les tutos « Premiers pas ». <a href="compte.html">Te connecter</a> pour voir les autres.</p>
+      <p class="small muted aide-guest" id="aide-guest" hidden>Tu n'es pas connecté : tu ne vois que les tutos « Premiers pas ». <a href="/pages/compte/compte.html">Te connecter</a> pour voir les autres.</p>
       <div id="aide-groups"></div>
       <p class="card aide-empty" id="aide-empty" hidden></p>
     </section>
@@ -62,13 +62,13 @@
       <h2 id="aide-help-title">Besoin d'aide ?</h2>
       <p>Si aucun tuto ne répond à ta question, écris à l'admin. Il te répond sur Discord.</p>
       <div class="aide-help-actions">
-        <a class="btn btn-light" href="assistance.html">Contacter l'assistance</a>
-        <a class="btn btn-light" href="assistance.html?sujet=Bug%20sur%20le%20site">Signaler un bug</a>
-        <a class="btn btn-light" href="accueil.html#idees">Proposer une idée</a>
+        <a class="btn btn-light" href="/pages/infos/assistance.html">Contacter l'assistance</a>
+        <a class="btn btn-light" href="/pages/infos/assistance.html?sujet=Bug%20sur%20le%20site">Signaler un bug</a>
+        <a class="btn btn-light" href="/pages/compte/accueil.html#idees">Proposer une idée</a>
       </div>
     </section>
   </main>
-  <script type="module" src="assets/js/site-boot.js"></script>
-  <script type="module" src="assets/js/aide.js"></script>
+  <script type="module" src="/assets/commun/site-boot.js"></script>
+  <script type="module" src="/assets/espaces/infos/aide.js"></script>
 </body>
 </html>

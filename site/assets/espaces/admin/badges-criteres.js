@@ -4,10 +4,10 @@
 // core/profile.js et core/perms.js (droit d'écriture).
 // La RLS de hg_settings exige l'administrateur ou le droit « reglages » pour écrire la clé « badges » : sans l'un des deux,
 // le formulaire est affiché en lecture seule (champs désactivés, note explicative) au lieu d'échouer à l'enregistrement.
-import { sb, toast, errMsg, esc, $ } from '../core.js';
+import { sb, toast, errMsg, esc, $ } from '../../commun/core.js';
 import { busy } from './common.js';
-import { getCachedProfile } from '../core/profile.js';
-import { hasPerm } from '../core/perms.js';
+import { getCachedProfile } from '../../commun/core/profile.js';
+import { hasPerm } from '../../commun/core/perms.js';
 
 /* Vrai si l'utilisateur peut enregistrer la clé « badges » (administrateur ou droit Réglages du site). */
 const peutEcrire = () => !!getCachedProfile()?.is_admin || hasPerm('reglages');

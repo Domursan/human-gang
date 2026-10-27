@@ -12,9 +12,9 @@
  * Dépendances : core.js (esc), plateaux/api.js (suivrePartie, messages, estInvite, contenus, jeu).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { suivrePartie, messages, estInvite, contenus, jeu } from '../api.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 
 const VUES = {
   salle: () => import('./salle.js'),

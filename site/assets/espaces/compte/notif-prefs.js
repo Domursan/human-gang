@@ -2,15 +2,15 @@
 /*
  * Rôle : une ligne par catégorie, deux interrupteurs (« Sur ce téléphone » pour le push, « Sur Discord » pour les MP du bot),
  * le grand interrupteur « Le bot peut m'écrire sur Discord » (hg_profiles.bot_optin) et les heures calmes.
- * Page : compte.html (monté par compte.js à côté du bloc « Notifications sur cet appareil »).
+ * Page : /pages/compte/compte.html (monté par compte.js à côté du bloc « Notifications sur cet appareil »).
  * Dépendances : core.js (sb, toast, errMsg, esc).
  * Tables / RPC : hg_notif_prefs (lecture de sa ligne), hg_set_notif_prefs (écriture, migration 095), hg_profiles (bot_optin).
  * Réglages par défaut = comportement d'avant : clé absente = autorisé ; « Sorties IRL » sur Discord reprend remind_irl
  * (rappels de sortie) et « Cartes · souhaits » sur Discord reprend notify_card_wish ; la RPC tient ces colonnes à jour.
  * Exporte : NOTIF_ROWS, mountNotifPrefs.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { loadMyPages, canAccess, pageLabel } from './core/pages-access.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { loadMyPages, canAccess, pageLabel } from '../../commun/core/pages-access.js';
 
 /**
  * Catégories affichées : [clé, titre, détail, push disponible, page requise (facultatif : la ligne n'apparaît que si la page est déclarée et ouverte au membre)]. Le push n'est envoyé aujourd'hui que pour les messages :

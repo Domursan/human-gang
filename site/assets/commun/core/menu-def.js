@@ -9,23 +9,23 @@
  */
 export const MENUS = [
   { id: 'cartes', label: 'Le jeu de cartes', items: [
-    // cpt : clé de la pastille de compteur (assets/js/core/badges-compteur.js), absente = pas de compteur
-    { label: 'Ouverture', href: 'cartes.html#ouverture', page: 'cartes', cpt: 'cartes.ouverture' },
-    { label: 'Inventaire', href: 'cartes.html#inventaire', page: 'cartes' },
-    { label: 'Boutique', href: 'cartes.html#boutique', page: 'cartes' },
-    { label: 'Mes cartes', href: 'cartes.html#collection', page: 'cartes' },
-    { label: 'Classement', href: 'cartes.html#classement', page: 'cartes' },
-    { label: 'Échanges', href: 'cartes.html#echanges', page: 'cartes', cpt: 'cartes.echanges' },
-    { label: 'Arène', href: 'cartes.html#arene', page: 'cartes' },
+    // cpt : clé de la pastille de compteur (/assets/commun/core/badges-compteur.js), absente = pas de compteur
+    { label: 'Ouverture', href: '/pages/cartes/cartes.html#ouverture', page: 'cartes', cpt: 'cartes.ouverture' },
+    { label: 'Inventaire', href: '/pages/cartes/cartes.html#inventaire', page: 'cartes' },
+    { label: 'Boutique', href: '/pages/cartes/cartes.html#boutique', page: 'cartes' },
+    { label: 'Mes cartes', href: '/pages/cartes/cartes.html#collection', page: 'cartes' },
+    { label: 'Classement', href: '/pages/cartes/cartes.html#classement', page: 'cartes' },
+    { label: 'Échanges', href: '/pages/cartes/cartes.html#echanges', page: 'cartes', cpt: 'cartes.echanges' },
+    { label: 'Arène', href: '/pages/cartes/cartes.html#arene', page: 'cartes' },
   ] },
   { id: 'irl', label: 'IRL', items: [
-    { label: 'Secret Santa', href: 'secret-santa.html', page: 'secret-santa' },
-    { label: 'IRL', href: 'irl.html', page: 'irl' },
-    { label: 'Historique', href: 'historique.html', page: 'historique' },
+    { label: 'Secret Santa', href: '/pages/irl/secret-santa.html', page: 'secret-santa' },
+    { label: 'IRL', href: '/pages/irl/irl.html', page: 'irl' },
+    { label: 'Historique', href: '/pages/irl/historique.html', page: 'historique' },
   ] },
-  // Jeux : un lien direct vers la page des cartes de jeux (jeux.html), qui range tous les jeux par section.
-  { id: 'jeux', label: 'Jeux', href: 'jeux.html', page: 'jeux' },
-  { id: 'calendrier', label: 'Calendrier', href: 'calendrier.html', page: 'calendrier' },
+  // Jeux : un lien direct vers la page des cartes de jeux (/pages/jeux/jeux.html), qui range tous les jeux par section.
+  { id: 'jeux', label: 'Jeux', href: '/pages/jeux/jeux.html', page: 'jeux' },
+  { id: 'calendrier', label: 'Calendrier', href: '/pages/irl/calendrier.html', page: 'calendrier' },
   { id: 'autres', label: 'Autres', auto: true },
 ];
 

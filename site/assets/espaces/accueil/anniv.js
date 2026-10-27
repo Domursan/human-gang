@@ -3,15 +3,15 @@
  * Rôle : pendant la fenêtre de l'anniversaire du gang (par défaut du 7 au 9 janvier, réglable), remplace la bannière
  * « Joyeux anniversaire » par un encart « Le gang a N ans » sur l'accueil et la page Cartes : un gros chiffre, le cadeau
  * à réclamer une fois (booster « Anniversaire » dans le stock + carte datée de l'année) et un aperçu de la rétrospective
- * (recap.html?retro=1). Le jour même, la part de gâteau (secret « anniversaire ») reste à prendre.
+ * (/pages/irl/recap.html?retro=1). Le jour même, la part de gâteau (secret « anniversaire ») reste à prendre.
  * RPC : hg_anniv_me, hg_anniv_claim, hg_gang_retro. Le serveur vérifie la fenêtre (heure de Zurich) et ne donne qu'une fois.
  * Dépendances : core.js (sb, esc, toast, errMsg), cartes-ui.js (cardHtml), eggs/api.js (eggFound), saisons-css.js.
  * Exporte : mountAnniv({ today }).
  */
-import { sb, esc, toast, errMsg } from './core.js';
-import { cardHtml } from './cartes-ui.js';
-import { eggFound } from './eggs/api.js';
-import { svg } from './icons.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
+import { cardHtml } from '../cartes/cartes-ui.js';
+import { eggFound } from '../arcade/api.js';
+import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
@@ -30,7 +30,7 @@ function giftHtml(st) {
         ${st.claimed ? `<span class="pill pill-ok">${svg('check', { size: 14 })} Reçu</span>` : ''}
         ${st.card ? '<p class="sz-small sz-muted">Carte Légendaire datée, introuvable dans les boosters.</p>' : ''}
         ${b ? `<p class="sz-small sz-muted">${st.claimed ? 'Booster ajouté à ton stock.' : 'Un booster à ouvrir quand tu veux.'}</p>` : ''}
-        ${st.claimed ? '<p style="margin:0"><a class="btn btn-ghost" href="cartes.html#ouverture">Ouvrir le booster</a></p>' : ''}
+        ${st.claimed ? '<p style="margin:0"><a class="btn btn-ghost" href="/pages/cartes/cartes.html#ouverture">Ouvrir le booster</a></p>' : ''}
       </div></div></section>`;
 }
 
@@ -46,7 +46,7 @@ function retroHtml(r, age) {
   const chips = [[t.sorties, 'sorties'], [t.photos, 'photos'], [t.secret_santa, 'Secret Santa'], [t.souvenirs, 'souvenirs']]
     .filter(([n]) => Number(n) > 0).map(([n, l]) => `<span class="pill">${nf.format(Number(n))} ${l}</span>`).join('');
   return `<section class="sz-card an-retro" aria-labelledby="an-r-t"><div class="sz-between"><h3 class="sz-h3" id="an-r-t">Rétrospective · ${esc(age)} ans</h3>
-    <a class="sz-small" href="recap.html?retro=1">Voir la story</a></div>
+    <a class="sz-small" href="/pages/irl/recap.html?retro=1">Voir la story</a></div>
     <ul class="an-years">${lines}</ul><div class="an-chips">${chips}</div></section>`;
 }
 
@@ -78,7 +78,7 @@ export async function mountAnniv(opts = {}) {
           <p class="sz-small sz-muted">Merci d’être là. Ton cadeau t’attend jusqu’au ${esc(dm(s.fin))}.</p>
           <div class="btn-row">
             <button class="btn btn-sand" type="button" data-an="claim" ${s.claimed ? 'disabled' : ''}>${svg('gift', { size: 16 })} ${s.claimed ? 'Cadeau ouvert' : 'Ouvrir mon cadeau'}</button>
-            <a class="btn btn-ghost" href="recap.html?retro=1">Revoir les ${esc(s.age)} ans</a>
+            <a class="btn btn-ghost" href="/pages/irl/recap.html?retro=1">Revoir les ${esc(s.age)} ans</a>
             ${opts.today ? `<button class="btn btn-ghost" type="button" data-an="cake">${svg('cake', { size: 16 })} Ta part de gâteau</button>` : ''}
           </div>
         </div>

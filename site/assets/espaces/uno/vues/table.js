@@ -11,11 +11,11 @@
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi } ; suivi = retour de suivrePartie (rafraichir, secondesRestantes, etat).
  */
-import { esc, initials, toast } from '../../core.js';
+import { esc, initials, toast } from '../../../commun/core.js';
 import { uno, erreurTexte } from '../api.js';
 import { carteHtml, dosHtml, COULEURS } from '../cartes.js';
 import { creerChat } from './chat.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 
 const RAYON = 16;
 const CIRCONFERENCE = 2 * Math.PI * RAYON;

@@ -5,14 +5,14 @@
  *   Famille (52 à 61) ou Aventure (62 à 71) ; puis 72 à 90 (retraite).
  *   Les positions viennent d'un tracé en polylignes (repère 640 × 560 de la maquette), échantillonnées
  *   à égale distance : elles sont en % du plan, donc elles suivent la largeur de l'écran.
- *   Si une image de fond existe (assets/img/plateaux/destins/plateau.webp, 2000 × 2000), elle sert de fond.
+ *   Si une image de fond existe (/assets/images/plateaux/destins/plateau.webp, 2000 × 2000), elle sert de fond.
  *   Ce module ne fait que du HTML : table.js décide quand le refaire.
  * Dépendances : core.js (esc).
  * Exporte : POSITIONS (91 paires [x, y] en %), LIBELLES (type de case -> nom affiché), plateauHtml(opts) -> HTML.
  *   opts = { image: string|null, types: [type de case, index 0..90], pions: [{couleur, initiale, pseudo, nom, invite, case}],
  *            prochaine: index|null, moi: index|null }
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 const LARGEUR = 640;
 const HAUTEUR = 560;
@@ -68,7 +68,7 @@ function construire() {
 /** Positions des 91 cases (index = case), dessin de repli. */
 export const POSITIONS = construire();
 
-/* Tracé sur l'image du chemin de vie (assets/img/plateaux/destins/plateau.webp, 1024 × 1024) : le long de ses routes,
+/* Tracé sur l'image du chemin de vie (/assets/images/plateaux/destins/plateau.webp, 1024 × 1024) : le long de ses routes,
    départ au village en haut à gauche, Université vers le campus en haut à droite, Carrière par la route du milieu,
    vie d'adulte à travers la ville, Famille vers le quartier des jardins, Aventure vers le lac et l'aérodrome,
    retraite par le domaine jusqu'au village du bord de mer. */

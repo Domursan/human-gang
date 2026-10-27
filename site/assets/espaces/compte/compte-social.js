@@ -1,9 +1,9 @@
-// ===== Humane Gang — carte « Entraide et liens » du compte (idées P6, P7, P8 ; compte.html) =====
+// ===== Humane Gang — carte « Entraide et liens » du compte (idées P6, P7, P8 ; /pages/compte/compte.html) =====
 // Une carte de la page Mon compte : compétences (P7, skills.js), « Je veux bien parrainer » (P8) et
 // « Ne pas afficher nos souvenirs communs » (P6). Les deux cases s'enregistrent dès qu'on les coche.
 // Colonnes : hg_profiles.mentor_volunteer et hg_profiles.hide_friendship (migration 091), table hg_member_skills.
 // Exporte : mountSocialCard(el, me).
-import { sb, toast, errMsg } from './core.js';
+import { sb, toast, errMsg } from '../../commun/core.js';
 import { mountSkillEditor } from './skills.js';
 
 /**

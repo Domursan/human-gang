@@ -6,9 +6,9 @@
 // Dépendances : core.js (Supabase, toast, notify, mode sans limite, balise « god »), ui-confirm.js (confirmation), icons.js (icônes).
 // Tables et RPC : rpc hg_ss_manual_draw (enregistre les paires), table hg_ss_assignments (tirage de l'an dernier).
 // Exporte : analyse (contrôle des choix), completeRandom (complétion au hasard), openManualDraw (ouvre l'éditeur).
-import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
+import { sb, toast, errMsg, esc, $, notify, isGodMode, godTag } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
 
 /* ---------- Constantes et état ---------- */
 // Icônes SVG des lignes (OK, avertissement, erreur) et du bouton « Compléter au hasard ».

@@ -12,16 +12,16 @@
  * Droit : administrateur seulement (attribut data-admin-only). Aucune permission Staff.
  * Section : <section id="plateaux">, conteneur #plateaux-root (monté par admin.js).
  * Onglet choisi : paramètre ?jeu= de l'adresse (remplacé sans recharger la page), sinon localStorage.
- * Appels : via plat (assets/js/plateaux/api.js) : adminReglages, adminEnregistrer, adminContenu, adminArreter.
+ * Appels : via plat (/assets/espaces/plateaux/api.js) : adminReglages, adminEnregistrer, adminContenu, adminArreter.
  *   Les écritures sont bornées côté serveur (migration 125) ; ici on vérifie la saisie pour un retour immédiat.
  * Dépendances : core.js (toast, errMsg, esc), admin/common.js (sectionError, ICON), ui-confirm.js (confirmBox),
  *   plateaux/api.js (plat, JEUX).
  * Exporte : mountPlateauxSection.
  */
-import { toast, errMsg, esc } from './core.js';
-import { sectionError, ICON } from './admin/common.js';
-import { confirmBox } from './ui-confirm.js';
-import { plat, JEUX } from './plateaux/api.js';
+import { toast, errMsg, esc } from '../../commun/core.js';
+import { sectionError, ICON } from './common.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { plat, JEUX } from '../plateaux/api.js';
 
 /* ---------- Constantes ---------- */
 

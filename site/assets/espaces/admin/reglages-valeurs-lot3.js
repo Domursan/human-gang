@@ -6,8 +6,8 @@
 // Dépendances : core/supabase.js (client Supabase), admin-reglages/keys-lot3.js (liste des champs et défauts).
 // Exporte : chargerReglagesLot3, reglage, majReglagesLot3, objetLot3 et les raccourcis (delaiPassee, etc.).
 // =====================================================================
-import { sb } from './core/supabase.js';
-import { CHAMPS_LOT3, CLES_LOT3 } from './admin-reglages/keys-lot3.js';
+import { sb } from '../../commun/core/supabase.js';
+import { CHAMPS_LOT3, CLES_LOT3 } from './reglages/keys-lot3.js';
 
 /* ---------- État en mémoire ---------- */
 // Index « cle.champ » -> définition du champ, pour retrouver vite un réglage par son nom.

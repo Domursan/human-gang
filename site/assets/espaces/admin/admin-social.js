@@ -9,10 +9,10 @@
  * Exporte : mountSocialSection, validateSocial.
  * (Ce fichier réunit aussi les sections de la migration 091 : Parrainage, Compétences, Accueil des membres, plus bas.)
  */
-import { sb, esc, toast, errMsg } from './core.js';
-import { DEFAULT_SOCIAL } from './social.js';
-import { confirmBox } from './ui-confirm.js';
-import { HOME_BLOCKS, HOME_DEFAULT } from './home-registry.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
+import { DEFAULT_SOCIAL } from '../compte/social.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { HOME_BLOCKS, HOME_DEFAULT } from '../accueil/home-registry.js';
 import { slugId } from './admin-champs.js';
 
 /** Plafonds réglables : clé, libellé, minimum, maximum (mêmes bornes que le serveur). */

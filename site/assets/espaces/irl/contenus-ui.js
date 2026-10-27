@@ -1,12 +1,12 @@
 // ===== Humane Gang — outils communs des pages « Contenu et souvenirs » =====
-// Citations (citations.html), Playlist (playlist.html).
+// Citations (/pages/irl/citations.html), Playlist (/pages/irl/playlist.html).
 /*
  * Rôle : petites briques partagées par ces deux pages : annuaire des membres, dates à l'heure de Zurich,
  * boîte de dialogue de formulaire (vrai <dialog>, focus, Échap, message d'erreur), filtres en pastilles.
  * Dépendances : core.js (sb, esc, errMsg).
  * Exporte : FUSEAU, fmtJour, fmtMois, loadPeople, pseudoOf, formDialog, chipsHtml, setPressed.
  */
-import { sb, esc, errMsg } from './core.js';
+import { sb, esc, errMsg } from '../../commun/core.js';
 
 /** Fuseau d'affichage : toujours l'heure de Zurich, quel que soit l'appareil. */
 export const FUSEAU = 'Europe/Zurich';

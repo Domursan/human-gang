@@ -1,5 +1,5 @@
 // ===== Humane Gang — administration : liens d'invitation (hg_invite_links) =====
-// Un lien public (rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
+// Un lien public (/pages/infos/rejoindre.html?l=<token>) donne à chaque visiteur un code unique HG-XXXXXX valable 48 h.
 // Rôle : créer, activer / désactiver, copier, afficher en QR code et supprimer les liens d'invitation, et voir les codes
 // qu'ils ont générés. Règle aussi les codes (durée, limite par heure, préfixe) dans hg_settings.invites.
 // Valeurs par défaut d'un nouveau lien (limite de codes, durée) : même clé hg_settings.invites, lues par le trigger SQL.
@@ -8,11 +8,11 @@
 // Tables et RPC : hg_invite_links (liens), hg_invites (codes, lien d'origine = link_id), hg_settings (clé 'invites').
 // Exporte : inviteLinkUrl (URL publique d'un lien), openLinkDrawer (tiroir « Nouveau lien »),
 // mountInviteLinks (montage), refreshInviteLinks (re-rendu).
-import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, isGodMode } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { openDrawer } from './admin/ui/drawer.js';
-import { INVITE_DEFAULTS, INVITE_LIMITS, LIEN_DEFAULTS, LIEN_LIMITS, normalizeInviteConfig, normalizeLienDefaults, inviteConfig, lienConfig, loadInviteConfig, applyInviteRaw } from './invite-config.js';
+import { sb, toast, errMsg, esc, $, fmtDate, fmtDateTime, godLimitAttr, godTag, isGodMode } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { openDrawer } from './ui/drawer.js';
+import { INVITE_DEFAULTS, INVITE_LIMITS, LIEN_DEFAULTS, LIEN_LIMITS, normalizeInviteConfig, normalizeLienDefaults, inviteConfig, lienConfig, loadInviteConfig, applyInviteRaw } from '../compte/invite-config.js';
 
 /* ---------- Constantes et état ---------- */
 // Icônes SVG des boutons Copier, QR code et Supprimer.
@@ -22,7 +22,7 @@ const IC = {
   qr: svg('qr', { stroke: 2 }),
 };
 // Bibliothèque QR code (version figée), chargée seulement au premier clic sur « QR code ».
-const QR_LIB = '../vendor/qrcode-generator-1.4.4.mjs';
+const QR_LIB = '../../vendor/qrcode-generator-1.4.4.mjs';
 
 // État de la section : racine, admin connecté, fonctions de pseudo et de rappel, liens et codes chargés,
 // sections « Codes » ouvertes, erreurs de chargement, règles lues (rulesRaw : undefined = pas encore lues, null = valeurs par défaut).
@@ -57,7 +57,7 @@ async function copyText(text) {
 
 /** URL publique du lien, calculée depuis l'adresse de la page (fonctionne aussi sous /human-gang/ sur GitHub Pages). */
 export function inviteLinkUrl(token) {
-  const u = new URL('rejoindre.html', `${location.origin}${location.pathname}`);
+  const u = new URL('/pages/infos/rejoindre.html', `${location.origin}${location.pathname}`);
   u.searchParams.set('l', token);
   return u.href;
 }

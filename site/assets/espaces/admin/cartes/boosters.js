@@ -15,15 +15,15 @@
 // Contrat 071 : création { create: true, id, … } ; modification { id, …champs changés } ; réponse { type, created, free_daily_removed_from }.
 // Statistiques : { types: [{ id, sales: { d7|d30|total: { boosters, paillettes } }, opens: { total… }, stock: { total, holders }, gifts: { total… } }], opens_since }.
 // =====================================================================
-import { sb, toast, errMsg, esc, $, $$, currentLogo, hasPerm } from '../core.js';
-import { rarityLabel } from '../cartes-ui.js';
-import { openDrawer } from '../admin/ui/drawer.js';
+import { sb, toast, errMsg, esc, $, $$, currentLogo, hasPerm } from '../../../commun/core.js';
+import { rarityLabel } from '../../cartes/cartes-ui.js';
+import { openDrawer } from '../ui/drawer.js';
 import { CFG_DEFAULT, RARITY_IDS, ICON } from './constants.js';
 import { check, nf } from './helpers.js';
 import { saisonDefaults, saisonSectionHtml, readSaison, validateSaison, saisonPayload } from './boosters-saison.js';
-import { BOOSTER_STYLES, BOOSTER_STYLE_LIST, BOOSTER_STYLE_FAMILIES, boosterStyleClass } from '../booster-styles.js';
-import { themeDecor } from '../booster-themes.js';
-import { confirmBox } from '../ui-confirm.js';
+import { BOOSTER_STYLES, BOOSTER_STYLE_LIST, BOOSTER_STYLE_FAMILIES, boosterStyleClass } from '../../cartes/booster-styles.js';
+import { themeDecor } from '../../cartes/booster-themes.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 
 /* ---------- Constantes ---------- */
 /** Les 56 styles de cartouche (9 d'origine + 30 couleurs + 14 thèmes + 3 de saison) : liste de référence dans booster-styles.js. */
@@ -88,7 +88,7 @@ function cartHtml(t, s = 0.3) {
 /** Charge cartes-boosters.css (9 styles d'origine) et boosters-styles.css (30 couleurs) une seule fois. */
 function ensureCss() {
   if (document.querySelector('link[data-abt-css]')) return;
-  ['assets/css/cartes-boosters.css', 'assets/css/boosters-styles.css'].forEach((href) => {
+  ['/assets/espaces/cartes/cartes-boosters.css', '/assets/espaces/cartes/boosters-styles.css'].forEach((href) => {
     const l = document.createElement('link');
     l.rel = 'stylesheet';
     l.href = href;
@@ -324,7 +324,7 @@ function render() {
   B.root.innerHTML = `<div class="abt">
     <div class="acd-head">
       <p class="small muted">Les types de boosters vendus dans la Boutique, dans l’ordre d’affichage. Un type retiré n’est plus vendu, mais le stock des joueurs reste ouvrable. L’affiche A3 de la gamme lit les types actifs à l’ouverture : elle suit tes changements.</p>
-      <div class="btn-row"><a class="btn btn-ghost" href="affiches/boosters-gamme-a3.html" target="_blank" rel="noopener">Voir l’affiche</a>
+      <div class="btn-row"><a class="btn btn-ghost" href="/affiches/boosters-gamme-a3.html" target="_blank" rel="noopener">Voir l’affiche</a>
       ${B.canWrite ? `<button class="btn btn-primary" type="button" data-bt="new">${ICON.plus} Nouveau type</button>` : ''}</div>
     </div>
     ${B.canWrite ? '' : '<p class="acd-note" role="note">Lecture seule : il faut la permission « Jeu de cartes » pour modifier les boosters.</p>'}

@@ -9,9 +9,9 @@
  * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, JEUX, ROBOTS), vues/commun.js (avatarHtml, nomJoueur).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, JEUX, ROBOTS, jeuxVisibles } from '../api.js';
-import { avatarPresence } from '../../core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
+import { avatarPresence } from '../../../commun/core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, nomJoueur } from './commun.js';
 
 const FORMATS = [[1, '1 manche'], [3, 'Au meilleur des 3'], [5, 'Au meilleur des 5']];
@@ -84,7 +84,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
 
   const jeuxHtml = Object.entries(jeuxVisibles()).map(([cle, j]) => `<label class="duels-jeu">
       <input class="visually-hidden" type="radio" name="jeu" value="${esc(cle)}">
-      <img class="duels-vignette" src="assets/img/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
+      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
       <span class="duels-jeu-nom">${esc(j.nom)}</span>
       ${j.dev ? '<span class="duels-dev">En développement</span>' : ''}
       <span class="duels-choix-etat">${CHECK}<span>Sélectionné</span></span>
@@ -92,7 +92,7 @@ export async function afficher(root, { arg, arg2, naviguer }) {
     </label>`).join('');
 
   root.innerHTML = `
-    <p class="duels-fil"><a href="duels.html">Duels</a> › Nouveau duel</p>
+    <p class="duels-fil"><a href="/pages/jeux/duels.html">Duels</a> › Nouveau duel</p>
     <h1 class="duels-titre">Nouveau duel</h1>
     <p class="duels-sous">Trois étapes, puis tu envoies le défi.</p>
 

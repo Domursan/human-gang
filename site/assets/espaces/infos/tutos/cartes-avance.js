@@ -14,7 +14,7 @@ export default {
       slug: 'proposer-un-echange',
       title: 'Proposer un échange',
       summary: 'Donner des cartes en double contre des cartes qui te manquent, avec ou sans Paillettes.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre l’onglet Échanges', text: 'Sur Cartes, touche « Échanges », puis le sous-onglet « Proposer ».' },
         { title: 'Choisis le membre', text: 'Dans la liste « Membre », choisis la personne à qui tu fais l’offre, puis touche « Composer l’offre ».' },
@@ -34,7 +34,7 @@ export default {
       slug: 'repondre-a-une-offre',
       title: 'Répondre à une offre reçue',
       summary: 'Accepter, refuser ou annuler une offre d’échange, et comprendre le message Discord qui la signale.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre les offres reçues', text: 'Sur Cartes, touche « Échanges », puis le sous-onglet « Reçues ». Le nombre entre parenthèses indique les offres en attente.' },
         { title: 'Lis l’offre', text: 'Chaque carte d’offre montre ce que le membre te donne, ce qu’il te demande, les Paillettes éventuelles et son message.' },
@@ -52,7 +52,7 @@ export default {
       slug: 'contre-proposition',
       title: 'Faire une contre-proposition',
       summary: 'Modifier une offre reçue au lieu de l’accepter ou de la refuser.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre l’offre reçue', text: 'Sur Cartes, touche « Échanges », puis « Reçues », et repère l’offre à modifier.' },
         { title: 'Touche « Contre-proposer »', text: 'La fenêtre s’ouvre avec le titre « Contre-proposition à… » et l’offre d’origine déjà remplie : les cartes données et demandées sont reprises.' },
@@ -69,7 +69,7 @@ export default {
       slug: 'offrir-une-carte',
       title: 'Offrir une carte en cadeau',
       summary: 'Donner une carte à un membre sans rien demander en retour.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre l’onglet Proposer', text: 'Sur Cartes, touche « Échanges », puis « Proposer ». Choisis le membre et touche « Composer l’offre ».' },
         { title: 'Choisis la ou les cartes', text: 'Dans « Je donne », sélectionne au moins une carte. Les cartes et Paillettes demandées ne sont pas prises en compte pour un cadeau.' },
@@ -86,7 +86,7 @@ export default {
       slug: 'preparer-un-echange',
       title: 'Préparer un échange avec un membre',
       summary: 'Voir la collection d’un membre, repérer les correspondances et proposer un échange sur mesure.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre la fiche du membre', text: 'Sur ta page « Carte d’identité », la liste du gang à côté de la carte mène à la fiche de chaque membre. Ouvre celle du membre avec qui tu veux échanger.' },
         { title: 'Voir sa collection', text: 'Touche « Voir sa collection ». Tu vois ses cartes : elles te servent à repérer ce qui t’intéresse.' },
@@ -102,7 +102,7 @@ export default {
       slug: 'quetes-de-la-semaine',
       title: 'Les quêtes de la semaine',
       summary: 'Accomplir les quêtes de la semaine et réclamer leurs Paillettes.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Trouve le bloc des quêtes', text: 'Sur Cartes, onglet « Ouverture », le bloc « Quêtes de la semaine » se trouve sous la zone d’ouverture des boosters.' },
         { title: 'Lis l’avancement', text: 'Chaque quête affiche sa barre de progression et le compte « X / Y ». Elle se remplit toute seule au fil de tes actions (ouvrir des boosters, conclure un échange, etc.).' },
@@ -119,7 +119,7 @@ export default {
       slug: 'defis-du-gang',
       title: 'Les défis du gang',
       summary: 'Suivre l’objectif collectif en cours, dont chaque membre touche la récompense.',
-      page: 'accueil.html',
+      page: '/pages/compte/accueil.html',
       steps: [
         { title: 'Repère le bloc « Défi du gang »', text: 'Sur l’accueil, le bloc « Défi du gang » apparaît quand un défi est en cours. Sans défi actif, il reste masqué.' },
         { title: 'Lis l’objectif', text: 'Chaque défi a un titre, une description, une barre de progression et un compteur « X / Y » sur l’action visée.' },
@@ -136,7 +136,7 @@ export default {
       slug: 'classement',
       title: 'Lire le classement',
       summary: 'Comprendre comment le score est calculé et ce que disent les lignes du classement.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre l’onglet Classement', text: 'Sur Cartes, touche « Classement ».' },
         { title: 'Lis le score', text: 'Le score additionne la valeur de toutes les cartes possédées. Une carte brillante compte double.' },
@@ -153,7 +153,7 @@ export default {
       slug: 'vitrine',
       title: 'Ta vitrine sur ta fiche membre',
       summary: 'Mettre en avant jusqu’à trois cartes de ta collection sur ta fiche membre.',
-      page: 'membre.html',
+      page: '/pages/compte/membre.html',
       steps: [
         { title: 'Ouvre ta fiche membre', text: 'Dans Compte, touche « Voir ma carte d’identité ». La section « Vitrine » est sur cette page.' },
         { title: 'Touche « Modifier ma vitrine »', text: 'Le bouton n’apparaît que sur ta propre fiche. La fenêtre « Ma vitrine » s’ouvre.' },
@@ -187,7 +187,7 @@ export default {
       slug: 'series-completees',
       title: 'Compléter une série',
       summary: 'Repérer ta progression dans une série et toucher la récompense quand elle est complète.',
-      page: 'cartes.html',
+      page: '/pages/cartes/cartes.html',
       steps: [
         { title: 'Ouvre la collection', text: 'Sur Cartes, touche « Mes cartes ». Dans la liste « Série », choisis une série ou « Toutes les séries ».' },
         { title: 'Lis la progression', text: 'Chaque série affiche ses cartes possédées sur le total et une barre de progression.' },
@@ -204,7 +204,7 @@ export default {
       slug: 'questions-du-gang',
       title: 'Répondre aux questions du gang',
       summary: 'Répondre aux questions de l’admin, filtrer par difficulté et gagner des Paillettes si ta réponse est juste.',
-      page: 'quiz.html',
+      page: '/pages/jeux/quiz.html',
       steps: [
         { title: 'Ouvre la page', text: 'Sur Cartes, dans l’encart « Questions du gang » sous les quêtes, touche le lien. Tu peux aussi ouvrir « Questions du gang » depuis le menu.' },
         { title: 'Lis le résumé', text: 'En haut, tu vois les questions ouvertes, tes bonnes réponses et les Paillettes gagnées grâce aux questions.' },

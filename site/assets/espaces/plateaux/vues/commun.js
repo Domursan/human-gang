@@ -2,12 +2,12 @@
 /*
  * Rôle : petites fonctions communes à Cluedo, Shadow Hunters, Destins, Monopoly et Risk (avatars, pseudos,
  * bandeau du haut de table, chrono, journal, envoi sécurisé, lecture de l'état).
- * Les signatures sont fixes : les tables (assets/js/plateaux/jeux/<jeu>/table.js) les importent telles quelles.
+ * Les signatures sont fixes : les tables (/assets/espaces/plateaux/jeux/<jeu>/table.js) les importent telles quelles.
  * Dépendances : core.js (esc, avatarHtml, toast), plateaux/api.js (jeu, erreurTexte).
  * Exporte : avatarHtml, pseudoHtml, joueurDe, bandeauHtml, brancherChrono, journalHtml, imagePlateau,
  *           envoyer, moiJoueur, estMonTour.
  */
-import { esc, avatarHtml as avatarCore, toast } from '../../core.js';
+import { esc, avatarHtml as avatarCore, toast } from '../../../commun/core.js';
 import { erreurTexte } from '../api.js';
 
 const GRIS_INVITE = '#9A968F';
@@ -136,7 +136,7 @@ export function journalHtml(journal, etat) { // eslint-disable-line no-unused-va
  * @returns {string} chemin relatif.
  */
 export function imagePlateau(jeuId, nom) {
-  return `assets/img/plateaux/${jeuId}/${nom}.webp`;
+  return `/assets/images/plateaux/${jeuId}/${nom}.webp`;
 }
 
 /**

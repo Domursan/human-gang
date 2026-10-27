@@ -12,7 +12,7 @@
  * Dépendances : ../core.js (currentLogo, motionAllowed, effectsEnabled, playSound, sb, hasSession), ./api.js (eggFound).
  * Exporte : initEggs(), tryWordSecret(mot) (utilisée par la loupe de recherche, core/search.js).
  */
-import { currentLogo, motionAllowed, effectsEnabled, playSound, sb, hasSession } from '../core.js';
+import { currentLogo, motionAllowed, effectsEnabled, playSound, sb, hasSession } from '../../commun/core.js';
 import { eggFound } from './api.js';
 
 /* ---------- Constantes ---------- */
@@ -99,13 +99,13 @@ function ecritureStock(cle, valeur) {
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 /**
- * Charge la feuille de style des secrets (assets/css/eggs.css), une seule fois.
+ * Charge la feuille de style des secrets (/assets/espaces/arcade/eggs.css), une seule fois.
  */
 function chargeCss() {
   if (document.querySelector('link[data-eggs]')) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL('../../css/eggs.css', import.meta.url).href;
+  l.href = new URL('./eggs.css', import.meta.url).href;
   l.dataset.eggs = '';
   document.head.append(l);
 }
@@ -572,7 +572,7 @@ async function verifieAnniversaire() {
     // Fenêtre de l'anniversaire du serveur (migration 096) : encart « Le gang a N ans » à la place de la bannière.
     if (data?.anniversaire_fenetre === true && Number(data.anniversaire_age) > 0) {
       try {
-        const { mountAnniv } = await import('../anniv.js');
+        const { mountAnniv } = await import('../accueil/anniv.js');
         if (await mountAnniv({ today: data.anniversaire_aujourdhui === true })) encart = true;
       } catch { /* module indisponible : bannière d'origine */ }
     }
@@ -635,7 +635,7 @@ function confettis({ couleurs = COULEURS_DEFAUT, nombre = 70, duree = 4000, clas
 /* ---------- Console : énigme ---------- */
 
 /**
- * Écrit dans la console du navigateur une courte énigme qui mène à la page secrète (secret.html).
+ * Écrit dans la console du navigateur une courte énigme qui mène à la page secrète (/pages/jeux/secret.html).
  */
 function enigmeConsole() {
   console.log('%cHumane Gang', 'font: 900 30px system-ui, sans-serif; color: #9E3543; text-shadow: 2px 2px 0 #E2C77E;');

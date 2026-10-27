@@ -13,12 +13,12 @@
 // admin-reglages/lot3-ui.js (bloc de réglages), reglages-valeurs-lot3.js.
 // Exporte : mountSouvenirsSection, openSouvenirs, listSouvenirs.
 // =====================================================================
-import { sb, esc, hasPerm } from '../core.js';
-import { signedUrls, thumbHtml, openLightbox } from '../photos.js';
-import { createList } from '../admin/ui/list.js';
-import { renderDetailHeader } from '../admin/ui/detail-header.js';
-import { sectionError } from '../admin/common.js';
-import { onTableChange } from '../admin/live.js';
+import { sb, esc, hasPerm } from '../../../commun/core.js';
+import { signedUrls, thumbHtml, openLightbox } from '../../irl/photos.js';
+import { createList } from '../ui/list.js';
+import { renderDetailHeader } from '../ui/detail-header.js';
+import { sectionError } from '../common.js';
+import { onTableChange } from '../live.js';
 import { loadPeople, dayLabel } from './helpers.js';
 import { openMomentForm, removeMoment } from './moments.js';
 import { momentCardsMap, openMomentCard } from './moment-card.js';
@@ -26,7 +26,7 @@ import { createPhotosPanel } from './photos.js';
 import { createReactionsPanel } from './reactions.js';
 import { createContenusPanel } from './contenus.js';
 import { createCeJourPanel } from './contenu.js';
-import { blocReglages } from '../admin-reglages/lot3-ui.js';
+import { blocReglages } from '../reglages/lot3-ui.js';
 import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
 
 /* Vues de la section : [identifiant, libellé]. Souvenirs est la vue par défaut. */

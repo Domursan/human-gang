@@ -41,13 +41,13 @@ export async function getProfile(force = false) {
   return (_profile = data ?? null);
 }
 /**
- * Exige un membre connecté. Sinon, redirige vers compte.html (avec retour à la page demandée).
+ * Exige un membre connecté. Sinon, redirige vers /pages/compte/compte.html (avec retour à la page demandée).
  * @returns {Promise<object>} Le profil. Ne revient jamais si redirigé (lève 'redirect' pour arrêter la page).
  * @throws {Error} Error('redirect') quand la redirection est lancée.
  */
 export async function requireMember() {
   const p = await getProfile();
-  if (!p) { location.href = `compte.html?next=${encodeURIComponent(location.pathname.split('/').pop())}`; throw new Error('redirect'); }
+  if (!p) { location.href = `/pages/compte/compte.html?next=${encodeURIComponent(location.pathname.split('/').pop())}`; throw new Error('redirect'); }
   return p;
 }
 /**
@@ -60,6 +60,6 @@ export async function requireMember() {
 export async function requireAdmin() {
   const p = await requireMember();
   if (p.is_admin) return p;
-  if (!canPanel(await loadMyPerms({ strict: true }))) { location.href = 'accueil.html'; throw new Error('redirect'); }
+  if (!canPanel(await loadMyPerms({ strict: true }))) { location.href = '/pages/compte/accueil.html'; throw new Error('redirect'); }
   return p;
 }

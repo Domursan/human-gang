@@ -10,7 +10,7 @@
 // Exporte : reportButtonHtml, hiddenNoteHtml, openReport.
 import { sb, toast, errMsg, esc } from './core.js';
 
-const CSS = [new URL('../css/ui-confirm.css', import.meta.url).href, new URL('../css/report.css', import.meta.url).href];
+const CSS = [new URL('./ui-confirm.css', import.meta.url).href, new URL('./report.css', import.meta.url).href];
 const REASONS = [['blessant', 'Blessant ou gênant'], ['prive', 'Information privée'], ['spam', 'Spam ou doublon'], ['autre', 'Autre']];
 /** Ce qui est signalé, pour le titre (« Signaler cette photo »). */
 const WHAT = { moment: 'ce moment', photo: 'cette photo', message: 'ce message' };
@@ -44,7 +44,7 @@ export function reportButtonHtml(kind, id, label = '') {
 export function hiddenNoteHtml(kind = 'moment') {
   const quoi = { moment: 'Ce moment est masqué', photo: 'Cette photo est masquée', message: 'Message masqué' }[kind] || 'Contenu masqué';
   return `<p class="rp-hidden small" role="note">${quoi} par le Staff : les autres membres ne le voient plus.
-    <a href="assistance.html">Demander une relecture</a></p>`;
+    <a href="/pages/infos/assistance.html">Demander une relecture</a></p>`;
 }
 
 /** Ferme le menu ouvert, s'il y en a un. */

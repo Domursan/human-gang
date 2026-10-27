@@ -11,8 +11,8 @@
  * Tables et RPC : hg_settings (clé eggs), hg_egg_log (lecture admin), hg_staff_directory (pseudos).
  * Exporte : mountEggsSection, EGGS_DEFAULTS, EGG_NOMS, validateEggs.
  */
-import { sb, toast, errMsg, esc, getCachedPerms, hasPerm } from './core.js';
-import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from './admin/list-tools.js';
+import { sb, toast, errMsg, esc, getCachedPerms, hasPerm } from '../../commun/core.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from './list-tools.js';
 
 /* ---------- Constantes ---------- */
 

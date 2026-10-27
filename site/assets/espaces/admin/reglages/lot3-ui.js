@@ -7,9 +7,9 @@
 // reglages-valeurs-lot3.js (lecture et écriture en mémoire des valeurs).
 // Exporte : blocReglages (le bloc à insérer dans une sous-section).
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
-import { getCachedProfile } from '../core/profile.js';
-import { hasPerm } from '../core/perms.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
+import { getCachedProfile } from '../../../commun/core/profile.js';
+import { hasPerm } from '../../../commun/core/perms.js';
 import { CHAMPS_LOT3, DOMAINES_LOT3 } from './keys-lot3.js';
 import { chargerReglagesLot3, majReglagesLot3, reglage, objetLot3 } from '../reglages-valeurs-lot3.js';
 

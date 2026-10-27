@@ -11,7 +11,7 @@
  *                          continents: [{id, nom, couleur, membres: [ids]}] }
  *   marquer : sel = { de, vers, cibles: [ids] } (classes is-sel, is-vers, is-hl sur les territoires).
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 
 const LARGEUR = 960;
 const HAUTEUR = 520;
@@ -99,7 +99,7 @@ function fondDessine(continents) {
     <rect width="${LARGEUR}" height="${HAUTEUR}" fill="#0B2C48"></rect>${zones}${mers}</svg>`;
 }
 
-/** Centres des 42 territoires sur l'image de la carte (assets/img/plateaux/risk/carte.webp, 1376 × 768, en pixels). */
+/** Centres des 42 territoires sur l'image de la carte (/assets/images/plateaux/risk/carte.webp, 1376 × 768, en pixels). */
 export const CENTRES_IMAGE = {
   alaska: [110, 160], tno: [235, 140], groenland: [520, 95], alberta: [230, 230], ontario: [320, 240], quebec: [420, 230],
   ouest: [260, 300], est: [350, 300], amcentrale: [320, 370],

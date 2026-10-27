@@ -6,12 +6,12 @@
  * Rôle : liste des champs du formulaire « Mes informations » (livraison, tailles, goûts, réseaux, contraintes).
  * Cette liste est la source unique : la page compte et les pages Secret Santa s'en servent pour afficher et pour
  * savoir quels champs peuvent être transmis au Santa.
- * Pages : compte.html (saisie), secret-santa.html, et la fiche d'un membre dans l'administration (admin-accounts/).
+ * Pages : /pages/compte/compte.html (saisie), /pages/irl/secret-santa.html, et la fiche d'un membre dans l'administration (admin-accounts/).
  * Dépendances : core.js (client Supabase, pour lire le réglage « profile_fields »).
  * Table : hg_settings (clé 'profile_fields') ; hg_profile_info (données de chaque membre).
  * Exporte : INFO_GROUPS, INFO_FIELDS, INFO_LABEL, validateInfoGroups.
  */
-import { sb } from './core.js';
+import { sb } from '../../commun/core.js';
 
 /* ---------- Liste d'origine ---------- */
 

@@ -1,22 +1,22 @@
-// ===== Humane Gang — Historique, la frise des souvenirs (historique.html) =====
+// ===== Humane Gang — Historique, la frise des souvenirs (/pages/irl/historique.html) =====
 // Frise chronologique : éditions du Secret Santa (avec « qui a offert à qui »), sorties IRL passées avec leurs photos,
 // et « moments cultes » ajoutés à la main (avec image, réactions, modification et suppression).
 // Dépendances : core.js, photos.js (images), image-compress.js, reactions.js, admin-ghosts.js (fantômes, admin),
 // ui-confirm.js, ss-pairs.js (paires), reglages-valeurs-lot3.js (délai avant qu'un événement soit « passé »).
 // Tables et RPC : hg_members, hg_ss_editions, hg_ss_progress, hg_events, hg_event_rsvps, hg_photos, hg_moments.
 // N'exporte rien.
-import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, $$, fmtDate, avatarHtml, godLimit, godTag } from '../../commun/core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, gridPath, selectPhotos } from './photos.js';
-import { prepareImage } from './image-compress.js';
-import { loadReactions, reactionBarHtml } from './reactions.js';
-import { ghostDirectory } from './admin-ghosts.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { pluralCount } from './utils.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { loadReactions, reactionBarHtml } from '../../commun/reactions.js';
+import { ghostDirectory } from '../admin/admin-ghosts.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { pluralCount } from '../../commun/utils.js';
 import { fetchPairs, peopleByPseudo, pairsHtml } from './ss-pairs.js';
-import { chargerReglagesLot3, delaiPassee } from './reglages-valeurs-lot3.js';
-import { lireQuota, restants, messageSouvenir } from './eco-quota.js';
-import { reportButtonHtml, hiddenNoteHtml } from './report.js'; // A6 : « Signaler » un moment
+import { chargerReglagesLot3, delaiPassee } from '../admin/reglages-valeurs-lot3.js';
+import { lireQuota, restants, messageSouvenir } from '../../commun/eco-quota.js';
+import { reportButtonHtml, hiddenNoteHtml } from '../../commun/report.js'; // A6 : « Signaler » un moment
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit plus de choses (fantômes, modifications d'autrui).
@@ -156,7 +156,7 @@ function pairsBlock(e) {
 }
 
 /**
- * Carte d'une sortie IRL passée : lieu, présents, vignettes de l'album et lien vers irl.html.
+ * Carte d'une sortie IRL passée : lieu, présents, vignettes de l'album et lien vers /pages/irl/irl.html.
  * Les présents dont le compte n'est pas connu (fantômes) sont ignorés.
  * @param {object} e la sortie (hg_events)
  * @returns {string} HTML
@@ -166,7 +166,7 @@ function irlCard(e) {
   const photos = S.photos.get(e.id) || [];
   const shown = photos.slice(0, THUMBS);
   const more = photos.length - shown.length;
-  const href = `irl.html#event-${encodeURIComponent(e.id)}`;
+  const href = `/pages/irl/irl.html#event-${encodeURIComponent(e.id)}`;
   const thumbs = shown.length ? `<ul class="tl-thumbs">
       ${shown.map((p, i) => `<li><a class="tl-thumb" href="${href}" aria-label="Photo ${i + 1} de l'album ${esc(e.title)}">${thumbHtml(S.urls.get(gridPath(p)), '', p)}</a></li>`).join('')}
       ${more > 0 ? `<li><a class="tl-thumb tl-thumb-more" href="${href}" aria-label="${more} autres photos dans l'album">+${more}</a></li>` : ''}
@@ -191,7 +191,7 @@ function momentCard(m) {
   const mine = m.created_by === me.id || isAdmin;
   const inCard = S.momentCards?.has(m.id);
   return `<article class="tl-card tl-card-moment" id="moment-${esc(m.id)}">
-    <div class="tl-kind">${I.star}<span>Moment culte · ${esc(fmtDate(dayDate(m.happened_on)))}</span>${inCard ? '<a class="tl-incard" href="cartes.html#collection">En carte</a>' : ''}</div>
+    <div class="tl-kind">${I.star}<span>Moment culte · ${esc(fmtDate(dayDate(m.happened_on)))}</span>${inCard ? '<a class="tl-incard" href="/pages/cartes/cartes.html#collection">En carte</a>' : ''}</div>
     <h3 class="tl-title">${esc(m.title)}</h3>
     ${url ? `<button type="button" class="tl-moment-img" data-act="zoom" data-id="${esc(m.id)}" aria-label="Agrandir l'image de « ${esc(m.title)} »"><img src="${esc(url)}" alt="" loading="lazy"></button>` : ''}
     ${m.body ? `<p class="tl-body">${esc(m.body)}</p>` : ''}
@@ -220,7 +220,7 @@ function render() {
     tl.innerHTML = `<div class="hist-empty">
       <p class="display hist-empty-title">La frise est encore vierge.</p>
       <p class="muted">Les éditions du Secret Santa, les sorties passées et vos moments cultes s'afficheront ici, année après année. Commence par immortaliser un souvenir.</p>
-      <div class="btn-row"><button type="button" class="btn btn-light" data-act="new">+ Ajouter un moment culte</button><a class="btn btn-ghost" href="irl.html">Voir les sorties IRL</a></div>
+      <div class="btn-row"><button type="button" class="btn btn-light" data-act="new">+ Ajouter un moment culte</button><a class="btn btn-ghost" href="/pages/irl/irl.html">Voir les sorties IRL</a></div>
     </div>`;
     return;
   }
@@ -356,5 +356,5 @@ form.addEventListener('submit', async (e) => {
 await refresh();
 // Lien direct vers un moment (« Voir le moment » depuis une carte, migration 080) : on le montre une fois la frise dessinée.
 if (location.hash.startsWith('#moment-')) document.getElementById(location.hash.slice(1))?.scrollIntoView({ block: 'center' });
-// Secret caché « rembobine » : module chargé à part (assets/js/eggs/pages.js).
-import('./eggs/pages.js').then((m) => m.secretsHistorique()).catch(() => {});
+// Secret caché « rembobine » : module chargé à part (/assets/espaces/arcade/pages.js).
+import('../arcade/pages.js').then((m) => m.secretsHistorique()).catch(() => {});

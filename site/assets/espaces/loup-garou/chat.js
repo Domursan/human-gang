@@ -5,7 +5,7 @@
  * Dépendances : core.js (esc), ui.js, api.js (erreurTexte).
  * Exporte : monterChat.
  */
-import { esc } from '../core.js';
+import { esc } from '../../commun/core.js';
 import { icone, CANAUX, notifier } from './ui.js';
 import { erreurTexte } from './api.js';
 

@@ -1,13 +1,13 @@
-// ===== Humane Gang — aide et tutos (aide.html) =====
-// Liste des tutos par groupe, recherche (titre, résumé, mots-clés), tuto ouvert par l'adresse aide.html#<slug>.
+// ===== Humane Gang — aide et tutos (/pages/infos/aide.html) =====
+// Liste des tutos par groupe, recherche (titre, résumé, mots-clés), tuto ouvert par l'adresse /pages/infos/aide.html#<slug>.
 // Accessible sans compte : seuls les groupes PUBLIC_GROUP_IDS (« premiers pas ») sont visibles aux visiteurs.
 // Dépendances : core.js (initPage, esc, $) et tutos/index.js (chargement des groupes de tutos).
 // Les données des tutos viennent de assets/js/tutos/ ; cette page ne fait que les afficher. N'exporte rien.
 // Les chiffres des tutos sont des jetons {{chemin|repli}} remplacés par les réglages du site (reglages-jetons.js).
-import { initPage, esc, $ } from './core.js';
+import { initPage, esc, $ } from '../../commun/core.js';
 import { loadTutoGroups, PUBLIC_GROUP_IDS } from './tutos/index.js';
-import { chargerReglages, jetons } from './reglages-jetons.js';
-import { questTrack } from './quest-track.js';
+import { chargerReglages, jetons } from '../admin/reglages-jetons.js';
+import { questTrack } from '../../commun/quest-track.js';
 
 /* ---------- Initialisation : session facultative (les visiteurs voient « premiers pas ») ---------- */
 const me = await initPage({ auth: 'optional' });
@@ -21,10 +21,10 @@ const SAFE_IMG = /^assets\/tutos\/[\w.-]+$/;        // capture : un fichier du d
 // Chaque affiche (dossier affiches/) illustre un thème ; un tuto absent de cette table s'affiche sans affiche.
 // Les affiches lisent elles-mêmes les réglages du site : leurs chiffres suivent les prix et gains réglés.
 const AFFICHES = {
-  paillettes: { fichier: 'affiches/paillettes-a3.html', titre: 'Gagner des Paillettes' },
-  boosters: { fichier: 'affiches/boosters-a3.html', titre: 'Obtenir des boosters' },
-  cartes: { fichier: 'affiches/cartes-a3.html', titre: 'Gagner des cartes' },
-  badges: { fichier: 'affiches/badges-a3.html', titre: 'Les badges du Humane Gang' },
+  paillettes: { fichier: '/affiches/paillettes-a3.html', titre: 'Gagner des Paillettes' },
+  boosters: { fichier: '/affiches/boosters-a3.html', titre: 'Obtenir des boosters' },
+  cartes: { fichier: '/affiches/cartes-a3.html', titre: 'Gagner des cartes' },
+  badges: { fichier: '/affiches/badges-a3.html', titre: 'Les badges du Humane Gang' },
 };
 const AFFICHE_PAR_TUTO = {
   'paillettes-passage-du-jour': 'paillettes', 'quetes-de-la-semaine': 'paillettes', 'defis-du-gang': 'paillettes', 'classement': 'paillettes',
@@ -99,7 +99,7 @@ const bySlug = new Map();
 groups.forEach((g) => g.tutos.forEach((t) => bySlug.set(t.slug, { t, g })));
 
 if (!me) guestNote.hidden = false;
-else $('.page-head')?.insertAdjacentHTML('beforeend', '<a class="btn btn-ghost aide-visite" href="accueil.html#visite">Revoir la visite</a>'); // Q1 : relance la visite guidée sur l'accueil
+else $('.page-head')?.insertAdjacentHTML('beforeend', '<a class="btn btn-ghost aide-visite" href="/pages/compte/accueil.html#visite">Revoir la visite</a>'); // Q1 : relance la visite guidée sur l'accueil
 
 /* ---------- Liste et recherche ---------- */
 /**
@@ -124,7 +124,7 @@ function renderList(query = '') {
     return `<section class="card aide-group" aria-labelledby="g-${esc(g.id)}">
       <h2 class="aide-group-title" id="g-${esc(g.id)}"><span class="aide-group-icon" aria-hidden="true">${esc(g.icon)}</span>${esc(g.title)}</h2>
       <ul class="aide-tuto-list">
-        ${items.map((t) => `<li><a class="aide-tuto-link" href="aide.html#${esc(t.slug)}">
+        ${items.map((t) => `<li><a class="aide-tuto-link" href="/pages/infos/aide.html#${esc(t.slug)}">
           <span class="aide-tuto-title">${esc(t.title)}</span>
           ${t.summary ? `<span class="aide-tuto-sum">${esc(t.summary)}</span>` : ''}</a></li>`).join('')}
       </ul>
@@ -144,7 +144,7 @@ function renderList(query = '') {
 
 qInput.addEventListener('input', () => renderList(qInput.value));
 
-/* ---------- Un tuto (adresse aide.html#<slug>) ---------- */
+/* ---------- Un tuto (adresse /pages/infos/aide.html#<slug>) ---------- */
 /**
  * HTML d'un tuto complet : fil d'Ariane, étapes numérotées, astuces, bouton « Y aller ».
  * Le lien « Y aller » et les captures ne passent que si leur chemin est sûr (SAFE_PAGE, SAFE_IMG).
@@ -157,7 +157,7 @@ function tutoHtml(t, g) {
   const tips = (Array.isArray(t.tips) ? t.tips : []).filter(Boolean);
   const page = typeof t.page === 'string' && SAFE_PAGE.test(t.page) ? t.page : '';
   return `<article class="card aide-tuto">
-    <p class="aide-crumb"><a href="aide.html">Tous les tutos</a> <span aria-hidden="true">›</span> ${esc(g.icon)} ${esc(g.title)}</p>
+    <p class="aide-crumb"><a href="/pages/infos/aide.html">Tous les tutos</a> <span aria-hidden="true">›</span> ${esc(g.icon)} ${esc(g.title)}</p>
     <h2 class="aide-tuto-heading display" id="aide-tuto-heading" tabindex="-1">${esc(t.title)}</h2>
     ${t.summary ? `<p class="aide-summary">${esc(t.summary)}</p>` : ''}
     <ol class="aide-steps">
@@ -173,7 +173,7 @@ function tutoHtml(t, g) {
     ${tips.length ? `<div class="aide-tips"><h3>Astuces</h3><ul>${tips.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
     <div class="btn-row aide-actions">
       ${page ? `<a class="btn btn-primary" href="${esc(page)}">Y aller</a>` : ''}
-      <a class="btn btn-ghost" href="aide.html">← Tous les tutos</a>
+      <a class="btn btn-ghost" href="/pages/infos/aide.html">← Tous les tutos</a>
     </div>
   </article>`;
 }
@@ -184,11 +184,11 @@ function tutoHtml(t, g) {
  */
 function showMessage(html) {
   tutoView.innerHTML = `<div class="card aide-tuto aide-missing">${html}
-    <div class="btn-row"><a class="btn btn-ghost" href="aide.html">← Tous les tutos</a></div></div>`;
+    <div class="btn-row"><a class="btn btn-ghost" href="/pages/infos/aide.html">← Tous les tutos</a></div></div>`;
 }
 
 /**
- * Ouvre un tuto par son slug (adresse aide.html#<slug>) : le tuto, un message « n'existe pas », ou « réservé aux membres ».
+ * Ouvre un tuto par son slug (adresse /pages/infos/aide.html#<slug>) : le tuto, un message « n'existe pas », ou « réservé aux membres ».
  * @param {string} slug identifiant du tuto
  */
 function showTuto(slug) {
@@ -199,7 +199,7 @@ function showTuto(slug) {
     showMessage(`<h2 class="display" tabindex="-1">Ce tuto n'existe pas</h2><p>Il a peut-être changé de nom. Choisis-en un dans la liste.</p>`);
   } else if (!canSee(hit.g)) {
     showMessage(`<h2 class="display" tabindex="-1">Tuto réservé aux membres</h2><p>Connecte-toi pour voir ce tuto.</p>
-      <div class="btn-row"><a class="btn btn-primary" href="compte.html">Me connecter</a></div>`);
+      <div class="btn-row"><a class="btn btn-primary" href="/pages/compte/compte.html">Me connecter</a></div>`);
   } else {
     const affiche = afficheHtml(hit.t.slug);
     tutoView.innerHTML = affiche ? `<div class="aide-tuto-duo">${tutoHtml(hit.t, hit.g)}${affiche}</div>` : tutoHtml(hit.t, hit.g);
@@ -215,7 +215,7 @@ function showTuto(slug) {
   tutoView.querySelector('h2')?.focus();
 }
 
-/** Revient à la liste des tutos (aide.html sans slug) et remet le titre de page par défaut. */
+/** Revient à la liste des tutos (/pages/infos/aide.html sans slug) et remet le titre de page par défaut. */
 function showList() {
   tutoView.hidden = true;
   ajusteAffiche.disconnect();
@@ -226,7 +226,7 @@ function showList() {
 }
 
 /**
- * Choisit la vue selon l'adresse : aide.html#<slug> ouvre un tuto, sans slug la liste.
+ * Choisit la vue selon l'adresse : /pages/infos/aide.html#<slug> ouvre un tuto, sans slug la liste.
  * Appelée au chargement et à chaque changement d'ancre.
  */
 function route() {

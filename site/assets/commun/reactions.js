@@ -4,7 +4,7 @@
 /*
  * Rôle : barre de réactions (6 émojis avec compteur) sous les souvenirs et les photos. Un clic ajoute ou retire
  * sa réaction ; le compteur et l'état « j'ai réagi » se mettent à jour sans recharger la page.
- * Page : historique.html (souvenirs), irl.html (photos de sortie), la visionneuse de photos (photos.js),
+ * Page : /pages/irl/historique.html (souvenirs), /pages/irl/irl.html (photos de sortie), la visionneuse de photos (photos.js),
  *   et les pages d'administration des souvenirs.
  * Dépendances : core.js (client Supabase, toast, errMsg, esc).
  * Tables / RPC : hg_reactions (lecture), rpc hg_toggle_reaction (ajout ou retrait).

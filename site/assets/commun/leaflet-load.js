@@ -3,7 +3,7 @@
  * Rôle : charge une seule fois la feuille de style et le script de Leaflet depuis le CDN autorisé par la CSP,
  * et fournit le fond de carte OpenStreetMap commun. En cas d'échec, les balises ajoutées sont retirées pour
  * qu'une nouvelle tentative reste possible.
- * Pages : jeux.html (onglet GeoGuessr), admin.html (manches GeoGuessr). La carte des lieux d'irl-history.js
+ * Pages : /pages/jeux/jeux.html (onglet GeoGuessr), /pages/admin/admin.html (manches GeoGuessr). La carte des lieux d'irl-history.js
  *   garde pour l'instant son propre chargeur (même adresse, même balise data-leaflet : les deux cohabitent).
  * Dépendances : aucune.
  * Exporte : LEAFLET, loadLeaflet, addOsmTiles.

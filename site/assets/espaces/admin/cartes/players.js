@@ -7,12 +7,12 @@
 // Lit : hg_wallet_log (journal). RPC : hg_cards_admin_paillettes, hg_cards_admin_give, hg_cards_admin_take.
 // Exporte : mountPlayersList, refreshPlayersList, playersPanel, refreshLog, playerActions, takeCopy.
 // =====================================================================
-import { sb, toast, errMsg, esc, $, avatarHtml, notify } from '../core.js';
-import { rarityLabel, serialLabel, fmtP } from '../cartes-ui.js';
-import { confirmBox } from '../ui-confirm.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { createList } from '../admin/ui/list.js';
-import { navigate } from '../admin/shell.js';
+import { sb, toast, errMsg, esc, $, avatarHtml, notify } from '../../../commun/core.js';
+import { rarityLabel, serialLabel, fmtP } from '../../cartes/cartes-ui.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { openDrawer } from '../ui/drawer.js';
+import { createList } from '../ui/list.js';
+import { navigate } from '../shell.js';
 import { ICON, REASON_LABEL } from './constants.js';
 import { C } from './state.js';
 import { refresh } from './data.js';

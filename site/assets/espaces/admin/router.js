@@ -1,4 +1,4 @@
-// Admin : routage du panel. URL : admin.html#plateau, #<lieu>, #<lieu>/<sous-section>[/id[/onglet]]
+// Admin : routage du panel. URL : /pages/admin/admin.html#plateau, #<lieu>, #<lieu>/<sous-section>[/id[/onglet]]
 // - #plateau : l'accueil (route par défaut). #<lieu> (ex. #fabrique) : la page du lieu. #<lieu>/<sous-section> : la page.
 // - Un lieu ou une sous-section sans droit renvoie vers la première route permise (ou null : aucun accès).
 // - Anciennes adresses par domaine (avant le plateau : #pilotage/…, #membres/…, #irl/…, #event/…, #cartes/…, #jeux/…) :

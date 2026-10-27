@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), plateaux/api.js (plat, contenus, erreurTexte, jeu, JEUX).
  * Exporte : afficher.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { plat, contenus, erreurTexte, jeu } from '../api.js';
 
 /** Intervalle de rafraîchissement des parties publiques (ms). */
@@ -194,7 +194,7 @@ export async function afficher(root) {
   // Image d'en-tête : affichée seulement si le fichier existe (sinon on garde le texte seul).
   const img = root.querySelector('[data-image]');
   if (image) {
-    img.src = `assets/img/jeux/${image}.webp`;
+    img.src = `/assets/images/jeux/${image}.webp`;
     img.addEventListener('load', () => { img.hidden = false; });
   }
 

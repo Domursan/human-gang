@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc), api.js (lg, erreurTexte), ui.js, roles.js, chat.js.
  * Exporte : monter.
  */
-import { esc } from '../../core.js';
+import { esc } from '../../../commun/core.js';
 import { erreurTexte, estInvite } from '../api.js';
 import { icone, avatar, pseudo, vignetteRole, confirmer, notifier } from '../ui.js';
 import { ROLES, roleById, CAMPS } from '../roles.js';
@@ -32,8 +32,8 @@ export function monter(root, s) {
   let fini = false;
 
   // Invité : pas de fil d'Ariane (il mène aux pages membres).
-  const ariane = invite ? '' : `<nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="loup-garou.html">Loup-Garou</a> › <span>Salle d'attente</span></nav>`;
-  const retourAnnulee = invite ? '' : '<p><a class="btn btn-primary" href="loup-garou.html">Retour au Loup-Garou</a></p>';
+  const ariane = invite ? '' : `<nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/loup-garou.html">Loup-Garou</a> › <span>Salle d'attente</span></nav>`;
+  const retourAnnulee = invite ? '' : '<p><a class="btn btn-primary" href="/pages/jeux/loup-garou.html">Retour au Loup-Garou</a></p>';
 
   root.innerHTML = `
     <div class="lg-salle">

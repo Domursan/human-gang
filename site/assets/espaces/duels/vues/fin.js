@@ -14,7 +14,7 @@
  *   ./chat.js (creerChat). Le cadre des tables n'est pas utilisé ici.
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, estInvite, COULEURS_MM } from '../api.js';
 import { avatarHtml, nomJoueur, deJoueur } from './commun.js';
 import { creerChat } from './chat.js';

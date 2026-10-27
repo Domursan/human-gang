@@ -6,10 +6,10 @@
 // « Oui, j'utilise mon dernier … » (le serveur le vérifie aussi : p_confirm_last).
 // RPC : hg_card_recipes_me (recettes ouvertes et exemplaires en vitrine), hg_card_recipe_craft.
 // Exporte : initAtelier(ctx), drawAtelier(). ctx = { app, copies: () => [], card: (id) => object|null, refresh, toast }.
-import { sb, esc, toast, errMsg } from './core.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
 import { cardHtml, rarityLabel, fmtP } from './cartes-ui.js';
 import { tagLabel } from './cartes-jeux.js';
-import { confirmBox } from './ui-confirm.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 
 let C = null;
 // recipes : null = pas chargé, [] = aucune ; open : recette dépliée ; confirm : recettes où « dernier exemplaire » est coché.

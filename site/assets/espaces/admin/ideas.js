@@ -3,8 +3,8 @@
 // en lecture seule. Route : #poste/idees[/<id>]. Droits : admin/perms.js (section « idees », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderIdeas). Dépend de core.js, ui-confirm.js, badges.js (badge
 // « Boîte à idées »), shell.js (compteur) et des composants ui/.
-import { sb, toast, errMsg, fmtDateTime } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, errMsg, fmtDateTime } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 import { S, pseudoOf } from './state.js';
 import { check } from './common.js';
 import { loadIdeas } from './loaders.js';

@@ -1,5 +1,5 @@
-/* Simulateur de téléphone (simulateur.html) : outil de test pour l'admin, hors navigation du site.
-   Sorti de la page (ancien script inline) pour que la Content-Security-Policy de simulateur.html n'ait pas besoin
+/* Simulateur de téléphone (/pages/jeux/simulateur.html) : outil de test pour l'admin, hors navigation du site.
+   Sorti de la page (ancien script inline) pour que la Content-Security-Policy de /pages/jeux/simulateur.html n'ait pas besoin
    de 'unsafe-inline' dans script-src. Contenu inchangé. */
 /* ---------- Données ---------- */
 
@@ -17,11 +17,11 @@ const DEVICES = [
 const COMPARE = ['iphone-se', 'iphone-15', 'galaxy-s23'];
 /** Pages du site, pour la liste de raccourcis. */
 const PAGES = [
-  ['accueil.html', 'Accueil'], ['index.html', 'Intro'], ['secret-santa.html', 'Secret Santa'], ['irl.html', 'Sorties IRL'],
-  ['historique.html', 'Historique'], ['messages.html', 'Messages'], ['cartes.html', 'Cartes'], ['evenements.html', 'Événements'],
-  ['compte.html', 'Mon compte'], ['membre.html', 'Carte de membre'], ['recap.html', "Récap de l'année"], ['aide.html', 'Aide et tutos'],
-  ['assistance.html', 'Assistance'], ['admin.html', 'Administration'], ['legal.html', 'Mentions légales'], ['rejoindre.html', 'Rejoindre'],
-  ['affiches/index.html', 'Affiches'],
+  ['/pages/compte/accueil.html', 'Accueil'], ['/index.html', 'Intro'], ['/pages/irl/secret-santa.html', 'Secret Santa'], ['/pages/irl/irl.html', 'Sorties IRL'],
+  ['/pages/irl/historique.html', 'Historique'], ['/pages/compte/messages.html', 'Messages'], ['/pages/cartes/cartes.html', 'Cartes'], ['/pages/irl/evenements.html', 'Événements'],
+  ['/pages/compte/compte.html', 'Mon compte'], ['/pages/compte/membre.html', 'Carte de membre'], ['/pages/irl/recap.html', "Récap de l'année"], ['/pages/infos/aide.html', 'Aide et tutos'],
+  ['/pages/infos/assistance.html', 'Assistance'], ['/pages/admin/admin.html', 'Administration'], ['/pages/infos/legal.html', 'Mentions légales'], ['/pages/infos/rejoindre.html', 'Rejoindre'],
+  ['/affiches/index.html', 'Affiches'],
 ];
 
 /* ---------- État ---------- */
@@ -35,7 +35,7 @@ const state = {
   landscape: false,
   compare: false,
   zoom: saved.zoom || 'fit',
-  path: saved.path || 'accueil.html',
+  path: saved.path || '/pages/compte/accueil.html',
 };
 
 /** Enregistre les préférences (silencieux si le stockage est indisponible). */
@@ -119,7 +119,7 @@ function syncPageSelect() {
 
 /** Charge une page dans tous les téléphones affichés. */
 function go(path) {
-  state.path = path.replace(/^\.?\//, '') || 'accueil.html';
+  state.path = path.replace(/^\.?\//, '') || '/pages/compte/accueil.html';
   persist();
   $('#url').value = state.path;
   syncPageSelect();

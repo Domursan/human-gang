@@ -1,4 +1,4 @@
-// ===== Accueil : le QG du Humane Gang (accueil.html) =====
+// ===== Accueil : le QG du Humane Gang (/pages/compte/accueil.html) =====
 // Page d'accueil. Visiteur : présentation et connexion. Membre : tuiles (Secret Santa, IRL, Historique),
 // fil d'activité, anniversaires du mois, défi du gang, bandeaux (récap, événement en cours) et boîte à idées.
 // Chaque tuile et chaque bloc se charge séparément : une erreur n'empêche pas les autres.
@@ -6,11 +6,11 @@
 // accueil-ce-jour.js (tuile « Ce jour-là »).
 // Tables et RPC : hg_settings (site_textes), hg_ss_editions, hg_ss_participants, hg_ss_progress, hg_events, hg_event_rsvps,
 // hg_moments, hg_activity, hg_members, hg_challenges_active, hg_ideas, hg_profiles. N'exporte rien.
-import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from './core.js';
-import { svg } from './icons.js';
-import { maybeStartTour } from './core/tour.js'; // Q1 : visite guidée au premier passage
+import { sb, initPage, esc, $, fmtDate, fmtDateTime, avatarHtml, errMsg, toast, currentLogo, canAccess, pageLabel } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { maybeStartTour } from '../../commun/core/tour.js'; // Q1 : visite guidée au premier passage
 import { loadOnThisDay } from './accueil-ce-jour.js';
-import { SITE_DEFAULTS } from './core/site-defaults.js'; // textes d'origine (repli des textes réglables)
+import { SITE_DEFAULTS } from '../../commun/core/site-defaults.js'; // textes d'origine (repli des textes réglables)
 const D = SITE_DEFAULTS.textes;
 
 /* ---------- Conteneur et session : me = personne connectée, ou null pour un visiteur ---------- */
@@ -98,7 +98,7 @@ function syncIntro() {
    ====================================================================== */
 /**
  * Accueil pour un visiteur non connecté : présentation du gang, bouton de connexion et tuiles sans données.
- * Le bouton « Revoir l'intro » efface le jour de l'intro puis renvoie à index.html.
+ * Le bouton « Revoir l'intro » efface le jour de l'intro puis renvoie à /index.html.
  */
 function renderGuest() {
   app.innerHTML = `
@@ -108,7 +108,7 @@ function renderGuest() {
       <h1 class="page-title">${esc(txt('accueil_titre', D.accueil_titre))}</h1>
       <p class="home-lead">${esc(txt('accueil_lead', D.accueil_lead))}</p>
       <div class="btn-row home-hero-actions">
-        <a class="btn btn-primary" href="compte.html?next=accueil.html">${esc(txt('accueil_cta_connexion', D.accueil_cta_connexion))}</a>
+        <a class="btn btn-primary" href="/pages/compte/compte.html?next=/pages/compte/accueil.html">${esc(txt('accueil_cta_connexion', D.accueil_cta_connexion))}</a>
         <button class="btn btn-ghost" type="button" id="replay">Revoir l'intro</button>
       </div>
       <p class="small muted">${esc(txt('accueil_note_invitation', D.accueil_note_invitation))}</p>
@@ -132,7 +132,7 @@ function renderGuest() {
     </section>`;
   $('#replay').addEventListener('click', () => {
     try { localStorage.removeItem('hg_intro_day'); } catch {}
-    location.href = 'index.html';
+    location.href = '/index.html';
   });
 }
 
@@ -159,19 +159,19 @@ function renderMemberShell() {
     <div id="qdj-home" hidden></div>
 
     <section class="grid home-tiles" aria-label="Rubriques">
-      <a class="card card-ss tile tile-link" href="secret-santa.html" id="tile-ss">
+      <a class="card card-ss tile tile-link" href="/pages/irl/secret-santa.html" id="tile-ss">
         ${tileIcon('ss')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">Secret Santa</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
-      <a class="card card-irl tile tile-link" href="irl.html" id="tile-irl">
+      <a class="card card-irl tile tile-link" href="/pages/irl/irl.html" id="tile-irl">
         ${tileIcon('irl')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">IRL</h2>
         <div class="tile-body"><span class="skeleton"></span><span class="skeleton short"></span></div>
       </a>
-      <a class="card card-hist tile tile-link" href="historique.html" id="tile-hist">
+      <a class="card card-hist tile tile-link" href="/pages/irl/historique.html" id="tile-hist">
         ${tileIcon('hist')}
         <span class="tile-arrow">${ICON.arrow}</span>
         <h2 class="tile-label">Historique</h2>
@@ -216,7 +216,7 @@ function ideasHtml() {
 }
 
 /**
- * Lien « accueil.html#idees » (aide, tutos, compte…) : montre la boîte à idées même si le membre l'a retirée de son
+ * Lien « /pages/compte/accueil.html#idees » (aide, tutos, compte…) : montre la boîte à idées même si le membre l'a retirée de son
  * accueil personnalisé, puis y fait défiler et place le curseur dans le champ.
  * @param {boolean} [focus] true : place aussi le curseur dans « Ton idée ».
  */
@@ -376,7 +376,7 @@ const members = () => (membersP ||= sb.rpc('hg_members').then(({ data, error }) 
 /* ---------- Liens vers la carte d'identité d'un membre ---------- */
 /** Pseudo cliquable vers la carte du membre, ou pseudo simple si la page membre n'est pas accessible. */
 const memberLink = (m, label = m.pseudo) => (canAccess('membre')
-  ? `<a class="member-link" href="membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`
+  ? `<a class="member-link" href="/pages/compte/membre.html?id=${encodeURIComponent(m.id)}">${esc(label)}</a>`
   : `<strong class="member-link">${esc(label)}</strong>`);
 /**
  * Texte d'une ligne du fil. Si le texte commence par le pseudo, le pseudo devient un lien ; sinon le lien précède le texte.
@@ -400,7 +400,7 @@ function recapBanner() {
   const d = new Date(), mo = d.getMonth();
   if ((mo !== 11 && mo !== 0) || !canAccess('recap')) return '';
   const y = mo === 11 ? d.getFullYear() : d.getFullYear() - 1;
-  return `<a class="recap-banner" href="recap.html?year=${y}">
+  return `<a class="recap-banner" href="/pages/irl/recap.html?year=${y}">
       <span class="recap-banner-emoji" aria-hidden="true">✨</span>
       <span class="recap-banner-txt"><strong>Le récap ${y} est disponible</strong><span>Ton année avec le gang en quelques chiffres</span></span>
       <span class="recap-banner-go" aria-hidden="true">${ICON.arrow}</span>
@@ -416,7 +416,7 @@ async function loadDynBanner() {
   const box = $('#dyn-banner');
   if (!box || !canAccess('evenements')) return;
   try {
-    const { getActiveDynEvents } = await import('./dyn-events.js');
+    const { getActiveDynEvents } = await import('../../commun/dyn-events.js');
     const list = await getActiveDynEvents();
     if (!list.length) return;
     const ev = [...list].sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
@@ -424,7 +424,7 @@ async function loadDynBanner() {
     const vis = ev.image_url
       ? `<img class="dyn-banner-img" src="${esc(ev.image_url)}" alt="" data-on-error="remove">`
       : `<span class="recap-banner-emoji" aria-hidden="true">${esc(ev.emoji || '✨')}</span>`;
-    box.innerHTML = `<a class="recap-banner dyn-banner" href="evenements.html">
+    box.innerHTML = `<a class="recap-banner dyn-banner" href="/pages/irl/evenements.html">
         ${vis}
         <span class="recap-banner-txt"><strong>Événement en cours : ${esc(ev.name)}${esc(more)}</strong><span>Jusqu'au ${esc(fmtDateTime(ev.ends_at))} · une image spéciale traverse le site, attrape-la !</span></span>
         <span class="recap-banner-go" aria-hidden="true">${ICON.arrow}</span>
@@ -481,7 +481,7 @@ async function loadBirthdays() {
       .map((m) => ({ ...m, day: Number(m.birthday_dm.split('.')[0]) }))
       .sort((a, b) => a.day - b.day || a.pseudo.localeCompare(b.pseudo, 'fr'));
     if (!list.length) {
-      ul.innerHTML = `<li class="empty">Pas d'anniversaire partagé ce mois-ci.<br><a href="compte.html">Partager le tien</a> (jour et mois seulement)</li>`;
+      ul.innerHTML = `<li class="empty">Pas d'anniversaire partagé ce mois-ci.<br><a href="/pages/compte/compte.html">Partager le tien</a> (jour et mois seulement)</li>`;
       return;
     }
     ul.innerHTML = list.map((m) => `
@@ -562,7 +562,7 @@ async function loadDailyQuestion() {
   const box = $('#qdj-home');
   if (!box || !canAccess('jeux')) return;
   try {
-    const { mountDaily } = await import('./jeux/jour-ui.js');
+    const { mountDaily } = await import('../jeux/jour-ui.js');
     box.hidden = false;
     await mountDaily(box, { sb, esc, toast, compact: true, meId: me.id });
   } catch (e) {

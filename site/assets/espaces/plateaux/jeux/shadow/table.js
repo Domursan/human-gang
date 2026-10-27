@@ -13,7 +13,7 @@
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { plat, nomDe, imageExiste } from '../../api.js';
 import { avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';

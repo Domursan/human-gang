@@ -4,15 +4,15 @@
  * puis le résultat : vraie position, ligne entre les deux points, distance, score sur 5 000, Paillettes, sortie
  * d'origine. Classements du jour et de la semaine ; archive des manches passées jouable « pour l'honneur ».
  * La réponse ne quitte le serveur qu'après le vote (RPC hg_geo_guess).
- * Onglet : jeux.html#geo. Contrat : mount(panel, ctx), unmount().
+ * Onglet : /pages/jeux/jeux.html#geo. Contrat : mount(panel, ctx), unmount().
  * Dépendances : photos.js (adresses signées, visionneuse), leaflet-load.js (carte), jeux/commun.js, core.js (errMsg).
  * Données : RPC hg_geo_today, hg_geo_guess, hg_geo_board, hg_geo_archive (migration 083).
  */
-import { errMsg } from '../core.js';
-import { signedUrl, signedUrls, openLightbox } from '../photos.js';
-import { loadLeaflet, addOsmTiles } from '../leaflet-load.js';
+import { errMsg } from '../../commun/core.js';
+import { signedUrl, signedUrls, openLightbox } from '../irl/photos.js';
+import { loadLeaflet, addOsmTiles } from '../../commun/leaflet-load.js';
 import { chargerCss, nf, km, gainHtml, classementHtml, jourLong } from './commun.js';
-import { boutonReponses } from '../core/admin-reponses.js';
+import { boutonReponses } from '../../commun/core/admin-reponses.js';
 
 /* ---------- Constantes ---------- */
 /** Vue de départ de la carte : Suisse et pays voisins. */
@@ -248,7 +248,7 @@ function resultat(m, focus) {
   const date = sol.event_date ? ` (${new Intl.DateTimeFormat('fr-CH', { month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' }).format(new Date(sol.event_date))})` : '';
   const origine = sol.label ? `<div class="geo-origin">
       <span class="small">C’était : <b>${esc(sol.label)}</b>${sol.event_title ? `, ${esc(sol.event_title)}${esc(date)}` : ''}</span>
-      ${sol.event_id ? `<a class="small geo-album" href="irl.html#event-${encodeURIComponent(sol.event_id)}">Voir l’album</a>` : ''}
+      ${sol.event_id ? `<a class="small geo-album" href="/pages/irl/irl.html#event-${encodeURIComponent(sol.event_id)}">Voir l’album</a>` : ''}
     </div>` : '';
   const box = q('#geo-result');
   box.innerHTML = `<div class="jg-between">

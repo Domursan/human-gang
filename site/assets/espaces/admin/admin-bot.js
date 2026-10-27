@@ -14,14 +14,14 @@
 // Tables, RPC et stockage : hg_settings (bot, bot_templates, support, planning), hg_bot_log (historique), hg_profiles
 // (destinataires), bucket hg-bot-media (pièces jointes), fonctions edge hg-notify et hg-bot-templates.
 // Exporte : mountBotSection (montage de la page).
-import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from './core.js';
-import { svg } from './icons.js';
-import { pluralCount } from './utils.js';
-import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './admin/list-tools.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { sb, toast, errMsg, esc, $, $$, callFn, avatarHtml, currentLogo } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { pluralCount } from '../../commun/utils.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, PAGE_SIZE, SEARCH_DELAY } from './list-tools.js';
+import { openDrawer } from './ui/drawer.js';
 
 // Adresse du fichier de modèles partagé avec les fonctions edge (textes par défaut des messages types).
-const TEMPLATES_URL = new URL('../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
+const TEMPLATES_URL = new URL('../../../../supabase/functions/_shared/bot-templates.json', import.meta.url).href;
 // Types de notifications du bot : [clé, libellé, ce qui part et où]. Chaque type peut être activé ou coupé.
 const NOTIFY = [
   ['draw', 'Tirage du Secret Santa', 'annonce + MP aux participants'],
@@ -261,7 +261,7 @@ function attachmentUI(root, p, onChange) {
 function loadStyles() {
   if (document.querySelector('link[data-admin-bot]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../css/admin-bot.css', import.meta.url).href; l.dataset.adminBot = '';
+  l.rel = 'stylesheet'; l.href = new URL('./admin-bot.css', import.meta.url).href; l.dataset.adminBot = '';
   document.head.append(l);
 }
 

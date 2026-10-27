@@ -9,8 +9,8 @@
  * RPC : hg_proof_queue, hg_proof_review, hg_proofs_purge_due, hg_proofs_mark_purged. Stockage : hg-proofs (privé).
  * Exporte : mountProofsSection.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { setCount } from './admin/shell.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { setCount } from './shell.js';
 
 const BUCKET = 'hg-proofs';
 const STATUTS = [['en_attente', 'En attente'], ['validee', 'Validées'], ['refusee', 'Refusées']];

@@ -14,7 +14,7 @@
  *       nomMain: 'Paire'|null }]
  *   }
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { carteHtml, dosHtml } from '../cartes.js';
 
 /** Libellé des phases de la main. */

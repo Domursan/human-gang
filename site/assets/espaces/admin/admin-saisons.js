@@ -16,9 +16,9 @@
  * Dépendances : core.js (sb, esc, toast, errMsg, getCachedPerms), saisons-css.js (styles de l'aperçu).
  * Exporte : mountSaisonsSection(root), showSaisonsPart(part).
  */
-import { sb, esc, toast, errMsg, getCachedPerms } from './core.js';
-import { loadSeasonCss } from './saisons-css.js';
-import { ecrireReglage } from './admin/reglages-merge.js';
+import { sb, esc, toast, errMsg, getCachedPerms } from '../../commun/core.js';
+import { loadSeasonCss } from '../accueil/saisons-css.js';
+import { ecrireReglage } from './reglages-merge.js';
 
 const KINDS = [['paillettes', 'Paillettes'], ['carte', 'Carte'], ['souvenir', 'Souvenir'], ['question', 'Question bonus'], ['booster', 'Booster']];
 /* Adresse d'une page des pronostics : nom de fichier .html, ancre facultative (même règle que hg_saison_worlds_cfg). */
@@ -176,8 +176,8 @@ function renderWorlds(host) {
         ${(Z.tpl || []).map((q) => `<label class="check"><input type="checkbox" name="quete" value="${esc(q.code)}"${(w.quetes || []).includes(q.code) ? ' checked' : ''}> ${esc(q.label)} <span class="muted small">(${esc(q.code)} · ${esc(q.reward)} ✦${q.active ? '' : ' · inactive'})</span></label>`).join('') || '<p class="muted small">Aucun modèle de quête. Crée-en dans Fabrique › Quêtes.</p>'}
       </fieldset>
       <div class="field"><label for="zw-p">Page des pronostics</label>
-        <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || 'jeux.html#pronos')}" aria-describedby="zw-p-h">
-        <span class="small muted" id="zw-p-h">Adresse d’une page du site, avec ou sans ancre (ex. jeux.html#pronos). Vide : jeux.html#pronos.</span></div>
+        <input id="zw-p" name="pronos" maxlength="80" value="${esc(w.pronos || '/pages/jeux/jeux.html#pronos')}" aria-describedby="zw-p-h">
+        <span class="small muted" id="zw-p-h">Adresse d’une page du site, avec ou sans ancre (ex. /pages/jeux/jeux.html#pronos). Vide : /pages/jeux/jeux.html#pronos.</span></div>
       <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer la saison</button></div>
     </form>`;
 }
@@ -205,7 +205,7 @@ function renderAnniv(host) {
         <div class="field"><label for="za-b">Booster du cadeau d’anniversaire</label><select id="za-b" name="booster" aria-describedby="za-b-h">${annivBoosterOptions(i.booster || 'anniversaire')}</select>
           <span class="small muted" id="za-b-h">Le booster offert au membre pendant la fenêtre du cadeau. Les types se gèrent dans Fabrique › Boosters.</span></div>
         <div class="field"><label for="za-p">Photo de famille (identifiant d’une photo d’album, facultatif)</label><input id="za-p" name="photo_id" value="${esc(c.photo_id || '')}"></div>
-        <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer</button><a class="btn btn-ghost" href="recap.html?retro=1" target="_blank" rel="noopener">Voir la rétrospective</a></div>
+        <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer</button><a class="btn btn-ghost" href="/pages/irl/recap.html?retro=1" target="_blank" rel="noopener">Voir la rétrospective</a></div>
       </form>
       <h3>Moments retenus pour la rétrospective</h3>
       <p class="muted small">Seulement des moments validés : rien de blessant, personne qui a demandé à ne pas apparaître (droit « souvenirs »).</p>
@@ -284,8 +284,8 @@ async function onSubmit(e) {
       // Quêtes et page des pronostics : pas dans hg_saison_set, enregistrées ensuite dans saisons.worlds (fusion).
       const quetes = [...f.querySelectorAll('input[name="quete"]:checked')].map((x) => x.value);
       if (quetes.length > 6) throw new Error('Six quêtes au plus pour la saison.');
-      const pronos = val('pronos').trim() || 'jeux.html#pronos';
-      if (!PRONOS_RE.test(pronos)) throw new Error('Page des pronostics : nom d’une page .html, avec une ancre facultative (ex. jeux.html#pronos).');
+      const pronos = val('pronos').trim() || '/pages/jeux/jeux.html#pronos';
+      if (!PRONOS_RE.test(pronos)) throw new Error('Page des pronostics : nom d’une page .html, avec une ancre facultative (ex. /pages/jeux/jeux.html#pronos).');
       const { data, error } = await sb.rpc('hg_saison_set', { p_slug: 'worlds', p });
       if (error) throw error;
       await ecrireReglage('saisons', (s) => { s.worlds = { ...(s.worlds || {}), quetes, pronos }; });

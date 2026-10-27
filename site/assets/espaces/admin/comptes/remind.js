@@ -8,11 +8,11 @@
 // (migration 092) ; MP : fonction hg-notify, événement admin_dm (permission bot).
 // Dépendances : core.js, admin/common.js (copyText), admin/ui/drawer.js, ui-confirm.js, admin/shell.js.
 // Exporte : remindSub ({ main, open }), branché par admin.js sur « membres/relance ».
-import { sb, esc, toast, errMsg, hasPerm, callFn, initials } from '../core.js';
-import { copyText } from '../admin/common.js';
-import { openDrawer } from '../admin/ui/drawer.js';
-import { confirmBox } from '../ui-confirm.js';
-import { setActions, setCount } from '../admin/shell.js';
+import { sb, esc, toast, errMsg, hasPerm, callFn, initials } from '../../../commun/core.js';
+import { copyText } from '../common.js';
+import { openDrawer } from '../ui/drawer.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { setActions, setCount } from '../shell.js';
 
 // Modèles par défaut (hg_settings.relance absent). {pseudo} est remplacé par le pseudo du membre.
 const DEFAUTS = [

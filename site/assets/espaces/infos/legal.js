@@ -1,8 +1,8 @@
-// ===== Pages légales (legal.html) : en-tête/pied communs, champs d'identité, sommaire actif =====
-// Module chargé par legal.html. Dépend de core.js (initPage, $$) et des réglages du site (core/site-defaults.js).
+// ===== Pages légales (/pages/infos/legal.html) : en-tête/pied communs, champs d'identité, sommaire actif =====
+// Module chargé par /pages/infos/legal.html. Dépend de core.js (initPage, $$) et des réglages du site (core/site-defaults.js).
 // Ne rend rien en dehors de la page légale, et n'exporte rien.
-import { initPage, $$ } from './core.js';
-import { siteIdentite, siteTexte } from './core/site-defaults.js';
+import { initPage, $$ } from '../../commun/core.js';
+import { siteIdentite, siteTexte } from '../../commun/core/site-defaults.js';
 
 /* ---------- Initialisation : en-tête et pied communs, accès facultatif (pas de connexion requise) ---------- */
 await initPage({ auth: 'optional' });
@@ -21,7 +21,7 @@ document.querySelectorAll('[data-legal-extra]').forEach((el) => {
   el.replaceChildren(...paras.map((t) => { const p = document.createElement('p'); p.textContent = t; return p; }));
 });
 
-/* ---------- Ancre demandée (ex. legal.html#cookies) ---------- */
+/* ---------- Ancre demandée (ex. /pages/infos/legal.html#cookies) ---------- */
 // L'en-tête est injecté après le chargement : on recale l'ancre demandée.
 if (location.hash) {
   const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));

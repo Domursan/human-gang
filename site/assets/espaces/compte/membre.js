@@ -1,4 +1,4 @@
-// ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » (membre.html) =====
+// ===== Humane Gang — carte d'identité d'un membre + annuaire « Le gang » (/pages/compte/membre.html) =====
 // Affiche la carte de membre (soi-même par défaut, ou ?id=<uuid> pour un autre membre), ses badges, sa vitrine de cartes,
 // et l'annuaire « Le gang ». La carte peut être téléchargée en PNG haute définition.
 // Dépendances : core.js (initPage, sb, canAccess), ss-card.js (chargement d'image et téléchargement),
@@ -6,17 +6,17 @@
 // RPC et tables : hg_member_card, hg_members, hg_settings (badges), hg_user_badges, hg_badges ;
 // profil gaming et mercis (migration 090) : profil-gaming.js et mercis.js, chargés à la demande.
 // N'exporte que renderIdCard (carte haute définition).
-import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo, canAccess } from './core.js';
-import { loadImage, downloadCanvas } from './ss-card.js';
+import { sb, initPage, esc, $, $$, errMsg, toast, fmtDate, avatarHtml, initials, currentLogo, canAccess } from '../../commun/core.js';
+import { loadImage, downloadCanvas } from '../irl/ss-card.js';
 import { hasLevels, levelImage, levelLabel, levelPipsHtml, roman } from './badge-levels.js';
-import { mountShowcase } from './cartes-showcase.js';
-import { svg } from './icons.js';
-import { questTrack } from './quest-track.js';
-import { avatarPresence } from './core/presence.js';
-import { isOffline, startOfflinePage, saveOffline, offlineBannerHtml } from './offline-store.js'; // Q4 : sa carte hors ligne
-import { loadGenerations } from './cartes-gen.js';
-import { generationLabel } from './cartes-ui.js';
-import { loadTagLabels, titlesOf } from './cartes-jeux.js';
+import { mountShowcase } from '../cartes/cartes-showcase.js';
+import { svg } from '../../commun/icons.js';
+import { questTrack } from '../../commun/quest-track.js';
+import { avatarPresence } from '../../commun/core/presence.js';
+import { isOffline, startOfflinePage, saveOffline, offlineBannerHtml } from '../../commun/offline-store.js'; // Q4 : sa carte hors ligne
+import { loadGenerations } from '../cartes/cartes-gen.js';
+import { generationLabel } from '../cartes/cartes-ui.js';
+import { loadTagLabels, titlesOf } from '../cartes/cartes-jeux.js';
 
 const app = $('#app');
 // Q4 : sans réseau, la page montre la carte de membre gardée sur l'appareil (la sienne seulement, aucune requête).
@@ -202,9 +202,9 @@ function cardHtml(c) {
       </article>
     </div>
     <div class="btn-row mb-actions">
-      ${isMe ? '' : `<a class="btn btn-primary" href="messages.html?to=${encodeURIComponent(c.id)}">${ICON.msg} Envoyer un message</a>`}
+      ${isMe ? '' : `<a class="btn btn-primary" href="/pages/compte/messages.html?to=${encodeURIComponent(c.id)}">${ICON.msg} Envoyer un message</a>`}
       <button class="btn ${isMe ? 'btn-primary' : 'btn-ghost'}" type="button" id="dl-card">${ICON.download} Télécharger la carte</button>
-      ${isMe ? '<a class="btn btn-ghost" href="compte.html">Modifier mon profil</a>' : ''}
+      ${isMe ? '<a class="btn btn-ghost" href="/pages/compte/compte.html">Modifier mon profil</a>' : ''}
     </div>`;
 }
 
@@ -473,7 +473,7 @@ async function onDownload(btn, card) {
     await downloadCanvas(canvas, `carte-hg-${slug}-${num4(card.member_number)}.png`);
     toast('Carte téléchargée', 'ok');
     questTrack('carte_identite', 'carte'); // quête « carte d'identité téléchargée »
-    import('./sound.js').then((m) => m.playSound?.('success')).catch(() => {});
+    import('../../commun/sound.js').then((m) => m.playSound?.('success')).catch(() => {});
   } catch (e) {
     toast(`Téléchargement impossible : ${errMsg(e)}`, 'error');
   } finally {
@@ -491,7 +491,7 @@ async function loadGang() {
     const list = (data || []).slice().sort((a, b) => String(a.pseudo).localeCompare(String(b.pseudo), 'fr'));
     if (!list.length) { ul.innerHTML = '<li class="empty">Personne pour l\'instant.</li>'; return; }
     ul.innerHTML = list.map((m) => `
-      <li><a class="gang-item${m.id === targetId ? ' is-current' : ''}" href="membre.html?id=${encodeURIComponent(m.id)}"${m.id === targetId ? ' aria-current="page"' : ''}>
+      <li><a class="gang-item${m.id === targetId ? ' is-current' : ''}" href="/pages/compte/membre.html?id=${encodeURIComponent(m.id)}"${m.id === targetId ? ' aria-current="page"' : ''}>
         ${avatarPresence(avatarHtml(m, 44), m.id)}
         <span class="gang-txt"><strong>${esc(m.pseudo)}${m.id === me.id ? ' <span class="gang-me">toi</span>' : ''}</strong>
           <span class="small muted">depuis ${esc(sinceLabel(m.member_since))}</span></span>
@@ -536,7 +536,7 @@ function renderOffline() {
     ${offlineBannerHtml(card ? OFF.copie.membre.at : null, 'ta carte de membre')}
     ${card ? `<section class="mb-layout" id="mb-main"><div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div></section>`
       : `<div class="card mb-missing"><p class="empty">${me && !isMe ? 'Hors ligne, seule ta propre carte est disponible.' : 'Ta carte de membre n’est pas encore gardée sur cet appareil.'}</p>
-        <div class="btn-row"><a class="btn btn-ghost" href="cartes.html">Voir ma collection</a></div></div>`}`;
+        <div class="btn-row"><a class="btn btn-ghost" href="/pages/cartes/cartes.html">Voir ma collection</a></div></div>`}`;
   if (card) { bindHolo(); $('#dl-card')?.addEventListener('click', (e) => onDownload(e.currentTarget, card)); }
   app.removeAttribute('aria-busy');
 }
@@ -566,16 +566,16 @@ async function renderOnline() {
     }
     if (!card || !card.id) {
       $('#mb-main').innerHTML = `<div class="card mb-missing"><p class="empty">Ce membre est introuvable : le compte a peut-être été supprimé.</p>
-        <div class="btn-row"><a class="btn btn-ghost" href="membre.html">Voir ma carte</a></div></div>`;
+        <div class="btn-row"><a class="btn btn-ghost" href="/pages/compte/membre.html">Voir ma carte</a></div></div>`;
     } else {
       document.title = `${card.pseudo} · Carte de membre · Humane Gang`;
       $('#mb-title').textContent = isMe ? 'Ma carte' : card.pseudo;
       $('#mb-main').innerHTML = `<div class="mb-card-col">${cardHtml(card)}</div><div class="card mb-badges">${badgesHtml(card)}</div>`;
       bindHolo();
       $('#dl-card').addEventListener('click', (e) => onDownload(e.currentTarget, card));
-      if (!isMe && canAccess('cartes')) { // collection de ce membre, en lecture seule (cartes.html)
+      if (!isMe && canAccess('cartes')) { // collection de ce membre, en lecture seule (/pages/cartes/cartes.html)
         $('#mb-actions').hidden = false;
-        $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
+        $('#mb-actions').innerHTML = `<a class="btn btn-ghost" href="/pages/cartes/cartes.html#collection/${esc(card.id)}">Voir sa collection</a>`;
       }
       if (canAccess('cartes')) mountShowcase($('#mb-showcase'), { userId: card.id, isMe });
       if (!isMe) questTrack('fiche_vue', card.id); // quête « fiches consultées » : jamais sa propre carte
@@ -583,7 +583,7 @@ async function renderOnline() {
       // Social (migration 090) : bloc « En jeu » et mercis, chargés à la demande sans retarder la carte.
       import('./profil-gaming.js').then((m) => m.mountGamingBlock($('#mb-gaming'), card.id, isMe)).catch((e) => console.warn('[gaming]', e));
       const merciEv = params.get('merci');
-      import('./mercis.js').then((m) => m.mountThanks($('#mb-thanks'), card, isMe, { eventId: merciEv && UUID_RE.test(merciEv) ? merciEv : null, mePseudo: me.pseudo }))
+      import('../accueil/mercis.js').then((m) => m.mountThanks($('#mb-thanks'), card, isMe, { eventId: merciEv && UUID_RE.test(merciEv) ? merciEv : null, mePseudo: me.pseudo }))
         .catch((e) => console.warn('[mercis]', e));
       // Idées P6 (souvenirs communs) et P7 (compétences) : modules à part, chargés sans bloquer la carte
       import('./friendship.js').then((m) => m.mountFriendship($('#mb-friend'), { card, isMe, me })).catch((e) => console.warn('[amitié]', e?.message || e));

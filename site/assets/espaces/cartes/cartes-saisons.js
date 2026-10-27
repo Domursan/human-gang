@@ -3,7 +3,7 @@
 // available_until (fin de la saison), opens_at / closes_at (plage horaire), per_window_limit / remaining_window (limite par soirée).
 // Toutes les heures sont affichées en heure de Zurich ; le serveur fait foi pour l'achat (hg_booster_buy).
 // Exporte : onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml, windowLeft, nextOpenLabel.
-import { esc } from './core.js';
+import { esc } from '../../commun/core.js';
 
 const TZ = 'Europe/Zurich';
 const nf = new Intl.NumberFormat('fr-CH');

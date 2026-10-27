@@ -2,7 +2,7 @@
 // Charge une fois les générations (RPC hg_card_generations : « og » ou « gen2 » par membre qui l'affiche) et les donne
 // au rendu des cartes (cartes-ui.js, setGenerations). Sans la fonction (migration pas encore déployée) : rien ne change.
 // Exporte : loadGenerations() (promesse de la Map user_id -> génération, jamais d'erreur).
-import { sb } from './core.js';
+import { sb } from '../../commun/core.js';
 import { setGenerations } from './cartes-ui.js';
 
 let pending = null;

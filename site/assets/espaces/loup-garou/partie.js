@@ -8,7 +8,7 @@
  * Dépendances : api.js, ui.js.
  * Exporte : afficher.
  */
-import { esc } from '../core.js';
+import { esc } from '../../commun/core.js';
 import { lg, messages, suivrePartie, estInvite } from './api.js';
 import { filAriane } from './ui.js';
 
@@ -66,7 +66,7 @@ export async function afficher(root, { code, naviguer }) {
       if (!courant) {
         root.innerHTML = `${estInvite() ? '' : filAriane('Partie')}<section class="card lg-erreur"><h1 class="display">Partie introuvable</h1>
           <p>${esc(err?.message || 'Cette partie n\'existe pas ou n\'est plus disponible.')}</p>
-          <p><a class="btn btn-primary" href="${estInvite() ? `loup-garou.html#rejoindre/${encodeURIComponent(code)}` : 'loup-garou.html'}">${estInvite() ? 'Rejoindre à nouveau' : 'Retour au Loup-Garou'}</a></p></section>`;
+          <p><a class="btn btn-primary" href="${estInvite() ? `/pages/jeux/loup-garou.html#rejoindre/${encodeURIComponent(code)}` : '/pages/jeux/loup-garou.html'}">${estInvite() ? 'Rejoindre à nouveau' : 'Retour au Loup-Garou'}</a></p></section>`;
       }
     },
   });

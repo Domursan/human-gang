@@ -11,9 +11,9 @@
 // La clé de réponse part dans hg_quiz_import puis hg_quiz_keys : elle n'est jamais mise dans les choix visibles des membres.
 // Dépendances : core.js (sb, esc, toast, errMsg), admin-events.js (heure suisse), admin/ui/drawer.js (tiroir).
 // Exporte : openQuizImport({ onDone }), appelé par admin-quiz.js.
-import { sb, esc, toast, errMsg } from './core.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { openDrawer } from './ui/drawer.js';
 
 /* ---------- Constantes ---------- */
 // Limites du fichier (les mêmes côté base pour le nombre de lignes).

@@ -7,8 +7,8 @@
 // Dépendances : core.js, admin/common.js (sectionError), helpers.js.
 // Exporte : createContenusPanel (fabrique la vue : élément HTML et fonction de rechargement).
 // =====================================================================
-import { sb, esc, toast, errMsg } from '../core.js';
-import { sectionError } from '../admin/common.js';
+import { sb, esc, toast, errMsg } from '../../../commun/core.js';
+import { sectionError } from '../common.js';
 import { stampLabel, dayLabel } from './helpers.js';
 
 /* Onglets de la vue : [identifiant, libellé]. */

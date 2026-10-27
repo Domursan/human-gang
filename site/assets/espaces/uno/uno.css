@@ -2,13 +2,13 @@
    Feuilles par écran : assets/css/uno/*.css (importées ci-dessous).
    Cartes : style « art déco » (.uc.v3), dos D « arc-en-ciel doré » (.ub.d), validés en maquette.
    Animations coupées par <body class="uno-calme"> (préférence du membre) et prefers-reduced-motion. */
-@import url('uno/accueil.css');
-@import url('uno/creer.css');
-@import url('uno/rejoindre.css');
-@import url('uno/salle.css');
-@import url('uno/table.css');
-@import url('uno/fin.css');
-@import url('uno/stats.css');
+@import url('accueil.css');
+@import url('creer.css');
+@import url('rejoindre.css');
+@import url('salle.css');
+@import url('table.css');
+@import url('fin.css');
+@import url('stats.css');
 
 /* ---------- Décor ---------- */
 body.uno-page {

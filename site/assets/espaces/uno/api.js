@@ -7,7 +7,7 @@
  * Dépendances : core.js (sb, errMsg).
  * Exporte : uno (appels), suivrePartie, messages, erreurTexte, activerInvite, estInvite, jetonInvite.
  */
-import { sb, errMsg } from '../core.js';
+import { sb, errMsg } from '../../commun/core.js';
 
 /* ---------- Mode invité ---------- */
 let invite = false;

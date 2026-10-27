@@ -5,7 +5,7 @@
 // cards.tag_labels), sinon les libellés connus ci-dessous.
 // Rendu pur : aucune requête sauf loadTagLabels. Utilisé par cartes.js (drawCollection) et membre.js (titres).
 // Exporte : TAG_LABELS, tagLabel, hasTags, loadTagLabels, tagGroupsHtml, titlesOf.
-import { sb, esc } from './core.js';
+import { sb, esc } from '../../commun/core.js';
 import { TINT } from './cartes-zoom.js';
 
 /** Libellés connus (repli si la base ne répond pas). */

@@ -6,7 +6,7 @@
 // Lit : table hg_ss_assignments (giver_id, receiver_id) et hg_ss_participants (sent_at, received_at).
 // Exporte : pairsBlockHtml (HTML du bloc) et togglePairs (afficher / masquer le tableau).
 // =====================================================================
-import { sb, esc, fmtDate, $ } from '../core.js';
+import { sb, esc, fmtDate, $ } from '../../../commun/core.js';
 import { IC, busy, check } from './common.js';
 import { A, pseudoOf } from './state.js';
 import { loadAccounts } from './list.js';

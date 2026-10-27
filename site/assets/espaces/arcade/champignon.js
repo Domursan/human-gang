@@ -11,7 +11,7 @@
  * Dépendances : ../core.js (sb, hasSession, motionAllowed), ./api.js (eggFound, eggsMe), feuille assets/css/eggs-f.css.
  * Exporte : rien (effets de bord).
  */
-import { sb, hasSession, motionAllowed } from '../core.js';
+import { sb, hasSession, motionAllowed } from '../../commun/core.js';
 import { eggFound, eggsMe } from './api.js';
 
 /* ---------- Constantes ---------- */
@@ -33,7 +33,7 @@ const MYCENA = `<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
 
 /* ---------- Outils ---------- */
 
-/** Nom de la page courante, sans chemin ni extension (« irl » pour irl.html). */
+/** Nom de la page courante, sans chemin ni extension (« irl » pour /pages/irl/irl.html). */
 const pageCourante = () => location.pathname.split('/').pop().replace(/\.html$/, '');
 
 /** Charge la feuille de style des secrets F, une seule fois. */
@@ -41,7 +41,7 @@ function chargeCss() {
   if (document.querySelector('link[data-eggs-f]')) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL('../../css/eggs-f.css', import.meta.url).href;
+  l.href = new URL('./eggs-f.css', import.meta.url).href;
   l.dataset.eggsF = '';
   document.head.append(l);
 }

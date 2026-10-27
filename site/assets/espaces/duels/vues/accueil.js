@@ -1,4 +1,4 @@
-// ===== Humane Gang — Duels : accueil (duels.html, sans adresse de duel) =====
+// ===== Humane Gang — Duels : accueil (/pages/jeux/duels.html, sans adresse de duel) =====
 /*
  * Rôle : écran d'accueil des duels. Rejoindre avec un code, les jeux proposés (les jeux en développement aux seuls admins),
  * code du jour, défis reçus (accepter ou refuser), mes duels, duels ouverts, duels en direct, défier un membre
@@ -8,9 +8,9 @@
  * Dépendances : core.js (esc, toast), duels/api.js (duel, erreurTexte, jeuxVisibles), vues/commun.js (avatarHtml, couleurJoueur).
  * Exporte : afficher.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, jeuxVisibles } from '../api.js';
-import { avatarPresence } from '../../core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
+import { avatarPresence } from '../../../commun/core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, couleurJoueur } from './commun.js';
 
 /** Intervalle de rafraîchissement de l'accueil (ms). */
@@ -70,7 +70,7 @@ function squelette() {
   return `<div class="duels-acc">
     <header class="duels-acc-tete">
       <div class="duels-acc-titre">
-        <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="jeux.html">Jeux</a> › Duels</nav>
+        <nav class="duels-fil" aria-label="Fil d’Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › Duels</nav>
         <h1 class="duels-titre">Duels</h1>
         <p class="duels-acc-intro">Des jeux à deux. Défie un membre, partage un code ou entraîne-toi contre le robot.</p>
       </div>
@@ -145,7 +145,7 @@ function squelette() {
 function htmlJeux() {
   return Object.entries(jeuxVisibles()).map(([cle, j]) => `
     <article class="duels-acc-jeu">
-      <img class="duels-vignette" src="assets/img/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
+      <img class="duels-vignette" src="/assets/images/jeux/${esc(j.image)}.webp" alt="" loading="lazy">
       <div class="duels-acc-jeu-corps">
         <h2 class="duels-acc-jeu-nom">${esc(j.nom)}${j.dev ? ' <span class="duels-dev">En développement</span>' : ''}</h2>
         <p class="duels-acc-jeu-texte">${esc(j.texte)}</p>

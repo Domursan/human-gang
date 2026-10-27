@@ -1,5 +1,5 @@
-/* ===== Intro quotidienne (page accueil.html) =====
-   Script classique (pas un module) chargé AVANT accueil.js, dans l'en-tête de accueil.html.
+/* ===== Intro quotidienne (page /pages/compte/accueil.html) =====
+   Script classique (pas un module) chargé AVANT accueil.js, dans l'en-tête de /pages/compte/accueil.html.
    Dépendances : localStorage uniquement (clés hg_site_settings, hg_intro_day, hg_storage_test, hg_intro_seen).
    Il n'exporte rien. */
 
@@ -12,5 +12,5 @@ try {
   var d = new Date(), t = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
   localStorage.setItem('hg_storage_test', '1'); localStorage.removeItem('hg_storage_test');
   localStorage.removeItem('hg_intro_seen'); // ancienne clé (intro jouée une seule fois)
-  if (!introOff && localStorage.getItem('hg_intro_day') !== t && !/[?&]nointro\b/.test(location.search)) location.replace('index.html');
+  if (!introOff && localStorage.getItem('hg_intro_day') !== t && !/[?&]nointro\b/.test(location.search)) location.replace('/index.html');
 } catch (e) {}

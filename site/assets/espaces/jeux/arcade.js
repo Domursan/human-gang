@@ -2,7 +2,7 @@
 /*
  * Rôle : les mini-jeux (« Paillettes », « Raclette », « Domu-mobile », et ceux en développement réservés aux admins :
  * Flappy Domu, Casse-briques, Snake, Tetris, Space Invaders, Tape-taupe), jouables tous les jours. Le joueur choisit le sien
- * (sélecteur) ; au départ, c'est celui de l'adresse (jeux.html#arcade-<jeu>, ctx.sub), sinon le jeu du jour (game_of_day).
+ * (sélecteur) ; au départ, c'est celui de l'adresse (/pages/jeux/jeux.html#arcade-<jeu>, ctx.sub), sinon le jeu du jour (game_of_day).
  * Le serveur fixe le jeu de chaque tableau (hg_arcade_board(p_game)) et de chaque partie (hg_arcade_start(p_game)) ;
  * la partie est fermée par le serveur (hg_arcade_finish : durée et score vérifiés). Une seule partie par jour est
  * récompensée, tous jeux confondus. Record personnel (navigateur) par jeu et meilleurs scores du gang de la semaine (5 lignes).
@@ -12,38 +12,38 @@
  * core/util.js (avatarHtml) ; core/pages-access.js (accès des nouveaux jeux).
  * Exporte : mount(panel, ctx), unmount().
  */
-import { creeArcade } from '../eggs/arcade.js';
-import { avatarHtml } from '../core/util.js';
-import { canAccess, pageLabel, pageMode } from '../core/pages-access.js';
+import { creeArcade } from '../arcade/arcade.js';
+import { avatarHtml } from '../../commun/core/util.js';
+import { canAccess, pageLabel, pageMode } from '../../commun/core/pages-access.js';
 
 /** Mini-jeux connus : identifiant du serveur → module, nom, icône en pixel art (SVG 16 × 16). */
 const JEUX = {
-  paillettes: { module: '../eggs/jeu-paillettes.js', nom: 'Paillettes',
+  paillettes: { module: '../arcade/jeu-paillettes.js', nom: 'Paillettes',
     icone: (c) => `<rect x="7" y="1" width="2" height="14" fill="${c[0]}"/><rect x="1" y="7" width="14" height="2" fill="${c[0]}"/><rect x="5" y="5" width="6" height="6" fill="${c[1]}"/>`,
     couleurs: ['#FCA301', '#FBD32D'] },
-  raclette: { module: '../eggs/jeu-raclette.js', nom: 'Raclette',
+  raclette: { module: '../arcade/jeu-raclette.js', nom: 'Raclette',
     icone: (c) => `<rect x="2" y="4" width="12" height="7" fill="${c[1]}"/><rect x="2" y="4" width="12" height="2" fill="${c[0]}"/><rect x="5" y="7" width="2" height="2" fill="${c[2]}"/><rect x="10" y="8" width="2" height="2" fill="${c[2]}"/><rect x="1" y="11" width="14" height="2" fill="${c[3]}"/>`,
     couleurs: ['#FCA301', '#FBD32D', '#e2a52c', '#6b3a12'] },
-  domu: { module: '../eggs/jeu-domu.js', nom: 'Domu-mobile',
+  domu: { module: '../arcade/jeu-domu.js', nom: 'Domu-mobile',
     icone: (c) => `<rect x="3" y="5" width="10" height="4" fill="${c[0]}"/><rect x="5" y="3" width="6" height="3" fill="${c[1]}"/><rect x="4" y="9" width="3" height="3" fill="${c[2]}"/><rect x="9" y="9" width="3" height="3" fill="${c[2]}"/>`,
     couleurs: ['#9E3543', '#7E93C9', '#121212'] },
   // Nouveaux jeux (page) : accès réglé dans « Accès aux pages » du panel (hg_pages, migration 150 ; le serveur le vérifie aussi).
-  flappy: { module: '../eggs/jeu-flappy.js', nom: 'Flappy Domu', page: 'arcade-flappy',
+  flappy: { module: '../arcade/jeu-flappy.js', nom: 'Flappy Domu', page: 'arcade-flappy',
     icone: (c) => `<rect x="1" y="6" width="2" height="1" fill="${c[1]}"/><rect x="1" y="7" width="2" height="1" fill="${c[2]}"/><rect x="1" y="8" width="2" height="1" fill="${c[3]}"/><rect x="4" y="4" width="3" height="2" fill="${c[0]}"/><rect x="8" y="4" width="3" height="2" fill="${c[0]}"/><rect x="3" y="6" width="9" height="3" fill="${c[0]}"/><rect x="4" y="9" width="7" height="2" fill="${c[0]}"/><rect x="6" y="11" width="3" height="2" fill="${c[0]}"/>`,
     couleurs: ['#B0102A', '#FE3104', '#FBD32D', '#2B5AE2'] },
-  briques: { module: '../eggs/jeu-briques.js', nom: 'Casse-briques', page: 'arcade-briques',
+  briques: { module: '../arcade/jeu-briques.js', nom: 'Casse-briques', page: 'arcade-briques',
     icone: (c) => `<rect x="1" y="2" width="4" height="2" fill="${c[0]}"/><rect x="6" y="2" width="4" height="2" fill="${c[1]}"/><rect x="11" y="2" width="4" height="2" fill="${c[2]}"/><rect x="3" y="5" width="4" height="2" fill="${c[1]}"/><rect x="8" y="5" width="4" height="2" fill="${c[0]}"/><rect x="7" y="10" width="2" height="2" fill="${c[3]}"/><rect x="4" y="13" width="8" height="2" fill="${c[3]}"/>`,
     couleurs: ['#FE3104', '#FBD32D', '#2B5AE2', '#F2EFEA'] },
-  snake: { module: '../eggs/jeu-snake.js', nom: 'Snake', page: 'arcade-snake',
+  snake: { module: '../arcade/jeu-snake.js', nom: 'Snake', page: 'arcade-snake',
     icone: (c) => `<rect x="2" y="3" width="8" height="2" fill="${c[0]}"/><rect x="8" y="5" width="2" height="5" fill="${c[0]}"/><rect x="3" y="10" width="7" height="2" fill="${c[0]}"/><rect x="2" y="3" width="2" height="2" fill="${c[1]}"/><rect x="12" y="10" width="2" height="2" fill="${c[2]}"/>`,
     couleurs: ['#159946', '#0B5A2A', '#FCA301'] },
-  tetris: { module: '../eggs/jeu-tetris.js', nom: 'Tetris du gang', page: 'arcade-tetris',
+  tetris: { module: '../arcade/jeu-tetris.js', nom: 'Tetris du gang', page: 'arcade-tetris',
     icone: (c) => `<rect x="2" y="10" width="4" height="4" fill="${c[0]}"/><rect x="6" y="10" width="4" height="4" fill="${c[1]}"/><rect x="10" y="10" width="4" height="4" fill="${c[2]}"/><rect x="6" y="6" width="4" height="4" fill="${c[1]}"/><rect x="10" y="2" width="4" height="4" fill="${c[3]}"/><rect x="10" y="6" width="4" height="4" fill="${c[3]}"/>`,
     couleurs: ['#FE3104', '#FBD32D', '#2B5AE2', '#4E2398'] },
-  invaders: { module: '../eggs/jeu-invaders.js', nom: 'Space Invaders', page: 'arcade-invaders',
+  invaders: { module: '../arcade/jeu-invaders.js', nom: 'Space Invaders', page: 'arcade-invaders',
     icone: (c) => `<rect x="4" y="2" width="8" height="2" fill="${c[0]}"/><rect x="2" y="4" width="12" height="3" fill="${c[0]}"/><rect x="4" y="5" width="2" height="1" fill="${c[1]}"/><rect x="10" y="5" width="2" height="1" fill="${c[1]}"/><rect x="2" y="7" width="2" height="2" fill="${c[0]}"/><rect x="12" y="7" width="2" height="2" fill="${c[0]}"/><rect x="7" y="12" width="2" height="3" fill="${c[2]}"/>`,
     couleurs: ['#6FA37F', '#121212', '#E2C77E'] },
-  taupe: { module: '../eggs/jeu-taupe.js', nom: 'Tape-taupe', page: 'arcade-taupe',
+  taupe: { module: '../arcade/jeu-taupe.js', nom: 'Tape-taupe', page: 'arcade-taupe',
     icone: (c) => `<rect x="2" y="12" width="12" height="2" fill="${c[0]}"/><rect x="5" y="5" width="6" height="7" fill="${c[1]}"/><rect x="6" y="7" width="1" height="1" fill="${c[2]}"/><rect x="9" y="7" width="1" height="1" fill="${c[2]}"/><rect x="7" y="9" width="2" height="1" fill="${c[3]}"/>`,
     couleurs: ['#5A3A24', '#9E3543', '#121212', '#E0909A'] },
 };
@@ -66,7 +66,7 @@ function css() {
   if (document.querySelector('link[data-jeux-css="arcade"]')) return;
   const l = document.createElement('link');
   l.rel = 'stylesheet';
-  l.href = new URL('../../css/jeux-arcade.css', import.meta.url).href;
+  l.href = new URL('./jeux-arcade.css', import.meta.url).href;
   l.dataset.jeuxCss = 'arcade';
   document.head.append(l);
 }
@@ -276,7 +276,7 @@ export async function mount(panel, ctx) {
     if (!b || b.disabled || b.dataset.game === courant) return;
     charger(b.dataset.game);
   });
-  // Adresse jeux.html#arcade-<jeu> (ou #arcade) suivie alors que l'onglet est ouvert : null = jeu du jour
+  // Adresse /pages/jeux/jeux.html#arcade-<jeu> (ou #arcade) suivie alors que l'onglet est ouvert : null = jeu du jour
   panel.addEventListener('jeux:sub', (e) => {
     const cible = visibles()[e.detail?.sub] ? e.detail.sub : duDuJour;
     if (cible && cible !== courant) charger(cible);

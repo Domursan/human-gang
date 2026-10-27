@@ -9,9 +9,9 @@
 // Dépendances : core.js (sb, toast, errMsg, esc), admin/shell.js (setCount), admin/ui/time.js (relTime).
 // Exporte : mountErrorsSection (montage), countNewErrors (compteur au démarrage du panel).
 // =====================================================================
-import { sb, toast, errMsg, esc } from './core.js';
-import { setCount } from './admin/shell.js';
-import { relTime } from './admin/ui/time.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { setCount } from './shell.js';
+import { relTime } from './ui/time.js';
 
 /** Statuts : libellé et ton de pastille (ui-pill). */
 const STATUS = {

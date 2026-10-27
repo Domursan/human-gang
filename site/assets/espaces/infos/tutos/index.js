@@ -1,4 +1,4 @@
-// Tous les groupes de tutos (assets/js/tutos/<groupe>.js). Chaque groupe est un module de données.
+// Tous les groupes de tutos (/assets/espaces/infos/tutos/<groupe>.js). Chaque groupe est un module de données.
 // L'import est tolérant : un groupe absent ou en erreur est ignoré, la page d'aide reste utilisable.
 
 export const GROUP_IDS = ['premiers-pas', 'secret-santa', 'irl-historique', 'cartes-base', 'cartes-avance', 'communaute'];

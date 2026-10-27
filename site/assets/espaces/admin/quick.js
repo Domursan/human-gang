@@ -17,17 +17,17 @@
 // admin-cards/bulk.js (KIND, recapText, invalide, argsDon), admin-cards/auctions.js (nextWeekend), enchere-regles.js,
 // admin/visual-pick.js (sélecteurs visuels).
 // =====================================================================
-import { sb, toast, errMsg, esc, notify, getCachedPerms, hasPerm } from '../core.js';
-import { check, fetchAll, fmtWhen, nf } from '../admin-cards/helpers.js';
-import { KIND, recapText, invalide, argsDon } from '../admin-cards/bulk.js';
-import { nextWeekend } from '../admin-cards/auctions.js';
-import { rulesFieldsHtml, readRules } from '../enchere-regles.js';
+import { sb, toast, errMsg, esc, notify, getCachedPerms, hasPerm } from '../../commun/core.js';
+import { check, fetchAll, fmtWhen, nf } from './cartes/helpers.js';
+import { KIND, recapText, invalide, argsDon } from './cartes/bulk.js';
+import { nextWeekend } from './cartes/auctions.js';
+import { rulesFieldsHtml, readRules } from '../cartes/enchere-regles.js';
 import { cardPicker, boosterPicker, chargerBoosters, chargerRestants, visuelHtml, libelleEpuisee } from './visual-pick.js';
 
 /** Permission exigée pour les trois actions (Jeu de cartes). */
 export const QUICK_PERM = 'cartes';
 /** Feuille de style du module, chargée une fois à l'initialisation. */
-const CSS_HREF = new URL('../../css/admin-quick.css', import.meta.url).href;
+const CSS_HREF = new URL('./admin-quick.css', import.meta.url).href;
 
 /** Fenêtre ouverte (une seule à la fois). */
 let current = null;
@@ -163,7 +163,7 @@ function busyOff(btn) { if (btn) { btn.disabled = false; btn.removeAttribute('ar
    ========================================================= */
 /** Ouvre « Give ». Mêmes règles et même RPC que le tiroir « Don groupé » (admin-cards/bulk.js). */
 async function openGive(trigger) {
-  const ui = openShell({ title: 'Give', sub: 'Offrir quelque chose à des membres', color: '#159946', href: 'admin.html#fabrique/gestion', trigger });
+  const ui = openShell({ title: 'Give', sub: 'Offrir quelque chose à des membres', color: '#159946', href: '/pages/admin/admin.html#fabrique/gestion', trigger });
   let members, sets, cards;
   try {
     [members, sets, cards] = await Promise.all([
@@ -349,7 +349,7 @@ async function sendGive(ui, v, btn) {
    ========================================================= */
 /** Ouvre « Nouvelle enchère ». Mêmes contrôles que le formulaire d'admin-cards/auctions.js (carte unique, règles). */
 async function openEnchere(trigger) {
-  const ui = openShell({ title: 'Nouvelle enchère', sub: 'Une carte unique, mise aux enchères pour le week-end par défaut.', color: '#FCA301', href: 'admin.html#fabrique/encheres', trigger });
+  const ui = openShell({ title: 'Nouvelle enchère', sub: 'Une carte unique, mise aux enchères pour le week-end par défaut.', color: '#FCA301', href: '/pages/admin/admin.html#fabrique/encheres', trigger });
   let cards, copies, auctions;
   try {
     cards = await fetchAll(() => sb.from('hg_cards').select('id, name, rarity, member_id, family').order('id'));
@@ -434,7 +434,7 @@ async function sendAuction(ui, btn) {
    ========================================================= */
 /** Ouvre « Lancer un drop ». Mêmes bornes, mêmes contrôles et même RPC que admin-cards/drops.js. */
 async function openDrop(trigger) {
-  const ui = openShell({ title: 'Lancer un drop', sub: 'La carte apparaît sur le site pour les membres connectés.', color: '#2B5AE2', href: 'admin.html#fabrique/drops', trigger });
+  const ui = openShell({ title: 'Lancer un drop', sub: 'La carte apparaît sur le site pour les membres connectés.', color: '#2B5AE2', href: '/pages/admin/admin.html#fabrique/drops', trigger });
   let cards, sets, restants, cfg;
   try {
     [cards, sets, cfg] = await Promise.all([

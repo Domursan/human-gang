@@ -9,7 +9,7 @@
  * Exporte : secretsCartes(), secretsHistorique(). La feuille de style assets/css/eggs-pages.css est ajoutée ici.
  */
 import { eggFound } from './api.js';
-import { motionAllowed } from '../core.js';
+import { motionAllowed } from '../../commun/core.js';
 
 /* ---------- Constantes ---------- */
 const SEUIL_SECOUSSE = 25; // m/s² : la pesanteur seule donne environ 9,8 ; au-dessus, c'est un coup
@@ -27,14 +27,14 @@ function injecterCss() {
   if (document.querySelector('link[data-eggs]')) return;
   const lien = document.createElement('link');
   lien.rel = 'stylesheet';
-  lien.href = new URL('../../css/eggs-pages.css', import.meta.url).href;
+  lien.href = new URL('./eggs-pages.css', import.meta.url).href;
   lien.dataset.eggs = '';
   document.head.append(lien);
 }
 
 /* ---------- Page Cartes : secousse ---------- */
 /**
- * Active le secret « secousse » sur cartes.html : deux coups en moins d'1 s déclenchent l'effet (la page tremble
+ * Active le secret « secousse » sur /pages/cartes/cartes.html : deux coups en moins d'1 s déclenchent l'effet (la page tremble
  * 0,6 s) puis signalent le secret au serveur. Sans capteur (ordinateur), rien ne s'affiche.
  * Sur iOS, la permission se demande depuis un geste : un bouton 📳 discret est proposé et disparaît après la réponse.
  */
@@ -125,7 +125,7 @@ function afficherRelance() {
 
 /* ---------- Page Historique : rembobinage ---------- */
 /**
- * Active le secret « rembobine » sur historique.html : un appui long (600 ms) sur le dernier élément de la frise
+ * Active le secret « rembobine » sur /pages/irl/historique.html : un appui long (600 ms) sur le dernier élément de la frise
  * (le plus ancien, tout en bas) fait remonter la page en haut, façon magnétoscope, puis signale le secret.
  * L'appui long a été choisi plutôt que le double-clic : il ne double pas le clic des liens et des boutons de la carte.
  * Le menu contextuel est aussi bloqué pendant l'appui sur ce seul élément.

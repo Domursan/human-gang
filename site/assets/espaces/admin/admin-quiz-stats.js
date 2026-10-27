@@ -7,7 +7,7 @@
 // Dépendances : core.js (client Supabase, toast, échappement, erreurs, dates).
 // Exporte : mountQuizStats(container), qui affiche l'onglet dans le conteneur. Rappelée, elle recharge et réaffiche.
 
-import { sb, toast, esc, errMsg, fmtDateTime } from './core.js';
+import { sb, toast, esc, errMsg, fmtDateTime } from '../../commun/core.js';
 
 /* ---------- Constantes ---------- */
 // Réponses minimum avant de tirer des conclusions ; réponses corrigées minimum pour classer une question.

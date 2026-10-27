@@ -1,16 +1,16 @@
-// ===== Humane Gang — messagerie (messages.html) : conversations directes + messages anonymes du Secret Santa =====
+// ===== Humane Gang — messagerie (/pages/compte/messages.html) : conversations directes + messages anonymes du Secret Santa =====
 // Page réservée aux membres. Deux colonnes : la liste des conversations, et le fil de la conversation ouverte.
 // Dépendances : core.js (Supabase, notifications), sound.js (son), icons.js.
 // Tables et RPC : hg_members, hg_my_conversations, hg_get_messages, hg_send_message, hg_mark_read, hg_open_direct ;
 // groupes (migration 090) : messages-groupes.js (hg_group_*, hg_event_conv_open). Lien direct : ?event=<sortie>.
 // Temps réel : canal privé « conv:<id> » (Supabase Realtime), avec actualisation périodique de secours.
 // N'exporte rien.
-import * as core from './core.js';
-import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from './core.js';
-import { svg } from './icons.js';
+import * as core from '../../commun/core.js';
+import { sb, initPage, toast, errMsg, esc, $, avatarHtml, notify } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 import * as G from './messages-groupes.js'; // groupes et discussions de sortie (migration 090)
-import { reportButtonHtml } from './report.js'; // A6 : « Signaler » un message
-import { avatarPresence } from './core/presence.js'; // pastille « en ligne » (migration 153)
+import { reportButtonHtml } from '../../commun/report.js'; // A6 : « Signaler » un message
+import { avatarPresence } from '../../commun/core/presence.js'; // pastille « en ligne » (migration 153)
 
 const me = await initPage({ auth: 'member' });
 const app = $('#app');
@@ -58,7 +58,7 @@ function santaSide(c) { return c?.kind === 'santa' ? (c.other_id ? 'santa' : 'ta
 /** Vrai pour une conversation d'assistance (ouverte quand l'admin ou le Staff prend en charge une demande). */
 const isSupport = (c) => c?.kind === 'support';
 /** Joue un son de notification (chargé à la demande, sans bloquer la page). */
-function playSound(name) { import('./sound.js').then((m) => m.playSound?.(name)).catch(() => {}); }
+function playSound(name) { import('../../commun/sound.js').then((m) => m.playSound?.(name)).catch(() => {}); }
 /** Met à jour le compteur de messages non lus dans l'en-tête ; silencieux si la fonction n'existe pas. */
 function refreshUnread() { try { core.refreshUnread?.(); } catch {} }
 
@@ -189,7 +189,7 @@ function renderShell() {
         </div>
       </section>
     </div>
-    <p class="muted small msg-admin-note">${I.lock}<span>Les messages peuvent être consultés par l’admin. <a href="legal.html#confidentialite">En savoir plus</a></span></p>`;
+    <p class="muted small msg-admin-note">${I.lock}<span>Les messages peuvent être consultés par l’admin. <a href="/pages/infos/legal.html#confidentialite">En savoir plus</a></span></p>`;
   $('#msg-new').addEventListener('click', openNewDialog);
   $('#msg-new-group').addEventListener('click', () => G.openGroupCreate({ members: S.members, me, onCreated: reopen }));
 }

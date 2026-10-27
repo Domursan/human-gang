@@ -325,6 +325,6 @@ export function themeDe(id) { return THEMES[id] || null; }
 
 /** Chemins des trois dessins du thème d'un rôle. */
 export function imagesTheme(id) {
-  const base = `assets/img/loup-garou/themes/${id}`;
+  const base = `/assets/images/loup-garou/themes/${id}`;
   return { embleme: `${base}-embleme.svg`, motif: `${base}-motif.svg`, scene: `${base}-scene.svg` };
 }

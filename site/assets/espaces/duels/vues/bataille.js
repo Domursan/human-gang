@@ -12,11 +12,11 @@
  * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte, estInvite, FLOTTE, nomCase), ./commun.js (creerCadre, nomJoueur).
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, FLOTTE, nomCase } from '../api.js';
 import { creerCadre, nomJoueur, deJoueur, deNom } from './commun.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
-import { voisinGrille } from '../../grille-clavier.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
+import { voisinGrille } from '../../../commun/grille-clavier.js';
 
 const TAILLE = 10;
 const NB_CASES = 100;

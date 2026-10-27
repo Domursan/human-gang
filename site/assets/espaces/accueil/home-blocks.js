@@ -1,4 +1,4 @@
-// ===== Humane Gang — accueil personnalisable : disposition des blocs (idée P9, accueil.html) =====
+// ===== Humane Gang — accueil personnalisable : disposition des blocs (idée P9, /pages/compte/accueil.html) =====
 // Applique la disposition du membre au squelette rendu par accueil.js (renderMemberShell) : ordre des blocs, blocs masqués
 // (retirés avant tout chargement : seuls les blocs visibles font leur appel), blocs ajoutés par ce module (quêtes,
 // quotidien des cartes, quiz, semaine d'accueil du parrainage P8), bouton « Personnaliser » et rappel des blocs masqués.
@@ -7,7 +7,7 @@
 // immédiat ; défaut et blocs obligatoires : hg_settings.home_default (Staff « reglages »). Migration 091.
 // Dépendances : core.js, home-registry.js, home-edit.js (chargé au clic), home-mentor.js (bloc parrainage).
 // Exporte : applyHomeLayout(app, me), resolveLayout(available, saved, def), LS_KEY.
-import { sb, esc, $, errMsg, toast, canAccess } from './core.js';
+import { sb, esc, $, errMsg, toast, canAccess } from '../../commun/core.js';
 import { HOME_BLOCKS, HOME_DEFAULT } from './home-registry.js';
 
 /** Clé de la copie locale de la disposition. */
@@ -130,7 +130,7 @@ async function loadQuests(box) {
       <p class="home-own-main"><strong>${done} sur ${list.length}</strong> terminées</p>
       <div class="progress" role="progressbar" aria-label="Quêtes de la semaine" aria-valuemin="0" aria-valuemax="${list.length}" aria-valuenow="${done}"><span style="width:${pct}%"></span></div>
       ${todo.length ? `<ul class="home-own-list">${todo.map((q) => `<li>${esc(q.label)} <span class="small muted">${esc(String(Math.min(Number(q.progress) || 0, Number(q.target) || 0)))} / ${esc(String(q.target))}</span></li>`).join('')}</ul>` : '<p class="small muted">Toutes faites, bravo !</p>'}
-      <a class="btn btn-ghost home-own-go" href="cartes.html#ouverture">Voir les quêtes</a>`;
+      <a class="btn btn-ghost home-own-go" href="/pages/cartes/cartes.html#ouverture">Voir les quêtes</a>`;
   } catch (e) { box.innerHTML = fail(e); }
 }
 
@@ -149,7 +149,7 @@ async function loadDaily(box) {
       <p class="small muted">${esc(freeTxt)}</p>
       <div class="btn-row">
         ${s.daily_available ? '<button class="btn btn-sand" type="button" data-daily>Récupérer le passage du jour</button>' : '<span class="pill pill-ok">Passage du jour récupéré</span>'}
-        <a class="btn btn-ghost" href="cartes.html#ouverture">Ouvrir les cartes</a>
+        <a class="btn btn-ghost" href="/pages/cartes/cartes.html#ouverture">Ouvrir les cartes</a>
       </div>`;
     box.querySelector('[data-daily]')?.addEventListener('click', async (ev) => {
       ev.currentTarget.disabled = true;
@@ -164,7 +164,7 @@ async function loadDaily(box) {
 /** Questions du gang : invitation à jouer. */
 function loadQuiz(box) {
   box.innerHTML = `<p class="small muted">Teste ce que tu sais du gang et gagne des Paillettes.</p>
-    <a class="btn btn-ghost home-own-go" href="quiz.html">Jouer au quiz</a>`;
+    <a class="btn btn-ghost home-own-go" href="/pages/jeux/quiz.html">Jouer au quiz</a>`;
 }
 
 /** Chargeurs des blocs de ce module. */

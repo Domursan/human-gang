@@ -9,12 +9,12 @@ import {
   sb, toast, errMsg, esc, $,
   applyTheme, paintTheme, pickTheme, isValidMd, isHex, contrast, todayMd, mdInRange, getActiveTheme,
   DEFAULT_THEME, THEME_EFFECTS, THEME_COLOR_KEYS,
-} from './core.js';
-import { svg } from './icons.js';
-import { confirmBox } from './ui-confirm.js';
-import { prepareImage } from './image-compress.js';
-import { matches, searchHtml, bindSearch, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
-import { openDrawer } from './admin/ui/drawer.js';
+} from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { matches, searchHtml, bindSearch, emptyHtml, SEARCH_DELAY } from './list-tools.js';
+import { openDrawer } from './ui/drawer.js';
 
 // Bouton « + Nouveau thème » de l'en-tête de zone (admin.js) : appelle l'éditeur ouvert par la section montée.
 let openNewTheme = null;
@@ -109,7 +109,7 @@ const rangeLabel = (t) => (isValidMd(t.start_md) && isValidMd(t.end_md) ? `${fmt
 function loadStyles() {
   if (document.querySelector('link[data-admin-themes]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../css/admin-themes.css', import.meta.url).href; l.dataset.adminThemes = '';
+  l.rel = 'stylesheet'; l.href = new URL('./admin-themes.css', import.meta.url).href; l.dataset.adminThemes = '';
   document.head.append(l);
 }
 
@@ -510,7 +510,7 @@ export async function mountThemesSection(container) {
       } else note.textContent = '';
     }
     // Logo
-    root.querySelector('[data-el="logo-preview"]').innerHTML = `<img src="${esc(d.logo_url || new URL('../img/logo-512.webp', import.meta.url).href)}" alt="" data-on-error="text" data-fallback="Image introuvable">`;
+    root.querySelector('[data-el="logo-preview"]').innerHTML = `<img src="${esc(d.logo_url || new URL('../../images/marque/logo-512.webp', import.meta.url).href)}" alt="" data-on-error="text" data-fallback="Image introuvable">`;
     // Emojis
     root.querySelector('[data-el="emoji-preview"]').textContent = d.emojis.length ? `${d.emojis.length} emoji${d.emojis.length > 1 ? 's' : ''} : ${d.emojis.join('  ')}` : '';
     // Échantillon (variables locales, n'affecte pas la page)

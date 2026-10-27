@@ -13,7 +13,7 @@ export default {
       slug: 'proposer-une-sortie',
       title: 'Proposer une sortie',
       summary: 'Lancer une sortie IRL avec une date fixe, ou un sondage pour caler la date à plusieurs.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Ouvre Sorties IRL', text: 'Clique sur « IRL » dans la barre du haut, puis reste sur l’onglet « Sorties ».' },
         { title: 'Clique sur « + Proposer une sortie »', text: 'Le bouton est en haut à droite de la page.' },
@@ -31,7 +31,7 @@ export default {
       slug: 'repondre-a-une-sortie',
       title: 'Répondre à une sortie',
       summary: 'Dire si tu viens, si tu hésites ou si tu n’es pas dispo.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Repère la sortie', text: 'Elle est dans « Prochaine sortie » ou dans « À venir », sur Sorties IRL.' },
         { title: 'Clique sur ta réponse', text: 'Choisis « Je viens », « Peut-être » ou « Pas dispo », sous la date.' },
@@ -48,7 +48,7 @@ export default {
       slug: 'voter-pour-une-date',
       title: 'Voter pour une date',
       summary: 'Indiquer les dates qui t’arrangent dans un sondage, et caler la sortie.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Ouvre « Dates à caler »', text: 'Cette section, sur Sorties IRL, liste les sorties dont la date n’est pas encore fixée.' },
         { title: 'Clique sur « Je suis dispo »', text: 'Fais-le pour chaque date qui t’arrange : tu peux en choisir plusieurs.' },
@@ -65,7 +65,7 @@ export default {
       slug: 'ajouter-photos-album',
       title: 'Ajouter des photos à l’album d’une sortie',
       summary: 'Partager ses photos d’une sortie passée dans son album.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Ouvre la sortie', text: 'Va dans « Sorties passées » sur Sorties IRL. La prochaine sortie a aussi son album une fois commencée.' },
         { title: 'Clique sur « Ajouter des photos »', text: 'Le bouton est dans la section « Album » de la sortie. Tu peux choisir plusieurs images d’un coup.' },
@@ -82,7 +82,7 @@ export default {
       slug: 'ajouter-rencontre-passee',
       title: 'Ajouter une rencontre passée',
       summary: 'Rattraper une sortie oubliée ou faite avant le site, avec ses photos et ses présents.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Clique sur « + Ajouter une rencontre passée »', text: 'Le bouton est en haut de la page Sorties IRL, à côté de « + Proposer une sortie ».' },
         { title: 'Renseigne le titre et la date', text: 'Le titre et la date sont obligatoires. L’heure et le lieu sont facultatifs.' },
@@ -99,7 +99,7 @@ export default {
       slug: 'dire-qui-etait-la',
       title: 'Dire qui était là',
       summary: 'Renseigner les présents d’une sortie passée, si tu l’as créée.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Va dans « Sorties passées »', text: 'Ouvre la sortie concernée sur Sorties IRL.' },
         { title: 'Clique sur « Qui était là ? »', text: 'Ce bouton apparaît sous la sortie. Il n’est visible que pour son créateur et pour un admin.' },
@@ -115,7 +115,7 @@ export default {
       slug: 'historique-des-rencontres',
       title: 'Parcourir l’historique des rencontres',
       summary: 'Filtrer toutes les rencontres par année, lieu ou personne, et voir les lieux sur la carte.',
-      page: 'irl.html',
+      page: '/pages/irl/irl.html',
       steps: [
         { title: 'Ouvre l’onglet « Historique des rencontres »', text: 'Il est à côté de l’onglet « Sorties », en haut de la page Sorties IRL.' },
         { title: 'Filtre par année', text: 'Les puces d’année, à côté de « Toutes », ne gardent que les rencontres de cette année.' },
@@ -132,7 +132,7 @@ export default {
       slug: 'frise-historique',
       title: 'Parcourir la frise de l’historique',
       summary: 'Voir d’un coup d’œil les Secret Santa, les sorties et les moments cultes, année après année.',
-      page: 'historique.html',
+      page: '/pages/irl/historique.html',
       steps: [
         { title: 'Ouvre Historique', text: 'Clique sur « Historique » dans la barre du haut. La frise s’affiche du plus récent au plus ancien.' },
         { title: 'Choisis un filtre', text: 'Les boutons « Tout », « Secret Santa », « IRL & albums » et « Moments cultes » ne gardent qu’une catégorie.' },
@@ -148,7 +148,7 @@ export default {
       slug: 'secret-santa-qui-offre-a-qui',
       title: 'Voir qui a offert à qui (Secret Santa)',
       summary: 'Retrouver la chaîne des cadeaux d’une édition passée du Secret Santa.',
-      page: 'historique.html',
+      page: '/pages/irl/historique.html',
       steps: [
         { title: 'Trouve l’édition', text: 'Sur Historique, repère la carte « Secret Santa » de l’année voulue dans la frise.' },
         { title: 'Clique sur « Qui a offert à qui ? »', text: 'Pour une édition en cours de révélation, le libellé est « Qui offrait à qui ? ». Le bloc ne s’affiche que si les attributions sont enregistrées.' },
@@ -163,7 +163,7 @@ export default {
       slug: 'publier-moment-culte',
       title: 'Publier un moment culte',
       summary: 'Raconter un souvenir marquant et l’ajouter à la frise de l’historique.',
-      page: 'historique.html',
+      page: '/pages/irl/historique.html',
       steps: [
         { title: 'Clique sur « + Ajouter un moment culte »', text: 'Le bouton est en haut à droite de la page Historique.' },
         { title: 'Donne un titre et une date', text: 'Le titre est obligatoire. La date est celle du moment : elle vaut aujourd’hui par défaut.' },
@@ -179,7 +179,7 @@ export default {
       slug: 'reagir-moment-culte',
       title: 'Réagir à un moment culte',
       summary: 'Ajouter une réaction à un moment culte, ou la retirer.',
-      page: 'historique.html',
+      page: '/pages/irl/historique.html',
       steps: [
         { title: 'Trouve le moment', text: 'Sur Historique, repère la carte « Moment culte » (filtre « Moments cultes » si besoin).' },
         { title: 'Repère la barre « Réactions »', text: 'Elle propose ❤️ Cœur, 😂 Rire, 😮 Surprise, 🔥 Feu, 👏 Bravo et 🎉 Fête, sous le récit.' },
@@ -195,7 +195,7 @@ export default {
       slug: 'attraper-image-evenement',
       title: 'Attraper l’image d’un événement',
       summary: 'Cliquer sur l’image spéciale qui traverse le site pendant un événement, avant qu’elle ne disparaisse.',
-      page: 'evenements.html',
+      page: '/pages/irl/evenements.html',
       steps: [
         { title: 'Ouvre la page Événements', text: 'Clique sur « Événements » dans le pied de page. La page liste les événements en cours et passés.' },
         { title: 'Surveille les pages du site', text: 'Pendant un événement en cours, une image spéciale peut apparaître sur n’importe quelle page du site, à un moment aléatoire.' },

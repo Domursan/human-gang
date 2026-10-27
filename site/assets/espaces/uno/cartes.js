@@ -5,7 +5,7 @@
  * Couleurs : r rouge, y jaune, g vert, b bleu, k noir (Joker). Valeurs : 0-9, +2, inv, passe, joker, +4.
  * Exporte : COULEURS, nomCouleur, nomCarte, carteHtml, dosHtml, pointsCarte.
  */
-import { esc } from '../core.js';
+import { esc } from '../../commun/core.js';
 
 /** Couleurs du jeu : nom, teinte d'affichage. */
 export const COULEURS = {

@@ -1,23 +1,23 @@
-// ===== Humane Gang — Sorties IRL (irl.html) =====
+// ===== Humane Gang — Sorties IRL (/pages/irl/irl.html) =====
 // Page des sorties : prochaine sortie en grand, sorties à venir, sondages de dates, sorties passées avec leur album photo,
 // et l'historique (irl-history.js, monté ici). Réponses (je viens, peut-être, pas dispo), votes, photos et ZIP.
 // Dépendances : core.js, photos.js (envoi, albums, visionneuse), reactions.js, image-compress.js, ics.js (agenda),
 // irl-history.js (historique), admin-ghosts.js (fantômes, admin), ui-confirm.js, reglages-valeurs-lot3.js (délais, bornes).
 // Tables : hg_members, hg_events, hg_event_rsvps, hg_event_dates, hg_event_date_votes, hg_photos. N'exporte rien.
-import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from './core.js';
+import { sb, initPage, toast, errMsg, esc, $, $$, fmtDateTime, daysUntil, avatarHtml, notify, isGodMode, godTag } from '../../commun/core.js';
 import { uploadImage, removeObjects, signedUrls, openLightbox, uuid, thumbHtml, downloadAlbum, gridPath, uploadAlbumPhoto, insertPhotoRow, selectPhotos } from './photos.js';
-import { loadReactions } from './reactions.js';
-import { prepareImage } from './image-compress.js';
+import { loadReactions } from '../../commun/reactions.js';
+import { prepareImage } from '../../commun/image-compress.js';
 import { addToCalendar } from './ics.js';
 import { mountHistory } from './irl-history.js';
-import { ghostDirectory } from './admin-ghosts.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { pluralCount, pad } from './utils.js';
-import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
-import { lireQuota, restants, messagePhotos, messageSortie } from './eco-quota.js';
+import { ghostDirectory } from '../admin/admin-ghosts.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { pluralCount, pad } from '../../commun/utils.js';
+import { chargerReglagesLot3, delaiPassee, bornesSondage } from '../admin/reglages-valeurs-lot3.js';
+import { lireQuota, restants, messagePhotos, messageSortie } from '../../commun/eco-quota.js';
 import { loadSortieCards, sortieCardHtml, onSortieCardClick } from './irl-carte.js';
-import { setCompteurs } from './core/badges-compteur.js';
+import { setCompteurs } from '../../commun/core/badges-compteur.js';
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit les fantômes et peut tout modifier.
@@ -217,7 +217,7 @@ function calButton(ev) {
 function discussBtn(ev) {
   const mine = rsvpOf(ev.id).mine;
   if (ev.created_by !== me.id && mine !== 'oui' && mine !== 'peut-etre') return '';
-  return `<a class="btn btn-ghost btn-sm" href="messages.html?event=${encodeURIComponent(ev.id)}">${I.chat}<span>Discussion de la sortie</span></a>`;
+  return `<a class="btn btn-ghost btn-sm" href="/pages/compte/messages.html?event=${encodeURIComponent(ev.id)}">${I.chat}<span>Discussion de la sortie</span></a>`;
 }
 /**
  * Suggestion « Dire merci à l’organisateur » dans les trois jours qui suivent une sortie où j'étais (P4, migration 090).
@@ -227,7 +227,7 @@ function thanksHint(ev) {
   const t = new Date(ev.starts_at).getTime();
   if (!ev.created_by || ev.created_by === me.id || rsvpOf(ev.id).mine !== 'oui' || !(t <= Date.now() && Date.now() - t < 3 * 864e5)) return '';
   return `<p class="irl-thanks small">${esc(pseudo(ev.created_by))} a organisé cette sortie.
-    <a class="btn btn-sand btn-sm" href="membre.html?id=${encodeURIComponent(ev.created_by)}&amp;merci=${encodeURIComponent(ev.id)}">Dire merci à l’organisateur</a></p>`;
+    <a class="btn btn-sand btn-sm" href="/pages/compte/membre.html?id=${encodeURIComponent(ev.created_by)}&amp;merci=${encodeURIComponent(ev.id)}">Dire merci à l’organisateur</a></p>`;
 }
 /** Description d'une sortie, échappée ; vide si absente. */
 function descHtml(ev) {
@@ -616,7 +616,7 @@ $('#app').addEventListener('click', (e) => {
   else if (act === 'edit') { const ev = S.events.find((x) => x.id === id); if (ev?.retro) hx.openRetro(ev); else openEventDialog(ev); }
   else if (act === 'who') hx.openWho(S.events.find((x) => x.id === id));
   else if (act === 'delete') deleteEvent(id);
-  else if (act === 'ics') { const ev = S.events.find((x) => x.id === id); if (ev?.starts_at) addToCalendar({ id, title: ev.title, start: ev.starts_at, location: ev.location, description: ev.description }, new URL(`irl.html#event-${id}`, location.href).href); }
+  else if (act === 'ics') { const ev = S.events.find((x) => x.id === id); if (ev?.starts_at) addToCalendar({ id, title: ev.title, start: ev.starts_at, location: ev.location, description: ev.description }, new URL(`/pages/irl/irl.html#event-${id}`, location.href).href); }
   else if (act === 'new') openEventDialog();
   else if (act === 'photo') openPhoto(id, Number(b.dataset.idx));
   else if (act === 'zip') zipAlbum(id, b);

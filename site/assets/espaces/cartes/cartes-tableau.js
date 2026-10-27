@@ -6,7 +6,7 @@
 // RPC : hg_trade_board (filtres série, rareté, « ce qui m'intéresse », pages de 60), hg_trade_board_set.
 // Lectures pour le préremplissage : hg_card_copies et hg_card_wishlist (déjà lisibles par les membres).
 // Exporte : mountBoard(el, ctx). ctx = { me, sets: Map(id -> nom), openEditor({ to, give, want }) }.
-import { sb, esc, toast, errMsg } from './core.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
 import { cardHtml, RARITIES } from './cartes-ui.js';
 
 const B = { data: null, rows: [], mine: false, set: '', rarity: '', offset: 0, busy: false, err: '', noteDraft: null };

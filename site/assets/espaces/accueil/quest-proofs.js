@@ -6,7 +6,7 @@
  * puis la RPC hg_proof_submit enregistre la preuve (quête de la semaine, 2 tentatives au plus).
  * Exporte : openProof(quest, { uid, sb, toast, esc, onDone }), proofCss().
  */
-import { prepareImage } from './image-compress.js';
+import { prepareImage } from '../../commun/image-compress.js';
 
 const BUCKET = 'hg-proofs';
 const MAX = 3;
@@ -15,7 +15,7 @@ const MAX = 3;
 export function proofCss() {
   if (document.querySelector('link[data-qp-css]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../css/quest-proofs.css', import.meta.url).href; l.dataset.qpCss = '1';
+  l.rel = 'stylesheet'; l.href = new URL('./quest-proofs.css', import.meta.url).href; l.dataset.qpCss = '1';
   document.head.append(l);
 }
 

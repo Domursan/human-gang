@@ -5,7 +5,7 @@
 // Exporte : les listes de raretés et de familles (et leurs libellés), le numéro d'exemplaire, le numéro de carte,
 // les générations des membres (setGenerations, generationOf, generationLabel : idée C8),
 // le HTML d'une carte (cardHtml), le dos de carte (cardBackHtml) et le format des Paillettes (fmtP).
-import { esc, currentLogo } from './core.js';
+import { esc, currentLogo } from '../../commun/core.js';
 
 /* ---------- Raretés et familles : listes de référence et libellés ---------- */
 // Ordre de RARITIES = du plus commun au plus rare (l'ordre compte pour le rang).

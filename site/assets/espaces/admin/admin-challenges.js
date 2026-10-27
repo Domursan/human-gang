@@ -6,11 +6,11 @@
 // Dépendances : core.js (client Supabase, toast, échappement), admin-events.js (conversion heure suisse),
 // ui-confirm.js (confirmation), admin/list-tools.js (recherche), admin/ui/drawer.js (tiroir du formulaire).
 // Exporte : mountChallengesSection(container), qui monte la section dans son conteneur.
-import { sb, toast, errMsg, esc, $ } from './core.js';
+import { sb, toast, errMsg, esc, $ } from '../../commun/core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
-import { confirmBox } from './ui-confirm.js';
-import { matches, searchHtml, bindSearch, setCount, emptyHtml, SEARCH_DELAY } from './admin/list-tools.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, SEARCH_DELAY } from './list-tools.js';
+import { openDrawer } from './ui/drawer.js';
 
 /** Bouton en cours : désactivé avec indicateur (pas de second envoi). */
 function setBusy(btn, on) {

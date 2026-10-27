@@ -4,7 +4,7 @@
 // Dépendances : core.js (sb, esc, fmtDate, fmtDateTime), admin-ghosts.js (annuaire des fantômes).
 // Exporte : PAGE, dayLabel, stampLabel, todayIso, pageRange, pageOf, pagerHtml, loadPeople, peopleOptions.
 // =====================================================================
-import { sb, esc, fmtDate, fmtDateTime } from '../core.js';
+import { sb, esc, fmtDate, fmtDateTime } from '../../../commun/core.js';
 import { ghostDirectory } from '../admin-ghosts.js';
 
 export const PAGE = 30; // lignes par page (on lit PAGE + 1 pour savoir s'il existe une page suivante)

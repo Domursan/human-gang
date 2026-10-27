@@ -6,7 +6,7 @@
  * Exporte : recap(etat, contenus) -> HTML (chaîne).
  *   etat.jeu.fortunes = {user_id: fortune estimée} ; etat.joueurs[i].etat = {metier, marie, enfants, maisons, argent, prets, retraite, retraite_lieu, pari}.
  */
-import { esc } from '../../../core.js';
+import { esc } from '../../../../commun/core.js';
 import { nomDe } from '../../api.js';
 
 /** Montant en euros, format français. */

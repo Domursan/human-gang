@@ -5,14 +5,14 @@
 // ui-confirm.js, utils.js (safeUrl), common.js, state.js (A, H), admin/perms.js (isAdminView).
 // Exporte : profileHtml, saveProfile, infosHtml, saveInfos.
 // =====================================================================
-import { sb, toast, esc, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from '../core.js';
-import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
-import { confirmBox } from '../ui-confirm.js';
-import { safeUrl } from '../utils.js';
+import { sb, toast, esc, fmtDateTime, avatarHtml, isGodMode, godLimitAttr, godTag } from '../../../commun/core.js';
+import { INFO_GROUPS, INFO_FIELDS } from '../../compte/profile-fields.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
+import { safeUrl } from '../../../commun/utils.js';
 import { check, nullIfEmpty, tabError } from './common.js';
 import { A, H, dropFicheCache } from './state.js';
-import { isAdminView } from '../admin/perms.js';
-import { NOTIF_ROWS } from '../notif-prefs.js';
+import { isAdminView } from '../perms.js';
+import { NOTIF_ROWS } from '../../compte/notif-prefs.js';
 
 /* ---------- Profil ---------- */
 /**

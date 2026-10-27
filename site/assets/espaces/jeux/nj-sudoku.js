@@ -8,12 +8,12 @@
  * solution. Refusée : « Grille incorrecte », on corrige et une nouvelle partie chronométrée démarre (hg_nj_solo_debut).
  * Si la grille du jour est déjà terminée (sudoku_fait), elle se rejoue pour le plaisir, sans score.
  * Le temps officiel est celui du serveur (au premier chiffre posé) ; le chrono affiché pendant la partie est local.
- * Onglet : jeux.html#sudoku. Contrat : mount(panel, ctx), unmount(), resume(ctx).
+ * Onglet : /pages/jeux/jeux.html#sudoku. Contrat : mount(panel, ctx), unmount(), resume(ctx).
  * Dépendances : core.js (errMsg), jeux/commun.js (chargerCss, nf, classementHtml, zurichIso, jourLong).
  * Données : RPC hg_nj_solo_etat, hg_nj_solo_debut, hg_nj_solo_fin (migration 138).
  * Exporte : mount, unmount, resume.
  */
-import { esc, errMsg } from '../core.js';
+import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml, zurichIso, jourLong } from './commun.js';
 
 /* ---------- Constantes ---------- */

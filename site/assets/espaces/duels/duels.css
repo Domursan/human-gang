@@ -1,21 +1,21 @@
 /* ===== Humane Gang — Duels : décor et composants partagés (duels.html) =====
    Feuilles par écran : assets/css/duels/*.css (importées ci-dessous).
    Animations coupées par <body class="duels-calme"> (préférence du membre) et prefers-reduced-motion. */
-@import url('duels/accueil.css');
-@import url('duels/creer.css');
-@import url('duels/rejoindre.css');
-@import url('duels/salle.css');
-@import url('duels/table.css');
-@import url('duels/p4.css');
-@import url('duels/morpion.css');
-@import url('duels/mastermind.css');
-@import url('duels/bataille.css');
-@import url('duels/quiestce.css');
-@import url('duels/othello.css');
-@import url('duels/pfc.css');
-@import url('duels/fin.css');
-@import url('duels/stats.css');
-@import url('duels/jour.css');
+@import url('accueil.css');
+@import url('creer.css');
+@import url('rejoindre.css');
+@import url('salle.css');
+@import url('table.css');
+@import url('p4.css');
+@import url('morpion.css');
+@import url('mastermind.css');
+@import url('bataille.css');
+@import url('quiestce.css');
+@import url('othello.css');
+@import url('pfc.css');
+@import url('fin.css');
+@import url('stats.css');
+@import url('jour.css');
 
 /* ---------- Décor ---------- */
 /* Halo derrière l'en-tête : jamais de couleur fixe sombre (l'en-tête est transparent,

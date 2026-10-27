@@ -5,8 +5,8 @@
 // Exporte : check, nf, fmtWhen, pseudo, activeProfiles, friendly, group, maxSerialOf, liveCount, uniqueRestants, nextFreeNumber,
 // nextSetSort, identSetId, thumb, tile, selField, setState, period, act, removeImages, uploadCardImage, fetchAll.
 // =====================================================================
-import { sb, toast, errMsg, esc } from '../core.js';
-import { prepareImage } from '../image-compress.js';
+import { sb, toast, errMsg, esc } from '../../../commun/core.js';
+import { prepareImage } from '../../../commun/image-compress.js';
 import { C } from './state.js';
 import { TZ } from './constants.js';
 

@@ -14,12 +14,12 @@
  *   ./portrait.js (portraitSvg : SVG viewBox 100 × 120 d'après les attributs).
  * Exporte : creer.
  */
-import { esc, toast } from '../../core.js';
+import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
-import { boutonReponses } from '../../core/admin-reponses.js';
+import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import { portraitSvg } from './portrait.js';
-import { voisinSpatial } from '../../grille-clavier.js';
+import { voisinSpatial } from '../../../commun/grille-clavier.js';
 
 const DELAI_ENVOI = 600;
 const ANNONCE_MS = 6000;

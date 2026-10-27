@@ -3,17 +3,17 @@
 // Création, modification et exclusions se font dans le tiroir (ss-events.js) ; rien n'est déplié en permanence.
 // Utilisé par admin.js (registerSub), ss-events.js et live.js. Dépend de core.js, state.js, common.js,
 // admin-accounts.js (pairsBlockHtml), ui/ et des réglages « lot 3 » (blocReglages, chargerReglagesLot3).
-import { esc, $, sb, fmtDate, fmtDateTime, isGodMode, godTag } from '../core.js';
+import { esc, $, sb, fmtDate, fmtDateTime, isGodMode, godTag } from '../../commun/core.js';
 import { S, pseudoOf, STATUS_LABEL } from './state.js';
 import { check } from './common.js';
-import { pairsBlockHtml } from '../admin-accounts.js';
+import { pairsBlockHtml } from './admin-accounts.js';
 import { createList } from './ui/list.js';
 import { pill } from './ui/common.js';
 import { renderDetailHeader } from './ui/detail-header.js';
 import { loadEditionDetails } from './loaders.js';
 import { navigate } from './shell.js';
-import { blocReglages } from '../admin-reglages/lot3-ui.js';
-import { chargerReglagesLot3 } from '../reglages-valeurs-lot3.js';
+import { blocReglages } from './reglages/lot3-ui.js';
+import { chargerReglagesLot3 } from './reglages-valeurs-lot3.js';
 
 // Ton (couleur) de chaque étape d'une édition.
 const TONE = { inscriptions: 'open', tirage: 'prog', envoi: 'prog', revelation: 'prog', termine: 'done' };

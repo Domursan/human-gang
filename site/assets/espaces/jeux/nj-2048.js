@@ -8,12 +8,12 @@
  * La partie se termine quand plus aucun coup n'est possible, ou avec « Terminer et enregistrer ». Le serveur reçoit
  * le score (hg_nj_solo_fin) ; la première partie du jour donne des Paillettes. Le temps de jeu est mesuré par le serveur
  * (hg_nj_solo_debut au premier coup).
- * Onglet : jeux.html#2048. Contrat : mount(panel, ctx), unmount(), resume(ctx).
+ * Onglet : /pages/jeux/jeux.html#2048. Contrat : mount(panel, ctx), unmount(), resume(ctx).
  * Dépendances : core.js (errMsg), jeux/commun.js (chargerCss, nf, classementHtml).
  * Données : RPC hg_nj_solo_etat, hg_nj_solo_debut, hg_nj_solo_fin (migration 138). Variante : 'classique'.
  * Exporte : mount, unmount, resume.
  */
-import { esc, errMsg } from '../core.js';
+import { esc, errMsg } from '../../commun/core.js';
 import { chargerCss, nf, classementHtml } from './commun.js';
 
 /* ---------- Constantes ---------- */

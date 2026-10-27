@@ -7,11 +7,11 @@
 // RPC : hg_auctions_admin, hg_auction_create, hg_auction_update, hg_auction_cancel (Staff « cartes », journal admin).
 // Exporte : mountAuctionsTab(el), nextWeekend(now). Les cartes viennent de C (state.js).
 // =====================================================================
-import { sb, toast, esc, errMsg } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, errMsg } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
-import { rulesFieldsHtml, readRules, rulesSummary } from '../enchere-regles.js';
+import { rulesFieldsHtml, readRules, rulesSummary } from '../../cartes/enchere-regles.js';
 
 const X = { el: null, list: null, err: '', edit: null };
 const STATUS = { prevue: 'Prévue', ouverte: 'Ouverte', close: 'Terminée', annulee: 'Annulée' };

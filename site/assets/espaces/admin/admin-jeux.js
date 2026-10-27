@@ -12,12 +12,12 @@
  *   (recompression), leaflet-load.js (carte), ui-confirm.js (confirmation), admin/ui/drawer.js (tiroir).
  * Exporte : mountGeoSection, mountCitationsSection.
  */
-import { sb, toast, errMsg, esc, getUser } from './core.js';
-import { signedUrls, signedUrl, uploadImage, uuid } from './photos.js';
-import { prepareImage } from './image-compress.js';
-import { loadLeaflet, addOsmTiles } from './leaflet-load.js';
-import { confirmBox } from './ui-confirm.js';
-import { openDrawer } from './admin/ui/drawer.js';
+import { sb, toast, errMsg, esc, getUser } from '../../commun/core.js';
+import { signedUrls, signedUrl, uploadImage, uuid } from '../irl/photos.js';
+import { prepareImage } from '../../commun/image-compress.js';
+import { loadLeaflet, addOsmTiles } from '../../commun/leaflet-load.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { openDrawer } from './ui/drawer.js';
 
 /* ---------- Outils communs ---------- */
 const jourFmt = new Intl.DateTimeFormat('fr-CH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });

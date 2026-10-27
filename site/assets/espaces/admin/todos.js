@@ -9,7 +9,7 @@
 // Framed, Heardle : 3 prochains jours ; Sutom : 7 prochains jours.
 // Pages sans source d'action retenue (Membres IRL, Secrets, Arcade…) : aucun élément, voir le compte rendu de l'ajout.
 // Dépend de core.js (sb), admin/state.js (S : demandes, idées, éditions), admin/perms.js, admin/lieux.js, admin/eco-health.js.
-import { sb } from '../core.js';
+import { sb } from '../../commun/core.js';
 import { S } from './state.js';
 import { LIEUX, canSub } from './perms.js';
 import { registerTodo } from './lieux.js';

@@ -8,8 +8,8 @@
 // Route : #poste/assistance[/<id>]. Droits : admin/perms.js (section « assistance », permission « support »).
 // Utilisé par admin.js (registerSub) et live.js (renderSupport). Dépend de core.js, ui-confirm.js, state.js, loaders.js,
 // counts.js (compteurs), badges.js (badge « Chasseur de bugs »), shell.js, et des composants ui/.
-import { sb, toast, fmtDateTime, errMsg } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, fmtDateTime, errMsg } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
 import { S, pseudoOf, SUBJECT_BUG } from './state.js';
 import { copyText, check } from './common.js';
 import { loadSupport } from './loaders.js';
@@ -138,7 +138,7 @@ export async function setState(id, target) {
 }
 
 /** Adresse de la conversation privée d'une demande, dans la page Messages. */
-const convUrl = (conv) => `messages.html?c=${encodeURIComponent(conv)}`;
+const convUrl = (conv) => `/pages/compte/messages.html?c=${encodeURIComponent(conv)}`;
 
 /**
  * Prend la demande en charge (hg_support_take) : elle passe « en cours » et, pour un membre inscrit, une conversation

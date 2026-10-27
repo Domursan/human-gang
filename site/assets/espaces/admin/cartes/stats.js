@@ -4,8 +4,8 @@
 // Dépendances : core.js (esc), cartes-ui.js (RARITIES, fmtP), state.js (C), helpers.js (liveCount, maxSerialOf, nf, tile).
 // Exporte : statsPanel.
 // =====================================================================
-import { esc } from '../core.js';
-import { RARITIES, fmtP } from '../cartes-ui.js';
+import { esc } from '../../../commun/core.js';
+import { RARITIES, fmtP } from '../../cartes/cartes-ui.js';
 import { C } from './state.js';
 import { liveCount, maxSerialOf, nf, tile } from './helpers.js';
 

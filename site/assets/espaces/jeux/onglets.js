@@ -1,8 +1,8 @@
-// ===== Humane Gang — liste des onglets de la page « Jeux » (jeux.html) =====
+// ===== Humane Gang — liste des onglets de la page « Jeux » (/pages/jeux/jeux.html) =====
 /*
  * Rôle : déclare les jeux affichés en onglets, dans l'ordre (trié par numéro d'idée du catalogue).
  * Une ligne par onglet :
- *   id      adresse jeux.html#<id> (minuscules, chiffres, tirets ; « aujourdhui » est réservé au tableau de bord) ;
+ *   id      adresse /pages/jeux/jeux.html#<id> (minuscules, chiffres, tirets ; « aujourdhui » est réservé au tableau de bord) ;
  *   titre   libellé de l'onglet ;
  *   module  chemin relatif à ce dossier, chargé à la première ouverture ;
  *   idee    référence du catalogue ;
@@ -13,7 +13,7 @@
  *   page    facultatif : slug de hg_pages qui règle l'accès (« Accès aux pages » du panel, migration 150) : onglet visible si ouvert.
  * Contrat d'un module :
  *   export async function mount(panel, ctx)  panel = <section role="tabpanel"> vide, ctx = { sb, me, toast, esc, sub } (sub : choix
- *     tiré de l'adresse, jeux.html#<id>-<choix>, ou null) ; un changement de choix alors que le module est monté arrive par « jeux:sub » ;
+ *     tiré de l'adresse, /pages/jeux/jeux.html#<id>-<choix>, ou null) ; un changement de choix alors que le module est monté arrive par « jeux:sub » ;
  *   export function unmount()                facultatif, appelé quand on quitte la page ;
  *   export async function resume(ctx)        facultatif, pour le tableau de bord « Les missions du jour » : { etat: 'fait' | 'a_jouer' |
  *     'en_cours' | 'info', texte, badge, gain?, serie? } (texte = sous-titre, badge = pastille, gain = Paillettes

@@ -2,8 +2,8 @@
 // Partagé par historique.js et secret-santa.js. Les paires viennent de hg_ss_reveal, qui ne répond que pour une édition
 // en révélation ou terminée. Un membre ne peut pas lire le profil d'un fantôme (hg_members les exclut) : le pseudo
 // vient donc de la RPC, et l'avatar par défaut (initiales) est affiché. L'admin voit aussi les avatars des fantômes.
-import { sb, esc, avatarHtml } from './core.js';
-import { svg } from './icons.js';
+import { sb, esc, avatarHtml } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 
 /* ---------- Constantes ---------- */
 const ARROW = svg('arrow', { size: 16, stroke: 2 });

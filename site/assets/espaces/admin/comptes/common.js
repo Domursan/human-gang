@@ -4,8 +4,8 @@
 // Dépendances : core.js (toast, errMsg, esc), icons.js (svg).
 // Exporte : IC, busy, check, nullIfEmpty, toLocalInput, fromLocalInput, norm, tabError.
 // =====================================================================
-import { toast, errMsg, esc } from '../core.js';
-import { svg } from '../icons.js';
+import { toast, errMsg, esc } from '../../../commun/core.js';
+import { svg } from '../../../commun/icons.js';
 
 /* ---------- Icônes ---------- */
 // Icônes SVG réutilisées dans la fiche (retour, retrait, œil, recherche...).

@@ -10,10 +10,10 @@
  * Tables et RPC : hg_activity, hg_staff_directory (pseudos).
  * Exporte : mountFilSection, FIL_KINDS.
  */
-import { sb, toast, errMsg, esc } from './core.js';
-import { svg } from './icons.js';
-import { confirmBox } from './ui-confirm.js';
-import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from './admin/list-tools.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { matches, searchHtml, bindSearch, setCount, emptyHtml, moreHtml } from './list-tools.js';
 
 /* ---------- Constantes ---------- */
 

@@ -6,11 +6,11 @@
 // RPC : hg_card_recipes_admin, hg_card_recipe_save (Staff « cartes », journal admin).
 // Exporte : mountRecipesTab(el). Les cartes et les tags viennent de C (state.js).
 // =====================================================================
-import { sb, toast, esc, errMsg } from '../core.js';
+import { sb, toast, esc, errMsg } from '../../../commun/core.js';
 import { C } from './state.js';
 import { act, check, fmtWhen, nf } from './helpers.js';
-import { rarityLabel } from '../cartes-ui.js';
-import { tagLabel } from '../cartes-jeux.js';
+import { rarityLabel } from '../../cartes/cartes-ui.js';
+import { tagLabel } from '../../cartes/cartes-jeux.js';
 
 const R = { el: null, list: null, err: '', edit: null };
 const blank = () => ({ id: null, name: '', description: '', output_card: '', output_shiny: false, inputs: [{ mode: 'tag', tag: '', card: '', qty: 1 }], paillettes: 0,

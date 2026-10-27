@@ -1,11 +1,11 @@
-// ===== Humane Gang — le carnet des secrets (secret.html) =====
+// ===== Humane Gang — le carnet des secrets (/pages/jeux/secret.html) =====
 // Page cachée, hors du menu : compte les secrets trouvés, liste ceux-ci avec leur date, et compte les autres sans les nommer.
 // Ouvrir la page est en soi un secret (« console ») : eggFound('console') part avant la lecture du carnet.
 // Visiteur sans compte : seulement un message pour se connecter (rien n'est lu ni enregistré).
 // Les quatre champignons (saisons) forment une seule case « La cueillette » ; le total vient de hg_eggs_me.
 // Dépendances : core.js (initPage, esc, fmtDate, hasSession), eggs/api.js (eggFound, eggsMe). N'exporte rien.
-import { initPage, esc, fmtDate, hasSession } from './core.js';
-import { eggFound, eggsMe } from './eggs/api.js';
+import { initPage, esc, fmtDate, hasSession } from '../../commun/core.js';
+import { eggFound, eggsMe } from './api.js';
 
 /* ---------- Constantes ---------- */
 
@@ -45,7 +45,7 @@ const $caches = document.getElementById('secret-caches');
  */
 function rendVisiteur() {
   $bilan.innerHTML = `<p>Connecte-toi pour garder la trace de tes trouvailles.</p>
-    <p><a class="btn btn-light" href="compte.html">Me connecter</a></p>`;
+    <p><a class="btn btn-light" href="/pages/compte/compte.html">Me connecter</a></p>`;
 }
 
 /**

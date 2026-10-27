@@ -7,7 +7,7 @@
  * Exporte : ICONES, icone, vignetteRole, pastilleCamp, pseudo, avatar, chrono, ouvrirFenetre, confirmer, notifier,
  *   libellePhase, libelleCause, filAriane, CANAUX.
  */
-import { esc, avatarHtml, toast } from '../core.js';
+import { esc, avatarHtml, toast } from '../../commun/core.js';
 import { roleById, CAMPS } from './roles.js';
 
 /** Chemins d'icônes (trait 24×24). */
@@ -110,7 +110,7 @@ export const CANAUX = {
 
 /** Fil d'Ariane « Jeux › Loup-Garou › écran ». */
 export function filAriane(ecran) {
-  return `<nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <a href="loup-garou.html">Loup-Garou</a>${ecran ? ` › <span>${esc(ecran)}</span>` : ''}</nav>`;
+  return `<nav class="lg-ariane" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/loup-garou.html">Loup-Garou</a>${ecran ? ` › <span>${esc(ecran)}</span>` : ''}</nav>`;
 }
 
 /**

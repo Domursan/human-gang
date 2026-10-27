@@ -5,8 +5,8 @@
 // Exporte : sharedFieldsHtml (bloc HTML des cases), readSharedFields (lit les cases cochées),
 // bindSharedFields (branche les boutons « tout cocher » une seule fois).
 // =====================================================================
-import { $, $$, esc } from '../core.js';
-import { INFO_GROUPS, INFO_FIELDS } from '../profile-fields.js';
+import { $, $$, esc } from '../../../commun/core.js';
+import { INFO_GROUPS, INFO_FIELDS } from '../../compte/profile-fields.js';
 
 /* =========================================================
    Secret Santa (section de l'admin) : champs transmis + attributions

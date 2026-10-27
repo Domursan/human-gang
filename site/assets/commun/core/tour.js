@@ -11,7 +11,7 @@
  * écrire ce champ). 1970-01-01 = membre inscrit avant la visite : un bandeau la lui propose une seule fois.
  * Textes : réglables dans Admin › Site › Textes (site_textes.visite_*, défauts dans core/site-defaults.js) ;
  * site_identite.visite_active coupe la visite automatique (« Revoir la visite » reste sur la page Aide).
- * Page : accueil.js (lancement automatique, bandeau), aide.js (« Revoir la visite » → accueil.html#visite).
+ * Page : accueil.js (lancement automatique, bandeau), aide.js (« Revoir la visite » → /pages/compte/accueil.html#visite).
  * Dépendances : supabase.js, profile.js (profil en cache), pages-access.js (canAccess), effects.js, site-defaults.js, util.js.
  * Exporte : TOUR_ANCIEN, tourState, startTour, maybeStartTour, markTourDone.
  */
@@ -256,7 +256,7 @@ export async function startTour(me, { welcome = true, onEnd } = {}) {
 /**
  * Accueil : lance la visite au premier passage, ou propose le bandeau aux membres déjà inscrits.
  * Sans effet si la colonne n'existe pas encore, si la visite est coupée par l'admin, ou si elle a déjà été vue.
- * accueil.html#visite (bouton « Revoir la visite » de la page Aide) la relance à la demande.
+ * /pages/compte/accueil.html#visite (bouton « Revoir la visite » de la page Aide) la relance à la demande.
  * @param {object} me Profil du membre connecté.
  * @param {HTMLElement} [bannerHost] Où insérer le bandeau « Nouveau : la visite du site » (début de #app par défaut).
  */

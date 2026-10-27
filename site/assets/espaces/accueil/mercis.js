@@ -4,13 +4,13 @@
  * (message facultatif de 140 caractères, sortie partagée facultative) et, sur sa propre fiche, le masquage d'un merci.
  * Règles (serveur) : pas à soi-même ni à un fantôme, 3 mercis par jour, un par semaine et par personne (ou un par sortie).
  * Aucune Paillette : seulement les badges « Le gang te dit merci » et « Reconnaissant ».
- * Lien direct : membre.html?id=<membre>&merci=<sortie> ouvre la boîte avec la sortie choisie (suggestion de la page IRL).
+ * Lien direct : /pages/compte/membre.html?id=<membre>&merci=<sortie> ouvre la boîte avec la sortie choisie (suggestion de la page IRL).
  * Dépendances : core.js, social.js (boîte de dialogue), icons.js. RPC : hg_thanks_for, hg_thank, hg_thank_hide.
  * Exporte : mountThanks.
  */
-import { sb, esc, toast, errMsg, fmtDate } from './core.js';
-import { openDialog } from './social.js';
-import { svg } from './icons.js';
+import { sb, esc, toast, errMsg, fmtDate } from '../../commun/core.js';
+import { openDialog } from '../compte/social.js';
+import { svg } from '../../commun/icons.js';
 
 const HEART = svg('star', { size: 18, stroke: 1.8 });
 const MAX = 140;
@@ -121,7 +121,7 @@ function openThank(el, card, isMe, d, eventId = null) {
       if (error) throw error;
       dlg.close();
       toast(`Merci envoyé à ${card.pseudo} !`, 'ok');
-      import('./sound.js').then((m) => m.playSound?.('success')).catch(() => {});
+      import('../../commun/sound.js').then((m) => m.playSound?.('success')).catch(() => {});
       await mountThanks(el, card, isMe, { mePseudo: d.me_pseudo });
       el.querySelector('#thx-open')?.focus();
     } catch (ex) { err.textContent = errMsg(ex); err.hidden = false; btn.disabled = false; }

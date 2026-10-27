@@ -6,13 +6,13 @@
  *   Points = Paillettes gagnées : 150 au 1er palier, −10 par palier, 10 si raté.
  * Données : RPC hg_jeux_classement(p_jeu) (p_jeu null = tous les jeux).
  * Dépendances : core.js (sb, esc), core/util.js (avatarHtml), core/profile.js (membre connecté).
- * Exporte : CLE_JEU (onglet de jeux.html → clé du classement), monterClassement(conteneur, cle), rafraichirClassements().
+ * Exporte : CLE_JEU (onglet de /pages/jeux/jeux.html → clé du classement), monterClassement(conteneur, cle), rafraichirClassements().
  */
-import { sb, esc } from '../core.js';
-import { avatarHtml } from '../core/util.js';
-import { getCachedProfile } from '../core/profile.js';
+import { sb, esc } from '../../commun/core.js';
+import { avatarHtml } from '../../commun/core/util.js';
+import { getCachedProfile } from '../../commun/core/profile.js';
 
-/** Onglet de jeux.html (ou « code_jour » pour duels.html#jour) → clé de hg_jeux_resultats. */
+/** Onglet de /pages/jeux/jeux.html (ou « code_jour » pour /pages/jeux/duels.html#jour) → clé de hg_jeux_resultats. */
 export const CLE_JEU = {
   sutom: 'sutom', framed: 'framed', heardle: 'heardle', code_jour: 'code_jour',
   'carte-mystere': 'nj_carte', 'jeu-video': 'nj_jv', pochette: 'nj_pochette', replique: 'nj_replique', pays: 'nj_pays', plat: 'nj_plat',
@@ -29,11 +29,11 @@ const nf = (n) => new Intl.NumberFormat('fr-CH').format(Number(n) || 0);
 /** Médaille des trois premiers, sinon le rang. */
 const rang = (i) => (i < 3 ? ['🥇', '🥈', '🥉'][i] : String(i + 1));
 
-/** Feuille de style du bloc (assets/css/jeux-classement.css), ajoutée une fois. */
+/** Feuille de style du bloc (/assets/espaces/jeux/jeux-classement.css), ajoutée une fois. */
 function css() {
   if (document.querySelector('link[data-css="jeux-classement"]')) return;
   const l = document.createElement('link');
-  l.rel = 'stylesheet'; l.href = new URL('../../css/jeux-classement.css', import.meta.url).href; l.dataset.css = 'jeux-classement';
+  l.rel = 'stylesheet'; l.href = new URL('./jeux-classement.css', import.meta.url).href; l.dataset.css = 'jeux-classement';
   document.head.append(l);
 }
 

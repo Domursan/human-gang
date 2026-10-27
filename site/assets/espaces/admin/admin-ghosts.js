@@ -12,13 +12,13 @@
 // Tables et RPC : hg_admin_ghosts, hg_ghost_suggestions, hg_ghost_create, hg_ghost_invite, hg_ghost_merge, hg_profiles (suppression).
 // Exporte : ghostCodeActive, ghostInviteLink, fetchAdminGhosts, ghostDirectory, refreshGhosts, ensureGhosts, setGhostHooks,
 // renderGhostView, ghostBannerHtml, ghostZoneActions, openNewGhostDrawer, openMergeDrawer, bindGhostPanel.
-import { sb, toast, errMsg, esc, fmtDate } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { svg } from './icons.js';
-import { fmtDay } from './utils.js';
-import { openDrawer } from './admin/ui/drawer.js';
-import { loadInviteConfig, inviteConfig } from './invite-config.js';
-import { renderDetailHeader } from './admin/ui/detail-header.js';
+import { sb, toast, errMsg, esc, fmtDate } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { svg } from '../../commun/icons.js';
+import { fmtDay } from '../../commun/utils.js';
+import { openDrawer } from './ui/drawer.js';
+import { loadInviteConfig, inviteConfig } from '../compte/invite-config.js';
+import { renderDetailHeader } from './ui/detail-header.js';
 
 /* ---------- Constantes et état ---------- */
 // Icônes SVG des boutons Copier le code et Copier le lien.
@@ -84,9 +84,9 @@ const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toL
 
 /** Code actif = non expiré. Un seul code par fantôme : en générer un nouveau invalide l'ancien. */
 export const ghostCodeActive = (g) => !!g.invite_code && !!g.invite_expires_at && new Date(g.invite_expires_at) > new Date();
-/** Lien d'inscription complet : compte.html lit ?code=… (pré-remplit le champ) et ouvre le formulaire d'inscription. */
+/** Lien d'inscription complet : /pages/compte/compte.html lit ?code=… (pré-remplit le champ) et ouvre le formulaire d'inscription. */
 export function ghostInviteLink(code) {
-  const u = new URL('compte.html', location.href);
+  const u = new URL('/pages/compte/compte.html', location.href);
   u.searchParams.set('code', code);
   u.hash = 'inscription';
   return u.href;

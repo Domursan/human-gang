@@ -4,6 +4,6 @@
 // Actions sensibles par RPC : hg_cards_admin_give, hg_cards_admin_paillettes, hg_cards_admin_take, hg_trade_cancel.
 // Rendu d'une carte : cardHtml de cartes-ui.js. Images : bucket public hg-assets, dossier cards/.
 // Point d'entrée (importé par admin.js) : le code est réparti dans assets/js/admin-cards/.
-export { mountCardsSection, openCardsTab } from './admin-cards/view.js';
-export { mountPlayersList } from './admin-cards/players.js';
-export { mountDropsSection } from './admin-cards/drops.js';
+export { mountCardsSection, openCardsTab } from './cartes/view.js';
+export { mountPlayersList } from './cartes/players.js';
+export { mountDropsSection } from './cartes/drops.js';

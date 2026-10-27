@@ -8,11 +8,11 @@
 // salons connus du bot : hg_settings.bot (lecture admin).
 // Dépendances : core.js, admin-events.js (heure suisse), admin/ui/drawer.js, ui-confirm.js, admin/shell.js (setActions).
 // Exporte : mjSub ({ main, open }), branché par admin.js sur « jeux/mes-jeux ».
-import { sb, esc, toast, errMsg } from './core.js';
+import { sb, esc, toast, errMsg } from '../../commun/core.js';
 import { toZurichInput, fromZurichInput } from './admin-events.js';
-import { openDrawer } from './admin/ui/drawer.js';
-import { confirmBox } from './ui-confirm.js';
-import { setActions } from './admin/shell.js';
+import { openDrawer } from './ui/drawer.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { setActions } from './shell.js';
 
 const TZ = 'Europe/Zurich';
 const when = new Intl.DateTimeFormat('fr-CH', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });

@@ -7,7 +7,7 @@
  * Dépendances : core.js (esc, initials), nom-de-code/api.js (ndc, erreurTexte, estInvite, EQUIPES).
  * Exporte : afficher.
  */
-import { esc, initials } from '../../core.js';
+import { esc, initials } from '../../../commun/core.js';
 import { ndc, erreurTexte, estInvite, EQUIPES } from '../api.js';
 
 /** Intervalle de rafraîchissement des parties publiques (ms). */
@@ -73,7 +73,7 @@ function htmlHero() {
         </a>
       </div>
     </div>
-    <img class="ndc-acc-image" src="assets/img/jeux/nom-de-code.webp" alt="" loading="eager" decoding="async">
+    <img class="ndc-acc-image" src="/assets/images/jeux/nom-de-code.webp" alt="" loading="eager" decoding="async">
   </section>`;
 }
 
@@ -167,7 +167,7 @@ export async function afficher(root, { naviguer }) {
   const invite = estInvite();
 
   root.innerHTML = `<div class="ndc-acc">
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="jeux.html">Jeux</a> › <span aria-current="page">Codenames</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <span aria-current="page">Codenames</span></nav>
     ${htmlHero()}
     <div class="ndc-acc-grille">
       <div class="ndc-acc-colonne">

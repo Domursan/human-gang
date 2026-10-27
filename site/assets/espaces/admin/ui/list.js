@@ -13,8 +13,8 @@
 //   defaultFilter : id du filtre affiché au départ (défaut : 'all').
 // Lignes par lots de 50 (bouton « Afficher plus »). Navigation : ↑ ↓ Début Fin, Entrée ; ↓ depuis la recherche va à la première ligne.
 // Utilisé par les colonnes 2 (assistance, idées, journal, Secret Santa…). Dépend de core/util.js, icons.js, time.js, common.js.
-import { esc, avatarHtml } from '../../core/util.js';
-import { svg } from '../../icons.js';
+import { esc, avatarHtml } from '../../../commun/core/util.js';
+import { svg } from '../../../commun/icons.js';
 import { relTime } from './time.js';
 import { fold, pill } from './common.js';
 

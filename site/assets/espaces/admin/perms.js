@@ -8,8 +8,8 @@
 // montée. Un lieu sans sous-section permise n'apparaît nulle part.
 // Utilisé par shell.js (plateau, fil d'Ariane, barre du bas), router.js (routage), lieux.js (pages de lieu), live.js
 // (tables visibles) et les sections (canSection). Dépend de core/perms.js (permissions en cache, hasPerm) et core/util.js ($$).
-import { getCachedPerms, hasPerm } from '../core/perms.js';
-import { $$ } from '../core/util.js';
+import { getCachedPerms, hasPerm } from '../../commun/core/perms.js';
+import { $$ } from '../../commun/core/util.js';
 
 /** Section (id de <section>) -> permission requise. null : pas de permission. */
 export const SECTION_PERM = {

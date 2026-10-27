@@ -60,7 +60,7 @@ function otherItems() {
 /** Vrai si le lien pointe vers la page affichée (avec son ancre si le lien en a une). */
 function isHere(href) {
   const [file, hash] = href.split('#');
-  const cur = location.pathname.split('/').pop() || 'index.html';
+  const cur = location.pathname.split('/').pop() || '/index.html';
   if (file !== cur) return false;
   return !hash || location.hash.slice(1).split(/[/?]/)[0] === hash;
 }
@@ -88,7 +88,7 @@ function itemsHtml(items, id, profile) {
     if (it.sub) {
       const subs = it.sub.filter((s) => allowed(s, profile));
       if (!subs.length) continue;
-      const on = subs.some((s) => isHere(s.href)) || isHere('jeux.html#arcade');
+      const on = subs.some((s) => isHere(s.href)) || isHere('/pages/jeux/jeux.html#arcade');
       out.push(`<div class="nav-sub">
           <button class="nav-item nav-sub-btn${on ? ' is-current' : ''}" type="button" aria-expanded="false" aria-controls="nav-sub-${id}">${esc(navLibelle(menuKey(it)) || it.label)}${ICON_CHEVRON_RIGHT}</button>
           <div class="nav-submenu" id="nav-sub-${id}" hidden>${subs.map(linkHtml).join('')}</div>
@@ -226,7 +226,7 @@ function bindWindow() {
   // Clic hors de la barre : les menus déroulants se ferment.
   document.addEventListener('click', (e) => { const h = cur(); if (h && !h.querySelector('.nav')?.contains(e.target)) closeMenus(h); });
   window.addEventListener('resize', () => { const h = cur(); if (h?.classList.contains('fan-open')) layoutFan(h); });
-  // Ancre changée sur la même page (ex. cartes.html#boutique) : le menu marque l'entrée courante.
+  // Ancre changée sur la même page (ex. /pages/cartes/cartes.html#boutique) : le menu marque l'entrée courante.
   window.addEventListener('hashchange', () => { if (cur()) updateNav(); });
 }
 
@@ -242,13 +242,13 @@ function fanHtml(profile) {
   const item = (cls, tag, attrs, icon, label, extra = '') => `<li class="fan-li">
       <${tag} class="fan-item ${cls}" ${attrs}><span class="fan-ico">${icon}</span>${extra}<span class="fan-label">${esc(label)}</span></${tag}></li>`;
   return [
-    item('nav-msg', 'a', `href="messages.html"${curAttr('messages.html')} aria-label="Messages"`, ICON_MSG, 'Messages', '<span class="nav-badge" hidden></span>'),
+    item('nav-msg', 'a', `href="/pages/compte/messages.html"${curAttr('/pages/compte/messages.html')} aria-label="Messages"`, ICON_MSG, 'Messages', '<span class="nav-badge" hidden></span>'),
     item('nav-search-open', 'button', 'type="button" aria-haspopup="dialog" aria-label="Rechercher (Ctrl ou Cmd + K)"', ICON_SEARCH, 'Recherche'),
-    item('nav-account', 'a', `href="compte.html"${curAttr('compte.html')} aria-label="Mon compte"`, ICON_USER, 'Mon compte'),
-    item('nav-help', 'a', `href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos"`, ICON_HELP, 'Aide et tutos'),
+    item('nav-account', 'a', `href="/pages/compte/compte.html"${curAttr('/pages/compte/compte.html')} aria-label="Mon compte"`, ICON_USER, 'Mon compte'),
+    item('nav-help', 'a', `href="/pages/infos/aide.html"${curAttr('/pages/infos/aide.html')} aria-label="Aide et tutos"`, ICON_HELP, 'Aide et tutos'),
     item('prefs-open', 'button', 'type="button" aria-haspopup="dialog" aria-label="Préférences d’affichage"', ICON_PREFS, 'Affichage'),
     profile.is_admin && !viewAsActive() ? item('nav-god', 'button', 'type="button" aria-pressed="false" aria-label="Activer le mode sans limite"', ICON_BOLT, 'Sans limite') : '',
-    item('nav-admin', 'a', `href="admin.html"${curAttr('admin.html')} hidden`, ICON_SHIELD, profile.is_admin ? 'Admin' : 'Staff'),
+    item('nav-admin', 'a', `href="/pages/admin/admin.html"${curAttr('/pages/admin/admin.html')} hidden`, ICON_SHIELD, profile.is_admin ? 'Admin' : 'Staff'),
     item('nav-logout', 'button', 'type="button" aria-label="Se déconnecter"', ICON_DOOR, 'Déconnexion'),
   ].join('');
 }
@@ -393,14 +393,14 @@ export function renderHeader(profile, { nav = true } = {}) {
          <div class="me-fan" id="me-fan" hidden><div class="fan-scrim" aria-hidden="true"></div><div class="fan-disc" aria-hidden="true"></div>
            <ul class="fan-list" aria-label="Mon menu">${fanHtml(profile)}</ul></div>
        </span>`
-    : `<a class="nav-icon nav-help" href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>
-       <a class="nav-account is-guest" href="compte.html"${curAttr('compte.html')}>Connexion</a>`;
+    : `<a class="nav-icon nav-help" href="/pages/infos/aide.html"${curAttr('/pages/infos/aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>
+       <a class="nav-account is-guest" href="/pages/compte/compte.html"${curAttr('/pages/compte/compte.html')}>Connexion</a>`;
   const header = document.createElement('header');
   header.className = 'site-header';
   header.innerHTML = `<a class="skip-link" href="#app">Aller au contenu</a>
     <div class="rainbow" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="container">
-      <a class="brand" href="accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
+      <a class="brand" href="/pages/compte/accueil.html"><img class="brand-logo" src="${esc(currentLogo())}" alt=""><span>${esc(siteIdentite().nom.toUpperCase())}</span></a>
       <nav class="nav" id="site-nav" aria-label="Navigation principale">${nav ? navHtml(profile) : ''}</nav>
       <div class="nav-tools">${toggle}${right}</div>
     </div>`;
@@ -424,7 +424,7 @@ export function renderHeader(profile, { nav = true } = {}) {
     if (header.classList.contains('fan-open')) { setFan(header, false, { focus: true }); return; }
     if (tg.getAttribute('aria-expanded') === 'true') { setNavOpen(header, false); tg.focus(); }
   });
-  bindShortcuts(profile); // « g » puis une lettre, « / », « ? » (idée Q8 ; rien sur admin.html)
+  bindShortcuts(profile); // « g » puis une lettre, « / », « ? » (idée Q8 ; rien sur /pages/admin/admin.html)
   if (!profile) return;
 
   // Menu en arc : la photo l'ouvre et le ferme ; un clic sur le voile, une icône suivie ou le focus qui sort le referme.
@@ -471,6 +471,6 @@ export function renderHeader(profile, { nav = true } = {}) {
     // Q4 : copie hors ligne de la collection et images des cartes effacées (téléphone prêté, ordinateur partagé)
     try { await (await import('../offline-store.js')).clearOffline(); } catch { /* rien à effacer */ }
     clearPerms();
-    location.href = 'compte.html';
+    location.href = '/pages/compte/compte.html';
   });
 }

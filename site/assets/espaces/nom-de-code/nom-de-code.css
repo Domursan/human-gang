@@ -2,14 +2,14 @@
    Feuilles par écran : assets/css/nom-de-code/*.css (importées ci-dessous).
    Équipes : Jaune et Rose ; police des mots et des titres de jeu : Oswald (maquettes validées).
    Animations coupées par <body class="ndc-calme"> (préférence du membre) et prefers-reduced-motion. */
-@import url('nom-de-code/accueil.css');
-@import url('nom-de-code/creer.css');
-@import url('nom-de-code/rejoindre.css');
-@import url('nom-de-code/stats.css');
-@import url('nom-de-code/salle.css');
-@import url('nom-de-code/chat.css');
-@import url('nom-de-code/table.css');
-@import url('nom-de-code/fin.css');
+@import url('accueil.css');
+@import url('creer.css');
+@import url('rejoindre.css');
+@import url('stats.css');
+@import url('salle.css');
+@import url('chat.css');
+@import url('table.css');
+@import url('fin.css');
 
 :root {
   --ndc-jaune: #F2B71F; --ndc-jaune-fonce: #7A5200; --ndc-jaune-clair: #FFD970;

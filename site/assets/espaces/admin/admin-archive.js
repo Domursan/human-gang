@@ -1,14 +1,14 @@
 // =====================================================================
 // Admin : Site › Fonctionnement › Archives (idée A8). Réservé à l'administrateur.
-// Télécharge une année complète du gang en ZIP (fonction edge hg-archive) : page index.html lisible hors ligne,
+// Télécharge une année complète du gang en ZIP (fonction edge hg-archive) : page /index.html lisible hors ligne,
 // un dossier par sortie avec ses photos, les données en JSON et un LISEZ-MOI.txt. Au-delà de 300 Mo de photos,
 // l'archive arrive en plusieurs parties (« partie 1 / 3 ») : on les télécharge l'une après l'autre.
 // Exclusions (faites en base, hg_archive_year) : messages privés, souhaits et messages du Secret Santa, e-mails,
 // anniversaires, RSVP détaillés, contenus masqués. Chaque export est journalisé (hg_admin_log « archive_annuelle »).
 // Dépendances : core.js (sb, toast, errMsg, esc), config.js (adresse et clé publique). Exporte : mountArchiveSection.
 // =====================================================================
-import { sb, toast, errMsg, esc } from './core.js';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { sb, toast, errMsg, esc } from '../../commun/core.js';
+import { SUPABASE_URL, SUPABASE_KEY } from '../../commun/config.js';
 
 // Première année proposée, et les parties de l'archive (clé envoyée à la fonction, libellé).
 const FIRST_YEAR = 2022;
@@ -24,7 +24,7 @@ const PARTS = [
  * Demande une partie de l'archive à la fonction edge. Renvoie le fichier et le nombre total de parties.
  * @param {number} year Année.
  * @param {string[]} parts Parties choisies.
- * @param {number} part Numéro de la partie (1 = la première, avec index.html et les données).
+ * @param {number} part Numéro de la partie (1 = la première, avec /index.html et les données).
  * @returns {Promise<{blob: Blob, total: number, name: string}>}
  */
 async function fetchPart(year, parts, part) {
@@ -83,7 +83,7 @@ export function mountArchiveSection(root) {
   root.innerHTML = `<form class="card ar-card" id="ar-form" novalidate>
       <h3 class="card-title">Archives</h3>
       <p class="small muted">Télécharge une année complète du gang en un ZIP à ranger hors du site (disque, cloud personnel) :
-        une page <span class="code">index.html</span> lisible hors ligne, un dossier par sortie avec ses photos, les données en JSON et un LISEZ-MOI.
+        une page <span class="code">/index.html</span> lisible hors ligne, un dossier par sortie avec ses photos, les données en JSON et un LISEZ-MOI.
         Au-delà de 300 Mo de photos, l’archive arrive en plusieurs parties.</p>
       <div class="ar-row">
         <div class="field"><label for="ar-year">Année</label>

@@ -6,8 +6,8 @@
 // Tables : hg_ss_participants, hg_ss_assignments (giver_id -> receiver_id), hg_ss_wishes.
 // Exporte : ssHtml, curEdition, ssJoin, ssLeave, setPair, clearPair.
 // =====================================================================
-import { sb, toast, esc, fmtDateTime, isGodMode } from '../core.js';
-import { confirmBox } from '../ui-confirm.js';
+import { sb, toast, esc, fmtDateTime, isGodMode } from '../../../commun/core.js';
+import { confirmBox } from '../../../commun/ui-confirm.js';
 import { IC, check, tabError, toLocalInput } from './common.js';
 import { A, SS_STATUS, pseudoOf, dropFicheCache } from './state.js';
 

@@ -7,7 +7,7 @@
 //   actions : [{ label, onClick }] boutons pleine largeur en bas (ex. « Ouvrir la fiche membre »)
 //   caption : ligne sous le nom (ex. « Organisateur ») ; emptyHistory (ou emptyText) : texte quand history est vide (défaut « Aucune autre demande. »)
 // Utilisé par la colonne de droite de l'assistance (admin/support.js). Dépend de ui/time.js et ui/common.js.
-import { esc, avatarHtml } from '../../core/util.js';
+import { esc, avatarHtml } from '../../../commun/core/util.js';
 import { monthYear, fmtDay, seenAgo } from './time.js';
 import { pill, statusSelect, bindStatus, ICON } from './common.js';
 

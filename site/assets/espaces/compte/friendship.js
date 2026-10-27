@@ -1,12 +1,12 @@
-// ===== Humane Gang — statistiques d'amitié (idée P6, membre.html) =====
+// ===== Humane Gang — statistiques d'amitié (idée P6, /pages/compte/membre.html) =====
 // Sur la fiche d'un autre membre : encart « Toi et <pseudo> » (sorties ensemble, échanges et dons, Secret Santa des éditions
 // terminées, mercis si l'idée P4 est en place, année commune), une phrase de conclusion et l'action suivante.
 // Sur sa propre fiche : bouton « Avec qui j'ai le plus de souvenirs » (liste visible de soi seul).
 // Rien n'est stocké ni récompensé : tout vient des RPC hg_friendship(p_other) et hg_friendship_top() (migration 091).
 // Dépendances : core.js (sb, esc, $, avatarHtml, errMsg, canAccess, fmtDate), icons.js.
 // Exporte : mountFriendship(el, { card, isMe }), friendshipVerdict(f), friendshipRows(f).
-import { sb, esc, avatarHtml, errMsg, canAccess } from './core.js';
-import { svg } from './icons.js';
+import { sb, esc, avatarHtml, errMsg, canAccess } from '../../commun/core.js';
+import { svg } from '../../commun/icons.js';
 
 /* Icônes propres à l'encart (le jeu d'icônes du site n'a ni cœur ni cartes) */
 const I = {
@@ -92,8 +92,8 @@ function encartHtml(f, card, me) {
   // Action suivante : écrire (toujours), et proposer un échange quand il n'y en a pas encore eu
   const canCards = canAccess('cartes');
   const actions = [];
-  if (!num(f.echanges) && !num(f.dons) && canCards) actions.push(`<a class="btn btn-sand" href="cartes.html#collection/${encodeURIComponent(card.id)}">${I.cards} Proposer un échange</a>`);
-  actions.push(`<a class="btn ${actions.length ? 'btn-ghost' : 'btn-sand'}" href="messages.html?to=${encodeURIComponent(card.id)}">${svg('msg', { size: 16 })} Lui écrire</a>`);
+  if (!num(f.echanges) && !num(f.dons) && canCards) actions.push(`<a class="btn btn-sand" href="/pages/cartes/cartes.html#collection/${encodeURIComponent(card.id)}">${I.cards} Proposer un échange</a>`);
+  actions.push(`<a class="btn ${actions.length ? 'btn-ghost' : 'btn-sand'}" href="/pages/compte/messages.html?to=${encodeURIComponent(card.id)}">${svg('msg', { size: 16 })} Lui écrire</a>`);
   return `
     <section class="card fr-card" aria-labelledby="fr-title">
       <div class="fr-head">
@@ -133,7 +133,7 @@ function mountTop(el) {
       box.innerHTML = list.length
         ? `<p class="small muted">Sorties partagées. Visible par toi seul.</p>
            <ol class="fr-top-ol">${list.map((m) => `
-             <li><a class="fr-top-item" href="membre.html?id=${encodeURIComponent(m.user_id)}">${avatarHtml({ ...m, id: m.user_id }, 32)}
+             <li><a class="fr-top-item" href="/pages/compte/membre.html?id=${encodeURIComponent(m.user_id)}">${avatarHtml({ ...m, id: m.user_id }, 32)}
                <span class="fr-top-name">${esc(m.pseudo)}</span><span class="small muted">${esc(String(m.sorties))} ${plural(m.sorties, 'sortie', 'sorties')}</span></a></li>`).join('')}</ol>`
         : '<p class="small muted">Pas encore de sortie partagée. Les souvenirs arrivent avec la prochaine sortie IRL !</p>';
     } catch (e) { box.innerHTML = `<p class="small muted">Impossible de charger la liste (${esc(errMsg(e))}).</p>`; }

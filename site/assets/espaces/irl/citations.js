@@ -1,16 +1,16 @@
-// ===== Humane Gang — Mur des citations (citations.html), idée S13 =====
+// ===== Humane Gang — Mur des citations (/pages/irl/citations.html), idée S13 =====
 /*
  * Rôle : mur de post-it des citations validées (filtre par année, personne, contexte), réactions, proposition
  * d'une citation, bandeau « On t'a cité » (la personne citée refuse ou accepte, et dit si la citation peut servir
  * au jeu « Qui a dit ça ? »), liste de mes propositions et des citations qui me concernent.
- * Page : citations.html (membres).
+ * Page : /pages/irl/citations.html (membres).
  * Dépendances : core.js, reactions.js (barre de réactions, cible « quote »), contenus-ui.js.
  * Données : table hg_quotes (lecture, filtrée par la base : validées, mes propositions, celles qui me citent) ;
  *   RPC hg_quote_propose, hg_quote_author_decide, hg_members ; hg_toggle_reaction via reactions.js.
  * Tout texte venant de la base passe par esc(). Le fichier n'exporte rien.
  */
-import { sb, initPage, esc, $, toast, errMsg } from './core.js';
-import { loadReactions, reactionBarHtml, REACTION_LABEL } from './reactions.js';
+import { sb, initPage, esc, $, toast, errMsg } from '../../commun/core.js';
+import { loadReactions, reactionBarHtml, REACTION_LABEL } from '../../commun/reactions.js';
 import { loadPeople, pseudoOf, formDialog, chipsHtml, setPressed, fmtJour } from './contenus-ui.js';
 
 const me = await initPage();

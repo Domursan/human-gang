@@ -1,13 +1,13 @@
 // ===== Humane Gang — menu « En ligne » (à droite du site, migration 159) =====
 /*
- * Rôle : montre les membres connectés en ce moment, avec deux raccourcis pour chacun : « Écrire » (messages.html?to=<id>)
- *   et « Défier » (duels.html#creer/membre/<id>).
+ * Rôle : montre les membres connectés en ce moment, avec deux raccourcis pour chacun : « Écrire » (/pages/compte/messages.html?to=<id>)
+ *   et « Défier » (/pages/jeux/duels.html#creer/membre/<id>).
  *   Ordinateur (à partir de 720 px) : barre verticale fixe à droite, avatars avec pastille verte ; le pseudo sort en bulle au
  *   survol ; un clic ouvre une petite fenêtre avec les deux raccourcis (Échap ou clic ailleurs la ferme). Le contenu de la
  *   page est décalé de la largeur de la barre (html[data-en-ligne] body).
  *   Téléphone : bouton flottant en bas à droite (nombre de membres en ligne) ; il ouvre la liste avec les raccourcis.
  * Données : RPC hg_membres_en_ligne() (les autres membres, statut non masqué), relue toutes les 60 s quand la page est visible.
- * Pas affiché sur admin.html, ni en vue « comme un membre », ni (sur téléphone) pendant une partie.
+ * Pas affiché sur /pages/admin/admin.html, ni en vue « comme un membre », ni (sur téléphone) pendant une partie.
  * Page : toutes (init.js appelle startEnLigne avec le profil connecté).
  * Dépendances : supabase.js (sb), util.js (esc, avatarHtml), pages-access.js (page courante), view-as.js.
  * Exporte : startEnLigne.
@@ -20,7 +20,7 @@ import { viewAsActive } from './view-as.js';
 /** Rafraîchissement de la liste (ms). */
 const RAFRAICHIR_MS = 60000;
 /** Feuille de style du module. */
-const CSS_HREF = new URL('../../css/en-ligne.css', import.meta.url).href;
+const CSS_HREF = new URL('../en-ligne.css', import.meta.url).href;
 /** Pages de partie : pas de bouton flottant sur téléphone (il recouvrirait les actions du jeu). */
 const PAGES_PARTIE = new Set(['blackjack', 'catan', 'cluedo', 'destins', 'duels', 'loup-garou', 'monopoly', 'nom-de-code', 'pictionary', 'poker', 'quiz', 'risk', 'shadow-hunters', 'uno', 'simulateur']);
 
@@ -34,8 +34,8 @@ const PICTO = {
 const ico = (nom) => `<svg class="ol-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${PICTO[nom] || ''}</svg>`;
 
 /** Liens des deux raccourcis pour un membre. */
-const lienEcrire = (id) => `messages.html?to=${encodeURIComponent(id)}`;
-const lienDefier = (id) => `duels.html#creer/membre/${encodeURIComponent(id)}`;
+const lienEcrire = (id) => `/pages/compte/messages.html?to=${encodeURIComponent(id)}`;
+const lienDefier = (id) => `/pages/jeux/duels.html#creer/membre/${encodeURIComponent(id)}`;
 
 /** Ajoute la feuille de style une seule fois. */
 function chargerCss() {

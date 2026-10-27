@@ -8,13 +8,13 @@
 // Tables et RPC : hg_perm_catalog (permissions), rpc hg_staff_list et hg_staff_set, hg_members et hg_admin_accounts (candidats),
 // hg_admin_log (journal).
 // Exporte : permLabel (libellé d'une permission, aussi utilisé par admin-accounts), listStaff, openStaff, infoStaff, mountStaffSection.
-import { sb, toast, errMsg, esc, avatarHtml } from './core.js';
-import { confirmBox } from './ui-confirm.js';
-import { onTableChange } from './admin/live.js';
-import { createList } from './admin/ui/list.js';
-import { renderDetailHeader } from './admin/ui/detail-header.js';
-import { renderInfoPanel } from './admin/ui/info-panel.js';
-import { shortDate } from './admin/ui/time.js';
+import { sb, toast, errMsg, esc, avatarHtml } from '../../commun/core.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { onTableChange } from './live.js';
+import { createList } from './ui/list.js';
+import { renderDetailHeader } from './ui/detail-header.js';
+import { renderInfoPanel } from './ui/info-panel.js';
+import { shortDate } from './ui/time.js';
 import { actionLabel } from './admin-log.js';
 
 // Regroupement des permissions dans la fiche (les clés absentes du catalogue vont dans « Autres »)

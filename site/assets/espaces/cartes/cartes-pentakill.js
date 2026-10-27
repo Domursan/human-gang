@@ -6,10 +6,10 @@
  *   (checkNewBadges) lorsqu'il monte de niveau. Sans réponse du serveur, rien ne s'affiche : l'ouverture n'est jamais bloquée.
  * Appelé par cartes.js : pentakillCheck() dès que le booster est reçu ; showPentakill(res) au moment voulu.
  * Données : RPC hg_pentakill_check (aucun paramètre) → { pentakill, kind: 'rarete'|'nouvelles', level, new_level, total }.
- * Dépendances : core.js (sb, motionAllowed, checkNewBadges, toast), cartes-pentakill.css (chargée par cartes.html).
+ * Dépendances : core.js (sb, motionAllowed, checkNewBadges, toast), cartes-pentakill.css (chargée par /pages/cartes/cartes.html).
  * Exporte : pentakillCheck, showPentakill.
  */
-import { sb, motionAllowed, checkNewBadges, toast } from './core.js';
+import { sb, motionAllowed, checkNewBadges, toast } from '../../commun/core.js';
 
 /** Durée d'affichage de la bannière (ms) : animée, ou fixe si le mouvement est réduit. */
 const DUREE_ANIMEE = 2000;

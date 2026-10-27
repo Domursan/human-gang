@@ -1,4 +1,4 @@
-// ===== Humane Gang — page « Calendrier du gang » (calendrier.html, idée V8) =====
+// ===== Humane Gang — page « Calendrier du gang » (/pages/irl/calendrier.html, idée V8) =====
 /*
  * Rôle : vue mois de tous les rendez-vous du gang : sorties IRL, séances du ciné-club, rendez-vous récurrents des
  * groupes (CK3 du jeudi, F1 du dimanche…), anniversaires partagés (jour et mois seulement) et dates du site
@@ -15,11 +15,11 @@
  * Dépendances : core.js, ics.js (export d'un rendez-vous), icons.js, ui-confirm.js, config.js (adresse du flux).
  * Page réservée aux membres (auth: 'member'). N'exporte rien.
  */
-import { sb, initPage, esc, $, errMsg, toast, hasPerm } from './core.js';
+import { sb, initPage, esc, $, errMsg, toast, hasPerm } from '../../commun/core.js';
 import { addToCalendar } from './ics.js';
-import { svg } from './icons.js';
-import { confirmBox } from './ui-confirm.js';
-import { SUPABASE_URL } from './config.js';
+import { svg } from '../../commun/icons.js';
+import { confirmBox } from '../../commun/ui-confirm.js';
+import { SUPABASE_URL } from '../../commun/config.js';
 
 /* ---------- Initialisation ---------- */
 const me = await initPage({ auth: 'member' });
@@ -366,7 +366,7 @@ async function loadCanManage() {
 $('#cal-prev').innerHTML = I.prev; $('#cal-next').innerHTML = I.next;
 $('#cal-sub').innerHTML = `${I.cal}<span>S’abonner dans mon agenda</span>`;
 $('#cal-add').innerHTML = `${I.plus}<span>Rendez-vous récurrent</span>`;
-// Bouton « Ajouter un événement » : créé ici s'il manque (ancienne copie de calendrier.html en cache).
+// Bouton « Ajouter un événement » : créé ici s'il manque (ancienne copie de /pages/irl/calendrier.html en cache).
 if (!$('#cal-add-evt')) $('#cal-add')?.insertAdjacentHTML('afterend', '<button type="button" class="btn btn-ghost" id="cal-add-evt" hidden></button>');
 $('#cal-add-evt').innerHTML = `${I.plus}<span>Ajouter un événement</span>`;
 $('#cal-prev').addEventListener('click', () => go(-1));
