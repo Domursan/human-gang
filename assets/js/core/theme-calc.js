@@ -172,20 +172,6 @@ export function luminance(c) {
  */
 export function contrast(a, b) { const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); }
 /**
- * Assombrit (ou éclaircit) c jusqu'à atteindre le contraste demandé avec `against`.
- * Procédé par petits pas (7 % vers `toward`), 24 pas au maximum pour rester rapide.
- * @param {string} c Couleur à corriger.
- * @param {string} against Couleur de fond.
- * @param {number} ratio Contraste minimal visé.
- * @param {string} [toward='#000000'] Couleur vers laquelle on se déplace.
- * @returns {string} Couleur corrigée (inchangée si elle est déjà assez contrastée).
- */
-function ensureContrast(c, against, ratio, toward = '#000000') {
-  let x = c;
-  for (let i = 0; i < 24 && contrast(x, against) < ratio; i++) x = mix(x, toward, 0.07);
-  return x;
-}
-/**
  * Teinte (0 à 360°) et saturation (0 à 1) d'une couleur, en espace HSL.
  * @param {string} c Couleur « #RRGGBB ».
  * @returns {number[]} [teinte, saturation] ; [0, 0] pour un gris.
@@ -198,6 +184,45 @@ function hueSat(c) {
   h = (h * 60 + 360) % 360;
   const l = (max + min) / 2;
   return [h, d / (1 - Math.abs(2 * l - 1))];
+}
+/**
+ * [teinte, saturation, luminosité] (HSL) d'une couleur « #RRGGBB ».
+ * @param {string} c Couleur.
+ * @returns {number[]}
+ */
+function toHsl(c) {
+  const [r, g, b] = rgb(c).map((v) => v / 255);
+  return [...hueSat(c), (Math.max(r, g, b) + Math.min(r, g, b)) / 2];
+}
+/**
+ * [teinte, saturation, luminosité] (HSL) vers « #RRGGBB ».
+ * @param {number} h Teinte (0 à 360).
+ * @param {number} s Saturation (0 à 1).
+ * @param {number} l Luminosité (0 à 1).
+ * @returns {string}
+ */
+function fromHsl(h, s, l) {
+  const C = (1 - Math.abs(2 * l - 1)) * s, X = C * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - C / 2;
+  const [r, g, b] = h < 60 ? [C, X, 0] : h < 120 ? [X, C, 0] : h < 180 ? [0, C, X] : h < 240 ? [0, X, C] : h < 300 ? [X, 0, C] : [C, 0, X];
+  return hex([r + m, g + m, b + m].map((v) => v * 255));
+}
+/**
+ * Ajuste la luminosité de c (vers le noir, ou vers le blanc si dir = 1) jusqu'à atteindre le contraste demandé avec
+ * `against`. La teinte est gardée et la saturation ne descend pas sous 60 % (sauf pour un gris) : un jaune reste un or
+ * et ne vire pas au brun-olive, comme le ferait un mélange avec du noir.
+ * @param {string} c Couleur à corriger.
+ * @param {string} against Couleur de fond.
+ * @param {number} ratio Contraste minimal visé.
+ * @param {number} [dir=-1] -1 pour assombrir, 1 pour éclaircir.
+ * @returns {string} Couleur corrigée (inchangée si elle est déjà assez contrastée).
+ */
+function tuneContrast(c, against, ratio, dir = -1) {
+  if (contrast(c, against) >= ratio) return c;
+  const [h, s0, l0] = toHsl(c);
+  const s = s0 < 0.1 ? s0 : Math.max(s0, 0.6);
+  let l = l0;
+  for (let i = 0; i < 90 && contrast(fromHsl(h, s, l), against) < ratio; i++) l = Math.max(0, Math.min(1, l + dir * 0.01));
+  return fromHsl(h, s, l);
 }
 /**
  * Vrai si la couleur est rouge ou verte et assez vive : les personnes daltoniennes les confondent.
@@ -226,12 +251,14 @@ export function themeVars(colors = {}, mode = getPrefs().mode) {
   const accentText = (a) => (contrast(a, '#ffffff') >= contrast(a, '#121212') ? '#ffffff' : '#121212');
 
   if (mode === 'clair') {
-    const bg = mix('#F5F2ED', c.accent, 0.025), surface = '#FFFFFF', text = '#1B1A1F', muted = '#57534C';
-    const accent = ensureContrast(c.accent, '#FFFFFF', 4.5);
+    const bg = mix('#F5F2ED', c.accent, 0.025), text = '#1B1A1F', muted = '#57534C';
+    // Surface teintée par le fond du thème (blanc pur pour le thème sombre neutre, crème pour l'automne, froide pour l'hiver)
+    const surface = mix('#FFFFFF', c.bg, 0.06);
+    const accent = tuneContrast(c.accent, '#FFFFFF', 4.5);
     // Les jaunes de texte doivent tenir aussi sur les surfaces, un peu plus sombres que le fond (cartes, pastilles) :
     // le contraste est calculé contre une surface moyenne (fond + 6 % de texte), pas seulement contre le fond.
     const plusFonce = mix(bg, text, 0.06);
-    const sand = ensureContrast(c.highlight, plusFonce, 4.8);
+    const sand = tuneContrast(c.highlight, plusFonce, 4.8);
     return {
       '--accent': accent, '--accent-text': accentText(accent),
       '--bg': bg, '--surface': surface,
@@ -240,7 +267,8 @@ export function themeVars(colors = {}, mode = getPrefs().mode) {
       '--border-strong': mix(surface, text, 0.26),
       '--text': text, '--muted': muted,
       '--sand': sand,
-      '--amber': ensureContrast(mix(c.highlight, c.accent, 0.3), plusFonce, 4.8),
+      '--amber': tuneContrast(mix(c.highlight, c.accent, 0.3), plusFonce, 4.8),
+      ...sectionVars(c, mode, surface, accent),
     };
   }
   let accent = c.accent;
@@ -258,6 +286,47 @@ export function themeVars(colors = {}, mode = getPrefs().mode) {
     '--muted': dalto ? mix(c.muted, c.text, 0.4) : c.muted,
     '--sand': c.highlight,
     '--amber': mix(c.highlight, c.accent, 0.3),
+    ...sectionVars(c, mode, c.surface, accent),
+  };
+}
+
+/**
+ * Couleurs des bandeaux « historique », « pendant » et des bleus par défaut (--slate, --plum) : dérivées du thème pour
+ * qu'aucun bleu fixe ne ressorte. Le mode daltonien garde ses couleurs propres (bleu = réussite), donc rien n'est posé.
+ * @param {object} c Couleurs du thème (accent, highlight, bg…).
+ * @param {string} mode Mode d'affichage.
+ * @param {string} surface Surface du mode courant.
+ * @param {string} accent Accent du mode courant.
+ * @returns {Object<string, string>}
+ */
+function sectionVars(c, mode, surface, accent) {
+  if (mode === 'daltonien') return {};
+  if (mode === 'clair') {
+    return {
+      '--hist-bg': mix(surface, accent, 0.05), '--hist-border': mix(surface, accent, 0.16), '--hist-fg': accent,
+      '--slate': accent,
+      '--plum': tuneContrast(mix(c.highlight, c.accent, 0.5), '#FFFFFF', 4.5),
+    };
+  }
+  return {
+    '--hist-bg': mix(surface, accent, 0.1), '--hist-border': mix(surface, accent, 0.22), '--hist-fg': mix(accent, '#FFFFFF', 0.5),
+    '--slate': mix(accent, '#FFFFFF', 0.35),
+    '--plum': mix(c.highlight, c.accent, 0.5),
+  };
+}
+
+/**
+ * Couleurs de la barre arc-en-ciel (--rb-1 à --rb-6) pour un thème : elles reprennent la palette du thème au lieu des
+ * couleurs fixes de la marque. Vide en mode daltonien.
+ * @param {Object<string, string>} v Variables du thème (sortie de themeVars).
+ * @param {string} [mode] Mode d'affichage (par défaut celui des préférences).
+ * @returns {Object<string, string>}
+ */
+export function rainbowVars(v, mode = getPrefs().mode) {
+  if (mode === 'daltonien') return {};
+  return {
+    '--rb-1': v['--accent'], '--rb-2': v['--sand'], '--rb-3': v['--amber'],
+    '--rb-4': mix(v['--accent'], v['--text'], 0.35), '--rb-5': mix(v['--sand'], v['--accent'], 0.5), '--rb-6': v['--muted'],
   };
 }
 

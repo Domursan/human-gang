@@ -152,7 +152,7 @@
 .jx-sh p { margin: 0; }
 .jx-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
 .jx-carte[hidden] { display: none; }
-.jx-carte { min-width: 0; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); overflow: hidden; transition: border-color .15s, transform .15s; }
+.jx-carte { min-width: 0; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); overflow: hidden; transition: border-color .15s, transform .15s; }
 .jx-lien { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
 .jx-lien:focus-visible { outline: 2px solid var(--sand); outline-offset: -2px; border-radius: 14px; }
 @media (hover: hover) { .jx-carte:not(.is-prep):hover { border-color: var(--sand); transform: translateY(-2px); } .jx-carte:not(.is-prep):hover .jx-t { color: var(--sand); } }
@@ -163,15 +163,15 @@
 .jx-img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; border-bottom: 1px solid var(--border); background: var(--surface-2, #1F1F23); }
 .jx-ico { display: grid; place-items: center; color: var(--jx); background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--jx) 22%, transparent) 0, transparent 70%), var(--surface-2, #1F1F23); }
 .jx-gi { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.jx-pills { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between; gap: 6px; pointer-events: none; }
-.jx-pills .pill { background: var(--bg); padding: 3px 9px; font-size: 12px; gap: 4px; }
+.jx-pills { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 4px 6px; pointer-events: none; }
+.jx-pills .pill { background: var(--bg); padding: 3px 8px; font-size: 11px; line-height: 1.2; gap: 4px; white-space: nowrap; max-width: 100%; }
 .jx-prep { border: 1px solid var(--sand); color: var(--sand); font-weight: 700; }
 
 /* Chantier : ce qui n'est visible que des admins (jeu en préparation, page en mode admin) */
-.jx-section.is-chantier { position: relative; padding: 22px 20px 20px; border-radius: var(--radius); border: 1px solid #3A3220;
-  background: repeating-linear-gradient(-45deg, rgba(242, 183, 5, .045) 0 18px, transparent 18px 36px), #15130D;
-  color: #F2EFEA; } /* fond fixe sombre : texte clair dans les deux modes */
-.jx-section.is-chantier .muted, .jx-section.is-chantier p.small { color: #ABA7A0; }
+.jx-section.is-chantier { position: relative; padding: 22px 20px 20px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: repeating-linear-gradient(-45deg, rgba(242, 183, 5, .07) 0 18px, transparent 18px 36px), var(--surface);
+  color: var(--text); } /* suit le mode (clair ou sombre), comme le reste de la page */
+.jx-section.is-chantier .muted, .jx-section.is-chantier p.small { color: var(--muted); }
 .jx-section.is-chantier::before, .jx-section.is-chantier::after { content: ''; position: absolute; left: 0; right: 0; height: 10px;
   background: repeating-linear-gradient(-45deg, #F2B705 0 14px, #121212 14px 28px); }
 .jx-section.is-chantier::before { top: 0; border-radius: var(--radius) var(--radius) 0 0; }
@@ -195,9 +195,11 @@
 @media (max-width: 760px) {
   .jx-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .jx-cherche, .jx-cherche input { width: 100%; }
+  .jx-filtres { flex-wrap: wrap; overflow: visible; }
   .jx-txt { padding: 8px 8px 10px; }
   .jx-t { font-size: 13px; }
   .jx-s { display: none; }
   .jx-gi { width: 30px; height: 30px; }
-  .jx-pills .pill { font-size: 12px; padding: 2px 6px; }
+  .jx-pills { top: 4px; left: 4px; right: 4px; gap: 3px 4px; }
+  .jx-pills .pill { font-size: 10px; padding: 2px 5px; line-height: 1.15; white-space: normal; }
 }

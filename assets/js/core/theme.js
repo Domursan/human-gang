@@ -12,7 +12,7 @@
  */
 import { siteLogo } from './site-defaults.js';
 import { getPrefs, applyPrefsAttrs } from './prefs-state.js';
-import { DEFAULT_THEME, themeVars } from './theme-calc.js';
+import { DEFAULT_THEME, themeVars, rainbowVars } from './theme-calc.js';
 import { startEffects, applyFromageClass } from './effects.js';
 
 /* ---------- État ---------- */
@@ -41,7 +41,11 @@ function displayTheme(site) {
  */
 function setRootVars(t) {
   const root = document.documentElement;
-  for (const [k, v] of Object.entries(themeVars(t.colors))) root.style.setProperty(k, v);
+  const vars = themeVars(t.colors);
+  // Barre arc-en-ciel : palette du thème pour un thème spécial, couleurs de marque sinon (retirées si on revient au défaut)
+  Object.assign(vars, t.is_default ? {} : rainbowVars(vars));
+  for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
+  if (t.is_default) for (let i = 1; i <= 6; i++) root.style.removeProperty(`--rb-${i}`);
   root.dataset.theme = t.slug || 'classique';
 }
 

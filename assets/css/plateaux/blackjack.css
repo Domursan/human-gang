@@ -30,9 +30,9 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 .bj-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; color: var(--bj-or); }
 .bj-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 8px; font-size: 11px; color: var(--bj-or); font-weight: 500; white-space: nowrap; }
 .bj-etiquette.is-tour { font-weight: 700; }
-.bj-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--bj-rouge); font-weight: 700; font-size: 14px; }
+.bj-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--bj-rouge-fond); color: var(--bj-rouge); font-weight: 700; font-size: 14px; }
 
-.bj-bloc, .bf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--bj-bord); min-width: 0; }
+.bj-bloc, .bf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--bj-panneau); border: 1px solid var(--bj-bord); min-width: 0; }
 .bj-bloc-titre, .bf-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
 
 /* ---------- Boutons ---------- */
@@ -64,8 +64,8 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 .bj-banque { text-align: center; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px dashed rgba(226, 199, 126, .5); }
 .bj-banque-tete { display: flex; justify-content: center; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
 .bj-banque-titre { font-family: 'Archivo Black', sans-serif; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; color: var(--bj-or); }
-.bj-banque-phase { color: #D7EBDD; }
-.bj-banque-total { margin: 8px 0 0; color: #E6F2EA; font-size: 14px; }
+.bj-banque-phase { color: var(--bj-texte-doux, #D7EBDD); }
+.bj-banque-total { margin: 8px 0 0; color: var(--bj-texte-doux, #E6F2EA); font-size: 14px; }
 .bj-banque-total strong { font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 18px; color: #FFFFFF; }
 .bj-cartes { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: flex-start; min-height: 40px; }
 .bj-cartes-banque { min-height: 92px; }
@@ -83,7 +83,7 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 .bj-pastille { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 13px Inter, sans-serif; color: #121212; }
 .bj-jetons { margin: 6px 0 4px; }
 .bj-jetons-nombre { font-family: 'Archivo Black', sans-serif; font-size: 20px; }
-.bj-attente { margin: 6px 0 0; color: #CFE3D4; }
+.bj-attente { margin: 6px 0 0; color: var(--bj-texte-doux, #CFE3D4); }
 .bj-mains { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 .bj-main { box-sizing: border-box; padding: 6px; border-radius: 12px; background: rgba(0, 0, 0, .22); border: 1px solid transparent; }
 .bj-main.is-active { border-color: var(--bj-or); }
@@ -92,7 +92,7 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 .bj-main-titre { font-weight: 700; }
 .bj-main .bj-cartes { justify-content: flex-start; gap: 4px; min-height: 0; }
 .bj-main .cd { --cd-l: 40px; --cd-h: 56px; }
-.bj-main-info { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 4px 0 0; color: #D9D5CC; }
+.bj-main-info { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 4px 0 0; color: var(--bj-texte-doux, #D9D5CC); }
 .bj-statut { font-weight: 700; }
 .bj-statut.is-saute { color: var(--bj-rouge); }
 .bj-statut.is-blackjack { color: var(--bj-or); }
@@ -122,7 +122,7 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 
 /* ---------- Fin de partie (encart) ---------- */
 .bf-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
-.bf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: #1F1F23; border: 1px solid var(--bj-bord-fort); min-width: 0; }
+.bf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: var(--bj-carte-2); border: 1px solid var(--bj-bord-fort); min-width: 0; }
 .bf-carte.is-gagnant { border-color: var(--bj-or); }
 .bf-carte.is-parti { opacity: .7; }
 .bf-rang { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--bj-muet); }

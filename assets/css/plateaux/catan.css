@@ -33,10 +33,10 @@ body.plat-catan { --plat-teinte: #3A2E12; --plat-or: #E2C77E; }
 .ct-note { margin: 0; font-size: 13px; color: var(--ct-muet); }
 .ct-vide { margin: 0; color: var(--ct-muet); }
 .ct-titre { margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--ct-or); line-height: 1.25; }
-.ct-table p { margin: 0; font-size: 15px; color: #D6DCE4; }
+.ct-table p { margin: 0; font-size: 15px; color: var(--ct-texte-doux, #D6DCE4); }
 .ct-invite { font-size: 12px; color: var(--ct-muet); border: 1px solid var(--ct-bord-fort); border-radius: 999px; padding: 0 8px; font-weight: 500; margin-left: 4px; }
 
-.ct-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ct-bord); min-width: 0; }
+.ct-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--ct-panneau); border: 1px solid var(--ct-bord); min-width: 0; }
 .ct-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 16px; line-height: 1.2; }
 
 /* ---------- Boutons, choix, formulaire ---------- */
@@ -51,7 +51,7 @@ body.plat-catan { --plat-teinte: #3A2E12; --plat-or: #E2C77E; }
 .ct-quitter { font-size: 13px; }
 .ct-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .ct-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-.ct-carte-choix { flex-direction: column; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: #1F1F23; font-weight: 500; text-align: left; }
+.ct-carte-choix { flex-direction: column; align-items: flex-start; padding: 12px 14px; border-radius: 14px; background: var(--ct-carte-2); font-weight: 500; text-align: left; }
 .ct-carte-choix span { font-size: 13px; color: var(--ct-muet); }
 .ct-carte-choix:hover:not(:disabled) { border-color: var(--ct-or); }
 .ct-pied { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
@@ -61,8 +61,8 @@ body.plat-catan { --plat-teinte: #3A2E12; --plat-or: #E2C77E; }
 .ct-fieldset legend { padding: 0 6px; font-size: 14px; font-weight: 700; color: var(--ct-muet); }
 .ct-champs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .ct-label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ct-muet); min-width: 0; }
-.ct-label select { min-height: 44px; border-radius: 12px; border: 1px solid var(--ct-bord-fort); background: #1F1F23; color: var(--ct-texte); font: 500 15px Inter, sans-serif; padding: 0 10px; width: 100%; box-sizing: border-box; }
-.ct-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; padding: 10px 12px; border-radius: 14px; background: #2A2415; border: 1px solid #5A4A22; }
+.ct-label select { min-height: 44px; border-radius: 12px; border: 1px solid var(--ct-bord-fort); background: var(--ct-carte-2); color: var(--ct-texte); font: 500 15px Inter, sans-serif; padding: 0 10px; width: 100%; box-sizing: border-box; }
+.ct-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; padding: 10px 12px; border-radius: 14px; background: var(--ct-or-fond); border: 1px solid var(--ct-or-bord); }
 
 /* ---------- Barre et bandeau ---------- */
 .ct-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
@@ -79,7 +79,7 @@ body.plat-catan { --plat-teinte: #3A2E12; --plat-or: #E2C77E; }
 .ct-zone-plateau { padding: 12px; }
 .ct-plateau-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
 .ct-plateau-tete .ct-bloc-titre { margin: 0; }
-.ct-tag { font-size: 13px; font-weight: 700; background: rgba(14, 14, 16, .7); border-radius: 999px; padding: 4px 12px; color: var(--ct-or); }
+.ct-tag { font-size: 13px; font-weight: 700; background: var(--ct-tag-fond, rgba(14, 14, 16, .7)); border-radius: 999px; padding: 4px 12px; color: var(--ct-or); }
 .ct-plateau { position: relative; width: 100%; max-width: 560px; margin: 0 auto; box-sizing: border-box; border-radius: 18px;
   background: radial-gradient(ellipse 80% 70% at 50% 45%, #2B4A6B 0, #17283A 75%); padding: 6px; }
 .ct-svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -113,30 +113,30 @@ circle.ct-zone { stroke-width: 0; }   /* sans contour : la zone reste celle du r
 /* ---------- Pastilles et coûts ---------- */
 .ct-pastille { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 3px 10px; font: 700 13px Inter, sans-serif; margin: 2px 2px 2px 0; }
 .ct-couts { margin: 0; display: flex; flex-direction: column; gap: 8px; }
-.ct-cout-ligne { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 12px; background: #1F1F23; }
+.ct-cout-ligne { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 12px; background: var(--ct-carte-2); }
 .ct-cout-ligne dt { font-size: 13px; color: var(--ct-muet); }
 .ct-cout-ligne dd { margin: 0; }
 .ct-main { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
 .ct-main li { display: inline-flex; }
 
 /* ---------- Étapes et points ---------- */
-.ct-etapes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #D6DCE4; }
+.ct-etapes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ct-texte-doux, #D6DCE4); }
 .ct-etapes strong { color: var(--ct-texte); }
 .ct-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.ct-point-ligne { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px; background: #1F1F23; }
+.ct-point-ligne { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 12px; background: var(--ct-carte-2); }
 .ct-point-tete { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
 .ct-point-tete strong { overflow-wrap: anywhere; }
-.ct-barre-pts { width: 100%; height: 10px; appearance: none; -webkit-appearance: none; border: 0; border-radius: 999px; overflow: hidden; background: #2A2A2F; }
-.ct-barre-pts::-webkit-progress-bar { background: #2A2A2F; }
+.ct-barre-pts { width: 100%; height: 10px; appearance: none; -webkit-appearance: none; border: 0; border-radius: 999px; overflow: hidden; background: var(--ct-piste); }
+.ct-barre-pts::-webkit-progress-bar { background: var(--ct-piste); }
 .ct-barre-pts::-webkit-progress-value { background: linear-gradient(90deg, var(--ct-accent), var(--ct-or-vif)); }
 .ct-barre-pts::-moz-progress-bar { background: var(--ct-or-vif); }
-.ct-table ul.plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #D6DCE4; max-height: 260px; overflow-y: auto; }
+.ct-table ul.plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ct-texte-doux, #D6DCE4); max-height: 260px; overflow-y: auto; }
 
 /* ---------- Écran de fin ---------- */
 .ct-fin { display: grid; gap: 16px; }
 .ct-fin-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.ct-fin-ligne { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: #1F1F23; border: 1px solid var(--ct-bord-fort); }
-.ct-fin-ligne.is-gagnant { background: #26201A; border-color: var(--ct-or); }
+.ct-fin-ligne { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--ct-carte-2); border: 1px solid var(--ct-bord-fort); }
+.ct-fin-ligne.is-gagnant { background: var(--ct-or-fond); border-color: var(--ct-or); }
 .ct-fin-rang { font-family: 'Archivo Black', sans-serif; font-size: 18px; color: var(--ct-muet); }
 .ct-fin-ligne.is-gagnant .ct-fin-rang { color: var(--ct-or); }
 .ct-fin-pseudo { font-size: 16px; overflow-wrap: anywhere; }

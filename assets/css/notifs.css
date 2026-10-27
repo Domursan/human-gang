@@ -1,4 +1,4 @@
-/* ===== Humane Gang — cloche des notifications et pastilles « en ligne » (core/presence.js, migration 153) =====
+/* ===== Humane Gang — voyant de statut sur la photo, panneau des notifications et pastilles « en ligne » (core/presence.js, migration 153) =====
    Pastille : en ligne = disque VERT plein ; hors ligne = disque ROUGE barré d'un petit trait blanc (la forme change
    aussi : lisible sans distinguer le vert du rouge). Le libellé « En ligne » / « Hors ligne » est donné aux lecteurs
    d'écran (aria-label) et au survol (title). */
@@ -12,12 +12,22 @@
 .presence-dot.is-online::after { content: none; }
 .presence-wrap > .presence-dot { position: absolute; right: -1px; bottom: -1px; }
 
-/* Cloche */
-.notif-wrap { position: relative; }
-.notif-btn { position: relative; }
-.notif-badge { position: absolute; top: 2px; right: 0; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
+/* Conteneur de la photo (header.js) : repère du voyant de statut et du panneau des notifications */
+.nav-me-wrap { position: relative; display: inline-flex; flex: none; }
+
+/* Voyant de statut : bouton distinct, posé sur le coin bas-droit de la photo (la photo garde le menu en arc).
+   Zone cliquable de 24 × 24 px ; au doigt (pointeur grossier) une zone invisible s'étend vers le coin, environ 37 × 37 px.
+   Pas 44 : plus large, elle couvrirait le centre de la photo ou déborderait de l'écran (marge de 16 px) ; voir le rapport. */
+.statut-voyant { position: absolute; right: -6px; bottom: -6px; z-index: 72; min-width: 24px; height: 24px; box-sizing: border-box;
+  margin: 0; padding: 0; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.statut-voyant:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+@media (pointer: coarse) { .statut-voyant::before { content: ''; position: absolute; left: -3px; top: -3px; right: -10px; bottom: -10px; } }
+/* Badge du nombre de non lues, à gauche du voyant */
+.statut-n { min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px;
   background: var(--accent); color: var(--accent-text); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
   box-shadow: 0 0 0 2px var(--surface); }
+.statut-n[hidden] { display: none; }
 .notif-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(380px, calc(100vw - 24px));
   max-height: min(70vh, 560px); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box; padding: 12px;
   background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);

@@ -32,9 +32,9 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
 .pk-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 7px; font-size: 11px; color: var(--pk-or); font-weight: 500; white-space: nowrap; }
 .pk-etiquette.is-donneur { background: var(--pk-or); color: #121212; font-weight: 700; }
 .pk-etiquette.is-tapis { border-color: var(--pk-rouge); color: var(--pk-rouge); font-weight: 700; }
-.pk-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--pk-rouge); font-weight: 700; font-size: 14px; }
+.pk-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--pk-rouge-fond); color: var(--pk-rouge); font-weight: 700; font-size: 14px; }
 
-.pk-bloc, .pf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--pk-bord); min-width: 0; }
+.pk-bloc, .pf-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--pk-panneau); border: 1px solid var(--pk-bord); min-width: 0; }
 .pk-bloc-titre, .pf-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
 
 /* ---------- Boutons ---------- */
@@ -68,7 +68,7 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
 }
 .pk-centre { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(62%, 480px); text-align: center; z-index: 1; }
 .pk-phase { margin: 0; font-family: 'Archivo Black', sans-serif; font-size: 15px; letter-spacing: .5px; text-transform: uppercase; color: var(--pk-or); }
-.pk-blindes { margin: 0; color: #D7EBDD; }
+.pk-blindes { margin: 0; color: var(--pk-texte-doux, #D7EBDD); }
 .pk-board { display: flex; justify-content: center; gap: 6px; margin: 8px 0; min-height: 90px; }
 .pk-board .cd { --cd-l: 56px; --cd-h: 80px; }
 .pk-emplacement { display: inline-block; width: 56px; height: 80px; box-sizing: border-box; border-radius: 9px; border: 2px dashed rgba(226, 199, 126, .45); }
@@ -142,7 +142,7 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
 
 /* ---------- Fin de partie (encart) ---------- */
 .pf-grille { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
-.pf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: #1F1F23; border: 1px solid var(--pk-bord-fort); min-width: 0; }
+.pf-carte { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px; border-radius: 16px; background: var(--pk-carte-2); border: 1px solid var(--pk-bord-fort); min-width: 0; }
 .pf-carte.is-gagnant { border-color: var(--pk-or); }
 .pf-carte.is-elimine, .pf-carte.is-parti { opacity: .72; }
 .pf-rang { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--pk-muet); }

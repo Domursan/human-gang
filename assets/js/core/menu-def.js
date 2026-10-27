@@ -9,12 +9,13 @@
  */
 export const MENUS = [
   { id: 'cartes', label: 'Le jeu de cartes', items: [
-    { label: 'Ouverture', href: 'cartes.html#ouverture', page: 'cartes' },
+    // cpt : clé de la pastille de compteur (assets/js/core/badges-compteur.js), absente = pas de compteur
+    { label: 'Ouverture', href: 'cartes.html#ouverture', page: 'cartes', cpt: 'cartes.ouverture' },
     { label: 'Inventaire', href: 'cartes.html#inventaire', page: 'cartes' },
     { label: 'Boutique', href: 'cartes.html#boutique', page: 'cartes' },
     { label: 'Mes cartes', href: 'cartes.html#collection', page: 'cartes' },
     { label: 'Classement', href: 'cartes.html#classement', page: 'cartes' },
-    { label: 'Échanges', href: 'cartes.html#echanges', page: 'cartes' },
+    { label: 'Échanges', href: 'cartes.html#echanges', page: 'cartes', cpt: 'cartes.echanges' },
     { label: 'Arène', href: 'cartes.html#arene', page: 'cartes' },
   ] },
   { id: 'irl', label: 'IRL', items: [

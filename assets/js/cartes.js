@@ -38,6 +38,7 @@ import { initAtelier, drawAtelier } from './cartes-atelier.js';
 import { initEnchere, drawEnchere } from './cartes-enchere.js';
 import { LOT as COL_LOT, SEUIL as COL_SEUIL, lotsAnticipes, gardeFocus, mesurerGroupes, attrGroupe } from './cartes-lots.js';
 import { foldText } from './core/search.js';
+import { refreshCompteurs } from './core/badges-compteur.js';
 
 /* ---------- Constantes et outils de formatage ---------- */
 // me : profil du membre connecté (initPage vérifie qu'il y a une session membre avant la suite).
@@ -508,6 +509,7 @@ async function refreshData() {
   // Favoris : une erreur de lecture les laisse vides plutôt que de bloquer la collection
   S.favs = new Set(fv?.error ? [] : (fv?.data || []).map((x) => x.card_id));
   saveCollectionOffline(); // Q4 : copie à jour à chaque lecture (sans attendre)
+  refreshCompteurs(); // pastilles « Ouverture » et « Échanges » à jour après une action (sans attendre la minute)
 }
 
 /* ---------- Copie hors ligne (Q4) ---------- */
@@ -552,7 +554,7 @@ function skeleton() {
     </section>
     <div class="pot-slot" id="cartes-pot" hidden></div>
     <nav class="cartes-tabs" id="cartes-tablist" role="tablist" aria-label="Sections du jeu">
-      ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}"
+      ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}" data-cpt="cartes.${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
     </nav>
     <h2 class="cartes-section-h" id="cartes-section-h" tabindex="-1"></h2>

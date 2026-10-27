@@ -70,7 +70,8 @@ const curAttr = (href) => (isHere(href) ? ' aria-current="page"' : '');
 const libelleEntree = (it) => navLibelle(menuKey(it)) || (it.page && it.href === `${it.page}.html` && navLibelle(it.page)) || it.label;
 
 /** Lien d'un menu déroulant. */
-const linkHtml = (it) => `<a class="nav-item" href="${esc(it.href)}"${curAttr(it.href)}>${esc(libelleEntree(it))}</a>`;
+// data-cpt : pastille de compteur (badges-compteur.js), posée toute seule après le rendu du menu.
+const linkHtml = (it) => `<a class="nav-item" href="${esc(it.href)}"${it.cpt ? ` data-cpt="${esc(it.cpt)}"` : ''}${curAttr(it.href)}>${esc(libelleEntree(it))}</a>`;
 
 /**
  * Contenu d'un menu déroulant (liens, filets, sous-menu Arcade). Les filets en tête ou en fin sont retirés.
@@ -385,10 +386,13 @@ function setNavOpen(header, open) {
 export function renderHeader(profile, { nav = true } = {}) {
   document.querySelector('.site-header')?.remove();
   const toggle = `<button class="nav-icon nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu" title="Menu" hidden>${ICON_MENU}</button>`;
+  // Conteneur de la photo : presence.js y pose le voyant de statut (et le panneau des notifications) à côté de la photo.
   const right = profile
-    ? `<button class="nav-me" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="me-fan">${meInner(profile)}</button>
-       <div class="me-fan" id="me-fan" hidden><div class="fan-scrim" aria-hidden="true"></div><div class="fan-disc" aria-hidden="true"></div>
-         <ul class="fan-list" aria-label="Mon menu">${fanHtml(profile)}</ul></div>`
+    ? `<span class="nav-me-wrap">
+         <button class="nav-me" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="me-fan">${meInner(profile)}</button>
+         <div class="me-fan" id="me-fan" hidden><div class="fan-scrim" aria-hidden="true"></div><div class="fan-disc" aria-hidden="true"></div>
+           <ul class="fan-list" aria-label="Mon menu">${fanHtml(profile)}</ul></div>
+       </span>`
     : `<a class="nav-icon nav-help" href="aide.html"${curAttr('aide.html')} aria-label="Aide et tutos" title="Aide et tutos">${ICON_HELP}</a>
        <a class="nav-account is-guest" href="compte.html"${curAttr('compte.html')}>Connexion</a>`;
   const header = document.createElement('header');

@@ -24,9 +24,11 @@ import { sb, initPage, toast, esc, $ } from './core.js';
 import { ONGLETS } from './jeux/onglets.js';
 import { nf, jourLong, zurichIso } from './jeux/commun.js';
 import { SECTIONS, CARTES } from './jeux/catalogue.js';
+import { CLE_JEU, monterClassement } from './jeux/classement-jeux.js'; // classements des jeux du jour (migration 157)
 import { canAccess, pageLabel, pageMode } from './core/pages-access.js';
 import { getCachedProfile } from './core/profile.js';
 import { viewAsActive } from './core/view-as.js';
+import { setCompteurs } from './core/badges-compteur.js';
 
 /* ---------- Ancienne adresse de l'Arène : elle vit dans la page Cartes ---------- */
 if (location.hash === '#bataille') location.replace('cartes.html#arene');
@@ -61,7 +63,7 @@ const BASE = new URL('./jeux/', import.meta.url);
 /** Contexte passé aux modules. sub : choix propre à un jeu tiré de l'adresse (null si aucun). */
 const CTX = { sb, me, toast, esc, sub: null };
 // État : onglet affiché ; modules montés (id -> module) ; montages en cours ; modules importés ; résumés (id -> résumé).
-const S = { cur: null, mods: new Map(), loading: new Map(), imports: new Map(), resumes: new Map() };
+const S = { cur: null, mods: new Map(), loading: new Map(), imports: new Map(), resumes: new Map(), classements: new Map() };
 
 const tablist = $('#jeux-tabs');
 const panels = $('#jeux-panels');
@@ -101,7 +103,7 @@ function importer(o) {
 /** Bouton d'onglet. */
 function tabHtml(o) {
   return `<button class="jeux-tab" type="button" role="tab" id="jeux-tab-${o.id}" aria-controls="jeux-panel-${o.id}"
-      aria-selected="false" tabindex="-1" data-id="${o.id}">${svg(o.icone)}<span class="jeux-tab-t">${esc(o.titre)}</span><span class="jeux-tab-st" data-st="${o.id}"></span></button>`;
+      aria-selected="false" tabindex="-1" data-id="${o.id}" data-cpt="jeux.${o.id}" data-cpt-label="à jouer">${svg(o.icone)}<span class="jeux-tab-t">${esc(o.titre)}</span><span class="jeux-tab-st" data-st="${o.id}"></span></button>`;
 }
 
 /** Barre d'onglets (groupes décoratifs pour le grand écran) et panneaux vides. */
@@ -215,6 +217,8 @@ function peindreHub() {
     }).join('');
     cards.hidden = !aJouer.length;
   }
+  // Pastille « à jouer » sur chaque onglet de jeu (badges-compteur.js) : 1 si le jeu est à jouer aujourd'hui
+  setCompteurs('jeux', Object.fromEntries(JEUX.map((o) => [o.id, S.resumes.get(o.id)?.etat === 'a_jouer' ? 1 : 0])));
   // Paillettes gagnées aujourd'hui (en-tête)
   const bal = $('#jeux-bal');
   if (bal) { bal.hidden = false; $('#jeux-bal-v').textContent = `+${nf(gain)} ✦`; }
@@ -273,6 +277,7 @@ function monterCatalogue(panel) {
         <label class="jx-cherche"><span class="visually-hidden">Rechercher un jeu</span>
           <input type="search" id="jx-q" placeholder="Rechercher un jeu" autocomplete="off"></label>
       </div>
+      <div class="jx-classement" id="jx-classement"></div>
       ${parSection.map((s) => {
         // Section entièrement réservée aux admins : ambiance chantier (bandes, panneau) ; sinon seules ses cartes réservées
         const chantier = s.cartes.every(reserveAdmin);
@@ -284,6 +289,8 @@ function monterCatalogue(panel) {
       }).join('')}
       <p class="card jx-vide" id="jx-vide" hidden>Aucun jeu ne correspond à ta recherche.</p>
     </div>`;
+  // Classement général des jeux du jour et progression vers le bonus « 16 jeux terminés » (migration 157)
+  S.classements.set(TOUS, monterClassement(panel.querySelector('#jx-classement'), null));
   let filtre = '';
   const appliquer = () => {
     const q = (panel.querySelector('#jx-q').value || '').trim().toLowerCase();
@@ -328,7 +335,19 @@ function monter(o) {
       const mod = await importer(o);
       if (typeof mod.mount !== 'function') throw new Error('module de jeu incomplet');
       panel.innerHTML = '';
-      await mod.mount(panel, CTX);
+      // Jeux du jour classés (migration 157) : le jeu se monte dans sa propre zone, le classement en dessous
+      // (le jeu peut redessiner sa zone sans effacer le classement).
+      const cle = CLE_JEU[o.id];
+      let zone = panel;
+      if (cle) {
+        zone = document.createElement('div');
+        zone.className = 'jeux-zone';
+        const classement = document.createElement('div');
+        classement.className = 'jeux-classement';
+        panel.append(zone, classement);
+        S.classements.set(o.id, monterClassement(classement, cle));
+      }
+      await mod.mount(zone, CTX);
       S.mods.set(o.id, mod);
     } catch (e) {
       console.warn('[jeux]', o.id, e);
@@ -379,9 +398,11 @@ function choisir(id, { focus = false, adresse = true, sub = undefined } = {}) {
   if ((o.hub || o.catalogue) && avant && avant !== o.id && S.mods.has(o.id)) rafraichirHub();
   // Le panneau est prévenu à chaque affichage (une carte cachée doit recalculer sa taille)
   monter(o).then(() => {
-    const panneau = document.getElementById(`jeux-panel-${o.id}`);
+    // Jeu classé : le module écoute sa zone (.jeux-zone), pas le panneau ; le classement est relu à chaque affichage.
+    const panneau = document.getElementById(`jeux-panel-${o.id}`)?.querySelector(':scope > .jeux-zone') || document.getElementById(`jeux-panel-${o.id}`);
     panneau?.dispatchEvent(new CustomEvent('jeux:show'));
     if (sub !== undefined) panneau?.dispatchEvent(new CustomEvent('jeux:sub', { detail: { sub: CTX.sub } }));
+    if (avant !== o.id) S.classements.get(o.id)?.rafraichir();
   });
 }
 

@@ -54,7 +54,8 @@
   background:
     radial-gradient(circle at 80% 15%, color-mix(in srgb, var(--member) 22%, transparent), transparent 55%),
     conic-gradient(from 90deg at 2px 2px, rgba(242,239,234,.018) 25%, transparent 0) 0 0 / calc(var(--u) * 1.6) calc(var(--u) * 1.6),
-    linear-gradient(135deg, #241B1E 0%, #151417 55%, #0C0C0F 100%);
+    /* fond sombre teinté par la couleur d'accent du thème (reste sombre en mode clair : texte clair conservé) */
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, #0C0C0F) 0%, color-mix(in srgb, var(--accent) 9%, #0C0C0F) 55%, #0C0C0F 100%);
   box-shadow: inset 0 0 0 2px rgba(242,239,234,.12);
 }
 .idc-k { display: block; font-family: var(--font-pixel); font-size: clamp(9px, calc(var(--u) * 1.75), 12px); letter-spacing: .14em; text-transform: uppercase; color: #ABA7A0; line-height: 1.2; }
@@ -121,7 +122,8 @@
 .idc-holo, .idc-glare { pointer-events: none; transition: opacity .4s ease; }
 .idc-holo {
   opacity: .16; mix-blend-mode: color-dodge;
-  background: linear-gradient(115deg, transparent 20%, #FE3104 32%, #FBD32D 40%, #159946 48%, #2B5AE2 56%, #4E2398 64%, transparent 76%) var(--mx) var(--my) / 250% 250% no-repeat,
+  /* reflets tirés de la palette du thème (accent, sable, ambre) : pas de bleu ou de violet fixes qui teintent la carte */
+  background: linear-gradient(115deg, transparent 20%, var(--accent) 32%, var(--sand) 40%, var(--amber) 48%, var(--accent) 56%, var(--sand) 64%, transparent 76%) var(--mx) var(--my) / 250% 250% no-repeat,
     repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 4px);
 }
 .idc-glare { opacity: 0; background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,.28), transparent 45%); mix-blend-mode: soft-light; }

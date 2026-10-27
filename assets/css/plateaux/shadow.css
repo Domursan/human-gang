@@ -41,7 +41,7 @@
 .sh-table a { color: var(--sh-or); }
 
 /* ---------- Blocs et titres ---------- */
-.sh-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--sh-bord); min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.sh-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--sh-panneau); border: 1px solid var(--sh-bord); min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .sh-bloc-titre, .sh-titre { font-family: Cinzel, serif; font-weight: 700; line-height: 1.2; margin: 0; }
 .sh-bloc-titre { font-size: 17px; }
 .sh-titre { font-size: 20px; color: var(--sh-or); }
@@ -50,7 +50,7 @@
 .sh-vide { margin: 0; font-size: 14px; color: var(--sh-muet); list-style: none; }
 
 /* ---------- Boutons, champs ---------- */
-.sh-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: #1F1F23; color: var(--sh-texte);
+.sh-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: var(--sh-carte-2); color: var(--sh-texte);
   font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .sh-btn:disabled { opacity: .5; cursor: default; }
 .sh-btn-primary { background: var(--sh-accent); border-color: transparent; color: #FFFFFF; }
@@ -60,7 +60,7 @@
 .sh-pleine { width: 100%; }
 .sh-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 200px; }
 .sh-champ label, .sh-label-champ { font-size: 13px; color: var(--sh-muet); }
-.sh-select { min-height: 44px; width: 100%; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1px solid var(--sh-bord-fort); background: #0E0E10; color: var(--sh-texte); font: 500 14px Inter, sans-serif; }
+.sh-select { min-height: 44px; width: 100%; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1px solid var(--sh-bord-fort); background: var(--sh-champ); color: var(--sh-texte); font: 500 14px Inter, sans-serif; }
 .sh-fieldset { margin: 0; border: 1px solid var(--sh-bord); border-radius: 12px; padding: 6px 12px; display: flex; flex-wrap: wrap; gap: 8px; }
 .sh-fieldset legend { font-size: 13px; color: var(--sh-muet); padding: 0 4px; }
 .sh-radio { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
@@ -74,7 +74,7 @@
 .sh-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
 .sh-composition { margin: 0; font-size: 14px; color: var(--sh-muet); }
 .sh-quitter { min-height: 44px; }
-.sh-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--sh-non); font-weight: 700; font-size: 14px; }
+.sh-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--sh-rouge-fond); color: var(--sh-non); font-weight: 700; font-size: 14px; }
 
 /* ---------- Corps : trois colonnes ---------- */
 .sh-corps { display: grid; grid-template-columns: 260px minmax(0, 1fr) 300px; gap: 16px; align-items: start; min-width: 0; }
@@ -83,7 +83,7 @@
 
 /* Mon personnage */
 .sh-perso { border: 2px solid var(--sh-hunter); background: linear-gradient(180deg, #1B2A4A 0%, #0E1424 100%); box-shadow: 0 0 28px rgba(78, 115, 196, .28); }
-.sh-pastille { display: inline-flex; align-self: flex-start; font-size: 12px; color: #D6DCE4; background: rgba(14, 14, 16, .6); border-radius: 999px; padding: 4px 10px; }
+.sh-pastille { display: inline-flex; align-self: flex-start; font-size: 12px; color: var(--sh-texte-doux, #D6DCE4); background: var(--sh-pastille-fond, rgba(14, 14, 16, .6)); border-radius: 999px; padding: 4px 10px; }
 .sh-perso-visuel svg, .sh-perso-visuel img { width: 100%; height: 100px; display: block; border-radius: 12px; object-fit: cover; background: #0B1020; }
 .sh-perso-nom { display: flex; flex-direction: column; gap: 4px; }
 .sh-perso-nom strong { font-family: Cinzel, serif; font-size: 20px; line-height: 1.2; }
@@ -92,7 +92,7 @@
 .sh-camp.is-shadow { background: var(--sh-shadow); }
 .sh-camp.is-inconnu { background: #5A5A62; }
 .sh-camp.is-neutre { color: #121212; }
-.sh-perso-texte { margin: 0; font-size: 13px; line-height: 1.4; color: #D6DCE4; }
+.sh-perso-texte { margin: 0; font-size: 13px; line-height: 1.4; color: var(--sh-texte-doux, #D6DCE4); }
 .sh-perso-texte em { color: var(--sh-or); font-style: normal; font-weight: 700; }
 .sh-pv { display: flex; flex-direction: column; gap: 6px; }
 .sh-pv-tete { display: flex; justify-content: space-between; font-size: 14px; }
@@ -101,7 +101,7 @@
 
 /* Pioches */
 .sh-pioches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.sh-pioche { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 12px; background: #1F1F23; font-size: 14px; }
+.sh-pioche { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 12px; background: var(--sh-carte-2); font-size: 14px; }
 .sh-dos { width: 30px; height: 42px; flex: none; box-sizing: border-box; border-radius: 5px; border: 2px solid #5A5A62; background: linear-gradient(160deg, #1A1A1F 0%, #050507 100%); }
 .sh-pioche.is-vision .sh-dos { border-color: #7FC08E; background: linear-gradient(160deg, #3F8A52 0%, #1E4A2B 100%); }
 .sh-pioche.is-lumiere .sh-dos { border-color: #F4F1EA; background: linear-gradient(160deg, #FFFFFF 0%, #D9D4C8 100%); }
@@ -112,11 +112,11 @@
 .sh-equip-item p { margin: 6px 0 0; font-size: 13px; color: var(--sh-muet); }
 
 /* ---------- Panneau « Ton tour » ---------- */
-.sh-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--sh-or); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sh-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: var(--sh-panneau); border: 1px solid var(--sh-or); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .sh-panneau > p { margin: 0; color: var(--sh-muet); font-size: 14px; }
 .sh-panneau > p strong { color: var(--sh-texte); }
 .sh-choix { display: flex; flex-wrap: wrap; gap: 8px; }
-.sh-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: #1F1F23; color: var(--sh-texte); font: 600 14px Inter, sans-serif; cursor: pointer; }
+.sh-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: var(--sh-carte-2); color: var(--sh-texte); font: 600 14px Inter, sans-serif; cursor: pointer; }
 .sh-chip[aria-pressed="true"] { border-color: var(--sh-or); color: var(--sh-or); box-shadow: 0 0 0 2px rgba(226, 199, 126, .25); }
 .sh-vision-texte { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 500; }
 
@@ -155,7 +155,7 @@
 
 /* ---------- Joueurs ---------- */
 .sh-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.sh-joueur { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: #1F1F23; }
+.sh-joueur { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: var(--sh-carte-2); }
 .sh-joueur.is-tour { box-shadow: inset 0 0 0 2px var(--sh-or); }
 .sh-joueur.is-moi { background: #23232A; }
 .sh-joueur.is-mort { opacity: .6; }
@@ -163,10 +163,10 @@
 .sh-joueur-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .sh-joueur-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; }
 .sh-joueur-perso, .sh-joueur-lieu { margin: 0; font-size: 13px; color: var(--sh-muet); }
-.sh-joueur-perso { color: #D6DCE4; }
-.sh-etiquette { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2A2A2F; color: var(--sh-texte); }
+.sh-joueur-perso { color: var(--sh-texte-doux, #D6DCE4); }
+.sh-etiquette { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--sh-piste); color: var(--sh-texte); }
 .sh-etiquette.is-tour { background: var(--sh-or); color: #121212; }
-.sh-etiquette.is-mort { background: #3A1A20; color: var(--sh-non); }
+.sh-etiquette.is-mort { background: var(--sh-rouge-fond); color: var(--sh-non); }
 
 /* ---------- Fenêtre Vision (téléphone et ordinateur) ---------- */
 .sh-modale { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
@@ -174,12 +174,12 @@
 .sh-modale-boite { position: relative; width: min(420px, 100%); max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: 18px; border-radius: 20px;
   border: 2px solid #7FC08E; background: radial-gradient(circle at 50% 30%, #1E5A34 0, #0F2A19 70%); box-shadow: 0 0 30px rgba(127, 192, 142, .35);
   display: flex; flex-direction: column; gap: 10px; color: var(--sh-texte); }
-.sh-modale-boite .sh-titre { color: #D8F2DE; }
+.sh-modale-boite .sh-titre { color: var(--sh-titre-texte, #D8F2DE); }
 .sh-modale-boite .sh-pastille { background: #7FC08E; color: #121212; font-weight: 700; }
 .sh-vision-oeil svg { width: 100%; height: 104px; display: block; border-radius: 12px; background: #0A1A10; }
-.sh-vision-pv { margin: 0; font-size: 14px; color: #D6DCE4; }
+.sh-vision-pv { margin: 0; font-size: 14px; color: var(--sh-texte-doux, #D6DCE4); }
 .sh-pied-vision .sh-btn-primary { flex: 1 1 100%; }
-.sh-modale-boite .sh-note { color: #D6DCE4; }
+.sh-modale-boite .sh-note { color: var(--sh-texte-doux, #D6DCE4); }
 
 /* ---------- Chat : colonne ou tiroir ---------- */
 .sh-chat-zone { min-width: 0; }

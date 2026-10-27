@@ -124,3 +124,9 @@
 html[data-mode="clair"] .shell .lieu-todo-actions a.btn-sand { color: #FFFFFF; }
 /* Bouton principal (lien) de chaque case */
 a.plateau-act, a.plateau-act:visited { color: #0D0B0A; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+
+/* Mode clair : la surface du thème est blanche pure (theme-calc.js) ; sur un fond crème ou gris froid, les cartes
+   prennent la teinte du fond (surface-2, plus sombre que le fond de 3,5 %) et gardent leur filet de couleur de lieu. */
+html[data-mode="clair"] .plateau-cell,
+html[data-mode="clair"] .lieu-tile { background: var(--surface-2); }
+html[data-mode="clair"] .plateau-cell { box-shadow: 0 1px 2px rgba(30, 28, 34, .06); }

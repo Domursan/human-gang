@@ -18,10 +18,17 @@
 @import url('duels/jour.css');
 
 /* ---------- Décor ---------- */
+/* Halo derrière l'en-tête : jamais de couleur fixe sombre (l'en-tête est transparent,
+   les liens du menu se posaient sur ce halo). Mode sombre : teinte dérivée de la palette du thème ;
+   mode clair : teinte très légère, pour que les liens (--text) restent lisibles. */
 body.duels-page {
+  --duels-halo: color-mix(in srgb, var(--surface-2) 60%, var(--bg));
   background-color: var(--bg);
-  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, #1B1F33 0, var(--bg) 70%);
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, var(--duels-halo) 0, var(--bg) 70%);
   background-repeat: no-repeat;
+}
+html[data-mode="clair"] body.duels-page {
+  --duels-halo: color-mix(in srgb, var(--sand) 16%, var(--bg));
 }
 .duels-app { padding-bottom: 48px; }
 .duels-app .card { background: color-mix(in srgb, var(--surface) 92%, transparent); }

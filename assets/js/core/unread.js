@@ -6,6 +6,7 @@
  * Exporte : refreshUnread, startUnread.
  */
 import { sb, hasSession, isNavCancel } from './supabase.js';
+import { startCompteurs } from './badges-compteur.js';
 
 /** Minuteur de rafraîchissement automatique (une minute). */
 let _unreadTimer = 0;
@@ -52,6 +53,8 @@ export async function refreshUnread() {
  */
 export function startUnread() {
   refreshUnread();
+  // Pastilles de compteur des menus et onglets (« 3 à faire ») : même rythme que les non-lus (badges-compteur.js)
+  startCompteurs();
   clearInterval(_unreadTimer);
   _unreadTimer = setInterval(() => { if (!document.hidden) refreshUnread(); }, 60000);
   if (_unreadBound) return;

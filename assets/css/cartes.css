@@ -141,10 +141,12 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 .paill-svg { display: block; width: 1.1em; height: 1.1em; }
 
 /* ===== Pastille de solde : compteur LCD 7 segments (style 1 de la maquette « solde ») ===== */
-.lcd { --lit: #FBD32D; --off: #2b2913; --lab: #8f8f5f; position: relative; display: inline-flex; align-items: center; gap: 12px;
+/* Couleurs du compteur tirées du thème (--sand, --accent, --text) : chaque thème garde son LCD, sans vert ni jaune fixe. */
+.lcd { --lit: var(--sand); --off: color-mix(in srgb, var(--sand) 9%, #000); --lab: color-mix(in srgb, var(--sand) 60%, #000);
+  position: relative; display: inline-flex; align-items: center; gap: 12px;
   white-space: nowrap; line-height: 1; vertical-align: middle; font-variant-numeric: tabular-nums; color: var(--lit);
-  background: #060807; border: 3px solid #34321f; border-radius: 4px; padding: 12px 20px 12px 14px;
-  box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px #15140b; }
+  background: color-mix(in srgb, var(--accent) 10%, #050505); border: 3px solid color-mix(in srgb, var(--sand) 28%, #000); border-radius: 4px; padding: 12px 20px 12px 14px;
+  box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px color-mix(in srgb, var(--sand) 6%, #000); }
 .lcd-sm { gap: 7px; border-width: 2px; border-radius: 3px; padding: 4px 7px 4px 5px; box-shadow: inset 0 0 0 1px #000; }
 .lcd-ic { display: block; flex: none; line-height: 0; }
 .lcd-ic .paill-svg { width: 100%; height: 100%; }
@@ -161,7 +163,9 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 .lcd-delta { position: absolute; right: 10px; top: -30px; font-size: 15px; font-weight: 700; color: #2fd17a; text-shadow: 1px 1px 0 #000;
   pointer-events: none; white-space: nowrap; animation: lcd-rise 1.2s ease-out both; }
 @keyframes lcd-rise { 0% { opacity: 0; transform: translateY(6px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
-html[data-mode="clair"] .lcd { --lit: #15170c; --off: #c3c8ad; --lab: #4f5440; background: #cfd5bd; border-color: #7a806a; box-shadow: inset 0 0 0 2px #aeb496; }
+html[data-mode="clair"] .lcd { --lit: var(--text); --off: color-mix(in srgb, var(--text) 12%, var(--surface)); --lab: var(--muted);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 45%, var(--surface));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 22%, var(--surface)); }
 html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 
 /* ===== Boosters : deux cartouches ===== */

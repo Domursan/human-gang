@@ -1,0 +1,23 @@
+/* ===== Humane Gang — classement des jeux du jour (jeux/classement-jeux.js, migration 157) ===== */
+.jc { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.jc-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
+.jc-h { margin: 0; font-size: 18px; }
+.jc-onglets { display: inline-flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.jc-o { min-height: 36px; padding: 4px 14px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; cursor: pointer; }
+.jc-o[aria-pressed="true"] { background: var(--text); color: var(--bg); font-weight: 700; }
+.jc-o:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+@media (pointer: coarse) { .jc-o { min-height: 44px; } }
+.jc-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.jc-ligne { display: grid; grid-template-columns: 2.2em 28px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 6px 10px;
+  border-radius: 10px; background: var(--surface-2); }
+.jc-ligne.is-moi { outline: 2px solid var(--sand); outline-offset: -2px; }
+.jc-rang { text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.jc-nom { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.jc-toi, .jc-bonus { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-strong); color: var(--muted); }
+.jc-faits { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.jc-pts { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.jc-vide, .jc-note { margin: 0; font-size: 14px; color: var(--muted); }
+.jc-tout { align-self: flex-start; }
+.jc-prog { display: flex; flex-direction: column; gap: 6px; }
+.jc-prog-t { margin: 0; font-size: 14px; }
+@media (max-width: 420px) { .jc-ligne { grid-template-columns: 1.8em 28px minmax(0, 1fr) auto; } .jc-faits { display: none; } }

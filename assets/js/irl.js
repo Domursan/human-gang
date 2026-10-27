@@ -17,6 +17,7 @@ import { pluralCount, pad } from './utils.js';
 import { chargerReglagesLot3, delaiPassee, bornesSondage } from './reglages-valeurs-lot3.js';
 import { lireQuota, restants, messagePhotos, messageSortie } from './eco-quota.js';
 import { loadSortieCards, sortieCardHtml, onSortieCardClick } from './irl-carte.js';
+import { setCompteurs } from './core/badges-compteur.js';
 
 /* ---------- Initialisation : session membre, réglages, droits ---------- */
 // me = personne connectée (la page exige un membre). isAdmin : l'admin voit les fantômes et peut tout modifier.
@@ -288,7 +289,7 @@ function renderNext(ev) {
     return `<div class="card card-irl feat-empty">
       <p class="display feat-empty-title">Rien de calé pour l'instant.</p>
       <p class="muted">Un resto, une rando, un karaoké raté : propose quelque chose et le gang suivra.</p>
-      <div><button type="button" class="btn btn-sand" data-act="new">+ Proposer une sortie</button></div>
+      <div><button type="button" class="btn btn-primary" data-act="new">+ Proposer une sortie</button></div>
     </div>`;
   }
   const started = new Date(ev.starts_at).getTime() <= Date.now();
@@ -392,8 +393,22 @@ function renderPast(ev) {
  * Dessine toute la page. Signe d'abord les URLs des images en un seul lot, puis charge les réactions des albums affichés.
  * Rétablit le focus sur le bouton qui vient d'être utilisé, pour le clavier.
  */
+/**
+ * Vrai si une sortie attend quelque chose de moi : un sondage sans mon vote (si elle a des dates proposées),
+ * sinon une sortie à venir sans ma réponse (oui, peut-être ou non).
+ * @param {object} ev Sortie.
+ * @returns {boolean}
+ */
+function attendMoi(ev) {
+  const dates = datesOf(ev.id);
+  if (dates.length) return !dates.some((d) => votesOf(d.id).some((v) => v.user_id === me.id));
+  return new Date(ev.starts_at) > Date.now() && !S.rsvps.some((r) => r.event_id === ev.id && r.user_id === me.id);
+}
+
 async function render() {
   const { next, upcoming, polls, past } = classify();
+  // Pastille « à faire » de l'onglet Sorties (badges-compteur.js) : sorties à venir sans ma réponse, sondages sans mon vote
+  setCompteurs('irl', { sorties: new Set([...(next ? [next] : []), ...upcoming, ...polls].filter(attendMoi).map((e) => e.id)).size });
   // URLs signées en un seul lot : couvertures + photos des albums affichés
   const albumEvents = [...past, ...(next && new Date(next.starts_at) <= Date.now() ? [next] : [])];
   const paths = [

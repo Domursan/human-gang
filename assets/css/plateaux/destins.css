@@ -33,7 +33,7 @@
 .ds-titre { margin: 0; font-size: 20px; font-weight: 700; color: var(--ds-or); }
 .ds-invite, .dp-invite { font-size: 12px; color: var(--ds-muet); border: 1px solid var(--ds-bord-fort); border-radius: 999px; padding: 0 8px; font-weight: 500; }
 
-.ds-bloc, .dp-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ds-bord); min-width: 0; }
+.ds-bloc, .dp-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--ds-panneau); border: 1px solid var(--ds-bord); min-width: 0; }
 .ds-bloc-titre, .dp-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
 
 /* ---------- Boutons et cartes de choix ---------- */
@@ -45,7 +45,7 @@
 .ds-grand { min-height: 52px; width: 100%; font-size: 16px; }
 .ds-quitter { font-size: 13px; }
 .ds-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.ds-carte-choix { min-height: 44px; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--ds-bord-fort); background: #1F1F23; color: var(--ds-texte);
+.ds-carte-choix { min-height: 44px; box-sizing: border-box; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--ds-bord-fort); background: var(--ds-carte-2); color: var(--ds-texte);
   text-align: left; font: 500 14px Inter, sans-serif; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
 .ds-carte-choix strong { font-size: 15px; }
 .ds-carte-choix span { font-size: 13px; color: var(--ds-muet); }
@@ -56,7 +56,7 @@
 
 /* ---------- Barre et bandeau ---------- */
 .ds-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
-.ds-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: #E0909A; font-weight: 700; font-size: 14px; }
+.ds-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--ds-rouge-fond); color: var(--plat-urgent); font-weight: 700; font-size: 14px; }
 .ds-bandeau { min-width: 0; }
 
 /* ---------- Corps ---------- */
@@ -107,7 +107,7 @@
   font: 400 20px 'Archivo Black', sans-serif; }
 .ds-roue.is-tourne { animation: ds-tourne 1.5s cubic-bezier(.2, .7, .2, 1); }
 .ds-prochaines { margin: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
-.ds-prochaines div { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: #1F1F23; }
+.ds-prochaines div { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--ds-carte-2); }
 .ds-prochaines dt { font-size: 12px; color: var(--ds-muet); }
 .ds-prochaines dd { margin: 0; font-weight: 700; font-size: 14px; text-align: right; }
 .ds-carte-zone { min-width: 0; }
@@ -115,11 +115,11 @@
 .ds-carte-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ds-etiquette { font-size: 12px; font-weight: 700; color: #121212; background: #B07ED0; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: .5px; }
 .ds-carte-titre { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.25; }
-.ds-carte-effet { margin: 0; font-size: 14px; color: #D6DCE4; }
+.ds-carte-effet { margin: 0; font-size: 14px; color: var(--ds-texte-doux, #D6DCE4); }
 
 /* ---------- Panneau d'action ---------- */
-.ds-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ds-bord); min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.ds-panneau p { margin: 0; font-size: 15px; color: #D6DCE4; }
+.ds-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: var(--ds-panneau); border: 1px solid var(--ds-bord); min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ds-panneau p { margin: 0; font-size: 15px; color: var(--ds-texte-doux, #D6DCE4); }
 .ds-form-assur { display: flex; flex-direction: column; gap: 10px; }
 .ds-coche { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; cursor: pointer; }
 .ds-coche input { width: 22px; height: 22px; accent-color: var(--ds-accent); }
@@ -135,13 +135,13 @@
 .ds-classement { margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
 .ds-classement .ds-invite { margin-left: 4px; }
 .ds-table .ds-bloc .ds-bloc-titre { font-size: 16px; }
-.ds-table ul.ds-journal, .ds-table .plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #D6DCE4; max-height: 260px; overflow-y: auto; }
+.ds-table ul.ds-journal, .ds-table .plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ds-texte-doux, #D6DCE4); max-height: 260px; overflow-y: auto; }
 
 /* ---------- Écran de fin : podium et chemin de chacun ---------- */
 .dp-fin { display: grid; gap: 16px; }
 .dp-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
-.dp-podium-carte { box-sizing: border-box; border-radius: 16px; background: #1F1F23; border: 1px solid var(--ds-bord-fort); padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
-.dp-podium-carte.is-gagnant { background: #26201A; border-color: var(--ds-or); }
+.dp-podium-carte { box-sizing: border-box; border-radius: 16px; background: var(--ds-carte-2); border: 1px solid var(--ds-bord-fort); padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.dp-podium-carte.is-gagnant { background: var(--ds-or-fond); border-color: var(--ds-or); }
 .dp-podium-rang { font-size: 13px; font-weight: 700; color: var(--ds-muet); }
 .dp-podium-carte.is-gagnant .dp-podium-rang { color: var(--ds-or); }
 .dp-podium-disque { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #121212; font: 800 15px Inter, sans-serif; }
@@ -149,9 +149,9 @@
 .dp-podium-total { font-family: 'Archivo Black', sans-serif; font-size: 22px; font-weight: 400; text-align: center; }
 .dp-podium-detail { font-size: 14px; color: var(--ds-muet); text-align: center; }
 .dp-liste-chemins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
-.dp-chemin { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #1F1F23; }
+.dp-chemin { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: var(--ds-carte-2); }
 .dp-chemin-pseudo { overflow-wrap: anywhere; }
-.dp-chemin-texte { color: #F2EFEA; }
+.dp-chemin-texte { color: var(--ds-texte); }
 .dp-chemin-fortune { font-weight: 700; text-align: right; }
 .dp-chemin-fortune small { display: block; font-size: 12px; font-weight: 400; color: var(--ds-muet); }
 

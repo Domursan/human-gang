@@ -200,7 +200,19 @@ function bindMenu() {
 
 /** Marque le lieu courant (barre du bas) et la page du plateau (aria-current). */
 function markActive(route) {
-  for (const a of document.querySelectorAll('.shell-tab')) setCurrent(a, route === (a.dataset.route || a.dataset.lieu));
+  let cur = null;
+  for (const a of document.querySelectorAll('.shell-tab')) {
+    const on = route === (a.dataset.route || a.dataset.lieu);
+    setCurrent(a, on);
+    if (on) cur = a;
+  }
+  // Téléphone : la barre du bas défile ; l'onglet courant reste entier à l'écran (ne reste jamais rogné au bord).
+  const bar = el.tabs;
+  if (cur && bar && bar.scrollWidth > bar.clientWidth) {
+    const b = bar.getBoundingClientRect(), t = cur.getBoundingClientRect();
+    if (t.left < b.left + 14) bar.scrollLeft += t.left - b.left - 14;
+    else if (t.right > b.right - 14) bar.scrollLeft += t.right - b.right + 14;
+  }
 }
 /** Pose ou retire aria-current sur un lien. */
 function setCurrent(a, on) {

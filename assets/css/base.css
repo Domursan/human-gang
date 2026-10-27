@@ -368,7 +368,9 @@ html[data-fx="off"] .badge-celebrate .bc-badge, html[data-fx="off"] .badge-celeb
 /* ===== Effets de thème (calque derrière le contenu, généré par core.js) ===== */
 .fx-layer { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; contain: strict; }
 .fx-layer span { position: absolute; top: -40px; display: block; will-change: transform; }
-.fx-pluie span { line-height: 1; opacity: .5; animation: fx-fall linear infinite; }
+/* Pluie d'emojis : en retrait, pour ne pas gêner la lecture des titres, liens et boutons (le calque reste sous le contenu) */
+.fx-pluie span { line-height: 1; opacity: .28; filter: saturate(.8); animation: fx-fall linear infinite; }
+html[data-mode="clair"] .fx-pluie span { opacity: .2; }
 .fx-neige span { border-radius: 50%; background: #fff; animation: fx-fall linear infinite; }
 .fx-etoiles span { border-radius: 50%; background: var(--sand); box-shadow: 0 0 6px var(--sand); opacity: 0; animation: fx-twinkle ease-in-out infinite; }
 @keyframes fx-fall {
@@ -419,7 +421,9 @@ html[data-mode="clair"] {
   --progress-bg: #E3DFD8;
 }
 html[data-mode="clair"] .btn-light { background: var(--text); color: #FFFFFF; }
-html[data-mode="clair"] .btn-sand { color: #FFFFFF; }
+/* Une seule couleur d'action en mode clair : les boutons « sable » (Jouer, Créer, Répondre…) prennent l'accent du thème */
+html[data-mode="clair"] .btn-sand { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+html[data-mode="clair"] .btn-sand:hover { filter: brightness(1.1); }
 html[data-mode="clair"] .nav-badge { color: #FFFFFF; }
 /* Sur un fond « sable » (--sand), le texte sombre (#121212) n'a plus assez de contraste en mode clair : --sand y est plus foncé
    que le sable des modes sombre et daltonien. Texte blanc (≥ 5,9:1 sur ces fonds). Liste des éléments qui posent --sand en fond. */
@@ -716,3 +720,12 @@ kbd { font-family: inherit; font-size: 12px; font-weight: 700; line-height: 1; m
 .adrep-note { margin: 0 0 4px; padding: 8px 10px; border-radius: 8px; background: rgba(216, 167, 94, .12); font-size: 14px; }
 .adrep-err { color: #E0909A; }
 .adrep-pied { margin: 16px 0 0; }
+
+/* Pastilles de compteur « 3 à faire » (assets/js/core/badges-compteur.js) : entrées de menu, menus et onglets de page.
+   Même style que la pastille des messages non lus ; le nombre est lu avec son libellé (texte masqué). */
+.cpt-badge { display: inline-flex; align-items: center; justify-content: center; flex: none; min-width: 20px; height: 20px; padding: 0 6px;
+  box-sizing: border-box; margin-left: 6px; border-radius: 999px; background: var(--sand); color: #121212; font-size: 12px; font-weight: 700;
+  line-height: 1; vertical-align: middle; white-space: nowrap; }
+.cpt-badge[hidden] { display: none; }
+.nav-item > .cpt-badge { margin-left: auto; }
+html[data-mode="clair"] .cpt-badge { color: #FFFFFF; }

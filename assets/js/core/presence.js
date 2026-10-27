@@ -4,9 +4,11 @@
  *   1. Signal de vie : tant qu'une page du site est ouverte et visible, hg_presence_ping() toutes les 50 s. Le membre est
  *      « en ligne » pendant 2 minutes après le dernier signal ; le bot Discord ne lui envoie alors pas de MP (une
  *      notification du site suffit, voir supabase/functions/_shared/presence.ts).
- *   2. Cloche de l'en-tête : nombre de notifications non lues, liste (hg_mes_notifs), « Tout marquer comme lu »
- *      (hg_notifs_lues), réglage « Masquer mon statut en ligne » (hg_presence_masquer). Une nouvelle notification arrive en
- *      direct (canal privé Realtime « notif:<id> ») et s'affiche aussi en message temporaire.
+ *   2. Voyant de statut sur la photo du membre (#statut-btn, dans .nav-me-wrap, posé ici) : vert = en ligne, rouge barré =
+ *      statut masqué (« Masquer mon statut »). Son badge = nombre de notifications non lues. Un clic ouvre le panneau
+ *      (#notif-panel) : liste (hg_mes_notifs), « Tout marquer comme lu » (hg_notifs_lues), réglage « Masquer mon statut en
+ *      ligne » (hg_presence_masquer). Une nouvelle notification arrive en direct (canal privé Realtime « notif:<id> ») et
+ *      s'affiche aussi en message temporaire.
  *   3. Pastilles de statut : tout élément [data-presence="<uuid>"] reçoit la classe is-online et un libellé « En ligne »
  *      ou « Hors ligne » (hg_en_ligne, par lots, rafraîchi toutes les 60 s et à chaque ajout dans la page).
  *      presenceDot(id) fabrique cette pastille ; avatarPresence(html, id) l'ajoute sur un avatar.
@@ -22,8 +24,6 @@ import { esc } from './util.js';
 const PING_MS = 50000;
 /** Intervalle de rafraîchissement des pastilles (ms). */
 const STATUTS_MS = 60000;
-/** Pictogramme de la cloche (trait). */
-const ICON_CLOCHE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
 /** Libellés des catégories (petite étiquette dans la liste). */
 const CATS = { messages: 'Message', sorties: 'Sortie', echanges: 'Échange', souhaits: 'Cartes', santa: 'Secret Santa',
   anniversaires: 'Anniversaire', jeux: 'Jeux', annonces: 'Annonce', info: 'Info' };
@@ -36,7 +36,7 @@ function chargerCss() {
   document.head.append(l);
 }
 
-const P = { me: null, timer: null, nonLues: 0, liste: null, masque: false, canal: null, ouvert: false, demarre: false };
+const P = { me: null, timer: null, nonLues: 0, liste: null, masque: false, canal: null, ouvert: false, demarre: false, docBound: false };
 
 /* ---------- Pastilles de statut ---------- */
 
@@ -101,19 +101,19 @@ function majStatutsBientot() {
 
 /* ---------- Signal de vie ---------- */
 
-/** Envoie le signal de vie et met le compteur de la cloche à jour. */
+/** Envoie le signal de vie et met à jour le badge de non lues du voyant. */
 async function ping() {
   if (document.hidden) return;
   try {
     const { data, error } = await sb.rpc('hg_presence_ping');
     if (error) throw error;
-    if (Number.isFinite(Number(data)) && Number(data) !== P.nonLues) { P.nonLues = Number(data); P.liste = null; peindreCloche(); }
+    if (Number.isFinite(Number(data)) && Number(data) !== P.nonLues) { P.nonLues = Number(data); P.liste = null; peindreVoyant(); }
   } catch (e) {
     console.warn('[présence] signal', e?.message || e);
   }
 }
 
-/* ---------- Cloche et liste des notifications ---------- */
+/* ---------- Voyant, liste et actions des notifications ---------- */
 
 /** Relit mes notifications (liste et non lues). */
 async function charger() {
@@ -125,15 +125,20 @@ async function charger() {
   return data;
 }
 
-/** Bouton de la cloche : pastille du nombre de non lues. */
-function peindreCloche() {
-  const b = document.getElementById('notif-btn');
+/**
+ * Voyant de statut du membre, posé sur sa photo : vert plein = en ligne, rouge barré = statut masqué (les autres
+ * membres le voient hors ligne). Son badge affiche le nombre de notifications non lues, quand il y en a.
+ */
+function peindreVoyant() {
+  const b = document.getElementById('statut-btn');
   if (!b) return;
   const n = P.nonLues;
-  const badge = b.querySelector('.notif-badge');
+  const badge = b.querySelector('.statut-n');
   badge.textContent = n > 99 ? '99+' : String(n);
   badge.hidden = n <= 0;
-  b.setAttribute('aria-label', n ? `Notifications : ${n} non lue${n > 1 ? 's' : ''}` : 'Notifications');
+  b.querySelector('.presence-dot').classList.toggle('is-online', !P.masque);
+  const nb = n ? `${n} non lue${n > 1 ? 's' : ''}` : 'aucune non lue';
+  b.setAttribute('aria-label', `Statut et notifications : ${P.masque ? 'statut masqué' : 'en ligne'}, ${nb}`);
   b.title = b.getAttribute('aria-label');
 }
 
@@ -162,7 +167,7 @@ function panneauHtml() {
 
 /** Ouvre ou ferme le panneau. */
 async function basculer(ouvrir = !P.ouvert) {
-  const b = document.getElementById('notif-btn');
+  const b = document.getElementById('statut-btn');
   const box = document.getElementById('notif-panel');
   if (!b || !box) return;
   P.ouvert = ouvrir;
@@ -173,7 +178,7 @@ async function basculer(ouvrir = !P.ouvert) {
   try { await charger(); } catch (e) { console.warn('[notifs]', e?.message || e); }
   if (!P.ouvert) return;
   box.innerHTML = panneauHtml();
-  peindreCloche();
+  peindreVoyant();
   box.querySelector('.notif-item, button, input')?.focus({ preventScroll: true });
 }
 
@@ -184,7 +189,7 @@ async function marquerLues(ids = null) {
     if (error) throw error;
     for (const n of P.liste || []) if (!ids || ids.includes(Number(n.id))) n.lu = true;
     P.nonLues = ids ? Math.max(0, P.nonLues - ids.length) : 0;
-    peindreCloche();
+    peindreVoyant();
     const box = document.getElementById('notif-panel');
     if (box && !box.hidden) box.innerHTML = panneauHtml();
   } catch (e) {
@@ -192,19 +197,35 @@ async function marquerLues(ids = null) {
   }
 }
 
-/** Place la cloche dans l'en-tête (avant le bouton du compte). */
-function monterCloche() {
-  const outils = document.querySelector('.site-header .nav-tools');
-  if (!outils || document.getElementById('notif-btn')) return;
-  const wrap = document.createElement('div');
-  wrap.className = 'notif-wrap';
-  wrap.innerHTML = `<button type="button" class="nav-icon notif-btn" id="notif-btn" aria-haspopup="true" aria-expanded="false" aria-controls="notif-panel" aria-label="Notifications" title="Notifications">${ICON_CLOCHE}<span class="notif-badge" aria-hidden="true" hidden>0</span></button>
-    <div class="notif-panel" id="notif-panel" role="region" aria-labelledby="notif-h" hidden></div>`;
-  const moi = outils.querySelector('.nav-me');
-  outils.insertBefore(wrap, moi || null);
-  const b = wrap.querySelector('#notif-btn');
-  const box = wrap.querySelector('#notif-panel');
-  b.addEventListener('click', () => basculer());
+/**
+ * Pose le voyant de statut sur la photo du membre (dans .nav-me-wrap, créé par header.js) et le panneau des notifications.
+ * Idempotent : refait sans effet si le voyant existe déjà ; à rappeler si l'en-tête a été reconstruit.
+ */
+function monterVoyant() {
+  const wrap = document.querySelector('.site-header .nav-me-wrap');
+  if (!wrap || document.getElementById('statut-btn')) return;
+  P.ouvert = false;
+  // Voyant : un bouton distinct de la photo (qui, elle, ouvre toujours le menu en arc).
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.id = 'statut-btn';
+  b.className = 'statut-voyant';
+  b.setAttribute('aria-expanded', 'false');
+  b.setAttribute('aria-controls', 'notif-panel');
+  b.innerHTML = '<span class="statut-n" aria-hidden="true" hidden>0</span><span class="presence-dot" aria-hidden="true"></span>';
+  // Panneau des notifications : rattaché au même conteneur (positionné sous la photo sur ordinateur, en bandeau sur téléphone).
+  const box = document.createElement('div');
+  box.className = 'notif-panel';
+  box.id = 'notif-panel';
+  box.setAttribute('role', 'region');
+  box.setAttribute('aria-labelledby', 'notif-h');
+  box.hidden = true;
+  wrap.append(b, box);
+  b.addEventListener('click', () => {
+    // Le voile du menu en arc couvre la page : on le referme d'abord, sinon le panneau s'ouvre sous le voile.
+    if (document.querySelector('.site-header.fan-open')) document.querySelector('.me-fan .fan-scrim')?.click();
+    basculer();
+  });
   box.addEventListener('click', (ev) => {
     const lien = ev.target.closest('[data-notif]');
     if (lien) { const n = (P.liste || []).find((x) => String(x.id) === lien.dataset.notif); if (n && !n.lu) marquerLues([Number(n.id)]); }
@@ -217,16 +238,29 @@ function monterCloche() {
       const { error } = await sb.rpc('hg_presence_masquer', { p_masque: c.checked });
       if (error) throw error;
       P.masque = c.checked;
+      peindreVoyant();
       toast(c.checked ? 'Ton statut en ligne est masqué.' : 'Ton statut en ligne est visible.', 'ok');
     } catch (e) { c.checked = !c.checked; toast(e?.message || String(e), 'error'); }
   });
-  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && P.ouvert) { basculer(false); b.focus(); } });
-  // composedPath : le panneau a pu être redessiné pendant le clic (la cible n'est alors plus dans la page)
-  document.addEventListener('click', (ev) => { if (P.ouvert && !ev.composedPath().includes(wrap)) basculer(false); });
-  peindreCloche();
+  // Écouteurs de la page, posés une seule fois (le voyant peut être reconstruit avec l'en-tête).
+  if (!P.docBound) {
+    P.docBound = true;
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && P.ouvert) { basculer(false); document.getElementById('statut-btn')?.focus(); }
+    });
+    // composedPath : le panneau a pu être redessiné pendant le clic (la cible n'est alors plus dans la page).
+    // Un clic hors du voyant et du panneau (y compris sur la photo) referme le panneau.
+    document.addEventListener('click', (ev) => {
+      if (!P.ouvert) return;
+      const chemin = ev.composedPath();
+      const dedans = chemin.includes(document.getElementById('statut-btn')) || chemin.includes(document.getElementById('notif-panel'));
+      if (!dedans) basculer(false);
+    });
+  }
+  peindreVoyant();
 }
 
-/** Canal privé « notif:<moi> » : une nouvelle notification met la cloche à jour et s'affiche en message temporaire. */
+/** Canal privé « notif:<moi> » : une nouvelle notification met le voyant à jour et s'affiche en message temporaire. */
 function ecouter() {
   try {
     P.canal = sb.channel(`notif:${P.me.id}`, { config: { private: true, broadcast: { self: false } } })
@@ -234,7 +268,7 @@ function ecouter() {
         try {
           const avant = new Set((P.liste || []).map((n) => String(n.id)));
           await charger();
-          peindreCloche();
+          peindreVoyant();
           const nouvelle = (P.liste || []).find((n) => !n.lu && !avant.has(String(n.id)));
           if (nouvelle) toast(`🔔 ${nouvelle.titre}`);
           const box = document.getElementById('notif-panel');
@@ -248,7 +282,7 @@ function ecouter() {
 }
 
 /**
- * Démarre la présence pour le membre connecté : signal de vie, cloche, notifications en direct, pastilles de statut.
+ * Démarre la présence pour le membre connecté : signal de vie, voyant de statut, notifications en direct, pastilles de statut.
  * Sans effet pour un visiteur ; ne lève jamais d'erreur.
  * @param {{id: string}|null} profile Profil connecté.
  */
@@ -258,7 +292,9 @@ export function startPresence(profile) {
   P.me = profile;
   try {
     chargerCss();
-    monterCloche();
+    monterVoyant();
+    // État du membre au départ (statut masqué ou non, non lues) : une lecture de la liste, sans bloquer le reste
+    charger().then(peindreVoyant).catch((e) => console.warn('[notifs] état initial', e?.message || e));
     ping();
     P.timer = setInterval(ping, PING_MS);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) { ping(); majStatuts(); } });
@@ -267,6 +303,8 @@ export function startPresence(profile) {
     majStatuts();
     statutsTimer = setInterval(() => { if (!document.hidden) majStatuts(); }, STATUTS_MS);
     new MutationObserver((muts) => {
+      // En-tête reconstruit (renderHeader) : le voyant est reposé sur la nouvelle photo
+      if (!document.getElementById('statut-btn') && document.querySelector('.site-header .nav-me-wrap')) monterVoyant();
       if (muts.some((m) => [...m.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.('[data-presence]') || n.querySelector?.('[data-presence]'))))) majStatutsBientot();
     }).observe(document.body, { childList: true, subtree: true });
   } catch (e) {

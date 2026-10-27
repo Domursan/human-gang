@@ -12,6 +12,58 @@
   --plat-tour: #E2C77E;
   --plat-urgent: #E0909A;
   --plat-gris-invite: #9A968F;
+
+  /* Surfaces des tables (un jeu = un préfixe : bj, ch, ct, ds, mo, pi, pk, rk, sh). Valeurs du mode sombre ;
+     en mode clair, redéfinies ci-dessous. Les feuilles par jeu s'en servent au lieu de couleurs fixes. */
+  --bj-panneau: rgba(23, 23, 26, .92); --bj-carte-2: #1F1F23; --bj-champ: #0E0E10; --bj-or-fond: #2A2412; --bj-bleu-fond: #1B2A44; --bj-rouge-fond: #3A1A20; --bj-piste: #2A2A2F;
+  --ch-panneau: rgba(23, 23, 26, .92); --ch-carte-2: #1F1F23; --ch-champ: #0E0E10; --ch-or-fond: #2A2412; --ch-bleu-fond: #1B2A44; --ch-rouge-fond: #3A1A20; --ch-piste: #2A2A2F;
+  --ct-panneau: rgba(23, 23, 26, .92); --ct-carte-2: #1F1F23; --ct-champ: #0E0E10; --ct-or-fond: #2A2412; --ct-bleu-fond: #1B2A44; --ct-rouge-fond: #3A1A20; --ct-piste: #2A2A2F; --ct-or-bord: #5A4A22;
+  --ds-panneau: rgba(23, 23, 26, .92); --ds-carte-2: #1F1F23; --ds-champ: #0E0E10; --ds-or-fond: #2A2412; --ds-bleu-fond: #1B2A44; --ds-rouge-fond: #3A1A20; --ds-piste: #2A2A2F;
+  --mo-panneau: rgba(23, 23, 26, .92); --mo-carte-2: #1F1F23; --mo-champ: #0E0E10; --mo-or-fond: #2A2412; --mo-bleu-fond: #1B2A44; --mo-rouge-fond: #3A1A20; --mo-piste: #2A2A2F;
+  --pi-panneau: rgba(23, 23, 26, .92); --pi-carte-2: #1F1F23; --pi-champ: #0E0E10; --pi-or-fond: #2A2412; --pi-bleu-fond: #1B2A44; --pi-rouge-fond: #3A1A20; --pi-piste: #2A2A2F;
+  --pk-panneau: rgba(23, 23, 26, .92); --pk-carte-2: #1F1F23; --pk-champ: #0E0E10; --pk-or-fond: #2A2412; --pk-bleu-fond: #1B2A44; --pk-rouge-fond: #3A1A20; --pk-piste: #2A2A2F;
+  --rk-panneau: rgba(23, 23, 26, .92); --rk-carte-2: #1F1F23; --rk-champ: #0E0E10; --rk-or-fond: #2A2412; --rk-bleu-fond: #1B2A44; --rk-rouge-fond: #3A1A20; --rk-piste: #2A2A2F;
+  --sh-panneau: rgba(23, 23, 26, .92); --sh-carte-2: #1F1F23; --sh-champ: #0E0E10; --sh-or-fond: #2A2412; --sh-bleu-fond: #1B2A44; --sh-rouge-fond: #3A1A20; --sh-piste: #2A2A2F;
+}
+
+/* ===== Mode clair : tables de jeu =====
+   Les tables (bandeau, panneaux, aide, boutons) suivent le mode : texte sombre, panneaux clairs, or foncé lisible.
+   Le plateau lui-même (feutre, cases) reste sombre : c'est une surface de jeu, pas un texte. */
+html[data-mode="clair"], html[data-mode="clair"] .mo-table, html[data-mode="clair"] .pi-table, html[data-mode="clair"] .sh-table {
+  --plat-or-clair: #94690F; --plat-tour: #94690F; --plat-urgent: #A52F40; --plat-gris-invite: #6B665F;
+  --bj-texte: #1B1A1F; --bj-muet: #57534C; --bj-or: #94690F; --bj-or-vif: #8A5A0C; --bj-bord: #DCD4C8; --bj-bord-fort: #BBB1A2; --bj-carte: #FFFFFF;
+  --bj-panneau: rgba(255, 255, 255, .94); --bj-carte-2: #F4F0EA; --bj-champ: #FFFFFF; --bj-or-fond: #FBF3DC; --bj-bleu-fond: #E6EEFB; --bj-rouge-fond: #FBEEF0; --bj-piste: #E3DDD3;
+  --ch-texte: #1B1A1F; --ch-muet: #57534C; --ch-or: #94690F; --ch-or-vif: #8A5A0C; --ch-bord: #DCD4C8; --ch-bord-fort: #BBB1A2; --ch-carte: #FFFFFF;
+  --ch-panneau: rgba(255, 255, 255, .94); --ch-carte-2: #F4F0EA; --ch-champ: #FFFFFF; --ch-or-fond: #FBF3DC; --ch-bleu-fond: #E6EEFB; --ch-rouge-fond: #FBEEF0; --ch-piste: #E3DDD3;
+  --ct-texte: #1B1A1F; --ct-muet: #57534C; --ct-or: #94690F; --ct-or-vif: #8A5A0C; --ct-bord: #DCD4C8; --ct-bord-fort: #BBB1A2; --ct-carte: #FFFFFF;
+  --ct-panneau: rgba(255, 255, 255, .94); --ct-carte-2: #F4F0EA; --ct-champ: #FFFFFF; --ct-or-fond: #FBF3DC; --ct-bleu-fond: #E6EEFB; --ct-rouge-fond: #FBEEF0; --ct-piste: #E3DDD3; --ct-or-bord: #E0C98A;
+  --ds-texte: #1B1A1F; --ds-muet: #57534C; --ds-or: #94690F; --ds-or-vif: #8A5A0C; --ds-bord: #DCD4C8; --ds-bord-fort: #BBB1A2; --ds-carte: #FFFFFF;
+  --ds-panneau: rgba(255, 255, 255, .94); --ds-carte-2: #F4F0EA; --ds-champ: #FFFFFF; --ds-or-fond: #FBF3DC; --ds-bleu-fond: #E6EEFB; --ds-rouge-fond: #FBEEF0; --ds-piste: #E3DDD3;
+  --mo-texte: #1B1A1F; --mo-muet: #57534C; --mo-or: #94690F; --mo-or-vif: #8A5A0C; --mo-bord: #DCD4C8; --mo-bord-fort: #BBB1A2; --mo-carte: #FFFFFF;
+  --mo-panneau: rgba(255, 255, 255, .94); --mo-carte-2: #F4F0EA; --mo-champ: #FFFFFF; --mo-or-fond: #FBF3DC; --mo-bleu-fond: #E6EEFB; --mo-rouge-fond: #FBEEF0; --mo-piste: #E3DDD3;
+  --pi-texte: #1B1A1F; --pi-muet: #57534C; --pi-or: #94690F; --pi-or-vif: #8A5A0C; --pi-bord: #DCD4C8; --pi-bord-fort: #BBB1A2; --pi-carte: #FFFFFF;
+  --pi-panneau: rgba(255, 255, 255, .94); --pi-carte-2: #F4F0EA; --pi-champ: #FFFFFF; --pi-or-fond: #FBF3DC; --pi-bleu-fond: #E6EEFB; --pi-rouge-fond: #FBEEF0; --pi-piste: #E3DDD3;
+  --pk-texte: #1B1A1F; --pk-muet: #57534C; --pk-or: #94690F; --pk-or-vif: #8A5A0C; --pk-bord: #DCD4C8; --pk-bord-fort: #BBB1A2; --pk-carte: #FFFFFF;
+  --pk-panneau: rgba(255, 255, 255, .94); --pk-carte-2: #F4F0EA; --pk-champ: #FFFFFF; --pk-or-fond: #FBF3DC; --pk-bleu-fond: #E6EEFB; --pk-rouge-fond: #FBEEF0; --pk-piste: #E3DDD3;
+  --rk-texte: #1B1A1F; --rk-muet: #57534C; --rk-or: #94690F; --rk-or-vif: #8A5A0C; --rk-bord: #DCD4C8; --rk-bord-fort: #BBB1A2; --rk-carte: #FFFFFF;
+  --rk-panneau: rgba(255, 255, 255, .94); --rk-carte-2: #F4F0EA; --rk-champ: #FFFFFF; --rk-or-fond: #FBF3DC; --rk-bleu-fond: #E6EEFB; --rk-rouge-fond: #FBEEF0; --rk-piste: #E3DDD3;
+  --sh-texte: #1B1A1F; --sh-muet: #57534C; --sh-or: #94690F; --sh-or-vif: #8A5A0C; --sh-bord: #DCD4C8; --sh-bord-fort: #BBB1A2; --sh-carte: #FFFFFF;
+  --sh-panneau: rgba(255, 255, 255, .94); --sh-carte-2: #F4F0EA; --sh-champ: #FFFFFF; --sh-or-fond: #FBF3DC; --sh-bleu-fond: #E6EEFB; --sh-rouge-fond: #FBEEF0; --sh-piste: #E3DDD3;
+}
+html[data-mode="clair"] body.plat-page {
+  background-image: radial-gradient(ellipse 1100px 520px at 50% 0, color-mix(in srgb, var(--plat-teinte, #1a1418) 14%, var(--bg)) 0, var(--bg) 70%);
+}
+/* Textes d'état et de soutien : couleurs foncées lisibles sur panneau clair (repli = valeur du mode sombre, via var(--x, #…)) */
+html[data-mode="clair"], html[data-mode="clair"] .mo-table, html[data-mode="clair"] .pi-table, html[data-mode="clair"] .sh-table {
+  --bj-texte-doux: #2E2C30; --bj-vert: #1E653A; --bj-rouge: #A52F40;
+  --ct-texte-doux: #2E2C30; --ct-tag-fond: rgba(255, 255, 255, .85);
+  --ds-texte-doux: #2E2C30; --ds-vert: #1E653A;
+  --ch-texte-doux: #2E2C30; --ch-ok: #2E7A4B; --ch-non: #A52F40; --ch-bleu: #1F5F85;
+  --mo-dette-texte: #8E2F3C;
+  --pk-texte-doux: #2E2C30; --pk-vert: #1E653A; --pk-rouge: #A52F40;
+  --pi-vert: #1E653A; --pi-rouge: #A52F40;
+  --rk-ok: #1E653A; --rk-non: #A52F40; --rk-vert-fond: #E2F1E7;
+  --sh-texte-doux: #2E2C30; --sh-titre-texte: #1E5A36; --sh-vert: #1E653A; --sh-non: #A52F40; --sh-pastille-fond: rgba(0, 0, 0, .06);
 }
 
 /* ---------- Décor par jeu ---------- */

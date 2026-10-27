@@ -480,7 +480,7 @@ async function renderMember(user) {
         <div><p class="eyebrow">Mon compte</p><h1 class="page-title" id="head-pseudo">${esc(p.pseudo)}</h1></div>
       </div>
       <div class="btn-row acc-head-actions">
-        <a class="btn btn-sand" href="membre.html">${ICON.badge} Voir ma carte d'identité</a>
+        <a class="btn btn-primary" href="membre.html">${ICON.badge} Voir ma carte d'identité</a>
         <button class="btn btn-ghost" type="button" id="logout">${ICON.out} Se déconnecter</button>
       </div>
     </section>

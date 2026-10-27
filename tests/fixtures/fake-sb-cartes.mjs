@@ -67,7 +67,7 @@ const DB = {
   hg_pages: [['accueil','Accueil','membres',false],['secret-santa','Secret Santa','membres',true],['irl','IRL','membres',true],['historique','Historique','membres',true],['messages','Messages','membres',true],['evenements','Événements','membres',false],['membre',"Carte d'identité & annuaire",'membres',false],['recap','Récap annuel','membres',false],['cartes','Cartes à collectionner','admin',true]].map(([slug,label,mode,in_nav],sort)=>({slug,label,mode,in_nav,sort})),
   hg_page_access: S.access || [],
   hg_ideas: [], hg_support: [], hg_activity: [], hg_messages: [], hg_events: [], hg_event_rsvps: [], hg_photos: [], hg_profile_info: [],
-  hg_card_trades: [], hg_card_trade_items: [],
+  hg_card_trades: S.trades || [], hg_card_trade_items: [], // S.trades : offres d'échange (pastille « Échanges », parcours-compteurs.cjs)
   // Drops de cartes (card-drops.js, admin-cards/drops.js) : scénario S.drops / S.dropClaims (dates ISO)
   // Drops de cartes : ce que la page reçoit (scénario S.drops et S.dropClaims).
   hg_card_drops: S.drops || [], hg_card_drop_claims: S.dropClaims || [],
@@ -480,7 +480,8 @@ class Q {
   /** Prépare une requête sur la table t, en lecture (select) par défaut. */
   constructor(t) { this.t = t; this.f = []; this.one = false; this.op = 'select'; this.payload = null; this.ret = false; }
   /** Choisit les colonnes : sans effet ici, toutes les colonnes sont renvoyées. */
-  select() { if (this.op !== 'select') this.ret = true; return this; }
+  // o.head : seulement le nombre de lignes (count), comme PostgREST avec { count: 'exact', head: true }
+  select(_c, o) { if (this.op !== 'select') this.ret = true; this.head = !!o?.head; return this; }
   /** Filtre : la colonne c vaut v. */
   eq(c, v) { this.f.push((r) => getv(r, c) === v); return this; }
   /** Filtre : la colonne c ne vaut pas v. */
@@ -541,6 +542,7 @@ class Q {
     // Lecture : les lignes qui respectent les filtres ; une seule si maybeSingle ou single.
     let out = tab.filter(match);
     if (this.rg) out = out.slice(this.rg[0], this.rg[1] + 1); // pagination (fetchAllRows : pages de 1 000 lignes)
+    if (this.head) return { data: null, error: null, count: out.length };
     return this.one ? { data: out[0] ?? null, error: null } : { data: out, error: null };
   }
   /** Permet d'attendre la requête avec await : exécute run() et transmet son résultat. */
@@ -934,7 +936,8 @@ export function createClient() {
       if (fn === 'hg_my_badge_progress') { if (S.noProgress) return { data: null, error: { message: 'function not found' } }; return { data: [{ badge_code: 'fidele', metric: 'anciennete_annees', value: 4 }, { badge_code: 'citrouille', metric: 'event_captures', value: DB.hg_dyn_captures.filter((c) => c.user_id === ME && c.event_id === 'aaaaaaaa-0000-4000-8000-000000000001').length }], error: null }; }
 
       // Compteurs du compte Cartes : Paillettes, pity, bonus quotidien, booster gratuit, cadeaux.
-      if (fn === 'hg_cards_me') { const w = DB.hg_wallets[0]; return { data: { paillettes: w.paillettes, boosters_opened: 4, pity: w.pity_epique, daily_streak: w.daily_streak, daily_available: !w.last_daily, free_booster_at: S.freeAt ?? iso(-0.1), gift_boosters: w.gift_boosters ?? 0, god: !!S.god, config: window.__CARDS.config }, error: null }; }
+      // S.cardsMeErreur : lecture en erreur (parcours-compteurs.cjs)
+      if (fn === 'hg_cards_me') { if (S.cardsMeErreur) return { data: null, error: { message: 'Indisponible' } }; const w = DB.hg_wallets[0]; return { data: { paillettes: w.paillettes, boosters_opened: 4, pity: w.pity_epique, daily_streak: w.daily_streak, daily_available: !w.last_daily, free_booster_at: S.freeAt ?? iso(-0.1), gift_boosters: w.gift_boosters ?? 0, god: !!S.god, config: window.__CARDS.config }, error: null }; }
       // Bonus quotidien : +20 Paillettes et série à 3.
       if (fn === 'hg_cards_daily') { const w = DB.hg_wallets[0]; w.last_daily = 'today'; w.paillettes += 20; return { data: { gain: 20, streak: 3 }, error: null }; }
       // hg_open_booster_req (migration 021), seulement si scenario.reqRpc : idempotence par p_request,

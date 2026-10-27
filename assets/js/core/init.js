@@ -8,7 +8,8 @@
  * header.js, footer.js, unread.js, badges.js, site-load.js, site-defaults.js, site-etat.js (bandeau et maintenance),
  * view-as.js (vue « comme un membre » de l'admin : résolue dès le profil connu, bandeau sous le menu).
  * light-dismiss.js (fermer une fenêtre en cliquant à côté).
- *   Chargés à part (import dynamique, sans bloquer la page) : dyn-events.js, card-drops.js.
+ *   Chargés à part (import dynamique, sans bloquer la page) : dyn-events.js, card-drops.js, staff-dock.js
+ *   (raccourcis Staff : barre à gauche pour l'admin et le Staff, pas sur admin.html).
  * Exporte : initPage.
  */
 import { applyTheme } from './theme-load.js';
@@ -135,6 +136,9 @@ async function startPage(auth) {
     import('../dyn-events.js').then((m) => m.startDynEvents(profile)).catch((e) => console.warn('[événements]', e));
     import('../card-drops.js').then((m) => m.startCardDrops(profile)).catch((e) => console.warn('[drops]', e));
   }
+  // Raccourcis Staff (admin et Staff seulement, pas sur admin.html ni en vue « comme un membre ») : même en maintenance,
+  // car le Staff n'est jamais bloqué par l'état du site
+  if (profile) import('./staff-dock.js').then((m) => m.startStaffDock(profile)).catch((e) => console.warn('[raccourcis Staff]', e));
   return profile;
 }
 

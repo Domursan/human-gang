@@ -33,7 +33,7 @@
 .ch-table .visually-hidden, .ch-fin .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .ch-table a, .ch-fin a { color: var(--ch-or); }
 
-.ch-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ch-bord); min-width: 0; }
+.ch-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--ch-panneau); border: 1px solid var(--ch-bord); min-width: 0; }
 .ch-bloc-titre { margin: 0 0 8px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 17px; line-height: 1.2; }
 .ch-titre { margin: 0; font-size: 20px; font-weight: 700; color: var(--ch-or); }
 .ch-note, .ch-legende { margin: 0; font-size: 12px; color: var(--ch-muet); }
@@ -47,17 +47,17 @@
 .ch-btn-primary { background: var(--ch-accent); color: var(--ch-accent-texte); border-color: transparent; }
 .ch-btn-danger { background: #6B1D27; color: #FFFFFF; border-color: #9E3543; }
 .ch-btn-ghost { background: transparent; border: 1px solid var(--ch-bord-fort); color: var(--ch-texte); font-weight: 500; }
-.ch-btn-piece { background: #1F1F23; border: 2px solid var(--ch-or); color: var(--ch-texte); }
-.ch-btn-piece:hover { background: #2A2412; }
+.ch-btn-piece { background: var(--ch-carte-2); border: 2px solid var(--ch-or); color: var(--ch-texte); }
+.ch-btn-piece:hover { background: var(--ch-or-fond); }
 .ch-quitter { font-size: 13px; }
 
 /* ---------- Barre (onglets téléphone, quitter) ---------- */
 .ch-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
 .ch-onglets { display: none; gap: 6px; }
-.ch-onglet { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--ch-bord-fort); background: #1F1F23; color: var(--ch-texte);
+.ch-onglet { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--ch-bord-fort); background: var(--ch-carte-2); color: var(--ch-texte);
   font: 700 14px Inter, sans-serif; cursor: pointer; }
 .ch-onglet[aria-pressed="true"] { border-color: var(--ch-or); color: var(--ch-or); }
-.ch-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: #3A1A20; color: var(--ch-non); font-weight: 700; font-size: 14px; }
+.ch-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--ch-rouge-fond); color: var(--ch-non); font-weight: 700; font-size: 14px; }
 
 /* ---------- Bandeau (joueurs, chrono) : le contenu vient de commun.js ---------- */
 .ch-bandeau { min-width: 0; }
@@ -97,7 +97,7 @@ button.ch-room { font: inherit; }
   font: 800 10px Inter, sans-serif; display: grid; place-items: center; transform: translate(-50%, -50%); pointer-events: none; }
 
 /* ---------- Panneau « Ton tour » ---------- */
-.ch-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ch-bord); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ch-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: var(--ch-panneau); border: 1px solid var(--ch-bord); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .ch-panneau > p { margin: 0; font-size: 14px; }
 .ch-pied { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .ch-pied .ch-btn { flex: 1 1 auto; }
@@ -105,7 +105,7 @@ button.ch-room { font: inherit; }
 .ch-form-hyp, .ch-form-acc { display: flex; flex-direction: column; gap: 8px; min-width: 0; margin: 0; }
 .ch-champ { display: grid; grid-template-columns: 74px minmax(0, 1fr); align-items: center; gap: 8px; }
 .ch-champ label { font-size: 13px; color: var(--ch-muet); }
-.ch-select { min-height: 44px; width: 100%; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1px solid var(--ch-bord-fort); background: #0E0E10; color: var(--ch-texte); font: 500 14px Inter, sans-serif; }
+.ch-select { min-height: 44px; width: 100%; box-sizing: border-box; padding: 0 10px; border-radius: 10px; border: 1px solid var(--ch-bord-fort); background: var(--ch-champ); color: var(--ch-texte); font: 500 14px Inter, sans-serif; }
 .ch-piece-hyp { margin: 0; display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
 .ch-piece-hyp span { color: var(--ch-muet); font-size: 13px; }
 .ch-choix { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -118,7 +118,7 @@ button.ch-room { font: inherit; }
 .ch-panneau.is-montrer { border-color: var(--ch-or); box-shadow: 0 0 0 1px var(--ch-or), 0 10px 30px rgba(0, 0, 0, .5); }
 
 /* ---------- Mes cartes ---------- */
-.ch-mes-cartes { box-sizing: border-box; padding: 12px 16px; border-radius: 20px; background: rgba(23, 23, 26, .92); border: 1px solid var(--ch-bord); min-width: 0; }
+.ch-mes-cartes { box-sizing: border-box; padding: 12px 16px; border-radius: 20px; background: var(--ch-panneau); border: 1px solid var(--ch-bord); min-width: 0; }
 .ch-mes-cartes .ch-bloc-titre { font-family: Inter, sans-serif; font-weight: 700; font-size: 16px; }
 .ch-liste-cartes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .ch-carte { width: 118px; min-height: 92px; box-sizing: border-box; border-radius: 10px; border: 3px solid rgba(0, 0, 0, .25); padding: 8px 6px;
@@ -131,13 +131,13 @@ button.ch-room { font: inherit; }
 .ch-carnet { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
 .ch-carnet th, .ch-carnet td { height: 22px; padding: 0 3px; line-height: 20px; border-top: 1px solid #2A2A2F; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ch-carte-titre { width: 128px; text-align: left; color: var(--ch-muet); font-weight: 700; }
-.ch-entete { width: 34px; color: #E8B04B; font-weight: 700; text-align: center; }
+.ch-entete { width: 34px; color: var(--ch-or-vif); font-weight: 700; text-align: center; }
 .ch-entete.is-moi { color: var(--ch-or); text-decoration: underline; }
 .ch-carnet th.ch-row { text-align: left; color: var(--ch-texte); }
-.ch-carnet th.ch-sec { text-align: left; background: #1F1F23; color: var(--ch-muet); font-weight: 700; font-size: 12px; letter-spacing: .5px; text-transform: uppercase; }
+.ch-carnet th.ch-sec { text-align: left; background: var(--ch-carte-2); color: var(--ch-muet); font-weight: 700; font-size: 12px; letter-spacing: .5px; text-transform: uppercase; }
 .ch-c { text-align: center; font-weight: 700; font-size: 12px; }
 .ch-me { font-size: 12px; color: var(--ch-or-vif); text-align: center; }
-.ch-vu { font-size: 11px; color: #7EC4E8; text-align: center; font-weight: 700; }
+.ch-vu { font-size: 11px; color: var(--ch-bleu, #7EC4E8); text-align: center; font-weight: 700; }
 .ch-x { color: var(--ch-non); }
 .ch-q { color: var(--ch-or); }
 .ch-v { color: var(--ch-ok); }
@@ -150,7 +150,7 @@ button.ch-room { font: inherit; }
 
 /* ---------- Historique, journal, chat ---------- */
 .ch-histo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; max-height: 260px; overflow-y: auto; }
-.ch-histo li { padding: 8px 10px; border-radius: 12px; background: #1F1F23; }
+.ch-histo li { padding: 8px 10px; border-radius: 12px; background: var(--ch-carte-2); }
 .ch-histo-issue { display: block; color: var(--ch-muet); font-size: 12px; }
 .ch-chat-zone { min-width: 0; }
 
@@ -164,13 +164,13 @@ button.ch-room { font: inherit; }
 .ch-sol small { font: 700 11px Inter, sans-serif; text-transform: uppercase; letter-spacing: .8px; opacity: .85; }
 .ch-sol span { font: 700 15px Inter, sans-serif; text-align: center; line-height: 1.2; }
 .ch-liste-accus, .ch-liste-mains { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
-.ch-accus { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 14px; border-radius: 12px; background: #1F1F23; }
+.ch-accus { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 14px; border-radius: 12px; background: var(--ch-carte-2); }
 .ch-accus-qui { font-weight: 700; }
 .ch-accus-quoi { grid-column: 1; color: var(--ch-muet); font-size: 13px; }
 .ch-accus-issue { grid-column: 2; grid-row: 1; font-weight: 700; }
 .ch-accus.is-juste .ch-accus-issue { color: var(--ch-or); }
 .ch-accus.is-fausse .ch-accus-issue { color: var(--ch-non); }
-.ch-liste-mains li { padding: 8px 12px; border-radius: 10px; background: #1F1F23; }
+.ch-liste-mains li { padding: 8px 12px; border-radius: 10px; background: var(--ch-carte-2); }
 
 /* ---------- Téléphone (≤ 760 px) ---------- */
 @media (max-width: 760px) {

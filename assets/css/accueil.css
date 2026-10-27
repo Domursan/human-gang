@@ -9,6 +9,21 @@
 .home-hero-actions { margin-top: 8px; }
 .home-hero .small { margin: 0; }
 
+/* ---------- Couleurs des tuiles (Secret Santa, IRL, Historique) tirées du thème ----------
+   base.css fixe des teintes pastel (rose, jaune, bleu) pour le thème par défaut : hors palette des autres thèmes.
+   Ici elles dérivent de --accent (Secret Santa), --sand (IRL) et du texte (Historique), en mode sombre comme en mode clair. */
+#app {
+  --ss-bg: color-mix(in srgb, var(--accent) 11%, var(--surface));
+  --ss-border: color-mix(in srgb, var(--accent) 32%, var(--surface));
+  --ss-fg: color-mix(in srgb, var(--accent) 55%, var(--text));
+  --irl-bg: color-mix(in srgb, var(--sand) 13%, var(--surface));
+  --irl-border: color-mix(in srgb, var(--sand) 36%, var(--surface));
+  --irl-fg: color-mix(in srgb, var(--sand) 80%, var(--text));
+  --hist-bg: color-mix(in srgb, var(--text) 4%, var(--surface));
+  --hist-border: var(--border-strong);
+  --hist-fg: var(--text);
+}
+
 /* ---------- En-tête membre + compte à rebours ---------- */
 .home-head { align-items: flex-end; }
 .countdown {
