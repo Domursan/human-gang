@@ -1,7 +1,11 @@
 # Fonctions edge à déployer quand ce fichier change sur main (une par ligne) : voir .github/workflows/deploy-functions.yml
-hg-nj-images
-# 2026-10-26 : mots du Pictionary
-# 2026-10-26 : présence (MP seulement hors ligne, notification du site)
-hg-notify
-hg-cron
+# 2026-10-27 : rangement (liens vers /pages/<catégorie>/…), dépôt renommé humane-gang
+hg-album
+hg-archive
 hg-birthdays
+hg-calendar
+hg-cron
+hg-discord
+hg-notify
+hg-support
+hg-nj-images

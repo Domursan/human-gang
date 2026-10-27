@@ -20,7 +20,7 @@ const CORS = {
 /** Réponse JSON avec les en-têtes CORS. */
 const jsonResponse = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 /** Réserves publiées dans le dépôt (branche main). */
-const RESERVES = 'https://raw.githubusercontent.com/Domursan/human-gang/main/outils/nj/reserves/';
+const RESERVES = 'https://raw.githubusercontent.com/Domursan/humane-gang/main/outils/nj/reserves/';
 const FICHIERS: Record<string, string> = { jv: 'jv.json', pays: 'pays.json', plat: 'plats.json', pochette: 'pochettes.json', replique: 'repliques.json' };
 /** Contenus des grilles du jour (migration 140), chargés par hg_nj_contenu_lot. */
 const CONTENUS: Record<string, string> = { connexions: 'connexions.json', motmele: 'mot-mele.json', dico: 'dico.json', motscroises: 'mots-croises.json', pictionary: 'pictionary.json' };
