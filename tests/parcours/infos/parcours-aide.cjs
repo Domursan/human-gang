@@ -23,6 +23,18 @@ const GUEST_SLUG = 'se-connecter';          // tuto « Premiers pas », visible 
 const GROUP_IDS = ['premiers-pas', 'secret-santa', 'irl-historique', 'cartes-base', 'cartes-avance', 'communaute'];
 
 /* ---------- Données (sans navigateur) ---------- */
+/**
+ * Importe les données d'un groupe. Dans une version construite (HG_ROOT=_site), le fichier d'origine n'est qu'un relais
+ * « export * from "/assets/_b/…" » vers le fichier regroupé : Node ne résout pas une adresse absolue de site, on suit donc
+ * le relais sur le disque. Dans la source, le fichier contient directement les données.
+ */
+async function importerGroupe(id) {
+  let file = path.join(ROOT, 'assets/espaces/infos/tutos', id + '.js');
+  const relais = fs.readFileSync(file, 'utf8').match(/^export \* from "(\/[^"]+)";/m);
+  if (relais) file = path.join(ROOT, relais[1]);
+  return (await import(pathToFileURL(file).href)).default;
+}
+
 /** Parcourt les groupes et tutos de la page d'aide et relève les anomalies : slug en double, page absente, étapes manquantes. */
 async function checkData() {
   const slugs = new Map();   // slug -> groupe
@@ -30,7 +42,7 @@ async function checkData() {
   let total = 0, groupsOk = 0;
   for (const id of GROUP_IDS) {
     let g = null;
-    try { g = (await import(pathToFileURL(path.join(ROOT, 'assets/espaces/infos/tutos', id + '.js')).href)).default; } catch (e) { /* signalé plus bas */ }
+    try { g = await importerGroupe(id); } catch (e) { /* signalé plus bas */ }
     if (!g || !Array.isArray(g.tutos)) { badPage.push(`groupe ${id} illisible`); continue; }
     groupsOk++;
     for (const t of g.tutos) {
