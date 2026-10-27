@@ -5,7 +5,7 @@
 // Staff sans le droit Réglages, fiche membre › Informations (groupes repliables, enregistrement inchangé).
 // Les contrôles portent sur l'état du faux (window.__DB), donc sur ce que le client a réellement écrit.
 // Lancer : node tests/parcours/admin/parcours-admin-complements.cjs
-const { ROOT, check, finish, openPage, adminSection, chromium } = require('../../lib/harness.cjs');
+const { ROOT, check, finish, openPage, adminSection, ouvrirRepliable, chromium } = require('../../lib/harness.cjs');
 
 /** Exécute fn dans la page et renvoie son résultat (lecture de la base simulée). */
 const db = (p, fn) => p.evaluate(fn);
@@ -128,6 +128,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
 
   /* ---------- Accès aux pages : créer, modifier, supprimer ---------- */
   await adminSection(p, 'place/acces');
+  await ouvrirRepliable(p, 'acces:pages'); // la liste des pages est repliée par défaut
   await p.waitForSelector('#zone-actions [data-pa-new]', { timeout: 5000 });
   await p.click('#zone-actions [data-pa-new]'); // « + Nouvelle page » : en-tête de zone, ouvre le tiroir
   await p.waitForSelector('#pa-pg-form', { timeout: 5000 });
@@ -174,9 +175,11 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
 
   /* ---------- Accès aux pages : vue Matrice (sous-section membres/acces-matrice, setAccessView) ---------- */
   await adminSection(p, 'place/acces-matrice');
+  await ouvrirRepliable(p, 'acces:matrice');
   await p.waitForSelector('#access-root .pa-matrix', { timeout: 5000 });
   check(await p.getAttribute('#access-root [data-pa-view="matrice"]', 'aria-pressed') === 'true', 'accès : la sous-section Matrice affiche la matrice (puce de vue à jour)');
   await adminSection(p, 'place/acces');
+  await ouvrirRepliable(p, 'acces:pages');
   await p.waitForSelector('#access-root .pa-table', { timeout: 5000 });
   check(!(await p.isVisible('#access-root .pa-ro')) && !(await p.isDisabled('#access-root [data-pa-mode]')), 'accès : administrateur, mode modifiable, pas de note « lecture seule »');
 
@@ -202,6 +205,7 @@ const confirmOk = async (p) => { // bouton « ok » d'une confirmBox (dialogue m
   /* ---------- Accès aux pages, Staff « membres » sans « reglages » : mode, menu et ordre en lecture seule ---------- */
   const ps = await openPage(browser, { page: 'admin', width: 1280, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['membres'] } });
   await adminSection(ps, 'membres/acces');
+  await ouvrirRepliable(ps, 'acces:pages');
   await ps.waitForSelector('#access-root .pa-table', { timeout: 5000 });
   check(await ps.isVisible('#access-root .pa-ro') && /réservé au droit Réglages/.test(await ps.textContent('#access-root .pa-ro')), 'accès (Staff sans Réglages) : note « lecture seule » affichée');
   check(await ps.isDisabled('#access-root [data-pa-mode]') && await ps.isDisabled('#access-root [data-pa-nav]') && await ps.locator('#access-root .pa-move:not([disabled])').count() === 0,

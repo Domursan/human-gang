@@ -22,11 +22,6 @@ const EXCEPTIONS = {
   'fabrique/limites': 'Limites : quêtes, drops, générations, échanges, puis les plafonds de Paillettes repliés (≈ 1 440 px) ; à répartir en pages plus tard',
   'mairie/menu': 'Menu et pied de page : libellés de tous les menus et de leurs entrées (≈ 1 650 px), en blocs côte à côte',
   'mairie/textes': 'Textes et intro : groupe « Page d’accueil » replié, puis textes des pages, intro et visite (≈ 1 550 px) ; à répartir en pages plus tard',
-  'place/roles': 'Rôles : une ligne par page du site (cases pour les pages en liste, lignes fixes pour les autres, jeux en développement compris ; ≈ 1 920 px) ; à replier par groupe',
-  'place/acces': 'Accès aux pages : une ligne par page du site (≈ 2 950 px) ; à répartir par groupe de lieu',
-  'fete/nom-de-code': 'Codenames : paquets de mots, Paillettes, badges et parties en cours (≈ 1 730 px) ; à replier en blocs',
-  'fete/duels': 'Duels : cinq jeux (puissance 4, morpion, Mastermind, bataille navale, Qui est-ce ?) et leurs réglages (≈ 1 920 px) ; à replier par jeu',
-  'place/comptes/<Bruno>/acces': 'Accès d’un membre : une ligne par page du site (≈ 2 850 px) ; à replier par groupe de lieu',
 };
 
 // Arbre attendu : lieu -> [titre de groupe (null : sans titre), [pages]] (dans l'ordre de LIEUX, admin/perms.js).

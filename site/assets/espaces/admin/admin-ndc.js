@@ -20,6 +20,7 @@ import { toast, errMsg, esc } from '../../commun/core.js';
 import { sectionError, ICON } from './common.js';
 import { confirmBox } from '../../commun/ui-confirm.js';
 import { ndc } from '../nom-de-code/api.js';
+import { foldHtml, compte } from './ui/fold.js';
 
 /* ---------- Constantes ---------- */
 
@@ -136,8 +137,8 @@ function squelette() {
   const badges = Array.isArray(d.badges) ? d.badges : [];
 
   return `<form class="ndc-colonnes" id="ndc-form" novalidate>
-    <section class="card ndc-card" aria-labelledby="ndc-h-pai">
-      <h3 id="ndc-h-pai" class="ndc-titre">Récompenses en Paillettes</h3>
+    <section class="card ndc-card">
+      ${foldHtml({ cle: 'ndc:pai', titre: 'Récompenses en Paillettes', resume: `plafond de ${nb(plafond)} par jour`, ouvert: true, corps: `
       <table class="ndc-table">
         <thead class="visually-hidden"><tr><th scope="col">Moment</th><th scope="col">Paillettes</th></tr></thead>
         <tbody>
@@ -161,28 +162,27 @@ function squelette() {
       <div class="ndc-actions">
         <button class="btn btn-primary" type="submit">Enregistrer</button>
         <span id="ndc-statut" class="ndc-statut" role="status"></span>
-      </div>
+      </div>` })}
     </section>
 
-    <section class="card ndc-card" aria-labelledby="ndc-h-badges">
-      <h3 id="ndc-h-badges" class="ndc-titre">Badges Codenames</h3>
+    <section class="card ndc-card">
+      ${foldHtml({ cle: 'ndc:badges', titre: 'Badges Codenames', resume: compte(badges.length, 'badge'), corps: `
       ${badges.length ? `<ul class="ndc-badges">${badges.map(badgeHtml).join('')}</ul>` : '<p class="muted small">Aucun badge Codenames pour l’instant.</p>'}
       <p class="small muted ndc-note">Les interrupteurs se désactivent ici, puis se valident avec Enregistrer.
-        Les images et textes des badges se modifient dans <a href="#place/badges">Badges</a>.</p>
+        Les images et textes des badges se modifient dans <a href="#place/badges">Badges</a>.</p>` })}
     </section>
   </form>
 
-  <section class="card ndc-card" aria-labelledby="ndc-h-paquets">
-    <h3 id="ndc-h-paquets" class="ndc-titre">Paquets de mots</h3>
-    <div id="ndc-paquets-bloc"></div>
+  <section class="card ndc-card">
+    ${foldHtml({ cle: 'ndc:paquets', titre: 'Paquets de mots', resume: resumePaquets(), corps: '<div id="ndc-paquets-bloc"></div>' })}
   </section>
 
-  <section class="card ndc-card" aria-labelledby="ndc-h-parties">
-    <div class="ndc-entete">
-      <h3 id="ndc-h-parties" class="ndc-titre">Parties en cours</h3>
-      <span id="ndc-terminees" class="small muted"></span>
-    </div>
-    <div id="ndc-parties-bloc"></div>
+  <section class="card ndc-card">
+    ${foldHtml({ cle: 'ndc:parties', titre: 'Parties en cours', resume: resumeParties(), corps: `
+      <div class="ndc-entete">
+        <span id="ndc-terminees" class="small muted"></span>
+      </div>
+      <div id="ndc-parties-bloc"></div>` })}
   </section>
 
   <section class="card ndc-card" aria-labelledby="ndc-h-acces">
@@ -214,11 +214,30 @@ function badgeHtml(b) {
   </li>`;
 }
 
+/** Résumé de la section « Paquets de mots » : nombre de paquets, dont ceux qui servent à une partie. */
+function resumePaquets() {
+  const utilisables = [...N.paquets.values()].filter((s) => s.actifs >= MOTS_MIN).length;
+  return `${compte(N.paquets.size, 'paquet')}, ${utilisables} utilisable${utilisables > 1 ? 's' : ''}`;
+}
+
+/** Résumé de la section « Parties en cours ». */
+function resumeParties() {
+  const n = Array.isArray(N.data?.parties) ? N.data.parties.length : 0;
+  return `${compte(n, 'partie')} en cours`;
+}
+
+/** Remplace le résumé d'une section repliable (après un changement de ses données). */
+function majResume(cle, texte) {
+  const el = N.root?.querySelector(`[data-fold="${cle}"] .acc-fold-res`);
+  if (el) el.textContent = `· ${texte}`;
+}
+
 /** Dessine le bloc des parties en cours et le nombre de parties terminées. */
 function renderParties() {
   const bloc = N.root.querySelector('#ndc-parties-bloc');
   if (!bloc) return;
   const parties = Array.isArray(N.data?.parties) ? N.data.parties : [];
+  majResume('ndc:parties', resumeParties());
   N.root.querySelector('#ndc-terminees').textContent = `Parties terminées : ${nb(N.data?.terminees)}`;
   bloc.innerHTML = `<div class="ndc-scroll">
     <table class="ndc-table ndc-parties">
@@ -278,6 +297,7 @@ function renderPaquets() {
 
 /** Redessine seulement la liste des paquets (actifs / total, alerte sous le seuil). */
 function renderListePaquets() {
+  majResume('ndc:paquets', resumePaquets());
   const ul = N.root.querySelector('#ndc-liste-paquets');
   if (!ul) return;
   ul.innerHTML = paquetsTries().map((p) => {

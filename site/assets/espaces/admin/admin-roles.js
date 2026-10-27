@@ -14,6 +14,7 @@
 import { sb, toast, errMsg, esc, fmtDate, avatarHtml } from '../../commun/core.js';
 import { confirmBox } from '../../commun/ui-confirm.js';
 import { busy, check, sectionError } from './common.js';
+import { foldHtml } from './ui/fold.js';
 
 /* ---------- Constantes et outils ---------- */
 const ID_RE = /^[a-z0-9-]{2,30}$/;       // identifiant d'un rôle (même règle que la base)
@@ -161,24 +162,31 @@ function pagesHtml(r) {
     || '<p class="small muted">Aucune page.</p>';
 }
 
-/** Détail d'un rôle existant : formulaire, membres, note. */
+/** Pages « sur liste » cochées par le rôle, sur le total des pages réglables (résumé de la section repliable). */
+function pagesResume(r) {
+  const reglables = D.pages.filter((p) => p.mode === 'liste');
+  const cochees = reglables.filter((p) => (r.pages ?? []).includes(p.slug)).length;
+  return `${cochees} sur ${reglables.length} réglable${reglables.length > 1 ? 's' : ''}`;
+}
+
+/** Détail d'un rôle existant : formulaire, pages et membres (sections repliables), note. */
 function roleDetailHtml(r) {
   return `<div class="rl-title"><h2 id="rl-titre" class="rl-h">${esc(r.label)}</h2><span class="rl-count">${nMembres(holdersOf(r.id).length)}</span></div>
     <form class="rl-form" data-rl-form="${esc(r.id)}" novalidate>
       ${fieldsHtml(r, false)}
-      <fieldset class="rl-pages"><legend>Ce rôle donne accès à</legend><div class="rl-page-grid">${pagesHtml(r)}</div></fieldset>
+      ${foldHtml({ cle: 'roles:pages', titre: 'Pages accessibles', resume: pagesResume(r), corps: `<fieldset class="rl-pages"><legend>Ce rôle donne accès à</legend><div class="rl-page-grid">${pagesHtml(r)}</div></fieldset>` })}
       <p class="form-error" role="alert" hidden></p>
       <div class="btn-row">
         <button type="submit" class="btn btn-primary">Enregistrer le rôle</button>
         <button type="button" class="btn btn-danger" data-rl-delete="${esc(r.id)}">Supprimer le rôle</button>
       </div>
     </form>
-    <section class="rl-members" aria-labelledby="rl-members-h">
-      <div class="rl-members-head"><h3 id="rl-members-h" class="rl-sub">Membres avec ce rôle</h3>
+    ${foldHtml({ cle: 'roles:membres', titre: 'Membres avec ce rôle', resume: nMembres(holdersOf(r.id).length), forcer: R.pick, corps: `<div class="rl-members">
+      <div class="rl-members-head">
         <button type="button" class="btn btn-ghost" data-rl-pick-open aria-expanded="${R.pick}">${R.pick ? 'Fermer' : 'Ajouter un membre'}</button></div>
       ${R.pick ? pickerHtml('rl', r.id, R.q) : ''}
       <ul class="rl-people">${peopleHtml(r.id)}</ul>
-    </section>
+    </div>` })}
     <p class="rl-note">Un réglage fait à la main sur un membre l’emporte sur ses rôles.</p>`;
 }
 
@@ -187,7 +195,7 @@ function newRoleHtml() {
   return `<div class="rl-title"><h2 id="rl-titre" class="rl-h">Nouveau rôle</h2></div>
     <form class="rl-form" data-rl-form="new" novalidate>
       ${fieldsHtml(null, true)}
-      <fieldset class="rl-pages"><legend>Ce rôle donne accès à</legend><div class="rl-page-grid">${pagesHtml({ pages: [] })}</div></fieldset>
+      ${foldHtml({ cle: 'roles:pages', titre: 'Pages accessibles', resume: pagesResume({ pages: [] }), corps: `<fieldset class="rl-pages"><legend>Ce rôle donne accès à</legend><div class="rl-page-grid">${pagesHtml({ pages: [] })}</div></fieldset>` })}
       <p class="form-error" role="alert" hidden></p>
       <div class="btn-row">
         <button type="submit" class="btn btn-primary">Créer le rôle</button>

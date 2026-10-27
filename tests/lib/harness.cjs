@@ -161,6 +161,20 @@ async function adminSection(page, route) {
 }
 
 /**
+ * Admin : ouvre une section repliable (ui/fold.js : <details data-fold="cle">) si elle est fermée, pour atteindre ce qu'elle
+ * contient (champs, boutons). Les sections fermées ont une hauteur nulle : un clic ou une mesure y échouerait.
+ * @returns {Promise<boolean>} Faux si la section n'existe pas sur la page.
+ */
+async function ouvrirRepliable(page, cle) {
+  const sel = `details[data-fold="${cle}"]`;
+  await page.waitForSelector(sel, { state: 'attached', timeout: 5000 }).catch(() => {}); // la section apparaît après le chargement des données
+  if (!(await page.$(sel))) return false;
+  if (!(await page.$eval(sel, (d) => d.open))) await page.click(`${sel} > summary`);
+  await page.waitForFunction((s) => document.querySelector(s)?.open === true, sel, { timeout: 3000 }).catch(() => {});
+  return true;
+}
+
+/**
  * Admin : compteur « à traiter » d'une page, lu sur la tuile de sa page de lieu (la coquille ne garde pas de compteur
  * sur la page ouverte). Va sur #<lieu>, lit la pastille de la tuile, puis revient à l'adresse d'origine. Vide si aucun.
  */
@@ -179,4 +193,4 @@ async function countOf(page, lieu, sub) {
 /** Renvoie le journal des appels du faux client, lu dans la page (window.__LOG). */
 const log = (page) => page.evaluate(() => window.__LOG || []);
 
-module.exports = { ROOT, DEPOT, urlPage, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, countOf, hscroll, log, sleep, chromium };
+module.exports = { ROOT, DEPOT, urlPage, TESTS, FIXTURES, SHOTS, ORIGIN, PREFIX, check, finish, openPage, adminSection, ouvrirRepliable, countOf, hscroll, log, sleep, chromium };

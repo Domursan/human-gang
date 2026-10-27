@@ -15,7 +15,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v111';
+const CACHE_VERSION = 'v112';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -89,7 +89,7 @@ const PRECACHE = [
   '/assets/espaces/quiz/quiz.css', '/assets/espaces/admin/admin-quiz.css', '/assets/espaces/admin/admin-quiz-stats.css', '/assets/espaces/arcade/eggs.css', '/assets/espaces/arcade/eggs-pages.css', '/assets/espaces/arcade/eggs-f.css',
   '/assets/espaces/admin/admin-challenges.js', '/assets/espaces/admin/admin-log.js', '/assets/espaces/admin/admin-staff.js', '/assets/espaces/irl/ics.js', '/assets/commun/image-compress.js', '/assets/commun/push.js', '/assets/commun/reactions.js',
   '/assets/espaces/admin/admin-ui.css', '/assets/espaces/admin/ui/common.js', '/assets/espaces/admin/ui/time.js', '/assets/espaces/admin/ui/list.js', '/assets/espaces/admin/ui/drawer.js',
-  '/assets/espaces/admin/ui/thread.js', '/assets/espaces/admin/ui/info-panel.js', '/assets/espaces/admin/ui/detail-header.js',
+  '/assets/espaces/admin/ui/thread.js', '/assets/espaces/admin/ui/info-panel.js', '/assets/espaces/admin/ui/detail-header.js', '/assets/espaces/admin/ui/fold.js',
   // Nouvelles pages et modules (23/10 : Jeux, citations, playlist, visite guidée, hors ligne)
   '/pages/jeux/jeux.html', '/pages/irl/citations.html', '/pages/irl/playlist.html',
   '/assets/espaces/jeux/jeux.js', '/assets/espaces/jeux/onglets.js', '/assets/espaces/jeux/commun.js', '/assets/espaces/jeux/jeux.css',

@@ -17,6 +17,7 @@ import { confirmBox } from '../../commun/ui-confirm.js';
 import { svg } from '../../commun/icons.js';
 import { getCachedProfile } from '../../commun/core/profile.js';
 import { openDrawer } from './ui/drawer.js';
+import { foldHtml, compte } from './ui/fold.js';
 import { setActions, currentSub } from './shell.js';
 
 export const MODES = [
@@ -183,8 +184,9 @@ export function memberAccessHtml(member, origin = []) {
   const intro = isAdmin
     ? `${esc(member.pseudo)} est admin : accès à toutes les pages.`
     : `Accès effectif de ${esc(member.pseudo)}, avec son origine. L’interrupteur règle la page à la main.`;
+  const accordes = origin.filter((r) => r.allowed).length;
   return `<p class="small muted">${intro}</p>
-    <ul class="pa-member">${origin.map((r) => {
+    ${foldHtml({ cle: `acces-membre:${member.id}`, titre: 'Pages et origine de l’accès', resume: `${accordes} accessible${accordes > 1 ? 's' : ''} sur ${origin.length}`, corps: `<ul class="pa-member">${origin.map((r) => {
       const on = !!r.allowed;
       const fixed = isAdmin || r.mode === 'admin' || ALWAYS_OPEN.has(r.slug);
       const reset = !isAdmin && r.source === 'main'
@@ -200,7 +202,7 @@ export function memberAccessHtml(member, origin = []) {
         <span class="pill ${on ? 'pill-ok' : 'pill-muted'} pa-state">${on ? 'Accès' : 'Pas d’accès'}</span>
         ${reset}
       </li>`;
-    }).join('')}</ul>`;
+    }).join('')}</ul>` })}`;
 }
 
 /* =========================================================
@@ -234,7 +236,16 @@ function sectionHtml() {
       <button class="chip" type="button" data-pa-view="pages" aria-pressed="${AC.view === 'pages'}">Pages</button>
       <button class="chip" type="button" data-pa-view="matrice" aria-pressed="${AC.view === 'matrice'}">Matrice membres × pages</button>
     </div>
-    <div class="card pa-card">${AC.view === 'pages' ? pagesTableHtml() : matrixHtml()}</div>`;
+    ${AC.view === 'pages'
+      ? foldHtml({ cle: 'acces:pages', titre: 'Pages du site', resume: resumePages(), corps: pagesTableHtml() })
+      : foldHtml({ cle: 'acces:matrice', titre: 'Accès de chaque membre', resume: `${compte(AC.members.length, 'membre')} × ${compte(AC.pages.length, 'page')}`, corps: matrixHtml() })}`;
+}
+
+/** Résumé de la liste des pages : nombre de pages, dont celles à membres choisis et celles réservées aux admins. */
+function resumePages() {
+  const choisis = AC.pages.filter((p) => p.mode === 'liste').length;
+  const admin = AC.pages.filter((p) => p.mode === 'admin').length;
+  return `${compte(AC.pages.length, 'page')}, dont ${choisis} à membres choisis et ${admin} réservée${admin > 1 ? 's' : ''} aux admins`;
 }
 
 /**

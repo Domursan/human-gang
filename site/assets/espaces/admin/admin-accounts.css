@@ -162,3 +162,6 @@ button.acc-row:focus-visible { outline-offset: -2px; border-radius: var(--radius
 .acc-fold-sum { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 0 16px; font-weight: 700; }
 .acc-fold-sum:focus-visible { outline: 2px solid var(--accent, currentColor); outline-offset: 2px; }
 .acc-fold > .acc-group { border: 0; padding: 0 16px 16px; }
+/* Sections repliables des pages admin (ui/fold.js) : corps et résumé en gris */
+.acc-fold-corps { display: grid; gap: 12px; padding: 4px 16px 16px; min-width: 0; }
+.acc-fold-res { font-weight: 400; color: var(--muted); }

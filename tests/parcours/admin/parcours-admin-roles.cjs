@@ -18,7 +18,7 @@
 // Lancer : node tests/parcours/admin/parcours-admin-roles.cjs
 const fs = require('fs');
 const path = require('path');
-const { SHOTS, check, finish, openPage, adminSection, hscroll, log, chromium } = require('../../lib/harness.cjs');
+const { SHOTS, check, finish, openPage, adminSection, ouvrirRepliable, hscroll, log, chromium } = require('../../lib/harness.cjs');
 
 /** Identifiant de test du membre n (même format que le faux client : Alice = 2, Bruno = 3, Chloé = 4, David = 5, Emma = 6). */
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
@@ -73,7 +73,8 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
       check((await p.textContent('#roles-root')).includes('Un réglage fait à la main sur un membre l’emporte sur ses rôles.'), '(a) note : réglage à la main prioritaire');
       check(JSON.stringify(await textes(p, '#roles-root ul.rl-people:not(.rl-results) .rl-person-name')) === JSON.stringify(['Alice', 'Bruno', 'Chloé']), '(a) membres du rôle IRL, par pseudo');
 
-      // Ajouter un membre : recherche, puis « Ajouter » pour Emma
+      // Ajouter un membre : recherche, puis « Ajouter » pour Emma (la section « Membres » est repliée par défaut)
+      await ouvrirRepliable(p, 'roles:membres');
       await p.click('[data-rl-pick-open]');
       await attendre(p, '#rl-q');
       check(await p.evaluate(() => document.activeElement?.id === 'rl-q'), '(a) « Ajouter un membre » : le focus va sur la recherche');
@@ -110,6 +111,7 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
       await p.fill('#rl-label', 'Cinéphile');
       check((await p.textContent('#rl-id-hint')).trim() === 'Identifiant : cinephile', '(a) identifiant dérivé du libellé : « cinephile » (sans accent)');
       await p.fill('#rl-desc', 'Ceux qui vont au ciné-club.');
+      await ouvrirRepliable(p, 'roles:pages'); // les pages du rôle sont repliées par défaut
       await p.check('[data-rl-form="new"] input[value="historique"]');
       await p.click('[data-rl-form="new"] button[type="submit"]');
       await p.waitForFunction(() => document.querySelectorAll('#roles-root .rl-item').length === 3, null, { timeout: 8000 }).catch(() => {});
@@ -172,6 +174,7 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
       await adminSection(p, 'place/roles');
       await p.evaluate((h) => { location.hash = h; }, '#place/comptes/' + U(3) + '/acces');
       await attendre(p, '#acc-panel .ra-block');
+      await ouvrirRepliable(p, 'acces-membre:' + U(3));
       check(await p.locator('#acc-panel .ra-chip').count() === 2, '(c) Bruno : deux puces de rôle (IRL, Secret Santa)');
       check(JSON.stringify(await textes(p, '#acc-panel .ra-chip')) === JSON.stringify(['IRL×', 'Secret Santa×']), '(c) puces : libellés des rôles');
       check((await p.textContent('#acc-panel .ra-roles')).includes('Tous les rôles sont déjà donnés.'), '(c) menu « Ajouter un rôle » : absent, tous les rôles sont donnés');
@@ -222,12 +225,14 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
       await adminSection(p, 'place/roles');
       await attendre(p, '#roles-root .rl-item');
       check(await hscroll(p) === 0, '(d) Rôles, 390 px : pas de défilement horizontal');
+      await ouvrirRepliable(p, 'roles:pages');
       check(await hauteurMin(p, '#roles-root .rl-item') >= 44, '(d) Rôles, 390 px : cibles de liste ≥ 44 px');
       check(await hauteurMin(p, '#roles-root .rl-detail .btn') >= 44, '(d) Rôles, 390 px : boutons du détail ≥ 44 px');
       check(await hauteurMin(p, '#roles-root .rl-page') >= 44, '(d) Rôles, 390 px : cases de pages ≥ 44 px');
       await p.screenshot({ path: path.join(SHOTS, 'admin-roles-390.png') });
       await p.evaluate((h) => { location.hash = h; }, '#place/comptes/' + U(3) + '/acces');
       await attendre(p, '#acc-panel .ra-block');
+      await ouvrirRepliable(p, 'acces-membre:' + U(3));
       check(await hscroll(p) === 0, '(d) fiche « Accès », 390 px : pas de défilement horizontal');
       check(await hauteurMin(p, '#acc-panel .ra-chip') >= 44, '(d) fiche, 390 px : puces ≥ 44 px');
       check(await hauteurMin(p, '#acc-panel [data-access-reset]') >= 44 || (await p.locator('#acc-panel [data-access-reset]').count()) === 0, '(d) fiche, 390 px : bouton de réglage ≥ 44 px');
@@ -237,6 +242,7 @@ const erreurRole = (p) => p.$eval('#roles-root .rl-form .form-error', (e) => (e.
     {
       const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { ...SCN, access: [{ page_slug: 'irl', user_id: U(2), allowed: true }] } });
       await adminSection(p, 'place/acces');
+      await ouvrirRepliable(p, 'acces:pages');
       await attendre(p, '[data-pa-manage="irl"]');
       await p.click('[data-pa-manage="irl"]');
       await attendre(p, 'dialog[open] [data-pa-user="' + U(2) + '"]');

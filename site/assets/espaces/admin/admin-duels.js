@@ -18,6 +18,7 @@
 import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { sectionError, ICON } from './common.js';
 import { confirmBox } from '../../commun/ui-confirm.js';
+import { foldHtml, compte } from './ui/fold.js';
 
 /* ---------- Constantes ---------- */
 
@@ -138,11 +139,12 @@ function render() {
   const terminees = d.terminees && typeof d.terminees === 'object' ? d.terminees : {};
   // Jeux connus d'abord, puis tout jeu inattendu renvoyé par le serveur.
   const clesTerminees = [...Object.keys(JEUX_NOM), ...Object.keys(terminees).filter((k) => !(k in JEUX_NOM))];
+  const total = Object.values(terminees).reduce((n, v) => n + Number(v || 0), 0);
 
   D.root.innerHTML = `<form class="dls" id="dls-form" novalidate>
     <div class="dls-colonnes">
-      <section class="card dls-card" aria-labelledby="dls-h-pai">
-        <h3 id="dls-h-pai" class="dls-titre">Récompenses en Paillettes</h3>
+      <section class="card dls-card">
+        ${foldHtml({ cle: 'dls:pai', titre: 'Récompenses en Paillettes', resume: `plafond de ${nb(plafond)} par jour`, corps: `
         <table class="dls-table">
           <thead><tr><th scope="col">Jeu</th><th scope="col">Partie terminée</th><th scope="col">Victoire</th></tr></thead>
           <tbody>
@@ -177,19 +179,19 @@ function render() {
         <div class="dls-actions">
           <button class="btn btn-primary" type="submit">Enregistrer</button>
           <span id="dls-statut" class="dls-statut" role="status"></span>
-        </div>
+        </div>` })}
       </section>
 
-      <section class="card dls-card" aria-labelledby="dls-h-badges">
-        <h3 id="dls-h-badges" class="dls-titre">Badges Duels</h3>
+      <section class="card dls-card">
+        ${foldHtml({ cle: 'dls:badges', titre: 'Badges Duels', resume: compte(badges.length, 'badge'), corps: `
         ${badges.length ? `<ul class="dls-badges">${badges.map(badgeHtml).join('')}</ul>` : '<p class="muted small">Aucun badge Duels pour l’instant.</p>'}
         <p class="small muted dls-note">Les interrupteurs se désactivent ici, puis se valident avec Enregistrer.
-          Les images et textes des badges se modifient dans <a href="#place/badges">Badges</a>.</p>
+          Les images et textes des badges se modifient dans <a href="#place/badges">Badges</a>.</p>` })}
       </section>
     </div>
 
-    <section class="card dls-card" aria-labelledby="dls-h-parties">
-      <h3 id="dls-h-parties" class="dls-titre">Duels en cours</h3>
+    <section class="card dls-card">
+      ${foldHtml({ cle: 'dls:parties', titre: 'Duels en cours', resume: `${compte(parties.length, 'duel')} en cours`, corps: `
       <div class="dls-scroll">
         <table class="dls-table dls-parties">
           <thead><tr>
@@ -198,12 +200,12 @@ function render() {
           </tr></thead>
           <tbody>${parties.length ? parties.map(partieHtml).join('') : '<tr><td colspan="7" class="muted">Aucun duel en cours.</td></tr>'}</tbody>
         </table>
-      </div>
+      </div>` })}
     </section>
 
     <div class="dls-colonnes">
-      <section class="card dls-card" aria-labelledby="dls-h-terminees">
-        <h3 id="dls-h-terminees" class="dls-titre">Duels terminés</h3>
+      <section class="card dls-card">
+        ${foldHtml({ cle: 'dls:terminees', titre: 'Duels terminés', resume: `${compte(total, 'partie')} terminée${total > 1 ? 's' : ''}`, corps: `
         <table class="dls-table dls-terminees">
           <thead><tr><th scope="col">Jeu</th><th scope="col">Parties terminées</th></tr></thead>
           <tbody>
@@ -212,7 +214,7 @@ function render() {
               <td>${nb(terminees[cle])}</td>
             </tr>`).join('')}
           </tbody>
-        </table>
+        </table>` })}
       </section>
 
       <section class="card dls-card" aria-labelledby="dls-h-acces">
