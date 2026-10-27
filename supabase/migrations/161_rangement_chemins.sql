@@ -1,6 +1,6 @@
 -- ===== Humane Gang — migration 161 : chemins du rangement (pages /pages/<cat>/, illustrations /assets/cartes/) =====
 -- à appliquer au moment de la mise en ligne du rangement.
--- Hors supabase/appliquer.txt : elle est appliquée à la bascule, pas avant.
+-- Appliquée à la bascule du rangement (27 octobre 2026), juste après la première publication de site/
 -- (a) données : cartes (assets/cards/ -> /assets/cartes/), liens de notifications déjà envoyés, réglages de saisons et de menu ;
 -- (b) fonctions : les liens de page et les validations d'images écrits par la base prennent la forme nouvelle (hg__patch, migration 141).
 -- Les migrations précédentes ne sont pas modifiées : tout passe par des mises à jour de données et des remplacements de texte.

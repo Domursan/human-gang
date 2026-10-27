@@ -24,3 +24,4 @@ supabase/migrations/157_jeux_classement.sql
 supabase/migrations/158_quetes_profil_etat.sql
 supabase/migrations/159_membres_en_ligne.sql
 supabase/migrations/160_flappy_rythme.sql
+supabase/migrations/161_rangement_chemins.sql
