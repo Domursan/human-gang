@@ -28,10 +28,12 @@
 // Ne mesure pas : barres fixes qui masquent le contenu, clavier virtuel, encoches réelles (à vérifier sur un appareil),
 // écrans de partie des jeux à salons (faux Supabase absent).
 // Faux Supabase (tests/fixtures/) : aucune donnée réelle. Écrit tests/shots/a11y-mobile.json.
+// Attentes avant chaque mesure (pas de délai fixe) : fin de redirection (une page de jeu sans partie renvoie vers l'accueil,
+// le libellé indique alors la page d'arrivée), feuilles de style chargées, barre Staff ajoutée (admin), mise en page stable.
 // Lancer : node tests/controles/a11y-mobile.cjs   (ou : npm run test:a11y-mobile)
 const fs = require('fs');
 const path = require('path');
-const { ROOT, SHOTS, check, finish, openPage, sleep, chromium } = require('../lib/harness.cjs');
+const { ROOT, SHOTS, check, finish, openPage, sleep, urlPage, chromium } = require('../lib/harness.cjs');
 
 const LARGEURS = [360, 390];
 const HAUTEUR = { 360: 740, 390: 844 };
@@ -223,70 +225,142 @@ const OPTS = { minCible: MIN_CIBLE, minTexte: MIN_TEXTE, minChamp: MIN_CHAMP };
 const PARALLELE = 4;
 
 /**
+ * Relevés de la mise en page, jusqu'à ce qu'ils soient identiques pendant quatre passages (environ 250 ms) : les tailles
+ * des cibles sont alors finales. Écrit pour page.evaluate : ne fait référence à rien hors de la page.
+ */
+function attendreMiseEnPage() {
+  return new Promise((resolve) => {
+    const t0 = Date.now();
+    let last = '', n = 0;
+    const releve = () => [...document.querySelectorAll('a[href], button, input, select, textarea, summary, label, [role=button], [role=tab], [role=link], [role=checkbox], [role=switch], [role=radio], [role=menuitem], [role=option], h1, h2, h3')]
+      .map((e) => { const r = e.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].map(Math.round).join(','); }).join('|');
+    const tick = () => {
+      const s = releve();
+      n = s === last ? n + 1 : 0; last = s;
+      if (n >= 4 || Date.now() - t0 > 6000) resolve(n >= 4);
+      else setTimeout(tick, 60);
+    };
+    tick();
+  });
+}
+
+/** Erreurs dues à une navigation en cours (redirection) : la mesure est alors reprise sur la page d'arrivée. */
+const TRANSITOIRE = /Execution context was destroyed|frame was detached|Target (page, context or browser )?closed|ERR_ABORTED/i;
+
+/**
+ * Attend que la page soit prête à être mesurée, au lieu de délais fixes :
+ *   1. fin de redirection : l'adresse ne change plus pendant 1 s (une page de jeu sans partie renvoie vers l'accueil) ;
+ *   2. barre des raccourcis Staff (admin, hors panel) : son bouton est ajouté après les droits, par script ;
+ *   3. chaque feuille de style de la page chargée (link.sheet renseigné, y compris celles ajoutées par script) ;
+ *   4. polices web chargées ;
+ *   5. mise en page stable (attendreMiseEnPage).
+ * Renvoie l'adresse d'arrivée.
+ */
+async function attendrePrete(p, { pg, role }) {
+  await p.waitForLoadState('load').catch(() => {});
+  let adresse = p.url(), depuis = Date.now();
+  const fin = Date.now() + 20000;
+  while (Date.now() < fin && Date.now() - depuis < 1000) {
+    await sleep(100);
+    if (p.url() !== adresse) { adresse = p.url(); depuis = Date.now(); }
+  }
+  await p.waitForLoadState('load').catch(() => {});
+  if (role === 'admin' && pg !== 'admin') await p.waitForSelector('#staff-dock .sd-fab', { state: 'attached', timeout: 8000 }).catch(() => {});
+  await p.waitForFunction(() => [...document.querySelectorAll('link[rel~="stylesheet"]')].every((l) => l.sheet), null, { timeout: 15000 }).catch(() => {});
+  await p.evaluate(() => document.fonts.ready).catch(() => {});
+  await p.evaluate(attendreMiseEnPage).catch(() => {});
+  return adresse;
+}
+
+/**
+ * Mesures d'une page prête : défauts de la page entière, menu du haut (ouvert puis refermé), fenêtres modales.
+ * Remplit rapport (meta, scan, nav, navCouvert, dialogues). Chaque ouverture ou fermeture est attendue, pas temporisée.
+ */
+async function mesurer(p, rapport) {
+  rapport.meta = await p.evaluate(() => { const m = document.querySelector('meta[name="viewport"]'); return m ? m.content : null; });
+  rapport.scan = await p.evaluate(scanDom, { ...OPTS, rootSel: null });
+
+  // Menu du haut : ouvert puis refermé au bouton « Menu »
+  const tog = await p.$('.nav-toggle');
+  // Atteignable au doigt ? Sinon (ex. récap : diaporama plein écran qui couvre l'en-tête) : signalé à part.
+  const couvert = tog && await p.evaluate(() => {
+    const t = document.querySelector('.nav-toggle'); const r = t.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return !!hit && !t.contains(hit);
+  });
+  if (tog && await tog.isVisible() && couvert) rapport.navCouvert = true;
+  else if (tog && await tog.isVisible()) {
+    await tog.click();
+    const ouvert = await p.waitForFunction(() => document.querySelector('.site-header')?.classList.contains('nav-open') === true, null, { timeout: 3000 }).then(() => true, () => false);
+    if (ouvert) await p.evaluate(attendreMiseEnPage).catch(() => {});
+    const sNav = await p.evaluate(scanDom, { ...OPTS, rootSel: '.site-header' });
+    await tog.click();
+    const ferme = await p.waitForFunction(() => document.querySelector('.site-header')?.classList.contains('nav-open') !== true, null, { timeout: 3000 }).then(() => true, () => false);
+    rapport.nav = { ouvert, ferme, scan: sNav };
+  }
+
+  // Fenêtres modales : ouvertes, mesurées, refermées au clavier (Échap) ou par leur bouton Fermer
+  const nd = await p.evaluate(() => document.querySelectorAll('dialog').length);
+  for (let i = 0; i < nd; i++) {
+    const ok = await p.evaluate((i) => {
+      const d = document.querySelectorAll('dialog')[i];
+      if (d.open) return false;
+      try { d.showModal(); d.setAttribute('data-a11y-root', ''); return true; } catch (e) { return false; }
+    }, i);
+    if (!ok) continue;
+    await p.waitForFunction(() => document.querySelector('dialog[data-a11y-root]')?.open === true, null, { timeout: 3000 }).catch(() => {});
+    await p.evaluate(attendreMiseEnPage).catch(() => {});
+    const info = await p.evaluate(() => {
+      const d = document.querySelector('dialog[data-a11y-root]');
+      const r = d.getBoundingClientRect();
+      const de = document.documentElement;
+      return { id: d.id || d.className || 'dialog', tientEcran: r.left >= -0.5 && r.right <= de.clientWidth + 0.5 };
+    });
+    const sD = await p.evaluate(scanDom, { ...OPTS, rootSel: 'dialog[data-a11y-root]' });
+    await p.keyboard.press('Escape');
+    const fermeEchap = await p.waitForFunction(() => !document.querySelector('dialog[data-a11y-root]')?.open, null, { timeout: 3000 }).then(() => true, () => false);
+    const boutonFermer = await p.evaluate(() => {
+      const d = document.querySelector('dialog[data-a11y-root]');
+      return [...d.querySelectorAll('button, [role=button], a')].some((b) => {
+        const t = ((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).toLowerCase();
+        return b.getClientRects().length > 0 && /ferm|close|annul|retour|×|✕|✖/.test(t);
+      });
+    });
+    if (!fermeEchap) await p.evaluate(() => { const d = document.querySelector('dialog[data-a11y-root]'); d.close(); });
+    await p.evaluate(() => document.querySelectorAll('[data-a11y-root]').forEach((x) => x.removeAttribute('data-a11y-root')));
+    rapport.dialogues.push({ ...info, fermeEchap, boutonFermer, scan: sD });
+  }
+}
+
+/** Nombre d'essais par contrôle : une redirection tardive ou une navigation en cours reprend la mesure sur la page d'arrivée. */
+const ESSAIS = 3;
+
+/**
  * Contrôle d'une page, pour un rôle et une largeur. Renvoie { rapport, messages } : messages = [{ ok, msg }] à afficher dans l'ordre.
- * rapport est gardé pour le fichier de sortie. Le paysage (pages de jeux) n'est fait qu'à la première largeur.
+ * Le libellé indique la page d'arrivée quand la page a redirigé (membre sans partie : accueil). rapport est gardé pour le fichier de sortie.
+ * Le paysage (pages de jeux) n'est fait qu'à la première largeur.
  */
 async function controler(browser, { pg, role, scenario, fixture, w }) {
   const messages = [];
-  const libelle = `${pg} [${role}]`;
-  const rapport = { page: pg, role, fixture, largeur: w, meta: null, fixes: [], nav: null, dialogues: [], paysage: null, erreur: null, avis: [] };
-  const p = await openPage(browser, { page: pg, fixture, scenario, width: w, height: HAUTEUR[w], mobile: true, dpr: 2, reducedMotion: 'reduce' });
-  try {
-    rapport.meta = await p.evaluate(() => { const m = document.querySelector('meta[name="viewport"]'); return m ? m.content : null; });
-    const s = await p.evaluate(scanDom, { ...OPTS, rootSel: null });
-    rapport.scan = s;
-
-    // Menu du haut : ouvert puis refermé au bouton « Menu »
-    const tog = await p.$('.nav-toggle');
-    // Atteignable au doigt ? Sinon (ex. récap : diaporama plein écran qui couvre l'en-tête) : signalé à part.
-    const couvert = tog && await p.evaluate(() => {
-      const t = document.querySelector('.nav-toggle'); const r = t.getBoundingClientRect();
-      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      return !!hit && !t.contains(hit);
-    });
-    if (tog && await tog.isVisible() && couvert) rapport.navCouvert = true;
-    else if (tog && await tog.isVisible()) {
-      await tog.click(); await sleep(350);
-      const ouvert = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') === true);
-      const sNav = await p.evaluate(scanDom, { ...OPTS, rootSel: '.site-header' });
-      await tog.click(); await sleep(350);
-      const ferme = await p.evaluate(() => document.querySelector('.site-header')?.classList.contains('nav-open') !== true);
-      rapport.nav = { ouvert, ferme, scan: sNav };
+  let rapport = null, p = null, adresse = null;
+  for (let essai = 1; essai <= ESSAIS; essai++) {
+    rapport = { page: pg, role, fixture, largeur: w, meta: null, scan: null, nav: null, dialogues: [], paysage: null, erreur: null, avis: [], arrivee: null };
+    p = await openPage(browser, { page: pg, fixture, scenario, width: w, height: HAUTEUR[w], mobile: true, dpr: 2, reducedMotion: 'reduce' });
+    let transitoire = false;
+    try {
+      adresse = await attendrePrete(p, { pg, role });
+      await mesurer(p, rapport);
+    } catch (e) {
+      transitoire = TRANSITOIRE.test(e.message);
+      if (!transitoire || essai === ESSAIS) rapport.erreur = e.message.split('\n')[0].slice(0, 160);
     }
-
-    // Fenêtres modales : ouvertes, mesurées, refermées au clavier (Échap) ou par leur bouton Fermer
-    const nd = await p.evaluate(() => document.querySelectorAll('dialog').length);
-    for (let i = 0; i < nd; i++) {
-      const ok = await p.evaluate((i) => {
-        const d = document.querySelectorAll('dialog')[i];
-        if (d.open) return false;
-        try { d.showModal(); d.setAttribute('data-a11y-root', ''); return true; } catch (e) { return false; }
-      }, i);
-      if (!ok) continue;
-      await sleep(250);
-      const info = await p.evaluate(() => {
-        const d = document.querySelector('dialog[data-a11y-root]');
-        const r = d.getBoundingClientRect();
-        const de = document.documentElement;
-        return { id: d.id || d.className || 'dialog', tientEcran: r.left >= -0.5 && r.right <= de.clientWidth + 0.5 };
-      });
-      const sD = await p.evaluate(scanDom, { ...OPTS, rootSel: 'dialog[data-a11y-root]' });
-      await p.keyboard.press('Escape'); await sleep(200);
-      const fermeEchap = await p.evaluate(() => !document.querySelector('dialog[data-a11y-root]')?.open);
-      const boutonFermer = await p.evaluate(() => {
-        const d = document.querySelector('dialog[data-a11y-root]');
-        return [...d.querySelectorAll('button, [role=button], a')].some((b) => {
-          const t = ((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).toLowerCase();
-          return b.getClientRects().length > 0 && /ferm|close|annul|retour|×|✕|✖/.test(t);
-        });
-      });
-      if (!fermeEchap) await p.evaluate(() => { const d = document.querySelector('dialog[data-a11y-root]'); d.close(); });
-      await p.evaluate(() => document.querySelectorAll('[data-a11y-root]').forEach((x) => x.removeAttribute('data-a11y-root')));
-      rapport.dialogues.push({ ...info, fermeEchap, boutonFermer, scan: sD });
-    }
-  } catch (e) {
-    rapport.erreur = e.message.split('\n')[0].slice(0, 160);
+    if (essai < ESSAIS && (transitoire || p.url() !== adresse)) { await p.ctx.close(); continue; }
+    break;
   }
+  const arrivee = new URL(p.url()).pathname;
+  rapport.arrivee = arrivee;
+  const redirigee = !arrivee.endsWith(urlPage(pg));
+  const libelle = `${pg} [${role}]` + (redirigee ? ` → redirigée vers ${arrivee}` : '');
   // Erreurs JavaScript de la page : signalées en avis (le contrôle de fumée les compte, ici elles ne sont pas des défauts d'accessibilité)
   rapport.avis = (p.errs || []).slice(0, 2);
   await p.ctx.close();
@@ -312,19 +386,26 @@ async function controler(browser, { pg, role, scenario, fixture, w }) {
 
   // Paysage (pages de jeux) : défilement horizontal et barres fixes trop hautes. Une seule fois par page et rôle.
   if (JEUX.has(pg) && w === LARGEURS[0]) {
-    const q = await openPage(browser, { page: pg, fixture, scenario, width: PAYSAGE.width, height: PAYSAGE.height, mobile: true, dpr: 2, reducedMotion: 'reduce' });
-    try {
-      const s = await q.evaluate(scanDom, { ...OPTS, rootSel: null });
-      const hautes = s.fixes.filter((f) => f.pourcentHauteur > 40);
-      const pd = [];
-      if (s.hscroll > 0) pd.push(`défilement horizontal ${s.hscroll} px`);
-      const av = hautes.map((f) => `barre fixe ${f.pourcentHauteur} % de la hauteur : ${f.el}`);
-      rapport.paysage = { hscroll: s.hscroll, avis: av };
-      messages.push({ ok: pd.length === 0, msg: `${libelle} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}` });
-    } catch (e) {
-      messages.push({ ok: false, msg: `${libelle} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})` });
+    let fini = null;
+    for (let essai = 1; essai <= ESSAIS && !fini; essai++) {
+      const q = await openPage(browser, { page: pg, fixture, scenario, width: PAYSAGE.width, height: PAYSAGE.height, mobile: true, dpr: 2, reducedMotion: 'reduce' });
+      try {
+        const adr = await attendrePrete(q, { pg, role });
+        const s = await q.evaluate(scanDom, { ...OPTS, rootSel: null });
+        if (!(q.url() !== adr && essai < ESSAIS)) {
+          const hautes = s.fixes.filter((f) => f.pourcentHauteur > 40);
+          const pd = [];
+          if (s.hscroll > 0) pd.push(`défilement horizontal ${s.hscroll} px`);
+          const av = hautes.map((f) => `barre fixe ${f.pourcentHauteur} % de la hauteur : ${f.el}`);
+          rapport.paysage = { hscroll: s.hscroll, avis: av };
+          fini = { ok: pd.length === 0, msg: `${libelle} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}` };
+        }
+      } catch (e) {
+        if (essai === ESSAIS || !TRANSITOIRE.test(e.message)) fini = { ok: false, msg: `${libelle} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})` };
+      }
+      await q.ctx.close();
     }
-    await q.ctx.close();
+    if (fini) messages.push(fini);
   }
   return { rapport, messages };
 }
