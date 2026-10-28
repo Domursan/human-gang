@@ -31,7 +31,7 @@ for (const [code, cartes] of Object.entries(D)) {
         .toFile(path.join(ICI, 'local', NOMS[code], `${num} - ${propre(c.nom)}.png`));
       rapport.push({ code, n: c.n, ok: true });
     } catch (e) { rapport.push({ code, n: c.n, ok: false, err: String(e.message || e), img: c.img }); }
-    await new Promise((ok) => setTimeout(ok, 150));
+    await new Promise((ok) => setTimeout(ok, 1500));
   }
 }
 fs.writeFileSync(path.join(ICI, 'rapport.json'), JSON.stringify(rapport, null, 1));
