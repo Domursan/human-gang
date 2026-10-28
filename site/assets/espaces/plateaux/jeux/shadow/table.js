@@ -29,6 +29,9 @@ const CARTE_EQUIPEMENT = ['gobelin', 'gobelin2', 'banane'];
 const POUVOIR_CIBLE = ['franklin', 'georges'];
 const POUVOIR_SANS_CIBLE = ['allie'];
 const MITRAILLEUSE = 'T:mitrailleuse';
+/** Équipements qui ont une illustration (assets/images/plateaux/shadow/equip-<id>.webp). */
+const EQUIP_IMAGE = ['toge', 'chapelet', 'lance', 'talisman', 'broche', 'boussole',
+  'tronconneuse', 'hachoir', 'hache', 'masamune', 'mitrailleuse', 'revolver'];
 /** Préfixe de carte → liste des contenus. */
 const LISTE_CARTE = { V: 'vision', L: 'lumiere', T: 'tenebres' };
 /** Libellé du bouton d'un lieu où l'action est une pioche automatique. */
@@ -455,7 +458,8 @@ export function creer(root, ctx) {
   function equipementsHtml(cartes, qui) {
     if (!cartes.length) return '';
     return `<ul class="sh-equip" aria-label="Équipements de ${esc(qui || '?')}">${cartes.map((c) =>
-      `<li><details class="sh-equip-item"><summary>${esc(carteNom(c))}</summary><p>${esc(carteItem(c)?.texte || '')}</p></details></li>`).join('')}</ul>`;
+      `<li><details class="sh-equip-item is-${c.startsWith('L:') ? 'lumiere' : 'tenebres'}"><summary>${EQUIP_IMAGE.includes(idCarte(c))
+        ? `<img class="sh-equip-img" src="${esc(imagePlateau('shadow', `equip-${idCarte(c)}`))}" alt="" width="40" height="40" loading="lazy">` : ''}${esc(carteNom(c))}</summary><p>${esc(carteItem(c)?.texte || '')}</p></details></li>`).join('')}</ul>`;
   }
 
   /* ---------- Joueurs, piste, plateau ---------- */
