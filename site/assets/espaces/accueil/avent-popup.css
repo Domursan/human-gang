@@ -1,0 +1,170 @@
+/* ===== Humane Gang — calendrier de l'Avent : paquet cadeau (barre du haut) et popup (migration 096) =====
+   Chargé à la demande par saisons-css.js (popup : avent-gift.js, avent-popup.js, avent.js), en saison seulement.
+   Les animations sont coupées si « Effets visuels » est désactivé (html[data-fx="off"]) ou si le mouvement est réduit. */
+
+/* ---------- Paquet cadeau (barre du haut, entre le logo et le menu) ---------- */
+.site-header .av-gift-zone { flex: 1 1 auto; display: flex; justify-content: center; align-items: center; min-width: 0; }
+.av-gift { position: relative; display: inline-flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 18px 6px 8px; border-radius: 999px;
+  border: 1px solid #5a2430; background: linear-gradient(135deg, #3a1219, #23131a); color: var(--text); font: inherit; cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(226, 199, 126, .45); animation: av-halo 2.6s ease-out infinite; }
+.av-gift:hover { border-color: var(--sand); }
+.av-gift:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.av-gift-ico { width: 44px; height: 44px; flex: none; animation: av-wiggle 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.av-gift-txt { display: flex; flex-direction: column; line-height: 1.15; text-align: left; }
+.av-gift-txt b { font-size: 14px; }
+.av-gift-txt small { font-size: 12px; color: var(--sand); }
+.av-gift-badge { position: absolute; top: -4px; left: 38px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--sand); color: #121212;
+  font: 700 12px/22px Inter, sans-serif; text-align: center; border: 2px solid var(--bg); }
+.av-gift-badge[hidden] { display: none; }
+@keyframes av-wiggle { 0%, 70%, 100% { transform: rotate(0); } 74% { transform: rotate(-9deg); } 78% { transform: rotate(8deg); } 82% { transform: rotate(-6deg); } 86% { transform: rotate(4deg); } 90% { transform: rotate(0); } }
+@keyframes av-halo { 0% { box-shadow: 0 0 0 0 rgba(226, 199, 126, .45); } 70%, 100% { box-shadow: 0 0 0 12px rgba(226, 199, 126, 0); } }
+
+/* ---------- Popup : coque ---------- */
+.av-dlg { width: min(860px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--border-strong, #3A3A40); border-radius: 24px;
+  background: var(--surface); color: var(--text); box-shadow: 0 30px 90px rgba(0, 0, 0, .6); overflow: hidden; }
+.av-dlg[open] { display: flex; flex-direction: column; }
+.av-dlg::backdrop { background: rgba(6, 4, 10, .72); backdrop-filter: blur(3px); }
+.av-dlg-in { position: relative; display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; animation: av-dlg-in .45s cubic-bezier(.2, .9, .3, 1.2); }
+@keyframes av-dlg-in { from { opacity: 0; transform: translateY(20px) scale(.92); } to { opacity: 1; transform: none; } }
+.av-dlg-head { position: relative; padding: 22px 140px 18px 26px; background:
+  linear-gradient(90deg, transparent calc(100% - 118px), rgba(226, 199, 126, .95) calc(100% - 118px), rgba(226, 199, 126, .95) calc(100% - 104px), transparent calc(100% - 104px)),
+  linear-gradient(135deg, #7c1426, #3b0f1c); }
+.av-eyebrow { margin: 0; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #F7D9A0; }
+.av-dlg h2 { margin: 2px 0 2px; font: 400 clamp(24px, 5vw, 32px)/1.05 var(--font-display); text-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.av-sub { margin: 0; font-size: 14px; color: #f4dfe2; }
+.av-bow { position: absolute; right: 78px; top: 50%; width: 66px; height: 48px; transform: translateY(-50%); pointer-events: none; }
+.av-close { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .35);
+  background: rgba(0, 0, 0, .35); color: #fff; cursor: pointer; display: grid; place-items: center; }
+.av-close:hover { background: rgba(0, 0, 0, .6); }
+.av-close:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.av-dlg-body { padding: 20px 26px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.av-loading { margin: 24px 0; text-align: center; color: var(--muted); }
+
+/* Légende */
+.av-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); margin: 0; }
+.av-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.av-sw { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.av-sw.is-today { background: var(--brand-red); outline: 2px solid var(--rb-3); }
+.av-sw.is-late { background: var(--ss-bg); outline: 2px dashed var(--rust); }
+.av-sw.is-locked { background: #2B1D22; outline: 1px solid var(--ss-border); }
+
+/* ---------- Grille : cases carrées ---------- */
+.av-grid { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(8, 84px); gap: 10px; justify-content: center; }
+.av-grid li { min-width: 0; }
+.av-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; aspect-ratio: 1 / 1;
+  min-width: 44px; padding: 4px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; overflow: hidden; }
+.av-cell:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
+@media (hover: hover) { .av-cell:hover:not([aria-disabled="true"]) { transform: translateY(-2px); } }
+.av-cell { transition: transform .15s; }
+.av-n { font: 400 16px/1 var(--font-display); color: var(--muted); }
+.av-k { display: contents; }
+.av-ico { width: 24px; height: 24px; display: block; }
+.av-val { font-size: 12px; font-weight: 700; line-height: 1; }
+.av-k-paillettes { color: var(--sand); } .av-k-carte { color: var(--slate); } .av-k-souvenir { color: var(--rose); }
+.av-k-question { color: var(--sage-text); } .av-k-booster { color: var(--plum); }
+.av-cell.is-open { border-color: #34343a; }
+.av-cell.is-sel { background: var(--sand); border: 2px solid var(--rb-3); color: #121212; }
+.av-cell.is-sel .av-n, .av-cell.is-sel .av-val, .av-cell.is-sel .av-ico { color: #121212; }
+.av-cell.is-locked { cursor: default; border-color: var(--ss-border); background:
+  linear-gradient(90deg, transparent 44%, var(--brand-red) 44%, var(--brand-red) 56%, transparent 56%),
+  linear-gradient(0deg, transparent 44%, var(--brand-red) 44%, var(--brand-red) 56%, transparent 56%), #2B1D22; }
+.av-cell.is-locked .av-n { color: #F2EFEA; text-shadow: 0 1px 2px #000; font-size: 18px; }
+.av-cell.is-locked svg { color: var(--rose); }
+.av-cell.is-today { border: 2px solid var(--rb-3); box-shadow: 0 0 0 4px rgba(226, 199, 126, .25), 0 0 26px rgba(226, 199, 126, .35);
+  animation: av-pulse 1.8s ease-in-out infinite; background:
+  linear-gradient(90deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%),
+  linear-gradient(0deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%), var(--brand-red); }
+.av-cell.is-today .av-n { color: #fff; font-size: 24px; text-shadow: 0 2px 2px #000; }
+.av-cell.is-today .av-val { color: #fff; text-shadow: 0 1px 2px #000; }
+@keyframes av-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.av-cell.is-late { background: var(--ss-bg); border: 2px dashed var(--rust); }
+.av-cell.is-late .av-n { color: var(--text); }
+.av-cell.is-late .av-val { color: var(--rust); }
+.av-cell.is-late svg { color: var(--rust); }
+.av-grp { position: absolute; top: 5px; right: 6px; line-height: 0; color: var(--sage-text); }
+.av-grp svg { width: 14px; height: 14px; }
+.av-cell.is-sel .av-grp { color: #121212; }
+
+/* Déchirure de la case à l'ouverture (la classe n'est posée que si les effets sont permis). */
+.av-cell.is-tearing::before, .av-cell.is-tearing::after { content: ''; position: absolute; inset: 0; z-index: 3; background:
+  linear-gradient(90deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%),
+  linear-gradient(0deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%), var(--brand-red); }
+.av-cell.is-tearing::before { clip-path: polygon(0 0, 55% 0, 45% 30%, 58% 55%, 42% 100%, 0 100%); animation: av-tear-l .7s ease-in forwards; }
+.av-cell.is-tearing::after { clip-path: polygon(55% 0, 100% 0, 100% 100%, 42% 100%, 58% 55%, 45% 30%); animation: av-tear-r .7s ease-in forwards; }
+@keyframes av-tear-l { to { transform: translate(-70%, 14%) rotate(-22deg); opacity: 0; } }
+@keyframes av-tear-r { to { transform: translate(70%, 14%) rotate(22deg); opacity: 0; } }
+
+/* Contenu révélé : apparition douce quand la case vient d'être ouverte */
+.av-rv.is-new > * { animation: av-rv-in .45s cubic-bezier(.2, .9, .3, 1.3); }
+@keyframes av-rv-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+
+/* ---------- Pluie (dans le dialog, au-dessus du contenu, sans interaction) ---------- */
+.av-rain { position: fixed; inset: 0; pointer-events: none; z-index: 2147483000; overflow: hidden; }
+.av-drop { position: absolute; top: -60px; will-change: transform; animation: av-fall var(--d) linear var(--delay) forwards; }
+.av-drop > svg { display: block; width: 100%; height: 100%; animation: av-sway var(--s) ease-in-out var(--delay) infinite alternate; }
+@keyframes av-fall { from { transform: translate3d(0, 0, 0) rotate(0); } to { transform: translate3d(var(--dx), calc(100vh + 120px), 0) rotate(var(--r)); } }
+@keyframes av-sway { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
+
+/* Mouvement réduit ou effets coupés : ni pluie, ni pulsation, ni oscillation du paquet */
+@media (prefers-reduced-motion: reduce) {
+  .av-rain, .av-drop { display: none; }
+  .av-gift, .av-gift-ico, .av-cell.is-today, .av-dlg-in, .av-rv.is-new > * { animation: none; }
+}
+html[data-fx="off"] .av-rain, html[data-fx="off"] .av-drop { display: none; }
+html[data-fx="off"] .av-gift, html[data-fx="off"] .av-gift-ico, html[data-fx="off"] .av-cell.is-today, html[data-fx="off"] .av-dlg-in,
+html[data-fx="off"] .av-rv.is-new > * { animation: none; }
+
+/* ---------- Téléphone : paquet seul à côté du logo, popup plein écran, cases 6 × 4 ---------- */
+@media (max-width: 760px) {
+  .site-header .brand { flex: 0 0 auto; }
+  .site-header .av-gift-zone { justify-content: flex-start; }
+  .av-gift { padding: 4px; min-height: 48px; gap: 0; }
+  .av-gift-txt { display: none; }
+  .av-gift-ico { width: 38px; height: 38px; }
+  .av-gift-badge { left: auto; right: -6px; top: -6px; }
+  .av-dlg { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; border: 0; }
+  .av-dlg-in { height: 100%; }
+  .av-dlg-head { padding: 18px 64px 16px 16px; }
+  .av-dlg-head .av-close { top: 10px; right: 10px; }
+  .av-bow { display: none; }
+  .av-dlg-body { padding: 16px; }
+  .av-legend { font-size: 11px; }
+  .av-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; width: 100%; }
+  .av-cell { border-radius: 10px; padding: 2px; gap: 2px; }
+  .av-n { font-size: 13px; }
+  .av-cell.is-locked .av-n { font-size: 15px; }
+  .av-cell.is-today .av-n { font-size: 18px; }
+  .av-ico { width: 20px; height: 20px; }
+  .av-val { font-size: 10px; }
+  .av-val.is-txt { display: none; }
+  .av-grp { top: 3px; right: 3px; }
+  .av-grp svg { width: 11px; height: 11px; }
+}
+
+/* ---------- Contenu révélé : plusieurs éléments par case ---------- */
+.av-rv-items { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.av-rv-item { position: relative; flex: 1 1 260px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
+  background: var(--ss-bg); border: 1px solid var(--ss-border); border-radius: var(--radius); padding: 14px; }
+.av-rv-card { flex: 0 1 200px; align-items: center; }
+.av-rv-paid .av-big { font-size: clamp(26px, 6vw, 40px); overflow-wrap: anywhere; line-height: 1.05; }
+.av-rv-paid p { margin: 0; }
+.av-rv-txt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.av-rv-souvenir .av-photo { width: 100%; max-width: 160px; height: auto; aspect-ratio: 1 / 1; }
+.av-rv-question { flex-basis: 100%; }
+.av-rv-booster { flex: 0 1 220px; }
+.av-rv-note { flex-basis: 100%; margin: 0; }
+.av-qty { position: absolute; top: 8px; right: 8px; min-width: 30px; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--sand); color: #121212;
+  font: 700 13px/26px Inter, sans-serif; text-align: center; }
+.av-rv-card .av-qty { top: -8px; right: -8px; }
+/* Pastille « +N » : autres éléments de la case */
+.av-more { position: absolute; left: 4px; top: 4px; min-width: 22px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #F7D9A0;
+  font: 700 11px/18px Inter, sans-serif; text-align: center; }
+.av-cell .av-val { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .av-rv-item { flex-basis: 100%; }
+  .av-rv-card { flex-basis: 150px; }
+  .av-more { font-size: 9px; min-width: 16px; height: 14px; line-height: 14px; padding: 0 3px; left: 2px; top: 2px; }
+}
+@media (max-width: 760px) {
+  .av-dlg-head { background: linear-gradient(135deg, #7c1426, #3b0f1c); }
+}

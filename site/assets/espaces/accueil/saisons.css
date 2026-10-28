@@ -1,6 +1,6 @@
 /* ===== Humane Gang — rendez-vous saisonniers (migration 096) =====
-   T1 calendrier de l'Avent (accueil), T3 saison des Worlds (accueil), T4 anniversaire du gang (accueil, cartes),
-   T2 soirée déballage (Secret Santa). Chargé à la demande par assets/espaces/accueil/avent.js, saisons.js, anniv.js, ss-unwrap.js. */
+   T1 contenu révélé du calendrier de l'Avent (popup, avent-popup.css), T3 saison des Worlds (accueil), T4 anniversaire du gang
+   (accueil, cartes), T2 soirée déballage (Secret Santa). Chargé à la demande par saisons-css.js. */
 
 /* ---------- Commun ---------- */
 .sz-stack { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
@@ -15,45 +15,7 @@
 .sz-gauge { height: 10px; border-radius: 999px; background: var(--progress-bg, #26262A); overflow: hidden; margin: 10px 0 8px; }
 .sz-gauge > span { display: block; height: 100%; background: var(--sage-text); border-radius: inherit; transition: width .4s ease; }
 
-/* ---------- T1 : calendrier de l'Avent ---------- */
-.av-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin: 14px 0 8px; list-style: none; padding: 0; }
-.av-cell { position: relative; min-height: 52px; min-width: 44px; width: 100%; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface); color: var(--text); font: inherit; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 2px; padding: 4px 2px; cursor: pointer; overflow: hidden; }
-.av-cell:focus-visible { outline: 3px solid var(--sand); outline-offset: 2px; }
-.av-n { font-size: 11px; color: var(--muted); line-height: 1; }
-.av-lab { font-size: 11px; font-weight: 700; line-height: 1.1; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.av-k-paillettes { color: var(--sand); } .av-k-carte { color: var(--slate); } .av-k-souvenir { color: var(--rose); }
-.av-k-question { color: var(--sage-text); } .av-k-booster { color: var(--plum); }
-/* Case fermée : papier cadeau (ruban croisé). */
-.av-cell.is-locked { background:
-  linear-gradient(90deg, transparent 44%, var(--brand-red) 44%, var(--brand-red) 56%, transparent 56%),
-  linear-gradient(0deg, transparent 44%, var(--brand-red) 44%, var(--brand-red) 56%, transparent 56%), #2B1D22;
-  border-color: var(--ss-border); }
-.av-cell.is-locked .av-n { font-family: var(--font-display); font-size: 15px; color: #F2EFEA; text-shadow: 0 1px 2px #000; }
-.av-cell.is-locked svg { color: var(--rose); }
-.av-cell.is-today { background:
-  linear-gradient(90deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%),
-  linear-gradient(0deg, transparent 42%, var(--sand) 42%, var(--sand) 58%, transparent 58%), var(--brand-red);
-  border: 2px solid var(--rb-3); box-shadow: 0 0 0 3px rgba(226, 199, 126, .25); }
-.av-cell.is-today .av-n { font-family: var(--font-display); font-size: 18px; color: #fff; text-shadow: 0 1px 2px #000; }
-.av-cell.is-today .av-lab { color: #fff; text-shadow: 0 1px 2px #000; }
-.av-cell.is-late { background: var(--ss-bg); border: 1px dashed var(--rust); }
-.av-cell.is-late .av-n { color: var(--text); }
-.av-cell.is-late .av-lab { color: var(--rust); font-size: 10px; }
-.av-cell.is-sel { background: var(--sand); border: 2px solid var(--rb-3); }
-.av-cell.is-sel .av-n { font-family: var(--font-display); font-size: 18px; color: #121212; }
-.av-cell.is-sel .av-lab { color: #121212; }
-.av-grp { position: absolute; top: 3px; right: 4px; color: var(--sage-text); line-height: 0; }
-.av-cell.is-locked .av-grp { color: var(--sage-text); }
-.av-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
-.av-legend span { display: inline-flex; align-items: center; gap: 5px; }
-/* Déchirure du papier à l'ouverture (coupée si « Effets visuels » est désactivé : la classe n'est pas posée). */
-.av-cell.is-tearing::before, .av-cell.is-tearing::after { content: ''; position: absolute; inset: 0; background: inherit; z-index: 2; }
-.av-cell.is-tearing::before { clip-path: polygon(0 0, 55% 0, 45% 30%, 58% 55%, 42% 100%, 0 100%); animation: av-tear-l .6s ease-in forwards; }
-.av-cell.is-tearing::after { clip-path: polygon(55% 0, 100% 0, 100% 100%, 42% 100%, 58% 55%, 45% 30%); animation: av-tear-r .6s ease-in forwards; }
-@keyframes av-tear-l { to { transform: translate(-60%, 10%) rotate(-18deg); opacity: 0; } }
-@keyframes av-tear-r { to { transform: translate(60%, 10%) rotate(18deg); opacity: 0; } }
+/* ---------- T1 : contenu révélé du calendrier de l'Avent (la grille et la popup : avent-popup.css) ---------- */
 .av-reveal { background: var(--ss-bg); border: 1px solid var(--ss-border); border-radius: var(--radius); padding: 16px; display: flex; gap: 14px; align-items: flex-start; }
 .av-reveal-media { flex: none; }
 .av-reveal-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }
@@ -70,8 +32,8 @@
 .av-group { padding: 14px 16px; }
 .av-group .sz-h3 { display: inline-flex; align-items: center; gap: 6px; }
 .av-count { font-weight: 700; color: var(--sand); }
-.av-remind { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius-sm);
-  background: var(--ss-bg); border: 1px solid var(--ss-border); color: var(--text); text-decoration: none; min-height: 44px; }
+.av-remind { display: flex; align-items: center; gap: 10px; width: 100%; font: inherit; color: var(--text); cursor: pointer; margin: 0 0 16px; padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--ss-bg); border: 1px solid var(--ss-border); text-decoration: none; min-height: 44px; }
 @media (max-width: 420px) {
   .av-reveal { flex-direction: column; align-items: stretch; }
   .av-reveal-media { align-self: center; }
@@ -156,8 +118,6 @@
   .an-hero { flex-direction: column-reverse; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .sz-gauge > span { transition: none; } }
-/* Pendant le calendrier de l’Avent, il remplace le bandeau « Événement en cours » de l’accueil. */
-#dyn-banner[data-avent] { display: none !important; }
 
 /* ---------- Panel : section « Saisons » (admin-saisons.js) ---------- */
 .zav-days { display: flex; flex-direction: column; gap: 6px; }

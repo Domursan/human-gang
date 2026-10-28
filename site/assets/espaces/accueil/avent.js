@@ -1,14 +1,17 @@
 // ===== Humane Gang — calendrier de l'Avent du gang (T1, migration 096) =====
 /*
- * Rôle : la tuile « Calendrier de l'Avent » de l'accueil (1er → 31 décembre) : 24 cases en papier cadeau, la case du jour
- * s'ouvre à 6 h (heure de Zurich, calculée par le serveur), les cases oubliées se rattrapent jusqu'au 31. Ouvrir une case
- * la déchire (animation coupée si « Effets visuels » est désactivé) et révèle son contenu : Paillettes, carte, souvenir,
- * question bonus ou booster. Quatre cases sont collectives : une jauge montre combien de membres l'ont ouverte ; au seuil,
- * chacun réclame le bonus du gang. Rappel discret sur la page Cartes (cartesReminder).
+ * Rôle : le calendrier de l'Avent (1er → 31 décembre) : 24 cases en papier cadeau, la case du jour s'ouvre à 6 h
+ * (heure de Zurich, calculée par le serveur), les cases oubliées se rattrapent jusqu'au 31. Ouvrir une case la déchire
+ * (animation coupée si « Effets visuels » est désactivé) et révèle son contenu : Paillettes, carte, souvenir, question
+ * bonus ou booster. Quatre cases sont collectives : une jauge montre combien de membres l'ont ouverte ; au seuil,
+ * chacun réclame le bonus du gang.
+ * Ce module dessine le calendrier dans un conteneur donné : la popup (avent-popup.js), ouverte depuis le paquet cadeau
+ * de l'en-tête (avent-gift.js) ou le rappel de la page Cartes (cartesReminder).
  * RPC : hg_advent_me, hg_advent_open, hg_advent_answer, hg_advent_claim_group. Tout est vérifié et payé par le serveur ;
  * le contenu d'une case n'arrive qu'une fois la case ouverte.
- * Dépendances : core.js (sb, esc, toast, errMsg, motionAllowed), cartes-ui.js (cardHtml), photos.js (signedUrls), icons.js.
- * Exporte : adventSeason(), mountAdvent(box), cartesReminder(selector).
+ * Dépendances : core.js (sb, esc, toast, errMsg, motionAllowed), cartes-ui.js (cardHtml), photos.js (signedUrls), icons.js,
+ * saisons-css.js, avent-date.js, avent-gift.js (adventLeft), avent-popup.js (import dynamique, rappel des Cartes).
+ * Exporte : adventSeason(), mountAdvent(box, opts), adventSubtitle(data), cartesReminder(selector).
  */
 import { sb, esc, toast, errMsg, motionAllowed } from '../../commun/core.js';
 import { cardHtml, rarityLabel } from '../cartes/cartes-ui.js';
@@ -16,92 +19,133 @@ import { signedUrls } from '../irl/photos.js';
 import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
 import { adventSeason } from './avent-date.js';
+import { adventLeft } from './avent-gift.js';
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const KIND_LABEL = { paillettes: 'Paillettes', carte: 'Carte', souvenir: 'Souvenir', question: 'Question', booster: 'Booster' };
-const ICON_LOCK = svg('lock', { size: 14 });
+const ICON_LOCK = svg('lock', { size: 16 });
 const ICON_GANG = svg('users', { size: 12 });
+/** Icônes des cases (tracées pour le calendrier ; la couleur vient de la classe av-k-<type>). */
+const ICON = {
+  paillettes: '<svg class="av-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.8 5.6L19 9.5l-5.2 1.9L12 17l-1.8-5.6L5 9.5l5.2-1.9z"/><path d="M19 15l.9 2.4 2.1.6-2.1.8L19 21l-.9-2.2-2.1-.8 2.1-.6z" opacity=".7"/></svg>',
+  carte: '<svg class="av-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M12 8l1.4 2.8 3 .4-2.2 2 .6 3-2.8-1.5-2.8 1.5.6-3-2.2-2 3-.4z" fill="currentColor" stroke="none"/></svg>',
+  souvenir: '<svg class="av-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-3h5L16 7"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+  question: '<svg class="av-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>',
+  booster: '<svg class="av-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12l-1 3 1 3-1 3 1 3-1 3 1 3H6l1-3-1-3 1-3-1-3 1-3z"/><path d="M10 10h4M10 14h4"/></svg>',
+  sablier: '<svg class="av-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 3h12M6 21h12M7 3c0 5 10 6 10 9s-10 4-10 9M17 3c0 5-10 6-10 9s10 4 10 9"/></svg>',
+};
 
 export { adventSeason } from './avent-date.js';
+export { itemCount, shortN };
 
-/** État de la tuile : réponse de hg_advent_me, case choisie, dernier résultat d'ouverture. */
-const A = { data: null, sel: null, box: null, urls: new Map() };
-
-/** Libellé court d'une case ouverte (« +25 », « Carte »…). */
-function shortLabel(c) {
-  if (!c) return 'Ouverte';
-  if (c.kind === 'paillettes') return `+${Number(c.paid ?? c.reward) || 0}`;
-  return KIND_LABEL[c.kind] || 'Ouverte';
-}
+/** État du calendrier : réponse de hg_advent_me, case choisie, rendu à faire après une ouverture, rappels de la popup. */
+const A = { data: null, sel: null, fresh: null, box: null, urls: new Map(), bound: new WeakSet(), onUpdate: null, onOpened: null };
 
 /** HTML d'une case de la grille. */
-function cellHtml(d, today) {
+function cellHtml(d) {
   const n = d.day;
   const grp = d.group ? `<span class="av-grp" aria-hidden="true">${ICON_GANG}</span>` : '';
+  const gTxt = d.group ? ', case collective' : '';
   const sel = A.sel === n;
   if (d.state === 'ouverte') {
-    const c = d.content;
-    return `<li><button type="button" class="av-cell${sel ? ' is-sel' : ''}" data-day="${n}" aria-pressed="${sel}"
-      aria-label="Case du ${n}, ouverte : ${esc(KIND_LABEL[c?.kind] || 'contenu')}${d.group ? ', case collective' : ''}">
-      ${grp}<span class="av-n">${n}</span><span class="av-lab av-k-${esc(c?.kind || '')}">${esc(shortLabel(c))}</span></button></li>`;
+    const c = d.content || {};
+    const kind = c.kind || '';
+    const paid = Number(c.paid ?? c.reward) || 0;
+    const others = Math.max(0, itemCount(c) - 1);
+    const val = paid > 0 ? `+${shortN(paid)}` : (KIND_LABEL[kind] || '');
+    const more = others > 0 ? `<span class="av-more" aria-hidden="true">+${others}</span>` : '';
+    const moreTxt = others > 0 ? `, et ${others} autre${others > 1 ? 's' : ''} élément${others > 1 ? 's' : ''}` : '';
+    return `<li><button type="button" class="av-cell is-open${sel ? ' is-sel' : ''}" data-day="${n}" aria-pressed="${sel}"
+      aria-label="Case du ${n}, ouverte : ${esc(KIND_LABEL[kind] || 'contenu')}${paid > 0 ? `, ${fmtN(paid)} Paillettes` : ''}${moreTxt}${gTxt}">
+      ${grp}<span class="av-n">${n}</span><span class="av-k av-k-${esc(kind)}">${ICON[kind] || ''}<span class="av-val${paid > 0 ? '' : ' is-txt'}">${esc(val)}</span></span>${more}</button></li>`;
   }
   if (d.state === 'a_ouvrir') {
-    return `<li><button type="button" class="av-cell is-today" data-day="${n}" aria-label="Case du ${n} : à ouvrir aujourd’hui${d.group ? ', case collective' : ''}">
-      ${grp}<span class="av-n">${n}</span><span class="av-lab">Ouvrir</span></button></li>`;
+    return `<li><button type="button" class="av-cell is-today" data-day="${n}" aria-label="Case du ${n} : à ouvrir aujourd’hui${gTxt}">
+      ${grp}<span class="av-n">${n}</span><span class="av-val">Ouvrir</span></button></li>`;
   }
   if (d.state === 'a_rattraper') {
-    return `<li><button type="button" class="av-cell is-late" data-day="${n}" aria-label="Case du ${n} : à rattraper avant le 31${d.group ? ', case collective' : ''}">
-      ${grp}<span class="av-n">${n}</span><span class="av-lab">À rattraper</span></button></li>`;
+    return `<li><button type="button" class="av-cell is-late" data-day="${n}" aria-label="Case du ${n} : à rattraper avant le 31${gTxt}">
+      ${grp}<span class="av-n">${n}</span>${ICON.sablier}<span class="av-val is-txt">À rattraper</span></button></li>`;
   }
   return `<li><button type="button" class="av-cell is-locked" data-day="${n}" aria-disabled="true"
-    aria-label="Case du ${n} : s’ouvre le ${n} décembre à 6 h${d.group ? ', case collective' : ''}">
+    aria-label="Case du ${n} : s’ouvre le ${n} décembre à 6 h${gTxt}">
     ${grp}<span class="av-n">${n}</span>${d.group ? '' : ICON_LOCK}</button></li>`;
 }
 
 /** Sous-titre : « 12 cases ouvertes sur 13 · une à rattraper avant le 31 ». */
-function subtitle(data) {
+export function adventSubtitle(data) {
   const late = data.days.filter((d) => d.state === 'a_rattraper').length;
   const opened = data.opened || 0;
   const avail = Math.min(24, data.today || 0);
   if (data.complete) return 'Les 24 cases sont ouvertes : calendrier complet !';
   let s = `${opened} ${opened > 1 ? 'cases ouvertes' : 'case ouverte'} sur ${avail}`;
   if (late) s += ` · ${late === 1 ? 'une' : late} à rattraper avant le 31`;
-  if (data.today >= 24 && !late && opened >= 24) s = 'Calendrier complet';
   return s;
 }
 
-/** Contenu révélé d'une case ouverte (panneau sous la grille). */
+/** Nombre de Paillettes, formaté à la française (espace fine insécable). */
+const fmtN = (n) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0);
+/** Version courte pour une case de 52 px : « +1,2 M », « +25 000 » -> « +25 k ». */
+function shortN(n) {
+  n = Number(n) || 0;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(n % 1e6 === 0 ? 0 : 1).replace('.', ',')} M`;
+  if (n >= 1e4) return `${(n / 1e3).toFixed(n % 1e3 === 0 ? 0 : 1).replace('.', ',')} k`;
+  return fmtN(n);
+}
+/** Éléments d'une case (Paillettes, cartes, boosters, souvenir, question), tous ensemble, avec la compatibilité card/booster. */
+function contentItems(c) {
+  const cards = Array.isArray(c.cards) && c.cards.length ? c.cards : (c.card ? [{ ...c.card, qty: 1, copies: c.serial ? [{ serial: c.serial, shiny: !!c.shiny }] : [] }] : []);
+  const boosters = Array.isArray(c.boosters) && c.boosters.length ? c.boosters : (c.booster ? [{ ...c.booster, qty: 1 }] : []);
+  const hasMoment = !!(c.moment || c.event);
+  return { cards, boosters, hasMoment, paid: Number(c.paid ?? c.reward) || 0, question: c.question };
+}
+/** Nombre d'éléments de la case (pour la pastille « +N » de la grille). */
+function itemCount(c) {
+  const { cards, boosters, hasMoment, paid, question } = contentItems(c || {});
+  return (paid > 0 ? 1 : 0) + cards.length + boosters.length + (hasMoment ? 1 : 0) + (question ? 1 : 0);
+}
+
+/** Une carte (avec « ×N » si on en a plusieurs exemplaires). */
+function cardItemHtml(card, qty, copy) {
+  const q = Number(qty) || 1;
+  return `<div class="av-rv-item av-rv-card">${cardHtml({ ...card }, { size: 'sm', shiny: !!copy?.shiny, serial: copy?.serial })}${q > 1 ? `<span class="av-qty">×${q}</span>` : ''}</div>`;
+}
+
+/** Contenu révélé d'une case ouverte (panneau sous la grille) : tout ce que la case contient. */
 function revealHtml(d) {
   const c = d.content || {};
+  const { cards, boosters, hasMoment, paid, question } = contentItems(c);
   const head = `<p class="sz-eyebrow">Case du ${d.day}</p>`;
-  if (c.kind === 'carte' && c.card) {
-    const card = { ...c.card };
-    return `<div class="av-reveal"><div class="av-reveal-media">${cardHtml(card, { size: 'sm', shiny: !!c.shiny, serial: c.serial })}</div>
-      <div class="av-reveal-body">${head}<h3 class="av-reveal-title">Tu gagnes une carte ${esc(rarityLabel(card.rarity))}</h3>
-      <p class="sz-small sz-muted">« ${esc(card.name)} » rejoint ta collection${card.set_name ? ` (${esc(card.set_name)})` : ''}.${c.paid ? ` Et +${Number(c.paid)} Paillettes.` : ''}</p>
-      <a class="btn btn-ghost" href="/pages/cartes/cartes.html#collection">Voir dans ma collection</a></div></div>`;
+  const parts = [];
+  if (paid > 0) parts.push(`<div class="av-rv-item av-rv-paid"><span class="av-big">+${fmtN(paid)}</span><p class="sz-small sz-muted">Paillettes ajoutées à ton portefeuille.</p></div>`);
+  for (const card of cards) {
+    const copies = Array.isArray(card.copies) ? card.copies : [];
+    const qty = Number(card.qty) || copies.length || 1;
+    parts.push(cardItemHtml(card, qty, copies[0]));
   }
-  if (c.kind === 'carte') {
-    return `<div class="av-reveal"><div class="av-reveal-body">${head}<h3 class="av-reveal-title">Plus d’exemplaire de cette carte</h3>
-      <p class="sz-small sz-muted">Elle a trouvé preneur avant toi : tu reçois ${Number(c.paid) || 0} Paillettes à la place.</p></div></div>`;
+  for (const b of boosters) {
+    const q = Number(b.qty) || 1;
+    parts.push(`<div class="av-rv-item av-rv-booster"><div class="av-booster"><span><b>Booster</b>${esc(b.name || 'Booster')}<br>${Number(b.size) || 5} cartes</span></div>
+      ${q > 1 ? `<span class="av-qty">×${q}</span>` : ''}<p class="sz-small sz-muted">Un booster ${esc(b.name || '')} à ouvrir quand tu veux.</p>
+      <a class="btn btn-ghost" href="/pages/cartes/cartes.html#ouverture">L’ouvrir</a></div>`);
   }
-  if (c.kind === 'souvenir') {
+  if (hasMoment) {
     const m = c.moment, e = c.event;
     const path = m?.image_path || e?.cover_path;
     const url = path ? A.urls.get(path) : null;
     const when = m?.happened_on ? fmtDay(m.happened_on) : e?.starts_at ? fmtDay(e.starts_at) : '';
     const title = m?.title || e?.title || 'Un souvenir du gang';
-    return `<div class="av-reveal">${url ? `<div class="av-reveal-media"><img class="av-photo" src="${esc(url)}" alt="" data-on-error="remove" loading="lazy" decoding="async"></div>` : ''}
-      <div class="av-reveal-body">${head}<h3 class="av-reveal-title">${esc(when ? `${when} : ${title}` : title)}</h3>
+    parts.push(`<div class="av-rv-item av-rv-souvenir">${url ? `<img class="av-photo" src="${esc(url)}" alt="" data-on-error="remove" loading="lazy" decoding="async">` : ''}
+      <div class="av-rv-txt"><p class="sz-eyebrow">Souvenir</p><h3 class="av-reveal-title">${esc(when ? `${when} : ${title}` : title)}</h3>
       ${m?.body ? `<p class="sz-small sz-muted">${esc(m.body)}</p>` : ''}${e?.location ? `<p class="sz-small sz-muted">${esc(e.location)}</p>` : ''}
-      ${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}${c.paid ? `<p class="sz-small">+${Number(c.paid)} Paillettes</p>` : ''}
-      <a class="btn btn-ghost" href="/pages/irl/historique.html">Revoir l’historique</a></div></div>`;
+      ${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}
+      <a class="btn btn-ghost" href="/pages/irl/historique.html">Revoir l’historique</a></div></div>`);
   }
-  if (c.kind === 'question' && c.question) {
-    const q = c.question;
+  if (question) {
+    const q = question;
     let form = '';
     if (q.answered) {
-      form = `<p class="sz-small">${q.correct ? `Bonne réponse${q.reward ? ` : +${Number(q.reward)} Paillettes` : ''} !` : q.correct === false ? 'Raté, ce sera pour la prochaine.' : 'Réponse envoyée, l’admin la vérifie.'}</p>
+      form = `<p class="sz-small">${q.correct ? `Bonne réponse${q.reward ? ` : +${fmtN(q.reward)} Paillettes` : ''} !` : q.correct === false ? 'Raté, ce sera pour la prochaine.' : 'Réponse envoyée, l’admin la vérifie.'}</p>
         ${q.explanation ? `<p class="sz-small sz-muted">${esc(q.explanation)}</p>` : ''}`;
     } else if (['choix_unique', 'vrai_faux', 'choix_multiple'].includes(q.qtype)) {
       const multi = q.qtype === 'choix_multiple';
@@ -113,18 +157,12 @@ function revealHtml(d) {
         <input id="avq-t" name="avq" type="text" maxlength="200" autocomplete="off" ${q.qtype === 'nombre' ? 'inputmode="decimal"' : ''}>
         <button class="btn btn-sand" type="submit">Répondre</button></form>`;
     }
-    return `<div class="av-reveal"><div class="av-reveal-body">${head}<h3 class="av-reveal-title">Question bonus</h3>
-      <p>${esc(q.prompt)}</p>${q.image_url ? `<img class="av-photo" src="${esc(q.image_url)}" alt="" data-on-error="remove" loading="lazy" decoding="async">` : ''}${form}</div></div>`;
+    parts.push(`<div class="av-rv-item av-rv-question"><div class="av-rv-txt"><p class="sz-eyebrow">Question bonus</p><h3 class="av-reveal-title">${esc(q.prompt)}</h3>
+      ${q.image_url ? `<img class="av-photo" src="${esc(q.image_url)}" alt="" data-on-error="remove" loading="lazy" decoding="async">` : ''}${form}</div></div>`);
   }
-  if (c.kind === 'booster') {
-    const b = c.booster || {};
-    return `<div class="av-reveal"><div class="av-reveal-media"><div class="av-booster"><span><b>Booster</b>${esc(b.name || 'Booster')}<br>${Number(b.size) || 5} cartes</span></div></div>
-      <div class="av-reveal-body">${head}<h3 class="av-reveal-title">Un booster ${esc(b.name || '')} pour toi</h3>
-      <p class="sz-small sz-muted">Il t’attend dans ton stock, à ouvrir quand tu veux.</p>
-      <a class="btn btn-ghost" href="/pages/cartes/cartes.html#ouverture">L’ouvrir</a></div></div>`;
-  }
-  return `<div class="av-reveal"><div class="av-reveal-body">${head}<p class="av-big">+${Number(c.paid ?? c.reward) || 0}</p>
-    <p class="sz-small sz-muted">Paillettes ajoutées à ton portefeuille.</p>${c.label ? `<p class="sz-small">${esc(c.label)}</p>` : ''}</div></div>`;
+  if (c.missing || d.missing) parts.push(`<p class="sz-small sz-muted av-rv-note">Exemplaire épuisé : les Paillettes remplacent la carte.</p>`);
+  if (!parts.length) parts.push(`<p class="sz-small sz-muted">Rien dans cette case.</p>`);
+  return `${head}<div class="av-rv-items">${parts.join('')}</div>`;
 }
 
 /** Jauge de la case collective (choisie, sinon celle du jour, sinon la prochaine). */
@@ -154,23 +192,24 @@ function fmtDay(v) {
   return `${s[2]} ${MOIS[s[1] - 1]} ${s[0]}`;
 }
 
-/** Dessine toute la tuile. */
+/** Dessine le calendrier dans son conteneur, puis prévient l'appelant (titre et paquet). */
 function render() {
   const data = A.data, box = A.box;
   if (!box || !data?.active) return;
   const sel = data.days.find((d) => d.day === A.sel && d.state === 'ouverte');
+  const fresh = !!sel && A.fresh === sel.day;
+  A.fresh = null;
   box.innerHTML = `
-    <section class="sz-stack" id="avent" aria-labelledby="av-title">
-      <div>
-        <p class="sz-eyebrow">Décembre ${esc(data.year)} · jour ${Math.max(1, Math.min(24, data.today || 1))}</p>
-        <h2 class="sz-title" id="av-title">Calendrier de l’Avent</h2>
-        <p class="sz-small sz-muted">${esc(subtitle(data))}</p>
-      </div>
-      <ul class="av-grid" aria-label="Les 24 cases">${data.days.map((d) => cellHtml(d, data.today)).join('')}</ul>
-      <p class="av-legend"><span>${ICON_GANG} Case collective</span><span>${ICON_LOCK} Pas encore</span></p>
-      <div id="av-reveal" aria-live="polite">${sel ? revealHtml(sel) : ''}</div>
-      ${groupHtml(data)}
-    </section>`;
+    <p class="av-legend">
+      <span><i class="av-sw is-today"></i>À ouvrir aujourd’hui</span>
+      <span><i class="av-sw is-late"></i>À rattraper</span>
+      <span><i class="av-sw is-locked"></i>Pas encore</span>
+      <span>${ICON_GANG} Case collective</span>
+    </p>
+    <ul class="av-grid" aria-label="Les 24 cases">${data.days.map((d) => cellHtml(d)).join('')}</ul>
+    <div class="av-rv${fresh ? ' is-new' : ''}" aria-live="polite">${sel ? revealHtml(sel) : ''}</div>
+    ${groupHtml(data)}`;
+  A.onUpdate?.(data);
 }
 
 /** Charge (ou recharge) le calendrier depuis le serveur, avec les adresses des photos des souvenirs. */
@@ -183,10 +222,6 @@ async function load() {
   if (paths.length) {
     try { for (const [k, v] of await signedUrls(paths)) A.urls.set(k, v); } catch { /* sans photo */ }
   }
-  if (A.sel == null) {
-    const today = A.data.days.find((d) => d.day === A.data.today);
-    if (today?.state === 'ouverte') A.sel = today.day;
-  }
 }
 
 /** Ouvre une case : animation de déchirure (si permise), appel serveur, puis affichage du contenu. */
@@ -196,12 +231,13 @@ async function openDay(btn, day) {
   try {
     const { data, error } = await sb.rpc('hg_advent_open', { p_day: day });
     if (error) throw error;
-    A.sel = day;
+    A.sel = day; A.fresh = day;
     if (data?.badge) toast('Badge « Calendrier complet » débloqué !', 'success');
     else if (data?.fallback) toast(`Carte épuisée : +${Number(data.paid) || 0} Paillettes à la place`, 'success');
     else if (data?.paid) toast(`+${Number(data.paid)} Paillettes`, 'success');
     await load();
     render();
+    A.onOpened?.(day);
     A.box.querySelector(`.av-cell[data-day="${day}"]`)?.focus();
   } catch (e) {
     btn.classList.remove('is-tearing');
@@ -210,9 +246,11 @@ async function openDay(btn, day) {
   }
 }
 
-/** Branche les clics de la tuile (une seule fois). */
-function bind() {
-  A.box.addEventListener('click', async (e) => {
+/** Branche les clics et les réponses du calendrier (une seule fois par conteneur). */
+function bind(box) {
+  if (A.bound.has(box)) return;
+  A.bound.add(box);
+  box.addEventListener('click', async (e) => {
     const cell = e.target.closest('.av-cell');
     if (cell) {
       const day = Number(cell.dataset.day);
@@ -234,7 +272,7 @@ function bind() {
       } catch (err) { claim.disabled = false; toast(errMsg(err), 'error'); }
     }
   });
-  A.box.addEventListener('submit', async (e) => {
+  box.addEventListener('submit', async (e) => {
     const f = e.target.closest('form.av-q');
     if (!f) return;
     e.preventDefault();
@@ -254,25 +292,27 @@ function bind() {
 }
 
 /**
- * Monte le calendrier dans box (accueil). Ne fait rien hors saison ou si le calendrier n'est pas actif.
- * @param {HTMLElement} box Conteneur (vide).
- * @returns {Promise<boolean>} vrai si le calendrier est affiché.
+ * Monte le calendrier dans box (la popup). Chaque appel repart d'une case non choisie.
+ * @param {HTMLElement} box Conteneur vide ou à remplacer.
+ * @param {{onUpdate?: (data: object) => void, onOpened?: (day: number) => void}} [opts]
+ *   onUpdate : à chaque rendu (sous-titre, paquet) ; onOpened : après l'ouverture d'une case (pluie).
+ * @returns {Promise<boolean>} vrai si le calendrier est affiché (faux s'il n'est pas actif).
  */
-export async function mountAdvent(box) {
+export async function mountAdvent(box, opts = {}) {
   if (!box) return false;
+  A.box = box; A.sel = null; A.fresh = null;
+  A.onUpdate = opts.onUpdate || null;
+  A.onOpened = opts.onOpened || null;
   await load();
   if (!A.data) return false;
-  loadSeasonCss({ cards: true });
-  A.box = box;
-  box.hidden = false;
+  loadSeasonCss({ cards: true, popup: true });
+  bind(box);
   render();
-  bind();
-  if (location.hash === '#avent') requestAnimationFrame(() => box.scrollIntoView({ block: 'start' }));
   return true;
 }
 
 /**
- * Rappel discret sur la page Cartes : « La case du jour t'attend » si elle n'est pas encore ouverte.
+ * Rappel discret sur la page Cartes : « La case du jour t'attend » si elle n'est pas encore ouverte. Un clic ouvre la popup.
  * @param {string} selector Élément avant lequel insérer le rappel (cherché après la réponse du serveur).
  */
 export async function cartesReminder(selector) {
@@ -280,14 +320,17 @@ export async function cartesReminder(selector) {
   try {
     const { data, error } = await sb.rpc('hg_advent_me');
     if (error || !data?.active) return;
-    const todo = (data.days || []).filter((d) => d.state === 'a_ouvrir' || d.state === 'a_rattraper').length;
+    const todo = adventLeft(data);
     const target = document.querySelector(selector);
     if (!todo || !target) return;
-    loadSeasonCss();
-    const a = document.createElement('a');
+    loadSeasonCss({ popup: true });
+    const a = document.createElement('button');
+    a.type = 'button';
     a.className = 'av-remind';
-    a.href = '/pages/compte/accueil.html#avent';
-    a.innerHTML = `<span aria-hidden="true">🎁</span><span>${todo > 1 ? `${todo} cases du calendrier de l’Avent t’attendent` : 'Une case du calendrier de l’Avent t’attend'} sur l’accueil.</span>`;
+    a.innerHTML = `<span aria-hidden="true">🎁</span><span>${todo > 1 ? `${todo} cases du calendrier de l’Avent t’attendent` : 'Une case du calendrier de l’Avent t’attend'}.</span>`;
+    a.addEventListener('click', () => {
+      import('./avent-popup.js').then((m) => m.openAvent({ returnTo: a })).catch((e) => console.warn('[avent]', e));
+    });
     target.before(a);
   } catch { /* rappel facultatif */ }
 }

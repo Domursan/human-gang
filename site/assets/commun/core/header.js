@@ -393,6 +393,18 @@ function setNavOpen(header, open) {
 /* ---------- Construction de l'en-tête ---------- */
 
 /**
+ * Calendrier de l'Avent : paquet cadeau dans la barre, pour un membre, du 30 novembre au 1er janvier seulement.
+ * Hors saison, rien n'est chargé. La règle de date est celle de adventSeason() (espaces/accueil/avent-date.js),
+ * recopiée ici pour ne charger aucun module hors saison.
+ * @param {HTMLElement} header En-tête posé.
+ */
+function paquetAvent(header) {
+  const d = new Date(), m = d.getMonth(), j = d.getDate();
+  if (!(m === 11 || (m === 10 && j === 30) || (m === 0 && j === 1))) return;
+  import('../../espaces/accueil/avent-gift.js').then((x) => x.mountGift(header)).catch(() => {});
+}
+
+/**
  * En-tête commun. nav:false -> la barre reste vide jusqu'à updateNav (pages accessibles pas encore connues).
  * Un visiteur voit seulement le logo, l'aide et le bouton « Connexion ». Remplace l'en-tête précédent s'il existe.
  * @param {object|null} profile Profil courant, ou null pour un visiteur.
@@ -425,6 +437,7 @@ export function renderHeader(profile, { nav = true } = {}) {
   if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
   document.body.prepend(header);
   if (profile) syncAdmin(header, profile);
+  if (profile) paquetAvent(header);
   const tg = header.querySelector('.nav-toggle');
   tg.hidden = !header.querySelector('.nav .nav-top');
   tg.addEventListener('click', () => {

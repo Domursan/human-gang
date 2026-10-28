@@ -1,18 +1,17 @@
 // ===== Humane Gang — rendez-vous saisonniers de l'accueil (migration 096) =====
 /*
- * Rôle : monte sur l'accueil ce que la saison apporte, dans le bloc #saison-home :
- *   - T1 calendrier de l'Avent (décembre, avent.js) : il remplace alors le bandeau « Événement en cours » ;
- *   - T3 saison des Worlds (dates choisies par le Staff) : bandeau de saison, booster de la saison (C1, par son
- *     identifiant) et quêtes saisonnières.
+ * Rôle : monte sur l'accueil ce que la saison apporte, dans le bloc #saison-home : la saison des Worlds (dates choisies
+ * par le Staff) : bandeau de saison, booster de la saison (C1, par son identifiant) et quêtes saisonnières.
+ * Le calendrier de l'Avent n'est plus sur l'accueil : en décembre, il s'ouvre depuis le paquet cadeau de la barre du haut
+ * (avent-gift.js, avent-popup.js).
  * L'anniversaire du gang (T4) est monté par eggs/core.js (anniv.js), sur l'accueil et la page Cartes.
- * RPC : hg_advent_me (avent.js), hg_saison_state. Rien n'est affiché hors saison.
- * Dépendances : core.js (sb, esc, errMsg), avent-date.js (adventSeason), avent.js (chargé en décembre seulement), icons.js, cartes-ui.js (fmtP), saisons-css.js.
+ * RPC : hg_saison_state. Rien n'est affiché hors saison.
+ * Dépendances : core.js (sb, esc), icons.js, cartes-ui.js (fmtP), saisons-css.js.
  * Exporte : mountSeasonal(box).
  */
 import { sb, esc } from '../../commun/core.js';
 import { svg } from '../../commun/icons.js';
 import { loadSeasonCss } from './saisons-css.js';
-import { adventSeason } from './avent-date.js'; // le calendrier (avent.js) ne se charge qu'en décembre
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const nf = new Intl.NumberFormat('fr-CH');
@@ -66,29 +65,18 @@ function worldsHtml(w) {
 }
 
 /**
- * Monte les rendez-vous de la saison dans box. Le bloc reste caché s'il n'y a rien à montrer.
+ * Monte les rendez-vous de la saison (Worlds) dans box. Le bloc reste caché s'il n'y a rien à montrer.
  * @param {HTMLElement} box Conteneur #saison-home.
  */
 export async function mountSeasonal(box) {
   if (!box) return;
-  const advBox = document.createElement('div');
   const wdBox = document.createElement('div');
-  box.append(advBox, wdBox);
-  const jobs = [];
-  if (adventSeason()) {
-    jobs.push(import('./avent.js').then((m) => m.mountAdvent(advBox)).then((on) => {
-      if (on) { box.hidden = false; const dyn = document.getElementById('dyn-banner'); if (dyn) dyn.dataset.avent = '1'; }
-    }).catch((e) => console.warn('[avent]', e)));
-  }
-  jobs.push((async () => {
+  box.append(wdBox);
+  try {
     const { data, error } = await sb.rpc('hg_saison_state');
     if (error || !data?.worlds) return;
     loadSeasonCss();
     wdBox.innerHTML = worldsHtml(data.worlds);
     box.hidden = false;
-  })().catch((e) => console.warn('[saison]', e)));
-  await Promise.allSettled(jobs);
-  // Le calendrier de l'Avent remplace le bandeau d'événement de l'accueil pendant décembre.
-  const dyn = document.getElementById('dyn-banner');
-  if (dyn?.dataset.avent) dyn.hidden = true;
+  } catch (e) { console.warn('[saison]', e); }
 }

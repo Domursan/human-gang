@@ -71,42 +71,77 @@ function aventCfgHtml(c) {
       <label class="check"><input type="checkbox" name="actif"${c.actif !== false ? ' checked' : ''}> Calendrier actif (les membres peuvent ouvrir les cases)</label>
       <div class="row" style="gap:12px;flex-wrap:wrap">
         <div class="field"><label for="zac-s">Seuil de la case collective (membres)</label>
-          <input id="zac-s" name="seuil" type="number" min="1" max="200" step="1" inputmode="numeric" value="${esc(c.seuil ?? 10)}" aria-describedby="zac-s-h">
-          <span class="small muted" id="zac-s-h">Nombre de membres qui doivent ouvrir une case collective pour débloquer son bonus (1 à 200).</span></div>
+          <input id="zac-s" name="seuil" type="number" min="1" step="1" inputmode="numeric" value="${esc(c.seuil ?? 10)}" aria-describedby="zac-s-h">
+          <span class="small muted" id="zac-s-h">Nombre de membres qui doivent ouvrir une case collective pour débloquer son bonus (au moins 1).</span></div>
         <div class="field"><label for="zac-p">Seuil en % du gang</label>
           <input id="zac-p" name="seuil_pct" type="number" min="10" max="100" step="1" inputmode="numeric" value="${esc(c.seuil_pct ?? 70)}" aria-describedby="zac-p-h">
           <span class="small muted" id="zac-p-h">Le seuil ne dépasse jamais ce pourcentage des membres (10 à 100).</span></div>
       </div>
-      <div class="field"><label for="zac-r">Paillettes de repli (0 à 200)</label>
-        <input id="zac-r" name="carte_repli" type="number" min="0" max="200" step="1" inputmode="numeric" value="${esc(c.carte_repli ?? 20)}" aria-describedby="zac-r-h">
+      <div class="field"><label for="zac-r">Paillettes de repli par carte épuisée</label>
+        <input id="zac-r" name="carte_repli" type="number" min="0" step="1" inputmode="numeric" value="${esc(c.carte_repli ?? 20)}" aria-describedby="zac-r-h">
         <span class="small muted" id="zac-r-h">Versées en plus de la case quand la carte ne peut plus être donnée (plus d'exemplaire disponible).</span></div>
       <div class="btn-row"><button class="btn btn-sand" type="submit">Enregistrer le calendrier</button></div>
     </form></details>`;
 }
 
-/** Formulaire d'une case. */
+/** Une ligne « carte » d'une case : carte, quantité, brillante, retirer. */
+function cardRow(c = {}) {
+  const L = Z.lists;
+  return `<div class="zav-item" data-zitem="carte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <select name="c_id" aria-label="Carte" style="flex:1 1 240px;min-width:0"><option value="">—</option>${L.cards.map((k) => opt(k.id, `${k.name} (${k.rarity})`, k.id === c.card_id)).join('')}</select>
+    <input name="c_qty" type="number" min="1" max="1000" step="1" inputmode="numeric" value="${Number(c.qty) || 1}" aria-label="Nombre d’exemplaires" style="width:88px">
+    <label class="check" style="margin:0"><input type="checkbox" name="c_shiny"${c.shiny ? ' checked' : ''}> Brillante</label>
+    <button class="btn btn-ghost" type="button" data-zav-del aria-label="Retirer cette carte">Retirer</button></div>`;
+}
+
+/** Une ligne « booster » d'une case : type, quantité, retirer. */
+function boosterRow(b = {}) {
+  const L = Z.lists;
+  return `<div class="zav-item" data-zitem="booster" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <select name="b_type" aria-label="Type de booster" style="flex:1 1 240px;min-width:0"><option value="">—</option>${L.types.map((t) => opt(t.id, t.name, t.id === b.type)).join('')}</select>
+    <input name="b_qty" type="number" min="1" max="1000" step="1" inputmode="numeric" value="${Number(b.qty) || 1}" aria-label="Nombre de boosters" style="width:88px">
+    <button class="btn btn-ghost" type="button" data-zav-del aria-label="Retirer ce booster">Retirer</button></div>`;
+}
+
+/** Résumé d'une case : « 500 ✦ · 2 cartes · 1 booster · souvenir · question · collective ». */
+function daySummary(d) {
+  if (!d.ready) return 'à remplir';
+  const nb = (arr) => (arr || []).reduce((t, x) => t + (Number(x.qty) || 1), 0);
+  const parts = [];
+  if (d.reward) parts.push(`${Number(d.reward).toLocaleString('fr-CH')} ${paillSym()}`);
+  const c = nb(d.cards), b = nb(d.boosters);
+  if (c) parts.push(`${c} carte${c > 1 ? 's' : ''}`);
+  if (b) parts.push(`${b} booster${b > 1 ? 's' : ''}`);
+  if (d.moment_id || d.event_id) parts.push('souvenir');
+  if (d.quiz_id) parts.push('question');
+  if (d.group_target != null) parts.push('collective');
+  return `${parts.join(' · ') || 'vide'} · ${d.opens || 0} ouverture(s)`;
+}
+
+/** Formulaire d'une case : tout est cumulable (Paillettes, cartes, boosters, souvenir, question, bonus collectif). */
 function dayForm(d) {
   const L = Z.lists;
-  const k = d.kind || 'paillettes';
   const grp = d.group_target != null;
-  const sum = !d.ready ? 'à remplir' : `${KINDS.find((x) => x[0] === k)?.[1] || k}${d.reward ? ` · ${d.reward} ${paillSym()}` : ''}${grp ? ' · collective' : ''} · ${d.opens || 0} ouverture(s)`;
   const id = `zav-${d.day}`;
-  return `<details class="zav-day" data-day="${d.day}"><summary><strong>${d.day} décembre</strong> <span class="muted small">${esc(sum)}</span></summary>
+  return `<details class="zav-day" data-day="${d.day}"><summary><strong>${d.day} décembre</strong> <span class="muted small">${esc(daySummary(d))}</span></summary>
     <form class="stack zav-form" data-day="${d.day}" style="padding:12px 0">
-      <div class="field"><label for="${id}-k">Sorte</label><select id="${id}-k" name="kind">${KINDS.map(([v, l]) => opt(v, l, v === k)).join('')}</select></div>
-      <div class="field"><label for="${id}-r">Paillettes de la case (0 à 200)</label><input id="${id}-r" name="reward" type="number" min="0" max="200" value="${Number(d.reward) || 0}"></div>
-      <div class="field" data-for="carte"><label for="${id}-c">Carte</label><select id="${id}-c" name="card_id"><option value="">—</option>${L.cards.map((c) => opt(c.id, `${c.name} (${c.rarity})`, c.id === d.card_id)).join('')}</select>
-        <label class="check"><input type="checkbox" name="shiny"${d.shiny ? ' checked' : ''}> Brillante</label></div>
-      <div class="field" data-for="souvenir"><label for="${id}-m">Souvenir (moment de l’historique)</label><select id="${id}-m" name="moment_id"><option value="">—</option>${L.moments.map((m) => opt(m.id, `${m.happened_on} · ${m.title}`, m.id === d.moment_id)).join('')}</select>
+      <p class="small muted" style="margin:0">Tout se cumule : mets autant de choses que tu veux dans la case.</p>
+      <div class="field"><label for="${id}-r">Paillettes de la case</label><input id="${id}-r" name="reward" type="number" min="0" step="1" inputmode="numeric" value="${Number(d.reward) || 0}"></div>
+      <fieldset class="stack" style="border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:0"><legend class="small" style="padding:0 6px">Cartes</legend>
+        <div class="stack" data-zlist="carte">${(d.cards || []).map(cardRow).join('')}</div>
+        <div><button class="btn btn-ghost" type="button" data-zav-add="carte">Ajouter une carte</button></div></fieldset>
+      <fieldset class="stack" style="border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:0"><legend class="small" style="padding:0 6px">Boosters (mis dans le stock)</legend>
+        <div class="stack" data-zlist="booster">${(d.boosters || []).map(boosterRow).join('')}</div>
+        <div><button class="btn btn-ghost" type="button" data-zav-add="booster">Ajouter un booster</button></div></fieldset>
+      <div class="field"><label for="${id}-m">Souvenir (moment de l’historique)</label><select id="${id}-m" name="moment_id"><option value="">—</option>${L.moments.map((m) => opt(m.id, `${m.happened_on} · ${m.title}`, m.id === d.moment_id)).join('')}</select>
         <label for="${id}-e">ou sortie (identifiant)</label><input id="${id}-e" name="event_id" value="${esc(d.event_id || '')}" placeholder="facultatif"></div>
-      <div class="field" data-for="question"><label for="${id}-q">Question (une question inactive reste réservée au calendrier)</label>
+      <div class="field"><label for="${id}-q">Question bonus (une question inactive reste réservée au calendrier)</label>
         ${L.quiz.length ? `<select id="${id}-q" name="quiz_id"><option value="">—</option>${L.quiz.map((q) => opt(q.id, `${q.active ? '' : '[réservée] '}${q.prompt.slice(0, 80)}`, q.id === d.quiz_id)).join('')}</select>`
           : `<input id="${id}-q" name="quiz_id" value="${esc(d.quiz_id || '')}" placeholder="identifiant de la question (droit « quiz » pour la liste)">`}</div>
-      <div class="field" data-for="booster"><label for="${id}-b">Type de booster (mis dans le stock)</label><select id="${id}-b" name="booster_type"><option value="">—</option>${L.types.map((t) => opt(t.id, t.name, t.id === d.booster_type)).join('')}</select></div>
       <label class="check"><input type="checkbox" name="group"${grp ? ' checked' : ''}> Case collective (bonus quand assez de membres l’ont ouverte)</label>
       <div class="row" style="gap:12px;flex-wrap:wrap">
-        <div class="field"><label for="${id}-gt">Seuil (membres)</label><input id="${id}-gt" name="group_target" type="number" min="1" max="200" value="${grp ? Number(d.group_target) : 10}"></div>
-        <div class="field"><label for="${id}-gr">Bonus du gang (0 à 200)</label><input id="${id}-gr" name="group_reward" type="number" min="0" max="200" value="${Number(d.group_reward) || 25}"></div>
+        <div class="field"><label for="${id}-gt">Seuil (membres)</label><input id="${id}-gt" name="group_target" type="number" min="1" step="1" inputmode="numeric" value="${grp ? Number(d.group_target) : 10}"></div>
+        <div class="field"><label for="${id}-gr">Bonus du gang (Paillettes pour chacun)</label><input id="${id}-gr" name="group_reward" type="number" min="0" step="1" inputmode="numeric" value="${Number(d.group_reward) || 25}"></div>
       </div>
       ${grp && d.group_target_eff != null && d.group_target_eff !== d.group_target ? `<p class="small muted">Seuil effectif : ${d.group_target_eff} (borné par la taille du gang).</p>` : ''}
       <div class="field"><label for="${id}-l">Petit mot (facultatif)</label><input id="${id}-l" name="label" maxlength="120" value="${esc(d.label || '')}"></div>
@@ -117,7 +152,11 @@ function dayForm(d) {
 /** Aperçu de la grille telle qu'un membre la voit le jour N (toutes les cases passées ouvertes). */
 function previewHtml(n) {
   if (!n) return '';
-  const lab = (d) => (d.kind === 'paillettes' ? `+${d.reward}` : KINDS.find((x) => x[0] === d.kind)?.[1] || '—');
+  const lab = (d) => {
+    const autres = (d.cards || []).length + (d.boosters || []).length + (d.moment_id || d.event_id ? 1 : 0) + (d.quiz_id ? 1 : 0);
+    if (d.reward) return `+${Number(d.reward).toLocaleString('fr-CH')}${autres ? ` +${autres}` : ''}`;
+    return `${KINDS.find((x) => x[0] === d.kind)?.[1] || '—'}${autres > 1 ? ` +${autres - 1}` : ''}`;
+  };
   return `<ul class="zav-prev" aria-label="Aperçu le ${n} décembre">${Z.adv.days.map((d) => `<li class="zav-p ${d.day < n ? 'is-open' : d.day === n ? 'is-today' : 'is-locked'}">
     <span>${d.day}${d.group_target != null ? ' 👥' : ''}</span><b>${d.day <= n ? esc(d.ready ? lab(d) : 'vide') : '🔒'}</b></li>`).join('')}</ul>`;
 }
@@ -128,7 +167,7 @@ function renderAvent(host) {
   host.innerHTML = `
     <div class="stack">
       <p class="muted small">Du 1er au 24 décembre, une case s’ouvre chaque matin à 6 h (heure de Zurich) ; une case oubliée se rattrape jusqu’au 31.
-        Budget conseillé : environ 500 Paillettes par membre sur le mois (plafond « avent_mois » : ${esc(a.cfg?.plafond ?? 600)}). Gang : ${esc(a.gang)} membres.</p>
+        Aucune limite : chaque case peut contenir autant de Paillettes, de cartes et de boosters que tu veux. Gang : ${esc(a.gang)} membres.</p>
       ${aventCfgHtml(a.cfg || {})}
       <div class="row" style="gap:12px;flex-wrap:wrap;align-items:flex-end">
         <div class="field"><label for="zav-year">Année</label><input id="zav-year" type="number" min="2024" max="2100" value="${esc(a.year)}"></div>
@@ -143,10 +182,8 @@ function renderAvent(host) {
   for (const f of host.querySelectorAll('.zav-form')) syncKind(f);
 }
 
-/** N'affiche que les champs utiles à la sorte choisie. */
+/** Affiche le seuil et le bonus seulement pour une case collective. */
 function syncKind(f) {
-  const k = f.querySelector('[name="kind"]').value;
-  for (const el of f.querySelectorAll('[data-for]')) el.hidden = el.dataset.for !== k;
   const grp = f.querySelector('[name="group"]').checked;
   for (const n of ['group_target', 'group_reward']) f.querySelector(`[name="${n}"]`).closest('.field').hidden = !grp;
 }
@@ -257,9 +294,12 @@ async function onSubmit(e) {
     if (f.matches('.zav-form')) {
       const v = (n) => f.querySelector(`[name="${n}"]`)?.value ?? '';
       const grp = f.querySelector('[name="group"]').checked;
-      const p = { kind: v('kind'), reward: v('reward'), card_id: v('card_id'), shiny: f.querySelector('[name="shiny"]').checked, moment_id: v('moment_id'),
-        event_id: v('event_id'), quiz_id: v('quiz_id'), booster_type: v('booster_type'), label: v('label'),
-        group_target: grp ? v('group_target') : '', group_reward: grp ? v('group_reward') : '0' };
+      const cards = [...f.querySelectorAll('[data-zitem="carte"]')].map((r) => ({ card_id: r.querySelector('[name="c_id"]').value,
+        qty: Number(r.querySelector('[name="c_qty"]').value) || 1, shiny: r.querySelector('[name="c_shiny"]').checked })).filter((c) => c.card_id);
+      const boosters = [...f.querySelectorAll('[data-zitem="booster"]')].map((r) => ({ type: r.querySelector('[name="b_type"]').value,
+        qty: Number(r.querySelector('[name="b_qty"]').value) || 1 })).filter((b) => b.type);
+      const p = { reward: v('reward'), cards, boosters, moment_id: v('moment_id'), event_id: v('event_id'), quiz_id: v('quiz_id'),
+        label: v('label'), group: grp, group_target: grp ? v('group_target') : '', group_reward: grp ? v('group_reward') : '0' };
       const { error } = await sb.rpc('hg_advent_day_save', { p_year: Z.year, p_day: Number(f.dataset.day), p });
       if (error) throw error;
       toast(`Case du ${f.dataset.day} enregistrée`, 'success');
@@ -271,8 +311,8 @@ async function onSubmit(e) {
         if (v === '' || !Number.isInteger(x) || x < lo || x > hi) throw new Error(`${lib} : nombre entier de ${lo} à ${hi}.`);
         return x;
       };
-      const p = { actif: f.querySelector('[name="actif"]').checked, seuil: ent('seuil', 1, 200, 'Seuil de la case collective'),
-        seuil_pct: ent('seuil_pct', 10, 100, 'Seuil en %'), carte_repli: ent('carte_repli', 0, 200, 'Paillettes de repli') };
+      const p = { actif: f.querySelector('[name="actif"]').checked, seuil: ent('seuil', 1, 100000, 'Seuil de la case collective'),
+        seuil_pct: ent('seuil_pct', 10, 100, 'Seuil en %'), carte_repli: ent('carte_repli', 0, 100000000, 'Paillettes de repli') };
       // Fusion dans saisons.avent : les autres sous-clés (worlds, anniversaire) restent en place.
       await ecrireReglage('saisons', (s) => { s.avent = { ...(s.avent || {}), ...p }; });
       toast('Réglages du calendrier enregistrés', 'success');
@@ -311,6 +351,18 @@ async function onSubmit(e) {
 async function onClick(e) {
   const b = e.target.closest('button');
   if (!b) return;
+  if (b.dataset.zavAdd) {
+    const list = b.closest('fieldset').querySelector('[data-zlist]');
+    list.insertAdjacentHTML('beforeend', b.dataset.zavAdd === 'carte' ? cardRow() : boosterRow());
+    list.lastElementChild.querySelector('select')?.focus();
+    return;
+  }
+  if (b.hasAttribute('data-zav-del')) {
+    const fs = b.closest('fieldset');
+    b.closest('.zav-item').remove();
+    fs.querySelector('[data-zav-add]')?.focus();
+    return;
+  }
   if (b.dataset.zav === 'reload') {
     Z.year = Number(Z.root.querySelector('#zav-year').value) || defaultYear();
     await paint();
@@ -324,8 +376,7 @@ async function onClick(e) {
         const m = s.moments?.[0], ev = s.events?.[0];
         const f = Z.root.querySelector(`.zav-form[data-day="${s.day}"]`);
         const d = Z.adv.days.find((x) => x.day === s.day);
-        if (!f || (!m && !ev) || (d?.ready && d.kind !== 'paillettes')) continue;
-        f.querySelector('[name="kind"]').value = 'souvenir';
+        if (!f || (!m && !ev) || d?.moment_id || d?.event_id) continue;
         if (m) f.querySelector('[name="moment_id"]').value = m.id;
         if (!m && ev) f.querySelector('[name="event_id"]').value = ev.id;
         syncKind(f);
@@ -344,7 +395,7 @@ async function onClick(e) {
 
 async function onChange(e) {
   const t = e.target;
-  if (t.matches('.zav-form select[name="kind"], .zav-form input[name="group"]')) syncKind(t.closest('form'));
+  if (t.matches('.zav-form input[name="group"]')) syncKind(t.closest('form'));
   else if (t.id === 'zav-prev') { Z.preview = Number(t.value) || null; Z.root.querySelector('#zav-preview').innerHTML = previewHtml(Z.preview); }
   else if (t.dataset.retro) {
     t.disabled = true;
