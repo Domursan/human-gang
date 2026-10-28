@@ -11,7 +11,7 @@
  * Dépendances : site-defaults.js (siteIdentite, fmt), util.js (esc), pages-access.js (currentPageSlug).
  * Styles : assets/commun/site-etat.css, ajouté à la page seulement quand il sert (aucun <link> à poser dans les pages).
  * Stockage : sessionStorage « hg_bandeau_ferme » (empreinte du texte fermé : un nouveau texte réapparaît).
- * Exporte : applySiteEtat, MAINTENANCE_DEFAUT, PAGES_LIBRES.
+ * Exporte : applySiteEtat, empreinteEtat, MAINTENANCE_DEFAUT, PAGES_LIBRES.
  */
 import { siteIdentite, fmt } from './site-defaults.js';
 import { esc } from './util.js';
@@ -121,6 +121,13 @@ function poseMaintenance(message, connecte) {
 }
 
 /* ---------- Point d'entrée ---------- */
+
+/**
+ * Empreinte de l'état du site (maintenance, bandeau) telle qu'elle est lue dans les réglages en cache.
+ * init.js la compare après la relecture : on ne réaffiche le bandeau ou la maintenance que si elle a changé.
+ * @returns {string}
+ */
+export function empreinteEtat() { return JSON.stringify(etat()); }
 
 /**
  * Applique l'état du site à la page courante. Ne lève jamais d'erreur.

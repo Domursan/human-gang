@@ -31,7 +31,7 @@ import { startUnread } from './unread.js';
 import { checkNewBadges } from './badges.js';
 import { loadSiteSettings } from './site-load.js';
 import { applySiteDom, siteIdentite } from './site-defaults.js';
-import { applySiteEtat } from './site-etat.js';
+import { applySiteEtat, empreinteEtat } from './site-etat.js';
 import { resolveViewAs, viewAsActive, renderViewAsBar } from './view-as.js';
 import { installLightDismiss } from './light-dismiss.js';
 import { sb } from './supabase.js';
@@ -162,7 +162,7 @@ function demarrerRaccourcisStaff(profile) {
 /**
  * Partie finale du démarrage, commune aux deux chemins : pied, bandeau cookies, état du site, effets, services.
  * @param {object|null} profile Profil courant.
- * @returns {object|null} Le profil.
+ * @returns {{maintenance: boolean, bandeau: boolean}} Ce qui a été affiché pour l'état du site.
  */
 function finir(profile) {
   renderFooter(profile);
@@ -172,7 +172,7 @@ function finir(profile) {
   startEffects(getActiveTheme());
   demarrerServices(profile, etat);
   demarrerRaccourcisStaff(profile);
-  return profile;
+  return etat;
 }
 
 /**
@@ -189,21 +189,21 @@ function demarrerAvecMemoire(auth, g) {
   primerProfil(profile);
   primerPages(g.pages);
   if (g.perms) primerDroits(profile.id, g.perms);
-  primerGodMode(profile, g.god);
   const slug = currentPageSlug();
   if (slug !== 'accueil' && !canAccess(slug)) {
     location.replace(`/pages/compte/accueil.html?refus=${encodeURIComponent(slug)}`);
     return new Promise(() => {}); // la page s'arrête là, sans erreur
   }
   // Ce qui a été lu avant la relecture : sert à ne remettre à jour que ce qui a changé
-  const avant = { profil: JSON.stringify(profile), pages: JSON.stringify(g.pages), perms: JSON.stringify(g.perms ?? null) };
+  const avant = { profil: JSON.stringify(profile), pages: JSON.stringify(g.pages), perms: JSON.stringify(g.perms ?? null), etat: empreinteEtat() };
   applySiteDom();
   renderHeader(profile, { nav: false });
+  primerGodMode(profile, g.god); // après l'en-tête : le bandeau du mode sans limite se place au-dessus
   updateNav(profile);
   renderViewAsBar();
-  finir(profile);
-  const siteP = loadSiteSettings(); // après l'en-tête : le nom affiché vient du cache local
-  rafraichir(auth, avant, siteP); // sans attendre : la page est déjà utilisable
+  const etat = finir(profile);
+  const siteP = loadSiteSettings(); // après l'en-tête : le nom et l'état du site viennent du cache local
+  rafraichir(auth, { ...avant, maintenance: etat.maintenance }, siteP); // sans attendre : la page est déjà utilisable
   return profile;
 }
 
@@ -211,35 +211,40 @@ function demarrerAvecMemoire(auth, g) {
  * Relit la base après un affichage tiré de la mémoire, puis met à jour l'affichage si une valeur a changé.
  * Erreur réseau : rien ne change, la mémoire reste à l'écran. Droit ou page retirés : le menu est mis à jour et
  * la page renvoie à l'accueil si elle n'est plus permise. Profil introuvable : on relance le démarrage complet.
+ * Réglages du site relus ensuite : nom, bandeau, maintenance (maintenance levée : rechargement pour retrouver la page).
  * @param {'member'|'admin'|'optional'} auth Niveau d'accès exigé.
- * @param {{profil: string, pages: string, perms: string}} avant Valeurs (JSON) affichées avant la relecture.
+ * @param {{profil: string, pages: string, perms: string, etat: string, maintenance: boolean}} avant Valeurs affichées avant la relecture.
  * @param {Promise<void>} siteP Chargement des réglages du site.
  * @returns {Promise<void>}
  */
 async function rafraichir(auth, avant, siteP) {
   try {
     const slug = currentPageSlug();
-    // Réglages du site : le nom de l'en-tête suit la base (le reste de la page est mis à jour par applySiteDom)
-    siteP.then(() => {
-      applySiteDom();
-      const nom = siteIdentite().nom.toUpperCase();
-      const marque = document.querySelector('.site-header .brand span');
-      if (marque && marque.textContent !== nom) marque.textContent = nom;
-    });
     let profil;
-    try { profil = await getProfile(true); } catch (e) { console.warn('[mise à jour]', e?.message || e); return; } // réseau : on garde l'affichage
-    if (!profil) { memoEffacer(); location.reload(); return; } // compte ou session disparus : le démarrage complet renvoie vers la connexion
-    await Promise.all([
-      loadMyPages({ force: true }),
-      loadGodMode(viewAsActive() ? null : profil),
-      loadMyPerms({ force: true }),
-    ]);
-    if (slug !== 'accueil' && !canAccess(slug)) { location.replace(`/pages/compte/accueil.html?refus=${encodeURIComponent(slug)}`); return; }
-    if (auth === 'admin' && !(profil.is_admin || canPanel(getCachedPerms()))) { location.replace('/pages/compte/accueil.html'); return; }
-    const apres = { profil: JSON.stringify(profil), pages: JSON.stringify(memoLire('pages') ?? null), perms: JSON.stringify(memoLire('perms') ?? null) };
-    if (apres.profil !== avant.profil) { updateHeaderProfile(profil); updateNav(profil); }
-    else if (apres.pages !== avant.pages || apres.perms !== avant.perms) updateNav(profil);
-    demarrerRaccourcisStaff(profil); // un Staff nommé pendant la visite voit ses raccourcis sans recharger
+    try { profil = await getProfile(true); } catch (e) { console.warn('[mise à jour]', e?.message || e); } // réseau : on garde l'affichage
+    if (profil === null) { memoEffacer(); location.reload(); return; } // compte ou session disparus : le démarrage complet renvoie vers la connexion
+    if (profil) {
+      await Promise.all([
+        loadMyPages({ force: true }),
+        loadGodMode(viewAsActive() ? null : profil),
+        loadMyPerms({ force: true }),
+      ]);
+      if (slug !== 'accueil' && !canAccess(slug)) { location.replace(`/pages/compte/accueil.html?refus=${encodeURIComponent(slug)}`); return; }
+      if (auth === 'admin' && !(profil.is_admin || canPanel(getCachedPerms()))) { location.replace('/pages/compte/accueil.html'); return; }
+      const apres = { profil: JSON.stringify(profil), pages: JSON.stringify(memoLire('pages') ?? null), perms: JSON.stringify(memoLire('perms') ?? null) };
+      if (apres.profil !== avant.profil) { updateHeaderProfile(profil); updateNav(profil); }
+      else if (apres.pages !== avant.pages || apres.perms !== avant.perms) updateNav(profil);
+      demarrerRaccourcisStaff(profil); // un Staff nommé pendant la visite voit ses raccourcis sans recharger
+    }
+    await siteP;
+    applySiteDom();
+    const marque = document.querySelector('.site-header .brand span');
+    if (marque) marque.textContent = siteIdentite().nom.toUpperCase();
+    // État du site relu : maintenance ou bandeau nouveaux s'affichent ; maintenance levée, on recharge pour retrouver la page
+    if (empreinteEtat() !== avant.etat) {
+      const maintenant = applySiteEtat({ isStaff: canPanel(getCachedPerms()) && !viewAsActive(), connecte: true, slug });
+      if (avant.maintenance && !maintenant.maintenance) { location.reload(); return; }
+    }
   } catch (e) {
     console.warn('[mise à jour]', e?.message || e);
   }
@@ -281,7 +286,8 @@ async function startPage(auth) {
     return new Promise(() => {}); // la page s'arrête là, sans erreur
   }
   updateNav(profile);
-  return finir(profile);
+  finir(profile);
+  return profile;
 }
 
 /* ---------- Point d'entrée ---------- */

@@ -173,7 +173,7 @@ export async function loadGodMode(profile) {
     if (g.error) throw g.error;
     // La réponse peut être un booléen nu ou un objet { nom: bool } : on accepte les deux formes
     const raw = Array.isArray(g.data) ? g.data[0] : g.data;
-    const on = raw === true || (raw && typeof raw === 'object' && Object.values(raw)[0] === true);
+    const on = raw === true || (!!raw && typeof raw === 'object' && Object.values(raw)[0] === true);
     if (s.error) console.warn('[mode sans limite] date de fin', s.error);
     const fin = on ? (s.data?.god_until ?? null) : null;
     setGodState(on, fin, { silent: true });
