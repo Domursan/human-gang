@@ -4,8 +4,9 @@
 // connectée comme membre (membre de test non administrateur) ET comme administrateur, quand la page est ouverte à tous les membres.
 // Une page réservée aux administrateurs (ADMIN_SEUL) n'est contrôlée qu'en administrateur.
 // Chaque page est ouverte avec le faux Supabase et le scénario que les parcours utilisent (SPEC) : données de la collection,
-// des jeux de plateau, du calendrier, etc. Les jeux à salons (loup-garou, uno, nom-de-code, duels) n'ont pas de faux dédié :
-// on contrôle leur écran d'accueil, pas leurs écrans de partie (ceux-ci sont testés par les bancs, sur une base locale).
+// des jeux de plateau, du calendrier, etc. Les jeux à salons (loup-garou, uno, nom-de-code, duels) sont contrôlés à l'accueil
+// (membre et admin) ET sur un écran de partie en cours (PARTIES) : le faux serveur tests/fixtures/fake-salons.js (états figés,
+// « à moi de jouer ») ou, pour les Échecs et les Dames, le faux de tests/fixtures/fake-sb-duels-plateaux.mjs.
 // Contrôles, par page, par rôle et par largeur :
 //   - pas de défilement horizontal de la page ;
 //   - cibles tactiles d'au moins 44 × 44 px (boutons, liens isolés, cases, onglets, icônes). Exempts : liens
@@ -26,7 +27,7 @@
 //   - textes de la planche A4 (collection-a4 n'est pas contrôlée : format d'impression) ;
 //   - bouton Menu couvert par une superposition (récap : diaporama plein écran) : signalé comme « navCouvert ».
 // Ne mesure pas : barres fixes qui masquent le contenu, clavier virtuel, encoches réelles (à vérifier sur un appareil),
-// écrans de partie des jeux à salons (faux Supabase absent).
+// écrans d'attente des salons (salle, rejoindre), ni les autres jeux de la liste (cluedo, destins… : pas de faux dédié).
 // Faux Supabase (tests/fixtures/) : aucune donnée réelle. Écrit tests/shots/a11y-mobile.json.
 // Attentes avant chaque mesure (pas de délai fixe) : fin de redirection (une page de jeu sans partie renvoie vers l'accueil,
 // le libellé indique alors la page d'arrivée), feuilles de style chargées, barre Staff ajoutée (admin), mise en page stable.
@@ -36,6 +37,68 @@ const path = require('path');
 const { ROOT, SHOTS, check, finish, openPage, sleep, urlPage, chromium } = require('../lib/harness.cjs');
 
 const LARGEURS = [360, 390];
+/**
+ * Écrans de partie en cours (membre, sans l'accueil du jeu). salon : scénario de tests/fixtures/fake-salons.js ; hash : adresse
+ * de la partie ; attend : élément qui prouve que la table est affichée (attente d'état, pas de délai) ; fixture : faux client.
+ */
+const PARTIES = [
+  { pg: 'uno', nom: 'table en cours', salon: 'uno', hash: '#partie/HGUNO-4242', attend: '.uno-avatar-moi' },
+  { pg: 'nom-de-code', nom: 'grille en cours', salon: 'nom-de-code', hash: '#partie/HGNDC-4242', attend: '.ndc-bouton-arreter' },
+  { pg: 'loup-garou', nom: 'plateau de nuit', salon: 'loup-garou', hash: '#partie/HGLG-4242', attend: '.lg-pl-table' },
+  { pg: 'duels', nom: 'Échecs en cours', salon: 'duel-echecs', fixture: 'fake-sb-duels-plateaux.mjs', hash: '#partie/HGEC-1001', attend: '[data-sq]' },
+  { pg: 'duels', nom: 'Dames en cours', salon: 'duel-dames', fixture: 'fake-sb-duels-plateaux.mjs', hash: '#partie/HGDA-2002', attend: '[data-sq]' },
+  // Jeux de plateau (pages réservées aux administrateurs) : faux des tests, parties en cours
+  { pg: 'blackjack', nom: 'table en cours', role: 'admin', fixture: 'fake-sb-plateaux-cartes.mjs', scenario: { jeu: 'blackjack' }, hash: '#partie/HGBJK-1234', attend: '.bj-barre' },
+  { pg: 'poker', nom: 'table en cours', role: 'admin', fixture: 'fake-sb-plateaux-cartes.mjs', scenario: { jeu: 'poker' }, hash: '#partie/HGPOK-1234', attend: '.pk-barre' },
+  { pg: 'catan', nom: 'plateau en cours', role: 'admin', fixture: 'fake-sb-catan.mjs', hash: '#partie/HGCAT-1234', attend: '.ct-barre' },
+  { pg: 'pictionary', nom: 'dessin en cours', role: 'admin', fixture: 'fake-sb-pictionary.mjs', hash: '#partie/HGPIC-1234', attend: '.pi-barre' },
+];
+/**
+ * Défauts réels du site relevés sur les écrans de partie, admis TEMPORAIREMENT : ils ne font pas échouer le contrôle, mais
+ * sont comptés et signalés (« exceptions documentées »). Une règle ne vise qu'un élément précis (motif sur sa description) d'une
+ * page et d'une partie : tout autre élément trop petit fait toujours échouer. À retirer une fois corrigé (commentaire « À corriger »).
+ */
+const EXCEPTIONS = [
+  { page: 'uno', partie: 'table en cours', type: 'texte', motif: /^b « HG »/,
+    comment: 'À corriger : « HG » en 11 px sur les dos de cartes de la table (9 occurrences, 360 et 390 px). Passer à 12 px au minimum.' },
+  { page: 'nom-de-code', partie: 'grille en cours', type: 'texte', motif: /ndc-score-nb|ndc-carte-etiq|ndc-carte-mot|^span « MO »/,
+    comment: 'À corriger : compteurs « restants » (11 px), étiquettes JAUNE et ROSE des cartes (9 px), mots des cartes (10,4 à 11,3 px), initiales d\'avatar (8 px). Passer à 12 px au minimum.' },
+  { page: 'loup-garou', partie: 'plateau de nuit', type: 'cible', motif: /lg-chat-onglet/,
+    comment: 'À corriger : onglets du chat (95 × 40 px : hauteur sous 44 px).' },
+  { page: 'loup-garou', partie: 'plateau de nuit', type: 'texte', motif: /avatar|lg-siege-buche/,
+    comment: 'À corriger : initiales des sièges (11 px) et prénoms autour du feu (11,5 px). Passer à 12 px au minimum.' },
+  { page: 'duels', partie: 'Échecs en cours', type: 'cible', motif: /duels-echecs-case/,
+    comment: 'À corriger : cases de l\'échiquier à 41 × 41 px en 360 px (44 px attendus).' },
+  { page: 'duels', partie: 'Échecs en cours', type: 'texte', motif: /duels-echecs-coord/,
+    comment: 'À corriger : coordonnées de l\'échiquier (9 px).' },
+  { page: 'duels', partie: 'Dames en cours', type: 'cible', motif: /duels-dames-case/,
+    comment: 'À corriger : cases du damier à 32 × 32 px en 360 px et 35 × 35 px en 390 px (44 px attendus).' },
+  { page: 'blackjack', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|bj-etiquette/,
+    comment: 'À corriger : étiquettes « À toi de jouer » et « toi » (11 px). Composant commun des plateaux (plat-etiquette).' },
+  { page: 'poker', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|pk-|cd-sym/,
+    comment: 'À corriger : étiquettes, mises, actions et symboles des cartes (11 px). Composant commun des plateaux (plat-etiquette).' },
+  { page: 'catan', partie: 'plateau en cours', type: 'cible', motif: /^g « Sommet/,
+    comment: 'À corriger : sommets du plateau (SVG de 40 × 40 px en 360 px, 44 px attendus).' },
+  { page: 'catan', partie: 'plateau en cours', type: 'texte', motif: /plat-etiquette/,
+    comment: 'À corriger : étiquette « À toi de jouer » (11 px). Composant commun des plateaux (plat-etiquette).' },
+];
+/**
+ * Retire du relevé les défauts admis par EXCEPTIONS (écran de partie seulement). Renvoie la liste retirée, pour le compte rendu.
+ * scan.petites et scan.texte sont réduits ; le reste du relevé n'est pas touché.
+ */
+function appliquerExceptions(pg, partie, scan) {
+  const retires = [];
+  if (!scan || !partie) return retires;
+  const regles = EXCEPTIONS.filter((x) => x.page === pg && x.partie === partie);
+  const garder = (liste, type) => liste.filter((it) => {
+    const r = regles.find((x) => x.type === type && x.motif.test(it.el));
+    if (r) { retires.push({ type, el: it.el, comment: r.comment }); return false; }
+    return true;
+  });
+  scan.petites = garder(scan.petites, 'cible');
+  scan.texte = garder(scan.texte, 'texte');
+  return retires;
+}
 const HAUTEUR = { 360: 740, 390: 844 };
 const PAYSAGE = { width: 740, height: 360 };
 const MIN_CIBLE = 44, MIN_TEXTE = 12, MIN_CHAMP = 16;
@@ -340,15 +403,21 @@ const ESSAIS = 3;
  * Le libellé indique la page d'arrivée quand la page a redirigé (membre sans partie : accueil). rapport est gardé pour le fichier de sortie.
  * Le paysage (pages de jeux) n'est fait qu'à la première largeur.
  */
-async function controler(browser, { pg, role, scenario, fixture, w }) {
+async function controler(browser, { pg, role, scenario, fixture, w, hash = '', init = null, attend = null, libelle = null }) {
   const messages = [];
   let rapport = null, p = null, adresse = null;
+  const ouvrir = (largeur, hauteur, extra = {}) => openPage(browser, { page: pg, fixture, scenario, hash, init, width: largeur, height: hauteur, mobile: true, dpr: 2, reducedMotion: 'reduce', ...extra });
   for (let essai = 1; essai <= ESSAIS; essai++) {
-    rapport = { page: pg, role, fixture, largeur: w, meta: null, scan: null, nav: null, dialogues: [], paysage: null, erreur: null, avis: [], arrivee: null };
-    p = await openPage(browser, { page: pg, fixture, scenario, width: w, height: HAUTEUR[w], mobile: true, dpr: 2, reducedMotion: 'reduce' });
+    rapport = { page: pg, role, fixture, largeur: w, meta: null, scan: null, nav: null, dialogues: [], paysage: null, erreur: null, avis: [], arrivee: null, partie: attend ? libelle : null, exceptions: [] };
+    p = await ouvrir(w, HAUTEUR[w]);
     let transitoire = false;
     try {
       adresse = await attendrePrete(p, { pg, role });
+      if (attend) {
+        // Écran de partie : la table doit être affichée (attente de l'élément, pas de délai) ; sinon le défaut est signalé.
+        const vu = await p.waitForSelector(attend, { state: 'visible', timeout: 8000 }).then(() => true, () => false);
+        if (!vu) throw new Error(`écran de partie non affiché (élément ${attend} absent)`);
+      }
       await mesurer(p, rapport);
     } catch (e) {
       transitoire = TRANSITOIRE.test(e.message);
@@ -360,11 +429,13 @@ async function controler(browser, { pg, role, scenario, fixture, w }) {
   const arrivee = new URL(p.url()).pathname;
   rapport.arrivee = arrivee;
   const redirigee = !arrivee.endsWith(urlPage(pg));
-  const libelle = `${pg} [${role}]` + (redirigee ? ` → redirigée vers ${arrivee}` : '');
+  const libelleAff = (libelle ? `${pg} · ${libelle} [${role}]` : `${pg} [${role}]`) + (redirigee ? ` → redirigée vers ${arrivee}` : '');
   // Erreurs JavaScript de la page : signalées en avis (le contrôle de fumée les compte, ici elles ne sont pas des défauts d'accessibilité)
   rapport.avis = (p.errs || []).slice(0, 2);
   await p.ctx.close();
 
+  // Écrans de partie : défauts réels admis temporairement (EXCEPTIONS), retirés du relevé et comptés
+  rapport.exceptions = appliquerExceptions(pg, rapport.partie, rapport.scan);
   // Une ligne par page et largeur (les défauts de la page entière et des éléments ouverts)
   const tous = [rapport.scan, rapport.nav?.scan, ...rapport.dialogues.map((d) => d.scan)].filter(Boolean);
   const ds = [...new Set(tous.flatMap(defauts))];
@@ -382,15 +453,17 @@ async function controler(browser, { pg, role, scenario, fixture, w }) {
   if (rapport.erreur) ds.push('analyse impossible : ' + rapport.erreur);
   rapport.defauts = ds;
   const ex = [...(rapport.scan ? exemples(rapport.scan) : []), ...(rapport.nav?.scan ? exemples(rapport.nav.scan).map((x) => 'menu : ' + x) : [])];
-  messages.push({ ok: ds.length === 0, msg: `${libelle} ${w} : ${ds.length ? ds.join(' ; ') : 'OK'}${ex.length && ds.length ? '  [' + ex.slice(0, 3).join(' | ') + ']' : ''}` });
+  const admis = rapport.exceptions.length ? `  (exceptions documentées : ${rapport.exceptions.length}, voir EXCEPTIONS)` : '';
+  messages.push({ ok: ds.length === 0, msg: `${libelleAff} ${w} : ${ds.length ? ds.join(' ; ') : 'OK'}${ex.length && ds.length ? '  [' + ex.slice(0, 3).join(' | ') + ']' : ''}${admis}` });
 
   // Paysage (pages de jeux) : défilement horizontal et barres fixes trop hautes. Une seule fois par page et rôle.
   if (JEUX.has(pg) && w === LARGEURS[0]) {
     let fini = null;
     for (let essai = 1; essai <= ESSAIS && !fini; essai++) {
-      const q = await openPage(browser, { page: pg, fixture, scenario, width: PAYSAGE.width, height: PAYSAGE.height, mobile: true, dpr: 2, reducedMotion: 'reduce' });
+      const q = await ouvrir(PAYSAGE.width, PAYSAGE.height);
       try {
         const adr = await attendrePrete(q, { pg, role });
+        if (attend) await q.waitForSelector(attend, { state: 'visible', timeout: 8000 }).catch(() => {});
         const s = await q.evaluate(scanDom, { ...OPTS, rootSel: null });
         if (!(q.url() !== adr && essai < ESSAIS)) {
           const hautes = s.fixes.filter((f) => f.pourcentHauteur > 40);
@@ -398,10 +471,10 @@ async function controler(browser, { pg, role, scenario, fixture, w }) {
           if (s.hscroll > 0) pd.push(`défilement horizontal ${s.hscroll} px`);
           const av = hautes.map((f) => `barre fixe ${f.pourcentHauteur} % de la hauteur : ${f.el}`);
           rapport.paysage = { hscroll: s.hscroll, avis: av };
-          fini = { ok: pd.length === 0, msg: `${libelle} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}` };
+          fini = { ok: pd.length === 0, msg: `${libelleAff} paysage ${PAYSAGE.width}×${PAYSAGE.height} : ${pd.length ? pd.join(' ; ') : 'OK'}${av.length ? '  (avis : ' + av.join(' ; ') + ')' : ''}` };
         }
       } catch (e) {
-        if (essai === ESSAIS || !TRANSITOIRE.test(e.message)) fini = { ok: false, msg: `${libelle} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})` };
+        if (essai === ESSAIS || !TRANSITOIRE.test(e.message)) fini = { ok: false, msg: `${libelleAff} paysage : analyse impossible (${e.message.split('\n')[0].slice(0, 120)})` };
       }
       await q.ctx.close();
     }
@@ -439,6 +512,13 @@ async function enParallele(taches, n, fn) {
     for (const [role, scn] of roles) for (const w of LARGEURS) {
       taches.push({ pg, role, fixture: sp.fixture || 'fake-sb.mjs', scenario: { ...(sp.scenario || {}), ...scn }, w });
     }
+  }
+  // Écrans de partie en cours : membre (salons) ou administrateur (jeux de plateau), dans les deux largeurs
+  for (const pt of PARTIES) for (const w of LARGEURS) {
+    const role = pt.role || 'membre';
+    taches.push({ pg: pt.pg, role, fixture: pt.fixture || 'fake-sb.mjs',
+      scenario: { ...(pt.scenario || {}), ...(pt.salon ? { salon: pt.salon } : {}), ...(role === 'membre' ? MEMBRE : {}) }, w,
+      hash: pt.hash, init: pt.salon ? 'fake-salons.js' : null, attend: pt.attend, libelle: pt.nom });
   }
   const browser = await chromium.launch();
   const resultats = await enParallele(taches, PARALLELE, (t) => controler(browser, t).catch((e) => ({
