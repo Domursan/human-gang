@@ -52,6 +52,8 @@ const cells = (p) => p.locator('#cartes-p-collection .cz-cell').count();
     check(!(await p.locator('.cartes-mass').isVisible()), 'hors ligne : recyclage des doublons masqué');
     await p.click('#cartes-tab-ouverture', { force: true }).catch(() => {});
     check(await p.getAttribute('#cartes-tab-collection', 'aria-selected') === 'true', 'hors ligne : clic sur Ouverture sans effet');
+    await p.waitForSelector('#cartes-filtres'); // téléphone : les filtres sont repliés
+    await p.evaluate(() => { document.querySelector('#cartes-filtres').open = true; });
     await p.selectOption('#cartes-f-owned', 'owned'); await sleep(300);
     check(await cells(p) > 0, 'hors ligne : le filtre « Possédées » fonctionne');
     const zoomBtn = p.locator('#cartes-p-collection .cz-zoom').first();

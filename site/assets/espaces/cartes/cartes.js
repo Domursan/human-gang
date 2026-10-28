@@ -142,7 +142,7 @@ const S = {
   otherSets: new Map(), // séries fermées ou pas encore ouvertes dont un membre possède des cartes (drops, dons…)
   copies: [], wish: new Set(), favs: new Set(), favBusy: false, log: [],
   uniqueTaken: null, // cartes uniques : Map id -> exemplaires déjà attribués (null = inconnu)
-  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '', q: '' }, jeuOpen: null,
+  tab: 'ouverture', setId: null, filters: { rarity: '', family: '', owned: 'all', group: '', q: '' }, jeuOpen: null, filtresOuverts: undefined,
   // Collection très longue (idée Q5) : nombre de cartes dessinées (lot affiché), remis à zéro à chaque changement de filtre.
   colLimit: 0,
   reveal: null, busy: false, detailId: null, tradesMounted: false, massIds: [],
@@ -561,6 +561,10 @@ function skeleton() {
       ${TABS.map(([id, label], i) => `<button type="button" role="tab" id="cartes-tab-${id}" class="cartes-tab" data-tab="${id}" data-cpt="cartes.${id}"
         aria-selected="${i === 0}" aria-controls="cartes-p-${id}" tabindex="${i === 0 ? 0 : -1}"><svg class="cartes-tab-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${TAB_ICON[id]}</svg>${label}</button>`).join('')}
     </nav>
+    <div class="cartes-section-sel" id="cartes-section-wrap">
+      <label for="cartes-section-sel">Section</label>
+      <select id="cartes-section-sel" data-section>${TABS.map(([id, label]) => `<option value="${id}">${label}</option>`).join('')}</select>
+    </div>
     <h2 class="cartes-section-h" id="cartes-section-h" tabindex="-1"></h2>
     ${TABS.map(([id]) => `<section role="tabpanel" id="cartes-p-${id}" class="cartes-panel" aria-labelledby="cartes-tab-${id}" ${id === 'ouverture' ? '' : 'hidden'}>${id === 'echanges' ? '<div id="cartes-trades"></div>' : ''}</section>`).join('')}
     <section class="cartes-peer" id="cartes-peer" hidden></section>
@@ -613,7 +617,7 @@ function renderHeader() {
     ${pastilleHtml(S.lcdShown, { size: 'lg', id: 'cartes-lcd' })}
     ${isGod() ? '<span class="pill pill-current">Mode sans limite</span>' : ''}
     ${s.daily_available
-      ? `<button type="button" class="btn btn-sand" data-action="daily">Passage du jour (+${fmtPaillettes(daily)})</button>
+      ? `<button type="button" class="btn btn-sand" data-action="daily"><span>Passage du jour (+${fmtPaillettes(daily)})</span></button>
          <span class="cartes-small">Série actuelle : ${nf.format(s.daily_streak)} j</span>`
       : `<span class="pill pill-ok">Passage du jour pris · série de ${nf.format(s.daily_streak)} j</span>`}`;
   if (S.lcdShown < bal() && !S.lcdAnim) animateBalance();
@@ -657,6 +661,7 @@ function showTab() {
     tab.setAttribute('aria-selected', String(on));
     tab.tabIndex = on ? 0 : -1;
   }
+  $('#cartes-section-sel').value = S.tab;
   applyView();
 }
 
@@ -666,6 +671,7 @@ function showTab() {
 function applyView() {
   const peer = !!S.peer;
   $('#cartes-tablist').hidden = peer;
+  $('#cartes-section-wrap').hidden = peer;
   // Titre visible de la section affichée (il tient lieu de barre d'onglets)
   const titre = $('#cartes-section-h');
   titre.hidden = peer;
@@ -2454,6 +2460,9 @@ function drawCollection(focusId) {
     return true;
   };
   const favCount = [...S.favs].filter((id) => copiesOf(id).length > 0).length; // favoris encore possédés (libellé du filtre)
+  // Filtres repliables : ouverts sur ordinateur, fermés sur téléphone ; le choix de l'utilisateur tient d'un dessin à l'autre
+  const filtresOuverts = S.filtresOuverts ?? !window.matchMedia('(max-width: 600px)').matches;
+  const filtresActifs = [f.rarity, f.family, f.group, f.owned !== 'all' ? f.owned : ''].filter(Boolean).length;
   // Une entrée par série affichée : ses compteurs (sans filtre) et ses cartes (filtrées).
   /** Compteurs et cartes affichées d'une série ouverte. */
   const openGroup = (s) => {
@@ -2512,6 +2521,8 @@ function drawCollection(focusId) {
           <span class="muted small" id="cartes-f-q-n">${q ? esc(pluralCount(S.shownIds.length, 'résultat', 'résultats', nf.format)) : ''}</span>
         </div>
       </div>
+      <details class="cartes-filtres" id="cartes-filtres"${filtresOuverts ? ' open' : ''}>
+        <summary>Filtres et actions${filtresActifs ? ` <span class="muted">(${nf.format(filtresActifs)} actif${filtresActifs > 1 ? 's' : ''})</span>` : ''}</summary>
       <div class="cartes-filters">
         <div class="field">
           <label for="cartes-f-rarity">Rareté</label>
@@ -2553,8 +2564,10 @@ function drawCollection(focusId) {
         <a class="btn btn-ghost" href="/pages/cartes/collection-a4.html?set=${all ? 'all' : esc(set.id)}">Imprimer ma planche</a>
         <button type="button" class="btn btn-ghost" data-action="champion">Ma carte Champion</button>
       </div>
+      </details>
     </section>
     ${body}`;
+  $('#cartes-filtres')?.addEventListener('toggle', (e) => { S.filtresOuverts = e.currentTarget.open; });
   el.insertAdjacentHTML('afterbegin', '<div id="cartes-luck-slot"></div>');
   if (!OFF) import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
   drawAtelier(); // panneau de l'Atelier (idée C10)
@@ -3358,7 +3371,8 @@ function onClick(e) {
  */
 function onChange(e) {
   const t = e.target;
-  if (t.dataset.change === 'set') { S.setId = t.value; S.colLimit = 0; renderCollection('cartes-set'); }
+  if (t.id === 'cartes-section-sel') { setTab(t.value); focusSection(); }
+  else if (t.dataset.change === 'set') { S.setId = t.value; S.colLimit = 0; renderCollection('cartes-set'); }
   else if (t.dataset.filter) { S.filters[t.dataset.filter] = t.value; S.colLimit = 0; renderCollection(t.id); }
   else if (t.dataset.change === 'peer-set' && S.peer) { S.peer.setId = t.value; S.peer.limit = 0; renderPeer('#peer-set'); }
   else if (t.dataset.pfilter && S.peer) { S.peer.filters[t.dataset.pfilter] = t.value; S.peer.limit = 0; renderPeer('#' + t.id); }

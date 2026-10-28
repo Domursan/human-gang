@@ -1,12 +1,12 @@
 // Parcours : navigation de la page Cartes (/pages/cartes/cartes.html) entre ses sections.
-// La barre d'onglets interne est masquée sur toutes les tailles d'écran (assets/espaces/cartes/cartes.css) : la navigation
-// passe par le menu « Le jeu de cartes » de l'en-tête et par l'adresse /pages/cartes/cartes.html#<onglet>. Le titre de section
-// (#cartes-section-h) indique l'onglet affiché.
-// 1. Téléphone (360, 390, 430 px) : barre masquée, titre visible, les sept sections ont un lien dans le menu,
-//    aucune erreur, pas de défilement horizontal.
-// 2. 390 px : Ouverture est active au départ ; changer de section par adresse ou par le menu met à jour
-//    l'onglet, le panneau et le titre.
-// 3. Ordinateur (1280 px) : barre toujours masquée, titre visible, sept onglets dans le DOM (aria-selected).
+// Ordinateur (601 px et plus) : barre d'onglets (#cartes-tablist) ; le titre de section (#cartes-section-h) est masqué visuellement.
+// Téléphone (600 px et moins) : liste déroulante « Section » (#cartes-section-sel) au-dessus du titre ; la barre reste dans le DOM, masquée.
+// Les liens du menu « Le jeu de cartes » de l'en-tête et l'adresse /pages/cartes/cartes.html#<onglet> mènent aussi aux sections.
+// 1. Téléphone (360, 390, 430 px) : liste déroulante visible avec les sept sections, barre masquée, titre visible,
+//    les sept sections ont un lien dans le menu, aucune erreur, pas de défilement horizontal.
+// 2. 390 px : Ouverture est active au départ ; changer de section par la liste, par adresse ou par le menu met à jour
+//    l'onglet, le panneau, le titre et la liste.
+// 3. Ordinateur (1280 px) : barre visible, liste masquée, titre masqué visuellement, sept onglets (aria-selected).
 // 4. Contenu des sections (Ouverture, Inventaire, Boutique) et adresse /pages/cartes/cartes.html#boutique.
 // Faux Supabase : fixtures/fake-sb-cartes.mjs.
 // Lancer : node tests/parcours/cartes/parcours-cartes-onglets.cjs
@@ -24,6 +24,9 @@ const etat = (p) => p.evaluate((ids) => {
   const liens = [...document.querySelectorAll('a[href^="/pages/cartes/cartes.html#"]')].map((a) => a.getAttribute('href').split('#')[1]);
   return {
     barreVisible: getComputedStyle(t).display !== 'none',
+    listeVisible: getComputedStyle(document.querySelector('#cartes-section-wrap')).display !== 'none',
+    listeValeur: document.querySelector('#cartes-section-sel').value,
+    listeOptions: [...document.querySelectorAll('#cartes-section-sel option')].map((o) => o.value),
     titreVisible: !titre.hidden && getComputedStyle(titre).display !== 'none',
     titre: titre.textContent.trim(),
     liens: ids.filter((id) => liens.includes(id)),
@@ -39,7 +42,8 @@ const actif = (p) => p.evaluate(() => [...document.querySelectorAll('#cartes-tab
   for (const w of [360, 390, 430]) {
     const p = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: w, height: 800, touch: true });
     const e = await etat(p);
-    check(!e.barreVisible, `${w} px : barre d'onglets masquée (navigation dans le menu du haut)`);
+    check(!e.barreVisible, `${w} px : barre d'onglets masquée (remplacée par la liste)`);
+    check(e.listeVisible && JSON.stringify(e.listeOptions) === JSON.stringify(ONGLETS), `${w} px : liste « Section » visible avec les sept sections`);
     check(e.titreVisible && e.titre === 'Ouverture', `${w} px : titre de section visible (« ${e.titre} »)`);
     check(JSON.stringify(e.onglets) === JSON.stringify(ONGLETS), `${w} px : les sept sections existent (${e.onglets.join(',')})`);
     check(e.liens.length === ONGLETS.length, `${w} px : le menu mène aux sept sections (${e.liens.join(',')})`);
@@ -48,9 +52,15 @@ const actif = (p) => p.evaluate(() => [...document.querySelectorAll('#cartes-tab
     if (w === 390) {
       // ---------- 2. Section active et changements de section ----------
       check(await actif(p) === 'ouverture', '390 px : Ouverture est la section active au départ');
+      check((await etat(p)).listeValeur === 'ouverture', '390 px : la liste affiche Ouverture au départ');
+      await p.selectOption('#cartes-section-sel', 'inventaire');
+      await sleep(300);
+      check(await actif(p) === 'inventaire', '390 px : la liste « Section » active Inventaire');
+      check((await etat(p)).titre === 'Inventaire', '390 px : le titre suit la liste (Inventaire)');
       await goTab(p, 'classement');
       await sleep(300);
       check(await actif(p) === 'classement', '390 px : l\'adresse #classement active la section Classement');
+      check((await etat(p)).listeValeur === 'classement', '390 px : la liste suit l\'adresse (Classement)');
       check(await p.$eval('#cartes-p-classement', (s) => !s.hidden), '390 px : le panneau Classement s\'affiche');
       check((await etat(p)).titre === 'Classement', '390 px : le titre indique Classement');
       // Lien « Échanges » du menu, par le chemin d'un téléphone : Menu (replié), puis « Le jeu de cartes », puis le lien
@@ -69,9 +79,14 @@ const actif = (p) => p.evaluate(() => [...document.querySelectorAll('#cartes-tab
   // ---------- 3. Ordinateur : barre masquée, titre visible ----------
   const d = await openPage(browser, { page: 'cartes', fixture: FIXTURE, width: 1280, height: 900 });
   const ed = await etat(d);
-  check(!ed.barreVisible, '1280 px : barre d\'onglets masquée');
-  check(ed.titreVisible && ed.titre === 'Ouverture', '1280 px : titre de section visible (« ' + ed.titre + ' »)');
+  check(ed.barreVisible, '1280 px : barre d\'onglets visible');
+  check(!ed.listeVisible, '1280 px : liste « Section » masquée');
+  const largeurTitre = await d.$eval('#cartes-section-h', (h) => h.getBoundingClientRect().width);
+  check(largeurTitre <= 1 && ed.titre === 'Ouverture', `1280 px : titre de section masqué visuellement (largeur ${largeurTitre} px, « ${ed.titre} »)`);
+  check(await d.$eval('#cartes-tab-ouverture', (b) => b.getAttribute('aria-selected')) === 'true', '1280 px : Ouverture sélectionnée dans la barre');
   check(JSON.stringify(ed.onglets) === JSON.stringify(ONGLETS), '1280 px : les sept sections existent dans le DOM');
+  await d.click('#cartes-tab-classement'); await sleep(300);
+  check(await actif(d) === 'classement', '1280 px : un clic sur l\'onglet Classement change de section');
   check(d.errs.length === 0, `1280 px : aucune erreur console (${d.errs.join(' | ') || 'rien'})`);
   await d.ctx.close();
 

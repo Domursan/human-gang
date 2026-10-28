@@ -9,11 +9,14 @@ const path = require('path');
 const { openPage, check, finish, hscroll, sleep, log, adminSection, chromium } = require('../../lib/harness.cjs');
 
 const F = 'fake-sb-cartes.mjs';
+/** Sur téléphone, « Ma carte Champion » est dans le bloc repliable « Filtres et actions » : on l'ouvre s'il est fermé. */
+const ouvrirFiltres = (pg) => pg.$eval('#cartes-filtres', (d) => d.open).then((o) => (o ? null : pg.click('#cartes-filtres > summary')));
 (async () => {
   const browser = await chromium.launch();
 
   const p = await openPage(browser, { page: 'cartes', fixture: F, width: 390, height: 900, scenario: { champion: 'aucune' }, hash: '#collection' });
   await sleep(400);
+  await ouvrirFiltres(p);
   await p.click('[data-action="champion"]');
   await sleep(500);
   check(await p.$eval('#cartes-champion', (d) => d.open), 'fenêtre ouverte');
@@ -45,6 +48,7 @@ const F = 'fake-sb-cartes.mjs';
 
   const a = await openPage(browser, { page: 'cartes', fixture: F, width: 390, height: 900, scenario: { champion: 'acceptee' }, hash: '#collection' });
   await sleep(400);
+  await ouvrirFiltres(a);
   await a.click('[data-action="champion"]');
   await sleep(500);
   check(/est sortie/.test(await a.$eval('.champ-body', (e) => e.innerText)) && await a.$('.champ-form') === null, 'carte acceptée : message, pas de formulaire');
@@ -52,6 +56,7 @@ const F = 'fake-sb-cartes.mjs';
 
   const s = await openPage(browser, { page: 'cartes', fixture: F, width: 360, height: 800, scenario: { champion: 'aucune' }, hash: '#collection' });
   await sleep(400);
+  await ouvrirFiltres(s);
   await s.click('[data-action="champion"]');
   await sleep(500);
   check(await s.$eval('#cartes-champion', (d) => d.scrollWidth <= d.clientWidth + 1) && await hscroll(s) === 0, '360 px : pas de défilement horizontal');

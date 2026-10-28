@@ -9,9 +9,14 @@
 /* ---------- Onglets ---------- */
 .cartes-tabs { display: flex; gap: 6px; overflow-x: auto; border-bottom: 1px solid var(--border); margin-bottom: 24px; scrollbar-width: none; }
 .cartes-tabs::-webkit-scrollbar { display: none; }
-/* Barre d'onglets masquée (sur toutes les tailles d'écran) : la navigation est dans le menu du haut (header.js).
-   Les onglets restent la mécanique qui affiche le panneau (adresse, boutons internes). Le titre de section les remplace. */
+/* Navigation entre les sections (la même mécanique sur toutes les tailles : onglets, adresse, boutons internes) :
+   - ordinateur (601 px et plus) : la barre d'onglets ; le titre de section reste focusable mais n'est plus affiché ;
+   - téléphone (600 px et moins) : une liste déroulante « Section » au-dessus du titre, la barre reste dans le DOM. */
 #cartes-tablist { display: none; }
+.cartes-section-sel { display: none; margin: 0 0 16px; }
+.cartes-section-sel[hidden] { display: none; }
+.cartes-section-sel label { display: block; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.cartes-section-sel select { width: 100%; min-height: 44px; }
 .cartes-section-h { font-family: var(--font-display); font-weight: 400; font-size: clamp(24px, 3.4vw, 32px); line-height: 1.1; margin: 0 0 16px; }
 .cartes-section-h[hidden] { display: none; }
 .cartes-tab { font: inherit; font-weight: 700; min-height: 44px; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent;
@@ -20,16 +25,20 @@
 .cartes-tab-ico { display: none; }
 .cartes-panel[hidden] { display: none; }
 
-/* Téléphone (600 px et moins) : les six onglets deviennent une grille de 3 colonnes sur 2 lignes, tous visibles d'un coup,
-   icône au-dessus du libellé. Plus besoin de glisser pour découvrir Échanges ou Classement. */
+/* Téléphone (600 px et moins) : liste déroulante « Section ». Ordinateur (601 px et plus) : barre d'onglets, titre masqué visuellement. */
 @media (max-width: 600px) {
-  .cartes-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; overflow: visible; border-bottom: 0; margin-bottom: 20px; }
-  .cartes-tab { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-height: 60px; padding: 8px 4px; font-size: 13px; background: var(--surface);
-    border: 1px solid var(--border); border-bottom: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
-  .cartes-tab[aria-selected="true"] { color: var(--text); background: var(--surface-2); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-  .cartes-tab-ico { display: block; flex: none; width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .cartes-tab[aria-selected="true"] .cartes-tab-ico { color: var(--sand); }
+  .cartes-section-sel { display: block; }
 }
+@media (min-width: 601px) {
+  #cartes-tablist { display: flex; }
+  .cartes-section-h { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+}
+
+/* Filtres de la collection : repliables (téléphone : fermés par défaut, pour garder la collection près du haut de page) */
+.cartes-filtres { margin-bottom: 16px; }
+.cartes-filtres > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 700; color: var(--text); }
+.cartes-filtres > summary .muted { font-weight: 400; margin-left: 8px; }
+.cartes-filtres > .cartes-filters { margin: 10px 0 0; }
 
 /* ---------- Blocs génériques ---------- */
 .cartes-block { margin-bottom: 20px; }
