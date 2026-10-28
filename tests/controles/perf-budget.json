@@ -1,10 +1,13 @@
 {
-  "_note": "Budget de performance mobile (Q3) : téléphone moyen, 4G lente simulée, processeur ralenti × 4, 390 px. lcp_ms : plus grand affichage ; ko : octets servis au premier chargement (hors photos, hors polices Google) ; requetes : requêtes servies ; cls : décalage de mise en page. Les valeurs de chaque page sont l'objectif (affiché « hors objectif » s'il est dépassé) ; « plafond » fixe, pour les mesures qui dépassent déjà l'objectif au 23/10/2026 (requêtes et Ko : version publiée, compressée, au 28/10/2026), la limite bloquante (mesure du jour arrondie). Échec si une mesure dépasse sa limite (plafond, sinon objectif) de plus de 10 %. Abaisser un plafond après chaque correction. Mesuré sur la version publiée (_site/, HG_ROOT) par la CI.",
+  "_note": "Budget de performance mobile (Q3) : téléphone moyen, 4G lente simulée, processeur ralenti × 4, 390 px. lcp_ms : plus grand affichage ; ko : octets servis au premier chargement (hors photos, hors polices : les polices Google d'avant la revue r9, puis les polices hébergées assets/fonts, sont mesurées à part dans « polices », plafond fixe) ; requetes : requêtes servies ; cls : décalage de mise en page. Les valeurs de chaque page sont l'objectif (affiché « hors objectif » s'il est dépassé) ; « plafond » fixe, pour les mesures qui dépassent déjà l'objectif au 23/10/2026 (requêtes et Ko : version publiée, compressée, au 28/10/2026), la limite bloquante (mesure du jour arrondie). Échec si une mesure dépasse sa limite (plafond, sinon objectif) de plus de 10 %. Abaisser un plafond après chaque correction. Mesuré sur la version publiée (_site/, HG_ROOT) par la CI.",
   "reseau": {
     "rtt_ms": 150,
     "debit_ko_s": 200
   },
   "cpu": 4,
+  "polices": {
+    "ko": 150
+  },
   "tolerance": 0.1,
   "pages": {
     "accueil": {

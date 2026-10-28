@@ -1,5 +1,16 @@
 /* ===== Humane Gang — base commune (chargée par toutes les pages) ===== */
 
+/* Polices hébergées sur le site (assets/fonts, sous-ensembles latin, licence OFL : voir assets/fonts/OFL.txt).
+   Aucun appel à Google Fonts : la police s'affiche tout de suite, et le texte de secours reste lisible si elle tarde. */
+@font-face { font-family: 'Archivo Black'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/assets/fonts/archivo-black-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/assets/fonts/inter-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url('/assets/fonts/inter-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('/assets/fonts/inter-latin-700.woff2') format('woff2'); }
+
 :root {
   /* Couleurs de marque (bande arc-en-ciel uniquement, en pleine saturation) */
   --brand-red: #B70127;

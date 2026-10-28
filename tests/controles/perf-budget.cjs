@@ -2,8 +2,10 @@
 // (390 px, 4G lente : 150 ms d'aller-retour et 200 Ko/s par réponse, processeur ralenti × 4), avec le faux Supabase.
 // Mesures : plus grand affichage (LCP), octets et requêtes servis au premier chargement, décalage de mise en page (CLS).
 // Seuils : tests/controles/perf-budget.json (objectif par page, plafond bloquant pour ce qui dépasse déjà) ; échec au-delà du plafond + 10 %.
-// Limites : fausses données (protège contre les régressions du code, pas contre un album de 400 photos) ; photos et
-// polices Google hors mesure (servies à part) ; le réseau lent est simulé réponse par réponse, sans partage du débit.
+// Polices (Google Fonts avant la revue r9, hébergées dans assets/fonts depuis) : hors ko et requêtes, mesurées à part
+// (polices_ko, plafond « polices » du JSON).
+// Limites : fausses données (protège contre les régressions du code, pas contre un album de 400 photos) ; photos hors mesure
+// (servies à part) ; le réseau lent est simulé réponse par réponse, sans partage du débit.
 // Écrit tests/shots/perf.json (repris par tests/ci-resume.cjs) et, sous GitHub Actions, un tableau dans le résumé.
 // Lancer : node tests/controles/perf-budget.cjs   (ou npm run test:perf)
 const fs = require('fs');
@@ -32,13 +34,17 @@ const INIT = () => {
     await sleep(2500); // laisse les modules et les données arriver (le LCP peut encore changer)
     const m = await p.evaluate(() => window.__perf || { lcp: 0, cls: 0 });
     const net = p.ctx.__net;
-    const r = { page: pg, lcp_ms: Math.round(m.lcp), ko: Math.round(net.octets / 1024), requetes: net.requetes, cls: Math.round(m.cls * 1000) / 1000 };
+    const polices = net.polices || { requetes: 0, octets: 0 };
+    const r = { page: pg, lcp_ms: Math.round(m.lcp), ko: Math.round((net.octets - polices.octets) / 1024), requetes: net.requetes - polices.requetes,
+      cls: Math.round(m.cls * 1000) / 1000, polices_ko: Math.round(polices.octets / 1024) };
     const K = ['lcp_ms', 'ko', 'requetes', 'cls'];
     const limite = (k) => (seuil.plafond?.[k] ?? seuil[k]);
     const hors = K.filter((k) => r[k] > limite(k) * TOL); // bloquant
+    if (r.polices_ko > CFG.polices.ko * TOL) hors.push(`polices ${r.polices_ko} Ko / ${CFG.polices.ko}`);
     r.objectif = K.filter((k) => r[k] > seuil[k]);        // à améliorer (affiché seulement)
     r.ok = !hors.length;
     check(r.ok, `${pg} : LCP ${r.lcp_ms} ms / ${seuil.lcp_ms} · ${r.ko} Ko / ${seuil.ko} · ${r.requetes} requêtes / ${seuil.requetes} · CLS ${r.cls} / ${seuil.cls}`
+      + ` · polices ${r.polices_ko} Ko / ${CFG.polices.ko}`
       + `${r.objectif.length ? ` · hors objectif : ${r.objectif.join(', ')}` : ''}${hors.length ? ` · AU-DELÀ DU PLAFOND : ${hors.join(', ')}` : ''}${p.errs.length ? ` · erreurs : ${p.errs.join(' | ').slice(0, 200)}` : ''}`);
     pages.push(r);
     await p.ctx.close();

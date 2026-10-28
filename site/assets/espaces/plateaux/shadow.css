@@ -4,7 +4,7 @@
    Ordinateur (> 760 px) : mon personnage à gauche, plan et panneau au centre, joueurs, journal et chat à droite.
    Téléphone (≤ 760 px) : une colonne ; le panneau « Ton tour » vient en premier, le chat est en tiroir.
    Titres en Cinzel ; le texte en Inter. Le plan est en grille : il suit la largeur de l'écran. */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
 
 .sh-table, .sh-fin {
   --sh-fond: #0E0E10;
