@@ -12,5 +12,8 @@ try {
   var d = new Date(), t = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
   localStorage.setItem('hg_storage_test', '1'); localStorage.removeItem('hg_storage_test');
   localStorage.removeItem('hg_intro_seen'); // ancienne clé (intro jouée une seule fois)
+  // « Passer l'intro » cliqué avant que le script de l'intro soit chargé (appareil lent) : le lien porte ?intro=vu,
+  // on marque la journée ici, sinon l'accueil renverrait vers l'intro en boucle.
+  if (/[?&]intro=vu\b/.test(location.search)) localStorage.setItem('hg_intro_day', t);
   if (!introOff && localStorage.getItem('hg_intro_day') !== t && !/[?&]nointro\b/.test(location.search)) location.replace('/index.html');
 } catch (e) {}
