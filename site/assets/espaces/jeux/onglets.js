@@ -27,7 +27,7 @@ export const ONGLETS = [
   { id: 'citations', titre: 'Qui a dit ça ?', module: './citations.js', idee: 'J3', rythme: 'jour', couleur: 'var(--slate)',
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
   { id: 'jour', titre: 'Question du jour', module: './jour.js', idee: 'J4', rythme: 'jour' },
-  { id: 'sutom', titre: 'Sutom HG', module: './sutom.js', idee: 'J8', rythme: 'jour' },
+  { id: 'sutom', titre: 'Sutom du gang', module: './sutom.js', idee: 'J8', rythme: 'jour' },
   { id: 'framed', titre: 'Framed', module: './framed.js', idee: 'J9', rythme: 'jour' },
   { id: 'heardle', titre: 'Heardle', module: './heardle.js', idee: 'J10', rythme: 'jour' },
   { id: 'arcade', titre: 'Arcade', module: './arcade.js', idee: 'J18', rythme: 'jour' },

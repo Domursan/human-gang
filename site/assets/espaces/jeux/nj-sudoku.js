@@ -158,7 +158,10 @@ export async function resume({ sb }) {
   if (error) throw error;
   const gain = data?.recompense_aujourdhui ? Number(data.gain) || 0 : 0;
   if (data?.sudoku_fait) return { etat: 'fait', texte: `Grille du jour terminée en ${fmtTemps(data.sudoku_fait.secondes)}`, badge: 'Fait', gain };
-  return { etat: 'a_jouer', texte: `Grille du jour · niveau ${data?.sudoku?.niveau || ''}`.trim(), badge: 'À jouer', gain };
+  // Le niveau n'est affiché que s'il existe (sans lui : « Grille du jour » seul, sans « · niveau » suspendu)
+  const niveau = data?.sudoku?.niveau;
+  const texte = niveau != null && String(niveau).trim() !== '' ? `Grille du jour · niveau ${niveau}` : 'Grille du jour';
+  return { etat: 'a_jouer', texte, badge: 'À jouer', gain };
 }
 
 /* ---------- Données ---------- */

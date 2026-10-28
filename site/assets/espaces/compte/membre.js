@@ -76,9 +76,7 @@ function sinceLabel(d, joined) {
   const x = new Date(d);
   return `${MONTHS[x.getMonth()]} ${x.getFullYear()}`;
 }
-/** Identifiant lisible dérivé de l'uuid : HG-1A2B-3C4D */
-const shortId = (id) => { const h = String(id || '').replace(/-/g, '').toUpperCase(); return `HG-${h.slice(0, 4)}-${h.slice(-4)}`; };
-/** Code-barres décoratif déterministe (largeurs 1–3) à partir de l'uuid. */
+/** Code-barres décoratif déterministe (largeurs 1–3) à partir d'une chaîne (ici le numéro de membre, répété) : le code-barres encode le numéro. */
 function barcode(id) {
   const h = String(id || '0').replace(/-/g, '');
   return [...h].slice(0, 28).map((c) => (parseInt(c, 16) % 3) + 1);
@@ -158,7 +156,7 @@ function idcBadgesHtml(c) {
 function cardHtml(c) {
   const bday = birthdayLabel(c.birthday_dm);
   const stats = c.stats || {};
-  const bars = barcode(c.id).map((w, i) => `<i style="flex-grow:${w}" class="${i % 2 ? 'gap' : ''}"></i>`).join('');
+  const bars = barcode(num4(c.member_number).repeat(7)).map((w, i) => `<i style="flex-grow:${w}" class="${i % 2 ? 'gap' : ''}"></i>`).join('');
   const bdg = idcBadgesHtml(c);
   return `
     <div class="idc-wrap" id="idc-wrap">
@@ -194,7 +192,6 @@ function cardHtml(c) {
           <footer class="idc-foot" aria-hidden="true">
             <span class="idc-chip"><i></i><i></i><i></i><i></i></span>
             <span class="idc-barcode">${bars}</span>
-            <span class="idc-serial">${esc(shortId(c.id))}</span>
           </footer>
         </div>
         <div class="idc-holo" aria-hidden="true"></div>
@@ -439,17 +436,15 @@ export async function renderIdCard(canvas, c) {
     ctx.fillStyle = '#ABA7A0'; ctx.font = `500 28px ${BODY}`; ctx.fillText(n > 1 ? many : one, x + 18, sy + 134);
   });
 
-  // Pied : puce, code-barres, numéro de série
+  // Pied : puce, code-barres (encode le numéro de membre, affiché dans l'en-tête)
   const fy = 1110;
   ctx.fillStyle = '#C9A962'; pixelRect(ctx, 90, fy, 130, 96, 8); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.moveTo(90, fy + 48); ctx.lineTo(220, fy + 48); ctx.moveTo(155, fy); ctx.lineTo(155, fy + 96); ctx.stroke();
   let x = 280;
-  const bars = barcode(c.id), unit = 640 / bars.reduce((a, b) => a + b, 0);
+  const bars = barcode(num4(c.member_number).repeat(7)), unit = 640 / bars.reduce((a, b) => a + b, 0);
   ctx.fillStyle = 'rgba(242,239,234,0.75)';
   bars.forEach((w, i) => { if (i % 2 === 0) ctx.fillRect(x, fy + 8, w * unit, 80); x += w * unit; });
-  ctx.textAlign = 'right'; ctx.fillStyle = '#ABA7A0'; ctx.font = `400 34px ${PIXEL}`; spacing(ctx, 4);
-  ctx.fillText(shortId(c.id), CW - 90, fy + 64); spacing(ctx, 0);
   ctx.restore();
 
   // Liseré

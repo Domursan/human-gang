@@ -83,6 +83,11 @@ export function fmtPaillettes(n, { icon = true } = {}) {
 const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
 /** Position de chaque segment dans le viewBox 20 × 34 : [x, y, largeur, hauteur]. */
 const SEGR = { a: [3, 0, 14, 3], b: [17, 3, 3, 13], c: [17, 18, 3, 13], d: [3, 31, 14, 3], e: [0, 18, 3, 13], f: [0, 3, 3, 13], g: [3, 15, 14, 3] };
+/**
+ * Géométrie du petit format (20 px de haut) : traits plus épais, sinon le « 1 » (deux traits verticaux de 3/20) ne se voit
+ * presque pas. Le grand format garde SEGR.
+ */
+const SEGR_SM = { a: [3, 0, 14, 4], b: [15, 3, 5, 14], c: [15, 17, 5, 14], d: [3, 30, 14, 4], e: [0, 17, 5, 14], f: [0, 3, 5, 14], g: [3, 15, 14, 4] };
 /** Hauteur (px) et taille de l'icône pour chaque taille de pastille : 'lg' (en-tête) ou 'sm' (bouton). */
 const SIZES = { lg: { h: 40, ic: 40 }, sm: { h: 20, ic: 20 } };
 
@@ -94,9 +99,13 @@ const SIZES = { lg: { h: 40, ic: 40 }, sm: { h: 20, ic: 20 } };
  */
 function digitSvg(ch, h) {
   const on = SEG[ch] || '';
+  const small = h <= SIZES.sm.h;
+  const geo = small ? SEGR_SM : SEGR;
+  // Petit format : le « 1 » est centré dans sa case (les segments éteints restent à leur place, comme sur un vrai afficheur)
+  const dx = small && ch === '1' ? -7 : 0;
   let s = `<svg class="lcd-dg" viewBox="0 0 20 34" style="width:${(h * 20 / 34).toFixed(2)}px;height:${h}px" aria-hidden="true" focusable="false">`;
-  for (const k of Object.keys(SEGR)) { const r = SEGR[k]; s += `<rect class="lcd-off" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}"/>`; }
-  for (const k of on) { const r = SEGR[k]; s += `<rect class="lcd-on" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}"/>`; }
+  for (const k of Object.keys(geo)) { const r = geo[k]; s += `<rect class="lcd-off" x="${r[0]}" y="${r[1]}" width="${r[2]}" height="${r[3]}"/>`; }
+  for (const k of on) { const r = geo[k]; s += `<rect class="lcd-on" x="${r[0] + dx}" y="${r[1]}" width="${r[2]}" height="${r[3]}"/>`; }
   return s + '</svg>';
 }
 

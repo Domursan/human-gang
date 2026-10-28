@@ -34,7 +34,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     check(JSON.stringify(cartes) === JSON.stringify(['#place', '#poste', '#ventes', '#camp', '#fabrique', '#fete', '#mairie']),
       `(a) 7 lieux sur le plateau : ${cartes.join(' ')}`);
     check(await p.isVisible('#plateau-root') && await p.isVisible('#zone-title'), '(a) plateau visible, titre de zone');
-    check((await p.textContent('#zone-crumb')).trim() === 'Plateau', '(a) fil d’Ariane du plateau : Plateau');
+    check((await p.textContent('#zone-crumb')).trim() === '', '(a) plateau : pas de fil d’Ariane répété (le titre dit déjà Plateau)');
     check(!(await p.isVisible('#zone-back')), '(a) pas de bouton retour sur le plateau');
     check(await p.$('.shell-col:not([hidden])') === null && await p.$('.shell-tabs:visible') === null, '(a) ordinateur : ni colonne de navigation, ni barre du bas');
 

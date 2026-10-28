@@ -24,7 +24,7 @@ import { paillSym } from '../../commun/paillettes.js';
 import { sb, initPage, toast, esc, $ } from '../../commun/core.js';
 import { ONGLETS } from './onglets.js';
 import { nf, jourLong, zurichIso } from './commun.js';
-import { SECTIONS, CARTES } from './catalogue.js';
+import { SECTIONS, CARTES, BONUS, LIBELLE_ETAT } from './catalogue.js';
 import { CLE_JEU, monterClassement } from './classement-jeux.js'; // classements des jeux du jour (migration 157)
 import { canAccess, pageLabel, pageMode } from '../../commun/core/pages-access.js';
 import { getCachedProfile } from '../../commun/core/profile.js';
@@ -126,10 +126,10 @@ function construire() {
 }
 
 /* ---------- Tableau de bord « Les missions du jour » ---------- */
-/** Pastille d'état d'un jeu. */
+/** Pastille d'état d'un jeu : sans état du jour, pas de pastille (comme dans le catalogue). Libellés : catalogue.js. */
 function badgeHtml(r) {
-  if (!r) return '<span class="pill jeux-pill-sand">Ouvrir</span>';
-  const t = esc(r.badge || (r.etat === 'fait' ? 'Fait' : r.etat === 'a_jouer' ? 'À jouer' : ''));
+  if (!['fait', 'a_jouer', 'en_cours'].includes(r?.etat)) return '';
+  const t = esc(r.badge || LIBELLE_ETAT[r.etat]);
   if (!t) return '';
   if (r.etat === 'fait') return `<span class="pill pill-ok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>${t}</span>`;
   if (r.etat === 'a_jouer') return `<span class="pill jeux-pill-sand">${t}</span>`;
@@ -144,7 +144,7 @@ function monterHub(panel) {
       <section class="jg-card jeux-prog" aria-labelledby="jeux-prog-h">
         <div class="jg-between"><h2 class="jg-h3" id="jeux-prog-h">Ton programme du jour</h2>
           <span class="jeux-serie" id="jeux-serie" hidden></span></div>
-        <div class="jeux-bar" role="progressbar" aria-labelledby="jeux-prog-h" aria-valuemin="0" aria-valuemax="${JEUX.length}" aria-valuenow="0" id="jeux-bar"><i></i></div>
+        <div class="jeux-bar" role="progressbar" aria-labelledby="jeux-prog-h" aria-valuemin="0" aria-valuemax="${BONUS.length}" aria-valuenow="0" id="jeux-bar"><i></i></div>
         <p class="small muted" id="jeux-prog-txt">Chargement de tes jeux…</p>
       </section>
       <div class="jeux-hub-cards" id="jeux-hub-cards"></div>
@@ -179,14 +179,15 @@ async function rafraichirHub() {
 
 /** Applique les résumés : lignes, cartes « à jouer », barre de progression, gains du jour, états des onglets. */
 function peindreHub() {
-  const avecEtat = JEUX.filter((o) => ['fait', 'a_jouer', 'en_cours'].includes(S.resumes.get(o.id)?.etat));
-  const faits = avecEtat.filter((o) => S.resumes.get(o.id).etat === 'fait').length;
+  // Compteurs : les 16 jeux du bonus (catalogue.js, comme le classement) ; un jeu compte s'il est fait aujourd'hui
+  const faits = BONUS.filter((c) => S.resumes.get(c.onglet || c.id)?.etat === 'fait').length;
+  const descr = new Map(CARTES.map((c) => [c.onglet || c.id, c.texte]));
   const gain = JEUX.reduce((t, o) => t + (Number(S.resumes.get(o.id)?.gain) || 0), 0);
   const serie = Math.max(0, ...JEUX.map((o) => Number(S.resumes.get(o.id)?.serie) || 0));
   for (const o of JEUX) {
     const r = S.resumes.get(o.id);
     const sub = document.querySelector(`[data-sub="${o.id}"]`);
-    if (sub) sub.textContent = r?.texte || 'Découvre le jeu';
+    if (sub) sub.textContent = r?.texte || descr.get(o.id) || '';
     const b = document.querySelector(`[data-badge="${o.id}"]`);
     if (b) b.innerHTML = badgeHtml(r);
     const cb = document.querySelector(`[data-cbadge="${o.id}"]`);
@@ -194,7 +195,7 @@ function peindreHub() {
     const st = document.querySelector(`[data-st="${o.id}"]`);
     if (st) st.textContent = r?.etat === 'fait' ? (r.badge || 'Fait') : r?.etat === 'en_cours' ? (r.badge || '') : '';
   }
-  const total = avecEtat.length;
+  const total = BONUS.length;
   const bar = $('#jeux-bar');
   if (bar) {
     bar.setAttribute('aria-valuemax', String(total || 1));

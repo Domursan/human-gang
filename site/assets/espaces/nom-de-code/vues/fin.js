@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : fin de partie (statut « terminee » ou « annulee ») =====
+// ===== Humane Gang — Nom de code : fin de partie (statut « terminee » ou « annulee ») =====
 /*
  * Rôle : titre selon le résultat (et mon équipe), raison de la fin, carte secrète complète 5 × 5 (mots trouvés
  * marqués d'une coche), mes Paillettes et mes badges (membres seulement), historique des indices par équipe,
@@ -52,7 +52,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="ndc-fin">
-      <nav class="ndc-fil ndc-fin-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span>Fin de partie</span></nav>
+      <nav class="ndc-fil ndc-fin-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Nom de code</a> › <span>Fin de partie</span></nav>
 
       <div class="ndc-fin-entete" data-zone="entete"></div>
 
@@ -261,7 +261,7 @@ export function creer(root, ctx) {
       html += '<button type="button" class="btn btn-primary" data-rejouer>Revanche</button>';
     }
     if (!invite) {
-      html += '<a class="btn btn-ghost" href="/pages/jeux/nom-de-code.html">Retour à Codenames</a>'
+      html += '<a class="btn btn-ghost" href="/pages/jeux/nom-de-code.html">Retour à Nom de code</a>'
         + '<a class="btn btn-ghost" href="/pages/jeux/nom-de-code.html#stats">Mes statistiques</a>';
     }
     zone(zActions, html);

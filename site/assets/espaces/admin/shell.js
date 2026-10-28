@@ -244,7 +244,7 @@ async function showPlateau() {
   el.lieuRoot.hidden = true;
   el.plateauRoot.hidden = false;
   el.zoneTitle.textContent = 'Plateau';
-  paintCrumb([{ label: 'Plateau' }], null);
+  paintCrumb([], null); // pas de fil d'Ariane : le titre est déjà « Plateau » (pas de répétition)
   setActions([]);
   markActive('plateau');
   const fn = plateauMount();

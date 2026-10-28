@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : salle d'attente (statut « attente ») =====
+// ===== Humane Gang — Nom de code : salle d'attente (statut « attente ») =====
 /*
  * Rôle : écran d'une partie pas encore lancée, fidèle à la maquette NDCSalle. Panneau central avec le code,
  * « Copier le lien » et les réglages ; colonnes Équipe Jaune et Équipe Rose ; zone « Sans équipe » ;
@@ -75,7 +75,7 @@ export function creer(root, ctx) {
 
   root.innerHTML = `
     <div class="ndc-salle">
-      <nav class="ndc-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span>Salle d'attente</span></nav>
+      <nav class="ndc-fil" aria-label="Fil d'Ariane" ${invite ? 'hidden' : ''}><a href="/pages/jeux/nom-de-code.html">Nom de code</a> › <span>Salle d'attente</span></nav>
 
       <div data-zone-adieu hidden class="card ndc-salle-adieu">
         <h2>Tu as quitté la salle</h2>
@@ -87,7 +87,7 @@ export function creer(root, ctx) {
           <section class="ndc-salle-panneau" aria-labelledby="ndc-salle-titre">
             <div class="ndc-salle-entete">
               <h1 id="ndc-salle-titre" class="ndc-titre ndc-salle-titre">Salle d'attente</h1>
-              <p class="ndc-salle-sous">Codenames · Partage le code pour inviter tes amis.</p>
+              <p class="ndc-salle-sous">Nom de code · Partage le code pour inviter tes amis.</p>
             </div>
 
             <div class="ndc-salle-codeligne">

@@ -81,6 +81,8 @@ function ago(d) {
 const parseDay = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
 /** Noms des mois en français, pour les titres et les dates. */
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+/** « de » + nom du mois, élidé devant une voyelle : « d'octobre », « d'avril », « d'août », mais « de juin ». */
+const deMois = (mois) => (/^[aeéiouâèêôû]/i.test(mois) ? `d'${mois}` : `de ${mois}`);
 
 /* ---------- « Intro vue » dans le profil (indicateur affiché dans l'admin ; l'intro se rejoue une fois par jour) ---------- */
 /**
@@ -186,7 +188,7 @@ function renderMemberShell() {
         <ul class="feed" id="feed" aria-live="polite"><li class="skeleton-row"></li><li class="skeleton-row"></li><li class="skeleton-row"></li></ul>
       </div>
       <div class="card home-bdays">
-        <h2 class="card-title">${ICON.cake} Anniversaires de ${MONTHS[new Date().getMonth()]}</h2>
+        <h2 class="card-title">${ICON.cake} Anniversaires ${deMois(MONTHS[new Date().getMonth()])}</h2>
         <ul class="bdays" id="bdays"><li class="skeleton-row"></li></ul>
       </div>
     </section>
