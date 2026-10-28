@@ -13,7 +13,7 @@ Le dossier `tests/` est lui-même un petit projet npm (`package.json`, Playwrigh
 | `parcours/<catégorie>/` | Tests de parcours navigateur (`parcours-*.cjs`), rangés selon la page ouverte : `admin`, `cartes`, `compte`, `infos`, `irl`, `jeux` |
 | `unitaires/` | Tests sans navigateur : arcade (`arcade-*.mjs`), fonctions edge (`check-hg-*.mjs`, `hg-archive-lib.mjs`), préférences de notification |
 | `controles/` | Contrôles du site : fumée (`smoke*.cjs`), accessibilité (`a11y-*.cjs`), budget de performance, syntaxe (`check-js.cjs`), publication (`check-publication.cjs`), RPC (`check-rpc.mjs`), bibliothèques locales (`vendor-check.cjs`), composants du panel |
-| `bancs/<nom>/` | Bancs SQL et UI des jeux (duels, jeux, loup-garou, nom-de-code, plateaux, uno) : scripts `rebuild.sh`, `*.sql`, vues de test sous `ui/` |
+| `bancs/<nom>/` | Bancs SQL et UI des jeux (duels, jeux, loup-garou, nom-de-code, plateaux, uno) : scripts `rebuild.sh`, `*.sql`, vues de test sous `ui/`. Connexion PostgreSQL par `bancs/pg-env.sh` (serveur local par défaut, port 54329 ; `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` pour un autre serveur). Le banc plateaux tourne en CI (`bancs-plateaux`) |
 | `lib/`, `fixtures/`, `shots/` | Harnais commun, faux Supabase et pages de démonstration, captures (ignorées par git) |
 
 Les fichiers à la racine de `tests/` sont `run-all.cjs` (suite complète), `ci-resume.cjs` (résumé de la CI), `package.json` et `README.md`.
@@ -94,6 +94,8 @@ et doit être lancé avec `node <chemin>` depuis `tests/`.
 |---|---|---|---|
 | `controles/check-js.cjs` | `node controles/check-js.cjs` | `npm run check` | Syntaxe de chaque fichier `.js`, `.mjs` et `.cjs` du dépôt (modules ES compris) |
 | `controles/check-rpc.mjs` | `node controles/check-rpc.mjs` | `npm run test:rpc` | Chaque table et fonction RPC appelée par le site existe dans le schéma ou les migrations 020+ |
+| `controles/check-migrations.cjs` | `node controles/check-migrations.cjs` | « Vérifications » de la CI, `run-all` | Numéros de migration uniques à partir de la 165 ; migrations 138+ présentes dans `supabase/appliquer.txt` ; fonctions internes SECURITY DEFINER `hg_<jeu>__…` refermées par leur migration (`hg_plat__droits()`, `revoke` ou refermeture en boucle). Dettes connues dans `DETTES_CONNUES` |
+| `controles/check-echappement.cjs` | `node controles/check-echappement.cjs` | « Vérifications » de la CI, `run-all` | Gabarits HTML de `site/assets/` : une interpolation de texte libre (pseudo, title, body, name…) doit passer par `esc()`. Faux positifs dans `LISTE_BLANCHE` |
 | `unitaires/check-hg-discord.mjs` | `node unitaires/check-hg-discord.mjs` | `test` | Fonction edge des commandes slash (D3) sans Deno : signature Ed25519, PING, rejeu, membre inconnu, boutons, rendus |
 | `unitaires/check-hg-calendar.mjs` | `node unitaires/check-hg-calendar.mjs` | `test` | Flux d'agenda ICS du calendrier (V8) : fuseau Europe/Zurich, journées entières, pliage, liens, ni lieu ni participants |
 | `controles/smoke.cjs` | `node controles/smoke.cjs` | `test:smoke`, `test` | Chaque page publique à 1280 et 375 px : pas d'erreur JS, pas de 404, pas de défilement horizontal |

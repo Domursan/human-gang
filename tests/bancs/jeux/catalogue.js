@@ -4,7 +4,7 @@
 process.env.FAKE_DB = 'uno';
 const { chromium } = require('playwright');
 const { attach } = require('../loup-garou/ui/fake.js');
-require('child_process').execFileSync('psql', ['-h', '/tmp', '-p', '54329', '-U', 'postgres', '-d', 'uno', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-c', `insert into hg_pages(slug, label, mode) values ('jeux', 'Jeux', 'membres'), ('loup-garou', 'Loup-Garou', 'admin'), ('uno', 'Uno', 'membres'),
+require('child_process').execFileSync('psql', ['-h', process.env.PGHOST || '/tmp', '-p', process.env.PGPORT || '54329', '-U', process.env.PGUSER || 'postgres', '-d', 'uno', '-X', '-q', '-v', 'ON_ERROR_STOP=1', '-c', `insert into hg_pages(slug, label, mode) values ('jeux', 'Jeux', 'membres'), ('loup-garou', 'Loup-Garou', 'admin'), ('uno', 'Uno', 'membres'),
   ('duels', 'Duels', 'admin'), ('nom-de-code', 'Nom de code', 'admin'),
   ('cluedo', 'Cluedo', 'admin'), ('shadow-hunters', 'Shadow Hunters', 'admin'), ('destins', 'Destins', 'admin'), ('monopoly', 'Monopoly', 'admin'), ('risk', 'Risk', 'admin')
   on conflict (slug) do update set mode = excluded.mode`]);

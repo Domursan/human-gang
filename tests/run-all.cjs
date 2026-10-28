@@ -42,8 +42,12 @@ const parcours = fs.readdirSync(path.join(dir, 'parcours'), { withFileTypes: tru
   .filter((d) => d.isDirectory())
   .flatMap((d) => fs.readdirSync(path.join(dir, 'parcours', d.name)).filter((f) => /^parcours-.*\.cjs$/.test(f)).map((f) => `parcours/${d.name}/${f}`))
   .sort();
-const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
-const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', ...parcours];
+const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'controles/check-migrations.cjs', 'controles/check-echappement.cjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
+/** Site construit (outils/build/construire.mjs) : contrôles lancés sur _site/ seulement s'il existe, sinon sautés. */
+const SITE_CONSTRUIT = path.resolve(dir, '..', '_site');
+const CONSTRUIT = ['controles/check-build.cjs'];
+const constructionPresente = fs.existsSync(SITE_CONSTRUIT);
+const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', ...(constructionPresente ? CONSTRUIT : []), ...parcours];
 /** Suite complète, ou le morceau demandé (un fichier sur N, liste triée : la découpe ne dépend que des noms). */
 const suite = shard
   ? NAVIGATEUR.filter((_, i) => i % shard.n === shard.k - 1)
@@ -56,7 +60,9 @@ const suite = shard
  */
 function lancer(f) {
   const t0 = Date.now();
-  const r = spawnSync(process.execPath, [path.join(dir, f)], { stdio: 'inherit', timeout: LIMITE_MS, killSignal: 'SIGKILL' });
+  // Les contrôles du site construit testent _site/ (la version publiée), pas les sources.
+  const env = CONSTRUIT.includes(f) ? { ...process.env, HG_ROOT: SITE_CONSTRUIT } : process.env;
+  const r = spawnSync(process.execPath, [path.join(dir, f)], { stdio: 'inherit', timeout: LIMITE_MS, killSignal: 'SIGKILL', env });
   const delai = !!(r.error && r.error.code === 'ETIMEDOUT');
   if (delai) console.error(`\nLimite de temps dépassée : ${f}`);
   return { ok: r.status === 0, ms: Date.now() - t0, delai };
@@ -69,6 +75,7 @@ const duree = (ms) => {
 };
 
 /* ---------- Exécution ---------- */
+if (!constructionPresente) console.log('Site construit (_site/) absent : check-build.cjs sauté (lancer outils/build/construire.mjs pour l\'inclure).');
 const t0 = Date.now();
 /** Résultat de chaque fichier lancé : { f, ok, relance, ms, delai }. */
 const resultats = [];
