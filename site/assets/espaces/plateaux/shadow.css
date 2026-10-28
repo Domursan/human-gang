@@ -1,25 +1,33 @@
 /* ===== Humane Gang — Shadow Hunters : styles propres à la table et à l'encart de fin =====
    Fichier : assets/espaces/plateaux/shadow.css. Classes préfixées sh-.
-   Reprend la maquette OmbresPlateau (ordinateur), OmbresVisionTel (fenêtre Vision) et OmbresFin (fin).
-   Ordinateur (> 760 px) : mon personnage à gauche, plan et panneau au centre, joueurs, journal et chat à droite.
-   Téléphone (≤ 760 px) : une colonne ; le panneau « Ton tour » vient en premier, le chat est en tiroir.
-   Titres en Cinzel ; le texte en Inter. Le plan est en grille : il suit la largeur de l'écran. */
+   Reprend la maquette « Table de veillée » (Main.dc.html) et les écrans d'étapes shadow-s1 à s7.
+   Ordinateur (> 760 px) : mon personnage à gauche, la table ronde et les pioches au centre, action, journal et joueurs à droite.
+   Téléphone (≤ 760 px) : une colonne ; l'action « Ton tour » vient en premier, la table ensuite, le chat est en tiroir.
+   La couleur de la page suit mon camp : data-camp="hunter | shadow | neutre | inconnu | spectateur" sur .sh-table.
+   Titres en Cinzel ; le texte en Inter. Les animations sont faites en JS (table.js) et respectent prefers-reduced-motion. */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
 
 .sh-table, .sh-fin {
-  --sh-fond: #0E0E10;
-  --sh-carte: #17171A;
-  --sh-bord: #2A2A2F;
-  --sh-bord-fort: #3A3A40;
+  --sh-fond-haut: #10203a;
+  --sh-fond-bas: #070d1b;
+  --sh-panneau: rgba(11, 20, 36, .94);
+  --sh-carte-2: #17213a;
+  --sh-champ: #0B1424;
+  --sh-bord: #1d3766;
+  --sh-bord-fort: #2a4a7a;
+  --sh-acc: #2F5FBF;
+  --sh-acc-clair: #7FA3D6;
+  --sh-acc-texte: #9FC0EA;
   --sh-texte: #F2EFEA;
-  --sh-muet: #ABA7A0;
+  --sh-texte-doux: #DDE6F5;
+  --sh-muet: #B7C4DA;
   --sh-or: #E2C77E;
-  --sh-accent: #9E3543;
+  --sh-vert: #8FBF9A;
+  --sh-rouge-fond: #3a1620;
+  --sh-non: #E0909A;
   --sh-hunter: #4E73C4;
   --sh-shadow: #B2433A;
   --sh-neutre: #8A9A7A;
-  --sh-vert: #8FC39F;
-  --sh-non: #E0909A;
   color: var(--sh-texte);
   font-family: Inter, system-ui, sans-serif;
   font-size: 16px;
@@ -28,34 +36,54 @@
   max-width: 100%;
   position: relative;
 }
+/* Thèmes par camp (mon personnage). */
+.sh-table[data-camp="hunter"] { --sh-fond-haut: #10203a; --sh-fond-bas: #070d1b; --sh-acc: #2F5FBF; --sh-acc-clair: #7FA3D6; --sh-acc-texte: #9FC0EA; }
+.sh-table[data-camp="shadow"] { --sh-fond-haut: #2a0f14; --sh-fond-bas: #0b0506; --sh-acc: #9E3543; --sh-acc-clair: #E0909A; --sh-acc-texte: #F0B7BE; --sh-panneau: rgba(26, 10, 13, .94); --sh-bord: #3d1820; --sh-bord-fort: #5a2430; --sh-champ: #140709; --sh-carte-2: #230d12; }
+.sh-table[data-camp="neutre"] { --sh-fond-haut: #1f1b0e; --sh-fond-bas: #0a0904; --sh-acc: #8A7A3A; --sh-acc-clair: #E2C77E; --sh-acc-texte: #EFD99A; --sh-panneau: rgba(24, 21, 11, .94); --sh-bord: #3b3420; --sh-bord-fort: #5b4f2c; --sh-champ: #120f07; --sh-carte-2: #201c10; }
+.sh-table[data-camp="spectateur"] { --sh-fond-haut: #151518; --sh-fond-bas: #08080a; --sh-acc: #4A4F5C; --sh-acc-clair: #8A8F9C; --sh-acc-texte: #A9AEBB; --sh-panneau: rgba(20, 20, 24, .94); --sh-bord: #2a2c33; --sh-bord-fort: #3a3d46; --sh-champ: #101013; --sh-carte-2: #1b1c21; --sh-muet: #9EA3AE; }
+.sh-table[data-camp="spectateur"] .sh-corps { filter: saturate(.3); }
+
 .sh-table {
   box-sizing: border-box;
   padding: 16px;
   border-radius: 24px;
-  background: radial-gradient(ellipse 720px 360px at 50% -6%, rgba(130, 150, 196, .24) 0, rgba(130, 150, 196, 0) 72%),
-    linear-gradient(180deg, #05070D 0%, #0A0F1C 55%, #101827 100%);
+  background: radial-gradient(ellipse 720px 360px at 50% -6%, rgba(130, 150, 196, .18) 0, rgba(130, 150, 196, 0) 72%),
+    linear-gradient(180deg, var(--sh-fond-haut) 0%, var(--sh-fond-bas) 100%);
 }
 .sh-table [hidden], .sh-fin [hidden] { display: none !important; }
 .sh-table :focus-visible, .sh-fin :focus-visible { outline: 3px solid var(--sh-texte); outline-offset: 2px; }
 .sh-table .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sh-table a { color: var(--sh-or); }
 
+/* ---------- Bandeau de camp (au-dessus de la table) ---------- */
+.sh-camp-bandeau { margin: -16px -16px 12px; padding: 6px 16px; border-radius: 24px 24px 0 0; text-align: center; background: linear-gradient(90deg, var(--sh-acc), var(--sh-acc-clair) 50%, var(--sh-acc)); color: #0B1424; }
+.sh-camp-bandeau:empty { display: none; }
+.sh-camp-texte { margin: 0; font-size: 13px; font-weight: 700; color: #FFFFFF; }
+.sh-table[data-camp="neutre"] .sh-camp-texte, .sh-table[data-camp="spectateur"] .sh-camp-texte { color: #121212; }
+.sh-table[data-camp="spectateur"] .sh-camp-bandeau { background: #2a2c33; }
+.sh-table[data-camp="spectateur"] .sh-camp-texte { color: #D6D8DE; }
+.sh-table[data-camp="shadow"] .sh-camp-bandeau { background: linear-gradient(90deg, #5a1a24, #B2433A 50%, #5a1a24); }
+.sh-table[data-camp="hunter"] .sh-camp-bandeau { background: linear-gradient(90deg, #0b1f44, #2F5FBF 50%, #0b1f44); }
+.sh-table[data-camp="neutre"] .sh-camp-bandeau { background: linear-gradient(90deg, #5b4f2c, #E2C77E 50%, #5b4f2c); }
+.sh-table[data-camp="neutre"] .sh-camp-bandeau .sh-camp-texte { color: #121212; }
+
 /* ---------- Blocs et titres ---------- */
-.sh-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 20px; background: var(--sh-panneau); border: 1px solid var(--sh-bord); min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.sh-bloc { box-sizing: border-box; padding: 14px 16px; border-radius: 14px; background: var(--sh-panneau); border: 1px solid var(--sh-bord-fort); min-width: 0; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 12px 24px rgba(0, 0, 0, .45); }
+.sh-bloc:empty { display: none; }
 .sh-bloc-titre, .sh-titre { font-family: Cinzel, serif; font-weight: 700; line-height: 1.2; margin: 0; }
-.sh-bloc-titre { font-size: 17px; }
+.sh-bloc-titre { font-size: 14px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--sh-acc-texte); display: flex; align-items: center; gap: 8px; }
 .sh-titre { font-size: 20px; color: var(--sh-or); }
 .sh-note, .sh-legende { margin: 0; font-size: 12px; color: var(--sh-muet); }
 .sh-label { font-weight: 700; color: var(--sh-muet); }
 .sh-vide { margin: 0; font-size: 14px; color: var(--sh-muet); list-style: none; }
 
 /* ---------- Boutons, champs ---------- */
-.sh-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: var(--sh-carte-2); color: var(--sh-texte);
+.sh-btn { min-height: 44px; box-sizing: border-box; padding: 0 16px; border-radius: 10px; border: 1px solid var(--sh-bord-fort); background: var(--sh-carte-2); color: var(--sh-texte);
   font: 700 14px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .sh-btn:disabled { opacity: .5; cursor: default; }
-.sh-btn-primary { background: var(--sh-accent); border-color: transparent; color: #FFFFFF; }
+.sh-btn-primary { background: var(--sh-acc); border-color: transparent; color: #FFFFFF; }
 .sh-btn-ghost { background: transparent; font-weight: 500; }
-.sh-btn-outline { background: transparent; border-color: #6F8FD0; font: 600 15px Inter, sans-serif; }
+.sh-btn-outline { background: transparent; border-color: var(--sh-acc-clair); font: 600 15px Inter, sans-serif; color: var(--sh-texte); }
 .sh-btn-large { min-height: 52px; font-size: 16px; }
 .sh-pleine { width: 100%; }
 .sh-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 200px; }
@@ -69,95 +97,152 @@
 .sh-pied .sh-btn { flex: 1 1 auto; }
 .sh-pied-fin { justify-content: flex-start; border-top: 1px solid var(--sh-bord); padding-top: 10px; }
 .sh-pied-fin .sh-btn { flex: 0 1 auto; }
+.sh-badge { align-self: flex-start; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.sh-badge.is-dispo { background: var(--sh-acc-clair); color: #0B1424; }
+.sh-badge.is-utilise { background: #2a3a5a; color: var(--sh-muet); }
+.sh-etiquette { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #2a3a5a; color: var(--sh-texte); white-space: nowrap; }
+.sh-etiquette.is-tour { background: var(--sh-or); color: #121212; }
+.sh-etiquette.is-mort { background: var(--sh-rouge-fond); color: var(--sh-non); }
 
 /* ---------- Barre du haut, élimination ---------- */
 .sh-barre { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
 .sh-composition { margin: 0; font-size: 14px; color: var(--sh-muet); }
 .sh-quitter { min-height: 44px; }
-.sh-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--sh-rouge-fond); color: var(--sh-non); font-weight: 700; font-size: 14px; }
+.sh-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--sh-rouge-fond); color: var(--sh-non); font-weight: 700; font-size: 14px; }
 
 /* ---------- Corps : trois colonnes ---------- */
 .sh-corps { display: grid; grid-template-columns: 260px minmax(0, 1fr) 300px; gap: 16px; align-items: start; min-width: 0; }
 .sh-colonne { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .sh-tiroir-chat { display: none; }
 
-/* Mon personnage */
-.sh-perso { border: 2px solid var(--sh-hunter); background: linear-gradient(180deg, #1B2A4A 0%, #0E1424 100%); box-shadow: 0 0 28px rgba(78, 115, 196, .28); }
-.sh-pastille { display: inline-flex; align-self: flex-start; font-size: 12px; color: var(--sh-texte-doux, #D6DCE4); background: var(--sh-pastille-fond, rgba(14, 14, 16, .6)); border-radius: 999px; padding: 4px 10px; }
-.sh-perso-visuel svg, .sh-perso-visuel img { width: 100%; height: 100px; display: block; border-radius: 12px; object-fit: cover; background: #0B1020; }
-.sh-perso-nom { display: flex; flex-direction: column; gap: 4px; }
-.sh-perso-nom strong { font-family: Cinzel, serif; font-size: 20px; line-height: 1.2; }
-.sh-camp { align-self: flex-start; font-size: 13px; font-weight: 700; color: #FFFFFF; background: var(--sh-neutre); border-radius: 999px; padding: 3px 10px; }
+/* Mon personnage, points de vie, pouvoir, mission, équipements (blocs distincts) */
+.sh-perso { border-color: var(--sh-acc-clair); }
+.sh-perso-tete { display: flex; gap: 12px; align-items: center; }
+.sh-perso-portrait { width: 64px; height: 64px; flex: none; border-radius: 10px; overflow: hidden; border: 2px solid var(--sh-acc-clair); }
+.sh-perso-portrait svg, .sh-perso-portrait img { width: 100%; height: 100%; display: block; object-fit: cover; background: #0B1020; }
+.sh-perso-nom { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sh-perso-nom strong { font-family: Cinzel, serif; font-size: 19px; line-height: 1.2; }
+.sh-camp { align-self: flex-start; font-size: 12px; font-weight: 700; color: #FFFFFF; background: var(--sh-neutre); border-radius: 999px; padding: 2px 10px; }
 .sh-camp.is-hunter { background: var(--sh-hunter); }
 .sh-camp.is-shadow { background: var(--sh-shadow); }
 .sh-camp.is-inconnu { background: #5A5A62; }
-.sh-camp.is-neutre { color: #121212; }
-.sh-perso-texte { margin: 0; font-size: 13px; line-height: 1.4; color: var(--sh-texte-doux, #D6DCE4); }
-.sh-perso-texte em { color: var(--sh-or); font-style: normal; font-weight: 700; }
-.sh-pv { display: flex; flex-direction: column; gap: 6px; }
-.sh-pv-tete { display: flex; justify-content: space-between; font-size: 14px; }
-.sh-barre-pv { height: 8px; border-radius: 999px; background: #1F2A3F; overflow: hidden; }
-.sh-barre-pv span { display: block; height: 100%; background: var(--sh-vert); }
+.sh-camp.is-neutre { color: #121212; background: var(--sh-or); }
+.sh-pv-valeur { margin: 0; font-size: 14px; color: var(--sh-muet); }
+.sh-pv-valeur strong { font-family: Inter, sans-serif; font-size: 36px; line-height: 1; color: var(--sh-texte); margin-right: 4px; }
+.sh-barre-pv { height: 12px; border-radius: 999px; background: #0B1424; border: 1px solid var(--sh-bord-fort); overflow: hidden; }
+.sh-barre-pv span { display: block; height: 100%; background: linear-gradient(90deg, var(--sh-acc), var(--sh-acc-clair)); }
+.sh-perso-texte { margin: 0; font-size: 13px; line-height: 1.45; color: var(--sh-texte-doux); }
+.sh-mission-bloc .sh-perso-texte { font-size: 14px; }
 
-/* Pioches */
-.sh-pioches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.sh-pioche { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 12px; background: var(--sh-carte-2); font-size: 14px; }
-.sh-dos { width: 30px; height: 42px; flex: none; box-sizing: border-box; border-radius: 5px; border: 2px solid #5A5A62; background: linear-gradient(160deg, #1A1A1F 0%, #050507 100%); }
-.sh-pioche.is-vision .sh-dos { border-color: #7FC08E; background: linear-gradient(160deg, #3F8A52 0%, #1E4A2B 100%); }
-.sh-pioche.is-lumiere .sh-dos { border-color: #F4F1EA; background: linear-gradient(160deg, #FFFFFF 0%, #D9D4C8 100%); }
+/* Bac des pioches (sous la table) */
+.sh-bac { gap: 10px; }
+.sh-piles { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.sh-pile { flex: 1 1 150px; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #0B1424; border: 1px solid var(--sh-bord-fort); min-width: 0; font-size: 14px; }
+.sh-pile-nom { font-weight: 700; flex: 1; min-width: 0; }
+.sh-pile-n { min-width: 30px; height: 24px; padding: 0 7px; box-sizing: border-box; border-radius: 999px; background: #B7C4DA; color: #0B1424; font: 700 13px/24px Inter, sans-serif; text-align: center; }
+.sh-pile.is-vision .sh-pile-n { background: var(--sh-vert); }
+.sh-pile.is-lumiere .sh-pile-n { background: #F2EFEA; }
+.sh-pile.is-tenebres .sh-pile-n { background: #B0B0B8; }
+.sh-pile.is-defausse .sh-pile-nom { color: var(--sh-muet); font-weight: 600; }
+.sh-dos { width: 28px; height: 40px; flex: none; box-sizing: border-box; border-radius: 6px; border: 2px solid #5A5A62; background: linear-gradient(160deg, #1A1A1F 0%, #050507 100%); box-shadow: 0 4px 8px rgba(0, 0, 0, .5); }
+.sh-pile.is-vision .sh-dos { border-color: #7FC08E; background: linear-gradient(160deg, #3F8A52 0%, #1E4A2B 100%); box-shadow: 0 0 12px rgba(127, 192, 142, .35); }
+.sh-pile.is-lumiere .sh-dos { border-color: #F4F1EA; background: linear-gradient(160deg, #FFFFFF 0%, #D9D4C8 100%); box-shadow: 0 0 12px rgba(242, 239, 234, .3); }
+.sh-pile.is-tenebres .sh-dos { border-color: #B0B0B8; background: linear-gradient(160deg, #1a1a1f 0%, #050506 100%); box-shadow: 0 0 12px rgba(200, 200, 215, .3); }
+.sh-pile.is-defausse .sh-dos { border-color: #B7A58E; background: linear-gradient(160deg, #4a4037 0%, #2c2620 100%); }
+.sh-legende-piste { font-size: 12px; line-height: 1.45; color: var(--sh-muet); padding: 10px 14px; }
+.sh-legende-piste strong { color: var(--sh-texte); }
 
 /* Équipements */
 .sh-equip { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.sh-equip-item summary { min-height: 44px; display: flex; align-items: center; padding: 0 10px; border-radius: 10px; border: 1px solid var(--sh-bord-fort); cursor: pointer; font-size: 13px; font-weight: 600; }
+.sh-equip-item summary { min-height: 44px; display: flex; align-items: center; padding: 0 10px; border-radius: 10px; border: 1px solid var(--sh-bord-fort); cursor: pointer; font-size: 13px; font-weight: 600; gap: 10px; padding-left: 6px; }
 .sh-equip-item p { margin: 6px 0 0; font-size: 13px; color: var(--sh-muet); }
-.sh-equip-item summary { gap: 10px; padding-left: 6px; }
 .sh-equip-img { width: 40px; height: 40px; flex: none; border-radius: 8px; object-fit: cover; border: 1px solid #5A5A62; }
 .sh-equip-item.is-lumiere .sh-equip-img { border-color: #E2C77E; box-shadow: 0 0 8px rgba(226, 199, 126, .35); }
 .sh-equip-item.is-tenebres .sh-equip-img { border-color: #9E3543; box-shadow: 0 0 8px rgba(158, 53, 67, .45); }
 
-/* ---------- Panneau « Ton tour » ---------- */
-.sh-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: var(--sh-panneau); border: 1px solid var(--sh-or); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+/* ---------- Table ronde ---------- */
+.sh-centre { gap: 14px; }
+.sh-rond { position: relative; width: min(100%, 600px); aspect-ratio: 1 / 1; margin: 0 auto; }
+.sh-rond > * { position: absolute; inset: 0; }
+.sh-rond > .sh-rond-anneau { inset: 4%; }
+.sh-rond-anneau { border-radius: 50%; background: radial-gradient(circle at 50% 45%, #1b2f52 0%, #0e1a30 70%, #0a1322 100%); box-shadow: 0 0 0 10px #0a1424, 0 0 0 13px var(--sh-bord), 0 40px 80px rgba(0, 0, 0, .7), 0 0 60px rgba(59, 111, 212, .22); }
+.sh-table[data-camp="shadow"] .sh-rond-anneau { background: radial-gradient(circle at 50% 45%, #3a1a22 0%, #1d0c12 70%, #120709 100%); box-shadow: 0 0 0 10px #12070a, 0 0 0 13px var(--sh-bord), 0 40px 80px rgba(0, 0, 0, .7), 0 0 60px rgba(178, 67, 58, .25); }
+.sh-table[data-camp="neutre"] .sh-rond-anneau { background: radial-gradient(circle at 50% 45%, #2e2813 0%, #1a1609 70%, #100e06 100%); box-shadow: 0 0 0 10px #0d0b05, 0 0 0 13px var(--sh-bord), 0 40px 80px rgba(0, 0, 0, .7), 0 0 60px rgba(226, 199, 126, .2); }
+.sh-table[data-camp="spectateur"] .sh-rond-anneau { background: radial-gradient(circle at 50% 45%, #22242a 0%, #141519 70%, #0c0d10 100%); }
+.sh-rond-anneau::after { content: ''; position: absolute; inset: 9%; border-radius: 50%; border: 1px dashed rgba(127, 163, 214, .3); }
+.sh-rond-piste, .sh-rond-lieux, .sh-rond-jet, .sh-rond-med { pointer-events: none; }
+.sh-rond > .sh-rond-jet { inset: 37%; }
+
+/* Piste des blessures : 15 cases sur l'anneau */
+.sh-piste { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.sh-case { position: absolute; width: 0; height: 0; }
+.sh-case-num { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; border: 1px solid #3B6FD4; background: #17213a; color: #B7C4DA; font: 700 10px/20px Inter, sans-serif; text-align: center; }
+.sh-case-pions { position: absolute; transform: translate(-50%, -50%); display: flex; gap: 2px; }
+.sh-case-pv { position: absolute; transform: translate(-50%, -50%); display: flex; gap: 2px; }
+.sh-marque-pv { width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--sh-or); background: #0B1424; color: var(--sh-or); font: 800 8px/14px Inter, sans-serif; text-align: center; }
+
+/* Lieux : six tuiles au centre */
+.sh-plan { position: absolute; inset: 0; }
+.sh-lieu { position: absolute; width: 24%; height: 11%; box-sizing: border-box; overflow: hidden; border-radius: 10px; border: 1px solid var(--sh-bord-fort); background: #0f1d33; pointer-events: auto; }
+.sh-lieu.is-option { outline: 3px dashed var(--sh-or); outline-offset: -5px; }
+.sh-lieu.is-choix { border: 3px solid var(--sh-or); box-shadow: 0 0 18px rgba(226, 199, 126, .35); }
+.sh-lieu-scene { position: absolute; inset: 0; }
+.sh-lieu-svg, .sh-lieu-img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.sh-lieu-des { position: absolute; top: 4px; left: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(8, 10, 16, .8); font-size: 10px; font-weight: 700; color: var(--sh-texte); }
+.sh-tag { position: absolute; top: 4px; right: 4px; padding: 1px 6px; border-radius: 999px; background: rgba(8, 10, 16, .85); font-size: 10px; font-weight: 700; }
+.sh-tag.is-choix { background: var(--sh-or); color: #121212; }
+.sh-lieu-bas { position: absolute; left: 4px; right: 4px; bottom: 4px; display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; }
+.sh-lieu-nom { margin: 0; min-width: 0; padding: 2px 6px; border-radius: 999px; background: rgba(8, 10, 16, .84); font-family: Inter, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-pions { display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-end; }
+
+/* Pions (joueurs) */
+.sh-pion { width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10; background: var(--pion, #F2EFEA); color: #121212; font: 800 10px Inter, sans-serif; display: inline-grid; place-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+.sh-pion.is-tour { box-shadow: 0 0 0 3px var(--sh-or), 0 2px 6px rgba(0, 0, 0, .5); }
+.sh-pion.is-moi { outline: 2px solid #FFFFFF; outline-offset: 1px; }
+.sh-pion.is-mort { opacity: .45; }
+
+/* Médaillons des joueurs autour de la table */
+.sh-rond-med { pointer-events: none; }
+.sh-medaillons { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.sh-med { position: absolute; transform: translate(-50%, -50%); width: 104px; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; pointer-events: auto; }
+.sh-med-cadre { width: 74px; height: 74px; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--camp, #7d8699); background: #17213a; overflow: hidden; display: grid; place-items: center; box-shadow: 0 0 0 4px #0B1424, 0 10px 20px rgba(0, 0, 0, .6); }
+.sh-med-cadre img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sh-med-inconnu { font: 800 30px/1 Inter, sans-serif; color: var(--sh-muet); }
+.sh-med.is-tour .sh-med-cadre { box-shadow: 0 0 0 4px #0B1424, 0 0 0 7px var(--sh-or), 0 0 18px rgba(226, 199, 126, .45); }
+.sh-med.is-moi .sh-med-nom { background: var(--sh-acc-clair); color: #0B1424; }
+.sh-med.is-mort .sh-med-cadre { filter: grayscale(1); }
+.sh-med-nom { max-width: 100%; box-sizing: border-box; padding: 2px 8px; border-radius: 999px; background: #1a2a48; border: 1px solid var(--sh-bord-fort); font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-med-camp { font-size: 11px; font-weight: 700; color: var(--camp, var(--sh-muet)); }
+.sh-med-etat { font-size: 11px; color: var(--sh-muet); }
+
+/* Jet de dés au centre : d6 (carré) et d4 (triangle) */
+.sh-jet { width: 100%; height: 100%; box-sizing: border-box; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px; text-align: center; background: radial-gradient(circle, #1a2e52 0%, #0B1424 75%); border: 1px solid var(--sh-acc-clair); box-shadow: 0 0 30px rgba(59, 111, 212, .35); }
+.sh-jet-titre { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sh-muet); }
+.sh-jet-des { display: flex; gap: 8px; align-items: center; }
+.sh-de { display: inline-flex; align-items: center; justify-content: center; font: 800 20px Inter, sans-serif; }
+.sh-de6 { width: 40px; height: 40px; border-radius: 9px; background: #F2EFEA; color: #0B1424; box-shadow: inset 0 -4px 0 #B9C6DE, 0 6px 12px rgba(0, 0, 0, .5); }
+.sh-de4 { width: 44px; height: 40px; background: #2F5FBF; color: #F2EFEA; clip-path: polygon(50% 0, 100% 100%, 0 100%); padding-top: 14px; box-sizing: border-box; }
+.sh-jet-total { margin: 0; font-size: 13px; color: var(--sh-texte); min-height: 1.2em; }
+.sh-jet-msg { margin: 0; font-size: 11px; color: var(--sh-or); min-height: 1em; line-height: 1.3; }
+.sh-jet-msg:empty { display: none; }
+
+/* ---------- Panneau « Ton tour » (colonne de droite) ---------- */
+.sh-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 16px; background: rgba(11, 20, 36, .9); border: 1px solid rgba(127, 163, 214, .4); box-shadow: 0 20px 40px rgba(0, 0, 0, .5); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sh-table[data-camp="shadow"] .sh-panneau { background: rgba(26, 10, 13, .92); }
+.sh-table[data-camp="neutre"] .sh-panneau { background: rgba(24, 21, 11, .92); }
 .sh-panneau > p { margin: 0; color: var(--sh-muet); font-size: 14px; }
 .sh-panneau > p strong { color: var(--sh-texte); }
+.sh-panneau .sh-titre { font-family: Cinzel, serif; font-size: 22px; color: var(--sh-texte); }
 .sh-choix { display: flex; flex-wrap: wrap; gap: 8px; }
 .sh-chip { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); background: var(--sh-carte-2); color: var(--sh-texte); font: 600 14px Inter, sans-serif; cursor: pointer; }
 .sh-chip[aria-pressed="true"] { border-color: var(--sh-or); color: var(--sh-or); box-shadow: 0 0 0 2px rgba(226, 199, 126, .25); }
 .sh-vision-texte { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 500; }
+.sh-panneau .sh-btn { background: var(--sh-carte-2); }
+.sh-panneau .sh-btn-primary { background: var(--sh-acc-clair); color: #0B1424; }
+.sh-panneau .sh-btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.sh-panneau .sh-pied:last-child { margin-top: 4px; }
 
-/* ---------- Plan des lieux ---------- */
-.sh-plateau-zone { min-width: 0; }
-.sh-plan { display: flex; flex-direction: column; gap: 12px; }
-.sh-groupe { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-.sh-lieu { position: relative; overflow: hidden; min-height: 150px; box-sizing: border-box; border-radius: 16px; border: 1px solid var(--sh-bord); background: #0B0F18; min-width: 0; }
-.sh-lieu.is-option { outline: 3px dashed var(--sh-or); outline-offset: -6px; }
-.sh-lieu.is-choix { border: 3px solid var(--sh-or); box-shadow: 0 0 18px rgba(226, 199, 126, .35); }
-.sh-lieu-scene { position: absolute; inset: 0; }
-.sh-lieu-svg, .sh-lieu-img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.sh-lieu-des { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(8, 10, 16, .78); font-size: 12px; font-weight: 700; color: var(--sh-texte); }
-.sh-tag { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(8, 10, 16, .85); font-size: 12px; font-weight: 700; }
-.sh-tag.is-choix { background: var(--sh-or); color: #121212; }
-.sh-lieu-bas { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.sh-lieu-nom { margin: 0; padding: 4px 10px; border-radius: 999px; background: rgba(8, 10, 16, .82); font-family: Inter, sans-serif; font-size: 15px; font-weight: 700; line-height: 1.3; }
-.sh-pions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
-.sh-pion { width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10; background: var(--pion, #F2EFEA); color: #121212; font: 800 12px Inter, sans-serif; display: inline-grid; place-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
-.sh-pion.is-tour { box-shadow: 0 0 0 3px var(--sh-or), 0 2px 6px rgba(0, 0, 0, .5); }
-.sh-pion.is-moi { outline: 2px solid #FFFFFF; outline-offset: 1px; }
-.sh-pion.is-mort { opacity: .45; }
-.sh-hors { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-radius: 14px; border: 1px dashed var(--sh-bord-fort); }
-.sh-hors-titre { margin: 0; font-size: 13px; color: var(--sh-muet); }
-
-/* ---------- Piste des blessures ---------- */
-.sh-piste-tete { display: flex; flex-direction: column; gap: 2px; }
-.sh-piste-defile { overflow-x: auto; }
-.sh-piste { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(15, minmax(34px, 1fr)); min-width: 520px; }
-.sh-case { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
-.sh-case-pions { min-height: 64px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px; }
-.sh-case-pions .sh-pion { width: 24px; height: 24px; font-size: 11px; }
-.sh-case-num { width: 100%; box-sizing: border-box; text-align: center; font-size: 12px; font-weight: 600; color: var(--sh-muet); padding: 2px 0; border-radius: 6px; border: 1px solid var(--sh-bord); background: #151A26; }
-.sh-case-pv { min-height: 26px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
-.sh-marque-pv { width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--sh-or); color: var(--sh-or); font: 800 10px Inter, sans-serif; display: inline-grid; place-items: center; }
-
-/* ---------- Joueurs ---------- */
+/* ---------- Journal et joueurs ---------- */
 .sh-joueurs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .sh-joueur { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: var(--sh-carte-2); }
 .sh-joueur.is-tour { box-shadow: inset 0 0 0 2px var(--sh-or); }
@@ -167,10 +252,8 @@
 .sh-joueur-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .sh-joueur-tete { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; }
 .sh-joueur-perso, .sh-joueur-lieu { margin: 0; font-size: 13px; color: var(--sh-muet); }
-.sh-joueur-perso { color: var(--sh-texte-doux, #D6DCE4); }
-.sh-etiquette { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--sh-piste); color: var(--sh-texte); }
-.sh-etiquette.is-tour { background: var(--sh-or); color: #121212; }
-.sh-etiquette.is-mort { background: var(--sh-rouge-fond); color: var(--sh-non); }
+.sh-joueur-perso { color: var(--sh-texte-doux); }
+.sh-journal-bloc .plat-journal { margin: 0; }
 
 /* ---------- Fenêtre Vision (téléphone et ordinateur) ---------- */
 .sh-modale { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
@@ -178,30 +261,57 @@
 .sh-modale-boite { position: relative; width: min(420px, 100%); max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: 18px; border-radius: 20px;
   border: 2px solid #7FC08E; background: radial-gradient(circle at 50% 30%, #1E5A34 0, #0F2A19 70%); box-shadow: 0 0 30px rgba(127, 192, 142, .35);
   display: flex; flex-direction: column; gap: 10px; color: var(--sh-texte); }
-.sh-modale-boite .sh-titre { color: var(--sh-titre-texte, #D8F2DE); }
-.sh-modale-boite .sh-pastille { background: #7FC08E; color: #121212; font-weight: 700; }
+.sh-modale-boite .sh-titre { color: #D8F2DE; }
+.sh-modale-boite .sh-pastille { display: inline-flex; align-self: flex-start; font-size: 12px; background: #7FC08E; color: #121212; font-weight: 700; border-radius: 999px; padding: 4px 10px; }
 .sh-vision-oeil svg { width: 100%; height: 104px; display: block; border-radius: 12px; background: #0A1A10; }
-.sh-vision-pv { margin: 0; font-size: 14px; color: var(--sh-texte-doux, #D6DCE4); }
+.sh-vision-pv { margin: 0; font-size: 14px; color: var(--sh-texte-doux); }
 .sh-pied-vision .sh-btn-primary { flex: 1 1 100%; }
-.sh-modale-boite .sh-note { color: var(--sh-texte-doux, #D6DCE4); }
+.sh-modale-boite .sh-note { color: var(--sh-texte-doux); }
+.sh-pastille { display: inline-flex; align-self: flex-start; font-size: 12px; color: var(--sh-texte-doux); background: rgba(14, 14, 16, .6); border-radius: 999px; padding: 4px 10px; }
 
 /* ---------- Chat : colonne ou tiroir ---------- */
 .sh-chat-zone { min-width: 0; }
 
-/* ---------- Téléphone ---------- */
+/* ---------- Téléphone : une colonne, l'action d'abord, la table ensuite ---------- */
 @media (max-width: 760px) {
-  .sh-corps { grid-template-columns: minmax(0, 1fr); }
-  .sh-centre { order: -1; }
-  .sh-gauche { order: 1; }
-  .sh-droite { order: 2; }
+  .sh-table { padding: 12px; }
+  .sh-camp-bandeau { margin: -12px -12px 10px; }
+  .sh-corps { display: flex; flex-direction: column; gap: 12px; }
+  .sh-colonne { display: contents; }
+  .sh-panneau { order: 1; }
+  .sh-rond { order: 2; width: 100%; }
+  .sh-legende-piste { order: 3; }
+  .sh-bac { order: 4; }
+  .sh-perso { order: 5; }
+  .sh-pv-bloc { order: 6; }
+  .sh-pouvoir-bloc { order: 7; }
+  .sh-mission-bloc { order: 8; }
+  .sh-mes-bloc { order: 9; }
+  .sh-journal-bloc { order: 10; }
+  .sh-joueurs-bloc { order: 11; }
   .sh-chat-zone { display: none; }
   .sh-tiroir-chat { display: block; }
-  .sh-panneau { position: sticky; top: 0; z-index: 20; box-shadow: 0 10px 24px rgba(0, 0, 0, .45); }
-  .sh-groupe { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-  .sh-lieu { min-height: 130px; }
-  .sh-lieu-nom { font-size: 14px; }
+  .sh-rond > .sh-rond-jet { inset: 36%; }
+  .sh-case-num { width: 18px; height: 18px; font-size: 8px; line-height: 16px; }
+  .sh-case-pions .sh-pion { width: 18px; height: 18px; font-size: 8px; }
+  .sh-case-pv { display: none; }
+  .sh-pion { width: 20px; height: 20px; font-size: 8px; }
+  .sh-lieu-des { display: none; }
+  .sh-lieu-nom { font-size: 9px; }
+  .sh-lieu-bas { left: 3px; right: 3px; bottom: 3px; }
+  .sh-med { width: 74px; }
+  .sh-med-cadre { width: 50px; height: 50px; }
+  .sh-med-nom { font-size: 10px; }
+  .sh-med-camp, .sh-med-etat { display: none; }
+  .sh-med.is-tour .sh-med-etat { display: block; font-size: 9px; }
+  .sh-jet { padding: 6px; }
+  .sh-de6 { width: 30px; height: 30px; font-size: 15px; }
+  .sh-de4 { width: 32px; height: 30px; font-size: 15px; padding-top: 10px; }
+  .sh-jet-titre { font-size: 9px; }
+  .sh-jet-total, .sh-jet-msg { font-size: 10px; }
   .sh-pied .sh-btn { flex: 1 1 140px; }
   .sh-pied-fin .sh-btn { flex: 0 1 auto; }
+  .sh-pile { flex: 1 1 140px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -210,12 +320,25 @@
 
 /* ---------- Encart de fin ---------- */
 .sh-fin { margin: 0; }
-.sh-fin-cartes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.sh-fin-carte { position: relative; box-sizing: border-box; border-radius: 16px; border: 2px solid var(--camp, #8A9A7A); background: #17171A; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.sh-fin-carte.is-gagnant { box-shadow: 0 0 0 2px var(--sh-vert); }
-.sh-fin-camp { align-self: flex-start; background: var(--camp, #8A9A7A); color: #FFFFFF; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.sh-fin-entete { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.sh-fin-kicker { margin: 0; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--sh-muet); }
+.sh-fin-titre { margin: 0; font-family: Cinzel, serif; font-weight: 700; font-size: clamp(26px, 5vw, 40px); line-height: 1.15; color: var(--sh-texte); text-shadow: 0 0 24px var(--sh-fin-couleur, #4E73C4); }
+.sh-fin-cartes { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.sh-fin-carte { position: relative; box-sizing: border-box; border-radius: 16px; border: 2px solid var(--camp, #8A9A7A); background: #17171A; overflow: hidden; display: flex; flex-direction: column; min-width: 0; animation: sh-fin-entree .6s ease-out both; animation-delay: calc(var(--i, 0) * 140ms); }
+.sh-fin-carte.is-gagnant { box-shadow: 0 0 0 2px var(--sh-vert), 0 0 24px rgba(127, 192, 142, .35); }
+.sh-fin-carte.is-mort:not(.is-gagnant) { filter: saturate(.25) brightness(.8); }
+.sh-fin-visuel { height: 128px; position: relative; background: #0B1020; }
+.sh-fin-visuel img, .sh-fin-visuel svg { width: 100%; height: 100%; display: block; object-fit: cover; }
+.sh-fin-camp { position: absolute; top: 8px; left: 8px; background: var(--camp, #8A9A7A); color: #FFFFFF; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.sh-fin-corps { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
 .sh-fin-nom { font-family: Cinzel, serif; font-size: 16px; }
 .sh-fin-joueur, .sh-fin-etat { font-size: 13px; color: var(--sh-muet); }
 .sh-fin-bilan { font-size: 12px; font-weight: 700; color: var(--sh-vert); }
 .sh-fin-carte:not(.is-gagnant) .sh-fin-bilan { color: var(--sh-muet); }
 .sh-fin-victoire { margin: 4px 0 0; font-size: 12px; color: var(--sh-muet); }
+.sh-fin-resume { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; }
+.sh-fin-resume span { font-size: 13px; color: var(--sh-muet); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--sh-bord-fort); }
+@keyframes sh-fin-entree { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .sh-fin-carte { animation: none; }
+}

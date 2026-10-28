@@ -17,7 +17,7 @@ import { esc } from '../../../../commun/core.js';
 import { plat, nomDe, imageExiste } from '../../api.js';
 import { avatarHtml, pseudoHtml, bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
-import { LIEUX, GROUPES, PV_MAX, CAMP_LIBELLE, campDe, voisinsDe, plateauHtml, pisteHtml, persoVisuelHtml } from './plateau.js';
+import { LIEUX, GROUPES, PV_MAX, CAMP_LIBELLE, campDe, voisinsDe, plateauHtml, pisteHtml, medaillonsHtml, persoVisuelHtml } from './plateau.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
@@ -45,6 +45,7 @@ const idCarte = (c) => String(c || '').slice(2);
 /** Gabarit statique : les zones variables sont remplies à chaque mise à jour. */
 function squelette() {
   return `
+  <div class="sh-camp-bandeau" data-camp-bandeau></div>
   <header class="sh-bandeau" data-bandeau></header>
   <div class="sh-barre">
     <p class="sh-composition" data-composition></p>
@@ -53,30 +54,33 @@ function squelette() {
   <p class="sh-elimine" data-elimine hidden></p>
 
   <div class="sh-corps">
-    <aside class="sh-colonne sh-gauche" aria-label="Ton personnage et les pioches">
+    <aside class="sh-colonne sh-gauche" aria-label="Ton personnage">
       <section class="sh-bloc sh-perso" aria-labelledby="sh-perso-titre" data-perso></section>
-      <section class="sh-bloc" aria-labelledby="sh-pioches-titre" data-pioches></section>
-      <section class="sh-bloc" aria-labelledby="sh-mes-titre" data-mes-equip></section>
+      <section class="sh-bloc sh-pv-bloc" aria-labelledby="sh-pv-titre" data-pv></section>
+      <section class="sh-bloc sh-pouvoir-bloc" aria-labelledby="sh-pouvoir-titre" data-pouvoir></section>
+      <section class="sh-bloc sh-mission-bloc" aria-labelledby="sh-mission-titre" data-mission></section>
+      <section class="sh-bloc sh-mes-bloc" aria-labelledby="sh-mes-titre" data-mes-equip></section>
     </aside>
     <section class="sh-colonne sh-centre" aria-label="Le jeu">
-      <section class="sh-panneau" aria-labelledby="sh-tour-titre" aria-live="polite" data-panneau></section>
-      <section class="sh-plateau-zone" aria-label="Les lieux" data-plateau></section>
-      <section class="sh-bloc" aria-labelledby="sh-piste-titre">
-        <div class="sh-piste-tete">
-          <h2 id="sh-piste-titre" class="sh-bloc-titre">Blessures et points de vie</h2>
-          <p class="sh-legende">Pion plein : blessures. Anneau : PV maximum d'un personnage révélé.</p>
-        </div>
-        <div class="sh-piste-defile" data-piste></div>
+      <section class="sh-rond" aria-label="Table de veillée">
+        <div class="sh-rond-anneau" aria-hidden="true"></div>
+        <div class="sh-rond-piste" data-piste></div>
+        <div class="sh-rond-lieux" data-plateau></div>
+        <div class="sh-rond-jet" data-jet></div>
+        <div class="sh-rond-med" data-medaillons></div>
       </section>
+      <p class="sh-bloc sh-legende-piste" id="sh-piste-titre"><strong>Piste des blessures.</strong> 1 case = 1 blessure. Un personnage meurt quand ses blessures atteignent ses points de vie. L'anneau doré marque les PV maximum des personnages révélés.</p>
+      <section class="sh-bloc sh-bac" aria-labelledby="sh-pioches-titre" data-pioches></section>
     </section>
-    <aside class="sh-colonne sh-droite" aria-label="Joueurs, journal et chat">
-      <section class="sh-bloc" aria-labelledby="sh-joueurs-titre">
+    <aside class="sh-colonne sh-droite" aria-label="Action en cours, journal, joueurs et chat">
+      <section class="sh-panneau" aria-labelledby="sh-tour-titre" aria-live="polite" data-panneau></section>
+      <section class="sh-bloc sh-journal-bloc" aria-labelledby="sh-journal-titre">
+        <h2 id="sh-journal-titre" class="sh-bloc-titre">Journal récent</h2>
+        <div data-journal></div>
+      </section>
+      <section class="sh-bloc sh-joueurs-bloc" aria-labelledby="sh-joueurs-titre">
         <h2 id="sh-joueurs-titre" class="sh-bloc-titre">Joueurs</h2>
         <ul class="sh-joueurs" data-joueurs></ul>
-      </section>
-      <section class="sh-bloc" aria-labelledby="sh-journal-titre">
-        <h2 id="sh-journal-titre" class="sh-bloc-titre">Journal</h2>
-        <div data-journal></div>
       </section>
       <div class="sh-chat-zone" data-chat></div>
     </aside>
@@ -109,7 +113,9 @@ export function creer(root, ctx) {
   const q = (s) => el.querySelector(s);
   const refs = {
     bandeau: q('[data-bandeau]'), composition: q('[data-composition]'), quitter: q('[data-quitter]'), elimine: q('[data-elimine]'),
-    perso: q('[data-perso]'), pioches: q('[data-pioches]'), mesEquip: q('[data-mes-equip]'),
+    perso: q('[data-perso]'), pv: q('[data-pv]'), pouvoir: q('[data-pouvoir]'), mission: q('[data-mission]'),
+    pioches: q('[data-pioches]'), mesEquip: q('[data-mes-equip]'), campBandeau: q('[data-camp-bandeau]'),
+    jet: q('[data-jet]'), med: q('[data-medaillons]'),
     panneau: q('[data-panneau]'), plateau: q('[data-plateau]'), piste: q('[data-piste]'),
     joueurs: q('[data-joueurs]'), journal: q('[data-journal]'), chatZone: q('[data-chat]'), tiroirZone: q('[data-tiroir-chat]'),
     modale: q('[data-modale]'), modaleBoite: q('[data-modale-boite]'), annonce: q('[data-annonce]'),
@@ -163,7 +169,7 @@ export function creer(root, ctx) {
       if (!ok) return;
       imagesPerso[perso] = url;
       cles.perso = null;
-      if (etat) rendrePerso();
+      if (etat) { rendrePerso(); rendreMedaillons(); }
     });
   }
 
@@ -428,30 +434,73 @@ export function creer(root, ctx) {
     if (!perso) return '<h2 id="sh-perso-titre" class="sh-bloc-titre">Ton personnage</h2><p class="sh-note">Tu regardes la partie.</p>';
     const mon = moiEtat();
     const camp = jeu().moi?.camp || campDe(perso);
-    const info = persoInfo(perso);
-    const max = PV_MAX[perso] ?? null;
-    const pv = max != null ? Math.max(0, max - (mon.degats ?? 0)) : null;
-    const pct = max ? Math.round((pv / max) * 100) : 0;
-    const pouvoirPossible = POUVOIR_CIBLE.includes(perso) || POUVOIR_SANS_CIBLE.includes(perso);
     const peutReveler = !mon.revele && monTour();
-    return `<h2 id="sh-perso-titre" class="sh-bloc-titre">Mon personnage</h2>
-      <span class="sh-pastille">${mon.revele ? 'Révélé : tout le monde voit ton personnage' : 'Seulement visible par toi'}</span>
-      <div class="sh-perso-visuel">${persoVisuelHtml(camp, imagesPerso[perso] || null)}</div>
-      <div class="sh-perso-nom"><strong>${esc(nomPerso(perso))}</strong><span class="sh-camp is-${esc(camp || 'inconnu')}">${esc(CAMP_LIBELLE[camp] || 'Camp inconnu')}</span></div>
-      ${info.victoire ? `<p class="sh-perso-texte"><span class="sh-label">Victoire</span> ${esc(info.victoire)}</p>` : ''}
-      ${info.pouvoir ? `<p class="sh-perso-texte"><span class="sh-label">Pouvoir</span> ${esc(info.pouvoir)}${pouvoirPossible ? ` <em>${mon.pouvoir ? '(utilisé)' : '(disponible)'}</em>` : ''}</p>` : ''}
-      <div class="sh-pv">
-        <div class="sh-pv-tete"><span>Points de vie</span><strong>${pv ?? '?'} / ${max ?? '?'}</strong></div>
-        <div class="sh-barre-pv" aria-hidden="true"><span style="width:${pct}%"></span></div>
+    return `<h2 id="sh-perso-titre" class="sh-bloc-titre">Personnage</h2>
+      <div class="sh-perso-tete">
+        <div class="sh-perso-portrait">${persoVisuelHtml(camp, imagesPerso[perso] || null)}</div>
+        <div class="sh-perso-nom"><strong>${esc(nomPerso(perso))}</strong>
+          <span class="sh-camp is-${esc(camp || 'inconnu')}">${esc(CAMP_LIBELLE[camp] || 'Camp inconnu')}</span>
+          <span class="sh-note">${mon.revele ? 'Révélé : tout le monde voit ton personnage' : 'Seulement visible par toi'}</span>
+        </div>
       </div>
       <button type="button" class="sh-btn sh-btn-outline sh-pleine" data-revele${peutReveler ? '' : ' disabled'}>${mon.revele ? 'Personnage révélé' : 'Me révéler'}</button>
       ${!mon.revele && !monTour() ? '<p class="sh-note">Tu peux te révéler pendant ton tour.</p>' : ''}`;
   }
 
+  /** Points de vie : valeur, barre (le texte porte l'information). */
+  function pvHtml() {
+    const perso = moiPerso();
+    if (!perso) return '';
+    const mon = moiEtat();
+    const max = PV_MAX[perso] ?? null;
+    const pv = max != null ? Math.max(0, max - (mon.degats ?? 0)) : null;
+    const part = max ? Math.round((pv / max) * 100) : 0;
+    return `<h2 id="sh-pv-titre" class="sh-bloc-titre">Points de vie</h2>
+      <p class="sh-pv-valeur"><strong>${pv ?? '?'}</strong><span> / ${max ?? '?'} PV</span></p>
+      <div class="sh-barre-pv" aria-hidden="true"><span style="width:${part}%"></span></div>`;
+  }
+
+  /** Pouvoir du personnage, avec son état (disponible ou utilisé) quand il peut être utilisé. */
+  function pouvoirHtml() {
+    const perso = moiPerso();
+    const info = perso ? persoInfo(perso) : {};
+    if (!perso || !info.pouvoir) return '';
+    const mon = moiEtat();
+    const possible = POUVOIR_CIBLE.includes(perso) || POUVOIR_SANS_CIBLE.includes(perso);
+    return `<h2 id="sh-pouvoir-titre" class="sh-bloc-titre">Pouvoir</h2>
+      ${possible ? `<span class="sh-badge ${mon.pouvoir ? 'is-utilise' : 'is-dispo'}">${mon.pouvoir ? 'Utilisé' : 'Disponible'}</span>` : ''}
+      <p class="sh-perso-texte">${esc(info.pouvoir)}</p>`;
+  }
+
+  /** Mission : la condition de victoire du personnage. */
+  function missionHtml() {
+    const perso = moiPerso();
+    const info = perso ? persoInfo(perso) : {};
+    if (!info.victoire) return '';
+    return `<h2 id="sh-mission-titre" class="sh-bloc-titre">Mission</h2><p class="sh-perso-texte">${esc(info.victoire)}</p>`;
+  }
+
+  /** Bac des pioches : dos colorés et nombre de cartes. La défausse n'a pas de compteur public. */
   function piochesHtml() {
     const p = jeu().pioches || {};
-    const ligne = (cle, nom, n) => `<li class="sh-pioche is-${cle}"><span class="sh-dos" aria-hidden="true"></span><span>${esc(nom)} : ${esc(plur(n ?? 0, 'carte'))}</span></li>`;
-    return `<h2 id="sh-pioches-titre" class="sh-bloc-titre">Pioches</h2><ul class="sh-pioches">${ligne('vision', 'Vision', p.vision)}${ligne('lumiere', 'Lumière', p.lumiere)}${ligne('tenebres', 'Ténèbres', p.tenebres)}</ul>`;
+    const pile = (cle, nom, n) => `<li class="sh-pile is-${cle}"><span class="sh-dos" aria-hidden="true"></span><span class="sh-pile-nom">${esc(nom)}</span><span class="sh-pile-n" aria-label="${esc(plur(n ?? 0, 'carte'))}">${esc(n ?? 0)}</span></li>`;
+    return `<h2 id="sh-pioches-titre" class="sh-bloc-titre">Pioches et défausse</h2><ul class="sh-piles">${pile('vision', 'Vision', p.vision)}${pile('lumiere', 'Lumière', p.lumiere)}${pile('tenebres', 'Ténèbres', p.tenebres)}<li class="sh-pile is-defausse"><span class="sh-dos" aria-hidden="true"></span><span class="sh-pile-nom">Défausse</span></li></ul>`;
+  }
+
+  /** Jet de dés au centre de la table : d6 (carré) et d4 (triangle). animer : les faces défilent avant le résultat. */
+  function jetHtml(des, animer = false) {
+    const titre = des?.type === 'attaque' ? 'Attaque' : (des?.type === 'deplacement' ? 'Déplacement' : 'Jet');
+    const total = des && des.d6 != null && des.d4 != null ? des.d6 + des.d4 : null;
+    const face = (v) => (animer ? '?' : (v ?? '·'));
+    return `<div class="sh-jet">
+      <span class="sh-jet-titre">${esc(titre)}</span>
+      <div class="sh-jet-des">
+        <span class="sh-de sh-de6" data-d6>${esc(face(des?.d6))}</span>
+        <span class="sh-de sh-de4" data-d4>${esc(face(des?.d4))}</span>
+      </div>
+      <p class="sh-jet-total" data-total>${!animer && total != null ? `Total ${esc(total)}` : ''}</p>
+      <p class="sh-jet-msg" data-msg></p>
+    </div>`;
   }
 
   /** Liste d'équipements : nom, texte au clic (détails). */
@@ -577,6 +626,54 @@ export function creer(root, ctx) {
     poser('piste', refs.piste, pisteHtml({ joueurs: etat.joueurs || [], pv: etat.pv || {}, moiId: monId(), tour: etat.partie?.tour }));
   }
 
+  function rendrePv() {
+    poser('pv', refs.pv, pvHtml());
+  }
+
+  function rendrePouvoir() {
+    poser('pouvoir', refs.pouvoir, pouvoirHtml());
+  }
+
+  function rendreMission() {
+    poser('mission', refs.mission, missionHtml());
+  }
+
+  /** Thème de la page selon mon camp (Hunter bleu, Shadow rouge, Neutre or) ; désaturé en spectateur. */
+  function rendreCamp() {
+    const regarde = jeAiSorti() || !monId() || !moiPerso();
+    const camp = jeu().moi?.camp || campDe(moiPerso()) || null;
+    const theme = regarde ? 'spectateur' : (camp || 'inconnu');
+    if (el.dataset.camp !== theme) el.dataset.camp = theme;
+    let texte = 'Tu regardes la partie';
+    if (jeAiSorti()) texte = 'Tu es mort·e : tu regardes la partie';
+    else if (!regarde && camp) texte = `Tu joues un ${CAMP_LIBELLE[camp] || 'Camp inconnu'}`;
+    poser('camp', refs.campBandeau, `<p class="sh-camp-texte">${esc(texte)}</p>`);
+  }
+
+  /** Médaillons des joueurs : portrait connu pour moi et pour les personnages révélés (sinon « ? »). */
+  function rendreMedaillons() {
+    const portraits = {};
+    for (const j of etat.joueurs || []) {
+      const estMoi = j.user_id === monId();
+      const perso = estMoi ? moiPerso() : (j.etat?.revele ? j.etat.perso : null);
+      if (!perso) continue;
+      const camp = estMoi ? (jeu().moi?.camp || campDe(perso)) : campDe(perso);
+      portraits[j.user_id] = { url: imagesPerso[perso] || null, camp };
+    }
+    poser('med', refs.med, medaillonsHtml({ joueurs: etat.joueurs || [], moiId: monId(), tour: etat.partie?.tour, portraits }));
+  }
+
+  /** Jet de dés : refait seulement quand les dés changent ; l'animation vient après. */
+  function rendreJet(animer, blesses) {
+    const des = jeu().des || null;
+    const reconstruit = poser('jet', refs.jet, jetHtml(des, animer));
+    if (reconstruit && animer && des) rouler(des, blesses);
+    else if (blesses.length) {
+      const msg = refs.jet.querySelector('[data-msg]');
+      if (msg) msg.textContent = texteBlesses(blesses);
+    }
+  }
+
   function rendreJoueurs() {
     poser('joueurs', refs.joueurs, joueursHtml());
   }
@@ -598,7 +695,101 @@ export function creer(root, ctx) {
     modaleOuverte = true;
     if (poser('modale', refs.modaleBoite, html) && !etaitOuverte) {
       refs.modaleBoite.querySelector('h2')?.focus();
+      if (!reduit()) refs.modaleBoite.animate([{ transform: 'rotateY(80deg)', opacity: 0 }, { transform: 'rotateY(0deg)', opacity: 1 }], { duration: 650, easing: 'ease-out' });
     }
+  }
+
+  /* ---------- Animations (uniquement sur les vrais changements d'état) ---------- */
+
+  const reduit = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let arretDes = null;
+
+  /** Ce que la table montre de chaque joueur : blessures, révélation, mort, lieu. */
+  function photo(e) {
+    const m = {};
+    for (const j of e?.joueurs || []) {
+      m[j.user_id] = { pseudo: j.pseudo || '?', degats: j.etat?.degats ?? 0, revele: !!j.etat?.revele, elimine: !!j.elimine };
+    }
+    return m;
+  }
+
+  /** Joueurs qui ont reçu des blessures depuis l'état précédent. */
+  function degatsRecus(avant, e) {
+    const liste = [];
+    for (const j of e.joueurs || []) {
+      const p = avant[j.user_id];
+      const n = (j.etat?.degats ?? 0) - (p?.degats ?? 0);
+      if (p && n > 0) liste.push({ pseudo: j.pseudo || '?', n });
+    }
+    return liste;
+  }
+  const texteBlesses = (liste) => liste.map(({ pseudo, n }) => `${pseudo} : ${plur(n, 'blessure')}`).join(' · ');
+
+  /** Position des pions (piste et lieux) avant le nouveau rendu. */
+  function mesurer() {
+    const m = new Map();
+    el.querySelectorAll('[data-uid][data-zone]').forEach((x) => m.set(`${x.dataset.zone}|${x.dataset.uid}`, x.getBoundingClientRect()));
+    return m;
+  }
+  /** Un pion qui change de case ou de lieu glisse depuis son ancienne position. */
+  function deplacer(avant) {
+    if (!avant || reduit()) return;
+    el.querySelectorAll('[data-uid][data-zone]').forEach((x) => {
+      if (x.dataset.zone === 'med') return;
+      const r0 = avant.get(`${x.dataset.zone}|${x.dataset.uid}`);
+      if (!r0) return;
+      const r1 = x.getBoundingClientRect();
+      const dx = r0.left - r1.left;
+      const dy = r0.top - r1.top;
+      if (Math.abs(dx) + Math.abs(dy) < 3) return;
+      x.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: 1100, easing: 'cubic-bezier(.4, .1, .2, 1)' });
+    });
+  }
+  /** Carte piochée (le panneau se retourne), révélation (médaillon retourné), mort (médaillon s'éteint). */
+  function animerEvenements(avant, carteAvant) {
+    const carte = jeu().carte || null;
+    if (carte && carte !== carteAvant) {
+      refs.panneau.animate([{ transform: 'rotateY(80deg)', opacity: 0.2 }, { transform: 'rotateY(0deg)', opacity: 1 }], { duration: 700, easing: 'ease-out' });
+    }
+    for (const j of etat.joueurs || []) {
+      const p = avant[j.user_id];
+      if (!p) continue;
+      const med = refs.med.querySelector(`.sh-med[data-uid="${CSS.escape(j.user_id)}"]`);
+      if (!med) continue;
+      if (!p.revele && j.etat?.revele) {
+        med.querySelector('.sh-med-cadre')?.animate([{ transform: 'rotateY(90deg)' }, { transform: 'rotateY(0deg)' }], { duration: 800, easing: 'ease-out' });
+      }
+      if (!p.elimine && j.elimine) med.animate([{ opacity: 1 }, { opacity: 0.4 }], { duration: 1200, easing: 'ease-out' });
+    }
+  }
+  /** Lancer de dés : les faces défilent ~1 s puis s'arrêtent sur le résultat. Ne bloque aucune action. */
+  function rouler(des, blesses) {
+    arretDes?.();
+    const d6 = refs.jet.querySelector('[data-d6]');
+    const d4 = refs.jet.querySelector('[data-d4]');
+    const total = refs.jet.querySelector('[data-total]');
+    const msg = refs.jet.querySelector('[data-msg]');
+    const finir = () => {
+      if (d6) d6.textContent = des.d6 ?? '·';
+      if (d4) d4.textContent = des.d4 ?? '·';
+      if (total) total.textContent = `Total ${(des.d6 ?? 0) + (des.d4 ?? 0)}`;
+      if (msg) msg.textContent = blesses.length ? texteBlesses(blesses) : '';
+    };
+    if (!d6 || !d4) return finir();
+    d6.animate([{ transform: 'rotate(-200deg) scale(.6)' }, { transform: 'rotate(0deg) scale(1)' }], { duration: 1000, easing: 'cubic-bezier(.2, .8, .3, 1)' });
+    d4.animate([{ transform: 'rotate(200deg) scale(.6)' }, { transform: 'rotate(0deg) scale(1)' }], { duration: 1000, easing: 'cubic-bezier(.2, .8, .3, 1)' });
+    const debut = Date.now();
+    const t = setInterval(() => {
+      if (Date.now() - debut >= 1000) {
+        clearInterval(t);
+        arretDes = null;
+        finir();
+        return;
+      }
+      d6.textContent = String(1 + Math.floor(Math.random() * 6));
+      d4.textContent = String(1 + Math.floor(Math.random() * 4));
+    }, 80);
+    arretDes = () => clearInterval(t);
   }
 
   /* ---------- Actions ---------- */
@@ -706,21 +897,41 @@ export function creer(root, ctx) {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
       if (!e?.partie) return;
+      const premier = !etat;
       const avant = etat?.partie?.tour;
+      const photoAvant = photo(etat);
+      const desAvant = JSON.stringify(etat?.jeu?.des ?? null);
+      const carteAvant = etat?.jeu?.carte ?? null;
+      const positions = premier ? null : mesurer();
       etat = e;
       verifierImagePerso(moiPerso());
+      for (const j of e.joueurs || []) if (j.etat?.revele && j.etat.perso) verifierImagePerso(j.etat.perso);
+      const animer = !premier && !reduit();
+      const changeDes = desAvant !== JSON.stringify(e.jeu?.des ?? null);
+      const blesses = premier ? [] : degatsRecus(photoAvant, e);
       rendreBandeau();
+      rendreCamp();
       rendreElimine();
       rendreComposition();
       rendrePerso();
+      rendrePv();
+      rendrePouvoir();
+      rendreMission();
       rendrePioches();
       rendreMesEquip();
       rendrePanneau();
       rendrePlateau();
       rendrePiste();
+      rendreMedaillons();
+      rendreJet(animer && changeDes, blesses);
       rendreJoueurs();
       rendreJournal();
       rendreModale();
+      if (animer) {
+        deplacer(positions);
+        animerEvenements(photoAvant, carteAvant);
+      }
+      if (blesses.length) refs.annonce.textContent = texteBlesses(blesses) + '.';
       if (avant !== undefined && e.partie.tour !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
     },
@@ -733,6 +944,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
       arretChrono?.();
+      arretDes?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();
       el.remove();
