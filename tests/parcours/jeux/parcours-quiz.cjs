@@ -151,8 +151,10 @@ async function attendApres(p, id) {
   await p.ctx.close();
 
   /* ---------- Tuto ---------- */
-  const tuto = fs.existsSync(path.join(ROOT, 'assets/espaces/infos/tutos/cartes-avance.js'))
-    ? fs.readFileSync(path.join(ROOT, 'assets/espaces/infos/tutos/cartes-avance.js'), 'utf8') : '';
+  // Texte source (site/) : dans une version construite, le fichier de _site/ est un relais (voir construire.mjs).
+  const SRC = path.join(__dirname, '..', '..', '..', 'site');
+  const tuto = fs.existsSync(path.join(SRC, 'assets/espaces/infos/tutos/cartes-avance.js'))
+    ? fs.readFileSync(path.join(SRC, 'assets/espaces/infos/tutos/cartes-avance.js'), 'utf8') : '';
   check(tuto.includes("slug: 'questions-du-gang'") && tuto.includes("page: '/pages/jeux/quiz.html'"), 'tuto : « questions-du-gang » pointe vers /pages/jeux/quiz.html');
 
   await browser.close();

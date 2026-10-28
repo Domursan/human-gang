@@ -191,7 +191,8 @@ async function routeEvil(p, target) {
   await p.reload(); await sleep(1500);
   check(!cspAff.length && (await p.locator('body *').count()) > 20, 'affiche avec script en ligne : autorisé par son empreinte, page remplie' + (cspAff.length ? ` (${cspAff.join(' | ')})` : ''));
   await p.ctx.close();
-  const irl = fsx.readFileSync(px.join(ROOT, 'assets/espaces/irl/irl-history.js'), 'utf8');
+  // Texte source (site/) : dans une version construite, le fichier de _site/ est un relais (voir construire.mjs).
+  const irl = fsx.readFileSync(px.join(__dirname, '..', '..', '..', 'site', 'assets/espaces/irl/irl-history.js'), 'utf8');
   check(/s\.integrity = LEAFLET_SRI\.js/.test(irl) && /css\.integrity = LEAFLET_SRI\.css/.test(irl), 'Leaflet : script et feuille de style chargés avec integrity');
   const pages = fsx.readdirSync(ROOT).filter((f) => f.endsWith('.html') && !['offline.html', '/pages/jeux/simulateur.html'].includes(f));
   // /pages/jeux/jeux.html ajoute seulement le lecteur YouTube de Heardle (script iframe_api et ses fichiers sur s.ytimg.com).

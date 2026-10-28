@@ -8,8 +8,8 @@
 //   site partagent leurs morceaux communs (splitting), les imports dynamiques restent des morceaux séparés.
 //   Sorties dans _site/assets/_b/ (sous /assets/ pour que le service worker les traite comme du code).
 // - Imports calculés (import(variable), import(`./${id}.js`)) : leur cible reste chargée par son adresse d'origine.
-//   Ces cibles sont donc aussi des entrées, et leur fichier d'origine dans _site/ devient un relais vers la version
-//   regroupée : une seule instance de chaque module par page (les états partagés restent uniques).
+//   Tout module ES (cibles comprises) est aussi une entrée, et son fichier d'origine dans _site/ devient un relais vers
+//   la version regroupée : une seule instance de chaque module par page (les états partagés restent uniques).
 // - import.meta.url est remplacé par l'adresse d'origine du fichier : les URL relatives (feuilles, images) restent justes.
 // - Chemins relatifs des littéraux « ./x.js » et « ../x.js » ramenés à des chemins absolus du site : un module
 //   regroupé n'a plus son adresse d'origine, et le chemin doit rester juste pour les imports calculés.
@@ -81,6 +81,16 @@ for (const page of pagesHtml) {
 }
 dire(`Pages : ${pagesHtml.length} · modules de page (entrées) : ${entrees.size}`);
 
+// Scripts classiques (<script src> sans type=module) : pas des modules, jamais regroupés (variables globales).
+const classiques = new Set();
+for (const page of pagesHtml) {
+  for (const [balise] of readFileSync(page, 'utf8').matchAll(/<script\b[^>]*>/gi)) {
+    if (/type\s*=\s*["']module["']/i.test(balise)) continue;
+    const src = balise.match(/\ssrc\s*=\s*"(\/[^"]+\.js)"/i);
+    if (src) classiques.add(src[1]);
+  }
+}
+
 /**
  * Réécrit un fichier JS avant regroupement :
  * - import.meta.url devient l'adresse d'origine du fichier ;
@@ -143,7 +153,13 @@ for (const f of fichiersJs) {
 }
 dire(`Imports calculés : ${cibles.size} module(s) relayé(s)`);
 
-const toutesEntrees = [...new Set([...entrees, ...cibles])];
+// Tout module ES devient aussi une entrée, et son fichier d'origine un relais : un module chargé par son adresse
+// d'origine (import('/assets/…/x.js') depuis une page, un test…) est alors la même instance que le code regroupé,
+// et non une seconde copie avec ses propres états (ex. les codes de triche de l'arcade).
+const modules = fichiersJs.filter((f) => !classiques.has('/' + relSrc(f)) && relSrc(f) !== 'sw.js'
+  && /^\s*(import|export)\b/m.test(readFileSync(f, 'utf8')));
+
+const toutesEntrees = [...new Set([...entrees, ...cibles, ...modules])];
 const resultat = await esbuild.build({
   absWorkingDir: RACINE,
   entryPoints: toutesEntrees,
@@ -171,23 +187,15 @@ for (const [cle, info] of Object.entries(resultat.metafile.outputs)) {
 const morceaux = parcourir(join(OUT, 'assets', '_b', 'chunks')).length;
 dire(`JS regroupé : ${toutesEntrees.length} entrée(s), ${morceaux} morceau(x) partagé(s)`);
 
-// Relais : le fichier d'origine d'une cible renvoie vers la version regroupée (même instance de module).
-for (const cible of cibles) {
-  const url = adresseSortie.get(cible);
-  if (!url) throw new Error(`Pas de sortie pour la cible ${relSrc(cible)}`);
-  writeFileSync(join(OUT, relSrc(cible)),
+// Relais : le fichier d'origine d'un module renvoie vers la version regroupée (même instance de module).
+for (const origine of new Set([...entrees, ...cibles, ...modules])) {
+  const url = adresseSortie.get(origine);
+  if (!url) throw new Error(`Pas de sortie pour le module ${relSrc(origine)}`);
+  writeFileSync(join(OUT, relSrc(origine)),
     `export * from ${JSON.stringify(url)};\nimport * as __m from ${JSON.stringify(url)};\nexport default __m.default;\n`);
 }
 
 // ---------- 4. Scripts classiques et CSS : minification sur place ----------
-const classiques = new Set();
-for (const page of pagesHtml) {
-  for (const [balise] of readFileSync(page, 'utf8').matchAll(/<script\b[^>]*>/gi)) {
-    if (/type\s*=\s*["']module["']/i.test(balise)) continue;
-    const src = balise.match(/\ssrc\s*=\s*"(\/[^"]+\.js)"/i);
-    if (src) classiques.add(src[1]);
-  }
-}
 let octetsAvant = 0;
 let octetsApres = 0;
 for (const adresse of classiques) {
@@ -290,7 +298,11 @@ const gardees = ancienne.filter((p) => {
   if (!/\.m?js$/.test(p)) return existsSync(join(OUT, p));
   return existsSync(join(SRC, p)) && (cibleUrls.has(p) || classiquesSet.has(p));
 });
-const regroupes = parcourir(join(OUT, 'assets', '_b')).map((f) => '/' + relative(OUT, f).split(sep).join('/'));
+// Fichiers regroupés à précacher : sorties des entrées d'avant (pages et cibles) et morceaux partagés. Les modules
+// ajoutés pour les relais ne sont pas précachés : ils ne servent qu'aux chargements par adresse d'origine.
+const precachees = new Set([...entrees, ...cibles].map((e) => adresseSortie.get(e)));
+const regroupes = parcourir(join(OUT, 'assets', '_b')).map((f) => '/' + relative(OUT, f).split(sep).join('/'))
+  .filter((u) => precachees.has(u) || u.includes('/assets/_b/chunks/'));
 const liste = [...new Set([...gardees, ...regroupes])].sort();
 const lignes = [];
 for (let i = 0; i < liste.length; i += 4) lignes.push('  ' + liste.slice(i, i + 4).map((p) => `'${p}'`).join(', ') + ',');
