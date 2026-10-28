@@ -24,3 +24,4 @@
 2026-10-27T21:13:39.895Z ok supabase/migrations/163_theme_paillettes.sql
 2026-10-27T21:13:41.123Z ok supabase/migrations/164_themes_saint_nicolas_pate.sql
 2026-10-28T12:40:54.772Z ok supabase/migrations/165_plateaux_droits.sql
+2026-10-28T12:41:32.134Z ok supabase/migrations/166_plateaux_droits_internes.sql
