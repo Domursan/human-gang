@@ -42,6 +42,15 @@
 .cal-ttl { font-size: 12px; line-height: 1.3; padding: 1px 6px; border-radius: 6px; border-left: 3px solid var(--c); background: var(--surface-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cal-loading, .cal-error { padding: 24px 0; }
+/* Hauteur de six semaines réservée dès le chargement : la grille ne bouge plus quand les rendez-vous arrivent */
+.cal-grid { min-height: calc(6 * 96px + 5 * 6px); }
+
+/* Squelette du chargement (filtres, grille, jour) : même place que le contenu final, sans animation */
+.cal-sk { display: block; background: var(--surface-2); border-radius: 8px; }
+.cal-sk-chip { width: 104px; border-color: transparent; background: var(--surface-2); }
+.cal-sk-cell { border-color: transparent; background: var(--surface-2); }
+.cal-sk-titre { width: 55%; height: 22px; margin-bottom: 12px; }
+.cal-sk-ligne { width: 70%; height: 18px; }
 .cal-error { color: var(--rose); }
 
 /* Téléphone : grille compacte avec pastilles ; la liste du jour s'affiche dessous. */
@@ -50,6 +59,7 @@
   .cal-today { display: none; }
   .cal-dow, .cal-row { gap: 3px; }
   .cal-grid { gap: 4px; }
+  .cal-grid { min-height: calc(6 * 54px + 5 * 4px); }
   .cal-cell { min-height: 54px; align-items: center; padding: 6px 2px; border-radius: 10px; }
   .cal-num { font-size: 13px; }
   .cal-dots { display: flex; }

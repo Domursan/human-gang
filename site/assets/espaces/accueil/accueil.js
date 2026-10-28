@@ -139,6 +139,28 @@ function renderGuest() {
 /* ======================================================================
    Membre connecté
    ====================================================================== */
+/* Blocs conditionnels du haut (compte à rebours, bandeau d'événement) : s'ils étaient affichés à la dernière visite,
+   leur place est réservée pendant le chargement, pour ne pas repousser les tuiles. Préférence locale, sans effet si absente. */
+const BLOCS_KEY = 'hg_accueil_blocs';
+/** Hauteur (px) du bloc à la dernière visite dans ce navigateur, 0 s'il n'était pas affiché. */
+function blocVu(cle) { try { return Math.max(0, Math.round(Number(JSON.parse(localStorage.getItem(BLOCS_KEY) || '{}')[cle]) || 0)); } catch { return 0; } }
+/** Mémorise la hauteur de chaque bloc affiché, une fois le chargement terminé (0 : absent). */
+function noterBlocs() {
+  const h = (id) => { const el = $(`#${id}`); return el && !el.hidden ? Math.round(el.getBoundingClientRect().height) : 0; };
+  try { localStorage.setItem(BLOCS_KEY, JSON.stringify({ countdown: h('countdown'), dyn: h('dyn-banner') })); } catch { /* sans importance */ }
+}
+/**
+ * Bloc conditionnel : réservé (squelette, classe is-attente) si vu la dernière fois, sinon masqué comme avant.
+ * @param {string} id identifiant de l'élément
+ * @param {string} cle clé dans BLOCS_KEY
+ * @param {string} sq contenu du squelette
+ */
+function blocAttente(id, cle, sq) {
+  const h = blocVu(cle);
+  if (!h) return `<div id="${id}" hidden></div>`;
+  return `<div id="${id}" class="${id === 'countdown' ? 'countdown' : 'recap-banner dyn-banner'} is-attente" style="min-height:${h}px" aria-hidden="true">${sq}</div>`;
+}
+
 /**
  * Squelette de l'accueil d'un membre : titre, bandeaux, tuiles (avec des blocs en attente), fil, anniversaires, boîte à idées.
  * Les données arrivent ensuite, tuile par tuile.
@@ -150,11 +172,11 @@ function renderMemberShell() {
         <p class="eyebrow">Salut ${esc(me.pseudo)}</p>
         <h1 class="page-title">${esc(txt('accueil_titre', D.accueil_titre))}</h1>
       </div>
-      <div id="countdown" class="countdown" hidden></div>
+      ${blocAttente('countdown', 'countdown', '<p class="cd-title home-sk home-sk-court"></p><div class="cd-units"><span class="home-sk home-sk-num"></span><span class="home-sk home-sk-num"></span><span class="home-sk home-sk-num"></span><span class="home-sk home-sk-num"></span></div>')}
     </section>
     ${recapBanner()}
     <div id="saison-home" hidden></div>
-    <div id="dyn-banner" hidden></div>
+    ${blocAttente('dyn-banner', 'dyn', '<span class="home-sk home-sk-rond"></span><span class="home-sk-txt"><span class="home-sk home-sk-long"></span><span class="home-sk home-sk-court"></span></span>')}
     <section class="card home-defi" id="defi" aria-labelledby="defi-title" hidden></section>
     <div id="qdj-home" hidden></div>
 
@@ -297,8 +319,8 @@ function startCountdown(target, year) {
   /** Met à jour le compte à rebours : le décompte, ou le message du jour J. */
   const tick = () => {
     const ms = target - Date.now();
-    if (ms <= -86400000) { box.hidden = true; clearInterval(cdTimer); return; }
-    box.hidden = false;
+    if (ms <= -86400000) { box.hidden = true; box.classList.remove('is-attente'); clearInterval(cdTimer); return; }
+    box.hidden = false; box.classList.remove('is-attente');
     if (ms <= 0) { box.innerHTML = `<p class="cd-title">Secret Santa ${esc(year)}</p><p class="cd-today display">C'est le jour de l'échange</p>`; clearInterval(cdTimer); return; }
     const s = Math.floor(ms / 1000);
     const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
@@ -418,7 +440,7 @@ async function loadDynBanner() {
   try {
     const { getActiveDynEvents } = await import('../../commun/dyn-events.js');
     const list = await getActiveDynEvents();
-    if (!list.length) return;
+    if (!list.length) { box.hidden = true; box.classList.remove('is-attente'); return; }
     const ev = [...list].sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
     const more = list.length > 1 ? ` (+${list.length - 1} autre${list.length > 2 ? 's' : ''})` : '';
     const vis = ev.image_url
@@ -429,8 +451,8 @@ async function loadDynBanner() {
         <span class="recap-banner-txt"><strong>Événement en cours : ${esc(ev.name)}${esc(more)}</strong><span>Jusqu'au ${esc(fmtDateTime(ev.ends_at))} · une image spéciale traverse le site, attrape-la !</span></span>
         <span class="recap-banner-go" aria-hidden="true">${ICON.arrow}</span>
       </a>`;
-    box.hidden = false;
-  } catch (e) { console.warn('[événements]', e); }
+    box.hidden = false; box.classList.remove('is-attente');
+  } catch (e) { console.warn('[événements]', e); box.hidden = true; box.classList.remove('is-attente'); }
 }
 
 /* ---------- Fil d'activité ---------- */
@@ -627,6 +649,9 @@ if (!me) {
     home?.loadOwn(),
     tileOn('tile-day') ? import('./accueil-ce-jour.js').then((m) => m.loadOnThisDay($('#tile-day'), me)) : null, // module chargé seulement si la tuile existe
   ]);
+  // Places réservées restées vides (bloc absent cette fois) : retirées ; la visite suivante réserve selon ce qui s'affiche
+  for (const el of app.querySelectorAll('.is-attente')) { el.classList.remove('is-attente'); el.hidden = true; el.innerHTML = ''; el.removeAttribute('aria-hidden'); }
+  noterBlocs();
   allerAuxIdees(true);
   lanceVisite(me); // après les tuiles : la visite éclaire des éléments déjà en place
 }

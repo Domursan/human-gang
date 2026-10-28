@@ -46,8 +46,26 @@
         <div class="eyebrow">Entre nous</div>
         <h1 class="page-title">Messages</h1>
       </div>
+      <!-- Place des boutons, réservée pendant le chargement (remplacée par renderShell) -->
+      <div class="btn-row msg-head-actions msg-sk-actions" aria-hidden="true">
+        <span class="btn btn-ghost" tabindex="-1">Nouveau groupe</span>
+        <span class="btn btn-primary" tabindex="-1">Nouveau message</span>
+      </div>
     </div>
-    <div class="msg-loading" role="status"><span class="msg-spinner" aria-hidden="true"></span> Chargement des conversations…</div>
+    <p class="visually-hidden" role="status">Chargement des conversations…</p>
+    <!-- Squelette à la hauteur finale de la messagerie : pas de saut quand renderShell la remplace -->
+    <div class="msg-app msg-app-sk" aria-hidden="true" data-view="list">
+      <div class="msg-side">
+        <ul class="msg-convs">
+          <li class="msg-conv-sk"><span class="msg-sk msg-sk-av"></span><span class="msg-sk-lines"><span class="msg-sk msg-sk-l1"></span><span class="msg-sk msg-sk-l2"></span></span></li>
+          <li class="msg-conv-sk"><span class="msg-sk msg-sk-av"></span><span class="msg-sk-lines"><span class="msg-sk msg-sk-l1"></span><span class="msg-sk msg-sk-l2"></span></span></li>
+          <li class="msg-conv-sk"><span class="msg-sk msg-sk-av"></span><span class="msg-sk-lines"><span class="msg-sk msg-sk-l1"></span><span class="msg-sk msg-sk-l2"></span></span></li>
+          <li class="msg-conv-sk"><span class="msg-sk msg-sk-av"></span><span class="msg-sk-lines"><span class="msg-sk msg-sk-l1"></span><span class="msg-sk msg-sk-l2"></span></span></li>
+        </ul>
+      </div>
+      <div class="msg-main"></div>
+    </div>
+    <p class="muted small msg-admin-note"><span>Les messages peuvent être consultés par l’admin. <a href="/pages/infos/legal.html#confidentialite">En savoir plus</a></span></p>
   </main>
 
   <dialog class="msg-dialog" id="msg-new-dlg" aria-labelledby="msg-new-title">
