@@ -10,6 +10,33 @@ import { esc } from '../../commun/core.js';
 import { icone, avatar } from './ui.js';
 import { roleById } from './roles.js';
 
+/* Fond du prénom (loup-garou.css, .lg-siege-buche) : la teinte la plus claire du bandeau, et seuil de contraste visé. */
+const FOND_BANDEAU = [0x1C, 0x13, 0x0D];
+const CONTRASTE_MIN = 4.6;
+
+/** Luminance relative WCAG d'une couleur [r, g, b] (0 à 255). */
+function luminance([r, g, b]) {
+  const c = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+}
+
+/**
+ * Couleur du prénom lisible sur le bandeau sombre : même teinte, éclaircie vers le blanc juste assez pour
+ * atteindre le contraste visé. Une couleur déjà assez claire est rendue telle quelle.
+ * @param {string} hex couleur #rrggbb du joueur
+ * @returns {string} #rrggbb
+ */
+export function couleurPrenom(hex) {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const lf = luminance(FOND_BANDEAU);
+  const contraste = (rgb) => (Math.max(luminance(rgb), lf) + 0.05) / (Math.min(luminance(rgb), lf) + 0.05);
+  for (let t = 0; t <= 1.0001; t += 0.01) {
+    const m = c.map((v) => Math.round(v + (255 - v) * t));
+    if (contraste(m) >= CONTRASTE_MIN) return '#' + m.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  return '#FFFFFF';
+}
+
 /**
  * HTML de la table.
  * @param {Array<object>} joueurs joueurs de hg_lg_etat (place, pseudo, couleur, invite, vivant, role, capitaine…).
@@ -36,7 +63,7 @@ export function tableHtml(joueurs, o = {}) {
     if (!j.vivant) classes.push('mort');
     if (o.cible && j.user_id === o.cible) classes.push('cible');
     const bouton = !!o.choisissable?.(j);
-    const couleur = j.invite ? '#9A968F' : (/^#[0-9a-f]{6}$/i.test(j.couleur || '') ? j.couleur : '#F2EFEA');
+    const couleur = couleurPrenom(j.invite ? '#9A968F' : (/^#[0-9a-f]{6}$/i.test(j.couleur || '') ? j.couleur : '#F2EFEA'));
     const nbVotes = o.votes?.[j.user_id];
     const role = !j.vivant && j.role ? roleById(j.role).nom : '';
     let sous = o.sous ? o.sous(j) : '';
