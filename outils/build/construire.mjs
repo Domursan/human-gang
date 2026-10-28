@@ -13,6 +13,8 @@
 // - import.meta.url est remplacé par l'adresse d'origine du fichier : les URL relatives (feuilles, images) restent justes.
 // - Chemins relatifs des littéraux « ./x.js » et « ../x.js » ramenés à des chemins absolus du site : un module
 //   regroupé n'a plus son adresse d'origine, et le chemin doit rester juste pour les imports calculés.
+// - Préchargements : chaque page reçoit un <link rel="modulepreload"> pour tout le graphe d'imports statiques de ses modules
+//   (version regroupée). Sans eux, le navigateur découvre chaque niveau de la chaîne après le précédent (cascade d'allers-retours).
 // - CSS : chaque feuille est minifiée ; les feuilles locales d'une page sont regroupées en un seul fichier quand
 //   c'est sûr (ordre conservé, pas d'@import, pas d'url() relative). Fichiers dans _site/assets/_b/css/.
 // - Scripts classiques (theme-boot.js…) : minifiés sur place, sans renommer les variables (ils sont globaux).
@@ -184,6 +186,11 @@ for (const [cle, info] of Object.entries(resultat.metafile.outputs)) {
   if (!info.entryPoint) continue;
   adresseSortie.set(resolve(RACINE, info.entryPoint), '/' + relative(OUT, resolve(RACINE, cle)).split(sep).join('/'));
 }
+// Dépendances statiques de chaque sortie (« import … from » ; pas les imports dynamiques) : servent aux préchargements.
+const importsStatiques = new Map();
+for (const [cle, info] of Object.entries(resultat.metafile.outputs)) {
+  importsStatiques.set(resolve(RACINE, cle), info.imports.filter((i) => i.kind === 'import-statement').map((i) => resolve(RACINE, i.path)));
+}
 const morceaux = parcourir(join(OUT, 'assets', '_b', 'chunks')).length;
 dire(`JS regroupé : ${toutesEntrees.length} entrée(s), ${morceaux} morceau(x) partagé(s)`);
 
@@ -226,21 +233,59 @@ const LIEN = /<link\b[^>]*>/gi;
 const SANS_RISQUE = /url\(\s*(?!["']?(?:data:|https?:|\/\/|#|\/))/i; // url() relative : ne suit pas le fichier regroupé
 let feuillesFusionnees = 0;
 let lienSupprimes = 0;
+let preloadsAjoutes = 0;
 const pagesModifiees = [];
 
 for (const page of pagesHtml) {
   const rel = relSrc(page);
   let texte = readFileSync(page, 'utf8');
 
-  // Modules : adresse vers la version regroupée. Préchargements vers des fichiers d'origine : retirés (plus chargés).
+  // Modules : adresse vers la version regroupée. Préchargements vers des fichiers d'origine : retirés (remplacés ci-dessous).
+  const entreesPage = [];
   texte = texte.replace(/<script\b[^>]*>/gi, (balise) => {
     if (!/type\s*=\s*["']module["']/i.test(balise)) return balise;
     const src = balise.match(/\ssrc\s*=\s*"([^"]+)"/i);
     if (!src) return balise;
     const url = adresseSortie.get(join(SRC, src[1]));
+    entreesPage.push(join(OUT, url.slice(1)));
     return balise.replace(src[0], ` src="${url}"`);
   });
-  texte = texte.replace(/<link\b[^>]*rel\s*=\s*["']modulepreload["'][^>]*>\s*/gi, () => { lienSupprimes++; return ''; });
+  // Préchargements d'origine (ex. supabase-js, chargé par un import() dans core/supabase.js) : leur version regroupée est
+  // demandée dès le HTML ; ceux qui n'ont pas de version regroupée sont retirés.
+  const prechargesOrigine = [];
+  texte = texte.replace(/<link\b[^>]*rel\s*=\s*["']modulepreload["'][^>]*>\s*/gi, (lien) => {
+    lienSupprimes++;
+    const href = lien.match(/href\s*=\s*"([^"]+)"/);
+    const abs = href && adresseSortie.get(join(SRC, href[1]));
+    if (abs) prechargesOrigine.push(join(OUT, abs.slice(1)));
+    return '';
+  });
+
+  // Préchargements : les dépendances statiques des modules de la page (regroupées) sont demandées dès le HTML, comme
+  // les <link rel="modulepreload"> d'origine. Sans eux, chaque niveau de la chaîne d'imports attend le précédent.
+  // Imports dynamiques et entrées elles-mêmes exclus (sauf les préchargements d'origine). Insérés avant le premier module.
+  const vus = new Set(entreesPage);
+  const aTraiter = [...entreesPage];
+  const preloads = [];
+  for (const abs of prechargesOrigine) {
+    if (vus.has(abs)) continue;
+    vus.add(abs);
+    aTraiter.push(abs);
+    preloads.push(`<link rel="modulepreload" href="/${relative(OUT, abs).split(sep).join('/')}">`);
+  }
+  for (let i = 0; i < aTraiter.length; i++) {
+    for (const dep of importsStatiques.get(aTraiter[i]) || []) {
+      if (vus.has(dep)) continue;
+      vus.add(dep);
+      aTraiter.push(dep);
+      preloads.push(`<link rel="modulepreload" href="/${relative(OUT, dep).split(sep).join('/')}">`);
+    }
+  }
+  if (preloads.length) {
+    const premier = texte.search(/<script\b[^>]*type\s*=\s*["']module["']/i);
+    if (premier >= 0) texte = texte.slice(0, premier) + preloads.join('\n  ') + '\n  ' + texte.slice(premier);
+    preloadsAjoutes += preloads.length;
+  }
 
   // Feuilles locales « rel + href » seulement : regroupées si l'ordre le permet.
   const liens = [...texte.matchAll(LIEN)].filter((m) => /rel\s*=\s*["']stylesheet["']/i.test(m[0]));
@@ -285,7 +330,7 @@ for (const page of pagesHtml) {
   writeFileSync(join(OUT, rel), texte);
   pagesModifiees.push(rel);
 }
-dire(`Feuilles regroupées : ${feuillesFusionnees} lien(s) évité(s) · préchargements de modules retirés : ${lienSupprimes}`);
+dire(`Feuilles regroupées : ${feuillesFusionnees} lien(s) évité(s) · préchargements de modules retirés : ${lienSupprimes}, ajoutés : ${preloadsAjoutes}`);
 
 // ---------- 6. Service worker : liste de précache et version ----------
 const swSrc = readFileSync(join(SRC, 'sw.js'), 'utf8');
