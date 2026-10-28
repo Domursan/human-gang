@@ -1,15 +1,19 @@
 // ===== Humane Gang — Risk : la table de jeu (plateaux/jeux/risk/table.js) =====
 /*
- * Rôle : affiche une partie de Risk en cours : bandeau (joueurs, chrono, quitter), étapes du tour, carte du monde
- *   (42 territoires), panneau d'action selon la phase (mise en place, renforts, attaque, conquête, déplacement),
- *   mes cartes et échanges, joueurs, continents et bonus, ma mission secrète, journal, chat
- *   (à droite sur ordinateur, en tiroir sur téléphone).
- *   Le style est dans assets/espaces/plateaux/risk.css ; ici, le contenu et les actions.
+ * Rôle : affiche une partie de Risk en cours : bandeau (joueurs, chrono, quitter), barre des 3 phases, bandeau
+ *   d'instruction (à qui le tour, quelle phase), carte du monde (42 territoires, vraies formes), checklist « Ton action
+ *   en 3 étapes », panneau d'action selon la phase (mise en place, renforts, attaque, conquête, déplacement), bataille
+ *   (dés, comparaison des paires, bilan), mes cartes et échanges, légende des joueurs, continents et bonus, journal,
+ *   infos utiles, ma mission secrète, chat (à droite sur ordinateur, en tiroir sur téléphone).
+ *   Le style est dans assets/espaces/plateaux/risk.css ; ici, le contenu, les actions et les animations.
+ *   Les animations se déclenchent sur les vrais changements d'état (nouveau combat, troupes qui bougent) et ne
+ *   bloquent jamais une action. Rien ne bouge si l'on demande moins de mouvement (prefers-reduced-motion).
  *   Les zones ne sont reconstruites que si leur contenu change. Les choix (territoires, dés, curseurs, cartes)
  *   se mettent à jour sur place, pour garder le focus et les saisies en cours.
  * Dépendances : core.js (esc, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
- *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe,
- *   avatarHtml, pseudoHtml), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, marquer).
+ *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml,
+ *   pseudoHtml), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, marquer, fleche, animations),
+ *   ../../../../commun/grille-clavier.js (voisinSpatial).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -17,14 +21,24 @@ import { esc, toast } from '../../../../commun/core.js';
 import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
 import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml, pseudoHtml } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
-import { plateauHtml, marquer } from './plateau.js';
+import { plateauHtml, marquer, fleche, animerMouvement, animerChutes, animerCompteur } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
+const MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
-/** Étapes du tour, dans l'ordre (la conquête suit l'attaque). */
-const ETAPES = [['placement', 'Mise en place'], ['renforts', 'Renforts'], ['attaque', 'Attaques'], ['conquete', 'Conquête'], ['manoeuvre', 'Déplacement']];
+const ICONE_FAIT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+const ICONE_FLECHE = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"></path></svg>';
+/** Phases de l'écran : 3 étapes (Renforts, Attaques, Déplacement), chacune regroupe les phases techniques. */
+const NUM_PHASE = { placement: 1, renforts: 1, attaque: 2, conquete: 2, manoeuvre: 3 };
+const TITRE_PHASE = { placement: 'Mise en place', renforts: 'Renforts', attaque: 'Attaques', conquete: 'Conquête', manoeuvre: 'Déplacement' };
+const PHASES_BARRE = [[1, 'Renforts'], [2, 'Attaques'], [3, 'Déplacement']];
+/** Noms courts des pastilles de la barre sur téléphone. */
+const COURT = { 1: 'Renforts', 2: 'Attaques', 3: 'Dépl.' };
 const SYMBOLES_DEFAUT = { infanterie: 'Infanterie', cavalerie: 'Cavalerie', artillerie: 'Artillerie', joker: 'Joker' };
+/** Faces d'un dé : 4 tours de 1 à 6 ; la face v se trouve à l'indice 18 + (v - 1). */
+const FACES_DE = Array.from({ length: 24 }, (_, k) => `<span>${(k % 6) + 1}</span>`).join('');
+const decalageFace = (v) => -(18 + v - 1) * 44;
 
 /** Texte noir sur fond clair, blanc sur fond foncé (lisible sur les couleurs d'armée). */
 function estClair(hex) {
@@ -34,6 +48,8 @@ function estClair(hex) {
   return 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 150;
 }
 const troupes = (n) => `${n} troupe${n > 1 ? 's' : ''}`;
+const armees = (n) => `${n} armée${n > 1 ? 's' : ''}`;
+const plur = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
 /**
  * Combinaison valable pour un échange : trois identiques, trois différentes, ou avec un joker.
@@ -49,6 +65,26 @@ function combinaisonValable(ids, cartes) {
   return differents === 1 || differents === 3;
 }
 
+/** Mouvement de troupes entre deux états : un seul territoire perd n troupes, un autre (même propriétaire) gagne n. */
+function mouvementEntre(a, b) {
+  const ta = a?.jeu?.territoires || {};
+  const tb = b?.jeu?.territoires || {};
+  const sources = [];
+  const cibles = [];
+  for (const id of Object.keys(tb)) {
+    const x = ta[id];
+    const y = tb[id];
+    if (!x || !y || x.j !== y.j) continue;
+    const d = (x.a || 0) - (y.a || 0);
+    if (d > 0) sources.push([id, d]);
+    else if (d < 0) cibles.push([id, -d]);
+  }
+  if (sources.length === 1 && cibles.length === 1 && sources[0][1] === cibles[0][1]) {
+    return { de: sources[0][0], vers: cibles[0][0], n: cibles[0][1] };
+  }
+  return null;
+}
+
 /** Gabarit statique : les zones variables sont remplies à chaque mise à jour. */
 function squelette() {
   return `
@@ -62,30 +98,40 @@ function squelette() {
   </div>
   <p class="rk-elimine" data-elimine hidden></p>
 
+  <ol class="rk-phases" data-phases aria-label="Phases du tour"></ol>
+  <section class="rk-banniere" aria-labelledby="rk-banniere-titre" data-banniere></section>
+
   <div class="rk-corps">
     <div class="rk-colonne-carte">
-      <nav class="rk-etapes" aria-label="Étapes du tour" data-etapes></nav>
-      <div class="rk-zoom" role="group" aria-label="Zoom de la carte">
+      <div class="rk-zoom" role="group" aria-label="Zoom de la carte" data-zone="carte">
         <button type="button" class="rk-btn rk-btn-ghost rk-rond" data-zoom="-1" aria-label="Dézoomer la carte">−</button>
         <button type="button" class="rk-btn rk-btn-ghost rk-rond" data-zoom="1" aria-label="Zoomer la carte">+</button>
       </div>
-      <section class="rk-carte-zone" aria-label="Carte du monde, 42 territoires" data-carte></section>
-      <section class="rk-bloc" aria-labelledby="rk-continents-titre">
+      <section class="rk-carte-zone" data-zone="carte" aria-label="Carte du monde, 42 territoires" data-carte></section>
+      <section class="rk-bloc rk-legende" data-zone="infos" aria-labelledby="rk-joueurs-titre" data-joueurs></section>
+      <section class="rk-bloc" data-zone="infos" aria-labelledby="rk-continents-titre">
         <h2 id="rk-continents-titre" class="rk-bloc-titre">Continents et bonus</h2>
         <ul class="rk-continents" data-continents></ul>
-        <p class="rk-note">Chaque rond indique les troupes du territoire. Pointillés : routes maritimes. Survole un rond pour le nom.</p>
+        <p class="rk-note">Chaque bulle indique les troupes du territoire. Pointillés : routes maritimes.</p>
       </section>
+      <div class="rk-bas" data-zone="infos">
+        <section class="rk-bloc" aria-labelledby="rk-journal-titre">
+          <h2 id="rk-journal-titre" class="rk-bloc-titre">Journal</h2>
+          <div data-journal></div>
+        </section>
+        <section class="rk-bloc" aria-labelledby="rk-infos-titre" data-infos>
+          <h2 id="rk-infos-titre" class="rk-bloc-titre">Infos utiles</h2>
+          <div data-infos-contenu></div>
+        </section>
+      </div>
     </div>
 
     <div class="rk-colonne-cote">
-      <section class="rk-panneau" aria-labelledby="rk-action-titre" aria-live="polite" data-panneau></section>
-      <section class="rk-bloc" aria-labelledby="rk-cartes-titre" data-cartes></section>
-      <section class="rk-bloc" aria-labelledby="rk-joueurs-titre" data-joueurs></section>
-      <section class="rk-bloc" aria-labelledby="rk-mission-titre" data-mission></section>
-      <section class="rk-bloc" aria-labelledby="rk-journal-titre">
-        <h2 id="rk-journal-titre" class="rk-bloc-titre">Journal</h2>
-        <div data-journal></div>
-      </section>
+      <section class="rk-bloc rk-checklist" data-zone="carte" aria-labelledby="rk-checklist-titre" data-checklist></section>
+      <section class="rk-panneau" data-zone="carte" aria-labelledby="rk-action-titre" aria-live="polite" data-panneau></section>
+      <section class="rk-bloc rk-bataille" data-zone="carte" aria-labelledby="rk-bataille-titre" data-bataille></section>
+      <section class="rk-bloc" data-zone="carte" aria-labelledby="rk-cartes-titre" data-cartes></section>
+      <section class="rk-bloc" data-zone="infos" aria-labelledby="rk-mission-titre" data-mission></section>
       <div class="rk-chat-zone" data-chat></div>
     </div>
   </div>
@@ -103,6 +149,7 @@ export function creer(root, ctx) {
   const { code, suivi } = ctx;
   const contenus = ctx.contenus || {};
   const grand = window.matchMedia(ECRAN_GRAND);
+  const reduit = window.matchMedia(MOUVEMENT_REDUIT);
 
   const el = document.createElement('section');
   el.className = 'rk-table';
@@ -112,9 +159,10 @@ export function creer(root, ctx) {
 
   const q = (s) => el.querySelector(s);
   const refs = {
-    bandeau: q('[data-bandeau]'), elimine: q('[data-elimine]'), etapes: q('[data-etapes]'), carte: q('[data-carte]'),
-    continents: q('[data-continents]'), panneau: q('[data-panneau]'), cartes: q('[data-cartes]'), joueurs: q('[data-joueurs]'),
-    mission: q('[data-mission]'), journal: q('[data-journal]'), chatZone: q('[data-chat]'), tiroirChatZone: q('[data-tiroir-chat]'),
+    bandeau: q('[data-bandeau]'), elimine: q('[data-elimine]'), phases: q('[data-phases]'), banniere: q('[data-banniere]'),
+    carte: q('[data-carte]'), continents: q('[data-continents]'), panneau: q('[data-panneau]'), checklist: q('[data-checklist]'),
+    bataille: q('[data-bataille]'), cartes: q('[data-cartes]'), joueurs: q('[data-joueurs]'), mission: q('[data-mission]'),
+    journal: q('[data-journal]'), infos: q('[data-infos-contenu]'), chatZone: q('[data-chat]'), tiroirChatZone: q('[data-tiroir-chat]'),
     annonce: q('[data-annonce]'), ongletCarte: q('[data-onglet-carte]'), ongletInfos: q('[data-onglet-infos]'), quitter: q('[data-quitter]'),
     zoom: q('.rk-zoom'),
   };
@@ -161,7 +209,7 @@ export function creer(root, ctx) {
   const peutAgir = () => !occupe && etat?.partie?.statut === 'en_cours' && !!moi() && !moi().elimine && !moi().parti;
   const terr = () => jeu().territoires || {};
   const proprio = (t) => terr()[t]?.j ?? null;
-  const armees = (t) => terr()[t]?.a ?? 0;
+  const armees_ = (t) => terr()[t]?.a ?? 0;
   const nomT = (t) => nomDe(contenus, 'territoires', t);
   const nomJ = (uid) => joueurDe(etat, uid)?.pseudo || '?';
   const armeeDe = (uid) => {
@@ -213,7 +261,7 @@ export function creer(root, ctx) {
     if (!monTour()) return set;
     if (p === 'renforts') mesTerritoires().forEach((t) => set.add(t));
     if (p === 'attaque' || p === 'manoeuvre') {
-      mesTerritoires().filter((t) => armees(t) >= 2).forEach((t) => set.add(t));
+      mesTerritoires().filter((t) => armees_(t) >= 2).forEach((t) => set.add(t));
       cibles().forEach((t) => set.add(t));
     }
     return set;
@@ -238,7 +286,7 @@ export function creer(root, ctx) {
       phaseVue = j.phase;
     }
     // Choix devenus invalides (territoire perdu, plus assez de troupes).
-    if (j.phase !== 'conquete' && choix.de && (proprio(choix.de) !== monId() || armees(choix.de) < 2)) {
+    if (j.phase !== 'conquete' && choix.de && (proprio(choix.de) !== monId() || armees_(choix.de) < 2)) {
       choix.de = null;
       choix.vers = null;
     }
@@ -268,19 +316,144 @@ export function creer(root, ctx) {
     refs.quitter.disabled = !m || m.parti === true;
   }
 
-  /* ---------- Rendu : étapes du tour ---------- */
+  /* ---------- Rendu : barre des 3 phases ---------- */
 
-  function rendreEtapes() {
+  function rendrePhases() {
     const p = phase();
-    const rang = ETAPES.findIndex(([id]) => id === p);
-    const cle = `${p}|${etat.partie?.statut}`;
-    if (cles.etapes === cle) return;
-    cles.etapes = cle;
-    refs.etapes.innerHTML = `<ol class="rk-etapes-liste">${ETAPES.map(([id, libelle], i) => {
-      const actuelle = id === p;
-      const fait = rang >= 0 && i < rang;
-      return `<li class="rk-etape${actuelle ? ' is-actuelle' : ''}${fait ? ' is-fait' : ''}"${actuelle ? ' aria-current="step"' : ''}>${esc(libelle)}${fait ? '<span class="visually-hidden"> (fait)</span>' : ''}</li>`;
-    }).join('')}</ol>`;
+    const rang = NUM_PHASE[p] ?? 0;
+    const actif = jeu().actif ?? null;
+    const cle = JSON.stringify([rang, actif, etat.partie?.statut]);
+    if (cles.phases === cle) return;
+    cles.phases = cle;
+    const sous = (n) => {
+      if (n < rang) return n === 1 ? 'Troupes reçues et posées' : 'Attaques terminées';
+      if (n > rang) return n === 2 ? 'Attaquer un voisin, avec des dés' : '1 mouvement, après les attaques';
+      if (n === 1) return p === 'placement' ? 'Tout le monde pose en même temps' : `Tour de ${nomJ(actif)}`;
+      if (n === 2) return p === 'conquete' ? 'Conquête : déplacer les troupes' : `Tour de ${nomJ(actif)}`;
+      return `Tour de ${nomJ(actif)}`;
+    };
+    const etatPhase = (n) => (n < rang ? 'fait' : (n === rang ? 'actuelle' : 'venir'));
+    const libelle = { fait: 'terminée', actuelle: 'en cours', venir: 'à venir' };
+    refs.phases.innerHTML = PHASES_BARRE.map(([n, nom], i) => {
+      const ea = etatPhase(n);
+      const fleche = i < PHASES_BARRE.length - 1 ? `<li class="rk-phase-fleche${ea === 'fait' ? ' is-fait' : ''}" aria-hidden="true">${ICONE_FLECHE}</li>` : '';
+      return `<li class="rk-phase is-${ea}"${ea === 'actuelle' ? ' aria-current="step"' : ''}>
+        <span class="rk-phase-etat">${ea === 'fait' ? ICONE_FAIT : ''}Phase ${n} · ${libelle[ea]}</span>
+        <span class="rk-phase-nom">${esc(nom)}</span>
+        <span class="rk-phase-court">${n} · ${esc(COURT[n])}</span>
+        <span class="rk-phase-sous">${esc(sous(n))}</span>
+      </li>${fleche}`;
+    }).join('');
+  }
+
+  /* ---------- Rendu : bandeau d'instruction et checklist ---------- */
+
+  /** Étapes de mon action (checklist) selon la phase, ou un message quand il n'y a rien à faire. */
+  function etapesAction() {
+    const m = moi();
+    if (!m || m.parti) return { intro: 'Tu regardes la partie : pas d\'action à faire.', etapes: null };
+    if (m.elimine) return { intro: 'Tu es éliminé : tu peux suivre la partie.', etapes: null };
+    if (etat?.partie?.statut !== 'en_cours') return { intro: 'La partie est terminée.', etapes: null };
+    const p = phase();
+    const total = totalBrouillon();
+    const reste = Math.max(0, disponible() - total);
+    if (p === 'placement') {
+      return { etapes: [
+        { titre: 'Pose tes troupes sur tes territoires', etat: reste > 0 ? 'actuel' : 'fait', detail: reste > 0 ? `Il te reste ${plur(reste, 'troupe')} à poser (+1 par clic)` : 'Tout est posé' },
+        { titre: 'Valide tes troupes', etat: disponible() <= 0 ? 'fait' : (total > 0 ? 'actuel' : 'attente'), detail: total > 0 ? `${plur(total, 'troupe')} à valider` : 'Rien de posé pour l\'instant' },
+        { titre: 'Attends les autres joueurs', etat: 'attente', detail: 'Chacun pose en même temps' },
+      ] };
+    }
+    if (!monTour()) return { intro: `C'est à ${nomJ(jeu().actif)} de jouer. Tu peux suivre la carte et le journal.`, etapes: null };
+    if (p === 'renforts') {
+      const obligatoire = cartes().length >= 5;
+      return { etapes: [
+        { titre: 'Pose tes renforts sur tes territoires', etat: reste > 0 ? 'actuel' : 'fait', detail: reste > 0 ? `Il te reste ${plur(reste, 'troupe')} à poser (+1 par clic)` : 'Tout est posé' },
+        { titre: 'Échange 3 cartes si tu peux', etat: obligatoire ? 'actuel' : 'attente', detail: obligatoire ? 'Obligatoire : tu as 5 cartes ou plus' : `Tu as ${plur(cartes().length, 'carte')}` },
+        { titre: 'Valide tes troupes', etat: !obligatoire && total > 0 ? 'actuel' : 'attente', detail: total > 0 ? `${plur(total, 'troupe')} à valider` : 'Rien de posé pour l\'instant' },
+      ] };
+    }
+    if (p === 'attaque') {
+      const de = choix.de;
+      const vers = choix.vers;
+      return { etapes: [
+        { titre: 'Choisis un territoire d\'où attaquer', etat: de ? 'fait' : 'actuel', detail: de ? `Fait : ${nomT(de)}, ${armees(armees_(de))}` : 'Un de tes territoires avec au moins 2 armées' },
+        { titre: 'Choisis un voisin ennemi', etat: vers ? 'fait' : (de ? 'actuel' : 'attente'), detail: vers ? `Fait : ${nomT(vers)}, ${armees(armees_(vers))}, à ${nomJ(proprio(vers))}` : (de ? 'Un voisin en surbrillance sur la carte' : 'Après le territoire de départ') },
+        { titre: 'Lance les dés', etat: de && vers ? 'actuel' : 'attente', detail: de && vers ? `À faire : tu lances ${plur(choix.des, 'dé')}, ${nomJ(proprio(vers))} ${plur(Math.min(2, armees_(vers)), 'dé')}` : 'Après les deux choix' },
+      ] };
+    }
+    if (p === 'conquete') {
+      const c = jeu().conquete;
+      return { etapes: [
+        { titre: 'Territoire conquis', etat: 'fait', detail: c ? nomT(c.vers) : '' },
+        { titre: 'Choisis combien de troupes avancer', etat: 'actuel', detail: c ? `Entre ${c.min} et ${Math.max(c.min, armees_(c.de) - 1)}` : '' },
+        { titre: 'Valide le déplacement', etat: 'attente', detail: '' },
+      ] };
+    }
+    if (p === 'manoeuvre') {
+      const de = choix.de;
+      const vers = choix.vers;
+      return { etapes: [
+        { titre: 'Choisis ton territoire de départ', etat: de ? 'fait' : 'actuel', detail: de ? `Fait : ${nomT(de)}, ${armees(armees_(de))}` : 'Un de tes territoires avec au moins 2 armées' },
+        { titre: 'Choisis un territoire relié', etat: vers ? 'fait' : (de ? 'actuel' : 'attente'), detail: vers ? `Fait : ${nomT(vers)}` : (de ? 'Un territoire relié, en surbrillance' : 'Après le départ') },
+        { titre: 'Valide le déplacement, ou finis ton tour', etat: de && vers ? 'actuel' : 'attente', detail: '' },
+      ] };
+    }
+    return { intro: '', etapes: null };
+  }
+
+  /** Bandeau d'instruction : « À toi, X — Phase N : ... » et une ligne d'aide. */
+  function rendreBanniere() {
+    const p = phase();
+    const n = NUM_PHASE[p] ?? '';
+    const titre = TITRE_PHASE[p] || '';
+    const m = moi();
+    const info = etapesAction();
+    let principal;
+    let indice;
+    if (!m || m.elimine || m.parti || etat?.partie?.statut !== 'en_cours') {
+      principal = `Tour de ${nomJ(jeu().actif)} — Phase ${n} : ${titre}`;
+      indice = m?.elimine ? 'Tu regardes la suite.' : 'Tu regardes la partie.';
+    } else if (p === 'placement') {
+      const reste = Math.max(0, disponible() - totalBrouillon());
+      principal = reste > 0 || totalBrouillon() > 0
+        ? `À toi, ${m.pseudo} — Phase 1 : Mise en place`
+        : `En attente des autres — Phase 1 : Mise en place`;
+      indice = reste > 0 || totalBrouillon() > 0 ? 'Pose tes troupes sur tes territoires, puis valide.' : 'Tes troupes sont posées.';
+    } else if (monTour()) {
+      principal = `À toi, ${m.pseudo} — Phase ${n} : ${titre}`;
+      const actuelle = info.etapes?.find((e) => e.etat === 'actuel');
+      indice = actuelle ? actuelle.titre : '';
+    } else {
+      principal = `Tour de ${nomJ(jeu().actif)} — Phase ${n} : ${titre}`;
+      indice = 'Tu peux suivre la carte et le journal.';
+    }
+    const cle = JSON.stringify([principal, indice]);
+    if (cles.banniere === cle) return;
+    cles.banniere = cle;
+    refs.banniere.innerHTML = `<span class="rk-banniere-icone" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="3.5"></circle></svg></span>
+      <div class="rk-banniere-texte"><h2 id="rk-banniere-titre" class="rk-banniere-titre">${esc(principal)}</h2>${indice ? `<p class="rk-banniere-indice">${esc(indice)}</p>` : ''}</div>`;
+  }
+
+  /** Checklist « Ton action en 3 étapes ». */
+  function rendreChecklist() {
+    const info = etapesAction();
+    const cle = JSON.stringify(info);
+    if (cles.checklist === cle) return;
+    cles.checklist = cle;
+    if (!info.etapes) {
+      refs.checklist.innerHTML = `<h2 id="rk-checklist-titre" class="rk-bloc-titre">Ton action</h2><p class="rk-note">${esc(info.intro)}</p>`;
+      return;
+    }
+    const liste = info.etapes.map((s, i) => {
+      const libelle = s.etat === 'fait' ? '(fait)' : (s.etat === 'actuel' ? '(à faire)' : '');
+      const rond = s.etat === 'fait' ? ICONE_FAIT : esc(i + 1);
+      return `<li class="rk-etape is-${s.etat}"${s.etat === 'actuel' ? ' aria-current="step"' : ''}>
+        <span class="rk-etape-rond" aria-hidden="true">${rond}</span>
+        <span class="rk-etape-texte"><strong>${esc(s.titre)}${libelle ? `<span class="visually-hidden"> ${libelle}</span>` : ''}</strong>${s.detail ? `<span>${esc(s.detail)}</span>` : ''}</span>
+      </li>`;
+    }).join('');
+    refs.checklist.innerHTML = `<h2 id="rk-checklist-titre" class="rk-bloc-titre">Ton action en 3 étapes</h2><ol class="rk-checklist-liste">${liste}</ol>`;
   }
 
   /* ---------- Rendu : carte ---------- */
@@ -291,7 +464,7 @@ export function creer(root, ctx) {
       const pr = proprio(t.id);
       const couleur = pr != null ? couleurJoueur(pr) : '#5A5650';
       return {
-        id: t.id, nom: t.nom, couleur, clair: estClair(couleur), a: armees(t.id),
+        id: t.id, nom: t.nom, couleur, clair: estClair(couleur), a: armees_(t.id),
         mine: pr != null && pr === monId(), clic: false,
         proprietaire: pr != null ? nomJ(pr) : '', armee: pr != null ? nomArmee(pr) : '',
       };
@@ -311,7 +484,8 @@ export function creer(root, ctx) {
     const cle = JSON.stringify([terrs, imageFond]);
     if (cles.carte === cle) return;
     cles.carte = cle;
-    refs.carte.innerHTML = plateauHtml({ image: imageFond, terrs, continents: continentsVue() });
+    cles.fleche = null;
+    refs.carte.innerHTML = plateauHtml({ image: imageFond, terrs });
     majMarquage();
     majBrouillon();
   }
@@ -326,7 +500,20 @@ export function creer(root, ctx) {
       b.disabled = !ok;
       b.classList.toggle('is-clic', ok);
     });
-    marquer(refs.carte, { de: choix.de, vers: choix.vers, cibles: liste });
+    marquer(refs.carte, { de: choix.de, vers: choix.vers, cibles: liste, clics: [...clics] });
+    majFleche();
+  }
+
+  /** Flèche sur la carte : la sélection en cours, sinon le combat (départ vers arrivée). */
+  function majFleche() {
+    const c = jeu().combat;
+    let sel = { de: null, vers: null };
+    if (choix.de && choix.vers) sel = { de: choix.de, vers: choix.vers, style: 'choix' };
+    else if (c && ['attaque', 'conquete'].includes(phase())) sel = { de: c.de, vers: c.vers, style: 'attaque' };
+    const cle = JSON.stringify(sel);
+    if (cles.fleche === cle) return;
+    cles.fleche = cle;
+    fleche(refs.carte, sel);
   }
 
   function rendreContinents() {
@@ -352,7 +539,7 @@ export function creer(root, ctx) {
     }).join('');
   }
 
-  /* ---------- Rendu : joueurs ---------- */
+  /* ---------- Rendu : légende des joueurs ---------- */
 
   function rendreJoueurs() {
     const joueurs = etat.joueurs || [];
@@ -361,7 +548,7 @@ export function creer(root, ctx) {
       const mais = Object.keys(terr()).filter((t) => proprio(t) === x.user_id);
       return {
         uid: x.user_id, couleur: couleurJoueur(x.user_id), armee: nomArmee(x.user_id),
-        nbTerr: mais.length, nbTroupes: mais.reduce((s, t) => s + armees(t), 0),
+        nbTerr: mais.length, nbTroupes: mais.reduce((s, t) => s + armees_(t), 0),
         nbCartes: x.etat?.nb_cartes ?? 0, tour: j.actif === x.user_id, elimine: !!x.elimine,
       };
     });
@@ -372,16 +559,20 @@ export function creer(root, ctx) {
       const jx = joueurDe(etat, l.uid);
       const statut = l.elimine ? '<span class="rk-etiquette">éliminé</span>'
         : (l.tour ? `<span class="rk-etiquette is-tour">${l.uid === monId() ? 'À toi' : 'Son tour'}</span>` : '');
-      return `<li class="rk-joueur${l.tour ? ' is-tour' : ''}${l.elimine ? ' is-elimine' : ''}">
-        ${avatarHtml(jx, 28)}
-        <span class="rk-joueur-corps">
-          <span class="rk-joueur-ligne">${pseudoHtml(jx)} ${statut}</span>
-          <span class="rk-joueur-armee"><span class="rk-swatch" style="background:${esc(l.couleur)}" aria-hidden="true"></span>Armée ${esc(l.armee || '?')}</span>
-          <span class="rk-joueur-chiffres">${l.nbTerr} territoire${l.nbTerr > 1 ? 's' : ''} · ${troupes(l.nbTroupes)} · ${l.nbCartes} carte${l.nbCartes > 1 ? 's' : ''}</span>
+      return `<li class="rk-legende-ligne${l.tour ? ' is-tour' : ''}${l.elimine ? ' is-elimine' : ''}">
+        <span class="rk-legende-couleur" style="background:${esc(l.couleur)}" aria-hidden="true"></span>
+        <span class="rk-legende-nom">
+          <span class="rk-joueur-ligne">${avatarHtml(jx, 22)} ${pseudoHtml(jx)} ${statut}</span>
+          <span class="rk-legende-armee">Armée ${esc(l.armee || '?')}</span>
+        </span>
+        <span class="rk-legende-chiffres">
+          <span><strong>${esc(l.nbTroupes)}</strong> armée${l.nbTroupes > 1 ? 's' : ''}</span>
+          <span>${esc(l.nbTerr)} territoire${l.nbTerr > 1 ? 's' : ''}</span>
+          <span>${esc(l.nbCartes)} carte${l.nbCartes > 1 ? 's' : ''}</span>
         </span>
       </li>`;
     }).join('');
-    refs.joueurs.innerHTML = `<h2 id="rk-joueurs-titre" class="rk-bloc-titre">Joueurs</h2><ul class="rk-liste-joueurs">${liste}</ul>`;
+    refs.joueurs.innerHTML = `<h2 id="rk-joueurs-titre" class="rk-bloc-titre">Joueurs et armées</h2><ul class="rk-liste-joueurs">${liste}</ul>`;
   }
 
   /* ---------- Rendu : ma mission ---------- */
@@ -457,7 +648,65 @@ export function creer(root, ctx) {
     });
   }
 
-  /* ---------- Rendu : journal ---------- */
+  /* ---------- Rendu : bataille (dés, paires, bilan) ---------- */
+
+  /** Une paire de dés comparée : le plus haut gagne, égalité au défenseur. */
+  function htmlBataille(c, lancer) {
+    const att = c.des_att || [];
+    const def = c.des_def || [];
+    const n = Math.min(att.length, def.length);
+    const de = (v, camp, i) => `<span class="rk-de is-${camp}" data-valeur="${esc(v)}" style="--end:${decalageFace(v)}px;--delai:${(i * 0.12).toFixed(2)}s"><span class="rk-roule" aria-hidden="true">${FACES_DE}</span></span>`;
+    const dAtt = att.map((v, i) => de(v, 'att', i)).join('');
+    const dDef = def.map((v, i) => de(v, 'def', i)).join('');
+    const gagneAtt = new Set();
+    const gagneDef = new Set();
+    const paires = [];
+    for (let i = 0; i < n; i += 1) {
+      const attGagne = att[i] > def[i];
+      if (attGagne) { gagneAtt.add(i); } else { gagneDef.add(i); }
+      const perdant = attGagne ? nomJ(c.defenseur) : nomJ(c.attaquant);
+      paires.push(`<li class="rk-paire">
+        <span class="rk-paire-des"><span class="rk-paire-val">${esc(att[i])}</span> contre <span class="rk-paire-val">${esc(def[i])}</span></span>
+        <span class="rk-paire-texte">${esc(perdant)} perd 1 armée.</span></li>`);
+    }
+    for (let i = n; i < att.length; i += 1) paires.push(`<li class="rk-paire is-seul">${esc(att[i])} n'est pas comparé (${plur(att.length, 'dé')} contre ${plur(def.length, 'dé')}).</li>`);
+    for (let i = n; i < def.length; i += 1) paires.push(`<li class="rk-paire is-seul">${esc(def[i])} n'est pas comparé (${plur(att.length, 'dé')} contre ${plur(def.length, 'dé')}).</li>`);
+    const dAttMarque = att.map((v, i) => de(v, gagneAtt.has(i) ? 'att is-gagne' : (i < n ? 'att is-perd' : 'att'), i)).join('');
+    const dDefMarque = def.map((v, i) => de(v, gagneDef.has(i) ? 'def is-gagne' : (i < n ? 'def is-perd' : 'def'), i)).join('');
+    const sujet = `${nomT(c.de)} contre ${nomT(c.vers)}`;
+    return `<h2 id="rk-bataille-titre" class="rk-bloc-titre rk-bataille-entete">Bataille
+        <button type="button" class="rk-btn rk-btn-ghost rk-rejouer" data-rejouer>Rejouer</button></h2>
+      <div class="rk-bataille${lancer ? ' is-lancer' : ''}">
+        <p class="rk-bataille-sujet">${esc(sujet)}</p>
+        <div class="rk-des-duel">
+          <div class="rk-des-camp">
+            <span class="rk-des-nom">${esc(nomJ(c.attaquant))} · attaque</span>
+            <div class="rk-des-ligne">${dAttMarque || dAtt}</div>
+          </div>
+          <span class="rk-des-contre">contre</span>
+          <div class="rk-des-camp is-droite">
+            <span class="rk-des-nom">${esc(nomJ(c.defenseur))} · défend</span>
+            <div class="rk-des-ligne">${dDefMarque || dDef}</div>
+          </div>
+        </div>
+        <ul class="rk-paires" aria-label="Comparaison des dés">${paires.join('')}</ul>
+        <p class="rk-bilan">Bilan : ${esc(nomJ(c.attaquant))} perd ${troupes(c.pertes_att || 0)}, ${esc(nomJ(c.defenseur))} perd ${troupes(c.pertes_def || 0)}.</p>
+        <p class="rk-note">Le plus haut dé gagne, égalité au défenseur. ${esc(nomT(c.vers))} : ${troupes(armees_(c.vers))}.</p>
+      </div>`;
+  }
+
+  /** La bataille du dernier combat ; le lancer n'est joué que pour un nouveau combat (ou « Rejouer »). */
+  function rendreBataille(lancer = false) {
+    const c = jeu().combat || null;
+    const cle = JSON.stringify(c);
+    if (cles.bataille === cle && !lancer) return;
+    cles.bataille = cle;
+    refs.bataille.innerHTML = c
+      ? htmlBataille(c, lancer && !reduit.matches)
+      : `<h2 id="rk-bataille-titre" class="rk-bloc-titre">Bataille</h2><p class="rk-note">Pas de bataille pour l'instant. Les dés et le bilan apparaissent ici.</p>`;
+  }
+
+  /* ---------- Rendu : journal et infos utiles ---------- */
 
   function rendreJournal() {
     const html = journalHtml(etat.journal || [], etat);
@@ -466,24 +715,26 @@ export function creer(root, ctx) {
     refs.journal.innerHTML = html;
   }
 
-  /* ---------- Rendu : panneau d'action ---------- */
-
-  /** Résumé du dernier combat (dés et pertes), lu par le panneau. */
-  function resumeCombat() {
-    const c = jeu().combat;
-    if (!c) return '';
-    const des = (liste) => (liste || []).join(', ');
-    return `<div class="rk-combat">
-      <p class="rk-combat-titre"><strong>${esc(nomJ(c.attaquant))}</strong> attaque <strong>${esc(nomT(c.vers))}</strong> depuis ${esc(nomT(c.de))}.</p>
-      <div class="rk-des-ligne">
-        <span class="rk-des-groupe"><span class="rk-des-nom">${esc(nomJ(c.attaquant))}</span>${(c.des_att || []).map((d) => `<span class="rk-de is-att" aria-hidden="true">${esc(d)}</span>`).join('')}</span>
-        <span class="rk-des-contre">contre</span>
-        <span class="rk-des-groupe"><span class="rk-des-nom">${esc(nomJ(c.defenseur))}</span>${(c.des_def || []).map((d) => `<span class="rk-de is-def" aria-hidden="true">${esc(d)}</span>`).join('')}</span>
-      </div>
-      <p class="visually-hidden">Dés de l'attaquant : ${esc(des(c.des_att))}. Dés du défenseur : ${esc(des(c.des_def))}.</p>
-      <p class="rk-combat-issue">${esc(nomJ(c.attaquant))} perd ${troupes(c.pertes_att || 0)}, ${esc(nomJ(c.defenseur))} perd ${troupes(c.pertes_def || 0)}.</p>
-    </div>`;
+  function rendreInfos() {
+    const j = jeu();
+    const cle = JSON.stringify([j.renforts, j.prochain_echange, cartes().length, j.phase, j.actif, !!moi()]);
+    if (cles.infos === cle) return;
+    cles.infos = cle;
+    const lignes = [];
+    if (j.phase === 'renforts' || j.phase === 'placement') {
+      lignes.push(`<p>Renforts de ${esc(nomJ(j.actif))} : <strong>${esc(j.renforts ?? 0)}</strong> armée${(j.renforts ?? 0) > 1 ? 's' : ''}.</p>`);
+    }
+    lignes.push(`<p>Prochain échange de cartes : <strong>${esc(j.prochain_echange ?? '—')}</strong> armées.</p>`);
+    if (moi()) {
+      const n = cartes().length;
+      lignes.push(`<p>${n >= 5
+        ? '<strong class="rk-alerte-texte">Tu as 5 cartes ou plus : l\'échange est obligatoire.</strong>'
+        : `Tes cartes : <strong>${esc(n)}</strong>. L'échange est obligatoire à partir de 5.`}</p>`);
+    }
+    refs.infos.innerHTML = lignes.join('');
   }
+
+  /* ---------- Rendu : panneau d'action ---------- */
 
   /** Mise en place et renforts : liste des troupes posées, boutons − et + (sans reconstruire la liste au focus). */
   function vueDeploiement({ titre, texte, bloquerValider = false, extra = '' }) {
@@ -501,35 +752,34 @@ export function creer(root, ctx) {
   function vueAttente(texte = '') {
     const actif = jeu().actif;
     return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">C'est à ${esc(nomJ(actif))} de jouer</h2>
-      <p>${esc(texte)}</p>${resumeCombat()}`;
+      <p>${esc(texte)}</p>`;
   }
 
   function vueAttaque() {
     const de = choix.de;
     const vers = choix.vers;
-    const max = de ? Math.max(1, Math.min(3, armees(de) - 1)) : 3;
+    const max = de ? Math.max(1, Math.min(3, armees_(de) - 1)) : 3;
     if (choix.des > max) choix.des = max;
     const options = [1, 2, 3].filter((n) => n <= max).map((n) => `<button type="button" class="rk-btn rk-choix" aria-pressed="${n === choix.des}" data-des="${n}">${n} dé${n > 1 ? 's' : ''}</button>`).join('');
     const intro = de
-      ? `Depuis <strong>${esc(nomT(de))}</strong> (${troupes(armees(de))}).`
+      ? `Depuis <strong>${esc(nomT(de))}</strong> (${troupes(armees_(de))}).`
       : 'Clique un de tes territoires avec au moins 2 troupes, puis un voisin ennemi en surbrillance.';
     const cible = de && vers
-      ? `<p>Contre <strong>${esc(nomT(vers))}</strong> : ${troupes(armees(vers))}, à ${esc(nomJ(proprio(vers)))} (armée ${esc(nomArmee(proprio(vers)))}).</p>`
+      ? `<p>Contre <strong>${esc(nomT(vers))}</strong> : ${troupes(armees_(vers))}, à ${esc(nomJ(proprio(vers)))} (armée ${esc(nomArmee(proprio(vers)))}).</p>`
       : (de ? '<p class="rk-note">Choisis un voisin ennemi en surbrillance sur la carte.</p>' : '');
     return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Attaque</h2>
       <p>${intro}</p>${cible}
       ${de ? `<div class="rk-des" role="group" aria-label="Nombre de dés">${options}</div>` : ''}
       <div class="rk-pied">
-        <button type="button" class="rk-btn rk-btn-primary" data-attaquer ${de && vers ? '' : 'disabled'}>Attaquer</button>
-        <button type="button" class="rk-btn rk-btn-ghost" data-arreter>Arrêter les attaques</button>
-      </div>
-      ${resumeCombat()}`;
+        <button type="button" class="rk-btn rk-btn-primary rk-btn-grand" data-attaquer ${de && vers ? '' : 'disabled'}>Lancer l'attaque (${plur(choix.des, 'dé')})</button>
+        <button type="button" class="rk-btn rk-btn-ghost" data-arreter>Terminer les attaques → Déplacement</button>
+      </div>`;
   }
 
   function vueConquete() {
     const c = jeu().conquete;
     if (!c) return vueAttente();
-    const max = Math.max(c.min, armees(c.de) - 1);
+    const max = Math.max(c.min, armees_(c.de) - 1);
     const n = Math.min(max, Math.max(c.min, choix.conquete ?? c.min));
     choix.conquete = n;
     return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Conquête</h2>
@@ -539,14 +789,13 @@ export function creer(root, ctx) {
         <input type="range" id="rk-avancer-${esc(code)}" min="${c.min}" max="${max}" value="${n}" data-curseur="avancer">
         <output data-sortie="avancer">${n}</output>
       </div>
-      <div class="rk-pied"><button type="button" class="rk-btn rk-btn-primary" data-avancer>Déplacer ${n} troupe${n > 1 ? 's' : ''}</button></div>
-      ${resumeCombat()}`;
+      <div class="rk-pied"><button type="button" class="rk-btn rk-btn-primary rk-btn-grand" data-avancer>Déplacer ${n} troupe${n > 1 ? 's' : ''}</button></div>`;
   }
 
   function vueManoeuvre() {
     const de = choix.de;
     const vers = choix.vers;
-    const reste = de ? Math.max(0, armees(de) - 1) : 0;
+    const reste = de ? Math.max(0, armees_(de) - 1) : 0;
     const n = de && vers ? Math.min(reste, Math.max(1, choix.manoeuvre ?? 1)) : 1;
     choix.manoeuvre = n;
     const texte = !de
@@ -563,7 +812,7 @@ export function creer(root, ctx) {
       <p class="rk-note">Un seul déplacement : il termine ton tour.</p>
       ${curseur}
       <div class="rk-pied">
-        <button type="button" class="rk-btn rk-btn-primary" data-manoeuvrer ${de && vers && reste >= 1 ? '' : 'disabled'}>Déplacer ${n} troupe${n > 1 ? 's' : ''}</button>
+        <button type="button" class="rk-btn rk-btn-primary rk-btn-grand" data-manoeuvrer ${de && vers && reste >= 1 ? '' : 'disabled'}>Déplacer ${n} troupe${n > 1 ? 's' : ''}</button>
         <button type="button" class="rk-btn rk-btn-ghost" data-finir>Finir mon tour sans déplacer</button>
       </div>`;
   }
@@ -574,7 +823,7 @@ export function creer(root, ctx) {
     const m = moi();
     if (!m) return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Tu regardes la partie</h2><p>Tu n'as pas de place dans cette partie : tu peux suivre le chat et le journal.</p>`;
     if (m.parti) return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Tu as quitté la partie</h2>`;
-    if (m.elimine) return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Tu regardes la suite</h2><p>Tu es éliminé, mais tu peux suivre la partie.</p>${resumeCombat()}`;
+    if (m.elimine) return `<h2 id="rk-action-titre" class="rk-titre" tabindex="-1">Tu regardes la suite</h2><p>Tu es éliminé, mais tu peux suivre la partie.</p>`;
     const p = phase();
     if (p === 'placement') {
       const dispo = disponible();
@@ -614,7 +863,7 @@ export function creer(root, ctx) {
     const j = jeu();
     const cle = JSON.stringify([j.phase, j.actif, etat.partie?.nb_tours, monId(), monTour(), etat.partie?.statut, !!moi()?.elimine,
       !!moi()?.parti, disponible(), cartes().length, choix.de, choix.vers, choix.des, choix.conquete, choix.manoeuvre,
-      j.territoires, j.combat, j.conquete]);
+      j.territoires]);
     if (!force && cles.panneau === cle) { majBrouillon(); return; }
     cles.panneau = cle;
     refs.panneau.innerHTML = contenuPanneau();
@@ -651,7 +900,7 @@ export function creer(root, ctx) {
       const pastille = b.querySelector('.rk-pastille');
       if (!pastille) return;
       const d = brouillon[id] || 0;
-      pastille.innerHTML = `${esc(armees(id) + d)}${d ? `<small class="rk-plus">+${d}</small>` : ''}`;
+      pastille.innerHTML = `${esc(armees_(id) + d)}${d ? `<small class="rk-plus">+${d}</small>` : ''}`;
     });
   }
 
@@ -727,8 +976,11 @@ export function creer(root, ctx) {
     majMarquage();
   }
 
+  /** Clic sur la bulle d'un territoire, ou sur sa forme : même action que le bouton. */
   function surCarte(ev) {
-    const b = ev.target.closest('button[data-terr]');
+    const forme = ev.target.closest?.('[data-forme]');
+    const b = ev.target.closest?.('button[data-terr]')
+      || (forme ? refs.carte.querySelector(`button[data-terr="${CSS.escape(forme.dataset.forme)}"]`) : null);
     if (!b || b.disabled) return;
     surTerritoire(b.dataset.terr);
   }
@@ -784,6 +1036,12 @@ export function creer(root, ctx) {
     }
   }
 
+  /** « Rejouer » : relance l'animation de la dernière bataille (sans rien envoyer au serveur). */
+  function surBataille(ev) {
+    if (!ev.target.closest?.('[data-rejouer]')) return;
+    rendreBataille(true);
+  }
+
   function surQuitter(ev) {
     if (occupe) return;
     if (!confirm('Quitter la partie ? Tu ne pourras plus jouer dans cette manche.')) return;
@@ -822,6 +1080,7 @@ export function creer(root, ctx) {
   refs.panneau.addEventListener('input', surCurseur);
   refs.panneau.addEventListener('change', surCurseur);
   refs.cartes.addEventListener('click', surCartes);
+  refs.bataille.addEventListener('click', surBataille);
   refs.quitter.addEventListener('click', surQuitter);
   refs.zoom.addEventListener('click', surZoom);
   refs.ongletCarte.addEventListener('click', () => ongletPour('carte'));
@@ -833,7 +1092,7 @@ export function creer(root, ctx) {
     refs.ongletInfos.setAttribute('aria-pressed', String(nomOnglet === 'infos'));
   }
 
-  // Image de carte si elle existe (sinon, le dessin de repli).
+  // Image de carte si elle existe (sinon, le fond de mer seul : les formes restent lisibles).
   const urlImage = imagePlateau('risk', 'carte');
   imageExiste(urlImage).then((ok) => {
     if (!ok) return;
@@ -842,25 +1101,61 @@ export function creer(root, ctx) {
     if (etat) { rendreCarte(); rendrePanneau(true); }
   });
 
+  /* ---------- Animations sur les vrais changements ---------- */
+
+  /**
+   * Compare l'état précédent au nouveau : un nouveau combat fait rouler les dés (déjà rendus), baisser les compteurs
+   * et tomber les pertes ; un déplacement de troupes envoie le cortège de l'origine à l'arrivée.
+   * Rien n'est joué au premier affichage, ni si l'utilisateur préfère moins de mouvement.
+   */
+  function animerChangements(avant, nouveauCombat) {
+    if (reduit.matches) return;
+    const c = jeu().combat;
+    if (nouveauCombat && c) {
+      const t0 = avant.jeu?.territoires || {};
+      const t1 = terr();
+      const a = (t, id) => t?.[id]?.a ?? 0;
+      if (a(t0, c.vers) !== a(t1, c.vers)) animerCompteur(refs.carte, c.vers, a(t0, c.vers));
+      if (a(t0, c.de) !== a(t1, c.de)) animerCompteur(refs.carte, c.de, a(t0, c.de));
+      if (c.pertes_att) animerChutes(refs.carte, c.de, c.pertes_att);
+      if (c.pertes_def) animerChutes(refs.carte, c.vers, c.pertes_def);
+      return;
+    }
+    if (!nouveauCombat) {
+      const m = mouvementEntre(avant, etat);
+      if (m) animerMouvement(refs.carte, m.de, m.vers, m.n);
+    }
+  }
+
   /* ---------- Contrat de la vue ---------- */
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
     maj(e) {
       if (!e?.partie) return;
+      const avant = etat;
       etat = e;
       suivreTour();
       rendreBandeau();
       rendreElimine();
-      rendreEtapes();
+      rendrePhases();
+      rendreBanniere();
+      rendreChecklist();
+      const cleCombat = JSON.stringify(jeu().combat || null);
+      const premiere = cles.combatVu === undefined;
+      const nouveauCombat = !premiere && cleCombat !== cles.combatVu;
+      cles.combatVu = cleCombat;
       rendreCarte();
       rendrePanneau();
+      rendreBataille(nouveauCombat);
       rendreCartes();
       rendreContinents();
       rendreJoueurs();
       rendreMission();
       rendreJournal();
+      rendreInfos();
       majMarquage();
+      if (avant && !premiere) animerChangements(avant, nouveauCombat);
       const actif = jeu().actif ?? null;
       if (dernierActif !== null && actif !== dernierActif && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       dernierActif = actif;
