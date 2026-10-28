@@ -1,20 +1,28 @@
 // Recherche globale (membres connectés) : bouton loupe dans l'en-tête, raccourci Ctrl/Cmd+K, dialogue accessible
 // (role="dialog", focus piégé, Échap). Cherche dans les sorties (hg_events : titre, lieu), les souvenirs
-// (hg_moments : titre, texte) et les membres (rpc hg_members), avec des résultats groupés et des liens vers les pages.
+// (hg_moments : titre, texte), les membres (rpc hg_members), les pages du menu et les jeux du catalogue,
+// avec des résultats groupés et des liens vers les pages. Les pages et les jeux viennent du code (menu, catalogue) :
+// seuls ceux auxquels le membre a accès s'affichent.
 // Les listes sont chargées une fois, à la première ouverture de la page, et au plus 300 éléments par type ;
 // la recherche se fait ensuite dans la page, sans aller-retour, insensible à la casse et aux accents.
 /*
- * Rôle : la loupe de l'en-tête ouvre un dialogue de recherche qui parcourt les sorties, les souvenirs
- * et les membres. Chaque résultat est un lien vers la page concernée. Un mot secret tapé exactement (ex. « serge »)
- * lance son effet à la place (eggs/core.js, chargé à la demande).
+ * Rôle : la loupe de l'en-tête ouvre un dialogue de recherche qui parcourt les sorties, les souvenirs, les membres,
+ * les pages du menu et les jeux. Chaque résultat est un lien vers la page concernée. Un mot secret tapé exactement
+ * (ex. « serge ») lance son effet à la place (eggs/core.js, chargé à la demande).
  * Page : toutes les pages pour un membre connecté (header.js ajoute la loupe et bindSearch).
- * Dépendances : supabase.js (requêtes), pages-access.js (groupes visibles selon mes pages),
+ * Dépendances : supabase.js (requêtes), pages-access.js (accès aux pages), profile.js et view-as.js (admin),
+ * menu-def.js (titres du menu), site-defaults.js (libellés réglés), espaces/jeux/catalogue.js (jeux),
  * util.js (esc, errMsg, fmtDate, avatarHtml), icons.js (loupe, fermer).
  * Tables / RPC : hg_events, hg_moments, rpc hg_members.
  * Exporte : foldText, openSearch, searchButtonHtml, bindSearch.
  */
 import { sb } from './supabase.js';
-import { canAccess } from './pages-access.js';
+import { canAccess, pageLabel } from './pages-access.js';
+import { getCachedProfile } from './profile.js';
+import { viewAsActive } from './view-as.js';
+import { MENUS, menuKey } from './menu-def.js';
+import { navLibelle } from './site-defaults.js';
+import { CARTES, SECTIONS } from '../../espaces/jeux/catalogue.js';
 import { esc, errMsg, fmtDate, avatarHtml } from './util.js';
 import { ICON_SEARCH, ICON_CLOSE } from './icons.js';
 
@@ -27,12 +35,15 @@ const SHOW_PER_GROUP = 10; // résultats affichés par groupe (le reste est sign
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
  * Groupes de résultats : titre affiché, et page à laquelle le groupe appartient
- * (le groupe n'apparaît que si le membre a accès à cette page).
+ * (le groupe n'apparaît que si le membre a accès à cette page). locaux : groupes faits du code (pages, jeux),
+ * sans requête ; leurs éléments portent eux-mêmes leur page (ou un indicateur admin), contrôlés à l'affichage.
  */
 const GROUPS = {
   events: { title: 'Sorties', slug: 'irl' },
   moments: { title: 'Souvenirs', slug: 'historique' },
   members: { title: 'Membres', slug: 'membre' },
+  pages: { title: 'Pages', slug: null, locaux: () => pagesItems() },
+  games: { title: 'Jeux', slug: null, locaux: () => jeuxItems() },
 };
 
 /* ---------- Normalisation ---------- */
@@ -108,6 +119,57 @@ async function fetchGroup(key) {
 }
 
 /**
+ * Pages du menu de l'en-tête (menu-def.js) : une entrée par lien, avec le libellé réglé s'il existe, comme dans la barre.
+ * Le menu « Autres » (pages venues de hg_pages) n'est pas indexé ici.
+ * @returns {Array<object>} Éléments de recherche (title, sub, href, page, hay).
+ */
+function pagesItems() {
+  const out = [];
+  for (const m of MENUS) {
+    if (m.auto) continue;
+    if (m.href) { // lien direct (Jeux, Calendrier)
+      const title = navLibelle(menuKey(m)) || navLibelle(m.page) || m.label;
+      out.push({ title, sub: '', href: m.href, page: m.page, hay: foldText(title) });
+      continue;
+    }
+    const menu = navLibelle(menuKey(m)) || navLibelle(m.id) || m.label;
+    for (const it of m.items || []) {
+      if (it.sep || !it.href) continue;
+      const title = navLibelle(menuKey(it)) || it.label;
+      out.push({ title, sub: menu, href: it.href, page: it.page, hay: foldText(`${title}\n${menu}`) });
+    }
+  }
+  return out;
+}
+
+/**
+ * Jeux du catalogue (espaces/jeux/catalogue.js) : une entrée par carte, sous le nom de sa section. Cherchée sur le titre
+ * et la section, pas sur la description (« cal » ne doit pas ramener les jeux dont la description contient « calcul »).
+ * Une ancre (« #geo ») pointe vers l'onglet dans la page des jeux. Admin : jeu en préparation ou en développement.
+ * @returns {Array<object>} Éléments de recherche (title, sub, href, page, strict, admin, hay).
+ */
+function jeuxItems() {
+  return CARTES.map((c) => {
+    const title = c.titre || c.id;
+    const sub = SECTIONS.find((s) => s.id === c.section)?.titre || '';
+    const href = c.href.startsWith('#') ? `/pages/jeux/jeux.html${c.href}` : c.href;
+    return { title, sub, href, page: c.page, strict: !!c.page, admin: !!(c.bientot || c.admin), hay: foldText(`${title}\n${sub}`) };
+  });
+}
+
+/**
+ * Vrai si le membre peut voir l'élément : admin seulement pour un jeu en préparation ; page à part soumise à son accès
+ * (et déclarée pour un jeu, comme la page des jeux). Un admin qui regarde le site « en tant que » un membre n'est plus admin.
+ * @param {object} it Élément de recherche.
+ * @returns {boolean}
+ */
+function itemVisible(it) {
+  if (it.admin && !(!viewAsActive() && getCachedProfile()?.is_admin)) return false;
+  if (!it.page) return true;
+  return canAccess(it.page) && (!it.strict || !!pageLabel(it.page));
+}
+
+/**
  * Charge un type (une seule fois). Renvoie { items } ou { error, items: [] }.
  * Une erreur n'est pas gardée en cache : la prochaine ouverture réessaie.
  * @param {string} key Type à charger.
@@ -135,7 +197,7 @@ const terms = (q) => foldText(q).trim().split(/\s+/).filter(Boolean);
  * Clés des groupes que le membre a le droit de voir.
  * @returns {string[]} Par exemple ['events', 'members'].
  */
-const visibleGroups = () => Object.keys(GROUPS).filter((k) => canAccess(GROUPS[k].slug));
+const visibleGroups = () => Object.keys(GROUPS).filter((k) => !GROUPS[k].slug || canAccess(GROUPS[k].slug));
 
 /**
  * Markup d'un résultat (lien). Pour un membre, on affiche aussi son avatar.
@@ -171,7 +233,7 @@ function renderResults(d, q) {
     const g = GROUPS[key];
     if (!cache[key] && pending[key]) return `<section class="sr-group" aria-labelledby="sr-${key}"><h3 class="sr-group-title" id="sr-${key}">${g.title}</h3><p class="sr-empty muted small">Chargement…</p></section>`;
     if (!cache[key]) return `<section class="sr-group" aria-labelledby="sr-${key}"><h3 class="sr-group-title" id="sr-${key}">${g.title}</h3><p class="sr-empty muted small">Indisponible pour le moment.</p></section>`;
-    const hits = cache[key].items.filter((it) => t.every((x) => it.hay.includes(x)));
+    const hits = cache[key].items.filter((it) => itemVisible(it) && t.every((x) => it.hay.includes(x)));
     total += hits.length;
     const shown = hits.slice(0, SHOW_PER_GROUP);
     return `<section class="sr-group" aria-labelledby="sr-${key}">
@@ -226,10 +288,10 @@ function buildDialog() {
         <button class="search-close" type="button" aria-label="Fermer la recherche">${ICON_CLOSE}</button>
       </div>
       <div class="search-box">${ICON_SEARCH}
-        <label for="search-q" class="visually-hidden">Rechercher une sortie, un souvenir ou un membre</label>
-        <input id="search-q" class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Sortie, lieu, souvenir, membre…" aria-describedby="search-hint sr-status-line">
+        <label for="search-q" class="visually-hidden">Rechercher une page, un jeu, une sortie, un souvenir ou un membre</label>
+        <input id="search-q" class="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Page, jeu, sortie, souvenir, membre…" aria-describedby="search-hint sr-status-line">
       </div>
-      <p id="search-hint" class="muted small">Sorties (titre, lieu), souvenirs (titre, texte), membres. Insensible aux accents et à la casse.</p>
+      <p id="search-hint" class="muted small">Pages, jeux, sorties (titre, lieu), souvenirs (titre, texte), membres. Insensible aux accents et à la casse.</p>
       <p id="sr-status-line" class="sr-status" role="status" aria-live="polite"></p>
       <div class="search-results"></div>
     </form>`;
@@ -274,6 +336,7 @@ function buildDialog() {
  * @param {HTMLDialogElement} d Dialogue de recherche.
  */
 function ensureLoaded(d) {
+  for (const [k, g] of Object.entries(GROUPS)) if (g.locaux && !cache[k]) cache[k] = { items: g.locaux() };
   const todo = visibleGroups().filter((k) => !cache[k]);
   if (!todo.length) return;
   renderResults(d, d.querySelector('#search-q').value); // affiche « Chargement… »
