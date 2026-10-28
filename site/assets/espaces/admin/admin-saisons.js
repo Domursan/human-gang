@@ -36,14 +36,49 @@ const isoLocal = (iso) => { if (!iso) return ''; const d = new Date(iso); if (Nu
 async function loadLists() {
   if (Z.lists) return Z.lists;
   const [cards, moments, quiz, types] = await Promise.all([
-    sb.from('hg_cards').select('id,name,rarity,set_id').order('name').limit(2000),
+    sb.from('hg_card_sets').select('id,code,name,active,sort').order('sort').order('name'),
     sb.from('hg_moments').select('id,title,happened_on').order('happened_on', { ascending: false }).limit(500),
     sb.from('hg_quiz_questions').select('id,prompt,active').order('created_at', { ascending: false }).limit(500),
     sb.from('hg_booster_types').select('id,name').order('sort'),
   ]);
-  Z.lists = { cards: cards.data || [], moments: moments.data || [], quiz: quiz.data || [], types: types.data || [] };
+  Z.lists = { sets: cards.data || [], moments: moments.data || [], quiz: quiz.data || [], types: types.data || [] };
   return Z.lists;
 }
+
+/** Cartes d'une série (toutes, par pages de 1 000), lues une fois par série. */
+const CARTES_SERIE = new Map();
+async function cardsOfSet(setId) {
+  if (!setId) return [];
+  if (CARTES_SERIE.has(setId)) return CARTES_SERIE.get(setId);
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('hg_cards').select('id,name,rarity,number,set_id').eq('set_id', setId)
+      .order('number', { ascending: true, nullsFirst: false }).order('name').range(from, from + 999);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  CARTES_SERIE.set(setId, out);
+  return out;
+}
+/** Série de chaque carte déjà placée dans une case (carte -> set_id), pour préremplir les deux listes. */
+const SERIE_DE = new Map();
+async function loadCardSets(days) {
+  const ids = [...new Set(days.flatMap((d) => (d.cards || []).map((c) => c.card_id)).filter((id) => id && !SERIE_DE.has(id)))];
+  if (ids.length) {
+    const { data, error } = await sb.from('hg_cards').select('id,set_id').in('id', ids);
+    if (error) throw error;
+    for (const c of data || []) SERIE_DE.set(c.id, c.set_id);
+  }
+  await Promise.all([...new Set([...SERIE_DE.values()])].map(cardsOfSet));
+}
+const cardLabel = (k) => `${k.number != null ? `n° ${k.number} · ` : ''}${k.name} (${k.rarity})`;
+const cardOptions = (setId, sel) => {
+  if (!setId) return '<option value="">Choisis d’abord la série</option>';
+  const list = CARTES_SERIE.get(setId);
+  if (!list) return '<option value="">Chargement…</option>';
+  return `<option value="">— ${list.length} carte${list.length > 1 ? 's' : ''} —</option>${list.map((k) => opt(k.id, cardLabel(k), k.id === sel)).join('')}`;
+};
 
 /** Modèles de quêtes (hg_card_quests_templates), lus une fois : choix des quêtes de la Saison des Worlds. */
 async function loadQuestTemplates() {
@@ -87,8 +122,10 @@ function aventCfgHtml(c) {
 /** Une ligne « carte » d'une case : carte, quantité, brillante, retirer. */
 function cardRow(c = {}) {
   const L = Z.lists;
+  const setId = c.card_id ? SERIE_DE.get(c.card_id) || '' : '';
   return `<div class="zav-item" data-zitem="carte" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-    <select name="c_id" aria-label="Carte" style="flex:1 1 240px;min-width:0"><option value="">—</option>${L.cards.map((k) => opt(k.id, `${k.name} (${k.rarity})`, k.id === c.card_id)).join('')}</select>
+    <select name="c_set" aria-label="Série" style="flex:1 1 200px;min-width:0"><option value="">Série…</option>${L.sets.map((st) => opt(st.id, `${st.name}${st.active === false ? ' (inactive)' : ''}`, st.id === setId)).join('')}</select>
+    <select name="c_id" aria-label="Carte" style="flex:1 1 240px;min-width:0"${setId ? '' : ' disabled'}>${cardOptions(setId, c.card_id)}</select>
     <input name="c_qty" type="number" min="1" max="1000" step="1" inputmode="numeric" value="${Number(c.qty) || 1}" aria-label="Nombre d’exemplaires" style="width:88px">
     <label class="check" style="margin:0"><input type="checkbox" name="c_shiny"${c.shiny ? ' checked' : ''}> Brillante</label>
     <button class="btn btn-ghost" type="button" data-zav-del aria-label="Retirer cette carte">Retirer</button></div>`;
@@ -192,6 +229,7 @@ async function loadAvent() {
   const { data, error } = await sb.rpc('hg_advent_admin', { p_year: Z.year });
   if (error) throw error;
   Z.adv = data;
+  await loadCardSets(data.days || []);
 }
 
 /* ---------- Partie « Saison des Worlds » ---------- */
@@ -396,6 +434,15 @@ async function onClick(e) {
 async function onChange(e) {
   const t = e.target;
   if (t.matches('.zav-form input[name="group"]')) syncKind(t.closest('form'));
+  else if (t.matches('.zav-item select[name="c_set"]')) {
+    const sel = t.closest('.zav-item').querySelector('[name="c_id"]');
+    sel.disabled = true;
+    sel.innerHTML = cardOptions(t.value ? t.value : '', '');
+    if (!t.value) return;
+    sel.innerHTML = '<option value="">Chargement…</option>';
+    try { await cardsOfSet(t.value); sel.innerHTML = cardOptions(t.value, ''); sel.disabled = false; sel.focus(); }
+    catch (err) { sel.innerHTML = '<option value="">Erreur de chargement</option>'; toast(errMsg(err), 'error'); }
+  }
   else if (t.id === 'zav-prev') { Z.preview = Number(t.value) || null; Z.root.querySelector('#zav-preview').innerHTML = previewHtml(Z.preview); }
   else if (t.dataset.retro) {
     t.disabled = true;
