@@ -1,7 +1,9 @@
 /* ===== Humane Gang — raccourcis Staff (core/staff-dock.js) =====
-   Ordinateur (à partir de 720 px) : barre verticale fixe à gauche, étroite, icônes toujours visibles ; le nom sort en bulle au survol ou au focus.
+   Ordinateur (à partir de 720 px) : barre verticale à gauche, sous l'en-tête (son haut suit --en-tete-bas, posé par core/init.js),
+   étroite, icônes toujours visibles ; le nom sort en bulle au survol ou au focus.
    Le contenu est décalé de la largeur de la barre (html[data-staff-dock] body) : rien n'est masqué.
-   Téléphone (moins de 720 px) : bouton flottant en bas à gauche ; la liste s'ouvre au-dessus, sans décaler la page.
+   Téléphone (moins de 720 px) : bouton flottant en bas à gauche ; la liste s'ouvre au-dessus, sans décaler la page ;
+   il se replie pendant un défilement vers le bas (html[data-defil="bas"]).
    Couleurs : jetons de base.css (--surface, --surface-2, --border, --text, --muted, --accent, --sand). */
 
 :root { --sd-w: 56px; }
@@ -15,9 +17,9 @@
 /* ---------- Ordinateur : barre à gauche ---------- */
 @media (min-width: 720px) {
   .sd {
-    position: fixed; left: 0; top: calc(var(--god-h, 0px) + var(--va-h, 0px)); bottom: 0; z-index: 55;
+    position: fixed; left: 0; top: max(var(--en-tete-bas, 0px), calc(var(--god-h, 0px) + var(--va-h, 0px))); bottom: 0; z-index: 55;
     width: var(--sd-w); display: flex; flex-direction: column;
-    background: var(--surface); border-right: 1px solid var(--border); color: var(--text);
+    background: var(--surface); border-right: 1px solid var(--border); border-top: 1px solid var(--border); color: var(--text);
   }
   .sd-fab { display: none; }
   .sd-body { display: flex; flex-direction: column; gap: 8px; height: 100%; min-height: 0; padding: 10px 6px; }
@@ -54,19 +56,23 @@
 @media (min-width: 720px) {
   html[data-staff-dock="on"] body { padding-left: var(--sd-w); }
   html[data-staff-dock] .kbd-hint { left: calc(var(--sd-w) + 16px); }
+  /* La barre arc-en-ciel et la ligne de l'en-tête passent au-dessus de la barre (--ext-g, lu par base.css) */
+  html[data-staff-dock="on"] { --ext-g: var(--sd-w); }
 }
 
 /* ---------- Téléphone : bouton flottant et liste ---------- */
 @media (max-width: 719.98px) {
   .sd {
     position: fixed; left: max(12px, env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom));
-    z-index: 55; width: auto; background: transparent; border: 0; box-shadow: none; overflow: visible;
+    z-index: 55; width: auto; background: transparent; border: 0; box-shadow: none; overflow: visible; transition: transform .2s ease;
   }
   .sd:hover, .sd:focus-within { width: auto; box-shadow: none; }
   /* Espace en bas pour que le bouton ne cache jamais le dernier élément ; masqué pendant une partie (actions en bas) */
   html[data-staff-dock] body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   html[data-sd-partie] .sd { display: none; }
   html[data-sd-partie][data-staff-dock] body { padding-bottom: 0; }
+  /* Défilement vers le bas : le bouton se replie hors de l'écran (il revient en remontant ou en bas de page) */
+  html[data-defil="bas"] .sd:not([data-open="1"]) { transform: translateY(calc(100% + 24px)); }
   .sd-fab { position: relative; display: grid; place-items: center; width: 52px; height: 52px; padding: 0; border-radius: 50%;
     border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); cursor: pointer;
     box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }

@@ -2,9 +2,10 @@
 /*
  * Rôle : montre les membres connectés en ce moment, avec deux raccourcis pour chacun : « Écrire » (/pages/compte/messages.html?to=<id>)
  *   et « Défier » (/pages/jeux/duels.html#creer/membre/<id>).
- *   Ordinateur (à partir de 720 px) : barre verticale fixe à droite, avatars avec pastille verte ; le pseudo sort en bulle au
- *   survol ; un clic ouvre une petite fenêtre avec les deux raccourcis (Échap ou clic ailleurs la ferme). Le contenu de la
- *   page est décalé de la largeur de la barre (html[data-en-ligne] body).
+ *   Ordinateur (à partir de 720 px) : barre verticale à droite, sous l'en-tête (son haut suit --en-tete-bas, posé par init.js),
+ *   avatars avec pastille verte ; le pseudo sort en bulle au survol ; un clic ouvre une petite fenêtre avec les deux raccourcis
+ *   (Échap ou clic ailleurs la ferme). Le contenu de la page est décalé de la largeur de la barre (html[data-en-ligne] body).
+ *   Personne en ligne : la barre se replie en bouton (classe is-vide), qui ouvre la liste vide comme sur téléphone.
  *   Téléphone : bouton flottant en bas à droite (nombre de membres en ligne) ; il ouvre la liste avec les raccourcis.
  * Données : RPC hg_membres_en_ligne() (les autres membres, statut non masqué), relue toutes les 60 s quand la page est visible.
  * Pas affiché sur /pages/admin/admin.html, ni en vue « comme un membre », ni (sur téléphone) pendant une partie.

@@ -293,6 +293,42 @@ async function startPage(auth) {
 /* ---------- Point d'entrée ---------- */
 
 /**
+ * Barres latérales (menu « En ligne » à droite, raccourcis Staff à gauche) : sur ordinateur, leur haut suit le bas de
+ * l'en-tête (variable --en-tete-bas sur <html>), pour que l'en-tête et sa barre arc-en-ciel restent entiers au-dessus.
+ * Sur téléphone, les boutons flottants se replient pendant un défilement vers le bas (html[data-defil="bas"]) :
+ * ils ne recouvrent pas le contenu qu'on lit, et reviennent dès qu'on remonte ou qu'on touche le bas de page.
+ */
+function suivreBarres() {
+  const racine = document.documentElement;
+  let derniere = window.scrollY;
+  let attente = false;
+  const mesurer = () => {
+    attente = false;
+    const h = document.querySelector('.site-header');
+    // Une pixel au-dessus du bas de l'en-tête : la barre latérale prolonge sa ligne basse (bordure du haut)
+    racine.style.setProperty('--en-tete-bas', `${Math.max(0, h ? h.getBoundingClientRect().bottom - 1 : 0)}px`);
+  };
+  const defiler = () => {
+    attente = false;
+    const y = window.scrollY;
+    const bas = y + window.innerHeight >= document.documentElement.scrollHeight - 4;
+    if (y > derniere + 4 && !bas) racine.dataset.defil = 'bas';
+    else if (y < derniere - 4 || bas || y <= 0) delete racine.dataset.defil;
+    derniere = y;
+  };
+  const planifier = () => {
+    if (attente) return;
+    attente = true;
+    requestAnimationFrame(() => { mesurer(); defiler(); });
+  };
+  window.addEventListener('scroll', planifier, { passive: true });
+  window.addEventListener('resize', planifier);
+  // Le corps change de hauteur quand l'en-tête change (menu qui se replie, bandeau, vue « comme un membre »)
+  if (window.ResizeObserver) new ResizeObserver(planifier).observe(document.body);
+  planifier();
+}
+
+/**
  * Initialise une page : thème, en-tête, pied, bandeau cookies, puis (membre) messages non lus, badges.
  * options.auth : 'member' | 'admin' | 'optional'. Renvoie le profil (ou null).
  * En cas d'échec réseau, affiche « Connexion impossible » et ne résout qu'après une nouvelle tentative réussie.
@@ -301,6 +337,7 @@ async function startPage(auth) {
  */
 export async function initPage({ auth = 'member' } = {}) {
   installLightDismiss(); // clic à côté d'une fenêtre = fermer (toutes les pages)
+  suivreBarres();
   for (;;) {
     try {
       return await startPage(auth);
