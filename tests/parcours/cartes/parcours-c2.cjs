@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C2 (migration 080) : booster « Pâté-saucisses » vendu le soir de la soirée jeux.
 // 1. Plage ouverte : article avec « Ce soir · jusqu’à 2 h », prix barré du Classique et « −20 % », limite par soirée.
 // 2. Limite de la soirée atteinte : bouton désactivé et explication reliée.
@@ -38,7 +39,7 @@ const pate = (open, rest) => ({ id: 'pate_saucisses', name: 'Pâté-saucisses', 
   await sleep(300);
   check(await p.isDisabled(`${art} [data-action="buy-stock"]`), '(2) 2 demandés, 1 restant : achat désactivé');
   check((await p.textContent(art)).includes('pour cette soirée'), '(2) explication « pour cette soirée »');
-  await p.screenshot({ path: 'tests/shots/c2-ouvert.png' });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c2-ouvert.png') });
   check(!p.errs.length, '(1) aucune erreur de page ' + p.errs.join(' | '));
   await p.ctx.close();
 
@@ -49,7 +50,7 @@ const pate = (open, rest) => ({ id: 'pate_saucisses', name: 'Pâté-saucisses', 
   check(/Revient (vendredi|demain|ce soir) à 20 h/.test(row), `(3) ligne compacte « ${row.replace(/\s+/g, ' ').trim()} »`);
   check((await p.textContent('#cartes-p-boutique')).includes('Le reste de la semaine'), '(3) intertitre « Le reste de la semaine »');
   check((await hscroll(p)) <= 0, '(5) 360 px : pas de défilement horizontal');
-  await p.screenshot({ path: 'tests/shots/c2-ferme.png' });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c2-ferme.png') });
   await p.ctx.close();
 
   p = await openPage(browser, { page: 'admin', width: 1280 });

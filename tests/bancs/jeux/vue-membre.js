@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Captures de la page Jeux vue par un membre non-admin (ordinateur et téléphone), images chargées.
 process.env.FAKE_DB = 'uno';
 const { chromium } = require('playwright');

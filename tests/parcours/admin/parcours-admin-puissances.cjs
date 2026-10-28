@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours admin : puissance des cartes (Fabrique › Arène, bloc « Puissance des cartes », admin/puissances.js).
 // Catégories : valeurs affichées (enregistrées, défauts en placeholder), aperçu en direct, enregistrement par fusion
 // dans hg_settings.cards.puissances (les autres sous-clés et les clés inconnues restent), « Valeur par défaut »,

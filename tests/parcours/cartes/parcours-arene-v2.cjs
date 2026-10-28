@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours Arène v2 (docs/ARENE.md ; /pages/cartes/cartes.html#arene, réglages dans /pages/admin/admin.html#fabrique/arene).
 // Admin : aperçu avec bandeau, accueil (ligue, cote, combats restants, adversaires), attaque d'Alice (5 cartes, résultat,
 // cote), historique, classement de saison, règles ; 1280 et 390 px sans défilement horizontal ; captures.

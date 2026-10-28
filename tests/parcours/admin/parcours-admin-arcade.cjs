@@ -19,7 +19,8 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const lundi = (iso) => { const x = new Date(iso + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.toISOString().slice(0, 10); };
 /** Date AAAA-MM-JJ décalée de n jours. */
 const addJ = (iso, n) => { const x = new Date(iso + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
-const CUR = lundi(new Date().toISOString().slice(0, 10));
+// Aujourd’hui = jour de Zurich (comme le site), pas le jour UTC de l’horloge.
+const CUR = lundi(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()));
 const PREV = addJ(CUR, -7);
 
 /** Appels d'une fonction RPC notés par le faux client. */

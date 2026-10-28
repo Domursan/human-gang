@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours J11 : quêtes à preuve validées par le Staff.
 // Membre (cartes.html, onglet Ouverture) : les 2 quêtes à preuve apparaissent avec leur jeu et « Envoyer une preuve » ;
 // la fenêtre demande 1 à 3 captures, les envoie dans hg-proofs/<moi>/…, appelle hg_proof_submit ; la quête passe

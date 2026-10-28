@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Outils des parcours navigateur de Nom de code : ouvre /pages/jeux/nom-de-code.html pour le joueur n (faux Supabase sur la base locale « ndc »).
 process.env.FAKE_DB = 'ndc';
 const { chromium } = require('playwright');

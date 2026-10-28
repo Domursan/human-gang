@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C6 (migration 080) : série « Campagne Serge » et propositions de cartes.
 // 1. Collection : encart « Proposer une carte » quand une série accepte des propositions ; mes propositions et leur état.
 // 2. Formulaire : nom, famille, phrase, blason (couleurs en pastilles, figure), aperçu en direct ; envoi = hg_card_proposal_submit.
@@ -31,7 +32,7 @@ const PROPS = [
   await sleep(200);
   check((await p.textContent('#prop-prev')).includes('Comté de Zadar'.toUpperCase()) || (await p.getAttribute('#prop-prev .hgc', 'aria-label')).includes('Comté de Zadar'), '(2) aperçu en direct');
   check(/^data:image\/svg\+xml/.test(await p.getAttribute('#prop-prev .hgc-win-img', 'src')), '(2) aperçu du blason');
-  await p.screenshot({ path: 'tests/shots/c6-formulaire.png' });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c6-formulaire.png') });
   await p.click('#prop-send');
   await sleep(600);
   const sub = (await log(p)).filter((x) => x[0] === 'rpc' && x[1] === 'hg_card_proposal_submit').pop();

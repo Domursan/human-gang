@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours Blackjack (plateaux, migration 143) : table et bandeau, mise rapide puis « Miser » (hg_plat_agir miser 100),
 // une main jouée (Tirer puis Rester), dernier règlement dans la colonne de droite, classement, 390 px sans défilement
 // horizontal, écran de fin avec une carte par joueur, aucune erreur JS. Faux Supabase : fixtures/fake-sb-plateaux-cartes.mjs.

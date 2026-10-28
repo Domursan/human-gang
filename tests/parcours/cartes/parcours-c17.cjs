@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C17 · « Ma carte Champion » (cartes.html, Collection ; panel : Jeux et cartes › Cartes Champions ; migration 082).
 // 1. Membre sans carte : fenêtre, aperçu en direct (nom, emblème, phrase, édition), proposition envoyée (RPC), statut, retrait.
 // 2. Carte déjà acceptée cette année : message, pas de formulaire. Fermeture : le focus revient au bouton.

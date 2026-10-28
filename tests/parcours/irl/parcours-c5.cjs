@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C5 (migration 080) : transformer un moment de l'historique en carte.
 // 1. Admin › Souvenirs : le détail d'un moment propose « Créer une carte » (permission « cartes »).
 // 2. Fenêtre préremplie : nom = titre, famille Moment, texte d'ambiance = première phrase, légende = date, rareté suggérée.
@@ -22,7 +23,7 @@ const M3 = 'mmmmmmmm-0000-4000-8000-000000000003';
   check(!!v.cap, `(2) légende = date (${v.cap})`);
   check(v.rar === 'commune', '(2) rareté suggérée selon les réactions');
   check(await p.$('dialog.sv-card-dlg #sv-kc-card .hgc'), '(2) aperçu de la carte');
-  await p.screenshot({ path: 'tests/shots/c5-admin.png' });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c5-admin.png') });
   await p.click('dialog.sv-card-dlg [type=submit]');
   await sleep(900);
   const ins = (await log(p)).filter((x) => x[0] === 'insert' && x[1] === 'hg_cards').pop();

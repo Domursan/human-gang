@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C4 (migration 080) : cartes « J’y étais » des sorties IRL.
 // 1. /pages/irl/irl.html : sous une sortie passée qui a sa carte, l'encart montre la carte (tampon « J’y étais »), « Dans ta collection »,
 //    le nombre de membres qui l'ont reçue et « Non échangeable ».
@@ -42,7 +43,7 @@ const scenario = {
   await sleep(600);
   const add = (await log(p)).filter((x) => x[0] === 'rpc' && x[1] === 'hg_event_card_add').pop();
   check(add && add[2].p_event === EV && add[2].p_user === U(3), '(2) hg_event_card_add avec la sortie et le membre');
-  await p.screenshot({ path: 'tests/shots/c4-irl.png' });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c4-irl.png') });
   check(!p.errs.length, '(1) aucune erreur de page ' + p.errs.join(' | '));
   await p.ctx.close();
 

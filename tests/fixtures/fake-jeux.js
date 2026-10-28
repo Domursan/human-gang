@@ -10,7 +10,7 @@
   const SC = () => (window.__SCN && window.__SCN.jeux) || {};
   const now = Date.now();
   const iso = (j) => new Date(now + j * 864e5).toISOString();
-  const day = (j) => new Date(now + j * 864e5).toISOString().slice(0, 10);
+  const day = (j) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(now + j * 864e5)); // jour de Zurich
   const ok = (data) => ({ data, error: null });
   const ko = (message) => ({ data: null, error: { message } });
 

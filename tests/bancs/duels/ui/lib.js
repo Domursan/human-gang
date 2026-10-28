@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Outils des parcours navigateur des duels : ouvre /pages/jeux/duels.html pour le joueur n (faux Supabase sur la base locale « duels »).
 process.env.FAKE_DB = 'duels';
 const { chromium } = require('playwright');

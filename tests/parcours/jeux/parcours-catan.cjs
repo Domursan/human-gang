@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours Catan du gang (plateaux, migration 144) : plateau SVG, mise en place (colonie puis route), construction d'une
 // route en phase action, lancer des dés, déplacement du voleur, fin de partie ; 390 et 360 px sans défilement horizontal ;
 // aucune erreur JS. Faux Supabase : fixtures/fake-sb-catan.mjs (scénario : phase, fin).

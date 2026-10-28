@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours Poker (plateaux, migration 143) : table ovale, sièges, cartes communes vides, « Tes cartes » en grand, dernier
 // abattage (cartes montrées et nom des mains), actions Suivre (hg_plat_agir suivre), puis relance à la moitié du pot et
 // au pot (hg_plat_agir relancer, montant lu sur le curseur), Se coucher ; 390 px sans défilement horizontal ;

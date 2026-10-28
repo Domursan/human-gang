@@ -1,3 +1,4 @@
+require('fs').mkdirSync('shots', { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 const { chromium } = require('playwright');
 const { attach, log } = require('./fake.js');
 (async () => {
