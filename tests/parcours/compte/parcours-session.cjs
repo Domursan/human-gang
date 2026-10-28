@@ -22,7 +22,7 @@ const count401 = async (p) => (await log(p)).filter((l) => l[0] === 'rpc-401');
 
   // 2. Visiteur sur une page membre : renvoi vers la connexion, pas d'écran vide.
   p = await openPage(browser, { page: 'membre', scenario: { guest: true } });
-  check(/compte\.html\?next=membre\.html/.test(p.url()), 'visiteur sur /pages/compte/membre.html : renvoi vers /pages/compte/compte.html (next=membre.html)');
+  check(new URL(p.url()).pathname === '/pages/compte/compte.html' && new URL(p.url()).searchParams.get('next') === '/pages/compte/membre.html', 'visiteur sur /pages/compte/membre.html : renvoi vers /pages/compte/compte.html (next = adresse complète /pages/compte/membre.html)');
   check(await p.isVisible('#pane-login'), 'visiteur sur /pages/compte/membre.html : formulaire de connexion affiché');
   bad = await count401(p);
   check(!bad.length, 'visiteur sur /pages/compte/membre.html : aucune RPC réservée aux membres' + (bad.length ? ' (' + bad.map((l) => l[1]).join(', ') + ')' : ''));

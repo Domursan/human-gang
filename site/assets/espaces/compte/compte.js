@@ -25,8 +25,22 @@ const isRecoveryLink = hashParams.get('type') === 'recovery' || url.searchParams
 // (il pourrait être écrit par n'importe qui) : voir renderLinkError.
 const linkError = !!(hashParams.get('error_description') || url.searchParams.get('error_description') || hashParams.get('error_code') || url.searchParams.get('error_code'));
 const rawNext = url.searchParams.get('next') || '';
-// Accepte un nom de fichier (« irl.html », envoyé par le menu) ou une adresse absolue de page (« /pages/jeux/uno.html?code=… »).
-const NEXT = /^[\w-]+\.html(#[\w-]*)?$/.test(rawNext) || /^\/pages\/[\w-]+\/[\w-]+\.html(\?[\w=&%.-]*)?(#[\w-]*)?$/.test(rawNext) ? rawNext : '';
+/**
+ * Adresse de retour après connexion (?next=) : un nom de page (« irl.html », envoyé par le menu) ou une adresse interne
+ * de page avec ses paramètres et son ancre (« /pages/cartes/cartes.html#echanges », « /pages/jeux/uno.html?code=… »).
+ * Renvoie '' pour tout le reste : autre site (« https://… »), « // », schéma (« javascript: »), chemin hors de /pages/.
+ * @param {string} v Valeur brute de ?next=.
+ * @returns {string} Adresse sûre, ou '' (retour à l'accueil).
+ */
+function adresseDeRetour(v) {
+  if (/^[\w-]+\.html(#[\w-]*)?$/.test(v)) return v;
+  if (!v || v.length > 500 || !v.startsWith('/') || v.startsWith('//') || /[\\\s]/.test(v)) return '';
+  try {
+    const u = new URL(v, location.origin);
+    return u.origin === location.origin && /^\/pages\/[\w-]+\/[\w-]+\.html$/.test(u.pathname) ? u.pathname + u.search + u.hash : '';
+  } catch { return ''; }
+}
+const NEXT = adresseDeRetour(rawNext);
 /**
  * Clé du stockage local où l'on garde le code et le pseudo en attente pendant la confirmation par e-mail.
  * Stockage local et non de session : le lien de confirmation s'ouvre souvent dans un autre onglet, qui ne voit pas

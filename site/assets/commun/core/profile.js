@@ -56,7 +56,8 @@ export async function getProfile(force = false) {
  */
 export async function requireMember() {
   const p = await getProfile();
-  if (!p) { location.href = `/pages/compte/compte.html?next=${encodeURIComponent(location.pathname.split('/').pop())}`; throw new Error('redirect'); }
+  // Adresse complète de la page (chemin, paramètres et ancre) : le retour après connexion y revient exactement
+  if (!p) { location.href = `/pages/compte/compte.html?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`; throw new Error('redirect'); }
   return p;
 }
 /**
