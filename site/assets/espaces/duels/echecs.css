@@ -30,7 +30,7 @@
 .duels-echecs-piece.is-blanc { color: #FFFFFF; -webkit-text-stroke: 1.1px #2A1D12; text-shadow: 0 1px 2px rgba(0, 0, 0, .45); }
 .duels-echecs-piece.is-noir { color: #17120E; -webkit-text-stroke: .7px #EFE4CC; text-shadow: 0 0 3px rgba(255, 255, 255, .22); }
 
-.duels-echecs-coord { position: absolute; font: 700 max(9px, 2.5cqi) / 1 'Inter', system-ui, sans-serif; color: rgba(40, 28, 18, .8); pointer-events: none; }
+.duels-echecs-coord { position: absolute; font: 700 max(12px, 2.5cqi) / 1 'Inter', system-ui, sans-serif; color: rgba(40, 28, 18, .8); pointer-events: none; }
 .duels-echecs-case.is-sombre .duels-echecs-coord { color: rgba(255, 246, 230, .9); }
 .duels-echecs-coord.is-rang { top: 3px; left: 4px; }
 .duels-echecs-coord.is-fichier { right: 4px; bottom: 2px; }
@@ -74,4 +74,11 @@
 @media (max-width: 420px) {
   .duels-echecs-jeu { gap: 8px; }
   .duels-echecs-pris { font-size: 13px; }
+}
+
+/* Téléphone : l'échiquier prend presque toute la largeur (marges de la page réduites de 14 px de chaque côté, soit 2 px
+   au bord de l'écran). Bordure de 1 px : à 360 px, 8 cases de 44,25 px (cible tactile de 44 px respectée). */
+@media (max-width: 480px) {
+  .duels-echecs-zone { width: calc(100% + 28px); margin-inline: -14px; }
+  .duels-echecs-plateau { border-width: 1px; }
 }

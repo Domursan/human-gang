@@ -7,6 +7,12 @@
   border: 2px solid #3B2A1E; box-shadow: 0 14px 34px rgba(0, 0, 0, .45); }
 
 /* Cases claires : décor seulement. Cases sombres (jouables) : boutons. */
+/* Téléphone : damier pleine largeur (marges réduites de 14 px de chaque côté), bordure de 1 px. Même principe que
+   l'échiquier. À 360 px, 10 cases de 35,4 px : 44 px par case est impossible (10 × 44 = 440 px > 360 px), voir EXCEPTIONS. */
+@media (max-width: 480px) {
+  .duels-dames-plateau { width: calc(100% + 28px); margin-inline: -14px; border-width: 1px; }
+}
+
 .duels-dames-case.is-claire { background: #EADBBE; }
 .duels-dames-case.is-sombre { appearance: none; margin: 0; padding: 0; border: 0; border-radius: 0; min-width: 0; min-height: 0;
   position: relative; display: grid; place-items: center; background: #5E3F2C; cursor: pointer; font: inherit; color: inherit;

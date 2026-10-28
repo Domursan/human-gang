@@ -281,7 +281,10 @@ async function mobile(browser) {
     await attendre(p, 400);
     check(await hscroll(p) === 0, `échecs ${largeur} px : aucun défilement horizontal`);
     const boite = await p.locator('.duels-echecs-plateau').boundingBox();
-    check(boite.width <= largeur - 32, `échecs ${largeur} px : plateau ${Math.round(boite.width)} px (tient dans la marge de 16 px)`);
+    // Plateau pleine largeur : marges réduites à 2 px de chaque bord (echecs.css, téléphone)
+    check(boite.width <= largeur - 4 && boite.x >= 0, `échecs ${largeur} px : plateau ${Math.round(boite.width)} px (pleine largeur, 2 px de marge)`);
+    const caseE = await p.locator('.duels-echecs-case').first().boundingBox();
+    check(caseE.width >= 44 && caseE.height >= 44, `échecs ${largeur} px : case ${caseE.width.toFixed(1)} × ${caseE.height.toFixed(1)} px (cible ≥ 44 px)`);
     await cliquer(p, 52);
     await attendre(p, 150);
     await shot(p, `s4-echecs-${largeur}`);
@@ -290,7 +293,10 @@ async function mobile(browser) {
     await attendre(p, 400);
     check(await hscroll(p) === 0, `dames ${largeur} px : aucun défilement horizontal`);
     const boiteD = await p.locator('.duels-dames-plateau').boundingBox();
-    check(boiteD.width <= largeur - 32, `dames ${largeur} px : damier ${Math.round(boiteD.width)} px`);
+    check(boiteD.width <= largeur - 4 && boiteD.x >= 0, `dames ${largeur} px : damier ${Math.round(boiteD.width)} px (pleine largeur, 2 px de marge)`);
+    // 10 cases de 44 px = 440 px > 360 px : la case reste sous 44 px (exception documentée dans a11y-mobile.cjs)
+    const caseD = await p.locator('.duels-dames-case').first().boundingBox();
+    check(caseD.width >= (largeur === 360 ? 35 : 38), `dames ${largeur} px : case ${caseD.width.toFixed(1)} px (maximum de la largeur, exception 44 px)`);
     await cliquer(p, 61);
     await attendre(p, 150);
     const annuler = await p.locator('[data-annuler]').boundingBox();

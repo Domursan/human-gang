@@ -67,12 +67,10 @@ const EXCEPTIONS = [
     comment: 'À corriger : onglets du chat (95 × 40 px : hauteur sous 44 px).' },
   { page: 'loup-garou', partie: 'plateau de nuit', type: 'texte', motif: /avatar|lg-siege-buche/,
     comment: 'À corriger : initiales des sièges (11 px) et prénoms autour du feu (11,5 px). Passer à 12 px au minimum.' },
-  { page: 'duels', partie: 'Échecs en cours', type: 'cible', motif: /duels-echecs-case/,
-    comment: 'À corriger : cases de l\'échiquier à 41 × 41 px en 360 px (44 px attendus).' },
-  { page: 'duels', partie: 'Échecs en cours', type: 'texte', motif: /duels-echecs-coord/,
-    comment: 'À corriger : coordonnées de l\'échiquier (9 px).' },
+  // Dames : exception permanente. 10 cases × 44 px = 440 px > 360 px : le damier ne peut pas atteindre 44 px de case en
+  // largeur. Cases de 35,4 px à 360 px et 38,4 px à 390 px (damier pleine largeur, bordure de 1 px : maximum atteignable).
   { page: 'duels', partie: 'Dames en cours', type: 'cible', motif: /duels-dames-case/,
-    comment: 'À corriger : cases du damier à 32 × 32 px en 360 px et 35 × 35 px en 390 px (44 px attendus).' },
+    comment: 'Exception permanente : damier de 10 cases, 10 × 44 px = 440 px > 360 px. Cases à 35,4 px en 360 px et 38,4 px en 390 px (maximum de la largeur).' },
   { page: 'blackjack', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|bj-etiquette/,
     comment: 'À corriger : étiquettes « À toi de jouer » et « toi » (11 px). Composant commun des plateaux (plat-etiquette).' },
   { page: 'poker', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|pk-|cd-sym/,
