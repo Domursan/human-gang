@@ -28,3 +28,4 @@ supabase/migrations/161_rangement_chemins.sql
 supabase/migrations/162_theme_booster_gratuit.sql
 supabase/migrations/163_theme_paillettes.sql
 supabase/migrations/164_themes_saint_nicolas_pate.sql
+supabase/migrations/165_plateaux_droits.sql
