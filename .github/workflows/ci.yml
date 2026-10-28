@@ -51,6 +51,48 @@ jobs:
       - name: Appels RPC et tables présents dans la base
         working-directory: tests
         run: npm run test:rpc
+      - name: Migrations (numéros uniques, appliquer.txt, fonctions internes refermées)
+        working-directory: tests
+        run: node controles/check-migrations.cjs
+      - name: Échappement des gabarits HTML (interpolations sans esc)
+        working-directory: tests
+        run: node controles/check-echappement.cjs
+
+  # ---------- Bancs SQL des jeux de plateau (PostgreSQL 16 en service, sans navigateur) ----------
+  # Reconstruit la base de test (socle, moteurs, fonctions internes fermées par les migrations 165 et 166) puis lance
+  # les scénarios t_*.sql. Mêmes scripts que sur un poste : voir tests/bancs/pg-env.sh.
+  bancs-plateaux:
+    name: Bancs SQL (plateaux)
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Client psql (version 16)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-16
+      - name: Construire la base de test
+        working-directory: tests/bancs/plateaux
+        run: bash rebuild.sh
+      # t_risk (6 parties simulées, bien plus de 30 min) n'est pas lancé ici : à lancer à la main (bash run.sh t_risk.sql).
+      - name: Scénarios SQL des plateaux
+        working-directory: tests/bancs/plateaux
+        run: bash run.sh $(ls t_*.sql | grep -v '^t_risk.sql$')
 
   # ---------- Suite de parcours, en 4 morceaux parallèles ----------
   morceaux:
@@ -193,6 +235,13 @@ jobs:
         env:
           HG_ROOT: ${{ github.workspace }}/_site
         run: node controles/perf-budget.cjs
+      - name: Contrôles du site publié (_site/), build et fumée
+        working-directory: tests
+        env:
+          HG_ROOT: ${{ github.workspace }}/_site
+        run: |
+          node controles/check-build.cjs
+          node controles/smoke.cjs
       - name: Bilan
         if: always()
         uses: actions/upload-artifact@v4
@@ -205,7 +254,7 @@ jobs:
   # ---------- Résultat global (nom « test » conservé : c'est le contrôle attendu sur les demandes de fusion) ----------
   test:
     name: test
-    needs: [verifs, morceaux, accessibilite, performance]
+    needs: [verifs, morceaux, accessibilite, performance, bancs-plateaux]
     if: always() && (github.event.action != 'labeled' || github.event.label.name == 'ci')
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -230,9 +279,10 @@ jobs:
           VERIFS: ${{ needs.verifs.result }}
           MORCEAUX: ${{ needs.morceaux.result }}
           PERF: ${{ needs.performance.result }}
+          BANCS: ${{ needs.bancs-plateaux.result }}
         run: |
-          echo "Vérifications : $VERIFS · Tests : $MORCEAUX · Performance : $PERF"
-          [ "$VERIFS" = success ] && [ "$MORCEAUX" = success ] && [ "$PERF" = success ]
+          echo "Vérifications : $VERIFS · Tests : $MORCEAUX · Performance : $PERF · Bancs SQL : $BANCS"
+          [ "$VERIFS" = success ] && [ "$MORCEAUX" = success ] && [ "$PERF" = success ] && [ "$BANCS" = success ]
 
   # ---------- Alerte Discord (main seulement) ----------
   alerte:

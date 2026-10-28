@@ -1,6 +1,11 @@
 -- Règles du lot B : Bataille navale (placement, tirs, rejouer, salve, radar, fin) et Qui est-ce ? (questions, question libre, deviner, baisser).
 -- À lancer sur une base neuve (tests/duels/rebuild.sh), après helpers.sql.
 -- Erreur d'une expression évaluée sans changer de rôle (fonctions internes non accordées aux membres).
+-- Journée vierge : t2_regles.sql récompense des duels entre les comptes 2 et 3 le même jour ; au-delà de 3 duels récompensés
+-- contre le même adversaire (et du plafond quotidien), les Paillettes de ce scénario tomberaient à 0. Les parties et
+-- gains de la veille de ce scénario sont donc reportés de deux jours : le résultat ne dépend plus de l'ordre des scénarios.
+update hg_duel_parties set ended_at = ended_at - interval '2 days' where ended_at >= now() - interval '1 day';
+update hg_wallet_log set created_at = created_at - interval '2 days' where created_at >= now() - interval '1 day';
 create or replace function t_err_su(p_sql text) returns text language plpgsql as $f$
 begin execute 'select ' || p_sql; return null; exception when others then return sqlerrm; end $f$;
 do $$
