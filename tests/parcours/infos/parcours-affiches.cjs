@@ -141,7 +141,7 @@ const NBSP = /\s/g; // espaces insécables des milliers (fmt) : retirées pour c
     // 11. Affiche « Les jeux » : missions, GeoGuessr, Raclette, Domu-mobile ; et la gamme des boosters lue sur hg_booster_types.
     page = await openPage(browser, { page: 'affiches/jeux-a3', fixture: FIXTURE, width: 1123 });
     const jeux = await page.evaluate(() => document.body.textContent);
-    check(['Missions quotidiennes', 'GeoGuessr', 'Sutom HG', 'Framed', 'Heardle', 'Raclette', 'Domu-mobile', 'Paillettes'].every((m) => jeux.includes(m)), 'affiche jeux : jeux du gang et arcade présents');
+    check(['Missions quotidiennes', 'GeoGuessr', 'Sutom du gang', 'Framed', 'Heardle', 'Raclette', 'Domu-mobile', 'Paillettes'].every((m) => jeux.includes(m)), 'affiche jeux : jeux du gang et arcade présents');
     check(page.errs.length === 0, `affiche jeux : aucune erreur de page (${page.errs.join(' | ').slice(0, 200)})`);
     await page.ctx.close();
 

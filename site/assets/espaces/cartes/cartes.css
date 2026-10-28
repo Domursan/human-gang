@@ -148,6 +148,8 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
   background: color-mix(in srgb, var(--accent) 10%, #050505); border: 3px solid color-mix(in srgb, var(--sand) 28%, #000); border-radius: 4px; padding: 12px 20px 12px 14px;
   box-shadow: inset 0 0 0 2px #000, inset 0 0 0 4px color-mix(in srgb, var(--sand) 6%, #000); }
 .lcd-sm { gap: 7px; border-width: 2px; border-radius: 3px; padding: 4px 7px 4px 5px; box-shadow: inset 0 0 0 1px #000; }
+/* Petit format : segments éteints un peu plus visibles, pour que le chiffre allumé se détache (le « 1 » surtout) */
+.lcd-sm { --off: color-mix(in srgb, var(--sand) 18%, #000); }
 .lcd-ic { display: block; flex: none; line-height: 0; }
 .lcd-ic .paill-svg { width: 100%; height: 100%; }
 .lcd-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
@@ -166,6 +168,7 @@ html[data-fx="off"] .cartes-flip-in { animation: none; }
 html[data-mode="clair"] .lcd { --lit: var(--text); --off: color-mix(in srgb, var(--text) 12%, var(--surface)); --lab: var(--muted);
   background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 45%, var(--surface));
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+html[data-mode="clair"] .lcd-sm { --off: color-mix(in srgb, var(--text) 20%, var(--surface)); }
 html[data-mode="clair"] .lcd-delta { color: #0f7a43; text-shadow: none; }
 
 /* ===== Boosters : deux cartouches ===== */

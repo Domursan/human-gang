@@ -15,7 +15,7 @@
  *   onglet  facultatif : id de l'onglet de /pages/jeux/jeux.html dont le résumé du jour donne la pastille (« Fait », « À jouer ») ;
  *   image   facultatif : image 3:2 (/assets/images/jeux/…) ; sans image, une vignette avec l'icône et la couleur ;
  *   icone   facultatif : contenu SVG (viewBox 0 0 24 24, trait) ; couleur : variable CSS ou hexadécimal.
- * Exporte : SECTIONS, CARTES.
+ * Exporte : SECTIONS, CARTES, BONUS_IDS, BONUS (les 16 jeux du bonus), LIBELLE_ETAT (libellés des états).
  */
 
 /**
@@ -42,7 +42,7 @@ export const CARTES = [
     icone: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>' },
   { id: 'jour', image: `${IMG}jour.webp`, titre: 'Question du jour', texte: 'Une question, une réponse par jour.', section: 'quotidien', href: '#jour', onglet: 'jour', couleur: 'var(--sand)',
     icone: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/>' },
-  { id: 'sutom', image: `${IMG}sutom.webp`, titre: 'Sutom HG', texte: 'Trouve le mot caché, lettre par lettre.', section: 'quotidien', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
+  { id: 'sutom', image: `${IMG}sutom.webp`, titre: 'Sutom du gang', texte: 'Trouve le mot caché, lettre par lettre.', section: 'quotidien', href: '#sutom', onglet: 'sutom', couleur: 'var(--rose)',
     icone: '<rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/>' },
   { id: 'framed', image: `${IMG}framed.webp`, titre: 'Framed', texte: 'Devine le film à partir d’une image.', section: 'quotidien', href: '#framed', onglet: 'framed', couleur: 'var(--plum)',
     icone: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4"/>' },
@@ -107,7 +107,7 @@ export const CARTES = [
   { id: 'nj-pfc', image: `${IMG}pfc.webp`, titre: 'Pierre-feuille-ciseaux', texte: 'En 1, 3 ou 5 manches.', section: 'multi', href: '/pages/jeux/duels.html#creer/pfc', page: 'duel-pfc', couleur: 'var(--rose)',
     icone: '<circle cx="7" cy="16" r="3"/><rect x="12" y="4" width="8" height="10" rx="1"/><path d="M5 4l6 8M11 4l-6 8"/>' },
   { id: 'qui-est-ce', titre: 'Qui est-ce ?', texte: 'Devine son personnage secret.', section: 'multi', href: '/pages/jeux/duels.html#creer/quiestce', page: 'duels', image: `${IMG}qui-est-ce.webp` },
-  { id: 'nom-de-code', titre: 'Codenames', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: '/pages/jeux/nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
+  { id: 'nom-de-code', titre: 'Nom de code', texte: 'Fais deviner tes mots à ton équipe.', section: 'multi', href: '/pages/jeux/nom-de-code.html', page: 'nom-de-code', image: `${IMG}nom-de-code.webp` },
 
   // Jeux spéciaux : pages à part, visibles selon l'accès de la page
   { id: 'loup-garou', image: `${IMG}loup-garou.webp`, titre: 'Loup-Garou', texte: 'Démasque les loups avant l’aube.', section: 'speciaux', href: '/pages/jeux/loup-garou.html', page: 'loup-garou', couleur: 'var(--slate)',
@@ -130,3 +130,15 @@ export const CARTES = [
   { id: 'monopoly', titre: 'Monopoly', texte: 'Achète, construis, ruine tes amis.', section: 'speciaux', href: '/pages/jeux/monopoly.html', page: 'monopoly', image: `${IMG}monopoly.webp` },
   { id: 'risk', titre: 'Risk', texte: 'Conquiers le monde, ou remplis ta mission.', section: 'speciaux', href: '/pages/jeux/risk.html', page: 'risk', image: `${IMG}risk.webp` },
 ];
+
+/**
+ * Les 16 jeux du jour qui comptent pour le bonus « tous les jeux » (liste de hg_jeux_liste, migration 157) : ids de CARTES.
+ * Source unique des compteurs : le tableau de bord « Missions quotidiennes » (jeux.js) et le classement (classement-jeux.js)
+ * comptent les mêmes jeux, et le total vient d'ici (le serveur renvoie le même nombre).
+ */
+export const BONUS_IDS = ['sutom', 'framed', 'heardle', 'code-du-jour', 'nj-carte', 'nj-jv', 'nj-pochette', 'nj-replique',
+  'nj-pays', 'nj-plat', 'nj-connexions', 'nj-motscroises', 'nj-motmele', 'nj-anagramme', 'nj-nerdle', 'nj-sudoku'];
+/** Cartes des 16 jeux du bonus, dans l'ordre du catalogue. */
+export const BONUS = CARTES.filter((c) => BONUS_IDS.includes(c.id));
+/** Libellés des états affichés en pastille, identiques dans toutes les vues (« Ouvrir » et « Découvre le jeu » ne sont plus utilisés). */
+export const LIBELLE_ETAT = { fait: 'Fait', a_jouer: 'À jouer', en_cours: 'En cours' };

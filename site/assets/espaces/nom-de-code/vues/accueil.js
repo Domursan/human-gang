@@ -1,6 +1,6 @@
-// ===== Humane Gang — Codenames : accueil (#, sans adresse de partie) =====
+// ===== Humane Gang — Nom de code : accueil (#, sans adresse de partie) =====
 /*
- * Rôle : écran d'accueil de Codenames. En-tête (fil, titre, phrase d'intro, image), bouton « Créer une partie »,
+ * Rôle : écran d'accueil de Nom de code. En-tête (fil, titre, phrase d'intro, image), bouton « Créer une partie »,
  * rejoindre avec un code (HGNDC-1234 ; « hgndc 1234 » est accepté), « Mes parties » (équipe, « À toi » si c'est mon tour),
  * « Parties publiques » (rafraîchies toutes les 15 s), règles en 4 points et lien vers « Mes statistiques ».
  * Chaque bloc charge ses données à part : une erreur n'empêche pas les autres.
@@ -64,7 +64,7 @@ function htmlHero() {
   return `<section class="ndc-acc-hero" aria-labelledby="ndc-acc-titre">
     <div class="ndc-acc-hero-texte">
       <span class="ndc-acc-tag ndc-acc-tag-rose">Jeu d'équipes à mots</span>
-      <h1 id="ndc-acc-titre" class="ndc-titre ndc-acc-hero-titre">Codenames</h1>
+      <h1 id="ndc-acc-titre" class="ndc-titre ndc-acc-hero-titre">Nom de code</h1>
       <p class="ndc-acc-intro">Deux équipes, deux espions, 25 mots. Donne le bon indice à ton équipe et évite l'assassin.</p>
       <div class="ndc-acc-actions">
         <a class="btn ndc-acc-cta ndc-acc-grand" href="#creer">
@@ -158,7 +158,7 @@ function htmlRegles() {
 /* ---------- Écran ---------- */
 
 /**
- * Affiche l'accueil de Codenames dans root. Renvoie la fonction de nettoyage (arrêt du rafraîchissement).
+ * Affiche l'accueil de Nom de code dans root. Renvoie la fonction de nettoyage (arrêt du rafraîchissement).
  * @param {HTMLElement} root Zone d'affichage (#app).
  * @param {{ naviguer: (hash: string) => void }} ctx Changement d'écran (hash).
  */
@@ -167,7 +167,7 @@ export async function afficher(root, { naviguer }) {
   const invite = estInvite();
 
   root.innerHTML = `<div class="ndc-acc">
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <span aria-current="page">Codenames</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <span aria-current="page">Nom de code</span></nav>
     ${htmlHero()}
     <div class="ndc-acc-grille">
       <div class="ndc-acc-colonne">

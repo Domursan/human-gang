@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : mes statistiques (#stats) =====
+// ===== Humane Gang — Nom de code : mes statistiques (#stats) =====
 /*
  * Rôle : statistiques du membre connecté, sur les parties terminées : parties, victoires, taux, mots trouvés,
  * parties et victoires comme espion, meilleur indice (« Plage 3 → 4 mots ») et badges (obtenus avec la date,
@@ -85,14 +85,14 @@ function htmlBadges(badges) {
 /* ---------- Écran ---------- */
 
 /**
- * Affiche les statistiques Codenames du membre dans root. Renvoie la fonction de nettoyage.
+ * Affiche les statistiques Nom de code du membre dans root. Renvoie la fonction de nettoyage.
  * @param {HTMLElement} root
  */
 export async function afficher(root) {
   let actif = true;
 
   root.innerHTML = `<div class="ndc-st">
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span aria-current="page">Statistiques</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Nom de code</a> › <span aria-current="page">Statistiques</span></nav>
     <h1 class="ndc-titre">Mes statistiques</h1>
     <div id="ndc-st-zone" aria-live="polite"><p class="ndc-st-aide">Chargement…</p></div>
   </div>`;

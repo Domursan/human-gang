@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : créer une partie (#creer) =====
+// ===== Humane Gang — Nom de code : créer une partie (#creer) =====
 /*
  * Rôle : formulaire de création (nom, places de 4 à 20, temps de l'espion, temps de l'équipe, révélation des mots,
  * paquet de mots, partie publique, invités sans compte, annonce Discord) avec le résumé « Ta partie » qui se met à jour
@@ -92,7 +92,7 @@ function majResume(root, p) {
  */
 export async function afficher(root, { naviguer }) {
   root.innerHTML = `
-    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Codenames</a> › <span aria-current="page">Créer</span></nav>
+    <nav class="ndc-fil" aria-label="Fil d'Ariane"><a href="/pages/jeux/jeux.html">Jeux</a> › <a href="/pages/jeux/nom-de-code.html">Nom de code</a> › <span aria-current="page">Créer</span></nav>
     <h1 class="ndc-titre">Créer une partie</h1>
     <p class="ndc-cre-sous">Règle ta partie, puis invite tes joueurs avec le code.</p>
 
@@ -104,7 +104,7 @@ export async function afficher(root, { naviguer }) {
             <div class="ndc-cre-reglages">
               <div class="ndc-cre-champ ndc-cre-large">
                 <label for="ndc-cre-nom">Nom de la partie</label>
-                <input id="ndc-cre-nom" class="ndc-cre-input" type="text" name="nom" value="Codenames du dimanche" maxlength="60" autocomplete="off" required>
+                <input id="ndc-cre-nom" class="ndc-cre-input" type="text" name="nom" value="Nom de code du dimanche" maxlength="60" autocomplete="off" required>
               </div>
 
               <div class="ndc-cre-champ ndc-cre-large">

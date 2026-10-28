@@ -11,7 +11,7 @@ import { sb, toast, errMsg, esc } from '../../commun/core.js';
 import { cardHtml } from './cartes-ui.js';
 
 /** Jeux proposés (identifiant, libellé) : liste blanche, identique à celle de la base. */
-export const GAMES = [['lol', 'LoL'], ['aoe2', 'AoE2'], ['ck3', 'CK3'], ['minecraft', 'Minecraft'], ['among_us', 'Among Us'], ['codenames', 'Codenames'], ['autre', 'Autre']];
+export const GAMES = [['lol', 'LoL'], ['aoe2', 'AoE2'], ['ck3', 'CK3'], ['minecraft', 'Minecraft'], ['among_us', 'Among Us'], ['codenames', 'Nom de code'], ['autre', 'Autre']];
 /** Emblèmes (identifiant, libellé, tracé 24 × 24) : liste blanche, identique à celle de la base et aux images des cartes. */
 export const EMBLEMS = [
   ['epee', 'Épée', '<path d="M20 4 9.5 14.5M20 4h-4.5M20 4v4.5M7 12.5l4.5 4.5M9.2 14.8 5 19M3.5 20.5 5 19"/>'],

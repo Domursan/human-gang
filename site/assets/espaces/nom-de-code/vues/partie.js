@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : pilotage d'une partie (#partie/CODE) =====
+// ===== Humane Gang — Nom de code : pilotage d'une partie (#partie/CODE) =====
 /*
  * Rôle : suit la partie en temps réel (nom-de-code/api.js) et affiche la bonne vue selon son statut :
  *   attente → vues/salle.js · en_cours → vues/table.js · terminee / annulee → vues/fin.js.
@@ -37,7 +37,7 @@ function erreurCarte(root, code, message) {
   root.innerHTML = `<section class="card ndc-erreur">
     <h1 class="display">Partie introuvable</h1>
     <p>${esc(message || 'Cette partie n\'existe pas ou n\'est plus disponible.')}</p>
-    <p><a class="btn btn-primary" href="${lien}">${invite ? 'Rejoindre à nouveau' : 'Retour à Codenames'}</a></p>
+    <p><a class="btn btn-primary" href="${lien}">${invite ? 'Rejoindre à nouveau' : 'Retour à Nom de code'}</a></p>
   </section>`;
 }
 

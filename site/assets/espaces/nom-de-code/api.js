@@ -1,6 +1,6 @@
-// ===== Humane Gang — Codenames : accès aux données (fonctions serveur hg_ndc_*, temps réel) =====
+// ===== Humane Gang — Nom de code : accès aux données (fonctions serveur hg_ndc_*, temps réel) =====
 /*
- * Rôle : seul point de contact avec Supabase pour Codenames. Les écrans n'appellent jamais sb directement.
+ * Rôle : seul point de contact avec Supabase pour Nom de code. Les écrans n'appellent jamais sb directement.
  * Toute la logique de jeu est côté serveur (migration 123) : ici on envoie des intentions et on relit l'état.
  * Les couleurs secrètes des cartes ne sont renvoyées qu'aux espions (ou une fois la carte révélée).
  * Mode invité : un visiteur sans compte joue avec un jeton secret gardé dans son navigateur ;

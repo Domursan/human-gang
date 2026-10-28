@@ -150,7 +150,7 @@ function openPropose() {
       <div class="field" id="qp-label-f" hidden><label for="qp-label">Auteur collectif</label>
         <input id="qp-label" name="label" maxlength="40" placeholder="Tout le gang"></div>
       <div class="field"><label for="qp-context">Contexte (facultatif)</label>
-        <input id="qp-context" name="context" maxlength="80" placeholder="vocal Codenames, RDV de Lyon 2026…"></div>
+        <input id="qp-context" name="context" maxlength="80" placeholder="vocal Nom de code, RDV de Lyon 2026…"></div>
       <div class="field"><label for="qp-date">Date (facultatif)</label><input id="qp-date" name="said_on" type="date"></div>
       <p class="small muted">Rien de blessant, de gênant ou d’intime : le Staff refuse en cas de doute, et la personne citée peut retirer la citation à tout moment.</p>`,
     onSubmit: async (f) => {

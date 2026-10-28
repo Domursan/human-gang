@@ -46,7 +46,7 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   const titresQ = await sec('quotidien').locator('.jx-t').allInnerTexts();
   const titresF = await sec('flash').locator('.jx-t').allInnerTexts();
   // (Code du jour dépend de la page duels, fermée à ce membre dans le faux Supabase : pas attendu ici)
-  check(['Sutom HG', 'Carte mystère', 'Sudoku du jour'].every((t) => titresQ.includes(t)), 'quotidiens : Sutom HG, Carte mystère, Sudoku du jour');
+  check(['Sutom du gang', 'Carte mystère', 'Sudoku du jour'].every((t) => titresQ.includes(t)), 'quotidiens : Sutom du gang, Carte mystère, Sudoku du jour');
   check(['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile'].every((t) => titresF.includes(t)), 'flash : Paillettes, Raclette, Démineur, Domu-mobile');
   check(!titresQ.some((t) => ['Paillettes', 'Raclette', 'Démineur', 'Domu-mobile', '2048 Paillettes'].includes(t)), 'quotidiens : aucun jeu à volonté');
   await p.click('.jx-filtre[data-f="quotidien"]'); await sleep(150);
@@ -76,7 +76,7 @@ const erreurs = (p) => p.errs.filter((e) => !/integrity|leaflet@/i.test(e));
   check((await p.locator('[data-badge="geo"]').innerText()).includes('À jouer'), 'tableau de bord : GeoGuessr à jouer');
   check((await p.locator('[data-badge="citations"]').innerText()).includes('À jouer'), 'tableau de bord : citations à jouer');
   // Quatre jeux ont un état pour cet admin (GeoGuessr, citations, Sudoku, 2048) : aucun fait
-  check((await p.locator('#jeux-prog-txt').innerText()).includes('0 jeu sur 4'), 'programme : 0 jeu sur 4 faits');
+  check((await p.locator('#jeux-prog-txt').innerText()).includes('0 jeu sur 16'), 'programme : 0 jeu sur 16 (les 16 jeux du bonus, comme le classement)');
   check(!(await p.locator('#jeux-bal').isHidden()) && (await p.locator('#jeux-bal-v').innerText()).includes('+0'), 'en-tête : Paillettes du jour affichées');
   const minH = await p.evaluate(() => Math.min(...[...document.querySelectorAll('[role="tab"], .jeux-row')].filter((b) => b.getClientRects().length > 0).map((b) => b.getBoundingClientRect().height)));
   check(minH >= 44, `cibles visibles ≥ 44 px (min ${Math.round(minH)})`);

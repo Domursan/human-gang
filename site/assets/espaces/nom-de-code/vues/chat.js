@@ -1,4 +1,4 @@
-// ===== Humane Gang — Codenames : chat à onglets (vues/chat.js) =====
+// ===== Humane Gang — Nom de code : chat à onglets (vues/chat.js) =====
 /*
  * Rôle : chat d'une partie, partagé par la salle d'attente (vues/salle.js) et la table (vues/table.js).
  * Deux onglets : « Général » (tous) et « Équipe Jaune » / « Équipe Rose » (mon équipe seulement, présent si etat.moi.equipe).
