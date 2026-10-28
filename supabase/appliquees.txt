@@ -26,3 +26,4 @@
 2026-10-28T12:40:54.772Z ok supabase/migrations/165_plateaux_droits.sql
 2026-10-28T12:41:32.134Z ok supabase/migrations/166_plateaux_droits_internes.sql
 2026-10-28T13:49:49.327Z ok supabase/migrations/167_cartes_images_rapatriees.sql
+2026-10-28T19:03:19.756Z ok supabase/migrations/168_series_pays_capitales_streaming.sql
