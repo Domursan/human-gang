@@ -31,3 +31,4 @@ supabase/migrations/164_themes_saint_nicolas_pate.sql
 supabase/migrations/165_plateaux_droits.sql
 supabase/migrations/166_plateaux_droits_internes.sql
 supabase/migrations/167_cartes_images_rapatriees.sql
+supabase/migrations/168_series_pays_capitales_streaming.sql

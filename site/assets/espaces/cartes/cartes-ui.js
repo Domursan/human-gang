@@ -39,8 +39,12 @@ export const FAMILIES = [
   { id: 'evenement', label: 'Événement' },
   { id: 'jeu', label: 'Jeu vidéo' },
   { id: 'musique', label: 'Musique' },
+  { id: 'pays', label: 'Pays' },
+  { id: 'plateforme', label: 'Plateforme' },
   { id: 'unique', label: 'Unique' },
 ];
+// Familles dont l'image est montrée en entier sur un fond flouté (pochette, drapeau, logo) au lieu d'être recadrée.
+const IMAGE_ENTIERE = new Set(['musique', 'pays', 'plateforme']);
 /** Libellé d'une famille (« Jeu vidéo »). Renvoie l'identifiant brut si inconnue. */
 export const familyLabel = (id) => FAMILIES.find((f) => f.id === id)?.label || id;
 
@@ -155,8 +159,8 @@ export function cardHtml(card, opts = {}) {
       + `<span class="hgc-idinfo"><span class="hgc-idk">Pseudo</span><span class="hgc-idv">${esc(name)}</span>`
       + (ms ? `<span class="hgc-idk">Membre depuis</span><span class="hgc-idv">${esc(ms)}</span>` : '') + '</span></span>';
   } else {
-    // Musique : la pochette (carrée) est montrée en entier, sur un fond flouté de la même image.
-    win = card.image_url && card.family === 'musique'
+    // Musique, pays, plateforme : la pochette, le drapeau ou le logo est montré en entier, sur un fond flouté de la même image.
+    win = card.image_url && IMAGE_ENTIERE.has(card.family)
       ? `<span class="hgc-win hgc-win-cover"><img class="hgc-win-blur" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer"></span>`
       : card.image_url
       ? `<span class="hgc-win"><img class="hgc-win-img" src="${esc(card.image_url)}" alt="" aria-hidden="true" loading="lazy" decoding="async"></span>`
