@@ -42,8 +42,8 @@ const parcours = fs.readdirSync(path.join(dir, 'parcours'), { withFileTypes: tru
   .filter((d) => d.isDirectory())
   .flatMap((d) => fs.readdirSync(path.join(dir, 'parcours', d.name)).filter((f) => /^parcours-.*\.cjs$/.test(f)).map((f) => `parcours/${d.name}/${f}`))
   .sort();
-const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
-const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', ...parcours];
+const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'controles/check-polices.cjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
+const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', 'controles/contraste-plateaux.cjs', ...parcours];
 /** Suite complète, ou le morceau demandé (un fichier sur N, liste triée : la découpe ne dépend que des noms). */
 const suite = shard
   ? NAVIGATEUR.filter((_, i) => i % shard.n === shard.k - 1)
