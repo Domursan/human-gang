@@ -114,7 +114,7 @@ const screen = (p) => p.getAttribute('#shell', 'data-screen');
   await m.evaluate(() => { location.hash = '#camp/sorties'; });
   await m.waitForSelector('#shell-col .ui-row', { timeout: 5000 }).catch(() => {});
   check((await screen(m)) === 'list', 'mobile : la liste occupe l\'écran');
-  check(!(await m.isVisible('#app')), 'mobile : la zone principale est masquée tant qu\'aucune sortie n\'est choisie');
+  check(!(await m.isVisible('#shell-groups')), 'mobile : le contenu de page est masqué tant qu\'aucune sortie n\'est choisie');
   check((await m.locator('#shell-col .ui-row').count()) === 2, 'mobile : deux sorties dans la liste');
   await row(m, EV_A).click();
   await m.waitForSelector('#ass-d-head h2', { state: 'visible', timeout: 5000 }).catch(() => {});

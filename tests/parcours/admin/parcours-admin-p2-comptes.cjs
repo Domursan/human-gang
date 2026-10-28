@@ -109,7 +109,7 @@ const waitRows = (p, n) => p.waitForFunction((k) => [...document.querySelectorAl
     await p.click('.shell-tab[data-lieu="place"]');
     await p.evaluate((h) => { location.hash = h; }, '#place/comptes');
     check(await waitRows(p, 6), '(c) mobile : liste des comptes plein écran');
-    check(await waitVisible(p, '#app', false) && await p.isVisible('#shell-col'), '(c) mobile : zone masquée tant qu’aucun membre n’est choisi');
+    check(await waitVisible(p, '#shell-groups', false) && await p.isVisible('#shell-col'), '(c) mobile : contenu de page masqué tant qu’aucun membre n’est choisi');
     check(await hscroll(p) <= 0, '(c) mobile : pas de défilement horizontal (liste)');
     await p.click(`#shell-col-list .ui-row[data-id="${U(2)}"]`);
     check(await waitVisible(p, '#app') && await waitVisible(p, '#shell-col', false), '(c) mobile : fiche d’Alice, liste masquée');
