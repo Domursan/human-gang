@@ -1,0 +1,3858 @@
+{
+ "pays": [
+  {
+   "nom": "Afrique du Sud",
+   "desc": "Pays le plus austral d'Afrique, réputé pour sa diversité et sa faune.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/af/Flag_of_South_Africa.svg",
+   "rar": "Épique",
+   "n": 1
+  },
+  {
+   "nom": "Afghanistan",
+   "desc": "Pays enclavé d'Asie centrale aux paysages très montagneux.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Flag_of_Afghanistan_%282013%E2%80%932021%29.svg",
+   "rar": "Rare",
+   "n": 2
+  },
+  {
+   "nom": "Albanie",
+   "desc": "Pays montagneux des Balkans bordé par la mer Adriatique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/36/Flag_of_Albania.svg",
+   "rar": "Peu commun",
+   "n": 3
+  },
+  {
+   "nom": "Algérie",
+   "desc": "Pays d'Afrique du Nord bordé par la Méditerranée et dominé par le Sahara.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/77/Flag_of_Algeria.svg",
+   "rar": "Commun",
+   "n": 4
+  },
+  {
+   "nom": "Allemagne",
+   "desc": "Pays d'Europe centrale et le plus peuplé de l'Union européenne.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Flag_of_Germany.svg",
+   "rar": "Légendaire",
+   "n": 5
+  },
+  {
+   "nom": "Andorre",
+   "desc": "Principauté pyrénéenne située entre la France et l'Espagne.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/19/Flag_of_Andorra.svg",
+   "rar": "Commun",
+   "n": 6
+  },
+  {
+   "nom": "Angola",
+   "desc": "Pays d'Afrique australe bordé par l'Atlantique, riche en pétrole.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Angola.svg",
+   "rar": "Peu commun",
+   "n": 7
+  },
+  {
+   "nom": "Antigua-et-Barbuda",
+   "desc": "État insulaire des Antilles situé entre la mer des Caraïbes et l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Antigua_and_Barbuda.svg",
+   "rar": "Commun",
+   "n": 8
+  },
+  {
+   "nom": "Arabie Saoudite",
+   "desc": "Royaume du Moyen-Orient, premier exportateur mondial de pétrole.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Flag_of_Saudi_Arabia.svg",
+   "rar": "Rare",
+   "n": 9
+  },
+  {
+   "nom": "Argentine",
+   "desc": "Pays d'Amérique du Sud célèbre pour la Pampa, le tango et la Patagonie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
+   "rar": "Commun",
+   "n": 10
+  },
+  {
+   "nom": "Arménie",
+   "desc": "Pays enclavé du Caucase aux paysages très montagneux.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Flag_of_Armenia.svg",
+   "rar": "Peu commun",
+   "n": 11
+  },
+  {
+   "nom": "Australie",
+   "desc": "Pays-continent d'Océanie réputé pour sa faune unique et ses vastes déserts.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Flag_of_Australia.svg",
+   "rar": "Commun",
+   "n": 12
+  },
+  {
+   "nom": "Autriche",
+   "desc": "Pays d'Europe centrale réputé pour ses Alpes, sa musique et son histoire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_Austria.svg",
+   "rar": "Légendaire",
+   "n": 13
+  },
+  {
+   "nom": "Azerbaïdjan",
+   "desc": "Pays du Caucase situé au bord de la mer Caspienne.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Azerbaijan.svg",
+   "rar": "Rare",
+   "n": 14
+  },
+  {
+   "nom": "Bahamas",
+   "desc": "Archipel des Caraïbes célèbre pour ses plages et ses eaux turquoises.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/42/Flag_of_the_Bahamas.svg",
+   "rar": "Commun",
+   "n": 15
+  },
+  {
+   "nom": "Bahreïn",
+   "desc": "État insulaire du golfe Persique situé au Moyen-Orient.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Bahrain.svg",
+   "rar": "Peu commun",
+   "n": 16
+  },
+  {
+   "nom": "Bangladesh",
+   "desc": "Pays d'Asie du Sud situé au bord du golfe du Bengale.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Flag_of_Bangladesh.svg",
+   "rar": "Rare",
+   "n": 17
+  },
+  {
+   "nom": "Barbade",
+   "desc": "État insulaire des Caraïbes situé dans les Petites Antilles.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Flag_of_Barbados.svg",
+   "rar": "Commun",
+   "n": 18
+  },
+  {
+   "nom": "Belgique",
+   "desc": "Pays d'Europe de l'Ouest célèbre pour ses chocolats et sa bière.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Belgium.svg",
+   "rar": "Mythique",
+   "n": 19
+  },
+  {
+   "nom": "Belize",
+   "desc": "Pays d'Amérique centrale bordé par la mer des Caraïbes et la jungle.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Flag_of_Belize.svg",
+   "rar": "Commun",
+   "n": 20
+  },
+  {
+   "nom": "Bénin",
+   "desc": "Pays d'Afrique de l'Ouest bordé par le golfe de Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flag_of_Benin.svg",
+   "rar": "Peu commun",
+   "n": 21
+  },
+  {
+   "nom": "Bhoutan",
+   "desc": "Royaume de l'Himalaya célèbre pour son indice de Bonheur national brut.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/91/Flag_of_Bhutan.svg",
+   "rar": "Rare",
+   "n": 22
+  },
+  {
+   "nom": "Biélorussie",
+   "desc": "Pays d'Europe de l'Est sans accès à la mer, ayant pour capitale Minsk.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/85/Flag_of_Belarus.svg",
+   "rar": "Commun",
+   "n": 23
+  },
+  {
+   "nom": "Birmanie",
+   "desc": "Pays d'Asie du Sud-Est réputé pour ses nombreuses pagodes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Flag_of_Myanmar.svg",
+   "rar": "Légendaire",
+   "n": 24
+  },
+  {
+   "nom": "Bolivie",
+   "desc": "Pays d'Amérique du Sud enclavé, réputé pour la cordillère des Andes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/48/Flag_of_Bolivia.svg",
+   "rar": "Commun",
+   "n": 25
+  },
+  {
+   "nom": "Bosnie-Herzégovine",
+   "desc": "Pays d'Europe du Sud-Est situé dans la péninsule des Balkans.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Flag_of_Bosnia_and_Herzegovina.svg",
+   "rar": "Peu commun",
+   "n": 26
+  },
+  {
+   "nom": "Botswana",
+   "desc": "Pays d'Afrique australe abritant le delta de l'Okavango et le Kalahari.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_Botswana.svg",
+   "rar": "Commun",
+   "n": 27
+  },
+  {
+   "nom": "Brésil",
+   "desc": "Plus grand pays d'Amérique du Sud, célèbre pour l'Amazonie et Rio.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg",
+   "rar": "Rare",
+   "n": 28
+  },
+  {
+   "nom": "Brunei",
+   "desc": "Sultanat d'Asie du Sud-Est riche en pétrole, situé sur l'île de Bornéo.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Flag_of_Brunei.svg",
+   "rar": "Rare",
+   "n": 29
+  },
+  {
+   "nom": "Bulgarie",
+   "desc": "Pays des Balkans au bord de la mer Noire, riche en histoire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Bulgaria.svg",
+   "rar": "Commun",
+   "n": 30
+  },
+  {
+   "nom": "Burkina Faso",
+   "desc": "Pays d'Afrique de l'Ouest enclavé, situé dans le Sahel.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/31/Flag_of_Burkina_Faso.svg",
+   "rar": "Commun",
+   "n": 31
+  },
+  {
+   "nom": "Burundi",
+   "desc": "Pays enclavé d'Afrique de l'Est dans la région des Grands Lacs.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Burundi.svg",
+   "rar": "Épique",
+   "n": 32
+  },
+  {
+   "nom": "Cambodge",
+   "desc": "Pays d'Asie du Sud-Est célèbre pour ses temples d'Angkor.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/83/Flag_of_Cambodia.svg",
+   "rar": "Commun",
+   "n": 33
+  },
+  {
+   "nom": "Cameroun",
+   "desc": "Pays d'Afrique centrale surnommé l'Afrique en miniature.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Flag_of_Cameroon.svg",
+   "rar": "Commun",
+   "n": 34
+  },
+  {
+   "nom": "Canada",
+   "desc": "Deuxième plus grand pays du monde, situé en Amérique du Nord.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg",
+   "rar": "Peu commun",
+   "n": 35
+  },
+  {
+   "nom": "Cap-Vert",
+   "desc": "Archipel d'Afrique de l'Ouest situé dans l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/38/Flag_of_Cape_Verde.svg",
+   "rar": "Peu commun",
+   "n": 36
+  },
+  {
+   "nom": "Chili",
+   "desc": "Pays étroit d'Amérique du Sud situé entre l'océan Pacifique et les Andes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/78/Flag_of_Chile.svg",
+   "rar": "Peu commun",
+   "n": 37
+  },
+  {
+   "nom": "Chine",
+   "desc": "Grand pays d'Asie de l'Est à la culture et l'histoire millénaires.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg",
+   "rar": "Rare",
+   "n": 38
+  },
+  {
+   "nom": "Chypre",
+   "desc": "État insulaire situé dans l'est de la mer Méditerranée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Flag_of_Cyprus.svg",
+   "rar": "Commun",
+   "n": 39
+  },
+  {
+   "nom": "Colombie",
+   "desc": "Pays d'Amérique du Sud connu pour sa biodiversité et sa culture.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Colombia.svg",
+   "rar": "Peu commun",
+   "n": 40
+  },
+  {
+   "nom": "Comores",
+   "desc": "Archipel de l'océan Indien situé entre l'Afrique et Madagascar.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/94/Flag_of_the_Comoros.svg",
+   "rar": "Peu commun",
+   "n": 41
+  },
+  {
+   "nom": "Corée du Nord",
+   "desc": "Pays d'Asie de l'Est situé dans le nord de la péninsule coréenne.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/51/Flag_of_North_Korea.svg",
+   "rar": "Commun",
+   "n": 42
+  },
+  {
+   "nom": "Corée du Sud",
+   "desc": "Pays d'Asie de l'Est célèbre pour sa technologie et sa culture pop.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg",
+   "rar": "Rare",
+   "n": 43
+  },
+  {
+   "nom": "Costa Rica",
+   "desc": "Pays d'Amérique centrale réputé pour sa riche biodiversité.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f2/Flag_of_Costa_Rica.svg",
+   "rar": "Commun",
+   "n": 44
+  },
+  {
+   "nom": "Côte d’Ivoire",
+   "desc": "Pays d'Afrique de l'Ouest, premier producteur mondial de cacao.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_C%C3%B4te_d%27Ivoire.svg",
+   "rar": "Peu commun",
+   "n": 45
+  },
+  {
+   "nom": "Croatie",
+   "desc": "Pays d'Europe du Sud bordé par la mer Adriatique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Croatia.svg",
+   "rar": "Commun",
+   "n": 46
+  },
+  {
+   "nom": "Cuba",
+   "desc": "État insulaire des Caraïbes, célèbre pour sa culture et ses plages.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Flag_of_Cuba.svg",
+   "rar": "Rare",
+   "n": 47
+  },
+  {
+   "nom": "Danemark",
+   "desc": "Pays scandinave d'Europe du Nord composé d'une péninsule et d'îles.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Flag_of_Denmark.svg",
+   "rar": "Peu commun",
+   "n": 48
+  },
+  {
+   "nom": "Djibouti",
+   "desc": "Pays de la Corne de l'Afrique, situé à l'entrée de la mer Rouge.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/34/Flag_of_Djibouti.svg",
+   "rar": "Commun",
+   "n": 49
+  },
+  {
+   "nom": "Dominique",
+   "desc": "État insulaire des Caraïbes aux paysages montagneux et forêts tropicales.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Flag_of_Dominica.svg",
+   "rar": "Légendaire",
+   "n": 50
+  },
+  {
+   "nom": "Égypte",
+   "desc": "Pays d'Afrique du Nord célèbre pour ses pyramides et le Nil.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Egypt.svg",
+   "rar": "Commun",
+   "n": 51
+  },
+  {
+   "nom": "Émirats arabes unis",
+   "desc": "Fédération de sept émirats située dans la péninsule Arabique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_United_Arab_Emirates.svg",
+   "rar": "Peu commun",
+   "n": 52
+  },
+  {
+   "nom": "Équateur",
+   "desc": "Pays d'Amérique du Sud, traversé par l'équateur, bordé par le Pacifique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Flag_of_Ecuador.svg",
+   "rar": "Peu commun",
+   "n": 53
+  },
+  {
+   "nom": "Érythrée",
+   "desc": "Pays de la Corne de l'Afrique bordé par la mer Rouge.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/29/Flag_of_Eritrea.svg",
+   "rar": "Peu commun",
+   "n": 54
+  },
+  {
+   "nom": "Espagne",
+   "desc": "Pays d'Europe du Sud situé sur la péninsule Ibérique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg",
+   "rar": "Peu commun",
+   "n": 55
+  },
+  {
+   "nom": "Eswatini",
+   "desc": "Petit royaume enclavé d'Afrique australe aux paysages montagneux.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Flag_of_Eswatini.svg",
+   "rar": "Commun",
+   "n": 56
+  },
+  {
+   "nom": "Estonie",
+   "desc": "Pays balte d'Europe du Nord bordé par la mer Baltique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Flag_of_Estonia.svg",
+   "rar": "Commun",
+   "n": 57
+  },
+  {
+   "nom": "États-Unis",
+   "desc": "République fédérale d'Amérique du Nord constituée de 50 États.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg",
+   "rar": "Commun",
+   "n": 58
+  },
+  {
+   "nom": "Éthiopie",
+   "desc": "Pays enclavé de la Corne de l'Afrique à l'histoire millénaire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/71/Flag_of_Ethiopia.svg",
+   "rar": "Peu commun",
+   "n": 59
+  },
+  {
+   "nom": "Fidji",
+   "desc": "Archipel de plus de 300 îles situé dans l'océan Pacifique sud.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/ba/ba/Flag_of_Fiji.svg",
+   "rar": "Commun",
+   "n": 60
+  },
+  {
+   "nom": "Finlande",
+   "desc": "Pays nordique d'Europe du Nord aux milliers de lacs et vastes forêts.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Finland.svg",
+   "rar": "Commun",
+   "n": 61
+  },
+  {
+   "nom": "France",
+   "desc": "Pays d'Europe occidentale célèbre pour sa culture et sa gastronomie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg",
+   "rar": "Mythique",
+   "n": 62
+  },
+  {
+   "nom": "Gabon",
+   "desc": "Pays côtier d'Afrique centrale, recouvert d'une vaste forêt tropicale.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/04/Flag_of_Gabon.svg",
+   "rar": "Commun",
+   "n": 63
+  },
+  {
+   "nom": "Gambie",
+   "desc": "Petit pays d'Afrique de l'Ouest traversé par le fleuve Gambie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_The_Gambia.svg",
+   "rar": "Peu commun",
+   "n": 64
+  },
+  {
+   "nom": "Géorgie",
+   "desc": "Pays du Caucase situé entre l'Europe de l'Est et l'Asie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Flag_of_Georgia.svg",
+   "rar": "Commun",
+   "n": 65
+  },
+  {
+   "nom": "Ghana",
+   "desc": "Pays d'Afrique de l'Ouest bordé par le golfe de Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/19/Flag_of_Ghana.svg",
+   "rar": "Commun",
+   "n": 66
+  },
+  {
+   "nom": "Grèce",
+   "desc": "Pays d'Europe du Sud au riche patrimoine antique et aux nombreuses îles.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Greece.svg",
+   "rar": "Rare",
+   "n": 67
+  },
+  {
+   "nom": "Grenade",
+   "desc": "État insulaire des Antilles, surnommé l'île aux épices.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Grenada.svg",
+   "rar": "Commun",
+   "n": 68
+  },
+  {
+   "nom": "Guatemala",
+   "desc": "Pays d'Amérique centrale aux nombreux volcans et au riche héritage maya.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Flag_of_Guatemala.svg",
+   "rar": "Peu commun",
+   "n": 69
+  },
+  {
+   "nom": "Guinée",
+   "desc": "Pays d'Afrique de l'Ouest bordé par l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Flag_of_Guinea.svg",
+   "rar": "Peu commun",
+   "n": 70
+  },
+  {
+   "nom": "Guinée équatoriale",
+   "desc": "Pays d'Afrique centrale situé sur le golfe de Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/31/Flag_of_Equatorial_Guinea.svg",
+   "rar": "Commun",
+   "n": 71
+  },
+  {
+   "nom": "Guinée-Bissau",
+   "desc": "Pays d'Afrique de l'Ouest bordé par l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/01/Flag_of_Guinea-Bissau.svg",
+   "rar": "Commun",
+   "n": 72
+  },
+  {
+   "nom": "Guyana",
+   "desc": "Pays d'Amérique du Sud bordé par l'Atlantique et couvert de forêts denses.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_Guyana.svg",
+   "rar": "Rare",
+   "n": 73
+  },
+  {
+   "nom": "Haïti",
+   "desc": "Pays des Caraïbes situé sur la partie occidentale de l'île d'Hispaniola.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/56/Flag_of_Haiti.svg",
+   "rar": "Commun",
+   "n": 74
+  },
+  {
+   "nom": "Honduras",
+   "desc": "Pays d'Amérique centrale réputé pour ses plages et ses vestiges mayas.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/82/Flag_of_Honduras.svg",
+   "rar": "Commun",
+   "n": 75
+  },
+  {
+   "nom": "Hongrie",
+   "desc": "Pays d'Europe centrale sans accès à la mer, traversé par le Danube.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Flag_of_Hungary.svg",
+   "rar": "Épique",
+   "n": 76
+  },
+  {
+   "nom": "Îles Cook",
+   "desc": "Archipel du Pacifique Sud en libre association avec la Nouvelle-Zélande.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/35/Flag_of_the_Cook_Islands.svg",
+   "rar": "Commun",
+   "n": 77
+  },
+  {
+   "nom": "Îles Marshall",
+   "desc": "Pays insulaire d'Océanie constitué de nombreux atolls coralliens.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Flag_of_the_Marshall_Islands.svg",
+   "rar": "Commun",
+   "n": 78
+  },
+  {
+   "nom": "Inde",
+   "desc": "Grand pays d'Asie du Sud connu pour sa riche culture.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/41/Flag_of_India.svg",
+   "rar": "Rare",
+   "n": 79
+  },
+  {
+   "nom": "Indonésie",
+   "desc": "Pays d'Asie du Sud-Est composé de milliers d'îles volcaniques.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_Indonesia.svg",
+   "rar": "Commun",
+   "n": 80
+  },
+  {
+   "nom": "Irak",
+   "desc": "Pays du Moyen-Orient situé en Mésopotamie, berceau de la civilisation.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Flag_of_Iraq.svg",
+   "rar": "Rare",
+   "n": 81
+  },
+  {
+   "nom": "Iran",
+   "desc": "Pays du Moyen-Orient, berceau de l'ancienne civilisation perse.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg",
+   "rar": "Commun",
+   "n": 82
+  },
+  {
+   "nom": "Irlande",
+   "desc": "Pays insulaire du nord-ouest de l'Europe, aux paysages verdoyants.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/45/Flag_of_Ireland.svg",
+   "rar": "Légendaire",
+   "n": 83
+  },
+  {
+   "nom": "Islande",
+   "desc": "État insulaire nordique réputé pour ses volcans, geysers et fjords.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Iceland.svg",
+   "rar": "Commun",
+   "n": 84
+  },
+  {
+   "nom": "Israël",
+   "desc": "État du Proche-Orient bordé par la mer Méditerranée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Flag_of_Israel.svg",
+   "rar": "Commun",
+   "n": 85
+  },
+  {
+   "nom": "Italie",
+   "desc": "Pays d'Europe du Sud célèbre pour sa culture, son histoire et sa gastronomie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/03/Flag_of_Italy.svg",
+   "rar": "Commun",
+   "n": 86
+  },
+  {
+   "nom": "Jamaïque",
+   "desc": "Île des Caraïbes connue pour ses plages et la musique reggae.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flag_of_Jamaica.svg",
+   "rar": "Commun",
+   "n": 87
+  },
+  {
+   "nom": "Japon",
+   "desc": "Pays insulaire d'Asie de l'Est mêlant tradition et modernité.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Flag_of_Japan.svg",
+   "rar": "Épique",
+   "n": 88
+  },
+  {
+   "nom": "Jordanie",
+   "desc": "Royaume du Moyen-Orient abritant la cité de Pétra et la mer Morte.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Flag_of_Jordan.svg",
+   "rar": "Commun",
+   "n": 89
+  },
+  {
+   "nom": "Kazakhstan",
+   "desc": "Grand pays d'Asie centrale, riche en ressources et aux vastes steppes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Flag_of_Kazakhstan.svg",
+   "rar": "Commun",
+   "n": 90
+  },
+  {
+   "nom": "Kenya",
+   "desc": "Pays d'Afrique de l'Est célèbre pour ses savanes et sa faune sauvage.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Kenya.svg",
+   "rar": "Commun",
+   "n": 91
+  },
+  {
+   "nom": "Kirghizistan",
+   "desc": "Pays enclavé d'Asie centrale aux paysages très montagneux.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Flag_of_Kyrgyzstan.svg",
+   "rar": "Commun",
+   "n": 92
+  },
+  {
+   "nom": "Kiribati",
+   "desc": "État insulaire d'Océanie situé dans l'océan Pacifique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Flag_of_Kiribati.svg",
+   "rar": "Commun",
+   "n": 93
+  },
+  {
+   "nom": "Koweït",
+   "desc": "Petit État du golfe Persique, riche en pétrole au Moyen-Orient.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Flag_of_Kuwait.svg",
+   "rar": "Rare",
+   "n": 94
+  },
+  {
+   "nom": "Laos",
+   "desc": "Pays d'Asie du Sud-Est sans accès à la mer, traversé par le Mékong.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/56/Flag_of_Laos.svg",
+   "rar": "Commun",
+   "n": 95
+  },
+  {
+   "nom": "Lesotho",
+   "desc": "Royaume montagnard d'Afrique australe, enclavé en Afrique du Sud.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Flag_of_Lesotho.svg",
+   "rar": "Commun",
+   "n": 96
+  },
+  {
+   "nom": "Lettonie",
+   "desc": "Pays baltes d'Europe du Nord bordé par la mer Baltique, dont la capitale est Riga.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/84/Flag_of_Latvia.svg",
+   "rar": "Commun",
+   "n": 97
+  },
+  {
+   "nom": "Liban",
+   "desc": "Pays du Proche-Orient sur la Méditerranée, riche de son histoire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/59/Flag_of_Lebanon.svg",
+   "rar": "Commun",
+   "n": 98
+  },
+  {
+   "nom": "Liberia",
+   "desc": "Pays d'Afrique de l'Ouest bordé par l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Flag_of_Liberia.svg",
+   "rar": "Rare",
+   "n": 99
+  },
+  {
+   "nom": "Libye",
+   "desc": "Pays d'Afrique du Nord bordé par la Méditerranée, en majeure partie désertique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Libya.svg",
+   "rar": "Commun",
+   "n": 100
+  },
+  {
+   "nom": "Liechtenstein",
+   "desc": "Petit pays alpin d'Europe centrale situé entre la Suisse et l'Autriche.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/47/Flag_of_Liechtenstein.svg",
+   "rar": "Commun",
+   "n": 101
+  },
+  {
+   "nom": "Lituanie",
+   "desc": "Pays balte d'Europe du Nord situé au bord de la mer Baltique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Flag_of_Lithuania.svg",
+   "rar": "Commun",
+   "n": 102
+  },
+  {
+   "nom": "Luxembourg",
+   "desc": "Petit grand-duché d'Europe de l'Ouest et important centre financier.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/da/Flag_of_Luxembourg.svg",
+   "rar": "Commun",
+   "n": 103
+  },
+  {
+   "nom": "Macédoine",
+   "desc": "Pays enclavé d'Europe du Sud-Est situé dans les Balkans",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Flag_of_North_Macedonia.svg",
+   "rar": "Commun",
+   "n": 104
+  },
+  {
+   "nom": "Madagascar",
+   "desc": "Grande île de l'océan Indien à la biodiversité exceptionnelle.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Madagascar.svg",
+   "rar": "Épique",
+   "n": 105
+  },
+  {
+   "nom": "Malaisie",
+   "desc": "Pays d'Asie du Sud-Est réputé pour ses forêts et ses plages.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/66/Flag_of_Malaysia.svg",
+   "rar": "Commun",
+   "n": 106
+  },
+  {
+   "nom": "Malawi",
+   "desc": "Pays enclavé d'Afrique australe, célèbre pour le lac Malawi.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Flag_of_Malawi.svg",
+   "rar": "Commun",
+   "n": 107
+  },
+  {
+   "nom": "Maldives",
+   "desc": "Archipel de l'océan Indien réputé pour ses atolls et ses plages.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Flag_of_Maldives.svg",
+   "rar": "Commun",
+   "n": 108
+  },
+  {
+   "nom": "Mali",
+   "desc": "Pays enclavé d'Afrique de l'Ouest traversé par le fleuve Niger.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/92/Flag_of_Mali.svg",
+   "rar": "Commun",
+   "n": 109
+  },
+  {
+   "nom": "Malte",
+   "desc": "État insulaire de la Méditerranée au riche patrimoine historique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/73/Flag_of_Malta.svg",
+   "rar": "Commun",
+   "n": 110
+  },
+  {
+   "nom": "Maroc",
+   "desc": "Pays d'Afrique du Nord bordé par l'Atlantique et la Méditerranée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg",
+   "rar": "Commun",
+   "n": 111
+  },
+  {
+   "nom": "Maurice",
+   "desc": "État insulaire de l'océan Indien réputé pour ses plages et lagons.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/52/Flag_of_Mauritius.svg",
+   "rar": "Commun",
+   "n": 112
+  },
+  {
+   "nom": "Mauritanie",
+   "desc": "Pays d'Afrique du Nord-Ouest situé entre l'Atlantique et le Sahara.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/43/Flag_of_Mauritania.svg",
+   "rar": "Légendaire",
+   "n": 113
+  },
+  {
+   "nom": "Mexique",
+   "desc": "Grand pays d'Amérique du Nord à l'histoire riche et aux paysages variés.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_Mexico.svg",
+   "rar": "Commun",
+   "n": 114
+  },
+  {
+   "nom": "Micronésie",
+   "desc": "État insulaire d'Océanie formé de plus de 600 îles dans le Pacifique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Flag_of_the_Federated_States_of_Micronesia.svg",
+   "rar": "Commun",
+   "n": 115
+  },
+  {
+   "nom": "Moldavie",
+   "desc": "Pays d'Europe orientale enclavé entre la Roumanie et l'Ukraine.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/27/Flag_of_Moldova.svg",
+   "rar": "Peu commun",
+   "n": 116
+  },
+  {
+   "nom": "Monaco",
+   "desc": "Principauté souveraine bordée par la mer Méditerranée et la France.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Flag_of_Monaco.svg",
+   "rar": "Commun",
+   "n": 117
+  },
+  {
+   "nom": "Mongolie",
+   "desc": "Pays d'Asie orientale connu pour ses vastes steppes et sa culture nomade.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg",
+   "rar": "Commun",
+   "n": 118
+  },
+  {
+   "nom": "Monténégro",
+   "desc": "Pays balkanique au relief montagneux bordé par la mer Adriatique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Montenegro.svg",
+   "rar": "Peu commun",
+   "n": 119
+  },
+  {
+   "nom": "Mozambique",
+   "desc": "Pays d'Afrique sud-orientale bordé par l'océan Indien.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Flag_of_Mozambique.svg",
+   "rar": "Commun",
+   "n": 120
+  },
+  {
+   "nom": "Namibie",
+   "desc": "Pays d'Afrique australe réputé pour ses déserts et sa faune sauvage.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Namibia.svg",
+   "rar": "Commun",
+   "n": 121
+  },
+  {
+   "nom": "Nauru",
+   "desc": "État insulaire d'Océanie, plus petite république du monde.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/30/Flag_of_Nauru.svg",
+   "rar": "Commun",
+   "n": 122
+  },
+  {
+   "nom": "Népal",
+   "desc": "Pays enclavé de l'Himalaya, abritant l'Everest et la vallée de Katmandou.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Flag_of_Nepal.svg",
+   "rar": "Commun",
+   "n": 123
+  },
+  {
+   "nom": "Nicaragua",
+   "desc": "Pays d'Amérique centrale situé entre l'océan Pacifique et la mer des Caraïbes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/19/Flag_of_Nicaragua.svg",
+   "rar": "Rare",
+   "n": 124
+  },
+  {
+   "nom": "Niger",
+   "desc": "Pays enclavé d'Afrique de l'Ouest, largement recouvert par le Sahara.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Flag_of_Niger.svg",
+   "rar": "Commun",
+   "n": 125
+  },
+  {
+   "nom": "Nigeria",
+   "desc": "Pays d'Afrique de l'Ouest, le plus peuplé du continent.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/79/Flag_of_Nigeria.svg",
+   "rar": "Commun",
+   "n": 126
+  },
+  {
+   "nom": "Niue",
+   "desc": "Île du Pacifique Sud en libre association avec la Nouvelle-Zélande.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/01/Flag_of_Niue.svg",
+   "rar": "Peu commun",
+   "n": 127
+  },
+  {
+   "nom": "Norvège",
+   "desc": "Pays scandinave célèbre pour ses spectaculaires fjords et ses montagnes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Flag_of_Norway.svg",
+   "rar": "Commun",
+   "n": 128
+  },
+  {
+   "nom": "Nouvelle-Zélande",
+   "desc": "Pays insulaire d'Océanie célèbre pour ses paysages grandioses.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Flag_of_New_Zealand.svg",
+   "rar": "Commun",
+   "n": 129
+  },
+  {
+   "nom": "Oman",
+   "desc": "Sultanat du Moyen-Orient situé au sud-est de la péninsule Arabique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Flag_of_Oman.svg",
+   "rar": "Commun",
+   "n": 130
+  },
+  {
+   "nom": "Ouganda",
+   "desc": "Pays d'Afrique de l'Est enclavé, réputé pour sa faune et le lac Victoria.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Flag_of_Uganda.svg",
+   "rar": "Commun",
+   "n": 131
+  },
+  {
+   "nom": "Ouzbékistan",
+   "desc": "Pays d'Asie centrale réputé pour ses cités sur la Route de la Soie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/84/Flag_of_Uzbekistan.svg",
+   "rar": "Épique",
+   "n": 132
+  },
+  {
+   "nom": "Pakistan",
+   "desc": "Pays d'Asie du Sud entre l'Himalaya et la mer d'Arabie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/53/Flag_of_Pakistan.svg",
+   "rar": "Commun",
+   "n": 133
+  },
+  {
+   "nom": "Palaos",
+   "desc": "Archipel d'Océanie situé en Micronésie, à l'est des Philippines.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/48/Flag_of_Palau.svg",
+   "rar": "Commun",
+   "n": 134
+  },
+  {
+   "nom": "Palestine",
+   "desc": "État du Proche-Orient constitué de la Cisjordanie et de la bande de Gaza.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg",
+   "rar": "Peu commun",
+   "n": 135
+  },
+  {
+   "nom": "Panama",
+   "desc": "Pays d'Amérique centrale célèbre pour son canal reliant deux océans.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Flag_of_Panama.svg",
+   "rar": "Commun",
+   "n": 136
+  },
+  {
+   "nom": "Papouasie-Nouvelle-Guinée",
+   "desc": "État insulaire d'Océanie à la biodiversité exceptionnelle.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e3/Flag_of_Papua_New_Guinea.svg",
+   "rar": "Commun",
+   "n": 137
+  },
+  {
+   "nom": "Paraguay",
+   "desc": "Pays enclavé d'Amérique du Sud, traversé par le fleuve Paraguay.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/27/Flag_of_Paraguay.svg",
+   "rar": "Peu commun",
+   "n": 138
+  },
+  {
+   "nom": "Pays-Bas",
+   "desc": "Pays d'Europe de l'Ouest célèbre pour ses canaux, tulipes et moulins à vent.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/20/Flag_of_the_Netherlands.svg",
+   "rar": "Commun",
+   "n": 139
+  },
+  {
+   "nom": "Pérou",
+   "desc": "Pays d'Amérique du Sud abritant le Machu Picchu et les Andes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Peru.svg",
+   "rar": "Légendaire",
+   "n": 140
+  },
+  {
+   "nom": "Philippines",
+   "desc": "Archipel d'Asie du Sud-Est comptant plus de 7 000 îles tropicales.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_the_Philippines.svg",
+   "rar": "Commun",
+   "n": 141
+  },
+  {
+   "nom": "Pologne",
+   "desc": "Pays d'Europe centrale au riche patrimoine historique, bordé par la Baltique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Flag_of_Poland.svg",
+   "rar": "Commun",
+   "n": 142
+  },
+  {
+   "nom": "Portugal",
+   "desc": "Pays du sud de l'Europe situé sur la péninsule Ibérique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Portugal.svg",
+   "rar": "Commun",
+   "n": 143
+  },
+  {
+   "nom": "Qatar",
+   "desc": "Petit émirat du golfe Persique, riche en pétrole et en gaz naturel.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/65/Flag_of_Qatar.svg",
+   "rar": "Peu commun",
+   "n": 144
+  },
+  {
+   "nom": "République centrafricaine",
+   "desc": "Pays d'Afrique centrale enclavé à la riche biodiversité.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Flag_of_the_Central_African_Republic.svg",
+   "rar": "Commun",
+   "n": 145
+  },
+  {
+   "nom": "République démocratique du Congo",
+   "desc": "Grand pays d'Afrique centrale aux vastes forêts tropicales.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Flag_of_the_Democratic_Republic_of_the_Congo.svg",
+   "rar": "Commun",
+   "n": 146
+  },
+  {
+   "nom": "République Dominicaine",
+   "desc": "Pays caribéen occupant la partie est de l'île d'Hispaniola.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_the_Dominican_Republic.svg",
+   "rar": "Commun",
+   "n": 147
+  },
+  {
+   "nom": "République du Congo",
+   "desc": "Pays d'Afrique centrale ayant pour capitale Brazzaville.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/92/Flag_of_the_Republic_of_the_Congo.svg",
+   "rar": "Commun",
+   "n": 148
+  },
+  {
+   "nom": "République tchèque",
+   "desc": "Pays d'Europe centrale enclavé, célèbre pour son histoire et Prague.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_Czech_Republic.svg",
+   "rar": "Peu commun",
+   "n": 149
+  },
+  {
+   "nom": "Roumanie",
+   "desc": "Pays d'Europe de l'Est, entre les Carpates et la mer Noire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/73/Flag_of_Romania.svg",
+   "rar": "Commun",
+   "n": 150
+  },
+  {
+   "nom": "Royaume-Uni",
+   "desc": "État insulaire d'Europe de l'Ouest formé de quatre nations constitutives.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_Kingdom.svg",
+   "rar": "Commun",
+   "n": 151
+  },
+  {
+   "nom": "Russie",
+   "desc": "Plus grand pays du monde, situé entre l'Europe et l'Asie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Russia.svg",
+   "rar": "Peu commun",
+   "n": 152
+  },
+  {
+   "nom": "Rwanda",
+   "desc": "Pays d'Afrique de l'Est, surnommé le pays des mille collines.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/17/Flag_of_Rwanda.svg",
+   "rar": "Commun",
+   "n": 153
+  },
+  {
+   "nom": "Saint-Kitts-et-Nevis",
+   "desc": "Petit État insulaire des Caraïbes constitué de deux îles volcaniques.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Saint_Kitts_and_Nevis.svg",
+   "rar": "Commun",
+   "n": 154
+  },
+  {
+   "nom": "Saint-Vincent-et-les-Grenadines",
+   "desc": "État insulaire des Caraïbes situé dans la chaîne des Petites Antilles.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Flag_of_Saint_Vincent_and_the_Grenadines.svg",
+   "rar": "Épique",
+   "n": 155
+  },
+  {
+   "nom": "Sainte-Lucie",
+   "desc": "État insulaire des Antilles célèbre pour ses deux pitons volcaniques.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_Saint_Lucia.svg",
+   "rar": "Commun",
+   "n": 156
+  },
+  {
+   "nom": "Saint-Marin",
+   "desc": "Micro-État enclavé en Italie, l'une des plus anciennes républiques au monde.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Flag_of_San_Marino.svg",
+   "rar": "Commun",
+   "n": 157
+  },
+  {
+   "nom": "Salomon",
+   "desc": "État insulaire d'Océanie situé en Mélanésie, à l'est de la Papouasie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/74/Flag_of_the_Solomon_Islands.svg",
+   "rar": "Peu commun",
+   "n": 158
+  },
+  {
+   "nom": "Salvador",
+   "desc": "Petit pays d'Amérique centrale célèbre pour ses nombreux volcans.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Flag_of_El_Salvador.svg",
+   "rar": "Commun",
+   "n": 159
+  },
+  {
+   "nom": "Samoa",
+   "desc": "État insulaire de Polynésie situé dans l'océan Pacifique Sud.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/31/Flag_of_Samoa.svg",
+   "rar": "Commun",
+   "n": 160
+  },
+  {
+   "nom": "São Tomé-et-Principe",
+   "desc": "Pays insulaire d'Afrique centrale situé dans le golfe de Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flag_of_S%C3%A3o_Tom%C3%A9_and_Pr%C3%ADncipe.svg",
+   "rar": "Commun",
+   "n": 161
+  },
+  {
+   "nom": "Sénégal",
+   "desc": "Pays d'Afrique de l'Ouest bordé par l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Flag_of_Senegal.svg",
+   "rar": "Peu commun",
+   "n": 162
+  },
+  {
+   "nom": "Serbie",
+   "desc": "Pays enclavé des Balkans, situé au sud-est de l'Europe.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Flag_of_Serbia.svg",
+   "rar": "Commun",
+   "n": 163
+  },
+  {
+   "nom": "Seychelles",
+   "desc": "Archipel de l'océan Indien connu pour ses plages.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_the_Seychelles.svg",
+   "rar": "Commun",
+   "n": 164
+  },
+  {
+   "nom": "Sierra Leone",
+   "desc": "Pays d'Afrique de l'Ouest bordé par l'océan Atlantique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/17/Flag_of_Sierra_Leone.svg",
+   "rar": "Commun",
+   "n": 165
+  },
+  {
+   "nom": "Singapour",
+   "desc": "Cité-État insulaire d'Asie du Sud-Est, pôle financier mondial.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/48/Flag_of_Singapore.svg",
+   "rar": "Peu commun",
+   "n": 166
+  },
+  {
+   "nom": "Slovaquie",
+   "desc": "Pays d'Europe centrale sans accès à la mer, membre de l'Union européenne.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Flag_of_Slovakia.svg",
+   "rar": "Commun",
+   "n": 167
+  },
+  {
+   "nom": "Slovénie",
+   "desc": "Pays d'Europe centrale réputé pour ses montagnes, ses lacs et ses forêts.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Flag_of_Slovenia.svg",
+   "rar": "Commun",
+   "n": 168
+  },
+  {
+   "nom": "Somalie",
+   "desc": "Pays de la Corne de l'Afrique situé au bord de l'océan Indien.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Flag_of_Somalia.svg",
+   "rar": "Commun",
+   "n": 169
+  },
+  {
+   "nom": "Soudan",
+   "desc": "Pays d'Afrique du Nord-Est bordé par la mer Rouge et traversé par le Nil.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/01/Flag_of_Sudan.svg",
+   "rar": "Commun",
+   "n": 170
+  },
+  {
+   "nom": "Soudan du Sud",
+   "desc": "Pays d'Afrique de l'Est devenu indépendant en 2011.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Flag_of_South_Sudan.svg",
+   "rar": "Commun",
+   "n": 171
+  },
+  {
+   "nom": "Sri Lanka",
+   "desc": "Île d'Asie du Sud située dans l'océan Indien, au sud de l'Inde.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/11/Flag_of_Sri_Lanka.svg",
+   "rar": "Commun",
+   "n": 172
+  },
+  {
+   "nom": "Suède",
+   "desc": "Pays scandinave d'Europe du Nord célèbre pour ses forêts et ses lacs.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Sweden.svg",
+   "rar": "Commun",
+   "n": 173
+  },
+  {
+   "nom": "Suisse",
+   "desc": "Pays d'Europe centrale réputé pour ses Alpes, ses lacs et sa neutralité.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Switzerland.svg",
+   "rar": "Mythique",
+   "n": 174
+  },
+  {
+   "nom": "Suriname",
+   "desc": "Petit pays d'Amérique du Sud, riche en forêts tropicales.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/60/Flag_of_Suriname.svg",
+   "rar": "Commun",
+   "n": 175
+  },
+  {
+   "nom": "Syrie",
+   "desc": "Pays du Moyen-Orient bordé par la mer Méditerranée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/53/Flag_of_Syria.svg",
+   "rar": "Commun",
+   "n": 176
+  },
+  {
+   "nom": "Tadjikistan",
+   "desc": "Pays montagneux enclavé d'Asie centrale.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Flag_of_Tajikistan.svg",
+   "rar": "Commun",
+   "n": 177
+  },
+  {
+   "nom": "Tanzanie",
+   "desc": "Pays d'Afrique de l'Est connu pour le Kilimandjaro et ses parcs naturels.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/38/Flag_of_Tanzania.svg",
+   "rar": "Épique",
+   "n": 178
+  },
+  {
+   "nom": "Tchad",
+   "desc": "Pays enclavé d'Afrique centrale bordé par le désert du Sahara.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Flag_of_Chad.svg",
+   "rar": "Commun",
+   "n": 179
+  },
+  {
+   "nom": "Thaïlande",
+   "desc": "Pays d'Asie du Sud-Est réputé pour ses plages et temples.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_Thailand.svg",
+   "rar": "Commun",
+   "n": 180
+  },
+  {
+   "nom": "Timor oriental",
+   "desc": "Pays d'Asie du Sud-Est occupant la partie orientale de l'île de Timor.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/26/Flag_of_East_Timor.svg",
+   "rar": "Commun",
+   "n": 181
+  },
+  {
+   "nom": "Togo",
+   "desc": "Pays d'Afrique de l'Ouest bordé par le golfe de Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/68/Flag_of_Togo.svg",
+   "rar": "Légendaire",
+   "n": 182
+  },
+  {
+   "nom": "Tonga",
+   "desc": "Royaume insulaire situé en Polynésie, dans l'océan Pacifique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Tonga.svg",
+   "rar": "Commun",
+   "n": 183
+  },
+  {
+   "nom": "Trinité-et-Tobago",
+   "desc": "État insulaire des Caraïbes riche en pétrole et en gaz naturel.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/64/Flag_of_Trinidad_and_Tobago.svg",
+   "rar": "Commun",
+   "n": 184
+  },
+  {
+   "nom": "Tunisie",
+   "desc": "Pays d'Afrique du Nord situé entre la Méditerranée et le Sahara.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Tunisia.svg",
+   "rar": "Peu commun",
+   "n": 185
+  },
+  {
+   "nom": "Turkménistan",
+   "desc": "Pays d'Asie centrale principalement recouvert par le désert du Karakoum.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Turkmenistan.svg",
+   "rar": "Commun",
+   "n": 186
+  },
+  {
+   "nom": "Turquie",
+   "desc": "Pays transcontinental à la croisée de l'Europe et de l'Asie.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
+   "rar": "Commun",
+   "n": 187
+  },
+  {
+   "nom": "Tuvalu",
+   "desc": "État insulaire de Polynésie composé de neuf atolls coralliens.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/3/38/Flag_of_Tuvalu.svg",
+   "rar": "Peu commun",
+   "n": 188
+  },
+  {
+   "nom": "Ukraine",
+   "desc": "Pays d'Europe de l'Est aux vastes plaines et à la riche histoire.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Ukraine.svg",
+   "rar": "Commun",
+   "n": 189
+  },
+  {
+   "nom": "Uruguay",
+   "desc": "Pays d'Amérique du Sud situé entre le Brésil et l'Argentine.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Uruguay.svg",
+   "rar": "Commun",
+   "n": 190
+  },
+  {
+   "nom": "Vanuatu",
+   "desc": "Archipel mélanésien situé dans le sud de l'océan Pacifique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Flag_of_Vanuatu.svg",
+   "rar": "Commun",
+   "n": 191
+  },
+  {
+   "nom": "Vatican",
+   "desc": "Plus petit État souverain au monde, siège de l'Église catholique.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Flag_of_Vatican_City_%282023%E2%80%93present%29.svg",
+   "rar": "Peu commun",
+   "n": 192
+  },
+  {
+   "nom": "Venezuela",
+   "desc": "Pays d'Amérique du Sud bordé par la mer des Caraïbes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Venezuela.svg",
+   "rar": "Commun",
+   "n": 193
+  },
+  {
+   "nom": "Viêt Nam",
+   "desc": "Pays d'Asie du Sud-Est situé au bord de la mer de Chine.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/2/21/Flag_of_Vietnam.svg",
+   "rar": "Commun",
+   "n": 194
+  },
+  {
+   "nom": "Yémen",
+   "desc": "Pays du sud de la péninsule Arabique, bordé par la mer Rouge.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Yemen.svg",
+   "rar": "Commun",
+   "n": 195
+  },
+  {
+   "nom": "Zambie",
+   "desc": "Pays d'Afrique australe sans accès à la mer, connu pour les chutes Victoria.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Zambia.svg",
+   "rar": "Épique",
+   "n": 196
+  },
+  {
+   "nom": "Zimbabwe",
+   "desc": "Pays d'Afrique australe réputé pour ses paysages et les chutes Victoria.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Flag_of_Zimbabwe.svg",
+   "rar": "Légendaire",
+   "n": 197
+  }
+ ],
+ "capitales": [
+  {
+   "nom": "Pretoria",
+   "desc": "Capitale administrative de l'Afrique du Sud, célèbre pour ses jacarandas.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Uniegebou.jpg",
+   "rar": "Épique",
+   "n": 1
+  },
+  {
+   "nom": "Kaboul",
+   "desc": "Capitale et plus grande ville d'Afghanistan, située dans l'Hindou Kouch.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Kabul_TV_Hill_view.jpg/960px-Kabul_TV_Hill_view.jpg",
+   "rar": "Rare",
+   "n": 2
+  },
+  {
+   "nom": "Tirana",
+   "desc": "Capitale de l'Albanie, célèbre pour ses façades colorées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Skanderbeg_square_tirana_2016.jpg/960px-Skanderbeg_square_tirana_2016.jpg",
+   "rar": "Peu commun",
+   "n": 3
+  },
+  {
+   "nom": "Alger",
+   "desc": "Capitale et plus grande ville de l'Algérie, au bord de la Méditerranée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Station_Tafourah_-_Grande_Poste_-_2025-05-03_-_IMG_101.jpg/960px-Station_Tafourah_-_Grande_Poste_-_2025-05-03_-_IMG_101.jpg",
+   "rar": "Commun",
+   "n": 4
+  },
+  {
+   "nom": "Berlin",
+   "desc": "Capitale de l'Allemagne, célèbre pour la porte de Brandebourg.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Museumsinsel_Berlin_Juli_2021_1_%28cropped%29_b.jpg/960px-Museumsinsel_Berlin_Juli_2021_1_%28cropped%29_b.jpg",
+   "rar": "Légendaire",
+   "n": 5
+  },
+  {
+   "nom": "Andorre-la-Vieille",
+   "desc": "Capitale d'Andorre dans les Pyrénées, la plus haute capitale d'Europe.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/LargeVue-Andorra.jpg/960px-LargeVue-Andorra.jpg",
+   "rar": "Commun",
+   "n": 6
+  },
+  {
+   "nom": "Luanda",
+   "desc": "Capitale de l'Angola, grand port situé sur la côte de l'Atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Luanda_2025_focused_%28cropped%29.jpg/960px-Luanda_2025_focused_%28cropped%29.jpg",
+   "rar": "Peu commun",
+   "n": 7
+  },
+  {
+   "nom": "Saint John’s",
+   "desc": "Capitale d'Antigua-et-Barbuda, ville portuaire et touristique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/St_Johns_Antigua_2012.jpg/960px-St_Johns_Antigua_2012.jpg",
+   "rar": "Commun",
+   "n": 8
+  },
+  {
+   "nom": "Riyad",
+   "desc": "Capitale de l'Arabie saoudite, grand centre financier du Moyen-Orient.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Riyadh_North_Skyline_.jpg/960px-Riyadh_North_Skyline_.jpg",
+   "rar": "Rare",
+   "n": 9
+  },
+  {
+   "nom": "Buenos Aires",
+   "desc": "Capitale de l'Argentine, cosmopolite et berceau du tango.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Puerto_Madero%2C_Buenos_Aires_%2840689219792%29_%28cropped%29.jpg/960px-Puerto_Madero%2C_Buenos_Aires_%2840689219792%29_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 10
+  },
+  {
+   "nom": "Erevan",
+   "desc": "Capitale de l'Arménie, surnommée la ville rose.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Mount_Ararat_and_the_Yerevan_skyline_%28June_2018%29.jpg/960px-Mount_Ararat_and_the_Yerevan_skyline_%28June_2018%29.jpg",
+   "rar": "Peu commun",
+   "n": 11
+  },
+  {
+   "nom": "Canberra",
+   "desc": "Capitale planifiée de l'Australie et siège du gouvernement fédéral.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Canberra_panorama_from_Mount_Ainslie.jpg/960px-Canberra_panorama_from_Mount_Ainslie.jpg",
+   "rar": "Commun",
+   "n": 12
+  },
+  {
+   "nom": "Vienne",
+   "desc": "Capitale de l'Autriche, réputée pour sa musique classique et ses palais.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/Schoenbrunn_philharmoniker_2012.jpg/960px-Schoenbrunn_philharmoniker_2012.jpg",
+   "rar": "Légendaire",
+   "n": 13
+  },
+  {
+   "nom": "Bakou",
+   "desc": "Capitale de l'Azerbaïdjan, située au bord de la mer Caspienne.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Baku_Montage.jpg/960px-Baku_Montage.jpg",
+   "rar": "Rare",
+   "n": 14
+  },
+  {
+   "nom": "Nassau",
+   "desc": "Capitale des Bahamas, située sur l'île de New Providence.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/88/Nassau%2C_Bahamas_aerial_view_%28cropped%29.jpg/960px-Nassau%2C_Bahamas_aerial_view_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 15
+  },
+  {
+   "nom": "Manama",
+   "desc": "Capitale du Bahreïn, centre financier et commercial moderne du Golfe.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Bahrain_World_trade_Center_.jpg/960px-Bahrain_World_trade_Center_.jpg",
+   "rar": "Peu commun",
+   "n": 16
+  },
+  {
+   "nom": "Dacca",
+   "desc": "Capitale et centre politique, culturel et économique du Bangladesh.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/1.%E0%A6%9C%E0%A6%BE%E0%A6%A4%E0%A7%80%E0%A6%AF%E0%A6%BC_%E0%A6%B8%E0%A6%82%E0%A6%B8%E0%A6%A6_%E0%A6%AD%E0%A6%AC%E0%A6%A8.jpg/960px-1.%E0%A6%9C%E0%A6%BE%E0%A6%A4%E0%A7%80%E0%A6%AF%E0%A6%BC_%E0%A6%B8%E0%A6%82%E0%A6%B8%E0%A6%A6_%E0%A6%AD%E0%A6%AC%E0%A6%A8.jpg",
+   "rar": "Rare",
+   "n": 17
+  },
+  {
+   "nom": "Bridgetown",
+   "desc": "Capitale de la Barbade, port historique et site de l'UNESCO.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Bridgetown_aerial.JPG/960px-Bridgetown_aerial.JPG",
+   "rar": "Commun",
+   "n": 18
+  },
+  {
+   "nom": "Bruxelles",
+   "desc": "Capitale de la Belgique et siège des principales institutions européennes.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Brussel_Koninklijk_paleis.jpg/960px-Brussel_Koninklijk_paleis.jpg",
+   "rar": "Mythique",
+   "n": 19
+  },
+  {
+   "nom": "Belmopan",
+   "desc": "Capitale du Belize, fondée en 1970 au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/National_Assembly_Building%2C_Belize.png/960px-National_Assembly_Building%2C_Belize.png",
+   "rar": "Commun",
+   "n": 20
+  },
+  {
+   "nom": "Porto-Novo",
+   "desc": "Capitale officielle du Bénin, célèbre pour son architecture afro-brésilienne.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Grande_Mosquee_Porto-Novo_Benin_Joseph_Herve_Ahissou.jpg/960px-Grande_Mosquee_Porto-Novo_Benin_Joseph_Herve_Ahissou.jpg",
+   "rar": "Peu commun",
+   "n": 21
+  },
+  {
+   "nom": "Thimphou",
+   "desc": "Capitale du Bhoutan, mêlant traditions bouddhistes et modernité.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Thimpu_Bazar_31.JPG/960px-Thimpu_Bazar_31.JPG",
+   "rar": "Rare",
+   "n": 22
+  },
+  {
+   "nom": "Minsk",
+   "desc": "Capitale et plus grande ville de la Biélorussie.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/View_of_Minsk_%28180819%29_09.jpg/960px-View_of_Minsk_%28180819%29_09.jpg",
+   "rar": "Commun",
+   "n": 23
+  },
+  {
+   "nom": "Naypyidaw",
+   "desc": "Capitale administrative de la Birmanie, ville planifiée construite en 2005.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/NPT_Water_Fountain.jpg/960px-NPT_Water_Fountain.jpg",
+   "rar": "Légendaire",
+   "n": 24
+  },
+  {
+   "nom": "Sucre",
+   "desc": "Capitale constitutionnelle de la Bolivie, célèbre pour sa ville blanche.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Sucre%2C_Capital_de_Bolivia.jpg/960px-Sucre%2C_Capital_de_Bolivia.jpg",
+   "rar": "Commun",
+   "n": 25
+  },
+  {
+   "nom": "Sarajevo",
+   "desc": "Capitale de la Bosnie-Herzégovine, réputée pour sa diversité culturelle.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Sarajevo_City_Panorama.JPG/960px-Sarajevo_City_Panorama.JPG",
+   "rar": "Peu commun",
+   "n": 26
+  },
+  {
+   "nom": "Gaborone",
+   "desc": "Capitale et plus grande ville du Botswana.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Gaborone_skyline.JPG/960px-Gaborone_skyline.JPG",
+   "rar": "Commun",
+   "n": 27
+  },
+  {
+   "nom": "Brasilia",
+   "desc": "Capitale du Brésil inaugurée en 1960, célèbre pour son architecture moderne.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Planalto_Central_%28cropped%29.jpg/960px-Planalto_Central_%28cropped%29.jpg",
+   "rar": "Rare",
+   "n": 28
+  },
+  {
+   "nom": "Bandar Seri Begawan",
+   "desc": "Capitale du sultanat de Brunei, célèbre pour ses magnifiques mosquées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Pusat_Bandar%2C_Brunei_skyline.jpg/960px-Pusat_Bandar%2C_Brunei_skyline.jpg",
+   "rar": "Rare",
+   "n": 29
+  },
+  {
+   "nom": "Sofia",
+   "desc": "Capitale de la Bulgarie, située au pied du mont Vitocha.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Panoramic_view_over_central_Sofia_and_the_Vitosha_Mountain_2017-10-08.jpg/960px-Panoramic_view_over_central_Sofia_and_the_Vitosha_Mountain_2017-10-08.jpg",
+   "rar": "Commun",
+   "n": 30
+  },
+  {
+   "nom": "Ouagadougou",
+   "desc": "Capitale et plus grande ville du Burkina Faso, située au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Monument_aux_h%C3%A9ros_nationaux_-_Ouagadougou_-_2024.jpg/960px-Monument_aux_h%C3%A9ros_nationaux_-_Ouagadougou_-_2024.jpg",
+   "rar": "Commun",
+   "n": 31
+  },
+  {
+   "nom": "Gitega",
+   "desc": "Capitale politique du Burundi et deuxième plus grande ville du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Burundi.Gitega_36.jpg/960px-Burundi.Gitega_36.jpg",
+   "rar": "Épique",
+   "n": 32
+  },
+  {
+   "nom": "Phnom Penh",
+   "desc": "Capitale et plus grande ville du Cambodge, située au confluent du Mékong.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Phnom_Penh_Montage_2021.png/960px-Phnom_Penh_Montage_2021.png",
+   "rar": "Commun",
+   "n": 33
+  },
+  {
+   "nom": "Yaoundé",
+   "desc": "Capitale politique du Cameroun, deuxième plus grande ville du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Cath%C3%A9drale_notre_dame_de_victoire_de_Yaound%C3%A9_01.JPG/960px-Cath%C3%A9drale_notre_dame_de_victoire_de_Yaound%C3%A9_01.JPG",
+   "rar": "Commun",
+   "n": 34
+  },
+  {
+   "nom": "Ottawa",
+   "desc": "Capitale fédérale du Canada, réputée pour son canal Rideau et ses musées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Centre_Block_-_Parliament_Hill.jpg/960px-Centre_Block_-_Parliament_Hill.jpg",
+   "rar": "Peu commun",
+   "n": 35
+  },
+  {
+   "nom": "Praia",
+   "desc": "Capitale et plus grande ville du Cap-Vert, située sur l'île de Santiago.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Pal%C3%A1cio_da_Cultura%2C_Praia%2C_Cape_Verde.jpg/960px-Pal%C3%A1cio_da_Cultura%2C_Praia%2C_Cape_Verde.jpg",
+   "rar": "Peu commun",
+   "n": 36
+  },
+  {
+   "nom": "Santiago",
+   "desc": "Capitale du Chili, située au pied de la cordillère des Andes.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Palacio_de_La_Moneda_-_miguelreflex.jpg/960px-Palacio_de_La_Moneda_-_miguelreflex.jpg",
+   "rar": "Peu commun",
+   "n": 37
+  },
+  {
+   "nom": "Pékin",
+   "desc": "Capitale de la Chine, célèbre pour la Cité interdite et sa Grande Muraille.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/%E5%A4%A9%E5%AE%89%E9%97%A8%E5%A4%9C%E6%99%AF.jpg/960px-%E5%A4%A9%E5%AE%89%E9%97%A8%E5%A4%9C%E6%99%AF.jpg",
+   "rar": "Rare",
+   "n": 38
+  },
+  {
+   "nom": "Nicosie",
+   "desc": "Capitale de Chypre, ville fortifiée et dernière capitale divisée au monde.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Nicosia%27s_skyline_2024.jpg/960px-Nicosia%27s_skyline_2024.jpg",
+   "rar": "Commun",
+   "n": 39
+  },
+  {
+   "nom": "Bogota",
+   "desc": "Capitale de la Colombie, située dans les Andes à 2 600 m d'altitude.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/2019_Bogot%C3%A1_-_Iglesia_de_Monserrate.jpg/960px-2019_Bogot%C3%A1_-_Iglesia_de_Monserrate.jpg",
+   "rar": "Peu commun",
+   "n": 40
+  },
+  {
+   "nom": "Moroni",
+   "desc": "Capitale des Comores, ville côtière dominée par le volcan Karthala.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Moroni_harbour_%282%29.jpg/960px-Moroni_harbour_%282%29.jpg",
+   "rar": "Peu commun",
+   "n": 41
+  },
+  {
+   "nom": "Pyongyang",
+   "desc": "Capitale et plus grande ville de la Corée du Nord.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Montage_of_Pyongyang%2C_North_Korea.png",
+   "rar": "Commun",
+   "n": 42
+  },
+  {
+   "nom": "Séoul",
+   "desc": "Capitale ultra-moderne de la Corée du Sud, mêlant gratte-ciels et palais.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Seoul_Sunset_%28192602565%29.jpeg/960px-Seoul_Sunset_%28192602565%29.jpeg",
+   "rar": "Rare",
+   "n": 43
+  },
+  {
+   "nom": "San José",
+   "desc": "Capitale du Costa Rica, située au cœur de la Vallée Centrale.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Downtown_San_Jos%C3%A9_City_%28Costa_Rica%29.jpg/960px-Downtown_San_Jos%C3%A9_City_%28Costa_Rica%29.jpg",
+   "rar": "Commun",
+   "n": 44
+  },
+  {
+   "nom": "Yamoussoukro",
+   "desc": "Capitale politique de Côte d'Ivoire, connue pour sa basilique géante.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Yamoussoukro_panorama.jpg/960px-Yamoussoukro_panorama.jpg",
+   "rar": "Peu commun",
+   "n": 45
+  },
+  {
+   "nom": "Zagreb",
+   "desc": "Capitale de la Croatie, riche en histoire et en patrimoine.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Zagreb_%2829255640143%29.jpg/960px-Zagreb_%2829255640143%29.jpg",
+   "rar": "Commun",
+   "n": 46
+  },
+  {
+   "nom": "La Havane",
+   "desc": "Capitale et centre économique de Cuba, connue pour son patrimoine historique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/DJI_0197_crp_wiki.jpg/960px-DJI_0197_crp_wiki.jpg",
+   "rar": "Rare",
+   "n": 47
+  },
+  {
+   "nom": "Copenhague",
+   "desc": "Capitale du Danemark, célèbre pour son port coloré de Nyhavn.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/68/Copenhagen_Collage2.jpg",
+   "rar": "Peu commun",
+   "n": 48
+  },
+  {
+   "nom": "Djibouti",
+   "desc": "Capitale de Djibouti, port stratégique à l'entrée de la mer Rouge.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Djib_001.JPG/960px-Djib_001.JPG",
+   "rar": "Commun",
+   "n": 49
+  },
+  {
+   "nom": "Roseau",
+   "desc": "Capitale et port principal de la Dominique, située sur la côte caraïbe.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Roseaux1.jpg/960px-Roseaux1.jpg",
+   "rar": "Légendaire",
+   "n": 50
+  },
+  {
+   "nom": "Le Caire",
+   "desc": "Capitale de l'Égypte, célèbre pour ses pyramides et son histoire.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Cairo_From_Tower_%28cropped%29.jpg/960px-Cairo_From_Tower_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 51
+  },
+  {
+   "nom": "Abou Dabi",
+   "desc": "Capitale des Émirats arabes unis, centre politique et économique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Abu_dhabi_skylines_2014.jpg/960px-Abu_dhabi_skylines_2014.jpg",
+   "rar": "Peu commun",
+   "n": 52
+  },
+  {
+   "nom": "Quito",
+   "desc": "Capitale de l'Équateur, célèbre pour son centre historique préservé.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/FACHADA_ASAMBLEA_NACIONAL._QUITO%2C_20_DE_FEBRERO_2020._01.jpg/960px-FACHADA_ASAMBLEA_NACIONAL._QUITO%2C_20_DE_FEBRERO_2020._01.jpg",
+   "rar": "Peu commun",
+   "n": 53
+  },
+  {
+   "nom": "Asmara",
+   "desc": "Capitale de l'Érythrée, célèbre pour son architecture moderniste italienne.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Asmara_Montage.png/960px-Asmara_Montage.png",
+   "rar": "Peu commun",
+   "n": 54
+  },
+  {
+   "nom": "Madrid",
+   "desc": "Capitale de l'Espagne, célèbre pour son patrimoine culturel et ses musées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Madrid_-_Sky_Bar_360%C2%BA_%28Hotel_Riu_Plaza_Espa%C3%B1a%29%2C_vistas_19.jpg/960px-Madrid_-_Sky_Bar_360%C2%BA_%28Hotel_Riu_Plaza_Espa%C3%B1a%29%2C_vistas_19.jpg",
+   "rar": "Peu commun",
+   "n": 55
+  },
+  {
+   "nom": "Mbabane",
+   "desc": "Capitale administrative d'Eswatini, située dans les montagnes Mdzimba.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Mbabane_%286035476964%29.jpg/960px-Mbabane_%286035476964%29.jpg",
+   "rar": "Commun",
+   "n": 56
+  },
+  {
+   "nom": "Tallinn",
+   "desc": "Capitale de l'Estonie, célèbre pour sa vieille ville médiévale.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Raekoja_plats_at_night.jpg/960px-Raekoja_plats_at_night.jpg",
+   "rar": "Commun",
+   "n": 57
+  },
+  {
+   "nom": "Washington",
+   "desc": "Capitale des États-Unis, siège du gouvernement et abritant la Maison-Blanche.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/12-07-13-washington-by-RalfR-08.jpg/960px-12-07-13-washington-by-RalfR-08.jpg",
+   "rar": "Commun",
+   "n": 58
+  },
+  {
+   "nom": "Addis-Abeba",
+   "desc": "Capitale de l'Éthiopie et siège de l'Union africaine.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/Addis_in_night.jpg/960px-Addis_in_night.jpg",
+   "rar": "Peu commun",
+   "n": 59
+  },
+  {
+   "nom": "Suva",
+   "desc": "Capitale et plus grande ville des Fidji, située sur l'île de Viti Levu.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Suva%2C_Fiji_77.jpg/960px-Suva%2C_Fiji_77.jpg",
+   "rar": "Commun",
+   "n": 60
+  },
+  {
+   "nom": "Helsinki",
+   "desc": "Capitale de la Finlande, située au bord de la mer Baltique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Suomenlinna_%28cropped%29.jpg/960px-Suomenlinna_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 61
+  },
+  {
+   "nom": "Paris",
+   "desc": "Capitale de la France, ville lumière célèbre pour la tour Eiffel et le Louvre.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg/960px-La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg",
+   "rar": "Mythique",
+   "n": 62
+  },
+  {
+   "nom": "Libreville",
+   "desc": "Capitale et plus grande ville du Gabon, située sur la côte atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Libreville_frond_de_mer.jpg/960px-Libreville_frond_de_mer.jpg",
+   "rar": "Commun",
+   "n": 63
+  },
+  {
+   "nom": "Banjul",
+   "desc": "Capitale de la Gambie, située à l'embouchure du fleuve Gambie.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/Gambia%2C_Banjul%2C_Arch_22.jpg/960px-Gambia%2C_Banjul%2C_Arch_22.jpg",
+   "rar": "Peu commun",
+   "n": 64
+  },
+  {
+   "nom": "Tbilissi",
+   "desc": "Capitale de la Géorgie, célèbre pour sa vieille ville et ses bains sulfureux.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/View_of_Tbilisi_from_Tabori_Church_2023-10-08-2.jpg/960px-View_of_Tbilisi_from_Tabori_Church_2023-10-08-2.jpg",
+   "rar": "Commun",
+   "n": 65
+  },
+  {
+   "nom": "Accra",
+   "desc": "Capitale et centre économique du Ghana, située sur le golfe de Guinée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Acca.jpg/960px-Acca.jpg",
+   "rar": "Commun",
+   "n": 66
+  },
+  {
+   "nom": "Athènes",
+   "desc": "Capitale de la Grèce, berceau de la démocratie et de la civilisation antique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8e/Athens_Montage_L.png/960px-Athens_Montage_L.png",
+   "rar": "Rare",
+   "n": 67
+  },
+  {
+   "nom": "Saint-Georges",
+   "desc": "Capitale de la Grenade, célèbre pour son port naturel et ses épices.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Grenada_-_St._George.jpg/960px-Grenada_-_St._George.jpg",
+   "rar": "Commun",
+   "n": 68
+  },
+  {
+   "nom": "Guatemala",
+   "desc": "Capitale du Guatemala, centre économique et culturel du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Ciudad_de_Guatemala%2C_CA.jpg/960px-Ciudad_de_Guatemala%2C_CA.jpg",
+   "rar": "Peu commun",
+   "n": 69
+  },
+  {
+   "nom": "Conakry",
+   "desc": "Capitale et port principal de la Guinée, située au bord de l'Atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Ville_de_Conaky.jpg/960px-Ville_de_Conaky.jpg",
+   "rar": "Peu commun",
+   "n": 70
+  },
+  {
+   "nom": "Malabo",
+   "desc": "Capitale de la Guinée équatoriale, située sur l'île de Bioko.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Hotel_de_Federaciones_02.jpg/960px-Hotel_de_Federaciones_02.jpg",
+   "rar": "Commun",
+   "n": 71
+  },
+  {
+   "nom": "Bissau",
+   "desc": "Capitale de la Guinée-Bissau, située à l'embouchure du fleuve Geba.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Bissau-Stroossenzeen--w.jpg/960px-Bissau-Stroossenzeen--w.jpg",
+   "rar": "Commun",
+   "n": 72
+  },
+  {
+   "nom": "Georgetown",
+   "desc": "Capitale du Guyana, située au bord de l'Océan Atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Guyana_Parliament_Building.jpg/960px-Guyana_Parliament_Building.jpg",
+   "rar": "Rare",
+   "n": 73
+  },
+  {
+   "nom": "Port-au-Prince",
+   "desc": "Capitale et plus grande ville d'Haïti, située dans le golfe de la Gonâve.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/View_of_Port-au_Prince_from_Hotel_Montana2.jpg/960px-View_of_Port-au_Prince_from_Hotel_Montana2.jpg",
+   "rar": "Commun",
+   "n": 74
+  },
+  {
+   "nom": "Tegucigalpa",
+   "desc": "Capitale du Honduras, située dans une vallée entourée de montagnes.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/56/Tegucigalpa_downtown_panoramic_2026.jpg/960px-Tegucigalpa_downtown_panoramic_2026.jpg",
+   "rar": "Commun",
+   "n": 75
+  },
+  {
+   "nom": "Budapest",
+   "desc": "Capitale de la Hongrie, traversée par le Danube et célèbre pour ses bains.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/View_from_Gell%C3%A9rt_Hill_to_the_Danube%2C_Hungary_-_Budapest_%2828493220635%29.jpg/960px-View_from_Gell%C3%A9rt_Hill_to_the_Danube%2C_Hungary_-_Budapest_%2828493220635%29.jpg",
+   "rar": "Épique",
+   "n": 76
+  },
+  {
+   "nom": "Avarua",
+   "desc": "Capitale des Îles Cook, située sur l'île de Rarotonga.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/Avarua%2C_february_2006.jpg/960px-Avarua%2C_february_2006.jpg",
+   "rar": "Commun",
+   "n": 77
+  },
+  {
+   "nom": "Majuro",
+   "desc": "Capitale des Îles Marshall, atoll corallien de l'océan Pacifique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Eneko_Islet_02.JPG/960px-Eneko_Islet_02.JPG",
+   "rar": "Commun",
+   "n": 78
+  },
+  {
+   "nom": "New Delhi",
+   "desc": "Capitale de l'Inde, centre politique et historique majeur.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Forecourt%2C_Rashtrapati_Bhavan_-_1.jpg/960px-Forecourt%2C_Rashtrapati_Bhavan_-_1.jpg",
+   "rar": "Rare",
+   "n": 79
+  },
+  {
+   "nom": "Jakarta",
+   "desc": "Capitale de l'Indonésie, située sur l'île de Java.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Bundaran_Hotel_Indonesia_%282025%29_%28cropped%29.jpg/960px-Bundaran_Hotel_Indonesia_%282025%29_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 80
+  },
+  {
+   "nom": "Bagdad",
+   "desc": "Capitale et plus grande ville de l'Irak, traversée par le Tigre.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/5628442718_b10fc2c47f_o.jpg/960px-5628442718_b10fc2c47f_o.jpg",
+   "rar": "Rare",
+   "n": 81
+  },
+  {
+   "nom": "Téhéran",
+   "desc": "Capitale et plus grande ville de l'Iran, située au pied des monts Alborz.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/North_of_Tehran_Skyline_view.jpg/960px-North_of_Tehran_Skyline_view.jpg",
+   "rar": "Commun",
+   "n": 82
+  },
+  {
+   "nom": "Dublin",
+   "desc": "Capitale de l'Irlande, riche en histoire et traversée par la Liffey.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Dublin_-_aerial_-_2025-07-07_01.jpg/960px-Dublin_-_aerial_-_2025-07-07_01.jpg",
+   "rar": "Légendaire",
+   "n": 83
+  },
+  {
+   "nom": "Reykjavik",
+   "desc": "Capitale de l'Islande, célèbre pour ses sources thermales et sa culture.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Reykjav%C3%ADk%2C_view_from_Hallgr%C3%ADmskirkja_%282%29.jpg/960px-Reykjav%C3%ADk%2C_view_from_Hallgr%C3%ADmskirkja_%282%29.jpg",
+   "rar": "Commun",
+   "n": 84
+  },
+  {
+   "nom": "Jérusalem",
+   "desc": "Ville sainte majeure pour le judaïsme, le christianisme et l'islam.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Jerusalem-2013%282%29-Aerial-Temple_Mount-%28south_exposure%29.jpg/960px-Jerusalem-2013%282%29-Aerial-Temple_Mount-%28south_exposure%29.jpg",
+   "rar": "Commun",
+   "n": 85
+  },
+  {
+   "nom": "Rome",
+   "desc": "Capitale de l'Italie, surnommée la Ville Éternelle, célèbre pour le Colisée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/75/Collage_Rome.jpg/960px-Collage_Rome.jpg",
+   "rar": "Commun",
+   "n": 86
+  },
+  {
+   "nom": "Kingston",
+   "desc": "Capitale de la Jamaïque, berceau de la musique reggae et grand port.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/1/10/View_of_Kingston.jpg",
+   "rar": "Commun",
+   "n": 87
+  },
+  {
+   "nom": "Tokyo",
+   "desc": "Capitale du Japon, métropole dynamique mêlant tradition et modernité.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6d/Tokyo_Tower%2C_Minato_City.jpg/960px-Tokyo_Tower%2C_Minato_City.jpg",
+   "rar": "Épique",
+   "n": 88
+  },
+  {
+   "nom": "Amman",
+   "desc": "Capitale de la Jordanie, célèbre pour sa Citadelle et son théâtre romain.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Amman%2C_Roman_Theatre%2C_Jordan.jpg/960px-Amman%2C_Roman_Theatre%2C_Jordan.jpg",
+   "rar": "Commun",
+   "n": 89
+  },
+  {
+   "nom": "Noursoultan",
+   "desc": "Capitale du Kazakhstan, célèbre pour son architecture futuriste.",
+   "img": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/66/Central_Downtown_Astana_2.jpg/960px-Central_Downtown_Astana_2.jpg",
+   "rar": "Commun",
+   "n": 90
+  },
+  {
+   "nom": "Nairobi",
+   "desc": "Capitale du Kenya, réputée pour son parc national aux portes de la ville.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Nairobi_skyline_from_Gem_Hotel.jpg/960px-Nairobi_skyline_from_Gem_Hotel.jpg",
+   "rar": "Commun",
+   "n": 91
+  },
+  {
+   "nom": "Bichkek",
+   "desc": "Capitale du Kirghizistan, située au pied des montagnes du Tian Shan.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/Bishkek_City%27s_business_center.jpg/960px-Bishkek_City%27s_business_center.jpg",
+   "rar": "Commun",
+   "n": 92
+  },
+  {
+   "nom": "Tarawa-Sud",
+   "desc": "Capitale des Kiribati, située sur l'atoll de Tarawa en Micronésie.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/South_Tarawa_from_the_air.jpg/960px-South_Tarawa_from_the_air.jpg",
+   "rar": "Commun",
+   "n": 93
+  },
+  {
+   "nom": "Koweït",
+   "desc": "Capitale du Koweït, métropole côtière célèbre pour ses tours emblématiques.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Kuwait_City_Kuwait_Towers_View_to_the_al-Hamra_Tower.jpg/960px-Kuwait_City_Kuwait_Towers_View_to_the_al-Hamra_Tower.jpg",
+   "rar": "Rare",
+   "n": 94
+  },
+  {
+   "nom": "Vientiane",
+   "desc": "Capitale paisible du Laos, située sur les rives du Mékong.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/20171118_Vientiane_3220_DxO.jpg/960px-20171118_Vientiane_3220_DxO.jpg",
+   "rar": "Commun",
+   "n": 95
+  },
+  {
+   "nom": "Maseru",
+   "desc": "Capitale du Lesotho, située près de la frontière avec l'Afrique du Sud.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Maseru_from_Parliament_Hill.jpg/960px-Maseru_from_Parliament_Hill.jpg",
+   "rar": "Commun",
+   "n": 96
+  },
+  {
+   "nom": "Riga",
+   "desc": "Capitale de la Lettonie, célèbre pour son architecture Art nouveau.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Riga_%2833844464828%29.jpg/960px-Riga_%2833844464828%29.jpg",
+   "rar": "Commun",
+   "n": 97
+  },
+  {
+   "nom": "Beyrouth",
+   "desc": "Capitale et plus grande ville du Liban, située au bord de la Méditerranée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Platinum_Tower_3_-_Beirut_-_Nabil_Gholam_Achitects.jpg/960px-Platinum_Tower_3_-_Beirut_-_Nabil_Gholam_Achitects.jpg",
+   "rar": "Commun",
+   "n": 98
+  },
+  {
+   "nom": "Monrovia",
+   "desc": "Capitale et plus grande ville du Liberia, située sur la côte atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Liberia%2C_Africa_-_panoramio_%28256%29.jpg/960px-Liberia%2C_Africa_-_panoramio_%28256%29.jpg",
+   "rar": "Rare",
+   "n": 99
+  },
+  {
+   "nom": "Tripoli",
+   "desc": "Capitale et plus grande ville de la Libye, sur la mer Méditerranée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Tripoli_at_night.jpg/960px-Tripoli_at_night.jpg",
+   "rar": "Commun",
+   "n": 100
+  },
+  {
+   "nom": "Vaduz",
+   "desc": "Capitale du Liechtenstein, célèbre pour son château médiéval.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/View_of_Vaduz.jpg/960px-View_of_Vaduz.jpg",
+   "rar": "Commun",
+   "n": 101
+  },
+  {
+   "nom": "Vilnius",
+   "desc": "Capitale de la Lituanie, célèbre pour son centre historique baroque.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Gedimino_pilis_by_Augustas_Didzgalvis_%28cropped%29.jpg/960px-Gedimino_pilis_by_Augustas_Didzgalvis_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 102
+  },
+  {
+   "nom": "Luxembourg",
+   "desc": "Capitale du Grand-Duché, place financière et siège d'institutions européennes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/53/1997-2005_Luxembourg_Philharmonie_02.jpg",
+   "rar": "Commun",
+   "n": 103
+  },
+  {
+   "nom": "Skopje",
+   "desc": "Capitale de la Macédoine du Nord, située sur le Vardar.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Skopje_landmarks.jpg/960px-Skopje_landmarks.jpg",
+   "rar": "Commun",
+   "n": 104
+  },
+  {
+   "nom": "Antananarivo",
+   "desc": "Capitale de Madagascar, surnommée la cité des mille.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Lake_Anosy%2C_Central_Antananarivo%2C_Capital_of_Madagascar%2C_Photo_by_Sascha_Grabow.jpg",
+   "rar": "Épique",
+   "n": 105
+  },
+  {
+   "nom": "Kuala Lumpur",
+   "desc": "Capitale de la Malaisie, célèbre pour ses tours jumelles Petronas.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Bukit_Bintang_junction_in_2024_2.jpg/960px-Bukit_Bintang_junction_in_2024_2.jpg",
+   "rar": "Commun",
+   "n": 106
+  },
+  {
+   "nom": "Lilongwe",
+   "desc": "Capitale et plus grande ville du Malawi, située au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Lilongwe_Area_2.jpg/960px-Lilongwe_Area_2.jpg",
+   "rar": "Commun",
+   "n": 107
+  },
+  {
+   "nom": "Malé",
+   "desc": "Capitale densément peuplée des Maldives, située dans l'océan Indien.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Male-total.jpg/960px-Male-total.jpg",
+   "rar": "Commun",
+   "n": 108
+  },
+  {
+   "nom": "Bamako",
+   "desc": "Capitale du Mali, située sur les rives du fleuve Niger.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Bamako_ACI_2000_Aeriel.jpg/960px-Bamako_ACI_2000_Aeriel.jpg",
+   "rar": "Commun",
+   "n": 109
+  },
+  {
+   "nom": "La Valette",
+   "desc": "Capitale fortifiée de Malte, célèbre pour son patrimoine baroque.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/St_Sebastian_Curtain_%28cropped%29.jpg/960px-St_Sebastian_Curtain_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 110
+  },
+  {
+   "nom": "Rabat",
+   "desc": "Capitale administrative du Maroc, célèbre pour sa Tour Hassan.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Rabat_Tour_Hassan.jpg/960px-Rabat_Tour_Hassan.jpg",
+   "rar": "Commun",
+   "n": 111
+  },
+  {
+   "nom": "Port-Louis",
+   "desc": "Capitale et port principal de Maurice, riche d'histoire et de culture.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/d/d9/Port_Louis_Skyline.JPG",
+   "rar": "Commun",
+   "n": 112
+  },
+  {
+   "nom": "Nouakchott",
+   "desc": "Capitale de la Mauritanie, située au bord de l'océan Atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Nouakchott.jpg/960px-Nouakchott.jpg",
+   "rar": "Légendaire",
+   "n": 113
+  },
+  {
+   "nom": "Mexico",
+   "desc": "Capitale du Mexique, célèbre pour son patrimoine historique et sa culture.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Sobrevuelos_CDMX_HJ2A4913_%2825514321687%29_%28cropped%29.jpg/960px-Sobrevuelos_CDMX_HJ2A4913_%2825514321687%29_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 114
+  },
+  {
+   "nom": "Palikir",
+   "desc": "Capitale des États fédérés de Micronésie, située sur l'île de Pohnpei.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Palikir_Government_Buildings.jpg/960px-Palikir_Government_Buildings.jpg",
+   "rar": "Commun",
+   "n": 115
+  },
+  {
+   "nom": "Chișinău",
+   "desc": "Capitale de la Moldavie, célèbre pour ses espaces verts et son histoire.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Consiliul_Municipal_Chi%C8%99in%C4%83u_%28cropped%29.jpg/960px-Consiliul_Municipal_Chi%C8%99in%C4%83u_%28cropped%29.jpg",
+   "rar": "Peu commun",
+   "n": 116
+  },
+  {
+   "nom": "Monaco",
+   "desc": "Cité-État de la Côte d'Azur, célèbre pour son casino et son luxe.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/20220621_100755_Monaco.jpg/960px-20220621_100755_Monaco.jpg",
+   "rar": "Commun",
+   "n": 117
+  },
+  {
+   "nom": "Oulan-Bator",
+   "desc": "Capitale de la Mongolie, connue comme la plus froide du monde.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/UB_downtown.jpg/960px-UB_downtown.jpg",
+   "rar": "Commun",
+   "n": 118
+  },
+  {
+   "nom": "Podgorica",
+   "desc": "Capitale du Monténégro, située au confluent de la Morača et de la Ribnica.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/P064720-426794_-_Panoramic_view_of_Podgorica.jpg/960px-P064720-426794_-_Panoramic_view_of_Podgorica.jpg",
+   "rar": "Peu commun",
+   "n": 119
+  },
+  {
+   "nom": "Maputo",
+   "desc": "Capitale et principal port du Mozambique, située sur l'océan Indien.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Avenida_Buildings_%281905%29_%284106356351%29.jpg/960px-Avenida_Buildings_%281905%29_%284106356351%29.jpg",
+   "rar": "Commun",
+   "n": 120
+  },
+  {
+   "nom": "Windhoek",
+   "desc": "Capitale de la Namibie, située sur les hauts plateaux au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Christ_Church_in_Windhoek%2C_Namibia.jpg/960px-Christ_Church_in_Windhoek%2C_Namibia.jpg",
+   "rar": "Commun",
+   "n": 121
+  },
+  {
+   "nom": "Yaren",
+   "desc": "Capitale de facto de Nauru, située dans l'océan Pacifique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Parliament_%2815403802091%29.jpg/960px-Parliament_%2815403802091%29.jpg",
+   "rar": "Commun",
+   "n": 122
+  },
+  {
+   "nom": "Katmandou",
+   "desc": "Capitale du Népal, située dans une vallée au pied de l'Himalaya.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Kathmandu-Durbar_Square-06-Mahavishnu-Kuh-Vishnu-Pratapamalla-Jagannath-2007-gje.jpg/960px-Kathmandu-Durbar_Square-06-Mahavishnu-Kuh-Vishnu-Pratapamalla-Jagannath-2007-gje.jpg",
+   "rar": "Commun",
+   "n": 123
+  },
+  {
+   "nom": "Managua",
+   "desc": "Capitale et plus grande ville du Nicaragua, située au bord du lac Xolotlán.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/%D0%9A%D0%B0%D1%84%D0%B5%D0%B4%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%81%D0%BE%D0%B1%D0%BE%D1%80_%D0%B2_%D0%9C%D0%B0%D0%BD%D0%B0%D0%B3%D1%83%D0%B0_%28cropped%29.jpg/960px-%D0%9A%D0%B0%D1%84%D0%B5%D0%B4%D1%80%D0%B0%D0%BB%D1%8C%D0%BD%D1%8B%D0%B9_%D1%81%D0%BE%D0%B1%D0%BE%D1%80_%D0%B2_%D0%9C%D0%B0%D0%BD%D0%B0%D0%B3%D1%83%D0%B0_%28cropped%29.jpg",
+   "rar": "Rare",
+   "n": 124
+  },
+  {
+   "nom": "Niamey",
+   "desc": "Capitale et plus grande ville du Niger, située sur le fleuve Niger.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Niamey_from_grand_mosque_theatre_2006.jpg/960px-Niamey_from_grand_mosque_theatre_2006.jpg",
+   "rar": "Commun",
+   "n": 125
+  },
+  {
+   "nom": "Abuja",
+   "desc": "Capitale fédérale du Nigeria, située au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Abuja_heritages_30.jpg/960px-Abuja_heritages_30.jpg",
+   "rar": "Commun",
+   "n": 126
+  },
+  {
+   "nom": "Alofi",
+   "desc": "Capitale de l'île de Niue, située dans l'océan Pacifique Sud.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Main_street_of_Alofi.jpg/960px-Main_street_of_Alofi.jpg",
+   "rar": "Peu commun",
+   "n": 127
+  },
+  {
+   "nom": "Oslo",
+   "desc": "Capitale de la Norvège, célèbre pour son fjord et ses nombreux musées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/Nationaltheatret_evening.jpg/960px-Nationaltheatret_evening.jpg",
+   "rar": "Commun",
+   "n": 128
+  },
+  {
+   "nom": "Wellington",
+   "desc": "Capitale de la Nouvelle-Zélande, située au sud de l'île du Nord.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/02/Parlamento_da_Nova_Zel%C3%A2ndia.jpg",
+   "rar": "Commun",
+   "n": 129
+  },
+  {
+   "nom": "Mascate",
+   "desc": "Capitale du Sultanat d'Oman, située entre mer et montagnes.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Mascate_collage.png/960px-Mascate_collage.png",
+   "rar": "Commun",
+   "n": 130
+  },
+  {
+   "nom": "Kampala",
+   "desc": "Capitale et plus grande ville de l'Ouganda, près du lac Victoria.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Kampalamontage.png",
+   "rar": "Commun",
+   "n": 131
+  },
+  {
+   "nom": "Tachkent",
+   "desc": "Capitale de l'Ouzbékistan et plus grande ville d'Asie centrale.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Tashkent_skyline_2019.jpg/960px-Tashkent_skyline_2019.jpg",
+   "rar": "Épique",
+   "n": 132
+  },
+  {
+   "nom": "Islamabad",
+   "desc": "Capitale moderne du Pakistan, située au pied des collines de Margalla.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Faisal_Masjid_From_Damn_e_koh.jpg/960px-Faisal_Masjid_From_Damn_e_koh.jpg",
+   "rar": "Commun",
+   "n": 133
+  },
+  {
+   "nom": "Ngerulmud",
+   "desc": "Capitale de la République des Palaos, située sur l'île de Babeldaob.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/%D7%91%D7%A0%D7%99%D7%99%D7%9F_%D7%94%D7%A7%D7%A4%D7%99%D7%98%D7%95%D7%9C_%D7%91%D7%91%D7%99%D7%A8%D7%AA_%D7%A4%D7%9C%D7%90%D7%95_%D7%A0%D7%92%D7%A8%D7%95%D7%9C%D7%95%D7%9E%D7%95%D7%93_01530.jpg/960px-%D7%91%D7%A0%D7%99%D7%99%D7%9F_%D7%94%D7%A7%D7%A4%D7%99%D7%98%D7%95%D7%9C_%D7%91%D7%91%D7%99%D7%A8%D7%AA_%D7%A4%D7%9C%D7%90%D7%95_%D7%A0%D7%92%D7%A8%D7%95%D7%9C%D7%95%D7%9E%D7%95%D7%93_01530.jpg",
+   "rar": "Commun",
+   "n": 134
+  },
+  {
+   "nom": "Ramallah",
+   "desc": "Capitale administrative de facto de la Palestine, en Cisjordanie.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/Mausol%C3%A9e_de_Yasser_Arafat.jpg/960px-Mausol%C3%A9e_de_Yasser_Arafat.jpg",
+   "rar": "Peu commun",
+   "n": 135
+  },
+  {
+   "nom": "Panama",
+   "desc": "Capitale du Panama, célèbre pour son canal et son quartier colonial.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Atardecer_en_la_ciudad_de_Panam%C3%A1.jpg/960px-Atardecer_en_la_ciudad_de_Panam%C3%A1.jpg",
+   "rar": "Commun",
+   "n": 136
+  },
+  {
+   "nom": "Port Moresby",
+   "desc": "Capitale et plus grande ville de la Papouasie-Nouvelle-Guinée.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Port_Moresby_Town2_Mschlauch.jpg",
+   "rar": "Commun",
+   "n": 137
+  },
+  {
+   "nom": "Asuncion",
+   "desc": "Capitale et plus grande ville du Paraguay, sur le río Paraguay.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Palacio_de_los_L%C3%B3pez_Asunci%C3%B3n_2.jpg/960px-Palacio_de_los_L%C3%B3pez_Asunci%C3%B3n_2.jpg",
+   "rar": "Peu commun",
+   "n": 138
+  },
+  {
+   "nom": "Amsterdam",
+   "desc": "Capitale des Pays-Bas, célèbre pour ses canaux et ses musées.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Imagen_de_los_canales_conc%C3%A9ntricos_en_%C3%81msterdam.png/960px-Imagen_de_los_canales_conc%C3%A9ntricos_en_%C3%81msterdam.png",
+   "rar": "Commun",
+   "n": 139
+  },
+  {
+   "nom": "Lima",
+   "desc": "Capitale du Pérou, célèbre pour son centre historique et sa gastronomie.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Bas%C3%ADlica_Catedral_Metropolitana_de_Lima_%28cropped%29.jpg/960px-Bas%C3%ADlica_Catedral_Metropolitana_de_Lima_%28cropped%29.jpg",
+   "rar": "Légendaire",
+   "n": 140
+  },
+  {
+   "nom": "Manille",
+   "desc": "Capitale des Philippines, mégapole animée et riche de son quartier Intramuros.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Cityscape_of_Manila%2C_2025_%2801%29.jpg/960px-Cityscape_of_Manila%2C_2025_%2801%29.jpg",
+   "rar": "Commun",
+   "n": 141
+  },
+  {
+   "nom": "Varsovie",
+   "desc": "Capitale et plus grande ville de la Pologne, située sur la Vistule.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Aleja_Niepdleglosci_Warsaw_2022_aerial_%28cropped%29.jpg/960px-Aleja_Niepdleglosci_Warsaw_2022_aerial_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 142
+  },
+  {
+   "nom": "Lisbonne",
+   "desc": "Capitale du Portugal, située au bord du Tage et célèbre pour ses tramways.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Arco_Triunfal_da_Rua_Augusta_from_Pra%C3%A7a_do_Com%C3%A9rcio_41.jpg/960px-Arco_Triunfal_da_Rua_Augusta_from_Pra%C3%A7a_do_Com%C3%A9rcio_41.jpg",
+   "rar": "Commun",
+   "n": 143
+  },
+  {
+   "nom": "Doha",
+   "desc": "Capitale et centre financier du Qatar, située sur le golfe Persique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Doha_-_Museum_of_Islamic_Art.jpg/960px-Doha_-_Museum_of_Islamic_Art.jpg",
+   "rar": "Peu commun",
+   "n": 144
+  },
+  {
+   "nom": "Bangui",
+   "desc": "Capitale de la République centrafricaine, située au bord de l'Oubangui.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Bangui_collage.png/960px-Bangui_collage.png",
+   "rar": "Commun",
+   "n": 145
+  },
+  {
+   "nom": "Kinshasa",
+   "desc": "Capitale de la RDC, située sur le fleuve Congo face à Brazzaville.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/La_Gombe%2C_Kinshasa%2C_RDC_%28cropped%29.jpg/960px-La_Gombe%2C_Kinshasa%2C_RDC_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 146
+  },
+  {
+   "nom": "Saint-Domingue",
+   "desc": "Capitale de la République dominicaine, plus ancienne ville du Nouveau Monde.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Santo_Domingo_montage.JPG",
+   "rar": "Commun",
+   "n": 147
+  },
+  {
+   "nom": "Brazzaville",
+   "desc": "Capitale de la République du Congo, située sur le fleuve Congo.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Quartier_OCH.jpg/960px-Quartier_OCH.jpg",
+   "rar": "Commun",
+   "n": 148
+  },
+  {
+   "nom": "Prague",
+   "desc": "Capitale de la République tchèque, surnommée la ville aux cent clochers.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Praha_1%2C_Karl%C5%AFv_most_20170810_014.jpg/960px-Praha_1%2C_Karl%C5%AFv_most_20170810_014.jpg",
+   "rar": "Peu commun",
+   "n": 149
+  },
+  {
+   "nom": "Bucarest",
+   "desc": "Capitale et cœur économique de la Roumanie, surnommée le Petit Paris.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Bucharest_University_Square_%28cropped%29.jpg/960px-Bucharest_University_Square_%28cropped%29.jpg",
+   "rar": "Commun",
+   "n": 150
+  },
+  {
+   "nom": "Londres",
+   "desc": "Capitale du Royaume-Uni, célèbre métropole traversée par la Tamise.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/London_Skyline_%28125508655%29.jpeg/960px-London_Skyline_%28125508655%29.jpeg",
+   "rar": "Commun",
+   "n": 151
+  },
+  {
+   "nom": "Moscou",
+   "desc": "Capitale de la Russie, célèbre pour la place Rouge et le Kremlin.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Saint_Basil%27s_Cathedral_and_the_Red_Square.jpg/960px-Saint_Basil%27s_Cathedral_and_the_Red_Square.jpg",
+   "rar": "Peu commun",
+   "n": 152
+  },
+  {
+   "nom": "Kigali",
+   "desc": "Capitale du Rwanda, connue pour sa propreté et ses nombreuses collines.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/My_city_kigali.jpg/960px-My_city_kigali.jpg",
+   "rar": "Commun",
+   "n": 153
+  },
+  {
+   "nom": "Basseterre",
+   "desc": "Capitale de Saint-Christophe-et-Niévès, célèbre port des Caraïbes.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/06/Basseterre.jpeg",
+   "rar": "Commun",
+   "n": 154
+  },
+  {
+   "nom": "Kingstown",
+   "desc": "Capitale et port principal de Saint-Vincent-et-les-Grenadines.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/St._Vincent%2C_Karibik_-_Kingstown_City_-_panoramio.jpg/960px-St._Vincent%2C_Karibik_-_Kingstown_City_-_panoramio.jpg",
+   "rar": "Épique",
+   "n": 155
+  },
+  {
+   "nom": "Castries",
+   "desc": "Capitale de Sainte-Lucie, connue pour son port animé et son marché.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/View_of_Castries_Saint_Lucia_Day248bdriveb.jpg/960px-View_of_Castries_Saint_Lucia_Day248bdriveb.jpg",
+   "rar": "Commun",
+   "n": 156
+  },
+  {
+   "nom": "Saint-Marin",
+   "desc": "Capitale de la République de Saint-Marin, perchée sur le mont Titano.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/View_of_Mount_Titano_-_San_Marino.jpg/960px-View_of_Mount_Titano_-_San_Marino.jpg",
+   "rar": "Commun",
+   "n": 157
+  },
+  {
+   "nom": "Honiara",
+   "desc": "Capitale des Îles Salomon, située sur l'île de Guadalcanal.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Honiara_View.jpg/960px-Honiara_View.jpg",
+   "rar": "Peu commun",
+   "n": 158
+  },
+  {
+   "nom": "San Salvador",
+   "desc": "Capitale du Salvador, située au pied du volcan San Salvador.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Monumento_al_Salvador_del_Mundo_1.jpg/960px-Monumento_al_Salvador_del_Mundo_1.jpg",
+   "rar": "Commun",
+   "n": 159
+  },
+  {
+   "nom": "Apia",
+   "desc": "Capitale et plus grande ville des Samoa, située sur l'île d'Upolu.",
+   "img": "https://thumb.wikimedia.org/wikipedia/en/thumb/a/a8/WS-apia-regierg.jpg/960px-WS-apia-regierg.jpg",
+   "rar": "Commun",
+   "n": 160
+  },
+  {
+   "nom": "São Tomé",
+   "desc": "Capitale de Sao Tomé-et-Principe, située dans le golfe de Guinée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Palais_pr%C3%A9sidentiel_%C3%A0_S%C3%A3o_Tom%C3%A9_%286%29.jpg/960px-Palais_pr%C3%A9sidentiel_%C3%A0_S%C3%A3o_Tom%C3%A9_%286%29.jpg",
+   "rar": "Commun",
+   "n": 161
+  },
+  {
+   "nom": "Dakar",
+   "desc": "Capitale du Sénégal, ville portuaire située sur la presqu'île du Cap-Vert.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Dakar-Ind%C3%A9pendance.jpg/960px-Dakar-Ind%C3%A9pendance.jpg",
+   "rar": "Peu commun",
+   "n": 162
+  },
+  {
+   "nom": "Belgrade",
+   "desc": "Capitale de la Serbie, située au confluent de la Save et du Danube.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Belgrade_from_the_Belgrade_Tower_%28October_2026%2C_1%29.jpg/960px-Belgrade_from_the_Belgrade_Tower_%28October_2026%2C_1%29.jpg",
+   "rar": "Commun",
+   "n": 163
+  },
+  {
+   "nom": "Victoria",
+   "desc": "Capitale des Seychelles, située sur l'île de Mahé.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Port_Victoria%2C_Seychelles_-_panoramio.jpg/960px-Port_Victoria%2C_Seychelles_-_panoramio.jpg",
+   "rar": "Commun",
+   "n": 164
+  },
+  {
+   "nom": "Freetown",
+   "desc": "Capitale de la Sierra Leone, grand port de l'Atlantique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Untitled_-_panoramio_-_Ghassan_Mroue_%281%29.jpg/960px-Untitled_-_panoramio_-_Ghassan_Mroue_%281%29.jpg",
+   "rar": "Commun",
+   "n": 165
+  },
+  {
+   "nom": "Singapour",
+   "desc": "Cité-État ultra-moderne et verdoyante d'Asie du Sud-Est.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Marina_Bay_Sands_20250903_%281%29.jpg/960px-Marina_Bay_Sands_20250903_%281%29.jpg",
+   "rar": "Peu commun",
+   "n": 166
+  },
+  {
+   "nom": "Bratislava",
+   "desc": "Capitale de la Slovaquie, située sur le Danube près de l'Autriche.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Slovakia_bratislava.jpg/960px-Slovakia_bratislava.jpg",
+   "rar": "Commun",
+   "n": 167
+  },
+  {
+   "nom": "Ljubljana",
+   "desc": "Capitale verdoyante de la Slovénie, traversée par la Ljubljanica.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/4/46/Ljubljana_Montage_2.png",
+   "rar": "Commun",
+   "n": 168
+  },
+  {
+   "nom": "Mogadiscio",
+   "desc": "Capitale et plus grande ville de Somalie, située sur l'océan Indien.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/Lido_beach_from_the_sea_in_Mogadishu.jpg/960px-Lido_beach_from_the_sea_in_Mogadishu.jpg",
+   "rar": "Commun",
+   "n": 169
+  },
+  {
+   "nom": "Khartoum",
+   "desc": "Capitale du Soudan, située au confluent du Nil Blanc et du Nil Bleu.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/%D8%A7%D9%84%D9%86%D9%8A%D9%84_%D8%A7%D9%84%D8%A3%D8%B2%D8%B1%D9%82_%D8%A7%D9%84%D8%B3%D9%88%D8%AF%D8%A7%D9%86.jpg/960px-%D8%A7%D9%84%D9%86%D9%8A%D9%84_%D8%A7%D9%84%D8%A3%D8%B2%D8%B1%D9%82_%D8%A7%D9%84%D8%B3%D9%88%D8%AF%D8%A7%D9%86.jpg",
+   "rar": "Commun",
+   "n": 170
+  },
+  {
+   "nom": "Djouba",
+   "desc": "Capitale du Soudan du Sud, située sur les rives du Nil Blanc.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/John_Garang_Mausoleum_Square_in_Juba.JPG/960px-John_Garang_Mausoleum_Square_in_Juba.JPG",
+   "rar": "Commun",
+   "n": 171
+  },
+  {
+   "nom": "Sri Jayawardenapura",
+   "desc": "Capitale administrative et législative du Sri Lanka.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Battaramulla_City.jpg/960px-Battaramulla_City.jpg",
+   "rar": "Commun",
+   "n": 172
+  },
+  {
+   "nom": "Stockholm",
+   "desc": "Capitale de la Suède, bâtie sur 14 îles et connue pour sa vieille ville.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Djurgardsbron_2008.jpg/960px-Djurgardsbron_2008.jpg",
+   "rar": "Commun",
+   "n": 173
+  },
+  {
+   "nom": "Berne",
+   "desc": "Capitale fédérale de la Suisse, connue pour sa vieille ville médiévale.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Bern%2C_Switzerland.JPG/960px-Bern%2C_Switzerland.JPG",
+   "rar": "Mythique",
+   "n": 174
+  },
+  {
+   "nom": "Paramaribo",
+   "desc": "Capitale du Suriname, célèbre pour son centre historique en bois.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/P1060656a.jpg/960px-P1060656a.jpg",
+   "rar": "Commun",
+   "n": 175
+  },
+  {
+   "nom": "Damas",
+   "desc": "Capitale de la Syrie, l'une des plus anciennes villes habitées au monde.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Damascus%2C_Syria%2C_Panoramic_view_of_Damascus.jpg/960px-Damascus%2C_Syria%2C_Panoramic_view_of_Damascus.jpg",
+   "rar": "Commun",
+   "n": 176
+  },
+  {
+   "nom": "Douchanbé",
+   "desc": "Capitale et plus grande ville du Tadjikistan, au pied des montagnes.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/A_view_of_Dushanbe%2C_Tajikistan.jpg/960px-A_view_of_Dushanbe%2C_Tajikistan.jpg",
+   "rar": "Commun",
+   "n": 177
+  },
+  {
+   "nom": "Dodoma",
+   "desc": "Capitale officielle de la Tanzanie, située au centre du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Street_in_Viwandani_ward%2C_Dodoma_City.jpg/960px-Street_in_Viwandani_ward%2C_Dodoma_City.jpg",
+   "rar": "Épique",
+   "n": 178
+  },
+  {
+   "nom": "N’Djaména",
+   "desc": "Capitale et plus grande ville du Tchad, située au bord du fleuve Chari.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Place_de_la_Nation.jpg/960px-Place_de_la_Nation.jpg",
+   "rar": "Commun",
+   "n": 179
+  },
+  {
+   "nom": "Bangkok",
+   "desc": "Capitale de la Thaïlande, célèbre pour ses temples et ses canaux.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/4Y1A1159_Bangkok_%2833536795515%29.jpg/960px-4Y1A1159_Bangkok_%2833536795515%29.jpg",
+   "rar": "Commun",
+   "n": 180
+  },
+  {
+   "nom": "Dili",
+   "desc": "Capitale du Timor oriental, située sur la côte nord de l'île.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Government_Palace%2C_Dili%2C_2023_%2802%29.jpg/960px-Government_Palace%2C_Dili%2C_2023_%2802%29.jpg",
+   "rar": "Commun",
+   "n": 181
+  },
+  {
+   "nom": "Lomé",
+   "desc": "Capitale et principal port du Togo, située sur le golfe de Guinée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Lom%C3%A9_Grand_March%C3%A9_with_the_Cath%C3%A9drale_du_Sacr%C3%A9_Coeur_%2833592985581%29.jpg/960px-Lom%C3%A9_Grand_March%C3%A9_with_the_Cath%C3%A9drale_du_Sacr%C3%A9_Coeur_%2833592985581%29.jpg",
+   "rar": "Légendaire",
+   "n": 182
+  },
+  {
+   "nom": "Nukuʻalofa",
+   "desc": "Capitale du Royaume de Tonga, située sur l'île de Tongatapu.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Royal_Palace%2C_Nuku%27alofa%2C_Nov_18.jpg/960px-Royal_Palace%2C_Nuku%27alofa%2C_Nov_18.jpg",
+   "rar": "Commun",
+   "n": 183
+  },
+  {
+   "nom": "Port-d’Espagne",
+   "desc": "Capitale de Trinité-et-Tobago, célèbre pour son carnaval.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/e/eb/POS_at_night_Skyline.jpg",
+   "rar": "Commun",
+   "n": 184
+  },
+  {
+   "nom": "Tunis",
+   "desc": "Capitale de la Tunisie, réputée pour sa médina inscrite à l'UNESCO.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Vue_de_Tunis.jpg/960px-Vue_de_Tunis.jpg",
+   "rar": "Peu commun",
+   "n": 185
+  },
+  {
+   "nom": "Achgabat",
+   "desc": "Capitale du Turkménistan, célèbre pour ses édifices en marbre blanc.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/View_of_Ashgabat_%2842376779291%29.jpg/960px-View_of_Ashgabat_%2842376779291%29.jpg",
+   "rar": "Commun",
+   "n": 186
+  },
+  {
+   "nom": "Ankara",
+   "desc": "Capitale de la Turquie, abritant le mausolée d'Atatürk et une citadelle.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/0/04/Ankara_Montage_2020.jpg",
+   "rar": "Commun",
+   "n": 187
+  },
+  {
+   "nom": "Funafuti",
+   "desc": "Capitale de Tuvalu, atoll corallien situé dans le Pacifique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Tuvalu_-_Funafuti_-_School.jpg/960px-Tuvalu_-_Funafuti_-_School.jpg",
+   "rar": "Peu commun",
+   "n": 188
+  },
+  {
+   "nom": "Kiev",
+   "desc": "Capitale de l'Ukraine, située sur le Dniepr et riche d'histoire.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D1%81%D0%B5%D1%80%D0%BF%D0%B5%D0%BD%D1%8C_2019.jpg/960px-%D0%91%D1%83%D0%B4%D0%B8%D0%BD%D0%BE%D0%BA_%D0%B7_%D1%85%D0%B8%D0%BC%D0%B5%D1%80%D0%B0%D0%BC%D0%B8%2C_%D1%81%D0%B5%D1%80%D0%BF%D0%B5%D0%BD%D1%8C_2019.jpg",
+   "rar": "Commun",
+   "n": 189
+  },
+  {
+   "nom": "Montevideo",
+   "desc": "Capitale de l'Uruguay et principal port du pays, sur le Río de la Plata.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/The_City_%28198895997%29.jpeg/960px-The_City_%28198895997%29.jpeg",
+   "rar": "Commun",
+   "n": 190
+  },
+  {
+   "nom": "Port-Vila",
+   "desc": "Capitale et centre économique du Vanuatu, située sur l'île d'Éfaté.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Port_Vila_aerial.jpg/960px-Port_Vila_aerial.jpg",
+   "rar": "Commun",
+   "n": 191
+  },
+  {
+   "nom": "Vatican",
+   "desc": "Plus petit État du monde et siège de l'Église catholique.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/0_Palazzo_del_Governatorato_-_Vatican.JPG/960px-0_Palazzo_del_Governatorato_-_Vatican.JPG",
+   "rar": "Peu commun",
+   "n": 192
+  },
+  {
+   "nom": "Caracas",
+   "desc": "Capitale et plus grande ville du Venezuela, située dans une vallée.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Caracas_desde_el_%C3%A1vila.jpg/960px-Caracas_desde_el_%C3%A1vila.jpg",
+   "rar": "Commun",
+   "n": 193
+  },
+  {
+   "nom": "Hanoï",
+   "desc": "Capitale du Vietnam, ville millénaire célèbre pour ses lacs et sa culture.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/04489-Hanoi_%2832954159775%29.jpg/960px-04489-Hanoi_%2832954159775%29.jpg",
+   "rar": "Commun",
+   "n": 194
+  },
+  {
+   "nom": "Sanaa",
+   "desc": "Capitale du Yémen, célèbre pour sa vieille ville classée par l'UNESCO.",
+   "img": "https://upload.wikimedia.org/wikipedia/commons/5/51/Sanaa%2C_Yemen_%287%29.jpg",
+   "rar": "Commun",
+   "n": 195
+  },
+  {
+   "nom": "Lusaka",
+   "desc": "Capitale et plus grande ville de la Zambie, située sur le plateau central.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Downtown_Lusaka.JPG/960px-Downtown_Lusaka.JPG",
+   "rar": "Épique",
+   "n": 196
+  },
+  {
+   "nom": "Harare",
+   "desc": "Capitale et plus grande ville du Zimbabwe, centre économique du pays.",
+   "img": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Crowne_Plaza%2C_Harare.png/960px-Crowne_Plaza%2C_Harare.png",
+   "rar": "Légendaire",
+   "n": 197
+  }
+ ],
+ "streaming": [
+  {
+   "nom": "AXN White Amazon Channel",
+   "desc": "Séries dramatiques et comédies d'AXN sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/waxIZOYRsPmkwNjohxFqZ7TcJCq.png",
+   "rar": "Épique",
+   "n": 1
+  },
+  {
+   "nom": "Action Max Amazon Channel",
+   "desc": "Films et séries d'action sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/h7uGCoj58dA5gpbyPmbION7mpg.png",
+   "rar": "Rare",
+   "n": 2
+  },
+  {
+   "nom": "Alleskino",
+   "desc": "Plateforme allemande de streaming de cinéma d'auteur.",
+   "img": "https://image.tmdb.org/t/p/w500/xT4qcTThQcx0qvj27GjPlDl1YAj.png",
+   "rar": "Peu commun",
+   "n": 3
+  },
+  {
+   "nom": "alleskino Amazon Channel",
+   "desc": "Cinéma allemand Alleskino sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/zNTVxeMlufUYsPwqGMGFSurGreV.png",
+   "rar": "Commun",
+   "n": 4
+  },
+  {
+   "nom": "Amazon Prime Video",
+   "desc": "Service mondial de streaming vidéo par abonnement d'Amazon.",
+   "img": "https://image.tmdb.org/t/p/w500/gMZdpavHmxFNnLpMHwVxfqeux2g.png",
+   "rar": "Mythique",
+   "n": 5
+  },
+  {
+   "nom": "Amazon Prime Video Free with Ads",
+   "desc": "Streaming gratuit financé par la publicité sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/fuVBtr57kxnYzOILZ38xqSmBeyR.png",
+   "rar": "Épique",
+   "n": 6
+  },
+  {
+   "nom": "Amazon Prime Video with Ads",
+   "desc": "Abonnement Prime Video avec publicités ciblées.",
+   "img": "https://image.tmdb.org/t/p/w500/tpwTT1FpWqLLhxUfAuDavIXDDfI.png",
+   "rar": "Commun",
+   "n": 7
+  },
+  {
+   "nom": "Amazon Video",
+   "desc": "Achat et location de films et séries sur Amazon.",
+   "img": "https://image.tmdb.org/t/p/w500/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+   "rar": "Commun",
+   "n": 8
+  },
+  {
+   "nom": "Animation Digital Network",
+   "desc": "Plateforme francophone de streaming d'animés japonais.",
+   "img": "https://image.tmdb.org/t/p/w500/lqW5wpRdZQrAPiHv1nZo3j8t4BW.png",
+   "rar": "Commun",
+   "n": 9
+  },
+  {
+   "nom": "Anime Digital Network Amazon Channel",
+   "desc": "Catalogue d'animation japonaise d'ADN sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/xcrhIrntyI8Ljmt8ETGe6AofE8V.png",
+   "rar": "Peu commun",
+   "n": 10
+  },
+  {
+   "nom": "Apollo",
+   "desc": "Service estonien de VOD avec films et séries baltes.",
+   "img": "https://image.tmdb.org/t/p/w500/d3MKcEDqgw9IywHS8YgqISFcySO.png",
+   "rar": "Commun",
+   "n": 11
+  },
+  {
+   "nom": "Apple TV",
+   "desc": "Application et service de streaming vidéo d'Apple.",
+   "img": "https://image.tmdb.org/t/p/w500/9icYBfYFcwgCbky5VdGUIKJ4C5i.png",
+   "rar": "Mythique",
+   "n": 12
+  },
+  {
+   "nom": "Apple TV Amazon Channel",
+   "desc": "Contenus sélectionnés d'Apple TV sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/rerVCu9auZrgxTTiZu1criqrQzg.png",
+   "rar": "Épique",
+   "n": 13
+  },
+  {
+   "nom": "Apple TV Store",
+   "desc": "Boutique Apple pour l'achat et la location de films et séries.",
+   "img": "https://image.tmdb.org/t/p/w500/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+   "rar": "Rare",
+   "n": 14
+  },
+  {
+   "nom": "ARD Plus Amazon channel",
+   "desc": "Archives et fictions de l'ARD sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/qF2LbROaQnSQknEyru1mrdMxqy0.png",
+   "rar": "Commun",
+   "n": 15
+  },
+  {
+   "nom": "Arte",
+   "desc": "Service franco-allemand de streaming culturel et documentaire.",
+   "img": "https://image.tmdb.org/t/p/w500/ieo2l4zOaljYqJNGxWY8jWryld5.png",
+   "rar": "Commun",
+   "n": 16
+  },
+  {
+   "nom": "ARTE VOD",
+   "desc": "Plateforme de VOD à l'acte éditée par Arte.",
+   "img": "https://image.tmdb.org/t/p/w500/z32NGSc2wYxQzcOc24iXK8q35A1.png",
+   "rar": "Peu commun",
+   "n": 17
+  },
+  {
+   "nom": "Arthouse CNMA Amazon Channel",
+   "desc": "Cinéma d'auteur et d'art et essai sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/4fzrs0Ex36KoZUiw5OS84avELuJ.png",
+   "rar": "Commun",
+   "n": 18
+  },
+  {
+   "nom": "Artiflix",
+   "desc": "Plateforme de films classiques et patrimoine du cinéma.",
+   "img": "https://image.tmdb.org/t/p/w500/hO4tZhtSJ7VrVnJusimkY3MltSx.png",
+   "rar": "Commun",
+   "n": 19
+  },
+  {
+   "nom": "Artify",
+   "desc": "VOD dédiée au cinéma tunisien et arabe.",
+   "img": "https://image.tmdb.org/t/p/w500/j6yqJltFxcDIrWB9bBJ2TDQQC8X.png",
+   "rar": "Commun",
+   "n": 20
+  },
+  {
+   "nom": "AVA CSAL",
+   "desc": "Plateforme de cinéma indépendant et de festivals.",
+   "img": "https://image.tmdb.org/t/p/w500/u3KVpMi5PGXEm5SlZ8telgA5flJ.png",
+   "rar": "Rare",
+   "n": 21
+  },
+  {
+   "nom": "AXN Black Amazon Channel",
+   "desc": "Films et séries policières et à suspense sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/nor5QyGmfv9AtJI2qPhOVdBa3hA.png",
+   "rar": "Légendaire",
+   "n": 22
+  },
+  {
+   "nom": "BBC Player Amazon Channel",
+   "desc": "Séries, comédies et documentaires de la BBC sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/ozvOiPMMjhOMXpcUYMDK5ut6puz.png",
+   "rar": "Épique",
+   "n": 23
+  },
+  {
+   "nom": "Be TV Go",
+   "desc": "Application de streaming et TV à la demande de BeTV en Belgique.",
+   "img": "https://image.tmdb.org/t/p/w500/hOLS8Gwjisz8YMFfyaW4ePK4UHv.png",
+   "rar": "Rare",
+   "n": 24
+  },
+  {
+   "nom": "Benshi Amazon Channel",
+   "desc": "Streaming jeunesse dédié aux films pour enfants sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/9CGo4lo9D6GgDOY2nmWDA8bWki1.png",
+   "rar": "Commun",
+   "n": 25
+  },
+  {
+   "nom": "Bloodstream",
+   "desc": "Plateforme de cinéma de genre et d'horreur.",
+   "img": "https://image.tmdb.org/t/p/w500/grSWrznc2QaymD5bM0MxMmcdrQl.png",
+   "rar": "Peu commun",
+   "n": 26
+  },
+  {
+   "nom": "blue TV",
+   "desc": "Service TV et streaming de Swisscom.",
+   "img": "https://image.tmdb.org/t/p/w500/omviag2i66PzB1VqDc48pbwTC8Z.png",
+   "rar": "Peu commun",
+   "n": 27
+  },
+  {
+   "nom": "BroadwayHD",
+   "desc": "Streaming de comédies musicales et pièces de théâtre filmées.",
+   "img": "https://image.tmdb.org/t/p/w500/aPhfGJf1ilFprLhUvpuBpkpHoO.png",
+   "rar": "Commun",
+   "n": 28
+  },
+  {
+   "nom": "BrutX Amazon Channel",
+   "desc": "Documentaires et fictions du média Brut sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/v5nFeMfHNflqaTidVBuIdePId34.png",
+   "rar": "Commun",
+   "n": 29
+  },
+  {
+   "nom": "CaixaForum+",
+   "desc": "Plateforme culturelle espagnole dédiée à l'art et la science.",
+   "img": "https://image.tmdb.org/t/p/w500/5BBtkfnbubfLyPXDtscrgQHg1cq.png",
+   "rar": "Commun",
+   "n": 30
+  },
+  {
+   "nom": "Canal VOD",
+   "desc": "VOD à l'acte de Canal+ pour achat et location.",
+   "img": "https://image.tmdb.org/t/p/w500/51fX3l4yElitnfui0IkbMUmfmgF.png",
+   "rar": "Commun",
+   "n": 31
+  },
+  {
+   "nom": "Canal+",
+   "desc": "Streaming par abonnement de films, séries et sports de Canal+.",
+   "img": "https://image.tmdb.org/t/p/w500/gliWKhLJVdm7QwL1braBCRko5dx.png",
+   "rar": "Mythique",
+   "n": 32
+  },
+  {
+   "nom": "Canal+ Séries",
+   "desc": "Offre Canal+ par abonnement axée sur les séries.",
+   "img": "https://image.tmdb.org/t/p/w500/fIfIIugqRNkW0YmfypjJB2X7xsX.png",
+   "rar": "Épique",
+   "n": 33
+  },
+  {
+   "nom": "Cine+ OCS Amazon Channel",
+   "desc": "Catalogue cinéma de Ciné+ et séries d'OCS sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/5sfivEdalxJRF96pcTQ8bffu05s.png",
+   "rar": "Rare",
+   "n": 34
+  },
+  {
+   "nom": "CineMember",
+   "desc": "Streaming par abonnement de cinéma indépendant.",
+   "img": "https://image.tmdb.org/t/p/w500/gd0zMEph8WdBDaRd7LTqfCG53vI.png",
+   "rar": "Commun",
+   "n": 35
+  },
+  {
+   "nom": "CineMix+ Amazon Channel",
+   "desc": "Films et fictions grand public sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/v4zffp54VJxTKLaL8bXJvG7DaBl.png",
+   "rar": "Commun",
+   "n": 36
+  },
+  {
+   "nom": "Cinu",
+   "desc": "Plateforme suisse de VOD axée sur le cinéma d'auteur.",
+   "img": "https://image.tmdb.org/t/p/w500/qmFZGxSNeiv4pDiQRLoiTLF4jIg.png",
+   "rar": "Commun",
+   "n": 37
+  },
+  {
+   "nom": "Crime+Investigation Play Amazon Channel",
+   "desc": "Documentaires de faits divers et criminels sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/kRZDLwZvgtxoz0xNIVkQ3dd7tbE.png",
+   "rar": "Rare",
+   "n": 38
+  },
+  {
+   "nom": "Crunchyroll",
+   "desc": "Plateforme mondiale de streaming d'animés et mangas.",
+   "img": "https://image.tmdb.org/t/p/w500/uFL3c4Cq8M6WoLymlC5Y8bmGytV.png",
+   "rar": "Mythique",
+   "n": 39
+  },
+  {
+   "nom": "Crunchyroll Amazon Channel",
+   "desc": "Animés et séries japonaises Crunchyroll sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/qHLLmKo7udRgiSnIASVTwP2IxfJ.png",
+   "rar": "Épique",
+   "n": 40
+  },
+  {
+   "nom": "Cultpix",
+   "desc": "Plateforme de cinéma vintage et d'exploitation.",
+   "img": "https://image.tmdb.org/t/p/w500/hBR1NB5z52BHMqowq0TgZqMcDBv.png",
+   "rar": "Rare",
+   "n": 41
+  },
+  {
+   "nom": "Curiosity Stream",
+   "desc": "Streaming par abonnement de documentaires scientifiques.",
+   "img": "https://image.tmdb.org/t/p/w500/oPrhlrmvdq8QDWVXgHLAZz8B2Of.png",
+   "rar": "Commun",
+   "n": 42
+  },
+  {
+   "nom": "Dekkoo",
+   "desc": "Films et séries LGBTQ+ en streaming par abonnement.",
+   "img": "https://image.tmdb.org/t/p/w500/pqiY6w53xNELS5Y16pYQYvCxgE.png",
+   "rar": "Peu commun",
+   "n": 43
+  },
+  {
+   "nom": "Discovery+ Amazon Channel",
+   "desc": "Séries documentaires de Discovery+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/52htht83nlt2aAobIug88TeiWvO.png",
+   "rar": "Rare",
+   "n": 44
+  },
+  {
+   "nom": "Disney Plus",
+   "desc": "Streaming par abonnement avec Disney, Pixar, Marvel et Star Wars.",
+   "img": "https://image.tmdb.org/t/p/w500/5eZ872CghnHFLB1j8grszbrx0dx.png",
+   "rar": "Mythique",
+   "n": 45
+  },
+  {
+   "nom": "DocAlliance Films",
+   "desc": "Plateforme européenne de documentaires d'auteur.",
+   "img": "https://image.tmdb.org/t/p/w500/dAna3PsNLAzPDJkEKWYzMlj94jF.png",
+   "rar": "Épique",
+   "n": 46
+  },
+  {
+   "nom": "DOCSVILLE",
+   "desc": "Streaming de documentaires indépendants primés.",
+   "img": "https://image.tmdb.org/t/p/w500/enoyK3NBsSCTpaJJJIR5x28mWHN.png",
+   "rar": "Rare",
+   "n": 47
+  },
+  {
+   "nom": "Eventive",
+   "desc": "Billetterie et streaming pour festivals de cinéma et événements.",
+   "img": "https://image.tmdb.org/t/p/w500/3TLkIBBnZQ9KdjIjWU7NdqXincI.png",
+   "rar": "Commun",
+   "n": 48
+  },
+  {
+   "nom": "FEAR Amazon Channel",
+   "desc": "Films d'épouvante et d'horreur sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/fxK1BOygqXrmmgZdcseRRTIoHLL.png",
+   "rar": "Commun",
+   "n": 49
+  },
+  {
+   "nom": "Fernsehen mit Herz Amazon Channel",
+   "desc": "Comédies romantiques et fictions sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/WpJabF1N2VZcfT5RuixglefxiA.png",
+   "rar": "Peu commun",
+   "n": 50
+  },
+  {
+   "nom": "FILMBOX+ Now Amazon Channel",
+   "desc": "Films récents, séries et classiques européens sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/rAJjslepn3Be3RppygJDVVYdkLw.png",
+   "rar": "Commun",
+   "n": 51
+  },
+  {
+   "nom": "filmfriend",
+   "desc": "Streaming pour bibliothèques publiques avec films et fictions.",
+   "img": "https://image.tmdb.org/t/p/w500/psovWwZtnFahybsSIXNz3ZfReBn.png",
+   "rar": "Commun",
+   "n": 52
+  },
+  {
+   "nom": "filmingo",
+   "desc": "Plateforme suisse de VOD de cinéma d'auteur international.",
+   "img": "https://image.tmdb.org/t/p/w500/5b7O8mKPJIirE7oDl2Ex4HMeXYv.png",
+   "rar": "Commun",
+   "n": 53
+  },
+  {
+   "nom": "Filmtap",
+   "desc": "VOD proposant films et séries indépendants.",
+   "img": "https://image.tmdb.org/t/p/w500/jaekUwv4s9rVc0GvQhsnwDp82MA.png",
+   "rar": "Peu commun",
+   "n": 54
+  },
+  {
+   "nom": "Filmtastic Amazon Channel",
+   "desc": "Films d'action, thrillers et blockbusters sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/ptmzPMNuPJXi3zc48EJ1rXElSBz.png",
+   "rar": "Commun",
+   "n": 55
+  },
+  {
+   "nom": "Filmzie",
+   "desc": "Streaming gratuit avec pub de films et documentaires indépendants.",
+   "img": "https://image.tmdb.org/t/p/w500/6tVbNdx7Yzvi6LThNW5Wo1yov6A.png",
+   "rar": "Rare",
+   "n": 56
+  },
+  {
+   "nom": "FlimmerkisteTV Amazon Channel",
+   "desc": "Comédies populaires et drames familiaux sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/iOpRuhzi1exWyWaYDBn8WagEvsz.png",
+   "rar": "Légendaire",
+   "n": 57
+  },
+  {
+   "nom": "FOUND TV",
+   "desc": "Streaming gratuit de documentaires et fictions émergentes.",
+   "img": "https://image.tmdb.org/t/p/w500/2hAu4MUecOOMTtrlJ3XEqB4dhZr.png",
+   "rar": "Épique",
+   "n": 58
+  },
+  {
+   "nom": "France TV Amazon Channel",
+   "desc": "Programmes de France Télévisions sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/dZtmGfUhFagm7YNk1Idol1T2t7e.png",
+   "rar": "Rare",
+   "n": 59
+  },
+  {
+   "nom": "Gaumont Amazon Channel",
+   "desc": "Patrimoine et comédies Gaumont sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/7rmxWbaHmau11uI6W2nGyKJZlFn.png",
+   "rar": "Commun",
+   "n": 60
+  },
+  {
+   "nom": "GuideDoc",
+   "desc": "Plateforme réputée de documentaires de création.",
+   "img": "https://image.tmdb.org/t/p/w500/zlgqOma3er9QTv5r8g4nhkZCqeN.png",
+   "rar": "Peu commun",
+   "n": 61
+  },
+  {
+   "nom": "Gullimax Amazon Channel",
+   "desc": "Dessins animés et émissions pour enfants sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/pBuufIoVRABPofRjcrxyGsv6cVq.png",
+   "rar": "Commun",
+   "n": 62
+  },
+  {
+   "nom": "Hayu",
+   "desc": "Streaming par abonnement dédié à la téléréalité.",
+   "img": "https://image.tmdb.org/t/p/w500/rQt1hWSiUthS3vDuIEO9NiJa3nN.png",
+   "rar": "Commun",
+   "n": 63
+  },
+  {
+   "nom": "Hayu Amazon Channel",
+   "desc": "Émissions de téléréalité Hayu sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/7j9bf0UmdxxmZtPsLggYLnGqrqS.png",
+   "rar": "Rare",
+   "n": 64
+  },
+  {
+   "nom": "HBO Max",
+   "desc": "Streaming par abonnement de Warner Bros. Discovery avec séries HBO.",
+   "img": "https://image.tmdb.org/t/p/w500/skypuy7SXuugIQeYg0IglmzoKaS.png",
+   "rar": "Mythique",
+   "n": 65
+  },
+  {
+   "nom": "HBO Max Amazon Channel",
+   "desc": "Séries HBO et films Warner Bros. sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/64fLWeSyZ1KQZhIdvTdy4QHeWty.png",
+   "rar": "Épique",
+   "n": 66
+  },
+  {
+   "nom": "Hoichoi",
+   "desc": "Streaming par abonnement spécialisé en contenus bengalis.",
+   "img": "https://image.tmdb.org/t/p/w500/8dgAD4EzQWMsyudVwWCFg19998L.png",
+   "rar": "Rare",
+   "n": 67
+  },
+  {
+   "nom": "Home of Horror Amazon Channel",
+   "desc": "Films d'angoisse et thrillers horrifiques sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/kJnso1tPo1jClQ3hDjQSC5sLBrr.png",
+   "rar": "Commun",
+   "n": 68
+  },
+  {
+   "nom": "Hopster Amazon Channel",
+   "desc": "Contenus éducatifs et ludiques pour enfants sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/p8eXYvEvVt78uSORrGhKbZG9jlS.png",
+   "rar": "Commun",
+   "n": 69
+  },
+  {
+   "nom": "INA madelen Amazon Channel",
+   "desc": "Archives télévisuelles et séries de l'INA sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/cQRFA66BrjIaBGp2RSC7ChS5ZHi.png",
+   "rar": "Peu commun",
+   "n": 70
+  },
+  {
+   "nom": "INA madelen",
+   "desc": "Streaming de l'INA pour revoir l'histoire de la télévision.",
+   "img": "https://image.tmdb.org/t/p/w500/gKkYpuVFoVJyaLDh4LZ3EBZt5eL.png",
+   "rar": "Commun",
+   "n": 71
+  },
+  {
+   "nom": "Insomnia Amazon Channel",
+   "desc": "Films d'horreur et fantastiques sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/w0981e2AB5dy7ttryZgQZBl10Bd.png",
+   "rar": "Commun",
+   "n": 72
+  },
+  {
+   "nom": "JustWatch TV Free",
+   "desc": "Sélection de contenus de streaming gratuits par JustWatch.",
+   "img": "https://image.tmdb.org/t/p/w500/dMMp97ZdEkokwbdjqeM12Xk0acu.png",
+   "rar": "Peu commun",
+   "n": 73
+  },
+  {
+   "nom": "KableOne",
+   "desc": "Fictions et séries d'Afrique du Sud par abonnement.",
+   "img": "https://image.tmdb.org/t/p/w500/tXSfA8awn62PUBbGIGhejrTPwiG.png",
+   "rar": "Commun",
+   "n": 74
+  },
+  {
+   "nom": "Kinderwelt Amazon Channel",
+   "desc": "Programmes jeunesse et dessins animés sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/8PVisTTWeABfUxhIIyzJpYGQG1M.png",
+   "rar": "Commun",
+   "n": 75
+  },
+  {
+   "nom": "Kino on Demand",
+   "desc": "Location de films en soutien aux cinémas de quartier.",
+   "img": "https://image.tmdb.org/t/p/w500/xA51o6jG0Bn0z8YmMcZ6kua9cbp.png",
+   "rar": "Commun",
+   "n": 76
+  },
+  {
+   "nom": "Kixi Select Amazon Channel",
+   "desc": "Dessins animés et films éducatifs jeunesse sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/1xUF6LZBMZ2AoklTDofGqi3Fr6g.png",
+   "rar": "Rare",
+   "n": 77
+  },
+  {
+   "nom": "Kocowa",
+   "desc": "Streaming spécialisé dans les séries sud-coréennes.",
+   "img": "https://image.tmdb.org/t/p/w500/tUXhi1QnIhdoPOTFUKKTrshUuiV.png",
+   "rar": "Légendaire",
+   "n": 78
+  },
+  {
+   "nom": "LaCinetek",
+   "desc": "Chefs-d'œuvre du cinéma choisis par des réalisateurs.",
+   "img": "https://image.tmdb.org/t/p/w500/gONX9BWf5xEK9UgXDtVWouq7eSu.png",
+   "rar": "Épique",
+   "n": 79
+  },
+  {
+   "nom": "Lionsgate+ Amazon Channel",
+   "desc": "Séries originales et films Lionsgate sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/1356slxu4QrHOMrEVDKHJXRo5sW.png",
+   "rar": "Rare",
+   "n": 80
+  },
+  {
+   "nom": "Love Nature Amazon Channel",
+   "desc": "Documentaires sur la faune, la flore et la nature sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/nfGvnsjqAOAPChbkdCBKX4c1MOh.png",
+   "rar": "Commun",
+   "n": 81
+  },
+  {
+   "nom": "M6+",
+   "desc": "Streaming gratuit et replay du groupe M6.",
+   "img": "https://image.tmdb.org/t/p/w500/9o7nQnmlVE94XqPcMhVPGycatxU.png",
+   "rar": "Peu commun",
+   "n": 82
+  },
+  {
+   "nom": "M6plus Amazon Channel",
+   "desc": "Programmes et séries de M6+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/kI6rWxuFpNJc9zWQiZxp9fWvorJ.png",
+   "rar": "Peu commun",
+   "n": 83
+  },
+  {
+   "nom": "Made in Europe Amazon Channel",
+   "desc": "Fictions, comédies et séries européennes sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/w9E1q2EUKFiRQ4q8aPaLtcaxxuj.png",
+   "rar": "Commun",
+   "n": 84
+  },
+  {
+   "nom": "Magellan TV",
+   "desc": "Streaming de documentaires historiques, spatiaux et scientifiques.",
+   "img": "https://image.tmdb.org/t/p/w500/hyo2pwkoGKt5Erpz9TfgNQbN8uq.png",
+   "rar": "Commun",
+   "n": 85
+  },
+  {
+   "nom": "MGM Amazon Channel",
+   "desc": "Classiques et franchises de la MGM sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/yAWdNyJunfCeyIR14tSE9fEFF3i.png",
+   "rar": "Rare",
+   "n": 86
+  },
+  {
+   "nom": "MGM Plus Amazon Channel",
+   "desc": "Séries prestigieuses et films cultes MGM sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/gk7O3l9qHttE9F3hgDNnhbhlOs7.png",
+   "rar": "Légendaire",
+   "n": 87
+  },
+  {
+   "nom": "Moconomy Amazon Channel",
+   "desc": "Documentaires financiers et de société sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/rj6jH5JIOqThIJvJ4c8x1yWWoAo.png",
+   "rar": "Épique",
+   "n": 88
+  },
+  {
+   "nom": "Molotov TV",
+   "desc": "Application de distribution TV et de replay en streaming.",
+   "img": "https://image.tmdb.org/t/p/w500/g8P4BJ2Wrya0VkbGUxBoUqpXtSs.png",
+   "rar": "Rare",
+   "n": 89
+  },
+  {
+   "nom": "Mosaik Amazon Channel",
+   "desc": "Films familiaux et divertissement sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/gIs4K2OZNAut9a0ARyb5ntc6nQm.png",
+   "rar": "Commun",
+   "n": 90
+  },
+  {
+   "nom": "Motorvision TV Amazon Channel",
+   "desc": "Sports mécaniques et compétitions auto sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/qGXNkoCzR1QzK3fHcO07Pn2mmGY.png",
+   "rar": "Commun",
+   "n": 91
+  },
+  {
+   "nom": "MovieMe",
+   "desc": "VOD avec films suisses et européens.",
+   "img": "https://image.tmdb.org/t/p/w500/pxmDUtLdaSCek4LUwme4h7wfsC9.png",
+   "rar": "Peu commun",
+   "n": 92
+  },
+  {
+   "nom": "MUBI",
+   "desc": "Streaming et communauté cinéphile pour films d'auteur primés.",
+   "img": "https://image.tmdb.org/t/p/w500/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+   "rar": "Commun",
+   "n": 93
+  },
+  {
+   "nom": "MUBI Amazon Channel",
+   "desc": "Sélection MUBI de cinéma d'auteur sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+   "rar": "Rare",
+   "n": 94
+  },
+  {
+   "nom": "Netflix",
+   "desc": "Service mondial de streaming de films, séries et documentaires.",
+   "img": "https://image.tmdb.org/t/p/w500/rK1KljqmbvO9HQa1PBFLILWah72.png",
+   "rar": "Mythique",
+   "n": 95
+  },
+  {
+   "nom": "Netflix Kids",
+   "desc": "Espace jeunesse Netflix avec dessins animés et animations.",
+   "img": "https://image.tmdb.org/t/p/w500/rjPaInWHH1nPgtRFF17BbHN2gu.png",
+   "rar": "Épique",
+   "n": 96
+  },
+  {
+   "nom": "Netflix Standard with Ads",
+   "desc": "Abonnement Netflix à tarif réduit avec coupures publicitaires.",
+   "img": "https://image.tmdb.org/t/p/w500/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+   "rar": "Rare",
+   "n": 97
+  },
+  {
+   "nom": "Netzkino",
+   "desc": "Streaming germanophone gratuit financé par la publicité.",
+   "img": "https://image.tmdb.org/t/p/w500/sFttgm39WC1HxP2qZvlDzh2Gk9O.png",
+   "rar": "Commun",
+   "n": 98
+  },
+  {
+   "nom": "Novo 19",
+   "desc": "Diffusion numérique de films et fictions contemporaines.",
+   "img": "https://image.tmdb.org/t/p/w500/oWzef0v7kMQzjAhax6wcc52GfxW.png",
+   "rar": "Commun",
+   "n": 99
+  },
+  {
+   "nom": "Orange VOD",
+   "desc": "Boutique et service de VOD à l'acte d'Orange.",
+   "img": "https://image.tmdb.org/t/p/w500/73lu1dtE9uJLWK1laXpeaAFh48j.png",
+   "rar": "Peu commun",
+   "n": 100
+  },
+  {
+   "nom": "Outbuster Amazon Channel",
+   "desc": "Films indépendants inédits en salle sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/7Q91dRDrFOvK0oikP2sMIWkVW0P.png",
+   "rar": "Commun",
+   "n": 101
+  },
+  {
+   "nom": "OUTtv Amazon Channel",
+   "desc": "Programmes et films axés sur la culture LGBTQ+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/x6kyGhdmBrAqE4uRc7XpxCj3hZu.png",
+   "rar": "Rare",
+   "n": 102
+  },
+  {
+   "nom": "Paramount Plus",
+   "desc": "Service mondial de streaming par abonnement de Paramount Global.",
+   "img": "https://image.tmdb.org/t/p/w500/pkx3klJlwW5JdtaulvDx6hDNtch.png",
+   "rar": "Mythique",
+   "n": 103
+  },
+  {
+   "nom": "Paramount Plus Apple TV channel",
+   "desc": "Abonnement et contenus Paramount+ sur Apple TV.",
+   "img": "https://image.tmdb.org/t/p/w500/xu4LyKTwasTbta1Z0qWtZG48yZ3.png",
+   "rar": "Épique",
+   "n": 104
+  },
+  {
+   "nom": "Paramount Plus Premium",
+   "desc": "Formule Paramount+ 4K UHD sans publicité et multi-écrans.",
+   "img": "https://image.tmdb.org/t/p/w500/4N4BMd0Mm0kHAmF7RZgL5lW3cwc.png",
+   "rar": "Rare",
+   "n": 105
+  },
+  {
+   "nom": "Paramount+ Amazon Channel",
+   "desc": "Films, séries et créations de Paramount+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/bxX0YVOCY7bI85BKRlJAAQ2EjUR.png",
+   "rar": "Commun",
+   "n": 106
+  },
+  {
+   "nom": "Pathé Home",
+   "desc": "VOD de Pathé pour l'achat et la location de films récents.",
+   "img": "https://image.tmdb.org/t/p/w500/zbXVTncv6m6ojLjPQJeW7u0SYKp.png",
+   "rar": "Commun",
+   "n": 107
+  },
+  {
+   "nom": "Pijama Films",
+   "desc": "Courts-métrages et fictions indépendantes en streaming espagnol.",
+   "img": "https://image.tmdb.org/t/p/w500/fy6GVs6ZtKluakv0Z5nuLesmTqx.png",
+   "rar": "Commun",
+   "n": 108
+  },
+  {
+   "nom": "Play Suisse",
+   "desc": "Streaming public suisse des quatre régions linguistiques.",
+   "img": "https://image.tmdb.org/t/p/w500/creLkhmK3MfjfaY1xY4Q73fe1p5.png",
+   "rar": "Peu commun",
+   "n": 109
+  },
+  {
+   "nom": "Plex",
+   "desc": "Streaming gratuit avec publicité et gestionnaire de médias.",
+   "img": "https://image.tmdb.org/t/p/w500/blAEhvx3XX8sV0fFVFk88FFjubs.png",
+   "rar": "Commun",
+   "n": 110
+  },
+  {
+   "nom": "Plex Channel",
+   "desc": "Chaînes TV en direct gratuites sur Plex.",
+   "img": "https://image.tmdb.org/t/p/w500/1gC0K43JMyMtVpqczxvwBp0pkxn.png",
+   "rar": "Commun",
+   "n": 111
+  },
+  {
+   "nom": "Pluto TV",
+   "desc": "Service pionnier de streaming TV gratuit en direct (FAST).",
+   "img": "https://image.tmdb.org/t/p/w500/fN4czqaMQNLeF6sSSIjGbAWzvwK.png",
+   "rar": "Commun",
+   "n": 112
+  },
+  {
+   "nom": "Popcorntimes",
+   "desc": "Streaming de films classiques du domaine public et rétro.",
+   "img": "https://image.tmdb.org/t/p/w500/uaQop23PbsnQwhIdUcn7Y1tz6lj.png",
+   "rar": "Rare",
+   "n": 113
+  },
+  {
+   "nom": "Premiere Max",
+   "desc": "Streaming sportif brésilien consacré au football national.",
+   "img": "https://image.tmdb.org/t/p/w500/yERf5EH3GjWMB0ZSWPaov1kCKrR.png",
+   "rar": "Légendaire",
+   "n": 114
+  },
+  {
+   "nom": "Qello Concerts by Stingray Amazon Channel",
+   "desc": "Concerts live et documentaires musicaux sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/4iLmGtD9ZFdZYFQ0ukrMFdZMrjm.png",
+   "rar": "Épique",
+   "n": 115
+  },
+  {
+   "nom": "Queens club Amazon Channel",
+   "desc": "Films dramatiques et séries féminines sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/h6a4MyElkn4WvJ8iyJGrjaEHrzy.png",
+   "rar": "Rare",
+   "n": 116
+  },
+  {
+   "nom": "Queer Cinemab Amazon Channel",
+   "desc": "Cinéma d'auteur et fictions LGBTQ+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/1bwgm2Ja1U6e4aehCzmXjlBvwRB.png",
+   "rar": "Commun",
+   "n": 117
+  },
+  {
+   "nom": "Rakuten TV",
+   "desc": "VOD combinant achat, location et chaînes gratuites.",
+   "img": "https://image.tmdb.org/t/p/w500/872dfVu1biZISJ8rO143CZZutPR.png",
+   "rar": "Commun",
+   "n": 118
+  },
+  {
+   "nom": "RTBF Auvio",
+   "desc": "Streaming et replay de la télévision publique belge francophone.",
+   "img": "https://image.tmdb.org/t/p/w500/i4rN5aI5cNEHVtmrJ4rEVlRNwBX.png",
+   "rar": "Commun",
+   "n": 119
+  },
+  {
+   "nom": "RTL Play",
+   "desc": "Streaming et rattrapage des chaînes du groupe RTL Belgique.",
+   "img": "https://image.tmdb.org/t/p/w500/lnnW6BXeL8iyXzlYK4U6oITaA7K.png",
+   "rar": "Peu commun",
+   "n": 120
+  },
+  {
+   "nom": "Runtime",
+   "desc": "Streaming gratuit de chaînes FAST et films à la demande.",
+   "img": "https://image.tmdb.org/t/p/w500/erEYCN3EGN4yzcRvix2DunZLxHE.png",
+   "rar": "Commun",
+   "n": 121
+  },
+  {
+   "nom": "SFR Play",
+   "desc": "VOD par abonnement et bouquet TV de l'opérateur SFR.",
+   "img": "https://image.tmdb.org/t/p/w500/9yt7CjnySiiOtRFknNWCz3gSyXz.png",
+   "rar": "Commun",
+   "n": 122
+  },
+  {
+   "nom": "Shadowz",
+   "desc": "Streaming français par abonnement dédié au cinéma de genre.",
+   "img": "https://image.tmdb.org/t/p/w500/4Hmt479nSu8j4JIFDu6WPqsc6AT.png",
+   "rar": "Commun",
+   "n": 123
+  },
+  {
+   "nom": "Shadowz Amazon Channel",
+   "desc": "Films d'horreur, gore et thrillers de Shadowz sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/ds5Gvv5tN46cuRCkb8zPXZ5UABD.png",
+   "rar": "Commun",
+   "n": 124
+  },
+  {
+   "nom": "Shahid VIP",
+   "desc": "Streaming leader dans le monde arabe avec séries exclusives.",
+   "img": "https://image.tmdb.org/t/p/w500/vmBE15FtFOa5RDcH5LEy5TftBLI.png",
+   "rar": "Commun",
+   "n": 125
+  },
+  {
+   "nom": "ShortsTV Amazon Channel",
+   "desc": "Courts-métrages primés sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/gNQdc6Hdh5mr9AJkuyQEFEmphWW.png",
+   "rar": "Commun",
+   "n": 126
+  },
+  {
+   "nom": "Sky",
+   "desc": "Télévision payante et streaming premium en Europe.",
+   "img": "https://image.tmdb.org/t/p/w500/9DoQOfCz9S9j4cif3Cqx3ebk3FP.png",
+   "rar": "Peu commun",
+   "n": 127
+  },
+  {
+   "nom": "Sky Store",
+   "desc": "Boutique Sky pour l'achat et la location dématérialisée de films.",
+   "img": "https://image.tmdb.org/t/p/w500/nNkZ1JKe6vNhzti14KiKEUWHE6H.png",
+   "rar": "Commun",
+   "n": 128
+  },
+  {
+   "nom": "Sony Pictures Core Amazon Channel",
+   "desc": "Films récents et productions Sony Pictures sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/uNyIRlzYb0Hf7Ix6Q3MKms0ERgA.png",
+   "rar": "Commun",
+   "n": 129
+  },
+  {
+   "nom": "Sooner",
+   "desc": "Streaming européen dédié au cinéma d'auteur et indépendant.",
+   "img": "https://image.tmdb.org/t/p/w500/a9ZXOebUSXGUFxTi3N36sA8wSSh.png",
+   "rar": "Commun",
+   "n": 130
+  },
+  {
+   "nom": "Sooner Amazon Channel",
+   "desc": "Cinéma indépendant et festivals de Sooner sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/rStHqcghNPED9B7xxKGxAKjrcXR.png",
+   "rar": "Commun",
+   "n": 131
+  },
+  {
+   "nom": "Stingray Karaoke Amazon Channel",
+   "desc": "Catalogue de karaoké pour les fêtes sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/esBXsHrOOJ43hZfdPN9sm8vv3Z7.png",
+   "rar": "Peu commun",
+   "n": 132
+  },
+  {
+   "nom": "Sun Nxt",
+   "desc": "Streaming indien par abonnement de cinéma du Sud de l'Inde.",
+   "img": "https://image.tmdb.org/t/p/w500/1T9VcLknesOZZen9ZgLfcDdm5Ys.png",
+   "rar": "Commun",
+   "n": 133
+  },
+  {
+   "nom": "Takflix",
+   "desc": "VOD ukrainienne valorisant le cinéma contemporain local.",
+   "img": "https://image.tmdb.org/t/p/w500/exmycQN7BOW3d2Br5SGAQ1BMqjq.png",
+   "rar": "Commun",
+   "n": 134
+  },
+  {
+   "nom": "Telenet",
+   "desc": "Streaming et TV numérique pour abonnés Telenet en Belgique.",
+   "img": "https://image.tmdb.org/t/p/w500/rhLVvRh5iqFV8zO125qgKyw9l5C.png",
+   "rar": "Commun",
+   "n": 135
+  },
+  {
+   "nom": "Tenk",
+   "desc": "Streaming documentaire d'auteur indépendant et engagé.",
+   "img": "https://image.tmdb.org/t/p/w500/y9ZT5IDneFzHfdx9Q5zumvZlr3.png",
+   "rar": "Commun",
+   "n": 136
+  },
+  {
+   "nom": "TF1+",
+   "desc": "Streaming gratuit et replay des chaînes du groupe TF1.",
+   "img": "https://image.tmdb.org/t/p/w500/j5w5U61YwOM6Adiaa5zuEVqrpP8.png",
+   "rar": "Commun",
+   "n": 137
+  },
+  {
+   "nom": "TFOU Max Amazon Channel",
+   "desc": "Dessins animés et héros jeunesse TFOU Max sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/aGvsqArU7oGzOTPd3HJbElTZj9n.png",
+   "rar": "Rare",
+   "n": 138
+  },
+  {
+   "nom": "Thrillbox Amazon Channel",
+   "desc": "Thrillers, polars et films d'action sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/pCHUNSATfpIJRosYwoF8ShT4ee7.png",
+   "rar": "Légendaire",
+   "n": 139
+  },
+  {
+   "nom": "True Story",
+   "desc": "Streaming de documentaires inspirés d'histoires vraies.",
+   "img": "https://image.tmdb.org/t/p/w500/4lNWw9zxVHvoxbas6SAO8X6J03f.png",
+   "rar": "Épique",
+   "n": 140
+  },
+  {
+   "nom": "TV5 Monde+",
+   "desc": "Streaming gratuit valorisant la création audiovisuelle francophone.",
+   "img": "https://image.tmdb.org/t/p/w500/kqtcWgvZccNbWrqTec9rDFNMZU1.png",
+   "rar": "Rare",
+   "n": 141
+  },
+  {
+   "nom": "Univer Video",
+   "desc": "VOD dédiée au cinéma roumain et créations locales.",
+   "img": "https://image.tmdb.org/t/p/w500/nFOHylv7fSm5fEyTMBWxSwUwv4u.png",
+   "rar": "Commun",
+   "n": 142
+  },
+  {
+   "nom": "Universal+ Amazon Channel",
+   "desc": "Séries premium et films Universal+ sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/j3Q750FwRyIejO5MrNu25Kia57.png",
+   "rar": "Peu commun",
+   "n": 143
+  },
+  {
+   "nom": "UPC TV",
+   "desc": "Service TV connectée et streaming pour abonnés UPC.",
+   "img": "https://image.tmdb.org/t/p/w500/4UK8ibAWSubGXnPoQT5EZbgd0yF.png",
+   "rar": "Commun",
+   "n": 144
+  },
+  {
+   "nom": "Viaplay Amazon Channel",
+   "desc": "Séries scandinaves et sport de Viaplay sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/eP8ouMk5uIDebPWNto76rNstMqE.png",
+   "rar": "Commun",
+   "n": 145
+  },
+  {
+   "nom": "VIVA by videofutur",
+   "desc": "VOD par abonnement et à l'acte par Videofutur.",
+   "img": "https://image.tmdb.org/t/p/w500/uzTONLCUH92RRMSzs206OYtWVml.png",
+   "rar": "Commun",
+   "n": 146
+  },
+  {
+   "nom": "VRT MAX",
+   "desc": "Streaming public flamand et replay de la VRT en Belgique.",
+   "img": "https://image.tmdb.org/t/p/w500/7rFl1Di4V2kGzpiNy4w5j8CTjJd.png",
+   "rar": "Peu commun",
+   "n": 147
+  },
+  {
+   "nom": "VTM GO",
+   "desc": "Streaming flamand et télévision de rattrapage de DPG Media.",
+   "img": "https://image.tmdb.org/t/p/w500/cJzAytXtgrMDuFNccc7qtqeFHYF.png",
+   "rar": "Commun",
+   "n": 148
+  },
+  {
+   "nom": "wedotv",
+   "desc": "Streaming gratuit avec pub proposant films et documentaires.",
+   "img": "https://image.tmdb.org/t/p/w500/iMAly5P5Qp43jMDHPUj7ko7if7L.png",
+   "rar": "Commun",
+   "n": 149
+  },
+  {
+   "nom": "Wild West Amzon Channel",
+   "desc": "Westerns classiques et aventures de l'Ouest sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/5bRuoUCmorhxi3H5JWVDW6IWOfb.png",
+   "rar": "Commun",
+   "n": 150
+  },
+  {
+   "nom": "Winx Club & Friends Amazon Channel",
+   "desc": "Dessins animés des fées Winx et leurs amis sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/99RqnEMhItqimlsLWbSW1ExxUfD.png",
+   "rar": "Commun",
+   "n": 151
+  },
+  {
+   "nom": "WOW Presents Plus",
+   "desc": "Streaming officiel de RuPaul's Drag Race et séries associées.",
+   "img": "https://image.tmdb.org/t/p/w500/8pME6TzkiDzMnKZioeoqqvfaNya.png",
+   "rar": "Rare",
+   "n": 152
+  },
+  {
+   "nom": "YouTube",
+   "desc": "Plateforme mondiale d'hébergement et visionnage vidéo de Google.",
+   "img": "https://image.tmdb.org/t/p/w500/5Maob4o5w8oZnNeYpCDyVFD3M7X.png",
+   "rar": "Mythique",
+   "n": 153
+  },
+  {
+   "nom": "YouTube Premium",
+   "desc": "Abonnement sans publicité à YouTube avec accès YouTube Music.",
+   "img": "https://image.tmdb.org/t/p/w500/eWHpKZihdiY617s5LipWJWvN28U.png",
+   "rar": "Légendaire",
+   "n": 154
+  },
+  {
+   "nom": "ZDF",
+   "desc": "Télévision publique allemande avec replay et documentaires.",
+   "img": "https://image.tmdb.org/t/p/w500/sQsgEUFPgsuJaBf68OJ7s6ht6ta.png",
+   "rar": "Épique",
+   "n": 155
+  },
+  {
+   "nom": "ZDF Select Amazon Channel",
+   "desc": "Séries et téléfilms de la chaîne ZDF sur Prime Video.",
+   "img": "https://image.tmdb.org/t/p/w500/5KLmtvQzX0ksqDQHIWx6D1akBhW.png",
+   "rar": "Rare",
+   "n": 156
+  }
+ ]
+}

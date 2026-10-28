@@ -1,0 +1,21 @@
+name: Images des trois nouvelles séries (outil ponctuel)
+on:
+  push:
+    branches: [outil-series3]
+    paths: ['outils/series3/telecharger.mjs', 'outils/series3/donnees.json', '.github/workflows/images-cp.yml']
+permissions:
+  contents: write
+jobs:
+  chercher:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: cd outils/series3 && npm init -y >/dev/null && npm i sharp@0.33.5 >/dev/null && node telecharger.mjs
+      - run: |
+          git config user.name Domursan; git config user.email domursan1@gmail.com
+          git add outils/series3/site outils/series3/local outils/series3/rapport.json
+          git commit -m "Images des séries Pays, Capitales, Plateformes [skip ci]"
+          git push
