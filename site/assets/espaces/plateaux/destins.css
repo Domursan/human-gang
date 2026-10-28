@@ -1,8 +1,8 @@
 /* ===== Humane Gang — Destins : table de jeu et écran de fin =====
    Fichier : assets/espaces/plateaux/destins.css. Classes préfixées ds- (table) et dp- (chemin de vie et fin).
-   Reprend la maquette DestinsPlateau (ordinateur), DestinsCarteTel (téléphone) et DestinsFin (fin).
-   Ordinateur (> 760 px) : chemin à gauche ; roue, carte et panneau au centre ; fiche, classement, journal et chat à droite.
-   Téléphone (≤ 760 px) : chemin en haut, roue et panneau en dessous, chat en tiroir. Le chemin est en % : il suit la largeur. */
+   Reprend la maquette « Carte vivante » (destins-b) : ordinateur (> 760 px) : plan et barre du bas à gauche ;
+   fiche, carte, classement, journal et chat à droite. Téléphone (≤ 760 px) : une colonne, chat en tiroir.
+   Le plan est une image carrée (1024 × 1024) avec un SVG posé dessus : il suit la largeur de l'écran. */
 
 :root {
   --ds-fond: #0E0E10;
@@ -15,6 +15,7 @@
   --ds-or-vif: #E8B04B;
   --ds-accent: #9E3543;
   --ds-vert: #8FC39F;
+  --ds-roue-fond: conic-gradient(#9E3543 0deg 36deg, #E2C77E 36deg 72deg, #8FBF9A 72deg 108deg, #7FA3D6 108deg 144deg, #D98BA0 144deg 180deg, #A98BD4 180deg 216deg, #CE9B6C 216deg 252deg, #6F9C86 252deg 288deg, #B5573F 288deg 324deg, #4F6E96 324deg 360deg);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) { --ds-fond: #0E0E10; }
@@ -59,63 +60,82 @@
 .ds-elimine { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--ds-rouge-fond); color: var(--plat-urgent); font-weight: 700; font-size: 14px; }
 .ds-bandeau { min-width: 0; }
 
-/* ---------- Corps ---------- */
-.ds-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; column-gap: 24px; row-gap: 12px; align-items: start; min-width: 0; }
+/* ---------- Corps : colonne du plan (gauche) et colonne de côté (droite) ---------- */
+.ds-corps { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 20px; row-gap: 12px; align-items: start; min-width: 0; }
 .ds-colonne-plan { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ds-colonne-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ds-tiroir-chat { display: none; }
 .ds-chat-zone { min-width: 0; }
 
-/* ---------- Chemin de vie ---------- */
-.ds-plan-zone { min-width: 0; width: 100%; max-width: 760px; }
+/* ---------- Chemin de vie (image carrée, SVG posé dessus) ---------- */
+.ds-plan-wrap { position: relative; min-width: 0; width: 100%; }
+.ds-plan-zone { min-width: 0; width: 100%; }
 .ds-plan-tete { margin-bottom: 8px; }
-.ds-tag { font-size: 13px; font-weight: 700; background: rgba(14, 14, 16, .7); border-radius: 999px; padding: 4px 12px; }
-.dp-plan { position: relative; width: 100%; aspect-ratio: 640 / 560; box-sizing: border-box; border-radius: 20px; border: 1px solid var(--ds-bord);
+.ds-tag { font-size: 13px; font-weight: 700; background: rgba(14, 14, 16, .7); color: #F2EFEA; border-radius: 999px; padding: 4px 12px; }
+.dp-plan { position: relative; width: 100%; aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 20px; border: 1px solid var(--ds-bord);
   background: radial-gradient(ellipse 80% 60% at 50% 40%, #3A5E45 0, #2E4A36 70%); overflow: hidden; }
-.dp-plan-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.dp-case { position: absolute; transform: translate(-50%, -50%); width: 36px; height: 36px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10;
-  display: grid; place-items: center; background: #F2EFEA; }
-.dp-disque { font: 700 14px Inter, sans-serif; color: #121212; line-height: 1; }
-.dp-nom { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); white-space: nowrap; font: 700 11px Inter, sans-serif; color: #F2EFEA;
-  text-shadow: 0 0 3px #0E0E10, 0 0 3px #0E0E10; pointer-events: none; }
-.dp-case.dp-t-depart { background: #F2EFEA; }
-.dp-case.dp-t-paie, .dp-case.dp-t-augmentation { background: #8FC39F; }
-.dp-case.dp-t-evenement { background: #B07ED0; }
-.dp-case.dp-t-vacances { background: #7E93C9; }
-.dp-case.dp-t-assurance { background: #6FB3F2; }
-.dp-case.dp-t-diplome { background: #E8B04B; }
-.dp-case.dp-t-mariage { background: #E0909A; }
-.dp-case.dp-t-bebe, .dp-case.dp-t-jumeaux { background: #5BB8C9; }
-.dp-case.dp-t-achat { background: #D98E5A; }
-.dp-case.dp-t-impots, .dp-case.dp-t-proces { background: #C95B5B; }
-.dp-case.dp-t-choix { background: #FFFFFF; }
-.dp-case.dp-t-risque { background: #D9A441; }
-.dp-case.dp-t-retraite { background: #A89A80; }
-.dp-case.is-prochaine { box-shadow: 0 0 0 4px #E2C77E; }
-.dp-case.is-moi { border-color: #E2C77E; }
-.dp-tag { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 700; background: #121212; color: #E2C77E; border-radius: 999px; padding: 2px 8px; }
+.dp-plan-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.dp-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.dp-halo { animation: dp-halo 1.6s ease-in-out infinite; }
+@keyframes dp-halo { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+.dp-case { position: absolute; transform: translate(-50%, -50%); width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; }
+.dp-case.is-moi::after { content: ""; position: absolute; inset: -5px; border: 2px solid var(--ds-or); border-radius: 50%; }
+.dp-tag { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 700; background: #121212; color: #E2C77E; border-radius: 999px; padding: 2px 8px; pointer-events: none; z-index: 4; }
+.dp-zone { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: 700 11px Inter, sans-serif; color: #F2EFEA; padding: 2px 9px; border-radius: 999px;
+  background: rgba(14, 14, 16, .82); border: 1.5px solid var(--zc, #E2C77E); pointer-events: none; z-index: 1; }
 .dp-pion { position: absolute; transform: translate(-50%, -50%); z-index: 2; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-.dp-pion-disque { width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid #0E0E10; display: grid; place-items: center; color: #121212; font: 800 11px Inter, sans-serif; }
-.dp-pion-tag { font: 700 10px Inter, sans-serif; color: #F2EFEA; text-shadow: 0 0 3px #0E0E10, 0 0 3px #0E0E10; white-space: nowrap; }
+.dp-pion-disque { width: 26px; height: 26px; box-sizing: border-box; border-radius: 50% 50% 50% 3px; transform: rotate(-45deg); border: 2px solid #0E0E10;
+  display: grid; place-items: center; box-shadow: 0 4px 10px rgba(0, 0, 0, .5); }
+.dp-pion-disque > span { transform: rotate(45deg); color: #121212; font: 800 11px Inter, sans-serif; line-height: 1; }
+.dp-pion-tag { display: none; }
+.dp-pion.is-saut { animation: dp-saut .23s ease-out; }
+@keyframes dp-saut { 0% { margin-top: 0; } 45% { margin-top: -12px; } 100% { margin-top: 0; } }
 
-/* ---------- Roue ---------- */
-.ds-roue-zone { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-width: 0; }
-.ds-roue-bloc { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.ds-roue { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #0E0E10; display: grid; place-items: center; position: relative;
-  background: conic-gradient(#9E3543 0 10%, #E2C77E 0 20%, #6FB3F2 0 30%, #8FC39F 0 40%, #B07ED0 0 50%, #D98E5A 0 60%, #E8B04B 0 70%, #5BB8C9 0 80%, #7E93C9 0 90%, #E0909A 0 100%); }
-.ds-roue span { width: 52px; height: 52px; border-radius: 50%; background: #121212; color: #E2C77E; border: 3px solid #E2C77E; display: grid; place-items: center;
-  font: 400 20px 'Archivo Black', sans-serif; }
-.ds-roue.is-tourne { animation: ds-tourne 1.5s cubic-bezier(.2, .7, .2, 1); }
-.ds-prochaines { margin: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; }
-.ds-prochaines div { display: flex; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--ds-carte-2); }
-.ds-prochaines dt { font-size: 12px; color: var(--ds-muet); }
-.ds-prochaines dd { margin: 0; font-weight: 700; font-size: 14px; text-align: right; }
-.ds-carte-zone { min-width: 0; }
-.ds-carte { display: flex; flex-direction: column; gap: 8px; }
-.ds-carte-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ds-etiquette { font-size: 12px; font-weight: 700; color: #121212; background: #B07ED0; border-radius: 999px; padding: 3px 10px; text-transform: uppercase; letter-spacing: .5px; }
-.ds-carte-titre { margin: 0; font-size: 18px; font-weight: 700; line-height: 1.25; }
-.ds-carte-effet { margin: 0; font-size: 14px; color: var(--ds-texte-doux, #D6DCE4); }
+/* ---------- Scène : grande roue et carte retournée (au-dessus du plan, sans bloquer les boutons) ---------- */
+.ds-scene { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box;
+  background: rgba(8, 6, 12, .8); border-radius: 20px; opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+.ds-scene.is-ouverte { opacity: 1; }
+.ds-scene.is-sortie { opacity: 0; transition: opacity .4s ease; }
+.ds-scene-roue { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.ds-scene-titre { margin: 0; font-size: 15px; font-weight: 700; color: #F2EFEA; text-align: center; }
+.ds-grande-cadre { position: relative; width: min(420px, 80%); aspect-ratio: 1 / 1; }
+.ds-grande { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #E2C77E; background: var(--ds-roue-fond); box-shadow: 0 20px 60px rgba(0, 0, 0, .6); }
+.ds-grande-rayon { position: absolute; inset: 0; }
+.ds-grande-num { position: absolute; left: 50%; top: 9.3%; transform: translate(-50%, -50%); width: 9.5%; aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 50%;
+  background: #0E0E10; border: 2px solid #E2C77E; color: #F2EFEA; font: 400 clamp(12px, 3.8vw, 17px) 'Archivo Black', sans-serif; display: grid; place-items: center; }
+.ds-grande-pointe { position: absolute; left: 50%; top: -3%; transform: translateX(-50%); width: 0; height: 0; border-left: 14px solid transparent; border-right: 14px solid transparent;
+  border-top: 28px solid #F2EFEA; z-index: 2; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5)); }
+.ds-grande-moyeu { position: absolute; left: 50%; top: 50%; width: 22%; height: 22%; transform: translate(-50%, -50%); border-radius: 50%; background: #17171A; border: 4px solid #E2C77E; z-index: 1; }
+.ds-scene-val { margin: 0; font: 400 clamp(40px, 9vw, 60px) 'Archivo Black', sans-serif; color: #E2C77E; line-height: 1; text-shadow: 0 6px 18px rgba(0, 0, 0, .7); min-height: 1em; }
+.ds-scene-val.is-pop { animation: ds-pop .5s cubic-bezier(.2, .9, .3, 1.3) both; }
+@keyframes ds-pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+.ds-scene-carte { width: min(300px, 80%); aspect-ratio: 3 / 2; perspective: 1000px; }
+.ds-flip { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .9s cubic-bezier(.3, .7, .3, 1); }
+.ds-flip.is-ouverte { transform: rotateY(180deg); }
+.ds-face { position: absolute; inset: 0; box-sizing: border-box; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; border: 1px solid #A98BD4; }
+.ds-face-dos { background: repeating-linear-gradient(45deg, #4B2F7A 0 12px, #5C3C93 12px 24px); align-items: center; font: 400 56px 'Archivo Black', sans-serif; color: #E9DDFA; }
+.ds-face-avant { transform: rotateY(180deg); background: linear-gradient(160deg, #2c2046 0%, #17171A 72%); color: #F2EFEA; }
+.ds-face-avant .ds-etiquette { align-self: flex-start; }
+.ds-face-avant .ds-carte-titre { font-size: 18px; line-height: 1.3; }
+.ds-face-avant .ds-carte-montant { font: 400 30px 'Archivo Black', sans-serif; color: #E2C77E; }
+
+/* ---------- Bas du plan : roue, dernier lancer, bouton et légende ---------- */
+.ds-bas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; box-sizing: border-box; padding: 12px 14px; border-radius: 16px; background: var(--ds-carte); border: 1px solid var(--ds-bord); min-width: 0; }
+.ds-roue { position: relative; flex: none; width: 66px; height: 66px; border-radius: 50%; border: 3px solid #0E0E10; display: grid; place-items: center; background: var(--ds-roue-fond); }
+.ds-roue::before { content: ""; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 12px solid #E2C77E; }
+.ds-roue span { width: 30px; height: 30px; border-radius: 50%; background: #121212; color: #E2C77E; border: 2px solid #E2C77E; display: grid; place-items: center; font: 400 14px 'Archivo Black', sans-serif; }
+.ds-bas-info { display: flex; flex-direction: column; gap: 6px; flex: 0 1 230px; min-width: 0; }
+.ds-bas-info .ds-note { font-size: 13px; color: var(--ds-texte); }
+.ds-bas-info .ds-note strong { color: var(--ds-or); }
+.ds-prochaines { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+.ds-prochaines div { display: flex; justify-content: space-between; gap: 8px; }
+.ds-prochaines dt { color: var(--ds-muet); }
+.ds-prochaines dd { margin: 0; font-weight: 700; text-align: right; }
+.ds-tourner { width: 100%; min-height: 44px; }
+.dp-legende { list-style: none; margin: 0; padding: 0; flex: 1 1 300px; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; font-weight: 700; }
+.dp-legende-item { display: flex; align-items: center; gap: 5px; }
+.dp-legende-puce { flex: none; width: 26px; height: 18px; border-radius: 4px; font: 800 11px Inter, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
 
 /* ---------- Panneau d'action ---------- */
 .ds-panneau { box-sizing: border-box; padding: 16px 18px; border-radius: 20px; background: var(--ds-panneau); border: 1px solid var(--ds-bord); min-width: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -124,18 +144,52 @@
 .ds-coche { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; cursor: pointer; }
 .ds-coche input { width: 22px; height: 22px; accent-color: var(--ds-accent); }
 
-/* ---------- Colonne de droite ---------- */
-.ds-fiche { display: flex; flex-direction: column; gap: 8px; border-color: #3A3226; }
-.ds-fiche-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.ds-fiche-tete .ds-bloc-titre { margin: 0; }
-.ds-argent { font-family: 'Archivo Black', sans-serif; font-size: 18px; color: var(--ds-or-vif); }
-.ds-dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; }
-.ds-dl dt { color: var(--ds-muet); }
-.ds-dl dd { margin: 0; }
-.ds-classement { margin: 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
-.ds-classement .ds-invite { margin-left: 4px; }
-.ds-table .ds-bloc .ds-bloc-titre { font-size: 16px; }
+/* ---------- Colonne de droite : fiche en cartes colorées, carte, classement ---------- */
+.ds-fiche { display: flex; flex-direction: column; gap: 10px; border-color: #3A3226; }
+.ds-fiche-tete { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ds-fiche-disque { flex: none; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #0E0E10; font: 400 22px 'Archivo Black', sans-serif;
+  box-shadow: 0 0 0 3px var(--ds-panneau), 0 0 0 5px #E2C77E; }
+.ds-fiche-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ds-fiche-nom { margin: 0; font: 400 21px/1.1 'Archivo Black', sans-serif; overflow-wrap: anywhere; }
+.ds-zone-pill { flex: none; padding: 5px 11px; border-radius: 999px; background: #3E9B5B; color: #0E0E10; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.ds-argent-carte { position: relative; box-sizing: border-box; padding: 12px 16px; border-radius: 18px; background: linear-gradient(135deg, #F4DE9A 0%, #E2C77E 45%, #B98F2E 100%);
+  color: #0E0E10; box-shadow: 0 10px 24px rgba(0, 0, 0, .35); display: flex; flex-direction: column; gap: 6px; }
+.ds-argent-etiq { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.ds-argent-val { font: 400 34px/1 'Archivo Black', sans-serif; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ds-tuiles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.ds-tuile { box-sizing: border-box; padding: 9px 12px; border-radius: 14px; background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid var(--c);
+  display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ds-tuile-tete { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ds-muet); }
+.ds-tuile-icone { display: inline-flex; flex: none; }
+.ds-tuile-corps { display: flex; flex-direction: column; min-width: 0; }
+.ds-tuile-corps strong { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.ds-tuile-corps small { font-size: 12px; color: var(--ds-muet); }
+.ds-tuile-large { grid-column: 1 / span 2; }
+.ds-tuile-large .ds-pied { margin-top: 2px; }
+.ds-tuile-large .ds-btn { min-height: 40px; font-size: 13px; }
+.ds-carte-zone { display: flex; flex-direction: column; gap: 8px; }
+.ds-carte-zone .ds-bloc-titre { margin: 0; }
+.ds-carte-cadre { position: relative; box-sizing: border-box; height: 140px; border-radius: 16px; border: 1px solid #A98BD4; overflow: hidden; }
+.ds-carte-dos { background: repeating-linear-gradient(45deg, #4B2F7A 0 12px, #5C3C93 12px 24px); display: flex; align-items: center; justify-content: center;
+  font: 400 44px 'Archivo Black', sans-serif; color: #E9DDFA; }
+.ds-carte { display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 12px 14px; border-radius: 16px; border: 1px solid #A98BD4;
+  background: linear-gradient(160deg, #2c2046 0%, #17171A 72%); color: #F2EFEA; }
+.ds-etiquette { display: inline-block; font-size: 11px; font-weight: 700; color: #121212; background: #B07ED0; border-radius: 999px; padding: 2px 10px; text-transform: uppercase; letter-spacing: .5px; }
+.ds-carte-titre { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.3; }
+.ds-carte-montant { font: 400 24px 'Archivo Black', sans-serif; color: #E2C77E; }
+.ds-classement { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.ds-rang { display: grid; grid-template-columns: 14px 26px minmax(0, 1fr) minmax(60px, 1fr) auto; align-items: center; gap: 8px; min-height: 30px; padding: 0 6px; border-radius: 10px; border: 1px solid transparent; }
+.ds-rang.is-moi { background: rgba(226, 199, 126, .14); border-color: #E2C77E; }
+.ds-rang-n { font-size: 13px; font-weight: 700; color: var(--ds-muet); }
+.ds-rang.is-moi .ds-rang-n { color: #E2C77E; }
+.ds-rang-disque { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #0E0E10; font: 400 11px 'Archivo Black', sans-serif; }
+.ds-rang-nom { display: flex; align-items: center; gap: 4px; min-width: 0; font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ds-rang-piste { position: relative; display: block; height: 10px; border-radius: 5px; background: var(--ds-piste, #2a292c); overflow: hidden; min-width: 40px; }
+.ds-rang-barre { display: block; height: 100%; border-radius: 5px; transform-origin: left center; animation: ds-remplit .9s ease-out both; }
+@keyframes ds-remplit { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.ds-rang-val { font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .ds-table ul.ds-journal, .ds-table .plat-journal { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ds-texte-doux, #D6DCE4); max-height: 260px; overflow-y: auto; }
+.ds-table .ds-bloc .ds-bloc-titre { font-size: 16px; }
 
 /* ---------- Écran de fin : podium et chemin de chacun ---------- */
 .dp-fin { display: grid; gap: 16px; }
@@ -157,35 +211,40 @@
 
 /* ---------- Téléphone (≤ 760 px) ---------- */
 @media (max-width: 760px) {
-  .ds-corps { grid-template-columns: minmax(0, 1fr); }
-  .ds-roue-zone { grid-template-columns: minmax(0, 1fr); }
-  .ds-plan-zone { max-width: none; }
-  .dp-case { width: 30px; height: 30px; }
-  .dp-disque { font-size: 12px; }
-  .dp-nom { display: none; }
-  .dp-pion-disque { width: 24px; height: 24px; font-size: 10px; }
-  .dp-pion-tag { display: none; }
+  .ds-corps { display: flex; flex-direction: column; gap: 12px; }
+  .ds-colonne-plan, .ds-colonne-cote { display: contents; }
+  .ds-colonne-plan > *, .ds-colonne-cote > * { align-self: stretch; width: auto; max-width: none; min-width: 0; box-sizing: border-box; }
+  .ds-tuiles { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .ds-plan-wrap { order: 1; }
+  .ds-bas { order: 2; }
+  .ds-panneau { order: 3; }
+  .ds-fiche { order: 4; }
+  .ds-carte-zone { order: 5; }
+  .ds-classement-bloc { order: 6; }
+  .ds-journal-bloc { order: 7; }
+  .ds-chat-zone { order: 8; }
   .ds-tiroir-chat { display: block; }
   .ds-chat-zone { display: none; }
-  .ds-panneau { position: sticky; bottom: 0; z-index: 20; box-shadow: 0 -10px 24px rgba(0, 0, 0, .45); }
   .ds-choix { grid-template-columns: minmax(0, 1fr); }
   .ds-bloc-titre { font-size: 15px; }
+  .dp-zone { font-size: 9px; padding: 1px 6px; }
+  .dp-pion-disque { width: 22px; height: 22px; }
+  .dp-pion-disque > span { font-size: 9px; }
+  .dp-pion-tag { display: none; }
+  .dp-tag { font-size: 10px; }
+  .ds-bas { gap: 10px; padding: 10px; }
+  .ds-roue { width: 56px; height: 56px; }
+  .ds-bas-info { flex: 1 1 100%; }
+  .dp-legende { flex: 1 1 100%; gap: 5px 10px; font-size: 11px; }
+  .ds-classement .ds-rang { grid-template-columns: 14px 26px minmax(0, 1fr) auto; }
+  .ds-classement .ds-rang-piste { display: none; }
   .dp-podium { grid-template-columns: minmax(0, 1fr); }
   .dp-chemin { grid-template-columns: minmax(0, 1fr); }
   .dp-chemin-fortune { text-align: left; }
 }
 
-/* ---------- Mouvement réduit ---------- */
-@keyframes ds-tourne { from { transform: rotate(0deg); } to { transform: rotate(1080deg); } }
+/* ---------- Mouvement réduit : pas d'animation (les changements s'affichent tout de suite) ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ds-roue.is-tourne { animation: none; }
-  .ds-btn, .ds-carte-choix { transition: none !important; }
+  .ds-scene, .ds-flip, .ds-btn, .ds-carte-choix { transition: none !important; }
+  .dp-halo, .dp-pion.is-saut, .ds-rang-barre, .ds-scene-val.is-pop { animation: none !important; }
 }
-
-/* Chemin dense : les noms des cases sont dans la légende et l'aide (aria-label, title), pas sous chaque disque. */
-.dp-case { width: 30px; height: 30px; }
-.dp-nom { display: none; }
-
-/* Avec l'image du chemin de vie (carrée) : proportions de l'image, cases un peu transparentes pour laisser voir le décor. */
-.dp-plan.dp-plan--image { aspect-ratio: 1 / 1; max-width: 860px; margin-inline: auto; }
-.dp-plan--image .dp-case { width: 26px; height: 26px; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
