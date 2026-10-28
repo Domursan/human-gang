@@ -6,6 +6,9 @@
 
 :root { --sd-w: 56px; }
 
+/* Transition entre pages : la barre reste en place (nom unique par page : un seul #staff-dock) */
+.sd { view-transition-name: hg-raccourcis; }
+
 /* Attribut hidden toujours respecté dans la barre (les règles display ci-dessous ne doivent pas le contredire) */
 .sd [hidden], .sd-dialog [hidden] { display: none !important; }
 

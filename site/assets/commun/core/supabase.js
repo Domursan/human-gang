@@ -8,6 +8,7 @@
  * Exporte : sb, hasSession, isNavCancel, authLanding, signOutDevice.
  */
 import { SUPABASE_URL, SUPABASE_KEY } from '../config.js';
+import { memoEffacer } from './memoire.js';
 
 // supabase-js est chargé ici et non par une balise <script> : le fichier local porte la version (2.45.4).
 const { createClient } = await import('../../vendor/supabase-js-2.45.4.mjs');
@@ -114,5 +115,6 @@ export async function signOutDevice() {
   // Copie hors ligne de la collection (IndexedDB) effacée à chaque déconnexion, comme le menu : téléphone prêté,
   // ordinateur partagé. Sans cela, la page Compte et le panel admin la laissaient sur l'appareil.
   try { await (await import('../offline-store.js')).clearOffline(); } catch { /* rien à effacer */ }
+  memoEffacer(); // mémoire d'affichage (profil, pages, droits, mode sans limite) : rien ne reste pour le compte suivant
   try { await sb.auth.signOut(); } catch { /* déconnexion locale au mieux */ }
 }

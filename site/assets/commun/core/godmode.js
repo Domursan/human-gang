@@ -18,6 +18,7 @@ import { sb } from './supabase.js';
 import { toast } from './ui.js';
 import { esc, errMsg } from './util.js';
 import { ICON_ALERT } from './icons.js';
+import { memoEcrire } from './memoire.js';
 
 /* ---------- Constantes ---------- */
 
@@ -174,7 +175,9 @@ export async function loadGodMode(profile) {
     const raw = Array.isArray(g.data) ? g.data[0] : g.data;
     const on = raw === true || (raw && typeof raw === 'object' && Object.values(raw)[0] === true);
     if (s.error) console.warn('[mode sans limite] date de fin', s.error);
-    setGodState(on, on ? (s.data?.god_until ?? null) : null, { silent: true });
+    const fin = on ? (s.data?.god_until ?? null) : null;
+    setGodState(on, fin, { silent: true });
+    memoEcrire('god', { on, until: fin }); // mémoire d'affichage (memoire.js) : relu au prochain démarrage
   } catch (e) {
     console.warn('[mode sans limite]', e?.message || e);
   }
@@ -197,7 +200,21 @@ export async function setGodMode(on, minutes = 30) {
   const until = raw && typeof raw === 'object' ? Object.values(raw)[0] : raw;
   if (on && !until) throw new Error('Le serveur n\'a pas activé le mode (es-tu bien admin ?).');
   setGodState(!!on, on ? until : null, { sync: true });
-  return getGodMode();
+  const g = getGodMode();
+  memoEcrire('god', { on: g.on, until: g.until ? g.until.toISOString() : null });
+  return g;
+}
+
+/**
+ * Pose l'état du mode gardé en mémoire (memoire.js) avant la relecture : même affichage, sans requête.
+ * Un non-admin reste à « coupé ». loadGodMode relit ensuite le serveur.
+ * @param {object|null} profile Profil courant.
+ * @param {{on: boolean, until: string|null}|undefined} g Valeur gardée (ou undefined).
+ */
+export function primerGodMode(profile, g) {
+  _godAdmin = !!profile?.is_admin;
+  if (!_godAdmin || !g) return;
+  setGodState(!!g.on, g.on ? (g.until ?? null) : null, { silent: true });
 }
 
 /**

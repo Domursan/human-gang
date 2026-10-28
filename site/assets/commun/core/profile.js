@@ -8,6 +8,7 @@
  */
 import { sb } from './supabase.js';
 import { loadMyPerms, canPanel } from './perms.js';
+import { memoEcrire, memoOublier } from './memoire.js';
 
 /** Profil en cache : undefined = pas encore chargé ; null = pas de profil (visiteur). */
 let _profile;
@@ -16,6 +17,12 @@ let _profile;
  * @returns {object|null|undefined}
  */
 export function getCachedProfile() { return _profile; }
+/**
+ * Pose le profil gardé en mémoire (memoire.js) comme profil courant, sans requête : l'en-tête s'affiche tout de suite.
+ * getProfile(true) relit ensuite la base.
+ * @param {object} p Ligne hg_profiles gardée.
+ */
+export function primerProfil(p) { _profile = p; }
 
 /**
  * Utilisateur connecté (compte d'authentification), ou null si personne n'est connecté.
@@ -38,6 +45,8 @@ export async function getProfile(force = false) {
   const { data, error } = await sb.from('hg_profiles').select('*').eq('id', user.id).maybeSingle();
   // Erreur réseau (ou base) : on ne met rien en cache et on jette, pour ne pas confondre avec « pas de profil »
   if (error) throw error;
+  // Mémoire d'affichage : le profil relu sert au prochain démarrage (memoire.js)
+  if (data) memoEcrire('profil', data); else memoOublier('profil');
   return (_profile = data ?? null);
 }
 /**

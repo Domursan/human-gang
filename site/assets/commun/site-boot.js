@@ -11,6 +11,7 @@
  * Page : toutes les pages (chargé avant le module de chaque page).
  * Dépendances : aucune au démarrage (quest-track.js seulement si l'app est installée ; eggs/core.js après le chargement). Le fichier sw.js (racine du site) est enregistré ici.
  * Note aussi la visite du jour (hg_touch, idée A4 : une écriture par jour au plus, seulement connecté).
+ * Pré-chargement au survol (prefetch) : une seule écoute ici, pour toutes les pages.
  * Exporte : rien (effets de bord seulement).
  */
 
@@ -81,7 +82,7 @@ addEventListener('appinstalled', signaleApp);
 
 /* Mode hors ligne : enregistrement du service worker (sw.js, à la racine du site). */
 if (window.isSecureContext && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
   // Nouvelle version du site installée pendant la visite : on recharge une fois pour ne pas mélanger
   // l'ancienne page et les nouveaux fichiers.
   const hadController = !!navigator.serviceWorker.controller;
@@ -121,3 +122,57 @@ const noteVisite = async () => {
   } catch { /* hors ligne ou fonction absente : sans importance */ }
 };
 if (document.readyState === 'complete') setTimeout(noteVisite, 1500); else addEventListener('load', () => setTimeout(noteVisite, 1500), { once: true });
+
+/* ---------- Pré-chargement au survol (prefetch) ----------
+   Au survol d'un lien interne (environ 200 ms) ou au début d'un toucher, la page est demandée à l'avance
+   (<link rel="prefetch">) : seul le HTML est chargé, aucun script n'est exécuté. Pas de Speculation Rules (prerender) :
+   la politique CSP du site refuse le JSON en ligne, et le fichier externe n'est pas pris en charge par Chromium ici.
+   Exclus : l'administration, les liens qui ouvrent un autre onglet ou téléchargent, ceux qui déclenchent une action
+   (?action=, #ancre, déconnexion), et le mode économie de données. */
+const PRECHARGES = new Set();
+
+/**
+ * Adresse à précharger pour un lien, ou '' si le lien est exclu (autre site, administration, action, ancre…).
+ * @param {Element|null} a Lien trouvé sous le pointeur.
+ * @returns {string}
+ */
+function adressePrechargeable(a) {
+  if (!a?.href || a.target || a.hasAttribute('download') || /\bnofollow\b/.test(a.rel || '') || a.classList.contains('nav-logout')) return '';
+  let u;
+  try { u = new URL(a.href, location.href); } catch { return ''; }
+  const page = u.pathname === '/index.html' || (u.pathname.startsWith('/pages/') && !u.pathname.startsWith('/pages/admin/'));
+  const sansAction = !u.search.includes('action=') && !u.hash && !/deconnexion|logout/i.test(u.pathname + u.search);
+  return u.origin === location.origin && page && sansAction ? u.href : '';
+}
+
+/**
+ * Demande une page à l'avance, une seule fois.
+ * @param {string} adresse Adresse à précharger ('' ne fait rien).
+ */
+function precharge(adresse) {
+  if (!adresse || PRECHARGES.has(adresse)) return;
+  PRECHARGES.add(adresse);
+  const l = document.createElement('link');
+  l.rel = 'prefetch';
+  l.href = adresse;
+  document.head.append(l);
+}
+
+let economieDonnees = false;
+try { economieDonnees = !!navigator.connection?.saveData; } catch { /* inconnu : on précharge */ }
+if (!economieDonnees) {
+  let minuterie = 0;
+  // Souris : le lien doit rester sous le pointeur 200 ms.
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType === 'touch') return;
+    const adresse = adressePrechargeable(e.target.closest?.('a[href]'));
+    if (!adresse) return;
+    clearTimeout(minuterie);
+    minuterie = setTimeout(() => precharge(adresse), 200);
+  }, { passive: true });
+  document.addEventListener('pointerout', () => clearTimeout(minuterie), { passive: true });
+  // Tactile : dès le début du toucher.
+  document.addEventListener('touchstart', (e) => {
+    precharge(adressePrechargeable(e.target.closest?.('a[href]')));
+  }, { passive: true });
+}

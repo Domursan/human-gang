@@ -9,11 +9,13 @@
  * Dépendances : supabase.js (requêtes), profile.js (savoir si l'on est admin : accès total).
  * Données : table hg_pages (liste déclarée), RPC hg_my_pages (mes pages accessibles). Pendant une vue « comme un membre »
  * (view-as.js), ce sont les pages de ce membre, et l'admin n'a plus l'accès total.
- * Exporte : currentPageSlug, loadMyPages, getMyPages, canAccess, pageLabel.
+ * Mémoire d'affichage (memoire.js) : primerPages pose les pages gardées avant la relecture ; loadMyPages les garde après.
+ * Exporte : currentPageSlug, loadMyPages, primerPages, getMyPages, canAccess, pageLabel, pageMode.
  */
 import { sb, hasSession, isNavCancel } from './supabase.js';
 import { getCachedProfile } from './profile.js';
 import { viewAsActive, viewAsState } from './view-as.js';
+import { memoEcrire } from './memoire.js';
 
 /* ---------- État interne ---------- */
 
@@ -63,7 +65,30 @@ export function currentPageSlug() { return slugOf(location.pathname) || 'accueil
 /* ---------- Chargement ---------- */
 
 /**
+ * Construit l'état des pages à partir des listes reçues (déclarées, mes pages triées).
+ * @param {Array<object>} declared Pages déclarées (hg_pages).
+ * @param {Array<object>} mine Mes pages accessibles.
+ * @returns {object} État à garder dans _pages.
+ */
+function poser(declared, mine) {
+  const list = (Array.isArray(mine) ? mine : []).filter((p) => p && SLUG_RE.test(p.slug))
+    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  return {
+    declared: new Map((Array.isArray(declared) ? declared : []).map((p) => [p.slug, p])),
+    mine: list,
+    set: new Set(list.map((p) => p.slug)),
+  };
+}
+/**
+ * Pose les pages gardées en mémoire (memoire.js) comme état courant, sans requête. loadMyPages les relit ensuite.
+ * @param {{declared: Array<object>, mine: Array<object>}} v Valeur gardée.
+ */
+export function primerPages(v) {
+  _pages = poser(v?.declared, v?.mine);
+}
+/**
  * Charge (une fois par page) les pages déclarées et mes pages accessibles. Ne jette jamais ; renvoie mes pages ou null.
+ * Un échec de relecture garde l'état précédent (la mémoire, s'il y en a une) au lieu de tout ouvrir.
  * Les appels suivants renvoient la même promesse, sauf avec { force: true }.
  * @param {{force?: boolean}} [options] force : recharge même si un chargement a déjà eu lieu.
  * @returns {Promise<Array<object>|null>} Mes pages, ou null si inconnues.
@@ -81,16 +106,12 @@ export function loadMyPages({ force = false } = {}) {
       if (all.error) throw all.error;
       if (mine.error) throw mine.error;
       // On ignore les entrées mal formées ; l'ordre d'affichage suit le champ sort
-      const list = (Array.isArray(mine.data) ? mine.data : []).filter((p) => p && SLUG_RE.test(p.slug))
-        .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
-      _pages = {
-        declared: new Map((all.data ?? []).map((p) => [p.slug, p])),
-        mine: list,
-        set: new Set(list.map((p) => p.slug)),
-      };
+      _pages = poser(all.data, mine.data);
+      // Mémoire d'affichage : la liste relue sert au prochain démarrage (pas pendant une vue « comme un membre »)
+      if (!va) memoEcrire('pages', { declared: all.data ?? [], mine: Array.isArray(mine.data) ? mine.data : [] });
     } catch (e) {
       if (!isNavCancel(e)) console.warn('[accès aux pages]', e?.message || e);
-      _pages = null; // accès inconnus : canAccess laissera tout passer
+      // Accès inconnus : sans état précédent, canAccess laisse tout passer ; avec la mémoire, on garde ce qu'on sait
     }
     return getMyPages();
   })();

@@ -65,8 +65,19 @@ h1, h2, h3 { margin: 0; }
 @media (max-width: 600px) { .container { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); } }
 button, a, label, summary, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
+/* ---------- Transitions entre pages (View Transitions entre documents) ----------
+   Fondu court du contenu d'une page à l'autre. Ce qui reste en place (en-tête, raccourcis Staff, menu « En ligne ») porte
+   un view-transition-name fixe, posé dans leur propre feuille de style : il ne bouge pas pendant la transition.
+   Navigateurs sans support : rien ne change. Préférence « effets » coupée ou mouvement réduit : transition instantanée. */
+@view-transition { navigation: auto; }
+::view-transition-old(*), ::view-transition-new(*) { animation-duration: 180ms; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
+}
+html[data-fx="off"] ::view-transition-old(*), html[data-fx="off"] ::view-transition-new(*) { animation: none; }
+
 /* ---------- En-tête (refonte du 23/10 : menus déroulants + photo de profil qui ouvre un menu en arc) ---------- */
-.site-header { border-bottom: 1px solid var(--border); position: relative; z-index: 45; }
+.site-header { border-bottom: 1px solid var(--border); position: relative; z-index: 45; view-transition-name: hg-entete; }
 .site-header .container { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 14px; padding-bottom: 14px; }
 /* En-tête posé par JS (init.js) : tant qu'il n'est pas là, sa hauteur est réservée (sinon le contenu descend d'un coup, CLS) */
 body:has(#app):not(:has(> .site-header))::before { content: ''; display: block; height: 83px; }

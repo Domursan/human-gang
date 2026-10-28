@@ -8,8 +8,9 @@
      d'invitation ni identifiant dans le cache.
    - Supabase (données, authentification, fonctions) : jamais interceptée, jamais mise en cache.
      Seule exception (Q4, collection hors ligne) : les images PUBLIQUES des cartes (/storage/v1/object/public/hg-assets/cards/,
-     sans jeton ni donnée privée) passent par un cache séparé « hg-cartes-img », servi en premier, plafonné à 400 images
+     sans jeton ni donnée privée) passent par un cache séparé « hg-cartes-img », servi en premier, plafonné à 1 500 images
      (les plus anciennes partent). Ce cache est rempli aussi par la page Cartes et effacé à la déconnexion.
+     Les illustrations des cartes servies par le site (/assets/cartes/) suivent la même stratégie, dans le même cache.
    CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
 
 /* ---------- Constantes ---------- */
@@ -20,8 +21,10 @@ const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
 const IMG_CACHE = 'hg-cartes-img';
-const IMG_MAX = 400;
+const IMG_MAX = 1500;
 const CARD_IMG_PATH = '/storage/v1/object/public/hg-assets/cards/';
+// Illustrations des cartes rangées dans le site (même cache IMG_CACHE que ci-dessus).
+const LOCAL_CARD_PATH = '/assets/cartes/';
 
 /* ---------- Liste de précache ----------
    Fichiers téléchargés à l'installation, pour que le site s'ouvre hors ligne. Chemins relatifs à la racine du site.
@@ -73,7 +76,7 @@ const PRECACHE = [
   '/assets/commun/core/functions.js', '/assets/commun/core/godmode.js', '/assets/commun/core/header.js', '/assets/commun/core/menu-def.js', '/assets/commun/core/view-as.js',
   '/assets/commun/core/icons.js', '/assets/commun/core/init.js', '/assets/commun/core/light-dismiss.js', '/assets/commun/core/admin-reponses.js', '/assets/commun/core/pages-access.js',
   '/assets/commun/core/prefs-state.js', '/assets/commun/core/prefs.js', '/assets/commun/core/profile.js',
-  '/assets/commun/core/perms.js', '/assets/commun/core/search.js',
+  '/assets/commun/core/perms.js', '/assets/commun/core/memoire.js', '/assets/commun/core/search.js',
   '/assets/commun/core/supabase.js', '/assets/commun/core/theme-calc.js', '/assets/commun/core/theme-load.js',
   '/assets/commun/core/theme.js', '/assets/commun/core/ui.js', '/assets/commun/core/unread.js',
   '/assets/commun/core/util.js', '/assets/commun/dyn-events.js', '/assets/espaces/cartes/card-drops.js', '/assets/espaces/cartes/card-drops.css', '/assets/espaces/admin/cartes/drops.js',
@@ -155,6 +158,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirst(req));
     return;
   }
+
+  // Illustrations des cartes servies par le site (/assets/cartes/, 4 135 fichiers) : même stratégie que les images
+  // de Supabase (cache hg-cartes-img, servi en premier, plafonné à IMG_MAX).
+  if (sameOrigin && url.pathname.startsWith(LOCAL_CARD_PATH)) { event.respondWith(cardImage(req, event)); return; }
 
   // Code (JS, CSS) : toujours la version en ligne quand le réseau répond, pour que la page et ses modules
   // restent de la même version après une mise à jour ; le cache ne sert qu'hors ligne.
@@ -239,15 +246,16 @@ async function staleWhileRevalidate(req, event) {
 }
 
 /**
- * Image de carte (Q4) : la copie du cache hg-cartes-img si elle existe ; sinon le réseau en mode CORS (réponse lisible,
- * pas de réponse opaque), gardée dans le cache, plafonné à IMG_MAX images (les plus anciennes sont retirées).
+ * Image de carte (Q4) : la copie du cache hg-cartes-img si elle existe, sinon la copie de la précache (CACHE, cartes
+ * de base rangées dans le site) ; sinon le réseau en mode CORS (réponse lisible, pas de réponse opaque), gardée dans
+ * hg-cartes-img, plafonné à IMG_MAX images (les plus anciennes sont retirées).
  * @param {Request} req Requête de l'image.
  * @param {FetchEvent} event Événement fetch (le rangement du cache se poursuit après la réponse).
  * @returns {Promise<Response>}
  */
 async function cardImage(req, event) {
   const cache = await caches.open(IMG_CACHE);
-  const hit = await cache.match(req.url);
+  const hit = (await cache.match(req.url)) || (await (await caches.open(CACHE)).match(req.url));
   if (hit) return hit;
   try {
     const res = await fetch(req.url, { mode: 'cors', credentials: 'omit' });

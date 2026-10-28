@@ -7,7 +7,7 @@
  *   { user_id, at, profil: { id, pseudo, avatar_url, color }, cartes?: { at, sets, otherSets, cards, copies, paillettes }, membre?: { at, card } }.
  *   Jamais la copie d'un autre compte : la clé est l'identifiant du membre connecté (session locale).
  * - Images des cartes possédées : cache « hg-cartes-img » (adresses publiques du bucket hg-assets/cards/, sans jeton),
- *   rempli par la page et servi par sw.js hors ligne, plafonné à 400 images (les plus anciennes partent).
+ *   rempli par la page et servi par sw.js hors ligne, plafonné à 1 500 images (environ 6 Mo) (les plus anciennes partent).
  * - Effacement : à la déconnexion (core/header.js), ou quand l'admin coupe la fonction (site_identite.cartes_hors_ligne).
  * - Sans réseau, cartes.js et membre.js démarrent avec startOfflinePage() au lieu d'initPage().
  * Page : cartes.js, membre.js (lecture et écriture), core/header.js (effacement), /offline.html (lien « Voir ma collection »).
@@ -27,7 +27,7 @@ const STORE = 'copies';
 /** Cache des images de cartes (même nom dans sw.js). */
 export const IMG_CACHE = 'hg-cartes-img';
 /** Nombre maximal d'images de cartes gardées (même valeur dans sw.js). */
-export const IMG_MAX = 400;
+export const IMG_MAX = 1500;
 /** Seules les images publiques des cartes sont gardées (pas de jeton, pas de donnée privée). */
 const CARD_IMG_RE = /^https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/hg-assets\/cards\/[^\s?#]+$/;
 

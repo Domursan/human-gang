@@ -5,6 +5,9 @@
 
 :root { --ol-w: 60px; --ol-vert: #2fbf71; }
 
+/* Transition entre pages : le menu reste en place (nom unique par page : un seul #en-ligne) */
+.ol { view-transition-name: hg-en-ligne; }
+
 .ol-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .ol-ico { width: 18px; height: 18px; flex: none; }
 .ol .avatar { display: grid; place-items: center; border-radius: 50%; font-size: 13px; font-weight: 700; object-fit: cover; }
