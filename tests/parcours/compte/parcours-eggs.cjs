@@ -151,7 +151,9 @@ async function konami(p) {
 
   /* ---------- Heure du gang : 13 h 37 à Zurich, message dans le pied de page ---------- */
   p = await openPage(browser, { page: 'accueil', width: 1280, now: ZURICH_1337 });
-  await p.waitForSelector('.site-footer .egg-gang', { timeout: 10000 }).catch(() => {});
+  // Le pied peut arriver après le démarrage des secrets : la vérification est alors refaite toutes les 20 s
+  // (VERIFIE_MS, arcade/core.js). L'attente couvre donc au moins un tour, sinon le test échoue une fois sur deux.
+  await p.waitForSelector('.site-footer .egg-gang', { timeout: 25000 }).catch(() => {});
   check(await p.locator('.site-footer .egg-gang').count() === 1, 'heure du gang (13 h 37 à Zurich) : message dans le pied de page');
   check(await p.locator('.site-footer .egg-gang').innerText().then((t) => t.includes('13 h 37') && t.includes('l\'heure du gang')), 'heure du gang : texte « 13 h 37 · l\'heure du gang »');
   check(egg(await log(p), 'heure_gang') === 1, 'heure du gang : hg_egg_found(heure_gang) envoyé (silencieux)');
