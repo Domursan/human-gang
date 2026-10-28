@@ -81,7 +81,7 @@ button.uc:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; }
 .ub.d .f > i { position: relative; width: 58%; aspect-ratio: 1; border-radius: 50%; background: #0E0E10; border: 2px solid #E2C77E;
   box-shadow: 0 0 12px rgba(226, 199, 126, .55); display: grid; place-items: center; font-style: normal; }
 .ub.d .f > i > b { font: 400 14px 'Archivo Black', sans-serif; color: #E2C77E; }
-.ub.s.d .f > i > b { font-size: 11px; }
+.ub.s.d .f > i > b { font-size: 12px; }
 
 /* ---------- Bouton UNO festif ---------- */
 .uno-btn { position: relative; border: 0; border-radius: 999px; cursor: pointer; color: #FFFFFF; font-family: 'Archivo Black', sans-serif;

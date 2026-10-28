@@ -28,7 +28,7 @@ body.plat-blackjack { --plat-teinte: #123A24; --plat-or: #E2C77E; }
 .bj-note { margin: 4px 0 10px; font-size: 14px; color: var(--bj-muet); }
 .bj-vide { font-size: 14px; color: var(--bj-muet); list-style: none; }
 .bj-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; color: var(--bj-or); }
-.bj-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 8px; font-size: 11px; color: var(--bj-or); font-weight: 500; white-space: nowrap; }
+.bj-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 8px; font-size: 12px; color: var(--bj-or); font-weight: 500; white-space: nowrap; }
 .bj-etiquette.is-tour { font-weight: 700; }
 .bj-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--bj-rouge-fond); color: var(--bj-rouge); font-weight: 700; font-size: 14px; }
 

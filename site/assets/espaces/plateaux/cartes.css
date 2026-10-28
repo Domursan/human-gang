@@ -46,7 +46,7 @@
   pointer-events: none;
 }
 .cd.is-petite .cd-valeur { font-size: 12px; }
-.cd.is-petite .cd-sym { font-size: 11px; }
+.cd.is-petite .cd-sym { font-size: 12px; }
 .cd.is-petite .cd-centre { font-size: calc(var(--cd-l) * .42); }
 
 /* Dos : motif or sur bleu nuit */

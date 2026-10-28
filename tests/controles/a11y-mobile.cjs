@@ -59,8 +59,6 @@ const PARTIES = [
  * page et d'une partie : tout autre élément trop petit fait toujours échouer. À retirer une fois corrigé (commentaire « À corriger »).
  */
 const EXCEPTIONS = [
-  { page: 'uno', partie: 'table en cours', type: 'texte', motif: /^b « HG »/,
-    comment: 'À corriger : « HG » en 11 px sur les dos de cartes de la table (9 occurrences, 360 et 390 px). Passer à 12 px au minimum.' },
   { page: 'nom-de-code', partie: 'grille en cours', type: 'texte', motif: /ndc-score-nb|ndc-carte-etiq|ndc-carte-mot|^span « MO »/,
     comment: 'À corriger : compteurs « restants » (11 px), étiquettes JAUNE et ROSE des cartes (9 px), mots des cartes (10,4 à 11,3 px), initiales d\'avatar (8 px). Passer à 12 px au minimum.' },
   { page: 'loup-garou', partie: 'plateau de nuit', type: 'cible', motif: /lg-chat-onglet/,
@@ -73,14 +71,6 @@ const EXCEPTIONS = [
     comment: 'À corriger : coordonnées de l\'échiquier (9 px).' },
   { page: 'duels', partie: 'Dames en cours', type: 'cible', motif: /duels-dames-case/,
     comment: 'À corriger : cases du damier à 32 × 32 px en 360 px et 35 × 35 px en 390 px (44 px attendus).' },
-  { page: 'blackjack', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|bj-etiquette/,
-    comment: 'À corriger : étiquettes « À toi de jouer » et « toi » (11 px). Composant commun des plateaux (plat-etiquette).' },
-  { page: 'poker', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|pk-|cd-sym/,
-    comment: 'À corriger : étiquettes, mises, actions et symboles des cartes (11 px). Composant commun des plateaux (plat-etiquette).' },
-  { page: 'catan', partie: 'plateau en cours', type: 'cible', motif: /^g « Sommet/,
-    comment: 'À corriger : sommets du plateau (SVG de 40 × 40 px en 360 px, 44 px attendus).' },
-  { page: 'catan', partie: 'plateau en cours', type: 'texte', motif: /plat-etiquette/,
-    comment: 'À corriger : étiquette « À toi de jouer » (11 px). Composant commun des plateaux (plat-etiquette).' },
 ];
 /**
  * Retire du relevé les défauts admis par EXCEPTIONS (écran de partie seulement). Renvoie la liste retirée, pour le compte rendu.

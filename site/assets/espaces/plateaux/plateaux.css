@@ -104,10 +104,10 @@ body.plat-risk { --plat-teinte: #3B2A18; --plat-or: #D8A75E; }
 
 /* Pastilles et étiquettes : toujours du texte, la couleur ne porte jamais seule le sens */
 .plat-etiquette { display: inline-flex; align-items: center; padding: 1px 8px; border: 1px solid var(--border-strong); border-radius: 999px;
-  font-size: 11px; color: var(--muted); vertical-align: middle; white-space: nowrap; }
+  font-size: 12px; color: var(--muted); vertical-align: middle; white-space: nowrap; }
 .plat-etiquette.is-tour { border-color: var(--plat-tour); color: var(--plat-tour); font-weight: 700; }
 .plat-invite { display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border-strong); border-radius: 999px;
-  font-size: 11px; color: var(--muted); vertical-align: middle; font-weight: 400; }
+  font-size: 12px; color: var(--muted); vertical-align: middle; font-weight: 400; }
 .plat-pseudo { font-weight: 700; }
 
 /* ---------- Formulaires ---------- */
