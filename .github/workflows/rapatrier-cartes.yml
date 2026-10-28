@@ -1,0 +1,59 @@
+# Rapatrie dans le site les images de cartes stockées ailleurs (Deezer, Apple, stockage Supabase) : voir
+# outils/images/rapatrier-cartes.mjs. Se lance quand ce script change sur main, ou avec le bouton « Run workflow ».
+# 1. télécharge et convertit les images dans site/assets/cartes/<série>/ puis les ajoute au dépôt (commit au nom de Domursan,
+#    qui déclenche la publication du site) ; 2. attend qu'elles soient en ligne sur humane-gang.com ; 3. met à jour les adresses
+#    en base (hg_cards.image_url).
+name: Rapatrier les images des cartes
+
+on:
+  push:
+    branches: [main]
+    paths: ['outils/images/rapatrier-cartes.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rapatrier-cartes
+  cancel-in-progress: false
+
+jobs:
+  rapatrier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      PROJECT_REF: zqbdzokyhgavgmqgiwuw
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Installer sharp
+        run: npm i --no-save --no-package-lock sharp@0.33.5
+      - name: Télécharger et convertir
+        run: node outils/images/rapatrier-cartes.mjs telecharger
+      - name: Ajouter au dépôt
+        id: commit
+        run: |
+          git config user.name Domursan
+          git config user.email domursan1@gmail.com
+          git add site/assets/cartes outils/images/rapatriement.json
+          if git diff --cached --quiet; then echo "Rien de nouveau."; echo "rien=1" >> "$GITHUB_OUTPUT"; exit 0; fi
+          git commit -m "Cartes : images rapatriées dans le site (Deezer, Apple, stockage Supabase)"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
+      - name: Attendre la mise en ligne
+        if: steps.commit.outputs.rien != '1'
+        run: |
+          u=$(node -e "const j=require('./outils/images/rapatriement.json');console.log(j.faits[j.faits.length-1]?.apres||'')")
+          [ -z "$u" ] && exit 0
+          for i in $(seq 1 60); do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "https://humane-gang.com$u")
+            [ "$c" = 200 ] && echo "En ligne : $u" && exit 0
+            sleep 20
+          done
+          echo "Images pas encore en ligne après 20 min" && exit 1
+      - name: Basculer les adresses en base
+        if: steps.commit.outputs.rien != '1'
+        run: node outils/images/rapatrier-cartes.mjs basculer
