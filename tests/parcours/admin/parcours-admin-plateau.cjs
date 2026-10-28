@@ -15,6 +15,10 @@
 const path = require('path');
 const { ROOT, SHOTS, check, finish, openPage, hscroll, sleep, chromium, log } = require('../../lib/harness.cjs');
 
+// Heure figée (10 h à Zurich) : sans elle, le secret « nuit » (arcade/core.js, entre 3 h et 3 h 59 à Zurich) affiche un toast
+// « Secret trouvé » qui recouvre la poignée de la Mairie à ces heures-là. Le test ne dépend plus de l’heure réelle.
+const HEURE = '2026-10-28T09:00:00Z';
+
 // Adresse finale après redirection (le routeur remplace le fragment sans nouvelle entrée d'historique).
 const settle = async (p) => { await sleep(350); return p.evaluate(() => location.hash); };
 
@@ -24,7 +28,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   /* (a) Administrateur : plateau, page de lieu, tuile, fil d'Ariane */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    const p = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900 });
     check((await settle(p)) === '#plateau', '(a) accueil par défaut : #plateau');
     const cartes = await p.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
     check(JSON.stringify(cartes) === JSON.stringify(['#place', '#poste', '#ventes', '#camp', '#fabrique', '#fete', '#mairie']),
@@ -85,7 +89,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     ];
     const ko = [];
     for (const [ancienne, attendue] of anciennes) {
-      const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, hash: ancienne });
+      const p = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, hash: ancienne });
       const finale = await settle(p);
       if (finale !== attendue) ko.push(`${ancienne} -> ${finale} (attendu ${attendue})`);
       await p.ctx.close();
@@ -95,7 +99,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   /* (c) Staff { cartes, journal } : seuls ses lieux, dont le Planning (Mairie) */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
+    const p = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
     const lieux = await p.$$eval('.plateau-lieu', (as) => as.map((a) => a.getAttribute('href')));
     check(JSON.stringify(lieux) === JSON.stringify(['#ventes', '#fabrique', '#mairie']), `(c) Staff : lieux permis = ${lieux.join(' ')}`);
     const pages = await p.evaluate(() => [...document.querySelectorAll('#plateau-root [href]')].length);
@@ -109,7 +113,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   /* (d) Téléphone 390 px : barre du bas, pas de défilement horizontal */
   {
-    const p = await openPage(browser, { page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
+    const p = await openPage(browser, { now: HEURE, page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
     check((await settle(p)) === '#plateau', '(d) téléphone : #plateau par défaut');
     const hs = await hscroll(p);
     check(hs <= 0, `(d) téléphone : pas de défilement horizontal (${hs})`);
@@ -132,7 +136,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   /* (e) Plan du plateau : cases, nom accessible, pastilles, actions rapides (droits), repli, téléphone */
   {
-    const p = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    const p = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900 });
     await settle(p);
     check(await p.isVisible('.plateau-board'), '(e) le plan du plateau est affiché');
     check((await p.$$('.plateau-board .plateau-cell')).length === 7, '(e) 7 cases sur le plan');
@@ -162,7 +166,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     await p.ctx.close();
 
     // Avec les fenêtres rapides (admin/quick.js) : le clic ouvre la fenêtre, sans quitter le plateau
-    const n = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    const n = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900 });
     await settle(n);
     await n.click('[data-quick="enchere"]');
     await sleep(400);
@@ -170,7 +174,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     await n.ctx.close();
 
     // Give : repli vers la gestion globale (La Fabrique)
-    const q = await openPage(browser, { page: 'admin', width: 1280, height: 900 });
+    const q = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900 });
     await settle(q);
     await q.click('[data-quick="give"]');
     await sleep(400);
@@ -178,21 +182,21 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     await q.ctx.close();
 
     // Membre sans le droit « cartes » : aucune action rapide ; seule la Mairie (journal) est sur le plan
-    const m = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['journal'] } });
+    const m = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['journal'] } });
     await settle(m);
     check((await m.$$('[data-quick]')).length === 0, '(e) sans droit « cartes » : aucune action rapide sur le plan');
     check((await m.$$('.plateau-cell')).length === 1, '(e) sans droit « cartes » : une seule case (La Mairie)');
     await m.ctx.close();
 
     // Staff « cartes » : les trois actions rapides, dans leurs lieux
-    const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
+    const s = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
     await settle(s);
     const qs = await s.$$eval('[data-quick]', (bs) => bs.map((b) => b.dataset.quick));
     check(qs.length === 3, `(e) Staff « cartes » : trois actions rapides (${qs.join(' ')})`);
     await s.ctx.close();
 
     // Téléphone : une colonne, pas de chemin, actions rapides visibles et dans l'écran
-    const t = await openPage(browser, { page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
+    const t = await openPage(browser, { now: HEURE, page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
     await settle(t);
     check((await t.$eval('.plateau-road', (r) => getComputedStyle(r).display)) === 'none', '(e) téléphone : pas de chemin');
     const hsT = await hscroll(t);
@@ -227,7 +231,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
       place: '1 / span 4 | 1 / span 2', poste: '5 / span 4 | 1 / span 2', ventes: '9 / span 4 | 1 / span 2',
       camp: '1 / span 4 | 3 / span 2', fabrique: '5 / span 4 | 3 / span 2', fete: '9 / span 4 | 3 / span 2', mairie: '1 / span 12 | 5 / span 1',
     };
-    const p = await openPage(browser, { page: 'admin', width: 1280, height: 1150 });
+    const p = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 1150 });
     await settle(p);
     check(egal(await toutes(p), DEFAUT), '(f) disposition par défaut : sept cases à leur place (trois par ligne, la Mairie en bas sur toute la largeur)');
     const hauteur0 = await p.$eval('.plateau-board', (b) => b.getBoundingClientRect().height);
@@ -377,7 +381,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
       camp: { x: 6, y: 0, w: 2, h: 2 }, fabrique: { x: 8, y: 0, w: 2, h: 2 }, fete: { x: 10, y: 0, w: 2, h: 2 }, mairie: { x: 0, y: 2, w: 12, h: 1 },
     };
     for (const [nom, L, largeur] of [['mixte 1280', TASSEES, 1280], ['mixte 1000', TASSEES, 1000], ['minces 1280', MINCES, 1280], ['minces 900', MINCES, 900]]) {
-      const p = await openPage(browser, { page: 'admin', width: largeur, height: 900, init: pose(L) });
+      const p = await openPage(browser, { now: HEURE, page: 'admin', width: largeur, height: 900, init: pose(L) });
       await settle(p);
       const d = await debord(p);
       const ko = d.filter((c) => c.hors.length || c.sh > 1 || c.sw > 1);
@@ -386,7 +390,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
       await p.ctx.close();
     }
     // Disposition enregistrée illisible (case hors du cadre) : repli sur la disposition par défaut
-    const bad = await openPage(browser, { page: 'admin', width: 1280, height: 900, init: pose({ ...TASSEES, place: { x: 10, y: 0, w: 4, h: 2 } }) });
+    const bad = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, init: pose({ ...TASSEES, place: { x: 10, y: 0, w: 4, h: 2 } }) });
     await settle(bad);
     // place (x 10, w 4) sort du cadre : elle passe sous la case la plus basse (mairie, ligne 7), les autres gardent leur place
     check(egal(await toutes(bad), {
@@ -399,7 +403,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
       place: { x: 0, y: 0, w: 4, h: 2 }, poste: { x: 4, y: 0, w: 4, h: 2 }, ventes: { x: 8, y: 0, w: 4, h: 2 },
       camp: { x: 0, y: 2, w: 4, h: 2 }, fabrique: { x: 4, y: 2, w: 4, h: 2 }, mairie: { x: 0, y: 4, w: 12, h: 1 },
     };
-    const manque = await openPage(browser, { page: 'admin', width: 1280, height: 900, init: pose(sansFete) });
+    const manque = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, init: pose(sansFete) });
     await settle(manque);
     check((await pos(manque, 'fete')) === '1 / span 4 | 6 / span 2', `(f) lieu absent de la disposition : il passe sous les autres (${await pos(manque, 'fete')})`);
     await manque.ctx.close();
@@ -408,7 +412,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   {
     // Staff : seules ses cases ; l'enregistrement envoie les sept cases (pas d'effacement des autres)
-    const s = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
+    const s = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { uid: '00000002-0000-4000-8000-000000000002', staff: ['cartes', 'journal'] } });
     await settle(s);
     check((await s.$$('.plateau-cell')).length === 3, '(f) Staff : trois cases visibles');
     await s.click('[data-plateau-edit]');
@@ -425,7 +429,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   {
     // Erreurs : enregistrement refusé (reste en mode disposition) ; lecture en erreur (disposition par défaut)
-    const e = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { plateauFail: true } });
+    const e = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { plateauFail: true } });
     await settle(e);
     await e.click('[data-plateau-edit]');
     await sleep(300);
@@ -439,7 +443,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
     check(errE.length === 0, `(f) enregistrement refusé : aucune erreur JavaScript${errE.length ? ' : ' + errE.join(' | ') : ''}`);
     await e.ctx.close();
 
-    const g = await openPage(browser, { page: 'admin', width: 1280, height: 900, scenario: { plateauGetFail: true } });
+    const g = await openPage(browser, { now: HEURE, page: 'admin', width: 1280, height: 900, scenario: { plateauGetFail: true } });
     await settle(g);
     check(egal(await toutes(g), { place: '1 / span 4 | 1 / span 2', poste: '5 / span 4 | 1 / span 2', ventes: '9 / span 4 | 1 / span 2', camp: '1 / span 4 | 3 / span 2', fabrique: '5 / span 4 | 3 / span 2', fete: '9 / span 4 | 3 / span 2', mairie: '1 / span 12 | 5 / span 1' }),
       '(f) lecture de la disposition en erreur : disposition par défaut');
@@ -450,7 +454,7 @@ const settle = async (p) => { await sleep(350); return p.evaluate(() => location
 
   {
     // Téléphone 390 px : pas de bouton, une colonne, pas de défilement horizontal
-    const t = await openPage(browser, { page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
+    const t = await openPage(browser, { now: HEURE, page: 'admin', width: 390, height: 844, mobile: true, dpr: 2 });
     await settle(t);
     check((await t.$eval('[data-plateau-edit]', (b) => getComputedStyle(b).display)) === 'none', '(f) téléphone 390 px : bouton « Modifier la disposition » masqué');
     const cw = await t.$$eval('.plateau-cell', (cs) => cs.map((c) => c.getBoundingClientRect().width));
