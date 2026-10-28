@@ -8,6 +8,7 @@
  * Exporte : afficher.
  */
 import { esc } from '../../../commun/core.js';
+import { brancherRejoindre, chargerBloc, suivrePubliques } from '../../../commun/jeux-accueil.js';
 import { lg, erreurTexte } from '../api.js';
 import { CAMPS, EXTENSIONS, ROLES, roleById } from '../roles.js';
 import { icone, avatar, pseudo, libellePhase } from '../ui.js';
@@ -191,71 +192,27 @@ export async function afficher(root, { naviguer }) {
   const erreur = root.querySelector('#lg-acc-erreur');
 
   // Rejoindre avec un code : normalisation puis navigation vers la salle d'attente.
-  champ.addEventListener('input', () => {
-    if (!erreur.hidden) { erreur.hidden = true; champ.removeAttribute('aria-invalid'); }
-  });
-  formulaire.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = normaliserCode(champ.value);
-    if (!code) {
-      erreur.textContent = 'Le code ressemble à HGLG-4821 : quatre chiffres, avec ou sans « HGLG ».';
-      erreur.hidden = false;
-      champ.setAttribute('aria-invalid', 'true');
-      champ.focus();
-      return;
-    }
-    champ.value = code;
-    erreur.hidden = true;
-    champ.removeAttribute('aria-invalid');
-    naviguer(urlRejoindre(code));
-  });
+  brancherRejoindre({ formulaire, champ, erreur, normaliser: normaliserCode, naviguer, url: urlRejoindre,
+    messageErreur: 'Le code ressemble à HGLG-4821 : quatre chiffres, avec ou sans « HGLG ».' });
 
   // Chaque bloc charge ses données à part ; une erreur ne bloque pas les autres.
-  async function chargerEnCours() {
-    try {
-      const parties = await lg.mesParties();
-      if (!actif || !Array.isArray(parties) || !parties.length) return;
-      zoneEnCours.innerHTML = htmlMesParties(parties);
-      zoneEnCours.hidden = false;
-    } catch (e) {
-      console.warn('[loup-garou] mes parties', e);
-    }
-  }
-
-  let dernierHtmlPubliques = null;
-  async function chargerPubliques() {
-    try {
-      const liste = await lg.publiques();
-      if (!actif) return;
-      const html = htmlPubliques(Array.isArray(liste) ? liste : []);
-      if (html !== dernierHtmlPubliques) { zonePubliques.innerHTML = html; dernierHtmlPubliques = html; }
-    } catch (e) {
-      if (!actif || dernierHtmlPubliques !== null) return;
-      zonePubliques.innerHTML = `<p class="lg-acc-aide">Liste indisponible pour l'instant. ${esc(erreurTexte(e))}</p>`;
-    }
-  }
-
-  async function chargerStats() {
-    try {
-      const s = await lg.stats();
-      if (!actif) return;
-      zoneStats.innerHTML = s
-        ? htmlStatsResume(s)
-        : htmlCarteStats('<p class="lg-acc-aide">Tes statistiques ne sont pas disponibles pour ton compte.</p>');
-    } catch (e) {
-      if (!actif) return;
-      zoneStats.innerHTML = htmlCarteStats(`<p class="lg-acc-aide">Statistiques indisponibles pour l'instant. ${esc(erreurTexte(e))}</p>`);
-    }
-  }
-
-  chargerEnCours();
-  chargerPubliques();
-  chargerStats();
-  const minuterie = setInterval(() => { if (!document.hidden) chargerPubliques(); }, INTERVALLE_PUBLIQUES);
+  // Mes parties : bloc masqué tant qu'il est vide ou en erreur (la console garde l'erreur).
+  chargerBloc({ zone: zoneEnCours, charger: () => lg.mesParties(),
+    rendre: (p) => { const liste = Array.isArray(p) ? p : []; zoneEnCours.hidden = !liste.length; return liste.length ? htmlMesParties(liste) : ''; },
+    messageErreur: () => { zoneEnCours.hidden = true; return ''; },
+    erreurTexte, actif: () => actif });
+  const arretPubliques = suivrePubliques({ zone: zonePubliques, charger: () => lg.publiques(),
+    rendre: (l) => htmlPubliques(Array.isArray(l) ? l : []), intervalle: INTERVALLE_PUBLIQUES,
+    messageErreur: (m) => `<p class="lg-acc-aide">Liste indisponible pour l'instant. ${esc(m)}</p>`,
+    erreurTexte, actif: () => actif });
+  chargerBloc({ zone: zoneStats, charger: () => lg.stats(),
+    rendre: (s) => s ? htmlStatsResume(s) : htmlCarteStats('<p class="lg-acc-aide">Tes statistiques ne sont pas disponibles pour ton compte.</p>'),
+    messageErreur: (m) => htmlCarteStats(`<p class="lg-acc-aide">Statistiques indisponibles pour l'instant. ${esc(m)}</p>`),
+    erreurTexte, actif: () => actif });
 
   return () => {
     actif = false;
-    clearInterval(minuterie);
+    arretPubliques();
     delete document.body.dataset.lgAmbiance;
   };
 }

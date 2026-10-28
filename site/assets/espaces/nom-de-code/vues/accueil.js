@@ -8,6 +8,7 @@
  * Exporte : afficher.
  */
 import { esc, initials } from '../../../commun/core.js';
+import { brancherRejoindre, chargerBloc, suivrePubliques } from '../../../commun/jeux-accueil.js';
 import { ndc, erreurTexte, estInvite, EQUIPES } from '../api.js';
 
 /** Intervalle de rafraîchissement des parties publiques (ms). */
@@ -198,54 +199,20 @@ export async function afficher(root, { naviguer }) {
   const erreur = root.querySelector('#ndc-acc-erreur');
 
   // Rejoindre avec un code : normalisation puis navigation vers l'écran de rejoindre.
-  champ.addEventListener('input', () => {
-    if (!erreur.hidden) { erreur.hidden = true; champ.removeAttribute('aria-invalid'); }
-  });
-  formulaire.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = normaliserCode(champ.value);
-    if (!code) {
-      erreur.textContent = 'Le code ressemble à HGNDC-1234 : quatre chiffres, avec ou sans « HGNDC ».';
-      erreur.hidden = false;
-      champ.setAttribute('aria-invalid', 'true');
-      champ.focus();
-      return;
-    }
-    champ.value = code;
-    naviguer(urlRejoindre(code));
-  });
+  brancherRejoindre({ formulaire, champ, erreur, normaliser: normaliserCode, naviguer, url: urlRejoindre,
+    messageErreur: 'Le code ressemble à HGNDC-1234 : quatre chiffres, avec ou sans « HGNDC ».' });
 
   // Chaque bloc charge ses données à part ; une erreur ne bloque pas les autres.
-  async function chargerEnCours() {
-    try {
-      const parties = await ndc.mesParties();
-      if (!actif) return;
-      zoneEnCours.innerHTML = htmlMesParties(Array.isArray(parties) ? parties : []);
-    } catch (e) {
-      if (!actif) return;
-      zoneEnCours.innerHTML = `<p class="ndc-acc-aide">Tes parties ne sont pas disponibles pour l'instant. ${esc(erreurTexte(e))}</p>`;
-    }
-  }
-
-  let dernierHtmlPubliques = null;
-  async function chargerPubliques() {
-    try {
-      const liste = await ndc.publiques();
-      if (!actif) return;
-      const html = htmlPubliques(Array.isArray(liste) ? liste : []);
-      if (html !== dernierHtmlPubliques) { zonePubliques.innerHTML = html; dernierHtmlPubliques = html; }
-    } catch (e) {
-      if (!actif || dernierHtmlPubliques !== null) return;
-      zonePubliques.innerHTML = `<p class="ndc-acc-aide">Liste indisponible pour l'instant. ${esc(erreurTexte(e))}</p>`;
-    }
-  }
-
-  chargerEnCours();
-  chargerPubliques();
-  const minuterie = setInterval(() => { if (!document.hidden) chargerPubliques(); }, INTERVALLE_PUBLIQUES);
+  chargerBloc({ zone: zoneEnCours, charger: () => ndc.mesParties(), rendre: (p) => htmlMesParties(Array.isArray(p) ? p : []),
+    messageErreur: (m) => `<p class="ndc-acc-aide">Tes parties ne sont pas disponibles pour l'instant. ${esc(m)}</p>`,
+    erreurTexte, actif: () => actif });
+  const arretPubliques = suivrePubliques({ zone: zonePubliques, charger: () => ndc.publiques(),
+    rendre: (l) => htmlPubliques(Array.isArray(l) ? l : []), intervalle: INTERVALLE_PUBLIQUES,
+    messageErreur: (m) => `<p class="ndc-acc-aide">Liste indisponible pour l'instant. ${esc(m)}</p>`,
+    erreurTexte, actif: () => actif });
 
   return () => {
     actif = false;
-    clearInterval(minuterie);
+    arretPubliques();
   };
 }

@@ -12,6 +12,7 @@ import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, jeuxVisibles } from '../api.js';
 import { avatarPresence } from '../../../commun/core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, couleurJoueur } from './commun.js';
+import { brancherRejoindre } from '../../../commun/jeux-accueil.js';
 
 /** Intervalle de rafraîchissement de l'accueil (ms). */
 const INTERVALLE = 10000;
@@ -287,22 +288,8 @@ export async function afficher(root, { naviguer }) {
   };
 
   // Rejoindre avec un code : normalisation puis navigation vers le duel.
-  champ.addEventListener('input', () => {
-    if (!erreur.hidden) { erreur.hidden = true; champ.removeAttribute('aria-invalid'); }
-  });
-  formulaire.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = normaliserCode(champ.value);
-    if (!code) {
-      erreur.textContent = 'Le code ressemble à HGP4-2190.';
-      erreur.hidden = false;
-      champ.setAttribute('aria-invalid', 'true');
-      champ.focus();
-      return;
-    }
-    champ.value = code;
-    naviguer(urlRejoindre(code));
-  });
+  brancherRejoindre({ formulaire, champ, erreur, normaliser: normaliserCode, naviguer, url: urlRejoindre,
+    messageErreur: 'Le code ressemble à HGP4-2190.' });
 
   // Défis reçus : accepter (puis aller au duel) ou refuser. Délégation : les boutons sont redessinés à chaque relecture.
   ecran.addEventListener('click', async (e) => {

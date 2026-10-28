@@ -8,6 +8,7 @@
  * Exporte : afficher.
  */
 import { esc } from '../../../commun/core.js';
+import { brancherRejoindre, chargerBloc, suivrePubliques } from '../../../commun/jeux-accueil.js';
 import { plat, contenus, erreurTexte, jeu } from '../api.js';
 
 /** Intervalle de rafraîchissement des parties publiques (ms). */
@@ -209,49 +210,23 @@ export async function afficher(root) {
   });
 
   // Rejoindre avec un code.
-  const form = root.querySelector('[data-rejoindre-form]');
-  const champ = root.querySelector('[data-code]');
-  const erreurEl = root.querySelector('[data-erreur]');
-  form.addEventListener('submit', (ev) => {
-    ev.preventDefault();
-    const code = normaliserCode(champ.value, J.prefixe);
-    if (!code) {
-      erreurEl.textContent = `Le code doit ressembler à ${J.prefixe}-1234.`;
-      erreurEl.hidden = false;
-      champ.focus();
-      return;
-    }
-    erreurEl.hidden = true;
-    location.hash = `#rejoindre/${encodeURIComponent(code)}`;
-  });
+  brancherRejoindre({ formulaire: root.querySelector('[data-rejoindre-form]'), champ: root.querySelector('[data-code]'),
+    erreur: root.querySelector('[data-erreur]'), normaliser: (saisie) => normaliserCode(saisie, J.prefixe),
+    messageErreur: `Le code doit ressembler à ${J.prefixe}-1234.`, naviguer: (hash) => { location.hash = hash; },
+    url: (code) => `#rejoindre/${encodeURIComponent(code)}` });
 
   // Mes parties en cours.
-  plat.mesParties()
-    .then((liste) => {
-      if (!actif) return;
-      root.querySelector('[data-mes]').innerHTML = htmlMesParties(Array.isArray(liste) ? liste : []);
-    })
-    .catch((e) => {
-      if (!actif) return;
-      root.querySelector('[data-mes]').innerHTML = `<p class="plat-aide" role="alert">${esc(erreurTexte(e))}</p>`;
-    });
+  const alerte = (m) => `<p class="plat-aide" role="alert">${esc(m)}</p>`;
+  chargerBloc({ zone: root.querySelector('[data-mes]'), charger: () => plat.mesParties(),
+    rendre: (liste) => htmlMesParties(Array.isArray(liste) ? liste : []), messageErreur: alerte, erreurTexte, actif: () => actif });
 
   // Parties publiques, rafraîchies régulièrement.
-  const zonePub = root.querySelector('[data-pub]');
-  const chargerPubliques = () => plat.publiques()
-    .then((liste) => {
-      if (!actif) return;
-      zonePub.innerHTML = htmlPubliques(Array.isArray(liste) ? liste : []);
-    })
-    .catch((e) => {
-      if (!actif) return;
-      zonePub.innerHTML = `<p class="plat-aide" role="alert">${esc(erreurTexte(e))}</p>`;
-    });
-  chargerPubliques();
-  const minuteur = setInterval(() => { if (!document.hidden) chargerPubliques(); }, INTERVALLE_PUBLIQUES);
+  const arretPubliques = suivrePubliques({ zone: root.querySelector('[data-pub]'), charger: () => plat.publiques(),
+    rendre: (liste) => htmlPubliques(Array.isArray(liste) ? liste : []), intervalle: INTERVALLE_PUBLIQUES,
+    messageErreur: alerte, erreurTexte, actif: () => actif });
 
   return () => {
     actif = false;
-    clearInterval(minuteur);
+    arretPubliques();
   };
 }
