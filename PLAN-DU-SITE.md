@@ -1,7 +1,7 @@
 # Plan du site — Humane Gang
 
 Toutes les pages, qui peut les voir, ce qu'elles contiennent, où est leur code et comment on y arrive.
-Version : état du code au 27 octobre 2026, après le rangement du dépôt (pages dans `site/pages/`, code dans `site/assets/espaces/`).
+Version : état du code au 28 octobre 2026, après le rangement du dépôt (pages dans `site/pages/`, code dans `site/assets/espaces/`).
 
 Les adresses sont celles du site publié : `/pages/<catégorie>/<nom>.html`. Le plan du dépôt (où est quel fichier, où ranger un nouveau fichier) est dans [PLAN-DU-DEPOT.md](PLAN-DU-DEPOT.md).
 
@@ -149,16 +149,17 @@ La liste des onglets vit dans `site/assets/espaces/jeux/onglets.js` : c'est elle
 
 ## Administration (`admin.html`)
 
-Six domaines, avec leurs sous-sections (détail, permissions et adresses : ADMIN-PANEL.md). Chaque sous-section demande une permission Staff, sauf mention « administrateur ».
+Sept lieux, regroupés sur le plateau (`#plateau`), avec leurs sous-sections (détail, permissions et adresses : ADMIN-PANEL.md). Chaque sous-section demande une permission Staff, sauf mention « administrateur ».
 
-| Domaine | Sous-sections |
+| Lieu (adresse) | Sous-sections |
 | --- | --- |
-| Pilotage | Vue d'ensemble · Planning · Journal · Staff (administrateur) · Bot (Bot Discord, Commandes slash) · Site (Identité et mentions légales, Textes et intro, Menu et pied de page, État du site, Erreurs du site, Archives, Clés avancées) · Apparence (Thème) · Assistance (Assistance, Boîte à idées, Messagerie, Fil d'activité) |
-| Membres | Comptes (Comptes, Rôles, À relancer, Invitations, Champs du profil, Vie sociale, Accueil des membres) · Entraide (Parrainage, Compétences) · Accès aux pages (Pages, Matrice membres × pages) · Badges (Catalogue, Attribution, Critères automatiques) |
-| IRL | Membres IRL · Sorties IRL · Souvenirs et photos · Secret Santa |
-| Event | Événements à thème · Calendrier et cinéma · Calendrier de l'Avent · Saison des Worlds · Anniversaire du gang |
-| Le jeu de cartes | Gestion globale · Catalogue (Séries, Cartes, Boosters) · Économie (Paillettes et dons, Tirage, Recyclage et fabrication, Limites) · Animation (Quêtes, Défis du gang, Drops, Cagnotte et bulletin, Cartes Champions, Codes cadeaux, Atelier, Enchères) · Suivi (Joueurs, Échanges, Statistiques) · Arène |
-| Autres jeux | Questions du gang · Sutom du gang · GeoGuessr · Citations « Qui a dit ça ? » · Preuves de quêtes · Framed et Heardle · Arcade (pages 404) · Secrets · Mes jeux |
+| La Place du gang (`#place`) | Membres (Comptes, Rôles, Champs du profil, Vie sociale, Accueil des membres) · Relances (À relancer, Invitations) · Entraide (Parrainage, Compétences) · Accès (Accès aux pages, Matrice membres × pages) · Badges (Catalogue, Attribution, Critères automatiques) |
+| La Poste (`#poste`) | Demandes (Assistance, Boîte à idées) · Échanges (Messagerie, Fil d'activité) · Discord (Bot Discord, Commandes slash) |
+| La Salle des ventes (`#ventes`) | Enchères · Échanges entre membres |
+| Le Camp IRL (`#camp`) | Qui (Membres IRL) · Vivre les sorties (Sorties IRL, Souvenirs et photos) · Rendez-vous (Secret Santa) |
+| La Fabrique de cartes (`#fabrique`) | Agir (Gestion globale, Drops, Codes cadeaux) · Arène · Catalogue (Séries, Cartes, Boosters) · Suivi (Joueurs, Statistiques) · Économie (Paillettes et dons, Tirage, Recyclage et fabrication, Limites) · Animations (Quêtes, Défis du gang, Cagnotte et bulletin, Cartes Champions, Atelier) |
+| La Fête foraine (`#fete`) | Événements (Événements à thème, Calendrier et cinéma, Calendrier de l'Avent, Saison des Worlds, Anniversaire du gang) · Jeux (Questions du gang, Sutom du gang, GeoGuessr, Citations, Preuves de quêtes, Framed et Heardle, Arcade, Secrets, Mes jeux ; Loup-Garou, Uno, Codenames, Jeux de plateau et Duels réservés à l'administrateur) |
+| La Mairie (`#mairie`) | Organisation (Planning, Journal, Staff) · Le site (Identité et mentions légales, Textes et intro, Menu et pied de page, Thème) · Technique (État du site, Erreurs du site, Archives, Clés avancées) |
 
 ## Anciennes adresses
 

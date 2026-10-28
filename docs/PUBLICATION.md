@@ -1,6 +1,6 @@
 # Publication du site (GitHub Pages)
 
-Seul le dossier `site/` est publié. Le workflow `.github/workflows/publier-site.yml` envoie son contenu à GitHub Pages
+Seul le dossier `site/` est publié, après une construction. Le workflow `.github/workflows/publier-site.yml` construit `_site/` à partir de `site/` (avec `outils/build/construire.mjs`), puis publie `_site/` sur GitHub Pages
 à chaque envoi sur `main` (et à la demande, `workflow_dispatch`). Le reste du dépôt (`supabase/`, `docs/`, `tests/`,
 `.github/`…) n'est jamais servi : il est seulement lisible sur github.com, le dépôt étant public.
 

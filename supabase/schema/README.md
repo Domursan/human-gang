@@ -1,58 +1,39 @@
-# Schéma reconstitué (`schema_reel_2026-10-21.sql`)
+# Schéma de référence (`schema_reel_2026-10-21b.sql`)
 
-## Ce que c'est
+## Date et couverture
 
-`schema_reel_2026-10-21.sql` décrit l'état réel du schéma `public` du projet Supabase
-`zqbdzokyhgavgmqgiwuw` le 21/10/2026 : tables et colonnes, défauts, identités, contraintes,
-index, RLS, policies, fonctions, triggers, séquences, extensions, politiques du stockage
-(`storage.objects`), buckets (noms et visibilité) et tâches pg_cron.
+- **Fichier de référence : `schema_reel_2026-10-21b.sql`**, relevé le **21/10/2026**, après la migration **131**.
+  Il ne reflète donc **pas** les migrations 132 à 166 (dernière : `166_plateaux_droits_internes.sql`), ni les
+  éventuelles modifications faites directement dans la base après le relevé. Ne pas le considérer comme l'état actuel.
+- `schema_reel_2026-10-21.sql` (relevé plus ancien, sans les migrations 020 à 032) est **périmé** : gardé pour mémoire, à ne plus utiliser.
+- Le fichier ne contient ni données, ni secrets, ni adresses e-mail. Le seul marqueur est l'UUID du propriétaire
+  de l'application Domursan (tables `d_*`), écrit `00000000-0000-0000-0000-000000000000`.
 
-Il fait foi pour les résumés de migrations `006`, `009`, `011`, `012`, `015` et `017`, dont le SQL
-exact n'a jamais été conservé dans le dépôt. Il fait aussi foi, pour les policies et les fonctions
-qu'il recense, sur `018_cartes_tables.sql`, `018_cartes_fonctions.sql` et `003`.
+## Connu : il ne se rejoue pas sans erreur
 
-## Comment il a été produit
+Testé sur PostgreSQL 16 (bancs de `tests/bancs/cartes/`) : les extensions propres à Supabase (`supabase_vault`, `pg_net`,
+`pg_cron`) sont absentes en local, ce qui est attendu (et `pgcrypto` doit être dans le `search_path`). Restent des défauts du fichier lui-même :
 
-- Lecture seule uniquement : des `select` sur `pg_catalog`, `information_schema`, `pg_policies`,
-  `pg_trigger`, `pg_indexes`, `pg_get_functiondef`, `pg_get_triggerdef`, `storage.buckets` et `cron.job`.
-  Aucune écriture, aucun `apply_migration`, aucun DDL sur la base de production.
-- Les résultats ont été assemblés par un script (non versionné) qui écrit le DDL à partir de ces catalogues :
-  `information_schema.columns` pour les tables, `pg_constraint` pour les contraintes, `pg_get_functiondef`
-  pour les fonctions, etc.
-- Ordre du fichier : extensions, séquences hors identité, tables, contraintes (PK, UNIQUE, CHECK puis FK),
-  index, fonctions (avec `check_function_bodies` désactivé, car les fonctions SQL peuvent se référencer),
-  triggers, RLS, policies, policies de stockage, buckets, puis pg_cron en commentaire.
+- la politique `hg_dates_write` (ligne 3130) a des parenthèses déséquilibrées : elle n'est pas créée, ce qui fait
+  remonter une erreur de syntaxe vers la ligne 3209 ; la politique `hg_rsvps_creator` (ligne 3132) n'est pas créée non plus ;
+- la publication `supabase_realtime` (ligne 3199) reste vide après le rejeu du fichier seul : à vérifier avant tout usage ;
 
-## Ce qu'il ne contient pas, volontairement
+## Comment le régénérer (lecture seule)
 
-- **Aucune donnée de lignes**, aucun secret, aucun e-mail. Une recherche sur le fichier ne trouve aucune adresse
-  e-mail ni aucun UUID réel.
-- **Un seul marqueur** : l'UUID du propriétaire de l'application Domursan (tables `d_*`), qui apparaît dans
-  des policies « owner_lock ». Il est écrit `00000000-0000-0000-0000-000000000000`. Pour rejouer le fichier,
-  remplacer ce marqueur par la vraie valeur, hors du dépôt (ou utiliser la clé `hg_settings.domursan_owner`
-  décrite dans `supabase/migrations/README.md`).
-- Les URL des fonctions edge dans pg_cron sont ramenées à `<PROJECT_REF>`.
+Le relevé doit être refait sur la base de production, **en lecture seule**. Deux possibilités :
 
-## Ce qu'il ne couvre pas
+1. **Éditeur SQL de Supabase** : exécuter des `select` sur les catalogues (`pg_class`, `pg_attribute`, `pg_constraint`,
+   `pg_policies`, `pg_proc` avec `pg_get_functiondef`, `pg_trigger` avec `pg_get_triggerdef`, `storage.buckets`, `cron.job`),
+   puis assembler le DDL. C'est ainsi que le fichier actuel a été produit.
+2. **En ligne de commande**, avec l'adresse de connexion directe de la base (Project Settings › Database) :
+   ```sh
+   pg_dump --schema-only --schema=public --no-owner --no-privileges \
+     "postgresql://postgres:MOT_DE_PASSE@HOTE:5432/postgres" > supabase/schema/schema_reel_AAAA-MM-JJ.sql
+   ```
+   Ne pas inclure le schéma `auth`, `storage` ni les extensions (les `--schema` le font). Relire le résultat et
+   remplacer l'UUID du propriétaire Domursan par le marqueur, comme ci-dessus, avant de le commiter.
 
-- Les privilèges (`GRANT` / `REVOKE`) : non recensés dans ce fichier. Les privilèges par défaut de Supabase
-  s'appliquent à la reconstitution ; les `grant` écrits dans les migrations restent la référence.
-- Les réglages du projet (auth, SMTP, buckets au-delà de leur nom et visibilité), les secrets (vault), les
-  fonctions edge (dans `supabase/functions/`), le contenu des buckets (fichiers).
-- Les tables des autres schémas (`auth`, `storage` hors `objects` et `buckets`).
+Ensuite : nommer le fichier avec la date du relevé, indiquer dans cet README la dernière migration couverte, et
+vérifier qu'il se rejoue sur une base locale (voir `tests/bancs/cartes/rebuild.sh` pour l'imitation de Supabase).
 
-## Contrôle effectué
-
-- Le fichier a été rejoué sur une base PostgreSQL 16 locale de test (pas la production), après des stubs
-  minimaux pour `auth` (`auth.uid()`, `auth.users`) et `storage` (`buckets`, `objects`, `foldername`), et
-  sans les extensions Supabase absentes localement (`supabase_vault`, `pg_net`, `pg_cron`).
-  Résultat : 0 erreur au premier passage ; 0 erreur au second passage (idempotent) ; 55 tables,
-  115 policies, 36 triggers, 94 index.
-- Le fichier a été généré à partir de la base du 21/10/2026. Il doit être regénéré (et relu) à chaque changement
-  de schéma significatif ; la migration `021_securite_cartes.sql` a été écrite après ce relevé et doit être appliquée
-  par-dessus.
-
-## Pour le régénérer
-
-Relancer les mêmes `select` en lecture seule sur les catalogues (voir la section « Comment il a été produit »),
-puis comparer avec le fichier existant. Ne jamais exécuter ce fichier sur la production sans relecture.
+Ne jamais exécuter ce fichier sur la production sans relecture.

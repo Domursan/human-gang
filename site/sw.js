@@ -1,7 +1,9 @@
 /* Service worker du Humane Gang : mode hors ligne (coque du site et derniers contenus lus).
    - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis /offline.html.
-   - Fichiers du site (/assets/) : copie en cache servie tout de suite, mise à jour en arrière-plan
-     (stale-while-revalidate) : une nouvelle version est utilisée dès le chargement suivant.
+   - Code du site (/assets/**.js, .css, .json) : réseau d'abord, avec revalidation (cache: no-cache) ; la copie en cache
+     ne sert que hors ligne. Une page et ses modules restent ainsi de la même version.
+   - Autres fichiers du site (/assets/ : images, polices, sons) : copie en cache servie tout de suite, mise à jour en
+     arrière-plan (stale-while-revalidate) ; une nouvelle version est utilisée dès le chargement suivant.
    - Bibliothèque jsDelivr épinglée (/npm/, version exacte x.y.z) : cache d'abord ; seules les réponses lisibles et réussies
      (pas les réponses « opaques », dont le statut est inconnu) sont gardées, sauf pour PRECACHE_REMOTE.
    - Pages : la copie en cache est rangée sous l'adresse sans paramètres (?code=, ?c=, ?u=…), pour ne garder ni code
@@ -11,7 +13,8 @@
      sans jeton ni donnée privée) passent par un cache séparé « hg-cartes-img », servi en premier, plafonné à 1 500 images
      (les plus anciennes partent). Ce cache est rempli aussi par la page Cartes et effacé à la déconnexion.
      Les illustrations des cartes servies par le site (/assets/cartes/) suivent la même stratégie, dans le même cache.
-   CACHE_VERSION : à incrémenter seulement si la liste PRECACHE ou la logique du service worker change. */
+   CACHE_VERSION : incrémenter à chaque changement de JS ou CSS du site ; la publication l'incrémente aussi dans sa copie
+   (outils/build/construire.mjs). Règle unique, la même que dans PLAN-DU-DEPOT.md. */
 
 /* ---------- Constantes ---------- */
 
