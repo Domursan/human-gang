@@ -182,8 +182,16 @@ jobs:
         if: steps.pw-cache.outputs.cache-hit == 'true'
         working-directory: tests
         run: npx playwright install-deps chromium
+      # On mesure le site tel qu'il est publié (_site/, construit comme dans publier-site.yml), pas les sources.
+      - name: Installer l'outil de construction (esbuild)
+        working-directory: outils/build
+        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-package-lock; fi
+      - name: Construire le site publié (_site/)
+        run: node outils/build/construire.mjs
       - name: Mesure (4G lente simulée, processeur ralenti × 4, 390 px)
         working-directory: tests
+        env:
+          HG_ROOT: ${{ github.workspace }}/_site
         run: node controles/perf-budget.cjs
       - name: Bilan
         if: always()

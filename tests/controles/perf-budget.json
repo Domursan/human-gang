@@ -1,5 +1,5 @@
 {
-  "_note": "Budget de performance mobile (Q3) : téléphone moyen, 4G lente simulée, processeur ralenti × 4, 390 px. lcp_ms : plus grand affichage ; ko : octets servis au premier chargement (hors photos, hors polices Google) ; requetes : requêtes servies ; cls : décalage de mise en page. Les valeurs de chaque page sont l'objectif (affiché « hors objectif » s'il est dépassé) ; « plafond » fixe, pour les mesures qui dépassent déjà l'objectif au 23/10/2026, la limite bloquante (mesure du jour arrondie). Échec si une mesure dépasse sa limite (plafond, sinon objectif) de plus de 10 %. Abaisser un plafond après chaque correction.",
+  "_note": "Budget de performance mobile (Q3) : téléphone moyen, 4G lente simulée, processeur ralenti × 4, 390 px. lcp_ms : plus grand affichage ; ko : octets servis au premier chargement (hors photos, hors polices Google) ; requetes : requêtes servies ; cls : décalage de mise en page. Les valeurs de chaque page sont l'objectif (affiché « hors objectif » s'il est dépassé) ; « plafond » fixe, pour les mesures qui dépassent déjà l'objectif au 23/10/2026 (requêtes et Ko : version publiée, compressée, au 28/10/2026), la limite bloquante (mesure du jour arrondie). Échec si une mesure dépasse sa limite (plafond, sinon objectif) de plus de 10 %. Abaisser un plafond après chaque correction. Mesuré sur la version publiée (_site/, HG_ROOT) par la CI.",
   "reseau": {
     "rtt_ms": 150,
     "debit_ko_s": 200
@@ -13,7 +13,8 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "cls": 0.12
+        "cls": 0.12,
+        "requetes": 85
       }
     },
     "cartes": {
@@ -22,8 +23,9 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "ko": 700,
-        "lcp_ms": 2800
+        "ko": 800,
+        "lcp_ms": 2800,
+        "requetes": 85
       }
     },
     "irl": {
@@ -32,8 +34,7 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "ko": 700,
-        "requetes": 70
+        "requetes": 80
       }
     },
     "historique": {
@@ -42,7 +43,7 @@
       "requetes": 60,
       "cls": 0.1,
       "plafond": {
-        "requetes": 70
+        "requetes": 80
       }
     },
     "membre": {
@@ -50,7 +51,9 @@
       "ko": 600,
       "requetes": 60,
       "cls": 0.1,
-      "plafond": {}
+      "plafond": {
+        "requetes": 80
+      }
     }
   }
 }
