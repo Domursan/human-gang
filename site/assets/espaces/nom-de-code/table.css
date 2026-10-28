@@ -188,7 +188,7 @@
   .ndc-score-cas { flex: 1 1 0; min-height: 48px; padding: 4px 10px; gap: 6px; }
   .ndc-score-nom { font-size: 14px; }
   .ndc-score-nb strong { font-size: 28px; }
-  .ndc-score-nb { font-size: 11px; }
+  .ndc-score-nb { font-size: 12px; }
   .ndc-au-tour { order: 3; flex-basis: 100%; font-size: 15px; }
   .ndc-chrono-texte { font-size: 15px; min-width: 0; }
   .ndc-anneau { width: 34px; height: 34px; }
@@ -205,17 +205,21 @@
   .ndc-indice-mot { font-size: 28px; }
   .ndc-indice-essais { font-size: 13px; }
 
-  /* Grille pleine largeur, 5 colonnes serrées ; mots qui rétrécissent, jamais coupés au milieu */
+  /* Grille pleine largeur, 5 colonnes serrées. Texte 12 px minimum : un mot qui ne tient pas sur une ligne passe
+     sur deux (césure du navigateur quand elle existe, sinon coupure au bord de la carte), jamais en plus petit. */
   .ndc-grille { gap: 6px; }
-  .ndc-carte { aspect-ratio: auto; height: 58px; padding: 2px; border-radius: 8px; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); }
+  .ndc-carte { aspect-ratio: auto; height: 64px; padding: 2px; border-radius: 8px; box-shadow: 0 3px 8px rgba(0, 0, 0, .35); }
   .ndc-carte::before { border-width: 3px; border-radius: 8px; }
   .ndc-carte > .ndc-carte-haut { margin: 2px 2px 0; }
-  .ndc-carte .ndc-carte-mot { margin: 2px; height: 22px; padding: 0 2px; font-size: clamp(9px, 2.9vw, 13px); letter-spacing: 0; white-space: nowrap; }
-  .ndc-carte-etiq { font-size: 9px; padding: 1px 4px; letter-spacing: .2px; }
+  .ndc-carte .ndc-carte-mot { margin: 2px; height: auto; min-height: 26px; padding: 1px 1px; box-sizing: border-box; font-size: 12px; line-height: 1.05;
+    letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; word-break: normal; hyphens: auto; -webkit-hyphens: auto; text-align: center; }
+  .ndc-carte-etiq { font-size: 12px; padding: 1px 4px; letter-spacing: 0; }
+  .ndc-carte-etiq svg { display: none; }
   .ndc-carte-icone svg { width: 18px; height: 18px; }
-  .ndc-carte-tokens { top: 3px; right: 3px; }
-  .ndc-jeton { width: 18px; height: 18px; font-size: 8px; border-width: 1px; }
-  .ndc-jeton.is-moi { width: 20px; height: 20px; }
+  .ndc-carte-tokens { top: 2px; right: 2px; }
+  .ndc-jeton { width: 24px; height: 24px; font-size: 12px; letter-spacing: -.3px; border-width: 1px; }
+  .ndc-jeton + .ndc-jeton { margin-left: -8px; }
+  .ndc-jeton.is-moi { width: 26px; height: 26px; }
   .ndc-carte.is-ma-proposition { outline-width: 2px; }
 
   .ndc-actions { gap: 8px; }

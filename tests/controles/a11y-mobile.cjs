@@ -61,8 +61,6 @@ const PARTIES = [
 const EXCEPTIONS = [
   { page: 'uno', partie: 'table en cours', type: 'texte', motif: /^b « HG »/,
     comment: 'À corriger : « HG » en 11 px sur les dos de cartes de la table (9 occurrences, 360 et 390 px). Passer à 12 px au minimum.' },
-  { page: 'nom-de-code', partie: 'grille en cours', type: 'texte', motif: /ndc-score-nb|ndc-carte-etiq|ndc-carte-mot|^span « MO »/,
-    comment: 'À corriger : compteurs « restants » (11 px), étiquettes JAUNE et ROSE des cartes (9 px), mots des cartes (10,4 à 11,3 px), initiales d\'avatar (8 px). Passer à 12 px au minimum.' },
   { page: 'loup-garou', partie: 'plateau de nuit', type: 'cible', motif: /lg-chat-onglet/,
     comment: 'À corriger : onglets du chat (95 × 40 px : hauteur sous 44 px).' },
   { page: 'loup-garou', partie: 'plateau de nuit', type: 'texte', motif: /avatar|lg-siege-buche/,
