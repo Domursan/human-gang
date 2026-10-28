@@ -106,13 +106,17 @@
   .shell-live .live-status { font-size: 12px; }
   .shell-live .live-label { display: inline; }
   .shell-avatar { width: 36px; height: 36px; }
-  .shell-body { grid-template-columns: minmax(0, 1fr) !important; }
+  .shell-body { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: minmax(0, 1fr); }
   .shell-col { border-right: 0; padding: 14px 16px 16px; }
-  /* Liste (sous-section « liste + détail ») : écran plein tant qu'aucun élément n'est choisi ; page : sans la liste */
-  .shell[data-screen="list"] .shell-zone { display: none; }
+  /* Liste (sous-section « liste + détail ») : la liste occupe l'écran tant qu'aucun élément n'est choisi, mais l'en-tête
+     de page (titre, fil d'Ariane) reste au-dessus ; le contenu de la page est masqué. Page : sans la liste. */
+  .shell-zone { order: -1; }
+  .shell[data-screen="list"] .shell-body { grid-template-rows: auto minmax(0, 1fr); }
+  .shell[data-screen="list"] .shell-groups, .shell[data-screen="list"] .shell-noaccess { display: none; }
   .shell[data-screen="page"] .shell-col { display: none; }
   .shell-info { display: none !important; }
-  .zone-head { padding: 14px 16px 12px; }
+  .zone-head { padding: 12px 16px 12px; }
+  .zone-title { font-size: 24px; }
   .shell-groups { padding: 16px 16px 32px; }
   .shell-tabs { grid-row: 3; display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
     padding: 8px 14px calc(env(safe-area-inset-bottom, 0px) + 6px); scroll-padding-inline: 14px; background: var(--shell-bar); border-top: 1px solid var(--border); }

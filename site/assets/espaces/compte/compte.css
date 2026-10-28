@@ -212,3 +212,27 @@ html[data-mode="clair"] .medal-lvl { color: #FFFFFF; }
 .np-hours[hidden] { display: none; }
 .np-hours select { min-height: 44px; width: auto; }
 .np-status:empty { display: none; }
+
+/* ===== Sommaire de « Mon compte » : collant sous le haut de page ; sur téléphone il défile en ligne ===== */
+.acc-nav { position: sticky; top: 0; z-index: 20; margin: 0 -24px 20px; padding: 10px 24px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.acc-nav-list { display: flex; gap: 8px; margin: 0; padding: 0; list-style: none; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-padding-inline: 16px; }
+.acc-nav-list::-webkit-scrollbar { display: none; }
+.acc-nav-list a { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: var(--surface); color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; text-decoration: none; }
+@media (hover: hover) { .acc-nav-list a:hover { color: var(--text); border-color: var(--sand); } }
+.acc-nav-list a:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.acc-nav-list a[aria-current="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+#profile-form, #avatar, #pw-form, #gaming, #entraide, #infos, #badges, #data-card, #notifs { scroll-margin-top: 84px; }
+@media (max-width: 600px) {
+  .acc-nav { margin: 0 -16px 16px; padding: 10px 16px; }
+}
+
+/* ===== Barre d'enregistrement (téléphone) : « Enregistrer » du profil reste à portée de pouce quand le profil a changé ===== */
+.acc-savebar { display: none; }
+@media (max-width: 719.98px) {
+  .acc-savebar:not([hidden]) { position: fixed; left: 0; right: 0; bottom: 0; z-index: 52; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface-2); border-top: 1px solid var(--border-strong); box-shadow: 0 -8px 24px rgba(0, 0, 0, .35); }
+  .acc-savebar p { margin: 0; font-size: 14px; font-weight: 600; color: var(--sand); }
+  /* Les boutons flottants (en ligne, staff) passent au-dessus de la barre pendant qu'elle est visible */
+  html[data-savebar] .ol, html[data-savebar] .sd { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+}

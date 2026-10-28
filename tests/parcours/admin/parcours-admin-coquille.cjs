@@ -111,7 +111,9 @@ const tabsOf = (p) => p.$$eval('#shell-tabs .shell-tab', (as) => as.map((a) => a
     await p.evaluate(() => { location.hash = '#place/comptes'; });
     check(await waitRoute(p, 'place/comptes'), '(c) mobile : Comptes affiché');
     // Comptes est une liste + détail : sur mobile, la liste occupe l'écran tant qu'aucun membre n'est choisi
-    check(await waitRoute(p, 'place/comptes') && await p.isVisible('#shell-col') && !(await p.isVisible('#app')), '(c) mobile : liste des comptes plein écran (zone masquée)');
+    // Titre de page visible au-dessus de la liste (revue R6, M1) ; le contenu de la page reste masqué
+    check(await waitRoute(p, 'place/comptes') && await p.isVisible('#shell-col') && !(await p.isVisible('#shell-groups')), '(c) mobile : liste des comptes plein écran (contenu de page masqué)');
+    check((await p.textContent('#zone-title')).trim() === 'Comptes' && await p.isVisible('#zone-title'), '(c) mobile : titre « Comptes » visible en haut de la liste');
     check(await p.isVisible('#shell-tabs') && (await hashOf(p)) === '#place/comptes', '(c) mobile : barre du bas toujours visible');
     const hs = await hscroll(p);
     check(hs <= 0, `(c) mobile : pas de défilement horizontal (${hs})`);
