@@ -29,7 +29,7 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
 .pk-note { margin: 4px 0 10px; font-size: 14px; color: var(--pk-muet); }
 .pk-vide { font-size: 14px; color: var(--pk-muet); list-style: none; }
 .pk-titre { margin: 0 0 4px; font-family: 'Archivo Black', sans-serif; font-weight: 400; font-size: 20px; color: var(--pk-or); }
-.pk-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 7px; font-size: 11px; color: var(--pk-or); font-weight: 500; white-space: nowrap; }
+.pk-etiquette { display: inline-flex; align-items: center; border: 1px solid rgba(226, 199, 126, .55); border-radius: 999px; padding: 0 7px; font-size: 12px; color: var(--pk-or); font-weight: 500; white-space: nowrap; }
 .pk-etiquette.is-donneur { background: var(--pk-or); color: #121212; font-weight: 700; }
 .pk-etiquette.is-tapis { border-color: var(--pk-rouge); color: var(--pk-rouge); font-weight: 700; }
 .pk-alerte { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: var(--pk-rouge-fond); color: var(--pk-rouge); font-weight: 700; font-size: 14px; }
@@ -99,7 +99,7 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
 .pk-siege-cartes .cd { --cd-l: 30px; --cd-h: 44px; }
 .pk-siege-nom { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; min-width: 0; }
 .pk-pseudo { overflow-wrap: anywhere; font-size: 14px; }
-.pk-pastille { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11px Inter, sans-serif; color: #121212; }
+.pk-pastille { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 12px Inter, sans-serif; color: #121212; }
 .pk-siege-etiquettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin: 3px 0 0; min-height: 0; }
 .pk-siege-etiquettes:empty { display: none; }
 .pk-jetons { margin: 3px 0 0; font-size: 13px; }
@@ -171,9 +171,9 @@ body.plat-poker { --plat-teinte: #15324A; --plat-or: #E2C77E; }
   .pk-siege-cartes .cd-sym { font-size: 8px; }
   .pk-siege-cartes .cd-centre { display: none; }
   .pk-pseudo { font-size: 12px; }
-  .pk-jetons { font-size: 11px; }
+  .pk-jetons { font-size: 12px; }
   .pk-jetons-n { font-size: 13px; }
-  .pk-mise, .pk-action, .pk-main { font-size: 11px; }
+  .pk-mise, .pk-action, .pk-main { font-size: 12px; }
   .pk-mes-cartes .cd { --cd-l: 64px; --cd-h: 92px; }
   .pk-chat-zone { display: none; }
   .pk-tiroir-chat { display: block; }

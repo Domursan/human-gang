@@ -136,10 +136,11 @@ export function plateauSvg({ geo, tuiles = [], voleur = null, colonies = {}, vil
     return '';
   }).join('');
 
-  /* Sommets cibles : zone de clic de 0,72 unité de rayon (environ 22 px sur un plateau de 360 px, soit 44 px de diamètre). */
+  /* Sommets cibles : zone de clic de 0,8 unité de rayon, invisible (environ 22 px de rayon sur un plateau de 360 px, soit 45 px de
+     diamètre, au-dessus des 44 px). Les sommets voisins sont espacés d'une unité : les zones se recouvrent un peu, le dessin ne bouge pas. */
   const sommetsSvg = sommets.filter((s) => cS.has(String(s.id))).map((s) =>
     `<g class="ct-cible ct-cible--sommet" role="button" tabindex="0" data-sommet="${s.id}" aria-label="${esc(nomSommet(s))}">` +
-    `<circle class="ct-zone" cx="${f(s.x)}" cy="${f(s.y)}" r="0.72"/>` +
+    `<circle class="ct-zone" cx="${f(s.x)}" cy="${f(s.y)}" r="0.8"/>` +
     `<circle class="ct-halo" cx="${f(s.x)}" cy="${f(s.y)}" r="0.24"/></g>`).join('');
 
   const dernierSvg = dernier != null && S.get(dernier)
