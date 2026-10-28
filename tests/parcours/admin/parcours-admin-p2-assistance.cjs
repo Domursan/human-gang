@@ -159,7 +159,7 @@ const dbRows = (p, table) => p.evaluate((t) => window.__DB[t].map((r) => ({ ...r
     const p = await openPage(browser, { page: 'admin', width: 390, height: 844, scenario: SCN });
     await goto(p, '#poste/assistance', '#shell-col-list .ui-row');
     check(await p.getAttribute('.shell', 'data-screen') === 'list', '(c) mobile : liste plein écran (pas de détail sans demande choisie)');
-    check(await p.isHidden('#app'), '(c) mobile : zone principale masquée sur l\'écran liste');
+    check(await p.isHidden('#shell-groups'), '(c) mobile : contenu de page masqué sur l\'écran liste');
     check(await rows(p) === 3, '(c) mobile : trois demandes dans la liste');
     await p.click('#shell-col-list .ui-row[data-id="sup-1"]');
     await p.waitForFunction(() => location.hash === '#poste/assistance/sup-1', null, { timeout: 4000 }).catch(() => {});

@@ -36,6 +36,12 @@ function serveur() {
   });
 }
 
+// Test réservé au site construit (assets/_b/ produit par outils/build/construire.mjs) : sur les sources, il est sauté.
+if (!fs.existsSync(path.join(ROOT, 'assets', '_b'))) {
+  console.log('SAUTE site source (pas de _site construit) : lancer avec HG_ROOT=<dossier _site> pour ce test');
+  process.exit(0);
+}
+
 (async () => {
   const srv = await serveur();
   const base = `http://127.0.0.1:${srv.address().port}`;
