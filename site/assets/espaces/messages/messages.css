@@ -16,6 +16,16 @@
 .msg-side { border-right: 1px solid var(--border); background: var(--bg); overflow-y: auto; min-width: 0; overscroll-behavior: contain; }
 .msg-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
 
+/* ---------- Squelette du chargement (même cadre que la messagerie finale : pas de saut de mise en page) ---------- */
+.msg-sk-actions { visibility: hidden; }
+.msg-app-sk .msg-main { background: var(--bg); }
+.msg-conv-sk { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 12px; border: 1px solid transparent; border-radius: var(--radius-sm); }
+.msg-sk { display: block; background: var(--surface-2); border-radius: 999px; }
+.msg-sk-av { width: 40px; height: 40px; border-radius: 50%; flex: none; }
+.msg-sk-lines { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.msg-sk-l1 { width: 60%; height: 12px; }
+.msg-sk-l2 { width: 85%; height: 10px; }
+
 /* ---------- Liste des conversations ---------- */
 .msg-convs { list-style: none; margin: 0; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
 .msg-convs-empty { padding: 8px; }
@@ -119,10 +129,8 @@
   .msg-head { padding: 28px 0 16px; align-items: center; }
   .msg-head .page-title { font-size: 36px; }
   .msg-app { grid-template-columns: minmax(0, 1fr); border-radius: 16px; }
-  /* Liste : dans le flux de la page (pas de double défilement) */
-  .msg-app[data-view="list"] { height: auto; }
+  /* Liste : même cadre que sur ordinateur (hauteur fixe, défilement dans la liste) : la place est réservée au chargement */
   .msg-app[data-view="list"] .msg-main { display: none; }
-  .msg-app[data-view="list"] .msg-side { overflow: visible; }
   /* Fil : plein écran, comme une appli de messagerie */
   .msg-app[data-view="thread"] { position: fixed; inset: 0; z-index: 60; height: 100dvh; border: 0; border-radius: 0; }
   .msg-app[data-view="thread"] .msg-side { display: none; }
