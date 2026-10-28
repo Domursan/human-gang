@@ -12,6 +12,7 @@ import { esc, toast } from '../../../commun/core.js';
 import { duel, erreurTexte, jeuxVisibles } from '../api.js';
 import { avatarPresence } from '../../../commun/core/presence.js'; // pastille verte (en ligne) ou rouge (hors ligne)
 import { avatarHtml, couleurJoueur } from './commun.js';
+import { brancherRejoindre } from '../../../commun/jeux-accueil.js';
 
 /** Intervalle de rafraîchissement de l'accueil (ms). */
 const INTERVALLE = 10000;
@@ -74,25 +75,25 @@ function squelette() {
         <h1 class="duels-titre">Duels</h1>
         <p class="duels-acc-intro">Des jeux à deux. Défie un membre, partage un code ou entraîne-toi contre le robot.</p>
       </div>
-      <section class="card duels-acc-carte duels-acc-rejoindre" aria-labelledby="acc-rejoindre-titre">
-        <h2 id="acc-rejoindre-titre" class="duels-acc-titre-carte">Rejoindre un duel</h2>
-        <form id="acc-form" class="duels-acc-form" novalidate>
-          <label for="acc-code" class="duels-acc-champ-nom">Code du duel</label>
-          <div class="duels-acc-form-ligne">
-            <input id="acc-code" class="duels-acc-code" type="text" name="code" placeholder="HGP4-2190" autocomplete="off"
-              autocapitalize="characters" spellcheck="false" aria-describedby="acc-aide acc-erreur">
-            <button type="submit" class="btn btn-light">Rejoindre</button>
-          </div>
-        </form>
-        <p id="acc-erreur" class="duels-acc-erreur" role="alert" hidden></p>
-        <p id="acc-aide" class="duels-acc-aide">Le code est donné par l'hôte du duel. Un lien d'invitation fonctionne aussi.</p>
-      </section>
     </header>
 
     <section class="duels-acc-jeux" aria-label="Les jeux">${htmlJeux()}</section>
 
     <div class="duels-acc-grille">
       <div class="duels-acc-colonne">
+        <section class="card duels-acc-carte duels-acc-rejoindre" aria-labelledby="acc-rejoindre-titre">
+          <h2 id="acc-rejoindre-titre" class="duels-acc-titre-carte">Rejoindre un duel</h2>
+          <form id="acc-form" class="duels-acc-form" novalidate>
+            <label for="acc-code" class="duels-acc-champ-nom">Code du duel</label>
+            <div class="duels-acc-form-ligne">
+              <input id="acc-code" class="duels-acc-code" type="text" name="code" placeholder="HGP4-2190" autocomplete="off"
+                autocapitalize="characters" spellcheck="false" aria-describedby="acc-aide acc-erreur">
+              <button type="submit" class="btn btn-light">Rejoindre</button>
+            </div>
+          </form>
+          <p id="acc-erreur" class="duels-acc-erreur" role="alert" hidden></p>
+          <p id="acc-aide" class="duels-acc-aide">Le code est donné par l'hôte du duel. Un lien d'invitation fonctionne aussi.</p>
+        </section>
         <section class="card duels-acc-carte" aria-labelledby="acc-defis-titre">
           <div class="duels-acc-entete">
             <h2 id="acc-defis-titre" class="duels-acc-titre-carte">Défis reçus</h2>
@@ -287,22 +288,8 @@ export async function afficher(root, { naviguer }) {
   };
 
   // Rejoindre avec un code : normalisation puis navigation vers le duel.
-  champ.addEventListener('input', () => {
-    if (!erreur.hidden) { erreur.hidden = true; champ.removeAttribute('aria-invalid'); }
-  });
-  formulaire.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = normaliserCode(champ.value);
-    if (!code) {
-      erreur.textContent = 'Le code ressemble à HGP4-2190.';
-      erreur.hidden = false;
-      champ.setAttribute('aria-invalid', 'true');
-      champ.focus();
-      return;
-    }
-    champ.value = code;
-    naviguer(urlRejoindre(code));
-  });
+  brancherRejoindre({ formulaire, champ, erreur, normaliser: normaliserCode, naviguer, url: urlRejoindre,
+    messageErreur: 'Le code ressemble à HGP4-2190.' });
 
   // Défis reçus : accepter (puis aller au duel) ou refuser. Délégation : les boutons sont redessinés à chaque relecture.
   ecran.addEventListener('click', async (e) => {

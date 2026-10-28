@@ -9,6 +9,7 @@
 import { esc, avatarHtml } from '../../../commun/core.js';
 import { uno, erreurTexte, estInvite } from '../api.js';
 import { carteHtml, dosHtml } from '../cartes.js';
+import { brancherRejoindre, chargerBloc, suivrePubliques } from '../../../commun/jeux-accueil.js';
 
 /** Intervalle de rafraîchissement des parties publiques (ms). */
 const INTERVALLE_PUBLIQUES = 15000;
@@ -237,69 +238,26 @@ export async function afficher(root, { naviguer }) {
   });
 
   // Rejoindre avec un code : normalisation puis navigation vers l'écran de rejoindre.
-  champ.addEventListener('input', () => {
-    if (!erreur.hidden) { erreur.hidden = true; champ.removeAttribute('aria-invalid'); }
-  });
-  formulaire.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = normaliserCode(champ.value);
-    if (!code) {
-      erreur.textContent = 'Le code ressemble à HGUNO-4821 : quatre chiffres, avec ou sans « HGUNO ».';
-      erreur.hidden = false;
-      champ.setAttribute('aria-invalid', 'true');
-      champ.focus();
-      return;
-    }
-    champ.value = code;
-    naviguer(urlRejoindre(code));
-  });
+  brancherRejoindre({ formulaire, champ, erreur, normaliser: normaliserCode, naviguer, url: urlRejoindre,
+    messageErreur: 'Le code ressemble à HGUNO-4821 : quatre chiffres, avec ou sans « HGUNO ».' });
 
   // Chaque bloc charge ses données à part ; une erreur ne bloque pas les autres.
-  async function chargerEnCours() {
-    try {
-      const parties = await uno.mesParties();
-      if (!actif) return;
-      zoneEnCours.innerHTML = htmlMesParties(Array.isArray(parties) ? parties : []);
-    } catch (e) {
-      if (!actif) return;
-      zoneEnCours.innerHTML = `<p class="uno-acc-aide">Parties en cours indisponibles pour l'instant. ${esc(erreurTexte(e))}</p>`;
-    }
+  chargerBloc({ zone: zoneEnCours, charger: () => uno.mesParties(), rendre: (p) => htmlMesParties(Array.isArray(p) ? p : []),
+    messageErreur: (m) => `<p class="uno-acc-aide">Parties en cours indisponibles pour l'instant. ${esc(m)}</p>`,
+    erreurTexte, actif: () => actif });
+  const arretPubliques = suivrePubliques({ zone: zonePubliques, charger: () => uno.publiques(),
+    rendre: (l) => htmlPubliques(Array.isArray(l) ? l : []), intervalle: INTERVALLE_PUBLIQUES,
+    messageErreur: (m) => `<p class="uno-acc-aide">Liste indisponible pour l'instant. ${esc(m)}</p>`,
+    erreurTexte, actif: () => actif });
+  if (zoneStats) {
+    chargerBloc({ zone: zoneStats, charger: () => uno.stats(),
+      rendre: (s) => htmlCarteStats(s ? htmlStatsResume(s) : '<p class="uno-acc-aide">Tes statistiques ne sont pas disponibles pour ton compte.</p>'),
+      messageErreur: (m) => htmlCarteStats(`<p class="uno-acc-aide">Statistiques indisponibles pour l'instant. ${esc(m)}</p>`),
+      erreurTexte, actif: () => actif });
   }
-
-  let dernierHtmlPubliques = null;
-  async function chargerPubliques() {
-    try {
-      const liste = await uno.publiques();
-      if (!actif) return;
-      const html = htmlPubliques(Array.isArray(liste) ? liste : []);
-      if (html !== dernierHtmlPubliques) { zonePubliques.innerHTML = html; dernierHtmlPubliques = html; }
-    } catch (e) {
-      if (!actif || dernierHtmlPubliques !== null) return;
-      zonePubliques.innerHTML = `<p class="uno-acc-aide">Liste indisponible pour l'instant. ${esc(erreurTexte(e))}</p>`;
-    }
-  }
-
-  async function chargerStats() {
-    if (!zoneStats) return;
-    try {
-      const s = await uno.stats();
-      if (!actif) return;
-      zoneStats.innerHTML = htmlCarteStats(s
-        ? htmlStatsResume(s)
-        : '<p class="uno-acc-aide">Tes statistiques ne sont pas disponibles pour ton compte.</p>');
-    } catch (e) {
-      if (!actif) return;
-      zoneStats.innerHTML = htmlCarteStats(`<p class="uno-acc-aide">Statistiques indisponibles pour l'instant. ${esc(erreurTexte(e))}</p>`);
-    }
-  }
-
-  chargerEnCours();
-  chargerPubliques();
-  chargerStats();
-  const minuterie = setInterval(() => { if (!document.hidden) chargerPubliques(); }, INTERVALLE_PUBLIQUES);
 
   return () => {
     actif = false;
-    clearInterval(minuterie);
+    arretPubliques();
   };
 }

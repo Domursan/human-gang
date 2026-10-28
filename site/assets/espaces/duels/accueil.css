@@ -7,7 +7,7 @@
 }
 
 /* ---------- En-tête : titre et rejoindre ---------- */
-.duels-acc-tete { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 24px; align-items: end; }
+.duels-acc-tete { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: end; }
 .duels-acc-titre { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .duels-acc-titre .duels-titre { margin-bottom: 0; }
 .duels-acc-intro { margin: 0; font-size: 17px; color: var(--muted); }
