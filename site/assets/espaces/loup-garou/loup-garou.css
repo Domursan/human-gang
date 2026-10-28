@@ -97,21 +97,22 @@ dialog.lg-fenetre::backdrop { background: rgba(4, 4, 8, .66); }
 button.lg-siege { cursor: pointer; }
 button.lg-siege:disabled { cursor: default; }
 .lg-siege-av { position: relative; z-index: 1; width: var(--lg-av); height: var(--lg-av); border-radius: 50%; border: 2px solid #3A3A40; background: #22222A;
-  display: grid; place-items: center; font-size: clamp(11px, 2.6cqi, 13px); font-weight: 700; box-shadow: 0 4px 10px rgba(0, 0, 0, .55); }
+  display: grid; place-items: center; font-size: clamp(12px, 2.6cqi, 13px); font-weight: 700; box-shadow: 0 4px 10px rgba(0, 0, 0, .55); }
 .lg-siege-av .avatar { width: 100% !important; height: 100% !important; }
 .lg-siege-buche { display: block; margin-top: -6px; min-width: 60%; max-width: 100%; box-sizing: border-box; padding: clamp(3px, .9cqi, 7px) clamp(7px, 2cqi, 14px);
-  border-radius: 999px; background: linear-gradient(180deg, #a4703f 0, #74492a 52%, #4c2e18 100%); border: 1px solid #1e1209;
-  box-shadow: 0 3px 0 #24150a, 0 8px 14px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 214, 160, .32);
-  font-size: clamp(11.5px, 3cqi, 13px); font-weight: 700; line-height: 1.2; text-shadow: 0 1px 2px rgba(0, 0, 0, .9);
+  /* Fond sombre sous le prénom (le texte coloré y reste lisible, 4,5:1 au moins) ; le bord reste en bois */
+  border-radius: 999px; background: linear-gradient(180deg, #1C130D 0, #120D09 100%); border: 1px solid #74492a;
+  box-shadow: 0 3px 0 #24150a, 0 8px 14px rgba(0, 0, 0, .5);
+  font-size: clamp(12px, 3cqi, 13px); font-weight: 700; line-height: 1.2; text-shadow: 0 1px 2px rgba(0, 0, 0, .9);
   text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lg-siege-sous { margin-top: 5px; font-size: 11px; color: var(--muted); text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.lg-siege-sous { margin-top: 5px; font-size: 12px; color: var(--muted); text-shadow: 0 1px 2px #000; white-space: nowrap; }
 .lg-siege-badge { position: absolute; top: -4px; right: -8px; min-width: 20px; height: 20px; padding: 0 4px; box-sizing: border-box; border-radius: 999px;
   background: var(--sand); color: #121212; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; }
 .lg-siege.moi .lg-siege-av { border: 3px solid var(--sand); }
 .lg-siege.cible .lg-siege-av { border: 3px solid var(--lg-anneau, #7E93C9); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lg-anneau, #7E93C9) 30%, transparent), 0 4px 10px rgba(0, 0, 0, .55); }
 .lg-siege.mort { opacity: .78; }
 .lg-siege.mort .lg-siege-av { background: #1A1A1E; color: #6E6A66; }
-.lg-siege.mort .lg-siege-buche { background: linear-gradient(180deg, #4a3a30 0, #2e241e 60%, #1e1814 100%); color: #8E8A84 !important; text-decoration: line-through; }
+.lg-siege.mort .lg-siege-buche { background: linear-gradient(180deg, #17120E 0, #0C0907 100%); color: #B9B4AC !important; text-decoration: line-through; }
 @media (hover: hover) { button.lg-siege:not(:disabled):hover .lg-siege-av { border-color: var(--text); } }
 button.lg-siege:focus-visible { outline: none; }
 button.lg-siege:focus-visible .lg-siege-av { outline: 3px solid var(--sand); outline-offset: 2px; }
@@ -137,10 +138,10 @@ button.lg-siege:focus-visible .lg-siege-av { outline: 3px solid var(--sand); out
 .lg-chat-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .lg-chat-titre { font-size: 18px; font-weight: 700; font-family: var(--font-body); }
 .lg-chat-onglets { display: flex; flex-wrap: wrap; gap: 6px; }
-.lg-chat-onglet { font: inherit; font-size: 13px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-strong);
+.lg-chat-onglet { font: inherit; font-size: 13px; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-strong);
   background: transparent; color: var(--text); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .lg-chat-onglet[aria-selected="true"] { background: var(--text); color: #121212; border-color: var(--text); font-weight: 700; }
-.lg-chat-nonlu { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+.lg-chat-nonlu { min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; }
 .lg-chat-fil { flex: 1; min-height: 160px; max-height: 340px; overflow-y: auto; padding: 4px 2px; display: flex; flex-direction: column; gap: 10px; }
 .lg-chat-msg { margin: 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
 .lg-chat-heure { font-size: 12px; color: var(--muted); font-weight: 400; }
