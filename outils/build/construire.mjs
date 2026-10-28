@@ -18,8 +18,9 @@
 // - CSS : chaque feuille est minifiée ; les feuilles locales d'une page sont regroupées en un seul fichier quand
 //   c'est sûr (ordre conservé, pas d'@import, pas d'url() relative). Fichiers dans _site/assets/_b/css/.
 // - Scripts classiques (theme-boot.js…) : minifiés sur place, sans renommer les variables (ils sont globaux).
-// - sw.js : PRECACHE est réécrit (fichiers regroupés ajoutés, scripts d'origine devenus inutiles retirés) et
-//   CACHE_VERSION est incrémentée dans la copie publiée seulement. site/sw.js reste tel quel.
+// - sw.js : PRECACHE est réécrit dans la copie publiée : pour chaque page de la liste, la page et ce qu'elle charge au
+//   démarrage ; les autres fichiers de la liste sont gardés. CACHE_VERSION est incrémentée dans la copie publiée seulement.
+//   site/sw.js reste tel quel.
 // - Les autres fichiers (JSON, images, affiches, pages) sont copiés tels quels.
 
 import * as esbuild from 'esbuild';
@@ -332,30 +333,41 @@ for (const page of pagesHtml) {
 }
 dire(`Feuilles regroupées : ${feuillesFusionnees} lien(s) évité(s) · préchargements de modules retirés : ${lienSupprimes}, ajoutés : ${preloadsAjoutes}`);
 
-// ---------- 6. Service worker : liste de précache et version ----------
+// ---------- 6. Service worker : liste de précache (la coque) et version ----------
+// La liste source (site/sw.js) donne les pages de la coque et quelques fichiers. Pour chaque page : elle-même, puis les
+// fichiers qu'elle charge au démarrage (feuilles, scripts, préchargements, images), lus dans la page construite (hors
+// indications prefetch, preconnect, icônes et manifeste). Les autres fichiers de la liste sont gardés s'ils existent.
+// Le reste n'est pas précaché : il est mis en cache à la première visite (voir site/sw.js).
 const swSrc = readFileSync(join(SRC, 'sw.js'), 'utf8');
 const bloc = swSrc.match(/const PRECACHE = \[([\s\S]*?)\];/);
 if (!bloc) throw new Error('PRECACHE introuvable dans site/sw.js');
-const ancienne = [...bloc[1].matchAll(/'(\/[^']+)'/g)].map((m) => m[1]);
-const cibleUrls = new Set([...cibles].map((c) => '/' + relSrc(c)));
-const classiquesSet = new Set(classiques);
-const gardees = ancienne.filter((p) => {
-  if (!/\.m?js$/.test(p)) return existsSync(join(OUT, p));
-  return existsSync(join(SRC, p)) && (cibleUrls.has(p) || classiquesSet.has(p));
-});
-// Fichiers regroupés à précacher : sorties des entrées d'avant (pages et cibles) et morceaux partagés. Les modules
-// ajoutés pour les relais ne sont pas précachés : ils ne servent qu'aux chargements par adresse d'origine.
-const precachees = new Set([...entrees, ...cibles].map((e) => adresseSortie.get(e)));
-const regroupes = parcourir(join(OUT, 'assets', '_b')).map((f) => '/' + relative(OUT, f).split(sep).join('/'))
-  .filter((u) => precachees.has(u) || u.includes('/assets/_b/chunks/'));
-const liste = [...new Set([...gardees, ...regroupes])].sort();
+const demandes = [...bloc[1].matchAll(/'(\/[^']+)'/g)].map((m) => m[1]);
+const coqueFichiers = new Set();
+const ajouter = (adresse) => {
+  if (existsSync(join(OUT, adresse.slice(1)))) coqueFichiers.add(adresse);
+  else dire(`Précache : fichier absent de la sortie, ignoré : ${adresse}`);
+};
+for (const p of demandes) {
+  if (p.endsWith('.html')) {
+    ajouter(p);
+    const html = readFileSync(join(OUT, p.slice(1)), 'utf8');
+    for (const [balise] of html.matchAll(/<(?:link|script|img)\b[^>]*>/gi)) {
+      if (/\brel\s*=\s*["']?(?:prefetch|preconnect|dns-prefetch|canonical|icon|apple-touch-icon|manifest)/i.test(balise)) continue;
+      const m = balise.match(/\s(?:href|src)="(\/[^"#?]+)"/i);
+      if (m) ajouter(m[1]);
+    }
+  } else {
+    ajouter(p);
+  }
+}
+const liste = [...coqueFichiers].sort();
 const lignes = [];
 for (let i = 0; i < liste.length; i += 4) lignes.push('  ' + liste.slice(i, i + 4).map((p) => `'${p}'`).join(', ') + ',');
-const nouveauBloc = `const PRECACHE = [\n  // Généré par outils/build/construire.mjs : fichiers regroupés (assets/_b) et fichiers d'origine encore servis.\n${lignes.join('\n')}\n];`;
+const nouveauBloc = `const PRECACHE = [\n  // Généré par outils/build/construire.mjs : la coque (pages et fichiers qu'elles chargent au démarrage).\n${lignes.join('\n')}\n];`;
 let swOut = swSrc.replace(bloc[0], () => nouveauBloc);
 swOut = swOut.replace(/const CACHE_VERSION = 'v(\d+)';/, (_, n) => `const CACHE_VERSION = 'v${Number(n) + 1}';`);
 writeFileSync(join(OUT, 'sw.js'), swOut);
-dire(`Précache : ${ancienne.length} → ${liste.length} fichier(s) ; CACHE_VERSION incrémentée (copie publiée seulement)`);
+dire(`Précache : ${demandes.length} entrée(s) de la liste source → ${liste.length} fichier(s) ; CACHE_VERSION incrémentée (copie publiée seulement)`);
 
 // ---------- 7. Bilan ----------
 const poids = (dossier, motif) => parcourir(dossier).filter((f) => motif.test(f)).reduce((s, f) => s + statSync(f).size, 0);
