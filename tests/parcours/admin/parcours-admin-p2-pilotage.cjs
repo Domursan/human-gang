@@ -55,6 +55,10 @@ const chip = (p, label) => p.locator('#shell-col-list .ui-chip', { hasText: new 
     await p.click('#staff-dialog button[type="submit"]');
     await p.waitForFunction(() => !document.querySelector('#staff-dialog').open, null, { timeout: 5000 }).catch(() => {});
     await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
+    // La fiche se dessine après la liste (adresse puis cases) : on attend son état, pas un délai.
+    await p.waitForFunction((uid) => location.hash === '#mairie/staff/' + uid, CHLOE, { timeout: 8000 }).catch(() => {});
+    await p.waitForFunction(() => document.querySelectorAll('#staff input[data-perm-key]:checked').length === 2, null, { timeout: 8000 }).catch(() => {});
+    await p.waitForFunction((n) => (document.querySelector('#staff .stf-note')?.textContent || '').includes(n), NOTE, { timeout: 8000 }).catch(() => {});
     check(await hashOf(p) === '#mairie/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé s’ouvre (URL #mairie/staff/<uid>)');
     check(await p.locator('#staff input[data-perm-key]:checked').count() === 2, '(a) fiche : deux permissions cochées');
     check((await p.textContent('#staff .stf-note')).includes(NOTE), '(a) fiche : note affichée');

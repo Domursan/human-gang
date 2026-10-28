@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours Pictionary (moteur des plateaux, migration 145) : choix du mot et tracé (dessinateur), trait envoyé sur le canal,
 // annuler / tout effacer / enregistrement du dessin ; devineur : indice, « presque » (ligne privée), proposition, trouvé ;
 // traits reçus en direct, mot du tour précédent, classement de fin ; 390 px et 360 px sans défilement horizontal ;

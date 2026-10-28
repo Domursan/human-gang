@@ -16,6 +16,7 @@ const MAX_H = 1400;
 // Exceptions documentées à la garde de longueur (route -> raison). Toute autre route au-delà de MAX_H échoue.
 const EXCEPTIONS = {
   'fete/secrets': 'formulaire des 18 secrets, récompenses et cueillette de saison (admin-eggs.js)',
+  'fabrique/gestion': 'Give, résumé et derniers gives : ≈ 1 392 px sur la machine de dev, 1 410 px sur la CI (polices Linux, plus larges) ; marge de polices, à replier plus tard',
   'fabrique/boosters': 'liste des 9 types et statistiques par type (onglet Boosters, chantier séparé : statistiques à replier)',
   'place/invitations': 'codes + liens + règles des codes, à la limite (≈ 1 403 px avec la fixture) : « Règles des codes » à séparer plus tard',
   'place/social': 'Vie sociale (migration 090) : plateformes gaming, jeux, plafonds et sondages ; à replier en blocs',

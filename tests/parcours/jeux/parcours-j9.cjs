@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours J9 : Framed (/pages/jeux/jeux.html#framed) : films du ciné-club, affiches et tutos du site.
 // L'onglet s'ouvre depuis l'adresse ; 1 image au départ, les images suivantes verrouillées ; suggestions limitées à la liste
 // (formulation neutre) ; une erreur dévoile l'image 2 ; deviner à la 2e image ; fin : film dévoilé, gain, partage ; 360 px

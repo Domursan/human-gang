@@ -39,10 +39,12 @@ const LIGUE = (r) => (r >= A.cfg.seuils.legende ? 'legende' : r >= A.cfg.seuils.
 const PSEUDO = { [ME]: 'Ethan', [U(2)]: 'Alice', [U(3)]: 'Bruno', [U(4)]: 'Chloé', [U(5)]: 'David' };
 const COULEUR = { [U(2)]: '#D97757', [U(3)]: '#7E93C9', [U(4)]: '#8F5F4F' };
 const DECK_OF = (id) => (id === U(3) ? null : DEF.map((c) => ({ ...c })));
-const today = () => new Date().toISOString().slice(0, 10);
+// Jour de Zurich (comme le site), pour la date d'un instant donné (AAAA-MM-JJ).
+const jourZ = (t) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t));
+const today = () => jourZ(Date.now());
 const cote = (id) => A.ratings[id] ?? A.cfg.depart;
 const mesCombats = () => A.fights.filter((f) => f.attacker_id === uid() || f.defender_id === uid());
-const aujourdhui = (f) => f.created_at.slice(0, 10) === today();
+const aujourdhui = (f) => jourZ(f.created_at) === today();
 const vueDe = (f, me) => ({ id: f.id, created_at: f.created_at, season_id: 1, role: f.attacker_id === me ? 'attaque' : 'defense',
   attacker: { id: f.attacker_id, pseudo: PSEUDO[f.attacker_id] || 'Ethan', color: '#4F6A8F' }, defender: { id: f.defender_id, pseudo: PSEUDO[f.defender_id] || 'Alice', color: COULEUR[f.defender_id] || '#4F6A8F' },
   attack: f.attack, defense: f.defense, duels: f.duels, wins_a: f.wins_a, wins_d: f.wins_d, result: f.result,

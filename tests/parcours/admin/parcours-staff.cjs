@@ -51,6 +51,9 @@ const TABLES_INTERDITES = ['hg_invites', 'hg_invite_links', 'hg_ss_editions', 'h
     // Colonne 2 : la liste se met à jour ; la fiche de Chloé s'ouvre (URL #mairie/staff/<uid>)
     await p.waitForSelector('#shell-col-list .ui-row:has-text("Chloé")', { timeout: 5000 }).catch(() => {});
     check(await p.locator('#shell-col-list .ui-row', { hasText: 'Chloé' }).count() === 1, '(a) la liste se met à jour : Chloé apparaît dans le Staff');
+    // La fiche se dessine après la liste : on attend son état (adresse, cases cochées), pas un délai fixe.
+    await p.waitForFunction((uid) => location.hash === '#mairie/staff/' + uid, CHLOE, { timeout: 8000 }).catch(() => {});
+    await p.waitForFunction(() => document.querySelectorAll('#staff input[data-perm-key]:checked').length === 2, null, { timeout: 8000 }).catch(() => {});
     check((await p.evaluate(() => location.hash)) === '#mairie/staff/' + CHLOE, '(a) après ajout : la fiche de Chloé est ouverte (URL)');
     check(await p.locator('#staff input[data-perm-key]:checked').count() === 2, '(a) Chloé a deux permissions cochées dans sa fiche');
     check((await p.textContent('#staff .stf-note')).includes(NOTE), '(a) la note est affichée dans la fiche');

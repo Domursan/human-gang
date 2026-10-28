@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours V8 : calendrier du gang (/pages/irl/calendrier.html).
 // Couvre : lien dans le menu ; mois courant avec pastilles (téléphone) ou titres (ordinateur) ; jour du jour sélectionné ;
 // choisir un jour affiche sa liste (sortie IRL avec lien, rendez-vous récurrent) ; filtres (aria-pressed, masquage,

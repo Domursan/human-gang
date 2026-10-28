@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C14 · Ma chance en chiffres (onglet Collection de cartes.html, migration 082).
 // 1. Sans la migration : aucun encart. 2. Moins de 100 cartes : « Pas encore assez de tirages ».
 // 3. 312 cartes : verdict, 6 raretés (identité cachée sans tirage), brillantes, 2 garanties, série sans Épique,

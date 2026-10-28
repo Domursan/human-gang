@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Outils des parcours navigateur des jeux de plateau : ouvre <page> pour le joueur n (faux Supabase sur la base locale « plat »).
 process.env.FAKE_DB = 'plat';
 const { chromium } = require('playwright');

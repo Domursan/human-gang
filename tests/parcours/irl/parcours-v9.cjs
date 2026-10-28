@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours V9 : ciné-club (/pages/irl/cine.html).
 // Couvre : vote de la semaine (deux films, totaux, clôture, seuil), voter (« Ton choix »), « Je serai là » (aria-pressed),
 // lien vocal Discord ; film vu avec note moyenne, avis, spoiler flouté puis affiché, « Le livre est mieux » (compteur) ;

@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Outils des parcours navigateur du Uno : ouvre /pages/jeux/uno.html pour le joueur n (faux Supabase sur la base locale « uno »).
 process.env.FAKE_DB = 'uno';
 const { chromium } = require('playwright');

@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C13 · Cagnotte collective de Paillettes (cartes.html, migration 082).
 // 1. Sans la migration (fonction absente) : aucun encart, aucune erreur.
 // 2. Cagnotte ouverte (téléphone 390 px) : jauge, participants, derniers versements (« Anonyme »), fenêtre de versement,

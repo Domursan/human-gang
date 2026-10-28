@@ -4,4 +4,5 @@ shots/
 qa/
 site/assets/espaces/admin/bot-templates.json
 _site/
+tests/resultats-tests.log
 node_modules

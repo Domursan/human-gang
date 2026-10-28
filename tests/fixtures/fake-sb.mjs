@@ -1114,8 +1114,9 @@ export function createClient(_url, _key, opts = {}) {
         if (!(m.is_admin || m.perms.includes('reglages'))) return { data: null, error: { message: 'Droit « reglages » requis' } };
         const AB = (window.__ARCB ||= { cleared: [] });
         const lundi = (iso) => { const x = new Date(iso + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.toISOString().slice(0, 10); };
-        const cetteSemaine = lundi(new Date().toISOString().slice(0, 10));
-        const wk = lundi(args.p_week || new Date().toISOString().slice(0, 10));
+        const jourZ = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); // jour de Zurich
+        const cetteSemaine = lundi(jourZ);
+        const wk = lundi(args.p_week || jourZ);
         if (fn === 'hg_arcade_admin_clear') {
           if (S.arcadeClearFail) return { data: null, error: { message: 'Effacement refusé (test)' } };
           AB.cleared.push(`${args.p_user}|${args.p_game}|${args.p_week}`);

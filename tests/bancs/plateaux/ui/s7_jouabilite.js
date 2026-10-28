@@ -200,5 +200,6 @@ async function scenario(sc) {
   const rpc = log.filter((x) => !x.startsWith('rpc inconnue'));
   note(`erreurs serveur vues par l'écran : ${rpc.length}${rpc.length ? '\n  ' + [...new Set(rpc)].slice(0, 12).join('\n  ') : ''}`);
   await fermer();
+  require('fs').mkdirSync(`${__dirname}/shots`, { recursive: true });
   require('fs').writeFileSync(`${__dirname}/shots/jouabilite_${JEU}_${FILTRE}.txt`, bilan.join('\n'));
 })();

@@ -30,6 +30,7 @@ function urlPage(slug) {
 }
 const FIXTURES = path.join(TESTS, 'fixtures');
 const SHOTS = path.join(TESTS, 'shots');
+fs.mkdirSync(SHOTS, { recursive: true }); // créé avant toute capture (absent d'une copie fraîche)
 const ORIGIN = 'http://hg.test';
 // Préfixe de chemin : HG_PREFIX=/human-gang sert le site comme GitHub Pages (https://humane-gang.com/).
 // Tout chemin hors préfixe (ex. /assets/… à la racine) répond 404, comme en ligne : un chemin absolu cassé se voit.

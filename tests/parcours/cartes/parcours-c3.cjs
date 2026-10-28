@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C3 (migration 080) : brillantes « fondues » du booster Raclette.
 // 1. Collection : une brillante dont l'exemplaire porte finish = 'fondue' affiche le fromage (is-fondue, calque hgc-fondue)
 //    au lieu du reflet holographique ; une brillante ordinaire garde son reflet.
@@ -39,7 +40,7 @@ const scenario = {
       await sleep(500);
       check(await p.$('.cz-dialog[open] .hgc.is-fondue, dialog[open] .hgc.is-fondue'), '(2) fenêtre agrandie : rendu fondu');
       await p.keyboard.press('Escape');
-      await p.screenshot({ path: 'tests/shots/c3-collection.png' });
+      await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c3-collection.png') });
       await p.evaluate(() => { location.hash = 'boutique'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
       await p.waitForSelector('#cartes-p-boutique:not([hidden])', { timeout: 5000 });
       await sleep(400);

@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours J15 : Arène de cartes (/pages/cartes/cartes.html#arene, ex-jeux.html#bataille).
 // Accueil (règles, bêta sans Paillettes, pas de deck) ; créer son deck de défense (5 cartes, une seule de puissance 6) ;
 // attaquer Alice avec 5 cartes ; écran de résultat (5 duels, puissances, avantages en texte, score) ; historique ;

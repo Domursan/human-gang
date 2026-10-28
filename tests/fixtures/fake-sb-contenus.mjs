@@ -14,13 +14,16 @@ const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const uidNow = () => S.uid || ME;
 const now = Date.now();
 const iso = (d) => new Date(now + d * 864e5).toISOString();
-const day = (d) => iso(d).slice(0, 10);
+// Jours « AAAA-MM-JJ » à l'heure de Zurich (comme le site), pas en UTC.
+const jourZ = (t) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t));
+const decal = (j, n) => { const x = new Date(`${j}T12:00:00Z`); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const day = (d) => jourZ(now + d * 864e5);
 let seq = 100;
 const nid = () => `aaaaaaaa-bbbb-4ccc-8ddd-${String(++seq).padStart(12, '0')}`;
 const err = (message) => ({ data: null, error: { message } });
 /** Lundi de la semaine en cours (AAAA-MM-JJ). */
-const weekStart = (() => { const d = new Date(); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return d.toISOString().slice(0, 10); })();
-const lastWeek = (() => { const d = new Date(`${weekStart}T12:00:00`); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); })();
+const weekStart = (() => { const j = day(0); return decal(j, -((new Date(`${j}T12:00:00Z`).getUTCDay() + 6) % 7)); })();
+const lastWeek = decal(weekStart, -7);
 
 /* ---------- Pages du menu ---------- */
 for (const [slug, label, sort] of [['citations', 'Citations', 12], ['playlist', 'Playlist', 13], ['carnet', 'Carnet de voyage', 14], ['capsule', 'Capsules', 15]]) {

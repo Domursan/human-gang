@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C15 · « Le Cours de la Paillette » (onglet Classement de cartes.html, migration 082).
 // 1. Sans la migration : le classement seul, sans erreur.
 // 2. Carte d'appel en tête du classement ; « Lire le bulletin » remplace le classement par le bulletin complet :

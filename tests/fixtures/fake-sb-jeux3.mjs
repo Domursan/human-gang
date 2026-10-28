@@ -12,7 +12,7 @@ const base = await import(`${location.origin}${prefix}/tests/fixtures/${S.jeuxBa
 const ME = '11111111-1111-4111-8111-111111111111';
 const U = (n) => `0000000${n}-0000-4000-8000-00000000000${n}`;
 const uid = () => S.uid || ME;
-const today = new Date().toISOString().slice(0, 10);
+const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); // jour de Zurich, comme le site
 const ok = (data) => ({ data, error: null });
 const err = (message) => ({ data: null, error: { message } });
 

@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours J10 : Heardle du gang (/pages/jeux/jeux.html#heardle), avec un lecteur YouTube simulé (aucun appel à YouTube).
 // 1 s au départ ; « Écouter » lance le lecteur au bon instant et l'arrête à la durée débloquée ; « Passer » débloque 2 s ;
 // une erreur débloque 4 s ; deviner au 3e essai ; fin : morceau et « proposé par » dévoilés ; proposer un morceau ;

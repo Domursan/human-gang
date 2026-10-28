@@ -1,3 +1,4 @@
+require('fs').mkdirSync(require('path').join(__dirname, '..', '..', 'shots'), { recursive: true }); // tests/shots absent d'une copie fraîche du dépôt : créé avant les captures.
 // Parcours C1 (migration 080) : booster « Saison esport » à fenêtre de vente.
 // 1. Boutique : l'article « Saison esport » (cartouche cart--esport, « Encore 12 j », « Série « Soirée match » uniquement »),
 //    achat qui appelle hg_booster_buy (p_type worlds_2026).
@@ -40,7 +41,7 @@ const scenario = (until) => ({
   await sleep(600);
   const buy = (await log(p)).filter((x) => x[0] === 'rpc' && x[1] === 'hg_booster_buy').pop();
   check(buy && buy[2].p_type === 'worlds_2026', '(1) achat : hg_booster_buy avec p_type worlds_2026');
-  await p.screenshot({ path: 'tests/shots/c1-boutique.png', fullPage: false });
+  await p.screenshot({ path: require('path').join(__dirname, '..', '..', 'shots', 'c1-boutique.png'), fullPage: false });
   await p.evaluate(() => { location.hash = 'ouverture'; }); // la barre d'onglets est masquée : on change d'onglet par l'adresse
   await p.waitForSelector('#cartes-p-ouverture:not([hidden])', { timeout: 5000 });
   await sleep(500);

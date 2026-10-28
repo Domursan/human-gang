@@ -9,6 +9,9 @@ const path = require('path');
 const { openPage, check, finish, hscroll, sleep, chromium } = require('../../lib/harness.cjs');
 
 const F = 'fake-sb-cartes.mjs';
+// tests/shots/ n'existe pas sur une copie fraîche du dépôt (CI) : créé avant toute écriture (writeFileSync ne le crée pas).
+const SHOTS = path.join(__dirname, '..', '..', 'shots');
+require('fs').mkdirSync(SHOTS, { recursive: true });
 (async () => {
   const browser = await chromium.launch();
 
@@ -50,9 +53,9 @@ const F = 'fake-sb-cartes.mjs';
   const pdf = await p.pdf({ preferCSSPageSize: true, printBackground: true });
   const pages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
   check(pages === 1, `PDF A4 : ${pages} page(s)`);
-  require('fs').writeFileSync(path.join(__dirname, '..', '..', 'shots', 'c16-planche.pdf'), pdf);
+  require('fs').writeFileSync(path.join(SHOTS, 'c16-planche.pdf'), pdf);
   await p.emulateMedia({ media: 'screen' });
-  await p.screenshot({ path: path.join(__dirname, '..', '..', 'shots', 'c16-planche.png'), fullPage: true });
+  await p.screenshot({ path: path.join(SHOTS, 'c16-planche.png'), fullPage: true });
   check(p.errs.length === 0, `aucune erreur (${p.errs.join(' | ') || 'rien'})`);
   await p.ctx.close();
 
