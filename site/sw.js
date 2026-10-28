@@ -45,6 +45,8 @@ const PRECACHE = [
   '/assets/commun/en-ligne.css', '/assets/commun/notifs.css',
   // Logo de la marque (en-tête des pages de la coque).
   '/assets/images/marque/logo-96.webp', '/assets/images/marque/logo-192.webp',
+  // Polices (hébergées dans assets/fonts, plus de Google Fonts)
+  '/assets/fonts/archivo-black-latin.woff2', '/assets/fonts/inter-latin-400.woff2', '/assets/fonts/inter-latin-500.woff2', '/assets/fonts/inter-latin-700.woff2',
 ];
 
 // Bibliothèque versionnée (épinglée) : mise en cache si le réseau le permet, sans bloquer l'installation.

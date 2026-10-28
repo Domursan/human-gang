@@ -48,6 +48,14 @@ const visibles = (p) => p.$$eval('#sd-links li', (lis) => lis.filter((li) => !li
     const pad = await p.evaluate(() => getComputedStyle(document.body).paddingLeft);
     check(pad === '56px', `(a) contenu décalé de la barre (padding gauche ${pad})`);
     check(await p.evaluate(() => document.documentElement.dataset.staffDock) === 'on', '(a) html[data-staff-dock] = on');
+    // En-tête : barre arc-en-ciel pleine largeur (au-dessus de la barre Staff), barre sous l'en-tête, contenu de l'en-tête aligné sur les pages
+    const geo = await p.evaluate(() => {
+      const r = (s) => document.querySelector(s).getBoundingClientRect();
+      return { rb: r('.site-header .rainbow').toJSON(), hd: r('.site-header').toJSON(), sd: r('#staff-dock').toJSON(), ct: r('.site-header .container').toJSON(), pied: r('footer').toJSON() };
+    });
+    check(Math.round(geo.rb.left) === 0 && Math.round(geo.rb.right) === 1280, '(a) barre arc-en-ciel pleine largeur, au-dessus de la barre Staff');
+    check(geo.sd.top >= geo.hd.bottom - 2, '(a) barre Staff sous l’en-tête (ne le tronque pas)');
+    check(Math.round(geo.ct.left) === 56 && Math.round(geo.pied.left) === 56, `(a) en-tête et pied alignés sur la colonne du contenu (${Math.round(geo.ct.left)} px)`);
     // Icônes toujours visibles ; au survol, la barre reste fine et le nom sort en bulle à droite de l'icône
     const opRepos = await p.evaluate(() => getComputedStyle(document.querySelector('#sd-links .sd-label')).opacity);
     await p.hover('#sd-links a');

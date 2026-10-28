@@ -4,7 +4,7 @@
  * bandeau du haut de table, chrono, journal, envoi sécurisé, lecture de l'état).
  * Les signatures sont fixes : les tables (/assets/espaces/plateaux/jeux/<jeu>/table.js) les importent telles quelles.
  * Dépendances : core.js (esc, avatarHtml, toast), plateaux/api.js (jeu, erreurTexte).
- * Exporte : avatarHtml, pseudoHtml, joueurDe, bandeauHtml, brancherChrono, journalHtml, imagePlateau,
+ * Exporte : avatarHtml, pseudoHtml, couleurPseudo, texteSur, joueurDe, bandeauHtml, brancherChrono, journalHtml, imagePlateau,
  *           envoyer, moiJoueur, estMonTour.
  */
 import { esc, avatarHtml as avatarCore, toast } from '../../../commun/core.js';
@@ -12,6 +12,67 @@ import { erreurTexte } from '../api.js';
 
 const GRIS_INVITE = '#9A968F';
 const COULEUR = /^#[0-9a-f]{6}$/i;
+/** Contraste minimal du texte (WCAG AA, texte courant). */
+const CONTRASTE_MIN = 4.5;
+/** Fonds de lecture par défaut (sombre) si le thème ne donne pas de couleurs lisibles. */
+const FONDS_DEFAUT = ['#0E0E10', '#17171A', '#1F1F23'];
+
+/** Luminance relative WCAG (0 à 1) d'une couleur #rrggbb. */
+function luminance(hex) {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+/** Rapport de contraste WCAG entre deux couleurs #rrggbb. */
+function contraste(a, b) {
+  const [la, lb] = [luminance(a), luminance(b)];
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+/** Mélange deux couleurs #rrggbb : k part de b, le reste de a. */
+function melange(a, b, k) {
+  const [ca, cb] = [a, b].map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  return '#' + ca.map((v, i) => Math.round(v + (cb[i] - v) * k).toString(16).padStart(2, '0')).join('');
+}
+/**
+ * Fonds sur lesquels les pseudos sont lus : les couleurs de surface du thème en cours (fond, carte, carte claire),
+ * et ces mêmes surfaces sous la teinte du tour (--plat-tour à 12 %, bandeau du joueur dont c'est le tour).
+ * @returns {string[]} couleurs #rrggbb.
+ */
+function fondsLecture() {
+  const st = getComputedStyle(document.documentElement);
+  const surfaces = ['--bg', '--surface', '--surface-2'].map((v) => st.getPropertyValue(v).trim().toLowerCase()).filter((c) => COULEUR.test(c));
+  if (!surfaces.length) return FONDS_DEFAUT;
+  const tour = st.getPropertyValue('--plat-tour').trim().toLowerCase();
+  const teintes = COULEUR.test(tour) ? [tour] : [];
+  return [...surfaces, ...surfaces.flatMap((s) => teintes.map((t) => melange(s, t, 0.12)))];
+}
+
+/**
+ * Couleur d'un pseudo, éclaircie (fond sombre) ou assombrie (fond clair) jusqu'à 4,5:1 sur tous les fonds de lecture.
+ * La couleur du membre reste reconnaissable : on ne fait que la rapprocher du blanc ou du noir.
+ * @param {string} hex couleur #rrggbb du membre.
+ * @returns {string} #rrggbb.
+ */
+export function couleurPseudo(hex) {
+  const fonds = fondsLecture();
+  if (fonds.every((f) => contraste(hex, f) >= CONTRASTE_MIN)) return hex;
+  const cible = fonds.every((f) => luminance(f) < 0.18) ? 255 : 0;
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  for (let t = 0; t <= 1.0001; t += 0.01) {
+    const m = '#' + c.map((v) => Math.round(v + (cible - v) * t).toString(16).padStart(2, '0')).join('');
+    if (fonds.every((f) => contraste(m, f) >= CONTRASTE_MIN)) return m;
+  }
+  return cible ? '#ffffff' : '#000000';
+}
+
+/**
+ * Texte lisible sur une pastille de couleur de fond : noir ou blanc, le plus contrasté (au moins 4,5:1 pour toute couleur).
+ * @param {string} fond couleur #rrggbb de la pastille.
+ * @returns {string} #121212 ou #ffffff.
+ */
+export function texteSur(fond) {
+  if (!COULEUR.test(fond || '')) return '#121212';
+  return contraste(fond, '#121212') >= contraste(fond, '#ffffff') ? '#121212' : '#ffffff';
+}
 
 /**
  * Rond avec initiales (ou image avatar_url), fond j.couleur ; gris pour un invité.
@@ -33,7 +94,7 @@ export function avatarHtml(j, taille = 32) {
  * @returns {string} HTML (<span class="plat-pseudo">).
  */
 export function pseudoHtml(j) {
-  const couleur = j?.invite ? GRIS_INVITE : (COULEUR.test(j?.couleur || '') ? j.couleur : '#F2EFEA');
+  const couleur = couleurPseudo(j?.invite ? GRIS_INVITE : (COULEUR.test(j?.couleur || '') ? j.couleur : '#F2EFEA'));
   const tag = j?.invite ? ' <span class="plat-invite">invité</span>' : '';
   return `<span class="plat-pseudo" style="color:${couleur}">${esc(j?.pseudo || '?')}${tag}</span>`;
 }

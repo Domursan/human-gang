@@ -1,0 +1,17 @@
+/* ===== Humane Gang — polices des affiches A3 (site/affiches/*.html) =====
+   Archivo Black et Inter, hébergées dans assets/fonts (sous-ensembles latin, licence OFL : voir OFL.txt).
+   Mêmes fichiers que base.css, avec les graisses 600, 800 et 900 d'Inter que les affiches utilisent. */
+@font-face { font-family: 'Archivo Black'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/assets/fonts/archivo-black-latin.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url('/assets/fonts/inter-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap;
+  src: url('/assets/fonts/inter-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap;
+  src: url('/assets/fonts/inter-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+  src: url('/assets/fonts/inter-latin-700.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 800; font-display: swap;
+  src: url('/assets/fonts/inter-latin-800.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 900; font-display: swap;
+  src: url('/assets/fonts/inter-latin-900.woff2') format('woff2'); }

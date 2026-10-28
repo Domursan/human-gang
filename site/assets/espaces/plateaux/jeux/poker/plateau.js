@@ -5,7 +5,7 @@
  *   sa mise du tour, sa dernière action, le badge « D » du donneur, et les dos de ses cartes (ou ses cartes révélées à l'abattage).
  *   Les sièges sont placés par deux nombres (cos, sin de leur angle) : CSS les étale selon la taille de l'écran (--rx, --ry).
  *   Ce module ne fait que du HTML ; table.js décide quand le refaire.
- * Dépendances : core.js (esc), ../cartes.js (carteHtml, dosHtml).
+ * Dépendances : core.js (esc), ../cartes.js (carteHtml, dosHtml), ../../vues/commun.js (texteSur : initiale lisible sur la pastille).
  * Exporte : tableHtml(opts) -> HTML ; placeSiege(k, n) -> { cx, cy } ; ACTIONS (action serveur -> libellé) ; PHASES.
  *   opts = {
  *     board: ['AS', 'KD', …] (0 à 5 cartes), pot: number, phase: 'preflop'|'flop'|'turn'|'river'|'abattage',
@@ -16,6 +16,7 @@
  */
 import { esc } from '../../../../commun/core.js';
 import { carteHtml, dosHtml } from '../cartes.js';
+import { texteSur } from '../../vues/commun.js';
 
 /** Libellé des phases de la main. */
 export const PHASES = {
@@ -88,7 +89,7 @@ function siegeHtml(s, k, n) {
       <div class="pk-siege-cartes">${cartesSiege(s)}</div>
       <div class="pk-siege-corps">
         <p class="pk-siege-nom">
-          <span class="pk-pastille" style="background:${esc(couleur)}" aria-hidden="true">${esc(s.initiale || '?')}</span>
+          <span class="pk-pastille" style="background:${esc(couleur)};color:${texteSur(couleur)}" aria-hidden="true">${esc(s.initiale || '?')}</span>
           <strong class="pk-pseudo">${esc(s.pseudo || '?')}</strong>
         </p>
         <p class="pk-siege-etiquettes">${etiquettes.join('')}</p>

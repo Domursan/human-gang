@@ -98,11 +98,13 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
   // ou script Playwright (fonction, { content }, { path }).
   if (init) await ctx.addInitScript(typeof init === 'string' && /\.m?js$/.test(init) ? { path: path.join(FIXTURES, init) } : init);
   const fakeBody = fs.readFileSync(path.join(FIXTURES, fixture));
-  const net = ctx.__net = { requetes: 0, octets: 0 };
+  // polices : part des polices hébergées (assets/fonts) dans le total, comptée à part (perf-budget.cjs)
+  const net = ctx.__net = { requetes: 0, octets: 0, polices: { requetes: 0, octets: 0 } };
   // Réponse comptée (requêtes et octets) et retardée si un réseau lent est simulé (delay).
   const serve = async (route, opts) => {
     const n = opts.body ? Buffer.byteLength(opts.body) : 0;
     net.requetes++; net.octets += n;
+    if (/\/assets\/fonts\//.test(route.request().url())) { net.polices.requetes++; net.polices.octets += n; }
     if (delay) await sleep(delay(n));
     return route.fulfill(opts);
   };

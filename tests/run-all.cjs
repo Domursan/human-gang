@@ -42,12 +42,12 @@ const parcours = fs.readdirSync(path.join(dir, 'parcours'), { withFileTypes: tru
   .filter((d) => d.isDirectory())
   .flatMap((d) => fs.readdirSync(path.join(dir, 'parcours', d.name)).filter((f) => /^parcours-.*\.cjs$/.test(f)).map((f) => `parcours/${d.name}/${f}`))
   .sort();
-const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'controles/check-migrations.cjs', 'controles/check-echappement.cjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
+const STATIQUES = ['controles/check-js.cjs', 'controles/check-rpc.mjs', 'controles/check-migrations.cjs', 'controles/check-echappement.cjs', 'controles/check-polices.cjs', 'unitaires/check-hg-discord.mjs', 'unitaires/check-hg-calendar.mjs', 'unitaires/check-notif-prefs.mjs', 'unitaires/hg-archive-lib.mjs'];
 /** Site construit (outils/build/construire.mjs) : contrôles lancés sur _site/ seulement s'il existe, sinon sautés. */
 const SITE_CONSTRUIT = path.resolve(dir, '..', '_site');
 const CONSTRUIT = ['controles/check-build.cjs'];
 const constructionPresente = fs.existsSync(SITE_CONSTRUIT);
-const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', ...(constructionPresente ? CONSTRUIT : []), ...parcours];
+const NAVIGATEUR = ['controles/smoke.cjs', 'controles/smoke-admin.cjs', 'controles/composants-admin-ui.cjs', 'controles/contraste-plateaux.cjs', ...(constructionPresente ? CONSTRUIT : []), ...parcours];
 /** Suite complète, ou le morceau demandé (un fichier sur N, liste triée : la découpe ne dépend que des noms). */
 const suite = shard
   ? NAVIGATEUR.filter((_, i) => i % shard.n === shard.k - 1)
