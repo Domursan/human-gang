@@ -32,6 +32,7 @@ const ECRIT_HTML = /(innerHTML|outerHTML)\s*\+?=\s*$|insertAdjacentHTML\([^,]*,\
 const LISTE_BLANCHE = [
   // Constantes du module, jamais saisies : libellés et décors fixes.
   { fichier: 'commun/core/search.js', expr: 'g.title', raison: 'GROUPS : titres fixes des sections de recherche' },
+  { fichier: 'espaces/admin/admin-bot-regles.js', expr: 'grpHead(', raison: 'grpHead échappe lui-même le titre (esc(title)) ; titres fixes du module' },
   { fichier: 'commun/core/staff-dock.js', expr: 'r.label', raison: 'RACCOURCIS : libellés fixes' },
   { fichier: 'commun/core/staff-dock.js', expr: 'r.href', raison: 'RACCOURCIS : adresses fixes' },
   { fichier: 'espaces/admin/admin-invite-links.js', expr: 'r.name', raison: 'clé fixe d\'une règle (INVITE_DEFAULTS)' },
