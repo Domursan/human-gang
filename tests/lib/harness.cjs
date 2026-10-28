@@ -85,6 +85,13 @@ async function openPage(browser, { page: slug = 'accueil', fixture = 'fake-sb.mj
       // Intro déjà jouée aujourd'hui (sinon l'accueil y renvoie) ; scenario.intro = true pour la tester
       const d = new Date();
       if (!s.intro) localStorage.setItem('hg_intro_day', dayKey || `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+      // Secret « nuit » (3 h à Zurich) : la chouette traverse le bas de l'écran et peut gêner les clics des tests lancés
+      // entre 3 h et 4 h. On le marque comme déjà vu aujourd'hui, sauf avec scenario.nuit = true (et sans horloge simulée).
+      if (!s.nuit && !dayKey) {
+        const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' })
+          .formatToParts(new Date()).map((x) => [x.type, x.value]));
+        sessionStorage.setItem(`hg_egg_nuit_${p.year}-${p.month}-${p.day}`, '1');
+      }
     } catch (e) { /* stockage bloqué : sans importance pour le test */ }
   }, { s: scenario, dayKey });
   // init : script supplémentaire exécuté avant la page : nom d'un fichier de tests/fixtures/ (ex. fake-jeux.js : RPC des jeux)
