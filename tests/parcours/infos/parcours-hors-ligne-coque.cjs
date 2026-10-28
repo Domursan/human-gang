@@ -1,7 +1,7 @@
 // P2 · Coque hors ligne (site/sw.js, précache ; outils/build/construire.mjs, section 6), avec le vrai service worker.
 // Le service worker n'est pas actif sur http://hg.test (contexte non sûr) : le site est ici servi sur 127.0.0.1 (contexte sûr),
 // et le réseau sortant passe par un proxy inaccessible, pour que les appels vers la base échouent aussitôt.
-// - Installation : la précache est la coque seule (moins de 80 fichiers, aucune page ni script du panel admin).
+// - Installation : la précache est la coque seule (moins de 90 fichiers, dont les 4 polices, aucune page ni script du panel admin).
 // - Une page hors coque, visitée en ligne (Événements), s'ouvre hors ligne depuis le cache.
 // - Une page jamais visitée (panel admin) affiche la page hors ligne (/offline.html).
 // Le serveur local est arrêté avant ces deux étapes : le cache seul répond.
@@ -61,7 +61,7 @@ if (!fs.existsSync(path.join(ROOT, 'assets', '_b'))) {
     const nom = (await caches.keys()).find((k) => k.startsWith('hg-coque-'));
     return nom ? (await (await caches.open(nom)).keys()).map((r) => new URL(r.url).pathname) : [];
   });
-  check(precache.length > 0 && precache.length < 80, `précache : ${precache.length} fichier(s) (objectif : moins de 80)`);
+  check(precache.length > 0 && precache.length < 90, `précache : ${precache.length} fichier(s) (objectif : moins de 90)`);
   const attendus = ['/pages/compte/accueil.html', '/offline.html', '/index.html', '/sw.js'];
   check(attendus.every((p) => precache.includes(p)) && precache.some((p) => p.startsWith('/assets/_b/css/')),
     'précache : pages de la coque, feuille de style et service worker présents');
