@@ -15,7 +15,7 @@
 
 /* ---------- Configuration, son et utilitaires ---------- */
 export { LOGO_SRC } from './config.js';
-export { playSound } from './sound.js';
+export { playSound, playTurnSound } from './sound.js';
 export { esc, $, $$, fmtDate, fmtDateTime, daysUntil, initials, avatarHtml, errMsg } from './core/util.js';
 export { toast } from './core/ui.js';
 

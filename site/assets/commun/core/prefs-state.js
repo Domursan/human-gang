@@ -22,9 +22,10 @@ const OLD_FX_KEY = 'hg_effects_off';
 export const PREF_MODES = { sombre: 'Sombre', clair: 'Clair', daltonien: 'Daltonien' };
 /**
  * Valeurs par défaut : sombre, thème spécial et effets actifs, sons coupés, volume 60 %,
- * boosters révélés avec leur séquence animée (revealDirect coupé), raccourcis clavier actifs.
+ * boosters révélés avec leur séquence animée (revealDirect coupé), raccourcis clavier actifs,
+ * son « à toi de jouer » des jeux actif (sonTour, indépendant des autres sons).
  */
-export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effects: true, sound: false, volume: 0.6, revealDirect: false, shortcuts: true });
+export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effects: true, sound: false, volume: 0.6, revealDirect: false, shortcuts: true, sonTour: true });
 
 /* ---------- Validation et chargement ---------- */
 
@@ -32,7 +33,7 @@ export const PREF_DEFAULTS = Object.freeze({ mode: 'sombre', special: true, effe
  * Ramène un objet quelconque à des préférences valides : valeurs inconnues remplacées par les défauts,
  * volume borné entre 0 et 1.
  * @param {object} [p={}] Préférences brutes (par exemple lues dans localStorage).
- * @returns {{mode: string, special: boolean, effects: boolean, sound: boolean, volume: number, revealDirect: boolean, shortcuts: boolean}}
+ * @returns {{mode: string, special: boolean, effects: boolean, sound: boolean, volume: number, revealDirect: boolean, shortcuts: boolean, sonTour: boolean}}
  */
 function normalizePrefs(p = {}) {
   const v = Number(p.volume);
@@ -44,6 +45,7 @@ function normalizePrefs(p = {}) {
     volume: Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : PREF_DEFAULTS.volume,
     revealDirect: typeof p.revealDirect === 'boolean' ? p.revealDirect : PREF_DEFAULTS.revealDirect,
     shortcuts: typeof p.shortcuts === 'boolean' ? p.shortcuts : PREF_DEFAULTS.shortcuts,
+    sonTour: typeof p.sonTour === 'boolean' ? p.sonTour : PREF_DEFAULTS.sonTour,
   };
 }
 /**
@@ -71,7 +73,7 @@ let _prefs = loadPrefs();
 /* ---------- Lecture et écriture ---------- */
 
 /**
- * Préférences courantes (copie) : { mode, special, effects, sound, volume, revealDirect, shortcuts }.
+ * Préférences courantes (copie) : { mode, special, effects, sound, volume, revealDirect, shortcuts, sonTour }.
  * @returns {object} Copie de l'état ; la modifier ne change rien.
  */
 export function getPrefs() { return { ..._prefs }; }

@@ -26,7 +26,8 @@ export function erreurTexte(e) {
  *   etiquette      '[uno]' : préfixe des avertissements dans la console
  *   libelle        « la partie » (ou « le duel ») : fin du message « Impossible de rejoindre … »
  *   tablesSupp     tables écoutées en plus (lignes des joueurs, pour le Loup-Garou)
- *   secours        délai de relecture de secours en ms : { membre, invite }
+ *   secours        délai de relecture de secours en ms : { membre, invite, abonne } ; « abonne » sert quand le temps
+ *                  réel est branché (la relecture ne sert alors qu'en filet de sécurité : moins de charge serveur)
  *   delaiAvance    retard (ms, négatif = avant) avant de demander au serveur l'avance d'une échéance
  *   champFin       champ de la partie qui porte l'échéance du tour (tour_fin, ou phase_fin)
  *   restePause     vrai si la partie peut afficher un temps figé (pause_reste)
@@ -40,7 +41,7 @@ export function erreurTexte(e) {
  */
 export function creerSalon({
   prefixe, canal, etiquette, libelle = 'la partie', tablesSupp = [],
-  secours = { membre: 4000, invite: 2000 }, delaiAvance = -500, champFin = 'tour_fin', restePause = false,
+  secours = { membre: 4000, invite: 2000, abonne: 15000 }, delaiAvance = -500, champFin = 'tour_fin', restePause = false,
   maintenant = (e) => e?.maintenant,
   changement = (dernier, e) => !dernier || dernier.partie?.version !== e?.partie?.version || dernier.partie?.statut !== e?.partie?.statut,
   echeance = (dernier) => {
@@ -120,7 +121,8 @@ export function creerSalon({
 
   /**
    * Suit une partie : appelle onEtat(etat) à chaque changement, onMessage(msg) à chaque nouveau message.
-   * Temps réel (ligne de la partie, lignes des joueurs, messages) et relecture de secours régulière.
+   * Temps réel (ligne de la partie, lignes des joueurs, messages) et relecture de secours régulière
+ * (toutes les 4 s sans temps réel, toutes les 15 s quand le canal est branché).
    * Quand une échéance est dépassée, demande au serveur d'avancer (il vérifie lui-même).
    * @returns {{ arreter: Function, rafraichir: Function, etat: Function, secondesRestantes: Function, decalage: Function }}
    */
@@ -132,10 +134,14 @@ export function creerSalon({
     let canalTr = null;           // canal temps réel
     let decalage = 0;             // horloge serveur - horloge locale (ms)
     let avanceDemandee = '';      // évite de demander deux fois l'avance pour la même échéance
+    let abonne = false;           // canal temps réel branché (SUBSCRIBED)
+    let derniereLecture = 0;      // instant (Date.now) de la dernière relecture lancée
+    let attente = null;           // regroupe les signaux temps réel rapprochés en une seule relecture
 
     const rafraichir = async () => {
       if (!actif) return;
       if (enCours) { relire = true; return enCours; }
+      derniereLecture = Date.now();
       enCours = (async () => {
         try {
           const e = await commun.etat(code);
@@ -156,18 +162,28 @@ export function creerSalon({
       return enCours;
     };
 
+    /** Signal temps réel : plusieurs lignes changent souvent ensemble (partie + joueurs) : une seule relecture. */
+    const signal = () => {
+      if (attente) return;
+      attente = setTimeout(() => { attente = null; rafraichir(); }, 120);
+    };
+
     const abonner = (e) => {
       const id = e?.partie?.id;
       if (!id || canalTr || invite) return;   // invité : pas de temps réel, la relecture suffit
       try {
         let c = sb.channel(`${canal}:${id}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: `${prefixe}_parties`, filter: `id=eq.${id}` }, () => rafraichir());
+          .on('postgres_changes', { event: '*', schema: 'public', table: `${prefixe}_parties`, filter: `id=eq.${id}` }, signal);
         for (const table of tablesSupp) {
-          c = c.on('postgres_changes', { event: '*', schema: 'public', table, filter: `partie=eq.${id}` }, () => rafraichir());
+          c = c.on('postgres_changes', { event: '*', schema: 'public', table, filter: `partie=eq.${id}` }, signal);
         }
         c = c.on('postgres_changes', { event: 'INSERT', schema: 'public', table: `${prefixe}_messages`, filter: `partie=eq.${id}` },
           (p) => onMessage?.(transformerMessage(p.new, dernier)));
-        canalTr = c.subscribe();
+        canalTr = c.subscribe((statut) => {
+          const avant = abonne;
+          abonne = statut === 'SUBSCRIBED';
+          if (abonne && !avant) rafraichir();   // rien manqué pendant le branchement
+        });
       } catch (err) {
         console.warn(`${etiquette} temps réel indisponible`, err);
       }
@@ -185,7 +201,12 @@ export function creerSalon({
       }
     }, 1000);
     const delai = invite ? secours.invite : secours.membre;
-    const relecture = setInterval(() => { if (actif && !document.hidden) rafraichir(); }, delai);
+    // Relecture de secours : rapide sans temps réel (invité, canal coupé), espacée quand le canal est branché.
+    const relecture = setInterval(() => {
+      if (!actif || document.hidden) return;
+      if (abonne && Date.now() - derniereLecture < (secours.abonne ?? 15000)) return;
+      rafraichir();
+    }, delai);
     const visible = () => { if (!document.hidden) rafraichir(); };
     document.addEventListener('visibilitychange', visible);
 
@@ -193,7 +214,7 @@ export function creerSalon({
     return {
       arreter() {
         actif = false;
-        clearInterval(minuteur); clearInterval(relecture);
+        clearInterval(minuteur); clearInterval(relecture); clearTimeout(attente);
         document.removeEventListener('visibilitychange', visible);
         if (canalTr) { try { sb.removeChannel(canalTr); } catch { /* sans effet */ } }
       },

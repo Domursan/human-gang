@@ -32,3 +32,6 @@ supabase/migrations/165_plateaux_droits.sql
 supabase/migrations/166_plateaux_droits_internes.sql
 supabase/migrations/167_cartes_images_rapatriees.sql
 supabase/migrations/168_series_pays_capitales_streaming.sql
+# supabase/migrations/169_menu_autres_sans_jeux.sql (appliquée directement le 28/10)
+# supabase/migrations/170_avent_sans_limites.sql (appliquée directement le 28/10)
+supabase/migrations/171_uno_jouabilite.sql

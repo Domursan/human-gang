@@ -1,12 +1,13 @@
 // ===== Humane Gang — petits sons synthétisés (WebAudio, aucun fichier) =====
 // playSound(name) : 'click' | 'success' | 'error' | 'message' | 'badge' | 'fanfare'
+// playTurnSound() : « à toi de jouer » des jeux à plusieurs (préférence sonTour, active par défaut).
 // Ne fait rien si les sons sont désactivés dans les préférences (localStorage 'hg_prefs', défaut : off).
 /*
  * Rôle : produit de petits sons (clic, succès, erreur, message, badge) avec l'API WebAudio, sans fichier audio.
  * Page : toutes les pages (ui.js, badges.js, prefs.js, godmode.js, etc.). Le son reste coupé tant que
  *   l'utilisateur ne l'a pas activé dans les préférences d'affichage.
  * Dépendances : aucune (lit seulement la préférence dans localStorage « hg_prefs »).
- * Exporte : playSound.
+ * Exporte : playSound, playTurnSound.
  */
 
 /* ---------- Constantes et état ---------- */
@@ -30,8 +31,8 @@ function soundPrefs() {
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null') || {};
     const vol = Number(p.volume);
-    return { on: p.sound === true, volume: Number.isFinite(vol) ? Math.min(1, Math.max(0, vol)) : 0.6 };
-  } catch { return { on: false, volume: 0.6 }; }
+    return { on: p.sound === true, tour: p.sonTour !== false, volume: Number.isFinite(vol) ? Math.min(1, Math.max(0, vol)) : 0.6 };
+  } catch { return { on: false, tour: true, volume: 0.6 }; }
 }
 
 /**
@@ -52,7 +53,8 @@ function audio() {
 
 /** Débloque l'AudioContext au premier geste (exigence des navigateurs). */
 function unlock() {
-  if (!soundPrefs().on) return;
+  const p = soundPrefs();
+  if (!p.on && !p.tour) return;
   const c = audio();
   if (c && c.state === 'suspended') c.resume().catch(() => {});
 }
@@ -114,6 +116,11 @@ const SOUNDS = {
     }
     note(c, o, { f: N(96), t: 0.54, d: 0.35, type: 'square', g: 0.025 }); // scintillement
   },
+  // « Pièce arcade » : deux notes 8-bit, quand ton tour commence dans un jeu (choisi par Ethan, oct. 2026)
+  tour: (c, o) => {
+    note(c, o, { f: 988, t: 0, d: 0.08, type: 'square', g: 0.12, attack: 0.005 });
+    note(c, o, { f: 1319, t: 0.08, d: 0.35, type: 'square', g: 0.12, attack: 0.005 });
+  },
   // Fanfare de quatre notes montantes (secret « kc », voir eggs/core.js)
   fanfare: (c, o) => {
     [[72, 0, 0.1], [76, 0.11, 0.1], [79, 0.22, 0.1], [84, 0.33, 0.36]].forEach(([n, t, d]) => {
@@ -131,9 +138,25 @@ const SOUNDS = {
  * @param {'click'|'success'|'error'|'message'|'badge'|'fanfare'} name Nom du son.
  */
 export function playSound(name) {
-  const fn = SOUNDS[name];
   const p = soundPrefs();
-  if (!fn || !p.on || p.volume <= 0) return;
+  if (!p.on) return;
+  jouer(name, p);
+}
+
+/**
+ * Son « à toi de jouer » des jeux à plusieurs. Suit sa propre préférence (sonTour, active par défaut),
+ * pas celle des autres sons. Le navigateur peut le bloquer tant que la page n'a reçu aucun clic.
+ */
+export function playTurnSound() {
+  const p = soundPrefs();
+  if (!p.tour) return;
+  jouer('tour', p);
+}
+
+/** Joue un son avec les préférences données (volume, anti-rafale). */
+function jouer(name, p) {
+  const fn = SOUNDS[name];
+  if (!fn || p.volume <= 0) return;
   const now = performance.now();
   if (now - (lastPlay[name] || 0) < 40) return; // anti-rafale
   lastPlay[name] = now;

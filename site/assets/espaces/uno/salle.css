@@ -61,6 +61,25 @@
 .uno-regles li { display: flex; align-items: center; gap: 10px; }
 .uno-regles li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--sand); flex: none; }
 
+/* Règles modifiables par l'hôte : segments et interrupteurs (lecture seule pour les autres) */
+.uno-regle { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.uno-regle:last-of-type { border-bottom: 0; }
+.uno-regle-txt { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 15px; }
+.uno-regle-txt small { color: var(--muted); font-size: 13px; }
+.uno-regle-seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 12px; overflow: hidden; }
+.uno-regle-seg button { min-height: 40px; padding: 0 12px; border: 0; background: none; color: var(--muted); font: 600 13px Inter, sans-serif; cursor: pointer; }
+.uno-regle-seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--sand); }
+.uno-regle-seg button:disabled { cursor: default; }
+.uno-regle-seg button:disabled:not([aria-pressed="true"]) { opacity: .55; }
+.uno-interr { flex: none; position: relative; width: 48px; height: 28px; border-radius: 999px; border: 0; background: #3A3645; cursor: pointer; }
+.uno-interr::after { content: ''; position: absolute; left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; transition: left .15s ease; }
+.uno-interr[aria-checked="true"] { background: #1F9D55; }
+.uno-interr[aria-checked="true"]::after { left: 24px; }
+.uno-interr:disabled { cursor: default; opacity: .8; }
+.uno-regle-seg button:focus-visible, .uno-interr:focus-visible { outline: 2px solid var(--sand); outline-offset: 2px; }
+.uno-regles-note { margin: 4px 0 0; }
+.uno-modifie { color: var(--sand); }
+
 /* ----- Chat (le composant vit dans chat.js) ----- */
 .uno-salle-chat { display: flex; flex-direction: column; gap: 14px; padding: 24px; min-width: 0; box-sizing: border-box; }
 .uno-salle-chat .lg-chat-fil { max-height: 360px; overflow-y: auto; }
@@ -81,4 +100,4 @@
 .uno-salle-adieu h2 { margin: 0; font-size: 22px; }
 
 /* ----- Mouvement réduit ----- */
-@media (prefers-reduced-motion: reduce) { .uno-progres span { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .uno-progres span, .uno-interr::after { transition: none; } }

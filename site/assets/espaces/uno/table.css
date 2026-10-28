@@ -3,7 +3,9 @@
    chargés pour tout le Uno (uno.css importe cette feuille).
    Ordinateur (> 760 px) : table à gauche, chat à droite, joueurs posés sur l'anneau.
    Téléphone (≤ 760 px) : une colonne ; les joueurs défilent en bande ; le chat s'ouvre en volet par le bas.
-   Cartes, dos et bouton UNO ! : uno.css. Roue des couleurs : uno.css (.uno-roue-voile, .uno-roue). */
+   Cartes, dos et bouton UNO ! : uno.css. Roue des couleurs : uno.css (.uno-roue-voile, .uno-roue).
+   Décor validé en maquette (oct. 2026) : tapis vert, anneau arc-en-ciel, HG en filigrane, étoiles, flèches dorées du sens,
+   photos de profil avec anneau doré (chrono) pour le joueur actif, main en éventail, animations des coups. */
 
 .uno-table { display: flex; flex-direction: column; gap: 12px; min-width: 0; max-width: 100%; color: var(--text); }
 .uno-table [hidden] { display: none !important; }
@@ -17,8 +19,11 @@
 .uno-nom:focus { outline: none; }
 .uno-nom:focus-visible { outline: 2px solid #E2C77E; outline-offset: 4px; border-radius: 4px; }
 .uno-barre .uno-code { font-size: 13px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
-.uno-sens { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); white-space: nowrap; }
-.uno-sens-icone { display: inline-flex; transition: transform .2s ease; }
+.uno-sens { margin: 0; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px;
+  background: rgba(226, 199, 126, .12); border: 1px solid rgba(226, 199, 126, .5); color: #E2C77E; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.uno-sens-icone { display: inline-flex; animation: uno-tourne 3s linear infinite; }
+.uno-sens.inverse .uno-sens-icone { animation-direction: reverse; transform: scaleX(-1); }
+@keyframes uno-tourne { to { transform: rotate(360deg); } }
 .uno-chrono { display: flex; align-items: center; gap: 10px; flex: none; }
 .uno-anneau { width: 40px; height: 40px; flex: none; }
 .uno-anneau circle[data-anneau] { transition: stroke-dasharray .25s linear; }
@@ -32,27 +37,45 @@
 .uno-table.chat-masque .uno-chat { display: none; }
 
 /* ---------- Table ---------- */
-.uno-plateau { position: relative; height: clamp(340px, calc(100vh - 380px), 600px); min-width: 0; }
-.uno-sieges { position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; list-style: none; }
+.uno-plateau { position: relative; height: clamp(340px, calc(100vh - 430px), 560px); min-width: 0; border-radius: 24px; overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 46%, rgba(46, 24, 64, .85), transparent 70%),
+    radial-gradient(circle at 12% 88%, rgba(183, 1, 39, .18), transparent 35%),
+    radial-gradient(circle at 90% 12%, rgba(43, 90, 226, .16), transparent 35%), #0D0B13; }
+.uno-plateau::before { content: ''; position: absolute; inset: 0; opacity: .5; pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, .55) 1px, transparent 1.4px), radial-gradient(rgba(226, 199, 126, .45) 1px, transparent 1.6px);
+  background-size: 120px 120px, 190px 190px; background-position: 0 0, 60px 90px; }
+.uno-sieges { position: absolute; inset: 0; z-index: 2; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+.uno-siege { pointer-events: auto; }
 .uno-siege { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 124px; box-sizing: border-box;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 8px; text-align: center;
-  background: rgba(14, 14, 16, .85); border-radius: 16px; }
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 8px; text-align: center;
+  background: rgba(13, 11, 19, .78); border-radius: 16px; }
+.uno-siege.est-tour .uno-siege-nom strong { text-shadow: 0 0 12px rgba(226, 199, 126, .7); }
 .uno-siege.exclu { opacity: .4; }
 .uno-siege.uno-serre { width: 96px; }
-.uno-siege.uno-serre .uno-avatar { width: 44px; height: 44px; font-size: 12px; }
 .uno-siege-infos { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
 .uno-siege-nom { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; font-size: 15px; font-weight: 700; }
 .uno-siege-cartes { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
 
-.uno-avatar { width: 56px; height: 56px; flex: none; box-sizing: border-box; border-radius: 50%; background: #1F1F23;
-  border: 2px solid var(--c, #3A3A40); color: #F2EFEA; display: grid; place-items: center; font-size: 15px; font-weight: 700; }
-.uno-avatar-moi { width: 52px; height: 52px; }
-.uno-avatar.est-tour, .uno-siege.est-tour .uno-avatar { box-shadow: 0 0 0 3px #0E0E10, 0 0 0 5px #E2C77E; }
+/* Photo de profil dans un anneau ; joueur actif : anneau doré qui se vide avec le chrono (--k), halo, pastille « Joue » */
+.uno-siege-photo { position: relative; display: inline-flex; flex: none; }
+.uno-av { display: inline-flex; padding: 3px; border-radius: 50%; background: #2A2733; box-shadow: inset 0 0 0 1px var(--c, #3A3645); }
+.uno-av .avatar { display: grid; place-items: center; border-radius: 50%; object-fit: cover; font-weight: 700; font-size: 15px; }
+.uno-siege.est-tour .uno-av, .uno-moi-photo.est-tour .uno-av {
+  background: conic-gradient(#E2C77E calc(var(--k, 1) * 360deg), #3A3645 0);
+  box-shadow: 0 0 0 4px rgba(226, 199, 126, .25), 0 0 28px rgba(226, 199, 126, .6); }
+.uno-joue { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #0B0A10;
+  background: #E2C77E; padding: 2px 8px; border-radius: 999px; animation: uno-bulle 1.4s ease-in-out infinite; }
+@keyframes uno-bulle { 50% { transform: translateY(-2px); } }
+.uno-badge-siege { position: absolute; right: -24px; top: -8px; z-index: 2; font: 400 14px 'Archivo Black', sans-serif; color: #FFFFFF;
+  padding: 2px 8px; border-radius: 999px; background: linear-gradient(120deg, #FE3104, #FCA301, #159946, #2B5AE2, #4E2398);
+  box-shadow: 0 0 0 2px #0B0A10, 0 0 18px rgba(252, 163, 1, .8); transform: rotate(8deg); }
 
-/* Dos en éventail : trois petits dos au plus, puis le nombre écrit */
-.uno-eventail { position: relative; display: inline-block; width: 40px; height: 34px; flex: none; }
-.uno-eventail-carte { position: absolute; left: calc(var(--i) * 7px); top: 0; width: 52px; height: 78px; transform-origin: 0 0;
-  transform: scale(.42) rotate(calc((var(--i) - 1) * 12deg)); }
+/* Mini-dos : trois au plus, puis le nombre écrit */
+.uno-mini-dos { display: inline-flex; }
+.uno-mini-dos span { width: 12px; height: 17px; border-radius: 2px; margin-left: -6px; border: 1px solid #FFFFFF;
+  background: linear-gradient(135deg, #16161B 40%, #FCA301 41% 50%, #2B5AE2 51% 60%, #16161B 61%); }
+.uno-mini-dos span:first-child { margin-left: 0; }
 
 .uno-etiquettes { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
 .uno-badge-uno { display: inline-flex; align-items: center; min-height: 20px; padding: 1px 8px; border-radius: 999px;
@@ -62,10 +85,17 @@
 
 /* Anneau arc-en-ciel posé sous les joueurs (ordinateur : ellipse ; les joueurs sont sur son bord) */
 .uno-tapis { position: absolute; inset: 0; z-index: 1; }
-.uno-ovale { position: absolute; left: 10%; right: 10%; top: 16%; bottom: 16%; border-radius: 50%;
-  background: conic-gradient(#FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398, #FE3104);
-  box-shadow: 0 0 28px rgba(254, 120, 4, .35), 0 0 60px rgba(43, 90, 226, .2); }
-.uno-ovale::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #16161B; box-shadow: inset 0 0 50px rgba(0, 0, 0, .5); }
+.uno-ovale, .uno-fleches { position: absolute; left: 10%; right: 10%; top: 16%; bottom: 16%; border-radius: 50%; }
+.uno-ovale { background: conic-gradient(#FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398, #FE3104);
+  box-shadow: 0 0 28px rgba(254, 120, 4, .35), 0 0 60px rgba(43, 90, 226, .2), 0 30px 60px rgba(0, 0, 0, .6); }
+.uno-ovale::after { content: 'HG'; position: absolute; inset: 5px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 45%, #1C3A2A 0, #11261C 55%, #0B1912 100%); box-shadow: inset 0 0 60px rgba(0, 0, 0, .6);
+  font: 400 clamp(80px, 14vw, 150px) 'Archivo Black', sans-serif; letter-spacing: 6px; color: rgba(255, 255, 255, .035); }
+/* Flèches dorées du sens du jeu (positionnées par table.js le long de l'ellipse) */
+.uno-fleches { pointer-events: none; z-index: 1; }
+.uno-fleches i { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.uno-fleches i::after { content: ''; position: absolute; left: -5px; top: -7px; width: 0; height: 0; border-left: 10px solid #E2C77E;
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent; opacity: .85; filter: drop-shadow(0 0 4px rgba(226, 199, 126, .8)); }
 
 /* Centre : pilules, pioche, défausse, dernière ligne du journal */
 .uno-tapis-centre { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; width: min(400px, 70%);
@@ -78,31 +108,94 @@
 .uno-point { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .uno-pile { display: flex; align-items: flex-start; gap: 28px; }
 .uno-pile-bloc { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.uno-pioche { border: 0; padding: 0; margin: 0; background: none; cursor: pointer; color: inherit; border-radius: 10px; display: block; }
-.uno-pioche:disabled { cursor: not-allowed; opacity: .55; }
-.uno-pioche .ub { box-shadow: 2px 2px 0 #2A2A2F, 4px 4px 0 #1A1A1F, 0 3px 8px rgba(0, 0, 0, .45); transition: transform .15s ease; }
-.uno-pioche:not(:disabled):hover .ub, .uno-pioche:not(:disabled):focus-visible .ub { transform: translateY(-3px); }
+.uno-pioche { position: relative; border: 0; padding: 0; margin: 0; background: none; cursor: pointer; color: inherit; border-radius: 12px; display: block; }
+.uno-pioche:disabled { cursor: default; }
+.uno-pile-dos { position: relative; display: block; }
+.uno-pile-dos .ub + .ub { position: absolute; left: 3px; top: -3px; }
+.uno-pile-dos .ub:nth-child(3) { left: 6px; top: -6px; }
+.uno-pile-dos .ub { transition: transform .15s ease; }
+.uno-pioche:not(:disabled):hover .ub:nth-child(3), .uno-pioche:not(:disabled):focus-visible .ub:nth-child(3) { transform: translateY(-6px); }
+.uno-pioche:not(:disabled) { box-shadow: 0 0 0 2px rgba(226, 199, 126, .55); }
+.uno-pioche.oblige { animation: uno-pulse-or 1.1s ease-in-out infinite; }
+@keyframes uno-pulse-or { 0%, 100% { box-shadow: 0 0 0 2px rgba(226, 199, 126, .55); }
+  50% { box-shadow: 0 0 0 10px rgba(226, 199, 126, .35), 0 0 40px rgba(226, 199, 126, .7); } }
+.uno-pioche-bulle { position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%); white-space: nowrap; z-index: 3;
+  font: 400 14px 'Archivo Black', sans-serif; color: #0B0A10; background: #E2C77E; padding: 5px 12px; border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .5); }
 .uno-legende { font-size: 13px; color: #F2EFEA; }
 .uno-defausse { display: block; }
 .uno-dernier { margin: 0; min-height: 1.5em; font-size: 13px; color: var(--muted); text-align: center; }
 .uno-vide { margin: 0; font-size: 13px; color: var(--muted); }
 
 /* ---------- Bas : moi, ma main, commandes ---------- */
-.uno-bas { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.uno-bas-ligne { display: grid; grid-template-columns: 180px minmax(0, 1fr) 210px; gap: 16px; align-items: end; }
+.uno-bas { display: flex; flex-direction: column; gap: 0; min-width: 0; border-radius: 20px; overflow: hidden;
+  background: rgba(10, 9, 14, .9); border: 1px solid #2A2733; }
+.uno-bas > .uno-defi { margin: 12px 12px 0; }
+.uno-bas-ligne { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 12px 18px;
+  border-top: 1px solid #2A2733; background: rgba(13, 11, 19, .82); }
 .uno-moi { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .uno-moi-texte { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
 .uno-moi-texte > strong { font-size: 15px; font-weight: 700; }
 .uno-moi-detail { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-.uno-main-zone { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.uno-main-zone { min-width: 0; display: flex; flex-direction: column; gap: 0; padding: 10px 14px 0; }
+.uno-main-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; min-height: 30px; }
+.uno-main-tete .uno-indice, .uno-main-tete .uno-aide-tel { margin: 0 auto 0 0; }
 .uno-indice { margin: 0; font-size: 13px; color: #E2C77E; font-weight: 700; }
-.uno-main-cartes { display: flex; justify-content: center; align-items: flex-end; min-height: 150px; padding: 18px 0 4px; box-sizing: border-box; max-width: 100%; }
-.uno-eventail-main { flex: none; margin: 0 -10px; transform: rotate(var(--rot, 0deg)); transform-origin: 50% 240%; }
-.uno-eventail-main:first-child { margin-left: 0; }
-.uno-eventail-main:last-child { margin-right: 0; }
-.uno-commandes { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.uno-cmd { width: 100%; min-height: 52px; font-size: 16px; }
-.uno-commandes .uno-btn { width: 100%; min-height: 64px; box-sizing: border-box; }
+.uno-aide-tel { font-size: 12px; color: var(--muted); }
+.uno-tri { display: flex; gap: 6px; }
+.uno-tri button { min-height: 30px; font: 600 12px Inter, sans-serif; color: var(--muted); background: none; border: 1px solid #2A2733;
+  border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.uno-tri button[aria-pressed="true"] { color: #F2EFEA; border-color: #E2C77E; }
+/* Main en éventail : chaque carte est placée par table.js (left, top, rotation --r) */
+.uno-main-cartes { position: relative; min-height: 120px; max-width: 100%; }
+.uno-main-cartes > .uno-vide { padding: 24px 0; text-align: center; }
+.uno-fan-carte { position: absolute; transform: rotate(var(--r, 0deg)); transform-origin: 50% 120%; transition: transform .18s ease, opacity .2s ease; }
+.uno-fan-carte button.uc.jouable:hover, .uno-fan-carte button.uc.jouable:focus-visible { transform: none; }
+.uno-fan-carte:hover, .uno-fan-carte:focus-within { z-index: 90 !important; transform: rotate(var(--r, 0deg)) translateY(-26px) scale(1.08); }
+.uno-fan-carte:has(.bloquee):hover { transform: rotate(var(--r, 0deg)) translateY(-10px); }
+.uno-fan-carte.leve { z-index: 95 !important; transform: rotate(var(--r, 0deg)) translateY(-22px) scale(1.12); }
+.uno-fan-carte.arrive { opacity: 0; transform: rotate(var(--r, 0deg)) translateY(-30px); }
+.uno-commandes { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.uno-cmd { min-height: 52px; font-size: 16px; padding: 0 20px; }
+.uno-cmd.oblige { border-color: #E2C77E; color: #E2C77E; animation: uno-pulse-or 1.1s ease-in-out infinite; }
+.uno-commandes .uno-btn { min-height: 56px; font-size: 22px; box-sizing: border-box; }
+/* Contre-UNO : rouge, pulsant, avec le nom de la cible ; grisé pendant les 3 secondes de grâce */
+.uno-contre { min-height: 52px; padding: 0 20px; border: 0; border-radius: 14px; cursor: pointer; color: #FFFFFF;
+  font: 400 16px 'Archivo Black', sans-serif; background: #C0202A; box-shadow: 0 0 0 3px rgba(255, 80, 80, .35);
+  animation: uno-alerte .9s ease-in-out infinite; }
+.uno-contre.attend, .uno-contre:disabled { animation: none; filter: saturate(.5) brightness(.75); cursor: wait; }
+@keyframes uno-alerte { 50% { box-shadow: 0 0 0 7px rgba(255, 80, 80, .15), 0 0 30px rgba(255, 60, 60, .8); transform: scale(1.03); } }
+
+/* ---------- Animations des coups ---------- */
+.uno-annonce { position: absolute; left: 50%; top: 48%; z-index: 5; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.4);
+  font: 400 clamp(52px, 8vw, 92px) 'Archivo Black', sans-serif; letter-spacing: 4px; color: #FFFFFF; white-space: nowrap; text-align: center;
+  text-shadow: 0 6px 0 rgba(0, 0, 0, .6), 0 0 40px rgba(252, 163, 1, .9); }
+.uno-annonce.go { animation: uno-annonce 1.6s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+@keyframes uno-annonce { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(-8deg); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.08) rotate(-3deg); } 30% { transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
+  80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%) scale(1) rotate(-3deg); } }
+.uno-annonce .qui { display: block; text-align: center; font: 700 18px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+.uno-txt { background: linear-gradient(120deg, #FE3104, #FCA301, #FBD32D, #159946, #2B5AE2, #4E2398); -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-stroke: 2px #FFFFFF; }
+.uno-txt-rouge { color: #FF4D4D; font-size: .7em; }
+.uno-txt-or { color: #E2C77E; font-size: .7em; }
+.uno-table { position: relative; }
+.uno-coup { position: absolute; z-index: 40; pointer-events: none; opacity: 0; transform: translate(-50%, -50%);
+  font: 400 44px 'Archivo Black', sans-serif; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 24px var(--lueur, #FF5A5A); }
+.uno-coup.go { animation: uno-coup 1.4s ease-out forwards; }
+@keyframes uno-coup { 0% { opacity: 0; transform: translate(-50%, -10%) scale(.3); } 20% { opacity: 1; transform: translate(-50%, -80%) scale(1.25); }
+  40% { transform: translate(-50%, -80%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -150%) scale(1); } }
+.uno-siege-photo.touche .uno-av { animation: uno-secoue .5s; }
+.uno-siege-photo.touche::after { content: ''; position: absolute; left: 50%; top: 50%; width: 110px; height: 110px; border-radius: 50%;
+  border: 4px solid #FF4D4D; transform: translate(-50%, -50%); animation: uno-onde .8s ease-out forwards; pointer-events: none; }
+@keyframes uno-onde { from { opacity: 1; transform: translate(-50%, -50%) scale(.5); } to { opacity: 0; transform: translate(-50%, -50%) scale(1.4); } }
+@keyframes uno-secoue { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+.uno-tampon { position: absolute; left: 50%; top: 50%; opacity: 0; pointer-events: none; transform: translate(-50%, -50%) scale(2); z-index: 3; }
+.uno-siege-photo.bloque .uno-tampon { animation: uno-tampon 1.4s ease-out forwards; }
+@keyframes uno-tampon { 0% { opacity: 0; transform: translate(-50%, -50%) scale(2.2) rotate(-20deg); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-12deg); } 80% { opacity: 1; } 100% { opacity: 0; } }
+/* Carte piochée qui vole de la pioche à la main (élément posé sur <body>) */
+.uno-vole { position: fixed; z-index: 70; pointer-events: none; transition: transform .4s cubic-bezier(.3, .7, .3, 1), opacity .4s ease; }
 
 .uno-defi { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px;
   border-radius: 16px; border: 1px solid #E2C77E; background: rgba(23, 23, 26, .92); }
@@ -122,7 +215,7 @@
 .uno-cible { width: 100%; min-height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 14px;
   border-radius: 16px; border: 1px solid #3A3A40; background: #17171A; color: #F2EFEA; font: inherit; text-align: left; cursor: pointer; }
 .uno-cible:hover, .uno-cible:focus-visible { border-color: #E2C77E; }
-.uno-cible .uno-avatar { width: 40px; height: 40px; font-size: 13px; }
+.uno-cible .uno-av .avatar { font-size: 13px; }
 .uno-cible-nom { flex: 1; font-weight: 700; }
 .uno-cible-nb { font-size: 13px; color: var(--muted); }
 
@@ -149,33 +242,36 @@
   .uno-barre { flex-wrap: wrap; gap: 8px 12px; margin-top: 8px; padding: 10px 12px; border-radius: 16px; }
   .uno-barre-titre { flex: 1 1 0; min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
   .uno-nom { font-size: 16px; max-width: 100%; }
-  .uno-sens { order: 4; flex-basis: 100%; font-size: 13px; }
+  .uno-sens { order: 4; font-size: 13px; padding: 4px 10px 4px 6px; }
   .uno-chrono { order: 2; }
   .uno-chrono-texte { font-size: 14px; min-width: 0; }
   .uno-anneau { width: 44px; height: 44px; }
+  .uno-barre .adrep-btn { order: 5; }
   .uno-bouton-chat { order: 3; width: 44px; min-width: 44px; padding: 0; justify-content: center; }
   .uno-bouton-chat .uno-chat-libelle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   .uno-corps { display: flex; flex-direction: column; gap: 12px; }
-  .uno-plateau { height: auto; display: flex; flex-direction: column; gap: 10px; }
+  .uno-plateau { height: auto; display: flex; flex-direction: column; gap: 10px; padding: 8px; border-radius: 20px; }
   .uno-sieges { position: relative; inset: auto; z-index: 2; display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 6px;
     scroll-snap-type: x proximity; scrollbar-width: thin; }
   .uno-siege, .uno-siege.uno-serre { position: relative; left: auto; top: auto; transform: none; flex: none; width: 104px; scroll-snap-align: start; }
   .uno-siege-cartes { flex-direction: column; gap: 2px; white-space: nowrap; }
-  .uno-siege.uno-serre .uno-avatar { width: 56px; height: 56px; font-size: 15px; }
-  .uno-tapis { position: relative; inset: auto; height: 300px; }
-  .uno-ovale { left: 0; right: 0; top: 0; bottom: 0; }
+  .uno-siege { width: 88px; padding: 6px 4px; }
+  .uno-siege .avatar { width: 46px !important; height: 46px !important; }
+  .uno-badge-siege { right: -16px; font-size: 12px; }
+  .uno-tapis { position: relative; inset: auto; height: 250px; }
+  .uno-ovale, .uno-fleches { left: 4px; right: 4px; top: 4px; bottom: 4px; }
+  .uno-ovale::after { font-size: 80px; }
   .uno-tapis-centre { width: calc(100% - 44px); }
   .uno-pile { gap: 20px; }
   .uno-pilule { font-size: 13px; }
 
-  .uno-bas-ligne { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .uno-moi { order: 0; }
-  .uno-main-cartes { justify-content: flex-start; overflow-x: auto; min-height: 150px; padding: 18px 12px 6px; scrollbar-width: none; }
-  .uno-eventail-main { margin: 0 4px; transform: none; }
-  .uno-commandes { flex-direction: row; flex-wrap: wrap; }
-  .uno-cmd { flex: 1 1 120px; width: auto; }
-  .uno-commandes .uno-btn { flex: 1.4 1 200px; }
+  .uno-bas-ligne { padding: 10px 12px; }
+  .uno-main-zone { padding: 8px 10px 0; }
+  .uno-commandes { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  .uno-cmd, .uno-contre { width: 100%; font-size: 14px; padding: 0 8px; }
+  .uno-commandes .uno-btn { width: 100%; font-size: 18px; transform: none; }
+  .uno-annonce .qui { font-size: 13px; }
   .uno-journal { max-height: 140px; }
 
   .uno-corps .uno-chat { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; height: 72vh; max-height: 72vh; border-radius: 20px 20px 0 0;
@@ -186,8 +282,12 @@
   .uno-chat-fermer { display: inline-flex; }
 }
 
+@media (min-width: 761px) { .uno-aide-tel { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .uno-sens-icone, .uno-anneau circle[data-anneau], .uno-pioche .ub, .uno-corps .uno-chat { transition: none !important; }
+  .uno-sens-icone, .uno-anneau circle[data-anneau], .uno-pioche .ub, .uno-corps .uno-chat, .uno-fan-carte, .uno-vole { transition: none !important; }
+  .uno-sens-icone, .uno-joue, .uno-pioche.oblige, .uno-cmd.oblige, .uno-contre, .uno-annonce.go, .uno-coup.go { animation: none !important; }
+  .uno-annonce, .uno-coup { display: none; }
 }
 
 /* Écran peu haut (portable 720-800 px) : la table rétrécit pour garder la main visible, les sièges aussi. */

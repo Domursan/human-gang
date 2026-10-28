@@ -75,6 +75,7 @@ begin
     end if;
     -- Contre : un autre joueur contre parfois un oubli de UNO.
     if p.uno_attente is not null and random() < 0.5 then
+      update hg_uno_parties set uno_depuis = now() - interval '5 seconds' where id = v_id;  -- délai de grâce écoulé
       perform t_callu((select user_id from hg_uno_joueurs where partie = v_id and not exclu and user_id <> p.uno_attente order by random() limit 1),
         format('hg_uno_contrer(%L, %L)', v_code, p.uno_attente));
       continue;
@@ -84,15 +85,15 @@ begin
       perform t_callu(u, format('hg_uno_contester(%L, %s)', v_code, (random() < 0.4)::text));
       continue;
     end if;
-    -- UNO à 2 cartes avant de poser (souvent).
-    if (select nb_cartes from hg_uno_joueurs where partie = v_id and user_id = u) = 2 and random() < 0.8 then
-      perform t_callu(u, format('hg_uno_uno(%L)', v_code));
-    end if;
     select c into carte from jsonb_array_elements(e->'main') c where (c->>'jouable')::boolean order by random() limit 1;
     if carte is not null then
       select couleur into v_coul from (values ('r'),('y'),('g'),('b')) t(couleur) order by random() limit 1;
       select user_id into v_cible from hg_uno_joueurs where partie = v_id and not exclu and user_id <> u order by random() limit 1;
       perform t_callu(u, format('hg_uno_jouer(%L, %s, %L, %L)', v_code, carte->>'id', v_coul, v_cible));
+      -- UNO juste après avoir posé l'avant-dernière carte (souvent).
+      if (select nb_cartes from hg_uno_joueurs where partie = v_id and user_id = u) = 1 and random() < 0.8 then
+        perform t_callu(u, format('hg_uno_uno(%L)', v_code));
+      end if;
     elsif (e->'partie'->>'a_pioche')::boolean then
       perform t_callu(u, format('hg_uno_passer(%L)', v_code));
     else

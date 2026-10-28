@@ -2,7 +2,9 @@
 /*
  * Rôle : écran d'une partie pas encore lancée. Code et lien à partager, joueurs et leur « prêt »,
  * règles de la partie, chat du salon, actions (être prêt, lancer si hôte, quitter).
- * L'hôte peut retirer un joueur. Un invité qui quitte voit un message d'au revoir à la place de la salle.
+ * L'hôte peut retirer un joueur et modifier les règles (durée du tour, mode, variantes) tant que la partie n'est pas
+ * lancée : chaque changement remet les autres joueurs « pas prêts » (règle serveur hg_uno_regles, migration 171).
+ * Les autres voient les mêmes réglages en lecture seule, avec « Modifié par l'hôte » quand une règle change. Un invité qui quitte voit un message d'au revoir à la place de la salle.
  * Les zones qui changent ne sont réécrites que si leurs données ont changé, pour ne pas perdre le focus.
  * Dépendances : core.js (esc, avatarHtml, toast), uno/api.js (uno, erreurTexte, estInvite), uno/vues/chat.js (creerChat).
  * Exporte : creer.
@@ -33,13 +35,15 @@ function pseudoHtml(j) {
     + (j.invite ? ' <span class="uno-invite-tag">invité</span>' : '');
 }
 
-/** Libellés des variantes actives (ordre d'affichage). */
+/** Variantes : clé, libellé, explication (même texte qu'à la création). */
 const VARIANTES = [
-  ['cumul', 'Cumul des +2 et +4'],
-  ['pioche_jusqu', 'Pioche jusqu\'à jouer'],
-  ['sept_zero', 'Sept-zéro'],
-  ['interception', 'Interception'],
+  ['cumul', 'Cumul des +2 et +4', 'Un +2 ou +4 peut être contré par une carte semblable. Les pénalités s\'additionnent.'],
+  ['pioche_jusqu', 'Pioche jusqu\'à jouer', 'On pioche jusqu\'à tomber sur une carte jouable, au lieu d\'une seule.'],
+  ['sept_zero', 'Sept-zéro', 'Un 7 échange ta main avec un autre joueur, un 0 fait tourner toutes les mains.'],
+  ['interception', 'Interception', 'On peut poser une carte identique à la défausse, même hors de son tour.'],
 ];
+const DUREES = [15, 30, 60];
+const MODES = [['manche', 'Manche simple'], ['points', '500 points']];
 
 /**
  * Monte la salle d'attente dans root.
@@ -53,6 +57,7 @@ export function creer(root, ctx) {
   let busy = false;
   let fini = false;
   let dernierEtat = suivi.etat();
+  let reglesVues = null;      // règles au premier affichage (pour signaler « Modifié par l'hôte »)
 
   root.innerHTML = `
     <div class="uno-salle">
@@ -172,6 +177,26 @@ export function creer(root, ctx) {
     essayer(() => uno.exclure(code, uid));
   });
 
+  // ----- Règles : l'hôte les modifie (segments et interrupteurs) -----
+  zRegles.addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-regle]');
+    if (!b || b.disabled || !dernierEtat?.moi?.hote) return;
+    const p = dernierEtat.partie;
+    const cle = b.dataset.regle;
+    let changement;
+    if (cle === 't_tour') changement = { t_tour: Number(b.dataset.valeur) };
+    else if (cle === 'mode') changement = { mode: b.dataset.valeur };
+    else changement = { variantes: { ...(p.variantes || {}), [cle]: b.getAttribute('aria-checked') !== 'true' } };
+    if (cle === 't_tour' && changement.t_tour === p.t_tour) return;
+    if (cle === 'mode' && changement.mode === p.mode) return;
+    const focus = `${cle}:${b.dataset.valeur || ''}`;
+    essayer(async () => {
+      await uno.regles(code, changement);
+      await suivi.rafraichir();
+      zRegles.querySelector(`[data-focus="${CSS.escape(focus)}"]`)?.focus();
+    });
+  });
+
   // ----- Rendus -----
   function rendreTitre(p) {
     zTitre.textContent = p.nom || 'Partie d\'Uno';
@@ -223,22 +248,36 @@ export function creer(root, ctx) {
   function rendreRegles(e) {
     const p = e.partie;
     const v = p.variantes || {};
-    const actives = VARIANTES.filter(([cle]) => v[cle]).map(([, libelle]) => libelle);
-    const modeTxt = p.mode === 'points' ? 'Mode points (on joue jusqu\'à 500 points)' : 'Mode manche simple';
+    const hote = !!e.moi?.hote && p.statut === 'attente';
+    const signature = JSON.stringify([v, p.t_tour, p.mode]);
+    if (reglesVues == null) reglesVues = signature;
+    const modifie = !hote && reglesVues !== signature;
+    const seg = (cle, titre, aide, options, valeur) => `
+      <div class="uno-regle">
+        <div class="uno-regle-txt"><span id="uno-r-${cle}">${esc(titre)}</span><small>${esc(aide)}</small></div>
+        <div class="uno-regle-seg" role="group" aria-labelledby="uno-r-${cle}">${options.map(([val, lib]) => `
+          <button type="button" data-regle="${cle}" data-valeur="${esc(val)}" data-focus="${cle}:${esc(val)}"
+            aria-pressed="${String(String(val) === String(valeur))}"${hote ? '' : ' disabled'}>${esc(lib)}</button>`).join('')}</div>
+      </div>`;
+    const interr = ([cle, titre, aide]) => `
+      <div class="uno-regle">
+        <button type="button" class="uno-interr" data-regle="${cle}" data-focus="${cle}:" role="switch" aria-checked="${String(!!v[cle])}" aria-label="${esc(titre)}"${hote ? '' : ' disabled'}></button>
+        <div class="uno-regle-txt"><span>${esc(titre)}</span><small>${esc(aide)}</small></div>
+      </div>`;
     const html = `
       <h2 id="uno-salle-regles-titre">Règles de la partie</h2>
-      <ul class="uno-regles">
-        ${actives.map((l) => `<li>${esc(l)}</li>`).join('')}
-        <li>Tours de ${esc(p.t_tour)} secondes</li>
-        <li>${esc(modeTxt)}</li>
-      </ul>
-      ${actives.length ? '' : '<p class="small muted">Aucune variante active.</p>'}
-      <p class="small muted">Les variantes non cochées sont désactivées pour cette partie.</p>`;
-    zone(zRegles, JSON.stringify([v, p.t_tour, p.mode]), html);
+      ${seg('t_tour', 'Temps par tour', 'Le jeu joue à ta place quand le temps est écoulé.', DUREES.map((d) => [d, `${d} s`]), p.t_tour)}
+      ${seg('mode', 'Mode', 'Une manche, ou le premier à 500 points.', MODES, p.mode)}
+      ${VARIANTES.map(interr).join('')}
+      <p class="small muted uno-regles-note">${hote
+    ? 'Tu peux changer les règles jusqu\'au lancement. Chaque changement remet les autres joueurs « pas prêts ».'
+    : (modifie ? '<strong class="uno-modifie">Modifié par l\'hôte</strong> : relis les règles avant de te dire prêt.' : 'Seul l\'hôte peut changer les règles.')}</p>`;
+    zone(zRegles, JSON.stringify([signature, hote, modifie, busy]), html);
   }
 
   function rendreActions(e) {
     if (!e?.partie) return;
+    rendreRegles(e);
     const p = e.partie;
     const mon = e.moi || {};
     const joueurs = e.joueurs || [];

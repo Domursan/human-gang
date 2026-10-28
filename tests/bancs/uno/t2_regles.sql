@@ -59,8 +59,11 @@ begin
   update hg_uno_cartes set user_id = null, lieu = 'pioche' where partie = v_id and user_id = u2 and id not in (select id from hg_uno_cartes where partie = v_id and user_id = u2 order by id limit 2);
   perform hg_uno__compter(v_id);
   c := (select id from hg_uno_cartes where partie = v_id and user_id = u2 order by id limit 1);
+  perform t_ok(t_err(2, format('hg_uno_uno(%L)', v_code)) like 'Pose d''abord%', 'UNO refusé à 2 cartes');
   perform t_call(2, format('hg_uno_jouer(%L, %s)', v_code, c));
   perform t_ok((select uno_attente from hg_uno_parties where id = v_id) = u2, 'oubli de UNO : le joueur 2 est contrable');
+  perform t_ok(t_err(3, format('hg_uno_contrer(%L, %L)', v_code, u2)) like 'Laisse-lui%', 'pas de contre pendant les 3 secondes de grâce');
+  update hg_uno_parties set uno_depuis = now() - interval '5 seconds' where id = v_id;
   perform t_call(3, format('hg_uno_contrer(%L, %L)', v_code, u2));
   perform t_ok((select nb_cartes from hg_uno_joueurs where partie = v_id and user_id = u2) = 3, 'contré : 2 cartes de pénalité');
   perform t_ok(t_err(1, format('hg_uno_contrer(%L, %L)', v_code, u2)) like 'Trop tard%', 'on ne contre pas deux fois');

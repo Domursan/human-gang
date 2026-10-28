@@ -12,7 +12,7 @@ import { getPrefs, writePrefs, PREF_DEFAULTS } from './prefs-state.js';
 import { paintSiteTheme, paintActiveTheme, getActiveTheme } from './theme.js';
 import { startEffects } from './effects.js';
 import { reducedMotion } from './util.js';
-import { playSound } from '../sound.js';
+import { playSound, playTurnSound } from '../sound.js';
 import { ICON_CLOSE } from './icons.js';
 
 /* ---------- Application d'une modification ---------- */
@@ -90,6 +90,10 @@ function buildPrefsDialog() {
           <input class="pref-switch" type="checkbox" role="switch" name="sound">
         </label>
         <label class="switch-row">
+          <span class="switch-txt"><strong>Son « à toi de jouer »</strong><small>Dans les jeux à plusieurs : un petit son quand ton tour commence (même si les autres sons sont coupés).</small></span>
+          <input class="pref-switch" type="checkbox" role="switch" name="sonTour">
+        </label>
+        <label class="switch-row">
           <span class="switch-txt"><strong>Révéler mes boosters d’un coup</strong><small>Sans la séquence animée : toutes les cartes s’affichent tout de suite.</small></span>
           <input class="pref-switch" type="checkbox" role="switch" name="revealDirect">
         </label>
@@ -120,6 +124,7 @@ function buildPrefsDialog() {
     }
     else if (['special', 'effects', 'revealDirect', 'shortcuts'].includes(el.name)) setPrefs({ [el.name]: el.checked });
     else if (el.name === 'sound') { setPrefs({ sound: el.checked }); if (el.checked) playSound('success'); }
+    else if (el.name === 'sonTour') { setPrefs({ sonTour: el.checked }); if (el.checked) playTurnSound(); }
   });
   const vol = f.elements.volume;
   vol.addEventListener('input', () => { setPrefs({ volume: Number(vol.value) / 100 }); }); // le son suit le curseur en direct
@@ -147,6 +152,7 @@ function syncPrefsDialog() {
   f.elements.sound.checked = p.sound;
   f.elements.revealDirect.checked = p.revealDirect;
   f.elements.shortcuts.checked = p.shortcuts;
+  f.elements.sonTour.checked = p.sonTour;
   f.elements.volume.value = String(Math.round(p.volume * 100));
   f.elements.volume.disabled = !p.sound;
   f.querySelector('.prefs-test').disabled = !p.sound;
