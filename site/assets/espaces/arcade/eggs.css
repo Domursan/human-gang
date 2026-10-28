@@ -75,6 +75,13 @@ html.egg-arc .egg-arc-calque {
   100% { background-position: 0% 50%; }
 }
 
+/* ---------- Notification « Secret trouvé » : ne bloque pas les clics sur les boutons dessous ---------- */
+
+.toasts:has(> .egg-toast),
+.toast.egg-toast {
+  pointer-events: none;
+}
+
 /* ---------- Heure du gang : message dans le pied de page ---------- */
 
 .egg-gang {
@@ -103,6 +110,7 @@ html.egg-arc .egg-arc-calque {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+  pointer-events: none; /* la chouette et sa bulle ne bloquent jamais un clic sur les boutons dessous */
   animation: egg-traverse 9s linear forwards;
 }
 
@@ -112,6 +120,7 @@ html.egg-arc .egg-arc-calque {
 }
 
 .egg-bulle {
+  pointer-events: none;
   margin-bottom: 36px;
   padding: 6px 10px;
   border: 1px solid var(--border-strong);

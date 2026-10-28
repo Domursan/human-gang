@@ -30,11 +30,12 @@ function toastBox() {
  * Affiche un message temporaire (4,5 secondes). Un son est joué selon le type.
  * @param {string} msg Texte affiché (jamais interprété comme HTML).
  * @param {'ok'|'success'|'error'|''} [type=''] Type : 'ok' ou 'success' (son de succès), 'error' (alerte annoncée tout de suite).
+ * @param {string} [classe=''] Classe ajoutée au message (ex. « egg-toast » : le message ne bloque pas les clics, voir eggs.css).
  */
-export function toast(msg, type = '') {
+export function toast(msg, type = '', classe = '') {
   const box = toastBox();
   const t = document.createElement('div');
-  t.className = `toast ${type}`; t.textContent = msg;
+  t.className = `toast ${type} ${classe}`.trim(); t.textContent = msg;
   if (type === 'error') t.setAttribute('role', 'alert'); // les erreurs sont annoncées tout de suite
   box.append(t);
   if (type === 'ok' || type === 'success') playSound('success');

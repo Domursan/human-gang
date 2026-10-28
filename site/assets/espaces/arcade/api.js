@@ -35,9 +35,9 @@ export async function eggFound(code, extra = {}, opts = {}) {
     if (data?.new) {
       const gains = [data.reward > 0 ? `+${data.reward} ${paillSym()}` : '', data.card ? `carte « ${data.card} »` : '', data.badge ? `badge « ${data.badge} »` : '']
         .filter(Boolean).join(' · ');
-      toast(`🔍 ${data.message}${gains ? ` (${gains})` : ''}`, 'success');
+      toast(`🔍 ${data.message}${gains ? ` (${gains})` : ''}`, 'success', 'egg-toast');
     } else if (data && !opts.silencieux) {
-      toast(`🔍 ${data.message}`);
+      toast(`🔍 ${data.message}`, '', 'egg-toast');
     }
     return data ?? null;
   } catch {

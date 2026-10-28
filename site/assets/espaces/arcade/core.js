@@ -498,18 +498,32 @@ function voitureDomu(anime) {
 /* ---------- Heure du gang (13 h 37) et nuit profonde (3 h) à Zurich ---------- */
 
 let heureVue = false;
+let attentePied = null; // MutationObserver actif tant que le pied de page n'est pas posé à 13 h 37
 
 /**
  * Affiche « 13 h 37 · l'heure du gang » dans le pied de page quand il est 13 h 37 à Zurich.
- * Le pied peut arriver après la page : on réessaie à chaque vérification tant qu'il n'est pas là.
+ * Le pied peut arriver après la page : un MutationObserver (sur <body>) l'affiche dès qu'il est posé,
+ * et la vérification toutes les 20 s reste en secours. Une seule fois (heureVue), donc pas de double affichage.
  */
 function verifieHeure() {
   if (heureVue) return;
   const z = heureZurich();
-  if (z.h !== 13 || z.min !== 37) return;
+  if (z.h !== 13 || z.min !== 37) {
+    attentePied?.disconnect(); // l'heure est passée : inutile d'attendre le pied de page
+    attentePied = null;
+    return;
+  }
   const pied = document.querySelector('.site-footer > .container') || document.querySelector('.site-footer');
-  if (!pied) return;
+  if (!pied) {
+    if (!attentePied) {
+      attentePied = new MutationObserver(verifieHeure);
+      attentePied.observe(document.body, { childList: true });
+    }
+    return;
+  }
   heureVue = true;
+  attentePied?.disconnect();
+  attentePied = null;
   const p = document.createElement('p');
   p.className = 'egg-gang egg-gang-anim';
   p.setAttribute('role', 'status');
