@@ -32,7 +32,7 @@ Un bot Discord prévient les membres (MP et annonces) : tirage, sorties, anniver
 
 ## Comment c'est construit
 
-- **Front-end** : HTML, CSS et JavaScript « vanilla » (modules ES), **sans étape de build**. Chaque page HTML charge son script `assets/js/<page>.js`.
+- **Front-end** : HTML, CSS et JavaScript « vanilla » (modules ES), sans framework. Une seule étape de build : `outils/build/construire.mjs` (esbuild) assemble `site/` dans `_site/`, qui est ce que GitHub Pages publie. Chaque page HTML charge son script `assets/espaces/<espace>/<page>.js` (par exemple `assets/espaces/irl/historique.js`, via `site-boot.js`).
 - **Hébergement** : GitHub Pages, branche `main`.
 - **Back-end** : Supabase (base Postgres, authentification, stockage de fichiers, temps réel).
   - Les règles d'accès sont dans la base (RLS) : le navigateur n'a que la clé publique.
@@ -101,27 +101,26 @@ Un clic sur la photo ouvre un quart de cercle d'icônes :
 
 Tout se règle depuis **Administration** (`pages/admin/admin.html`), sans toucher au code. L'adresse d'une section est `pages/admin/admin.html#domaine/sous-section`.
 
-### Vue d'ensemble et « Mes raccourcis »
+### Le plateau et les sept lieux
 
-La vue d'ensemble (Pilotage › Vue d'ensemble) affiche les chiffres clés, les éléments à traiter, l'activité récente et, à gauche, **Mes raccourcis** : une grande tuile par sous-section. Les raccourcis sont propres à chaque personne ; « Modifier » ou « + Ajouter » permet de les choisir et de les ranger (24 au plus). Sans choix enregistré, des raccourcis par défaut sont proposés (six au plus). Chaque élément n'apparaît que si les droits de la personne le permettent.
+L'accueil du panel est le **plateau** (`#plateau`) : une carte par lieu permis à la personne. Chaque lieu regroupe des sous-sections, et ses pastilles indiquent ce qui est à traiter.
 
-### Les six domaines
-
-| Domaine | Sous-sections principales |
+| Lieu (adresse) | Sous-sections principales |
 | --- | --- |
-| **Pilotage** | Vue d'ensemble, Planning, Journal, Staff (administrateur), Bot Discord et commandes slash, Site (identité, textes, menu, état du site, erreurs, archives, clés avancées), Thème, Assistance, Boîte à idées, Messagerie, Fil d'activité |
-| **Membres** | Comptes (comptes, rôles, à relancer, invitations, champs du profil, vie sociale, accueil), Entraide (parrainage, compétences), Accès aux pages (pages, matrice membres × pages), Badges (catalogue, attribution, critères automatiques) |
-| **IRL** | Membres IRL, Sorties IRL, Souvenirs et photos, Secret Santa |
-| **Event** | Événements à thème, Calendrier et cinéma, Calendrier de l'Avent, Saison des Worlds, Anniversaire du gang |
-| **Le jeu de cartes** | Gestion globale, Catalogue (séries, cartes, boosters), Économie (Paillettes et dons, tirage, recyclage et fabrication, limites), Animation (quêtes, défis du gang, drops, cagnotte, cartes Champions, codes cadeaux, atelier, enchères), Suivi (joueurs, échanges, statistiques), Arène |
-| **Autres jeux** | Questions du gang, Sutom du gang, GeoGuessr, citations « Qui a dit ça ? », preuves de quêtes, Framed et Heardle, Arcade (pages 404), Secrets, Mes jeux |
+| **La Place du gang** (`#place`) | Membres (comptes, rôles, champs du profil, vie sociale), Relances, Entraide, Accès aux pages, Badges |
+| **La Poste** (`#poste`) | Assistance, Boîte à idées, Messagerie, Fil d'activité, Bot Discord, Commandes slash |
+| **La Salle des ventes** (`#ventes`) | Enchères, Échanges entre membres |
+| **Le Camp IRL** (`#camp`) | Membres IRL, Sorties IRL, Souvenirs et photos, Secret Santa |
+| **La Fabrique de cartes** (`#fabrique`) | Gestion globale, Arène (`#fabrique/arene`), Catalogue, Joueurs, Statistiques, Économie, Quêtes, Défis, Drops, Atelier |
+| **La Fête foraine** (`#fete`) | Événements à thème, Calendrier et cinéma, Avent, Worlds, Anniversaire, Jeux (questions, Sutom, GeoGuessr, citations, Arcade, Secrets, Mes jeux) |
+| **La Mairie** (`#mairie`) | Planning, Journal, Staff, Le site (identité, textes, menu, thème), Technique (état du site, erreurs, archives, clés avancées) |
 
-Une sous-section sans droit n'est ni affichée ni ouverte. Une touche Ctrl/Cmd + K ouvre la palette « Aller à… ». Les données se mettent à jour en direct, sauf pendant une saisie (un bandeau « Actualiser » apparaît).
+Une sous-section sans droit n'est ni affichée ni ouverte. Une touche Ctrl/Cmd + K ouvre la palette « Tout le panel ». Les données se mettent à jour en direct, sauf pendant une saisie (un bandeau « Actualiser » apparaît). Détail complet (sections, adresses, anciennes adresses) : `docs/ADMIN-PANEL.md`.
 
 ### Rôles et droits
 
 - **Administrateur** : tous les droits. Réservé à l'administrateur, non délégable : promotion d'un administrateur, gestion du Staff, mode sans limite, journal des lectures de messages, adresses e-mail.
-- **Staff** : une liste de permissions parmi les 12 du catalogue (`membres`, `evenements`, `souvenirs`, `secret_santa`, `cartes`, `badges`, `themes`, `messages`, `support`, `bot`, `reglages`, `journal`). Détail dans `docs/ADMIN-PANEL.md`.
+- **Staff** : une liste de permissions parmi les 15 du catalogue (`membres`, `evenements`, `souvenirs`, `secret_santa`, `cartes`, `badges`, `themes`, `messages`, `support`, `bot`, `reglages`, `journal`, `quiz`, `preuves`, `mj`). Détail dans `docs/ADMIN-PANEL.md`.
 - **Rôles** (Membres › Comptes › Rôles) : un rôle prérègle l'accès à des pages pour les membres qui le portent. Un réglage fait à la main sur une page l'emporte toujours sur le rôle.
 
 ### Voir le site comme un membre
@@ -130,7 +129,7 @@ Depuis la fiche d'un membre (Membres › Comptes), **Voir le site comme…** ouv
 
 ### Arène v2 (aperçu admin)
 
-Jeu de cartes › **Arène** (`pages/cartes/cartes.html#arene` pour le site, `pages/admin/admin.html#cartes/arene` pour le panel) contient deux blocs :
+Jeu de cartes › **Arène** (`pages/cartes/cartes.html#arene` pour le site, `pages/admin/admin.html#fabrique/arene` pour le panel, lieu La Fabrique de cartes › Arène) contient deux blocs :
 - l'**Arène actuelle**, ouverte aux membres, avec ses gains et plafonds ;
 - l'**Arène v2**, visible des seuls administrateurs : réglages, aperçu du classement, saisons passées, clôture de saison. Elle ne s'ouvre aux membres que si le réglage `arena.v2_public` est activé. Règles et chiffres : `docs/ARENE.md`.
 
@@ -162,6 +161,7 @@ Seul `site/` est publié (voir [docs/PUBLICATION.md](docs/PUBLICATION.md)) ; le 
 │   ├── sw.js               Service worker (cache hors ligne, notifications push)
 │   ├── manifest.webmanifest   Application installable
 │   └── CNAME               Nom de domaine (humane-gang.com)
+├── outils/                 Outils de développement : build du site (build/construire.mjs), images, SQL, nj
 ├── impression/             Documents à imprimer qui ne sont pas publiés (solutions des secrets)
 ├── supabase/
 │   ├── migrations/         Historique du schéma (numérotées, appliquées dans l'ordre)
@@ -170,7 +170,7 @@ Seul `site/` est publié (voir [docs/PUBLICATION.md](docs/PUBLICATION.md)) ; le 
 │   ├── functions/          Fonctions edge (bot Discord, tâches programmées) + _shared/
 │   └── ADMIN.md            Administrateur de secours
 ├── docs/                   Documentation (voir la liste plus bas) et captures de recette (docs/captures/qa)
-├── tests/                  Tests automatiques (Playwright) et faux Supabase
+├── tests/                  Tests automatiques (Playwright), faux Supabase, bancs SQL (bancs/) et contrôles (controles/)
 └── .github/workflows/      Intégration continue et publication du site (publier-site.yml)
 ```
 
@@ -200,12 +200,12 @@ Puis ouvrir l'adresse indiquée (par exemple http://localhost:3000 ou :8000). Le
 5. Un menu ou un lien de page se règle ensuite dans le panel (Menu et pied de page, Accès aux pages).
 
 ### Mettre en ligne une nouvelle version
-1. Si un fichier précaché (JS ou CSS) a changé, ou si la liste `PRECACHE` ou la logique de `sw.js` a changé, **augmenter `CACHE_VERSION`** dans `sw.js` (ex. `v62` → `v63`). Sans ça, les membres gardent l'ancienne version en cache.
+1. Incrémenter `CACHE_VERSION` dans `site/sw.js` à chaque changement de JS ou CSS du site ; la publication l'incrémente aussi dans sa copie (`outils/build/construire.mjs`). Règle unique, la même que dans `PLAN-DU-DEPOT.md`. Sans ça, les membres gardent l'ancienne version en cache.
 2. Lancer les vérifications et les tests (voir plus bas).
-3. Pousser sur `main` : le workflow `publier-site.yml` publie le contenu de `site/` sur GitHub Pages en une à deux minutes. Détails : [docs/PUBLICATION.md](docs/PUBLICATION.md).
+3. Pousser sur `main` : le workflow `publier-site.yml` construit `_site/` à partir de `site/` puis publie `_site/` sur GitHub Pages en une à deux minutes. Détails : [docs/PUBLICATION.md](docs/PUBLICATION.md).
 
 ### Modifier la base de données
-- Le **numéro le plus haut** actuellement présent est `105_securite.sql`. Une nouvelle migration prend le numéro suivant (ex. `106_mon_changement.sql`), dans `supabase/migrations/`.
+- Le **numéro le plus haut** actuellement présent est `166_plateaux_droits_internes.sql`. Une nouvelle migration prend le numéro suivant (`167_…`), dans `supabase/migrations/`.
 - Quelles migrations sont appliquées en production, et les trous de numérotation : [supabase/migrations/README.md](supabase/migrations/README.md). Le schéma réel de référence : `supabase/schema/`.
 - L'appliquer sur Supabase (éditeur SQL ou CLI), puis le committer.
 - Ne jamais modifier une migration déjà appliquée : en écrire une nouvelle.
@@ -220,13 +220,16 @@ Puis ouvrir l'adresse indiquée (par exemple http://localhost:3000 ou :8000). Le
 
 Les tests utilisent Playwright et un faux Supabase : aucune donnée réelle n'est touchée.
 ```
+cd tests
 npm install
 npm run check        # vérification syntaxique des JS et des règles de publication
 npm run test:rpc     # chaque fonction et table appelée existe dans le schéma ou les migrations
 npm run test:smoke   # toutes les pages s'ouvrent sans erreur
 npm test             # suite complète des parcours
 ```
-Un seul parcours se lance avec `node tests/<nom-du-fichier>` (par exemple `node tests/parcours-admin-nav.cjs`). Le détail de chaque test est dans [tests/README.md](tests/README.md). La première fois, Chromium s'installe avec `npx playwright install chromium`.
+Un seul parcours se lance avec `node <chemin>` depuis `tests/` (par exemple `node parcours/admin/parcours-admin-nav.cjs`). Le détail de chaque test est dans [tests/README.md](tests/README.md). La première fois, Chromium s'installe avec `npx playwright install chromium`.
+
+Les bancs SQL (PostgreSQL local, sans navigateur) sont dans `tests/bancs/` ; le banc des cartes est décrit dans [tests/bancs/cartes/README.md](tests/bancs/cartes/README.md).
 
 ---
 

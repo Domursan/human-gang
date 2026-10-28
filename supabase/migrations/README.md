@@ -4,8 +4,12 @@ Ce dossier contient l'historique des modifications de la base, dans l'ordre. Les
 ont été appliqués à la main (SQL Editor) ou via l'outil de migration ; les noms ne sont pas
 renommés, car ils sont déjà référencés en production.
 
-**Source de vérité** : `supabase/schema/schema_reel_2026-10-21b.sql`. Il reconstitue l'état réel
-du schéma `public` tel qu'il est en base le 21/10/2026. L'ancien `schema_reel_2026-10-21.sql` est périmé
+**Dernière migration : `166_plateaux_droits_internes.sql`** (état au 28/10/2026). Le journal des applications
+est `supabase/appliquees.txt` (depuis la 138) ; la liste à appliquer est `supabase/appliquer.txt`.
+
+**Schéma de référence** : `supabase/schema/schema_reel_2026-10-21b.sql` reconstitue le schéma `public` tel qu'il
+était en base le 21/10/2026, après la migration 131. Il ne couvre donc pas les migrations 132 à 166 : voir
+`supabase/schema/README.md`. L'ancien `schema_reel_2026-10-21.sql` est périmé
 (il ne couvre pas les migrations 020 à 032). Les migrations 006, 009, 011, 012, 015 et 017
 sont des résumés (le SQL exact a été exécuté pendant une session et n'a pas été conservé) : en cas
 de différence, c'est le schéma reconstitué qui fait foi.
@@ -46,24 +50,148 @@ de différence, c'est le schéma reconstitué qui fait foi.
 | `069_types_boosters.sql` | Types de boosters (9 types, stock par type, garantie et limites par type), achat, ouverture, dons de boosters par type ; remplace le 067 (brouillon jamais appliqué) ; `hg_wallets.gift_boosters` versé dans le stock « classique » | appliqué (outil de migration, 22/10) |
 | `070_bot_multi_salons.sql` | Bot Discord : détail par salon des envois (`hg_bot_log.channels`), annonces dans plusieurs salons | appliqué (outil de migration, 22/10) |
 | `071_boosters_admin.sql` | Boosters paramétrables par l'admin et le Staff « cartes » : raretés et séries exclues par type (`excluded_rarities`, `excluded_sets`), RPC `hg_booster_type_save` et `hg_booster_type_stats`, journal des ouvertures `hg_booster_opens` ; Collectionneur sans identité ni série « Les OG » (`gang-membres`) | appliqué (outil de migration, 23/10) |
-| `072_securite_economie.sql` | Sécurité, paquet A (audit du 23/10) : économie (Paillettes, badges) | **à appliquer cette nuit** (dans l'ordre 072 → 075) |
-| `073_securite_profils_staff.sql` | Sécurité (audit du 23/10, paquet B) : garde des profils élargie (I1, I5), fantôme rattaché seulement par lien nominatif (I2), plus d'accès direct du Staff aux messages (I4) ni d'écriture directe sur l'économie (M5), audit `hg_wallets`, bornes des récompenses `hg_settings`, clés inconnues réservées à l'admin, buckets `photos`/`hg-assets`/`d-files`, `hg_backup_027` retirée | **à appliquer** (après 072) |
-| `074_securite_echanges.sql` | Sécurité, paquet C : verrous des exemplaires (dons, échanges, recyclage), captures d'événement, fantômes refusés comme destinataires, plafond et ancienneté des Paillettes échangées (réglage `echanges`), ancienne ouverture payante `hg_open_booster` refusée, liens d'invitation plafonnés, abonnements push contrôlés | **à appliquer cette nuit** (après 073 ; puis le front `cartes.js`, `admin-invite-links.js`) |
-| `075_securite_annonces.sql` | Sécurité, paquet D : annonces | **à appliquer cette nuit** (après 074) |
-| `078_assistance_pj_favoris.sql` | Assistance : pièces jointes (bucket privé `hg-support-files`, table `hg_support_files`, RPC `hg_support_add`) ; cartes en favoris (`hg_card_favorites`, RPC `hg_card_favorite_set`, nettoyage à la sortie de la collection). Aucune récompense | **à appliquer** (après 075) |
+| `072_securite_economie.sql` | Sécurité, paquet A (audit du 23/10) : économie (Paillettes, badges) | 23/10 : à appliquer (dans l'ordre 072 → 075) ; état actuel non journalisé |
+| `073_securite_profils_staff.sql` | Sécurité (audit du 23/10, paquet B) : garde des profils élargie (I1, I5), fantôme rattaché seulement par lien nominatif (I2), plus d'accès direct du Staff aux messages (I4) ni d'écriture directe sur l'économie (M5), audit `hg_wallets`, bornes des récompenses `hg_settings`, clés inconnues réservées à l'admin, buckets `photos`/`hg-assets`/`d-files`, `hg_backup_027` retirée | 23/10 : à appliquer (après 072) ; état actuel non journalisé |
+| `074_securite_echanges.sql` | Sécurité, paquet C : verrous des exemplaires (dons, échanges, recyclage), captures d'événement, fantômes refusés comme destinataires, plafond et ancienneté des Paillettes échangées (réglage `echanges`), ancienne ouverture payante `hg_open_booster` refusée, liens d'invitation plafonnés, abonnements push contrôlés | 23/10 : à appliquer (après 073 ; puis le front `cartes.js`, `admin-invite-links.js`) ; état actuel non journalisé |
+| `075_securite_annonces.sql` | Sécurité, paquet D : annonces | 23/10 : à appliquer (après 074) ; état actuel non journalisé |
+| `078_assistance_pj_favoris.sql` | Assistance : pièces jointes (bucket privé `hg-support-files`, table `hg_support_files`, RPC `hg_support_add`) ; cartes en favoris (`hg_card_favorites`, RPC `hg_card_favorite_set`, nettoyage à la sortie de la collection). Aucune récompense | 23/10 : à appliquer (après 075) ; état actuel non journalisé |
 **État réel au 23/10/2026** : l'outil de migration de production connaît 038 → 071 (plus les migrations `airpe_*` et
 `domursan_01_schema` des autres applications du projet). 001 → 037 et 063 ont été appliqués à la main.
 
+## Règle pour une nouvelle migration
+
+1. Numéro = **dernier numéro + 1** (le plus haut présent dans ce dossier : 166 au 28/10/2026, donc `167_…`), sur trois
+   chiffres. Jamais un numéro déjà pris, même un trou ancien.
+2. Nom : `NNN_sujet_en_minuscules.sql`, en français quand c'est possible.
+3. Ne jamais modifier une migration déjà notée dans `supabase/appliquees.txt` : on écrit un correctif, qui prend son
+   propre numéro.
+4. Ajouter le chemin (`supabase/migrations/NNN_sujet.sql`) à la fin de `supabase/appliquer.txt`. Le workflow
+   `appliquer-sql` l'applique et note le résultat dans `appliquees.txt`.
+5. Rendre la migration rejouable (`if not exists`, `create or replace`, `drop policy if exists`, blocs `do` pour les contraintes).
+
+## État des migrations 079 à 166
+
+Lecture : une ligne par migration. « Journal » : la migration figure dans `appliquees.txt` (appliquée par le workflow,
+avec la date). Depuis le 26/10, le journal est tenu pour les migrations 138 et suivantes ; pour 079 à 137, le dépôt ne
+dit pas toujours si elles ont été appliquées : le sujet indique ce qui est écrit dans le fichier lui-même.
+
+| N° | Sujet | Journal |
+|---|---|---|
+| 079 | Sécurité des fonctions edge (ré-audit E2, E5) | non |
+| 080 | Idées C1 à C6 (cartes et boosters) | non |
+| 081 | Idées C7 à C12 (cartes et économie : tags, codes cadeaux, atelier, enchères, bourse) | non |
+| 082 | Idées du gang, paquet C3 (thème Cartes) | non |
+| 083 | Page Jeux et idées J1, J2, J3 du catalogue | non |
+| 084 | Idées J4, D2, J5, J8 (question du jour, pronostics, Sutom du gang) | non |
+| 085 | Idées J9, J10, J11, J15 (Framed, Heardle, preuves de quêtes, Bataille) | non |
+| 086 | Idées J16, J18, J19 (saisons de classement, arcade du jour, soirée complète) | non |
+| 087 | Idées V8, V9, D3 (calendrier du gang, ciné-club, commandes slash Discord) | non |
+| 088 | Idées S1, S2, S3, S6 (contenu et souvenirs) | non |
+| 089 | Idées « Contenu et souvenirs », paquet xS2 | non |
+| 090 | Idées P1, P3, P4, P5 (profil gaming, conversations de groupe, merci public, sondages) | non |
+| 091 | Idées P6 à P9 (social et profils) | non |
+| 092 | Idées A1 à A5 (admin et outils ; permission « mj ») | non |
+| 093 | Idées A6 à A9 (admin et outils) | non |
+| 094 | Idées Q1, Q3 (visite guidée, vignettes des photos) | non |
+| 095 | Notifications par catégorie (Q6) | non |
+| 096 | Idées T1 à T4 (saisonnier) | non |
+| 097 | Règles des enchères, réglables enchère par enchère | non |
+| 098 | Événements ponctuels du calendrier, affiches des films du ciné | non |
+| 099 | Effacement des fonctionnalités retirées (23/10) | non |
+| 100 | Arcade : les trois mini-jeux disponibles tous les jours | non |
+| 101 | Secrets « clins d'œil du gang » (catégorie F) | non |
+| 102 | Thème saisonnier « Raclette » | non |
+| 103 | Réorganisation du panel admin | non |
+| 104 | Arène v2 (règles dans `docs/ARENE.md`) | non |
+| 105 | Audit de sécurité du 23/10, paquet E (privilèges). Le fichier dit : non appliqué par l'auteur de l'audit, à appliquer par le propriétaire | non |
+| 106 | Suite de l'audit de sécurité (validée par le propriétaire) | non |
+| 107 | Badge « Gladiateur » (fin de saison de l'Arène v2) | non |
+| 108 | **Trou** (aucun fichier) | — |
+| 109 | Mot du jour du Sutom visible par l'admin | non |
+| 110 | Clé d'empreinte des adresses des visiteurs (assistance), dans Vault | non |
+| 111 | Disposition personnelle du plateau du panel admin | non |
+| 112 | Don groupé (Give) : tout type de booster | non |
+| 113 | Un compte admin ne peut plus se supprimer lui-même | non |
+| 114 | Jeux d'arcade sans limite de temps | non |
+| 115 | Puissances des cartes réglables depuis le panel | non |
+| 116 | Booster série d'une série qui n'a pas toutes les raretés | non |
+| 117 | Carte unique avec plusieurs exemplaires numérotés | non |
+| 118 | Loup-Garou (1/2) : tables, accès et sécurité | non |
+| 119 | Loup-Garou (2/2) : moteur de jeu | non |
+| 120 | Loup-Garou : mode invité | non |
+| 121 | Uno : tables, moteur, invités, récompenses | non |
+| 122 | Duels (Puissance 4, Morpion, Mastermind, Bataille navale, Qui est-ce ?) | non |
+| 123 | Nom de code (Codenames) : tables, moteur, invités, récompenses | non |
+| 124 | Qui est-ce ?, plateau « Les habitants du quartier » | non |
+| 125 | Socle commun des jeux de plateau | non |
+| 126 | Cluedo (moteur, sur le socle 125) | non |
+| 127 | Shadow Hunters (moteur, sur le socle 125) | non |
+| 128 | Destins (moteur, sur le socle 125) | non |
+| 129 | Monopoly (moteur, sur le socle 125) | non |
+| 130 | Risk (moteur, sur le socle 125) | non |
+| 131 | **Doublon.** `131_arcade_plafond_scores.sql` : plafond des scores de l'Arcade | non |
+| 131 | **Doublon.** `131_plateaux_robots.sql` : robots des jeux de plateau, « Nom de code » renommé « Codenames » | non |
+| 132 | Arcade : score maximum porté à 100 000 | non |
+| 133 | Réponses des jeux pour les administrateurs (point d'entrée `hg_adrep_<jeu>`) | non |
+| 134 | **Doublon** (5 fichiers) : `134_adrep_duels`, `134_adrep_jour`, `134_adrep_plateaux`, `134_adrep_salons` (réponses admin des jeux) et `134_musiques` (série « Musiques », 1 000 cartes) | non |
+| 135 | Heardle : vidéo du jour non lisible dans le site (YouTube refuse la lecture intégrée, codes 100, 101, 150, 153) | non |
+| 136 | Socle des nouveaux jeux (réservés aux admins) | non |
+| 137 | Jeux du jour « devine en 6 essais » | non |
+| 138 | Jeux solo (Démineur, Sudoku du jour, 2048) | oui |
+| 139 | Réserves et images des jeux du jour | oui |
+| 140 | Grilles du jour (Connexions, Mot mêlé, Anagramme, Nerdle, Mots croisés) | oui |
+| 141 | Nouveaux duels (Dames, Échecs, Othello, pierre-feuille-ciseaux) ; relancée 4 fois, cause non notée | oui |
+| 142 | Correctif des nouveaux duels (échecs) | oui |
+| 143 | Blackjack et Poker sur le moteur des jeux de plateau | oui |
+| 144 | Catan (version simplifiée) | oui |
+| 145 | Pictionary | oui |
+| 146 | Correctif des mots croisés | oui |
+| 147 | Import automatique des images des jeux du jour (toutes les heures) | oui |
+| 148 | Grilles du jour, deux correctifs | oui |
+| 149 | Nerdle du gang : indice à la demande | oui |
+| 150 | Accès des nouveaux jeux réglable dans « Accès aux pages » | oui |
+| 151 | Blackjack : le journal détaille le jeu de la banque | oui |
+| 152 | Plat du jour : on devine le nom du plat | oui |
+| 153 | Statut « en ligne / hors ligne » et notifications sur le site | oui |
+| 154 | Retrait du thème « Saison des Worlds » | oui |
+| 155 | **Trou** (aucun fichier) | — |
+| 156 | **Trou** (aucun fichier) | — |
+| 157 | Classement des jeux du jour, récompenses à paliers | oui |
+| 158 | Quêtes de profil validées par l'état du profil | oui |
+| 159 | Liste des membres en ligne | oui |
+| 160 | Flappy Domu : vitesse sans plafond, contrôle de score porté à 4 par seconde | oui |
+| 161 | Rangement : chemins des pages et des illustrations des cartes | oui |
+| 162 | Booster gratuit du jour selon le thème | oui |
+| 163 | Emoji de la paillette par thème | oui |
+| 164 | Thèmes Saint-Nicolas et Pâté-saucisse, effets « neige-emojis » et « braises » | oui |
+| 165 | Referme les fonctions internes des plateaux (143 à 145) | oui |
+| 166 | Suite de la 165 : fonctions internes des jeux de cartes et de Catan (143 à 145) | oui |
+
 ## Les trous et les doublons
 
-- **067** : brouillon (stock et dons de boosters) jamais appliqué, remplacé par 069 ; le numéro reste vide.
+**Trous** (aucun fichier au numéro) :
 - **004, 007, 008, 010, 020** : absents du dépôt. Rien ne prouve qu'il s'agissait de migrations
   appliquées ; si c'était le cas, leur effet est dans le schéma reconstitué. Ne pas créer de fichier
   à ces numéros pour les « combler ».
-- **018** existe en deux fichiers : `018_cartes_tables.sql` (tables) et `018_cartes_fonctions.sql`
-  (fonctions). Les deux ont été appliqués dans cet ordre (tables d'abord, car les fonctions les utilisent).
-  L'ordre alphabétique convient ici.
-- Les nouvelles migrations reprennent le numéro suivant libre (ici 021, après 019 et le 020 non utilisé).
+- **057, 108, 155, 156** : absents, sans explication dans le dépôt. Même règle : ne pas les combler.
+- **067** : brouillon (stock et dons de boosters) jamais appliqué, remplacé par 069 ; le numéro reste vide.
+
+**Doublons** (plusieurs fichiers pour un même numéro). Ils sont tous rangés par suffixe ou par sujet ; l'ordre
+d'application est donné entre parenthèses :
+- **018** : `018_cartes_tables.sql` (tables), puis `018_cartes_fonctions.sql` (fonctions, qui les utilisent).
+- **039** : `039_don_admin_fil.sql`, puis `039b_rarete_libelle.sql` (correctif appliqué sans fichier, reconstitué le 23/10).
+- **052, 053, 054** : chaque réglage a son correctif `052b_…`, `053b_…`, `054b_…` (enregistrés en production sous
+  `052_corrige`, `053_corrige`, `054_corrige`).
+- **131** : `131_arcade_plafond_scores.sql` (plafond des scores de l'Arcade), puis `131_plateaux_robots.sql`
+  (robots des jeux de plateau, renommage de « Nom de code » en « Codenames ») : deux sujets indépendants.
+- **134** : cinq fichiers, indépendants entre eux : `134_adrep_duels.sql`, `134_adrep_jour.sql`,
+  `134_adrep_plateaux.sql`, `134_adrep_salons.sql` (réponses admin des jeux, qui dépendent de la 133 : point
+  d'entrée `hg_adrep_<jeu>`) et `134_musiques.sql` (série « Musiques »). Aucun ne dépend d'un autre.
+
+Pour une nouvelle migration, la règle ci-dessus s'applique : numéro = plus haut + 1, sans combler de trou.
+
+**Relances** : `supabase/appliquer.txt` / `appliquees.txt` notent `# relance 141` (quatre fois, cause non notée) :
+la 141 a dû être relancée sans que la raison soit écrite. Noter la cause quand une migration est relancée.
 
 ## Rejouabilité
 

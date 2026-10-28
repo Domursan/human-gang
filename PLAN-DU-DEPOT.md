@@ -1,7 +1,7 @@
 # Plan du dépôt — Humane Gang
 
 Où est quoi dans le dépôt, à quoi sert chaque dossier, et où ranger un nouveau fichier.
-Version : état du dépôt au 27 octobre 2026, après le rangement (branche `rangement`).
+Version : état du dépôt au 28 octobre 2026 (dernière migration : 166).
 
 Pour les pages du site (adresses, rôles, accès), voir [PLAN-DU-SITE.md](PLAN-DU-SITE.md). Le README décrit le fonctionnement du site ; ce document décrit seulement l'arborescence.
 
@@ -23,7 +23,7 @@ human-gang/
 │   ├── manifest.webmanifest  Fiche de l'application installable
 │   ├── CNAME              Nom de domaine
 │   │                      (la publication GitHub Pages doit viser ce dossier site/ : docs/PUBLICATION.md
-│   │                      décrit encore l'ancienne racine du dépôt, à mettre à jour)
+│   │                      décrit la publication de site/ ; la construction de _site/ est dans outils/build)
 │   │
 │   ├── pages/             Une page = un fichier HTML, rangé par catégorie
 │   │   ├── admin/        admin.html (panel d'administration)
@@ -47,10 +47,10 @@ human-gang/
 │       └── vendor/        Bibliothèques servies localement : supabase-js, qrcode-generator (voir son README.md)
 │
 ├── supabase/              Base de données et fonctions serveur (Supabase)
-│   ├── migrations/        Migrations SQL numérotées (001… à 160) : historique du schéma
+│   ├── migrations/        Migrations SQL numérotées (001… à 166) : historique du schéma ; README.md : état et doublons
 │   ├── appliquer.txt      Liste des migrations à appliquer (une par ligne)
 │   ├── appliquees.txt     Journal : ce qui a été appliqué, et le résultat (ok ou erreur)
-│   ├── schema/            Schéma réel reconstitué (schema_reel_2026-10-21*.sql) + README.md
+│   ├── schema/            Schéma reconstitué (schema_reel_2026-10-21b.sql, daté du 21/10) + README.md (comment le régénérer)
 │   ├── seed/              Données de départ, dont sutom-dict (dictionnaire du Sutom)
 │   ├── functions/         Fonctions edge : hg-* (une par dossier), _shared/ (code commun),
 │   │                      a-deployer.txt (fonctions à déployer), DEPLOY.md (déploiement)
@@ -64,7 +64,8 @@ human-gang/
 │   ├── unitaires/         Tests de fonctions isolées (arcade, calendrier, Discord, notifications, archive)
 │   ├── controles/        Vérifications : syntaxe JS, RPC et tables, publication, accessibilité, budget de performance,
 │   │                      vendor, composants du panel
-│   ├── bancs/             Bancs SQL et UI par jeu (duels, jeux, loup-garou, nom-de-code, plateaux, uno) : règles et simulations
+│   ├── bancs/             Bancs SQL et UI : économie des cartes (cartes), jeux (duels, jeux, loup-garou, nom-de-code,
+│   │                      plateaux, uno) : règles et simulations, sur une base PostgreSQL locale (voir cartes/README.md)
 │   ├── fixtures/         Faux Supabase et faux modules utilisés par les tests
 │   ├── lib/               Outils communs aux tests (harness.cjs, faux-canevas.mjs)
 │   └── shots/             Captures produites par les tests (non suivies par git)
@@ -80,6 +81,7 @@ human-gang/
 │   └── captures/qa/       Captures de recette, par chantier (p2-communication, p2-comptes, p2-pilotage)
 │
 ├── outils/                Scripts et données utilisés par les workflows ou à la main (non publiés)
+│   ├── build/             construire.mjs : construit _site/ à partir de site/ (JS et CSS regroupés, PRECACHE réécrit) ; package.json (esbuild)
 │   ├── appliquer-sql.mjs  Applique les migrations listées dans supabase/appliquer.txt (workflow appliquer-sql)
 │   ├── images/            importer.mjs + a-importer.json (images à importer), rapport.json, maquettes/
 │   └── nj/                Générateurs et réserves de mots pour les jeux nj-* (mots croisés, silhouettes, réserves JSON)
@@ -118,6 +120,7 @@ Un espace = un dossier = une fonctionnalité du site. Chaque espace a sa page (o
 
 | Fichier | Rôle | Déclenchement |
 | --- | --- | --- |
+| `publier-site.yml` | Construit `_site/` à partir de `site/` (`outils/build/construire.mjs`, esbuild) puis le publie sur GitHub Pages. Seul `_site/` sort du dépôt. Une publication à la fois. | Envoi sur `main`, ou lancement manuel |
 | `ci.yml` | Contrôles et tests : syntaxe JS, présence des fonctions et tables de la base, tests de parcours (4 morceaux en parallèle), accessibilité (axe-core), budget de performance mobile. Tourne sur un faux Supabase : aucune donnée réelle. | Envoi sur `main`, demande de fusion, passage de nuit (2 h 17 UTC), lancement manuel |
 | `appliquer-sql.yml` | Applique sur la base les migrations de `supabase/appliquer.txt` qui ne sont pas encore dans `supabase/appliquees.txt` (script `outils/appliquer-sql.mjs`), puis note le résultat. Utilise le secret `SUPABASE_ACCESS_TOKEN`. | Envoi sur `main` qui modifie `supabase/appliquer.txt`, ou lancement manuel |
 | `deploy-functions.yml` | Déploie les fonctions edge listées dans `supabase/functions/a-deployer.txt`. Utilise le secret `SUPABASE_ACCESS_TOKEN`. | Envoi sur `main` qui modifie `supabase/functions/a-deployer.txt`, ou lancement manuel (choix de la fonction) |
@@ -135,15 +138,15 @@ Règles générales :
 - **Chemins absolus** dans le code : `/assets/…` et `/pages/…` (jamais de chemin relatif qui remonte d'un dossier à l'autre).
 - **Images** : `site/assets/images/<thème>/` ; cartes : `site/assets/cartes/<série>/`.
 - **Tests de parcours** : `tests/parcours/<catégorie>/` ; tests de fonction isolée : `tests/unitaires/` ; contrôles globaux : `tests/controles/` ; bancs SQL ou UI d'un jeu : `tests/bancs/<jeu>/` ; faux Supabase et faux modules : `tests/fixtures/`.
-- **Migrations** : `supabase/migrations/NNN_nom.sql`, avec le numéro suivant (trois chiffres), puis ajouter le chemin dans `supabase/appliquer.txt`. Une migration déjà notée dans `supabase/appliquees.txt` n'est jamais modifiée : on écrit une nouvelle migration (un correctif).
+- **Migrations** : `supabase/migrations/NNN_nom.sql`, numéro = dernier + 1 (trois chiffres, jamais un numéro déjà pris ; voir `supabase/migrations/README.md`), puis ajouter le chemin dans `supabase/appliquer.txt`. Une migration déjà notée dans `supabase/appliquees.txt` n'est jamais modifiée : on écrit une nouvelle migration (un correctif).
 - **Fonctions edge** : `supabase/functions/<nom>/index.ts` (code partagé dans `_shared/`) ; ajouter le nom dans `supabase/functions/a-deployer.txt` pour le déployer.
 - **Documentation** : `docs/` pour les documents techniques ; le plan du site et le plan du dépôt restent à la racine.
 - **Ne pas publier par erreur** : un fichier `.md`, `.sql`, `.ts`, `.sh` n'est jamais servi par le site ; un fichier publié ne commence jamais par `---`. Voir docs/PUBLICATION.md.
 
 Règle du service worker :
 
-- **`CACHE_VERSION` dans `site/sw.js`** : à augmenter d'un cran (`'v110'` → `'v111'`) à chaque changement de JS ou de CSS, pour que tous les membres reçoivent la nouvelle version sans vider leur cache. Un fichier qui doit être disponible hors ligne s'ajoute aussi à la liste `PRECACHE`.
+- **`CACHE_VERSION` dans `site/sw.js`** : une seule règle, écrite pareil dans `sw.js` : incrémenter à chaque changement de JS ou de CSS du site ; la publication l'incrémente aussi dans sa copie (`outils/build/construire.mjs`). Un fichier qui doit être disponible hors ligne s'ajoute aussi à la liste `PRECACHE`.
 
 ## Lancer les vérifications
 
-Les commandes sont décrites dans `tests/README.md` et dans `tests/package.json` (scripts `check`, `test`, `test:a11y`, `test:perf`…). Les tests servent le site directement depuis le dépôt : pas de serveur à lancer, pas de build.
+Les commandes sont décrites dans `tests/README.md` et dans `tests/package.json` (scripts `check`, `test`, `test:a11y`, `test:perf`…). Les tests servent le site directement depuis le dépôt : pas de serveur à lancer, pas de build (seule la publication construit `_site/`).
