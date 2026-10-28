@@ -1,29 +1,35 @@
 // ===== Humane Gang — Monopoly : la table de jeu (plateaux/jeux/monopoly/table.js) =====
 /*
  * Rôle : affiche une partie de Monopoly en cours (règles officielles, dés, achats, constructions, hypothèques,
- *   échanges, dettes). Bandeau (joueurs, chrono, quitter), plateau carré (plateau.js) avec un centre (dés, carte,
- *   panneau d'action), fiche d'un lieu au clic, joueurs, mes titres groupés par couleur, journal, chat
- *   (à droite sur ordinateur, en tiroir sur téléphone). Fenêtre d'échange (comme PolyEchange) et offre reçue.
- *   La mise en page est dans assets/espaces/plateaux/monopoly.css ; ici, le contenu et les actions.
+ *   échanges, dettes). Plateau carré vintage « Paris · Édition 1936 » (plateau.js) avec, au centre, les paquets
+ *   Chance et Caisse, les dés et la dernière carte tirée. À droite : « Argent de moi » (billets empilés), le tour
+ *   (joueurs, soldes, texte d'aide, boutons d'action), puis mes titres, le journal et le chat (en tiroir sur téléphone).
+ *   Les pions sont dessinés dans une couche au-dessus des cases et avancent case par case jusqu'à leur nouvelle case.
+ *   Animations (dés qui roulent, carte qui apparaît, achat) : seulement quand l'état change, jamais au rafraîchissement.
+ *   La mise en page est dans assets/espaces/plateaux/monopoly.css ; ici, le contenu, les actions et les animations.
  *   Les zones sont reconstruites seulement quand leur contenu change (le focus et les saisies restent en place).
- * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
- *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, pseudoHtml),
- *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, positionCase).
+ * Dépendances : core.js (esc, initials, toast), ../../api.js (plat, erreurTexte, nomDe),
+ *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe, pseudoHtml, texteSur),
+ *   ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, pointCase), ../../../../commun/grille-clavier.js.
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
 import { esc, initials, toast } from '../../../../commun/core.js';
-import { plat, erreurTexte, nomDe, imageExiste } from '../../api.js';
-import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, pseudoHtml } from '../../vues/commun.js';
+import { plat, erreurTexte, nomDe } from '../../api.js';
+import { bandeauHtml, brancherChrono, journalHtml, envoyer, moiJoueur, joueurDe, pseudoHtml, texteSur } from '../../vues/commun.js';
 import { creerChat, tiroirChat } from '../../vues/chat.js';
-import { plateauHtml } from './plateau.js';
+import { plateauHtml, pointCase } from './plateau.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
+const MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 const CAUTION_PRISON = 50;
+const PAS_MARCHE_MS = 150;                 // durée d'une case pendant le déplacement d'un pion
+const DUREE_TITRE_MS = 3200;               // durée d'affichage de la carte de propriété achetée
 const ICONE_QUITTER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H9"></path></svg>';
 const LIBELLE_CASE = { rue: 'Rue', gare: 'Gare', compagnie: 'Compagnie', caisse: 'Caisse de communauté', chance: 'Chance', impot: 'Impôt', depart: 'Départ', prison: 'Prison', parc: 'Parc gratuit', allez_prison: 'Allez en prison' };
 const LIBELLES_LOYER = ['Loyer nu', 'Avec 1 maison', 'Avec 2 maisons', 'Avec 3 maisons', 'Avec 4 maisons', 'Avec un hôtel'];
+const BILLETS = [500, 100, 50, 20];        // coupures affichées, de la plus grosse à la plus petite
 const PIONS_PIPS = {
   1: [[32, 32]],
   2: [[16, 16], [48, 48]],
@@ -35,7 +41,14 @@ const PIONS_PIPS = {
 
 const euros = (n) => `${Math.round(Number(n) || 0).toLocaleString('fr-FR')} €`;
 /** Dé en SVG (points) ; l'entier est lu par les lecteurs d'écran à part. */
-const de = (v) => `<svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="10" fill="#F6F4EF" stroke="#121212" stroke-width="2"></rect>${(PIONS_PIPS[v] || []).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="#121212"></circle>`).join('')}</svg>`;
+const de = (v) => `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="2" y="2" width="60" height="60" rx="10" fill="#FFFFFF" stroke="#1B1B1B" stroke-width="3"></rect>${(PIONS_PIPS[v] || []).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="#1B1B1B"></circle>`).join('')}</svg>`;
+/** Répartition d'une somme en billets (gloutonne, de 500 à 20 €) : { 500: n, 100: n, … }. */
+function billets(somme) {
+  let reste = Math.max(0, Math.floor(Number(somme) || 0));
+  const compte = {};
+  BILLETS.forEach((v) => { compte[v] = Math.floor(reste / v); reste -= compte[v] * v; });
+  return compte;
+}
 
 /** Gabarit statique : les zones variables sont remplies à chaque mise à jour. */
 function squelette() {
@@ -57,16 +70,32 @@ function squelette() {
       <section class="mo-plan-zone" aria-label="Plateau de jeu">
         <div class="mo-plan" data-plan>
           <div class="mo-cases" data-cases></div>
-          <div class="mo-centre" data-centre></div>
+          <div class="mo-pions" data-pions aria-hidden="true"></div>
+          <div class="mo-centre" data-centre>
+            <p class="mo-logo" aria-hidden="true">MONOPOLY</p>
+            <div class="mo-paquet mo-paquet-chance" aria-hidden="true"><span class="mo-paquet-pt">?</span><span class="mo-paquet-nom">CHANCE</span></div>
+            <div class="mo-paquet mo-paquet-caisse" aria-hidden="true"><span class="mo-paquet-nom">CAISSE DE COMMUNAUTÉ</span></div>
+            <div class="mo-zone-des" data-zone-des></div>
+            <div class="mo-zone-carte" data-zone-carte></div>
+          </div>
         </div>
       </section>
       <section class="mo-fiche" data-fiche hidden aria-labelledby="mo-fiche-titre"></section>
     </div>
-    <aside class="mo-colonne-cote" aria-label="Joueurs, titres, journal et chat">
-      <section class="mo-bloc" aria-labelledby="mo-joueurs-titre"><h2 id="mo-joueurs-titre" class="mo-bloc-titre">Joueurs</h2><div data-joueurs></div></section>
+
+    <div class="mo-droite">
+      <section class="mo-argent" aria-label="Mon argent" data-argent hidden></section>
+      <section class="mo-tour" aria-label="Tour de jeu">
+        <p class="mo-tour-tete" data-tour-tete></p>
+        <section class="mo-bloc-joueurs" aria-labelledby="mo-joueurs-titre"><h2 id="mo-joueurs-titre" class="visually-hidden">Joueurs</h2><div data-joueurs></div></section>
+        <div class="mo-panneau" aria-live="polite" data-panneau></div>
+        <div class="mo-raccourcis" data-raccourcis></div>
+      </section>
+    </div>
+
+    <aside class="mo-colonne-cote" aria-label="Titres, journal et chat">
       <section class="mo-bloc" aria-labelledby="mo-titres-titre"><h2 id="mo-titres-titre" class="mo-bloc-titre">Mes titres</h2><div data-titres></div></section>
       <section class="mo-bloc" aria-labelledby="mo-journal-titre"><h2 id="mo-journal-titre" class="mo-bloc-titre">Journal</h2><div data-journal></div></section>
-      <div class="mo-raccourcis" data-raccourcis></div>
       <div class="mo-chat-zone" data-chat></div>
     </aside>
   </div>
@@ -85,6 +114,7 @@ export function creer(root, ctx) {
   const { code, suivi } = ctx;
   const contenus = ctx.contenus || {};
   const grand = window.matchMedia(ECRAN_GRAND);
+  const reduit = window.matchMedia(MOUVEMENT_REDUIT);
 
   const el = document.createElement('section');
   el.className = 'mo-table';
@@ -95,21 +125,25 @@ export function creer(root, ctx) {
   const q = (s) => el.querySelector(s);
   const refs = {
     bandeau: q('[data-bandeau]'), elimine: q('[data-elimine]'), plan: q('[data-plan]'), cases: q('[data-cases]'),
-    centre: q('[data-centre]'), fiche: q('[data-fiche]'), joueurs: q('[data-joueurs]'), titres: q('[data-titres]'),
-    journal: q('[data-journal]'), raccourcis: q('[data-raccourcis]'), chatZone: q('[data-chat]'),
-    tiroirChatZone: q('[data-tiroir-chat]'), echange: q('[data-echange]'), annonce: q('[data-annonce]'), ongletJeu: q('[data-onglet-jeu]'),
-    ongletCote: q('[data-onglet-cote]'), quitter: q('[data-quitter]'),
+    pions: q('[data-pions]'), zoneDes: q('[data-zone-des]'), zoneCarte: q('[data-zone-carte]'),
+    fiche: q('[data-fiche]'), argent: q('[data-argent]'), tourTete: q('[data-tour-tete]'), joueurs: q('[data-joueurs]'),
+    panneau: q('[data-panneau]'), titres: q('[data-titres]'), journal: q('[data-journal]'), raccourcis: q('[data-raccourcis]'),
+    chatZone: q('[data-chat]'), tiroirChatZone: q('[data-tiroir-chat]'), echange: q('[data-echange]'), annonce: q('[data-annonce]'),
+    ongletJeu: q('[data-onglet-jeu]'), ongletCote: q('[data-onglet-cote]'), quitter: q('[data-quitter]'),
   };
 
   let etat = null;
   let occupe = false;
+  let premiere = true;                     // vrai tant que le premier état n'est pas affiché : pas d'animation à l'arrivée
   let arretChrono = null;
   let caseOuverte = null;                  // numéro de la case dont la fiche est ouverte
   let fenetreEchange = false;              // fenêtre « proposer un échange » ouverte
+  let titreMontre = null;                  // { c, t } : titre de propriété affiché en grand après un achat
+  let minuteurTitre = null;
   const brouillon = { a: null, argent: 0, donne: [], recoit: [], cartesDonne: 0, cartesRecoit: 0 };
   const cles = {};                         // clé du dernier rendu de chaque zone
+  const pions = new Map();                 // user_id -> { el, visu (case affichée), cible (case de l'état), marche }
   const messagesVus = [];
-  let imageFond = null;
 
   /* ---------- Chat : colonne (ordinateur) ou tiroir (téléphone) ---------- */
 
@@ -171,10 +205,10 @@ export function creer(root, ctx) {
 
   /* ---------- Rendu : plateau (cases) ---------- */
 
-  /** Cases : reconstruites quand les lieux, les pions ou les propriétés changent ; le focus est gardé. */
+  /** Cases : reconstruites quand les lieux, les joueurs ou les propriétés changent ; le focus est gardé. */
   function rendreCases() {
-    const joueurs = (etat.joueurs || []).map((j) => [j.user_id, posDe(j), j.etat?.pion, j.couleur, j.pseudo, !!j.parti, !!j.elimine]);
-    const cle = JSON.stringify([jeu().proprietes, joueurs, monId(), jeu().plateau?.length, imageFond]);
+    const joueurs = (etat.joueurs || []).map((j) => [j.user_id, posDe(j), j.couleur, j.pseudo, !!j.parti, !!j.elimine, j.invite]);
+    const cle = JSON.stringify([jeu().proprietes, joueurs, monId(), jeu().plateau?.length]);
     if (cles.cases === cle) return;
     cles.cases = cle;
     const actif = document.activeElement;
@@ -182,12 +216,70 @@ export function creer(root, ctx) {
     refs.cases.innerHTML = plateauHtml({
       plateau: jeu().plateau || [], contenus, joueurs: etat.joueurs || [], proprietes: jeu().proprietes || {}, maCase: posDe(monMoi()),
     });
-    refs.plan.style.backgroundImage = imageFond ? `url("${imageFond}")` : '';
-    refs.plan.classList.toggle('has-img', !!imageFond);
     if (refocus != null) refs.cases.querySelector(`[data-case="${refocus}"]`)?.focus();
   }
 
-  /* ---------- Rendu : joueurs ---------- */
+  /* ---------- Rendu : pions (couche au-dessus des cases, déplacement case par case) ---------- */
+
+  /** Range les pions : ceux qui sont sur la même case s'écartent les uns des autres. */
+  function disposerPions() {
+    const nombre = new Map();
+    pions.forEach((p) => nombre.set(p.visu, (nombre.get(p.visu) || 0) + 1));
+    const rangs = new Map();
+    pions.forEach((p) => {
+      const k = rangs.get(p.visu) || 0;
+      rangs.set(p.visu, k + 1);
+      const pt = pointCase(p.visu, k, nombre.get(p.visu));
+      p.el.style.left = pt.left;
+      p.el.style.top = pt.top;
+      p.el.style.setProperty('--f', String(pt.f));
+    });
+  }
+
+  /** Fait avancer un pion, case par case, jusqu'à sa case de l'état. */
+  function marcher(p) {
+    if (p.marche) return;
+    p.marche = true;
+    const pas = () => {
+      if (!pions.has(p.uid)) { p.marche = false; return; }
+      if (p.visu === p.cible) { p.marche = false; return; }
+      p.visu = (p.visu + 1) % 40;
+      disposerPions();
+      setTimeout(pas, PAS_MARCHE_MS);
+    };
+    setTimeout(pas, PAS_MARCHE_MS);
+  }
+
+  /** Synchronise les pions avec les joueurs ; un changement de case déclenche la marche (sauf à l'arrivée). */
+  function rendrePions() {
+    const vivants = new Set();
+    (etat.joueurs || []).forEach((j) => {
+      if (j.parti || j.elimine || typeof j.etat?.pos !== 'number') return;
+      vivants.add(j.user_id);
+      const couleur = couleurJ(j);
+      let p = pions.get(j.user_id);
+      if (!p) {
+        const el = document.createElement('span');
+        el.className = 'mo-pion';
+        el.dataset.uid = j.user_id;
+        refs.pions.append(el);
+        p = { uid: j.user_id, el, visu: posDe(j), cible: posDe(j), marche: false };
+        pions.set(j.user_id, p);
+      }
+      p.cible = posDe(j);
+      if (reduit.matches) p.visu = p.cible;
+      const ini = initials(j.pseudo);
+      p.el.textContent = ini;
+      p.el.title = j.pseudo || '?';
+      p.el.style.background = couleur;
+      p.el.style.color = texteSur(couleur);
+      if (p.visu !== p.cible) marcher(p);
+    });
+    pions.forEach((p, uid) => { if (!vivants.has(uid)) { p.el.remove(); pions.delete(uid); } });
+    disposerPions();
+  }
+
+  /* ---------- Rendu : joueurs (dans le tour) ---------- */
 
   function rendreJoueurs() {
     const liste = (etat.joueurs || []).map((j) => {
@@ -211,6 +303,35 @@ export function creer(root, ctx) {
     if (cles.joueurs === cle) return;
     cles.joueurs = cle;
     refs.joueurs.innerHTML = `<ul class="mo-liste-joueurs" aria-label="Joueurs">${liste}</ul>`;
+  }
+
+  /** En-tête du tour : numéro et joueur dont c'est le tour. */
+  function rendreTourTete() {
+    const texte = `Tour n°${etat.partie?.nb_tours ?? 0} · ${pseudoDe(jeu().actif) || '?'}`;
+    if (cles.tourTete === texte) return;
+    cles.tourTete = texte;
+    refs.tourTete.textContent = texte;
+  }
+
+  /* ---------- Rendu : argent de moi (billets empilés) ---------- */
+
+  function rendreArgent() {
+    const me = monMoi();
+    if (!monId()) { refs.argent.hidden = true; refs.argent.innerHTML = ''; cles.argent = null; return; }
+    const argent = Number(me?.etat?.argent) || 0;
+    const cle = JSON.stringify([argent, monId(), me?.pseudo, etat.partie?.nb_tours]);
+    if (cles.argent === cle) return;
+    cles.argent = cle;
+    refs.argent.hidden = false;
+    const compte = billets(argent);
+    const pile = BILLETS.slice().reverse().map((v, n) => `<span class="mo-billet mo-billet-${v}${compte[v] ? '' : ' is-vide'}" style="--r:${[-5, 3, -3, 5][n]}deg">
+        <strong>${v} €</strong><small>× ${compte[v]}</small></span>`).join('');
+    const detail = BILLETS.filter((v) => compte[v]).map((v) => `${compte[v]} billet${compte[v] > 1 ? 's' : ''} de ${v} €`).join(', ');
+    refs.argent.innerHTML = `<div class="mo-argent-tete"><span class="mo-argent-titre">Argent de ${esc(me?.pseudo || '?')}</span>
+        <span class="mo-argent-tour">Tour n°${esc(etat.partie?.nb_tours ?? 0)}</span></div>
+      <p class="mo-argent-montant${argent < 0 ? ' is-negatif' : ''}">${esc(euros(argent))}</p>
+      <div class="mo-billets" aria-hidden="true">${pile}</div>
+      <p class="visually-hidden">${esc(detail || 'Aucun billet')}</p>`;
   }
 
   /* ---------- Rendu : mes titres groupés par couleur ---------- */
@@ -250,7 +371,55 @@ export function creer(root, ctx) {
     refs.journal.innerHTML = html;
   }
 
-  /* ---------- Rendu : centre (dés, carte, panneau d'action) ---------- */
+  /* ---------- Rendu : dés et cartes (au centre du plateau) ---------- */
+
+  /** Dés : roulent seulement quand la valeur change (un nouveau lancer), pas au rafraîchissement. */
+  function rendreDes() {
+    const des = jeu().des;
+    const cle = JSON.stringify(des || null);
+    if (cles.des === cle) return;
+    const roule = !premiere && !!des;
+    cles.des = cle;
+    if (!des) { refs.zoneDes.innerHTML = ''; return; }
+    const faux = () => 1 + Math.floor(Math.random() * 6);
+    const unDe = (v) => `<div class="mo-de${roule ? ' is-roule' : ''}">${roule ? `<span class="mo-face mo-faux">${de(faux())}</span>` : ''}<span class="mo-face mo-vrai">${de(v)}</span></div>`;
+    refs.zoneDes.innerHTML = `<div class="mo-des" role="img" aria-label="Dés : ${des[0]} et ${des[1]}${jeu().doubles ? ', doubles' : ''}">${unDe(des[0])}${unDe(des[1])}</div>`;
+  }
+
+  /** Carte tirée (Chance, Caisse) ou titre de propriété acheté : apparaît en grand, une fois par nouveauté. */
+  function rendreCarte() {
+    const c = jeu().carte;
+    const jeton = titreMontre ? `${titreMontre.c}/${titreMontre.t}` : '';
+    const cle = JSON.stringify([c, jeton]);
+    if (cles.carte === cle) return;
+    const anime = !premiere && (c || titreMontre) ? ' is-neuve' : '';
+    cles.carte = cle;
+    if (titreMontre) {
+      const def = caseDef(titreMontre.c);
+      const g = couleurGroupe(def.groupe);
+      const p = jeu().proprietes?.[String(titreMontre.c)] || {};
+      refs.zoneCarte.innerHTML = `<article class="mo-titre-carte${anime}" aria-hidden="true">
+        <div class="mo-titre-bande" style="background:${esc(g?.couleur || '#6B6660')}"></div>
+        <p class="mo-titre-nomcase">${esc(nomCase(titreMontre.c))}</p>
+        <p class="mo-titre-prix">${esc(euros(def.prix))}</p>
+        <p class="mo-titre-pied">Titre de propriété<br>${p.proprio ? `Propriétaire : ${esc(pseudoDe(p.proprio))}` : ''}</p></article>`;
+      return;
+    }
+    if (!c) { refs.zoneCarte.innerHTML = ''; return; }
+    const chance = c.pioche === 'chance';
+    refs.zoneCarte.innerHTML = `<article class="mo-carte ${chance ? 'is-chance' : 'is-caisse'}${anime}" aria-label="Dernière carte tirée">
+      <p class="mo-carte-pioche">${chance ? 'Carte Chance' : 'Caisse de communauté'}${c.pour ? ` · ${esc(pseudoDe(c.pour))}` : ''}</p>
+      <p class="mo-carte-texte">${esc(c.texte || '')}</p></article>`;
+  }
+
+  /** Achat d'un terrain : le titre s'affiche en grand un instant. */
+  function montrerTitre(c) {
+    titreMontre = { c, t: Date.now() };
+    clearTimeout(minuteurTitre);
+    minuteurTitre = setTimeout(() => { titreMontre = null; rendreCarte(); }, DUREE_TITRE_MS);
+  }
+
+  /* ---------- Rendu : panneau d'action (dans le tour) ---------- */
 
   /** Texte court de ce qu'on donne ou reçoit dans un échange. */
   function descOffre(part) {
@@ -332,23 +501,29 @@ export function creer(root, ctx) {
       <div class="mo-pied"><button type="button" class="mo-btn mo-btn-primary" data-act="finir"${peutAgir() ? '' : ' disabled'}>Finir mon tour</button></div>`;
   }
 
-  /** Dés, dernière carte tirée et panneau d'action : reconstruits seulement si leur contenu change. */
-  function rendreCentre(force = false) {
+  /** Panneau d'action : reconstruit seulement si son contenu change. */
+  function rendrePanneau(force = false) {
     if (occupe && !force) return;
     const j = jeu();
-    const cle = JSON.stringify([j.phase, j.actif, j.des, j.doubles, j.carte, j.offre, j.dette, monId(), etat.partie?.statut,
+    const cle = JSON.stringify([j.phase, j.actif, j.offre, j.dette, monId(), etat.partie?.statut,
       monMoi()?.etat?.argent, monMoi()?.etat?.prison, monMoi()?.etat?.cartes_sortie, posDe(monMoi()), monMoi()?.elimine, monMoi()?.parti,
       (etat.joueurs || []).map((x) => x.etat?.argent).join(',')]);
-    if (!force && cles.centre === cle) return;
-    cles.centre = cle;
-    const des = j.des
-      ? `<div class="mo-des" role="img" aria-label="Dés : ${j.des[0]} et ${j.des[1]}${j.doubles ? ', doubles' : ''}">${de(j.des[0])}${de(j.des[1])}</div>`
-      : '';
-    const carte = j.carte
-      ? `<article class="mo-carte" aria-label="Dernière carte tirée"><p class="mo-carte-pioche">${j.carte.pioche === 'chance' ? 'Carte Chance' : 'Caisse de communauté'}${j.carte.pour ? ` · ${esc(pseudoDe(j.carte.pour))}` : ''}</p><p class="mo-carte-texte">${esc(j.carte.texte || '')}</p></article>`
-      : '';
-    refs.centre.innerHTML = `<div class="mo-centre-haut">${des}${carte}</div>
-      <div class="mo-panneau" aria-live="polite" data-panneau>${panneau()}</div>`;
+    if (!force && cles.panneau === cle) return;
+    cles.panneau = cle;
+    refs.panneau.innerHTML = panneau();
+  }
+
+  /* ---------- Rendu : raccourcis (proposer un échange, annuler mon offre) ---------- */
+
+  function rendreRaccourcis() {
+    const offre = jeu().offre;
+    const aMoi = !!offre && offre.de === monId();
+    const peut = monTour() && peutAgir() && !offre;
+    const cle = JSON.stringify([peut, aMoi, peutAgir()]);
+    if (cles.raccourcis === cle) return;
+    cles.raccourcis = cle;
+    refs.raccourcis.innerHTML = `${peut ? '<button type="button" class="mo-btn mo-btn-ghost mo-pleine" data-echange-ouvrir>Proposer un échange</button>' : ''}
+      ${aMoi ? `<button type="button" class="mo-btn mo-btn-ghost mo-pleine" data-act="annuler_echange"${peutAgir() ? '' : ' disabled'}>Annuler ma proposition</button>` : ''}`;
   }
 
   /* ---------- Rendu : fiche d'un lieu (au clic sur une case ou un titre) ---------- */
@@ -472,18 +647,6 @@ export function creer(root, ctx) {
     refs.echange.dataset.focus = '';
   }
 
-  /** Raccourcis de la colonne de droite : proposer un échange (mon tour), annuler mon offre. */
-  function rendreRaccourcis() {
-    const offre = jeu().offre;
-    const aMoi = !!offre && offre.de === monId();
-    const peut = monTour() && peutAgir() && !offre;
-    const cle = JSON.stringify([peut, aMoi, peutAgir()]);
-    if (cles.raccourcis === cle) return;
-    cles.raccourcis = cle;
-    refs.raccourcis.innerHTML = `${peut ? '<button type="button" class="mo-btn mo-btn-ghost mo-pleine" data-echange-ouvrir>Proposer un échange</button>' : ''}
-      ${aMoi ? `<button type="button" class="mo-btn mo-btn-ghost mo-pleine" data-act="annuler_echange"${peutAgir() ? '' : ' disabled'}>Annuler ma proposition</button>` : ''}`;
-  }
-
   /* ---------- Actions et écouteurs ---------- */
 
   /** Envoie une action de jeu (bouton data-act ; data-case donne le numéro de case). */
@@ -499,9 +662,9 @@ export function creer(root, ctx) {
         toast(erreurTexte(e), 'error');
       } finally {
         occupe = false;
-        cles.centre = null;
+        cles.panneau = null;
         cles.fiche = null;
-        rendreCentre(true);
+        rendrePanneau(true);
         rendreFiche();
         suivi.rafraichir();
       }
@@ -613,7 +776,7 @@ export function creer(root, ctx) {
   refs.fiche.addEventListener('click', surClic);
   refs.titres.addEventListener('click', surClic);
   refs.raccourcis.addEventListener('click', surClic);
-  refs.centre.addEventListener('click', surClic);
+  refs.panneau.addEventListener('click', surClic);
   refs.echange.addEventListener('click', surClic);
   refs.echange.addEventListener('input', surSaisie);
   refs.echange.addEventListener('change', surSaisie);
@@ -631,22 +794,15 @@ export function creer(root, ctx) {
     refs.ongletCote.setAttribute('aria-pressed', String(nomOnglet === 'cote'));
   }
 
-  // Image du plateau si elle existe (sinon, les couleurs et les noms suffisent).
-  const urlImage = imagePlateau('monopoly', 'plateau');
-  imageExiste(urlImage).then((ok) => {
-    if (!ok) return;
-    imageFond = urlImage;
-    cles.cases = null;
-    if (etat) rendreCases();
-  });
-  // Illustration du centre du plateau (/assets/images/plateaux/monopoly/centre.webp), sous les dés et le panneau d'action.
-  const urlCentre = imagePlateau('monopoly', 'centre');
-  imageExiste(urlCentre).then((ok) => {
-    if (!ok || !refs.centre) return;
-    refs.centre.classList.add('mo-centre--image');
-    // En style direct : une adresse dans une variable CSS serait résolue depuis la feuille de style, pas depuis la page.
-    refs.centre.style.backgroundImage = `linear-gradient(rgba(14, 14, 16, .35), rgba(14, 14, 16, .35)), url("${urlCentre}")`;
-  });
+  /* ---------- Titres achetés : détection à partir de l'état précédent ---------- */
+
+  /** Terrains dont le propriétaire vient de changer (un achat) : à montrer en grand. */
+  function achatsDepuis(precedent) {
+    if (!precedent) return null;
+    const avant = precedent.jeu?.proprietes || {};
+    const apres = jeu().proprietes || {};
+    return Object.entries(apres).find(([c, p]) => p?.proprio && (!avant[c] || avant[c].proprio !== p.proprio));
+  }
 
   /* ---------- Chat et contrat de la vue ---------- */
 
@@ -655,17 +811,26 @@ export function creer(root, ctx) {
     maj(e) {
       if (!e?.partie) return;
       const avant = etat?.jeu?.actif;
+      const precedent = etat;
       etat = e;
+      const achat = achatsDepuis(precedent);
       rendreBandeau();
       rendreElimine();
       rendreCases();
+      rendrePions();
+      rendreArgent();
+      rendreTourTete();
       rendreJoueurs();
       rendreTitres();
       rendreJournal();
       rendreRaccourcis();
-      rendreCentre();
+      rendreDes();
+      if (achat) montrerTitre(Number(achat[0]));
+      rendreCarte();
+      rendrePanneau();
       rendreFiche();
       rendreEchange();
+      premiere = false;
       if (avant !== undefined && e.jeu?.actif !== avant && monTour()) refs.annonce.textContent = 'À toi de jouer.';
       chat.maj(e);
     },
@@ -675,9 +840,12 @@ export function creer(root, ctx) {
       if (messagesVus.length > 200) messagesVus.shift();
       chat.message(msg);
     },
-    /** Arrête le chrono, retire le chat et la table de la page. */
+    /** Arrête le chrono, les déplacements et le chat ; retire la table de la page. */
     detruire() {
       arretChrono?.();
+      clearTimeout(minuteurTitre);
+      pions.forEach((p) => { p.marche = true; });
+      pions.clear();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();
       el.remove();
