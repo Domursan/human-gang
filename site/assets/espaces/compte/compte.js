@@ -486,6 +486,51 @@ async function logout() {
  * Chaque bloc est branché juste après l'affichage.
  * @param {object|null} user utilisateur de la session (pour afficher l'e-mail)
  */
+/* Sommaire de « Mon compte » : une ancre par section (id de la cible, libellé). Sur téléphone, il défile en ligne. */
+const SOMMAIRE = [
+  ['profile-form', 'Profil'], ['avatar', 'Avatar'], ['pw-form', 'Connexion'], ['gaming', 'Gaming'], ['entraide', 'Entraide'],
+  ['infos', 'Infos'], ['badges', 'Badges'], ['data-card', 'Données'], ['notifs', 'Notifications'],
+];
+/** Sommaire (nav collante sous le haut de page) : les liens pointent vers les ancres des sections. */
+function sommaireHtml() {
+  return `<nav class="acc-nav" id="acc-nav" aria-label="Sommaire de mon compte">
+      <ul class="acc-nav-list">${SOMMAIRE.map(([id, label]) => `<li><a href="#${id}" data-target="${id}">${esc(label)}</a></li>`).join('')}</ul>
+    </nav>`;
+}
+let sommaireEcoute = false;
+/**
+ * Surligne la section courante du sommaire (aria-current) : la dernière section dont le haut a passé la barre collante.
+ * Le lien courant reste visible dans le sommaire défilant (téléphone).
+ */
+function paintSommaire() {
+  const nav = document.getElementById('acc-nav');
+  if (!nav) return;
+  const limite = nav.getBoundingClientRect().bottom + 24;
+  let cur = null;
+  for (const [id] of SOMMAIRE) {
+    const sec = document.getElementById(id);
+    if (!sec || !sec.getClientRects().length) continue; // section absente ou masquée (ex. Entraide avant son chargement)
+    if (sec.getBoundingClientRect().top <= limite) cur = id;
+  }
+  for (const a of nav.querySelectorAll('a[data-target]')) {
+    const on = a.dataset.target === cur;
+    if (on && !a.hasAttribute('aria-current')) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+  }
+}
+/** Branche le sommaire : écoute du défilement (une seule fois), puis premier surlignage. */
+function bindSommaire() {
+  if (!sommaireEcoute) {
+    sommaireEcoute = true;
+    let attente = 0;
+    window.addEventListener('scroll', () => {
+      if (attente) return;
+      attente = requestAnimationFrame(() => { attente = 0; paintSommaire(); });
+    }, { passive: true });
+  }
+  paintSommaire();
+}
+
 async function renderMember(user) {
   const p = me;
   app.innerHTML = `
@@ -499,6 +544,8 @@ async function renderMember(user) {
         <button class="btn btn-ghost" type="button" id="logout">${ICON.out} Se déconnecter</button>
       </div>
     </section>
+
+    ${sommaireHtml()}
 
     <div class="privacy-note" role="note">
       ${ICON.lock}
@@ -538,7 +585,7 @@ async function renderMember(user) {
       </form>
 
       <div class="stack acc-side">
-        <div class="card stack">
+        <div class="card stack" id="avatar">
           <h2 class="card-title">Avatar ${tagPublic}</h2>
           <div class="avatar-edit">
             <span id="av-preview">${avatarHtml(p, 96)}</span>
@@ -597,7 +644,7 @@ async function renderMember(user) {
       </form>
     </section>
 
-    <section class="card acc-badges">
+    <section class="card acc-badges" id="badges">
       <div class="acc-badges-head">
         <h2 class="card-title">${ICON.badge} Badges</h2>
         <span class="pill" id="badge-count">…</span>
@@ -620,8 +667,13 @@ async function renderMember(user) {
     </section>
     <section class="acc-row">
       <div id="push-slot" hidden></div>
-    </section>`;
+    </section>
+    <div class="acc-savebar" id="acc-savebar" role="region" aria-label="Enregistrer le profil" hidden>
+      <p>Modifications non enregistrées</p>
+      <button class="btn btn-primary" type="submit" form="profile-form">Enregistrer</button>
+    </div>`;
   done();
+  bindSommaire();
 
   $('#logout').addEventListener('click', logout);
   mountPushBlock($('#push-slot'), me);
@@ -654,7 +706,18 @@ function refreshIdentity() {
  */
 function bindProfile() {
   const form = $('#profile-form');
-  $$('.swatch', form).forEach((b) => b.addEventListener('click', () => { $('#pf-color').value = b.dataset.c; }));
+  // Barre collante (téléphone) : visible tant que le profil a des changements non enregistrés
+  const bar = $('#acc-savebar');
+  const etat = () => JSON.stringify([$('#pf-pseudo').value, $('#pf-color').value, $('#pf-birthday').value, $('#pf-share').checked, $('#pf-show-gen')?.checked ?? null]);
+  let enregistre = etat();
+  const majBarre = () => {
+    if (!bar) return;
+    bar.hidden = etat() === enregistre;
+    document.documentElement.toggleAttribute('data-savebar', !bar.hidden); // remonte le bouton flottant au-dessus de la barre
+  };
+  form.addEventListener('input', majBarre);
+  form.addEventListener('change', majBarre);
+  $$('.swatch', form).forEach((b) => b.addEventListener('click', () => { $('#pf-color').value = b.dataset.c; majBarre(); }));
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const pseudo = $('#pf-pseudo').value.trim();
@@ -673,6 +736,8 @@ function bindProfile() {
     if (error) return formError(form, authMsg(error));
     me = data;
     refreshIdentity();
+    enregistre = etat();
+    majBarre();
     toast('Profil enregistré.', 'ok');
   });
 }
