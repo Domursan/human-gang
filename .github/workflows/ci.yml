@@ -89,9 +89,10 @@ jobs:
       - name: Construire la base de test
         working-directory: tests/bancs/plateaux
         run: bash rebuild.sh
+      # t_risk (6 parties simulées, bien plus de 30 min) n'est pas lancé ici : à lancer à la main (bash run.sh t_risk.sql).
       - name: Scénarios SQL des plateaux
         working-directory: tests/bancs/plateaux
-        run: bash run.sh
+        run: bash run.sh $(ls t_*.sql | grep -v '^t_risk.sql$')
 
   # ---------- Suite de parcours, en 4 morceaux parallèles ----------
   morceaux:

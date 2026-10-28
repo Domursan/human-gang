@@ -23,7 +23,7 @@ const DEBUT_UNICITE = 165;
 /** Premier numéro dont l'application doit être journalisée dans appliquer.txt. */
 const DEBUT_APPLIQUEE = 138;
 /** Doublons historiques (numéros antérieurs à 165), acceptés. */
-const DOUBLONS_CONNUS = new Set(['018', '039', '052', '053', '054', '131', '134']);
+const DOUBLONS_CONNUS = new Set(['018', '131', '134']);
 /**
  * Fonctions internes non refermées dans leur propre migration, acceptées. Motifs par fichier : une fonction qui
  * correspond est signalée en « dette » et n'échoue pas. Elles sont refermées par la migration 165 (hg_plat__droits,
