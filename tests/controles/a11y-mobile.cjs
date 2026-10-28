@@ -59,24 +59,10 @@ const PARTIES = [
  * page et d'une partie : tout autre élément trop petit fait toujours échouer. À retirer une fois corrigé (commentaire « À corriger »).
  */
 const EXCEPTIONS = [
-  { page: 'uno', partie: 'table en cours', type: 'texte', motif: /^b « HG »/,
-    comment: 'À corriger : « HG » en 11 px sur les dos de cartes de la table (9 occurrences, 360 et 390 px). Passer à 12 px au minimum.' },
-  { page: 'loup-garou', partie: 'plateau de nuit', type: 'cible', motif: /lg-chat-onglet/,
-    comment: 'À corriger : onglets du chat (95 × 40 px : hauteur sous 44 px).' },
-  { page: 'loup-garou', partie: 'plateau de nuit', type: 'texte', motif: /avatar|lg-siege-buche/,
-    comment: 'À corriger : initiales des sièges (11 px) et prénoms autour du feu (11,5 px). Passer à 12 px au minimum.' },
   // Dames : exception permanente. 10 cases × 44 px = 440 px > 360 px : le damier ne peut pas atteindre 44 px de case en
   // largeur. Cases de 35,4 px à 360 px et 38,4 px à 390 px (damier pleine largeur, bordure de 1 px : maximum atteignable).
   { page: 'duels', partie: 'Dames en cours', type: 'cible', motif: /duels-dames-case/,
     comment: 'Exception permanente : damier de 10 cases, 10 × 44 px = 440 px > 360 px. Cases à 35,4 px en 360 px et 38,4 px en 390 px (maximum de la largeur).' },
-  { page: 'blackjack', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|bj-etiquette/,
-    comment: 'À corriger : étiquettes « À toi de jouer » et « toi » (11 px). Composant commun des plateaux (plat-etiquette).' },
-  { page: 'poker', partie: 'table en cours', type: 'texte', motif: /plat-etiquette|pk-|cd-sym/,
-    comment: 'À corriger : étiquettes, mises, actions et symboles des cartes (11 px). Composant commun des plateaux (plat-etiquette).' },
-  { page: 'catan', partie: 'plateau en cours', type: 'cible', motif: /^g « Sommet/,
-    comment: 'À corriger : sommets du plateau (SVG de 40 × 40 px en 360 px, 44 px attendus).' },
-  { page: 'catan', partie: 'plateau en cours', type: 'texte', motif: /plat-etiquette/,
-    comment: 'À corriger : étiquette « À toi de jouer » (11 px). Composant commun des plateaux (plat-etiquette).' },
 ];
 /**
  * Retire du relevé les défauts admis par EXCEPTIONS (écran de partie seulement). Renvoie la liste retirée, pour le compte rendu.
