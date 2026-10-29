@@ -7,17 +7,28 @@
  *   recouvertes, la nulle est grisée, la grille imposée est entourée d'or (ou tout est libre si cible est null).
  *   Après chaque manche, la grille finale reste affichée quelques secondes avec la ligne gagnante barrée.
  *   Une case vide est un <button type="button"> (désactivée hors de mon tour), une marque un <span role="img">.
- * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur).
+ *   Effets (ajouts à la maquette validée) : à mon tour, mon nom pulse en doré et les cases libres s'éclairent un instant ;
+ *   chaque marque nouvelle joue le son 1 (craie) ; fin de manche : la ligne se trace, les cases gagnantes brillent, bandeau
+ *   « Manche gagnée ! » avec le score, et confettis pour le gagnant (son 2 ; perdant : son 3 ; nulle : son 4). Le premier état
+ *   reçu n'anime rien. Coupés par mouvement réduit (body.duels-calme ou prefers-reduced-motion), sauf les sons.
+ *   Le signal « à toi de jouer » (son + titre d'onglet) reste celui du cadre (commun/tour-signal.js).
+ * Dépendances : core.js (esc, toast, motionAllowed), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur),
+ *   ../../../commun/grille-clavier.js, ../../../commun/sons-jeux.js (jouerSonJeu).
  * Exporte : creer(root, ctx) → { maj(etat), message(msg), detruire() } (contrat de vues/partie.js).
  */
-import { esc, toast } from '../../../commun/core.js';
+import { esc, toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
 import { voisinGrille } from '../../../commun/grille-clavier.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
 
 const CROIX = '#6FB3F2';
 const ROND = '#E8B04B';
 const DUREE_RECAP = 3500;
+const DELAI_FIN = 450;    // bandeau, confettis et son de fin de manche : après le tracé de la ligne
+const DUREE_TOUR = 2600;  // pulsation de mon nom et éclairage des cases libres (moins de 3 s)
+const SON_MARQUE = 1;     // son « marque posée (craie) » de la maquette
+const COULEURS_CONFETTI = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398', '#E2C77E'];
 const POS = ['en haut à gauche', 'en haut', 'en haut à droite', 'à gauche', 'au centre', 'à droite',
   'en bas à gauche', 'en bas', 'en bas à droite'];
 const REGLES = {
@@ -88,6 +99,10 @@ export function creer(root, ctx) {
   // masque : coup du robot reçu en même temps que le mien, montré un instant après (on voit d'abord son propre coup).
   const st = { etat: null, nbManches: null, recap: null, timer: null, dernierVu: '', envoi: false, vivant: true,
     provisoire: null, masque: null, tMasque: null,
+    /* effets : glow (cases gagnantes de la grille finale), tCelebre (bandeau et son), fx (calques ajoutés au body),
+       tourAvant (mon tour à l'état précédent), tourDebut (mon tour commence), tTour, tourEnAttente (début de tour pendant
+       une grille finale : attend sa fin), affiche (marques déjà à l'écran : sert au son « marque posée ») */
+    glow: null, tCelebre: null, fx: [], tourAvant: undefined, tourDebut: false, tTour: null, tourEnAttente: false, affiche: null,
     /* curseur : case de la tabulation (une seule, roving tabindex) ; par : cases affichées (index → élément) ;
        geo : forme de la grille affichée (lignes, colonnes, passage index ↔ ligne/colonne). */
     curseur: 0, par: new Map(), geo: null };
@@ -136,7 +151,8 @@ export function creer(root, ctx) {
     }
   }
 
-  /** Quand une manche vient de finir, garde sa grille finale affichée quelques secondes (ligne barrée). */
+  /** Quand une manche vient de finir, garde sa grille finale affichée quelques secondes (ligne barrée, cases gagnantes
+   *  qui brillent), puis bandeau, confettis et son après DELAI_FIN (le temps que la ligne se trace). */
   function suivreManche(e) {
     const h = e.partie.historique || [];
     if (st.nbManches === null) { st.nbManches = h.length; return; }
@@ -145,11 +161,81 @@ export function creer(root, ctx) {
     const d = h[h.length - 1];
     if (!d?.grille) return;
     st.recap = { manche: d.manche, grille: d.grille, petites: d.petites, ligne: d.ligne };
+    st.glow = (d.ligne || []).map(Number);
     clearTimeout(st.timer);
     st.timer = setTimeout(() => {
       st.recap = null;
+      st.glow = null;
+      if (st.tourEnAttente && st.etat) { st.tourEnAttente = false; debutTour(); marquerNom(st.etat); }
       if (st.vivant && st.etat) rendre();
     }, DUREE_RECAP);
+    // Issue vue par moi : gagnant (son 2, confettis), perdant (son 3), nulle (son 4), spectateur (aucun son).
+    const issue = !e.moi?.joue ? 'spectateur' : !d.gagnant ? 'nulle' : d.gagnant === e.moi.user_id ? 'gagnant' : 'perdant';
+    clearTimeout(st.tCelebre);
+    st.tCelebre = setTimeout(() => celebrer(e, d, issue), DELAI_FIN);
+  }
+
+  /** Fin de manche : son, bandeau « Manche gagnée ! » avec le score, confettis pour le gagnant (sauf mouvement réduit). */
+  function celebrer(e, d, issue) {
+    if (!st.vivant) return;
+    const son = { gagnant: 2, perdant: 3, nulle: 4 }[issue];
+    if (son) jouerSonJeu('morpion', son);
+    const js = e.joueurs || [];
+    const gagnant = js.find((j) => j.user_id === d.gagnant);
+    const autre = js.find((j) => j.user_id !== d.gagnant);
+    const plusieurs = Number(e.partie.format) > 1;
+    let sous = '';
+    if (gagnant) {
+      sous = plusieurs
+        ? `${esc(gagnant.pseudo || '?')} mène ${gagnant.manches ?? 0} – ${autre?.manches ?? 0}`
+        : `${esc(gagnant.pseudo || '?')} gagne la manche`;
+    } else if (plusieurs) {
+      sous = `Score : ${js.find((j) => j.place === 1)?.manches ?? 0} – ${js.find((j) => j.place === 2)?.manches ?? 0}`;
+    }
+    bandeau(d.gagnant ? 'Manche gagnée !' : 'Manche nulle', sous);
+    if (issue === 'gagnant' && motionAllowed()) confettis();
+  }
+
+  /** Bandeau de fin de manche sur la page : calque fixe, sans clic, retiré après 2,3 s. sous est déjà échappé. */
+  function bandeau(titre, sous) {
+    const b = document.createElement('div');
+    b.className = 'morpion-bandeau';
+    b.setAttribute('aria-hidden', 'true');
+    b.innerHTML = `${esc(titre)}${sous ? `<small>${sous}</small>` : ''}`;
+    document.body.append(b);
+    st.fx.push(b);
+    setTimeout(() => b.remove(), 2300);
+  }
+
+  /** Confettis : 70 petits rectangles qui tombent (durée et retard au total sous 3 s), retirés d'eux-mêmes. */
+  function confettis() {
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement('i');
+      c.className = 'morpion-confetti';
+      c.style.left = `${Math.random() * 100}vw`;
+      c.style.background = COULEURS_CONFETTI[i % COULEURS_CONFETTI.length];
+      c.style.animationDuration = `${(1.4 + Math.random()).toFixed(2)}s`;
+      c.style.animationDelay = `${(Math.random() * 0.4).toFixed(2)}s`;
+      document.body.append(c);
+      st.fx.push(c);
+      setTimeout(() => c.remove(), 3000);
+    }
+  }
+
+  /** Mon tour commence : pulsation de mon nom et éclairage des cases libres, retirés après DUREE_TOUR. */
+  function debutTour() {
+    st.tourDebut = true;
+    clearTimeout(st.tTour);
+    st.tTour = setTimeout(finTour, DUREE_TOUR);
+  }
+  function finTour() {
+    st.tourDebut = false;
+    root.querySelectorAll('.morpion-tour-moi, .morpion-libre').forEach((el) => el.classList.remove('morpion-tour-moi', 'morpion-libre'));
+  }
+  /** Pulsation sur mon nom dans le cadre (le cadre redessine ses joueurs à chaque état : on l'ajoute après lui). */
+  function marquerNom(e) {
+    const i = (e.joueurs || []).findIndex((j) => j.user_id === e.moi?.user_id);
+    root.querySelectorAll('.duels-face-j')[i]?.classList.add('morpion-tour-moi');
   }
 
   /** Statut sous la barre. Le spectateur garde le texte posé par le cadre. */
@@ -208,6 +294,20 @@ export function creer(root, ctx) {
     const animer = !recap && masque === null && dernier >= 0 && cleDernier !== st.dernierVu;
     if (!recap && masque === null) st.dernierVu = cleDernier;
     const maMarque = String(e.moi?.place ?? '');
+    // Son « marque posée » : une marque nouvelle à l'écran (la mienne dès le clic, celle du robot après son délai).
+    const marques = new Set();
+    for (let i = 0; i < N; i++) if (g[i] === '1' || g[i] === '2') marques.add(i);
+    if (st.envoi && st.provisoire !== null && (maMarque === '1' || maMarque === '2')) marques.add(st.provisoire);
+    if (masque !== null) marques.delete(masque);
+    if (!recap) {
+      if (st.affiche === null) st.affiche = marques;
+      else {
+        if ([...marques].some((i) => !st.affiche.has(i))) jouerSonJeu('morpion', SON_MARQUE);
+        st.affiche = marques;
+      }
+    }
+    // Cases gagnantes de la grille finale (manche qui vient de finir) : petites grilles en ultime, cases sinon.
+    const brille = recap && st.glow ? new Set(st.glow) : null;
 
     /** Une case : marque (span) ou case vide (bouton). */
     const caseHtml = (i) => {
@@ -220,10 +320,12 @@ export function creer(root, ctx) {
       if (c === '1' || c === '2') {
         const etiquette = `${c === '1' ? 'Croix' : 'Rond'} de ${nomDe(c)}`;
         const point = estDernier && v === 'gomoku' ? '<span class="morpion-point" aria-hidden="true"></span>' : '';
-        return `<span class="morpion-case${estDernier ? ' is-dernier' : ''}" data-case="${i}" tabindex="-1" role="img" aria-label="${esc(etiquette)}">${svgMarque(c, estDernier && animer)}${point}</span>`;
+        const gl = v !== 'ultime' && brille?.has(i) ? ' morpion-gagnante' : '';
+        return `<span class="morpion-case${estDernier ? ' is-dernier' : ''}${gl}" data-case="${i}" tabindex="-1" role="img" aria-label="${esc(etiquette)}">${svgMarque(c, estDernier && animer)}${point}</span>`;
       }
-      const off = jouable(i) ? '' : ' disabled';
-      return `<button type="button" class="morpion-case" data-case="${i}" aria-label="${esc(libelleCase(v, w, i))}"${off}></button>`;
+      const ok = jouable(i);
+      const flash = ok && st.tourDebut ? ' morpion-libre' : '';
+      return `<button type="button" class="morpion-case${flash}" data-case="${i}" aria-label="${esc(libelleCase(v, w, i))}"${ok ? '' : ' disabled'}></button>`;
     };
 
     /** Une petite grille de l'ultime, avec son voile si elle est gagnée ou nulle. */
@@ -232,6 +334,7 @@ export function creer(root, ctx) {
       const classes = ['morpion-petite'];
       if (etat === '1' || etat === '2') classes.push('is-gagnee');
       if (etat === '=') classes.push('is-nulle');
+      if (v === 'ultime' && brille?.has(k)) classes.push('morpion-gagnante');
       if (peut && cibleOk && k === cible) classes.push('is-cible');
       else if (peut && !cibleOk && etat === '.') classes.push('is-libre');
       let voile = '';
@@ -316,6 +419,14 @@ export function creer(root, ctx) {
       st.envoi = false;
       cadre.maj(e);
       suivreManche(e);
+      // Mon tour commence (jamais au premier état reçu) ; pendant une grille finale, l'effet attend la fin de l'affichage.
+      const monTour = cadre.monTour(e);
+      if (st.tourAvant === false && monTour) {
+        if (st.recap) st.tourEnAttente = true;
+        else debutTour();
+      }
+      st.tourAvant = monTour;
+      if (st.tourDebut) marquerNom(e);
       // Contre le robot, sa réponse arrive avec mon coup : on la montre 450 ms plus tard, pour voir les deux coups l'un après l'autre.
       const prov = st.provisoire;
       st.provisoire = null;
@@ -334,6 +445,9 @@ export function creer(root, ctx) {
       st.vivant = false;
       clearTimeout(st.timer);
       clearTimeout(st.tMasque);
+      clearTimeout(st.tCelebre);
+      clearTimeout(st.tTour);
+      st.fx.forEach((el) => el.remove());
       cadre.detruire();
     },
   };

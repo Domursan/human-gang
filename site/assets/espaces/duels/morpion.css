@@ -64,3 +64,32 @@ button.morpion-case:disabled { cursor: default; }
 .morpion-note { font-size: 14px; max-width: 46ch; }
 .morpion-regle { margin: 0 0 12px; padding-left: 18px; font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .morpion-score { margin: 0 0 4px; font-size: 15px; }
+
+/* Effets ajoutés (vues/morpion.js), tous sous 3 s. Sans mouvement (body.duels-calme ou prefers-reduced-motion) : état final direct. */
+/* Mon tour : mon nom pulse en doré (classe ajoutée sur le joueur du cadre) */
+.duels-face-j.morpion-tour-moi { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); animation: morpion-pouls 1.2s ease-in-out 2; }
+@keyframes morpion-pouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+/* Mon tour : les cases libres s'éclairent un instant */
+.morpion-case.morpion-libre { animation: morpion-eclaire 1.3s ease-in-out 2; }
+@keyframes morpion-eclaire { 50% { border-color: #E2C77E; background: #2A2A1F; } }
+/* Fin de manche : les cases (ou petites grilles) gagnantes brillent, après le tracé de la ligne */
+.morpion-gagnante { animation: morpion-brille 1.2s ease-in-out .45s 2; }
+@keyframes morpion-brille { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); transform: scale(1.04); } }
+/* Bandeau « Manche gagnée ! » et confettis : calques fixes sur la page, sans clic */
+.morpion-bandeau { position: fixed; left: 50%; top: 72%; transform: translate(-50%, -50%) scale(.5); opacity: 0; z-index: 9000; pointer-events: none;
+  white-space: nowrap; font: 400 clamp(30px, 5vw, 56px) 'Archivo Black', Inter, sans-serif; color: #fff;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9); animation: morpion-bandeau 2.2s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.morpion-bandeau small { display: block; text-align: center; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes morpion-bandeau { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); } 85% { opacity: 1; } 100% { opacity: 0; } }
+.morpion-confetti { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none; animation: morpion-tombe linear forwards; }
+@keyframes morpion-tombe { to { transform: translateY(105vh) rotate(720deg); } }
+
+body.duels-calme .morpion-tour-moi, body.duels-calme .morpion-libre, body.duels-calme .morpion-gagnante { animation: none; }
+body.duels-calme .morpion-gagnante { box-shadow: 0 0 0 3px #E2C77E; }
+body.duels-calme .morpion-bandeau { animation: none; opacity: 1; transform: translate(-50%, -50%); }
+@media (prefers-reduced-motion: reduce) {
+  .duels-face-j.morpion-tour-moi, .morpion-case.morpion-libre, .morpion-gagnante { animation: none; }
+  .morpion-gagnante { box-shadow: 0 0 0 3px #E2C77E; }
+  .morpion-bandeau { animation: none; opacity: 1; transform: translate(-50%, -50%); }
+}
