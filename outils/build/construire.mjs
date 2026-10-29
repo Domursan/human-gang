@@ -254,11 +254,13 @@ for (const page of pagesHtml) {
   // Préchargements d'origine (ex. supabase-js, chargé par un import() dans core/supabase.js) : leur version regroupée est
   // demandée dès le HTML ; ceux qui n'ont pas de version regroupée sont retirés.
   const prechargesOrigine = [];
+  let scriptSupabase = null;
   texte = texte.replace(/<link\b[^>]*rel\s*=\s*["']modulepreload["'][^>]*>\s*/gi, (lien) => {
     lienSupprimes++;
     const href = lien.match(/href\s*=\s*"([^"]+)"/);
     const abs = href && adresseSortie.get(join(SRC, href[1]));
     if (abs) prechargesOrigine.push(join(OUT, abs.slice(1)));
+    if (href && /\/vendor\/supabase-js-[\d.]+\.mjs$/.test(href[1])) scriptSupabase = href[1].replace(/\.mjs$/, '.js');
     return '';
   });
 
@@ -268,6 +270,9 @@ for (const page of pagesHtml) {
   const vus = new Set(entreesPage);
   const aTraiter = [...entreesPage];
   const preloads = [];
+  // supabase-js : le wrapper (.mjs) injecte le vrai script classique (110 Ko). Sans ce préchargement, le script n'est
+  // demandé qu'une fois le wrapper exécuté, et toute la page attend ces deux allers-retours en série.
+  if (scriptSupabase && existsSync(join(SRC, scriptSupabase))) preloads.push(`<link rel="preload" as="script" href="${scriptSupabase}">`);
   for (const abs of prechargesOrigine) {
     if (vus.has(abs)) continue;
     vus.add(abs);

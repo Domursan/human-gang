@@ -14,7 +14,9 @@ import { creerSalon } from '../../commun/jeux-salon.js';
 
 const salon = creerSalon({
   prefixe: 'hg_lg', canal: 'lg', etiquette: '[loup-garou]',
-  tablesSupp: ['hg_lg_joueurs'],           // les joueurs changent (rôle, vivant, vote) : relecture
+  // Pas d'abonnement à hg_lg_joueurs : chaque fonction qui écrit un joueur met aussi à jour hg_lg_parties dans la même
+  // transaction (version, phase ou statut), dont le signal suffit. Un abonnement de plus doublait les relectures.
+  tablesSupp: [],
   secours: { membre: 4000, invite: 4000 },
   relireMessagesInvite: false,             // le chat relit lui-même chaque salon pour l'invité (chat.js)
   restePause: true,                         // partie en pause : le temps figé est affiché
@@ -51,12 +53,34 @@ export const lg = Object.assign(commun, {
     rpc('hg_lg_mj', { p_code: code, p_action: action, p_cible: cible, p_texte: texte, p_secondes: secondes }),
 });
 
+// Invité : hg_lg_invite('messages') renvoie tous les salons lisibles d'un coup. Une relève (un appel par salon visible)
+// partage donc une seule lecture, et seuls les messages récents sont redemandés (curseur « apres », horodatage).
+// Le curseur recule de 10 s : un message dont la transaction finit en retard n'est pas perdu (doublons écartés par id).
+const releveInvite = { code: null, apres: null, quand: 0, promesse: null, charges: new Set() };
+async function messagesInvite(code, canal, depuisId) {
+  if (releveInvite.code !== code) Object.assign(releveInvite, { code, apres: null, quand: 0, promesse: null, charges: new Set() });
+  const lire = (args) => rpcInvite('messages', code, args).then((liste) => {
+    const fin = (liste || []).reduce((max, m) => Math.max(max, Date.parse(m.created_at) || 0), 0);
+    if (fin) releveInvite.apres = new Date(Math.max(fin - 10000, Date.parse(releveInvite.apres || 0) || 0)).toISOString();
+    return liste || [];
+  });
+  let liste;
+  if (!releveInvite.charges.has(canal) || !releveInvite.apres) {     // premier chargement d'un salon : tout l'historique
+    liste = await lire({});
+    releveInvite.charges.add(canal);
+  } else {
+    if (!releveInvite.promesse || Date.now() - releveInvite.quand > 1000) {
+      releveInvite.quand = Date.now();
+      releveInvite.promesse = lire({ apres: releveInvite.apres });
+    }
+    liste = await releveInvite.promesse;
+  }
+  return liste.filter((m) => m.canal === canal && m.id > depuisId).sort((a, b) => a.id - b.id);
+}
+
 /** Messages d'un salon (lecture directe : la base ne renvoie que ce que le joueur a le droit de lire). */
 export async function messages(partieId, canal, depuisId = 0, code = null) {
-  if (salon.estInvite()) {
-    const tous = await rpcInvite('messages', code);
-    return (tous || []).filter((m) => m.canal === canal && m.id > depuisId).sort((a, b) => a.id - b.id);
-  }
+  if (salon.estInvite()) return messagesInvite(code, canal, depuisId);
   const { data, error } = await sb.from('hg_lg_messages').select('id, canal, user_id, texte, created_at')
     .eq('partie', partieId).eq('canal', canal).gt('id', depuisId).order('id', { ascending: true }).limit(200);
   if (error) throw new Error(salon.erreurTexte(error));

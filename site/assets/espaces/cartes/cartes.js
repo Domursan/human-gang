@@ -26,7 +26,6 @@ import { openProof, proofCss } from '../accueil/quest-proofs.js';
 import { boosterStyleClass } from './booster-styles.js';
 import { themeDecor, playOpeningFx } from './booster-themes.js';
 import { onShelf, openNow, saleBadgeHtml, saleLimitHtml, closedBoxHtml, closedRowHtml, discountHtml } from './cartes-saisons.js';
-import { mountProposals } from './cartes-propositions.js';
 // Succès « Pentakill » (F9, migration 101) : contrôle serveur après un booster de 5 cartes, bannière à la fin de la révélation.
 import { pentakillCheck, showPentakill } from './cartes-pentakill.js';
 // Idées du gang, paquet C2 (migration 081) : générations OG / 2e gen (C8), regroupement par jeu (C7), codes cadeaux (C9),
@@ -34,8 +33,9 @@ import { pentakillCheck, showPentakill } from './cartes-pentakill.js';
 import { loadGenerations } from './cartes-gen.js';
 import { hasTags, tagGroupsHtml, loadTagLabels } from './cartes-jeux.js';
 import { initCodes, codeBoxHtml, codeFromHash, openCode } from './cartes-codes.js';
-import { initAtelier, drawAtelier } from './cartes-atelier.js';
-import { initEnchere, drawEnchere } from './cartes-enchere.js';
+// Atelier (C10), enchère (C11) et propositions (C6) : chargés après le premier affichage (voir le démarrage, en bas).
+let atelier = null;
+let enchere = null;
 import { LOT as COL_LOT, SEUIL as COL_SEUIL, lotsAnticipes, gardeFocus, mesurerGroupes, attrGroupe } from './cartes-lots.js';
 import { foldText } from '../../commun/core/recherche-lien.js';
 import { refreshCompteurs } from '../../commun/core/badges-compteur.js';
@@ -1077,7 +1077,7 @@ function drawBoutique() {
       <p class="muted small shop-intro">${esc(SHOP_INTRO)}</p>
       ${items}
     </section>`;
-  drawEnchere(); // encart ou vue de l'enchère de la semaine (idée C11)
+  enchere?.drawEnchere(); // encart ou vue de l'enchère de la semaine (idée C11)
   fitAll(el);
 }
 
@@ -2570,7 +2570,7 @@ function drawCollection(focusId) {
   $('#cartes-filtres')?.addEventListener('toggle', (e) => { S.filtresOuverts = e.currentTarget.open; });
   el.insertAdjacentHTML('afterbegin', '<div id="cartes-luck-slot"></div>');
   if (!OFF) import('./cartes-chance.js').then((m) => m.mountLuck($('#cartes-luck-slot'))).catch(() => {}); // « Ma chance » (C14)
-  drawAtelier(); // panneau de l'Atelier (idée C10)
+  atelier?.drawAtelier(); // panneau de l'Atelier (idée C10)
   // Le focus revient au champ modifié sans faire défiler la page
   if (focusId) document.getElementById(focusId)?.focus({ preventScroll: true });
   lotsCol.planifier(); // remplit l'écran si la liste ne le couvre pas encore (grand écran, filtre)
@@ -3497,8 +3497,17 @@ async function boot() {
   // Idées du gang (paquet C2) : codes cadeaux, Atelier, enchère. Chaque module se charge seul et ne bloque pas la page.
   const refreshAll = async () => { await refreshAfter(refreshData); renderAll(); };
   initCodes({ app, refresh: refreshAll, goTab: (id) => { setTab(id); focusSection(); } });
-  initAtelier({ app, copies: () => S.copies, card: (id) => S.cardsById.get(id) || null, balance: bal, god: isGod, refresh: refreshAll });
-  initEnchere({ app, visible: () => S.tab === 'boutique' && !S.peer, refresh: refreshAll });
+  // Atelier et enchère : modules chargés à part (onglets peu visités), dessinés dès qu'ils arrivent.
+  import('./cartes-atelier.js').then((m) => {
+    m.initAtelier({ app, copies: () => S.copies, card: (id) => S.cardsById.get(id) || null, balance: bal, god: isGod, refresh: refreshAll });
+    atelier = m;
+    m.drawAtelier();
+  }).catch(() => {});
+  import('./cartes-enchere.js').then((m) => {
+    m.initEnchere({ app, visible: () => S.tab === 'boutique' && !S.peer, refresh: refreshAll });
+    enchere = m;
+    m.drawEnchere();
+  }).catch(() => {});
   window.addEventListener('hashchange', routeFromHash);
   routeFromHash(); // lien direct vers une collection ou retour arrière depuis elle
   loadQuests();
@@ -3506,7 +3515,7 @@ async function boot() {
   loadGifts();
   loadMembers();
   // Propositions de cartes (migration 080, C6) : encart sous la Collection quand une série en accepte.
-  mountProposals(app, me);
+  import('./cartes-propositions.js').then((m) => m.mountProposals(app, me)).catch(() => {});
   app.removeAttribute('aria-busy');
   // Le compte à rebours du booster gratuit se met à jour sans recharger la page
   // Pas de rafraîchissement quand l'onglet est caché ; une mise à jour immédiate au retour

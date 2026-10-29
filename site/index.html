@@ -34,8 +34,9 @@
   <link rel="stylesheet" href="/assets/espaces/cartes/card-drops.css">
   <link rel="stylesheet" href="/assets/espaces/accueil/intro.css">
   <!-- Polices non bloquantes (l'intro n'en a presque pas besoin) -->
-  <!-- Mise en cache, en basse priorité, de la bibliothèque utilisée par l'accueil -->
-  <link rel="prefetch" href="/assets/vendor/supabase-js-2.45.4.mjs" crossorigin="anonymous">
+  <!-- Mise en cache, en basse priorité, de la bibliothèque utilisée par l'accueil (le .js : le .mjs n'est qu'un relais de 1 Ko,
+       chargé comme script classique, donc sans crossorigin) -->
+  <link rel="prefetch" href="/assets/vendor/supabase-js-2.45.4.js">
 </head>
 <body class="intro">
   <a class="intro-skip btn btn-ghost" href="/pages/compte/accueil.html?intro=vu" id="skip">Passer l'intro</a>

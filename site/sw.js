@@ -1,7 +1,10 @@
 /* Service worker du Humane Gang : mode hors ligne (coque du site et derniers contenus lus).
-   - Pages (navigation) : réseau d'abord ; en cas d'échec, la copie en cache puis /offline.html.
-   - Code du site (/assets/**.js, .css, .json) : réseau d'abord, avec revalidation (cache: no-cache) ; la copie en cache
-     ne sert que hors ligne. Une page et ses modules restent ainsi de la même version.
+   - Pages (navigation) : réseau d'abord ; sans réponse au bout de 3 s, la copie en cache (le réseau la met à jour en
+     arrière-plan) ; en cas d'échec, la copie en cache puis /offline.html.
+   - Fichiers immuables (morceaux et feuilles regroupés nommés par empreinte, bibliothèques vendorées versionnées) :
+     cache d'abord, jamais revérifiés (une nouvelle version porte une autre adresse).
+   - Autre code du site (/assets/**.js, .css, .json) : réseau d'abord, avec revalidation (cache: no-cache) ; la copie en
+     cache ne sert que hors ligne. Une page et ses modules restent ainsi de la même version.
    - Autres fichiers du site (/assets/ : images, polices, sons) : copie en cache servie tout de suite, mise à jour en
      arrière-plan (stale-while-revalidate) ; une nouvelle version est utilisée dès le chargement suivant.
    - Bibliothèque jsDelivr épinglée (/npm/, version exacte x.y.z) : cache d'abord ; seules les réponses lisibles et réussies
@@ -19,7 +22,7 @@
 /* ---------- Constantes ---------- */
 
 // Nom du cache : préfixe commun + version. Les caches des anciennes versions (même préfixe) sont supprimés à l'activation.
-const CACHE_VERSION = 'v148';
+const CACHE_VERSION = 'v149';
 const CACHE_PREFIX = 'hg-coque-';
 const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 // Q4 : images des cartes (même nom et même plafond que assets/commun/offline-store.js). Hors du préfixe : gardé d'une version à l'autre.
@@ -28,6 +31,11 @@ const IMG_MAX = 1500;
 const CARD_IMG_PATH = '/storage/v1/object/public/hg-assets/cards/';
 // Illustrations des cartes rangées dans le site (même cache IMG_CACHE que ci-dessus).
 const LOCAL_CARD_PATH = '/assets/cartes/';
+// Fichiers dont l'adresse change avec le contenu (outils/build/construire.mjs) : morceaux esbuild <nom>-<empreinte 8>.js,
+// feuilles regroupées <sha1 8 hex>.css, bibliothèques vendorées <nom>-<x.y.z>.(m)js.
+const IMMUABLE = /^\/assets\/(?:_b\/chunks\/[^/]+-[A-Z0-9]{8}\.js|_b\/css\/[0-9a-f]{8}\.css|vendor\/[^/]+-\d+\.\d+\.\d+\.m?js)$/;
+// Navigation : au-delà de ce délai sans réponse du réseau, la copie en cache de la page est servie (si elle existe).
+const NAV_DELAI_MS = 3000;
 
 /* ---------- Liste de précache (la coque) ----------
    Fichiers téléchargés à l'installation, pour que le site s'ouvre hors ligne dès la première fois : les pages de la coque
@@ -95,7 +103,7 @@ self.addEventListener('fetch', (event) => {
   const sameOrigin = url.origin === self.location.origin;
 
   if (req.mode === 'navigate' && sameOrigin) {
-    event.respondWith(networkFirst(req));
+    event.respondWith(networkFirst(req, false, event, NAV_DELAI_MS));
     return;
   }
 
@@ -103,6 +111,9 @@ self.addEventListener('fetch', (event) => {
   // de Supabase (cache hg-cartes-img, servi en premier, plafonné à IMG_MAX).
   if (sameOrigin && url.pathname.startsWith(LOCAL_CARD_PATH)) { event.respondWith(cardImage(req, event)); return; }
 
+  // Fichiers immuables (morceaux et feuilles nommés par empreinte, bibliothèques vendorées versionnées) : leur contenu
+  // ne change jamais sous la même adresse, inutile de les revérifier à chaque chargement.
+  if (sameOrigin && IMMUABLE.test(url.pathname)) { event.respondWith(cacheFirst(req)); return; }
   // Code (JS, CSS) : toujours la version en ligne quand le réseau répond, pour que la page et ses modules
   // restent de la même version après une mise à jour ; le cache ne sert qu'hors ligne.
   if (sameOrigin && url.pathname.includes('/assets/') && /\.(m?js|css|json)$/.test(url.pathname)) { event.respondWith(networkFirst(req, true)); return; }
@@ -136,19 +147,28 @@ function pageKey(req) {
 
 /**
  * Réseau d'abord : essaie le réseau et garde une copie. Hors ligne, sert la copie en cache, sinon /offline.html.
+ * Avec un délai : si le réseau n'a pas répondu à temps et qu'une copie existe, la copie est servie et le réseau
+ * continue en arrière-plan pour la rafraîchir (connexion lente mais pas coupée).
  * @param {Request} req Requête à traiter.
  * @param {boolean} [revalidate] Si vrai, demande au serveur de vérifier la version (évite le cache HTTP du navigateur).
+ * @param {FetchEvent} [event] Événement fetch, pour finir la mise à jour du cache après la réponse (waitUntil).
+ * @param {number} [delai] Délai en millisecondes avant de servir la copie ; 0 : attendre le réseau.
  * @returns {Promise<Response>} La réponse réseau, la copie en cache, ou une erreur réseau.
  */
-async function networkFirst(req, revalidate = false) {
+async function networkFirst(req, revalidate = false, event = null, delai = 0) {
   const cache = await caches.open(CACHE);
   // Navigation : rangée sous l'adresse sans paramètres (voir pageKey).
   const key = req.mode === 'navigate' ? pageKey(req) : req;
-  try {
-    // revalidate : demande au serveur si le fichier a changé (réponse 304 légère sinon), sans se fier au cache HTTP.
-    const res = await fetch(req, revalidate ? { cache: 'no-cache' } : undefined);
+  // revalidate : demande au serveur si le fichier a changé (réponse 304 légère sinon), sans se fier au cache HTTP.
+  const reseau = fetch(req, revalidate ? { cache: 'no-cache' } : undefined).then((res) => {
     if (res.ok) cache.put(key, res.clone());
     return res;
+  });
+  if (event) event.waitUntil(reseau.catch(() => {}));
+  try {
+    const copie = delai ? await cache.match(key) : null;
+    if (!copie) return await reseau;
+    return await Promise.race([reseau, new Promise((ok) => { setTimeout(() => ok(copie), delai); })]);
   } catch (e) {
     return (await cache.match(key)) || (await cache.match('/offline.html')) || Response.error();
   }

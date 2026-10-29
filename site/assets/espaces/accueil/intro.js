@@ -174,9 +174,11 @@ function buildBand() {
  * Appelée au départ et après un redimensionnement important.
  */
 function buildSky() {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
   W = canvas.clientWidth || window.innerWidth;
   H = canvas.clientHeight || window.innerHeight;
+  // Téléphone : densité 1 et moins d'étoiles (le ciel est redessiné à chaque image, il doit rester fluide)
+  const petit = W < 760;
+  DPR = Math.min(petit ? 1 : 2, window.devicePixelRatio || 1);
   canvas.width = Math.round(W * DPR);
   canvas.height = Math.round(H * DPR);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -188,7 +190,7 @@ function buildSky() {
   buildBand();
 
   // Nombre d'étoiles adapté à la surface de l'écran (et plafonné pour rester fluide)
-  const count = Math.round(Math.min(1500, Math.max(380, (W * H) / 850)));
+  const count = Math.round(Math.min(petit ? 500 : 1500, Math.max(380, (W * H) / 850)));
   const half = Math.hypot(W, H) / 2;
   const diag = half * 2;
   stars = [];
@@ -412,6 +414,13 @@ if (reduced) {
   window.addEventListener('resize', readScroll, { passive: true });
 
   let lastPct = -1;
+  // Page quittée (ou gardée pour le retour arrière) : la boucle s'arrête, et reprend si la page revient à l'écran.
+  let arrete = false;
+  window.addEventListener('pagehide', () => { arrete = true; });
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted || !arrete) return;
+    arrete = false; lastT = performance.now(); requestAnimationFrame(frame);
+  });
 
   /**
    * Une image d'animation : fait avancer la progression, puis met à jour caméra, logo, lueur, ciel et barre de progression.
@@ -460,7 +469,7 @@ if (reduced) {
     if (pct !== lastPct) { progressEl.setAttribute('aria-valuenow', String(pct)); lastPct = pct; }
 
     if (!leaving && target >= 0.985 && cur >= 0.95) leave(600);
-    requestAnimationFrame(frame);
+    if (!arrete) requestAnimationFrame(frame);
   }
   readScroll();
   requestAnimationFrame(frame);
