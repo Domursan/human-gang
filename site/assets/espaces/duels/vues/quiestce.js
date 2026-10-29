@@ -10,21 +10,37 @@
  *   Question libre reçue : bandeau « X te demande… » avec Oui / Non, avant le reste.
  *   Spectateur : plateau seul, sans action ni personnage secret.
  *   Nouvelle manche (partie.manche change) : personnages rechargés, baisses remises à zéro.
- * Dépendances : core.js (esc, toast), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur),
- *   ./portrait.js (portraitSvg : SVG viewBox 100 × 120 d'après les attributs).
- * Exporte : creer.
+ *   Effets (ajouts à la maquette validée), déclenchés par les vrais changements d'état (le premier état reçu n'anime rien) :
+ *   mon tour commence : mon nom pulse, la zone des questions s'éclaire, et la bulle « À toi de demander ? » si je pose la question ;
+ *   personnages nouvellement baissés : ils basculent (dos « HG ») un à un ; question nouvelle : cloche (son 4) ; réponse
+ *   arrivée : oui (son 2) ou non (son 3), la réponse rebondit dans l'historique ; manche gagnée par moi : bandeau
+ *   « Personnage trouvé ! », son 5, confettis. Animations coupées par mouvement réduit (matchMedia), préférence « effets »
+ *   ou body.duels-calme ; les sons restent. Le signal « à toi de jouer » (son + titre) reste celui du cadre (commun/tour-signal.js).
+ * Dépendances : core.js (esc, toast, motionAllowed), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur, deNom),
+ *   ./portrait.js (portraitSvg : SVG viewBox 100 × 120 d'après les attributs), ../../../commun/sons-jeux.js (jouerSonJeu).
+ * Exporte : creer, effetsFin (fin de duel, via ./fin-fx.js).
  */
-import { esc, toast } from '../../../commun/core.js';
+import { esc, toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur, deNom } from './commun.js';
 import { boutonReponses } from '../../../commun/core/admin-reponses.js';
 import { portraitSvg } from './portrait.js';
 import { voisinSpatial } from '../../../commun/grille-clavier.js';
+import { jouerSonJeu } from '../../../commun/sons-jeux.js';
+import { vuEnCours, effetsFinDuel } from './fin-fx.js';
 
 const DELAI_ENVOI = 600;
 const ANNONCE_MS = 6000;
 const LIBRE_MIN = 4;
 const LIBRE_MAX = 140;
+/** Son du jeu (numéros de la maquette : sons-jeux.js). */
+const SON = 'qui-est-ce';
+/** Durées des effets (ms) : chacune reste sous 3 s. */
+const DUREE_TOUR = 2400;      // « à toi » : pulsation de mon nom et zone des questions
+const DUREE_BULLE = 2600;     // bulle « À toi de demander ? »
+const DUREE_BANDEAU = 2300;   // bandeau « Personnage trouvé ! »
+const DECALAGE_BASC = 120;    // retard entre deux portraits qui basculent (ms)
+const COULEURS_CONFETTI = ['#FE3104', '#FCA301', '#FBD32D', '#159946', '#2B5AE2', '#4E2398', '#E2C77E'];
 /** Groupes des questions toutes prêtes ; les clés absentes d'ici vont dans « Autres ». */
 const GROUPES = [
   ['Tête', ['chapeau']],
@@ -87,6 +103,12 @@ export function creer(root, ctx) {
     occupe: false, libre: '', reponse: null,          // envoi en cours ; brouillon de question libre ; dernière réponse
     annonce: null, timerAnnonce: null,                // message annoncé aux lecteurs d'écran (statut)
     telOuvert: false,                                 // volet « Poser une question » sur téléphone
+    /* effets : tourAvant (mon tour à l'état précédent), tourDebut / tTour (pulsation, surlignage), bulle / tBulle,
+       vuQ (réponses déjà vues : id → oui/non/null), aPoper (réponses à faire rebondir), nbManches (manches vues),
+       montre (baisses déjà affichées : basculent seulement quand elles changent), timers et fx (à nettoyer) */
+    tourAvant: undefined, tourDebut: false, tTour: null, bulle: false, tBulle: null,
+    vuQ: null, aPoper: new Set(), nbManches: null,
+    montre: null, timers: [], fx: [],
   };
 
   const joue = (e) => !!e?.moi?.joue && e?.partie?.statut === 'en_cours';
@@ -232,6 +254,162 @@ export function creer(root, ctx) {
     if (ok) toast(juste ? 'Bien joué, tu gagnes la manche !' : 'Raté, tu perds la manche.', juste ? 'ok' : 'error');
   }
 
+  /* ---------- Effets (ajouts à la maquette) ---------- */
+
+  /** Son du jeu (numéro de la maquette). */
+  const son = (n) => jouerSonJeu(SON, n);
+  /** Animations permises : préférence « effets », mouvement réduit et body.duels-calme les coupent (les sons restent). */
+  const anim = () => motionAllowed() && !document.body.classList.contains('duels-calme');
+
+  /** Zone « Poser une question » visible : colonne (ordinateur) ou bloc du téléphone. */
+  function zoneQuestions() {
+    const titre = [...cadre.cote.querySelectorAll('h2')].find((h) => /Poser une question/.test(h.textContent))?.closest('section');
+    const tel = root.querySelector('.qec-ask-tel');
+    return [titre, tel].find((z) => z && z.getClientRects().length) || null;
+  }
+
+  /** Bandeau au centre de l'écran, retiré tout seul. Animé seulement si les animations sont permises. sous est déjà échappé. */
+  function bandeau(titre, sous) {
+    const b = document.createElement('div');
+    b.className = `qec-fx-ban${anim() ? ' is-anime' : ''}`;
+    b.setAttribute('aria-hidden', 'true');
+    b.innerHTML = `${esc(titre)}${sous ? `<small>${sous}</small>` : ''}`;
+    document.body.append(b);
+    st.fx.push(b);
+    st.timers.push(setTimeout(() => b.remove(), DUREE_BANDEAU));
+  }
+
+  /** Confettis : 70 petits rectangles qui tombent, retirés d'eux-mêmes (moins de 3 s). */
+  function confettis() {
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement('i');
+      c.className = 'qec-fx-conf';
+      c.setAttribute('aria-hidden', 'true');
+      c.style.left = `${Math.random() * 100}vw`;
+      c.style.background = COULEURS_CONFETTI[i % COULEURS_CONFETTI.length];
+      c.style.animationDuration = `${(1.2 + Math.random()).toFixed(2)}s`;
+      c.style.animationDelay = `${(Math.random() * 0.4).toFixed(2)}s`;
+      document.body.append(c);
+      st.fx.push(c);
+      st.timers.push(setTimeout(() => c.remove(), 2800));
+    }
+  }
+
+  /** Mon tour commence : mon nom pulse, la zone des questions s'éclaire ; bulle si c'est à moi de poser la question. */
+  function debutTour(aMoi) {
+    if (!anim()) return;
+    st.tourDebut = true;
+    st.bulle = aMoi;
+    clearTimeout(st.tTour);
+    clearTimeout(st.tBulle);
+    st.tTour = setTimeout(() => { st.tourDebut = false; retirerTour(); }, DUREE_TOUR);
+    st.tBulle = setTimeout(() => { st.bulle = false; retirerBulle(); }, DUREE_BULLE);
+  }
+  function retirerTour() {
+    root.querySelectorAll('.qec-fx-tour, .qec-fx-surligne').forEach((el) => el.classList.remove('qec-fx-tour', 'qec-fx-surligne'));
+  }
+  function retirerBulle() {
+    root.querySelectorAll('.qec-fx-bulle').forEach((el) => el.remove());
+  }
+
+  /** J'ai gagné la manche (personnage trouvé) : son, bandeau, confettis. */
+  function celebrer(e) {
+    son(5);
+    const adv = cadre.adversaire(e);
+    const nom = adv?.robot ? 'Le robot' : (adv?.pseudo || 'ton adversaire');
+    bandeau('Personnage trouvé !', esc(`Tu as deviné le personnage ${deNom(nom)}`));
+    if (anim()) confettis();
+  }
+
+  /** Effets d'un nouvel état, sur les vrais changements seulement (le premier état reçu n'anime rien). */
+  function effets(e) {
+    const mt = monTour(e);
+    if (st.tourAvant === false && mt) debutTour(mt && !attente(e));
+    st.tourAvant = mt;
+    // Questions : nouvelle question (cloche), réponse arrivée (oui ou non, la réponse rebondit).
+    const qs = questions();
+    if (st.vuQ) {
+      qs.forEach((x) => {
+        const avant = st.vuQ.get(x.id);
+        if (avant === undefined) {
+          if (x.reponse == null) son(4);
+          else { son(x.reponse ? 2 : 3); st.aPoper.add(x.id); }
+        } else if (avant == null && x.reponse != null) {
+          son(x.reponse ? 2 : 3);
+          st.aPoper.add(x.id);
+        }
+      });
+    }
+    st.vuQ = new Map(qs.map((x) => [x.id, x.reponse ?? null]));
+    // Manche finie : je l'ai gagnée → personnage trouvé.
+    const h = e.partie?.historique || [];
+    if (st.nbManches === null) st.nbManches = h.length;
+    else if (h.length > st.nbManches) {
+      st.nbManches = h.length;
+      const gagnant = h[h.length - 1]?.gagnant;
+      if (gagnant && gagnant === e.moi?.user_id) celebrer(e);
+    }
+  }
+
+  /** Portraits qui basculent : les personnages qui viennent d'être baissés se retournent un à un ; le portrait cède la place
+   *  au dos « HG » à mi-tour. ids : baissés nouvellement ; avant : portraits d'avant (id → HTML). */
+  function basculer(ids, avant) {
+    ids.forEach((id, i) => {
+      const b = cadre.plateau.querySelector(`[data-act="carte"][data-id="${CSS.escape(String(id))}"]`);
+      if (!b) return;
+      const delai = Math.min(i, 12) * DECALAGE_BASC;
+      const dos = b.querySelector('.qec-dos');
+      const portrait = avant.get(String(id));
+      b.style.animationDelay = `${delai}ms`;
+      b.classList.add('qec-fx-bascule');
+      const fin = (ev) => {
+        if (ev.target !== b) return;   // les animations des enfants (dos) remontent aussi jusqu'ici
+        b.classList.remove('qec-fx-bascule');
+        b.style.animationDelay = '';
+        b.removeEventListener('animationend', fin);
+      };
+      b.addEventListener('animationend', fin);
+      if (dos && portrait) {
+        dos.style.display = 'none';
+        dos.insertAdjacentHTML('beforebegin', portrait);
+        const p = b.querySelector('.qec-portrait');
+        st.timers.push(setTimeout(() => { p?.remove(); dos.style.display = ''; }, delai + 330));
+      }
+    });
+  }
+
+  /** Effets en cours, posés après chaque redessin (le cadre et les zones sont reconstruits) : pulsation, zone, bulle, rebond. */
+  function decorer() {
+    const e = st.etat;
+    if (!e) return;
+    const monTourMaint = st.tourDebut && monTour(e);
+    if (monTourMaint) {
+      const i = (e.joueurs || []).findIndex((j) => j.user_id === e.moi?.user_id);
+      root.querySelectorAll('.duels-face-j')[i]?.classList.add('qec-fx-tour');
+    }
+    const zone = zoneQuestions();
+    if (zone) {
+      zone.classList.add('qec-fx-zone');
+      if (monTourMaint) zone.classList.add('qec-fx-surligne');
+      if (st.bulle && !zone.querySelector('.qec-fx-bulle')) {
+        const b = document.createElement('div');
+        b.className = 'qec-fx-bulle';
+        b.setAttribute('aria-hidden', 'true');
+        b.textContent = 'À toi de demander ?';
+        zone.append(b);
+      }
+    }
+    if (st.aPoper.size) {
+      if (anim()) {
+        const qs = questions();
+        cadre.cote.querySelectorAll('.qec-histo > li').forEach((li, i) => {
+          if (st.aPoper.has(qs[i]?.id)) li.querySelector('.qec-rep')?.classList.add('qec-fx-pop');
+        });
+      }
+      st.aPoper.clear();
+    }
+  }
+
   /* ---------- Rendu ---------- */
 
   /** Carte d'un personnage : portrait (levé) ou dos de carte (baissé). */
@@ -359,6 +537,12 @@ export function creer(root, ctx) {
     const nbAdv = advId ? q.restants_adverses?.[advId] : undefined;
     const nomAdv = esc(pseudoA());
     const cartes = liste.map((p) => carte(p, { ouvert, mon, designation })).join('');
+    // Baissés en plus depuis le dernier affichage : ils basculent (sauf au premier affichage d'une manche).
+    const nouveaux = st.montre && st.plateau ? [...st.baisses].filter((id) => !st.montre.has(id)) : [];
+    const basc = anim() ? nouveaux : [];   // le son joue même sans animation ; le basculement non
+    const avant = new Map(basc.length ? [...cadre.plateau.querySelectorAll('.qec-carte')]
+      .map((b) => [b.dataset.id, b.querySelector('.qec-portrait')?.outerHTML || '']) : []);
+    if (st.plateau) st.montre = new Set(st.baisses);
 
     cadre.plateau.innerHTML = `
       <div class="qec-entete">
@@ -386,6 +570,9 @@ export function creer(root, ctx) {
         ${historique(e)}
       </section>`;
     restaurerFocus(f);
+    if (nouveaux.length) son(1);   // portrait baissé (son 1 de la maquette)
+    basculer(basc, avant);
+    decorer();
   }
 
   /* ---------- Écouteurs (délégation sur la racine) ---------- */
@@ -433,6 +620,7 @@ export function creer(root, ctx) {
   return {
     /** Nouvel état : nouvelle manche = personnages rechargés et baisses à zéro ; puis barre, statut et rendu. */
     maj(e) {
+      vuEnCours(e.partie);
       if (st.detruit) return;
       st.etat = e;
       const manche = e.partie?.manche;
@@ -442,11 +630,13 @@ export function creer(root, ctx) {
         clearTimeout(st.timerEnvoi); st.timerEnvoi = null;
         st.mode = 'normal'; st.reponse = null;
         st.plateau = null; st.chargement = null;
+        st.montre = null; st.vuQ = null;   // nouvelle manche : son état de départ n'anime rien
       }
       if (st.mode === 'designation' && !(monTour(e) && !attente(e))) st.mode = 'normal';
       charger();
       cadre.maj(e);
       majStatut();
+      effets(e);
       rendre();
     },
     message(m) { cadre.message(m); },
@@ -459,8 +649,21 @@ export function creer(root, ctx) {
       root.removeEventListener('keydown', surTouche);
       root.removeEventListener('toggle', surOuverture, true);
       clearTimeout(st.timerAnnonce);
+      clearTimeout(st.tTour);
+      clearTimeout(st.tBulle);
+      st.timers.forEach((t) => clearTimeout(t));
+      st.fx.forEach((el) => el.remove());
       if (st.timerEnvoi) { clearTimeout(st.timerEnvoi); st.timerEnvoi = null; envoyerBaisses(st.manche); }
       cadre.detruire();
     },
   };
+}
+
+/** Fin de duel vue en direct (appelé par vues/fin.js) : « Personnage trouvé ! », son, gagnant qui brille, confettis. */
+export function effetsFin(root, e) {
+  effetsFinDuel(root, e, {
+    jeu: 'qui-est-ce',
+    son: (issue) => (issue === 'gagnant' ? 5 : null),
+    titre: (issue) => (issue === 'gagnant' ? ['Personnage trouvé !', 'Duel gagné'] : null),
+  });
 }

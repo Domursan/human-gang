@@ -14,13 +14,14 @@
  *   Le signal « à toi de jouer » (son + titre d'onglet) reste celui du cadre (commun/tour-signal.js).
  * Dépendances : core.js (esc, toast, motionAllowed), ../api.js (duel, erreurTexte), ./commun.js (creerCadre, nomJoueur),
  *   ../../../commun/grille-clavier.js, ../../../commun/sons-jeux.js (jouerSonJeu).
- * Exporte : creer(root, ctx) → { maj(etat), message(msg), detruire() } (contrat de vues/partie.js).
+ * Exporte : effetsFin (fin de duel, via ./fin-fx.js) ; creer(root, ctx) → { maj(etat), message(msg), detruire() } (contrat de vues/partie.js).
  */
 import { esc, toast, motionAllowed } from '../../../commun/core.js';
 import { duel, erreurTexte } from '../api.js';
 import { creerCadre, nomJoueur } from './commun.js';
 import { voisinGrille } from '../../../commun/grille-clavier.js';
 import { jouerSonJeu } from '../../../commun/sons-jeux.js';
+import { vuEnCours, effetsFinDuel } from './fin-fx.js';
 
 const CROIX = '#6FB3F2';
 const ROND = '#E8B04B';
@@ -415,6 +416,7 @@ export function creer(root, ctx) {
   return {
     /** Met à jour la barre, le journal, le chat, le plateau, la colonne latérale et le statut. */
     maj(e) {
+      vuEnCours(e.partie);
       st.etat = e;
       st.envoi = false;
       cadre.maj(e);
@@ -451,4 +453,17 @@ export function creer(root, ctx) {
       cadre.detruire();
     },
   };
+}
+
+/** Fin de duel vue en direct (appelé par vues/fin.js) : la dernière manche n'est plus jouée sur la table,
+ *  donc son de victoire, défaite ou égalité, gagnant qui brille, bandeau « Duel gagné ! » et confettis pour le gagnant. */
+export function effetsFin(root, e) {
+  const js = e.joueurs || [];
+  const score = Number(e.partie?.format) > 1
+    ? `Score final ${js.find((j) => j.place === 1)?.manches ?? 0} – ${js.find((j) => j.place === 2)?.manches ?? 0}` : 'Le duel est terminé';
+  effetsFinDuel(root, e, {
+    jeu: 'morpion',
+    son: (issue) => ({ gagnant: 2, perdant: 3, nulle: 4 }[issue] || null),
+    titre: (issue) => (issue === 'gagnant' ? ['Duel gagné !', score] : issue === 'nulle' ? ['Match nul', score] : null),
+  });
 }

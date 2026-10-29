@@ -72,3 +72,45 @@
   .duels-pfc-cartes.is-revele .duels-pfc-face, .duels-pfc-cartes.is-revele .duels-pfc-vs { animation: none; }
   .duels-pfc-geste { transition: none; }
 }
+
+/* ===== Effets (vues/pfc.js) : compte, révélation, lancer gagné ou égalité, tour =====
+   Animations coupées par mouvement réduit et par body.duels-calme (le JS ne les pose pas non plus). Moins de 3 s chacune. */
+
+/* Compte « Pierre… Feuille… Ciseaux ! » au-dessus de l'arène (calque du body, sans clic) */
+.duels-pfc-fx-compte { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 9000; pointer-events: none; white-space: nowrap; text-align: center;
+  font: 400 clamp(28px, 4.6vw, 54px) 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 24px rgba(226, 199, 126, .7); }
+.duels-pfc-fx-compte span { display: inline-block; opacity: 0; animation: duels-pfc-fx-mot .42s ease-out forwards; }
+@keyframes duels-pfc-fx-mot { from { opacity: 0; transform: translateY(-14px) scale(1.3); } to { opacity: 1; transform: none; } }
+
+/* Bandeau « Égalité, on relance » (calque du body, retiré par le JS) */
+.duels-pfc-fx-ban { position: fixed; left: 50%; top: 72%; transform: translate(-50%, -50%); z-index: 9000; pointer-events: none; white-space: nowrap; text-align: center;
+  font: 400 clamp(26px, 4.4vw, 50px) 'Archivo Black', Inter, sans-serif; color: #fff; text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9); }
+.duels-pfc-fx-ban small { display: block; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.duels-pfc-fx-ban.is-anime { animation: duels-pfc-fx-ban 2.2s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+@keyframes duels-pfc-fx-ban { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); } 85% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Mon nom pulse à mon tour de choisir */
+.duels-face-j.duels-pfc-fx-tour { box-shadow: 0 0 0 3px #E2C77E, 0 0 22px rgba(226, 199, 126, .6); animation: duels-pfc-fx-pouls 1.2s ease-in-out 2; }
+@keyframes duels-pfc-fx-pouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+
+/* Les gestes se soulèvent à tour de rôle (un par un, décalés en ligne) */
+.duels-pfc-geste.duels-pfc-fx-leve { animation: duels-pfc-fx-leve .6s ease-in-out 1; }
+@keyframes duels-pfc-fx-leve { 50% { border-color: #E2C77E; transform: translateY(-4px); } }
+
+/* Lancer gagné : halo doré sur la main gagnante (sélecteur plus fort que la révélation, qui reste appliquée) */
+.duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-gagnant { animation: duels-pfc-fx-gagne 1.2s ease-in-out 2; }
+@keyframes duels-pfc-fx-gagne { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 26px rgba(226, 199, 126, .7); transform: scale(1.03); } }
+
+/* Égalité : les deux mains tremblent */
+.duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-secoue { animation: duels-pfc-fx-secoue .5s linear 3; }
+@keyframes duels-pfc-fx-secoue { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .duels-pfc-fx-compte span, .duels-pfc-fx-ban.is-anime, .duels-face-j.duels-pfc-fx-tour, .duels-pfc-geste.duels-pfc-fx-leve,
+  .duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-gagnant, .duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-secoue { animation: none; }
+  .duels-pfc-fx-compte span { opacity: 1; }
+}
+body.duels-calme .duels-face-j.duels-pfc-fx-tour, body.duels-calme .duels-pfc-geste.duels-pfc-fx-leve,
+body.duels-calme .duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-gagnant, body.duels-calme .duels-pfc-cartes .duels-pfc-face.duels-pfc-fx-secoue,
+body.duels-calme .duels-pfc-fx-ban.is-anime { animation: none; }

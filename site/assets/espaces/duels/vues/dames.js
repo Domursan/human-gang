@@ -17,10 +17,11 @@
  *   si le mouvement est réduit ou si les duels sont en mode calme. Le son « à toi de jouer » reste celui de commun/tour-signal.js.
  *   La fin de partie (victoire, nulle) est affichée par vues/fin.js, hors de ce fichier.
  * Dépendances : core.js (toast, motionAllowed), sons-jeux.js (jouerSonJeu), ../api.js (duel, erreurTexte), ../plateau-commun.js (chargerCss), ./commun.js (creerCadre, nomJoueur).
- * Exporte : creer.
+ * Exporte : creer, effetsFin (fin de duel, via ./fin-fx.js).
  */
 import { toast, motionAllowed } from '../../../commun/core.js';
 import { jouerSonJeu } from '../../../commun/sons-jeux.js';
+import { vuEnCours, effetsFinDuel } from './fin-fx.js';
 import { duel, erreurTexte } from '../api.js';
 import { chargerCss } from '../plateau-commun.js';
 import { creerCadre, nomJoueur } from './commun.js';
@@ -446,6 +447,7 @@ export function creer(root, ctx) {
   return {
     /** Met à jour la table avec l'état du duel. */
     maj(e) {
+      vuEnCours(e.partie);
       const prec = st.etat;
       st.etat = e;
       st.attente = false;
@@ -473,4 +475,14 @@ export function creer(root, ctx) {
       cadre.detruire();
     },
   };
+}
+
+/** Fin de duel vue en direct (appelé par vues/fin.js) : cloches, gagnant qui brille, bandeau et confettis. */
+export function effetsFin(root, e) {
+  effetsFinDuel(root, e, {
+    jeu: 'dames',
+    son: (issue) => (issue === 'spectateur' ? null : 4),
+    titre: (issue, x) => (issue === 'gagnant' ? ['Partie gagnée !', x.partie?.abandon ? 'Par abandon' : 'Fin de la partie']
+      : issue === 'nulle' ? ['Nulle', 'Fin de la partie'] : null),
+  });
 }

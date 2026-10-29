@@ -290,7 +290,7 @@ function blocGains(e, moiJ, js) {
       <span class="duels-fin-medaille">${MEDAILLE}</span>
       <div><strong>${badges.length > 1 ? 'Badges débloqués' : 'Badge débloqué'}</strong><span class="duels-fin-badge-nom">${esc(b.nom)}</span></div>
     </div>`).join('');
-  return `<h2 id="duels-fin-gains-titre" class="duels-h3">Tu gagnes</h2>${texte}${medailles}`;
+  return `<h2 id="duels-fin-gains-titre" class="duels-h3">Tes gains</h2>${texte}${medailles}`;
 }
 
 /** Actions : Revanche (ou rejoindre la revanche), retour aux duels, statistiques. */
@@ -425,7 +425,8 @@ export function creer(root, ctx) {
       dernier = e;
       rendre(e);
       // Effets de fin propres à certains jeux (son, gagnant qui brille) : seulement pour une partie vue en direct.
-      const jeuFx = { p4: './p4.js', othello: './othello.js', bataille: './bataille.js', mastermind: './mastermind.js' }[e.partie?.jeu];
+      const jeuFx = { p4: './p4.js', othello: './othello.js', bataille: './bataille.js', mastermind: './mastermind.js',
+        dames: './dames.js', echecs: './echecs.js', morpion: './morpion.js', pfc: './pfc.js', quiestce: './quiestce.js' }[e.partie?.jeu];
       if (jeuFx) import(jeuFx).then((m) => m.effetsFin?.(root, e)).catch(() => {});
       chat?.maj(e);
     },
