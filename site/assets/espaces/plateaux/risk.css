@@ -368,3 +368,63 @@
     animation: none !important; transition: none !important;
   }
 }
+
+/* ---------- Effets ajoutés (jeux/risk/effets.js) : classes rk-anim-*, sans changer le design existant ----------
+   Chaque animation dure moins de 3 s et se retire seule. Les calques du body (bulles, bandeaux, confettis) ne sont
+   créés que si le mouvement est permis. Pour ne pas se disputer avec les animations existantes (dés, comparaisons,
+   bilan), les effets sur les dés et les comparaisons passent par un pseudo-élément, et la secousse porte sur le bloc. */
+
+/* À toi de jouer : mon nom, mon étiquette, la bannière, mes territoires cliquables */
+@keyframes rk-anim-pouls { 50% { box-shadow: 0 0 0 5px #E2C77E, 0 0 36px rgba(226, 199, 126, .85); } }
+.rk-anim-joue { animation: rk-anim-pouls 1.2s ease-in-out 2; }
+@keyframes rk-anim-cadre { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 34px rgba(226, 199, 126, .6); } }
+.rk-banniere.rk-anim-surligne { animation: rk-anim-cadre 1.3s ease-in-out 2; }
+@keyframes rk-anim-terr { 50% { box-shadow: 0 0 0 3px #E2C77E, 0 0 16px rgba(226, 199, 126, .9); } }
+.rk-terr.rk-anim-terr .rk-pastille { animation: rk-anim-terr 1.1s ease-in-out 2; }
+
+/* Renforts posés : la pastille grossit, avec un « +1 » qui monte */
+@keyframes rk-anim-pop { 50% { transform: scale(1.35); } }
+.rk-pastille.rk-anim-pop { animation: rk-anim-pop .35s; }
+@keyframes rk-anim-monte {
+  0% { opacity: 0; transform: translateY(8px) scale(.7); }
+  20% { opacity: 1; transform: translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-44px) scale(1); }
+}
+.rk-anim-plus { position: fixed; z-index: 9001; pointer-events: none; font: 900 22px Inter, sans-serif; color: #E2C77E;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .7); animation: rk-anim-monte 1.2s ease-out forwards; }
+
+/* Bataille : anneau sur les dés gagnants, comparaison allumée, bloc qui secoue */
+@keyframes rk-anim-anneau { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.12); } }
+.rk-de.rk-anim-gagne::after { content: ''; position: absolute; inset: 0; border-radius: 9px; border: 3px solid var(--rk-or);
+  pointer-events: none; animation: rk-anim-anneau 1s ease-out 2; }
+.rk-paire.rk-anim-surligne { position: relative; }
+@keyframes rk-anim-cadre-net { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.rk-paire.rk-anim-surligne::after { content: ''; position: absolute; inset: -2px; border: 2px solid var(--rk-or); border-radius: 12px;
+  pointer-events: none; animation: rk-anim-cadre-net 1.3s ease-in-out 1; }
+@keyframes rk-anim-choc {
+  20% { transform: translate(-4px, 0); }
+  40% { transform: translate(4px, 0); }
+  60% { transform: translate(-3px, 0); }
+  80% { transform: translate(2px, 0); }
+}
+.rk-bloc[data-bataille].rk-anim-choc { animation: rk-anim-choc .5s ease-out 2; }
+
+/* Victoire et conquête : bandeau plein écran et confettis (calques du body) */
+@keyframes rk-anim-ban {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-6deg); }
+  20% { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(-2deg); }
+  35% { transform: translate(-50%, -50%) scale(1) rotate(-2deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.rk-anim-banc { position: fixed; left: 50%; top: 70%; transform: translate(-50%, -50%) scale(.5); opacity: 0; z-index: 9002;
+  pointer-events: none; white-space: nowrap; font: 400 clamp(26px, 4.5vw, 52px) 'Archivo Black', Inter, sans-serif; color: #fff;
+  text-shadow: 0 4px 0 rgba(0, 0, 0, .6), 0 0 30px rgba(226, 199, 126, .9); animation: rk-anim-ban 2.6s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+.rk-anim-banc small { display: block; text-align: center; font: 700 15px Inter, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.rk-anim-conf { position: fixed; top: -10px; width: 8px; height: 14px; z-index: 8999; pointer-events: none;
+  animation: rk-anim-tombe linear forwards; }
+@keyframes rk-anim-tombe { to { transform: translateY(105vh) rotate(720deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rk-anim-plus, .rk-anim-banc, .rk-anim-conf { display: none; }
+}

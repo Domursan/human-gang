@@ -10,10 +10,11 @@
  *   bloquent jamais une action. Rien ne bouge si l'on demande moins de mouvement (prefers-reduced-motion).
  *   Les zones ne sont reconstruites que si leur contenu change. Les choix (territoires, dés, curseurs, cartes)
  *   se mettent à jour sur place, pour garder le focus et les saisies en cours.
+ *   Effets de la maquette (à toi, troupes posées, dés, conquête) : ./effets.js, appelé après chaque rendu (maj).
  * Dépendances : commun/tour-signal.js (creerSignalTour), core.js (esc, toast), ../../api.js (plat, erreurTexte, nomDe, imageExiste),
  *   ../../vues/commun.js (bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJoueur, joueurDe, avatarHtml,
  *   pseudoHtml), ../../vues/chat.js (creerChat, tiroirChat), ./plateau.js (plateauHtml, marquer, fleche, animations),
- *   ../../../../commun/grille-clavier.js (voisinSpatial).
+ *   ./effets.js (creerEffets), ../../../../commun/grille-clavier.js (voisinSpatial).
  * Exporte : creer(root, ctx) -> { maj(etat), message(msg), detruire() }.
  *   ctx = { code, naviguer, moi, suivi, contenus } ; suivi = retour de suivrePartie.
  */
@@ -23,6 +24,7 @@ import { bandeauHtml, brancherChrono, journalHtml, imagePlateau, envoyer, moiJou
 import { creerChat, tiroirChat } from '../../vues/chat.js';
 import { creerSignalTour } from '../../../../commun/tour-signal.js';
 import { plateauHtml, marquer, fleche, animerMouvement, animerChutes, animerCompteur } from './plateau.js';
+import { creerEffets } from './effets.js';
 import { voisinSpatial } from '../../../../commun/grille-clavier.js';
 
 const ECRAN_GRAND = '(min-width: 761px)';
@@ -1131,6 +1133,7 @@ export function creer(root, ctx) {
   /* ---------- Contrat de la vue ---------- */
 
   const signal = creerSignalTour();
+  const effets = creerEffets(el, { nomTerritoire: nomT, nomJoueur: nomJ });
 
   return {
     /** Nouvel état de la partie (appelé à chaque changement de version). */
@@ -1164,6 +1167,7 @@ export function creer(root, ctx) {
       dernierActif = actif;
       chat.maj(e);
       signal.maj(monTour());
+      try { effets.maj(e, monId()); } catch (err) { console.warn('[risk] effets visuels', err); }
     },
     /** Message du chat (ancien ou nouveau). */
     message(msg) {
@@ -1174,6 +1178,7 @@ export function creer(root, ctx) {
     /** Arrête le chrono, retire le chat et la table de la page. */
     detruire() {
       signal.arreter();
+      effets.detruire();
       arretChrono?.();
       grand.removeEventListener('change', surEcran);
       chat?.detruire();
